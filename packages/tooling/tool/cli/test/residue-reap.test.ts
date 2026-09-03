@@ -14,6 +14,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -36,16 +37,45 @@ const withTempDirectory = <Value, Failure, Requirements>(
       })
   );
 
+const fixtureTimestamp = (daysAgo: number): string =>
+  `@${(FIXTURE_NOW_MILLIS - Duration.toMillis(Duration.days(daysAgo))) / Duration.toMillis(Duration.seconds(1))}`;
+
+const runFixtureCommand = Effect.fn("ResidueReapTest.runFixtureCommand")(function* (
+  cwd: string,
+  command: string,
+  args: ReadonlyArray<string>
+) {
+  const result = yield* runRepoCommandCapture(command, args, cwd);
+  expect(result.exitCode, result.output).toBe(0);
+  return result.output;
+});
+
 const touchDaysAgo = Effect.fn("ResidueReapTest.touchDaysAgo")(function* (
   root: string,
   candidatePath: string,
   daysAgo: number
 ) {
-  const timestamp = `@${
-    (FIXTURE_NOW_MILLIS - Duration.toMillis(Duration.days(daysAgo))) / Duration.toMillis(Duration.seconds(1))
-  }`;
-  const result = yield* runRepoCommandCapture("touch", ["-d", timestamp, candidatePath], root);
-  expect(result.exitCode, result.output).toBe(0);
+  yield* runFixtureCommand(root, "touch", ["-d", fixtureTimestamp(daysAgo), candidatePath]);
+});
+
+const touchTreeDaysAgo = Effect.fn("ResidueReapTest.touchTreeDaysAgo")(function* (
+  root: string,
+  target: string,
+  daysAgo: number
+) {
+  yield* runFixtureCommand(root, "find", [target, "-exec", "touch", "-d", fixtureTimestamp(daysAgo), "{}", "+"]);
+});
+
+const makeEmbeddedRepo = Effect.fn("ResidueReapTest.makeEmbeddedRepo")(function* (worktreeRoot: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const repoRoot = path.join(worktreeRoot, "repo");
+  yield* fs.makeDirectory(repoRoot, { recursive: true });
+  yield* runFixtureCommand(repoRoot, "git", ["init", "--quiet", "-b", "main"]);
+  yield* runFixtureCommand(repoRoot, "git", ["config", "user.email", "residue-reap@example.invalid"]);
+  yield* runFixtureCommand(repoRoot, "git", ["config", "user.name", "Residue Reap Test"]);
+  yield* runFixtureCommand(repoRoot, "git", ["config", "commit.gpgsign", "false"]);
+  return repoRoot;
 });
 
 const candidateByPath = (report: ResidueReapReport, candidatePath: string): ResidueReapReport["candidates"][number] =>
@@ -70,20 +100,39 @@ const makeFixture = Effect.fn("ResidueReapTest.makeFixture")(function* (root: st
   const disposable = path.join(beepCacheRoot, "photo-face-old");
   const disposablePayload = path.join(disposable, "payload.txt");
   const durable = path.join(beepCacheRoot, "handoffs");
+  const worktreeResidue = path.join(beepCacheRoot, "worktree-residue");
+  const worktreeResiduePayload = path.join(worktreeResidue, "archive.patch");
   const turboEntry = path.join(turboCacheRoot, "old-cache.tar.zst");
 
   yield* Effect.forEach(
-    [sessionsRoot, archivedRoot, oldWorktree, disposable, durable, turboCacheRoot],
+    [sessionsRoot, archivedRoot, oldWorktree, disposable, durable, worktreeResidue, turboCacheRoot],
     (directory) => fs.makeDirectory(directory, { recursive: true }),
     { discard: true }
   );
   yield* Effect.forEach(
-    [oldSession, youngSession, protectedSession, archivedSession, worktreePayload, disposablePayload, turboEntry],
+    [
+      oldSession,
+      youngSession,
+      protectedSession,
+      archivedSession,
+      worktreePayload,
+      disposablePayload,
+      worktreeResiduePayload,
+      turboEntry,
+    ],
     (file) => fs.writeFileString(file, `fixture:${path.basename(file)}\n`),
     { discard: true }
   );
   yield* Effect.forEach(
-    [oldSession, protectedSession, archivedSession, worktreePayload, disposablePayload, turboEntry],
+    [
+      oldSession,
+      protectedSession,
+      archivedSession,
+      worktreePayload,
+      disposablePayload,
+      worktreeResiduePayload,
+      turboEntry,
+    ],
     (file) => touchDaysAgo(root, file, 45),
     { discard: true }
   );
@@ -103,6 +152,7 @@ const makeFixture = Effect.fn("ResidueReapTest.makeFixture")(function* (root: st
     turboCacheRoot,
     turboEntry,
     worktreePayload,
+    worktreeResidue,
     youngSession,
   };
 });
@@ -126,6 +176,11 @@ describe("residue reap", () => {
         expect(candidateByPath(report, fixture.oldWorktree).action).toBe("remove-dir");
         expect(candidateByPath(report, fixture.disposable).action).toBe("remove-dir");
         expect(A.some(report.candidates, (candidate) => Str.Equivalence(candidate.path, fixture.durable))).toBe(false);
+        // worktree-residue archives are the preserved copy of retired worktree state and
+        // must never surface as candidates, no matter how old they grow.
+        expect(A.some(report.candidates, (candidate) => Str.Equivalence(candidate.path, fixture.worktreeResidue))).toBe(
+          false
+        );
         expect(candidateByPath(report, fixture.turboEntry).action).toBe("remove-file");
         expect(report.classes).toEqual(["codex-sessions", "codex-worktrees", "turbo-cache", "beep-cache-disposable"]);
       })
@@ -227,6 +282,83 @@ describe("residue reap", () => {
         expect(candidateByPath(overflow, fixture.oldWorktree).skipReason).toBe("census-overflow");
       })
     ).pipe(provideScopedLayer(NodeServices.layer))
+  );
+
+  it.effect("preserves dirty embedded git checkouts and reaps clean ones", () =>
+    withTempDirectory((root) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const fixture = yield* makeFixture(root);
+        const worktreesRoot = path.join(fixture.homeRoot, ".codex", "worktrees");
+        const dirtyWorktree = path.join(worktreesRoot, "dirty-worktree");
+        const cleanWorktree = path.join(worktreesRoot, "clean-worktree");
+        const dirtyRepo = yield* makeEmbeddedRepo(dirtyWorktree);
+        const cleanRepo = yield* makeEmbeddedRepo(cleanWorktree);
+        yield* fs.writeFileString(path.join(dirtyRepo, "uncommitted.txt"), "unpreserved work\n");
+        yield* fs.writeFileString(path.join(cleanRepo, "committed.txt"), "landed work\n");
+        yield* runFixtureCommand(cleanRepo, "git", ["add", "committed.txt"]);
+        yield* runFixtureCommand(cleanRepo, "git", ["commit", "--quiet", "-m", "fixture"]);
+        yield* touchTreeDaysAgo(root, dirtyWorktree, 45);
+        yield* touchTreeDaysAgo(root, cleanWorktree, 45);
+
+        const report = yield* runResidueReap({
+          apply: true,
+          classes: ["codex-worktrees"],
+          homeRoot: fixture.homeRoot,
+          nowMillis: FIXTURE_NOW_MILLIS,
+          probeLiveCwd: noLiveCwd,
+          repoRoot: fixture.repoRoot,
+        });
+
+        const dirty = candidateByPath(report, dirtyWorktree);
+        expect(dirty.action).toBe("skip");
+        expect(dirty.skipReason).toBe("dirty-tree");
+        expect(yield* fs.exists(path.join(dirtyRepo, "uncommitted.txt"))).toBe(true);
+        const clean = candidateByPath(report, cleanWorktree);
+        expect(clean.action).toBe("remove-dir");
+        expect(clean.skipReason).toBeUndefined();
+        expect(yield* fs.exists(cleanWorktree)).toBe(false);
+      })
+    ).pipe(provideScopedLayer(NodeServices.layer))
+  );
+
+  it.effect("classifies a turbo cache directory by its newest descendant, not its own mtime", () =>
+    withTempDirectory((root) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const fixture = yield* makeFixture(root);
+        const staleDir = path.join(fixture.turboCacheRoot, "stale-dir");
+        const freshInside = path.join(staleDir, "fresh.bin");
+        yield* fs.makeDirectory(staleDir, { recursive: true });
+        yield* fs.writeFileString(freshInside, "recent cache write\n");
+        yield* touchDaysAgo(root, freshInside, 2);
+        yield* touchDaysAgo(root, staleDir, 45);
+
+        const report = yield* runResidueReap({
+          classes: ["turbo-cache"],
+          homeRoot: fixture.homeRoot,
+          nowMillis: FIXTURE_NOW_MILLIS,
+          probeLiveCwd: noLiveCwd,
+          repoRoot: fixture.repoRoot,
+        });
+
+        const stale = candidateByPath(report, staleDir);
+        expect(stale.action).toBe("skip");
+        expect(stale.skipReason).toBe("too-young");
+        expect(candidateByPath(report, fixture.turboEntry).action).toBe("remove-file");
+      })
+    ).pipe(provideScopedLayer(NodeServices.layer))
+  );
+
+  it.effect("fails closed when the configured home root is empty or relative", () =>
+    Effect.gen(function* () {
+      const empty = yield* Effect.result(runResidueReap({ homeRoot: "" }));
+      expect(Result.isFailure(empty)).toBe(true);
+      const relative = yield* Effect.result(runResidueReap({ homeRoot: "relative/home" }));
+      expect(Result.isFailure(relative)).toBe(true);
+    }).pipe(provideScopedLayer(NodeServices.layer))
   );
 
   it.effect("round-trips the residue-reap/v1 report schema and honors class filtering", () =>
