@@ -1230,7 +1230,7 @@ const findCodexSession = Effect.fn("PrProvenance.findCodexSession")(function* (h
   const names = yield* fs.readDirectory(root, { recursive: true });
   const match = yield* Effect.reduce(
     A.filter(names, Str.endsWith(".jsonl")),
-    O.none,
+    O.none<{ readonly cwd: string; readonly model: O.Option<PrProvenanceModel> }>,
     Effect.fnUntraced(function* (found, name) {
       if (O.isSome(found)) return found;
       const content = yield* fs.readFileString(path.join(root, name));
@@ -1314,7 +1314,7 @@ const readCodexEvidence = Effect.fn("PrProvenance.readCodexEvidence")(function* 
   const coordinates = O.all({ home: environment.home, codexId: environment.codexId });
   if (O.isNone(coordinates)) return fallback;
   const session = yield* findCodexSession(coordinates.value.home, coordinates.value.codexId).pipe(
-    Effect.orElseSucceed(O.none)
+    Effect.orElseSucceed(O.none<{ readonly cwd: string; readonly model: O.Option<string> }>)
   );
   return O.map(session, (record) =>
     ProvenanceSessionEvidence.make({
