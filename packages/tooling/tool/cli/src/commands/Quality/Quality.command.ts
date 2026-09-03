@@ -2624,6 +2624,26 @@ const turboConfigProofCommand = Command.make(
     )
 ).pipe(Command.withDescription("Summarize Turbo affected and dry-run task-input blast radius"));
 
+/**
+ * Verify one workspace package against freshly built dependency artifacts.
+ *
+ * **Details**
+ *
+ * Default verification first runs the selected package's Turbo build closure,
+ * whose graph includes upstream `build` tasks, and only then runs the package
+ * audit. A genuine closure-build or audit failure still records the existing
+ * P0 package-audit inbox shard. Quick mode continues to run only lint and check.
+ *
+ * **Example** (Verify the repository CLI package)
+ *
+ * ```ts
+ * const command = "bun run beep quality package-verify @beep/repo-cli"
+ * console.log(command)
+ * ```
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
 const packageVerifyCommand = Command.make(
   "package-verify",
   {
@@ -2635,7 +2655,7 @@ const packageVerifyCommand = Command.make(
   },
   ({ packageArgs, quick }) =>
     runQualityProgram(runPackageVerifyCli({ packageArgs: variadicStrings(packageArgs), quick }))
-).pipe(Command.withDescription("Run package-local lint/check/test verification"));
+).pipe(Command.withDescription("Build a package dependency closure, then run package-local verification"));
 
 const changesetGraphCommand = Command.make("changeset-graph", {}, () =>
   runQualityProgram(

@@ -2,12 +2,16 @@ import {
   collectPackageVerifyChangedFilesForTesting,
   PackageVerifyReport,
   PackageVerifyStepResult,
+  PackageVerifyStepSpec,
   PackageVerifyWorkspace,
+  packageVerifyStepPlanForTesting,
   packageVerifyStepSpecsForTesting,
+  QualityTaskStep,
   recordPackageVerifyInboxForTesting,
   renderPackageVerifyReportForTesting,
-  runPackageVerify,
+  runPackageVerifyAtRootForTesting,
   runPackageVerifyCli,
+  runPackageVerifyStepPlanForTesting,
   selectPackageVerifyTargetForTesting,
 } from "@beep/repo-cli/test/Quality";
 import { loadYeetInboxView } from "@beep/repo-cli/test/Yeet";
@@ -82,50 +86,93 @@ describe("package verify", () => {
     expect(A.map(packageVerifyStepSpecsForTesting(false), (spec) => spec.step)).toEqual(["audit", "docgen"]);
   });
 
+  it("builds the audit dependency closure through Turbo before the package script", () => {
+    const plan = packageVerifyStepPlanForTesting(
+      "/repo",
+      demoWorkspace,
+      PackageVerifyStepSpec.make({ step: "audit", script: "beep:audit" })
+    );
+
+    expect(A.map(plan, ({ args, command, cwd, label }) => ({ args, command, cwd, label }))).toEqual([
+      {
+        label: "audit:build-closure",
+        command: "bun",
+        args: ["x", "turbo", "run", "build", "--filter=@beep/demo..."],
+        cwd: "/repo",
+      },
+      {
+        label: "audit",
+        command: "bun",
+        args: ["run", "beep:audit"],
+        cwd: "/repo/packages/demo",
+      },
+    ]);
+  });
+
+  it("does not run the package audit when its closure build fails", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const markerPath = path.join(tmpDir, "audit-ran");
+          const result = yield* runPackageVerifyStepPlanForTesting([
+            QualityTaskStep.make({
+              label: "audit:build-closure",
+              command: "sh",
+              args: ["-c", "printf build-failed; exit 7"],
+              cwd: tmpDir,
+            }),
+            QualityTaskStep.make({
+              label: "audit",
+              command: "sh",
+              args: ["-c", "touch audit-ran"],
+              cwd: tmpDir,
+            }),
+          ]);
+
+          expect(result.exitCode).toBe(7);
+          expect(result.output).toContain("build-failed");
+          expect(yield* fs.exists(markerPath)).toBe(false);
+        })
+      )
+    ));
+
   it("runs quick verification and records the repository head", () =>
     Effect.runPromise(
       withTempDirectory((tmpDir) =>
-        Effect.acquireUseRelease(
-          Effect.sync(() => {
-            const previous = process.cwd();
-            process.chdir(tmpDir);
-            return previous;
-          }),
-          () =>
-            Effect.gen(function* () {
-              const fs = yield* FileSystem.FileSystem;
-              const path = yield* Path.Path;
-              const packageDir = path.join(tmpDir, "packages/demo");
-              yield* fs.makeDirectory(packageDir, { recursive: true });
-              yield* fs.writeFileString(
-                path.join(tmpDir, "package.json"),
-                yield* encodeJson({ name: "verify-root", private: true, workspaces: ["packages/*"] })
-              );
-              yield* fs.writeFileString(
-                path.join(packageDir, "package.json"),
-                yield* encodeJson({
-                  name: "@beep/demo",
-                  private: true,
-                  scripts: { "beep:lint": "true", "beep:check": "true" },
-                })
-              );
-              yield* runGit(tmpDir, ["init", "--quiet"]);
-              yield* runGit(tmpDir, ["config", "user.email", "codex@example.invalid"]);
-              yield* runGit(tmpDir, ["config", "user.name", "Codex"]);
-              yield* runGit(tmpDir, ["add", "."]);
-              yield* runGit(tmpDir, ["commit", "--quiet", "-m", "initial"]);
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const packageDir = path.join(tmpDir, "packages/demo");
+          yield* fs.makeDirectory(packageDir, { recursive: true });
+          yield* fs.writeFileString(
+            path.join(tmpDir, "package.json"),
+            yield* encodeJson({ name: "verify-root", private: true, workspaces: ["packages/*"] })
+          );
+          yield* fs.writeFileString(
+            path.join(packageDir, "package.json"),
+            yield* encodeJson({
+              name: "@beep/demo",
+              private: true,
+              scripts: { "beep:lint": "true", "beep:check": "true" },
+            })
+          );
+          yield* runGit(tmpDir, ["init", "--quiet"]);
+          yield* runGit(tmpDir, ["config", "user.email", "codex@example.invalid"]);
+          yield* runGit(tmpDir, ["config", "user.name", "Codex"]);
+          yield* runGit(tmpDir, ["add", "."]);
+          yield* runGit(tmpDir, ["commit", "--quiet", "-m", "initial"]);
 
-              const report = yield* runPackageVerify({ packageName: O.some("@beep/demo"), quick: true });
+          const report = yield* runPackageVerifyAtRootForTesting(tmpDir, {
+            packageName: O.some("@beep/demo"),
+            quick: true,
+          });
 
-              expect(report.packageName).toBe("@beep/demo");
-              expect(report.headSha).toMatch(/^[0-9a-f]{40}$/u);
-              expect(A.map(report.results, (result) => result.ok)).toEqual([true, true]);
-
-              yield* fs.writeFileString(path.join(tmpDir, ".beep"), "block inbox creation");
-              yield* runPackageVerifyCli({ packageArgs: ["@beep/demo"], quick: true });
-            }),
-          (previous) => Effect.sync(() => process.chdir(previous))
-        )
+          expect(report.packageName).toBe("@beep/demo");
+          expect(report.headSha).toMatch(/^[0-9a-f]{40}$/u);
+          expect(A.map(report.results, (result) => result.ok)).toEqual([true, true]);
+        })
       )
     ));
 
@@ -267,6 +314,7 @@ describe("package verify", () => {
           const failed = yield* loadYeetInboxView(tmpDir);
           expect(failed.entries).toHaveLength(1);
           expect(failed.entries[0]?.row.kind).toBe("local-shard-failed");
+          expect(failed.entries[0]?.row.severity).toBe("P0");
           expect(failed.entries[0]?.ack.acked).toBe(false);
 
           yield* recordPackageVerifyInboxForTesting(report(true));
@@ -327,6 +375,42 @@ describe("package verify", () => {
           const repaired = yield* loadYeetInboxView(tmpDir);
           expect(repaired.entries).toHaveLength(2);
           expect(repaired.entries.every((entry) => entry.ack.acked)).toBe(true);
+        })
+      )
+    ));
+
+  it("records the Turbo closure build in a genuine audit failure capsule", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          yield* recordPackageVerifyInboxForTesting(
+            PackageVerifyReport.make({
+              headSha: "abc123",
+              packageName: "@beep/demo",
+              packageDir: `${tmpDir}/packages/demo`,
+              quick: false,
+              repoRoot: tmpDir,
+              results: [
+                PackageVerifyStepResult.make({
+                  step: "audit",
+                  script: "beep:audit",
+                  skipped: false,
+                  ok: false,
+                  durationMillis: 20,
+                  exitCode: O.some(1),
+                  output: "build failed",
+                }),
+              ],
+            })
+          );
+
+          const inbox = yield* loadYeetInboxView(tmpDir);
+          const row = inbox.entries[0]?.row;
+          expect(row?.kind).toBe("local-shard-failed");
+          if (row?.kind === "local-shard-failed") {
+            expect(row.severity).toBe("P0");
+            expect(row.capsule.command).toBe("bun x turbo run build --filter=@beep/demo... && bun run beep:audit");
+          }
         })
       )
     ));
