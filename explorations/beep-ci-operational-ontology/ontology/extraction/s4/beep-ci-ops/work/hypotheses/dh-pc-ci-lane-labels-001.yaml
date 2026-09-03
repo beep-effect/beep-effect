@@ -1,0 +1,33 @@
+id: "dh:pc-ci-lane-labels:001"
+observation_refs:
+  - "po:sha256:ba02c2407e6a168b568df68d655e15d929e3a77ae4e2d4a9281c0d47d36a88b5"
+  - "po:sha256:bd04b6377f602e0ba9dd134a21d1233fa1a2c10c31ee362a87dd820979cb68af"
+  - "po:sha256:cf647b6512cf7c56d24edc7f879f74f4412192e16d5f721c654730b7ae72d65e"
+  - "po:sha256:d96acf931afd8792316f7ff9984cb9d516557e8cb1cec77907869b55673476dc"
+  - "po:sha256:dec2d433d94738ea7d20521b27874dcc0fe38ce6731beaee427c2d4381f4e237"
+  - "po:sha256:ded759fcb05cf31ec6b4a4221d68df72c2832b9e6a62285ff6727be29935055f"
+  - "po:sha256:f3e7620dc123c6523bfc67d2f3e5f64ffae2805148d50c98d25bee1531d82fa8"
+cq_warrants:
+  - "CQ-001"
+proposed_referent:
+  label: "CI lane label vocabulary"
+  description: >-
+    Source spellings that may lexically name operational verification lanes.
+representation_status: lexical_alias
+alternatives:
+  - label: "command-dispatch literals"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+  - label: "enumerated operational verification lanes"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: >-
+    The observations provide only individual strings from a source list. They
+    do not establish lane boundaries, execution semantics, membership in an
+    assurance tier, or instances of the named activities.
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.75, use_for_acceptance: false}

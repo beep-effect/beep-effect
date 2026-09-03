@@ -1,0 +1,10 @@
+id: po:sha256:922212cafdb03daef5fb111352d661cfda30e1e9f3d3e8c3e6f45a19c6a82a50
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts
+source_span:
+  start_line: 447
+  end_line: 447
+quote: proofStep(context, "cheap-gates", true),
+epistemic_status: quoted_prose

@@ -1,0 +1,50 @@
+target: "otp:pc-token-capacity-policy:001"
+target_sha256: "d5e5ff8013497abd8b0b5b467f7aa9fc98a4eb0ca590fbde977f6cdeafa63ab2"
+chain_sha256: "766ca1f9e5e046696eaf02973afc0fe4520af557f8394264808bb197d848f4b4"
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The invalid clause-is-a-policy edge was removed; the revision exact-reuses
+    only the complete AdmissionPolicy and asserts no candidate is-a edge.
+revision_requests: []
+attacks:
+  - surface: identity
+    rule: clause-identity-lineage-unobserved
+    counterexample: >-
+      The same capacity inequality can occur in policies with different charge
+      semantics, and one policy can change it without separately issuing a
+      clause. The revision no longer claims autonomous clause identity: the
+      arithmetic is content of the complete exact-reused AdmissionPolicy.
+    outcome: survived
+  - surface: warrant
+    rule: semantic-support-not-necessary
+    counterexample: >-
+      CQ-010 does not require a separate TokenCapacityAdmissionRule. The
+      revision removes that term and directly warrants only the complete
+      AdmissionPolicy through CQ-023, which explicitly asks for the governing
+      policy and its starvation bound.
+    outcome: survived
+  - surface: null_discriminator
+    rule: discriminator-true-of-replay-implementation
+    counterexample: >-
+      A scheduler can compute the inequality and replay charges without minting
+      an independently governed clause. The revision asserts no clause entity;
+      those operations are carriers of capacity content in the complete policy
+      under the sitting's carrier-only strike.
+    outcome: survived
+rival_models_still_viable:
+  - "Token-capacity arithmetic is a proper clause component of AdmissionPolicy."
+  - "A deployed admission regime realizes the policy specification."
+evidence:
+  - "po:sha256:b3ea29a27a4730f094b12522a0d0c1648896c255cf538754d3bb11c7db52764f"
+  - "po:sha256:d0e190e143df1788d957dc00bbdf6faf804b7b76ae3e47e147c558e44f802424"
+  - "po:sha256:ff37ebad0eb0db7d4d93c2868963043b2d76981e6d29939abf14cb4b0e3b4899"
+  - "CQ-010"
+  - "CQ-023"

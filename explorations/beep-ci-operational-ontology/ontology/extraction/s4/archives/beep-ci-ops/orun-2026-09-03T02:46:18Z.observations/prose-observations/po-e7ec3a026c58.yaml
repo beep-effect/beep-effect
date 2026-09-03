@@ -1,0 +1,10 @@
+id: po:sha256:e7ec3a026c581a927f350c5035546be6cc2ea0f58e040cb6b1a758a5de5ae81d
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: packages/tooling/tool/cli/src/internal/github/JobShape.ts
+source_span:
+  start_line: 76
+  end_line: 80
+quote: LiteralKit(["setup-5xx", "runner-loss", "install-failure"])
+epistemic_status: quoted_prose

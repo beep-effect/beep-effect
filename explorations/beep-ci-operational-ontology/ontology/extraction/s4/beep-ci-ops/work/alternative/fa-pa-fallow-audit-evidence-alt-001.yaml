@@ -1,0 +1,21 @@
+id: fa:pa-fallow-audit-evidence-alt:001
+hypothesis_ref: dh:pa-fallow-audit-evidence:001
+identity_card_ref: ic:pa-fallow-audit-evidence-alt:001
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+- label: the audit occurrence that produced the count
+  still_viable: true
+- label: inventory configuration fields with no evidential content
+  still_viable: false
+strongest_counterexample: The inventory places a zero count and a command in nearby fields;
+  that is compatible with evidence, with a spec, and with a silent claim that the world has
+  zero violations (evidence-is-truth). The report is the defensible referent; the world state
+  is not observed.
+verdict: analyzed
+needed_evidence: An observation that the count is treated as world-truth of boundaries, or
+  that the evidence object is cited as a digest-locked receipt independently of the inventory
+  file.

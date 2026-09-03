@@ -1,0 +1,21 @@
+id: fa:pb-docgen-affected-scope-alt:001
+hypothesis_ref: dh:pb-docgen-affected-scope:001
+identity_card_ref: ic:pb-docgen-affected-scope-alt:001
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+- label: affected-scope specification (the bound as a plan)
+  still_viable: true
+- label: quality of a run (its input extent)
+  still_viable: true
+- label: docgen command optimization flag with no extensional set
+  still_viable: false
+strongest_counterexample: The quote 'bounded to origin/main...HEAD + dirty files' is both
+  a specification of how to select files and a description of a run's actual input set. Spec
+  versus situation are observationally equivalent on this single sentence.
+verdict: analyzed
+needed_evidence: An observation that the selected file-set is enumerated or compared as the
+  scope of a run, versus only the bound being cited as a command rule.

@@ -1,0 +1,59 @@
+target: "otp:pa-projection-limitation-report:001"
+target_sha256: "e79e420eda3743b927493c94dad8c263549e6885fdb982ef3fdab3f531d2dda0"
+chain_sha256: "ffcdd756f4aa84a7d0fceda3c64d3495963fb7994200c97c4fe4d71c08db9045"
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The broad exact-reuse proposal asserts no parent edge, so no candidate
+    subsumption relation is present; extension compatibility is tested below.
+revision_requests: []
+attacks:
+  - surface: identity
+    rule: exact-reuse-extension-narrowing
+    counterexample: >-
+      A hosted-check result can record a completed verification outcome without
+      any projection-applicability caveat. It remains inside the revised broad
+      VerificationResultArtifact definition because caveats are now only
+      possible instance or component content, not membership conditions.
+    outcome: survived
+  - surface: identity
+    rule: independent-artifact-identity-unwarranted
+    counterexample: >-
+      Moving or copying the caveat section does not establish a separately
+      issued limitation-report individual. The revision makes no such claim:
+      it exact-reuses the broad result-artifact class and keeps any independent
+      specialization withdrawn pending issuance and lineage evidence.
+    outcome: survived
+  - surface: warrant
+    rule: evidence-role-requires-result-bearer
+    counterexample: >-
+      A diagnostic result can record an outcome without bearing the contingent
+      VerificationEvidence role, while evidence must have some result-bearing
+      information object to which applicability and provenance attach. The
+      broad exact-reused class preserves that necessary role/bearer distinction
+      for otp:pb-verification-evidence-receipt:001.
+    outcome: survived
+  - surface: null_discriminator
+    rule: transient-carrier-does-not-erase-result-content
+    counterexample: >-
+      Relocating the cited caveats into another faithful report carrier does not
+      erase their information content about the verification result's
+      applicability. Honoring the sitting strike, the revision infers neither
+      an independently issued caveat token nor a world-side limitation from the
+      report section.
+    outcome: survived
+rival_models_still_viable:
+  - "VerificationResultArtifact identity follows repeatable result content across faithful carriers."
+  - "VerificationResultArtifact identity follows each authoritative issuance and custody-tracked token."
+  - "The projection-applicability context is a situation distinct from the result artifact that describes it."
+evidence:
+  - "po:sha256:37dade1cef0b41d87b0656f26afcacbbb5abd10dc718d45d7e0c966b19061610"
+  - "CQ-005"
+  - "CQ-015"

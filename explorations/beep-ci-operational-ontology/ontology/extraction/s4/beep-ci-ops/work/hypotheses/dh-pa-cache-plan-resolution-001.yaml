@@ -1,0 +1,22 @@
+id: "dh:pa-cache-plan-resolution:001"
+observation_refs:
+  - "po:sha256:30be9d42308395a759ea42b1706c47b14bf2d995ff5d90eb85161cef24e27b61"
+cq_warrants: ["CQ-024"]
+proposed_referent:
+  label: "Per-invocation Turbo cache-plan resolution"
+  description: "A possible process or result that determines cache behavior for one Turbo invocation."
+representation_status: unresolved
+alternatives:
+  - label: "Resolved cache posture"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "Cache-plan resolver documentation"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The isolated sentence describes a resolver but supplies neither its possible results nor evidence that any result was applied to an execution."
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.35, use_for_acceptance: false}

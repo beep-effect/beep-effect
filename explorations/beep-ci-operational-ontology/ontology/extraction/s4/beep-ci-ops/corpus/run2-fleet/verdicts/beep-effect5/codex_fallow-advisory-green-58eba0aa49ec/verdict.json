@@ -1,0 +1,50 @@
+{
+  "schemaVersion": "yeet-verdict/v1",
+  "base": "origin/main",
+  "branch": "codex/fallow-advisory-green",
+  "committed": true,
+  "createdAt": "2026-07-08T22:30:36.170Z",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "advisory:01-fallow-feedback",
+      "label": "fallow-advisory-feedback",
+      "phase": "feedback",
+      "status": "passed",
+      "exitCode": 0
+    },
+    {
+      "id": "commit:01-git-commit",
+      "label": "commit:git:commit",
+      "phase": "commit",
+      "status": "passed",
+      "exitCode": 0
+    },
+    {
+      "id": "full:01-pre-push",
+      "label": "full:pre-push",
+      "phase": "full",
+      "status": "passed",
+      "exitCode": 0
+    },
+    {
+      "id": "publish:01-git-push",
+      "label": "publish:git:push",
+      "phase": "publish",
+      "status": "passed",
+      "exitCode": 0
+    }
+  ],
+  "message": "yeet publish succeeded.",
+  "mode": "publish",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": true,
+  "runId": "codex_fallow-advisory-green-58eba0aa49ec",
+  "indexPath": "<fleet>/beep-effect5/.beep/yeet/quality-issue-index.json",
+  "baseFreshness": {
+    "behindCount": 0,
+    "mergeBase": "037dd8a912d17f6b1368ed9f088e565caabb7b6e",
+    "overlappingPaths": []
+  }
+}

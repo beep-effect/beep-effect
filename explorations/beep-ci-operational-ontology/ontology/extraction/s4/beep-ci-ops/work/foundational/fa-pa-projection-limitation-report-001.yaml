@@ -1,0 +1,32 @@
+id: "fa:pa-projection-limitation-report:001"
+hypothesis_ref: "dh:pa-projection-limitation-report:001"
+identity_card_ref: "ic:pa-projection-limitation-report:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+  - label: "VerificationResultArtifact identity follows repeatable result content across faithful carriers."
+    still_viable: true
+  - label: "VerificationResultArtifact identity follows each authoritative issuance and custody-tracked record token."
+    still_viable: true
+  - label: "The projection-applicability context is a situation distinct from the broad result artifact that describes it."
+    still_viable: true
+  - label: "The caveat section is a proper component of a larger result artifact rather than its own result individual."
+    still_viable: true
+  - label: "The result artifact is identical with the verification execution or world-side limitation it reports."
+    still_viable: false
+strongest_counterexample: >-
+  Heterogeneous verification results can record outcomes without projection
+  caveats, and equal result content can be copied or separately issued. Neither
+  a limitation-only criterion nor one carrier lineage can silently govern the
+  full exact-reused VerificationResultArtifact extension.
+verdict: explicitly_deferred
+needed_evidence: >-
+  Authoritative result formation, issuance, producer, custody, copy,
+  correction, and revocation provenance across heterogeneous
+  VerificationResultArtifact records is required to choose content,
+  record-token, or carrier-lineage identity. A separate limitation-report term
+  additionally requires independent issuance and a Must/Should CQ that consumes
+  it apart from the containing result.

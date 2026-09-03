@@ -1,0 +1,10 @@
+id: rat:32
+proposal_ref: otp:jv-failure-signature:001
+proposal_sha256: 653f674fd57ecffc5f747cbae3482d71888f6392f1d90fd19907290d76d5a449
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-09-03T09:05:00Z'
+verbatim_decision: Accept FailureSignature — the failedStepId/failureKind tuple as a recorded classification,
+  grain fixed at the signature, not the occurrence.

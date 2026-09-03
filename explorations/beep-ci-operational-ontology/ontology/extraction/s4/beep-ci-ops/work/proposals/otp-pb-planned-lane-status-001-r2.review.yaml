@@ -1,0 +1,63 @@
+target: "otp:pb-planned-lane-status:001"
+target_sha256: "958061c205cbc4d0e15fa508c4cf9be40b0245846f0a808329228967f1e3fcf0"
+chain_sha256: "992b70f03b73fd20320f377e23df3fd68047f517405121cb71276d1d1faefc0f"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: "The revised proposal asserts no candidate is-a edge."
+revision_requests:
+  - >-
+    Restore the broad exact-reused VerificationResultArtifact definition and
+    treat planned-lane status as a possible instance, component, or separately
+    deferred specialization; the run-3 concession does not license narrowing
+    the reused class to this one status shape.
+attacks:
+  - surface: identity
+    rule: record-issuance-identity-unobserved
+    counterexample: >-
+      Equal transient status values may be allocated, copied, or reconstructed
+      without a retained issuance. The revision expressly concedes that
+      identity problem and names issuance, correction, parent-attempt,
+      execution, and custody evidence for run 3, so that honest deferral is not
+      itself the basis of this FAIL.
+    outcome: survived
+  - surface: identity
+    rule: exact-reuse-extension-narrowing
+    counterexample: >-
+      An ordinary VerificationResultArtifact can record a completed
+      verification result without being the status of one planned lane or
+      carrying its repair instruction. It belongs to the broad reused class
+      but fails this definition, so the exact-reused extension is narrowed.
+    outcome: landed
+  - surface: warrant
+    rule: semantic-support-not-necessary
+    counterexample: >-
+      CQ-022 and CQ-025 remain answerable from WorkUnitExecution state,
+      cancellation, duration, and estimate without a separate lane-status
+      record. The revision explicitly withdraws the separate term pending a
+      Must/Should CQ, so the concession is not treated as a failed repair.
+    outcome: survived
+  - surface: null_discriminator
+    rule: discriminator-true-of-dto
+    counterexample: >-
+      A transient DTO can carry every cited field without acquiring issuance
+      identity. The proposal now concedes precisely that possibility rather
+      than using those fields to settle identity, so the DTO twin supplies the
+      stated run-3 evidence need but does not add a second failure here.
+    outcome: survived
+rival_models_still_viable:
+  - "Execution status is direct content of WorkUnitExecution."
+  - "A transient value object has no independently issued artifact identity."
+evidence:
+  - "po:sha256:59e3f07184abaf7f8075745f636d111ccdf14c2c058c5b08adb59b9745033ac0"
+  - "po:sha256:900957ece232a7fe12a98b7a2894aff6e0ab77fdbaaf5e453e16b17977e5dec6"
+  - "po:sha256:960216354d31160a6fac7280f6375dc8731cfd58c667bcb4c4bcdfde75887792"
+  - "po:sha256:97d6383547ad97c34937c34179413d35651dcf44fed758f70e6de129e163901c"
+  - "CQ-022"
+  - "CQ-025"

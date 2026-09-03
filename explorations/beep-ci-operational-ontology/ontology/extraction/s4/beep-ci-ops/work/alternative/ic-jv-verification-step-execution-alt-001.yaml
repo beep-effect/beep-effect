@@ -1,0 +1,41 @@
+id: ic:jv-verification-step-execution-alt:001
+hypothesis_ref: dh:jv-verification-step-execution:001
+identity:
+  supplies_identity: true
+  identity_criterion: 'Two step-execution status records are the same iff they are the same
+    status-and-outcome assertion about the same planned step in the same attempt. The step''s
+    plan name (prepare:01-effect-imports, closeout:01-pr-context) is evidence of which specification
+    is talked about, never identity of a run: a not-run row is still a status record about
+    that planned step.'
+  reidentification_key:
+  - id/label of planned step (evidence)
+  - runId (evidence)
+  - status (evidence)
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: one status/outcome assertion about one planned step in one attempt
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - event
+  - process
+  existential_dependencies:
+  - the planned verification step
+  - the attempt in which status is recorded
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+  - passed
+  - failed
+  - not-run
+counterexamples:
+- description: closeout:01-pr-context with status=not-run and outcome=failure is not an execution
+    occurrence; classifying it as an event would mint occurrents that did not unfold.
+- description: prepare:01-effect-imports recorded as passed with exitCode=0 on a journal that
+    also tags attempt-started shows the observation does not isolate a step run from the attempt
+    record.
+status: proposed

@@ -1,0 +1,19 @@
+id: fa:pa-workspace-package-alt:001
+hypothesis_ref: dh:pa-workspace-package:001
+identity_card_ref: ic:pa-workspace-package-alt:001
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+- label: workspace package reference / PackageRef information object
+  still_viable: true
+- label: topological-sort row with no artifact referent
+  still_viable: false
+strongest_counterexample: The pre-glossary line 'PackageRef,class,@beep/* workspace package
+  identity' already slides from reference to identity. Name-as-identity is the failure mode;
+  the artifact kind remains the better reading of vertices that stand in dependsOn relations.
+verdict: analyzed
+needed_evidence: An observation of package sameness across rename, version bump, or directory
+  move, and whether PackageRef is a pointer information object distinct from the package artifact.

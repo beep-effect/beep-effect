@@ -1,0 +1,33 @@
+id: "ic:pb-admission-priority-aging:001"
+hypothesis_ref: "dh:pb-admission-priority-aging:001"
+identity:
+  supplies_identity: true
+  identity_criterion: "Two admission-policy specifications are the same only when they continue one authoritative policy lineage with the same normative ordering, capacity, aging, class-cap, starvation, applicability, and version semantics; one aging clause or equal configuration values alone are insufficient."
+  reidentification_key:
+    - "policy authority and version lineage"
+    - "complete normative rule set"
+    - "declared applicability scope"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: "One governed specification whose admission clauses share an authority, applicability scope, and revision boundary."
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "an anti-rigid aged-request phase created when the threshold is crossed"
+    - "a deployed normative policy regime or mode"
+    - "a numeric comparator carrying one policy clause"
+  existential_dependencies:
+    - "a policy authority and admission-domain vocabulary"
+    - "at least one faithful inscription or executable carrier"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - "superseded by an authoritative policy revision"
+    - "withdrawn from its applicability scope"
+counterexamples:
+  - description: "Two policies can share an identical aging threshold while differing in capacity, class-cap, starvation, authority, or applicability; the clause cannot reidentify the complete policy."
+status: proposed

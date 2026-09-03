@@ -1,0 +1,21 @@
+id: "fa:pa-turbo-task-specification:001"
+hypothesis_ref: "dh:pa-turbo-task-specification:001"
+identity_card_ref: "ic:pa-turbo-task-specification:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+  - label: "The operational VerificationLane is a governed coordinating prescription distinct from, and not a subkind of, each WorkUnitSpecification it schedules."
+    still_viable: true
+  - label: "Each turbo.json task-entry token, rather than its repeatable semantic content, is the specification individual."
+    still_viable: true
+  - label: "persistent false or a task name describes an execution occurrence."
+    still_viable: false
+strongest_counterexample: >-
+  One collected-gate lane can coordinate several replaceable work
+  specifications, while equal task or lane names under different authorities
+  can prescribe different behavior; carrier, work specification, lane
+  prescription, and execution therefore remain split.
+verdict: analyzed

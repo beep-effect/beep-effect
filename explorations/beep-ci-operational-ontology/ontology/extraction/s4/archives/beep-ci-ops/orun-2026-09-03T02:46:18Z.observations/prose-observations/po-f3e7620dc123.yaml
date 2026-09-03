@@ -1,0 +1,10 @@
+id: po:sha256:f3e7620dc123c6523bfc67d2f3e5f64ffae2805148d50c98d25bee1531d82fa8
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts
+source_span:
+  start_line: 173
+  end_line: 173
+quote: '"ecosystem",'
+epistemic_status: quoted_prose

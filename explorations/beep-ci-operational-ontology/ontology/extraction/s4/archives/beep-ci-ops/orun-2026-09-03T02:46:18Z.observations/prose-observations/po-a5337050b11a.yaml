@@ -1,0 +1,10 @@
+id: po:sha256:a5337050b11a15f3c1b20a01228366cdf9affbd31a471c391b4d980883be0f5b
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts
+source_span:
+  start_line: 371
+  end_line: 371
+quote: 'priority: "publish"'
+epistemic_status: quoted_prose

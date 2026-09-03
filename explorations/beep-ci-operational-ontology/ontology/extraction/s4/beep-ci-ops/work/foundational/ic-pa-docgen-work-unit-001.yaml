@@ -1,0 +1,48 @@
+id: "ic:pa-docgen-work-unit:001"
+hypothesis_ref: "dh:pa-docgen-work-unit:001"
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Two docgen WorkUnit specifications are the same information content only
+    when they retain the same documentation-verification objective, scope
+    rule, inputs, procedure semantics, completion criteria, and failure
+    semantics; command spelling and execution identity are insufficient.
+  reidentification_key:
+    - "documentation-verification objective and procedure semantics"
+    - "local affected-scope or full-repository scope rule"
+    - "inputs, completion criteria, and failure semantics"
+    - "content digest or semantic version as supporting evidence"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    One repeatable documentation-verification prescription joining a procedure
+    to its scope, inputs, and success or failure conditions.
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "information_object: two distinct local and full-repository specifications"
+    - "process: a dated docgen verification execution"
+    - "none: command aliases without governed prescriptive content"
+  existential_dependencies:
+    - "A governing repository verification practice"
+    - "At least one executable or documentary carrier"
+    - "An interpretation of local and full-repository scope"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - "superseded by semantically changed scope or completion rules"
+    - "withdrawn from the repository's verification practice"
+counterexamples:
+  - description: >-
+      The same docgen prescription can be executed repeatedly against different
+      trees with different times and results, while changing local affected
+      scope to full-repository scope may create a different specification.
+  - description: >-
+      A documentation-assurance obligation can persist if docgen is replaced by
+      another procedure, so the WorkUnit specification is not the obligation it
+      may help discharge.
+status: proposed

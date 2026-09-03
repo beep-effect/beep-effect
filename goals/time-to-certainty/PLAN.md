@@ -39,8 +39,14 @@ orchestrator owns schemas, contracts, and judgment.
 
 ## P2 — Proof reuse
 
-- [ ] C1 ProofFact schema + migration from `YeetLaneProofState` (schema PR, no behavior change).
-- [ ] C2 ProofLedger Context.Service (record / lookup / expire) over an append-only NDJSON ledger.
+- [x] C1 ProofFact schema — done 2026-09-03 (PR #954 merged as 3e46822475): ProofEnvProfile, ProofStage,
+      ProofOutcome, ProofInputSource, ProofEpoch, ProofInputDigest, ProofProvenance, ProofFact,
+      ProofMissReason, hit/miss decisions, fact/shadow ledger rows. The `YeetLaneProofState`
+      migration is tracked as C4a below.
+- [x] C2 ProofLedger Context.Service — done 2026-09-03 (PR #954): record / recordShadow / lookup /
+      expire / disagreements over an append-only per-checkout NDJSON ledger with a tolerant reader,
+      key derivation and epoch collection, identity-field verification on lookup, undeclared-input
+      facts never reused; not yet wired into any lane.
 - [~] C3 declared inputs per script lane; Turbo lanes adopt the task hash; undeclared lanes report
       as non-reusable. Coverage done 2026-09-03 (PR #952 merged as 1ef10a6906: package-owned
       inputs replace the default glob, `cache: false` kept, a docs-only edit leaves the hash
@@ -50,6 +56,16 @@ orchestrator owns schemas, contracts, and judgment.
       and identical failure rendering must survive), lint-policy (heterogeneous sublanes with
       root-wide inputs; one union glob would recreate a whole-tree hash), labs (three task-hash
       sets rather than one declared action; must keep the PR path gate and zero-labs-is-green).
+- [ ] C4a retire both legacy proof stores with receipts, never migrate them: (1) `YeetLaneProofState`
+      rows nested in `YeetRunState` and written to each run's `state.json` by `writeVerifiedState`
+      in `ProofState.ts`; (2) `LaneProofRecord` rows (`yeet-lane-proofs/v2`) in
+      `.beep/yeet/lane-proofs.json`, owned by `Quality/internal/LaneProofReuse.ts`. Neither carries a
+      per-lane input digest, env profile, epoch, duration, or run/attempt/origin provenance, so a
+      ProofFact built from them would attribute an old result to inputs it may never have run
+      against and could later become a reuse hit. Retirement means: the ProofLedger is the only
+      store shadow wiring reads; legacy readers keep working until C4 lands, then are removed with
+      a retirement receipt in `research/OPPORTUNITIES.md`; ProofFacts come only from lane runs
+      recorded after A5 journal facts exist. Deferred from C1 (PR #954); owed before C4.
 - [ ] C4 shadow mode with a disagreement report; enforcement between pre-push and merged preview
       only after zero disagreements over a ratified sample; hosted reuse recorded as a separate
       decision.

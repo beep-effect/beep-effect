@@ -1,0 +1,32 @@
+{
+  "schemaVersion": "yeet-verdict/v1",
+  "base": "origin/main",
+  "branch": "doc-improvements",
+  "committed": false,
+  "createdAt": "2026-07-01T05:31:00.759Z",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "advisory:01-fallow-feedback",
+      "label": "fallow-advisory-feedback",
+      "phase": "feedback",
+      "status": "passed",
+      "exitCode": 0
+    },
+    {
+      "id": "full:01-pre-push",
+      "label": "full:pre-push",
+      "phase": "full",
+      "status": "failed",
+      "exitCode": 1,
+      "repairCommand": "Run `bun run beep laws dual-arity --check` and fix enforced candidates."
+    }
+  ],
+  "message": "yeet verification proof failed.",
+  "mode": "verify",
+  "outcome": "failure",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "doc-improvements-e8e4d879340b",
+  "indexPath": "<fleet>/beep-effect2/.beep/yeet/quality-issue-index.json"
+}

@@ -1,0 +1,10 @@
+id: rat:48
+proposal_ref: otp:pa-projection-limitation-report:001
+proposal_sha256: e79e420eda3743b927493c94dad8c263549e6885fdb982ef3fdab3f531d2dda0
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-09-03T09:05:00Z'
+verbatim_decision: Accept the limitation-report VerificationResultArtifact reuse, result-provenance identity
+  deferred as flagged.

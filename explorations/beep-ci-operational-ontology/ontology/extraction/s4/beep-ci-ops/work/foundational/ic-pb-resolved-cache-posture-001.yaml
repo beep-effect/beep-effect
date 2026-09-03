@@ -1,0 +1,31 @@
+id: "ic:pb-resolved-cache-posture:001"
+hypothesis_ref: "dh:pb-resolved-cache-posture:001"
+identity:
+  supplies_identity: true
+  identity_criterion: "Two CachePosture specifications are the same information content only when they prescribe the same allocation of local and remote cache read/write authority and the same caller-override responsibility under one posture version; resolver episodes, tags, and carrier copies are evidence, not identity."
+  reidentification_key:
+    - "normative cache-authority matrix"
+    - "caller-override rule"
+    - "posture specification version"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: "One governed cache-authority specification whose alternatives classify the effective posture of a Turbo execution."
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "an invocation-scoped resolver-result token"
+    - "an execution-borne cache mode"
+  existential_dependencies:
+    - "a governing cache-posture vocabulary"
+    - "at least one policy or software carrier"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - "superseded when cache-authority or override semantics change"
+counterexamples:
+  - description: "One resolver result may be copied without creating multiple posture specifications, while two policies can reuse one tag but authorize different remote writes and therefore express different content."
+status: proposed

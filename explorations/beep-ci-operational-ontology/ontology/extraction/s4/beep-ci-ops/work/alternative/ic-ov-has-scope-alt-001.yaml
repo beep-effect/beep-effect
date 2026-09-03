@@ -1,0 +1,40 @@
+id: ic:ov-has-scope-alt:001
+hypothesis_ref: dh:ov-has-scope:001
+identity:
+  supplies_identity: false
+  identity_criterion: 'The scope classification of a ScheduleStep is the same quality
+    iff it is that step''s designation of what kind of content is scheduled. The hasScope
+    predicate and the schema''s scope tag are evidence of the quality, never the quality.
+    The v1 phrase "the admission act itself" is evidence of a value, not a second
+    individual. This quality is not the change-bounded documentation file-set also
+    called scope in other hypotheses.'
+  reidentification_key:
+  - hasScope predicate spelling (evidence)
+  - scope tag field (evidence of value)
+ontoclean:
+  rigidity: rigid
+  carries_identity: false
+  supplies_identity: false
+  unity: one content-kind classification inhering in one ScheduleStep
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: quality
+  alternatives:
+  - none
+  - role
+  - relator
+  existential_dependencies:
+  - the ScheduleStep that bears the classification
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: unresolved
+  terminal_states: []
+counterexamples:
+- description: 'The only quoted value is the version-wide parenthetical "v1: the admission
+    act itself; the planner seam widens this in v2". No observation shows two steps
+    of one proposal with distinct tags, so a per-step quality and a projection-version
+    constant are not yet distinguished.'
+- description: 'Identifying this designation with origin/main...HEAD documentation
+    affected-scope would collapse two homonymous uses of "scope". The schedule tag
+    qualifies scheduled content kind; it does not select a file set.'
+status: proposed

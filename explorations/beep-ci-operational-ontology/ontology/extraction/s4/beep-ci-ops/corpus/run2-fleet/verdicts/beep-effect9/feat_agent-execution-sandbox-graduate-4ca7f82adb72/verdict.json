@@ -1,0 +1,33 @@
+{
+  "schemaVersion": "yeet-verdict/v1",
+  "base": "origin/main",
+  "branch": "feat/agent-execution-sandbox-graduate",
+  "committed": false,
+  "createdAt": "2026-07-26T03:27:34.613Z",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "monitor:01-pr-context",
+      "label": "monitor:pr-context",
+      "phase": "monitor",
+      "status": "passed",
+      "durationMs": 366.681619,
+      "exitCode": 0
+    },
+    {
+      "id": "monitor:02-pr-checks-watch",
+      "label": "monitor:pr-checks:watch",
+      "phase": "monitor",
+      "status": "passed",
+      "durationMs": 522754.784308,
+      "exitCode": 0
+    }
+  ],
+  "message": "yeet monitor succeeded.",
+  "mode": "monitor",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "feat_agent-execution-sandbox-graduate-4ca7f82adb72",
+  "indexPath": "<fleet>/beep-effect9/.beep/yeet/quality-issue-index.json"
+}

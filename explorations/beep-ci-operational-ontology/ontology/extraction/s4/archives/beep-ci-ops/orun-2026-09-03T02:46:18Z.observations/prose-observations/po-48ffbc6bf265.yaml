@@ -1,0 +1,10 @@
+id: po:sha256:48ffbc6bf26516fe6abe5504eef559c532b334927df41fd8ec82df76fce702db
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts
+source_span:
+  start_line: 341
+  end_line: 344
+quote: LiteralKit(["current", "workstation", "ci"])
+epistemic_status: quoted_prose

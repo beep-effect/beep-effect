@@ -1,0 +1,68 @@
+id: "otp:pa-turbo-task-specification:001"
+hypothesis_ref: "dh:pa-turbo-task-specification:001"
+identity_card_ref: "ic:pa-turbo-task-specification:001"
+foundational_status: analyzed
+term:
+  preferred_label: "work unit specification"
+  local_name: WorkUnitSpecification
+  proposed_iri: "https://oip.law/ontology/ci-ops#WorkUnitSpecification"
+  owl_entity_kind: class
+definition:
+  text: >-
+    A repeatable work-prescription information object whose identity-bearing
+    content fixes task semantics, input surface, upstream dependency rule,
+    persistence behavior, outputs, and completion conditions independently of
+    any execution or configuration-entry carrier.
+  source:
+    - "CQ-002"
+    - "po:sha256:1630518546c7461a9063892f9fc45a0ee9c7333d7a175dd1c05f99e3cd74519e"
+    - "po:sha256:19da9053dc578ecea6995d45a9c23ea09f1f36b02e3969bb13b3c08a6a3c981f"
+    - "po:sha256:3e1c6cd48f541482c5471d901e96c829dd47de787108d7ee9cc4fec91966eb97"
+    - "po:sha256:4fc13f1c056d4666ad83f3944408c9437bbcc0eebd583f907ec05449b5730594"
+foundational:
+  ufo_category: information_object
+  gufo_alignment: "gufo:Endurant"
+ontoclean:
+  rigidity: rigid
+  identity: supplies
+  dependence: intrinsic
+parents: []
+revision_log:
+  - from_sha256: "95d24fe668cb425bd1560f56f83d9662c4197dafffe9e5c1f8c80dc06337c2e4"
+    addressed:
+      - "cq-term-not-required"
+    sitting_struck:
+      - "cq-term-not-required"
+    disposition: >-
+      Run-2 sitting 1 struck the review's entire landed basis; no substantive
+      proposal change was made.
+reuse:
+  searched: true
+  exact_reuse_found: true
+  mappings:
+    - iri: "https://oip.law/ontology/ci-ops#WorkUnitSpecification"
+      compatibility: >-
+        The ratified class already covers repeatable task prescriptions with
+        scope and execution semantics; Turbo task specifications are members
+        of that class rather than a second top-level specification kind.
+operational_warrant:
+  competency_questions: ["CQ-002"]
+  semantic_support_for: []
+alternatives_rejected:
+  - >-
+    The Turbo configuration-object null is rejected because task inputs,
+    dependencies, and persistence prescribe repeatable operational work.
+  - >-
+    A particular Turbo execution is rejected as identical to its reusable
+    WorkUnitSpecification.
+open_issues:
+  - >-
+    The operational VerificationLane rival is represented separately by
+    otp:pa-turbo-task-specification:002; the steward must preserve its
+    distinction from this specification class.
+  - >-
+    The configuration-entry-token model remains viable but has no independent
+    Must/Should admission warrant.
+revision_requests: []
+review: {foundational_agent: pending, adversarial_agent: pending, steward: pending}
+status: proposed
