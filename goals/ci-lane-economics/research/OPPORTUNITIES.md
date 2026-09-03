@@ -774,3 +774,16 @@ evidence, what would have prevented it). Redact for the public repo.
 - **Would have prevented it:** make the tmpfs live-reference fixture wait for the
   descriptor to become visible before asserting, or retry the reference census within a
   small deterministic bound.
+
+## 2026-09-03 — base-freshness overlap check overflowed on a busy main
+
+- **Doing:** publishing the verified shard head with `yeet publish --push-only
+  --reuse-verified --pr --monitor` after a full local proof, while `origin/main` had
+  advanced 17 commits during that proof.
+- **Evidence:** publish stopped before pushing with `git diff --name-only -z
+  <merge-base>..origin/main output exceeded the repo-run capture limit`; main's window
+  touched 5,269 paths (exploration and time-to-certainty docs), none overlapping the
+  branch, so the guard failed on volume rather than on a real conflict.
+- **Would have prevented it:** intersect the branch's changed paths with the base delta
+  through git (`git diff --name-only base...head` against a pathspec) or stream the
+  listing, instead of capturing the whole base delta into a bounded buffer.
