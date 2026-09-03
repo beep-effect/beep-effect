@@ -197,6 +197,7 @@
         "test/**",
         "tsconfig*.json",
         "vitest.config.ts",
+        "vitest.coverage.config.ts",
         "$TURBO_ROOT$/vitest.aliases.generated.json",
         "$TURBO_ROOT$/vitest.shared.ts",
         "$TURBO_ROOT$/vitest.setup.ts"

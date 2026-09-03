@@ -17,6 +17,7 @@ const EXPECTED_COVERAGE_INPUTS: ReadonlyArray<string> = [
   "test/**",
   "tsconfig*.json",
   "vitest.config.ts",
+  "vitest.coverage.config.ts",
   "$TURBO_ROOT$/vitest.aliases.generated.json",
   "$TURBO_ROOT$/vitest.shared.ts",
   "$TURBO_ROOT$/vitest.setup.ts",
@@ -159,6 +160,7 @@ describe("coverage Turbo inputs", () => {
         yield* writeFixtureFile(root, "packages/coverage/test/index.test.ts", "export const expected = 1;\n");
         yield* writeFixtureFile(root, "packages/coverage/tsconfig.json", "{}\n");
         yield* writeFixtureFile(root, "packages/coverage/vitest.config.ts", "export default {};\n");
+        yield* writeFixtureFile(root, "packages/coverage/vitest.coverage.config.ts", "export default {};\n");
         yield* writeFixtureFile(root, "packages/coverage/README.md", "# Initial docs\n");
 
         const baselineHash = yield* coverageHashFromSummary(root, turboBinary);
@@ -173,6 +175,12 @@ describe("coverage Turbo inputs", () => {
         expect(yield* coverageHashFromSummary(root, turboBinary)).toBe(baselineHash);
 
         yield* writeFixtureFile(root, "packages/coverage/test/index.test.ts", "export const expected = 2;\n");
+        expect(yield* coverageHashFromSummary(root, turboBinary)).not.toBe(baselineHash);
+
+        yield* writeFixtureFile(root, "packages/coverage/test/index.test.ts", "export const expected = 1;\n");
+        expect(yield* coverageHashFromSummary(root, turboBinary)).toBe(baselineHash);
+
+        yield* writeFixtureFile(root, "packages/coverage/vitest.coverage.config.ts", "export default { test: {} };\n");
         expect(yield* coverageHashFromSummary(root, turboBinary)).not.toBe(baselineHash);
       },
       Effect.scoped,
