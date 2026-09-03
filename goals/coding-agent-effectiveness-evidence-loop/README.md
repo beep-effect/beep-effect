@@ -83,6 +83,12 @@ readout is favorable:
    descriptive reduction of 30.025 s / 80.1%. The treatment is retained, but
    the small, mode-shifted sample is not promoted to an unqualified causal
    claim.
+7. **Telemetry-v2 contracts landed** (2026-09-03). Schema-first flight
+   records now separate agent-supplied semantics from mechanical evidence, and
+   ingest has distinct pre-read enumeration and final attestation contracts.
+   The first fixtures cover one real Codex session and all six current source
+   instances without retaining transcript content. P2 remains open for the
+   service, emitters, leases, reconciliation, and coverage gate.
 
 The interrupted-series lower bound is `2026-09-03T09:41:33.322Z`, after a
 six-second old/new writer overlap excluded from analysis. The census through
@@ -104,6 +110,7 @@ immutable. P1 is complete and P2 is current. Full evidence is in
 [`research/2026-09-03-p1-baseline-close.md`](./research/2026-09-03-p1-baseline-close.md),
 [`research/2026-09-03-p1-first-treatment-readout.md`](./research/2026-09-03-p1-first-treatment-readout.md),
 [`research/2026-09-03-p1-phone-transport-disposition.md`](./research/2026-09-03-p1-phone-transport-disposition.md),
+[`research/2026-09-03-p2-contract-foundation.md`](./research/2026-09-03-p2-contract-foundation.md),
 and
 [`history/outputs/2026-09-03-p1-sharp-cutover.md`](./history/outputs/2026-09-03-p1-sharp-cutover.md).
 

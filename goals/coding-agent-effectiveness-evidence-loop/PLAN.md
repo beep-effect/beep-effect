@@ -274,6 +274,17 @@ disposition. P1 is complete. See
   reconciliation, so channel dropout is a measured number with an alarm
   threshold.
 
+**Contract checkpoint (2026-09-03):** the first P2 milestone is complete in
+`@beep/repo-ai-metrics`. The shared LiteralKit vocabularies, structurally split
+`FlightRecord`, distinct pre-read `IngestEnumeration`, exact final
+`IngestManifest`, content-free invalid/quarantine events, and JSON codecs are
+landed with round-trip and property coverage. The real-session fixture retains
+37 privacy-safe hook events as counts and hashes only. The real workstation
+inventory accounts for all six registered source instances as `dry-run`
+without opening transcript content. P2 remains in progress for the service,
+emitters, leases, reconciliation, divergence metric, and seven-day coverage
+gate. See `research/2026-09-03-p2-contract-foundation.md`.
+
 ## P3 — Yeet mistrial doctrine and proof durability (audit P1.5)
 
 Dogfoods P2 vocabulary in the operator before any pipeline exists.

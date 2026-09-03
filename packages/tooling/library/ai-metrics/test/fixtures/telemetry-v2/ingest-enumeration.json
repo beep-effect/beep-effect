@@ -1,0 +1,63 @@
+{
+  "schemaVersion": "telemetry-v2/ingest-enumeration/v1",
+  "enumerationId": "c48c0d804141451786f740f87a8428928e5ea50a0979c0807a0b5259f5461c96",
+  "ingestRunId": "99c484db5137fcbac87fd672c1e38fded417add52277cf5c67770c7b17677f46",
+  "enumeratedAt": "2026-09-03T16:53:34.542Z",
+  "identityNamespaceId": "d8a2deff993421c1cca651957dd17064f02c4deb8bf3eaa150116b9f58a83cc4",
+  "configFingerprint": "5d9aac19caa34a1b2372ac395dbcaf52a62ec29117e6bc2f7fd390e8172e9886",
+  "configEvidenceTier": "heuristic",
+  "inventoryEvidenceDigest": "c48c0d804141451786f740f87a8428928e5ea50a0979c0807a0b5259f5461c96",
+  "subjects": [
+    {
+      "subjectId": "1f7ed7440069dd77e84c3d94cbdd7a97f90ad8a100e7a3eda54b8b9da5ffda30",
+      "rootId": "aac575785a820135a5c1e852686e75ad9589120c36ad224c4f3e414b03aa5270",
+      "sourceKind": "claude",
+      "subjectKind": "source-instance",
+      "evidenceTier": "derived",
+      "oipTaint": "unknown"
+    },
+    {
+      "subjectId": "aa4e609baa34997172ebfd4fa6112cdcc85f15c4d3286bfd8ef8e6bb4e7ba3fa",
+      "rootId": "aac575785a820135a5c1e852686e75ad9589120c36ad224c4f3e414b03aa5270",
+      "sourceKind": "openclaw",
+      "subjectKind": "source-instance",
+      "evidenceTier": "derived",
+      "oipTaint": "unknown"
+    },
+    {
+      "subjectId": "b8cac0a41496fb73d99db35eb19074880c6331f2f7403741632295f96f02c682",
+      "rootId": "c0282d9e19b8136c5cd65dd3c18e3d50a1c1581dc1db2346775571bc893cd512",
+      "sourceKind": "claude",
+      "subjectKind": "source-instance",
+      "evidenceTier": "derived",
+      "oipTaint": "unknown"
+    },
+    {
+      "subjectId": "baf43112eac31200fe297abeb8e80ce0a496698135084a2729da994fb7906b6b",
+      "rootId": "c0282d9e19b8136c5cd65dd3c18e3d50a1c1581dc1db2346775571bc893cd512",
+      "sourceKind": "codex",
+      "subjectKind": "source-instance",
+      "evidenceTier": "derived",
+      "oipTaint": "unknown"
+    },
+    {
+      "subjectId": "c136244bdae889df836e2be1acdbf6d26fef11b04285603063f7de6e21c75d6c",
+      "rootId": "aac575785a820135a5c1e852686e75ad9589120c36ad224c4f3e414b03aa5270",
+      "sourceKind": "codex",
+      "subjectKind": "source-instance",
+      "evidenceTier": "derived",
+      "oipTaint": "unknown"
+    },
+    {
+      "subjectId": "e995f2cacd31d6ba04a61de6842dc3a8f1d2c40ad8843bc8d99bafaaa7bcf539",
+      "rootId": "c0282d9e19b8136c5cd65dd3c18e3d50a1c1581dc1db2346775571bc893cd512",
+      "sourceKind": "openclaw",
+      "subjectKind": "source-instance",
+      "evidenceTier": "derived",
+      "oipTaint": "unknown"
+    }
+  ],
+  "enumeratedCount": 6,
+  "evidenceTier": "heuristic",
+  "oipTaint": "unknown"
+}

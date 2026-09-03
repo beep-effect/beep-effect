@@ -20626,26 +20626,26 @@
     },
     "@beep/repo-ai-metrics": {
       "path": "packages/tooling/library/ai-metrics",
-      "lines": 89.16,
-      "statements": 89.18,
-      "branches": 77.98,
-      "functions": 75.98,
+      "lines": 89.69,
+      "statements": 89.74,
+      "branches": 78.23,
+      "functions": 76.87,
       "uncovered": {
-        "lines": 276,
-        "statements": 283,
-        "branches": 105,
-        "functions": 237
+        "lines": 279,
+        "statements": 286,
+        "branches": 106,
+        "functions": 240
       },
       "files": {
         "packages/tooling/library/ai-metrics/src/agent-effectiveness.ts": {
-          "lines": 89.9,
-          "statements": 88.94,
-          "branches": 72.72,
-          "functions": 78.65,
+          "lines": 89.92,
+          "statements": 88.96,
+          "branches": 73.1,
+          "functions": 78.78,
           "uncovered": {
             "lines": 42,
             "statements": 47,
-            "branches": 33,
+            "branches": 32,
             "functions": 35
           }
         },
@@ -20659,6 +20659,18 @@
             "statements": 19,
             "branches": 1,
             "functions": 16
+          }
+        },
+        "packages/tooling/library/ai-metrics/src/circuit-breaker.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
           }
         },
         "packages/tooling/library/ai-metrics/src/compose.ts": {
@@ -20733,6 +20745,18 @@
             "functions": 0
           }
         },
+        "packages/tooling/library/ai-metrics/src/flight-record.ts": {
+          "lines": 94.28,
+          "statements": 94.44,
+          "branches": 50,
+          "functions": 83.33,
+          "uncovered": {
+            "lines": 2,
+            "statements": 2,
+            "branches": 2,
+            "functions": 2
+          }
+        },
         "packages/tooling/library/ai-metrics/src/forwarder.ts": {
           "lines": 85.71,
           "statements": 85.18,
@@ -20770,6 +20794,18 @@
           }
         },
         "packages/tooling/library/ai-metrics/src/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/ai-metrics/src/ingest-manifest.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -20913,6 +20949,18 @@
             "functions": 40
           }
         },
+        "packages/tooling/library/ai-metrics/src/sequence-break.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/tooling/library/ai-metrics/src/shell.ts": {
           "lines": 100,
           "statements": 100,
@@ -20935,6 +20983,18 @@
             "statements": 13,
             "branches": 7,
             "functions": 8
+          }
+        },
+        "packages/tooling/library/ai-metrics/src/telemetry-v2.ts": {
+          "lines": 96,
+          "statements": 96,
+          "branches": 100,
+          "functions": 90,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 0,
+            "functions": 1
           }
         }
       }
