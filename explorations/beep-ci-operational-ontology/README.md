@@ -137,8 +137,10 @@ graduation. Full plan with locked decisions: [`DECISIONS.md`](./DECISIONS.md).
   corpora design grill"), fed by a four-lane evidence sweep synthesized into
   `research/run3-corpora-design-brief.md`. Shape: staged capture (Stage A gateless:
   checkout-identity + existing-journal provenance + granted-work contention; Stage B
-  behind the additive v3 journal PR, the bundled S7 emission-v2 PR, organic traffic,
-  and proof-ledger materialization); fleet-wide scope; new sibling generators (run-2
+  behind the additive v3 journal PR, organic traffic, and proof-ledger
+  materialization — the bundled S7 emission-v2 PR runs in parallel, gating the
+  ordering-cluster evidence at the run itself, not the capture); fleet-wide scope;
+  new sibling generators (run-2
   ETL immutable); VerificationEpisode grounded via emission; timestamped-binding
   checkout identity; ownerRef custody surrogate; turbo-topology cache mounts;
   fixture-induced evictions labeled synthetic; 13 scope-surprise families re-park

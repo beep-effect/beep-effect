@@ -883,8 +883,10 @@ admission journals, fleet attempts/verdicts including worktrees) plus
 granted-work contention facts. Stage B after the v3 PR, organic traffic, and
 proof-ledger materialization (the issuance ledger exists in no checkout yet):
 loss-population contention and proof-ledger issuance rows. Two pins, two
-MANIFESTs, accepted. Rejected: one capture gated on the slowest of four clocks
-while ring buffers erase evidence.
+MANIFESTs, accepted. The S7 emission-v2 PR (Ruling 13) is a PARALLEL
+instrumentation workstream: it gates the ordering-cluster evidence consumed at
+the run itself, never the Stage B capture. Rejected: one capture gated on the
+slowest of four clocks while ring buffers erase evidence.
 
 **Ruling 9 — v3 event set is items 1-4.** `admission-enqueued` (nonce, pid,
 procStart, attemptId, kind, weightTokens, priority, originKey, checkoutRoot,
