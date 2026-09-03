@@ -1,0 +1,32 @@
+id: "dh:ov-schedules-seat-request:001"
+observation_refs:
+  - "po:sha256:35a69c5bcbf7493cc0aa7f248d138d65f2d5c8beff49e80308ef85b43a0f559d"
+  - "po:sha256:959a603a7bc88415101c1c6e9073034271081d03a55dd625f763898feb579ea2"
+  - "po:sha256:d1f555913267743bc009bfd030c3bafd841e6f7baa081d7a1ecc0704fc2b2d2d"
+cq_warrants: []
+proposed_referent:
+  label: "schedule-step-to-seat-request relation"
+  description: >-
+    The schedule-content relation by which a ScheduleStep designates the
+    SeatRequest whose admission the step orders.
+representation_status: domain_referent
+alternatives:
+  - label: "ScheduleStep-to-WorkUnitSpecification relation"
+    representation_status: domain_referent
+    plausibility: weak
+  - label: "Journal-specific foreign-key edge"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: >-
+    The rename is justified by which operational individual the journal can
+    identify, rather than by a merely lexical or RDF-shape preference.
+  discriminator: >-
+    The implementation report says request nodes are SeatRequests and the
+    journal carries no WorkUnitSpecification identity, and it renames the edge
+    for exactly that distinction; the scheduled target's identity changes the
+    relation's truth conditions.
+epistemic_status: proposed
+confidence: {value: 0.89, use_for_acceptance: false}

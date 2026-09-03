@@ -1,0 +1,27 @@
+id: "dh:pb-review-fix-class-cap:001"
+observation_refs:
+  - "po:sha256:60e90bd17b628d4d6d815cfd05ddcf88cbc2a724790b05ac88b4411619f535be"
+  - "po:sha256:71ff33a91cd202789d604775c82a3100091dee4dead6fe88e84f7712ffd84a31"
+cq_warrants:
+  - "CQ-021"
+  - "CQ-023"
+proposed_referent:
+  label: "review-fix admission class cap"
+  description: "A policy constraint that blocks further review-fix admissions when the active count reaches the configured class cap."
+representation_status: information_artifact
+alternatives:
+  - label: "boolean scheduler branch"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+  - label: "machine-wide resource capacity"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: "The contract independently names reviewFixClassCap as an admission condition, and the code comparison states the active review-fix count threshold. The represented content is a normative class-specific concurrency constraint, not merely the spelling of a branch."
+  discriminator: "The quoted policy makes the count of active review-fix grants reaching reviewFixClassCap sufficient to block another request of that class; this class-specific admissibility consequence would be absent from an inert implementation artifact."
+epistemic_status: proposed
+confidence:
+  value: 0.89
+  use_for_acceptance: false

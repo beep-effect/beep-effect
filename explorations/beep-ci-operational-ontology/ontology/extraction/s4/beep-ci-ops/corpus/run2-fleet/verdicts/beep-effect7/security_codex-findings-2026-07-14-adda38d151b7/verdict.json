@@ -1,0 +1,29 @@
+{
+  "schemaVersion": "yeet-verdict/v1",
+  "base": "origin/main",
+  "branch": "security/codex-findings-2026-07-14",
+  "committed": false,
+  "createdAt": "2026-07-14T15:33:46.238Z",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "closeout:01-pr-context",
+      "label": "closeout:pr-context",
+      "phase": "monitor",
+      "status": "not-run"
+    },
+    {
+      "id": "closeout:02-review-gates",
+      "label": "closeout:review-gates",
+      "phase": "monitor",
+      "status": "not-run"
+    }
+  ],
+  "message": "yeet PR closeout failed with 7 issue(s).",
+  "mode": "closeout",
+  "outcome": "failure",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "security_codex-findings-2026-07-14-adda38d151b7",
+  "indexPath": "<fleet>/beep-effect7/.beep/yeet/quality-issue-index.json"
+}

@@ -1,0 +1,48 @@
+target: "otp:pa-package-dependency-closure:001"
+target_sha256: "5c5f46f18f8467fe84c87d533d92d0349adfaa10f4df5343a2db2959a5c16137"
+chain_sha256: "9688a278e0cfabb2ac355a27a879a9dce2b41d9bdc4b9cd75a5a15d86e023bf1"
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The proposal asserts no parents, so no is-a edge exists to test and no
+    subsumption relation is needed for this object property.
+revision_requests: []
+attacks:
+  - surface: identity
+    rule: contextual-reachability-fact-identity
+    counterexample: >-
+      Two different dependency paths in the same pinned graph can connect the
+      same package pair, while a later graph can preserve the pair through a new
+      path. The card treats paths as support rather than identity and includes
+      the graph context, so it neither multiplies the first fact nor conflates
+      assertions from different snapshots.
+    outcome: survived
+  - surface: warrant
+    rule: direct-cq-warrant
+    counterexample: >-
+      Removing dependsOnTransitive makes CQ-004 unable to return packages reached
+      through indirect dependencies; its SPARQL and required-properties list
+      directly require the relation, rather than merely mentioning dependency.
+    outcome: survived
+  - surface: null_discriminator
+    rule: formal-relation-independent-of-predicate-spelling
+    counterexample: >-
+      Renaming the Datalog predicate or changing the fixpoint engine leaves the
+      same package reachable from another through the direct-dependency graph;
+      the quoted closure semantics therefore survives the lexical/query-artifact
+      null while remaining an unreified relation rather than an individual.
+    outcome: survived
+rival_models_still_viable:
+  - "A materialized closure assertion set as a separate information object."
+  - "Reified dependency paths if path provenance later becomes decision-bearing."
+evidence:
+  - "po:sha256:04efe14c9b36df094bcd5670eb7ef97147f4158a69a833ebc0b997361225a6b0"
+  - "po:sha256:346503bf0ecc7e2531c623fe8377aaeee72b6e7bcaea94fb9db2c17d5e7536bc"
+  - "CQ-004"

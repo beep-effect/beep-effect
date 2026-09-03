@@ -1,0 +1,10 @@
+id: po:sha256:aee915d1a2f10cd68fd37eda78a62ab37da4dfbdeee73ab0040a7e8438001ecf
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts
+source_span:
+  start_line: 111
+  end_line: 111
+quote: export const CI_LANE_REPLAY_VALUES = ["exact", "approximate", "none"] as const;
+epistemic_status: quoted_prose

@@ -1,0 +1,26 @@
+id: "dh:pb-attempt-event-vocabulary:001"
+observation_refs:
+  - "po:sha256:865926a47734303e9a04191e4b85e490fa72fe50c4e64028dc2ef7e00e23c52f"
+cq_warrants:
+  - "CQ-007"
+  - "CQ-022"
+proposed_referent:
+  label: "attempt-started and attempt-finished event vocabulary"
+  description: "A possible lexical classification of attempt lifecycle events into started and finished variants."
+representation_status: lexical_alias
+alternatives:
+  - label: "two domain event types"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "schema union implementation"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observation names two schema members of a union, but gives no occurrence timestamps, transition semantics, attempt identity, or journal instances. A named union is not sufficient to reject the implementation-artifact null."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.49
+  use_for_acceptance: false

@@ -1,0 +1,22 @@
+id: "dh:pa-elapsed-ms-field:001"
+observation_refs:
+  - "po:sha256:2092736911a0c68e96ae8d9638b00ec4b6992b4da0677f325e4fd420fb41b2a7"
+cq_warrants: ["CQ-007", "CQ-025"]
+proposed_referent:
+  label: "Optional verdict elapsed-milliseconds value"
+  description: "A possibly absent finite numeric field carried by a Yeet verdict representation."
+representation_status: unresolved
+alternatives:
+  - label: "Observed verification-attempt duration"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "Optional serialization field"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The field declaration alone does not identify whether the duration covers a WorkUnit execution, an attempt, or a broader command, so no stable referent is established."
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.31, use_for_acceptance: false}

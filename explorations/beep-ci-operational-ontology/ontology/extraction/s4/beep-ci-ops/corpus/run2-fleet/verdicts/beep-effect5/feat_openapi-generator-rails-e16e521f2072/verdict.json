@@ -1,0 +1,74 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "feat/openapi-generator-rails",
+  "committed": false,
+  "createdAt": "2026-08-26T00:58:57.426Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "advisory:01-fallow-feedback",
+      "label": "fallow-advisory-feedback",
+      "phase": "feedback",
+      "status": "passed",
+      "durationMs": 1693.157837,
+      "exitCode": 0
+    },
+    {
+      "id": "commit:01-git-commit",
+      "label": "commit:git:commit",
+      "phase": "commit",
+      "status": "not-run"
+    },
+    {
+      "id": "publish:00-head-install-preflight",
+      "label": "publish:head-install-preflight",
+      "phase": "early-publish",
+      "status": "not-run"
+    },
+    {
+      "id": "publish:01-git-push",
+      "label": "early-publish:git:push",
+      "phase": "early-publish",
+      "status": "not-run"
+    },
+    {
+      "id": "publish:02-pr-create",
+      "label": "publish:pr-create",
+      "phase": "early-publish",
+      "status": "not-run"
+    },
+    {
+      "id": "full:01-pre-push",
+      "label": "full:pre-push",
+      "phase": "full",
+      "status": "not-run"
+    },
+    {
+      "id": "monitor:01-pr-context",
+      "label": "monitor:pr-context",
+      "phase": "monitor",
+      "status": "not-run"
+    },
+    {
+      "id": "monitor:02-pr-checks-watch",
+      "label": "monitor:pr-checks:watch",
+      "phase": "monitor",
+      "status": "not-run"
+    }
+  ],
+  "message": "yeet publish refuses a stale base: files changed on this branch were also changed on origin/main since the merge-base, so the PR would conflict or silently regress them.\n72 path(s) across 12 top-level entries: .changeset, .fallowrc.jsonc, .github, _typos.toml, bun.lock, explorations, goals, packages, standards, tsconfig.json, tsconfig.packages.json, vitest.aliases.generated.json\n  - .changeset/openapi-generator-rails.md\n  - .fallowrc.jsonc\n  - .github/workflows/check.yml\n  - _typos.toml\n  - bun.lock\n  - explorations/gov-legal-data-driver-codegen/MAP.md\n  - goals/standards-remediation/ops/reports/FINAL/final-d.md\n  - packages/drivers/acp/AGENTS.md\n  - packages/drivers/acp/package.json\n  - packages/drivers/acp/scripts/generate.ts\n  - (+62 more; full list in the failure packet)\nRemedy: git fetch origin && git merge origin/main, resolve conflicts, re-run bun run beep yeet verify, then publish again. Pass --allow-stale-base to proceed anyway.",
+  "mode": "publish",
+  "outcome": "failure",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "feat_openapi-generator-rails-e16e521f2072",
+  "attemptId": "8999c151-9d53-42d2-a5c9-9a0f029a4560",
+  "startedAt": "2026-08-26T00:58:55.702Z",
+  "endedAt": "2026-08-26T00:58:57.426Z",
+  "elapsedMs": 1724,
+  "indexPath": "<fleet>/beep-effect5/.beep/yeet/quality-issue-index.json",
+  "failedStepId": "commit:01-git-commit",
+  "failureKind": "handler-error"
+}

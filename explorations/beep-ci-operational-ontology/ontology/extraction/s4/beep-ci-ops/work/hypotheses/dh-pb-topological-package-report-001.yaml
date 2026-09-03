@@ -1,0 +1,30 @@
+id: "dh:pb-topological-package-report:001"
+observation_refs:
+  - "po:sha256:5a59d414027abf00522737e1d86c7976c6837e7dcf88eb47112cc39709b2be1d"
+  - "po:sha256:62ae30cfc28b391c7bf4a87534abeba849a8ca2ebd5f8ebe72cb5af81dcc50eb"
+  - "po:sha256:64463ef1e1f2b77cb50713f8194bb055d35d02288f465e6902e337f9fc5f5edf"
+  - "po:sha256:6e598d379ffd2f0565176b337833e4eedf0293941fa87936078ee572e63748a9"
+  - "po:sha256:89165acdfec28c3a8692c411aead416ca1fd5f13333c0ea5c748e92aeab0cb98"
+  - "po:sha256:90fa083c4887641658c0239762b509fd6c9bacc6f14cf29ee392ce08714572ff"
+cq_warrants:
+  - "CQ-004"
+proposed_referent:
+  label: "peer-dependency topological-package report"
+  description: "A possible report that orders workspace package references in a peer-dependency topology."
+representation_status: unresolved
+alternatives:
+  - label: "generated topological-order information artifact"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "package-name and numeric-position formatting artifact"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observations show a peerDependencies heading and five package-like labels followed by numbers, but they do not state what the numbers mean, how the order was computed, or whether the file is consumed as operational evidence. A formatted intermediate listing remains sufficient."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.42
+  use_for_acceptance: false

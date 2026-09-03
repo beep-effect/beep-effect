@@ -1,0 +1,22 @@
+id: "dh:pa-package-verify-step-symbol:001"
+observation_refs:
+  - "po:sha256:547677c4325953ad8435621a7bd50418fb75d1d36bebac6977766136d9fa4aae"
+cq_warrants: ["CQ-001", "CQ-002"]
+proposed_referent:
+  label: "PackageVerifyStepName schema symbol"
+  description: "The LiteralKit-backed implementation symbol used to represent package-verification step names."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "Package-verification step vocabulary"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "Package-verification WorkUnit family"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The quotation supplies the carrier's name but not its members, execution semantics, ordering, scope, or relation to assurance obligations."
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.13, use_for_acceptance: false}

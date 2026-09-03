@@ -1,0 +1,25 @@
+id: fa:ov-schedule-step-alt:001
+hypothesis_ref: dh:ov-schedule-step:001
+identity_card_ref: ic:ov-schedule-step-alt:001
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: false
+rival_models:
+- label: relator mediating a ScheduleProposal and a SeatRequest, with index and scope as its properties
+  still_viable: true
+- label: admission-act event / occurrence itself
+  still_viable: false
+- label: S.Class or provisional RDF node with no schedule content
+  still_viable: false
+strongest_counterexample: 'The parenthetical "v1: the admission act itself" attaches
+  to the scope tag / scheduled-unit slot, not to the step as an occurrent. Combined
+  with the deferred tail and with the proposal existing as a whole at one projection
+  instant, the event reading fails. Relator versus information object remain observationally
+  equivalent: the step both records a scheduling and is the natural reification of
+  that scheduling.'
+verdict: analyzed
+needed_evidence: 'An observation that attributes a property to a step during an interval
+  independently of the proposal record (forcing a world relator), or that counts deferred-tail
+  rows as ScheduleStep individuals versus as a non-step appendix of the proposal.'

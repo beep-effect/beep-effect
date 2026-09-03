@@ -1,0 +1,126 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "feat/api-docs-lab",
+  "committed": false,
+  "createdAt": "2026-08-26T16:50:04.135Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "publish:00-head-install-preflight",
+      "label": "publish:head-install-preflight",
+      "phase": "prepare",
+      "status": "passed",
+      "durationMs": 4557.573202,
+      "exitCode": 0
+    },
+    {
+      "id": "advisory:01-fallow-feedback",
+      "label": "fallow-advisory-feedback",
+      "phase": "feedback",
+      "status": "passed",
+      "durationMs": 1687.030759,
+      "exitCode": 0
+    },
+    {
+      "id": "full:00-cheap-gates",
+      "label": "full:cheap-gates",
+      "phase": "full",
+      "status": "passed",
+      "durationMs": 86143.659429,
+      "exitCode": 0
+    },
+    {
+      "id": "full:01-pre-push",
+      "label": "full:pre-push",
+      "phase": "full",
+      "status": "passed",
+      "durationMs": 1586637.49015,
+      "exitCode": 0
+    },
+    {
+      "id": "quality:changeset-status",
+      "label": "quality:changeset-status",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "cheap-gates:config-sync",
+      "label": "cheap-gates:config-sync",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "cheap-gates:tsgo-rules",
+      "label": "cheap-gates:tsgo-rules",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "cheap-gates:effect-imports",
+      "label": "cheap-gates:effect-imports",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "cheap-gates:schema-first",
+      "label": "cheap-gates:schema-first",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "cheap-gates:allowlist-check",
+      "label": "cheap-gates:allowlist-check",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "cheap-gates:goals-index",
+      "label": "cheap-gates:goals-index",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "cheap-gates:goals-doctor",
+      "label": "cheap-gates:goals-doctor",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "cheap-gates:jsdoc-ratchet",
+      "label": "cheap-gates:jsdoc-ratchet",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "cheap-gates:knip",
+      "label": "cheap-gates:knip",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "fallow:audit",
+      "label": "fallow:audit",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "fallow:dead-code",
+      "label": "fallow:dead-code",
+      "phase": "full",
+      "status": "passed"
+    }
+  ],
+  "message": "yeet verify succeeded.",
+  "mode": "verify",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "feat_api-docs-lab-1168fe62b395",
+  "attemptId": "2fd90075-0892-449a-be49-1142eb427d93",
+  "startedAt": "2026-08-26T16:22:05.037Z",
+  "endedAt": "2026-08-26T16:50:04.135Z",
+  "elapsedMs": 1679098,
+  "indexPath": "<fleet>/beep-effect/.beep/yeet/quality-issue-index.json"
+}

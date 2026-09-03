@@ -1,0 +1,31 @@
+id: "dh:pb-admission-capacity-state:001"
+observation_refs:
+  - "po:sha256:60e90bd17b628d4d6d815cfd05ddcf88cbc2a724790b05ac88b4411619f535be"
+  - "po:sha256:6b31f817391e66aab8fc9796fed0c0bbdbd8285c9e86438e9172d1ce6bbaef61"
+  - "po:sha256:8a555d65d66a8d7f44336fdb4ce8816f5a033a6ce448e311dc29615bfd8f41f2"
+  - "po:sha256:8af3333c97798f24aeecfa40f40faefcf152f96fffb6717f647eabf0f5250a92"
+  - "po:sha256:95037a7104c1dbd21fc02aeeeb45733f744c10ba07ea4c5db2a94db62d88e95a"
+  - "po:sha256:95b57e4f4029739dacb78d5caa9b43939b1820fc17d3785a9ff32181d7d0e0b6"
+cq_warrants:
+  - "CQ-010"
+  - "CQ-023"
+proposed_referent:
+  label: "admission-capacity state"
+  description: "The available token capacity for admissions as derived from observed available memory, reserve and slot parameters, with a zero-capacity hard-floor condition."
+representation_status: domain_referent
+alternatives:
+  - label: "scheduler capacity snapshot record"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "arithmetic implementation detail"
+    representation_status: implementation_artifact_only
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: "The observations connect measured available GiB to a hard-floor state, derive a token count after reserve and slot sizing, and place that count in the admission inequality. That combination describes a changing resource-capacity condition that constrains real admissions."
+  discriminator: "When observed available memory falls below hardFloorGib the quoted rule makes capacity zero; otherwise capacity is the floored post-reserve GiB divided by slot size and is compared with active load plus request weight, so the value varies with external machine state and changes admissibility."
+epistemic_status: proposed
+confidence:
+  value: 0.94
+  use_for_acceptance: false

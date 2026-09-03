@@ -1,0 +1,31 @@
+id: "dh:pc-origin-blocked-timestamp:001"
+observation_refs:
+  - "po:sha256:e362227f9f3d78e8fcb933ddf9f5523b1ef97776a2546ad12c7f702c33fc1cdd"
+  - "po:sha256:edf38d10efe0552b7de770a0cc24a9596cc4b5141b693889e987465f4174b4bb"
+cq_warrants:
+  - "CQ-009"
+  - "CQ-023"
+proposed_referent:
+  label: "origin-blocked timestamp record"
+  description: >-
+    A possible information field recording when an admission ticket is found
+    blocked by origin contention.
+representation_status: unresolved
+alternatives:
+  - label: "temporal information recorded about an origin-blocked request"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "mutable scheduler bookkeeping field"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: >-
+    The assignment shows that the value is refreshed when originBusy is true,
+    but no persisted ticket, observed wait, unit conversion, or use in the
+    starvation policy is supplied. Both bookkeeping and information-record
+    interpretations remain viable.
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.53, use_for_acceptance: false}

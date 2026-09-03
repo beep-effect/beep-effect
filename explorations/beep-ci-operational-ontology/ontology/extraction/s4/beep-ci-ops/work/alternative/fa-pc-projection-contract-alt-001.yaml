@@ -1,0 +1,19 @@
+id: fa:pc-projection-contract-alt:001
+hypothesis_ref: dh:pc-projection-contract:001
+identity_card_ref: ic:pc-projection-contract-alt:001
+tests:
+  spec_vs_execution: separated
+  world_vs_information: not_applicable
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+- label: the same information object as pa-projection-contract and pb-schedule-projection-specification
+  still_viable: true
+- label: schedule-projection process governed by the contract
+  still_viable: true
+strongest_counterexample: This hypothesis quotes the binding header and determinism rules
+  of the same document the pa/pb contract hypotheses quote. Observationally equivalent as
+  one specification unless a source splits 'binding function' from 'architecture' from 'non-goals'.
+verdict: analyzed
+needed_evidence: An observation that the determinism/NFR layer is cited or versioned apart
+  from architecture schemas and non-goals, or that they are always one document.

@@ -1,0 +1,22 @@
+id: "dh:pa-affected-reason-field:001"
+observation_refs:
+  - "po:sha256:3fba179ba20dd910e397613882c485dcaea5256e000bfc7996aafa6f0c493c03"
+cq_warrants: ["CQ-019"]
+proposed_referent:
+  label: "Optional Turbo affected-reason field"
+  description: "An optional field in the Turbo query result representation whose value uses the affected-reason schema."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "Affected-computation explanation"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "Affected-computation outcome"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "Optionality and a schema reference do not reveal the possible reasons, their fail-open or fail-closed semantics, or whether the field records trusted scope provenance."
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.2, use_for_acceptance: false}

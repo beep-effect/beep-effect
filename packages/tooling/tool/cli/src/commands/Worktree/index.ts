@@ -46,3 +46,10 @@ export * from "./Worktree.errors.ts";
  * @since 0.0.0
  */
 export * from "./Worktree.schemas.ts";
+/**
+ * Public worktree removal service exports.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./Worktree.service.ts";

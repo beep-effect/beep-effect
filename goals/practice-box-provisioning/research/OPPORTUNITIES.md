@@ -88,3 +88,38 @@ Friction receipts captured while shipping, per the repository friction law.
    declarations older than their source across project references and rebuild
    them before auditing, or the packet playbook's merge step could say to
    verify changed dependency packages first.
+
+6. **The 1Password desktop-app CLI integration blocked every live step for weeks.** `unowned`
+
+   From agent sessions, `op whoami` reported "account is not signed in" and
+   `op read` reported "connecting to desktop app: connection reset" while the
+   desktop app was open and unlocked. The integration is a per-terminal,
+   PolKit-approved session that idles out, is revoked by device lock, rejects
+   parent binaries under the home directory, and is unsupported for headless
+   launches. Replaced on 2026-09-03 by a PATH shim that loads a scoped service
+   account (or the local Connect server) and fails loud instead of prompting.
+
+   **What would have prevented it:** the packet's P0 credential-path gate
+   could have required an automation credential from the start instead of
+   treating the desktop integration as a viable agent path.
+
+7. **A Box Sign listing 403 failed the whole live dry-run.** `owned`
+
+   The first live dry-run stopped with a bare `BoxError` from
+   `signRequests.getSignRequests` (HTTP 403) although nothing in the desired
+   state depends on Sign. Metadata and retention listings already classified
+   403 as permission-blocked discovery; Sign did not. Fixed in #959 with a
+   regression test.
+
+   **What would have prevented it:** one shared permission-tolerant discovery
+   helper for every observation-only listing from the first implementation.
+
+8. **The private runner passed a decoded intent to `applyReviewedPlan`.** `owned`
+
+   The first attended apply stopped before any mutation with
+   `BoxProvisioningSchemaError`: the runner decoded the intent for its own use
+   and then handed the decoded instance to a service that decodes again; the
+   dry-run path passed the raw JSON and worked. Fixed in the private runner.
+
+   **What would have prevented it:** keeping the runner's apply path under a
+   tracked test, or documenting the raw-input contract on `applyReviewedPlan`.

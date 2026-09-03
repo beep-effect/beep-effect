@@ -1,0 +1,70 @@
+id: "otp:pb-verification-evidence-receipt:001"
+hypothesis_ref: "dh:pb-verification-evidence-receipt:001"
+identity_card_ref: "ic:pb-verification-evidence-receipt:001"
+foundational_status: explicitly_deferred
+term:
+  preferred_label: "verification evidence"
+  local_name: VerificationEvidence
+  proposed_iri: "https://oip.law/ontology/ci-ops#VerificationEvidence"
+  owl_entity_kind: class
+definition:
+  text: >-
+    A provenance-bearing information object used to justify a verification
+    conclusion within a bounded subject, tree, epoch, policy, and evidence
+    context; digest-bound replay receipts are instances of this broad ratified
+    class rather than its defining extension.
+  source:
+    - "CQ-005"
+    - "CQ-015"
+    - "po:sha256:7b0afae312843e4da0ff5628da56e5201bcc40f7d0221fa8f4b92e74637b90b3"
+foundational:
+  ufo_category: information_object
+  gufo_alignment: "gufo:Endurant"
+ontoclean:
+  rigidity: unresolved
+  identity: unresolved
+  dependence: relational
+parents: []
+revision_log:
+  - from_sha256: "41d4308b9b163d3d7777639d592c6084e1b8d83308e67fb3694d1c5c82cd4492"
+    addressed:
+      - "exact-reuse-extension-narrowing"
+      - "claim-content-carrier-identity-unresolved"
+    disposition: >-
+      Run-2 sitting 1 restored the ratified broad VerificationEvidence
+      extension and explicitly deferred claim-content versus issued-carrier
+      identity pending run-3 provenance.
+reuse:
+  searched: true
+  exact_reuse_found: true
+  mappings:
+    - iri: "https://oip.law/ontology/ci-ops#VerificationEvidence"
+      compatibility: >-
+        The ratified class already covers provenance-bearing evidence valid in
+        a bounded tree and epoch; the digest-bound replay receipt is an instance
+        of that class rather than a separate evidence kind.
+operational_warrant:
+  competency_questions: ["CQ-005", "CQ-015"]
+  semantic_support_for: []
+alternatives_rejected:
+  - >-
+    The successful replay occurrence is rejected as the receipt because an
+    occurrence and the information object reporting it have distinct identity.
+  - >-
+    Timeless correctness is rejected because applicability can cease after
+    the tree, epoch, or frozen corpus changes.
+open_issues:
+  - >-
+    Steward must choose whether VerificationEvidence primarily denotes an
+    abstract claim or the issued digest-bound receipt that realizes it.
+  - >-
+    Carrier-token identity remains viable where separately generated reports
+    have byte-equal content and provenance.
+  - >-
+    Run-3 evidence required for the deferred identity boundary: authoritative
+    claim formation and realization, issuance, producer, custody, copy,
+    retention, correction, and revocation provenance across heterogeneous
+    VerificationEvidence records.
+revision_requests: []
+review: {foundational_agent: pending, adversarial_agent: pending, steward: pending}
+status: proposed

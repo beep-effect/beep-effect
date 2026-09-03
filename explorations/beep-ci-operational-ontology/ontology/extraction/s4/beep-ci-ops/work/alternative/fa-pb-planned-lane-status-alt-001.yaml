@@ -1,0 +1,19 @@
+id: fa:pb-planned-lane-status-alt:001
+hypothesis_ref: dh:pb-planned-lane-status:001
+identity_card_ref: ic:pb-planned-lane-status-alt:001
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+- label: the lane execution occurrence itself
+  still_viable: false
+- label: in-memory verdict DTO with no aboutness
+  still_viable: false
+strongest_counterexample: The unit is explicitly about one planned lane's execution status
+  and repair command. That wording already splits the record from the occurrence; the occurrence
+  rival is weak on this evidence.
+verdict: analyzed
+needed_evidence: Only if a later observation attributes duration or failure to 'the lane execution'
+  independently of this record would the event rival revive.
