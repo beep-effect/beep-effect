@@ -578,8 +578,9 @@ const readReapClaims = Effect.fnUntraced(function* (
     .readDirectory(directories.claims)
     .pipe(Effect.mapError(QualitySchedulerError.new(`Failed to list admission claims in ${directories.claims}.`)));
   return A.getSomes(
-    yield* Effect.forEach(A.filter(names, Str.endsWith(".reap.json")), (name) =>
-      Effect.gen(function* () {
+    yield* Effect.forEach(
+      A.filter(names, Str.endsWith(".reap.json")),
+      Effect.fnUntraced(function* (name: string) {
         const claimPath = path.join(directories.claims, name);
         const text = yield* fs.readFileString(claimPath).pipe(Effect.option);
         if (O.isNone(text)) {
