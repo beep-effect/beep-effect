@@ -24,7 +24,7 @@ import { YeetCommandError } from "../Yeet.errors.ts";
 import { distinctPrSessions, PrProvenanceLabel, PrRepository, PrSessionRecord } from "./Provenance.ts";
 import { detectPrRepository } from "./ProvenanceFooter.ts";
 import { makePrSessionRegistryLive } from "./PrSessionRegistry.ts";
-import { ResolvedResume } from "./Resume.schemas.ts";
+import { PrRef, ResolvedResume } from "./Resume.schemas.ts";
 import type { ConfigError } from "effect/Config";
 import type { PlatformError } from "effect/PlatformError";
 import type { PrNumber } from "./Provenance.ts";
@@ -83,7 +83,7 @@ class TranscriptCwd extends S.Class<TranscriptCwd>($I`TranscriptCwd`)(
 const decodeCwd = S.decodeUnknownOption(S.fromJsonString(TranscriptCwd));
 
 /**
- * Parse a number or GitHub PR URL into a positive PR number.
+ * Parse a number or GitHub PR URL into its PR number and optional repository.
  *
  * **Gotchas**
  *
@@ -96,20 +96,16 @@ const decodeCwd = S.decodeUnknownOption(S.fromJsonString(TranscriptCwd));
  * import { parsePrRef } from "@beep/repo-cli/test/Yeet"
  * import { Effect } from "effect"
  *
- * console.log(Effect.runSync(parsePrRef("https://github.com/o/r/pull/42"))) // 42
+ * console.log(Effect.runSync(parsePrRef("https://github.com/o/r/pull/42")).pr) // 42
  * ```
  *
  * @param ref - Positive decimal PR number or GitHub pull-request URL.
- * @returns The validated positive pull-request number.
+ * @returns The validated number and normalized URL repository identity when present.
  * @category parsing
  * @since 0.0.0
  */
 export const parsePrRef = Effect.fn("Resume.parsePrRef")(function* (ref: string) {
-  const urlMatch = Str.match(/\/pull\/([1-9][0-9]*)(?:\/|$)/u)(ref);
-  const candidate = O.isSome(urlMatch) && urlMatch.value[1] !== undefined ? urlMatch.value[1] : ref;
-  return yield* S.decodeEffect(S.FiniteFromString.pipe(S.check(S.isInt()), S.check(S.isGreaterThan(0))))(
-    candidate
-  ).pipe(
+  return yield* S.decodeEffect(PrRef)(ref).pipe(
     Effect.mapError((cause) => YeetCommandError.make({ message: `Invalid PR reference: ${ref}`, cause, exitCode: 4 }))
   );
 });
@@ -382,7 +378,7 @@ const commandText = (command: string, args: ReadonlyArray<string>): string =>
  *
  * const resumer: HarnessResumerShape = { run: () => Effect.void }
  * const options = ResumeOptions.make({
- *   ref: "42",
+ *   ref: { pr: 42, repository: O.none() },
  *   list: true,
  *   print: false,
  *   force: false,
@@ -416,7 +412,7 @@ export interface HarnessResumerShape {
  *
  * const service = HarnessResumer.of({ run: () => Effect.void })
  * const options = ResumeOptions.make({
- *   ref: "42",
+ *   ref: { pr: 42, repository: O.none() },
  *   list: false,
  *   print: true,
  *   force: false,
@@ -456,10 +452,14 @@ export const makeHarnessResumerLive = Effect.fn("HarnessResumer.makeLive")(funct
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
   return HarnessResumer.of({
     run: Effect.fn("HarnessResumer.run")(function* (options) {
-      const pr = yield* parsePrRef(options.ref);
+      const prRef = options.ref;
+      const pr = prRef.pr;
       const cwd = yield* Config.string("PWD").pipe(Config.withDefault("."));
       const home = yield* Config.string("HOME");
-      const repository = yield* detectPrRepository(cwd);
+      const repository = yield* O.match(prRef.repository, {
+        onNone: () => detectPrRepository(cwd),
+        onSome: Effect.succeed,
+      });
       const registry = yield* makePrSessionRegistryLive();
       const local = yield* registry
         .lookup(repository, pr)
@@ -467,7 +467,11 @@ export const makeHarnessResumerLive = Effect.fn("HarnessResumer.makeLive")(funct
       const records = A.isReadonlyArrayNonEmpty(local) ? local : yield* transcriptFallback(home, repository, pr);
       if (A.isReadonlyArrayEmpty(records))
         return yield* YeetCommandError.make({
-          message: `No local session state for PR #${pr}. Claude users can try: claude --from-pr ${pr}`,
+          message: `No local session state for ${pipe(
+            prRef.repository,
+            O.map(() => `${repository.owner}/${repository.name} `),
+            O.getOrElse(() => "")
+          )}PR #${pr}. Claude users can try: claude --from-pr ${pr}`,
           exitCode: 4,
         });
       const distinct = distinctPrSessions(records);
@@ -566,7 +570,7 @@ export const makeHarnessResumerLive = Effect.fn("HarnessResumer.makeLive")(funct
  * import * as O from "effect/Option"
  *
  * const options = ResumeOptions.make({
- *   ref: "42",
+ *   ref: { pr: 42, repository: O.none() },
  *   list: false,
  *   print: true,
  *   force: false,

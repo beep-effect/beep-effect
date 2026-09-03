@@ -6,8 +6,11 @@
  */
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
+import { SchemaTransformation } from "effect";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { PrNumber } from "./Provenance.ts";
+import * as Str from "effect/String";
+import { PrNumber, PrRepository } from "./Provenance.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/Resume.schemas");
 const ResumeStatus = LiteralKit(["resumable", "not-resumable"]).pipe(
@@ -17,7 +20,67 @@ const ResumeStatus = LiteralKit(["resumable", "not-resumable"]).pipe(
 );
 
 /**
- * Non-empty pull-request number or GitHub pull-request URL accepted by `yeet resume`.
+ * Positive one-based integer used to select a recorded resume agent.
+ *
+ * **Example** (Reject zero as an agent selection)
+ *
+ * ```ts
+ * import { PositiveInt } from "@beep/repo-cli/test/Yeet"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(PositiveInt)(1)) // true
+ * console.log(S.is(PositiveInt)(0)) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const PositiveInt = S.Int.check(S.isGreaterThan(0)).pipe(
+  $I.annoteSchema("PositiveInt", { description: "Positive one-based integer used for resume selection." })
+);
+
+/**
+ * Decoded positive integer produced by {@link PositiveInt}.
+ *
+ * **Example** (Annotate a validated selection)
+ *
+ * ```ts
+ * import type { PositiveInt } from "@beep/repo-cli/test/Yeet"
+ *
+ * const selection: PositiveInt = 1
+ * console.log(selection) // 1
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PositiveInt = typeof PositiveInt.Type;
+
+const prNumberPattern = /^[1-9][0-9]*$/u;
+const prUrlPattern = /^https:\/\/github\.com\/([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+)\/pull\/([1-9][0-9]*)(?:\/)?$/iu;
+const PrRefInput = S.NonEmptyString.check(
+  S.makeFilter<string>(
+    (value) =>
+      O.isSome(Str.match(prNumberPattern)(value)) ||
+      O.isSome(Str.match(prUrlPattern)(value)) || {
+        path: [],
+        issue: "Expected a positive PR number or github.com PR URL",
+      },
+    {
+      identifier: $I`PrRefInputCheck`,
+      title: "Pull request reference",
+      description: "A positive PR number or exact github.com pull-request URL.",
+    }
+  )
+);
+
+class PrRefValue extends S.Class<PrRefValue>($I`PrRefValue`)(
+  { pr: PrNumber, repository: S.OptionFromNullOr(PrRepository) },
+  $I.annote("PrRefValue", { description: "Decoded pull-request number and optional URL repository identity." })
+) {}
+
+/**
+ * Pull-request number and optional GitHub repository decoded for `yeet resume`.
  *
  * **Example** (Decode a pull-request URL)
  *
@@ -26,13 +89,41 @@ const ResumeStatus = LiteralKit(["resumable", "not-resumable"]).pipe(
  * import * as S from "effect/Schema"
  *
  * const ref = S.decodeSync(PrRef)("https://github.com/beep-effect/beep-effect/pull/42")
- * console.log(ref) // "https://github.com/beep-effect/beep-effect/pull/42"
+ * console.log(ref.repository) // { _id: "Option", _tag: "Some", ... }
  * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-export const PrRef = S.NonEmptyString.pipe(
+export const PrRef = PrRefInput.pipe(
+  S.decodeTo(
+    PrRefValue,
+    SchemaTransformation.transform<typeof PrRefValue.Encoded, string>({
+      decode: (value) => {
+        const match = Str.match(prUrlPattern)(value);
+        if (
+          O.isNone(match) ||
+          match.value[1] === undefined ||
+          match.value[2] === undefined ||
+          match.value[3] === undefined
+        ) {
+          return { pr: globalThis.Number.parseInt(value, 10), repository: null };
+        }
+        return {
+          pr: globalThis.Number.parseInt(match.value[3], 10),
+          repository: {
+            host: "github.com",
+            owner: Str.toLowerCase(match.value[1]),
+            name: Str.toLowerCase(match.value[2]),
+          },
+        };
+      },
+      encode: (value) =>
+        value.repository === null
+          ? `${value.pr}`
+          : `https://github.com/${value.repository.owner}/${value.repository.name}/pull/${value.pr}`,
+    })
+  ),
   $I.annoteSchema("PrRef", { description: "Positive PR number or GitHub pull-request URL." })
 );
 /**
@@ -45,7 +136,7 @@ export const PrRef = S.NonEmptyString.pipe(
  * import * as S from "effect/Schema"
  *
  * const ref: PrRef = S.decodeSync(PrRef)("42")
- * console.log(ref) // "42"
+ * console.log(ref.pr) // 42
  * ```
  *
  * @see {@link PrRef} for the runtime schema and decoding behavior.
@@ -69,7 +160,7 @@ export type PrRef = typeof PrRef.Type;
  * import * as O from "effect/Option"
  *
  * const options = ResumeOptions.make({
- *   ref: "42",
+ *   ref: { pr: 42, repository: O.none() },
  *   list: false,
  *   print: true,
  *   force: false,
@@ -89,7 +180,7 @@ export class ResumeOptions extends S.Class<ResumeOptions>($I`ResumeOptions`)(
     print: S.Boolean,
     force: S.Boolean,
     json: S.Boolean,
-    agent: S.OptionFromNullOr(PrNumber),
+    agent: S.OptionFromNullOr(PositiveInt),
   },
   $I.annote("ResumeOptions", { description: "Validated CLI options for resolving and resuming a PR session." })
 ) {}

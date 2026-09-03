@@ -150,6 +150,30 @@ describe("Yeet PR provenance v2", () => {
     )
   );
 
+  it.effect("reads the latest valid Codex model from turn_context records", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const home = yield* fs.makeTempDirectory();
+      const sessions = path.join(home, ".codex", "sessions", "2026", "09", "03");
+      yield* fs.makeDirectory(sessions, { recursive: true });
+      yield* fs.writeFileString(
+        path.join(sessions, "rollout.jsonl"),
+        '{"type":"session_meta","payload":{"id":"thread-model","cwd":"/session/home"}}\n' +
+          '{"type":"turn_context","model":"gpt-5.4"}\n' +
+          '{"type":"turn_context","model":"gpt-5.6-codex"}\n'
+      );
+      const provenance = yield* detectPrProvenanceFromPaths("/clone", "/checkout", O.none(), "feat/footer").pipe(
+        Effect.provideService(
+          ConfigProvider.ConfigProvider,
+          ConfigProvider.fromEnv({ env: { HOME: home, CODEX_THREAD_ID: "thread-model" } })
+        )
+      );
+      expect(provenance.sessionHome).toStrictEqual(O.some("/session/home"));
+      expect(provenance.model).toBe("gpt-5.6-codex");
+    }).pipe(provideScopedLayer(PlatformLayer))
+  );
+
   it.effect("preserves exact Codex identity when a delayed session store exceeds the detector bound", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;

@@ -33,11 +33,12 @@ export const makeRecord = (
     readonly headSha?: string;
     readonly runId?: string;
     readonly prUrl?: string;
+    readonly repository?: PrRepository;
   } = {}
 ) =>
   PrSessionRecord.make({
     schemaVersion: 1,
-    repository,
+    repository: options.repository ?? repository,
     prNumber: O.some(options.pr ?? 42),
     prUrl: O.some(options.prUrl ?? `https://github.com/beep-effect/beep-effect/pull/${options.pr ?? 42}`),
     branch: options.branch ?? "feat/yeet-pr-resume-footer",

@@ -1,8 +1,8 @@
 import { renderPrProvenance, toPublicPrProvenance } from "@beep/repo-cli/test/Yeet";
 import { fcRuns } from "@beep/test-utils";
+import * as O from "@beep/utils/Option";
 import { assert, describe, it } from "@effect/vitest";
 import * as A from "effect/Array";
-import * as O from "effect/Option";
 import * as Str from "effect/String";
 import { FastCheck as fc } from "effect/testing";
 import { makeRecord } from "./yeet-pr-fixtures.ts";
@@ -13,7 +13,7 @@ describe("Yeet PR provenance public boundary", () => {
     fc.assert(
       fc.property(
         fc.record({
-          suffix: fc.string({ minLength: 1, maxLength: 80 }),
+          suffix: fc.stringMatching(/^[A-Za-z0-9_-]{1,80}$/u),
           branch: fc.constantFrom("feat/footer-one", "release/footer-two", "fix/footer-three"),
           harness: fc.constantFrom("claude-code", "codex", "unknown"),
           hostHarness: fc.constantFrom(undefined, "claude-code", "codex"),
@@ -53,14 +53,16 @@ describe("Yeet PR provenance public boundary", () => {
           };
           const local = makeRecord({
             ...localValues,
+            ...O.getSomesStruct({
+              hostHarness: O.fromUndefinedOr(hostHarness),
+              sessionWorkspace: O.fromUndefinedOr(sessionWorkspace),
+            }),
             branch,
             harness,
-            hostHarness,
             entrypoint,
             role,
             model,
             workspace,
-            sessionWorkspace,
             sessionName,
             nameSource,
             pr,

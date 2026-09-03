@@ -71,5 +71,5 @@ export * from "../commands/Yeet/internal/WatchMode.ts";
 export * from "../commands/Yeet/internal/WatchStream.ts";
 export * from "../commands/Yeet/Yeet.render.ts";
 export * from "../commands/Yeet/Yeet.schemas.ts";
-export { GhActor } from "../internal/github/GhSchema.ts";
+export { GhActor, GhPrView } from "../internal/github/GhSchema.ts";
 export * from "../internal/repo-run/index.ts";

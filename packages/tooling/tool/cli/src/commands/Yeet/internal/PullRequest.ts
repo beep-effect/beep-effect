@@ -16,18 +16,14 @@ import { YeetCommandError } from "../Yeet.errors.ts";
 import { runIdForContext, runArtifactPathForContext as runOutputPathForContext } from "./ArtifactPaths.ts";
 import { runGitOutput } from "./GitExec.ts";
 import { writeTextFile } from "./IssueArtifacts.ts";
-import { renderPrProvenance, toPublicPrProvenance } from "./Provenance.ts";
-import {
-  detectPrRepository,
-  ensureProvenanceFooter,
-  makeCurrentPrSessionRecord,
-  recordCurrentPrSession,
-} from "./ProvenanceFooter.ts";
+import { ensureProvenanceFooter, recordCurrentPrSession } from "./ProvenanceFooter.ts";
 import { YeetExecutedStep } from "./Verdict.ts";
 import type { FileSystem, Path } from "effect";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { GhCommandFailure } from "../../../internal/github/index.ts";
 import type { RepoPlanStep, RepoRunContext } from "../../../internal/repo-run/index.ts";
+import type { PrNumber } from "./Provenance.ts";
+import type { PrSessionRegistryShape } from "./PrSessionRegistry.ts";
 
 const ghPullRequestViewArgs = ["pr", "view", "--json", "number,headRefName,state"] as const;
 const ghPullRequestViewCommand = "gh pr view --json number,headRefName,state";
@@ -208,17 +204,15 @@ export const buildPrBody = Effect.fn("Yeet.buildPrBody")(function* (
   const proofSection = Str.isNonEmpty(laneSummary)
     ? laneSummary
     : "- full local proof still running (start-pr-early); see the verdict artifact for final lane results";
-  const footer = yield* Effect.gen(function* () {
-    const repository = yield* detectPrRepository(context.repoRoot);
-    const record = yield* makeCurrentPrSessionRecord(context, repository, O.none(), O.none(), "created");
-    const labels = yield* runGitOutput(context.repoRoot, ["config", "--get", "beep.provenance.labels"]).pipe(
-      Effect.map((value) => Str.trim(value) !== "off"),
-      Effect.orElseSucceed(() => true)
-    );
-    return renderPrProvenance(toPublicPrProvenance([record], O.none(), labels));
-  }).pipe(Effect.orElseSucceed(() => ""));
-  return `${Str.trim(commitLog)}\n\n## Local proof\n\n${proofSection}\n\nVerdict: .beep/yeet/runs/${runIdForContext(context)}/verdict.json\n\n${footer}`;
+  return `${Str.trim(commitLog)}\n\n## Local proof\n\n${proofSection}\n\nVerdict: .beep/yeet/runs/${runIdForContext(context)}/verdict.json\n`;
 });
+
+interface EnsurePullRequestDependencies {
+  readonly capture?: typeof runRepoCommandCapture;
+  readonly findOpen?: typeof findOpenPullRequest;
+  readonly registry?: PrSessionRegistryShape;
+  readonly view?: typeof runGhPullRequestView;
+}
 
 /**
  * Record a successful `gh pr create` lane in the Yeet execution recorder.
@@ -281,6 +275,60 @@ export const recordPrCreateLane = Effect.fn("Yeet.recordPrCreateLane")(function*
 });
 
 /**
+ * Record the non-fatal provenance-stamp outcome as an executed publish lane.
+ *
+ * **Example** (Record a skipped stamp)
+ *
+ * ```ts
+ * import { Effect, Ref } from "effect"
+ * import * as O from "effect/Option"
+ * import { recordPrProvenanceStampLane } from "@beep/repo-cli/test/Yeet"
+ *
+ * const recorded = Effect.gen(function* () {
+ *   const recorder = yield* Ref.make([])
+ *   yield* recordPrProvenanceStampLane(recorder, O.none(), O.none(), O.none())
+ * })
+ * console.log(Effect.isEffect(recorded)) // true
+ * ```
+ *
+ * @param recorder - Mutable Ref of executed Yeet lanes.
+ * @param stampStep - Optional planned provenance-stamp step to append.
+ * @param prNumber - Pull-request number when GitHub supplied one.
+ * @param warning - Non-fatal warning returned by footer stamping.
+ * @returns An Effect that records passed, failed, or skipped stamp status.
+ * @category diagnostics
+ * @since 0.0.0
+ */
+export const recordPrProvenanceStampLane = Effect.fn("Yeet.recordPrProvenanceStampLane")(function* (
+  recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>,
+  stampStep: O.Option<RepoPlanStep>,
+  prNumber: O.Option<PrNumber>,
+  warning: O.Option<string>
+): Effect.fn.Return<void> {
+  if (O.isNone(stampStep)) return;
+  const skipped = O.isNone(prNumber);
+  const failed = O.isSome(warning);
+  const output = skipped
+    ? "skipped: no pull request number was available"
+    : O.getOrElse(warning, () => `provenance footer current for PR #${prNumber.value}`);
+  yield* Ref.update(
+    recorder,
+    A.append(
+      YeetExecutedStep.make({
+        result: RepoStepRunResult.make({
+          stepId: stampStep.value.id,
+          commandText: "gh pr edit <number> --body-file <run-artifacts>/pr-provenance-body.md",
+          exitCode: failed ? 1 : 0,
+          output,
+        }),
+        status: skipped ? "skipped" : failed ? "failed" : "passed",
+        step: stampStep.value,
+      })
+    )
+  );
+});
+
+/**
  * Create a pull request for publish when one does not already exist.
  *
  * **Example** (Ensure PR when missing)
@@ -312,6 +360,8 @@ export const recordPrCreateLane = Effect.fn("Yeet.recordPrCreateLane")(function*
  * @param recorder - Execution recorder updated when PR creation is attempted
  * or skipped.
  * @param prStep - Optional planned PR creation lane for recorder metadata.
+ * @param stampStep - Optional planned provenance-stamp lane for recorder metadata.
+ * @param dependencies - Injectable GitHub runners and registry for deterministic tests.
  * @returns An Effect that completes after an existing PR is found or a new PR
  * is created.
  * @category workflows
@@ -320,27 +370,47 @@ export const recordPrCreateLane = Effect.fn("Yeet.recordPrCreateLane")(function*
 export const ensurePullRequest = Effect.fn("Yeet.ensurePullRequest")(function* (
   context: RepoRunContext,
   recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>,
-  prStep: O.Option<RepoPlanStep>
+  prStep: O.Option<RepoPlanStep>,
+  stampStep: O.Option<RepoPlanStep> = O.none(),
+  dependencies: EnsurePullRequestDependencies = {}
 ): Effect.fn.Return<
   void,
   YeetCommandError,
   FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
-  const existing = yield* findOpenPullRequest(context);
+  const capture = dependencies.capture ?? runRepoCommandCapture;
+  const existing = yield* (dependencies.findOpen ?? findOpenPullRequest)(context);
   if (O.isSome(existing)) {
     yield* Console.log(
       `[yeet] --pr: open pull request #${existing.value.number} already exists for ${context.branch}; skipping create`
     );
     yield* recordPrCreateLane(recorder, prStep, `skipped: open pull request #${existing.value.number} already exists`);
-    const recording = yield* recordCurrentPrSession(context, existing.value.number, O.none(), "pushed");
-    if (O.isSome(recording)) yield* ensureProvenanceFooter(context, recording.value.repository, existing.value.number);
+    const recording = yield* recordCurrentPrSession(
+      context,
+      existing.value.number,
+      O.none(),
+      "pushed",
+      dependencies.registry
+    );
+    const warning = O.isSome(recording)
+      ? yield* ensureProvenanceFooter(
+          context,
+          recording.value.repository,
+          existing.value.number,
+          capture,
+          dependencies.registry
+        )
+      : O.some(
+          `[yeet] provenance footer stamp skipped for PR #${existing.value.number}: session recording was unavailable`
+        );
+    yield* recordPrProvenanceStampLane(recorder, stampStep, O.some(existing.value.number), warning);
     return;
   }
 
   const title = yield* runGitOutput(context.repoRoot, ["log", "-1", "--pretty=%s"]).pipe(Effect.map(Str.trim));
   const bodyPath = yield* runOutputPathForContext(context, "pr-body.md");
   yield* writeTextFile(bodyPath, yield* buildPrBody(context, recorder));
-  const result = yield* runRepoCommandCapture(
+  const result = yield* capture(
     "gh",
     ["pr", "create", "--title", title, "--body-file", bodyPath],
     context.repoRoot
@@ -354,9 +424,18 @@ export const ensurePullRequest = Effect.fn("Yeet.ensurePullRequest")(function* (
   }
   yield* Console.log(`[yeet] --pr: created pull request -> ${Str.trim(result.output)}`);
   yield* recordPrCreateLane(recorder, prStep, Str.trim(result.output));
-  const created = yield* runGhPullRequestView(context);
-  const recording = yield* recordCurrentPrSession(context, created.number, O.some(Str.trim(result.output)), "created");
-  if (O.isSome(recording)) yield* ensureProvenanceFooter(context, recording.value.repository, created.number);
+  const created = yield* (dependencies.view ?? runGhPullRequestView)(context);
+  const recording = yield* recordCurrentPrSession(
+    context,
+    created.number,
+    O.some(Str.trim(result.output)),
+    "created",
+    dependencies.registry
+  );
+  const warning = O.isSome(recording)
+    ? yield* ensureProvenanceFooter(context, recording.value.repository, created.number, capture, dependencies.registry)
+    : O.some(`[yeet] provenance footer stamp skipped for PR #${created.number}: session recording was unavailable`);
+  yield* recordPrProvenanceStampLane(recorder, stampStep, O.some(created.number), warning);
 });
 
 /**

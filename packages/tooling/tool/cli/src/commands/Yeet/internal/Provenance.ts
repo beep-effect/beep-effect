@@ -1105,11 +1105,19 @@ const decodeTranscriptRecord = S.decodeUnknownOption(S.fromJsonString(Transcript
 class CodexSessionHeader extends S.Class<CodexSessionHeader>($I`CodexSessionHeader`)(
   {
     type: S.String,
-    payload: S.Struct({ id: S.String, cwd: S.String, model: S.optionalKey(S.String) }),
+    payload: S.Struct({ id: S.String, cwd: S.String }),
   },
   $I.annote("CodexSessionHeader", { description: "Narrow Codex rollout session header." })
 ) {}
 const decodeCodexHeader = S.decodeUnknownOption(S.fromJsonString(CodexSessionHeader));
+class CodexTurnContext extends S.Class<CodexTurnContext>($I`CodexTurnContext`)(
+  {
+    type: S.String,
+    model: S.optionalKey(S.String),
+  },
+  $I.annote("CodexTurnContext", { description: "Narrow Codex turn context used for active-model detection." })
+) {}
+const decodeCodexTurnContext = S.decodeUnknownOption(S.fromJsonString(CodexTurnContext));
 const normalizeEntrypoint = (value: O.Option<string>, codex: boolean): PrProvenanceEntrypoint =>
   O.flatMap(value, S.decodeUnknownOption(PrProvenanceEntrypoint)).pipe(
     O.getOrElse(() => (codex ? "codex-tui" : "unknown"))
@@ -1164,20 +1172,34 @@ const findCodexSession = Effect.fn("PrProvenance.findCodexSession")(function* (h
   const names = yield* fs.readDirectory(root, { recursive: true });
   const match = yield* Effect.reduce(
     A.filter(names, Str.endsWith(".jsonl")),
-    () => O.none<CodexSessionHeader>(),
+    () => O.none<{ readonly cwd: string; readonly model: O.Option<PrProvenanceModel> }>(),
     Effect.fnUntraced(function* (found, name) {
       if (O.isSome(found)) return found;
       const content = yield* fs.readFileString(path.join(root, name));
-      return pipe(
-        Str.split("\n")(content),
-        A.filter(Str.isNonEmpty),
+      const lines = pipe(Str.split("\n")(content), A.filter(Str.isNonEmpty));
+      const header = pipe(
+        lines,
         A.map((line) => decodeCodexHeader(line)),
         A.getSomes,
-        A.findFirst((header) => header.type === "session_meta" && header.payload.id === id)
+        A.findFirst((candidate) => candidate.type === "session_meta" && candidate.payload.id === id)
       );
+      return O.map(header, (selected) => ({
+        cwd: selected.payload.cwd,
+        model: pipe(
+          lines,
+          A.map((line) => decodeCodexTurnContext(line)),
+          A.getSomes,
+          A.filter((record) => record.type === "turn_context"),
+          A.map((record) => O.fromUndefinedOr(record.model)),
+          A.getSomes,
+          A.map((model) => S.decodeOption(PrProvenanceModel)(model)),
+          A.getSomes,
+          A.last
+        ),
+      }));
     })
   );
-  return O.map(match, (header) => ({ cwd: header.payload.cwd, model: O.fromUndefinedOr(header.payload.model) }));
+  return match;
 });
 const detectGitPaths = Effect.fn("PrProvenance.detectGitPaths")(function* (cwd: string) {
   const path = yield* Path.Path;

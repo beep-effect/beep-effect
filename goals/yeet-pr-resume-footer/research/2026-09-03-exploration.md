@@ -1,6 +1,6 @@
 # PR provenance footer revival — exploration facts (2026-09-03)
 
-Owner: Fable session `beep-effect10-69` (title "PR footer session tracking") in `~/YeeBois/projects/beep-effect10`.
+Owner: the Fable orchestrator session for this packet (a claude-desktop session in the publishing clone).
 
 ## History of the feature
 
@@ -26,7 +26,7 @@ Claude Code (2.1.259 CLI; desktop entrypoint 2.1.255):
 
 - `CLAUDE_CODE_SESSION_ID=<uuid>` — exact session id. Also `CLAUDE_PID`, `CLAUDE_CODE_ENTRYPOINT=claude-desktop|cli|sdk-cli`, `CLAUDE_CODE_CHILD_SESSION`, `CLAUDE_CODE_HOST_SESSION_ID`.
 - Codex-companion plugin adds `CODEX_COMPANION_SESSION_ID` (= Claude session id) and `CODEX_COMPANION_TRANSCRIPT_PATH=~/.claude/projects/<munged-session-home>/<id>.jsonl` (persisted via `~/.claude/session-env/<id>/`).
-- `~/.claude/sessions/<CLAUDE_PID>.json` live index: `{pid, sessionId, cwd, name, nameSource: derived|user, entrypoint, kind, startedAt, bridgeSessionId}`. Names look like `beep-effect10-69` (derived) or `SHIP_VELOCITY`, `SEMANTICA_CANARY` (user-named via `--name`/rename). Only exists while the process lives.
+- `~/.claude/sessions/<CLAUDE_PID>.json` live index: `{pid, sessionId, cwd, name, nameSource: derived|user, entrypoint, kind, startedAt, bridgeSessionId}`. Names look like `<clone>-<xx>` (derived) or `SHIP_VELOCITY`, `SEMANTICA_CANARY` (user-named via `--name`/rename). Only exists while the process lives.
 - Transcript metadata records (durable): `custom-title` (desktop conversation title), `agent-name`, `ai-title`, **`pr-link` `{sessionId, prNumber, prUrl, prRepository, timestamp}`**, `worktree-state`, `bridge-session`.
 - **`claude --from-pr <number|url>`** (native): resumes the session linked to a PR. The link is written by `linkSessionToPR` (transcript `pr-link`, telemetry `tengu_session_linked_to_pr`); observed for yeet-created PRs #946, #947, #950 (not #944/#945, which came from Codex). Index semantics are **last-wins per session**: session `<id>` linked #946 then #950, so `--from-pr 946` will not find it. Scope: the picker is per-project like `--resume`, so a `cd` to the session home is still needed.
 - `-n, --name <name>` sets display name; `--resume` takes a session ID (picker otherwise).
@@ -39,7 +39,7 @@ Codex (`codex 0.152.1`):
 
 ## Workstation layout
 
-- Projects root `~/YeeBois/projects/` holds ~45 `beep-effect*` clones (`beep-effect`, `beep-effect2`..`beep-effect22`, plus suffixed clones like `beep-effect3-pra`, `beep-effect12-pr874`, and `<clone>-worktrees` roots per `standards/git-worktrees.md`).
+- The projects root holds several dozen clones of this repository plus `<clone>-worktrees` siblings per `standards/git-worktrees.md`; clone basenames are the only layout fact the feature needs.
 - No `BEEP_PROJECTS`-style env var exists yet in `~/.zshrc`.
 - `turbo.json` already passes through `BEEP_AGENT_SESSION_ID`, `CLAUDE_SESSION_ID`, `CODEX_SESSION_ID`, `CODEX_THREAD_ID` — but nothing in the repo reads `BEEP_AGENT_SESSION_ID` or `CLAUDE_CODE_SESSION_ID` today.
 - State-dir precedent: ai-metrics uses `${XDG_STATE_HOME:-$HOME/.local/state}/beep/ai-metrics`. Yeet run artifacts live in `.beep/yeet/runs/<run-id>/` (repo-local, ignored).

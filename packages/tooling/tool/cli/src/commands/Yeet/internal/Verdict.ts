@@ -651,6 +651,7 @@ export class YeetExecutedStep extends S.Class<YeetExecutedStep>($I`YeetExecutedS
   {
     durationMs: S.optionalKey(S.Finite),
     result: RepoStepRunResult,
+    status: S.optionalKey(YeetLaneStatus),
     step: RepoPlanStep,
   },
   $I.annote("YeetExecutedStep", {
@@ -660,19 +661,21 @@ export class YeetExecutedStep extends S.Class<YeetExecutedStep>($I`YeetExecutedS
 
 const laneFromExecuted = (executed: YeetExecutedStep): YeetVerdictLane => {
   const failed = executed.result.exitCode !== 0;
-  const repairCommand = failed
-    ? O.some(
-        pipe(
-          knownSubLaneRemediationFromOutput(executed.result.output),
-          O.getOrElse(() => commandTextForStep(executed.step))
+  const status = executed.status ?? (failed ? "failed" : "passed");
+  const repairCommand =
+    status === "failed"
+      ? O.some(
+          pipe(
+            knownSubLaneRemediationFromOutput(executed.result.output),
+            O.getOrElse(() => commandTextForStep(executed.step))
+          )
         )
-      )
-    : O.none<string>();
+      : O.none<string>();
   return YeetVerdictLane.make({
     id: executed.step.id,
     label: executed.step.label,
     phase: executed.step.phase,
-    status: failed ? "failed" : "passed",
+    status,
     exitCode: executed.result.exitCode,
     ...O.getSomesStruct({
       durationMs: pipe(

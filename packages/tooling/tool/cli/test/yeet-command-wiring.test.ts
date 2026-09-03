@@ -29,6 +29,18 @@ const findSubcommand = (name: string) =>
   );
 
 describe("yeet merge-loop command wiring", () => {
+  it.effect("dispatches the top-level publish and repair planners", () =>
+    Effect.forEach(
+      [
+        ["--plan", "--state-root", "/tmp/yeet-command-wiring-state"],
+        ["repair", "--plan"],
+        ["pre-push-hook", "--plan"],
+      ],
+      (args) => runYeetCommand(args),
+      { discard: true }
+    ).pipe(provideScopedLayer(commandTestLayer))
+  );
+
   it.each(["sweep", "merge", "reply"])("registers the %s subcommand", (name) => {
     expect(subcommandNames).toContain(name);
   });

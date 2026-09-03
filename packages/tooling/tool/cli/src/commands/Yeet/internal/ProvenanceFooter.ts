@@ -24,6 +24,7 @@ import {
   makePrProvenanceServiceLive,
   PrRepository,
   PrSessionRecord,
+  parsePrProvenanceFooter,
   renderPrProvenance,
   splicePrProvenanceFooter,
   toPublicPrProvenance,
@@ -32,6 +33,7 @@ import { makePrSessionRegistryLive } from "./PrSessionRegistry.ts";
 import type { FileSystem, Path } from "effect";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { PrNumber, PrProvenanceRole } from "./Provenance.ts";
+import type { PrSessionRegistryShape } from "./PrSessionRegistry.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/ProvenanceFooter");
 const repositoryPattern = /github\.com[/:]([^/]+)\/([^/]+?)(?:\.git)?$/u;
@@ -42,6 +44,25 @@ class GhPrBody extends S.Class<GhPrBody>($I`GhPrBody`)(
 ) {}
 const decodeGhPrBody = S.decodeUnknownEffect(S.fromJsonString(GhPrBody));
 const encodeRecord = S.encodeEffect(S.fromJsonString(PrSessionRecord));
+
+const readPrBody = Effect.fn("ProvenanceFooter.readPrBody")(function* (
+  capture: typeof runRepoCommandCapture,
+  context: RepoRunContext,
+  prNumber: PrNumber
+) {
+  const viewed = yield* capture("gh", ["pr", "view", `${prNumber}`, "--json", "body"], context.repoRoot);
+  if (viewed.exitCode !== 0) {
+    return yield* YeetCommandError.make({ message: viewed.output, exitCode: viewed.exitCode });
+  }
+  const current = yield* decodeGhPrBody(viewed.output);
+  return current.body ?? "";
+});
+
+const bodyWithoutProvenanceFooter = (body: string): string =>
+  O.match(parsePrProvenanceFooter(body), {
+    onNone: () => Str.trimEnd(body),
+    onSome: ({ start, end }) => `${Str.trimEnd(Str.slice(0, start)(body))}${Str.slice(end)(body)}`,
+  });
 
 /**
  * Independent persistence outcomes for a locally detected PR session row.
@@ -238,6 +259,7 @@ export const makeCurrentPrSessionRecord = Effect.fn("ProvenanceFooter.makeRecord
  * @param prNumber - Positive pull-request number linked to the local session.
  * @param prUrl - Pull-request URL when the caller has one available.
  * @param role - Lifecycle action appended to the registry history.
+ * @param registryOverride - Optional in-memory registry used by fixture-safe tests.
  * @returns Repository and independent persistence outcomes; detection failures become `None`.
  * @category workflows
  * @since 0.0.0
@@ -246,12 +268,13 @@ export const recordCurrentPrSession = Effect.fn("ProvenanceFooter.recordCurrentS
   context: RepoRunContext,
   prNumber: PrNumber,
   prUrl: O.Option<string>,
-  role: PrProvenanceRole
+  role: PrProvenanceRole,
+  registryOverride?: PrSessionRegistryShape
 ) {
   return yield* Effect.gen(function* () {
     const repository = yield* detectPrRepository(context.repoRoot);
     const record = yield* makeCurrentPrSessionRecord(context, repository, O.some(prNumber), prUrl, role);
-    const registry = yield* makePrSessionRegistryLive();
+    const registry = registryOverride ?? (yield* makePrSessionRegistryLive());
     return yield* persistPrSessionRecord(
       repository,
       registry.append(record),
@@ -302,6 +325,8 @@ export const recordCurrentPrSession = Effect.fn("ProvenanceFooter.recordCurrentS
  * @param context - Hydrated Yeet run context used for local artifacts and `gh` calls.
  * @param repository - Registry partition whose rows supply the public projection.
  * @param prNumber - Positive pull-request number used for lookup and the typed resume fence.
+ * @param capture - Subprocess runner, injectable for deterministic GitHub body tests.
+ * @param registryOverride - Optional in-memory registry used by fixture-safe tests.
  * @returns An effect that re-asserts the footer when local rows exist and content changed.
  * @category workflows
  * @since 0.0.0
@@ -309,42 +334,89 @@ export const recordCurrentPrSession = Effect.fn("ProvenanceFooter.recordCurrentS
 export const ensureProvenanceFooter = Effect.fn("ProvenanceFooter.ensure")(function* (
   context: RepoRunContext,
   repository: PrRepository,
-  prNumber: PrNumber
+  prNumber: PrNumber,
+  capture: typeof runRepoCommandCapture = runRepoCommandCapture,
+  registryOverride?: PrSessionRegistryShape
 ): Effect.fn.Return<
-  void,
+  O.Option<string>,
   never,
   FileSystem.FileSystem | Path.Path | import("effect/unstable/process").ChildProcessSpawner.ChildProcessSpawner
 > {
-  yield* Effect.gen(function* () {
-    const registry = yield* makePrSessionRegistryLive();
+  return yield* Effect.gen(function* () {
+    const registry = registryOverride ?? (yield* makePrSessionRegistryLive());
     const rows = yield* registry.lookup(repository, prNumber);
-    if (A.isReadonlyArrayEmpty(rows)) return;
+    if (A.isReadonlyArrayEmpty(rows)) {
+      const warning = `[yeet] provenance footer stamp skipped for PR #${prNumber}: no local registry rows were available`;
+      yield* Console.warn(warning);
+      return O.some(warning);
+    }
     const labels = yield* runGitOutput(context.repoRoot, ["config", "--get", "beep.provenance.labels"]).pipe(
       Effect.map((value) => Str.trim(value) !== "off"),
       Effect.orElseSucceed(() => true)
     );
     const first = A.head(rows);
-    if (O.isNone(first)) return;
+    if (O.isNone(first)) return O.none<string>();
     const publicValue = toPublicPrProvenance([first.value, ...A.drop(rows, 1)], O.some(prNumber), labels);
-    const viewed = yield* runRepoCommandCapture(
-      "gh",
-      ["pr", "view", `${prNumber}`, "--json", "body"],
-      context.repoRoot
-    );
-    if (viewed.exitCode !== 0)
-      return yield* YeetCommandError.make({ message: viewed.output, exitCode: viewed.exitCode });
-    const current = yield* decodeGhPrBody(viewed.output);
-    const body = current.body ?? "";
-    const next = splicePrProvenanceFooter(body, renderPrProvenance(publicValue));
-    if (next === body) return;
+    const rendered = renderPrProvenance(publicValue);
+    const body = yield* readPrBody(capture, context, prNumber);
+    if (Str.Equivalence(splicePrProvenanceFooter(body, rendered), body)) return O.none<string>();
+    const freshBody = yield* readPrBody(capture, context, prNumber);
+    const next = splicePrProvenanceFooter(freshBody, rendered);
+    if (Str.Equivalence(next, freshBody)) return O.none<string>();
     const bodyPath = yield* runArtifactPathForContext(context, "pr-provenance-body.md");
     yield* writeTextFile(bodyPath, next);
-    const edited = yield* runRepoCommandCapture(
-      "gh",
-      ["pr", "edit", `${prNumber}`, "--body-file", bodyPath],
-      context.repoRoot
-    );
+    const edited = yield* capture("gh", ["pr", "edit", `${prNumber}`, "--body-file", bodyPath], context.repoRoot);
     if (edited.exitCode !== 0)
       return yield* YeetCommandError.make({ message: edited.output, exitCode: edited.exitCode });
-  }).pipe(Effect.catchCause((cause) => Console.warn(`[yeet] provenance footer stamp skipped: ${cause}`)));
+    const writtenBody = yield* readPrBody(capture, context, prNumber);
+    if (!Str.Equivalence(bodyWithoutProvenanceFooter(writtenBody), bodyWithoutProvenanceFooter(freshBody))) {
+      const warning = `[yeet] provenance footer for PR #${prNumber} may have overwritten a concurrent body edit; leaving the latest body unchanged`;
+      yield* Console.warn(warning);
+      return O.some(warning);
+    }
+    return O.none<string>();
+  }).pipe(
+    Effect.catchCause((cause) => {
+      const warning = `[yeet] provenance footer stamp skipped: ${Cause.pretty(cause)}`;
+      return Console.warn(warning).pipe(Effect.as(O.some(warning)));
+    })
+  );
+});
+
+/**
+ * Record the current monitor session and re-assert its public provenance footer once.
+ *
+ * **Example** (Build the monitor provenance prelude)
+ *
+ * ```ts
+ * import { recordMonitoredPrSession, RepoRunContext } from "@beep/repo-cli/test/Yeet"
+ * import { Effect } from "effect"
+ *
+ * const context = RepoRunContext.make({
+ *   base: "origin/main", branch: "feat/footer", cwd: ".", head: "HEAD",
+ *   originalArgv: [], packetDir: ".beep/yeet", repoRoot: ".",
+ *   turbo: { graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] }
+ * })
+ * console.log(Effect.isEffect(recordMonitoredPrSession(context, 42))) // true
+ * ```
+ *
+ * @param context - Hydrated Yeet context for the monitor invocation.
+ * @param prNumber - Pull-request number observed once before polling begins.
+ * @param capture - Subprocess runner, injectable for deterministic GitHub tests.
+ * @param registryOverride - Optional in-memory registry used by fixture-safe tests.
+ * @returns The footer warning when stamping could not be completed, otherwise `None`.
+ * @category workflows
+ * @since 0.0.0
+ */
+export const recordMonitoredPrSession = Effect.fn("ProvenanceFooter.recordMonitoredSession")(function* (
+  context: RepoRunContext,
+  prNumber: PrNumber,
+  capture: typeof runRepoCommandCapture = runRepoCommandCapture,
+  registryOverride?: PrSessionRegistryShape
+) {
+  const recording = yield* recordCurrentPrSession(context, prNumber, O.none(), "monitored", registryOverride);
+  if (O.isNone(recording)) {
+    return O.some(`[yeet] provenance footer stamp skipped for PR #${prNumber}: session recording was unavailable`);
+  }
+  return yield* ensureProvenanceFooter(context, recording.value.repository, prNumber, capture, registryOverride);
 });

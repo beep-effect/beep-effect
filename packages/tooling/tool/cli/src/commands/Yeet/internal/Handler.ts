@@ -92,7 +92,7 @@ import {
   retireFullProofLockOrObserveAtPath,
   writeVerifiedState,
 } from "./ProofState.ts";
-import { ensureProvenanceFooter, recordCurrentPrSession } from "./ProvenanceFooter.ts";
+import { recordMonitoredPrSession } from "./ProvenanceFooter.ts";
 import {
   collectPublishIntent,
   enforceBaseFreshness,
@@ -589,7 +589,8 @@ const ensureRequestedPullRequest = Effect.fn("Yeet.ensureRequestedPullRequest")(
   yield* ensurePullRequest(
     context,
     recorder,
-    A.findFirst(steps, (step) => step.id === "publish:02-pr-create")
+    A.findFirst(steps, (step) => step.id === "publish:02-pr-create"),
+    A.findFirst(steps, (step) => step.id === "publish:03-pr-provenance-stamp")
   );
 });
 
@@ -1109,8 +1110,7 @@ const runMonitorPhase = Effect.fn("Yeet.runMonitorPhase")(function* (
     Effect.map((pullRequest) => pullRequest.number),
     Effect.mapError(YeetCommandError.new("Failed to decode pull request number for yeet monitor."))
   );
-  const recording = yield* recordCurrentPrSession(context, pullRequestNumber, O.none(), "monitored");
-  if (O.isSome(recording)) yield* ensureProvenanceFooter(context, recording.value.repository, pullRequestNumber);
+  yield* recordMonitoredPrSession(context, pullRequestNumber);
   yield* Effect.raceFirst(
     runMonitorCheckWatch(context, checkSteps, recorder, failureMessage),
     runYeetPullRequestCommentMonitor(context, pullRequestNumber)

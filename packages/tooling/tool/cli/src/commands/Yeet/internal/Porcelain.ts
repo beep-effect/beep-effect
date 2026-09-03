@@ -31,6 +31,8 @@ import { YeetCommandError } from "../Yeet.errors.ts";
 import { hydrateYeetReadOnlyContext } from "./Handler.ts";
 import { mergePr } from "./Merge.ts";
 import { runYeetMonitorUntilMerged } from "./MonitorLoop.ts";
+import { recordMonitoredPrSession } from "./ProvenanceFooter.ts";
+import { runGhPullRequestView } from "./PullRequest.ts";
 import { renderYeetReplyFailureVerdict, replyReportPathForContext, runYeetReply } from "./Reply.ts";
 import { SweepPlanJson, SweepReportJson } from "./Sweep.schemas.ts";
 import { executeSweep, overrideSweepBranch, planSweep, renderSweepReport } from "./Sweep.ts";
@@ -38,7 +40,9 @@ import { runYeetWatchStream, yeetWatchExitFailure } from "./WatchMode.ts";
 import type { FileSystem, Path } from "effect";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { CliReportedExit } from "../../../internal/cli/ExitCodeError.ts";
+import type { runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
 import type { YeetMonitorTerminalState } from "./MonitorLoop.ts";
+import type { PrSessionRegistryShape } from "./PrSessionRegistry.ts";
 import type { ReplyReport } from "./Reply.schemas.ts";
 import type { SweepPlan, SweepPlanStep, SweepReport } from "./Sweep.schemas.ts";
 
@@ -50,6 +54,15 @@ interface YeetPorcelainOptions {
   readonly base: string;
   readonly head: string;
   readonly packetDir: string;
+}
+
+interface YeetMonitorRouteDependencies {
+  readonly capture?: typeof runRepoCommandCapture;
+  readonly hydrate?: typeof hydrateYeetReadOnlyContext;
+  readonly mergeLoop?: typeof runYeetMonitorUntilMerged;
+  readonly registry?: PrSessionRegistryShape;
+  readonly view?: typeof runGhPullRequestView;
+  readonly watchStream?: typeof runYeetWatchStream;
 }
 
 /**
@@ -278,18 +291,23 @@ export const failYeetReplyOnFailedOutcomes = Effect.fn("Yeet.failReplyOnFailedOu
  * ```
  *
  * @param options - Parsed `yeet monitor` flag values.
+ * @param dependencies - Injectable route boundaries for deterministic tests.
  * @returns The terminal state that ended the loop.
  * @category commands
  * @since 0.0.0
  */
 export const runYeetMergeLoop = Effect.fn("Yeet.runMergeLoopCommand")(function* (
-  options: YeetPorcelainOptions
+  options: YeetPorcelainOptions,
+  dependencies: YeetMonitorRouteDependencies = {}
 ): Effect.fn.Return<
   YeetMonitorTerminalState,
   YeetCommandError,
   FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
-  return yield* runYeetMonitorUntilMerged(yield* hydrateYeetReadOnlyContext(options), {});
+  const context = yield* (dependencies.hydrate ?? hydrateYeetReadOnlyContext)(options);
+  const pullRequest = yield* (dependencies.view ?? runGhPullRequestView)(context);
+  yield* recordMonitoredPrSession(context, pullRequest.number, dependencies.capture, dependencies.registry);
+  return yield* (dependencies.mergeLoop ?? runYeetMonitorUntilMerged)(context, {});
 });
 
 /**
@@ -340,6 +358,7 @@ export const YEET_WATCH_INTERVAL_MILLIS = 10_000;
  * @param options - Parsed `yeet monitor` flag values.
  * @param untilEvent - Whether the stream exits on the first actionable event
  * batch instead of only at terminal PR states.
+ * @param dependencies - Injectable route boundaries for deterministic tests.
  * @returns Nothing on a green settle or a comment-only event exit; a reported
  * non-zero exit otherwise.
  * @category commands
@@ -347,14 +366,20 @@ export const YEET_WATCH_INTERVAL_MILLIS = 10_000;
  */
 export const runYeetWatchLoop = Effect.fn("Yeet.runWatchLoopCommand")(function* (
   options: YeetPorcelainOptions,
-  untilEvent = false
+  untilEvent = false,
+  dependencies: YeetMonitorRouteDependencies = {}
 ): Effect.fn.Return<
   void,
   YeetCommandError | CliReportedExit,
   FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
-  const context = yield* hydrateYeetReadOnlyContext(options);
-  const ended = yield* runYeetWatchStream(context, { intervalMillis: YEET_WATCH_INTERVAL_MILLIS, untilEvent });
+  const context = yield* (dependencies.hydrate ?? hydrateYeetReadOnlyContext)(options);
+  const pullRequest = yield* (dependencies.view ?? runGhPullRequestView)(context);
+  yield* recordMonitoredPrSession(context, pullRequest.number, dependencies.capture, dependencies.registry);
+  const ended = yield* (dependencies.watchStream ?? runYeetWatchStream)(context, {
+    intervalMillis: YEET_WATCH_INTERVAL_MILLIS,
+    untilEvent,
+  });
   const verdict = `yeet watch ended ${ended.reason} with ${ended.failing} failing check(s).`;
   yield* Console.error(verdict).pipe(
     Effect.andThen(failWithReportedExit(verdict)),

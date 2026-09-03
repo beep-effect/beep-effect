@@ -41,7 +41,7 @@ Schema (`PrSessionRegistry.ts`): `PrSessionRecord extends PrProvenance` with `sc
 - `branch`: public head ref, unchanged validation, escaped per context as today.
 - `workspace` (`PrProvenanceLabel`: `^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$`, no `..`, no leading `.`/`-`, no `.lock`, rejects UUID shapes and >=16-hex runs): one path component with no root, separator, home token, or sibling fragment to concatenate with; information content = repository name plus disambiguator, the exposure class of a branch name. Rendered as "Workspace", never "clone"/"checkout". Rebuttal writable and pre-written (see below).
 - `agents[]` (distinct sessions, newest first, cap 4): `harness` (LiteralKit claude-code|codex|unknown), `entrypoint` (LiteralKit from real values `claude-desktop|cli|sdk-cli|codex-exec|codex-tui|unknown`), `hostHarness` (Option, category only), `role` (LiteralKit), `workspace` (Option label, only when the session home differs from the PR workspace), `label` (Option `PrProvenanceLabel`).
-- `label` policy, decided by the help text I verified: Codex session names are a first-class `codex resume` key, so a Codex row NEVER carries a label. Claude display names are only a picker search term, non-unique, not a store key; publish them only when `nameSource === "user"` and the slug passes; derived names (`beep-effect10-69`, whose 2-hex suffix neither critic could derive from anything) stay registry-only. Git config `beep.provenance.agentLabel=off` mutes the field. Visible wording is "label", never "session name".
+- `label` policy, decided by the help text I verified: Codex session names are a first-class `codex resume` key, so a Codex row NEVER carries a label. Claude display names are only a picker search term, non-unique, not a store key; publish them only when `nameSource === "user"` and the slug passes; derived names (`<clone>-<xx>`, whose 2-hex suffix neither critic could derive from anything) stay registry-only. Git config `beep.provenance.agentLabel=off` mutes the field. Visible wording is "label", never "session name".
 - The fence: `renderResumeFence(pr: PrNumber)` is typed on the integer, so a branch cannot reach a fence by construction; the branch form is accepted by `yeet resume` from the terminal only.
 
 Forbidden by schema, not policy: any path or path template (including `$BEEP_PROJECTS/...`), any `cd`, any `claude --resume`/`codex resume`/`--from-pr`, every session/thread/host/bridge/companion id and any hash or truncation of them, pid, socket, hostname, username, Codex worktree hash, linked-worktree name, free-text titles. `renderPrProvenance` accepts only `PublicPrProvenance`; `toPublicPrProvenance` is the single projection site; the compile-time impossibility of passing `PrSessionRecord` to the renderer plus the boundary test file IS the "Already fixed" evidence.
@@ -135,7 +135,7 @@ Why: The `cd` is redundant: `yeet resume` spawns the harness with cwd = the reco
 
 ### Q2. Agent label policy in the public footer
 - A. Publish only Claude labels with nameSource=user that pass the slug schema; derived names and all Codex names stay registry-only; `beep.provenance.agentLabel=off` mutes it
-- B. Also publish derived Claude names (`beep-effect10-69`) with a written False-positive rebuttal
+- B. Also publish derived Claude names (`<clone>-<xx>`) with a written False-positive rebuttal
 - C. No labels in the PR; harness + entrypoint + workspace only; names via `yeet resume --list`
 
 Recommended: A

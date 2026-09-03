@@ -234,6 +234,7 @@ const initTrackedFileRepo = Effect.fn("initTrackedFileRepo")(function* (tmpDir: 
   yield* runGit(tmpDir, ["init"]);
   yield* runGit(tmpDir, ["config", "user.email", "yeet@example.test"]);
   yield* runGit(tmpDir, ["config", "user.name", "Yeet Test"]);
+  yield* runGit(tmpDir, ["config", "commit.gpgsign", "false"]);
   yield* fs.writeFileString(filePath, "base\n");
   yield* runGit(tmpDir, ["add", "tracked.txt"]);
   yield* runGit(tmpDir, ["commit", "-m", "init"]);
@@ -2428,6 +2429,7 @@ describe("yeet publish scope helpers", () => {
         yield* runGit(tmpDir, ["init"]);
         yield* runGit(tmpDir, ["config", "user.email", "yeet@example.test"]);
         yield* runGit(tmpDir, ["config", "user.name", "Yeet Test"]);
+        yield* runGit(tmpDir, ["config", "commit.gpgsign", "false"]);
         yield* fs.writeFileString(path.join(tmpDir, "package.json"), '{"name":"head-install-probe","private":true}\n');
         yield* fs.writeFileString(path.join(tmpDir, "bun.lock"), "not a bun lockfile\n");
         yield* runGit(tmpDir, ["add", "package.json", "bun.lock"]);
@@ -3779,6 +3781,7 @@ describe("yeet publish scope helpers", () => {
           yield* runGit(tmpDir, ["init", "-b", "main"]);
           yield* runGit(tmpDir, ["config", "user.email", "yeet@example.test"]);
           yield* runGit(tmpDir, ["config", "user.name", "Yeet Test"]);
+          yield* runGit(tmpDir, ["config", "commit.gpgsign", "false"]);
           yield* fs.writeFileString(path.join(tmpDir, "shared.txt"), "base\n");
           yield* fs.writeFileString(path.join(tmpDir, "other.txt"), "base\n");
           yield* runGit(tmpDir, ["add", "."]);
