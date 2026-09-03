@@ -64,3 +64,15 @@ publish PATH; hosted Nix Shell passes) and is acknowledged as such.
   `@beep/box-provisioning` row; this branch carries the row.
 - Hosted runners check out a detached HEAD, so the command-wiring dispatch
   test tolerates the PR-branch-only guards.
+
+## Round 5 (hosted coverage on `3cd1f3f273`; main red since #990)
+
+Attribution of the `Heavy / Coverage Regression` red, from the hosted logs:
+
+| Row | Class | Evidence |
+| --- | --- | --- |
+| `Quality/Quality.command.ts` (4 metrics) | Inherited from `main` | `main` is red on the same four floors on every push since #990 (`3254833bac`, `cde3be8f10`, `a00b102b19`); `751da1fc18` was green. #990 regenerated the baseline locally and raised this untouched file's row from 35.62/35.52/19.66/26.59 to 40.61/40.43/31.67/32.39; hosted measures 39.6/39.41/29.62/31.03 on every run. Fix: restore the pre-#990 row (this branch). |
+| `test-utils/SqlTest.ts` (4 metrics) | Environment-only | `SqlTest.pglite.test.ts` ran `8 tests \| 7 skipped` in 48.7 s (Docker/Testcontainers unavailable on that runner; the 45 s availability probe timed out) versus `8 tests \| 5 skipped` in 21 s on every `main` run, where the two Testcontainers tests execute. The row is in scope only because the terse-effect fix touched `ConformanceLedger.evidence.ts`. |
+| `repo-run/QualityScheduler.ts` (4 metrics, <0.7 pp) | Run-to-run drift | 62/62 tests pass on every run; the uncovered set moves by one timing-dependent branch. |
+
+Verdict: one row fixed here, two rows rerun the lane on the same head.

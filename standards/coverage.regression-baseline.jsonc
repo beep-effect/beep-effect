@@ -24388,15 +24388,15 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts": {
-          "lines": 40.61,
-          "statements": 40.43,
-          "branches": 31.67,
-          "functions": 32.39,
+          "lines": 35.62,
+          "statements": 35.52,
+          "branches": 19.66,
+          "functions": 26.59,
           "uncovered": {
-            "lines": 427,
-            "statements": 436,
-            "branches": 151,
-            "functions": 144
+            "lines": 412,
+            "statements": 421,
+            "branches": 143,
+            "functions": 138
           }
         },
         "packages/tooling/tool/cli/src/commands/Quality/Quality.errors.ts": {
