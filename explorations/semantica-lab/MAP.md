@@ -6,16 +6,13 @@ component cites an existing repo capability or is explicitly marked NET-NEW. -->
 
 Status: **v1.0 — RATIFIED by Benjamin 2026-08-24 (MAP grill M1–M6 applied; see Dispositions).**
 
-> **2026-08-27 amendment (not a re-ratification):** C0 fired the Extraction probe
-> breaker on 2026-08-26 and the `semantica-canary` packet is paused at P2; the PR
-> A/B/C delivery vehicle described below completed and is historical. The
-> replacement plan is the evidence-quote relation candidate, DECISIONS.md E1-E8
-> (fold alignment tier in the shared aligner, lab-local relation evidence
-> contract, endpoint anchoring inside the evidence span, frozen-vocabulary
-> target, preview and spot-check-and-repair gates, bounded re-entry). Where this
-> file's extractor prose disagrees with the DECISIONS Current law table, the
-> table wins; this MAP is re-ratified only if the candidate passes C0 and later
-> stages change shape. Derived from `BRIEF.md`
+> **2026-08-27 amendment (historical, not a re-ratification):** C0 fired the
+> Extraction probe breaker on 2026-08-26 and paused `semantica-canary` at P2.
+> The evidence-quote replacement in DECISIONS E1-E8 later passed C0, followed
+> by C1 and C2. On 2026-09-02, MAP Sequencing 5 reopened this exploration at
+> `decompose` for the C2-fired storage gate and the fixture-gated reasoning spike. The PR A/B/C delivery
+> vehicle below is historical. Where extractor prose disagrees with the
+> DECISIONS Current law table, the table wins. Derived from `BRIEF.md`
 v1.1, the `DECISIONS.md` Current law table (D1–D18, A1–A9, B1–B6, G1–G7, O1–O5, S1–S8, T1–T3),
 `research/shared-schema.md` v1.3, `research/workload-contract.md` v1.3, and
 `research/upstream-tracker-mining.md`. Every capability cell below was re-verified against the
