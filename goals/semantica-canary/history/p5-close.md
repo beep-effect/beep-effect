@@ -125,7 +125,7 @@ These artifacts back `DECISIONS.md` entry
   SHA-256: `c4f9ba234607d3bd0654a97b2ccd2faee2d37ecc868c1d5fa2b21867c0ac727b`
 
 Stage record: `p4-c2-r2.md`, SHA-256
-``.
+`179243b5ecb455bb9ea5b0ee125c5d0b72b7b4edae4c1b945c6e0c57c473f098`.
 
 The C2 checksum manifest covers the four JSON artifacts and `crash-identity.log`.
 The archived report pair, `p4-c2-r2.md`, and the dated C2 entry in `DECISIONS.md`
