@@ -40,6 +40,7 @@ import {
   decodeYeetAttemptJournalEvent,
   defaultYeetRunOptions,
   emptyTurboPlanSnapshot,
+  ensureAttemptTerminatedForTesting,
   executeStepWithArtifacts,
   FallowFeedbackAllowedRoot,
   findOpenPullRequest,
@@ -132,7 +133,7 @@ import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
-import { ConfigProvider, Deferred, Effect, Fiber, FileSystem, Layer, Path } from "effect";
+import { ConfigProvider, Deferred, Effect, Fiber, FileSystem, Layer, Path, Ref } from "effect";
 import * as A from "effect/Array";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
@@ -559,6 +560,74 @@ describe("yeet planner", () => {
     expect(attemptEnvProfileForTesting(defaultYeetRunOptions())).toBe("local");
     expect(attemptEnvProfileForTesting(defaultYeetRunOptions({ merged: true }))).toBe("pr-posture");
   });
+
+  it("journals every terminal-finalizer reason with immutable attempt facts", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const tempContext = RepoRunContext.make({ ...context, cwd: tmpDir, repoRoot: tmpDir });
+          const attempt = (suffix: string) =>
+            YeetAttemptStarted.make({
+              schemaVersion: "yeet-attempt-journal/v1",
+              _tag: "attempt-started",
+              attemptId: attemptUuid(`00000000-0000-4000-8020-${suffix}`),
+              runId: `terminal-${suffix}`,
+              branch: tempContext.branch,
+              base: tempContext.base,
+              head: tempContext.head,
+              mode: "repair",
+              startedAt: "2026-09-03T00:00:00.000Z",
+              resolvedHeadSha: O.some("0123456789abcdef0123456789abcdef01234567"),
+              diffFingerprint: O.some("abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcd"),
+              proofTier: O.some("cheap-gates"),
+              envProfile: O.some("local"),
+              stage: O.some("repair-loop"),
+            });
+          const cases = [
+            [attempt("000000000001"), yield* Effect.exit(Effect.succeed(undefined)), "terminal-row-missing"],
+            [attempt("000000000002"), yield* Effect.exit(Effect.interrupt), "interrupted"],
+            [attempt("000000000003"), yield* Effect.exit(Effect.fail("boom")), "unrecorded-failure"],
+          ] as const;
+
+          yield* Effect.forEach(
+            cases,
+            ([started, exit], index) =>
+              Effect.gen(function* () {
+                const terminalWritten = yield* Ref.make(false);
+                yield* ensureAttemptTerminatedForTesting(tempContext, started, terminalWritten, exit);
+                expect(yield* Ref.get(terminalWritten)).toBe(true);
+                if (index === 0) {
+                  yield* ensureAttemptTerminatedForTesting(tempContext, started, terminalWritten, exit);
+                }
+              }),
+            { discard: true }
+          );
+
+          const journalPath = yield* attemptJournalPath(tempContext);
+          const events = yield* Effect.forEach(
+            pipe(yield* fs.readFileString(journalPath), Str.split("\n"), A.filter(Str.isNonEmpty)),
+            decodeYeetAttemptJournalEvent
+          );
+          const terminals = A.filter(events, YeetAttemptJournalEvent.guards["attempt-terminated"]);
+          expect(A.map(terminals, (terminal) => terminal.reason)).toEqual(A.map(cases, ([, , reason]) => reason));
+          expect(
+            A.every(
+              terminals,
+              (terminal) =>
+                O.contains(terminal.resolvedHeadSha, "0123456789abcdef0123456789abcdef01234567") &&
+                O.contains(
+                  terminal.diffFingerprint,
+                  "abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcd"
+                ) &&
+                O.contains(terminal.proofTier, "cheap-gates") &&
+                O.contains(terminal.envProfile, "local") &&
+                O.contains(terminal.stage, "repair-loop")
+            )
+          ).toBe(true);
+        })
+      )
+    ));
 
   it("keeps yeet command error optional context at the command boundary", () => {
     const emptyError = YeetCommandError.new(new Error("cause"), "failed");

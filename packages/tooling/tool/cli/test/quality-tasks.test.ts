@@ -967,6 +967,23 @@ describe("quality task adapter", () => {
       )
     ));
 
+  it("tolerates an outcome whose mutable lane source disappears while the step runs", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const lanes = [["check", bunScriptStep("ci:check", "await Bun.sleep(100)"), O.none()]] as Array<
+          Parameters<typeof collectQualityTaskLaneRunsForTesting>[1][number]
+        >;
+        const running = yield* Effect.forkChild(collectQualityTaskLaneRunsForTesting("ci:mutable", lanes));
+        yield* Effect.sleep("20 millis");
+        lanes.length = 0;
+
+        const result = yield* Fiber.join(running);
+
+        expect(result.report.lanes).toHaveLength(0);
+        expect(result.failures).toHaveLength(0);
+      }).pipe(provideScopedLayer(PlatformLayer))
+    ));
+
   it("emits machine-readable lane reports from both wrapper writers", () =>
     Effect.runPromise(
       Effect.gen(function* () {
