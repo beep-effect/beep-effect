@@ -1465,11 +1465,14 @@ const tryPromoteTicket = Effect.fnUntraced(function* <OriginLease, GateError, Ga
   QualitySchedulerError | GateError,
   FileSystem.FileSystem | Path.Path | MemoryStats | ChildProcessSpawner.ChildProcessSpawner | GateRequirements
 > {
+  // Rank contenders at the start of the attempt. Recovery may perform durable
+  // journal I/O, but that housekeeping must not age a ticket across a priority
+  // boundary before this selection pass compares the queue.
+  const nowMillis = yield* Clock.currentTimeMillis;
   const state = yield* scanAdmissionState(directories, true);
   const stats = yield* MemoryStats;
   const availableGib = yield* stats.availableGib;
   const capacityTokens = admissionCapacityTokensFor(availableGib, config);
-  const nowMillis = yield* Clock.currentTimeMillis;
   const info: PromotionTickInfo = { availableGib, capacityTokens, nowMillis, state };
   if (!selfMayAttempt(state, capacityTokens, nowMillis, config, ticket)) {
     return { admitted: O.none(), info, originBusy: hasLegacySameOriginOwner(state, ticket) };

@@ -6,6 +6,7 @@ import {
   AdmissionJournalAdmitted,
   AdmissionJournalEvent,
   AdmissionJournalLockGeneration,
+  AdmissionLeaseReapClaim,
   AdmissionPromotionTransition,
   AdmissionReapClaim,
   AdmissionRequest,
@@ -138,6 +139,7 @@ const decodeTicket = S.decodeUnknownEffect(S.fromJsonString(YeetAdmissionTicket)
 const encodeJournalLockGeneration = S.encodeUnknownEffect(S.fromJsonString(AdmissionJournalLockGeneration));
 const decodeJournalLockGeneration = S.decodeUnknownEffect(S.fromJsonString(AdmissionJournalLockGeneration));
 const decodeAdmissionReapClaim = S.decodeUnknownEffect(S.fromJsonString(AdmissionReapClaim));
+const encodeAdmissionReapClaim = S.encodeUnknownEffect(S.fromJsonString(AdmissionReapClaim));
 const encodePromotionTransition = S.encodeUnknownEffect(S.fromJsonString(AdmissionPromotionTransition));
 const decodeJsonObject = S.decodeUnknownEffect(S.fromJsonString(S.JsonObject));
 const encodeJsonObject = S.encodeUnknownEffect(S.fromJsonString(S.JsonObject));
@@ -363,6 +365,72 @@ const listDirectory = Effect.fnUntraced(function* (directory: string) {
   const fs = yield* FileSystem.FileSystem;
   const names = yield* fs.readDirectory(directory).pipe(Effect.orElseSucceed(A.empty<string>));
   return A.filter(names, (name) => !Str.includes(".tmp-")(name));
+});
+
+const waitForDirectoryEntryCount = Effect.fnUntraced(function* (directory: string, count: number) {
+  for (let attempt = 0; attempt < 500; attempt++) {
+    const entries = yield* listDirectory(directory);
+    if (A.length(entries) >= count) {
+      return entries;
+    }
+    yield* Effect.sleep("10 millis");
+  }
+  return yield* Effect.dieMessage(`Timed out waiting for ${count} settled entries in ${directory}.`);
+});
+
+const writePromotionTransition = Effect.fnUntraced(function* (
+  tempRoot: AdmissionTempRoot,
+  transition: AdmissionPromotionTransition
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  yield* fs.makeDirectory(tempRoot.promotions, { recursive: true, mode: 0o700 });
+  const transitionPath = path.join(tempRoot.promotions, `${transition.nonce}.promotion.json`);
+  yield* fs.writeFileString(transitionPath, `${yield* encodePromotionTransition(transition)}\n`);
+  return transitionPath;
+});
+
+const writePromotionFixture = Effect.fnUntraced(function* (
+  tempRoot: AdmissionTempRoot,
+  options: {
+    readonly keepLease: boolean;
+    readonly keepTicket: boolean;
+    readonly nonce: string;
+    readonly phase: AdmissionPromotionTransition["phase"];
+    readonly pid?: number;
+  }
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const originKey = `${options.nonce}-origin`;
+  const pid = O.getOrElse(O.fromUndefinedOr(options.pid), () => process.pid);
+  const leasePath = yield* writeFakeLease(tempRoot, {
+    pid,
+    nonce: options.nonce,
+    originKey,
+  });
+  const ticketPath = yield* writeFakeTicket(tempRoot, {
+    pid,
+    nonce: options.nonce,
+    originKey,
+  });
+  const lease = yield* fs.readFileString(leasePath).pipe(Effect.flatMap(decodeLease));
+  const ticket = yield* fs.readFileString(ticketPath).pipe(Effect.flatMap(decodeTicket));
+  yield* options.keepLease ? Effect.void : fs.remove(leasePath, { force: true });
+  yield* options.keepTicket ? Effect.void : fs.remove(ticketPath, { force: true });
+  const promotionPath = yield* writePromotionTransition(
+    tempRoot,
+    AdmissionPromotionTransition.make({
+      schemaVersion: "yeet-admission-promotion/v1",
+      nonce: options.nonce,
+      ticketPath,
+      leasePath,
+      ticket,
+      lease,
+      phase: options.phase,
+      createdAtMillis: 1,
+    })
+  );
+  return { lease, leasePath, promotionPath, ticket, ticketPath };
 });
 
 describe("quality-scheduler", () => {
@@ -1132,6 +1200,35 @@ describe("quality-scheduler", () => {
               Object.defineProperty(process, "platform", platform ?? { configurable: true, value: "linux" });
             }
 
+            const unavailableAdopterPath = path.join(tempRoot.root, "unavailable-adopter-identity.lock");
+            const unavailableAdopterToken = `${DEAD_PID}:unavailable-adopter-generation`;
+            const procReads = yield* Ref.make(0);
+            yield* fs.writeFileString(unavailableAdopterPath, unavailableAdopterToken);
+            const unavailableAdopterFileSystem = FileSystem.FileSystem.of({
+              ...fs,
+              readFileString: Effect.fn("ProcessIdentityTest.readFileString")(function* (target, encoding) {
+                if (!Str.startsWith("/proc/")(target)) {
+                  return yield* fs.readFileString(target, encoding);
+                }
+                const readCount = yield* Ref.updateAndGet(procReads, (count) => count + 1);
+                return readCount === 1 ? yield* fs.readFileString(target, encoding) : Str.empty;
+              }),
+            });
+            Object.defineProperty(process, "platform", { configurable: true, value: "win32" });
+            try {
+              expect(
+                yield* withProcessPath(
+                  Str.empty,
+                  acquireJournalFileLock(unavailableAdopterPath, `${process.pid}:adopter-unavailable`, 1).pipe(
+                    Effect.provideService(FileSystem.FileSystem, unavailableAdopterFileSystem)
+                  )
+                )
+              ).toBe(false);
+            } finally {
+              Object.defineProperty(process, "platform", platform ?? { configurable: true, value: "linux" });
+            }
+            expect(yield* fs.readFileString(unavailableAdopterPath)).toBe(unavailableAdopterToken);
+
             const vanishedLockPath = path.join(tempRoot.root, "vanished-contention.lock");
             const missingSource = path.join(tempRoot.root, "missing-link-source");
             const vanishedFileSystem = FileSystem.FileSystem.of({
@@ -1506,7 +1603,8 @@ describe("quality-scheduler", () => {
                 priorityConfig
               )
             );
-            yield* Effect.sleep("60 millis");
+            yield* waitForDirectoryEntryCount(tempRoot.queue, 1);
+            yield* Effect.sleep("10 millis");
             const publish = yield* Effect.forkChild(
               withQualityAdmission(
                 request({ originKey: "origin-p", checkoutRoot: "/repo/p", priority: "publish" }),
@@ -1515,14 +1613,51 @@ describe("quality-scheduler", () => {
                 priorityConfig
               )
             );
-            yield* Effect.sleep("60 millis");
+            yield* waitForDirectoryEntryCount(tempRoot.queue, 2);
             yield* fs.remove(blocking, { force: true });
             yield* Fiber.join(verify);
             yield* Fiber.join(publish);
             // Publish enqueued later but outranks the young verify ticket.
-            // The long test-local threshold keeps runner load from changing
-            // the policy state while the contenders are being enqueued.
             expect(yield* Ref.get(order)).toStrictEqual(["publish", "verify"]);
+          })
+        );
+      })
+    ));
+
+  it("keeps an aged verify ahead of a newer publish at the same effective rank", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const agedConfig = AdmissionConfig.make({ ...fastConfig, publishAgingSeconds: 0 });
+            const blocking = yield* writeFakeLease(tempRoot, { weightTokens: 6, originKey: "origin-other" });
+            const order = yield* Ref.make(A.empty<string>());
+            const record = (label: string) => Ref.update(order, A.append(label));
+            const verify = yield* Effect.forkChild(
+              withQualityAdmission(
+                request({ originKey: "origin-aged-v", checkoutRoot: "/repo/aged-v" }),
+                noAdmissionOriginGate,
+                record("verify"),
+                agedConfig
+              )
+            );
+            yield* waitForDirectoryEntryCount(tempRoot.queue, 1);
+            yield* Effect.sleep("10 millis");
+            const publish = yield* Effect.forkChild(
+              withQualityAdmission(
+                request({ originKey: "origin-aged-p", checkoutRoot: "/repo/aged-p", priority: "publish" }),
+                noAdmissionOriginGate,
+                record("publish"),
+                agedConfig
+              )
+            );
+            yield* waitForDirectoryEntryCount(tempRoot.queue, 2);
+            yield* fs.remove(blocking, { force: true });
+            yield* Fiber.join(verify);
+            yield* Fiber.join(publish);
+            expect(yield* Ref.get(order)).toStrictEqual(["verify", "publish"]);
           })
         );
       })
@@ -1796,6 +1931,143 @@ describe("quality-scheduler", () => {
       })
     ));
 
+  it("acknowledges completed reap claims and quarantines malformed recovery records", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            yield* admissionStatus(fastConfig);
+            const sourcePath = yield* writeFakeLease(tempRoot, {
+              pid: DEAD_PID,
+              nonce: "completed-claim",
+              originKey: "completed-claim-origin",
+            });
+            const lease = yield* fs.readFileString(sourcePath).pipe(Effect.flatMap(decodeLease));
+            yield* fs.remove(sourcePath, { force: true });
+            const completedClaimPath = path.join(tempRoot.claims, "completed.reap.json");
+            yield* fs.writeFileString(
+              completedClaimPath,
+              `${yield* encodeAdmissionReapClaim(
+                AdmissionLeaseReapClaim.make({
+                  schemaVersion: "yeet-admission-reap-claim/v1",
+                  _tag: "lease",
+                  sourcePath,
+                  nonce: lease.nonce,
+                  claimedAtMillis: 1,
+                  attemptJournal: "complete",
+                  admissionJournal: "complete",
+                  lease,
+                })
+              )}\n`
+            );
+            const malformedClaimPath = path.join(tempRoot.claims, "malformed.reap.json");
+            const malformedPromotionPath = path.join(tempRoot.promotions, "malformed.promotion.json");
+            yield* fs.writeFileString(malformedClaimPath, "not-json");
+            yield* fs.writeFileString(malformedPromotionPath, "not-json");
+
+            const snapshot = yield* reapAdmissionState({ apply: true });
+
+            expect(yield* listDirectory(tempRoot.claims)).toHaveLength(0);
+            expect(yield* listDirectory(tempRoot.promotions)).toHaveLength(0);
+            expect(yield* readJournalEvents(tempRoot.root)).toHaveLength(0);
+            expect(
+              A.some(snapshot.quarantined, (entry) => Str.startsWith("malformed.reap.json.")(path.basename(entry)))
+            ).toBe(true);
+            expect(
+              A.some(snapshot.quarantined, (entry) => Str.startsWith("malformed.promotion.json.")(path.basename(entry)))
+            ).toBe(true);
+          })
+        );
+      })
+    ));
+
+  it("leaves a reap claim retryable when it vanishes from the recovery read", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            yield* admissionStatus(fastConfig);
+            const claimPath = path.join(tempRoot.claims, "vanished.reap.json");
+            yield* fs.writeFileString(claimPath, "temporarily unreadable");
+            const unreadableClaimFileSystem = FileSystem.FileSystem.of({
+              ...fs,
+              readFileString: Effect.fn("QualitySchedulerTest.readFileString")((target, encoding) =>
+                Str.Equivalence(target, claimPath)
+                  ? fs.readFileString(path.join(tempRoot.claims, "missing.reap.json"), encoding)
+                  : fs.readFileString(target, encoding)
+              ),
+            });
+
+            yield* reapAdmissionState({ apply: true }).pipe(
+              Effect.provideService(FileSystem.FileSystem, unreadableClaimFileSystem)
+            );
+
+            expect(yield* fs.exists(claimPath)).toBe(true);
+          })
+        );
+      })
+    ));
+
+  it("rejects a reap claim whose lifecycle identity changes while awaiting its lock", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            yield* admissionStatus(fastConfig);
+            const sourcePath = yield* writeFakeLease(tempRoot, {
+              pid: DEAD_PID,
+              nonce: "observed-claim",
+              originKey: "observed-claim-origin",
+            });
+            const lease = yield* fs.readFileString(sourcePath).pipe(Effect.flatMap(decodeLease));
+            yield* fs.remove(sourcePath, { force: true });
+            const claimPath = path.join(tempRoot.claims, "changed.reap.json");
+            const observed = AdmissionLeaseReapClaim.make({
+              schemaVersion: "yeet-admission-reap-claim/v1",
+              _tag: "lease",
+              sourcePath,
+              nonce: lease.nonce,
+              claimedAtMillis: 1,
+              attemptJournal: "complete",
+              admissionJournal: "complete",
+              lease,
+            });
+            const changed = AdmissionLeaseReapClaim.make({ ...observed, nonce: "replacement-claim" });
+            const observedText = `${yield* encodeAdmissionReapClaim(observed)}\n`;
+            const changedText = `${yield* encodeAdmissionReapClaim(changed)}\n`;
+            yield* fs.writeFileString(claimPath, observedText);
+            const reads = yield* Ref.make(0);
+            const changedClaimFileSystem = FileSystem.FileSystem.of({
+              ...fs,
+              readFileString: Effect.fn("QualitySchedulerTest.readFileString")(function* (target, encoding) {
+                if (!Str.Equivalence(target, claimPath)) {
+                  return yield* fs.readFileString(target, encoding);
+                }
+                return (yield* Ref.updateAndGet(reads, (count) => count + 1)) === 1 ? observedText : changedText;
+              }),
+            });
+
+            const failure = yield* reapAdmissionState({ apply: true }).pipe(
+              Effect.provideService(FileSystem.FileSystem, changedClaimFileSystem),
+              Effect.flip
+            );
+
+            expect(failure.message).toContain("changed lifecycle identity");
+            expect(yield* fs.exists(claimPath)).toBe(true);
+          })
+        );
+      })
+    ));
+
   it("recovers an overlapping promotion as one nonce lifecycle with idempotent publication", () =>
     Effect.runPromise(
       Effect.gen(function* () {
@@ -1910,6 +2182,72 @@ describe("quality-scheduler", () => {
             expect(
               A.filter(yield* readJournalEvents(tempRoot.root), AdmissionJournalEvent.guards["admission-admitted"])
             ).toHaveLength(1);
+          })
+        );
+      })
+    ));
+
+  it("recovers prepared, ticket-removed, and already-journaled promotion phases", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const live = yield* writePromotionFixture(tempRoot, {
+              keepLease: false,
+              keepTicket: true,
+              nonce: "prepared-live-without-lease",
+              phase: "prepared",
+            });
+            const dead = yield* writePromotionFixture(tempRoot, {
+              keepLease: false,
+              keepTicket: true,
+              nonce: "prepared-dead-without-lease",
+              phase: "prepared",
+              pid: DEAD_PID,
+            });
+            const removed = yield* writePromotionFixture(tempRoot, {
+              keepLease: false,
+              keepTicket: false,
+              nonce: "ticket-removed-without-lease",
+              phase: "ticket-removed",
+            });
+            const journaled = yield* writePromotionFixture(tempRoot, {
+              keepLease: false,
+              keepTicket: false,
+              nonce: "already-journaled-without-lease",
+              phase: "admission-journaled",
+            });
+            yield* appendAdmissionJournalEvent(
+              tempRoot.root,
+              AdmissionJournalAdmitted.make({
+                schemaVersion: "yeet-admission-journal/v1",
+                _tag: "admission-admitted",
+                nonce: journaled.ticket.nonce,
+                pid: journaled.ticket.pid,
+                procStart: journaled.ticket.procStart,
+                kind: journaled.ticket.kind,
+                weightTokens: journaled.ticket.weightTokens,
+                priority: journaled.ticket.priority,
+                originKey: journaled.ticket.originKey,
+                enqueuedAtMillis: journaled.ticket.enqueuedAtMillis,
+                admittedAtMillis: journaled.lease.admittedAtMillis,
+                attemptId: journaled.ticket.attemptId,
+              })
+            );
+
+            yield* reapAdmissionState({ apply: true });
+
+            expect(yield* fs.exists(live.promotionPath)).toBe(true);
+            expect(yield* fs.exists(live.ticketPath)).toBe(true);
+            expect(yield* fs.exists(dead.promotionPath)).toBe(false);
+            expect(yield* fs.exists(dead.ticketPath)).toBe(false);
+            expect(yield* fs.exists(removed.promotionPath)).toBe(false);
+            expect(yield* fs.exists(journaled.promotionPath)).toBe(false);
+            const events = yield* readJournalEvents(tempRoot.root);
+            expect(A.filter(events, AdmissionJournalEvent.guards["admission-admitted"])).toHaveLength(2);
+            expect(A.filter(events, AdmissionJournalEvent.guards["admission-ticket-evicted"])).toHaveLength(1);
           })
         );
       })
