@@ -10,9 +10,10 @@ import {
 import { fcRuns } from "@beep/test-utils";
 import { SetWorkspaceVaultInput } from "@beep/workspace-use-cases/public";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Result } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import { DerivedThreadTitle } from "@/chat/DerivedThreadTitle";

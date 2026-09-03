@@ -6,15 +6,20 @@ import {
   SendTurnRequest,
   turnActiveAtom,
 } from "@beep/agents-client/Chat.atoms";
-import { documentToEditorState } from "@beep/lexical-schema";
+import { documentToEditorState } from "@beep/lexical-schema/Lexical.codec";
 import * as Md from "@beep/md/Md.model";
 import { SafeDocument } from "@beep/md/Md.safe";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { ThreadTimeline } from "@beep/workspace-use-cases/aggregates/Thread";
 import { it } from "@effect/vitest";
-import { Duration, Effect, Layer, Result, Schedule, Stream } from "effect";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
+import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import { Atom, AtomRegistry, Reactivity } from "effect/unstable/reactivity";
 import { describe, expect } from "vitest";
 import { composerSurfaceAtoms, dispatchTurnWithConfirm } from "@/chat/ui/Composer.atoms";

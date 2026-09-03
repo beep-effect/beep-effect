@@ -8,11 +8,15 @@
  */
 
 import { ContradictionListPayload } from "@beep/epistemic-use-cases/public";
-import { NonNegativeInt, PosInt } from "@beep/schema";
+import { PosInt } from "@beep/schema/Int";
+import { NonNegativeInt } from "@beep/schema/Number";
 import { provideScopedLayer } from "@beep/test-utils";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { describe, expect, it } from "@effect/vitest";
-import { ConfigProvider, Effect, FileSystem, Layer } from "effect";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { RpcTest } from "effect/unstable/rpc";
