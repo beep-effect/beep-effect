@@ -2985,7 +2985,7 @@ describe("yeet attempt journal", () => {
           const journalPath = yield* attemptJournalPath(tempContext);
           const owner = yield* liveAttemptOwner();
           const encodeStarted = S.encodeEffect(S.fromJsonString(YeetAttemptStarted));
-          const attemptIds = A.makeBy(5, (index) =>
+          const attemptIds = A.makeBy(6, (index) =>
             attemptUuid(`00000000-0000-4000-8011-${Str.padStart(12, "0")(`${index}`)}`)
           );
           const starts = yield* Effect.forEach(attemptIds, (attemptId, index) =>
@@ -3000,7 +3000,7 @@ describe("yeet attempt journal", () => {
                 head: "HEAD",
                 mode: "repair",
                 startedAt: `2026-09-03T00:00:00.00${index}Z`,
-                ...(index < 3 ? {} : owner),
+                ...(index < 3 ? {} : index === 3 ? { ownerPid: owner.ownerPid } : owner),
               })
             )
           );
@@ -3182,8 +3182,10 @@ describe("yeet attempt journal", () => {
           const tempContext = RepoRunContext.make({ ...context, cwd: tmpDir, repoRoot: tmpDir });
           const journalPath = yield* attemptJournalPath(tempContext);
           const firstBatch = yield* encodedAttemptPairs("8017", 51);
+          const legacyReceipt =
+            '{"schemaVersion":"yeet-attempt-journal/v1","_tag":"journal-compacted","recordedAt":"2026-09-03T00:00:00.000Z","evictedCount":2,"oldestEvictedRecordedAt":"2026-09-03T00:00:00.000Z"}';
           yield* fs.makeDirectory(path.dirname(journalPath), { recursive: true });
-          yield* fs.writeFileString(journalPath, `${A.join(firstBatch.lines, "\n")}\n`);
+          yield* fs.writeFileString(journalPath, `${legacyReceipt}\n${A.join(firstBatch.lines, "\n")}\n`);
 
           expect(yield* reconcileAttemptJournal(journalPath)).toBe(0);
           const firstEvents = yield* Effect.forEach(
@@ -3211,7 +3213,7 @@ describe("yeet attempt journal", () => {
           const receipts = A.filter(secondEvents, YeetAttemptJournalEvent.guards["journal-compacted"]);
           expect(receipts).toHaveLength(1);
           expect(receipts[0]?.evictedAttemptIds).toStrictEqual(A.take(firstBatch.attemptIds, 11));
-          expect(receipts[0]?.evictedCount).toBe(22);
+          expect(receipts[0]?.evictedCount).toBe(24);
           expect(receipts[0]?.oldestEvictedRecordedAt).toBe("2026-09-03T00:00:00.000Z");
           expect(pipe(receipts[0]?.terminalEvictionCutoffRecordedAt, O.getOrThrow)).toBe("2026-09-03T00:00:01.010Z");
         })

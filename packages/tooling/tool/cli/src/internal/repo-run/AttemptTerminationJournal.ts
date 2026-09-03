@@ -217,12 +217,7 @@ const terminalAttemptIds = (events: ReadonlyArray<AttemptJournalRetentionEvent>)
   );
 
 const eventRecordedAt = (event: AttemptJournalRetentionEvent): string =>
-  AttemptJournalRetentionEvent.match(event, {
-    "attempt-started": (started) => started.startedAt,
-    "attempt-finished": (finished) => finished.recordedAt,
-    "attempt-terminated": (terminated) => terminated.recordedAt,
-    "journal-compacted": (compacted) => compacted.recordedAt,
-  });
+  event._tag === "attempt-started" ? event.startedAt : event.recordedAt;
 
 const retainedJournalLines = Effect.fn("AttemptTerminationJournal.retainedLines")(function* (
   rows: ReadonlyArray<JournalLine>,
@@ -262,9 +257,6 @@ const retainedJournalLines = Effect.fn("AttemptTerminationJournal.retainedLines"
     evictableTerminalAttemptIds,
     A.length(evictableTerminalAttemptIds) - unprotectedCapacity
   );
-  if (A.isReadonlyArrayEmpty(evictedAttemptIds)) {
-    return A.map(rows, ({ line }) => line);
-  }
   const previousReceipts = A.filter(events, AttemptJournalRetentionEvent.guards["journal-compacted"]);
   const retainedLines = A.getSomes(
     A.map(rows, ({ event, line }) =>
