@@ -1,9 +1,10 @@
 import "./styles/globals.css";
 import "./styles/dock.css";
-import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability";
-import { O, P } from "@beep/utils";
+import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability/CauseRedaction";
+import * as O from "@beep/utils/Option";
+import * as P from "@beep/utils/Predicate";
 import { invoke } from "@tauri-apps/api/core";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App.tsx";

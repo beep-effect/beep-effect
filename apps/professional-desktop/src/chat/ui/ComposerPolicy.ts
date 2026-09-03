@@ -13,16 +13,19 @@
  */
 
 import { $ProfessionalDesktopId } from "@beep/identity/packages";
-import { editorStateToDocument } from "@beep/lexical-schema";
+import { editorStateToDocument } from "@beep/lexical-schema/Lexical.codec";
 import * as Md from "@beep/md/Md.model";
 import { renderPlainTextUnsafe } from "@beep/md/Md.render";
 import { refineSafeDocument, SafeDocument } from "@beep/md/Md.safe";
-import { LiteralKit } from "@beep/schema";
-import { A, flow, Str } from "@beep/utils";
-import { Match, Result, Tuple } from "effect";
-import { dual } from "effect/Function";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as A from "@beep/utils/Array";
+import * as Str from "@beep/utils/Str";
+import { dual, flow } from "effect/Function";
+import * as Match from "effect/Match";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import type { SerializedEditorState } from "@beep/lexical-schema";
+import * as Tuple from "effect/Tuple";
+import type { SerializedEditorState } from "@beep/lexical-schema/Lexical.model";
 import type { DocumentSafetyViolation } from "@beep/md/Md.safe";
 
 const $I = $ProfessionalDesktopId.create("chat/ui/ComposerPolicy");
@@ -258,11 +261,10 @@ const keptDraftSafetyMessage = (issues: ReadonlyArray<DocumentSafetyViolation>):
  *
  * ```ts
  * import { composerDocumentFromEditorState } from "@/chat/ui/ComposerPolicy"
- * import { documentToEditorState } from "@beep/lexical-schema"
+ * import { documentToEditorState } from "@beep/lexical-schema/Lexical.codec";
  * import * as Md from "@beep/md/Md.model"
  * import * as A from "effect/Array"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const seed = Md.Document.make({ children: [] })
  *   const state = yield* documentToEditorState(seed)

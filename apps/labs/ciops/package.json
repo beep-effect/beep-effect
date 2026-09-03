@@ -27,7 +27,8 @@
     "evidence:s7": "bun run scripts/generate-replay-evidence.ts",
     "lint": "bun run beep:lint",
     "lint:fix": "bun run beep:lint:fix",
-    "test": "bun run beep:test"
+    "test": "bun run beep:test",
+    "package-test-typecheck": "beep-cli quality test-tsgo-package"
   },
   "dependencies": {
     "@beep/identity": "workspace:^",
