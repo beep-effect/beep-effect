@@ -482,3 +482,23 @@ ratifies.
   explicit destination-free-space validator witness and retain the bounded integration probes.
   Prevention: tests must inject capacity readings instead of allocating or sizing fixtures from
   live runner resources.
+
+- **2026-09-02 — An unmatched optional commitlint glob aborted a config lookup.** The closeout
+  command resolved `commitlint.config.ts`, then zsh stopped on `no matches found` for the optional
+  `.commitlintrc*` argument before ripgrep could inspect the resolved file. Prevention: pass only
+  paths returned by `rg --files`, or enable `nullglob` for commands with optional file families.
+
+- **2026-09-02 — Managed Git metadata permissions stopped Yeet before verification.** The P5
+  `bun run beep yeet verify` preflight failed before any quality lane because `git fetch` could not
+  open `~/YeeBois/projects/beep-effect11/.git/worktrees/semantica-p5-close/FETCH_HEAD` on the
+  read-only linked-worktree metadata mount. The docs checks were not implicated. Prevention: grant
+  the designated worktree write access to its own Git administrative directory, or give Yeet a
+  supported no-fetch verify mode when the caller has an already verified base snapshot.
+
+- **2026-09-02 — Codex's Notion OAuth grant was revoked; the atlas lane could not read Notion.**
+  The read-only Codex atlas-proposal lane started with `failed to refresh OAuth tokens for server
+  notion: ... invalid_grant: OAuth grant revoked` and inventoried only what an earlier report and
+  ten live catalog queries supplied. The six park writes were applied from the orchestrating
+  session's own Notion connection with a canary write and SQL read-back. Prevention: check
+  `codex mcp list` auth state before delegating Notion work, and re-run `codex mcp login notion`
+  when it reports a revoked grant.

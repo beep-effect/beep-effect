@@ -3,15 +3,15 @@
 ## Status
 
 <!-- BEGIN GENERATED: EXPLORATION STATUS -->
-Stage: `graduate`
-Status: `graduated`
+Stage: `decompose`
+Status: `active`
 <!-- END GENERATED: EXPLORATION STATUS -->
 
-Source: [`ops/manifest.json`](./ops/manifest.json). The exploration graduated
-on 2026-08-24, returned to `decompose` when the C0 Extraction breaker fired,
-and graduated again on 2026-08-30 after the bounded evidence-quote re-entry
-passed C0. C1-C2 remain owned by
-[`semantica-canary`](../../goals/semantica-canary/README.md).
+Source: [`ops/manifest.json`](./ops/manifest.json). The `semantica-canary`
+goal passed C0 through C2 and closes as retained on 2026-09-02. Per MAP
+Sequencing 5, C2 fired the storage-inversion and reasoning-spike gates. The
+exploration therefore re-enters as `active` at `decompose`; this closeout does
+not scaffold either successor.
 
 ## Spark
 
@@ -22,12 +22,14 @@ and opens a neuro-symbolic reasoning work stream.
 
 ## Next Open Question
 
-None at this exploration boundary. The C1 projection candidate passed its
-committed G expectations, alternate-dimension fixture, rebuild identity, and
-full-W1 live/replay gate without using its retry. Storage and Embeddings join
-the earlier Input and Extraction verdicts in `DECISIONS.md`; C2 execution
-resumes from the graduated `semantica-canary` goal after the C1 evidence PR
-lands. A queued MAP gate reopens this packet only when its named trigger fires.
+Two queued gates are now open:
+
+- MAP Sequencing 5: the C2 pass fired `semantica-storage-inversion`; what
+  bounded spike proves delete and compaction semantics for the append-only
+  provenance ledger?
+- MAP Sequencing 5: the C2 pass fired `semantica-reasoning-spike`; what bounded
+  spike should build `G-entailment/rules` and test the queued reasoning
+  candidates?
 
 ## Read This First
 
@@ -51,6 +53,10 @@ owns *decisions and research* (D2).
 
 ## Trail
 
+- 2026-09-02 (P5 close and successor re-entry): `semantica-canary` completed
+  its evidence audit and closeout reflection. All five family verdicts remain
+  dated in `DECISIONS.md`. The C2 pass fired the two MAP Sequencing 5 gates, so
+  this exploration re-entered at `decompose` without scaffolding a successor.
 - 2026-08-31 (C1 pass): the first-probe projection candidate rebuilt the C0
   PGlite ledger into dimension-keyed DuckDB exact-vector tables and an
   Oxigraph RDF view. The frozen G kNN and SPARQL witnesses, alternate-dimension

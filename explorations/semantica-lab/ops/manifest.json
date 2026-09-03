@@ -3,9 +3,12 @@
   "exploration": {
     "slug": "semantica-lab",
     "title": "Semantica Port Atlas & Lab",
-    "status": "graduated",
-    "stage": "graduate",
-    "openQuestions": [],
+    "status": "active",
+    "stage": "decompose",
+    "openQuestions": [
+      "MAP Sequencing 5: the C2 pass fired semantica-storage-inversion; what bounded spike proves delete and compaction semantics for the append-only provenance ledger?",
+      "MAP Sequencing 5: the C2 pass fired semantica-reasoning-spike; what bounded spike should build G-entailment/rules and test the queued reasoning candidates?"
+    ],
     "sources": ["research/SOURCES.md"],
     "links": {
       "goals": ["goals/semantica-canary", "goals/openai-driver"],
@@ -13,6 +16,6 @@
       "supersededBy": null
     },
     "created": "2026-08-24",
-    "updated": "2026-08-31"
+    "updated": "2026-09-02"
   }
 }
