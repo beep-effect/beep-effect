@@ -9,7 +9,7 @@ import { randomUUID } from "node:crypto";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { UUID as UUIDSchema } from "@beep/schema/String";
-import { Console, DateTime, Effect, FileSystem, Order, Path, pipe } from "effect";
+import { Clock, Console, DateTime, Duration, Effect, FileSystem, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import { constant } from "effect/Function";
 import * as O from "effect/Option";
@@ -27,6 +27,7 @@ const $I = $RepoCliId.create("internal/repo-run/AttemptTerminationJournal");
 const JOURNAL_FILE_NAME = "attempts.ndjson";
 const RETAINED_ATTEMPTS = 50;
 const LOCK_RETRY_ATTEMPTS = 400;
+const PID_ONLY_OWNER_MAX_AGE = Duration.hours(24);
 const textEncoder = new TextEncoder();
 
 /**
@@ -57,6 +58,7 @@ export const YeetAttemptTerminationReason = LiteralKit([
   "lease-eviction",
   "owner-dead",
   "legacy-unowned-start",
+  "stale-unverifiable-owner",
   "terminal-row-missing",
   "unrecorded-failure",
 ]).pipe(
@@ -425,6 +427,36 @@ const appendLinesLocked = Effect.fnUntraced(function* (
   );
 });
 
+interface AttemptOwnerFacts {
+  readonly ownerPid: O.Option<number>;
+  readonly ownerProcStart: O.Option<string>;
+  readonly startedAt: string;
+}
+
+const unfinishedStartTerminationReason = Effect.fnUntraced(function* (
+  started: AttemptOwnerFacts
+): Effect.fn.Return<O.Option<YeetAttemptTerminationReason>, never, FileSystem.FileSystem> {
+  if (O.isNone(started.ownerPid)) {
+    return O.some("legacy-unowned-start");
+  }
+  const ownerStatus = yield* processIdentityStatus({
+    pid: started.ownerPid.value,
+    procStart: O.getOrElse(started.ownerProcStart, constant(Str.empty)),
+  });
+  if (ProcessIdentityStatus.is.dead(ownerStatus)) {
+    return O.some("owner-dead");
+  }
+  if (O.isSome(started.ownerProcStart)) {
+    return O.none();
+  }
+  const nowMillis = yield* Clock.currentTimeMillis;
+  return pipe(
+    DateTime.make(started.startedAt),
+    O.filter((startedAt) => nowMillis - DateTime.toEpochMillis(startedAt) >= Duration.toMillis(PID_ONLY_OWNER_MAX_AGE)),
+    O.map(constant<YeetAttemptTerminationReason>("stale-unverifiable-owner"))
+  );
+});
+
 const reconcileJournalLocked = Effect.fn("AttemptTerminationJournal.reconcileLocked")(function* (
   journalPath: string
 ): Effect.fn.Return<ReadonlyArray<UUID>, QualitySchedulerError, FileSystem.FileSystem> {
@@ -443,21 +475,7 @@ const reconcileJournalLocked = Effect.fn("AttemptTerminationJournal.reconcileLoc
   const terminalRows = A.getSomes(
     yield* Effect.forEach(unfinishedStarts, (started) =>
       pipe(
-        started.ownerPid,
-        O.match({
-          onNone: () => Effect.succeedSome<YeetAttemptTerminationReason>("legacy-unowned-start"),
-          onSome: (pid) =>
-            processIdentityStatus({
-              pid,
-              procStart: O.getOrElse(started.ownerProcStart, constant(Str.empty)),
-            }).pipe(
-              Effect.map((status) =>
-                ProcessIdentityStatus.is.dead(status)
-                  ? O.some<YeetAttemptTerminationReason>("owner-dead")
-                  : O.none<YeetAttemptTerminationReason>()
-              )
-            ),
-        }),
+        unfinishedStartTerminationReason(started),
         Effect.flatMap(
           O.match({
             onNone: () => Effect.succeedNone,

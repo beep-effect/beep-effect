@@ -223,7 +223,7 @@ class AttemptLoaderTest(unittest.TestCase):
                             "_tag": "attempt-terminated",
                             "attemptId": "abnormal",
                             "recordedAt": "2026-09-03T00:00:03Z",
-                            "reason": "legacy-unowned-start",
+                            "reason": "stale-unverifiable-owner",
                             "resolvedHeadSha": "0123456789abcdef0123456789abcdef01234567",
                             "diffFingerprint": "fingerprint-abnormal",
                             "proofTier": "full",
@@ -242,7 +242,7 @@ class AttemptLoaderTest(unittest.TestCase):
 
         self.assertEqual(diagnostics["invalidRows"], 0)
         self.assertEqual(len(attempts), 1)
-        self.assertEqual(attempts[0]["terminationReason"], "legacy-unowned-start")
+        self.assertEqual(attempts[0]["terminationReason"], "stale-unverifiable-owner")
         self.assertEqual(attempts[0]["resolvedHeadSha"], "0123456789abcdef0123456789abcdef01234567")
         self.assertEqual(attempts[0]["diffFingerprint"], "fingerprint-abnormal")
         self.assertEqual(attempts[0]["proofTier"], "full")

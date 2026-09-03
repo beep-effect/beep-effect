@@ -139,6 +139,21 @@ ATTEMPT_TERMINATION_FIELDS = (
     "schemaVersion",
     *ATTEMPT_FACT_FIELDS,
 )
+ATTEMPT_TERMINATION_REASONS = frozenset(
+    {
+        "failure",
+        "interrupted",
+        "lease-eviction",
+        "legacy-unowned-start",
+        "owner-dead",
+        "queued-submitter-death",
+        "signal",
+        "stale-unverifiable-owner",
+        "success",
+        "terminal-row-missing",
+        "unrecorded-failure",
+    }
+)
 ATTEMPT_COMPACTION_FIELDS = (
     "_tag",
     "evictedAttemptIds",
@@ -771,7 +786,11 @@ def load_attempts(
                 duplicate_finishes += int(key in finishes)
                 if key not in finishes or source["source"] == "live":
                     finishes[key] = envelope
-            elif record.get("_tag") == "attempt-terminated" and isinstance(record.get("reason"), str):
+            elif (
+                record.get("_tag") == "attempt-terminated"
+                and isinstance(record.get("reason"), str)
+                and record.get("reason") in ATTEMPT_TERMINATION_REASONS
+            ):
                 duplicate_finishes += int(key in finishes)
                 if key not in finishes or source["source"] == "live":
                     finishes[key] = envelope
