@@ -36,7 +36,6 @@
       "Bash(git stash show:*)",
       "Bash(git stash list:*)",
       "Bash(git stash drop:*)",
-      "Bash(git worktree remove:*)",
       "Bash(git update-ref refs/archive/:*)",
       "Bash(bun run beep yeet sweep:*)",
       "Bash(bun run beep yeet repair:*)",

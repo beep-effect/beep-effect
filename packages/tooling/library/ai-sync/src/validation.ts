@@ -118,7 +118,6 @@ const ApprovedClaudeRepoBashPermission = LiteralKit([
   "Bash(git stash show:*)",
   "Bash(git stash list:*)",
   "Bash(git stash drop:*)",
-  "Bash(git worktree remove:*)",
   "Bash(git update-ref refs/archive/:*)",
   "Bash(bun run beep yeet sweep:*)",
   "Bash(bun run beep yeet repair:*)",
@@ -137,7 +136,7 @@ const ApprovedClaudeRepoBashPermission = LiteralKit([
 ]).pipe(
   $I.annoteSchema("ApprovedClaudeRepoBashPermission", {
     description:
-      "Exact 51-value Bash grant domain approved for this repository, including named read-only GitHub queries, intentional Yeet publication commands, and stale-lane cleanup (stash drop, plain worktree removal, archive refs under refs/archive/, and Yeet sweep).",
+      "Exact 50-value Bash grant domain approved for this repository, including named read-only GitHub queries, intentional Yeet publication commands, and stale-lane cleanup (stash drop, archive refs under refs/archive/, and Yeet sweep; worktree removal only through the Beep CLI).",
   })
 );
 
