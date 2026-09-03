@@ -1,0 +1,25 @@
+id: "dh:pb-fallow-failure-vocabulary:001"
+observation_refs:
+  - "po:sha256:70ea5a10bd36d7d26981839b25a381e3f0daa59bb80327d7f289fe046a205f6c"
+cq_warrants:
+  - "CQ-013"
+proposed_referent:
+  label: "Fallow report-failure vocabulary"
+  description: "A possible vocabulary of tool-failed, invalid-json, invalid-report, and base-resolution-failed result labels."
+representation_status: lexical_alias
+alternatives:
+  - label: "serialization union members"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+  - label: "verification failure kinds"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The quotation exposes four literals but no occurrence criteria, failed step, lane, verdict consequence, or relation to an attributed delay. Literal membership alone cannot distinguish a domain failure taxonomy from envelope decoding states."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.41
+  use_for_acceptance: false

@@ -1,0 +1,51 @@
+id: "otp:pb-package-dependency:001"
+hypothesis_ref: "dh:pb-package-dependency:001"
+identity_card_ref: "ic:pb-package-dependency:001"
+foundational_status: analyzed
+term:
+  preferred_label: "depends on"
+  local_name: dependsOn
+  proposed_iri: "https://oip.law/ontology/ci-ops#dependsOn"
+  owl_entity_kind: object_property
+definition:
+  text: >-
+    A context-indexed package relation that holds from one importing workspace
+    package to one imported workspace package when a direct dependency edge
+    connects that ordered pair in one pinned repository dependency graph.
+  source:
+    - "po:sha256:669ac1bd6274ee1851c836dd9730f2ae14dcf8843ffea88e4f170949778249d3"
+    - "po:sha256:8816173181e3b06a711847fa03ad9d050c9f1d74d131af70eb367a8ea99f99cd"
+foundational:
+  ufo_category: none
+  gufo_alignment: ""
+ontoclean:
+  rigidity: unresolved
+  identity: none
+  dependence: relational
+parents: []
+revision_log: []
+reuse:
+  searched: true
+  exact_reuse_found: false
+  mappings: []
+operational_warrant:
+  competency_questions: []
+  semantic_support_for: ["otp:pa-package-dependency-closure:001"]
+alternatives_rejected:
+  - >-
+    The architecture-arrow convention is rejected as the relation itself
+    because a copied or stale diagram can exist without the operative edge.
+  - >-
+    The dependsOn spelling alone is rejected because lexical identity does not
+    determine the directed graph relation.
+open_issues:
+  - >-
+    Steward must choose whether edge-local provenance or version constraints
+    require a reified dependency relator in addition to this binary relation.
+  - >-
+    The package-manifest dependency declaration remains a viable, distinct
+    information-object model and needs its own warranted hypothesis before
+    admission.
+revision_requests: []
+review: {foundational_agent: pending, adversarial_agent: pending, steward: pending}
+status: proposed

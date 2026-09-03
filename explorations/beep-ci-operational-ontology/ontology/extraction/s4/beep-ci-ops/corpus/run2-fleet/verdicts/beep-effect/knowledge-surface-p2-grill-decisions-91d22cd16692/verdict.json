@@ -1,0 +1,33 @@
+{
+  "schemaVersion": "yeet-verdict/v1",
+  "base": "origin/main",
+  "branch": "knowledge-surface-p2-grill-decisions",
+  "committed": false,
+  "createdAt": "2026-08-01T10:21:10.339Z",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "monitor:01-pr-context",
+      "label": "monitor:pr-context",
+      "phase": "monitor",
+      "status": "passed",
+      "durationMs": 319.991047,
+      "exitCode": 0
+    },
+    {
+      "id": "monitor:02-pr-checks-watch",
+      "label": "monitor:pr-checks:watch",
+      "phase": "monitor",
+      "status": "passed",
+      "durationMs": 582601.52722,
+      "exitCode": 0
+    }
+  ],
+  "message": "yeet monitor succeeded.",
+  "mode": "monitor",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "knowledge-surface-p2-grill-decisions-91d22cd16692",
+  "indexPath": "<fleet>/beep-effect/.beep/yeet/quality-issue-index.json"
+}

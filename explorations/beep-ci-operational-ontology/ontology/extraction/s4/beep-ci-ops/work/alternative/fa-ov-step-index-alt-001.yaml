@@ -1,0 +1,24 @@
+id: fa:ov-step-index-alt:001
+hypothesis_ref: dh:ov-step-index:001
+identity_card_ref: ic:ov-step-index-alt:001
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+- label: successor ordering relation encoded as an integer (no positional quality)
+  still_viable: true
+- label: information object that is the integer field itself
+  still_viable: true
+- label: array offset selected only by the projection implementation
+  still_viable: false
+strongest_counterexample: 'Projected admission order is compared with deployed grant
+  order, so ordinal place can be right or wrong independently of serialization. That
+  kills the array-offset null. A positional quality and a successor chain serialized
+  as integers remain observationally equivalent: nothing shows next/previous predicates,
+  and nothing shows the integer being used as anything but place-in-sequence.'
+verdict: analyzed
+needed_evidence: 'An observation of next-step or previous-step structure used as the
+  order, versus stepIndex being compared as a number, versus the integer existing
+  only as a schema field never checked against grant order.'

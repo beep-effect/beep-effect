@@ -1,0 +1,10 @@
+id: rat:47
+proposal_ref: otp:jv-merge-readiness-assessment:001
+proposal_sha256: f387a8fc447a19053d7a08ea83cbb2744b12d8e73299f3b083a7c21abdb47a77
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-09-03T09:05:00Z'
+verbatim_decision: Accept the merge-readiness VerificationEvidence reuse, provenance identity deferred
+  to run 3 as flagged.

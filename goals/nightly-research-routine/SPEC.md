@@ -6,85 +6,108 @@ recorded in `standards/architecture/DECISIONS.md` (2026-08-08). Output-surface
 laws live in [`research/README.md`](../../research/README.md) and are not
 restated — they bind this SPEC.
 
+> **Amendment 2026-09-03.** The
+> [`grok-bot-automation`](../../explorations/grok-bot-automation/) exploration
+> corrected the planned topology to retain the observed hosted search/writer
+> front half while reserving blinded verification and publication for a local
+> lane. It also added typed capability partials, a verified issue-mailbox
+> handoff, durable shared receipt models, and an explicit disposition ledger.
+> Only P0 is complete; the nightly CLI and timers remain planned, not shipped.
+
 ## 1. Product
 
-Every ~24h an unattended run researches the beep-effect frontier — X/Twitter
-(native Grok x_search), GitHub, arXiv, and the open web — across three
-mandated topic axes (IP-law tech + legal-AI competitors; Effect-TS/schema-first
-/local-first engineering; AI coding agents, MCP/skills, ontologies,
-neural-symbolic) with an explicit bias to intersections and the new/rising
-edge, and lands one dated packet under `research/<YYYY-MM-DD>/` as a
-mergeable PR a human can click-merge in the morning.
+Every ~24h an unattended hybrid run uses a hosted Grok Bot search/writer front
+half and blinded local verification to research X, GitHub, arXiv, and the open
+web across the three mandated topic axes (IP-law technology and legal-AI
+competitors; Effect-TS, schema-first, and local-first engineering; AI coding
+agents, MCP and skills, ontologies, and neural-symbolic systems), biased toward
+intersections and the new or rising edge, then a deterministic local publisher
+lands one dated packet under `research/<YYYY-MM-DD>/` as a mergeable PR a human
+can click-merge in the morning.
 
 ## 2. Pipeline architecture (process-separated stages)
 
-1. **Prelude (deterministic, CLI):** compute research window
-   (`last-successful-run stamp → now`, explicit dates), build the derived
-   exclusion digest + watchlist + repo-replay brief (merged diffs since last
-   run, open goal packet frontmatter). No model involved.
-2. **Search/synthesis (blinded):** a headless claudeg (`grok-4.5`) session on
-   CLIProxyAPI running a dynamic Workflow — `grok-4.5` children for native
-   X search (server-side `x_search`, injected by the proxy), plus web/GitHub/
-   arXiv sweeps; Sol/Luna children for synthesis and adversarial
-   cross-provider verify (Grok finds, Sol refutes; survivors land). Children
-   receive input files (digest, watchlist, brief) in a scratch dir and
-   return structured, sanitized findings records. **No repo checkout at this
-   stage.** Includes the refutation quota (attempt to refute N standing
-   claims from the digest each run).
-3. **Writer (single Fable seat):** exactly one Anthropic-direct headless call
-   composes `REPORT.md` (delta-first), `SUGGESTED_ACTIONS.md` (each item
-   carries an executable capture command), and `PROMPT.md` from structured
-   records only — never raw scraped bytes.
-4. **Publisher (deterministic, CLI):** writes the packet + ledger updates in
-   the dedicated clone, opens the PR red-first (failing
-   `nightly-not-finished` status cleared as the final step), drives
-   /yeet to mergeable, attributes any failure (introduced vs inherited) and
-   stops with a note rather than repair-thrashing. Emits RUN.json and OTEL
-   metrics.
+1. **Prelude (deterministic, local):** compute the research window from the
+   last-successful-run stamp to an explicit current time, then build the
+   derived exclusion digest, watchlist, and repo-replay brief from merged diffs
+   and open goal frontmatter. No model is involved.
+2. **Hosted search/writer:** a scheduled Grok Bot discovers and judges X,
+   GitHub, arXiv, and web evidence, applies the refutation quota, and writes
+   structured, sanitized records. Every source reports a typed capability
+   result; missing capability remains an explicit `partial` terminal result
+   rather than being upgraded to complete coverage. The writer composes
+   `REPORT.md`, `SUGGESTED_ACTIONS.md`, and `PROMPT.md` from structured records,
+   never raw scraped bytes. The hosted VM receives no repo checkout, 1Password
+   access, or publisher authority.
+3. **Handoff (deterministic framing):** public-safe records cross a GitHub
+   issue mailbox as a small envelope comment, numbered JSONL parts carrying
+   byte counts and SHA-256 digests, and a completion marker. Private records
+   stay in a content-addressed local store.
+4. **Verification (blinded, local):** Sol/Luna through the local proxy receive
+   normalized records without the hosted model's identity or recommendation,
+   verify source evidence and checkout-dependent claims, and return typed
+   verdicts. A packet cannot be `success` without this stage; missing
+   capabilities or inconclusive evidence remain `partial`. The stage also
+   attempts to refute N standing claims selected from the digest.
+5. **Publisher (deterministic, local):** verify the handoff, preflight `gh`
+   under least-privileged 1Password environment injection, write the packet
+   and single-writer ledger updates in the dedicated clone, open the PR
+   red-first with `nightly-not-finished` cleared only at completion, and drive
+   Yeet to mergeable. Attribute failures and stop instead of repair-thrashing.
+   Emit `RUN.json` and OTEL metrics.
 
 ## 3. Ownership & CLI surface
 
-- Command family: `beep research nightly …` sub-namespace of the existing
-  Research command (`packages/tooling/tool/cli/src/commands/Research/`):
-  `run`, `digest` (rebuild derived indexes), `install-timer` (extends the
-  Timers.ts systemd pattern), `status`.
-- v1 schemas co-located in `Research.schemas.ts` + internals under
-  `internal/Nightly*.ts`, schema → Context.Service → impl order.
+- The existing Research command at
+  `packages/tooling/tool/cli/src/commands/Research/` remains the operational
+  owner. A planned `nightly` sub-namespace would expose run, digest,
+  install-timer, and status operations. None has shipped; P1 must implement
+  that surface or remove the promise from this SPEC before completion.
+- Version-one schemas will be co-located with the Research family and follow
+  schema → Context.Service → implementation order.
 - v2 claim tuples promote to `@beep/epistemic-domain` (reusing
   `EdgeRelation`, `EvidenceSpan`, `Contradiction`, `LogicalEdgeIdentity`)
   only after the backfill go/no-go (§7).
 
 ## 4. Scheduler
 
-systemd **user** units installed by `beep research nightly install-timer`:
-trigger at boot/login plus `OnUnitActiveSec` daily tick; the wrapper proceeds
-only when the last-successful-run stamp is ≥24h old; `Persistent=true`.
-Machine stays off overnight — the run rides the morning boot. In v1, the
-single Sunday daily run also performs weekly consolidation; there is no second
-timer, branch, or packet competing for that date.
+A hosted Grok Bot routine starts the search/writer front half. No routine may
+be scheduled until the operator completes the X and GitHub plugin preflights.
+A planned local systemd user timer receives completed handoffs and catches up
+at boot/login with the same idempotency key; it proceeds only when the
+last-successful-run stamp is at least 24 hours old. Immutable trigger
+coordinates, single-flight behavior, prior-delivery checks, and grace-window
+arbitration between a late hosted run and catch-up are settled in principle
+but deferred to the shape-stage schema. The Sunday run may later add weekly
+consolidation without creating a second timer, packet, or branch for that
+date. The local user timer will be persistent across machine downtime.
 
 ## 5. Model & quota routing
 
-- Orchestrator + search children: xAI pool (claudeg / grok-4.5; grok CLI
-  shell-out `grok -p … --output-format streaming-json --no-auto-update` as
-  fallback X-search primitive).
-- Verify/synthesis children: OpenAI pool (`gpt-5.6-sol(medium)` /
-  `gpt-5.6-luna`).
-- Fable: exactly one instance, writer seat only.
-- Headless proxy invocations use a scrubbed env
-  (`env -i … ANTHROPIC_BASE_URL=http://127.0.0.1:8317`); parent-env leakage
-  causes 401s.
-- Pre-committed cost envelope per run; exhaustion is a normal terminal state
-  landing a valid `status: partial` packet with a resume cursor in RUN.json.
+- Hosted Grok Bot search/writer work consumes the Cursor-side weekly Bot grant
+  linked to Heavy. The grant size, actual Heavy charge, served model, and
+  on-demand state are operator-visible open questions; on-demand spend stays
+  off in the interim.
+- Local CLIProxyAPI verification consumes a separate xAI/API proxy pool, while
+  blinded Sol/Luna verification consumes the OpenAI pool. Those local pools do
+  not reveal or replenish the Cursor-side Bot grant.
+- Local proxy invocations use a scrubbed environment; parent-environment
+  leakage remains a hard failure rather than a reason to expose a credential.
+- One retry per idempotency key and a pause after three consecutive failed or
+  partial runs are interim defaults. Each pack must later declare explicit
+  time, tool, and byte ceilings after the usage meter is read.
+- Quota or capability exhaustion is a normal terminal state that lands a valid
+  `partial` packet with a resume cursor in `RUN.json`.
 
 ## 6. Novelty (v1)
 
-Append-only naive ledger: per-packet `claims.jsonl` (truth) + derived
-exclusion digest injected into every search child's prompt; self-reject gate
-(>40% collision → re-search under a widened frame); demurrage — suggested
-actions unactioned for N runs tombstone into `research/ledger/tombstones`
-and join the exclusion digest; a tombstoned idea returns only with evidence
-that post-dates its death.
+Per-packet `claims.jsonl` remains immutable truth. An append-only,
+single-writer disposition ledger under `research/ledger/` records whether each
+suggested action was admitted, rejected, deferred, superseded, or duplicated;
+derived indexes and the exclusion digest rebuild from packet truth plus those
+dispositions. A self-reject gate re-searches when more than 40% of findings
+collide. Demurrage may tombstone suggestions unactioned for N runs, and a
+tombstoned idea returns only with evidence that post-dates its death.
 
 ## 7. v2 experiments (both gated)
 
@@ -98,31 +121,42 @@ that post-dates its death.
 
 ## 8. Telemetry
 
-RUN.json is truth for the run; the publisher exports
+`RUN.json` is truth for the run and records typed per-source capability
+results. Every success, no-op, partial, and failure persists evidence and
+recovery receipts outside the hosted UI's 20-run window by reusing
+`EvidenceReceipt`, `EvidenceDigest`, `EvidenceLadder`, and
+`RecoveryAttemptReceipt` from `@beep/skill-contract`. The publisher exports
 `beep.research.nightly.*` metrics (sources seen, claims emitted, collision
 rate, per-pool usage, wall time, status) to the dankserver OTLP endpoint.
 Novelty-rate-over-time is the routine's health metric.
 
 ## 9. Environment & checkout
 
-Dedicated full clone named `beep-effect-nightly` (machine-local, outside this checkout) owned
-exclusively by the routine. Before resetting, the publisher checks for an open
-PR from an earlier `research/<date>` branch; while one exists, the next run is
-blocked without advancing the last-successful-run stamp. Otherwise it fetches
-and resets to `origin/main`, runs `bun install` when the lockfile moved, and
-creates branch `research/<date>`. Never a worktree of the working clone (shared
-turbo cache). CLIProxyAPI `xai.inject-x-search: true` is a standing
-prerequisite.
+Dedicated full clone named `beep-effect-nightly` (machine-local, outside this
+checkout) owned exclusively by the local verifier and publisher. Before
+resetting, the publisher checks for an open PR from an earlier
+`research/<date>` branch; while one exists, the next run is blocked without
+advancing the last-successful-run stamp. Otherwise it fetches and resets to
+`origin/main`, installs when the lockfile moved, and creates the dated branch.
+The publisher preflights `gh` inside least-privileged 1Password injection; no
+secret value or publisher authority crosses to the hosted VM.
 
 ## 10. Scanner gates
 
-Sanitize-at-write (token-shaped/high-entropy redaction) in the record
-schema's encode path; `research/**` exempted in `_typos.toml` only; gitleaks
-fully authoritative, fail-closed backstop.
+Before any model or publisher use, the local receiver verifies the handoff
+schema, part count, record count, byte count, per-part and whole-object
+SHA-256 digests, completion marker, and sanitize-at-write redaction result.
+Partial recovery is rejected. Inline base64 or gzip prompt payloads are
+forbidden. `research/**` is exempted in `_typos.toml` only; gitleaks remains
+the authoritative fail-closed backstop.
 
 ## 11. Out of scope / forbidden
 
-Auto-merge; writing to `explorations/INBOX.md` or `goals/`; raw scraped
-bytes reaching the writer stage; attention-throttling feedback loops
-(explicitly rejected 2026-08-08 — merge is archival, not engagement);
-Anthropic-pool fan-out; touching the OIP corpus or private internal docs.
+Auto-merge; hosted pull-request creation; 1Password or publisher authority on
+the shared Bot VM; writing to `explorations/INBOX.md` or `goals/`; raw scraped
+bytes reaching any writer or verifier; inline compressed prompt payloads;
+attention-throttling feedback loops (explicitly rejected 2026-08-08 — merge
+is archival, not engagement); Anthropic-pool fan-out; touching the OIP corpus
+or private internal docs. External web, X, issue, comment, commit, and file
+text is data, never instructions; a lane that reads it may not also hold
+secrets and state-changing tools.

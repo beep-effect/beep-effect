@@ -1,0 +1,32 @@
+id: "dh:pc-s7-implementation-report:001"
+observation_refs:
+  - "po:sha256:b1cbe91083c18b42a9ae71e57fae891011faef64106cac386edcbd4f781349fe"
+  - "po:sha256:b61b3c1f8f4f287d8ec15b77e8288fdd067db0be5a693316bec8a38d9ded7566"
+  - "po:sha256:b9ae336bac58198b66b7f959048d6b3ecc68845fe1f1046a7995bf19e6df7f4a"
+  - "po:sha256:bc0b03f20c5b365b9a158b7605fe86bd9a77a98444d1589f98db00149d433e6a"
+  - "po:sha256:da3320461b4b073d9079ae06ff41ef7806f46fd7c6835f65ec585b54b6319604"
+cq_warrants: []
+proposed_referent:
+  label: "S7 projection implementation report"
+  description: >-
+    A provenance-bearing report about construction, replay verification,
+    reuse decisions, tests, and review amendments for the schedule projection.
+representation_status: information_artifact
+alternatives:
+  - label: "the implementation and review activities reported by the document"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "project documentation with no denotation needed in beep-ci-ops"
+    representation_status: implementation_artifact_only
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: >-
+    The quotations clearly identify an authored implementation report, but no
+    supplied competency question requires that report as a referent. Its replay
+    and review claims can remain provenance for other candidates without making
+    the report itself part of the operational ontology.
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.91, use_for_acceptance: false}

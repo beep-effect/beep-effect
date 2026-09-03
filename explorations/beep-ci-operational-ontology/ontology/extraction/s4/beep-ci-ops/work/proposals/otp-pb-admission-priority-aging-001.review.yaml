@@ -1,0 +1,62 @@
+target: "otp:pb-admission-priority-aging:001"
+target_sha256: "1c796a6eb377b7fda1323e8bc51ff4016da0a03191df29d3f0204c67b47662d6"
+chain_sha256: "9a4d1250a8930dadec51333c92998479dd23038b0175b996562cd341ca893f06"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: "The proposal asserts no candidate is-a edge."
+revision_requests:
+  - >-
+    Address both semantic-support-not-necessary attacks by folding the aging
+    clause into AdmissionPolicy or by adding a Must/Should decision CQ whose
+    answer requires an independently represented aging rule.
+  - >-
+    Address discriminator-true-of-sort-implementation by supplying
+    observation-backed policy authority independent of the comparator, or
+    leave the implementation-only null unrejected.
+attacks:
+  - surface: identity
+    rule: rule-identity-versus-evaluation
+    counterexample: >-
+      The same aging rule can be evaluated for many requests and can yield the
+      same rank under different thresholds; the criterion survives because it
+      uses the governed threshold semantics, affected class, scope, and rule
+      lineage rather than a Boolean or rank result.
+    outcome: survived
+  - surface: warrant
+    rule: semantic-support-not-necessary
+    counterexample: >-
+      CQ-023 asks whether queue wait exceeds a declared starvation bound. It
+      expressly says aging does not guarantee starvation freedom, so an
+      AdmissionPolicy can answer that CQ without a separate priority-aging
+      rule class.
+    outcome: landed
+  - surface: warrant
+    rule: semantic-support-not-necessary
+    counterexample: >-
+      CQ-021 lists each request's recorded AdmissionPriorityClass but never
+      asks when its effective sort rank changes. The class remains answerable
+      with verify/publish values and no aging-rule individual.
+    outcome: landed
+  - surface: null_discriminator
+    rule: discriminator-true-of-sort-implementation
+    counterexample: >-
+      A purely implementation-level ternary comparator can change a waiting
+      request's rank from one to zero after a configured interval. That is the
+      discriminator's entire claimed fact, so it remains true in the null
+      world even if no independently identified policy-rule artifact exists.
+    outcome: landed
+rival_models_still_viable:
+  - "Threshold crossing creates an aged-request phase or policy-relative role."
+  - "The comparison is only an implementation of a clause inside AdmissionPolicy."
+evidence:
+  - "po:sha256:60e90bd17b628d4d6d815cfd05ddcf88cbc2a724790b05ac88b4411619f535be"
+  - "po:sha256:6b2e1d71b18197d5aabdde8f443d63fb71885b277f825b9ad13103f0de607a29"
+  - "CQ-021"
+  - "CQ-023"

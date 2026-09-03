@@ -1,0 +1,22 @@
+id: fa:pc-token-capacity-policy-alt:001
+hypothesis_ref: dh:pc-token-capacity-policy:001
+identity_card_ref: ic:pc-token-capacity-policy-alt:001
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+- label: the same information object as (part of) pb-admission-policy
+  still_viable: true
+- label: situation of a request being feasible under current load
+  still_viable: true
+- label: scheduler arithmetic with no normative force
+  still_viable: false
+strongest_counterexample: Replay adjudication shows the inequality has operational force over
+  recorded grants, which rejects a mere-arithmetic reading. Whether this is a standalone policy
+  or a clause of the admission-policy bundle, and whether feasibility situations are the real
+  individuals, remains open.
+verdict: analyzed
+needed_evidence: An observation that token-capacity is cited, waived, or versioned apart from
+  aging and class-cap rules, versus always bundled as admission semantics v1.

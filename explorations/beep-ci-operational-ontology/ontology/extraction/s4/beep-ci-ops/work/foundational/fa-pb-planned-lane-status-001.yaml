@@ -1,0 +1,26 @@
+id: "fa:pb-planned-lane-status:001"
+hypothesis_ref: "dh:pb-planned-lane-status:001"
+identity_card_ref: "ic:pb-planned-lane-status:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+  - label: "VerificationResultArtifact identity follows repeatable result content across faithful carriers."
+    still_viable: true
+  - label: "VerificationResultArtifact identity follows each authoritative issuance and custody-tracked record token."
+    still_viable: true
+  - label: "A transient planned-lane verdict is only a value object and not an independently useful artifact instance."
+    still_viable: true
+  - label: "The broad result artifact is identical with the execution occurrence it reports."
+    still_viable: false
+strongest_counterexample: "Heterogeneous verification results can record outcomes without lane identifiers, repair instructions, or duration fields, and equal result content can be copied or separately issued; a planned-lane criterion cannot govern the full exact-reused extension."
+verdict: explicitly_deferred
+needed_evidence: >-
+  Authoritative result formation, issuance, producer, custody, copy,
+  correction, and revocation provenance across heterogeneous
+  VerificationResultArtifact records is required to choose content,
+  record-token, or carrier-lineage identity. A separate planned-lane-status
+  term additionally requires retained issuance, parent-attempt and execution
+  joins, and a Must/Should CQ that consumes it separately.

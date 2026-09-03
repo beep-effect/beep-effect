@@ -1,0 +1,47 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "feat/skill-contract-p1b-kernel-types",
+  "committed": false,
+  "createdAt": "2026-08-24T18:30:23.649Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "monitor:01-pr-context",
+      "label": "monitor:pr-context",
+      "phase": "monitor",
+      "status": "passed",
+      "durationMs": 399.669997,
+      "exitCode": 0
+    },
+    {
+      "id": "monitor:02-pr-checks-watch",
+      "label": "monitor:pr-checks:watch",
+      "phase": "monitor",
+      "status": "passed",
+      "durationMs": 940027.947799,
+      "exitCode": 0
+    }
+  ],
+  "message": "yeet monitor succeeded.",
+  "mode": "monitor",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "feat_skill-contract-p1b-kernel-types-34212107f6eb",
+  "attemptId": "8953ed54-8d2c-43fb-bd4b-a50d867ad842",
+  "startedAt": "2026-08-24T18:14:40.512Z",
+  "endedAt": "2026-08-24T18:30:23.649Z",
+  "elapsedMs": 943137,
+  "indexPath": "<fleet>/beep-effect16/.beep/yeet/quality-issue-index.json",
+  "mergeReady": {
+    "ready": false,
+    "failing": "closeout-run",
+    "criteria": {
+      "closeoutRun": false,
+      "checksGreen": true,
+      "threadsResolved": true
+    }
+  }
+}

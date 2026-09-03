@@ -1,0 +1,24 @@
+id: "fa:jv-lane-diagnostic-comparison:001"
+hypothesis_ref: "dh:jv-lane-diagnostic-comparison:001"
+identity_card_ref: "ic:jv-lane-diagnostic-comparison:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+  - label: "The intended referent is a performance-anomaly situation rather than the record describing it."
+    still_viable: true
+  - label: "The row merely co-locates two duration data and does not constitute one comparison information object."
+    still_viable: true
+  - label: "The diagnostic record is identical to either execution it compares."
+    still_viable: false
+strongest_counterexample: >-
+  A later rerun can produce the same standalone and lane values under a
+  different tree or tool version, so the numeric pair cannot identify either
+  the comparison record or the anomaly situation without its context.
+verdict: explicitly_deferred
+needed_evidence: >-
+  Joined identities for both compared executions, their measurement
+  assertions, context and comparison issuance are required, together with a
+  Must/Should CQ that consumes a distinct comparison record.

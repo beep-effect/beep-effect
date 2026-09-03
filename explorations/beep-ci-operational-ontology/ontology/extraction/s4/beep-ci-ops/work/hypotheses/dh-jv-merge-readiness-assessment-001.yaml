@@ -1,0 +1,34 @@
+id: "dh:jv-merge-readiness-assessment:001"
+observation_refs:
+  - "so:sha256:0fe42bf9ddcb6f694fd168ec852d86cce4ac9945aa66e1d55d1531e6ca799e46"
+  - "so:sha256:223ed0681f8f87a828ea875cbfde48d86c2cedd8d649f476ca43f10a42134437"
+  - "so:sha256:4d2f65e45969d3636bdb53c81dc0c3192aa766ad2bc9e98e6b641d3e90e0d7db"
+cq_warrants: ["CQ-006"]
+proposed_referent:
+  label: "Merge-readiness assessment record"
+  description: >-
+    An information artifact recording evaluated pull-request and closeout
+    conditions, including check, review-thread, draft, openness, merge-state,
+    and overall readiness results.
+representation_status: information_artifact
+alternatives:
+  - label: "Pull request merge-readiness situation"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "Yeet-specific Boolean aggregation"
+    representation_status: implementation_artifact_only
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: >-
+    The observations capture evaluated assurance conditions for concrete runs,
+    which can evidence whether obligations toward CI-merge assurance remain
+    unmet.
+  discriminator: >-
+    Two cited observations record six concrete pull-request criteria as true,
+    while another records checksGreen and threadsResolved as true but ready as
+    false with failing equal to closeout-run; those evaluated combinations are
+    run observations, not only field definitions.
+epistemic_status: proposed
+confidence: {value: 0.87, use_for_acceptance: false}

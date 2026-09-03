@@ -1,0 +1,36 @@
+id: ic:jv-memory-peak-measurement-alt:001
+hypothesis_ref: dh:jv-memory-peak-measurement:001
+identity:
+  supplies_identity: true
+  identity_criterion: Two recorded peak-memory measurements are the same iff they are the
+    same peak-usage assertion about the same process boundary at the same measurement instant.
+    peakRssKb versus memoryPeakBytes is unit evidence, never a second identity criterion.
+    The observations do not determine the process boundary or a mapping to a memory class.
+  reidentification_key:
+  - peakRssKb (evidence)
+  - memoryPeakBytes (evidence)
+  - originKey (evidence of admission bearer)
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: one peak-usage quantity about one carrier at one recording
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - quality
+  existential_dependencies:
+  - the attempt or admission activity whose peak is reported
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+- description: peakRssKb=511788 on an attempt journal and peakRssKb=499424 on a verdict for
+    the same run name are two records, possibly of different process boundaries, not automatically
+    one quality.
+- description: memoryPeakBytes=2194235392 on an admission journal is a different unit and
+    bearer family; collapsing it with RSS-kilobyte attempt peaks invents a single measurement
+    kind the observations do not support.
+status: proposed

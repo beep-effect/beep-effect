@@ -1,0 +1,25 @@
+id: "fa:jv-verification-step-execution:001"
+hypothesis_ref: "dh:jv-verification-step-execution:001"
+identity_card_ref: "ic:jv-verification-step-execution:001"
+tests:
+  spec_vs_execution: merged
+  world_vs_information: unresolved
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+  - label: "Restrict the referent to actual step-execution processes and exclude every not-run row."
+    still_viable: true
+  - label: "Model a planned-step situation that can receive run and not-run dispositions."
+    still_viable: true
+  - label: "Treat every cited row as an information object and make execution a separately evidenced referent."
+    still_viable: true
+strongest_counterexample: >-
+  closeout:01-pr-context is explicitly recorded as not-run. A non-occurrence
+  cannot share the temporal identity criterion of the measured, passed
+  prepare:01-effect-imports execution merely because both rows have step ids.
+verdict: explicitly_deferred
+needed_evidence: >-
+  A step-record contract must distinguish planned-step identity, result-record
+  identity, and actual execution identity, state whether not-run denotes a
+  disposition rather than an occurrence, and link every actual run to one
+  parent attempt with execution start and end boundaries.

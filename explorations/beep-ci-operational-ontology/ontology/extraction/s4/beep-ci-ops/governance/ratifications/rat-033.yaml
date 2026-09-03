@@ -1,0 +1,10 @@
+id: rat:33
+proposal_ref: otp:jv-verification-attempt:001
+proposal_sha256: 7036b5a2cc215df19dac974f8351c48f09626cdefc21d52f88ec41685a78a24f
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-09-03T09:05:00Z'
+verbatim_decision: Accept VerificationAttempt — the attempt record as information object, boundaries from
+  the journal's own start/finish events.

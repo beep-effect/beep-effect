@@ -1,0 +1,41 @@
+id: ic:ov-schedules-seat-request-alt:001
+hypothesis_ref: dh:ov-schedules-seat-request:001
+identity:
+  supplies_identity: false
+  identity_criterion: 'The schedules-seat-request association is not a second relator
+    beside the ScheduleStep. Two such facts are the same iff they are the same targeting
+    of the same step at the same SeatRequest. The rename from schedulesWorkUnit records
+    a change of range — SeatRequest identity rather than WorkUnitSpecification identity —
+    not a new relation per spelling. A journal key to a request node is evidence of
+    that targeting, never the criterion.'
+  reidentification_key:
+  - schedulesSeatRequest predicate spelling (evidence)
+  - scheduled unit ref field (evidence)
+  - request-node typing as SeatRequest (evidence of range)
+ontoclean:
+  rigidity: rigid
+  carries_identity: false
+  supplies_identity: false
+  unity: not an individual; one targeting tuple of one step and one SeatRequest
+  dependence: relational
+ufo_analysis:
+  candidate_category: none
+  alternatives:
+  - relator
+  - information_object
+  existential_dependencies:
+  - the ScheduleStep that designates
+  - the SeatRequest designated
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+- description: 'Request nodes are typed SeatRequest only because double-typing collapsed
+    two ratified identity criteria. Treating this edge as schedulesWorkUnit would
+    identify SeatRequest with WorkUnitSpecification — the finding the rename exists
+    to block.'
+- description: 'If the edge were itself a relator, ScheduleStep would be an unexplained
+    second mediation of the same participants. The step already has a scheduled-unit
+    slot; the predicate is that slot''s graph spelling.'
+status: proposed

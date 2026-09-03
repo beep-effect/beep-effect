@@ -1,0 +1,45 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "fix/ai-metrics-watermark-migration-immutability",
+  "committed": false,
+  "createdAt": "2026-08-06T21:26:48.816Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "monitor:01-pr-context",
+      "label": "monitor:pr-context",
+      "phase": "monitor",
+      "status": "passed",
+      "durationMs": 350.487292,
+      "exitCode": 0
+    },
+    {
+      "id": "monitor:02-pr-checks-watch",
+      "label": "monitor:pr-checks:watch",
+      "phase": "monitor",
+      "status": "passed",
+      "durationMs": 145618.101873,
+      "exitCode": 0
+    }
+  ],
+  "message": "yeet monitor succeeded.",
+  "mode": "monitor",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "fix_ai-metrics-watermark-migration-immutability-9388a3e115a6",
+  "attemptId": "e609a043-ebe5-43f8-b946-f4d55ac52573",
+  "startedAt": "2026-08-06T21:24:21.014Z",
+  "endedAt": "2026-08-06T21:26:48.816Z",
+  "elapsedMs": 147802,
+  "indexPath": "<fleet>/beep-effect6/.beep/yeet/quality-issue-index.json",
+  "mergeReady": {
+    "ready": true,
+    "criteria": {
+      "checksGreen": true,
+      "threadsResolved": true
+    }
+  }
+}

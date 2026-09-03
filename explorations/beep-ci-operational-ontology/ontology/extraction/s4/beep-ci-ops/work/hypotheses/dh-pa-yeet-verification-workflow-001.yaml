@@ -1,0 +1,25 @@
+id: "dh:pa-yeet-verification-workflow:001"
+observation_refs:
+  - "po:sha256:33182e9f689b24bcb01d622aa789cd78093af067a6594b2e0c2c950ac0867715"
+  - "po:sha256:45d50fea9a4a18913111c9152e3c2ffad848b8e8f869cb5e694c910c604264f3"
+  - "po:sha256:4c265303ec2062df5a841185cf1032b9beab1cefafb63f3468298c2bc7917e1b"
+  - "po:sha256:53cb7d2cdb081cbfab7b6f42091d51256ea65d70c7a4a592209b542cc6cf4d79"
+cq_warrants: ["CQ-002", "CQ-006", "CQ-017"]
+proposed_referent:
+  label: "Yeet verification workflow specification"
+  description: "The canonical repository-quality procedure comprising distinct proof plans and monitoring to a declared merge-readiness condition."
+representation_status: information_artifact
+alternatives:
+  - label: "Yeet verification process"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "CLI planner implementation"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: "The observations jointly prescribe the repository's verification procedure, distinguish proof plans, and identify its operational terminal condition."
+  discriminator: "The repository law makes Yeet the canonical quality path, the planner quotations specify different cheap-gates and review-fix plans, and monitoring must reach merge-ready yes."
+epistemic_status: proposed
+confidence: {value: 0.81, use_for_acceptance: false}

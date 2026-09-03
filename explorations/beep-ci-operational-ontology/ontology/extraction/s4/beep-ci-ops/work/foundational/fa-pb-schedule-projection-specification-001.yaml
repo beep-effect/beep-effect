@@ -1,0 +1,17 @@
+id: "fa:pb-schedule-projection-specification:001"
+hypothesis_ref: "dh:pb-schedule-projection-specification:001"
+identity_card_ref: "ic:pb-schedule-projection-specification:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+  - label: "This chain denotes a separately authoritative schedule-specific contract rather than the canonical AdmissionProjectionSpecification."
+    still_viable: false
+  - label: "The projected schedule occurrence or emitted schedule artifact is the specification."
+    still_viable: false
+  - label: "The document is only an incubation plan with no domain-relevant normative content."
+    still_viable: false
+strongest_counterexample: "A single contract can govern many projection executions and emitted schedules; byte-equal output from equal inputs establishes determinism, not identity among the contract, executions, and result artifacts."
+verdict: analyzed
