@@ -123,6 +123,9 @@ export class PrSessionRegistry extends Context.Service<PrSessionRegistry, PrSess
   $I`PrSessionRegistry`
 ) {}
 
+const lookupPrSessions = (list: PrSessionRegistryShape["list"]) => (repository: PrRepository, pr: PrNumber) =>
+  list(repository).pipe(Effect.map(A.filter((record) => O.isSome(record.prNumber) && record.prNumber.value === pr)));
+
 const encodeRecord = S.encodeEffect(S.fromJsonString(PrSessionRecord));
 const decodeRecord = S.decodeUnknownOption(S.fromJsonString(PrSessionRecord));
 
@@ -268,9 +271,7 @@ export const makePrSessionRegistryLive = Effect.fn("PrSessionRegistry.makeLive")
       )
     ),
     list,
-    lookup: Effect.fn("PrSessionRegistry.lookup")((repository, pr) =>
-      list(repository).pipe(Effect.map(A.filter((record) => O.isSome(record.prNumber) && record.prNumber.value === pr)))
-    ),
+    lookup: Effect.fn("PrSessionRegistry.lookup")(lookupPrSessions(list)),
   });
 });
 
@@ -338,11 +339,7 @@ export const layerPrSessionRegistryMemory = Layer.effect(
       return PrSessionRegistry.of({
         append: Effect.fn("PrSessionRegistry.memory.append")((record) => Ref.update(records, A.append(record))),
         list,
-        lookup: Effect.fn("PrSessionRegistry.memory.lookup")((repository, pr) =>
-          list(repository).pipe(
-            Effect.map(A.filter((record) => O.isSome(record.prNumber) && record.prNumber.value === pr))
-          )
-        ),
+        lookup: Effect.fn("PrSessionRegistry.memory.lookup")(lookupPrSessions(list)),
       });
     })
   )

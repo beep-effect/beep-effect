@@ -1118,6 +1118,64 @@ class CodexTurnContext extends S.Class<CodexTurnContext>($I`CodexTurnContext`)(
   $I.annote("CodexTurnContext", { description: "Narrow Codex turn context used for active-model detection." })
 ) {}
 const decodeCodexTurnContext = S.decodeUnknownOption(S.fromJsonString(CodexTurnContext));
+class ProvenanceDetectionEnvironment extends S.Class<ProvenanceDetectionEnvironment>(
+  $I`ProvenanceDetectionEnvironment`
+)(
+  {
+    home: S.OptionFromNullOr(S.String),
+    claudeId: S.OptionFromNullOr(S.String),
+    claudePid: S.OptionFromNullOr(S.Int),
+    configuredEntrypoint: S.OptionFromNullOr(S.String),
+    hostSessionId: S.OptionFromNullOr(S.String),
+    childSession: S.Boolean,
+    companionTranscript: S.OptionFromNullOr(S.String),
+    codexId: S.OptionFromNullOr(S.String),
+  },
+  $I.annote("ProvenanceDetectionEnvironment", {
+    description: "Decoded environment inputs used by local provenance detection.",
+  })
+) {}
+class ProvenanceSessionEvidence extends S.Class<ProvenanceSessionEvidence>($I`ProvenanceSessionEvidence`)(
+  {
+    sessionHome: S.OptionFromNullOr(PrProvenancePath),
+    sessionHomeSource: PrProvenanceSessionHomeSource,
+    entrypoint: PrProvenanceEntrypoint,
+    sessionName: S.OptionFromNullOr(S.String),
+    nameSource: PrProvenanceNameSource,
+    model: PrProvenanceModel,
+  },
+  $I.annote("ProvenanceSessionEvidence", {
+    description: "Session metadata enriched from local transcript and live-index evidence.",
+  })
+) {}
+const optionalConfigString = (name: string): Effect.Effect<O.Option<string>> =>
+  Config.option(Config.string(name)).pipe(Effect.orElseSucceed(() => O.none<string>()));
+const readDetectionEnvironment = Effect.fn("PrProvenance.readDetectionEnvironment")(function* () {
+  const [home, claudeId, claudePid, configuredEntrypoint, hostSessionId, childSession, companionTranscript, codexId] =
+    yield* Effect.all(
+      [
+        optionalConfigString("HOME"),
+        optionalConfigString("CLAUDE_CODE_SESSION_ID"),
+        Config.option(Config.number("CLAUDE_PID")).pipe(Effect.orElseSucceed(() => O.none<number>())),
+        optionalConfigString("CLAUDE_CODE_ENTRYPOINT"),
+        optionalConfigString("CLAUDE_CODE_HOST_SESSION_ID"),
+        Config.boolean("CLAUDE_CODE_CHILD_SESSION").pipe(Config.withDefault(false)),
+        optionalConfigString("CODEX_COMPANION_TRANSCRIPT_PATH"),
+        optionalConfigString("CODEX_THREAD_ID"),
+      ],
+      { concurrency: 8 }
+    );
+  return ProvenanceDetectionEnvironment.make({
+    home,
+    claudeId,
+    claudePid,
+    configuredEntrypoint,
+    hostSessionId,
+    childSession,
+    companionTranscript,
+    codexId,
+  });
+});
 const normalizeEntrypoint = (value: O.Option<string>, codex: boolean): PrProvenanceEntrypoint =>
   O.flatMap(value, S.decodeUnknownOption(PrProvenanceEntrypoint)).pipe(
     O.getOrElse(() => (codex ? "codex-tui" : "unknown"))
@@ -1234,6 +1292,138 @@ const detectGitPaths = Effect.fn("PrProvenance.detectGitPaths")(function* (cwd: 
 export const detectCodexEnvironment = Config.option(Config.string("CODEX_THREAD_ID")).pipe(
   Effect.map((threadId) => [O.isSome(threadId), threadId] as const)
 );
+const classifyHarness = (environment: ProvenanceDetectionEnvironment): PrProvenanceHarness =>
+  O.isSome(environment.codexId) ? "codex" : O.isSome(environment.claudeId) ? "claude-code" : "unknown";
+const defaultSessionEvidence = (
+  checkoutPath: string,
+  entrypoint: PrProvenanceEntrypoint = "unknown"
+): ProvenanceSessionEvidence =>
+  ProvenanceSessionEvidence.make({
+    sessionHome: O.some(checkoutPath),
+    sessionHomeSource: "checkout",
+    entrypoint,
+    sessionName: O.none(),
+    nameSource: "unknown",
+    model: "unknown",
+  });
+const readCodexEvidence = Effect.fn("PrProvenance.readCodexEvidence")(function* (
+  environment: ProvenanceDetectionEnvironment,
+  checkoutPath: string
+) {
+  const fallback = defaultSessionEvidence(checkoutPath, O.isSome(environment.claudeId) ? "codex-exec" : "codex-tui");
+  const coordinates = O.all({ home: environment.home, codexId: environment.codexId });
+  if (O.isNone(coordinates)) return fallback;
+  const session = yield* findCodexSession(coordinates.value.home, coordinates.value.codexId).pipe(
+    Effect.orElseSucceed(() => O.none<{ readonly cwd: string; readonly model: O.Option<string> }>())
+  );
+  return O.map(session, (record) =>
+    ProvenanceSessionEvidence.make({
+      ...fallback,
+      sessionHome: O.some(record.cwd),
+      sessionHomeSource: "transcript",
+      model: normalizeModel(record.model),
+    })
+  ).pipe(O.getOrElse(() => fallback));
+});
+const readClaudeTranscriptEvidence = Effect.fn("PrProvenance.readClaudeTranscriptEvidence")(function* (
+  environment: ProvenanceDetectionEnvironment
+) {
+  const coordinates = O.all({ home: environment.home, claudeId: environment.claudeId });
+  if (O.isNone(coordinates)) return O.none<{ readonly cwd: O.Option<string>; readonly model: O.Option<string> }>();
+  const transcriptPath = yield* O.match(environment.companionTranscript, {
+    onNone: () =>
+      findClaudeTranscript(coordinates.value.home, coordinates.value.claudeId).pipe(
+        Effect.orElseSucceed(() => O.none<string>())
+      ),
+    onSome: Effect.succeedSome,
+  });
+  return yield* O.match(transcriptPath, {
+    onNone: () => Effect.succeedNone,
+    onSome: (path) => readTranscript(path).pipe(Effect.option),
+  });
+});
+const readClaudeIndexEvidence = Effect.fn("PrProvenance.readClaudeIndexEvidence")(function* (
+  environment: ProvenanceDetectionEnvironment
+) {
+  const coordinates = O.all({
+    home: environment.home,
+    claudeId: environment.claudeId,
+    claudePid: environment.claudePid,
+  });
+  if (O.isNone(coordinates)) return O.none<ClaudeSessionIndex>();
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const indexPath = path.join(coordinates.value.home, ".claude", "sessions", `${coordinates.value.claudePid}.json`);
+  return yield* fs.readFileString(indexPath).pipe(
+    Effect.map(decodeClaudeIndex),
+    Effect.map(O.filter((index) => index.sessionId === coordinates.value.claudeId)),
+    Effect.orElseSucceed(() => O.none<ClaudeSessionIndex>())
+  );
+});
+const readClaudeEvidence = Effect.fn("PrProvenance.readClaudeEvidence")(function* (
+  environment: ProvenanceDetectionEnvironment,
+  checkoutPath: string
+) {
+  const [transcript, index] = yield* Effect.all(
+    [readClaudeTranscriptEvidence(environment), readClaudeIndexEvidence(environment)],
+    { concurrency: 2 }
+  );
+  const transcriptHome = O.flatMap(transcript, (record) => record.cwd);
+  const indexHome = O.map(index, (record) => record.cwd);
+  const sessionHome = O.orElse(transcriptHome, () => O.orElse(indexHome, () => O.some(checkoutPath)));
+  const sessionHomeSource: PrProvenanceSessionHomeSource = O.isSome(transcriptHome)
+    ? "transcript"
+    : O.isSome(indexHome)
+      ? "index"
+      : "checkout";
+  return ProvenanceSessionEvidence.make({
+    sessionHome,
+    sessionHomeSource,
+    entrypoint: pipe(
+      index,
+      O.map((record) => normalizeEntrypoint(O.fromUndefinedOr(record.entrypoint), false)),
+      O.getOrElse(() => normalizeEntrypoint(environment.configuredEntrypoint, false))
+    ),
+    sessionName: O.flatMap(index, (record) => O.fromUndefinedOr(record.name)),
+    nameSource: pipe(
+      index,
+      O.map((record) => normalizeNameSource(O.fromUndefinedOr(record.nameSource))),
+      O.getOrElse<PrProvenanceNameSource>(() => "unknown")
+    ),
+    model: pipe(
+      transcript,
+      O.flatMap((record) => record.model),
+      normalizeModel
+    ),
+  });
+});
+const readSessionEvidence = Effect.fn("PrProvenance.readSessionEvidence")(function* (
+  harness: PrProvenanceHarness,
+  environment: ProvenanceDetectionEnvironment,
+  checkoutPath: string
+) {
+  if (harness === "codex") return yield* readCodexEvidence(environment, checkoutPath);
+  if (harness === "claude-code") return yield* readClaudeEvidence(environment, checkoutPath);
+  return defaultSessionEvidence(checkoutPath, normalizeEntrypoint(environment.configuredEntrypoint, false));
+});
+const detectSessionWorkspace = Effect.fn("PrProvenance.detectSessionWorkspace")(function* (
+  path: Path.Path,
+  sessionHome: O.Option<string>,
+  workspace: PrProvenanceLabel
+) {
+  const labelEquivalence = S.toEquivalence(PrProvenanceLabel);
+  return yield* pipe(
+    sessionHome,
+    O.map((resolvedHome) =>
+      detectGitPaths(resolvedHome).pipe(
+        Effect.map(({ clonePath }) => labelFromBasename(path, clonePath)),
+        Effect.map((label) => (labelEquivalence(label, workspace) ? O.none<PrProvenanceLabel>() : O.some(label))),
+        Effect.catchCause(() => Effect.succeedNone)
+      )
+    ),
+    O.getOrElse(() => Effect.succeedNone)
+  );
+});
 /**
  * Detect workstation-local harness provenance from already-resolved Git paths.
  *
@@ -1272,111 +1462,70 @@ export const detectPrProvenanceFromPaths = Effect.fn("PrProvenance.detectFromPat
   worktreePath: O.Option<string>,
   branch: string
 ) {
-  const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const optionalString = (name: string) =>
-    Config.option(Config.string(name)).pipe(Effect.orElseSucceed(() => O.none<string>()));
-  const home = yield* optionalString("HOME");
-  const claudeId = yield* optionalString("CLAUDE_CODE_SESSION_ID");
-  const claudePid = yield* Config.option(Config.number("CLAUDE_PID")).pipe(
-    Effect.orElseSucceed(() => O.none<number>())
-  );
-  const configuredEntrypoint = yield* optionalString("CLAUDE_CODE_ENTRYPOINT");
-  const hostSessionId = yield* optionalString("CLAUDE_CODE_HOST_SESSION_ID");
-  const childSession = yield* Config.boolean("CLAUDE_CODE_CHILD_SESSION").pipe(Config.withDefault(false));
-  const companionTranscript = yield* optionalString("CODEX_COMPANION_TRANSCRIPT_PATH");
-  const codexId = yield* optionalString("CODEX_THREAD_ID");
-  const isCodex = O.isSome(codexId);
-  const harness: PrProvenanceHarness = isCodex ? "codex" : O.isSome(claudeId) ? "claude-code" : "unknown";
+  const environment = yield* readDetectionEnvironment();
+  const harness = classifyHarness(environment);
   const workspaceOverride = yield* runGitOutput(checkoutPath, ["config", "--get", "beep.workspace.label"]).pipe(
     Effect.map(Str.trim),
     Effect.option,
     Effect.map(O.flatMap(S.decodeUnknownOption(PrProvenanceLabel)))
   );
   const workspace = O.getOrElse(workspaceOverride, () => labelFromBasename(path, clonePath));
-  let sessionHome = O.some(checkoutPath);
-  let sessionHomeSource: PrProvenanceSessionHomeSource = "checkout";
-  let sessionName = O.none<string>();
-  let nameSource: PrProvenanceNameSource = "unknown";
-  let entrypoint = isCodex
-    ? O.isSome(claudeId)
-      ? "codex-exec"
-      : "codex-tui"
-    : normalizeEntrypoint(configuredEntrypoint, false);
-  let model: PrProvenanceModel = "unknown";
-  if (isCodex && O.isSome(home)) {
-    const codexSession = yield* findCodexSession(home.value, codexId.value).pipe(
-      Effect.orElseSucceed(() => O.none<{ readonly cwd: string; readonly model: O.Option<string> }>())
-    );
-    if (O.isSome(codexSession)) {
-      sessionHome = O.some(codexSession.value.cwd);
-      sessionHomeSource = "transcript";
-      model = normalizeModel(codexSession.value.model);
-    }
-  }
-  if (!isCodex && O.isSome(claudeId) && O.isSome(home)) {
-    const transcriptPath = O.isSome(companionTranscript)
-      ? companionTranscript
-      : yield* findClaudeTranscript(home.value, claudeId.value).pipe(Effect.orElseSucceed(() => O.none<string>()));
-    if (O.isSome(transcriptPath)) {
-      const transcript = yield* readTranscript(transcriptPath.value).pipe(Effect.option);
-      if (O.isSome(transcript)) {
-        if (O.isSome(transcript.value.cwd)) {
-          sessionHome = transcript.value.cwd;
-          sessionHomeSource = "transcript";
-        }
-        model = normalizeModel(transcript.value.model);
-      }
-    }
-    if (O.isSome(claudePid)) {
-      const indexPath = path.join(home.value, ".claude", "sessions", `${claudePid.value}.json`);
-      const index = yield* fs.readFileString(indexPath).pipe(
-        Effect.map(decodeClaudeIndex),
-        Effect.orElseSucceed(() => O.none<ClaudeSessionIndex>())
-      );
-      if (O.isSome(index) && index.value.sessionId === claudeId.value) {
-        sessionName = O.fromUndefinedOr(index.value.name);
-        nameSource = normalizeNameSource(O.fromUndefinedOr(index.value.nameSource));
-        entrypoint = normalizeEntrypoint(O.fromUndefinedOr(index.value.entrypoint), false);
-        if (sessionHomeSource === "checkout") {
-          sessionHome = O.some(index.value.cwd);
-          sessionHomeSource = "index";
-        }
-      }
-    }
-  }
-  const labelEquivalence = S.toEquivalence(PrProvenanceLabel);
-  const sessionWorkspace = yield* pipe(
-    sessionHome,
-    O.map((resolvedHome) =>
-      detectGitPaths(resolvedHome).pipe(
-        Effect.map(({ clonePath: sessionClonePath }) => labelFromBasename(path, sessionClonePath)),
-        Effect.map((label) => (labelEquivalence(label, workspace) ? O.none<PrProvenanceLabel>() : O.some(label))),
-        Effect.catchCause(() => Effect.succeed(O.none<PrProvenanceLabel>()))
-      )
-    ),
-    O.getOrElse(() => Effect.succeed(O.none<PrProvenanceLabel>()))
-  );
+  const evidence = yield* readSessionEvidence(harness, environment, checkoutPath);
+  const sessionWorkspace = yield* detectSessionWorkspace(path, evidence.sessionHome, workspace);
   return PrProvenance.make({
     branch,
     harness,
-    hostHarness: isCodex && O.isSome(claudeId) ? O.some("claude-code") : O.none(),
-    sessionId: isCodex ? codexId : claudeId,
-    hostSessionId,
-    sessionHome,
-    sessionHomeSource,
-    entrypoint,
-    sessionName,
-    nameSource,
-    model,
+    hostHarness: harness === "codex" && O.isSome(environment.claudeId) ? O.some("claude-code") : O.none(),
+    sessionId: harness === "codex" ? environment.codexId : environment.claudeId,
+    hostSessionId: environment.hostSessionId,
+    ...evidence,
     clonePath,
     checkoutPath,
     worktreePath,
     workspace,
     sessionWorkspace,
-    childSession,
+    childSession: environment.childSession,
   });
 });
+
+const fallbackHarness = (codexId: O.Option<string>, claudeId: O.Option<string>): PrProvenanceHarness =>
+  O.isSome(codexId) ? "codex" : O.isSome(claudeId) ? "claude-code" : "unknown";
+const fallbackHostHarness = (codexId: O.Option<string>, claudeId: O.Option<string>): O.Option<PrProvenanceHarness> =>
+  O.isSome(codexId) && O.isSome(claudeId) ? O.some("claude-code") : O.none();
+const fallbackSessionId = (codexId: O.Option<string>, claudeId: O.Option<string>): O.Option<string> =>
+  O.isSome(codexId) ? codexId : claudeId;
+const fallbackEntrypoint = (codexId: O.Option<string>, claudeId: O.Option<string>): PrProvenanceEntrypoint =>
+  O.isSome(codexId) ? (O.isSome(claudeId) ? "codex-exec" : "codex-tui") : "unknown";
+const makeFallbackProvenance = (
+  path: Path.Path,
+  cwd: string,
+  branch: string,
+  codexId: O.Option<string>,
+  claudeId: O.Option<string>,
+  hostSessionId: O.Option<string>
+): PrProvenance => {
+  const fallbackPath = path.resolve(cwd);
+  return PrProvenance.make({
+    branch,
+    harness: fallbackHarness(codexId, claudeId),
+    hostHarness: fallbackHostHarness(codexId, claudeId),
+    sessionId: fallbackSessionId(codexId, claudeId),
+    hostSessionId,
+    sessionHome: O.some(fallbackPath),
+    sessionHomeSource: "checkout",
+    entrypoint: fallbackEntrypoint(codexId, claudeId),
+    sessionName: O.none(),
+    nameSource: "unknown",
+    model: "unknown",
+    clonePath: fallbackPath,
+    checkoutPath: fallbackPath,
+    worktreePath: O.none(),
+    workspace: labelFromBasename(path, fallbackPath),
+    sessionWorkspace: O.none(),
+    childSession: false,
+  });
+};
 /**
  * Service contract for detecting local provenance within one checkout boundary.
  *
@@ -1439,32 +1588,15 @@ export const makePrProvenanceServiceLive = Effect.fn("PrProvenanceService.make")
   const context = yield* Effect.context<Requirements>();
   return PrProvenanceService.of({
     detect: Effect.fn("PrProvenanceService.detect")(function* (cwd, branch) {
-      const fallbackPath = path.resolve(cwd);
-      const optionalString = (name: string) =>
-        Config.option(Config.string(name)).pipe(Effect.orElseSucceed(() => O.none<string>()));
-      const codexId = yield* optionalString("CODEX_THREAD_ID");
-      const claudeId = yield* optionalString("CLAUDE_CODE_SESSION_ID");
-      const hostSessionId = yield* optionalString("CLAUDE_CODE_HOST_SESSION_ID");
-      const isCodex = O.isSome(codexId);
-      const fallback = PrProvenance.make({
-        branch,
-        harness: isCodex ? "codex" : O.isSome(claudeId) ? "claude-code" : "unknown",
-        hostHarness: isCodex && O.isSome(claudeId) ? O.some("claude-code") : O.none(),
-        sessionId: isCodex ? codexId : claudeId,
-        hostSessionId,
-        sessionHome: O.some(fallbackPath),
-        sessionHomeSource: "checkout",
-        entrypoint: isCodex ? (O.isSome(claudeId) ? "codex-exec" : "codex-tui") : "unknown",
-        sessionName: O.none(),
-        nameSource: "unknown",
-        model: "unknown",
-        clonePath: fallbackPath,
-        checkoutPath: fallbackPath,
-        worktreePath: O.none(),
-        workspace: labelFromBasename(path, fallbackPath),
-        sessionWorkspace: O.none(),
-        childSession: false,
-      });
+      const [codexId, claudeId, hostSessionId] = yield* Effect.all(
+        [
+          optionalConfigString("CODEX_THREAD_ID"),
+          optionalConfigString("CLAUDE_CODE_SESSION_ID"),
+          optionalConfigString("CLAUDE_CODE_HOST_SESSION_ID"),
+        ],
+        { concurrency: 3 }
+      );
+      const fallback = makeFallbackProvenance(path, cwd, branch, codexId, claudeId, hostSessionId);
       return yield* detectGitPaths(cwd).pipe(
         Effect.flatMap(({ clonePath, checkoutPath, worktreePath }) =>
           detectPrProvenanceFromPaths(clonePath, checkoutPath, worktreePath, branch)

@@ -427,6 +427,122 @@ export interface HarnessResumerShape {
  */
 export class HarnessResumer extends Context.Service<HarnessResumer, HarnessResumerShape>()($I`HarnessResumer`) {}
 
+const sessionCwd = (record: PrSessionRecord, home: string): string =>
+  pipe(
+    record.sessionHome,
+    O.orElse(() => O.some(record.clonePath)),
+    O.getOrElse(() => home)
+  );
+
+const resolveResumeRecords = Effect.fn("HarnessResumer.resolveRecords")(function* (options: ResumeOptions) {
+  const prRef = options.ref;
+  const pr = prRef.pr;
+  const cwd = yield* Config.string("PWD").pipe(Config.withDefault("."));
+  const home = yield* Config.string("HOME");
+  const repository = yield* O.match(prRef.repository, {
+    onNone: () => detectPrRepository(cwd),
+    onSome: Effect.succeed,
+  });
+  const registry = yield* makePrSessionRegistryLive();
+  const local = yield* registry
+    .lookup(repository, pr)
+    .pipe(Effect.mapError((cause) => YeetCommandError.make({ message: cause.message, cause })));
+  const records = A.isReadonlyArrayNonEmpty(local) ? local : yield* transcriptFallback(home, repository, pr);
+  if (A.isReadonlyArrayEmpty(records))
+    return yield* YeetCommandError.make({
+      message: `No local session state for ${pipe(
+        prRef.repository,
+        O.map(() => `${repository.owner}/${repository.name} `),
+        O.getOrElse(() => "")
+      )}PR #${pr}. Claude users can try: claude --from-pr ${pr}`,
+      exitCode: 4,
+    });
+  return { home, pr, records: distinctPrSessions(records) };
+});
+
+const resolveDisplayRows = (
+  options: ResumeOptions,
+  pr: PrNumber,
+  home: string,
+  records: ReadonlyArray<PrSessionRecord>
+): ReadonlyArray<ResolvedResume> => {
+  const selectedRecords = options.list
+    ? records
+    : pipe(
+        selectResumeRecord(records, options.agent),
+        O.map(A.of),
+        O.getOrElse(() => A.empty<PrSessionRecord>())
+      );
+  return A.map(selectedRecords, (record, index) => {
+    const parts = commandParts(record);
+    return ResolvedResume.make({
+      pr,
+      sequence: index + 1,
+      harness: record.harness,
+      workspace: record.workspace,
+      status: O.isSome(parts) ? "resumable" : "not-resumable",
+      command: O.map(parts, ([command, args]) => commandText(command, args)),
+      cwd: sessionCwd(record, home),
+    });
+  });
+};
+
+const renderResumeRows = Effect.fn("HarnessResumer.renderRows")(function* (
+  options: ResumeOptions,
+  rows: ReadonlyArray<ResolvedResume>
+) {
+  if (options.json) {
+    return yield* Console.log(pipe(rows, encodeResolved, Result.getOrThrow, renderPrettyCommandJson, Str.trimEnd));
+  }
+  yield* Effect.forEach(
+    rows,
+    (item) =>
+      Console.log(
+        `${item.sequence}. ${item.harness} · ${item.workspace} · ${item.status} · ${O.getOrElse(item.command, () => "no resume command")} · cwd ${item.cwd}`
+      ),
+    { discard: true }
+  );
+});
+
+const resumeSelectedSession = Effect.fn("HarnessResumer.resumeSelectedSession")(function* (
+  path: Path.Path,
+  spawner: ChildProcessSpawner.ChildProcessSpawner["Service"],
+  options: ResumeOptions,
+  pr: PrNumber,
+  home: string,
+  records: ReadonlyArray<PrSessionRecord>
+) {
+  const selected = selectResumeRecord(records, options.agent);
+  if (O.isNone(selected))
+    return yield* YeetCommandError.make({ message: `Agent selection is out of range for PR #${pr}.`, exitCode: 4 });
+  if (!options.force) {
+    const live = yield* isClaudeSessionLive(selected.value, path.join(home, ".claude", "sessions"), "/proc");
+    if (O.isSome(live)) {
+      yield* Console.log(
+        `Session is already live: ${O.getOrElse(live.value.name, () => "unnamed")} · ${live.value.cwd} · pid ${live.value.pid}`
+      );
+      return;
+    }
+  }
+  const parts = commandParts(selected.value);
+  if (O.isNone(parts))
+    return yield* YeetCommandError.make({ message: `Recorded agent for PR #${pr} is not resumable.`, exitCode: 4 });
+  const exitCode = yield* spawner
+    .exitCode(
+      ChildProcess.make(parts.value[0], parts.value[1], {
+        cwd: sessionCwd(selected.value, home),
+        stdin: "inherit",
+        stdout: "inherit",
+        stderr: "inherit",
+      })
+    )
+    .pipe(
+      Effect.mapError((cause) => YeetCommandError.make({ message: "Failed to spawn the recorded harness.", cause }))
+    );
+  if (exitCode !== 0)
+    return yield* YeetCommandError.make({ message: `Harness exited with code ${exitCode}.`, exitCode });
+});
+
 /**
  * Construct the live resumer that resolves local records and spawns supported harnesses.
  *
@@ -452,104 +568,11 @@ export const makeHarnessResumerLive = Effect.fn("HarnessResumer.makeLive")(funct
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
   return HarnessResumer.of({
     run: Effect.fn("HarnessResumer.run")(function* (options) {
-      const prRef = options.ref;
-      const pr = prRef.pr;
-      const cwd = yield* Config.string("PWD").pipe(Config.withDefault("."));
-      const home = yield* Config.string("HOME");
-      const repository = yield* O.match(prRef.repository, {
-        onNone: () => detectPrRepository(cwd),
-        onSome: Effect.succeed,
-      });
-      const registry = yield* makePrSessionRegistryLive();
-      const local = yield* registry
-        .lookup(repository, pr)
-        .pipe(Effect.mapError((cause) => YeetCommandError.make({ message: cause.message, cause })));
-      const records = A.isReadonlyArrayNonEmpty(local) ? local : yield* transcriptFallback(home, repository, pr);
-      if (A.isReadonlyArrayEmpty(records))
-        return yield* YeetCommandError.make({
-          message: `No local session state for ${pipe(
-            prRef.repository,
-            O.map(() => `${repository.owner}/${repository.name} `),
-            O.getOrElse(() => "")
-          )}PR #${pr}. Claude users can try: claude --from-pr ${pr}`,
-          exitCode: 4,
-        });
-      const distinct = distinctPrSessions(records);
-      const selectedRecords = options.list
-        ? distinct
-        : pipe(
-            selectResumeRecord(distinct, options.agent),
-            O.map(A.of),
-            O.getOrElse(() => A.empty<PrSessionRecord>())
-          );
-      const resolved = pipe(
-        selectedRecords,
-        A.map((record, index) => {
-          const parts = commandParts(record);
-          const sessionCwd = pipe(
-            record.sessionHome,
-            O.orElse(() => O.some(record.clonePath)),
-            O.getOrElse(() => home)
-          );
-          return ResolvedResume.make({
-            pr,
-            sequence: index + 1,
-            harness: record.harness,
-            workspace: record.workspace,
-            status: O.isSome(parts) ? "resumable" : "not-resumable",
-            command: O.map(parts, ([command, args]) => commandText(command, args)),
-            cwd: sessionCwd,
-          });
-        })
-      );
+      const { home, pr, records } = yield* resolveResumeRecords(options);
       if (options.list || options.print) {
-        if (options.json)
-          yield* Console.log(pipe(resolved, encodeResolved, Result.getOrThrow, renderPrettyCommandJson, Str.trimEnd));
-        else
-          yield* Effect.forEach(
-            resolved,
-            (item) =>
-              Console.log(
-                `${item.sequence}. ${item.harness} · ${item.workspace} · ${item.status} · ${O.getOrElse(item.command, () => "no resume command")} · cwd ${item.cwd}`
-              ),
-            { discard: true }
-          );
-        return;
+        return yield* renderResumeRows(options, resolveDisplayRows(options, pr, home, records));
       }
-      const selected = selectResumeRecord(distinct, options.agent);
-      if (O.isNone(selected))
-        return yield* YeetCommandError.make({ message: `Agent selection is out of range for PR #${pr}.`, exitCode: 4 });
-      if (!options.force) {
-        const live = yield* isClaudeSessionLive(selected.value, path.join(home, ".claude", "sessions"), "/proc");
-        if (O.isSome(live)) {
-          yield* Console.log(
-            `Session is already live: ${O.getOrElse(live.value.name, () => "unnamed")} · ${live.value.cwd} · pid ${live.value.pid}`
-          );
-          return;
-        }
-      }
-      const parts = commandParts(selected.value);
-      if (O.isNone(parts))
-        return yield* YeetCommandError.make({ message: `Recorded agent for PR #${pr} is not resumable.`, exitCode: 4 });
-      const sessionCwd = pipe(
-        selected.value.sessionHome,
-        O.orElse(() => O.some(selected.value.clonePath)),
-        O.getOrElse(() => home)
-      );
-      const exitCode = yield* spawner
-        .exitCode(
-          ChildProcess.make(parts.value[0], parts.value[1], {
-            cwd: sessionCwd,
-            stdin: "inherit",
-            stdout: "inherit",
-            stderr: "inherit",
-          })
-        )
-        .pipe(
-          Effect.mapError((cause) => YeetCommandError.make({ message: "Failed to spawn the recorded harness.", cause }))
-        );
-      if (exitCode !== 0)
-        return yield* YeetCommandError.make({ message: `Harness exited with code ${exitCode}.`, exitCode });
+      yield* resumeSelectedSession(path, spawner, options, pr, home, records);
     }),
   });
 });

@@ -9,9 +9,9 @@ Status: `active`
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
 | P0 Research | complete (2026-09-03) | Recover the removed feature's history, the CSF-007 constraint, and the harness identity available at publish time; grill the design. | `research/2026-09-03-exploration.md`, `research/2026-09-03-design-panel.md`, and `DECISIONS.md` exist. |
-| P1 Implement | in-progress | Ship PR 1 per `SPEC.md`: exact-identity detection, registry, footer v2 + ledger, post-create stamp, `yeet resume`, monitor re-assert, boundary test, CSF-007 note, changeset. | Acceptance criteria in `SPEC.md` are met on the feature branch. |
-| P2 Verify | pending | `package-verify @beep/repo-cli`, `docgen:local`, focused vitest lanes; dogfood the footer on this packet's own PR. | Verification matrix green; live footer evidence recorded under `history/`. |
-| P3 Yeet: PR to mergeable | pending | Publish with `yeet publish --start-pr-early --monitor --pr` and drive to mergeable. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
+| P1 Implement | complete (2026-09-03) | Ship PR 1 per `SPEC.md`: exact-identity detection, registry, footer v2 + ledger, post-create stamp, `yeet resume`, monitor re-assert, boundary test, CSF-007 note, changeset. | Acceptance criteria in `SPEC.md` are met on the feature branch. |
+| P2 Verify | complete (2026-09-03) | `package-verify @beep/repo-cli`, `docgen:local`, focused vitest lanes; dogfood the footer on this packet's own PR. | Verification matrix green; live footer evidence recorded under `history/`. |
+| P3 Yeet: PR to mergeable | in-progress (#975) | Publish with `yeet publish --start-pr-early --monitor --pr` and drive to mergeable. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
 | P4 Close | pending | Closeout reflection, packet-state flip, PR 2 handoff recorded. | Reflection exists; manifest and README updated; PR 2 surfaces listed in `history/`. |
 
 ## PR 2 (next phase of this packet after P4)

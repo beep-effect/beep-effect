@@ -31,13 +31,15 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Implement — PR 1 on `feat/yeet-pr-resume-footer` (see `PLAN.md`).
+P3 Yeet — PR #975 on `feat/yeet-pr-resume-footer` driving to mergeable (see `PLAN.md`).
 
 ## Latest Evidence
 
 - 2026-09-03: P0 done. `research/2026-09-03-exploration.md` (feature history,
   CSF-005/CSF-007, harness identity facts), `research/2026-09-03-design-panel.md`
   (three-lens panel, red-team, judge), `DECISIONS.md` (seven ratified decisions).
+
+- 2026-09-03: P1/P2 complete. PR #975 dogfooded the footer on itself; review rounds and CI attribution in `history/2026-09-03-review-round-1.md` and `-round-2.md`; friction receipts in `research/OPPORTUNITIES.md`.
 
 ## Notes
 

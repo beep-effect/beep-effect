@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-09-03T13:41:25.232Z
+Generated: 2026-09-03T17:10:13.522Z
 
 ## Scope
 
@@ -14,8 +14,8 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 17 |
 | packagesWithoutPublicSrcSurface | 3 |
 | packagesNeedingRemediation | 116 |
-| publicModules | 2998 |
-| publicExports | 21181 |
+| publicModules | 3000 |
+| publicExports | 21222 |
 | openModules | 371 |
 | openExports | 3490 |
 | missingExportExamples | 4 |
@@ -74,7 +74,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 16 | `@beep/ontology-use-cases` | `packages/ontology/use-cases` | needs-remediation | 23 | 214 | 1 | 17 |
 | 17 | `@beep/architecture-lab-client` | `packages/architecture-lab/client` | needs-remediation | 3 | 7 | 0 | 4 |
 | 18 | `@beep/dock` | `packages/foundation/ui-system/dock` | needs-remediation | 20 | 212 | 0 | 189 |
-| 19 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 222 | 1804 | 47 | 290 |
+| 19 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 222 | 1804 | 47 | 289 |
 | 20 | `@beep/pglite` | `packages/drivers/pglite` | needs-remediation | 4 | 11 | 3 | 0 |
 | 21 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | needs-remediation | 10 | 86 | 0 | 18 |
 | 22 | `@beep/agents-server` | `packages/agents/server` | needs-remediation | 11 | 39 | 2 | 7 |
@@ -110,10 +110,10 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 52 | `@beep/agents-tables` | `packages/agents/tables` | clean | 6 | 14 | 0 | 0 |
 | 53 | `@beep/ontology-domain` | `packages/ontology/domain` | clean | 6 | 41 | 0 | 0 |
 | 54 | `@beep/lexical-schema` | `packages/foundation/modeling/lexical` | needs-remediation | 7 | 126 | 4 | 62 |
-| 55 | `@beep/langextract` | `packages/foundation/capability/langextract` | needs-remediation | 26 | 125 | 0 | 31 |
+| 55 | `@beep/langextract` | `packages/foundation/capability/langextract` | needs-remediation | 26 | 126 | 0 | 31 |
 | 56 | `@beep/shared-tables` | `packages/shared/tables` | clean | 9 | 12 | 0 | 0 |
 | 57 | `@beep/scratchpad` | `scratchpad` | needs-remediation | 469 | 4226 | 3 | 693 |
-| 58 | `@beep/md` | `packages/foundation/modeling/md` | needs-remediation | 10 | 261 | 4 | 116 |
+| 58 | `@beep/md` | `packages/foundation/modeling/md` | needs-remediation | 10 | 263 | 4 | 117 |
 | 59 | `@beep/practice-kg-mcp` | `apps/practice-kg-mcp` | needs-remediation | 7 | 14 | 0 | 3 |
 | 60 | `@beep/tailscale` | `packages/drivers/tailscale` | needs-remediation | 5 | 29 | 0 | 3 |
 | 61 | `@beep/law-practice-use-cases` | `packages/law-practice/use-cases` | needs-remediation | 32 | 113 | 4 | 23 |
@@ -122,7 +122,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 64 | `@beep/todox` | `apps/todox` | clean | 2 | 3 | 0 | 0 |
 | 65 | `@beep/semantic-web` | `packages/foundation/capability/semantic-web` | needs-remediation | 8 | 56 | 0 | 15 |
 | 66 | `@beep/utils` | `packages/foundation/modeling/utils` | needs-remediation | 28 | 214 | 6 | 118 |
-| 67 | `@beep/repo-ai-metrics` | `packages/tooling/library/ai-metrics` | needs-remediation | 22 | 377 | 0 | 79 |
+| 67 | `@beep/repo-ai-metrics` | `packages/tooling/library/ai-metrics` | needs-remediation | 24 | 415 | 0 | 79 |
 | 68 | `@beep/architecture-lab-tables` | `packages/architecture-lab/tables` | clean | 7 | 21 | 0 | 0 |
 | 69 | `@beep/tika` | `packages/drivers/tika` | needs-remediation | 8 | 34 | 3 | 7 |
 | 70 | `@beep/libpff` | `packages/drivers/libpff` | needs-remediation | 7 | 40 | 4 | 8 |
@@ -1108,7 +1108,6 @@ Export findings:
 - `src/commands/Worktree/Worktree.service.ts:196` `worktreeArchivePlan` (const) - 1 example import violation(s)
 - `src/commands/Worktree/Worktree.service.ts:316` `WorktreeRemovalService` (class) - 1 example import violation(s)
 - `src/commands/Worktree/Worktree.service.ts:370` `runWorktreeGitCapture` (const) - 1 example import violation(s)
-- `src/commands/Yeet/Yeet.command.ts:674` `yeetCommand` (const) - 1 example import violation(s)
 
 ### @beep/pglite
 
@@ -1299,7 +1298,7 @@ Export findings:
 - `src/values/PatentDocument/PatentDocument.model.ts:467` `PatentApplicationSection` (class) - 1 example import violation(s)
 - `src/values/PatentDocument/PatentDocument.model.ts:572` `PatentApplicationSections` (const) - 1 example import violation(s)
 - `src/values/PatentDocument/PatentDocument.model.ts:660` `PatentApplicationDocument` (class) - 1 example import violation(s)
-- `src/values/PatentDocument/PatentDocument.normalizer.ts:473` `normalizePatentApplicationDocument` (const) - 2 example import violation(s)
+- `src/values/PatentDocument/PatentDocument.normalizer.ts:494` `normalizePatentApplicationDocument` (const) - 2 example import violation(s)
 - `src/values/PatentDocumentTriplet/PatentDocumentTriplet.model.ts:61` `PatentDocumentTriplet` (const) - 4 documentation section/link violation(s)
 - `src/values/PatentNumber/PatentNumber.model.ts:38` `PatentNumber` (const) - 1 documentation section/link violation(s)
 - `src/values/PinciteInfo/PinciteInfo.model.ts:156` `PinciteInfo` (class) - 1 example import violation(s)
@@ -2784,16 +2783,17 @@ Export findings:
 - `src/Md.render.ts:1499` `render` (const) - 2 example import violation(s)
 - `src/Md.render.ts:1524` `renderHtml` (const) - 2 example import violation(s)
 - `src/Md.render.ts:1549` `renderPlainText` (const) - 2 example import violation(s)
-- `src/Md.safe.ts:62` `DocumentSafetyPathSegment` (const) - 1 example import violation(s)
-- `src/Md.safe.ts:645` `documentSafetyIssues` (const) - 1 example import violation(s)
-- `src/Md.safe.ts:666` `inlineSafetyIssuesAtRoot` (const) - 1 example import violation(s)
-- `src/Md.safe.ts:707` `SafeInline` (const) - 1 example import violation(s)
-- `src/Md.safe.ts:734` `SafeInline` (type) - 1 example import violation(s)
-- `src/Md.safe.ts:756` `SafeDocument` (const) - 1 example import violation(s)
-- `src/Md.safe.ts:783` `SafeDocument` (type) - 1 example import violation(s)
-- `src/Md.safe.ts:801` `decodeSafeDocument` (const) - 1 example import violation(s)
-- `src/Md.safe.ts:822` `decodeSafeDocumentEffect` (const) - 1 example import violation(s)
-- `src/Md.safe.ts:860` `refineSafeDocument` (const) - 2 example import violation(s)
+- `src/Md.safe.ts:79` `DocumentSafetyPathSegment` (const) - 1 example import violation(s)
+- `src/Md.safe.ts:350` `DocumentComplexitySafetyViolation` (class) - 1 example import violation(s)
+- `src/Md.safe.ts:739` `documentSafetyIssues` (const) - 1 example import violation(s)
+- `src/Md.safe.ts:765` `inlineSafetyIssuesAtRoot` (const) - 1 example import violation(s)
+- `src/Md.safe.ts:806` `SafeInline` (const) - 1 example import violation(s)
+- `src/Md.safe.ts:833` `SafeInline` (type) - 1 example import violation(s)
+- `src/Md.safe.ts:855` `SafeDocument` (const) - 1 example import violation(s)
+- `src/Md.safe.ts:882` `SafeDocument` (type) - 1 example import violation(s)
+- `src/Md.safe.ts:900` `decodeSafeDocument` (const) - 1 example import violation(s)
+- `src/Md.safe.ts:921` `decodeSafeDocumentEffect` (const) - 1 example import violation(s)
+- `src/Md.safe.ts:959` `refineSafeDocument` (const) - 2 example import violation(s)
 - `src/Md.ts:121` `InlineContent` (type) - 1 example import violation(s)
 - `src/Md.ts:177` `BlockContent` (type) - 1 example import violation(s)
 - `src/Md.ts:200` `BlockTemplateValue` (type) - 1 example import violation(s)
@@ -3176,7 +3176,7 @@ Export findings:
 - `src/Libpff.errors.ts:172` `makeLibpffError` (const) - 1 example import violation(s)
 - `src/Libpff.messages.ts:85` `PffexportMessageRecord` (class) - 1 example import violation(s)
 - `src/Libpff.messages.ts:132` `encodePffexportMessageRecordJson` (const) - 1 example import violation(s)
-- `src/Libpff.pffexport.ts:498` `makePffexportFileProcessingEngine` (const) - 1 example import violation(s); 1 documentation section/link violation(s)
+- `src/Libpff.pffexport.ts:536` `makePffexportFileProcessingEngine` (const) - 1 example import violation(s); 1 documentation section/link violation(s)
 
 ### @beep/venice-ai
 
@@ -3650,7 +3650,7 @@ Export findings:
 - `src/chat/UsageRecordSink.ts:91` `makeInMemoryUsageRecordSink` (const) - 1 example import violation(s)
 - `src/chat/UsageRecordSink.ts:125` `UsageRecordSinkInMemory` (const) - 1 example import violation(s)
 - `src/chat/UsageRecordSink.ts:196` `UsageRecordSinkDrizzle` (const) - 1 example import violation(s)
-- `src/chat/ui/ComposerPolicy.ts:270` `composerDocumentFromEditorState` (const) - 2 example import violation(s)
+- `src/chat/ui/ComposerPolicy.ts:276` `composerDocumentFromEditorState` (const) - 2 example import violation(s)
 - `src/contradiction/ContradictionQaSeed.ts:1022` `seedContradictionQaFixtures` (const) - 1 example import violation(s)
 - `src/contradiction/ContradictionQaSeed.ts:1126` `ContradictionQaSeedLive` (const) - 1 example import violation(s)
 - `src/intake/DocumentIntakeOrchestrator.ts:97` `WorkspaceVaultHandlersLive` (const) - 1 example import violation(s)
@@ -4611,8 +4611,8 @@ Export findings:
 - `src/Html.attributes.ts:1943` `DatasetKey` (type) - 1 example import violation(s)
 - `src/Html.conformance.ts:159` `ConformantHtml` (const) - 1 example import violation(s)
 - `src/Html.conformance.ts:201` `ConformantHtmlNode` (const) - 2 example import violation(s)
-- `src/Html.conformance.ts:2248` `conform` (const) - 1 example import violation(s)
-- `src/Html.conformance.ts:2280` `conformantRoot` (const) - 1 example import violation(s)
+- `src/Html.conformance.ts:2244` `conform` (const) - 1 example import violation(s)
+- `src/Html.conformance.ts:2276` `conformantRoot` (const) - 1 example import violation(s)
 - `src/Html.contract.ts:103` `HtmlDocumentChild` (type) - 1 example import violation(s)
 - `src/Html.form-control.ts:43` `InputState` (const) - 1 example import violation(s)
 - `src/Html.form-control.ts:128` `resolveInputState` (const) - 1 example import violation(s)
@@ -4873,9 +4873,9 @@ Module findings:
 
 Export findings:
 - `src/TextAnchor.ts:161` `TextAnchor` (class) - 1 example import violation(s)
-- `src/VerifiedTextAnchor.ts:470` `toTextAnchorVerificationReceipt` (const) - 2 example import violation(s)
-- `src/VerifiedTextAnchor.ts:528` `verifySourceTextIdentity` (const) - 1 example import violation(s)
-- `src/VerifiedTextAnchor.ts:656` `verifyTextAnchor` (const) - 2 example import violation(s)
+- `src/VerifiedTextAnchor.ts:512` `toTextAnchorVerificationReceipt` (const) - 2 example import violation(s)
+- `src/VerifiedTextAnchor.ts:576` `verifySourceTextIdentity` (const) - 1 example import violation(s)
+- `src/VerifiedTextAnchor.ts:708` `verifyTextAnchor` (const) - 2 example import violation(s)
 
 ### @beep/epistemic-tables
 

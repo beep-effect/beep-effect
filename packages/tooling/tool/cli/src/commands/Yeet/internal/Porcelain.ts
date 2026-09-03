@@ -65,6 +65,16 @@ interface YeetMonitorRouteDependencies {
   readonly watchStream?: typeof runYeetWatchStream;
 }
 
+const hydrateMonitoredContext = Effect.fn("Yeet.hydrateMonitoredContext")(function* (
+  options: YeetPorcelainOptions,
+  dependencies: YeetMonitorRouteDependencies
+) {
+  const context = yield* (dependencies.hydrate ?? hydrateYeetReadOnlyContext)(options);
+  const pullRequest = yield* (dependencies.view ?? runGhPullRequestView)(context);
+  yield* recordMonitoredPrSession(context, pullRequest.number, dependencies.capture, dependencies.registry);
+  return context;
+});
+
 /**
  * Parsed `yeet sweep` flag values. `plan` is the dry run — observe the clone,
  * build the plan, print it, execute nothing — and `json` selects the artifact
@@ -304,9 +314,7 @@ export const runYeetMergeLoop = Effect.fn("Yeet.runMergeLoopCommand")(function* 
   YeetCommandError,
   FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
-  const context = yield* (dependencies.hydrate ?? hydrateYeetReadOnlyContext)(options);
-  const pullRequest = yield* (dependencies.view ?? runGhPullRequestView)(context);
-  yield* recordMonitoredPrSession(context, pullRequest.number, dependencies.capture, dependencies.registry);
+  const context = yield* hydrateMonitoredContext(options, dependencies);
   return yield* (dependencies.mergeLoop ?? runYeetMonitorUntilMerged)(context, {});
 });
 
@@ -373,9 +381,7 @@ export const runYeetWatchLoop = Effect.fn("Yeet.runWatchLoopCommand")(function* 
   YeetCommandError | CliReportedExit,
   FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
-  const context = yield* (dependencies.hydrate ?? hydrateYeetReadOnlyContext)(options);
-  const pullRequest = yield* (dependencies.view ?? runGhPullRequestView)(context);
-  yield* recordMonitoredPrSession(context, pullRequest.number, dependencies.capture, dependencies.registry);
+  const context = yield* hydrateMonitoredContext(options, dependencies);
   const ended = yield* (dependencies.watchStream ?? runYeetWatchStream)(context, {
     intervalMillis: YEET_WATCH_INTERVAL_MILLIS,
     untilEvent,

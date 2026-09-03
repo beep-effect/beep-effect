@@ -740,7 +740,7 @@ const yeetPlanContractCheckCommand = Command.make(
  * ```ts
  * import { yeetCommand } from "@beep/repo-cli/commands/Yeet"
  * import { Command } from "effect/unstable/cli"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const run = Command.run(yeetCommand, { version: "0.0.0" })
  * console.log(Effect.isEffect(run)) // true
