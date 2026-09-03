@@ -1,3 +1,9 @@
+/**
+ * Staged HTML validation facade over conformance checks and the safety policy.
+ *
+ * @packageDocumentation \@beep/html/Html
+ * @since 0.0.0
+ */
 import { conform, inspectConformance } from "./Html.conformance.ts";
 import { enforceSafeHtml, inspectSafeHtml } from "./Html.policy.ts";
 import { readonlyStruct } from "./internal/Html.readonly.ts";
