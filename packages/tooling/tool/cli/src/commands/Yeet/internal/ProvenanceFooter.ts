@@ -258,7 +258,14 @@ const reconcilePrBodyAfterWrite = Effect.fn("ProvenanceFooter.reconcileAfterWrit
         foreign
       );
     }
-    const warning = `[yeet] provenance footer for PR #${prNumber} yielded after ${maxReconcileRounds} reconcile rounds and left the concurrent body edit by ${bodyEditorLabel(foreign.value)} in place; the next yeet monitor re-asserts the footer`;
+    const finalReadback = yield* readPrBody(capture, context, prNumber);
+    if (Str.Equivalence(finalReadback, writtenBody)) {
+      yield* writePrBody(capture, context, prNumber, bodyPath, foreign.value.body);
+      const restored = `[yeet] provenance footer for PR #${prNumber} yielded after ${maxReconcileRounds} reconcile rounds and restored the concurrent body edit by ${bodyEditorLabel(foreign.value)} that its last write had overtaken; the next yeet monitor re-asserts the footer`;
+      yield* Console.warn(restored);
+      return O.some(restored);
+    }
+    const warning = `[yeet] provenance footer for PR #${prNumber} yielded after ${maxReconcileRounds} reconcile rounds and left the newer concurrent body edit by ${bodyEditorLabel(foreign.value)} in place; the next yeet monitor re-asserts the footer`;
     yield* Console.warn(warning);
     return O.some(warning);
   }
@@ -535,8 +542,9 @@ export const recordCurrentPrSession = Effect.fn("ProvenanceFooter.recordCurrentS
  * JSON twin never become registry data or process arguments. After every
  * write, a bounded reconcile yields to newer foreign edits: the final body is
  * either that foreign body with the footer or, when contention outlasts the
- * bound, the newest foreign body left in place untouched (the next monitor
- * re-asserts the footer). No write ever starts from a stale snapshot.
+ * bound, the concurrent edit itself: an edit the final write overtook is
+ * restored when that write is still the latest body, and anything newer is
+ * left untouched (the next monitor re-asserts the footer).
  *
  * **Example** (Build footer re-assertion)
  *

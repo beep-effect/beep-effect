@@ -341,7 +341,7 @@ describe("Yeet provenance footer splice", () => {
     }).pipe(provideScopedLayer(PlatformLayer))
   );
 
-  it.effect("leaves the newest foreign body in place when contention outlasts the bound", () =>
+  it.effect("restores the edit its final write overtook when contention outlasts the bound", () =>
     Effect.gen(function* () {
       let warnings = A.empty<unknown>();
       const currentConsole = yield* Console.Console;
@@ -369,13 +369,52 @@ describe("Yeet provenance footer splice", () => {
           },
         ];
       }).pipe(Effect.provideService(Console.Console, warningConsole));
-      expect(result.writes).toBe(4);
-      expect(result.body).toContain("yeet-provenance");
-      expect(result.body).not.toBe("Newest foreign body");
+      expect(result.writes).toBe(5);
+      expect(result.body).toBe("Newest foreign body");
+      expect(result.body).not.toContain("yeet-provenance");
       expect(warnings).toHaveLength(1);
       expect(A.join(A.map(warnings, globalThis.String), "\n")).toContain("PR #42");
       expect(A.join(A.map(warnings, globalThis.String), "\n")).toContain("dana");
       expect(A.join(A.map(warnings, globalThis.String), "\n")).toContain("yeet monitor");
+    }).pipe(provideScopedLayer(PlatformLayer))
+  );
+
+  it.effect("leaves a newer edit untouched when it lands after the final reconcile write", () =>
+    Effect.gen(function* () {
+      let warnings = A.empty<unknown>();
+      const currentConsole = yield* Console.Console;
+      const warningConsole: Console.Console = {
+        ...currentConsole,
+        warn: (...args) => {
+          warnings = A.appendAll(warnings, args);
+        },
+      };
+      const foreignBodies = A.make("Foreign one", "Foreign two", "Foreign three", "Newest foreign body");
+      const ownMinutes = A.make("03", "05", "07", "09");
+      const foreignMinutes = A.make("04", "06", "08", "10");
+      const result = yield* runStamp(
+        "Original body",
+        "Original body",
+        () => "Even newer edit",
+        (bodies, read) => {
+          const written = O.getOrElse(A.get(bodies, read), () => "");
+          return [
+            {
+              diff: written,
+              editedAt: `2026-09-03T12:${O.getOrElse(A.get(ownMinutes, read), () => "09")}:00Z`,
+              editor: { login: "yeet" },
+            },
+            {
+              diff: O.getOrElse(A.get(foreignBodies, read), () => "Newest foreign body"),
+              editedAt: `2026-09-03T12:${O.getOrElse(A.get(foreignMinutes, read), () => "10")}:00Z`,
+              editor: { login: "concurrent-editor" },
+            },
+          ];
+        }
+      ).pipe(Effect.provideService(Console.Console, warningConsole));
+      expect(result.writes).toBe(4);
+      expect(warnings).toHaveLength(1);
+      expect(A.join(A.map(warnings, globalThis.String), "\n")).toContain("left the newer concurrent body edit");
     }).pipe(provideScopedLayer(PlatformLayer))
   );
 
