@@ -967,9 +967,7 @@ const gitRefSpanNames = (fullRef: string): ReadonlyArray<string> => {
   const remoteMatch = GIT_REMOTE_REF_NAME_PATTERN.exec(fullRef);
   const remoteName = remoteMatch?.[1];
   const branchName = remoteMatch?.[2];
-  return P.isString(remoteName) && P.isString(branchName)
-    ? [`${remoteName}/${branchName}`, branchName]
-    : A.empty<string>();
+  return P.isString(remoteName) && P.isString(branchName) ? [`${remoteName}/${branchName}`] : A.empty<string>();
 };
 
 /**
@@ -977,9 +975,9 @@ const gitRefSpanNames = (fullRef: string): ReadonlyArray<string> => {
  *
  * **Details**
  *
- * Local branches and tags yield their unqualified name. Remote-tracking branches yield both the
- * conventional remote-qualified spelling and its branch-name suffix. Unsupported namespaces yield
- * an empty collection.
+ * Local branches and tags yield their unqualified name. Remote-tracking branches yield only the
+ * conventional remote-qualified spelling; accepting the suffix could hide a missing path with the
+ * same text. Unsupported namespaces yield an empty collection.
  *
  * **Example** (Parse a remote-tracking branch)
  *
@@ -987,7 +985,7 @@ const gitRefSpanNames = (fullRef: string): ReadonlyArray<string> => {
  * import { gitRefSpanNamesForTesting } from "@beep/repo-cli/test/Knowledge"
  *
  * console.log(gitRefSpanNamesForTesting("refs/remotes/origin/goals/example"))
- * // ["origin/goals/example", "goals/example"]
+ * // ["origin/goals/example"]
  * ```
  *
  * @param fullRef - Fully qualified ref name emitted by `git for-each-ref`.

@@ -252,7 +252,6 @@ describe("knowledge semantic-delta golden paired fixtures", () => {
     expect(gitRefSpanNamesForTesting("refs/heads/goals/local-branch")).toEqual(["goals/local-branch"]);
     expect(gitRefSpanNamesForTesting("refs/remotes/origin/goals/remote-branch")).toEqual([
       "origin/goals/remote-branch",
-      "goals/remote-branch",
     ]);
     expect(gitRefSpanNamesForTesting("refs/tags/goals/release-tag")).toEqual(["goals/release-tag"]);
     expect(gitRefSpanNamesForTesting("refs/notes/goals/not-a-branch")).toEqual([]);
@@ -574,14 +573,19 @@ describe("knowledge semantic-delta golden paired fixtures", () => {
   it.effect("a real Git ref span is exempt while a genuinely missing path remains", () =>
     Effect.gen(function* () {
       const branchName = "goals/time-to-certainty-kickoff";
-      const remoteRef = `refs/remotes/origin/${branchName}`;
+      const missingPath = "goals/genuinely-missing.md";
       const report = yield* scan(
         fixture(
           { "docs/guide.md": "No references.\n" },
           {
-            "docs/guide.md": `Continue branch \`${branchName}\`; repair \`goals/genuinely-missing.md\`.\n`,
+            "docs/guide.md": `Continue branch \`${branchName}\`; repair \`${missingPath}\`.\n`,
           },
-          { gitRefNames: gitRefSpanNamesForTesting(remoteRef) }
+          {
+            gitRefNames: A.appendAll(
+              gitRefSpanNamesForTesting(`refs/heads/${branchName}`),
+              gitRefSpanNamesForTesting(`refs/remotes/origin/${missingPath}`)
+            ),
+          }
         )
       );
 
