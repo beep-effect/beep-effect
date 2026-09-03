@@ -691,7 +691,7 @@ export const renderCiLaneTimingsSummary = (report: CiLaneTimingsReport): string 
  *
  * ```ts
  * import { decodeCiWorkflowJobsPage } from "@beep/repo-cli/commands/Ci"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * console.log(Effect.isEffect(decodeCiWorkflowJobsPage("{\"jobs\":[]}")))
  * ```
@@ -816,7 +816,7 @@ const collectCiWorkflowJobPages = Effect.fn("Ci.collectCiWorkflowJobPages")(func
  *
  * ```ts
  * import { collectCiLaneTimings } from "@beep/repo-cli/commands/Ci"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const collected = collectCiLaneTimings(".", 5).pipe(Effect.map((report) => report.jobCount))
  * console.log(Effect.isEffect(collected))
@@ -914,7 +914,7 @@ const NonNegativeTimingSeconds = S.Finite.check(S.isGreaterThanOrEqualTo(0)).pip
  *
  * ```ts
  * import { CiLaneTimingWindowOptions } from "@beep/repo-cli/commands/Ci"
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime"
  * import * as O from "effect/Option"
  *
  * const options = CiLaneTimingWindowOptions.make({
@@ -952,7 +952,7 @@ export class CiLaneTimingWindowOptions extends S.Class<CiLaneTimingWindowOptions
  *
  * ```ts
  * import { CiWorkflowWindowRun } from "@beep/repo-cli/commands/Ci"
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime"
  *
  * const run = CiWorkflowWindowRun.make({
  *   created_at: DateTime.makeUnsafe("2026-09-04T00:00:00Z"),
@@ -987,7 +987,7 @@ export class CiWorkflowWindowRun extends S.Class<CiWorkflowWindowRun>($I`CiWorkf
  *
  * ```ts
  * import { CiWorkflowWindowRun, CiWorkflowWindowRunJobs } from "@beep/repo-cli/commands/Ci"
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime"
  *
  * const run = CiWorkflowWindowRun.make({
  *   created_at: DateTime.makeUnsafe("2026-09-04T00:00:00Z"),
@@ -1219,7 +1219,7 @@ export class CiLaneTimingPickupStat extends S.Class<CiLaneTimingPickupStat>($I`C
  *
  * ```ts
  * import { buildCiLaneTimingWindowReport } from "@beep/repo-cli/commands/Ci"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const report = buildCiLaneTimingWindowReport([], [])
  * console.log(Effect.isEffect(report))
@@ -1341,7 +1341,7 @@ export interface CiLaneTimingGithubClientShape {
  *
  * ```ts
  * import { CiLaneTimingGithubClient } from "@beep/repo-cli/commands/Ci"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * console.log(Effect.isEffect(Effect.service(CiLaneTimingGithubClient)))
  * ```
@@ -1880,7 +1880,7 @@ const reportFromRows = Effect.fn("Ci.reportFromLaneTimingWindowRows")(function* 
  *
  * ```ts
  * import { buildCiLaneTimingWindowReport } from "@beep/repo-cli/commands/Ci"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const report = buildCiLaneTimingWindowReport([], [])
  * console.log(Effect.isEffect(report))
@@ -1944,7 +1944,8 @@ const collectCiLaneTimingWindowWithClient = Effect.fn("Ci.collectCiLaneTimingWin
  *
  * ```ts
  * import { CiLaneTimingWindowOptions, collectCiLaneTimingWindow } from "@beep/repo-cli/commands/Ci"
- * import { DateTime, Effect } from "effect"
+ * import * as DateTime from "effect/DateTime"
+ * import * as Effect from "effect/Effect"
  * import * as O from "effect/Option"
  *
  * const options = CiLaneTimingWindowOptions.make({
@@ -2045,7 +2046,7 @@ const renderQueueTripwire = (pickup: CiLaneTimingPickupStat): string =>
  *
  * ```ts
  * import { buildCiLaneTimingWindowReport, renderCiLaneTimingWindowMarkdown } from "@beep/repo-cli/commands/Ci"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const rendered = buildCiLaneTimingWindowReport([], []).pipe(Effect.map(renderCiLaneTimingWindowMarkdown))
  * console.log(Effect.isEffect(rendered))
@@ -2077,7 +2078,7 @@ export const renderCiLaneTimingWindowMarkdown = (report: CiLaneTimingWindowRepor
  *
  * ```ts
  * import { buildCiLaneTimingWindowReport, renderCiLaneTimingWindowSummary } from "@beep/repo-cli/commands/Ci"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const rendered = buildCiLaneTimingWindowReport([], []).pipe(Effect.map(renderCiLaneTimingWindowSummary))
  * console.log(Effect.isEffect(rendered))
@@ -2189,7 +2190,7 @@ const renderWindowRowTsv = (row: CiLaneTimingWindowRow): string =>
  *
  * ```ts
  * import { buildCiLaneTimingWindowReport, renderCiLaneTimingWindowTsv } from "@beep/repo-cli/commands/Ci"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const rendered = buildCiLaneTimingWindowReport([], []).pipe(Effect.map(renderCiLaneTimingWindowTsv))
  * console.log(Effect.isEffect(rendered))
