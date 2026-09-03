@@ -21,7 +21,8 @@ orchestrator owns schemas, contracts, and judgment.
 
 ## P1 — Journal facts, then hygiene — IN PROGRESS (independent small PRs, Codex lanes in sibling worktrees)
 
-- [x] A5 journal facts — done 2026-09-03 (PR #964 merged as 58e063757b, under rulings 11–16):
+- [~] A5 journal facts — landed 2026-09-03 (PR #964 merged as 58e063757b, under rulings 11–16),
+      partial until A5b closes the four gaps review found after the merge:
       attempt rows carry the resolved head, tree fingerprint, tier, stage and env profile (C1
       vocabulary); the pre-push and merged-preview wrappers journal each inner lane through a
       durable report file; abnormal ends (interrupt, queued-submitter death, lease eviction) are
@@ -29,6 +30,16 @@ orchestrator owns schemas, contracts, and judgment.
       dead tickets and leases are claimed atomically before their event is journaled; writers
       preserve unknown journal rows and the eviction variant ships under a versioned protocol the
       CI-ops lab folds as a release; the economics loader accepts both terminal tags.
+- [ ] A5b journal-facts completion (review of PR #964 on the docs PR #976): (1) gate eviction-row
+      emission behind an explicit protocol switch that stays off until the unknown-row preservation
+      release has rolled out to every live checkout, because a v1 writer's locked rewrite still
+      drops v2 rows (ruling 14); (2) scheduler-owned termination rows carry the attempt's resolved
+      head, tree fingerprint, tier, stage and env profile, and compaction keeps start/terminal pairs
+      together so a minimal terminal row never survives its start; (3) stale-start reconciliation
+      closes starts whose owning process (pid plus start time) is dead with no admission owner,
+      covering SIGKILL and host death in repair, monitor and closeout modes; (4) the wrapper persists
+      each inner-lane result as it completes (append-only), so an interrupted wrapper keeps the lanes
+      that already finished. A5 is complete when all four land.
 - [ ] B1 package verification through the Turbo graph (upstream builds) or automatic
       environment-only attribution when no package source differs from base.
 - [x] A4 ack ledger contract — done 2026-09-03 (PR #966 merged as fe70e27f55): the P0 reminder and
@@ -42,7 +53,9 @@ orchestrator owns schemas, contracts, and judgment.
       reads, the quad still fails closed, and the health probe names failing variables only).
 - [ ] B3 cheap precise gates first, wave fails immediately; ordering seeded from A1.
 - [ ] B5 detached durable proof jobs in their own systemd user scope with inbox completion.
-- [ ] B6 lease and submitter death journaled as admission events.
+- [~] B6 lease and submitter death journaled as admission events — landed in PR #964
+      (`admission-lease-evicted` and `admission-ticket-evicted` rows, claimed atomically); complete
+      when A5b gates their emission behind the preservation rollout.
 
 ## P2 — Proof reuse
 
