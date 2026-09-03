@@ -349,14 +349,14 @@ export class ProofFact extends S.Class<ProofFact>($I`ProofFact`)(
     key: ProofInputDigest,
     epoch: ProofEpoch,
     outcome: ProofOutcome,
-    durationMs: S.Finite,
+    durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)),
     provenance: ProofProvenance,
     recordedAt: S.NonEmptyString,
     expiresAt: S.NonEmptyString,
   },
   $I.annote("ProofFact", {
     description:
-      "One reusable verification fact: reuse key, epoch, terminal outcome, duration, provenance, and expiry bounded by the epoch's lifetime.",
+      "One reusable verification fact: reuse key, epoch, terminal outcome, non-negative duration, provenance, and expiry bounded by the epoch's lifetime.",
   })
 ) {}
 

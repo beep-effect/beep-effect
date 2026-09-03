@@ -192,6 +192,15 @@ describe("ProofLedger", () => {
           expect(
             yield* ledger.lookup(input({ epochDigest: "different-epoch", key: "inconsistent-epoch" }), NOW)
           ).toStrictEqual(ProofReuseMiss.make({ key: "inconsistent-epoch", reason: "no-fact" }));
+
+          yield* ledger.record(
+            fact({
+              key: input({ inputSource: "undeclared", key: "undeclared-fact" }),
+            })
+          );
+          expect(yield* ledger.lookup(input({ key: "undeclared-fact" }), NOW)).toStrictEqual(
+            ProofReuseMiss.make({ key: "undeclared-fact", reason: "no-fact" })
+          );
         })
       )
     ).pipe(provideScopedLayer(PlatformLayer))

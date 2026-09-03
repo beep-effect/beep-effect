@@ -143,6 +143,7 @@ describe("ProofFact schemas", () => {
         schemaVersion: "proof-fact/v2",
         fact,
       });
+      yield* assertRejects(ProofFact, { ...fact, durationMs: -1 });
     })
   );
 

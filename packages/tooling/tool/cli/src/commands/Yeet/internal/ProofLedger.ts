@@ -228,6 +228,7 @@ export class ProofLedger extends Context.Service<ProofLedger, ProofLedgerShape>(
           (fact) =>
             Str.Equivalence(fact.key.key, key.key) &&
             sameReuseIdentity(fact.key, key) &&
+            !Str.Equivalence(fact.key.inputSource, "undeclared") &&
             Str.Equivalence(fact.key.epochDigest, fact.epoch.digest)
         );
         if (O.isSome(exact)) {
