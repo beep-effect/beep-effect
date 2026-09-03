@@ -13,9 +13,13 @@
 
 import * as UsageRecordTable from "@beep/epistemic-tables/entities/UsageRecord";
 import { $ProfessionalDesktopId } from "@beep/identity/packages";
-import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability";
+import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability/CauseRedaction";
 import { PostgresDrizzle } from "@beep/postgres";
-import { Context, Effect, Layer, Metric, Ref } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Metric from "effect/Metric";
+import * as Ref from "effect/Ref";
 import type { UsageRecord } from "@beep/epistemic-domain";
 
 const $I = $ProfessionalDesktopId.create("chat/UsageRecordSink");
@@ -29,7 +33,7 @@ const usagePersistenceFailures = Metric.counter("agents_usage_persistence_failur
  * **Example** (Define minimal sink shape)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import type { UsageRecordSinkShape } from "@/chat/UsageRecordSink"
  *
  * const sink: UsageRecordSinkShape = {
@@ -52,7 +56,7 @@ export interface UsageRecordSinkShape {
  * **Example** (Yield usage record sink)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { UsageRecordSink } from "@/chat/UsageRecordSink"
  *
  * const program = Effect.gen(function* () {
@@ -75,7 +79,7 @@ export class UsageRecordSink extends Context.Service<UsageRecordSink, UsageRecor
  * **Example** (Build sink with backing ref)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { makeInMemoryUsageRecordSink } from "@/chat/UsageRecordSink"
  *
  * const program = Effect.gen(function* () {
@@ -110,7 +114,7 @@ export const makeInMemoryUsageRecordSink: Effect.Effect<{
  * **Example** (Provide in-memory sink layer)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { UsageRecordSink, UsageRecordSinkInMemory } from "@/chat/UsageRecordSink"
  *
  * const program = Effect.gen(function* () {
@@ -185,8 +189,7 @@ const makeDrizzleUsageRecordSink: Effect.Effect<UsageRecordSinkShape, never, Pos
  *
  * ```ts
  * import { UsageRecordSinkDrizzle } from "@/chat/UsageRecordSink"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(UsageRecordSinkDrizzle)) // true
  * ```
  *

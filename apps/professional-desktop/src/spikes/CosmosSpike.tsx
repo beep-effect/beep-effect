@@ -7,16 +7,25 @@
  */
 
 import { CosmosBackend, CosmosGraphProjection, CosmosRenderHandle, renderCosmosGraph } from "@beep/cosmos/browser";
-import { $ProfessionalDesktopId } from "@beep/identity";
-import { LogRedactedCauseOptions, logRedactedCause, redactCauseForClient } from "@beep/observability";
-import { Fn, LiteralKit, SchemaUtils } from "@beep/schema";
+import { $ProfessionalDesktopId } from "@beep/identity/packages";
+import { LogRedactedCauseOptions, logRedactedCause, redactCauseForClient } from "@beep/observability/CauseRedaction";
+import { Fn } from "@beep/schema/Fn";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Button } from "@beep/ui/components/button";
-import { O, P, pipe, thunkNull } from "@beep/utils";
+import * as O from "@beep/utils/Option";
+import * as P from "@beep/utils/Predicate";
+import { thunkNull } from "@beep/utils/thunk";
 import { useAtomMount, useAtomSet, useAtomValue } from "@effect/atom-react";
 import * as BrowserWorker from "@effect/platform-browser/BrowserWorker";
-import { Clock, Duration, Effect, Layer, Tuple } from "effect";
 import * as A from "effect/Array";
+import * as Clock from "effect/Clock";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
+import * as Tuple from "effect/Tuple";
 import { AsyncResult, Atom } from "effect/unstable/reactivity";
 import * as RpcClient from "effect/unstable/rpc/RpcClient";
 import { reportedBrowserFailureAtoms } from "@/runtime/BrowserFailure.atoms";

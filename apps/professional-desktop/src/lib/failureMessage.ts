@@ -6,7 +6,7 @@
  */
 
 import { $ProfessionalDesktopId } from "@beep/identity/packages";
-import { redactCauseForClient } from "@beep/observability";
+import { redactCauseForClient } from "@beep/observability/CauseRedaction";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 

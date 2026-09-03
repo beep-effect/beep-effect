@@ -2,7 +2,7 @@ import { YOUTUBE_WATCH_EVENT, YouTubeWatchRequest } from "@beep/editor/youtube-e
 import "@testing-library/jest-dom/vitest";
 import { it } from "@effect/vitest";
 import { cleanup, fireEvent, render, waitFor, within } from "@testing-library/react";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { afterEach, beforeEach, describe, expect, vi } from "vitest";
 import { YouTubeWatchOpener } from "@/chat/ui/YouTubeWatchOpener";
 

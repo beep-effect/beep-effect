@@ -1,5 +1,5 @@
 import { ChatComposer } from "@beep/editor/chat/chat-composer";
-import { documentToEditorState } from "@beep/lexical-schema";
+import { documentToEditorState } from "@beep/lexical-schema/Lexical.codec";
 import * as MdModel from "@beep/md/Md.model";
 import { RegistryProvider } from "@effect/atom-react";
 import "@testing-library/jest-dom/vitest";

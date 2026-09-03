@@ -11,9 +11,16 @@ import {
   threadTimelineAtoms,
   unreconciledTurnAtoms,
 } from "@beep/agents-client/Chat.atoms";
-import { A, dual, Eq, N, O, P, thunkEffectVoid } from "@beep/utils";
+import * as A from "@beep/utils/Array";
+import * as Eq from "@beep/utils/Equal";
+import * as N from "@beep/utils/Number";
+import * as O from "@beep/utils/Option";
+import * as P from "@beep/utils/Predicate";
+import { thunkEffectVoid } from "@beep/utils/thunk";
 import { Thread as ThreadProjections } from "@beep/workspace-use-cases/public";
-import { Effect, HashSet } from "effect";
+import * as Effect from "effect/Effect";
+import { dual } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import { AsyncResult, Atom } from "effect/unstable/reactivity";
 import { professionalBrowserRuntime } from "@/runtime/ProfessionalAtomRuntime";
 import type { EditTarget, StreamingTurn } from "@beep/agents-client/Chat.atoms";

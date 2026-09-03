@@ -29,11 +29,13 @@ import {
   unreconciledTurnAtoms,
 } from "@beep/agents-client/Chat.atoms";
 import { Button } from "@beep/ui/components/button";
-import { A, O, thunkNull } from "@beep/utils";
+import * as A from "@beep/utils/Array";
+import * as O from "@beep/utils/Option";
+import { thunkNull } from "@beep/utils/thunk";
 import { MessageRole } from "@beep/workspace-domain/entities/Message";
 import { Thread as ThreadProjections } from "@beep/workspace-use-cases/public";
 import { useAtomMount, useAtomSet, useAtomSubscribe, useAtomValue } from "@effect/atom-react";
-import { HashSet } from "effect";
+import * as HashSet from "effect/HashSet";
 import { MessageView } from "./MessageView.tsx";
 import { StreamingBlocks } from "./StreamingBlocks.tsx";
 import {

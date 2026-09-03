@@ -20,12 +20,20 @@ import {
   SyntheticGraph3DOptions,
 } from "@beep/graph-3d/browser";
 import { $ProfessionalDesktopId } from "@beep/identity/packages";
-import { LogRedactedCauseOptions, logRedactedCause, redactCauseForClient } from "@beep/observability";
-import { LiteralKit, NonNegativeInt, PosInt } from "@beep/schema";
-import { A, N, O, pipe, thunkEmptyStr, thunkNull } from "@beep/utils";
+import { LogRedactedCauseOptions, logRedactedCause, redactCauseForClient } from "@beep/observability/CauseRedaction";
+import { PosInt } from "@beep/schema/Int";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import { NonNegativeInt } from "@beep/schema/Number";
+import * as A from "@beep/utils/Array";
+import * as N from "@beep/utils/Number";
+import * as O from "@beep/utils/Option";
+import { thunkEmptyStr, thunkNull } from "@beep/utils/thunk";
 import { useAtomMount, useAtomSet, useAtomValue } from "@effect/atom-react";
-import { Duration, Effect, Tuple } from "effect";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as S from "effect/Schema";
+import * as Tuple from "effect/Tuple";
 import { AsyncResult, Atom } from "effect/unstable/reactivity";
 import { professionalBrowserRuntime } from "@/runtime/ProfessionalAtomRuntime";
 import { fpsSampleAtoms } from "./Fps.atoms.ts";

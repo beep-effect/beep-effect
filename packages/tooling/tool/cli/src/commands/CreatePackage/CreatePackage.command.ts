@@ -1778,6 +1778,7 @@ const appBaseScripts = (dev: string, build: string, lab: boolean) => ({
   ...(lab ? {} : { coverage: "bunx vitest run --coverage" }),
   lint: "bun run beep:lint",
   "lint:fix": "bun run beep:lint:fix",
+  "package-test-typecheck": "beep-cli quality test-tsgo-package",
   test: "bun run beep:test",
 });
 
@@ -1953,6 +1954,7 @@ const packageScripts = (rootRelative: string, packagePath: string, withStoriesTs
   docgen: "bun run beep:docgen",
   lint: "bun run beep:lint",
   "lint:fix": "bun run beep:lint:fix",
+  "package-test-typecheck": "beep-cli quality test-tsgo-package",
   test: "bun run beep:test",
   "test:integration": "bun run beep:test:integration",
 });

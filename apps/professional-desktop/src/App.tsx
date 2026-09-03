@@ -19,12 +19,14 @@
  */
 
 import { chatProtocolLayerAtom, HttpChatProtocolLive } from "@beep/agents-client";
-import { DockNode, DockWorkspace, PanelId, TabChrome } from "@beep/dock";
-import { DockviewReact } from "@beep/dock-react";
+import { PanelId } from "@beep/dock/Dock.ids";
+import { DockNode, DockWorkspace } from "@beep/dock/Dock.tree";
+import { TabChrome } from "@beep/dock/Minima";
+import { DockviewReact } from "@beep/dock-react/DockviewReact";
 import { epistemicProtocolLayerAtom } from "@beep/epistemic-client";
 import { ContradictionTriagePanel } from "@beep/epistemic-ui";
-import { $ProfessionalDesktopId } from "@beep/identity";
-import { redactCauseForClient } from "@beep/observability";
+import { $ProfessionalDesktopId } from "@beep/identity/packages";
+import { redactCauseForClient } from "@beep/observability/CauseRedaction";
 import { HttpOntologyProtocolLive, ontologyProtocolLayerAtom } from "@beep/ontology-client";
 import {
   OntologyChangeLogRegion,
@@ -35,14 +37,14 @@ import {
   OntologySourceRegion,
   OntologySparqlRegion,
 } from "@beep/ontology-ui";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import { Button } from "@beep/ui/components/button";
 import { Toaster } from "@beep/ui/components/sonner";
-import { thunkUndefined } from "@beep/utils";
+import { thunkUndefined } from "@beep/utils/thunk";
 import { RegistryContext, useAtomMount, useAtomSet, useAtomValue } from "@effect/atom-react";
 import { invoke } from "@tauri-apps/api/core";
-import { Effect } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -72,8 +74,8 @@ import {
   resetDockSnapshotAtom,
 } from "./workspace/dock.atoms.ts";
 import { dockApiAtom, dockAtomBridge, focusedDockGroupAtom } from "./workspace/dock-react.atoms.ts";
-import type { GroupId } from "@beep/dock";
-import type { DockRenderer, DockviewAdapterApi } from "@beep/dock-react";
+import type { GroupId } from "@beep/dock/Dock.ids";
+import type { DockRenderer, DockviewAdapterApi } from "@beep/dock-react/DockReact.types";
 import type { JSX, ReactNode } from "react";
 import type { DesktopDockGraph, DesktopPanelKey } from "./workspace/dock.atoms.ts";
 

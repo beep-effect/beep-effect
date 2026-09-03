@@ -1,4 +1,4 @@
-import { Redacted } from "effect";
+import * as Redacted from "effect/Redacted";
 import { Headers, HttpClientRequest } from "effect/unstable/http";
 import { describe, expect, it } from "vitest";
 import {
