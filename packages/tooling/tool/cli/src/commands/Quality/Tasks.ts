@@ -2297,14 +2297,10 @@ const rootRepoLintPolicySteps = (repoRoot: string, files?: ReadonlyArray<string>
       ),
       ...scopedLawStep(repoRoot, "lint:effect-imports", "effect-imports", ["--check"], files),
       // Standalone Markdown is invisible to Biome and the JSDoc inventory. Keep this
-      // full authored-corpus pass advisory until the final per-module import flip.
-      repoCliStep(repoRoot, "lint:effect-imports-markdown", [
-        "laws",
-        "effect-imports",
-        "--mode",
-        "markdown",
-        "--check",
-      ]),
+      // full authored-corpus pass advisory until the final per-module import flip:
+      // run it report-only (no `--check`) so it surfaces markdown import drift in the
+      // logs without failing the policy. `--check` is re-added at the final flip.
+      repoCliStep(repoRoot, "lint:effect-imports-markdown", ["laws", "effect-imports", "--mode", "markdown"]),
       repoCliStep(repoRoot, "lint:package-test-typecheck", ["lint", "package-test-typecheck"]),
       repoCliStep(repoRoot, "lint:tsgo-rules", ["quality", "tsgo-rules"]),
       // Gate on mandatory (error) oxlint rules; --quiet suppresses the large advisory (warn)

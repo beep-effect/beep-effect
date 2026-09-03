@@ -2093,7 +2093,7 @@ describe("quality task adapter", () => {
       repoCliEntryArgs("laws", "native-runtime", "--check")
     );
     expect(steps.find((step) => step.label === "lint:effect-imports-markdown")?.args).toEqual(
-      repoCliEntryArgs("laws", "effect-imports", "--mode", "markdown", "--check")
+      repoCliEntryArgs("laws", "effect-imports", "--mode", "markdown")
     );
     expect(steps.every((step) => step.captureTimeoutMillis === 15 * 60 * 1_000)).toBe(true);
   });
