@@ -388,7 +388,11 @@ export const detectPrRepository = Effect.fn("ProvenanceFooter.detectRepository")
   if (O.isNone(match) || match.value[1] === undefined || match.value[2] === undefined) {
     return yield* YeetCommandError.make({ message: "Expected a github.com origin URL." });
   }
-  return PrRepository.make({ host: "github.com", owner: match.value[1], name: match.value[2] });
+  return PrRepository.make({
+    host: "github.com",
+    owner: Str.toLowerCase(match.value[1]),
+    name: Str.toLowerCase(match.value[2]),
+  });
 });
 
 /**

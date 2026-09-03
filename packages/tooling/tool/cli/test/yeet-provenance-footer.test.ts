@@ -1,6 +1,7 @@
 import {
   BuildYeetVerdictInput,
   buildYeetVerdictForTesting,
+  detectPrRepository,
   ensureProvenanceFooter,
   ensurePullRequest,
   GhPrView,
@@ -501,5 +502,23 @@ describe("Yeet provenance footer splice", () => {
       expect(yield* registry.lookup(repository, 42)).toHaveLength(1);
       expect(yield* Ref.get(runner.writes)).toBe(1);
     }).pipe(provideScopedLayer(Layer.mergeAll(PlatformLayer, layerPrSessionRegistryMemory)))
+  );
+
+  it.effect("lowercases a mixed-case origin so URL and origin lookups share one registry partition", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fs.makeTempDirectory();
+      yield* configureRepo(root);
+      yield* Effect.sync(() => {
+        const result = Bun.spawnSync(
+          ["git", "remote", "set-url", "origin", "https://github.com/Beep-Effect/Beep-Effect.git"],
+          { cwd: root, stderr: "pipe", stdout: "pipe" }
+        );
+        if (!result.success) assert.fail("fixture origin update failed");
+      });
+      const detected = yield* detectPrRepository(root);
+      expect(detected.owner).toBe("beep-effect");
+      expect(detected.name).toBe("beep-effect");
+    }).pipe(provideScopedLayer(PlatformLayer))
   );
 });
