@@ -33,7 +33,7 @@ const $I = $RepoCliId.create("internal/repo-run/ProcessIdentity");
  *
  * @param stat - Raw `/proc/<pid>/stat` file content.
  * @returns The start-time field when present.
- * @category liveness
+ * @category utilities
  * @since 0.0.0
  */
 export const parseAdmissionProcStatStartTime = (stat: string): O.Option<string> =>
@@ -58,7 +58,7 @@ export const parseAdmissionProcStatStartTime = (stat: string): O.Option<string> 
  *
  * @param pid - Process id to probe with signal zero.
  * @returns Whether a process with this pid currently exists.
- * @category liveness
+ * @category utilities
  * @since 0.0.0
  */
 export const isProcessPidAlive = (pid: number): Effect.Effect<boolean> =>
@@ -91,7 +91,7 @@ export const isProcessPidAlive = (pid: number): Effect.Effect<boolean> =>
  *
  * @param pid - Process whose `/proc/<pid>/stat` start time is requested.
  * @returns The process start time when the proc entry is readable.
- * @category liveness
+ * @category utilities
  * @since 0.0.0
  */
 export const processStartTimeForPid = Effect.fnUntraced(function* (
@@ -146,7 +146,7 @@ const processStartIdentityFromSystemCommand = (pid: number): Effect.Effect<O.Opt
  *
  * @param pid - Process whose start identity is requested.
  * @returns A procfs or platform-inspector identity when available.
- * @category liveness
+ * @category utilities
  * @since 0.0.0
  */
 export const processStartIdentityForPid = Effect.fnUntraced(function* (
@@ -224,7 +224,7 @@ const processIdentityStatusWithStart = Effect.fnUntraced(function* <Requirements
  *
  * @param owner - PID and process start time recorded by an owner.
  * @returns The observed process-identity status.
- * @category liveness
+ * @category utilities
  * @since 0.0.0
  */
 export const processIdentityStatus = Effect.fnUntraced(function* (owner: {
@@ -258,7 +258,7 @@ export const processIdentityStatus = Effect.fnUntraced(function* (owner: {
  *
  * @param owner - PID and process start time recorded by an owner.
  * @returns Whether the same process identity is still alive.
- * @category liveness
+ * @category utilities
  * @since 0.0.0
  */
 export const isProcessIdentityAlive = Effect.fnUntraced(function* (owner: {

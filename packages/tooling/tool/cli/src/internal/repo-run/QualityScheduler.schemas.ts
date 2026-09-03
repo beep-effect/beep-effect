@@ -215,7 +215,7 @@ export type ProofStage = typeof ProofStage.Type;
  * console.log("resolvedHeadSha" in attemptInputFactFields) // true
  * ```
  *
- * @category schema-building-blocks
+ * @category models
  * @since 0.0.0
  */
 export const attemptInputFactFields = {

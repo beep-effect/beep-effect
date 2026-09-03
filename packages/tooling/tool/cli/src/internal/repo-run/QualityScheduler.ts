@@ -42,11 +42,11 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import {
-  AdmissionEvictionEmission,
   AdmissionJournalAdmitted,
   AdmissionJournalLeaseEvicted,
   AdmissionJournalReleased,
   AdmissionJournalTicketEvicted,
+  appendAdmissionEvictionJournalEvent,
   appendAdmissionJournalEvent,
   readAdmissionProtocol,
   writeAdmissionProtocol,
@@ -68,6 +68,7 @@ import { enterRunScope, readRunScopeTelemetry, runScopeUnitName, stopRunScopeFor
 import { admissionRootFor, perUserRuntimeRoot } from "./RuntimeRoot.ts";
 import type { UUID } from "@beep/schema/String";
 import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { AdmissionEvictionEmission } from "./AdmissionJournal.ts";
 
 export {
   isProcessIdentityAlive,
@@ -375,7 +376,7 @@ const ensureAdmissionDirectories = Effect.fnUntraced(function* (): Effect.fn.Ret
  * ```
  *
  * @returns The current protocol, defaulting eviction emission to off.
- * @category admission
+ * @category utilities
  * @since 0.0.0
  */
 export const admissionProtocolStatus = Effect.fn("QualityScheduler.admissionProtocolStatus")(function* () {
@@ -396,7 +397,7 @@ export const admissionProtocolStatus = Effect.fn("QualityScheduler.admissionProt
  *
  * @param eviction - Desired v2 eviction-event emission state.
  * @returns The protocol marker that was published.
- * @category admission
+ * @category utilities
  * @since 0.0.0
  */
 export const setAdmissionEvictionProtocol = Effect.fn("QualityScheduler.setAdmissionEvictionProtocol")(function* (
@@ -599,21 +600,18 @@ const scanAdmissionState = Effect.fnUntraced(function* (
       onReap: Effect.fn("QualityScheduler.onLeaseReap")(function* (lease: YeetAdmissionLease) {
         const evictedAtMillis = yield* Clock.currentTimeMillis;
         yield* journalAbnormalAttemptEnd(lease, "lease-eviction");
-        const protocol = yield* readAdmissionProtocol(directories.root);
-        yield* AdmissionEvictionEmission.is.on(protocol.eviction)
-          ? appendAdmissionJournalEvent(
-              directories.root,
-              AdmissionJournalLeaseEvicted.make({
-                schemaVersion: "yeet-admission-journal/v2",
-                _tag: "admission-lease-evicted",
-                nonce: lease.nonce,
-                pid: lease.pid,
-                attemptId: lease.attemptId,
-                evictedAtMillis,
-                reason: "owner-dead-or-reused",
-              })
-            ).pipe(Effect.catch(warnAdmissionJournalError))
-          : Effect.void;
+        yield* appendAdmissionEvictionJournalEvent(
+          directories.root,
+          AdmissionJournalLeaseEvicted.make({
+            schemaVersion: "yeet-admission-journal/v2",
+            _tag: "admission-lease-evicted",
+            nonce: lease.nonce,
+            pid: lease.pid,
+            attemptId: lease.attemptId,
+            evictedAtMillis,
+            reason: "owner-dead-or-reused",
+          })
+        ).pipe(Effect.catch(warnAdmissionJournalError));
       }),
     },
     repair,
@@ -629,21 +627,18 @@ const scanAdmissionState = Effect.fnUntraced(function* (
       onReap: Effect.fn("QualityScheduler.onTicketReap")(function* (ticket: YeetAdmissionTicket) {
         const evictedAtMillis = yield* Clock.currentTimeMillis;
         yield* journalAbnormalAttemptEnd(ticket, "queued-submitter-death");
-        const protocol = yield* readAdmissionProtocol(directories.root);
-        yield* AdmissionEvictionEmission.is.on(protocol.eviction)
-          ? appendAdmissionJournalEvent(
-              directories.root,
-              AdmissionJournalTicketEvicted.make({
-                schemaVersion: "yeet-admission-journal/v2",
-                _tag: "admission-ticket-evicted",
-                nonce: ticket.nonce,
-                pid: ticket.pid,
-                attemptId: ticket.attemptId,
-                evictedAtMillis,
-                reason: "queued-submitter-death",
-              })
-            ).pipe(Effect.catch(warnAdmissionJournalError))
-          : Effect.void;
+        yield* appendAdmissionEvictionJournalEvent(
+          directories.root,
+          AdmissionJournalTicketEvicted.make({
+            schemaVersion: "yeet-admission-journal/v2",
+            _tag: "admission-ticket-evicted",
+            nonce: ticket.nonce,
+            pid: ticket.pid,
+            attemptId: ticket.attemptId,
+            evictedAtMillis,
+            reason: "queued-submitter-death",
+          })
+        ).pipe(Effect.catch(warnAdmissionJournalError));
       }),
     },
     repair

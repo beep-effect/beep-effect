@@ -1645,7 +1645,7 @@ const runPlanExecution = Effect.fn("Yeet.runPlanExecution")(function* (
   plan: RepoRunPlan,
   options: YeetRunOptions,
   message: O.Option<string>,
-  providedAttemptId: O.Option<YeetAttemptId> = O.none()
+  providedAttempt: O.Option<YeetAttemptStarted> = O.none()
 ): Effect.fn.Return<
   YeetRunResult,
   YeetCommandError,
@@ -1655,11 +1655,10 @@ const runPlanExecution = Effect.fn("Yeet.runPlanExecution")(function* (
     return yield* runStatusMode(plan.context, options);
   }
   const startedAtEpochMillis = yield* Clock.currentTimeMillis;
-  const attemptId = yield* O.match(providedAttemptId, {
-    onNone: generateAttemptId,
+  const attempt = yield* O.match(providedAttempt, {
+    onNone: () => Effect.flatMap(generateAttemptId(), (attemptId) => makeYeetAttempt(plan.context, options, attemptId)),
     onSome: Effect.succeed,
   });
-  const attempt = yield* makeYeetAttempt(plan.context, options, attemptId);
   const recorder = yield* Ref.make<ReadonlyArray<YeetExecutedStep>>(A.empty());
   const extras = yield* Ref.make<YeetVerdictExtras>({
     baseFreshness: O.none(),
@@ -1840,13 +1839,20 @@ const runMergedVerify = Effect.fn("Yeet.runMergedVerify")(function* (
       yield* Console.log(
         `[yeet] proving the merge preview ${pipe(preview.commitSha, Str.takeLeft(12))} (${context.branch} merged with ${context.base} at ${pipe(preview.baseSha, Str.takeLeft(12))})`
       );
-      yield* installYeetMergePreview(context, preview.worktreePath);
       const previewContext = yeetMergedPreviewContext(context, preview, artifactDir);
-      return yield* runPlanExecution(
-        buildYeetRunPlanWithMode(previewContext, message, modeOptions),
-        options,
-        message,
-        O.some(attemptId)
+      const attempt = yield* makeYeetAttempt(previewContext, options, attemptId);
+      return yield* runWithMergedPreviewAdmission(
+        context,
+        Effect.gen(function* () {
+          yield* installYeetMergePreview(context, preview.worktreePath);
+          return yield* runPlanExecution(
+            buildYeetRunPlanWithMode(previewContext, message, modeOptions),
+            options,
+            message,
+            O.some(attempt)
+          );
+        }),
+        attempt
       );
     })
   );
@@ -1929,11 +1935,7 @@ export const runYeet = Effect.fn("Yeet.runYeet")(function* (
   }
   if (options.merged) {
     const attemptId = yield* generateAttemptId();
-    const admissionAttempt = yield* makeYeetAttempt(context, options, attemptId);
-    const merged = runMergedVerify(context, options, message, modeOptions, attemptId);
-    return yield* options.mode === "verify" && options.tier === "full"
-      ? runWithMergedPreviewAdmission(context, merged, admissionAttempt)
-      : merged;
+    return yield* runMergedVerify(context, options, message, modeOptions, attemptId);
   }
 
   return yield* runPlanExecution(plan, options, message);

@@ -2991,6 +2991,11 @@ const schedulerStatusCommand = Command.make(
   })
 ).pipe(Command.withDescription("Show machine-wide admission capacity, leases, and queue"));
 
+const reconcileCurrentCheckoutAttemptJournals = Effect.fn("Quality.reconcileCurrentCheckoutAttempts")(function* () {
+  const repoRoot = yield* findRepoRoot().pipe(QualityScriptCommandError.mapError("Failed to locate repository root."));
+  return yield* reconcileAttemptJournalsForCheckout(repoRoot);
+});
+
 const schedulerReapCommand = Command.make(
   "reap",
   {
@@ -3000,13 +3005,19 @@ const schedulerReapCommand = Command.make(
   },
   Effect.fn(function* ({ apply }) {
     const snapshot = yield* reapAdmissionState({ apply });
+    const reconciledAttempts = apply ? yield* reconcileCurrentCheckoutAttemptJournals() : 0;
     const deadLines = A.map(snapshot.dead, (path) => `- ${path}`);
     yield* printLines([
       apply ? "reaped dead admission state:" : "dry run — would reap:",
       ...(A.length(deadLines) === 0 ? ["(nothing dead)"] : deadLines),
+      ...(apply ? [`reconciled owner-dead attempts: ${reconciledAttempts}`] : []),
     ]);
   })
-).pipe(Command.withDescription("Reap dead admission leases and tickets (dry-run by default)"));
+).pipe(
+  Command.withDescription(
+    "Reap dead admission state and reconcile this checkout's attempts when applied (dry-run by default)"
+  )
+);
 
 const schedulerProtocolCommand = Command.make(
   "protocol",
@@ -3044,10 +3055,7 @@ const schedulerReconcileAttemptsCommand = Command.make(
   "reconcile-attempts",
   {},
   Effect.fn(function* () {
-    const repoRoot = yield* findRepoRoot().pipe(
-      QualityScriptCommandError.mapError("Failed to locate repository root.")
-    );
-    const reconciled = yield* reconcileAttemptJournalsForCheckout(repoRoot);
+    const reconciled = yield* reconcileCurrentCheckoutAttemptJournals();
     yield* printLines([`reconciled owner-dead attempts: ${reconciled}`]);
   })
 ).pipe(Command.withDescription("Close unfinished attempt starts whose PID/start-time owner is dead"));

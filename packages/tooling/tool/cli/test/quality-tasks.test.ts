@@ -1129,6 +1129,56 @@ describe("quality task adapter", () => {
       }).pipe(provideScopedLayer(PlatformLayer))
     ));
 
+  it("retains completed streaming lanes before the group returns", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const tempDir = yield* fs.makeTempDirectory();
+        const artifactPath = path.join(tempDir, "streaming-inner-lanes.ndjson");
+        yield* withEnvVarEffect(
+          QUALITY_TASK_LANE_RUN_ARTIFACT_PATH_ENV,
+          artifactPath,
+          withEnvVarEffect(
+            QUALITY_TASK_LANE_RUN_PARENT_ID_ENV,
+            "full:02-ci-parity",
+            Effect.gen(function* () {
+              const wrapper = yield* Effect.forkChild(
+                runQualityTaskStreamingLaneGroup(
+                  "ci:local",
+                  [
+                    ["first", bunScriptStep("ci:first", "process.exit(0)"), O.none()],
+                    ["second", bunScriptStep("ci:second", "process.exit(0)"), O.none()],
+                    ["interrupted", bunScriptStep("ci:interrupted", "await Bun.sleep(60_000)"), O.none()],
+                  ],
+                  1
+                )
+              );
+              let lines = A.empty<string>();
+              for (let attempt = 0; attempt < 200 && A.length(lines) < 2; attempt++) {
+                yield* Effect.sleep("10 millis");
+                lines = pipe(
+                  yield* fs.readFileString(artifactPath).pipe(Effect.orElseSucceed(() => Str.empty)),
+                  Str.split("\n"),
+                  A.filter(Str.isNonEmpty)
+                );
+              }
+              yield* Fiber.interrupt(wrapper);
+              expect(lines).toHaveLength(2);
+              const reports = yield* Effect.forEach(lines, (line) =>
+                S.decodeEffect(S.fromJsonString(QualityTaskLaneRunReport))(line)
+              );
+              expect(A.flatMap(reports, (report) => A.map(report.lanes, (lane) => lane.id))).toEqual([
+                "first",
+                "second",
+              ]);
+            })
+          )
+        );
+        yield* fs.remove(tempDir, { recursive: true, force: true });
+      }).pipe(provideScopedLayer(PlatformLayer))
+    ));
+
   it("property: the wave report schema round-trips arbitrary reports", () => {
     const ReportArbitrary = S.toArbitrary(GithubCheckRunReport)(fc);
     fc.assert(

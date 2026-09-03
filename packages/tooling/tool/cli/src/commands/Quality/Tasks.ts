@@ -1431,10 +1431,18 @@ interface StreamingStepOutcome {
   readonly step: QualityTaskStep;
 }
 
+type StreamingOutcomeObserver = (
+  outcome: StreamingStepOutcome,
+  index: number
+) => Effect.Effect<void, QualityTaskConfigurationError, FileSystem.FileSystem | Path.Path>;
+
+const ignoreStreamingOutcome: StreamingOutcomeObserver = () => Effect.void;
+
 const collectStreamingStepOutcomes = Effect.fn("QualityTasks.collectStreamingStepOutcomes")(function* (
   label: string,
   steps: ReadonlyArray<QualityTaskStep>,
-  concurrency = 1
+  concurrency = 1,
+  onOutcome: StreamingOutcomeObserver = ignoreStreamingOutcome
 ) {
   if (A.isReadonlyArrayEmpty(steps)) {
     return A.empty<StreamingStepOutcome>();
@@ -1449,13 +1457,15 @@ const collectStreamingStepOutcomes = Effect.fn("QualityTasks.collectStreamingSte
   });
   const outcomes = yield* Effect.forEach(
     steps,
-    Effect.fnUntraced(function* (step) {
+    Effect.fnUntraced(function* (step, index) {
       const startedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
       const [elapsed, failure] = yield* runStepWithQuarantine(step, incidents).pipe(Effect.timed);
       const endedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
       const durationMs = Duration.toMillis(elapsed);
       yield* Console.log(`[beep-cli] ${step.label}: ${O.isNone(failure) ? "ok" : "failed"} in ${durationMs}ms`);
-      return { durationMs, endedAt, failure, startedAt, step };
+      const outcome = { durationMs, endedAt, failure, startedAt, step };
+      yield* onOutcome(outcome, index);
+      return outcome;
     }),
     { concurrency }
   );
@@ -1532,7 +1542,16 @@ const collectQualityTaskLaneRuns = Effect.fn("QualityTasks.collectQualityTaskLan
   const outcomes = yield* collectStreamingStepOutcomes(
     label,
     A.map(lanes, ([, step]) => step),
-    concurrency
+    concurrency,
+    (outcome, index) =>
+      pipe(
+        A.get(lanes, index),
+        O.match({
+          onNone: () => Effect.void,
+          onSome: ([id, , inputDigest]) =>
+            appendQualityTaskLaneRun(qualityTaskLaneRunFromOutcome(id, inputDigest, outcome)),
+        })
+      )
   );
   return {
     report: QualityTaskLaneRunReport.make({
@@ -1581,7 +1600,6 @@ const runGithubCheckWave = Effect.fn("QualityTasks.runGithubCheckWave")(function
     const result = yield* collectQualityTaskLaneRuns(`${label}:${lane.id}`, [[lane.id, lane.step, O.none()]], 1);
     const run = A.head(result.report.lanes);
     if (O.isSome(run)) {
-      yield* appendQualityTaskLaneRun(run.value);
       laneRuns = A.append(laneRuns, run.value);
     }
     if (A.isReadonlyArrayNonEmpty(result.failures)) {
@@ -1841,7 +1859,6 @@ export const runQualityTaskStreamingLaneGroup = Effect.fn("QualityTasks.runStrea
   concurrency = 1
 ) {
   const result = yield* collectQualityTaskLaneRuns(label, lanes, concurrency);
-  yield* Effect.forEach(result.report.lanes, appendQualityTaskLaneRun, { discard: true, concurrency: 1 });
   yield* emitQualityTaskLaneRunReport(yield* qualityTaskLaneRunReportFromArtifact(result.report));
   yield* failQualityTaskFailures(label, result.failures);
 });

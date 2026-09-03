@@ -239,8 +239,9 @@ const retainedJournalLines = Effect.fn("AttemptTerminationJournal.retainedLines"
   );
 });
 
-const compactJournal = Effect.fn("AttemptTerminationJournal.compact")(function* (
-  journalPath: string
+const normalizeJournal = Effect.fn("AttemptTerminationJournal.normalize")(function* (
+  journalPath: string,
+  retainRows: boolean
 ): Effect.fn.Return<void, QualitySchedulerError, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
   const text = yield* fs
@@ -259,10 +260,10 @@ const compactJournal = Effect.fn("AttemptTerminationJournal.compact")(function* 
       Effect.mapError(QualitySchedulerError.new(`Failed to decode Yeet attempt journal "${journalPath}".`))
     )
   );
-  if (!torn && A.length(events) <= RETAINED_ROWS) {
+  if (!torn && (!retainRows || A.length(events) <= RETAINED_ROWS)) {
     return;
   }
-  const retainedLines = yield* retainedJournalLines(events, lines);
+  const retainedLines = retainRows ? yield* retainedJournalLines(events, lines) : lines;
   yield* fs
     .writeFileString(
       journalPath,
@@ -274,6 +275,10 @@ const compactJournal = Effect.fn("AttemptTerminationJournal.compact")(function* 
     )
     .pipe(Effect.mapError(QualitySchedulerError.new(`Failed to compact Yeet attempt journal "${journalPath}".`)));
 });
+
+const repairTornJournal = (journalPath: string) => normalizeJournal(journalPath, false);
+
+const compactJournal = (journalPath: string) => normalizeJournal(journalPath, true);
 
 const appendLinesLocked = Effect.fnUntraced(function* (
   journalPath: string,
@@ -383,7 +388,7 @@ const reconcileJournalLocked = Effect.fn("AttemptTerminationJournal.reconcileLoc
  *
  * @param journalPath - Absolute branch-scoped attempt journal path.
  * @returns The number of `owner-dead` terminal rows appended.
- * @category reconciliation
+ * @category utilities
  * @since 0.0.0
  */
 export const reconcileAttemptJournal = Effect.fn("AttemptTerminationJournal.reconcile")(function* (
@@ -402,7 +407,7 @@ export const reconcileAttemptJournal = Effect.fn("AttemptTerminationJournal.reco
   }
   return yield* Effect.ensuring(
     Effect.gen(function* () {
-      yield* compactJournal(journalPath);
+      yield* repairTornJournal(journalPath);
       const reconciled = yield* reconcileJournalLocked(journalPath);
       yield* compactJournal(journalPath);
       return reconciled;
@@ -424,7 +429,7 @@ export const reconcileAttemptJournal = Effect.fn("AttemptTerminationJournal.reco
  *
  * @param checkoutRoot - Checkout whose `.beep/yeet/runs` journals are scanned.
  * @returns The total number of `owner-dead` terminal rows appended.
- * @category reconciliation
+ * @category utilities
  * @since 0.0.0
  */
 export const reconcileAttemptJournalsForCheckout = Effect.fn("AttemptTerminationJournal.reconcileCheckout")(function* (
@@ -495,7 +500,7 @@ export const appendEncodedAttemptJournalEvent = Effect.fn("AttemptTerminationJou
   }
   const appendLocked = Effect.gen(function* () {
     const journalExists = yield* fs.exists(journalPath).pipe(Effect.orElseSucceed(constant(false)));
-    yield* journalExists ? compactJournal(journalPath) : Effect.void;
+    yield* journalExists ? repairTornJournal(journalPath) : Effect.void;
     yield* appendLinesLocked(journalPath, [line]);
     yield* reconcileJournalLocked(journalPath);
     yield* compactJournal(journalPath);

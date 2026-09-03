@@ -751,6 +751,28 @@ describe("quality-scheduler", () => {
     expect(repoRunSafeArtifactName("///")).toBe("repo");
   });
 
+  it("serializes protocol disablement behind the admission journal lock", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+          Effect.gen(function* () {
+            const path = yield* Path.Path;
+            yield* setAdmissionEvictionProtocol("on");
+            const lockPath = path.join(tempRoot.root, "journal.lock");
+            const lockToken = `${process.pid}:00000000-0000-4000-8000-000000000124`;
+            expect(yield* acquireJournalFileLock(lockPath, lockToken, 1)).toBe(true);
+            const disabling = yield* Effect.forkChild(setAdmissionEvictionProtocol("off"));
+            yield* Effect.sleep("75 millis");
+            expect(disabling.pollUnsafe()).toBeUndefined();
+            expect((yield* admissionProtocolStatus()).eviction).toBe("on");
+            yield* releaseAdmissionJournalLockForTesting(lockPath, lockToken);
+            expect((yield* Fiber.join(disabling)).eviction).toBe("off");
+          })
+        );
+      })
+    ));
+
   it("decodes legacy lease files without nonce or enqueuedAtMillis", () =>
     Effect.runPromise(
       Effect.gen(function* () {

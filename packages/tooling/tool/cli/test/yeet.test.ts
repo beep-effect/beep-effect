@@ -2451,6 +2451,90 @@ describe("yeet attempt journal", () => {
       )
     ));
 
+  it("reconciles an old dead start before explicit and append-time compaction", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const tempContext = RepoRunContext.make({ ...context, cwd: tmpDir, repoRoot: tmpDir });
+          const journalPath = yield* attemptJournalPath(tempContext);
+          const deadAttemptId = attemptUuid("00000000-0000-4000-8003-000000000000");
+          const encodeStarted = S.encodeEffect(S.fromJsonString(YeetAttemptStarted));
+          const starts = yield* Effect.forEach(
+            A.makeBy(55, (index) => index),
+            (index) =>
+              encodeStarted(
+                YeetAttemptStarted.make({
+                  schemaVersion: "yeet-attempt-journal/v1",
+                  _tag: "attempt-started",
+                  attemptId: attemptUuid(`00000000-0000-4000-8003-${Str.padStart(12, "0")(`${index}`)}`),
+                  runId: `over-limit-${index}`,
+                  branch: "over-limit-reconciliation",
+                  base: "origin/main",
+                  head: "HEAD",
+                  mode: "repair",
+                  startedAt: `2026-09-03T00:00:${Str.padStart(2, "0")(`${index}`)}.000Z`,
+                  ownerPid: index === 0 ? O.some(DEAD_PID) : O.none(),
+                  ownerProcStart: index === 0 ? O.some("dead-before-compaction") : O.none(),
+                  resolvedHeadSha: index === 0 ? O.some("0123456789abcdef0123456789abcdef01234567") : O.none(),
+                  diffFingerprint:
+                    index === 0 ? O.some("abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcd") : O.none(),
+                  proofTier: index === 0 ? O.some("cheap-gates") : O.none(),
+                  envProfile: index === 0 ? O.some("local") : O.none(),
+                  stage: index === 0 ? O.some("repair-loop") : O.none(),
+                })
+              )
+          );
+          yield* fs.makeDirectory(path.dirname(journalPath), { recursive: true });
+          const writeOverLimitJournal = fs.writeFileString(journalPath, `${A.join(starts, "\n")}\n`);
+          const readDeadPair = Effect.gen(function* () {
+            const events = yield* Effect.forEach(
+              pipe(yield* fs.readFileString(journalPath), Str.split("\n"), A.filter(Str.isNonEmpty)),
+              (line) => decodeYeetAttemptJournalEvent(line)
+            );
+            expect(events.length).toBeLessThanOrEqual(50);
+            expect(
+              A.some(
+                events,
+                (event) => YeetAttemptJournalEvent.guards["attempt-started"](event) && event.attemptId === deadAttemptId
+              )
+            ).toBe(true);
+            const terminal = pipe(
+              events,
+              A.findFirst(
+                (event) =>
+                  YeetAttemptJournalEvent.guards["attempt-terminated"](event) && event.attemptId === deadAttemptId
+              ),
+              O.getOrThrow
+            );
+            expect(terminal).toMatchObject({ reason: "owner-dead" });
+          });
+
+          yield* writeOverLimitJournal;
+          expect(yield* reconcileAttemptJournal(journalPath)).toBe(1);
+          yield* readDeadPair;
+
+          yield* writeOverLimitJournal;
+          yield* appendYeetAttemptJournalEvent(
+            tempContext,
+            YeetAttemptStarted.make({
+              schemaVersion: "yeet-attempt-journal/v1",
+              _tag: "attempt-started",
+              attemptId: attemptUuid("00000000-0000-4000-8003-000000000099"),
+              runId: "append-trigger",
+              branch: "over-limit-reconciliation",
+              base: "origin/main",
+              head: "HEAD",
+              mode: "repair",
+              startedAt: "2026-09-03T00:01:00.000Z",
+            })
+          );
+          yield* readDeadPair;
+        })
+      )
+    ));
+
   it("serializes concurrent appenders while compacting the bounded journal", () =>
     Effect.runPromise(
       withTempDirectory((tmpDir) =>
