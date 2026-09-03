@@ -6,9 +6,9 @@
  */
 
 import { $FreshbooksId } from "@beep/identity";
-import { Defect, LiteralKit } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { O } from "@beep/utils";
-import { Effect, flow, pipe, Result } from "effect";
+import { Effect } from "effect";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as HttpClientError from "effect/unstable/http/HttpClientError";
@@ -20,6 +20,35 @@ const FreshbooksHttpStatus = S.Int.check(S.isGreaterThanOrEqualTo(100), S.isLess
     description: "Integer HTTP status code recorded in FreshBooks driver errors.",
   })
 );
+
+// Reduce an unknown thrown cause to a short, non-sensitive label. Kept as one
+// self-contained reducer (rather than a chain of reflection helpers) so the
+// boundary stays compact and does not leak raw API payloads.
+const readTag = (value: unknown, key: string): O.Option<string> =>
+  P.isObject(value) ? O.filter(O.fromNullishOr(Reflect.get(value, key) as unknown), P.isString) : O.none();
+
+const causeLabel = (cause: unknown): O.Option<string> => {
+  if (P.isUndefined(cause)) {
+    return O.none();
+  }
+  if (HttpClientError.isHttpClientError(cause)) {
+    return O.map(readTag(cause.reason, "_tag"), (tag) => `HttpClientError:${tag}`);
+  }
+  return O.firstSomeOf([
+    readTag(cause, "_tag"),
+    readTag(cause, "name"),
+    P.isString(cause) ? O.some("String") : O.none(),
+  ]);
+};
+
+// Diagnostic options for FreshbooksError.fromReason. Internal: the driver
+// constructs errors through the static below, so consumers never name this.
+type FreshbooksErrorOptions = {
+  readonly cause?: unknown;
+  readonly resource?: string;
+  readonly status?: number;
+  readonly url?: string;
+};
 
 /**
  * Technical error reasons emitted by the FreshBooks driver.
@@ -114,7 +143,8 @@ export class FreshbooksError extends S.TaggedError<FreshbooksError>($I`Freshbook
   })
 ) {
   /**
-   * Create a FreshBooks driver error.
+   * Create a FreshBooks driver error, deriving a redacted cause label from an
+   * optional thrown cause.
    *
    * **Example** (Create error with status)
    *
@@ -132,7 +162,7 @@ export class FreshbooksError extends S.TaggedError<FreshbooksError>($I`Freshbook
     FreshbooksError.make({
       reason,
       ...O.getSomesStruct({
-        cause: causeFromUnknown(options.cause),
+        cause: causeLabel(options.cause),
         resource: O.fromUndefinedOr(options.resource),
         status: O.fromUndefinedOr(options.status),
         url: O.fromUndefinedOr(options.url),
@@ -140,116 +170,22 @@ export class FreshbooksError extends S.TaggedError<FreshbooksError>($I`Freshbook
     });
 
   /**
-   * Create a failed Effect containing a FreshBooks driver error.
+   * Fail an Effect with a FreshBooks driver error built from a reason.
    *
-   * **Example** (Failed Effect from reason)
+   * **Example** (Fail an Effect from a reason)
    *
    * ```ts
    * import { FreshbooksError } from "@beep/freshbooks"
    *
-   * const effect = FreshbooksError.failEffectFromReason("transport")
+   * const effect = FreshbooksError.failFromReason("token refresh")
    * console.log(effect)
    * ```
    *
    * @category constructors
    * @since 0.0.0
    */
-  static readonly failEffectFromReason = flow(this.fromReason, Effect.fail);
-
-  /**
-   * Create a thunk returning a failed Effect containing a FreshBooks driver error.
-   *
-   * **Example** (Thunk returning failed Effect)
-   *
-   * ```ts
-   * import { FreshbooksError } from "@beep/freshbooks"
-   *
-   * const thunk = FreshbooksError.failEffectFromReasonThunk("token refresh")
-   * console.log(thunk)
-   * ```
-   *
-   * @category constructors
-   * @since 0.0.0
-   */
-  static readonly failEffectFromReasonThunk = flow(this.failEffectFromReason, (effect) => () => effect);
+  static readonly failFromReason = (
+    reason: FreshbooksErrorReason,
+    options: FreshbooksErrorOptions = {}
+  ): Effect.Effect<never, FreshbooksError> => Effect.fail(FreshbooksError.fromReason(reason, options));
 }
-
-/**
- * Options used when constructing FreshBooks driver errors.
- *
- * **Example** (Make options with status)
- *
- * ```ts
- * import { FreshbooksErrorOptions } from "@beep/freshbooks"
- *
- * const options = FreshbooksErrorOptions.make({
- *   resource: "payments",
- *   status: 429
- * })
- *
- * console.log(options.status) // 429
- * ```
- *
- * @category errors
- * @since 0.0.0
- */
-export class FreshbooksErrorOptions extends S.Class<FreshbooksErrorOptions>($I`FreshbooksErrorOptions`)(
-  {
-    cause: S.optionalKey(Defect({ includeStack: true })).annotateKey({
-      description: "Original native or third-party defect when one was available.",
-    }),
-    resource: S.optionalKey(S.NonEmptyString).annotateKey({
-      description: "FreshBooks resource name associated with the failure.",
-    }),
-    status: S.optionalKey(FreshbooksHttpStatus).annotateKey({
-      description: "HTTP response status code associated with the failure.",
-    }),
-    url: S.optionalKey(FreshbooksUrl).annotateKey({
-      description: "FreshBooks API URL associated with the failure.",
-    }),
-  },
-  $I.annote("FreshbooksErrorOptions", {
-    description: "Options for configuring FreshbooksError instances.",
-  })
-) {}
-
-// shared driver boundary idiom; no in-family home; future foundation capability candidate.
-// fallow-ignore-next-line code-duplication -- safe reflection keeps unknown API causes inside the FreshBooks boundary
-const readProperty = (value: unknown, key: PropertyKey): O.Option<unknown> => {
-  if (!P.isObject(value)) {
-    return O.none();
-  }
-
-  return O.fromUndefinedOr(
-    Result.getOrElse(
-      Result.try(() => Reflect.get(value, key)),
-      () => undefined
-    )
-  );
-};
-
-const readString = (value: unknown, key: PropertyKey): O.Option<string> =>
-  O.filter(readProperty(value, key), P.isString);
-
-const safeBoolean = (evaluate: () => boolean): boolean => Result.getOrElse(Result.try(evaluate), () => false);
-
-const httpClientCauseLabel = (cause: unknown): O.Option<string> =>
-  safeBoolean(() => HttpClientError.isHttpClientError(cause))
-    ? pipe(
-        readProperty(cause, "reason"),
-        O.flatMap((reason) => readString(reason, "_tag")),
-        O.map((tag) => `HttpClientError:${tag}`)
-      )
-    : O.none();
-
-// shared driver boundary idiom; no in-family home; future foundation capability candidate.
-// fallow-ignore-next-line code-duplication -- FreshBooks cause normalization preserves provider-specific HTTP labels
-const causeFromUnknown = (cause: unknown): O.Option<string> =>
-  P.isUndefined(cause)
-    ? O.none()
-    : O.firstSomeOf([
-        httpClientCauseLabel(cause),
-        readString(cause, "_tag"),
-        readString(cause, "name"),
-        P.isString(cause) ? O.some("String") : O.none(),
-      ]);

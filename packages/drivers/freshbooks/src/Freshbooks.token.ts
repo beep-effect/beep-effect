@@ -380,7 +380,7 @@ export const makeFreshbooksAuth = Effect.fn("Freshbooks.makeAuth")(function* (
       const now = yield* Clock.currentTimeMillis;
       const current = yield* store.read;
       return yield* O.match(current, {
-        onNone: FreshbooksError.failEffectFromReasonThunk("token refresh"),
+        onNone: () => FreshbooksError.failFromReason("token refresh"),
         onSome: (token) =>
           isFresh(token, now)
             ? Effect.succeed(token)
@@ -396,7 +396,7 @@ export const makeFreshbooksAuth = Effect.fn("Freshbooks.makeAuth")(function* (
     Effect.gen(function* () {
       const current = yield* store.read;
       return yield* O.match(current, {
-        onNone: FreshbooksError.failEffectFromReasonThunk("token refresh"),
+        onNone: () => FreshbooksError.failFromReason("token refresh"),
         onSome: (token) => rotate({ grant_type: "refresh_token", refresh_token: Redacted.value(token.refreshToken) }),
       });
     })
