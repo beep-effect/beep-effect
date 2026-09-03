@@ -449,3 +449,17 @@ from commands that actually reached the guarded service, or provide a dry-run
 argument-validation step before the breaker owns the command. A local syntax
 mistake should remain observable, but it should not suppress unrelated agents'
 GitHub reads for a full remote-failure cooldown.
+
+## 2026-09-03 — changeset status ignores an uncommitted changeset
+
+Lived while repairing the exact-head Repo Sanity failure for a missing
+`@beep/repo-ai-metrics` changeset. After adding the changeset locally,
+`bun run beep quality changeset-status --since origin/main` still reported the
+package as missing because the check only inspected `origin/main...HEAD`; the
+new untracked changeset was outside that committed range. This made a correct
+dirty-worktree repair indistinguishable from no repair until after a commit.
+
+What would have prevented it: include tracked and untracked working-tree
+changesets when `HEAD` names the local checkout, or state that the command is a
+committed-range-only check and provide a dirty-aware local mode. The PR lane can
+remain commit-only while the edit loop gives authors evidence before committing.

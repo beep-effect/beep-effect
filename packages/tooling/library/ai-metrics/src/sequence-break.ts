@@ -25,6 +25,8 @@ const $I = $RepoAiMetricsId.create("sequence-break");
  * // /var/lib/beep/agent-evidence/sequence-break
  * ```
  *
+ * @param evidenceRoot - Root directory shared by content-free agent evidence.
+ * @returns The sequence-break state root beneath the supplied evidence root.
  * @category utilities
  * @since 0.0.0
  */
@@ -42,6 +44,8 @@ export const sequenceBreakRoot = (evidenceRoot: string): string => `${evidenceRo
  * // /var/lib/beep/agent-evidence/sequence-break/notification-events
  * ```
  *
+ * @param root - Sequence-break state root returned by {@link sequenceBreakRoot}.
+ * @returns The directory containing append-only notification evidence rows.
  * @category utilities
  * @since 0.0.0
  */
@@ -59,6 +63,8 @@ export const sequenceBreakNotificationLedgerDir = (root: string): string => `${r
  * // /var/lib/beep/agent-evidence/sequence-break/damping
  * ```
  *
+ * @param root - Sequence-break state root returned by {@link sequenceBreakRoot}.
+ * @returns The directory containing serialized storm-damping claims.
  * @category utilities
  * @since 0.0.0
  */

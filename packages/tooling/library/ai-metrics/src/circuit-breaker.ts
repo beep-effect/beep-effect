@@ -24,6 +24,8 @@ const $I = $RepoAiMetricsId.create("circuit-breaker");
  * // /var/lib/beep/agent-evidence/circuit-breaker
  * ```
  *
+ * @param evidenceRoot - Root directory shared by content-free agent evidence.
+ * @returns The circuit-breaker state root beneath the supplied evidence root.
  * @category utilities
  * @since 0.0.0
  */
@@ -41,6 +43,8 @@ export const circuitBreakerRoot = (evidenceRoot: string): string => `${evidenceR
  * // /var/lib/beep/agent-evidence/circuit-breaker/events
  * ```
  *
+ * @param root - Circuit-breaker state root returned by {@link circuitBreakerRoot}.
+ * @returns The directory containing append-only circuit-breaker event rows.
  * @category utilities
  * @since 0.0.0
  */
@@ -58,6 +62,8 @@ export const circuitBreakerEventLedgerDir = (root: string): string => `${root}/e
  * // /var/lib/beep/agent-evidence/circuit-breaker/open
  * ```
  *
+ * @param root - Circuit-breaker state root returned by {@link circuitBreakerRoot}.
+ * @returns The directory containing one atomic open-state document per probe.
  * @category utilities
  * @since 0.0.0
  */

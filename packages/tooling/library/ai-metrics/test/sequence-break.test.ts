@@ -218,7 +218,7 @@ const runNotifier = Effect.fnUntraced(function* (
   return { exitCode, stderr, stdout };
 });
 
-const runWriter = Effect.fnUntraced(function* (store: NotifierStore, stdin: string, foreground = true) {
+const runWriter = Effect.fnUntraced(function* (store: NotifierStore, stdin: string, foreground?: boolean) {
   const handle = yield* ChildProcess.make(writerPath, [], {
     cwd: repoRoot,
     extendEnv: true,
@@ -235,7 +235,7 @@ const runWriter = Effect.fnUntraced(function* (store: NotifierStore, stdin: stri
       BEEP_HOOK_PULSE_INSTRUMENT_CLASS: "production",
       BEEP_HOOK_PULSE_NOTIFIER_REV: "desktop-ntfy-1",
       BEEP_SEQUENCE_BREAK_DESKTOP_ENABLED: "1",
-      BEEP_SEQUENCE_BREAK_FOREGROUND: foreground ? "1" : "0",
+      BEEP_SEQUENCE_BREAK_FOREGROUND: foreground === false ? "0" : "1",
       BEEP_SEQUENCE_BREAK_MAX_STAGE: "initial",
       BEEP_SEQUENCE_BREAK_NTFY_TOPIC: "",
     },
@@ -283,13 +283,11 @@ const notificationRows = Effect.fnUntraced(function* (store: NotifierStore) {
   return A.flatten(rows);
 });
 
-const waitForNotificationRows = (store: NotifierStore) =>
+const waitForNotificationRows = (store: NotifierStore, minimumCount: number) =>
   notificationRows(store).pipe(
-    Effect.flatMap(
-      A.match({
-        onEmpty: () => Effect.fail("Detached notifier did not emit delivery evidence."),
-        onNonEmpty: Effect.succeed,
-      })
+    Effect.filterOrFail(
+      (rows) => A.length(rows) >= minimumCount,
+      () => "Detached notifier did not emit all expected delivery evidence."
     ),
     Effect.retry(Schedule.recurs(200).pipe(Schedule.addDelay(() => Effect.succeed(Duration.millis(10))))),
     TestClock.withLive
@@ -516,7 +514,7 @@ layer(NodeServices.layer)("sequence-break notification contracts", (it) => {
             false
           )
         );
-        yield* waitForNotificationRows(store);
+        yield* waitForNotificationRows(store, 2);
 
         const notifications = yield* decodedNotifications(store);
         expect(
@@ -563,9 +561,10 @@ layer(NodeServices.layer)("sequence-break notification contracts", (it) => {
 
         expectSilentSuccess(yield* runNotifier(store, CANARY));
         const notifications = yield* decodedNotifications(store);
-        expect(
-          A.map(notifications, ({ delivery, transport }) => `${transport}:${delivery.status}:${delivery.reason}`)
-        ).toEqual(["desktop:sent:undefined", "ntfy:skipped:coordination-unavailable"]);
+        expect(A.map(notifications, ({ delivery, transport }) => ({ delivery, transport }))).toEqual([
+          { delivery: { status: "sent" }, transport: "desktop" },
+          { delivery: { status: "skipped", reason: "coordination-unavailable" }, transport: "ntfy" },
+        ]);
 
         const breakerEvents = yield* decodedBreakerEvents(store);
         expect(A.map(breakerEvents, ({ outcome, probe }) => `${probe}:${outcome.status}`)).toEqual([
