@@ -4,6 +4,50 @@ Record friction at the moment it happens (what you were doing, evidence, what wo
 prevented it). Public repo: redact secrets, replace absolute home paths with `~`, drop
 session/machine ids.
 
+## 2026-09-02 — two provisioning passes preserved the wrong cache reference
+
+- **Doing:** proving the final cache credential against its infrastructure source before repeating
+  the fleet sample.
+- **Evidence:** digest-only comparison showed that the infra-vault read-only item still matched the
+  SSM source, while the main checkout and the alternate reference in another live root resolved to
+  a different February item that predates the AWS cache. The sanctioned helper had intentionally
+  left every nonblank `TURBO_TOKEN` untouched, so two provisioning passes preserved the stale
+  reference. No value was rendered.
+- **Would have prevented it:** make reference correction an explicit helper mode that compares a
+  nonblank token reference with the intended source and reports only sanitized prior state.
+
+## 2026-09-02 — a legacy root stored the resolved cache token
+
+- **Doing:** classifying non-reference `TURBO_TOKEN` state before applying the fleet repair.
+- **Evidence:** one dormant legacy root held a resolved value in its ignored `.env`. A value-
+  suppressed digest matched the February developer item, not the SSM-backed read-only item. The
+  replacement helper reported only `raw value (not shown)` and wrote the canonical reference.
+- **Would have prevented it:** validate that every checkout token starts with `op://` during
+  provisioning and offer a safe replacement path instead of relying on manual `.env` edits.
+
+## 2026-09-02 — an unrelated reference blocked the all-file cache preflight
+
+- **Doing:** running the exact output-suppressed `op run --env-file=.env -- true` preflight in
+  every root from the frozen cache sample.
+- **Evidence:** one live root exited 1 because a non-cache reference in the same `.env` names a
+  field absent from its item. The all-file wrapper failed before the artifact GET or Turbo spawn,
+  while a TURBO-only subset returned 200 and restored all eight first-touch tasks remotely. The
+  run's scope allowed only `TURBO_*` edits in sibling roots, so the unrelated line was preserved.
+- **Would have prevented it:** hand `op run` only the four references the remote-read lane needs,
+  or preflight each reference and name the offending variable without values. Retain the whole-
+  file wrapper as a separate environment-health check.
+
+## 2026-09-02 — another zsh special parameter broke a read-only inventory
+
+- **Doing:** checking whether frozen live roots had `node_modules` before their sequential cache
+  probes.
+- **Evidence:** the loop used `modules` as a scalar name; zsh rejected it as read-only before any
+  install or probe ran. The packet already recorded the same class for `path` and `status`, but the
+  known-danger list did not include this name.
+- **Would have prevented it:** run portable inventory snippets under Bash and consistently use
+  task-specific names such as `modules_present`, rather than maintaining an incomplete list of zsh
+  special parameters.
+
 ## 2026-08-31 — 1Password MCP IPC failed while the exact CLI wrapper worked
 
 - **Doing:** authorizing the final remote-cache canary after the 1Password MCP server appeared in
@@ -731,7 +775,7 @@ is itself the fourth receipt below; the batching is the symptom, not the practic
   receipts an untracked or per-item landing zone that a live fingerprint does not cover, then fold
   into the ledger at the next natural commit.
 - A base-freshness claim sourced from a clone's `HEAD` rather than from `origin/main` sent an agent
-  toward merging an unrelated branch. The orchestrator read `git log -1` in a checkout that another
+  toward merging an unrelated branch. The handoff relied on `git log -1` in a checkout that another
   session had switched to a feature branch, reported "main moved" with that branch's tip, and
   instructed a re-merge; the receiving agent verified from the merge base, found the claim false,
   and did not act on it. No damage, purely because the instruction was checked rather than obeyed.
@@ -1242,3 +1286,42 @@ worktree provisioner should install the complete workspace instead of linking on
   scan.
 - **Would have prevented it:** accept an optional packet slug, or print the repository-wide form
   in the error so a focused closeout does not need a failed discovery call.
+
+## 2026-09-02 — Inbox acknowledgement shorthand did not match the live CLI contract
+
+- **Doing:** acknowledging an environment-only package-audit receipt after rebuilding stale
+  workspace outputs and obtaining a green audit.
+- **Evidence:** `beep yeet inbox ack <id> --wontfix "<reason>"` rejected the explanation as an
+  unexpected positional argument; the live help requires the separate `--wontfix --reason
+  "<reason>"` flags.
+- **Would have prevented it:** keep operator handoffs and error reminders aligned with the
+  command's parsed flag contract, or accept the value-bearing shorthand as an alias.
+
+## 2026-09-02 — Detached publish was terminated before Yeet produced a verdict
+
+- **Doing:** starting the staged-only final-evidence publish under `nohup` so a shell timeout
+  could not interrupt the full local proof.
+- **Evidence:** the publish log retained only Bun's command echo, the branch verdict timestamp did
+  not advance, no commit was created, and the background process disappeared with the exact
+  staged index still intact.
+- **Would have prevented it:** launch long-lived operators under a durable user scope with an exit
+  receipt, or keep a supervised command handle that survives the calling shell's lifecycle.
+
+## 2026-09-02 — A branch name in code formatting was classified as a tracked path
+
+- **Doing:** running the final-evidence publish proof after the packet named its successor branch
+  in the goal, plan, and README.
+- **Evidence:** `knowledge semantic-delta` treated the code-formatted branch name as a repository
+  path and reported three introduced `broken-tracked-path` findings; the branch is intentionally
+  not a tracked directory.
+- **Would have prevented it:** distinguish Git branch references from tracked filesystem paths in
+  semantic-delta, or document that branch names must remain plain prose rather than inline code.
+
+## 2026-09-02 — Staged-only publish could not carry an unpushed repair amend
+
+- **Doing:** retrying the final-evidence publish after fixing its sole pre-push policy failure.
+- **Evidence:** Yeet's failure guidance offered an amend for the unpushed commit, while
+  `publish --staged-only --amend --no-edit` was rejected because staged-only cannot combine with
+  amend mode.
+- **Would have prevented it:** print the exact supported retry command in the failure guidance, or
+  allow staged-only to scope the staged delta of an unpushed amend.

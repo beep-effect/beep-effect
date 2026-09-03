@@ -3,14 +3,14 @@
   "initiative": {
     "id": "ship-velocity",
     "title": "Ship Velocity",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-08-13",
-    "updated": "2026-08-31",
+    "updated": "2026-09-02",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/ship-velocity",
-  "lifecycle": "active",
-  "statusNote": "P0-P4 and the P5 engineering backlog are complete. On 2026-08-30 the operator accepted the observed 24-hour production volume in place of the original seven-day duration proxy. Operator PR #921 later superseded A4 by removing the published-PR ownership lease, watcher, takeover, and mutation fence; the packet does not count that scope replacement as takeover success. Current backpressure, parity, and hot-file receipts satisfy the authorized sample. Two independent same-origin full proofs overlapped for 48 minutes 49.201 seconds and both completed every lane at exit 0, satisfying the concurrency condition. PR #929 reached Yeet merge-ready status and merged on 2026-08-31 as the implementation-repair PR. PR #937 later merged as an observation-state follow-up without the cache outcome, status flip, or reflection, so it did not satisfy the final closeout PR gate. The existing 1Password reference resolves, but the cache canary rejects its credentials. Control-plane timestamps make mirror drift a leading hypothesis, not a proven value mismatch or cause. The initiative remains active until the operator repairs cache authentication, a fresh cross-checkout remote-read observation succeeds, and a successor final-evidence PR reaches Yeet merge-ready status with the evidence, status flip, and reflection. research/metrics-closeout.md owns these explicit gates.",
+  "lifecycle": "completed-retained",
+  "statusNote": "Closed 2026-09-02 pending merge of the successor final-evidence PR. Digest-only evidence retracted the mirror-drift hypothesis: checkout references pointed at a February developer item, while the infra-vault read-only item still matched its SSM source. The helper gained explicit reference replacement and corrected or completed 27 ignored read-only quads. A six-root frozen sample produced five 8/8 first-touch remote-hit roots including the main checkout and one GET-200 authenticated-cold root on a different revision and lockfile, with zero cache authentication failures. One remote-hit root required a separately labelled TURBO-only canary because an unrelated reference failed its exact all-file wrapper before HTTP. The branch goals/ship-velocity-cache-auth-evidence carries this evidence, the P5 and lifecycle flip, and the closeout reflection. PR #937 remains historical and did not satisfy the final PR gate; the successor must still reach terminal Yeet merge-ready status before merge. research/metrics-closeout.md and research/cache-proof.md own the receipts.",
   "mission": "Agents ship correct code faster: sub-minute failure backpressure into an active session with a hard P0 Stop gate, local verify that near-guarantees the 17 required remote checks, readable+warm Turbo cache in every checkout, memory-aware concurrent verify/publish, and no derived-file merge treadmill.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -88,7 +88,7 @@
     {
       "id": "P5",
       "name": "Hot-file endgame and close",
-      "status": "in-progress"
+      "status": "complete"
     }
   ],
   "verificationCommands": [

@@ -308,3 +308,25 @@ unchanged until authentication is repaired and the sample succeeds. PR #937 merg
 `c57f63ac76cd3f25fbc700bad3032d6ce6a06d94` before those artifacts landed. Its green hosted checks
 and Greptile `5/5` do not satisfy the semantic completion gate. A successor final-evidence PR now
 owns the cache receipt, status flip, reflection, and terminal Yeet `merge-ready: yes` proof.
+
+### 2026-09-02 authenticated remote-read sample
+
+The final repair identified a stale checkout reference, not a stale mirror. Digest-only comparison
+proved that the infra-vault read-only item still matches its SSM source, while the checkout
+reference resolved to a different February item that predates the AWS cache. The helper gained an
+explicit comparison-and-replacement mode and corrected or completed 27 ignored checkout quads.
+
+A fresh `worktree fleet` snapshot at `2026-09-03T00:11:59Z` froze six in-scope live roots. All six
+carry the canonical reference. Five exact output-suppressed wrappers resolved and returned 200 for
+a known hosted artifact; the sixth was skipped before HTTP because an unrelated non-cache
+reference in the same `.env` names a missing field. A separately labelled TURBO-only canary in
+that root then resolved, returned 200, and reported eight first-touch remote hits. Five roots
+therefore reported eight first-touch remote hits each from fresh local cache directories. One
+GET-200 root reported eight misses on a different revision and lockfile and is classified
+`authenticated-cold`; no root was `auth-failed`. `research/cache-proof.md` is authoritative for
+the per-root counts, summary paths, and the explicit reference-coverage →
+authenticated-resolution → observed-hit distinction.
+
+The packet now carries its P5/lifecycle flip and closeout reflection on the successor branch. PR
+#937 remains historical evidence, not the final PR. The successor final-evidence PR must still be
+published and driven to terminal Yeet `merge-ready: yes` before merge.

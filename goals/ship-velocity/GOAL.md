@@ -38,14 +38,10 @@ SPEC). Update PLAN checkmarks and the parity ledger as work lands; record fricti
 `research/OPPORTUNITIES.md` at the moment it happens. The operator-authorized 2026-08-27
 closeout bundles all remaining items into one Yeet-published PR.
 
-Closeout status (2026-08-30): the operator accepted the concentrated 24-hour production sample
-instead of the original seven-day duration proxy. Continue from
-`research/metrics-closeout.md`; do not reopen satisfied evidence families. The terminal
-same-origin dual proof is green. PR #921 is the recorded operator supersession of A4, not an A4
-success receipt. PR #929 reached Yeet `merge-ready: yes` and merged on 2026-08-31, satisfying the
-implementation-repair gate. PR #937 merged without the cache outcome, status flip, or reflection,
-so it did not satisfy the final PR gate. A successor PR owns those artifacts. The existing
-1Password reference resolves, but the cache canary rejects its credentials. Timestamp drift
-suggests mirror drift without proving a mismatch or cause. Repair authentication, run the exact
-`op run` wrapper, collect remote hits from every live checkout, land the status flip and
-reflection, and drive the successor to Yeet `merge-ready: yes`. Keep lifecycle active until then.
+Closeout status (2026-09-02): the packet is closed pending merge of the successor final-evidence
+PR on branch goals/ship-velocity-cache-auth-evidence. Digest proof retracted the mirror-drift
+hypothesis, the helper repaired stale checkout references, and the frozen fleet sample found no
+cache authentication failure. A narrow cache-only canary also proved remote reads in the root
+whose exact all-file wrapper failed on an unrelated reference. This branch carries the cache
+receipt, completed-retained status, and closeout reflection. PR #937 remains historical, not the
+final PR; drive the successor to terminal Yeet `merge-ready: yes` before merge.
