@@ -6,12 +6,21 @@
 # or prints a secret value, and the reference stays a reference on disk so
 # `op run` resolves it at spawn time.
 #
-# Idempotent: an already-present nonblank name is reported and left alone; blank placeholders are
-# repaired from the supplied reference-only configuration. Duplicate assignments fail before the
-# file is modified because their effective value is ambiguous across dotenv consumers.
+# Idempotent by default: an already-present nonblank name is reported and left alone; blank
+# placeholders are repaired from the supplied reference-only configuration. Set
+# TURBO_TOKEN_REPLACE=1 to replace a nonblank TURBO_TOKEN when it differs from TURBO_TOKEN_REF.
+# Duplicate assignments fail before the file is modified because their effective value is
+# ambiguous across dotenv consumers.
 # See standards/turbo-remote-cache.md.
 #
 # Usage (from any beep-effect checkout):
+#   TURBO_API=https://<id>.execute-api.<region>.amazonaws.com \
+#   TURBO_TEAM=<team-slug> \
+#   TURBO_TOKEN_REF=op://<vault>/<item>/<field> \
+#     bash scripts/enable-turbo-remote-reads.sh
+#
+#   # Correct or rotate an existing token reference:
+#   TURBO_TOKEN_REPLACE=1 \
 #   TURBO_API=https://<id>.execute-api.<region>.amazonaws.com \
 #   TURBO_TEAM=<team-slug> \
 #   TURBO_TOKEN_REF=op://<vault>/<item>/<field> \
@@ -25,6 +34,7 @@ set -euo pipefail
 REPO_ROOT="${1:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 ENV_FILE="${REPO_ROOT}/.env"
 CACHE_MODE="local:rw,remote:r"
+TOKEN_REPLACE="${TURBO_TOKEN_REPLACE:-0}"
 
 log() { printf 'enable-turbo-remote-reads: %s\n' "$*"; }
 die() { printf 'enable-turbo-remote-reads: ERROR: %s\n' "$*" >&2; exit 1; }
@@ -41,9 +51,13 @@ case "${TURBO_API}" in
   *) die "TURBO_API must be an https:// endpoint" ;;
 esac
 
-case "${TURBO_TOKEN_REF}" in
-  op://*) ;;
-  *) die "TURBO_TOKEN_REF must be a 1Password reference (op://vault/item/field), never a token value" ;;
+if [[ ! "${TURBO_TOKEN_REF}" =~ ^op://[^/]+/[^/]+/[^/]+$ ]]; then
+  die "TURBO_TOKEN_REF must be a 1Password reference (op://vault/item/field), never a token value"
+fi
+
+case "${TOKEN_REPLACE}" in
+  0 | 1) ;;
+  *) die "TURBO_TOKEN_REPLACE must be 0 or 1" ;;
 esac
 
 if [[ ! -f "${ENV_FILE}" ]]; then
@@ -61,6 +75,20 @@ for name in TURBO_API TURBO_TOKEN TURBO_TEAM TURBO_CACHE; do
   assert_unique_name "${name}"
 done
 
+describe_token_state() {
+  local value="$1" reference_path vault item_path item
+  case "${value}" in
+    op://*)
+      reference_path="${value#op://}"
+      vault="${reference_path%%/*}"
+      item_path="${reference_path#*/}"
+      item="${item_path%%/*}"
+      printf 'reference %s/%s' "${vault}" "${item}"
+      ;;
+    *) printf 'raw value (not shown)' ;;
+  esac
+}
+
 # The workstation posture is read-only by contract: no agent checkout ever
 # holds the trusted write token, and remote writes stay with the main-push CI
 # jobs. The CLI refuses any other posture, so do not hand-edit this value.
@@ -73,6 +101,17 @@ ensure_name() {
     current="${current#\'}"
     current="${current%\'}"
     if [[ -n "${current//[[:space:]]/}" ]]; then
+      if [[ "${name}" == "TURBO_TOKEN" && "${TOKEN_REPLACE}" == "1" && "${current}" != "${value}" ]]; then
+        temporary="$(mktemp "${ENV_FILE}.XXXXXX")"
+        awk -v name="$name" -v replacement="${name}=${value}" '
+          BEGIN { pattern = "^[[:space:]]*" name "[[:space:]]*=" }
+          $0 ~ pattern { if (!replaced) print replacement; replaced = 1; next }
+          { print }
+        ' "${ENV_FILE}" >"${temporary}"
+        mv -f "${temporary}" "${ENV_FILE}"
+        log "replaced TURBO_TOKEN (prior: $(describe_token_state "${current}")) with <1Password reference>"
+        return 0
+      fi
       log "${name} already present in .env — leaving it unchanged"
       return 0
     fi

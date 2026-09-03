@@ -1,6 +1,9 @@
 import {
+  BoxAdoption,
+  BoxAdoptions,
   BoxCollaborationIntent,
   BoxDesiredState,
+  BoxDiscoveryAvailable,
   BoxDiscoveryPermissionBlocked,
   BoxFolderIntent,
   BoxLogicalKey,
@@ -10,6 +13,7 @@ import {
   BoxObservedWebhook,
   BoxProviderId,
   BoxProvisioningPlan,
+  BoxSourceRevision,
   BoxWebhookIntent,
   planBoxProvisioning,
 } from "@beep/box-provisioning";
@@ -21,7 +25,7 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
-import { desiredFixture, observedFixture } from "./fixtures.ts";
+import { desiredFixture, observedAfterApplyFixture, observedFixture, postApplyAdoptionsFixture } from "./fixtures.ts";
 
 describe("@beep/box-provisioning planner", () => {
   it("round-trips schema-derived observed folders", () => {
@@ -48,7 +52,8 @@ describe("@beep/box-provisioning planner", () => {
       expect(first.planDigest).toBe(second.planDigest);
       expect(first.blockerCount).toBe(2);
       expect(first.destructiveCount).toBe(0);
-      expect(first.externalCollaboratorCount).toBe(1);
+      expect(first.declaredExternalCollaboratorCount).toBe(1);
+      expect(first.declaredExternalCollaboratorCreateCount).toBe(1);
       expect(first.foreignResources).toHaveLength(1);
       expect(A.map(first.actions, (action) => action._tag)).toEqual([
         "Noop",
@@ -62,6 +67,16 @@ describe("@beep/box-provisioning planner", () => {
       expect(text).not.toContain("Fixture child");
       expect(text).not.toContain("collaborator@example.test");
       expect(text).not.toContain("https://example.test/box/events");
+    })
+  );
+
+  it.effect(
+    "separates intent-declared external collaborators from their create actions",
+    Effect.fnUntraced(function* () {
+      const plan = yield* planBoxProvisioning(desiredFixture, observedAfterApplyFixture, postApplyAdoptionsFixture);
+
+      expect(plan.declaredExternalCollaboratorCount).toBe(1);
+      expect(plan.declaredExternalCollaboratorCreateCount).toBe(0);
     })
   );
 
@@ -156,7 +171,8 @@ describe("@beep/box-provisioning planner", () => {
   it("rejects cycles before inventory or planning", () => {
     const decoded = S.decodeOption(BoxDesiredState)({
       version: "box-provisioning/v1",
-      sourceRevision: "intent-cycle",
+      adoptions: { version: "box-provisioning-adoptions/v1", entries: [] },
+      sourceRevision: BoxSourceRevision.make("intent-cycle"),
       expectedEnterpriseId: "enterprise-id",
       expectedSubjectId: "service-account-id",
       rootFolderId: "0",
@@ -214,6 +230,136 @@ describe("@beep/box-provisioning planner", () => {
   });
 
   it.effect(
+    "blocks an unallowlisted exact-name folder and its dependents while retaining it as foreign",
+    Effect.fnUntraced(function* () {
+      const desired = BoxDesiredState.make({
+        ...desiredFixture,
+        adoptions: BoxAdoptions.make({ entries: [] }),
+      });
+
+      const plan = yield* planBoxProvisioning(desired, observedFixture);
+
+      expect(A.map(plan.actions, (action) => action._tag)).toEqual([
+        "Blocked",
+        "Blocked",
+        "Blocked",
+        "Blocked",
+        "Blocked",
+        "Blocked",
+      ]);
+      expect(
+        A.some(plan.foreignResources, (resource) => resource.resourceKind === "folder" && resource.providerId === "100")
+      ).toBe(true);
+      const first = plan.actions[0];
+      expect(first?._tag).toBe("Blocked");
+      if (first?._tag === "Blocked") {
+        expect(first.reason._tag).toBe("BlockedByPolicy");
+      }
+      expect(
+        A.every(
+          A.drop(plan.actions, 1),
+          (action) =>
+            action._tag === "Blocked" &&
+            action.reason._tag === "BlockedByPolicy" &&
+            action.reason.policy === "blocked-folder-dependency"
+        )
+      ).toBe(true);
+    })
+  );
+
+  it.effect(
+    "adopts an exact provider and parent only when one allowlist entry authorizes it",
+    Effect.fnUntraced(function* () {
+      const plan = yield* planBoxProvisioning(desiredFixture, observedFixture);
+
+      expect(plan.actions[0]?._tag).toBe("Noop");
+      expect(A.some(plan.foreignResources, (resource) => resource.providerId === "100")).toBe(false);
+    })
+  );
+
+  it.effect(
+    "blocks an exact-name folder when the allowlist provider id is wrong",
+    Effect.fnUntraced(function* () {
+      const desired = BoxDesiredState.make({
+        ...desiredFixture,
+        adoptions: BoxAdoptions.make({
+          entries: [
+            BoxAdoption.make({
+              expectedParentProviderId: BoxProviderId.make("0"),
+              expectedProviderId: BoxProviderId.make("wrong-id"),
+              logicalKey: BoxLogicalKey.make("folder.workspace"),
+              resourceKind: "folder",
+            }),
+          ],
+        }),
+      });
+
+      const plan = yield* planBoxProvisioning(desired, observedFixture);
+      const first = plan.actions[0];
+
+      expect(first?._tag).toBe("Blocked");
+      if (first?._tag === "Blocked") {
+        expect(first.reason._tag).toBe("BlockedByPolicy");
+      }
+      expect(A.some(plan.foreignResources, (resource) => resource.providerId === "100")).toBe(true);
+    })
+  );
+
+  it.effect(
+    "blocks a case-equivalent observed folder by policy instead of planning create",
+    Effect.fnUntraced(function* () {
+      const desired = BoxDesiredState.make({
+        ...desiredFixture,
+        adoptions: BoxAdoptions.make({ entries: [] }),
+      });
+      const observed = BoxObservedState.make({
+        ...observedFixture,
+        folders: A.map(observedFixture.folders, (folder) =>
+          folder.providerId === "100" ? BoxObservedFolder.make({ ...folder, name: "fixture WORKSPACE " }) : folder
+        ),
+      });
+
+      const plan = yield* planBoxProvisioning(desired, observed);
+      const first = plan.actions[0];
+
+      expect(first?._tag).toBe("Blocked");
+      if (first?._tag === "Blocked") {
+        expect(first.reason._tag).toBe("BlockedByPolicy");
+      }
+      expect(A.some(plan.actions, (action) => action.resourceKind === "folder" && action._tag === "Create")).toBe(
+        false
+      );
+    })
+  );
+
+  it.effect(
+    "blocks two exact-name candidates as ambiguous even when one is allowlisted",
+    Effect.fnUntraced(function* () {
+      const observed = BoxObservedState.make({
+        ...observedFixture,
+        folders: [
+          ...observedFixture.folders,
+          BoxObservedFolder.make({
+            etag: O.none(),
+            name: "Fixture workspace",
+            parentProviderId: O.some(BoxProviderId.make("0")),
+            providerId: BoxProviderId.make("101"),
+          }),
+        ],
+      });
+
+      const plan = yield* planBoxProvisioning(desiredFixture, observed);
+      const first = plan.actions[0];
+
+      expect(first?._tag).toBe("Blocked");
+      if (first?._tag === "Blocked") {
+        expect(first.reason._tag).toBe("BlockedByAmbiguity");
+      }
+      expect(A.filter(plan.foreignResources, (resource) => resource.resourceKind === "folder")).toHaveLength(3);
+    })
+  );
+
+  it.effect(
     "reports unmatched collaborations and webhooks as foreign resources",
     Effect.fnUntraced(function* () {
       const foreignObserved = BoxObservedState.make({
@@ -254,6 +400,17 @@ describe("@beep/box-provisioning planner", () => {
       const collaboration = O.getOrThrow(A.head(desiredFixture.collaborations));
       const desiredByProviderId = BoxDesiredState.make({
         ...desiredFixture,
+        adoptions: BoxAdoptions.make({
+          entries: [
+            ...desiredFixture.adoptions.entries,
+            BoxAdoption.make({
+              expectedParentProviderId: BoxProviderId.make("100"),
+              expectedProviderId: BoxProviderId.make("101"),
+              logicalKey: BoxLogicalKey.make("folder.child"),
+              resourceKind: "folder",
+            }),
+          ],
+        }),
         collaborations: [BoxCollaborationIntent.make({ ...collaboration, principal: "user-id" })],
       });
       const observed = BoxObservedState.make({
@@ -288,7 +445,7 @@ describe("@beep/box-provisioning planner", () => {
   );
 
   it.effect(
-    "surfaces permission-blocked discovery separately from entitlement blockers",
+    "uses declared unavailability for entitlement blockers despite inconclusive permission discovery",
     Effect.fnUntraced(function* () {
       const plan = yield* planBoxProvisioning(
         desiredFixture,
@@ -305,9 +462,38 @@ describe("@beep/box-provisioning planner", () => {
 
       expect(O.isSome(metadataAction)).toBe(true);
       if (O.isSome(metadataAction) && metadataAction.value._tag === "Blocked") {
-        expect(metadataAction.value.reason._tag).toBe("BlockedByPolicy");
-        if (metadataAction.value.reason._tag === "BlockedByPolicy") {
-          expect(metadataAction.value.reason.policy).toBe("metadata-discovery-permission-denied");
+        expect(metadataAction.value.reason._tag).toBe("BlockedByEntitlement");
+        if (metadataAction.value.reason._tag === "BlockedByEntitlement") {
+          expect(metadataAction.value.reason.entitlement).toBe("metadata");
+        }
+      }
+    })
+  );
+
+  it.effect(
+    "treats an empty list as no entitlement proof and a nonempty list as a declared-state conflict",
+    Effect.fnUntraced(function* () {
+      const emptyPlan = yield* planBoxProvisioning(desiredFixture, observedFixture);
+      const conflictingPlan = yield* planBoxProvisioning(
+        desiredFixture,
+        BoxObservedState.make({
+          ...observedFixture,
+          metadata: BoxDiscoveryAvailable.make({ count: 1, kind: "metadata" }),
+        })
+      );
+      const emptyMetadata = A.findFirst(emptyPlan.actions, (action) => action.resourceKind === "metadata");
+      const conflictingMetadata = A.findFirst(conflictingPlan.actions, (action) => action.resourceKind === "metadata");
+
+      expect(O.map(emptyMetadata, (action) => action._tag === "Blocked" && action.reason._tag)).toEqual(
+        O.some("BlockedByEntitlement")
+      );
+      expect(O.map(conflictingMetadata, (action) => action._tag === "Blocked" && action.reason._tag)).toEqual(
+        O.some("BlockedByPolicy")
+      );
+      if (O.isSome(conflictingMetadata) && conflictingMetadata.value._tag === "Blocked") {
+        const reason = conflictingMetadata.value.reason;
+        if (reason._tag === "BlockedByPolicy") {
+          expect(reason.policy).toBe("metadata-entitlement-assertion-conflicts-with-live-discovery");
         }
       }
     })

@@ -319,12 +319,6 @@ const TSSyntaxKindEntries = [
   ["CatchClause", 300],
   ["ImportAttributes", 301],
   ["ImportAttribute", 302],
-  /** @deprecated Use `ImportAttribute` instead. */
-  ["AssertClause", 301],
-  /** @deprecated Use `ImportAttribute` instead. */
-  ["AssertEntry", 302],
-  /** @deprecated Use `ImportAttributes` instead. */
-  ["ImportTypeAssertionContainer", 303],
   ["PropertyAssignment", 304],
   ["ShorthandPropertyAssignment", 305],
   ["SpreadAssignment", 306],
@@ -343,8 +337,6 @@ const TSSyntaxKindEntries = [
   ["JSDocVariadicType", 319],
   ["JSDocNamepathType", 320],
   ["JSDoc", 321],
-  /** @deprecated Use SyntaxKind.JSDoc */
-  ["JSDocComment", 321],
   ["JSDocText", 322],
   ["JSDocTypeLiteral", 323],
   ["JSDocSignature", 324],

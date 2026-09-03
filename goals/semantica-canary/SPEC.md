@@ -249,29 +249,29 @@ Canonicalizer row).
       rebuild, identical query results); embedding dimension is frozen by this stage with an
       alternate-dimension fixture proving the keying (B4 defaults)." The full W1 manifest + F1
       runs end-to-end live and replay with equal `reportDigest`s and zero unexpected typed-degraded document failures — the F1 malformed specimens are expected to decode to their declared degraded states; any W1 paper degrading fails the gate — before the Storage/Embeddings verdicts are written (R2).
-- [ ] **C2 pass** (S8) — "the derived conclusion set equals EYE's on every
+- [x] **C2 pass** (S8) — "the derived conclusion set equals EYE's on every
       gold case (closure equality), AND every `InferenceEvent` validates
       against its own rule (premises present in inputs-or-closure, rule
       instance correct); crash identity; cold start <5 s; p95 <100 ms.
       Matching EYE's particular premise set is not required — an entailment
       with two valid derivations must not fail C2." Tier-L numbers are read from the
       live run's `EvalRunTelemetry` (R1). The full W1 manifest + F1 runs end-to-end live and replay with equal `reportDigest`s and zero unexpected typed-degraded document failures — the F1 malformed specimens are expected to decode to their declared degraded states; any W1 paper degrading fails the gate — before the Reasoning verdict is written (R2).
-- [ ] Each stage's pass writes its families' verdicts into the exploration's
+- [x] Each stage's pass writes its families' verdicts into the exploration's
       `DECISIONS.md` as a dated entry before any atlas value changes (B1).
-- [ ] The lab is minted by `bun run beep create-package` with `--lab`, passes
+- [x] The lab is minted by `bun run beep create-package` with `--lab`, passes
       its Labs lane on its own PR, carries the one local `cargo check` result
       in `history/`, and never exports a reusable surface (labs law).
-- [ ] Every `EvalReport` is schema-validated and carries corpus hash,
+- [x] Every `EvalReport` is schema-validated and carries corpus hash,
       `gold/v1` version, per-call `ModelIdentity` + provider-cache keys, and
       per-metric scores (metric names from upstream #574, T3) — nothing
       time-dependent. Every run also writes an `EvalRunTelemetry` sidecar
       referencing the `reportDigest`; the Tier-L measurements and the Tier-D
       telemetry including wall-clock are required solely there and never enter
       the report digest (R1).
-- [ ] Base packet checks and `bun run beep yeet verify` are green; each stage
+- [x] Base packet checks and `bun run beep yeet verify` are green; each stage
       ships as a PR driven to mergeable; P5 records a valid closeout
       reflection.
-- [ ] No unrelated refactors or formatting churn.
+- [x] No unrelated refactors or formatting churn.
 
 ## Verification Surface
 

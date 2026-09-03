@@ -8,6 +8,7 @@ import { desiredFixture } from "./fixtures.ts";
 
 type InventoryClientOptions = {
   readonly collaboration?: boolean;
+  readonly folderMetadataRead?: () => void;
   readonly metadataFailure?: unknown;
   readonly paginateMetadata?: boolean;
   readonly webhookEntries?: ReadonlyArray<unknown>;
@@ -17,10 +18,10 @@ const metadataTemplate = (id: string) => ({ id, type: "metadata_template" });
 
 const makeInventoryClient = (options: InventoryClientOptions = {}) => ({
   folderMetadata: {
-    getFolderMetadata: (_folderId: string): Promise<unknown> =>
-      options.metadataFailure === undefined
-        ? Promise.resolve({ entries: [] })
-        : Promise.reject(options.metadataFailure),
+    getFolderMetadata: (_folderId: string): Promise<unknown> => {
+      options.folderMetadataRead?.();
+      return Promise.resolve({ entries: [] });
+    },
   },
   folders: {
     getFolderItems: (folderId: string, _optionalsInput: unknown): Promise<unknown> =>
@@ -61,13 +62,15 @@ const makeInventoryClient = (options: InventoryClientOptions = {}) => ({
   },
   metadataTemplates: {
     getEnterpriseMetadataTemplates: (queryParams: { readonly marker?: string }): Promise<unknown> =>
-      Promise.resolve(
-        options.paginateMetadata === true && O.isNone(O.fromUndefinedOr(queryParams.marker))
-          ? { entries: [metadataTemplate("template-1")], nextMarker: "template-page-2" }
-          : options.paginateMetadata === true
-            ? { entries: [metadataTemplate("template-2")] }
-            : { entries: [] }
-      ),
+      options.metadataFailure === undefined
+        ? Promise.resolve(
+            options.paginateMetadata === true && O.isNone(O.fromUndefinedOr(queryParams.marker))
+              ? { entries: [metadataTemplate("template-1")], nextMarker: "template-page-2" }
+              : options.paginateMetadata === true
+                ? { entries: [metadataTemplate("template-2")] }
+                : { entries: [] }
+          )
+        : Promise.reject(options.metadataFailure),
     getGlobalMetadataTemplates: (_queryParams: unknown): Promise<unknown> => Promise.resolve({ entries: [] }),
   },
   retentionPolicies: {
@@ -143,6 +146,22 @@ describe("@beep/box-provisioning inventory", () => {
   );
 
   it.effect(
+    "does not request folder metadata on the root anchor",
+    Effect.fnUntraced(function* () {
+      let folderMetadataReads = 0;
+      yield* observeWithClient(
+        makeInventoryClient({
+          folderMetadataRead: () => {
+            folderMetadataReads += 1;
+          },
+        })
+      );
+
+      expect(folderMetadataReads).toBe(0);
+    })
+  );
+
+  it.effect(
     "classifies missing application scope separately from subscription entitlement",
     Effect.fnUntraced(function* () {
       const observed = yield* observeWithClient(
@@ -154,6 +173,22 @@ describe("@beep/box-provisioning inventory", () => {
       expect(observed.metadata._tag).toBe("BlockedByPermission");
       if (observed.metadata._tag === "BlockedByPermission") {
         expect(O.getOrUndefined(observed.metadata.code)).toBe("insufficient_scope");
+      }
+    })
+  );
+
+  it.effect(
+    "classifies an undocumented list 403 as permission rather than entitlement",
+    Effect.fnUntraced(function* () {
+      const observed = yield* observeWithClient(
+        makeInventoryClient({
+          metadataFailure: { responseInfo: { code: "forbidden", statusCode: 403 } },
+        })
+      );
+
+      expect(observed.metadata._tag).toBe("BlockedByPermission");
+      if (observed.metadata._tag === "BlockedByPermission") {
+        expect(O.getOrUndefined(observed.metadata.code)).toBe("forbidden");
       }
     })
   );
