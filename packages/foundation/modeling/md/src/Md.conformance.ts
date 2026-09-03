@@ -42,6 +42,12 @@ import {
 } from "./internal/conformance/Md.semantic-inspector.ts";
 import { Document } from "./Md.model.ts";
 
+/**
+ * Public semantic Markdown conformance schemas, diagnostics, and inspection helpers.
+ *
+ * @category validation
+ * @since 0.0.0
+ */
 export {
   formatMarkdownConformanceIssue,
   inspectMarkdownDocumentLosslessly,
