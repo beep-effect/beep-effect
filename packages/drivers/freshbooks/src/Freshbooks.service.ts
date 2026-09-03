@@ -192,35 +192,34 @@ const listQuery = (options: ListOptions | undefined): string => {
 const accountBase = (config: ResolvedFreshbooksConfig, accountId: FreshbooksAccountId): string =>
   `${config.apiUrl}/accounting/account/${accountId}`;
 
-const authorizedGet = (
+const authorizedGet = Effect.fn("authorizedGet")(function* (
   auth: FreshbooksAuthShape,
   client: HttpClient.HttpClient,
   config: ResolvedFreshbooksConfig,
   resource: string,
   url: string
-): Effect.Effect<unknown, FreshbooksError> =>
-  Effect.gen(function* () {
-    const token = yield* auth.accessToken;
-    const request = pipe(
-      HttpClientRequest.get(url),
-      HttpClientRequest.accept("application/json"),
-      HttpClientRequest.setHeaders(config.headers),
-      (base) => HttpClientRequest.bearerToken(base, token)
-    );
-    const response = yield* client
-      .execute(request)
-      .pipe(Effect.mapError((cause) => FreshbooksError.fromReason("transport", { cause, resource, url })));
-    // Non-2xx (including a short-burst 429 with Retry-After) surfaces as a typed
-    // error carrying the status; retry/backoff and reconciliation belong to the
-    // consuming reconciler rather than every read verb, so the caller can
-    // observe and schedule the retry with the server-provided delay.
-    if (response.status < 200 || response.status >= 300) {
-      return yield* FreshbooksError.fromReason("response status", { resource, status: response.status, url });
-    }
-    return yield* response.json.pipe(
-      Effect.mapError((cause) => FreshbooksError.fromReason("response decoding", { cause, resource, url }))
-    );
-  });
+) {
+  const token = yield* auth.accessToken;
+  const request = pipe(
+    HttpClientRequest.get(url),
+    HttpClientRequest.accept("application/json"),
+    HttpClientRequest.setHeaders(config.headers),
+    (base) => HttpClientRequest.bearerToken(base, token)
+  );
+  const response = yield* client
+    .execute(request)
+    .pipe(Effect.mapError((cause) => FreshbooksError.fromReason("transport", { cause, resource, url })));
+  // Non-2xx (including a short-burst 429 with Retry-After) surfaces as a typed
+  // error carrying the status; retry/backoff and reconciliation belong to the
+  // consuming reconciler rather than every read verb, so the caller can
+  // observe and schedule the retry with the server-provided delay.
+  if (response.status < 200 || response.status >= 300) {
+    return yield* FreshbooksError.fromReason("response status", { resource, status: response.status, url });
+  }
+  return yield* response.json.pipe(
+    Effect.mapError((cause) => FreshbooksError.fromReason("response decoding", { cause, resource, url }))
+  );
+});
 
 const decodeAt = <A>(
   resource: string,

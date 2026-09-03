@@ -274,51 +274,42 @@ const toStored = (response: FreshbooksTokenResponse, now: number): FreshbooksSto
 const isFresh = (token: FreshbooksStoredToken, now: number): boolean =>
   token.expiresAt - FRESHBOOKS_TOKEN_SKEW_MILLIS > now;
 
-const callTokenEndpoint = (
+const callTokenEndpoint = Effect.fn("callTokenEndpoint")(function* (
   client: HttpClient.HttpClient,
   config: ResolvedFreshbooksConfig,
   grant: Record<string, string>
-): Effect.Effect<FreshbooksTokenResponse, FreshbooksError> =>
-  Effect.gen(function* () {
-    const url = tokenEndpoint(config);
-    const request = yield* pipe(
-      HttpClientRequest.post(url),
-      HttpClientRequest.accept("application/json"),
-      HttpClientRequest.setHeaders(config.headers),
-      (base) =>
-        HttpClientRequest.bodyJson(base, {
-          client_id: config.clientId,
-          client_secret: Redacted.value(config.clientSecret),
-          redirect_uri: config.redirectUri,
-          ...grant,
-        }),
-      Effect.mapError((cause) =>
-        FreshbooksError.fromReason("request encoding", { cause, resource: "oauth/token", url })
-      )
-    );
-    const response = yield* client
-      .execute(request)
-      .pipe(
-        Effect.mapError((cause) => FreshbooksError.fromReason("transport", { cause, resource: "oauth/token", url }))
-      );
-    if (response.status < 200 || response.status >= 300) {
-      return yield* FreshbooksError.fromReason("token refresh", {
-        resource: "oauth/token",
-        status: response.status,
-        url,
-      });
-    }
-    const body = yield* response.json.pipe(
-      Effect.mapError((cause) =>
-        FreshbooksError.fromReason("response decoding", { cause, resource: "oauth/token", url })
-      )
-    );
-    return yield* decodeTokenResponse(body).pipe(
-      Effect.mapError((cause) =>
-        FreshbooksError.fromReason("response decoding", { cause, resource: "oauth/token", url })
-      )
-    );
-  });
+) {
+  const url = tokenEndpoint(config);
+  const request = yield* pipe(
+    HttpClientRequest.post(url),
+    HttpClientRequest.accept("application/json"),
+    HttpClientRequest.setHeaders(config.headers),
+    (base) =>
+      HttpClientRequest.bodyJson(base, {
+        client_id: config.clientId,
+        client_secret: Redacted.value(config.clientSecret),
+        redirect_uri: config.redirectUri,
+        ...grant,
+      }),
+    Effect.mapError((cause) => FreshbooksError.fromReason("request encoding", { cause, resource: "oauth/token", url }))
+  );
+  const response = yield* client
+    .execute(request)
+    .pipe(Effect.mapError((cause) => FreshbooksError.fromReason("transport", { cause, resource: "oauth/token", url })));
+  if (response.status < 200 || response.status >= 300) {
+    return yield* FreshbooksError.fromReason("token refresh", {
+      resource: "oauth/token",
+      status: response.status,
+      url,
+    });
+  }
+  const body = yield* response.json.pipe(
+    Effect.mapError((cause) => FreshbooksError.fromReason("response decoding", { cause, resource: "oauth/token", url }))
+  );
+  return yield* decodeTokenResponse(body).pipe(
+    Effect.mapError((cause) => FreshbooksError.fromReason("response decoding", { cause, resource: "oauth/token", url }))
+  );
+});
 
 /**
  * Build a {@link FreshbooksAuth} service value from its dependencies.
