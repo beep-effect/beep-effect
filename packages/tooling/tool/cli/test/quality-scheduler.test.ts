@@ -1793,8 +1793,8 @@ describe("quality-scheduler", () => {
             const fs = yield* FileSystem.FileSystem;
             const releases = yield* Ref.make(0);
             const gate = {
-              tryAcquire: Effect.succeed(O.some("origin-lease")),
-              tryAcquireFallback: Effect.succeed(O.some("origin-lease")),
+              tryAcquire: Effect.succeedSome("origin-lease"),
+              tryAcquireFallback: Effect.succeedSome("origin-lease"),
               release: (_: string) => Ref.update(releases, (count) => count + 1),
             };
             // Materialize the directories, then make the leases dir unwritable
@@ -1866,8 +1866,8 @@ describe("quality-scheduler", () => {
             Effect.gen(function* () {
               const releases = yield* Ref.make(0);
               const gate = {
-                tryAcquire: Effect.succeed(O.some("origin-lease")),
-                tryAcquireFallback: Effect.succeed(O.some("origin-lease")),
+                tryAcquire: Effect.succeedSome("origin-lease"),
+                tryAcquireFallback: Effect.succeedSome("origin-lease"),
                 release: (_: string) => Ref.update(releases, (count) => count + 1),
               };
               const result = yield* withQualityAdmission(request(), gate, Effect.succeed("ran"), fastConfig);

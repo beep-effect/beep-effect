@@ -440,15 +440,12 @@ const decodeDateTimeInput = (input: DateTimeInput): Effect.Effect<DateTime.Utc, 
   pipe(
     DateTime.make(toDateTimeInput(input)),
     O.map(DateTime.toUtc),
-    O.match({
-      onNone: () =>
-        Effect.fail(
-          new SchemaIssue.InvalidValue({
-            message: "Expected a valid Effect DateTime.Input value",
-          })
-        ),
-      onSome: Effect.succeed,
-    })
+    Effect.fromOption(
+      () =>
+        new SchemaIssue.InvalidValue({
+          message: "Expected a valid Effect DateTime.Input value",
+        })
+    )
   );
 
 const encodeDateTimeInput = (value: DateTime.Utc): Effect.Effect<DateTimeInput> =>

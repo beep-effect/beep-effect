@@ -726,7 +726,7 @@ const collectRemoteChecks = Effect.fn("YeetStatus.collectRemoteChecks")(function
   if (result.truncated) {
     return O.none();
   }
-  return yield* decodeGhStatusChecks(result.output).pipe(Effect.map(O.some), Effect.orElseSucceed(O.none));
+  return yield* decodeGhStatusChecks(result.output).pipe(Effect.asSome, Effect.orElseSucceed(O.none));
 });
 
 const collectRemoteReviewThreads = Effect.fn("YeetStatus.collectRemoteReviewThreads")(function* (

@@ -776,7 +776,7 @@ const preserveArchiveResidue = Effect.fn("WorktreeRemovalService.preserveArchive
 ): Effect.fn.Return<O.Option<WorktreeResidueManifest>, WorktreePreservationError, WorktreeRemovalServiceRequirements> {
   return yield* Bool.match(needsPreservation, {
     onFalse: () => Effect.succeed(O.none<WorktreeResidueManifest>()),
-    onTrue: () => captureAndPreserveResidue(request, head, reason).pipe(Effect.map(O.some)),
+    onTrue: () => captureAndPreserveResidue(request, head, reason).pipe(Effect.asSome),
   });
 });
 

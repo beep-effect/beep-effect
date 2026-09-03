@@ -280,10 +280,7 @@ const releaseFromLedger = Effect.fnUntraced(function* (
 ): Effect.fn.Return<TokenLedgerState, PolicyDecodeError> {
   const releasedWeight = yield* pipe(
     HashMap.get(ledger.activeGrants, nonce),
-    O.match({
-      onNone: () => Effect.fail(replayInputFailure(`Release nonce "${nonce}" had no active admitted pair.`)),
-      onSome: Effect.succeed,
-    })
+    Effect.fromOption(() => replayInputFailure(`Release nonce "${nonce}" had no active admitted pair.`))
   );
   return TokenLedgerState.make({
     activeGrants: HashMap.remove(ledger.activeGrants, nonce),
@@ -382,16 +379,10 @@ export const replayAdmissionJournal = Effect.fn("Replay.replayAdmissionJournal")
         );
       }
       const phantom = yield* A.head(activePhantomAdmissions).pipe(
-        O.match({
-          onNone: () => Effect.fail(replayInputFailure("Phantom candidate set became empty mid-eviction.")),
-          onSome: Effect.succeed,
-        })
+        Effect.fromOption(() => replayInputFailure("Phantom candidate set became empty mid-eviction."))
       );
       const weightTokens = yield* HashMap.get(ledger.activeGrants, phantom.nonce).pipe(
-        O.match({
-          onNone: () => Effect.fail(replayInputFailure(`Phantom admission nonce "${phantom.nonce}" was not active.`)),
-          onSome: Effect.succeed,
-        })
+        Effect.fromOption(() => replayInputFailure(`Phantom admission nonce "${phantom.nonce}" was not active.`))
       );
       const activeTokenTotalBefore = ledger.activeTokenTotal;
       const activeTokenTotalAfter = NonNegativeInt.make(activeTokenTotalBefore - weightTokens);

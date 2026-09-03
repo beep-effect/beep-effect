@@ -168,10 +168,9 @@ const makeDocumentSource = Effect.gen(function* () {
 
   const listW1 = Effect.fn("DocumentSource.listW1")(function* (selection: DocumentSelection) {
     const rows = yield* selectRows(selection);
-    const corpusRoot = yield* O.match(config.corpusRoot, {
-      onNone: () => Effect.fail(unavailable("SEMANTICA_CORPUS_ROOT is required to list W1 documents.")),
-      onSome: Effect.succeed,
-    });
+    const corpusRoot = yield* config.corpusRoot.pipe(
+      Effect.fromOption(() => unavailable("SEMANTICA_CORPUS_ROOT is required to list W1 documents."))
+    );
     return yield* Effect.forEach(rows, (row) => makeW1Document(row, selection.manifest.corpusId, corpusRoot), {
       concurrency: 4,
     });

@@ -170,17 +170,13 @@ const runTurboQueryJson = Effect.fn("Yeet.runTurboQueryJson")(function* (
 
   return yield* pipe(
     jsonObjectTextFromMixedOutput(result.output),
-    O.match({
-      onNone: () =>
-        Effect.fail(
-          YeetCommandError.make({
-            message: `${label} did not emit a JSON object.`,
-            command: `${turbo} ${A.join(args, " ")}`,
-            exitCode: 1,
-          })
-        ),
-      onSome: Effect.succeed,
-    })
+    Effect.fromOption(() =>
+      YeetCommandError.make({
+        message: `${label} did not emit a JSON object.`,
+        command: `${turbo} ${A.join(args, " ")}`,
+        exitCode: 1,
+      })
+    )
   );
 });
 

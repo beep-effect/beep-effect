@@ -187,9 +187,9 @@ const parseXlsx = Effect.fn("LeJeuneFixtures.parseXlsx")(function* (bytes: Uint8
     catch: (cause) => fixtureErrorWithCause("xlsx-unzip", "Failed to open the synthetic XLSX fixture.", cause),
   });
   const sheetBytes = O.fromUndefinedOr(files["xl/worksheets/sheet1.xml"]);
-  const sheet = yield* O.match(sheetBytes, {
-    onNone: () => Effect.fail(fixtureError("xlsx-parse", "Synthetic XLSX fixture is missing sheet1.xml.")),
-    onSome: (value) =>
+  const sheet = yield* sheetBytes.pipe(
+    Effect.fromOption(() => fixtureError("xlsx-parse", "Synthetic XLSX fixture is missing sheet1.xml.")),
+    Effect.flatMap((value) =>
       Effect.try({
         try: () => strFromU8(value),
         catch: (cause) => fixtureErrorWithCause("xlsx-parse", "Synthetic XLSX worksheet is not valid UTF-8.", cause),
@@ -198,12 +198,12 @@ const parseXlsx = Effect.fn("LeJeuneFixtures.parseXlsx")(function* (bytes: Uint8
         Effect.mapError((cause) =>
           fixtureErrorWithCause("xlsx-parse", "Synthetic XLSX worksheet did not match the fixed layout.", cause)
         )
-      ),
-  });
-  const dataRow = yield* O.match(A.get(sheet.worksheet.sheetData.row, 1), {
-    onNone: () => Effect.fail(fixtureError("xlsx-parse", "Synthetic XLSX fixture is missing its data row.")),
-    onSome: Effect.succeed,
-  });
+      )
+    )
+  );
+  const dataRow = yield* A.get(sheet.worksheet.sheetData.row, 1).pipe(
+    Effect.fromOption(() => fixtureError("xlsx-parse", "Synthetic XLSX fixture is missing its data row."))
+  );
   const values = A.map(dataRow.c, (cell) => cell.is.t);
   const parsed = A.join(values, " | ");
   return Str.Equivalence(parsed, XLSX_ROW_TEXT)

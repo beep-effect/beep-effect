@@ -175,7 +175,7 @@ const makeGoldTestLayer = (
   const providerCache = Layer.succeed(
     ProviderCache,
     ProviderCache.of({
-      lookup: Effect.fn("ProviderCache.lookup")(() => Effect.succeed(O.none())),
+      lookup: Effect.fn("ProviderCache.lookup")(() => Effect.succeedNone),
       store: Effect.fn("ProviderCache.store")(() => Effect.void),
     })
   );

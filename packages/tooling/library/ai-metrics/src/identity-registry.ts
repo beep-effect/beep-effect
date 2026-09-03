@@ -355,7 +355,7 @@ const readFileOption = Effect.fn("AiMetrics.identityRegistry.readFileOption")(fu
 ): Effect.fn.Return<O.Option<string>, AiMetricsIdentityRegistryError, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
   return yield* fs.readFileString(filePath).pipe(
-    Effect.map(O.some),
+    Effect.asSome,
     Effect.catchIf(isNotFound, () => Effect.succeed(O.none<string>())),
     Effect.mapError(identityRegistryFailure("Failed to read an AI metrics identity file."))
   );

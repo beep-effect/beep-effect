@@ -1476,9 +1476,9 @@ const runCiDoctestLane = Effect.fn("CiLane.runCiDoctestLane")(function* (
   options: CiLaneRunOptions
 ): Effect.fn.Return<void, CiCommandError | QualityTaskConfigurationError | QualityTaskGroupFailed, CiLaneEnvironment> {
   const files = yield* DocgenLaneMode.$match(options.mode, {
-    auto: () => Effect.map(resolveAffectedDoctestFiles(repoRoot, options.base, options.head), O.some),
+    auto: () => Effect.asSome(resolveAffectedDoctestFiles(repoRoot, options.base, options.head)),
     none: () => Effect.succeed(O.none<ReadonlyArray<string>>()),
-    affected: () => Effect.map(resolveAffectedDoctestFiles(repoRoot, options.base, options.head), O.some),
+    affected: () => Effect.asSome(resolveAffectedDoctestFiles(repoRoot, options.base, options.head)),
     full: () => Effect.succeed(O.none<ReadonlyArray<string>>()),
   });
   const steps =

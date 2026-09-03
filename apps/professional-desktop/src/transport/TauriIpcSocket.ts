@@ -383,16 +383,12 @@ const sendFrame = Effect.fn("sendFrame")(function* (frame: string): Effect.fn.Re
       },
     }).pipe(Effect.flatMap(SidecarTransport.decodeUnknownEffect), Effect.mapError(toSidecarSendError));
 
-    const rpcSessionToken = yield* O.match(transport.rpcSessionToken, {
-      onNone: () =>
-        Effect.fail(
-          SidecarSendError.make({
-            causeMessage: "missing RPC session token",
-            message: "sidecar transport did not provide an RPC session token for IPC send",
-          })
-        ),
-      onSome: Effect.succeed,
-    });
+    const rpcSessionToken = yield* Effect.fromOption(transport.rpcSessionToken, () =>
+      SidecarSendError.make({
+        causeMessage: "missing RPC session token",
+        message: "sidecar transport did not provide an RPC session token for IPC send",
+      })
+    );
 
     yield* Effect.tryPromise({
       try: () => invoke<void>("sidecar_send", { frame, rpcSessionToken }),

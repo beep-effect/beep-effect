@@ -203,7 +203,11 @@ const normalizeContentType = (contentType: string | null | undefined): string =>
   if (P.isNullish(contentType)) return "application/octet-stream";
 
   // Extract the base mime type (ignore charset etc.)
-  const base = Str.toLowerCase(Str.trim(O.getOrElse(A.head(Str.split(";")(contentType)), () => contentType)));
+  const base = A.head(Str.split(";")(contentType)).pipe(
+    O.getOrElse(() => contentType),
+    Str.trim,
+    Str.toLowerCase
+  );
 
   // Normalize common variations
   if (base === "image/jpg") return "image/jpeg";

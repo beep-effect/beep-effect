@@ -190,7 +190,7 @@ const probeBinary = Effect.fn("QaDoctor.probeBinary")(function* (
   remediation: string
 ): Effect.fn.Return<QaProbe, never, ChildProcessSpawner.ChildProcessSpawner> {
   const captured = yield* runCaptured({ args, command: name, source: "stdout", trim: true }).pipe(
-    Effect.map(O.some),
+    Effect.asSome,
     Effect.orElseSucceed(O.none<{ readonly exitCode: number; readonly output: string }>)
   );
   return O.match(captured, {

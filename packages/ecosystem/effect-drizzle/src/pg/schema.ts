@@ -451,11 +451,11 @@ const collectEdges = (models: ModelRecord): ReadonlyArray<Edge> => {
               );
             }
             if (
-              PgColumn.storageIdent(sourceSpec, sourceMeta.dimensions) !==
-                PgColumn.storageIdent(targetSpec, targetMeta.dimensions) ||
+              PgColumn.storageIdent(sourceMeta.dimensions)(sourceSpec) !==
+                PgColumn.storageIdent(targetMeta.dimensions)(targetSpec) ||
               !equals(
-                PgColumn.carrier(sourceSpec, sourceMeta.dimensions),
-                PgColumn.carrier(targetSpec, targetMeta.dimensions)
+                PgColumn.carrier(sourceMeta.dimensions)(sourceSpec),
+                PgColumn.carrier(targetMeta.dimensions)(targetSpec)
               )
             ) {
               fail(

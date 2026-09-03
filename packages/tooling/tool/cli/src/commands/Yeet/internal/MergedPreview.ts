@@ -563,17 +563,13 @@ export const createYeetMergePreview = Effect.fn("Yeet.createYeetMergePreview")(f
     "-m",
     YEET_MERGED_PREVIEW_COMMIT_MESSAGE,
   ]);
-  const commitSha = yield* O.match(gitObjectIdFromOutput(committed.output), {
-    onNone: () =>
-      Effect.fail(
-        YeetCommandError.make({
-          message: `yeet verify --merged could not commit the merge preview tree:\n${committed.output}`,
-          command: `git commit-tree ${treeSha}`,
-          exitCode: committed.exitCode === 0 ? 1 : committed.exitCode,
-        })
-      ),
-    onSome: Effect.succeed,
-  });
+  const commitSha = yield* Effect.fromOption(gitObjectIdFromOutput(committed.output), () =>
+    YeetCommandError.make({
+      message: `yeet verify --merged could not commit the merge preview tree:\n${committed.output}`,
+      command: `git commit-tree ${treeSha}`,
+      exitCode: committed.exitCode === 0 ? 1 : committed.exitCode,
+    })
+  );
 
   yield* removeMergePreviewWorktree(context, worktreePath);
   const added = yield* gitCapture(context.repoRoot, ["worktree", "add", "--detach", worktreePath, commitSha]);

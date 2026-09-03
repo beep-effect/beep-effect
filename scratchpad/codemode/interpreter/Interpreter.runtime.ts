@@ -1519,19 +1519,17 @@ export class Interpreter<R> {
     allowAsync = true
   ): Effect.Effect<O.Option<CustomIterator>, InterpreterFailure, R> {
     if (CodeModeGenerator.is(value)) {
-      if (value.asynchronous && !allowAsync) return Effect.succeed(O.none());
-      return Effect.succeed(
-        O.some({
-          iterator: value,
-          next: GeneratorMethodReference.new(value, "next"),
-          asynchronous: value.asynchronous,
-        })
-      );
+      if (value.asynchronous && !allowAsync) return Effect.succeedNone;
+      return Effect.succeedSome({
+    iterator: value,
+    next: GeneratorMethodReference.new(value, "next"),
+    asynchronous: value.asynchronous,
+});
     }
-    if (!isRecord(value) || isRuntimeReference(value)) return Effect.succeed(O.none());
+    if (!isRecord(value) || isRuntimeReference(value)) return Effect.succeedNone;
     const asyncMethod = allowAsync ? Reflect.get(value, AsyncIteratorSymbol) : undefined;
     const method = asyncMethod ?? Reflect.get(value, IteratorSymbol);
-    if (P.isUndefined(method) || P.isNull(method)) return Effect.succeed(O.none());
+    if (P.isUndefined(method) || P.isNull(method)) return Effect.succeedNone;
     return Effect.map(
       this.invokeCallable(this.requireIteratorMethod(method, "Iterator method", node), [], node),
       (iterator) => {
@@ -2054,13 +2052,9 @@ export class Interpreter<R> {
       onFailure: (cause) =>
         cause.reasons.some(Cause.isInterruptReason)
           ? Effect.failCause(cause)
-          : Effect.flatMap(this.evaluateStatement(finalizer), (final) =>
-              isAbrupt(final) ? Effect.succeed(final) : Effect.failCause(cause)
-            ),
+          : Effect.filterOrElse(this.evaluateStatement(finalizer), final => isAbrupt(final), final => Effect.failCause(cause)),
       onSuccess: (result) =>
-        Effect.flatMap(this.evaluateStatement(finalizer), (final) =>
-          isAbrupt(final) ? Effect.succeed(final) : Effect.succeed(result)
-        ),
+        Effect.filterOrElse(this.evaluateStatement(finalizer), final => isAbrupt(final), final => Effect.succeed(result)),
     });
   }
 
@@ -3931,7 +3925,7 @@ export class Interpreter<R> {
           state.active = O.some(yield* invocation.takeGeneratorRequest(state));
           const exit = yield* Effect.exit(
             run.pipe(
-              Effect.flatMap((result) => (asynchronous ? invocation.awaitValue(result) : Effect.succeed(result))),
+              Effect.filterOrElse(result => !asynchronous, result => invocation.awaitValue(result)),
               Effect.catch((error) =>
                 InterpreterFailure.guards.GeneratorReturn(error)
                   ? asynchronous

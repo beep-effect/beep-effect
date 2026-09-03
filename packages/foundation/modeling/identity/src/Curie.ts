@@ -191,18 +191,12 @@ const makeCurieTransformation = <const V extends VocabShape>(vocab: V) =>
     decode: (curie: string) =>
       pipe(
         expandOption(curie, vocab),
-        O.match({
-          onNone: () => Effect.fail(schemaIssue(`Unknown CURIE: ${curie}`)),
-          onSome: Effect.succeed,
-        })
+        Effect.fromOption(() => schemaIssue(`Unknown CURIE: ${curie}`))
       ),
     encode: (iri: string) =>
       pipe(
         contractOption(iri, vocab),
-        O.match({
-          onNone: () => Effect.fail(schemaIssue(`Unknown IRI: ${iri}`)),
-          onSome: Effect.succeed,
-        })
+        Effect.fromOption(() => schemaIssue(`Unknown IRI: ${iri}`))
       ),
   });
 
@@ -211,19 +205,13 @@ const CoreCurieTransformation = SchemaTransformation.transformOrFail({
     pipe(
       expandOption(curie, CoreVocab),
       O.filter(isCoreIri),
-      O.match({
-        onNone: () => Effect.fail(schemaIssue(`Unknown CURIE: ${curie}`)),
-        onSome: Effect.succeed,
-      })
+      Effect.fromOption(() => schemaIssue(`Unknown CURIE: ${curie}`))
     ),
   encode: (iri: CoreIri) =>
     pipe(
       contractOption(iri, CoreVocab),
       O.filter(isCoreCurie),
-      O.match({
-        onNone: () => Effect.fail(schemaIssue(`Unknown IRI: ${iri}`)),
-        onSome: Effect.succeed,
-      })
+      Effect.fromOption(() => schemaIssue(`Unknown IRI: ${iri}`))
     ),
 });
 

@@ -123,7 +123,7 @@ const walkDirectory = (
 const directoryExists = Effect.fn("Goals.packetDirectoryExists")(function* (target: string) {
   const fs = yield* FileSystem.FileSystem;
   const info = yield* fs.stat(target).pipe(
-    Effect.map(O.some),
+    Effect.asSome,
     Effect.catchIf(
       (error) => error.reason._tag === "NotFound",
       () => Effect.succeedNone

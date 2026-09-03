@@ -565,9 +565,9 @@ const prepareTools = (
     ? pipe(
         options.tools,
         Effect.forEach((tool) => prepareTool(moduleName, config, tool)),
-        Effect.map(O.some)
+        Effect.asSome
       )
-    : Effect.succeed(O.none());
+    : Effect.succeedNone;
 
 const prepareToolChoice = (
   toolNameMapper: Tool.NameMapper<ReadonlyArray<Tool.Any>>,
@@ -628,7 +628,7 @@ const prepareResponseFormat = (
               })
             ),
         }),
-      text: () => Effect.succeed(O.none()),
+      text: () => Effect.succeedNone,
     })
   )(responseFormat);
 
@@ -790,11 +790,9 @@ const makeChoiceParts = Effect.fn("OpenAiCompatLanguageModel.makeChoiceParts")(f
   const choice = yield* pipe(
     response.choices,
     A.head,
-    O.match({
-      onNone: () =>
-        Effect.fail(makeInvalidOutput(moduleName, "makeResponse", "Provider response did not include a choice.")),
-      onSome: Effect.succeed,
-    })
+    Effect.fromOption(() =>
+      makeInvalidOutput(moduleName, "makeResponse", "Provider response did not include a choice.")
+    )
   );
   const textParts = pipe(
     choice.message,
