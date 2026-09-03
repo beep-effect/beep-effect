@@ -3151,6 +3151,53 @@ describe("yeet attempt journal", () => {
       )
     ));
 
+  it("closes a dead PID-only owner while retaining a live PID-only owner", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const tempContext = RepoRunContext.make({ ...context, cwd: tmpDir, repoRoot: tmpDir });
+          const journalPath = yield* attemptJournalPath(tempContext);
+          const encodeStarted = S.encodeEffect(S.fromJsonString(YeetAttemptStarted));
+          const deadAttemptId = attemptUuid("00000000-0000-4000-8011-000000000006");
+          const liveAttemptId = attemptUuid("00000000-0000-4000-8011-000000000007");
+          const started = (attemptId: UUID, ownerPid: number) =>
+            YeetAttemptStarted.make({
+              schemaVersion: "yeet-attempt-journal/v1",
+              _tag: "attempt-started",
+              attemptId,
+              runId: `partial-owner-${ownerPid}`,
+              branch: "partial-owner-reconciliation",
+              base: "origin/main",
+              head: "HEAD",
+              mode: "repair",
+              startedAt: "2026-09-03T00:00:00.000Z",
+              ownerPid: O.some(ownerPid),
+            });
+          const lines = yield* Effect.all([
+            encodeStarted(started(deadAttemptId, DEAD_PID)),
+            encodeStarted(started(liveAttemptId, process.pid)),
+          ]);
+          yield* fs.makeDirectory(path.dirname(journalPath), { recursive: true });
+          yield* fs.writeFileString(journalPath, `${A.join(lines, "\n")}\n`);
+
+          expect(yield* reconcileAttemptJournal(journalPath)).toBe(1);
+          const events = yield* Effect.forEach(
+            pipe(yield* fs.readFileString(journalPath), Str.split("\n"), A.filter(Str.isNonEmpty)),
+            (line) => decodeYeetAttemptJournalEvent(line)
+          );
+          const terminals = A.filter(events, YeetAttemptJournalEvent.guards["attempt-terminated"]);
+          expect(terminals).toHaveLength(1);
+          expect(terminals[0]?.attemptId).toBe(deadAttemptId);
+          expect(terminals[0]?.reason).toBe("owner-dead");
+          expect(A.some(events, (event) => event._tag === "attempt-started" && event.attemptId === liveAttemptId)).toBe(
+            true
+          );
+        })
+      )
+    ));
+
   it("keeps unfinished starts outside the terminal-attempt retention budget", () =>
     Effect.runPromise(
       withTempDirectory((tmpDir) =>

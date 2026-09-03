@@ -443,14 +443,14 @@ const reconcileJournalLocked = Effect.fn("AttemptTerminationJournal.reconcileLoc
   const terminalRows = A.getSomes(
     yield* Effect.forEach(unfinishedStarts, (started) =>
       pipe(
-        O.all({ pid: started.ownerPid, procStart: started.ownerProcStart }),
+        started.ownerPid,
         O.match({
-          onNone: () =>
-            O.isNone(started.ownerPid) && O.isNone(started.ownerProcStart)
-              ? Effect.succeedSome<YeetAttemptTerminationReason>("legacy-unowned-start")
-              : Effect.succeedNone,
-          onSome: (owner) =>
-            processIdentityStatus(owner).pipe(
+          onNone: () => Effect.succeedSome<YeetAttemptTerminationReason>("legacy-unowned-start"),
+          onSome: (pid) =>
+            processIdentityStatus({
+              pid,
+              procStart: O.getOrElse(started.ownerProcStart, constant(Str.empty)),
+            }).pipe(
               Effect.map((status) =>
                 ProcessIdentityStatus.is.dead(status)
                   ? O.some<YeetAttemptTerminationReason>("owner-dead")
