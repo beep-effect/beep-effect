@@ -4,8 +4,9 @@
 
 Status: `completed-retained` — all phases complete on 2026-09-03. The live
 dry-run, the operator-attended apply, and the all-`Noop` re-plan are recorded
-in `history/2026-09-03-p2-live-apply.md`; the reflection and status flip ride
-PR #959 with the final fix.
+in `history/2026-09-03-p2-live-apply.md`. The final fix merged as #959 before
+the closeout was written, so the reflection and status flip ride follow-up PR
+#960 by operator decision (see the `SPEC.md` Exception Ledger).
 
 ## Phases
 
@@ -15,7 +16,7 @@ PR #959 with the final fix.
 | P1 Implement | complete | Driver expansion (reads first, then mutations, regenerate + remeasure), then the reconciler: intent/observed/plan/receipt schemas → service contracts (`Inventory`, `Planner`, `Applier`, orchestration) → implementation. | Driver and reconciler package verification pass; local dry-run/apply safety tests are green. |
 | P2 Verify | complete | Dry-run plan artifact against the live tenant; repeat-run identity; operator-attended first apply; all-`Noop` re-plan; package-verify handoffs. | Verification matrix green; apply receipt in `history/`. |
 | P3 Yeet: PR to mergeable | complete | Publish work commits through yeet and drive the PR toward mergeable: required checks green, review comments answered and resolved. The packet's final merge-ready verdict is deliberately not taken here — it belongs to P4, after the closeout edits are published on the same PR. | Checks green and zero unresolved review threads on the latest work head. |
-| P4 Close | complete | Land the closeout reflection and packet-state flip in the same PR as the final work (same-PR packet-state flips — never a post-merge follow-up), publish that closeout head through yeet, and take the packet's final gate on it. | `bun run beep yeet monitor` reports `merge-ready: yes` on the head that contains the reflection and status flip. |
+| P4 Close | complete | Land the closeout reflection and packet-state flip with the final work; this packet landed them on follow-up PR #960 after the operator merged the final fix (#959) first, recorded as an Exception Ledger row. | `bun run beep yeet monitor` reports `merge-ready: yes` on the head that contains the reflection and status flip (#960). |
 
 ## P4 Closeout Checklist
 

@@ -12,7 +12,7 @@
   "packetPath": "goals/practice-box-provisioning",
   "lifecycle": "completed-retained",
   "mission": "Expand @beep/box with the provisioning manager surface and ship the Effect-native desired-state reconciler for the service-identity-owned client/matter tree",
-  "statusNote": "Completed 2026-09-03: driver surface and reconciler shipped (#928), pre-apply hardening after an adversarial review (#947), live dry-run proof, operator-attended apply of the 32-folder starter tree with the attorney collaboration, all-Noop re-plan, and the Sign 403 inventory fix plus closeout reflection (#959).",
+  "statusNote": "Completed 2026-09-03: driver surface and reconciler shipped (#928), pre-apply hardening after an adversarial review (#947), live dry-run proof, operator-attended apply of the 32-folder starter tree with the attorney collaboration, all-Noop re-plan, and the Sign 403 inventory fix (#959). The closeout reflection and status flip ride follow-up PR #960 by operator decision (Exception Ledger).",
   "blockedBy": [],
   "executionCapable": true,
   "reflectionRequired": true,

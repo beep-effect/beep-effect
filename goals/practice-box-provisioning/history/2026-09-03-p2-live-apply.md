@@ -20,7 +20,8 @@ ignored operator directory with mode 0600.
 The first live dry-run failed before planning: the Box Sign request listing
 returned 403 on this tenant and the inventory raised it as a hard driver
 error. Sign discovery now uses the same permission-blocked classification as
-metadata and retention (regression test added; PR #959). The corrected
+metadata and retention (regression test added; PR #959). The closeout
+itself rides follow-up PR #960 (Exception Ledger). The corrected
 dry-run, run twice in one process:
 
 ```text
@@ -31,9 +32,12 @@ destructiveCount: 0, declaredExternalCollaboratorCount: 0, foreignResourceCount:
 ```
 
 `foreignResourceCount` is 0 because the tree is anchored at the service
-account's own root folder, which is empty; the 2026-07 staging drop lives under
-the admin user's root and is therefore outside this reconciler's scope rather
-than adopted or pruned.
+account's own root folder, which was empty. The 2026-07 staging drop lives
+under the admin user's root and is outside this reconciler's scope. A separate
+read-only listing of the admin root, authenticated as the admin user through
+the same platform app, reported 11 top-level items (6 folders, 5 files); none
+was adopted, pruned, or otherwise touched. `SPEC.md` acceptance criterion 2 was
+amended to this wording and the Exception Ledger records it.
 
 ## Attended apply
 

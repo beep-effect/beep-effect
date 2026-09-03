@@ -39,8 +39,8 @@ Use this command for execution-capable sessions:
 Closed 2026-09-03. The live tenant carries the 32-folder starter tree under the
 service identity with the attorney collaborated on the client folder; metadata
 and retention stay `BlockedByEntitlement` on Business; a fresh-process re-plan
-is all-`Noop`. The closeout reflection and this status flip ride the same PR
-as the final fix (#959).
+is all-`Noop`. The final fix merged as #959; the closeout reflection and this
+status flip ride follow-up PR #960 by operator decision (Exception Ledger).
 
 ## Latest evidence
 
