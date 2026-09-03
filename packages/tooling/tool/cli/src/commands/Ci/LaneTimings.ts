@@ -152,6 +152,18 @@ export class CiWorkflowJob extends S.Class<CiWorkflowJob>($I`CiWorkflowJob`)(
   })
 ) {}
 
+const CiWorkflowAttemptOneJob = CiWorkflowJob.mapFields((fields) => ({
+  ...fields,
+  run_attempt: S.Literal(1),
+})).annotate(
+  $I.annote("CiWorkflowAttemptOneJob", {
+    description: "A structurally selected GitHub Actions job from the first workflow-run attempt.",
+  })
+);
+type CiWorkflowAttemptOneJob = typeof CiWorkflowAttemptOneJob.Type;
+
+const isCiWorkflowAttemptOneJob = S.is(CiWorkflowAttemptOneJob);
+
 /**
  * One page of the Actions jobs REST endpoint.
  *
@@ -347,7 +359,7 @@ export const ciTimestampSpanSeconds: {
  * @since 0.0.0
  */
 export const attemptOnePickupSeconds = (job: CiWorkflowJob): O.Option<number> =>
-  job.run_attempt === 1 ? ciTimestampSpanSeconds(job.created_at, job.started_at) : O.none();
+  isCiWorkflowAttemptOneJob(job) ? ciTimestampSpanSeconds(job.created_at, job.started_at) : O.none();
 
 const stepSecondsMatching = (job: CiWorkflowJob, pattern: RegExp): O.Option<number> =>
   pipe(
@@ -733,14 +745,38 @@ const ghApiJson = Effect.fn("Ci.laneTimingsGhApi")(function* (
   return result.output;
 });
 
-const collectCiWorkflowJobPages = Effect.fn("Ci.collectCiWorkflowJobPages")(function* (
+type CiWorkflowJobsPageFetcher<Requirements> = (
   repoRoot: string,
   runId: number,
-  pageNumber: number,
-  collected: ReadonlyArray<CiWorkflowJob>
-): Effect.fn.Return<ReadonlyArray<CiWorkflowJob>, CiCommandError, ChildProcessSpawner.ChildProcessSpawner> {
-  const endpoint = `repos/{owner}/{repo}/actions/runs/${runId}/jobs?filter=all&per_page=100&page=${pageNumber}`;
-  const json = yield* ghApiJson(repoRoot, endpoint, O.some(CI_LEGACY_WORKFLOW_JOBS_JQ));
+  perPage: number,
+  pageNumber: number
+) => Effect.Effect<string, CiCommandError, Requirements>;
+
+const ciWorkflowJobsEndpoint = (runId: number, perPage: number, pageNumber: number): string =>
+  `repos/{owner}/{repo}/actions/runs/${runId}/jobs?filter=all&per_page=${perPage}&page=${pageNumber}`;
+
+const fetchLegacyCiWorkflowJobsPage = Effect.fn("Ci.fetchLegacyCiWorkflowJobsPage")(function* (
+  repoRoot: string,
+  runId: number,
+  perPage: number,
+  pageNumber: number
+): Effect.fn.Return<string, CiCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+  return yield* ghApiJson(
+    repoRoot,
+    ciWorkflowJobsEndpoint(runId, perPage, pageNumber),
+    O.some(CI_LEGACY_WORKFLOW_JOBS_JQ)
+  );
+});
+
+const collectCiWorkflowJobPages = Effect.fn("Ci.collectCiWorkflowJobPages")(function* <Requirements>(
+  fetchPage: CiWorkflowJobsPageFetcher<Requirements>,
+  repoRoot: string,
+  runId: number,
+  perPage: number,
+  pageNumber = 1,
+  collected: ReadonlyArray<CiWorkflowJob> = A.empty()
+): Effect.fn.Return<ReadonlyArray<CiWorkflowJob>, CiCommandError, Requirements> {
+  const json = yield* fetchPage(repoRoot, runId, perPage, pageNumber);
   const page = yield* decodeCiWorkflowJobsPage(json).pipe(
     CiCommandError.mapError(`Failed to decode jobs page ${pageNumber} for run ${runId}.`)
   );
@@ -753,7 +789,7 @@ const collectCiWorkflowJobPages = Effect.fn("Ci.collectCiWorkflowJobPages")(func
       CiCommandError.make({
         message: `Jobs pagination for run ${runId} ended after ${A.length(jobs)} of ${page.total_count} jobs.`,
       }),
-    onNonEmpty: () => collectCiWorkflowJobPages(repoRoot, runId, pageNumber + 1, jobs),
+    onNonEmpty: () => collectCiWorkflowJobPages(fetchPage, repoRoot, runId, perPage, pageNumber + 1, jobs),
   });
 });
 
@@ -808,9 +844,11 @@ export const collectCiLaneTimings = Effect.fn("Ci.collectCiLaneTimings")(functio
     Effect.map((page) => page.workflow_runs),
     CiCommandError.mapError("Failed to decode the workflow-runs response.")
   );
-  const jobPages = yield* Effect.forEach(runs, (run) => collectCiWorkflowJobPages(repoRoot, run.id, 1, A.empty()), {
-    concurrency: 4,
-  });
+  const jobPages = yield* Effect.forEach(
+    runs,
+    (run) => collectCiWorkflowJobPages(fetchLegacyCiWorkflowJobsPage, repoRoot, run.id, 100),
+    { concurrency: 4 }
+  );
   return ciLaneTimingsReport(A.map(A.flatten(jobPages), ciLaneTimingRow));
 });
 
@@ -1330,6 +1368,13 @@ const makeCiLaneTimingGithubClient = Effect.fn("CiLaneTimingGithubClient.make")(
 const normalizeRequiredLaneName = (name: string): string =>
   Str.startsWith(HEAVY_LANE_PREFIX)(name) ? Str.slice(Str.length(HEAVY_LANE_PREFIX))(name) : name;
 
+const effectiveLaneSpecForJobName = (name: string): O.Option<CiEffectiveLaneSpec> =>
+  A.findFirst(
+    CI_EFFECTIVE_LANE_SPECS,
+    (spec) =>
+      Str.equivalence(spec.aggregator, name) || A.some(spec.shards, (shardName) => Str.equivalence(shardName, name))
+  );
+
 const windowRunOrder = Order.combine(
   Order.mapInput(Order.Number, (run: CiWorkflowWindowRun) => DateTime.toEpochMillis(run.created_at)),
   Order.mapInput(Order.Number, (run: CiWorkflowWindowRun) => run.id)
@@ -1424,29 +1469,18 @@ const collectCiWorkflowWindowRuns = Effect.fn("Ci.collectCiWorkflowWindowRuns")(
   return A.sort(A.fromIterable(HashMap.values(indexed)), windowRunOrder);
 });
 
-const collectCiWorkflowWindowJobPages = Effect.fn("Ci.collectCiWorkflowWindowJobPages")(function* (
+const fetchCiWorkflowWindowJobsPage = Effect.fn("Ci.fetchCiWorkflowWindowJobsPage")(function* (
   repoRoot: string,
   runId: number,
-  pageNumber: number,
-  collected: ReadonlyArray<CiWorkflowJob>
-): Effect.fn.Return<ReadonlyArray<CiWorkflowJob>, CiCommandError, CiLaneTimingGithubClient> {
+  perPage: number,
+  pageNumber: number
+): Effect.fn.Return<string, CiCommandError, CiLaneTimingGithubClient> {
   const github = yield* CiLaneTimingGithubClient;
-  const endpoint = `repos/{owner}/{repo}/actions/runs/${runId}/jobs?filter=all&per_page=100&page=${pageNumber}`;
-  const json = yield* github.getJson(repoRoot, endpoint, O.some(CI_WINDOW_WORKFLOW_JOBS_JQ));
-  const page = yield* decodeCiWorkflowJobsPage(json).pipe(
-    CiCommandError.mapError(`Failed to decode jobs page ${pageNumber} for run ${runId}.`)
+  return yield* github.getJson(
+    repoRoot,
+    ciWorkflowJobsEndpoint(runId, perPage, pageNumber),
+    O.some(CI_WINDOW_WORKFLOW_JOBS_JQ)
   );
-  const jobs = A.appendAll(collected, page.jobs);
-  if (A.length(jobs) >= page.total_count) {
-    return jobs;
-  }
-  return yield* A.match(page.jobs, {
-    onEmpty: () =>
-      CiCommandError.make({
-        message: `Jobs pagination for run ${runId} ended after ${A.length(jobs)} of ${page.total_count} jobs.`,
-      }),
-    onNonEmpty: () => collectCiWorkflowWindowJobPages(repoRoot, runId, pageNumber + 1, jobs),
-  });
 });
 
 const collectRequiredContexts = Effect.fn("Ci.collectRequiredContexts")(function* (
@@ -1474,21 +1508,29 @@ const collectRequiredContexts = Effect.fn("Ci.collectRequiredContexts")(function
 
 const actionConclusion = (job: CiWorkflowJob): string => O.getOrElse(O.fromNullishOr(job.conclusion), () => job.status);
 
-const durationRowForJob = (run: CiWorkflowWindowRun, lane: string, job: CiWorkflowJob): CiLaneTimingWindowRow => {
+const laterAttemptRowForJob = (
+  run: CiWorkflowWindowRun,
+  lane: string,
+  job: CiWorkflowJob
+): CiLaneTimingAttributionRow =>
+  CiLaneTimingAttributionRow.make({
+    attribution: "later-attempt",
+    conclusion: actionConclusion(job),
+    event: run.event,
+    headSha: run.head_sha,
+    jobName: job.name,
+    lane,
+    runAttempt: job.run_attempt,
+    runCreatedAt: run.created_at,
+    runId: run.id,
+  });
+
+const durationRowForAttemptOneJob = (
+  run: CiWorkflowWindowRun,
+  lane: string,
+  job: CiWorkflowAttemptOneJob
+): CiLaneTimingWindowRow => {
   const conclusion = actionConclusion(job);
-  if (job.run_attempt !== 1) {
-    return CiLaneTimingAttributionRow.make({
-      attribution: "later-attempt",
-      conclusion,
-      event: run.event,
-      headSha: run.head_sha,
-      jobName: job.name,
-      lane,
-      runAttempt: job.run_attempt,
-      runCreatedAt: run.created_at,
-      runId: run.id,
-    });
-  }
   if (!Str.equivalence(conclusion, "success")) {
     return CiLaneTimingAttributionRow.make({
       attribution: Str.equivalence(conclusion, "cancelled") ? "cancelled" : "failure",
@@ -1531,8 +1573,11 @@ const durationRowForJob = (run: CiWorkflowWindowRun, lane: string, job: CiWorkfl
   });
 };
 
-const attemptOneJobNamed = (jobs: ReadonlyArray<CiWorkflowJob>, name: string): O.Option<CiWorkflowJob> => {
-  const matches = A.filter(jobs, (job) => job.run_attempt === 1 && Str.equivalence(job.name, name));
+const attemptOneJobNamed = (
+  jobs: ReadonlyArray<CiWorkflowAttemptOneJob>,
+  name: string
+): O.Option<CiWorkflowAttemptOneJob> => {
+  const matches = A.filter(jobs, (job) => Str.equivalence(job.name, name));
   return A.length(matches) === 1 ? A.head(matches) : O.none();
 };
 
@@ -1549,12 +1594,16 @@ const incompleteEffectiveRow = (run: CiWorkflowWindowRun, spec: CiEffectiveLaneS
     runId: run.id,
   });
 
-const effectiveDurationRow = (runJobs: CiWorkflowWindowRunJobs, spec: CiEffectiveLaneSpec): CiLaneTimingWindowRow => {
+const effectiveDurationRow = (
+  run: CiWorkflowWindowRun,
+  jobs: ReadonlyArray<CiWorkflowAttemptOneJob>,
+  spec: CiEffectiveLaneSpec
+): CiLaneTimingWindowRow => {
   const expectedNames = A.prepend(spec.shards, spec.aggregator);
-  const componentOptions = A.map(expectedNames, (name) => attemptOneJobNamed(runJobs.jobs, name));
+  const componentOptions = A.map(expectedNames, (name) => attemptOneJobNamed(jobs, name));
   const components = A.getSomes(componentOptions);
   if (A.length(components) !== A.length(expectedNames)) {
-    return incompleteEffectiveRow(runJobs.run, spec);
+    return incompleteEffectiveRow(run, spec);
   }
   const conclusions = A.map(components, actionConclusion);
   if (!A.every(conclusions, (conclusion) => Str.equivalence(conclusion, "success"))) {
@@ -1562,21 +1611,21 @@ const effectiveDurationRow = (runJobs: CiWorkflowWindowRunJobs, spec: CiEffectiv
     return CiLaneTimingAttributionRow.make({
       attribution: cancelled ? "cancelled" : "failure",
       conclusion: cancelled ? "cancelled" : "failure",
-      event: runJobs.run.event,
-      headSha: runJobs.run.head_sha,
+      event: run.event,
+      headSha: run.head_sha,
       jobName: spec.aggregator,
       lane: spec.lane,
       runAttempt: 1,
-      runCreatedAt: runJobs.run.created_at,
-      runId: runJobs.run.id,
+      runCreatedAt: run.created_at,
+      runId: run.id,
     });
   }
   const shardStartedAtMillis = A.getSomes(
     A.map(spec.shards, (shardName) =>
-      O.flatMap(attemptOneJobNamed(runJobs.jobs, shardName), (job) => epochMillis(job.started_at))
+      O.flatMap(attemptOneJobNamed(jobs, shardName), (job) => epochMillis(job.started_at))
     )
   );
-  const aggregatorCompletedAtMillis = O.flatMap(attemptOneJobNamed(runJobs.jobs, spec.aggregator), (job) =>
+  const aggregatorCompletedAtMillis = O.flatMap(attemptOneJobNamed(jobs, spec.aggregator), (job) =>
     epochMillis(job.completed_at)
   );
   const earliestStartedAtMillis = A.head(A.sort(shardStartedAtMillis, Order.Number));
@@ -1594,49 +1643,50 @@ const effectiveDurationRow = (runJobs: CiWorkflowWindowRunJobs, spec: CiEffectiv
       CiLaneTimingAttributionRow.make({
         attribution: "invalid-span",
         conclusion: "success",
-        event: runJobs.run.event,
-        headSha: runJobs.run.head_sha,
+        event: run.event,
+        headSha: run.head_sha,
         jobName: spec.aggregator,
         lane: spec.lane,
         runAttempt: 1,
-        runCreatedAt: runJobs.run.created_at,
-        runId: runJobs.run.id,
+        runCreatedAt: run.created_at,
+        runId: run.id,
       }),
     onSome: (seconds) =>
       CiLaneTimingDurationRow.make({
         conclusion: "success",
         durationSeconds: seconds,
-        event: runJobs.run.event,
-        headSha: runJobs.run.head_sha,
+        event: run.event,
+        headSha: run.head_sha,
         jobName: spec.aggregator,
         lane: spec.lane,
         pickupSeconds: O.none(),
         runAttempt: 1,
-        runCreatedAt: runJobs.run.created_at,
-        runId: runJobs.run.id,
+        runCreatedAt: run.created_at,
+        runId: run.id,
       }),
   });
 };
 
-const shardPickupRows = (runJobs: CiWorkflowWindowRunJobs): ReadonlyArray<CiLaneTimingPickupRow> =>
+const shardPickupRows = (
+  run: CiWorkflowWindowRun,
+  jobs: ReadonlyArray<CiWorkflowAttemptOneJob>
+): ReadonlyArray<CiLaneTimingPickupRow> =>
   A.flatMap(CI_EFFECTIVE_LANE_SPECS, (spec) =>
     pipe(
-      runJobs.jobs,
-      A.filter(
-        (job) => job.run_attempt === 1 && A.some(spec.shards, (shardName) => Str.equivalence(shardName, job.name))
-      ),
+      jobs,
+      A.filter((job) => A.some(spec.shards, (shardName) => Str.equivalence(shardName, job.name))),
       A.map((job) =>
         O.map(attemptOnePickupSeconds(job), (pickupSeconds) =>
           CiLaneTimingPickupRow.make({
             conclusion: actionConclusion(job),
-            event: runJobs.run.event,
-            headSha: runJobs.run.head_sha,
+            event: run.event,
+            headSha: run.head_sha,
             jobName: job.name,
             lane: spec.lane,
             pickupSeconds,
             runAttempt: 1,
-            runCreatedAt: runJobs.run.created_at,
-            runId: runJobs.run.id,
+            runCreatedAt: run.created_at,
+            runId: run.id,
           })
         )
       ),
@@ -1644,31 +1694,75 @@ const shardPickupRows = (runJobs: CiWorkflowWindowRunJobs): ReadonlyArray<CiLane
     )
   );
 
+const laterEffectiveRows = (
+  requiredContexts: HashSet.HashSet<string>,
+  runJobs: CiWorkflowWindowRunJobs
+): ReadonlyArray<CiLaneTimingAttributionRow> =>
+  pipe(
+    CI_EFFECTIVE_LANE_SPECS,
+    A.filter((spec) => HashSet.has(requiredContexts, spec.lane)),
+    A.flatMap((spec) => {
+      const componentNames = A.prepend(spec.shards, spec.aggregator);
+      const laterComponents = A.filter(
+        runJobs.jobs,
+        (job) =>
+          !isCiWorkflowAttemptOneJob(job) &&
+          A.some(componentNames, (componentName) => Str.equivalence(componentName, job.name))
+      );
+      const laterAttempts = A.dedupe(A.map(laterComponents, (job) => job.run_attempt));
+      return pipe(
+        laterAttempts,
+        A.map((runAttempt) =>
+          pipe(
+            A.findFirst(
+              laterComponents,
+              (job) => job.run_attempt === runAttempt && Str.equivalence(job.name, spec.aggregator)
+            ),
+            O.orElse(() => A.findFirst(laterComponents, (job) => job.run_attempt === runAttempt)),
+            O.map((job) => laterAttemptRowForJob(runJobs.run, spec.lane, job))
+          )
+        ),
+        A.getSomes
+      );
+    })
+  );
+
 const rowsForRun = (
   requiredContexts: HashSet.HashSet<string>,
   runJobs: CiWorkflowWindowRunJobs
 ): ReadonlyArray<CiLaneTimingWindowRow> => {
-  const effectiveLanes = HashSet.fromIterable(A.map(CI_EFFECTIVE_LANE_SPECS, (spec) => spec.lane));
+  const attemptOneJobs = A.filter(runJobs.jobs, isCiWorkflowAttemptOneJob);
   const ordinaryRows = pipe(
     runJobs.jobs,
     A.map((job) => {
-      const lane = normalizeRequiredLaneName(job.name);
+      const effectiveSpec = effectiveLaneSpecForJobName(job.name);
+      const lane = O.match(effectiveSpec, {
+        onNone: () => normalizeRequiredLaneName(job.name),
+        onSome: (spec) => spec.lane,
+      });
       if (!HashSet.has(requiredContexts, lane)) {
         return O.none<CiLaneTimingWindowRow>();
       }
-      if (job.run_attempt === 1 && HashSet.has(effectiveLanes, lane)) {
+      if (O.isSome(effectiveSpec)) {
         return O.none<CiLaneTimingWindowRow>();
       }
-      return O.some(durationRowForJob(runJobs.run, lane, job));
+      return O.some(
+        isCiWorkflowAttemptOneJob(job)
+          ? durationRowForAttemptOneJob(runJobs.run, lane, job)
+          : laterAttemptRowForJob(runJobs.run, lane, job)
+      );
     }),
     A.getSomes
   );
   const effectiveRows = pipe(
     CI_EFFECTIVE_LANE_SPECS,
     A.filter((spec) => HashSet.has(requiredContexts, spec.lane)),
-    A.map((spec) => effectiveDurationRow(runJobs, spec))
+    A.map((spec) => effectiveDurationRow(runJobs.run, attemptOneJobs, spec))
   );
-  return A.appendAll(A.appendAll(ordinaryRows, effectiveRows), shardPickupRows(runJobs));
+  return A.appendAll(
+    A.appendAll(A.appendAll(ordinaryRows, effectiveRows), laterEffectiveRows(requiredContexts, runJobs)),
+    shardPickupRows(runJobs.run, attemptOneJobs)
+  );
 };
 
 const isDurationWindowRow = S.is(CiLaneTimingDurationRow);
@@ -1823,7 +1917,7 @@ const collectCiLaneTimingWindowWithClient = Effect.fn("Ci.collectCiLaneTimingWin
     Stream.fromIterable(runs),
     Stream.mapEffect(
       Effect.fnUntraced(function* (run) {
-        const jobs = yield* collectCiWorkflowWindowJobPages(repoRoot, run.id, 1, A.empty());
+        const jobs = yield* collectCiWorkflowJobPages(fetchCiWorkflowWindowJobsPage, repoRoot, run.id, 100);
         return CiWorkflowWindowRunJobs.make({ jobs, run });
       }),
       { concurrency: CI_LANE_TIMING_JOB_FETCH_CONCURRENCY, unordered: false }
@@ -1910,9 +2004,13 @@ const renderSuccessfulDurationsMarkdown = (report: CiLaneTimingWindowReport): Re
 const renderAttemptOneAttributionMarkdown = (report: CiLaneTimingWindowReport): ReadonlyArray<string> => [
   "## Attempt-one failures and cancellations",
   "",
-  "| Required lane | Failures | Cancellations |",
-  "| --- | ---: | ---: |",
-  ...A.map(report.attribution, (stat) => `| ${stat.lane} | ${stat.failures} | ${stat.cancellations} |`),
+  "| Required lane | Failures | Cancellations | Invalid spans | Incomplete shard sets |",
+  "| --- | ---: | ---: | ---: | ---: |",
+  ...A.map(
+    report.attribution,
+    (stat) =>
+      `| ${stat.lane} | ${stat.failures} | ${stat.cancellations} | ${stat.invalidSpans} | ${stat.incompleteEffectiveSpans} |`
+  ),
 ];
 
 const renderLaterAttemptsMarkdown = (report: CiLaneTimingWindowReport): ReadonlyArray<string> => [

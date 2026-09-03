@@ -4,6 +4,7 @@ import {
   CiLaneTimingGithubClient,
   CiLaneTimingWindowOptions,
   CiWorkflowJob,
+  CiWorkflowJobsPage,
   CiWorkflowWindowRun,
   CiWorkflowWindowRunJobs,
   ciLaneTimingRow,
@@ -22,8 +23,9 @@ import {
 import { provideScopedLayer } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
-import { DateTime, Effect, Exit, Layer, Sink, Stream } from "effect";
+import { DateTime, Effect, Exit, Layer, pipe, Sink, Stream } from "effect";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import type { CiLaneTimingWindowReport } from "@beep/repo-cli/commands/Ci";
 
@@ -60,6 +62,7 @@ const job = (overrides: Partial<CiWorkflowJob> = {}) =>
   });
 
 const encoder = new TextEncoder();
+const encodeCiWorkflowJobsPage = S.encodeUnknownEffect(S.fromJsonString(CiWorkflowJobsPage));
 
 const stubHandle = (output: string) =>
   ChildProcessSpawner.makeHandle({
@@ -148,45 +151,84 @@ const windowOptions = (overrides: Partial<CiLaneTimingWindowOptions> = {}) =>
     ...overrides,
   });
 
+const staticWindowGithubResponse =
+  (response: string) =>
+  (_endpoint: string): Effect.Effect<string> =>
+    Effect.succeed(response);
+
+const windowJobsPageNumber = (endpoint: string): number =>
+  pipe(
+    [3, 2],
+    A.findFirst((pageNumber) => Str.includes(`page=${pageNumber}`)(endpoint)),
+    O.getOrElse(() => 1)
+  );
+
+const windowJobsResponse = Effect.fn("TestCiLaneTimingGithubClient.windowJobsResponse")(function* (endpoint: string) {
+  const pageNumber = windowJobsPageNumber(endpoint);
+  const jobCount = pageNumber === 3 ? 1 : 100;
+  return yield* encodeCiWorkflowJobsPage(
+    CiWorkflowJobsPage.make({
+      jobs: A.makeBy(jobCount, (index) =>
+        job({
+          id: pageNumber * 1_000 + index,
+          name: `Non-required fixture ${pageNumber}-${index}`,
+          run_id: 102,
+        })
+      ),
+      total_count: 201,
+    })
+  ).pipe(Effect.orDie);
+});
+
+const windowGithubRoutes = [
+  {
+    matches: Str.includes("rules/branches/main"),
+    respond: staticWindowGithubResponse(RULESET_18_JSON),
+  },
+  { matches: Str.includes("/actions/runs/"), respond: windowJobsResponse },
+  {
+    matches: Str.includes("event=push"),
+    respond: staticWindowGithubResponse('{"total_count":0,"workflow_runs":[]}'),
+  },
+  {
+    matches: Str.includes("&page=1"),
+    respond: staticWindowGithubResponse(
+      '{"total_count":3,"workflow_runs":[{"created_at":"2026-09-03T23:59:59Z","event":"pull_request","head_sha":"before","id":101,"run_attempt":1}]}'
+    ),
+  },
+  {
+    matches: Str.includes("&page=2"),
+    respond: staticWindowGithubResponse(
+      '{"total_count":3,"workflow_runs":[{"created_at":"2026-09-04T00:00:00Z","event":"pull_request","head_sha":"included","id":102,"run_attempt":1}]}'
+    ),
+  },
+  {
+    matches: Str.includes("&page=3"),
+    respond: staticWindowGithubResponse(
+      '{"total_count":3,"workflow_runs":[{"created_at":"2026-09-11T00:00:00Z","event":"pull_request","head_sha":"until","id":103,"run_attempt":1}]}'
+    ),
+  },
+];
+
+const windowGithubResponse = Effect.fn("TestCiLaneTimingGithubClient.route")((endpoint: string) =>
+  pipe(
+    windowGithubRoutes,
+    A.findFirst((route) => route.matches(endpoint)),
+    O.match({
+      onNone: () => Effect.succeed('{"total_count":0,"workflow_runs":[]}'),
+      onSome: (route) => route.respond(endpoint),
+    })
+  )
+);
+
 const windowGithubLayer = (commands: Array<string>) =>
   Layer.succeed(
     CiLaneTimingGithubClient,
     CiLaneTimingGithubClient.of({
-      getJson: Effect.fn("TestCiLaneTimingGithubClient.getJson")((_repoRoot, endpoint) =>
-        Effect.sync(() => {
-          A.appendInPlace(commands, endpoint);
-          if (Str.includes("rules/branches/main")(endpoint)) {
-            return RULESET_18_JSON;
-          }
-          if (Str.includes("/actions/runs/")(endpoint)) {
-            const pageNumber = Str.includes("page=3")(endpoint) ? 3 : Str.includes("page=2")(endpoint) ? 2 : 1;
-            const jobCount = pageNumber === 3 ? 1 : 100;
-            return JSON.stringify({
-              jobs: A.makeBy(jobCount, (index) =>
-                job({
-                  id: pageNumber * 1_000 + index,
-                  name: `Non-required fixture ${pageNumber}-${index}`,
-                  run_id: 102,
-                })
-              ),
-              total_count: 201,
-            });
-          }
-          if (Str.includes("event=push")(endpoint)) {
-            return '{"total_count":0,"workflow_runs":[]}';
-          }
-          if (Str.includes("&page=1")(endpoint)) {
-            return '{"total_count":3,"workflow_runs":[{"created_at":"2026-09-03T23:59:59Z","event":"pull_request","head_sha":"before","id":101,"run_attempt":1}]}';
-          }
-          if (Str.includes("&page=2")(endpoint)) {
-            return '{"total_count":3,"workflow_runs":[{"created_at":"2026-09-04T00:00:00Z","event":"pull_request","head_sha":"included","id":102,"run_attempt":1}]}';
-          }
-          if (Str.includes("&page=3")(endpoint)) {
-            return '{"total_count":3,"workflow_runs":[{"created_at":"2026-09-11T00:00:00Z","event":"pull_request","head_sha":"until","id":103,"run_attempt":1}]}';
-          }
-          return '{"total_count":0,"workflow_runs":[]}';
-        })
-      ),
+      getJson: Effect.fn("TestCiLaneTimingGithubClient.getJson")(function* (_repoRoot, endpoint) {
+        A.appendInPlace(commands, endpoint);
+        return yield* windowGithubResponse(endpoint);
+      }),
     })
   );
 
@@ -398,6 +440,13 @@ describe("ci lane timing admission window", () => {
           job({ conclusion: "cancelled", id: 3, name: "Heavy / Doctest", run_id: run.id }),
           job({ id: 4, name: "Knip", run_attempt: 2, run_id: run.id }),
           job({
+            completed_at: "2026-09-04T00:00:00Z",
+            id: 11,
+            name: "Codegen Drift",
+            run_id: run.id,
+            started_at: "2026-09-04T00:00:10Z",
+          }),
+          job({
             completed_at: "2026-09-04T00:12:00Z",
             created_at: "2026-09-04T00:00:00Z",
             id: 5,
@@ -456,6 +505,7 @@ describe("ci lane timing admission window", () => {
       expect(attributionStat(report, "Test Unit").incompleteEffectiveSpans).toBe(1);
       expect(attributionStat(report, "Docgen").failures).toBe(1);
       expect(attributionStat(report, "Doctest").cancellations).toBe(1);
+      expect(attributionStat(report, "Codegen Drift").invalidSpans).toBe(1);
       expect(attributionStat(report, "Knip").laterAttempts).toBe(1);
       expect(attributionStat(report, "Knip").laterSuccesses).toBe(1);
       expect(report.pickup.n).toBe(4);
@@ -465,12 +515,84 @@ describe("ci lane timing admission window", () => {
       const markdown = renderCiLaneTimingWindowMarkdown(report);
       expect(markdown).toContain("| Required lane | n | PR | Push | p50 | p95 | Max | P3 state |");
       expect(markdown).toContain("| Lint | 1 | 1 | 0 | 10m00s | 10m00s | 10m00s | Pass |");
+      expect(markdown).toContain(
+        "| Required lane | Failures | Cancellations | Invalid spans | Incomplete shard sets |"
+      );
+      expect(markdown).toContain("| Codegen Drift | 0 | 0 | 1 | 0 |");
+      expect(markdown).toContain("| Test Unit | 0 | 0 | 0 | 1 |");
       expect(markdown).toContain("Queue tripwire: Breach — shard pickup p95 7m00s > 5m00s");
 
       const tsv = renderCiLaneTimingWindowTsv(report);
       expect(tsv).toContain("head-a");
       expect(tsv).toContain("pickup\tLint");
       expect(tsv).toContain("attribution\tTest Unit");
+    })
+  );
+
+  it.effect("keeps successful rerun components out of a failed attempt-one Lint population", () =>
+    Effect.gen(function* () {
+      const run = windowRun({ id: 150 });
+      const report = yield* buildCiLaneTimingWindowReport(REQUIRED_CONTEXTS, [
+        windowRunJobs(run, [
+          job({ conclusion: "failure", id: 151, name: "Lint (lint-a)", run_id: run.id }),
+          job({ id: 152, name: "Lint (lint-b)", run_id: run.id }),
+          job({ conclusion: "failure", id: 153, name: "Lint", run_id: run.id }),
+          job({ id: 154, name: "Lint (lint-a)", run_attempt: 2, run_id: run.id }),
+          job({ id: 155, name: "Lint", run_attempt: 2, run_id: run.id }),
+        ]),
+      ]);
+
+      expect(laneStat(report, "Lint").n).toBe(0);
+      expect(attributionStat(report, "Lint").failures).toBe(1);
+      expect(attributionStat(report, "Lint").laterAttempts).toBe(1);
+      expect(attributionStat(report, "Lint").laterSuccesses).toBe(1);
+      const lintPickups = A.filter(report.rows, (row) => row.population === "pickup" && row.lane === "Lint");
+      expect(A.map(lintPickups, (row) => row.jobName)).toStrictEqual(["Lint (lint-a)", "Lint (lint-b)"]);
+      expect(report.pickup.n).toBe(2);
+    })
+  );
+
+  it.effect("uses the green attempt-one Lint span when a later attempt is also present", () =>
+    Effect.gen(function* () {
+      const run = windowRun({ id: 175 });
+      const report = yield* buildCiLaneTimingWindowReport(REQUIRED_CONTEXTS, [
+        windowRunJobs(run, [
+          job({
+            completed_at: "2026-09-04T00:12:00Z",
+            created_at: "2026-09-04T00:00:00Z",
+            id: 176,
+            name: "Lint (lint-a)",
+            run_id: run.id,
+            started_at: "2026-09-04T00:02:00Z",
+          }),
+          job({
+            completed_at: "2026-09-04T00:11:00Z",
+            created_at: "2026-09-04T00:00:00Z",
+            id: 177,
+            name: "Lint (lint-b)",
+            run_id: run.id,
+            started_at: "2026-09-04T00:03:00Z",
+          }),
+          job({
+            completed_at: "2026-09-04T00:15:00Z",
+            created_at: "2026-09-04T00:00:00Z",
+            id: 178,
+            name: "Lint",
+            run_id: run.id,
+            started_at: "2026-09-04T00:12:00Z",
+          }),
+          job({ id: 179, name: "Lint (lint-a)", run_attempt: 2, run_id: run.id }),
+          job({ id: 180, name: "Lint (lint-b)", run_attempt: 2, run_id: run.id }),
+          job({ id: 181, name: "Lint", run_attempt: 2, run_id: run.id }),
+        ]),
+      ]);
+
+      expect(laneStat(report, "Lint").n).toBe(1);
+      expect(laneStat(report, "Lint").p95Seconds).toStrictEqual(O.some(780));
+      expect(attributionStat(report, "Lint").laterAttempts).toBe(1);
+      expect(attributionStat(report, "Lint").laterSuccesses).toBe(1);
+      const attemptTwoRows = A.filter(report.rows, (row) => row.runAttempt === 2);
+      expect(A.map(attemptTwoRows, (row) => row.population)).toStrictEqual(["attribution"]);
     })
   );
 
