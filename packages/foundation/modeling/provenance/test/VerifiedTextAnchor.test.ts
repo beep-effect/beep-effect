@@ -165,9 +165,21 @@ describe("@beep/provenance VerifiedTextAnchor", () => {
       );
       const counterfeitSource = Reflect.construct(verifiedSource.constructor, []);
       const counterfeitAnchor = Reflect.construct(verified.constructor, []);
+      const forgedInput = VerifyTextAnchorAgainstVerifiedSourceInput.make({
+        anchor: decodeTextAnchor({ endChar: 4, quote: "fact", startChar: 0 }),
+        verifiedSource,
+      });
 
       expect(S.is(VerifiedSourceText)(counterfeitSource)).toBe(false);
       expect(S.is(VerifiedTextAnchor)(counterfeitAnchor)).toBe(false);
+      expect(() => Reflect.get(counterfeitSource, "source")).toThrow();
+      expect(() => Reflect.get(counterfeitSource, "sourceText")).toThrow();
+      expect(() => Reflect.get(counterfeitAnchor, "anchor")).toThrow();
+      expect(() => Reflect.get(counterfeitAnchor, "source")).toThrow();
+      expect(() => Reflect.apply(toTextAnchorVerificationReceipt, undefined, [counterfeitAnchor])).toThrow();
+      expect(Reflect.set(forgedInput, "verifiedSource", counterfeitSource)).toBe(true);
+      const forgedInputFailure = yield* verifyTextAnchorAgainstVerifiedSource(forgedInput).pipe(Effect.flip);
+      expect(forgedInputFailure.reason).toBe("stale-source");
       expect(() => globalThis.Object.getOwnPropertyDescriptor(verifiedSource, "sourceText")).not.toThrow();
       expect(() => globalThis.Object.defineProperty(verified, "anchor", { value: verified.anchor })).toThrow();
       expect(() =>
