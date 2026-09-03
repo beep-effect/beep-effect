@@ -150,6 +150,10 @@ files, package source directories, transitive dependency `transit` hashes, the
 root `tsconfig.base.json`, and the CLI worker plus its synthetic tsconfig template.
 Package documentation is deliberately outside the owning package's direct
 input set, so a README-only edit does not change that package task hash.
+Every discovered package must expose the matching package script. The aggregate
+checks this before invoking Turbo and fails with the package name plus the exact
+`"package-test-typecheck": "beep-cli quality test-tsgo-package"` entry to add;
+it never treats a missing task as a successful package result.
 
 The aggregate discovers package ownership exactly as the pre-Turbo lane did,
 then invokes Turbo with `--concurrency=1`, `--continue=always`, suppressed task

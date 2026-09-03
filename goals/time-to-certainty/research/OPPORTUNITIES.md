@@ -76,3 +76,11 @@ session/machine ids, quote only the minimal identifying error text.
   on stdin.
 - **Would have prevented it:** a detached job surface that puts every agent-submitted proof in its
   own scope with a durable id and journals its termination (SPEC B5/B6).
+
+## 2026-09-03 — Escaped commit-message newlines reached commitlint literally
+
+- **Doing:** committing the C3 review fixes with the required wrapped body and co-author trailer.
+- **Evidence:** commitlint rejected first a body containing literal `\\n` text and then two
+  unwrapped paragraphs as lines longer than 100 characters.
+- **Would have prevented it:** pass each short wrapped line as a separate `git commit -m` argument
+  instead of encoding newlines or relying on the commit tool to wrap paragraphs.

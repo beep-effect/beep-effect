@@ -453,7 +453,10 @@ type TsgoDiagnosticOutput = {
 const TestTsgoPackageResultVersion = LiteralKit(["test-tsgo-package-result/v1"]);
 
 class TestTsgoPackageManifest extends S.Class<TestTsgoPackageManifest>($I`TestTsgoPackageManifest`)(
-  { name: S.String },
+  {
+    name: S.String,
+    scripts: S.optionalKey(S.Record(S.String, S.String)),
+  },
   $I.annote("TestTsgoPackageManifest", {
     description: "Package identity needed to address one package-owned Turbo task.",
   })
@@ -471,18 +474,10 @@ class TestTsgoPackageResultArtifact extends S.Class<TestTsgoPackageResultArtifac
   })
 ) {}
 
-class TestTsgoTurboTaskExecution extends S.Class<TestTsgoTurboTaskExecution>($I`TestTsgoTurboTaskExecution`)(
-  { exitCode: S.optionalKey(S.Int) },
-  $I.annote("TestTsgoTurboTaskExecution", {
-    description: "Execution status recorded for one task in a Turbo run summary.",
-  })
-) {}
-
 class TestTsgoTurboTaskSummary extends S.Class<TestTsgoTurboTaskSummary>($I`TestTsgoTurboTaskSummary`)(
   {
     taskId: S.String,
     hash: S.String,
-    execution: S.optionalKey(TestTsgoTurboTaskExecution),
   },
   $I.annote("TestTsgoTurboTaskSummary", {
     description: "Task identity and hash recorded by the tsgo tests Turbo run.",
@@ -501,6 +496,7 @@ const decodeTestTsgoPackageResultArtifact = S.decodeUnknownEffect(S.fromJsonStri
 const decodeTestTsgoTurboRunSummary = S.decodeUnknownEffect(S.fromJsonString(TestTsgoTurboRunSummary));
 
 const testTsgoPackageTaskName = "package-test-typecheck";
+const testTsgoPackageTaskScript = "beep-cli quality test-tsgo-package";
 const testTsgoPackageResultRelativePath = ".turbo/package-test-typecheck-result.json";
 
 const commandText = formatCommandLine;
@@ -1309,6 +1305,7 @@ type TestTsgoPackageGroup = {
   readonly packageDir: string;
   readonly tsconfigPath: string;
   readonly files: ReadonlyArray<string>;
+  readonly hasTaskScript: boolean;
 };
 
 type TestTsgoPackageResult = {
@@ -1422,6 +1419,7 @@ const collectTestTsgoPackageGroups = Effect.fn("QualityScriptCommands.collectTes
         packageDir,
         tsconfigPath,
         files,
+        hasTaskScript: R.has(packageManifest.scripts ?? {}, testTsgoPackageTaskName),
       } satisfies TestTsgoPackageGroup;
     }),
     { concurrency: 1 }
@@ -1615,9 +1613,9 @@ const readTestTsgoTurboResults = Effect.fn("QualityScriptCommands.readTestTsgoTu
       const taskId = `${group.packageName}#${testTsgoPackageTaskName}`;
       const task = HM.get(tasksById, taskId);
 
-      if (O.isNone(task) || !Str.isNonEmpty(task.value.hash) || task.value.execution?.exitCode !== 0) {
+      if (O.isNone(task) || !Str.isNonEmpty(task.value.hash)) {
         return yield* QualityScriptCommandError.make({
-          message: `${summaryPath} has no successful hashed task for ${taskId}.`,
+          message: `${summaryPath} has no hashed task for ${taskId}.`,
           exitCode: 1,
         });
       }
@@ -1693,6 +1691,47 @@ export const collectEffectTsgoDiagnosticLines: (results: ReadonlyArray<TsgoDiagn
       )
     )
   );
+
+type TestTsgoTaskOwner = {
+  readonly packageName: string;
+  readonly hasTaskScript: boolean;
+};
+
+/**
+ * Build the actionable preflight failure for discovered packages without the Turbo worker script.
+ *
+ * **Example** (Report a missing package task)
+ *
+ * ```ts
+ * import { missingTestTsgoTaskMessageForTesting } from "@beep/repo-cli/commands/Quality/Quality.command"
+ *
+ * const message = missingTestTsgoTaskMessageForTesting([
+ *   { packageName: "@beep/example", hasTaskScript: false }
+ * ])
+ * ```
+ *
+ * @param groups - Discovered package owners and whether their manifests expose the task script.
+ * @returns The preflight failure message, or `None` when every package can run the Turbo worker.
+ * @category testing
+ * @since 0.0.0
+ */
+export const missingTestTsgoTaskMessageForTesting = (groups: ReadonlyArray<TestTsgoTaskOwner>): O.Option<string> => {
+  const missingPackageNames = pipe(
+    groups,
+    A.filter((group) => !group.hasTaskScript),
+    A.map((group) => group.packageName),
+    A.sort(Order.String)
+  );
+
+  return A.isReadonlyArrayEmpty(missingPackageNames)
+    ? O.none()
+    : O.some(
+        `[check:tsgo:tests] missing required "${testTsgoPackageTaskName}" package script for ${A.join(
+          missingPackageNames,
+          ", "
+        )}. Add "${testTsgoPackageTaskName}": "${testTsgoPackageTaskScript}" to each named package.json.`
+      );
+};
 
 const extractEffectTsgoDiagnosticsTableFragment = (readme: string): O.Option<string> => {
   const tableStart = readme.indexOf(effectTsgoDiagnosticsTableStartMarker);
@@ -2428,6 +2467,14 @@ export const runTestTsgoChecks = Effect.fn("QualityScriptCommands.runTestTsgoChe
   const tempDir = path.join(repoRoot, "node_modules", ".tmp", "tsgo-test-checks");
   const normalizedExtraArgs = normalizeExtraArgs(extraArgs);
   const packageGroups = yield* collectTestTsgoPackageGroups(repoRoot, discoveredFiles);
+  const missingTaskMessage = missingTestTsgoTaskMessageForTesting(packageGroups);
+
+  if (O.isSome(missingTaskMessage)) {
+    return yield* QualityScriptCommandError.make({
+      message: missingTaskMessage.value,
+      exitCode: 1,
+    });
+  }
 
   yield* Console.log(
     `[check:tsgo:tests] checking ${A.length(discoveredFiles)} file(s) across ${A.length(packageGroups)} package(s)`
