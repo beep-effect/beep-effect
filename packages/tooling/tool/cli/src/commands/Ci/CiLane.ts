@@ -819,7 +819,8 @@ export class CiLanePartitionProof extends S.Class<CiLanePartitionProof>($I`CiLan
  *   "lint-a",
  *   ["@beep/repo-cli"],
  *   ["@beep/repo-cli"],
- *   ["@beep/repo-cli"]
+ *   ["@beep/repo-cli"],
+ *   false
  * )
  * console.log(proof)
  * ```
@@ -829,6 +830,7 @@ export class CiLanePartitionProof extends S.Class<CiLanePartitionProof>($I`CiLan
  * @param workspacePackageNames - Every package currently in the workspace.
  * @param taskPackageNames - Every current non-labs workspace package with the lane task.
  * @param selectedTaskPackageNames - Executable packages selected by Turbo's shaped dry run.
+ * @param affected - Whether Turbo may select only packages affected relative to the base.
  * @param table - Schema-backed table to validate; injectable for focused failure tests.
  * @returns A typed effect containing the requested partition intersection.
  * @category validation
@@ -840,8 +842,20 @@ export const proveCiLanePartition = Effect.fn("CiLane.proveCiLanePartition")(fun
   workspacePackageNames: ReadonlyArray<string>,
   taskPackageNames: ReadonlyArray<string>,
   selectedTaskPackageNames: ReadonlyArray<string>,
+  affected: boolean,
   table: ReadonlyArray<CiLanePartition> = CI_LANE_PARTITIONS
 ): Effect.fn.Return<CiLanePartitionProof, CiLanePartitionError> {
+  const lanePartitions = A.filter(table, (candidate) => candidate.lane === laneId);
+  const duplicatePartition = firstDuplicate(A.map(lanePartitions, (candidate) => candidate.id));
+  if (O.isSome(duplicatePartition)) {
+    return yield* ciLanePartitionError(
+      "duplicate-partition",
+      laneId,
+      `Partition id ${duplicatePartition.value} appears more than once in the ${laneId} table.`,
+      partitionId
+    );
+  }
+
   const definition = yield* O.match(
     A.findFirst(table, (candidate) => candidate.id === partitionId),
     {
@@ -865,7 +879,6 @@ export const proveCiLanePartition = Effect.fn("CiLane.proveCiLanePartition")(fun
     );
   }
 
-  const lanePartitions = A.filter(table, (candidate) => candidate.lane === laneId);
   const assignedPackages = A.flatMap(lanePartitions, (candidate) => candidate.packages);
   const duplicate = firstDuplicate(assignedPackages);
   if (O.isSome(duplicate)) {
@@ -910,6 +923,7 @@ export const proveCiLanePartition = Effect.fn("CiLane.proveCiLanePartition")(fun
     );
   }
 
+  const selectedPackages = HashSet.fromIterable(selectedTaskPackageNames);
   const unknownSelectedPackage = A.findFirst(
     selectedTaskPackageNames,
     (name) => !HashSet.has(assignedPackageSet, name)
@@ -923,7 +937,18 @@ export const proveCiLanePartition = Effect.fn("CiLane.proveCiLanePartition")(fun
     );
   }
 
-  const selectedPackages = HashSet.fromIterable(selectedTaskPackageNames);
+  const missingSelectedPackages = affected
+    ? A.empty<string>()
+    : A.filter(taskPackageNames, (name) => !HashSet.has(selectedPackages, name));
+  if (A.isReadonlyArrayNonEmpty(missingSelectedPackages)) {
+    return yield* ciLanePartitionError(
+      "incomplete-selection",
+      laneId,
+      `Turbo's unscoped ${laneId} dry run omitted executable packages: ${A.join(missingSelectedPackages, ", ")}.`,
+      partitionId
+    );
+  }
+
   const packages = A.filter(definition.packages, (name) => HashSet.has(selectedPackages, name));
   return CiLanePartitionProof.make({
     laneId,
@@ -1994,7 +2019,8 @@ const runCiPartitionedLane = Effect.fn("CiLane.runCiPartitionedLane")(function* 
     partition,
     workspacePackageNames,
     taskPackageNames,
-    selectedTaskPackages
+    selectedTaskPackages,
+    options.affected
   );
   yield* Console.log(
     `[ci] ${laneId} partition union proved: ${taskPackageNames.length} executable tasks, ${proof.selectedTaskCount} selected, ${proof.partitionTaskCount} in ${partition}.`
@@ -2025,7 +2051,7 @@ const runCiPartitionedLane = Effect.fn("CiLane.runCiPartitionedLane")(function* 
  *
  * ```ts
  * import { CiLaneRunOptions, runCiLane } from "@beep/repo-cli/commands/Ci"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const program = runCiLane("knip", CiLaneRunOptions.make({
  *   affected: false,
@@ -2106,7 +2132,7 @@ const reportCiCommandError = (error: { readonly message: string }) =>
  * ```ts
  * import { ciLaneCommand } from "@beep/repo-cli/commands/Ci"
  * import { Command } from "effect/unstable/cli"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const run = Command.run(ciLaneCommand, { version: "0.0.0" })
  * console.log(Effect.isEffect(run)) // true
@@ -2494,7 +2520,7 @@ export const ciLocalLaneInputsForTesting: {
  *
  * ```ts
  * import { runCiLocal } from "@beep/repo-cli/commands/Ci"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * import * as O from "effect/Option"
  *
  * const program = runCiLocal({
@@ -2538,7 +2564,7 @@ export const runCiLocal = Effect.fn("CiLane.runCiLocal")(function* (
  * ```ts
  * import { ciLocalCommand } from "@beep/repo-cli/commands/Ci"
  * import { Command } from "effect/unstable/cli"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const run = Command.run(ciLocalCommand, { version: "0.0.0" })
  * console.log(Effect.isEffect(run)) // true

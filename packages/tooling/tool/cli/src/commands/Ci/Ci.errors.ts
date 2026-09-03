@@ -67,7 +67,9 @@ export class CiCommandError extends S.TaggedError<CiCommandError>($I`CiCommandEr
 export const CiLanePartitionErrorReason = LiteralKit([
   "invalid-assignment",
   "invalid-options",
+  "duplicate-partition",
   "duplicate-package",
+  "incomplete-selection",
   "missing-package",
   "stale-package",
   "unknown-selected-task",

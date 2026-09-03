@@ -813,3 +813,14 @@ evidence, what would have prevented it). Redact for the public repo.
 - **Would have prevented it:** intersect the branch's changed paths with the base delta
   through git (`git diff --name-only base...head` against a pathspec) or stream the
   listing, instead of capturing the whole base delta into a bounded buffer.
+
+## 2026-09-03 — hosted-log inspection assumed a writable user cache
+
+- **Doing:** attributing the failed hosted JSDoc Ratchet job on PR #982 after the
+  supplied log excerpt proved empty.
+- **Evidence:** `gh run view --job <job> --log` stopped before reading the completed
+  job with `creating cache entry: open ~/.cache/gh/run-log-<run>.zip: read-only file
+  system` in the managed workspace profile.
+- **Would have prevented it:** let `gh run view` honor a workspace-approved cache
+  directory automatically, or make the log command stream the archive without first
+  writing beneath the user cache.
