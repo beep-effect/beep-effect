@@ -7,6 +7,6 @@ SELECT ?proposal ?spec ?step ?idx ?req ?scope WHERE {
   ?ep ciops:hasCurrentProposal ?proposal .
   ?proposal a ciops:ScheduleProposal ; ciops:hasProjectionSpecification ?spec ; ciops:hasStep ?step .
   ?spec a ciops:AdmissionProjectionSpecification .
-  ?step ciops:stepIndex ?idx ; ciops:schedulesSeatRequest ?req ; ciops:hasScope ?scope .
+  ?step ciops:stepIndex ?idx ; ciops:schedulesSeatRequest ?req ; ciops:hasScopeTag ?scope .
   ?req a ciops:SeatRequest .
 } ORDER BY ?idx

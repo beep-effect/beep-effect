@@ -82,6 +82,7 @@ landedAt,property,CQ-016,data property
 hasAffectedOutcome,property,CQ-019,"computation -> typed outcome; closed (closed-world.yaml) so CQ-019 arm 4 can detect dangling provenance targets"
 scopedByComputation,property,CQ-019,"evidence/schedule -> the affected computation whose affected set it TRUSTS; an honest fail-open full-scope remap does not carry this edge (round-1 seat D definition)"
 hasScope,property,CQ-019,"evidence/schedule/workunit -> Scope member; DERIVED FROM THE SUBJECT'S WORKUNITS' SCOPES at ingestion, never from the trust edge (closed scope-provenance, final grill Q2); CQ-019 arm 3 also derives proposal scope through steps so omitting the materialized edge cannot launder (round-3 H-01)"
+hasScopeTag,property,CQ-020,"data property xsd:string; ScheduleStep -> deployed literal scope tag; v1 value is admission (ScheduleScope in apps/labs/ciops/src/projection/Schemas.ts); distinct from object property hasScope under the no-punning ruling; run 3 reconciles the provisional ciops-prov:hasScope spelling"
 queueWaitMs,property,CQ-007,"data property; seat-request-to-grant wait inside the episode decomposition (round-1 admission)"
 occurredAt,property,CQ-011,"data property xsd:dateTime; when an InvalidationEvent occurred (round-1 admission)"
 episodeStartedAt,property,CQ-012,"data property xsd:dateTime; episode window membership; one edge of episode identity (round-1 admission)"

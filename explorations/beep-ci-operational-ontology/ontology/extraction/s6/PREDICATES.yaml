@@ -10,7 +10,7 @@ scan:
   - does not expand variable predicates or property paths
   - does not inspect SERVICE clauses or runtime-generated query text
   - matches direct triple heads and semicolon predicate continuations only
-predicate_count: 85
+predicate_count: 86
 coverage_count: 25
 predicates:
 - predicate: ciops-prov:dependsOnWorkspace
@@ -380,6 +380,15 @@ predicates:
   closure: open
   used_by:
   - CQ-019
+  - tests/fixtures/seed.ttl
+- predicate: ciops:hasScopeTag
+  status: seed-only
+  term_ref: null
+  domain: unknown
+  range: unknown
+  closure: open
+  used_by:
+  - CQ-019
   - CQ-020
   - tests/fixtures/seed.ttl
 - predicate: ciops:hasStarvationException
@@ -632,6 +641,7 @@ predicates:
   range: unknown
   closure: open
   used_by:
+  - CQ-019
   - CQ-020
   - tests/fixtures/seed.ttl
 - predicate: ciops:schedulesWorkUnit
@@ -1105,13 +1115,15 @@ coverage:
   - predicate: ciops:requiresLane
     status: seed-only
 - cq: CQ-019
-  predicate_count: 6
+  predicate_count: 8
   ratified_count: 1
   full_predicate_set_ratified: false
   predicates:
   - ciops:hasAffectedOutcome
   - ciops:hasScope
+  - ciops:hasScopeTag
   - ciops:hasStep
+  - ciops:schedulesSeatRequest
   - ciops:schedulesWorkUnit
   - ciops:scopedByComputation
   - rdf:type
@@ -1120,7 +1132,11 @@ coverage:
     status: seed-only
   - predicate: ciops:hasScope
     status: seed-only
+  - predicate: ciops:hasScopeTag
+    status: seed-only
   - predicate: ciops:hasStep
+    status: seed-only
+  - predicate: ciops:schedulesSeatRequest
     status: seed-only
   - predicate: ciops:schedulesWorkUnit
     status: seed-only
@@ -1133,7 +1149,7 @@ coverage:
   predicates:
   - ciops:hasCurrentProposal
   - ciops:hasProjectionSpecification
-  - ciops:hasScope
+  - ciops:hasScopeTag
   - ciops:hasStep
   - ciops:schedulesSeatRequest
   - ciops:stepIndex
@@ -1143,7 +1159,7 @@ coverage:
     status: seed-only
   - predicate: ciops:hasProjectionSpecification
     status: seed-only
-  - predicate: ciops:hasScope
+  - predicate: ciops:hasScopeTag
     status: seed-only
   - predicate: ciops:hasStep
     status: seed-only

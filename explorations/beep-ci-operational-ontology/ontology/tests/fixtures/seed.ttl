@@ -101,7 +101,7 @@ ciops:grant-1 a ciops:SeatGrant ;
     ciops:hasBudget ciops:budget-1 .
 ciops:budget-1 ciops:softP95BudgetMs 900000 .
 
-# --- schedule proposal (CQ-020; CQ-019 arms 2-4 exercise its narrowed scope) ---
+# --- schedule proposal (CQ-020; CQ-019 arms 2-5 exercise its narrowed scope) ---
 ciops:aps-v1 a ciops:AdmissionProjectionSpecification .
 ciops:sp-2026-08-27-1443 a ciops:ScheduleProposal ;
     ciops:hasProjectionSpecification ciops:aps-v1 ;
@@ -111,7 +111,7 @@ ciops:sp-2026-08-27-1443 a ciops:ScheduleProposal ;
 ciops:st-1 a ciops:ScheduleStep ;
     ciops:stepIndex 1 ;
     ciops:schedulesSeatRequest ciops:req-lint-affected-from-main ;
-    ciops:hasScope "affected-from-main" .
+    ciops:hasScopeTag "admission" .
 ciops:req-lint-affected-from-main a ciops:SeatRequest .
 
 # --- attempts, executions, stopping (CQ-022, CQ-024, CQ-025) ---

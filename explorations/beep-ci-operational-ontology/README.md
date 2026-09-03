@@ -53,9 +53,13 @@ deferred with named run-3 evidence, unresolved-fraction waiver (56%) steward-rat
 The run report is
 [`work-run2/impl-report.md`](./ontology/extraction/s4/beep-ci-ops/work-run2/impl-report.md);
 sittings 1–3 are scribed in DECISIONS.md.
-**NEXT: auditor run 3 prerequisites, then S8 IRI scheme.** Run 3's queue: the CQ-020
-wording amendment (`WorkUnit` → `SeatRequest` ordering — post-run because the suite
-digest was manifest-pinned), the full ordering cluster (`ScheduleStep` + its four
+**THE CQ-020 AMENDMENT IS APPLIED** (2026-09-03, post-merge as sanctioned): the ordering
+question now asks for the SeatRequest sequence under its governing
+`AdmissionProjectionSpecification`, with the step's literal `hasScopeTag` (a distinct
+data property — the no-punning ruling keeps `hasScope` an object property), and the S6
+predicate registry regenerated to track it.
+**NEXT: auditor run 3 prerequisites, then S8 IRI scheme.** Run 3's queue: the full
+ordering cluster (`ScheduleStep` + its four
 relations ratify together), the deferred identity-provenance corpora (evidence/result
 issuance-custody lineage, plan-identity contract, priority-class registry lineage),
 and the grant-contention + checkout-identity captures (sitting 2). Prior chain:
@@ -128,6 +132,21 @@ graduation. Full plan with locked decisions: [`DECISIONS.md`](./DECISIONS.md).
 
 ## Trail
 
+- 2026-09-03 (nineteenth stint): CQ-020 AMENDMENT APPLIED (PR #963). The
+  steward-sanctioned post-run-2 amendment landed once the pinned run merged:
+  SeatRequest ordering (`schedulesSeatRequest`), the required governing
+  `AdmissionProjectionSpecification`, and the step's literal scope on a NEW
+  data property `hasScopeTag` — the review wave caught that reusing `hasScope`
+  would pun one IRI as both object and data property (OWL 2 DL + the packet's
+  no-punning ruling), that the seed's scope literal had to be the deployed
+  `admission` value (fixture realism), and that CQ-019's closed
+  scope-provenance arms needed extending to the amended step shape with a new
+  must-fail fixture. Two generator drifts repaired en route: regen now emits
+  the #919 golden `legs` block itself, and the S6 predicate registry
+  regenerates through `build_predicates.py` (the `--s6` scan no longer
+  KeyErrors on unregistered predicates). Inherited finding logged: `--s5`
+  reads 43 blockers on main, pre-dating this branch. Stopped at: PR #963
+  babysit.
 - 2026-09-03 (eighteenth stint): AUDITOR RUN 2 COMPLETE — `orun-2026-09-03T02:46:18Z`,
   gate `ARTIFACTS VALID — GATE PASSED`. Launch grill locked nine rulings (no TS
   re-extraction, fresh fleet corpus, full docket, run-1 seats, validator v13 as-is,
