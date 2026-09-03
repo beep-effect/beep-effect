@@ -4,6 +4,19 @@ Record friction at the moment it happens (what you were doing, evidence, what wo
 prevented it). Public repo: redact secrets, replace absolute home paths with `~`, drop
 session/machine ids, quote only the minimal identifying error text.
 
+## 2026-09-03 — A chained review fix committed and pushed past a red test
+
+- **Doing:** closing a Greptile thread on the economics script by patching a validation branch,
+  running the script's unit tests and default replay, then committing and pushing in one shell
+  chain.
+- **Evidence:** the chain ran the tests and the replay for their output only; neither result gated
+  the commit, so a commit with one erroring test and a replay that had exited non-zero was pushed
+  to the public PR branch. A follow-up commit fixed the test; the replay had failed only because
+  the worktree was dirty from the previous regeneration.
+- **Would have prevented it:** gate every chained commit on the test and replay exit codes
+  (`&&` chains, never sequential lines), and regenerate outputs from a clean tree before the
+  validation that compares the worktree with HEAD.
+
 ## 2026-09-03 — Economics replay depended on private capture state
 
 - **Doing:** reviewing the measurement lane's clean-clone reproducibility before ratification.
