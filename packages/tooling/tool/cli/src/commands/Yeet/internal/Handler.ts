@@ -1608,7 +1608,7 @@ const makeYeetAttempt = Effect.fn("Yeet.makeAttempt")(function* (
   const startedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
   const resolvedHeadSha = yield* currentCommitSha(context);
   const diffFingerprint = yield* collectDiffFingerprint(context);
-  const ownerProcStart = O.getOrElse(yield* processStartIdentityForPid(process.pid), () => Str.empty);
+  const ownerProcStart = yield* processStartIdentityForPid(process.pid);
   return YeetAttemptStarted.make({
     schemaVersion: "yeet-attempt-journal/v1",
     _tag: "attempt-started",
@@ -1620,7 +1620,7 @@ const makeYeetAttempt = Effect.fn("Yeet.makeAttempt")(function* (
     mode: options.mode,
     startedAt,
     ownerPid: O.some(process.pid),
-    ownerProcStart: O.some(ownerProcStart),
+    ownerProcStart,
     resolvedHeadSha: O.some(resolvedHeadSha),
     diffFingerprint: O.some(diffFingerprint),
     proofTier: O.some(options.tier),
