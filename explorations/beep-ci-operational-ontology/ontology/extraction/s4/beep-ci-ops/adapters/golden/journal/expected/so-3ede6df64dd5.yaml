@@ -1,0 +1,29 @@
+id: "so:sha256:3ede6df64dd5b3ed57964b9c5db86bf7dd5c705e9159959923e5ea0c76aaf017"
+schema_version: 1
+repository:
+  commit: "0123456789abcdef0123456789abcdef01234567"
+  path: "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/journal/input/attempts/repo-a/attempt-a/attempts.properties"
+source_span:
+  start_line: 1
+  end_line: 6
+  content_sha256: "af31eae6fc8718c4b22a9c9c2b2cff99fedf82fea127215c99128e2bc9415f15"
+extractor:
+  id: "adapter-journal"
+  version: "1.0.0"
+  parser: "python-stdlib-properties"
+  script: "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal.py"
+symbol:
+  qualified_name: "attempt-journal"
+  lexical_name: "attempt-journal"
+  syntactic_kind: "properties_projection"
+observed_facts:
+  - predicate: "config_key_value"
+    object: "_tag=attempt-started"
+  - predicate: "config_key_value"
+    object: "attemptId=a-001"
+  - predicate: "config_key_value"
+    object: "mode=verify"
+  - predicate: "config_key_value"
+    object: "schemaVersion=golden-attempt-journal/v1"
+source_excerpt: "_tag=attempt-started"
+epistemic_status: "parser_derived"
