@@ -599,7 +599,7 @@ export const makeModelClass: {
         });
 
         if (!PgColumn.Spec.guards.custom(classified.column)) {
-          const expected = PgColumn.carrier(classified.column, field.meta.dimensions);
+          const expected = PgColumn.carrier(field.meta.dimensions)(classified.column);
           const actual = Derive.carrier(field.schema, field.meta.dimensions);
           if (actual.tag !== expected.tag || actual.dimensions !== expected.dimensions) {
             throw ModelInvariantError.make({
@@ -680,7 +680,7 @@ export const makeModelClass: {
           }
         }
         validateLiteralDefault(field, select, classified.column, key);
-        const resolvedColumn = PgColumn.resolveName(classified.column, key);
+        const resolvedColumn = PgColumn.resolveName(key)(classified.column);
         if (PgColumn.Spec.guards.enum(resolvedColumn)) {
           assertSqlName(resolvedColumn.name, "pg", "PostgreSQL enum name");
           resolvedColumn.values.forEach(assertPgEnumLabel);

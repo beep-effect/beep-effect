@@ -8,6 +8,7 @@ import { $RepoUtilsId } from "@beep/identity/packages";
 import { NonNegativeInt } from "@beep/schema";
 import { A, Str, thunkFalse } from "@beep/utils";
 import { Context, Effect, FileSystem, flow, Inspectable, Layer, MutableHashMap, Order, Path, pipe } from "effect";
+import { constant } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -1252,12 +1253,7 @@ export const createTSMorphService = Effect.fn("createTSMorphService")(function* 
                   : Inspectable.toStringUnknown(cause)
               }`,
             }),
-        }).pipe(
-          Effect.catchIf(
-            (error) => isMissingDirectoryError(error.message),
-            () => Effect.void
-          )
-        );
+        }).pipe(Effect.catchIf(isMissingDirectoryError, constant(Effect.void)));
       }
 
       if (!A.isReadonlyArrayEmpty(request.sourceFileGlobs)) {

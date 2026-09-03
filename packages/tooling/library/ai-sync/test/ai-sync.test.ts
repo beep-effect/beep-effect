@@ -12,6 +12,7 @@ import {
   AiSyncSourceUrl,
   AiSyncValidationResult,
   AiSyncVersionPin,
+  assertNoStrictDrift,
   ClaudeMcpJson,
   CodexConfig,
   checkGeneratedArtifacts,
@@ -41,6 +42,7 @@ import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
+import { HttpClient, HttpClientResponse } from "effect/unstable/http";
 import type { TUnsafe } from "@beep/types";
 import type { Layer } from "effect";
 
@@ -118,6 +120,21 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/ai-sync", (it) => {
     Effect.fn(function* () {
       const report = yield* checkGeneratedArtifacts();
       expect(report.findings).toEqual([]);
+    })
+  );
+
+  it.effect(
+    "reports strict upstream drift through the typed failure channel",
+    Effect.fn(function* () {
+      const client = HttpClient.make((request) =>
+        Effect.succeed(HttpClientResponse.fromWeb(request, new Response("synthetic upstream drift")))
+      );
+      const error = yield* assertNoStrictDrift().pipe(
+        Effect.provideService(HttpClient.HttpClient, client),
+        Effect.flip
+      );
+
+      expect(error.message).toContain(" -> ");
     })
   );
 

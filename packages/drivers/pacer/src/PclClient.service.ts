@@ -16,6 +16,7 @@
 import { $PacerId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
 import { Context, Duration, Effect, Layer, pipe, Redacted, Ref, Result, Schedule, Stream, Tuple } from "effect";
+import { constant } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -269,7 +270,7 @@ export class PclClient extends Context.Service<PclClient, PclClientShape>()($I`P
             }),
             Effect.filterOrFail(
               (info) => O.exists(info.status, isTerminalReportStatus),
-              () => PacerPclError.fromReason("server-error", { cause: "report polling timed out" })
+              constant(PacerPclError.fromReason("server-error", { cause: "report polling timed out" }))
             )
           );
 
