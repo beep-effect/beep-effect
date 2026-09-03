@@ -1,22 +1,31 @@
 import {
   attemptOnePickupSeconds,
+  buildCiLaneTimingWindowReport,
+  CiLaneTimingGithubClient,
+  CiLaneTimingWindowOptions,
   CiWorkflowJob,
+  CiWorkflowWindowRun,
+  CiWorkflowWindowRunJobs,
   ciLaneTimingRow,
   ciLaneTimingsReport,
   ciRunnerClassForLabels,
   ciTimestampSpanSeconds,
   collectCiLaneTimings,
+  collectCiLaneTimingWindow,
   decodeCiWorkflowJobsPage,
   renderCiLaneTimingsSummary,
   renderCiLaneTimingsTsv,
+  renderCiLaneTimingWindowMarkdown,
+  renderCiLaneTimingWindowTsv,
   withCiLanePeakRss,
 } from "@beep/repo-cli/commands/Ci";
 import { provideScopedLayer } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Exit, Layer, Sink, Stream } from "effect";
+import { DateTime, Effect, Exit, Layer, Sink, Stream } from "effect";
 import * as O from "effect/Option";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
+import type { CiLaneTimingWindowReport } from "@beep/repo-cli/commands/Ci";
 
 // The Actions jobs endpoint returns snake_case wire fields; these fixtures keep
 // them so the derivations are exercised on the shape they actually receive.
@@ -84,6 +93,102 @@ const laneTimingsSpawnerLayer = Layer.effect(
     })
   )
 );
+
+const REQUIRED_CONTEXTS = [
+  "Heavy / Check",
+  "Codegen Drift",
+  "Commitlint",
+  "Heavy / Coverage Regression",
+  "Heavy / Docgen",
+  "Heavy / Doctest",
+  "Knip",
+  "Lint",
+  "Heavy / Lint Policy",
+  "Nix Shell",
+  "Professional Desktop IPC Stdio",
+  "Repo Sanity",
+  "SAST",
+  "Secret Scanning",
+  "Security",
+  "Heavy / Test Integration",
+  "Test Unit",
+  "JSDoc Ratchet",
+];
+
+const RULESET_18_JSON =
+  '[{"ruleset_id":10240248,"type":"required_status_checks","parameters":{"required_status_checks":[{"context":"Heavy / Check"},{"context":"Codegen Drift"},{"context":"Commitlint"},{"context":"Heavy / Coverage Regression"},{"context":"Heavy / Docgen"},{"context":"Heavy / Doctest"},{"context":"Knip"},{"context":"Lint"},{"context":"Heavy / Lint Policy"},{"context":"Nix Shell"},{"context":"Professional Desktop IPC Stdio"},{"context":"Repo Sanity"},{"context":"SAST"},{"context":"Secret Scanning"},{"context":"Security"},{"context":"Heavy / Test Integration"},{"context":"Test Unit"},{"context":"JSDoc Ratchet"}]}}]';
+
+const windowRun = (overrides: Partial<CiWorkflowWindowRun> = {}) =>
+  CiWorkflowWindowRun.make({
+    created_at: DateTime.makeUnsafe("2026-09-04T00:00:00Z"),
+    event: "pull_request",
+    head_sha: "head-a",
+    id: 100,
+    run_attempt: 1,
+    ...overrides,
+  });
+
+const windowRunJobs = (run: CiWorkflowWindowRun, jobs: ReadonlyArray<CiWorkflowJob>) =>
+  CiWorkflowWindowRunJobs.make({ jobs, run });
+
+const laneStat = (report: CiLaneTimingWindowReport, lane: string) =>
+  O.getOrThrow(A.findFirst(report.laneStats, (stat) => stat.lane === lane));
+
+const attributionStat = (report: CiLaneTimingWindowReport, lane: string) =>
+  O.getOrThrow(A.findFirst(report.attribution, (stat) => stat.lane === lane));
+
+const windowOptions = (overrides: Partial<CiLaneTimingWindowOptions> = {}) =>
+  CiLaneTimingWindowOptions.make({
+    branch: O.none(),
+    event: "all",
+    headSha: O.none(),
+    since: DateTime.makeUnsafe("2026-09-04T00:00:00Z"),
+    until: DateTime.makeUnsafe("2026-09-11T00:00:00Z"),
+    workflow: "check.yml",
+    ...overrides,
+  });
+
+const windowGithubLayer = (commands: Array<string>) =>
+  Layer.succeed(
+    CiLaneTimingGithubClient,
+    CiLaneTimingGithubClient.of({
+      getJson: Effect.fn("TestCiLaneTimingGithubClient.getJson")((_repoRoot, endpoint) =>
+        Effect.sync(() => {
+          A.appendInPlace(commands, endpoint);
+          if (Str.includes("rules/branches/main")(endpoint)) {
+            return RULESET_18_JSON;
+          }
+          if (Str.includes("/actions/runs/")(endpoint)) {
+            const pageNumber = Str.includes("page=3")(endpoint) ? 3 : Str.includes("page=2")(endpoint) ? 2 : 1;
+            const jobCount = pageNumber === 3 ? 1 : 100;
+            return JSON.stringify({
+              jobs: A.makeBy(jobCount, (index) =>
+                job({
+                  id: pageNumber * 1_000 + index,
+                  name: `Non-required fixture ${pageNumber}-${index}`,
+                  run_id: 102,
+                })
+              ),
+              total_count: 201,
+            });
+          }
+          if (Str.includes("event=push")(endpoint)) {
+            return '{"total_count":0,"workflow_runs":[]}';
+          }
+          if (Str.includes("&page=1")(endpoint)) {
+            return '{"total_count":3,"workflow_runs":[{"created_at":"2026-09-03T23:59:59Z","event":"pull_request","head_sha":"before","id":101,"run_attempt":1}]}';
+          }
+          if (Str.includes("&page=2")(endpoint)) {
+            return '{"total_count":3,"workflow_runs":[{"created_at":"2026-09-04T00:00:00Z","event":"pull_request","head_sha":"included","id":102,"run_attempt":1}]}';
+          }
+          if (Str.includes("&page=3")(endpoint)) {
+            return '{"total_count":3,"workflow_runs":[{"created_at":"2026-09-11T00:00:00Z","event":"pull_request","head_sha":"until","id":103,"run_attempt":1}]}';
+          }
+          return '{"total_count":0,"workflow_runs":[]}';
+        })
+      ),
+    })
+  );
 
 describe("ci lane timings attempt filter", () => {
   it.effect("collects every page of all-attempt jobs", () =>
@@ -272,5 +377,206 @@ describe("ci lane timings derivations", () => {
       O.some(25_000_000_000)
     );
     expect(withCiLanePeakRss(rows, { Coverage: 1 })[0]?.peakRssBytes).toStrictEqual(O.none());
+  });
+});
+
+describe("ci lane timing admission window", () => {
+  it.effect("keeps effective spans, pickup, and excluded outcomes in separate schema populations", () =>
+    Effect.gen(function* () {
+      const run = windowRun();
+      const report = yield* buildCiLaneTimingWindowReport(REQUIRED_CONTEXTS, [
+        windowRunJobs(run, [
+          job({
+            completed_at: "2026-09-04T00:00:10Z",
+            created_at: "2026-09-04T00:00:00Z",
+            id: 1,
+            name: "Heavy / Check",
+            run_id: run.id,
+            started_at: "2026-09-04T00:00:00Z",
+          }),
+          job({ conclusion: "failure", id: 2, name: "Heavy / Docgen", run_id: run.id }),
+          job({ conclusion: "cancelled", id: 3, name: "Heavy / Doctest", run_id: run.id }),
+          job({ id: 4, name: "Knip", run_attempt: 2, run_id: run.id }),
+          job({
+            completed_at: "2026-09-04T00:12:00Z",
+            created_at: "2026-09-04T00:00:00Z",
+            id: 5,
+            name: "Lint (lint-a)",
+            run_id: run.id,
+            started_at: "2026-09-04T00:06:00Z",
+          }),
+          job({
+            completed_at: "2026-09-04T00:11:00Z",
+            created_at: "2026-09-04T00:00:00Z",
+            id: 6,
+            name: "Lint (lint-b)",
+            run_id: run.id,
+            started_at: "2026-09-04T00:07:00Z",
+          }),
+          job({
+            completed_at: "2026-09-04T00:16:00Z",
+            created_at: "2026-09-04T00:00:00Z",
+            id: 7,
+            name: "Lint",
+            run_id: run.id,
+            started_at: "2026-09-04T00:12:00Z",
+          }),
+          job({
+            completed_at: "2026-09-04T00:09:00Z",
+            created_at: "2026-09-04T00:00:00Z",
+            id: 8,
+            name: "Test Unit (repo-cli)",
+            run_id: run.id,
+            started_at: "2026-09-04T00:01:00Z",
+          }),
+          job({
+            completed_at: "2026-09-04T00:10:00Z",
+            created_at: "2026-09-04T00:00:00Z",
+            id: 9,
+            name: "Test Unit (unit-a)",
+            run_id: run.id,
+            started_at: "2026-09-04T00:02:00Z",
+          }),
+          job({
+            completed_at: "2026-09-04T00:13:00Z",
+            id: 10,
+            name: "Test Unit",
+            run_id: run.id,
+            started_at: "2026-09-04T00:11:00Z",
+          }),
+        ]),
+      ]);
+
+      expect(report.contextCount).toBe(18);
+      expect(laneStat(report, "Check").n).toBe(1);
+      expect(laneStat(report, "Check").p95Seconds).toStrictEqual(O.some(10));
+      expect(laneStat(report, "Lint").n).toBe(1);
+      expect(laneStat(report, "Lint").p95Seconds).toStrictEqual(O.some(600));
+      expect(laneStat(report, "Test Unit").n).toBe(0);
+      expect(attributionStat(report, "Test Unit").incompleteEffectiveSpans).toBe(1);
+      expect(attributionStat(report, "Docgen").failures).toBe(1);
+      expect(attributionStat(report, "Doctest").cancellations).toBe(1);
+      expect(attributionStat(report, "Knip").laterAttempts).toBe(1);
+      expect(attributionStat(report, "Knip").laterSuccesses).toBe(1);
+      expect(report.pickup.n).toBe(4);
+      expect(report.pickup.p95Seconds).toStrictEqual(O.some(420));
+      expect(report.pickup.breached).toBe(true);
+
+      const markdown = renderCiLaneTimingWindowMarkdown(report);
+      expect(markdown).toContain("| Required lane | n | PR | Push | p50 | p95 | Max | P3 state |");
+      expect(markdown).toContain("| Lint | 1 | 1 | 0 | 10m00s | 10m00s | 10m00s | Pass |");
+      expect(markdown).toContain("Queue tripwire: Breach — shard pickup p95 7m00s > 5m00s");
+
+      const tsv = renderCiLaneTimingWindowTsv(report);
+      expect(tsv).toContain("head-a");
+      expect(tsv).toContain("pickup\tLint");
+      expect(tsv).toContain("attribution\tTest Unit");
+    })
+  );
+
+  it.effect("admits an effective Test Unit span only when every shard and the aggregator are green", () =>
+    Effect.gen(function* () {
+      const run = windowRun({ id: 200 });
+      const report = yield* buildCiLaneTimingWindowReport(REQUIRED_CONTEXTS, [
+        windowRunJobs(run, [
+          job({
+            completed_at: "2026-09-04T00:12:00Z",
+            id: 21,
+            name: "Test Unit (repo-cli)",
+            run_id: run.id,
+            started_at: "2026-09-04T00:02:00Z",
+          }),
+          job({
+            completed_at: "2026-09-04T00:10:00Z",
+            id: 22,
+            name: "Test Unit (unit-a)",
+            run_id: run.id,
+            started_at: "2026-09-04T00:03:00Z",
+          }),
+          job({
+            completed_at: "2026-09-04T00:11:00Z",
+            id: 23,
+            name: "Test Unit (unit-b)",
+            run_id: run.id,
+            started_at: "2026-09-04T00:04:00Z",
+          }),
+          job({
+            completed_at: "2026-09-04T00:15:00Z",
+            id: 24,
+            name: "Test Unit",
+            run_id: run.id,
+            started_at: "2026-09-04T00:01:00Z",
+          }),
+        ]),
+      ]);
+
+      expect(laneStat(report, "Test Unit").n).toBe(1);
+      expect(laneStat(report, "Test Unit").p95Seconds).toStrictEqual(O.some(780));
+      expect(laneStat(report, "Test Unit").state).toBe("Pass");
+    })
+  );
+
+  it.effect("uses nearest rank for small p50 and p95 populations", () =>
+    Effect.gen(function* () {
+      const durations = [10, 20, 30];
+      const runs = A.map(durations, (duration, index) => {
+        const run = windowRun({ id: 300 + index });
+        return windowRunJobs(run, [
+          job({
+            completed_at: `2026-09-04T00:00:${Str.padStart(2, "0")(`${duration}`)}Z`,
+            created_at: "2026-09-04T00:00:00Z",
+            id: 30 + index,
+            name: "Heavy / Check",
+            run_id: run.id,
+            started_at: "2026-09-04T00:00:00Z",
+          }),
+        ]);
+      });
+      const report = yield* buildCiLaneTimingWindowReport(REQUIRED_CONTEXTS, runs);
+
+      expect(laneStat(report, "Check").p50Seconds).toStrictEqual(O.some(20));
+      expect(laneStat(report, "Check").p95Seconds).toStrictEqual(O.some(30));
+      expect(laneStat(report, "Check").maxSeconds).toStrictEqual(O.some(30));
+    })
+  );
+
+  it.effect("fails closed when ruleset 10240248 does not normalize to exactly 18 contexts", () =>
+    Effect.gen(function* () {
+      const exit = yield* Effect.exit(buildCiLaneTimingWindowReport(A.append(REQUIRED_CONTEXTS, "Extra Context"), []));
+
+      expect(Exit.isFailure(exit)).toBe(true);
+      expect(Exit.isFailure(exit) ? exit.cause.toString() : "").toContain("exactly 18 required contexts; observed 19");
+    })
+  );
+
+  it.effect("paginates three run pages and reapplies the half-open boundary before fetching jobs", () => {
+    const commands = A.empty<string>();
+    return Effect.gen(function* () {
+      const report = yield* collectCiLaneTimingWindow(".", windowOptions({ headSha: O.some("included") }));
+
+      expect(report.runCount).toBe(1);
+      const runPageCommands = A.filter(commands, (command) => Str.includes("/actions/workflows/")(command));
+      expect(runPageCommands).toHaveLength(4);
+      expect(
+        A.some(
+          runPageCommands,
+          (command) => Str.includes("event=pull_request")(command) && Str.includes("page=3")(command)
+        )
+      ).toBe(true);
+      expect(
+        A.some(
+          runPageCommands,
+          (command) => Str.includes("event=push")(command) && Str.includes("branch=main")(command)
+        )
+      ).toBe(true);
+      expect(
+        A.some(commands, (command) => Str.includes("/actions/runs/102/jobs?filter=all&per_page=100")(command))
+      ).toBe(true);
+      const jobPageCommands = A.filter(commands, (command) => Str.includes("/actions/runs/102/jobs")(command));
+      expect(jobPageCommands).toHaveLength(3);
+      expect(A.some(jobPageCommands, (command) => Str.includes("page=3")(command))).toBe(true);
+      expect(A.some(commands, (command) => Str.includes("/actions/runs/101/jobs")(command))).toBe(false);
+      expect(A.some(commands, (command) => Str.includes("/actions/runs/103/jobs")(command))).toBe(false);
+    }).pipe(provideScopedLayer(windowGithubLayer(commands)));
   });
 });
