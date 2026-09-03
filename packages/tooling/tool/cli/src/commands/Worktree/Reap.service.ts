@@ -23,15 +23,15 @@ import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { runRepoCommandCapture } from "../../internal/repo-run/index.ts";
+import { classifyFleetLiveness } from "./Fleet.service.ts";
 import { WorktreeReapCandidate, WorktreeReapClass, WorktreeReapReport } from "./Reap.schemas.ts";
 import { WorktreeCommandError } from "./Worktree.errors.ts";
-import { parseWorktreePorcelain, WorktreeRemovalRequest } from "./Worktree.schemas.ts";
+import { FleetLivenessReadings, parseWorktreePorcelain, WorktreeRemovalRequest } from "./Worktree.schemas.ts";
 import { runWorktreeGitCapture, WorktreeRemovalService } from "./Worktree.service.ts";
 import type { DomainError } from "@beep/repo-utils";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { WorktreeReapSkipReason } from "./Reap.schemas.ts";
-import type { WorktreeListEntry } from "./Worktree.schemas.ts";
-import type { WorktreeRemovalServiceShape } from "./Worktree.service.ts";
+import type { FleetLivenessVerdict, FleetProbeReading, WorktreeListEntry } from "./Worktree.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Worktree/Reap.service");
 
@@ -47,12 +47,27 @@ type ReapCommandRunner = (
   cwd: string
 ) => Effect.Effect<ProbeCapture, DomainError, ChildProcessSpawner.ChildProcessSpawner>;
 
+type ReapLivenessProber = (
+  targetPath: string,
+  idleHours: O.Option<number>
+) => Effect.Effect<FleetLivenessVerdict, never, FileSystem.FileSystem>;
+
 type WorktreeReapRunOptions = {
   readonly apply?: boolean;
   readonly idleHours?: number;
   readonly nowMillis?: number;
+  readonly probeLiveness?: ReapLivenessProber;
   readonly runCommand?: ReapCommandRunner;
   readonly startFrom?: string;
+};
+
+type AssessContext = {
+  readonly fs: FileSystem.FileSystem;
+  readonly idleThreshold: Duration.Duration;
+  readonly nowMillis: number;
+  readonly path: Path.Path;
+  readonly prober: ReapLivenessProber;
+  readonly runner: ReapCommandRunner;
 };
 
 type PrClassification = {
@@ -65,6 +80,20 @@ type IdleReading = {
   readonly hours: O.Option<number>;
   readonly failed: boolean;
 };
+
+type ProbeSkip = {
+  readonly reason: WorktreeReapSkipReason;
+  readonly warning: string;
+};
+
+type EvidenceProbe =
+  | { readonly _tag: "skipped"; readonly skip: ProbeSkip; readonly pr: O.Option<PrClassification> }
+  | {
+      readonly _tag: "probed";
+      readonly pr: PrClassification;
+      readonly dirty: boolean;
+      readonly idleHours: O.Option<number>;
+    };
 
 type CandidateAssessment = {
   readonly candidate: WorktreeReapCandidate;
@@ -185,6 +214,85 @@ const measureBytes = Effect.fn("WorktreeReap.measureBytes")(function* (
   );
 });
 
+const PID_DIRECTORY_NAME = /^[0-9]+$/;
+
+const readPidCwd = Effect.fnUntraced(function* (
+  pid: string
+): Effect.fn.Return<O.Option<string>, never, FileSystem.FileSystem> {
+  const fs = yield* FileSystem.FileSystem;
+  return yield* fs.readLink(`/proc/${pid}/cwd`).pipe(Effect.option);
+});
+
+const scanProcessCwdMatches = Effect.fnUntraced(function* (
+  targetPath: string
+): Effect.fn.Return<O.Option<number>, never, FileSystem.FileSystem> {
+  const fs = yield* FileSystem.FileSystem;
+  const names = yield* fs.readDirectory("/proc").pipe(Effect.option);
+  if (O.isNone(names)) {
+    return O.none();
+  }
+  const pids = A.filter(names.value, (name) => PID_DIRECTORY_NAME.test(name));
+  const cwds = A.getSomes(yield* Effect.forEach(pids, readPidCwd));
+  return O.some(
+    A.length(A.filter(cwds, (cwd) => Str.Equivalence(cwd, targetPath) || Str.startsWith(`${targetPath}/`)(cwd)))
+  );
+});
+
+/**
+ * Classify one directory's liveness from a same-uid process-cwd scan plus its idle age.
+ *
+ * **Details**
+ *
+ * Unreadable `/proc` entries (other users' daemons) do NOT mark the scan
+ * incomplete, unlike the fleet-status probes — agent processes run as this
+ * user, and a reading that goes unknown whenever root owns a process would
+ * make retirement unreachable. Only a failure to list `/proc` at all
+ * withholds the process evidence. Verdicts follow `classifyFleetLiveness`:
+ * any positive evidence is live, complete negatives are dormant, anything
+ * else is unknown.
+ *
+ * **Example** (Probe the invoking process's own directory)
+ *
+ * ```ts
+ * import { probeWorktreeLiveness } from "@beep/repo-cli/commands/Worktree"
+ * import { Effect } from "effect"
+ * import * as O from "effect/Option"
+ *
+ * console.log(Effect.isEffect(probeWorktreeLiveness(process.cwd(), O.some(400)))) // true
+ * ```
+ *
+ * @param targetPath - Absolute directory whose liveness is being classified.
+ * @param idleHours - Already-measured idle age used as the worktree-mtime reading.
+ * @returns The classified liveness verdict for the directory.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const probeWorktreeLiveness: ReapLivenessProber = Effect.fnUntraced(function* (
+  targetPath: string,
+  idleHours: O.Option<number>
+): Effect.fn.Return<FleetLivenessVerdict, never, FileSystem.FileSystem> {
+  const matches = yield* scanProcessCwdMatches(targetPath);
+  return classifyFleetLiveness(
+    FleetLivenessReadings.make({
+      processMatches: O.getOrElse(matches, () => 0),
+      processScanComplete: O.isSome(matches),
+      sessionMatches: 0,
+      transcript: { _tag: "absent" },
+      worktreeMtime: O.match(idleHours, {
+        onNone: (): FleetProbeReading => ({ _tag: "failed" }),
+        onSome: (hours): FleetProbeReading => ({ _tag: "measured", ageSeconds: hours * 3_600 }),
+      }),
+    })
+  );
+});
+
+const livenessSkipReason = (verdict: FleetLivenessVerdict): O.Option<WorktreeReapSkipReason> =>
+  Match.value(verdict.status).pipe(
+    Match.when("dormant", () => O.none<WorktreeReapSkipReason>()),
+    Match.when("live", () => O.some<WorktreeReapSkipReason>("live-session")),
+    Match.orElse(() => O.some<WorktreeReapSkipReason>("liveness-unknown"))
+  );
+
 const classSkipReason = (reapClass: WorktreeReapClass): O.Option<WorktreeReapSkipReason> =>
   WorktreeReapClass.$match(reapClass, {
     "merged-pr": () => O.none<WorktreeReapSkipReason>(),
@@ -193,15 +301,86 @@ const classSkipReason = (reapClass: WorktreeReapClass): O.Option<WorktreeReapSki
     unknown: () => O.some<WorktreeReapSkipReason>("gh-probe-failed"),
   });
 
-const assessCandidate = Effect.fn("WorktreeReap.assessCandidate")(function* (
-  runner: ReapCommandRunner,
+const probeDirectory = Effect.fnUntraced(function* (
   fs: FileSystem.FileSystem,
-  path: Path.Path,
+  targetPath: string
+): Effect.fn.Return<O.Option<ProbeSkip>, never, never> {
+  const status = yield* Effect.result(fs.stat(targetPath));
+  if (Result.isFailure(status)) {
+    const reason: WorktreeReapSkipReason = Match.value(status.failure.reason._tag).pipe(
+      Match.when("NotFound", () => "missing-directory" as const),
+      Match.orElse(() => "filesystem-probe-failed" as const)
+    );
+    return O.some({ reason, warning: `${reason}: could not inspect ${targetPath}.` });
+  }
+  return status.success.type === "Directory"
+    ? O.none()
+    : O.some({ reason: "missing-directory" as const, warning: `missing-directory: ${targetPath} is not a directory.` });
+});
+
+const probeEvidence = Effect.fnUntraced(function* (
+  ctx: AssessContext,
   entry: WorktreeListEntry,
-  idleThreshold: Duration.Duration,
-  nowMillis: number,
+  branch: string
+): Effect.fn.Return<EvidenceProbe, never, ChildProcessSpawner.ChildProcessSpawner> {
+  const pr = yield* classifyPr(ctx.runner, entry.path, branch);
+  if (pr.failed) {
+    return {
+      _tag: "skipped",
+      skip: {
+        reason: "gh-probe-failed",
+        warning: `gh-probe-failed: could not classify pull requests for ${branch} at ${entry.path}.`,
+      },
+      pr: O.none(),
+    };
+  }
+  const status = yield* successfulOutput(
+    ctx.runner,
+    "git",
+    ["status", "--porcelain", "--untracked-files=all", "--ignore-submodules=none"],
+    entry.path
+  );
+  if (O.isNone(status)) {
+    return {
+      _tag: "skipped",
+      skip: {
+        reason: "git-probe-failed",
+        warning: `git-probe-failed: could not inspect worktree status at ${entry.path}.`,
+      },
+      pr: O.some(pr),
+    };
+  }
+  const idle = yield* readIdleHours(ctx.runner, ctx.fs, ctx.path, entry, ctx.nowMillis);
+  if (idle.failed) {
+    return {
+      _tag: "skipped",
+      skip: {
+        reason: "idle-probe-failed",
+        warning: `idle-probe-failed: could not establish commit and HEAD-file activity for ${entry.path}.`,
+      },
+      pr: O.some(pr),
+    };
+  }
+  return { _tag: "probed", pr, dirty: Str.isNonEmpty(Str.trim(status.value)), idleHours: idle.hours };
+});
+
+const eligibilitySkipReason = (
+  evidence: Extract<EvidenceProbe, { _tag: "probed" }>,
+  idleThreshold: Duration.Duration
+): O.Option<WorktreeReapSkipReason> =>
+  O.firstSomeOf([
+    evidence.dirty ? O.some<WorktreeReapSkipReason>("dirty-tree") : O.none(),
+    classSkipReason(evidence.pr.reapClass),
+    O.exists(evidence.idleHours, (hours) => hours < Duration.toHours(idleThreshold))
+      ? O.some<WorktreeReapSkipReason>("too-young")
+      : O.none(),
+  ]);
+
+const assessCandidate = Effect.fn("WorktreeReap.assessCandidate")(function* (
+  ctx: AssessContext,
+  entry: WorktreeListEntry,
   includeBytes: boolean
-): Effect.fn.Return<CandidateAssessment, never, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<CandidateAssessment, never, FileSystem.FileSystem | ChildProcessSpawner.ChildProcessSpawner> {
   const branch = O.fromNullishOr(entry.branch);
   const base = {
     path: entry.path,
@@ -212,163 +391,143 @@ const assessCandidate = Effect.fn("WorktreeReap.assessCandidate")(function* (
     bytes: O.none<number>(),
     retired: false,
   };
+  if (entry.locked) {
+    return { candidate: WorktreeReapCandidate.make({ ...base, skipReason: O.some("locked") }), warnings: A.empty() };
+  }
   if (O.isNone(branch)) {
     return {
       candidate: WorktreeReapCandidate.make({ ...base, skipReason: O.some("detached-head") }),
       warnings: A.empty(),
     };
   }
-
-  const pathStatus = yield* Effect.result(fs.stat(entry.path));
-  if (Result.isFailure(pathStatus)) {
-    const reason: WorktreeReapSkipReason = Match.value(pathStatus.failure.reason._tag).pipe(
-      Match.when("NotFound", () => "missing-directory" as const),
-      Match.orElse(() => "filesystem-probe-failed" as const)
-    );
+  const directorySkip = yield* probeDirectory(ctx.fs, entry.path);
+  if (O.isSome(directorySkip)) {
     return {
-      candidate: WorktreeReapCandidate.make({ ...base, skipReason: O.some(reason) }),
-      warnings: [`${reason}: could not inspect ${entry.path}.`],
+      candidate: WorktreeReapCandidate.make({ ...base, skipReason: O.some(directorySkip.value.reason) }),
+      warnings: [directorySkip.value.warning],
     };
   }
-  if (pathStatus.success.type !== "Directory") {
+  const evidence = yield* probeEvidence(ctx, entry, branch.value);
+  if (evidence._tag === "skipped") {
+    const prFields = O.match(evidence.pr, {
+      onNone: () => ({}),
+      onSome: (pr) => ({ reapClass: pr.reapClass, prNumber: pr.prNumber }),
+    });
     return {
-      candidate: WorktreeReapCandidate.make({ ...base, skipReason: O.some("missing-directory") }),
-      warnings: [`missing-directory: ${entry.path} is not a directory.`],
+      candidate: WorktreeReapCandidate.make({ ...base, ...prFields, skipReason: O.some(evidence.skip.reason) }),
+      warnings: [evidence.skip.warning],
     };
   }
-
-  const pr = yield* classifyPr(runner, entry.path, branch.value);
-  if (pr.failed) {
-    return {
-      candidate: WorktreeReapCandidate.make({ ...base, skipReason: O.some("gh-probe-failed") }),
-      warnings: [`gh-probe-failed: could not classify pull requests for ${branch.value} at ${entry.path}.`],
-    };
+  const enriched = {
+    ...base,
+    reapClass: evidence.pr.reapClass,
+    prNumber: evidence.pr.prNumber,
+    idleHours: evidence.idleHours,
+  };
+  const skipReason = eligibilitySkipReason(evidence, ctx.idleThreshold);
+  if (O.isSome(skipReason)) {
+    return { candidate: WorktreeReapCandidate.make({ ...enriched, skipReason }), warnings: A.empty() };
   }
-
-  const status = yield* successfulOutput(
-    runner,
-    "git",
-    ["status", "--porcelain", "--untracked-files=all", "--ignore-submodules=none"],
-    entry.path
-  );
-  if (O.isNone(status)) {
-    return {
-      candidate: WorktreeReapCandidate.make({
-        ...base,
-        reapClass: pr.reapClass,
-        prNumber: pr.prNumber,
-        skipReason: O.some("git-probe-failed"),
-      }),
-      warnings: [`git-probe-failed: could not inspect worktree status at ${entry.path}.`],
-    };
+  const liveness = livenessSkipReason(yield* ctx.prober(entry.path, evidence.idleHours));
+  if (O.isSome(liveness)) {
+    return { candidate: WorktreeReapCandidate.make({ ...enriched, skipReason: liveness }), warnings: A.empty() };
   }
-
-  const idle = yield* readIdleHours(runner, fs, path, entry, nowMillis);
-  if (idle.failed) {
-    return {
-      candidate: WorktreeReapCandidate.make({
-        ...base,
-        reapClass: pr.reapClass,
-        prNumber: pr.prNumber,
-        skipReason: O.some("idle-probe-failed"),
-      }),
-      warnings: [`idle-probe-failed: could not establish commit and HEAD-file activity for ${entry.path}.`],
-    };
+  if (!includeBytes) {
+    return { candidate: WorktreeReapCandidate.make({ ...enriched, skipReason: O.none() }), warnings: A.empty() };
   }
-
-  const dirty = Str.isNonEmpty(Str.trim(status.value));
-  const tooYoung = O.exists(idle.hours, (hours) => hours < Duration.toHours(idleThreshold));
-  const skipReason = O.firstSomeOf([
-    dirty ? O.some<WorktreeReapSkipReason>("dirty-tree") : O.none(),
-    classSkipReason(pr.reapClass),
-    tooYoung ? O.some<WorktreeReapSkipReason>("too-young") : O.none(),
-  ]);
-  if (O.isSome(skipReason) || !includeBytes) {
-    return {
-      candidate: WorktreeReapCandidate.make({
-        ...base,
-        reapClass: pr.reapClass,
-        prNumber: pr.prNumber,
-        idleHours: idle.hours,
-        skipReason,
-      }),
-      warnings: A.empty(),
-    };
-  }
-
-  const bytes = yield* measureBytes(runner, entry);
+  // Size is reporting-only evidence: a failed measurement must never block retirement.
+  const bytes = yield* measureBytes(ctx.runner, entry);
   return O.match(bytes, {
     onNone: (): CandidateAssessment => ({
-      candidate: WorktreeReapCandidate.make({
-        ...base,
-        reapClass: pr.reapClass,
-        prNumber: pr.prNumber,
-        idleHours: idle.hours,
-        skipReason: O.some("size-probe-failed"),
-      }),
-      warnings: [`size-probe-failed: could not measure eligible worktree ${entry.path}.`],
+      candidate: WorktreeReapCandidate.make({ ...enriched, skipReason: O.none() }),
+      warnings: [`size-probe-failed: could not measure eligible worktree ${entry.path}; retirement is unaffected.`],
     }),
     onSome: (measuredBytes): CandidateAssessment => ({
-      candidate: WorktreeReapCandidate.make({
-        ...base,
-        reapClass: pr.reapClass,
-        prNumber: pr.prNumber,
-        idleHours: idle.hours,
-        bytes: O.some(measuredBytes),
-        skipReason: O.none(),
-      }),
+      candidate: WorktreeReapCandidate.make({ ...enriched, bytes: O.some(measuredBytes), skipReason: O.none() }),
       warnings: A.empty(),
     }),
   });
 });
 
-const applyCandidate = Effect.fn("WorktreeReap.applyCandidate")(function* (
-  runner: ReapCommandRunner,
-  fs: FileSystem.FileSystem,
-  path: Path.Path,
-  removalService: WorktreeRemovalServiceShape,
-  mainCheckout: string,
+const retirementOutcome = Effect.fnUntraced(function* (
+  ctx: AssessContext,
   entry: WorktreeListEntry,
   assessed: WorktreeReapCandidate,
-  idleThreshold: Duration.Duration,
-  nowMillis: number
-): Effect.fn.Return<CandidateAssessment, never, ChildProcessSpawner.ChildProcessSpawner> {
+  failure: { readonly message: string }
+): Effect.fn.Return<CandidateAssessment, never, never> {
+  const present = O.getOrElse(yield* ctx.fs.exists(entry.path).pipe(Effect.option), () => true);
+  if (present) {
+    return {
+      candidate: WorktreeReapCandidate.make({ ...assessed, skipReason: O.some("retirement-failed") }),
+      warnings: [`retirement-failed: ${entry.path}: ${failure.message}`],
+    };
+  }
+  // The checkout is already gone: report the retirement so callers do not retry a
+  // removal Git can no longer perform, and surface the failed cleanup loudly.
+  return {
+    candidate: WorktreeReapCandidate.make({ ...assessed, retired: true }),
+    warnings: [`retirement-cleanup-failed: ${entry.path} was removed but follow-up cleanup failed: ${failure.message}`],
+  };
+});
+
+const assessmentWarnings = (assessments: ReadonlyArray<CandidateAssessment>): ReadonlyArray<string> =>
+  A.flatten(A.map(assessments, (assessment) => assessment.warnings));
+
+const summarizeOutcomes = (
+  apply: boolean,
+  assessed: ReadonlyArray<CandidateAssessment>,
+  outcomes: ReadonlyArray<CandidateAssessment>
+): Pick<WorktreeReapReport, "candidates" | "reclaimableBytes" | "reclaimedBytes" | "retiredCount" | "warnings"> => {
+  const rows = A.map(outcomes, (assessment) => assessment.candidate);
+  const retired = A.filter(rows, (candidate) => candidate.retired);
+  const measured = (candidates: ReadonlyArray<WorktreeReapCandidate>): number =>
+    A.reduce(candidates, 0, (total, candidate) => total + O.getOrElse(candidate.bytes, () => 0));
+  return {
+    candidates: rows,
+    reclaimableBytes: measured(A.map(assessed, (assessment) => assessment.candidate)),
+    reclaimedBytes: measured(retired),
+    retiredCount: A.length(retired),
+    warnings: apply
+      ? A.appendAll(assessmentWarnings(assessed), assessmentWarnings(outcomes))
+      : assessmentWarnings(outcomes),
+  };
+};
+
+const applyCandidate = Effect.fn("WorktreeReap.applyCandidate")(function* (
+  ctx: AssessContext,
+  removalService: typeof WorktreeRemovalService.Service,
+  mainCheckout: string,
+  entry: WorktreeListEntry,
+  assessed: WorktreeReapCandidate
+): Effect.fn.Return<CandidateAssessment, never, FileSystem.FileSystem | ChildProcessSpawner.ChildProcessSpawner> {
   if (O.isSome(assessed.skipReason)) {
     return { candidate: assessed, warnings: A.empty() };
   }
-  const rechecked = yield* assessCandidate(runner, fs, path, entry, idleThreshold, nowMillis, false);
+  const rechecked = yield* assessCandidate(ctx, entry, false);
   if (O.isSome(rechecked.candidate.skipReason)) {
+    // Report the rechecked classification, not the stale pre-apply one, so the row's
+    // class and skip reason always describe the same observation; measured bytes stay.
     return {
-      candidate: WorktreeReapCandidate.make({
-        ...assessed,
-        skipReason: rechecked.candidate.skipReason,
-      }),
+      candidate: WorktreeReapCandidate.make({ ...rechecked.candidate, bytes: assessed.bytes }),
       warnings: A.append(rechecked.warnings, `eligibility changed before retirement: ${entry.path}.`),
     };
   }
-  const branch = O.fromNullishOr(entry.branch);
   const removal = yield* Effect.result(
     removalService.remove(
       WorktreeRemovalRequest.make({
-        name: NonEmptyTrimmedStr.make(path.basename(entry.path)),
+        name: NonEmptyTrimmedStr.make(ctx.path.basename(entry.path)),
         targetPath: entry.path,
         mainCheckout,
-        branch,
+        branch: O.fromNullishOr(entry.branch),
         archive: true,
         deleteBranch: true,
       })
     )
   );
-  return Result.match(removal, {
-    onFailure: (error): CandidateAssessment => ({
-      candidate: WorktreeReapCandidate.make({ ...assessed, skipReason: O.some("retirement-failed") }),
-      warnings: [`retirement-failed: ${entry.path}: ${error.message}`],
-    }),
-    onSuccess: (): CandidateAssessment => ({
-      candidate: WorktreeReapCandidate.make({ ...assessed, retired: true }),
-      warnings: A.empty(),
-    }),
-  });
+  if (Result.isSuccess(removal)) {
+    return { candidate: WorktreeReapCandidate.make({ ...assessed, retired: true }), warnings: A.empty() };
+  }
+  return yield* retirementOutcome(ctx, entry, assessed, removal.failure);
 });
 
 /**
@@ -376,9 +535,16 @@ const applyCandidate = Effect.fn("WorktreeReap.applyCandidate")(function* (
  *
  * **Details**
  *
- * The main checkout and invoking checkout are excluded. Dry-run is the default.
- * Apply mode revalidates every eligible candidate immediately before calling
- * the shared archive-first removal service with branch deletion enabled.
+ * The main checkout, the invoking checkout, and locked worktrees are excluded.
+ * Eligibility requires a merged PR with no open PR on the branch, a clean tree,
+ * idleness beyond the threshold, and a dormant liveness verdict from the
+ * same-uid process-cwd probe (`classifyFleetLiveness` semantics; a live or
+ * unknown verdict skips the candidate). Byte measurement is reporting-only —
+ * a failed `du` leaves the candidate eligible with `bytes` absent. Apply mode
+ * revalidates every eligible candidate immediately before calling the shared
+ * archive-first removal service with branch deletion enabled, and reports a
+ * retirement whose checkout was removed but whose follow-up cleanup failed as
+ * retired with a loud warning instead of pretending the directory remains.
  *
  * **Example** (Build a dry-run janitor effect)
  *
@@ -389,7 +555,7 @@ const applyCandidate = Effect.fn("WorktreeReap.applyCandidate")(function* (
  * console.log(Effect.isEffect(runWorktreeReap())) // true
  * ```
  *
- * @param options - Optional apply, idle threshold, clock, command runner, and repository-root seams.
+ * @param options - Optional apply, idle threshold, clock, liveness prober, command runner, and repository-root seams.
  * @returns A versioned, auditable worktree-reap report.
  * @category workflows
  * @since 0.0.0
@@ -404,7 +570,6 @@ export const runWorktreeReap = Effect.fn("WorktreeReap.runWorktreeReap")(functio
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const removalService = yield* WorktreeRemovalService;
-  const runner = options.runCommand ?? runRepoCommandCapture;
   const currentRoot = yield* findRepoRoot(options.startFrom).pipe(
     Effect.mapError(WorktreeCommandError.new("Failed to locate the current repository root."))
   );
@@ -426,13 +591,19 @@ export const runWorktreeReap = Effect.fn("WorktreeReap.runWorktreeReap")(functio
   if (!S.is(S.Finite)(idleThresholdHours) || idleThresholdHours < 0) {
     return yield* WorktreeCommandError.make({ message: "--idle-hours must be a non-negative finite number." });
   }
-  const idleThreshold = Duration.hours(idleThresholdHours);
   const clockNow = yield* Clock.currentTimeMillis;
-  const nowMillis = options.nowMillis ?? clockNow;
+  const ctx: AssessContext = {
+    fs,
+    idleThreshold: Duration.hours(idleThresholdHours),
+    nowMillis: options.nowMillis ?? clockNow,
+    path,
+    prober: options.probeLiveness ?? probeWorktreeLiveness,
+    runner: options.runCommand ?? runRepoCommandCapture,
+  };
   const assessed = yield* Effect.forEach(
     candidates,
     Effect.fn("WorktreeReap.assessRegisteredWorktree")(function* (entry) {
-      return yield* assessCandidate(runner, fs, path, entry, idleThreshold, nowMillis, true);
+      return yield* assessCandidate(ctx, entry, true);
     }),
     { concurrency: 4 }
   );
@@ -441,38 +612,11 @@ export const runWorktreeReap = Effect.fn("WorktreeReap.runWorktreeReap")(functio
     ? yield* Effect.forEach(
         A.zip(candidates, assessed),
         Effect.fn("WorktreeReap.applyRegisteredWorktree")(function* ([entry, assessment]) {
-          return yield* applyCandidate(
-            runner,
-            fs,
-            path,
-            removalService,
-            mainCheckout,
-            entry,
-            assessment.candidate,
-            idleThreshold,
-            nowMillis
-          );
+          return yield* applyCandidate(ctx, removalService, mainCheckout, entry, assessment.candidate);
         }),
         { concurrency: 1 }
       )
     : assessed;
-  const rows = A.map(outcomes, (assessment) => assessment.candidate);
-  const reclaimableBytes = A.reduce(
-    assessed,
-    0,
-    (total, assessment) => total + O.getOrElse(assessment.candidate.bytes, () => 0)
-  );
-  const reclaimedBytes = A.reduce(
-    rows,
-    0,
-    (total, candidate) => total + (candidate.retired ? O.getOrElse(candidate.bytes, () => 0) : 0)
-  );
-  const warnings = apply
-    ? A.appendAll(
-        A.flatten(A.map(assessed, (assessment) => assessment.warnings)),
-        A.flatten(A.map(outcomes, (assessment) => assessment.warnings))
-      )
-    : A.flatten(A.map(outcomes, (assessment) => assessment.warnings));
   const scannedAt = DateTime.formatIso(yield* DateTime.now);
   return WorktreeReapReport.make({
     scannedAt,
@@ -480,10 +624,6 @@ export const runWorktreeReap = Effect.fn("WorktreeReap.runWorktreeReap")(functio
     invokingWorktree: currentRoot,
     idleThresholdHours,
     applied: apply,
-    candidates: rows,
-    retiredCount: A.length(A.filter(rows, (candidate) => candidate.retired)),
-    reclaimableBytes,
-    reclaimedBytes,
-    warnings,
+    ...summarizeOutcomes(apply, assessed, outcomes),
   });
 });

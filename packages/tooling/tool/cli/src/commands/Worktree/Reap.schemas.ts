@@ -59,6 +59,7 @@ export type WorktreeReapClass = typeof WorktreeReapClass.Type;
  * @since 0.0.0
  */
 export const WorktreeReapSkipReason = LiteralKit([
+  "locked",
   "detached-head",
   "missing-directory",
   "filesystem-probe-failed",
@@ -69,7 +70,8 @@ export const WorktreeReapSkipReason = LiteralKit([
   "open-pr",
   "no-pr",
   "too-young",
-  "size-probe-failed",
+  "live-session",
+  "liveness-unknown",
   "retirement-failed",
 ]).pipe(
   $I.annoteSchema("WorktreeReapSkipReason", {
@@ -91,8 +93,9 @@ export type WorktreeReapSkipReason = typeof WorktreeReapSkipReason.Type;
  * **Details**
  *
  * `skipReason` is absent only when the worktree is eligible (dry run) or was
- * retired successfully (apply). Byte measurement is likewise present only for
- * eligible candidates, and failed probes leave optional evidence absent.
+ * retired (apply). Byte measurement is attempted only for eligible candidates
+ * and is reporting-only: a failed measurement leaves `bytes` absent without
+ * blocking retirement, and other failed probes leave optional evidence absent.
  *
  * **Example** (Describe an eligible merged worktree)
  *

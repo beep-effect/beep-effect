@@ -25476,6 +25476,42 @@
             "functions": 25
           }
         },
+        "packages/tooling/tool/cli/src/commands/Worktree/Reap.command.ts": {
+          "lines": 71.42,
+          "statements": 73.33,
+          "branches": 62.5,
+          "functions": 80,
+          "uncovered": {
+            "lines": 8,
+            "statements": 8,
+            "branches": 3,
+            "functions": 3
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Worktree/Reap.schemas.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Worktree/Reap.service.ts": {
+          "lines": 90.85,
+          "statements": 90.65,
+          "branches": 85.18,
+          "functions": 87.5,
+          "uncovered": {
+            "lines": 16,
+            "statements": 17,
+            "branches": 12,
+            "functions": 7
+          }
+        },
         "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts": {
           "lines": 51.63,
           "statements": 50.3,
