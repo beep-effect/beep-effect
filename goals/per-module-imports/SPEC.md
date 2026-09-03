@@ -36,6 +36,93 @@ migration is gated on a measured pilot.
 | 9 | Enforcement (research-settled) | Biome `style/noRestrictedImports`: root `warn`, per-family `error` overrides, final root `error` | New ESLint profile; oxlint native; tsgo fork; ast-grep | Executed proof in `research/tooling-autofix-eval.md`; zero new tools/parses |
 | 10 | Migration vehicle (research-settled) | ts-morph command by inverting/generalizing `laws effect-imports` | jscodeshift; ast-grep; `@effect/eslint-plugin` fixer as-is; unbarrel-class tools | Incumbent command owns discovery/check/write/tests and must flip anyway; upstream tools emit the wrong target form |
 
+### P2 Gate Rulings (grilled 2026-09-03)
+
+#### D11 — P2 pilot workspace approval
+
+- **Question:** Which single workspace, if any, may enter the measured P2
+  pilot at its complete live migration scope?
+- **Answer:** The operator approved `apps/professional-desktop` as the sole P2
+  pilot workspace/application. Approval covers every in-scope executable,
+  type-only, and JSDoc root import in that workspace, along with the prescribed
+  untouched before samples, complete pilot rewrite, equivalent after samples,
+  correctness gates, and tracked evidence.
+- **Rejected:** Use `apps/oip-web`; pair the pilot with `@beep/schema` or a
+  second workspace; stop at P2 without running the experiment; approve only a
+  subset of the live Professional Desktop inventory.
+- **Rationale:** Professional Desktop is the only ranked candidate that exposes
+  compiler, cold Vite-route, cold Vitest-startup, total production-byte, and
+  named `effect-vendor` measurements in one bounded executable workspace. The
+  live P1 vehicle scan remains fully mechanical: 106 executable files with
+  213 root declarations mapped to 505 per-module declarations, plus 25
+  JSDoc-bearing files with 41 root declarations mapped to 42 per-module
+  declarations, with zero manual reviews or parser warnings. Dependencies,
+  measurement conditions, Biome enforcement, architecture doctrine, and every
+  outside workspace remain unchanged during the measurement pair.
+- **Authority boundary:** This ruling authorizes P2 only. Whether a strictly
+  qualifying P2 verdict also constitutes operator sign-off to begin P3 remains
+  the next decision in the grilling frontier.
+
+#### D12 — Strict-pass continuation authority
+
+- **Question:** If P2 produces a decisive stable win, all prescribed
+  correctness gates pass, and no material regression is present, must the goal
+  pause for another operator approval before beginning P3?
+- **Answer:** No. The operator pre-authorized a strict pass: a P2 result that
+  satisfies every normative qualifying condition is itself the operator
+  sign-off to begin P3 without another approval pause.
+- **Rejected:** Require a separate post-verdict approval before P3; run and
+  record the pilot but never begin P3 from its result.
+- **Rationale:** The qualifying conditions and stop rules are objective and
+  already fixed by the normative measurement protocol. Conditional authority
+  preserves those controls while allowing the persistent goal to continue
+  without an avoidable pause.
+- **Authority boundary:** A no-win, material regression, correctness failure,
+  or unresolved result after the permitted symmetric extension still stops the
+  migration. A strict pass authorizes P3 implementation and Yeet publication
+  to merge-ready; it does not authorize merging any pull request.
+- **Confirmation:** On 2026-09-03 the operator confirmed that D11 and D12,
+  together with the unchanged normative P2 protocol and stop rules, are the
+  complete shared understanding. The P2 execution gate is open.
+
+#### D13 — Scheduler-lane execution override
+
+- **Question:** May healthy or queued work in other checkouts block P2
+  execution and publication?
+- **Answer:** No. On 2026-09-03 the operator directed this goal to ignore other
+  clones' scheduler lanes, use affected-package filters for checks, and publish
+  through Yeet's `--start-pr-early --monitor --pr` path.
+- **Rejected:** Continue waiting for a machine-wide empty scheduler before
+  collecting P2 evidence or starting publication.
+- **Rationale:** The operator prioritized completion and early hosted feedback
+  over exclusive local-lane availability. Healthy work remains untouched and
+  no lease is killed, reaped, or displaced. The measurement harness still
+  records every sample and applies the normative stability, variance,
+  regression, and stop rules; scheduler occupancy is not hidden or used to
+  relax a verdict threshold.
+- **Authority boundary:** The override narrows local verification to affected
+  package filters and authorizes early PR creation. It does not authorize a PR
+  merge or permit a noisy/inconclusive result to be reclassified as a win.
+
+#### D14 — P2 verdict and required stop
+
+- **Question:** Did the complete Professional Desktop pilot produce the strict
+  qualifying pass required to begin P3?
+- **Answer:** No. The final valid 15-sample comparison produced no stable
+  qualifying improvement and no stable material regression. Nominal source
+  check and Vitest movements remained outside the strict no-win band but below
+  their required MAD stability floors after the one permitted extension, so
+  the normative verdict is **inconclusive — stop**.
+- **Evidence:** `history/p2-pilot-verdict.md` records the complete threshold
+  math and correctness results; `history/measurements/` contains every valid
+  raw sample and stats summary.
+- **Authority boundary:** P2 is complete with a recorded stop. D12 did not
+  activate, P3 is not authorized, and no mass migration or global enforcement
+  flip may proceed. The bounded migration remains as measurement evidence, but
+  `apps/professional-desktop` is removed from the default promoted-family
+  ratchet. D13 still permits publishing the bounded pilot and evidence to
+  merge-ready, but never merging the pull request.
+
 ## Non-Goals
 
 - Removing, slimming, or deprecating any barrel (`export *` codegen stays).
@@ -144,14 +231,14 @@ imports can regress cold start; a material regression stops the migration.
 
 ## Acceptance Criteria
 
-- [ ] `laws effect-imports` enforces per-module form (tests, type-only,
+- [x] `laws effect-imports` enforces per-module form (tests, type-only,
       ecosystem included); the reverse conversion and its fixtures are gone;
       Yeet repair and Lint Policy run the new semantics.
-- [ ] Pilot measured under the protocol; verdict + raw stats recorded in the
+- [x] Pilot measured under the protocol; verdict + raw stats recorded in the
       packet; operator sign-off on continuation (or a recorded stop).
 - [ ] Post-gate: zero forbidden root specifiers in scope (executable and doc
       fences); Biome rule at root `error` with family overrides removed.
-- [ ] Foundation leaf exports shipped in both export maps; docgen green.
+- [x] Foundation leaf exports shipped in both export maps; docgen green.
 - [ ] Law-flip checklist (`research/enforcement-census.md` §B) fully applied.
 - [ ] Every batch shipped as a PR driven to mergeable via `/yeet`.
 - [ ] Closeout reflection passes `bun run beep lint reflection-artifacts`.

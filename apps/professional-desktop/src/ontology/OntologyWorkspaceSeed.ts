@@ -14,8 +14,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability";
+import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability/CauseRedaction";
 import {
   applyChangeOperationsWithDelta,
   CreateSessionInput,
@@ -33,8 +32,10 @@ import {
   WriteOntologyFileRequest,
 } from "@beep/ontology-use-cases/public";
 import { makeDataset } from "@beep/rdf/Rdf";
-import { Eq, P } from "@beep/utils";
-import { Effect, Layer } from "effect";
+import * as Eq from "@beep/utils/Equal";
+import * as P from "@beep/utils/Predicate";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 
 /**
@@ -61,8 +62,7 @@ const decodeSessionId = S.decodeUnknownEffect(SessionId);
  *
  * ```ts
  * import { seedPizzaTutorial } from "@/ontology/OntologyWorkspaceSeed"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(seedPizzaTutorial())) // true
  * ```
  *
@@ -119,8 +119,7 @@ export const seedPizzaTutorial = Effect.fn("OntologyWorkspaceSeed.seedPizzaTutor
  *
  * ```ts
  * import { OntologyWorkspaceSeedLive } from "@/ontology/OntologyWorkspaceSeed"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(OntologyWorkspaceSeedLive)) // true
  * ```
  *

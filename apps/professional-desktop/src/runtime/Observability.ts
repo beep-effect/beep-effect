@@ -20,8 +20,15 @@
  */
 
 import { layerLocalLgtmServer, ServerObservabilityConfig } from "@beep/observability/server";
-import { O, thunkFalse } from "@beep/utils";
-import { Config, Effect, HashSet, identity, Layer, References, Result } from "effect";
+import * as O from "@beep/utils/Option";
+import { thunkFalse } from "@beep/utils/thunk";
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
+import * as HashSet from "effect/HashSet";
+import * as Layer from "effect/Layer";
+import * as References from "effect/References";
+import * as Result from "effect/Result";
 import { FetchHttpClient } from "effect/unstable/http";
 
 /**
@@ -105,8 +112,7 @@ const ObservabilityConfigLive: Layer.Layer<never> = Layer.unwrap(
  *
  * ```ts
  * import { ObservabilityLive } from "@/runtime/Observability"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(ObservabilityLive)) // true
  * ```
  *

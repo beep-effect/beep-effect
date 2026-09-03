@@ -11,8 +11,9 @@ import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { RDFS_NAMESPACE } from "@beep/rdf/Vocab/Rdfs";
 import * as BrowserRuntime from "@effect/platform-browser/BrowserRuntime";
 import * as BrowserWorkerRunner from "@effect/platform-browser/BrowserWorkerRunner";
-import { Effect, Layer } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as RpcServer from "effect/unstable/rpc/RpcServer";
 import { CosmosSpikeRpcs, SyntheticProjectionResponse } from "./CosmosSpike.rpc.ts";
 import type { ProjectSyntheticGraphRequest } from "./CosmosSpike.rpc.ts";
@@ -109,4 +110,4 @@ const CosmosSpikeWorkerLive = RpcServer.layer(CosmosSpikeRpcs).pipe(
   Layer.provide(BrowserWorkerRunner.layer)
 );
 
-BrowserRuntime.runMain(Layer.launch(CosmosSpikeWorkerLive));
+CosmosSpikeWorkerLive.pipe(Layer.launch, BrowserRuntime.runMain);
