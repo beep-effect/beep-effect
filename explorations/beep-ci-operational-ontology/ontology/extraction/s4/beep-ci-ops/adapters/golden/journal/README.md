@@ -3,8 +3,10 @@
 This fixture is relocatable and mirrors all three run-2 corpus layouts.
 `expected-metadata.yaml` supplies a fixed synthetic 40-hex commit because
 self-check mode has no run manifest. `input/` contains the source projections,
-and `expected/` contains one byte-exact `so-*.yaml` document per emitted
-SourceObservation.
+and `expected/` contains one byte-exact `so-*.yaml.expected` document per
+emitted SourceObservation — the suffix keeps the auditor's scanner, which
+reads every `so-*.yaml` under the ontology root as live evidence, away from
+fixture bytes.
 
 The fixture locks these behaviors:
 

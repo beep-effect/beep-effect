@@ -72,7 +72,10 @@ COMMIT_RE = re.compile(
 COMMENT_LINE_RE = re.compile(r"^[ \t\f]*[#!]")
 PROPERTY_LINE_RE = re.compile(r"^[ \t]*([^\s=/]+)[ \t]*[:=][ \t]*(.*)$")
 CONFIG_OBJECT_RE = re.compile(r"^[^\s=/]+=\S+$")
-EXPECTED_NAME_RE = re.compile(r"^so-[0-9a-f]{12}\.yaml$")
+# Expected golden records carry a .expected suffix so the auditor's scanner —
+# which treats every so-*.yaml under the ontology root as a live observation —
+# never reads fixture bytes as evidence.
+EXPECTED_NAME_RE = re.compile(r"^so-[0-9a-f]{12}\.yaml\.expected$")
 
 
 class AdapterError(RuntimeError):
@@ -399,7 +402,7 @@ def expected_records(expected_dir: Path) -> dict[str, bytes]:
             continue
         if EXPECTED_NAME_RE.fullmatch(path.name) is None:
             raise AdapterError(f"unexpected golden record filename: {path.name}")
-        records[path.name] = path.read_bytes()
+        records[path.name.removesuffix(".expected")] = path.read_bytes()
     if not records:
         raise AdapterError(f"golden expected directory has no records: {expected_dir}")
     return records
