@@ -4,6 +4,7 @@ import {
   makePrSessionRegistryLive,
   PrRef,
   PrRepository,
+  PrSessionRecord,
   parsePrRef,
   ResumeOptions,
   runYeetResume,
@@ -14,12 +15,13 @@ import {
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, expect, it } from "@effect/vitest";
-import { ConfigProvider, Effect, FileSystem, Layer, Path, Result } from "effect";
+import { ConfigProvider, Effect, FileSystem, Layer, Path, Ref, Result, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
 import { Command } from "effect/unstable/cli";
+import { ChildProcessSpawner } from "effect/unstable/process";
 import { makeRecord } from "./yeet-pr-fixtures.ts";
 
 const TestLayer = Layer.mergeAll(
@@ -50,6 +52,21 @@ const options = (overrides: Partial<ResumeOptions> = {}) =>
     ...overrides,
   });
 
+const stubHandle = (exitCode: number) =>
+  ChildProcessSpawner.makeHandle({
+    all: Stream.empty,
+    exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(exitCode)),
+    getInputFd: () => Sink.drain,
+    getOutputFd: () => Stream.empty,
+    isRunning: Effect.succeed(false),
+    kill: () => Effect.void,
+    pid: ChildProcessSpawner.ProcessId(1),
+    stderr: Stream.empty,
+    stdin: Sink.drain,
+    stdout: Stream.empty,
+    unref: Effect.succeed(Effect.void),
+  });
+
 describe("yeet resume", () => {
   it.effect("parses number and URL references", () =>
     Effect.gen(function* () {
@@ -61,6 +78,21 @@ describe("yeet resume", () => {
       );
     })
   );
+
+  it.effect("maps an invalid PR reference to an exit-4 command error", () =>
+    Effect.gen(function* () {
+      const error = yield* parsePrRef("not-a-pr").pipe(Effect.flip);
+      assert.instanceOf(error, YeetCommandError);
+      expect(error.exitCode).toBe(4);
+    })
+  );
+
+  it("encodes both number and URL pull-request references", () => {
+    expect(Result.getOrThrow(S.encodeResult(PrRef)(decodeRef("42")))).toBe("42");
+    expect(
+      Result.getOrThrow(S.encodeResult(PrRef)(decodeRef("https://github.com/Beep-Effect/Beep-Effect/pull/43")))
+    ).toBe("https://github.com/beep-effect/beep-effect/pull/43");
+  });
 
   it("rejects a pull-request URL whose host is not github.com", () => {
     expect(Result.isFailure(S.decodeResult(PrRef)("https://gitlab.com/beep-effect/beep-effect/pull/42"))).toBe(true);
@@ -94,6 +126,25 @@ describe("yeet resume", () => {
     }).pipe(provideScopedLayer(TestLayer))
   );
 
+  it.effect("covers resume command list and JSON output without a state-root flag", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fs.makeTempDirectory();
+      yield* configureRepo(root);
+      const provider = ConfigProvider.fromEnv({ env: { HOME: root, PWD: root, BEEP_YEET_STATE_ROOT: root } });
+      const registry = yield* makePrSessionRegistryLive().pipe(
+        Effect.provideService(ConfigProvider.ConfigProvider, provider)
+      );
+      yield* registry.append(makeRecord({ harness: "unknown", sessionId: "listed-agent" }));
+      yield* runYeetCommand(["resume", "42", "--list", "--json"]).pipe(
+        Effect.provideService(ConfigProvider.ConfigProvider, provider)
+      );
+      const logs = A.join(A.map(yield* TestConsole.logLines, globalThis.String), "\n");
+      expect(logs).toContain('"status": "not-resumable"');
+      expect(logs).toContain('"sequence": 1');
+    }).pipe(provideScopedLayer(TestLayer))
+  );
+
   it("prefers the newest created or pushed row, with one-based override", () => {
     const monitored = makeRecord({ role: "monitored", recordedAt: "2026-09-03T14:00:00Z", sessionId: "monitor" });
     const created = makeRecord({ role: "created", recordedAt: "2026-09-03T13:00:00Z", sessionId: "creator" });
@@ -102,6 +153,9 @@ describe("yeet resume", () => {
       O.some("creator")
     );
     expect(O.flatMap(selectResumeRecord(rows, O.some(1)), (record) => record.sessionId)).toStrictEqual(
+      O.some("monitor")
+    );
+    expect(O.flatMap(selectResumeRecord([monitored], O.none()), (record) => record.sessionId)).toStrictEqual(
       O.some("monitor")
     );
   });
@@ -140,6 +194,28 @@ describe("yeet resume", () => {
       );
       const live = yield* isClaudeSessionLive(makeRecord(), sessions, proc);
       expect(live.pipe(O.map((value) => value.pid))).toStrictEqual(O.some(123));
+    }).pipe(provideScopedLayer(TestLayer))
+  );
+
+  it.effect("misses the Claude live guard for unsupported, absent, and stale index evidence", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectory();
+      const sessions = path.join(root, "sessions");
+      const proc = path.join(root, "proc");
+      yield* fs.makeDirectory(sessions, { recursive: true });
+      yield* fs.makeDirectory(proc, { recursive: true });
+      yield* fs.writeFileString(path.join(sessions, "bad.json"), "not-json");
+      yield* fs.makeDirectory(path.join(sessions, "unreadable.json"));
+      yield* fs.writeFileString(
+        path.join(sessions, "123.json"),
+        '{"pid":123,"sessionId":"session-local-only","cwd":"/workspace"}'
+      );
+      expect(O.isNone(yield* isClaudeSessionLive(makeRecord({ harness: "codex" }), sessions, proc))).toBe(true);
+      const withoutSession = PrSessionRecord.make({ ...makeRecord(), sessionId: O.none() });
+      expect(O.isNone(yield* isClaudeSessionLive(withoutSession, sessions, proc))).toBe(true);
+      expect(O.isNone(yield* isClaudeSessionLive(makeRecord(), sessions, proc))).toBe(true);
     }).pipe(provideScopedLayer(TestLayer))
   );
 
@@ -239,6 +315,64 @@ describe("yeet resume", () => {
     }).pipe(provideScopedLayer(TestLayer))
   );
 
+  it.effect("falls back to HOME and an unknown workspace for a transcript without cwd", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectory();
+      const home = path.join(root, "bad workspace label");
+      yield* configureRepo(root);
+      const project = path.join(home, ".claude", "projects", "fixture");
+      yield* fs.makeDirectory(project, { recursive: true });
+      yield* fs.writeFileString(
+        path.join(project, "no-cwd.jsonl"),
+        '{"type":"pr-link","prNumber":42,"prRepository":"beep-effect/beep-effect"}\n'
+      );
+      const provider = ConfigProvider.fromEnv({
+        env: { HOME: home, PWD: root, BEEP_YEET_STATE_ROOT: path.join(root, "state") },
+      });
+      yield* runYeetResume(options()).pipe(Effect.provideService(ConfigProvider.ConfigProvider, provider));
+      const logs = A.join(A.map(yield* TestConsole.logLines, globalThis.String), "\n");
+      expect(logs).toContain("no-cwd");
+      expect(logs).toContain(`cwd ${home}`);
+      expect(logs).toContain("unknown");
+    }).pipe(provideScopedLayer(TestLayer))
+  );
+
+  it.effect("reports URL-scoped missing state with repository context", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectory();
+      const provider = ConfigProvider.fromEnv({
+        env: { HOME: root, PWD: root, BEEP_YEET_STATE_ROOT: path.join(root, "state") },
+      });
+      const error = yield* runYeetResume(
+        options({ ref: decodeRef("https://github.com/beep-effect/beep-effect/pull/99") })
+      ).pipe(Effect.provideService(ConfigProvider.ConfigProvider, provider), Effect.flip);
+      assert.instanceOf(error, YeetCommandError);
+      expect(error.exitCode).toBe(4);
+      expect(error.message).toContain("beep-effect/beep-effect PR #99");
+    }).pipe(provideScopedLayer(TestLayer))
+  );
+
+  it.effect("prints no rows for an out-of-range explicit agent", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fs.makeTempDirectory();
+      yield* configureRepo(root);
+      const provider = ConfigProvider.fromEnv({ env: { HOME: root, PWD: root, BEEP_YEET_STATE_ROOT: root } });
+      const registry = yield* makePrSessionRegistryLive().pipe(
+        Effect.provideService(ConfigProvider.ConfigProvider, provider)
+      );
+      yield* registry.append(makeRecord());
+      yield* runYeetResume(options({ agent: O.some(99) })).pipe(
+        Effect.provideService(ConfigProvider.ConfigProvider, provider)
+      );
+      expect(yield* TestConsole.logLines).toStrictEqual([]);
+    }).pipe(provideScopedLayer(TestLayer))
+  );
+
   it.effect("selects only the current repository when PR numbers collide", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
@@ -292,6 +426,76 @@ describe("yeet resume", () => {
       const logs = A.map(yield* TestConsole.logLines, globalThis.String);
       expect(logs).toHaveLength(2);
       expect(A.join(logs, "\n")).toContain("not-resumable");
+    }).pipe(provideScopedLayer(TestLayer))
+  );
+
+  it.effect("spawns the selected Codex argv in its recorded session home", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fs.makeTempDirectory();
+      yield* configureRepo(root);
+      const provider = ConfigProvider.fromEnv({ env: { HOME: root, PWD: root, BEEP_YEET_STATE_ROOT: root } });
+      const registry = yield* makePrSessionRegistryLive().pipe(
+        Effect.provideService(ConfigProvider.ConfigProvider, provider)
+      );
+      yield* registry.append(
+        makeRecord({ harness: "claude-code", sessionId: "newest", recordedAt: "2026-09-03T13:00:00Z" })
+      );
+      const codexRecord = makeRecord({
+        harness: "codex",
+        sessionId: "codex-thread",
+        recordedAt: "2026-09-03T12:00:00Z",
+      });
+      yield* registry.append(PrSessionRecord.make({ ...codexRecord, sessionHome: O.none(), clonePath: root }));
+      const spawned = yield* Ref.make<ReadonlyArray<string>>(A.empty());
+      const spawnCwd = yield* Ref.make(O.none<string>());
+      const spawner = ChildProcessSpawner.make((command) => {
+        const argv = command._tag === "StandardCommand" ? A.prepend(command.args, command.command) : A.empty<string>();
+        const cwd = command._tag === "StandardCommand" ? O.fromUndefinedOr(command.options.cwd) : O.none<string>();
+        return Effect.all([Ref.set(spawned, argv), Ref.set(spawnCwd, cwd)], { discard: true }).pipe(
+          Effect.as(stubHandle(0))
+        );
+      });
+      yield* runYeetResume(
+        options({
+          ref: decodeRef("https://github.com/beep-effect/beep-effect/pull/42"),
+          print: false,
+          force: true,
+          agent: O.some(2),
+        })
+      ).pipe(
+        Effect.provideService(ConfigProvider.ConfigProvider, provider),
+        Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
+      );
+      expect(yield* Ref.get(spawned)).toStrictEqual(["codex", "resume", "codex-thread"]);
+      expect(yield* Ref.get(spawnCwd)).toStrictEqual(O.some(root));
+    }).pipe(provideScopedLayer(TestLayer))
+  );
+
+  it.effect("reports a non-zero harness exit with the same exit code", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fs.makeTempDirectory();
+      yield* configureRepo(root);
+      const provider = ConfigProvider.fromEnv({ env: { HOME: root, PWD: root, BEEP_YEET_STATE_ROOT: root } });
+      const registry = yield* makePrSessionRegistryLive().pipe(
+        Effect.provideService(ConfigProvider.ConfigProvider, provider)
+      );
+      yield* registry.append(makeRecord({ sessionHome: root }));
+      const spawner = ChildProcessSpawner.make(() => Effect.succeed(stubHandle(7)));
+      const error = yield* runYeetResume(
+        options({
+          ref: decodeRef("https://github.com/beep-effect/beep-effect/pull/42"),
+          print: false,
+          force: true,
+        })
+      ).pipe(
+        Effect.provideService(ConfigProvider.ConfigProvider, provider),
+        Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
+        Effect.flip
+      );
+      assert.instanceOf(error, YeetCommandError);
+      expect(error.exitCode).toBe(7);
     }).pipe(provideScopedLayer(TestLayer))
   );
 

@@ -32,6 +32,8 @@ describe("yeet merge-loop command wiring", () => {
   it.effect("dispatches the top-level publish and repair planners", () =>
     Effect.forEach(
       [
+        ["--plan"],
+        ["--plan", "--state-root", "/tmp/yeet-command-wiring-state"],
         ["monitor", "--plan", "--state-root", "/tmp/yeet-command-wiring-state"],
         ["repair", "--plan"],
         ["pre-push-hook", "--plan"],

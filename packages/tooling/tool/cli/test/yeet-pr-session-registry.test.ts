@@ -48,4 +48,68 @@ describe("Yeet PR session registry", () => {
       assert.instanceOf(error, PrSessionRegistryError);
     }).pipe(provideScopedLayer(PlatformLayer))
   );
+
+  it.effect("treats missing and empty registry files as empty history", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectory();
+      const registry = yield* makePrSessionRegistryLive().pipe(
+        Effect.provideService(
+          ConfigProvider.ConfigProvider,
+          ConfigProvider.fromEnv({ env: { BEEP_YEET_STATE_ROOT: root, HOME: root } })
+        )
+      );
+      expect(yield* registry.list(repository)).toStrictEqual([]);
+      const directory = path.join(root, "pr-sessions");
+      yield* fs.makeDirectory(directory, { recursive: true });
+      yield* fs.writeFileString(path.join(directory, prSessionRegistryFileName(repository)), "");
+      expect(yield* registry.list(repository)).toStrictEqual([]);
+    }).pipe(provideScopedLayer(PlatformLayer))
+  );
+
+  it.effect("resolves XDG and HOME fallback state roots", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectory();
+      const xdg = path.join(root, "xdg");
+      const xdgRegistry = yield* makePrSessionRegistryLive().pipe(
+        Effect.provideService(
+          ConfigProvider.ConfigProvider,
+          ConfigProvider.fromEnv({ env: { XDG_STATE_HOME: xdg, HOME: root } })
+        )
+      );
+      yield* xdgRegistry.append(makeRecord());
+      expect(
+        yield* fs.exists(path.join(xdg, "beep", "yeet", "pr-sessions", prSessionRegistryFileName(repository)))
+      ).toBe(true);
+      const homeRegistry = yield* makePrSessionRegistryLive().pipe(
+        Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromEnv({ env: { HOME: root } }))
+      );
+      yield* homeRegistry.append(makeRecord({ sessionId: "home-fallback" }));
+      expect(
+        yield* fs.exists(
+          path.join(root, ".local", "state", "beep", "yeet", "pr-sessions", prSessionRegistryFileName(repository))
+        )
+      ).toBe(true);
+    }).pipe(provideScopedLayer(PlatformLayer))
+  );
+
+  it.effect("classifies a fixture permission denial as denied", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fs.makeTempDirectory();
+      const registry = yield* makePrSessionRegistryLive().pipe(
+        Effect.provideService(
+          ConfigProvider.ConfigProvider,
+          ConfigProvider.fromEnv({ env: { BEEP_YEET_STATE_ROOT: root, HOME: root } })
+        )
+      );
+      yield* fs.chmod(root, 0o500);
+      const error = yield* registry.append(makeRecord()).pipe(Effect.ensuring(fs.chmod(root, 0o700)), Effect.flip);
+      assert.instanceOf(error, PrSessionRegistryError);
+      expect(error.reason).toBe("denied");
+    }).pipe(provideScopedLayer(PlatformLayer))
+  );
 });

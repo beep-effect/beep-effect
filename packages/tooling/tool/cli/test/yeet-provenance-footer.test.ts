@@ -249,7 +249,8 @@ describe("Yeet provenance footer splice", () => {
         },
       };
       const result = yield* runStamp("Original body", "Original body", undefined, (bodies) => [
-        { diff: "Foreign body", editedAt: "2026-09-03T12:02:00Z", editor: { login: "blacksmith-sh" } },
+        { diff: "Older foreign body", editedAt: "2026-09-03T12:01:30Z", editor: { login: "earlier-editor" } },
+        { diff: "Foreign body", editedAt: "2026-09-03T12:02:00Z", editor: null },
         {
           diff: O.getOrElse(A.head(bodies), () => ""),
           editedAt: "2026-09-03T12:03:00Z",
@@ -266,7 +267,7 @@ describe("Yeet provenance footer splice", () => {
       expect(result.body).toContain("<!-- yeet-provenance:start -->");
       expect(warnings).toHaveLength(1);
       expect(A.join(A.map(warnings, globalThis.String), "\n")).toContain("PR #42");
-      expect(A.join(A.map(warnings, globalThis.String), "\n")).toContain("blacksmith-sh");
+      expect(A.join(A.map(warnings, globalThis.String), "\n")).toContain("an unknown editor");
       expect(A.join(A.map(warnings, globalThis.String), "\n")).toContain("preserved");
     }).pipe(provideScopedLayer(PlatformLayer))
   );
@@ -291,7 +292,7 @@ describe("Yeet provenance footer splice", () => {
     }).pipe(provideScopedLayer(PlatformLayer))
   );
 
-  it.effect("stops after warning when another foreign edit follows the repair", () =>
+  it.effect("reconciles two rounds of contention and preserves the newest foreign body", () =>
     Effect.gen(function* () {
       let warnings = A.empty<unknown>();
       const currentConsole = yield* Console.Console;
@@ -308,18 +309,72 @@ describe("Yeet provenance footer splice", () => {
           { diff: firstWrite, editedAt: "2026-09-03T12:03:00Z", editor: { login: "yeet" } },
         ];
         if (read === 0) return firstHistory;
-        const repairWrite = O.getOrElse(A.get(bodies, 1), () => "");
-        return [
+        const firstRepair = O.getOrElse(A.get(bodies, 1), () => "");
+        const secondHistory: ReadonlyArray<GhBodyEdit> = [
           ...firstHistory,
-          { diff: repairWrite, editedAt: "2026-09-03T12:04:00Z", editor: { login: "yeet" } },
-          { diff: "Second foreign body", editedAt: "2026-09-03T12:05:00Z", editor: { login: "bob" } },
+          { diff: firstRepair, editedAt: "2026-09-03T12:04:00Z", editor: { login: "yeet" } },
+          {
+            diff: "First foreign body\n\nSecond foreign edit",
+            editedAt: "2026-09-03T12:05:00Z",
+            editor: { login: "bob" },
+          },
+        ];
+        if (read === 1) return secondHistory;
+        return [
+          ...secondHistory,
+          {
+            diff: O.getOrElse(A.get(bodies, 2), () => ""),
+            editedAt: "2026-09-03T12:06:00Z",
+            editor: { login: "yeet" },
+          },
         ];
       }).pipe(Effect.provideService(Console.Console, warningConsole));
-      expect(result.writes).toBe(2);
-      expect(result.historyReads).toBe(2);
-      expect(A.join(A.map(warnings, globalThis.String), "\n")).toContain("alice");
+      expect(result.writes).toBe(3);
+      expect(result.historyReads).toBe(3);
+      expect(result.body).toContain("First foreign body");
+      expect(result.body).toContain("Second foreign edit");
+      expect(result.body).toContain("<!-- yeet-provenance:start -->");
+      expect(warnings).toHaveLength(1);
+      expect(A.join(A.map(warnings, globalThis.String), "\n")).toContain("PR #42");
       expect(A.join(A.map(warnings, globalThis.String), "\n")).toContain("bob");
-      expect(A.join(A.map(warnings, globalThis.String), "\n")).toContain("no third write attempted");
+      expect(A.join(A.map(warnings, globalThis.String), "\n")).toContain("preserved");
+    }).pipe(provideScopedLayer(PlatformLayer))
+  );
+
+  it.effect("restores the newest foreign body verbatim when contention outlasts the bound", () =>
+    Effect.gen(function* () {
+      let warnings = A.empty<unknown>();
+      const currentConsole = yield* Console.Console;
+      const warningConsole: Console.Console = {
+        ...currentConsole,
+        warn: (...args) => {
+          warnings = A.appendAll(warnings, args);
+        },
+      };
+      const foreignBodies = A.make("Foreign one", "Foreign two", "Foreign three", "Newest foreign body");
+      const ownMinutes = A.make("03", "05", "07", "09");
+      const foreignMinutes = A.make("04", "06", "08", "10");
+      const result = yield* runStamp("Original body", "Original body", undefined, (bodies, read) => {
+        const written = O.getOrElse(A.get(bodies, read), () => "");
+        return [
+          {
+            diff: written,
+            editedAt: `2026-09-03T12:${O.getOrElse(A.get(ownMinutes, read), () => "09")}:00Z`,
+            editor: { login: "yeet" },
+          },
+          {
+            diff: O.getOrElse(A.get(foreignBodies, read), () => "Newest foreign body"),
+            editedAt: `2026-09-03T12:${O.getOrElse(A.get(foreignMinutes, read), () => "10")}:00Z`,
+            editor: { login: read === 3 ? "dana" : "concurrent-editor" },
+          },
+        ];
+      }).pipe(Effect.provideService(Console.Console, warningConsole));
+      expect(result.body).toBe("Newest foreign body");
+      expect(result.body).not.toContain("yeet-provenance");
+      expect(warnings).toHaveLength(1);
+      expect(A.join(A.map(warnings, globalThis.String), "\n")).toContain("PR #42");
+      expect(A.join(A.map(warnings, globalThis.String), "\n")).toContain("dana");
+      expect(A.join(A.map(warnings, globalThis.String), "\n")).toContain("yeet monitor");
     }).pipe(provideScopedLayer(PlatformLayer))
   );
 
@@ -520,5 +575,45 @@ describe("Yeet provenance footer splice", () => {
       expect(detected.owner).toBe("beep-effect");
       expect(detected.name).toBe("beep-effect");
     }).pipe(provideScopedLayer(PlatformLayer))
+  );
+
+  it.effect("skips stamping without calling GitHub when the registry has no rows", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fs.makeTempDirectory();
+      const registry = yield* PrSessionRegistry;
+      const calls = yield* Ref.make(0);
+      const capture = Effect.fn("test.unexpectedGhRunner")(function* () {
+        yield* Ref.update(calls, (count) => count + 1);
+        return { exitCode: 0, output: "", truncated: false };
+      });
+      const warning = yield* ensureProvenanceFooter(context(root), repository, 42, capture, registry);
+      expect(O.isSome(warning)).toBe(true);
+      expect(yield* Ref.get(calls)).toBe(0);
+    }).pipe(provideScopedLayer(Layer.mergeAll(PlatformLayer, layerPrSessionRegistryMemory)))
+  );
+
+  it.effect("keeps initial and pre-write GitHub read failures non-fatal", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fs.makeTempDirectory();
+      const registry = yield* PrSessionRegistry;
+      yield* registry.append(makeRecord());
+      const initialFailure = Effect.fn("test.initialReadFailure")(function* () {
+        return { exitCode: 1, output: "initial read denied", truncated: false };
+      });
+      const initialWarning = yield* ensureProvenanceFooter(context(root), repository, 42, initialFailure, registry);
+      expect(O.getOrElse(initialWarning, () => "")).toContain("initial read denied");
+
+      const calls = yield* Ref.make(0);
+      const snapshotFailure = Effect.fn("test.snapshotReadFailure")(function* () {
+        const call = yield* Ref.getAndUpdate(calls, (count) => count + 1);
+        return call === 0
+          ? { exitCode: 0, output: encodeGhBody("Body"), truncated: false }
+          : { exitCode: 1, output: "snapshot read denied", truncated: false };
+      });
+      const snapshotWarning = yield* ensureProvenanceFooter(context(root), repository, 42, snapshotFailure, registry);
+      expect(O.getOrElse(snapshotWarning, () => "")).toContain("snapshot read denied");
+    }).pipe(provideScopedLayer(Layer.mergeAll(PlatformLayer, layerPrSessionRegistryMemory)))
   );
 });

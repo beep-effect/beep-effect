@@ -30,7 +30,9 @@ import {
   toPublicPrProvenance,
 } from "./Provenance.ts";
 import { makePrSessionRegistryLive } from "./PrSessionRegistry.ts";
+import type { DomainError } from "@beep/repo-utils";
 import type { FileSystem, Path } from "effect";
+import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { PrNumber, PrProvenanceRole } from "./Provenance.ts";
 import type { PrSessionRegistryShape } from "./PrSessionRegistry.ts";
@@ -200,6 +202,8 @@ const newestEditOfBodySince = (
 
 const bodyEditorLabel = (edit: PrBodyEdit): string => O.getOrElse(edit.editor, () => "an unknown editor");
 
+const maxReconcileRounds = 3;
+
 const writePrBody = Effect.fn("ProvenanceFooter.writePrBody")(function* (
   capture: typeof runRepoCommandCapture,
   context: RepoRunContext,
@@ -214,58 +218,61 @@ const writePrBody = Effect.fn("ProvenanceFooter.writePrBody")(function* (
   }
 });
 
-const repairForeignPrBodyEdit = Effect.fn("ProvenanceFooter.repairForeignEdit")(function* (
+const reconcilePrBodyAfterWrite = Effect.fn("ProvenanceFooter.reconcileAfterWrite")(function* (
   capture: typeof runRepoCommandCapture,
   context: RepoRunContext,
   repository: PrRepository,
   prNumber: PrNumber,
   bodyPath: string,
   rendered: string,
-  foreign: PrBodyEdit
-) {
-  const repairedBody = splicePrProvenanceFooter(foreign.body, rendered);
-  yield* writePrBody(capture, context, prNumber, bodyPath, repairedBody);
-  const warning = `[yeet] provenance footer for PR #${prNumber} preserved a concurrent body edit by ${bodyEditorLabel(foreign)}`;
-  yield* Console.warn(warning);
-  const repairEdits = yield* readPrBodyEdits(capture, context, repository, prNumber);
-  const repairWrite = newestEditOfBodySince(repairEdits, foreign.editedAt, repairedBody);
-  const newerForeign = O.flatMap(repairWrite, (ownEdit) =>
-    newestForeignEditSince(repairEdits, ownEdit.editedAt, repairedBody)
-  );
-  if (O.isSome(newerForeign)) {
-    const raceWarning = `[yeet] provenance footer repair for PR #${prNumber} detected another concurrent body edit by ${bodyEditorLabel(newerForeign.value)}; no third write attempted`;
-    yield* Console.warn(raceWarning);
-    return O.some(raceWarning);
-  }
-  const repairedReadback = yield* readPrBody(capture, context, prNumber);
-  if (!Str.Equivalence(bodyWithoutProvenanceFooter(repairedReadback), bodyWithoutProvenanceFooter(foreign.body))) {
-    const readbackWarning = `[yeet] provenance footer repair for PR #${prNumber} did not preserve the expected concurrent body; no third write attempted`;
-    yield* Console.warn(readbackWarning);
-    return O.some(readbackWarning);
-  }
-  return O.some(warning);
-});
-
-const stampPrBodyWithRaceRepair = Effect.fn("ProvenanceFooter.stampWithRaceRepair")(function* (
-  capture: typeof runRepoCommandCapture,
-  context: RepoRunContext,
-  repository: PrRepository,
-  prNumber: PrNumber,
-  bodyPath: string,
-  rendered: string,
-  freshBody: string,
-  baseline: DateTime.Utc
-) {
-  const next = splicePrProvenanceFooter(freshBody, rendered);
-  yield* writePrBody(capture, context, prNumber, bodyPath, next);
+  sourceBody: string,
+  baseline: DateTime.Utc,
+  round: number,
+  preservedForeign: O.Option<PrBodyEdit>
+): Effect.fn.Return<
+  O.Option<string>,
+  DomainError | S.SchemaError | YeetCommandError,
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> {
+  const writtenBody = splicePrProvenanceFooter(sourceBody, rendered);
+  yield* writePrBody(capture, context, prNumber, bodyPath, writtenBody);
   const edits = yield* readPrBodyEdits(capture, context, repository, prNumber);
-  const foreign = newestForeignEditSince(edits, baseline, next);
+  const foreign = O.isNone(preservedForeign)
+    ? newestForeignEditSince(edits, baseline, writtenBody)
+    : pipe(
+        newestEditOfBodySince(edits, baseline, writtenBody),
+        O.flatMap((ownEdit) => newestForeignEditSince(edits, ownEdit.editedAt, writtenBody))
+      );
   if (O.isSome(foreign)) {
-    return yield* repairForeignPrBodyEdit(capture, context, repository, prNumber, bodyPath, rendered, foreign.value);
+    if (round < maxReconcileRounds) {
+      return yield* reconcilePrBodyAfterWrite(
+        capture,
+        context,
+        repository,
+        prNumber,
+        bodyPath,
+        rendered,
+        foreign.value.body,
+        foreign.value.editedAt,
+        round + 1,
+        foreign
+      );
+    }
+    yield* writePrBody(capture, context, prNumber, bodyPath, foreign.value.body);
+    const warning = `[yeet] provenance footer for PR #${prNumber} yielded after ${maxReconcileRounds} reconcile rounds to a concurrent body edit by ${bodyEditorLabel(foreign.value)}; the footer will be retried by yeet monitor`;
+    yield* Console.warn(warning);
+    return O.some(warning);
   }
-  const writtenBody = yield* readPrBody(capture, context, prNumber);
-  if (!Str.Equivalence(bodyWithoutProvenanceFooter(writtenBody), bodyWithoutProvenanceFooter(freshBody))) {
-    const warning = `[yeet] provenance footer for PR #${prNumber} may have overwritten a concurrent body edit; leaving the latest body unchanged`;
+  const readback = yield* readPrBody(capture, context, prNumber);
+  if (!Str.Equivalence(bodyWithoutProvenanceFooter(readback), bodyWithoutProvenanceFooter(sourceBody))) {
+    const warning = O.isSome(preservedForeign)
+      ? `[yeet] provenance footer repair for PR #${prNumber} did not preserve the expected concurrent body; leaving the latest body unchanged`
+      : `[yeet] provenance footer for PR #${prNumber} may have overwritten a concurrent body edit; leaving the latest body unchanged`;
+    yield* Console.warn(warning);
+    return O.some(warning);
+  }
+  if (O.isSome(preservedForeign)) {
+    const warning = `[yeet] provenance footer for PR #${prNumber} preserved a concurrent body edit by ${bodyEditorLabel(preservedForeign.value)}`;
     yield* Console.warn(warning);
     return O.some(warning);
   }
@@ -526,7 +533,10 @@ export const recordCurrentPrSession = Effect.fn("ProvenanceFooter.recordCurrentS
  * **Details**
  *
  * The existing PR body is used only as splice framing. Its visible labels and
- * JSON twin never become registry data or process arguments.
+ * JSON twin never become registry data or process arguments. After every
+ * write, a bounded reconcile yields to newer foreign edits: the final body is
+ * either that foreign body with the footer or the foreign body restored
+ * verbatim when contention outlasts the bound.
  *
  * **Example** (Build footer re-assertion)
  *
@@ -597,7 +607,7 @@ export const ensureProvenanceFooter = Effect.fn("ProvenanceFooter.ensure")(funct
     if (Str.Equivalence(next, freshBody)) return O.none<string>();
     const bodyPath = yield* runArtifactPathForContext(context, "pr-provenance-body.md");
     const baseline = O.getOrElse(fresh.lastEditedAt, () => fresh.createdAt);
-    return yield* stampPrBodyWithRaceRepair(
+    return yield* reconcilePrBodyAfterWrite(
       capture,
       context,
       repository,
@@ -605,7 +615,9 @@ export const ensureProvenanceFooter = Effect.fn("ProvenanceFooter.ensure")(funct
       bodyPath,
       rendered,
       freshBody,
-      baseline
+      baseline,
+      0,
+      O.none()
     );
   }).pipe(
     Effect.catchCause((cause) => {

@@ -48,3 +48,19 @@ Divergence with `main` was resolved by merging `origin/main` through a
 temporary sync branch into the PR branch (no rewrite), then pushing. The local
 proof's `pre-push:nix` red was environment-only (no `nix` on the detached
 publish PATH; hosted Nix Shell passes) and is acknowledged as such.
+
+## Round 4 (Greptile 4/5 on `d83c4799ad`; hosted coverage ratchet)
+
+- Body-race residual: the stamp now yields to concurrent editors with a
+  bounded reconcile (three rounds); if contention persists the newest foreign
+  body is written back verbatim and the footer self-heals on the next monitor.
+  Invariant: a foreign edit is never left overwritten.
+- Coverage: the four new modules had no baseline identity; tests raised them
+  (`Resume.ts` statements 75 -> 89.7, `ProvenanceFooter.ts` 86 -> 93,
+  `PrSessionRegistry.ts` branches 66.7 -> 95.2, `Resume.schemas.ts` to 100) and
+  `Yeet.command.ts` lines back to 96.72 over the 96.19 floor; rows recorded with
+  the scoped `coverage --filter=@beep/repo-cli --write-baseline`.
+- Inherited: main's own Coverage Regression lane is red on the missing
+  `@beep/box-provisioning` row; this branch carries the row.
+- Hosted runners check out a detached HEAD, so the command-wiring dispatch
+  test tolerates the PR-branch-only guards.

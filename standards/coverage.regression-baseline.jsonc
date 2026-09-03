@@ -25908,6 +25908,18 @@
             "functions": 1
           }
         },
+        "packages/tooling/tool/cli/src/commands/Yeet/internal/PrSessionRegistry.ts": {
+          "lines": 97.72,
+          "statements": 97.95,
+          "branches": 95.23,
+          "functions": 95.23,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 1,
+            "functions": 1
+          }
+        },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/ProofState.ts": {
           "lines": 84.89,
           "statements": 84.94,
@@ -25930,6 +25942,18 @@
             "statements": 33,
             "branches": 10,
             "functions": 12
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Yeet/internal/ProvenanceFooter.ts": {
+          "lines": 95.34,
+          "statements": 94.2,
+          "branches": 80.39,
+          "functions": 97.05,
+          "uncovered": {
+            "lines": 6,
+            "statements": 8,
+            "branches": 10,
+            "functions": 1
           }
         },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/PublishScope.ts": {
@@ -26002,6 +26026,30 @@
             "statements": 11,
             "branches": 5,
             "functions": 7
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Yeet/internal/Resume.schemas.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Yeet/internal/Resume.ts": {
+          "lines": 92,
+          "statements": 89.7,
+          "branches": 85.96,
+          "functions": 88.37,
+          "uncovered": {
+            "lines": 10,
+            "statements": 14,
+            "branches": 8,
+            "functions": 5
           }
         },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts": {
