@@ -130,7 +130,7 @@
     },
     "package-test-typecheck": {
       "cache": false,
-      "dependsOn": ["^build"],
+      "dependsOn": ["^transit"],
       "inputs": [
         "package.json",
         "scripts/**",

@@ -134,7 +134,7 @@ describe("tsgo tests Turbo inputs", () => {
         const packageTask = turboConfiguration.tasks["package-test-typecheck"];
 
         expect(packageTask.cache).toBe(false);
-        expect(packageTask.dependsOn).toEqual(["^build"]);
+        expect(packageTask.dependsOn).toEqual(["^transit"]);
         expect(packageTask.inputs).toEqual(EXPECTED_TEST_TSGO_INPUTS);
 
         yield* writeFixtureJson(root, "package.json", {
@@ -153,13 +153,11 @@ describe("tsgo tests Turbo inputs", () => {
         yield* writeFixtureJson(root, "packages/config/package.json", {
           name: "@fixture/config",
           private: true,
-          scripts: { build: "echo build" },
         });
         yield* writeFixtureJson(root, "turbo.json", {
           tasks: {
-            build: {
-              inputs: ["$TURBO_DEFAULT$"],
-              outputs: [],
+            transit: {
+              dependsOn: ["^transit"],
             },
             "package-test-typecheck": {
               cache: packageTask.cache,
