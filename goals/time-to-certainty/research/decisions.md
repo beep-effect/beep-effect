@@ -157,7 +157,8 @@ only detector of pid reuse. Three states are distinct: a start with no owner pid
 a legacy start (amendment 1, `legacy-unowned-start`); a start whose recorded pid no longer exists as
 a process is closed as `owner-dead` at the next reconciliation; a start whose recorded pid still
 exists, with no start-time identity to confirm it is the same process, stays open until the start
-is older than the longest plausible attempt (24 hours from the start row's `recordedAt`);
+is older than the longest plausible attempt (24 hours from the start row's `startedAt`, the
+`attempt-started` timestamp field);
 the first reconciliation after that closes it with `attempt-terminated` reason
 `stale-unverifiable-owner` and one receipt per pass. Rejected: keeping such starts open
 indefinitely (pid reuse leaves permanent unfinished rows and M5 drifts upward); retrying identity
