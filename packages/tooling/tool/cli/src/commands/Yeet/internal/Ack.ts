@@ -207,6 +207,19 @@ export class YeetAckWaiveResolution extends S.Class<YeetAckWaiveResolution>($I`Y
  * dismissal button, and dismissals are A3's *waive* concept with attribution
  * and expiry, not an acknowledgment.
  *
+ * **Example** (Decode an environment-only resolution)
+ *
+ * ```ts
+ * import { YeetAckResolution } from "@beep/repo-cli/test/Yeet"
+ * import * as S from "effect/Schema"
+ *
+ * const resolution = S.decodeUnknownSync(YeetAckResolution)({
+ *   kind: "environment-only",
+ *   reason: "the runner image does not provide systemd"
+ * })
+ * console.log(resolution.kind) // "environment-only"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
