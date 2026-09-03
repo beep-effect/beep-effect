@@ -1,0 +1,42 @@
+id: "ic:jv-merge-readiness-assessment:001"
+hypothesis_ref: "dh:jv-merge-readiness-assessment:001"
+identity:
+  supplies_identity: unresolved
+  identity_criterion: >-
+    Unresolved for the broad exact-reused VerificationEvidence extension: its
+    instances include heterogeneous claims, assessment records, and issued
+    carriers, and the corpus does not yet decide whether content, issuance, or
+    custody lineage supplies identity across all of them.
+  reidentification_key:
+    - "target, tree, epoch, policy, and evidence context"
+    - "claim content and producing evaluation"
+    - "issuance, custody, copy, and correction lineage"
+ontoclean:
+  rigidity: unresolved
+  carries_identity: unresolved
+  supplies_identity: unresolved
+  unity: >-
+    Broad evidence unity is unresolved between one claim-content unit and one
+    provenance-bound issued record realizing such content.
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "situation: the pull request's merge-readiness state at an instant"
+    - "information_object: one claim-content object realized by many carriers"
+    - "information_object: each separately issued evidence record token"
+    - "none: an ephemeral monitor projection without stable evidence identity"
+  existential_dependencies:
+    - "The target and bounded applicability context evidenced"
+    - "A producing act and at least one faithful carrier"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: unresolved
+  terminal_states:
+    - "superseded or corrected under an authoritative evidence lineage"
+counterexamples:
+  - description: >-
+      A merge-readiness record and a hosted-check record can both instantiate
+      VerificationEvidence while having different generation and custody
+      practices, so the merge-specific criterion cannot govern the broad class.
+status: proposed

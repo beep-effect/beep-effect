@@ -1,0 +1,10 @@
+id: po:sha256:bfd3354cf7bb7617d540ac6a8e7d8e93b8f73350c7f7c95e890bd915cc636b42
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: turbo.json
+source_span:
+  start_line: 39
+  end_line: 40
+quote: "\"NODE_TLS_REJECT_UNAUTHORIZED\",\n      \"CHAT_TRANSPORT\","
+epistemic_status: quoted_prose

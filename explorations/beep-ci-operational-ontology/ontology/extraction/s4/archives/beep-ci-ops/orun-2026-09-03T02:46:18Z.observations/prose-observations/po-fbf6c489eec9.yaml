@@ -1,0 +1,10 @@
+id: po:sha256:fbf6c489eec970f6721e9230714ae66a02b6dacd615e00edefd8a84d7a436e42
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: standards/ARCHITECTURE.md
+source_span:
+  start_line: 1939
+  end_line: 1947
+quote: The migration posture has five buckets
+epistemic_status: quoted_prose

@@ -1,0 +1,27 @@
+id: "so:sha256:01f4d0036e4dcd1a4e636c0b502838d5455dd4b5c96c845bfc0a6931109dd264"
+schema_version: 1
+repository:
+  commit: "341cfef8b6e80d49f6cef894e9eecd5337f70e8f"
+  path: "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run2-fleet/verdicts/beep-effect10/docs_candor-wedge-brief-98161af967dc/verdict.properties"
+source_span:
+  start_line: 1
+  end_line: 34
+  content_sha256: "bc8dcc0db77f26c82f775f888821106608b0343ccb841a7dfd96f2930c660837"
+extractor:
+  id: "adapter-journal"
+  version: "1.0.0"
+  parser: "python-stdlib-properties"
+  script: "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal.py"
+symbol:
+  qualified_name: "yeet-verdict"
+  lexical_name: "yeet-verdict"
+  syntactic_kind: "properties_projection"
+observed_facts:
+  - predicate: "config_key_value"
+    object: "_id=Option"
+  - predicate: "config_key_value"
+    object: "_tag=Some"
+  - predicate: "config_key_value"
+    object: "value=c5776ca7-7aae-4e0c-bbc3-20f3657a07c6"
+source_excerpt: "_id=Option"
+epistemic_status: "parser_derived"

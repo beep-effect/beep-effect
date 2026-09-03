@@ -1,0 +1,43 @@
+id: "ic:jv-memory-peak-measurement:001"
+hypothesis_ref: "dh:jv-memory-peak-measurement:001"
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Two recorded peak-memory measurements are the same information object only
+    when one measurement assertion concerns the same resource-using occurrence
+    and process boundary under the same sampling method, interval, unit, value,
+    and provenance; converted or coincident values are not sufficient.
+  reidentification_key:
+    - "measured execution or admission occurrence and process boundary"
+    - "sampling interval, method, and resource metric"
+    - "value, unit, and provenance as supporting evidence"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    One provenance-bearing peak-resource assertion about one bounded activity
+    under one metric, sampling interval, and unit.
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "quality: the peak memory-consumption quality of an execution"
+    - "information_object: an instrumentation-counter record tied to a process"
+    - "none: an unscoped numeric telemetry field"
+  existential_dependencies:
+    - "The resource-using occurrence and process boundary measured"
+    - "A sampling method, interval, metric, and unit"
+    - "At least one faithful carrier"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - "corrected or re-scoped into a successor measurement"
+    - "ceased when no faithful realization remains"
+counterexamples:
+  - description: >-
+      A peakRssKb value and a memoryPeakBytes value can concern different
+      process trees and sampling windows even after unit conversion, so their
+      magnitude cannot establish one measurement identity.
+status: proposed

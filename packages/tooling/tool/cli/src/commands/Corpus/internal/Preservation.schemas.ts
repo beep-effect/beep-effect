@@ -197,9 +197,12 @@ class AlreadyCompleteOutcome extends S.Class<AlreadyCompleteOutcome>($I`AlreadyC
     kind: S.tag("already-complete"),
     bytesReused: NonNegativeInt,
     sha256: Sha256Hex,
+    statAfter: SourceStabilityObservation,
+    statBefore: SourceStabilityObservation,
   },
   $I.annote("AlreadyCompleteOutcome", {
-    description: "An existing full-length destination whose re-hash matched the source stream digest.",
+    description:
+      "An existing full-length destination whose digest matched two stable source reads bracketed by source stats.",
   })
 ) {}
 
@@ -417,7 +420,9 @@ export type PreservationAttemptOutcome = typeof PreservationAttemptOutcome.Type;
  *   outcome: {
  *     kind: "already-complete",
  *     bytesReused: 2048,
- *     sha256: Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
+ *     sha256: Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"),
+ *     statAfter: { mtimeEpoch: 1754784000000, sizeBytes: 2048 },
+ *     statBefore: { mtimeEpoch: 1754784000000, sizeBytes: 2048 }
  *   }
  * })
  * console.log(row.outcome.kind) // "already-complete"

@@ -1,0 +1,47 @@
+target: "otp:pb-package-dependency:001"
+target_sha256: "2f513f97bc4b10b8b4d9a5c1e8d77890369e9ad856f4f6940c3283a96ddfdad6"
+chain_sha256: "b5fe8134662322dd586c62561766b4671e22c2176f8be1c28126f8d6732b369b"
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: "The proposal asserts no candidate is-a edge."
+revision_requests: []
+attacks:
+  - surface: identity
+    rule: relation-identity-versus-assertion
+    counterexample: >-
+      Two manifest records can assert the same direct edge, and one stale
+      record can survive after the operative dependency ends. The proposal
+      does not reify either assertion as the relation's identity bearer; it
+      indexes the binary fact to ordered package pair, pinned graph context,
+      dependency semantics, and validity interval.
+    outcome: survived
+  - surface: warrant
+    rule: semantic-support-required-by-decision-term
+    counterexample: >-
+      CQ-004 computes dependsOnTransitive as a reachability fixpoint. Without
+      direct dependsOn edges, that fixpoint has no base facts and cannot return
+      transitively affected package vertices, so the support term is necessary
+      rather than merely mentioned.
+    outcome: survived
+  - surface: null_discriminator
+    rule: discriminator-false-in-null-world
+    counterexample: >-
+      A decorative architecture arrow could have the same spelling without an
+      operative package dependency. It could not serve as the directed base
+      relation for CQ-004's pinned-graph reachability calculation, so the
+      implementation-decoration null fails.
+    outcome: survived
+rival_models_still_viable:
+  - "A manifest dependency declaration is an information object about the binary relation."
+  - "A reified dependency relator carries edge-local provenance or version constraints."
+evidence:
+  - "po:sha256:669ac1bd6274ee1851c836dd9730f2ae14dcf8843ffea88e4f170949778249d3"
+  - "po:sha256:8816173181e3b06a711847fa03ad9d050c9f1d74d131af70eb367a8ea99f99cd"
+  - "CQ-004"

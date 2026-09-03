@@ -1,0 +1,27 @@
+id: po:sha256:b3ea29a27a4730f094b12522a0d0c1648896c255cf538754d3bb11c7db52764f
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: explorations/beep-ci-operational-ontology/ontology/extraction/s7/work-s7/impl-report.md
+source_span:
+  start_line: 62
+  end_line: 71
+quote: '## Differential replay adjudication
+
+
+  The initial replay reported six first-choice divergences at zero-based journal
+
+  event indices 66, 68, 71, 73, 75, and 78. The common reconstructed charge was
+
+  grant nonce `1813f29f...`, weight 5, admitted at event index 20 and never
+
+  released anywhere later in the journal. Retaining that charge made the six
+
+  recorded admissions appear infeasible. Removing it made every admission
+
+  exactly feasible under `activeTokenTotal + weightTokens <= capacityMaxTokens`;
+
+  each divergent instant had exactly one pending request, and the projection''s
+
+  first choice then matched the recorded grant.'
+epistemic_status: quoted_prose

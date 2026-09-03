@@ -1,0 +1,24 @@
+id: "dh:pa-failure-signature:001"
+observation_refs:
+  - "po:sha256:2d69bdb38dd2c7618a64b60834a6993abe999b6776d721aef8b6eb947c9b2e91"
+  - "po:sha256:4ce41ce65957b0594e01c672972fb68722ee30c3df62444b2d323fe6d70e07cf"
+  - "po:sha256:4ec767a335e920a2a80204127a6c3146cded1e5eb3d748b11a87dfc4579fc735"
+cq_warrants: ["CQ-013"]
+proposed_referent:
+  label: "Verification failure signature information"
+  description: "A classification artifact combining a failure kind with the failed verification step, with concrete monitor signatures as operational vocabulary."
+representation_status: unresolved
+alternatives:
+  - label: "Verification failure occurrence"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "Yeet error-code vocabulary"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The enum, optional field, and monitor literal suggest a failure-signature representation, but do not observe a classified failure occurrence or establish the components' operational semantics."
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.4, use_for_acceptance: false}

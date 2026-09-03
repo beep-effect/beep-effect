@@ -1,0 +1,10 @@
+id: po:sha256:1e660064d1ea4f712a62b8e4440612413263dc165cb8fc6711b52fb488110e59
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
+source_span:
+  start_line: 1272
+  end_line: 1272
+quote: 'yield* fs.remove(ticketPath, { force: true }).pipe(Effect.ignore);'
+epistemic_status: quoted_prose

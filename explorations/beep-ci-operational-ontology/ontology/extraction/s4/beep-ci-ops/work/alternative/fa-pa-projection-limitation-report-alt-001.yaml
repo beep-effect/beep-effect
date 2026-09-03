@@ -1,0 +1,19 @@
+id: fa:pa-projection-limitation-report-alt:001
+hypothesis_ref: dh:pa-projection-limitation-report:001
+identity_card_ref: ic:pa-projection-limitation-report-alt:001
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+- label: projection applicability situation in the world
+  still_viable: true
+- label: implementation-report section with no delimiting force
+  still_viable: false
+strongest_counterexample: The caveat list is exactly an applicability-context object. The
+  remaining rival is whether those limits are themselves a world situation (what the projection
+  did not cover) rather than a report about coverage.
+verdict: analyzed
+needed_evidence: An observation that later reasoning treats the four caveats as facts about
+  the scheduler rather than as scope limits on the S7 evidence.

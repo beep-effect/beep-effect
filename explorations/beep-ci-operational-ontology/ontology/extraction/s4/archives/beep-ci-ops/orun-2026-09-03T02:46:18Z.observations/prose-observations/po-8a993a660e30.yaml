@@ -1,0 +1,10 @@
+id: po:sha256:8a993a660e307ea438dd3b6151cf65a81254311b91ba0ce9a6e03e606dfc012a
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts
+source_span:
+  start_line: 176
+  end_line: 177
+quote: "\"knip\",\n  \"labs\","
+epistemic_status: quoted_prose

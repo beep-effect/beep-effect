@@ -1,0 +1,14 @@
+# Falsifiability (PR #963 Codex review): an amended ScheduleProposal whose step
+# schedules a SeatRequest and carries the deployed literal scope tag, but has NO
+# scopedByComputation edge, must violate the step-scope provenance arm.
+@prefix ciops: <https://oip.law/ontology/ci-ops#> .
+
+ciops:sp-step-scoped a ciops:ScheduleProposal ;
+    ciops:hasProjectionSpecification ciops:aps-step-scoped ;
+    ciops:hasStep ciops:st-step-scoped .
+ciops:aps-step-scoped a ciops:AdmissionProjectionSpecification .
+ciops:st-step-scoped a ciops:ScheduleStep ;
+    ciops:stepIndex 1 ;
+    ciops:schedulesSeatRequest ciops:req-step-scoped ;
+    ciops:hasScopeTag "admission" .
+ciops:req-step-scoped a ciops:SeatRequest .

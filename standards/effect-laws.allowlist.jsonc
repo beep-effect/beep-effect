@@ -212,6 +212,14 @@
     },
     {
       "rule": "beep-laws/no-native-runtime",
+      "file": "packages/foundation/modeling/provenance/src/VerifiedTextAnchor.ts",
+      "kind": "new-map-set",
+      "reason": "Verified source and anchor capabilities require module-private weak identity registries so structural lookalikes remain unforgeable without retaining discarded proof objects.",
+      "owner": "@beep/provenance",
+      "issue": "CODEX-SECURITY-VERIFIED-ANCHOR-WEAK-IDENTITY"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
       "file": "packages/foundation/ui-system/dock-react/src/internal/ResizeObserverHarness.ts",
       "kind": "new-map-set",
       "reason": "The controllable jsdom harness mirrors the native ResizeObserver contract (observer registry and per-observer Element targets) so tests drive resize callbacks exactly as the DOM would.",

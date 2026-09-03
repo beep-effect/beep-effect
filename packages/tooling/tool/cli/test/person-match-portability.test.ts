@@ -32,7 +32,7 @@ const makePersonMatchOptions = (
   });
 
 const workerFailureJson = (code: PersonMatchWorkerErrorCode): string =>
-  `{"schemaVersion":"beep.files.match-person.worker.v2","ok":false,"error":{"code":"${code}","message":"simulated worker failure"},"elapsedSeconds":0}`;
+  `{"schemaVersion":"beep.files.match-person.worker.v3","ok":false,"limits":{"referenceImages":256,"candidateImages":10000,"facesPerImage":32,"reportedFaces":65536,"reportBytes":67108864,"diagnosticBytes":1048576},"error":{"code":"${code}","message":"simulated worker failure"},"elapsedSeconds":0}`;
 
 const modelFailureCases = [
   { code: "model-acquisition-incomplete", tag: "MatchPersonModelAcquisitionError" },
@@ -158,7 +158,7 @@ describe("person-match backend portability", () => {
 
       expect(truncated).toMatchObject({
         _tag: "MatchPersonProtocolError",
-        message: expect.stringContaining("exceeded the 256 MiB safety bound"),
+        message: expect.stringContaining("JSON or diagnostics exceeded its safety bound"),
       });
       expect(malformed).toMatchObject({
         _tag: "MatchPersonProtocolError",

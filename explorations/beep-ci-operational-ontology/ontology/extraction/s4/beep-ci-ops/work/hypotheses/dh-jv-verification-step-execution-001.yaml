@@ -1,0 +1,32 @@
+id: "dh:jv-verification-step-execution:001"
+observation_refs:
+  - "so:sha256:1081a3f10108fba5826e74ade5a53a90ae027969e1857cbfe67f1ef919a6931f"
+  - "so:sha256:3a8b51a1acc8602b1a583147d6d5e7e253481237fbf5806c9b13833698bc9090"
+cq_warrants: ["CQ-022", "CQ-025"]
+proposed_referent:
+  label: "Verification step execution occurrence"
+  description: >-
+    A run or non-run occurrence of a verification step or lane, identified in
+    a phase and carrying an observed status, outcome, duration, or exit code.
+representation_status: domain_referent
+alternatives:
+  - label: "Verification step result record"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "Yeet pipeline bookkeeping row"
+    representation_status: implementation_artifact_only
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: >-
+    Concrete steps are recorded with run-specific phases and statuses, which
+    supports an execution occurrence distinct from the reusable step
+    specification and from its serialized result.
+  discriminator: >-
+    One cited observation records prepare:01-effect-imports as passed with a
+    measured duration and zero exit code, while the other records
+    closeout:01-pr-context as not-run in a failed closeout; those are concrete
+    execution outcomes, not representation declarations.
+epistemic_status: proposed
+confidence: {value: 0.88, use_for_acceptance: false}

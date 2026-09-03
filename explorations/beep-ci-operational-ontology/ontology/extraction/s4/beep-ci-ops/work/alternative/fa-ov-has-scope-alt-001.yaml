@@ -1,0 +1,28 @@
+id: fa:ov-has-scope-alt:001
+hypothesis_ref: dh:ov-has-scope:001
+identity_card_ref: ic:ov-has-scope-alt:001
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+- label: projection-version constant (v1 all admission-act), not a per-step quality
+  still_viable: true
+- label: hasScope ranges over admission-act individuals rather than a tag value
+  still_viable: true
+- label: role of the scheduled content relative to the proposal
+  still_viable: true
+- label: generic scope relation reused across proposals and scheduled units as one relator type
+  still_viable: true
+- label: projection-schema scope-tag field with no qualifying content
+  still_viable: false
+strongest_counterexample: 'The schema puts a scope tag on each ScheduleStep, which
+  supports a per-step quality, but the only gloss is a v1/v2 version comment on "the
+  admission act itself". That gloss equally supports a constant of the v1 projection,
+  a comment on the scheduled-unit slot, or a tag that will later range over acts.
+  Quality versus those rivals are observationally equivalent on current evidence.'
+verdict: analyzed
+needed_evidence: 'An observation of two steps in one proposal with distinct scope
+  tags, or of hasScope ranging over individuals (acts or units) rather than a tag,
+  or of the tag being cited as a property of the v1 contract rather than of each step.'

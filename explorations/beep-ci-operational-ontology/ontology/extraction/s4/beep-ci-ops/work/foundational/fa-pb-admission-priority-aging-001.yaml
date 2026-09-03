@@ -1,0 +1,17 @@
+id: "fa:pb-admission-priority-aging:001"
+hypothesis_ref: "dh:pb-admission-priority-aging:001"
+identity_card_ref: "ic:pb-admission-priority-aging:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+  - label: "A deployed admission-policy regime is a normative mode or situation distinct from the specification that describes it."
+    still_viable: true
+  - label: "The aging clause is an independently identified specification rather than content within the complete AdmissionPolicy."
+    still_viable: false
+  - label: "The priority-aging clause alone guarantees the declared starvation bound."
+    still_viable: false
+strongest_counterexample: "A request can receive the aged rank and remain inadmissible under other policy clauses, while two policies can share that threshold yet differ elsewhere; the aging clause is content of, not identity for, the complete AdmissionPolicy."
+verdict: analyzed

@@ -1,0 +1,22 @@
+id: "dh:pa-changeset-enforcement-mode:001"
+observation_refs:
+  - "po:sha256:29fa556fa03b7070d567678f785682c88a97dfe828fa6c517223e3961847c58a"
+cq_warrants: []
+proposed_referent:
+  label: "Changeset-status enforcement literals"
+  description: "The lab-exempt and enforced values represented by a ChangesetStatus LiteralKit declaration."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "Changeset policy applicability state"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "Policy-state controlled vocabulary"
+    representation_status: information_artifact
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The two literal spellings provide no observation of their operational conditions, bearers, or effect on a verification episode."
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.15, use_for_acceptance: false}

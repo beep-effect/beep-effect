@@ -1,0 +1,26 @@
+id: "fa:pa-projection-conformance-evidence:001"
+hypothesis_ref: "dh:pa-projection-conformance-evidence:001"
+identity_card_ref: "ic:pa-projection-conformance-evidence:001"
+tests:
+  spec_vs_execution: merged
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+  - label: "The property-suite specification, replay execution, and result report are three linked individuals."
+    still_viable: true
+  - label: "A governed composite evidence package intentionally includes all three components."
+    still_viable: true
+  - label: "The PASS report is identical to projection correctness without an applicability context."
+    still_viable: false
+strongest_counterexample: >-
+  Forty-one matching admissions establish only one replay result over frozen
+  bytes, while the property suite is repeatable and the caveat evidence omits
+  deployed skippability conditions; evidence, execution, and conformance truth
+  therefore have different identities.
+verdict: explicitly_deferred
+needed_evidence: >-
+  An evidence-package contract must identify the exact suite and projection
+  bytes, frozen input digests, replay execution and environment, complete
+  outputs, report custody, and applicability limits, and must state whether
+  these remain separate linked artifacts or one governed composite.

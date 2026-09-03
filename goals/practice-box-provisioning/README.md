@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -36,15 +36,20 @@ Use this command for execution-capable sessions:
 
 ## Current phase
 
-P2 Verify. The pre-apply adversarial review found the merged reconciler NOT
-SAFE for a first live apply (silent exact-name adoption, case-sensitive name
-matching, a loose blocker contract, no partial receipt); the hardening is
-landed and verified. Live dry-run and apply still require the operator: the
-1Password CLI desktop integration must be enabled, the three private practice
-inputs filled, and the apply attended.
+Closed 2026-09-03. The live tenant carries the 32-folder starter tree under the
+service identity with the attorney collaborated on the client folder; metadata
+and retention stay `BlockedByEntitlement` on Business; a fresh-process re-plan
+is all-`Noop`. The final fix merged as #959; the closeout reflection and this
+status flip ride follow-up PR #960 by operator decision (Exception Ledger).
 
 ## Latest evidence
 
+- [`history/2026-09-03-p2-live-apply.md`](./history/2026-09-03-p2-live-apply.md)
+  records the live dry-run proof, the attended apply receipt summary, the
+  post-apply all-`Noop` re-plan, and the two live-tenant fixes (Sign 403
+  tolerance, runner input contract).
+- [`history/reflections/2026-09-03-claude.md`](./history/reflections/2026-09-03-claude.md)
+  is the closeout reflection.
 - [`history/2026-09-02-p2-preapply-hardening.md`](./history/2026-09-02-p2-preapply-hardening.md)
   records the branch re-sync, the Codex NOT SAFE verdict and Grok Box API
   verification, the nine reconciler and driver hardening items, verification,

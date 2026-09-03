@@ -1,0 +1,59 @@
+target: "otp:jv-merge-readiness-assessment:001"
+target_sha256: "c0e8c8871a94fd3d11e4a24182d424c3f423e4d664d12da2984db23cfb58de32"
+chain_sha256: "9b67e6d1eb9654396e12cb41d02e280f3b7712a6e2f634c89215e268f01219f7"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The proposal asserts no parents. Its exact-reuse collision with the
+    ratified VerificationEvidence term is an identity and warrant issue, not a
+    proposed subsumption edge.
+revision_requests:
+  - >-
+    Preserve the ratified broad VerificationEvidence semantics when reusing its
+    IRI; model a merge-readiness assessment as an instance or separately named
+    subtype instead of redefining the class with a narrower identity criterion.
+  - >-
+    Use a CQ that actually consumes the merge-readiness assessment and its
+    policy/head snapshot, rather than CQ-006's generic obligation-discharge
+    evidence pattern.
+  - >-
+    Provide evidence that an assessment is retained and reidentified apart
+    from Yeet's Boolean aggregation record.
+attacks:
+  - surface: identity
+    rule: exact-reuse-narrows-ratified-identity
+    counterexample: >-
+      A build receipt and a merge-readiness evaluation can both be ratified
+      VerificationEvidence while having different production and identity
+      criteria; the proposal's same-IRI definition would exclude the build
+      receipt and make one subtype's evaluation instant identify the whole class.
+    outcome: landed
+  - surface: warrant
+    rule: cq-does-not-require-merge-readiness-assessment
+    counterexample: >-
+      CQ-006 can compute unmet lanes from per-lane evidence that discharges
+      obligations for a tree and epoch without reading ready, mergeable,
+      threadsResolved, or any aggregate merge-readiness assessment.
+    outcome: landed
+  - surface: null_discriminator
+    rule: discriminator-true-of-readiness-dto
+    counterexample: >-
+      A pure monitor DTO can compute and serialize all six Boolean criteria and
+      ready=false for a concrete run without the aggregate becoming an
+      independently identified evidence object.
+    outcome: landed
+rival_models_still_viable:
+  - "A time-indexed merge-readiness situation."
+  - "A transient aggregation over independently identified evidence records."
+evidence:
+  - "so:sha256:0fe42bf9ddcb6f694fd168ec852d86cce4ac9945aa66e1d55d1531e6ca799e46"
+  - "so:sha256:223ed0681f8f87a828ea875cbfde48d86c2cedd8d649f476ca43f10a42134437"
+  - "so:sha256:4d2f65e45969d3636bdb53c81dc0c3192aa766ad2bc9e98e6b641d3e90e0d7db"
+  - "CQ-006"

@@ -1,0 +1,21 @@
+id: po:sha256:06dd8aab73f74fd680b9cf55a760da82d4a3420f91fc8ea9d8bdb27c4c000d57
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: explorations/beep-ci-operational-ontology/ontology/extraction/s7/work-s7/impl-report.md
+source_span:
+  start_line: 3
+  end_line: 9
+quote: '## Outcome
+
+
+  The S7 lane now provides a schema-first, deterministic admission projection,
+
+  an Effect service with a transactional live shell, canonical Turtle emission,
+
+  and strict differential replay against the frozen S6 journal. The replay passes
+
+  all 41 recorded admissions after one journal-grounded inferred dead-lease
+
+  eviction. The frozen S6 inputs were read only and were not regenerated.'
+epistemic_status: quoted_prose

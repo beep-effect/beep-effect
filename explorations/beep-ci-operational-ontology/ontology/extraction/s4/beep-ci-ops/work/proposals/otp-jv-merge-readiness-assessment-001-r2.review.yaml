@@ -1,0 +1,49 @@
+target: "otp:jv-merge-readiness-assessment:001"
+target_sha256: "f387a8fc447a19053d7a08ea83cbb2744b12d8e73299f3b083a7c21abdb47a77"
+chain_sha256: "523afbd08641c050fdac0f8c35cf7c633c522740be722ec71641492979f80f6f"
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The revised exact-reuse proposal asserts no parents, so no new is-a edge is
+    present; extension compatibility is tested on identity and warrant instead.
+revision_requests: []
+attacks:
+  - surface: identity
+    rule: exact-reuse-narrows-ratified-identity
+    counterexample: >-
+      A hosted-check receipt and a merge-readiness assessment have different
+      production and custody histories but can both be VerificationEvidence.
+      The revised definition expressly retains that broad extension and treats
+      readiness assessments as instances rather than the class's identity rule.
+    outcome: survived
+  - surface: warrant
+    rule: exact-reused-decision-term-warrant
+    counterexample: >-
+      CQ-005 and CQ-006 both require the broad VerificationEvidence class even
+      when no aggregate readiness record exists. The revision warrants that
+      exact-reused class and no longer claims a separate assessment subtype.
+    outcome: survived
+  - surface: null_discriminator
+    rule: evidence-content-not-readiness-dto
+    counterexample: >-
+      A readiness DTO can be transient, but its concrete evaluated criteria and
+      conclusion can still be one evidence record alongside other evidence
+      kinds. The revision claims neither a new carrier identity nor a timeless
+      readiness situation, so the DTO counterexample does not narrow the class.
+    outcome: survived
+rival_models_still_viable:
+  - "A time-indexed merge-readiness situation distinct from its evidence."
+  - "Claim-content identity versus issued-carrier identity within the broad class."
+evidence:
+  - "so:sha256:0fe42bf9ddcb6f694fd168ec852d86cce4ac9945aa66e1d55d1531e6ca799e46"
+  - "so:sha256:223ed0681f8f87a828ea875cbfde48d86c2cedd8d649f476ca43f10a42134437"
+  - "so:sha256:4d2f65e45969d3636bdb53c81dc0c3192aa766ad2bc9e98e6b641d3e90e0d7db"
+  - "CQ-005"
+  - "CQ-006"

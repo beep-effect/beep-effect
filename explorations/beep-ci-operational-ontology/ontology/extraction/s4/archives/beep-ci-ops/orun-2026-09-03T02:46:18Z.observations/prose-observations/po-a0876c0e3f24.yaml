@@ -1,0 +1,10 @@
+id: po:sha256:a0876c0e3f248b2e92b3945d162a565e2f325cfd39145c9f8f9eec5702ff9d03
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: packages/tooling/tool/cli/src/commands/Yeet/Yeet.schemas.ts
+source_span:
+  start_line: 29
+  end_line: 49
+quote: export const QualityIssueCategory = LiteralKit([
+epistemic_status: quoted_prose

@@ -1,0 +1,35 @@
+id: ic:pb-docgen-affected-scope-alt:001
+hypothesis_ref: dh:pb-docgen-affected-scope:001
+identity:
+  supplies_identity: true
+  identity_criterion: Two change-bounded documentation scopes are the same situation iff they
+    determine the same extensional file-set from the same origin/main-to-HEAD interval plus
+    the same dirty files for the same local verification run. The command flag that bounds
+    the run is evidence of how the situation is selected, never the situation.
+  reidentification_key:
+  - origin/main...HEAD (evidence)
+  - dirty files (evidence)
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: one extensional file-set for one local documentation-verification run
+  dependence: relational
+ufo_analysis:
+  candidate_category: situation
+  alternatives:
+  - information_object
+  - quality
+  existential_dependencies:
+  - the local verification run
+  - the revision interval and dirty set
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+- description: The same bound used on two runs with different HEAD or dirty files yields two
+    scopes; identifying the scope with the phrase origin/main...HEAD would collapse them.
+- description: A file can enter or leave the set without ceasing to exist; treating in-scope
+    as a kind of file would be role-or-phase as kind.
+status: proposed

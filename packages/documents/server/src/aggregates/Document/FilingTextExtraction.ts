@@ -132,7 +132,7 @@ const extractedText = (result: ProcessFileResult, maxExcerptChars: number) =>
         O.filter(Str.isNonEmpty),
         O.match({
           onNone: () => Effect.succeed(O.none<FilingTextExcerpt>()),
-          onSome: (text) => decodeFilingTextExcerpt(text).pipe(Effect.map(O.some)),
+          onSome: (text) => decodeFilingTextExcerpt(text).pipe(Effect.asSome),
         })
       ),
     skipped: () => Effect.succeed(O.none<FilingTextExcerpt>()),

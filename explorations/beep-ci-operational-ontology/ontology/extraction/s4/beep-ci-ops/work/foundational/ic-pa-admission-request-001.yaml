@@ -1,0 +1,43 @@
+id: "ic:pa-admission-request:001"
+hypothesis_ref: "dh:pa-admission-request:001"
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Two queued-request record tokens are the same only when they continue one
+    provenance-bearing ticket created by one enqueue act; heartbeat updates
+    preserve that lineage, whereas a live input, replay-derived view, or copied
+    serialization is not identical without an explicit carrier-lineage join.
+  reidentification_key:
+    - "exclusive ticket-creation and enqueue provenance"
+    - "nonce and process coordinates as supporting evidence"
+    - "continuous queued-ticket carrier lineage"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    One durably created ticket record whose queue fields and update history
+    belong to a single carrier lineage until removal or quarantine.
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "relator: the requesting relation between an agent and planned work"
+    - "information_object: live-request and replay-view artifacts about the ticket"
+    - "none: a transient scheduler DTO without independent artifact identity"
+  existential_dependencies:
+    - "The enqueue act and admission context represented by the record"
+    - "At least one durable ticket carrier"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+    - "deleted after successful grant staging"
+    - "removed on cancellation, interruption, or dead-owner reaping"
+    - "moved to quarantine when undecodable"
+counterexamples:
+  - description: >-
+      Two independently created ticket carriers can contain identical owner,
+      work-kind, charge and enqueue values, while a replay-derived view can
+      match those fields without continuing either carrier lineage.
+status: proposed

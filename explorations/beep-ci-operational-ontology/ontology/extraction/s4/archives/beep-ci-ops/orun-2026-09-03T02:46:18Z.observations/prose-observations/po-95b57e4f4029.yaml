@@ -1,0 +1,10 @@
+id: po:sha256:95b57e4f4029739dacb78d5caa9b43939b1820fc17d3785a9ff32181d7d0e0b6
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
+source_span:
+  start_line: 183
+  end_line: 183
+quote: Math.floor((availableGib - config.reserveGib) / config.slotSizeGib)
+epistemic_status: quoted_prose

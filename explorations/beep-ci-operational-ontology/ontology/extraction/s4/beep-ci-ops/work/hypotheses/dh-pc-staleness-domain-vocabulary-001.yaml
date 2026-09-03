@@ -1,0 +1,28 @@
+id: "dh:pc-staleness-domain-vocabulary:001"
+observation_refs:
+  - "po:sha256:f3e3147d94fc10d3f19baa227380325d13ef3a56e8c2172ff1e218662278deca"
+cq_warrants:
+  - "CQ-011"
+proposed_referent:
+  label: "gate-staleness domain vocabulary"
+  description: >-
+    The source labels repo-code and goals-packets as possible lexical names for
+    invalidation or staleness surfaces.
+representation_status: lexical_alias
+alternatives:
+  - label: "implementation switch values for staleness checks"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+  - label: "kinds of hash surface"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: >-
+    The two literals are not accompanied by an invalidation event, affected
+    lane, package blast radius, or definition of staleness. Their presence in
+    a source vocabulary does not establish domain categories.
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.77, use_for_acceptance: false}

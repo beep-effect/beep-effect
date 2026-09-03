@@ -644,6 +644,74 @@ export class AdmissionJournalReleased extends S.Class<AdmissionJournalReleased>(
   })
 ) {}
 
+// Private vocabulary used to decode v2 lease-eviction rows.
+const AdmissionLeaseEvictionReason = LiteralKit(["owner-dead-or-reused"]).pipe(
+  $I.annoteSchema("AdmissionLeaseEvictionReason", {
+    description: "Reason a v2 admission lease was evicted.",
+  })
+);
+
+// Private vocabulary used to decode v2 queued-ticket eviction rows.
+const AdmissionTicketEvictionReason = LiteralKit(["queued-submitter-death"]).pipe(
+  $I.annoteSchema("AdmissionTicketEvictionReason", {
+    description: "Reason a v2 admission queue ticket was evicted.",
+  })
+);
+
+/**
+ * Lease-eviction event accepted from the v2 admission journal.
+ *
+ * **Example** (Construct an eviction event)
+ *
+ * ```ts
+ * import { AdmissionJournalLeaseEvicted } from "@beep/ciops/src/projection/Schemas"
+ * import { NonNegativeInt } from "@beep/schema"
+ * import * as O from "effect/Option"
+ *
+ * const event = AdmissionJournalLeaseEvicted.make({
+ *   schemaVersion: "yeet-admission-journal/v2",
+ *   nonce: "request-1",
+ *   pid: O.none(),
+ *   evictedAtMillis: NonNegativeInt.make(3000),
+ *   reason: "owner-dead-or-reused"
+ * })
+ * console.log(event._tag) // "admission-lease-evicted"
+ * ```
+ *
+ * @category domain-events
+ * @since 0.0.0
+ */
+export class AdmissionJournalLeaseEvicted extends S.Class<AdmissionJournalLeaseEvicted>(
+  $I`AdmissionJournalLeaseEvicted`
+)(
+  {
+    schemaVersion: S.Literal("yeet-admission-journal/v2"),
+    _tag: S.tag("admission-lease-evicted"),
+    nonce: S.NonEmptyString,
+    pid: S.OptionFromOptionalKey(NonNegativeInt),
+    evictedAtMillis: NonNegativeInt,
+    reason: AdmissionLeaseEvictionReason,
+  },
+  $I.annote("AdmissionJournalLeaseEvicted", {
+    description: "V2 journal transition releasing an active grant after its owner is verified dead.",
+  })
+) {}
+
+// Private schema retained in the public union so mixed v1/v2 journals decode.
+class AdmissionJournalTicketEvicted extends S.Class<AdmissionJournalTicketEvicted>($I`AdmissionJournalTicketEvicted`)(
+  {
+    schemaVersion: S.Literal("yeet-admission-journal/v2"),
+    _tag: S.tag("admission-ticket-evicted"),
+    nonce: S.NonEmptyString,
+    pid: S.OptionFromOptionalKey(NonNegativeInt),
+    evictedAtMillis: NonNegativeInt,
+    reason: AdmissionTicketEvictionReason,
+  },
+  $I.annote("AdmissionJournalTicketEvicted", {
+    description: "V2 journal transition recording a verified dead queued submitter.",
+  })
+) {}
+
 /**
  * Tagged union of admitted and released journal transitions used by replay.
  *
@@ -665,7 +733,12 @@ export class AdmissionJournalReleased extends S.Class<AdmissionJournalReleased>(
  * @category schemas
  * @since 0.0.0
  */
-export const AdmissionJournalEvent = S.Union([AdmissionJournalAdmitted, AdmissionJournalReleased]).pipe(
+export const AdmissionJournalEvent = S.Union([
+  AdmissionJournalAdmitted,
+  AdmissionJournalReleased,
+  AdmissionJournalLeaseEvicted,
+  AdmissionJournalTicketEvicted,
+]).pipe(
   S.toTaggedUnion("_tag"),
   $I.annoteSchema("AdmissionJournalEvent", {
     description: "Admission transition decoded from the S6 golden journal or the live journal shape.",

@@ -560,18 +560,20 @@ export type ArrayCarrier<Carrier, Dimensions extends ArrayDimension> = Dimension
  * @category utilities
  * @since 0.0.0
  */
+export function storageIdent<Dimensions extends ArrayDimension>(
+  dimensions: Dimensions
+): <C extends Spec>(spec: C) => StorageIdent<C, Dimensions>;
 export function storageIdent<C extends Spec, Dimensions extends ArrayDimension>(
   spec: C,
   dimensions: Dimensions
 ): StorageIdent<C, Dimensions>;
-/**
- * Internal helper `storageIdent`.
- *
- * @internal
- * @category utilities
- * @since 0.0.0
- */
-export function storageIdent(spec: Spec, dimensions: ArrayDimension): string {
+export function storageIdent(
+  ...args: readonly [dimensions: ArrayDimension] | readonly [spec: Spec, dimensions: ArrayDimension]
+): string | ((spec: Spec) => string) {
+  if (args.length === 1) {
+    return (spec: Spec) => storageIdent(spec, args[0]);
+  }
+  const [spec, dimensions] = args;
   if (dimensions !== 0) return invariant("SQLite storage identities cannot carry array dimensions.");
   return spec.ident;
 }
@@ -594,7 +596,15 @@ export interface Carrier {
  * @category utilities
  * @since 0.0.0
  */
-export const carrier = (spec: Spec, dimensions: ArrayDimension): Carrier => {
+export function carrier(dimensions: ArrayDimension): (spec: Spec) => Carrier;
+export function carrier(spec: Spec, dimensions: ArrayDimension): Carrier;
+export function carrier(
+  ...args: readonly [dimensions: ArrayDimension] | readonly [spec: Spec, dimensions: ArrayDimension]
+): Carrier | ((spec: Spec) => Carrier) {
+  if (args.length === 1) {
+    return (spec: Spec) => carrier(spec, args[0]);
+  }
+  const [spec, dimensions] = args;
   if (dimensions !== 0) return invariant("SQLite carriers cannot carry array dimensions.");
   return { tag: carrierTag(spec), dimensions };
-};
+}

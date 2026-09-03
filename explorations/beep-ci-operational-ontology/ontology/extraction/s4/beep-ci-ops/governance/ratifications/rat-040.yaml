@@ -1,0 +1,9 @@
+id: rat:40
+proposal_ref: otp:pb-admission-policy:001
+proposal_sha256: f0c2f33ebe7c16f7efe59fbaf266d4653a1472f144710be6d0b553eaf74157e4
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-09-03T09:05:00Z'
+verbatim_decision: Accept the AdmissionPolicy reuse for the base policy content.

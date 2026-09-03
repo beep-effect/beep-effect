@@ -1,0 +1,43 @@
+id: "ic:jv-verification-step-execution:001"
+hypothesis_ref: "dh:jv-verification-step-execution:001"
+identity:
+  supplies_identity: unresolved
+  identity_criterion: >-
+    Unresolved: an actual step execution would be reidentified by one
+    continuous realization of a step specification within one parent attempt,
+    but the cited not-run row may instead identify a planned-step disposition
+    or result record and therefore supplies no execution occurrence to join.
+  reidentification_key:
+    - "parent verification attempt and realized step specification"
+    - "execution start, end, and causal continuity when the step ran"
+    - "planned-step identity and disposition provenance when it did not run"
+ontoclean:
+  rigidity: unresolved
+  carries_identity: unresolved
+  supplies_identity: unresolved
+  unity: >-
+    Evidence does not settle whether the extension contains only bounded step
+    processes or also non-occurring planned steps represented by dispositions.
+  dependence: relational
+ufo_analysis:
+  candidate_category: unresolved
+  alternatives:
+    - "process: an actual verification-step execution"
+    - "situation: a planned step bearing a passed, failed, or not-run disposition"
+    - "information_object: a verification-step result record"
+  existential_dependencies:
+    - "A parent verification attempt and step specification for actual executions"
+    - "A plan and disposition context for a not-run step"
+    - "Execution timing and outcome evidence sufficient to distinguish those cases"
+temporality:
+  exists_during_interval: unresolved
+  may_change_state_without_losing_identity: unresolved
+  terminal_states:
+    - "passed or failed when an execution occurred"
+    - "not-run when only a planned-step disposition exists"
+counterexamples:
+  - description: >-
+      A row whose status is not-run has no execution interval or activity, so
+      admitting it as a VerificationStepExecution would manufacture an event
+      from the information that no such execution occurred.
+status: proposed

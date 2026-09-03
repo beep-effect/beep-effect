@@ -1,0 +1,33 @@
+id: "so:sha256:4d2f65e45969d3636bdb53c81dc0c3192aa766ad2bc9e98e6b641d3e90e0d7db"
+schema_version: 1
+repository:
+  commit: "341cfef8b6e80d49f6cef894e9eecd5337f70e8f"
+  path: "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run2-fleet/verdicts/beep-effect2/chore_deps-update-09-02-26-d946f1d66993/verdict.properties"
+source_span:
+  start_line: 1
+  end_line: 76
+  content_sha256: "e17f49c061bf5c838a4294ca2c8961a04cb5fb37211ca5316c2527ff8113a818"
+extractor:
+  id: "adapter-journal"
+  version: "1.0.0"
+  parser: "python-stdlib-properties"
+  script: "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal.py"
+symbol:
+  qualified_name: "yeet-verdict"
+  lexical_name: "yeet-verdict"
+  syntactic_kind: "properties_projection"
+observed_facts:
+  - predicate: "config_key_value"
+    object: "mergeStateAcceptable=true"
+  - predicate: "config_key_value"
+    object: "mergeable=true"
+  - predicate: "config_key_value"
+    object: "notDraft=true"
+  - predicate: "config_key_value"
+    object: "prOpen=true"
+  - predicate: "config_key_value"
+    object: "requiredChecksGreen=true"
+  - predicate: "config_key_value"
+    object: "reviewDecisionAcceptable=true"
+source_excerpt: "mergeStateAcceptable=true"
+epistemic_status: "parser_derived"

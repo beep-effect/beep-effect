@@ -1,0 +1,85 @@
+id: "otp:pa-yeet-verification-workflow:001"
+hypothesis_ref: "dh:pa-yeet-verification-workflow:001"
+identity_card_ref: "ic:pa-yeet-verification-workflow:001"
+foundational_status: explicitly_deferred
+term:
+  preferred_label: "verification plan specification"
+  local_name: VerificationPlanSpecification
+  proposed_iri: "https://oip.law/ontology/ci-ops#VerificationPlanSpecification"
+  owl_entity_kind: class
+definition:
+  text: >-
+    A repeatable information object prescribing an ordered verification
+    WorkUnit sequence and its applicable scope independently of any dated
+    execution. Yeet proof-plan selection, monitoring, and merge-ready behavior
+    may occur in an instance or constituent specification, but they are not
+    necessary membership conditions on this broad class.
+  source:
+    - "po:sha256:33182e9f689b24bcb01d622aa789cd78093af067a6594b2e0c2c950ac0867715"
+    - "po:sha256:45d50fea9a4a18913111c9152e3c2ffad848b8e8f869cb5e694c910c604264f3"
+    - "po:sha256:4c265303ec2062df5a841185cf1032b9beab1cefafb63f3468298c2bc7917e1b"
+    - "po:sha256:53cb7d2cdb081cbfab7b6f42091d51256ea65d70c7a4a592209b542cc6cf4d79"
+foundational:
+  ufo_category: information_object
+  gufo_alignment: "gufo:Endurant"
+ontoclean:
+  rigidity: unresolved
+  identity: unresolved
+  dependence: intrinsic
+parents: []
+revision_log:
+  - from_sha256: "005587bfae91034fa763e3ad42c919ff0f6d2233114b8ab614203499065c7b76"
+    addressed:
+      - "exact-reuse-extension-narrowing"
+      - "plan-unity-underdetermined"
+      - "semantic-support-not-necessary"
+    disposition: >-
+      Run-2 sitting 1 conceded the Yeet-specific helper as unresolved: the
+      current corpus neither fixes one plan lineage nor supplies a decision CQ
+      requiring this specialization.
+  - from_sha256: "b8f1c37715443df889ef7aac74f3b9e003d659fcc9d61e27e95a95c1beaf36a7"
+    addressed:
+      - "exact-reuse-extension-narrowing"
+    disposition: >-
+      Round 3 restores the full ratified VerificationPlanSpecification
+      extension. The Yeet-specific proof-plan and monitor content is treated as
+      possible instance or constituent content and no longer defines the
+      exact-reused class.
+reuse:
+  searched: true
+  exact_reuse_found: true
+  mappings:
+    - iri: "https://oip.law/ontology/ci-ops#VerificationPlanSpecification"
+      compatibility: >-
+        The ratified class covers repeatable specifications of ordered
+        verification WorkUnits and applicable scope. Yeet's governed proof-plan
+        and monitoring content is accommodated by that broad extension without
+        becoming its defining differentia.
+operational_warrant:
+  competency_questions: []
+  semantic_support_for: ["otp:pa-turbo-task-specification:002"]
+alternatives_rejected:
+  - >-
+    The CLI-implementation null is rejected because repository law prescribes
+    proof-plan choices and a merge-ready terminal condition.
+  - >-
+    A dated Yeet execution, its merge-readiness situation, and an assurance
+    obligation are rejected as identical to the reusable plan specification.
+open_issues:
+  - >-
+    For the Yeet instance, steward choice remains whether one parameterized plan
+    unifies cheap-gates, review-fix, and monitor behavior or coordinated
+    subplans have separate specification identities.
+  - >-
+    An abstract higher-level procedure universal remains a category-distinct
+    viable rival not admitted by this information-object card.
+  - >-
+    ROUND-3 REPAIR — a separately specialized YeetVerificationWorkflow remains
+    withdrawn from run-2 admission, not false. Run-3 evidence required:
+    governed Yeet plan authority and version lineage deciding whether
+    cheap-gates, review-fix and monitor are one plan or coordinated subplans,
+    plus a Must/Should CQ requiring that specialization. This deferral does not
+    narrow the broad exact-reused VerificationPlanSpecification retained here.
+revision_requests: []
+review: {foundational_agent: pending, adversarial_agent: pending, steward: pending}
+status: proposed

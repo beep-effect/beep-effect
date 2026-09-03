@@ -1,0 +1,17 @@
+id: "fa:pb-review-fix-class-cap:001"
+hypothesis_ref: "dh:pb-review-fix-class-cap:001"
+identity_card_ref: "ic:pb-review-fix-class-cap:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+  - label: "A deployed admission-policy regime is a normative mode or situation distinct from the specification that describes it."
+    still_viable: true
+  - label: "The return expression itself is the policy rather than one executable procedure that realizes the policy clause."
+    still_viable: false
+  - label: "The review-fix cap is the host's intrinsic total resource capacity."
+    still_viable: false
+strongest_counterexample: "A scheduler branch can misapply one cap, and distinct complete policies can share the same cap; neither one guard evaluation nor the clause alone identifies the authoritative AdmissionPolicy."
+verdict: analyzed

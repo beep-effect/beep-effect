@@ -122,7 +122,7 @@ const selectedPaper = (paper: O.Option<string>) =>
     onNone: () => Effect.succeed(O.none<CorpusPaperId>()),
     onSome: (value) =>
       CorpusPaperId.decodeEffect(value).pipe(
-        Effect.map(O.some),
+        Effect.asSome,
         Effect.mapError(() => executionFailed("The requested --paper value is not a valid W1 corpus id."))
       ),
   });

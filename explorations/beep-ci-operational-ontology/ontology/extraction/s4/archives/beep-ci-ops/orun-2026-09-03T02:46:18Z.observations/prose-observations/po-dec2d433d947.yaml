@@ -1,0 +1,10 @@
+id: po:sha256:dec2d433d94738ea7d20521b27874dcc0fe38ce6731beaee427c2d4381f4e237
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts
+source_span:
+  start_line: 170
+  end_line: 170
+quote: '"desktop-ipc",'
+epistemic_status: quoted_prose

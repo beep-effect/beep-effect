@@ -1,0 +1,62 @@
+id: "otp:jv-verification-attempt:001"
+hypothesis_ref: "dh:jv-verification-attempt:001"
+identity_card_ref: "ic:jv-verification-attempt:001"
+foundational_status: analyzed
+term:
+  preferred_label: "verification attempt"
+  local_name: VerificationAttempt
+  proposed_iri: "https://oip.law/ontology/ci-ops#VerificationAttempt"
+  owl_entity_kind: class
+definition:
+  text: >-
+    A recorded-attempt information object that identifies one verification
+    attempt and records its start and terminal bounds, target and assurance
+    context, and success, failure, cancellation, or interruption outcome; it
+    does not assert that the journal record is the unfolding process itself.
+  source:
+    - "CQ-022"
+    - "so:sha256:1081a3f10108fba5826e74ade5a53a90ae027969e1857cbfe67f1ef919a6931f"
+    - "so:sha256:c509f4a98184260243c9b13f2cc0d46bbe7783f07518144c48d9e58d47617b73"
+foundational:
+  ufo_category: information_object
+  gufo_alignment: "gufo:Endurant"
+ontoclean:
+  rigidity: rigid
+  identity: supplies
+  dependence: relational
+parents: []
+revision_log:
+  - from_sha256: "98e0c155302a6a54af6ce041c278c619f2af40b53b7020bf35b290bdca599bd4"
+    addressed:
+      - "attempt-boundary-underdetermined"
+      - "discriminator-true-of-journal-dto"
+    sitting_struck:
+      - "attempt-boundary-underdetermined"
+    disposition: >-
+      Run-2 sitting 1 struck the invalid boundary attack and recast the term
+      to the attempt information recorded by the corpus rather than claiming
+      an independently identified world-side process.
+reuse:
+  searched: true
+  exact_reuse_found: false
+  mappings: []
+operational_warrant:
+  competency_questions: ["CQ-022"]
+  semantic_support_for: []
+alternatives_rejected:
+  - >-
+    The implementation-only null is rejected by the dated attempt-start and
+    terminal measurements in the cited fleet records.
+  - >-
+    The recorded attempt is not collapsed into the unfolding process; a
+    future world-side process proposal would need independent causal joins.
+open_issues:
+  - >-
+    A world-side unfolding process or boundary event remains a viable distinct
+    referent, but the present corpus warrants only the recorded-attempt object.
+  - >-
+    The evidence does not settle whether one Yeet CLI invocation and one
+    VerificationAttempt are necessarily coextensive.
+revision_requests: []
+review: {foundational_agent: pending, adversarial_agent: pending, steward: pending}
+status: proposed

@@ -8,7 +8,6 @@
 import { $BoxProvisioningId } from "@beep/identity";
 import { Context, Effect, Equal, Layer } from "effect";
 import * as A from "effect/Array";
-import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import {
   BoxProvisioningApplier,
@@ -63,24 +62,17 @@ const postApplyAdoptions = Effect.fn("BoxProvisioning.postApplyAdoptions")(funct
   return yield* Effect.forEach(
     appliedFolders,
     Effect.fnUntraced(function* (outcome) {
-      const desiredFolder = yield* O.match(
+      const desiredFolder = yield* Effect.fromOption(
         A.findFirst(desired.folders, (folder) => Equal.equals(digestText(folder.logicalKey), outcome.logicalKeyDigest)),
-        {
-          onNone: () => Effect.fail(BoxProvisioningInvariantError.make({ code: "unresolved-dependency" })),
-          onSome: Effect.succeed,
-        }
+        () => BoxProvisioningInvariantError.make({ code: "unresolved-dependency" })
       );
-      const observedFolder = yield* O.match(
+      const observedFolder = yield* Effect.fromOption(
         A.findFirst(observed.folders, (folder) => Equal.equals(folder.providerId, outcome.providerId)),
-        {
-          onNone: () => Effect.fail(BoxProvisioningInvariantError.make({ code: "unresolved-dependency" })),
-          onSome: Effect.succeed,
-        }
+        () => BoxProvisioningInvariantError.make({ code: "unresolved-dependency" })
       );
-      const expectedParentProviderId = yield* O.match(observedFolder.parentProviderId, {
-        onNone: () => Effect.fail(BoxProvisioningInvariantError.make({ code: "unresolved-dependency" })),
-        onSome: Effect.succeed,
-      });
+      const expectedParentProviderId = yield* Effect.fromOption(observedFolder.parentProviderId, () =>
+        BoxProvisioningInvariantError.make({ code: "unresolved-dependency" })
+      );
       return BoxAdoption.make({
         expectedParentProviderId,
         expectedProviderId: observedFolder.providerId,

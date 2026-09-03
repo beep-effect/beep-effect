@@ -1,0 +1,10 @@
+id: po:sha256:70ea5a10bd36d7d26981839b25a381e3f0daa59bb80327d7f289fe046a205f6c
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: packages/tooling/tool/cli/src/commands/Quality/internal/FallowEnvelope.schema.ts
+source_span:
+  start_line: 99
+  end_line: 107
+quote: '"tool-failed", "invalid-json", "invalid-report", "base-resolution-failed"'
+epistemic_status: quoted_prose

@@ -1,0 +1,55 @@
+target: "otp:pa-projection-limitation-report:001"
+target_sha256: "62db7a3cab03caa05ba5a95d8f8921d7096473e8f1765afd169c18fc5b626e03"
+chain_sha256: "e20d21588ac263e76a5df411e64b972019658e15d75b803b025d62a9be8e863e"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: "The proposal asserts no candidate is-a edge."
+revision_requests:
+  - >-
+    Address independent-artifact-identity-unwarranted by treating the caveats
+    as a component of the observed implementation report, or provide an
+    independently issued target, provenance, and revision lineage that
+    individuates a limitation report.
+  - >-
+    Address semantic-support-not-necessary and
+    discriminator-true-of-report-section with a decision CQ that consumes the
+    limitation report and evidence that would be false of an implementation
+    report section with the same four caveats.
+attacks:
+  - surface: identity
+    rule: independent-artifact-identity-unwarranted
+    counterexample: >-
+      The observed bytes are one caveat section inside impl-report.md. Moving
+      that section within the same report, or copying it into a later report,
+      does not establish the separately issued limitation-report individual
+      and lineage assumed by the identity criterion.
+    outcome: landed
+  - surface: warrant
+    rule: semantic-support-not-necessary
+    counterexample: >-
+      A VerificationEvidence record with provesTree, validInEpoch,
+      invalidation, and cache-transfer facts answers CQ-005 and CQ-015 even
+      when no projection-limitation-report class exists.
+    outcome: landed
+  - surface: null_discriminator
+    rule: discriminator-true-of-report-section
+    counterexample: >-
+      A purely implementation-facing caveat section can truthfully list
+      substituted tie-break data, omitted conditions, a single-instant
+      reading, and an unimplemented seam; all four claimed facts remain true
+      while no independently identified limitation-report referent exists.
+    outcome: landed
+rival_models_still_viable:
+  - "The caveats are a component of the larger implementation report."
+  - "The primary referent is an applicability situation rather than its report."
+evidence:
+  - "po:sha256:37dade1cef0b41d87b0656f26afcacbbb5abd10dc718d45d7e0c966b19061610"
+  - "CQ-005"
+  - "CQ-015"

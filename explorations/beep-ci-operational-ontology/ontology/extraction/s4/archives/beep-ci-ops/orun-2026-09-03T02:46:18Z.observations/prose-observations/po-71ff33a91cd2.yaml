@@ -1,0 +1,10 @@
+id: po:sha256:71ff33a91cd202789d604775c82a3100091dee4dead6fe88e84f7712ffd84a31
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
+source_span:
+  start_line: 917
+  end_line: 917
+quote: return activeReviewFix >= config.reviewFixClassCap;
+epistemic_status: quoted_prose

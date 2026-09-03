@@ -53,7 +53,7 @@ export class CsvCodecOptions extends S.Class<CsvCodecOptions>($I`CsvCodecOptions
     delimiter: SingleCharacterText.pipe(SchemaUtils.withKeyDefaults(",")),
     ignoreEmpty: SchemaUtils.BoolKeyDefaultFalse,
     quote: S.OptionFromNullOr(SingleCharacterText).pipe(
-      S.withConstructorDefault(Effect.succeed(O.some('"'))),
+      S.withConstructorDefault(Effect.succeedSome('"')),
       S.withDecodingDefaultKey(Effect.succeed('"'))
     ),
     escape: S.OptionFromNullOr(SingleCharacterText).pipe(

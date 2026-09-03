@@ -1,0 +1,51 @@
+run_id: "orun-2026-09-03T02:46:18Z"
+ontology: {name: beep-ci-ops}
+engine:
+  validator_sha256_12: "c036e5316511"
+  contracts_sha256_12: "db5aefe804fe"
+repository:
+  commit: "341cfef8b6e80d49f6cef894e9eecd5337f70e8f"
+  dirty: false
+  pin_waived: false
+  waiver_reason: ""
+scope_doc: {path: "explorations/beep-ci-operational-ontology/ontology/docs/scope.md", sha256_12: "6c39b69481a3"}
+cq_suite: {path: "explorations/beep-ci-operational-ontology/ontology/docs/competency-questions.yaml", sha256_12: "e06ec7fe12a6", cq_count: 26}
+adapters:
+- id: adapter-journal
+  version: 1.0.0
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal.py
+  script_sha256_12: "b8c2f180a921"
+  golden_fixture: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/journal
+agents:
+  denotation: {model: gpt-5.6-sol, prompt: "prompts/denotation.md", prompt_sha256_12: "1d848ac2560f"}
+  foundational: {model: gpt-5.6-sol, prompt: "prompts/ufo-analysis.md", prompt_sha256_12: "3d94feb0629c"}
+  synthesis: {model: gpt-5.6-sol, prompt: "prompts/synthesis.md", prompt_sha256_12: "117d82b29904"}
+  adversary: {model: gpt-5.6-sol, prompt: "prompts/ontoclean-adversary.md", prompt_sha256_12: "9dbfb7fc9d4c", independent_context: true}
+  alternative: {model: grok-4.6, prompt: "prompts/alternative-model.md", prompt_sha256_12: "4563e5726438", blinded: true}
+first_run: false
+prior_index: "runs/orun-2026-08-29T08:20:55Z.index.yaml"
+prior_index_sha256_12: "5fc9e9de179f"
+empty_corpus_reason: ""
+unresolved_fraction_waiver: "Steward-ratified at sitting 3 (2026-09-03): every unresolved
+  row is an adjudicated park, not a silent re-park — withdrawn-chain observations carry
+  their proposals' named run-3 evidence (identity provenance corpora, the CQ-020 wording
+  amendment, the ordering-cluster deferral), the two carried keep-open rows carry the
+  sitting-2 corpus requirements, and hypothesis-unresolved rows carry their hypotheses'
+  needed evidence. Adjudication trail: sittings 1-3 in the run's decisions entries."
+notes: 'Auditor run 2 under the nine launch rulings scribed in packet DECISIONS.md
+  (2026-09-02): full docket, fresh fleet corpus (corpus/run2-fleet at this pin), no
+  TypeScript re-extraction (parked candidates ground through ProseObservation
+  transcription by corpus/po_transcriber_run2.py, committed at the pin), validator
+  v13 as-is. Engine freeze: skill SKILL.md sha256_12 e37573b74593; adapter sandbox
+  runner scripts/run_adapter_sandbox.sh sha256_12 ecb6dcab421b (rlimits applied
+  inside the user namespace, fix committed b2e1a347a5); every VAL invocation runs
+  under uv --python 3.12 with pyyaml because the v13 self-test fails on Python 3.13
+  (pathlib symlink-loop resolve change) and passes 156/156 families on 3.12. Seat
+  efforts per the initiative directive: every codex seat -c model_reasoning_effort=max,
+  the grok alternative seat --reasoning-effort xhigh; denotation/foundational/synthesis
+  run as separate fresh codex contexts; adapter-journal reads the pin commit from this
+  manifest because the no-network sandbox cannot resolve a worktree gitdir — the gate
+  independently checks record commits against this pin and HEAD. Prior-run carry: all
+  149 prior unresolved rows re-open (verbatim re-parking rejected); run-1 work/
+  hypotheses, foundational analyses, alternative records, and proposals remain in
+  place under the carry-forward policy and re-verify or stale against this engine.'

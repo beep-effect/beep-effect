@@ -1,0 +1,40 @@
+id: ic:jv-actual-wall-duration-alt:001
+hypothesis_ref: dh:jv-actual-wall-duration:001
+identity:
+  supplies_identity: true
+  identity_criterion: Two recorded wall-duration measurements are the same information object
+    iff they are the same duration-quantity assertion about the same execution bearer at the
+    same measurement instant. Field spellings such as durationMs, elapsedMs, standaloneDurationMs,
+    and laneRerunDurationMs are evidence of that assertion, never the sameness criterion.
+    The cited records do not settle whether attempt-level elapsed time and lane-level durations
+    are individuals of one kind.
+  reidentification_key:
+  - durationMs (evidence)
+  - elapsedMs (evidence)
+  - standaloneDurationMs (evidence)
+  - laneRerunDurationMs (evidence)
+  - startedAt/endedAt pair (evidence)
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: one asserted millisecond quantity about one bearer occurrence at one recording
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - quality
+  existential_dependencies:
+  - the verification or lane execution the quantity is about
+  - some encoding of the measurement
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+- description: The same attempt journal lists durationMs=7094.398349 beside elapsedMs=81605
+    and startedAt/endedAt instants; treating every numeric duration field as one measurement
+    would collapse distinct quantities on one bearer.
+- description: standaloneDurationMs=1902.713545 and laneRerunDurationMs=29802.864398 for @beep/box#build
+    are two measurements of related executions, not two copies of one duration quality.
+status: proposed

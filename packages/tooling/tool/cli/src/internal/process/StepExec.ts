@@ -1060,6 +1060,8 @@ export type RunCapturedStreamsOptions = SpawnFields & {
   readonly command: string;
   readonly args: ReadonlyArray<string>;
   readonly bound?: OutputBound | undefined;
+  readonly stdoutBound?: OutputBound | undefined;
+  readonly stderrBound?: OutputBound | undefined;
   readonly trim?: boolean | undefined;
 };
 
@@ -1110,8 +1112,16 @@ export const runCapturedStreams = Effect.fn("StepExec.runCapturedStreams")(funct
       const deadline = capturePipeDeadline(handle, formatCommandLine(options.command, options.args));
       const [stdout, stderr, exitCode] = yield* Effect.all(
         [
-          foldDecodedText(decodedText(handle.stdout).pipe(Stream.interruptWhen(deadline)), options.bound, false),
-          foldDecodedText(decodedText(handle.stderr).pipe(Stream.interruptWhen(deadline)), options.bound, false),
+          foldDecodedText(
+            decodedText(handle.stdout).pipe(Stream.interruptWhen(deadline)),
+            options.stdoutBound ?? options.bound,
+            false
+          ),
+          foldDecodedText(
+            decodedText(handle.stderr).pipe(Stream.interruptWhen(deadline)),
+            options.stderrBound ?? options.bound,
+            false
+          ),
           handle.exitCode,
         ],
         { concurrency: "unbounded" }

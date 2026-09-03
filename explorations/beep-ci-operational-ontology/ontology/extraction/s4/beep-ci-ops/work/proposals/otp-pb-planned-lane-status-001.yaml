@@ -1,0 +1,82 @@
+id: "otp:pb-planned-lane-status:001"
+hypothesis_ref: "dh:pb-planned-lane-status:001"
+identity_card_ref: "ic:pb-planned-lane-status:001"
+foundational_status: explicitly_deferred
+term:
+  preferred_label: "verification result artifact"
+  local_name: VerificationResultArtifact
+  proposed_iri: "https://oip.law/ontology/ci-ops#VerificationResultArtifact"
+  owl_entity_kind: class
+definition:
+  text: >-
+    An information object recording the outcome of a verification execution in
+    a form that may bear the contingent VerificationEvidence role when
+    policy-required applicability and provenance are present. A retained
+    planned-lane status record may be one instance, but lane identity, repair
+    instructions, or duration fields are not necessary membership conditions
+    on this broad class.
+  source:
+    - "po:sha256:59e3f07184abaf7f8075745f636d111ccdf14c2c058c5b08adb59b9745033ac0"
+    - "po:sha256:900957ece232a7fe12a98b7a2894aff6e0ab77fdbaaf5e453e16b17977e5dec6"
+    - "po:sha256:960216354d31160a6fac7280f6375dc8731cfd58c667bcb4c4bcdfde75887792"
+    - "po:sha256:97d6383547ad97c34937c34179413d35651dcf44fed758f70e6de129e163901c"
+foundational:
+  ufo_category: information_object
+  gufo_alignment: "gufo:Endurant"
+ontoclean:
+  rigidity: unresolved
+  identity: unresolved
+  dependence: intrinsic
+parents: []
+revision_log:
+  - from_sha256: "7dbceb015e0148a54d17998d77b4345d772dd8b760fd04ef9d72789156ae51c2"
+    addressed:
+      - "record-issuance-identity-unobserved"
+      - "semantic-support-not-necessary"
+      - "discriminator-true-of-dto"
+    disposition: >-
+      Run-2 sitting 1 conceded a separate planned-lane status artifact as
+      unresolved pending issuance, correction, execution, and decision
+      provenance beyond the transient value shape.
+  - from_sha256: "958061c205cbc4d0e15fa508c4cf9be40b0245846f0a808329228967f1e3fcf0"
+    addressed:
+      - "exact-reuse-extension-narrowing"
+    disposition: >-
+      Round 3 restores the full ratified VerificationResultArtifact extension.
+      Planned-lane status is treated only as a possible instance or component,
+      never as the defining extension of the exact-reused class.
+reuse:
+  searched: true
+  exact_reuse_found: true
+  mappings:
+    - iri: "https://oip.law/ontology/ci-ops#VerificationResultArtifact"
+      compatibility: >-
+        The ratified class covers heterogeneous information objects that record
+        verification outcomes and may bear an evidence role. A retained
+        planned-lane status record is an accommodated instance and does not
+        narrow the class to one lane-status shape.
+operational_warrant:
+  competency_questions: []
+  semantic_support_for: ["otp:pb-verification-evidence-receipt:001"]
+alternatives_rejected:
+  - >-
+    The planned lane specification is rejected as identical with the status
+    record because one specification can have several execution results.
+  - >-
+    The execution occurrence is rejected as the record because an occurrence
+    can later receive a corrected information artifact.
+open_issues:
+  - >-
+    Steward must decide whether transient, unretained verdict values instantiate
+    the broad VerificationResultArtifact class or remain value objects without
+    independently useful result-artifact identity.
+  - >-
+    ROUND-3 REPAIR — a separately specialized PlannedLaneStatusArtifact remains
+    withdrawn from run-2 admission, not false. Run-3 evidence required:
+    retained issuance and correction lineage, a parent-attempt join, producing
+    execution boundaries, custody semantics, and a Must/Should CQ requiring a
+    separate lane-status record. Those conditions do not narrow the broad
+    exact-reused VerificationResultArtifact retained here.
+revision_requests: []
+review: {foundational_agent: pending, adversarial_agent: pending, steward: pending}
+status: proposed

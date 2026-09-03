@@ -77,6 +77,20 @@ for stale in TESTS.glob("cq-*.sparql"):
 manifest_lines = [
     "# beep-ci-ops CQ test manifest (GENERATED from competency-questions.yaml by",
     "# regen_cq_artifacts.py — do not hand-edit).",
+    # PR #919 added these ratified seed and golden legs; keep the generator authoritative.
+    "legs:",
+    "  seed:",
+    "    graphs: [tests/fixtures/seed.ttl]",
+    "    selection: all-manifest-tests",
+    "  golden:",
+    "    graphs:",
+    "      - extraction/s6/graphs/abox.ttl",
+    "      - extraction/s6/graphs/snapshot-*.ttl",
+    "    excludes:",
+    "      - extraction/s6/graphs/census.ttl",
+    "      - tests/fixtures/seed.ttl",
+    "    coverage: extraction/s6/PREDICATES.yaml#coverage",
+    "    selection: full-predicate-set-ratified-and-non-vacuity-antecedent",
     "tests:",
 ]
 for c in testable:

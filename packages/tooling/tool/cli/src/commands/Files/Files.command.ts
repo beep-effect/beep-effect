@@ -429,7 +429,7 @@ const decodeMatchPersonDevices = (
     onNone: () => Effect.succeed(O.none<PersonMatchDeviceIndexesFromCsv>()),
     onSome: (value) =>
       decodePersonMatchDeviceIndexesFromCsv(value).pipe(
-        Effect.map(O.some),
+        Effect.asSome,
         FilesCommandError.mapError(
           `Invalid --devices value "${value}"; expected exactly one non-negative device index such as 0.`
         )

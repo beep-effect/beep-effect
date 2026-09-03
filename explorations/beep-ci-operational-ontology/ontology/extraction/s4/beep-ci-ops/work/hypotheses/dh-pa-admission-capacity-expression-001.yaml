@@ -1,0 +1,23 @@
+id: "dh:pa-admission-capacity-expression:001"
+observation_refs:
+  - "po:sha256:3c757a7975b27b8597ccf8c6d886eb72ad2b8b51aaba8eb59cf21cc9a1a7a3c6"
+  - "po:sha256:518aee86882c8b9092469203add3bc23c72acfed1d7139f136a96e8763f0c8c7"
+cq_warrants: ["CQ-010", "CQ-023"]
+proposed_referent:
+  label: "Admission-capacity computation expression"
+  description: "The scheduler implementation expression subtracting configured reserve memory from available memory under a resolved admission configuration."
+representation_status: unresolved
+alternatives:
+  - label: "Usable admission memory capacity"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "Default scheduler configuration logic"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The expressions suggest a capacity calculation but do not establish its unit conversion, relation to token capacity at admission, or treatment of the hard floor."
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.36, use_for_acceptance: false}

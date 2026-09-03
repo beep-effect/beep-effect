@@ -159,7 +159,7 @@ const formatExpectCTValue = Effect.fn("ExpectCT.formatExpectCTValue")(function* 
   const reportURI: O.Option<string> = yield* O.match(config.reportURI, {
     onNone: () => Effect.succeed(O.none<string>()),
     onSome: (reportUriValue) =>
-      Effect.map(
+      Effect.asSome(
         Effect.try({
           try: () => String(internal.encodeStrictURI(reportUriValue)),
           catch: () =>
@@ -167,8 +167,7 @@ const formatExpectCTValue = Effect.fn("ExpectCT.formatExpectCTValue")(function* 
               message: `Invalid value for "reportURI" option in ${headerName}: ${String(reportUriValue)}`,
               cause: O.none(),
             }),
-        }),
-        O.some
+        })
       ),
   });
 

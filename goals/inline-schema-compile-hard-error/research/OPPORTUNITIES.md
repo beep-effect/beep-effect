@@ -122,7 +122,7 @@
   invalidation and always use `package-verify` as the owner proof authority;
   retain refresh diagnostics only when the canonical verifier also fails.
 
-## 2026-09-03 — Reused optional decoder broke lane-proof reuse
+## 2026-09-03 — Ambient environment hashing made lane proofs nondeterministic
 
 - **Work:** Verify the compiler hoists in `@beep/repo-cli` through its complete
   owner test suite.
@@ -131,10 +131,14 @@
   failed on the packet tree, passed at the exact starting HEAD, and passed
   again when only the hoisted `S.decodeUnknownOption(LaneProofMode)` call was
   temporarily restored. A module-scoped `S.is(LaneProofMode)` guard retained
-  compile-once validation and made the isolated test pass.
-- **Prevention:** For repeatedly sampled environment literal domains, prefer a
-  compiled schema guard over a reused optional decoder, and keep lane-proof
-  reuse tests in the owner gate for compiler-hoist migrations.
+  compile-once validation and made the isolated test pass, but the full suite
+  still exposed the underlying identity bug: proof hashing sampled mutable
+  process environment even for lanes with `useLocalEnv: false`. Hashing only
+  the environment actually supplied to the lane made both the focused suite
+  and the full canonical package verifier pass.
+- **Prevention:** Compute cache identities from executor-visible inputs rather
+  than mutable ambient state, and keep reuse tests in the complete owner gate
+  so package-wide worker interference remains observable.
 
 ## 2026-09-03 — Shared Vite temp cache invalidated control-worktree proof
 
@@ -148,3 +152,16 @@
 - **Prevention:** Give disposable control worktrees an isolated Vite cache, or
   run package-scoped Vitest from the package directory when dependencies are
   shared by symlink.
+
+## 2026-09-03 — Merge commits over large main deltas can stall staged hooks
+
+- **Work:** Merge the latest `origin/main` into the feature branch before final
+  exact-head verification.
+- **Evidence:** The semantic merge resolved 16 conflicts and staged 5,677
+  incoming paths. Its pre-commit hook completed the JSDoc inventory, then both
+  the Biome and ESLint processes remained live but showed unchanged CPU and I/O
+  counters across repeated observations after more than eight minutes. The
+  commit attempt was interrupted without changing the resolved index.
+- **Prevention:** Teach staged-file hooks to evaluate a merge commit's
+  first-parent feature delta, or cap and shard path fan-outs when the second
+  parent already carries the incoming files' own gate history.

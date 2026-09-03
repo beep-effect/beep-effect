@@ -1,0 +1,49 @@
+target: "otp:pa-turbo-task-specification:002"
+target_sha256: "5dadb1740c6e181c1b38291f48d13ac902d6074d7622f5e4e809b3094a54e53d"
+chain_sha256: "cf41294084f589231fc0f558ccb3f41b566b88768d68c879ab176207ad5eaca2"
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: "The invalid WorkUnitSpecification parent edge was removed in the revision."
+revision_requests: []
+attacks:
+  - surface: identity
+    rule: identity-card-does-not-fit-proposed-child
+    counterexample: >-
+      A collected-gate lane can retain its governed lane lineage while one of
+      several coordinated work prescriptions is replaced. The revised card
+      now includes lane kind, authority, scope, coordination, completion, and
+      failure semantics, so it neither identifies the lane with a Turbo task
+      nor depends on the removed subsumption edge.
+    outcome: survived
+  - surface: warrant
+    rule: decision-cq-requires-term
+    counterexample: >-
+      Without VerificationLane, CQ-001 cannot enumerate lane individuals by
+      kind and CQ-011 cannot return the lanes fed by invalidated hash surfaces.
+      Both queries therefore require this decision term rather than merely
+      mentioning a planner label.
+    outcome: survived
+  - surface: null_discriminator
+    rule: discriminator-false-in-null-world
+    counterexample: >-
+      Inert task-name strings do not prescribe input surfaces, upstream
+      coordination, persistence, completion, or failure semantics. The cited
+      governed task clauses and the two decision CQs defeat that label-only
+      null twin while leaving executions distinct from lane specifications.
+    outcome: survived
+rival_models_still_viable:
+  - "A procedure universal may be specified by, but remain distinct from, the lane information object."
+  - "Collected-gate lanes coordinate multiple replaceable WorkUnitSpecifications."
+evidence:
+  - "po:sha256:19da9053dc578ecea6995d45a9c23ea09f1f36b02e3969bb13b3c08a6a3c981f"
+  - "po:sha256:3e1c6cd48f541482c5471d901e96c829dd47de787108d7ee9cc4fec91966eb97"
+  - "po:sha256:4fc13f1c056d4666ad83f3944408c9437bbcc0eebd583f907ec05449b5730594"
+  - "CQ-001"
+  - "CQ-011"

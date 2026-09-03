@@ -140,7 +140,7 @@ export class ParserOptions extends S.Class<ParserOptions>($I`ParserOptions`)(
     delimiter: SingleCharacterText.pipe(SchemaUtils.withKeyDefaults(",")),
     ignoreEmpty: SchemaUtils.BoolKeyDefaultFalse,
     quote: S.OptionFromNullOr(S.String).pipe(
-      S.withConstructorDefault(Effect.succeed(O.some('"'))),
+      S.withConstructorDefault(Effect.succeedSome('"')),
       S.withDecodingDefaultKey(Effect.succeed('"'))
     ),
     escape: S.OptionFromNullOr(S.String).pipe(

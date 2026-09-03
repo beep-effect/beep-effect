@@ -3,7 +3,7 @@
  * `<admission root>/journal.ndjson`.
  *
  * Every write serializes under `<admission root>/journal.lock`: the writer
- * reads the journal, drops undecodable records, appends its event, ring-trims
+ * reads the journal, preserves undecodable records byte-for-byte, appends its event, ring-trims
  * to the newest admitted transitions, and publishes the result with an atomic
  * temp-file rename. Scheduler correctness lives exclusively in ticket and
  * lease files; `bypassAdmission` on sub-envelope machines mints neither file
@@ -13,10 +13,11 @@
  * @since 0.0.0
  */
 
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { $RepoCliId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
-import { Clock, Console, Duration, Effect, FileSystem, Number as N, Path, pipe } from "effect";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { UUID } from "@beep/schema/String";
+import { Clock, Duration, Effect, FileSystem, Number as N, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import { constant, dual, flow } from "effect/Function";
 import * as O from "effect/Option";
@@ -31,9 +32,9 @@ const LOCK_FILE_NAME = "journal.lock";
 const RETAINED_ADMISSIONS = 200;
 const LOCK_RETRY_ATTEMPTS = 8;
 const LOCK_RETRY_DELAY_MILLIS = 25;
-// No legitimate writer holds the lock beyond one rewrite (milliseconds); the
-// backstop clears locks stranded by pid reuse or tampering without ever
-// racing a live hold.
+// No legitimate writer publishes an unparseable token. The age backstop
+// therefore applies only to malformed generations, never a parseable live
+// owner whose lock could still be released concurrently.
 const LOCK_REUSE_BACKSTOP_MILLIS = 300_000;
 const textEncoder = new TextEncoder();
 
@@ -64,6 +65,7 @@ export class AdmissionJournalAdmitted extends S.Class<AdmissionJournalAdmitted>(
     originKey: S.String,
     enqueuedAtMillis: S.Finite,
     admittedAtMillis: S.Finite,
+    attemptId: UUID.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   },
   $I.annote("AdmissionJournalAdmitted", {
     description: "Durable transition recorded when a queued ticket becomes an active admission lease.",
@@ -92,9 +94,147 @@ export class AdmissionJournalReleased extends S.Class<AdmissionJournalReleased>(
     pid: S.Finite,
     releasedAtMillis: S.Finite,
     memoryPeakBytes: S.optionalKey(S.Finite),
+    attemptId: UUID.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   },
   $I.annote("AdmissionJournalReleased", {
     description: "Durable transition recorded when an active admission lease is released.",
+  })
+) {}
+
+/**
+ * Why a dead scheduler lease was evicted from capacity accounting.
+ *
+ * **Example** (Recognize an owner death)
+ *
+ * ```ts
+ * import { AdmissionLeaseEvictionReason } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(AdmissionLeaseEvictionReason.is["owner-dead-or-reused"]("owner-dead-or-reused")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const AdmissionLeaseEvictionReason = LiteralKit(["owner-dead-or-reused"]).pipe(
+  $I.annoteSchema("AdmissionLeaseEvictionReason", {
+    description: "Reason a dead admission lease was evicted from scheduler capacity accounting.",
+  })
+);
+
+/**
+ * Reason a dead admission lease was evicted from scheduler capacity accounting.
+ *
+ * **Example** (Name an eviction reason)
+ *
+ * ```ts
+ * import type { AdmissionLeaseEvictionReason } from "@beep/repo-cli/test/RepoRun"
+ *
+ * const reason: AdmissionLeaseEvictionReason = "owner-dead-or-reused"
+ * console.log(reason) // "owner-dead-or-reused"
+ * ```
+ *
+ * @see {@link AdmissionLeaseEvictionReason} for the runtime schema and literal helpers.
+ * @category models
+ * @since 0.0.0
+ */
+export type AdmissionLeaseEvictionReason = typeof AdmissionLeaseEvictionReason.Type;
+
+/**
+ * Durable transition recorded after the scheduler reaps a verified dead lease.
+ *
+ * **Example** (Reference an eviction transition)
+ *
+ * ```ts
+ * import { AdmissionJournalLeaseEvicted } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(typeof AdmissionJournalLeaseEvicted) // "function"
+ * ```
+ *
+ * @category domain-events
+ * @since 0.0.0
+ */
+export class AdmissionJournalLeaseEvicted extends S.Class<AdmissionJournalLeaseEvicted>(
+  $I`AdmissionJournalLeaseEvicted`
+)(
+  {
+    schemaVersion: S.Literal("yeet-admission-journal/v2"),
+    _tag: S.Literal("admission-lease-evicted"),
+    nonce: S.String,
+    pid: S.Finite,
+    attemptId: UUID.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    evictedAtMillis: S.Finite,
+    reason: AdmissionLeaseEvictionReason,
+  },
+  $I.annote("AdmissionJournalLeaseEvicted", {
+    description: "Durable transition recorded after the scheduler reaps a verified dead admission lease.",
+  })
+) {}
+
+/**
+ * Why a dead scheduler ticket was evicted from the admission queue.
+ *
+ * **Example** (Recognize a queued submitter death)
+ *
+ * ```ts
+ * import { AdmissionTicketEvictionReason } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(AdmissionTicketEvictionReason.is["queued-submitter-death"]("queued-submitter-death")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const AdmissionTicketEvictionReason = LiteralKit(["queued-submitter-death"]).pipe(
+  $I.annoteSchema("AdmissionTicketEvictionReason", {
+    description: "Reason a dead admission ticket was evicted from the scheduler queue.",
+  })
+);
+
+/**
+ * Reason a dead admission ticket was evicted from the scheduler queue.
+ *
+ * **Example** (Name a queued submitter death)
+ *
+ * ```ts
+ * import type { AdmissionTicketEvictionReason } from "@beep/repo-cli/test/RepoRun"
+ *
+ * const reason: AdmissionTicketEvictionReason = "queued-submitter-death"
+ * console.log(reason) // "queued-submitter-death"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type AdmissionTicketEvictionReason = typeof AdmissionTicketEvictionReason.Type;
+
+/**
+ * Durable transition recorded after the scheduler claims a dead queue ticket.
+ *
+ * **Example** (Reference a ticket eviction transition)
+ *
+ * ```ts
+ * import { AdmissionJournalTicketEvicted } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(typeof AdmissionJournalTicketEvicted) // "function"
+ * ```
+ *
+ * @category domain-events
+ * @since 0.0.0
+ */
+export class AdmissionJournalTicketEvicted extends S.Class<AdmissionJournalTicketEvicted>(
+  $I`AdmissionJournalTicketEvicted`
+)(
+  {
+    schemaVersion: S.Literal("yeet-admission-journal/v2"),
+    _tag: S.Literal("admission-ticket-evicted"),
+    nonce: S.String,
+    pid: S.Finite,
+    attemptId: UUID.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    evictedAtMillis: S.Finite,
+    reason: AdmissionTicketEvictionReason,
+  },
+  $I.annote("AdmissionJournalTicketEvicted", {
+    description: "Durable transition recorded after the scheduler atomically claims a dead queue ticket.",
   })
 ) {}
 
@@ -112,7 +252,12 @@ export class AdmissionJournalReleased extends S.Class<AdmissionJournalReleased>(
  * @category schemas
  * @since 0.0.0
  */
-export const AdmissionJournalEvent = S.Union([AdmissionJournalAdmitted, AdmissionJournalReleased]).pipe(
+export const AdmissionJournalEvent = S.Union([
+  AdmissionJournalAdmitted,
+  AdmissionJournalReleased,
+  AdmissionJournalLeaseEvicted,
+  AdmissionJournalTicketEvicted,
+]).pipe(
   S.toTaggedUnion("_tag"),
   $I.annoteSchema("AdmissionJournalEvent", {
     description: "Schema-decoded transition stored in the machine-wide admission journal.",
@@ -196,9 +341,12 @@ const pidIsAlive = (pid: number): boolean => {
 
 const lockOwnerPid = flow(Str.split(":"), A.head, O.flatMap(N.parse));
 
-// A lock replaced between the ownership read and the remove can be reaped
-// fresh; the window is one syscall pair and the cost is one competing
-// serialized writer, so the telemetry-grade journal accepts it.
+const journalLockReapClaimPath = (lockPath: string, observedToken: string): string =>
+  `${lockPath}.reap-${createHash("sha256").update(observedToken).digest("hex")}`;
+
+// A generation-specific hard link is both the reaper claim and an immutable
+// snapshot of the inode it observed. Only one contender can claim a given
+// generation; a delayed contender therefore cannot unlink its replacement.
 const reapAbandonedJournalLock = Effect.fnUntraced(function* (
   lockPath: string
 ): Effect.fn.Return<void, never, FileSystem.FileSystem> {
@@ -206,22 +354,30 @@ const reapAbandonedJournalLock = Effect.fnUntraced(function* (
   const content = yield* fs.readFileString(lockPath).pipe(Effect.option);
   const info = yield* fs.stat(lockPath).pipe(Effect.option);
   const nowMillis = yield* Clock.currentTimeMillis;
-  // A parseable owner that died abandons its lock immediately; anything else
-  // (pid reuse, unreadable content) clears through the age backstop so a
-  // just-published generation is never misread as abandoned.
-  const ownerDead = pipe(
-    content,
-    O.flatMap(lockOwnerPid),
-    O.exists((pid) => !pidIsAlive(pid))
-  );
+  // A parseable owner that died abandons its lock immediately. Only malformed
+  // content clears through the age backstop, so a just-published or live
+  // generation is never misread as abandoned.
+  const ownerPid = O.flatMap(content, lockOwnerPid);
+  const ownerDead = O.exists(ownerPid, (pid) => !pidIsAlive(pid));
   const outlivedBackstop = pipe(
     info,
     O.flatMap((fileInfo) => fileInfo.mtime),
     O.exists((mtime) => nowMillis - mtime.getTime() > LOCK_REUSE_BACKSTOP_MILLIS)
   );
-  if (ownerDead || outlivedBackstop) {
-    yield* fs.remove(lockPath, { force: true }).pipe(Effect.ignore);
+  const observedToken = O.filter(content, () => ownerDead || (O.isNone(ownerPid) && outlivedBackstop));
+  if (O.isNone(observedToken)) {
+    return;
   }
+  const claimPath = journalLockReapClaimPath(lockPath, observedToken.value);
+  const claimed = yield* fs.link(lockPath, claimPath).pipe(Effect.as(true), Effect.orElseSucceed(constant(false)));
+  if (!claimed) {
+    return;
+  }
+  const claimedToken = yield* fs.readFileString(claimPath).pipe(Effect.option);
+  yield* O.exists(claimedToken, (token) => token === observedToken.value)
+    ? fs.remove(lockPath, { force: false }).pipe(Effect.ignore)
+    : Effect.void;
+  yield* fs.remove(claimPath, { force: true }).pipe(Effect.ignore);
 });
 
 const tryAcquireJournalLock = Effect.fnUntraced(function* (
@@ -244,11 +400,37 @@ const tryAcquireJournalLock = Effect.fnUntraced(function* (
   return acquired;
 });
 
-const acquireJournalLock = Effect.fnUntraced(function* (
+/**
+ * Acquire an owned-generation lock for a serialized journal rewrite.
+ *
+ * **Details**
+ *
+ * A hard link publishes the complete owner token atomically. Contenders retry
+ * briefly and reclaim a dead owner's exact observed generation. An unparseable
+ * generation can age through the corruption backstop, while a parseable live
+ * owner is never reaped by age alone.
+ *
+ * **Example** (Acquire a journal lock)
+ *
+ * ```ts
+ * import { acquireJournalFileLock } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(typeof acquireJournalFileLock) // "function"
+ * ```
+ *
+ * @param lockPath - Exclusive lock path adjacent to the serialized journal.
+ * @param token - Unique `pid:uuid` generation owned by the caller.
+ * @param retryAttempts - Maximum atomic-acquisition attempts before returning false.
+ * @returns Whether the caller acquired the lock within the retry window.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const acquireJournalFileLock = Effect.fnUntraced(function* (
   lockPath: string,
-  token: string
+  token: string,
+  retryAttempts = LOCK_RETRY_ATTEMPTS
 ): Effect.fn.Return<boolean, never, FileSystem.FileSystem> {
-  for (let attempt = 0; attempt < LOCK_RETRY_ATTEMPTS; attempt++) {
+  for (let attempt = 0; attempt < retryAttempts; attempt++) {
     if (yield* tryAcquireJournalLock(lockPath, token)) {
       return true;
     }
@@ -257,7 +439,24 @@ const acquireJournalLock = Effect.fnUntraced(function* (
   return false;
 });
 
-const releaseJournalLock = Effect.fnUntraced(function* (
+/**
+ * Release a serialized journal lock only while its generation is still owned.
+ *
+ * **Example** (Release a journal lock)
+ *
+ * ```ts
+ * import { releaseJournalFileLock } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(typeof releaseJournalFileLock) // "function"
+ * ```
+ *
+ * @param lockPath - Exclusive lock path adjacent to the serialized journal.
+ * @param token - Unique `pid:uuid` generation previously acquired by the caller.
+ * @returns An effect that removes only the caller's lock generation.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const releaseJournalFileLock = Effect.fnUntraced(function* (
   lockPath: string,
   token: string
 ): Effect.fn.Return<void, never, FileSystem.FileSystem> {
@@ -287,7 +486,7 @@ const releaseJournalLock = Effect.fnUntraced(function* (
  * @category utilities
  * @since 0.0.0
  */
-export const releaseAdmissionJournalLockForTesting = releaseJournalLock;
+export const releaseAdmissionJournalLockForTesting = releaseJournalFileLock;
 
 const publishJournalAtomic = Effect.fnUntraced(function* (
   journalPath: string,
@@ -323,34 +522,35 @@ const rewriteJournalLocked = Effect.fnUntraced(function* (
       )
     );
   const rawLines = pipe(Str.split("\n")(text), A.filter(Str.isNonEmpty));
-  const probed = yield* Effect.forEach(rawLines, (raw) =>
+  // Mixed fleet revisions share this journal. Preserve rows this revision does
+  // not understand byte-for-byte so an older locked rewrite cannot erase a
+  // newer protocol event before all checkouts have rolled forward.
+  const retained = yield* Effect.forEach(rawLines, (raw) =>
     decodeAdmissionJournalEvent(raw).pipe(
       Effect.option,
-      Effect.map(O.map((decoded) => ({ event: decoded, line: raw })))
+      Effect.map((decoded) => ({ event: decoded, line: raw }))
     )
   );
-  const retained = A.getSomes(probed);
-  const droppedCount = A.length(rawLines) - A.length(retained);
-  if (droppedCount > 0) {
-    yield* Console.warn(`dropped ${droppedCount} undecodable admission journal record(s) from "${journalPath}"`);
-  }
-  const records = A.append(retained, { event, line });
+  const records = A.append(retained, { event: O.some(event), line });
   const admittedIndexes = pipe(
     A.zip(
       A.map(records, (record) => record.event),
       A.range(0, A.length(records) - 1)
     ),
-    A.map(([recorded, index]) => (recorded._tag === "admission-admitted" ? O.some(index) : O.none())),
+    A.map(([recorded, index]) =>
+      O.exists(recorded, AdmissionJournalEvent.guards["admission-admitted"]) ? O.some(index) : O.none()
+    ),
     A.getSomes
   );
   const firstRetainedIndex =
     A.length(admittedIndexes) <= RETAINED_ADMISSIONS
       ? 0
       : pipe(admittedIndexes, A.takeRight(RETAINED_ADMISSIONS), A.head, O.getOrElse(constant(0)));
+  const retainedRecords = A.filter(records, (record, index) => index >= firstRetainedIndex || O.isNone(record.event));
   yield* publishJournalAtomic(
     journalPath,
     pipe(
-      A.drop(records, firstRetainedIndex),
+      retainedRecords,
       A.map((record) => `${record.line}\n`),
       A.join(Str.empty)
     )
@@ -368,7 +568,9 @@ const rewriteJournalLocked = Effect.fnUntraced(function* (
  * newest admitted transitions, and publishes atomically via temp-file
  * rename. A lock that stays busy fails the append with a typed error;
  * scheduler correctness never depends on this operation, so callers treat
- * that failure as a best-effort diagnostic write.
+ * that failure as a best-effort diagnostic write. Unknown journal rows remain
+ * byte-identical across rewrites so older fleet writers cannot erase newer
+ * protocol variants during a rolling upgrade.
  *
  * **Example** (Reference the journal append entry point)
  *
@@ -399,10 +601,10 @@ export const appendAdmissionJournalEvent = Effect.fn("AdmissionJournal.append")(
   yield* fs
     .makeDirectory(root, { recursive: true, mode: 0o700 })
     .pipe(Effect.mapError(QualitySchedulerError.new("Failed to create admission journal directory.")));
-  if (!(yield* acquireJournalLock(lockPath, token))) {
+  if (!(yield* acquireJournalFileLock(lockPath, token))) {
     return yield* QualitySchedulerError.make({
       message: `Admission journal lock "${lockPath}" stayed busy; dropping one ${event._tag} event.`,
     });
   }
-  yield* Effect.ensuring(rewriteJournalLocked(journalPath, event, line), releaseJournalLock(lockPath, token));
+  yield* Effect.ensuring(rewriteJournalLocked(journalPath, event, line), releaseJournalFileLock(lockPath, token));
 });

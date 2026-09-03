@@ -771,7 +771,7 @@ const hookPulsePrivateReferences = Effect.fnUntraced(function* (input: {
     cwd: privateReference(input.cwd, hashSalt),
     transcriptPath: O.match(input.transcriptPath, {
       onNone: () => Effect.succeed(O.none<Sha256Hex>()),
-      onSome: (value) => privateReference(value, hashSalt).pipe(Effect.map(O.some)),
+      onSome: (value) => privateReference(value, hashSalt).pipe(Effect.asSome),
     }),
   });
 });

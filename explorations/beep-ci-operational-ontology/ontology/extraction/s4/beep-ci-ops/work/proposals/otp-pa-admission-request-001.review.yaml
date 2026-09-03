@@ -1,0 +1,61 @@
+target: "otp:pa-admission-request:001"
+target_sha256: "5b7577e223874db092827181647c489d660518d20c16ae9584452a0ccc4c0fc1"
+chain_sha256: "0169ac321170eaa511bec688e2f9d451d76cd12f006041df55596480483d5651"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The proposal asserts no parents. Its collision with the ratified SeatRequest
+    identity is tested on identity and reuse compatibility, not through a new
+    subsumption edge.
+revision_requests:
+  - >-
+    Narrow exact reuse to the ratified durable queued-ticket identity, or emit a
+    separate proposal for the replay-derived PendingRequest view with its own
+    identity and relationship to the queued request.
+  - >-
+    Replace the unresolved shared-carrier criterion with evidence that states
+    when live DTO, journal event, and replay view are the same content, distinct
+    tokens, or records about one world-side request.
+  - >-
+    Supply a discriminator based on operational reidentification or treatment
+    of the request, not merely on DTO fields and derivation code.
+attacks:
+  - surface: identity
+    rule: exact-reuse-identity-unresolved
+    counterexample: >-
+      A live queued ticket is deleted on admission, after which replay derives a
+      PendingRequest-shaped row from journal history with the same kind, charge,
+      origin, and enqueue values. The ratified ticket and later view can be two
+      artifacts, but this proposal exact-reuses one IRI while its card cannot say.
+    outcome: landed
+  - surface: warrant
+    rule: direct-cq-warrant
+    counterexample: >-
+      Removing SeatRequest makes CQ-021 unable to type and enumerate queued
+      requests with their owner, kind, priority, charge, and enqueue time, so the
+      class itself is directly required despite the identity overreach.
+    outcome: survived
+  - surface: null_discriminator
+    rule: discriminator-true-of-request-dto
+    counterexample: >-
+      A pure scheduler DTO and a replay projection can both carry the listed
+      fields and derive one row from journal events without either being the
+      durable queued-ticket individual ratified by the taxonomy.
+    outcome: landed
+rival_models_still_viable:
+  - "Distinct live-request and replay-view information artifacts."
+  - "A world-side requesting relator represented by both artifacts."
+evidence:
+  - "po:sha256:0f770a52d6074ae2a158234d536178589a6353333147509d21a526ac41305d59"
+  - "po:sha256:292a0d656c3996d634bbcc4cde62da942c52bd9a0a3c5d1f9246bf5977066841"
+  - "po:sha256:35fb67c441193ece032d71a3f3e53107352fd83cd469df203eac69b27f2461d9"
+  - "po:sha256:4a30b60df83c527a6da561402d3755e6b194e0f657659d3510c506549f3c9021"
+  - "po:sha256:55c2897fcdfe9318041fe93947653642729b7d3b83ca8f7964e83043085abeac"
+  - "CQ-021"

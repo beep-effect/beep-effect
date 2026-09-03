@@ -395,19 +395,28 @@ fi
 # OBSERVATIONS ARE RUN-SCOPED: their canonical ids embed the pinned commit
 # and adapter version, so a new run's manifest can never re-validate the old
 # records — left in place they poison the next scan as stale, undispositioned
-# observations. Archive them beside the manifest/index (refuse-if-exists;
-# they are deterministically regenerable from the archived manifest's pin):
-AO=$ONT/runs/$RID.observations
+# observations. Archive them at the SIBLING shelter, OUTSIDE the scan root
+# (refuse-if-exists; deterministically regenerable from the archived
+# manifest's pin). runs/ itself is the ROTATION LEDGER — manifest/index
+# pairs and engine history only; the validator (v14) REFUSES record-prefixed
+# files under runs/, so per-run record trees can never ride there as live
+# evidence, and no in-root exemption exists to hide live records in:
+ARCH=$(dirname "$ONT")/archives/$(basename "$ONT")
+AO=$ARCH/$RID.observations
 if [ -z "$RID" ]; then :; elif [ -e "$AO" ]; then echo "refusing: observation archive for $RID exists"; else
   mkdir -p "$AO" && mv "$WORK/observations" "$WORK/prose-observations" "$AO"/ && \
   mkdir -p "$WORK/observations" "$WORK/prose-observations" && \
-  echo "observations archived to runs/$RID.observations/"
+  echo "observations archived to $AO/"
 fi
 # CARRY-FORWARD POLICY (by design): reviews/analyses are CONTENT-ADDRESSED —
 # a new run reuses them only while their closures still verify; an engine,
 # prompt, contract, or corpus change stales the manifest or the chains and
 # forces re-lock/re-review. Carrying verified artifacts across runs is
 # therefore reuse of still-valid authority, not revival of stale authority.
+# When a later run DOES stale carried seat trees or ratifications, relocate
+# them byte-identically to the same sibling shelter with a dated README note
+# — and sweep every historical gate or script that joins on the old paths
+# before publishing the relocation.
 
 # Idempotence check: same pinned source + same adapter version => same RECORD
 # IDS (filenames prove nothing — two runs can name files alike with different

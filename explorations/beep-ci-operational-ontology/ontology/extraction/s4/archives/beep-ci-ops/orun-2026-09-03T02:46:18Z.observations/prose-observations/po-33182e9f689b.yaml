@@ -1,0 +1,10 @@
+id: po:sha256:33182e9f689b24bcb01d622aa789cd78093af067a6594b2e0c2c950ac0867715
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: AGENTS.md
+source_span:
+  start_line: 87
+  end_line: 88
+quote: 'run `bun run beep yeet monitor` until it reports `merge-ready: yes`'
+epistemic_status: quoted_prose

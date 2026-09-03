@@ -1,4 +1,4 @@
-import { Model, make, makeRepository, VariantField } from "@beep/effect-drizzle";
+import { fieldEvolve, Model, make, makeRepository, VariantField } from "@beep/effect-drizzle";
 import * as pg from "@beep/effect-drizzle/pg";
 import * as sqlite from "@beep/effect-drizzle/sqlite";
 import { sql } from "drizzle-orm";
@@ -109,9 +109,15 @@ it("keeps generated and defaulted fields in the intended model variants", () => 
   expect<Update>().type.toHaveProperty("rowVersion");
 
   const explicit = VariantField({ select: String, update: String });
+  const evolved = explicit.pipe(fieldEvolve({ update: NullOr }));
+  const directlyEvolved = fieldEvolve(explicit, { update: NullOr });
   expect<(typeof explicit)["schemas"]>().type.toHaveProperty("select");
   expect<(typeof explicit)["schemas"]>().type.toHaveProperty("update");
   expect<(typeof explicit)["schemas"]>().type.not.toHaveProperty("insert");
+  expect<typeof evolved.schemas.select>().type.toBe<typeof String>();
+  expect<typeof evolved.schemas.update>().type.toBe<ReturnType<typeof NullOr<typeof String>>>();
+  expect<typeof directlyEvolved.schemas.select>().type.toBe<typeof String>();
+  expect<typeof directlyEvolved.schemas.update>().type.toBe<ReturnType<typeof NullOr<typeof String>>>();
 });
 
 it("preserves resolved metadata algebra", () => {

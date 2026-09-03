@@ -1,0 +1,10 @@
+id: po:sha256:39654605207ddc525fd7a94dc32f91540979a9a0605500594d3b95445ed2dd80
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: AGENTS.md
+source_span:
+  start_line: 76
+  end_line: 77
+quote: full `bun run docgen` only for the repo-wide proof
+epistemic_status: quoted_prose

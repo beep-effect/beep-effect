@@ -375,6 +375,9 @@ export const hasProperties: {
     ...properties: Properties
   ): (self: unknown) => self is { [K in Properties[number]]: unknown };
   <Properties extends A.NonEmptyReadonlyArray<PropertyKey>>(
+    properties: Properties
+  ): (self: unknown) => self is { [K in Properties[number]]: unknown };
+  <Properties extends A.NonEmptyReadonlyArray<PropertyKey>>(
     self: unknown,
     properties: Properties
   ): self is { [K in Properties[number]]: unknown };

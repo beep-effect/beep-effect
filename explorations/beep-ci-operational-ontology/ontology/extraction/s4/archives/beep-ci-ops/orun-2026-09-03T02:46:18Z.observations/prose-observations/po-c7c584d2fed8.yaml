@@ -1,0 +1,10 @@
+id: po:sha256:c7c584d2fed863958e6cc07caab7553d34c39bb3d6d57edd5706bbcb2846355f
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts
+source_span:
+  start_line: 158
+  end_line: 158
+quote: 'checkoutRoot: S.String'
+epistemic_status: quoted_prose

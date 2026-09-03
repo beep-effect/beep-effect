@@ -1,0 +1,10 @@
+id: po:sha256:952426ad6b41b341dc31101240da6e04c833d0ca2b33c8785298bca07f9cd5d3
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: standards/fallow.boundaries.provenance.schema.json
+source_span:
+  start_line: 111
+  end_line: 125
+quote: '"external-service" ]'
+epistemic_status: quoted_prose

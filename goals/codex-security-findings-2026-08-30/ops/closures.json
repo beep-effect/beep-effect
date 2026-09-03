@@ -1,0 +1,143 @@
+{
+  "meta": {
+    "schemaVersion": "codex-closure-ledger/v1",
+    "repository": "kriegcloud/beep-effect",
+    "packet": "goals/codex-security-findings-2026-08-30",
+    "capturedCount": 11,
+    "closureCount": 11,
+    "handoffCount": 0,
+    "verifiedAt": "2026-09-03"
+  },
+  "mergeEvidence": {
+    "pullRequest": 902,
+    "headCommit": "62ea090d6fbb010a68a19dbaee955ac521ce8e98",
+    "mergeCommit": "3b27a0c17900a28578ec6a0d59dc70a2887c5bc9",
+    "mergedAt": "2026-08-30",
+    "requiredChecks": "passed",
+    "unresolvedReviewThreads": 0,
+    "vercelException": "Two deployment failures were rate-limit-only."
+  },
+  "closures": [
+    {
+      "csfId": "CSF-001",
+      "codexId": "4cd67192c1088191a93381516271f51e",
+      "status": "closed",
+      "reason": "Already fixed",
+      "closedAt": "2026-09-03",
+      "evidence": {
+        "pullRequest": 902,
+        "closureMode": "automatic-no-longer-detected"
+      }
+    },
+    {
+      "csfId": "CSF-002",
+      "codexId": "84e157bd2ccc8191831738dfd18514fb",
+      "status": "closed",
+      "reason": "Already fixed",
+      "closedAt": "2026-09-03",
+      "evidence": {
+        "pullRequest": 902,
+        "closureMode": "automatic-no-longer-detected"
+      }
+    },
+    {
+      "csfId": "CSF-003",
+      "codexId": "0ba9252f73048191bc143b5732736004",
+      "status": "closed",
+      "reason": "Already fixed",
+      "closedAt": "2026-09-03",
+      "evidence": {
+        "pullRequest": 876,
+        "closureMode": "automatic-no-longer-detected"
+      }
+    },
+    {
+      "csfId": "CSF-004",
+      "codexId": "8d271604a6888191aba0d2a8f31ef2b4",
+      "status": "closed",
+      "reason": "Already fixed",
+      "closedAt": "2026-09-03",
+      "evidence": {
+        "pullRequest": 902,
+        "closureMode": "automatic-no-longer-detected"
+      }
+    },
+    {
+      "csfId": "CSF-005",
+      "codexId": "022c47c20a1c81918bf8772c0581f88e",
+      "status": "closed",
+      "reason": "Already fixed",
+      "closedAt": "2026-09-03",
+      "evidence": {
+        "pullRequest": 902,
+        "closureMode": "automatic-no-longer-detected"
+      }
+    },
+    {
+      "csfId": "CSF-006",
+      "codexId": "0bdf89a067648191b422fe675dd0780a",
+      "status": "closed",
+      "reason": "Already fixed",
+      "closedAt": "2026-09-03",
+      "evidence": {
+        "pullRequest": 902,
+        "closureMode": "automatic-no-longer-detected"
+      }
+    },
+    {
+      "csfId": "CSF-007",
+      "codexId": "5167e0476d4c8191bad46d2e7d96d96f",
+      "status": "closed",
+      "reason": "Already fixed",
+      "closedAt": "2026-09-03",
+      "evidence": {
+        "pullRequest": 902,
+        "closureMode": "automatic-no-longer-detected"
+      }
+    },
+    {
+      "csfId": "CSF-008",
+      "codexId": "8c5243aa119881919c825d3a0f142ecd",
+      "status": "closed",
+      "reason": "Already fixed",
+      "closedAt": "2026-09-03",
+      "evidence": {
+        "pullRequest": 902,
+        "closureMode": "automatic-no-longer-detected"
+      }
+    },
+    {
+      "csfId": "CSF-009",
+      "codexId": "995a450483d48191938dfeef27a75564",
+      "status": "closed",
+      "reason": "Already fixed",
+      "closedAt": "2026-09-03",
+      "evidence": {
+        "pullRequest": 902,
+        "closureMode": "automatic-no-longer-detected"
+      }
+    },
+    {
+      "csfId": "CSF-010",
+      "codexId": "e9660bfcc3e88191973971212b8131f0",
+      "status": "closed",
+      "reason": "Already fixed",
+      "closedAt": "2026-09-03",
+      "evidence": {
+        "pullRequest": 902,
+        "closureMode": "automatic-no-longer-detected"
+      }
+    },
+    {
+      "csfId": "CSF-011",
+      "codexId": "fa191f71f5d48191aa9f31d544cee2e7",
+      "status": "closed",
+      "reason": "Already fixed",
+      "closedAt": "2026-09-03",
+      "evidence": {
+        "pullRequest": 902,
+        "closureMode": "automatic-no-longer-detected"
+      }
+    }
+  ]
+}

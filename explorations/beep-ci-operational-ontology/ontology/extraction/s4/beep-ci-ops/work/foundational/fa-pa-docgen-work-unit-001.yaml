@@ -1,0 +1,21 @@
+id: "fa:pa-docgen-work-unit:001"
+hypothesis_ref: "dh:pa-docgen-work-unit:001"
+identity_card_ref: "ic:pa-docgen-work-unit:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+  - label: "Local docgen and full-repository docgen are two distinct WorkUnit specifications rather than variants of one specification."
+    still_viable: true
+  - label: "Docgen denotes an abstract procedure universal realized by separate specification artifacts."
+    still_viable: true
+  - label: "A dated docgen run or its result is the WorkUnit specification."
+    still_viable: false
+strongest_counterexample: >-
+  The local and full commands can each be rerun against many trees, producing
+  distinct process histories and evidence; none of those executions can supply
+  the reusable prescription's identity, and the prescription does not become
+  an assurance obligation.
+verdict: analyzed

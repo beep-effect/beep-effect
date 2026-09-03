@@ -1,0 +1,34 @@
+id: ic:pb-resolved-cache-posture-alt:001
+hypothesis_ref: dh:pb-resolved-cache-posture:001
+identity:
+  supplies_identity: false
+  identity_criterion: The resolved cache posture of a Turbo invocation is the same mode iff
+    it is the cache-access characterization of that same invocation. Two invocations may bear
+    different postures while sharing a task specification. A function return type or value
+    object is an encoding of the posture, never the mode.
+  reidentification_key:
+  - resolved cache decision for one Turbo invocation (evidence of aboutness)
+ontoclean:
+  rigidity: anti_rigid
+  carries_identity: false
+  supplies_identity: false
+  unity: one cache-access characterization of one Turbo invocation
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: mode
+  alternatives:
+  - quality
+  - information_object
+  existential_dependencies:
+  - the Turbo invocation characterized
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+- description: If posture were a property of the reusable task spec, two invocations could
+    not differ; the quote 'resolved for one Turbo invocation' is a counterexample to that
+    reading.
+- description: If the referent is only the value object, nothing in the world is decided;
+    the quote calls it a decision, which a mere DTO would not be.
+status: proposed

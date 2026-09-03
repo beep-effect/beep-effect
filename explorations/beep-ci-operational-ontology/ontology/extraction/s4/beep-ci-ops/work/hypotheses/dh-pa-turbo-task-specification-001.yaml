@@ -1,0 +1,30 @@
+id: "dh:pa-turbo-task-specification:001"
+observation_refs:
+  - "po:sha256:1630518546c7461a9063892f9fc45a0ee9c7333d7a175dd1c05f99e3cd74519e"
+  - "po:sha256:19da9053dc578ecea6995d45a9c23ea09f1f36b02e3969bb13b3c08a6a3c981f"
+  - "po:sha256:1b49e7e0668570e889eb25329d1f20477c265b30b4fb6626fd5817bb06f8b3b1"
+  - "po:sha256:3b19444624c429f6c39c9e575a3292b8c48329e4fccb1c7caedf44b274a198fe"
+  - "po:sha256:3c7433d6cba26df248d3103ccc8c500af66525cb53c75876dd810ec316ec611d"
+  - "po:sha256:4763b2908e30e2d48c58ce216dabaa1dd8234c19e0e84ba5b5eefe4f1541e36e"
+  - "po:sha256:394b686a0833c0d7dca04d9e31bbdd18750dfbaa9fb3249e3b6ec48e12b57bc4"
+  - "po:sha256:3e1c6cd48f541482c5471d901e96c829dd47de787108d7ee9cc4fec91966eb97"
+  - "po:sha256:4fc13f1c056d4666ad83f3944408c9437bbcc0eebd583f907ec05449b5730594"
+cq_warrants: ["CQ-001", "CQ-002", "CQ-011"]
+proposed_referent:
+  label: "Turbo task specification"
+  description: "A repeatable task description for repository work, with task identity and configuration such as input surface, upstream dependency, and persistence behavior."
+representation_status: information_artifact
+alternatives:
+  - label: "Verification lane"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "Turbo configuration object"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: "The observations jointly specify repeatable repository work and constraints that affect execution and invalidation, while remaining distinct from any particular run."
+  discriminator: "The configuration declares concrete tasks together with an upstream-build dependency, an input surface, and non-persistent execution, thereby specifying operational work beyond isolated labels."
+epistemic_status: proposed
+confidence: {value: 0.76, use_for_acceptance: false}

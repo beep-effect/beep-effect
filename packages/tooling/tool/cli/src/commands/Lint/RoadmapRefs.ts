@@ -225,17 +225,12 @@ const readManifestPhaseCounts = Effect.fn("RoadmapRefs.readManifestPhaseCounts")
   const path = yield* Path.Path;
   const goalPath = pipe(targetPath(reference.target), Str.split("/"), A.take(3), A.join("/"));
   const manifestPath = path.join(path.dirname(roadmapPath), goalPath, "ops", "manifest.json");
-  const manifestText = yield* fs
-    .readFileString(manifestPath)
-    .pipe(Effect.map(O.some), Effect.orElseSucceed(O.none<string>));
+  const manifestText = yield* fs.readFileString(manifestPath).pipe(Effect.asSome, Effect.orElseSucceed(O.none<string>));
   const parsedManifest = O.flatMap(manifestText, parseGoalManifestText);
   if (O.isNone(parsedManifest)) {
     return O.none<{ readonly done: number; readonly total: number }>();
   }
-  const manifest = yield* decodeGoalManifest(parsedManifest.value).pipe(
-    Effect.map(O.some),
-    Effect.orElseSucceed(O.none)
-  );
+  const manifest = yield* decodeGoalManifest(parsedManifest.value).pipe(Effect.asSome, Effect.orElseSucceed(O.none));
   if (O.isNone(manifest) || manifest.value.phases === undefined) {
     return O.none<{ readonly done: number; readonly total: number }>();
   }

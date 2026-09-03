@@ -1,0 +1,10 @@
+id: po:sha256:a9c848655ed1e432b835ae1220d3327deb3ef187f773e9f68b3d098c71aae67c
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: standards/fallow.boundaries.provenance.schema.json
+source_span:
+  start_line: 4
+  end_line: 13
+quote: '"title": "Fallow Boundary Rule Provenance"'
+epistemic_status: quoted_prose

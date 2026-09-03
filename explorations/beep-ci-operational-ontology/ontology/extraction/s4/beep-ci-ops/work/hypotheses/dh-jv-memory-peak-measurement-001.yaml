@@ -1,0 +1,34 @@
+id: "dh:jv-memory-peak-measurement:001"
+observation_refs:
+  - "so:sha256:78cf821b0771a1c60ef1f80746484a8da1df72bcf2b1eaa9ebed337144e5a245"
+  - "so:sha256:a439f4ee4315fe978323f80c502d712289fd590fe8655c5050162bf65b9827b7"
+  - "so:sha256:c627961a8fcde9dca01027cbf052494763b5e6895805c1c0c50d8bf51ba3a7bb"
+cq_warrants: ["CQ-003"]
+proposed_referent:
+  label: "Recorded peak-memory measurement"
+  description: >-
+    A serialized peak resource-usage quantity reported in kilobytes or bytes
+    for verification or admission activity; the observations do not determine
+    the exact process boundary or its mapping to a memory class.
+representation_status: information_artifact
+alternatives:
+  - label: "Peak memory consumption quality"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "Instrumentation-specific accounting counter"
+    representation_status: implementation_artifact_only
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: >-
+    Concrete peak values supply measurement evidence from which memory-cost
+    classes and their provenance may be calibrated, even though the carrier
+    boundary is unresolved.
+  discriminator: >-
+    The cited observations record peakRssKb values of 511788 and 499424 and a
+    memoryPeakBytes value of 2194235392 in concrete fleet records; a static
+    instrumentation representation would not contain those observed usage
+    quantities.
+epistemic_status: proposed
+confidence: {value: 0.83, use_for_acceptance: false}

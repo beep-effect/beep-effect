@@ -7,9 +7,10 @@
  * `<checkout>/.beep/inbox/acks/<id>` — the ship-velocity A2 contract that the
  * harness adapters (Claude deny, Codex inject, Grok tail) all enforce from.
  * The receipt is not a bare tombstone: it records what was actually done about
- * the failure — the SHA of the fix commit, a wontfix decision with its reason,
- * or the review-thread URL where the discussion continues — so `yeet monitor`
- * and the operator can audit an acknowledgment instead of trusting it.
+ * the failure — the SHA of the fix commit, a reasoned environment-only
+ * attribution, a wontfix decision with its reason, or the review-thread URL
+ * where the discussion continues — so `yeet monitor` and the operator can
+ * audit an acknowledgment instead of trusting it.
  *
  * **Gotchas**
  *
@@ -29,6 +30,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema";
 import { DateTime, Effect, Match } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -39,6 +41,8 @@ import { yeetInboxAckPath } from "./Inbox.ts";
 import type { FileSystem, Path } from "effect";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/Ack");
+
+const YeetAckResolutionKind = LiteralKit(["fix-sha", "environment-only", "wontfix", "thread-url", "waive"]);
 
 /**
  * Schema version stamped on every ack receipt.
@@ -73,11 +77,40 @@ export const YEET_ACK_SCHEMA_VERSION = "yeet-ack/v1";
  */
 export class YeetAckFixResolution extends S.Class<YeetAckFixResolution>($I`YeetAckFixResolution`)(
   {
-    kind: S.tag("fix-sha"),
+    kind: S.tag(YeetAckResolutionKind.Enum["fix-sha"]),
     sha: S.NonEmptyString,
   },
   $I.annote("YeetAckFixResolution", {
     description: "Acknowledgment that the failure was fixed, naming the fix commit.",
+  })
+) {}
+
+/**
+ * The failure came from the execution environment rather than repository code.
+ *
+ * **Example** (Record an environment-only resolution)
+ *
+ * ```ts
+ * import { YeetAckEnvironmentOnlyResolution } from "@beep/repo-cli/test/Yeet"
+ *
+ * const resolution = YeetAckEnvironmentOnlyResolution.make({
+ *   reason: "stale upstream dist rebuilt; package audit rerun green"
+ * })
+ * console.log(resolution.kind) // "environment-only"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class YeetAckEnvironmentOnlyResolution extends S.Class<YeetAckEnvironmentOnlyResolution>(
+  $I`YeetAckEnvironmentOnlyResolution`
+)(
+  {
+    kind: S.tag(YeetAckResolutionKind.Enum["environment-only"]),
+    reason: S.NonEmptyString,
+  },
+  $I.annote("YeetAckEnvironmentOnlyResolution", {
+    description: "Acknowledgment that the failure was environmental rather than a repository-code defect.",
   })
 ) {}
 
@@ -98,7 +131,7 @@ export class YeetAckFixResolution extends S.Class<YeetAckFixResolution>($I`YeetA
  */
 export class YeetAckWontfixResolution extends S.Class<YeetAckWontfixResolution>($I`YeetAckWontfixResolution`)(
   {
-    kind: S.tag("wontfix"),
+    kind: S.tag(YeetAckResolutionKind.Enum.wontfix),
     reason: S.NonEmptyString,
   },
   $I.annote("YeetAckWontfixResolution", {
@@ -123,7 +156,7 @@ export class YeetAckWontfixResolution extends S.Class<YeetAckWontfixResolution>(
  */
 export class YeetAckThreadResolution extends S.Class<YeetAckThreadResolution>($I`YeetAckThreadResolution`)(
   {
-    kind: S.tag("thread-url"),
+    kind: S.tag(YeetAckResolutionKind.Enum["thread-url"]),
     url: S.NonEmptyString,
   },
   $I.annote("YeetAckThreadResolution", {
@@ -151,7 +184,7 @@ export class YeetAckThreadResolution extends S.Class<YeetAckThreadResolution>($I
  */
 export class YeetAckWaiveResolution extends S.Class<YeetAckWaiveResolution>($I`YeetAckWaiveResolution`)(
   {
-    kind: S.tag("waive"),
+    kind: S.tag(YeetAckResolutionKind.Enum.waive),
     actor: S.NonEmptyString,
     expiresAt: S.NonEmptyString,
     reason: S.NonEmptyString,
@@ -163,33 +196,49 @@ export class YeetAckWaiveResolution extends S.Class<YeetAckWaiveResolution>($I`Y
 ) {}
 
 /**
- * What was done about an inbox row: three permanent closing moves or a temporary waiver.
+ * What was done about an inbox row: four permanent closing moves or a temporary waiver.
  *
  * **Details**
  *
- * The members mirror the SPEC A2 receipt contract verbatim — fix SHA, wontfix
- * plus reason, or thread URL. There is deliberately no bare "seen" member: a
- * receipt with no work log would turn the ack protocol into a dismissal
- * button, and dismissals are A3's *waive* concept with attribution and expiry,
- * not an acknowledgment.
+ * The original SPEC A2 members remain unchanged — fix SHA, wontfix plus reason,
+ * or thread URL — while `environment-only` adds a reasoned attribution without
+ * changing the `yeet-ack/v1` wire shape. There is deliberately no bare "seen"
+ * member: a receipt with no work log would turn the ack protocol into a
+ * dismissal button, and dismissals are A3's *waive* concept with attribution
+ * and expiry, not an acknowledgment.
+ *
+ * **Example** (Decode an environment-only resolution)
+ *
+ * ```ts
+ * import { YeetAckResolution } from "@beep/repo-cli/test/Yeet"
+ * import * as S from "effect/Schema"
+ *
+ * const resolution = S.decodeUnknownSync(YeetAckResolution)({
+ *   kind: "environment-only",
+ *   reason: "the runner image does not provide systemd"
+ * })
+ * console.log(resolution.kind) // "environment-only"
+ * ```
  *
  * @category models
  * @since 0.0.0
  */
 export const YeetAckResolution = S.Union([
   YeetAckFixResolution,
+  YeetAckEnvironmentOnlyResolution,
   YeetAckWontfixResolution,
   YeetAckThreadResolution,
   YeetAckWaiveResolution,
 ]).pipe(
   $I.annoteSchema("YeetAckResolution", {
     title: "Yeet Ack Resolution",
-    description: "What was done about one inbox row: a fix, wontfix, review thread, or expiring waiver.",
+    description:
+      "What was done about one inbox row: a fix, environment-only attribution, wontfix, review thread, or expiring waiver.",
   })
 );
 
 /**
- * What was done about an inbox row: the ack protocol's three closing moves.
+ * What was done about an inbox row: the ack protocol's four permanent closing moves or temporary waiver.
  *
  * @category type-level
  * @since 0.0.0
@@ -215,6 +264,7 @@ export type YeetAckResolution = typeof YeetAckResolution.Type;
 export const renderYeetAckResolution = (resolution: YeetAckResolution): string =>
   Match.value(resolution).pipe(
     Match.discriminatorsExhaustive("kind")({
+      "environment-only": (environmentOnly) => `environment-only: ${environmentOnly.reason}`,
       "fix-sha": (fix) => `fix-sha ${fix.sha}`,
       "thread-url": (thread) => `thread ${thread.url}`,
       waive: (waive) => `waive ${waive.shard} by ${waive.actor} until ${waive.expiresAt}: ${waive.reason}`,

@@ -1,0 +1,47 @@
+id: "ic:ov-schedules-seat-request:001"
+hypothesis_ref: "dh:ov-schedules-seat-request:001"
+identity:
+  supplies_identity: false
+  identity_criterion: >-
+    This object property supplies no identity: one schedules-seat-request
+    assertion is the same fact only for the same proposal-relative
+    ScheduleStep and the same SeatRequest ticket created by one enqueue
+    lineage; equal work fields, request nonces, or later SeatGrant fields do
+    not preserve the assertion.
+  reidentification_key:
+    - "proposal-relative ScheduleStep identity"
+    - "SeatRequest enqueue provenance and continuous ticket lineage"
+    - "ScheduleProposal provenance and scheduling validity context"
+ontoclean:
+  rigidity: unresolved
+  carries_identity: false
+  supplies_identity: false
+  unity: >-
+    One schedule-content assertion connecting one ScheduleStep to the
+    SeatRequest ticket whose admission that step orders.
+  dependence: relational
+ufo_analysis:
+  candidate_category: none
+  alternatives:
+    - "an aboutness or reference assertion from schedule content to a SeatRequest record"
+    - "a reified scheduled-admission situation joining proposal, step, and SeatRequest"
+    - "a ScheduleStep-to-WorkUnitSpecification relation"
+    - "a ScheduleStep-to-SeatGrant relation"
+    - "a journal-specific foreign-key edge without domain semantics"
+  existential_dependencies:
+    - "The ScheduleStep information artifact that carries the scheduling content"
+    - "The queued SeatRequest ticket, distinct from its later SeatGrant lease"
+    - "The containing ScheduleProposal and its projection context"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - "retargeting the step to another SeatRequest creates a successor assertion"
+    - "the step or proposal ceases to have a faithful realization"
+counterexamples:
+  - description: >-
+      Two SeatRequests can carry identical work kind, charge, scope, and owner
+      fields but arise from distinct enqueue acts, and one ticket can later
+      yield a separate SeatGrant lease; neither shared work content nor the
+      grant can replace the scheduled ticket's identity.
+status: proposed

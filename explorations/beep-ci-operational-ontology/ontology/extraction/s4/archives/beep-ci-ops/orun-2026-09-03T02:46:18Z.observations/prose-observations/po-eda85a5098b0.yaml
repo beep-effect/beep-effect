@@ -1,0 +1,10 @@
+id: po:sha256:eda85a5098b02018ace4da628d2de2627526f5b83760f37cce92d0666a5d2cf4
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts
+source_span:
+  start_line: 73
+  end_line: 80
+quote: 'verdict: YeetVerdict,'
+epistemic_status: quoted_prose

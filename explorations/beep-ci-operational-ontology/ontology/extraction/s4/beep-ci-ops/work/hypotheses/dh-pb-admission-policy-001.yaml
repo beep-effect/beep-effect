@@ -1,0 +1,29 @@
+id: "dh:pb-admission-policy:001"
+observation_refs:
+  - "po:sha256:60e90bd17b628d4d6d815cfd05ddcf88cbc2a724790b05ac88b4411619f535be"
+  - "po:sha256:6a73b5411cc63a7066296a936e6c699b0f4d624efded1e0c2acf4156593cc944"
+  - "po:sha256:9caeeca09be88e420e93a2dfbf183f7bfc7037e859a9da5cd685b166ce8363b6"
+cq_warrants:
+  - "CQ-010"
+  - "CQ-021"
+  - "CQ-023"
+proposed_referent:
+  label: "admission policy"
+  description: "A normative operational specification governing how pending verification requests are ordered and admitted subject to capacity, class caps, aging, and a starvation condition."
+representation_status: information_artifact
+alternatives:
+  - label: "AdmissionConfig implementation object"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+  - label: "one admission decision occurrence"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: "The projection contract says pending requests are admitted in canonical order under named capacity, priority, class-cap, and starvation constraints, and that replay arbitrates disagreement with deployed behavior. The optional configuration type and admission timestamp are representations of that policy and its decisions, not the whole referent."
+  discriminator: "The contract requires a replay to reproduce deployed admission ordering and treats an over-bound eligible request as a projection error; those normative and counterfactual consequences would not exist for a configuration object with no operational policy referent."
+epistemic_status: proposed
+confidence:
+  value: 0.9
+  use_for_acceptance: false

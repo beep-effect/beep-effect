@@ -649,7 +649,7 @@ export const invokePromiseMethod = <R>(
             Effect.flatMap((reasons) =>
               Effect.fail(ProgramThrow.new(createAggregateErrorValue(reasons, "All promises were rejected")))
             ),
-            Effect.catch((error) => (PromiseAnyFulfilled.is(error) ? Effect.succeed(error.value) : Effect.fail(error)))
+            Effect.catchIf(PromiseAnyFulfilled.is, (error) => Effect.succeed(error.value))
           )
         );
       }),

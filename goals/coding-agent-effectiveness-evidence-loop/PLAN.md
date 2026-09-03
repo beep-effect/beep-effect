@@ -2,19 +2,21 @@
 
 ## Status
 
-Status: `in-progress` (packet opened 2026-07-31; P1 instrument-verification
-spike ran 2026-08-01 and passed — see
-`research/2026-08-01-p1-hook-semantics-spike.md`)
+Status: `in-progress` (packet opened 2026-07-31; the P1 log-only baseline
+closed and `desktop-ntfy-1` cut over in the implementation checkout on
+2026-09-03 — see
+`research/2026-09-03-p1-baseline-close.md` and
+`history/outputs/2026-09-03-p1-sharp-cutover.md`)
 
 **Current phases (single authority for `/goal` executors):** P1 is current.
-Its **First step** (hook-semantics verification) is **complete**: all three
-wait classes emit distinguishable, sessionId-bearing events, so `HookPulseV1`
-schema authoring may now begin — subject to the seven spike amendments folded
-into the P1 section below. **P0 is complete (2026-08-07)** — code, atomic
-store cutover, and live verification all landed; evidence in
-`history/outputs/2026-08-07-p0-cutover.md`. P2–P8 are not current until the
-manifest marks their predecessors' exit criteria met; the "proceeds in
-parallel" notes below describe scheduling intent between phases, never
+Hook semantics, the production writer, the fixed baseline, notifier/damping
+schemas, desktop delivery, and the shared circuit breaker are complete. The
+first sharp `AskUserQuestion` wait and phone delivery are not yet observed, so
+P1's interrupted-series exit criterion is not met. **P0 is complete
+(2026-08-07)** — code, atomic store cutover, and live verification all landed;
+evidence in `history/outputs/2026-08-07-p0-cutover.md`. P2–P8 are not current
+until the manifest marks their predecessors' exit criteria met; the "proceeds
+in parallel" notes below describe scheduling intent between phases, never
 permission to start ahead of this section.
 
 Numbering map to the source audit plan (scratch/codex thread + ADHD
@@ -26,7 +28,7 @@ P5→P7, P6→P8.
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
 | P0 Storage cutover + identity registry | complete (2026-08-07) | Clone-independent canonical store, source registry, bounded config snapshots. | Store serves all clones; snapshots have stage timings; nested worktrees are independent roots. Met — see `history/outputs/2026-08-07-p0-cutover.md`. |
-| P1 Sequence-break instrument | in-progress | Hooks + hook-pulse ledger + notifications + circuit breaker + kill switch; first wait reduction measured. | Baseline captured, notifications live, interrupted time-series recorded; breaker kills retry storms. (First step done 2026-08-01: hook semantics verified.) |
+| P1 Sequence-break instrument | in-progress (checkout cutover 2026-09-03) | Hooks + hook-pulse ledger + notifications + circuit breaker + kill switch; first wait reduction measured. | Baseline captured; desktop notifications and breaker live in the implementation checkout. Still requires fleet rollout, a sharp human-input denominator/effect, and phone-delivery receipt. |
 | P2 Telemetry-v2 truth model | pending | FlightRecord + IngestManifest write contract with the five evidence-integrity laws. | Schemas land with fixtures; Claude + Codex emitters flowing; tombstones + leases working. |
 | P3 Yeet mistrial + proof durability | pending | Exhibit-required verdicts, mistrial outcome, per-lane durable proofs, `yeet doctor`. | Exhibit-less failure undecodable; interrupted publish resumes as cache hit; doctor names blocking edge. |
 | P4 Replay, dedup, trust gates | pending | Replay all raw history into v2; replay-twice-diff determinism; gates pass. | Zero duplicate identities; attestation coverage ≥95%; score families replace composite. |
@@ -195,6 +197,20 @@ phase's critical path.
 - The hook-pulse ledger later serves as the independent witness P4 trust
   gates reconcile v2 wait spans against, and as the P6 spike's fixture
   corpus of real transition sequences.
+
+**Implementation checkpoint (2026-09-03):** the fixed `log-only-0` window is
+closed, checkpoint option 3 selects the observed `AskUserQuestion` population,
+and `desktop-ntfy-1` is live in this checkout after an explicitly excluded
+six-second cutover overlap. Notification and damping state, breaker
+state/events, Claude/Codex adapters, exact-bracket rechecks, desktop Plasma
+delivery, and cross-adapter retry suppression have schema and execution proof.
+Sibling checkouts remain revision-labeled controls until the required PR ships;
+they are not mutated out of band. P1 remains open until a real sharp human-input
+denominator supports the first wait-reduction estimate, the tracked cutover
+reaches the fleet, and ntfy phone delivery has a safe runtime secret plus
+receipt. See
+`research/2026-09-03-p1-baseline-close.md` and
+`history/outputs/2026-09-03-p1-sharp-cutover.md`.
 
 ## P2 — Telemetry-v2 truth model (audit P1)
 

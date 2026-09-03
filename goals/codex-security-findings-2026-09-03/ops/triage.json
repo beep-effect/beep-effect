@@ -1,0 +1,376 @@
+{
+  "meta": {
+    "schemaVersion": "codex-triage/v1",
+    "repository": "kriegcloud/beep-effect",
+    "findingsView": "repo-scoped, status=new",
+    "branch": "security/codex-findings-2026-09-03",
+    "expectedCount": 12,
+    "capturedCount": 12,
+    "capturedAt": "2026-09-03",
+    "captureMethod": "signed-in-csv-export",
+    "note": "All 12 findings were confirmed at the packet's initial HEAD and remediated in seven shared-root lanes. Repository and hosted proof remain pending."
+  },
+  "lanes": {
+    "L1-filesystem-safety": {
+      "status": "implemented",
+      "findings": ["CSF-001", "CSF-007"]
+    },
+    "L2-bounded-parsing": {
+      "status": "implemented",
+      "findings": ["CSF-002", "CSF-005", "CSF-008"]
+    },
+    "L3-provenance-capabilities": {
+      "status": "implemented",
+      "findings": ["CSF-003", "CSF-009"]
+    },
+    "L4-sandbox-quotas": { "status": "implemented", "findings": ["CSF-004"] },
+    "L5-schema-coherence": { "status": "implemented", "findings": ["CSF-006"] },
+    "L6-photo-bounds": {
+      "status": "implemented",
+      "findings": ["CSF-010", "CSF-012"]
+    },
+    "L7-preservation-stability": {
+      "status": "implemented",
+      "findings": ["CSF-011"]
+    }
+  },
+  "findings": [
+    {
+      "id": "CSF-001",
+      "codexId": "033be00d8a588191b81f6e3d5246ac8a",
+      "title": "Dangling worktree cleanup can delete uncommitted source",
+      "severity": "Informational",
+      "codexStatus": "New",
+      "commit": "c8e7408034351fecda38a915ac170d99a7dc329c",
+      "ownerArea": "repo CLI runtime cleanup",
+      "lane": "L1-filesystem-safety",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "Small extra files did not prevent dangling-stub classification, and apply recursively removed the candidate."
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
+          "packages/tooling/tool/cli/test/tmpfs-reap.test.ts"
+        ],
+        "verificationCommands": [
+          "bunx vitest run packages/tooling/tool/cli/test/tmpfs-reap.test.ts"
+        ],
+        "summary": "Exact single-file classification and non-recursive apply preserve all other or raced content."
+      }
+    },
+    {
+      "id": "CSF-002",
+      "codexId": "165a5b8ffce48191aaced1bb8554e022",
+      "title": "Minimal-fold regex permits synchronous denial of service",
+      "severity": "Informational",
+      "codexStatus": "New",
+      "commit": "19d8b3df005dd9768e003a9efc716d84bf0ad12a",
+      "ownerArea": "langextract alignment",
+      "lane": "L2-bounded-parsing",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "Attacker-controlled optional-separator regex structure admitted explosive synchronous matching work."
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "packages/foundation/capability/langextract/src/Alignment/Alignment.behavior.ts",
+          "packages/foundation/capability/langextract/src/Alignment/Alignment.config.ts",
+          "packages/foundation/capability/langextract/test/Alignment.test.ts"
+        ],
+        "verificationCommands": [
+          "bunx vitest run packages/foundation/capability/langextract/test/Alignment.test.ts"
+        ],
+        "summary": "A memoized NFA with a shared one-million-transition budget replaces dynamic regex execution."
+      }
+    },
+    {
+      "id": "CSF-003",
+      "codexId": "31937b1d88088191a99249e49086b3f7",
+      "title": "Extensible proof objects allow verified provenance forgery",
+      "severity": "Informational",
+      "codexStatus": "New",
+      "commit": "72932dfe02fda598449c7b3ccc0fe9a3b2ac1efa",
+      "ownerArea": "provenance modeling",
+      "lane": "L3-provenance-capabilities",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "Verification authority was represented by forgeable object structure rather than private issuance membership."
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "packages/foundation/modeling/provenance/src/VerifiedTextAnchor.ts",
+          "packages/foundation/modeling/provenance/test/VerifiedTextAnchor.test.ts"
+        ],
+        "verificationCommands": [
+          "bunx vitest run packages/foundation/modeling/provenance/test/VerifiedTextAnchor.test.ts"
+        ],
+        "summary": "Frozen proof values are issued into private WeakMap registries and guards require registry membership."
+      }
+    },
+    {
+      "id": "CSF-004",
+      "codexId": "34129b90da2881919145836d5bb422c5",
+      "title": "PST output ceiling retains over-limit data",
+      "severity": "Informational",
+      "codexStatus": "New",
+      "commit": "a09d001ed7f8d652fb5d9f6663e79a5acca17652",
+      "ownerArea": "libpff PST export",
+      "lane": "L4-sandbox-quotas",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "The polling watchdog allowed host writes past the ceiling and failure retained the over-limit tree."
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "packages/drivers/libpff/src/Libpff.pffexport.ts",
+          "packages/drivers/libpff/test/Libpff.pffexport.test.ts"
+        ],
+        "verificationCommands": [
+          "bunx vitest run packages/drivers/libpff/test/Libpff.pffexport.test.ts"
+        ],
+        "summary": "A size-limited tmpfs and memory cgroup bound writes; only a validated post-exit handoff reaches host storage."
+      }
+    },
+    {
+      "id": "CSF-005",
+      "codexId": "65579c81b8708191b6120fafce470a09",
+      "title": "Quadratic HTML checks enable SafeDocument RPC denial of service",
+      "severity": "Informational",
+      "codexStatus": "New",
+      "commit": "09ad07d1fceca4e0f595dcdd7a56f422bde0ba3e",
+      "ownerArea": "Markdown and HTML modeling",
+      "lane": "L2-bounded-parsing",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "Repeated table and ancestry scans compounded on an unbounded SafeDocument tree."
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          ".impeccable/config.json",
+          "packages/foundation/modeling/html/src/Html.conformance.ts",
+          "packages/foundation/modeling/md/src/Md.safe.ts",
+          "packages/foundation/modeling/md/test/Md.test.ts"
+        ],
+        "verificationCommands": [
+          "bunx vitest run packages/foundation/modeling/md/test/Md.test.ts"
+        ],
+        "summary": "Traversal carries table context directly and SafeDocument rejects trees over 10,000 nodes before projection."
+      }
+    },
+    {
+      "id": "CSF-006",
+      "codexId": "7841f1bd6ca08191b44b026fb6ffe730",
+      "title": "Nested schema drift is reported as compatible",
+      "severity": "Informational",
+      "codexStatus": "New",
+      "commit": "e9ea263219955101e837e0fcc729433918f26e55",
+      "ownerArea": "law-practice vocabulary domain",
+      "lane": "L5-schema-coherence",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "Compatibility omitted nested schema and projection header drift and did not enforce artifact-version coherence."
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "packages/law-practice/domain/src/values/CourtReporterVocabulary/CourtReporterVocabulary.compatibility.ts",
+          "packages/law-practice/domain/src/values/CourtReporterVocabulary/CourtReporterVocabulary.model.ts",
+          "packages/law-practice/domain/test/CourtReporterVocabulary.test.ts"
+        ],
+        "verificationCommands": [
+          "bunx vitest run packages/law-practice/domain/test/CourtReporterVocabulary.test.ts"
+        ],
+        "summary": "Nested headers must remain coherent with the artifact and drift is classified as incompatible."
+      }
+    },
+    {
+      "id": "CSF-007",
+      "codexId": "84c1f9753c888191a7d8a94ac8d55f03",
+      "title": "Predictable /tmp root permits cross-user scheduler denial",
+      "severity": "Informational",
+      "codexStatus": "New",
+      "commit": "1692d75ff2e50cd8e5d2ece213bbc4624bf7cddd",
+      "ownerArea": "repo CLI runtime root",
+      "lane": "L1-filesystem-safety",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "The default runtime namespace was predictable beneath the shared temporary directory."
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "packages/tooling/tool/cli/src/internal/repo-run/RuntimeRoot.ts",
+          "packages/tooling/tool/cli/test/runtime-root.test.ts"
+        ],
+        "verificationCommands": [
+          "bunx vitest run packages/tooling/tool/cli/test/runtime-root.test.ts"
+        ],
+        "summary": "POSIX defaults now use the canonical user-owned home runtime root."
+      }
+    },
+    {
+      "id": "CSF-008",
+      "codexId": "af1409097bf48191b4481ecd0b9e90d6",
+      "title": "Unbounded claim ranges exhaust memory during normalization",
+      "severity": "Informational",
+      "codexStatus": "New",
+      "commit": "f1383148c6c4873badd9a4c9f4cf9baa83c9601a",
+      "ownerArea": "patent-document normalization",
+      "lane": "L2-bounded-parsing",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "Parent ranges expanded before prior-claim, ordering, or cardinality checks."
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "packages/law-practice/domain/src/values/PatentDocument/PatentDocument.normalizer.ts",
+          "packages/law-practice/domain/test/PatentDocument.test.ts"
+        ],
+        "verificationCommands": [
+          "bunx vitest run packages/law-practice/domain/test/PatentDocument.test.ts"
+        ],
+        "summary": "Ranges must be ordered, prior to the current claim, and no larger than 1,024 before expansion."
+      }
+    },
+    {
+      "id": "CSF-009",
+      "codexId": "b027eb838a648191b339e4c1550417da",
+      "title": "Mutable proof prototypes allow citation forgery",
+      "severity": "Informational",
+      "codexStatus": "New",
+      "commit": "6947e1c495f4b354950d541953c87d418e1a455d",
+      "ownerArea": "provenance modeling",
+      "lane": "L3-provenance-capabilities",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "Mutable prototype getters could change receipt evidence after successful verification."
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "packages/foundation/modeling/provenance/src/VerifiedTextAnchor.ts",
+          "packages/foundation/modeling/provenance/test/VerifiedTextAnchor.test.ts"
+        ],
+        "verificationCommands": [
+          "bunx vitest run packages/foundation/modeling/provenance/test/VerifiedTextAnchor.test.ts"
+        ],
+        "summary": "Frozen prototypes and private immutable snapshots remove prototype state from the authority path."
+      }
+    },
+    {
+      "id": "CSF-010",
+      "codexId": "c7fa61c5b0108191bf651b60c4e142ac",
+      "title": "AdaFace crops allocate from unbounded detector coordinates",
+      "severity": "Informational",
+      "codexStatus": "New",
+      "commit": "3babc4cdfd474fbb54c7473c1ca35ea8425aeaa7",
+      "ownerArea": "local photo-face worker",
+      "lane": "L6-photo-bounds",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "Detector coordinates determined an intermediate allocation before finiteness or image-bound checks."
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "packages/tooling/tool/cli/python/photo-face/beep_photo_face/backends/adaface_kprpe.py",
+          "packages/tooling/tool/cli/python/photo-face/tests/test_adaface_backend.py"
+        ],
+        "verificationCommands": [
+          "uv run --frozen --group dev pytest tests/test_worker.py tests/test_adaface_backend.py"
+        ],
+        "summary": "Finite clipped boxes feed a fixed 112-by-112 affine output and detection is capped at 32 faces."
+      }
+    },
+    {
+      "id": "CSF-011",
+      "codexId": "e92c5a6b08ac819194c3de102e0f9935",
+      "title": "Already-complete rows bypass source-stability evidence",
+      "severity": "Informational",
+      "codexStatus": "New",
+      "commit": "bb59a7d8e3450dbdf9c7b9fc7cebc87d56ce0c84",
+      "ownerArea": "corpus preservation",
+      "lane": "L7-preservation-stability",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "The terminal shortcut omitted the before/after stat and second source-hash window required by copy completion."
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "packages/tooling/tool/cli/src/commands/Corpus/internal/Preservation.schemas.ts",
+          "packages/tooling/tool/cli/src/commands/Corpus/internal/Preservation.ts",
+          "packages/tooling/tool/cli/test/corpus-preservation.test.ts"
+        ],
+        "verificationCommands": [
+          "bunx vitest run packages/tooling/tool/cli/test/corpus-preservation.test.ts"
+        ],
+        "summary": "Already-complete outcomes now carry and validate the full source-stability evidence window."
+      }
+    },
+    {
+      "id": "CSF-012",
+      "codexId": "ee6b279568bc8191aab576d4c1ea9783",
+      "title": "Unbounded photo reports allow memory-exhaustion denial of service",
+      "severity": "Informational",
+      "codexStatus": "New",
+      "commit": "bfb20e7688fa1aa655f84f614e861e71afbf646b",
+      "ownerArea": "photo worker boundary",
+      "lane": "L6-photo-bounds",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "Discovery, model faces, worker JSON, and both captured streams lacked one enforceable bounded contract."
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "packages/tooling/tool/cli/python/photo-face/beep_photo_face/worker.py",
+          "packages/tooling/tool/cli/python/photo-face/tests/test_worker.py",
+          "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.schemas.ts",
+          "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.ts",
+          "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.worker-service.ts",
+          "packages/tooling/tool/cli/src/internal/process/StepExec.ts",
+          "packages/tooling/tool/cli/test/files-command.test.ts",
+          "packages/tooling/tool/cli/test/person-match-portability.test.ts"
+        ],
+        "verificationCommands": [
+          "uv run --frozen --group dev pytest tests/test_worker.py tests/test_adaface_backend.py",
+          "uv run --frozen --group dev ruff check beep_photo_face tests",
+          "bunx vitest run packages/tooling/tool/cli/test/person-match-portability.test.ts packages/tooling/tool/cli/test/files-command.test.ts"
+        ],
+        "summary": "Worker protocol v3 echoes and enforces hard image, face, report, and diagnostic limits while public report v2 remains stable."
+      }
+    }
+  ]
+}

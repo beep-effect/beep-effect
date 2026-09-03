@@ -333,15 +333,12 @@ const parseSemver = (value: string): O.Option<Semver> => {
 const decodeSemverFromString = (value: string): Effect.Effect<Semver, SchemaIssue.Issue> =>
   pipe(
     Semver.fromStr(value),
-    O.match({
-      onNone: () =>
-        Effect.fail(
-          new SchemaIssue.InvalidValue({
-            message: "Expected a valid semantic version string",
-          })
-        ),
-      onSome: Effect.succeed,
-    })
+    Effect.fromOption(
+      () =>
+        new SchemaIssue.InvalidValue({
+          message: "Expected a valid semantic version string",
+        })
+    )
   );
 
 const encodeSemverToString = (value: Semver): Effect.Effect<string> => Effect.succeed(Semver.format(value));

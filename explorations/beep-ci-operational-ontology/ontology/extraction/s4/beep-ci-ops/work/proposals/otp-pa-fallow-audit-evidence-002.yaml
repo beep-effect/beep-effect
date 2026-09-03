@@ -1,0 +1,68 @@
+id: "otp:pa-fallow-audit-evidence:002"
+hypothesis_ref: "dh:pa-fallow-audit-evidence:001"
+identity_card_ref: "ic:pa-fallow-audit-evidence:001"
+foundational_status: analyzed
+term:
+  preferred_label: "Fallow audit lane"
+  local_name: FallowAuditLane
+  proposed_iri: "https://oip.law/ontology/ci-ops#FallowAuditLane"
+  owl_entity_kind: individual
+definition:
+  text: >-
+    The ratified WorkUnitSpecification individual that prescribes the Fallow
+    new-only boundary audit against a resolved base and target tree, distinct
+    from any execution and the result artifact that execution produces.
+  source:
+    - "CQ-001"
+    - "po:sha256:0a135a5a3d645935fc24eab144d7671ed544ad71da23212db9ef611b5f251560"
+foundational:
+  ufo_category: information_object
+  gufo_alignment: "gufo:Endurant"
+ontoclean:
+  rigidity: rigid
+  identity: supplies
+  dependence: relational
+parents: []
+revision_log:
+  - from_sha256: "180050683594620434a62f7f9db614b4d7cf9e08e7b707d00bd00b9babc23dd2"
+    addressed:
+      - "identity-card-cross-wired-to-composite-evidence"
+      - "listing-cq-does-not-require-specific-lane"
+      - "discriminator-true-of-command-inventory"
+    sitting_struck:
+      - "listing-cq-does-not-require-specific-lane"
+      - "discriminator-true-of-command-inventory"
+    disposition: >-
+      Run-2 sitting 1 struck the two invalid attacks and replaced the
+      cross-wired composite card with the ratified FallowAuditLane
+      specification identity.
+reuse:
+  searched: true
+  exact_reuse_found: true
+  mappings:
+    - iri: "https://oip.law/ontology/ci-ops#FallowAuditLane"
+      compatibility: >-
+        The ratified individual already covers the exact new-only Fallow audit
+        prescription quoted by this hypothesis; retaining that IRI preserves
+        the settled WorkUnitSpecification identity.
+operational_warrant:
+  competency_questions: ["CQ-001"]
+  semantic_support_for: []
+alternatives_rejected:
+  - >-
+    The inventory-field null is rejected because the quoted command is a
+    governed verification procedure, not an uninterpreted configuration key.
+  - >-
+    The specification is not identical to its zero-count result or to a
+    timeless boundary-conformance situation.
+open_issues:
+  - >-
+    The composite evidence and separate result siblings are withdrawn by
+    sitting 1; this surviving proposal denotes only the reusable Fallow audit
+    prescription already ratified as a WorkUnitSpecification individual.
+  - >-
+    Execution and result identity are deliberately outside the specification
+    card and require the run-3 provenance named on the conceded siblings.
+revision_requests: []
+review: {foundational_agent: pending, adversarial_agent: pending, steward: pending}
+status: proposed

@@ -382,7 +382,7 @@ export const resolveBunVersions: {
                   VersionSyncError.mapError("Failed to parse apps/oip-web/vercel.json", "apps/oip-web/vercel.json")
                 )
               ),
-              Effect.map(O.some)
+              Effect.asSome
             ),
         })
       ),
@@ -400,7 +400,7 @@ export const resolveBunVersions: {
               .pipe(
                 VersionSyncError.mapError("Failed to read .bun-linux-x64.sha256", ".bun-linux-x64.sha256"),
                 Effect.map(Str.trim),
-                Effect.map(O.some)
+                Effect.asSome
               ),
         })
       ),
@@ -409,7 +409,7 @@ export const resolveBunVersions: {
 
     const latest = yield* Bool.match(skipNetwork, {
       onTrue: () => Effect.succeed(O.none<string>()),
-      onFalse: () => fetchLatestBunVersion().pipe(Effect.map(O.some), Effect.orElseSucceed(O.none<string>)),
+      onFalse: () => fetchLatestBunVersion().pipe(Effect.asSome, Effect.orElseSucceed(O.none<string>)),
     });
 
     const target = O.match(latest, {
@@ -418,7 +418,7 @@ export const resolveBunVersions: {
     });
     const expectedBunArchiveSha256 = yield* Bool.match(skipNetwork, {
       onTrue: () => Effect.succeed(O.none<string>()),
-      onFalse: () => fetchBunArchiveChecksum(target).pipe(Effect.map(O.some), Effect.orElseSucceed(O.none<string>)),
+      onFalse: () => fetchBunArchiveChecksum(target).pipe(Effect.asSome, Effect.orElseSucceed(O.none<string>)),
     });
 
     return BunVersionState.make({

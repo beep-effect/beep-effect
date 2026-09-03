@@ -1589,7 +1589,7 @@ const normalizeQuery = (
       onNone: () => Effect.succeed(O.none<VeniceAIEncodedQuery>()),
       onSome: (value) =>
         decodeVeniceAIEncodedQuery(value).pipe(
-          Effect.map(O.some),
+          Effect.asSome,
           Effect.mapError(() => VeniceAIError.fromDescriptor(descriptor, "request encoding"))
         ),
     })
@@ -1951,18 +1951,12 @@ const extractChatText = Effect.fn("VeniceAI.extractChatText")(function* (respons
   const firstChoice = yield* pipe(
     decoded.choices,
     A.get(0),
-    O.match({
-      onNone: () => Effect.fail(VeniceAIError.fromDescriptor(createChatCompletionOperation, "response decoding")),
-      onSome: Effect.succeed,
-    })
+    Effect.fromOption(() => VeniceAIError.fromDescriptor(createChatCompletionOperation, "response decoding"))
   );
 
   return yield* pipe(
     O.fromNullishOr(firstChoice.message.content),
-    O.match({
-      onNone: () => Effect.fail(VeniceAIError.fromDescriptor(createChatCompletionOperation, "response decoding")),
-      onSome: Effect.succeed,
-    })
+    Effect.fromOption(() => VeniceAIError.fromDescriptor(createChatCompletionOperation, "response decoding"))
   );
 });
 

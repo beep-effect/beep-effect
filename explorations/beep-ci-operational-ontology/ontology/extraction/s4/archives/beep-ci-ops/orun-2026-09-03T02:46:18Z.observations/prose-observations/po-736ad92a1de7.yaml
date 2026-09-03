@@ -1,0 +1,13 @@
+id: po:sha256:736ad92a1de7991caa17d905c310e2dac02d5a4d9b7cd3b709adfcabd690e4cc
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: explorations/beep-ci-operational-ontology/ontology/docs/s7-projection-contract.md
+source_span:
+  start_line: 43
+  end_line: 48
+quote: "2. **Provisional ordering vocabulary**: emitted nodes typed with ratified\n   `ciops:` classes;\
+  \ ordering predicates (`hasCurrentProposal`, `hasStep`,\n   `stepIndex`, `schedulesWorkUnit`, `hasScope`)\
+  \ and class `ScheduleStep`\n   emitted in the provisional `ciops-prov:` named graph (S6 census precedent:\n\
+  \   open closure, excluded from negation/typing). These terms join the run-2\n   re-proposal queue."
+epistemic_status: quoted_prose

@@ -1,0 +1,47 @@
+target: "otp:jv-verification-attempt:001"
+target_sha256: "7036b5a2cc215df19dac974f8351c48f09626cdefc21d52f88ec41685a78a24f"
+chain_sha256: "6292e5c60170edbd06136f9700f7100c8a551c2c000e49e99c77042071744a97"
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The revised proposal asserts no parents, so no is-a edge exists and the
+    record-versus-process distinction is not being smuggled through subsumption.
+revision_requests: []
+attacks:
+  - surface: identity
+    rule: record-lineage-separates-attempts
+    counterexample: >-
+      A retry can reuse branch, base, mode, and target while receiving a new
+      attemptId, and a copied record can preserve all fields without becoming
+      the same issued record. The revised criterion uses the authoritative
+      attempt and record lineage, not CLI or process continuity, to separate them.
+    outcome: survived
+  - surface: warrant
+    rule: direct-cq-warrant
+    counterexample: >-
+      Without VerificationAttempt, CQ-022 cannot require a committed failure and
+      in-flight executions to share one attempt context. The class is directly
+      required even though a future process model may be represented separately.
+    outcome: survived
+  - surface: null_discriminator
+    rule: recorded-attempt-not-unfolding-process
+    counterexample: >-
+      A journal DTO can carry attemptId and temporal bounds without being the
+      unfolding process. The revision now denotes precisely the provenance-bound
+      recorded-attempt information object, so that counterexample confirms the
+      world/information separation rather than defeating the proposal.
+    outcome: survived
+rival_models_still_viable:
+  - "The world-side unfolding verification process recorded by the artifact."
+  - "A boundary event model distinct from both process and record."
+evidence:
+  - "so:sha256:1081a3f10108fba5826e74ade5a53a90ae027969e1857cbfe67f1ef919a6931f"
+  - "so:sha256:c509f4a98184260243c9b13f2cc0d46bbe7783f07518144c48d9e58d47617b73"
+  - "CQ-022"

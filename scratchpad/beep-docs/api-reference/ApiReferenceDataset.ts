@@ -438,7 +438,7 @@ const loadModule = Effect.fn("ApiReferenceDataset.loadModule")(function* (input:
   const modulePath = yield* modulePathFromExportPath(input.module.export);
   const barrelPath = yield* pipe(
     input.module.barrel,
-    O.map((barrel) => modulePathFromExportPath(barrel).pipe(Effect.map(O.some))),
+    O.map((barrel) => modulePathFromExportPath(barrel).pipe(Effect.asSome)),
     O.getOrElse(() => Effect.succeed(O.none<ModulePath>()))
   );
   const reflectionPath = yield* resolveWithinDataset(input.packageDirectory, input.module.json);

@@ -1,0 +1,46 @@
+target: "otp:pb-admission-policy:001"
+target_sha256: "f0c2f33ebe7c16f7efe59fbaf266d4653a1472f144710be6d0b553eaf74157e4"
+chain_sha256: "60fc20e528016c4950d40b19807a6a5166c1211422ed68ed30374435a666d212"
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: "The proposal asserts no candidate is-a edge."
+revision_requests: []
+attacks:
+  - surface: identity
+    rule: identifier-is-not-identity
+    counterexample: >-
+      Two deployments can carry byte-equal AdmissionConfig values under
+      different authorities and applicability scopes. The criterion survives
+      because it uses authority, normative content, scope, and version lineage
+      rather than configuration equality or admittedAtMillis.
+    outcome: survived
+  - surface: warrant
+    rule: decision-cq-requires-term
+    counterexample: >-
+      CQ-023 cannot compare a queued request with the declared starvation
+      bound governing it without an AdmissionPolicy bearer linked by
+      governedBy; the CQ explicitly requires that class.
+    outcome: survived
+  - surface: null_discriminator
+    rule: discriminator-false-in-null-world
+    counterexample: >-
+      A pure AdmissionConfig DTO can hold the same numbers, but it cannot by
+      itself make an over-bound eligible request a policy violation and a
+      projection error. The binding admission-semantics quotation supplies
+      the normative consequence that the DTO-only twin lacks.
+    outcome: survived
+rival_models_still_viable:
+  - "A deployed policy regime or normative mode is distinct from its specification."
+  - "Capacity, aging, class-cap, and starvation clauses may also merit separately governed rule individuals."
+evidence:
+  - "po:sha256:60e90bd17b628d4d6d815cfd05ddcf88cbc2a724790b05ac88b4411619f535be"
+  - "po:sha256:6a73b5411cc63a7066296a936e6c699b0f4d624efded1e0c2acf4156593cc944"
+  - "po:sha256:9caeeca09be88e420e93a2dfbf183f7bfc7037e859a9da5cd685b166ce8363b6"
+  - "CQ-023"

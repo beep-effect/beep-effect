@@ -1,0 +1,45 @@
+id: "ic:pa-projection-limitation-report:001"
+hypothesis_ref: "dh:pa-projection-limitation-report:001"
+identity:
+  supplies_identity: unresolved
+  identity_criterion: >-
+    Unresolved for the broad exact-reused VerificationResultArtifact extension:
+    the corpus does not decide whether repeatable result content, each
+    authoritative issuance, or custody-tracked carrier lineage supplies
+    identity across heterogeneous verification-result artifacts.
+  reidentification_key:
+    - "reported verification execution and outcome content"
+    - "producing act, authority, and applicability context"
+    - "issuance, custody, copy, correction, and revision lineage"
+ontoclean:
+  rigidity: unresolved
+  carries_identity: unresolved
+  supplies_identity: unresolved
+  unity: >-
+    Broad result-artifact unity is unresolved between one repeatable outcome-
+    content unit and one provenance-bound issued record or carrier realizing
+    that content.
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "information_object: repeatable verification-result content realized by multiple carriers"
+    - "information_object: each authoritatively issued verification-result record token"
+    - "situation: the projection evidence's applicability context described by one result"
+    - "information_object: a caveat section that is only a proper component of a larger result"
+  existential_dependencies:
+    - "A verification execution or result-bearing process that the content reports"
+    - "A producing act and at least one faithful carrier"
+    - "The policy and applicability context under which the result may bear an evidence role"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - "superseded, corrected, revoked, or left without a faithful carrier"
+counterexamples:
+  - description: >-
+      A hosted-check result and a projection report can both instantiate
+      VerificationResultArtifact while following different production and
+      custody practices; a caveat-specific identity criterion cannot govern the
+      broad exact-reused class.
+status: proposed

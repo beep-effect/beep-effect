@@ -1636,7 +1636,7 @@ const buildRenamePlan = Effect.fn("Files.buildRenamePlan")(function* (
   const collection = yield* collectSortableFiles(dir, withDimensions, "sort scan");
   const width = `${A.length(collection.files)}`.length + 1;
   const dimensionsByFile: ReadonlyArray<O.Option<MediaDimensions>> = withDimensions
-    ? yield* runFilesProgressForEach(collection.files, (file) => probeMediaDimensions(file).pipe(Effect.map(O.some)), {
+    ? yield* runFilesProgressForEach(collection.files, (file) => probeMediaDimensions(file).pipe(Effect.asSome), {
         concurrency: FilesConcurrency.metadata,
         label: "sort probe",
       })

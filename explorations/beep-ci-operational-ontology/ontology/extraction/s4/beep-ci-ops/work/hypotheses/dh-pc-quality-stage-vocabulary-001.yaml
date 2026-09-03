@@ -1,0 +1,27 @@
+id: "dh:pc-quality-stage-vocabulary:001"
+observation_refs:
+  - "po:sha256:dc9a66cefc65a79ca47ae516814a18982de127089bfaefc12aafaadbec8ae3ce"
+cq_warrants: []
+proposed_referent:
+  label: "quality-command stage vocabulary"
+  description: >-
+    The labels preflight, heavy, test, and documentation as possible lexical
+    names for stages in a quality command.
+representation_status: lexical_alias
+alternatives:
+  - label: "implementation dispatch sections"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+  - label: "phases of a verification process"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: >-
+    The literal kit alone does not state ordering, entry or exit conditions,
+    executions, or whether the labels are mutually exclusive stages. Treating
+    them as dispatch values fully explains the quotation.
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.8, use_for_acceptance: false}

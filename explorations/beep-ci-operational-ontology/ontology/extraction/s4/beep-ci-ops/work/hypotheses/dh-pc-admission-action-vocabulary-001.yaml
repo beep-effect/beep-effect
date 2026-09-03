@@ -1,0 +1,27 @@
+id: "dh:pc-admission-action-vocabulary:001"
+observation_refs:
+  - "po:sha256:dc2068ee67260aeec14cff25d52fafb812a9a9391a79210d78b1c9a07344ca38"
+cq_warrants: []
+proposed_referent:
+  label: "publish-or-verify action vocabulary"
+  description: >-
+    Two scheduler-source literals that may label admission actions or request
+    purposes.
+representation_status: lexical_alias
+alternatives:
+  - label: "internal command branch values"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+  - label: "operational admission work kinds"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: >-
+    The literal pair is not accompanied by a request, grant, charge, or
+    definition, and its wording does not match the richer work-kind inventory
+    required by the queue competency question. An internal branch is enough.
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.82, use_for_acceptance: false}

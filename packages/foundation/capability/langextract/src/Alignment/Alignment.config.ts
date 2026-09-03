@@ -70,6 +70,27 @@ export const MAX_FUZZY_SOURCE_LENGTH = 100_000;
 export const MAX_FUZZY_QUERY_LENGTH = 4_096;
 
 /**
+ * Maximum minimal-fold NFA transitions shared by one alignment batch.
+ *
+ * **Details**
+ *
+ * Exhaustion fails minimal-fold alignment closed for the current batch and
+ * suppresses fuzzy fallback, bounding synchronous matcher work.
+ *
+ * **Example** (Inspect the minimal-fold work ceiling)
+ *
+ * ```ts import.meta.vitest name="Inspect the minimal-fold work ceiling"
+ * import { MAX_MINIMAL_FOLD_TRANSITIONS } from "@beep/langextract/Alignment"
+ *
+ * MAX_MINIMAL_FOLD_TRANSITIONS // => 1000000
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const MAX_MINIMAL_FOLD_TRANSITIONS = 1_000_000;
+
+/**
  * Default extraction cap applied when an alignment source resolves no explicit
  * `maxExtractions`.
  *

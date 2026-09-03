@@ -1,0 +1,35 @@
+id: ic:pb-yeet-proof-tier-alt:001
+hypothesis_ref: dh:pb-yeet-proof-tier:001
+identity:
+  supplies_identity: false
+  identity_criterion: The Yeet proof-planning quality of a planned verification is the same
+    quality iff it is that plan's full / cheap-gates / review-fix classification. LiteralKit
+    membership is evidence of the value, never a taxonomy of kinds. Selecting cheap-gates
+    changes prescribed lanes; that is a value-consequence of the quality, not a new sortal.
+    It is not an assurance tier on the cited evidence.
+  reidentification_key:
+  - YeetProofTier literals (evidence of value)
+ontoclean:
+  rigidity: rigid
+  carries_identity: false
+  supplies_identity: false
+  unity: one proof-plan classification of one planned Yeet verification
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: quality
+  alternatives:
+  - none
+  - subkind
+  existential_dependencies:
+  - the planned Yeet verification that is classified
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+- description: Expanding cheap-gates to changeset-status and GitHub-check lanes is a change
+    of prescribed work, so a purely inert vocabulary reading is too weak — but that still
+    does not mint three subkinds of Yeet.
+- description: 'Calling the values assurance tiers would be the rejected alternative: the
+    observations are planner dispatch, not assurance claims.'
+status: proposed

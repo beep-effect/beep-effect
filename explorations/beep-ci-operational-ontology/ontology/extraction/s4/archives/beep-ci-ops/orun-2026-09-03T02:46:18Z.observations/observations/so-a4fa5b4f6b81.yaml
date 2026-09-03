@@ -1,0 +1,23 @@
+id: "so:sha256:a4fa5b4f6b8142d813d5867e01c92a245a9a7ee7d64b8841a3e27a068c88e764"
+schema_version: 1
+repository:
+  commit: "341cfef8b6e80d49f6cef894e9eecd5337f70e8f"
+  path: "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run2-fleet/attempts/beep-effect10/explore_lejeune-bolt-agentic-demo-18a53c56060e/attempts.properties"
+source_span:
+  start_line: 1
+  end_line: 1134
+  content_sha256: "fe9e232190909346c9bd3b14ed04b75527caf634194d9d68484113def4e88058"
+extractor:
+  id: "adapter-journal"
+  version: "1.0.0"
+  parser: "python-stdlib-properties"
+  script: "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal.py"
+symbol:
+  qualified_name: "yeet-attempt-journal"
+  lexical_name: "yeet-attempt-journal"
+  syntactic_kind: "properties_projection"
+observed_facts:
+  - predicate: "config_key_value"
+    object: "overlappingPaths=explorations/ATLAS.md"
+source_excerpt: "overlappingPaths=explorations/ATLAS.md"
+epistemic_status: "parser_derived"

@@ -1,0 +1,47 @@
+target: "otp:pb-admission-priority-aging:001"
+target_sha256: "4c07aaa488121fe383c30bb0deba91d9e06f961f5f7f039a4f984230a9e79ccb"
+chain_sha256: "941c8170192611c84a0face746d6246f3b4b1762b5ad42acdae2d50544ca6e2f"
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: "The revised proposal asserts no candidate is-a edge."
+revision_requests: []
+attacks:
+  - surface: identity
+    rule: clause-does-not-supply-policy-identity
+    counterexample: >-
+      The same aging threshold can occur in distinct policies, and one policy
+      can change that threshold without issuing an autonomous aging clause.
+      The revision no longer claims clause identity: it exact-reuses the whole
+      AdmissionPolicy under the authority, scope, complete rule content, and
+      revision lineage that identify that specification.
+    outcome: survived
+  - surface: warrant
+    rule: semantic-support-not-necessary
+    counterexample: >-
+      CQ-023 does not require a separate priority-aging rule, as round 1
+      demonstrated. The revision removes that separate class and now warrants
+      only the complete AdmissionPolicy that CQ-023 explicitly requires, so
+      the prior counterexample no longer defeats the asserted referent.
+    outcome: survived
+  - surface: null_discriminator
+    rule: discriminator-true-of-sort-implementation
+    counterexample: >-
+      A ternary comparator can implement effective aging without creating an
+      independent clause individual. The revision asserts no such individual;
+      the branch is merely a carrier of governed content in the exact-reused
+      complete policy, consistent with the sitting's carrier-only strike.
+    outcome: survived
+rival_models_still_viable:
+  - "A threshold-crossing phase is a temporary state of a waiting request."
+  - "An aged-priority role is borne by a request without identifying the policy."
+evidence:
+  - "po:sha256:60e90bd17b628d4d6d815cfd05ddcf88cbc2a724790b05ac88b4411619f535be"
+  - "po:sha256:6b2e1d71b18197d5aabdde8f443d63fb71885b277f825b9ad13103f0de607a29"
+  - "CQ-023"

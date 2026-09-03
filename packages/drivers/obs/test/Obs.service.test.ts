@@ -77,17 +77,15 @@ describe("Obs", () => {
       yield* withObs(
         {
           GetVersion: () =>
-            Effect.succeed(
-              O.some({
-                availableRequests: [],
-                obsVersion: "32.1.2",
-                obsWebSocketVersion: "5.5.2",
-                platform: "ubuntu",
-                platformDescription: "CachyOS Linux",
-                rpcVersion: 1,
-                supportedImageFormats: [],
-              })
-            ),
+            Effect.succeedSome({
+              availableRequests: [],
+              obsVersion: "32.1.2",
+              obsWebSocketVersion: "5.5.2",
+              platform: "ubuntu",
+              platformDescription: "CachyOS Linux",
+              rpcVersion: 1,
+              supportedImageFormats: [],
+            }),
         },
         Effect.fnUntraced(function* (obs) {
           const result = yield* obs.ensureRunning;
@@ -111,12 +109,10 @@ describe("Obs", () => {
             Ref.get(inputExists).pipe(
               Effect.flatMap((exists) =>
                 exists
-                  ? Effect.succeed(
-                      O.some({
-                        inputKind: "pipewire-screen-capture-source",
-                        inputSettings: { RestoreToken: "portal-token-1", ShowCursor: true },
-                      })
-                    )
+                  ? Effect.succeedSome({
+                      inputKind: "pipewire-screen-capture-source",
+                      inputSettings: { RestoreToken: "portal-token-1", ShowCursor: true },
+                    })
                   : Effect.fail(
                       ObsError.make({
                         message: "No source was found by the name of `beep-qa-capture`.",
@@ -126,7 +122,7 @@ describe("Obs", () => {
                     )
               )
             ),
-          GetSceneList: () => Effect.succeed(O.some({ currentProgramSceneName: null, scenes: [] })),
+          GetSceneList: () => Effect.succeedSome({ currentProgramSceneName: null, scenes: [] }),
         },
         Effect.fnUntraced(function* (obs, calls) {
           const result = yield* obs.ensureQaScene();
@@ -154,21 +150,17 @@ describe("Obs", () => {
       yield* withObs(
         {
           GetInputSettings: () =>
-            Effect.succeed(
-              O.some({
-                inputKind: "pipewire-screen-capture-source",
-                inputSettings: { RestoreToken: "portal-token-2" },
-              })
-            ),
+            Effect.succeedSome({
+              inputKind: "pipewire-screen-capture-source",
+              inputSettings: { RestoreToken: "portal-token-2" },
+            }),
           GetSceneItemList: () =>
-            Effect.succeed(O.some({ sceneItems: [{ sceneItemId: 1, sourceName: "beep-qa-capture" }] })),
+            Effect.succeedSome({ sceneItems: [{ sceneItemId: 1, sourceName: "beep-qa-capture" }] }),
           GetSceneList: () =>
-            Effect.succeed(
-              O.some({
-                currentProgramSceneName: "beep-qa",
-                scenes: [{ sceneIndex: 0, sceneName: "beep-qa", sceneUuid: "scene-uuid-1" }],
-              })
-            ),
+            Effect.succeedSome({
+              currentProgramSceneName: "beep-qa",
+              scenes: [{ sceneIndex: 0, sceneName: "beep-qa", sceneUuid: "scene-uuid-1" }],
+            }),
         },
         Effect.fnUntraced(function* (obs, calls) {
           const result = yield* obs.ensureQaScene();
@@ -192,25 +184,21 @@ describe("Obs", () => {
     Effect.fnUntraced(function* () {
       yield* withObs(
         {
-          CreateSceneItem: () => Effect.succeed(O.some({ sceneItemId: 7 })),
+          CreateSceneItem: () => Effect.succeedSome({ sceneItemId: 7 }),
           GetInputSettings: () =>
-            Effect.succeed(
-              O.some({
-                inputKind: "pipewire-screen-capture-source",
-                inputSettings: { RestoreToken: "portal-token-3" },
-              })
-            ),
+            Effect.succeedSome({
+              inputKind: "pipewire-screen-capture-source",
+              inputSettings: { RestoreToken: "portal-token-3" },
+            }),
           // The input exists globally (attached to some other scene), so the
           // freshly-considered QA scene's item list does not reference it.
           GetSceneItemList: () =>
-            Effect.succeed(O.some({ sceneItems: [{ sceneItemId: 2, sourceName: "unrelated-source" }] })),
+            Effect.succeedSome({ sceneItems: [{ sceneItemId: 2, sourceName: "unrelated-source" }] }),
           GetSceneList: () =>
-            Effect.succeed(
-              O.some({
-                currentProgramSceneName: "beep-qa",
-                scenes: [{ sceneIndex: 0, sceneName: "beep-qa", sceneUuid: "scene-uuid-1" }],
-              })
-            ),
+            Effect.succeedSome({
+              currentProgramSceneName: "beep-qa",
+              scenes: [{ sceneIndex: 0, sceneName: "beep-qa", sceneUuid: "scene-uuid-1" }],
+            }),
         },
         Effect.fnUntraced(function* (obs, calls) {
           const result = yield* obs.ensureQaScene();
@@ -289,15 +277,13 @@ describe("Obs", () => {
       yield* withObs(
         {
           GetRecordStatus: () =>
-            Effect.succeed(
-              O.some({
-                outputActive: true,
-                outputBytes: 1024,
-                outputDuration: 1500,
-                outputPaused: false,
-                outputTimecode: "00:00:01.500",
-              })
-            ),
+            Effect.succeedSome({
+              outputActive: true,
+              outputBytes: 1024,
+              outputDuration: 1500,
+              outputPaused: false,
+              outputTimecode: "00:00:01.500",
+            }),
         },
         Effect.fnUntraced(function* (obs) {
           const status = yield* obs.recordStatus;

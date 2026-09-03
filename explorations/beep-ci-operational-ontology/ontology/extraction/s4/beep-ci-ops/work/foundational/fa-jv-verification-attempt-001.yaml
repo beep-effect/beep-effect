@@ -1,0 +1,20 @@
+id: "fa:jv-verification-attempt:001"
+hypothesis_ref: "dh:jv-verification-attempt:001"
+identity_card_ref: "ic:jv-verification-attempt:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+  - label: "VerificationAttempt denotes the unfolding process recorded by this information object."
+    still_viable: true
+  - label: "One Yeet CLI invocation and one verification attempt are necessarily coextensive."
+    still_viable: true
+  - label: "The attempt record and the verification occurrence share one identity."
+    still_viable: false
+strongest_counterexample: >-
+  The cited journal supplies attemptId, temporal bounds and terminal outcome
+  as recorded content but no independent causal join proving an unfolding
+  process; the information-object grain is the strongest supported model.
+verdict: analyzed

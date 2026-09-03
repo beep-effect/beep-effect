@@ -1,0 +1,18 @@
+id: "fa:pb-failure-attribution-category:001"
+hypothesis_ref: "dh:pb-failure-attribution-category:001"
+identity_card_ref: "ic:pb-failure-attribution-category:001"
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: unresolved
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+  - label: "Each label denotes an anti-rigid, context-relative role borne by a failure occurrence."
+    still_viable: true
+  - label: "The referent is a provenance-bearing attribution judgment information object rather than a world-side role."
+    still_viable: true
+  - label: "The four labels form one exhaustive and mutually exclusive failure taxonomy."
+    still_viable: true
+strongest_counterexample: "A timeout caused by a transient runner environment can predate the candidate change and also be unrelated to it; without member criteria or precedence, one occurrence can satisfy several advertised labels."
+verdict: explicitly_deferred
+needed_evidence: "Normative definitions must state each member's necessary conditions, overlap or precedence rules, and whether an attribution record captures the assessed change, baseline, environment, provenance, and revision history."

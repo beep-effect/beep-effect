@@ -1,0 +1,22 @@
+id: fa:pb-failure-attribution-category-alt:001
+hypothesis_ref: dh:pb-failure-attribution-category:001
+identity_card_ref: ic:pb-failure-attribution-category-alt:001
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: unresolved
+  role_vs_bearer: unresolved
+  context_reification_needed: true
+rival_models:
+- label: nominal quality of a failure occurrence
+  still_viable: true
+- label: role of a failure relative to the current branch/environment
+  still_viable: true
+- label: controlled vocabulary / lexical labels with no class semantics
+  still_viable: true
+strongest_counterexample: Operational consequence (repair versus report) is real and rejects
+  a purely decorative reading, but consequence alone does not pick quality versus role versus
+  remaining a vocabulary. Enum-is-taxonomy is the live failure mode.
+verdict: explicitly_deferred
+needed_evidence: Classification criteria for the four labels, plus whether attribution of
+  one failure can change without that failure ceasing to exist, and whether the labels are
+  used as types in decisions or only as checklist words.

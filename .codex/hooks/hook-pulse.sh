@@ -169,7 +169,7 @@ case "${ts}" in
   *N*) ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)" ;;
 esac
 
-notifier_rev="${BEEP_HOOK_PULSE_NOTIFIER_REV:-log-only-0}"
+notifier_rev="${BEEP_HOOK_PULSE_NOTIFIER_REV:-desktop-ntfy-1}"
 instrument_class="${BEEP_HOOK_PULSE_INSTRUMENT_CLASS:-production}"
 # A misconfigured class would make every row undecodable, so fail back to the
 # default rather than poisoning the ledger.
@@ -354,5 +354,51 @@ if [ ! -d "${store}" ]; then
   mkdir -p "${store}" 2>/dev/null || exit 0
 fi
 printf '%s\n' "${row}" >>"${store}/hook-pulse-${shard}.ndjson" 2>/dev/null || exit 0
+
+# A sharp notifier revision turns a durable PermissionRequest row into a
+# content-free sequence-break worker. The worker is detached only after this
+# append succeeds, so its exact-bracket replay can never race an unwritten
+# request. `setsid -f` prevents the hook runner from waiting through reminder
+# sleeps; both inherited streams are closed so this path cannot influence the
+# permission decision or retain the hook protocol pipe.
+if [ "${notifier_rev}" != "log-only-0" ]; then
+  notification_fields="$(
+    jq -r '
+      if .hookEvent == "PermissionRequest" and (.toolName | type) == "string" then
+        [
+          .sessionId,
+          .ts,
+          .waitReason,
+          (if .toolName == "AskUserQuestion" then "human-input"
+           elif .toolName == "ExitPlanMode" then "plan-approval"
+           else "tool-permission" end),
+          .toolName
+        ] | @tsv
+      else empty end
+    ' <<<"${row}" 2>/dev/null
+  )" || notification_fields=""
+
+  if [ -n "${notification_fields}" ] && command -v setsid >/dev/null 2>&1; then
+    IFS=$'\t' read -r notification_session notification_ts notification_reason notification_target notification_tool \
+      <<<"${notification_fields}"
+    notifier_path="${BASH_SOURCE[0]%/*}/sequence-break-notifier.sh"
+    if [ -x "${notifier_path}" ]; then
+      notifier_args=(
+        "codex-cli"
+        "${notification_session}"
+        "${notification_ts}"
+        "${notification_reason}"
+        "${notification_target}"
+        "${notification_tool}"
+        "${notifier_rev}"
+      )
+      if [ "${BEEP_SEQUENCE_BREAK_FOREGROUND:-0}" = "1" ]; then
+        "${notifier_path}" "${notifier_args[@]}" </dev/null >/dev/null 2>&1 || true
+      else
+        setsid -f -- "${notifier_path}" "${notifier_args[@]}" </dev/null >/dev/null 2>&1 || true
+      fi
+    fi
+  fi
+fi
 
 exit 0

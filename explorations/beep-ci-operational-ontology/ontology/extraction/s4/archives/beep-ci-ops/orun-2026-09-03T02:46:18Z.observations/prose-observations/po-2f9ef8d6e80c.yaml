@@ -1,0 +1,10 @@
+id: po:sha256:2f9ef8d6e80c52201ddaa889c48640d0defd49902d53c28dc5ecf331462609a2
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: standards/fallow.boundaries.provenance.schema.json
+source_span:
+  start_line: 35
+  end_line: 44
+quote: '"sourceRefs", "doctrineRefs", "catalogRefs", "promotionEligible"'
+epistemic_status: quoted_prose

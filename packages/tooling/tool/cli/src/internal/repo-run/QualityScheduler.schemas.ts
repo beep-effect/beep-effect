@@ -10,7 +10,8 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { Defect, LiteralKit } from "@beep/schema";
+import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
+import { UUID } from "@beep/schema/String";
 import * as O from "@beep/utils/Option";
 import { Effect, Runtime } from "effect";
 import * as A from "effect/Array";
@@ -149,6 +150,7 @@ export const admissionTokenWeight = (kind: AdmissionWorkKind): number =>
   });
 
 const admissionOwnerFields = {
+  attemptId: UUID.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   pid: S.Finite,
   procStart: S.String,
   kind: AdmissionWorkKind,
@@ -362,6 +364,7 @@ export class AdmissionConfig extends S.Class<AdmissionConfig>($I`AdmissionConfig
  */
 export class AdmissionRequest extends S.Class<AdmissionRequest>($I`AdmissionRequest`)(
   {
+    attemptId: UUID.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     kind: AdmissionWorkKind,
     weightTokens: S.Finite,
     priority: AdmissionPriority,

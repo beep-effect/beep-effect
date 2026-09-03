@@ -911,7 +911,7 @@ const makeLocalStore = Effect.fn("makeLocalStore")(function* (config: StorageCon
         })
       );
     }),
-    getSignedUrl: (_key: string) => Effect.succeed(O.none()),
+    getSignedUrl: (_key: string) => Effect.succeedNone,
     supportsSignedUrls: false,
   } satisfies StorageServiceMethods;
 });
@@ -993,7 +993,7 @@ const makeMemoryStore = Effect.sync(() => {
         return Effect.void;
       }),
     // Memory store doesn't support signed URLs
-    getSignedUrl: () => Effect.succeed(O.none()),
+    getSignedUrl: () => Effect.succeedNone,
     supportsSignedUrls: false,
   };
   return service;

@@ -1,0 +1,45 @@
+id: "ic:pa-turbo-task-specification:001"
+hypothesis_ref: "dh:pa-turbo-task-specification:001"
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Two governed work or verification-procedure prescriptions are the same
+    information object only when they continue one authority and semantic
+    lineage with the same task or lane kind, input and scope surface,
+    dependency/coordination rules, persistence, outputs, and completion or
+    failure conditions; names and configuration bytes alone never suffice.
+  reidentification_key:
+    - "prescription authority, semantic version, and repository interpretation"
+    - "task or lane kind, inputs, scope, and coordination/dependency rules"
+    - "persistence, outputs, completion, and failure conditions"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    One repeatable governed prescription whose operational, input, scope,
+    coordination, persistence, output, and terminal clauses share one revision
+    boundary.
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "information_object: a VerificationLane coordinating replaceable work prescriptions without a WorkUnitSpecification subsumption"
+    - "information_object: the turbo.json configuration entry as a carrier token"
+    - "process: a particular Turbo task execution"
+  existential_dependencies:
+    - "At least one faithful configuration or documentary carrier"
+    - "The repository and Turbo semantics under which the prescription is interpreted"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - "superseded by a semantic configuration change"
+    - "withdrawn or left without any faithful realization"
+counterexamples:
+  - description: >-
+      Two repositories can use the same task or lane spelling while assigning
+      different governed scope and failure semantics, and one lane can
+      coordinate multiple replaceable work prescriptions; neither spelling nor
+      an is-a edge supplies identity.
+status: proposed

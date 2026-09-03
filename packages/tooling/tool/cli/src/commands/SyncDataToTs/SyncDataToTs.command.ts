@@ -161,7 +161,7 @@ const readExistingFile = Effect.fn(function* (
   );
 
   return yield* fs.readFileString(absolutePath).pipe(
-    Effect.map(O.some),
+    Effect.asSome,
     Effect.mapError(() =>
       SyncDataToTsError.make({
         message: `Failed to read ${absolutePath}.`,

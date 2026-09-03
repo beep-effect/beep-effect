@@ -418,11 +418,11 @@ const collectEdges = (models: ModelRecord): ReadonlyArray<Edge> => {
               );
             }
             if (
-              SqliteColumn.storageIdent(sourceSpec, sourceMeta.dimensions) !==
-                SqliteColumn.storageIdent(targetSpec, targetMeta.dimensions) ||
+              SqliteColumn.storageIdent(sourceMeta.dimensions)(sourceSpec) !==
+                SqliteColumn.storageIdent(targetMeta.dimensions)(targetSpec) ||
               !equals(
-                SqliteColumn.carrier(sourceSpec, sourceMeta.dimensions),
-                SqliteColumn.carrier(targetSpec, targetMeta.dimensions)
+                SqliteColumn.carrier(sourceMeta.dimensions)(sourceSpec),
+                SqliteColumn.carrier(targetMeta.dimensions)(targetSpec)
               )
             ) {
               fail(

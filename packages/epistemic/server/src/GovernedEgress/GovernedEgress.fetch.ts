@@ -340,7 +340,7 @@ export const makeGovernedEgressFetch = Effect.fn("Epistemic.GovernedEgress.make"
           return O.none<DecisionRecordHash>();
         }
         return yield* ExecutionVerdict.match(verdict, {
-          allowed: () => Effect.succeed(O.some(record.hash)),
+          allowed: () => Effect.succeedSome(record.hash),
           denied: ({ reason }) => deny(reason, recordedDestination).pipe(Effect.as(O.none<DecisionRecordHash>())),
         });
       })

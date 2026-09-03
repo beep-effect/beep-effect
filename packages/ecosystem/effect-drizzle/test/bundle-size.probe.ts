@@ -83,7 +83,10 @@ const resolveBaseline = () => {
 };
 
 const reportComparison = fnUntraced(function* (currentRawBytes: number, baselineRawBytes: number) {
-  const comparison = compareBundleSize(currentRawBytes, baselineRawBytes, minimumBundleRawBytes);
+  const comparison = compareBundleSize(currentRawBytes, {
+    baselineRawBytes,
+    minimumRawBytes: minimumBundleRawBytes,
+  });
   const line = formatBundleSizeLine(currentRawBytes, baselineRawBytes);
   yield* sync(() => {
     process.stdout.write(`${line}\n`);

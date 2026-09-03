@@ -1,0 +1,25 @@
+id: fa:ov-has-step-alt:001
+hypothesis_ref: dh:ov-has-step:001
+identity_card_ref: ic:ov-has-step-alt:001
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: false
+rival_models:
+- label: relator of proposal-to-step (or proposal-to-act) participation, distinct from the step
+  still_viable: true
+- label: participation of an admission act in a projected schedule, with the step as that act
+  still_viable: false
+- label: RDF-only containment edge between emitted nodes
+  still_viable: false
+strongest_counterexample: 'The contract characterizes a ScheduleProposal by ordered
+  steps and each step by index, scheduled target, and scope. That is mereology of
+  an information object. A separate has-step relator is unmotivated unless some property
+  is predicated of the edge that is not a property of the step. Participation-of-act
+  collapses to the event reading of ScheduleStep, already falsified by the deferred
+  tail.'
+verdict: analyzed
+needed_evidence: 'An observation of a property of the hasStep edge (weight, interval,
+  provenance) that is not a property of the ScheduleStep, which would force a distinct
+  relator, versus only ever the step being counted as the component.'

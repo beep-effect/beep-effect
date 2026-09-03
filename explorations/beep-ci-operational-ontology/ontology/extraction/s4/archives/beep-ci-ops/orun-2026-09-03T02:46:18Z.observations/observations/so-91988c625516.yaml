@@ -1,0 +1,37 @@
+id: "so:sha256:91988c625516a3fa1516b592a7dc4c6b197b56249390fde1fc1e116867ae1af3"
+schema_version: 1
+repository:
+  commit: "341cfef8b6e80d49f6cef894e9eecd5337f70e8f"
+  path: "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run2-fleet/attempts/beep-effect10/docs_patent-drafting-episode-ledger-research-6054027069ca/attempts.properties"
+source_span:
+  start_line: 1
+  end_line: 1007
+  content_sha256: "f7a9d0969950eb03260b6cb115a0c513b1a2e0ab0a5742b49ee9752361571533"
+extractor:
+  id: "adapter-journal"
+  version: "1.0.0"
+  parser: "python-stdlib-properties"
+  script: "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal.py"
+symbol:
+  qualified_name: "yeet-attempt-journal"
+  lexical_name: "yeet-attempt-journal"
+  syntactic_kind: "properties_projection"
+observed_facts:
+  - predicate: "config_key_value"
+    object: "detectedAt=2026-08-08T11:43:52.465Z"
+  - predicate: "config_key_value"
+    object: "laneLabel=quality:build"
+  - predicate: "config_key_value"
+    object: "laneRerunDurationMs=29802.864398"
+  - predicate: "config_key_value"
+    object: "packageName=@beep/box"
+  - predicate: "config_key_value"
+    object: "policy=ts2589-no-location"
+  - predicate: "config_key_value"
+    object: "standaloneDurationMs=1902.713545"
+  - predicate: "config_key_value"
+    object: "task=build"
+  - predicate: "config_key_value"
+    object: "taskId=@beep/box#build"
+source_excerpt: "detectedAt=2026-08-08T11:43:52.465Z"
+epistemic_status: "parser_derived"

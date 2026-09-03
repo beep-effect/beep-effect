@@ -361,15 +361,12 @@ const makeCaseInsensitiveLiteralSchema = <const Values extends A.NonEmptyReadonl
         return pipe(
           values,
           A.findFirst((candidate) => pipe(candidate, Str.toLowerCase) === normalizedValue),
-          O.match({
-            onNone: () =>
-              Effect.fail(
-                new SchemaIssue.InvalidValue({
-                  message: `Expected one of ${expected}.`,
-                })
-              ),
-            onSome: Effect.succeed,
-          })
+          Effect.fromOption(
+            () =>
+              new SchemaIssue.InvalidValue({
+                message: `Expected one of ${expected}.`,
+              })
+          )
         );
       }),
       encode: SchemaGetter.transform((value) => value),

@@ -1,0 +1,2 @@
+{"schemaVersion":"yeet-admission-journal/v1","_tag":"admission-admitted","nonce":"fixture-lease","kind":"review-fix","weightTokens":1,"priority":"verify","originKey":"fixture-origin","enqueuedAtMillis":999,"admittedAtMillis":1000}
+{"schemaVersion":"yeet-admission-journal/v2","_tag":"admission-lease-evicted","nonce":"fixture-lease","evictedAtMillis":2000,"reason":"owner-dead-or-reused"}

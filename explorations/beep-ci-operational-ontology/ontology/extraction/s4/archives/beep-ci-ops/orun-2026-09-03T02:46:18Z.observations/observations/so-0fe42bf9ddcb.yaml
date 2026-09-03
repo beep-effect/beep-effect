@@ -1,0 +1,33 @@
+id: "so:sha256:0fe42bf9ddcb6f694fd168ec852d86cce4ac9945aa66e1d55d1531e6ca799e46"
+schema_version: 1
+repository:
+  commit: "341cfef8b6e80d49f6cef894e9eecd5337f70e8f"
+  path: "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run2-fleet/attempts/beep-effect2/chore_deps-update-09-02-26-d946f1d66993/attempts.properties"
+source_span:
+  start_line: 1
+  end_line: 268
+  content_sha256: "c7907d2cd1135d05544e6fabc736da7a95f96dd9fe8b70d678eba9250382dc64"
+extractor:
+  id: "adapter-journal"
+  version: "1.0.0"
+  parser: "python-stdlib-properties"
+  script: "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal.py"
+symbol:
+  qualified_name: "yeet-attempt-journal"
+  lexical_name: "yeet-attempt-journal"
+  syntactic_kind: "properties_projection"
+observed_facts:
+  - predicate: "config_key_value"
+    object: "mergeStateAcceptable=true"
+  - predicate: "config_key_value"
+    object: "mergeable=true"
+  - predicate: "config_key_value"
+    object: "notDraft=true"
+  - predicate: "config_key_value"
+    object: "prOpen=true"
+  - predicate: "config_key_value"
+    object: "requiredChecksGreen=true"
+  - predicate: "config_key_value"
+    object: "reviewDecisionAcceptable=true"
+source_excerpt: "mergeStateAcceptable=true"
+epistemic_status: "parser_derived"

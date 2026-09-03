@@ -256,31 +256,27 @@ const decodeStringArray = (
   context: string,
   corpusId: string
 ): Effect.Effect<ReadonlyArray<string>, CorpusManagerError> =>
-  O.match(decodeUnknownWinkStringArrayOption(value), {
-    onNone: () => Effect.fail(CorpusManagerError.fromMessage(`Invalid ${context}: expected string[]`, corpusId)),
-    onSome: Effect.succeed,
-  });
+  Effect.fromOption(decodeUnknownWinkStringArrayOption(value), () =>
+    CorpusManagerError.fromMessage(`Invalid ${context}: expected string[]`, corpusId)
+  );
 
 const decodeNumberArray = (
   value: unknown,
   context: string,
   corpusId: string
 ): Effect.Effect<ReadonlyArray<number>, CorpusManagerError> =>
-  O.match(decodeUnknownWinkNumberArrayOption(value), {
-    onNone: () => Effect.fail(CorpusManagerError.fromMessage(`Invalid ${context}: expected number[]`, corpusId)),
-    onSome: Effect.succeed,
-  });
+  Effect.fromOption(decodeUnknownWinkNumberArrayOption(value), () =>
+    CorpusManagerError.fromMessage(`Invalid ${context}: expected number[]`, corpusId)
+  );
 
 const decodeTermScorePairs = (
   value: unknown,
   context: string,
   corpusId: string
 ): Effect.Effect<ReadonlyArray<readonly [string, number]>, CorpusManagerError> =>
-  O.match(decodeUnknownTermScorePairsOption(value), {
-    onNone: () =>
-      Effect.fail(CorpusManagerError.fromMessage(`Invalid ${context}: expected [string, number][]`, corpusId)),
-    onSome: Effect.succeed,
-  });
+  Effect.fromOption(decodeUnknownTermScorePairsOption(value), () =>
+    CorpusManagerError.fromMessage(`Invalid ${context}: expected [string, number][]`, corpusId)
+  );
 
 const readNormalizedTokensFromWink = Effect.fn("Wink.WinkCorpusManager.readNormalizedTokensFromWink")(function* (
   engine: WinkEngineService,
@@ -403,10 +399,9 @@ const makeWinkCorpusManager = Effect.gen(function* () {
       Ref.get(sessionsRef),
       Effect.flatMap(
         Effect.fnUntraced(function* (sessions) {
-          return yield* O.match(HashMap.get(sessions, corpusId), {
-            onNone: () => Effect.fail(CorpusManagerError.fromMessage(`Corpus "${corpusId}" does not exist`, corpusId)),
-            onSome: Effect.succeed,
-          });
+          return yield* Effect.fromOption(HashMap.get(sessions, corpusId), () =>
+            CorpusManagerError.fromMessage(`Corpus "${corpusId}" does not exist`, corpusId)
+          );
         })
       )
     );

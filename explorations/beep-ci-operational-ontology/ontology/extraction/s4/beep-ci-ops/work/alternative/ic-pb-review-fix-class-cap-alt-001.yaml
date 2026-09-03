@@ -1,0 +1,32 @@
+id: ic:pb-review-fix-class-cap-alt:001
+hypothesis_ref: dh:pb-review-fix-class-cap:001
+identity:
+  supplies_identity: true
+  identity_criterion: Two review-fix class-cap rules are the same iff they prescribe the same
+    blocking threshold on the count of active review-fix grants. reviewFixClassCap as a configured
+    number is a parameter of that rule, not the rule. The boolean branch activeReviewFix >=
+    config.reviewFixClassCap is an encoding of one evaluation, not a new individual.
+  reidentification_key:
+  - reviewFixClassCap (evidence of parameter)
+  - activeReviewFix comparison (evidence)
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: one class-specific concurrency constraint on review-fix admissions
+  dependence: none
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - situation
+  existential_dependencies: []
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+- description: Machine-wide token capacity is a different constraint; identifying the class
+    cap with capacityMaxTokens would erase the class-specific consequence.
+- description: Each time the boolean returns true is a situation of being at cap, not a new
+    policy. Snapshot-as-continuant if those evaluations are minted as caps.
+status: proposed

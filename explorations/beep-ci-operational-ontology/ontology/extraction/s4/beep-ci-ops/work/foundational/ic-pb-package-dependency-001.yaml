@@ -1,0 +1,33 @@
+id: "ic:pb-package-dependency:001"
+hypothesis_ref: "dh:pb-package-dependency:001"
+identity:
+  supplies_identity: false
+  identity_criterion: "This directed relation supplies no package identity; one dependency fact is the same only for the same ordered importer and imported-package pair, dependency interpretation, repository graph snapshot, and continuous validity interval."
+  reidentification_key:
+    - "ordered importing and imported package pair"
+    - "dependency-kind and resolution semantics"
+    - "repository graph snapshot and validity interval"
+ontoclean:
+  rigidity: unresolved
+  carries_identity: false
+  supplies_identity: false
+  unity: "One directed dependency assertion from an importing workspace package to an imported workspace package in one graph context."
+  dependence: relational
+ufo_analysis:
+  candidate_category: none
+  alternatives:
+    - "a reified dependency relator with its own provenance or constraint properties"
+    - "a package-manifest dependency-declaration information object"
+    - "an architecture-diagram arrow convention"
+  existential_dependencies:
+    - "the importing and imported workspace packages"
+    - "a repository dependency-graph context and validity interval"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - "the directed edge is removed from the operative dependency graph"
+    - "either package ceases to participate in the workspace graph"
+counterexamples:
+  - description: "The same two package names can be connected in one repository revision and disconnected in another, while a copied diagram arrow need not establish either dependency fact."
+status: proposed

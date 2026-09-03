@@ -1025,7 +1025,7 @@ const makeEngine = Effect.fn("makeEngine")(function* (
     // Narrowed to JournalNotFound only: a permissions error or a bad handle
     // must NOT present as an empty journal. Anything other than "the file
     // vanished between the check and the read" is a real failure.
-    yield* refresh.pipe(Effect.catchTag("JournalNotFound", () => Effect.succeed(Option.none())));
+    yield* refresh.pipe(Effect.catchTag("JournalNotFound", () => Effect.succeedNone));
     const info = yield* fs.stat(config.path);
     // LOGICAL, post-BOM — the same space every offset this package emits
     // lives in. Seeding it physically put every subsequent append's offset

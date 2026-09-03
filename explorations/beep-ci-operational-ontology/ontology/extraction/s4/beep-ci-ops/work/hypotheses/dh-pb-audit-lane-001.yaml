@@ -1,0 +1,26 @@
+id: "dh:pb-audit-lane:001"
+observation_refs:
+  - "po:sha256:80eff13a609db2451f8138cce8e48a291950e5dd0ffeb90a889a641567e540ac"
+  - "po:sha256:a9ee0881022c5204f761eb8fd19ab3ad9344c1e916c83b798bbde01e809b9d45"
+cq_warrants:
+  - "CQ-001"
+proposed_referent:
+  label: "audit verification lane"
+  description: "A possible Turbo task lane lexically indicated by an audit key inside a tasks configuration."
+representation_status: lexical_alias
+alternatives:
+  - label: "Turbo task configuration key"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+  - label: "dependency or package audit procedure"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observations establish only a tasks mapping and an audit key. They do not state what is audited, how it runs, its scope, or what evidence it yields."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.44
+  use_for_acceptance: false

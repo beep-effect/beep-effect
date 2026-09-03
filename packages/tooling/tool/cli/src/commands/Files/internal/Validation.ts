@@ -87,7 +87,7 @@ export const validateNormalizeMaxLongEdge: (
     onNone: () => Effect.succeed(O.none<PositiveMediaDimension>()),
     onSome: (value) =>
       decodeNormalizeMaxLongEdge(value).pipe(
-        Effect.map(O.some),
+        Effect.asSome,
         Effect.mapError(() =>
           FilesCommandError.make({
             message: `Expected --max-long-edge to be a positive integer: ${value}`,
@@ -114,6 +114,19 @@ export const validateCreateCaptionFilesOptions = (
     )
   );
 
+interface ScanWidthPercentages {
+  readonly maxScanPct: number;
+  readonly minWidthPct: number;
+}
+
+const scanWidthFitsWithinMaximum = (decoded: ScanWidthPercentages): boolean =>
+  decoded.minWidthPct <= decoded.maxScanPct;
+
+const invalidScanWidthError = (decoded: ScanWidthPercentages): FilesCommandError =>
+  FilesCommandError.make({
+    message: `Expected --min-width-pct (${decoded.minWidthPct}) to be less than or equal to --max-scan-pct (${decoded.maxScanPct}).`,
+  });
+
 /**
  * Decode and validate detect-borders options.
  *
@@ -129,17 +142,7 @@ export const validateDetectBordersOptions = (
     FilesCommandError.mapError(
       "Invalid detect-borders options. Expected --tolerance between 0 and 255, --min-solid-pct and --min-width-pct between greater than 0 and 100, and --max-scan-pct between greater than 0 and 50."
     ),
-    Effect.flatMap((decoded) => {
-      if (decoded.minWidthPct > decoded.maxScanPct) {
-        return Effect.fail(
-          FilesCommandError.make({
-            message: `Expected --min-width-pct (${decoded.minWidthPct}) to be less than or equal to --max-scan-pct (${decoded.maxScanPct}).`,
-          })
-        );
-      }
-
-      return Effect.succeed(decoded);
-    })
+    Effect.filterOrFail(scanWidthFitsWithinMaximum, invalidScanWidthError)
   );
 
 /**
@@ -254,17 +257,7 @@ export const validateCropBordersOptions = (
     FilesCommandError.mapError(
       "Invalid crop-borders options. Expected --tolerance between 0 and 255, --min-solid-pct and --min-width-pct between greater than 0 and 100, and --max-scan-pct between greater than 0 and 50."
     ),
-    Effect.flatMap((decoded) => {
-      if (decoded.minWidthPct > decoded.maxScanPct) {
-        return Effect.fail(
-          FilesCommandError.make({
-            message: `Expected --min-width-pct (${decoded.minWidthPct}) to be less than or equal to --max-scan-pct (${decoded.maxScanPct}).`,
-          })
-        );
-      }
-
-      return Effect.succeed(decoded);
-    })
+    Effect.filterOrFail(scanWidthFitsWithinMaximum, invalidScanWidthError)
   );
 
 /**

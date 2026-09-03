@@ -1,0 +1,23 @@
+id: "dh:pa-package-dependency-closure:001"
+observation_refs:
+  - "po:sha256:04efe14c9b36df094bcd5670eb7ef97147f4158a69a833ebc0b997361225a6b0"
+  - "po:sha256:346503bf0ecc7e2531c623fe8377aaeee72b6e7bcaea94fb9db2c17d5e7536bc"
+cq_warrants: ["CQ-004"]
+proposed_referent:
+  label: "Transitive workspace-package dependency"
+  description: "The reachability relation obtained by a Datalog fixpoint over direct workspace-package dependencies for affected-package decisions."
+representation_status: domain_referent
+alternatives:
+  - label: "Materialized dependency-closure assertion"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "Query predicate spelling"
+    representation_status: lexical_alias
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: "The observations assign the expression a closure semantics and use it between package variables for an affected-package decision."
+  discriminator: "The pre-glossary quotation defines a Datalog fixpoint over direct dependencies, and the CQ quotation applies that closure between touched and affected packages."
+epistemic_status: proposed
+confidence: {value: 0.82, use_for_acceptance: false}

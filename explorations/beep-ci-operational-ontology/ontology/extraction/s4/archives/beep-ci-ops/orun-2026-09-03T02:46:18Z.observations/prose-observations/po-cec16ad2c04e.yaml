@@ -1,0 +1,10 @@
+id: po:sha256:cec16ad2c04ecdb48826305bc7bcd59a0c67ba98d119b38191f25de6863c7d3d
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: standards/fallow.pilot.inventory.jsonc
+source_span:
+  start_line: 125
+  end_line: 136
+quote: '"blockingQualityGate": "none-proven-in-live-pre-push"'
+epistemic_status: quoted_prose

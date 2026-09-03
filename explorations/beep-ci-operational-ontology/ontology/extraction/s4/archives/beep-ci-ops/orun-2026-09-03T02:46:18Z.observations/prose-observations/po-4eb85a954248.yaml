@@ -1,0 +1,13 @@
+id: po:sha256:4eb85a95424814775f10fc4b76c458723d3414d4abdc1c100571482f7feecdc0
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: explorations/beep-ci-operational-ontology/ontology/extraction/s7/work-s7/impl-report.md
+source_span:
+  start_line: 129
+  end_line: 131
+quote: '### Typecheck
+
+
+  Command:'
+epistemic_status: quoted_prose

@@ -1,0 +1,46 @@
+target: "otp:pa-fallow-audit-evidence:002"
+target_sha256: "3d4af1e9f8594b88abf5affcc9f1962956b2ba35e5d68b16952e5d5579f01818"
+chain_sha256: "b8f714d258479513c8f5c4c285e619e0c11f5c70415354de80dd3bd6e92ad184"
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The named specification individual asserts no parents, so there is no
+    proposed is-a relation or inherited identity criterion to test.
+revision_requests: []
+attacks:
+  - surface: identity
+    rule: specification-identity-separates-executions
+    counterexample: >-
+      The same exact Fallow boundary-audit prescription can be executed against
+      different trees with different results. The shared card now identifies
+      this reusable FallowAuditLane specification independently of executions
+      and result artifacts.
+    outcome: survived
+  - surface: warrant
+    rule: exhaustive-cq-warrant
+    counterexample: >-
+      Under the sitting's ratified-individual precedent, CQ-001 requires the
+      complete ordered lane set and FallowAuditLane is an admitted lane
+      specification. Removing it makes the ordered answer incomplete.
+    outcome: survived
+  - surface: null_discriminator
+    rule: governed-procedure-discriminator
+    counterexample: >-
+      A command-token rename does not change the governed Fallow boundary-audit
+      prescription, whereas changing its base/target boundary semantics does.
+      The individual is therefore not merely the current script spelling.
+    outcome: survived
+rival_models_still_viable:
+  - "An abstract audit-procedure universal realized by this specification."
+  - "Separate execution and result individuals for each governed run."
+evidence:
+  - "po:sha256:03faca9bdbda493f0d75b6c88c6bc46fe48dd8968d87259b3f201dddbd862bd9"
+  - "po:sha256:0a135a5a3d645935fc24eab144d7671ed544ad71da23212db9ef611b5f251560"
+  - "CQ-001"

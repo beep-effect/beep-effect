@@ -401,7 +401,7 @@ const readExistingFile = Effect.fn("Skills.readExistingFile")(function* (
 
   return yield* fs
     .readFileString(absolutePath)
-    .pipe(Effect.map(O.some), SkillsCommandError.mapError(`Failed to read ${absolutePath}.`, absolutePath));
+    .pipe(Effect.asSome, SkillsCommandError.mapError(`Failed to read ${absolutePath}.`, absolutePath));
 });
 
 const makeParentDirectory = Effect.fn("Skills.makeParentDirectory")(function* (
@@ -662,7 +662,7 @@ const readLockFile = Effect.fn("Skills.readLockFile")(function* (
     return O.none();
   }
   return yield* decodeLockText(content.value).pipe(
-    Effect.map(O.some),
+    Effect.asSome,
     SkillsCommandError.mapError(`Failed to parse ${SKILLS_LOCK_PATH}.`, lockPath)
   );
 });

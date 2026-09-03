@@ -1,0 +1,31 @@
+id: "dh:jv-verification-attempt:001"
+observation_refs:
+  - "so:sha256:1081a3f10108fba5826e74ade5a53a90ae027969e1857cbfe67f1ef919a6931f"
+  - "so:sha256:c509f4a98184260243c9b13f2cc0d46bbe7783f07518144c48d9e58d47617b73"
+cq_warrants: ["CQ-022", "CQ-025"]
+proposed_referent:
+  label: "Verification attempt occurrence"
+  description: >-
+    A bounded verification-process occurrence represented by attempt-start,
+    timing, branch/base, mode, outcome, and terminal-record data.
+representation_status: domain_referent
+alternatives:
+  - label: "Verification attempt journal entry"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "CLI invocation grouping"
+    representation_status: implementation_artifact_only
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: >-
+    The observations instantiate a temporally bounded attempt rather than only
+    describing how attempt data would be represented.
+  discriminator: >-
+    The cited data assert an attempt-started occurrence together with exact
+    start, end, creation, and recording instants and measured elapsed values;
+    a reusable implementation declaration would not assert that dated
+    occurrence.
+epistemic_status: proposed
+confidence: {value: 0.92, use_for_acceptance: false}

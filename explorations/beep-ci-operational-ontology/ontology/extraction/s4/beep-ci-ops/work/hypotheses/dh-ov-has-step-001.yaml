@@ -1,0 +1,32 @@
+id: "dh:ov-has-step:001"
+observation_refs:
+  - "po:sha256:35a69c5bcbf7493cc0aa7f248d138d65f2d5c8beff49e80308ef85b43a0f559d"
+  - "po:sha256:736ad92a1de7991caa17d905c310e2dac02d5a4d9b7cd3b709adfcabd690e4cc"
+cq_warrants: ["CQ-020"]
+proposed_referent:
+  label: "schedule-proposal component relation"
+  description: >-
+    The relation connecting a ScheduleProposal information object to one of
+    the ScheduleStep information objects that constitutes its ordered content.
+representation_status: domain_referent
+alternatives:
+  - label: "Participation of an admission act in a projected schedule"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "RDF-only containment edge between emitted nodes"
+    representation_status: implementation_artifact_only
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: >-
+    The predicate is paired with prose that describes a ScheduleProposal in
+    terms of ordered ScheduleStep components, supporting a content relation
+    rather than only an RDF adjacency.
+  discriminator: >-
+    The contract says each ScheduleProposal contains ordered steps and
+    characterizes each ScheduleStep by its index, scheduled target, and scope;
+    that proposal-to-step composition remains part of the schedule content
+    when RDF encoding is replaced.
+epistemic_status: proposed
+confidence: {value: 0.84, use_for_acceptance: false}

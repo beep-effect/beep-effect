@@ -1,0 +1,13 @@
+id: po:sha256:86fd8d27db8b06cf2ecc97ca0405dffaba2fdca152659b3f2a6b9d3c9e98cb97
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: explorations/beep-ci-operational-ontology/ontology/extraction/s7/work-s7/impl-report.md
+source_span:
+  start_line: 161
+  end_line: 163
+quote: '### Package verification
+
+
+  Command:'
+epistemic_status: quoted_prose

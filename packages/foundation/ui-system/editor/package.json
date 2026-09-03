@@ -67,6 +67,7 @@
     "./viewer": "./src/viewer.tsx",
     "./youtube-embed": "./src/youtube-embed.tsx",
     "./youtube-node": "./src/youtube-node.tsx",
+    "./Version": "./src/Version.ts",
     "./package.json": "./package.json",
     "./internal/*": null
   },
@@ -113,6 +114,7 @@
       "./viewer": "./dist/viewer.js",
       "./youtube-embed": "./dist/youtube-embed.js",
       "./youtube-node": "./dist/youtube-node.js",
+      "./Version": "./dist/Version.js",
       "./package.json": "./package.json",
       "./internal/*": null
     }

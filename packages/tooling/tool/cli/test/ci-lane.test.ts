@@ -4,6 +4,7 @@ import {
   CiLaneRunOptions,
   CiLocalStepPlan,
   ciLaneStepsForTesting,
+  ciLocalLaneInputsForTesting,
   ciLocalStepsForTesting,
   docgenLaneModeForChangedPaths,
   doctestStepForTesting,
@@ -589,6 +590,17 @@ describe("ciLocalStepsForTesting", () => {
   it("dispatches each lane through beep ci lane", () => {
     const step = firstOf(ciLocalStepsForTesting(REPO_ROOT, ["knip"], branchPlan));
     expect([...step.args]).toEqual(["run", "beep", "ci", "lane", "knip"]);
+  });
+
+  it("pairs inner-lane ids with steps and honest absent executor digests", () => {
+    const selection = ["knip"] as const;
+    const steps = ciLocalStepsForTesting(REPO_ROOT, selection, branchPlan);
+    const inputs = ciLocalLaneInputsForTesting(selection, steps);
+
+    expect(inputs).toHaveLength(1);
+    expect(inputs[0]?.[0]).toBe("knip");
+    expect(inputs[0]?.[1]).toBe(steps[0]);
+    expect(inputs[0]?.[2]).toStrictEqual(O.none());
   });
 
   it("dispatches the labs lane bare, without affected shaping", () => {

@@ -1,0 +1,24 @@
+id: "fa:jv-admission-lifecycle:001"
+hypothesis_ref: "dh:jv-admission-lifecycle:001"
+identity_card_ref: "ic:jv-admission-lifecycle:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+  - label: "The journal row is the intended information artifact, not the operational lifecycle it records."
+    still_viable: true
+  - label: "Enqueue, admission, and release are separate events without one lifecycle-process individual."
+    still_viable: true
+  - label: "The active grant or lease alone is identical to the entire admission lifecycle."
+    still_viable: false
+strongest_counterexample: >-
+  The origin and memory-peak values come from a different journal projection
+  than the nonce-bearing admitted and released values, so those records cannot
+  be joined into one lifecycle merely because both concern admission.
+verdict: explicitly_deferred
+needed_evidence: >-
+  One authoritative lifecycle join must link enqueue, grant, release or
+  cancellation, and causal-continuity identifiers for the same request, and a
+  Must/Should decision CQ must require that lifecycle rather than SeatRequest.

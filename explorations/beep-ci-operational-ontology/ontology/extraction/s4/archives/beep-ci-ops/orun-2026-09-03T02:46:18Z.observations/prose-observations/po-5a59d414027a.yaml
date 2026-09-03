@@ -1,0 +1,10 @@
+id: po:sha256:5a59d414027abf00522737e1d86c7976c6837e7dcf88eb47112cc39709b2be1d
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt
+source_span:
+  start_line: 118
+  end_line: 118
+quote: '@beep/architecture-lab-proof 117'
+epistemic_status: quoted_prose

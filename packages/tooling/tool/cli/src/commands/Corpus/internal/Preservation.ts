@@ -447,33 +447,52 @@ const discardStaged = Effect.fn("Preservation.discardStaged")(function* (
   });
 });
 
+const sourceStabilityFailure = (
+  statBefore: SourceStabilityObservation,
+  observed: O.Option<SourceStabilityObservation>
+): O.Option<PreservationAttemptOutcome> =>
+  O.match(observed, {
+    onNone: () => O.some(unreadable("Source became unreadable during preservation.")),
+    onSome: (stat) => (stabilityEquivalence(statBefore, stat) ? O.none() : O.some(changedOutcome(statBefore, stat))),
+  });
+
+const hashesProveAlreadyComplete = (
+  firstSourceHash: StreamingHashResult,
+  secondSourceHash: StreamingHashResult,
+  destHash: StreamingHashResult,
+  sourceBytes: number,
+  destBytes: number
+): boolean =>
+  firstSourceHash.bytes === sourceBytes &&
+  secondSourceHash.bytes === sourceBytes &&
+  destHash.bytes === destBytes &&
+  Str.Equivalence(firstSourceHash.sha256, destHash.sha256) &&
+  Str.Equivalence(firstSourceHash.sha256, secondSourceHash.sha256);
+
 const settleFullLengthDestination = Effect.fn("Preservation.settleFullLengthDestination")(function* (
   sourceAbs: string,
   destAbs: string,
   destBytes: number,
   statBefore: SourceStabilityObservation
 ): Effect.fn.Return<O.Option<PreservationAttemptOutcome>, PreservationArchiveIoError, FileSystem.FileSystem> {
-  const sourceHash = yield* hashStream(sourceAbs);
+  const firstSourceHash = yield* hashStream(sourceAbs);
   const destHash = yield* hashStream(destAbs);
+  const statBetween = yield* statSource(sourceAbs);
+  const betweenFailure = sourceStabilityFailure(statBefore, statBetween);
+  if (O.isSome(betweenFailure)) return betweenFailure;
+  const secondSourceHash = yield* hashStream(sourceAbs);
   const statAfter = yield* statSource(sourceAbs);
-  if (O.isNone(statAfter)) {
-    return O.some(unreadable("Source became unreadable during preservation."));
-  }
-  if (!stabilityEquivalence(statBefore, statAfter.value)) {
-    return O.some(changedOutcome(statBefore, statAfter.value));
-  }
-  const settledSourceHash = yield* hashStream(sourceAbs);
-  if (
-    !Str.Equivalence(sourceHash.sha256, destHash.sha256) ||
-    !Str.Equivalence(sourceHash.sha256, settledSourceHash.sha256)
-  ) {
+  const afterFailure = sourceStabilityFailure(statBefore, statAfter);
+  if (O.isSome(afterFailure)) return afterFailure;
+  if (!hashesProveAlreadyComplete(firstSourceHash, secondSourceHash, destHash, statBefore.sizeBytes, destBytes))
     return O.none();
-  }
   return O.some(
     PreservationAttemptOutcome.cases["already-complete"].make({
       kind: "already-complete",
       bytesReused: NonNegativeInt.make(destBytes),
-      sha256: sourceHash.sha256,
+      sha256: firstSourceHash.sha256,
+      statAfter: O.getOrThrow(statAfter),
+      statBefore,
     })
   );
 });

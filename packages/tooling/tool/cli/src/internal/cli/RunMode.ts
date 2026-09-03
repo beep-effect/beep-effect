@@ -160,12 +160,14 @@ export type RunMode = typeof RunMode.Type;
  * @category resolution
  * @since 0.0.0
  */
+type RunModeCandidates = ReadonlyArray<readonly [enabled: boolean, mode: RunMode]>;
+
 export const resolveRunMode: {
-  (candidates: ReadonlyArray<readonly [enabled: boolean, mode: RunMode]>, fallback: RunMode): RunMode;
-  (fallback: RunMode): (candidates: ReadonlyArray<readonly [enabled: boolean, mode: RunMode]>) => RunMode;
+  (fallback: RunMode): (candidates: RunModeCandidates) => RunMode;
+  (candidates: RunModeCandidates, fallback: RunMode): RunMode;
 } = dual(
   2,
-  (candidates: ReadonlyArray<readonly [enabled: boolean, mode: RunMode]>, fallback: RunMode): RunMode =>
+  (candidates: RunModeCandidates, fallback: RunMode): RunMode =>
     pipe(
       A.map(candidates, ([enabled, mode]) => pipe(enabled, O.liftPredicate(P.isTruthy), O.as(mode))),
       O.firstSomeOf,

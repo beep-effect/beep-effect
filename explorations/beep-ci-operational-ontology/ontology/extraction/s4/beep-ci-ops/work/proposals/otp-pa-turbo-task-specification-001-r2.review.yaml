@@ -1,0 +1,47 @@
+target: "otp:pa-turbo-task-specification:001"
+target_sha256: "1bdc8f9b658e4948efa2d32ec83c2ad140c95f14a462953aa8535f3bcec59119"
+chain_sha256: "d2b6361f4d60a84394f780c59afc5420885ac4117dad5aea3b6ddc1bdf60ecb0"
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: "The proposal asserts no candidate is-a edge."
+revision_requests: []
+attacks:
+  - surface: identity
+    rule: identifier-is-not-identity
+    counterexample: >-
+      Two repositories can both name a task build while prescribing different
+      inputs and dependencies, and many executions can realize one task. The
+      criterion separates those cases by governed semantic lineage and content
+      rather than by task key, configuration bytes, or run identifier.
+    outcome: survived
+  - surface: warrant
+    rule: cq-term-required-under-specification-execution-split
+    counterexample: >-
+      Treating CQ-002's WorkUnit spelling as an opaque execution-bearing class
+      would collapse the binding specification/execution split. The sitting
+      struck that reading: the queried lane-by-scope WorkUnit is the repeatable
+      WorkUnitSpecification, so the proposal's CQ-002 warrant survives.
+    outcome: survived
+  - surface: null_discriminator
+    rule: discriminator-false-in-null-world
+    counterexample: >-
+      A formatting-only turbo.json entry can repeat a task label, but it does
+      not thereby prescribe inputs, upstream dependencies, persistence,
+      outputs, and completion behavior. The joined task clauses carry
+      repeatable work content independently of any execution or carrier copy.
+    outcome: survived
+rival_models_still_viable:
+  - "A concrete turbo.json entry token is distinct from its repeatable specification content."
+  - "A VerificationLane can coordinate several WorkUnitSpecifications without being one of them."
+evidence:
+  - "po:sha256:19da9053dc578ecea6995d45a9c23ea09f1f36b02e3969bb13b3c08a6a3c981f"
+  - "po:sha256:3e1c6cd48f541482c5471d901e96c829dd47de787108d7ee9cc4fec91966eb97"
+  - "po:sha256:4fc13f1c056d4666ad83f3944408c9437bbcc0eebd583f907ec05449b5730594"
+  - "CQ-002"

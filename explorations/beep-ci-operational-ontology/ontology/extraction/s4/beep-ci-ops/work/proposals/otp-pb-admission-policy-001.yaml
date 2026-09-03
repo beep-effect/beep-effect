@@ -1,0 +1,53 @@
+id: "otp:pb-admission-policy:001"
+hypothesis_ref: "dh:pb-admission-policy:001"
+identity_card_ref: "ic:pb-admission-policy:001"
+foundational_status: analyzed
+term:
+  preferred_label: "admission policy"
+  local_name: AdmissionPolicy
+  proposed_iri: "https://oip.law/ontology/ci-ops#AdmissionPolicy"
+  owl_entity_kind: class
+definition:
+  text: >-
+    A governed policy-specification information object that normatively fixes
+    admission ordering, capacity, aging, class-cap, starvation, applicability,
+    and revision semantics for queued SeatRequests.
+  source:
+    - "CQ-023"
+    - "po:sha256:60e90bd17b628d4d6d815cfd05ddcf88cbc2a724790b05ac88b4411619f535be"
+    - "po:sha256:6a73b5411cc63a7066296a936e6c699b0f4d624efded1e0c2acf4156593cc944"
+    - "po:sha256:9caeeca09be88e420e93a2dfbf183f7bfc7037e859a9da5cd685b166ce8363b6"
+foundational:
+  ufo_category: information_object
+  gufo_alignment: "gufo:Endurant"
+ontoclean:
+  rigidity: rigid
+  identity: supplies
+  dependence: relational
+parents: []
+revision_log: []
+reuse:
+  searched: true
+  exact_reuse_found: true
+  mappings:
+    - iri: "https://oip.law/ontology/ci-ops#AdmissionPolicy"
+      compatibility: >-
+        The ratified term already denotes the governed policy specification
+        whose starvation and weighted-admission rules control SeatRequests;
+        the new evidence refines its carriers without changing its referent.
+operational_warrant:
+  competency_questions: ["CQ-023"]
+  semantic_support_for: []
+alternatives_rejected:
+  - >-
+    AdmissionConfig is rejected as the whole policy because equal value
+    objects can occur under different authorities and applicability scopes.
+  - >-
+    Individual admission decisions and timestamps are rejected as policy identity.
+open_issues:
+  - >-
+    Steward must choose whether a deployed normative policy regime or mode
+    also needs a world-side term distinct from this specification artifact.
+revision_requests: []
+review: {foundational_agent: pending, adversarial_agent: pending, steward: pending}
+status: proposed

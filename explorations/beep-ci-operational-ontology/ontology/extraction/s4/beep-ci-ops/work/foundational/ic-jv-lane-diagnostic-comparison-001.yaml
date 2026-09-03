@@ -1,0 +1,43 @@
+id: "ic:jv-lane-diagnostic-comparison:001"
+hypothesis_ref: "dh:jv-lane-diagnostic-comparison:001"
+identity:
+  supplies_identity: unresolved
+  identity_criterion: >-
+    Unresolved: one comparison identity would require joined standalone and
+    lane-rerun execution identities, their measurement assertions, diagnostic
+    context, and comparison issuance; the current row co-locates values but
+    does not supply those execution or issuance joins.
+  reidentification_key:
+    - "the two execution occurrences being compared"
+    - "task, package, diagnostic policy, and detection context"
+    - "duration values, units, and provenance as supporting evidence"
+ontoclean:
+  rigidity: unresolved
+  carries_identity: unresolved
+  supplies_identity: unresolved
+  unity: >-
+    One provenance-bearing comparison assertion relating exactly two measured
+    execution contexts for one task and diagnostic policy.
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "situation: a verification-lane performance anomaly"
+    - "information_object: two independent measurement data without one comparison object"
+    - "none: compiler-specific telemetry with no stable record identity"
+  existential_dependencies:
+    - "The standalone and lane-rerun execution measurements compared"
+    - "The task, package, policy, and detection context"
+    - "At least one faithful information carrier"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - "corrected or replaced by a comparison with changed content"
+    - "ceased when no faithful realization remains"
+counterexamples:
+  - description: >-
+      The same pair of duration values can arise for another package or two
+      later executions, while one anomaly can be described in several copied
+      carriers; value equality and carrier identity therefore both fail.
+status: proposed

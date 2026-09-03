@@ -35,6 +35,7 @@ const ambiguousLexicalTransition = LiteralKit(["including", "having"]);
 const isAmbiguousLexicalTransition = S.is(ambiguousLexicalTransition);
 const isOrderedList = S.is(Ol);
 const ambiguousTransitionPrefixPattern = /\b(?:by|for|of|without)\s*$/iu;
+const MAX_PARENT_CLAIM_RANGE_CARDINALITY = 1024;
 
 const ClaimNumberFromString = S.FiniteFromString.pipe(S.decodeTo(PosInt));
 const decodeClaimNumberFromStringOption = S.decodeOption(ClaimNumberFromString);
@@ -339,10 +340,17 @@ const transitionFromClaimText = (claimText: string): O.Option<RegExpMatchArray> 
     })
   );
 
-const claimReferencesFromMatch = (match: RegExpMatchArray): O.Option<ReadonlyArray<PosInt>> =>
+const isPriorClaimNumber = (currentClaimNumber: PosInt, candidate: PosInt): boolean =>
+  Num.isLessThan(candidate, currentClaimNumber);
+
+const claimReferencesFromMatch = (
+  match: RegExpMatchArray,
+  currentClaimNumber: PosInt
+): O.Option<ReadonlyArray<PosInt>> =>
   pipe(
     A.get(match, 1),
     O.flatMap(parseClaimNumber),
+    O.filter((start) => isPriorClaimNumber(currentClaimNumber, start)),
     O.flatMap((start) =>
       pipe(
         O.fromUndefinedOr(match[2]),
@@ -351,7 +359,12 @@ const claimReferencesFromMatch = (match: RegExpMatchArray): O.Option<ReadonlyArr
           onSome: (endText) =>
             pipe(
               parseClaimNumber(endText),
-              O.filter((end) => Num.isGreaterThanOrEqualTo(end, start)),
+              O.filter(
+                (end) =>
+                  Num.isGreaterThanOrEqualTo(end, start) &&
+                  isPriorClaimNumber(currentClaimNumber, end) &&
+                  Num.sum(Num.subtract(end, start), 1) <= MAX_PARENT_CLAIM_RANGE_CARDINALITY
+              ),
               O.map((end) => A.map(A.range(start, end), (value) => PosInt.make(value)))
             ),
         })
@@ -359,7 +372,7 @@ const claimReferencesFromMatch = (match: RegExpMatchArray): O.Option<ReadonlyArr
     )
   );
 
-const parentClaimNumbers = (preamble: string): O.Option<ReadonlyArray<PosInt>> =>
+const parentClaimNumbers = (preamble: string, currentClaimNumber: PosInt): O.Option<ReadonlyArray<PosInt>> =>
   pipe(
     Str.match(claimReferenceMarkerPattern)(preamble),
     O.match({
@@ -367,10 +380,18 @@ const parentClaimNumbers = (preamble: string): O.Option<ReadonlyArray<PosInt>> =
       onSome: (marker) => {
         const markerIndex = pipe(O.fromUndefinedOr(marker.index), O.getOrThrow);
         const value = Str.slice(Num.sum(markerIndex, Str.length(marker[0])))(preamble);
-        const matches = A.fromIterable(Str.matchAll(claimReferencePattern)(value));
-        return A.isReadonlyArrayEmpty(matches)
-          ? O.none()
-          : pipe(A.map(matches, claimReferencesFromMatch), O.all, O.map(flow(A.flatten, A.dedupe)));
+        let expanded: ReadonlyArray<PosInt> = A.empty();
+        let expandedCount = 0;
+        let matched = false;
+        for (const match of Str.matchAll(claimReferencePattern)(value)) {
+          matched = true;
+          const references = claimReferencesFromMatch(match, currentClaimNumber);
+          if (O.isNone(references)) return O.none();
+          expandedCount = Num.sum(expandedCount, A.length(references.value));
+          if (expandedCount > MAX_PARENT_CLAIM_RANGE_CARDINALITY) return O.none();
+          expanded = A.appendAll(expanded, references.value);
+        }
+        return matched ? O.some(A.dedupe(expanded)) : O.none();
       },
     })
   );
@@ -395,7 +416,7 @@ const parseClaim = Effect.fn("PatentDocument.parseClaim")(function* (
   const transitionStart = pipe(O.fromUndefinedOr(transitionMatch.index), O.getOrThrow);
   const preamble = Str.trim(Str.slice(0, transitionStart)(claimText));
   const body = Str.trim(Str.slice(transitionStart + transitionMatch[0].length)(claimText));
-  const references = yield* Effect.fromOption(parentClaimNumbers(preamble), () =>
+  const references = yield* Effect.fromOption(parentClaimNumbers(preamble, claimNumber), () =>
     PatentDocumentNormalizationError.make({
       message: `Claim ${claimNumberText} contains an invalid parent-claim reference.`,
       reason: "invalid-claim",

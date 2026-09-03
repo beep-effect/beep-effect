@@ -1,0 +1,35 @@
+id: ic:pa-projection-conformance-evidence-alt:001
+hypothesis_ref: dh:pa-projection-conformance-evidence:001
+identity:
+  supplies_identity: true
+  identity_criterion: Two projection-conformance evidence objects are the same iff they are
+    the same report of differential-replay and property-suite results about the same frozen
+    journal and projection under the same obligations. A PASS sentence is not identity with
+    the projection being correct. Byte identity of a report file is evidence of the same encoding,
+    not by itself the criterion of the evidence individual.
+  reidentification_key:
+  - replay verdict text (evidence)
+  - frozen journal reference (evidence)
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: one replay/property-suite report about one frozen input and one projection
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - event
+  existential_dependencies:
+  - the projection under test
+  - the frozen journal replayed
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+- description: PASS — all 41 admitted events matched is compatible with a true world and with
+    a false report; treating the green result as the projection's correctness is evidence-is-truth.
+- description: The impl-report and the replay-evidence note could be two encodings of one
+    census or two evidence objects; the observations do not say.
+status: proposed

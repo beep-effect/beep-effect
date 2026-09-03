@@ -1,0 +1,33 @@
+id: ic:pb-failure-attribution-category-alt:001
+hypothesis_ref: dh:pb-failure-attribution-category:001
+identity:
+  supplies_identity: unresolved
+  identity_criterion: 'unresolved: the observations instruct attribution into four labels
+    before repair but give no criterion of sameness for a category, no tests for membership,
+    and no fact about whether a failure can change attribution while remaining that failure'
+  reidentification_key: []
+ontoclean:
+  rigidity: unresolved
+  carries_identity: unresolved
+  supplies_identity: unresolved
+  unity: ''
+  dependence: unresolved
+ufo_analysis:
+  candidate_category: unresolved
+  alternatives:
+  - quality
+  - role
+  - none
+  existential_dependencies:
+  - the verification failure being attributed
+temporality:
+  exists_during_interval: unresolved
+  may_change_state_without_losing_identity: unresolved
+  terminal_states: []
+counterexamples:
+- description: The four labels introduced / inherited / unrelated / environment-only can be
+    a nominal quality, a role relative to a branch, or an unanalyzed checklist vocabulary;
+    the instruction does not discriminate.
+- description: If a failure classified as inherited is later re-attributed as introduced,
+    anti-rigid role/phase is favored; no such observation exists.
+status: proposed

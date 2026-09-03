@@ -308,9 +308,7 @@ const WikidataSearchResponse = S.Struct({
   search: S.Array(WikidataSearchResult),
   success: NonNegativeInt.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   "search-continue": NonNegativeInt.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-}).pipe(
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
-);
+}).pipe(SchemaUtils.withCodecStatics(["decodeUnknownEffect"]));
 
 const WikidataEntityText = S.Struct({
   value: S.String,
@@ -342,7 +340,11 @@ const calculateScore = (
   _totalResults: number
 ): number => {
   const queryLower = Str.trim(Str.toLowerCase(query));
-  const labelLower = Str.trim(Str.toLowerCase(O.getOrElse(result.label, () => result.title)));
+  const labelLower = result.label.pipe(
+    O.getOrElse(() => result.title),
+    Str.toLowerCase,
+    Str.trim
+  );
   const matchText = Str.trim(Str.toLowerCase(result.match.text));
 
   // Base score from match type

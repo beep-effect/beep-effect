@@ -659,9 +659,7 @@ export const loadJsonl = Effect.fn("DatasetLoader.loadJsonl")(function* (
   const records = yield* Effect.forEach(
     lines,
     (line) =>
-      loadOptions.skipInvalid
-        ? Effect.option(parseJson(line, location))
-        : Effect.map(parseJson(line, location), O.some),
+      loadOptions.skipInvalid ? Effect.option(parseJson(line, location)) : Effect.asSome(parseJson(line, location)),
     { concurrency: 1 }
   ).pipe(Effect.map(A.getSomes));
 

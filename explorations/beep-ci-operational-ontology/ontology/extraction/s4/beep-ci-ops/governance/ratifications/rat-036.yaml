@@ -1,0 +1,10 @@
+id: rat:36
+proposal_ref: otp:pa-fallow-audit-evidence:002
+proposal_sha256: 3d4af1e9f8594b88abf5affcc9f1962956b2ba35e5d68b16952e5d5579f01818
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-09-03T09:05:00Z'
+verbatim_decision: Accept the FallowAuditLane reuse — the ratified lane specification carries the Fallow
+  case.

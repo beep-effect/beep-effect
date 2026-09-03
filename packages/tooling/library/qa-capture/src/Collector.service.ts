@@ -271,7 +271,7 @@ const makeService = Effect.fnUntraced(function* () {
   const readHandleFile = (handlePath: string): Effect.Effect<O.Option<CollectorHandle>> =>
     fs.readFileString(handlePath).pipe(
       Effect.flatMap(decodeCollectorHandleJson),
-      Effect.map(O.some),
+      Effect.asSome,
       Effect.catchCause(() => Effect.succeedNone)
     );
 

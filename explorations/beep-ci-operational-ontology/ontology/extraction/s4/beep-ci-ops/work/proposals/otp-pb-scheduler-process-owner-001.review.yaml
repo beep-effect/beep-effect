@@ -1,0 +1,52 @@
+target: "otp:pb-scheduler-process-owner:001"
+target_sha256: "5803d7152b0f97919960b92f9384f8e73c40b1ca6e399a616b69a76fe5a654e6"
+chain_sha256: "8713d51b2738fd04cca064625e73aaa1a3b39d859d72079120e046c43e2f1a33"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: "The proposal asserts no candidate is-a edge."
+revision_requests:
+  - >-
+    Address role-token-bearer-identity-conflict by treating Agent as the same
+    process bearer while it enters or leaves the scheduler-owner role, with
+    process continuity supplying identity, or mint a separately named
+    SchedulerOwnership relator/mode whose identity includes the owned item.
+attacks:
+  - surface: identity
+    rule: role-token-bearer-identity-conflict
+    counterexample: >-
+      One causally continuous process can own two live requests at once or
+      release one and acquire another. CQ-021 should still return the same
+      Agent bearer, but the criterion's same-owned-item requirement creates a
+      different role token for each relation and therefore does not match the
+      reused Agent class.
+    outcome: landed
+  - surface: warrant
+    rule: decision-cq-requires-term
+    counterexample: >-
+      CQ-021 explicitly asks which Agent owns each queued SeatRequest through
+      requestedBy, so the owner bearer is a required decision term rather than
+      an optional implementation coordinate.
+    outcome: survived
+  - surface: null_discriminator
+    rule: discriminator-false-in-null-world
+    counterexample: >-
+      A serialized pid/procStart tuple can be a pure information artifact, but
+      PID reuse makes the tuple insufficient unless it tracks distinct real
+      process lifetimes. The cited reidentification requirement therefore
+      preserves a process-owner referent beyond the fields.
+    outcome: survived
+rival_models_still_viable:
+  - "Agent is the operating-system process bearer classified by an anti-rigid role."
+  - "A scheduler ownership relator or mode is distinct from Agent."
+  - "The serialized owner-coordinate information object deserves a separate term only if decision-bearing."
+evidence:
+  - "po:sha256:5f469b32b1a76b6af2b9ebbed7334996404ec4029d63bca140ebd2a796e0ba87"
+  - "po:sha256:7debc0657f601d5714b767d284e75c22c236b1da704789e970affedec30e3a1b"
+  - "CQ-021"

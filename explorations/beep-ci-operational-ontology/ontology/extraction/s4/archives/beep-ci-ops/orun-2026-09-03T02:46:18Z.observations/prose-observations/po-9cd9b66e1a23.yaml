@@ -1,0 +1,10 @@
+id: po:sha256:9cd9b66e1a2335a52fcc44086f95092406c75898e149c5ac63ed773aa36da974
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts
+source_span:
+  start_line: 70
+  end_line: 73
+quote: LiteralKit(["readonly", "write", "publish"])
+epistemic_status: quoted_prose

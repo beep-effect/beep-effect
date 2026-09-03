@@ -249,6 +249,41 @@ def test_square_face_crop_is_unaligned_deterministic_and_padded() -> None:
     assert adaface.DFA_CONFIDENCE_THRESHOLD == 0.2
 
 
+@pytest.mark.parametrize(
+    "box",
+    [
+        np.array([0.0, 0.0, np.inf, 4.0, 0.9]),
+        np.array([4.0, 4.0, 2.0, 2.0, 0.9]),
+    ],
+)
+def test_square_face_crop_rejects_invalid_detector_coordinates(box: np.ndarray) -> None:
+    image = np.full((8, 12, 3), 200, dtype=np.uint8)
+
+    with pytest.raises(WorkerError) as raised:
+        adaface.AdaFaceAnalysis._square_face_crop(image, box)
+
+    assert raised.value.code == "worker-failed"
+
+
+def test_adaface_detection_requests_the_face_limit() -> None:
+    calls: list[int] = []
+    detector = SimpleNamespace(
+        detect=lambda _image, max_num, metric: (calls.append(max_num) or (None, None))
+    )
+    analysis = adaface.AdaFaceAnalysis(
+        detector=detector,
+        aligner=object(),
+        recognizer=object(),
+        priors=object(),
+        torch=object(),
+        device=object(),
+        batch_size=1,
+    )
+
+    assert analysis.get(np.zeros((1, 1, 3), dtype=np.uint8)) == []
+    assert calls == [32]
+
+
 def test_piecewise_index_matches_pinned_upstream_for_all_grid_offsets() -> None:
     torch = pytest.importorskip("torch", exc_type=ImportError)
     offsets = torch.arange(-13, 14, dtype=torch.float32)
@@ -724,7 +759,8 @@ def test_run_worker_selects_adaface_backend_and_emits_v2_protocol(
 
     report = worker.run_worker(arguments, time.perf_counter())
 
-    assert report["schemaVersion"] == "beep.files.match-person.worker.v2"
+    assert report["schemaVersion"] == "beep.files.match-person.worker.v3"
+    assert report["limits"] == worker.WORKER_LIMITS
     assert report["model"] is model_payload
     assert report["parameters"] == {
         "backend": "adaface-kprpe",

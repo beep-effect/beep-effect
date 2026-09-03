@@ -1,0 +1,9 @@
+id: rat:37
+proposal_ref: otp:pa-package-dependency-closure:001
+proposal_sha256: 5c5f46f18f8467fe84c87d533d92d0349adfaa10f4df5343a2db2959a5c16137
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-09-03T09:05:00Z'
+verbatim_decision: Accept dependsOnTransitive — the closure property CQ-004/CQ-019 traverse.

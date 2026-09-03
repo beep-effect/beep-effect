@@ -650,3 +650,162 @@ semantic finding and becomes run-2 evidence. This is the loop-closer's proof
 and seeds the S9 dogfood.
 
 Binding contract: `ontology/docs/s7-projection-contract.md`.
+
+## 2026-09-02 — auditor run-2 launch grill (nine rulings, steward: Benjamin)
+
+Grilled after the S7 lane closed (#936, #940 merged) and the intake docket landed
+(`research/auditor-run2-intake.md`). All nine resolved to the recommended arm;
+frontier closed in two rounds.
+
+**Ruling 1 — no TypeScript re-extraction in run 2.** The run-1 TS engine used the
+compiler API and cannot execute in the #902 stdlib-only python3 sandbox. Run 2 is
+re-adjudication: parked candidates ride their run-1 SourceObservations through the
+prior-index chain; new vocabulary grounds in journal/verdict NDJSON, emitted `.ttl`
+outputs, and prose. TS adapter v1.1.0 is deferred until a run needs new TS
+observations. Rejected: a stdlib-Python TS adapter (fidelity downgrade from the
+compiler API) and extending the sandbox runner upstream first (re-opens the closed
+skill-hardening loop and delays the run).
+
+**Ruling 2 — fresh journal/verdict corpus capture, S6 choreography.** Capture the
+live journals now (attempt ring buffers self-erase), redact per the S6 rules, and
+commit the raw snapshot beside the S6 precedent (`extraction/s6/snapshot/raw/`).
+This is what grounds the 149 waiver-parked measurement/episode rows. Rejected:
+reusing only the 79-event S6 snapshot (most rows could not discharge; another
+unresolved-fraction waiver likely) and adding a historical-evidence sweep
+(bigger ETL/redaction surface than the docket needs).
+
+**Ruling 3 — full docket, one run.** All five intake buckets (149 re-opened rows,
+163 parked candidates, 76 ledger rows, 4 waived constraints + VerificationLane,
+six S6 gaps + the ciops-prov re-proposal) go through run 2. Rejected: a core-first
+run with `carried_from_prior` retirement of the tail.
+
+**Ruling 4 — seats keep the run-1 assignment.** Denotation/foundational/synthesis
+= codex Sol max; adversary = codex max in an independent context; blinded
+alternative = grok xhigh, now minting `-alt`-namespaced ids per the updated
+prompt. Rejected: routing the blinded seat through the proxy harness (more moving
+parts mid-run) and dropping the main seats to medium effort.
+
+**Ruling 5 — validator v13 as-is; no upstream skill amendments.** Adapter v1.1.0
+mirrors v13 exactly; the JSON pairing-grammar limitation stays a recorded honest
+under-emission, and its fix queues as a skill follow-up outside this run.
+Rejected: amending the validator first (re-opens the engine surface mid-packet).
+
+**Ruling 6 — run 2 executes on `ontology-run2-prep`.** The branch is fresh off
+current main and already carries the intake docket. Rejected: minting a
+differently-named branch with the docket cherry-picked (same content, extra
+choreography).
+
+**Ruling 7 — ratification via clustered dockets, S5 style.** As each docket
+bucket clears the mechanical gate, the steward sits over a suggested-disposition
+table clustered by kind (bulk default + individually pulled contested rows);
+rulings scribed per sitting. Rejected: one end-of-run marathon sitting and rigid
+per-bucket sittings regardless of kind clustering.
+
+**Ruling 8 — one end-of-run PR, #889 choreography.** Pin commit (corpus +
+adapters + goldens + scribe), frozen HEAD through the run with `work/` untracked,
+final commit of run artifacts + ratifications, single PR babysat to merge-ready;
+merge readiness = checks + threads + GitHub mergeability (Greptile cannot score
+at this size). Steward merges. Rejected: an infrastructure PR merged to main
+before the run (blocks the stint on a mid-way merge cycle).
+
+**Ruling 9 — corpus breadth is the local fleet sweep.** All beep-effect checkouts
+on the workstation feed the capture (attempt journals, verdict artifacts,
+admission/transition journals), matching the fleet-aggregated KPI framing.
+Rejected: primary-checkout-only capture.
+
+## 2026-09-03 — run-2 sitting 1 (adversary round-1 adjudication, steward: Benjamin)
+
+Docket: 45 adversary reviews (36 FAIL / 4 INDETERMINATE / 5 PASS), 100 landed
+attacks audited for validity (80 demonstrated / 20 invalid; full grounds in the
+run's work/review-audit/validity-report.md, committed with the run artifacts).
+All three cluster rulings resolved to the audit split; the 20 invalid attacks
+are STRUCK, including the entire landed basis of otp:pa-docgen-work-unit:001
+(misread CQ-002 as satisfiable by a nonempty subset) and
+otp:pa-turbo-task-specification:001 (used the superseded WorkUnit spelling to
+evade the ratified specification/execution split) — both retire at re-review.
+
+**Ruling 1 — warrant-necessity cluster:** revision removes unnecessary support
+edges and remaps warrants to the CQs that actually require them; helper classes
+whose only case is implementation usefulness are conceded as undefendable from
+current evidence (unresolved, run-3 evidence named); five strikes ratified
+(attacks treating exact-reused ratified decision terms as optional new
+subclasses).
+
+**Ruling 2 — dto-discriminator cluster:** remaining measurement/capacity claims
+recast as recorded-value information objects with only evidence-backed joins
+(the run-1 'measurements are recorded values' precedent governs);
+record-vs-process and content-vs-token choices lacking corpus joins conceded
+with exact run-3 evidence named; eleven strikes ratified (carrier-only attacks
+against already-supported record/specification content, schedulesSeatRequest
+among them).
+
+**Ruling 3 — identity-card cluster:** demonstrated card defects fixed in
+revision (cross-wired composite evidence, grain conflicts, child-supplied
+identity over an identity-supplying parent); the three co-denoting S7 contract
+proposals consolidate; named boundary choices (ScheduleStep content/token,
+lease relator/lifecycle, package lineage, evidence claim/carrier) conceded
+until provenance exists; four strikes ratified. A concession means unsupported
+now, never false.
+
+## 2026-09-03 — run-2 sitting 2 (carried-row adjudication, steward: Benjamin)
+
+Docket: the 149 carried prior-index rows (run-1 observations that cannot re-emit
+under the run-2 pin), clustered into 15 referent groups against the run-2
+surface (`work/sittings/carried-rows-docket.md` + `carried-clusters.yaml`,
+committed with the run artifacts). All three rulings resolved to the docket's
+recommendation.
+
+**Ruling 1 — supersession retirements (94 rows, 9 clusters):** measurements,
+attempt/execution structure, failure verdicts, merge readiness, origin-key,
+package topology, work-unit specifications, and plan control/ordering retire as
+irrelevant with per-cluster supersession reasons — the vocabulary lives on in
+named run-2 proposals and is judged there, not through obsolete run-1
+observation identities.
+
+**Ruling 2 — wrapper retirements (52 rows, 4 clusters):** gate-staleness result
+variants, watch-stream event records, monitor rerun-decision records, and
+quality report/config containers retire as ontology-irrelevant for v1 —
+transport/controller/DTO wrappers with no Must/Should CQ warrant, their
+underlying verification and merge outcomes modeled elsewhere. This closes what
+run 1 only parked; any future warrant re-enters through a fresh observation
+chain.
+
+**Ruling 3 — keep-unresolved (3 rows, 2 clusters):** grant-resource contention
+(2) and fleet checkout identity (1) stay open with the docket's named run-3
+corpus requirements: a joinable admission/lock event corpus carrying grant
+identity, resource path, acquisition/release instants, and contention outcome
+in one provenance chain; and a timestamped fleet inventory binding checkout
+identity to root, origin, branch/worktree, and shared-cache mounts for the
+CQ-015 evidence-transfer bearer.
+
+## 2026-09-03 — run-2 sitting 3 (ratification docket, steward: Benjamin, locked via /grill-with-docs)
+
+Docket: 44 converged proposals (final reviews 21 PASS / 23 INDETERMINATE / 0 FAIL after
+three adversary rounds) presented as ratify-candidates (17), flagged submissions (6),
+and withdrawals (21 + the stale-review conformance-evidence chain). The grill surfaced
+one defect in the docket itself before locking: `hasStep` and `stepIndex` both bind
+`ScheduleStep`, which is withdrawn and unratified, and share the pinned CQ-020 wording
+problem — ratifying them would mint the `admittedBy` defect class into the taxonomy.
+
+**Ruling 1 — ordering pair deferred:** `hasStep` and `stepIndex` join the run-3
+deferral; the full ordering cluster (ScheduleStep and its four relations) ratifies
+together after the CQ-020 wording amendment. No dangling ends enter the taxonomy.
+
+**Ruling 2 — 15 ratify-candidates adopted as drafted:** per-proposal verbatim decisions
+scribed into rat-032..rat-046 (FailureSignature, VerificationAttempt, the SeatRequest /
+DocgenAffectedWorkUnit / FallowAuditLane / WorkUnitSpecification / VerificationLane
+reuses, dependsOnTransitive, four AdmissionPolicy component-content mappings, dependsOn
+as a plain property, resolved CachePosture as a recorded value, Agent as the anti-rigid
+admission-owner role) — the last three carrying the sitting's seat-dispute rulings
+(none over relator; information_object over mode; role over kind).
+
+**Ruling 3 — 6 flagged submissions adopted as drafted:** rat-047..rat-052 accept reuse
+mappings onto ratified evidence/plan/priority classes with identity-provenance choices
+explicitly deferred to run 3 as flagged.
+
+**Closure:** the 24 withdrawn/deferred proposals and their reviews were removed per the
+run-1 close precedent (bytes preserved in git history); their observation rows re-parked
+with named run-3 evidence; the unresolved-fraction waiver (56%, every park adjudicated
+at sittings 1-3) entered the manifest; post-scribe gate: ARTIFACTS VALID — GATE PASSED,
+flags only. Run rotated to runs/orun-2026-09-03T02:46:18Z (observations archived under
+extraction/s4/archives/ per the v13 scanner-defect relocation).

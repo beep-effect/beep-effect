@@ -1,0 +1,10 @@
+id: po:sha256:38891f55c44cf3045cd6625fb9da228941fb75d9ce85e80a033aa94381dc034a
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: .fallowrc.jsonc
+source_span:
+  start_line: 329
+  end_line: 329
+quote: '"maxCognitive": 8'
+epistemic_status: quoted_prose

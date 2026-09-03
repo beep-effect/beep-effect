@@ -1,0 +1,20 @@
+id: fa:pb-resolved-cache-posture-alt:001
+hypothesis_ref: dh:pb-resolved-cache-posture:001
+identity_card_ref: ic:pb-resolved-cache-posture-alt:001
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+- label: quality of the invocation (a value in a quality structure)
+  still_viable: true
+- label: cache-plan value object / information object only
+  still_viable: true
+strongest_counterexample: 'Mode versus quality is a fine UFO fork: both existentially depend
+  on the invocation and characterize it. Information-object remains viable because the only
+  observation is a comment on a TypeScript decision type. The models are observationally close.'
+verdict: analyzed
+needed_evidence: An observation that posture is attributed to the running invocation as a
+  characterizing particular (mode/quality) versus passed around only as a value object after
+  the function returns.

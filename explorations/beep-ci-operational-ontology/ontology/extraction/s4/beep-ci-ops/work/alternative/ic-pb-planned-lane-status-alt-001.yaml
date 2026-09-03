@@ -1,0 +1,34 @@
+id: ic:pb-planned-lane-status-alt:001
+hypothesis_ref: dh:pb-planned-lane-status:001
+identity:
+  supplies_identity: true
+  identity_criterion: Two planned-lane status records are the same iff they are the same status-and-repair
+    assertion about the same planned yeet lane in the same attempt. The schema description
+    'execution status of one planned yeet lane' is aboutness evidence. The lane execution,
+    if it occurred, is not this record.
+  reidentification_key:
+  - lane id (evidence)
+  - durationMs (evidence of a measured run)
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: one status/repair-command assertion about one planned lane in one attempt
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - event
+  existential_dependencies:
+  - the planned lane
+  - the attempt whose verdict carries the record
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+- description: optional durationMs is absent when there was no measured run; identifying the
+    record with the execution would make those rows non-individuals.
+- description: An in-memory verdict DTO can encode the same record; the DTO is a carrier,
+    not a second lane-status individual.
+status: proposed

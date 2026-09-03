@@ -1,0 +1,10 @@
+id: po:sha256:d472fc9b1acf4a14fa15d543c6aec21ea9646c9fec3fd503013a0102e57c2e22
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts
+source_span:
+  start_line: 77
+  end_line: 80
+quote: export const TurboConfigProofSelectorMode = LiteralKit(TURBO_CONFIG_PROOF_SELECTOR_VALUES).pipe(
+epistemic_status: quoted_prose

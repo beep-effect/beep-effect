@@ -1,0 +1,31 @@
+id: "fa:ov-step-index:001"
+hypothesis_ref: "dh:ov-step-index:001"
+identity_card_ref: "ic:ov-step-index:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+  - label: >-
+      Reify a proposal-relative ordinal-position mode rather than treating the
+      integer as the object of a data assertion.
+    still_viable: true
+  - label: >-
+      Model ordered membership as a proposal-step-position situation carrying
+      provenance and derive stepIndex from it.
+    still_viable: true
+  - label: >-
+      Represent order with successor or precedence relations and derive all
+      numeric indices outside OWL.
+    still_viable: true
+  - label: >-
+      stepIndex is only an array offset whose value has no correctness
+      conditions outside the projection implementation.
+    still_viable: false
+strongest_counterexample: >-
+  A projected step at index one can correspond to a later actual grant, and
+  arbitrarily many proposals each contain a distinct index-one assertion;
+  therefore the number is proposal-relative recorded order, not execution
+  identity, occurrence chronology, or an independently identified quality.
+verdict: analyzed

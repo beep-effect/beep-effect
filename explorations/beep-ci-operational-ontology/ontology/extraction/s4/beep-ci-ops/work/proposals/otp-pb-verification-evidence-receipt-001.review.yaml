@@ -1,0 +1,69 @@
+target: "otp:pb-verification-evidence-receipt:001"
+target_sha256: "41d4308b9b163d3d7777639d592c6084e1b8d83308e67fb3694d1c5c82cd4492"
+chain_sha256: "658e026f1345083f1d4ad1e0b9d285b7e6fb7a4708072a10dc0c091258640204"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: "The proposal asserts no candidate is-a edge."
+revision_requests:
+  - >-
+    Address exact-reuse-extension-narrowing by retaining the ratified
+    VerificationEvidence extension broad enough for non-replay evidence, or
+    model this S7 replay receipt as a separately warranted subtype or
+    individual rather than replacing the exact-reused class definition.
+  - >-
+    Resolve whether identity follows an abstract claim/content lineage or a
+    concrete receipt issuance/carrier token before asserting one supplying
+    criterion for the reused class.
+attacks:
+  - surface: identity
+    rule: exact-reuse-extension-narrowing
+    counterexample: >-
+      A hosted-check evidence record can prove a tree in an epoch and answer
+      CQ-005 without containing an S7 replay outcome, mismatch census, or
+      frozen replay corpus. It belongs to the broad ratified
+      VerificationEvidence class but fails this replay-receipt definition.
+    outcome: landed
+  - surface: identity
+    rule: claim-content-carrier-identity-unresolved
+    counterexample: >-
+      Two separately issued files may carry byte-equal claims and provenance,
+      while one abstract evidence claim may have several faithful carriers.
+      The primary and blinded analyses choose different issuance/content
+      emphases, so the proposal has not fixed which pairs are identical.
+    outcome: landed
+  - surface: warrant
+    rule: decision-cq-requires-term
+    counterexample: >-
+      CQ-005 explicitly ranges over VerificationEvidence records whose
+      validity is queried, and CQ-015 takes one such proof as a bound argument;
+      both require the broad evidence term.
+    outcome: survived
+  - surface: warrant
+    rule: decision-cq-requires-term
+    counterexample: >-
+      CQ-015 cannot ask whether a given proof is transferable without a
+      VerificationEvidence bearer linked to its epoch and cache, so the second
+      cited CQ is substantive rather than a listing mention.
+    outcome: survived
+  - surface: null_discriminator
+    rule: discriminator-false-in-null-world
+    counterexample: >-
+      A generated report can be a mere carrier, but once its immutable bytes
+      record a replay outcome and are consumed under digest-locked custody by
+      named gates, it is itself decision-bearing evidence. The incidental-file
+      null twin therefore loses the aboutness and custody facts.
+    outcome: survived
+rival_models_still_viable:
+  - "VerificationEvidence primarily denotes an abstract evidence claim."
+  - "A digest-bound receipt token realizes that claim but has separate identity."
+evidence:
+  - "po:sha256:7b0afae312843e4da0ff5628da56e5201bcc40f7d0221fa8f4b92e74637b90b3"
+  - "CQ-005"
+  - "CQ-015"

@@ -10,6 +10,8 @@ import type * as PlatformError from "effect/PlatformError";
 
 const repoRoot = fileURLToPath(new URL("../../../../../", import.meta.url));
 const hookPath = `${repoRoot}.claude/hooks/yeet-inbox.sh`;
+const environmentOnlyAckForm = '--environment-only --reason "<text>"';
+const wontfixAckForm = '--wontfix --reason "<text>"';
 
 const JsonObject = S.fromJsonString(S.Record(S.String, S.Unknown));
 const decodeObject = S.decodeUnknownSync(JsonObject);
@@ -185,6 +187,9 @@ describe("Yeet inbox harness adapter", () => {
           expect(first.stdout).toContain("P1 thread-1 [thread-live]");
           expect(first.stdout).toContain("P2 origin/main [drift-live]");
           expect(first.stdout).not.toContain("lint-stale");
+          expect(decodeObject(first.stdout)).toMatchObject({
+            hookSpecificOutput: { additionalContext: expect.stringContaining(wontfixAckForm) },
+          });
           expect(second.stdout).toBe("");
         })
       ).pipe(provideTestLayer),
@@ -288,7 +293,13 @@ describe("Yeet inbox harness adapter", () => {
             })).stdout
           );
 
-          expect(stop).toMatchObject({ decision: "block" });
+          expect(stop).toMatchObject({
+            decision: "block",
+            reason: expect.stringContaining(wontfixAckForm),
+          });
+          expect(stop).toMatchObject({
+            reason: expect.stringContaining(environmentOnlyAckForm),
+          });
 
           yield* ack("coverage-live");
           const clearStop = decodeObject(

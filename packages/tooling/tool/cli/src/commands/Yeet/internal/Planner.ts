@@ -20,9 +20,9 @@ import {
   RepoPlanStep,
   RepoPlanWave,
   RepoRunPlan,
-  repoProofStepDefinition,
   TurboPlanSnapshot,
-} from "../../../internal/repo-run/index.ts";
+} from "../../../internal/repo-run/RepoRun.models.ts";
+import { repoProofStepDefinition } from "../../../internal/repo-run/RepoRun.proofs.ts";
 import {
   githubCheckChangesetStatusLane,
   githubCheckCheapGateLanes,
@@ -33,7 +33,7 @@ import {
   githubCheckRepoSanityLanes,
 } from "../../Quality/internal/GithubChecks.ts";
 import { HEAD_INSTALL_PREFLIGHT_STEP_ID } from "./HeadInstallPreflight.ts";
-import type { RepoRunContext, TurboPlanTask } from "../../../internal/repo-run/index.ts";
+import type { RepoRunContext, TurboPlanTask } from "../../../internal/repo-run/RepoRun.models.ts";
 import type { GithubCheckLaneSpec } from "../../Quality/Quality.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/Planner");

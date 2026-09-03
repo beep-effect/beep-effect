@@ -1,0 +1,10 @@
+id: po:sha256:dfe72174d596ac1cfa3ee2607b102893e4fa55a81d45bcf6f3c3e4783533a084
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts
+source_span:
+  start_line: 83
+  end_line: 87
+quote: LiteralKit(["pending", "pass", "fail", "skip"])
+epistemic_status: quoted_prose

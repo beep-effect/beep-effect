@@ -1,0 +1,57 @@
+target: "otp:pb-admission-priority-class:001"
+target_sha256: "184e7f65be7bfaa42a7c448f37d80db2cbe1227c9e3fc59615d1a70b599917bf"
+chain_sha256: "f2073f7fdee15d6b3671d5e977b7805471f371745b47219fc48e347a1d24add1"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: "The proposal asserts no candidate is-a edge."
+revision_requests:
+  - >-
+    Address role-rigidity-unsupported by retaining the ratified unresolved
+    rigidity/category or by citing an observed live request reclassification
+    that proves anti-rigidity and relational role dependence.
+  - >-
+    Address discriminator-true-of-enum-dispatch with a fact that would be
+    false for an implementation-only priority field and sort branch, or leave
+    the null unrejected.
+attacks:
+  - surface: identity
+    rule: role-rigidity-unsupported
+    counterexample: >-
+      A request may receive verify or publish once at creation and retain that
+      classification for its whole lifetime; the only observed later change
+      is effective rank, not the recorded class. Such data are compatible
+      with a rigid quality or controlled vocabulary, so the anti-rigid role
+      assertion outruns the evidence.
+    outcome: landed
+  - surface: warrant
+    rule: decision-cq-requires-term
+    counterexample: >-
+      CQ-021 explicitly projects the priority class of every queued request
+      through hasPriorityClass; eliminating AdmissionPriorityClass would make
+      that required answer component untyped.
+    outcome: survived
+  - surface: null_discriminator
+    rule: discriminator-true-of-enum-dispatch
+    counterexample: >-
+      An implementation-only verify/publish field can be non-interchangeable,
+      drive publish-before-verify sorting, and participate in an aging
+      comparator. Those consequences do not distinguish a request-borne role
+      from a LiteralKit plus branch logic.
+    outcome: landed
+rival_models_still_viable:
+  - "AdmissionPriorityClass is a controlled-vocabulary information object."
+  - "It is an intrinsic quality or phase rather than a relational role."
+  - "The recorded class is rigid over a SeatRequest's lifetime."
+evidence:
+  - "po:sha256:60e90bd17b628d4d6d815cfd05ddcf88cbc2a724790b05ac88b4411619f535be"
+  - "po:sha256:6b2e1d71b18197d5aabdde8f443d63fb71885b277f825b9ad13103f0de607a29"
+  - "po:sha256:7a127886ce9cd789e25ca288274377e644ebfc27da768ca939e258cb40dc81cd"
+  - "po:sha256:a5337050b11a15f3c1b20a01228366cdf9affbd31a471c391b4d980883be0f5b"
+  - "CQ-021"

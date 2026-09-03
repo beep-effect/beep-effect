@@ -1,0 +1,10 @@
+id: rat:45
+proposal_ref: otp:pb-scheduler-process-owner:001
+proposal_sha256: 7000aa9694afcfb93ac19eb21349b898937043f5169c05c747916cfa758312c6
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-09-03T09:05:00Z'
+verbatim_decision: Accept Agent as the anti-rigid admission-owner role on a continuous OS-process bearer
+  — role, not kind.

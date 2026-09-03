@@ -1,0 +1,21 @@
+id: fa:pa-package-dependency-closure-alt:001
+hypothesis_ref: dh:pa-package-dependency-closure:001
+identity_card_ref: ic:pa-package-dependency-closure-alt:001
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+- label: no domain individual — derived formal relation / query predicate
+  still_viable: true
+- label: situation of one package reaching another in a snapshot
+  still_viable: true
+strongest_counterexample: The pre-glossary calls it a Datalog fixpoint over dependsOn. That
+  is compatible with reifying each transitive edge as a relator and with treating the closure
+  as a defined predicate with no individuals. The models are observationally equivalent on
+  current evidence.
+verdict: analyzed
+needed_evidence: An observation that transitive edges are asserted, counted, or given their
+  own properties (discovered-via, hop-count) as individuals, versus only queried as a fixpoint
+  over direct dependsOn.

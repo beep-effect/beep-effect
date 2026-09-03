@@ -1,0 +1,10 @@
+id: po:sha256:547677c4325953ad8435621a7bd50418fb75d1d36bebac6977766136d9fa4aae
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: packages/tooling/tool/cli/src/commands/Quality/internal/PackageVerify.ts
+source_span:
+  start_line: 43
+  end_line: 46
+quote: export const PackageVerifyStepName = LiteralKit(VERIFY_STEP_NAMES).pipe(
+epistemic_status: quoted_prose

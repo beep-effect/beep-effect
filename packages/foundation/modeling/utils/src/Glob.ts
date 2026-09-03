@@ -366,8 +366,8 @@ const optionOnNotFound = <A>(
   self: Effect.Effect<A, PlatformError.PlatformError>
 ): Effect.Effect<O.Option<A>, PlatformError.PlatformError> =>
   self.pipe(
-    Effect.map(O.some),
-    Effect.catchIf(isNotFound, () => Effect.succeed(O.none()))
+    Effect.asSome,
+    Effect.catchIf(isNotFound, () => Effect.succeedNone)
   );
 
 const resolveDirectoryFlag = (
@@ -379,7 +379,7 @@ const resolveDirectoryFlag = (
         optionOnNotFound(statSync(absolutePath)),
         O.map((info) => info.type === "Directory")
       )
-    : Effect.succeed(O.some(entry.isDirectory()));
+    : Effect.succeedSome(entry.isDirectory());
 
 const scanDirectory = (
   absoluteDirectoryPath: string,

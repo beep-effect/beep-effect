@@ -1,0 +1,26 @@
+id: "dh:pb-ci-timeout-flake-label:001"
+observation_refs:
+  - "po:sha256:93db5c48fe13c4f8d97d99a07d1e8a1a9b3bdb87fbeabce598204d36e50640f2"
+  - "po:sha256:986d65b9bd0da99d0a49a54cb0742e6a4f4001a3c310c0f509c482c91226ae6e"
+cq_warrants:
+  - "CQ-013"
+proposed_referent:
+  label: "CI-timeout monitor-flake label"
+  description: "A possible lexical label for a monitored CI flake attributed to a timeout."
+representation_status: lexical_alias
+alternatives:
+  - label: "Yeet monitor classifier literal"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+  - label: "CI-timeout failure kind"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observations show that ci-timeout is a member of a LiteralKit named for monitor flake classes, but provide no timeout threshold, observed event, failed step, or delay consequence. The literal may remain an internal classifier value."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.48
+  use_for_acceptance: false

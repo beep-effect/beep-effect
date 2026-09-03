@@ -1,0 +1,44 @@
+id: "ic:pa-package-dependency-closure:001"
+hypothesis_ref: "dh:pa-package-dependency-closure:001"
+identity:
+  supplies_identity: false
+  identity_criterion: >-
+    A transitive package-dependency fact has no independent identity beyond the
+    same ordered package participants under the same direct-dependency graph,
+    closure-rule semantics, and repository-tree context; endpoint names or one
+    supporting path alone are insufficient.
+  reidentification_key:
+    - "source and reachable workspace-package identities"
+    - "direct-dependency graph snapshot"
+    - "closure-rule version and repository-tree context"
+ontoclean:
+  rigidity: rigid
+  carries_identity: false
+  supplies_identity: false
+  unity: >-
+    One ordered reachability fact entailed by a specified closure rule over one
+    direct-dependency graph and repository context.
+  dependence: relational
+ufo_analysis:
+  candidate_category: none
+  alternatives:
+    - "information_object: a materialized dependency-closure assertion set"
+    - "information_object: the Datalog closure-rule specification"
+    - "process: a particular fixpoint computation"
+    - "relator: a reified dependency path with provenance"
+  existential_dependencies:
+    - "The two workspace-package participants"
+    - "The supporting direct-dependency graph"
+    - "The closure rule and repository-tree context"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - "the graph or rule context no longer entails the ordered pair"
+    - "either package participant is replaced in the topology context"
+counterexamples:
+  - description: >-
+      The same package pair can remain transitively related after its supporting
+      dependency path changes, while separate graph snapshots can entail the
+      same endpoints; neither one path nor endpoint spelling supplies identity.
+status: proposed

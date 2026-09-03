@@ -1,0 +1,33 @@
+id: ic:pc-projection-contract-alt:001
+hypothesis_ref: dh:pc-projection-contract:001
+identity:
+  supplies_identity: true
+  identity_criterion: Two binding schedule-projection contracts are the same iff they prescribe
+    the same function from T-Box, A-Box, and live instance data to a WorkUnit schedule, including
+    the same determinism rules (no clock in the core, canonical request ordering, byte-equal
+    Turtle). The document title 'S7 Projection Contract (binding)' is evidence of that specification,
+    not a second individual.
+  reidentification_key:
+  - determinism rules (evidence)
+  - binding-contract header (evidence)
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: one binding prescription of a deterministic projection function and its NFRs
+  dependence: none
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - process
+  existential_dependencies: []
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+- description: Treating the projection instant as Date.now() would merge spec with a run's
+    clock; the contract's explicit-argument rule is the split.
+- description: A process that derives a schedule on a given evening is an execution; identifying
+    it with the binding contract would make the contract unrepeatable.
+status: proposed

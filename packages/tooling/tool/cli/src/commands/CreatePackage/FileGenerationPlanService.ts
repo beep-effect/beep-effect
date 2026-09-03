@@ -697,7 +697,7 @@ export const createFileGenerationPlanService = (): FileGenerationPlanServiceShap
       return yield* pipe(
         absolutePath,
         fs.readFileString,
-        Effect.map(O.some),
+        Effect.asSome,
         Effect.orElseSucceed(O.none<string>),
         Effect.when(pathExists(absolutePath)),
         Effect.map(O.flatten)

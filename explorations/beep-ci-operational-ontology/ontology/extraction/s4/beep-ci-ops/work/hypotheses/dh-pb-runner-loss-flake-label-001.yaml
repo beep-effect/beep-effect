@@ -1,0 +1,26 @@
+id: "dh:pb-runner-loss-flake-label:001"
+observation_refs:
+  - "po:sha256:77c3c594297fa78ef1ff73095e26c54640521d7a75c91be0b49ab4665978dc84"
+  - "po:sha256:93db5c48fe13c4f8d97d99a07d1e8a1a9b3bdb87fbeabce598204d36e50640f2"
+cq_warrants:
+  - "CQ-013"
+proposed_referent:
+  label: "runner-loss monitor-flake label"
+  description: "A possible lexical label for a monitored CI flake attributed to loss of a runner."
+representation_status: lexical_alias
+alternatives:
+  - label: "Yeet monitor classifier literal"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+  - label: "runner-loss failure kind"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observations show that runner-loss is a member of a LiteralKit named for monitor flake classes, but provide no classification condition, observed runner-loss occurrence, failed step, or delay consequence. The literal may remain an internal classifier value."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.48
+  use_for_acceptance: false

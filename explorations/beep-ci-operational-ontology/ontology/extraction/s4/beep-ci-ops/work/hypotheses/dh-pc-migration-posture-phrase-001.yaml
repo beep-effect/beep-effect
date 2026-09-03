@@ -1,0 +1,24 @@
+id: "dh:pc-migration-posture-phrase:001"
+observation_refs:
+  - "po:sha256:fbf6c489eec970f6721e9230714ae66a02b6dacd615e00edefd8a84d7a436e42"
+cq_warrants: []
+proposed_referent:
+  label: "five-bucket migration-posture phrase"
+  description: >-
+    An architectural-document sentence announcing five buckets without
+    quoting the buckets or their relation to verification operations.
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "classification of operational migration states"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: >-
+    The observation omits every bucket and supplies no classified subject,
+    criterion, lifecycle, or competency-question warrant. The heading-like
+    phrase carries insufficient evidence for any domain interpretation.
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.96, use_for_acceptance: false}

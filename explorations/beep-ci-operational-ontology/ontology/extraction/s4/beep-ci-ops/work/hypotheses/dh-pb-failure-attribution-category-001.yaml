@@ -1,0 +1,25 @@
+id: "dh:pb-failure-attribution-category:001"
+observation_refs:
+  - "po:sha256:a0460c0e2b60f310cb30b9c03ea0aa2e487e02aadaa0450c56bb04cff6b5c8c9"
+cq_warrants:
+  - "CQ-013"
+proposed_referent:
+  label: "verification-failure attribution category"
+  description: "The operational classification of a verification failure as introduced, inherited, unrelated, or environment-only before deciding whether to repair it."
+representation_status: domain_referent
+alternatives:
+  - label: "agent workflow checklist vocabulary"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "four prose labels without stable criteria"
+    representation_status: lexical_alias
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: "The instruction makes attribution precede repair and supplies four mutually contrasted outcomes. It therefore describes a decision-relevant classification of observed verification failures rather than a source representation alone, although the classification criteria remain unstated."
+  discriminator: "Whether a failure is introduced, inherited, unrelated, or environment-only changes the instructed decision to repair or report it, so the classification has an operational consequence that would be absent if the four labels were only incidental prose formatting."
+epistemic_status: proposed
+confidence:
+  value: 0.76
+  use_for_acceptance: false

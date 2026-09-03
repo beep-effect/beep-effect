@@ -1,0 +1,10 @@
+id: po:sha256:8af3333c97798f24aeecfa40f40faefcf152f96fffb6717f647eabf0f5250a92
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
+source_span:
+  start_line: 1658
+  end_line: 1658
+quote: 'hardFloorEngaged: availableGib < config.hardFloorGib'
+epistemic_status: quoted_prose

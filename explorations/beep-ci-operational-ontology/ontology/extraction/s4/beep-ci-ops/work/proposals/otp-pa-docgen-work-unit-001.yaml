@@ -1,0 +1,65 @@
+id: "otp:pa-docgen-work-unit:001"
+hypothesis_ref: "dh:pa-docgen-work-unit:001"
+identity_card_ref: "ic:pa-docgen-work-unit:001"
+foundational_status: analyzed
+term:
+  preferred_label: "docgen affected work unit"
+  local_name: DocgenAffectedWorkUnit
+  proposed_iri: "https://oip.law/ontology/ci-ops#DocgenAffectedWorkUnit"
+  owl_entity_kind: individual
+definition:
+  text: >-
+    The ratified WorkUnitSpecification individual that prescribes local
+    documentation verification over the affected edit-loop scope, distinct
+    from every dated execution and from full-repository docgen proof.
+  source:
+    - "CQ-002"
+    - "po:sha256:2f4a9d86f9018ff3add768e859f83488c2df28a9d004ef9b3e580f4c9a358668"
+    - "po:sha256:39654605207ddc525fd7a94dc32f91540979a9a0605500594d3b95445ed2dd80"
+foundational:
+  ufo_category: information_object
+  gufo_alignment: "gufo:Endurant"
+ontoclean:
+  rigidity: rigid
+  identity: supplies
+  dependence: intrinsic
+parents: []
+revision_log:
+  - from_sha256: "aa83171011ae51b36df5e47fa3da33646e6b0c36d27f754383ebfbfbb173c8e9"
+    addressed:
+      - "listing-cq-does-not-require-named-individual"
+    sitting_struck:
+      - "listing-cq-does-not-require-named-individual"
+    disposition: >-
+      Run-2 sitting 1 struck the review's entire landed basis; no substantive
+      proposal change was made.
+reuse:
+  searched: true
+  exact_reuse_found: true
+  mappings:
+    - iri: "https://oip.law/ontology/ci-ops#DocgenAffectedWorkUnit"
+      compatibility: >-
+        The ratified individual already denotes the affected-scope docgen
+        prescription established by the local edit-loop command, so a second
+        docgen work-unit term would duplicate the same operational referent.
+operational_warrant:
+  competency_questions: ["CQ-002"]
+  semantic_support_for: []
+alternatives_rejected:
+  - >-
+    The command-alias null is rejected because repository law assigns local
+    and full docgen different governed verification scopes.
+  - >-
+    Dated docgen executions and their results are rejected as identical to
+    the reusable work-unit specification.
+open_issues:
+  - >-
+    Steward must decide whether full-repository docgen warrants a separate
+    WorkUnitSpecification individual; no Must/Should CQ presently requires
+    that additional individual.
+  - >-
+    The abstract-procedure-universal rival remains distinct from this
+    information-object specification.
+revision_requests: []
+review: {foundational_agent: pending, adversarial_agent: pending, steward: pending}
+status: proposed

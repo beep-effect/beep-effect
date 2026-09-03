@@ -1,0 +1,21 @@
+id: fa:pb-admission-capacity-state-alt:001
+hypothesis_ref: dh:pb-admission-capacity-state:001
+identity_card_ref: ic:pb-admission-capacity-state-alt:001
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+- label: situation of the token ledger versus machine memory at an instant
+  still_viable: true
+- label: scheduler capacity snapshot record only
+  still_viable: true
+strongest_counterexample: Capacity is computed from observed available GiB and then compared
+  in activeTokenTotal + weightTokens <= capacityMaxTokens. That is a changing world quantity,
+  a situation at an instant, and a recorded number. The three are observationally equivalent
+  without an observation that reidentifies capacity across snapshots as one inhering quality.
+verdict: analyzed
+needed_evidence: An observation that capacity is reidentified across time as the same quality
+  of one scheduler (value changes), versus each computation being a fresh snapshot individual,
+  versus only the inequality being cited as policy.

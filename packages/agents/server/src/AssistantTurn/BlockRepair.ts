@@ -520,7 +520,7 @@ const repairItemToIndexed = Effect.fn("repairItemToIndexed")(function* (
   }
 
   const encodedUnknown = yield* encodeBlock(item.block).pipe(
-    Effect.map(O.some),
+    Effect.asSome,
     Effect.catch((error) =>
       Effect.logWarning("assistant-turn block repair failed to encode returned block", {
         index: item.index,
@@ -533,7 +533,7 @@ const repairItemToIndexed = Effect.fn("repairItemToIndexed")(function* (
   }
 
   const encodedJson = yield* decodeJsonValue(encodedUnknown.value).pipe(
-    Effect.map(O.some),
+    Effect.asSome,
     Effect.catch((error) =>
       Effect.logWarning("assistant-turn block repair returned non-json block", {
         index: item.index,
@@ -546,7 +546,7 @@ const repairItemToIndexed = Effect.fn("repairItemToIndexed")(function* (
   }
 
   const checked = yield* decodeRepairedBlock(encodedJson.value).pipe(
-    Effect.map(O.some),
+    Effect.asSome,
     Effect.catch((error) =>
       Effect.logWarning("assistant-turn block repair returned codec-invalid block", {
         index: item.index,

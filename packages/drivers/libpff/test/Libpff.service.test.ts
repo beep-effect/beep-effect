@@ -142,6 +142,7 @@ describe("@beep/libpff", () => {
       exportMode: "items",
       exportRoot: "/tmp/pst-out",
       pffexportPath: "pffexport",
+      systemdRunPath: "systemd-run",
     });
     expect(Effect.runSync(encodeLibpffError(errorWithoutContext))).toStrictEqual({
       _tag: "LibpffError",

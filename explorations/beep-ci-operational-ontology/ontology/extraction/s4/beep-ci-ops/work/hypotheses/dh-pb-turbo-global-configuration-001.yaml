@@ -1,0 +1,24 @@
+id: "dh:pb-turbo-global-configuration:001"
+observation_refs:
+  - "po:sha256:64a23849292414d4cf7e196f646636a3d3a1fabdedb567a2b594687978a7dd51"
+cq_warrants: []
+proposed_referent:
+  label: "Turbo global-configuration flag"
+  description: "A possible configuration flag indicating that some Turbo configuration is global."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "global hash-surface declaration"
+    representation_status: domain_referent
+    plausibility: weak
+  - label: "tool-specific boolean configuration key"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The quoted key-value pair does not identify what is made global, what inputs enter a hash surface, or what verification evidence is invalidated. A tool-specific configuration switch fully explains it."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.91
+  use_for_acceptance: false

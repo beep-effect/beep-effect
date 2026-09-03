@@ -63,3 +63,31 @@ here as well:
 v1.1.0 embeds the expected engine digest in the wrapper source (so the
 manifest-pinned wrapper transitively pins the engine) and bumps the adapter
 version whenever the engine changes.
+
+## v1.1-era addition: adapter-journal v1.0.0
+
+`adapter-journal.py` is the standard-library-only SourceObservation adapter
+for the run-2 fleet's admission journals, attempt journals, and verdict
+records. It reads only the three fixed `.properties` path families beneath
+`corpus/run2-fleet/` and emits `config_key_value` facts accepted by the
+validator's properties pairing grammar. Values are preserved verbatim to the
+physical end of line; prose-valued assignments outside the closed object
+grammar are never truncated into facts.
+
+Granularity is kind-local and vocabulary-bounded. For each of admission,
+attempts, and verdicts, files are visited in lexicographic repo-relative path
+order. A file emits one whole-file SourceObservation when it contains at least
+one validator-representable key not already observed for that kind; that
+record contains exactly the first-occurrence pairing for each such key. Files
+with no new key emit nothing.
+
+The no-network adapter sandbox cannot run Git when the worktree's gitdir is
+outside the read-only bind, so repository mode reads exactly one 40-hex
+`commit:` pin from `work/run-manifest.yaml`. This does not weaken provenance:
+the independent auditor gate verifies each record's commit against both the
+manifest pin and repository HEAD.
+
+Run 2 deliberately does not re-extract the configuration corpus covered by
+run 1. Parked configuration candidates are grounded through ProseObservation
+transcription, while any ordering-vocabulary re-proposal is grounded in
+prose.

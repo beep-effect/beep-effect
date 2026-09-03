@@ -69,6 +69,11 @@ export const CourtReporterCompatibilityPolicy = ArtifactCompatibilityPolicy.make
 });
 
 type SubjectKind = "court" | "reporter";
+type ArtifactHeaders = Pick<CourtReporterArtifactComparison, "projectionVersion" | "schemaVersion">;
+type ComparisonArtifactHeaders = ArtifactHeaders & {
+  readonly courts: ArtifactHeaders;
+  readonly reporters: ArtifactHeaders;
+};
 
 interface NormalizedRecord {
   readonly aliases: ReadonlyArray<string>;
@@ -203,6 +208,59 @@ const change = (
     subjectIds,
     detail,
   });
+
+const headerDriftChanges = (
+  previous: ComparisonArtifactHeaders,
+  next: ComparisonArtifactHeaders
+): ReadonlyArray<ArtifactDriftChange> => {
+  const changes: Array<ArtifactDriftChange> = [];
+  const compare = (previousHeaders: ArtifactHeaders, nextHeaders: ArtifactHeaders, scope: string) => {
+    if (!Eq.equals(previousHeaders.schemaVersion, nextHeaders.schemaVersion)) {
+      changes.push(change("schemaChange", "artifact", [], `The ${scope} schema version changed.`));
+    }
+    if (!Eq.equals(previousHeaders.projectionVersion, nextHeaders.projectionVersion)) {
+      changes.push(change("projectionChange", "artifact", [], `The ${scope} projection version changed.`));
+    }
+  };
+
+  compare(previous, next, "combined artifact");
+  compare(previous.courts, next.courts, "court artifact");
+  compare(previous.reporters, next.reporters, "reporter artifact");
+  return changes;
+};
+
+const headerCoherenceChanges = (
+  artifact: ComparisonArtifactHeaders,
+  side: "previous" | "next"
+): ReadonlyArray<ArtifactDriftChange> => {
+  const changes: Array<ArtifactDriftChange> = [];
+  const compare = (nested: ArtifactHeaders, scope: string) => {
+    if (!Eq.equals(artifact.schemaVersion, nested.schemaVersion)) {
+      changes.push(
+        change(
+          "schemaChange",
+          "artifact",
+          [],
+          `The ${side} ${scope} schema version disagrees with its combined artifact.`
+        )
+      );
+    }
+    if (!Eq.equals(artifact.projectionVersion, nested.projectionVersion)) {
+      changes.push(
+        change(
+          "projectionChange",
+          "artifact",
+          [],
+          `The ${side} ${scope} projection version disagrees with its combined artifact.`
+        )
+      );
+    }
+  };
+
+  compare(artifact.courts, "court artifact");
+  compare(artifact.reporters, "reporter artifact");
+  return changes;
+};
 
 const byKey = (records: ReadonlyArray<NormalizedRecord>, key: "id" | "semanticKey") =>
   pipe(
@@ -473,18 +531,10 @@ export const classifyCourtReporterArtifactCompatibility: {
   (previous: CourtReporterArtifactComparison, next: CourtReporterArtifactComparison): ArtifactDriftReport;
   (next: CourtReporterArtifactComparison): (previous: CourtReporterArtifactComparison) => ArtifactDriftReport;
 } = dual(2, (previous: CourtReporterArtifactComparison, next: CourtReporterArtifactComparison): ArtifactDriftReport => {
-  const contractChanges: Array<ArtifactDriftChange> = [];
-
-  if (!Eq.equals(previous.schemaVersion, next.schemaVersion)) {
-    contractChanges.push(change("schemaChange", "artifact", [], "The public artifact schema version changed."));
-  }
-
-  if (!Eq.equals(previous.projectionVersion, next.projectionVersion)) {
-    contractChanges.push(change("projectionChange", "artifact", [], "The public projection version changed."));
-  }
-
   const changes = [
-    ...contractChanges,
+    ...headerCoherenceChanges(previous, "previous"),
+    ...headerCoherenceChanges(next, "next"),
+    ...headerDriftChanges(previous, next),
     ...compareFamily(
       "court",
       A.map(previous.courts.records, normalizeCourt),

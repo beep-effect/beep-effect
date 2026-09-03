@@ -1,0 +1,28 @@
+id: "dh:pc-proof-task-vocabulary:001"
+observation_refs:
+  - "po:sha256:aa44e6bb67ce87538b7feddce7e285430ae2030bffbb5ac280905f9945b507c8"
+cq_warrants:
+  - "CQ-001"
+proposed_referent:
+  label: "proof-configuration task label set"
+  description: >-
+    A source vocabulary whose task spellings may lexically correspond to
+    operational verification lanes, without establishing any lane instances.
+representation_status: lexical_alias
+alternatives:
+  - label: "allowlist used only by the Turbo configuration proof implementation"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+  - label: "enumeration of operational verification lanes"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: >-
+    The quotation supplies five literals in a source array but observes no
+    execution, lane identity, obligation, scope, or outcome associated with
+    them. An implementation allowlist fully explains the evidence.
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.72, use_for_acceptance: false}

@@ -606,7 +606,7 @@ const observePullRequest = Effect.fn("Yeet.observeSweepPullRequest")(function* (
     cwd: context.repoRoot,
     label: `gh pr view ${shellQuote(branch)}`,
     onFailure: (failure) => failure,
-  }).pipe(Effect.map(O.some), Effect.orElseSucceed(O.none<string>));
+  }).pipe(Effect.asSome, Effect.orElseSucceed(O.none<string>));
   return O.flatMap(output, decodePullRequestView);
 });
 

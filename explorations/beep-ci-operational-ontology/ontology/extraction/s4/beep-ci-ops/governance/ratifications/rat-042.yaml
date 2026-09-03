@@ -1,0 +1,9 @@
+id: rat:42
+proposal_ref: otp:pb-package-dependency:001
+proposal_sha256: 2f513f97bc4b10b8b4d9a5c1e8d77890369e9ad856f4f6940c3283a96ddfdad6
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-09-03T09:05:00Z'
+verbatim_decision: Accept dependsOn as a plain property — no relator; S5's treatment stands.

@@ -1,4 +1,4 @@
-"""Machine enforcement for the auditor's artifact contracts (v13).
+"""Machine enforcement for the auditor's artifact contracts (v14).
 
 v3 bound records to id strings and file bytes; round-4 seats proved id-joins
 and lone-file digests are not coherence. v4 binds CONTENT, HISTORY, and
@@ -1651,9 +1651,17 @@ def safe_join(repo_root, rel, p, what="repository.path"):
         err(p, f"{what} {rel!r} is absolute — pinned paths are relative to the root")
         return None
     try:
-        # resolve() raises on symlink loops (RuntimeError/OSError) — a
-        # confinement check that crashes is not fail-closed
-        target = (repo_root / rel).resolve()
+        # strict-first resolution: Python 3.13 changed NON-strict resolve()
+        # to swallow symlink loops instead of raising, which would let a
+        # looped component slide through confinement. resolve(strict=True)
+        # raises OSError(ELOOP) on every supported runtime; only a
+        # merely-missing tail (FileNotFoundError) falls back to lenient
+        # resolution — a loop can never reach the fallback because strict
+        # resolution dies at the looping component before any missing tail.
+        try:
+            target = (repo_root / rel).resolve(strict=True)
+        except FileNotFoundError:
+            target = (repo_root / rel).resolve()
         root_res = repo_root.resolve()
     except (OSError, RuntimeError) as ex:
         err(p, f"{what} {rel!r} cannot be resolved ({ex}) — fails CLOSED as a "
@@ -2059,6 +2067,10 @@ def repo_fidelity(sos, pos, manifest, otps, reviews, dhs, repo_root):
 CHECKS = {"so": check_so, "po": check_po, "dh": check_dh, "ic": check_ic,
           "fa": check_fa, "otp": check_otp, "rat": check_rat, "rej": check_rej}
 
+RECORD_DISPATCH = (("so-", "so"), ("po-", "po"), ("dh-", "dh"), ("ic-", "ic"),
+                   ("fa-", "fa"), ("otp-", "otp"), ("rat-", "rat"),
+                   ("rej-", "rej"))
+
 
 def validate_dir(root, gate=False, repo=None):
     root = Path(root)
@@ -2072,6 +2084,27 @@ def validate_dir(root, gate=False, repo=None):
     for f in sorted(root.rglob("*.yaml")):
         name = f.name
         rel_parts = f.relative_to(root).parts
+        if rel_parts[:1] == ("runs",) and name not in (
+                "run-manifest.yaml", "dispositions.index.yaml"):
+            # runs/ is the ROTATION LEDGER (archived orun-<rid>.manifest/
+            # .index pairs + engine history), never live evidence. v13
+            # silently absorbed record-prefixed files here into the live
+            # scan, so a rotated predecessor's observations validated
+            # against the successor's manifest. v14 makes that poison LOUD
+            # and quarantines the file from every join; full per-run record
+            # trees rotate to the SIBLING shelter ../archives/<root-name>/,
+            # OUTSIDE the scan root — no in-root exemption exists to hide
+            # live records in. Ledger bytes are not parsed here: the one
+            # prior index this run stands on is byte- and row-validated at
+            # its manifest join, and a shadow manifest/index under runs/
+            # still falls through to the authoritative-location checks.
+            if name.endswith(".review.yaml") or \
+                    any(name.startswith(pfx) for pfx, _ in RECORD_DISPATCH):
+                err(f, "record-prefixed file under runs/ — archived per-run "
+                       "records are NOT live evidence; rotate them to the "
+                       "sibling archive shelter (../archives/<root-name>/), "
+                       "never leave them in the scan root")
+            continue
         try:
             d = yload(f.read_text()) or {}
         except Exception as ex:  # noqa: BLE001
@@ -2114,9 +2147,7 @@ def validate_dir(root, gate=False, repo=None):
                                "filed under another proposal's name hides its history")
                 kinds["review"].append((f, d))
         else:
-            for prefix, key in (("so-", "so"), ("po-", "po"), ("dh-", "dh"),
-                                ("ic-", "ic"), ("fa-", "fa"), ("otp-", "otp"),
-                                ("rat-", "rat"), ("rej-", "rej")):
+            for prefix, key in RECORD_DISPATCH:
                 if name.startswith(prefix):
                     CHECKS[key](d, f)
                     if not isinstance(d, dict):
@@ -3339,6 +3370,13 @@ def self_test():
         assert res is None and len(errors) > n, \
             "symlink loop must be a violation, never a crash"
         del errors[n:]
+        # strict-first resolution must not tighten the missing-tail case:
+        # a merely-missing in-root path still resolves through the lenient
+        # fallback with no violation (loops can never reach the fallback)
+        n = len(errors)
+        res = safe_join(td, "nope/missing.yaml", "self:missing")
+        assert res is not None and len(errors) == n, \
+            "a merely-missing path must still resolve via the lenient fallback"
 
 
     # --- round-12 families ---------------------------------------------------
@@ -3454,7 +3492,29 @@ def self_test():
     assert not any("does not address" in m for m in out), \
         "split revision_log entries for one digest must UNION, not last-win"
 
-    print("SELF-TEST PASS (156 rule families fire: canonical ids, nested closure, "
+    # --- v14 field-amendment families ----------------------------------------
+    # (auditor run 2 field defect: the scanner absorbed a rotated
+    # predecessor's record files under runs/ as live evidence)
+    with tempfile.TemporaryDirectory() as td:
+        td = Path(td)
+        (td / "runs/orun-r.observations").mkdir(parents=True)
+        (td / "runs/orun-r.observations/so-poison.yaml").write_text("id: x\n")
+        (td / "runs/orun-r.index.yaml").write_text("[]\n")
+        (td / "runs/history").mkdir()
+        (td / "runs/history/ratification.schema.yaml").write_text("a: 1\n")
+        n = len(errors)
+        validate_dir(td)
+        msgs = errors[n:]
+        assert any("NOT live evidence" in m and "so-poison" in m
+                   for m in msgs), \
+            "record-prefixed file under runs/ must be a LOUD violation"
+        assert not any("orun-r.index.yaml" in m for m in msgs), \
+            "rotation-ledger files under runs/ are not live records"
+        assert not any("ratification.schema.yaml" in m for m in msgs), \
+            "engine-history files under runs/ are not record-prefixed"
+        del errors[n:]
+
+    print("SELF-TEST PASS (157 rule families fire: canonical ids, nested closure, "
           "object grammar, mixed-unrep, discriminator, searched-true, warrant-XOR, "
           "parents grammar, id grammars incl. rat digits, crash-hardening, rat "
           "content binding + staleness + freshness, review edge-target/chain/"
@@ -3463,7 +3523,7 @@ def self_test():
           "live-carried bypass, row-evidence join, since-exact, digest-fresh IRI, "
           "identifier pad + negation context + provider agreement incl. "
           "boolean-vs-unresolved, boolean pin_waived, ufo_category required, "
-          "addressed-list shape, #-boundary, config pairing, vacuity-boolean, text exact-type sweep, container shapes, prior-FAIL coverage population, tri-state crash hardening, duplicate-key loader, syntax-aware pairing stripper, glued openers, mid-line bare keys, blank-line continuation, identity precedence, lexical component symlinks, run-id parser, closed shared run-id grammar + rotation parity, exact-hex digest locks, cross-line separator refusal, ini/properties quoted-payload, toml/BOM/form-feed comment boundaries, join quarantine, orphan review/rejection authority, predecessor-local row validation, symlink-loop fail-closed, bounded run-id fractions, CR line-break normalization, half-quote arm refusal, table-filter quarantine, predecessor date/grammar/reason/carried meters, control-escaped authority rendering, unexaminable-path fail-closed, referent-mapping guard, review revision-requests channel, ledger-rationale binding, revision-log digest union, closure-read fail-closed)")
+          "addressed-list shape, #-boundary, config pairing, vacuity-boolean, text exact-type sweep, container shapes, prior-FAIL coverage population, tri-state crash hardening, duplicate-key loader, syntax-aware pairing stripper, glued openers, mid-line bare keys, blank-line continuation, identity precedence, lexical component symlinks, run-id parser, closed shared run-id grammar + rotation parity, exact-hex digest locks, cross-line separator refusal, ini/properties quoted-payload, toml/BOM/form-feed comment boundaries, join quarantine, orphan review/rejection authority, predecessor-local row validation, symlink-loop fail-closed, bounded run-id fractions, CR line-break normalization, half-quote arm refusal, table-filter quarantine, predecessor date/grammar/reason/carried meters, control-escaped authority rendering, unexaminable-path fail-closed, referent-mapping guard, review revision-requests channel, ledger-rationale binding, revision-log digest union, closure-read fail-closed, runs-shelter poison guard)")
 
 
 def print_run_id(ont_root):

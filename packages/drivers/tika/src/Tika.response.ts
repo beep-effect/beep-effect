@@ -103,12 +103,7 @@ export const decodeTikaResponseRecord = (
   decodeTikaJsonRows(payload).pipe(
     Effect.mapError(() => makeTikaError("response-decoding")),
     Effect.flatMap((rows) =>
-      A.head(rows).pipe(
-        O.match({
-          onNone: () => Effect.fail(makeTikaError("response-decoding", { cause: "empty tika -J array" })),
-          onSome: Effect.succeed,
-        })
-      )
+      A.head(rows).pipe(Effect.fromOption(() => makeTikaError("response-decoding", { cause: "empty tika -J array" })))
     )
   );
 

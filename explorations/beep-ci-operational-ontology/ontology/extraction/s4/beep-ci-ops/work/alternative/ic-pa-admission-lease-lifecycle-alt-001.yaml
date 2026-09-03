@@ -1,0 +1,39 @@
+id: ic:pa-admission-lease-lifecycle-alt:001
+hypothesis_ref: dh:pa-admission-lease-lifecycle:001
+identity:
+  supplies_identity: true
+  identity_criterion: Two admission leases are the same relator iff they are the same mediation
+    of held scheduler capacity for one admitted request. Eviction or file removal terminates
+    that relator; a later grant to similar work is a new lease. Nonce and lease path are reidentification
+    evidence, never the criterion.
+  reidentification_key:
+  - nonce (evidence)
+  - leasePath (evidence)
+  - weight (evidence)
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: one capacity-holding mediation between one grant and the scheduler ledger
+  dependence: relational
+ufo_analysis:
+  candidate_category: relator
+  alternatives:
+  - process
+  - information_object
+  existential_dependencies:
+  - the admitted request/work
+  - the scheduler's token capacity being held
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+  - released
+  - evicted
+  - removed
+counterexamples:
+- description: fs.remove(admitted.leasePath) is persistence mechanics; if that were the referent,
+    deleting a file would be the lease rather than ending it.
+- description: Replay 'dead-lease eviction' of nonce 1813f29f changing active tokens 8→3 can
+    be read as a process step or as termination of a relator; both remain live.
+status: proposed

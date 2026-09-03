@@ -282,10 +282,7 @@ const arrayItemAt = <A>(values: ReadonlyArray<A>, index: number, label: string):
   pipe(
     values,
     A.get(index),
-    O.match({
-      onNone: () => Effect.fail(testSetupError(label)),
-      onSome: Effect.succeed,
-    })
+    Effect.fromOption(() => testSetupError(label))
   );
 
 const captureAt = (
@@ -297,10 +294,7 @@ const captureAt = (
 const bodyTextFromCapture = (capture: CapturedRequest, label: string): Effect.Effect<string, VeniceAIError> =>
   pipe(
     O.fromUndefinedOr(capture.bodyText),
-    O.match({
-      onNone: () => Effect.fail(testSetupError(label)),
-      onSome: Effect.succeed,
-    })
+    Effect.fromOption(() => testSetupError(label))
   );
 
 const VeniceAITestHttpLayer = Layer.effect(

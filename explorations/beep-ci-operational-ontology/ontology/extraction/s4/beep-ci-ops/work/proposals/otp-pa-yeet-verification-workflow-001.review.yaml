@@ -1,0 +1,65 @@
+target: "otp:pa-yeet-verification-workflow:001"
+target_sha256: "005587bfae91034fa763e3ad42c919ff0f6d2233114b8ab614203499065c7b76"
+chain_sha256: "f750be9c921aa7a60a3f9be986d342c33bb5233df23790e6a907046daa8fbf27"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: "The proposal asserts no candidate is-a edge."
+revision_requests:
+  - >-
+    Address exact-reuse-extension-narrowing by keeping the ratified
+    VerificationPlanSpecification class generic and representing the Yeet
+    plan as an individual or separately warranted specialization, rather than
+    replacing the reused class definition with a Yeet-only extension.
+  - >-
+    Address semantic-support-not-necessary with a direct CQ that requires a
+    verification-plan specification, and provide evidence deciding whether
+    cheap-gates, review-fix, and monitoring are one plan or coordinated plans.
+attacks:
+  - surface: identity
+    rule: exact-reuse-extension-narrowing
+    counterexample: >-
+      A non-Yeet verification plan can instantiate the ratified generic
+      VerificationPlanSpecification class, yet it fails this proposal's
+      Yeet-specific definition. Exact reuse would therefore narrow the reused
+      class rather than merely classify one Yeet plan under it.
+    outcome: landed
+  - surface: identity
+    rule: plan-unity-underdetermined
+    counterexample: >-
+      Cheap-gates, review-fix, and monitor can be separately versioned plan
+      specifications coordinated by repository policy; the four observations
+      do not show that changing one necessarily creates a new individual for
+      all the others.
+    outcome: landed
+  - surface: warrant
+    rule: semantic-support-not-necessary
+    counterexample: >-
+      CQ-001 and CQ-011 can enumerate VerificationLane individuals and their
+      invalidation surfaces without representing the higher-level Yeet plan
+      that selects or monitors some of those lanes.
+    outcome: landed
+  - surface: null_discriminator
+    rule: discriminator-false-in-null-world
+    counterexample: >-
+      A CLI-only branch table could contain cheap-gates and review-fix labels,
+      but it would not by itself establish a canonical repository-quality
+      procedure or a merge-ready terminal condition; the AGENTS law supplies
+      that prescriptive content, so the implementation-only twin fails.
+    outcome: survived
+rival_models_still_viable:
+  - "Cheap-gates, review-fix, and monitoring are distinct coordinated specifications."
+  - "Yeet denotes a procedure universal distinct from its specification."
+evidence:
+  - "po:sha256:33182e9f689b24bcb01d622aa789cd78093af067a6594b2e0c2c950ac0867715"
+  - "po:sha256:45d50fea9a4a18913111c9152e3c2ffad848b8e8f869cb5e694c910c604264f3"
+  - "po:sha256:4c265303ec2062df5a841185cf1032b9beab1cefafb63f3468298c2bc7917e1b"
+  - "po:sha256:53cb7d2cdb081cbfab7b6f42091d51256ea65d70c7a4a592209b542cc6cf4d79"
+  - "CQ-001"
+  - "CQ-011"

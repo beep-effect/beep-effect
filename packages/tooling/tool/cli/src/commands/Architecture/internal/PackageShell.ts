@@ -369,7 +369,7 @@ const packageShellLayerContent = (target: ArchitecturePlanTarget, role: "config"
  * @since 0.0.0
  */
 
-import { Layer } from "effect";
+import * as Layer from "effect/Layer";
 
 /**
  * Shell ${role} layer for the ${target.boundedContext} slice.
@@ -392,7 +392,7 @@ const packageShellTestLayerContent = (target: ArchitecturePlanTarget, role: "con
  * @since 0.0.0
  */
 
-import { Layer } from "effect";
+import * as Layer from "effect/Layer";
 
 /**
  * Shell ${role} test layer for the ${target.boundedContext} slice.

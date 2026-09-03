@@ -1,0 +1,10 @@
+id: po:sha256:2f4a9d86f9018ff3add768e859f83488c2df28a9d004ef9b3e580f4c9a358668
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: AGENTS.md
+source_span:
+  start_line: 75
+  end_line: 75
+quote: '`bun run docgen:local` for edit loops'
+epistemic_status: quoted_prose

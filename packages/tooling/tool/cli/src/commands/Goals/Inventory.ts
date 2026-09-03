@@ -105,7 +105,7 @@ type InventoryScanMode = "permissive" | "strict";
 const readOptionalFile = Effect.fn("Goals.readOptionalFile")(function* (filePath: string, mode: InventoryScanMode) {
   const fs = yield* FileSystem.FileSystem;
   const read = fs.readFileString(filePath).pipe(
-    Effect.map(O.some),
+    Effect.asSome,
     Effect.catchIf(
       (error) => error.reason._tag === "NotFound",
       () => Effect.succeed(O.none<string>())
@@ -128,7 +128,7 @@ const scanGoalPacket = Effect.fn("Goals.scanGoalPacket")(function* (
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const packetPath = path.join(goalsDir, slug);
-  const readStat = fs.stat(packetPath).pipe(Effect.map(O.some));
+  const readStat = fs.stat(packetPath).pipe(Effect.asSome);
   const stat = yield* mode === "strict" ? readStat : readStat.pipe(Effect.orElseSucceed(O.none));
   if (O.isNone(stat) || stat.value.type !== "Directory") return O.none<GoalPacketRecord>();
 

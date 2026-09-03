@@ -117,11 +117,10 @@ const bySymbolStartLineAscending: Order.Order<TsMorphSymbol> = Order.mapInput(
  * @category utilities
  * @since 0.0.0
  */
-export const byTsMorphSymbolAscending: ((that: TsMorphSymbol) => (self: TsMorphSymbol) => Ordering.Ordering) &
-  Order.Order<TsMorphSymbol> = dual(
-  2,
-  Order.combine(bySymbolNameAscending, Order.combine(bySymbolFilePathAscending, bySymbolStartLineAscending))
-);
+export const byTsMorphSymbolAscending: {
+  (that: TsMorphSymbol): (self: TsMorphSymbol) => Ordering.Ordering;
+  (self: TsMorphSymbol, that: TsMorphSymbol): Ordering.Ordering;
+} = dual(2, Order.combine(bySymbolNameAscending, Order.combine(bySymbolFilePathAscending, bySymbolStartLineAscending)));
 
 const byDiagnosticStartLineAscending: Order.Order<TsMorphDiagnostic> = Order.mapInput(
   Order.Number,
@@ -173,10 +172,10 @@ const byDiagnosticCodeAscending: Order.Order<TsMorphDiagnostic> = Order.mapInput
  * @category utilities
  * @since 0.0.0
  */
-export const byNormalizedDiagnosticAscending: ((
-  that: TsMorphDiagnostic
-) => (self: TsMorphDiagnostic) => Ordering.Ordering) &
-  Order.Order<TsMorphDiagnostic> = dual(
+export const byNormalizedDiagnosticAscending: {
+  (that: TsMorphDiagnostic): (self: TsMorphDiagnostic) => Ordering.Ordering;
+  (self: TsMorphDiagnostic, that: TsMorphDiagnostic): Ordering.Ordering;
+} = dual(
   2,
   Order.combine(
     byDiagnosticStartLineAscending,

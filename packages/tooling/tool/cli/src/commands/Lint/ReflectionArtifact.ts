@@ -317,7 +317,7 @@ export const runReflectionArtifactLint = Effect.fn(function* () {
     const manifestPath = path.join(GOALS_DIR, slug, "ops", "manifest.json");
     const manifestRead = yield* fs
       .readFileString(manifestPath)
-      .pipe(Effect.map(O.some), Effect.orElseSucceed(O.none<string>));
+      .pipe(Effect.asSome, Effect.orElseSucceed(O.none<string>));
     if (O.isNone(manifestRead)) {
       continue;
     }

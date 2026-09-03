@@ -1,0 +1,10 @@
+id: po:sha256:a0fc2a10223c1bb84b47852f284c3b22bb7ac96679df7a42a21cdd531b06d825
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts
+source_span:
+  start_line: 185
+  end_line: 185
+quote: '"security",'
+epistemic_status: quoted_prose

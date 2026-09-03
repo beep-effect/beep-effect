@@ -53,16 +53,12 @@ const sourceTextPageFromBounds = Effect.fn("SourceText.pageFromBounds")(function
   const totalCodeUnits = Str.length(source.text);
   const pageCount = A.length(pageBounds);
   const [startOffset, endOffset] = yield* A.get(pageBounds, pageIndex).pipe(
-    O.match({
-      onNone: () =>
-        Effect.fail(
-          SourceTextResolverError.new(
-            "page-out-of-range",
-            `Source-text page ${pageIndex} is outside the available range 0-${pageCount - 1}.`
-          )
-        ),
-      onSome: Effect.succeed,
-    })
+    Effect.fromOption(() =>
+      SourceTextResolverError.new(
+        "page-out-of-range",
+        `Source-text page ${pageIndex} is outside the available range 0-${pageCount - 1}.`
+      )
+    )
   );
 
   return SourceTextPage.make({

@@ -23,7 +23,7 @@ describe("create-package identity template", () => {
       expect(identityExportBlockSource).toContain(
         "const toIdentityAccessorName = (packageName: string): string => `$${Str.pascalCase(packageName)}Id`;"
       );
-      expect(identityExportBlockSource).toContain('` * import { ${accessorName} } from "@beep/identity"`');
+      expect(identityExportBlockSource).toContain('` * import { ${accessorName} } from "@beep/identity/packages"`');
       expect(identityExportBlockSource).toContain(
         '`export const ${accessorName}: Identity.IdentityComposer<"@beep/${packageName}"> = composers.${accessorName};`'
       );

@@ -1,0 +1,30 @@
+id: "dh:pc-proof-selector-vocabulary:001"
+observation_refs:
+  - "po:sha256:ae9e377cd54111e4374cb7b78d7589721695334898292c2194e57a274b84f1ad"
+  - "po:sha256:d472fc9b1acf4a14fa15d543c6aec21ea9646c9fec3fd503013a0102e57c2e22"
+cq_warrants:
+  - "CQ-002"
+  - "CQ-004"
+proposed_referent:
+  label: "proof selector-mode vocabulary"
+  description: >-
+    The source spellings affected and filter-range as possible lexical aliases
+    for ways of selecting a narrowed verification scope.
+representation_status: lexical_alias
+alternatives:
+  - label: "parser or command selector options"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+  - label: "operational scope-selection strategies"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: >-
+    The observations show a literal list and the schema built from that list,
+    but no selected packages, resulting scope, provenance, or execution. The
+    two spellings may therefore be code-level selector modes only.
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.74, use_for_acceptance: false}

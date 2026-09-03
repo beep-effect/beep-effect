@@ -1,0 +1,30 @@
+id: "dh:pa-ci-lane-vocabulary:001"
+observation_refs:
+  - "po:sha256:06e44e7a819508d788d7d342b71fcc080eb8b249b695b0217fd62ba83672e7b6"
+  - "po:sha256:09f92238876830de7c153c6bbc3cb0920e6d242635ef6df12129f4b8462b4002"
+  - "po:sha256:1eedf327cc0ca8bbf03f74777dd56ff8a86910f71ca88ceed1a75f6dd17144ab"
+  - "po:sha256:2149b9954f39e52d160e076e80674d05372562563582540e8a6b4da3cd12b68b"
+  - "po:sha256:238c7a54ba96c98f9094d79e88bcbd5da03af7d8a4ef720564e16b36f602759f"
+  - "po:sha256:2b07cb56911c7fcd60acd7c89f14be087604a2d3c1fc8c2f19781068876d094d"
+  - "po:sha256:35fd690a7bba2941347b93814e28742f611685585202afea0ba3e3c88d87577a"
+  - "po:sha256:38d7d12c45869ba760b31b763ddbd1464fa846644bb8f0ce5088361681abd9f6"
+  - "po:sha256:562bc1235121a3640f613e5190972f819cdb90be627fe9a0f054fc82c9753255"
+cq_warrants: ["CQ-001"]
+proposed_referent:
+  label: "CI lane identifier vocabulary"
+  description: "The LiteralKit declarations and member spellings used by the CLI to represent possible CI and quality lane identifiers."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "Verification-lane controlled vocabulary"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "Individual verification procedures denoted by the literals"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observations enumerate literals and their carrier but do not show that each spelling denotes a distinct operational lane rather than a CLI coding choice."
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.22, use_for_acceptance: false}

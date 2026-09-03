@@ -1,0 +1,69 @@
+target: "otp:pb-review-fix-class-cap:001"
+target_sha256: "dd03dad4899ad3768e9e76900b53514986d0990ed38ae2b34c3675e349caa7f0"
+chain_sha256: "2cce8e7c31f7284d82d6f52797f758c337e75ba8372d4b068ae81e268d7c81d5"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: attacked
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons: {}
+revision_requests:
+  - >-
+    Address clause-is-part-not-kind by replacing the AdmissionPolicy is-a edge
+    with an explicit clause/component relation, or fold the class-cap content
+    into the policy instead of treating it as a policy subtype.
+  - >-
+    Address clause-identity-lineage-unobserved,
+    semantic-support-not-necessary, and discriminator-true-of-guard by
+    providing independent clause authority/version evidence plus a decision
+    CQ that requires the clause, or withdraw the separate term.
+attacks:
+  - surface: taxonomy
+    rule: taxonomy-rigidity-compatible
+    counterexample: >-
+      Both a policy specification and an immutable clause specification remain
+      information objects throughout their existence, so the rigid-to-rigid
+      edge creates no rigidity violation by itself.
+    outcome: survived
+  - surface: taxonomy
+    rule: clause-is-part-not-kind
+    counterexample: >-
+      A class-cap clause specifies only the review-fix population and
+      threshold; it lacks the capacity, aging, starvation, authority, and
+      applicability bundle required by the parent AdmissionPolicy definition.
+      It is a component of a policy, not a kind of complete policy.
+    outcome: landed
+  - surface: identity
+    rule: clause-identity-lineage-unobserved
+    counterexample: >-
+      One AdmissionPolicy revision can change reviewFixClassCap together with
+      other parameters without assigning the clause a separate issuance or
+      version lineage. The code comparison and parameter name do not identify
+      an independent policy-clause individual.
+    outcome: landed
+  - surface: warrant
+    rule: semantic-support-not-necessary
+    counterexample: >-
+      CQ-023 requires AdmissionPolicy only to obtain its starvation bound; it
+      never counts active review-fix grants or asks for the class cap. The
+      decision term remains definable without a separate cap class.
+    outcome: landed
+  - surface: null_discriminator
+    rule: discriminator-true-of-guard
+    counterexample: >-
+      A scheduler-only Boolean guard can block when activeReviewFix reaches a
+      configured number, and an implementation contract can document that
+      behavior, while no independently governed class-cap information object
+      exists. The discriminator is true in that null world.
+    outcome: landed
+rival_models_still_viable:
+  - "The cap is a clause or parameter within AdmissionPolicy."
+  - "Being at the cap is a situation, not the reusable rule."
+  - "A normative mode borne by the admission service is distinct from the clause text."
+evidence:
+  - "po:sha256:60e90bd17b628d4d6d815cfd05ddcf88cbc2a724790b05ac88b4411619f535be"
+  - "po:sha256:71ff33a91cd202789d604775c82a3100091dee4dead6fe88e84f7712ffd84a31"
+  - "CQ-023"

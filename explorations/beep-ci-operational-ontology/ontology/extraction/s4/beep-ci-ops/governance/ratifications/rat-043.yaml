@@ -1,0 +1,10 @@
+id: rat:43
+proposal_ref: otp:pb-resolved-cache-posture:001
+proposal_sha256: 7c9504953ff9a09d8a327e2f71797deabae9edc79f445dd1c5ae43f389980f55
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-09-03T09:05:00Z'
+verbatim_decision: Accept resolved CachePosture as a recorded value on the execution record — information
+  object, not a mode.

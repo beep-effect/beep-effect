@@ -117,6 +117,7 @@ export type Prefixed<Pre extends string, S extends string> = Pre extends string 
  */
 export const prefix: {
   <const Pre extends string>(prefix: Pre): <S extends string>(str: S) => Prefixed<Pre, S>;
+  <const Pre extends string, const S extends string>(prefix: Pre): (str: S) => Prefixed<Pre, S>;
   <const Pre extends string, const S extends string>(str: S, prefix: Pre): Prefixed<Pre, S>;
 } = dual(
   2,
@@ -157,6 +158,7 @@ export const prefix: {
  */
 export const prefixThunk: {
   <const Pre extends string>(prefix: Pre): <S extends string>(str: S) => LazyArg<`${Pre}${S}`>;
+  <const Pre extends string, const S extends string>(prefix: Pre): (str: S) => LazyArg<`${Pre}${S}`>;
   <const Pre extends string, const S extends string>(str: S, prefix: Pre): LazyArg<`${Pre}${S}`>;
 } = dual(
   2,
@@ -209,6 +211,7 @@ export type Postfixed<S extends string, Post extends string> = Post extends stri
  */
 export const postfix: {
   <const Post extends string>(postfix: Post): <S extends string>(str: S) => Postfixed<S, Post>;
+  <const Post extends string, const S extends string>(postfix: Post): (str: S) => Postfixed<S, Post>;
   <const Post extends string, const S extends string>(str: S, postfix: Post): Postfixed<S, Post>;
 } = dual(
   2,
@@ -249,6 +252,7 @@ export const postfix: {
  */
 export const postfixThunk: {
   <const Post extends string>(postfix: Post): <S extends string>(str: S) => LazyArg<`${S}${Post}`>;
+  <const Post extends string, const S extends string>(postfix: Post): (str: S) => LazyArg<`${S}${Post}`>;
   <const Post extends string, const S extends string>(str: S, postfix: Post): LazyArg<`${S}${Post}`>;
 } = dual(
   2,
@@ -1001,6 +1005,10 @@ export const matchEmpty: {
     readonly onEmpty: LazyArg<B>;
     readonly onNonEmpty: (self: string) => C;
   }): <const Self extends string>(self: Self) => MatchEmptyResult<Self, B, C>;
+  <const Self extends string, const B, const C = B>(options: {
+    readonly onEmpty: LazyArg<B>;
+    readonly onNonEmpty: (self: Exclude<Self, "">) => C;
+  }): (self: Self) => MatchEmptyResult<Self, B, C>;
   <const Self extends string, const B, const C = B>(
     self: Self,
     options: {

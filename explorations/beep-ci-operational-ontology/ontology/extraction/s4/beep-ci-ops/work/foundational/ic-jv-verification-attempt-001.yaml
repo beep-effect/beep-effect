@@ -1,0 +1,42 @@
+id: "ic:jv-verification-attempt:001"
+hypothesis_ref: "dh:jv-verification-attempt:001"
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Two recorded attempts are the same information object only when they
+    continue one attempt-record lineage with the same authoritative attemptId,
+    start and terminal bounds, target and assurance context, and outcome;
+    matching target fields alone are insufficient.
+  reidentification_key:
+    - "authoritative attemptId and record lineage"
+    - "target tree, base, mode, episode, and assurance context"
+    - "recorded start and terminal boundaries and outcome"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    One attempt record whose identifier, context, temporal bounds, and terminal
+    outcome belong to the same journal lineage.
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "process: the unfolding verification occurrence recorded by the journal"
+    - "event: a boundary-defined verification occurrence without process structure"
+    - "process: one CLI invocation, if invocation and attempt boundaries coincide"
+  existential_dependencies:
+    - "The verification target and assurance context represented"
+    - "A producing attempt-record act and faithful journal carrier"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - "superseded by a correction to identity-bearing attempt content"
+    - "ceased when no faithful carrier remains"
+counterexamples:
+  - description: >-
+      A retry can target the same branch, base, tree, and mode yet carry a new
+      attemptId and record lineage, while a copied record does not become the
+      unfolding process it describes.
+status: proposed

@@ -507,7 +507,7 @@ const mcpFileFromServers = (
   O.match(servers, {
     onNone: () => Effect.succeed(O.none<McpJsonFile>()),
     onSome: (mcpServers) =>
-      withoutReservedServerNames(McpJsonFile.make({ mcpServers }), source).pipe(Effect.map(O.some)),
+      withoutReservedServerNames(McpJsonFile.make({ mcpServers }), source).pipe(Effect.asSome),
   });
 
 /** @internal */

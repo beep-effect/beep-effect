@@ -1,0 +1,60 @@
+id: "otp:jv-failure-signature:001"
+hypothesis_ref: "dh:jv-failure-signature:001"
+identity_card_ref: "ic:jv-failure-signature:001"
+foundational_status: analyzed
+term:
+  preferred_label: "failure signature"
+  local_name: FailureSignature
+  proposed_iri: "https://oip.law/ontology/ci-ops#FailureSignature"
+  owl_entity_kind: class
+definition:
+  text: >-
+    A repeatable classification information object that combines a failed-step
+    identifier with a failure-kind identifier under one governed vocabulary
+    and provenance context so distinct failure occurrences sharing that tuple
+    can be grouped by CQ-013.
+  source:
+    - "CQ-013"
+    - "so:sha256:1081a3f10108fba5826e74ade5a53a90ae027969e1857cbfe67f1ef919a6931f"
+    - "so:sha256:a439f4ee4315fe978323f80c502d712289fd590fe8655c5050162bf65b9827b7"
+foundational:
+  ufo_category: information_object
+  gufo_alignment: "gufo:Endurant"
+ontoclean:
+  rigidity: rigid
+  identity: supplies
+  dependence: relational
+parents: []
+revision_log:
+  - from_sha256: "5367d1efac60e6aae8d52f711c8dad78160c4407618eceb5affcc67e72e454a0"
+    addressed:
+      - "failure-signature-grain-conflict"
+      - "discriminator-true-of-result-dto"
+    disposition: >-
+      Run-2 sitting 1 recast the occurrence-bound mode as repeatable
+      classification information used by CQ-013 to group distinct failures.
+reuse:
+  searched: true
+  exact_reuse_found: false
+  mappings: []
+operational_warrant:
+  competency_questions: ["CQ-013"]
+  semantic_support_for: []
+alternatives_rejected:
+  - >-
+    The implementation-only null is rejected because both classification
+    coordinates are instantiated for concrete failed results.
+  - >-
+    Identity with the failure bearer is rejected because many distinct
+    failures can share one failed-step and failure-kind tuple.
+open_issues:
+  - >-
+    Governance evidence must continue to preserve the meanings and version of
+    both tuple coordinates; equal spellings under incompatible vocabularies do
+    not establish one FailureSignature.
+  - >-
+    A non-reified contextual-fact model remains viable and would require no
+    FailureSignature individual beyond the classification assertions.
+revision_requests: []
+review: {foundational_agent: pending, adversarial_agent: pending, steward: pending}
+status: proposed

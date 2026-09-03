@@ -1,0 +1,31 @@
+id: "dh:jv-failure-signature:001"
+observation_refs:
+  - "so:sha256:1081a3f10108fba5826e74ade5a53a90ae027969e1857cbfe67f1ef919a6931f"
+  - "so:sha256:a439f4ee4315fe978323f80c502d712289fd590fe8655c5050162bf65b9827b7"
+cq_warrants: ["CQ-013", "CQ-022"]
+proposed_referent:
+  label: "Verification failure signature"
+  description: >-
+    A classification of an observed verification failure by the failed step
+    and failure kind recorded for that failure occurrence.
+representation_status: domain_referent
+alternatives:
+  - label: "Serialized failed-step and failure-kind tuple"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "Yeet-specific error-code pairing"
+    representation_status: implementation_artifact_only
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: >-
+    The paired values discriminate actual failure occurrences in the fleet and
+    directly support the failure-signature and same-attempt stopping questions.
+  discriminator: >-
+    Each cited observation instantiates both failedStepId and failureKind with
+    concrete step-exit values for an observed failed verification result; a
+    representation-only declaration would not instantiate those two failure
+    coordinates for actual results.
+epistemic_status: proposed
+confidence: {value: 0.95, use_for_acceptance: false}

@@ -239,11 +239,7 @@ export const readArtifactBudget = Effect.fn("QaExtract.readArtifactBudget")(func
   const fs = yield* FileSystem.FileSystem;
   return yield* fs
     .readFileString(budgetPath)
-    .pipe(
-      Effect.flatMap(decodeUnknownArtifactBudgetJson),
-      Effect.map(O.some),
-      Effect.orElseSucceed(O.none<ArtifactBudget>)
-    );
+    .pipe(Effect.flatMap(decodeUnknownArtifactBudgetJson), Effect.asSome, Effect.orElseSucceed(O.none<ArtifactBudget>));
 });
 
 /**
@@ -270,7 +266,7 @@ export const readExtractionPlan = Effect.fn("QaExtract.readExtractionPlan")(func
     .pipe(
       Effect.flatMap(UnknownFromJsonString.decodeUnknownEffect),
       Effect.flatMap(decodeExtractionPlan),
-      Effect.map(O.some),
+      Effect.asSome,
       Effect.orElseSucceed(O.none<ExtractionPlan>)
     );
 });
@@ -562,7 +558,7 @@ const embedProvenance = Effect.fn("QaExtract.embedProvenance")(function* (
   if (isWritableByExiftool(extension)) {
     return yield* exiftool.writeXmpPacket(WriteXmpPacketRequest.make({ filePath, provenance })).pipe(
       Effect.as(O.none<string>()),
-      Effect.catchCause(() => Effect.succeed(O.some(`exiftool could not stamp ${path.basename(filePath)}`)))
+      Effect.catchCause(() => Effect.succeedSome(`exiftool could not stamp ${path.basename(filePath)}`))
     );
   }
 
@@ -853,7 +849,7 @@ export const runQaExtract = Effect.fn("QaExtract.run")(function* (
 
   const videoPath = yield* O.match(manifest.videoPath, {
     onNone: () => discoverRecordedVideo(layout.videoDir),
-    onSome: (value) => Effect.succeed(O.some(value)),
+    onSome: (value) => Effect.succeedSome(value),
   }).pipe(
     Effect.flatMap(
       O.match({

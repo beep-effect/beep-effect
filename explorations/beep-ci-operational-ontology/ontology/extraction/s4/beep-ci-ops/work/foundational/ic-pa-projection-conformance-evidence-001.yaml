@@ -1,0 +1,45 @@
+id: "ic:pa-projection-conformance-evidence:001"
+hypothesis_ref: "dh:pa-projection-conformance-evidence:001"
+identity:
+  supplies_identity: unresolved
+  identity_criterion: >-
+    Unresolved: one conformance-evidence package would be the same only if it
+    preserves the exact property-suite specification, projection build,
+    frozen inputs, execution provenance, and reported results, but the cited
+    contract, execution report, and verdict may be three distinct artifacts.
+  reidentification_key:
+    - "property-suite and projection implementation versions"
+    - "frozen journal, policy, and other input digests"
+    - "test-execution identity, environment, outputs, and report provenance"
+ontoclean:
+  rigidity: unresolved
+  carries_identity: unresolved
+  supplies_identity: unresolved
+  unity: >-
+    The observations do not state whether the test specification, differential
+    replay occurrence, PASS assertion, and implementation report form one
+    evidence package or remain linked but distinct individuals.
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "information_object: a differential-replay result record"
+    - "information_object: a composite evidence package including suite and result"
+    - "process: the differential replay execution"
+    - "situation: projection conformance under one applicability context"
+  existential_dependencies:
+    - "The property-suite specification and projection implementation tested"
+    - "The frozen input corpus and execution environment"
+    - "A particular replay execution and provenance-bearing result carrier"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: unresolved
+  terminal_states:
+    - "superseded by evidence for changed suite, implementation, or inputs"
+    - "invalidated outside its recorded applicability context"
+counterexamples:
+  - description: >-
+      The property suite can exist before any replay runs, and the same suite
+      can pass one frozen journal but fail another; neither suite text nor PASS
+      alone identifies the execution or its evidence package.
+status: proposed

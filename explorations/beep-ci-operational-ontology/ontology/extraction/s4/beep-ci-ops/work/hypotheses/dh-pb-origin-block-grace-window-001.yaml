@@ -1,0 +1,26 @@
+id: "dh:pb-origin-block-grace-window:001"
+observation_refs:
+  - "po:sha256:79df3741e52f870a9c5d7ac0f3c76fc333a1341bf8f15c7a7720f2b6982e88b3"
+cq_warrants:
+  - "CQ-009"
+  - "CQ-023"
+proposed_referent:
+  label: "origin-block grace window"
+  description: "A possible time window equal to three heartbeat intervals for a request recorded as blocked on an origin."
+representation_status: unresolved
+alternatives:
+  - label: "scheduler liveness policy interval"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "branch-local staleness check"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The expression establishes a comparison against three heartbeat intervals but not what happens when it is true or false, whether it governs origin exclusion, or whether it is a grace, staleness, or retry condition. No operational referent is discriminated."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.33
+  use_for_acceptance: false

@@ -285,7 +285,7 @@ export class EmbeddingCache extends Context.Service<EmbeddingCache, EmbeddingCac
  * @since 0.0.0
  */
 export const EmbeddingCacheTest: Layer.Layer<EmbeddingCache> = Layer.succeed(EmbeddingCache, {
-  get: Effect.fn("EmbeddingCache.get")((_hash: string) => Effect.succeed(O.none())),
+  get: Effect.fn("EmbeddingCache.get")((_hash: string) => Effect.succeedNone),
   set: Effect.fn("EmbeddingCache.set")((_hash: string, _embedding: Embedding) => Effect.void),
   has: Effect.fn("EmbeddingCache.has")((_hash: string) => Effect.succeed(false)),
   size: Effect.succeed(0),

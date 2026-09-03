@@ -201,7 +201,7 @@ export const buildPortfolioIndexContent = Effect.fn("Goals.buildPortfolioIndexCo
       invalid = A.append(invalid, record.slug);
       continue;
     }
-    const manifest = yield* decodeGoalManifest(parsed.value).pipe(Effect.map(O.some), Effect.orElseSucceed(O.none));
+    const manifest = yield* decodeGoalManifest(parsed.value).pipe(Effect.asSome, Effect.orElseSucceed(O.none));
     if (O.isNone(manifest)) {
       invalid = A.append(invalid, record.slug);
       continue;
@@ -263,7 +263,7 @@ const checkPortfolioIndex = Effect.fn("Goals.checkPortfolioIndex")(function* (co
   const fs = yield* FileSystem.FileSystem;
   const existing = yield* fs
     .readFileString(PORTFOLIO_INDEX_PATH)
-    .pipe(Effect.map(O.some), Effect.orElseSucceed(O.none<string>));
+    .pipe(Effect.asSome, Effect.orElseSucceed(O.none<string>));
   if (O.isSome(existing) && existing.value !== content) {
     yield* Console.error(
       `[goals:index] local ${PORTFOLIO_INDEX_PATH} drifts from goals/*/ops/manifest.json; run \`bun run beep goals index --write\`.`

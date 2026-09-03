@@ -1,0 +1,10 @@
+id: rat:38
+proposal_ref: otp:pa-turbo-task-specification:001
+proposal_sha256: 1bdc8f9b658e4948efa2d32ec83c2ad140c95f14a462953aa8535f3bcec59119
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-09-03T09:05:00Z'
+verbatim_decision: Accept the WorkUnitSpecification reuse — repeatable Turbo task content under the ratified
+  split.

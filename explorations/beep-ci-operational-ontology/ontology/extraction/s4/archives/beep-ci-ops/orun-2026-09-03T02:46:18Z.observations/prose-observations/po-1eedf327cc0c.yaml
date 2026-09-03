@@ -1,0 +1,10 @@
+id: po:sha256:1eedf327cc0ca8bbf03f74777dd56ff8a86910f71ca88ceed1a75f6dd17144ab
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts
+source_span:
+  start_line: 53
+  end_line: 56
+quote: LiteralKit(["build", "check", "test", "lint", "audit", "coverage"])
+epistemic_status: quoted_prose

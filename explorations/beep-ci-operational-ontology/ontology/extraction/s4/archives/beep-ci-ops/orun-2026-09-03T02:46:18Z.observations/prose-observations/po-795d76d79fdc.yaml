@@ -1,0 +1,10 @@
+id: po:sha256:795d76d79fdc3ad235d204aee98c96f70dcdb10704c927558f31012749553995
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: AGENTS.md
+source_span:
+  start_line: 75
+  end_line: 76
+quote: bounded to `origin/main...HEAD` + dirty files
+epistemic_status: quoted_prose

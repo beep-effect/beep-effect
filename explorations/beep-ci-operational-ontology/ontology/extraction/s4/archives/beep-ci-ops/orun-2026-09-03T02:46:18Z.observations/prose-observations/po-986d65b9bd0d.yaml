@@ -1,0 +1,10 @@
+id: po:sha256:986d65b9bd0da99d0a49a54cb0742e6a4f4001a3c310c0f509c482c91226ae6e
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts
+source_span:
+  start_line: 138
+  end_line: 138
+quote: '"ci-timeout",'
+epistemic_status: quoted_prose

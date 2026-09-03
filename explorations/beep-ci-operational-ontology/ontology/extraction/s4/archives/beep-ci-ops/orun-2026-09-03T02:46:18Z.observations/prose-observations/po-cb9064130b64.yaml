@@ -1,0 +1,10 @@
+id: po:sha256:cb9064130b643be08d25e627bcfc5264739ac1397a236d353835b473c2df5734
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: goals/ship-velocity/research/d1-admission-scheduler.md
+source_span:
+  start_line: 64
+  end_line: 67
+quote: stale heartbeats mark suspicion but never kill.
+epistemic_status: quoted_prose

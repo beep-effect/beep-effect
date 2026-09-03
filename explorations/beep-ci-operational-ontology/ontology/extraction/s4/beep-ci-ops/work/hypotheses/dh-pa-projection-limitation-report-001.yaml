@@ -1,0 +1,22 @@
+id: "dh:pa-projection-limitation-report:001"
+observation_refs:
+  - "po:sha256:37dade1cef0b41d87b0656f26afcacbbb5abd10dc718d45d7e0c966b19061610"
+cq_warrants: ["CQ-009", "CQ-020", "CQ-023"]
+proposed_referent:
+  label: "Admission-projection limitation report"
+  description: "An information artifact delimiting the projection evidence's applicability by recording substitutions, omitted scheduler conditions, temporal scope, and an unimplemented planner seam."
+representation_status: information_artifact
+alternatives:
+  - label: "Projection implementation report section"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+  - label: "Projection applicability context"
+    representation_status: domain_referent
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: "The report constrains how replay evidence may be interpreted against scheduler decisions, rather than merely describing source organization."
+  discriminator: "The caveat record gives four concrete applicability limits: substituted tie-break data, omitted skippability conditions, single-instant starvation interpretation, and an unimplemented planner seam."
+epistemic_status: proposed
+confidence: {value: 0.74, use_for_acceptance: false}

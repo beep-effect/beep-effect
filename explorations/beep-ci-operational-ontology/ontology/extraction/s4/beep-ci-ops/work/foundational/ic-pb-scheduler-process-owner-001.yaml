@@ -1,0 +1,34 @@
+id: "ic:pb-scheduler-process-owner:001"
+hypothesis_ref: "dh:pb-scheduler-process-owner:001"
+identity:
+  supplies_identity: false
+  identity_criterion: "Two Agent role tokens are the same only while the same causally continuous operating-system process bears admission ownership through one uninterrupted ownership interval; changing the owned SeatRequests or SeatGrants does not mint a role per item, while a zero-ownership interval ends the anti-rigid role."
+  reidentification_key:
+    - "pid together with procStart as supporting process evidence"
+    - "continuous operating-system process lineage"
+    - "uninterrupted admission-ownership interval across changing owned items"
+ontoclean:
+  rigidity: anti_rigid
+  carries_identity: true
+  supplies_identity: false
+  unity: "One process bearer participating continuously in admission ownership of one or more queued SeatRequests or active SeatGrants, without a separate role token for each item."
+  dependence: relational
+ufo_analysis:
+  candidate_category: role
+  alternatives:
+    - "the causally continuous operating-system process that bears the role"
+    - "a serialized pid-and-procStart owner-coordinate information object"
+    - "an autonomous agent enduring across several operating-system processes"
+    - "one admission-owner role token per owned request or grant"
+  existential_dependencies:
+    - "a causally continuous operating-system process bearer"
+    - "at least one live SeatRequest or SeatGrant ownership relation"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+    - "the process no longer owns any queued SeatRequest or active SeatGrant"
+    - "the process exits or fails process-start continuity"
+counterexamples:
+  - description: "The same process exists before ownership begins and after its last admission item is released, so process identity cannot be Agent identity; while ownership continues across several items, item turnover does not mint a distinct Agent per item."
+status: proposed

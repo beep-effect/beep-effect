@@ -1,0 +1,42 @@
+id: "ic:jv-actual-wall-duration:001"
+hypothesis_ref: "dh:jv-actual-wall-duration:001"
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Two recorded wall-duration measurements are the same information object
+    only when they continue one recorded assertion about the same temporal
+    extent of the same execution or attempt under the same journal provenance;
+    an equal numeric value or field spelling is evidence, never identity.
+  reidentification_key:
+    - "recorded execution or attempt identity and temporal extent"
+    - "value and millisecond unit"
+    - "journal lineage and boundary context"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    One journal-grounded duration assertion joining an identified execution or
+    attempt extent to one millisecond value.
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "quality: the wall-duration quality of the measured execution"
+    - "information_object: a record token rather than repeatable measurement content"
+    - "none: an instrumentation counter with no independent artifact identity"
+  existential_dependencies:
+    - "The recorded execution or attempt extent that the datum concerns"
+    - "At least one faithful carrier, generically rather than one particular file"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - "corrected or re-scoped into a successor measurement"
+    - "ceased when no faithful realization remains"
+counterexamples:
+  - description: >-
+      Two unrelated executions can both report 7094.398349 milliseconds, and
+      one attempt can carry both a lane duration and whole-attempt elapsed
+      time; numeric equality therefore cannot reidentify the measurement.
+status: proposed

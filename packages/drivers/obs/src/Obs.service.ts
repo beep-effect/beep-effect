@@ -182,7 +182,7 @@ const makeService = Effect.fn("Obs.make")(function* (
     }
 
     const existingSettings = yield* readInputSettings(request.inputName).pipe(
-      Effect.map(O.some),
+      Effect.asSome,
       Effect.catchFilter(filterResourceNotFound, () => Effect.succeedNone)
     );
     const inputCreated = O.isNone(existingSettings);
@@ -318,7 +318,7 @@ const connectAndMake = Effect.fn("Obs.connectAndMake")(function* (
 > {
   const config = resolveObsConfig(configInput);
   const first = yield* ObsProtocol.connect(configInput).pipe(
-    Effect.map(O.some),
+    Effect.asSome,
     Effect.catchFilter(filterConnectFailure, (error) =>
       Effect.logInfo("obs-websocket is not reachable; spawning OBS Studio detached.").pipe(
         Effect.annotateLogs({ message: error.message }),

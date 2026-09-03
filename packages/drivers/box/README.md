@@ -48,7 +48,7 @@ is a **compile error**, never a runtime failure.
 
 3. **Re-measure and record the numbers in the PR.** Budget is ≤750K *marginal*
    instantiations for any single generated file (total minus the schema-import
-   floor, currently 1,543,714 under tsgo 7.0.2+effect-tsgo.0.35.0) and ≤3M
+   floor, currently 1,667,162 under tsgo 7.0.2+effect-tsgo.0.39.1) and ≤3M
    absolute package-wide. The exact recipe,
    the floor probe, and every prior measurement live in
    `goals/box-typecheck-cost/research/measurements.md`.

@@ -223,7 +223,10 @@ const runWriter = Effect.fnUntraced(function* (
       // the precedence chain and must resolve to the same place.
       BEEP_AGENT_EVIDENCE_ROOT: options.viaXdgFallback === true ? "" : evidenceRoot,
       BEEP_HOOK_PULSE_DISARM_SENTINEL: "",
-      BEEP_HOOK_PULSE_NOTIFIER_REV: "",
+      // The production fallback is now the post-baseline notifier revision.
+      // Legacy writer fixtures pin log-only explicitly so their assertion stays
+      // about projection semantics rather than the current intervention state.
+      BEEP_HOOK_PULSE_NOTIFIER_REV: "log-only-0",
       BEEP_HOOK_PULSE_INSTRUMENT_CLASS: "",
       // Both salt rungs are cleared unless a case sets one, so a developer who
       // exports a real ai-metrics salt cannot change what these digests are.

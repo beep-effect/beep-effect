@@ -1,0 +1,46 @@
+target: "otp:pa-package-dependency-closure:001"
+target_sha256: "5c5f46f18f8467fe84c87d533d92d0349adfaa10f4df5343a2db2959a5c16137"
+chain_sha256: "9688a278e0cfabb2ac355a27a879a9dce2b41d9bdc4b9cd75a5a15d86e023bf1"
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The object-property proposal asserts no parents, so no is-a edge or
+    subsumption relation is available to attack.
+revision_requests: []
+attacks:
+  - surface: identity
+    rule: contextual-reachability-fact-identity
+    counterexample: >-
+      Multiple paths in one pinned graph can connect the same package pair, and
+      a later graph can preserve that pair through a different path. The card
+      treats paths as support and includes graph context, so neither case
+      confuses the contextual reachability fact.
+    outcome: survived
+  - surface: warrant
+    rule: direct-cq-warrant
+    counterexample: >-
+      Removing dependsOnTransitive makes CQ-004 unable to return packages
+      reachable through indirect declared dependencies. The CQ directly needs
+      the relation rather than a name for the closure algorithm.
+    outcome: survived
+  - surface: null_discriminator
+    rule: formal-relation-independent-of-predicate-spelling
+    counterexample: >-
+      Renaming the Datalog predicate or replacing the fixpoint engine preserves
+      which package is reachable from which in the pinned graph. The relation
+      therefore survives removal of its current query spelling.
+    outcome: survived
+rival_models_still_viable:
+  - "A materialized closure assertion set as a separate information object."
+  - "Reified paths if path-level provenance becomes decision-bearing."
+evidence:
+  - "po:sha256:04efe14c9b36df094bcd5670eb7ef97147f4158a69a833ebc0b997361225a6b0"
+  - "po:sha256:346503bf0ecc7e2531c623fe8377aaeee72b6e7bcaea94fb9db2c17d5e7536bc"
+  - "CQ-004"

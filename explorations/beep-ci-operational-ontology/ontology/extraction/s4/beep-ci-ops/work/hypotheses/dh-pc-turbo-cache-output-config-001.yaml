@@ -1,0 +1,29 @@
+id: "dh:pc-turbo-cache-output-config:001"
+observation_refs:
+  - "po:sha256:c4c2f0985af5e38ea1a71a2ad788b909887b1e4e4f034f990e6c9e9b6812bb3b"
+  - "po:sha256:d6ac0f588b9e4afac093026c9e2af8d928942a710d5917cd1475f66264730b30"
+  - "po:sha256:fd8fba7cf729e2a5c30525e4e89aaf025964df48e25217ff1c5fb8c72f0aed85"
+cq_warrants: []
+proposed_referent:
+  label: "Turbo cache and output configuration fragments"
+  description: >-
+    Configuration tokens that may describe cached task outputs, including a
+    Next.js output glob.
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "cacheable verification-output specification"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "hash-surface constituent"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: >-
+    The separate quotations do not identify their enclosing task or establish
+    that the cache flag, outputs key, and glob belong to one specification.
+    No cache epoch, produced output, or invalidation is observed.
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.8, use_for_acceptance: false}

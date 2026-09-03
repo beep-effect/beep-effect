@@ -4,18 +4,16 @@
     "id": "practice-box-provisioning",
     "packetId": "goal-packet/v1:cc6d94acb702eb69cb43e9493434780c6e840f5cb66e24cc54f46862703621fa",
     "title": "Practice Box Provisioning",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-08-30",
-    "updated": "2026-09-02",
+    "updated": "2026-09-03",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/practice-box-provisioning",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Expand @beep/box with the provisioning manager surface and ship the Effect-native desired-state reconciler for the service-identity-owned client/matter tree",
-  "statusNote": "P0 and P1 are complete. P2 passed private CCG injection, the read-only identity bootstrap, and the 2026-09-02 pre-apply hardening after an adversarial review found the merged reconciler NOT SAFE for a first apply. Private practice inputs, 1Password CLI integration, live dry-run, and attended apply remain.",
-  "blockedBy": [
-    "P2 live dry-run and apply require the operator: 1Password CLI desktop integration enabled and unlocked, the three private practice inputs filled, and the apply attended."
-  ],
+  "statusNote": "Completed 2026-09-03: driver surface and reconciler shipped (#928), pre-apply hardening after an adversarial review (#947), live dry-run proof, operator-attended apply of the 32-folder starter tree with the attorney collaboration, all-Noop re-plan, and the Sign 403 inventory fix (#959). The closeout reflection and status flip ride follow-up PR #960 by operator decision (Exception Ledger).",
+  "blockedBy": [],
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -64,17 +62,17 @@
     {
       "id": "P2",
       "name": "Verify",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [

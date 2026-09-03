@@ -1,0 +1,21 @@
+id: fa:pb-scheduler-process-owner-alt:001
+hypothesis_ref: dh:pb-scheduler-process-owner:001
+identity_card_ref: ic:pb-scheduler-process-owner-alt:001
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+- label: serialized owner-key tuple (information object only)
+  still_viable: true
+- label: occurrent process rather than an endurant owner
+  still_viable: true
+strongest_counterexample: The schema fields exist to reidentify an owner across PID reuse,
+  which is the identity problem of a process-as-object. Whether an OS process is a UFO kind
+  (endurant while alive) or a process occurrent is a remaining foundational fork; both fit
+  the evidence.
+verdict: analyzed
+needed_evidence: An observation that the owner is treated as an agent that holds leases while
+  alive (endurant/kind) versus only as a dated occurrence, and whether two tuples with the
+  same pid+procStart are treated as one owner.

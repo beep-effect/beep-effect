@@ -1,0 +1,31 @@
+id: "fa:pa-yeet-verification-workflow:001"
+hypothesis_ref: "dh:pa-yeet-verification-workflow:001"
+identity_card_ref: "ic:pa-yeet-verification-workflow:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+  - label: "VerificationPlanSpecification identity follows repeatable ordered plan content across faithful carriers."
+    still_viable: true
+  - label: "Context-bound or separately revised plan copies supply distinct information-object identity."
+    still_viable: true
+  - label: "For the Yeet instance, cheap-gates, review-fix, and monitoring are distinct constituent specifications coordinated by a higher-level plan."
+    still_viable: true
+  - label: "A particular verification execution or merge-readiness situation is the reusable plan specification."
+    still_viable: false
+  - label: "The plan specification is itself the hosted assurance obligation it operationalizes."
+    still_viable: false
+strongest_counterexample: >-
+  A non-Yeet plan can prescribe an ordered WorkUnit sequence and applicable
+  scope without any Yeet selector, monitor, or merge-ready clause. Those
+  Yeet-specific conditions therefore cannot define or reidentify the full
+  exact-reused VerificationPlanSpecification extension.
+verdict: explicitly_deferred
+needed_evidence: >-
+  An authoritative identity contract across heterogeneous verification plans
+  must define content, contextual-copy, replacement, and revision identity.
+  A separate Yeet specialization additionally requires governed authority and
+  version lineage deciding whether cheap-gates, review-fix, and monitor are one
+  plan or coordinated subplans, plus a Must/Should CQ requiring it.

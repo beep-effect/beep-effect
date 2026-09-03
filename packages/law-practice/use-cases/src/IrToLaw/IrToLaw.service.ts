@@ -66,18 +66,12 @@ const requiredExtraction = Effect.fn("law_practice.ir_to_law.required_extraction
 ): Effect.fn.Return<AlignedGroundedExtraction, IrToLawExtractionError> {
   const extraction = yield* pipe(
     A.findFirst(extractions, (extraction) => Eq.equals(extraction.label, label)),
-    O.match({
-      onNone: () => Effect.fail(missingExtraction(label)),
-      onSome: Effect.succeed,
-    })
+    Effect.fromOption(() => missingExtraction(label))
   );
 
   return yield* pipe(
     O.liftPredicate(isAlignedExtraction)(extraction),
-    O.match({
-      onNone: () => Effect.fail(unalignedExtraction(extraction)),
-      onSome: Effect.succeed,
-    })
+    Effect.fromOption(() => unalignedExtraction(extraction))
   );
 });
 

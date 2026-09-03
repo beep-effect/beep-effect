@@ -26,18 +26,4 @@
  * @since 0.0.0
  */
 
-/**
- * Version export.
- *
- * **Example** (Log package VERSION)
- *
- * ```ts
- * import { VERSION } from "@beep/ui"
- *
- * console.log(VERSION)
- * ```
- *
- * @category configuration
- * @since 0.0.0
- */
-export const VERSION = "0.0.0" as const;
+export { VERSION } from "./Version.ts";

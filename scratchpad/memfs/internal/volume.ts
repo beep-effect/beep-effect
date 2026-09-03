@@ -2106,9 +2106,7 @@ const dateTimeInput = (method: string, name: string, value: Date | number) => {
     return Effect.fail(argumentError(method, `${name} must be a valid Date or epoch-seconds number`));
   }
   const parsed = DateTime.make(milliseconds);
-  return Option.isSome(parsed)
-    ? Effect.succeed(parsed.value)
-    : Effect.fail(argumentError(method, `${name} is outside the supported date range`));
+  return Effect.fromOption(parsed, () => argumentError(method, `${name} is outside the supported date range`));
 };
 
 const utimes = (volume: Volume) =>

@@ -61,8 +61,9 @@ const loadOxigraphModule = Effect.tryPromise({
   try: () => import("oxigraph"),
   catch: driverError("importFailed", "Failed to import oxigraph WASM package."),
 }).pipe(
-  Effect.flatMap((module) =>
-    isOxigraphModule(module) ? Effect.succeed(module) : Effect.fail(adapterInvariant("Invalid oxigraph module."))
+  Effect.filterOrFail(
+    (module) => isOxigraphModule(module),
+    () => adapterInvariant("Invalid oxigraph module.")
   )
 );
 

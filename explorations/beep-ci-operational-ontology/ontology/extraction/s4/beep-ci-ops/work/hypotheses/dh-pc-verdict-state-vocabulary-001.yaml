@@ -1,0 +1,30 @@
+id: "dh:pc-verdict-state-vocabulary:001"
+observation_refs:
+  - "po:sha256:dfe72174d596ac1cfa3ee2607b102893e4fa55a81d45bcf6f3c3e4783533a084"
+  - "po:sha256:ec9a32b9d1d43ae0ed56564c07bf2a8cdbc0eee6e7a110887d3e0b8e748d363f"
+  - "po:sha256:eda85a5098b02018ace4da628d2de2627526f5b83760f37cce92d0666a5d2cf4"
+cq_warrants:
+  - "CQ-013"
+proposed_referent:
+  label: "verification verdict and lane-state vocabulary"
+  description: >-
+    Result-state literals plus status and verdict fields that may represent
+    outcomes recorded during verification attempts.
+representation_status: lexical_alias
+alternatives:
+  - label: "UI streaming statuses and journal serialization fields"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+  - label: "operational verdicts or phases of lane execution"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: >-
+    The observations contain a literal set and field declarations but no
+    attempt record, state transition, temporal condition, or failure signature.
+    They do not decide whether status and verdict denote the same thing.
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.7, use_for_acceptance: false}

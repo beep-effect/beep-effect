@@ -1,0 +1,20 @@
+id: fa:pb-admission-priority-aging-alt:001
+hypothesis_ref: dh:pb-admission-priority-aging:001
+identity_card_ref: ic:pb-admission-priority-aging-alt:001
+tests:
+  spec_vs_execution: separated
+  world_vs_information: not_applicable
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+- label: phase of a waiting verify request (unaged versus aged rank)
+  still_viable: true
+- label: numeric sort-key optimization with no rule content
+  still_viable: false
+strongest_counterexample: The contract names publishAgingSeconds as part of admission ordering,
+  which supports a rule (information object). The comparison changing rank from 1 to 0 as
+  elapsed time crosses a bound also supports a phase of the request. Both are observationally
+  live.
+verdict: analyzed
+needed_evidence: An observation that requests are classified as aged/unaged independently
+  of evaluating the sort key, versus only the rule being cited as policy.

@@ -1,0 +1,31 @@
+id: "dh:jv-lane-diagnostic-comparison:001"
+observation_refs:
+  - "so:sha256:91988c625516a3fa1516b592a7dc4c6b197b56249390fde1fc1e116867ae1af3"
+cq_warrants: ["CQ-003", "CQ-025"]
+proposed_referent:
+  label: "Lane diagnostic comparison record"
+  description: >-
+    An information artifact comparing a named task's standalone and lane-rerun
+    durations for a named package and diagnostic policy at a detection instant.
+representation_status: information_artifact
+alternatives:
+  - label: "Verification-lane performance anomaly occurrence"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "Compiler-policy diagnostic telemetry"
+    representation_status: implementation_artifact_only
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: >-
+    The comparison is concrete measured evidence about lane cost and therefore
+    can support cost estimation and calibration, even if the named policy is
+    implementation-specific.
+  discriminator: >-
+    The observation records a detection instant, package, lane label, task and
+    task identifier, plus distinct standalone and lane-rerun durations of
+    1902.713545 and 29802.864398 milliseconds; a diagnostic schema alone would
+    not assert that measured comparison.
+epistemic_status: proposed
+confidence: {value: 0.86, use_for_acceptance: false}

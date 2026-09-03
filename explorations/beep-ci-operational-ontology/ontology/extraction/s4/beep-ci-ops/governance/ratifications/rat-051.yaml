@@ -1,0 +1,10 @@
+id: rat:51
+proposal_ref: otp:pb-planned-lane-status:001
+proposal_sha256: e11b9e8dbb7b00499309a1b02edd206557e1aa50eb29d2f144e3ff6e520be7f0
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-09-03T09:05:00Z'
+verbatim_decision: Accept the planned-lane-status VerificationResultArtifact reuse, result-provenance
+  identity deferred as flagged.

@@ -1,0 +1,33 @@
+id: "ic:pb-admission-capacity-state:001"
+hypothesis_ref: "dh:pb-admission-capacity-state:001"
+identity:
+  supplies_identity: unresolved
+  identity_criterion: "Unresolved: two AdmissionSnapshot records would be the same capture only if they derive from one observation act over one machine and policy scope at one instant, but the present fields record values without that capture or pre-grant correlation provenance."
+  reidentification_key:
+    - "capture act and observation instant"
+    - "machine and policy scope"
+    - "correlation to the immediately pre-grant admission boundary"
+ontoclean:
+  rigidity: rigid
+  carries_identity: unresolved
+  supplies_identity: unresolved
+  unity: "One coordinated recorded-value capture of memAvailableGib, hardFloorEngaged, and capacityTokens at one observation boundary."
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "a capacity situation constituted by memory state and policy parameters"
+    - "an extensional status-response value without independently reidentified token identity"
+    - "a persisting capacity quality borne by the scheduler"
+    - "the reusable arithmetic procedure that derives capacity"
+  existential_dependencies:
+    - "a capture act and machine-wide admission scope"
+    - "at least one transient or durable carrier"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - "superseded for current-state purposes by a later capture"
+counterexamples:
+  - description: "Two status reads can record identical memory, hard-floor, and token values while arising from distinct observation acts, but the available fields do not identify those acts or join either read to one pre-grant admission."
+status: proposed

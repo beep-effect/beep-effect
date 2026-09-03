@@ -1,0 +1,25 @@
+id: fa:ov-schedules-seat-request-alt:001
+hypothesis_ref: dh:ov-schedules-seat-request:001
+identity_card_ref: ic:ov-schedules-seat-request-alt:001
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: false
+rival_models:
+- label: distinct relator mediating ScheduleStep and SeatRequest
+  still_viable: true
+- label: journal-specific foreign-key edge with no schedule-content aboutness
+  still_viable: true
+- label: ScheduleStep-to-WorkUnitSpecification relation as the range of this edge
+  still_viable: false
+strongest_counterexample: 'The implementation report renames the edge because the
+  journal carries SeatRequest identity and no WorkUnitSpecification identity. That
+  settles the range of this targeting against WorkUnitSpecification. It does not
+  settle whether the targeting is a slot of the step (no extra individual) or a relator
+  with its own identity. Those two remain observationally equivalent.'
+verdict: analyzed
+needed_evidence: 'An observation of a property of the scheduling-of edge (interval,
+  charge, rank) that is not a property of the ScheduleStep, which would force a distinct
+  relator, or of a v2 planner step designating a WorkUnitSpecification by a different
+  edge.'

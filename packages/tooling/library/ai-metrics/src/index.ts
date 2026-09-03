@@ -24,6 +24,14 @@ export * from "./agent-effectiveness.ts";
  */
 export * from "./archive.ts";
 /**
+ * Machine-wide agent command circuit-breaker schemas and shared state paths.
+ * Examples live on the owning declarations in `./circuit-breaker.ts`.
+ *
+ * @category observability
+ * @since 0.0.0
+ */
+export * from "./circuit-breaker.ts";
+/**
  * Docker Compose rendering for the local Phoenix observability backend that
  * receives exported spans. Examples live on the owning declarations in
  * `./compose.ts`.
@@ -173,6 +181,14 @@ export * from "./retention.ts";
  * @since 0.0.0
  */
 export * from "./scorecard.ts";
+/**
+ * Content-free sequence-break notification schemas and shared state paths.
+ * Examples live on the owning declarations in `./sequence-break.ts`.
+ *
+ * @category observability
+ * @since 0.0.0
+ */
+export * from "./sequence-break.ts";
 /**
  * Shell rendering helpers used to build the operator command strings printed by
  * install plans. Examples live on the owning declarations in `./shell.ts`.

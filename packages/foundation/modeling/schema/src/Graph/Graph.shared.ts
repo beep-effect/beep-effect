@@ -361,14 +361,6 @@ type GraphValue<Node, Edge> =
  */
 type GraphEquivalence<Node, Edge> = (self: GraphValue<Node, Edge>, that: GraphValue<Node, Edge>) => boolean;
 
-/**
- * The node-equivalence application step of the data-last
- * {@link makeGraphEquivalence} form.
- */
-type GraphEquivalenceForNodes<Node, Edge> = (
-  nodeEquivalence: (self: Node, that: Node) => boolean
-) => GraphEquivalence<Node, Edge>;
-
 /** @internal */
 /**
  * Builds a structural equivalence for two graphs given per-node and per-edge equivalences.
@@ -393,7 +385,9 @@ type GraphEquivalenceForNodes<Node, Edge> = (
  * @since 0.0.0
  */
 export const makeGraphEquivalence: {
-  <Node, Edge>(edgeEquivalence: (self: Edge, that: Edge) => boolean): GraphEquivalenceForNodes<Node, Edge>;
+  <Edge>(
+    edgeEquivalence: (self: Edge, that: Edge) => boolean
+  ): <Node>(nodeEquivalence: (self: Node, that: Node) => boolean) => GraphEquivalence<Node, Edge>;
   <Node, Edge>(
     nodeEquivalence: (self: Node, that: Node) => boolean,
     edgeEquivalence: (self: Edge, that: Edge) => boolean

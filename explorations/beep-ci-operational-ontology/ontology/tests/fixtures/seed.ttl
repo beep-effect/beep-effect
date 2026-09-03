@@ -22,7 +22,7 @@ ciops:ep-example a ciops:VerificationEpisode ;
     ciops:repairGapMs 100000 ;
     ciops:ciWaitMs 65000 ;
     ciops:episodeStartedAt "2026-08-13T08:24:45Z"^^xsd:dateTime ;
-    ciops:hasCurrentProposal ciops:sp-example .
+    ciops:hasCurrentProposal ciops:sp-2026-08-27-1443 .
 ciops:TierLocalFullProof ciops:requiresLane ciops:LaneLint .
 ciops:TierLocalFullProof ciops:requiresLane ciops:LaneStorybook .
 ciops:TierCiMergeGreen ciops:requiresLane ciops:LaneLint .
@@ -101,14 +101,18 @@ ciops:grant-1 a ciops:SeatGrant ;
     ciops:hasBudget ciops:budget-1 .
 ciops:budget-1 ciops:softP95BudgetMs 900000 .
 
-# --- schedule proposal (CQ-020; CQ-019 arms 2-4 exercise its narrowed scope) ---
-ciops:sp-example a ciops:ScheduleProposal ;
+# --- schedule proposal (CQ-020; CQ-019 arms 2-5 exercise its narrowed scope) ---
+ciops:aps-v1 a ciops:AdmissionProjectionSpecification .
+ciops:sp-2026-08-27-1443 a ciops:ScheduleProposal ;
+    ciops:hasProjectionSpecification ciops:aps-v1 ;
     ciops:hasScope ciops:AffectedScope ;
     ciops:scopedByComputation ciops:affected-2 ;
     ciops:hasStep ciops:st-1 .
 ciops:st-1 a ciops:ScheduleStep ;
     ciops:stepIndex 1 ;
-    ciops:schedulesWorkUnit ciops:wu-1 .
+    ciops:schedulesSeatRequest ciops:req-lint-affected-from-main ;
+    ciops:hasScopeTag "admission" .
+ciops:req-lint-affected-from-main a ciops:SeatRequest .
 
 # --- attempts, executions, stopping (CQ-022, CQ-024, CQ-025) ---
 ciops:att-1 a ciops:VerificationAttempt .

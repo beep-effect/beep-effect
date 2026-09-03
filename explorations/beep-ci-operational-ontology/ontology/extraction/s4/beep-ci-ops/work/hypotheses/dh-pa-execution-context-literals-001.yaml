@@ -1,0 +1,22 @@
+id: "dh:pa-execution-context-literals:001"
+observation_refs:
+  - "po:sha256:48ffbc6bf26516fe6abe5504eef559c532b334927df41fd8ec82df76fce702db"
+cq_warrants: []
+proposed_referent:
+  label: "Quality execution-context literals"
+  description: "The current, workstation, and ci values represented by a quality-command LiteralKit declaration."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "Verification execution environment vocabulary"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "Verification context phase"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The literal set does not state what bearer has the context, whether membership can change, or which in-scope decision depends on the distinction."
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.16, use_for_acceptance: false}

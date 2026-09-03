@@ -1,0 +1,43 @@
+id: "ic:pa-projection-contract:001"
+hypothesis_ref: "dh:pa-projection-contract:001"
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Two AdmissionProjectionSpecification records are the same information
+    object only when they continue one governing authority, version, and
+    applicability lineage with the same input interpretation, policy and ledger
+    reconstruction, ordering, explicit-time, output, provenance, replay,
+    failure, and non-goal semantics.
+  reidentification_key:
+    - "governing authority, version, and applicability lineage"
+    - "input, state-reconstruction, time, and ordered-output semantics"
+    - "provenance, replay, failure, and non-goal clauses"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    One repeatable prescriptive content unit whose projection, provenance,
+    replay, failure, and exclusion clauses share one revision boundary.
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "process: a particular admission-projection execution"
+    - "information_object: the Effect service and schema source carrier"
+    - "none: an abstract procedure universal realized by contract documents"
+  existential_dependencies:
+    - "At least one faithful documentary or executable carrier"
+    - "The policy, journal, and scheduling interpretation that gives the contract meaning"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - "superseded by changed projection or failure semantics"
+    - "withdrawn or left without any faithful realization"
+counterexamples:
+  - description: >-
+      The same contract can be executed twice against different journal prefixes
+      and produce different ordered schedules, while one execution can fail;
+      those occurrences and outputs do not change the specification's identity.
+status: proposed

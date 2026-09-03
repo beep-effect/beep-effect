@@ -1,0 +1,19 @@
+id: fa:pb-schedule-projection-specification-alt:001
+hypothesis_ref: dh:pb-schedule-projection-specification:001
+identity_card_ref: ic:pb-schedule-projection-specification-alt:001
+tests:
+  spec_vs_execution: separated
+  world_vs_information: not_applicable
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+- label: the same information object as pa-projection-contract and pc-projection-contract
+  still_viable: true
+- label: the projected schedule occurrence
+  still_viable: false
+strongest_counterexample: 'On current evidence this is observationally equivalent to the other
+  two projection-contract hypotheses: all quote the same binding document. Layered specs versus
+  one object is the live rivalry.'
+verdict: analyzed
+needed_evidence: An observation that inputs/rulings/non-goals are maintained or cited as a
+  document distinct from determinism rules and schema/service architecture.

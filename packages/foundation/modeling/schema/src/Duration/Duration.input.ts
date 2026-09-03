@@ -7,7 +7,7 @@
 
 import { $SchemaId } from "@beep/identity";
 import { A } from "@beep/utils";
-import { Duration as D, Effect, Option, pipe, SchemaGetter, SchemaIssue } from "effect";
+import { Duration as D, Effect, pipe, SchemaGetter, SchemaIssue } from "effect";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { LiteralKit } from "../LiteralKit/index.ts";
@@ -243,15 +243,12 @@ const decodeDurationInput = (input: DurationInput): Effect.Effect<D.Duration, Sc
 
   return pipe(
     duration,
-    Option.match({
-      onNone: () =>
-        Effect.fail(
-          new SchemaIssue.InvalidValue({
-            message: "Expected a valid duration input.",
-          })
-        ),
-      onSome: Effect.succeed,
-    })
+    Effect.fromOption(
+      () =>
+        new SchemaIssue.InvalidValue({
+          message: "Expected a valid duration input.",
+        })
+    )
   );
 };
 

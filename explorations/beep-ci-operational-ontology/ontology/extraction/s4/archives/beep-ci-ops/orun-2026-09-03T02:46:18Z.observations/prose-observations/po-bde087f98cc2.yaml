@@ -1,0 +1,10 @@
+id: po:sha256:bde087f98cc217a882d0f5836997ae35fd037d601fae87d4dfb60f422c805852
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: turbo.json
+source_span:
+  start_line: 174
+  end_line: 174
+quote: '"test:integration:serial": {'
+epistemic_status: quoted_prose

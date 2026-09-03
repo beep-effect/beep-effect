@@ -1839,5 +1839,110 @@
   "@beep/box-provisioning": [
     "./packages/drivers/box-provisioning/src/index.ts"
   ],
-  "@beep/box-provisioning/*": ["./packages/drivers/box-provisioning/src/*"]
+  "@beep/box-provisioning/*": ["./packages/drivers/box-provisioning/src/*"],
+  "@beep/dock-react/DockReact.types": [
+    "./packages/foundation/ui-system/dock-react/src/DockReact.types.ts"
+  ],
+  "@beep/dock-react/DockviewReact": [
+    "./packages/foundation/ui-system/dock-react/src/DockviewReact.tsx"
+  ],
+  "@beep/dock/AnchoredBox": [
+    "./packages/foundation/ui-system/dock/src/AnchoredBox.ts"
+  ],
+  "@beep/dock/Dock.atoms": [
+    "./packages/foundation/ui-system/dock/src/Dock.atoms.ts"
+  ],
+  "@beep/dock/Dock.commands": [
+    "./packages/foundation/ui-system/dock/src/Dock.commands.ts"
+  ],
+  "@beep/dock/Dock.errors": [
+    "./packages/foundation/ui-system/dock/src/Dock.errors.ts"
+  ],
+  "@beep/dock/Dock.events": [
+    "./packages/foundation/ui-system/dock/src/Dock.events.ts"
+  ],
+  "@beep/dock/Dock.geometry": [
+    "./packages/foundation/ui-system/dock/src/Dock.geometry.ts"
+  ],
+  "@beep/dock/Dock.ids": [
+    "./packages/foundation/ui-system/dock/src/Dock.ids.ts"
+  ],
+  "@beep/dock/Dock.models": [
+    "./packages/foundation/ui-system/dock/src/Dock.models.ts"
+  ],
+  "@beep/dock/Dock.outcomes": [
+    "./packages/foundation/ui-system/dock/src/Dock.outcomes.ts"
+  ],
+  "@beep/dock/Dock.placement": [
+    "./packages/foundation/ui-system/dock/src/Dock.placement.ts"
+  ],
+  "@beep/dock/Dock.protocol": [
+    "./packages/foundation/ui-system/dock/src/Dock.protocol.ts"
+  ],
+  "@beep/dock/Dock.reducer": [
+    "./packages/foundation/ui-system/dock/src/Dock.reducer.ts"
+  ],
+  "@beep/dock/Dock.tree": [
+    "./packages/foundation/ui-system/dock/src/Dock.tree.ts"
+  ],
+  "@beep/dock/DockEngine.service": [
+    "./packages/foundation/ui-system/dock/src/DockEngine.service.ts"
+  ],
+  "@beep/dock/DockPolicy": [
+    "./packages/foundation/ui-system/dock/src/DockPolicy.ts"
+  ],
+  "@beep/dock/Minima": ["./packages/foundation/ui-system/dock/src/Minima.ts"],
+  "@beep/dock/Recency": ["./packages/foundation/ui-system/dock/src/Recency.ts"],
+  "@beep/editor/Version": [
+    "./packages/foundation/ui-system/editor/src/Version.ts"
+  ],
+  "@beep/html/Html": ["./packages/foundation/modeling/html/src/Html.ts"],
+  "@beep/html/Version": ["./packages/foundation/modeling/html/src/Version.ts"],
+  "@beep/lexical-schema/Version": [
+    "./packages/foundation/modeling/lexical/src/Version.ts"
+  ],
+  "@beep/md/Version": ["./packages/foundation/modeling/md/src/Version.ts"],
+  "@beep/observability/CauseDiagnostics": [
+    "./packages/foundation/capability/observability/src/CauseDiagnostics.ts"
+  ],
+  "@beep/observability/CauseRedaction": [
+    "./packages/foundation/capability/observability/src/CauseRedaction.ts"
+  ],
+  "@beep/observability/CoreConfig": [
+    "./packages/foundation/capability/observability/src/CoreConfig.ts"
+  ],
+  "@beep/observability/HttpError": [
+    "./packages/foundation/capability/observability/src/HttpError.ts"
+  ],
+  "@beep/observability/Logging": [
+    "./packages/foundation/capability/observability/src/Logging.ts"
+  ],
+  "@beep/observability/Metric": [
+    "./packages/foundation/capability/observability/src/Metric.ts"
+  ],
+  "@beep/observability/Observed": [
+    "./packages/foundation/capability/observability/src/Observed.ts"
+  ],
+  "@beep/observability/PhaseProfiler": [
+    "./packages/foundation/capability/observability/src/PhaseProfiler.ts"
+  ],
+  "@beep/observability/Version": [
+    "./packages/foundation/capability/observability/src/Version.ts"
+  ],
+  "@beep/pandoc-ast/Version": [
+    "./packages/foundation/modeling/pandoc-ast/src/Version.ts"
+  ],
+  "@beep/schema/FileDiff": [
+    "./packages/foundation/modeling/schema/src/FileDiff.schema.ts"
+  ],
+  "@beep/schema/Opaque": [
+    "./packages/foundation/modeling/schema/src/Opaque.ts"
+  ],
+  "@beep/schema/SafeRemoteHost": [
+    "./packages/foundation/modeling/schema/src/SafeRemoteHost.ts"
+  ],
+  "@beep/schema/Version": [
+    "./packages/foundation/modeling/schema/src/Version.ts"
+  ],
+  "@beep/ui/Version": ["./packages/foundation/ui-system/ui/src/Version.ts"]
 }

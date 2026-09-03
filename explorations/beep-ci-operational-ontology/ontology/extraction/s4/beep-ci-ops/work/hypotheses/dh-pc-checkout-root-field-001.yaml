@@ -1,0 +1,28 @@
+id: "dh:pc-checkout-root-field:001"
+observation_refs:
+  - "po:sha256:c7c584d2fed863958e6cc07caab7553d34c39bb3d6d57edd5706bbcb2846355f"
+cq_warrants:
+  - "CQ-021"
+proposed_referent:
+  label: "checkout-root record field"
+  description: >-
+    A scheduler-record field whose spelling may alias an owner's checkout
+    location, without implying checkout uniqueness.
+representation_status: lexical_alias
+alternatives:
+  - label: "serialization field for a filesystem string"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+  - label: "recorded owner attribute of an admission request or grant"
+    representation_status: information_artifact
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: >-
+    The quotation states only that checkoutRoot is a string field. It gives no
+    record carrier, owner, value, or operational use; the scope document's
+    warning against uniqueness semantics cannot supply those missing facts.
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.66, use_for_acceptance: false}

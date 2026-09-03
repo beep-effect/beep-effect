@@ -1,0 +1,24 @@
+id: "dh:pb-turbo-output-logging:001"
+observation_refs:
+  - "po:sha256:6a11f3f1037815bbed2d22b89a8969976b724403102f0fde3c933bca230ae18e"
+cq_warrants: []
+proposed_referent:
+  label: "new-only task-output logging mode"
+  description: "A possible logging mode represented by Turbo's outputLogs configuration value."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "verification-evidence presentation policy"
+    representation_status: information_artifact
+    plausibility: weak
+  - label: "console-output configuration value"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The single key-value quote controls output rendering at most; it records no verification result, evidence validity, or operational event. Nothing distinguishes it from a tool-specific presentation setting."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.94
+  use_for_acceptance: false

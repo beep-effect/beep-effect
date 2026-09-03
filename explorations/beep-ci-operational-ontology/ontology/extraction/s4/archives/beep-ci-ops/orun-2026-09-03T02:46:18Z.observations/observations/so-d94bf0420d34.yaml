@@ -1,0 +1,39 @@
+id: "so:sha256:d94bf0420d3457158959e6188c50d5949dc4fae4a48d07e7077f8c81df36fcb6"
+schema_version: 1
+repository:
+  commit: "341cfef8b6e80d49f6cef894e9eecd5337f70e8f"
+  path: "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run2-fleet/admission/session-tmp/journal.properties"
+source_span:
+  start_line: 1
+  end_line: 14
+  content_sha256: "a87ea7673c1ef7b09402b7a46bfee151a8ec5c1196732d8ed0ab49516279068b"
+extractor:
+  id: "adapter-journal"
+  version: "1.0.0"
+  parser: "python-stdlib-properties"
+  script: "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal.py"
+symbol:
+  qualified_name: "yeet-admission-journal"
+  lexical_name: "yeet-admission-journal"
+  syntactic_kind: "properties_projection"
+observed_facts:
+  - predicate: "config_key_value"
+    object: "_tag=admission-admitted"
+  - predicate: "config_key_value"
+    object: "admittedAtMillis=1788047259740"
+  - predicate: "config_key_value"
+    object: "enqueuedAtMillis=1788047259737"
+  - predicate: "config_key_value"
+    object: "kind=review-fix"
+  - predicate: "config_key_value"
+    object: "nonce=91deb101"
+  - predicate: "config_key_value"
+    object: "priority=verify"
+  - predicate: "config_key_value"
+    object: "releasedAtMillis=1788047736427"
+  - predicate: "config_key_value"
+    object: "schemaVersion=yeet-admission-journal/v1"
+  - predicate: "config_key_value"
+    object: "weightTokens=1"
+source_excerpt: "_tag=admission-admitted"
+epistemic_status: "parser_derived"

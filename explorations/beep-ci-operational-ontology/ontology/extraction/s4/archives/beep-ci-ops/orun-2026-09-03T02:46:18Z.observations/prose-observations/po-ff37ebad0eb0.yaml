@@ -1,0 +1,10 @@
+id: po:sha256:ff37ebad0eb0db7d4d93c2868963043b2d76981e6d29939abf14cb4b0e3b4899
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts
+source_span:
+  start_line: 123
+  end_line: 123
+quote: Token weight for each admission kind
+epistemic_status: quoted_prose

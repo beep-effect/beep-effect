@@ -1,0 +1,17 @@
+id: "fa:pc-projection-contract:001"
+hypothesis_ref: "dh:pc-projection-contract:001"
+identity_card_ref: "ic:pc-projection-contract:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+  - label: "This chain denotes a separately authoritative binding contract rather than the canonical AdmissionProjectionSpecification."
+    still_viable: false
+  - label: "The contract denotes each schedule-projection process that executes its rules."
+    still_viable: false
+  - label: "The document has no domain-relevant normative force despite being declared binding and externally testable."
+    still_viable: false
+strongest_counterexample: "A contract persists unchanged across many executions, projection instants, and output schedules; deterministic equality of results under equal inputs does not collapse those occurrences into the specification."
+verdict: analyzed

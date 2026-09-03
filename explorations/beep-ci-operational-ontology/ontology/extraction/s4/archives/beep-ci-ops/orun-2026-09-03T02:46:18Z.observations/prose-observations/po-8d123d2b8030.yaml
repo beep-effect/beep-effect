@@ -1,0 +1,10 @@
+id: po:sha256:8d123d2b803018949aa079849fafabb4d38fbde7e7f77a5515d448cdc0a9f195
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts
+source_span:
+  start_line: 423
+  end_line: 423
+quote: '"cheap-gates": () => [...changesetStatusLanesForProof(context), ...githubCheckCheapGateLanes(context.repoRoot)],'
+epistemic_status: quoted_prose

@@ -244,10 +244,7 @@ const stripGsPrefix = (uri: string): string =>
 const parseManifest = S.decodeEffect(S.fromJsonString(BatchManifest));
 
 const expectValue = <A>(opt: O.Option<A>, key: string) =>
-  O.match(opt, {
-    onNone: () => Effect.fail(WorkflowError.make({ message: `Missing object at ${key}` })),
-    onSome: (value) => Effect.succeed(value),
-  });
+  Effect.fromOption(opt, () => WorkflowError.make({ message: `Missing object at ${key}` }));
 
 const stageFromState = Match.type<BatchState>().pipe(
   Match.tag("Pending", (): PipelineStage => "pending"),
@@ -541,8 +538,8 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
       const enrichedManifest = yield* storage.getOption(enrichedManifestKey).pipe(
         Effect.flatMap(
           O.match({
-            onNone: () => Effect.succeed(O.none()),
-            onSome: (content) => EnrichedManifest.decodeFromString(content).pipe(Effect.map(O.some)),
+            onNone: () => Effect.succeedNone,
+            onSome: (content) => EnrichedManifest.decodeFromString(content).pipe(Effect.asSome),
           })
         ),
         Effect.catch(

@@ -7,6 +7,8 @@
  * @since 0.0.0
  */
 import { VariantSchema } from "effect/unstable/schema";
+import type { Top } from "effect/Schema";
+import type { Apply, Lambda } from "effect/Struct";
 
 const variantTuple = <const Values extends readonly [string, ...string[]]>(...values: Values): Values => values;
 
@@ -145,6 +147,43 @@ export const FieldOnly = factory.FieldOnly;
  */
 export const FieldExcept = factory.FieldExcept;
 
+// biome-ignore lint/suspicious/noExplicitAny: Effect uses Field<any> as its invariant variant-field existential.
+type FieldEvolveInput = VariantSchema.Field<any> | Top;
+
+type FieldEvolveTransforms = { readonly [Key in Variant]?: (variant: never) => Top };
+
+type FieldEvolveMapping<Self extends FieldEvolveInput> =
+  Self extends VariantSchema.Field<infer Schemas>
+    ? { readonly [Key in keyof Schemas]?: (variant: Schemas[Key]) => Top }
+    : { readonly [Key in Variant]?: (variant: Self) => Top };
+
+type ApplyFieldEvolveTransform<Transform, Input> = Transform extends Lambda
+  ? Extract<Apply<Transform, Input>, Top>
+  : Transform extends (argument: Input) => infer Result
+    ? Extract<Result, Top>
+    : Input;
+
+type EvolvedField<Self extends FieldEvolveInput, Mapping extends FieldEvolveTransforms> = VariantSchema.Field<
+  Self extends VariantSchema.Field<infer Schemas>
+    ? {
+        readonly [Key in keyof Schemas]: Key extends keyof Mapping
+          ? ApplyFieldEvolveTransform<Mapping[Key], Schemas[Key]>
+          : Schemas[Key];
+      }
+    : {
+        readonly [Key in Variant]: Key extends keyof Mapping ? ApplyFieldEvolveTransform<Mapping[Key], Self> : Self;
+      }
+>;
+
+type FieldEvolve = {
+  <const Mapping extends FieldEvolveTransforms>(
+    ...args: [f: Mapping]
+  ): <Self extends FieldEvolveInput>(self: Self) => EvolvedField<Self, Mapping>;
+  <Self extends FieldEvolveInput, const Mapping extends FieldEvolveMapping<Self>>(
+    ...args: [self: Self, f: Mapping]
+  ): EvolvedField<Self, Mapping>;
+};
+
 /**
  * Evolves selected variant schemas while leaving other variants unchanged.
  *
@@ -170,7 +209,7 @@ export const FieldExcept = factory.FieldExcept;
  * @category combinators
  * @since 0.0.0
  */
-export const fieldEvolve = factory.fieldEvolve;
+export const fieldEvolve = factory.fieldEvolve as FieldEvolve;
 
 /**
  * Extracts the schema for one variant from a variant-aware model structure.

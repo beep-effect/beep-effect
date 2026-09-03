@@ -1,0 +1,10 @@
+id: po:sha256:ba02c2407e6a168b568df68d655e15d929e3a77ae4e2d4a9281c0d47d36a88b5
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts
+source_span:
+  start_line: 177
+  end_line: 178
+quote: "\"labs\",\n  \"lint\","
+epistemic_status: quoted_prose

@@ -9,14 +9,15 @@ import { createHash } from "node:crypto";
 import { hostname, userInfo } from "node:os";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Effect, flow, Path, pipe } from "effect";
+import { Effect, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { perUserRuntimeRoot } from "../../../internal/repo-run/index.ts";
+import { repoRunArtifactId, repoRunSafeArtifactName } from "../../../internal/repo-run/RepoRunArtifacts.ts";
+import { perUserRuntimeRoot } from "../../../internal/repo-run/RuntimeRoot.ts";
 import type { FileSystem } from "effect";
-import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
+import type { RepoRunContext } from "../../../internal/repo-run/RepoRun.models.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/ArtifactPaths");
 
@@ -124,11 +125,7 @@ const canonicalRepositoryIdentity = (repositoryIdentity: string): string => {
  * @category utilities
  * @since 0.0.0
  */
-export const safeArtifactName: (value: string) => string = flow(
-  Str.replace(/[^a-zA-Z0-9._-]+/gu, "_"),
-  Str.replace(/^_+|_+$/gu, ""),
-  (name) => (Str.isNonEmpty(name) ? name : "repo")
-);
+export const safeArtifactName: (value: string) => string = repoRunSafeArtifactName;
 
 const artifactNameHash = (value: string): string => createHash("sha256").update(value).digest("hex").slice(0, 12);
 
@@ -216,8 +213,7 @@ export const proofCoordinatorLockPath = Effect.fn("Yeet.proofCoordinatorLockPath
  * @category utilities
  * @since 0.0.0
  */
-export const runIdForContext = (context: RepoRunContext): string =>
-  `${safeArtifactName(context.branch)}-${artifactNameHash(context.branch)}`;
+export const runIdForContext = (context: RepoRunContext): string => repoRunArtifactId(context.branch);
 
 /**
  * Resolve the Yeet artifact directory for a repo run context.
@@ -242,6 +238,35 @@ export const artifactDirForContext = Effect.fn("Yeet.artifactDirForContext")(fun
 ): Effect.fn.Return<string, never, Path.Path> {
   const path = yield* Path.Path;
   return path.isAbsolute(context.packetDir) ? context.packetDir : path.join(context.repoRoot, context.packetDir);
+});
+
+/**
+ * Resolve the checkout-scoped append-only proof ledger path.
+ *
+ * **Details**
+ *
+ * The ledger shares Yeet's `.beep/yeet` artifact root but is not scoped to a
+ * branch or run because proof facts describe inputs and epochs, not Git refs.
+ *
+ * **Example** (Resolve a checkout ledger)
+ *
+ * ```ts
+ * import { proofLedgerPathForCheckout } from "@beep/repo-cli/test/Yeet"
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(proofLedgerPathForCheckout("/repo"))) // true
+ * ```
+ *
+ * @param repoRoot - Checkout root that owns the proof history.
+ * @returns Path to `.beep/yeet/proof-ledger.ndjson` in that checkout.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const proofLedgerPathForCheckout = Effect.fn("Yeet.proofLedgerPathForCheckout")(function* (
+  repoRoot: string
+): Effect.fn.Return<string, never, Path.Path> {
+  const path = yield* Path.Path;
+  return path.join(repoRoot, ".beep", "yeet", "proof-ledger.ndjson");
 });
 
 /**

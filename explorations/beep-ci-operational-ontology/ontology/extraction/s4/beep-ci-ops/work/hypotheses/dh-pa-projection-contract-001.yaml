@@ -1,0 +1,23 @@
+id: "dh:pa-projection-contract:001"
+observation_refs:
+  - "po:sha256:0121af7b661484de9197ede12df6eaa5c69240214339b7ea6844a4f09901fea8"
+  - "po:sha256:14e01baa9a4fa23873722680039d098e43c3e0f315d5f6805159154577794e06"
+cq_warrants: ["CQ-010", "CQ-020", "CQ-021"]
+proposed_referent:
+  label: "CI operations admission projection contract"
+  description: "A repeatable information artifact specifying the policy inputs, request and ledger views, ordered schedule output, provenance digests, and failure conditions of admission projection."
+representation_status: information_artifact
+alternatives:
+  - label: "Admission projection execution"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "Effect service and schema carrier"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: "The observations describe a provenance-bearing operational contract, not merely the syntax used to implement its service boundary."
+  discriminator: "The contract says policy values come from ratified artifact bytes, ledger state is reconstructed from admission deltas, and ordered proposals carry policy and journal-prefix digests."
+epistemic_status: proposed
+confidence: {value: 0.78, use_for_acceptance: false}

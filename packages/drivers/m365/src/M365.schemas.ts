@@ -10,7 +10,6 @@
 
 import { $M365Id } from "@beep/identity";
 import { NonNegativeInt } from "@beep/schema";
-import { O } from "@beep/utils";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
 
@@ -21,9 +20,7 @@ const $I = $M365Id.create("M365.schemas");
  * `Option.none`, defaults to `none` on construction, and carries a description.
  */
 const opt = <Sch extends S.Top>(schema: Sch, description: string) =>
-  S.OptionFromOptionalKey(schema)
-    .pipe(S.withConstructorDefault(Effect.succeed(O.none())))
-    .annotateKey({ description });
+  S.OptionFromOptionalKey(schema).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({ description });
 
 const GraphNonNegativeInt = S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(
   $I.annoteSchema("GraphNonNegativeInt", {

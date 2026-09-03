@@ -1,0 +1,22 @@
+id: "dh:pa-resume-eligibility-literals:001"
+observation_refs:
+  - "po:sha256:53e62dcef473ee07a3cc680adacab542cf3fcf1b2b079de5217fffbc38a5cfc2"
+cq_warrants: ["CQ-005", "CQ-015"]
+proposed_referent:
+  label: "Repository-run resume-policy literals"
+  description: "The never and fingerprint-match values represented by a repository-run LiteralKit declaration."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "Verification-evidence reuse eligibility policy"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "Resume eligibility situation"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The literal pair does not state what fingerprint is compared, which execution can resume, or whether the policy preserves tree and cache-epoch validity."
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.24, use_for_acceptance: false}

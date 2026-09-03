@@ -1,0 +1,27 @@
+id: "dh:pb-admission-priority-aging:001"
+observation_refs:
+  - "po:sha256:60e90bd17b628d4d6d815cfd05ddcf88cbc2a724790b05ac88b4411619f535be"
+  - "po:sha256:6b2e1d71b18197d5aabdde8f443d63fb71885b277f825b9ad13103f0de607a29"
+cq_warrants:
+  - "CQ-021"
+  - "CQ-023"
+proposed_referent:
+  label: "admission priority-aging rule"
+  description: "A policy rule that changes a waiting request's ordering treatment after the configured publish-aging interval."
+representation_status: information_artifact
+alternatives:
+  - label: "numeric sort-key optimization"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+  - label: "starvation guarantee"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: "The contract expressly names publishAgingSeconds as part of admission ordering, and the condition compares current time against the request's enqueue time to choose between two ranks. This is a policy rule about waiting requests, though it does not by itself establish a starvation guarantee."
+  discriminator: "The quoted comparison makes elapsed time since enqueue crossing publishAgingSeconds change the request's ordering rank from one to zero; that time-dependent treatment of a queued request would be absent if the expression were only inert representation syntax."
+epistemic_status: proposed
+confidence:
+  value: 0.87
+  use_for_acceptance: false

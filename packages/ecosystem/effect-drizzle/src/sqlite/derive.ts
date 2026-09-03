@@ -5,6 +5,7 @@
  */
 // fallow-ignore-file code-duplication -- pg/sqlite are deliberately mirrored dialect implementations; shared logic lives in src/core and the remaining parallelism is per-dialect vocabulary that must evolve independently (doc 14 family; review at next dialect addition)
 import { every, filter, some } from "effect/Array";
+import { dual } from "effect/Function";
 import { none, some as someOption } from "effect/Option";
 import { isTagged } from "effect/Predicate";
 import { isSchema } from "effect/Schema";
@@ -146,6 +147,8 @@ export const selectSchemaOf = (schema: Field.AnySchema): Top => {
   return schema;
 };
 
+type Classified = { readonly column: SqliteColumn.Spec; readonly nullable: boolean };
+
 /**
  * Derive one SQLite descriptor and its encoded nullability.
  *
@@ -153,16 +156,19 @@ export const selectSchemaOf = (schema: Field.AnySchema): Top => {
  * @category models
  * @since 0.0.0
  */
-export const classify = (
-  schema: Field.AnySchema,
-  fieldName: string
-): { readonly column: SqliteColumn.Spec; readonly nullable: boolean } =>
-  classifyCore(schema, fieldName, {
-    selectSchemaOf,
-    entityTableName: (select) => (isEntityIdLike(select) ? someOption(select.tableName) : none()),
-    entityColumn: (tableName) => SqliteColumn.Integer.make({ mode: "number", ident: `entityId<"${tableName}">` }),
-    fromSchemaAST: SqliteColumn.Spec.fromSchemaAST,
-  });
+export const classify: {
+  (fieldName: string): (schema: Field.AnySchema) => Classified;
+  (schema: Field.AnySchema, fieldName: string): Classified;
+} = /* @__PURE__ */ dual(
+  2,
+  (schema: Field.AnySchema, fieldName: string): Classified =>
+    classifyCore(schema, fieldName, {
+      selectSchemaOf,
+      entityTableName: (select) => (isEntityIdLike(select) ? someOption(select.tableName) : none()),
+      entityColumn: (tableName) => SqliteColumn.Integer.make({ mode: "number", ident: `entityId<"${tableName}">` }),
+      fromSchemaAST: SqliteColumn.Spec.fromSchemaAST,
+    })
+);
 
 /**
  * Test encoded select nullability.

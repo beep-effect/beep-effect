@@ -365,7 +365,7 @@ export const resolveDockerImages: {
       }
 
       // Fetch latest tag from Docker Hub
-      const latest = yield* fetchLatestDockerTag(ref).pipe(Effect.map(O.some), Effect.orElseSucceed(O.none<string>));
+      const latest = yield* fetchLatestDockerTag(ref).pipe(Effect.asSome, Effect.orElseSucceed(O.none<string>));
 
       images = A.append(images, DockerImageElement.make({ ...ref, latest }));
     }

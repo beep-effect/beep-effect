@@ -1,0 +1,23 @@
+id: "dh:pa-typecheck-report-headings:001"
+observation_refs:
+  - "po:sha256:4eb85a95424814775f10fc4b76c458723d3414d4abdc1c100571482f7feecdc0"
+  - "po:sha256:4fe450d9eb42050ad9526df81c35114a4c5190cd8ec6b093175c6c54058ee0c8"
+cq_warrants: []
+proposed_referent:
+  label: "Implementation-report typecheck headings"
+  description: "Overlapping report headings announcing a final-verification typecheck command without quoting the command or its result."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "Typecheck verification evidence"
+    representation_status: information_artifact
+    plausibility: weak
+  - label: "Typecheck verification execution"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "Headings ending at Command provide neither the invoked work, a result, a time, nor a relation to an assurance tier, so they do not establish verification evidence."
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.08, use_for_acceptance: false}

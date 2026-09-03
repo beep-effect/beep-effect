@@ -1,0 +1,23 @@
+id: "so:sha256:0a7f99ebe45f22164f484b539becf4d1d57384861db25b0c065fc67cca2574a7"
+schema_version: 1
+repository:
+  commit: "341cfef8b6e80d49f6cef894e9eecd5337f70e8f"
+  path: "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run2-fleet/verdicts/beep-effect10/fix_remove-yeet-pr-lease-0b94e262df14/verdict.properties"
+source_span:
+  start_line: 1
+  end_line: 134
+  content_sha256: "34e3ef6abebe305914a1c6c094154d8a23622a4d8d4fe6b254e238feda1727e9"
+extractor:
+  id: "adapter-journal"
+  version: "1.0.0"
+  parser: "python-stdlib-properties"
+  script: "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal.py"
+symbol:
+  qualified_name: "yeet-verdict"
+  lexical_name: "yeet-verdict"
+  syntactic_kind: "properties_projection"
+observed_facts:
+  - predicate: "config_key_value"
+    object: "overlappingPaths=standards/coverage.regression-baseline.jsonc"
+source_excerpt: "overlappingPaths=standards/coverage.regression-baseline.jsonc"
+epistemic_status: "parser_derived"

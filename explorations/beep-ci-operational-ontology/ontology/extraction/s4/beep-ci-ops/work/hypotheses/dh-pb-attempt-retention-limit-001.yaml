@@ -1,0 +1,24 @@
+id: "dh:pb-attempt-retention-limit:001"
+observation_refs:
+  - "po:sha256:7190395ff2b3c00428185ea21e0bca4027554317884ce7ba8f4e04ddbdef9969"
+cq_warrants: []
+proposed_referent:
+  label: "attempt-journal retention limit"
+  description: "A possible policy limiting retained attempt records to fifty."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "information-retention policy"
+    representation_status: information_artifact
+    plausibility: weak
+  - label: "array or file-rotation constant"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The constant name and value do not reveal what is retained, how eviction works, whether the number is normative, or whether historical coverage affects any CQ. A storage-bound implementation constant is sufficient."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.9
+  use_for_acceptance: false

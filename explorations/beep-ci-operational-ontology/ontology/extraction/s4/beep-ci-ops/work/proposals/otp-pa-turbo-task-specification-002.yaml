@@ -1,0 +1,63 @@
+id: "otp:pa-turbo-task-specification:002"
+hypothesis_ref: "dh:pa-turbo-task-specification:001"
+identity_card_ref: "ic:pa-turbo-task-specification:001"
+foundational_status: analyzed
+term:
+  preferred_label: "verification lane"
+  local_name: VerificationLane
+  proposed_iri: "https://oip.law/ontology/ci-ops#VerificationLane"
+  owl_entity_kind: class
+definition:
+  text: >-
+    A governed verification-procedure information object that coordinates one
+    or more replaceable work prescriptions under a lane kind, input and scope
+    semantics, completion conditions, and failure behavior, independently of
+    any dated execution.
+  source:
+    - "CQ-001"
+    - "CQ-011"
+    - "po:sha256:1630518546c7461a9063892f9fc45a0ee9c7333d7a175dd1c05f99e3cd74519e"
+    - "po:sha256:19da9053dc578ecea6995d45a9c23ea09f1f36b02e3969bb13b3c08a6a3c981f"
+    - "po:sha256:3e1c6cd48f541482c5471d901e96c829dd47de787108d7ee9cc4fec91966eb97"
+foundational:
+  ufo_category: information_object
+  gufo_alignment: "gufo:Endurant"
+ontoclean:
+  rigidity: rigid
+  identity: supplies
+  dependence: intrinsic
+parents: []
+revision_log:
+  - from_sha256: "3de91b7644d03c85d09030c631465f09278b029ab1f1dfcd38f62c7902d8c67f"
+    addressed:
+      - "subkind-inherits-parent-identity"
+      - "no-valid-subsumption"
+      - "identity-card-does-not-fit-proposed-child"
+    disposition: >-
+      Run-2 sitting 1 removed the invalid WorkUnitSpecification subsumption
+      edge and widened the shared card to the governed verification-lane
+      prescription actually proposed.
+reuse:
+  searched: true
+  exact_reuse_found: false
+  mappings: []
+operational_warrant:
+  competency_questions: ["CQ-001", "CQ-011"]
+  semantic_support_for: []
+alternatives_rejected:
+  - >-
+    A task-name or configuration-token taxonomy is rejected because equal
+    spellings can prescribe different work in different repository contexts.
+  - >-
+    Dated task executions are rejected as VerificationLane individuals.
+open_issues:
+  - >-
+    Steward must choose whether an abstract procedure universal also needs a
+    category-distinct term beyond this specification-centered lane model.
+  - >-
+    The WorkUnitSpecification reuse proposal
+    otp:pa-turbo-task-specification:001 remains distinct: a lane may coordinate
+    several replaceable specifications and is not asserted as their subkind.
+revision_requests: []
+review: {foundational_agent: pending, adversarial_agent: pending, steward: pending}
+status: proposed

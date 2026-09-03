@@ -1102,15 +1102,15 @@ export type ResolveName<C extends Spec, Key extends string> = C extends Enum<"",
  * @category utilities
  * @since 0.0.0
  */
+export function resolveName<const Key extends string>(key: Key): <C extends Spec>(spec: C) => ResolveName<C, Key>;
 export function resolveName<C extends Spec, const Key extends string>(spec: C, key: Key): ResolveName<C, Key>;
-/**
- * Internal helper `resolveName`.
- *
- * @internal
- * @category utilities
- * @since 0.0.0
- */
-export function resolveName(spec: Spec, key: string): Spec {
+export function resolveName(
+  ...args: readonly [key: string] | readonly [spec: Spec, key: string]
+): Spec | ((spec: Spec) => Spec) {
+  if (args.length === 1) {
+    return (spec: Spec) => resolveName(spec, args[0]);
+  }
+  const [spec, key] = args;
   return Spec.guards.enum(spec) && spec.name === ""
     ? Enum.make({ name: key, ident: `enum<${key}>`, values: spec.values })
     : spec;
@@ -1135,15 +1135,15 @@ export type StorageIdent<C extends Spec, Dimensions extends ArrayDimension> = Di
  * @category utilities
  * @since 0.0.0
  */
+export function storageIdent<D extends ArrayDimension>(dimensions: D): <C extends Spec>(spec: C) => StorageIdent<C, D>;
 export function storageIdent<C extends Spec, D extends ArrayDimension>(spec: C, dimensions: D): StorageIdent<C, D>;
-/**
- * Internal helper `storageIdent`.
- *
- * @internal
- * @category utilities
- * @since 0.0.0
- */
-export function storageIdent(spec: Spec, dimensions: ArrayDimension): string {
+export function storageIdent(
+  ...args: readonly [dimensions: ArrayDimension] | readonly [spec: Spec, dimensions: ArrayDimension]
+): string | ((spec: Spec) => string) {
+  if (args.length === 1) {
+    return (spec: Spec) => storageIdent(spec, args[0]);
+  }
+  const [spec, dimensions] = args;
   return dimensions === 0 ? spec.ident : `array<${spec.ident},${dimensions}>`;
 }
 
@@ -1284,7 +1284,17 @@ const carrierTag = (spec: Spec): CarrierTag => {
  * @category utilities
  * @since 0.0.0
  */
-export const carrier = (spec: Spec, dimensions: ArrayDimension): Carrier => ({
-  tag: carrierTag(spec),
-  dimensions,
-});
+export function carrier(dimensions: ArrayDimension): (spec: Spec) => Carrier;
+export function carrier(spec: Spec, dimensions: ArrayDimension): Carrier;
+export function carrier(
+  ...args: readonly [dimensions: ArrayDimension] | readonly [spec: Spec, dimensions: ArrayDimension]
+): Carrier | ((spec: Spec) => Carrier) {
+  if (args.length === 1) {
+    return (spec: Spec) => carrier(spec, args[0]);
+  }
+  const [spec, dimensions] = args;
+  return {
+    tag: carrierTag(spec),
+    dimensions,
+  };
+}

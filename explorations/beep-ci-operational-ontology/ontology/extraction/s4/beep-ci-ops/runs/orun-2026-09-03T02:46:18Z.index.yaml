@@ -1,0 +1,2129 @@
+# Run-2 dispositions index — carried rows adjudicated at sitting 2; live rows
+# final after sitting 3 (21 ratified, ordering pair + withdrawals re-parked).
+- observation: so:sha256:0016cfe3905b09c22b38a93799cf35fa443f35c6a3f89b192d172679f8c57629
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (failure-verdict-and-diagnostics): The domain-bearing failure and diagnostic
+    vocabulary is re-grounded in run 2. Residual enum wrappers and report codes are implementation representations,
+    so the non-emittable run-1 rows add no separate commitment.'
+- observation: so:sha256:01e37039cebeb141034280ea9064d32ad90e9c6042b222c941260520dc67e9aa
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (merge-readiness-and-closeout-outcomes): Current fleet verdict evidence and
+    the merge-readiness proposal supersede these run-1 gate/report declarations. Transport-specific closeout
+    wrappers need no second ontology commitment.'
+- observation: so:sha256:01ebe52998854e6382ed57cfc9052b2f4fbb29e735679f51e8911afd85469ded
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (watch-stream-event-artifacts): The rows describe polling, diffing, rendering,
+    and transport records with no Must/Should CQ warrant. The underlying verification and merge outcomes
+    are represented elsewhere, so these wrappers are ontology-irrelevant for v1.'
+- observation: so:sha256:0850d3a983d8a8f44ce9a2adb228ff9120ae1c83d5543c1dacfd24223bf46350
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (watch-stream-event-artifacts): The rows describe polling, diffing, rendering,
+    and transport records with no Must/Should CQ warrant. The underlying verification and merge outcomes
+    are represented elsewhere, so these wrappers are ontology-irrelevant for v1.'
+- observation: so:sha256:0a2c5f86ed363ec9af7d18b61cde9a0bd8f3332c6e23b7d14371b102026aa2b0
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (failure-verdict-and-diagnostics): The domain-bearing failure and diagnostic
+    vocabulary is re-grounded in run 2. Residual enum wrappers and report codes are implementation representations,
+    so the non-emittable run-1 rows add no separate commitment.'
+- observation: so:sha256:0bc0f3a4d5971c2427a262b3149ba5e6246f47d5bf319c9230e8f6f7c0f6468c
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (watch-stream-event-artifacts): The rows describe polling, diffing, rendering,
+    and transport records with no Must/Should CQ warrant. The underlying verification and merge outcomes
+    are represented elsewhere, so these wrappers are ontology-irrelevant for v1.'
+- observation: so:sha256:0ce3a84de808ba01f895a7dcba0ff39a6d37daae78abd3eef57fa9e37a554808
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (affected-package-and-dependency-topology): Run 2 now names the package, direct-edge,
+    closure, and affected-scope vocabulary. The old parser-bound catalog and declaration rows are superseded
+    or merely DTO representations.'
+- observation: so:sha256:0d096342f5ba116307ca177adcbc3fc775b860ae0e5fd62dfd4d090d86c660a3
+  outcome: unresolved
+  carried_from_prior: true
+  needed_evidence: 'sitting-2 ruling (fleet-checkout-identity): Run-2 path partitioning and checkoutRoot
+    fields do not establish a stable checkout identity or its cache-mount relations, and no current proposal
+    slug or label names Checkout.'
+  since: '2026-09-03'
+- observation: so:sha256:0e23613c08bd8703273959a5bf2dc75dd4fdea088a0aed2f5cd6a7684c30a06c
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (monitor-rerun-decision-artifacts): These are orchestration branch/command
+    artifacts without a CQ warrant. Failure signatures and diagnostic evidence are modeled separately;
+    the monitor controller choices need no independent ontology commitment.'
+- observation: so:sha256:0fd0abf7cb302f4f763b3a58aa6af6407d41aed5e9405aeb5ac6b97970e90ff4
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (verification-execution-structure-and-state): The run-2 surface now carries
+    the specification/execution/state split these old declaration rows could not establish. Retire the
+    obsolete run-1 evidence identities rather than duplicate the live vocabulary.'
+- observation: so:sha256:1481dce51159e820cdd129b4d588a263707a188896aefe6aa3120e1e6c734b59
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (failure-verdict-and-diagnostics): The domain-bearing failure and diagnostic
+    vocabulary is re-grounded in run 2. Residual enum wrappers and report codes are implementation representations,
+    so the non-emittable run-1 rows add no separate commitment.'
+- observation: so:sha256:174bc1e94d345376660ef5fa87113a49198ca33bcb34da61b934af64724b4ace
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (quality-report-and-config-artifacts): Run 1 never rejected the implementation-only
+    null for these unwarranted DTO/config/report declarations. They are software representations, not
+    additional v1 domain referents.'
+- observation: so:sha256:177fb3af96fac344cee73f33ab05cddcce1c695f27838693cca1d14538e26c40
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (merge-readiness-and-closeout-outcomes): Current fleet verdict evidence and
+    the merge-readiness proposal supersede these run-1 gate/report declarations. Transport-specific closeout
+    wrappers need no second ontology commitment.'
+- observation: so:sha256:193bdccb773affb34025f7d4b136568a01d2a47582a8f3f44e1381a3038fa092
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (repository-plan-control-and-ordering): Run-2 plan/specification and ordering
+    proposals cover the CQ-bearing semantics. The archived phase/mutability/mode shells are controller
+    encodings and should not remain independent ontology candidates.'
+- observation: so:sha256:19f1e38081aee7b60aecde18430abd809861b1cf6eb9ebf7065e34305b7275be
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (affected-package-and-dependency-topology): Run 2 now names the package, direct-edge,
+    closure, and affected-scope vocabulary. The old parser-bound catalog and declaration rows are superseded
+    or merely DTO representations.'
+- observation: so:sha256:1b632257febcbb643a3ab96bf64a1196964c1bf6edc0376b50cabea2bac2098d
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (gate-staleness-result-artifacts): These are unwarranted implementation result/DTO
+    variants. The CQ suite asks about verification-evidence validity, not the internal GateStaleness union
+    or its file-witness wrappers.'
+- observation: so:sha256:1cb8d4e2b4635df071ce9f58a6465718c1536825bf45fc3927bce758959976a1
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (work-unit-and-lane-specifications): The reusable procedure vocabulary is
+    represented by current run-2 proposals. Old class declarations and bare Turbo keys are redundant evidence,
+    not additional specifications.'
+- observation: so:sha256:1d6e22c81b4f8811f19b0ae4080b38b605c459c696d3715f7bc238441092f17f
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (watch-stream-event-artifacts): The rows describe polling, diffing, rendering,
+    and transport records with no Must/Should CQ warrant. The underlying verification and merge outcomes
+    are represented elsewhere, so these wrappers are ontology-irrelevant for v1.'
+- observation: so:sha256:1e993a781d8287c7d8eaef6ac56a139bd3849cf1fc650a91d7db9ac29c4f5fef
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (watch-stream-event-artifacts): The rows describe polling, diffing, rendering,
+    and transport records with no Must/Should CQ warrant. The underlying verification and merge outcomes
+    are represented elsewhere, so these wrappers are ontology-irrelevant for v1.'
+- observation: so:sha256:21fd15adfc632d3c13e0b52ed7a7b241aa285daf9e695b7a4f91880efd71422e
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (affected-package-and-dependency-topology): Run 2 now names the package, direct-edge,
+    closure, and affected-scope vocabulary. The old parser-bound catalog and declaration rows are superseded
+    or merely DTO representations.'
+- observation: so:sha256:2780de54843e2c073117897235567afa904e090a4ded2c414df0b7b22bd7338f
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (merge-readiness-and-closeout-outcomes): Current fleet verdict evidence and
+    the merge-readiness proposal supersede these run-1 gate/report declarations. Transport-specific closeout
+    wrappers need no second ontology commitment.'
+- observation: so:sha256:29b24028f0dfacf53ea6e68e56831a4a30aedbe593714f54fc38a7ff1ffcf755
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (affected-package-and-dependency-topology): Run 2 now names the package, direct-edge,
+    closure, and affected-scope vocabulary. The old parser-bound catalog and declaration rows are superseded
+    or merely DTO representations.'
+- observation: so:sha256:2be3b248a3b888f63aa21e0598782e2efec976842e70e3d18420d1051487f9ef
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (monitor-rerun-decision-artifacts): These are orchestration branch/command
+    artifacts without a CQ warrant. Failure signatures and diagnostic evidence are modeled separately;
+    the monitor controller choices need no independent ontology commitment.'
+- observation: so:sha256:2c69da902821ace2904ede4845d9193e0358eb571e5d563d0aaaf080dcfe161a
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (gate-staleness-result-artifacts): These are unwarranted implementation result/DTO
+    variants. The CQ suite asks about verification-evidence validity, not the internal GateStaleness union
+    or its file-witness wrappers.'
+- observation: so:sha256:308d8cf8a291855a224ef1088b124e39afc4b15550f72bb003ec4966b40acce8
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (affected-package-and-dependency-topology): Run 2 now names the package, direct-edge,
+    closure, and affected-scope vocabulary. The old parser-bound catalog and declaration rows are superseded
+    or merely DTO representations.'
+- observation: so:sha256:324517ded376b6dfcf6932e4ac2f2ddefd53a76bfb56b19e6fe9de926ea19990
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (affected-package-and-dependency-topology): Run 2 now names the package, direct-edge,
+    closure, and affected-scope vocabulary. The old parser-bound catalog and declaration rows are superseded
+    or merely DTO representations.'
+- observation: so:sha256:34992167c59b76a419b1c6851c319edceb48b1c97ca392c2dbedc5ae0b01303f
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (affected-package-and-dependency-topology): Run 2 now names the package, direct-edge,
+    closure, and affected-scope vocabulary. The old parser-bound catalog and declaration rows are superseded
+    or merely DTO representations.'
+- observation: so:sha256:357936bd5c10475bb683a73ef496a31521cdf91e52e444875205b73303f7ab1b
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (watch-stream-event-artifacts): The rows describe polling, diffing, rendering,
+    and transport records with no Must/Should CQ warrant. The underlying verification and merge outcomes
+    are represented elsewhere, so these wrappers are ontology-irrelevant for v1.'
+- observation: so:sha256:39221ec0124c17dffbcbed38afe8367929660e07f7f5decf79df8cb8bfb4dc7d
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (affected-package-and-dependency-topology): Run 2 now names the package, direct-edge,
+    closure, and affected-scope vocabulary. The old parser-bound catalog and declaration rows are superseded
+    or merely DTO representations.'
+- observation: so:sha256:3c67cece44cdfc67ae4bbc448bf87d837a9d92f55e59ff82135d00f2baec589e
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (monitor-rerun-decision-artifacts): These are orchestration branch/command
+    artifacts without a CQ warrant. Failure signatures and diagnostic evidence are modeled separately;
+    the monitor controller choices need no independent ontology commitment.'
+- observation: so:sha256:3e296553a20a27503388bc986394099c7c5581a8666a9fdd199ce051bdf89b3f
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (quality-report-and-config-artifacts): Run 1 never rejected the implementation-only
+    null for these unwarranted DTO/config/report declarations. They are software representations, not
+    additional v1 domain referents.'
+- observation: so:sha256:475cea15f30764a8045bd4d652dbc2c3c65b2cbde1b708f31800facdf6a2fbb1
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (watch-stream-event-artifacts): The rows describe polling, diffing, rendering,
+    and transport records with no Must/Should CQ warrant. The underlying verification and merge outcomes
+    are represented elsewhere, so these wrappers are ontology-irrelevant for v1.'
+- observation: so:sha256:47b1a59826ab332b9eb041001164f4b492dccb445629cf6fa858330701f649ff
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (watch-stream-event-artifacts): The rows describe polling, diffing, rendering,
+    and transport records with no Must/Should CQ warrant. The underlying verification and merge outcomes
+    are represented elsewhere, so these wrappers are ontology-irrelevant for v1.'
+- observation: so:sha256:4a64226d4f4e79c645be3905c847727726f5d1d1488e204b446f2d31bf100854
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (affected-package-and-dependency-topology): Run 2 now names the package, direct-edge,
+    closure, and affected-scope vocabulary. The old parser-bound catalog and declaration rows are superseded
+    or merely DTO representations.'
+- observation: so:sha256:505c45f1b6b21cea941e3727724c4453c62fc6afc248ae88a8f3a817372b9afb
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (gate-staleness-result-artifacts): These are unwarranted implementation result/DTO
+    variants. The CQ suite asks about verification-evidence validity, not the internal GateStaleness union
+    or its file-witness wrappers.'
+- observation: so:sha256:50b72ba5de1b4f4faa716b9b6d2b8ed6d678cb4950580f0ae8f85dad06eadddd
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (quality-report-and-config-artifacts): Run 1 never rejected the implementation-only
+    null for these unwarranted DTO/config/report declarations. They are software representations, not
+    additional v1 domain referents.'
+- observation: so:sha256:53871c1d8d3f62889042f3a5d4388e6e993dc3ef0478c837fbe383b75b912edd
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (watch-stream-event-artifacts): The rows describe polling, diffing, rendering,
+    and transport records with no Must/Should CQ warrant. The underlying verification and merge outcomes
+    are represented elsewhere, so these wrappers are ontology-irrelevant for v1.'
+- observation: so:sha256:538ac118dd5cd92616c9fe8d60133d6795e073e9433a44f749cce9951f291f2e
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (monitor-rerun-decision-artifacts): These are orchestration branch/command
+    artifacts without a CQ warrant. Failure signatures and diagnostic evidence are modeled separately;
+    the monitor controller choices need no independent ontology commitment.'
+- observation: so:sha256:53dfa3562ca91f94710212bf848b73ec946419464d1ed9ce22b9fed4f819bc38
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (verification-execution-structure-and-state): The run-2 surface now carries
+    the specification/execution/state split these old declaration rows could not establish. Retire the
+    obsolete run-1 evidence identities rather than duplicate the live vocabulary.'
+- observation: so:sha256:559894ea743432ee2425956d8fab59a94f1c385317f35dcbb9aa224dbcfc64fb
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (failure-verdict-and-diagnostics): The domain-bearing failure and diagnostic
+    vocabulary is re-grounded in run 2. Residual enum wrappers and report codes are implementation representations,
+    so the non-emittable run-1 rows add no separate commitment.'
+- observation: so:sha256:55c95d54d18f2b82756fa2bd7f23cc3fd7d294e693d77cea47f15b2d0196abfa
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (failure-verdict-and-diagnostics): The domain-bearing failure and diagnostic
+    vocabulary is re-grounded in run 2. Residual enum wrappers and report codes are implementation representations,
+    so the non-emittable run-1 rows add no separate commitment.'
+- observation: so:sha256:5ba757a4aac98e0d3609a7d6642729c8acc1805c69aa7768f425fba4c793a2bf
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (failure-verdict-and-diagnostics): The domain-bearing failure and diagnostic
+    vocabulary is re-grounded in run 2. Residual enum wrappers and report codes are implementation representations,
+    so the non-emittable run-1 rows add no separate commitment.'
+- observation: so:sha256:5ff32d0655a8cc9fbddace495da9b640c2633351caa4759c92235f53782b68e3
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (failure-verdict-and-diagnostics): The domain-bearing failure and diagnostic
+    vocabulary is re-grounded in run 2. Residual enum wrappers and report codes are implementation representations,
+    so the non-emittable run-1 rows add no separate commitment.'
+- observation: so:sha256:61c1bf9440b68549825b36c8f21f161d4eb7214e2703a59c3b8bf34020a06e86
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (affected-package-and-dependency-topology): Run 2 now names the package, direct-edge,
+    closure, and affected-scope vocabulary. The old parser-bound catalog and declaration rows are superseded
+    or merely DTO representations.'
+- observation: so:sha256:61cc360f5e99072fd1fd7b63748a43f8d39a921c4fce5c655e4937f1bfec4169
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (quality-report-and-config-artifacts): Run 1 never rejected the implementation-only
+    null for these unwarranted DTO/config/report declarations. They are software representations, not
+    additional v1 domain referents.'
+- observation: so:sha256:6305419fa96099617bb98162ac43d2718d51c1b66bcee82bc34027b762df7e60
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (merge-readiness-and-closeout-outcomes): Current fleet verdict evidence and
+    the merge-readiness proposal supersede these run-1 gate/report declarations. Transport-specific closeout
+    wrappers need no second ontology commitment.'
+- observation: so:sha256:67507f3d087ad2239cc47ee9f7622df86e6f79e03730f63cb0ee6ebd0e4c7320
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (work-unit-and-lane-specifications): The reusable procedure vocabulary is
+    represented by current run-2 proposals. Old class declarations and bare Turbo keys are redundant evidence,
+    not additional specifications.'
+- observation: so:sha256:6bc0f2e3af7672616e5fe40dacbc6a0a54ae24399ddd632e6448319c30bf7510
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (affected-package-and-dependency-topology): Run 2 now names the package, direct-edge,
+    closure, and affected-scope vocabulary. The old parser-bound catalog and declaration rows are superseded
+    or merely DTO representations.'
+- observation: so:sha256:704700c3569c97c04ce6698d167bf38c6ee95850d1a68bd3c0d8a3732107994f
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (repository-plan-control-and-ordering): Run-2 plan/specification and ordering
+    proposals cover the CQ-bearing semantics. The archived phase/mutability/mode shells are controller
+    encodings and should not remain independent ontology candidates.'
+- observation: so:sha256:7143eaf354ebb320ca07a95f3274f3aae0cb0323f9e3d1117b88128e4ed6e826
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (verification-attempt-structure): Run 2 re-grounds attempt identity and lifecycle
+    from fleet journal records and carries a verification-attempt proposal. The old parser-bound rows
+    are superseded evidence.'
+- observation: so:sha256:72751a9073713f96a4c3bf12a592db87e3b0b3364ab929e8d5fca792681f5ac4
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (watch-stream-event-artifacts): The rows describe polling, diffing, rendering,
+    and transport records with no Must/Should CQ warrant. The underlying verification and merge outcomes
+    are represented elsewhere, so these wrappers are ontology-irrelevant for v1.'
+- observation: so:sha256:762d3dd11bc844d2df9f208f0ccba2170033d9af6c1a1c9e04e7e8b0f7c764b0
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (verification-execution-structure-and-state): The run-2 surface now carries
+    the specification/execution/state split these old declaration rows could not establish. Retire the
+    obsolete run-1 evidence identities rather than duplicate the live vocabulary.'
+- observation: so:sha256:7796f616a217b54e8df2f48fbb0f01d5db11232605b3d1b24cb97268fc2a0113
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (verification-attempt-structure): Run 2 re-grounds attempt identity and lifecycle
+    from fleet journal records and carries a verification-attempt proposal. The old parser-bound rows
+    are superseded evidence.'
+- observation: so:sha256:7d81fca784579f2d5bf1d2bed62d836c001fedda5a774dbed3b94280174af3f0
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (monitor-rerun-decision-artifacts): These are orchestration branch/command
+    artifacts without a CQ warrant. Failure signatures and diagnostic evidence are modeled separately;
+    the monitor controller choices need no independent ontology commitment.'
+- observation: so:sha256:814e752549f0f43ad157a175616e3eb5549db881fc1fd9216c46b0faa12575c0
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (quality-report-and-config-artifacts): Run 1 never rejected the implementation-only
+    null for these unwarranted DTO/config/report declarations. They are software representations, not
+    additional v1 domain referents.'
+- observation: so:sha256:85a0c2546f8dc5cdc9a2d646a896bf5eadb4d39c08240549747c6e281006bf37
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (merge-readiness-and-closeout-outcomes): Current fleet verdict evidence and
+    the merge-readiness proposal supersede these run-1 gate/report declarations. Transport-specific closeout
+    wrappers need no second ontology commitment.'
+- observation: so:sha256:8bbc8fc68d7ff8865048928f754aea654b620b9ffbaae0064f8f4f1e9253f8b1
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (quality-report-and-config-artifacts): Run 1 never rejected the implementation-only
+    null for these unwarranted DTO/config/report declarations. They are software representations, not
+    additional v1 domain referents.'
+- observation: so:sha256:8de7e1574f6bb139c82c1a54e58cc377cb9b2425574eb104ef6e6d47a051f173
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (verification-attempt-structure): Run 2 re-grounds attempt identity and lifecycle
+    from fleet journal records and carries a verification-attempt proposal. The old parser-bound rows
+    are superseded evidence.'
+- observation: so:sha256:8e80633e942a2d17018c25156dff9f4303f22db8437f15e2c754abb1a9e6bcfe
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (repository-plan-control-and-ordering): Run-2 plan/specification and ordering
+    proposals cover the CQ-bearing semantics. The archived phase/mutability/mode shells are controller
+    encodings and should not remain independent ontology candidates.'
+- observation: so:sha256:8ee7607038f5041474aaef3747945ec491da23aadf1609c9999cc27d142d093b
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (merge-readiness-and-closeout-outcomes): Current fleet verdict evidence and
+    the merge-readiness proposal supersede these run-1 gate/report declarations. Transport-specific closeout
+    wrappers need no second ontology commitment.'
+- observation: so:sha256:906f9d719b7531f4c878c535e72c3cdae60b54bd8ef3ea349d1887b118f54cc9
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (repository-plan-control-and-ordering): Run-2 plan/specification and ordering
+    proposals cover the CQ-bearing semantics. The archived phase/mutability/mode shells are controller
+    encodings and should not remain independent ontology candidates.'
+- observation: so:sha256:91279c1adf88d29ca0968f9abc4ff9c2ddbeb57de25df9f432b1a272bb20c983
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (verification-execution-structure-and-state): The run-2 surface now carries
+    the specification/execution/state split these old declaration rows could not establish. Retire the
+    obsolete run-1 evidence identities rather than duplicate the live vocabulary.'
+- observation: so:sha256:9425d788587d694dee636b406feb6512298532c3795a7dc770bdfc7f4dd7487c
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (gate-staleness-result-artifacts): These are unwarranted implementation result/DTO
+    variants. The CQ suite asks about verification-evidence validity, not the internal GateStaleness union
+    or its file-witness wrappers.'
+- observation: so:sha256:957c9ffbcf7ab4c0dd90e7566dfc5080ffcbab33a8a2981a57facc8c571aecdb
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (quality-report-and-config-artifacts): Run 1 never rejected the implementation-only
+    null for these unwarranted DTO/config/report declarations. They are software representations, not
+    additional v1 domain referents.'
+- observation: so:sha256:985f8eabadd1ff4531d7bdf639ae2da797f9b2ef8124751b0452456d3551bea6
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (watch-stream-event-artifacts): The rows describe polling, diffing, rendering,
+    and transport records with no Must/Should CQ warrant. The underlying verification and merge outcomes
+    are represented elsewhere, so these wrappers are ontology-irrelevant for v1.'
+- observation: so:sha256:98cbdf1184f9cba51246aa80f650640311ce755674f478e3faac85f89074ecda
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (watch-stream-event-artifacts): The rows describe polling, diffing, rendering,
+    and transport records with no Must/Should CQ warrant. The underlying verification and merge outcomes
+    are represented elsewhere, so these wrappers are ontology-irrelevant for v1.'
+- observation: so:sha256:9a050882c859fbe6a493e1313f31f1062c204cb96663c81dfcac83bef8f5d917
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (watch-stream-event-artifacts): The rows describe polling, diffing, rendering,
+    and transport records with no Must/Should CQ warrant. The underlying verification and merge outcomes
+    are represented elsewhere, so these wrappers are ontology-irrelevant for v1.'
+- observation: so:sha256:a1c22fb0769c94f71dfe06a5f79cc81acad12d7b6ef289ddec66ee71291a695e
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (monitor-rerun-decision-artifacts): These are orchestration branch/command
+    artifacts without a CQ warrant. Failure signatures and diagnostic evidence are modeled separately;
+    the monitor controller choices need no independent ontology commitment.'
+- observation: so:sha256:a2352db33ca14ce4c1da0bf89decf6bc399e46f050d701ba267129ce31cda2e2
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (monitor-rerun-decision-artifacts): These are orchestration branch/command
+    artifacts without a CQ warrant. Failure signatures and diagnostic evidence are modeled separately;
+    the monitor controller choices need no independent ontology commitment.'
+- observation: so:sha256:a48630328a1a6c95febb3aecad4e2c6f9dbe75dbcdf2698acc17f0aa024c407a
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (merge-readiness-and-closeout-outcomes): Current fleet verdict evidence and
+    the merge-readiness proposal supersede these run-1 gate/report declarations. Transport-specific closeout
+    wrappers need no second ontology commitment.'
+- observation: so:sha256:a4a2bc6f88d7c94e877af69ce8c4e42f68cf4125076460fb0b59cabf1abf866a
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (gate-staleness-result-artifacts): These are unwarranted implementation result/DTO
+    variants. The CQ suite asks about verification-evidence validity, not the internal GateStaleness union
+    or its file-witness wrappers.'
+- observation: so:sha256:a64dc174173ded5009d4e8d1b7c7f0e8aa1ab75aa53e55eddbf0ab021e440325
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (repository-plan-control-and-ordering): Run-2 plan/specification and ordering
+    proposals cover the CQ-bearing semantics. The archived phase/mutability/mode shells are controller
+    encodings and should not remain independent ontology candidates.'
+- observation: so:sha256:a6ad40a935472aecb313008c29de7fd676155defa4706d1d7f8b1808a84ac3eb
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (repository-plan-control-and-ordering): Run-2 plan/specification and ordering
+    proposals cover the CQ-bearing semantics. The archived phase/mutability/mode shells are controller
+    encodings and should not remain independent ontology candidates.'
+- observation: so:sha256:a7c6ae0d10535713f109acc2252a5ec84ab4500696ac752d7782c3625caa5747
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (watch-stream-event-artifacts): The rows describe polling, diffing, rendering,
+    and transport records with no Must/Should CQ warrant. The underlying verification and merge outcomes
+    are represented elsewhere, so these wrappers are ontology-irrelevant for v1.'
+- observation: so:sha256:a86ebcb3d399835d6fe9c78128b16394d23254111ea17aa6e6e6b42ccca24ddc
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (quality-report-and-config-artifacts): Run 1 never rejected the implementation-only
+    null for these unwarranted DTO/config/report declarations. They are software representations, not
+    additional v1 domain referents.'
+- observation: so:sha256:a99d68de5fb72eb7f8c94c29b881cf9799c47fd386471042b810a019bb4493a1
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (quality-report-and-config-artifacts): Run 1 never rejected the implementation-only
+    null for these unwarranted DTO/config/report declarations. They are software representations, not
+    additional v1 domain referents.'
+- observation: so:sha256:ab9b40285e051d72072bcdf5cbda763df48c9df2f6d8bf3f0d1660078dc956a9
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (gate-staleness-result-artifacts): These are unwarranted implementation result/DTO
+    variants. The CQ suite asks about verification-evidence validity, not the internal GateStaleness union
+    or its file-witness wrappers.'
+- observation: so:sha256:acf8fc7875146dbe623d9a6d11a4eeeea04d59adf74dc7ecf2fb4a868c7b27c7
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (work-unit-and-lane-specifications): The reusable procedure vocabulary is
+    represented by current run-2 proposals. Old class declarations and bare Turbo keys are redundant evidence,
+    not additional specifications.'
+- observation: so:sha256:ade05d26b085f9b2d69b9583ce1f0b4dcb97e42de7725390b49801e6f2b9c533
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (monitor-rerun-decision-artifacts): These are orchestration branch/command
+    artifacts without a CQ warrant. Failure signatures and diagnostic evidence are modeled separately;
+    the monitor controller choices need no independent ontology commitment.'
+- observation: so:sha256:b05fb409eaff217c8757f9310dedb0581462cc68b81bcc55feaa2e41312a75f9
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (monitor-rerun-decision-artifacts): These are orchestration branch/command
+    artifacts without a CQ warrant. Failure signatures and diagnostic evidence are modeled separately;
+    the monitor controller choices need no independent ontology commitment.'
+- observation: so:sha256:b42503da37767cc741db6196fbf13e019bdc59f71166ad4d95318966ca7ae123
+  outcome: unresolved
+  carried_from_prior: true
+  needed_evidence: 'sitting-2 ruling (grant-resource-contention-and-paths): Run-2 overlappingPaths fields
+    describe worktree overlap, not a grant-to-resource contention relation, and no current proposal slug
+    or label names that relation.'
+  since: '2026-09-03'
+- observation: so:sha256:b614803893bb8f68eb1c45fc4d01e226ece696364727c688bd7320b9f6da0266
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (merge-readiness-and-closeout-outcomes): Current fleet verdict evidence and
+    the merge-readiness proposal supersede these run-1 gate/report declarations. Transport-specific closeout
+    wrappers need no second ontology commitment.'
+- observation: so:sha256:b78c10638ffab60de01ad1bc57cc639ce379fb6e46a3e589c8b9e38329d10828
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (repository-plan-control-and-ordering): Run-2 plan/specification and ordering
+    proposals cover the CQ-bearing semantics. The archived phase/mutability/mode shells are controller
+    encodings and should not remain independent ontology candidates.'
+- observation: so:sha256:b859fe7dc5c52ac10800e3b365fc4da4e1b6fcad4a91bed38c5c97daec171815
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (failure-verdict-and-diagnostics): The domain-bearing failure and diagnostic
+    vocabulary is re-grounded in run 2. Residual enum wrappers and report codes are implementation representations,
+    so the non-emittable run-1 rows add no separate commitment.'
+- observation: so:sha256:b870d15f88a575353b6b0228cd405f21da494b88735fc82c49042a272e0095ab
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (watch-stream-event-artifacts): The rows describe polling, diffing, rendering,
+    and transport records with no Must/Should CQ warrant. The underlying verification and merge outcomes
+    are represented elsewhere, so these wrappers are ontology-irrelevant for v1.'
+- observation: so:sha256:b96ad0207aebf7cdd3bf8767dd9d9e076a79928a1d0bad52c86b25a161260e9f
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (failure-verdict-and-diagnostics): The domain-bearing failure and diagnostic
+    vocabulary is re-grounded in run 2. Residual enum wrappers and report codes are implementation representations,
+    so the non-emittable run-1 rows add no separate commitment.'
+- observation: so:sha256:be1853aae0f018d491da8f4e61a6144f1a4e2667aee6d3772e8a68897842cc5f
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (watch-stream-event-artifacts): The rows describe polling, diffing, rendering,
+    and transport records with no Must/Should CQ warrant. The underlying verification and merge outcomes
+    are represented elsewhere, so these wrappers are ontology-irrelevant for v1.'
+- observation: so:sha256:c1a4b7a8cbcf4d7a688243597fc3b28d6db614cb6d358c6ca0587fbf06420f48
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (failure-verdict-and-diagnostics): The domain-bearing failure and diagnostic
+    vocabulary is re-grounded in run 2. Residual enum wrappers and report codes are implementation representations,
+    so the non-emittable run-1 rows add no separate commitment.'
+- observation: so:sha256:c30acf2ce6e721bb586765a46dc7f4aa0760f5c25dea64f91deac21f76228ed3
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (watch-stream-event-artifacts): The rows describe polling, diffing, rendering,
+    and transport records with no Must/Should CQ warrant. The underlying verification and merge outcomes
+    are represented elsewhere, so these wrappers are ontology-irrelevant for v1.'
+- observation: so:sha256:c5638e3942dc3becc40f695c02528ee5b1344a8b002a1091cc84e8de9acc0032
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (failure-verdict-and-diagnostics): The domain-bearing failure and diagnostic
+    vocabulary is re-grounded in run 2. Residual enum wrappers and report codes are implementation representations,
+    so the non-emittable run-1 rows add no separate commitment.'
+- observation: so:sha256:ccb76a5f3fd90747552276360f6623e87a823ed693b6cf9caacb9e15d51b2b6b
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (failure-verdict-and-diagnostics): The domain-bearing failure and diagnostic
+    vocabulary is re-grounded in run 2. Residual enum wrappers and report codes are implementation representations,
+    so the non-emittable run-1 rows add no separate commitment.'
+- observation: so:sha256:cd7765aadf2af4d0764d33623bd15e44f0052b381e6e235565dab25c0e4c8958
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (verification-execution-structure-and-state): The run-2 surface now carries
+    the specification/execution/state split these old declaration rows could not establish. Retire the
+    obsolete run-1 evidence identities rather than duplicate the live vocabulary.'
+- observation: so:sha256:cffc9352dab29999a8fea11c29898375fb9f5d0140582e5b325a5e361eafdf5a
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (repository-plan-control-and-ordering): Run-2 plan/specification and ordering
+    proposals cover the CQ-bearing semantics. The archived phase/mutability/mode shells are controller
+    encodings and should not remain independent ontology candidates.'
+- observation: so:sha256:d5e1b188a11d80b9489f3616a3b705634c3b4fdecee69ef7180d463c7f2dee85
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (gate-staleness-result-artifacts): These are unwarranted implementation result/DTO
+    variants. The CQ suite asks about verification-evidence validity, not the internal GateStaleness union
+    or its file-witness wrappers.'
+- observation: so:sha256:d80b78a8b525a1d9d3429688e5907aaa7a926b965d94a29efb3fb9dd1080795f
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (affected-package-and-dependency-topology): Run 2 now names the package, direct-edge,
+    closure, and affected-scope vocabulary. The old parser-bound catalog and declaration rows are superseded
+    or merely DTO representations.'
+- observation: so:sha256:daa315312a71c12c1825a31e0d63f47f647cee075cb885e1c4a244d626f3e9a3
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (verification-execution-structure-and-state): The run-2 surface now carries
+    the specification/execution/state split these old declaration rows could not establish. Retire the
+    obsolete run-1 evidence identities rather than duplicate the live vocabulary.'
+- observation: so:sha256:dac0c567ff454baf98279c698442d3effa8c8ce8da4a9e26251a1234e99e11b8
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (merge-readiness-and-closeout-outcomes): Current fleet verdict evidence and
+    the merge-readiness proposal supersede these run-1 gate/report declarations. Transport-specific closeout
+    wrappers need no second ontology commitment.'
+- observation: so:sha256:dcc8e45291ae54f9a3c4762ead3efdc29081b62bda5af6761c676a84f148ba60
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (quality-report-and-config-artifacts): Run 1 never rejected the implementation-only
+    null for these unwarranted DTO/config/report declarations. They are software representations, not
+    additional v1 domain referents.'
+- observation: so:sha256:dd4ce73b5f90b6a2cc48a40c200e4ab2a0f7353fbfbd20f5e53251a0d390ee71
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (repository-plan-control-and-ordering): Run-2 plan/specification and ordering
+    proposals cover the CQ-bearing semantics. The archived phase/mutability/mode shells are controller
+    encodings and should not remain independent ontology candidates.'
+- observation: so:sha256:e132249931623c34727a29cb5696b1e031836c6c5106e4e46cd145d2c2650593
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (affected-package-and-dependency-topology): Run 2 now names the package, direct-edge,
+    closure, and affected-scope vocabulary. The old parser-bound catalog and declaration rows are superseded
+    or merely DTO representations.'
+- observation: so:sha256:e34825fda95ce3050968b41d1d89037c85ab81e7f0cbab58d9ea1a2d907163fa
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (quality-report-and-config-artifacts): Run 1 never rejected the implementation-only
+    null for these unwarranted DTO/config/report declarations. They are software representations, not
+    additional v1 domain referents.'
+- observation: so:sha256:e49d7857a2f1d0c247b2bf32b8005aff0f0790bcba3b74dbf5cc27023140a054
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (merge-readiness-and-closeout-outcomes): Current fleet verdict evidence and
+    the merge-readiness proposal supersede these run-1 gate/report declarations. Transport-specific closeout
+    wrappers need no second ontology commitment.'
+- observation: so:sha256:e78b1a951729f59c449331ce1b39c87d1775a6c55e16f9c27cfcf70d97544f90
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (quality-report-and-config-artifacts): Run 1 never rejected the implementation-only
+    null for these unwarranted DTO/config/report declarations. They are software representations, not
+    additional v1 domain referents.'
+- observation: so:sha256:e931fc8b69e9c72f2f382ba6835ae50ed773594333b915a075f1510603035efc
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (watch-stream-event-artifacts): The rows describe polling, diffing, rendering,
+    and transport records with no Must/Should CQ warrant. The underlying verification and merge outcomes
+    are represented elsewhere, so these wrappers are ontology-irrelevant for v1.'
+- observation: so:sha256:ee1ece20418d730e54254ad7e2e33c3fe0193b1ee493d97e4cacb3717b4a0a4d
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (monitor-rerun-decision-artifacts): These are orchestration branch/command
+    artifacts without a CQ warrant. Failure signatures and diagnostic evidence are modeled separately;
+    the monitor controller choices need no independent ontology commitment.'
+- observation: so:sha256:f44344e14a671f9e5f86859eef0dccb723949c53750e0b7e5ec4c33dd473bf7b
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (watch-stream-event-artifacts): The rows describe polling, diffing, rendering,
+    and transport records with no Must/Should CQ warrant. The underlying verification and merge outcomes
+    are represented elsewhere, so these wrappers are ontology-irrelevant for v1.'
+- observation: so:sha256:f45109a7f280b3b010b8766d51c4c09c8e315cb04beb5d1ff38b45ad70c7ab86
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (watch-stream-event-artifacts): The rows describe polling, diffing, rendering,
+    and transport records with no Must/Should CQ warrant. The underlying verification and merge outcomes
+    are represented elsewhere, so these wrappers are ontology-irrelevant for v1.'
+- observation: so:sha256:f484833e6327058feb6e879ca5f7ac16995b5cc267ae52ce7cbd7f48c8258285
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (quality-report-and-config-artifacts): Run 1 never rejected the implementation-only
+    null for these unwarranted DTO/config/report declarations. They are software representations, not
+    additional v1 domain referents.'
+- observation: so:sha256:f71b168a6c2ae3db3894064c6c52de3f29b7464bb4e6d6d6194a7b6ad5e99155
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (repository-plan-control-and-ordering): Run-2 plan/specification and ordering
+    proposals cover the CQ-bearing semantics. The archived phase/mutability/mode shells are controller
+    encodings and should not remain independent ontology candidates.'
+- observation: so:sha256:f8963ec48e961a04e383747bb395792880b08befbcd942fe659fe7fad0da33cb
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (merge-readiness-and-closeout-outcomes): Current fleet verdict evidence and
+    the merge-readiness proposal supersede these run-1 gate/report declarations. Transport-specific closeout
+    wrappers need no second ontology commitment.'
+- observation: so:sha256:f8da674d8c16b9380e097c523f483e16748d4eb10287d3fe570ea4b9bb2986c1
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (quality-report-and-config-artifacts): Run 1 never rejected the implementation-only
+    null for these unwarranted DTO/config/report declarations. They are software representations, not
+    additional v1 domain referents.'
+- observation: so:sha256:f9ff896ab85e892800a541b68651b2f1827025998e2acf58e3c18b7bd73d9c5d
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (repository-plan-control-and-ordering): Run-2 plan/specification and ordering
+    proposals cover the CQ-bearing semantics. The archived phase/mutability/mode shells are controller
+    encodings and should not remain independent ontology candidates.'
+- observation: so:sha256:fc13da4a27d636493bf0caed7e01a55c91e31a45fe97c80ad34f40e7d9948b43
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (repository-plan-control-and-ordering): Run-2 plan/specification and ordering
+    proposals cover the CQ-bearing semantics. The archived phase/mutability/mode shells are controller
+    encodings and should not remain independent ontology candidates.'
+- observation: so:sha256:fc1a7afac87552a779a76bd632d960cf8a72272ed79d6187cfb88fd040cec99b
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (monitor-rerun-decision-artifacts): These are orchestration branch/command
+    artifacts without a CQ warrant. Failure signatures and diagnostic evidence are modeled separately;
+    the monitor controller choices need no independent ontology commitment.'
+- observation: so:sha256:fd30915e1d17659297436b33480b65b1417ff9b0274b7beafa8b70cd814d4596
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (repository-plan-control-and-ordering): Run-2 plan/specification and ordering
+    proposals cover the CQ-bearing semantics. The archived phase/mutability/mode shells are controller
+    encodings and should not remain independent ontology candidates.'
+- observation: so:sha256:fe1dbd4ba4f52a6957d7a51e6e130fa5ce90e9eb74deab72b30589aaf6973759
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (affected-package-and-dependency-topology): Run 2 now names the package, direct-edge,
+    closure, and affected-scope vocabulary. The old parser-bound catalog and declaration rows are superseded
+    or merely DTO representations.'
+- observation: so:sha256:fe44538eca0527dd216b0f0bf5ef18b5b18f14cfd430fc50540bacb847afe8fe
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (verification-execution-structure-and-state): The run-2 surface now carries
+    the specification/execution/state split these old declaration rows could not establish. Retire the
+    obsolete run-1 evidence identities rather than duplicate the live vocabulary.'
+- observation: po:sha256:2b64e2142eac08b9cd7f1d655caa43c80b1393910f15ac892f734e341dad3f7f
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (failure-verdict-and-diagnostics): The domain-bearing failure and diagnostic
+    vocabulary is re-grounded in run 2. Residual enum wrappers and report codes are implementation representations,
+    so the non-emittable run-1 rows add no separate commitment.'
+- observation: po:sha256:3842a52c7caada940ed89a9dd852f272f282f21620fd632dc4e92770ec7c49c1
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (affected-package-and-dependency-topology): Run 2 now names the package, direct-edge,
+    closure, and affected-scope vocabulary. The old parser-bound catalog and declaration rows are superseded
+    or merely DTO representations.'
+- observation: po:sha256:3d30eb80b619e2b7cf5c9261718d56c4a20637d162845611a655b025482e6325
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (elapsed-duration-measurements): The run-1 measurement evidence identities
+    cannot be emitted at the run-2 pin and are superseded by current journal/verdict observations plus
+    the named wall-duration proposals. Retiring these rows does not reject duration vocabulary.'
+- observation: po:sha256:47c1ecee6c68dd2abf05cf58cdbdc3944bbad2d1375eccbaa2bd1abea13d3ec9
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (affected-package-and-dependency-topology): Run 2 now names the package, direct-edge,
+    closure, and affected-scope vocabulary. The old parser-bound catalog and declaration rows are superseded
+    or merely DTO representations.'
+- observation: po:sha256:5fa0d40013f2f1bace37c166a14058909069e91de0f63b823bd0921c40f68278
+  outcome: unresolved
+  carried_from_prior: true
+  needed_evidence: 'sitting-2 ruling (grant-resource-contention-and-paths): Run-2 overlappingPaths fields
+    describe worktree overlap, not a grant-to-resource contention relation, and no current proposal slug
+    or label names that relation.'
+  since: '2026-09-03'
+- observation: po:sha256:648149e8ec61b86770c1c8511b659226c3e8605ab43ac3a0c03439f40b6002fa
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (affected-package-and-dependency-topology): Run 2 now names the package, direct-edge,
+    closure, and affected-scope vocabulary. The old parser-bound catalog and declaration rows are superseded
+    or merely DTO representations.'
+- observation: po:sha256:64d90805ebfbc6afee58171bc8f40cc34294e5a165e1e68ee59c3941f5878eea
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (repository-plan-control-and-ordering): Run-2 plan/specification and ordering
+    proposals cover the CQ-bearing semantics. The archived phase/mutability/mode shells are controller
+    encodings and should not remain independent ontology candidates.'
+- observation: po:sha256:6a0fc8a8c0fdc7f387b6300ff3899f9c604c1fbf27a9ece7c5559cfa2fd4cef5
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (failure-verdict-and-diagnostics): The domain-bearing failure and diagnostic
+    vocabulary is re-grounded in run 2. Residual enum wrappers and report codes are implementation representations,
+    so the non-emittable run-1 rows add no separate commitment.'
+- observation: po:sha256:6e6961e95ee4bef3649372773b103fb170b76da19c610a817da19676417eebad
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (verification-attempt-structure): Run 2 re-grounds attempt identity and lifecycle
+    from fleet journal records and carries a verification-attempt proposal. The old parser-bound rows
+    are superseded evidence.'
+- observation: po:sha256:7b9e1b59cb9fc7b104034c01453654a7477c36f848673ec924f1c4039fbdb554
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (elapsed-duration-measurements): The run-1 measurement evidence identities
+    cannot be emitted at the run-2 pin and are superseded by current journal/verdict observations plus
+    the named wall-duration proposals. Retiring these rows does not reject duration vocabulary.'
+- observation: po:sha256:7f1b0cc144cf9d58f851e9c6a1857dfd6ffdea2db7c0c4c083d7779b6a5048fd
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (affected-package-and-dependency-topology): Run 2 now names the package, direct-edge,
+    closure, and affected-scope vocabulary. The old parser-bound catalog and declaration rows are superseded
+    or merely DTO representations.'
+- observation: po:sha256:855501fcce91a1abd40a2ac7a2efc3fabe445e244e19e5f7f670097ea07cb9f0
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (failure-verdict-and-diagnostics): The domain-bearing failure and diagnostic
+    vocabulary is re-grounded in run 2. Residual enum wrappers and report codes are implementation representations,
+    so the non-emittable run-1 rows add no separate commitment.'
+- observation: po:sha256:86e624235b616a7cec93d1021d31f6e3b7de441af825fd16034e8e7cde6621b0
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (failure-verdict-and-diagnostics): The domain-bearing failure and diagnostic
+    vocabulary is re-grounded in run 2. Residual enum wrappers and report codes are implementation representations,
+    so the non-emittable run-1 rows add no separate commitment.'
+- observation: po:sha256:88e8e724ffb0967198fa555ab886c8a9ea3e14cf26614dd018b57b409b1c79ef
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (verification-execution-structure-and-state): The run-2 surface now carries
+    the specification/execution/state split these old declaration rows could not establish. Retire the
+    obsolete run-1 evidence identities rather than duplicate the live vocabulary.'
+- observation: po:sha256:906d0d377522942bb9220bd290bcb71907aa56c1ce497dc2cca550419419d2f8
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (verification-attempt-structure): Run 2 re-grounds attempt identity and lifecycle
+    from fleet journal records and carries a verification-attempt proposal. The old parser-bound rows
+    are superseded evidence.'
+- observation: po:sha256:91dddfd936452b90225013e406a88d962edb7d60f7218fd17b6f3a2a01268981
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (failure-verdict-and-diagnostics): The domain-bearing failure and diagnostic
+    vocabulary is re-grounded in run 2. Residual enum wrappers and report codes are implementation representations,
+    so the non-emittable run-1 rows add no separate commitment.'
+- observation: po:sha256:95043bdded97559199ecb0db22c74fb5278abc7814d2c685019f9d1134a81547
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (affected-package-and-dependency-topology): Run 2 now names the package, direct-edge,
+    closure, and affected-scope vocabulary. The old parser-bound catalog and declaration rows are superseded
+    or merely DTO representations.'
+- observation: po:sha256:96adb15e475d44e88cd7f1edd0a0beb3af5c5dac0aea1a42f03a59bd4b84b3d3
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (verification-execution-structure-and-state): The run-2 surface now carries
+    the specification/execution/state split these old declaration rows could not establish. Retire the
+    obsolete run-1 evidence identities rather than duplicate the live vocabulary.'
+- observation: po:sha256:9a531bd73c66cc707e1fd26fe320212022ca346d0bdcf26d549a103cd3fea88c
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (verification-attempt-structure): Run 2 re-grounds attempt identity and lifecycle
+    from fleet journal records and carries a verification-attempt proposal. The old parser-bound rows
+    are superseded evidence.'
+- observation: po:sha256:9c89bf17f35f4e9ac5dd3791656461492478cbd1e99258fd1e95b5babec7f0e6
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (admission-origin-key-field): The old handler-construction observation is
+    superseded by current carrier-level originKey evidence. Retire only the old ID; steward judgment over
+    the current observation remains separate.'
+- observation: po:sha256:a4f64e891a25a6cc469a3659587b1addf85901093769fbbb58ce0529735417c8
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (failure-verdict-and-diagnostics): The domain-bearing failure and diagnostic
+    vocabulary is re-grounded in run 2. Residual enum wrappers and report codes are implementation representations,
+    so the non-emittable run-1 rows add no separate commitment.'
+- observation: po:sha256:a790b3398403b1be2e7ced74bd8a5ef6b741760df1667416c0fa1410f18fbde9
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (affected-package-and-dependency-topology): Run 2 now names the package, direct-edge,
+    closure, and affected-scope vocabulary. The old parser-bound catalog and declaration rows are superseded
+    or merely DTO representations.'
+- observation: po:sha256:a8757840abf082cf2d3622dc431f79e8a9c66aa38728cafd325c609c3856a27d
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (verification-execution-structure-and-state): The run-2 surface now carries
+    the specification/execution/state split these old declaration rows could not establish. Retire the
+    obsolete run-1 evidence identities rather than duplicate the live vocabulary.'
+- observation: po:sha256:aac8ce7affe0bdd25e59ca5492726e91fb9a3b936009ebef512981bcfdc1c9b4
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (work-unit-and-lane-specifications): The reusable procedure vocabulary is
+    represented by current run-2 proposals. Old class declarations and bare Turbo keys are redundant evidence,
+    not additional specifications.'
+- observation: po:sha256:bde32fa6682e1b0c1117452303772e61fe6b20fc29764c45ffae977106fd9eaf
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (failure-verdict-and-diagnostics): The domain-bearing failure and diagnostic
+    vocabulary is re-grounded in run 2. Residual enum wrappers and report codes are implementation representations,
+    so the non-emittable run-1 rows add no separate commitment.'
+- observation: po:sha256:c9742edfc85a5c11f0217252b9961631a94a3b86c634c01f2cff9c08508d0533
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (affected-package-and-dependency-topology): Run 2 now names the package, direct-edge,
+    closure, and affected-scope vocabulary. The old parser-bound catalog and declaration rows are superseded
+    or merely DTO representations.'
+- observation: po:sha256:cb47b23eada8f8e95a7da272596862e4095ac0255417231c54f95e8f7305baa2
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (failure-verdict-and-diagnostics): The domain-bearing failure and diagnostic
+    vocabulary is re-grounded in run 2. Residual enum wrappers and report codes are implementation representations,
+    so the non-emittable run-1 rows add no separate commitment.'
+- observation: po:sha256:cd039ccfee27376edd08a5ec9157acfddc84b5004ffa125174bfc5ff2f7fbf6a
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (work-unit-and-lane-specifications): The reusable procedure vocabulary is
+    represented by current run-2 proposals. Old class declarations and bare Turbo keys are redundant evidence,
+    not additional specifications.'
+- observation: po:sha256:de71f16e82547bcd1c61213b48a0db513d48052cf55563ebb1634d1680d59f53
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (verification-attempt-structure): Run 2 re-grounds attempt identity and lifecycle
+    from fleet journal records and carries a verification-attempt proposal. The old parser-bound rows
+    are superseded evidence.'
+- observation: po:sha256:e0d1f36f373003dc34f8128df7d04a4631493aba04f2675ce52ec57792cbf782
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (merge-readiness-and-closeout-outcomes): Current fleet verdict evidence and
+    the merge-readiness proposal supersede these run-1 gate/report declarations. Transport-specific closeout
+    wrappers need no second ontology commitment.'
+- observation: po:sha256:e1b16485ec1f3285d03674eb6bb8d3da10dad7235a569391e48bbd00697a9e16
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (affected-package-and-dependency-topology): Run 2 now names the package, direct-edge,
+    closure, and affected-scope vocabulary. The old parser-bound catalog and declaration rows are superseded
+    or merely DTO representations.'
+- observation: po:sha256:fba9735d9ec0b7c541bbfc2ff30b0a3dd19d8e4b8e37874547ce6a0768b5e4d5
+  outcome: irrelevant
+  carried_from_prior: true
+  reason: 'sitting-2 ruling (verification-execution-structure-and-state): The run-2 surface now carries
+    the specification/execution/state split these old declaration rows could not establish. Retire the
+    obsolete run-1 evidence identities rather than duplicate the live vocabulary.'
+- observation: so:sha256:01f4d0036e4dcd1a4e636c0b502838d5455dd4b5c96c845bfc0a6931109dd264
+  outcome: irrelevant
+  reason: 'The implementation-artifact-only null verdict STANDS for dh:jv-option-encoding:001: Option
+    and Some describe a serialization choice, while the bare value key loses the parent property needed
+    to identify any operational referent; no observation-backed discriminator remains.'
+- observation: so:sha256:0a7f99ebe45f22164f484b539becf4d1d57384861db25b0c065fc67cca2574a7
+  outcome: unresolved
+  needed_evidence: dh:jv-base-freshness:001 requires an authoritative, versioned branch-freshness contract
+    identifying the assessed branch and base, defining merge-base, behind-count, and overlap semantics,
+    and recording the assessment provenance and decision use across recomputation.
+  since: '2026-09-03'
+- observation: so:sha256:0fe42bf9ddcb6f694fd168ec852d86cce4ac9945aa66e1d55d1531e6ca799e46
+  outcome: mapped
+  ref: otp:jv-merge-readiness-assessment:001
+- observation: so:sha256:1081a3f10108fba5826e74ade5a53a90ae027969e1857cbfe67f1ef919a6931f
+  outcome: proposed
+  ref: otp:jv-failure-signature:001
+- observation: so:sha256:12f0a017acb17063246f77ebb5c128271f9df67ea7bc1666268052f2d58873d1
+  outcome: unresolved
+  needed_evidence: dh:jv-greptile-score:001 requires authoritative scale semantics and version, the assessed
+    review subject, score provenance, and an observed decision or assurance consequence for the recorded
+    5/5 value.
+  since: '2026-09-03'
+- observation: so:sha256:223ed0681f8f87a828ea875cbfde48d86c2cedd8d649f476ca43f10a42134437
+  outcome: mapped
+  ref: otp:jv-merge-readiness-assessment:001
+- observation: so:sha256:258d88bf5d120ca46af4e7964a5c3a5674c5c4984b67c0f84fe8f706e979c3f6
+  outcome: unresolved
+  needed_evidence: dh:jv-greptile-score:001 requires authoritative scale semantics and version, the assessed
+    review subject, score provenance, and an observed decision or assurance consequence for the recorded
+    5/5 value.
+  since: '2026-09-03'
+- observation: so:sha256:2a207d4986630e8590f790457dabe07ffeecdb9b2bfa79cf254c6bce508a2998
+  outcome: unresolved
+  needed_evidence: otp:jv-actual-wall-duration:001 concession requires a revised or new Must/Should CQ
+    whose executable query must traverse a RecordedWallDurationMeasurement individual rather than reading
+    duration values directly from a VerificationEpisode or WorkUnitExecution. otp:jv-actual-wall-duration:002
+    concession requires an authoritative issuance record joining each duration carrier to a custody lineage,
+    copy/correction events, and a Must/Should decision CQ that distinguishes carrier tokens from equal
+    duration content.
+  since: '2026-09-03'
+- observation: so:sha256:3a8b51a1acc8602b1a583147d6d5e7e253481237fbf5806c9b13833698bc9090
+  outcome: unresolved
+  needed_evidence: otp:jv-verification-step-execution:001 concession requires a passed-step journal record
+    with an authoritative parent-attempt identifier, actual start and end boundaries, execution identity,
+    and an explicit distinction from not-run status rows.
+  since: '2026-09-03'
+- observation: so:sha256:4d2f65e45969d3636bdb53c81dc0c3192aa766ad2bc9e98e6b641d3e90e0d7db
+  outcome: mapped
+  ref: otp:jv-merge-readiness-assessment:001
+- observation: so:sha256:78cf821b0771a1c60ef1f80746484a8da1df72bcf2b1eaa9ebed337144e5a245
+  outcome: unresolved
+  needed_evidence: dh:jv-memory-peak-measurement:001 requires an authoritative measurement join identifying
+    each value's resource-using occurrence and process boundary, sampling method and interval, metric
+    and unit, provenance, and whether peakRssKb and memoryPeakBytes belong to one measurement family.
+  since: '2026-09-03'
+- observation: so:sha256:7c677ff0b3659f5c4353476b6c688b1c31496db4c596b18a1a0da467f02ce584
+  outcome: irrelevant
+  reason: 'The implementation-artifact-only null verdict STANDS for dh:jv-staged-only-marker:001: The
+    observations expose a Yeet-specific path convention and Git hash but provide no CQ warrant, lifecycle
+    semantics, or discriminator showing that the mechanism itself deserves a domain-ontology referent.'
+- observation: so:sha256:91988c625516a3fa1516b592a7dc4c6b197b56249390fde1fc1e116867ae1af3
+  outcome: unresolved
+  needed_evidence: otp:jv-actual-wall-duration:001 concession requires a revised or new Must/Should CQ
+    whose executable query must traverse a RecordedWallDurationMeasurement individual rather than reading
+    duration values directly from a VerificationEpisode or WorkUnitExecution. otp:jv-actual-wall-duration:002
+    concession requires an authoritative issuance record joining each duration carrier to a custody lineage,
+    copy/correction events, and a Must/Should decision CQ that distinguishes carrier tokens from equal
+    duration content. otp:jv-lane-diagnostic-comparison:001 concession requires joined identities for
+    both compared executions, their measurement assertions and comparison issuance, plus a Must/Should
+    decision CQ that consumes a distinct comparison record.
+  since: '2026-09-03'
+- observation: so:sha256:a439f4ee4315fe978323f80c502d712289fd590fe8655c5050162bf65b9827b7
+  outcome: proposed
+  ref: otp:jv-failure-signature:001
+- observation: so:sha256:a4fa5b4f6b8142d813d5867e01c92a245a9a7ee7d64b8841a3e27a068c88e764
+  outcome: unresolved
+  needed_evidence: dh:jv-base-freshness:001 requires an authoritative, versioned branch-freshness contract
+    identifying the assessed branch and base, defining merge-base, behind-count, and overlap semantics,
+    and recording the assessment provenance and decision use across recomputation.
+  since: '2026-09-03'
+- observation: so:sha256:c1e2fd7731b1efe855f70c75df8e7dd0bd99853668c551eca8fb80593a621d06
+  outcome: unresolved
+  needed_evidence: dh:jv-base-freshness:001 requires an authoritative, versioned branch-freshness contract
+    identifying the assessed branch and base, defining merge-base, behind-count, and overlap semantics,
+    and recording the assessment provenance and decision use across recomputation.
+  since: '2026-09-03'
+- observation: so:sha256:c509f4a98184260243c9b13f2cc0d46bbe7783f07518144c48d9e58d47617b73
+  outcome: proposed
+  ref: otp:jv-verification-attempt:001
+- observation: so:sha256:c627961a8fcde9dca01027cbf052494763b5e6895805c1c0c50d8bf51ba3a7bb
+  outcome: unresolved
+  needed_evidence: otp:jv-admission-lifecycle:001 concession requires one authoritative lifecycle join
+    linking enqueue, grant, release/cancellation, and causal-continuity identifiers for the same request,
+    plus a Must/Should decision CQ that needs that lifecycle. dh:jv-memory-peak-measurement:001 requires
+    an authoritative measurement join identifying each value's resource-using occurrence and process boundary,
+    sampling method and interval, metric and unit, provenance, and whether peakRssKb and memoryPeakBytes
+    belong to one measurement family.
+  since: '2026-09-03'
+- observation: so:sha256:c9bd093bed43447337e1bf9a5abfaf8f1cf53db5521e70d9c3bb15e28b011161
+  outcome: irrelevant
+  reason: 'The implementation-artifact-only null verdict STANDS for dh:jv-staged-only-marker:001: The
+    observations expose a Yeet-specific path convention and Git hash but provide no CQ warrant, lifecycle
+    semantics, or discriminator showing that the mechanism itself deserves a domain-ontology referent.'
+- observation: so:sha256:d94bf0420d3457158959e6188c50d5949dc4fae4a48d07e7077f8c81df36fcb6
+  outcome: unresolved
+  needed_evidence: otp:jv-admission-lifecycle:001 concession requires one authoritative lifecycle join
+    linking enqueue, grant, release/cancellation, and causal-continuity identifiers for the same request,
+    plus a Must/Should decision CQ that needs that lifecycle.
+  since: '2026-09-03'
+- observation: po:sha256:0121af7b661484de9197ede12df6eaa5c69240214339b7ea6844a4f09901fea8
+  outcome: unresolved
+  needed_evidence: otp:pa-projection-contract:001 concession requires the CQ-020 wording amendment (WorkUnit
+    -> SeatRequest ordering) queued for the post-run CQ revision, with an executable query that requires
+    the governing projection specification and the emitted SeatRequest-ordering facts it constrains.
+  since: '2026-09-03'
+- observation: po:sha256:03faca9bdbda493f0d75b6c88c6bc46fe48dd8968d87259b3f201dddbd862bd9
+  outcome: mapped
+  ref: otp:pa-fallow-audit-evidence:002
+- observation: po:sha256:04efe14c9b36df094bcd5670eb7ef97147f4158a69a833ebc0b997361225a6b0
+  outcome: proposed
+  ref: otp:pa-package-dependency-closure:001
+- observation: po:sha256:059c20e6b0972ff269acf52884fea9e75f4fc5144fac7728dbac333221866181
+  outcome: unresolved
+  needed_evidence: otp:pa-projection-conformance-evidence:001 concession requires one package manifest
+    with independent authority and version joining suite, implementation build, frozen inputs, replay
+    execution, complete results, limitations, issuance, and custody. otp:pa-projection-conformance-evidence:002
+    concession requires an independently governed and versioned property-suite specification whose authority
+    is separate from its test-file carrier, plus a Must/Should CQ that requires that specification. otp:pa-projection-conformance-evidence:003
+    concession requires producing replay-execution and environment identifiers, result issuance, custody,
+    retention and correction lineage, plus a Must/Should CQ requiring a distinct replay-result artifact.
+  since: '2026-09-03'
+- observation: po:sha256:06dd8aab73f74fd680b9cf55a760da82d4a3420f91fc8ea9d8bdb27c4c000d57
+  outcome: unresolved
+  needed_evidence: otp:pa-projection-conformance-evidence:001 concession requires one package manifest
+    with independent authority and version joining suite, implementation build, frozen inputs, replay
+    execution, complete results, limitations, issuance, and custody. otp:pa-projection-conformance-evidence:002
+    concession requires an independently governed and versioned property-suite specification whose authority
+    is separate from its test-file carrier, plus a Must/Should CQ that requires that specification. otp:pa-projection-conformance-evidence:003
+    concession requires producing replay-execution and environment identifiers, result issuance, custody,
+    retention and correction lineage, plus a Must/Should CQ requiring a distinct replay-result artifact.
+  since: '2026-09-03'
+- observation: po:sha256:06e44e7a819508d788d7d342b71fcc080eb8b249b695b0217fd62ba83672e7b6
+  outcome: irrelevant
+  reason: 'The implementation-artifact-only null verdict STANDS for dh:pa-ci-lane-vocabulary:001: The
+    observations enumerate literals and their carrier but do not show that each spelling denotes a distinct
+    operational lane rather than a CLI coding choice.'
+- observation: po:sha256:08a398bab03363136254e3e9c3ed49ebb16ffd18fb94b434111d4446cdf50d69
+  outcome: unresolved
+  needed_evidence: otp:pa-workspace-package:001 concession requires an authoritative package-identity
+    policy and provenance deciding rename, move, version, fork, and delete-recreate continuity, including
+    role versus immutable-content treatment.
+  since: '2026-09-03'
+- observation: po:sha256:09f92238876830de7c153c6bbc3cb0920e6d242635ef6df12129f4b8462b4002
+  outcome: irrelevant
+  reason: 'The implementation-artifact-only null verdict STANDS for dh:pa-ci-lane-vocabulary:001: The
+    observations enumerate literals and their carrier but do not show that each spelling denotes a distinct
+    operational lane rather than a CLI coding choice.'
+- observation: po:sha256:0a135a5a3d645935fc24eab144d7671ed544ad71da23212db9ef611b5f251560
+  outcome: mapped
+  ref: otp:pa-fallow-audit-evidence:002
+- observation: po:sha256:0f3ab3cf920a36f30c812e75f03b3974b913fbd26fa4d15f921e1c9ce526d6ef
+  outcome: irrelevant
+  reason: 'The implementation-artifact-only null verdict STANDS for dh:pa-optional-dependencies-token:001:
+    The isolated quotation does not establish whether the number is a rank, count, or formatting residue,
+    nor whether the token denotes an operational dependency relation.'
+- observation: po:sha256:0f770a52d6074ae2a158234d536178589a6353333147509d21a526ac41305d59
+  outcome: mapped
+  ref: otp:pa-admission-request:001
+- observation: po:sha256:1189ec1eca4fb79695201186157334124e71372bbe906bb6119996f42b9fe842
+  outcome: unresolved
+  needed_evidence: otp:pa-workspace-package:001 concession requires an authoritative package-identity
+    policy and provenance deciding rename, move, version, fork, and delete-recreate continuity, including
+    role versus immutable-content treatment.
+  since: '2026-09-03'
+- observation: po:sha256:13b29fc0bebcac4b0914db214f136add0fa739ac50af65649c800b7013ccb67a
+  outcome: unresolved
+  needed_evidence: otp:pa-workspace-package:001 concession requires an authoritative package-identity
+    policy and provenance deciding rename, move, version, fork, and delete-recreate continuity, including
+    role versus immutable-content treatment.
+  since: '2026-09-03'
+- observation: po:sha256:14e01baa9a4fa23873722680039d098e43c3e0f315d5f6805159154577794e06
+  outcome: unresolved
+  needed_evidence: "sitting-3 ruling: stepIndex defers to run 3 \u2014 its subject binds ScheduleStep,\
+    \ which is withdrawn and unratified; the full ordering cluster ratifies together after the CQ-020\
+    \ wording amendment (WorkUnit -> SeatRequest ordering)."
+  since: '2026-09-03'
+- observation: po:sha256:1630518546c7461a9063892f9fc45a0ee9c7333d7a175dd1c05f99e3cd74519e
+  outcome: mapped
+  ref: otp:pa-turbo-task-specification:001
+- observation: po:sha256:19da9053dc578ecea6995d45a9c23ea09f1f36b02e3969bb13b3c08a6a3c981f
+  outcome: mapped
+  ref: otp:pa-turbo-task-specification:001
+- observation: po:sha256:1b3960c2341fc83dbf21899c3ff4e856c1fe32d9157a472c84ff2d9577a91cf1
+  outcome: irrelevant
+  reason: 'The implementation-artifact-only null verdict STANDS for dh:pa-collection-mode:001: The literal
+    pair does not state what is collected, when stopping occurs, or whether the distinction changes any
+    in-scope verification decision.'
+- observation: po:sha256:1b49e7e0668570e889eb25329d1f20477c265b30b4fb6626fd5817bb06f8b3b1
+  outcome: mapped
+  ref: otp:pa-turbo-task-specification:001
+- observation: po:sha256:1c941c2e1e41a932dfd00e48631a9dd6217c6e51fe9c681369139a8c0402ea84
+  outcome: unresolved
+  needed_evidence: otp:pa-workspace-package:001 concession requires an authoritative package-identity
+    policy and provenance deciding rename, move, version, fork, and delete-recreate continuity, including
+    role versus immutable-content treatment.
+  since: '2026-09-03'
+- observation: po:sha256:1e660064d1ea4f712a62b8e4440612413263dc165cb8fc6711b52fb488110e59
+  outcome: irrelevant
+  reason: 'The implementation-artifact-only null verdict STANDS for dh:pa-ticket-removal-operation:001:
+    A filesystem removal expression does not establish that request consumption itself must be represented
+    as an ontology referent rather than inferred from queue snapshots.'
+- observation: po:sha256:1eedf327cc0ca8bbf03f74777dd56ff8a86910f71ca88ceed1a75f6dd17144ab
+  outcome: irrelevant
+  reason: 'The implementation-artifact-only null verdict STANDS for dh:pa-ci-lane-vocabulary:001: The
+    observations enumerate literals and their carrier but do not show that each spelling denotes a distinct
+    operational lane rather than a CLI coding choice.'
+- observation: po:sha256:2092736911a0c68e96ae8d9638b00ec4b6992b4da0677f325e4fd420fb41b2a7
+  outcome: unresolved
+  needed_evidence: dh:pa-elapsed-ms-field:001 requires an observed verdict record that identifies whether
+    elapsedMs measures a WorkUnit execution, verification attempt, or broader command, with start and
+    end boundaries and provenance.
+  since: '2026-09-03'
+- observation: po:sha256:2149b9954f39e52d160e076e80674d05372562563582540e8a6b4da3cd12b68b
+  outcome: irrelevant
+  reason: 'The implementation-artifact-only null verdict STANDS for dh:pa-ci-lane-vocabulary:001: The
+    observations enumerate literals and their carrier but do not show that each spelling denotes a distinct
+    operational lane rather than a CLI coding choice.'
+- observation: po:sha256:2338c92205c5fc08e5e18d149e7aabca98b83589cf5984e6b83fa81b2401a98c
+  outcome: unresolved
+  needed_evidence: otp:pa-projection-conformance-evidence:001 concession requires one package manifest
+    with independent authority and version joining suite, implementation build, frozen inputs, replay
+    execution, complete results, limitations, issuance, and custody. otp:pa-projection-conformance-evidence:002
+    concession requires an independently governed and versioned property-suite specification whose authority
+    is separate from its test-file carrier, plus a Must/Should CQ that requires that specification. otp:pa-projection-conformance-evidence:003
+    concession requires producing replay-execution and environment identifiers, result issuance, custody,
+    retention and correction lineage, plus a Must/Should CQ requiring a distinct replay-result artifact.
+  since: '2026-09-03'
+- observation: po:sha256:238c7a54ba96c98f9094d79e88bcbd5da03af7d8a4ef720564e16b36f602759f
+  outcome: irrelevant
+  reason: 'The implementation-artifact-only null verdict STANDS for dh:pa-ci-lane-vocabulary:001: The
+    observations enumerate literals and their carrier but do not show that each spelling denotes a distinct
+    operational lane rather than a CLI coding choice.'
+- observation: po:sha256:28e700021c9b4ba707087650a4e39ceed6540863e4d99b02af241b2b0fdbcaf8
+  outcome: unresolved
+  needed_evidence: otp:pa-workspace-package:001 concession requires an authoritative package-identity
+    policy and provenance deciding rename, move, version, fork, and delete-recreate continuity, including
+    role versus immutable-content treatment.
+  since: '2026-09-03'
+- observation: po:sha256:2928ea98736b22a91fa01c6a7ea1da53528a69fb97bca710e3b47d5d8f41f870
+  outcome: irrelevant
+  reason: 'The implementation-artifact-only null verdict STANDS for dh:pa-boundary-provenance-schema:001:
+    Schema keys, an enum, and a numeric configuration value do not show that these implementation distinctions
+    are needed in the operational ontology.'
+- observation: po:sha256:292a0d656c3996d634bbcc4cde62da942c52bd9a0a3c5d1f9246bf5977066841
+  outcome: mapped
+  ref: otp:pa-admission-request:001
+- observation: po:sha256:29fa556fa03b7070d567678f785682c88a97dfe828fa6c517223e3961847c58a
+  outcome: irrelevant
+  reason: 'The implementation-artifact-only null verdict STANDS for dh:pa-changeset-enforcement-mode:001:
+    The two literal spellings provide no observation of their operational conditions, bearers, or effect
+    on a verification episode.'
+- observation: po:sha256:2b07cb56911c7fcd60acd7c89f14be087604a2d3c1fc8c2f19781068876d094d
+  outcome: irrelevant
+  reason: 'The implementation-artifact-only null verdict STANDS for dh:pa-ci-lane-vocabulary:001: The
+    observations enumerate literals and their carrier but do not show that each spelling denotes a distinct
+    operational lane rather than a CLI coding choice.'
+- observation: po:sha256:2d69bdb38dd2c7618a64b60834a6993abe999b6776d721aef8b6eb947c9b2e91
+  outcome: unresolved
+  needed_evidence: dh:pa-failure-signature:001 requires an observed classified failure occurrence joining
+    failureKind to the failed verification step under governed, versioned component semantics.
+  since: '2026-09-03'
+- observation: po:sha256:2f4a9d86f9018ff3add768e859f83488c2df28a9d004ef9b3e580f4c9a358668
+  outcome: mapped
+  ref: otp:pa-docgen-work-unit:001
+- observation: po:sha256:2f816bb5f468d1cc4a06de84c4a9bb8e4c9393a070c41e364f53d951cbf172e1
+  outcome: unresolved
+  needed_evidence: otp:pa-workspace-package:001 concession requires an authoritative package-identity
+    policy and provenance deciding rename, move, version, fork, and delete-recreate continuity, including
+    role versus immutable-content treatment.
+  since: '2026-09-03'
+- observation: po:sha256:2f9ef8d6e80c52201ddaa889c48640d0defd49902d53c28dc5ecf331462609a2
+  outcome: irrelevant
+  reason: 'The implementation-artifact-only null verdict STANDS for dh:pa-boundary-provenance-schema:001:
+    Schema keys, an enum, and a numeric configuration value do not show that these implementation distinctions
+    are needed in the operational ontology.'
+- observation: po:sha256:30be9d42308395a759ea42b1706c47b14bf2d995ff5d90eb85161cef24e27b61
+  outcome: unresolved
+  needed_evidence: dh:pa-cache-plan-resolution:001 requires the governed resolver result domain and one
+    Turbo execution joined to the resolved cache posture that was actually applied.
+  since: '2026-09-03'
+- observation: po:sha256:33182e9f689b24bcb01d622aa789cd78093af067a6594b2e0c2c950ac0867715
+  outcome: mapped
+  ref: otp:pa-yeet-verification-workflow:001
+- observation: po:sha256:346503bf0ecc7e2531c623fe8377aaeee72b6e7bcaea94fb9db2c17d5e7536bc
+  outcome: proposed
+  ref: otp:pa-package-dependency-closure:001
+- observation: po:sha256:35fb67c441193ece032d71a3f3e53107352fd83cd469df203eac69b27f2461d9
+  outcome: mapped
+  ref: otp:pa-admission-request:001
+- observation: po:sha256:35fd690a7bba2941347b93814e28742f611685585202afea0ba3e3c88d87577a
+  outcome: irrelevant
+  reason: 'The implementation-artifact-only null verdict STANDS for dh:pa-ci-lane-vocabulary:001: The
+    observations enumerate literals and their carrier but do not show that each spelling denotes a distinct
+    operational lane rather than a CLI coding choice.'
+- observation: po:sha256:37dade1cef0b41d87b0656f26afcacbbb5abd10dc718d45d7e0c966b19061610
+  outcome: mapped
+  ref: otp:pa-projection-limitation-report:001
+- observation: po:sha256:38891f55c44cf3045cd6625fb9da228941fb75d9ce85e80a033aa94381dc034a
+  outcome: irrelevant
+  reason: 'The implementation-artifact-only null verdict STANDS for dh:pa-boundary-provenance-schema:001:
+    Schema keys, an enum, and a numeric configuration value do not show that these implementation distinctions
+    are needed in the operational ontology.'
+- observation: po:sha256:38d7d12c45869ba760b31b763ddbd1464fa846644bb8f0ce5088361681abd9f6
+  outcome: irrelevant
+  reason: 'The implementation-artifact-only null verdict STANDS for dh:pa-ci-lane-vocabulary:001: The
+    observations enumerate literals and their carrier but do not show that each spelling denotes a distinct
+    operational lane rather than a CLI coding choice.'
+- observation: po:sha256:394b686a0833c0d7dca04d9e31bbdd18750dfbaa9fb3249e3b6ec48e12b57bc4
+  outcome: mapped
+  ref: otp:pa-turbo-task-specification:001
+- observation: po:sha256:39654605207ddc525fd7a94dc32f91540979a9a0605500594d3b95445ed2dd80
+  outcome: mapped
+  ref: otp:pa-docgen-work-unit:001
+- observation: po:sha256:3aadb9c8ae061d71b2e8386d9b8af518d49df5a66abaa0bb0391783833a6eef4
+  outcome: unresolved
+  needed_evidence: otp:pa-admission-lease-lifecycle:001 concession requires a joined grant identifier
+    across lease creation, heartbeat rewrite, release/eviction, ledger decrement, and carrier lineage,
+    plus a CQ requiring a lifecycle distinct from SeatGrant.
+  since: '2026-09-03'
+- observation: po:sha256:3b19444624c429f6c39c9e575a3292b8c48329e4fccb1c7caedf44b274a198fe
+  outcome: mapped
+  ref: otp:pa-turbo-task-specification:001
+- observation: po:sha256:3bf3cf7f37f4e3e046efb12751c4b9650dd3a2a16a0c99a1ec17563fa551048a
+  outcome: unresolved
+  needed_evidence: dh:pa-qa-evidence-workflow:001 requires a provenance-bearing evidence record joining
+    record, extract, and judge stages to an in-scope Yeet or CI verification lane, frozen tree and epoch,
+    and assurance obligation.
+  since: '2026-09-03'
+- observation: po:sha256:3c7433d6cba26df248d3103ccc8c500af66525cb53c75876dd810ec316ec611d
+  outcome: mapped
+  ref: otp:pa-turbo-task-specification:001
+- observation: po:sha256:3c757a7975b27b8597ccf8c6d886eb72ad2b8b51aaba8eb59cf21cc9a1a7a3c6
+  outcome: unresolved
+  needed_evidence: dh:pa-admission-capacity-expression:001 requires an authoritative capacity contract
+    defining unit conversion, reserve subtraction, hard-floor treatment, and the join from the computed
+    value to capacityAtAdmissionTokens in an observed admission decision.
+  since: '2026-09-03'
+- observation: po:sha256:3e1c6cd48f541482c5471d901e96c829dd47de787108d7ee9cc4fec91966eb97
+  outcome: mapped
+  ref: otp:pa-turbo-task-specification:001
+- observation: po:sha256:3fba179ba20dd910e397613882c485dcaea5256e000bfc7996aafa6f0c493c03
+  outcome: irrelevant
+  reason: 'The implementation-artifact-only null verdict STANDS for dh:pa-affected-reason-field:001: Optionality
+    and a schema reference do not reveal the possible reasons, their fail-open or fail-closed semantics,
+    or whether the field records trusted scope provenance.'
+- observation: po:sha256:45d50fea9a4a18913111c9152e3c2ffad848b8e8f869cb5e694c910c604264f3
+  outcome: mapped
+  ref: otp:pa-yeet-verification-workflow:001
+- observation: po:sha256:4763b2908e30e2d48c58ce216dabaa1dd8234c19e0e84ba5b5eefe4f1541e36e
+  outcome: mapped
+  ref: otp:pa-turbo-task-specification:001
+- observation: po:sha256:48ffbc6bf26516fe6abe5504eef559c532b334927df41fd8ec82df76fce702db
+  outcome: irrelevant
+  reason: 'The implementation-artifact-only null verdict STANDS for dh:pa-execution-context-literals:001:
+    The literal set does not state what bearer has the context, whether membership can change, or which
+    in-scope decision depends on the distinction.'
+- observation: po:sha256:4a30b60df83c527a6da561402d3755e6b194e0f657659d3510c506549f3c9021
+  outcome: mapped
+  ref: otp:pa-admission-request:001
+- observation: po:sha256:4c265303ec2062df5a841185cf1032b9beab1cefafb63f3468298c2bc7917e1b
+  outcome: mapped
+  ref: otp:pa-yeet-verification-workflow:001
+- observation: po:sha256:4ce41ce65957b0594e01c672972fb68722ee30c3df62444b2d323fe6d70e07cf
+  outcome: unresolved
+  needed_evidence: dh:pa-failure-signature:001 requires an observed classified failure occurrence joining
+    failureKind to the failed verification step under governed, versioned component semantics.
+  since: '2026-09-03'
+- observation: po:sha256:4eaab6102c962dee4fa2994903e026bdec486cbf481cac243bd9246d1502e6ca
+  outcome: irrelevant
+  reason: 'The implementation-artifact-only null verdict STANDS for dh:pa-closeout-source-vocabulary:001:
+    The enum alone does not show whether its members are evidence sources, obligation types, service bearers,
+    or only closeout implementation branches.'
+- observation: po:sha256:4eb85a95424814775f10fc4b76c458723d3414d4abdc1c100571482f7feecdc0
+  outcome: irrelevant
+  reason: 'The implementation-artifact-only null verdict STANDS for dh:pa-typecheck-report-headings:001:
+    Headings ending at Command provide neither the invoked work, a result, a time, nor a relation to an
+    assurance tier, so they do not establish verification evidence.'
+- observation: po:sha256:4ec767a335e920a2a80204127a6c3146cded1e5eb3d748b11a87dfc4579fc735
+  outcome: unresolved
+  needed_evidence: dh:pa-failure-signature:001 requires an observed classified failure occurrence joining
+    failureKind to the failed verification step under governed, versioned component semantics.
+  since: '2026-09-03'
+- observation: po:sha256:4fc13f1c056d4666ad83f3944408c9437bbcc0eebd583f907ec05449b5730594
+  outcome: mapped
+  ref: otp:pa-turbo-task-specification:001
+- observation: po:sha256:4fe450d9eb42050ad9526df81c35114a4c5190cd8ec6b093175c6c54058ee0c8
+  outcome: irrelevant
+  reason: 'The implementation-artifact-only null verdict STANDS for dh:pa-typecheck-report-headings:001:
+    Headings ending at Command provide neither the invoked work, a result, a time, nor a relation to an
+    assurance tier, so they do not establish verification evidence.'
+- observation: po:sha256:518aee86882c8b9092469203add3bc23c72acfed1d7139f136a96e8763f0c8c7
+  outcome: unresolved
+  needed_evidence: dh:pa-admission-capacity-expression:001 requires an authoritative capacity contract
+    defining unit conversion, reserve subtraction, hard-floor treatment, and the join from the computed
+    value to capacityAtAdmissionTokens in an observed admission decision.
+  since: '2026-09-03'
+- observation: po:sha256:51a827390306ccb0cf37e23d646c653fd4291f3ed346ae04e097e678a5097781
+  outcome: unresolved
+  needed_evidence: otp:pa-workspace-package:001 concession requires an authoritative package-identity
+    policy and provenance deciding rename, move, version, fork, and delete-recreate continuity, including
+    role versus immutable-content treatment.
+  since: '2026-09-03'
+- observation: po:sha256:51fa8a9b8fcef0856134c3599ef68eabe588532203230c5b0ac8c892da47c95a
+  outcome: unresolved
+  needed_evidence: otp:pa-admission-lease-lifecycle:001 concession requires a joined grant identifier
+    across lease creation, heartbeat rewrite, release/eviction, ledger decrement, and carrier lineage,
+    plus a CQ requiring a lifecycle distinct from SeatGrant.
+  since: '2026-09-03'
+- observation: po:sha256:531a03f9b09634893599c361a8a313d76a5330c360e1b2a3779b8644380dfb2d
+  outcome: irrelevant
+  reason: 'The implementation-artifact-only null verdict STANDS for dh:pa-boundary-provenance-schema:001:
+    Schema keys, an enum, and a numeric configuration value do not show that these implementation distinctions
+    are needed in the operational ontology.'
+- observation: po:sha256:53cb7d2cdb081cbfab7b6f42091d51256ea65d70c7a4a592209b542cc6cf4d79
+  outcome: mapped
+  ref: otp:pa-yeet-verification-workflow:001
+- observation: po:sha256:53e62dcef473ee07a3cc680adacab542cf3fcf1b2b079de5217fffbc38a5cfc2
+  outcome: irrelevant
+  reason: 'The implementation-artifact-only null verdict STANDS for dh:pa-resume-eligibility-literals:001:
+    The literal pair does not state what fingerprint is compared, which execution can resume, or whether
+    the policy preserves tree and cache-epoch validity.'
+- observation: po:sha256:547677c4325953ad8435621a7bd50418fb75d1d36bebac6977766136d9fa4aae
+  outcome: irrelevant
+  reason: 'The implementation-artifact-only null verdict STANDS for dh:pa-package-verify-step-symbol:001:
+    The quotation supplies the carrier''s name but not its members, execution semantics, ordering, scope,
+    or relation to assurance obligations.'
+- observation: po:sha256:55c2897fcdfe9318041fe93947653642729b7d3b83ca8f7964e83043085abeac
+  outcome: mapped
+  ref: otp:pa-admission-request:001
+- observation: po:sha256:562bc1235121a3640f613e5190972f819cdb90be627fe9a0f054fc82c9753255
+  outcome: irrelevant
+  reason: 'The implementation-artifact-only null verdict STANDS for dh:pa-ci-lane-vocabulary:001: The
+    observations enumerate literals and their carrier but do not show that each spelling denotes a distinct
+    operational lane rather than a CLI coding choice.'
+- observation: po:sha256:56d67898f9daaa0ff3c1fb34ff05745d9a1f94cf2703726f7721d1f586f89e5f
+  outcome: unresolved
+  needed_evidence: otp:pa-admission-lease-lifecycle:001 concession requires a joined grant identifier
+    across lease creation, heartbeat rewrite, release/eviction, ledger decrement, and carrier lineage,
+    plus a CQ requiring a lifecycle distinct from SeatGrant.
+  since: '2026-09-03'
+- observation: po:sha256:59e3f07184abaf7f8075745f636d111ccdf14c2c058c5b08adb59b9745033ac0
+  outcome: mapped
+  ref: otp:pb-planned-lane-status:001
+- observation: po:sha256:5a59d414027abf00522737e1d86c7976c6837e7dcf88eb47112cc39709b2be1d
+  outcome: unresolved
+  needed_evidence: dh:pb-topological-package-report:001 requires a report contract defining the numeric
+    positions, ordering algorithm, and dependency edges, plus producing-graph provenance and evidence
+    that an operational verification decision consumes the report.
+  since: '2026-09-03'
+- observation: po:sha256:5dd0bbe6a4c12a80b1799ee2b5644b86bb8b249b09fb3f2661447bb24f278bb7
+  outcome: irrelevant
+  reason: 'The implementation-artifact-only null verdict STANDS for dh:pb-fallow-provenance-schema:001:
+    All four observations are fragments of a validation schema: a title, a constant file path, and enum
+    members. They establish representation constraints but no CI verification episode, evidence item,
+    schedule, package-dependency fact, or other in-scope bearer.'
+- observation: po:sha256:5e054a0ca76202b43a8a8e26efa82a965ed2998450b6e19ea3b1e86baf294141
+  outcome: irrelevant
+  reason: 'The lexical-alias null verdict STANDS for dh:pb-docgen-proof-marker:001: The observation supplies
+    only one LiteralKit member. It does not show that a manifest instance exists, what claim it records,
+    which tree or epoch it concerns, or whether it licenses any verification decision.'
+- observation: po:sha256:5f469b32b1a76b6af2b9ebbed7334996404ec4029d63bca140ebd2a796e0ba87
+  outcome: mapped
+  ref: otp:pb-scheduler-process-owner:001
+- observation: po:sha256:60e90bd17b628d4d6d815cfd05ddcf88cbc2a724790b05ac88b4411619f535be
+  outcome: mapped
+  ref: otp:pb-admission-policy:001
+- observation: po:sha256:62ae30cfc28b391c7bf4a87534abeba849a8ca2ebd5f8ebe72cb5af81dcc50eb
+  outcome: unresolved
+  needed_evidence: dh:pb-topological-package-report:001 requires a report contract defining the numeric
+    positions, ordering algorithm, and dependency edges, plus producing-graph provenance and evidence
+    that an operational verification decision consumes the report.
+  since: '2026-09-03'
+- observation: po:sha256:64463ef1e1f2b77cb50713f8194bb055d35d02288f465e6902e337f9fc5f5edf
+  outcome: unresolved
+  needed_evidence: dh:pb-topological-package-report:001 requires a report contract defining the numeric
+    positions, ordering algorithm, and dependency edges, plus producing-graph provenance and evidence
+    that an operational verification decision consumes the report.
+  since: '2026-09-03'
+- observation: po:sha256:64a23849292414d4cf7e196f646636a3d3a1fabdedb567a2b594687978a7dd51
+  outcome: irrelevant
+  reason: 'The implementation-artifact-only null verdict STANDS for dh:pb-turbo-global-configuration:001:
+    The quoted key-value pair does not identify what is made global, what inputs enter a hash surface,
+    or what verification evidence is invalidated. A tool-specific configuration switch fully explains
+    it.'
+- observation: po:sha256:65838f1f7c6af55a49e291e32979c1a29e016cd340e2e3b65bd4cd974c5c2471
+  outcome: irrelevant
+  reason: 'The lexical-alias null verdict STANDS for dh:pb-lint-fix-lane:001: The observations establish
+    only a tasks mapping and a lint:fix key. They do not record an executable command, an occurrence,
+    a scope, an obligation, or a verdict, so the key need not denote a verification lane.'
+- observation: po:sha256:65f255d208cb40da35fb417bfc09482d84e9102aab6895b406fc43fa9aa3551f
+  outcome: irrelevant
+  reason: 'The implementation-artifact-only null verdict STANDS for dh:pb-turbo-env-passthrough:001: The
+    pair gives a passThroughEnv array key and one wildcard-like member, but it says neither whether the
+    value affects task hashes nor which lane consumes it. Environment forwarding syntax is a complete
+    implementation-level account.'
+- observation: po:sha256:669ac1bd6274ee1851c836dd9730f2ae14dcf8843ffea88e4f170949778249d3
+  outcome: proposed
+  ref: otp:pb-package-dependency:001
+- observation: po:sha256:6a11f3f1037815bbed2d22b89a8969976b724403102f0fde3c933bca230ae18e
+  outcome: irrelevant
+  reason: 'The implementation-artifact-only null verdict STANDS for dh:pb-turbo-output-logging:001: The
+    single key-value quote controls output rendering at most; it records no verification result, evidence
+    validity, or operational event. Nothing distinguishes it from a tool-specific presentation setting.'
+- observation: po:sha256:6a73b5411cc63a7066296a936e6c699b0f4d624efded1e0c2acf4156593cc944
+  outcome: mapped
+  ref: otp:pb-admission-policy:001
+- observation: po:sha256:6afabfdec293f5d240216cef2ac43f92eb5b39151929383b009e99aaf42aec1c
+  outcome: irrelevant
+  reason: 'The lexical-alias null verdict STANDS for dh:pb-boundary-violation-severity:001: A configuration
+    pair mapping boundary-violation to error does not show a failure occurrence, signature, verdict effect,
+    or cheapest surfacing lane. It may be only a linter severity switch.'
+- observation: po:sha256:6b2e1d71b18197d5aabdde8f443d63fb71885b277f825b9ad13103f0de607a29
+  outcome: mapped
+  ref: otp:pb-admission-priority-aging:001
+- observation: po:sha256:6b31f817391e66aab8fc9796fed0c0bbdbd8285c9e86438e9172d1ce6bbaef61
+  outcome: unresolved
+  needed_evidence: otp:pb-admission-capacity-state:001 concession requires a revised or new Must/Should
+    CQ whose executable query traverses AdmissionSnapshot, plus capture act and instant, machine and policy
+    scope, and an authoritative correlation from that snapshot to the immediately pre-grant admission
+    record used to materialize capacityAtAdmissionTokens.
+  since: '2026-09-03'
+- observation: po:sha256:6bfd652637c66c009230dacefdc871489f3ea2151683db35fa848af0fdc158fc
+  outcome: irrelevant
+  reason: 'The lexical-alias null verdict STANDS for dh:pb-coverage-lane:001: The observations establish
+    only a tasks mapping and a coverage key. They do not identify the command, scope, obligation, execution,
+    or result behind that key.'
+- observation: po:sha256:6e598d379ffd2f0565176b337833e4eedf0293941fa87936078ee572e63748a9
+  outcome: unresolved
+  needed_evidence: dh:pb-topological-package-report:001 requires a report contract defining the numeric
+    positions, ordering algorithm, and dependency edges, plus producing-graph provenance and evidence
+    that an operational verification decision consumes the report.
+  since: '2026-09-03'
+- observation: po:sha256:6fa9ae087c8d411c0218a0491a20989f722773cb08d8b57d733514a58cc86742
+  outcome: unresolved
+  needed_evidence: otp:pb-schedule-projection-specification:001 concession requires the CQ-020 wording
+    amendment (WorkUnit -> SeatRequest ordering) queued for the post-run CQ revision, with an executable
+    query that requires the governing projection specification and the emitted SeatRequest-ordering facts
+    it constrains.
+  since: '2026-09-03'
+- observation: po:sha256:70ea5a10bd36d7d26981839b25a381e3f0daa59bb80327d7f289fe046a205f6c
+  outcome: irrelevant
+  reason: 'The lexical-alias null verdict STANDS for dh:pb-fallow-failure-vocabulary:001: The quotation
+    exposes four literals but no occurrence criteria, failed step, lane, verdict consequence, or relation
+    to an attributed delay. Literal membership alone cannot distinguish a domain failure taxonomy from
+    envelope decoding states.'
+- observation: po:sha256:7190395ff2b3c00428185ea21e0bca4027554317884ce7ba8f4e04ddbdef9969
+  outcome: irrelevant
+  reason: 'The implementation-artifact-only null verdict STANDS for dh:pb-attempt-retention-limit:001:
+    The constant name and value do not reveal what is retained, how eviction works, whether the number
+    is normative, or whether historical coverage affects any CQ. A storage-bound implementation constant
+    is sufficient.'
+- observation: po:sha256:71ff33a91cd202789d604775c82a3100091dee4dead6fe88e84f7712ffd84a31
+  outcome: mapped
+  ref: otp:pb-review-fix-class-cap:001
+- observation: po:sha256:77c3c594297fa78ef1ff73095e26c54640521d7a75c91be0b49ab4665978dc84
+  outcome: irrelevant
+  reason: 'The lexical-alias null verdict STANDS for dh:pb-runner-loss-flake-label:001: The observations
+    show that runner-loss is a member of a LiteralKit named for monitor flake classes, but provide no
+    classification condition, observed runner-loss occurrence, failed step, or delay consequence. The
+    literal may remain an internal classifier value.'
+- observation: po:sha256:791eb630990d1ccf3749beb107492a8fe86754bdf930b2b6ba762e2b725a23af
+  outcome: irrelevant
+  reason: 'The implementation-artifact-only null verdict STANDS for dh:pb-fallow-provenance-schema:001:
+    All four observations are fragments of a validation schema: a title, a constant file path, and enum
+    members. They establish representation constraints but no CI verification episode, evidence item,
+    schedule, package-dependency fact, or other in-scope bearer.'
+- observation: po:sha256:795d76d79fdc3ad235d204aee98c96f70dcdb10704c927558f31012749553995
+  outcome: unresolved
+  needed_evidence: otp:pb-docgen-affected-scope:001 concession requires a run artifact pinning base, head,
+    dirty snapshot and selected members, a scope contract choosing extension versus selection rule, and
+    a Must/Should CQ requiring the specialization. otp:pb-docgen-affected-scope:002 concession requires
+    independently versioned selection-rule authority, a pinned extension demonstrating its application,
+    a contract distinguishing rule from result, and a CQ requiring the specification.
+  since: '2026-09-03'
+- observation: po:sha256:79df3741e52f870a9c5d7ac0f3c76fc333a1341bf8f15c7a7720f2b6982e88b3
+  outcome: unresolved
+  needed_evidence: dh:pb-origin-block-grace-window:001 requires a deployed rule defining the threshold
+    unit and true/false consequences, whether it is a grace, staleness, or retry condition, and one observed
+    origin-blocked case governed by it.
+  since: '2026-09-03'
+- observation: po:sha256:7a127886ce9cd789e25ca288274377e644ebfc27da768ca939e258cb40dc81cd
+  outcome: mapped
+  ref: otp:pb-admission-priority-class:001
+- observation: po:sha256:7b0afae312843e4da0ff5628da56e5201bcc40f7d0221fa8f4b92e74637b90b3
+  outcome: mapped
+  ref: otp:pb-verification-evidence-receipt:001
+- observation: po:sha256:7dbc9b18d0c87cf2b98ab60d4772cfff79439d03472f1e69861549be226c3d25
+  outcome: irrelevant
+  reason: 'The implementation-artifact-only null verdict STANDS for dh:pb-turbo-config-proof-task-label:001:
+    The export declaration shows a LiteralKit constructor over an unseen values constant. It supplies
+    no task members, executions, scopes, or results, and being a named type is not a discriminator.'
+- observation: po:sha256:7debc0657f601d5714b767d284e75c22c236b1da704789e970affedec30e3a1b
+  outcome: mapped
+  ref: otp:pb-scheduler-process-owner:001
+- observation: po:sha256:80eff13a609db2451f8138cce8e48a291950e5dd0ffeb90a889a641567e540ac
+  outcome: irrelevant
+  reason: 'The lexical-alias null verdict STANDS for dh:pb-audit-lane:001: The observations establish
+    only a tasks mapping and an audit key. They do not state what is audited, how it runs, its scope,
+    or what evidence it yields.'
+- observation: po:sha256:82d9f068207e91298fe6946a4c2a54eb69eb8ec04ac062caaed19c720405bdf4
+  outcome: irrelevant
+  reason: 'The implementation-artifact-only null verdict STANDS for dh:pb-turbo-env-passthrough:001: The
+    pair gives a passThroughEnv array key and one wildcard-like member, but it says neither whether the
+    value affects task hashes nor which lane consumes it. Environment forwarding syntax is a complete
+    implementation-level account.'
+- observation: po:sha256:8356b294d9bd88ca88837d06b1f035ba7775026ddc09723dca888fa03e0341ae
+  outcome: irrelevant
+  reason: 'The implementation-artifact-only null verdict STANDS for dh:pb-scheduler-progress-interval:001:
+    Only the field name is quoted. Its unit is suggested by the suffix, but no value, consumer, event,
+    or behavioral consequence is observed; a configuration field requires no ontology referent.'
+- observation: po:sha256:8502a0f65ffbd3ba239947640ec9626f4f287c8327dcd589f40e35d42632d61b
+  outcome: irrelevant
+  reason: 'The lexical-alias null verdict STANDS for dh:pb-jsdoc-ratchet-lane:001, dh:pb-knip-lane:001,
+    dh:pb-labs-lane:001, dh:pb-security-lane:001: Membership in an identifier array does not establish
+    a runnable lane, its kind, scope, execution, or outcome. The jsdoc-ratchet token may remain dispatch
+    syntax. Membership in an identifier array does not establish a runnable lane, its kind, scope, execution,
+    or outcome. The knip token may remain dispatch syntax. Membership in an identifier array does not
+    establish a runnable lane, its kind, scope, execution, or outcome. The labs token may remain dispatch
+    syntax. Membership in an identifier array does not establish a runnable lane, its kind, scope, execution,
+    or outcome. The security token may remain dispatch syntax.'
+- observation: po:sha256:865926a47734303e9a04191e4b85e490fa72fe50c4e64028dc2ef7e00e23c52f
+  outcome: irrelevant
+  reason: 'The lexical-alias null verdict STANDS for dh:pb-attempt-event-vocabulary:001: The observation
+    names two schema members of a union, but gives no occurrence timestamps, transition semantics, attempt
+    identity, or journal instances. A named union is not sufficient to reject the implementation-artifact
+    null.'
+- observation: po:sha256:86fd8d27db8b06cf2ecc97ca0405dffaba2fdca152659b3f2a6b9d3c9e98cb97
+  outcome: irrelevant
+  reason: 'The implementation-artifact-only null verdict STANDS for dh:pb-package-verification-heading:001:
+    The excerpt contains only a report heading and the word Command, without the command, result, package,
+    tree state, or gate consequence. It cannot establish a verification occurrence or evidence record.'
+- observation: po:sha256:8816173181e3b06a711847fa03ad9d050c9f1d74d131af70eb367a8ea99f99cd
+  outcome: proposed
+  ref: otp:pb-package-dependency:001
+- observation: po:sha256:88f09e0224cf8cc48710903fe1e017b9369bc5dada8def6024d42f2841f9a654
+  outcome: unresolved
+  needed_evidence: otp:pb-schedule-projection-specification:001 concession requires the CQ-020 wording
+    amendment (WorkUnit -> SeatRequest ordering) queued for the post-run CQ revision, with an executable
+    query that requires the governing projection specification and the emitted SeatRequest-ordering facts
+    it constrains.
+  since: '2026-09-03'
+- observation: po:sha256:89165acdfec28c3a8692c411aead416ca1fd5f13333c0ea5c748e92aeab0cb98
+  outcome: unresolved
+  needed_evidence: dh:pb-topological-package-report:001 requires a report contract defining the numeric
+    positions, ordering algorithm, and dependency edges, plus producing-graph provenance and evidence
+    that an operational verification decision consumes the report.
+  since: '2026-09-03'
+- observation: po:sha256:8a555d65d66a8d7f44336fdb4ce8816f5a033a6ce448e311dc29615bfd8f41f2
+  outcome: unresolved
+  needed_evidence: otp:pb-admission-capacity-state:001 concession requires a revised or new Must/Should
+    CQ whose executable query traverses AdmissionSnapshot, plus capture act and instant, machine and policy
+    scope, and an authoritative correlation from that snapshot to the immediately pre-grant admission
+    record used to materialize capacityAtAdmissionTokens.
+  since: '2026-09-03'
+- observation: po:sha256:8a993a660e307ea438dd3b6151cf65a81254311b91ba0ce9a6e03e606dfc012a
+  outcome: irrelevant
+  reason: 'The lexical-alias null verdict STANDS for dh:pb-knip-lane:001, dh:pb-labs-lane:001: Membership
+    in an identifier array does not establish a runnable lane, its kind, scope, execution, or outcome.
+    The knip token may remain dispatch syntax. Membership in an identifier array does not establish a
+    runnable lane, its kind, scope, execution, or outcome. The labs token may remain dispatch syntax.'
+- observation: po:sha256:8af3333c97798f24aeecfa40f40faefcf152f96fffb6717f647eabf0f5250a92
+  outcome: unresolved
+  needed_evidence: otp:pb-admission-capacity-state:001 concession requires a revised or new Must/Should
+    CQ whose executable query traverses AdmissionSnapshot, plus capture act and instant, machine and policy
+    scope, and an authoritative correlation from that snapshot to the immediately pre-grant admission
+    record used to materialize capacityAtAdmissionTokens.
+  since: '2026-09-03'
+- observation: po:sha256:8b0e7ebacbadd3d0a21df787d0070763c9151c438e5ad68ef69454c6bea0aca1
+  outcome: unresolved
+  needed_evidence: otp:pb-yeet-proof-tier:001 concession requires planner governance and version lineage
+    deciding one shared scheme versus copied domains or plan-borne classifications, plus a Must/Should
+    CQ requiring the selector.
+  since: '2026-09-03'
+- observation: po:sha256:8d123d2b803018949aa079849fafabb4d38fbde7e7f77a5515d448cdc0a9f195
+  outcome: unresolved
+  needed_evidence: otp:pb-yeet-proof-tier:001 concession requires planner governance and version lineage
+    deciding one shared scheme versus copied domains or plan-borne classifications, plus a Must/Should
+    CQ requiring the selector.
+  since: '2026-09-03'
+- observation: po:sha256:8ff37f20dbb435de792af26bf58ce5cb5737b180cb70e4f83ce965f6f3f0a4b2
+  outcome: irrelevant
+  reason: 'The implementation-artifact-only null verdict STANDS for dh:pb-pilot-recorded-at:001: A recordedAt
+    key and date do not establish whether the date is creation time, observation time, publication time,
+    or a manually maintained label. No in-scope operational event is identified.'
+- observation: po:sha256:900957ece232a7fe12a98b7a2894aff6e0ab77fdbaaf5e453e16b17977e5dec6
+  outcome: mapped
+  ref: otp:pb-planned-lane-status:001
+- observation: po:sha256:909aeb95f9b6690d1d4cbac0b3f5a7adbd0affcee9159b536499e1438fd2e024
+  outcome: irrelevant
+  reason: 'The lexical-alias null verdict STANDS for dh:pb-repo-wide-proof-label:001: The two-word fragment
+    gives neither an evidence record nor a run, tree state, epoch, lane set, or scope boundary. It is
+    only semantically suggestive shorthand.'
+- observation: po:sha256:90fa083c4887641658c0239762b509fd6c9bacc6f14cf29ee392ce08714572ff
+  outcome: unresolved
+  needed_evidence: dh:pb-topological-package-report:001 requires a report contract defining the numeric
+    positions, ordering algorithm, and dependency edges, plus producing-graph provenance and evidence
+    that an operational verification decision consumes the report.
+  since: '2026-09-03'
+- observation: po:sha256:91a7acb71879927b51916b77d75557bce0347d66aa15536e1cce20d776c60786
+  outcome: mapped
+  ref: otp:pb-resolved-cache-posture:001
+- observation: po:sha256:922212cafdb03daef5fb111352d661cfda30e1e9f3d3e8c3e6f45a19c6a82a50
+  outcome: unresolved
+  needed_evidence: otp:pb-yeet-proof-tier:001 concession requires planner governance and version lineage
+    deciding one shared scheme versus copied domains or plan-borne classifications, plus a Must/Should
+    CQ requiring the selector.
+  since: '2026-09-03'
+- observation: po:sha256:93db5c48fe13c4f8d97d99a07d1e8a1a9b3bdb87fbeabce598204d36e50640f2
+  outcome: irrelevant
+  reason: 'The lexical-alias null verdict STANDS for dh:pb-ci-timeout-flake-label:001, dh:pb-runner-loss-flake-label:001:
+    The observations show that ci-timeout is a member of a LiteralKit named for monitor flake classes,
+    but provide no timeout threshold, observed event, failed step, or delay consequence. The literal may
+    remain an internal classifier value. The observations show that runner-loss is a member of a LiteralKit
+    named for monitor flake classes, but provide no classification condition, observed runner-loss occurrence,
+    failed step, or delay consequence. The literal may remain an internal classifier value.'
+- observation: po:sha256:95037a7104c1dbd21fc02aeeeb45733f744c10ba07ea4c5db2a94db62d88e95a
+  outcome: unresolved
+  needed_evidence: otp:pb-admission-capacity-state:001 concession requires a revised or new Must/Should
+    CQ whose executable query traverses AdmissionSnapshot, plus capture act and instant, machine and policy
+    scope, and an authoritative correlation from that snapshot to the immediately pre-grant admission
+    record used to materialize capacityAtAdmissionTokens.
+  since: '2026-09-03'
+- observation: po:sha256:952426ad6b41b341dc31101240da6e04c833d0ca2b33c8785298bca07f9cd5d3
+  outcome: irrelevant
+  reason: 'The implementation-artifact-only null verdict STANDS for dh:pb-fallow-provenance-schema:001:
+    All four observations are fragments of a validation schema: a title, a constant file path, and enum
+    members. They establish representation constraints but no CI verification episode, evidence item,
+    schedule, package-dependency fact, or other in-scope bearer.'
+- observation: po:sha256:959a603a7bc88415101c1c6e9073034271081d03a55dd625f763898feb579ea2
+  outcome: unresolved
+  needed_evidence: "sitting-3 ruling: stepIndex defers to run 3 \u2014 its subject binds ScheduleStep,\
+    \ which is withdrawn and unratified; the full ordering cluster ratifies together after the CQ-020\
+    \ wording amendment (WorkUnit -> SeatRequest ordering)."
+  since: '2026-09-03'
+- observation: po:sha256:95b57e4f4029739dacb78d5caa9b43939b1820fc17d3785a9ff32181d7d0e0b6
+  outcome: unresolved
+  needed_evidence: otp:pb-admission-capacity-state:001 concession requires a revised or new Must/Should
+    CQ whose executable query traverses AdmissionSnapshot, plus capture act and instant, machine and policy
+    scope, and an authoritative correlation from that snapshot to the immediately pre-grant admission
+    record used to materialize capacityAtAdmissionTokens.
+  since: '2026-09-03'
+- observation: po:sha256:960216354d31160a6fac7280f6375dc8731cfd58c667bcb4c4bcdfde75887792
+  outcome: mapped
+  ref: otp:pb-planned-lane-status:001
+- observation: po:sha256:96fbbdc8ad369517a7b3bdbb6bcc66e097757de50a05a32f0406c30ebd15f5e0
+  outcome: irrelevant
+  reason: 'The lexical-alias null verdict STANDS for dh:pb-fallow-dead-code-command:001: The inventory
+    contains a command spelling, but no evidence that it is an admitted verification lane, that it executed,
+    what scope it checked, or what result it produced. A stored command template remains sufficient.'
+- observation: po:sha256:97d6383547ad97c34937c34179413d35651dcf44fed758f70e6de129e163901c
+  outcome: mapped
+  ref: otp:pb-planned-lane-status:001
+- observation: po:sha256:986d65b9bd0da99d0a49a54cb0742e6a4f4001a3c310c0f509c482c91226ae6e
+  outcome: irrelevant
+  reason: 'The lexical-alias null verdict STANDS for dh:pb-ci-timeout-flake-label:001: The observations
+    show that ci-timeout is a member of a LiteralKit named for monitor flake classes, but provide no timeout
+    threshold, observed event, failed step, or delay consequence. The literal may remain an internal classifier
+    value.'
+- observation: po:sha256:9caeeca09be88e420e93a2dfbf183f7bfc7037e859a9da5cd685b166ce8363b6
+  outcome: mapped
+  ref: otp:pb-admission-policy:001
+- observation: po:sha256:9cbd50f3655b7ae7102a1be9bfcfe939528b3eaebd0dc33257408365f9402062
+  outcome: unresolved
+  needed_evidence: dh:pb-affected-task-input-mode:001 requires a normative affected-selection contract
+    defining how task inputs alter selection, fail-open or fail-closed behavior, an observed selected
+    set, and the operational decision that trusts it.
+  since: '2026-09-03'
+- observation: po:sha256:9cd9b66e1a2335a52fcc44086f95092406c75898e149c5ac63ed773aa36da974
+  outcome: irrelevant
+  reason: 'The lexical-alias null verdict STANDS for dh:pb-repo-run-mode-vocabulary:001: The LiteralKit
+    members suggest mutation intent, but no observation connects them to an execution, cancellation safety,
+    side effect, or scheduling decision. Enum membership alone cannot establish operational modes.'
+- observation: po:sha256:9f988f035c2f5d36b26f0161161d0d00b5222b9b38923367b602b4045b9185db
+  outcome: irrelevant
+  reason: 'The lexical-alias null verdict STANDS for dh:pb-jsdoc-ratchet-lane:001: Membership in an identifier
+    array does not establish a runnable lane, its kind, scope, execution, or outcome. The jsdoc-ratchet
+    token may remain dispatch syntax.'
+- observation: po:sha256:a0460c0e2b60f310cb30b9c03ea0aa2e487e02aadaa0450c56bb04cff6b5c8c9
+  outcome: unresolved
+  needed_evidence: dh:pb-failure-attribution-category:001 requires normative definitions stating each
+    member's necessary conditions, overlap or precedence rules, and whether an attribution record captures
+    the assessed change, baseline, environment, provenance, and revision history.
+  since: '2026-09-03'
+- observation: po:sha256:a0876c0e3f248b2e92b3945d162a565e2f325cfd39145c9f8f9eec5702ff9d03
+  outcome: irrelevant
+  reason: 'The implementation-artifact-only null verdict STANDS for dh:pb-quality-issue-category-type:001:
+    The quote ends at the LiteralKit constructor and exposes no members or classification semantics. A
+    named exported type is expressly insufficient to distinguish a domain taxonomy from source organization.'
+- observation: po:sha256:a0fc2a10223c1bb84b47852f284c3b22bb7ac96679df7a42a21cdd531b06d825
+  outcome: irrelevant
+  reason: 'The lexical-alias null verdict STANDS for dh:pb-security-lane:001: Membership in an identifier
+    array does not establish a runnable lane, its kind, scope, execution, or outcome. The security token
+    may remain dispatch syntax.'
+- observation: po:sha256:a1f8202d5ff295e75dd7ad3f50f9454dad4bc2d53677e5936a6a0812250c5e43
+  outcome: unresolved
+  needed_evidence: dh:pb-affected-task-input-mode:001 requires a normative affected-selection contract
+    defining how task inputs alter selection, fail-open or fail-closed behavior, an observed selected
+    set, and the operational decision that trusts it.
+  since: '2026-09-03'
+- observation: po:sha256:a5337050b11a15f3c1b20a01228366cdf9affbd31a471c391b4d980883be0f5b
+  outcome: mapped
+  ref: otp:pb-admission-priority-class:001
+- observation: po:sha256:a97000510cad9d27597ad301943d9f42226a9f042ddfa51dfe62d6d90eb5f12c
+  outcome: irrelevant
+  reason: 'The implementation-artifact-only null verdict STANDS for dh:pb-turbo-empty-outputs:001: An
+    empty outputs array does not identify the containing task, whether it executes, whether it emits logs
+    or evidence, or how caching treats it. The fragment is fully explained by configuration representation.'
+- observation: po:sha256:a9c848655ed1e432b835ae1220d3327deb3ef187f773e9f68b3d098c71aae67c
+  outcome: irrelevant
+  reason: 'The implementation-artifact-only null verdict STANDS for dh:pb-fallow-provenance-schema:001:
+    All four observations are fragments of a validation schema: a title, a constant file path, and enum
+    members. They establish representation constraints but no CI verification episode, evidence item,
+    schedule, package-dependency fact, or other in-scope bearer.'
+- observation: po:sha256:a9ee0881022c5204f761eb8fd19ab3ad9344c1e916c83b798bbde01e809b9d45
+  outcome: irrelevant
+  reason: 'The lexical-alias null verdict STANDS for dh:pb-audit-lane:001, dh:pb-coverage-lane:001, dh:pb-lint-fix-lane:001:
+    The observations establish only a tasks mapping and an audit key. They do not state what is audited,
+    how it runs, its scope, or what evidence it yields. The observations establish only a tasks mapping
+    and a coverage key. They do not identify the command, scope, obligation, execution, or result behind
+    that key. The observations establish only a tasks mapping and a lint:fix key. They do not record an
+    executable command, an occurrence, a scope, an obligation, or a verdict, so the key need not denote
+    a verification lane.'
+- observation: po:sha256:aa44e6bb67ce87538b7feddce7e285430ae2030bffbb5ac280905f9945b507c8
+  outcome: irrelevant
+  reason: 'The lexical-alias null verdict STANDS for dh:pc-proof-task-vocabulary:001: The quotation supplies
+    five literals in a source array but observes no execution, lane identity, obligation, scope, or outcome
+    associated with them. An implementation allowlist fully explains the evidence.'
+- observation: po:sha256:ab9766633fb5027d7c640e014021d43c1b1be6e17dfff5627165686d39da61b0
+  outcome: irrelevant
+  reason: 'The lexical-alias null verdict STANDS for dh:pc-turbo-task-identifiers:001: Each observation
+    quotes only a Turbo configuration key. The records do not establish whether the keys denote separate
+    lanes, aliases, runnable task specifications, or convenience variants, so configuration structure
+    remains a complete explanation.'
+- observation: po:sha256:ad12ed8a56e6c3759204df111d51cb81b2fe1c428ef94ce4b199724b43204028
+  outcome: irrelevant
+  reason: 'The lexical-alias null verdict STANDS for dh:pc-turbo-task-identifiers:001: Each observation
+    quotes only a Turbo configuration key. The records do not establish whether the keys denote separate
+    lanes, aliases, runnable task specifications, or convenience variants, so configuration structure
+    remains a complete explanation.'
+- observation: po:sha256:ad568cb9dc4965da5a75517a523dd39268d0d3c18b878a6cc4deb2b93da787f8
+  outcome: irrelevant
+  reason: 'The implementation-artifact-only null verdict STANDS for dh:pc-workspace-dependency-declaration:001:
+    The quotation establishes only one package-manifest key and workspace range. It does not observe dependency
+    resolution, closure membership, or any verification consequence, so the domain relation remains unproven.'
+- observation: po:sha256:ae9e377cd54111e4374cb7b78d7589721695334898292c2194e57a274b84f1ad
+  outcome: irrelevant
+  reason: 'The lexical-alias null verdict STANDS for dh:pc-proof-selector-vocabulary:001: The observations
+    show a literal list and the schema built from that list, but no selected packages, resulting scope,
+    provenance, or execution. The two spellings may therefore be code-level selector modes only.'
+- observation: po:sha256:aee915d1a2f10cd68fd37eda78a62ab37da4dfbdeee73ab0040a7e8438001ecf
+  outcome: irrelevant
+  reason: 'The lexical-alias null verdict STANDS for dh:pc-replay-fidelity-vocabulary:001: A three-member
+    literal array does not show any replay occurrence, criterion for exactness, or evidence object bearing
+    one of the labels. No supplied competency question requires this vocabulary.'
+- observation: po:sha256:b1cbe91083c18b42a9ae71e57fae891011faef64106cac386edcbd4f781349fe
+  outcome: irrelevant
+  reason: 'The information-artifact-only null verdict STANDS for dh:pc-s7-implementation-report:001: The
+    quotations clearly identify an authored implementation report, but no supplied competency question
+    requires that report as a referent. Its replay and review claims can remain provenance for other candidates
+    without making the report itself part of the operational ontology.'
+- observation: po:sha256:b3ea29a27a4730f094b12522a0d0c1648896c255cf538754d3bb11c7db52764f
+  outcome: mapped
+  ref: otp:pc-token-capacity-policy:001
+- observation: po:sha256:b5a7a18968ea6a6d42a965d5697549d79cb392e8817e15e55746a8b4924d9ccb
+  outcome: irrelevant
+  reason: 'The information-artifact-only null verdict STANDS for dh:pc-package-topology-report:001: The
+    records establish a topological-sort report with counts and package positions, but they quote no dependency
+    edges and no use of the report in verification. Its structure alone is compatible with disposable
+    generated output, so ontology-level relevance is not established.'
+- observation: po:sha256:b61b3c1f8f4f287d8ec15b77e8288fdd067db0be5a693316bec8a38d9ded7566
+  outcome: irrelevant
+  reason: 'The information-artifact-only null verdict STANDS for dh:pc-s7-implementation-report:001: The
+    quotations clearly identify an authored implementation report, but no supplied competency question
+    requires that report as a referent. Its replay and review claims can remain provenance for other candidates
+    without making the report itself part of the operational ontology.'
+- observation: po:sha256:b82909e7b8808336424552792b75d7f98980e1fba03ff67baec471659d4e3908
+  outcome: irrelevant
+  reason: 'The implementation-artifact-only null verdict STANDS for dh:pc-malformed-read-classification:001:
+    The quotation is only a tagged return expression. It provides no rejected input, persisted record,
+    operational consequence, or competency-question warrant from which a distinct domain referent could
+    be inferred.'
+- observation: po:sha256:b9ae336bac58198b66b7f959048d6b3ecc68845fe1f1046a7995bf19e6df7f4a
+  outcome: irrelevant
+  reason: 'The information-artifact-only null verdict STANDS for dh:pc-s7-implementation-report:001: The
+    quotations clearly identify an authored implementation report, but no supplied competency question
+    requires that report as a referent. Its replay and review claims can remain provenance for other candidates
+    without making the report itself part of the operational ontology.'
+- observation: po:sha256:ba02c2407e6a168b568df68d655e15d929e3a77ae4e2d4a9281c0d47d36a88b5
+  outcome: irrelevant
+  reason: 'The lexical-alias null verdict STANDS for dh:pc-ci-lane-labels:001: The observations provide
+    only individual strings from a source list. They do not establish lane boundaries, execution semantics,
+    membership in an assurance tier, or instances of the named activities.'
+- observation: po:sha256:bc0b03f20c5b365b9a158b7605fe86bd9a77a98444d1589f98db00149d433e6a
+  outcome: irrelevant
+  reason: 'The information-artifact-only null verdict STANDS for dh:pc-s7-implementation-report:001: The
+    quotations clearly identify an authored implementation report, but no supplied competency question
+    requires that report as a referent. Its replay and review claims can remain provenance for other candidates
+    without making the report itself part of the operational ontology.'
+- observation: po:sha256:bd04b6377f602e0ba9dd134a21d1233fa1a2c10c31ee362a87dd820979cb68af
+  outcome: irrelevant
+  reason: 'The lexical-alias null verdict STANDS for dh:pc-ci-lane-labels:001: The observations provide
+    only individual strings from a source list. They do not establish lane boundaries, execution semantics,
+    membership in an assurance tier, or instances of the named activities.'
+- observation: po:sha256:bde087f98cc217a882d0f5836997ae35fd037d601fae87d4dfb60f422c805852
+  outcome: irrelevant
+  reason: 'The lexical-alias null verdict STANDS for dh:pc-turbo-task-identifiers:001: Each observation
+    quotes only a Turbo configuration key. The records do not establish whether the keys denote separate
+    lanes, aliases, runnable task specifications, or convenience variants, so configuration structure
+    remains a complete explanation.'
+- observation: po:sha256:bfb348d69a15cdfa639fa1bb2df386ecf17dddb3e2a68efd172f7a06ec96e705
+  outcome: irrelevant
+  reason: 'The lexical-alias null verdict STANDS for dh:pc-failure-kind-vocabulary:001: The records establish
+    repeated literals and an optional failureKind field, but no failure occurrence, classification criterion,
+    failed step, or attributed delay. Code-level status vocabulary remains sufficient.'
+- observation: po:sha256:bfd3354cf7bb7617d540ac6a8e7d8e93b8f73350c7f7c95e890bd915cc636b42
+  outcome: irrelevant
+  reason: 'The implementation-artifact-only null verdict STANDS for dh:pc-environment-config-tokens:001:
+    The quotations list variable names without the containing key''s semantics, values, affected tasks,
+    or observed invalidation behavior. Treating them as configuration tokens requires no ontology-level
+    referent.'
+- observation: po:sha256:c04b4efbd7a3be8c91b5ac732ef996bd9b635eaf3117c2cc6caf9e4e176dd644
+  outcome: irrelevant
+  reason: 'The lexical-alias null verdict STANDS for dh:pc-failure-kind-vocabulary:001: The records establish
+    repeated literals and an optional failureKind field, but no failure occurrence, classification criterion,
+    failed step, or attributed delay. Code-level status vocabulary remains sufficient.'
+- observation: po:sha256:c09e465bf53e82d7992f460294e19bae8ea0ea4f8a5f9e91ec64e8691c259f35
+  outcome: irrelevant
+  reason: 'The lexical-alias null verdict STANDS for dh:pc-yeet-proof-tier-planning:001: Although the
+    fragments suggest mappings, they show no complete plan, emitted work sequence, tier obligation, or
+    execution. The source branches alone cannot establish a domain plan or a mapping to assurance tiers.'
+- observation: po:sha256:c2505dc57cfcdbd4bbceb25491bd2f483dc2c07ee27732bce2dc3d7928a985d0
+  outcome: irrelevant
+  reason: 'The implementation-artifact-only null verdict STANDS for dh:pc-worktree-creation-mode:001:
+    The observation is a two-member literal kit and supplies no checkout instance, persistence criterion,
+    verification consequence, or competency question that distinguishes creation modes in the operational
+    ontology.'
+- observation: po:sha256:c32bb460dc10035835151f726ba8f910ba4a82076b2b5f94060b54b4d26df76b
+  outcome: irrelevant
+  reason: 'The implementation-artifact-only null verdict STANDS for dh:pc-environment-config-tokens:001:
+    The quotations list variable names without the containing key''s semantics, values, affected tasks,
+    or observed invalidation behavior. Treating them as configuration tokens requires no ontology-level
+    referent.'
+- observation: po:sha256:c3c8f3327436b42f3dd02ed0b2fe88ae41808112b728b76803471b317e1b156c
+  outcome: irrelevant
+  reason: 'The information-artifact-only null verdict STANDS for dh:pc-package-topology-report:001: The
+    records establish a topological-sort report with counts and package positions, but they quote no dependency
+    edges and no use of the report in verification. Its structure alone is compatible with disposable
+    generated output, so ontology-level relevance is not established.'
+- observation: po:sha256:c4c2f0985af5e38ea1a71a2ad788b909887b1e4e4f034f990e6c9e9b6812bb3b
+  outcome: irrelevant
+  reason: 'The implementation-artifact-only null verdict STANDS for dh:pc-turbo-cache-output-config:001:
+    The separate quotations do not identify their enclosing task or establish that the cache flag, outputs
+    key, and glob belong to one specification. No cache epoch, produced output, or invalidation is observed.'
+- observation: po:sha256:c7bc3b9cb2d7825925bb16a87a40a38b7d5d950cdcfa1da548b36eee348fbc52
+  outcome: irrelevant
+  reason: 'The implementation-artifact-only null verdict STANDS for dh:pc-turbo-future-flags:001: Only
+    the opening key of a configuration object is quoted. With no member, value, affected task, or behavior,
+    there is no observation-backed basis for a domain interpretation.'
+- observation: po:sha256:c7c584d2fed863958e6cc07caab7553d34c39bb3d6d57edd5706bbcb2846355f
+  outcome: irrelevant
+  reason: 'The lexical-alias null verdict STANDS for dh:pc-checkout-root-field:001: The quotation states
+    only that checkoutRoot is a string field. It gives no record carrier, owner, value, or operational
+    use; the scope document''s warning against uniqueness semantics cannot supply those missing facts.'
+- observation: po:sha256:cb78d031658bfe80535beb490352c2086b2b8f629e3819df4fba336fbeb37598
+  outcome: unresolved
+  needed_evidence: dh:pc-heartbeat-suspicion-policy:001 requires a deployed policy and observed stale-heartbeat
+    case identifying the suspected holder, threshold, operational consequence, and the rule that suspicion
+    alone does not authorize termination.
+  since: '2026-09-03'
+- observation: po:sha256:cb9064130b643be08d25e627bcfc5264739ac1397a236d353835b473c2df5734
+  outcome: unresolved
+  needed_evidence: dh:pc-heartbeat-suspicion-policy:001 requires a deployed policy and observed stale-heartbeat
+    case identifying the suspected holder, threshold, operational consequence, and the rule that suspicion
+    alone does not authorize termination.
+  since: '2026-09-03'
+- observation: po:sha256:cec16ad2c04ecdb48826305bc7bcd59a0c67ba98d119b38191f25de6863c7d3d
+  outcome: irrelevant
+  reason: 'The implementation-artifact-only null verdict STANDS for dh:pc-fallow-gate-value:001: The isolated
+    key-value quote supplies neither the inventoried subject nor the method, time, or evidence behind
+    the assessment. It cannot establish a verification obligation or an operational gate.'
+- observation: po:sha256:cf647b6512cf7c56d24edc7f879f74f4412192e16d5f721c654730b7ae72d65e
+  outcome: irrelevant
+  reason: 'The lexical-alias null verdict STANDS for dh:pc-ci-lane-labels:001: The observations provide
+    only individual strings from a source list. They do not establish lane boundaries, execution semantics,
+    membership in an assurance tier, or instances of the named activities.'
+- observation: po:sha256:d0e190e143df1788d957dc00bbdf6faf804b7b76ae3e47e147c558e44f802424
+  outcome: mapped
+  ref: otp:pc-token-capacity-policy:001
+- observation: po:sha256:d3da98995119029957e6dc827459f6a2acb202e4dc38e79d2d8c237d58e2f196
+  outcome: irrelevant
+  reason: 'The implementation-artifact-only null verdict STANDS for dh:pc-persistent-task-flag:001: The
+    quote contains only a boolean key-value pair and omits the task it qualifies. No execution duration,
+    lifecycle, or verification role is observed, so a configuration-only reading is sufficient.'
+- observation: po:sha256:d472fc9b1acf4a14fa15d543c6aec21ea9646c9fec3fd503013a0102e57c2e22
+  outcome: irrelevant
+  reason: 'The lexical-alias null verdict STANDS for dh:pc-proof-selector-vocabulary:001: The observations
+    show a literal list and the schema built from that list, but no selected packages, resulting scope,
+    provenance, or execution. The two spellings may therefore be code-level selector modes only.'
+- observation: po:sha256:d61df0706849331476446a427e6b69b913b73bb1af6ab4e514d6cb1ede7eefe4
+  outcome: irrelevant
+  reason: 'The lexical-alias null verdict STANDS for dh:pc-affected-query-invocation:001: A command phrase
+    alone provides no inputs, affected outcome, failure mode, package set, or provenance edge. It can
+    be explained entirely as an invocation token without denoting a computation in the domain.'
+- observation: po:sha256:d6ac0f588b9e4afac093026c9e2af8d928942a710d5917cd1475f66264730b30
+  outcome: irrelevant
+  reason: 'The implementation-artifact-only null verdict STANDS for dh:pc-turbo-cache-output-config:001:
+    The separate quotations do not identify their enclosing task or establish that the cache flag, outputs
+    key, and glob belong to one specification. No cache epoch, produced output, or invalidation is observed.'
+- observation: po:sha256:d96acf931afd8792316f7ff9984cb9d516557e8cb1cec77907869b55673476dc
+  outcome: irrelevant
+  reason: 'The lexical-alias null verdict STANDS for dh:pc-ci-lane-labels:001: The observations provide
+    only individual strings from a source list. They do not establish lane boundaries, execution semantics,
+    membership in an assurance tier, or instances of the named activities.'
+- observation: po:sha256:d9e1c6941fe61eb8e8a4f7e40853d6090190ec18523931c3af4551bb2b880c76
+  outcome: unresolved
+  needed_evidence: otp:pc-projection-contract:001 concession requires the CQ-020 wording amendment (WorkUnit
+    -> SeatRequest ordering) queued for the post-run CQ revision, with an executable query that requires
+    the governing projection specification and the emitted SeatRequest-ordering facts it constrains.
+  since: '2026-09-03'
+- observation: po:sha256:d9eda1c640883d4b056abf114a0a2482b0fff4170ccd6462c26a9772ec0f9c59
+  outcome: irrelevant
+  reason: 'The lexical-alias null verdict STANDS for dh:pc-turbo-task-identifiers:001: Each observation
+    quotes only a Turbo configuration key. The records do not establish whether the keys denote separate
+    lanes, aliases, runnable task specifications, or convenience variants, so configuration structure
+    remains a complete explanation.'
+- observation: po:sha256:da3320461b4b073d9079ae06ff41ef7806f46fd7c6835f65ec585b54b6319604
+  outcome: irrelevant
+  reason: 'The information-artifact-only null verdict STANDS for dh:pc-s7-implementation-report:001: The
+    quotations clearly identify an authored implementation report, but no supplied competency question
+    requires that report as a referent. Its replay and review claims can remain provenance for other candidates
+    without making the report itself part of the operational ontology.'
+- observation: po:sha256:dab9bf23eee42dd005eff5c5613e511c31d50a15e5035287bb23e28dcef51c53
+  outcome: irrelevant
+  reason: 'The lexical-alias null verdict STANDS for dh:pc-turbo-task-identifiers:001: Each observation
+    quotes only a Turbo configuration key. The records do not establish whether the keys denote separate
+    lanes, aliases, runnable task specifications, or convenience variants, so configuration structure
+    remains a complete explanation.'
+- observation: po:sha256:dc2068ee67260aeec14cff25d52fafb812a9a9391a79210d78b1c9a07344ca38
+  outcome: irrelevant
+  reason: 'The lexical-alias null verdict STANDS for dh:pc-admission-action-vocabulary:001: The literal
+    pair is not accompanied by a request, grant, charge, or definition, and its wording does not match
+    the richer work-kind inventory required by the queue competency question. An internal branch is enough.'
+- observation: po:sha256:dc9a66cefc65a79ca47ae516814a18982de127089bfaefc12aafaadbec8ae3ce
+  outcome: irrelevant
+  reason: 'The lexical-alias null verdict STANDS for dh:pc-quality-stage-vocabulary:001: The literal kit
+    alone does not state ordering, entry or exit conditions, executions, or whether the labels are mutually
+    exclusive stages. Treating them as dispatch values fully explains the quotation.'
+- observation: po:sha256:dd059b85c10ae22f4f42ddb87e4cdf088caab8081758fb803180a4c8bbbb9f31
+  outcome: irrelevant
+  reason: 'The lexical-alias null verdict STANDS for dh:pc-turbo-task-identifiers:001: Each observation
+    quotes only a Turbo configuration key. The records do not establish whether the keys denote separate
+    lanes, aliases, runnable task specifications, or convenience variants, so configuration structure
+    remains a complete explanation.'
+- observation: po:sha256:dd229cadfb5ef5cf7d3edc5c256120433843f2bfab6d21c48ef6314a8022d88c
+  outcome: irrelevant
+  reason: 'The lexical-alias null verdict STANDS for dh:pc-failure-kind-vocabulary:001: The records establish
+    repeated literals and an optional failureKind field, but no failure occurrence, classification criterion,
+    failed step, or attributed delay. Code-level status vocabulary remains sufficient.'
+- observation: po:sha256:dea1ff947c2829fab23692186477e8f93f9d5dac947c4f59fa070576dc0edfb2
+  outcome: irrelevant
+  reason: 'The information-artifact-only null verdict STANDS for dh:pc-replay-evidence-artifact:001: The
+    quotations establish that this is a generated, provenance-bearing report, but neither cited competency
+    question requires the report itself. A frozen-input digest and event census are also fully compatible
+    with a disposable validation artifact, so the null cannot be rejected.'
+- observation: po:sha256:dec2d433d94738ea7d20521b27874dcc0fe38ce6731beaee427c2d4381f4e237
+  outcome: irrelevant
+  reason: 'The lexical-alias null verdict STANDS for dh:pc-ci-lane-labels:001: The observations provide
+    only individual strings from a source list. They do not establish lane boundaries, execution semantics,
+    membership in an assurance tier, or instances of the named activities.'
+- observation: po:sha256:ded759fcb05cf31ec6b4a4221d68df72c2832b9e6a62285ff6727be29935055f
+  outcome: irrelevant
+  reason: 'The lexical-alias null verdict STANDS for dh:pc-ci-lane-labels:001: The observations provide
+    only individual strings from a source list. They do not establish lane boundaries, execution semantics,
+    membership in an assurance tier, or instances of the named activities.'
+- observation: po:sha256:dfe72174d596ac1cfa3ee2607b102893e4fa55a81d45bcf6f3c3e4783533a084
+  outcome: irrelevant
+  reason: 'The lexical-alias null verdict STANDS for dh:pc-verdict-state-vocabulary:001: The observations
+    contain a literal set and field declarations but no attempt record, state transition, temporal condition,
+    or failure signature. They do not decide whether status and verdict denote the same thing.'
+- observation: po:sha256:e06b55997f54a7f842cf0bf07a560c0d4cc9ff9cf68515662196dabcd47b777c
+  outcome: irrelevant
+  reason: 'The lexical-alias null verdict STANDS for dh:pc-yeet-proof-tier-planning:001: Although the
+    fragments suggest mappings, they show no complete plan, emitted work sequence, tier obligation, or
+    execution. The source branches alone cannot establish a domain plan or a mapping to assurance tiers.'
+- observation: po:sha256:e362227f9f3d78e8fcb933ddf9f5523b1ef97776a2546ad12c7f702c33fc1cdd
+  outcome: unresolved
+  needed_evidence: dh:pc-origin-blocked-timestamp:001 requires a persisted ticket record joining the timestamp
+    and its unit to an observed originBusy wait and starvation-policy use, with issuance and revision
+    provenance.
+  since: '2026-09-03'
+- observation: po:sha256:e7ec3a026c581a927f350c5035546be6cc2ea0f58e040cb6b1a758a5de5ae81d
+  outcome: irrelevant
+  reason: 'The lexical-alias null verdict STANDS for dh:pc-failure-kind-vocabulary:001: The records establish
+    repeated literals and an optional failureKind field, but no failure occurrence, classification criterion,
+    failed step, or attributed delay. Code-level status vocabulary remains sufficient.'
+- observation: po:sha256:e9488393e12d332f49a9c4f54ac2e521ab56cb9d7a078c2196608599b4dcd87e
+  outcome: irrelevant
+  reason: 'The lexical-alias null verdict STANDS for dh:pc-turbo-task-identifiers:001: Each observation
+    quotes only a Turbo configuration key. The records do not establish whether the keys denote separate
+    lanes, aliases, runnable task specifications, or convenience variants, so configuration structure
+    remains a complete explanation.'
+- observation: po:sha256:ebcf0870c89a071318f5ac8d09a1d54a7ee6ddf923dd29620f580c03b8c1d1d6
+  outcome: irrelevant
+  reason: 'The information-artifact-only null verdict STANDS for dh:pc-package-topology-report:001: The
+    records establish a topological-sort report with counts and package positions, but they quote no dependency
+    edges and no use of the report in verification. Its structure alone is compatible with disposable
+    generated output, so ontology-level relevance is not established.'
+- observation: po:sha256:ec9a32b9d1d43ae0ed56564c07bf2a8cdbc0eee6e7a110887d3e0b8e748d363f
+  outcome: irrelevant
+  reason: 'The lexical-alias null verdict STANDS for dh:pc-verdict-state-vocabulary:001: The observations
+    contain a literal set and field declarations but no attempt record, state transition, temporal condition,
+    or failure signature. They do not decide whether status and verdict denote the same thing.'
+- observation: po:sha256:ed86c2d18b12ff797604eac97a917b36527e390ce417fce35ac583fd829b2709
+  outcome: unresolved
+  needed_evidence: otp:pc-projection-contract:001 concession requires the CQ-020 wording amendment (WorkUnit
+    -> SeatRequest ordering) queued for the post-run CQ revision, with an executable query that requires
+    the governing projection specification and the emitted SeatRequest-ordering facts it constrains.
+  since: '2026-09-03'
+- observation: po:sha256:eda85a5098b02018ace4da628d2de2627526f5b83760f37cce92d0666a5d2cf4
+  outcome: irrelevant
+  reason: 'The lexical-alias null verdict STANDS for dh:pc-verdict-state-vocabulary:001: The observations
+    contain a literal set and field declarations but no attempt record, state transition, temporal condition,
+    or failure signature. They do not decide whether status and verdict denote the same thing.'
+- observation: po:sha256:edf38d10efe0552b7de770a0cc24a9596cc4b5141b693889e987465f4174b4bb
+  outcome: unresolved
+  needed_evidence: dh:pc-origin-blocked-timestamp:001 requires a persisted ticket record joining the timestamp
+    and its unit to an observed originBusy wait and starvation-policy use, with issuance and revision
+    provenance.
+  since: '2026-09-03'
+- observation: po:sha256:edfa76c75c94c0c93b2d95145a84c744876e10af1bc3f9f2cc8f562ccc54268b
+  outcome: irrelevant
+  reason: 'The lexical-alias null verdict STANDS for dh:pc-yeet-proof-tier-planning:001: Although the
+    fragments suggest mappings, they show no complete plan, emitted work sequence, tier obligation, or
+    execution. The source branches alone cannot establish a domain plan or a mapping to assurance tiers.'
+- observation: po:sha256:f075200cfe4f55412deeeaf7fae01297c0807a1b5870fc2b772679fb1961844d
+  outcome: irrelevant
+  reason: 'The lexical-alias null verdict STANDS for dh:pc-attempt-identifier-field:001: Repetition of
+    an attemptId UUID field in two schema spans does not supply an attempt occurrence or an identity criterion
+    for attempts. A shared foreign key or serialization convention remains a complete interpretation.'
+- observation: po:sha256:f3e3147d94fc10d3f19baa227380325d13ef3a56e8c2172ff1e218662278deca
+  outcome: irrelevant
+  reason: 'The lexical-alias null verdict STANDS for dh:pc-staleness-domain-vocabulary:001: The two literals
+    are not accompanied by an invalidation event, affected lane, package blast radius, or definition of
+    staleness. Their presence in a source vocabulary does not establish domain categories.'
+- observation: po:sha256:f3e7620dc123c6523bfc67d2f3e5f64ffae2805148d50c98d25bee1531d82fa8
+  outcome: irrelevant
+  reason: 'The lexical-alias null verdict STANDS for dh:pc-ci-lane-labels:001: The observations provide
+    only individual strings from a source list. They do not establish lane boundaries, execution semantics,
+    membership in an assurance tier, or instances of the named activities.'
+- observation: po:sha256:f53364ecbfe8c517f16bf938fbc7d0391588f49e11f67205f35fa5204904a501
+  outcome: irrelevant
+  reason: 'The information-artifact-only null verdict STANDS for dh:pc-replay-evidence-artifact:001: The
+    quotations establish that this is a generated, provenance-bearing report, but neither cited competency
+    question requires the report itself. A frozen-input digest and event census are also fully compatible
+    with a disposable validation artifact, so the null cannot be rejected.'
+- observation: po:sha256:f7117e5271fa2910ceb6be3e4330a16e76b8e2783bcc3a5633d89179b62436ba
+  outcome: irrelevant
+  reason: 'The information-artifact-only null verdict STANDS for dh:pc-package-topology-report:001: The
+    records establish a topological-sort report with counts and package positions, but they quote no dependency
+    edges and no use of the report in verification. Its structure alone is compatible with disposable
+    generated output, so ontology-level relevance is not established.'
+- observation: po:sha256:f8ed741ad70c5bb5a2e89afd526ded84f977270652d48985e8c5d0a33458344a
+  outcome: irrelevant
+  reason: 'The lexical-alias null verdict STANDS for dh:pc-turbo-task-identifiers:001: Each observation
+    quotes only a Turbo configuration key. The records do not establish whether the keys denote separate
+    lanes, aliases, runnable task specifications, or convenience variants, so configuration structure
+    remains a complete explanation.'
+- observation: po:sha256:fbf6c489eec970f6721e9230714ae66a02b6dacd615e00edefd8a84d7a436e42
+  outcome: irrelevant
+  reason: 'The implementation-artifact-only null verdict STANDS for dh:pc-migration-posture-phrase:001:
+    The observation omits every bucket and supplies no classified subject, criterion, lifecycle, or competency-question
+    warrant. The heading-like phrase carries insufficient evidence for any domain interpretation.'
+- observation: po:sha256:fd8fba7cf729e2a5c30525e4e89aaf025964df48e25217ff1c5fb8c72f0aed85
+  outcome: irrelevant
+  reason: 'The implementation-artifact-only null verdict STANDS for dh:pc-turbo-cache-output-config:001:
+    The separate quotations do not identify their enclosing task or establish that the cache flag, outputs
+    key, and glob belong to one specification. No cache epoch, produced output, or invalidation is observed.'
+- observation: po:sha256:febceeffd219f0a3e9f23cdbef47669deea325c1a0272bffca94b9bc14bbe46f
+  outcome: irrelevant
+  reason: 'The implementation-artifact-only null verdict STANDS for dh:pc-plan-task-constructor:001: Only
+    the beginning of a constructor call is quoted. Its fields, identity, scope, lane, ordering, and emitted
+    record are absent, so the constructor name cannot establish a schedule or WorkUnit referent.'
+- observation: po:sha256:fed2c209471de5173c7e7cacfa2a12b8a99b13fb2e53a55be41fc77110393aaf
+  outcome: irrelevant
+  reason: 'The information-artifact-only null verdict STANDS for dh:pc-package-topology-report:001: The
+    records establish a topological-sort report with counts and package positions, but they quote no dependency
+    edges and no use of the report in verification. Its structure alone is compatible with disposable
+    generated output, so ontology-level relevance is not established.'
+- observation: po:sha256:fee4d44537bffa3439eb93e45d79f7e2189f6bcda79d42b345c1fd1292a609da
+  outcome: irrelevant
+  reason: 'The lexical-alias null verdict STANDS for dh:pc-failure-kind-vocabulary:001: The records establish
+    repeated literals and an optional failureKind field, but no failure occurrence, classification criterion,
+    failed step, or attributed delay. Code-level status vocabulary remains sufficient.'
+- observation: po:sha256:ff37ebad0eb0db7d4d93c2868963043b2d76981e6d29939abf14cb4b0e3b4899
+  outcome: mapped
+  ref: otp:pc-token-capacity-policy:001
+- observation: po:sha256:ff49d92348bf8cc96be9e54cd155dc636c0a5c5bfa32c51ba01ec1b0b3922c14
+  outcome: irrelevant
+  reason: 'The lexical-alias null verdict STANDS for dh:pc-attempt-identifier-field:001: Repetition of
+    an attemptId UUID field in two schema spans does not supply an attempt occurrence or an identity criterion
+    for attempts. A shared foreign key or serialization convention remains a complete interpretation.'
+- observation: po:sha256:736ad92a1de7991caa17d905c310e2dac02d5a4d9b7cd3b709adfcabd690e4cc
+  outcome: unresolved
+  needed_evidence: "sitting-3 ruling: hasStep defers to run 3 \u2014 its range binds ScheduleStep, which\
+    \ is withdrawn and unratified; the full ordering cluster ratifies together after the CQ-020 wording\
+    \ amendment (WorkUnit -> SeatRequest ordering)."
+  since: '2026-09-03'
+- observation: po:sha256:35a69c5bcbf7493cc0aa7f248d138d65f2d5c8beff49e80308ef85b43a0f559d
+  outcome: unresolved
+  needed_evidence: "sitting-3 ruling: hasStep defers to run 3 \u2014 its range binds ScheduleStep, which\
+    \ is withdrawn and unratified; the full ordering cluster ratifies together after the CQ-020 wording\
+    \ amendment (WorkUnit -> SeatRequest ordering)."
+  since: '2026-09-03'
+- observation: po:sha256:d1f555913267743bc009bfd030c3bafd841e6f7baa081d7a1ecc0704fc2b2d2d
+  outcome: unresolved
+  needed_evidence: otp:ov-schedules-seat-request:001 concession requires a revised or new Must/Should
+    CQ whose executable query requires ScheduleStep-to-SeatRequest targeting, together with emitted projection
+    facts carrying that relation.
+  since: '2026-09-03'

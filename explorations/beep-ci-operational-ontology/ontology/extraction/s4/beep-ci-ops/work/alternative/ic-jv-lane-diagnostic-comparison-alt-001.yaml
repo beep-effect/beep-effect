@@ -1,0 +1,41 @@
+id: ic:jv-lane-diagnostic-comparison-alt:001
+hypothesis_ref: dh:jv-lane-diagnostic-comparison:001
+identity:
+  supplies_identity: true
+  identity_criterion: Two lane-diagnostic comparison records are the same iff they are the
+    same measured contrast of standalone versus lane-rerun duration for the same package-task
+    under the same diagnostic policy at the same detection instant. taskId and laneLabel are
+    reidentification evidence, never the criterion.
+  reidentification_key:
+  - taskId (evidence)
+  - packageName (evidence)
+  - policy (evidence)
+  - detectedAt (evidence)
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: one standalone/lane-rerun duration pair about one task execution context at one detection
+    instant
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - event
+  existential_dependencies:
+  - the standalone execution measured
+  - the lane-rerun execution measured
+  - the diagnostic policy named
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+- description: The same observation could be read as the anomaly occurrence itself rather
+    than as a comparison record; if the hypothesized individual is the event of being slow
+    in-lane, the two duration numbers are qualities of two runs, not parts of one information
+    object.
+- description: policy=ts2589-no-location is implementation-specific; taking the policy name
+    as the comparison's identity would collapse distinct detections that share a compiler
+    policy.
+status: proposed

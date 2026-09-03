@@ -324,8 +324,10 @@ const toOrderTuple = (date: LocalDate.Model): readonly [number, number, number] 
  * @category utilities
  * @since 0.0.0
  */
-export const Order: ((right: LocalDate.Model) => (left: LocalDate.Model) => Ordering.Ordering) &
-  Ord.Order<LocalDate.Model> = dual(2, Ord.mapInput(Ord.Tuple([Ord.Number, Ord.Number, Ord.Number]), toOrderTuple));
+export const Order: {
+  (right: LocalDate.Model): (left: LocalDate.Model) => Ordering.Ordering;
+  (left: LocalDate.Model, right: LocalDate.Model): Ordering.Ordering;
+} = dual(2, Ord.mapInput(Ord.Tuple([Ord.Number, Ord.Number, Ord.Number]), toOrderTuple));
 
 /**
  * Test whether one LocalDate is chronologically before another.

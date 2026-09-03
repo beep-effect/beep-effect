@@ -1,0 +1,24 @@
+id: "dh:pb-scheduler-progress-interval:001"
+observation_refs:
+  - "po:sha256:8356b294d9bd88ca88837d06b1f035ba7775026ddc09723dca888fa03e0341ae"
+cq_warrants: []
+proposed_referent:
+  label: "scheduler progress interval"
+  description: "A possible scheduler timing parameter named progressSeconds."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "progress-reporting policy interval"
+    representation_status: domain_referent
+    plausibility: weak
+  - label: "configuration field"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "Only the field name is quoted. Its unit is suggested by the suffix, but no value, consumer, event, or behavioral consequence is observed; a configuration field requires no ontology referent."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.96
+  use_for_acceptance: false

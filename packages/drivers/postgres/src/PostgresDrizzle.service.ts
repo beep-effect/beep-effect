@@ -466,10 +466,7 @@ const readMigrationJournalState = Effect.fn("Postgres.readMigrationJournalState"
     const shape = yield* decodeUnknownMigrationJournalShapeRowArray(shapeRows).pipe(
       Effect.flatMap((rows) =>
         A.head(rows).pipe(
-          O.match({
-            onNone: () => Effect.fail(failMigrationJournal("Postgres returned no migration journal shape row.")),
-            onSome: Effect.succeed,
-          })
+          Effect.fromOption(() => failMigrationJournal("Postgres returned no migration journal shape row."))
         )
       )
     );

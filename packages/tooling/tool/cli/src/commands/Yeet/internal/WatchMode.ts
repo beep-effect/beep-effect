@@ -568,7 +568,7 @@ const advanceYeetWatchTick = Effect.fn("Yeet.advanceYeetWatchTick")(function* (
   emptyPolls: number
 ) {
   const polled = yield* collectYeetWatchSnapshot(context).pipe(
-    Effect.map(O.some),
+    Effect.asSome,
     Effect.catch((error) =>
       Console.error(`[yeet] watch poll failed: ${error.message}`).pipe(Effect.as(O.none<YeetWatchSnapshot>()))
     )

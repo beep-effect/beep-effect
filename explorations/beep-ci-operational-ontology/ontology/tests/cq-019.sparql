@@ -28,6 +28,14 @@ SELECT ?subject ?violation WHERE {
   }
   UNION
   {
+    ?subject a ciops:ScheduleProposal ; ciops:hasStep ?taggedStep .
+    ?taggedStep ciops:schedulesSeatRequest ?seatRequest ; ciops:hasScopeTag ?scopeTag .
+    FILTER (isLiteral(?scopeTag))
+    FILTER NOT EXISTS { ?subject ciops:scopedByComputation ?c3 }
+    BIND("step-scope-provenance-gap" AS ?violation)
+  }
+  UNION
+  {
     ?subject ciops:scopedByComputation ?target .
     FILTER NOT EXISTS { ?target ciops:hasAffectedOutcome ?outcome }
     BIND("dangling-provenance-target" AS ?violation)

@@ -1,0 +1,22 @@
+id: "fa:pb-verification-evidence-receipt:001"
+hypothesis_ref: "dh:pb-verification-evidence-receipt:001"
+identity_card_ref: "ic:pb-verification-evidence-receipt:001"
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+  - label: "The primary individual is an abstract evidence claim, while the digest-bound report is one carrier or realization of it."
+    still_viable: true
+  - label: "Each generated report token is the primary receipt individual even when another token carries identical content and provenance."
+    still_viable: true
+  - label: "A replay-pass receipt is identical with the successful replay occurrence or proves timeless correctness."
+    still_viable: false
+strongest_counterexample: "A genuine pass receipt can become inapplicable after the tree, epoch, or frozen corpus changes, and a forged or stale report can contain the word pass; evidence identity and applicability are not the truth of its claim."
+verdict: explicitly_deferred
+needed_evidence: >-
+  Authoritative claim-formation and realization, issuance, producer, custody,
+  copy, retention, correction, and revocation provenance across heterogeneous
+  VerificationEvidence records is required to choose content, record-token, or
+  carrier-lineage identity.

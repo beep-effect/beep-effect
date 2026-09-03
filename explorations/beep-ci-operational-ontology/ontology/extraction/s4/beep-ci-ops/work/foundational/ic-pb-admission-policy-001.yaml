@@ -1,0 +1,33 @@
+id: "ic:pb-admission-policy:001"
+hypothesis_ref: "dh:pb-admission-policy:001"
+identity:
+  supplies_identity: true
+  identity_criterion: "Two admission-policy specifications are the same only when they continue one authoritative policy lineage with the same normative ordering, capacity, aging, class-cap, starvation, applicability, and version semantics; equal configuration values alone are insufficient."
+  reidentification_key:
+    - "policy authority and version lineage"
+    - "complete normative rule set"
+    - "declared applicability scope"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: "One governed specification whose admission clauses share an authority, applicability scope, and revision boundary."
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "a deployed normative policy regime or mode"
+    - "an AdmissionConfig value object that carries some parameters"
+    - "one admission-decision occurrence"
+  existential_dependencies:
+    - "a policy authority and an admission-domain vocabulary"
+    - "at least one faithful inscription or executable carrier"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - "superseded by an authoritative semantic revision"
+    - "withdrawn from its applicability scope"
+counterexamples:
+  - description: "Two deployments can contain byte-equal AdmissionConfig values while being governed by different policy authorities or applying to different scheduler fleets."
+status: proposed

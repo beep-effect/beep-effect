@@ -65,6 +65,8 @@ export const propFromNullishOr: {
     path: P
   ): <S extends object>(self: P extends Paths<S> ? S : never) => O.Option<NonNullable<Get<S, P>>>;
   <const P extends ReadonlyArray<string>>(path: P): <S extends object>(self: S) => O.Option<NonNullable<Get<S, P>>>;
+  <S extends object, const P extends string & Paths<S>>(path: P): (self: S) => O.Option<NonNullable<Get<S, P>>>;
+  <S extends object, const P extends ReadonlyArray<string>>(path: P): (self: S) => O.Option<NonNullable<Get<S, P>>>;
   <S extends object, const P extends string & Paths<S>>(self: S, path: P): O.Option<NonNullable<Get<S, P>>>;
   <S extends object, const P extends ReadonlyArray<string>>(self: S, path: P): O.Option<NonNullable<Get<S, P>>>;
 } = dual(
@@ -75,6 +77,8 @@ export const propFromNullishOr: {
     path: P
   ): <S extends object>(self: P extends Paths<S> ? S : never) => O.Option<NonNullable<Get<S, P>>>;
   <const P extends ReadonlyArray<string>>(path: P): <S extends object>(self: S) => O.Option<NonNullable<Get<S, P>>>;
+  <S extends object, const P extends string & Paths<S>>(path: P): (self: S) => O.Option<NonNullable<Get<S, P>>>;
+  <S extends object, const P extends ReadonlyArray<string>>(path: P): (self: S) => O.Option<NonNullable<Get<S, P>>>;
   <S extends object, const P extends string & Paths<S>>(self: S, path: P): O.Option<NonNullable<Get<S, P>>>;
   <S extends object, const P extends ReadonlyArray<string>>(self: S, path: P): O.Option<NonNullable<Get<S, P>>>;
 };

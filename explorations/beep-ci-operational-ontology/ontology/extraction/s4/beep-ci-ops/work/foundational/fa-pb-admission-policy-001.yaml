@@ -1,0 +1,17 @@
+id: "fa:pb-admission-policy:001"
+hypothesis_ref: "dh:pb-admission-policy:001"
+identity_card_ref: "ic:pb-admission-policy:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+  - label: "A deployed admission-policy regime is a normative mode or situation distinct from the specification that describes it."
+    still_viable: true
+  - label: "AdmissionConfig is the entire policy rather than one implementation carrier of selected parameters."
+    still_viable: false
+  - label: "Each admittedAtMillis value identifies the policy rather than one decision made under it."
+    still_viable: false
+strongest_counterexample: "One policy specification can govern many admissions with different requests and timestamps, while identical configuration objects can occur under distinct authorities; neither an execution nor value equality supplies policy identity."
+verdict: analyzed

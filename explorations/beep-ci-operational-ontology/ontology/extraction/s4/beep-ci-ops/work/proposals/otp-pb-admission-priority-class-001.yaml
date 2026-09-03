@@ -1,0 +1,67 @@
+id: "otp:pb-admission-priority-class:001"
+hypothesis_ref: "dh:pb-admission-priority-class:001"
+identity_card_ref: "ic:pb-admission-priority-class:001"
+foundational_status: explicitly_deferred
+term:
+  preferred_label: "admission priority class"
+  local_name: AdmissionPriorityClass
+  proposed_iri: "https://oip.law/ontology/ci-ops#AdmissionPriorityClass"
+  owl_entity_kind: class
+definition:
+  text: >-
+    A governed controlled-vocabulary information object whose verify and
+    publish members classify queued SeatRequests for canonical admission
+    ordering; the request's later effective aging rank is a separate derived
+    value and does not reclassify the recorded request.
+  source:
+    - "CQ-021"
+    - "po:sha256:60e90bd17b628d4d6d815cfd05ddcf88cbc2a724790b05ac88b4411619f535be"
+    - "po:sha256:6b2e1d71b18197d5aabdde8f443d63fb71885b277f825b9ad13103f0de607a29"
+    - "po:sha256:7a127886ce9cd789e25ca288274377e644ebfc27da768ca939e258cb40dc81cd"
+    - "po:sha256:a5337050b11a15f3c1b20a01228366cdf9affbd31a471c391b4d980883be0f5b"
+foundational:
+  ufo_category: information_object
+  gufo_alignment: "gufo:Endurant"
+ontoclean:
+  rigidity: unresolved
+  identity: unresolved
+  dependence: relational
+parents: []
+revision_log:
+  - from_sha256: "184e7f65be7bfaa42a7c448f37d80db2cbe1227c9e3fc59615d1a70b599917bf"
+    addressed:
+      - "role-rigidity-unsupported"
+      - "discriminator-true-of-enum-dispatch"
+    disposition: >-
+      Run-2 sitting 1 restored the ratified controlled-vocabulary reading and
+      removed the unsupported request-borne role-token semantics.
+reuse:
+  searched: true
+  exact_reuse_found: true
+  mappings:
+    - iri: "https://oip.law/ontology/ci-ops#AdmissionPriorityClass"
+      compatibility: >-
+        The ratified term already covers the verify-or-publish classification
+        attached to queued requests and intentionally left rigidity unresolved;
+        the role-token analysis refines that same referent without a new IRI.
+operational_warrant:
+  competency_questions: ["CQ-021"]
+  semantic_support_for: []
+alternatives_rejected:
+  - >-
+    Interchangeable routing literals are rejected because verify and publish
+    produce different admission-order consequences.
+  - >-
+    Rigid request subkinds are rejected because a request can persist while
+    its policy-relative treatment or effective rank changes.
+open_issues:
+  - >-
+    The exact-reused ratified class is restored to the controlled-vocabulary
+    reading; independently reified request-borne role tokens are not asserted.
+  - >-
+    Run-3 evidence required to settle vocabulary identity and rigidity: an
+    authoritative registry with version/revision lineage, membership-change
+    rules, and evidence whether planners share one domain or copy it.
+revision_requests: []
+review: {foundational_agent: pending, adversarial_agent: pending, steward: pending}
+status: proposed

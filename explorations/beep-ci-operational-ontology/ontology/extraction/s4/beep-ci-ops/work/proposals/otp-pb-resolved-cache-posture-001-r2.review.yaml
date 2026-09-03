@@ -1,0 +1,44 @@
+target: "otp:pb-resolved-cache-posture:001"
+target_sha256: "7c9504953ff9a09d8a327e2f71797deabae9edc79f445dd1c5ae43f389980f55"
+chain_sha256: "f81ef1a5aa5b086884badf400971b34c4879085c777f212e9b444b0693e4f68d"
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: "The revised proposal asserts no candidate is-a edge."
+revision_requests: []
+attacks:
+  - surface: identity
+    rule: exact-reuse-token-versus-mode-identity
+    counterexample: >-
+      Many invocations can resolve to the same LocalOnly member without
+      becoming the same invocation-borne particular. The revision removes
+      per-invocation token identity and restores the broad governed
+      CachePosture specification/domain, so exact reuse is now coherent.
+    outcome: survived
+  - surface: warrant
+    rule: decision-cq-requires-term
+    counterexample: >-
+      CQ-024 explicitly asks which CachePosture each WorkUnitExecution used
+      and whether the observed behavior was consistent with it. Removing the
+      governed posture domain makes the required classification unavailable.
+    outcome: survived
+  - surface: null_discriminator
+    rule: discriminator-true-of-return-value
+    counterexample: >-
+      A resolver can return a local-only value without creating an
+      invocation-borne mode particular. The revision asserts no such token;
+      the returned member carries controlled posture content and the execution
+      relation records its use, so the former token-shaped null no longer lands.
+    outcome: survived
+rival_models_still_viable:
+  - "A run-specific effective-cache situation realizes one governed CachePosture."
+  - "A resolver result records the selected member without supplying its identity."
+evidence:
+  - "po:sha256:91a7acb71879927b51916b77d75557bce0347d66aa15536e1cce20d776c60786"
+  - "CQ-024"

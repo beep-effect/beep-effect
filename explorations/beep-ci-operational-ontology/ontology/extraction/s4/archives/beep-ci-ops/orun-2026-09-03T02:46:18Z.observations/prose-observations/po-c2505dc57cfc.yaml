@@ -1,0 +1,10 @@
+id: po:sha256:c2505dc57cfcdbd4bbceb25491bd2f483dc2c07ee27732bce2dc3d7928a985d0
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts
+source_span:
+  start_line: 616
+  end_line: 619
+quote: LiteralKit(["clone", "linked-worktree"])
+epistemic_status: quoted_prose

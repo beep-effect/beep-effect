@@ -1,0 +1,44 @@
+id: "ic:jv-admission-lifecycle:001"
+hypothesis_ref: "dh:jv-admission-lifecycle:001"
+identity:
+  supplies_identity: unresolved
+  identity_criterion: >-
+    Unresolved: one AdmissionLifecycle would require an authoritative join
+    showing enqueue, grant, capacity holding, release or cancellation, and
+    causal continuity belong to one request history; the present journal rows
+    do not record that complete join.
+  reidentification_key:
+    - "continuous request-to-admission-to-release history"
+    - "request, admitted work, and grant participants"
+    - "nonce and lifecycle instants as supporting evidence"
+ontoclean:
+  rigidity: unresolved
+  carries_identity: unresolved
+  supplies_identity: unresolved
+  unity: >-
+    One temporally connected admission history initiated for one request and
+    bounded by its terminal release, cancellation, or eviction.
+  dependence: relational
+ufo_analysis:
+  candidate_category: process
+  alternatives:
+    - "event: a sequence of distinct enqueue, admission, and release events"
+    - "information_object: the admission journal entry that records the history"
+    - "relator: the active grant or lease during only the admitted portion"
+  existential_dependencies:
+    - "The admission request and work whose handling unfolds"
+    - "The scheduler and capacity context in which admission occurs"
+    - "An active grant or lease during the admitted interval"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+    - "released after admitted work"
+    - "cancelled before or during admission"
+    - "terminated by lease eviction"
+counterexamples:
+  - description: >-
+      Two requests can have the same kind, priority, and token weight, while a
+      queued request may never yield a lease; those are not one lifecycle and
+      neither the request nor the lease is identical to the whole process.
+status: proposed

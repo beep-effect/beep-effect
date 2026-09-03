@@ -1,0 +1,27 @@
+id: "fa:pa-workspace-package:001"
+hypothesis_ref: "dh:pa-workspace-package:001"
+identity_card_ref: "ic:pa-workspace-package:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: unresolved
+  role_vs_bearer: unresolved
+  context_reification_needed: true
+rival_models:
+  - label: "WorkspacePackage is a kind of continuing software artifact whose versions are states or parts of its history."
+    still_viable: true
+  - label: "Each immutable versioned package content unit is an information object and a new version is a new individual."
+    still_viable: true
+  - label: "Workspace-package membership is an anti-rigid repository-relative role borne by a software artifact."
+    still_viable: true
+  - label: "The topology rows denote only package-reference information objects."
+    still_viable: true
+strongest_counterexample: >-
+  The same @beep spelling can designate unrelated artifacts in a fork or after
+  deletion and recreation, while one artifact can survive a rename; the cited
+  names and dependency entry cannot select an identity provider or rigidity.
+verdict: explicitly_deferred
+needed_evidence: >-
+  A workspace-package identity policy must decide continuity across repository
+  revisions, semantic versions, renames, moves, forks, and delete-recreate
+  cycles, and must state whether workspace membership is a role of a software
+  artifact or whether an immutable package content unit is the intended bearer.

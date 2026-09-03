@@ -710,7 +710,12 @@ def load_attempts(
         checkout = str(source["checkout"])
         run_id = str(source["runId"])
         for record in source["records"]:
-            if record.get("schemaVersion") != ATTEMPT_SCHEMA or not isinstance(record.get("attemptId"), str):
+            if record.get("schemaVersion") != ATTEMPT_SCHEMA:
+                invalid_rows += 1
+                continue
+            if record.get("_tag") == "journal-compacted":
+                continue
+            if not isinstance(record.get("attemptId"), str):
                 invalid_rows += 1
                 continue
             key = attempt_key(checkout, run_id, record["attemptId"])
@@ -720,6 +725,10 @@ def load_attempts(
                 if key not in starts or source["source"] == "live":
                     starts[key] = envelope
             elif record.get("_tag") == "attempt-finished" and isinstance(record.get("verdict"), dict):
+                duplicate_finishes += int(key in finishes)
+                if key not in finishes or source["source"] == "live":
+                    finishes[key] = envelope
+            elif record.get("_tag") == "attempt-terminated" and isinstance(record.get("reason"), str):
                 duplicate_finishes += int(key in finishes)
                 if key not in finishes or source["source"] == "live":
                     finishes[key] = envelope
@@ -753,7 +762,7 @@ def load_attempts(
     attempts: list[dict[str, Any]] = []
     for key, envelope in finishes.items():
         record = envelope["record"]
-        verdict = record["verdict"]
+        verdict = record.get("verdict") if isinstance(record.get("verdict"), dict) else {}
         start_record = starts.get(key, {}).get("record", {})
         started_at = parse_ts(verdict.get("startedAt") or start_record.get("startedAt"))
         ended_at = parse_ts(verdict.get("endedAt") or verdict.get("createdAt") or record.get("recordedAt"))
@@ -767,8 +776,10 @@ def load_attempts(
                 "branch": verdict.get("branch") or start_record.get("branch") or key[1],
                 "checkout": key[0],
                 "committed": verdict.get("committed"),
+                "diffFingerprint": record.get("diffFingerprint") or start_record.get("diffFingerprint"),
                 "elapsedMs": float(elapsed) if isinstance(elapsed, (int, float)) else None,
                 "endedAt": ended_at,
+                "envProfile": record.get("envProfile") or start_record.get("envProfile"),
                 "failedStepId": verdict.get("failedStepId"),
                 "failureKind": verdict.get("failureKind"),
                 "head": verdict.get("head") or start_record.get("head"),
@@ -777,11 +788,15 @@ def load_attempts(
                 "message": verdict.get("message") or "",
                 "mode": verdict.get("mode") or start_record.get("mode"),
                 "outcome": verdict.get("outcome"),
+                "proofTier": record.get("proofTier") or start_record.get("proofTier"),
                 "pushed": verdict.get("pushed"),
+                "resolvedHeadSha": record.get("resolvedHeadSha") or start_record.get("resolvedHeadSha"),
                 "runId": key[1],
                 "schemaVersion": verdict.get("schemaVersion"),
                 "source": envelope["source"],
                 "startedAt": started_at,
+                "stage": record.get("stage") or start_record.get("stage"),
+                "terminationReason": record.get("reason"),
             }
         )
     attempts.sort(
@@ -1399,9 +1414,10 @@ def fingerprint_quality(attempts: list[dict[str, Any]], states: list[dict[str, A
     per_attempt = sum(
         1
         for attempt in attempts
-        if any(key in attempt for key in ("diffFingerprint", "commandHash"))
+        if any(isinstance(attempt.get(key), str) for key in ("diffFingerprint", "commandHash"))
         or any(
-            isinstance(lane, dict) and ("diffFingerprint" in lane or "commandHash" in lane)
+            isinstance(lane, dict)
+            and any(isinstance(lane.get(key), str) for key in ("diffFingerprint", "commandHash"))
             for lane in attempt["lanes"]
         )
     )

@@ -1,0 +1,31 @@
+id: "so:sha256:c509f4a98184260243c9b13f2cc0d46bbe7783f07518144c48d9e58d47617b73"
+schema_version: 1
+repository:
+  commit: "341cfef8b6e80d49f6cef894e9eecd5337f70e8f"
+  path: "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run2-fleet/verdicts/beep-effect/chore_deps-update-08-23-26-cadf4f69e957/verdict.properties"
+source_span:
+  start_line: 1
+  end_line: 26
+  content_sha256: "47e4ff0f1a35ad05c225a5390e46a1f34b8cd62033d652f937c33409b19db6a7"
+extractor:
+  id: "adapter-journal"
+  version: "1.0.0"
+  parser: "python-stdlib-properties"
+  script: "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal.py"
+symbol:
+  qualified_name: "yeet-verdict"
+  lexical_name: "yeet-verdict"
+  syntactic_kind: "properties_projection"
+observed_facts:
+  - predicate: "config_key_value"
+    object: "attemptId=83b5a2ea-68cc-45f9-a5a0-1c9ce588c411"
+  - predicate: "config_key_value"
+    object: "elapsedMs=4456"
+  - predicate: "config_key_value"
+    object: "endedAt=2026-08-24T01:31:42.503Z"
+  - predicate: "config_key_value"
+    object: "failurePolicy=fail-fast"
+  - predicate: "config_key_value"
+    object: "startedAt=2026-08-24T01:31:38.047Z"
+source_excerpt: "attemptId=83b5a2ea-68cc-45f9-a5a0-1c9ce588c411"
+epistemic_status: "parser_derived"

@@ -1,0 +1,26 @@
+id: "dh:pb-repo-wide-proof-label:001"
+observation_refs:
+  - "po:sha256:909aeb95f9b6690d1d4cbac0b3f5a7adbd0affcee9159b536499e1438fd2e024"
+cq_warrants:
+  - "CQ-005"
+  - "CQ-019"
+proposed_referent:
+  label: "full-repository verification-evidence label"
+  description: "A possible vernacular label combining verification evidence with full-repository scope."
+representation_status: lexical_alias
+alternatives:
+  - label: "FullRepoScope verification run"
+    representation_status: domain_referent
+    plausibility: weak
+  - label: "documentation shorthand"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The two-word fragment gives neither an evidence record nor a run, tree state, epoch, lane set, or scope boundary. It is only semantically suggestive shorthand."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.29
+  use_for_acceptance: false

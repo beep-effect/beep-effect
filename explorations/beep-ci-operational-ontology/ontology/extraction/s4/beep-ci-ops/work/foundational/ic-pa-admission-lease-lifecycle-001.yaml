@@ -1,0 +1,45 @@
+id: "ic:pa-admission-lease-lifecycle:001"
+hypothesis_ref: "dh:pa-admission-lease-lifecycle:001"
+identity:
+  supplies_identity: unresolved
+  identity_criterion: >-
+    Unresolved among one SeatGrant relator, a lifecycle process, and a
+    lease-record carrier lineage: activation, heartbeat rewrite, release or
+    eviction, and ledger decrement are not authoritatively joined as one
+    continuing referent by the present corpus.
+  reidentification_key:
+    - "one grant's continuous activation-to-termination history"
+    - "admitted work, scheduler, and capacity participants"
+    - "nonce, lease path, weight, and lifecycle instants as supporting evidence"
+ontoclean:
+  rigidity: unresolved
+  carries_identity: unresolved
+  supplies_identity: unresolved
+  unity: >-
+    One temporally connected grant-lifecycle process from successful activation
+    through the end of that grant's capacity-holding interval.
+  dependence: relational
+ufo_analysis:
+  candidate_category: process
+  alternatives:
+    - "relator: the active seat grant or lease mediating work and capacity"
+    - "information_object: the active lease record and its carrier history"
+    - "event: the terminal lease-removal or eviction occurrence alone"
+  existential_dependencies:
+    - "The active seat grant whose lifecycle unfolds"
+    - "The admitted work, scheduler, and capacity ledger"
+    - "Activation and terminal events belonging to one continuous history"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+    - "released after admitted work ends"
+    - "evicted after owner-liveness failure"
+    - "rolled back or otherwise terminated"
+counterexamples:
+  - description: >-
+      Removing a lease file with failure ignored need not prove that the
+      world-side grant ended, and two different leases can cause the same
+      active-token decrease; file operation and token delta do not supply
+      lifecycle identity.
+status: proposed

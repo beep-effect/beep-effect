@@ -277,10 +277,7 @@ const requireStringField = Effect.fnUntraced(function* (
   return yield* pipe(
     readProperty(request, key),
     O.filter(P.isString),
-    O.match({
-      onNone: () => Effect.fail(RunpodError.fromDescriptor(descriptor, "request encoding")),
-      onSome: Effect.succeed,
-    })
+    Effect.fromOption(() => RunpodError.fromDescriptor(descriptor, "request encoding"))
   );
 });
 
@@ -358,7 +355,7 @@ const selectToken = Effect.fnUntraced(function* (
     config.apiKey,
     O.match({
       onNone: () => Effect.fail(RunpodError.fromDescriptor(descriptor, "config")),
-      onSome: (token) => Effect.succeed(O.some(token)),
+      onSome: (token) => Effect.succeedSome(token),
     })
   );
 });
@@ -657,7 +654,7 @@ const rawToken = Effect.fnUntraced(function* (
     config.apiKey,
     O.match({
       onNone: () => Effect.fail(RunpodError.raw({ method: request.method, path: request.path, reason: "config" })),
-      onSome: (token) => Effect.succeed(O.some(token)),
+      onSome: (token) => Effect.succeedSome(token),
     })
   );
 });

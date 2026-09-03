@@ -59,7 +59,7 @@ const openOverflowMenu = (trigger: HTMLElement): Effect.Effect<void> =>
 // Query a live handle at execution time (not construction time) so retried
 // attempts never reuse a node a strip re-measure has detached.
 const queried = (find: () => HTMLElement | null, missing: string): Effect.Effect<HTMLElement, string> =>
-  Effect.suspend(() => O.match(O.fromNullOr(find()), { onNone: () => Effect.fail(missing), onSome: Effect.succeed }));
+  Effect.suspend(() => O.fromNullOr(find()).pipe(Effect.fromOption(() => missing)));
 
 const workspace = PopulatedWorkspace.make({
   root: SplitNode.make({

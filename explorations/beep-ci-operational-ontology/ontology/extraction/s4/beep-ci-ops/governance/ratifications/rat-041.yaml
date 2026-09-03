@@ -1,0 +1,10 @@
+id: rat:41
+proposal_ref: otp:pb-admission-priority-aging:001
+proposal_sha256: 4c07aaa488121fe383c30bb0deba91d9e06f961f5f7f039a4f984230a9e79ccb
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-09-03T09:05:00Z'
+verbatim_decision: Accept the priority-aging clause as AdmissionPolicy component content, not a separate
+  kind.

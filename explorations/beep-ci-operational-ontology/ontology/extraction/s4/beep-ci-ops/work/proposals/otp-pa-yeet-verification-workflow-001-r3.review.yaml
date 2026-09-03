@@ -1,0 +1,63 @@
+target: "otp:pa-yeet-verification-workflow:001"
+target_sha256: "497ffce8213bfc2a4cc89f36c66d467a5a497e405b06b5c0f9c8e0fcc1786dd6"
+chain_sha256: "770d5915751d98b490242679b6f6209cd41d1c91e88ab1a0a3439244ff59ec28"
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The restored broad plan-specification proposal asserts no parent edge, so
+    there is no candidate is-a relation to test.
+revision_requests: []
+attacks:
+  - surface: identity
+    rule: exact-reuse-extension-narrowing
+    counterexample: >-
+      A non-Yeet plan can prescribe an ordered WorkUnit sequence and applicable
+      scope without proof-tier, monitor, or merge-ready clauses. The revised
+      definition includes it because those Yeet clauses are possible instance
+      or constituent content rather than the broad class's differentia.
+    outcome: survived
+  - surface: identity
+    rule: plan-unity-underdetermined
+    counterexample: >-
+      Cheap-gates, review-fix, and monitoring may be separately versioned
+      constituent plans rather than one Yeet token. The exact-reused class no
+      longer identifies them with each other and explicitly leaves that
+      instance boundary open, so the unresolved Yeet unity does not narrow the
+      broad extension.
+    outcome: survived
+  - surface: warrant
+    rule: schedule-specification-execution-split
+    counterexample: >-
+      Treating VerificationLane only as whatever process happens to run would
+      erase its reusable prescribed WorkUnits, scope, authority, and completion
+      semantics. VerificationPlanSpecification supplies the repeatable
+      specification category needed to define that CQ-001/CQ-011 decision term
+      without equating it to a dated execution.
+    outcome: survived
+  - surface: null_discriminator
+    rule: operative-plan-content-not-cli-token
+    counterexample: >-
+      A CLI branch label alone can be implementation-only, but repository law
+      makes Yeet canonical, its planner constructs distinct prescribed plans,
+      and monitoring has a governed terminal condition. A different carrier
+      can preserve that plan content, so the broad information-object referent
+      survives the null-world attempt.
+    outcome: survived
+rival_models_still_viable:
+  - "VerificationPlanSpecification identity follows repeatable plan content across faithful carriers."
+  - "Context-bound or independently revised plan copies have distinct information-object identity."
+  - "An abstract procedure universal is distinct from its documentary plan specification."
+evidence:
+  - "po:sha256:33182e9f689b24bcb01d622aa789cd78093af067a6594b2e0c2c950ac0867715"
+  - "po:sha256:45d50fea9a4a18913111c9152e3c2ffad848b8e8f869cb5e694c910c604264f3"
+  - "po:sha256:4c265303ec2062df5a841185cf1032b9beab1cefafb63f3468298c2bc7917e1b"
+  - "po:sha256:53cb7d2cdb081cbfab7b6f42091d51256ea65d70c7a4a592209b542cc6cf4d79"
+  - "CQ-001"
+  - "CQ-011"

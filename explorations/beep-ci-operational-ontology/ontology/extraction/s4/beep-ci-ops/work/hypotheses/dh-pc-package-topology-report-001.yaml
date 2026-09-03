@@ -1,0 +1,32 @@
+id: "dh:pc-package-topology-report:001"
+observation_refs:
+  - "po:sha256:b5a7a18968ea6a6d42a965d5697549d79cb392e8817e15e55746a8b4924d9ccb"
+  - "po:sha256:c3c8f3327436b42f3dd02ed0b2fe88ae41808112b728b76803471b317e1b156c"
+  - "po:sha256:ebcf0870c89a071318f5ac8d09a1d54a7ee6ddf923dd29620f580c03b8c1d1d6"
+  - "po:sha256:f7117e5271fa2910ceb6be3e4330a16e76b8e2783bcc3a5633d89179b62436ba"
+  - "po:sha256:fed2c209471de5173c7e7cacfa2a12b8a99b13fb2e53a55be41fc77110393aaf"
+cq_warrants: []
+proposed_referent:
+  label: "package-topology report"
+  description: >-
+    An information artifact recording dependency-count fields and ordered
+    workspace-package entries from a topological-sort inventory.
+representation_status: information_artifact
+alternatives:
+  - label: "the package dependency topology represented by the report"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "uninterpreted scratch output"
+    representation_status: implementation_artifact_only
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: >-
+    The records establish a topological-sort report with counts and package
+    positions, but they quote no dependency edges and no use of the report in
+    verification. Its structure alone is compatible with disposable generated
+    output, so ontology-level relevance is not established.
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.84, use_for_acceptance: false}

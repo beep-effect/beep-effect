@@ -1,0 +1,25 @@
+id: "so:sha256:c627961a8fcde9dca01027cbf052494763b5e6895805c1c0c50d8bf51ba3a7bb"
+schema_version: 1
+repository:
+  commit: "341cfef8b6e80d49f6cef894e9eecd5337f70e8f"
+  path: "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run2-fleet/admission/system-tmp/journal.properties"
+source_span:
+  start_line: 1
+  end_line: 195
+  content_sha256: "107f5bd8d18ac2f220aaa8c5c0dafe67b23ca16cd9bbf19bb1e58e3c7b652533"
+extractor:
+  id: "adapter-journal"
+  version: "1.0.0"
+  parser: "python-stdlib-properties"
+  script: "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal.py"
+symbol:
+  qualified_name: "yeet-admission-journal"
+  lexical_name: "yeet-admission-journal"
+  syntactic_kind: "properties_projection"
+observed_facts:
+  - predicate: "config_key_value"
+    object: "memoryPeakBytes=2194235392"
+  - predicate: "config_key_value"
+    object: "originKey=4cc31eeb4dec"
+source_excerpt: "memoryPeakBytes=2194235392"
+epistemic_status: "parser_derived"

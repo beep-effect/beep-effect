@@ -1,0 +1,27 @@
+id: "dh:pb-affected-task-input-mode:001"
+observation_refs:
+  - "po:sha256:9cbd50f3655b7ae7102a1be9bfcfe939528b3eaebd0dc33257408365f9402062"
+  - "po:sha256:a1f8202d5ff295e75dd7ad3f50f9454dad4bc2d53677e5936a6a0812250c5e43"
+cq_warrants:
+  - "CQ-004"
+  - "CQ-019"
+proposed_referent:
+  label: "task-input-aware affected-selection mode"
+  description: "A possible Turbo affected-selection mode suggested by enabled filterUsingTasks and affectedUsingTaskInputs flags."
+representation_status: unresolved
+alternatives:
+  - label: "affected-scope computation policy"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "Turbo implementation feature flags"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The names suggest that task inputs influence affected filtering, but the observations do not state the selection algorithm, its outcome, its fail-open behavior, or any subject that trusts the result. Two enabled feature flags do not settle a domain referent."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.38
+  use_for_acceptance: false

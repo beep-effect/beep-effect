@@ -1,0 +1,30 @@
+id: "fa:ov-has-scope:001"
+hypothesis_ref: "dh:ov-has-scope:001"
+identity_card_ref: "ic:ov-has-scope:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+  - label: >-
+      Broaden hasScope to ScheduleStep, ScheduleProposal, and
+      VerificationEvidence, using subject type and provenance to distinguish
+      prescribed, scheduled, and observed scope.
+    still_viable: true
+  - label: >-
+      Reify a scoped-schedule-content situation when the derivation
+      computation, proposal snapshot, or other edge-local provenance must be
+      represented.
+    still_viable: true
+  - label: >-
+      Treat hasScope as only a projection-schema field with no semantic fact
+      beyond its serialized tag.
+    still_viable: false
+strongest_counterexample: >-
+  The cited observations ground only a ScheduleStep scope designation. Reusing
+  them to assert a WorkUnitSpecification, proposal, or evidence relation changes
+  the bearer and truth conditions; the pinned CQ-020 still routes scope through
+  WorkUnit, so the step relation remains withdrawn until the post-run wording
+  and executable query are reconciled with SeatRequest ordering.
+verdict: analyzed

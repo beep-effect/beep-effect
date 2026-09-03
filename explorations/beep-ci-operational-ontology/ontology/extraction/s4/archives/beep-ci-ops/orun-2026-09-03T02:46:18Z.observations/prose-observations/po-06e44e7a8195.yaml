@@ -1,0 +1,10 @@
+id: po:sha256:06e44e7a819508d788d7d342b71fcc080eb8b249b695b0217fd62ba83672e7b6
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts
+source_span:
+  start_line: 203
+  end_line: 206
+quote: export const CiLaneId = LiteralKit(CI_LANE_ID_VALUES).pipe(
+epistemic_status: quoted_prose

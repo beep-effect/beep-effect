@@ -1,0 +1,32 @@
+id: "dh:pc-failure-kind-vocabulary:001"
+observation_refs:
+  - "po:sha256:bfb348d69a15cdfa639fa1bb2df386ecf17dddb3e2a68efd172f7a06ec96e705"
+  - "po:sha256:c04b4efbd7a3be8c91b5ac732ef996bd9b635eaf3117c2cc6caf9e4e176dd644"
+  - "po:sha256:dd229cadfb5ef5cf7d3edc5c256120433843f2bfab6d21c48ef6314a8022d88c"
+  - "po:sha256:e7ec3a026c581a927f350c5035546be6cc2ea0f58e040cb6b1a758a5de5ae81d"
+  - "po:sha256:fee4d44537bffa3439eb93e45d79f7e2189f6bcda79d42b345c1fd1292a609da"
+cq_warrants:
+  - "CQ-013"
+proposed_referent:
+  label: "verification failure-kind vocabulary"
+  description: >-
+    Source labels and a journal field that may lexically classify kinds of
+    verification failures used in failure signatures.
+representation_status: lexical_alias
+alternatives:
+  - label: "monitoring and serialization status codes"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+  - label: "operational failure categories"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: >-
+    The records establish repeated literals and an optional failureKind field,
+    but no failure occurrence, classification criterion, failed step, or
+    attributed delay. Code-level status vocabulary remains sufficient.
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.78, use_for_acceptance: false}

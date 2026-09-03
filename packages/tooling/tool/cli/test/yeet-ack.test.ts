@@ -3,6 +3,7 @@ import {
   renderYeetAckResolution,
   writeYeetAckReceipt,
   YEET_ACK_SCHEMA_VERSION,
+  YeetAckEnvironmentOnlyResolution,
   YeetAckFixResolution,
   YeetAckReceipt,
   YeetAckReceiptJson,
@@ -42,6 +43,9 @@ const inTempRepo = Effect.fn("inTempRepo")(function* <Value, Failure, Requiremen
 describe("renderYeetAckResolution", () => {
   it("phrases every closing move", () => {
     expect(renderYeetAckResolution(YeetAckFixResolution.make({ sha: "2817f28" }))).toBe("fix-sha 2817f28");
+    expect(renderYeetAckResolution(YeetAckEnvironmentOnlyResolution.make({ reason: "stale upstream dist" }))).toBe(
+      "environment-only: stale upstream dist"
+    );
     expect(renderYeetAckResolution(YeetAckWontfixResolution.make({ reason: "flaky infra lane" }))).toBe(
       "wontfix: flaky infra lane"
     );
@@ -71,6 +75,20 @@ describe("YeetAckReceiptJson", () => {
       expect(decoded.schemaVersion).toBe(YEET_ACK_SCHEMA_VERSION);
       expect(decoded.id).toBe("coverage-abc123");
       expect(decoded.resolution).toStrictEqual(receipt.resolution);
+    })
+  );
+
+  it.effect("decodes a receipt written before environment-only was added", () =>
+    Effect.gen(function* () {
+      const decoded = yield* YeetAckReceiptJson.decode(
+        '{"schemaVersion":"yeet-ack/v1","id":"coverage-old123","resolution":{"kind":"wontfix","reason":"legacy infrastructure incident"},"ackedAt":"2026-08-17T00:00:00Z"}'
+      );
+
+      expect(decoded.schemaVersion).toBe(YEET_ACK_SCHEMA_VERSION);
+      expect(decoded.id).toBe("coverage-old123");
+      expect(decoded.resolution).toStrictEqual(
+        YeetAckWontfixResolution.make({ reason: "legacy infrastructure incident" })
+      );
     })
   );
 

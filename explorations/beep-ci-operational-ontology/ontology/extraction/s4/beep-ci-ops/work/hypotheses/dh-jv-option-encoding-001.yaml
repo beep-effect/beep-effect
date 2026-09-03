@@ -1,0 +1,27 @@
+id: "dh:jv-option-encoding:001"
+observation_refs:
+  - "so:sha256:01f4d0036e4dcd1a4e636c0b502838d5455dd4b5c96c845bfc0a6931109dd264"
+cq_warrants: []
+proposed_referent:
+  label: "Option/Some serialization wrapper"
+  description: >-
+    A flattened optional-value encoding consisting of Option, Some, and an
+    unlabelled UUID payload whose parent field is absent from the observation.
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "Identifier of an unspecified operational entity"
+    representation_status: unresolved
+    plausibility: weak
+  - label: "Verdict metadata information datum"
+    representation_status: information_artifact
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: >-
+    Option and Some describe a serialization choice, while the bare value key
+    loses the parent property needed to identify any operational referent; no
+    observation-backed discriminator remains.
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.96, use_for_acceptance: false}

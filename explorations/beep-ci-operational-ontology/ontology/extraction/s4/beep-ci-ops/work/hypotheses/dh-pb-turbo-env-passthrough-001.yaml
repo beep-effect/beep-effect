@@ -1,0 +1,25 @@
+id: "dh:pb-turbo-env-passthrough:001"
+observation_refs:
+  - "po:sha256:65f255d208cb40da35fb417bfc09482d84e9102aab6895b406fc43fa9aa3551f"
+  - "po:sha256:82d9f068207e91298fe6946a4c2a54eb69eb8ec04ac062caaed19c720405bdf4"
+cq_warrants: []
+proposed_referent:
+  label: "Turbo environment-passthrough configuration"
+  description: "A configuration representation that may pass environment variables matching RESEND_* through to tasks."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "verification-input hash surface"
+    representation_status: domain_referent
+    plausibility: weak
+  - label: "tool-specific environment forwarding syntax"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The pair gives a passThroughEnv array key and one wildcard-like member, but it says neither whether the value affects task hashes nor which lane consumes it. Environment forwarding syntax is a complete implementation-level account."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.89
+  use_for_acceptance: false

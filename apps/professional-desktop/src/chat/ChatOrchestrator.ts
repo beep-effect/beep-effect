@@ -375,15 +375,11 @@ const streamAndPersist = (
             finalizedAt: yield* Ref.get(finalizedAt),
             usage: yield* Ref.get(finalizedUsage),
           });
-          return yield* O.match(observed, {
-            onNone: () =>
-              Effect.fail(
-                TurnGenerationError.make({
-                  message: "Assistant turn stream ended without a provider-usage finalization signal",
-                })
-              ),
-            onSome: Effect.succeed,
-          });
+          return yield* Effect.fromOption(observed, () =>
+            TurnGenerationError.make({
+              message: "Assistant turn stream ended without a provider-usage finalization signal",
+            })
+          );
         });
 
         // Persist runs once. A finished turn stores the streamed blocks, sorted by

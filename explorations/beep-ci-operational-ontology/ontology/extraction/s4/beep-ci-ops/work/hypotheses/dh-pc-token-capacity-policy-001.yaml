@@ -1,0 +1,33 @@
+id: "dh:pc-token-capacity-policy:001"
+observation_refs:
+  - "po:sha256:b3ea29a27a4730f094b12522a0d0c1648896c255cf538754d3bb11c7db52764f"
+  - "po:sha256:d0e190e143df1788d957dc00bbdf6faf804b7b76ae3e47e147c558e44f802424"
+  - "po:sha256:ff37ebad0eb0db7d4d93c2868963043b2d76981e6d29939abf14cb4b0e3b4899"
+cq_warrants:
+  - "CQ-010"
+proposed_referent:
+  label: "token-capacity admission policy"
+  description: >-
+    An operational admission rule under which a request's token weight must
+    fit within configured capacity, with replay evidence about recorded grants.
+representation_status: domain_referent
+alternatives:
+  - label: "replay-specific feasibility reconstruction"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "scheduler arithmetic and schema prose only"
+    representation_status: implementation_artifact_only
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: >-
+    The source expression and schema prose are accompanied by adjudicated
+    replay over recorded admissions. That operational trace supports a policy
+    referent rather than only an incidental arithmetic expression.
+  discriminator: >-
+    The replay adjudication reports that every recorded admission became
+    exactly feasible under activeTokenTotal plus weightTokens not exceeding
+    capacityMaxTokens once the unreleased charge was removed.
+epistemic_status: proposed
+confidence: {value: 0.9, use_for_acceptance: false}

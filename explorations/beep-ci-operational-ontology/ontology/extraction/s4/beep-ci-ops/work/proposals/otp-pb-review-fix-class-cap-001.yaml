@@ -1,0 +1,64 @@
+id: "otp:pb-review-fix-class-cap:001"
+hypothesis_ref: "dh:pb-review-fix-class-cap:001"
+identity_card_ref: "ic:pb-review-fix-class-cap:001"
+foundational_status: analyzed
+term:
+  preferred_label: "admission policy"
+  local_name: AdmissionPolicy
+  proposed_iri: "https://oip.law/ontology/ci-ops#AdmissionPolicy"
+  owl_entity_kind: class
+definition:
+  text: >-
+    A governed policy-specification information object that normatively fixes
+    admission ordering, capacity, aging, class-cap, starvation, applicability,
+    and revision semantics for queued SeatRequests.
+  source:
+    - "po:sha256:60e90bd17b628d4d6d815cfd05ddcf88cbc2a724790b05ac88b4411619f535be"
+    - "po:sha256:71ff33a91cd202789d604775c82a3100091dee4dead6fe88e84f7712ffd84a31"
+foundational:
+  ufo_category: information_object
+  gufo_alignment: "gufo:Endurant"
+ontoclean:
+  rigidity: rigid
+  identity: supplies
+  dependence: relational
+parents: []
+revision_log:
+  - from_sha256: "dd03dad4899ad3768e9e76900b53514986d0990ed38ae2b34c3675e349caa7f0"
+    addressed:
+      - "clause-is-part-not-kind"
+      - "clause-identity-lineage-unobserved"
+      - "semantic-support-not-necessary"
+      - "discriminator-true-of-guard"
+    sitting_struck:
+      - "discriminator-true-of-guard"
+    disposition: >-
+      Run-2 sitting 1 struck the carrier-only attack and folded the supported
+      class-cap content into exact reuse of the complete AdmissionPolicy,
+      removing the invalid policy-subclass edge.
+reuse:
+  searched: true
+  exact_reuse_found: true
+  mappings:
+    - iri: "https://oip.law/ontology/ci-ops#AdmissionPolicy"
+      compatibility: >-
+        The observed review-fix cap is one clause of the already-ratified
+        complete AdmissionPolicy; it supplies no independently issued clause
+        lineage and is not a policy subclass.
+operational_warrant:
+  competency_questions: ["CQ-023"]
+  semantic_support_for: []
+alternatives_rejected:
+  - >-
+    The Boolean scheduler branch is rejected as identical with the policy
+    clause because an implementation can mis-evaluate or misconfigure the cap.
+  - >-
+    Machine-wide resource capacity is rejected because this threshold applies
+    only to active grants of the review-fix admission class.
+open_issues:
+  - >-
+    A deployed normative regime remains a possible world-side model, but the
+    class-cap evidence here exact-reuses the complete policy specification.
+revision_requests: []
+review: {foundational_agent: pending, adversarial_agent: pending, steward: pending}
+status: proposed

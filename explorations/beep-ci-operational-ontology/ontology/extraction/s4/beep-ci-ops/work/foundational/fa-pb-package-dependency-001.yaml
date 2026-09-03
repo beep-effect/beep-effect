@@ -1,0 +1,17 @@
+id: "fa:pb-package-dependency:001"
+hypothesis_ref: "dh:pb-package-dependency:001"
+identity_card_ref: "ic:pb-package-dependency:001"
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+  - label: "The ontology should reify a dependency relator when edge provenance, version constraints, or other edge-local properties must be represented."
+    still_viable: true
+  - label: "The intended referent is the manifest declaration information object rather than the package-to-package dependency relation."
+    still_viable: true
+  - label: "The architecture arrow or dependsOn spelling is itself the dependency relation."
+    still_viable: false
+strongest_counterexample: "Two manifests or diagrams can assert the same ordered edge and remain distinct records, while one stale record can assert an edge absent from the operative dependency graph; assertion identity is not relation identity."
+verdict: analyzed

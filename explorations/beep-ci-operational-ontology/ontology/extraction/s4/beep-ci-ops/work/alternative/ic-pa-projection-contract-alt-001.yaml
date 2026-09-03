@@ -1,0 +1,31 @@
+id: ic:pa-projection-contract-alt:001
+hypothesis_ref: dh:pa-projection-contract:001
+identity:
+  supplies_identity: true
+  identity_criterion: Two admission-projection contracts are the same information object iff
+    they prescribe the same policy inputs, request and ledger views, ordered-schedule output,
+    provenance-digest rules, and failure conditions. A run of the projection is not a new
+    contract. Versioning that changes those prescriptions yields a different specification.
+  reidentification_key:
+  - s7-projection-contract.md architecture clauses (evidence)
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: one repeatable prescription of admission-projection inputs, views, and outputs
+  dependence: none
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - process
+  existential_dependencies: []
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+- description: CiOpsProjection as a Context.Service is an implementation carrier; identifying
+    the contract with that service would make every recoding a new contract.
+- description: A ScheduleProposal produced on a given journal is an execution output, not
+    the contract that says proposals must carry policy and journal-prefix digests.
+status: proposed

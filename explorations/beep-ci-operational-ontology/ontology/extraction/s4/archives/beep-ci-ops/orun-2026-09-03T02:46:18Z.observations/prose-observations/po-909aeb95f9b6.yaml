@@ -1,0 +1,10 @@
+id: po:sha256:909aeb95f9b6690d1d4cbac0b3f5a7adbd0affcee9159b536499e1438fd2e024
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: AGENTS.md
+source_span:
+  start_line: 77
+  end_line: 77
+quote: repo-wide proof
+epistemic_status: quoted_prose

@@ -1,0 +1,20 @@
+id: "fa:jv-actual-wall-duration:001"
+hypothesis_ref: "dh:jv-actual-wall-duration:001"
+identity_card_ref: "ic:jv-actual-wall-duration:001"
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+  - label: "The intended referent is the temporal quality of an execution, with the serialized number only recording it."
+    still_viable: true
+  - label: "The intended artifact is a particular record token rather than repeatable measurement content."
+    still_viable: true
+  - label: "The values are only unindividuated timer counters with no information-object identity."
+    still_viable: false
+strongest_counterexample: >-
+  The cited fields mix task or lane duration with whole-attempt elapsed time;
+  the same numeric value could measure different temporal extents, so neither
+  the number nor durationMs establishes the datum's identity or bearer.
+verdict: analyzed

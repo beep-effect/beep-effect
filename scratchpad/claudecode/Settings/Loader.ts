@@ -336,7 +336,7 @@ const loadWithOptions = Effect.fn("Settings.load")(function* (cwd: string, optio
     (source) =>
       O.match(source.content, {
         onNone: () => Effect.succeed(O.none<SettingsRaw>()),
-        onSome: (content) => decodeSettingsSource(source.path, content).pipe(Effect.map(O.some)),
+        onSome: (content) => decodeSettingsSource(source.path, content).pipe(Effect.asSome),
       }),
     { concurrency: 1 }
   );

@@ -287,7 +287,11 @@ const traverseHops = (
 };
 
 const buildSubgraph = (graph: KnowledgeGraph, traversal: TraversalState): Subgraph => {
-  const nodes = A.getSomes(A.map(A.fromIterable(traversal.nodes), (entityId) => graph.getEntity(entityId)));
+  const nodes = traversal.nodes.pipe(
+    A.fromIterable,
+    A.map((entityId) => graph.getEntity(entityId)),
+    A.getSomes
+  );
   const edges = A.filter(A.fromIterable(traversal.edges), (relation) => {
     const hasSubject = HashSet.has(traversal.nodes, relation.subjectId);
     const hasObject = RelationObject.match(relation.object, {

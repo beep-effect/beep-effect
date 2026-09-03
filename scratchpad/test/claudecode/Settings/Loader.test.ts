@@ -55,10 +55,7 @@ const makeFileSystemLayer = (files: ReadonlyMap<string, string>): Layer.Layer<Fi
       Effect.succeed(files.has(path) || A.isReadonlyArrayNonEmpty(directoryEntries(files, path))),
     readDirectory: (path: string) => Effect.succeed(directoryEntries(files, path)),
     readFileString: (path: string) =>
-      O.match(O.fromNullishOr(files.get(path)), {
-        onNone: () => Effect.fail(notFoundError(path)),
-        onSome: Effect.succeed,
-      }),
+      Effect.fromOption(O.fromNullishOr(files.get(path)), () => notFoundError(path)),
   });
 
 const makeTestLayer = (files: ReadonlyMap<string, string>): Layer.Layer<FileSystem.FileSystem | Path.Path> =>

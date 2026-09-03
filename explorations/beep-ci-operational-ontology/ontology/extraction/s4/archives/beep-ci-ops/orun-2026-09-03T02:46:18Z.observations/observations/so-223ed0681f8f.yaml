@@ -1,0 +1,31 @@
+id: "so:sha256:223ed0681f8f87a828ea875cbfde48d86c2cedd8d649f476ca43f10a42134437"
+schema_version: 1
+repository:
+  commit: "341cfef8b6e80d49f6cef894e9eecd5337f70e8f"
+  path: "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run2-fleet/verdicts/beep-effect/chore_refresh-bun-lockfile-0f8671787597/verdict.properties"
+source_span:
+  start_line: 1
+  end_line: 72
+  content_sha256: "42cec5e74ecb88ef9dc068585d677064ef2ba41fdb0d2c2d37f7f56cd5296ed6"
+extractor:
+  id: "adapter-journal"
+  version: "1.0.0"
+  parser: "python-stdlib-properties"
+  script: "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal.py"
+symbol:
+  qualified_name: "yeet-verdict"
+  lexical_name: "yeet-verdict"
+  syntactic_kind: "properties_projection"
+observed_facts:
+  - predicate: "config_key_value"
+    object: "checksGreen=true"
+  - predicate: "config_key_value"
+    object: "closeoutRun=false"
+  - predicate: "config_key_value"
+    object: "failing=closeout-run"
+  - predicate: "config_key_value"
+    object: "ready=false"
+  - predicate: "config_key_value"
+    object: "threadsResolved=true"
+source_excerpt: "checksGreen=true"
+epistemic_status: "parser_derived"

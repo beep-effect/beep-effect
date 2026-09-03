@@ -171,6 +171,7 @@ const lookupParts = (self: unknown, parts: A.NonEmptyReadonlyArray<string>): Pat
  */
 export const lookupAtPath: {
   <const P extends PathInput>(path: P): <S extends object>(self: S) => PathLookup;
+  <S extends object>(path: PathInput): (self: S) => PathLookup;
   <S extends object>(self: S, path: PathInput): PathLookup;
 } = dual(
   2,
@@ -198,6 +199,7 @@ export const lookupAtPath: {
  */
 export const unsafeDotGet: {
   <const P extends PathInput>(path: P): <S extends object>(self: S) => unknown;
+  <S extends object>(path: PathInput): (self: S) => unknown;
   <S extends object>(self: S, path: PathInput): unknown;
 } = dual(2, (self: object, path: PathInput): unknown => {
   const lookup = lookupAtPath(self, path);

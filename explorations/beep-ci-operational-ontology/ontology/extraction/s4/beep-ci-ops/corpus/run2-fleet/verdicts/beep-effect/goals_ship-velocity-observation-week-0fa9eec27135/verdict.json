@@ -1,0 +1,141 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "goals/ship-velocity-observation-week",
+  "committed": false,
+  "createdAt": "2026-08-31T02:38:38.819Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "publish:00-head-install-preflight",
+      "label": "publish:head-install-preflight",
+      "phase": "prepare",
+      "status": "passed",
+      "durationMs": 10128.652498,
+      "exitCode": 0
+    },
+    {
+      "id": "advisory:01-fallow-feedback",
+      "label": "fallow-advisory-feedback",
+      "phase": "feedback",
+      "status": "passed",
+      "durationMs": 1541.933999,
+      "peakRssKb": 506848,
+      "exitCode": 0
+    },
+    {
+      "id": "full:00-cheap-gates",
+      "label": "full:cheap-gates",
+      "phase": "full",
+      "status": "passed",
+      "durationMs": 250315.272654,
+      "peakRssKb": 18007176,
+      "exitCode": 0
+    },
+    {
+      "id": "full:01-pre-push",
+      "label": "full:pre-push",
+      "phase": "full",
+      "status": "passed",
+      "durationMs": 2055850.174168,
+      "peakRssKb": 18301244,
+      "exitCode": 0
+    },
+    {
+      "id": "quality:changeset-status",
+      "label": "quality:changeset-status",
+      "phase": "full",
+      "status": "reused"
+    },
+    {
+      "id": "cheap-gates:goals-index",
+      "label": "cheap-gates:goals-index",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "cheap-gates:exploration-atlas",
+      "label": "cheap-gates:exploration-atlas",
+      "phase": "full",
+      "status": "reused"
+    },
+    {
+      "id": "cheap-gates:config-sync",
+      "label": "cheap-gates:config-sync",
+      "phase": "full",
+      "status": "reused"
+    },
+    {
+      "id": "cheap-gates:tsgo-rules",
+      "label": "cheap-gates:tsgo-rules",
+      "phase": "full",
+      "status": "reused"
+    },
+    {
+      "id": "cheap-gates:test-tsgo",
+      "label": "cheap-gates:test-tsgo",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "cheap-gates:effect-imports",
+      "label": "cheap-gates:effect-imports",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "cheap-gates:schema-first",
+      "label": "cheap-gates:schema-first",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "cheap-gates:allowlist-check",
+      "label": "cheap-gates:allowlist-check",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "cheap-gates:goals-doctor",
+      "label": "cheap-gates:goals-doctor",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "cheap-gates:jsdoc-ratchet",
+      "label": "cheap-gates:jsdoc-ratchet",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "cheap-gates:knip",
+      "label": "cheap-gates:knip",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "fallow:audit",
+      "label": "fallow:audit",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "fallow:dead-code",
+      "label": "fallow:dead-code",
+      "phase": "full",
+      "status": "passed"
+    }
+  ],
+  "message": "yeet verify succeeded.",
+  "mode": "verify",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "goals_ship-velocity-observation-week-0fa9eec27135",
+  "attemptId": "55fb1ec7-686b-4722-83d2-2eace0a55171",
+  "startedAt": "2026-08-31T02:00:00.862Z",
+  "endedAt": "2026-08-31T02:38:38.819Z",
+  "elapsedMs": 2317957,
+  "indexPath": "<fleet>/beep-effect/.beep/yeet/quality-issue-index.json"
+}

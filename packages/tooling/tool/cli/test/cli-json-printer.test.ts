@@ -11,6 +11,7 @@ import {
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer } from "effect";
 import * as TestConsole from "effect/testing/TestConsole";
+import { vi } from "vitest";
 
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
@@ -79,12 +80,18 @@ describe("internal/cli/Json printCommandJson", () => {
     })
   );
 
-  it("emits payloads larger than 64 KiB intact across a process boundary", () => {
+  it("emits payloads larger than 64 KiB intact in bounded stdout writes", () => {
     const payload = { value: "x".repeat(70_000) };
     const moduleUrl = new URL("../src/internal/cli/Json.ts", import.meta.url).href;
     const program = [
       `import { printCommandJson } from ${JSON.stringify(moduleUrl)};`,
       'import { Effect } from "effect";',
+      "const rawWrite = process.stdout.write.bind(process.stdout);",
+      "process.stdout.write = (chunk, ...args) => {",
+      '  const bytes = typeof chunk === "string" ? new TextEncoder().encode(chunk) : chunk;',
+      '  if (bytes.byteLength > 8_192) throw new Error("oversized stdout write");',
+      "  return rawWrite(bytes, ...args);",
+      "};",
       'await Effect.runPromise(printCommandJson({ value: "x".repeat(70_000) }));',
     ].join("\n");
     const result = Bun.spawnSync(["bun", "--eval", program], {
@@ -97,6 +104,32 @@ describe("internal/cli/Json printCommandJson", () => {
     expect(result.stdout.byteLength).toBeGreaterThan(65_536);
     expect(output).toBe(`${JSON.stringify(payload)}\n`);
   });
+
+  it.effect(
+    "writes the default output sink in bounded UTF-8 chunks",
+    Effect.fnUntraced(function* () {
+      const chunks: Array<Uint8Array> = [];
+      const stdoutWrite = vi.spyOn(process.stdout, "write").mockImplementation(((
+        chunk: Uint8Array,
+        callback?: () => void
+      ) => {
+        chunks.push(chunk);
+        callback?.();
+        return true;
+      }) as typeof process.stdout.write);
+
+      try {
+        const output = yield* CommandJsonOutput;
+        yield* output("");
+        yield* output("x".repeat(20_000));
+
+        expect(chunks.map((chunk) => chunk.byteLength)).toEqual([8_192, 8_192, 3_616]);
+        expect(Buffer.concat(chunks).toString()).toBe("x".repeat(20_000));
+      } finally {
+        stdoutWrite.mockRestore();
+      }
+    })
+  );
 });
 
 describe("internal/cli/Printer formatDurationSeconds", () => {

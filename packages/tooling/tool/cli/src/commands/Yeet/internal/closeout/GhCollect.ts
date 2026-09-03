@@ -105,7 +105,7 @@ const cursorArgs = (cursor: O.Option<string>): ReadonlyArray<string> =>
 
 const nextCursor = (label: string, pageInfo: GhPageInfo): Effect.Effect<O.Option<string>, YeetCommandError> => {
   if (!pageInfo.hasNextPage) {
-    return Effect.succeed(O.none());
+    return Effect.succeedNone;
   }
 
   return pipe(
@@ -119,7 +119,7 @@ const nextCursor = (label: string, pageInfo: GhPageInfo): Effect.Effect<O.Option
             exitCode: 1,
           })
         ),
-      onSome: (cursor) => Effect.succeed(O.some(cursor)),
+      onSome: (cursor) => Effect.succeedSome(cursor),
     })
   );
 };

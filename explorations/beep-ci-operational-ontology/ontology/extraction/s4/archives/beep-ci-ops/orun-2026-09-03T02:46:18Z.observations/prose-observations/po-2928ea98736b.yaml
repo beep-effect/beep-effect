@@ -1,0 +1,10 @@
+id: po:sha256:2928ea98736b22a91fa01c6a7ea1da53528a69fb97bca710e3b47d5d8f41f870
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: standards/fallow.boundaries.provenance.schema.json
+source_span:
+  start_line: 54
+  end_line: 59
+quote: '"sourceClass": { "enum": ["manifest-derived", "doctrine-pinned"] }'
+epistemic_status: quoted_prose

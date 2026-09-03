@@ -1,0 +1,36 @@
+id: ic:jv-failure-signature-alt:001
+hypothesis_ref: dh:jv-failure-signature:001
+identity:
+  supplies_identity: true
+  identity_criterion: Two failure-signature records are the same information object iff they
+    are the same classifying assertion of failed step plus failure kind about the same failure
+    result. The pair failedStepId and failureKind is evidence of the classification, never
+    a stand-alone identity provider. Whether two distinct failures with the same pair are
+    'the same signature' (type) or two tokens remains open.
+  reidentification_key:
+  - failedStepId (evidence)
+  - failureKind (evidence)
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: one classifying pair about one observed failure result
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - quality
+  - none
+  existential_dependencies:
+  - the verification failure result being classified
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+- description: prepare:05-docgen with failureKind=step-exit and full:01-pre-push with the
+    same failureKind are two classifying records, not one signature individual.
+- description: If 'signature' is a repeatable matcher type, two failures sharing the pair
+    would be the same signature; the observations only instantiate per-result fields and do
+    not show matching-across-occurrences.
+status: proposed

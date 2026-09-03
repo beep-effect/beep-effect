@@ -128,7 +128,7 @@ export const findOpenPullRequest = Effect.fn("Yeet.findOpenPullRequest")(functio
     label: ghPullRequestViewCommand,
     onFailure: (failure) => failure,
   }).pipe(
-    Effect.map(O.some),
+    Effect.asSome,
     Effect.catch((failure) =>
       failure._tag === "spawn"
         ? Effect.fail(YeetCommandError.new("Failed to inspect current branch pull request.")(failure.cause))

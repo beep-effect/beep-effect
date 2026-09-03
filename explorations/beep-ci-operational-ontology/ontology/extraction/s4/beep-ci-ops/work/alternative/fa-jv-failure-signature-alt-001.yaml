@@ -1,0 +1,20 @@
+id: fa:jv-failure-signature-alt:001
+hypothesis_ref: dh:jv-failure-signature:001
+identity_card_ref: ic:jv-failure-signature-alt:001
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+- label: classificatory quality inhering in the failure occurrence
+  still_viable: true
+- label: no sortal — two properties of a result, not an individual
+  still_viable: true
+strongest_counterexample: Both cited records only serialize failedStepId and failureKind on
+  a journal or verdict; there is no observation of a signature being reused as a matcher.
+  Quality, information object, and mere property-pair remain observationally equivalent.
+verdict: analyzed
+needed_evidence: An observation that two distinct failure occurrences with the same failedStepId
+  and failureKind are treated as one signature for stopping or clustering, versus treated
+  as two per-result classifications.

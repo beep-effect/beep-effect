@@ -1,0 +1,20 @@
+id: fa:jv-actual-wall-duration-alt:001
+hypothesis_ref: dh:jv-actual-wall-duration:001
+identity_card_ref: ic:jv-actual-wall-duration-alt:001
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+- label: temporal quality inhering in a verification execution
+  still_viable: true
+- label: instrumentation timer output with no measured content
+  still_viable: false
+strongest_counterexample: One properties projection mixes attempt-level elapsedMs with a much
+  smaller durationMs on the same file; if the hypothesized individual is 'the wall duration
+  of the attempt', that observation does not say which number it is.
+verdict: analyzed
+needed_evidence: An observation that assigns duration as an inhering quality of an execution
+  independently of any journal field, or that treats two encodings of the same bearer-instant
+  quantity as one quality rather than two records.

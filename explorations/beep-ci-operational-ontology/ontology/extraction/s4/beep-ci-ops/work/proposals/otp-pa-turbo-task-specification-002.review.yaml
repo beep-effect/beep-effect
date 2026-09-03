@@ -1,0 +1,78 @@
+target: "otp:pa-turbo-task-specification:002"
+target_sha256: "3de91b7644d03c85d09030c631465f09278b029ab1f1dfcd38f62c7902d8c67f"
+chain_sha256: "b986c49215f2590be86157a9cf11ff529c031ce85a8f5bbdda87ce26897d8958"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: attacked
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons: {}
+revision_requests:
+  - >-
+    Address subkind-inherits-parent-identity and
+    identity-card-does-not-fit-proposed-child with a VerificationLane-specific
+    IdentityCard and analysis that either inherits WorkUnitSpecification
+    identity or removes the is-a edge in favor of a specification relation.
+  - >-
+    Address no-valid-subsumption by testing script and collected-gate lanes,
+    not only Turbo task entries, and retain the direct CQ-001/CQ-011 warrant.
+attacks:
+  - surface: taxonomy
+    rule: taxonomy-rigidity-compatible
+    counterexample: >-
+      A verification-lane specification cannot cease being a work
+      specification while persisting under the proposal's own
+      specification-centered reading; rigid child and rigid parent therefore
+      do not by themselves violate OntoClean rigidity.
+    outcome: survived
+  - surface: taxonomy
+    rule: subkind-inherits-parent-identity
+    counterexample: >-
+      The child is marked identity-supplying even though its asserted rigid
+      parent WorkUnitSpecification already supplies identity; the shared card
+      never states an inherited parent criterion or a compatible child-only
+      specialization.
+    outcome: landed
+  - surface: taxonomy
+    rule: no-valid-subsumption
+    counterexample: >-
+      A collected-gate VerificationLane can coordinate several independently
+      identified WorkUnitSpecifications and persist while those prescriptions
+      are replaced. Such a lane is not itself one of those specification
+      information objects, so no universal is-a edge has been established.
+    outcome: landed
+  - surface: identity
+    rule: identity-card-does-not-fit-proposed-child
+    counterexample: >-
+      A script lane and a Turbo task can prescribe byte-equivalent work while
+      remaining distinct governed lanes, but the reused card identifies only
+      Turbo task semantic content and supplies no lane authority or lineage
+      criterion to separate them.
+    outcome: landed
+  - surface: warrant
+    rule: decision-cq-requires-term
+    counterexample: >-
+      Without VerificationLane, CQ-001 cannot enumerate lanes by LaneKind and
+      CQ-011 cannot return the lanes fed by invalidated hash surfaces; the
+      cited CQs genuinely require the term.
+    outcome: survived
+  - surface: null_discriminator
+    rule: discriminator-false-in-null-world
+    counterexample: >-
+      A file containing inert task-name strings would not prescribe upstream
+      dependencies, input surfaces, or persistence behavior. The cited Turbo
+      entries do prescribe those operational constraints, so the pure-label
+      null twin does not survive.
+    outcome: survived
+rival_models_still_viable:
+  - "VerificationLane is a procedure type specified by, not a subkind of, WorkUnitSpecification."
+  - "Some lanes are composite collected gates rather than single work specifications."
+evidence:
+  - "po:sha256:19da9053dc578ecea6995d45a9c23ea09f1f36b02e3969bb13b3c08a6a3c981f"
+  - "po:sha256:3e1c6cd48f541482c5471d901e96c829dd47de787108d7ee9cc4fec91966eb97"
+  - "po:sha256:4fc13f1c056d4666ad83f3944408c9437bbcc0eebd583f907ec05449b5730594"
+  - "CQ-001"
+  - "CQ-011"

@@ -1,0 +1,10 @@
+id: po:sha256:09f92238876830de7c153c6bbc3cb0920e6d242635ef6df12129f4b8462b4002
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts
+source_span:
+  start_line: 169
+  end_line: 169
+quote: '"coverage",'
+epistemic_status: quoted_prose

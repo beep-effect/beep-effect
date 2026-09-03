@@ -1,0 +1,74 @@
+target: "otp:pc-token-capacity-policy:001"
+target_sha256: "82c6171ed42af85d2eea7355631b3964bd81993e2b25eb883f72339ea4f53c27"
+chain_sha256: "cdf5e5f74d4fbe8a01c531cf6f1e87e5c6c1654abffcf365fb8c6c7f5fa739ef"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: attacked
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons: {}
+revision_requests:
+  - >-
+    Address clause-is-part-not-kind by replacing the AdmissionPolicy is-a edge
+    with a clause/component relation or folding the capacity rule into the
+    complete policy specification.
+  - >-
+    Address clause-identity-lineage-unobserved and
+    semantic-support-not-necessary with independent policy-clause authority
+    and a Must/Should CQ that actually requires this rule; CQ-010 may ground a
+    revised decision term only if the CQ suite names and consumes it.
+  - >-
+    Address discriminator-true-of-replay-implementation with a fact false of
+    the arithmetic-and-replay-only null world, or leave that null unrejected.
+attacks:
+  - surface: taxonomy
+    rule: taxonomy-rigidity-compatible
+    counterexample: >-
+      Both an immutable policy specification and an immutable clause can be
+      rigid information objects, so rigidity alone does not block the edge.
+    outcome: survived
+  - surface: taxonomy
+    rule: clause-is-part-not-kind
+    counterexample: >-
+      A token-capacity clause says nothing about the parent policy's priority,
+      aging, class-cap, or starvation rules. It can be a proper component of
+      AdmissionPolicy without being an instance of the complete policy class,
+      so no valid subsumption relation has been shown.
+    outcome: landed
+  - surface: identity
+    rule: clause-identity-lineage-unobserved
+    counterexample: >-
+      The same inequality can be embedded in two complete policies with
+      different charge-accounting semantics, and one policy revision can
+      change the inequality without issuing a separately versioned clause.
+      The replay and source expressions do not establish the assumed lineage.
+    outcome: landed
+  - surface: warrant
+    rule: semantic-support-not-necessary
+    counterexample: >-
+      The supported AdmissionPolicy is required by CQ-023 for its starvation
+      bound, not for token capacity. CQ-010 directly compares recorded charge
+      and capacity properties and does not require a TokenCapacityAdmissionRule
+      class, so neither route makes this support term necessary.
+    outcome: landed
+  - surface: null_discriminator
+    rule: discriminator-true-of-replay-implementation
+    counterexample: >-
+      A scheduler implementation can compute Math.min, assign token weights,
+      replay its journal, and report that removing a stale charge makes grants
+      feasible. Every cited fact remains true while no independently governed
+      token-capacity policy-clause individual exists.
+    outcome: landed
+rival_models_still_viable:
+  - "The inequality is only a clause within AdmissionPolicy."
+  - "A request-feasibility situation is the world-side referent."
+  - "The replay artifact records compliance but is not the policy."
+evidence:
+  - "po:sha256:b3ea29a27a4730f094b12522a0d0c1648896c255cf538754d3bb11c7db52764f"
+  - "po:sha256:d0e190e143df1788d957dc00bbdf6faf804b7b76ae3e47e147c558e44f802424"
+  - "po:sha256:ff37ebad0eb0db7d4d93c2868963043b2d76981e6d29939abf14cb4b0e3b4899"
+  - "CQ-010"
+  - "CQ-023"

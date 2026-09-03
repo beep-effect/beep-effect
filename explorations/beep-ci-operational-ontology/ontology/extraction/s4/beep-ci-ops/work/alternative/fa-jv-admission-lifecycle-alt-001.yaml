@@ -1,0 +1,20 @@
+id: fa:jv-admission-lifecycle-alt:001
+hypothesis_ref: dh:jv-admission-lifecycle:001
+identity_card_ref: ic:jv-admission-lifecycle-alt:001
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: false
+rival_models:
+- label: capacity-holding lease relator whose history these timestamps record
+  still_viable: true
+- label: admission journal information object with no occurrence referent
+  still_viable: true
+strongest_counterexample: The cited session journal is itself an information encoding; nothing
+  in the observation distinguishes the dated holding-process from the grant relator or from
+  the journal entry. The models are observationally equivalent on current evidence.
+verdict: analyzed
+needed_evidence: An observation that attributes weight, kind, or waiting time to a grant object
+  that continues across admit/release versus to a process that ends at release, or that treats
+  two journals of one grant as one occurrence.

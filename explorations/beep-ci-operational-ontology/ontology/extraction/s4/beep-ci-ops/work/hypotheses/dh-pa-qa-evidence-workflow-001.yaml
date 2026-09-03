@@ -1,0 +1,22 @@
+id: "dh:pa-qa-evidence-workflow:001"
+observation_refs:
+  - "po:sha256:3bf3cf7f37f4e3e046efb12751c4b9650dd3a2a16a0c99a1ec17563fa551048a"
+cq_warrants: ["CQ-005"]
+proposed_referent:
+  label: "Recorded QA evidence workflow"
+  description: "A possible evidence-production process composed of record, extract, and judge stages."
+representation_status: unresolved
+alternatives:
+  - label: "Verification-evidence production procedure"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "Agent-guide command convention"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The policy quotation gives a workflow shape but does not connect its evidence to an in-scope Yeet or CI verification lane, tree, epoch, or assurance obligation."
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.3, use_for_acceptance: false}

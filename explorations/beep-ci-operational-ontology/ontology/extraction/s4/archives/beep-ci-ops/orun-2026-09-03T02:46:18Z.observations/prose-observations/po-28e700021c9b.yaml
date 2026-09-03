@@ -1,0 +1,10 @@
+id: po:sha256:28e700021c9b4ba707087650a4e39ceed6540863e4d99b02af241b2b0fdbcaf8
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: explorations/beep-ci-operational-ontology/ontology/docs/pre-glossary.csv
+source_span:
+  start_line: 12
+  end_line: 12
+quote: PackageRef,class,CQ-004,"@beep/* workspace package identity"
+epistemic_status: quoted_prose

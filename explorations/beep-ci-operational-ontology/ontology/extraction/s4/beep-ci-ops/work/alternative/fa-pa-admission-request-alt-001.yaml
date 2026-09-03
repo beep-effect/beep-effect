@@ -1,0 +1,20 @@
+id: fa:pa-admission-request-alt:001
+hypothesis_ref: dh:pa-admission-request:001
+identity_card_ref: ic:pa-admission-request-alt:001
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: false
+rival_models:
+- label: requesting relator between an agent/origin and planned work
+  still_viable: true
+- label: scheduler request DTO with no request content
+  still_viable: false
+strongest_counterexample: The projection contract says PendingRequest is derived from journal
+  events and shaped to accept live AdmissionRequest later — exactly a view of an asking, which
+  is compatible with both an information object and a relator encoded by that view.
+verdict: analyzed
+needed_evidence: An observation that the request is reidentified across the live DTO and the
+  pending view as one asking, and whether any property is attributed to a relation (who requests
+  what) beyond the record's fields.

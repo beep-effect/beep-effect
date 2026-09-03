@@ -892,10 +892,7 @@ const replaceSourceLine = (
   replacement: string,
   error: DoctestRewriteError
 ): Effect.Effect<ReadonlyArray<string>, DoctestRewriteError> =>
-  O.match(A.replace(lines, index, replacement), {
-    onNone: () => Effect.fail(error),
-    onSome: Effect.succeed,
-  });
+  Effect.fromOption(A.replace(lines, index, replacement), () => error);
 
 const applyMarkerEdit = (
   file: string,

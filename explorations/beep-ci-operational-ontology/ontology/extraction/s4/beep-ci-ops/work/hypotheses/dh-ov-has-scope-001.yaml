@@ -1,0 +1,31 @@
+id: "dh:ov-has-scope:001"
+observation_refs:
+  - "po:sha256:292a0d656c3996d634bbcc4cde62da942c52bd9a0a3c5d1f9246bf5977066841"
+  - "po:sha256:736ad92a1de7991caa17d905c310e2dac02d5a4d9b7cd3b709adfcabd690e4cc"
+cq_warrants: ["CQ-019", "CQ-020"]
+proposed_referent:
+  label: "schedule-step scope association"
+  description: >-
+    The relation by which a ScheduleStep carries the scope designation that
+    qualifies the scheduled content represented by that step.
+representation_status: domain_referent
+alternatives:
+  - label: "Generic scope relation reused across proposals and scheduled units"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "Projection-schema scope-tag field"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: >-
+    The schema prose assigns a scope tag to each ScheduleStep within an ordered
+    ScheduleProposal, giving the value schedule content beyond the provisional
+    RDF predicate used to carry it.
+  discriminator: >-
+    ScheduleStep is described as carrying a scope tag while ScheduleProposal
+    is described as ordered steps, so the scope value qualifies the scheduled
+    content even if a non-RDF representation carries that value differently.
+epistemic_status: proposed
+confidence: {value: 0.75, use_for_acceptance: false}

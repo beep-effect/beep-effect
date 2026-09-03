@@ -37,6 +37,8 @@ fabricated here.
 | https://opentelemetry.io/docs/specs/semconv/gen-ai/ | Evolving GenAI conventions — pin version, bounded `coding_agent.*` extensions | P2 |
 | https://code.claude.com/docs/en/monitoring-usage | Claude native telemetry separates `tool.blocked_on_user` from execution | P2 |
 | https://code.claude.com/docs/en/hooks | Notification/idle_prompt/permission_prompt hook events; async hooks not deduplicated | P1 |
+| https://docs.ntfy.sh/publish/ | JSON POST publishing, topic secrecy, priorities, and bearer authentication | P1 notifier transport |
+| https://docs.ntfy.sh/subscribe/phone/ | Phone subscription and topic configuration requirements | P1 phone-delivery gate |
 | https://developers.openai.com/codex/app-server/ | Codex app-server v2 request/resolution lifecycles | P2 |
 | https://developers.openai.com/codex/config-reference | Codex `notify` external command | P1 |
 | https://stately.ai/docs/promise-actors, https://stately.ai/docs/persistence | XState restoration restarts invoked work (at-least-once) — the P6 boundary reason | P6 |

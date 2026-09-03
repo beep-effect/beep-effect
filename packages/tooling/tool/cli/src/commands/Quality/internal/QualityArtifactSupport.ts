@@ -281,7 +281,7 @@ export const resolveEntryWithinRoot = Effect.fn("QualityArtifactSupport.resolveE
 ): Effect.fn.Return<O.Option<string>, never, FileSystem.FileSystem> {
   return yield* resolvePathWithinRoot({ root, candidate: entryPath }).pipe(
     Effect.provideService(Path.Path, path),
-    Effect.map(O.some),
+    Effect.asSome,
     Effect.orElseSucceed(O.none<string>)
   );
 });

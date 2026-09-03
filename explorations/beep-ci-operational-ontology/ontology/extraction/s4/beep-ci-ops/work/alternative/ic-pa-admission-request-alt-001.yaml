@@ -1,0 +1,41 @@
+id: ic:pa-admission-request-alt:001
+hypothesis_ref: dh:pa-admission-request:001
+identity:
+  supplies_identity: true
+  identity_criterion: Two admission-request information objects are the same iff they are
+    the same asking-for-admission of the same work by the same origin at the same enqueue
+    instant, carrying the same charge and priority content. PendingRequest views derived from
+    journal events are the same request iff they reconstruct that same asking. Nonce is evidence,
+    never the criterion.
+  reidentification_key:
+  - nonce (evidence)
+  - originKey (evidence)
+  - enqueuedAtMillis (evidence)
+  - kind/priority/weightTokens (evidence of content)
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: one enqueue-content asking about one work item from one origin
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - relator
+  existential_dependencies:
+  - the planned work requested
+  - the origin/agent making the request
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+  - admitted
+  - deferred
+  - withdrawn
+counterexamples:
+- description: A live AdmissionRequest DTO and a PendingRequest projection row can encode
+    the same asking; treating the TypeScript class as the individual would mint a new request
+    per representation.
+- description: If the referent is the requesting relation itself, two encodings of one asking
+    would be one relator; the observations never show a relation independent of the schema/view.
+status: proposed

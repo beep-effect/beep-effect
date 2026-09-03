@@ -1,0 +1,51 @@
+target: "otp:jv-verification-attempt:001"
+target_sha256: "98e0c155302a6a54af6ce041c278c619f2af40b53b7020bf35b290bdca599bd4"
+chain_sha256: "71c29e2cdd57ff3a051f2d29ff7c207ba65fd9d9d815bfb9617c9bcb0837f8a7"
+seat: ontoclean-adversary
+verdict: INDETERMINATE
+needed_evidence: >-
+  A grain contract or joined observations must show which step rows constitute
+  one causally continuous attempt, whether one CLI invocation can contain
+  multiple attempts, and whether recovery can preserve an attempt across an
+  invocation boundary independently of the journal record.
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The proposal asserts no parents, so no is-a edge exists to test and no
+    subsumption relation can decide process versus boundary-event grain.
+revision_requests: []
+attacks:
+  - surface: identity
+    rule: attempt-boundary-underdetermined
+    counterexample: >-
+      One CLI invocation can start a failed attempt and then a retry, while a
+      recovered attempt can continue across a process restart. Branch, tree,
+      mode, timestamps, and even invocation continuity therefore do not decide
+      whether either pair is one verification process.
+    outcome: landed
+  - surface: warrant
+    rule: direct-cq-warrant
+    counterexample: >-
+      Without VerificationAttempt, CQ-022 cannot restrict a committed failure
+      and running executions to the same attempt; the CQ directly requires the
+      term even though its operational identity boundary remains unsettled.
+    outcome: survived
+  - surface: null_discriminator
+    rule: discriminator-true-of-journal-dto
+    counterexample: >-
+      A pure attempt-journal DTO can carry attemptId, start and end instants,
+      elapsedMs, and an attempt-started tag about a run while the source symbol
+      still denotes only the record rather than the unfolding process.
+    outcome: landed
+rival_models_still_viable:
+  - "The attempt journal information object."
+  - "An atomic boundary event rather than a process with step parts."
+  - "A CLI invocation grouping whose boundary differs from attempt identity."
+evidence:
+  - "so:sha256:1081a3f10108fba5826e74ade5a53a90ae027969e1857cbfe67f1ef919a6931f"
+  - "so:sha256:c509f4a98184260243c9b13f2cc0d46bbe7783f07518144c48d9e58d47617b73"
+  - "CQ-022"

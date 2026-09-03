@@ -38,15 +38,11 @@ const selectEngine = (
         (capability === undefined || engine.descriptor.supportsCapability(capability)) &&
         (format === undefined || engine.descriptor.supportsFormat(format))
     ),
-    O.match({
-      onNone: () =>
-        Effect.fail(
-          FileProcessingOperationError.fromReason("engine-unavailable", {
-            message: `No file-processing engine is available for preference "${preferredEngine}".`,
-          })
-        ),
-      onSome: Effect.succeed,
-    })
+    Effect.fromOption(() =>
+      FileProcessingOperationError.fromReason("engine-unavailable", {
+        message: `No file-processing engine is available for preference "${preferredEngine}".`,
+      })
+    )
   );
 
 const detectWithAvailableEngine = Effect.fn("FileProcessingService.detectWithAvailableEngine")(function* (

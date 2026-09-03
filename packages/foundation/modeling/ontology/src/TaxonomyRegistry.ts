@@ -9,7 +9,6 @@ import { $OntologyId } from "@beep/identity/packages";
 import { IRIReference } from "@beep/rdf";
 import { Effect } from "effect";
 import * as A from "effect/Array";
-import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { ConceptAlignment, DocumentClass, FilingRootKind, FilingSegment } from "./SemanticFoundation.models.ts";
@@ -163,12 +162,7 @@ export const runLibrarianLoop = Effect.fn("TaxonomyRegistry.runLibrarianLoop")(f
     P.Struct({
       iri: IRIReference.equivalence(input.conceptIri),
     })
-  ).pipe(
-    O.match({
-      onNone: () => Effect.fail(TaxonomyConceptNotFound.make({ conceptIri: input.conceptIri })),
-      onSome: Effect.succeed,
-    })
-  );
+  ).pipe(Effect.fromOption(() => TaxonomyConceptNotFound.make({ conceptIri: input.conceptIri })));
   yield* Effect.filterOrFail(
     Effect.succeed(concept),
     P.Struct({ documentClasses: A.contains(input.documentClass) }),

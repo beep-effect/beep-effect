@@ -1,0 +1,58 @@
+target: "otp:pb-planned-lane-status:001"
+target_sha256: "7dbceb015e0148a54d17998d77b4345d772dd8b760fd04ef9d72789156ae51c2"
+chain_sha256: "b1fabbc23c0399f4993c78fe78a263be738c603609af43d24ecefeae8ac42544"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: "The proposal asserts no candidate is-a edge."
+revision_requests:
+  - >-
+    Address record-issuance-identity-unobserved by providing retained record
+    issuance, parent-attempt, and correction lineage evidence, or model the
+    schema value only as a carrier of an existing result assertion.
+  - >-
+    Address semantic-support-not-necessary and discriminator-true-of-dto by
+    adding a decision CQ that consumes a VerificationResultArtifact and a
+    discriminator false of a transient in-memory status DTO.
+attacks:
+  - surface: identity
+    rule: record-issuance-identity-unobserved
+    counterexample: >-
+      Two equal in-memory status values for the same planned lane can be
+      allocated twice, copied, or reconstructed without any observed issuance
+      or correction lineage. The cited fields do not decide whether those are
+      one information content assertion, two record tokens, or no retained
+      artifact at all.
+    outcome: landed
+  - surface: warrant
+    rule: semantic-support-not-necessary
+    counterexample: >-
+      CQ-022 and CQ-025 attach execution state, cancel class, duration, and
+      estimate directly to WorkUnitExecution. Both queries remain answerable
+      without a separate planned-lane status record or
+      VerificationResultArtifact class.
+    outcome: landed
+  - surface: null_discriminator
+    rule: discriminator-true-of-dto
+    counterexample: >-
+      A transient DTO can be explicitly about one planned lane, carry its
+      execution status, repair command, id, and optional duration, and never
+      acquire independent persistence or issuance identity. All claimed facts
+      are true in that implementation-only twin.
+    outcome: landed
+rival_models_still_viable:
+  - "The source denotes only a transient verdict value object."
+  - "The value carries an information assertion but is not a separately issued artifact."
+evidence:
+  - "po:sha256:59e3f07184abaf7f8075745f636d111ccdf14c2c058c5b08adb59b9745033ac0"
+  - "po:sha256:900957ece232a7fe12a98b7a2894aff6e0ab77fdbaaf5e453e16b17977e5dec6"
+  - "po:sha256:960216354d31160a6fac7280f6375dc8731cfd58c667bcb4c4bcdfde75887792"
+  - "po:sha256:97d6383547ad97c34937c34179413d35651dcf44fed758f70e6de129e163901c"
+  - "CQ-022"
+  - "CQ-025"

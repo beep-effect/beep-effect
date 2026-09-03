@@ -507,11 +507,9 @@ const makeService = (runner: OpenclawCliRunner): OpenclawCliShape => {
       return yield* exitFailure(ctx.binaryPath, "--version", result, O.some(stderrDiagnostics(result)));
     }
 
-    return yield* O.match(OpenclawVersionInfo.fromVersionOutput(result.stdout), {
-      onNone: () =>
-        Effect.fail(parseFailure(ctx.binaryPath, "--version", result.stdout)("Unrecognized version output line.")),
-      onSome: Effect.succeed,
-    });
+    return yield* Effect.fromOption(OpenclawVersionInfo.fromVersionOutput(result.stdout), () =>
+      parseFailure(ctx.binaryPath, "--version", result.stdout)("Unrecognized version output line.")
+    );
   });
 
   const configValidate = Effect.fn("OpenclawCli.configValidate")(function* (

@@ -70,6 +70,7 @@ FIXTURES = [
     ("must-fail/cq019-scope-gap.ttl", "cq-019", "rows_ge_1_all_bound"),
     ("must-fail/cq019-schedule-trust.ttl", "cq-019", "rows_ge_1_all_bound"),
     ("must-fail/cq019-derived-scope-gap.ttl", "cq-019", "rows_ge_1_all_bound"),
+    ("must-fail/cq019-step-scope-gap.ttl", "cq-019", "rows_ge_1_all_bound"),
     ("must-fail/cq019-dangling-target.ttl", "cq-019", "rows_ge_1_all_bound"),
     ("must-fail/cq022-cross-attempt.ttl", "cq-022", "rows_eq_0"),
     ("must-fail/cq023-starved-request.ttl", "cq-023", "rows_ge_1_all_bound"),

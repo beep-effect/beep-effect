@@ -1,0 +1,31 @@
+id: ic:pb-schedule-projection-specification-alt:001
+hypothesis_ref: dh:pb-schedule-projection-specification:001
+identity:
+  supplies_identity: true
+  identity_criterion: Two schedule-projection specifications are the same iff they prescribe
+    the same deterministic admission-order projection, the same frozen-input set, the same
+    provisional schedule vocabulary, the same differential-replay gate, and the same non-goals.
+    Sitting-1 rulings and the inputs table are parts of that specification, not separate identities.
+  reidentification_key:
+  - s7-projection-contract.md inputs/rulings/non-goals (evidence)
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: one versioned prescription of projection inputs, outputs, gates, and non-goals
+  dependence: none
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - process
+  existential_dependencies: []
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+- description: A projected grant order on a particular journal is an execution output; identifying
+    it with the specification would destroy the spec after one replay.
+- description: Non-goals (no lane-DAG planner, no scheduler replacement) are part of the spec's
+    content; treating them as absent features of the world would be policy-as-fact.
+status: proposed

@@ -1,0 +1,10 @@
+id: po:sha256:64a23849292414d4cf7e196f646636a3d3a1fabdedb567a2b594687978a7dd51
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: turbo.json
+source_span:
+  start_line: 6
+  end_line: 6
+quote: '"globalConfiguration": true'
+epistemic_status: quoted_prose

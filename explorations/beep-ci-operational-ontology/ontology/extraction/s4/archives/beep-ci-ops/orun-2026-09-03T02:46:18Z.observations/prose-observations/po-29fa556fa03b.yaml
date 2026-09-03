@@ -1,0 +1,10 @@
+id: po:sha256:29fa556fa03b7070d567678f785682c88a97dfe828fa6c517223e3961847c58a
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: packages/tooling/tool/cli/src/commands/Quality/ChangesetStatus.ts
+source_span:
+  start_line: 154
+  end_line: 157
+quote: LiteralKit(["lab-exempt", "enforced"])
+epistemic_status: quoted_prose

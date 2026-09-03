@@ -1,0 +1,28 @@
+id: "dh:pc-environment-config-tokens:001"
+observation_refs:
+  - "po:sha256:bfd3354cf7bb7617d540ac6a8e7d8e93b8f73350c7f7c95e890bd915cc636b42"
+  - "po:sha256:c32bb460dc10035835151f726ba8f910ba4a82076b2b5f94060b54b4d26df76b"
+cq_warrants: []
+proposed_referent:
+  label: "Turbo environment-configuration tokens"
+  description: >-
+    Environment-variable names listed by the Turbo configuration, possibly as
+    parts of a task input or hash surface.
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "environment-dependent hash-surface components"
+    representation_status: unresolved
+    plausibility: viable
+  - label: "runtime environment qualities"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: >-
+    The quotations list variable names without the containing key's semantics,
+    values, affected tasks, or observed invalidation behavior. Treating them as
+    configuration tokens requires no ontology-level referent.
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.82, use_for_acceptance: false}

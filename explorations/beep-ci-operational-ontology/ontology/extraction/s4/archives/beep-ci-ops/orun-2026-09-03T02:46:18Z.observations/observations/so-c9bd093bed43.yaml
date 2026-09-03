@@ -1,0 +1,25 @@
+id: "so:sha256:c9bd093bed43447337e1bf9a5abfaf8f1cf53db5521e70d9c3bb15e28b011161"
+schema_version: 1
+repository:
+  commit: "341cfef8b6e80d49f6cef894e9eecd5337f70e8f"
+  path: "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run2-fleet/attempts/beep-effect12/feat_yeet-until-event-6a35ad681e4e/attempts.properties"
+source_span:
+  start_line: 1
+  end_line: 2626
+  content_sha256: "1ce1390cf5951bd1c1c65d2d928ba83db4d5d88216948c52516e1cc71081da81"
+extractor:
+  id: "adapter-journal"
+  version: "1.0.0"
+  parser: "python-stdlib-properties"
+  script: "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal.py"
+symbol:
+  qualified_name: "yeet-attempt-journal"
+  lexical_name: "yeet-attempt-journal"
+  syntactic_kind: "properties_projection"
+observed_facts:
+  - predicate: "config_key_value"
+    object: "marker=yeet-staged-only/feat_yeet-until-event-6a35ad681e4e/2026-08-27T10:14:49.577Z"
+  - predicate: "config_key_value"
+    object: "stashSha=9e2fc98a0874c988365342b60dcd9bcde26cac75"
+source_excerpt: "marker=yeet-staged-only/feat_yeet-until-event-6a35ad681e4e/2026-08-27T10:14:49.577Z"
+epistemic_status: "parser_derived"

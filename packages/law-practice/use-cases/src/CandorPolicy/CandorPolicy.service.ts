@@ -126,10 +126,10 @@ const coverageReason = Effect.fn("CandorPolicy.coverageReason")(function* (
   const resolver = yield* SourceTextResolver;
   const resolved = yield* resolver
     .resolve(ResolveSourceTextRequest.make({ identity: head.grounding.source }))
-    .pipe(Effect.map(O.some), Effect.orElseSucceed(O.none));
+    .pipe(Effect.asSome, Effect.orElseSucceed(O.none));
 
   return yield* O.match(resolved, {
-    onNone: () => Effect.succeed(O.some<UncoveredReason>("source-unresolved")),
+    onNone: () => Effect.succeedSome<UncoveredReason>("source-unresolved"),
     onSome: (source) =>
       verifyTextAnchor(
         VerifyTextAnchorInput.make({
@@ -212,7 +212,7 @@ const evaluateGroup = Effect.fn("CandorPolicy.evaluateGroup")(function* (
   }
 
   const reason = yield* O.match(A.get(heads, 0), {
-    onNone: () => Effect.succeed(O.some<UncoveredReason>("ambiguous-lineage")),
+    onNone: () => Effect.succeedSome<UncoveredReason>("ambiguous-lineage"),
     onSome: (head) => coverageReason(head, dispositions),
   });
 

@@ -183,6 +183,8 @@ export const selectSchemaOf = (schema: Field.AnySchema): Top => {
   return schema;
 };
 
+type Classified = { readonly column: PgColumn.Spec; readonly nullable: boolean };
+
 /**
  * Derive `{ column, nullable }` for a field input from its encoded AST.
  * Explicit metadata should be consulted first; this is the bare-schema path
@@ -192,16 +194,19 @@ export const selectSchemaOf = (schema: Field.AnySchema): Top => {
  * @category getters
  * @since 0.0.0
  */
-export const classify = (
-  schema: Field.AnySchema,
-  fieldName: string
-): { readonly column: PgColumn.Spec; readonly nullable: boolean } =>
-  classifyCore(schema, fieldName, {
-    selectSchemaOf,
-    entityTableName: (select) => (isEntityIdLike(select) ? someOption(select.tableName) : none()),
-    entityColumn: (tableName) => PgColumn.Integer.make({ ident: `entityId<"${tableName}">` }),
-    fromSchemaAST: PgColumn.Spec.fromSchemaAST,
-  });
+export const classify: {
+  (fieldName: string): (schema: Field.AnySchema) => Classified;
+  (schema: Field.AnySchema, fieldName: string): Classified;
+} = /* @__PURE__ */ dual(
+  2,
+  (schema: Field.AnySchema, fieldName: string): Classified =>
+    classifyCore(schema, fieldName, {
+      selectSchemaOf,
+      entityTableName: (select) => (isEntityIdLike(select) ? someOption(select.tableName) : none()),
+      entityColumn: (tableName) => PgColumn.Integer.make({ ident: `entityId<"${tableName}">` }),
+      fromSchemaAST: PgColumn.Spec.fromSchemaAST,
+    })
+);
 
 const fail = (fieldName: string, astTag: string, message: string): never => {
   throw DeriveColumnError.make({ message, fieldName, astTag });
@@ -234,7 +239,10 @@ const nonNullEncodedAST = (schema: Field.AnySchema): AST => {
  * @category getters
  * @since 0.0.0
  */
-export const arrayElementAST = (schema: Field.AnySchema, dimensions: Exclude<PgColumn.ArrayDimension, 0>): AST => {
+export const arrayElementAST: {
+  (dimensions: Exclude<PgColumn.ArrayDimension, 0>): (schema: Field.AnySchema) => AST;
+  (schema: Field.AnySchema, dimensions: Exclude<PgColumn.ArrayDimension, 0>): AST;
+} = /* @__PURE__ */ dual(2, (schema: Field.AnySchema, dimensions: Exclude<PgColumn.ArrayDimension, 0>): AST => {
   const current = reduce(range(1, dimensions), nonNullEncodedAST(schema), (node) => {
     if (isTagged(node, "Arrays")) {
       if (isReadonlyArrayNonEmpty(node.elements) || node.rest.length !== 1) {
@@ -250,7 +258,7 @@ export const arrayElementAST = (schema: Field.AnySchema, dimensions: Exclude<PgC
     fail("(unknown)", current._tag, `pg.array encoded depth exceeds the declared depth ${dimensions}.`);
   }
   return current;
-};
+});
 
 /**
  * Return the non-null encoded AST used by a scalar element declaration.
@@ -316,7 +324,10 @@ const carrierTagFromAST = (node: AST): PgColumn.CarrierTag => {
  * @category utilities
  * @since 0.0.0
  */
-export const carrier = (schema: Field.AnySchema, dimensions: PgColumn.ArrayDimension): PgColumn.Carrier => {
+export const carrier: {
+  (dimensions: PgColumn.ArrayDimension): (schema: Field.AnySchema) => PgColumn.Carrier;
+  (schema: Field.AnySchema, dimensions: PgColumn.ArrayDimension): PgColumn.Carrier;
+} = /* @__PURE__ */ dual(2, (schema: Field.AnySchema, dimensions: PgColumn.ArrayDimension): PgColumn.Carrier => {
   const encoded = encodedAST(schema);
   const peelArray = (node: AST): AST => {
     const members = filter(flattenEncoded(node, "(unknown)"), not(isTagged("Null")));
@@ -344,7 +355,7 @@ export const carrier = (schema: Field.AnySchema, dimensions: PgColumn.ArrayDimen
     }
   }
   return { tag, dimensions };
-};
+});
 
 /**
  * Collect a finite non-empty union of encoded string literals.
@@ -375,7 +386,7 @@ const maxLengthFromCheck = (check: Check<unknown>): ReadonlyArray<number> => {
 const collectMaxLengths: {
   (visited: ReadonlyArray<AST>): (node: AST) => ReadonlyArray<number>;
   (node: AST, visited: ReadonlyArray<AST>): ReadonlyArray<number>;
-} = dual(2, (node: AST, visited: ReadonlyArray<AST>): ReadonlyArray<number> => {
+} = /* @__PURE__ */ dual(2, (node: AST, visited: ReadonlyArray<AST>): ReadonlyArray<number> => {
   if (some(visited, equals(node))) return empty();
   const nextVisited = append(visited, node);
   const collectNested = collectMaxLengths(nextVisited);
@@ -422,7 +433,7 @@ const exactLengthFromCheck = (check: Check<unknown>): ReadonlyArray<number> => {
 const collectExactLengths: {
   (visited: ReadonlyArray<AST>): (node: AST) => ReadonlyArray<number>;
   (node: AST, visited: ReadonlyArray<AST>): ReadonlyArray<number>;
-} = dual(2, (node: AST, visited: ReadonlyArray<AST>): ReadonlyArray<number> => {
+} = /* @__PURE__ */ dual(2, (node: AST, visited: ReadonlyArray<AST>): ReadonlyArray<number> => {
   if (some(visited, equals(node))) return empty();
   const nextVisited = append(visited, node);
   const collectNested = collectExactLengths(nextVisited);

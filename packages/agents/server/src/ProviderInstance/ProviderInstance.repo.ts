@@ -131,7 +131,7 @@ export const makeProviderInstanceRepository = Effect.fn("Agents.ProviderInstance
       return yield* pipe(
         A.head(rows),
         O.map(fromProviderInstanceRow),
-        O.match({ onNone: () => Effect.fail(notFound(id)), onSome: Effect.succeed })
+        Effect.fromOption(() => notFound(id))
       );
     }),
     list: db
@@ -165,7 +165,7 @@ export const makeProviderInstanceRepository = Effect.fn("Agents.ProviderInstance
       return yield* pipe(
         A.head(rows),
         O.map(fromProviderInstanceRow),
-        O.match({ onNone: () => Effect.fail(notFound(instance.id)), onSome: Effect.succeed })
+        Effect.fromOption(() => notFound(instance.id))
       );
     }),
   });

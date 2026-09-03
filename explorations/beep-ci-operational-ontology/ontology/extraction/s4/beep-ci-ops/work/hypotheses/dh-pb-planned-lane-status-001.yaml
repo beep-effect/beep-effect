@@ -1,0 +1,29 @@
+id: "dh:pb-planned-lane-status:001"
+observation_refs:
+  - "po:sha256:59e3f07184abaf7f8075745f636d111ccdf14c2c058c5b08adb59b9745033ac0"
+  - "po:sha256:900957ece232a7fe12a98b7a2894aff6e0ab77fdbaaf5e453e16b17977e5dec6"
+  - "po:sha256:960216354d31160a6fac7280f6375dc8731cfd58c667bcb4c4bcdfde75887792"
+  - "po:sha256:97d6383547ad97c34937c34179413d35651dcf44fed758f70e6de129e163901c"
+cq_warrants:
+  - "CQ-022"
+  - "CQ-025"
+proposed_referent:
+  label: "planned-lane execution-status record"
+  description: "An information object about one planned verification lane that records its execution status, repair command, identifier, and optional duration."
+representation_status: information_artifact
+alternatives:
+  - label: "in-memory verdict data-transfer object"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+  - label: "the lane execution occurrence itself"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: "The strongest quote explicitly characterizes a unit that is about one planned lane and carries its execution status and repair command; the companion quotes add a duration measure and clarify that the status is of an execution. This is representational content about an operational occurrence rather than merely a convenient source-code grouping."
+  discriminator: "The quoted unit is explicitly about one planned lane's execution status and repair command and can carry a finite duration; if it were only incidental schema scaffolding, it would not assert those operational facts about a particular planned-lane execution."
+epistemic_status: proposed
+confidence:
+  value: 0.78
+  use_for_acceptance: false

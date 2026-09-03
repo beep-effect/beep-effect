@@ -1,0 +1,10 @@
+id: po:sha256:8356b294d9bd88ca88837d06b1f035ba7775026ddc09723dca888fa03e0341ae
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts
+source_span:
+  start_line: 331
+  end_line: 331
+quote: progressSeconds
+epistemic_status: quoted_prose

@@ -1,0 +1,22 @@
+id: fa:pb-admission-priority-class-alt:001
+hypothesis_ref: dh:pb-admission-priority-class:001
+identity_card_ref: ic:pb-admission-priority-class-alt:001
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: false
+rival_models:
+- label: role of a request relative to admission ordering policy
+  still_viable: true
+- label: rigid subkind of admission request
+  still_viable: true
+- label: interchangeable handler literals with no ordering consequence
+  still_viable: false
+strongest_counterexample: Publish-precedes-verify is a policy consequence, which a quality,
+  a role, or a subkind can all carry. No observation shows a request changing class, so anti-rigid
+  role/phase is unsupported; quality versus subkind remain open.
+verdict: analyzed
+needed_evidence: An observation that a live request is reclassified from verify to publish
+  (or the reverse), which would force anti-rigid role/phase, or that class is used as a sortal
+  for counting requests.

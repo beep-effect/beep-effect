@@ -11,4 +11,7 @@ export {
   renderKnowledgeSemanticDeltaHumanReport,
 } from "../commands/Knowledge/Knowledge.command.ts";
 export { KnowledgeCommandSurface } from "../commands/Knowledge/Knowledge.command-surface.ts";
-export { makeKnowledgeArchiveOracle } from "../commands/Knowledge/Knowledge.service.ts";
+export {
+  gitRefSpanNamesForTesting,
+  makeKnowledgeArchiveOracle,
+} from "../commands/Knowledge/Knowledge.service.ts";

@@ -165,12 +165,12 @@ export const nextCursor = <E>(options: {
   readonly onMissingCursor: (label: string) => E;
 }): Effect.Effect<O.Option<string>, E> =>
   !options.pageInfo.hasNextPage
-    ? Effect.succeed(O.none())
+    ? Effect.succeedNone
     : pipe(
         O.fromNullishOr(options.pageInfo.endCursor),
         O.match({
           onNone: () => Effect.fail(options.onMissingCursor(options.label)),
-          onSome: (cursor) => Effect.succeed(O.some(cursor)),
+          onSome: (cursor) => Effect.succeedSome(cursor),
         })
       );
 

@@ -1,0 +1,10 @@
+id: po:sha256:5e054a0ca76202b43a8a8e26efa82a965ed2998450b6e19ea3b1e86baf294141
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: packages/tooling/tool/docgen/src/ProofManifest.ts
+source_span:
+  start_line: 37
+  end_line: 39
+quote: LiteralKit(["docgen-proof-manifest"])
+epistemic_status: quoted_prose

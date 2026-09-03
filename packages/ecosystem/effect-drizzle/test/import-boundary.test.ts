@@ -1,6 +1,6 @@
 /** Executable proof of the ecosystem polarity contract and dialect import DAG. */
 import { describe, expect, it } from "@effect/vitest";
-import { all, fnUntraced, gen, map, tryPromise } from "effect/Effect";
+import { fnUntraced, forEach, gen, map, tryPromise } from "effect/Effect";
 import { decodeUnknownEffect, Record as RecordSchema, String, Unknown } from "effect/Schema";
 import {
   createSourceFile,
@@ -75,12 +75,12 @@ const moduleSpecifiers = (file: string, source: string): ReadonlyArray<ModuleEdg
 const sourceEdges = (directoryUrl: URL) =>
   gen(function* () {
     const files = [...new Bun.Glob("**/*.ts").scanSync({ cwd: directoryUrl.pathname })];
-    return yield* all(
-      files.map((file) =>
+    return yield* forEach(
+      files,
+      (file) =>
         tryPromise(() => Bun.file(new URL(file, directoryUrl)).text()).pipe(
           map((source) => moduleSpecifiers(file, source))
-        )
-      ),
+        ),
       { concurrency: "unbounded" }
     ).pipe(map((edges) => edges.flat()));
   });

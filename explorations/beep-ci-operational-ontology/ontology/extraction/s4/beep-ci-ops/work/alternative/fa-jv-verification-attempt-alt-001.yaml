@@ -1,0 +1,20 @@
+id: fa:jv-verification-attempt-alt:001
+hypothesis_ref: dh:jv-verification-attempt:001
+identity_card_ref: ic:jv-verification-attempt-alt:001
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+- label: verification-attempt journal entry (information object only)
+  still_viable: true
+- label: atomic event without internal step structure
+  still_viable: true
+strongest_counterexample: The same properties projection is tagged attempt-started and also
+  lists a step id, step status, and failed step; without a declared grain, process versus
+  journal-entry versus 'the step' remain observationally mixed.
+verdict: analyzed
+needed_evidence: An observation that an attempt is reidentified across step rows as one unfolding,
+  or that the journal entry is the only object ever cited, plus a clean separation of attempt-level
+  versus step-level fields.

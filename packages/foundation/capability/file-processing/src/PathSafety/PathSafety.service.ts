@@ -128,7 +128,7 @@ const canonicalizeExisting: (
   absolute: string
 ) => Effect.Effect<string, PlatformError> = Effect.fnUntraced(function* (fs, path, absolute) {
   const tryResolve = (target: string): Effect.Effect<O.Option<string>, never> =>
-    fs.realPath(target).pipe(Effect.map(O.some), Effect.orElseSucceed(O.none<string>));
+    fs.realPath(target).pipe(Effect.asSome, Effect.orElseSucceed(O.none<string>));
 
   let current = absolute;
   let suffix: ReadonlyArray<string> = A.empty<string>();

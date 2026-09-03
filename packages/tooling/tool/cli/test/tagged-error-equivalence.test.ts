@@ -32,6 +32,7 @@ import {
   KnowledgeProbeBootError,
 } from "@beep/repo-cli/commands/Knowledge/Knowledge.errors";
 import {
+  EffectImportRulesConfigurationError,
   EffectImportRulesPersistenceError,
   NoNativeRuntimeRulesExecutionError,
   TerseEffectRulesPersistenceError,
@@ -564,6 +565,19 @@ describe("repo-cli tagged-error declared equivalence", () => {
     });
 
     expectDeclaredEquivalence(EffectImportRulesPersistenceError, first, second, different);
+  });
+  it("compares EffectImportRulesConfigurationError by declared fields", () => {
+    const first = EffectImportRulesConfigurationError.make({
+      message: "same",
+    });
+    const second = EffectImportRulesConfigurationError.make({
+      message: "same",
+    });
+    const different = EffectImportRulesConfigurationError.make({
+      message: "different",
+    });
+
+    expectDeclaredEquivalence(EffectImportRulesConfigurationError, first, second, different);
   });
   it("compares NoNativeRuntimeRulesExecutionError by declared fields", () => {
     const first = NoNativeRuntimeRulesExecutionError.make({

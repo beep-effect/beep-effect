@@ -1,0 +1,30 @@
+id: "dh:pc-attempt-identifier-field:001"
+observation_refs:
+  - "po:sha256:f075200cfe4f55412deeeaf7fae01297c0807a1b5870fc2b772679fb1961844d"
+  - "po:sha256:ff49d92348bf8cc96be9e54cd155dc636c0a5c5bfa32c51ba01ec1b0b3922c14"
+cq_warrants:
+  - "CQ-007"
+  - "CQ-022"
+proposed_referent:
+  label: "attempt-identifier record field"
+  description: >-
+    Repeated journal-schema fields whose spelling may link records concerning
+    the same verification attempt.
+representation_status: lexical_alias
+alternatives:
+  - label: "UUID serialization fields"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+  - label: "identifier carried by verification-attempt information records"
+    representation_status: information_artifact
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: >-
+    Repetition of an attemptId UUID field in two schema spans does not supply an
+    attempt occurrence or an identity criterion for attempts. A shared foreign
+    key or serialization convention remains a complete interpretation.
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.71, use_for_acceptance: false}

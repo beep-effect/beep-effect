@@ -334,7 +334,7 @@ const makeService = Effect.fnUntraced(function* () {
       )
     );
     return yield* decodeCollectorHandleJson(raw).pipe(
-      Effect.map(O.some),
+      Effect.asSome,
       Effect.mapError((cause) =>
         QaCaptureError.fromUnknown("sessionStore", "collector handle failed schema decoding", {
           cause,
