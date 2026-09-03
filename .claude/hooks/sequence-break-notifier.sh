@@ -24,6 +24,14 @@ target="${5:-}"
 tool_name="${6:-}"
 notifier_rev="${7:-}"
 
+# Capture phone configuration once, then remove its exported names before any
+# external command or desktop transport can inherit them. The worker-scoped
+# copies remain available to every escalation stage without being exported.
+ntfy_base_url="${BEEP_SEQUENCE_BREAK_NTFY_BASE_URL:-https://ntfy.sh}"
+ntfy_topic="${BEEP_SEQUENCE_BREAK_NTFY_TOPIC:-}"
+ntfy_token="${BEEP_SEQUENCE_BREAK_NTFY_TOKEN:-}"
+unset BEEP_SEQUENCE_BREAK_NTFY_BASE_URL BEEP_SEQUENCE_BREAK_NTFY_TOPIC BEEP_SEQUENCE_BREAK_NTFY_TOKEN
+
 BEEP_AGENT_EVIDENCE_ROOT="${BEEP_AGENT_EVIDENCE_ROOT:-${XDG_STATE_HOME:-${HOME:-/tmp}/.local/state}/beep/agent-evidence}"
 disarm_sentinel="${BEEP_HOOK_PULSE_DISARM_SENTINEL:-${BEEP_AGENT_EVIDENCE_ROOT}/hook-pulse.disarmed}"
 
@@ -207,7 +215,6 @@ bracket_status() {
     | LC_ALL=C sort -t $'\t' -k1,1 -k2,2n \
     | gawk -F '\t' -v targetTs="${request_ts}" -v targetTool="${tool_name}" '
         function key2(a,b) { return a SUBSEP b }
-        function key3(a,b,c) { return a SUBSEP b SUBSEP c }
         {
           ts=$1; event=$3; tool=$4; toolUseId=$5
           if (event == "PreToolUse" && tool != "" && toolUseId != "") {
@@ -293,8 +300,37 @@ case "${storm_seconds}" in "" | *[!0-9]*) storm_seconds=900 ;; esac
 current_ms="$(now_epoch_ms)" || current_ms="${request_epoch_ms}"
 expires_ms=0
 if [ -f "${damping_state}" ]; then
-  expires_ms="$(jq -r '.expiresEpochMs // 0' "${damping_state}" 2>/dev/null)"
-  case "${expires_ms}" in "" | *[!0-9]*) expires_ms=0 ;; esac
+  expires_ms="$(
+    jq -er \
+      --arg sessionId "${session_id}" \
+      --arg target "${target}" \
+      --arg notifierRev "${notifier_rev}" '
+        select(
+          .schemaVersion == "sequence-break-damping/v1"
+          and .sessionId == $sessionId
+          and .target == $target
+          and .notifierRev == $notifierRev
+          and (.claimedEpochMs | type) == "number"
+          and .claimedEpochMs >= 0
+          and (.claimedEpochMs | floor) == .claimedEpochMs
+          and (.expiresEpochMs | type) == "number"
+          and .expiresEpochMs >= .claimedEpochMs
+          and (.expiresEpochMs | floor) == .expiresEpochMs
+        )
+        | .expiresEpochMs
+      ' "${damping_state}" 2>/dev/null
+  )" || {
+    flock -u 9 || true
+    append_pair_skipped initial coordination-unavailable
+    exit 0
+  }
+  case "${expires_ms}" in
+    "" | *[!0-9]*)
+      flock -u 9 || true
+      append_pair_skipped initial coordination-unavailable
+      exit 0
+      ;;
+  esac
 fi
 if [ "${current_ms}" -lt "${expires_ms}" ]; then
   flock -u 9 || true
@@ -411,15 +447,10 @@ deliver_desktop() {
 deliver_ntfy() {
   local stage="${1}"
   local measured_age="${2}"
-  local base_url="${BEEP_SEQUENCE_BREAK_NTFY_BASE_URL:-https://ntfy.sh}"
-  local topic="${BEEP_SEQUENCE_BREAK_NTFY_TOPIC:-}"
-  local token="${BEEP_SEQUENCE_BREAK_NTFY_TOKEN:-}"
+  local base_url="${ntfy_base_url}"
+  local topic="${ntfy_topic}"
+  local token="${ntfy_token}"
   local title body priority exit_code
-
-  # Keep secret-bearing configuration out of every child process. The local
-  # copies stay in this worker only; curl receives the topic over JSON stdin and
-  # an optional bearer header over an inherited file descriptor.
-  unset BEEP_SEQUENCE_BREAK_NTFY_TOPIC BEEP_SEQUENCE_BREAK_NTFY_TOKEN
 
   case "${topic}" in "" | *[!A-Za-z0-9_-]*)
     append_delivery ntfy "${stage}" skipped transport-unconfigured "${measured_age}"
@@ -462,6 +493,10 @@ deliver_ntfy() {
     0) ;;
     75)
       append_delivery ntfy "${stage}" skipped circuit-open "${measured_age}"
+      return 0
+      ;;
+    76)
+      append_delivery ntfy "${stage}" skipped coordination-unavailable "${measured_age}"
       return 0
       ;;
     28)

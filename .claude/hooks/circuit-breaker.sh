@@ -2,6 +2,8 @@
 # Shared machine-wide breaker for repeated op, gh, and network probes. The
 # command still owns its stdout/stderr and exit code; the breaker ledger retains
 # only a bounded probe class and tagged outcome, never command content.
+# Exit 75 means a valid open cooldown skipped the command; exit 76 means shared
+# state could not be coordinated or validated. Callers must not conflate them.
 
 set -uo pipefail
 umask 077
@@ -15,6 +17,7 @@ event_dir="${state_root}/events"
 open_dir="${state_root}/open"
 breaker_rev="${BEEP_CIRCUIT_BREAKER_REV:-shared-cooldown-1}"
 disarm_sentinel="${BEEP_HOOK_PULSE_DISARM_SENTINEL:-${BEEP_AGENT_EVIDENCE_ROOT}/hook-pulse.disarmed}"
+coordination_exit_code=76
 
 case "${breaker_rev}" in
   "" | *[!A-Za-z0-9_.:-]*) exit 64 ;;
@@ -180,18 +183,18 @@ run_guarded() {
 
   exec 9>>"${lock_path}" || {
     append_event "${probe}" "${caller}" coordination-skipped
-    return 75
+    return "${coordination_exit_code}"
   }
   if ! flock -w 1 9; then
     append_event "${probe}" "${caller}" coordination-skipped
-    return 75
+    return "${coordination_exit_code}"
   fi
 
   if [ -f "${state_file}" ]; then
     state="$(read_valid_state "${state_file}" "${probe}")" || {
       append_event "${probe}" "${caller}" coordination-skipped
       flock -u 9 || true
-      return 75
+      return "${coordination_exit_code}"
     }
     retry_after_ms="$(jq -r '.retryAfterEpochMs' <<<"${state}")"
     current_ms="$(now_epoch_ms)" || current_ms=0
@@ -218,7 +221,7 @@ run_guarded() {
   if ! write_open_state "${state_file}" "${probe}" "${tripped_ms}" "${retry_after_ms}" "${exit_code}"; then
     append_event "${probe}" "${caller}" coordination-skipped
     flock -u 9 || true
-    return 75
+    return "${coordination_exit_code}"
   fi
   append_event "${probe}" "${caller}" tripped "${exit_code}" "${retry_after_ms}"
   flock -u 9 || true
@@ -232,8 +235,8 @@ reset_probe() {
 
   local lock_path="${open_dir}/${probe}.lock"
   local state_file="${open_dir}/${probe}.json"
-  exec 9>>"${lock_path}" || return 75
-  flock -w 1 9 || return 75
+  exec 9>>"${lock_path}" || return "${coordination_exit_code}"
+  flock -w 1 9 || return "${coordination_exit_code}"
   rm -f -- "${state_file}"
   append_event "${probe}" "${caller}" reset
   flock -u 9 || true
@@ -260,9 +263,9 @@ case "${action}" in
     ;;
   status)
     if [ "$#" -eq 0 ]; then
-      for probe in op gh network; do status_probe "${probe}" || exit 75; done
+      for probe in op gh network; do status_probe "${probe}" || exit "${coordination_exit_code}"; done
     elif [ "$#" -eq 1 ] && valid_probe "${1}"; then
-      status_probe "${1}" || exit 75
+      status_probe "${1}" || exit "${coordination_exit_code}"
     else
       exit 64
     fi

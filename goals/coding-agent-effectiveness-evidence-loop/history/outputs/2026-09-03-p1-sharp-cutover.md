@@ -39,7 +39,9 @@ and `network` circuit-breaker states reported closed before rollout.
   per-probe file lock across the guarded command. One failure atomically opens
   the machine-wide state; subsequent agent adapters return exit 75 and append
   `retry-skipped` without executing the command. An operator reset or an
-  expired half-open probe is required before recovery.
+  expired half-open probe is required before recovery. Coordination or state
+  validation failures return exit 76 and append `coordination-skipped`, so a
+  caller cannot misreport malformed or contended state as an open cooldown.
 - Claude and Codex adapters share the same implementation and the same
   `${XDG_STATE_HOME:-$HOME/.local/state}/beep/agent-evidence` state.
 

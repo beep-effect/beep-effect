@@ -172,7 +172,7 @@ layer(NodeServices.layer)("agent command circuit breaker", (it) => {
         );
 
         const run = yield* runBreaker(store, ["run", "op", "claude-code", "--", "/usr/bin/touch", store.markerPath]);
-        expect(run).toEqual({ exitCode: 75, stderr: "", stdout: "" });
+        expect(run).toEqual({ exitCode: 76, stderr: "", stdout: "" });
         expect(yield* fs.exists(store.markerPath)).toBe(false);
 
         const events = yield* decodedEvents(store);

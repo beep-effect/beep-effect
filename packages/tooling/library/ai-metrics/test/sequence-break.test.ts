@@ -3,6 +3,7 @@ import {
   agentEvidenceRoot,
   CircuitBreakerEventV1,
   circuitBreakerEventLedgerDir,
+  circuitBreakerOpenStateDir,
   circuitBreakerRoot,
   HookPulseV1,
   hashPrivateIdentifier,
@@ -18,13 +19,14 @@ import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
-import { Effect, FileSystem, Path, Result, Stream } from "effect";
+import { Duration, Effect, FileSystem, Path, Result, Schedule, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import { FastCheck as fc, TestClock } from "effect/testing";
 import { ChildProcess } from "effect/unstable/process";
+import type { SequenceBreakNotificationStage } from "@beep/repo-ai-metrics";
 
 const repoRoot = NodeURL.fileURLToPath(new URL("../../../../../", import.meta.url));
 const notifierPath = `${repoRoot}.claude/hooks/sequence-break-notifier.sh`;
@@ -38,6 +40,7 @@ const PRE_TS = "2026-09-03T12:00:00.000Z";
 const REQUEST_TS = "2026-09-03T12:00:00.001Z";
 const POST_TS = "2026-09-03T12:00:00.002Z";
 const CANARY = "SEQUENCE-BREAK-CONTENT-CANARY";
+const NTFY_BASE_URL = "https://private.example";
 const encodeJson = UnknownFromJsonString.encodeUnknownEffect;
 
 const canonicalNotificationKeys = [
@@ -130,6 +133,7 @@ const ambiguousPostToolUseLine = hookPulseLine({
 
 interface NotifierStore {
   readonly circuitEventDir: string;
+  readonly circuitOpenPath: string;
   readonly dampingPath: string;
   readonly evidenceRoot: string;
   readonly fakeBin: string;
@@ -145,6 +149,7 @@ const makeNotifierStore = Effect.fnUntraced(function* () {
   const evidenceRoot = agentEvidenceRoot(stateHome);
   const hookDir = hookPulseLedgerDir(evidenceRoot);
   const stateRoot = sequenceBreakRoot(evidenceRoot);
+  const breakerRoot = circuitBreakerRoot(evidenceRoot);
   const fakeBin = path.join(stateHome, "bin");
   const fakeCurl = path.join(fakeBin, "curl");
   const fakeNotifySend = path.join(fakeBin, "notify-send");
@@ -157,7 +162,8 @@ const makeNotifierStore = Effect.fnUntraced(function* () {
   yield* fs.chmod(fakeNotifySend, 0o755);
 
   return {
-    circuitEventDir: circuitBreakerEventLedgerDir(circuitBreakerRoot(evidenceRoot)),
+    circuitEventDir: circuitBreakerEventLedgerDir(breakerRoot),
+    circuitOpenPath: path.join(circuitBreakerOpenStateDir(breakerRoot), "network.json"),
     dampingPath: path.join(sequenceBreakDampingDir(stateRoot), `${SESSION_ID}-human-input.json`),
     evidenceRoot,
     fakeBin,
@@ -167,7 +173,12 @@ const makeNotifierStore = Effect.fnUntraced(function* () {
   } satisfies NotifierStore;
 });
 
-const runNotifier = Effect.fnUntraced(function* (store: NotifierStore, ntfyTopic = "", ntfyToken = "") {
+const runNotifier = Effect.fnUntraced(function* (
+  store: NotifierStore,
+  ntfyTopic = "",
+  ntfyToken = "",
+  maxStage: SequenceBreakNotificationStage = "initial"
+) {
   const handle = yield* ChildProcess.make(
     notifierPath,
     ["claude-code", SESSION_ID, REQUEST_TS, "tool-permission", "human-input", "AskUserQuestion", "desktop-ntfy-1"],
@@ -182,9 +193,12 @@ const runNotifier = Effect.fnUntraced(function* (store: NotifierStore, ntfyTopic
         BEEP_AGENT_EVIDENCE_ROOT: store.evidenceRoot,
         BEEP_HOOK_PULSE_DISARM_SENTINEL: "",
         BEEP_SEQUENCE_BREAK_DESKTOP_ENABLED: "1",
-        BEEP_SEQUENCE_BREAK_MAX_STAGE: "initial",
+        BEEP_SEQUENCE_BREAK_MAX_STAGE: maxStage,
+        BEEP_SEQUENCE_BREAK_NTFY_BASE_URL: NTFY_BASE_URL,
         BEEP_SEQUENCE_BREAK_NTFY_TOPIC: ntfyTopic,
         BEEP_SEQUENCE_BREAK_NTFY_TOKEN: ntfyToken,
+        BEEP_SEQUENCE_BREAK_REMINDER_SECONDS: "0",
+        BEEP_SEQUENCE_BREAK_URGENT_SECONDS: "0",
       },
       stdin: "ignore",
       stdout: "pipe",
@@ -204,7 +218,7 @@ const runNotifier = Effect.fnUntraced(function* (store: NotifierStore, ntfyTopic
   return { exitCode, stderr, stdout };
 });
 
-const runWriter = Effect.fnUntraced(function* (store: NotifierStore, stdin: string) {
+const runWriter = Effect.fnUntraced(function* (store: NotifierStore, stdin: string, foreground = true) {
   const handle = yield* ChildProcess.make(writerPath, [], {
     cwd: repoRoot,
     extendEnv: true,
@@ -221,7 +235,7 @@ const runWriter = Effect.fnUntraced(function* (store: NotifierStore, stdin: stri
       BEEP_HOOK_PULSE_INSTRUMENT_CLASS: "production",
       BEEP_HOOK_PULSE_NOTIFIER_REV: "desktop-ntfy-1",
       BEEP_SEQUENCE_BREAK_DESKTOP_ENABLED: "1",
-      BEEP_SEQUENCE_BREAK_FOREGROUND: "1",
+      BEEP_SEQUENCE_BREAK_FOREGROUND: foreground ? "1" : "0",
       BEEP_SEQUENCE_BREAK_MAX_STAGE: "initial",
       BEEP_SEQUENCE_BREAK_NTFY_TOPIC: "",
     },
@@ -242,6 +256,17 @@ const runWriter = Effect.fnUntraced(function* (store: NotifierStore, stdin: stri
   return { exitCode, stderr, stdout };
 });
 
+const writerPermissionRequestInput = (rawSessionId: string, rawCwd: string) =>
+  encodeJson({
+    session_id: rawSessionId,
+    cwd: rawCwd,
+    transcript_path: "/tmp/sequence-break-writer.jsonl",
+    hook_event_name: "PermissionRequest",
+    permission_mode: "default",
+    tool_name: "AskUserQuestion",
+    tool_input: { question: CANARY },
+  });
+
 const notificationRows = Effect.fnUntraced(function* (store: NotifierStore) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -257,6 +282,18 @@ const notificationRows = Effect.fnUntraced(function* (store: NotifierStore) {
 
   return A.flatten(rows);
 });
+
+const waitForNotificationRows = (store: NotifierStore) =>
+  notificationRows(store).pipe(
+    Effect.flatMap(
+      A.match({
+        onEmpty: () => Effect.fail("Detached notifier did not emit delivery evidence."),
+        onNonEmpty: Effect.succeed,
+      })
+    ),
+    Effect.retry(Schedule.recurs(200).pipe(Schedule.addDelay(() => Effect.succeed(Duration.millis(10))))),
+    TestClock.withLive
+  );
 
 const decodedNotifications = Effect.fnUntraced(function* (store: NotifierStore) {
   return yield* Effect.forEach(yield* notificationRows(store), (row) =>
@@ -409,6 +446,28 @@ layer(NodeServices.layer)("sequence-break notification contracts", (it) => {
     )
   );
 
+  it.effect("refuses an invalid damping document instead of honoring its expiry", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const store = yield* makeNotifierStore();
+        yield* fs.writeFileString(store.hookPath, `${preToolUseLine()}\n${permissionRequestLine}\n`);
+        yield* fs.makeDirectory(path.dirname(store.dampingPath), { recursive: true });
+        const invalidState = yield* encodeJson({ expiresEpochMs: 9_007_199_254_740_991 });
+        yield* fs.writeFileString(store.dampingPath, invalidState);
+
+        expectSilentSuccess(yield* runNotifier(store));
+        const notifications = yield* decodedNotifications(store);
+        expect(A.map(notifications, ({ delivery }) => delivery)).toEqual([
+          { status: "skipped", reason: "coordination-unavailable" },
+          { status: "skipped", reason: "coordination-unavailable" },
+        ]);
+        expect(yield* fs.readFileString(store.dampingPath)).toBe(invalidState);
+      })
+    )
+  );
+
   it.effect("launches the notifier from the durable PermissionRequest writer path", () =>
     Effect.scoped(
       Effect.gen(function* () {
@@ -424,15 +483,7 @@ layer(NodeServices.layer)("sequence-break notification contracts", (it) => {
 
         const run = yield* runWriter(
           { ...store, hookPath: prePath },
-          yield* encodeJson({
-            session_id: rawSessionId,
-            cwd: rawCwd,
-            transcript_path: "/tmp/sequence-break-writer.jsonl",
-            hook_event_name: "PermissionRequest",
-            permission_mode: "default",
-            tool_name: "AskUserQuestion",
-            tool_input: { question: CANARY },
-          })
+          yield* writerPermissionRequestInput(rawSessionId, rawCwd)
         );
         expectSilentSuccess(run);
 
@@ -441,6 +492,36 @@ layer(NodeServices.layer)("sequence-break notification contracts", (it) => {
           "desktop:sent",
           "ntfy:skipped",
         ]);
+        expect(A.every(yield* notificationRows(store), (row) => !row.includes(CANARY))).toBe(true);
+      })
+    )
+  );
+
+  it.effect("launches the production detached notifier with closed hook streams and forwarded identifiers", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const store = yield* makeNotifierStore();
+        const rawSessionId = "sequence-break-detached-session";
+        const rawCwd = "/workspace/sequence-break-detached";
+        const sessionDigest = yield* hashPrivateIdentifier(rawSessionId, O.none());
+        const cwdDigest = yield* hashPrivateIdentifier(rawCwd, O.none());
+        const prePath = store.hookPath.replace(SESSION_ID, sessionDigest);
+        yield* fs.writeFileString(prePath, `${preToolUseLine(sessionDigest, cwdDigest)}\n`);
+
+        expectSilentSuccess(
+          yield* runWriter(
+            { ...store, hookPath: prePath },
+            yield* writerPermissionRequestInput(rawSessionId, rawCwd),
+            false
+          )
+        );
+        yield* waitForNotificationRows(store);
+
+        const notifications = yield* decodedNotifications(store);
+        expect(
+          A.map(notifications, ({ delivery, sessionId, transport }) => `${sessionId}:${transport}:${delivery.status}`)
+        ).toEqual([`${sessionDigest}:desktop:sent`, `${sessionDigest}:ntfy:skipped`]);
         expect(A.every(yield* notificationRows(store), (row) => !row.includes(CANARY))).toBe(true);
       })
     )
@@ -470,19 +551,54 @@ layer(NodeServices.layer)("sequence-break notification contracts", (it) => {
     )
   );
 
+  it.effect("distinguishes breaker coordination failure from an open cooldown", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const store = yield* makeNotifierStore();
+        yield* fs.writeFileString(store.hookPath, `${preToolUseLine()}\n${permissionRequestLine}\n`);
+        yield* fs.makeDirectory(path.dirname(store.circuitOpenPath), { recursive: true });
+        yield* fs.writeFileString(store.circuitOpenPath, yield* encodeJson({ schemaVersion: "unknown" }));
+
+        expectSilentSuccess(yield* runNotifier(store, CANARY));
+        const notifications = yield* decodedNotifications(store);
+        expect(
+          A.map(notifications, ({ delivery, transport }) => `${transport}:${delivery.status}:${delivery.reason}`)
+        ).toEqual(["desktop:sent:undefined", "ntfy:skipped:coordination-unavailable"]);
+
+        const breakerEvents = yield* decodedBreakerEvents(store);
+        expect(A.map(breakerEvents, ({ outcome, probe }) => `${probe}:${outcome.status}`)).toEqual([
+          "network:coordination-skipped",
+        ]);
+      })
+    )
+  );
+
   it.effect("keeps ntfy secrets out of child environments while delivering the token by descriptor", () =>
     Effect.scoped(
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const store = yield* makeNotifierStore();
         const fakeCurl = `${store.fakeBin}/curl`;
+        const fakeNotifySend = `${store.fakeBin}/notify-send`;
         yield* fs.writeFileString(store.hookPath, `${preToolUseLine()}\n${permissionRequestLine}\n`);
+        yield* fs.writeFileString(
+          fakeNotifySend,
+          `#!/usr/bin/env bash
+if [ -n "\${BEEP_SEQUENCE_BREAK_NTFY_BASE_URL:-}\${BEEP_SEQUENCE_BREAK_NTFY_TOPIC:-}\${BEEP_SEQUENCE_BREAK_NTFY_TOKEN:-}" ]; then
+  exit 96
+fi
+exit 0
+`
+        );
         yield* fs.writeFileString(
           fakeCurl,
           `#!/usr/bin/env bash
-if [ -n "\${BEEP_SEQUENCE_BREAK_NTFY_TOPIC:-}\${BEEP_SEQUENCE_BREAK_NTFY_TOKEN:-}" ]; then
+if [ -n "\${BEEP_SEQUENCE_BREAK_NTFY_BASE_URL:-}\${BEEP_SEQUENCE_BREAK_NTFY_TOPIC:-}\${BEEP_SEQUENCE_BREAK_NTFY_TOKEN:-}" ]; then
   exit 97
 fi
+case " $* " in *" ${NTFY_BASE_URL}/ "*) ;; *) exit 101 ;; esac
 case " $* " in
   *" --request POST "*)
     header_path=""
@@ -499,12 +615,19 @@ exit 0
 `
         );
         yield* fs.chmod(fakeCurl, 0o755);
+        yield* fs.chmod(fakeNotifySend, 0o755);
 
-        expectSilentSuccess(yield* runNotifier(store, "private-topic", "private-token"));
+        expectSilentSuccess(yield* runNotifier(store, "private-topic", "private-token", "urgent"));
         const notifications = yield* decodedNotifications(store);
-        expect(A.map(notifications, ({ delivery, transport }) => `${transport}:${delivery.status}`)).toEqual([
-          "desktop:sent",
-          "ntfy:sent",
+        expect(
+          A.map(notifications, ({ delivery, stage, transport }) => `${stage}:${transport}:${delivery.status}`)
+        ).toEqual([
+          "initial:desktop:sent",
+          "initial:ntfy:sent",
+          "reminder:desktop:sent",
+          "reminder:ntfy:sent",
+          "urgent:desktop:sent",
+          "urgent:ntfy:sent",
         ]);
       })
     )
