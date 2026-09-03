@@ -37,6 +37,21 @@ disk):
   — §B plan matrix (watermarking correction, collaborator economics),
   §F identity-topology cautions and Sign request ownership.
 
+P2 pre-apply lanes (2026-09-02), delegated per the routing doctrine and kept
+in this packet with tenant ids, names, and principals excluded:
+
+- [`2026-09-02-preapply-review-codex.md`](./2026-09-02-preapply-review-codex.md)
+  — Codex (GPT-5.6 Sol, xhigh) static adversarial review of the reconciler,
+  driver errors, and private runner before the first attended apply:
+  one P0 (silent exact-name adoption), seven P1, three P2, the 33-mutation
+  apply sequence, digest inclusions, and an unverified-assumption list.
+- [`2026-09-02-box-api-semantics-grok.md`](./2026-09-02-box-api-semantics-grok.md)
+  — Grok 4.6 (xhigh) verification of the Box REST semantics the apply
+  depends on against developer.box.com and support.box.com: case-insensitive
+  sibling names, forbidden name characters, pending-collaboration shape,
+  `user_already_collaborator`, webhook limits, service-account identity, and
+  why a root-folder metadata 403 is not a Governance signal.
+
 ## 4. In-repo capability references
 
 | Brick | Path | Mark |

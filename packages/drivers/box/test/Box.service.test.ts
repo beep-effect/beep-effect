@@ -297,6 +297,7 @@ describe("@beep/box", () => {
   it("round-trips handwritten schema values without encoded-shape drift", () => {
     assertSchemaRoundTrip(B.BoxCcgConfig);
     assertSchemaRoundTrip(B.BoxErrorOptions);
+    assertSchemaRoundTrip(B.BoxErrorDiagnostic);
     assertSchemaRoundTrip(B.BoxError);
     assertSchemaRoundTrip(B.BoxPartAccumulator);
     assertSchemaRoundTripWithArbitrary(B.BoxUploadBigFilePayload, UploadBigFilePayloadArbitrary);
@@ -315,35 +316,50 @@ describe("@beep/box", () => {
     ).toBe(true);
   });
 
-  it("keeps sanitized JSON context round-trippable and rejects non-JSON context", () => {
+  it("keeps only the strict conflict projection from API failure context", () => {
     const withContext = B.BoxError.fromReason("response status", {
       context: B.BoxApiFailureContext.make({
-        values: { code: "rate_limit", nested: { retries: 3, hints: ["slow down", null] } },
+        values: {
+          conflictCount: NonNegativeInt.make(1),
+          conflicts: [{ id: "123", type: "file" }],
+        },
       }),
     });
 
-    // Round-trip must preserve equivalence for the JSON-typed context.
     expectRoundTrip(B.BoxError, withContext);
 
-    // Non-JSON SDK contextInfo sanitizes to `None` instead of throwing on the error path.
-    const nonJson = B.BoxError.fromUnknown("users.getUserMe", {
+    const conflict = B.BoxError.fromUnknown("files.getFileById", {
       responseInfo: {
-        contextInfo: { retry: () => undefined },
-        statusCode: 429,
+        contextInfo: {
+          conflicts: [
+            {
+              etag: "unsafe-etag",
+              id: "456",
+              name: "unsafe-name",
+              sha1: "unsafe-sha1",
+              type: "file",
+            },
+          ],
+          retry: () => undefined,
+        },
+        statusCode: 409,
       },
     });
 
-    expect(nonJson.context).toEqual(O.none());
-    expect(nonJson.status).toEqual(O.some(429));
+    expect(conflict.context).toEqual(
+      O.some(
+        B.BoxApiFailureContext.make({
+          values: {
+            conflictCount: NonNegativeInt.make(1),
+            conflicts: [{ id: "456", type: "file" }],
+          },
+        })
+      )
+    );
+    expect(conflict.status).toEqual(O.some(409));
   });
 
-  it('keeps a schema failure\'s issue tree instead of the word "SchemaError"', () => {
-    // `_tag` was read first, and a decode failure's `_tag` is the literal
-    // "SchemaError" — so every schema failure in this driver stringified to that one
-    // word and threw away the only thing that explained it. Diagnosing the Box decode
-    // bug (absent optional fields arriving as present-but-undefined keys, which broke
-    // every final-page listing) meant writing a standalone reproduction, because the
-    // error, the log, and the trace all said "SchemaError" and stopped there.
+  it("retains only the schema error class without issue text", () => {
     const schemaFailure = {
       _tag: "SchemaError",
       message: 'Expected string, got undefined\n  at ["entries"][0]["nextMarker"]',
@@ -351,9 +367,72 @@ describe("@beep/box", () => {
 
     const error = B.BoxError.fromUnknown("folders.getFolderItems", schemaFailure);
 
-    const label = O.getOrElse(error.cause, () => "");
-    expect(label).toContain("nextMarker");
-    expect(label).toContain("Expected string");
+    expect(error.cause).toEqual(O.some("SchemaError"));
+  });
+
+  it("excludes confidential sentinels from encoded and rendered Box errors", () => {
+    const resourceName = "P1-4 Confidential Matter Alpha";
+    const login = "p1-4-login@example.invalid";
+    const callbackUrl = "https://callback.invalid/p1-4-secret";
+    const bearerToken = "Bearer p1-4-token-abcdef123456";
+    const sentinels = [resourceName, login, callbackUrl, bearerToken];
+
+    const sdkFailure = B.BoxError.fromUnknown("folders.createFolder", {
+      responseInfo: {
+        code: "item_name_in_use",
+        contextInfo: {
+          callbackUrl,
+          conflicts: [
+            {
+              etag: login,
+              id: "987654321",
+              name: resourceName,
+              pathCollection: { entries: [{ name: callbackUrl }] },
+              sha1: bearerToken,
+              type: "folder",
+            },
+          ],
+          login,
+          token: bearerToken,
+        },
+        helpUrl: callbackUrl,
+        requestId: "request-409-safe",
+        statusCode: 409,
+      },
+    });
+    const schemaFailure = B.BoxError.fromUnknown("folders.getFolderItems", {
+      _tag: "SchemaError",
+      message: `Rejected ${resourceName}; ${login}; ${callbackUrl}; ${bearerToken}`,
+    });
+
+    expect(sdkFailure.context).toEqual(
+      O.some(
+        B.BoxApiFailureContext.make({
+          values: {
+            conflictCount: NonNegativeInt.make(1),
+            conflicts: [{ id: "987654321", type: "folder" }],
+          },
+        })
+      )
+    );
+    expect(sdkFailure.helpUrl).toEqual(O.none());
+    expect(schemaFailure.cause).toEqual(O.some("SchemaError"));
+    expect(B.BoxError.toDiagnostic(sdkFailure).provider).toBe("box");
+
+    for (const error of [sdkFailure, schemaFailure]) {
+      const renderedForms = [
+        JSON.stringify(encode(B.BoxError, error)),
+        String(error),
+        JSON.stringify(error),
+        Cause.pretty(Cause.fail(error)),
+      ];
+
+      for (const rendered of renderedForms) {
+        for (const sentinel of sentinels) {
+          expect(rendered).not.toContain(sentinel);
+        }
+      }
+    }
   });
 
   it("drops invalid SDK status codes from sanitized errors", () => {
@@ -719,6 +798,8 @@ describe("@beep/box", () => {
             expect(error.value.status).toEqual(O.some(429));
             expect(error.value.code).toEqual(O.some("rate_limit"));
             expect(error.value.requestId).toEqual(O.some("request-id"));
+            expect(error.value.context).toEqual(O.none());
+            expect(error.value.helpUrl).toEqual(O.none());
             expect(error.value.sdkVersion).toBe("10.14.0");
             expect(error.value.cause).toEqual(O.some("Unknown"));
           }

@@ -1,4 +1,6 @@
 import {
+  BoxAdoption,
+  BoxAdoptions,
   BoxCollaborationIntent,
   BoxDesiredState,
   BoxDiscoveryAvailable,
@@ -6,10 +8,14 @@ import {
   BoxFolderIntent,
   BoxLogicalKey,
   BoxMetadataIntent,
+  BoxObservedCollaboration,
   BoxObservedFolder,
   BoxObservedState,
+  BoxObservedWebhook,
   BoxProviderId,
+  BoxProviderRevision,
   BoxRetentionIntent,
+  BoxSourceRevision,
   BoxWebhookIntent,
 } from "@beep/box-provisioning";
 import { HttpsUrl } from "@beep/schema";
@@ -19,10 +25,20 @@ const workspaceKey = BoxLogicalKey.make("folder.workspace");
 const childKey = BoxLogicalKey.make("folder.child");
 
 export const desiredFixture = BoxDesiredState.make({
-  sourceRevision: "intent-1",
-  expectedEnterpriseId: "enterprise-id",
-  expectedSubjectId: "service-account-id",
-  rootFolderId: "0",
+  adoptions: BoxAdoptions.make({
+    entries: [
+      BoxAdoption.make({
+        expectedParentProviderId: BoxProviderId.make("0"),
+        expectedProviderId: BoxProviderId.make("100"),
+        logicalKey: workspaceKey,
+        resourceKind: "folder",
+      }),
+    ],
+  }),
+  sourceRevision: BoxSourceRevision.make("intent-1"),
+  expectedEnterpriseId: BoxProviderId.make("enterprise-id"),
+  expectedSubjectId: BoxProviderId.make("service-account-id"),
+  rootFolderId: BoxProviderId.make("0"),
   entitlements: BoxEntitlements.make({
     externalCollaboratorsRequirePaidSeats: true,
     metadata: "unavailable",
@@ -77,7 +93,7 @@ export const observedFixture = BoxObservedState.make({
   rootFolderId: BoxProviderId.make("0"),
   folders: [
     BoxObservedFolder.make({
-      etag: O.some("etag-workspace"),
+      etag: O.some(BoxProviderRevision.make("etag-workspace")),
       name: "Fixture workspace",
       parentProviderId: O.some(BoxProviderId.make("0")),
       providerId: BoxProviderId.make("100"),
@@ -95,4 +111,44 @@ export const observedFixture = BoxObservedState.make({
   retention: available("retention"),
   signRequests: available("signRequests"),
   signTemplates: available("signTemplates"),
+});
+
+export const postApplyAdoptionsFixture = [
+  BoxAdoption.make({
+    expectedParentProviderId: BoxProviderId.make("100"),
+    expectedProviderId: BoxProviderId.make("101"),
+    logicalKey: childKey,
+    resourceKind: "folder",
+  }),
+];
+
+export const observedAfterApplyFixture = BoxObservedState.make({
+  ...observedFixture,
+  folders: [
+    ...observedFixture.folders,
+    BoxObservedFolder.make({
+      etag: O.some(BoxProviderRevision.make("etag-child")),
+      name: "Fixture child",
+      parentProviderId: O.some(BoxProviderId.make("100")),
+      providerId: BoxProviderId.make("101"),
+    }),
+  ],
+  collaborations: [
+    BoxObservedCollaboration.make({
+      folderProviderId: BoxProviderId.make("101"),
+      principal: "collaborator@example.test",
+      principalProviderId: O.none(),
+      principalType: "user",
+      providerId: BoxProviderId.make("200"),
+      role: "editor",
+    }),
+  ],
+  webhooks: [
+    BoxObservedWebhook.make({
+      address: HttpsUrl.make("https://example.test/box/events"),
+      providerId: BoxProviderId.make("300"),
+      targetProviderId: BoxProviderId.make("100"),
+      triggers: ["FILE.UPLOADED"],
+    }),
+  ],
 });
