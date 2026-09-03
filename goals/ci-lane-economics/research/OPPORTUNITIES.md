@@ -787,3 +787,16 @@ evidence, what would have prevented it). Redact for the public repo.
 - **Would have prevented it:** intersect the branch's changed paths with the base delta
   through git (`git diff --name-only base...head` against a pathspec) or stream the
   listing, instead of capturing the whole base delta into a bounded buffer.
+
+## 2026-09-03 — a lane-proof reuse assertion flaked under the contended full proof
+
+- **Doing:** re-proving the merged shard head with `yeet verify` after `origin/main`
+  advanced during the previous proof.
+- **Evidence:** the test-unit and coverage lanes both failed on one untouched test,
+  `quality-tasks.test.ts` "invalidates a lane proof when the property-test run floor
+  increases", with `expected [ 'passed' ] to deeply equal [ 'reused' ]`; the same test
+  passed in isolation immediately afterwards (1 passed, 170 skipped), and the coverage
+  lane reported no ratchet regression of its own.
+- **Would have prevented it:** make the reuse assertion independent of wall-clock or
+  filesystem timing under load (deterministic proof fingerprints in the fixture), or let
+  the proof rerun a single failed test file before failing two lanes on it.
