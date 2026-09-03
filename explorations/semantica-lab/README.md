@@ -32,6 +32,10 @@ Two queued gates are now open:
   two preconditions; its `G-entailment/rules` fixture is still uncommitted. What
   bounded spike should build that fixture and test the queued reasoning
   candidates?
+- O3/M4: the passed canary unblocked row-level `adopt`/`adapt`/`already-have`
+  atlas values (DECISIONS `Atlas writes` row). That is the atlas-edit need which
+  re-enters `semantica-atlas-sync`; what bounded D5 render/diff sync writes them
+  from the schema-validated IR?
 
 ## Read This First
 

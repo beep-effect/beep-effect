@@ -9,7 +9,7 @@ holds now; when a log entry disagrees with it, the table wins.
 
 | Topic | Holds now | Supersedes |
 | --- | --- | --- |
-| Next work | Decompose the C2-fired `semantica-storage-inversion` gate; `semantica-reasoning-spike` also needs its `G-entailment/rules` fixture committed before it fires (MAP Sequencing 5). | P5 close |
+| Next work | Decompose the C2-fired `semantica-storage-inversion` gate; `semantica-reasoning-spike` also needs its `G-entailment/rules` fixture committed before it fires (MAP Sequencing 5); `semantica-atlas-sync` re-enters on the atlas-edit need its unblocked positive row values create (O3/M4). | P5 close |
 | Stop rule | Probe-denominated circuit breaker (S1): first-probe candidate, one retry, then the family parks and the packet drops to decompose; wall-clock is `EvalRunTelemetry` sidecar telemetry (R1), never a gate. Re-entry is bounded (E8): one decompose re-entry candidate per family per stage; a second park is terminal absent an explicit operator ratification recorded in this file | BRIEF v0.1 "two weeks, C0 in four days"; contract v1.2 two-week falsifier; unbounded slate re-entry |
 | Gold labels | Gold-proposer provider family ≠ extraction provider family, enforced as a schema refinement on EvalRun; spot-checked fraction committed as a number in gold/v1 (S2) | contract v1.2 "LLM-proposed and spot-checked" |
 | Lab shape | `--app-kind tauri`, one local `cargo check`, `src-tauri` frozen through C0-C2, hand-written `server/main.ts` + `src/runtime/Layer.ts` as the headless proof surface (S4) | D12/G2 wording without a runtime entry |
@@ -745,3 +745,6 @@ Source:
   confirmed; no `drop` was warranted. Evidence and the not-written list live in
   `goals/semantica-canary/history/p5-atlas-sync.md`. Row-level `adopt`/`adapt`/`already-have`
   values are unblocked by the passed canary and remain with `semantica-atlas-sync` (O3/M4).
+- Those unblocked positive row values are the "atlas-edit need" that O3/M4 name as
+  the `semantica-atlas-sync` re-entry trigger, so that gate joins the two spikes as
+  the exploration's third open question. Nothing is scaffolded for it either.
