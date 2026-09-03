@@ -1,0 +1,30 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "grok-bot-automation",
+    "title": "Grok Bot automation: hosted judgment, local proof",
+    "status": "active",
+    "stage": "align",
+    "openQuestions": [
+      "What is the weekly Heavy grant, and is on-demand usage enabled?",
+      "What amount is actually charged to Heavy usage?",
+      "Which identity backs the X connector, and how does search_posts_all behave?",
+      "Which tools does the Grok Bot GitHub plugin expose?",
+      "What are the routine scheduler's queue, delay, retry, and catch-up semantics?",
+      "Which tools and versions are installed on the hosted VM?",
+      "What is the Cloud Agent handoff payload ceiling?",
+      "Which model is actually served for this account and routine?"
+    ],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": ["goals/nightly-research-routine"],
+      "docs": [
+        "standards/architecture/DECISIONS.md",
+        "standards/architecture/07-non-slice-families.md"
+      ],
+      "supersededBy": null
+    },
+    "created": "2026-09-03",
+    "updated": "2026-09-03"
+  }
+}
