@@ -21,10 +21,14 @@ orchestrator owns schemas, contracts, and judgment.
 
 ## P1 — Journal facts, then hygiene — IN PROGRESS (independent small PRs, Codex lanes in sibling worktrees)
 
-- [ ] A5 journal facts: every attempt row carries the tree fingerprint and tier; the pre-push and
-      merged-preview wrappers journal each inner lane (id, tier, start, end, duration, input digest
-      when known); attempt starts that never finish and lease or submitter deaths become terminal
-      rows. Prerequisite for M3, M4, M5 and for the C4 shadow report (economics section G).
+- [x] A5 journal facts — done 2026-09-03 (PR #964 merged as 58e063757b, under rulings 11–16):
+      attempt rows carry the resolved head, tree fingerprint, tier, stage and env profile (C1
+      vocabulary); the pre-push and merged-preview wrappers journal each inner lane through a
+      durable report file; abnormal ends (interrupt, queued-submitter death, lease eviction) are
+      `attempt-terminated` rows with a reason while normal completions keep `attempt-finished`;
+      dead tickets and leases are claimed atomically before their event is journaled; writers
+      preserve unknown journal rows and the eviction variant ships under a versioned protocol the
+      CI-ops lab folds as a release; the economics loader accepts both terminal tags.
 - [ ] B1 package verification through the Turbo graph (upstream builds) or automatic
       environment-only attribution when no package source differs from base.
 - [x] A4 ack ledger contract — done 2026-09-03 (PR #966 merged as fe70e27f55): the P0 reminder and
