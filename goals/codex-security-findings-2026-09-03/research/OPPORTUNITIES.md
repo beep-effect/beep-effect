@@ -150,3 +150,30 @@
   test for the refusal path, including boundary revalidation and injected I/O
   failure callbacks. Run the full package-scoped coverage command and inspect
   changed-file rows before the first publish of a security batch.
+
+## 2026-09-03 — Auto-merge outran Yeet's strict closeout receipt
+
+- **What I was doing:** Running strict Yeet closeout immediately after the last
+  exact-head repository job passed on PR #949.
+- **Evidence:** GitHub auto-merged the PR at 14:32:02 UTC, four seconds after
+  the workflow reached terminal success. `beep yeet closeout` then rejected the
+  operation because the PR was no longer open, even though its exact head,
+  terminal checks, review threads, and Greptile result remained immutable and
+  queryable.
+- **What would have prevented it:** Yeet closeout should accept a just-merged PR
+  when the branch head matches the merged PR head and emit a terminal receipt
+  from the immutable hosted state instead of requiring an open PR.
+
+## 2026-09-03 — Codex closure list state lagged detail state
+
+- **What I was doing:** Closing and independently auditing the 12 exact captured
+  Codex finding IDs after PR #949 merged.
+- **Evidence:** The first `Already fixed` submission made the detail page expose
+  `Reopen` while the open-list row briefly remained visible and selection moved
+  asynchronously. Sorting the Closed view by detection time and reopening each
+  captured title proved all 12 exact URL identities, `Reopen` state, and fixed
+  reason without relying on the transient list count.
+- **What would have prevented it:** A packet-aware browser closeout helper should
+  select by captured title, assert the exact URL identity before submission,
+  then independently re-audit every ID from the Closed view before emitting a
+  sanitized closure ledger.

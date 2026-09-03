@@ -3,14 +3,14 @@
   "initiative": {
     "id": "codex-security-findings-2026-09-03",
     "title": "Codex Security Findings (2026-09-03)",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-09-03",
     "updated": "2026-09-03",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/codex-security-findings-2026-09-03",
-  "lifecycle": "active",
-  "statusNote": "P0 through P4 complete on 2026-09-03: all 12 findings were confirmed, assigned to seven lanes, and remediated with focused regression proof. P5 repository proof is in progress; merge and exact-ID closure remain pending.",
+  "lifecycle": "completed-retained",
+  "statusNote": "Complete on 2026-09-03: PR #949 merged all 12 remediations, all 23 repository jobs passed, all seven review threads were resolved, Greptile reported 5/5 with zero issues, and every exact captured Codex ID was manually closed as Already fixed.",
   "mission": "Remediate and close the 12 Codex Cloud security findings captured on 2026-09-03.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -64,7 +64,7 @@
       "out-of-scope": 0,
       "untriaged": 0
     },
-    "note": "Current-HEAD validation and remediation are complete for all 12 findings; repository and hosted proof remain pending."
+    "note": "All 12 findings were remediated by PR #949 and exact-ID verified closed as Already fixed after merge."
   },
   "closeoutPolicy": {
     "fixed": "Already fixed",
@@ -115,33 +115,34 @@
     {
       "id": "P5",
       "name": "Repo proof",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P6",
       "name": "Publish",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P7",
       "name": "Monitor",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P8",
       "name": "Merge and close findings",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P9",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
     "test \"$(wc -m < goals/codex-security-findings-2026-09-03/GOAL.md)\" -le 4000",
     "jq . goals/codex-security-findings-2026-09-03/ops/manifest.json",
     "jq . goals/codex-security-findings-2026-09-03/ops/triage.json",
+    "jq . goals/codex-security-findings-2026-09-03/ops/closures.json",
     "test \"$(find goals/codex-security-findings-2026-09-03/findings -maxdepth 1 -name 'CSF-*.md' | wc -l | tr -d ' ')\" = 12",
     "git diff --check -- goals/codex-security-findings-2026-09-03",
     "jq -r '.findings[].commit' goals/codex-security-findings-2026-09-03/ops/triage.json | while read -r c; do git merge-base --is-ancestor \"$c\" HEAD || echo \"not-an-ancestor: $c\"; done",
