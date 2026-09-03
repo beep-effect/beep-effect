@@ -235,7 +235,7 @@ describe("Yeet provenance footer splice", () => {
       const provider = ConfigProvider.fromEnv({ env: { HOME: root, PWD: root } });
       yield* ensurePullRequest(context(root), recorder, O.some(prCreateStep), O.some(provenanceStampStep), {
         capture: runner.capture,
-        findOpen: () => Effect.succeed(O.none()),
+        findOpen: () => Effect.succeedNone,
         registry,
         view: () => Effect.succeed(GhPrView.make({ headRefName: context(root).branch, number: 42, state: "OPEN" })),
       }).pipe(Effect.provideService(ConfigProvider.ConfigProvider, provider));
@@ -278,7 +278,7 @@ describe("Yeet provenance footer splice", () => {
       const provider = ConfigProvider.fromEnv({ env: { HOME: root, PWD: root } });
       yield* ensurePullRequest(context(root), recorder, O.some(prCreateStep), O.some(provenanceStampStep), {
         capture: runner.capture,
-        findOpen: () => Effect.succeed(O.some(existing)),
+        findOpen: () => Effect.succeedSome(existing),
         registry,
       }).pipe(Effect.provideService(ConfigProvider.ConfigProvider, provider));
       const rows = yield* registry.lookup(repository, 42);
