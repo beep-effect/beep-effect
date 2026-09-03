@@ -270,18 +270,6 @@ export class ImageConfigComplete extends S.Class<ImageConfigComplete>($I`ImageCo
       documentation: "https://nextjs.org/docs/api-reference/next/image#loader-configuration",
     }),
 
-    /**
-     * @deprecated Use `remotePatterns` instead.
-     */
-    domains: S.String.pipe(
-      S.Array,
-      S.mutable,
-      S.annotateKey({
-        description: "Deprecated list of configured external image domains.",
-        documentation: "https://nextjs.org/docs/api-reference/next/image#domains",
-      })
-    ),
-
     /** @see [Disable static image import configuration](https://nextjs.org/docs/api-reference/next/image#disable-static-imports) */
     disableStaticImages: S.Boolean.annotateKey({
       documentation: "https://nextjs.org/docs/api-reference/next/image#disable-static-imports",
@@ -414,7 +402,6 @@ export const ImageConfig = ImageConfigComplete.mapFields(Struct.map(S.optionalKe
         path: "/_next/image",
         loader: "default",
         loaderFile: "",
-        domains: [],
         disableStaticImages: false,
         minimumCacheTTL: 14400, // 4 hours
         formats: ["image/webp"],
