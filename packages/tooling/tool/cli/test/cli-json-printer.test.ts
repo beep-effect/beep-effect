@@ -11,6 +11,7 @@ import {
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer } from "effect";
 import * as TestConsole from "effect/testing/TestConsole";
+import { vi } from "vitest";
 
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
@@ -103,6 +104,32 @@ describe("internal/cli/Json printCommandJson", () => {
     expect(result.stdout.byteLength).toBeGreaterThan(65_536);
     expect(output).toBe(`${JSON.stringify(payload)}\n`);
   });
+
+  it.effect(
+    "writes the default output sink in bounded UTF-8 chunks",
+    Effect.fnUntraced(function* () {
+      const chunks: Array<Uint8Array> = [];
+      const stdoutWrite = vi.spyOn(process.stdout, "write").mockImplementation(((
+        chunk: Uint8Array,
+        callback?: () => void
+      ) => {
+        chunks.push(chunk);
+        callback?.();
+        return true;
+      }) as typeof process.stdout.write);
+
+      try {
+        const output = yield* CommandJsonOutput;
+        yield* output("");
+        yield* output("x".repeat(20_000));
+
+        expect(chunks.map((chunk) => chunk.byteLength)).toEqual([8_192, 8_192, 3_616]);
+        expect(Buffer.concat(chunks).toString()).toBe("x".repeat(20_000));
+      } finally {
+        stdoutWrite.mockRestore();
+      }
+    })
+  );
 });
 
 describe("internal/cli/Printer formatDurationSeconds", () => {

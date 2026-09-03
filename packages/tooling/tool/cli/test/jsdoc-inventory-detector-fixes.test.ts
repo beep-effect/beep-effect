@@ -1140,6 +1140,9 @@ export const value = 1;
  * import { Effect } from 'effect'
  * import { value } from "@beep/foundation-demo"
  * import { consumerValue } from '@beep/consumer'
+ * const fixture = 'import { Effect } from "effect"'
+ * // import { value } from "@beep/foundation-demo"
+ * console.log(fixture)
  * console.log(Effect.succeed(value + consumerValue))
  * \`\`\`
  *

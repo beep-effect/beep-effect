@@ -1,9 +1,12 @@
-import { EffectImportRulesOptions, runEffectImportRules } from "@beep/repo-cli/test/Laws";
+import { CommandJsonOutput } from "@beep/repo-cli/test/Cli";
+import { EffectImportRulesOptions, lawsCommand, runEffectImportRules } from "@beep/repo-cli/test/Laws";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { Effect, FileSystem, Layer, Path } from "effect";
+import * as TestConsole from "effect/testing/TestConsole";
+import { Command } from "effect/unstable/cli";
 import { describe, expect, it } from "vitest";
 
 const provideScopedLayer =
@@ -11,8 +14,13 @@ const provideScopedLayer =
   <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
     Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
 
-const testLayer = Layer.mergeAll(NodeServices.layer, FsUtilsLive.pipe(Layer.provide(NodeServices.layer)));
+const testLayer = Layer.mergeAll(
+  NodeServices.layer,
+  FsUtilsLive.pipe(Layer.provide(NodeServices.layer)),
+  TestConsole.layer
+);
 const encodeJson = UnknownFromJsonString.encodeUnknownSync;
+const runLawsCommand = Command.runWith(lawsCommand, { version: "0.0.0" });
 
 const withTempWorkingDirectory = <A, E, R>(use: Effect.Effect<A, E, R>) =>
   Effect.acquireUseRelease(
@@ -63,6 +71,7 @@ const writeDemoFoundationPackage = Effect.fn(function* (
     "./Helper": "./src/Helper.ts",
     ...(ambiguousHelperLeaf === true ? { "./HelperAlias": "./src/Helper.ts" } : {}),
     "./Models": "./src/Models.ts",
+    "./Nested": "./src/Nested.ts",
   };
   const publishExports = {
     ".": "./dist/index.js",
@@ -70,6 +79,7 @@ const writeDemoFoundationPackage = Effect.fn(function* (
     "./Helper": "./dist/Helper.js",
     ...(ambiguousHelperLeaf === true ? { "./HelperAlias": "./dist/Helper.js" } : {}),
     ...(publishModelsLeaf === true ? { "./Models": "./dist/Models.js" } : {}),
+    "./Nested": "./dist/Nested.js",
   };
 
   yield* writeProjectFile(
@@ -107,8 +117,9 @@ const writeDemoFoundationPackage = Effect.fn(function* (
   );
   yield* writeProjectFile(
     "packages/foundation/modeling/demo/src/Models.ts",
-    "export interface Model { value: number }\n"
+    'export * as Nested from "./Nested.ts";\nexport interface Model { value: number }\n'
   );
+  yield* writeProjectFile("packages/foundation/modeling/demo/src/Nested.ts", "export const value = 4;\n");
 });
 
 const demoSource = A.join(
@@ -127,6 +138,66 @@ const demoSource = A.join(
 );
 
 describe("effect import laws", () => {
+  it("validates candidate CLI flags and renders text and JSON summaries", () =>
+    Effect.runPromise(
+      withTempWorkingDirectory(
+        Effect.gen(function* () {
+          yield* writeTsconfig;
+          yield* writeProjectFile(
+            "packages/demo/src/index.ts",
+            'import { Effect } from "effect";\nexport const program = Effect.void;\n'
+          );
+
+          const candidateWrite = yield* Effect.exit(
+            runLawsCommand(["effect-imports", "--candidate", "--write", "--include", "packages/demo/src/index.ts"])
+          );
+          const unscopedCandidate = yield* Effect.exit(runLawsCommand(["effect-imports", "--candidate"]));
+
+          expect(candidateWrite._tag).toBe("Failure");
+          expect(unscopedCandidate._tag).toBe("Failure");
+
+          yield* runLawsCommand([
+            "effect-imports",
+            "--candidate",
+            "--include-prefix",
+            "packages/demo",
+            "--exclude",
+            "packages/demo/src/ignored.ts",
+          ]);
+          expect(yield* TestConsole.logLines).toContain("[effect-governance-imports] operation=dry-run");
+          expect(yield* TestConsole.logLines).toContain("[effect-governance-imports] candidate=true");
+
+          const jsonChunks: Array<string> = [];
+          const strictJson = yield* Effect.exit(
+            runLawsCommand([
+              "effect-imports",
+              "--candidate",
+              "--check",
+              "--include",
+              "packages/demo/src/index.ts",
+              "--mode",
+              "code",
+              "--enforce-documentation",
+              "--json",
+            ]).pipe(
+              Effect.provideService(CommandJsonOutput, (text) =>
+                Effect.sync(() => {
+                  jsonChunks.push(text);
+                })
+              )
+            )
+          );
+
+          expect(strictJson._tag).toBe("Failure");
+          expect(JSON.parse(A.join(jsonChunks, ""))).toMatchObject({
+            candidate: true,
+            mode: "code",
+            strictFailure: true,
+          });
+        })
+      ).pipe(provideScopedLayer(testLayer))
+    ));
+
   it("is a no-op before a family is promoted", () =>
     Effect.runPromise(
       withTempWorkingDirectory(
@@ -172,6 +243,85 @@ describe("effect import laws", () => {
           expect(summary.manualReviews).toEqual([]);
           expect(summary.strictFailure).toBe(true);
           expect(yield* readProjectFile("packages/ecosystem/member/test/index.test.ts")).toBe(demoSource);
+        })
+      ).pipe(provideScopedLayer(testLayer))
+    ));
+
+  it("rejects candidate writes at the exported runner boundary", () =>
+    Effect.runPromise(
+      withTempWorkingDirectory(
+        Effect.gen(function* () {
+          yield* writeTsconfig;
+          yield* writeProjectFile("apps/demo/src/index.ts", demoSource);
+
+          const failure = yield* runEffectImportRules(
+            EffectImportRulesOptions.make({
+              write: true,
+              candidate: true,
+              excludePaths: [],
+              includePrefixes: ["apps/demo"],
+            })
+          ).pipe(Effect.flip);
+
+          expect(failure._tag).toBe("EffectImportRulesConfigurationError");
+          expect(failure.message).toContain("dry-run only");
+          expect(yield* readProjectFile("apps/demo/src/index.ts")).toBe(demoSource);
+        })
+      ).pipe(provideScopedLayer(testLayer))
+    ));
+
+  it("scans the union of explicit files and include prefixes", () =>
+    Effect.runPromise(
+      withTempWorkingDirectory(
+        Effect.gen(function* () {
+          yield* writeTsconfig;
+          yield* writeProjectFile("apps/explicit.ts", demoSource);
+          yield* writeProjectFile("packages/demo/src/prefix.ts", demoSource);
+
+          const summary = yield* runEffectImportRules(
+            EffectImportRulesOptions.make({
+              write: false,
+              strictCheck: true,
+              candidate: true,
+              excludePaths: [],
+              includePaths: ["apps/explicit.ts"],
+              includePrefixes: ["packages/demo"],
+            })
+          );
+
+          expect(summary.scannedFiles).toBe(2);
+          expect(summary.touchedFiles).toBe(2);
+          expect(summary.rootImportsRewritten).toBe(2);
+          expect(summary.changedFiles).toEqual(["apps/explicit.ts", "packages/demo/src/prefix.ts"]);
+        })
+      ).pipe(provideScopedLayer(testLayer))
+    ));
+
+  it("leaves generated source files to their owning generators", () =>
+    Effect.runPromise(
+      withTempWorkingDirectory(
+        Effect.gen(function* () {
+          yield* writeTsconfig;
+          yield* writeProjectFile("packages/demo/src/index.ts", demoSource);
+          yield* writeProjectFile("packages/demo/src/_generated/schema.ts", demoSource);
+          yield* writeProjectFile("packages/demo/src/generated/client.ts", demoSource);
+          yield* writeProjectFile("packages/demo/src/schema.gen.ts", demoSource);
+
+          const summary = yield* runEffectImportRules(
+            EffectImportRulesOptions.make({
+              write: true,
+              strictCheck: true,
+              excludePaths: [],
+              promotedFamilyPrefixes: ["packages/demo"],
+            })
+          );
+
+          expect(summary.scannedFiles).toBe(1);
+          expect(summary.rootImportsRewritten).toBe(1);
+          expect(yield* readProjectFile("packages/demo/src/index.ts")).not.toContain('from "effect"');
+          expect(yield* readProjectFile("packages/demo/src/_generated/schema.ts")).toBe(demoSource);
+          expect(yield* readProjectFile("packages/demo/src/generated/client.ts")).toBe(demoSource);
+          expect(yield* readProjectFile("packages/demo/src/schema.gen.ts")).toBe(demoSource);
         })
       ).pipe(provideScopedLayer(testLayer))
     ));
@@ -276,6 +426,35 @@ describe("effect import laws", () => {
       ).pipe(provideScopedLayer(testLayer))
     ));
 
+  it("routes side-effect-only root imports to manual review", () =>
+    Effect.runPromise(
+      withTempWorkingDirectory(
+        Effect.gen(function* () {
+          yield* writeTsconfig;
+          const source = 'import "effect";\nexport const value = 1;\n';
+          yield* writeProjectFile("apps/demo/src/index.ts", source);
+
+          const summary = yield* runEffectImportRules(
+            EffectImportRulesOptions.make({
+              write: false,
+              strictCheck: true,
+              candidate: true,
+              excludePaths: [],
+              includePrefixes: ["apps/demo"],
+            })
+          );
+
+          expect(summary.touchedFiles).toBe(1);
+          expect(summary.rootImportsRewritten).toBe(0);
+          expect(summary.manualReviews).toHaveLength(1);
+          expect(summary.manualReviews[0]?.kind).toBe("side-effect");
+          expect(summary.manualReviews[0]?.binding).toBe("side-effect import");
+          expect(summary.strictFailure).toBe(true);
+          expect(yield* readProjectFile("apps/demo/src/index.ts")).toBe(source);
+        })
+      ).pipe(provideScopedLayer(testLayer))
+    ));
+
   it("keeps manual-review line numbers anchored after a shebang prefix", () =>
     Effect.runPromise(
       withTempWorkingDirectory(
@@ -347,9 +526,9 @@ describe("effect import laws", () => {
           const source = A.join(
             [
               'import { another } from "@beep/demo/Helper";',
-              'import DemoDefault, { Demo as D, renamedHelper, type Model } from "@beep/demo";',
+              'import DemoDefault, { Demo as D, Nested, renamedHelper, type Model } from "@beep/demo";',
               "",
-              "export const result = DemoDefault.value + D.value + renamedHelper + another;",
+              "export const result = DemoDefault.value + D.value + Nested.value + renamedHelper + another;",
               "export const model: Model = { value: result };",
               "",
             ],
@@ -368,9 +547,10 @@ describe("effect import laws", () => {
           const rewritten = yield* readProjectFile("apps/demo/src/index.ts");
 
           expect(summary.rootImportsRewritten).toBe(1);
-          expect(summary.emittedImports).toBe(4);
+          expect(summary.emittedImports).toBe(5);
           expect(summary.manualReviews).toEqual([]);
           expect(rewritten).toContain('import DemoDefault, * as D from "@beep/demo/Demo";');
+          expect(rewritten).toContain('import * as Nested from "@beep/demo/Nested";');
           expect(rewritten).toContain('import { another, helper as renamedHelper } from "@beep/demo/Helper";');
           expect(rewritten).toContain('import type { Model } from "@beep/demo/Models";');
           expect(rewritten).not.toContain('from "@beep/demo"');

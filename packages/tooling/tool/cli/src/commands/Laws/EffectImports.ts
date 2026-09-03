@@ -11,7 +11,11 @@ import { extractFencedCodeBlockDetails } from "@beep/repo-docgen/Core";
 import { FsUtils } from "@beep/repo-utils/FsUtils";
 import { jsonParse } from "@beep/repo-utils/JsonUtils";
 import { readPackageJsonFile } from "@beep/repo-utils/schemas/PackageJson";
-import { toPosixPath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
+import {
+  TYPESCRIPT_SOURCE_EXCLUDED_SEGMENTS,
+  TYPESCRIPT_SOURCE_EXCLUDED_SUFFIXES,
+  toPosixPath,
+} from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
 import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import { Effect, FileSystem, Inspectable, MutableHashSet, Path, pipe } from "effect";
@@ -20,7 +24,7 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { Node, Project, SyntaxKind } from "ts-morph";
-import { EffectImportRulesPersistenceError } from "./Laws.errors.ts";
+import { EffectImportRulesConfigurationError, EffectImportRulesPersistenceError } from "./Laws.errors.ts";
 import type {
   ExportDeclaration,
   ExportDeclarationStructure,
@@ -88,6 +92,7 @@ export const EffectImportManualReviewKind = LiteralKit([
   "missing-mapping",
   "require",
   "root-namespace",
+  "side-effect",
 ]).annotate(
   $I.annote("EffectImportManualReviewKind", {
     description: "Reason category for a root import that cannot be rewritten mechanically.",
@@ -468,6 +473,8 @@ const MARKDOWN_GLOBS = [
 
 const NON_SHIPPING_PREFIXES = ["scratchpad/", "explorations/"] as const;
 const GENERATED_OR_VENDOR_SEGMENTS = ["/.repos/", "/node_modules/", "/dist/", "/vendor/"] as const;
+const GENERATED_SOURCE_SEGMENTS = A.filter(TYPESCRIPT_SOURCE_EXCLUDED_SEGMENTS, Str.includes("generated"));
+const GENERATED_SOURCE_SUFFIXES = A.filter(TYPESCRIPT_SOURCE_EXCLUDED_SUFFIXES, Str.startsWith(".gen."));
 const GOAL_OPS_PATTERN = /^goals\/[^/]+\/(?:ops|research\/assets)\//u;
 
 const hasPathPrefix = (prefix: string, filePath: string): boolean =>
@@ -476,6 +483,8 @@ const hasPathPrefix = (prefix: string, filePath: string): boolean =>
 const isDeliberatelyExcludedPath = (filePath: string): boolean =>
   A.some(NON_SHIPPING_PREFIXES, (prefix) => Str.startsWith(prefix)(filePath)) ||
   A.some(GENERATED_OR_VENDOR_SEGMENTS, (segment) => Str.includes(segment)(`/${filePath}`)) ||
+  A.some(GENERATED_SOURCE_SEGMENTS, (segment) => Str.includes(segment)(`/${filePath}`)) ||
+  A.some(GENERATED_SOURCE_SUFFIXES, (suffix) => Str.endsWith(suffix)(filePath)) ||
   O.isSome(Str.match(GOAL_OPS_PATTERN)(filePath));
 
 const sameTarget = (left: ImportTarget, right: ImportTarget): boolean =>
@@ -651,9 +660,33 @@ const buildFoundationRootMappings = Effect.fn("EffectImports.buildFoundationRoot
           continue;
         }
 
-        for (const binding of targetSourceFile.getExportedDeclarations().keys()) {
+        for (const [binding, exportedDeclarations] of targetSourceFile.getExportedDeclarations()) {
           if (binding !== "default") {
-            packageMappings = appendMappingCandidate(packageMappings, binding, namedTarget(targetSpecifier, binding));
+            const namespaceTargetSpecifiers = pipe(
+              exportedDeclarations,
+              A.filter(Node.isSourceFile),
+              A.flatMap((sourceFile) =>
+                pipe(
+                  `./${toPosixPath(path.relative(packageDirectory, sourceFile.getFilePath()))}`,
+                  (sourceTarget) => publicSubpathsForSourceTarget(workspaceExports.value, sourceTarget),
+                  A.filter(isSafePublicSubpath),
+                  A.filter((subpath) => exportMapCoversSubpath(publishedExports.value, subpath)),
+                  A.map((subpath) => `${manifest.name}${Str.slice(1)(subpath)}`)
+                )
+              ),
+              A.dedupe
+            );
+            if (A.isReadonlyArrayNonEmpty(namespaceTargetSpecifiers)) {
+              for (const namespaceTargetSpecifier of namespaceTargetSpecifiers) {
+                packageMappings = appendMappingCandidate(
+                  packageMappings,
+                  binding,
+                  namespaceTarget(namespaceTargetSpecifier)
+                );
+              }
+            } else {
+              packageMappings = appendMappingCandidate(packageMappings, binding, namedTarget(targetSpecifier, binding));
+            }
           }
         }
       }
@@ -869,6 +902,27 @@ const planNamedRootImport = (
   };
 };
 
+const sideEffectImportManualReviews = (
+  file: string,
+  line: number,
+  moduleSpecifier: string,
+  importDeclaration: ImportDeclaration
+): ReadonlyArray<EffectImportManualReview> =>
+  P.isUndefined(importDeclaration.getDefaultImport()) &&
+  P.isUndefined(importDeclaration.getNamespaceImport()) &&
+  A.isReadonlyArrayEmpty(importDeclaration.getNamedImports())
+    ? [
+        manualReview(
+          "side-effect",
+          file,
+          line,
+          moduleSpecifier,
+          "side-effect import",
+          "A side-effect-only root import has no behavior-preserving per-module rewrite."
+        ),
+      ]
+    : A.empty();
+
 const planRootImport = (
   mappings: RootImportMappings,
   file: string,
@@ -878,8 +932,9 @@ const planRootImport = (
   const line = importDeclaration.getStartLineNumber();
   const defaultImport = importDeclaration.getDefaultImport();
   const namespaceImport = importDeclaration.getNamespaceImport();
+  const namedImports = importDeclaration.getNamedImports();
   let imports = A.empty<OptionalKind<ImportDeclarationStructure>>();
-  let manualReviews = A.empty<EffectImportManualReview>();
+  let manualReviews = sideEffectImportManualReviews(file, line, moduleSpecifier, importDeclaration);
 
   if (P.isNotUndefined(defaultImport)) {
     const target = O.getOrUndefined(importTargetFor(mappings, moduleSpecifier, "default"));
@@ -918,7 +973,6 @@ const planRootImport = (
     );
   }
 
-  const namedImports = importDeclaration.getNamedImports();
   if (A.isReadonlyArrayNonEmpty(namedImports)) {
     const namedPlan = planNamedRootImport(
       mappings,
@@ -1533,16 +1587,14 @@ const isPathInActiveScope = (
     A.some(options.promotedFamilyPrefixes, (prefix) => hasPathPrefix(prefix, relativePath)));
 
 const codeGlobsFor = (options: EffectImportRulesOptions): ReadonlyArray<string> => {
-  if (P.isNotUndefined(options.includePaths)) {
-    return options.includePaths;
+  if (P.isUndefined(options.includePaths) && A.isReadonlyArrayEmpty(options.includePrefixes)) {
+    return CODE_GLOBS;
   }
-  if (A.isReadonlyArrayNonEmpty(options.includePrefixes)) {
-    return A.map(
-      options.includePrefixes,
-      (prefix) => `${Str.trimEnd(Str.replace(/\/+$/u, "")(prefix))}/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}`
-    );
-  }
-  return CODE_GLOBS;
+  const prefixGlobs = A.map(
+    options.includePrefixes,
+    (prefix) => `${Str.trimEnd(Str.replace(/\/+$/u, "")(prefix))}/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}`
+  );
+  return pipe(options.includePaths ?? A.empty<string>(), A.appendAll(prefixGlobs), A.dedupe);
 };
 
 /**
@@ -1568,6 +1620,11 @@ const codeGlobsFor = (options: EffectImportRulesOptions): ReadonlyArray<string> 
 export const runEffectImportRules = Effect.fn("EffectImports.runEffectImportRules")(function* (
   options: EffectImportRulesOptions
 ) {
+  if (options.candidate && options.write) {
+    return yield* EffectImportRulesConfigurationError.new(
+      "Candidate scans are dry-run only and cannot persist updates."
+    );
+  }
   if (options.mode === "code" && !options.candidate && A.isReadonlyArrayEmpty(options.promotedFamilyPrefixes)) {
     return EffectImportRulesSummary.make({
       mappingTableVersion: "root-export-graph/v1",

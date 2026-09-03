@@ -7,7 +7,7 @@ import { pipe } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { Node, SyntaxKind } from "ts-morph";
+import { Node, SyntaxKind, ts } from "ts-morph";
 import { formatJsonc } from "../../../internal/artifacts/index.ts";
 import { isLabsWorkspacePath } from "../../../internal/cli/Labs/index.ts";
 import { globPatternToRegExp as sharedGlobPatternToRegExp } from "../../../internal/GlobPattern.ts";
@@ -570,7 +570,31 @@ const requiredNamespaceImportViolations = (
   ]);
 };
 
-const rootImportSpecifierPattern = /(?:\bfrom\s*|\bimport\s*(?:\(\s*)?)["']([^"']+)["']/g;
+const rootModuleSpecifiers = (example: string): ReadonlyArray<string> => {
+  const sourceFile = ts.createSourceFile("example.tsx", example, ts.ScriptTarget.Latest, false, ts.ScriptKind.TSX);
+  const moduleSpecifiers = A.empty<string>();
+
+  const appendStringLiteral = (node: ts.Node | undefined): void => {
+    if (P.isNotUndefined(node) && ts.isStringLiteralLike(node)) {
+      A.appendInPlace(moduleSpecifiers, node.text);
+    }
+  };
+  const visit = (node: ts.Node): void => {
+    if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) {
+      appendStringLiteral(node.moduleSpecifier);
+    } else if (ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword) {
+      appendStringLiteral(node.arguments[0]);
+    } else if (ts.isImportEqualsDeclaration(node) && ts.isExternalModuleReference(node.moduleReference)) {
+      appendStringLiteral(node.moduleReference.expression);
+    } else if (ts.isImportTypeNode(node) && ts.isLiteralTypeNode(node.argument)) {
+      appendStringLiteral(node.argument.literal);
+    }
+    ts.forEachChild(node, visit);
+  };
+
+  visit(sourceFile);
+  return moduleSpecifiers;
+};
 
 const rootPackageImportViolations = (
   example: string,
@@ -578,11 +602,9 @@ const rootPackageImportViolations = (
   forbiddenRootImports: MutableHashSet.MutableHashSet<string>
 ): ReadonlyArray<DocumentationIssue> =>
   pipe(
-    Str.matchAll(rootImportSpecifierPattern)(example),
-    A.fromIterable,
-    A.flatMap((match) => {
-      const moduleSpecifier = match[1];
-      return P.isString(moduleSpecifier) && MutableHashSet.has(forbiddenRootImports, moduleSpecifier)
+    rootModuleSpecifiers(example),
+    A.flatMap((moduleSpecifier) =>
+      MutableHashSet.has(forbiddenRootImports, moduleSpecifier)
         ? [
             {
               example: exampleNumber,
@@ -590,8 +612,8 @@ const rootPackageImportViolations = (
               detail: `Import stable public modules instead of the ${moduleSpecifier} package root.`,
             },
           ]
-        : A.empty<DocumentationIssue>();
-    })
+        : A.empty<DocumentationIssue>()
+    )
   );
 
 const exampleImportViolations = (
