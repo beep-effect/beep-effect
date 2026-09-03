@@ -74,7 +74,7 @@ export const PostgresConfig = S.Struct({
   $I.annoteSchema("PostgresConfig", {
     description: "PostgreSQL host, port, database, username, redacted password, and optional TLS flag.",
   }),
-  SchemaUtils.withEffectCodecStatics
+  SchemaUtils.withCodecStatics(["decodeEffect"])
 );
 
 /**

@@ -1,0 +1,153 @@
+{
+  "schemaVersion": 1,
+  "packageName": "@beep/lexical-schema",
+  "profileIds": ["lexical-serialized-state-0.49.0", "beep-lexical-v1"],
+  "profiles": [
+    {
+      "id": "lexical-serialized-state-0.49.0",
+      "title": "Lexical serialized-state upstream profile",
+      "version": "0.49.0",
+      "description": "Pinned upstream Lexical data model, informative concepts, and runtime implementation oracles.",
+      "sourceIds": [
+        "lexical-source-0.49.0",
+        "lexical-nodes-docs-2026-08-30",
+        "lexical-transforms-docs-2026-08-30",
+        "lexical-npm-0.49.0",
+        "lexical-list-npm-0.49.0",
+        "lexical-table-npm-0.49.0"
+      ],
+      "invariantIds": [
+        "lexical.source.upstream-parity",
+        "lexical.transforms.runtime-semantics",
+        "lexical.full-node-ecosystem"
+      ]
+    },
+    {
+      "id": "beep-lexical-v1",
+      "title": "Beep strict and lossless Lexical v1",
+      "version": "1",
+      "description": "Package-owned strict semantic tree, open lossless wire, exhaustive boundary classification, and Markdown adapter profile.",
+      "sourceIds": [
+        "lexical-source-0.49.0",
+        "lexical-nodes-docs-2026-08-30",
+        "lexical-npm-0.49.0",
+        "lexical-list-npm-0.49.0",
+        "lexical-table-npm-0.49.0",
+        "lexical-beep-v1-baseline"
+      ],
+      "invariantIds": [
+        "lexical.ast.type-discrimination",
+        "lexical.node.version-one",
+        "lexical.strict.closed-objects",
+        "lexical.lossless.open-wire",
+        "lexical.strict.future-node-reporting",
+        "lexical.tree.parent-child-grammar",
+        "lexical.root.nonempty",
+        "lexical.heading.tag-domain",
+        "lexical.list.metadata-consistency",
+        "lexical.table.structure",
+        "lexical.text.format-bitmasks",
+        "lexical.node-state.json-only",
+        "lexical.safe.urls-and-styles",
+        "lexical.nullish.option-boundary",
+        "lexical.adapter.md-core-identity",
+        "lexical.adapter.lossiness-reporting"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "id": "lexical-source-0.49.0",
+      "title": "Lexical v0.49.0 source commit tarball",
+      "role": "primarySpecification",
+      "canonicalUrl": "https://github.com/facebook/lexical/archive/ffe90924bd55b5d450c88de0f9f1c8b228c4a221.tar.gz",
+      "revision": {
+        "kind": "gitCommit",
+        "repository": "https://github.com/facebook/lexical",
+        "commit": "ffe90924bd55b5d450c88de0f9f1c8b228c4a221"
+      },
+      "contentSha256": "c9a1e68fef4ed36a821083e5c24936ec49e03c53f99fdd094804b55f664ae67b",
+      "license": "MIT",
+      "scope": "Approved upstream source pin for serialized node shapes and runtime behavior; the tarball is not yet vendored as a package corpus. Consumed anchors: packages/lexical/src, packages/lexical-list/src, packages/lexical-table/src."
+    },
+    {
+      "id": "lexical-nodes-docs-2026-08-30",
+      "title": "Lexical nodes concepts",
+      "role": "bestPractice",
+      "canonicalUrl": "https://lexical.dev/docs/concepts/nodes",
+      "revision": {
+        "kind": "retrievedSnapshot",
+        "retrievedOn": "2026-08-30"
+      },
+      "contentSha256": "d0ad375abbfd81dcd1d3a7fd2c33b9a713ca4900902cb7938c699a18a890c524",
+      "license": "MIT",
+      "scope": "Informative explanation of node properties, serialization, NodeState, element children, and node replacement; not normative authority. Consumed anchors: node-properties, node-properties-and-serialization, node-state."
+    },
+    {
+      "id": "lexical-transforms-docs-2026-08-30",
+      "title": "Lexical transforms concepts",
+      "role": "bestPractice",
+      "canonicalUrl": "https://lexical.dev/docs/concepts/transforms",
+      "revision": {
+        "kind": "retrievedSnapshot",
+        "retrievedOn": "2026-08-30"
+      },
+      "contentSha256": "d2302a855a0de4acba0e16dae444fe0c585fed05e0ed8c847b2f3118527f57f9",
+      "license": "MIT",
+      "scope": "Informative explanation of transform ordering, dirty-node processing, and preconditions; not normative authority. Consumed anchors: lifecycle, preconditions."
+    },
+    {
+      "id": "lexical-npm-0.49.0",
+      "title": "lexical 0.49.0 npm artifact",
+      "role": "implementationReference",
+      "canonicalUrl": "https://registry.npmjs.org/lexical/-/lexical-0.49.0.tgz",
+      "revision": {
+        "kind": "release",
+        "version": "0.49.0"
+      },
+      "contentSha256": "94af126c54427e80c88aac2051947921b45f7f036dbbfb94b5730ab38066bbe4",
+      "license": "MIT",
+      "scope": "Development-only real-runtime compatibility oracle; it is not a normative specification. Consumed anchors: package."
+    },
+    {
+      "id": "lexical-list-npm-0.49.0",
+      "title": "@lexical/list 0.49.0 npm artifact",
+      "role": "implementationReference",
+      "canonicalUrl": "https://registry.npmjs.org/@lexical/list/-/list-0.49.0.tgz",
+      "revision": {
+        "kind": "release",
+        "version": "0.49.0"
+      },
+      "contentSha256": "da6a019b5b9cfb6fa3f8bdd72ae06171fb30701a2592f823e668156362ceea10",
+      "license": "MIT",
+      "scope": "Development-only list serialization and normalization oracle; it is not a normative specification. Consumed anchors: package."
+    },
+    {
+      "id": "lexical-table-npm-0.49.0",
+      "title": "@lexical/table 0.49.0 npm artifact",
+      "role": "implementationReference",
+      "canonicalUrl": "https://registry.npmjs.org/@lexical/table/-/table-0.49.0.tgz",
+      "revision": {
+        "kind": "release",
+        "version": "0.49.0"
+      },
+      "contentSha256": "12107c51d850578ccd5e48776a1969e8912b6feb8f88f83aa8726f0d2b70006a",
+      "license": "MIT",
+      "scope": "Development-only table serialized-shape oracle; it is not a normative specification. Consumed anchors: package."
+    },
+    {
+      "id": "lexical-beep-v1-baseline",
+      "title": "Beep strict and lossless Lexical v1 profile baseline",
+      "role": "implementationReference",
+      "canonicalUrl": "https://github.com/beep-effect/beep-effect/blob/1ed08f66df016a18c6d7d56bd97aa778912cb37b/packages/foundation/modeling/lexical/src/Lexical.model.ts",
+      "revision": {
+        "kind": "gitCommit",
+        "repository": "https://github.com/beep-effect/beep-effect",
+        "commit": "1ed08f66df016a18c6d7d56bd97aa778912cb37b"
+      },
+      "contentSha256": "ed06366dc1263a30b375b4001c1d7aecfa5385e211a337b96c8ecc96224da0e3",
+      "license": "MIT",
+      "scope": "Immutable public pre-initiative package-owned baseline for the persisted-state contract, strict tree grammar, open lossless wire, and compatibility analysis. Consumed anchors: LexicalNode, SerializedEditorState, SerializedEditorStateWire."
+    }
+  ]
+}

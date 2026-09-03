@@ -451,6 +451,41 @@ describe("tmpfs reap", () => {
     ).pipe(provideScopedLayer(NodeServices.layer))
   );
 
+  it.effect("fails closed when discovered candidates change during the liveness scan", () =>
+    withTempDirectory((root) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const fixture = yield* makeNewClassFixtures(root);
+        const stubGitFile = path.join(fixture.stubEligible, ".git");
+        const worktreeGitFile = path.join(fixture.vitestWrongShape, ".git");
+        const missingStatTarget = path.join(root, "missing-stat-target");
+        const missingCacheRoot = path.join(root, "missing-cache-root");
+        let stubGitStatCount = 0;
+        const racingFileSystem = FileSystem.makeNoop({
+          ...fs,
+          stat: (target) => {
+            if (Str.Equivalence(target, stubGitFile)) {
+              stubGitStatCount += 1;
+              if (stubGitStatCount > 1) return fs.stat(missingStatTarget);
+            }
+            return fs.stat(target);
+          },
+        });
+
+        const report = yield* runTmpfsReap({
+          cacheRoot: missingCacheRoot,
+          listProcessCommandLines: () => fs.remove(worktreeGitFile).pipe(Effect.orDie, Effect.as(A.empty<string>())),
+          nowMillis: FIXTURE_NOW_MILLIS,
+          tmpRoot: fixture.tmpRoot,
+        }).pipe(Effect.provideService(FileSystem.FileSystem, racingFileSystem));
+
+        expect(candidateByPath(report, fixture.stubEligible).skipReason).toBe("contents-present");
+        expect(candidateByPath(report, fixture.vitestWrongShape).skipReason).toBe("dirty-worktree");
+      })
+    ).pipe(provideScopedLayer(NodeServices.layer))
+  );
+
   it.effect("preserves a container child created when non-recursive cleanup begins", () =>
     withTempDirectory((root) =>
       Effect.gen(function* () {
@@ -478,6 +513,49 @@ describe("tmpfs reap", () => {
         expect(yield* fs.exists(fixture.stubSoleEligible)).toBe(false);
         expect(yield* fs.exists(racedChild)).toBe(true);
         expect(A.some(report.warnings, Str.includes(fixture.soleWorktreesRoot))).toBe(false);
+      })
+    ).pipe(provideScopedLayer(NodeServices.layer))
+  );
+
+  it.effect("keeps dangling worktree stubs when census metadata vanishes or removal fails", () =>
+    withTempDirectory((root) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const fixture = yield* makeNewClassFixtures(root);
+        const gitFile = path.join(fixture.stubEligible, ".git");
+        const missingStatTarget = path.join(root, "missing-stat-target");
+        const missingCacheRoot = path.join(root, "missing-cache");
+        let gitFileStatCount = 0;
+        const racingFileSystem = FileSystem.makeNoop({
+          ...fs,
+          remove: (target, options) =>
+            Str.Equivalence(target, fixture.stubRelativeGitDir)
+              ? fs.remove(missingStatTarget)
+              : fs.remove(target, options),
+          stat: (target) => {
+            if (!Str.Equivalence(target, gitFile)) return fs.stat(target);
+            gitFileStatCount += 1;
+            return gitFileStatCount === 2 ? fs.stat(missingStatTarget) : fs.stat(target);
+          },
+        });
+
+        const report = yield* runTmpfsReap({
+          apply: true,
+          cacheRoot: missingCacheRoot,
+          classes: ["dangling-worktree-stub"],
+          listProcessCommandLines: noProcessCommandLines,
+          nowMillis: FIXTURE_NOW_MILLIS,
+          tmpRoot: fixture.tmpRoot,
+        }).pipe(Effect.provideService(FileSystem.FileSystem, racingFileSystem));
+
+        const candidate = candidateByPath(report, fixture.stubEligible);
+        expect(candidate.action).toBe("skip");
+        expect(candidate.skipReason).toBe("contents-present");
+        expect(yield* fs.exists(fixture.stubEligible)).toBe(true);
+        expect(gitFileStatCount).toBe(2);
+        expect(yield* fs.exists(fixture.stubRelativeGitDir)).toBe(true);
+        expect(report.warnings).toContain(`Failed to remove ${fixture.stubRelativeGitDir}.`);
       })
     ).pipe(provideScopedLayer(NodeServices.layer))
   );

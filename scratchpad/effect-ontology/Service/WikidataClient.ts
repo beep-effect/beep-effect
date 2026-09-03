@@ -309,7 +309,7 @@ const WikidataSearchResponse = S.Struct({
   success: NonNegativeInt.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   "search-continue": NonNegativeInt.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 }).pipe(
-  SchemaUtils.withEffectCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
 );
 
 const WikidataEntityText = S.Struct({
@@ -324,7 +324,7 @@ const WikidataEntity = S.Struct({
 
 const WikidataEntityResponse = S.Struct({
   entities: S.Record(S.String, WikidataEntity),
-}).pipe(SchemaUtils.withEffectCodecStatics);
+}).pipe(SchemaUtils.withCodecStatics(["decodeUnknownEffect"]));
 
 type WikidataSearchResultType = typeof WikidataSearchResult.Type;
 

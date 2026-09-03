@@ -93,7 +93,7 @@ interface RdfConstructionPrefixes {
   readonly schema?: string;
 }
 
-const n3NamedNode = (value: string): N3.NamedNode => N3.DataFactory.namedNode(IRI.fromUnknown(value));
+const n3NamedNode = (value: string): N3.NamedNode => N3.DataFactory.namedNode(IRI.decodeUnknownSync(value));
 const isIriObjectString = P.some([Str.startsWith("https://"), Str.startsWith("https://"), Str.startsWith("urn:")]);
 
 const valueToN3Literal = (value: string | number | boolean, prefixes: RdfConstructionPrefixes): N3.Literal => {

@@ -17,8 +17,7 @@
 
 import { createHash } from "node:crypto";
 import { $OpenclawId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { O } from "@beep/utils";
 import { flow, Match, Order, pipe, Result } from "effect";
 import * as A from "effect/Array";
@@ -44,7 +43,7 @@ const indentUnit = "  ";
 const gatewaySecretsProviderName = "op_gateway";
 const telegramSecretsProviderName = "op_telegram";
 const modelProviderSecretsName = (providerId: string): string => `op_provider_${providerId}`;
-const encodeCompactJson = Unknown.encodeResultFromJsonString;
+const encodeCompactJson = UnknownFromJsonString.encodeResult;
 const encodeJsonLeaf: (value: unknown) => string = flow(encodeCompactJson, Result.getOrThrow);
 const jsonEntryOrder = Order.mapInput(Order.String, ([key]: readonly [string, unknown]) => key);
 
@@ -276,8 +275,7 @@ export const OpenclawSha256Hex = S.String.check(
   S.brand("OpenclawSha256Hex"),
   $I.annoteSchema("OpenclawSha256Hex", {
     description: "Lowercase 64-character hexadecimal SHA-256 digest of canonical config bytes.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

@@ -86,12 +86,12 @@ export const tokenIndex: Brand.Constructor<TokenIndex> = Brand.check<TokenIndex>
  * @category validation
  * @since 0.0.0
  */
-export const TokenIndex = NonNegativeInt.pipe(
+export const TokenIndex = S.make<(typeof NonNegativeInt)["Rebuild"]>(NonNegativeInt.ast).pipe(
   S.fromBrand("TokenIndex", tokenIndex),
   $I.annoteSchema("TokenIndex", {
     description: "Non-negative ordered index for an NLP token.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 /**
@@ -166,12 +166,12 @@ export const charPosition: Brand.Constructor<CharPosition> = Brand.check<CharPos
  * @category validation
  * @since 0.0.0
  */
-export const CharPosition = NonNegativeInt.pipe(
+export const CharPosition = S.make<(typeof NonNegativeInt)["Rebuild"]>(NonNegativeInt.ast).pipe(
   S.fromBrand("CharPosition", charPosition),
   $I.annoteSchema("CharPosition", {
     description: "Non-negative character offset in source NLP text.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 /**

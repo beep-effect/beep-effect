@@ -97,6 +97,9 @@ import { refineKnowledgeGraph } from "../Utils/RefineKG.ts";
 import { mergeGraphs } from "./Merge.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Workflow/DurableActivities");
+const PrettyShaclValidationReportFromJsonString = S.fromJsonString(ShaclValidationReport, { space: 2 }).pipe(
+  SchemaUtils.withCodecStatics(["encodeEffect"])
+);
 const isActivityError = S.is(ActivityError);
 const preserveActivityError = (error: unknown): ActivityError =>
   isActivityError(error) ? error : toActivityError(error);
@@ -466,7 +469,7 @@ const storeToKnowledgeGraph = Effect.fn("storeToKnowledgeGraph")(function* (stor
       Entity.make({
         id: EntityId.make(localName),
         mention,
-        types: A.map(types, IRI.fromUnknown),
+        types: A.map(types, (type) => IRI.decodeUnknownSync(type)),
         attributes: {},
       })
     );
@@ -492,7 +495,7 @@ const storeToKnowledgeGraph = Effect.fn("storeToKnowledgeGraph")(function* (stor
         relations.push(
           Relation.make({
             subjectId,
-            predicate: IRI.fromUnknown(predicate),
+            predicate: IRI.decodeUnknownSync(predicate),
             object: RelationObject.cases.EntityReference.make({ value: objectId }),
           })
         );
@@ -684,7 +687,7 @@ export const makeResolutionActivity = (input: ResolutionActivityInput) =>
       });
 
       return {
-        resolvedUri: GcsUri.fromUnknown(`gs://${bucket}/${resolutionPath}`),
+        resolvedUri: GcsUri.decodeUnknownSync(`gs://${bucket}/${resolutionPath}`),
         entitiesTotal: NonNegativeInt.make(totalEntities),
         clustersFormed: NonNegativeInt.make(resolutionGraph.stats.clusterCount),
         relationsTotal: NonNegativeInt.make(totalRelations),
@@ -831,7 +834,7 @@ export const makeValidationActivity = (input: ValidationActivityInput) =>
       yield* storage.set(validationGraphPath, resolvedGraph);
 
       const reportPath = PathLayout.batch.validationReport(input.batchId);
-      const reportJson = yield* ShaclValidationReport.encodeEffectFromJsonString(report, { space: 2 });
+      const reportJson = yield* PrettyShaclValidationReportFromJsonString.encodeEffect(report);
       yield* storage.set(reportPath, reportJson);
 
       const end = yield* DateTime.now;
@@ -845,13 +848,13 @@ export const makeValidationActivity = (input: ValidationActivityInput) =>
       });
 
       return {
-        validatedUri: GcsUri.fromUnknown(`gs://${bucket}/${validationGraphPath}`),
+        validatedUri: GcsUri.decodeUnknownSync(`gs://${bucket}/${validationGraphPath}`),
         conforms: report.validation.conforms,
         violations: NonNegativeInt.make(report.validation.violations.length),
         violationSummary: P.isTruthy(report.validation.violations.length)
           ? summarizeViolations(report.validation.violations)
           : [],
-        reportUri: GcsUri.fromUnknown(`gs://${bucket}/${reportPath}`),
+        reportUri: GcsUri.decodeUnknownSync(`gs://${bucket}/${reportPath}`),
         durationMs: Duration.toMillis(DateTime.distance(start, end)),
       };
     }).pipe(Effect.mapError(preserveActivityError)),
@@ -1088,7 +1091,7 @@ export const makeIngestionActivity = (input: IngestionActivityInput) =>
       const end = yield* DateTime.now;
 
       return {
-        canonicalUri: GcsUri.fromUnknown(`gs://${bucket}/${canonicalPath}`),
+        canonicalUri: GcsUri.decodeUnknownSync(`gs://${bucket}/${canonicalPath}`),
         triplesIngested: NonNegativeInt.make(stats.tripleCount),
         durationMs: NonNegNum.make(Duration.toMillis(DateTime.distance(start, end))),
       };
@@ -1656,7 +1659,7 @@ export const makeInferenceActivity = (input: InferenceInput) =>
         });
         const end = yield* DateTime.now;
         return {
-          enrichedGraphUri: GcsUri.fromUnknown(input.resolvedGraphUri),
+          enrichedGraphUri: GcsUri.decodeUnknownSync(input.resolvedGraphUri),
           inferredTripleCount: NonNegativeInt.make(0),
           totalTripleCount: NonNegativeInt.make(0),
           provenanceQuadCount: NonNegativeInt.make(0),
@@ -1764,7 +1767,7 @@ export const makeInferenceActivity = (input: InferenceInput) =>
       });
 
       return {
-        enrichedGraphUri: GcsUri.fromUnknown(`gs://${bucket}/${enrichedPath}`),
+        enrichedGraphUri: GcsUri.decodeUnknownSync(`gs://${bucket}/${enrichedPath}`),
         inferredTripleCount: NonNegativeInt.make(delta.deltaCount),
         totalTripleCount: NonNegativeInt.make(rdfStoreSize(enrichedStore)),
         provenanceQuadCount: NonNegativeInt.make(provenanceQuadCount),
@@ -1985,7 +1988,7 @@ export const makeComputeEmbeddingsActivity = (input: ComputeEmbeddingsInput) =>
 
       // 7. Build OntologyEmbeddings blob
       // Use actual provider model from metadata, not hardcoded fallback
-      const ontologyUri = GcsUri.fromUnknown(input.ontologyUri);
+      const ontologyUri = GcsUri.decodeUnknownSync(input.ontologyUri);
       const embeddingsBlob = yield* OntologyEmbeddings.decodeUnknownEffect({
         ontologyUri,
         version: ContentHash.make(version),
@@ -2012,7 +2015,7 @@ export const makeComputeEmbeddingsActivity = (input: ComputeEmbeddingsInput) =>
       });
 
       return {
-        embeddingsUri: GcsUri.fromUnknown(`gs://${bucket}/${embeddingsPath}`),
+        embeddingsUri: GcsUri.decodeUnknownSync(`gs://${bucket}/${embeddingsPath}`),
         version,
         classCount: NonNegativeInt.make(classEmbeddings.length),
         propertyCount: NonNegativeInt.make(propertyEmbeddings.length),
@@ -2925,7 +2928,7 @@ export const makePreprocessingActivity = (input: PreprocessingActivityInput) =>
       });
 
       return {
-        enrichedManifestUri: GcsUri.fromUnknown(`gs://${bucket}/${enrichedManifestPath}`),
+        enrichedManifestUri: GcsUri.decodeUnknownSync(`gs://${bucket}/${enrichedManifestPath}`),
         totalDocuments: NonNegativeInt.make(documentMetadata.length),
         classifiedCount: NonNegativeInt.make(classifiedCount),
         failedCount: NonNegativeInt.make(failedCount),

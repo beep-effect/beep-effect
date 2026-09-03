@@ -233,8 +233,7 @@ export const StateUri = S.String.check(
   S.brand("StateUri"),
   $I.annoteSchema("StateUri", {
     description: "A compact OntoSkills state identifier used by execution preconditions and outcomes.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -901,8 +900,7 @@ export const SkillId = NonEmptyTrimmedStr.check(
   S.brand("SkillId"),
   $I.annoteSchema("SkillId", {
     description: "Canonical bare identifier used to address one OntoSkills skill.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -928,7 +926,7 @@ const RelationPart = S.String.check(
   $I.annoteSchema("RelationPart", {
     description: "One validated segment in a slash-qualified skill relation.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 const RelationInput = S.String.check(
@@ -997,8 +995,7 @@ export const RelationId = RelationInput.pipe(
   ),
   $I.annoteSchema("RelationId", {
     description: "Normalized OntoSkills relation target used by dependency and conflict edges.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

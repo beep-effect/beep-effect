@@ -1,47 +1,41 @@
-import { Unknown as RootUnknown } from "@beep/schema";
-import { Unknown } from "@beep/schema/Unknown";
+import { Unknown as RootUnknown, UnknownFromJsonString as RootUnknownFromJsonString } from "@beep/schema";
+import { Unknown, UnknownFromJsonString } from "@beep/schema/Unknown";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
-import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 
 const input = { name: "Ada", active: true };
 const compactJson = '{"name":"Ada","active":true}';
 const formattedJson = '{\n  "name": "Ada",\n  "active": true\n}';
-const assertsUnknown: typeof Unknown.asserts = Unknown.asserts;
+const PrettyUnknownFromJsonString = S.fromJsonString(Unknown, { space: 2 });
+const decodeUnknown = S.decodeSync(Unknown);
+const encodePrettyUnknownEffect = S.encodeUnknownEffect(PrettyUnknownFromJsonString);
 
 describe("Unknown", () => {
-  it("exports the codec-enhanced schema from the package root", () => {
+  it("exports the plain schema and explicit JSON boundary from the package root", () => {
     expect(RootUnknown).toBe(Unknown);
-    expect(Unknown.is(input)).toBe(true);
-    expect(Unknown.equivalence(input, input)).toBe(true);
-    assertsUnknown(input);
+    expect(RootUnknownFromJsonString).toBe(UnknownFromJsonString);
+    expect(decodeUnknown(input)).toBe(input);
   });
 
-  it("exposes Sync, Option, Result, and Exit codecs", () => {
-    expect(Unknown.decodeUnknownSync(input)).toBe(input);
-    expect(Unknown.encodeUnknownSync(input)).toBe(input);
-    expect(Unknown.decodeUnknownSyncFromJsonString(compactJson)).toEqual(input);
-    expect(Unknown.encodeUnknownSyncFromJsonString(input, { space: 2 })).toBe(formattedJson);
-
-    expect(Unknown.decodeUnknownOptionFromJsonString(compactJson)).toStrictEqual(O.some(input));
-    expect(Unknown.encodeUnknownOptionFromJsonString(input)).toStrictEqual(O.some(compactJson));
-    expect(Result.getOrThrow(Unknown.decodeUnknownResultFromJsonString(compactJson))).toEqual(input);
-    expect(Result.getOrThrow(Unknown.encodeUnknownResultFromJsonString(input))).toBe(compactJson);
-    expect(Exit.getSuccess(Unknown.decodeUnknownExitFromJsonString(compactJson))).toStrictEqual(O.some(input));
-    expect(Exit.getSuccess(Unknown.encodeUnknownExitFromJsonString(input))).toStrictEqual(O.some(compactJson));
+  it("exposes only selected compact JSON runners", () => {
+    expect(UnknownFromJsonString.decodeUnknownSync(compactJson)).toEqual(input);
+    expect(UnknownFromJsonString.encodeUnknownSync(input)).toBe(compactJson);
+    expect(UnknownFromJsonString.decodeUnknownOption(compactJson)).toStrictEqual(O.some(input));
+    expect(Result.getOrThrow(UnknownFromJsonString.decodeUnknownResult(compactJson))).toEqual(input);
+    expect(Result.getOrThrow(UnknownFromJsonString.encodeUnknownResult(input))).toBe(compactJson);
+    expect(Reflect.has(UnknownFromJsonString, "decodeUnknownPromise")).toBe(false);
+    expect(Reflect.has(UnknownFromJsonString, "encodeUnknownExit")).toBe(false);
   });
 
   it.effect(
-    "exposes Effect and Promise JSON codecs with per-call options",
+    "uses a separately named schema for fixed pretty-printing policy",
     Effect.fnUntraced(function* () {
-      expect(yield* Unknown.decodeUnknownEffectFromJsonString(compactJson)).toEqual(input);
-      expect(yield* Unknown.encodeUnknownEffectFromJsonString(input, { space: 2 })).toBe(formattedJson);
-      expect(yield* Effect.tryPromise(() => Unknown.decodeUnknownPromiseFromJsonString(compactJson))).toEqual(input);
-      expect(yield* Effect.tryPromise(() => Unknown.encodeUnknownPromiseFromJsonString(input, { space: 2 }))).toBe(
-        formattedJson
-      );
+      expect(yield* UnknownFromJsonString.decodeUnknownEffect(compactJson)).toEqual(input);
+      expect(yield* UnknownFromJsonString.encodeUnknownEffect(input)).toBe(compactJson);
+      expect(yield* encodePrettyUnknownEffect(input)).toBe(formattedJson);
     })
   );
 });

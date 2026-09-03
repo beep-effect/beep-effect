@@ -50,7 +50,7 @@ export const ContradictionCandidateKey = Sha256Hex.pipe(
   $I.annoteSchema("ContradictionCandidateKey", {
     description: "SHA-256 digest identifying one canonical contradiction candidate and match basis.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 /**
@@ -89,7 +89,7 @@ export const ContradictionReceiptKey = Sha256Hex.pipe(
   $I.annoteSchema("ContradictionReceiptKey", {
     description: "Caller-owned SHA-256 idempotency key for one contradiction-submission receipt.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 /**
@@ -130,7 +130,7 @@ export const ContradictionCandidateDigest = Sha256Hex.pipe(
   $I.annoteSchema("ContradictionCandidateDigest", {
     description: "SHA-256 digest guarding the complete immutable payload stored for a contradiction candidate.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 /**
@@ -175,7 +175,7 @@ export const ContradictionEvidenceDigest = Sha256Hex.pipe(
   $I.annoteSchema("ContradictionEvidenceDigest", {
     description: "Order-independent SHA-256 digest of the exact evidence ids in one contradiction basis.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 /**
@@ -220,7 +220,7 @@ export const ContradictionProposalId = Sha256Hex.pipe(
   $I.annoteSchema("ContradictionProposalId", {
     description: "Stable SHA-256 identifier for one persisted contradiction resolution proposal.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 /**
@@ -265,7 +265,7 @@ export const ContradictionProposalDigest = Sha256Hex.pipe(
   $I.annoteSchema("ContradictionProposalDigest", {
     description: "SHA-256 digest binding a proposal id to its losing belief, replacement, validity, and rationale.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 /**

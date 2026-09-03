@@ -11,7 +11,7 @@ import { LiteralKit } from "@beep/schema/LiteralKit";
 import { SemanticVersion } from "@beep/schema/SemanticVersion";
 import { Sha256Hex } from "@beep/schema/Sha256";
 import { ISOStr } from "@beep/schema/Timestamp";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import {
   AlwaysGateApplicability,
   EvidenceDigest,
@@ -711,7 +711,7 @@ export const evaluateJudgeOutputInventoryDecodes: GateEvaluator<
   input: JudgeOutputInventoryDecodesInput
 ): Effect.fn.Return<JudgeOutputInventoryDecodesVerdict> {
   const occurredAt = yield* auditTimestamp;
-  const parsed = yield* Effect.result(Unknown.decodeEffectFromJsonString(input.candidate));
+  const parsed = yield* Effect.result(UnknownFromJsonString.decodeEffect(input.candidate));
 
   return yield* Result.match(parsed, {
     onFailure: (issue) => Effect.succeed(outputDecodeDenial("malformed-json", issue.message, occurredAt)),

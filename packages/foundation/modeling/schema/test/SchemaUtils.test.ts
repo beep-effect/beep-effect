@@ -302,14 +302,14 @@ describe("withConstantDefault", () => {
 });
 
 describe("withCodecStatics", () => {
-  const Slug = S.NonEmptyString.pipe(SchemaUtils.withCodecStatics);
+  const Slug = S.NonEmptyString.pipe(SchemaUtils.withCodecStatics(["decodeUnknownOption", "decodeUnknownSync", "is"]));
 
   it("attached statics agree with the raw schema codecs over schema-derived samples", () => {
     fc.assert(
       fc.property(S.toArbitrary(S.NonEmptyString)(fc), (sampled) => {
         expect(Slug.is(sampled)).toBe(S.is(S.NonEmptyString)(sampled));
-        expect(Slug.fromUnknown(sampled)).toBe(sampled);
-        expect(O.isSome(Slug.decodeOption(sampled))).toBe(true);
+        expect(Slug.decodeUnknownSync(sampled)).toBe(sampled);
+        expect(O.isSome(Slug.decodeUnknownOption(sampled))).toBe(true);
       }),
       fcRuns(50)
     );
@@ -322,19 +322,19 @@ describe("withCodecStatics", () => {
   });
 
   it("attaches `fromUnknown` (throws on invalid) and `decodeOption` (None on invalid)", () => {
-    expect(Slug.fromUnknown("post")).toBe("post");
-    expect(() => Slug.fromUnknown("")).toThrow();
-    expect(Slug.decodeOption("post")).toStrictEqual(O.some("post"));
-    expect(O.isNone(Slug.decodeOption(""))).toBe(true);
+    expect(Slug.decodeUnknownSync("post")).toBe("post");
+    expect(() => Slug.decodeUnknownSync("")).toThrow();
+    expect(Slug.decodeUnknownOption("post")).toStrictEqual(O.some("post"));
+    expect(O.isNone(Slug.decodeUnknownOption(""))).toBe(true);
   });
 
   it("preserves statics when identity annotations run later in the pipeline", () => {
     const Tagged = S.NonEmptyString.pipe(
-      SchemaUtils.withCodecStatics,
+      SchemaUtils.withCodecStatics(["decodeUnknownOption", "is"]),
       $SchemaId.annoteSchema("TaggedSlug", { description: "Slug with codec statics." })
     );
 
     expect(Tagged.is("post")).toBe(true);
-    expect(O.isNone(Tagged.decodeOption(""))).toBe(true);
+    expect(O.isNone(Tagged.decodeUnknownOption(""))).toBe(true);
   });
 });

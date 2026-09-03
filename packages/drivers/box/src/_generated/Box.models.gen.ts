@@ -13,20 +13,6 @@ import * as S from "effect/Schema";
 
 const $I = $BoxId.create("_generated/Box.models.gen");
 
-// Kept local because importing this generic helper makes TypeScript instantiate it
-// against thousands of generated schemas and exceed the compiler's depth limit.
-const withLiteralKitCodecStatics = <Sch extends S.Top & S.ConstraintDecoder<unknown>>(
-  schema: Sch
-): Sch & {
-  // fallow-ignore-next-line code-duplication -- generated-local codec statics avoid TypeScript instantiation-depth failures
-  readonly decodeOption: (input: unknown) => import("effect/Option").Option<Sch["Type"]>;
-  readonly fromUnknown: (input: unknown) => Sch["Type"];
-} =>
-  SchemaUtils.withStatics((self: Sch) => ({
-    decodeOption: S.decodeUnknownOption(self),
-    fromUnknown: S.decodeUnknownSync(self)
-  }))(schema);
-
 /**
  * Serialized Box SDK JSON payloads.
  *
@@ -43,7 +29,7 @@ const withLiteralKitCodecStatics = <Sch extends S.Top & S.ConstraintDecoder<unkn
  */
 export const BoxSerializedData = S.Unknown.pipe($I.annoteSchema("BoxSerializedData", {
     description: "Permissive schema for Box SDK SerializedData values."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link BoxSerializedData}.
@@ -80,7 +66,7 @@ export const BoxSdkDate = S.Union([
   S.Struct({ value: S.Date })
 ]).pipe($I.annoteSchema("BoxSdkDate", {
     description: "Box SDK Date wrapper or encoded date string."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link BoxSdkDate}.
@@ -117,7 +103,7 @@ export const BoxSdkDateTime = S.Union([
   S.Struct({ value: S.Date })
 ]).pipe($I.annoteSchema("BoxSdkDateTime", {
     description: "Box SDK DateTime wrapper or encoded date-time string."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link BoxSdkDateTime}.
@@ -239,7 +225,6 @@ export const BoxMethodName = LiteralKit([
       $I.annoteSchema("BoxMethodName", {
         description: "Generated Box SDK method names wrapped by the Box technical driver."
       }),
-      withLiteralKitCodecStatics,
       SchemaUtils.withLiteralKitStatics(schema)
     )
 );
@@ -329,7 +314,7 @@ export class AppItemEventSource extends S.Class<AppItemEventSource>($I`AppItemEv
  */
 export const AppItemEventSourceTypeField = S.Literal("app_item").pipe($I.annoteSchema("AppItemEventSourceTypeField", {
     description: "Generated Box SDK schema for AppItemEventSourceTypeField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link AppItemEventSourceTypeField}.
@@ -363,7 +348,7 @@ export type AppItemEventSourceTypeField = typeof AppItemEventSourceTypeField.Typ
  */
 export const AppItemTypeField = S.Literal("app_item").pipe($I.annoteSchema("AppItemTypeField", {
     description: "Generated Box SDK schema for AppItemTypeField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link AppItemTypeField}.
@@ -579,7 +564,7 @@ export class CollaborationAcceptanceRequirementsStatusTwoFactorAuthenticationReq
  */
 export const CollaborationAccessGrantee = S.Union([S.suspend(() => UserCollaborations), S.suspend(() => GroupMini)]).pipe($I.annoteSchema("CollaborationAccessGrantee", {
     description: "Generated Box SDK schema for CollaborationAccessGrantee."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link CollaborationAccessGrantee}.
@@ -613,7 +598,7 @@ export type CollaborationAccessGrantee = typeof CollaborationAccessGrantee.Type;
  */
 export const CollaborationItem = S.Union([S.suspend(() => File), S.suspend(() => Folder), S.suspend(() => WebLink)]).pipe($I.annoteSchema("CollaborationItem", {
     description: "Generated Box SDK schema for CollaborationItem."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link CollaborationItem}.
@@ -647,7 +632,7 @@ export type CollaborationItem = typeof CollaborationItem.Type;
  */
 export const CollaborationRoleField = S.Union([LiteralKit(["editor", "viewer", "previewer", "uploader", "previewer uploader", "viewer uploader", "co-owner", "owner"]), S.String]).pipe($I.annoteSchema("CollaborationRoleField", {
     description: "Generated Box SDK schema for CollaborationRoleField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link CollaborationRoleField}.
@@ -733,7 +718,7 @@ export class CollaborationsOffsetPaginated extends S.Class<CollaborationsOffsetP
  */
 export const CollaborationStatusField = S.Union([LiteralKit(["accepted", "pending", "rejected"]), S.String]).pipe($I.annoteSchema("CollaborationStatusField", {
     description: "Generated Box SDK schema for CollaborationStatusField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link CollaborationStatusField}.
@@ -767,7 +752,7 @@ export type CollaborationStatusField = typeof CollaborationStatusField.Type;
  */
 export const CollaborationTypeField = S.Literal("collaboration").pipe($I.annoteSchema("CollaborationTypeField", {
     description: "Generated Box SDK schema for CollaborationTypeField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link CollaborationTypeField}.
@@ -827,7 +812,7 @@ export class Collection extends S.Class<Collection>($I`Collection`)(
  */
 export const CollectionCollectionTypeField = S.Union([LiteralKit(["favorites"]), S.String]).pipe($I.annoteSchema("CollectionCollectionTypeField", {
     description: "Generated Box SDK schema for CollectionCollectionTypeField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link CollectionCollectionTypeField}.
@@ -861,7 +846,7 @@ export type CollectionCollectionTypeField = typeof CollectionCollectionTypeField
  */
 export const CollectionNameField = S.Union([LiteralKit(["Favorites"]), S.String]).pipe($I.annoteSchema("CollectionNameField", {
     description: "Generated Box SDK schema for CollectionNameField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link CollectionNameField}.
@@ -895,7 +880,7 @@ export type CollectionNameField = typeof CollectionNameField.Type;
  */
 export const CollectionTypeField = S.Literal("collection").pipe($I.annoteSchema("CollectionTypeField", {
     description: "Generated Box SDK schema for CollectionTypeField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link CollectionTypeField}.
@@ -1295,7 +1280,6 @@ export const CreateCollaborationRequestBodyAccessibleByTypeField = LiteralKit(["
       $I.annoteSchema("CreateCollaborationRequestBodyAccessibleByTypeField", {
         description: "Generated Box SDK schema for CreateCollaborationRequestBodyAccessibleByTypeField."
       }),
-      withLiteralKitCodecStatics,
       SchemaUtils.withLiteralKitStatics(schema)
     )
 );
@@ -1360,7 +1344,6 @@ export const CreateCollaborationRequestBodyItemTypeField = LiteralKit(["file", "
       $I.annoteSchema("CreateCollaborationRequestBodyItemTypeField", {
         description: "Generated Box SDK schema for CreateCollaborationRequestBodyItemTypeField."
       }),
-      withLiteralKitCodecStatics,
       SchemaUtils.withLiteralKitStatics(schema)
     )
 );
@@ -1397,7 +1380,7 @@ export type CreateCollaborationRequestBodyItemTypeField = typeof CreateCollabora
  */
 export const CreateCollaborationRequestBodyRoleField = S.Union([LiteralKit(["editor", "viewer", "previewer", "uploader", "previewer uploader", "viewer uploader", "co-owner"]), S.String]).pipe($I.annoteSchema("CreateCollaborationRequestBodyRoleField", {
     description: "Generated Box SDK schema for CreateCollaborationRequestBodyRoleField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link CreateCollaborationRequestBodyRoleField}.
@@ -1815,7 +1798,7 @@ export class CreateFolderRequestBody extends S.Class<CreateFolderRequestBody>($I
  */
 export const CreateFolderRequestBodyFolderUploadEmailAccessField = S.Union([LiteralKit(["open", "collaborators"]), S.String]).pipe($I.annoteSchema("CreateFolderRequestBodyFolderUploadEmailAccessField", {
     description: "Generated Box SDK schema for CreateFolderRequestBodyFolderUploadEmailAccessField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link CreateFolderRequestBodyFolderUploadEmailAccessField}.
@@ -1895,7 +1878,7 @@ export class CreateFolderRequestBodyParentField extends S.Class<CreateFolderRequ
  */
 export const CreateFolderRequestBodySyncStateField = S.Union([LiteralKit(["synced", "not_synced", "partially_synced"]), S.String]).pipe($I.annoteSchema("CreateFolderRequestBodySyncStateField", {
     description: "Generated Box SDK schema for CreateFolderRequestBodySyncStateField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link CreateFolderRequestBodySyncStateField}.
@@ -2134,7 +2117,7 @@ export class CreateUserRequestBody extends S.Class<CreateUserRequestBody>($I`Cre
  */
 export const CreateUserRequestBodyRoleField = S.Union([LiteralKit(["coadmin", "user"]), S.String]).pipe($I.annoteSchema("CreateUserRequestBodyRoleField", {
     description: "Generated Box SDK schema for CreateUserRequestBodyRoleField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link CreateUserRequestBodyRoleField}.
@@ -2168,7 +2151,7 @@ export type CreateUserRequestBodyRoleField = typeof CreateUserRequestBodyRoleFie
  */
 export const CreateUserRequestBodyStatusField = S.Union([LiteralKit(["active", "inactive", "cannot_delete_edit", "cannot_delete_edit_upload"]), S.String]).pipe($I.annoteSchema("CreateUserRequestBodyStatusField", {
     description: "Generated Box SDK schema for CreateUserRequestBodyStatusField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link CreateUserRequestBodyStatusField}.
@@ -2302,7 +2285,6 @@ export const CreateWebhookRequestBodyTargetTypeField = LiteralKit(["file", "fold
       $I.annoteSchema("CreateWebhookRequestBodyTargetTypeField", {
         description: "Generated Box SDK schema for CreateWebhookRequestBodyTargetTypeField."
       }),
-      withLiteralKitCodecStatics,
       SchemaUtils.withLiteralKitStatics(schema)
     )
 );
@@ -2339,7 +2321,7 @@ export type CreateWebhookRequestBodyTargetTypeField = typeof CreateWebhookReques
  */
 export const CreateWebhookRequestBodyTriggersField = S.Union([LiteralKit(["FILE.UPLOADED", "FILE.PREVIEWED", "FILE.DOWNLOADED", "FILE.TRASHED", "FILE.DELETED", "FILE.RESTORED", "FILE.COPIED", "FILE.MOVED", "FILE.LOCKED", "FILE.UNLOCKED", "FILE.RENAMED", "COMMENT.CREATED", "COMMENT.UPDATED", "COMMENT.DELETED", "TASK_ASSIGNMENT.CREATED", "TASK_ASSIGNMENT.UPDATED", "METADATA_INSTANCE.CREATED", "METADATA_INSTANCE.UPDATED", "METADATA_INSTANCE.DELETED", "FOLDER.CREATED", "FOLDER.RENAMED", "FOLDER.DOWNLOADED", "FOLDER.RESTORED", "FOLDER.DELETED", "FOLDER.COPIED", "FOLDER.MOVED", "FOLDER.TRASHED", "WEBHOOK.DELETED", "COLLABORATION.CREATED", "COLLABORATION.ACCEPTED", "COLLABORATION.REJECTED", "COLLABORATION.REMOVED", "COLLABORATION.UPDATED", "SHARED_LINK.DELETED", "SHARED_LINK.CREATED", "SHARED_LINK.UPDATED", "SIGN_REQUEST.COMPLETED", "SIGN_REQUEST.DECLINED", "SIGN_REQUEST.EXPIRED", "SIGN_REQUEST.SIGNER_EMAIL_BOUNCED", "SIGN_REQUEST.SIGN_SIGNER_SIGNED", "SIGN_REQUEST.SIGN_DOCUMENT_CREATED", "SIGN_REQUEST.SIGN_ERROR_FINALIZING"]), S.String]).pipe($I.annoteSchema("CreateWebhookRequestBodyTriggersField", {
     description: "Generated Box SDK schema for CreateWebhookRequestBodyTriggersField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link CreateWebhookRequestBodyTriggersField}.
@@ -2999,7 +2981,7 @@ export class Event extends S.Class<Event>($I`Event`)(
  */
 export const EventEventTypeField = S.Union([LiteralKit(["ACCESS_GRANTED", "ACCESS_REVOKED", "ADD_DEVICE_ASSOCIATION", "ADD_LOGIN_ACTIVITY_DEVICE", "ADMIN_LOGIN", "ADVANCED_FOLDER_SETTINGS_UPDATE", "AI_SECURITY_DETECTION", "ANNOTATIONV2_CREATE", "ANNOTATIONV2_DELETE", "ANNOTATIONV2_EDIT", "APPLICATION_CREATED", "APPLICATION_PUBLIC_KEY_ADDED", "APPLICATION_PUBLIC_KEY_DELETED", "BOX_AI_USER_FAILED_REQUEST", "BOX_AI_USER_REQUEST", "CHANGE_ADMIN_ROLE", "CHANGE_FOLDER_PERMISSION", "COLLABORATION_ACCEPT", "COLLABORATION_EXPIRATION", "COLLABORATION_INVITE", "COLLABORATION_REMOVE", "COLLABORATION_ROLE_CHANGE", "COLLAB_ADD_COLLABORATOR", "COLLAB_INVITE_COLLABORATOR", "COLLAB_REMOVE_COLLABORATOR", "COLLAB_ROLE_CHANGE", "COLLECTION_CREATE", "COLLECTION_DELETE", "COLLECTION_ITEM_CREATE", "COLLECTION_ITEM_DELETE", "COLLECTION_ITEM_UPDATE", "COLLECTION_UPDATE", "COMMENT_CREATE", "COMMENT_DELETE", "COMMENT_EDIT", "CONTENT_ACCESS", "CONTENT_RECOVERY_REPORT_CREATE", "CONTENT_RECOVERY_REPORT_DELETE", "CONTENT_RECOVERY_REPORT_INITIATE", "CONTENT_WORKFLOW_ABNORMAL_DOWNLOAD_ACTIVITY", "CONTENT_WORKFLOW_AUTOMATION_ADD", "CONTENT_WORKFLOW_AUTOMATION_DELETE", "CONTENT_WORKFLOW_POLICY_ADD", "CONTENT_WORKFLOW_SHARING_POLICY_VIOLATION", "CONTENT_WORKFLOW_UPLOAD_POLICY_VIOLATION", "COPY", "DATA_RETENTION_CREATE_RETENTION", "DATA_RETENTION_REMOVE_RETENTION", "DELETE", "DELETE_USER", "DEVICE_TRUST_CHECK_FAILED", "DISABLE_MULTI_FACTOR_AUTH", "DOWNLOAD", "EDIT", "EDIT_USER", "EDR_CROWDSTRIKE_ACCESS_ALLOWED_NO_CROWDSTRIKE_DEVICE", "EDR_CROWDSTRIKE_ACCESS_REVOKED", "EDR_CROWDSTRIKE_BOX_TOOLS_OUTDATED", "EDR_CROWDSTRIKE_DEVICE_DETECTED", "EDR_CROWDSTRIKE_DRIVE_OUTDATED", "EDR_CROWDSTRIKE_NO_BOX_TOOLS", "EMAIL_ALIAS_CONFIRM", "EMAIL_ALIAS_PRIMARY", "EMAIL_ALIAS_REMOVE", "EMAIL_UPLOAD_DISABLED", "EMAIL_UPLOAD_ENABLED", "ENABLE_MULTI_FACTOR_AUTH", "ENABLE_TWO_FACTOR_AUTH", "ENTERPRISE_APP_AUTHORIZATION_UPDATE", "EXTERNAL_COLLAB_SECURITY_SETTINGS", "FAILED_LOGIN", "FAVORITE", "FILE_MARKED_MALICIOUS", "FILE_REQUEST_CREATE", "FILE_REQUEST_DELETE", "FILE_REQUEST_UPDATE", "FILE_VERSION_RESTORE", "FILE_WATERMARKED_DOWNLOAD", "GROUP_ADD_ITEM", "GROUP_ADD_USER", "GROUP_ADMIN_CREATED", "GROUP_ADMIN_DELETED", "GROUP_ADMIN_PERMISSIONS_UPDATED", "GROUP_CREATION", "GROUP_DELETION", "GROUP_EDITED", "GROUP_REMOVE_ITEM", "GROUP_REMOVE_USER", "ILLEGAL_ITEM_OWNERSHIP_TRANSFER_BY_USER", "ITEM_ASSOCIATION_CREATED", "ITEM_ASSOCIATION_DELETED", "ITEM_ASSOCIATION_UPDATED", "ITEM_COPY", "ITEM_CREATE", "ITEM_DOWNLOAD", "ITEM_EMAIL_SEND", "ITEM_MAKE_CURRENT_VERSION", "ITEM_MODIFY", "ITEM_MOVE", "ITEM_OPEN", "ITEM_PREVIEW", "ITEM_RENAME", "ITEM_SHARED", "ITEM_SHARED_CREATE", "ITEM_SHARED_UNSHARE", "ITEM_SHARED_UPDATE", "ITEM_SYNC", "ITEM_TRASH", "ITEM_UNDELETE_VIA_TRASH", "ITEM_UNSYNC", "ITEM_UPLOAD", "LEGAL_HOLD_ASSIGNMENT_CREATE", "LEGAL_HOLD_ASSIGNMENT_DELETE", "LEGAL_HOLD_POLICY_CREATE", "LEGAL_HOLD_POLICY_DELETE", "LEGAL_HOLD_POLICY_UPDATE", "LOCK", "LOCK_CREATE", "LOCK_DESTROY", "LOGIN", "MASTER_INVITE_ACCEPT", "MASTER_INVITE_REJECT", "METADATA_CASCADE_POLICY_APPLY", "METADATA_CASCADE_POLICY_CREATE", "METADATA_INSTANCE_COPY", "METADATA_INSTANCE_CREATE", "METADATA_INSTANCE_DELETE", "METADATA_INSTANCE_UPDATE", "METADATA_TEMPLATE_CREATE", "METADATA_TEMPLATE_DELETE", "METADATA_TEMPLATE_UPDATE", "MOVE", "NEW_USER", "OAUTH2_ACCESS_TOKEN_REVOKE", "OAUTH2_REFRESH_TOKEN_REVOKE", "PREVIEW", "REMOVE_DEVICE_ASSOCIATION", "REMOVE_LOGIN_ACTIVITY_DEVICE", "RENAME", "RETENTION_POLICY_ASSIGNMENT_ADD", "SHARE", "SHARED_LINK_REDIRECT_OUT_OF_SHARED_CONTEXT", "SHARED_LINK_SEND", "SHARE_EXPIRATION", "SHIELD_ACCESS_POLICY_CREATED", "SHIELD_ACCESS_POLICY_DELETED", "SHIELD_ACCESS_POLICY_UPDATED", "SHIELD_ALERT", "SHIELD_DOWNLOAD_BLOCKED", "SHIELD_EXTERNAL_COLLAB_ACCESS_BLOCKED", "SHIELD_EXTERNAL_COLLAB_ACCESS_BLOCKED_MISSING_JUSTIFICATION", "SHIELD_EXTERNAL_COLLAB_INVITE_BLOCKED", "SHIELD_EXTERNAL_COLLAB_INVITE_BLOCKED_MISSING_JUSTIFICATION", "SHIELD_EXTERNAL_COLLAB_INVITE_JUSTIFIED", "SHIELD_INFORMATION_BARRIER_COLLAB_BLOCKED", "SHIELD_INFORMATION_BARRIER_DISABLED", "SHIELD_INFORMATION_BARRIER_ENABLED", "SHIELD_INFORMATION_BARRIER_GROUP_ADD_USER_BLOCKED", "SHIELD_INFORMATION_BARRIER_ITEM_COPY_BLOCKED", "SHIELD_INFORMATION_BARRIER_ITEM_MOVE_BLOCKED", "SHIELD_INFORMATION_BARRIER_ITEM_OWNER_TRANSFER_BLOCKED", "SHIELD_INFORMATION_BARRIER_PENDING", "SHIELD_INFORMATION_BARRIER_SHARED_ITEM_ACCESS_BLOCKED", "SHIELD_JUSTIFICATION_APPROVAL", "SHIELD_PREVIEW_BLOCKED", "SHIELD_SHARED_LINK_ACCESS_BLOCKED", "SHIELD_SHARED_LINK_STATUS_RESTRICTED_ON_CREATE", "SHIELD_SHARED_LINK_STATUS_RESTRICTED_ON_UPDATE", "SIGN_DOCUMENT_ASSIGNED", "SIGN_DOCUMENT_CANCELLED", "SIGN_DOCUMENT_COMPLETED", "SIGN_DOCUMENT_CONVERTED", "SIGN_DOCUMENT_CREATED", "SIGN_DOCUMENT_DECLINED", "SIGN_DOCUMENT_EXPIRED", "SIGN_DOCUMENT_SIGNED", "SIGN_DOCUMENT_VIEWED_BY_SIGNED", "SIGN_DOCUMENT_VIEWED_BY_SIGNER", "SIGNER_DOWNLOADED", "SIGNER_FORWARDED", "STORAGE_EXPIRATION", "TAG_ITEM_CREATE", "TASK_ASSIGNMENT_CREATE", "TASK_ASSIGNMENT_DELETE", "TASK_ASSIGNMENT_UPDATE", "TASK_CREATE", "TASK_UPDATE", "TERMS_OF_SERVICE_ACCEPT", "TERMS_OF_SERVICE_REJECT", "UNDELETE", "UNFAVORITE", "UNLOCK", "UNSHARE", "UPDATE_COLLABORATION_EXPIRATION", "UPDATE_SHARE_EXPIRATION", "UPLOAD", "USER_AUTHENTICATE_OAUTH2_ACCESS_TOKEN_CREATE", "WATERMARK_LABEL_CREATE", "WATERMARK_LABEL_DELETE", "WORKFLOW_AUTOMATION_CREATE", "WORKFLOW_AUTOMATION_DELETE", "WORKFLOW_AUTOMATION_UPDATE"]), S.String]).pipe($I.annoteSchema("EventEventTypeField", {
     description: "Generated Box SDK schema for EventEventTypeField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link EventEventTypeField}.
@@ -3058,7 +3040,7 @@ export class Events extends S.Class<Events>($I`Events`)(
  */
 export const EventsNextStreamPositionField = S.Union([S.String, S.Finite]).pipe($I.annoteSchema("EventsNextStreamPositionField", {
     description: "Generated Box SDK schema for EventsNextStreamPositionField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link EventsNextStreamPositionField}.
@@ -3147,7 +3129,6 @@ export const EventSourceItemTypeField = LiteralKit(["file", "folder"]).pipe(
       $I.annoteSchema("EventSourceItemTypeField", {
         description: "Generated Box SDK schema for EventSourceItemTypeField."
       }),
-      withLiteralKitCodecStatics,
       SchemaUtils.withLiteralKitStatics(schema)
     )
 );
@@ -3184,7 +3165,7 @@ export type EventSourceItemTypeField = typeof EventSourceItemTypeField.Type;
  */
 export const EventSourceResource = S.Union([S.suspend(() => User), S.suspend(() => EventSource), S.suspend(() => File), S.suspend(() => Folder), S.suspend(() => GenericSource), S.suspend(() => AppItemEventSource)]).pipe($I.annoteSchema("EventSourceResource", {
     description: "Generated Box SDK schema for EventSourceResource."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link EventSourceResource}.
@@ -3306,7 +3287,7 @@ export class File extends FileMini.extend<File>($I`File`)(
  */
 export const FileBaseTypeField = S.Literal("file").pipe($I.annoteSchema("FileBaseTypeField", {
     description: "Generated Box SDK schema for FileBaseTypeField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link FileBaseTypeField}.
@@ -3388,7 +3369,7 @@ export class FileFull extends File.extend<FileFull>($I`FileFull`)(
  */
 export const FileFullAllowedInviteeRolesField = S.Union([LiteralKit(["editor", "viewer", "previewer", "uploader", "previewer uploader", "viewer uploader", "co-owner"]), S.String]).pipe($I.annoteSchema("FileFullAllowedInviteeRolesField", {
     description: "Generated Box SDK schema for FileFullAllowedInviteeRolesField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link FileFullAllowedInviteeRolesField}.
@@ -3422,7 +3403,7 @@ export type FileFullAllowedInviteeRolesField = typeof FileFullAllowedInviteeRole
  */
 export const FileFullAllowedSharedLinkAccessLevelsField = S.Union([LiteralKit(["open", "company", "collaborators"]), S.String]).pipe($I.annoteSchema("FileFullAllowedSharedLinkAccessLevelsField", {
     description: "Generated Box SDK schema for FileFullAllowedSharedLinkAccessLevelsField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link FileFullAllowedSharedLinkAccessLevelsField}.
@@ -3508,7 +3489,7 @@ export class FileFullExpiringEmbedLinkField extends S.Class<FileFullExpiringEmbe
  */
 export const FileFullExpiringEmbedLinkTokenTypeField = S.Union([LiteralKit(["bearer"]), S.String]).pipe($I.annoteSchema("FileFullExpiringEmbedLinkTokenTypeField", {
     description: "Generated Box SDK schema for FileFullExpiringEmbedLinkTokenTypeField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link FileFullExpiringEmbedLinkTokenTypeField}.
@@ -3542,7 +3523,7 @@ export type FileFullExpiringEmbedLinkTokenTypeField = typeof FileFullExpiringEmb
  */
 export const FileFullLockAppTypeField = S.Union([LiteralKit(["gsuite", "office_wopi", "office_wopiplus", "other"]), S.String]).pipe($I.annoteSchema("FileFullLockAppTypeField", {
     description: "Generated Box SDK schema for FileFullLockAppTypeField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link FileFullLockAppTypeField}.
@@ -3605,7 +3586,7 @@ export class FileFullLockField extends S.Class<FileFullLockField>($I`FileFullLoc
  */
 export const FileFullLockTypeField = S.Literal("lock").pipe($I.annoteSchema("FileFullLockTypeField", {
     description: "Generated Box SDK schema for FileFullLockTypeField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link FileFullLockTypeField}.
@@ -3818,7 +3799,7 @@ export class FileFullRepresentationsEntriesStatusField extends S.Class<FileFullR
  */
 export const FileFullRepresentationsEntriesStatusStateField = S.Union([LiteralKit(["success", "viewable", "pending", "none"]), S.String]).pipe($I.annoteSchema("FileFullRepresentationsEntriesStatusStateField", {
     description: "Generated Box SDK schema for FileFullRepresentationsEntriesStatusStateField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link FileFullRepresentationsEntriesStatusStateField}.
@@ -3875,7 +3856,7 @@ export class FileFullRepresentationsField extends S.Class<FileFullRepresentation
  */
 export const FileFullSharedLinkPermissionOptionsField = S.Union([LiteralKit(["can_preview", "can_download", "can_edit"]), S.String]).pipe($I.annoteSchema("FileFullSharedLinkPermissionOptionsField", {
     description: "Generated Box SDK schema for FileFullSharedLinkPermissionOptionsField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link FileFullSharedLinkPermissionOptionsField}.
@@ -3934,7 +3915,7 @@ export class FileFullWatermarkInfoField extends S.Class<FileFullWatermarkInfoFie
  */
 export const FileItemStatusField = S.Union([LiteralKit(["active", "trashed", "deleted"]), S.String]).pipe($I.annoteSchema("FileItemStatusField", {
     description: "Generated Box SDK schema for FileItemStatusField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link FileItemStatusField}.
@@ -4016,7 +3997,7 @@ export class Files extends S.Class<Files>($I`Files`)(
  */
 export const FileSharedLinkAccessField = S.Union([LiteralKit(["open", "company", "collaborators"]), S.String]).pipe($I.annoteSchema("FileSharedLinkAccessField", {
     description: "Generated Box SDK schema for FileSharedLinkAccessField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link FileSharedLinkAccessField}.
@@ -4050,7 +4031,7 @@ export type FileSharedLinkAccessField = typeof FileSharedLinkAccessField.Type;
  */
 export const FileSharedLinkEffectiveAccessField = S.Union([LiteralKit(["open", "company", "collaborators"]), S.String]).pipe($I.annoteSchema("FileSharedLinkEffectiveAccessField", {
     description: "Generated Box SDK schema for FileSharedLinkEffectiveAccessField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link FileSharedLinkEffectiveAccessField}.
@@ -4084,7 +4065,7 @@ export type FileSharedLinkEffectiveAccessField = typeof FileSharedLinkEffectiveA
  */
 export const FileSharedLinkEffectivePermissionField = S.Union([LiteralKit(["can_edit", "can_download", "can_preview", "no_access"]), S.String]).pipe($I.annoteSchema("FileSharedLinkEffectivePermissionField", {
     description: "Generated Box SDK schema for FileSharedLinkEffectivePermissionField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link FileSharedLinkEffectivePermissionField}.
@@ -4250,7 +4231,7 @@ export class FileVersionMini extends FileVersionBase.extend<FileVersionMini>($I`
  */
 export const FileVersionBaseTypeField = S.Literal("file_version").pipe($I.annoteSchema("FileVersionBaseTypeField", {
     description: "Generated Box SDK schema for FileVersionBaseTypeField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link FileVersionBaseTypeField}.
@@ -4372,7 +4353,7 @@ export class Folder extends FolderMini.extend<Folder>($I`Folder`)(
  */
 export const FolderBaseTypeField = S.Literal("folder").pipe($I.annoteSchema("FolderBaseTypeField", {
     description: "Generated Box SDK schema for FolderBaseTypeField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link FolderBaseTypeField}.
@@ -4406,7 +4387,7 @@ export type FolderBaseTypeField = typeof FolderBaseTypeField.Type;
  */
 export const FolderFolderUploadEmailAccessField = S.Union([LiteralKit(["open", "collaborators"]), S.String]).pipe($I.annoteSchema("FolderFolderUploadEmailAccessField", {
     description: "Generated Box SDK schema for FolderFolderUploadEmailAccessField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link FolderFolderUploadEmailAccessField}.
@@ -4502,7 +4483,7 @@ export class FolderFull extends Folder.extend<FolderFull>($I`FolderFull`)(
  */
 export const FolderFullAllowedInviteeRolesField = S.Union([LiteralKit(["editor", "viewer", "previewer", "uploader", "previewer uploader", "viewer uploader", "co-owner"]), S.String]).pipe($I.annoteSchema("FolderFullAllowedInviteeRolesField", {
     description: "Generated Box SDK schema for FolderFullAllowedInviteeRolesField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link FolderFullAllowedInviteeRolesField}.
@@ -4536,7 +4517,7 @@ export type FolderFullAllowedInviteeRolesField = typeof FolderFullAllowedInvitee
  */
 export const FolderFullAllowedSharedLinkAccessLevelsField = S.Union([LiteralKit(["open", "company", "collaborators"]), S.String]).pipe($I.annoteSchema("FolderFullAllowedSharedLinkAccessLevelsField", {
     description: "Generated Box SDK schema for FolderFullAllowedSharedLinkAccessLevelsField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link FolderFullAllowedSharedLinkAccessLevelsField}.
@@ -4648,7 +4629,7 @@ export class FolderFullPermissionsField extends S.Class<FolderFullPermissionsFie
  */
 export const FolderFullSyncStateField = S.Union([LiteralKit(["synced", "not_synced", "partially_synced"]), S.String]).pipe($I.annoteSchema("FolderFullSyncStateField", {
     description: "Generated Box SDK schema for FolderFullSyncStateField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link FolderFullSyncStateField}.
@@ -4707,7 +4688,7 @@ export class FolderFullWatermarkInfoField extends S.Class<FolderFullWatermarkInf
  */
 export const FolderItemStatusField = S.Union([LiteralKit(["active", "trashed", "deleted"]), S.String]).pipe($I.annoteSchema("FolderItemStatusField", {
     description: "Generated Box SDK schema for FolderItemStatusField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link FolderItemStatusField}.
@@ -4765,7 +4746,7 @@ export class FolderPathCollectionField extends S.Class<FolderPathCollectionField
  */
 export const FolderSharedLinkAccessField = S.Union([LiteralKit(["open", "company", "collaborators"]), S.String]).pipe($I.annoteSchema("FolderSharedLinkAccessField", {
     description: "Generated Box SDK schema for FolderSharedLinkAccessField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link FolderSharedLinkAccessField}.
@@ -4799,7 +4780,7 @@ export type FolderSharedLinkAccessField = typeof FolderSharedLinkAccessField.Typ
  */
 export const FolderSharedLinkEffectiveAccessField = S.Union([LiteralKit(["open", "company", "collaborators"]), S.String]).pipe($I.annoteSchema("FolderSharedLinkEffectiveAccessField", {
     description: "Generated Box SDK schema for FolderSharedLinkEffectiveAccessField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link FolderSharedLinkEffectiveAccessField}.
@@ -4833,7 +4814,7 @@ export type FolderSharedLinkEffectiveAccessField = typeof FolderSharedLinkEffect
  */
 export const FolderSharedLinkEffectivePermissionField = S.Union([LiteralKit(["can_edit", "can_download", "can_preview", "no_access"]), S.String]).pipe($I.annoteSchema("FolderSharedLinkEffectivePermissionField", {
     description: "Generated Box SDK schema for FolderSharedLinkEffectivePermissionField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link FolderSharedLinkEffectivePermissionField}.
@@ -4926,7 +4907,7 @@ export class FolderSharedLinkPermissionsField extends S.Class<FolderSharedLinkPe
  */
 export const GenericSource = S.Record(S.String, S.Unknown).pipe($I.annoteSchema("GenericSource", {
     description: "Generated Box SDK schema for GenericSource."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link GenericSource}.
@@ -5104,7 +5085,7 @@ export class GetCollaborationsQueryParams extends S.Class<GetCollaborationsQuery
  */
 export const GetCollaborationsQueryParamsStatusField = S.Union([LiteralKit(["pending"]), S.String]).pipe($I.annoteSchema("GetCollaborationsQueryParamsStatusField", {
     description: "Generated Box SDK schema for GetCollaborationsQueryParamsStatusField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link GetCollaborationsQueryParamsStatusField}.
@@ -5310,7 +5291,7 @@ export class GetEventsQueryParams extends S.Class<GetEventsQueryParams>($I`GetEv
  */
 export const GetEventsQueryParamsEventTypeField = S.Union([LiteralKit(["ACCESS_GRANTED", "ACCESS_REVOKED", "ADD_DEVICE_ASSOCIATION", "ADD_LOGIN_ACTIVITY_DEVICE", "ADMIN_LOGIN", "ADVANCED_FOLDER_SETTINGS_UPDATE", "APPLICATION_CREATED", "APPLICATION_PUBLIC_KEY_ADDED", "APPLICATION_PUBLIC_KEY_DELETED", "CHANGE_ADMIN_ROLE", "CHANGE_FOLDER_PERMISSION", "COLLABORATION_ACCEPT", "COLLABORATION_EXPIRATION", "COLLABORATION_INVITE", "COLLABORATION_REMOVE", "COLLABORATION_ROLE_CHANGE", "COMMENT_CREATE", "COMMENT_DELETE", "COMMENT_EDIT", "CONTENT_WORKFLOW_ABNORMAL_DOWNLOAD_ACTIVITY", "CONTENT_WORKFLOW_AUTOMATION_ADD", "CONTENT_WORKFLOW_AUTOMATION_DELETE", "CONTENT_WORKFLOW_POLICY_ADD", "CONTENT_WORKFLOW_SHARING_POLICY_VIOLATION", "CONTENT_WORKFLOW_UPLOAD_POLICY_VIOLATION", "COPY", "DATA_RETENTION_CREATE_RETENTION", "DATA_RETENTION_REMOVE_RETENTION", "DELETE", "DELETE_USER", "DEVICE_TRUST_CHECK_FAILED", "DOWNLOAD", "EDIT", "EDIT_USER", "EMAIL_ALIAS_CONFIRM", "EMAIL_ALIAS_PRIMARY", "EMAIL_ALIAS_REMOVE", "EMAIL_UPLOAD_DISABLED", "EMAIL_UPLOAD_ENABLED", "ENTERPRISE_APP_AUTHORIZATION_UPDATE", "EXTERNAL_COLLAB_SECURITY_SETTINGS", "FAILED_LOGIN", "FAVORITE", "FILE_MARKED_MALICIOUS", "FILE_REQUEST_CREATE", "FILE_REQUEST_DELETE", "FILE_REQUEST_UPDATE", "FILE_VERSION_RESTORE", "FILE_WATERMARKED_DOWNLOAD", "GROUP_ADD_ITEM", "GROUP_ADD_USER", "GROUP_CREATION", "GROUP_DELETION", "GROUP_EDITED", "GROUP_REMOVE_ITEM", "GROUP_REMOVE_USER", "ILLEGAL_ITEM_OWNERSHIP_TRANSFER_BY_USER", "ITEM_EMAIL_SEND", "ITEM_MODIFY", "ITEM_OPEN", "ITEM_SHARED_UPDATE", "ITEM_SYNC", "ITEM_UNSYNC", "LEGAL_HOLD_ASSIGNMENT_CREATE", "LEGAL_HOLD_ASSIGNMENT_DELETE", "LEGAL_HOLD_POLICY_CREATE", "LEGAL_HOLD_POLICY_DELETE", "LEGAL_HOLD_POLICY_UPDATE", "LOCK", "LOGIN", "METADATA_CASCADE_POLICY_APPLY", "METADATA_CASCADE_POLICY_CREATE", "METADATA_INSTANCE_COPY", "METADATA_INSTANCE_CREATE", "METADATA_INSTANCE_DELETE", "METADATA_INSTANCE_UPDATE", "METADATA_TEMPLATE_CREATE", "METADATA_TEMPLATE_DELETE", "METADATA_TEMPLATE_UPDATE", "MOVE", "NEW_USER", "OAUTH2_ACCESS_TOKEN_REVOKE", "OAUTH2_REFRESH_TOKEN_REVOKE", "PREVIEW", "REMOVE_DEVICE_ASSOCIATION", "REMOVE_LOGIN_ACTIVITY_DEVICE", "RENAME", "RETENTION_POLICY_ASSIGNMENT_ADD", "SHARE", "SHARED_LINK_SEND", "SHARE_EXPIRATION", "SHIELD_ALERT", "SHIELD_DOWNLOAD_BLOCKED", "SHIELD_EXTERNAL_COLLAB_ACCESS_BLOCKED", "SHIELD_EXTERNAL_COLLAB_ACCESS_BLOCKED_MISSING_JUSTIFICATION", "SHIELD_EXTERNAL_COLLAB_INVITE_BLOCKED", "SHIELD_EXTERNAL_COLLAB_INVITE_BLOCKED_MISSING_JUSTIFICATION", "SHIELD_JUSTIFICATION_APPROVAL", "SHIELD_PREVIEW_BLOCKED", "SHIELD_SHARED_LINK_ACCESS_BLOCKED", "SHIELD_SHARED_LINK_STATUS_RESTRICTED_ON_CREATE", "SHIELD_SHARED_LINK_STATUS_RESTRICTED_ON_UPDATE", "SIGN_DOCUMENT_ASSIGNED", "SIGN_DOCUMENT_CANCELLED", "SIGN_DOCUMENT_COMPLETED", "SIGN_DOCUMENT_CONVERTED", "SIGN_DOCUMENT_CREATED", "SIGN_DOCUMENT_DECLINED", "SIGN_DOCUMENT_EXPIRED", "SIGN_DOCUMENT_SIGNED", "SIGN_DOCUMENT_VIEWED_BY_SIGNED", "SIGNER_DOWNLOADED", "SIGNER_FORWARDED", "STORAGE_EXPIRATION", "TASK_ASSIGNMENT_CREATE", "TASK_ASSIGNMENT_DELETE", "TASK_ASSIGNMENT_UPDATE", "TASK_CREATE", "TASK_UPDATE", "TERMS_OF_SERVICE_ACCEPT", "TERMS_OF_SERVICE_REJECT", "UNDELETE", "UNFAVORITE", "UNLOCK", "UNSHARE", "UPDATE_COLLABORATION_EXPIRATION", "UPDATE_SHARE_EXPIRATION", "UPLOAD", "USER_AUTHENTICATE_OAUTH2_ACCESS_TOKEN_CREATE", "WATERMARK_LABEL_CREATE", "WATERMARK_LABEL_DELETE", "WORKFLOW_AUTOMATION_CREATE", "WORKFLOW_AUTOMATION_DELETE", "WORKFLOW_AUTOMATION_UPDATE"]), S.String]).pipe($I.annoteSchema("GetEventsQueryParamsEventTypeField", {
     description: "Generated Box SDK schema for GetEventsQueryParamsEventTypeField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link GetEventsQueryParamsEventTypeField}.
@@ -5344,7 +5325,7 @@ export type GetEventsQueryParamsEventTypeField = typeof GetEventsQueryParamsEven
  */
 export const GetEventsQueryParamsStreamTypeField = S.Union([LiteralKit(["all", "changes", "sync", "admin_logs", "admin_logs_streaming"]), S.String]).pipe($I.annoteSchema("GetEventsQueryParamsStreamTypeField", {
     description: "Generated Box SDK schema for GetEventsQueryParamsStreamTypeField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link GetEventsQueryParamsStreamTypeField}.
@@ -5429,7 +5410,7 @@ export class GetEventStreamQueryParams extends S.Class<GetEventStreamQueryParams
  */
 export const GetEventStreamQueryParamsEventTypeField = S.Union([LiteralKit(["ACCESS_GRANTED", "ACCESS_REVOKED", "ADD_DEVICE_ASSOCIATION", "ADD_LOGIN_ACTIVITY_DEVICE", "ADMIN_LOGIN", "ADVANCED_FOLDER_SETTINGS_UPDATE", "APPLICATION_CREATED", "APPLICATION_PUBLIC_KEY_ADDED", "APPLICATION_PUBLIC_KEY_DELETED", "CHANGE_ADMIN_ROLE", "CHANGE_FOLDER_PERMISSION", "COLLABORATION_ACCEPT", "COLLABORATION_EXPIRATION", "COLLABORATION_INVITE", "COLLABORATION_REMOVE", "COLLABORATION_ROLE_CHANGE", "COMMENT_CREATE", "COMMENT_DELETE", "COMMENT_EDIT", "CONTENT_WORKFLOW_ABNORMAL_DOWNLOAD_ACTIVITY", "CONTENT_WORKFLOW_AUTOMATION_ADD", "CONTENT_WORKFLOW_AUTOMATION_DELETE", "CONTENT_WORKFLOW_POLICY_ADD", "CONTENT_WORKFLOW_SHARING_POLICY_VIOLATION", "CONTENT_WORKFLOW_UPLOAD_POLICY_VIOLATION", "COPY", "DATA_RETENTION_CREATE_RETENTION", "DATA_RETENTION_REMOVE_RETENTION", "DELETE", "DELETE_USER", "DEVICE_TRUST_CHECK_FAILED", "DOWNLOAD", "EDIT", "EDIT_USER", "EMAIL_ALIAS_CONFIRM", "EMAIL_ALIAS_PRIMARY", "EMAIL_ALIAS_REMOVE", "EMAIL_UPLOAD_DISABLED", "EMAIL_UPLOAD_ENABLED", "ENTERPRISE_APP_AUTHORIZATION_UPDATE", "EXTERNAL_COLLAB_SECURITY_SETTINGS", "FAILED_LOGIN", "FAVORITE", "FILE_MARKED_MALICIOUS", "FILE_REQUEST_CREATE", "FILE_REQUEST_DELETE", "FILE_REQUEST_UPDATE", "FILE_VERSION_RESTORE", "FILE_WATERMARKED_DOWNLOAD", "GROUP_ADD_ITEM", "GROUP_ADD_USER", "GROUP_CREATION", "GROUP_DELETION", "GROUP_EDITED", "GROUP_REMOVE_ITEM", "GROUP_REMOVE_USER", "ILLEGAL_ITEM_OWNERSHIP_TRANSFER_BY_USER", "ITEM_EMAIL_SEND", "ITEM_MODIFY", "ITEM_OPEN", "ITEM_SHARED_UPDATE", "ITEM_SYNC", "ITEM_UNSYNC", "LEGAL_HOLD_ASSIGNMENT_CREATE", "LEGAL_HOLD_ASSIGNMENT_DELETE", "LEGAL_HOLD_POLICY_CREATE", "LEGAL_HOLD_POLICY_DELETE", "LEGAL_HOLD_POLICY_UPDATE", "LOCK", "LOGIN", "METADATA_CASCADE_POLICY_APPLY", "METADATA_CASCADE_POLICY_CREATE", "METADATA_INSTANCE_COPY", "METADATA_INSTANCE_CREATE", "METADATA_INSTANCE_DELETE", "METADATA_INSTANCE_UPDATE", "METADATA_TEMPLATE_CREATE", "METADATA_TEMPLATE_DELETE", "METADATA_TEMPLATE_UPDATE", "MOVE", "NEW_USER", "OAUTH2_ACCESS_TOKEN_REVOKE", "OAUTH2_REFRESH_TOKEN_REVOKE", "PREVIEW", "REMOVE_DEVICE_ASSOCIATION", "REMOVE_LOGIN_ACTIVITY_DEVICE", "RENAME", "RETENTION_POLICY_ASSIGNMENT_ADD", "SHARE", "SHARED_LINK_SEND", "SHARE_EXPIRATION", "SHIELD_ALERT", "SHIELD_DOWNLOAD_BLOCKED", "SHIELD_EXTERNAL_COLLAB_ACCESS_BLOCKED", "SHIELD_EXTERNAL_COLLAB_ACCESS_BLOCKED_MISSING_JUSTIFICATION", "SHIELD_EXTERNAL_COLLAB_INVITE_BLOCKED", "SHIELD_EXTERNAL_COLLAB_INVITE_BLOCKED_MISSING_JUSTIFICATION", "SHIELD_JUSTIFICATION_APPROVAL", "SHIELD_PREVIEW_BLOCKED", "SHIELD_SHARED_LINK_ACCESS_BLOCKED", "SHIELD_SHARED_LINK_STATUS_RESTRICTED_ON_CREATE", "SHIELD_SHARED_LINK_STATUS_RESTRICTED_ON_UPDATE", "SIGN_DOCUMENT_ASSIGNED", "SIGN_DOCUMENT_CANCELLED", "SIGN_DOCUMENT_COMPLETED", "SIGN_DOCUMENT_CONVERTED", "SIGN_DOCUMENT_CREATED", "SIGN_DOCUMENT_DECLINED", "SIGN_DOCUMENT_EXPIRED", "SIGN_DOCUMENT_SIGNED", "SIGN_DOCUMENT_VIEWED_BY_SIGNED", "SIGNER_DOWNLOADED", "SIGNER_FORWARDED", "STORAGE_EXPIRATION", "TASK_ASSIGNMENT_CREATE", "TASK_ASSIGNMENT_DELETE", "TASK_ASSIGNMENT_UPDATE", "TASK_CREATE", "TASK_UPDATE", "TERMS_OF_SERVICE_ACCEPT", "TERMS_OF_SERVICE_REJECT", "UNDELETE", "UNFAVORITE", "UNLOCK", "UNSHARE", "UPDATE_COLLABORATION_EXPIRATION", "UPDATE_SHARE_EXPIRATION", "UPLOAD", "USER_AUTHENTICATE_OAUTH2_ACCESS_TOKEN_CREATE", "WATERMARK_LABEL_CREATE", "WATERMARK_LABEL_DELETE", "WORKFLOW_AUTOMATION_CREATE", "WORKFLOW_AUTOMATION_DELETE", "WORKFLOW_AUTOMATION_UPDATE"]), S.String]).pipe($I.annoteSchema("GetEventStreamQueryParamsEventTypeField", {
     description: "Generated Box SDK schema for GetEventStreamQueryParamsEventTypeField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link GetEventStreamQueryParamsEventTypeField}.
@@ -5463,7 +5444,7 @@ export type GetEventStreamQueryParamsEventTypeField = typeof GetEventStreamQuery
  */
 export const GetEventStreamQueryParamsStreamTypeField = S.Union([LiteralKit(["all", "changes", "sync", "admin_logs", "admin_logs_streaming"]), S.String]).pipe($I.annoteSchema("GetEventStreamQueryParamsStreamTypeField", {
     description: "Generated Box SDK schema for GetEventStreamQueryParamsStreamTypeField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link GetEventStreamQueryParamsStreamTypeField}.
@@ -5739,7 +5720,7 @@ export class GetFilesUnderRetentionPolicyAssignmentQueryParams extends S.Class<G
  */
 export const GetFileThumbnailByIdExtension = S.Union([LiteralKit(["png", "jpg"]), S.String]).pipe($I.annoteSchema("GetFileThumbnailByIdExtension", {
     description: "Generated Box SDK schema for GetFileThumbnailByIdExtension."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link GetFileThumbnailByIdExtension}.
@@ -5847,7 +5828,7 @@ export class GetFileThumbnailByIdQueryParams extends S.Class<GetFileThumbnailByI
  */
 export const GetFileThumbnailUrlExtension = S.Union([LiteralKit(["png", "jpg"]), S.String]).pipe($I.annoteSchema("GetFileThumbnailUrlExtension", {
     description: "Generated Box SDK schema for GetFileThumbnailUrlExtension."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link GetFileThumbnailUrlExtension}.
@@ -6270,7 +6251,7 @@ export class GetFolderByIdQueryParams extends S.Class<GetFolderByIdQueryParams>(
  */
 export const GetFolderByIdQueryParamsDirectionField = S.Union([LiteralKit(["ASC", "DESC"]), S.String]).pipe($I.annoteSchema("GetFolderByIdQueryParamsDirectionField", {
     description: "Generated Box SDK schema for GetFolderByIdQueryParamsDirectionField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link GetFolderByIdQueryParamsDirectionField}.
@@ -6304,7 +6285,7 @@ export type GetFolderByIdQueryParamsDirectionField = typeof GetFolderByIdQueryPa
  */
 export const GetFolderByIdQueryParamsSortField = S.Union([LiteralKit(["id", "name", "date", "size"]), S.String]).pipe($I.annoteSchema("GetFolderByIdQueryParamsSortField", {
     description: "Generated Box SDK schema for GetFolderByIdQueryParamsSortField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link GetFolderByIdQueryParamsSortField}.
@@ -6489,7 +6470,7 @@ export class GetFolderItemsQueryParams extends S.Class<GetFolderItemsQueryParams
  */
 export const GetFolderItemsQueryParamsDirectionField = S.Union([LiteralKit(["ASC", "DESC"]), S.String]).pipe($I.annoteSchema("GetFolderItemsQueryParamsDirectionField", {
     description: "Generated Box SDK schema for GetFolderItemsQueryParamsDirectionField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link GetFolderItemsQueryParamsDirectionField}.
@@ -6523,7 +6504,7 @@ export type GetFolderItemsQueryParamsDirectionField = typeof GetFolderItemsQuery
  */
 export const GetFolderItemsQueryParamsSortField = S.Union([LiteralKit(["id", "name", "date", "size"]), S.String]).pipe($I.annoteSchema("GetFolderItemsQueryParamsSortField", {
     description: "Generated Box SDK schema for GetFolderItemsQueryParamsSortField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link GetFolderItemsQueryParamsSortField}.
@@ -6604,7 +6585,7 @@ export class GetFolderMetadataByIdOptionalsInput extends S.Class<GetFolderMetada
  */
 export const GetFolderMetadataByIdScope = S.Union([LiteralKit(["global", "enterprise"]), S.String]).pipe($I.annoteSchema("GetFolderMetadataByIdScope", {
     description: "Generated Box SDK schema for GetFolderMetadataByIdScope."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link GetFolderMetadataByIdScope}.
@@ -7114,7 +7095,7 @@ export class GetMetadataTemplatesByInstanceIdQueryParams extends S.Class<GetMeta
  */
 export const GetMetadataTemplateScope = S.Union([LiteralKit(["global", "enterprise"]), S.String]).pipe($I.annoteSchema("GetMetadataTemplateScope", {
     description: "Generated Box SDK schema for GetMetadataTemplateScope."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link GetMetadataTemplateScope}.
@@ -7199,7 +7180,7 @@ export class GetRetentionPoliciesQueryParams extends S.Class<GetRetentionPolicie
  */
 export const GetRetentionPoliciesQueryParamsPolicyTypeField = S.Union([LiteralKit(["finite", "indefinite"]), S.String]).pipe($I.annoteSchema("GetRetentionPoliciesQueryParamsPolicyTypeField", {
     description: "Generated Box SDK schema for GetRetentionPoliciesQueryParamsPolicyTypeField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link GetRetentionPoliciesQueryParamsPolicyTypeField}.
@@ -7382,7 +7363,6 @@ export const GetRetentionPolicyAssignmentsQueryParamsTypeField = LiteralKit(["fo
       $I.annoteSchema("GetRetentionPolicyAssignmentsQueryParamsTypeField", {
         description: "Generated Box SDK schema for GetRetentionPolicyAssignmentsQueryParamsTypeField."
       }),
-      withLiteralKitCodecStatics,
       SchemaUtils.withLiteralKitStatics(schema)
     )
 );
@@ -7897,7 +7877,7 @@ export class GetUsersQueryParams extends S.Class<GetUsersQueryParams>($I`GetUser
  */
 export const GetUsersQueryParamsUserTypeField = S.Union([LiteralKit(["all", "managed", "external"]), S.String]).pipe($I.annoteSchema("GetUsersQueryParamsUserTypeField", {
     description: "Generated Box SDK schema for GetUsersQueryParamsUserTypeField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link GetUsersQueryParamsUserTypeField}.
@@ -8167,7 +8147,7 @@ export class GroupMini extends GroupBase.extend<GroupMini>($I`GroupMini`)(
  */
 export const GroupBaseTypeField = S.Literal("group").pipe($I.annoteSchema("GroupBaseTypeField", {
     description: "Generated Box SDK schema for GroupBaseTypeField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link GroupBaseTypeField}.
@@ -8201,7 +8181,7 @@ export type GroupBaseTypeField = typeof GroupBaseTypeField.Type;
  */
 export const GroupMiniGroupTypeField = S.Union([LiteralKit(["managed_group", "all_users_group"]), S.String]).pipe($I.annoteSchema("GroupMiniGroupTypeField", {
     description: "Generated Box SDK schema for GroupMiniGroupTypeField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link GroupMiniGroupTypeField}.
@@ -8235,7 +8215,7 @@ export type GroupMiniGroupTypeField = typeof GroupMiniGroupTypeField.Type;
  */
 export const Item = S.Union([S.suspend(() => FileFull), S.suspend(() => FolderMini), S.suspend(() => WebLink)]).pipe($I.annoteSchema("Item", {
     description: "Generated Box SDK schema for Item."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link Item}.
@@ -8298,7 +8278,7 @@ export class Items extends S.Class<Items>($I`Items`)(
  */
 export const ItemsOrderDirectionField = S.Union([LiteralKit(["ASC", "DESC"]), S.String]).pipe($I.annoteSchema("ItemsOrderDirectionField", {
     description: "Generated Box SDK schema for ItemsOrderDirectionField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link ItemsOrderDirectionField}.
@@ -8356,7 +8336,7 @@ export class ItemsOrderField extends S.Class<ItemsOrderField>($I`ItemsOrderField
  */
 export const Metadata = S.suspend(() => MetadataBase).pipe($I.annoteSchema("Metadata", {
     description: "Generated Box SDK schema for Metadata."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link Metadata}.
@@ -8494,7 +8474,7 @@ export class MetadataCascadePolicyOwnerEnterpriseField extends S.Class<MetadataC
  */
 export const MetadataCascadePolicyOwnerEnterpriseTypeField = S.Literal("enterprise").pipe($I.annoteSchema("MetadataCascadePolicyOwnerEnterpriseTypeField", {
     description: "Generated Box SDK schema for MetadataCascadePolicyOwnerEnterpriseTypeField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link MetadataCascadePolicyOwnerEnterpriseTypeField}.
@@ -8552,7 +8532,7 @@ export class MetadataCascadePolicyParentField extends S.Class<MetadataCascadePol
  */
 export const MetadataCascadePolicyParentTypeField = S.Literal("folder").pipe($I.annoteSchema("MetadataCascadePolicyParentTypeField", {
     description: "Generated Box SDK schema for MetadataCascadePolicyParentTypeField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link MetadataCascadePolicyParentTypeField}.
@@ -8586,7 +8566,7 @@ export type MetadataCascadePolicyParentTypeField = typeof MetadataCascadePolicyP
  */
 export const MetadataCascadePolicyTypeField = S.Literal("metadata_cascade_policy").pipe($I.annoteSchema("MetadataCascadePolicyTypeField", {
     description: "Generated Box SDK schema for MetadataCascadePolicyTypeField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link MetadataCascadePolicyTypeField}.
@@ -8620,7 +8600,7 @@ export type MetadataCascadePolicyTypeField = typeof MetadataCascadePolicyTypeFie
  */
 export const MetadataFull = S.Unknown.pipe($I.annoteSchema("MetadataFull", {
     description: "Generated Box SDK schema for MetadataFull."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link MetadataFull}.
@@ -8793,7 +8773,6 @@ export const MetadataTemplateFieldsTypeField = LiteralKit(["string", "float", "d
       $I.annoteSchema("MetadataTemplateFieldsTypeField", {
         description: "Generated Box SDK schema for MetadataTemplateFieldsTypeField."
       }),
-      withLiteralKitCodecStatics,
       SchemaUtils.withLiteralKitStatics(schema)
     )
 );
@@ -8856,7 +8835,7 @@ export class MetadataTemplates extends S.Class<MetadataTemplates>($I`MetadataTem
  */
 export const MetadataTemplateTypeField = S.Literal("metadata_template").pipe($I.annoteSchema("MetadataTemplateTypeField", {
     description: "Generated Box SDK schema for MetadataTemplateTypeField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link MetadataTemplateTypeField}.
@@ -9059,7 +9038,7 @@ export class ResendSignRequestOptionalsInput extends S.Class<ResendSignRequestOp
  */
 export const Resource = S.Union([S.suspend(() => FolderMini), S.suspend(() => FileMini)]).pipe($I.annoteSchema("Resource", {
     description: "Generated Box SDK schema for Resource."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link Resource}.
@@ -9117,7 +9096,7 @@ export class ResourceScope extends S.Class<ResourceScope>($I`ResourceScope`)(
  */
 export const ResourceScopeScopeField = S.Union([LiteralKit(["annotation_edit", "annotation_view_all", "annotation_view_self", "base_explorer", "base_picker", "base_preview", "base_upload", "item_delete", "item_download", "item_preview", "item_rename", "item_share", "item_upload", "item_read"]), S.String]).pipe($I.annoteSchema("ResourceScopeScopeField", {
     description: "Generated Box SDK schema for ResourceScopeScopeField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link ResourceScopeScopeField}.
@@ -9317,7 +9296,6 @@ export const RetentionPolicyAssignmentAssignedToTypeField = LiteralKit(["folder"
       $I.annoteSchema("RetentionPolicyAssignmentAssignedToTypeField", {
         description: "Generated Box SDK schema for RetentionPolicyAssignmentAssignedToTypeField."
       }),
-      withLiteralKitCodecStatics,
       SchemaUtils.withLiteralKitStatics(schema)
     )
 );
@@ -9428,7 +9406,7 @@ export class RetentionPolicyAssignments extends S.Class<RetentionPolicyAssignmen
  */
 export const RetentionPolicyAssignmentTypeField = S.Literal("retention_policy_assignment").pipe($I.annoteSchema("RetentionPolicyAssignmentTypeField", {
     description: "Generated Box SDK schema for RetentionPolicyAssignmentTypeField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link RetentionPolicyAssignmentTypeField}.
@@ -9462,7 +9440,7 @@ export type RetentionPolicyAssignmentTypeField = typeof RetentionPolicyAssignmen
  */
 export const RetentionPolicyBaseTypeField = S.Literal("retention_policy").pipe($I.annoteSchema("RetentionPolicyBaseTypeField", {
     description: "Generated Box SDK schema for RetentionPolicyBaseTypeField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link RetentionPolicyBaseTypeField}.
@@ -9496,7 +9474,7 @@ export type RetentionPolicyBaseTypeField = typeof RetentionPolicyBaseTypeField.T
  */
 export const RetentionPolicyMaxExtensionLengthResponse = S.Union([S.suspend(() => RetentionPolicyMaxExtensionLengthResponseEnum), S.String]).pipe($I.annoteSchema("RetentionPolicyMaxExtensionLengthResponse", {
     description: "Generated Box SDK schema for RetentionPolicyMaxExtensionLengthResponse."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link RetentionPolicyMaxExtensionLengthResponse}.
@@ -9530,7 +9508,7 @@ export type RetentionPolicyMaxExtensionLengthResponse = typeof RetentionPolicyMa
  */
 export const RetentionPolicyMaxExtensionLengthResponseEnum = S.Union([LiteralKit(["none"]), S.String]).pipe($I.annoteSchema("RetentionPolicyMaxExtensionLengthResponseEnum", {
     description: "Generated Box SDK schema for RetentionPolicyMaxExtensionLengthResponseEnum."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link RetentionPolicyMaxExtensionLengthResponseEnum}.
@@ -9564,7 +9542,7 @@ export type RetentionPolicyMaxExtensionLengthResponseEnum = typeof RetentionPoli
  */
 export const RetentionPolicyMiniDispositionActionField = S.Union([LiteralKit(["permanently_delete", "remove_retention"]), S.String]).pipe($I.annoteSchema("RetentionPolicyMiniDispositionActionField", {
     description: "Generated Box SDK schema for RetentionPolicyMiniDispositionActionField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link RetentionPolicyMiniDispositionActionField}.
@@ -9598,7 +9576,7 @@ export type RetentionPolicyMiniDispositionActionField = typeof RetentionPolicyMi
  */
 export const RetentionPolicyPolicyTypeField = S.Union([LiteralKit(["finite", "indefinite"]), S.String]).pipe($I.annoteSchema("RetentionPolicyPolicyTypeField", {
     description: "Generated Box SDK schema for RetentionPolicyPolicyTypeField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link RetentionPolicyPolicyTypeField}.
@@ -9632,7 +9610,7 @@ export type RetentionPolicyPolicyTypeField = typeof RetentionPolicyPolicyTypeFie
  */
 export const RetentionPolicyRetentionTypeField = S.Union([LiteralKit(["modifiable", "non_modifiable"]), S.String]).pipe($I.annoteSchema("RetentionPolicyRetentionTypeField", {
     description: "Generated Box SDK schema for RetentionPolicyRetentionTypeField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link RetentionPolicyRetentionTypeField}.
@@ -9666,7 +9644,7 @@ export type RetentionPolicyRetentionTypeField = typeof RetentionPolicyRetentionT
  */
 export const RetentionPolicyStatusField = S.Union([LiteralKit(["active", "retired"]), S.String]).pipe($I.annoteSchema("RetentionPolicyStatusField", {
     description: "Generated Box SDK schema for RetentionPolicyStatusField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link RetentionPolicyStatusField}.
@@ -9700,7 +9678,7 @@ export type RetentionPolicyStatusField = typeof RetentionPolicyStatusField.Type;
  */
 export const SignRequest = S.Unknown.pipe($I.annoteSchema("SignRequest", {
     description: "Generated Box SDK schema for SignRequest."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link SignRequest}.
@@ -9757,7 +9735,7 @@ export class SignRequestCancelRequest extends S.Class<SignRequestCancelRequest>(
  */
 export const SignRequestCreateRequest = S.Unknown.pipe($I.annoteSchema("SignRequestCreateRequest", {
     description: "Generated Box SDK schema for SignRequestCreateRequest."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link SignRequestCreateRequest}.
@@ -9880,7 +9858,7 @@ export class SignTemplateAdditionalInfoField extends S.Class<SignTemplateAdditio
  */
 export const SignTemplateAdditionalInfoNonEditableField = S.Union([LiteralKit(["email_subject", "email_message", "name", "days_valid", "signers", "source_files"]), S.String]).pipe($I.annoteSchema("SignTemplateAdditionalInfoNonEditableField", {
     description: "Generated Box SDK schema for SignTemplateAdditionalInfoNonEditableField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link SignTemplateAdditionalInfoNonEditableField}.
@@ -9937,7 +9915,7 @@ export class SignTemplateAdditionalInfoRequiredField extends S.Class<SignTemplat
  */
 export const SignTemplateAdditionalInfoRequiredSignersField = S.Union([LiteralKit(["email"]), S.String]).pipe($I.annoteSchema("SignTemplateAdditionalInfoRequiredSignersField", {
     description: "Generated Box SDK schema for SignTemplateAdditionalInfoRequiredSignersField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link SignTemplateAdditionalInfoRequiredSignersField}.
@@ -10051,7 +10029,7 @@ export class SignTemplates extends S.Class<SignTemplates>($I`SignTemplates`)(
  */
 export const SignTemplateTypeField = S.Literal("sign-template").pipe($I.annoteSchema("SignTemplateTypeField", {
     description: "Generated Box SDK schema for SignTemplateTypeField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link SignTemplateTypeField}.
@@ -10118,7 +10096,7 @@ export class TemplateSigner extends S.Class<TemplateSigner>($I`TemplateSigner`)(
  */
 export const TemplateSignerInput = S.Unknown.pipe($I.annoteSchema("TemplateSignerInput", {
     description: "Generated Box SDK schema for TemplateSignerInput."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link TemplateSignerInput}.
@@ -10152,7 +10130,7 @@ export type TemplateSignerInput = typeof TemplateSignerInput.Type;
  */
 export const TemplateSignerRoleField = S.Union([LiteralKit(["signer", "approver", "final_copy_reader"]), S.String]).pipe($I.annoteSchema("TemplateSignerRoleField", {
     description: "Generated Box SDK schema for TemplateSignerRoleField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link TemplateSignerRoleField}.
@@ -10210,7 +10188,7 @@ export class TermsOfServiceBase extends S.Class<TermsOfServiceBase>($I`TermsOfSe
  */
 export const TermsOfServiceBaseTypeField = S.Literal("terms_of_service").pipe($I.annoteSchema("TermsOfServiceBaseTypeField", {
     description: "Generated Box SDK schema for TermsOfServiceBaseTypeField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link TermsOfServiceBaseTypeField}.
@@ -10269,7 +10247,7 @@ export class TrackingCode extends S.Class<TrackingCode>($I`TrackingCode`)(
  */
 export const TrackingCodeTypeField = S.Literal("tracking_code").pipe($I.annoteSchema("TrackingCodeTypeField", {
     description: "Generated Box SDK schema for TrackingCodeTypeField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link TrackingCodeTypeField}.
@@ -10377,7 +10355,7 @@ export class UpdateCollaborationByIdRequestBody extends S.Class<UpdateCollaborat
  */
 export const UpdateCollaborationByIdRequestBodyRoleField = S.Union([LiteralKit(["editor", "viewer", "previewer", "uploader", "previewer uploader", "viewer uploader", "co-owner", "owner"]), S.String]).pipe($I.annoteSchema("UpdateCollaborationByIdRequestBodyRoleField", {
     description: "Generated Box SDK schema for UpdateCollaborationByIdRequestBodyRoleField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link UpdateCollaborationByIdRequestBodyRoleField}.
@@ -10411,7 +10389,7 @@ export type UpdateCollaborationByIdRequestBodyRoleField = typeof UpdateCollabora
  */
 export const UpdateCollaborationByIdRequestBodyStatusField = S.Union([LiteralKit(["pending", "accepted", "rejected"]), S.String]).pipe($I.annoteSchema("UpdateCollaborationByIdRequestBodyStatusField", {
     description: "Generated Box SDK schema for UpdateCollaborationByIdRequestBodyStatusField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link UpdateCollaborationByIdRequestBodyStatusField}.
@@ -10573,7 +10551,7 @@ export class UpdateFileByIdRequestBodyCollectionsField extends S.Class<UpdateFil
  */
 export const UpdateFileByIdRequestBodyLockAccessField = S.Union([LiteralKit(["lock"]), S.String]).pipe($I.annoteSchema("UpdateFileByIdRequestBodyLockAccessField", {
     description: "Generated Box SDK schema for UpdateFileByIdRequestBodyLockAccessField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link UpdateFileByIdRequestBodyLockAccessField}.
@@ -10656,7 +10634,7 @@ export class UpdateFileByIdRequestBodyParentField extends S.Class<UpdateFileById
  */
 export const UpdateFileByIdRequestBodyPermissionsCanDownloadField = S.Union([LiteralKit(["open", "company"]), S.String]).pipe($I.annoteSchema("UpdateFileByIdRequestBodyPermissionsCanDownloadField", {
     description: "Generated Box SDK schema for UpdateFileByIdRequestBodyPermissionsCanDownloadField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link UpdateFileByIdRequestBodyPermissionsCanDownloadField}.
@@ -10713,7 +10691,7 @@ export class UpdateFileByIdRequestBodyPermissionsField extends S.Class<UpdateFil
  */
 export const UpdateFileByIdRequestBodySharedLinkAccessField = S.Union([LiteralKit(["open", "company", "collaborators"]), S.String]).pipe($I.annoteSchema("UpdateFileByIdRequestBodySharedLinkAccessField", {
     description: "Generated Box SDK schema for UpdateFileByIdRequestBodySharedLinkAccessField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link UpdateFileByIdRequestBodySharedLinkAccessField}.
@@ -10927,7 +10905,7 @@ export class UpdateFolderByIdRequestBodyCollectionsField extends S.Class<UpdateF
  */
 export const UpdateFolderByIdRequestBodyFolderUploadEmailAccessField = S.Union([LiteralKit(["open", "collaborators"]), S.String]).pipe($I.annoteSchema("UpdateFolderByIdRequestBodyFolderUploadEmailAccessField", {
     description: "Generated Box SDK schema for UpdateFolderByIdRequestBodyFolderUploadEmailAccessField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link UpdateFolderByIdRequestBodyFolderUploadEmailAccessField}.
@@ -11008,7 +10986,7 @@ export class UpdateFolderByIdRequestBodyParentField extends S.Class<UpdateFolder
  */
 export const UpdateFolderByIdRequestBodySharedLinkAccessField = S.Union([LiteralKit(["open", "company", "collaborators"]), S.String]).pipe($I.annoteSchema("UpdateFolderByIdRequestBodySharedLinkAccessField", {
     description: "Generated Box SDK schema for UpdateFolderByIdRequestBodySharedLinkAccessField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link UpdateFolderByIdRequestBodySharedLinkAccessField}.
@@ -11092,7 +11070,7 @@ export class UpdateFolderByIdRequestBodySharedLinkPermissionsField extends S.Cla
  */
 export const UpdateFolderByIdRequestBodySyncStateField = S.Union([LiteralKit(["synced", "not_synced", "partially_synced"]), S.String]).pipe($I.annoteSchema("UpdateFolderByIdRequestBodySyncStateField", {
     description: "Generated Box SDK schema for UpdateFolderByIdRequestBodySyncStateField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link UpdateFolderByIdRequestBodySyncStateField}.
@@ -11265,7 +11243,7 @@ export class UpdateUserByIdRequestBodyNotificationEmailField extends S.Class<Upd
  */
 export const UpdateUserByIdRequestBodyRoleField = S.Union([LiteralKit(["coadmin", "user"]), S.String]).pipe($I.annoteSchema("UpdateUserByIdRequestBodyRoleField", {
     description: "Generated Box SDK schema for UpdateUserByIdRequestBodyRoleField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link UpdateUserByIdRequestBodyRoleField}.
@@ -11299,7 +11277,7 @@ export type UpdateUserByIdRequestBodyRoleField = typeof UpdateUserByIdRequestBod
  */
 export const UpdateUserByIdRequestBodyStatusField = S.Union([LiteralKit(["active", "inactive", "cannot_delete_edit", "cannot_delete_edit_upload"]), S.String]).pipe($I.annoteSchema("UpdateUserByIdRequestBodyStatusField", {
     description: "Generated Box SDK schema for UpdateUserByIdRequestBodyStatusField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link UpdateUserByIdRequestBodyStatusField}.
@@ -11434,7 +11412,6 @@ export const UpdateWebhookByIdRequestBodyTargetTypeField = LiteralKit(["file", "
       $I.annoteSchema("UpdateWebhookByIdRequestBodyTargetTypeField", {
         description: "Generated Box SDK schema for UpdateWebhookByIdRequestBodyTargetTypeField."
       }),
-      withLiteralKitCodecStatics,
       SchemaUtils.withLiteralKitStatics(schema)
     )
 );
@@ -11471,7 +11448,7 @@ export type UpdateWebhookByIdRequestBodyTargetTypeField = typeof UpdateWebhookBy
  */
 export const UpdateWebhookByIdRequestBodyTriggersField = S.Union([LiteralKit(["FILE.UPLOADED", "FILE.PREVIEWED", "FILE.DOWNLOADED", "FILE.TRASHED", "FILE.DELETED", "FILE.RESTORED", "FILE.COPIED", "FILE.MOVED", "FILE.LOCKED", "FILE.UNLOCKED", "FILE.RENAMED", "COMMENT.CREATED", "COMMENT.UPDATED", "COMMENT.DELETED", "TASK_ASSIGNMENT.CREATED", "TASK_ASSIGNMENT.UPDATED", "METADATA_INSTANCE.CREATED", "METADATA_INSTANCE.UPDATED", "METADATA_INSTANCE.DELETED", "FOLDER.CREATED", "FOLDER.RENAMED", "FOLDER.DOWNLOADED", "FOLDER.RESTORED", "FOLDER.DELETED", "FOLDER.COPIED", "FOLDER.MOVED", "FOLDER.TRASHED", "WEBHOOK.DELETED", "COLLABORATION.CREATED", "COLLABORATION.ACCEPTED", "COLLABORATION.REJECTED", "COLLABORATION.REMOVED", "COLLABORATION.UPDATED", "SHARED_LINK.DELETED", "SHARED_LINK.CREATED", "SHARED_LINK.UPDATED", "SIGN_REQUEST.COMPLETED", "SIGN_REQUEST.DECLINED", "SIGN_REQUEST.EXPIRED", "SIGN_REQUEST.SIGNER_EMAIL_BOUNCED", "SIGN_REQUEST.SIGN_SIGNER_SIGNED", "SIGN_REQUEST.SIGN_DOCUMENT_CREATED", "SIGN_REQUEST.SIGN_ERROR_FINALIZING"]), S.String]).pipe($I.annoteSchema("UpdateWebhookByIdRequestBodyTriggersField", {
     description: "Generated Box SDK schema for UpdateWebhookByIdRequestBodyTriggersField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link UpdateWebhookByIdRequestBodyTriggersField}.
@@ -11842,7 +11819,7 @@ export class UploadFileVersionRequestBodyAttributesField extends S.Class<UploadF
  */
 export const UploadPart = S.Unknown.pipe($I.annoteSchema("UploadPart", {
     description: "Generated Box SDK schema for UploadPart."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link UploadPart}.
@@ -11903,7 +11880,7 @@ export class UploadParts extends S.Class<UploadParts>($I`UploadParts`)(
  */
 export const UploadPartsOrderDirectionField = S.Union([LiteralKit(["ASC", "DESC"]), S.String]).pipe($I.annoteSchema("UploadPartsOrderDirectionField", {
     description: "Generated Box SDK schema for UploadPartsOrderDirectionField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link UploadPartsOrderDirectionField}.
@@ -12018,7 +11995,7 @@ export class UploadSessionSessionEndpointsField extends S.Class<UploadSessionSes
  */
 export const UploadSessionTypeField = S.Literal("upload_session").pipe($I.annoteSchema("UploadSessionTypeField", {
     description: "Generated Box SDK schema for UploadSessionTypeField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link UploadSessionTypeField}.
@@ -12329,7 +12306,7 @@ export class UserAvatarPicUrlsField extends S.Class<UserAvatarPicUrlsField>($I`U
  */
 export const UserBaseTypeField = S.Literal("user").pipe($I.annoteSchema("UserBaseTypeField", {
     description: "Generated Box SDK schema for UserBaseTypeField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link UserBaseTypeField}.
@@ -12448,7 +12425,7 @@ export class UserFullEnterpriseField extends S.Class<UserFullEnterpriseField>($I
  */
 export const UserFullEnterpriseTypeField = S.Literal("enterprise").pipe($I.annoteSchema("UserFullEnterpriseTypeField", {
     description: "Generated Box SDK schema for UserFullEnterpriseTypeField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link UserFullEnterpriseTypeField}.
@@ -12482,7 +12459,7 @@ export type UserFullEnterpriseTypeField = typeof UserFullEnterpriseTypeField.Typ
  */
 export const UserFullRoleField = S.Union([LiteralKit(["admin", "coadmin", "user"]), S.String]).pipe($I.annoteSchema("UserFullRoleField", {
     description: "Generated Box SDK schema for UserFullRoleField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link UserFullRoleField}.
@@ -12569,7 +12546,7 @@ export class Users extends S.Class<Users>($I`Users`)(
  */
 export const UsersOrderDirectionField = S.Union([LiteralKit(["ASC", "DESC"]), S.String]).pipe($I.annoteSchema("UsersOrderDirectionField", {
     description: "Generated Box SDK schema for UsersOrderDirectionField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link UsersOrderDirectionField}.
@@ -12627,7 +12604,7 @@ export class UsersOrderField extends S.Class<UsersOrderField>($I`UsersOrderField
  */
 export const UserStatusField = S.Union([LiteralKit(["active", "inactive", "cannot_delete_edit", "cannot_delete_edit_upload"]), S.String]).pipe($I.annoteSchema("UserStatusField", {
     description: "Generated Box SDK schema for UserStatusField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link UserStatusField}.
@@ -12685,7 +12662,7 @@ export class ValidateMessageOptionalsInput extends S.Class<ValidateMessageOption
  */
 export const Webhook = S.Unknown.pipe($I.annoteSchema("Webhook", {
     description: "Generated Box SDK schema for Webhook."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link Webhook}.
@@ -12772,7 +12749,6 @@ export const WebhookMiniTargetTypeField = LiteralKit(["file", "folder"]).pipe(
       $I.annoteSchema("WebhookMiniTargetTypeField", {
         description: "Generated Box SDK schema for WebhookMiniTargetTypeField."
       }),
-      withLiteralKitCodecStatics,
       SchemaUtils.withLiteralKitStatics(schema)
     )
 );
@@ -12809,7 +12785,7 @@ export type WebhookMiniTargetTypeField = typeof WebhookMiniTargetTypeField.Type;
  */
 export const WebhookMiniTypeField = S.Literal("webhook").pipe($I.annoteSchema("WebhookMiniTypeField", {
     description: "Generated Box SDK schema for WebhookMiniTypeField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link WebhookMiniTypeField}.
@@ -12955,7 +12931,7 @@ export class WebLink extends WebLinkMini.extend<WebLink>($I`WebLink`)(
  */
 export const WebLinkAllowedSharedLinkAccessLevelsField = S.Union([LiteralKit(["open", "company", "collaborators"]), S.String]).pipe($I.annoteSchema("WebLinkAllowedSharedLinkAccessLevelsField", {
     description: "Generated Box SDK schema for WebLinkAllowedSharedLinkAccessLevelsField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link WebLinkAllowedSharedLinkAccessLevelsField}.
@@ -12989,7 +12965,7 @@ export type WebLinkAllowedSharedLinkAccessLevelsField = typeof WebLinkAllowedSha
  */
 export const WebLinkBaseTypeField = S.Literal("web_link").pipe($I.annoteSchema("WebLinkBaseTypeField", {
     description: "Generated Box SDK schema for WebLinkBaseTypeField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link WebLinkBaseTypeField}.
@@ -13023,7 +12999,7 @@ export type WebLinkBaseTypeField = typeof WebLinkBaseTypeField.Type;
  */
 export const WebLinkItemStatusField = S.Union([LiteralKit(["active", "trashed", "deleted"]), S.String]).pipe($I.annoteSchema("WebLinkItemStatusField", {
     description: "Generated Box SDK schema for WebLinkItemStatusField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link WebLinkItemStatusField}.
@@ -13081,7 +13057,7 @@ export class WebLinkPathCollectionField extends S.Class<WebLinkPathCollectionFie
  */
 export const WebLinkSharedLinkAccessField = S.Union([LiteralKit(["open", "company", "collaborators"]), S.String]).pipe($I.annoteSchema("WebLinkSharedLinkAccessField", {
     description: "Generated Box SDK schema for WebLinkSharedLinkAccessField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link WebLinkSharedLinkAccessField}.
@@ -13115,7 +13091,7 @@ export type WebLinkSharedLinkAccessField = typeof WebLinkSharedLinkAccessField.T
  */
 export const WebLinkSharedLinkEffectiveAccessField = S.Union([LiteralKit(["open", "company", "collaborators"]), S.String]).pipe($I.annoteSchema("WebLinkSharedLinkEffectiveAccessField", {
     description: "Generated Box SDK schema for WebLinkSharedLinkEffectiveAccessField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link WebLinkSharedLinkEffectiveAccessField}.
@@ -13149,7 +13125,7 @@ export type WebLinkSharedLinkEffectiveAccessField = typeof WebLinkSharedLinkEffe
  */
 export const WebLinkSharedLinkEffectivePermissionField = S.Union([LiteralKit(["can_edit", "can_download", "can_preview", "no_access"]), S.String]).pipe($I.annoteSchema("WebLinkSharedLinkEffectivePermissionField", {
     description: "Generated Box SDK schema for WebLinkSharedLinkEffectivePermissionField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link WebLinkSharedLinkEffectivePermissionField}.
@@ -13298,7 +13274,6 @@ export const ZipDownloadNameConflictsTypeField = LiteralKit(["file", "folder"]).
       $I.annoteSchema("ZipDownloadNameConflictsTypeField", {
         description: "Generated Box SDK schema for ZipDownloadNameConflictsTypeField."
       }),
-      withLiteralKitCodecStatics,
       SchemaUtils.withLiteralKitStatics(schema)
     )
 );
@@ -13387,7 +13362,6 @@ export const ZipDownloadRequestItemsTypeField = LiteralKit(["file", "folder"]).p
       $I.annoteSchema("ZipDownloadRequestItemsTypeField", {
         description: "Generated Box SDK schema for ZipDownloadRequestItemsTypeField."
       }),
-      withLiteralKitCodecStatics,
       SchemaUtils.withLiteralKitStatics(schema)
     )
 );
@@ -13451,7 +13425,7 @@ export class ZipDownloadStatus extends S.Class<ZipDownloadStatus>($I`ZipDownload
  */
 export const ZipDownloadStatusStateField = S.Union([LiteralKit(["in_progress", "failed", "succeeded"]), S.String]).pipe($I.annoteSchema("ZipDownloadStatusStateField", {
     description: "Generated Box SDK schema for ZipDownloadStatusStateField."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link ZipDownloadStatusStateField}.
@@ -15164,7 +15138,7 @@ export class ZipDownloadsGetZipDownloadStatusPayload extends S.Class<ZipDownload
  */
 export const AvatarsDeleteUserAvatarSuccess = S.Undefined.pipe($I.annoteSchema("AvatarsDeleteUserAvatarSuccess", {
     description: "Decoded success value for Box SDK method avatars.deleteUserAvatar."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link AvatarsDeleteUserAvatarSuccess}.
@@ -15198,7 +15172,7 @@ export type AvatarsDeleteUserAvatarSuccess = typeof AvatarsDeleteUserAvatarSucce
  */
 export const ChunkedUploadsCreateFileUploadSessionSuccess = S.suspend(() => UploadSession).pipe($I.annoteSchema("ChunkedUploadsCreateFileUploadSessionSuccess", {
     description: "Decoded success value for Box SDK method chunkedUploads.createFileUploadSession."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link ChunkedUploadsCreateFileUploadSessionSuccess}.
@@ -15232,7 +15206,7 @@ export type ChunkedUploadsCreateFileUploadSessionSuccess = typeof ChunkedUploads
  */
 export const ChunkedUploadsCreateFileUploadSessionCommitSuccess = S.suspend(() => Files).pipe(S.UndefinedOr, $I.annoteSchema("ChunkedUploadsCreateFileUploadSessionCommitSuccess", {
     description: "Decoded success value for Box SDK method chunkedUploads.createFileUploadSessionCommit."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link ChunkedUploadsCreateFileUploadSessionCommitSuccess}.
@@ -15266,7 +15240,7 @@ export type ChunkedUploadsCreateFileUploadSessionCommitSuccess = typeof ChunkedU
  */
 export const ChunkedUploadsCreateFileUploadSessionCommitByUrlSuccess = S.suspend(() => Files).pipe(S.UndefinedOr, $I.annoteSchema("ChunkedUploadsCreateFileUploadSessionCommitByUrlSuccess", {
     description: "Decoded success value for Box SDK method chunkedUploads.createFileUploadSessionCommitByUrl."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link ChunkedUploadsCreateFileUploadSessionCommitByUrlSuccess}.
@@ -15300,7 +15274,7 @@ export type ChunkedUploadsCreateFileUploadSessionCommitByUrlSuccess = typeof Chu
  */
 export const ChunkedUploadsCreateFileUploadSessionForExistingFileSuccess = S.suspend(() => UploadSession).pipe($I.annoteSchema("ChunkedUploadsCreateFileUploadSessionForExistingFileSuccess", {
     description: "Decoded success value for Box SDK method chunkedUploads.createFileUploadSessionForExistingFile."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link ChunkedUploadsCreateFileUploadSessionForExistingFileSuccess}.
@@ -15334,7 +15308,7 @@ export type ChunkedUploadsCreateFileUploadSessionForExistingFileSuccess = typeof
  */
 export const ChunkedUploadsDeleteFileUploadSessionByIdSuccess = S.Undefined.pipe($I.annoteSchema("ChunkedUploadsDeleteFileUploadSessionByIdSuccess", {
     description: "Decoded success value for Box SDK method chunkedUploads.deleteFileUploadSessionById."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link ChunkedUploadsDeleteFileUploadSessionByIdSuccess}.
@@ -15368,7 +15342,7 @@ export type ChunkedUploadsDeleteFileUploadSessionByIdSuccess = typeof ChunkedUpl
  */
 export const ChunkedUploadsDeleteFileUploadSessionByUrlSuccess = S.Undefined.pipe($I.annoteSchema("ChunkedUploadsDeleteFileUploadSessionByUrlSuccess", {
     description: "Decoded success value for Box SDK method chunkedUploads.deleteFileUploadSessionByUrl."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link ChunkedUploadsDeleteFileUploadSessionByUrlSuccess}.
@@ -15402,7 +15376,7 @@ export type ChunkedUploadsDeleteFileUploadSessionByUrlSuccess = typeof ChunkedUp
  */
 export const ChunkedUploadsGetFileUploadSessionByIdSuccess = S.suspend(() => UploadSession).pipe($I.annoteSchema("ChunkedUploadsGetFileUploadSessionByIdSuccess", {
     description: "Decoded success value for Box SDK method chunkedUploads.getFileUploadSessionById."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link ChunkedUploadsGetFileUploadSessionByIdSuccess}.
@@ -15436,7 +15410,7 @@ export type ChunkedUploadsGetFileUploadSessionByIdSuccess = typeof ChunkedUpload
  */
 export const ChunkedUploadsGetFileUploadSessionByUrlSuccess = S.suspend(() => UploadSession).pipe($I.annoteSchema("ChunkedUploadsGetFileUploadSessionByUrlSuccess", {
     description: "Decoded success value for Box SDK method chunkedUploads.getFileUploadSessionByUrl."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link ChunkedUploadsGetFileUploadSessionByUrlSuccess}.
@@ -15470,7 +15444,7 @@ export type ChunkedUploadsGetFileUploadSessionByUrlSuccess = typeof ChunkedUploa
  */
 export const ChunkedUploadsGetFileUploadSessionPartsSuccess = S.suspend(() => UploadParts).pipe($I.annoteSchema("ChunkedUploadsGetFileUploadSessionPartsSuccess", {
     description: "Decoded success value for Box SDK method chunkedUploads.getFileUploadSessionParts."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link ChunkedUploadsGetFileUploadSessionPartsSuccess}.
@@ -15504,7 +15478,7 @@ export type ChunkedUploadsGetFileUploadSessionPartsSuccess = typeof ChunkedUploa
  */
 export const ChunkedUploadsGetFileUploadSessionPartsByUrlSuccess = S.suspend(() => UploadParts).pipe($I.annoteSchema("ChunkedUploadsGetFileUploadSessionPartsByUrlSuccess", {
     description: "Decoded success value for Box SDK method chunkedUploads.getFileUploadSessionPartsByUrl."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link ChunkedUploadsGetFileUploadSessionPartsByUrlSuccess}.
@@ -15538,7 +15512,7 @@ export type ChunkedUploadsGetFileUploadSessionPartsByUrlSuccess = typeof Chunked
  */
 export const DownloadsGetDownloadFileUrlSuccess = S.String.pipe($I.annoteSchema("DownloadsGetDownloadFileUrlSuccess", {
     description: "Decoded success value for Box SDK method downloads.getDownloadFileUrl."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link DownloadsGetDownloadFileUrlSuccess}.
@@ -15572,7 +15546,7 @@ export type DownloadsGetDownloadFileUrlSuccess = typeof DownloadsGetDownloadFile
  */
 export const EventsGetEventsSuccess = S.suspend(() => Events).pipe($I.annoteSchema("EventsGetEventsSuccess", {
     description: "Decoded success value for Box SDK method events.getEvents."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link EventsGetEventsSuccess}.
@@ -15606,7 +15580,7 @@ export type EventsGetEventsSuccess = typeof EventsGetEventsSuccess.Type;
  */
 export const EventsGetEventsWithLongPollingSuccess = S.suspend(() => RealtimeServers).pipe($I.annoteSchema("EventsGetEventsWithLongPollingSuccess", {
     description: "Decoded success value for Box SDK method events.getEventsWithLongPolling."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link EventsGetEventsWithLongPollingSuccess}.
@@ -15640,7 +15614,7 @@ export type EventsGetEventsWithLongPollingSuccess = typeof EventsGetEventsWithLo
  */
 export const FilesCopyFileSuccess = S.suspend(() => FileFull).pipe($I.annoteSchema("FilesCopyFileSuccess", {
     description: "Decoded success value for Box SDK method files.copyFile."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link FilesCopyFileSuccess}.
@@ -15674,7 +15648,7 @@ export type FilesCopyFileSuccess = typeof FilesCopyFileSuccess.Type;
  */
 export const FilesDeleteFileByIdSuccess = S.Undefined.pipe($I.annoteSchema("FilesDeleteFileByIdSuccess", {
     description: "Decoded success value for Box SDK method files.deleteFileById."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link FilesDeleteFileByIdSuccess}.
@@ -15708,7 +15682,7 @@ export type FilesDeleteFileByIdSuccess = typeof FilesDeleteFileByIdSuccess.Type;
  */
 export const FilesGetFileByIdSuccess = S.suspend(() => FileFull).pipe($I.annoteSchema("FilesGetFileByIdSuccess", {
     description: "Decoded success value for Box SDK method files.getFileById."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link FilesGetFileByIdSuccess}.
@@ -15742,7 +15716,7 @@ export type FilesGetFileByIdSuccess = typeof FilesGetFileByIdSuccess.Type;
  */
 export const FilesGetFileThumbnailUrlSuccess = S.String.pipe($I.annoteSchema("FilesGetFileThumbnailUrlSuccess", {
     description: "Decoded success value for Box SDK method files.getFileThumbnailUrl."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link FilesGetFileThumbnailUrlSuccess}.
@@ -15776,7 +15750,7 @@ export type FilesGetFileThumbnailUrlSuccess = typeof FilesGetFileThumbnailUrlSuc
  */
 export const FilesUpdateFileByIdSuccess = S.suspend(() => FileFull).pipe($I.annoteSchema("FilesUpdateFileByIdSuccess", {
     description: "Decoded success value for Box SDK method files.updateFileById."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link FilesUpdateFileByIdSuccess}.
@@ -15810,7 +15784,7 @@ export type FilesUpdateFileByIdSuccess = typeof FilesUpdateFileByIdSuccess.Type;
  */
 export const FolderMetadataGetFolderMetadataSuccess = S.suspend(() => Metadatas).pipe($I.annoteSchema("FolderMetadataGetFolderMetadataSuccess", {
     description: "Decoded success value for Box SDK method folderMetadata.getFolderMetadata."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link FolderMetadataGetFolderMetadataSuccess}.
@@ -15844,7 +15818,7 @@ export type FolderMetadataGetFolderMetadataSuccess = typeof FolderMetadataGetFol
  */
 export const FolderMetadataGetFolderMetadataByIdSuccess = S.suspend(() => MetadataFull).pipe($I.annoteSchema("FolderMetadataGetFolderMetadataByIdSuccess", {
     description: "Decoded success value for Box SDK method folderMetadata.getFolderMetadataById."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link FolderMetadataGetFolderMetadataByIdSuccess}.
@@ -15878,7 +15852,7 @@ export type FolderMetadataGetFolderMetadataByIdSuccess = typeof FolderMetadataGe
  */
 export const FoldersCopyFolderSuccess = S.suspend(() => FolderFull).pipe($I.annoteSchema("FoldersCopyFolderSuccess", {
     description: "Decoded success value for Box SDK method folders.copyFolder."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link FoldersCopyFolderSuccess}.
@@ -15912,7 +15886,7 @@ export type FoldersCopyFolderSuccess = typeof FoldersCopyFolderSuccess.Type;
  */
 export const FoldersCreateFolderSuccess = S.suspend(() => FolderFull).pipe($I.annoteSchema("FoldersCreateFolderSuccess", {
     description: "Decoded success value for Box SDK method folders.createFolder."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link FoldersCreateFolderSuccess}.
@@ -15946,7 +15920,7 @@ export type FoldersCreateFolderSuccess = typeof FoldersCreateFolderSuccess.Type;
  */
 export const FoldersDeleteFolderByIdSuccess = S.Undefined.pipe($I.annoteSchema("FoldersDeleteFolderByIdSuccess", {
     description: "Decoded success value for Box SDK method folders.deleteFolderById."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link FoldersDeleteFolderByIdSuccess}.
@@ -15980,7 +15954,7 @@ export type FoldersDeleteFolderByIdSuccess = typeof FoldersDeleteFolderByIdSucce
  */
 export const FoldersGetFolderByIdSuccess = S.suspend(() => FolderFull).pipe($I.annoteSchema("FoldersGetFolderByIdSuccess", {
     description: "Decoded success value for Box SDK method folders.getFolderById."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link FoldersGetFolderByIdSuccess}.
@@ -16014,7 +15988,7 @@ export type FoldersGetFolderByIdSuccess = typeof FoldersGetFolderByIdSuccess.Typ
  */
 export const FoldersGetFolderItemsSuccess = S.suspend(() => Items).pipe($I.annoteSchema("FoldersGetFolderItemsSuccess", {
     description: "Decoded success value for Box SDK method folders.getFolderItems."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link FoldersGetFolderItemsSuccess}.
@@ -16048,7 +16022,7 @@ export type FoldersGetFolderItemsSuccess = typeof FoldersGetFolderItemsSuccess.T
  */
 export const FoldersUpdateFolderByIdSuccess = S.suspend(() => FolderFull).pipe($I.annoteSchema("FoldersUpdateFolderByIdSuccess", {
     description: "Decoded success value for Box SDK method folders.updateFolderById."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link FoldersUpdateFolderByIdSuccess}.
@@ -16082,7 +16056,7 @@ export type FoldersUpdateFolderByIdSuccess = typeof FoldersUpdateFolderByIdSucce
  */
 export const ListCollaborationsGetCollaborationsSuccess = S.suspend(() => CollaborationsOffsetPaginated).pipe($I.annoteSchema("ListCollaborationsGetCollaborationsSuccess", {
     description: "Decoded success value for Box SDK method listCollaborations.getCollaborations."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link ListCollaborationsGetCollaborationsSuccess}.
@@ -16116,7 +16090,7 @@ export type ListCollaborationsGetCollaborationsSuccess = typeof ListCollaboratio
  */
 export const ListCollaborationsGetFileCollaborationsSuccess = S.suspend(() => Collaborations).pipe($I.annoteSchema("ListCollaborationsGetFileCollaborationsSuccess", {
     description: "Decoded success value for Box SDK method listCollaborations.getFileCollaborations."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link ListCollaborationsGetFileCollaborationsSuccess}.
@@ -16150,7 +16124,7 @@ export type ListCollaborationsGetFileCollaborationsSuccess = typeof ListCollabor
  */
 export const ListCollaborationsGetFolderCollaborationsSuccess = S.suspend(() => Collaborations).pipe($I.annoteSchema("ListCollaborationsGetFolderCollaborationsSuccess", {
     description: "Decoded success value for Box SDK method listCollaborations.getFolderCollaborations."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link ListCollaborationsGetFolderCollaborationsSuccess}.
@@ -16184,7 +16158,7 @@ export type ListCollaborationsGetFolderCollaborationsSuccess = typeof ListCollab
  */
 export const ListCollaborationsGetGroupCollaborationsSuccess = S.suspend(() => CollaborationsOffsetPaginated).pipe($I.annoteSchema("ListCollaborationsGetGroupCollaborationsSuccess", {
     description: "Decoded success value for Box SDK method listCollaborations.getGroupCollaborations."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link ListCollaborationsGetGroupCollaborationsSuccess}.
@@ -16218,7 +16192,7 @@ export type ListCollaborationsGetGroupCollaborationsSuccess = typeof ListCollabo
  */
 export const MetadataCascadePoliciesGetMetadataCascadePoliciesSuccess = S.suspend(() => MetadataCascadePolicies).pipe($I.annoteSchema("MetadataCascadePoliciesGetMetadataCascadePoliciesSuccess", {
     description: "Decoded success value for Box SDK method metadataCascadePolicies.getMetadataCascadePolicies."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link MetadataCascadePoliciesGetMetadataCascadePoliciesSuccess}.
@@ -16252,7 +16226,7 @@ export type MetadataCascadePoliciesGetMetadataCascadePoliciesSuccess = typeof Me
  */
 export const MetadataCascadePoliciesGetMetadataCascadePolicyByIdSuccess = S.suspend(() => MetadataCascadePolicy).pipe($I.annoteSchema("MetadataCascadePoliciesGetMetadataCascadePolicyByIdSuccess", {
     description: "Decoded success value for Box SDK method metadataCascadePolicies.getMetadataCascadePolicyById."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link MetadataCascadePoliciesGetMetadataCascadePolicyByIdSuccess}.
@@ -16286,7 +16260,7 @@ export type MetadataCascadePoliciesGetMetadataCascadePolicyByIdSuccess = typeof 
  */
 export const MetadataTemplatesGetEnterpriseMetadataTemplatesSuccess = S.suspend(() => MetadataTemplates).pipe($I.annoteSchema("MetadataTemplatesGetEnterpriseMetadataTemplatesSuccess", {
     description: "Decoded success value for Box SDK method metadataTemplates.getEnterpriseMetadataTemplates."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link MetadataTemplatesGetEnterpriseMetadataTemplatesSuccess}.
@@ -16320,7 +16294,7 @@ export type MetadataTemplatesGetEnterpriseMetadataTemplatesSuccess = typeof Meta
  */
 export const MetadataTemplatesGetGlobalMetadataTemplatesSuccess = S.suspend(() => MetadataTemplates).pipe($I.annoteSchema("MetadataTemplatesGetGlobalMetadataTemplatesSuccess", {
     description: "Decoded success value for Box SDK method metadataTemplates.getGlobalMetadataTemplates."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link MetadataTemplatesGetGlobalMetadataTemplatesSuccess}.
@@ -16354,7 +16328,7 @@ export type MetadataTemplatesGetGlobalMetadataTemplatesSuccess = typeof Metadata
  */
 export const MetadataTemplatesGetMetadataTemplateSuccess = S.suspend(() => MetadataTemplate).pipe($I.annoteSchema("MetadataTemplatesGetMetadataTemplateSuccess", {
     description: "Decoded success value for Box SDK method metadataTemplates.getMetadataTemplate."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link MetadataTemplatesGetMetadataTemplateSuccess}.
@@ -16388,7 +16362,7 @@ export type MetadataTemplatesGetMetadataTemplateSuccess = typeof MetadataTemplat
  */
 export const MetadataTemplatesGetMetadataTemplateByIdSuccess = S.suspend(() => MetadataTemplate).pipe($I.annoteSchema("MetadataTemplatesGetMetadataTemplateByIdSuccess", {
     description: "Decoded success value for Box SDK method metadataTemplates.getMetadataTemplateById."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link MetadataTemplatesGetMetadataTemplateByIdSuccess}.
@@ -16422,7 +16396,7 @@ export type MetadataTemplatesGetMetadataTemplateByIdSuccess = typeof MetadataTem
  */
 export const MetadataTemplatesGetMetadataTemplatesByInstanceIdSuccess = S.suspend(() => MetadataTemplates).pipe($I.annoteSchema("MetadataTemplatesGetMetadataTemplatesByInstanceIdSuccess", {
     description: "Decoded success value for Box SDK method metadataTemplates.getMetadataTemplatesByInstanceId."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link MetadataTemplatesGetMetadataTemplatesByInstanceIdSuccess}.
@@ -16456,7 +16430,7 @@ export type MetadataTemplatesGetMetadataTemplatesByInstanceIdSuccess = typeof Me
  */
 export const RetentionPoliciesGetRetentionPoliciesSuccess = S.suspend(() => RetentionPolicies).pipe($I.annoteSchema("RetentionPoliciesGetRetentionPoliciesSuccess", {
     description: "Decoded success value for Box SDK method retentionPolicies.getRetentionPolicies."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link RetentionPoliciesGetRetentionPoliciesSuccess}.
@@ -16490,7 +16464,7 @@ export type RetentionPoliciesGetRetentionPoliciesSuccess = typeof RetentionPolic
  */
 export const RetentionPoliciesGetRetentionPolicyByIdSuccess = S.suspend(() => RetentionPolicy).pipe($I.annoteSchema("RetentionPoliciesGetRetentionPolicyByIdSuccess", {
     description: "Decoded success value for Box SDK method retentionPolicies.getRetentionPolicyById."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link RetentionPoliciesGetRetentionPolicyByIdSuccess}.
@@ -16524,7 +16498,7 @@ export type RetentionPoliciesGetRetentionPolicyByIdSuccess = typeof RetentionPol
  */
 export const RetentionPolicyAssignmentsGetFilesUnderRetentionPolicyAssignmentSuccess = S.suspend(() => FilesUnderRetention).pipe($I.annoteSchema("RetentionPolicyAssignmentsGetFilesUnderRetentionPolicyAssignmentSuccess", {
     description: "Decoded success value for Box SDK method retentionPolicyAssignments.getFilesUnderRetentionPolicyAssignment."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link RetentionPolicyAssignmentsGetFilesUnderRetentionPolicyAssignmentSuccess}.
@@ -16558,7 +16532,7 @@ export type RetentionPolicyAssignmentsGetFilesUnderRetentionPolicyAssignmentSucc
  */
 export const RetentionPolicyAssignmentsGetRetentionPolicyAssignmentByIdSuccess = S.suspend(() => RetentionPolicyAssignment).pipe($I.annoteSchema("RetentionPolicyAssignmentsGetRetentionPolicyAssignmentByIdSuccess", {
     description: "Decoded success value for Box SDK method retentionPolicyAssignments.getRetentionPolicyAssignmentById."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link RetentionPolicyAssignmentsGetRetentionPolicyAssignmentByIdSuccess}.
@@ -16592,7 +16566,7 @@ export type RetentionPolicyAssignmentsGetRetentionPolicyAssignmentByIdSuccess = 
  */
 export const RetentionPolicyAssignmentsGetRetentionPolicyAssignmentsSuccess = S.suspend(() => RetentionPolicyAssignments).pipe($I.annoteSchema("RetentionPolicyAssignmentsGetRetentionPolicyAssignmentsSuccess", {
     description: "Decoded success value for Box SDK method retentionPolicyAssignments.getRetentionPolicyAssignments."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link RetentionPolicyAssignmentsGetRetentionPolicyAssignmentsSuccess}.
@@ -16626,7 +16600,7 @@ export type RetentionPolicyAssignmentsGetRetentionPolicyAssignmentsSuccess = typ
  */
 export const SignRequestsCancelSignRequestSuccess = S.suspend(() => SignRequest).pipe($I.annoteSchema("SignRequestsCancelSignRequestSuccess", {
     description: "Decoded success value for Box SDK method signRequests.cancelSignRequest."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link SignRequestsCancelSignRequestSuccess}.
@@ -16660,7 +16634,7 @@ export type SignRequestsCancelSignRequestSuccess = typeof SignRequestsCancelSign
  */
 export const SignRequestsCreateSignRequestSuccess = S.suspend(() => SignRequest).pipe($I.annoteSchema("SignRequestsCreateSignRequestSuccess", {
     description: "Decoded success value for Box SDK method signRequests.createSignRequest."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link SignRequestsCreateSignRequestSuccess}.
@@ -16694,7 +16668,7 @@ export type SignRequestsCreateSignRequestSuccess = typeof SignRequestsCreateSign
  */
 export const SignRequestsGetSignRequestByIdSuccess = S.suspend(() => SignRequest).pipe($I.annoteSchema("SignRequestsGetSignRequestByIdSuccess", {
     description: "Decoded success value for Box SDK method signRequests.getSignRequestById."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link SignRequestsGetSignRequestByIdSuccess}.
@@ -16728,7 +16702,7 @@ export type SignRequestsGetSignRequestByIdSuccess = typeof SignRequestsGetSignRe
  */
 export const SignRequestsGetSignRequestsSuccess = S.suspend(() => SignRequests).pipe($I.annoteSchema("SignRequestsGetSignRequestsSuccess", {
     description: "Decoded success value for Box SDK method signRequests.getSignRequests."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link SignRequestsGetSignRequestsSuccess}.
@@ -16762,7 +16736,7 @@ export type SignRequestsGetSignRequestsSuccess = typeof SignRequestsGetSignReque
  */
 export const SignRequestsResendSignRequestSuccess = S.Undefined.pipe($I.annoteSchema("SignRequestsResendSignRequestSuccess", {
     description: "Decoded success value for Box SDK method signRequests.resendSignRequest."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link SignRequestsResendSignRequestSuccess}.
@@ -16796,7 +16770,7 @@ export type SignRequestsResendSignRequestSuccess = typeof SignRequestsResendSign
  */
 export const SignTemplatesGetSignTemplateByIdSuccess = S.suspend(() => SignTemplate).pipe($I.annoteSchema("SignTemplatesGetSignTemplateByIdSuccess", {
     description: "Decoded success value for Box SDK method signTemplates.getSignTemplateById."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link SignTemplatesGetSignTemplateByIdSuccess}.
@@ -16830,7 +16804,7 @@ export type SignTemplatesGetSignTemplateByIdSuccess = typeof SignTemplatesGetSig
  */
 export const SignTemplatesGetSignTemplatesSuccess = S.suspend(() => SignTemplates).pipe($I.annoteSchema("SignTemplatesGetSignTemplatesSuccess", {
     description: "Decoded success value for Box SDK method signTemplates.getSignTemplates."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link SignTemplatesGetSignTemplatesSuccess}.
@@ -16864,7 +16838,7 @@ export type SignTemplatesGetSignTemplatesSuccess = typeof SignTemplatesGetSignTe
  */
 export const UploadsPreflightFileUploadCheckSuccess = S.suspend(() => UploadUrl).pipe($I.annoteSchema("UploadsPreflightFileUploadCheckSuccess", {
     description: "Decoded success value for Box SDK method uploads.preflightFileUploadCheck."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link UploadsPreflightFileUploadCheckSuccess}.
@@ -16898,7 +16872,7 @@ export type UploadsPreflightFileUploadCheckSuccess = typeof UploadsPreflightFile
  */
 export const UserCollaborationsCreateCollaborationSuccess = S.suspend(() => Collaboration).pipe($I.annoteSchema("UserCollaborationsCreateCollaborationSuccess", {
     description: "Decoded success value for Box SDK method userCollaborations.createCollaboration."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link UserCollaborationsCreateCollaborationSuccess}.
@@ -16932,7 +16906,7 @@ export type UserCollaborationsCreateCollaborationSuccess = typeof UserCollaborat
  */
 export const UserCollaborationsDeleteCollaborationByIdSuccess = S.Undefined.pipe($I.annoteSchema("UserCollaborationsDeleteCollaborationByIdSuccess", {
     description: "Decoded success value for Box SDK method userCollaborations.deleteCollaborationById."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link UserCollaborationsDeleteCollaborationByIdSuccess}.
@@ -16966,7 +16940,7 @@ export type UserCollaborationsDeleteCollaborationByIdSuccess = typeof UserCollab
  */
 export const UserCollaborationsGetCollaborationByIdSuccess = S.suspend(() => Collaboration).pipe($I.annoteSchema("UserCollaborationsGetCollaborationByIdSuccess", {
     description: "Decoded success value for Box SDK method userCollaborations.getCollaborationById."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link UserCollaborationsGetCollaborationByIdSuccess}.
@@ -17000,7 +16974,7 @@ export type UserCollaborationsGetCollaborationByIdSuccess = typeof UserCollabora
  */
 export const UserCollaborationsUpdateCollaborationByIdSuccess = S.suspend(() => Collaboration).pipe(S.UndefinedOr, $I.annoteSchema("UserCollaborationsUpdateCollaborationByIdSuccess", {
     description: "Decoded success value for Box SDK method userCollaborations.updateCollaborationById."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link UserCollaborationsUpdateCollaborationByIdSuccess}.
@@ -17034,7 +17008,7 @@ export type UserCollaborationsUpdateCollaborationByIdSuccess = typeof UserCollab
  */
 export const UsersCreateUserSuccess = S.suspend(() => UserFull).pipe($I.annoteSchema("UsersCreateUserSuccess", {
     description: "Decoded success value for Box SDK method users.createUser."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link UsersCreateUserSuccess}.
@@ -17068,7 +17042,7 @@ export type UsersCreateUserSuccess = typeof UsersCreateUserSuccess.Type;
  */
 export const UsersDeleteUserByIdSuccess = S.Undefined.pipe($I.annoteSchema("UsersDeleteUserByIdSuccess", {
     description: "Decoded success value for Box SDK method users.deleteUserById."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link UsersDeleteUserByIdSuccess}.
@@ -17102,7 +17076,7 @@ export type UsersDeleteUserByIdSuccess = typeof UsersDeleteUserByIdSuccess.Type;
  */
 export const UsersGetUserByIdSuccess = S.suspend(() => UserFull).pipe($I.annoteSchema("UsersGetUserByIdSuccess", {
     description: "Decoded success value for Box SDK method users.getUserById."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link UsersGetUserByIdSuccess}.
@@ -17136,7 +17110,7 @@ export type UsersGetUserByIdSuccess = typeof UsersGetUserByIdSuccess.Type;
  */
 export const UsersGetUserMeSuccess = S.suspend(() => UserFull).pipe($I.annoteSchema("UsersGetUserMeSuccess", {
     description: "Decoded success value for Box SDK method users.getUserMe."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link UsersGetUserMeSuccess}.
@@ -17170,7 +17144,7 @@ export type UsersGetUserMeSuccess = typeof UsersGetUserMeSuccess.Type;
  */
 export const UsersGetUsersSuccess = S.suspend(() => Users).pipe($I.annoteSchema("UsersGetUsersSuccess", {
     description: "Decoded success value for Box SDK method users.getUsers."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link UsersGetUsersSuccess}.
@@ -17204,7 +17178,7 @@ export type UsersGetUsersSuccess = typeof UsersGetUsersSuccess.Type;
  */
 export const UsersUpdateUserByIdSuccess = S.suspend(() => UserFull).pipe($I.annoteSchema("UsersUpdateUserByIdSuccess", {
     description: "Decoded success value for Box SDK method users.updateUserById."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link UsersUpdateUserByIdSuccess}.
@@ -17238,7 +17212,7 @@ export type UsersUpdateUserByIdSuccess = typeof UsersUpdateUserByIdSuccess.Type;
  */
 export const WebhooksCreateWebhookSuccess = S.suspend(() => Webhook).pipe($I.annoteSchema("WebhooksCreateWebhookSuccess", {
     description: "Decoded success value for Box SDK method webhooks.createWebhook."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link WebhooksCreateWebhookSuccess}.
@@ -17272,7 +17246,7 @@ export type WebhooksCreateWebhookSuccess = typeof WebhooksCreateWebhookSuccess.T
  */
 export const WebhooksDeleteWebhookByIdSuccess = S.Undefined.pipe($I.annoteSchema("WebhooksDeleteWebhookByIdSuccess", {
     description: "Decoded success value for Box SDK method webhooks.deleteWebhookById."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link WebhooksDeleteWebhookByIdSuccess}.
@@ -17306,7 +17280,7 @@ export type WebhooksDeleteWebhookByIdSuccess = typeof WebhooksDeleteWebhookByIdS
  */
 export const WebhooksGetWebhookByIdSuccess = S.suspend(() => Webhook).pipe($I.annoteSchema("WebhooksGetWebhookByIdSuccess", {
     description: "Decoded success value for Box SDK method webhooks.getWebhookById."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link WebhooksGetWebhookByIdSuccess}.
@@ -17340,7 +17314,7 @@ export type WebhooksGetWebhookByIdSuccess = typeof WebhooksGetWebhookByIdSuccess
  */
 export const WebhooksGetWebhooksSuccess = S.suspend(() => Webhooks).pipe($I.annoteSchema("WebhooksGetWebhooksSuccess", {
     description: "Decoded success value for Box SDK method webhooks.getWebhooks."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link WebhooksGetWebhooksSuccess}.
@@ -17374,7 +17348,7 @@ export type WebhooksGetWebhooksSuccess = typeof WebhooksGetWebhooksSuccess.Type;
  */
 export const WebhooksUpdateWebhookByIdSuccess = S.suspend(() => Webhook).pipe($I.annoteSchema("WebhooksUpdateWebhookByIdSuccess", {
     description: "Decoded success value for Box SDK method webhooks.updateWebhookById."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link WebhooksUpdateWebhookByIdSuccess}.
@@ -17408,7 +17382,7 @@ export type WebhooksUpdateWebhookByIdSuccess = typeof WebhooksUpdateWebhookByIdS
  */
 export const WebhooksValidateMessageSuccess = S.Boolean.pipe($I.annoteSchema("WebhooksValidateMessageSuccess", {
     description: "Decoded success value for Box SDK method webhooks.validateMessage."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link WebhooksValidateMessageSuccess}.
@@ -17442,7 +17416,7 @@ export type WebhooksValidateMessageSuccess = typeof WebhooksValidateMessageSucce
  */
 export const ZipDownloadsCreateZipDownloadSuccess = S.suspend(() => ZipDownload).pipe($I.annoteSchema("ZipDownloadsCreateZipDownloadSuccess", {
     description: "Decoded success value for Box SDK method zipDownloads.createZipDownload."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link ZipDownloadsCreateZipDownloadSuccess}.
@@ -17476,7 +17450,7 @@ export type ZipDownloadsCreateZipDownloadSuccess = typeof ZipDownloadsCreateZipD
  */
 export const ZipDownloadsGetZipDownloadStatusSuccess = S.suspend(() => ZipDownloadStatus).pipe($I.annoteSchema("ZipDownloadsGetZipDownloadStatusSuccess", {
     description: "Decoded success value for Box SDK method zipDownloads.getZipDownloadStatus."
-  }), SchemaUtils.withCodecStatics);
+  }));
 
 /**
  * Type for {@link ZipDownloadsGetZipDownloadStatusSuccess}.

@@ -1,7 +1,7 @@
 // @vitest-environment node
 
 import { SourceTextExtractor } from "@beep/provenance";
-import { NonNegativeInt } from "@beep/schema";
+import { NonNegativeInt, PosInt } from "@beep/schema";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { Duration, Effect, FileSystem, Layer, Match, Number as N, Path, Stream } from "effect";
 import * as A from "effect/Array";
@@ -30,6 +30,8 @@ import { DocumentId, ProvenanceEventId } from "@/schema/Ids";
 import { ModelIdentity } from "@/schema/Model";
 import { ParseOutcome } from "@/schema/Text";
 import { CanaryC0 } from "@/services/CanaryC0";
+import { CanaryC1 } from "@/services/CanaryC1";
+import { CanaryC2 } from "@/services/CanaryC2";
 import { Chunker } from "@/services/Chunker";
 import { DocumentSource } from "@/services/DocumentSource";
 import { Parser } from "@/services/Parser";
@@ -64,6 +66,18 @@ const provideScopedLayer =
 
 const unusedCanaryC0 = CanaryC0.of({
   run: Effect.fn("CanaryC0.unused")(() => Effect.die(new Error("C0 is not used by gold command tests."))),
+  runWithSnapshot: Effect.fn("CanaryC0.unusedWithSnapshot")(() =>
+    Effect.die(new Error("C0 is not used by gold command tests."))
+  ),
+});
+const unusedCanaryC1 = CanaryC1.of({
+  run: Effect.fn("CanaryC1.unused")(() => Effect.die(new Error("C1 is not used by gold command tests."))),
+  runWithSnapshot: Effect.fn("CanaryC1.unusedWithSnapshot")(() =>
+    Effect.die(new Error("C1 is not used by gold command tests."))
+  ),
+});
+const unusedCanaryC2 = CanaryC2.of({
+  run: Effect.fn("CanaryC2.unused")(() => Effect.die(new Error("C2 is not used by gold command tests."))),
 });
 
 const unusedChunker = Chunker.of({
@@ -169,6 +183,9 @@ const makeGoldTestLayer = (
     LabConfig,
     LabConfig.of({
       corpusRoot: O.none(),
+      embeddingDimension: PosInt.make(1536),
+      embeddingModel: "text-embedding-3-small",
+      embeddingRevision: "text-embedding-3-small@2024-01-25",
       extractionTimeout: Duration.minutes(15),
       extractorModel: "stub-extractor-20260826",
       goldDirectory: "fixtures/gold/v1",
@@ -177,6 +194,7 @@ const makeGoldTestLayer = (
       ledgerRoot: ".beep/semantica/ledger",
       mode: "replay",
       offline: true,
+      projectionTimeout: Duration.seconds(30),
       providerCacheDirectory: ".beep/semantica/provider-cache",
     })
   );
@@ -533,6 +551,8 @@ describe("C0 gold proposer", () => {
           const error = yield* provideScopedLayer(makeGoldTestLayer(manifest, fixtures))(
             runCanary(["gold", "propose", "--offline", "--paper", paperId, "--subset", "entity"]).pipe(
               Effect.provideService(CanaryC0, unusedCanaryC0),
+              Effect.provideService(CanaryC1, unusedCanaryC1),
+              Effect.provideService(CanaryC2, unusedCanaryC2),
               Effect.provideService(Chunker, unusedChunker),
               Effect.flip
             )

@@ -97,13 +97,13 @@ const minimalIntent = OpenclawDeploymentIntent.make({
 describe("@beep/openclaw intent models", () => {
   it("accepts well-formed op:// secret references", () => {
     for (const reference of acceptedReferences) {
-      expect(O.isSome(OpenclawSecretReference.decodeOption(reference))).toBe(true);
+      expect(O.isSome(OpenclawSecretReference.decodeUnknownOption(reference))).toBe(true);
     }
   });
 
   it("rejects malformed secret references", () => {
     for (const reference of rejectedReferences) {
-      expect(O.isNone(OpenclawSecretReference.decodeOption(reference))).toBe(true);
+      expect(O.isNone(OpenclawSecretReference.decodeUnknownOption(reference))).toBe(true);
     }
   });
 

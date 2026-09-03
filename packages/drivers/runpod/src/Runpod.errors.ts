@@ -43,7 +43,7 @@ export const RunpodHttpStatusCode = S.Int.check(S.isBetween({ minimum: 100, maxi
   $I.annoteSchema("RunpodHttpStatusCode", {
     description: "Numeric HTTP status code emitted by Runpod driver boundaries.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 /**

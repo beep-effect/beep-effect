@@ -606,3 +606,47 @@ cf30b993a38d and every policy/enumeration fact — is byte-identical to what
 sitting 2 ratified. A follow-up hardening in the same review arc removed every
 committed live host path (the manifest source path is now a portable
 descriptor; the impl-report environment transcript is prose-elided).
+
+## 2026-08-30 — S7 sitting 1 (projection design grill, four rulings)
+
+Steward re-ordered the queue on merging #919: S7 opens now; auditor run 2
+follows S7. The six S6-surfaced gaps become explicitly-unavailable projection
+inputs, never blockers. Four judgment points grilled; all four resolved to the
+recommended option.
+
+**Ruling 1 — v1 scope is layered: admission core + planner seam.** v1 computes
+the deterministic admission-order projection — pending SeatRequests + ratified
+A-Box policy + reconstructed token state → an ordered ScheduleProposal under
+charge-vs-capacity, priority, FIFO aging, the starvation bound, and hard
+limits — entirely inside deployed-scheduler semantics. The service contract
+carries an explicit seam for the lane-DAG planner (Graph.topo territory); v1
+does not implement it. Rejected: admission-core-only (loses the seam and
+forces a fresh design later) and full-episode-planner-now (runs ahead of both
+ratified vocabulary and journal carriers — fixture-driven theater).
+
+**Ruling 2 — provisional ordering predicates; run 2 ratifies.** Emitted A-Box
+types its nodes with ratified `ciops:` classes (ScheduleProposal, SeatRequest,
+WorkUnitSpecification…); the unratified ordering vocabulary (hasCurrentProposal,
+hasStep, stepIndex, schedulesWorkUnit, hasScope, class ScheduleStep) is emitted
+in the provisional `ciops-prov:` named graph — the exact S6 census precedent
+(open closure, excluded from negation/typing). Those terms join the run-2
+re-proposal queue; vocabulary enters ratified status only through the auditor.
+Rejected: an in-S7 mini-ratification (first-ever vocabulary ratification
+outside an auditor run) and no-RDF-emission (schedule-as-A-Box untested).
+
+**Ruling 3 — landing zone is `apps/labs/ciops`, all-in.** New labs app via
+`bun run beep create-package`: schemas + Context.Service contract + engine +
+property tests all incubate there, off the required turbo graphs (the
+incubation-home decision's rationale). Schemas graduate to
+`packages/ontology/domain` when proven. Name matches the ontology prefix.
+
+**Ruling 4 — differential replay is IN v1, gating on the golden snapshot.**
+A Must property test replays the pinned S6 golden journal (79 events, frozen
+bytes, redacted digest cf30b993a38d) through the projection and requires the
+projected admission order to reproduce the deployed scheduler's actual grant
+order; token state is reconstructed from admitted/released deltas + A-Box
+capacity. Flake-free by construction (frozen bytes); any mismatch is a real
+semantic finding and becomes run-2 evidence. This is the loop-closer's proof
+and seeds the S9 dogfood.
+
+Binding contract: `ontology/docs/s7-projection-contract.md`.

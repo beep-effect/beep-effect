@@ -6,7 +6,7 @@
  */
 
 import { $FileProcessingId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, NonNegativeInt } from "@beep/schema";
 import * as S from "effect/Schema";
 import { ArtifactId, ArtifactReference, OperationId } from "../Artifact/Artifact.schema.ts";
 import { FileFormatFamily, FileProcessingSkipReason } from "../Strategy/Strategy.schema.ts";
@@ -419,8 +419,7 @@ export const ProcessFileResult = S.Union([
   S.toTaggedUnion("resultKind"),
   $I.annoteSchema("ProcessFileResult", {
     description: "Runtime-neutral result for a full source processing operation.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

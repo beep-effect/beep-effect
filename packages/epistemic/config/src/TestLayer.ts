@@ -33,7 +33,7 @@ import type { FrozenGrantSet } from "@beep/epistemic-domain/values/GrantSet";
  * @category fixtures
  * @since 0.0.0
  */
-export const fixtureAllowedDestination = SinkDestination.fromUnknown("https://registry.example");
+export const fixtureAllowedDestination = SinkDestination.decodeUnknownSync("https://registry.example");
 
 /**
  * Destination the fixture grant deliberately omits, so a denial has something
@@ -50,7 +50,7 @@ export const fixtureAllowedDestination = SinkDestination.fromUnknown("https://re
  * @category fixtures
  * @since 0.0.0
  */
-export const fixtureDeniedDestination = SinkDestination.fromUnknown("https://attacker.example");
+export const fixtureDeniedDestination = SinkDestination.decodeUnknownSync("https://attacker.example");
 
 /**
  * Instant the fixture grant set is sealed at. Pinned so the digest is stable.

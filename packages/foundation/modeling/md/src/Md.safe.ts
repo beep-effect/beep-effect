@@ -4,13 +4,16 @@
  * The general {@link Document} schema remains lossless persistence truth.
  * `SafeDocument` is the narrower RPC/editor boundary: it rejects trusted raw
  * nodes, URL destinations outside the canonical user-content policies,
- * duplicate footnote definitions, and strings that cannot reach the safe HTML
- * serializer while retaining the exact same encoded JSON representation.
+ * duplicate footnote definitions, strings that cannot reach the safe HTML
+ * serializer, and structures whose direct HTML projection is non-conforming,
+ * while retaining the exact same encoded JSON representation.
  *
  * @packageDocumentation \@beep/md/Md.safe
  * @since 0.0.0
  */
 
+import { Html } from "@beep/html";
+import { HtmlConformanceIssue } from "@beep/html/Html.conformance";
 import { SafeImageUrlAttribute, SafeUrlAttribute } from "@beep/html/Html.policy";
 import { $MdId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema/LiteralKit";
@@ -59,8 +62,7 @@ const schemaIssueToError = (cause: S.SchemaError | S.SchemaError["issue"]): S.Sc
 export const DocumentSafetyPathSegment = S.Union([S.String, S.Int.check(S.isGreaterThanOrEqualTo(0))]).pipe(
   $I.annoteSchema("DocumentSafetyPathSegment", {
     description: "String property name or numeric array index in a Markdown AST path.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -273,6 +275,43 @@ export class DuplicateFootnoteDefinitionSafetyViolation extends S.TaggedError<Du
 ) {}
 
 /**
+ * An HTML conformance issue produced by the canonical Markdown projection.
+ *
+ * **Details**
+ *
+ * `path` addresses the projected `@beep/html` tree using the HTML
+ * conformance inspector's path syntax. Other safety variants address the
+ * source Markdown AST.
+ *
+ * **Example** (Use HtmlProjectionSafetyViolation)
+ *
+ * ```ts import.meta.vitest name="Use HtmlProjectionSafetyViolation"
+ * import { HtmlProjectionSafetyViolation } from "@beep/md/Md.safe"
+ *
+ * const issue = HtmlProjectionSafetyViolation.make({
+ *   path: ["children.1"],
+ *   rule: "headingOutline",
+ *   message: "The projected heading skips an outline level",
+ * })
+ * issue._tag // => "HtmlProjection"
+ * ```
+ *
+ * @invariant Every instance describes a hard author-conformance failure returned by the canonical `Document.toHtml` projection.
+ * @see {@link https://html.spec.whatwg.org/multipage/sections.html#headings-and-outlines | WHATWG HTML headings and outlines} for the mandatory heading-level progression rule.
+ * @category errors
+ * @since 0.0.0
+ */
+export class HtmlProjectionSafetyViolation extends S.TaggedError<HtmlProjectionSafetyViolation>(
+  $I`HtmlProjectionSafetyViolation`
+)(
+  "HtmlProjection",
+  HtmlConformanceIssue.fields,
+  $I.annoteError<HtmlProjectionSafetyViolation>("HtmlProjectionSafetyViolation", {
+    description: "Path-located HTML conformance issue produced by the canonical Markdown projection.",
+  })
+) {}
+
+/**
  * Structured safety issue returned before a document crosses an editor or RPC
  * trust boundary.
  *
@@ -291,10 +330,12 @@ export class DuplicateFootnoteDefinitionSafetyViolation extends S.TaggedError<Du
  */
 export const DocumentSafetyViolation = S.Union([
   DuplicateFootnoteDefinitionSafetyViolation,
+  HtmlProjectionSafetyViolation,
   RawNodeSafetyViolation,
   ScalarSafetyViolation,
   UrlSafetyViolation,
 ]).pipe(
+  S.toTaggedUnion("_tag"),
   $I.annoteSchema("DocumentSafetyViolation", {
     description: "Path-located Markdown user-content safety violation.",
   })
@@ -573,8 +614,21 @@ const duplicateFootnoteDefinitionIssues = (document: Document): ReadonlyArray<Do
     )
   );
 
+const htmlProjectionSafetyIssues = flow(
+  Document.toHtml,
+  Html.Conformant.issues,
+  A.map((issue) =>
+    HtmlProjectionSafetyViolation.make({
+      path: issue.path,
+      rule: issue.rule,
+      message: issue.message,
+    })
+  )
+);
+
 /**
- * Returns every path-located user-content safety violation.
+ * Returns every path-located user-content safety or hard HTML-projection
+ * violation.
  *
  * **Example** (Use documentSafetyIssues)
  *
@@ -591,6 +645,7 @@ const duplicateFootnoteDefinitionIssues = (document: Document): ReadonlyArray<Do
 export const documentSafetyIssues = (document: Document): ReadonlyArray<DocumentSafetyViolation> => [
   ...pipeChildren(document.children, (block, index) => blockSafetyIssues(block, ["children", index])),
   ...duplicateFootnoteDefinitionIssues(document),
+  ...htmlProjectionSafetyIssues(document),
 ];
 
 /**
@@ -624,8 +679,10 @@ const SafeDocumentCheck = S.makeFilter<Document>(
   {
     identifier: $I`SafeDocumentCheck`,
     title: "Safe Markdown Document",
-    description: "A document without trusted raw content, unsafe URLs, duplicate footnotes, or invalid scalars.",
-    message: "Document contains trusted raw content, an unsafe URL, duplicate footnotes, or an invalid scalar string.",
+    description:
+      "A document without trusted raw content, unsafe URLs, duplicate footnotes, invalid scalars, or HTML projection issues.",
+    message:
+      "Document contains trusted raw content, an unsafe URL, duplicate footnotes, an invalid scalar string, or an HTML projection issue.",
   }
 );
 
@@ -652,8 +709,7 @@ export const SafeInline = Inline.pipe(
   S.brand("SafeInline"),
   $I.annoteSchema("SafeInline", {
     description: "User-authored inline content approved for editor and RPC boundaries.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -692,6 +748,8 @@ export type SafeInline = typeof SafeInline.Type;
  * Result.isSuccess(result) // => true
  * ```
  *
+ * @invariant Every admitted document projects through {@link Document.toHtml} to an HTML fragment with no hard author-conformance issues.
+ * @see {@link https://html.spec.whatwg.org/multipage/sections.html#headings-and-outlines | WHATWG HTML headings and outlines} for one cross-block structural invariant enforced by the projection check.
  * @category validation
  * @since 0.0.0
  */
@@ -700,8 +758,7 @@ export const SafeDocument = Document.pipe(
   S.brand("SafeDocument"),
   $I.annoteSchema("SafeDocument", {
     description: "User-authored Markdown document approved for editor and RPC boundaries.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

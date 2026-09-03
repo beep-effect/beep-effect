@@ -248,8 +248,7 @@ export const Rule = S.Union([Allow, Deny, Ask]).pipe(
   S.toTaggedUnion("effect"),
   $I.annoteSchema("Rule", {
     description: "RuleEffect tagged union",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

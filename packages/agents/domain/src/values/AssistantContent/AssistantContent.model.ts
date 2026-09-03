@@ -90,6 +90,14 @@ export class LinkInline extends S.Class<LinkInline>($I`LinkInline`)(
   })
 ) {}
 
+const InlineNodeWithCodecStatics = pipe(
+  S.Union([TextInline, LinkInline]),
+  $I.annoteSchema("InlineNode", {
+    description: "Inline content held by an assistant block.",
+  }),
+  SchemaUtils.withCodecStatics(["decodeUnknownSync", "is"])
+);
+
 /**
  * Inline content held by an assistant block.
  *
@@ -106,12 +114,12 @@ export class LinkInline extends S.Class<LinkInline>($I`LinkInline`)(
  * @category value-objects
  * @since 0.0.0
  */
-export const InlineNode = S.Union([TextInline, LinkInline]).pipe(
+export const InlineNode = InlineNodeWithCodecStatics.pipe(
   S.toTaggedUnion("type"),
-  $I.annoteSchema("InlineNode", {
-    description: "Inline content held by an assistant block.",
-  }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withStatics(() => ({
+    decodeUnknownSync: InlineNodeWithCodecStatics.decodeUnknownSync,
+    is: InlineNodeWithCodecStatics.is,
+  }))
 );
 
 /**
@@ -571,20 +579,17 @@ export class YouTubeBlock extends S.Class<YouTubeBlock>($I`YouTubeBlock`)(
  * @category value-objects
  * @since 0.0.0
  */
-export const AssistantBlock = S.Union([
-  ParagraphBlock,
-  HeadingBlock,
-  QuoteBlock,
-  ListBlock,
-  CodeBlock,
-  TableBlock,
-  YouTubeBlock,
-]).pipe(
-  S.toTaggedUnion("type"),
+export const AssistantBlock = pipe(
+  S.Union([ParagraphBlock, HeadingBlock, QuoteBlock, ListBlock, CodeBlock, TableBlock, YouTubeBlock]),
   $I.annoteSchema("AssistantBlock", {
     description: "A single block of an assistant turn.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownSync", "is"]),
+  (schema) =>
+    schema.pipe(
+      S.toTaggedUnion("type"),
+      SchemaUtils.withStatics(() => ({ decodeUnknownSync: schema.decodeUnknownSync, is: schema.is }))
+    )
 );
 
 /**

@@ -120,7 +120,7 @@ const sameString = S.toEquivalence(S.String);
 const acceptanceFailure = (step: OpenclawLiveAcceptanceStep, diagnostics: string): OpenclawLiveAcceptanceFailed =>
   OpenclawLiveAcceptanceFailed.make({
     _tag: "Failed",
-    diagnostics: OpenclawDiagnosticText.fromUnknown(diagnostics),
+    diagnostics: OpenclawDiagnosticText.decodeUnknownSync(diagnostics),
     step,
   });
 

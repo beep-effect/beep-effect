@@ -30,6 +30,14 @@ export const ALLOWLIST_SNAPSHOT = {
     },
     {
       "rule": "beep-laws/no-native-runtime",
+      "file": "packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts",
+      "kind": "object-method",
+      "reason": "classStatics returns an intentionally frozen public utility bag so an S.Class declaration can safely share destructurable precompiled codec helpers without consumers replacing the selected functions after initialization.",
+      "owner": "@beep/schema",
+      "issue": "SCHEMA-CLASS-STATICS-IMMUTABLE-UTILITY-BAG"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
       "file": "packages/foundation/modeling/html/src/Html.conformance.ts",
       "kind": "new-map-set",
       "reason": "Conformance proofs need weak identity semantics in two places: private issuer membership and proof-to-detached-root storage must not retain validated trees, while recursive snapshot traversal needs cycle detection without retaining previously inspected ASTs. Effect collections provide neither weak keys nor weak membership.",
@@ -123,14 +131,6 @@ export const ALLOWLIST_SNAPSHOT = {
       "reason": "wink-nlp similarity.set.tversky requires native Set inputs because it reads Set size and membership directly as part of its third-party API contract.",
       "owner": "@beep/wink",
       "issue": "WINK-SIMILARITY-NATIVE-SET-BRIDGE"
-    },
-    {
-      "rule": "beep-laws/no-native-runtime",
-      "file": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-      "kind": "new-map-set",
-      "reason": "Semantic schema metadata traversal needs WeakSet identity tracking to avoid retaining visited schema nodes while preventing recursive graph cycles.",
-      "owner": "@beep/modeling-rdf",
-      "issue": "RDF-SCHEMA-METADATA-WEAKSET-TRAVERSAL"
     },
     {
       "rule": "beep-laws/no-native-runtime",

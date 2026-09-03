@@ -117,6 +117,29 @@ graduation. Full plan with locked decisions: [`DECISIONS.md`](./DECISIONS.md).
 
 ## Trail
 
+- 2026-08-30 (seventeenth stint): S7 PROJECTION SHIPPED — REPLAY CLOSES THE
+  LOOP. Steward re-ordered the queue on merging #919: S7 now, auditor run 2
+  after. Design-first: sitting 1 locked four rulings (layered scope with a
+  typed lane-DAG planner seam, provisional `ciops-prov:` ordering vocabulary
+  queued for run 2, landing zone `apps/labs/ciops` via create-package,
+  differential replay gating v1) into the binding
+  `ontology/docs/s7-projection-contract.md`. Two codex lanes built
+  `@beep/ciops`: schema-first policy/request/ledger/proposal models, strict
+  A-Box decode from the frozen S6 Turtle bytes, a deterministic engine
+  mirroring the deployed admission semantics (aging rank, review-fix-cap
+  skippability, head-of-line capacity), byte-deterministic Turtle emission,
+  a `Context.Service` with TxRef live shell, and the five-property gate
+  suite. The replay first produced six first-choice divergences — adjudicated
+  as JOURNAL CENSORSHIP, not projection error: phantom grant `1813f29f`
+  (weight 5, event 20) is never released because the deployed reaper drops
+  dead admission state via pid/proc-start liveness without journaling a
+  release. One inferred dead-lease eviction (event 66) makes all 41
+  admissions replay exactly; run-2 finding recorded: **lease death is
+  unjournaled**. Evidence in `research/s7-replay-evidence.md`; report in
+  `extraction/s7/work-s7/impl-report.md`. All gates green (8/8 tests,
+  package-verify, base/--s5/--s6 validators 0/0, CQ suite 25+19 at 0).
+  NEXT: auditor run 2 (review the updated skill on main first), then S8.
+
 - 2026-08-30 (sixteenth stint): S6 COMPLETE — A-BOX RATIFIED. Design-first:
   the binding `ontology/docs/s6-abox-contract.md` landed under two grill
   rounds (seven sitting-1 rulings: S6 before run 2, real SHACL, one golden

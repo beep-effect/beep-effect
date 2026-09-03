@@ -1,5 +1,5 @@
 import { EcosystemPolarityOptions, runEcosystemPolarityCheck } from "@beep/repo-cli/commands/Lint/EcosystemPolarity";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { provideScopedLayer } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { Effect, FileSystem, Path } from "effect";
@@ -7,7 +7,7 @@ import * as R from "effect/Record";
 import { describe, expect, it } from "vitest";
 import { NodeTestLayer, withTempWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
 
-const encodeJson = Unknown.encodeUnknownSyncFromJsonString;
+const encodeJson = UnknownFromJsonString.encodeUnknownSync;
 
 const writeJson = Effect.fn(function* (filePath: string, value: unknown) {
   yield* writeProjectFile(filePath, `${encodeJson(value)}\n`);

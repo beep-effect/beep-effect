@@ -4,11 +4,11 @@ Lifecycle: `active`
 
 Created 2026-08-13 · Anchor: [SPEC.md](SPEC.md) · Order: [PLAN.md](PLAN.md)
 
-Agents ship correct code faster: near-zero backpressure latency (failures reach the owning
-agent's next tool boundary, not the operator's patience), local verify that near-guarantees the
-17 required remote checks, a readable+warm Turbo remote cache in every checkout, memory-aware
-concurrent verify/publish across sibling checkouts, and an end to the derived-file merge
-treadmill.
+Agents ship correct code faster: near-zero backpressure latency (failures reach an active
+session's next tool boundary and unacknowledged P0 work blocks Stop), local verify that
+near-guarantees the 17 required remote checks, a readable+warm Turbo remote cache in every
+checkout, memory-aware concurrent verify/publish across sibling checkouts, and an end to the
+derived-file merge treadmill.
 
 Born from a 9-lane fan-out (7 codex Sol analysis lanes over the live repo + 2 grok research/
 design lanes) plus a 5-frame ADHD divergence pass on backpressure; all evidence and idea pools
@@ -38,9 +38,19 @@ B11 (2026-08-25) closed the regeneration treadmill: the ratchet prints the exact
 touches package rows measures those packages (24 s) instead of the full workspace (9–15 min).
 
 The remaining P2-P5 engineering backlog was completed in the 2026-08-27 closeout branch. It
-adds hook-driven inbox enforcement and takeover, full local/hosted parity planning and proof
-reuse, weighted admission with RSS telemetry, cache warming and first-touch evidence, local-only
-portfolio projections, contention families, goals-only required-check skips, and the live E7/E8
-evaluations. The initiative intentionally remains active until the final PR is merge-ready and a
-representative post-merge week satisfies the completion gate; see
+adds hook-driven inbox enforcement, full local/hosted parity planning and proof reuse, weighted
+admission with RSS telemetry, cache warming and first-touch evidence, local-only portfolio
+projections, contention families, goals-only required-check skips, and the live E7/E8
+evaluations. On 2026-08-30 the operator accepted a concentrated 24-hour production sample in
+place of the original seven-day duration proxy. Operator PR #921 subsequently retired the
+published-PR ownership lease and automatic takeover path; the packet records that explicit
+supersession and does not claim takeover success. Two independent same-origin full proofs
+overlapped for 48 minutes 49.201 seconds and both completed every lane at exit 0. The initiative
+remains active because the existing 1Password reference resolves but the cache canary rejects its
+credentials. Control-plane timestamp drift makes mirror drift the leading hypothesis, but does not
+prove a secret mismatch or its cause. The operator must repair authentication before the
+cross-checkout remote-read sample can run. PR #929 reached Yeet `merge-ready: yes` and merged on
+2026-08-31 as the implementation-repair PR. PR #937 later merged as an observation-state follow-up
+without the cache evidence, status flip, or reflection. A successor final-evidence PR now owns
+those artifacts and must reach Yeet `merge-ready: yes`; see
 [research/metrics-closeout.md](research/metrics-closeout.md).

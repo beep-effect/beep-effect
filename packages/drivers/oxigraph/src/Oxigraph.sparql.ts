@@ -15,7 +15,7 @@ import {
   SparqlSelectResult,
 } from "@beep/semantic-web/services/sparql-query";
 import { A, O, P, R } from "@beep/utils";
-import { Effect, Layer, Match, pipe } from "effect";
+import { Effect, Layer, Match, MutableHashMap, pipe } from "effect";
 import * as Str from "effect/String";
 import { OxigraphSparqlError } from "./Oxigraph.errors.ts";
 import type { SparqlQueryRequest, SparqlQueryResult } from "@beep/semantic-web/services/sparql-query";
@@ -173,7 +173,14 @@ const fromOxigraphQuad = (quad: Oxigraph.Quad): Rdf.Quad =>
     graph: fromOxigraphGraph(quad.graph),
   });
 
-const makeStore = Effect.fn("Oxigraph.makeStore")(function* (request: SparqlQueryRequest) {
+const makeStore = Effect.fn("Oxigraph.makeStore")(function* (
+  request: SparqlQueryRequest,
+  stores: MutableHashMap.MutableHashMap<Rdf.Dataset, Oxigraph.Store>
+) {
+  const cached = MutableHashMap.get(stores, request.dataset);
+  if (O.isSome(cached)) {
+    return cached.value;
+  }
   const module = yield* loadOxigraphModule;
   const store = yield* Effect.try({
     try: () => new module.Store(),
@@ -190,6 +197,8 @@ const makeStore = Effect.fn("Oxigraph.makeStore")(function* (request: SparqlQuer
     { discard: true }
   );
 
+  MutableHashMap.clear(stores);
+  MutableHashMap.set(stores, request.dataset, store);
   return store;
 });
 
@@ -250,8 +259,11 @@ const askResult = (result: unknown): Effect.Effect<SparqlAskResult, OxigraphSpar
     ? Effect.succeed(SparqlAskResult.make({ profile: "ask", value: result }))
     : Effect.fail(unsupportedResult("Oxigraph did not return an ASK boolean."));
 
-const executeSparql = Effect.fn("Oxigraph.executeSparql")(function* (request: SparqlQueryRequest) {
-  const store = yield* makeStore(request);
+const executeSparql = Effect.fn("Oxigraph.executeSparql")(function* (
+  request: SparqlQueryRequest,
+  stores: MutableHashMap.MutableHashMap<Rdf.Dataset, Oxigraph.Store>
+) {
+  const store = yield* makeStore(request, stores);
   const result = yield* executeRawQuery(store, request);
 
   return yield* Match.value(request.profile).pipe(
@@ -270,7 +282,9 @@ const executeSparql = Effect.fn("Oxigraph.executeSparql")(function* (request: Sp
  *
  * The `oxigraph` package is imported lazily during query execution so this
  * Layer can be imported by browser and worker bundles without initializing
- * WebAssembly at module scope.
+ * WebAssembly at module scope. Each Layer acquisition retains the latest
+ * loaded immutable dataset instance so repeated queries do not rebuild the
+ * complete store and a long-lived service does not accumulate prior stores.
  *
  * **Example** (Import the live layer)
  *
@@ -283,11 +297,14 @@ const executeSparql = Effect.fn("Oxigraph.executeSparql")(function* (request: Sp
  * @category layers
  * @since 0.0.0
  */
-export const OxigraphSparqlQueryServiceLive = Layer.succeed(
+export const OxigraphSparqlQueryServiceLive = Layer.effect(
   SparqlQueryService,
-  SparqlQueryService.of({
-    execute: Effect.fn("SparqlQueryService.execute")((request) =>
-      executeSparql(request).pipe(Effect.mapError(semanticError))
-    ),
+  Effect.sync(() => {
+    const stores = MutableHashMap.empty<Rdf.Dataset, Oxigraph.Store>();
+    return SparqlQueryService.of({
+      execute: Effect.fn("SparqlQueryService.execute")((request) =>
+        executeSparql(request, stores).pipe(Effect.mapError(semanticError))
+      ),
+    });
   })
 );

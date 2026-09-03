@@ -9,7 +9,7 @@
  * @since 0.0.0
  * @category utilities
  */
-export * from "./codecStatics.ts";
+export * from "./collectAnnotationsAt.ts";
 /**
  * @since 0.0.0
  * @category utilities

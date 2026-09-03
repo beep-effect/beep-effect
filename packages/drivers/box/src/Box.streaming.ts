@@ -43,7 +43,7 @@ const BoxByteInputValue = S.Union([
   $I.annoteSchema("BoxByteInput", {
     description: "Byte input accepted by Box upload adapters.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 const LastPartIndex = S.Int.check(

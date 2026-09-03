@@ -33,7 +33,7 @@ const $I = $ScratchpadId.create("effect-ontology/Runtime/LinkIngestionRouter");
 const CreateBatchFromLinksBody = S.Struct({
   linkIds: S.Array(S.String),
   targetNamespace: S.optionalKey(S.String),
-}).pipe(SchemaUtils.withOptionCodecStatics);
+}).pipe(SchemaUtils.withCodecStatics(["decodeUnknownOption"]));
 
 const NonTerminalBatchStage = BatchStage.pick(BatchStage.omitOptions(["Complete", "Failed"]));
 
@@ -170,16 +170,16 @@ export const LinkIngestionRouter = HttpRouter.addAll([
       const bucket = O.getOrElse(config.storage.bucket, () => "local-bucket");
       const randomA = (yield* Random.nextIntBetween(0, 2_176_782_336)).toString(36).padStart(6, "0");
       const randomB = (yield* Random.nextIntBetween(0, 2_176_782_336)).toString(36).padStart(6, "0");
-      const batchId = BatchId.fromUnknown(`batch-${randomA}${randomB}`);
-      const targetNamespace = Namespace.fromUnknown(request.value.targetNamespace ?? entry.value.targetNamespace);
-      const ontologyUri = GcsUri.resolve(entry.value.storagePath, GcsBucket.fromUnknown(bucket));
-      const shaclUri = O.map(entry.value.shapesPath, (path) => GcsUri.resolve(path, GcsBucket.fromUnknown(bucket)));
+      const batchId = BatchId.decodeUnknownSync(`batch-${randomA}${randomB}`);
+      const targetNamespace = Namespace.decodeUnknownSync(request.value.targetNamespace ?? entry.value.targetNamespace);
+      const ontologyUri = GcsUri.resolve(entry.value.storagePath, GcsBucket.decodeUnknownSync(bucket));
+      const shaclUri = O.map(entry.value.shapesPath, (path) => GcsUri.resolve(path, GcsBucket.decodeUnknownSync(bucket)));
       const embeddingsUri = O.map(entry.value.embeddingsPath, (path) =>
-        GcsUri.resolve(path, GcsBucket.fromUnknown(bucket))
+        GcsUri.resolve(path, GcsBucket.decodeUnknownSync(bucket))
       );
       const documents = links.map((link) => ({
-        documentId: DocumentId.fromContentHash(ContentHash.fromUnknown(link.contentHash)),
-        sourceUri: GcsUri.resolve(link.storageUri, GcsBucket.fromUnknown(bucket)),
+        documentId: DocumentId.fromContentHash(ContentHash.decodeUnknownSync(link.contentHash)),
+        sourceUri: GcsUri.resolve(link.storageUri, GcsBucket.decodeUnknownSync(bucket)),
         contentType: "text/markdown",
         sizeBytes: NonNegativeInt.make(P.isNotNull(link.wordCount) ? link.wordCount * 5 : 0),
       }));
@@ -198,7 +198,7 @@ export const LinkIngestionRouter = HttpRouter.addAll([
       });
       const manifestPath = PathLayout.batch.manifest(batchId);
       yield* storage.set(manifestPath, yield* BatchManifest.encodeEffectFromJsonString(manifest));
-      const manifestUri = GcsUri.fromUnknown(`gs://${bucket}/${manifestPath}`);
+      const manifestUri = GcsUri.decodeUnknownSync(`gs://${bucket}/${manifestPath}`);
       const payload = yield* BatchWorkflowPayload.decodeUnknownEffect({
         batchId,
         ontologyId: entry.value.id,

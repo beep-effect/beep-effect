@@ -1,0 +1,492 @@
+{
+  "schemaVersion": 1,
+  "packageName": "@beep/md",
+  "profileIds": [
+    "commonmark-0.31.2",
+    "gfm-0.29.0.gfm.13",
+    "beep-md-extensions-v1"
+  ],
+  "items": [
+    {
+      "id": "md.member.text",
+      "symbol": "Text",
+      "tag": "text",
+      "kind": "inline-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": ["type", "decode"],
+      "sources": ["md-commonmark-0.31.2-spec"],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "This public AST member already carries a stable literal _tag and participates in its owning recursive schema."
+    },
+    {
+      "id": "md.member.rawMarkdown",
+      "symbol": "RawMarkdown",
+      "tag": "rawMarkdown",
+      "kind": "inline-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": ["type", "decode"],
+      "sources": ["md-beep-extensions-baseline"],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "This public AST member already carries a stable literal _tag and participates in its owning recursive schema."
+    },
+    {
+      "id": "md.member.rawHtml",
+      "symbol": "RawHtml",
+      "tag": "rawHtml",
+      "kind": "inline-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": ["type", "decode"],
+      "sources": ["md-commonmark-0.31.2-spec", "md-beep-extensions-baseline"],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "This public AST member already carries a stable literal _tag and participates in its owning recursive schema."
+    },
+    {
+      "id": "md.member.strong",
+      "symbol": "Strong",
+      "tag": "strong",
+      "kind": "inline-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": ["type", "decode"],
+      "sources": ["md-commonmark-0.31.2-spec"],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "This public AST member already carries a stable literal _tag and participates in its owning recursive schema."
+    },
+    {
+      "id": "md.member.em",
+      "symbol": "Em",
+      "tag": "em",
+      "kind": "inline-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": ["type", "decode"],
+      "sources": ["md-commonmark-0.31.2-spec"],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "This public AST member already carries a stable literal _tag and participates in its owning recursive schema."
+    },
+    {
+      "id": "md.member.del",
+      "symbol": "Del",
+      "tag": "del",
+      "kind": "inline-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": ["type", "decode"],
+      "sources": ["md-gfm-0.29.0.gfm.13-extensions"],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "This public AST member already carries a stable literal _tag and participates in its owning recursive schema."
+    },
+    {
+      "id": "md.member.code",
+      "symbol": "Code",
+      "tag": "code",
+      "kind": "inline-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": ["type", "decode"],
+      "sources": ["md-commonmark-0.31.2-spec"],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "This public AST member already carries a stable literal _tag and participates in its owning recursive schema."
+    },
+    {
+      "id": "md.member.a",
+      "symbol": "A",
+      "tag": "a",
+      "kind": "inline-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": ["type", "decode"],
+      "sources": ["md-commonmark-0.31.2-spec"],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "This public AST member already carries a stable literal _tag and participates in its owning recursive schema."
+    },
+    {
+      "id": "md.member.img",
+      "symbol": "Img",
+      "tag": "img",
+      "kind": "inline-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": ["type", "decode"],
+      "sources": ["md-commonmark-0.31.2-spec"],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "This public AST member already carries a stable literal _tag and participates in its owning recursive schema."
+    },
+    {
+      "id": "md.member.br",
+      "symbol": "Br",
+      "tag": "br",
+      "kind": "inline-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": ["type", "decode"],
+      "sources": ["md-commonmark-0.31.2-spec"],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "This public AST member already carries a stable literal _tag and participates in its owning recursive schema."
+    },
+    {
+      "id": "md.member.inlineMath",
+      "symbol": "InlineMath",
+      "tag": "inlineMath",
+      "kind": "inline-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": ["type", "decode"],
+      "sources": ["md-beep-extensions-baseline"],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "This public AST member already carries a stable literal _tag and participates in its owning recursive schema."
+    },
+    {
+      "id": "md.member.footnoteReference",
+      "symbol": "FootnoteReference",
+      "tag": "footnoteReference",
+      "kind": "inline-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": ["type", "decode"],
+      "sources": ["md-beep-extensions-baseline"],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "This public AST member already carries a stable literal _tag and participates in its owning recursive schema."
+    },
+    {
+      "id": "md.member.p",
+      "symbol": "P",
+      "tag": "p",
+      "kind": "block-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": ["type", "decode"],
+      "sources": ["md-commonmark-0.31.2-spec"],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "This public AST member already carries a stable literal _tag and participates in its owning recursive schema."
+    },
+    {
+      "id": "md.member.heading",
+      "symbol": "Heading",
+      "tag": "heading",
+      "kind": "block-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": ["type", "decode"],
+      "sources": ["md-commonmark-0.31.2-spec"],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "This public AST member already carries a stable literal _tag and participates in its owning recursive schema."
+    },
+    {
+      "id": "md.member.li",
+      "symbol": "Li",
+      "tag": "li",
+      "kind": "nested-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": ["type", "decode"],
+      "sources": ["md-commonmark-0.31.2-spec"],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "This public AST member already carries a stable literal _tag and participates in its owning recursive schema."
+    },
+    {
+      "id": "md.member.ul",
+      "symbol": "Ul",
+      "tag": "ul",
+      "kind": "block-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": ["type", "decode"],
+      "sources": ["md-commonmark-0.31.2-spec"],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "This public AST member already carries a stable literal _tag and participates in its owning recursive schema."
+    },
+    {
+      "id": "md.member.ol",
+      "symbol": "Ol",
+      "tag": "ol",
+      "kind": "block-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": ["type", "decode"],
+      "sources": ["md-commonmark-0.31.2-spec"],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "This public AST member already carries a stable literal _tag and participates in its owning recursive schema."
+    },
+    {
+      "id": "md.member.taskItem",
+      "symbol": "TaskItem",
+      "tag": "taskItem",
+      "kind": "nested-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": ["type", "decode"],
+      "sources": ["md-gfm-0.29.0.gfm.13-extensions"],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "This public AST member already carries a stable literal _tag and participates in its owning recursive schema."
+    },
+    {
+      "id": "md.member.taskList",
+      "symbol": "TaskList",
+      "tag": "taskList",
+      "kind": "block-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": ["type", "decode"],
+      "sources": ["md-gfm-0.29.0.gfm.13-extensions"],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "This public AST member already carries a stable literal _tag and participates in its owning recursive schema."
+    },
+    {
+      "id": "md.member.blockquote",
+      "symbol": "BlockQuote",
+      "tag": "blockquote",
+      "kind": "block-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": ["type", "decode"],
+      "sources": ["md-commonmark-0.31.2-spec"],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "This public AST member already carries a stable literal _tag and participates in its owning recursive schema."
+    },
+    {
+      "id": "md.member.pre",
+      "symbol": "Pre",
+      "tag": "pre",
+      "kind": "block-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": ["type", "decode"],
+      "sources": ["md-commonmark-0.31.2-spec"],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "This public AST member already carries a stable literal _tag and participates in its owning recursive schema."
+    },
+    {
+      "id": "md.member.tableCell",
+      "symbol": "TableCell",
+      "tag": "tableCell",
+      "kind": "nested-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": ["type", "decode"],
+      "sources": ["md-gfm-0.29.0.gfm.13-extensions"],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "This public AST member already carries a stable literal _tag and participates in its owning recursive schema."
+    },
+    {
+      "id": "md.member.tableRow",
+      "symbol": "TableRow",
+      "tag": "tableRow",
+      "kind": "nested-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": ["type", "decode"],
+      "sources": ["md-gfm-0.29.0.gfm.13-extensions"],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "This public AST member already carries a stable literal _tag and participates in its owning recursive schema."
+    },
+    {
+      "id": "md.member.table",
+      "symbol": "Table",
+      "tag": "table",
+      "kind": "block-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": ["type", "decode"],
+      "sources": ["md-gfm-0.29.0.gfm.13-extensions"],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "This public AST member already carries a stable literal _tag and participates in its owning recursive schema."
+    },
+    {
+      "id": "md.member.youtube",
+      "symbol": "YouTube",
+      "tag": "youtube",
+      "kind": "block-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": ["type", "decode"],
+      "sources": ["md-beep-extensions-baseline"],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "This public AST member already carries a stable literal _tag and participates in its owning recursive schema."
+    },
+    {
+      "id": "md.member.mathBlock",
+      "symbol": "MathBlock",
+      "tag": "mathBlock",
+      "kind": "block-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": ["type", "decode"],
+      "sources": ["md-beep-extensions-baseline"],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "This public AST member already carries a stable literal _tag and participates in its owning recursive schema."
+    },
+    {
+      "id": "md.member.footnoteDefinition",
+      "symbol": "FootnoteDefinition",
+      "tag": "footnoteDefinition",
+      "kind": "block-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": ["type", "decode"],
+      "sources": ["md-beep-extensions-baseline"],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "This public AST member already carries a stable literal _tag and participates in its owning recursive schema."
+    },
+    {
+      "id": "md.member.admonition",
+      "symbol": "Admonition",
+      "tag": "admonition",
+      "kind": "block-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": ["type", "decode"],
+      "sources": ["md-beep-extensions-baseline"],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "This public AST member already carries a stable literal _tag and participates in its owning recursive schema."
+    },
+    {
+      "id": "md.member.embed",
+      "symbol": "Embed",
+      "tag": "embed",
+      "kind": "block-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": ["type", "decode"],
+      "sources": ["md-beep-extensions-baseline"],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "This public AST member already carries a stable literal _tag and participates in its owning recursive schema."
+    },
+    {
+      "id": "md.member.hr",
+      "symbol": "Hr",
+      "tag": "hr",
+      "kind": "block-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": ["type", "decode"],
+      "sources": ["md-commonmark-0.31.2-spec"],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "This public AST member already carries a stable literal _tag and participates in its owning recursive schema."
+    },
+    {
+      "id": "md.member.document",
+      "symbol": "Document",
+      "tag": "document",
+      "kind": "root-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": ["type", "decode"],
+      "sources": [
+        "md-commonmark-0.31.2-spec",
+        "md-gfm-0.29.0.gfm.13-extensions",
+        "md-beep-extensions-baseline"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "This public AST member already carries a stable literal _tag and participates in its owning recursive schema."
+    },
+    {
+      "id": "md.union.inline",
+      "symbol": "Inline",
+      "tag": "12 inline tags",
+      "kind": "tagged-union",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": ["type", "decode", "adapter"],
+      "sources": [
+        "md-commonmark-0.31.2-spec",
+        "md-gfm-0.29.0.gfm.13-extensions",
+        "md-beep-extensions-baseline"
+      ],
+      "candidateDisposition": "retain-existing-tagged-union",
+      "candidateReason": "Inline already uses S.toTaggedUnion and exhaustive plain-text and HTML folds."
+    },
+    {
+      "id": "md.union.block",
+      "symbol": "Block",
+      "tag": "14 block tags",
+      "kind": "tagged-union",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": ["type", "decode", "adapter"],
+      "sources": [
+        "md-commonmark-0.31.2-spec",
+        "md-gfm-0.29.0.gfm.13-extensions",
+        "md-beep-extensions-baseline"
+      ],
+      "candidateDisposition": "retain-existing-tagged-union",
+      "candidateReason": "Block already uses S.toTaggedUnion and exhaustive render folds."
+    },
+    {
+      "id": "md.union.url-policy",
+      "symbol": "UrlPolicySpec",
+      "tag": "Compatibility | AllowList",
+      "kind": "tagged-union",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": ["type", "decode", "adapter"],
+      "sources": ["md-beep-extensions-baseline"],
+      "candidateDisposition": "retain-existing-tagged-union",
+      "candidateReason": "The public URL policy union exposes exhaustive cases and keeps compatibility behavior separate from explicit allow-list policy."
+    },
+    {
+      "id": "md.union.document-safety-violation",
+      "symbol": "DocumentSafetyViolation",
+      "tag": "DuplicateFootnoteDefinition | HtmlProjection | RawNode | InvalidScalar | UnsafeUrl",
+      "kind": "tagged-union",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": ["type", "decode", "tree"],
+      "sources": [
+        "md-html-whatwg-source-approved",
+        "md-beep-extensions-baseline"
+      ],
+      "candidateDisposition": "retain-existing-tagged-union",
+      "candidateReason": "The public path-located safety diagnostic union exposes exhaustive cases for every implemented trust-boundary rejection."
+    },
+    {
+      "id": "md.union.conformance-issue",
+      "symbol": "MarkdownConformanceIssue",
+      "tag": "NestedLink | UnsupportedNode | EmptyList | OrderedListStart | GfmTableHeader | GfmTableRowWidth | GfmTableAlignmentWidth | GfmDisallowedRawHtml | DuplicateFootnoteDefinition | UndefinedFootnoteReference",
+      "kind": "tagged-union",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": ["type", "decode", "tree"],
+      "sources": [
+        "md-commonmark-0.31.2-spec",
+        "md-gfm-0.29.0.gfm.13-extensions",
+        "md-beep-extensions-baseline"
+      ],
+      "candidateDisposition": "retain-existing-tagged-union",
+      "candidateReason": "The public strict-profile diagnostic union provides exhaustive constructors, guards, and matching for every implemented semantic-tree invariant."
+    },
+    {
+      "id": "md.candidate.list-item-child",
+      "symbol": "ListItemChild",
+      "tag": "inline and block tags",
+      "kind": "reviewed-existing-design",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": ["type", "decode", "adapter"],
+      "sources": ["md-commonmark-0.31.2-spec"],
+      "candidateDisposition": "retain-structural-schema",
+      "candidateReason": "ListItemChild is the suspended recursive seam between the already exhaustive Inline and Block tagged unions. Flattening their member registries would duplicate the recursive AST definition and destabilize inference without enforcing a new accepted-value or tree invariant."
+    },
+    {
+      "id": "md.candidate.heading-level",
+      "symbol": "HeadingValue",
+      "tag": "level 1 | 2 | 3 | 4 | 5 | 6",
+      "kind": "inner-tagged-union",
+      "existingDiscriminator": "level",
+      "currentEnforcementLayers": ["type", "decode", "adapter"],
+      "sources": ["md-commonmark-0.31.2-spec"],
+      "candidateDisposition": "retain-existing-tagged-union",
+      "candidateReason": "HeadingValue now provides the flat level-discriminated cases, guards, and exhaustive matcher without changing Heading.make({ level, children }) or its encoded wire."
+    },
+    {
+      "id": "md.candidate.admonition-kind",
+      "symbol": "AdmonitionKind",
+      "tag": "note | tip | important | warning | caution",
+      "kind": "reviewed-non-candidate",
+      "existingDiscriminator": "kind",
+      "currentEnforcementLayers": ["type", "decode", "adapter"],
+      "sources": ["md-beep-extensions-baseline"],
+      "candidateDisposition": "retain-literal-domain",
+      "candidateReason": "AdmonitionKind already closes the five package-owned values and provides exhaustive literal matching. Every kind has the same payload shape, so duplicating the object schema would enforce no additional invariant."
+    },
+    {
+      "id": "md.candidate.embed-kind",
+      "symbol": "EmbedKind",
+      "tag": "link | image | video | audio | unknown",
+      "kind": "reviewed-non-candidate",
+      "existingDiscriminator": "kind",
+      "currentEnforcementLayers": ["type", "decode", "adapter"],
+      "sources": ["md-beep-extensions-baseline"],
+      "candidateDisposition": "retain-literal-domain",
+      "candidateReason": "EmbedKind already closes the five package-owned values. Current adapters distinguish image from link-like embeds, but no kind has a case-specific payload, so duplicating the object schema would enforce no additional invariant."
+    },
+    {
+      "id": "md.candidate.task-checked",
+      "symbol": "TaskItem",
+      "tag": "checked boolean",
+      "kind": "reviewed-non-candidate",
+      "existingDiscriminator": "checked",
+      "currentEnforcementLayers": ["type", "decode", "adapter"],
+      "sources": ["md-gfm-0.29.0.gfm.13-extensions"],
+      "candidateDisposition": "retain-boolean-field",
+      "candidateReason": "Checked and unchecked task items have identical payload and behavior except state; splitting a boolean into two schema members adds no invariant-bearing structure."
+    },
+    {
+      "id": "md.candidate.table-header",
+      "symbol": "Table",
+      "tag": "headerRow boolean",
+      "kind": "reviewed-non-candidate",
+      "existingDiscriminator": "headerRow",
+      "currentEnforcementLayers": ["type", "decode", "adapter"],
+      "sources": ["md-gfm-0.29.0.gfm.13-extensions"],
+      "candidateDisposition": "retain-boolean-field",
+      "candidateReason": "Header presence does not change the encoded row payload and the current renderer already handles the empty-table edge; a tagged split would not enforce rectangularity."
+    }
+  ]
+}

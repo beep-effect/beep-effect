@@ -13,7 +13,7 @@
  * @since 0.0.0
  */
 import { $EpistemicDomainId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { Principal } from "@beep/shared-domain/entity/Principal";
 import * as S from "effect/Schema";
 import { GrantOperation, SinkAudience, SinkClass, SinkDestination } from "../ExecutionGrant/index.ts";
@@ -228,8 +228,7 @@ export const ExecutionVerdict = ExecutionVerdictTag.toTaggedUnion("verdict")({
 }).pipe(
   $I.annoteSchema("ExecutionVerdict", {
     description: "Typed allowed/denied evaluation verdict; denied carries the bounded reason.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

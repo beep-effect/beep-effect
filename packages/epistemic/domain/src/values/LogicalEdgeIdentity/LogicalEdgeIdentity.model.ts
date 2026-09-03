@@ -12,7 +12,7 @@
  * @since 0.0.0
  */
 import { $EpistemicDomainId } from "@beep/identity/packages";
-import { SchemaUtils, Sha256Hex } from "@beep/schema";
+import { Sha256Hex } from "@beep/schema";
 import { A, O, R, Str } from "@beep/utils";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils.js";
@@ -55,8 +55,7 @@ const absentScopeMarker = "<none>";
 export const EdgeOrgScope = S.NonEmptyString.pipe(
   $I.annoteSchema("EdgeOrgScope", {
     description: "Stringified owning organization id that scopes a logical epistemic edge.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -95,8 +94,7 @@ export type EdgeOrgScope = typeof EdgeOrgScope.Type;
 export const EdgeMatterScope = S.NonEmptyString.pipe(
   $I.annoteSchema("EdgeMatterScope", {
     description: "Optional matter scope narrowing a logical epistemic edge.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -134,8 +132,7 @@ export type EdgeMatterScope = typeof EdgeMatterScope.Type;
 export const EdgeEvidenceScope = S.NonEmptyString.pipe(
   $I.annoteSchema("EdgeEvidenceScope", {
     description: "Optional evidence-set scope narrowing a logical epistemic edge.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -221,8 +218,7 @@ export const LogicalEdgeKey = Sha256Hex.pipe(
   S.brand("LogicalEdgeKey"),
   $I.annoteSchema("LogicalEdgeKey", {
     description: "Lowercase SHA-256 hex digest naming one logical epistemic edge.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

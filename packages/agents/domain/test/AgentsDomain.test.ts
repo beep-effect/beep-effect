@@ -227,8 +227,8 @@ describe("@beep/agents-domain", () => {
     const decoded = Result.getOrThrow(S.decodeUnknownResult(AssistantContent)(encoded));
 
     expect(Result.getOrThrow(S.encodeResult(AssistantContent)(decoded))).toStrictEqual(encoded);
-    expect(AssistantBlock.is(AssistantBlock.fromUnknown(encoded.blocks[0]))).toBe(true);
-    expect(InlineNode.is(InlineNode.fromUnknown({ type: "text", text: "Install" }))).toBe(true);
+    expect(AssistantBlock.is(AssistantBlock.decodeUnknownSync(encoded.blocks[0]))).toBe(true);
+    expect(InlineNode.is(InlineNode.decodeUnknownSync({ type: "text", text: "Install" }))).toBe(true);
   });
 
   it("round-trips crispened schemas with schema-derived arbitraries", () => {

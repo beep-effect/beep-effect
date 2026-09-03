@@ -34,8 +34,8 @@ import {
 
 const $I = $ScratchpadId.create("codemode/openapi/OpenAPI.specification");
 
-const UnknownRecord = S.Record(S.String, S.Unknown).pipe(SchemaUtils.withCodecStatics);
-const NonEmptyString = S.NonEmptyString.pipe(SchemaUtils.withCodecStatics);
+const UnknownRecord = S.Record(S.String, S.Unknown).pipe(SchemaUtils.withCodecStatics(["is"]));
+const NonEmptyString = S.NonEmptyString.pipe(SchemaUtils.withCodecStatics(["decodeUnknownOption"]));
 const SuccessStatus = S.String.check(S.isPattern(/^2\d\d$/u));
 
 /**
@@ -167,7 +167,7 @@ export const isRecord = UnknownRecord.is;
  * @category parsing
  * @since 0.0.0
  */
-export const nonEmptyString = NonEmptyString.decodeOption;
+export const nonEmptyString = NonEmptyString.decodeUnknownOption;
 
 /**
  * Own-property lookup for spec-controlled records.

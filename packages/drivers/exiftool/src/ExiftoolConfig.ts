@@ -16,7 +16,7 @@
 
 import { $ExiftoolId } from "@beep/identity/packages";
 import { Fn, LiteralKit, SchemaUtils } from "@beep/schema";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, N, O, P, pipe, Str } from "@beep/utils";
 import * as S from "effect/Schema";
 import { BeepQaProvenance, EpochMilliseconds, TagAssignment } from "./Exiftool.models.ts";
@@ -144,8 +144,7 @@ export const XmpNamespacePrefix = S.String.check(
 ).pipe(
   $I.annoteSchema("XmpNamespacePrefix", {
     description: "XMP namespace prefix usable as a bare Perl identifier.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -192,8 +191,7 @@ export const XmpPropertyName = S.String.check(
 ).pipe(
   $I.annoteSchema("XmpPropertyName", {
     description: "XMP property name usable as a bare Perl hash key.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -240,8 +238,7 @@ export const XmpNamespaceUri = S.String.check(
 ).pipe(
   $I.annoteSchema("XmpNamespaceUri", {
     description: "XMP namespace URI safe to inline inside a single-quoted Perl string.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -357,7 +354,7 @@ ${propertyLines}
 `;
   });
 
-const encodeJsonText = Unknown.encodeUnknownSyncFromJsonString;
+const encodeJsonText = UnknownFromJsonString.encodeUnknownSync;
 const decodeToolVersions = S.decodeUnknownOption(S.fromJsonString(S.Record(S.String, S.String)));
 
 const qualifiedTagName = (name: BeepQaTagName): string => `${BEEP_QA_XMP_GROUP}:${name}`;
@@ -485,7 +482,7 @@ export const provenanceFromRawTags = (raw: Readonly<Record<string, unknown>>): O
   pipe(
     O.all({
       actionId: rawTextAt(raw, "actionId"),
-      capturedAtEpochMs: pipe(rawNumberAt(raw, "capturedAtEpochMs"), O.flatMap(EpochMilliseconds.decodeOption)),
+      capturedAtEpochMs: pipe(rawNumberAt(raw, "capturedAtEpochMs"), O.flatMap(EpochMilliseconds.decodeUnknownOption)),
       scenarioName: rawTextAt(raw, "scenarioName"),
       sessionId: rawTextAt(raw, "sessionId"),
     }),

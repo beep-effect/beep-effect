@@ -1051,7 +1051,7 @@ export const HookPulseV1FromLegacyRecord = HookPulseLegacyV1Record.pipe(
   $I.annoteSchema("HookPulseV1FromLegacyRecord", {
     description: "Migration codec that pseudonymizes private identifiers in legacy hook-pulse/v1 ledger rows.",
   }),
-  SchemaUtils.withEffectCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
 );
 
 /**
@@ -1246,8 +1246,7 @@ export const HookPulseV1FromRawEvent = HookPulseRawEventInput.pipe(
   $I.annoteSchema("HookPulseV1FromRawEvent", {
     description: "Canonical hook-pulse codec that derives wait attribution from whitelisted raw event fields.",
   }),
-  SchemaUtils.withEffectCodecStatics,
-  SchemaUtils.withResultCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownEffect", "decodeUnknownResult", "encodeResult", "encodeUnknownEffect"])
 );
 
 /**

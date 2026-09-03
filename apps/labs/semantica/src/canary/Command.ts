@@ -12,6 +12,8 @@ import { LanguageModelRuntimeLive, XAiGoldModelIdentityLive, XAiGoldProviderLive
 import { LabConfig } from "@/runtime/Config";
 import { CanaryStage, EvalSelectionMode } from "@/schema/Eval";
 import { CanaryC0 } from "@/services/CanaryC0";
+import { CanaryC1 } from "@/services/CanaryC1";
+import { CanaryC2 } from "@/services/CanaryC2";
 import type * as O from "effect/Option";
 import type {
   AnchorRejected,
@@ -20,6 +22,8 @@ import type {
   GoldUnavailable,
   LedgerFailed,
   ModelRevisionUnpinned,
+  ProjectionFailed,
+  ReasoningFailed,
   ReportInvalid,
 } from "@/schema/Errors";
 import type { GoldFile } from "@/schema/Gold";
@@ -63,44 +67,6 @@ export class CanaryOptions extends S.Class<CanaryOptions>($I`CanaryOptions`)(
   })
 ) {}
 
-/**
- * Reports that a requested canary stage has no P1 implementation.
- *
- * **Example** (Inspect the requested stage)
- *
- * ```ts
- * import { CanaryOptions, StageNotImplemented } from "@/canary/Command"
- * import * as O from "effect/Option"
- *
- * const error = StageNotImplemented.make({
- *   message: "Canary stage c0 is not implemented.",
- *   stage: "c0",
- *   options: CanaryOptions.make({
- *     manifest: "fixtures/w1.manifest.json",
- *     offline: true,
- *     out: O.none(),
- *     paper: O.none(),
- *     selection: "f1+w1"
- *   })
- * })
- * console.log(error._tag) // "StageNotImplemented"
- * ```
- *
- * @category errors
- * @since 0.0.0
- */
-export class StageNotImplemented extends S.TaggedError<StageNotImplemented>($I`StageNotImplemented`)(
-  "StageNotImplemented",
-  {
-    message: S.String,
-    options: CanaryOptions,
-    stage: CanaryStage,
-  },
-  $I.annoteError<StageNotImplemented>("StageNotImplemented", {
-    description: "Expected failure raised when a scaffolded canary stage is invoked before its implementation lands.",
-  })
-) {}
-
 const stageManifest = Flag.path("manifest").pipe(
   Flag.withDefault("fixtures/w1.manifest.json"),
   Flag.withDescription("Committed W1 corpus manifest (id, sha256, bytes per paper); never a directory.")
@@ -130,14 +96,6 @@ const stageDescriptions: Record<CanaryStage, string> = {
 
 const CanaryFlags = { manifest: stageManifest, offline, out: outputDirectory, paper, selection };
 
-const failStage = Effect.fn("SemanticaCanary.failStage")(function* (stage: CanaryStage, options: CanaryOptions) {
-  return yield* StageNotImplemented.make({
-    message: `Canary stage ${stage} is not implemented.`,
-    options,
-    stage,
-  });
-});
-
 type CanaryStageFailure =
   | AnchorRejected
   | C0ExecutionFailed
@@ -145,18 +103,30 @@ type CanaryStageFailure =
   | GoldUnavailable
   | LedgerFailed
   | ModelRevisionUnpinned
-  | ReportInvalid
-  | StageNotImplemented;
+  | ProjectionFailed
+  | ReasoningFailed
+  | ReportInvalid;
 
-const runStage = (stage: CanaryStage, options: CanaryOptions): Effect.Effect<void, CanaryStageFailure, CanaryC0> =>
+const runStage = (
+  stage: CanaryStage,
+  options: CanaryOptions
+): Effect.Effect<void, CanaryStageFailure, CanaryC0 | CanaryC1 | CanaryC2> =>
   CanaryStage.$match(stage, {
     c0: () =>
       CanaryC0.pipe(
         Effect.flatMap((service) => service.run(options)),
         Effect.asVoid
       ),
-    c1: () => failStage(stage, options),
-    c2: () => failStage(stage, options),
+    c1: () =>
+      CanaryC1.pipe(
+        Effect.flatMap((service) => service.run(options)),
+        Effect.asVoid
+      ),
+    c2: () =>
+      CanaryC2.pipe(
+        Effect.flatMap((service) => service.run(options)),
+        Effect.asVoid
+      ),
   });
 
 const makeStageCommand = (stage: CanaryStage) =>
@@ -294,8 +264,9 @@ const RelationCommand = Command.make("relation").pipe(
  *
  * **Details**
  *
- * C0 runs the parse, extraction, ledger, and evaluation workflow. C1 and C2
- * retain the typed {@link StageNotImplemented} boundary.
+ * C0 runs the parse, extraction, ledger, and evaluation workflow. C1 rebuilds
+ * dimension-keyed vector and RDF projections from C0 truth. C2 validates
+ * rho-df closure, proof events, rebuild identity, and Tier-L timing bars.
  *
  * **Example** (Create a programmatic runner)
  *

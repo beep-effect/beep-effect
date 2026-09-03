@@ -82,8 +82,7 @@ const OpenclawDiagnosticTextTarget = S.Trimmed.check(
 export const OpenclawExitCode = S.Int.check(S.isBetween({ minimum: 0, maximum: 255 })).pipe(
   $I.annoteSchema("OpenclawExitCode", {
     description: "Integer process exit status in the conventional 0-255 CLI range.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -113,7 +112,7 @@ export type OpenclawExitCode = typeof OpenclawExitCode.Type;
  * ```ts
  * import { OpenclawDiagnosticText } from "@beep/openclaw/Openclaw.models"
  *
- * const diagnostic = OpenclawDiagnosticText.fromUnknown(" secrets.reload failed\n")
+ * const diagnostic = OpenclawDiagnosticText.decodeUnknownSync(" secrets.reload failed\n")
  * console.log(diagnostic) // "secrets.reload failed"
  * ```
  *
@@ -131,7 +130,7 @@ export const OpenclawDiagnosticText = S.String.pipe(
   $I.annoteSchema("OpenclawDiagnosticText", {
     description: "Trim-normalized redacted diagnostic text capped at 2000 characters.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
 );
 
 /**
@@ -141,7 +140,7 @@ export const OpenclawDiagnosticText = S.String.pipe(
  * ```ts
  * import { OpenclawDiagnosticText } from "@beep/openclaw/Openclaw.models"
  *
- * const diagnostic: OpenclawDiagnosticText = OpenclawDiagnosticText.fromUnknown("Gateway did not respond")
+ * const diagnostic: OpenclawDiagnosticText = OpenclawDiagnosticText.decodeUnknownSync("Gateway did not respond")
  * console.log(diagnostic)
  * ```
  *

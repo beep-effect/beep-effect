@@ -391,7 +391,6 @@ export const BatchState = BatchStateDefinition.pipe(
     description: "Discriminated batch-ingestion lifecycle with legal stage-specific payloads.",
     toArbitrary: () => S.toArbitrary(BatchStateDefinition),
   }),
-  SchemaUtils.withCodecStatics,
   SchemaUtils.withStatics(() => ({
     stageDisplayName,
     progressPercent,

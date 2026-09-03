@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 import { $GovinfoId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $GovinfoId.create("domain/values/Sort/Sort.model");
@@ -259,8 +258,7 @@ export const Sort = S.Union([SortASC, SortDESC]).pipe(
   S.toTaggedUnion("sortOrder"),
   $I.annoteSchema("Sort", {
     description: "GovInfo search sort directive tagged by sortOrder.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

@@ -9,7 +9,7 @@
  */
 
 import { $ScratchpadId } from "@beep/identity/packages";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { describe, expect, it } from "@effect/vitest";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Context from "effect/Context";
@@ -43,7 +43,7 @@ const PROJECT_SETTINGS = `${CWD}/.claude/settings.json`;
 const PLUGIN_ROOT = "/plugin";
 const SKILL_PATH = `${PLUGIN_ROOT}/skills/review/SKILL.md`;
 const $I = $ScratchpadId.create("test/claudecode/ClaudeRuntime.test");
-const encodeJson = Unknown.encodeSyncFromJsonString;
+const encodeJson = UnknownFromJsonString.encodeUnknownSync;
 
 const permissionDeniedError = (path: string) =>
   PlatformError.systemError({

@@ -767,8 +767,11 @@ export const proposeGold = Effect.fn("Gold.propose")(function* (
   const accepted = A.reduce(proposed, 0, (count, item) => count + item.accepted);
   const total = A.reduce(proposed, 0, (count, item) => count + item.total);
   const proposer = yield* ActiveModelIdentity;
+  const encodedProposer = yield* S.encodeEffect(ModelIdentity)(proposer).pipe(Effect.orDie);
   const inventory = yield* readWrittenGold(options.outputDirectory, expectedJobs);
-  if (A.some(inventory.files, (file) => !GoldArtifactSemantics.modelIdentityEquivalence(file.proposer, proposer))) {
+  if (
+    A.some(inventory.files, (file) => !GoldArtifactSemantics.modelIdentityEquivalence(file.proposer, encodedProposer))
+  ) {
     return yield* unavailable(
       "mixed-proposer",
       "The complete gold-v1 file set must use the current run's proposer identity."

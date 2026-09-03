@@ -1,0 +1,11 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix skos: <http://www.w3.org/2004/02/skos/core#>.
+
+{ ?p rdfs:domain ?c. ?s ?p ?o. } => { ?s rdf:type ?c. }.
+{ ?p rdfs:range ?c. ?s ?p ?o. } => { ?o rdf:type ?c. }.
+{ ?p rdfs:subPropertyOf ?q. ?q rdfs:subPropertyOf ?r. } => { ?p rdfs:subPropertyOf ?r. }.
+{ ?p rdfs:subPropertyOf ?q. ?s ?p ?o. } => { ?s ?q ?o. }.
+{ ?c rdfs:subClassOf ?d. ?s rdf:type ?c. } => { ?s rdf:type ?d. }.
+{ ?c rdfs:subClassOf ?d. ?d rdfs:subClassOf ?e. } => { ?c rdfs:subClassOf ?e. }.
+{ ?s skos:broaderTransitive ?m. ?m skos:broaderTransitive ?o. } => { ?s skos:broaderTransitive ?o. }.

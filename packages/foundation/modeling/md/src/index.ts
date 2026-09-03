@@ -23,7 +23,7 @@
 export const VERSION = "0.0.2" as const;
 
 /**
- * Pure, escaping-free node behavior (plain-text projection and run segmentation).
+ * Shared list-item run segmentation and compatibility aliases for schema-owned plain-text projections.
  *
  * **Example** (Render plain-text heading)
  *
@@ -38,6 +38,22 @@ export const VERSION = "0.0.2" as const;
  * @since 0.0.0
  */
 export * from "./Md.behavior.ts";
+/**
+ * Strict and lossless semantic conformance profiles for decoded Markdown ASTs.
+ *
+ * **Example** (Inspect CommonMark conformance)
+ *
+ * ```ts import.meta.vitest name="Inspect CommonMark conformance"
+ * import { inspectMarkdownDocumentLosslessly, MarkdownConformanceProfile, Md } from "@beep/md"
+ *
+ * const report = inspectMarkdownDocumentLosslessly(Md.make([Md.p("Hello")]), MarkdownConformanceProfile.Enum.CommonMark)
+ * report.issues.length // => 0
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export * from "./Md.conformance.ts";
 /**
  * Markdown and HTML escaping and URL-sanitization helpers.
  *
@@ -54,7 +70,7 @@ export * from "./Md.behavior.ts";
  */
 export * from "./Md.escape.ts";
 /**
- * Direct safe-HTML AST projection and opaque safe-output rendering.
+ * Opaque safe-output rendering over the schema-owned HTML AST projection.
  *
  * **Example** (Render safe HTML paragraph)
  *

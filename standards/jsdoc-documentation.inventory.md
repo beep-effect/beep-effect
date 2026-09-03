@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-08-30T23:26:59.763Z
+Generated: 2026-08-31T09:31:22.627Z
 
 ## Scope
 
@@ -10,12 +10,12 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 
 | Metric | Count |
 |---|---:|
-| packages | 135 |
-| cleanPackages | 74 |
+| packages | 136 |
+| cleanPackages | 75 |
 | packagesWithoutPublicSrcSurface | 3 |
 | packagesNeedingRemediation | 58 |
-| publicModules | 2953 |
-| publicExports | 20579 |
+| publicModules | 2986 |
+| publicExports | 21138 |
 | openModules | 347 |
 | openExports | 99 |
 | missingExportExamples | 4 |
@@ -101,18 +101,18 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 44 | `@beep/shared-use-cases` | `packages/shared/use-cases` | clean | 6 | 15 | 0 | 0 |
 | 45 | `@beep/openclaw` | `packages/drivers/openclaw` | needs-remediation | 9 | 130 | 7 | 15 |
 | 46 | `@beep/law-practice-tables` | `packages/law-practice/tables` | needs-remediation | 34 | 89 | 1 | 0 |
-| 47 | `@beep/test-utils` | `packages/tooling/test-kit/test-utils` | needs-remediation | 7 | 38 | 1 | 0 |
+| 47 | `@beep/test-utils` | `packages/tooling/test-kit/test-utils` | needs-remediation | 11 | 43 | 1 | 0 |
 | 48 | `@beep/types` | `packages/foundation/primitive/types` | clean | 5 | 12 | 0 | 0 |
 | 49 | `@beep/oip-web` | `apps/oip-web` | clean | 31 | 86 | 0 | 0 |
 | 50 | `@beep/storybook` | `apps/storybook` | no-public-src-surface | 0 | 0 | 0 | 0 |
 | 51 | `@beep/exiftool` | `packages/drivers/exiftool` | needs-remediation | 5 | 55 | 1 | 0 |
 | 52 | `@beep/agents-tables` | `packages/agents/tables` | clean | 6 | 14 | 0 | 0 |
 | 53 | `@beep/ontology-domain` | `packages/ontology/domain` | clean | 6 | 41 | 0 | 0 |
-| 54 | `@beep/lexical-schema` | `packages/foundation/modeling/lexical` | needs-remediation | 5 | 119 | 4 | 4 |
+| 54 | `@beep/lexical-schema` | `packages/foundation/modeling/lexical` | needs-remediation | 6 | 125 | 4 | 4 |
 | 55 | `@beep/langextract` | `packages/foundation/capability/langextract` | clean | 26 | 125 | 0 | 0 |
 | 56 | `@beep/shared-tables` | `packages/shared/tables` | clean | 9 | 12 | 0 | 0 |
 | 57 | `@beep/scratchpad` | `scratchpad` | clean | 469 | 4233 | 0 | 0 |
-| 58 | `@beep/md` | `packages/foundation/modeling/md` | needs-remediation | 8 | 256 | 4 | 0 |
+| 58 | `@beep/md` | `packages/foundation/modeling/md` | needs-remediation | 9 | 259 | 4 | 0 |
 | 59 | `@beep/practice-kg-mcp` | `apps/practice-kg-mcp` | clean | 7 | 14 | 0 | 0 |
 | 60 | `@beep/tailscale` | `packages/drivers/tailscale` | clean | 5 | 29 | 0 | 0 |
 | 61 | `@beep/law-practice-use-cases` | `packages/law-practice/use-cases` | needs-remediation | 32 | 113 | 4 | 0 |
@@ -120,18 +120,18 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 63 | `@beep/workspace-domain` | `packages/workspace/domain` | clean | 30 | 58 | 0 | 0 |
 | 64 | `@beep/todox` | `apps/todox` | clean | 2 | 3 | 0 | 0 |
 | 65 | `@beep/semantic-web` | `packages/foundation/capability/semantic-web` | clean | 8 | 56 | 0 | 0 |
-| 66 | `@beep/utils` | `packages/foundation/modeling/utils` | needs-remediation | 27 | 212 | 4 | 1 |
+| 66 | `@beep/utils` | `packages/foundation/modeling/utils` | needs-remediation | 28 | 214 | 5 | 1 |
 | 67 | `@beep/repo-ai-metrics` | `packages/tooling/library/ai-metrics` | clean | 22 | 377 | 0 | 0 |
 | 68 | `@beep/architecture-lab-tables` | `packages/architecture-lab/tables` | clean | 7 | 21 | 0 | 0 |
 | 69 | `@beep/tika` | `packages/drivers/tika` | needs-remediation | 8 | 34 | 3 | 3 |
 | 70 | `@beep/libpff` | `packages/drivers/libpff` | needs-remediation | 7 | 40 | 4 | 1 |
 | 71 | `@beep/venice-ai` | `packages/drivers/venice-ai` | clean | 3 | 35 | 0 | 0 |
 | 72 | `@beep/graph-3d` | `packages/drivers/graph-3d` | needs-remediation | 7 | 17 | 2 | 0 |
-| 73 | `@beep/identity` | `packages/foundation/modeling/identity` | clean | 8 | 227 | 0 | 0 |
+| 73 | `@beep/identity` | `packages/foundation/modeling/identity` | clean | 8 | 228 | 0 | 0 |
 | 74 | `@beep/drizzle` | `packages/drivers/drizzle` | clean | 3 | 11 | 0 | 0 |
 | 75 | `@beep/ontology-ui` | `packages/ontology/ui` | clean | 15 | 28 | 0 | 0 |
 | 76 | `@beep/api-transport` | `packages/foundation/capability/api-transport` | needs-remediation | 3 | 10 | 2 | 0 |
-| 77 | `@beep/box` | `packages/drivers/box` | clean | 7 | 517 | 0 | 0 |
+| 77 | `@beep/box` | `packages/drivers/box` | clean | 7 | 858 | 0 | 0 |
 | 78 | `@beep/openai-compat` | `packages/drivers/openai-compat` | clean | 4 | 54 | 0 | 0 |
 | 79 | `@beep/shacl` | `packages/drivers/shacl` | clean | 3 | 6 | 0 | 0 |
 | 80 | `@beep/documents-server` | `packages/documents/server` | needs-remediation | 28 | 103 | 2 | 0 |
@@ -151,45 +151,46 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 94 | `@beep/fc-runs` | `packages/tooling/test-kit/fc-runs` | needs-remediation | 2 | 5 | 1 | 0 |
 | 95 | `@beep/repo-utils` | `packages/tooling/library/repo-utils` | needs-remediation | 63 | 675 | 18 | 0 |
 | 96 | `@beep/documents-domain` | `packages/documents/domain` | clean | 26 | 82 | 0 | 0 |
-| 97 | `@beep/schema` | `packages/foundation/modeling/schema` | needs-remediation | 253 | 1559 | 24 | 1 |
+| 97 | `@beep/schema` | `packages/foundation/modeling/schema` | needs-remediation | 262 | 1604 | 23 | 1 |
 | 98 | `@beep/epistemic-server` | `packages/epistemic/server` | needs-remediation | 23 | 51 | 8 | 4 |
-| 99 | `@beep/rdf` | `packages/foundation/modeling/rdf` | needs-remediation | 25 | 257 | 1 | 1 |
-| 100 | `@beep/onepassword-cli` | `packages/drivers/onepassword-cli` | clean | 4 | 16 | 0 | 0 |
-| 101 | `@beep/architecture-lab-config` | `packages/architecture-lab/config` | clean | 9 | 21 | 0 | 0 |
-| 102 | `@beep/govinfo` | `packages/drivers/govinfo` | needs-remediation | 32 | 86 | 2 | 0 |
-| 103 | `@beep/data` | `packages/foundation/primitive/data` | needs-remediation | 12 | 162 | 10 | 8 |
-| 104 | `@beep/xai` | `packages/drivers/xai` | clean | 7 | 70 | 0 | 0 |
-| 105 | `@beep/architecture-lab-server` | `packages/architecture-lab/server` | clean | 13 | 34 | 0 | 0 |
-| 106 | `@beep/duckdb` | `packages/drivers/duckdb` | clean | 6 | 28 | 0 | 0 |
-| 107 | `@beep/ffmpeg` | `packages/drivers/ffmpeg` | clean | 5 | 111 | 0 | 0 |
-| 108 | `@beep/obs` | `packages/drivers/obs` | needs-remediation | 6 | 73 | 3 | 0 |
-| 109 | `@beep/agents-client` | `packages/agents/client` | needs-remediation | 6 | 39 | 2 | 0 |
-| 110 | `@beep/uspto-mcp` | `packages/drivers/uspto-mcp` | needs-remediation | 7 | 30 | 7 | 0 |
-| 111 | `@beep/architecture-lab-proof` | `apps/architecture-lab-proof` | clean | 1 | 2 | 0 | 0 |
-| 112 | `@beep/epistemic-config` | `packages/epistemic/config` | needs-remediation | 7 | 21 | 3 | 0 |
-| 113 | `@beep/epistemic-use-cases` | `packages/epistemic/use-cases` | needs-remediation | 28 | 126 | 9 | 0 |
-| 114 | `@beep/m365` | `packages/drivers/m365` | needs-remediation | 6 | 74 | 2 | 0 |
-| 115 | `@beep/observability` | `packages/foundation/capability/observability` | clean | 24 | 163 | 0 | 0 |
-| 116 | `@beep/tsgo-shim` | `tools/tsgo-shim` | no-public-src-surface | 0 | 0 | 0 | 0 |
-| 117 | `@beep/html` | `packages/foundation/modeling/html` | needs-remediation | 12 | 520 | 8 | 2 |
-| 118 | `@beep/n3` | `packages/drivers/n3` | clean | 3 | 11 | 0 | 0 |
-| 119 | `@beep/ui` | `packages/foundation/ui-system/ui` | clean | 133 | 553 | 0 | 0 |
-| 120 | `@beep/pandoc-ast` | `packages/foundation/modeling/pandoc-ast` | clean | 5 | 158 | 0 | 0 |
-| 121 | `@beep/repo-configs` | `packages/tooling/policy-pack/repo-configs` | needs-remediation | 25 | 139 | 0 | 1 |
-| 122 | `@beep/openai` | `packages/drivers/openai` | clean | 4 | 17 | 0 | 0 |
-| 123 | `@beep/documents-tables` | `packages/documents/tables` | clean | 15 | 40 | 0 | 0 |
-| 124 | `@beep/wink` | `packages/drivers/wink` | needs-remediation | 14 | 73 | 1 | 0 |
-| 125 | `@beep/postgres` | `packages/drivers/postgres` | clean | 7 | 43 | 0 | 0 |
-| 126 | `@beep/brand` | `packages/foundation/ui-system/brand` | clean | 7 | 50 | 0 | 0 |
-| 127 | `@beep/codegen-kit` | `packages/tooling/library/codegen-kit` | clean | 5 | 37 | 0 | 0 |
-| 128 | `@beep/architecture-lab-domain` | `packages/architecture-lab/domain` | clean | 15 | 48 | 0 | 0 |
-| 129 | `@beep/pretext` | `packages/drivers/pretext` | needs-remediation | 6 | 36 | 6 | 0 |
-| 130 | `@beep/provenance` | `packages/foundation/modeling/provenance` | needs-remediation | 4 | 28 | 1 | 0 |
-| 131 | `@beep/epistemic-tables` | `packages/epistemic/tables` | needs-remediation | 28 | 87 | 4 | 0 |
-| 132 | `@beep/qa-capture` | `packages/tooling/library/qa-capture` | needs-remediation | 11 | 155 | 10 | 0 |
-| 133 | `@beep/doc-text` | `packages/drivers/doc-text` | clean | 3 | 12 | 0 | 0 |
-| 134 | `@beep/documents-use-cases` | `packages/documents/use-cases` | clean | 23 | 120 | 0 | 0 |
-| 135 | `@beep/sanity` | `packages/drivers/sanity` | clean | 4 | 16 | 0 | 0 |
+| 99 | `@beep/box-provisioning` | `packages/drivers/box-provisioning` | clean | 11 | 80 | 0 | 0 |
+| 100 | `@beep/rdf` | `packages/foundation/modeling/rdf` | needs-remediation | 28 | 265 | 1 | 1 |
+| 101 | `@beep/onepassword-cli` | `packages/drivers/onepassword-cli` | clean | 4 | 16 | 0 | 0 |
+| 102 | `@beep/architecture-lab-config` | `packages/architecture-lab/config` | clean | 9 | 21 | 0 | 0 |
+| 103 | `@beep/govinfo` | `packages/drivers/govinfo` | needs-remediation | 32 | 86 | 2 | 0 |
+| 104 | `@beep/data` | `packages/foundation/primitive/data` | needs-remediation | 12 | 162 | 10 | 8 |
+| 105 | `@beep/xai` | `packages/drivers/xai` | clean | 7 | 70 | 0 | 0 |
+| 106 | `@beep/architecture-lab-server` | `packages/architecture-lab/server` | clean | 13 | 34 | 0 | 0 |
+| 107 | `@beep/duckdb` | `packages/drivers/duckdb` | clean | 6 | 28 | 0 | 0 |
+| 108 | `@beep/ffmpeg` | `packages/drivers/ffmpeg` | clean | 5 | 111 | 0 | 0 |
+| 109 | `@beep/obs` | `packages/drivers/obs` | needs-remediation | 6 | 73 | 3 | 0 |
+| 110 | `@beep/agents-client` | `packages/agents/client` | needs-remediation | 6 | 39 | 2 | 0 |
+| 111 | `@beep/uspto-mcp` | `packages/drivers/uspto-mcp` | needs-remediation | 7 | 30 | 7 | 0 |
+| 112 | `@beep/architecture-lab-proof` | `apps/architecture-lab-proof` | clean | 1 | 2 | 0 | 0 |
+| 113 | `@beep/epistemic-config` | `packages/epistemic/config` | needs-remediation | 7 | 21 | 3 | 0 |
+| 114 | `@beep/epistemic-use-cases` | `packages/epistemic/use-cases` | needs-remediation | 28 | 126 | 9 | 0 |
+| 115 | `@beep/m365` | `packages/drivers/m365` | needs-remediation | 6 | 74 | 2 | 0 |
+| 116 | `@beep/observability` | `packages/foundation/capability/observability` | clean | 24 | 163 | 0 | 0 |
+| 117 | `@beep/tsgo-shim` | `tools/tsgo-shim` | no-public-src-surface | 0 | 0 | 0 | 0 |
+| 118 | `@beep/html` | `packages/foundation/modeling/html` | needs-remediation | 14 | 544 | 8 | 2 |
+| 119 | `@beep/n3` | `packages/drivers/n3` | clean | 3 | 11 | 0 | 0 |
+| 120 | `@beep/ui` | `packages/foundation/ui-system/ui` | clean | 133 | 553 | 0 | 0 |
+| 121 | `@beep/pandoc-ast` | `packages/foundation/modeling/pandoc-ast` | clean | 6 | 202 | 0 | 0 |
+| 122 | `@beep/repo-configs` | `packages/tooling/policy-pack/repo-configs` | needs-remediation | 25 | 139 | 0 | 1 |
+| 123 | `@beep/openai` | `packages/drivers/openai` | clean | 4 | 17 | 0 | 0 |
+| 124 | `@beep/documents-tables` | `packages/documents/tables` | clean | 15 | 40 | 0 | 0 |
+| 125 | `@beep/wink` | `packages/drivers/wink` | needs-remediation | 14 | 73 | 1 | 0 |
+| 126 | `@beep/postgres` | `packages/drivers/postgres` | clean | 7 | 43 | 0 | 0 |
+| 127 | `@beep/brand` | `packages/foundation/ui-system/brand` | clean | 7 | 50 | 0 | 0 |
+| 128 | `@beep/codegen-kit` | `packages/tooling/library/codegen-kit` | clean | 5 | 37 | 0 | 0 |
+| 129 | `@beep/architecture-lab-domain` | `packages/architecture-lab/domain` | clean | 15 | 48 | 0 | 0 |
+| 130 | `@beep/pretext` | `packages/drivers/pretext` | needs-remediation | 6 | 36 | 6 | 0 |
+| 131 | `@beep/provenance` | `packages/foundation/modeling/provenance` | needs-remediation | 4 | 28 | 1 | 0 |
+| 132 | `@beep/epistemic-tables` | `packages/epistemic/tables` | needs-remediation | 28 | 87 | 4 | 0 |
+| 133 | `@beep/qa-capture` | `packages/tooling/library/qa-capture` | needs-remediation | 11 | 155 | 10 | 0 |
+| 134 | `@beep/doc-text` | `packages/drivers/doc-text` | clean | 3 | 12 | 0 | 0 |
+| 135 | `@beep/documents-use-cases` | `packages/documents/use-cases` | clean | 23 | 120 | 0 | 0 |
+| 136 | `@beep/sanity` | `packages/drivers/sanity` | clean | 4 | 16 | 0 | 0 |
 
 ## Open Findings
 
@@ -278,7 +279,7 @@ Module findings:
 - `src/values/LocalDate/LocalDate.model.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 
 Export findings:
-- `src/entity/Principal.ts:257` `PrincipalSchema` (interface) - 1 documentation section/link violation(s)
+- `src/entity/Principal.ts:256` `PrincipalSchema` (interface) - 1 documentation section/link violation(s)
 - `src/entity/SourceKind.ts:37` `SourceKindSchema` (interface) - 1 documentation section/link violation(s)
 
 ### @beep/gov-legal-mcp
@@ -301,9 +302,9 @@ Module findings:
 - `src/aggregates/Session/worker.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 
 Export findings:
-- `src/aggregates/Session/Session.worker-protocol.ts:288` `encodeWorkerCommand` (const) - 1 documentation section/link violation(s)
-- `src/aggregates/Session/Session.worker-protocol.ts:328` `encodeWorkerResult` (const) - 1 documentation section/link violation(s)
-- `src/aggregates/Session/Session.worker-protocol.ts:368` `OntologyWorkerUndecodableCommand` (class) - 1 documentation section/link violation(s)
+- `src/aggregates/Session/Session.worker-protocol.ts:285` `encodeWorkerCommand` (const) - 1 documentation section/link violation(s)
+- `src/aggregates/Session/Session.worker-protocol.ts:325` `encodeWorkerResult` (const) - 1 documentation section/link violation(s)
+- `src/aggregates/Session/Session.worker-protocol.ts:365` `OntologyWorkerUndecodableCommand` (class) - 1 documentation section/link violation(s)
 
 ### @beep/repo-cli
 
@@ -361,7 +362,7 @@ Export findings:
 - `src/commands/Ci/CiLane.ts:339` `CI_LANE_DESCRIPTORS` (const) - 1 documentation section/link violation(s)
 - `src/commands/Ci/CiLane.ts:916` `ciLaneStepsForTesting` (const) - 1 documentation section/link violation(s)
 - `src/commands/CreatePackage/CreatePackage.command.ts:107` `resolveCreatePackageTemplateDir` (const) - 1 documentation section/link violation(s)
-- `src/commands/Explore/Atlas.ts:659` `explorationProjectionDriftPaths` (const) - 1 example import violation(s)
+- `src/commands/Explore/Atlas.ts:676` `explorationProjectionDriftPaths` (const) - 1 example import violation(s)
 - `src/commands/Laws/FrozenGrantSet.ts:328` `runFrozenGrantSetRules` (const) - 1 documentation section/link violation(s)
 - `src/commands/Laws/NoNativeRuntime.ts:570` `runNoNativeRuntimeRules` (const) - 1 documentation section/link violation(s)
 - `src/commands/Qa/JudgeCheck.ts:512` `extractLastJsonBlock` (const) - 1 documentation section/link violation(s)
@@ -496,21 +497,21 @@ Module findings:
 - `src/OpenclawSystemd.service.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 
 Export findings:
-- `src/Openclaw.models.ts:123` `OpenclawDiagnosticText` (const) - 1 documentation section/link violation(s)
-- `src/Openclaw.models.ts:176` `OpenclawProcessRequest` (class) - 1 documentation section/link violation(s)
-- `src/Openclaw.models.ts:342` `OpenclawConfigInvalid` (class) - 1 documentation section/link violation(s)
-- `src/Openclaw.models.ts:415` `OpenclawDoctorReport` (class) - 1 documentation section/link violation(s)
-- `src/Openclaw.models.ts:450` `OpenclawSecretsReloadOutput` (class) - 1 documentation section/link violation(s)
-- `src/Openclaw.models.ts:515` `OpenclawSecretsReloadDegraded` (class) - 1 documentation section/link violation(s)
-- `src/Openclaw.models.ts:1179` `OpenclawInvocationContext` (class) - 1 documentation section/link violation(s)
-- `src/Openclaw.models.ts:1267` `OpenclawSystemdUnitState` (class) - 1 documentation section/link violation(s)
-- `src/Openclaw.models.ts:1354` `OpenclawHttpProbe` (class) - 1 documentation section/link violation(s)
-- `src/Openclaw.models.ts:1425` `OpenclawSchemaPlaceholderFinding` (class) - 1 documentation section/link violation(s)
+- `src/Openclaw.models.ts:122` `OpenclawDiagnosticText` (const) - 1 documentation section/link violation(s)
+- `src/Openclaw.models.ts:175` `OpenclawProcessRequest` (class) - 1 documentation section/link violation(s)
+- `src/Openclaw.models.ts:341` `OpenclawConfigInvalid` (class) - 1 documentation section/link violation(s)
+- `src/Openclaw.models.ts:414` `OpenclawDoctorReport` (class) - 1 documentation section/link violation(s)
+- `src/Openclaw.models.ts:449` `OpenclawSecretsReloadOutput` (class) - 1 documentation section/link violation(s)
+- `src/Openclaw.models.ts:514` `OpenclawSecretsReloadDegraded` (class) - 1 documentation section/link violation(s)
+- `src/Openclaw.models.ts:1178` `OpenclawInvocationContext` (class) - 1 documentation section/link violation(s)
+- `src/Openclaw.models.ts:1266` `OpenclawSystemdUnitState` (class) - 1 documentation section/link violation(s)
+- `src/Openclaw.models.ts:1353` `OpenclawHttpProbe` (class) - 1 documentation section/link violation(s)
+- `src/Openclaw.models.ts:1424` `OpenclawSchemaPlaceholderFinding` (class) - 1 documentation section/link violation(s)
 - `src/OpenclawCli.service.ts:404` `OpenclawCliRunner` (type) - 1 documentation section/link violation(s)
 - `src/OpenclawIntent.models.ts:52` `OpenclawSecretReference` (const) - 1 documentation section/link violation(s)
 - `src/OpenclawIntent.models.ts:100` `OpenclawTargetVersion` (const) - 1 documentation section/link violation(s)
-- `src/OpenclawIntent.models.ts:1058` `OpenclawSkillPin` (class) - 1 documentation section/link violation(s)
-- `src/OpenclawIntent.models.ts:1158` `OpenclawDeploymentIntent` (class) - 1 documentation section/link violation(s)
+- `src/OpenclawIntent.models.ts:1056` `OpenclawSkillPin` (class) - 1 documentation section/link violation(s)
+- `src/OpenclawIntent.models.ts:1156` `OpenclawDeploymentIntent` (class) - 1 documentation section/link violation(s)
 
 ### @beep/law-practice-tables
 
@@ -544,10 +545,10 @@ Module findings:
 - `src/Lexical.normalize.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 
 Export findings:
-- `src/Lexical.model.ts:1136` `ElementNode` (class) - 1 documentation section/link violation(s)
-- `src/Lexical.model.ts:2198` `YouTubeNode` (class) - 1 documentation section/link violation(s)
-- `src/Lexical.model.ts:3201` `decodeEditorStateStrictResult` (const) - 1 documentation section/link violation(s)
-- `src/Lexical.model.ts:3284` `analyzeEditorStateCompatibilityResult` (const) - 1 documentation section/link violation(s)
+- `src/Lexical.model.ts:1138` `ElementNode` (class) - 1 documentation section/link violation(s)
+- `src/Lexical.model.ts:2283` `YouTubeNode` (class) - 1 documentation section/link violation(s)
+- `src/Lexical.model.ts:3240` `decodeEditorStateStrictResult` (const) - 1 documentation section/link violation(s)
+- `src/Lexical.model.ts:3323` `analyzeEditorStateCompatibilityResult` (const) - 1 documentation section/link violation(s)
 
 ### @beep/md
 
@@ -574,6 +575,7 @@ Module findings:
 Path: `packages/foundation/modeling/utils`
 
 Module findings:
+- `src/Data.ts:1` (jsdoc) - 1 documentation section/link violation(s)
 - `src/FileSystem.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/GlobalValue.ts:1` (jsdoc) - 1 documentation section/link violation(s)
 - `src/NodeUrl.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
@@ -698,8 +700,8 @@ Module findings:
 - `src/values/LogicalEdgeIdentity/LogicalEdgeIdentity.model.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 
 Export findings:
-- `src/values/GrantSet/GrantSet.model.ts:281` `addGrant` (const) - 1 documentation section/link violation(s)
-- `src/values/GrantSet/GrantSet.model.ts:495` `evaluateExecutionRequest` (const) - 1 documentation section/link violation(s)
+- `src/values/GrantSet/GrantSet.model.ts:279` `addGrant` (const) - 1 documentation section/link violation(s)
+- `src/values/GrantSet/GrantSet.model.ts:493` `evaluateExecutionRequest` (const) - 1 documentation section/link violation(s)
 
 ### @beep/ecfr
 
@@ -815,7 +817,6 @@ Module findings:
 - `src/PromiseSchema.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/SchemaUtils/pluck.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/SchemaUtils/split.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/SchemaUtils/withCodecStatics.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/SchemaUtils/withConstructorDefaults.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/UnitInterval.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 

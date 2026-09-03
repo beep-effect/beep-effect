@@ -14,7 +14,7 @@ import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { IRI } from "./Iri.ts";
-import { makeSemanticSchemaMetadata } from "./SemanticSchemaMetadata.ts";
+import { makeSemanticSchemaMetadata } from "./SemanticSchemaMetadata/index.ts";
 
 const $I = $RdfId.create("rdf");
 
@@ -200,7 +200,7 @@ const BlankNodeLabel = S.String.check(BlankNodeLabelChecks).pipe(
   $I.annoteSchema("BlankNodeLabel", {
     description: "Blank node label accepted by RDF/JS blank nodes.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
 );
 
 /**
@@ -239,7 +239,7 @@ export const PrefixLabel = S.String.check(PrefixLabelChecks).pipe(
       equivalenceBasis: "Exact string equality; the empty string denotes the default prefix.",
     }),
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownSync", "is"])
 );
 
 /**
@@ -302,7 +302,7 @@ export const Curie = S.String.check(CurieChecks).pipe(
     description: "CURIE-style compact IRI expression.",
     semanticSchemaMetadata: curieMetadata,
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
 );
 
 /**
@@ -357,7 +357,7 @@ export const LanguageTag = S.String.check(LanguageTagChecks).pipe(
       equivalenceBasis: "Lower-cased language-tag equality.",
     }),
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
 );
 
 /**
@@ -407,6 +407,8 @@ export class NamedNode extends S.Class<NamedNode>($I`NamedNode`)(
   })
 ) {
   static readonly decodeUnknownResult = S.decodeUnknownResult(this);
+
+  static readonly decodeEffect = S.decodeEffect(NamedNode);
 }
 
 /**
@@ -533,28 +535,8 @@ export class DefaultGraph extends S.Class<DefaultGraph>($I`DefaultGraph`)(
   })
 ) {}
 
-const TermDefinition = S.Union([NamedNode, BlankNode, Literal, DefaultGraph]).pipe(S.toTaggedUnion("termType"));
-
-/**
- * RDF term union.
- *
- * **Example** (Decode term union)
- *
- * ```ts import.meta.vitest name="Decode term union"
- * import * as S from "effect/Schema"
- * import { Term } from "@beep/rdf/Rdf"
- *
- * const term = S.decodeUnknownSync(Term)({
- *   termType: "NamedNode",
- *   value: "https://example.org/person/alice"
- * })
- * term.termType // => "NamedNode"
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export const Term = TermDefinition.pipe(
+const TermDefinition = S.Union([NamedNode, BlankNode, Literal, DefaultGraph]);
+const TermWithCodecStatics = TermDefinition.pipe(
   $I.annoteSchema("Term", {
     description: "RDF term union aligned with RDF/JS.",
     toArbitrary: () => S.toArbitrary(TermDefinition),
@@ -575,7 +557,31 @@ export const Term = TermDefinition.pipe(
       representations: [{ kind: "RDF/JS" }, { kind: "JSON-LD" }],
     }),
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
+);
+
+/**
+ * RDF term union.
+ *
+ * **Example** (Decode term union)
+ *
+ * ```ts import.meta.vitest name="Decode term union"
+ * import * as S from "effect/Schema"
+ * import { Term } from "@beep/rdf/Rdf"
+ *
+ * const term = S.decodeUnknownSync(Term)({
+ *   termType: "NamedNode",
+ *   value: "https://example.org/person/alice"
+ * })
+ * term.termType // => "NamedNode"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const Term = TermWithCodecStatics.pipe(
+  S.toTaggedUnion("termType"),
+  SchemaUtils.withStatics(() => ({ is: TermWithCodecStatics.is }))
 );
 
 /**
@@ -594,6 +600,19 @@ export const Term = TermDefinition.pipe(
  * @since 0.0.0
  */
 export type Term = typeof Term.Type;
+
+const SubjectDefinition = S.Union([NamedNode, BlankNode]);
+const SubjectWithCodecStatics = SubjectDefinition.pipe(
+  (schema) =>
+    pipe(
+      schema,
+      $I.annoteSchema("Subject", {
+        description: "RDF subject term union.",
+        toArbitrary: () => S.toArbitrary(schema),
+      })
+    ),
+  SchemaUtils.withCodecStatics(["is"])
+);
 
 /**
  * RDF subject term union.
@@ -614,17 +633,9 @@ export type Term = typeof Term.Type;
  * @category models
  * @since 0.0.0
  */
-export const Subject = S.Union([NamedNode, BlankNode]).pipe(
+export const Subject = SubjectWithCodecStatics.pipe(
   S.toTaggedUnion("termType"),
-  SchemaUtils.withCodecStatics,
-  (schema) =>
-    pipe(
-      schema,
-      $I.annoteSchema("Subject", {
-        description: "RDF subject term union.",
-        toArbitrary: () => S.toArbitrary(schema),
-      })
-    )
+  SchemaUtils.withStatics(() => ({ is: SubjectWithCodecStatics.is }))
 );
 
 /**
@@ -644,7 +655,14 @@ export const Subject = S.Union([NamedNode, BlankNode]).pipe(
  */
 export type Subject = typeof Subject.Type;
 
-const ObjectTermDefinition = S.Union([NamedNode, BlankNode, Literal]).pipe(S.toTaggedUnion("termType"));
+const ObjectTermDefinition = S.Union([NamedNode, BlankNode, Literal]);
+const ObjectTermWithCodecStatics = ObjectTermDefinition.pipe(
+  $I.annoteSchema("ObjectTerm", {
+    description: "RDF object term union.",
+    toArbitrary: () => S.toArbitrary(ObjectTermDefinition),
+  }),
+  SchemaUtils.withCodecStatics(["is"])
+);
 
 /**
  * RDF object term union.
@@ -666,12 +684,9 @@ const ObjectTermDefinition = S.Union([NamedNode, BlankNode, Literal]).pipe(S.toT
  * @category models
  * @since 0.0.0
  */
-export const ObjectTerm = ObjectTermDefinition.pipe(
-  $I.annoteSchema("ObjectTerm", {
-    description: "RDF object term union.",
-    toArbitrary: () => S.toArbitrary(ObjectTermDefinition),
-  }),
-  SchemaUtils.withCodecStatics
+export const ObjectTerm = ObjectTermWithCodecStatics.pipe(
+  S.toTaggedUnion("termType"),
+  SchemaUtils.withStatics(() => ({ is: ObjectTermWithCodecStatics.is }))
 );
 
 /**
@@ -691,7 +706,14 @@ export const ObjectTerm = ObjectTermDefinition.pipe(
  */
 export type ObjectTerm = typeof ObjectTerm.Type;
 
-const GraphTermDefinition = S.Union([NamedNode, BlankNode, DefaultGraph]).pipe(S.toTaggedUnion("termType"));
+const GraphTermDefinition = S.Union([NamedNode, BlankNode, DefaultGraph]);
+const GraphTermWithCodecStatics = GraphTermDefinition.pipe(
+  $I.annoteSchema("GraphTerm", {
+    description: "RDF graph term union.",
+    toArbitrary: () => S.toArbitrary(GraphTermDefinition),
+  }),
+  SchemaUtils.withCodecStatics(["is"])
+);
 
 /**
  * RDF graph term union.
@@ -712,12 +734,9 @@ const GraphTermDefinition = S.Union([NamedNode, BlankNode, DefaultGraph]).pipe(S
  * @category models
  * @since 0.0.0
  */
-export const GraphTerm = GraphTermDefinition.pipe(
-  $I.annoteSchema("GraphTerm", {
-    description: "RDF graph term union.",
-    toArbitrary: () => S.toArbitrary(GraphTermDefinition),
-  }),
-  SchemaUtils.withCodecStatics
+export const GraphTerm = GraphTermWithCodecStatics.pipe(
+  S.toTaggedUnion("termType"),
+  SchemaUtils.withStatics(() => ({ is: GraphTermWithCodecStatics.is }))
 );
 
 /**
@@ -873,7 +892,7 @@ export const PrefixMap = S.Record(S.String, IRI).pipe(
       equivalenceBasis: "Prefix and namespace string equality.",
     }),
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
 );
 
 /**
@@ -941,7 +960,7 @@ export const makeNamedNode = (value: string): NamedNode =>
 export const makeBlankNode = (value: string): BlankNode =>
   BlankNode.make({
     termType: "BlankNode",
-    value: BlankNodeLabel.fromUnknown(value),
+    value: BlankNodeLabel.decodeUnknownSync(value),
   });
 
 /**

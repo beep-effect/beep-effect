@@ -12,7 +12,7 @@ import { Str } from "@beep/utils";
 import { pipe } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
-import { makeSemanticSchemaMetadata } from "./SemanticSchemaMetadata.ts";
+import { makeSemanticSchemaMetadata } from "./SemanticSchemaMetadata/index.ts";
 
 const $I = $RdfId.create("uri");
 
@@ -216,7 +216,7 @@ export const URIReference = S.String.check(uriReferenceChecks).pipe(
     description: "RFC 3986 URI reference syntax, including both absolute and relative forms.",
     semanticSchemaMetadata: uriReferenceMetadata,
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
 );
 
 /**
@@ -258,7 +258,7 @@ export const RelativeURIReference = S.String.check(relativeUriReferenceChecks).p
     description: "RFC 3986 relative URI reference syntax (`relative-ref`).",
     semanticSchemaMetadata: relativeUriReferenceMetadata,
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
 );
 
 /**
@@ -300,7 +300,7 @@ export const AbsoluteURI = S.String.check(absoluteUriChecks).pipe(
     description: "RFC 3986 absolute URI syntax without a fragment component.",
     semanticSchemaMetadata: absoluteUriMetadata,
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
 );
 
 /**
@@ -346,7 +346,7 @@ export const URI = S.String.check(uriChecks)
       description: "RFC 3986 URI syntax.",
       semanticSchemaMetadata: uriMetadata,
     }),
-    SchemaUtils.withCodecStatics
+    SchemaUtils.withCodecStatics(["decodeUnknownSync", "is"])
   );
 
 /**

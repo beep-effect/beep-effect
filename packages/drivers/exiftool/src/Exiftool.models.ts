@@ -57,8 +57,7 @@ export const PositiveMilliseconds = S.Finite.check(
 ).pipe(
   $I.annoteSchema("PositiveMilliseconds", {
     description: "Positive finite timeout value in milliseconds.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -105,7 +104,7 @@ export const EpochMilliseconds = S.Finite.check(
   $I.annoteSchema("EpochMilliseconds", {
     description: "Non-negative epoch timestamp measured in milliseconds.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownOption"])
 );
 
 /**
@@ -151,8 +150,7 @@ export const TagCount = S.Int.check(
 ).pipe(
   $I.annoteSchema("TagCount", {
     description: "Non-negative integer count of tag assignments.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -219,8 +217,7 @@ export const SafeTagName = S.String.check(
 ).pipe(
   $I.annoteSchema("SafeTagName", {
     description: "ExifTool tag name restricted to group-qualified identifier characters.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

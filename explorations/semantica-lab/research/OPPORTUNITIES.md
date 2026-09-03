@@ -377,3 +377,108 @@ ratifies.
   only `undefined`/`null` or `APPROVED`. Fix: normalize the empty string as absence in both paths
   and cover the CLI encoding with regressions. Prevention: boundary fixtures for optional GitHub
   fields must exercise every representation emitted by both GraphQL and `gh` JSON.
+
+- **2026-08-30 — Agent shells misreported 1Password as signed out while the operator shell was
+  authenticated.** The operator's `op whoami` succeeded, but both direct and interactive agent
+  subprocesses returned `account is not signed in`. The agent inherited no `OP_SESSION_*`, and
+  Codex had no registered `1password` MCP server even though the desktop server was enabled and
+  `1password-mcp` was installed. Fix: register the user-level server with
+  `codex mcp add 1password -- 1password-mcp`, then start a fresh agent session so its fixed MCP
+  tool surface includes the server. For existing `op://` env files, the exact output-suppressed
+  `op run --env-file=<path> -- true` preflight succeeded despite both `whoami` failures, proving
+  that the wrapper can obtain desktop authorization directly. Prevention: agent diagnostics must
+  distinguish operator CLI auth, operation-scoped desktop authorization, agent process
+  inheritance, client MCP registration, and current-session tool exposure; never infer the first
+  from failure of another or ask the operator to repeat sign-in blindly.
+
+- **2026-08-30 — Full-W1 C0 replay spent nearly ten minutes in opaque local grounding.** The
+  network-off R2 replay kept the provider cache fixed and one Bun core busy for 580,206 ms before
+  emitting its report; its p95 document duration was 148,696 ms. The live run took 1,906,490 ms
+  with a 227,190 ms p95. During both runs the CLI emitted no per-document stage progress, so the
+  only safe liveness evidence was process CPU/RSS and aggregate cache-file growth. Prevention:
+  emit non-digest per-document stage telemetry or progress events around parse, provider wait,
+  grounding, ledger, and evaluation so operators can attribute latency without inspecting
+  provider text or interrupting an authoritative gate.
+
+- **2026-08-31 — Concurrent unowned edits in one checkout invalidated focused C1 proof.** While
+  the full-W1 C1 gate was running, an unrelated schema-statics change modified the lab's gold
+  modules and `@beep/provenance` in the same worktree. Its transient unused import made
+  `bun run check` fail after the C1 surface had already passed, so the failure was unrelated and
+  could not lawfully be repaired or discarded by the C1 lane. Disposition: preserve that WIP
+  unstaged and publish C1 from a clean owning worktree. Prevention: simultaneous agents must own
+  separate sibling worktrees even when their intended files appear disjoint; shared checkouts
+  make attribution and exact-head quality evidence unstable.
+
+- **2026-08-31 — The C1-to-C2 clean-worktree handoff hit two avoidable Git and install traps.**
+  `git fetch --prune origin main:refs/remotes/origin/main` deleted the local tracking ref before
+  failing to recreate it with `unable to resolve reference`; a normal configured `git fetch
+  origin` restored the ref at the merged C1 commit. The new worktree then lacked workspace links,
+  so `bun run beep architecture` failed with `Cannot find module '@beep/utils'`. Disposition:
+  install the committed lockfile in the clean worktree before running repo tooling. Prevention:
+  use the configured fetch refspec instead of combining prune with an explicit destination, and
+  make the sibling-worktree bootstrap path install or link dependencies before its first command.
+
+- **2026-08-31 — The architecture touch rule names an incomplete command.** The required
+  `bun run beep architecture` invocation printed only `architecture commands: create, add, plan,
+  apply, check`; attempting the apparent validation form, `architecture check`, then required a
+  plan file that does not exist for a hand-authored lab-local concept. No architecture validation
+  ran, although the normal lab check, lint, and tests remained available. Prevention: make the
+  touch table name the concrete discovery or validation invocation for an existing package, or
+  have the bare command run the applicable read-only check.
+
+- **2026-08-31 — The advertised F1-only canary selection cannot satisfy its own hosted
+  coverage schema.** A C2 integration smoke using `canary c2 --selection f1` stopped in the
+  inherited C0 evaluator with `No covered document supports structure-span-f1:hosted`; the
+  ratified `f1+w1` R2 selection passed with zero unexpected degradation. Prevention: either
+  make every advertised selection construct a satisfiable metric set or reject unsupported
+  stage/selection pairs during CLI decoding, before provider and ledger work begins.
+
+- **2026-08-31 — The first C2 report encoded component proxies as bundle-level proof.** Hosted
+  review found that the crash witness rebuilt one in-memory snapshot twice, cold start timed only
+  a second `ReasonerLive`, p95 closed ten synthetic seed triples, and RSS sampled the final heap.
+  Those values could pass while persisted-ledger recovery or the full selected workload failed.
+  Fix: the canary now rebuilds the actual run ledger in fresh processes around a SIGKILL, times a
+  fresh complete runtime to readiness, queries the full loaded projection for p95, and records
+  the process high-water RSS. Prevention: every telemetry field must name and exercise the same
+  accounting boundary as its governing workload-contract row; a component proxy is not evidence
+  for a bundle-level claim. The first corrected query probe then reported 280 ms because the
+  Oxigraph service silently constructed and reloaded a new store for every request; service-local
+  reuse of the immutable dataset's store reduced the same ordered query to a measured 5 ms
+  p95. Prevention: a query boundary over an already loaded dataset must not hide dataset rebuild
+  work inside every execution. Follow-up review also found that both recovery digests came from
+  the persisted representation and that the killed child had not itself committed data. The first
+  repair added a durable checkpoint, but a fresh review correctly showed that metadata was absent
+  from the recovered RDF projection and could still pass without projection-relevant recovery.
+  The first projection-relevant repair then selected only one non-empty batch, so a passing digest
+  still omitted the rest of the committed C1 state. Final fix: an isolated crash ledger starts
+  empty; the killed child commits every C1 extraction outcome and provenance event; the parent
+  independently digests the full C1 projection; recovery must match that digest and remain stable
+  across another restart. The metadata-only checkpoint API was removed. Prevention: crash evidence
+  needs an independent full-state pre-crash oracle and must mutate every projection-relevant row in
+  the process that is actually killed.
+
+- **2026-08-31 — An unrelated scheduler coverage floor failed two exact-head C2 runs.** The
+  hosted coverage lane repeatedly reported `QualityScheduler.ts` statements `91.44 < 91.66` and
+  branches `86.07 < 86.7`, although the C2 branch did not change that source. The missing case was
+  an installed-memory ceiling that clamps a five-token request to two tokens while still
+  satisfying the hard floor. Fix: a focused scheduler test now exercises the clamp and verifies
+  its admitted journal weight. Prevention: admission policy branches added to the monotonic floor
+  need a behavior-level test for each distinct machine-envelope outcome before ratification.
+
+- **2026-08-31 — The projection-relevant crash witness exceeded the process argument limit.** A
+  full-W1 repair passed the extracted batch as one child-process argument and reached the crash
+  boundary only after the ten-minute live pipeline, where spawn failed with `E2BIG: argument list
+  too long`. Fix: `CrashProjectionInput` now schema-encodes the batch and event to the isolated
+  crash directory; the child schema-decodes that bounded path before committing the transaction.
+  Prevention: subprocess protocols should pass file or stream handles for workload-sized typed
+  payloads and reserve argv for identifiers, modes, and bounded scalar options.
+
+- **2026-08-31 — A property test derived a sparse-file size from runner free space.** The final
+  exact-head Property Laws lane failed in `corpus-preservation.test.ts` after truncating a fixture
+  to `destFreeBytes + 1`; on that runner the subsequent source census tried to hash the enormous
+  sparse file and returned `PreservationArchiveIoError` before the expected capacity error. The
+  destination-capacity law is covered by the direct validator and by deterministic injected
+  capacity probes before and during copy. Fix: replace the host-sized sparse-file case with an
+  explicit destination-free-space validator witness and retain the bounded integration probes.
+  Prevention: tests must inject capacity readings instead of allocating or sizing fixtures from
+  live runner resources.

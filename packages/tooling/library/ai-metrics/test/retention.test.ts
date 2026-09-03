@@ -18,6 +18,7 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
 const decodeRetentionInventoryResult = S.decodeUnknownResult(AiMetricsRetentionInventory);
+const encodeRetentionInventoryJson = S.encodeUnknownEffect(S.fromJsonString(AiMetricsRetentionInventory));
 const decodeDerivedStorageWriteResult = S.decodeUnknownResult(AiMetricsDerivedStorageWriteResult);
 const encodeDerivedStorageWriteResult = S.encodeUnknownResult(AiMetricsDerivedStorageWriteResult);
 const DerivedStorageWriteResultArbitrary = S.toArbitrary(AiMetricsDerivedStorageWriteResult)(fc);
@@ -149,7 +150,7 @@ it.effect(
       selectedRawArchiveObjectCount: 0,
       selectedReportCount: 0,
     });
-    const json = yield* AiMetricsRetentionInventory.encodeUnknownEffectFromJsonString(inventory);
+    const json = yield* encodeRetentionInventoryJson(inventory);
     expect(json).toContain('"schemaVersion":"beep.ai_metrics.retention_inventory.v1"');
   })
 );

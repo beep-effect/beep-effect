@@ -25,7 +25,7 @@ import {
 import { ValidationPolicy } from "./Shacl.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/Batch");
-const defaultValidationPolicy = ValidationPolicy.fromUnknown({});
+const defaultValidationPolicy = ValidationPolicy.decodeUnknownSync({});
 
 /**
  * One immutable source entry in a stored batch manifest.

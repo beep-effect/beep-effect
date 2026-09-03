@@ -18,6 +18,24 @@ const RejectionStatute = LiteralKit(["102", "103", "101", "112"]).annotate(
   })
 );
 
+const RejectionGroundDefinition = RejectionStatute.toTaggedUnion("statute")({
+  "101": {},
+  "102": {
+    referenceFixtureKey: LawPracticeFixtureKey.annotateKey({
+      description: "Fixture key for the prior-art reference cited by a §102 rejection.",
+    }),
+  },
+  "103": {
+    combinationRationale: LawPracticeText.annotateKey({
+      description: "Reason the cited prior-art references are combined for a §103 rejection.",
+    }),
+    referenceFixtureKeys: S.NonEmptyArray(LawPracticeFixtureKey).annotateKey({
+      description: "Fixture keys for the prior-art references combined by a §103 rejection.",
+    }),
+  },
+  "112": {},
+});
+
 /**
  * The statutory ground of a rejection, discriminated on the statute section it
  * is grounded in. The tagged union encodes prior-art cardinality directly in the
@@ -42,28 +60,14 @@ const RejectionStatute = LiteralKit(["102", "103", "101", "112"]).annotate(
  * @category value-objects
  * @since 0.0.0
  */
-export const RejectionGround = RejectionStatute.toTaggedUnion("statute")({
-  "101": {},
-  "102": {
-    referenceFixtureKey: LawPracticeFixtureKey.annotateKey({
-      description: "Fixture key for the prior-art reference cited by a §102 rejection.",
-    }),
-  },
-  "103": {
-    combinationRationale: LawPracticeText.annotateKey({
-      description: "Reason the cited prior-art references are combined for a §103 rejection.",
-    }),
-    referenceFixtureKeys: S.NonEmptyArray(LawPracticeFixtureKey).annotateKey({
-      description: "Fixture keys for the prior-art references combined by a §103 rejection.",
-    }),
-  },
-  "112": {},
-}).pipe(
+export const RejectionGround = S.make<(typeof RejectionGroundDefinition)["Rebuild"]>(
+  RejectionGroundDefinition.ast
+).pipe(
   $I.annoteSchema("RejectionGround", {
     description:
       "Statutory ground of a rejection, encoding prior-art cardinality per statute section (§102 = 1 reference, §103 = >=1 references + rationale, §101/§112 = 0 references).",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 /**

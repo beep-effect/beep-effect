@@ -135,8 +135,7 @@ export const ClaimGateResult = ClaimGateVerdict.toTaggedUnion("verdict")({
 }).pipe(
   $I.annoteSchema("ClaimGateResult", {
     description: "Typed admitted/rejected verdict returned by the claim gate.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

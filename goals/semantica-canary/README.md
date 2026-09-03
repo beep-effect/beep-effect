@@ -50,17 +50,24 @@ Use this command for execution-capable sessions:
 
 ## Current phase
 
-Active in P2 on the single evidence-quote re-entry candidate. Its zero-spend
-preview grounded 10 cached relations on two papers, and the gold-v1 annotation
-pass repaired the known relation and abstract-label defects. The candidate's
-live probe and retry budgets remain unspent. C1, C2, and the full-W1 R2 gate
-have not run.
+P4 C2 is complete. The first valid combined candidate passed all seven
+restricted-EYE oracle cases, per-event rule validation, the real
+commit/SIGKILL/restart projection probe, both Tier-L bars, and the full-W1 R2
+gate live and replay. The 34-document reports were byte-identical with zero
+unexpected degradation; the retry was never used. P5 closes the packet with
+the atlas disposition, reflection, evidence audit, and final state flip.
 
 ## Latest evidence
 
+[`history/p4-c2-r2.md`](./history/p4-c2-r2.md) records the C2 oracle, crash,
+Tier-L, full-W1 live/replay gate, and Reasoning verdict.
+[`history/p3-c1-r2.md`](./history/p3-c1-r2.md) records the C1 G-projection,
+rebuild-identity, full-W1 live/replay gate, and resulting family verdicts.
+[`history/p2-c0-r2.md`](./history/p2-c0-r2.md) records the C0 full-W1 gate.
+[`history/p2-c0-relation-slate.md`](./history/p2-c0-relation-slate.md) records
+the preceding slice and relation-paper extension. The earlier
 [`history/p2-c0-evidence-quote-reentry.md`](./history/p2-c0-evidence-quote-reentry.md)
-records the candidate contract, zero-spend preview, gold annotation repairs,
-refrozen digests, and local proof that reopened P2.
+records the candidate contract, zero-spend preview, and gold repair.
 
 ## Notes
 

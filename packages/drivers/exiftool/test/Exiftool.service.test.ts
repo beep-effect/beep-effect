@@ -7,7 +7,7 @@ import {
   WriteTagsRequest,
   WriteXmpPacketRequest,
 } from "@beep/exiftool";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
@@ -23,7 +23,7 @@ const provideScopedLayer =
 const encoder = new TextEncoder();
 
 // TODO(effect-native-migration): model schema
-const exiftoolJson = Unknown.encodeUnknownSyncFromJsonString([
+const exiftoolJson = UnknownFromJsonString.encodeUnknownSync([
   {
     SourceFile: "frame.png",
     "System:FileName": "frame.png",

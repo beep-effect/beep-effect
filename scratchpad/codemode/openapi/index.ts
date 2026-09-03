@@ -207,10 +207,10 @@ const candidates = (document: Document): ReadonlyArray<OperationCandidate> => {
 
 const operationFrom = (candidate: OperationCandidate): O.Option<Operation> =>
   pipe(
-    ApiPath.decodeOption(candidate.path),
+    ApiPath.decodeUnknownOption(candidate.path),
     O.map((path) =>
       Operation.new(
-        pipe(own(candidate.operation, "operationId"), O.flatMap(OperationId.decodeOption)),
+        pipe(own(candidate.operation, "operationId"), O.flatMap(OperationId.decodeUnknownOption)),
         candidate.method,
         path,
         pipe(own(candidate.operation, "summary"), O.flatMap(nonEmptyString)),

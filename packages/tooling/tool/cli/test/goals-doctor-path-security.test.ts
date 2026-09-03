@@ -1,5 +1,5 @@
 import { goalsCommand, PacketEventStoreLive } from "@beep/repo-cli/test/Goals";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { Effect, FileSystem, Layer, Ref } from "effect";
@@ -9,7 +9,7 @@ import { describe, expect, it } from "vitest";
 import { withTempWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
 
 const runGoalsCommand = Command.runWith(goalsCommand, { version: "0.0.0" });
-const encodeJson = Unknown.encodeUnknownSyncFromJsonString;
+const encodeJson = UnknownFromJsonString.encodeUnknownSync;
 const absoluteExplorationPath = "/etc/passwd";
 
 const testLayer = Layer.mergeAll(

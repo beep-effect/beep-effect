@@ -5,6 +5,30 @@ Canonical rules for all coding agents. Claude Code loads this via the
 directly. Laws only — architecture lives in `standards/ARCHITECTURE.md`,
 workflows in skills.
 
+## 1Password MCP
+
+- Treat the `op` CLI session and the 1Password MCP connection as separate
+  authentication surfaces. `op whoami` can succeed in the operator's terminal
+  while failing inside an agent process because `OP_SESSION_*` is shell-local.
+  An agent-side failure does not prove that the desktop app or operator shell is
+  signed out.
+- Enabling the MCP server in the 1Password desktop app does not register it with
+  every agent client. For Codex, first verify that `1password-mcp` is on `PATH`
+  and that `codex mcp get 1password` succeeds. If the registration is missing,
+  run `codex mcp add 1password -- 1password-mcp`.
+- MCP tools are fixed when an agent session starts. After adding or enabling the
+  server, start a fresh task/session and approve its desktop connection; an
+  already-running session will not hot-load the new tool. Do not respond to a
+  missing MCP tool by repeatedly asking the operator to unlock 1Password or run
+  `op signin`.
+- For a pre-existing `op://`-backed env file, test the exact operation with
+  output suppressed: `op run --env-file=<path> -- true >/dev/null`. That wrapper
+  can obtain desktop authorization and succeed even when agent-side
+  `op whoami` fails; do not use `op whoami` as a gate for the wrapper.
+- Never copy, print, or inject `OP_SESSION_*` values to bridge the process gap.
+  Once exposed, use the 1Password MCP tools and keep secret values inside
+  1Password.
+
 ## Code Laws
 
 - Use schema-first domain models; prefer typed errors and tagged unions.
@@ -54,11 +78,17 @@ workflows in skills.
 - Attribute verification failures before repairing — introduced / inherited /
   unrelated / environment-only; attribution decides fix vs rebase vs report,
   not blind rerun.
+- “Mergeable” describes the complete PR state, not GitHub's structural
+  `MERGEABLE` field alone. It requires both of the following:
+  - no outstanding PR comments or nits unless they are marked resolved, marked
+    outdated, or have received a response; and
+  - no failing CI jobs except Vercel deployments failing only because they were
+    rate limited.
 - PR closeout: run `bun run beep yeet monitor` until it reports
-  `merge-ready: yes`. Unresolved review threads are a hard merge gate —
-  answer and resolve every one via `bun run beep yeet reply` (drafts in
-  `.beep/yeet/reply-drafts.json`); never leave threads standing or ask the
-  operator to relay them.
+  `merge-ready: yes`. Unanswered review threads are a hard merge gate — answer
+  every one and resolve every actionable one via `bun run beep yeet reply`
+  (drafts in `.beep/yeet/reply-drafts.json`); never ask the operator to relay
+  them.
 - Package handoff: any agent or sub-agent that edits a workspace package runs
   `bun run beep quality package-verify <@beep/package>` before handing the work
   back. Use `--quick` only when the touched surface justifies the lint+check

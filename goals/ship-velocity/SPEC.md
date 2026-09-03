@@ -15,6 +15,13 @@ to accumulate-and-remediate. B-track target raised to full required-context pari
 explicit warm capability. E-track adds a stacked-PRs leverage spike. No calendar estimates —
 items execute in order until finished.
 
+Operator supersession (2026-08-30): PR #921 intentionally removes A4's published-PR ownership
+lease, watcher, takeover, and mutation fence while retaining P0 inbox delivery and the hard
+Stop/SubagentStop gate. The A4 design below remains as historical design evidence. Current
+acceptance does not claim an automatic under-five-minute takeover; it requires the retained
+backpressure/Stop behavior and that no ownership lease can strand a checkout after its harness
+dies.
+
 ---
 
 ## Workstream A — Backpressure engine

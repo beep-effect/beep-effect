@@ -32,7 +32,7 @@ import {
 } from "@beep/repo-cli/commands/Qa";
 import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema/Sha256";
 import { ISOStr } from "@beep/schema/Timestamp";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { URLStr } from "@beep/schema/URL";
 import {
   AttestationResource,
@@ -397,12 +397,12 @@ describe("commands/Qa complete judge contract parity", () => {
         schemaVersion: "qa-inventory/v1",
         sessionRef: "session.json",
       };
-      const validCandidate = yield* Unknown.encodeEffectFromJsonString(inventory);
-      const emptyEvidenceCandidate = yield* Unknown.encodeEffectFromJsonString({
+      const validCandidate = yield* UnknownFromJsonString.encodeEffect(inventory);
+      const emptyEvidenceCandidate = yield* UnknownFromJsonString.encodeEffect({
         ...inventory,
         findings: [{ ...finding, evidence: [] }],
       });
-      const wrongCountCandidate = yield* Unknown.encodeEffectFromJsonString({ ...inventory, requiredCount: 0 });
+      const wrongCountCandidate = yield* UnknownFromJsonString.encodeEffect({ ...inventory, requiredCount: 0 });
       const allowed = yield* evaluateJudgeOutputInventoryDecodes(
         JudgeOutputInventoryDecodesInput.make({ candidate: validCandidate })
       );
@@ -447,7 +447,7 @@ describe("commands/Qa complete judge contract parity", () => {
         severity,
         title: id,
       });
-      const candidate = yield* Unknown.encodeEffectFromJsonString({
+      const candidate = yield* UnknownFromJsonString.encodeEffect({
         findings: [finding("R4-01", "P0"), finding("R4-02", "P1"), finding("R4-03", "P2")],
         judge: { effort: "high", model: "gpt-5.6-sol" },
         requiredCount: 2,

@@ -91,13 +91,13 @@ export type ISOStr = typeof ISOStr.Type;
  * @category constructors
  * @since 0.0.0
  */
-export const EpochMillis = NonNegativeInt.pipe(
+export const EpochMillis = S.make<(typeof NonNegativeInt)["Rebuild"]>(NonNegativeInt.ast).pipe(
   S.brand("EpochMillis"),
   $I.annoteSchema("EpochMillis", {
     description: "Epoch milliseconds since 1970-01-01T00:00:00.000Z",
     documentation: "Stores the epoch milliseconds internally.\nEncoded as ISO 8601 datetime string.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
 );
 
 /**

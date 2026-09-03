@@ -126,12 +126,17 @@ export class TimelineToolCallItem extends S.Class<TimelineToolCallItem>($I`Timel
  * @category read-models
  * @since 0.0.0
  */
-export const TimelineItem = S.Union([TimelineMessageItem, TimelineToolCallItem]).pipe(
-  S.toTaggedUnion("kind"),
+export const TimelineItem = pipe(
+  S.Union([TimelineMessageItem, TimelineToolCallItem]),
   $I.annoteSchema("TimelineItem", {
     description: "Resolved timeline item for a turn.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"]),
+  (schema) =>
+    schema.pipe(
+      S.toTaggedUnion("kind"),
+      SchemaUtils.withStatics(() => ({ is: schema.is }))
+    )
 );
 
 /**

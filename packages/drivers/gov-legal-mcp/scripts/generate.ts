@@ -9,7 +9,7 @@
 
 import { ProductionToolNameCollisionReport, renderToolNameCollisionReport } from "@beep/gov-legal-mcp/ToolNames";
 import { $GovLegalMcpId } from "@beep/identity/packages";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import * as NodeRuntime from "@effect/platform-node/NodeRuntime";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { Effect, FileSystem, Layer, Path } from "effect";
@@ -58,7 +58,7 @@ const generateToolNameCollisionReport = Effect.fn("GovLegalMcp.generateToolNameC
   const packageMetadata = yield* fs
     .readFileString(packagePath)
     .pipe(Effect.flatMap(S.decodeUnknownEffect(S.fromJsonString(PackageMetadata))));
-  const encodedVersion = yield* Unknown.encodeUnknownEffectFromJsonString(packageMetadata.version);
+  const encodedVersion = yield* UnknownFromJsonString.encodeUnknownEffect(packageMetadata.version);
 
   yield* fs.makeDirectory(generatedDirectory, { recursive: true });
   yield* fs.writeFileString(reportPath, renderToolNameCollisionReport(ProductionToolNameCollisionReport));

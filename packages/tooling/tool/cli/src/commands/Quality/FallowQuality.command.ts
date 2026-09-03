@@ -8,7 +8,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
 import { Fn, NonNegativeInt } from "@beep/schema";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { Console, DateTime, Effect, FileSystem, flow, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
@@ -81,7 +81,7 @@ const fallbackSourceRef = "standards/fallow.pilot.inventory.jsonc";
 // maximum while still surfacing that the lane has saturated findings.
 const maxFindingsPerCount = 10_000;
 
-const decodeJsonText = Unknown.decodeUnknownEffectFromJsonString;
+const decodeJsonText = UnknownFromJsonString.decodeUnknownEffect;
 const encodeFallowEnvelopeJson = S.encodeUnknownEffect(S.fromJsonString(FallowReportEnvelope));
 const decodeUnknownRecordOption = S.decodeUnknownOption(S.Record(S.String, S.Unknown));
 const decodeUnknownArrayOption = S.decodeUnknownOption(S.Array(S.Unknown));

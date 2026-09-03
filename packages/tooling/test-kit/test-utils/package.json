@@ -14,6 +14,8 @@
   "exports": {
     "./package.json": "./package.json",
     ".": "./src/index.ts",
+    "./ConformanceLedger": "./src/ConformanceLedger/index.ts",
+    "./ConformanceLedger/*": null,
     "./*": "./src/*.ts",
     "./internal/*": null
   },
@@ -76,6 +78,8 @@
     "exports": {
       "./package.json": "./package.json",
       ".": "./dist/index.ts",
+      "./ConformanceLedger": "./dist/ConformanceLedger/index.js",
+      "./ConformanceLedger/*": null,
       "./*": "./dist/*.js",
       "./internal/*": null
     }

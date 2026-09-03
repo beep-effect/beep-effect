@@ -1,0 +1,97 @@
+{
+  "schema": "beep.research.nightly.run/v0",
+  "date": "2026-08-31",
+  "status": "partial",
+  "supervised": false,
+  "firstRun": false,
+  "window": {
+    "start": "2026-08-30T08:14:00-05:00",
+    "end": "2026-08-31T08:52:00-05:00",
+    "timezone": "America/Chicago",
+    "fallbackHours": 24,
+    "note": "Delta since lastAttemptedRun of merged 2026-08-30 packet (#896). #896 merged 2026-08-30T14:22Z. Monday: no weekly consolidation / tombstone reaper. arXiv Monday /new was already live (prelude 20:00 ET wait was wrong)."
+  },
+  "claimsEmitted": 21,
+  "collisionRate": 0.33,
+  "collisionNote": "7/21 URL collisions: five standing-quota refute re-cites (ODP, drizzle, Instant, SEP-2640, #7446) plus Jazz #2347 and MCP #3321 move re-cites of excluded URLs. Novel-URL collision rate 0. selfReject false.",
+  "selfReject": false,
+  "sourcesSeen": {
+    "web": 12,
+    "arxiv": 18,
+    "github": 32,
+    "x": 0
+  },
+  "quotaPools": {
+    "search": "grok-bot+web+gh+arxiv",
+    "x": "blocked-client-not-enrolled",
+    "verify": "none (no Sol/Luna seat in this harness)",
+    "writer": "grok-bot",
+    "publisher": "cursor-cloud-agent"
+  },
+  "refutationQuota": {
+    "attempted": 5,
+    "held": 5,
+    "heldAndMoved": 0,
+    "broken": 0,
+    "standingClaims": [
+      "USPTO ODP four fields",
+      "drizzle TaggedErrorClass #6162",
+      "Instant Cloud sunset 2027-08-31",
+      "SEP-2640 skills extension",
+      "effect@4.0.0-rc.112 / no rc.113"
+    ],
+    "note": "All five hold. Cheap-check MOVES (not quota): Jazz #2347 MERGED 2026-08-31T05:37:27Z; MCP #3321 MERGED 2026-08-30T22:33:58Z."
+  },
+  "frictions": [
+    {
+      "id": "x-client-not-enrolled",
+      "severity": "source-gap",
+      "detail": "user-X MCP connected but search_posts_all / search_news return client-not-enrolled Client Forbidden. No x.com posts in this packet."
+    },
+    {
+      "id": "no-cross-provider-verify",
+      "severity": "process-gap",
+      "detail": "SPEC verify seats (Sol/Luna) unavailable. Writer used structured records only."
+    },
+    {
+      "id": "github-mcp-needsAuth",
+      "severity": "auth",
+      "detail": "GitHub MCP needsAuth. Publisher uses gh + cloud agent."
+    },
+    {
+      "id": "lawnext-empty-window",
+      "severity": "source-gap",
+      "detail": "LawNext RSS empty for Aug 30\u201331 (last post Aug 28 Peak Legal Tech)."
+    },
+    {
+      "id": "uspto-odp-500-untestable-unauth",
+      "severity": "source-gap",
+      "detail": "Unauthenticated probe of petition includeDocuments endpoint returns HTTP 401; cannot re-verify the standing 500 without an API key."
+    },
+    {
+      "id": "publisher-payload-truncated",
+      "severity": "process-gap",
+      "detail": "Cloud-agent prompt PAYLOAD_B64 was truncated in transit (gzip EOF before end-of-stream; no operator-box reconstruct path). Publisher recovered REPORT/claims/RUN/SUGGESTED_ACTIONS/WATCHLIST/stamp from the partial tar, mechanically restored and/law substitutions so claims.jsonl decodes (21 lines), and rebuilt SOURCES.md from claim excerpts plus PROMPT.md from the SUGGESTED_ACTIONS priority six. Do not treat SOURCES/PROMPT as byte-identical to the operator tarball."
+    }
+  ],
+  "resume": {
+    "retry": ["x-search", "verify"],
+    "cursor": "enroll X developer App in a Project at https://console.x.com, then re-search window 2026-08-30T08:14-05:00/2026-08-31T08:52-05:00; arXiv Monday /new already live"
+  },
+  "repoReplay": {
+    "merged": [
+      896, 913, 923, 932, 934, 935, 901, 905, 907, 919, 936, 904, 909, 915, 916,
+      917, 918, 928, 927, 912, 921, 922, 925, 929, 931, 926
+    ],
+    "open": [938, 939],
+    "blockingResearchPr": null,
+    "closedUnmergedResearchPr": 862,
+    "lastMergedResearchPr": 896
+  },
+  "weekly": {
+    "sunday": false,
+    "tombstonesEmitted": 0,
+    "tombstonePath": null,
+    "note": "Monday: no weekly consolidation, no tombstone reaper. Leave 2026-08-30 tombstones as-is."
+  }
+}

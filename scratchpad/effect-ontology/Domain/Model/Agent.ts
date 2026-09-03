@@ -51,7 +51,7 @@ export const AgentId = S.String.check(
     $I.annoteSchema("AgentId", {
       description: "Stable lowercase identifier assigned to an agent implementation.",
     }),
-    SchemaUtils.withCodecStatics
+    SchemaUtils.withCodecStatics(["is"])
   );
 
 /**

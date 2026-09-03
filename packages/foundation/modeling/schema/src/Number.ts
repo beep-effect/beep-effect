@@ -203,11 +203,10 @@ export const NonNegativeInt = S.Int.pipe(S.brand("Int"))
     })
   )
   .pipe(
-    SchemaUtils.withOptionCodecStatics,
     $I.annoteSchema("NonNegativeInt", {
       description: "A non-negative integer",
     }),
-    SchemaUtils.withCodecStatics
+    SchemaUtils.withCodecStatics(["decodeUnknownOption", "is"])
   );
 
 /**

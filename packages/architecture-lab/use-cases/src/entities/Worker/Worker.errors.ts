@@ -153,12 +153,17 @@ export class WorkerActionFailed extends S.TaggedError<WorkerActionFailed>($I`Wor
  * @since 0.0.0
  */
 export const WorkerActionError = S.Union([WorkerNotFound, WorkerConflict, WorkerActionFailed]).pipe(
-  S.toTaggedUnion("_tag"),
+  // fallow-ignore-next-line code-duplication -- preserve the selected guard through Effect's tagged-union rebuild
   $I.annoteSchema("WorkerActionError", {
     title: "Worker action error",
     description: "Tagged union of public Worker use-case failures.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"]),
+  (schema) =>
+    schema.pipe(
+      S.toTaggedUnion("_tag"),
+      SchemaUtils.withStatics(() => ({ is: schema.is }))
+    )
 );
 
 /**

@@ -1,0 +1,15 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "broken-image",
+        "value": "*",
+        "files": ["packages/foundation/modeling/md/src/Md.model.ts"],
+        "createdAt": "2026-08-30T08:11:15.928Z",
+        "reason": "Codex triage: line 857 declares the Markdown AST Img schema and tag; it does not render an HTML image element."
+      }
+    ]
+  }
+}

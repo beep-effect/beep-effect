@@ -7,7 +7,7 @@
  */
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, type SafeObject } from "@beep/schema";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, P, pipe, R } from "@beep/utils";
 import { type RegExpMethod, type RegExpStatic, regexpMethods } from "../Codemode.method-names.ts";
 import { isBlockedMember } from "../Codemode.tool-runtime.ts";
@@ -77,7 +77,7 @@ export const regexpProperties = LiteralKit([
  */
 export type regexpProperties = typeof regexpProperties.Type;
 
-const encodeJson = Unknown.encodeUnknownSyncFromJsonString;
+const encodeJson = UnknownFromJsonString.encodeUnknownSync;
 
 /**
  * Strips the host `Invalid regular expression:` prefix from a thrown pattern

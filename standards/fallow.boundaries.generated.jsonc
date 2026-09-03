@@ -144,6 +144,12 @@
         ]
       },
       {
+        "name": "@beep/ciops",
+        "patterns": [
+          "apps/labs/ciops/src/**"
+        ]
+      },
+      {
         "name": "@beep/codegen-kit",
         "patterns": [
           "packages/tooling/library/codegen-kit/src/**"
@@ -1306,6 +1312,21 @@
           "@beep/schema",
           "@beep/test-utils",
           "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/ciops",
+        "allow": [
+          "@beep/ciops",
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/test-utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/ciops",
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/test-utils"
         ]
       },
       {
@@ -3287,15 +3308,20 @@
         "allow": [
           "@beep/anthropic",
           "@beep/doc-text",
+          "@beep/duckdb",
           "@beep/epistemic-domain",
           "@beep/file-processing",
           "@beep/identity",
           "@beep/langextract",
           "@beep/nlp",
           "@beep/nlp-processing",
+          "@beep/openai",
+          "@beep/oxigraph",
           "@beep/pglite",
           "@beep/provenance",
+          "@beep/rdf",
           "@beep/schema",
+          "@beep/semantic-web",
           "@beep/semantica",
           "@beep/wink",
           "@beep/xai"
@@ -3303,15 +3329,20 @@
         "allowTypeOnly": [
           "@beep/anthropic",
           "@beep/doc-text",
+          "@beep/duckdb",
           "@beep/epistemic-domain",
           "@beep/file-processing",
           "@beep/identity",
           "@beep/langextract",
           "@beep/nlp",
           "@beep/nlp-processing",
+          "@beep/openai",
+          "@beep/oxigraph",
           "@beep/pglite",
           "@beep/provenance",
+          "@beep/rdf",
           "@beep/schema",
+          "@beep/semantic-web",
           "@beep/semantica",
           "@beep/wink",
           "@beep/xai"

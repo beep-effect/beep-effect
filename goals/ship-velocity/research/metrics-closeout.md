@@ -1,45 +1,55 @@
 # Ship velocity metrics closeout
 
-Date: 2026-08-27
+Date: 2026-08-30
 
-This receipt separates implementation proof from the representative post-merge week required by
-the initiative completion gate. Synthetic tests and pre-merge measurements establish that the
-measurement surfaces work; they do not establish that the outcome targets have been met.
+This receipt separates implementation proof from the production outcomes required by the
+initiative completion gate. The original protocol used seven elapsed days as a proxy for a
+representative sample. On 2026-08-30 the operator accepted the observed event volume instead:
+24 merged pull requests in the rolling 24 hours, 16 merges after the original #874 anchor, eight
+pull requests both opened and merged after that anchor, and eight main-push Check runs after the
+parity repair. This ruling removes the calendar wait; it does not waive an outcome condition or
+relabel the sample as a seven-day interval. Operator PR #921 later and separately superseded A4
+by removing the published-PR ownership lease, watcher, takeover, and mutation fence. The receipt
+below preserves the earlier implementation evidence as history; it does not report that removed
+takeover path as a current success.
 
-## Implementation receipts
+## Closeout receipts
 
 | Gate | Current evidence | Closeout state |
 | --- | --- | --- |
-| Attached-session backpressure p95 under 60 seconds | The watch stream polls every 10 seconds; synthetic first-red tests deliver on the observing tick. Hook adapters inject or deny at the next tool boundary. | Instrumented; representative week pending. |
-| Dead-owner takeover under 5 minutes | The installed watcher polls every 30 seconds and the lease stale threshold is 240 seconds, bounding detection at 270 seconds. CAS ownership and zombie fencing are tested. | Bound proven; representative incidents pending. |
-| Zero recurring locally catchable required-check failures | `research/parity-ledger.md` is the versioned divergence ledger. The local proof now plans the same 17 required contexts, including coverage, test-file typecheck, docgen, codegen, Desktop IPC, commitlint range, and base-pinned gitleaks. | Instrumented; post-merge entries pending. |
-| Every sibling checkout reads the remote cache | `research/cache-proof.md` records a successful main-push write/read sequence, a remote-enabled hosted build, restoration probes, and the first-touch dashboard contract. Configuration fails closed when the read quad or 1Password references are unavailable. | Capability proven; representative checkout sampling pending. |
-| Two concurrent verifies under admission without OOM | Weighted leases, adaptive concurrency, visible queue progress, starttime fencing, and RSS receipts are implemented and unit-tested. | Live dual-verify trial required before final closeout. |
-| Hot-file conflicts no longer force PR rework | `goals/INDEX.md` and `explorations/ATLAS.md` are ignored local projections; publication refuses staged copies. Atlas now renders wholesale from normalized D3 state, regenerates marked README Stage/Status regions, and fails on underivable streams, README drift, or any extra local Atlas content. Focused tests cover manifest adoption, loop-back stream derivation, and invalid-stream refusal. Derived auto-heal is allowlisted and contention leases serialize only intersecting families. | Projection mechanism proven; representative conflict week pending. |
-| Final PR mergeable | PR #874 reached zero unresolved threads, Greptile `5/5`, and green required contexts before merge. | Merged as `d324544d3a3` at `2026-08-30T02:39:33Z`. |
+| Attached-session backpressure p95 under 60 seconds | The watch stream polls every 10 seconds and synthetic first-red tests deliver on the observing tick. Two live optional Vercel P1 rows reached the inbox on their observing timestamp. No required hosted P0 red occurred in the sample, so no production percentile is fabricated. | Satisfied for the sampled event volume by the executable bound and live delivery receipts. |
+| Dead-owner ownership state | Before #921, the watcher had a 30-second poll, a 240-second stale threshold, and a 270-second detection bound backed by focused takeover tests. PR #921 then intentionally removed the lease, watcher, automatic takeover, and mutation fence while retaining P0 inbox context and the hard Stop/SubagentStop gate. | Superseded by operator cleanup. Current main cannot be stranded behind the removed ownership lease; no automatic under-five-minute takeover is claimed. |
+| Zero recurring locally catchable required-check failures | Eight main-push Check runs followed the #892 parity repair: seven passed and one failed on #869's isolated T7 capacity-preflight fixture mismatch. The PR-head coverage run and the next six main-push Check runs were green; `research/parity-ledger.md` retains the event as nonrecurring. | Satisfied for the sampled event volume; the failure remains recorded. |
+| Every sibling checkout reads the remote cache | The original repair covered 11 roots, but that set was historical by closeout. A fleet scan at `2026-08-31T02:45:59Z` classified 16 roots as live; four overlapped the historical set and nine of the current roots lacked one or more cache fields. The sanctioned helper provisioned only missing fields from an existing reference-only source, after which all 16 had a git-ignored `https`/`op://`/nonblank-team/read-only quad. On 2026-08-31, an output-suppressed `op run --env-file=.env -- true` preflight resolved the references, but the cache canary returned `Remote caching unavailable (Authentication failed)`. Sanitized metadata showed that the AWS read-token parameter changed on 2026-08-12 while the referenced 1Password item was last updated in February. Those timestamps support mirror drift as a leading hypothesis; they do not prove that the secret values differ or that drift caused the failure. No secret value or reference path was printed. | Open: the operator must verify or refresh the existing 1Password mirror, or otherwise repair the cache authentication failure. Then authorize the exact `op run` wrapper, rescan liveness, and produce a fresh authenticated remote-hit observation from every root in that frozen snapshot. The configured reference path resolves and does not need to change unless the repair identifies a separate reference problem. |
+| Two concurrent verifies under admission without OOM | Two independent same-origin full proofs overlapped for 48 minutes 49.201 seconds under `scheduler-origin-concurrency/v1`. Both terminal verdicts passed every lane at exit 0; their pre-push peaks were 17,966,264 and 18,001,708 KiB. Capacity contracted during pressure and recovered without hard-floor, dead-lease, quarantine, or OOM state. | Satisfied by terminal live receipts. |
+| Hot-file conflicts no longer force PR rework | Across the 17 merged pull requests from #874 through the snapshot, only #874 touched `goals/INDEX.md` or `explorations/ATLAS.md`; the next 16 touched neither, and no sampled publish failure named a projection or contention-family path. | Satisfied for the sampled event volume. |
+| Final PR mergeable | PR #929 reached Yeet `merge-ready: yes` and merged as `e76c4db079e62155b1c03e8b77a8b210cac6e1d2`, completing the implementation repair. PR #937 later finished its required checks at green with Greptile `5/5` and merged as `c57f63ac76cd3f25fbc700bad3032d6ce6a06d94`. It still lacked the cache outcome, status flip, and reflection. Two actionable Codex threads posted after the merge confirmed the premature final-PR assignment and corrected the goals-doctor staleness receipt. | Open: a successor final-evidence PR must contain the remaining evidence, status flip, and reflection, then reach Yeet `merge-ready: yes`. |
 
-## Representative-week protocol
+## Evidence-volume protocol
 
-The observation window starts only after this implementation PR lands on `main`. For seven
-consecutive days:
+The authoritative production receipt is
+`research/metrics-observation-2026-08-30.md`. It preserves the failed first candidate interval,
+the parity repair, the event-volume ruling, and every later refresh. The closeout uses these
+rules:
 
-1. collect watch-event-to-inbox and takeover timestamps without user or secret payloads;
-2. classify every required-check red against the parity ledger and count recurring locally
-   catchable causes;
-3. sample the cache dashboard across active sibling checkouts, excluding forced and disabled
-   runs from the locked first-touch denominator;
-4. retain admission and peak-RSS receipts for overlapping full verifies and record any OOM;
-5. count publish retries whose cause is INDEX, ATLAS, or another declared contention family.
-
-The first candidate interval and its Day 1 findings are recorded in
-`research/metrics-observation-2026-08-30.md`. A recurring required-check parity defect means that
-interval cannot satisfy the completion gate; the packet remains active while the repair and a
-fresh full interval are pending.
+1. collect watch-event-to-inbox and Stop-gate receipts without user or secret payloads, while
+   retaining the superseded takeover evidence as historical data only;
+2. classify every required-check red against the parity ledger instead of counting green totals
+   alone;
+3. distinguish cache reference coverage, authenticated resolution, and observed remote hits;
+4. retain admission, overlap, terminal outcome, and peak-RSS receipts for both independent full
+   proofs;
+5. count publish retries only when INDEX, ATLAS, or another declared contention family caused
+   the retry;
+6. drive the final closeout pull request to Yeet `merge-ready: yes`, including required hosted
+   checks, Greptile, and zero unresolved review threads.
 
 For the Atlas family, a retry counts only when the source change is a tracked
-manifest/event/README-prose edit. The ignored `explorations/ATLAS.md` itself is
-never a GitHub artifact or authoritative conflict target.
+manifest/event/README-prose edit. The ignored `explorations/ATLAS.md` itself is never a GitHub
+artifact or authoritative conflict target.
 
-Only after the full window satisfies every manifest condition should P5, the lifecycle, and the
-initiative status flip to `complete`, with the final observation receipt and closeout reflection
-in the same PR.
+PR #929 satisfied the implementation-repair merge gate. PR #937 merged without the cache outcome,
+status flip, or reflection and therefore did not satisfy the final closeout PR gate. P5, lifecycle,
+and initiative status remain active until the operator repairs cache authentication and the
+authenticated remote-read sample is complete. The evidence, status flip, closeout reflection, and
+terminal Yeet `merge-ready: yes` receipt must all land in the successor final-evidence PR.

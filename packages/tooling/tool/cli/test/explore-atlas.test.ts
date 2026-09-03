@@ -10,7 +10,7 @@ import {
   packetEventFileName,
   renderPacketEventFile,
 } from "@beep/repo-cli/test/Goals";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { NodeServices } from "@effect/platform-node";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
@@ -18,7 +18,7 @@ import * as O from "effect/Option";
 import { describe, expect, it } from "vitest";
 import { permutedDirectoryReadsFileSystem } from "./support/CommandTest.ts";
 
-const encodeJson = Unknown.encodeUnknownSyncFromJsonString;
+const encodeJson = UnknownFromJsonString.encodeUnknownSync;
 const testLayer = Layer.mergeAll(NodeServices.layer, PacketEventStoreLive.pipe(Layer.provideMerge(NodeServices.layer)));
 const PROJECTION_REPEAT_RUNS = 20;
 

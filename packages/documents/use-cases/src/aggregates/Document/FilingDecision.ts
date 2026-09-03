@@ -120,7 +120,7 @@ export class FilingDecisionInput extends S.Class<FilingDecisionInput>($I`FilingD
  * import { Effect } from "effect"
  *
  * const service: FilingDecisionShape = {
- *   decide: () => Effect.succeed(FilingOutcome.fromUnknown({
+ *   decide: () => Effect.succeed(FilingOutcome.decodeUnknownSync({
  *     kind: "filed",
  *     confidence: 1,
  *     rationale: "Matched deterministic taxonomy token for pleadings.",

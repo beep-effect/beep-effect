@@ -28,7 +28,7 @@ const $I = $DrizzleId.create("Drizzle.service");
  * import { deepStrictEqual } from "node:assert"
  * import { DrizzleRows } from "@beep/drizzle"
  *
- * const rows = DrizzleRows.fromUnknown([{ id: 1 }])
+ * const rows = DrizzleRows.decodeUnknownSync([{ id: 1 }])
  * deepStrictEqual(rows, [{ id: 1 }])
  * ```
  *
@@ -39,7 +39,7 @@ export const DrizzleRows = S.Array(S.Unknown).pipe(
   $I.annoteSchema("DrizzleRows", {
     description: "Rows returned by a product-neutral Drizzle adapter.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
 );
 
 /**

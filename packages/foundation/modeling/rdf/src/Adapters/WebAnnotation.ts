@@ -20,7 +20,7 @@ import {
   TextQuoteSelector,
 } from "../Evidence.ts";
 import { IRIReference } from "../Iri.ts";
-import { makeSemanticSchemaMetadata } from "../SemanticSchemaMetadata.ts";
+import { makeSemanticSchemaMetadata } from "../SemanticSchemaMetadata/index.ts";
 
 const $I = $RdfId.create("adapters/web-annotation");
 
@@ -357,7 +357,7 @@ export const WebAnnotationSelectorFromEvidenceSelector = S.toEncoded(EvidenceSel
       "Codec between package-owned evidence selectors and Web Annotation selector DTOs."
     ),
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
 );
 
 /**
@@ -492,7 +492,7 @@ export const WebAnnotationTargetFromEvidenceTarget = S.toEncoded(EvidenceTarget)
       "Codec between evidence targets and Web Annotation target DTOs."
     ),
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
 );
 
 /**
@@ -578,7 +578,7 @@ export const WebAnnotationFromEvidenceAnchor = S.toEncoded(EvidenceAnchor).pipe(
       "Codec between evidence anchors and Web Annotation DTOs."
     ),
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
 );
 
 /**

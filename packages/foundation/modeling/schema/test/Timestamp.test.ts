@@ -9,7 +9,7 @@ describe("Timestamp", () => {
   });
 
   it("accepts zero epoch milliseconds and rejects negative values", () => {
-    expect(EpochMillis.fromUnknown(0)).toBe(0);
-    expect(() => EpochMillis.fromUnknown(-1)).toThrow();
+    expect(EpochMillis.decodeUnknownSync(0)).toBe(0);
+    expect(() => EpochMillis.decodeUnknownSync(-1)).toThrow();
   });
 });

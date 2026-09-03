@@ -7,7 +7,7 @@ import {
   renderPacketDocuments,
   scanSensitiveText,
 } from "@beep/repo-cli/test/Codex";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, Str } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
@@ -15,7 +15,7 @@ import * as S from "effect/Schema";
 import type { PacketDocument } from "@beep/repo-cli/test/Codex";
 
 // The repo forbids bare JSON.* ; decode through the schema codec instead.
-const parseJson = Unknown.decodeUnknownSyncFromJsonString;
+const parseJson = UnknownFromJsonString.decodeUnknownSync;
 
 const SEVERITIES = ["Medium", "Low", "Informational"] as const;
 

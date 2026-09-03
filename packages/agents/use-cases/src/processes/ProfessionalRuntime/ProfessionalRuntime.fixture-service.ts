@@ -6,7 +6,7 @@
  */
 
 import { SchemaUtils } from "@beep/schema";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { PromotionGateRequest, PromotionGateVerdict, PromotionTenantRef } from "@beep/shared-use-cases/PromotionGate";
 import { A } from "@beep/utils";
 import { Effect, flow, HashMap, HashSet } from "effect";
@@ -48,7 +48,7 @@ const sameOrderedStrings = (left: ReadonlyArray<string>, right: ReadonlyArray<st
   left.length === right.length && A.every(left, (value, index) => value === right[index]);
 
 // TODO(effect-native-migration): model schema
-const toPlainJson = (value: unknown): string => Unknown.encodeUnknownSyncFromJsonString(value);
+const toPlainJson = (value: unknown): string => UnknownFromJsonString.encodeUnknownSync(value);
 
 const spanIdsFromEvidence = (evidence: RuntimeEvidenceRef): ReadonlyArray<string> => [
   ...O.toArray(evidence.spanId),

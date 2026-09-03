@@ -11,6 +11,7 @@
  */
 import { $HtmlId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
+import * as Conformance from "@beep/schema/Conformance";
 import { A, Struct } from "@beep/utils";
 import { Effect, flow, pipe, Result } from "effect";
 import * as O from "effect/Option";
@@ -21,6 +22,7 @@ import { AriaAttributes, StandardGlobalAttributes, tokenizeHtmlSpaceSeparated } 
 import { conformantRoot } from "./Html.conformance.ts";
 import { toAsciiLowerCase } from "./Html.foreign.ts";
 import { HtmlRoot } from "./Html.model.ts";
+import { HtmlSafePolicyConformanceAnnotation } from "./internal/conformance/Html.policy-conformance-registry.ts";
 import { readonlyStruct } from "./internal/Html.readonly.ts";
 import type { ConformantHtml } from "./Html.conformance.ts";
 
@@ -497,6 +499,7 @@ const issueSafeHtmlAst = (conformant: ConformantHtml): SafeHtmlAstValue => {
  * @since 0.0.0
  */
 export const SafeHtmlAst = S.declare(SafeHtmlAstValue.is).pipe(
+  Conformance.annotateConformance(HtmlSafePolicyConformanceAnnotation),
   SchemaUtils.withStatics(() => ({ is: SafeHtmlAstValue.is })),
   $I.annoteSchema("SafeHtmlAst", {
     description: "Runtime-issued proof of conservative HTML output safety.",

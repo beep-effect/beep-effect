@@ -78,7 +78,7 @@ import {
   writeArtifactBudget,
   writeRecordStartHint,
 } from "@beep/repo-cli/commands/Qa";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { provideScopedLayer } from "@beep/test-utils";
 import { thunk } from "@beep/utils";
 import { NodeChildProcessSpawner } from "@effect/platform-node";
@@ -112,7 +112,7 @@ const layoutFor = (root: string): RoundLayout =>
     videoDir: `${root}/video`,
   });
 
-const encodeJson = Unknown.encodeUnknownEffectFromJsonString;
+const encodeJson = UnknownFromJsonString.encodeUnknownEffect;
 
 const clock = ClockSync.make({ confidence: "high", method: "beacon", offsetMs: 0, residualRmsMs: 4, slope: 1 });
 

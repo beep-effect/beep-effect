@@ -7,7 +7,7 @@
 
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { Str, thunkEmptyStr } from "@beep/utils";
 import { Effect, FileSystem, Path, Stream } from "effect";
 import { dual } from "effect/Function";
@@ -19,7 +19,7 @@ import type { ChildProcessSpawner } from "effect/unstable/process";
 const require = createRequire(import.meta.url);
 const biomeExecutable = require.resolve("@biomejs/biome/bin/biome");
 const moduleDir = fileURLToPath(new URL(".", import.meta.url));
-const encodeJson = Unknown.encodeUnknownEffectFromJsonString;
+const encodeJson = UnknownFromJsonString.encodeUnknownEffect;
 
 const collectText = <E>(stream: Stream.Stream<Uint8Array, E>) =>
   stream.pipe(

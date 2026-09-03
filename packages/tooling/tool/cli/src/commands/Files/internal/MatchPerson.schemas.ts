@@ -7,14 +7,311 @@
 
 import { FaceDetectionConfidence, FaceDetectionPercentage } from "@beep/face-detection";
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, NonNegNum, SchemaUtils, Sha256Hex } from "@beep/schema";
-import { Effect } from "effect";
+import { PosInt } from "@beep/schema/Int";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import { NonNegativeInt, NonNegNum } from "@beep/schema/Number";
+import * as SchemaUtils from "@beep/schema/SchemaUtils";
+import { Sha256Hex } from "@beep/schema/Sha256";
+import { Effect, SchemaTransformation } from "effect";
+import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import type * as AST from "effect/SchemaAST";
 
 const $I = $RepoCliId.create("commands/Files/internal/MatchPerson.schemas");
+
+/**
+ * Enumerates the face-recognition backends available to the person matcher.
+ *
+ * **Example** (Check a backend)
+ *
+ * ```ts
+ * import { PersonMatchBackend } from "@beep/repo-cli/commands/Files"
+ *
+ * console.log(PersonMatchBackend.is("adaface-kprpe"))
+ * // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const PersonMatchBackend = LiteralKit(["buffalo-l", "adaface-kprpe"]).pipe(
+  $I.annoteSchema("PersonMatchBackend", {
+    description: "A supported face-recognition backend for local person matching.",
+  })
+);
+
+/**
+ * A face-recognition backend available to the person matcher.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PersonMatchBackend = typeof PersonMatchBackend.Type;
+
+/**
+ * Enumerates requested compute policies before runtime device resolution.
+ *
+ * **Example** (Check a compute policy)
+ *
+ * ```ts
+ * import { PersonMatchComputePolicy } from "@beep/repo-cli/commands/Files"
+ *
+ * console.log(PersonMatchComputePolicy.is("auto"))
+ * // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const PersonMatchComputePolicy = LiteralKit(["auto", "cpu", "rocm"]).pipe(
+  $I.annoteSchema("PersonMatchComputePolicy", {
+    description: "The caller's policy for selecting CPU or ROCm person-matching compute.",
+  })
+);
+
+/**
+ * A requested compute policy before runtime device resolution.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PersonMatchComputePolicy = typeof PersonMatchComputePolicy.Type;
+
+/**
+ * Enumerates compute implementations actually selected by the worker.
+ *
+ * **Example** (Check selected compute)
+ *
+ * ```ts
+ * import { PersonMatchActualCompute } from "@beep/repo-cli/commands/Files"
+ *
+ * console.log(PersonMatchActualCompute.is("rocm"))
+ * // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const PersonMatchActualCompute = LiteralKit(["cpu", "rocm"]).pipe(
+  $I.annoteSchema("PersonMatchActualCompute", {
+    description: "The CPU or ROCm compute implementation actually selected by the worker.",
+  })
+);
+
+/**
+ * A compute implementation actually selected by the worker.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PersonMatchActualCompute = typeof PersonMatchActualCompute.Type;
+
+/**
+ * Enumerates numeric precision modes accepted by person-matching backends.
+ *
+ * **Example** (Check runtime precision)
+ *
+ * ```ts
+ * import { PersonMatchPrecision } from "@beep/repo-cli/commands/Files"
+ *
+ * console.log(PersonMatchPrecision.is("fp32"))
+ * // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const PersonMatchPrecision = LiteralKit(["fp32"]).pipe(
+  $I.annoteSchema("PersonMatchPrecision", {
+    description: "The numeric precision used for person-matching inference.",
+  })
+);
+
+/**
+ * A numeric precision used for person-matching inference.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PersonMatchPrecision = typeof PersonMatchPrecision.Type;
+
+/**
+ * Enumerates whether thresholds came from a backend profile or caller overrides.
+ *
+ * **Example** (Check a threshold source)
+ *
+ * ```ts
+ * import { PersonMatchThresholdSource } from "@beep/repo-cli/commands/Files"
+ *
+ * console.log(PersonMatchThresholdSource.is("calibrated-default"))
+ * // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const PersonMatchThresholdSource = LiteralKit(["calibrated-default", "explicit"]).pipe(
+  $I.annoteSchema("PersonMatchThresholdSource", {
+    description: "The origin of the resolved detection, matching, review, and face-area thresholds.",
+  })
+);
+
+/**
+ * The origin of the thresholds resolved for a person-matching run.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PersonMatchThresholdSource = typeof PersonMatchThresholdSource.Type;
+
+/**
+ * Enumerates semantic roles played by immutable model components.
+ *
+ * **Example** (Check a component role)
+ *
+ * ```ts
+ * import { PersonMatchArtifactRole } from "@beep/repo-cli/commands/Files"
+ *
+ * console.log(PersonMatchArtifactRole.is("recognizer"))
+ * // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const PersonMatchArtifactRole = LiteralKit(["detector", "aligner", "recognizer"]).pipe(
+  $I.annoteSchema("PersonMatchArtifactRole", {
+    description: "The detector, aligner, or recognizer role of one model component.",
+  })
+);
+
+/**
+ * A semantic role played by an immutable model component.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PersonMatchArtifactRole = typeof PersonMatchArtifactRole.Type;
+
+/**
+ * Enumerates inference frameworks used by supported recognition backends.
+ *
+ * **Example** (Check a framework)
+ *
+ * ```ts
+ * import { PersonMatchFramework } from "@beep/repo-cli/commands/Files"
+ *
+ * console.log(PersonMatchFramework.is("pytorch"))
+ * // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const PersonMatchFramework = LiteralKit(["onnxruntime", "pytorch"]).pipe(
+  $I.annoteSchema("PersonMatchFramework", {
+    description: "The inference framework used by a person-matching runtime.",
+  })
+);
+
+/**
+ * An inference framework used by a supported recognition backend.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PersonMatchFramework = typeof PersonMatchFramework.Type;
+
+/**
+ * Enumerates the pinned PyTorch wheel families available to AdaFace.
+ *
+ * **Example** (Check a runtime distribution)
+ *
+ * ```ts
+ * import { PersonMatchPyTorchDistribution } from "@beep/repo-cli/commands/Files"
+ *
+ * console.log(PersonMatchPyTorchDistribution.is("cpu"))
+ * // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const PersonMatchPyTorchDistribution = LiteralKit(["rocm72", "cpu"]).pipe(
+  $I.annoteSchema("PersonMatchPyTorchDistribution", {
+    description: "The exact ROCm or CPU PyTorch wheel family selected for AdaFace inference.",
+  })
+);
+
+/**
+ * A pinned PyTorch wheel family available to AdaFace.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PersonMatchPyTorchDistribution = typeof PersonMatchPyTorchDistribution.Type;
+
+/**
+ * Enumerates non-fatal runtime warnings emitted during compute selection.
+ *
+ * **Example** (Check a runtime warning code)
+ *
+ * ```ts
+ * import { PersonMatchRuntimeWarningCode } from "@beep/repo-cli/commands/Files"
+ *
+ * console.log(PersonMatchRuntimeWarningCode.is("rocm-fallback-to-cpu"))
+ * // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const PersonMatchRuntimeWarningCode = LiteralKit(["rocm-fallback-to-cpu"]).pipe(
+  $I.annoteSchema("PersonMatchRuntimeWarningCode", {
+    description: "A stable non-fatal warning emitted while resolving person-matching compute.",
+  })
+);
+
+/**
+ * A non-fatal warning code emitted during compute selection.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PersonMatchRuntimeWarningCode = typeof PersonMatchRuntimeWarningCode.Type;
+
+/**
+ * Describes a non-fatal runtime fallback without hiding the selected compute.
+ *
+ * **Example** (Create a fallback warning)
+ *
+ * ```ts
+ * import { PersonMatchRuntimeWarning } from "@beep/repo-cli/commands/Files"
+ *
+ * const warning = PersonMatchRuntimeWarning.make({
+ *   code: "rocm-fallback-to-cpu",
+ *   message: "ROCm was unavailable, so auto compute selected CPU.",
+ * })
+ *
+ * console.log(warning.code)
+ * // "rocm-fallback-to-cpu"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class PersonMatchRuntimeWarning extends S.Class<PersonMatchRuntimeWarning>($I`PersonMatchRuntimeWarning`)(
+  {
+    code: PersonMatchRuntimeWarningCode,
+    message: S.NonEmptyString,
+  },
+  $I.annote("PersonMatchRuntimeWarning", {
+    description: "A stable code and explanation for a non-fatal person-matching runtime fallback.",
+  })
+) {}
 
 const PersonMatchSimilarityScore = S.Finite.check(
   S.makeFilterGroup(
@@ -132,6 +429,7 @@ export type PersonMatchQualityFlag = typeof PersonMatchQualityFlag.Type;
  * @since 0.0.0
  */
 export const PersonMatchReferenceRejectionReason = LiteralKit([
+  "aligner-confidence-failed",
   "unreadable-image",
   "no-face",
   "multiple-faces",
@@ -166,7 +464,7 @@ export type PersonMatchReferenceRejectionReason = typeof PersonMatchReferenceRej
  * @category schemas
  * @since 0.0.0
  */
-export const PersonMatchEntryReason = LiteralKit(["image-decode-failed"]).pipe(
+export const PersonMatchEntryReason = LiteralKit(["aligner-confidence-failed", "image-decode-failed"]).pipe(
   $I.annoteSchema("PersonMatchEntryReason", {
     description: "A machine-readable diagnostic reason attached to a candidate-image entry.",
   })
@@ -204,8 +502,15 @@ export const PersonMatchWorkerErrorCode = LiteralKit([
   "model-acquisition-failed",
   "model-license-not-accepted",
   "model-module-missing",
+  "model-state-mismatch",
   "unexpected-model-artifact",
   "unexpected-execution-provider",
+  "unsupported-platform",
+  "pytorch-runtime-load-failed",
+  "runtime-dependency-missing",
+  "rocm-unavailable",
+  "device-probe-failed",
+  "aligner-confidence-failed",
   "missing-embedding",
   "missing-landmarks",
   "no-reference-images",
@@ -255,6 +560,132 @@ export const PersonMatchModelArtifactName = LiteralKit(["det_10g.onnx", "w600k_r
 export type PersonMatchModelArtifactName = typeof PersonMatchModelArtifactName.Type;
 
 /**
+ * Captures a backend's resolved detection, identity, review, and face-area thresholds.
+ *
+ * **Example** (Create a threshold profile)
+ *
+ * ```ts
+ * import { PersonMatchThresholdProfile } from "@beep/repo-cli/commands/Files"
+ *
+ * const profile = PersonMatchThresholdProfile.make({
+ *   detectionThreshold: 0.6,
+ *   matchThreshold: 0.5,
+ *   reviewThreshold: 0.35,
+ *   minFaceAreaPct: 1,
+ * })
+ *
+ * console.log(profile.matchThreshold)
+ * // 0.5
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class PersonMatchThresholdProfile extends S.Class<PersonMatchThresholdProfile>($I`PersonMatchThresholdProfile`)(
+  {
+    detectionThreshold: FaceDetectionConfidence,
+    matchThreshold: FaceDetectionConfidence,
+    reviewThreshold: FaceDetectionConfidence,
+    minFaceAreaPct: FaceDetectionPercentage,
+  },
+  $I.annote("PersonMatchThresholdProfile", {
+    description: "Resolved detection, identity, review, and face-area thresholds for one backend profile.",
+  })
+) {}
+
+/**
+ * Validates duplicate-free non-negative GPU device indexes selected by a runtime.
+ *
+ * **Example** (Reject duplicate indexes)
+ *
+ * ```ts
+ * import { PersonMatchDeviceIndexes } from "@beep/repo-cli/commands/Files"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(O.isNone(S.decodeUnknownOption(PersonMatchDeviceIndexes)([0, 0])))
+ * // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const PersonMatchDeviceIndexes = S.UniqueArray(NonNegativeInt).pipe(
+  $I.annoteSchema("PersonMatchDeviceIndexes", {
+    description:
+      "Duplicate-free GPU indexes selected by a runtime; current person-match backends emit zero or one index.",
+  })
+);
+
+/**
+ * Duplicate-free GPU indexes selected by a runtime.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PersonMatchDeviceIndexes = typeof PersonMatchDeviceIndexes.Type;
+
+const PersonMatchDeviceIndexFromString = S.NonEmptyString.pipe(
+  S.decodeTo(S.Finite, SchemaTransformation.numberFromString),
+  S.decodeTo(NonNegativeInt),
+  $I.annoteSchema("PersonMatchDeviceIndexFromString", {
+    description: "A non-empty decimal string decoded into a non-negative integer device index.",
+  })
+);
+
+const PersonMatchRequestedDeviceIndexes = S.Tuple([NonNegativeInt]).pipe(
+  $I.annoteSchema("PersonMatchRequestedDeviceIndexes", {
+    description: "Exactly one explicitly requested ROCm device index.",
+  })
+);
+
+const PersonMatchDeviceIndexList = S.Tuple([PersonMatchDeviceIndexFromString]).pipe(
+  $I.annoteSchema("PersonMatchDeviceIndexList", {
+    description: "Exactly one ROCm device index decoded from its decimal string.",
+  })
+);
+
+/**
+ * Decodes a CLI value into exactly one requested ROCm device index.
+ *
+ * **Example** (Decode one device index)
+ *
+ * ```ts
+ * import { PersonMatchDeviceIndexesFromCsv } from "@beep/repo-cli/commands/Files"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ *
+ * const decoded = S.decodeUnknownOption(PersonMatchDeviceIndexesFromCsv)("0")
+ *
+ * console.log(O.getOrNull(decoded))
+ * // [0]
+ * ```
+ *
+ * @category decoding
+ * @since 0.0.0
+ */
+export const PersonMatchDeviceIndexesFromCsv = S.NonEmptyString.pipe(
+  S.decodeTo(
+    PersonMatchDeviceIndexList,
+    SchemaTransformation.transform<readonly [string], string>({
+      decode: (value) => [Str.trim(value)],
+      encode: A.headNonEmpty,
+    })
+  ),
+  $I.annoteSchema("PersonMatchDeviceIndexesFromCsv", {
+    description: "A CLI value decoded into exactly one explicitly requested ROCm device index.",
+  })
+);
+
+/**
+ * A singleton ROCm device-index tuple decoded from a CLI value.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PersonMatchDeviceIndexesFromCsv = typeof PersonMatchDeviceIndexesFromCsv.Type;
+
+/**
  * Command inputs for a local person-matching run.
  *
  * **Example** (Create command options)
@@ -266,18 +697,19 @@ export type PersonMatchModelArtifactName = typeof PersonMatchModelArtifactName.T
  *   dir: "/photos",
  *   references: "/references",
  *   manifest: "/reports/person-match.json",
+ *   backend: "adaface-kprpe",
  *   recursive: true,
- *   detectionThreshold: 0.5,
- *   matchThreshold: 0.45,
+ *   detectionThreshold: 0.6,
+ *   matchThreshold: 0.5,
  *   reviewThreshold: 0.35,
- *   minFaceAreaPct: 2,
+ *   minFaceAreaPct: 1,
  *   acceptModelLicense: true,
  *   json: false,
  *   overwrite: false,
  * })
  *
- * console.log(options.outDir._tag)
- * // "None"
+ * console.log([options.backend, options.compute, options.batchSize])
+ * // ["adaface-kprpe", "auto", 32]
  * ```
  *
  * @category models
@@ -290,14 +722,21 @@ export class MatchPersonOptions extends S.Class<MatchPersonOptions>($I`MatchPers
     manifest: S.NonEmptyString,
     outDir: S.Option(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeed(O.none<string>()))),
     cacheDir: S.Option(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeed(O.none<string>()))),
-    recursive: S.Boolean,
+    backend: PersonMatchBackend,
+    compute: PersonMatchComputePolicy.pipe(S.withConstructorDefault(Effect.succeed("auto"))),
+    devices: S.Option(PersonMatchRequestedDeviceIndexes).pipe(
+      S.withConstructorDefault(Effect.succeed(O.none<typeof PersonMatchRequestedDeviceIndexes.Type>()))
+    ),
+    batchSize: PosInt.pipe(S.withConstructorDefault(Effect.succeed(PosInt.make(32)))),
+    thresholdSource: PersonMatchThresholdSource.pipe(S.withConstructorDefault(Effect.succeed("calibrated-default"))),
+    recursive: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
     detectionThreshold: FaceDetectionConfidence,
     matchThreshold: FaceDetectionConfidence,
     reviewThreshold: FaceDetectionConfidence,
     minFaceAreaPct: FaceDetectionPercentage,
-    acceptModelLicense: S.Boolean,
-    json: S.Boolean,
-    overwrite: S.Boolean,
+    acceptModelLicense: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
+    json: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
+    overwrite: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
   },
   $I.annote("MatchPersonOptions", {
     description: "Validated command inputs for a local person-matching run.",
@@ -317,6 +756,7 @@ export class MatchPersonOptions extends S.Class<MatchPersonOptions>($I`MatchPers
  * const artifact = S.decodeUnknownOption(PersonMatchModelArtifact)({
  *   name: "det_10g.onnx",
  *   path: "/cache/models/det_10g.onnx",
+ *   sizeBytes: 1024,
  *   sha256: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
  * })
  *
@@ -329,8 +769,9 @@ export class MatchPersonOptions extends S.Class<MatchPersonOptions>($I`MatchPers
  */
 export class PersonMatchModelArtifact extends S.Class<PersonMatchModelArtifact>($I`PersonMatchModelArtifact`)(
   {
-    name: PersonMatchModelArtifactName,
+    name: S.NonEmptyString,
     path: S.NonEmptyString,
+    sizeBytes: NonNegativeInt,
     sha256: Sha256Hex,
   },
   $I.annote("PersonMatchModelArtifact", {
@@ -339,44 +780,291 @@ export class PersonMatchModelArtifact extends S.Class<PersonMatchModelArtifact>(
 ) {}
 
 /**
- * Records the exact local model installation and runtime allowlist used for matching.
+ * Groups immutable model artifacts by their detector, aligner, or recognizer role.
  *
- * **Example** (Validate model provenance)
+ * **Example** (Create a recognizer component)
  *
  * ```ts
- * import { PersonMatchModel } from "@beep/repo-cli/commands/Files"
- * import * as O from "effect/Option"
- * import * as S from "effect/Schema"
+ * import { PersonMatchModelComponent } from "@beep/repo-cli/commands/Files"
  *
- * const model = S.decodeUnknownOption(PersonMatchModel)({
- *   name: "buffalo_l",
- *   packageVersion: "1.0.1",
- *   providers: ["CPUExecutionProvider"],
- *   allowedModules: ["detection", "recognition"],
- *   root: "/cache/insightface",
+ * const component = PersonMatchModelComponent.make({
+ *   role: "recognizer",
+ *   name: "AdaFace ViT-Base KP-RPE WebFace12M",
+ *   revision: "308142aa50adf2e187711354f7524635d3414f1e",
+ *   source: "https://huggingface.co/minchul/cvlface_adaface_vit_base_kprpe_webface12m",
+ *   licenseNotice: "Use is subject to the checkpoint training-data terms.",
  *   artifacts: [],
  * })
  *
- * console.log(O.isSome(model))
+ * console.log(component.role)
+ * // "recognizer"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class PersonMatchModelComponent extends S.Class<PersonMatchModelComponent>($I`PersonMatchModelComponent`)(
+  {
+    role: PersonMatchArtifactRole,
+    name: S.NonEmptyString,
+    revision: S.NonEmptyString,
+    source: S.NonEmptyString,
+    licenseNotice: S.NonEmptyString,
+    artifacts: S.Array(PersonMatchModelArtifact),
+  },
+  $I.annote("PersonMatchModelComponent", {
+    description: "A model component and its immutable, checksummed artifacts grouped by semantic role.",
+  })
+) {}
+
+/**
+ * Describes one runtime device that actually participated in inference.
+ *
+ * **Example** (Create a ROCm device record)
+ *
+ * ```ts
+ * import { PersonMatchRuntimeDevice } from "@beep/repo-cli/commands/Files"
+ *
+ * const device = PersonMatchRuntimeDevice.make({ index: 0, name: "AMD Radeon AI PRO R9700", architecture: "gfx1201" })
+ *
+ * console.log(device.index)
+ * // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class PersonMatchRuntimeDevice extends S.Class<PersonMatchRuntimeDevice>($I`PersonMatchRuntimeDevice`)(
+  {
+    index: NonNegativeInt,
+    name: S.NonEmptyString,
+    architecture: S.NonEmptyString,
+  },
+  $I.annote("PersonMatchRuntimeDevice", {
+    description: "A runtime device index, display name, and hardware architecture used for inference.",
+  })
+) {}
+
+/**
+ * Records the exact CPU ONNX Runtime used by the pinned Buffalo backend.
+ *
+ * **Example** (Create Buffalo runtime provenance)
+ *
+ * ```ts
+ * import { PersonMatchOnnxRuntime } from "@beep/repo-cli/commands/Files"
+ *
+ * const runtime = PersonMatchOnnxRuntime.make({
+ *   packageVersion: "1.23.2",
+ *   actualCompute: "cpu",
+ *   precision: "fp32",
+ *   providers: ["CPUExecutionProvider"],
+ *   devices: [],
+ *   warnings: [],
+ * })
+ *
+ * console.log(runtime.framework)
+ * // "onnxruntime"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class PersonMatchOnnxRuntime extends S.Class<PersonMatchOnnxRuntime>($I`PersonMatchOnnxRuntime`)(
+  {
+    framework: S.tag("onnxruntime"),
+    packageVersion: S.Literal("1.23.2"),
+    actualCompute: S.Literal("cpu"),
+    precision: PersonMatchPrecision,
+    providers: S.Tuple([S.Literal("CPUExecutionProvider")]),
+    devices: S.Tuple([]),
+    warnings: S.Array(PersonMatchRuntimeWarning),
+  },
+  $I.annote("PersonMatchOnnxRuntime", {
+    description: "Pinned CPU ONNX Runtime provenance for the InsightFace Buffalo backend.",
+  })
+) {}
+
+/**
+ * Records the PyTorch runtime and concrete device used by the AdaFace backend.
+ *
+ * **Details**
+ *
+ * The pinned ROCm wheel distribution is `2.9.1+rocm7.2.0.lw.git7e1940d4`,
+ * while `torch.__version__` reports `2.9.1+rocm7.2.0.git7e1940d4`. The CPU
+ * fallback reports `2.9.1+cpu`. Runtime provenance records the selected wheel
+ * family and reported version exactly.
+ *
+ * **Example** (Create CPU PyTorch runtime provenance)
+ *
+ * ```ts
+ * import { PersonMatchPyTorchRuntime } from "@beep/repo-cli/commands/Files"
+ *
+ * const runtime = PersonMatchPyTorchRuntime.make({
+ *   distribution: "cpu",
+ *   packageVersion: "2.9.1+cpu",
+ *   actualCompute: "cpu",
+ *   precision: "fp32",
+ *   devices: [],
+ *   warnings: [],
+ * })
+ *
+ * console.log(runtime.framework)
+ * // "pytorch"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class PersonMatchPyTorchRuntime extends S.Class<PersonMatchPyTorchRuntime>($I`PersonMatchPyTorchRuntime`)(
+  {
+    framework: S.tag("pytorch"),
+    distribution: PersonMatchPyTorchDistribution,
+    packageVersion: S.NonEmptyString,
+    hipVersion: S.OptionFromOptionalKey(S.NonEmptyString),
+    actualCompute: PersonMatchActualCompute,
+    precision: PersonMatchPrecision,
+    devices: S.Array(PersonMatchRuntimeDevice),
+    warnings: S.Array(PersonMatchRuntimeWarning),
+  },
+  $I.annote("PersonMatchPyTorchRuntime", {
+    description: "PyTorch version, compute selection, precision, devices, and fallbacks used for AdaFace inference.",
+  })
+) {}
+
+/**
+ * Records pinned model and runtime provenance for the InsightFace Buffalo backend.
+ *
+ * **Example** (Decode Buffalo provenance)
+ *
+ * ```ts
+ * import { PersonMatchBuffaloModel } from "@beep/repo-cli/commands/Files"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ *
+ * const decoded = S.decodeUnknownOption(PersonMatchBuffaloModel)({
+ *   backend: "buffalo-l",
+ *   name: "buffalo_l",
+ *   packageName: "insightface",
+ *   packageVersion: "1.0.1",
+ *   runtime: {
+ *     framework: "onnxruntime",
+ *     packageVersion: "1.23.2",
+ *     actualCompute: "cpu",
+ *     precision: "fp32",
+ *     providers: ["CPUExecutionProvider"],
+ *     devices: [],
+ *     warnings: [],
+ *   },
+ *   root: "/cache/insightface",
+ *   allowedModules: ["detection", "recognition"],
+ *   components: [],
+ * })
+ *
+ * console.log(O.isSome(decoded))
  * // true
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export class PersonMatchModel extends S.Class<PersonMatchModel>($I`PersonMatchModel`)(
+export class PersonMatchBuffaloModel extends S.Class<PersonMatchBuffaloModel>($I`PersonMatchBuffaloModel`)(
   {
+    backend: S.tag("buffalo-l"),
     name: S.Literal("buffalo_l"),
+    packageName: S.Literal("insightface"),
     packageVersion: S.Literal("1.0.1"),
-    providers: S.Tuple([S.Literal("CPUExecutionProvider")]),
-    allowedModules: S.Tuple([S.Literal("detection"), S.Literal("recognition")]),
+    runtime: PersonMatchOnnxRuntime,
     root: S.NonEmptyString,
-    artifacts: S.Array(PersonMatchModelArtifact),
+    allowedModules: S.Tuple([S.Literal("detection"), S.Literal("recognition")]),
+    components: S.Array(PersonMatchModelComponent),
   },
-  $I.annote("PersonMatchModel", {
-    description: "Provenance for the model installation and runtime used by a person-matching run.",
+  $I.annote("PersonMatchBuffaloModel", {
+    description: "Pinned InsightFace Buffalo model, component, installation, and ONNX Runtime provenance.",
   })
 ) {}
+
+/**
+ * Records pinned model and runtime provenance for AdaFace ViT-Base KP-RPE.
+ *
+ * **Example** (Decode AdaFace provenance)
+ *
+ * ```ts
+ * import { PersonMatchAdaFaceModel } from "@beep/repo-cli/commands/Files"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ *
+ * const decoded = S.decodeUnknownOption(PersonMatchAdaFaceModel)({
+ *   backend: "adaface-kprpe",
+ *   name: "cvlface_adaface_vit_base_kprpe_webface12m",
+ *   codeRevision: "308142aa50adf2e187711354f7524635d3414f1e",
+ *   runtime: {
+ *     framework: "pytorch",
+ *     distribution: "cpu",
+ *     packageVersion: "2.9.1+cpu",
+ *     actualCompute: "cpu",
+ *     precision: "fp32",
+ *     devices: [],
+ *     warnings: [],
+ *   },
+ *   root: "/cache/adaface-kprpe",
+ *   components: [],
+ * })
+ *
+ * console.log(O.isSome(decoded))
+ * // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class PersonMatchAdaFaceModel extends S.Class<PersonMatchAdaFaceModel>($I`PersonMatchAdaFaceModel`)(
+  {
+    backend: S.tag("adaface-kprpe"),
+    name: S.Literal("cvlface_adaface_vit_base_kprpe_webface12m"),
+    codeRevision: S.Literal("308142aa50adf2e187711354f7524635d3414f1e"),
+    runtime: PersonMatchPyTorchRuntime,
+    root: S.NonEmptyString,
+    components: S.Array(PersonMatchModelComponent),
+  },
+  $I.annote("PersonMatchAdaFaceModel", {
+    description: "Pinned CVLFace AdaFace ViT-Base KP-RPE model, component, and PyTorch runtime provenance.",
+  })
+) {}
+
+/**
+ * Accepts backend-discriminated provenance for either supported recognition model.
+ *
+ * **Example** (Create an exhaustive backend matcher)
+ *
+ * ```ts
+ * import { PersonMatchModel } from "@beep/repo-cli/commands/Files"
+ *
+ * const backendLabel = PersonMatchModel.match({
+ *   "buffalo-l": () => "InsightFace Buffalo",
+ *   "adaface-kprpe": () => "AdaFace ViT-Base KP-RPE",
+ * })
+ *
+ * console.log(typeof backendLabel)
+ * // "function"
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const PersonMatchModel = S.Union([PersonMatchBuffaloModel, PersonMatchAdaFaceModel]).pipe(
+  S.toTaggedUnion("backend"),
+  $I.annoteSchema("PersonMatchModel", {
+    description: "Backend-discriminated model, component, installation, and runtime provenance.",
+  })
+);
+
+/**
+ * Decoded backend-discriminated provenance for a supported recognition model.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PersonMatchModel = typeof PersonMatchModel.Type;
 
 /**
  * Captures the JSON-safe thresholds and traversal mode supplied to the matching worker.
@@ -389,6 +1077,13 @@ export class PersonMatchModel extends S.Class<PersonMatchModel>($I`PersonMatchMo
  * import * as S from "effect/Schema"
  *
  * const parameters = S.decodeUnknownOption(PersonMatchParameters)({
+ *   backend: "adaface-kprpe",
+ *   compute: "auto",
+ *   actualCompute: "rocm",
+ *   devices: [0],
+ *   batchSize: 32,
+ *   precision: "fp32",
+ *   thresholdSource: "calibrated-default",
  *   detectionThreshold: 0.5,
  *   matchThreshold: 0.45,
  *   reviewThreshold: 0.35,
@@ -405,6 +1100,13 @@ export class PersonMatchModel extends S.Class<PersonMatchModel>($I`PersonMatchMo
  */
 export class PersonMatchParameters extends S.Class<PersonMatchParameters>($I`PersonMatchParameters`)(
   {
+    backend: PersonMatchBackend,
+    compute: PersonMatchComputePolicy,
+    actualCompute: PersonMatchActualCompute,
+    devices: PersonMatchDeviceIndexes,
+    batchSize: PosInt,
+    precision: PersonMatchPrecision,
+    thresholdSource: PersonMatchThresholdSource,
     detectionThreshold: FaceDetectionConfidence,
     matchThreshold: FaceDetectionConfidence,
     reviewThreshold: FaceDetectionConfidence,
@@ -412,7 +1114,8 @@ export class PersonMatchParameters extends S.Class<PersonMatchParameters>($I`Per
     recursive: S.Boolean,
   },
   $I.annote("PersonMatchParameters", {
-    description: "JSON-safe thresholds and traversal mode supplied to the person-matching worker.",
+    description:
+      "JSON-safe backend policy, actual selected device ordinals, batching, thresholds, and traversal mode used by the worker.",
   })
 ) {}
 
@@ -670,17 +1373,34 @@ export class PersonMatchWorkerError extends S.Class<PersonMatchWorkerError>($I`P
  * import * as S from "effect/Schema"
  *
  * const report = {
- *   schemaVersion: "beep.files.match-person.worker.v1",
+ *   schemaVersion: "beep.files.match-person.worker.v2",
  *   ok: true,
  *   model: {
+ *     backend: "buffalo-l",
  *     name: "buffalo_l",
+ *     packageName: "insightface",
  *     packageVersion: "1.0.1",
- *     providers: ["CPUExecutionProvider"],
+ *     runtime: {
+ *       framework: "onnxruntime",
+ *       packageVersion: "1.23.2",
+ *       actualCompute: "cpu",
+ *       precision: "fp32",
+ *       providers: ["CPUExecutionProvider"],
+ *       devices: [],
+ *       warnings: [],
+ *     },
  *     allowedModules: ["detection", "recognition"],
  *     root: "/cache/insightface",
- *     artifacts: [],
+ *     components: [],
  *   },
  *   parameters: {
+ *     backend: "buffalo-l",
+ *     compute: "auto",
+ *     actualCompute: "cpu",
+ *     devices: [],
+ *     batchSize: 32,
+ *     precision: "fp32",
+ *     thresholdSource: "calibrated-default",
  *     detectionThreshold: 0.5,
  *     matchThreshold: 0.45,
  *     reviewThreshold: 0.35,
@@ -715,7 +1435,7 @@ export class PersonMatchWorkerError extends S.Class<PersonMatchWorkerError>($I`P
  */
 export class PersonMatchWorkerSuccess extends S.Class<PersonMatchWorkerSuccess>($I`PersonMatchWorkerSuccess`)(
   {
-    schemaVersion: S.Literal("beep.files.match-person.worker.v1"),
+    schemaVersion: S.Literal("beep.files.match-person.worker.v2"),
     ok: S.Literal(true),
     model: PersonMatchModel,
     parameters: PersonMatchParameters,
@@ -740,7 +1460,7 @@ export class PersonMatchWorkerSuccess extends S.Class<PersonMatchWorkerSuccess>(
  * import * as S from "effect/Schema"
  *
  * const failure = S.decodeUnknownOption(PersonMatchWorkerFailure)({
- *   schemaVersion: "beep.files.match-person.worker.v1",
+ *   schemaVersion: "beep.files.match-person.worker.v2",
  *   ok: false,
  *   error: {
  *     code: "model-module-missing",
@@ -758,7 +1478,7 @@ export class PersonMatchWorkerSuccess extends S.Class<PersonMatchWorkerSuccess>(
  */
 export class PersonMatchWorkerFailure extends S.Class<PersonMatchWorkerFailure>($I`PersonMatchWorkerFailure`)(
   {
-    schemaVersion: S.Literal("beep.files.match-person.worker.v1"),
+    schemaVersion: S.Literal("beep.files.match-person.worker.v2"),
     ok: S.Literal(false),
     error: PersonMatchWorkerError,
     elapsedSeconds: NonNegNum,
@@ -779,7 +1499,7 @@ export class PersonMatchWorkerFailure extends S.Class<PersonMatchWorkerFailure>(
  * import * as S from "effect/Schema"
  *
  * const report = S.decodeUnknownOption(PersonMatchWorkerReport)({
- *   schemaVersion: "beep.files.match-person.worker.v1",
+ *   schemaVersion: "beep.files.match-person.worker.v2",
  *   ok: false,
  *   error: { code: "no-reference-images", message: "No reference images were found." },
  *   elapsedSeconds: 0,
@@ -819,17 +1539,34 @@ export type PersonMatchWorkerReport = typeof PersonMatchWorkerReport.Type;
  * import * as S from "effect/Schema"
  *
  * const report = {
- *   schemaVersion: "beep.files.match-person.v1",
+ *   schemaVersion: "beep.files.match-person.v2",
  *   ok: true,
  *   model: {
+ *     backend: "buffalo-l",
  *     name: "buffalo_l",
+ *     packageName: "insightface",
  *     packageVersion: "1.0.1",
- *     providers: ["CPUExecutionProvider"],
+ *     runtime: {
+ *       framework: "onnxruntime",
+ *       packageVersion: "1.23.2",
+ *       actualCompute: "cpu",
+ *       precision: "fp32",
+ *       providers: ["CPUExecutionProvider"],
+ *       devices: [],
+ *       warnings: [],
+ *     },
  *     allowedModules: ["detection", "recognition"],
  *     root: "/cache/insightface",
- *     artifacts: [],
+ *     components: [],
  *   },
  *   parameters: {
+ *     backend: "buffalo-l",
+ *     compute: "auto",
+ *     actualCompute: "cpu",
+ *     devices: [],
+ *     batchSize: 32,
+ *     precision: "fp32",
+ *     thresholdSource: "calibrated-default",
  *     detectionThreshold: 0.5,
  *     matchThreshold: 0.45,
  *     reviewThreshold: 0.35,
@@ -866,7 +1603,7 @@ export type PersonMatchWorkerReport = typeof PersonMatchWorkerReport.Type;
  */
 export class PersonMatchReport extends S.Class<PersonMatchReport>($I`PersonMatchReport`)(
   {
-    schemaVersion: S.Literal("beep.files.match-person.v1"),
+    schemaVersion: S.Literal("beep.files.match-person.v2"),
     ok: S.Literal(true),
     model: PersonMatchModel,
     parameters: PersonMatchParameters,
@@ -893,7 +1630,7 @@ export class PersonMatchReport extends S.Class<PersonMatchReport>($I`PersonMatch
  * import { Effect } from "effect"
  *
  * const decoded = decodePersonMatchWorkerReportJson(
- *   '{"schemaVersion":"beep.files.match-person.worker.v1","ok":false,"error":{"code":"no-reference-images","message":"No reference images were found."},"elapsedSeconds":0}'
+ *   '{"schemaVersion":"beep.files.match-person.worker.v2","ok":false,"error":{"code":"no-reference-images","message":"No reference images were found."},"elapsedSeconds":0}'
  * )
  *
  * console.log(Effect.isEffect(decoded))

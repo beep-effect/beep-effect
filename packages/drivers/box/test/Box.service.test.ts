@@ -224,6 +224,8 @@ const encode = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: C
 const decode = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: Codec["Encoded"]): Codec["Type"] =>
   Result.getOrThrow(S.decodeUnknownResult(schema)(value));
 
+const decodeCollectionEffect = S.decodeUnknownEffect(B.Collection);
+
 const expectRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: Codec["Type"]): void => {
   const encoded = encode(schema, value);
   const decoded = decode(schema, encoded);
@@ -270,6 +272,25 @@ describe("@beep/box", () => {
       const eventType = yield* S.decodeEffect(B.EventEventTypeField)("FUTURE_BOX_EVENT");
 
       expect(eventType).toBe("FUTURE_BOX_EVENT");
+    })
+  );
+
+  it.effect(
+    "decodes generated collection fields through their suspended schemas",
+    Effect.fnUntraced(function* () {
+      const collection = yield* decodeCollectionEffect({
+        id: "collection-id",
+        type: "collection",
+        name: "Favorites",
+        collectionType: "favorites",
+      });
+
+      expect(collection).toMatchObject({
+        id: "collection-id",
+        type: "collection",
+        name: "Favorites",
+        collectionType: "favorites",
+      });
     })
   );
 

@@ -11,7 +11,7 @@ import { SchemaUtils } from "@beep/schema";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as S from "effect/Schema";
 import { AbsoluteIRI, IRI, IRIReference } from "./Iri.ts";
-import { makeSemanticSchemaMetadata } from "./SemanticSchemaMetadata.ts";
+import { makeSemanticSchemaMetadata } from "./SemanticSchemaMetadata/index.ts";
 
 const $I = $RdfId.create("jsonld");
 
@@ -197,7 +197,7 @@ export const JsonLdBlankNodeIdentifier = S.String.check(jsonLdBlankNodeIdentifie
       representations: [{ kind: "JSON-LD" }, { kind: "RDF/JS", note: "Bridges to RDF blank-node labels." }],
     }),
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
 );
 
 /**
@@ -247,7 +247,7 @@ export const JsonLdNodeIdentifier = S.Union([IRIReference, JsonLdBlankNodeIdenti
       representations: [{ kind: "JSON-LD" }, { kind: "RDF/JS", note: "Bridges to named nodes or blank nodes." }],
     }),
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
 );
 
 /**
@@ -367,7 +367,7 @@ export const JsonLdPropertyValue = S.Union([JsonLdReferenceValue, JsonLdLiteralV
   $I.annoteSchema("JsonLdPropertyValue", {
     description: "JSON-LD property value union used by bounded node objects.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
 );
 
 /**

@@ -23,6 +23,7 @@ import {
   PandocListNumberDelimiter,
   PandocListNumberStyle,
   PandocMathType,
+  PandocMetaValue,
   PandocTablePayload,
   PandocTarget,
   Para,
@@ -32,7 +33,7 @@ import {
   UnknownInline,
   UnknownMeta,
 } from "@beep/pandoc-ast/Pandoc.model";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { fcRuns } from "@beep/test-utils";
 import { R } from "@beep/utils";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
@@ -78,7 +79,8 @@ const SemanticClosureDocumentArbitrary = fc
     })
   );
 const JsonArbitrary = S.toArbitrary(S.Json)(fc);
-const decodeUnknownJsonString = Unknown.decodeUnknownEffectFromJsonString;
+const decodeUnknownJsonString = UnknownFromJsonString.decodeUnknownEffect;
+const emptyAttr = ["", [], []];
 const pinnedPandocConstructorNames = [
   "Pandoc",
   "Meta",
@@ -179,12 +181,14 @@ const fixture = Effect.fn("PandocCodecTest.fixture")((name: string) =>
 const tableWire = ({
   caption = [null, []],
   cellAlignment = { t: "AlignDefault" },
+  cellBlocks = [{ c: [{ c: "ok", t: "Str" }], t: "Para" }],
   columnAlignment = { t: "AlignDefault" },
   columnWidth = { t: "ColWidthDefault" },
   headRows = [],
 }: {
   readonly caption?: unknown;
   readonly cellAlignment?: unknown;
+  readonly cellBlocks?: ReadonlyArray<unknown>;
   readonly columnAlignment?: unknown;
   readonly columnWidth?: unknown;
   readonly headRows?: ReadonlyArray<unknown>;
@@ -197,14 +201,7 @@ const tableWire = ({
         caption,
         [[columnAlignment, columnWidth]],
         [["", [], []], headRows],
-        [
-          [
-            ["", [], []],
-            0,
-            [],
-            [[["", [], []], [[["", [], []], cellAlignment, 1, 1, [{ c: [{ c: "ok", t: "Str" }], t: "Para" }]]]]],
-          ],
-        ],
+        [[["", [], []], 0, [], [[["", [], []], [[["", [], []], cellAlignment, 1, 1, cellBlocks]]]]]],
         [["", [], []], []],
       ],
       t: "Table",
@@ -212,6 +209,13 @@ const tableWire = ({
   ],
   meta: {},
 });
+
+const captionPlainTextFromWire = (caption: unknown): string => {
+  const block = Effect.runSync(decodePandocJson(tableWire({ caption }))).blocks[0];
+
+  expect(block?._tag).toBe("table");
+  return block?._tag === "table" ? block.captionPlainText : "";
+};
 
 describe("Pandoc.codec", () => {
   it("derives semantic documents without arbitrary warnings", () => {});
@@ -285,13 +289,12 @@ describe("Pandoc.codec", () => {
       meta: {},
     };
 
-    expectSchemaMakeToFail(
-      () =>
-        Table.make({
-          payload: [["", [], []], null, [], null, [], null],
-        }),
-      "Expected a Pandoc table payload whose nested constructors are valid in their semantic contexts."
-    );
+    expect(
+      S.is(Table)({
+        _tag: "table",
+        payload: [["", [], []], null, [], null, [], null],
+      })
+    ).toBe(false);
     expect(() => Effect.runSync(decodePandocJsonStrict(wire))).toThrow();
 
     const lossless = Effect.runSync(decodePandocJsonLossless(wire));
@@ -352,6 +355,15 @@ describe("Pandoc.codec", () => {
       fcRuns(50)
     ));
 
+  it("round-trips a recursively nested table inside table-cell block content", () => {
+    const nestedTable = tableWire().blocks[0];
+    const wire = tableWire({ cellBlocks: [nestedTable] });
+    const document = Effect.runSync(decodePandocJsonStrict(wire));
+
+    expect(document.blocks[0]?._tag).toBe("table");
+    expect(Effect.runSync(encodePandocJson(document))).toEqual(wire);
+  });
+
   it("retains valid future constructors in every semantic table component slot", () => {
     const document = PandocDocument.make({
       blocks: [
@@ -400,7 +412,7 @@ describe("Pandoc.codec", () => {
     expect(Effect.runSync(decodePandocJsonStrict(encoded))).toEqual(document);
   });
 
-  it("rejects pinned current constructors outside the semantic subset and reports them losslessly", () => {
+  it("rejects malformed Cite and Figure payloads and reports them losslessly", () => {
     const unsupported = [
       {
         expected: ["Cite", "inline", "/blocks/0/c/0"],
@@ -462,6 +474,32 @@ describe("Pandoc.codec", () => {
         wire: {
           "pandoc-api-version": [1, 23, 1],
           blocks: [{ c: [{ c: "smuggled", t: "Space" }], t: "Para" }],
+          meta: {},
+        },
+      },
+      {
+        expected: [["Decimal", "/blocks/0/c/0/1"]],
+        wire: {
+          "pandoc-api-version": [1, 23, 1],
+          blocks: [
+            {
+              c: [[1, { c: 1, t: "Decimal" }, { t: "Period" }], []],
+              t: "OrderedList",
+            },
+          ],
+          meta: {},
+        },
+      },
+      {
+        expected: [["Period", "/blocks/0/c/0/2"]],
+        wire: {
+          "pandoc-api-version": [1, 23, 1],
+          blocks: [
+            {
+              c: [[1, { t: "Decimal" }, { c: 1, t: "Period" }], []],
+              t: "OrderedList",
+            },
+          ],
           meta: {},
         },
       },
@@ -1012,12 +1050,136 @@ describe("Pandoc.codec", () => {
           _tag: "table",
           payload: table.payload,
         });
-        expect(table.caption[0]?._tag).toBe("str");
-        if (table.caption[0]?._tag === "str") {
-          expect(table.caption[0].text).toBe("Evidence");
-        }
+        expect(table.captionPlainText).toBe("Evidence");
       })
     ));
+
+  it("round-trips populated citations in a non-empty short table caption", () => {
+    const citation = {
+      citationHash: 17,
+      citationId: "doe-2024",
+      citationMode: { t: "NormalCitation" },
+      citationNoteNum: 2,
+      citationPrefix: [{ c: "see", t: "Str" }],
+      citationSuffix: [{ c: "p. 4", t: "Str" }],
+    };
+    const wire = tableWire({
+      caption: [
+        [
+          {
+            c: [[citation], [{ c: "Doe", t: "Str" }]],
+            t: "Cite",
+          },
+        ],
+        [],
+      ],
+    });
+
+    const semantic = Effect.runSync(decodePandocJsonStrict(wire));
+    expect(Effect.runSync(encodePandocJson(semantic))).toEqual(wire);
+    expect(captionPlainTextFromWire(wire.blocks[0]?.c[1])).toBe("Doe");
+
+    const lossless = Effect.runSync(decodePandocJsonLossless(wire));
+    expect(lossless.issues).toEqual([]);
+    expect(Effect.runSync(encodePandocJsonLossless(lossless))).toEqual(wire);
+  });
+
+  it("round-trips a non-empty short Figure caption", () => {
+    const wire = {
+      "pandoc-api-version": [1, 23, 1],
+      blocks: [
+        {
+          c: [emptyAttr, [[{ c: "Short", t: "Str" }], []], []],
+          t: "Figure",
+        },
+      ],
+      meta: {},
+    };
+
+    const semantic = Effect.runSync(decodePandocJsonStrict(wire));
+    expect(Effect.runSync(encodePandocJson(semantic))).toEqual(wire);
+  });
+
+  it("rejects an unsupported citation mode without relying on an earlier malformed block", () => {
+    const wire = {
+      "pandoc-api-version": [1, 23, 1],
+      blocks: [
+        {
+          c: [
+            {
+              c: [
+                [
+                  {
+                    citationHash: 0,
+                    citationId: "future-mode",
+                    citationMode: { t: "FutureCitationMode" },
+                    citationNoteNum: 0,
+                    citationPrefix: [],
+                    citationSuffix: [],
+                  },
+                ],
+                [],
+              ],
+              t: "Cite",
+            },
+          ],
+          t: "Para",
+        },
+      ],
+      meta: {},
+    };
+
+    expect(Effect.runSyncExit(decodePandocJsonStrict(wire))._tag).toBe("Failure");
+    expect(
+      Effect.runSync(decodePandocJsonLossless(wire)).issues.map((issue) => [issue.constructor, issue.pointer])
+    ).toEqual([["FutureCitationMode", "/blocks/0/c/0/c/0/0/citationMode"]]);
+  });
+
+  it("projects every current inline caption constructor to stable plaintext", () => {
+    const inlineCases: ReadonlyArray<readonly [unknown, string]> = [
+      [{ c: "text", t: "Str" }, "text"],
+      [{ t: "Space" }, " "],
+      [{ t: "SoftBreak" }, " "],
+      [{ t: "LineBreak" }, "\n"],
+      [{ c: [{ c: "emphasis", t: "Str" }], t: "Emph" }, "emphasis"],
+      [{ c: [{ c: "underline", t: "Str" }], t: "Underline" }, "underline"],
+      [{ c: [{ c: "strong", t: "Str" }], t: "Strong" }, "strong"],
+      [{ c: [{ c: "strikeout", t: "Str" }], t: "Strikeout" }, "strikeout"],
+      [{ c: [{ c: "superscript", t: "Str" }], t: "Superscript" }, "superscript"],
+      [{ c: [{ c: "subscript", t: "Str" }], t: "Subscript" }, "subscript"],
+      [{ c: [{ c: "small-caps", t: "Str" }], t: "SmallCaps" }, "small-caps"],
+      [{ c: [{ t: "DoubleQuote" }, [{ c: "quoted", t: "Str" }]], t: "Quoted" }, "quoted"],
+      [{ c: [[], [{ c: "cited", t: "Str" }]], t: "Cite" }, "cited"],
+      [{ c: [emptyAttr, "code"], t: "Code" }, "code"],
+      [{ c: [emptyAttr, [{ c: "link", t: "Str" }], ["https://example.com", ""]], t: "Link" }, "link"],
+      [{ c: [emptyAttr, [{ c: "image", t: "Str" }], ["image.png", ""]], t: "Image" }, "image"],
+      [{ c: [emptyAttr, [{ c: "span", t: "Str" }]], t: "Span" }, "span"],
+      [{ c: [{ t: "InlineMath" }, "math"], t: "Math" }, "math"],
+      [{ c: ["html", "raw"], t: "RawInline" }, "raw"],
+      [{ c: [{ c: [{ c: "note", t: "Str" }], t: "Para" }], t: "Note" }, "note"],
+      [{ c: { retained: true }, t: "FutureInline" }, ""],
+    ];
+
+    for (const [inline, expected] of inlineCases) {
+      expect(captionPlainTextFromWire([[inline], []])).toBe(expected);
+    }
+  });
+
+  it("falls back to current long-caption block constructors when the short caption is absent", () => {
+    const blockCases: ReadonlyArray<readonly [unknown, string]> = [
+      [{ c: [{ c: "plain", t: "Str" }], t: "Plain" }, "plain"],
+      [{ c: [{ c: "paragraph", t: "Str" }], t: "Para" }, "paragraph"],
+      [{ c: [2, emptyAttr, [{ c: "heading", t: "Str" }]], t: "Header" }, "heading"],
+      [{ c: [emptyAttr, "code-block"], t: "CodeBlock" }, "code-block"],
+      [{ c: ["html", "raw-block"], t: "RawBlock" }, "raw-block"],
+      [{ c: [{ c: [{ c: "quote", t: "Str" }], t: "Para" }], t: "BlockQuote" }, "quote"],
+      [{ c: { retained: true }, t: "FutureBlock" }, ""],
+    ];
+
+    for (const [block, expected] of blockCases) {
+      expect(captionPlainTextFromWire([null, [block]])).toBe(expected);
+    }
+  });
 
   it("rejects unsupported Math subtypes strictly, retains them losslessly, and preserves ordered-list semantics", () => {
     const unsupportedMath = {
@@ -1188,6 +1350,7 @@ describe("Pandoc.codec", () => {
         };
         const document = yield* decodePandocJson(wire);
 
+        expect(S.is(PandocMetaValue)(document.meta.title)).toBe(true);
         expect(document.meta.title).toEqual(MetaString.make({ value: "Document" }));
         expect(document.meta.nested?._tag).toBe("metaMap");
         if (document.meta.nested?._tag === "metaMap") {

@@ -71,6 +71,13 @@ export * from "./Color/index.ts";
  */
 export * from "./CommonTextSchemas.ts";
 /**
+ * Specification-grounded conformance models and annotation helpers.
+ *
+ * @category specifications
+ * @since 0.0.0
+ */
+export * as Conformance from "./Conformance/index.ts";
+/**
  * @since 0.0.0
  * @category validation
  */

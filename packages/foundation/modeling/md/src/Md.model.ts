@@ -1,15 +1,23 @@
 /**
- * Schema-first Markdown document AST models.
+ * Schema-first Markdown document AST models with schema-owned pure projections.
  *
  * @packageDocumentation \@beep/md/Md.model
  * @since 0.0.0
  */
 
-import { $MdId } from "@beep/identity";
-import { JsonObject, LiteralKit, PosInt, SchemaUtils } from "@beep/schema";
-import { SchemaGetter } from "effect";
+import * as HtmlModel from "@beep/html/Html.model";
+import { Text as HtmlText } from "@beep/html/Html.nodes";
+import { $MdId } from "@beep/identity/packages";
+import { PosInt } from "@beep/schema/Int";
+import { JsonObject } from "@beep/schema/Json";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as SchemaUtils from "@beep/schema/SchemaUtils";
+import * as Arr from "@beep/utils/Array";
+import { SchemaGetter, Tuple } from "effect";
+import { identity } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import type { HtmlChildNode } from "@beep/html";
 
 const $I = $MdId.create("Md.model");
 
@@ -57,7 +65,7 @@ export const CodeFenceLanguage = S.NonEmptyString.check(
   $I.annoteSchema("CodeFenceLanguage", {
     description: "Single safe Markdown fenced-code info-string token.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeOption", "decodeUnknownOption"])
 );
 
 /**
@@ -113,7 +121,7 @@ export const YouTubeVideoId = S.String.check(
   $I.annoteSchema("YouTubeVideoId", {
     description: "Bare 11-character YouTube video id accepted by Md YouTube embeds.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 /**
@@ -124,7 +132,7 @@ export const YouTubeVideoId = S.String.check(
  * ```ts
  * import { FootnoteIdentifier } from "@beep/md/Md.model"
  *
- * const identifier = FootnoteIdentifier.fromUnknown("note-1")
+ * const identifier = FootnoteIdentifier.decodeUnknownSync("note-1")
  * console.log(identifier)
  * ```
  *
@@ -143,7 +151,7 @@ export const FootnoteIdentifier = S.NonEmptyString.check(
   $I.annoteSchema("FootnoteIdentifier", {
     description: "Safe Markdown footnote identifier.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
 );
 
 /**
@@ -155,7 +163,7 @@ export const FootnoteIdentifier = S.NonEmptyString.check(
  * import type { FootnoteIdentifier as FootnoteIdentifierValue } from "@beep/md/Md.model"
  * import { FootnoteIdentifier } from "@beep/md/Md.model"
  *
- * const identifier: FootnoteIdentifierValue = FootnoteIdentifier.fromUnknown("note-1")
+ * const identifier: FootnoteIdentifierValue = FootnoteIdentifier.decodeUnknownSync("note-1")
  * console.log(identifier)
  * ```
  *
@@ -381,7 +389,11 @@ export class Text extends S.TaggedClass<Text>($I`Text`)(
   $I.annote("Text", {
     description: "Plain escaped inline text.",
   })
-) {}
+) {
+  static readonly toPlainText = (inline: Text): string => inline.value;
+
+  static readonly toHtml = (inline: Text): HtmlText => HtmlText.fromValue(inline.value);
+}
 
 /**
  * Companion namespace for {@link Text}.
@@ -438,7 +450,11 @@ export class RawMarkdown extends S.TaggedClass<RawMarkdown>($I`RawMarkdown`)(
   $I.annote("RawMarkdown", {
     description: "Trusted raw Markdown inline content.",
   })
-) {}
+) {
+  static readonly toPlainText = (inline: RawMarkdown): string => inline.value;
+
+  static readonly toHtml = (inline: RawMarkdown): HtmlText => HtmlText.fromValue(inline.value);
+}
 
 /**
  * Companion namespace for {@link RawMarkdown}.
@@ -500,7 +516,11 @@ export class RawHtml extends S.TaggedClass<RawHtml>($I`RawHtml`)(
     description:
       "Raw HTML inline content for adapters that opt into trusted HTML rendering. The built-in HTML adapter escapes this value by default.",
   })
-) {}
+) {
+  static readonly toPlainText = (inline: RawHtml): string => inline.value;
+
+  static readonly toHtml = (inline: RawHtml): HtmlText => HtmlText.fromValue(inline.value);
+}
 
 /**
  * Companion namespace for {@link RawHtml}.
@@ -557,7 +577,15 @@ export class Strong extends S.TaggedClass<Strong>($I`Strong`)(
   $I.annote("Strong", {
     description: "Strong inline content.",
   })
-) {}
+) {
+  static toPlainText(inline: Strong): string {
+    return Inline.toPlainTextAll(inline.children);
+  }
+
+  static toHtml(inline: Strong, insideAnchor = false): HtmlModel.Strong {
+    return HtmlModel.Strong.make({ children: Inline.toHtmlAll(inline.children, insideAnchor) });
+  }
+}
 
 /**
  * Companion namespace for {@link Strong}.
@@ -617,7 +645,15 @@ export class Em extends S.TaggedClass<Em>($I`Em`)(
   $I.annote("Em", {
     description: "Emphasized inline content.",
   })
-) {}
+) {
+  static toPlainText(inline: Em): string {
+    return Inline.toPlainTextAll(inline.children);
+  }
+
+  static toHtml(inline: Em, insideAnchor = false): HtmlModel.Em {
+    return HtmlModel.Em.make({ children: Inline.toHtmlAll(inline.children, insideAnchor) });
+  }
+}
 
 /**
  * Companion namespace for {@link Em}.
@@ -677,7 +713,15 @@ export class Del extends S.TaggedClass<Del>($I`Del`)(
   $I.annote("Del", {
     description: "Deleted inline content.",
   })
-) {}
+) {
+  static toPlainText(inline: Del): string {
+    return Inline.toPlainTextAll(inline.children);
+  }
+
+  static toHtml(inline: Del, insideAnchor = false): HtmlModel.Del {
+    return HtmlModel.Del.make({ children: Inline.toHtmlAll(inline.children, insideAnchor) });
+  }
+}
 
 /**
  * Companion namespace for {@link Del}.
@@ -737,7 +781,12 @@ export class Code extends S.TaggedClass<Code>($I`Code`)(
   $I.annote("Code", {
     description: "Inline code span.",
   })
-) {}
+) {
+  static readonly toPlainText = (inline: Code): string => inline.value;
+
+  static readonly toHtml = (inline: Code): HtmlModel.Code =>
+    HtmlModel.Code.make({ children: [HtmlText.fromValue(inline.value)] });
+}
 
 /**
  * Companion namespace for {@link Code}.
@@ -800,7 +849,19 @@ export class A extends S.TaggedClass<A>($I`A`)(
   $I.annote("A", {
     description: "Inline hyperlink.",
   })
-) {}
+) {
+  static toPlainText(inline: A): string {
+    return Inline.toPlainTextAll(inline.children);
+  }
+
+  static toHtml(inline: A, insideAnchor = false): HtmlModel.A | HtmlModel.Span {
+    const children = Inline.toHtmlAll(inline.children, true);
+
+    return insideAnchor
+      ? HtmlModel.Span.make({ children, title: inline.title })
+      : HtmlModel.A.make({ children, href: O.some(inline.href), title: inline.title });
+  }
+}
 
 /**
  * Companion namespace for {@link A}.
@@ -870,7 +931,16 @@ export class Img extends S.TaggedClass<Img>($I`Img`)(
   $I.annote("Img", {
     description: "Inline image.",
   })
-) {}
+) {
+  static readonly toPlainText = (inline: Img): string => inline.alt;
+
+  static readonly toHtml = (inline: Img): HtmlModel.Img =>
+    HtmlModel.Img.make({
+      alt: O.some(inline.alt),
+      src: O.some(inline.src),
+      title: inline.title,
+    });
+}
 
 /**
  * Companion namespace for {@link Img}.
@@ -930,7 +1000,11 @@ export class Br extends S.TaggedClass<Br>($I`Br`)(
   $I.annote("Br", {
     description: "Inline line break.",
   })
-) {}
+) {
+  static readonly toPlainText = (): string => "\n";
+
+  static readonly toHtml = (): HtmlModel.Br => HtmlModel.Br.make({});
+}
 
 /**
  * Companion namespace for {@link Br}.
@@ -986,7 +1060,12 @@ export class InlineMath extends S.TaggedClass<InlineMath>($I`InlineMath`)(
   $I.annote("InlineMath", {
     description: "Inline TeX math content.",
   })
-) {}
+) {
+  static readonly toPlainText = (inline: InlineMath): string => inline.value;
+
+  static readonly toHtml = (inline: InlineMath): HtmlModel.Code =>
+    HtmlModel.Code.make({ children: [HtmlText.fromValue(inline.value)] });
+}
 
 /**
  * Companion namespace for {@link InlineMath}.
@@ -1043,7 +1122,19 @@ export class FootnoteReference extends S.TaggedClass<FootnoteReference>($I`Footn
   $I.annote("FootnoteReference", {
     description: "Inline footnote reference.",
   })
-) {}
+) {
+  static readonly toPlainText = (inline: FootnoteReference): string => inline.identifier;
+
+  static readonly toHtml = (inline: FootnoteReference): HtmlModel.Sup =>
+    HtmlModel.Sup.make({
+      children: [
+        HtmlModel.A.make({
+          children: [HtmlText.fromValue(inline.identifier)],
+          href: O.some(`#fn-${inline.identifier}`),
+        }),
+      ],
+    });
+}
 
 /**
  * Companion namespace for {@link FootnoteReference}.
@@ -1081,9 +1172,9 @@ export declare namespace FootnoteReference {
 /**
  * Discriminated union of inline Markdown AST nodes.
  *
- * **Example** (Decode inline union)
+ * **Example** (Decode and project inline union)
  *
- * ```ts import.meta.vitest name="Decode inline union"
+ * ```ts import.meta.vitest name="Decode and project inline union"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { Inline, Text } from "@beep/md/Md.model"
@@ -1091,6 +1182,8 @@ export declare namespace FootnoteReference {
  * const decode = S.decodeUnknownResult(Inline)
  * const node = Result.getOrThrow(decode(Text.make({ value: "Hello" })))
  * node._tag // => "text"
+ * Inline.toPlainText(node) // => "Hello"
+ * Inline.toHtml(node)._tag // => "#text"
  * ```
  *
  * @category models
@@ -1114,7 +1207,47 @@ export const Inline = S.Union([
   $I.annoteSchema("Inline", {
     description: "Discriminated union of inline Markdown AST nodes.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withStatics((schema) => {
+    const toPlainText = schema.match({
+      text: Text.toPlainText,
+      rawMarkdown: RawMarkdown.toPlainText,
+      rawHtml: RawHtml.toPlainText,
+      strong: Strong.toPlainText,
+      em: Em.toPlainText,
+      del: Del.toPlainText,
+      code: Code.toPlainText,
+      a: A.toPlainText,
+      img: Img.toPlainText,
+      br: Br.toPlainText,
+      inlineMath: InlineMath.toPlainText,
+      footnoteReference: FootnoteReference.toPlainText,
+    });
+    const toHtmlWithContext = schema.match({
+      text: (inline) => (_insideAnchor: boolean) => Text.toHtml(inline),
+      rawMarkdown: (inline) => (_insideAnchor: boolean) => RawMarkdown.toHtml(inline),
+      rawHtml: (inline) => (_insideAnchor: boolean) => RawHtml.toHtml(inline),
+      strong: (inline) => (insideAnchor: boolean) => Strong.toHtml(inline, insideAnchor),
+      em: (inline) => (insideAnchor: boolean) => Em.toHtml(inline, insideAnchor),
+      del: (inline) => (insideAnchor: boolean) => Del.toHtml(inline, insideAnchor),
+      code: (inline) => (_insideAnchor: boolean) => Code.toHtml(inline),
+      a: (inline) => (insideAnchor: boolean) => A.toHtml(inline, insideAnchor),
+      img: (inline) => (_insideAnchor: boolean) => Img.toHtml(inline),
+      br: () => (_insideAnchor: boolean) => Br.toHtml(),
+      inlineMath: (inline) => (_insideAnchor: boolean) => InlineMath.toHtml(inline),
+      footnoteReference: (inline) => (_insideAnchor: boolean) => FootnoteReference.toHtml(inline),
+    });
+    const toHtml = (inline: Inline.Type, insideAnchor = false): HtmlChildNode =>
+      toHtmlWithContext(inline)(insideAnchor);
+
+    return {
+      is: S.is(schema),
+      toHtml,
+      toHtmlAll: (inlines: ReadonlyArray<Inline.Type>, insideAnchor = false): ReadonlyArray<HtmlChildNode> =>
+        Arr.map(inlines, (inline) => toHtml(inline, insideAnchor)),
+      toPlainText,
+      toPlainTextAll: (inlines: ReadonlyArray<Inline.Type>): string => Arr.join(Arr.map(inlines, toPlainText), ""),
+    };
+  })
 );
 
 /**
@@ -1265,15 +1398,16 @@ export declare namespace BlockChildren {
  * block children preserve nested document structure such as paragraphs, code
  * blocks, and nested lists.
  *
- * **Example** (Decode list item child)
+ * **Example** (Decode and project list item child)
  *
- * ```ts import.meta.vitest name="Decode list item child"
+ * ```ts import.meta.vitest name="Decode and project list item child"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { ListItemChild, Text } from "@beep/md/Md.model"
  *
  * const result = S.decodeUnknownResult(ListItemChild)(Text.make({ value: "Hello" }))
  * Result.isSuccess(result) && result.success._tag === "text" // => true
+ * Result.isSuccess(result) && ListItemChild.toPlainText(result.success) === "Hello" // => true
  * ```
  *
  * @category models
@@ -1284,6 +1418,33 @@ export const ListItemChild = S.suspend(
 ).pipe(
   $I.annoteSchema("ListItemChild", {
     description: "Inline or block Markdown AST node rendered inside a list item.",
+  }),
+  SchemaUtils.withStatics(() => {
+    const toHtml = (child: ListItemChild.Type): HtmlChildNode =>
+      Inline.is(child) ? Inline.toHtml(child) : Block.toHtml(child);
+    const toPlainText = (child: ListItemChild.Type): string =>
+      Inline.is(child) ? Inline.toPlainText(child) : Block.toPlainText(child);
+    const toPlainTextSegments = (children: ReadonlyArray<ListItemChild.Type>): ReadonlyArray<string> =>
+      Arr.match(children, {
+        onEmpty: Arr.empty<string>,
+        onNonEmpty: (items) =>
+          Arr.flatMap(
+            Arr.groupWith(items, (left, right) => Inline.is(left) === Inline.is(right)),
+            (run) =>
+              Inline.is(Arr.headNonEmpty(run))
+                ? [Inline.toPlainTextAll(Arr.filter(run, Inline.is))]
+                : Arr.map(Arr.filter(run, Block.is), Block.toPlainText)
+          ),
+      });
+
+    return {
+      toHtml,
+      toHtmlAll: (children: ReadonlyArray<ListItemChild.Type>): ReadonlyArray<HtmlChildNode> =>
+        Arr.map(children, toHtml),
+      toPlainText,
+      toPlainTextAll: (children: ReadonlyArray<ListItemChild.Type>): string =>
+        Arr.join(toPlainTextSegments(children), "\n"),
+    };
   })
 );
 
@@ -1429,7 +1590,11 @@ export class P extends S.TaggedClass<P>($I`P`)(
   $I.annote("P", {
     description: "Paragraph block.",
   })
-) {}
+) {
+  static readonly toPlainText = (block: P): string => Inline.toPlainTextAll(block.children);
+
+  static readonly toHtml = (block: P): HtmlModel.P => HtmlModel.P.make({ children: Inline.toHtmlAll(block.children) });
+}
 
 /**
  * Companion namespace for {@link P}.
@@ -1481,10 +1646,11 @@ export declare namespace P {
  * @category models
  * @since 0.0.0
  */
-export const HeadingLevel = LiteralKit([1, 2, 3, 4, 5, 6]).pipe(
+export const HeadingLevel = S.Literals([1, 2, 3, 4, 5, 6]).pipe(
   $I.annoteSchema("HeadingLevel", {
     description: "Markdown heading level from one (largest) to six (smallest).",
-  })
+  }),
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 /**
@@ -1506,15 +1672,98 @@ export const HeadingLevel = LiteralKit([1, 2, 3, 4, 5, 6]).pipe(
  */
 export type HeadingLevel = typeof HeadingLevel.Type;
 
+const makeHeadingValueMember = <Level extends HeadingLevel>({ literal }: S.Literal<Level>) =>
+  S.Struct({
+    level: S.tag(literal),
+    children: InlineChildren.annotateKey({
+      description: "Inline children rendered as heading content.",
+    }),
+  });
+
+/**
+ * Flat discriminated union of heading payloads keyed by their semantic level.
+ *
+ * **Details**
+ *
+ * The union retains the public `{ level, children }` shape while exposing
+ * schema-derived `cases`, `guards`, `isAnyOf`, and exhaustive `match` helpers.
+ * Heading content remains inline-only for every level.
+ *
+ * **Example** (Match a heading payload exhaustively)
+ *
+ * ```ts import.meta.vitest name="Match a heading payload exhaustively"
+ * import { HeadingValue, Text } from "@beep/md/Md.model"
+ *
+ * const value = HeadingValue.cases[2].make({ children: [Text.make({ value: "Overview" })] })
+ * const label = HeadingValue.match(value, {
+ *   1: () => "h1",
+ *   2: () => "h2",
+ *   3: () => "h3",
+ *   4: () => "h4",
+ *   5: () => "h5",
+ *   6: () => "h6",
+ * })
+ *
+ * label // => "h2"
+ * ```
+ *
+ * @invariant `level` is exactly one of the six CommonMark heading levels and `children` contains only inline nodes.
+ * @see {@link https://spec.commonmark.org/0.31.2/#atx-headings} for the normative ATX heading level rules.
+ * @see {@link https://spec.commonmark.org/0.31.2/#setext-headings} for the normative setext heading level rules.
+ * @category models
+ * @since 0.0.0
+ */
+export const HeadingValue = HeadingLevel.mapMembers(
+  Tuple.evolve([
+    makeHeadingValueMember,
+    makeHeadingValueMember,
+    makeHeadingValueMember,
+    makeHeadingValueMember,
+    makeHeadingValueMember,
+    makeHeadingValueMember,
+  ])
+).pipe(
+  S.toTaggedUnion("level"),
+  $I.annoteSchema("HeadingValue", {
+    description: "Flat discriminated union of Markdown heading payloads keyed by semantic level.",
+  })
+);
+
+/**
+ * Runtime heading payload represented by {@link HeadingValue}.
+ *
+ * @see {@link HeadingValue} for case constructors, guards, and exhaustive matching.
+ * @category models
+ * @since 0.0.0
+ */
+export type HeadingValue = typeof HeadingValue.Type;
+
+/**
+ * Encoded heading payload variants accepted by {@link HeadingValue}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace HeadingValue {
+  /**
+   * Encoded flat heading payload, discriminated by `level`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = S.Codec.Encoded<typeof HeadingValue>;
+}
+
 /**
  * Heading block carrying its level alongside inline content.
  *
  * **Example** (Make heading node)
  *
  * ```ts import.meta.vitest name="Make heading node"
- * import { Heading, Text } from "@beep/md/Md.model"
+ * import { Heading, HeadingValue, Text } from "@beep/md/Md.model"
  *
- * const node = Heading.make({ level: 1, children: [Text.make({ value: "Title" })] })
+ * const payload = HeadingValue.cases[1].make({ children: [Text.make({ value: "Title" })] })
+ * const node = Heading.make(payload)
  * node._tag // => "heading"
  * node.level // => 1
  * ```
@@ -1537,6 +1786,23 @@ export class Heading extends S.TaggedClass<Heading>($I`Heading`)(
   })
 ) {
   static readonly is = S.is(Heading);
+
+  static readonly toPlainText = (block: Heading): string => Inline.toPlainTextAll(block.children);
+
+  static readonly toHtml = (
+    block: Heading
+  ): HtmlModel.H1 | HtmlModel.H2 | HtmlModel.H3 | HtmlModel.H4 | HtmlModel.H5 | HtmlModel.H6 => {
+    const children = Inline.toHtmlAll(block.children);
+
+    return HeadingValue.match(block, {
+      1: () => HtmlModel.H1.make({ children }),
+      2: () => HtmlModel.H2.make({ children }),
+      3: () => HtmlModel.H3.make({ children }),
+      4: () => HtmlModel.H4.make({ children }),
+      5: () => HtmlModel.H5.make({ children }),
+      6: () => HtmlModel.H6.make({ children }),
+    });
+  };
 }
 
 /**
@@ -1570,7 +1836,7 @@ export declare namespace Heading {
   export interface Encoded {
     readonly _tag: "heading";
     readonly children: InlineChildren.Encoded;
-    readonly level: number;
+    readonly level: HeadingLevel;
   }
 }
 
@@ -1601,6 +1867,11 @@ export class Li extends S.TaggedClass<Li>($I`Li`)(
   })
 ) {
   static readonly is = S.is(Li);
+
+  static readonly toPlainText = (item: Li): string => ListItemChild.toPlainTextAll(item.children);
+
+  static readonly toHtml = (item: Li): HtmlModel.Li =>
+    HtmlModel.Li.make({ children: ListItemChild.toHtmlAll(item.children) });
 }
 
 /**
@@ -1734,7 +2005,12 @@ export class Ul extends S.TaggedClass<Ul>($I`Ul`)(
   $I.annote("Ul", {
     description: "Unordered list block.",
   })
-) {}
+) {
+  static readonly toPlainText = (block: Ul): string => Arr.join(Arr.map(block.children, Li.toPlainText), "\n");
+
+  static readonly toHtml = (block: Ul): HtmlModel.Ul =>
+    HtmlModel.Ul.make({ children: Arr.map(block.children, Li.toHtml) });
+}
 
 /**
  * Companion namespace for {@link Ul}.
@@ -1770,6 +2046,48 @@ export declare namespace Ul {
 }
 
 /**
+ * Ordered-list start value retained by the broad Markdown AST.
+ *
+ * **Details**
+ *
+ * Zero is representable because CommonMark ordered-list markers may begin at
+ * zero. Positive values retain the existing {@link PosInt} representation;
+ * profile validation applies CommonMark's nine-digit upper bound without
+ * narrowing the lossless AST.
+ *
+ * **Example** (Decode a zero start)
+ *
+ * ```ts import.meta.vitest name="Decode a zero start"
+ * import { OrderedListStart } from "@beep/md/Md.model"
+ * import { Result } from "effect"
+ * import * as S from "effect/Schema"
+ *
+ * const result = S.decodeUnknownResult(OrderedListStart)(0)
+ * Result.isSuccess(result) && result.success === 0 // => true
+ * ```
+ *
+ * @invariant Values are non-negative integers; strict CommonMark and GFM validation additionally caps them at 999999999.
+ * @see {@link https://spec.commonmark.org/0.31.2/#list-items} for the normative ordered-list marker range.
+ * @category models
+ * @since 0.0.0
+ */
+export const OrderedListStart = S.Union([S.Literal(0), PosInt]).pipe(
+  $I.annoteSchema("OrderedListStart", {
+    description: "Non-negative ordered-list start retained by the broad Markdown AST.",
+  }),
+  SchemaUtils.withCodecStatics(["decodeUnknownSync", "is"])
+);
+
+/**
+ * Runtime ordered-list start represented by {@link OrderedListStart}.
+ *
+ * @see {@link OrderedListStart} for decoding and validation helpers.
+ * @category models
+ * @since 0.0.0
+ */
+export type OrderedListStart = typeof OrderedListStart.Type;
+
+/**
  * Ordered list block.
  *
  * **Example** (Make ordered list)
@@ -1790,14 +2108,19 @@ export class Ol extends S.TaggedClass<Ol>($I`Ol`)(
     children: ListChildren.annotateKey({
       description: "List items rendered as an ordered list.",
     }),
-    start: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(1))).annotateKey({
+    start: OrderedListStart.pipe(SchemaUtils.withKeyDefaults(PosInt.make(1))).annotateKey({
       description: "First ordinal used by the ordered list. Defaults to one.",
     }),
   },
   $I.annote("Ol", {
     description: "Ordered list block.",
   })
-) {}
+) {
+  static readonly toPlainText = (block: Ol): string => Arr.join(Arr.map(block.children, Li.toPlainText), "\n");
+
+  static readonly toHtml = (block: Ol): HtmlModel.Ol =>
+    HtmlModel.Ol.make({ children: Arr.map(block.children, Li.toHtml), start: O.some(block.start) });
+}
 
 /**
  * Companion namespace for {@link Ol}.
@@ -1821,7 +2144,7 @@ export declare namespace Ol {
   export interface Type {
     readonly _tag: "ol";
     readonly children: ListChildren.Type;
-    readonly start: PosInt;
+    readonly start: OrderedListStart;
   }
 
   /**
@@ -1864,6 +2187,13 @@ export class TaskItem extends S.TaggedClass<TaskItem>($I`TaskItem`)(
   })
 ) {
   static readonly is = S.is(TaskItem);
+
+  static readonly toPlainText = (item: TaskItem): string => ListItemChild.toPlainTextAll(item.children);
+
+  static readonly toHtml = (item: TaskItem): HtmlModel.Li =>
+    HtmlModel.Li.make({
+      children: [HtmlText.fromValue(item.checked ? "☒ " : "☐ "), ...ListItemChild.toHtmlAll(item.children)],
+    });
 }
 
 /**
@@ -1906,8 +2236,8 @@ export declare namespace TaskItem {
  *
  * **Details**
  *
- * Unlike the deprecated shorthand union accepted by `Md.taskList`, every value
- * carries the `taskItem` discriminator and fully normalized child nodes.
+ * Every value carries the `taskItem` discriminator and fully normalized child
+ * nodes, keeping constructor input aligned with the persisted model.
  *
  * **Example** (Check task item spec)
  *
@@ -1924,8 +2254,7 @@ export declare namespace TaskItem {
 export const TaskListItemSpec = TaskItem.pipe(
   $I.annoteSchema("TaskListItemSpec", {
     description: "Canonical tagged task-list item accepted by unambiguous builders.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -2044,7 +2373,13 @@ export class TaskList extends S.TaggedClass<TaskList>($I`TaskList`)(
   $I.annote("TaskList", {
     description: "GFM task list block.",
   })
-) {}
+) {
+  static readonly toPlainText = (block: TaskList): string =>
+    Arr.join(Arr.map(block.children, TaskItem.toPlainText), "\n");
+
+  static readonly toHtml = (block: TaskList): HtmlModel.Ul =>
+    HtmlModel.Ul.make({ children: Arr.map(block.children, TaskItem.toHtml) });
+}
 
 /**
  * Companion namespace for {@link TaskList}.
@@ -2106,7 +2441,15 @@ export class BlockQuote extends S.TaggedClass<BlockQuote>($I`BlockQuote`)(
   $I.annote("BlockQuote", {
     description: "Block quote container.",
   })
-) {}
+) {
+  static toPlainText(block: BlockQuote): string {
+    return Block.toPlainTextAll(block.children);
+  }
+
+  static toHtml(block: BlockQuote): HtmlModel.Blockquote {
+    return HtmlModel.Blockquote.make({ children: Block.toHtmlAll(block.children) });
+  }
+}
 
 /**
  * Companion namespace for {@link BlockQuote}.
@@ -2169,8 +2512,8 @@ export class Pre extends S.TaggedClass<Pre>($I`Pre`)(
     language: S.OptionFromNullOr(S.String)
       .pipe(
         S.decodeTo(S.Option(CodeFenceLanguage), {
-          decode: SchemaGetter.transform((language) => O.flatMap(language, S.decodeUnknownOption(CodeFenceLanguage))),
-          encode: SchemaGetter.transform((language) => language),
+          decode: SchemaGetter.transform(O.flatMap(CodeFenceLanguage.decodeUnknownOption)),
+          encode: SchemaGetter.transform(identity),
         })
       )
       .annotateKey({
@@ -2183,7 +2526,14 @@ export class Pre extends S.TaggedClass<Pre>($I`Pre`)(
   $I.annote("Pre", {
     description: "Fenced code block.",
   })
-) {}
+) {
+  static readonly toPlainText = (block: Pre): string => block.value;
+
+  static readonly toHtml = (block: Pre): HtmlModel.Pre =>
+    HtmlModel.Pre.make({
+      children: [HtmlModel.Code.make({ children: [HtmlText.fromValue(block.value)] })],
+    });
+}
 
 /**
  * Companion namespace for {@link Pre}.
@@ -2252,6 +2602,13 @@ export class TableCell extends S.TaggedClass<TableCell>($I`TableCell`)(
   })
 ) {
   static readonly is = S.is(TableCell);
+
+  static readonly toPlainText = (cell: TableCell): string => Inline.toPlainTextAll(cell.children);
+
+  static readonly toHtml = (cell: TableCell, header = false): HtmlModel.Td | HtmlModel.Th => {
+    const children = Inline.toHtmlAll(cell.children);
+    return header ? HtmlModel.Th.make({ children }) : HtmlModel.Td.make({ children });
+  };
 }
 
 /**
@@ -2314,6 +2671,11 @@ export class TableRow extends S.TaggedClass<TableRow>($I`TableRow`)(
   })
 ) {
   static readonly is = S.is(TableRow);
+
+  static readonly toPlainText = (row: TableRow): string => Arr.join(Arr.map(row.children, TableCell.toPlainText), "\t");
+
+  static readonly toHtml = (row: TableRow, header = false): HtmlModel.Tr =>
+    HtmlModel.Tr.make({ children: Arr.map(row.children, (cell) => TableCell.toHtml(cell, header)) });
 }
 
 /**
@@ -2383,7 +2745,22 @@ export class Table extends S.TaggedClass<Table>($I`Table`)(
   $I.annote("Table", {
     description: "Markdown table block with inline cell content.",
   })
-) {}
+) {
+  static readonly toPlainText = (block: Table): string => Arr.join(Arr.map(block.children, TableRow.toPlainText), "\n");
+
+  static readonly toHtml = (block: Table): HtmlModel.Table => {
+    const [first, ...rest] = block.children;
+    const children: ReadonlyArray<HtmlChildNode> =
+      block.headerRow && first !== undefined
+        ? [
+            HtmlModel.Thead.make({ children: [TableRow.toHtml(first, true)] }),
+            HtmlModel.Tbody.make({ children: Arr.map(rest, (row) => TableRow.toHtml(row)) }),
+          ]
+        : [HtmlModel.Tbody.make({ children: Arr.map(block.children, (row) => TableRow.toHtml(row)) })];
+
+    return HtmlModel.Table.make({ children });
+  };
+}
 
 /**
  * Companion namespace for {@link Table}.
@@ -2450,7 +2827,19 @@ export class YouTube extends S.TaggedClass<YouTube>($I`YouTube`)(
   $I.annote("YouTube", {
     description: "YouTube video embed block.",
   })
-) {}
+) {
+  static readonly toPlainText = (block: YouTube): string => `https://www.youtube.com/watch?v=${block.videoId}`;
+
+  static readonly toHtml = (block: YouTube): HtmlModel.P =>
+    HtmlModel.P.make({
+      children: [
+        HtmlModel.A.make({
+          children: [HtmlText.fromValue("Watch on YouTube")],
+          href: O.some(`https://www.youtube.com/watch?v=${block.videoId}`),
+        }),
+      ],
+    });
+}
 
 /**
  * Companion namespace for {@link YouTube}.
@@ -2507,7 +2896,14 @@ export class MathBlock extends S.TaggedClass<MathBlock>($I`MathBlock`)(
   $I.annote("MathBlock", {
     description: "Display TeX math block.",
   })
-) {}
+) {
+  static readonly toPlainText = (block: MathBlock): string => block.value;
+
+  static readonly toHtml = (block: MathBlock): HtmlModel.Pre =>
+    HtmlModel.Pre.make({
+      children: [HtmlModel.Code.make({ children: [HtmlText.fromValue(block.value)] })],
+    });
+}
 
 /**
  * Companion namespace for {@link MathBlock}.
@@ -2570,7 +2966,21 @@ export class FootnoteDefinition extends S.TaggedClass<FootnoteDefinition>($I`Foo
   $I.annote("FootnoteDefinition", {
     description: "Footnote definition block.",
   })
-) {}
+) {
+  static toPlainText(block: FootnoteDefinition): string {
+    return Block.toPlainTextAll(block.children);
+  }
+
+  static toHtml(block: FootnoteDefinition): HtmlModel.Section {
+    return HtmlModel.Section.make({
+      children: [
+        HtmlModel.Sup.make({ children: [HtmlText.fromValue(block.identifier)] }),
+        ...Block.toHtmlAll(block.children),
+      ],
+      id: O.some(`fn-${block.identifier}`),
+    });
+  }
+}
 
 /**
  * Companion namespace for {@link FootnoteDefinition}.
@@ -2647,7 +3057,23 @@ export class Admonition extends S.TaggedClass<Admonition>($I`Admonition`)(
   $I.annote("Admonition", {
     description: "Typed admonition block.",
   })
-) {}
+) {
+  static toPlainText(block: Admonition): string {
+    return Block.toPlainTextAll(block.children);
+  }
+
+  static toHtml(block: Admonition): HtmlModel.Aside {
+    return HtmlModel.Aside.make({
+      children: [
+        ...O.match(block.title, {
+          onNone: Arr.emptyReadonly,
+          onSome: (value) => [HtmlModel.P.make({ children: [HtmlText.fromValue(value)] })],
+        }),
+        ...Block.toHtmlAll(block.children),
+      ],
+    });
+  }
+}
 
 /**
  * Companion namespace for {@link Admonition}.
@@ -2720,7 +3146,35 @@ export class Embed extends S.TaggedClass<Embed>($I`Embed`)(
   $I.annote("Embed", {
     description: "Safe generalized block embed rendered by built-in adapters as inert link or figure content.",
   })
-) {}
+) {
+  static readonly toPlainText = (block: Embed): string => O.getOrElse(block.title, () => block.src);
+
+  static readonly toHtml = (block: Embed): HtmlModel.Figure => {
+    const label = O.getOrElse(block.title, () => block.src);
+    const content: HtmlChildNode =
+      block.kind === "image"
+        ? HtmlModel.Img.make({
+            alt: O.some(label),
+            src: O.some(block.src),
+            title: block.title,
+          })
+        : HtmlModel.A.make({
+            children: [HtmlText.fromValue(label)],
+            href: O.some(block.src),
+            title: block.title,
+          });
+
+    return HtmlModel.Figure.make({
+      children: [
+        content,
+        ...O.match(block.description, {
+          onNone: Arr.emptyReadonly,
+          onSome: (value) => [HtmlModel.Figcaption.make({ children: [HtmlText.fromValue(value)] })],
+        }),
+      ],
+    });
+  };
+}
 
 /**
  * Companion namespace for {@link Embed}.
@@ -2782,7 +3236,11 @@ export class Hr extends S.TaggedClass<Hr>($I`Hr`)(
   $I.annote("Hr", {
     description: "Horizontal rule block.",
   })
-) {}
+) {
+  static readonly toPlainText = (): string => "";
+
+  static readonly toHtml = (): HtmlModel.Hr => HtmlModel.Hr.make({});
+}
 
 /**
  * Companion namespace for {@link Hr}.
@@ -2816,9 +3274,9 @@ export declare namespace Hr {
 /**
  * Discriminated union of block Markdown AST nodes.
  *
- * **Example** (Decode block union)
+ * **Example** (Decode and project block union)
  *
- * ```ts import.meta.vitest name="Decode block union"
+ * ```ts import.meta.vitest name="Decode and project block union"
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { Block, P, Text } from "@beep/md/Md.model"
@@ -2826,6 +3284,8 @@ export declare namespace Hr {
  * const decode = S.decodeUnknownResult(Block)
  * const node = Result.getOrThrow(decode(P.make({ children: [Text.make({ value: "Hello" })] })))
  * node._tag // => "p"
+ * Block.toPlainText(node) // => "Hello"
+ * Block.toHtml(node)._tag // => "p"
  * ```
  *
  * @category models
@@ -2851,7 +3311,48 @@ export const Block = S.Union([
   $I.annoteSchema("Block", {
     description: "Discriminated union of block Markdown AST nodes.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withStatics((schema) => {
+    const toHtml = schema.match({
+      heading: Heading.toHtml,
+      p: P.toHtml,
+      blockquote: BlockQuote.toHtml,
+      pre: Pre.toHtml,
+      ul: Ul.toHtml,
+      ol: Ol.toHtml,
+      taskList: TaskList.toHtml,
+      table: Table.toHtml,
+      youtube: YouTube.toHtml,
+      mathBlock: MathBlock.toHtml,
+      footnoteDefinition: FootnoteDefinition.toHtml,
+      admonition: Admonition.toHtml,
+      embed: Embed.toHtml,
+      hr: Hr.toHtml,
+    });
+    const toPlainText = schema.match({
+      heading: Heading.toPlainText,
+      p: P.toPlainText,
+      blockquote: BlockQuote.toPlainText,
+      pre: Pre.toPlainText,
+      ul: Ul.toPlainText,
+      ol: Ol.toPlainText,
+      taskList: TaskList.toPlainText,
+      table: Table.toPlainText,
+      youtube: YouTube.toPlainText,
+      mathBlock: MathBlock.toPlainText,
+      footnoteDefinition: FootnoteDefinition.toPlainText,
+      admonition: Admonition.toPlainText,
+      embed: Embed.toPlainText,
+      hr: Hr.toPlainText,
+    });
+
+    return {
+      is: S.is(schema),
+      toHtml,
+      toHtmlAll: (blocks: ReadonlyArray<Block.Type>): ReadonlyArray<HtmlChildNode> => Arr.map(blocks, toHtml),
+      toPlainText,
+      toPlainTextAll: (blocks: ReadonlyArray<Block.Type>): string => Arr.join(Arr.map(blocks, toPlainText), "\n"),
+    };
+  })
 );
 
 /**
@@ -2938,6 +3439,7 @@ export declare namespace Block {
  *
  * const document = Document.make({ children: [P.make({ children: [Text.make({ value: "Hello" })] })] })
  * document._tag // => "document"
+ * Document.toHtml(document)._tag // => "#fragment"
  * ```
  *
  * @category models
@@ -2958,6 +3460,11 @@ export class Document extends S.TaggedClass<Document>($I`Document`)(
   })
 ) {
   static readonly encodeSync = S.encodeSync(Document);
+
+  static readonly toPlainText = (document: Document): string => Block.toPlainTextAll(document.children);
+
+  static readonly toHtml = (document: Document): HtmlModel.Fragment =>
+    HtmlModel.Fragment.make({ children: Block.toHtmlAll(document.children) });
 }
 
 /**
