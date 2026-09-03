@@ -1029,7 +1029,7 @@ Demo video`);
         throw new Error("child beyond the document budget was read");
       },
     });
-    const overwide = Document.make({ children });
+    const overwide: Document = { ...Md.make([]), children };
 
     expect(documentSafetyIssues(overwide)).toMatchObject([
       {

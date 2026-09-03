@@ -12,12 +12,17 @@
   framing newline. Exact-head CI then rejected a direct `node:fs`/`async`
   implementation at the Effect compiler boundary and reported the corrected
   Markdown queue helper one point above the Fallow cognitive-complexity limit.
+  The following exact-head unit run also showed that an adversarial child-array
+  fixture threw during schema construction, before reaching the bounded reader
+  the test intended to prove.
 - **What would have prevented it:** Security-boundary reviews should separately
   account for source enumeration, intermediate staging, aggregate expansion,
   final retained output, and wire framing. Boundary tests should make data just
   beyond the decision point unreadable, not merely assert the final error.
   Resource-bound implementations in the CLI should begin from Effect platform
-  services and be kept below the repository complexity envelope before review.
+  services and be kept below the repository complexity envelope before review;
+  adversarial fixtures must bypass earlier eager constructors only at the
+  explicit trust boundary under test.
 
 ## 2026-09-03 — Runtime-root rollout prose described an older predecessor
 
