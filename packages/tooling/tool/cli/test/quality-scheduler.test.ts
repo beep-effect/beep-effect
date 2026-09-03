@@ -1,10 +1,13 @@
 import { createHash } from "node:crypto";
 import { renderAdmissionSnapshotLinesForTesting } from "@beep/repo-cli/test/Quality";
 import {
+  AdmissionAttemptTerminationJournal,
   AdmissionConfig,
   AdmissionJournalAdmitted,
   AdmissionJournalEvent,
   AdmissionJournalLockGeneration,
+  AdmissionPromotionTransition,
+  AdmissionReapClaim,
   AdmissionRequest,
   AdmissionSnapshot,
   acquireJournalFileLock,
@@ -13,6 +16,7 @@ import {
   admissionStatus,
   admissionTokenWeight,
   appendAdmissionJournalEvent,
+  attemptJournalPathForCheckout,
   decodeAdmissionJournalEvent,
   isOvershootLoserForTesting,
   isProcessIdentityAliveWithStartForTesting,
@@ -23,6 +27,7 @@ import {
   processIdentityStatusWithStartForTesting,
   processStartIdentityForPid,
   provideRuntimeRootForTesting,
+  QualitySchedulerError,
   RunScopeRecord,
   RuntimeRootChoice,
   reapAdmissionState,
@@ -132,6 +137,8 @@ const decodeLease = S.decodeUnknownEffect(S.fromJsonString(YeetAdmissionLease));
 const decodeTicket = S.decodeUnknownEffect(S.fromJsonString(YeetAdmissionTicket));
 const encodeJournalLockGeneration = S.encodeUnknownEffect(S.fromJsonString(AdmissionJournalLockGeneration));
 const decodeJournalLockGeneration = S.decodeUnknownEffect(S.fromJsonString(AdmissionJournalLockGeneration));
+const decodeAdmissionReapClaim = S.decodeUnknownEffect(S.fromJsonString(AdmissionReapClaim));
+const encodePromotionTransition = S.encodeUnknownEffect(S.fromJsonString(AdmissionPromotionTransition));
 const decodeJsonObject = S.decodeUnknownEffect(S.fromJsonString(S.JsonObject));
 const encodeJsonObject = S.encodeUnknownEffect(S.fromJsonString(S.JsonObject));
 
@@ -218,7 +225,9 @@ const ownProcStart = Effect.fnUntraced(function* () {
 });
 
 interface AdmissionTempRoot {
+  readonly claims: string;
   readonly leases: string;
+  readonly promotions: string;
   readonly quarantine: string;
   readonly queue: string;
   readonly root: string;
@@ -237,7 +246,9 @@ const withAdmissionTempRoot = Effect.fn("withAdmissionTempRoot")(
     const root = path.join(runtimeDir, "beep", "admit");
     const tempRoot: AdmissionTempRoot = {
       root,
+      claims: path.join(root, "claims"),
       leases: path.join(root, "leases"),
+      promotions: path.join(root, "promotions"),
       queue: path.join(root, "queue"),
       quarantine: path.join(root, "quarantine"),
     };
@@ -1216,7 +1227,7 @@ describe("quality-scheduler", () => {
             const fs = yield* FileSystem.FileSystem;
             const journalPath = yield* admissionJournalPath(tempRoot.root);
             // A directory squatting on the journal path fails every append;
-            // admission and release must still complete and clean up.
+            // admission stays usable while the durable promotion remains.
             yield* fs.makeDirectory(tempRoot.root, { recursive: true, mode: 0o700 });
             yield* fs.makeDirectory(journalPath, { mode: 0o700 });
             const during = yield* withQualityAdmission(
@@ -1228,7 +1239,13 @@ describe("quality-scheduler", () => {
             expect(during.leases).toHaveLength(1);
             expect(yield* listDirectory(tempRoot.leases)).toHaveLength(0);
             expect(yield* listDirectory(tempRoot.queue)).toHaveLength(0);
-            expect(yield* readJournalEvents(tempRoot.root)).toHaveLength(0);
+            expect(yield* listDirectory(tempRoot.promotions)).toHaveLength(1);
+            yield* fs.remove(journalPath, { force: true, recursive: true });
+            yield* reapAdmissionState({ apply: true });
+            expect(yield* listDirectory(tempRoot.promotions)).toHaveLength(0);
+            expect(A.map(yield* readJournalEvents(tempRoot.root), (event) => event._tag)).toStrictEqual([
+              "admission-admitted",
+            ]);
           })
         );
       })
@@ -1664,13 +1681,16 @@ describe("quality-scheduler", () => {
             const path = yield* Path.Path;
             // Keep scope-stop attempts off the host bus while exercising apply.
             const binDirectory = path.join(path.dirname(path.dirname(tempRoot.root)), "bin");
+            const checkoutRoot = path.join(path.dirname(path.dirname(tempRoot.root)), "checkout");
             yield* fs.makeDirectory(binDirectory, { recursive: true });
+            yield* fs.makeDirectory(checkoutRoot, { recursive: true });
             yield* writeExecutable(path.join(binDirectory, "systemctl"), "#!/bin/sh\nexit 0\n");
             const live = yield* writeFakeLease(tempRoot, { weightTokens: 3, originKey: "origin-live" });
             const dead = yield* writeFakeLease(tempRoot, {
               pid: DEAD_PID,
               weightTokens: 5,
               originKey: "origin-dead",
+              checkoutRoot,
               attemptId: O.some(JOURNALED_ATTEMPT_ID),
             });
             const snapshot = yield* admissionStatus(fastConfig);
@@ -1775,7 +1795,153 @@ describe("quality-scheduler", () => {
       })
     ));
 
-  it("still frees a dead lease when its eviction receipt cannot be published", () =>
+  it("recovers an overlapping promotion as one nonce lifecycle with idempotent publication", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const nonce = "promotion-crash-nonce";
+            const binDirectory = path.join(path.dirname(path.dirname(tempRoot.root)), "bin");
+            yield* fs.makeDirectory(binDirectory, { recursive: true });
+            yield* writeExecutable(path.join(binDirectory, "systemctl"), "#!/bin/sh\nexit 0\n");
+            const leasePath = yield* writeFakeLease(tempRoot, {
+              pid: DEAD_PID,
+              nonce,
+              originKey: "promotion-crash-origin",
+            });
+            const ticketPath = yield* writeFakeTicket(tempRoot, {
+              pid: DEAD_PID,
+              nonce,
+              originKey: "promotion-crash-origin",
+            });
+            const lease = yield* fs.readFileString(leasePath).pipe(Effect.flatMap(decodeLease));
+            const ticket = yield* fs.readFileString(ticketPath).pipe(Effect.flatMap(decodeTicket));
+            const promotionPath = path.join(tempRoot.promotions, `${nonce}.promotion.json`);
+            const transition = AdmissionPromotionTransition.make({
+              schemaVersion: "yeet-admission-promotion/v1",
+              nonce,
+              ticketPath,
+              leasePath,
+              ticket,
+              lease,
+              phase: "lease-published",
+              createdAtMillis: lease.admittedAtMillis,
+            });
+            yield* fs.makeDirectory(tempRoot.promotions, { recursive: true, mode: 0o700 });
+            yield* fs.writeFileString(promotionPath, `${yield* encodePromotionTransition(transition)}\n`);
+            yield* appendAdmissionJournalEvent(
+              tempRoot.root,
+              AdmissionJournalAdmitted.make({
+                schemaVersion: "yeet-admission-journal/v1",
+                _tag: "admission-admitted",
+                nonce,
+                pid: ticket.pid,
+                procStart: ticket.procStart,
+                kind: ticket.kind,
+                weightTokens: ticket.weightTokens,
+                priority: ticket.priority,
+                originKey: ticket.originKey,
+                enqueuedAtMillis: ticket.enqueuedAtMillis,
+                admittedAtMillis: lease.admittedAtMillis,
+                attemptId: ticket.attemptId,
+              })
+            );
+
+            yield* withPrependedPath(
+              binDirectory,
+              Effect.all([reapAdmissionState({ apply: true }), reapAdmissionState({ apply: true })], {
+                concurrency: "unbounded",
+              })
+            );
+
+            const events = yield* readJournalEvents(tempRoot.root);
+            expect(A.filter(events, AdmissionJournalEvent.guards["admission-admitted"])).toHaveLength(1);
+            expect(A.filter(events, AdmissionJournalEvent.guards["admission-lease-evicted"])).toHaveLength(1);
+            expect(A.filter(events, AdmissionJournalEvent.guards["admission-ticket-evicted"])).toHaveLength(0);
+            expect(yield* listDirectory(tempRoot.promotions)).toHaveLength(0);
+            expect(yield* listDirectory(tempRoot.queue)).toHaveLength(0);
+            expect(yield* listDirectory(tempRoot.leases)).toHaveLength(0);
+            expect(yield* listDirectory(tempRoot.claims)).toHaveLength(0);
+          })
+        );
+      })
+    ));
+
+  it("finishes a prepared promotion when its lease is already published by a live owner", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const nonce = "prepared-live-promotion";
+            const leasePath = yield* writeFakeLease(tempRoot, { nonce, originKey: "prepared-live-origin" });
+            const ticketPath = yield* writeFakeTicket(tempRoot, { nonce, originKey: "prepared-live-origin" });
+            const lease = yield* fs.readFileString(leasePath).pipe(Effect.flatMap(decodeLease));
+            const ticket = yield* fs.readFileString(ticketPath).pipe(Effect.flatMap(decodeTicket));
+            const promotionPath = path.join(tempRoot.promotions, `${nonce}.promotion.json`);
+            yield* fs.makeDirectory(tempRoot.promotions, { recursive: true, mode: 0o700 });
+            yield* fs.writeFileString(
+              promotionPath,
+              `${yield* encodePromotionTransition(
+                AdmissionPromotionTransition.make({
+                  schemaVersion: "yeet-admission-promotion/v1",
+                  nonce,
+                  ticketPath,
+                  leasePath,
+                  ticket,
+                  lease,
+                  phase: "prepared",
+                  createdAtMillis: lease.admittedAtMillis,
+                })
+              )}\n`
+            );
+
+            yield* reapAdmissionState({ apply: true });
+
+            expect(yield* listDirectory(tempRoot.promotions)).toHaveLength(0);
+            expect(yield* listDirectory(tempRoot.queue)).toHaveLength(0);
+            expect(yield* listDirectory(tempRoot.leases)).toHaveLength(1);
+            expect(
+              A.filter(yield* readJournalEvents(tempRoot.root), AdmissionJournalEvent.guards["admission-admitted"])
+            ).toHaveLength(1);
+          })
+        );
+      })
+    ));
+
+  it("coalesces legacy overlapping ticket and lease artifacts before terminal publication", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const nonce = "legacy-overlap-nonce";
+            const binDirectory = path.join(path.dirname(path.dirname(tempRoot.root)), "bin");
+            yield* fs.makeDirectory(binDirectory, { recursive: true });
+            yield* writeExecutable(path.join(binDirectory, "systemctl"), "#!/bin/sh\nexit 0\n");
+            yield* writeFakeLease(tempRoot, { pid: DEAD_PID, nonce, originKey: "legacy-overlap" });
+            yield* writeFakeTicket(tempRoot, { pid: DEAD_PID, nonce, originKey: "legacy-overlap" });
+
+            yield* withPrependedPath(binDirectory, reapAdmissionState({ apply: true }));
+
+            const events = yield* readJournalEvents(tempRoot.root);
+            expect(A.filter(events, AdmissionJournalEvent.guards["admission-lease-evicted"])).toHaveLength(1);
+            expect(A.filter(events, AdmissionJournalEvent.guards["admission-ticket-evicted"])).toHaveLength(0);
+            expect(yield* listDirectory(tempRoot.queue)).toHaveLength(0);
+            expect(yield* listDirectory(tempRoot.leases)).toHaveLength(0);
+          })
+        );
+      })
+    ));
+
+  it("retains and retries a dead-lease claim when its eviction receipt cannot be published", () =>
     Effect.runPromise(
       Effect.gen(function* () {
         const gibRef = yield* Ref.make(50);
@@ -1784,20 +1950,96 @@ describe("quality-scheduler", () => {
             const fs = yield* FileSystem.FileSystem;
             const path = yield* Path.Path;
             const binDirectory = path.join(path.dirname(path.dirname(tempRoot.root)), "bin");
+            const checkoutRoot = path.join(path.dirname(path.dirname(tempRoot.root)), "checkout");
             yield* fs.makeDirectory(binDirectory, { recursive: true });
+            yield* fs.makeDirectory(checkoutRoot, { recursive: true });
             yield* writeExecutable(path.join(binDirectory, "systemctl"), "#!/bin/sh\nexit 0\n");
             const dead = yield* writeFakeLease(tempRoot, {
               pid: DEAD_PID,
               weightTokens: 5,
               originKey: "origin-dead-journal-failure",
+              checkoutRoot,
               attemptId: O.some(JOURNALED_ATTEMPT_ID),
             });
             yield* fs.makeDirectory(path.join(tempRoot.root, "journal.ndjson"));
 
-            const applied = yield* withPrependedPath(binDirectory, reapAdmissionState({ apply: true }));
+            const failure = yield* withPrependedPath(binDirectory, reapAdmissionState({ apply: true })).pipe(
+              Effect.flip
+            );
 
-            expect(applied.dead).toStrictEqual([dead]);
+            expect(failure.message).toContain("Failed to read admission journal");
             expect(yield* listDirectory(tempRoot.leases)).toHaveLength(0);
+            const pendingClaims = yield* listDirectory(tempRoot.claims);
+            expect(pendingClaims).toHaveLength(1);
+            const pendingClaim = yield* fs
+              .readFileString(path.join(tempRoot.claims, O.getOrThrow(A.head(pendingClaims))))
+              .pipe(Effect.flatMap(decodeAdmissionReapClaim));
+            expect(pendingClaim.attemptJournal).toBe("complete");
+            expect(pendingClaim.admissionJournal).toBe("pending");
+            yield* fs.remove(path.join(tempRoot.root, "journal.ndjson"), { force: true, recursive: true });
+            yield* withPrependedPath(binDirectory, reapAdmissionState({ apply: true }));
+            expect(yield* listDirectory(tempRoot.claims)).toHaveLength(0);
+            expect(
+              A.filter(yield* readJournalEvents(tempRoot.root), AdmissionJournalEvent.guards["admission-lease-evicted"])
+            ).toHaveLength(1);
+            const attemptText = yield* fs.readFileString(
+              yield* attemptJournalPathForCheckout(checkoutRoot, "feat/other")
+            );
+            const attemptRows = yield* Effect.forEach(
+              pipe(attemptText, Str.split("\n"), A.filter(Str.isNonEmpty)),
+              decodeYeetAttemptJournalEvent
+            );
+            expect(A.filter(attemptRows, (event) => event._tag === "attempt-terminated")).toHaveLength(1);
+          })
+        );
+      })
+    ));
+
+  it("retains both pending sinks when attempt termination fails before admission eviction", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const binDirectory = path.join(path.dirname(path.dirname(tempRoot.root)), "bin");
+            const checkoutRoot = path.join(path.dirname(path.dirname(tempRoot.root)), "checkout");
+            yield* fs.makeDirectory(binDirectory, { recursive: true });
+            yield* fs.makeDirectory(checkoutRoot, { recursive: true });
+            yield* writeExecutable(path.join(binDirectory, "systemctl"), "#!/bin/sh\nexit 0\n");
+            yield* writeFakeLease(tempRoot, {
+              pid: DEAD_PID,
+              originKey: "origin-attempt-sink-failure",
+              checkoutRoot,
+              attemptId: O.some(JOURNALED_ATTEMPT_ID),
+            });
+            const unavailableAttemptJournal = AdmissionAttemptTerminationJournal.of({
+              appendOnce: () =>
+                Effect.fail(QualitySchedulerError.make({ message: "attempt termination sink unavailable" })),
+            });
+
+            const failure = yield* withPrependedPath(binDirectory, reapAdmissionState({ apply: true })).pipe(
+              Effect.provideService(AdmissionAttemptTerminationJournal, unavailableAttemptJournal),
+              Effect.flip
+            );
+
+            expect(failure.message).toContain("attempt termination sink unavailable");
+            expect(yield* listDirectory(tempRoot.leases)).toHaveLength(0);
+            const pendingClaims = yield* listDirectory(tempRoot.claims);
+            expect(pendingClaims).toHaveLength(1);
+            const pendingClaim = yield* fs
+              .readFileString(path.join(tempRoot.claims, O.getOrThrow(A.head(pendingClaims))))
+              .pipe(Effect.flatMap(decodeAdmissionReapClaim));
+            expect(pendingClaim.attemptJournal).toBe("pending");
+            expect(pendingClaim.admissionJournal).toBe("pending");
+            expect(yield* readJournalEvents(tempRoot.root)).toHaveLength(0);
+
+            yield* withPrependedPath(binDirectory, reapAdmissionState({ apply: true }));
+            expect(yield* listDirectory(tempRoot.claims)).toHaveLength(0);
+            expect(
+              A.filter(yield* readJournalEvents(tempRoot.root), AdmissionJournalEvent.guards["admission-lease-evicted"])
+            ).toHaveLength(1);
           })
         );
       })
@@ -1812,24 +2054,34 @@ describe("quality-scheduler", () => {
             const fs = yield* FileSystem.FileSystem;
             const path = yield* Path.Path;
             const binDirectory = path.join(path.dirname(path.dirname(tempRoot.root)), "bin");
+            const checkoutRoot = path.join(path.dirname(path.dirname(tempRoot.root)), "checkout");
             yield* fs.makeDirectory(binDirectory, { recursive: true });
+            yield* fs.makeDirectory(checkoutRoot, { recursive: true });
             yield* writeExecutable(path.join(binDirectory, "systemctl"), "#!/bin/sh\nexit 0\n");
             const dead = yield* writeFakeLease(tempRoot, {
               pid: DEAD_PID,
               weightTokens: 5,
               originKey: "origin-dead-remove-failure",
+              checkoutRoot,
               attemptId: O.some(JOURNALED_ATTEMPT_ID),
             });
 
-            const applied = yield* Effect.acquireUseRelease(
+            const failure = yield* Effect.acquireUseRelease(
               fs.chmod(tempRoot.leases, 0o500),
-              () => withPrependedPath(binDirectory, reapAdmissionState({ apply: true })),
+              () => withPrependedPath(binDirectory, reapAdmissionState({ apply: true })).pipe(Effect.flip),
               () => fs.chmod(tempRoot.leases, 0o700)
             );
 
-            expect(applied.dead).toStrictEqual([dead]);
+            expect(failure.message).toContain("Failed to remove claimed admission state");
             expect(yield* listDirectory(tempRoot.leases)).toStrictEqual([path.basename(dead)]);
+            expect(yield* listDirectory(tempRoot.claims)).toHaveLength(1);
             expect(yield* readJournalEvents(tempRoot.root)).toHaveLength(0);
+            yield* withPrependedPath(binDirectory, reapAdmissionState({ apply: true }));
+            expect(yield* listDirectory(tempRoot.claims)).toHaveLength(0);
+            expect(yield* listDirectory(tempRoot.leases)).toHaveLength(0);
+            expect(
+              A.filter(yield* readJournalEvents(tempRoot.root), AdmissionJournalEvent.guards["admission-lease-evicted"])
+            ).toHaveLength(1);
           })
         );
       })

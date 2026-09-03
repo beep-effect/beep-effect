@@ -19,6 +19,7 @@ import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { UUID } from "@beep/schema/String";
 import { Clock, Duration, Effect, Encoding, FileSystem, Number as N, Path, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Eq from "effect/Equal";
 import { constant, dual, flow } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -754,7 +755,8 @@ const publishJournalAtomic = Effect.fnUntraced(function* (
 const rewriteJournalLocked = Effect.fnUntraced(function* (
   journalPath: string,
   event: AdmissionJournalEvent,
-  line: string
+  line: string,
+  idempotent: boolean
 ): Effect.fn.Return<void, QualitySchedulerError, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
   const text = yield* fs
@@ -776,6 +778,19 @@ const rewriteJournalLocked = Effect.fnUntraced(function* (
       Effect.map((decoded) => ({ event: decoded, line: raw }))
     )
   );
+  const alreadyRecorded = A.some(retained, ({ event: recorded }) =>
+    O.exists(
+      recorded,
+      (candidate) =>
+        candidate._tag === event._tag &&
+        candidate.nonce === event.nonce &&
+        candidate.pid === event.pid &&
+        Eq.equals(candidate.attemptId, event.attemptId)
+    )
+  );
+  if (idempotent && alreadyRecorded) {
+    return;
+  }
   const records = A.append(retained, { event: O.some(event), line });
   const admittedIndexes = pipe(
     A.zip(
@@ -831,9 +846,10 @@ const rewriteJournalLocked = Effect.fnUntraced(function* (
  * @category utilities
  * @since 0.0.0
  */
-export const appendAdmissionJournalEvent = Effect.fn("AdmissionJournal.append")(function* (
+const appendAdmissionJournalEventWithMode = Effect.fnUntraced(function* (
   root: string,
-  event: AdmissionJournalEvent
+  event: AdmissionJournalEvent,
+  idempotent: boolean
 ): Effect.fn.Return<void, QualitySchedulerError, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -851,5 +867,44 @@ export const appendAdmissionJournalEvent = Effect.fn("AdmissionJournal.append")(
       message: `Admission journal lock "${lockPath}" stayed busy; dropping one ${event._tag} event.`,
     });
   }
-  yield* Effect.ensuring(rewriteJournalLocked(journalPath, event, line), releaseJournalFileLock(lockPath, token));
+  yield* Effect.ensuring(
+    rewriteJournalLocked(journalPath, event, line, idempotent),
+    releaseJournalFileLock(lockPath, token)
+  );
+});
+
+export const appendAdmissionJournalEvent = Effect.fn("AdmissionJournal.append")(function* (
+  root: string,
+  event: AdmissionJournalEvent
+): Effect.fn.Return<void, QualitySchedulerError, FileSystem.FileSystem | Path.Path> {
+  yield* appendAdmissionJournalEventWithMode(root, event, false);
+});
+
+/**
+ * Publish one admission transition at most once for its lifecycle identity.
+ *
+ * The journal lock makes the identity check and append one serialized
+ * operation. Identity is the event tag plus admission nonce, owner PID, and
+ * optional attempt ID, so replaying a durable claim or promotion transition
+ * cannot create a duplicate row.
+ *
+ * **Example** (Reference the idempotent journal writer)
+ *
+ * ```ts
+ * import { appendAdmissionJournalEventOnce } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(typeof appendAdmissionJournalEventOnce) // "function"
+ * ```
+ *
+ * @param root - Machine-wide admission root directory.
+ * @param event - Admission transition to publish once.
+ * @returns An effect that acknowledges an existing matching row or appends it durably.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const appendAdmissionJournalEventOnce = Effect.fn("AdmissionJournal.appendOnce")(function* (
+  root: string,
+  event: AdmissionJournalEvent
+): Effect.fn.Return<void, QualitySchedulerError, FileSystem.FileSystem | Path.Path> {
+  yield* appendAdmissionJournalEventWithMode(root, event, true);
 });
