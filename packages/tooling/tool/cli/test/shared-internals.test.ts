@@ -643,6 +643,59 @@ describe("canUseTurboCacheSecretSession", () => {
   );
 
   it.effect(
+    "keeps environment-health file fallbacks and healthy references non-blocking",
+    Effect.fnUntraced(function* () {
+      const fileSystemError = (method: string, pathOrDescriptor: string) =>
+        PlatformError.systemError({
+          _tag: "PermissionDenied",
+          module: "FileSystem",
+          method,
+          pathOrDescriptor,
+          description: "fixture denied",
+        });
+      const spawner = ChildProcessSpawner.make(() => Effect.succeed(stubHandle(0)));
+      const warningsWith = (repoRoot: string, fileSystemLayer: Layer.Layer<FileSystem.FileSystem>) =>
+        provideScopedLayer(Layer.merge(fileSystemLayer, Path.layer))(turboEnvironmentHealthWarnings(repoRoot, {})).pipe(
+          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
+        );
+
+      clearTurboCacheSecretSessionVerdictsForTesting();
+      const existsFailure = yield* warningsWith(
+        "/repo/exists-failure",
+        FileSystem.layerNoop({
+          exists: (target) => Effect.fail(fileSystemError("exists", target)),
+        })
+      );
+      const readFailure = yield* warningsWith(
+        "/repo/read-failure",
+        FileSystem.layerNoop({
+          exists: () => Effect.succeed(true),
+          readFileString: (target) => Effect.fail(fileSystemError("readFileString", target)),
+        })
+      );
+      const referenceFree = yield* warningsWith(
+        "/repo/reference-free",
+        FileSystem.layerNoop({
+          exists: () => Effect.succeed(true),
+          readFileString: () => Effect.succeed("PLAIN_VALUE=fixture\n# no secret references"),
+        })
+      );
+      const healthy = yield* warningsWith(
+        "/repo/healthy-reference",
+        FileSystem.layerNoop({
+          exists: () => Effect.succeed(true),
+          readFileString: () => Effect.succeed("SERVICE_TOKEN=op://fixture-vault/service/token"),
+        })
+      );
+
+      expect(existsFailure).toEqual([]);
+      expect(readFailure).toEqual([]);
+      expect(referenceFree).toEqual([]);
+      expect(healthy).toEqual([]);
+    })
+  );
+
+  it.effect(
     "fails closed when a cache-quad reference is broken",
     Effect.fnUntraced(function* () {
       const brokenReference = "op://fixture-vault/turbo/missing-token";
