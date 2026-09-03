@@ -1,0 +1,74 @@
+id: "otp:jv-merge-readiness-assessment:001"
+hypothesis_ref: "dh:jv-merge-readiness-assessment:001"
+identity_card_ref: "ic:jv-merge-readiness-assessment:001"
+foundational_status: explicitly_deferred
+term:
+  preferred_label: "verification evidence"
+  local_name: VerificationEvidence
+  proposed_iri: "https://oip.law/ontology/ci-ops#VerificationEvidence"
+  owl_entity_kind: class
+definition:
+  text: >-
+    A provenance-bearing information object used to justify a verification
+    conclusion within a bounded target, tree, epoch, policy, and evidence
+    context; merge-readiness assessments are instances of this broad ratified
+    class rather than its defining extension.
+  source:
+    - "CQ-006"
+    - "so:sha256:0fe42bf9ddcb6f694fd168ec852d86cce4ac9945aa66e1d55d1531e6ca799e46"
+    - "so:sha256:223ed0681f8f87a828ea875cbfde48d86c2cedd8d649f476ca43f10a42134437"
+    - "so:sha256:4d2f65e45969d3636bdb53c81dc0c3192aa766ad2bc9e98e6b641d3e90e0d7db"
+foundational:
+  ufo_category: information_object
+  gufo_alignment: "gufo:Endurant"
+ontoclean:
+  rigidity: unresolved
+  identity: unresolved
+  dependence: relational
+parents: []
+revision_log:
+  - from_sha256: "c0e8c8871a94fd3d11e4a24182d424c3f423e4d664d12da2984db23cfb58de32"
+    addressed:
+      - "exact-reuse-narrows-ratified-identity"
+      - "cq-does-not-require-merge-readiness-assessment"
+      - "discriminator-true-of-readiness-dto"
+    sitting_struck:
+      - "cq-does-not-require-merge-readiness-assessment"
+      - "discriminator-true-of-readiness-dto"
+    disposition: >-
+      Run-2 sitting 1 struck the two invalid attacks and restored the exact
+      reuse proposal to the ratified broad VerificationEvidence extension.
+reuse:
+  searched: true
+  exact_reuse_found: true
+  mappings:
+    - iri: "https://oip.law/ontology/ci-ops#VerificationEvidence"
+      compatibility: >-
+        The ratified class already covers provenance-bearing evidence records;
+        a merge-readiness assessment is one such record under a bounded head
+        and policy context, so no new assessment class is required.
+operational_warrant:
+  competency_questions: ["CQ-005", "CQ-006"]
+  semantic_support_for: []
+alternatives_rejected:
+  - >-
+    The implementation-only Boolean-aggregate null is rejected because the
+    records assert evaluated readiness criteria for concrete runs.
+  - >-
+    The assessment is not identical with code correctness or mergeability;
+    it remains context-bound evidence about those conditions.
+open_issues:
+  - >-
+    A time-indexed merge-readiness situation or specialized assessment record
+    may be modeled separately only after it receives its own decision warrant;
+    neither narrows the exact-reused VerificationEvidence class here.
+  - >-
+    The evidence may be an aggregate over independently identified records;
+    reuse here does not assert that the aggregate supplies their identities.
+  - >-
+    Run-3 evidence required for the deferred identity boundary: authoritative
+    generation, issuance, custody, copying, correction, and claim-realization
+    provenance across heterogeneous VerificationEvidence instances.
+revision_requests: []
+review: {foundational_agent: pending, adversarial_agent: pending, steward: pending}
+status: proposed

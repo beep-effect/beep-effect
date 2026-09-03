@@ -1,0 +1,26 @@
+id: "dh:pb-scheduler-process-owner:001"
+observation_refs:
+  - "po:sha256:5f469b32b1a76b6af2b9ebbed7334996404ec4029d63bca140ebd2a796e0ba87"
+  - "po:sha256:7debc0657f601d5714b767d284e75c22c236b1da704789e970affedec30e3a1b"
+cq_warrants:
+  - "CQ-021"
+proposed_referent:
+  label: "scheduler process owner"
+  description: "The process-grained agent owner that a scheduler must reidentify despite operating-system PID reuse."
+representation_status: domain_referent
+alternatives:
+  - label: "serialized owner-key tuple"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "two unrelated scheduler fields"
+    representation_status: implementation_artifact_only
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: "One observation explicitly states that the owner must be identified across PID reuse, while the other supplies pid and procStart together. This states a reidentification problem concerning successive operating-system processes rather than merely naming fields."
+  discriminator: "The prose requires distinguishing the same numeric PID across reuse by pairing it with process start, which would be unnecessary and false as an identity requirement if no process owner were being reidentified across real process lifetimes."
+epistemic_status: proposed
+confidence:
+  value: 0.84
+  use_for_acceptance: false

@@ -1,0 +1,43 @@
+id: "ic:ov-has-scope:001"
+hypothesis_ref: "dh:ov-has-scope:001"
+identity:
+  supplies_identity: false
+  identity_criterion: >-
+    This object property supplies no identity: one scheduled-scope fact is the
+    same only for the same ScheduleStep, Scope designation, containing
+    ScheduleProposal, and projection interpretation; equal scope tags on
+    different steps do not merge the facts.
+  reidentification_key:
+    - "ScheduleStep identity"
+    - "Scope identity and designation semantics"
+    - "containing ScheduleProposal and projection interpretation"
+ontoclean:
+  rigidity: unresolved
+  carries_identity: false
+  supplies_identity: false
+  unity: >-
+    One relational assertion connecting one ScheduleStep to the Scope
+    designation that qualifies its scheduled content.
+  dependence: relational
+ufo_analysis:
+  candidate_category: none
+  alternatives:
+    - "a broader scope relation shared by schedules, steps, work specifications, and evidence"
+    - "a reified scoped-prescription situation carrying derivation provenance"
+    - "an unindividuated scope-tag field in the projection schema"
+  existential_dependencies:
+    - "The ScheduleStep whose scheduled content is qualified"
+    - "The Scope designation associated with that step"
+    - "The containing ScheduleProposal and projection interpretation"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - "a semantic change to the step's scope creates a successor assertion"
+    - "the containing proposal or step ceases to have a faithful realization"
+counterexamples:
+  - description: >-
+      Two steps in one or different proposals can carry the same scope tag while
+      ordering different admission targets, so tag equality identifies neither
+      the scheduled-scope assertion nor its ScheduleStep bearer.
+status: proposed

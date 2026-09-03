@@ -1,0 +1,33 @@
+id: "ic:pb-docgen-affected-scope:001"
+hypothesis_ref: "dh:pb-docgen-affected-scope:001"
+identity:
+  supplies_identity: unresolved
+  identity_criterion: "Unresolved: sameness requires deciding whether the referent is the extensional input selection for one run or a reusable selection specification; either account must distinguish base, head, dirty-state snapshot, repository, and membership or rule lineage."
+  reidentification_key:
+    - "repository plus origin/main and HEAD revisions"
+    - "dirty-file snapshot at the selection boundary"
+    - "run provenance or selection-specification version"
+ontoclean:
+  rigidity: unresolved
+  carries_identity: unresolved
+  supplies_identity: unresolved
+  unity: "Unresolved between one extensional set or selection situation tied to a run and one repeatable information object prescribing how such sets are selected."
+  dependence: relational
+ufo_analysis:
+  candidate_category: unresolved
+  alternatives:
+    - "a context-indexed situation comprising the inputs selected for one documentation run"
+    - "an information-object specification for affected documentation selection"
+    - "an extensional collection for which none of the listed entity categories applies"
+  existential_dependencies:
+    - "a repository state with fixed base, head, and dirty-file observation boundaries"
+    - "either a particular documentation run or an authoritative selection rule"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: unresolved
+  terminal_states:
+    - "the run-specific selection interval ends"
+    - "a selection specification is superseded"
+counterexamples:
+  - description: "The same origin/main-to-HEAD revisions can yield different selected inputs when the dirty-file snapshot changes, while different selection rules can coincidentally yield the same member set."
+status: proposed

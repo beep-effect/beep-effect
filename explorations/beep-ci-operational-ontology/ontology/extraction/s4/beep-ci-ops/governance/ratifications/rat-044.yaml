@@ -1,0 +1,9 @@
+id: rat:44
+proposal_ref: otp:pb-review-fix-class-cap:001
+proposal_sha256: 05cb39c97a6a5f2b3ef2aca25568346b91189e4521d1fefef1cce8f4fc0a437f
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-09-03T09:05:00Z'
+verbatim_decision: Accept the review-fix-class cap as AdmissionPolicy component content.

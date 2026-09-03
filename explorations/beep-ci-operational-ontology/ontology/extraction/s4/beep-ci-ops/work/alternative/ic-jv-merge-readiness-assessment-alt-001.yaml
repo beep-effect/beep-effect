@@ -1,0 +1,36 @@
+id: ic:jv-merge-readiness-assessment-alt:001
+hypothesis_ref: dh:jv-merge-readiness-assessment:001
+identity:
+  supplies_identity: true
+  identity_criterion: Two merge-readiness assessments are the same iff they are the same evaluated
+    condition-set about the same pull-request or closeout run at the same evaluation instant.
+    Boolean fields such as ready, checksGreen, and mergeable are evidence of the evaluation,
+    never the criterion. A later evaluation of the same PR is a different assessment.
+  reidentification_key:
+  - ready (evidence)
+  - checksGreen/requiredChecksGreen (evidence)
+  - threadsResolved (evidence)
+  - mergeable/mergeStateAcceptable (evidence)
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: one evaluated condition snapshot about one PR/run at one instant
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - situation
+  existential_dependencies:
+  - the pull request or closeout run being assessed
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+- description: A verdict with checksGreen=true and threadsResolved=true but ready=false and
+    failing=closeout-run shows the record is not identical with the PR being merge-ready;
+    the assessment can report unreadiness while some criteria hold.
+- description: Two different runs both listing six PR criteria as true would be two assessments,
+    not one situation of merge-readiness.
+status: proposed

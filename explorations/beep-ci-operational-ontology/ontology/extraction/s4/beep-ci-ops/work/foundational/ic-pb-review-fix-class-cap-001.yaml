@@ -1,0 +1,33 @@
+id: "ic:pb-review-fix-class-cap:001"
+hypothesis_ref: "dh:pb-review-fix-class-cap:001"
+identity:
+  supplies_identity: true
+  identity_criterion: "Two admission-policy specifications are the same only when they continue one authoritative policy lineage with the same normative ordering, capacity, aging, class-cap, starvation, applicability, and version semantics; one class-cap clause or equal configuration values alone are insufficient."
+  reidentification_key:
+    - "policy authority and version lineage"
+    - "complete normative rule set"
+    - "declared applicability scope"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: "One governed specification whose admission clauses share an authority, applicability scope, and revision boundary."
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "a deployed normative policy regime or mode"
+    - "an invocation of the Boolean scheduler guard"
+    - "an independently issued review-fix clause"
+  existential_dependencies:
+    - "a policy authority and admission-domain vocabulary"
+    - "at least one faithful inscription or executable carrier"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - "superseded by an authoritative policy revision"
+    - "withdrawn from its applicability scope"
+counterexamples:
+  - description: "Two complete policies can share the same review-fix cap while differing in capacity, ordering, aging, starvation, authority, or applicability; the cap cannot reidentify the policy."
+status: proposed

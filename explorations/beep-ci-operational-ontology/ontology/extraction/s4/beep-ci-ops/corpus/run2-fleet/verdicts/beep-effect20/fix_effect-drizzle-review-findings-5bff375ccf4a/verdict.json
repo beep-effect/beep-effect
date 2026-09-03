@@ -1,0 +1,67 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "fix/effect-drizzle-review-findings",
+  "committed": true,
+  "createdAt": "2026-08-11T20:09:47.200Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "advisory:01-fallow-feedback",
+      "label": "fallow-advisory-feedback",
+      "phase": "feedback",
+      "status": "passed",
+      "durationMs": 1764.718824,
+      "exitCode": 0
+    },
+    {
+      "id": "commit:01-git-commit",
+      "label": "commit:git:commit",
+      "phase": "commit",
+      "status": "passed",
+      "durationMs": 536.815341,
+      "exitCode": 0
+    },
+    {
+      "id": "publish:00-head-install-preflight",
+      "label": "publish:head-install-preflight",
+      "phase": "publish",
+      "status": "passed",
+      "durationMs": 4099.557307,
+      "exitCode": 0
+    },
+    {
+      "id": "full:01-pre-push",
+      "label": "full:pre-push",
+      "phase": "full",
+      "status": "passed",
+      "durationMs": 708484.561419,
+      "exitCode": 0
+    },
+    {
+      "id": "publish:01-git-push",
+      "label": "publish:git:push",
+      "phase": "publish",
+      "status": "passed",
+      "durationMs": 1769.6073,
+      "exitCode": 0
+    }
+  ],
+  "message": "yeet publish succeeded.",
+  "mode": "publish",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": true,
+  "runId": "fix_effect-drizzle-review-findings-5bff375ccf4a",
+  "attemptId": "2753be99-aecc-4c54-b844-812be8b84788",
+  "startedAt": "2026-08-11T19:57:50.174Z",
+  "endedAt": "2026-08-11T20:09:47.200Z",
+  "elapsedMs": 717026,
+  "indexPath": "<fleet>/beep-effect20/.beep/yeet/quality-issue-index.json",
+  "baseFreshness": {
+    "behindCount": 0,
+    "mergeBase": "6eb1f37024eb4db61032ea6a7672f6c331a1d3a8",
+    "overlappingPaths": []
+  }
+}

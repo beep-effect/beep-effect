@@ -1,0 +1,30 @@
+id: "dh:pc-heartbeat-suspicion-policy:001"
+observation_refs:
+  - "po:sha256:cb78d031658bfe80535beb490352c2086b2b8f629e3819df4fba336fbeb37598"
+  - "po:sha256:cb9064130b643be08d25e627bcfc5264739ac1397a236d353835b473c2df5734"
+cq_warrants:
+  - "CQ-008"
+proposed_referent:
+  label: "heartbeat-suspicion policy"
+  description: >-
+    An operational rule that uses a time threshold to mark stale heartbeats as
+    suspicious without treating suspicion as authority to kill a holder.
+representation_status: unresolved
+alternatives:
+  - label: "documentation of scheduler liveness behavior"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "configuration field and aspirational prose only"
+    representation_status: implementation_artifact_only
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: >-
+    The threshold name and research prose articulate a possible suspicion
+    policy, but they observe no stale heartbeat, suspected holder, or deployed
+    consequence. A design statement plus its configuration field may still be
+    implementation documentation, so the rival interpretations remain open.
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.88, use_for_acceptance: false}

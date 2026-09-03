@@ -1,0 +1,34 @@
+id: ic:pa-workspace-package-alt:001
+hypothesis_ref: dh:pa-workspace-package:001
+identity:
+  supplies_identity: true
+  identity_criterion: Two workspace packages are the same kind-individual iff they are the
+    same versioned @beep workspace member as a software artifact — the same package lineage
+    in the workspace, not merely the same printed name. The strings @beep/root or @beep/identity
+    and a topo-sort row number are reidentification evidence, never the criterion. Whether
+    a version bump mints a new individual is not settled by the observations.
+  reidentification_key:
+  - package name (evidence)
+  - workspace:^ declaration (evidence)
+  - topo-sort row (evidence)
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: one versioned workspace module participating as a vertex in the dependency topology
+  dependence: none
+ufo_analysis:
+  candidate_category: kind
+  alternatives:
+  - information_object
+  existential_dependencies: []
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+- description: A topological-sort row '@beep/scratchpad 63' is a listing, not the package;
+    identifying the package with the row would make re-running the sort a new artifact.
+- description: A package.json workspace:^ on @beep/identity records a dependency on the package;
+    it is not the identity of @beep/identity itself.
+status: proposed

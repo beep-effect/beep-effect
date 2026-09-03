@@ -1,0 +1,43 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "docs/goals-explorations-review",
+  "committed": false,
+  "createdAt": "2026-08-17T11:26:03.604Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "publish:00-head-install-preflight",
+      "label": "publish:head-install-preflight",
+      "phase": "publish",
+      "status": "passed",
+      "durationMs": 4833.911421,
+      "exitCode": 0
+    },
+    {
+      "id": "publish:01-git-push",
+      "label": "publish:git:push",
+      "phase": "publish",
+      "status": "passed",
+      "durationMs": 1706.342155,
+      "exitCode": 0
+    }
+  ],
+  "message": "yeet publish succeeded.",
+  "mode": "publish",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": true,
+  "runId": "docs_goals-explorations-review-4d189e849a58",
+  "attemptId": "b78e2bc5-a5e1-47de-aad1-33d9bab73ecf",
+  "startedAt": "2026-08-17T11:25:56.935Z",
+  "endedAt": "2026-08-17T11:26:03.604Z",
+  "elapsedMs": 6669,
+  "indexPath": "<fleet>/beep-effect2/.beep/yeet/quality-issue-index.json",
+  "baseFreshness": {
+    "behindCount": 0,
+    "mergeBase": "d968f803a379984a9a85983d4f93bab17571e9f3",
+    "overlappingPaths": []
+  }
+}

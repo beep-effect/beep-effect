@@ -1,0 +1,51 @@
+target: "otp:pb-scheduler-process-owner:001"
+target_sha256: "7000aa9694afcfb93ac19eb21349b898937043f5169c05c747916cfa758312c6"
+chain_sha256: "0050ca49a29e0962947d9e7785c8b157bff55777b67aa96fe07d9356b34d62ea"
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The exact-reused Agent proposal asserts no parent edge, so no proposed
+    subsumption relation is present.
+revision_requests: []
+attacks:
+  - surface: identity
+    rule: role-bearer-collapse-on-exact-reuse
+    counterexample: >-
+      One operating-system process exists before ownership, can own several
+      requests or grants during one uninterrupted interval, and persists after
+      its last ownership ends. The repaired card now makes Agent the anti-rigid
+      owner role, carries process identity across changing items, and ends the
+      role at a zero-ownership interval instead of identifying it with the
+      rigid process bearer.
+    outcome: survived
+  - surface: warrant
+    rule: decision-cq-requires-term
+    counterexample: >-
+      CQ-021 explicitly selects the Agent that owns each queued SeatRequest via
+      requestedBy. Removing the anti-rigid owner role leaves the requested
+      ?agent binding without its required class-level interpretation, so this
+      is a decision term rather than an optional process helper.
+    outcome: survived
+  - surface: null_discriminator
+    rule: discriminator-false-in-null-world
+    counterexample: >-
+      A numeric PID alone can be reused by causally distinct processes, while a
+      pid and process-start coordinate is still only evidence for a bearer.
+      The requirement to reidentify the process owner across PID reuse and its
+      actual ownership of requests defeat the field-pair-only null without
+      making the coordinate tuple the Agent.
+    outcome: survived
+rival_models_still_viable:
+  - "A separate rigid OSProcess class supplies identity to the anti-rigid Agent role."
+  - "A separately modeled owner-coordinate information object records pid and process-start evidence."
+evidence:
+  - "po:sha256:5f469b32b1a76b6af2b9ebbed7334996404ec4029d63bca140ebd2a796e0ba87"
+  - "po:sha256:7debc0657f601d5714b767d284e75c22c236b1da704789e970affedec30e3a1b"
+  - "CQ-021"

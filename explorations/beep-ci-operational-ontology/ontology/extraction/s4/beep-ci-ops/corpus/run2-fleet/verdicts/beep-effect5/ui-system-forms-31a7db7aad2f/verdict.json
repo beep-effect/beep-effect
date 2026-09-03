@@ -1,0 +1,29 @@
+{
+  "schemaVersion": "yeet-verdict/v1",
+  "base": "origin/main",
+  "branch": "ui-system-forms",
+  "committed": false,
+  "createdAt": "2026-06-19T06:08:54.813Z",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "closeout:01-pr-context",
+      "label": "closeout:pr-context",
+      "phase": "monitor",
+      "status": "not-run"
+    },
+    {
+      "id": "closeout:02-review-gates",
+      "label": "closeout:review-gates",
+      "phase": "monitor",
+      "status": "not-run"
+    }
+  ],
+  "message": "yeet PR closeout failed with 18 issue(s).",
+  "mode": "closeout",
+  "outcome": "failure",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "ui-system-forms-31a7db7aad2f",
+  "indexPath": "<fleet>/beep-effect5/.beep/yeet/quality-issue-index.json"
+}

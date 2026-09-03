@@ -1,0 +1,10 @@
+id: po:sha256:79df3741e52f870a9c5d7ac0f3c76fc333a1341bf8f15c7a7720f2b6982e88b3
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
+source_span:
+  start_line: 911
+  end_line: 911
+quote: nowMillis - ticket.blockedOnOriginAtMillis <= 3 * config.heartbeatSeconds * 1000
+epistemic_status: quoted_prose

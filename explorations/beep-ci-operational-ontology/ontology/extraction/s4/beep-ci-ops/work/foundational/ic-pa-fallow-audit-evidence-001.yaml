@@ -1,0 +1,43 @@
+id: "ic:pa-fallow-audit-evidence:001"
+hypothesis_ref: "dh:pa-fallow-audit-evidence:001"
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    The FallowAuditLane is the same repeatable prescription only while it
+    preserves one governed authority and version with the same new-only
+    boundary semantics, base-resolution rule, target-selection rule, expected
+    output and completion/failure conditions; executions and results are not
+    part of its identity.
+  reidentification_key:
+    - "governing authority and specification version"
+    - "new-only boundary and base-resolution semantics"
+    - "target selection, output, completion, and failure conditions"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    One governed verification prescription whose selection, command,
+    interpretation, output and completion clauses share one revision boundary.
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "information_object: a result record for one audit execution"
+    - "process: the audit execution that could produce evidence"
+    - "situation: the repository's boundary-conformance state"
+  existential_dependencies:
+    - "A specification authority and Fallow boundary vocabulary"
+    - "At least one faithful documentary or executable carrier"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - "superseded by an authoritative semantic revision"
+    - "withdrawn from the verification inventory"
+counterexamples:
+  - description: >-
+      The quoted command can be run twice against different origin/main bases,
+      producing zero violations once and nonzero violations later while both
+      executions realize the same FallowAuditLane specification.
+status: proposed

@@ -1,0 +1,10 @@
+id: po:sha256:97d6383547ad97c34937c34179413d35651dcf44fed758f70e6de129e163901c
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts
+source_span:
+  start_line: 123
+  end_line: 156
+quote: One planned lane with its execution status and repair command.
+epistemic_status: quoted_prose

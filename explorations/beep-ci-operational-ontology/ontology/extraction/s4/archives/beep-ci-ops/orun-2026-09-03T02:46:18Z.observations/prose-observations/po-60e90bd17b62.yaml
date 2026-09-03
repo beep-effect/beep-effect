@@ -1,0 +1,29 @@
+id: po:sha256:60e90bd17b628d4d6d815cfd05ddcf88cbc2a724790b05ac88b4411619f535be
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: explorations/beep-ci-operational-ontology/ontology/docs/s7-projection-contract.md
+source_span:
+  start_line: 109
+  end_line: 119
+quote: '### 3.4 Admission semantics v1 (mirrors the deployed scheduler; never invents)
+
+
+  Given pending requests, ledger state, and policy params, admit greedily in
+
+  canonical order subject to: `activeTokenTotal + weightTokens <=
+
+  capacityMaxTokens`; priority `publish` ahead of `verify` with
+
+  `publishAgingSeconds` aging; `reviewFixClassCap` class cap; starvation bound
+
+  inherited as hard admissibility (an eligible request held beyond the declared
+
+  bound without a modeled `StarvationException` is a projection error, not a
+
+  warning). Where the deployed scheduler''s observed behavior and this contract
+
+  disagree, the REPLAY decides: reproduce deployed semantics and record the
+
+  contract delta as run-2 evidence.'
+epistemic_status: quoted_prose

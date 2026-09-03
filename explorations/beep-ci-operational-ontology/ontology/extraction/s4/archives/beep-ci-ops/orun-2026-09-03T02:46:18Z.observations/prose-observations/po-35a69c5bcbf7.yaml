@@ -1,0 +1,12 @@
+id: po:sha256:35a69c5bcbf7493cc0aa7f248d138d65f2d5c8beff49e80308ef85b43a0f559d
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: explorations/beep-ci-operational-ontology/ontology/docs/s7-projection-contract.md
+source_span:
+  start_line: 74
+  end_line: 77
+quote: "- `ScheduleStep` — stepIndex, scheduled unit ref, scope tag (v1: the\n  admission act itself;\
+  \ the planner seam widens this in v2).\n- `ScheduleProposal` — proposal id, projection instant, ordered\
+  \ steps,\n  input digests (policy digest + journal-prefix digest) for provenance."
+epistemic_status: quoted_prose

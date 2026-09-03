@@ -1,0 +1,20 @@
+id: "fa:pa-projection-contract:001"
+hypothesis_ref: "dh:pa-projection-contract:001"
+identity_card_ref: "ic:pa-projection-contract:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: false
+rival_models:
+  - label: "The projection is an abstract procedure universal represented by, but not identical to, the contract information object."
+    still_viable: true
+  - label: "A Context.Service instance or S.Class declaration supplies the projection contract's identity."
+    still_viable: false
+  - label: "A dated projection run and its ScheduleProposal are the reusable contract."
+    still_viable: false
+strongest_counterexample: >-
+  Many service instances can execute the same prescriptive content over
+  different policy and journal inputs, yielding different proposals; carrier,
+  execution, output, and contract therefore cannot share one identity.
+verdict: analyzed

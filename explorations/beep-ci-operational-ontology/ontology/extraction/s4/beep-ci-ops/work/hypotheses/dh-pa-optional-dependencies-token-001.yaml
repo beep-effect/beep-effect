@@ -1,0 +1,22 @@
+id: "dh:pa-optional-dependencies-token:001"
+observation_refs:
+  - "po:sha256:0f3ab3cf920a36f30c812e75f03b3974b913fbd26fa4d15f921e1c9ce526d6ef"
+cq_warrants: ["CQ-004"]
+proposed_referent:
+  label: "optionalDependencies topological-sort token"
+  description: "The isolated text and ordinal transcribed from the topological-sort input."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "Optional workspace-dependency category"
+    representation_status: domain_referent
+    plausibility: weak
+  - label: "Section heading with line ordinal"
+    representation_status: lexical_alias
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The isolated quotation does not establish whether the number is a rank, count, or formatting residue, nor whether the token denotes an operational dependency relation."
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.12, use_for_acceptance: false}

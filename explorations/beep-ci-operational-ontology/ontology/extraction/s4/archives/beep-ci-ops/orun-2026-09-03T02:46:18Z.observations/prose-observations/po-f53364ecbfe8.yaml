@@ -1,0 +1,17 @@
+id: po:sha256:f53364ecbfe8c517f16bf938fbc7d0391588f49e11f67205f35fa5204904a501
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: explorations/beep-ci-operational-ontology/research/s7-replay-evidence.md
+source_span:
+  start_line: 5
+  end_line: 9
+quote: '## Frozen input
+
+
+  - Journal: `ontology/extraction/s6/snapshot/raw/journal.ndjson`
+
+  - SHA-256: `cf30b993a38d8a22a8fdd44cb223b831039160c3819eb42e4104a69a56c01556`
+
+  - Events: 79 (41 admitted, 38 released)'
+epistemic_status: quoted_prose

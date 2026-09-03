@@ -1,0 +1,48 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "feat/yeet-until-event",
+  "committed": false,
+  "createdAt": "2026-08-27T11:13:19.042Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "publish:00-head-install-preflight",
+      "label": "publish:head-install-preflight",
+      "phase": "prepare",
+      "status": "not-run"
+    },
+    {
+      "id": "advisory:01-fallow-feedback",
+      "label": "fallow-advisory-feedback",
+      "phase": "feedback",
+      "status": "not-run"
+    },
+    {
+      "id": "full:00-cheap-gates",
+      "label": "full:cheap-gates",
+      "phase": "full",
+      "status": "not-run"
+    },
+    {
+      "id": "full:01-pre-push",
+      "label": "full:pre-push",
+      "phase": "full",
+      "status": "not-run"
+    }
+  ],
+  "message": "Another Yeet full proof for this repository is active. Owner checkout <fleet>/beep-effect15/.claude/worktrees/codex-ui-linting on codex/enforce-ui-buttons, pid <redacted>, started 2026-08-27T11:12:20.517Z.\nThe machine-local coordinator prevents sibling checkouts from overlapping Docker, Bun-cache, and Turbo work. Wait for it to finish, run the cheap/review-fix tier, or remove /run/user/1000/beep-yeet-proof-locks-2a2145724d1c-uid-1000/4cc31eeb4dec.lock only after confirming its owner is gone.",
+  "mode": "verify",
+  "outcome": "failure",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "feat_yeet-until-event-6a35ad681e4e",
+  "attemptId": "8eac1f5d-4b45-4850-a2cd-b41090be17d6",
+  "startedAt": "2026-08-27T11:13:19.029Z",
+  "endedAt": "2026-08-27T11:13:19.042Z",
+  "elapsedMs": 13,
+  "indexPath": "<fleet>/beep-effect12/.beep/yeet/quality-issue-index.json",
+  "failedStepId": "publish:00-head-install-preflight",
+  "failureKind": "handler-error"
+}

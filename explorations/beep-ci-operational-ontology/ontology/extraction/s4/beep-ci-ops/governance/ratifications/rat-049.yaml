@@ -1,0 +1,10 @@
+id: rat:49
+proposal_ref: otp:pa-yeet-verification-workflow:001
+proposal_sha256: 497ffce8213bfc2a4cc89f36c66d467a5a497e405b06b5c0f9c8e0fcc1786dd6
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-09-03T09:05:00Z'
+verbatim_decision: Accept the yeet-workflow VerificationPlanSpecification reuse, plan-identity contract
+  deferred as flagged.
