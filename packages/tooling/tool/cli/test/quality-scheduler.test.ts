@@ -51,6 +51,9 @@ import * as Str from "effect/String";
 import * as Struct from "effect/Struct";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeUUID = S.decodeEffect(UUID);
+const encodeUnknownAdmissionJournalEventJson = S.encodeUnknownEffect(S.fromJsonString(AdmissionJournalEvent));
+
 const decodeAdmissionJournalEventJsonSync = S.decodeSync(S.fromJsonString(AdmissionJournalEvent));
 const encodeAdmissionJournalEventJsonSync = S.encodeSync(S.fromJsonString(AdmissionJournalEvent));
 
@@ -610,7 +613,7 @@ describe("quality-scheduler", () => {
             yield* fs.writeFileString(journalPath, `${intact}${unknown}\n`);
             yield* appendAdmissionJournalEvent(tempRoot.root, journalAdmitted(2));
             const rewritten = yield* fs.readFileString(journalPath);
-            const second = yield* S.encodeUnknownEffect(S.fromJsonString(AdmissionJournalEvent))(journalAdmitted(2));
+            const second = yield* encodeUnknownAdmissionJournalEventJson(journalAdmitted(2));
             expect(pipe(rewritten, Str.split("\n"), A.filter(Str.isNonEmpty))).toStrictEqual([
               Str.trim(intact),
               unknown,
@@ -1297,8 +1300,8 @@ describe("quality-scheduler", () => {
             const fs = yield* FileSystem.FileSystem;
             const path = yield* Path.Path;
             const checkoutRoot = path.join(path.dirname(path.dirname(tempRoot.root)), "checkout");
-            const leaseAttemptId = yield* S.decodeEffect(UUID)("550e8400-e29b-41d4-a716-446655440021");
-            const ticketAttemptId = yield* S.decodeEffect(UUID)("550e8400-e29b-41d4-a716-446655440022");
+            const leaseAttemptId = yield* decodeUUID("550e8400-e29b-41d4-a716-446655440021");
+            const ticketAttemptId = yield* decodeUUID("550e8400-e29b-41d4-a716-446655440022");
             yield* fs.makeDirectory(checkoutRoot, { recursive: true });
             yield* writeFakeLease(tempRoot, {
               pid: DEAD_PID,

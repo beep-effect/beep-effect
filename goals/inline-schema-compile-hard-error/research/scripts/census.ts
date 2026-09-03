@@ -60,7 +60,7 @@ const repoRoot = commandOutput(process.cwd(), ["git", "rev-parse", "--show-tople
 const outputPath = resolve(repoRoot, process.argv[2] ?? "goals/inline-schema-compile-hard-error/research/census.json");
 const head = commandOutput(repoRoot, ["git", "rev-parse", "HEAD"]).trim();
 const headCommittedAt = commandOutput(repoRoot, ["git", "show", "-s", "--format=%cI", "HEAD"]).trim();
-const report = decodeOxlintReport(commandOutput(repoRoot, ["bunx", "oxlint", "--format=json"]));
+const report = decodeOxlintReport(commandOutput(repoRoot, ["bunx", "oxlint", "--quiet", "--format=json"]));
 
 const normalizeFilename = (filename: string): string =>
   isAbsolute(filename) ? relative(repoRoot, filename) : filename;

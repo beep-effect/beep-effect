@@ -153,6 +153,10 @@ import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import type { CiLaneId } from "@beep/repo-cli/commands/Ci";
 import type { GithubCheckLaneWave, QualityTaskInvocation } from "@beep/repo-cli/test/Quality";
 
+const decodeQualityTaskLaneRun = S.decodeEffect(QualityTaskLaneRun);
+const decodeQualityTaskLaneRunReportJson = S.decodeEffect(S.fromJsonString(QualityTaskLaneRunReport));
+const encodeQualityTaskLaneRunReport = S.encodeEffect(QualityTaskLaneRunReport);
+
 const decodeCoverageComparisonFailure = S.decodeEffect(CoverageComparisonFailure);
 const decodeGithubCheckFailurePolicy = S.decodeEffect(GithubCheckFailurePolicy);
 const decodeGithubCheckRunReport = S.decodeEffect(GithubCheckRunReport);
@@ -930,7 +934,7 @@ describe("quality task adapter", () => {
   it("decodes legacy lane rows and encodes unknown input digests as null", () =>
     Effect.runPromise(
       Effect.gen(function* () {
-        const legacy = yield* S.decodeEffect(QualityTaskLaneRun)({
+        const legacy = yield* decodeQualityTaskLaneRun({
           id: "check",
           label: "ci:check",
           status: "passed",
@@ -941,7 +945,7 @@ describe("quality task adapter", () => {
         expect(legacy.exitCode).toStrictEqual(O.none());
         expect(legacy.inputDigest).toStrictEqual(O.none());
 
-        const encoded = yield* S.encodeEffect(QualityTaskLaneRunReport)(
+        const encoded = yield* encodeQualityTaskLaneRunReport(
           QualityTaskLaneRunReport.make({
             schemaVersion: "quality-task-lane-run/v1",
             lanes: [legacy],
@@ -988,10 +992,7 @@ describe("quality task adapter", () => {
         expect(reportLines).toHaveLength(2);
         yield* Effect.forEach(
           reportLines,
-          (line) =>
-            S.decodeEffect(S.fromJsonString(QualityTaskLaneRunReport))(
-              Str.slice(QUALITY_TASK_LANE_RUN_REPORT_PREFIX.length)(line)
-            ),
+          (line) => decodeQualityTaskLaneRunReportJson(Str.slice(QUALITY_TASK_LANE_RUN_REPORT_PREFIX.length)(line)),
           { discard: true }
         );
       }).pipe(provideScopedLayer(PlatformLayer))
@@ -1015,7 +1016,7 @@ describe("quality task adapter", () => {
         );
         const lines = pipe(yield* fs.readFileString(artifactPath), Str.split("\n"), A.filter(Str.isNonEmpty));
         expect(lines).toHaveLength(1);
-        const report = yield* S.decodeEffect(S.fromJsonString(QualityTaskLaneRunReport))(lines[0]);
+        const report = yield* decodeQualityTaskLaneRunReportJson(lines[0]);
         expect(report.schemaVersion).toBe("quality-task-lane-run/v1");
         expect(report.parentLaneId).toStrictEqual(O.some("full:02-ci-parity"));
         yield* fs.remove(tempDir, { recursive: true, force: true });

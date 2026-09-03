@@ -165,3 +165,42 @@
 - **Prevention:** Teach staged-file hooks to evaluate a merge commit's
   first-parent feature delta, or cap and shard path fan-outs when the second
   parent already carries the incoming files' own gate history.
+
+## 2026-09-03 — Census emitted unrelated custom-rule diagnostics
+
+- **Work:** Regenerate the repository-wide residual census after merging the
+  latest main.
+- **Evidence:** The original census invoked the full root Oxlint configuration.
+  Its post-merge run remained active for more than twenty minutes, disappeared
+  without updating the artifact, and a bounded probe showed that the command
+  also emitted diagnostics for three unrelated warning-level custom rules. A
+  quiet canonical-config probe scanned all 4,936 governed files in under four
+  seconds and exposed 26 newly merged inline compiler calls.
+- **Prevention:** Have single-rule census tools suppress unrelated warning
+  output while retaining the repository's canonical config and ignore scope.
+
+## 2026-09-03 — Pipeable-signature matching needed named result shapes
+
+- **Work:** Resume the exact owner matrix after merging the latest main.
+- **Evidence:** `@beep/agents-client` failed through its `@beep/effect-drizzle`
+  dependency because tsgo 0.39 reported four `missingPipeableSignature`
+  diagnostics on newly merged `dual` functions even though each already had
+  corresponding data-first and data-last overloads. Explicit `dual` type
+  arguments did not help; naming the shared intersection and callable result
+  types made the existing overload pairs compiler-verifiable without changing
+  runtime behavior or call forms.
+- **Prevention:** When pipeable overloads return complex generic intersections
+  or callable shapes, express the shared result through one named internal type
+  so the diagnostic can compare identical type origins.
+
+## 2026-09-03 — Module-scope hoists can still precede their schema values
+
+- **Work:** Verify the `@beep/scratchpad` owner in the exact-tree package
+  matrix.
+- **Evidence:** Scratchpad docgen failed on five tracked modules because
+  compiler constants inserted at module scope referenced schema or class values
+  declared later in the same module. Relocating each constant immediately after
+  its dependency made canonical scratchpad docgen pass without runtime changes.
+- **Prevention:** Make codemod safety analysis require declaration-order
+  dominance in addition to module scope, and classify unresolved or later
+  schema dependencies as manual rather than emitting an eager compiler const.

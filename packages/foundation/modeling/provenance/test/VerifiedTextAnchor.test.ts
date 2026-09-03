@@ -178,8 +178,8 @@ describe("@beep/provenance VerifiedTextAnchor", () => {
         verifiedSource,
       });
 
-      expect(S.is(VerifiedSourceText)(counterfeitSource)).toBe(false);
-      expect(S.is(VerifiedTextAnchor)(counterfeitAnchor)).toBe(false);
+      expect(isVerifiedSourceText(counterfeitSource)).toBe(false);
+      expect(isVerifiedTextAnchor(counterfeitAnchor)).toBe(false);
       expect(() => Reflect.get(counterfeitSource, "source")).toThrow();
       expect(() => Reflect.get(counterfeitSource, "sourceText")).toThrow();
       expect(() => Reflect.get(counterfeitAnchor, "anchor")).toThrow();

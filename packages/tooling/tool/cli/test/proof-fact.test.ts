@@ -22,6 +22,15 @@ import { Effect, Exit, Result } from "effect";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeProofLedgerFactRowJson = S.decodeEffect(S.fromJsonString(ProofLedgerFactRow));
+const decodeProofLedgerShadowRowJson = S.decodeEffect(S.fromJsonString(ProofLedgerShadowRow));
+const decodeUnknownProofLedgerRowResult = S.decodeUnknownResult(ProofLedgerRow);
+const encodeProofLedgerRowResult = S.encodeResult(ProofLedgerRow);
+const encodeUnknownProofLedgerFactRowJson = S.encodeUnknownEffect(S.fromJsonString(ProofLedgerFactRow));
+const encodeUnknownProofLedgerShadowRowJson = S.encodeUnknownEffect(S.fromJsonString(ProofLedgerShadowRow));
+const isProofLedgerFactRow = S.is(ProofLedgerFactRow);
+const isProofLedgerShadowRow = S.is(ProofLedgerShadowRow);
+
 const epoch = ProofEpoch.make({
   lockfileDigest: "lock-digest",
   bunVersion: "1.4.0",
@@ -97,12 +106,15 @@ const assertRejects = Effect.fn("ProofFactTest.assertRejects")(function* <Schema
 describe("ProofFact schemas", () => {
   it("round-trips schema-derived arbitrary ledger rows", () => {
     const arbitrary = S.toArbitrary(ProofLedgerRow)(fc);
-    const encode = S.encodeResult(ProofLedgerRow);
-    const decode = S.decodeUnknownResult(ProofLedgerRow);
     const equivalent = S.toEquivalence(ProofLedgerRow);
 
     fc.assert(
-      fc.property(arbitrary, (value) => equivalent(Result.getOrThrow(decode(Result.getOrThrow(encode(value)))), value)),
+      fc.property(arbitrary, (value) =>
+        equivalent(
+          Result.getOrThrow(decodeUnknownProofLedgerRowResult(Result.getOrThrow(encodeProofLedgerRowResult(value)))),
+          value
+        )
+      ),
       fcRuns(20)
     );
   });
@@ -149,14 +161,14 @@ describe("ProofFact schemas", () => {
 
   it.effect("decodes fact and shadow rows from JSON text", () =>
     Effect.gen(function* () {
-      const factJson = yield* S.encodeUnknownEffect(S.fromJsonString(ProofLedgerFactRow))(factRow);
-      const shadowJson = yield* S.encodeUnknownEffect(S.fromJsonString(ProofLedgerShadowRow))(shadowRow);
+      const factJson = yield* encodeUnknownProofLedgerFactRowJson(factRow);
+      const shadowJson = yield* encodeUnknownProofLedgerShadowRowJson(shadowRow);
 
-      const decodedFact = yield* S.decodeEffect(S.fromJsonString(ProofLedgerFactRow))(factJson);
-      const decodedShadow = yield* S.decodeEffect(S.fromJsonString(ProofLedgerShadowRow))(shadowJson);
+      const decodedFact = yield* decodeProofLedgerFactRowJson(factJson);
+      const decodedShadow = yield* decodeProofLedgerShadowRowJson(shadowJson);
 
-      expect(S.is(ProofLedgerFactRow)(decodedFact)).toBe(true);
-      expect(S.is(ProofLedgerShadowRow)(decodedShadow)).toBe(true);
+      expect(isProofLedgerFactRow(decodedFact)).toBe(true);
+      expect(isProofLedgerShadowRow(decodedShadow)).toBe(true);
       expect(decodedFact).toStrictEqual(factRow);
       expect(decodedShadow).toStrictEqual(shadowRow);
     })

@@ -633,14 +633,14 @@ describe("architecture operation plan", () => {
               A.findFirst(
                 plan.operations,
                 (operation): operation is WriteFileOperation =>
-                  S.is(WriteFileOperation)(operation) && Str.endsWith(layerSuffix)(operation.path)
+                  isWriteFileOperation(operation) && Str.endsWith(layerSuffix)(operation.path)
               )
             );
             const testLayerOperation = O.getOrThrow(
               A.findFirst(
                 plan.operations,
                 (operation): operation is WriteFileOperation =>
-                  S.is(WriteFileOperation)(operation) && Str.endsWith("/src/test.ts")(operation.path)
+                  isWriteFileOperation(operation) && Str.endsWith("/src/test.ts")(operation.path)
               )
             );
 
