@@ -40,7 +40,8 @@ Use this command for execution-capable sessions:
 
 P1 is in progress. The fixed baseline is closed, the sharp notifier revision is
 merged, and a guarded fleet rollout is underway; the phase is now waiting on
-real post-intervention waits and a safely configured phone transport:
+the remaining safe fleet adoption, real post-intervention waits, and a safely
+configured phone transport:
 
 1. **Hook semantics verified** (2026-08-01) — all three wait classes emit
    distinguishable, sessionId-bearing events. **`PermissionRequest`** (not
