@@ -7,6 +7,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
+import { GitObjectId } from "@beep/schema/Conformance";
 import { NonEmptyTrimmedStr } from "@beep/schema/String";
 import * as A from "@beep/utils/Array";
 import * as O from "@beep/utils/Option";
@@ -79,6 +80,7 @@ type PrClassification = {
   readonly prNumber: O.Option<number>;
   readonly failed: boolean;
   readonly reusedBranch: boolean;
+  readonly mergedHead: O.Option<GitObjectId>;
 };
 
 type IdleReading = {
@@ -103,10 +105,11 @@ type EvidenceProbe =
 type CandidateAssessment = {
   readonly candidate: WorktreeReapCandidate;
   readonly warnings: ReadonlyArray<string>;
+  readonly authorizedHead: O.Option<GitObjectId>;
 };
 
 class GhPr extends S.Class<GhPr>($I`GhPr`)(
-  { number: S.Int, headRefOid: S.String },
+  { number: S.Int, headRefOid: GitObjectId },
   $I.annote("GhPr", {
     description: "Minimal pull-request row decoded from gh pr list JSON output.",
   })
@@ -153,19 +156,25 @@ const classifyPr = Effect.fn("WorktreeReap.classifyPr")(function* (
   // open PR, and retiring it would delete in-flight work along with its branch.
   const open = yield* ghPrList(runner, cwd, branch, "open");
   if (O.isNone(open)) {
-    return { reapClass: "unknown", prNumber: O.none(), failed: true, reusedBranch: false };
+    return { reapClass: "unknown", prNumber: O.none(), failed: true, reusedBranch: false, mergedHead: O.none() };
   }
   const openPr = A.head(open.value);
   if (O.isSome(openPr)) {
-    return { reapClass: "open-pr", prNumber: O.some(openPr.value.number), failed: false, reusedBranch: false };
+    return {
+      reapClass: "open-pr",
+      prNumber: O.some(openPr.value.number),
+      failed: false,
+      reusedBranch: false,
+      mergedHead: O.none(),
+    };
   }
   const merged = yield* ghPrList(runner, cwd, branch, "merged");
   if (O.isNone(merged)) {
-    return { reapClass: "unknown", prNumber: O.none(), failed: true, reusedBranch: false };
+    return { reapClass: "unknown", prNumber: O.none(), failed: true, reusedBranch: false, mergedHead: O.none() };
   }
   const mergedPr = A.head(merged.value);
   if (O.isNone(mergedPr)) {
-    return { reapClass: "no-pr", prNumber: O.none(), failed: false, reusedBranch: false };
+    return { reapClass: "no-pr", prNumber: O.none(), failed: false, reusedBranch: false, mergedHead: O.none() };
   }
   // A historical merge only authorizes retirement of the exact snapshot it merged: a
   // branch reused or advanced after that PR merged carries commits the PR never
@@ -179,6 +188,7 @@ const classifyPr = Effect.fn("WorktreeReap.classifyPr")(function* (
     prNumber: O.some(mergedPr.value.number),
     failed: false,
     reusedBranch: !O.exists(head, (sha) => Str.Equivalence(Str.trim(sha), mergedPr.value.headRefOid)),
+    mergedHead: O.some(mergedPr.value.headRefOid),
   };
 });
 
@@ -408,12 +418,17 @@ const assessCandidate = Effect.fn("WorktreeReap.assessCandidate")(function* (
     retired: false,
   };
   if (entry.locked) {
-    return { candidate: WorktreeReapCandidate.make({ ...base, skipReason: O.some("locked") }), warnings: A.empty() };
+    return {
+      candidate: WorktreeReapCandidate.make({ ...base, skipReason: O.some("locked") }),
+      warnings: A.empty(),
+      authorizedHead: O.none(),
+    };
   }
   if (O.isNone(branch)) {
     return {
       candidate: WorktreeReapCandidate.make({ ...base, skipReason: O.some("detached-head") }),
       warnings: A.empty(),
+      authorizedHead: O.none(),
     };
   }
   const directorySkip = yield* probeDirectory(ctx.fs, entry.path);
@@ -421,6 +436,7 @@ const assessCandidate = Effect.fn("WorktreeReap.assessCandidate")(function* (
     return {
       candidate: WorktreeReapCandidate.make({ ...base, skipReason: O.some(directorySkip.value.reason) }),
       warnings: [directorySkip.value.warning],
+      authorizedHead: O.none(),
     };
   }
   const evidence = yield* probeEvidence(ctx, entry, branch.value);
@@ -432,6 +448,7 @@ const assessCandidate = Effect.fn("WorktreeReap.assessCandidate")(function* (
     return {
       candidate: WorktreeReapCandidate.make({ ...base, ...prFields, skipReason: O.some(evidence.skip.reason) }),
       warnings: [evidence.skip.warning],
+      authorizedHead: O.none(),
     };
   }
   const enriched = {
@@ -442,14 +459,26 @@ const assessCandidate = Effect.fn("WorktreeReap.assessCandidate")(function* (
   };
   const skipReason = eligibilitySkipReason(evidence, ctx.idleThreshold);
   if (O.isSome(skipReason)) {
-    return { candidate: WorktreeReapCandidate.make({ ...enriched, skipReason }), warnings: A.empty() };
+    return {
+      candidate: WorktreeReapCandidate.make({ ...enriched, skipReason }),
+      warnings: A.empty(),
+      authorizedHead: O.none(),
+    };
   }
   const liveness = livenessSkipReason(yield* ctx.prober({ targetPath: entry.path, idleHours: evidence.idleHours }));
   if (O.isSome(liveness)) {
-    return { candidate: WorktreeReapCandidate.make({ ...enriched, skipReason: liveness }), warnings: A.empty() };
+    return {
+      candidate: WorktreeReapCandidate.make({ ...enriched, skipReason: liveness }),
+      warnings: A.empty(),
+      authorizedHead: O.none(),
+    };
   }
   if (!includeBytes) {
-    return { candidate: WorktreeReapCandidate.make({ ...enriched, skipReason: O.none() }), warnings: A.empty() };
+    return {
+      candidate: WorktreeReapCandidate.make({ ...enriched, skipReason: O.none() }),
+      warnings: A.empty(),
+      authorizedHead: evidence.pr.mergedHead,
+    };
   }
   // Size is reporting-only evidence: a failed measurement must never block retirement.
   const bytes = yield* measureBytes(ctx.runner, entry);
@@ -457,10 +486,12 @@ const assessCandidate = Effect.fn("WorktreeReap.assessCandidate")(function* (
     onNone: (): CandidateAssessment => ({
       candidate: WorktreeReapCandidate.make({ ...enriched, skipReason: O.none() }),
       warnings: [`size-probe-failed: could not measure eligible worktree ${entry.path}; retirement is unaffected.`],
+      authorizedHead: evidence.pr.mergedHead,
     }),
     onSome: (measuredBytes): CandidateAssessment => ({
       candidate: WorktreeReapCandidate.make({ ...enriched, bytes: O.some(measuredBytes), skipReason: O.none() }),
       warnings: A.empty(),
+      authorizedHead: evidence.pr.mergedHead,
     }),
   });
 });
@@ -476,6 +507,7 @@ const retirementOutcome = Effect.fnUntraced(function* (
     return {
       candidate: WorktreeReapCandidate.make({ ...assessed, skipReason: O.some("retirement-failed") }),
       warnings: [`retirement-failed: ${entry.path}: ${failure.message}`],
+      authorizedHead: O.none(),
     };
   }
   // The checkout is already gone: report the retirement so callers do not retry a
@@ -483,6 +515,7 @@ const retirementOutcome = Effect.fnUntraced(function* (
   return {
     candidate: WorktreeReapCandidate.make({ ...assessed, retired: true }),
     warnings: [`retirement-cleanup-failed: ${entry.path} was removed but follow-up cleanup failed: ${failure.message}`],
+    authorizedHead: O.none(),
   };
 });
 
@@ -517,7 +550,7 @@ const applyCandidate = Effect.fn("WorktreeReap.applyCandidate")(function* (
   assessed: WorktreeReapCandidate
 ): Effect.fn.Return<CandidateAssessment, never, FileSystem.FileSystem | ChildProcessSpawner.ChildProcessSpawner> {
   if (O.isSome(assessed.skipReason)) {
-    return { candidate: assessed, warnings: A.empty() };
+    return { candidate: assessed, warnings: A.empty(), authorizedHead: O.none() };
   }
   const rechecked = yield* assessCandidate(ctx, entry, false);
   if (O.isSome(rechecked.candidate.skipReason)) {
@@ -526,6 +559,15 @@ const applyCandidate = Effect.fn("WorktreeReap.applyCandidate")(function* (
     return {
       candidate: WorktreeReapCandidate.make({ ...rechecked.candidate, bytes: assessed.bytes }),
       warnings: A.append(rechecked.warnings, `eligibility changed before retirement: ${entry.path}.`),
+      authorizedHead: O.none(),
+    };
+  }
+  const authorized = rechecked.authorizedHead;
+  if (O.isNone(authorized)) {
+    return {
+      candidate: WorktreeReapCandidate.make({ ...assessed, skipReason: O.some("retirement-failed") }),
+      warnings: [`retirement-failed: ${entry.path}: eligible candidate carried no authorized HEAD.`],
+      authorizedHead: O.none(),
     };
   }
   const removal = yield* Effect.result(
@@ -537,11 +579,19 @@ const applyCandidate = Effect.fn("WorktreeReap.applyCandidate")(function* (
         branch: O.fromNullishOr(entry.branch),
         archive: true,
         deleteBranch: true,
+        // The removal service re-reads HEAD at removal time and refuses the removal
+        // outright when it no longer equals this merged-PR-authorized object id, so a
+        // checkout advancing after the recheck cannot lose its worktree or branch.
+        expectedHead: authorized,
       })
     )
   );
   if (Result.isSuccess(removal)) {
-    return { candidate: WorktreeReapCandidate.make({ ...assessed, retired: true }), warnings: A.empty() };
+    return {
+      candidate: WorktreeReapCandidate.make({ ...assessed, retired: true }),
+      warnings: A.empty(),
+      authorizedHead: authorized,
+    };
   }
   return yield* retirementOutcome(ctx, entry, assessed, removal.failure);
 });
@@ -560,7 +610,10 @@ const applyCandidate = Effect.fn("WorktreeReap.applyCandidate")(function* (
  * unknown verdict skips the candidate). Byte measurement is reporting-only —
  * a failed `du` leaves the candidate eligible with `bytes` absent. Apply mode
  * revalidates every eligible candidate immediately before calling the shared
- * archive-first removal service with branch deletion enabled, and reports a
+ * archive-first removal service with branch deletion enabled and the removal
+ * request pinned to the merged PR's authorized head — the service re-reads
+ * HEAD at removal time and refuses when the checkout advanced past that
+ * authority — and reports a
  * retirement whose checkout was removed but whose follow-up cleanup failed as
  * retired with a loud warning instead of pretending the directory remains.
  *

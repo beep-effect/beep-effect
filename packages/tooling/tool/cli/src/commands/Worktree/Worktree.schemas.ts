@@ -278,9 +278,17 @@ export class WorktreeArchivePlan extends S.Class<WorktreeArchivePlan>($I`Worktre
  *   branch: O.some("feat/feature-x"),
  *   archive: true,
  *   deleteBranch: false,
+ *   expectedHead: O.none(),
  * })
  * console.log(request.archive) // true
  * ```
+ *
+ * **Details**
+ *
+ * `expectedHead` pins the authority under which the removal was decided: when
+ * present, the service re-reads the checkout HEAD at removal time and refuses
+ * the entire removal — no worktree removal, no branch deletion — if it no
+ * longer equals this object id.
  *
  * @category models
  * @since 0.0.0
@@ -293,9 +301,11 @@ export class WorktreeRemovalRequest extends S.Class<WorktreeRemovalRequest>($I`W
     branch: S.OptionFromNullOr(S.String),
     archive: S.Boolean,
     deleteBranch: S.Boolean,
+    expectedHead: S.OptionFromNullOr(GitObjectId),
   },
   $I.annote("WorktreeRemovalRequest", {
-    description: "Resolved worktree removal request passed from the CLI boundary to the removal service.",
+    description:
+      "Resolved worktree removal request, optionally pinned to the HEAD object id its authority was decided under.",
   })
 ) {}
 

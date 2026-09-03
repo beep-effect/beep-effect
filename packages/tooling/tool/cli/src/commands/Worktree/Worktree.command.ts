@@ -833,6 +833,7 @@ const runWorktreeRemove = Effect.fn("Worktree.runWorktreeRemove")(function* (opt
       branch,
       archive: options.archive,
       deleteBranch: options.deleteBranch,
+      expectedHead: O.none(),
     })
   );
   yield* renderWorktreeRemovalReceipt(receipt, options.archive);

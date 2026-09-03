@@ -598,6 +598,7 @@ describe("worktree git operations", () => {
               branch: O.some(defaultWorktreeBranch("delete-demo")),
               archive: false,
               deleteBranch: true,
+              expectedHead: O.none(),
             })
           )
           .pipe(Effect.flip);
@@ -684,6 +685,7 @@ describe("worktree git operations", () => {
                 branch: O.some(defaultWorktreeBranch(name)),
                 archive: true,
                 deleteBranch: false,
+                expectedHead: O.none(),
               })
             )
             .pipe(Effect.provideService(ConfigProvider.ConfigProvider, configProvider), Effect.flip);
@@ -747,6 +749,7 @@ describe("worktree git operations", () => {
               branch: O.some(defaultWorktreeBranch(name)),
               archive: true,
               deleteBranch: false,
+              expectedHead: O.none(),
             })
           )
           .pipe(Effect.provideService(ConfigProvider.ConfigProvider, configProvider), Effect.flip);
@@ -791,6 +794,7 @@ describe("worktree git operations", () => {
               branch: O.none(),
               archive: true,
               deleteBranch: false,
+              expectedHead: O.none(),
             })
           )
           .pipe(
@@ -842,6 +846,7 @@ describe("worktree git operations", () => {
                 branch: O.some(defaultWorktreeBranch(name)),
                 archive: true,
                 deleteBranch: false,
+                expectedHead: O.none(),
               })
             )
             .pipe(Effect.provideService(ConfigProvider.ConfigProvider, configProvider));
@@ -854,6 +859,7 @@ describe("worktree git operations", () => {
                 branch: O.some(defaultWorktreeBranch(name)),
                 archive: true,
                 deleteBranch: false,
+                expectedHead: O.none(),
               })
             )
             .pipe(Effect.provideService(ConfigProvider.ConfigProvider, configProvider));
@@ -906,6 +912,7 @@ describe("worktree git operations", () => {
               branch: O.some(defaultWorktreeBranch("archive-demo")),
               archive: true,
               deleteBranch: false,
+              expectedHead: O.none(),
             })
           )
           .pipe(Effect.provideService(ConfigProvider.ConfigProvider, configProvider));
@@ -940,6 +947,7 @@ describe("worktree git operations", () => {
               branch: O.some(defaultWorktreeBranch("clean-demo")),
               archive: true,
               deleteBranch: true,
+              expectedHead: O.none(),
             })
           )
           .pipe(Effect.provideService(ConfigProvider.ConfigProvider, configProvider));

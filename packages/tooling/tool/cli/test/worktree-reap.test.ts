@@ -6,10 +6,12 @@ import {
   WorktreeCommandError,
   WorktreeReapCandidate,
   WorktreeReapReport,
+  WorktreeRemovalRequest,
   WorktreeRemovalService,
   WorktreeRemovalServiceLive,
 } from "@beep/repo-cli/commands/Worktree";
 import { runRepoCommandCapture } from "@beep/repo-cli/test/RepoRun";
+import { NonEmptyTrimmedStr } from "@beep/schema/String";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
@@ -19,6 +21,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -449,6 +452,68 @@ describe("worktree reap", () => {
         expect(O.getOrThrow(candidate.skipReason)).toBe("retirement-failed");
         expect(A.some(report.warnings, Str.includes("retirement-failed"))).toBe(true);
         expect(yield* fs.exists(merged)).toBe(true);
+      })
+    )
+  );
+
+  it.effect("pins the merged PR's authorized HEAD on the removal request", () =>
+    withScratchRepo(({ mainHead, repoRoot, worktreesRoot }) =>
+      Effect.gen(function* () {
+        const merged = yield* addWorktree(repoRoot, worktreesRoot, "pinned");
+        const runner = ghStubRunner(mainHead, { [merged]: { open: undefined, merged: 701 } });
+        let captured = O.none<string>();
+        const report = yield* runWorktreeReap({
+          apply: true,
+          nowMillis: FIXTURE_NOW_MILLIS,
+          probeLiveness: verdictProber("dormant"),
+          runCommand: runner,
+          startFrom: repoRoot,
+        }).pipe(
+          Effect.provideService(WorktreeRemovalService, {
+            hasUnpushedCommits: Effect.fnUntraced(function* () {
+              return false;
+            }),
+            remove: Effect.fnUntraced(function* (request) {
+              captured = request.expectedHead;
+              return yield* WorktreeCommandError.make({ message: "fixture: refuse after capturing the pin" });
+            }),
+          })
+        );
+
+        expect(O.getOrThrow(captured)).toBe(mainHead);
+        expect(O.getOrThrow(candidateAt(report, merged).skipReason)).toBe("retirement-failed");
+      })
+    )
+  );
+
+  it.effect("removal service refuses when the checkout HEAD is not the authorized object id", () =>
+    withScratchRepo(({ repoRoot, worktreesRoot }) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const target = yield* addWorktree(repoRoot, worktreesRoot, "unauthorized");
+        const removal = yield* WorktreeRemovalService;
+        const attempt = yield* Effect.result(
+          removal.remove(
+            WorktreeRemovalRequest.make({
+              name: NonEmptyTrimmedStr.make("unauthorized"),
+              targetPath: target,
+              mainCheckout: repoRoot,
+              branch: O.some("feat/unauthorized"),
+              archive: true,
+              deleteBranch: true,
+              expectedHead: O.some("a".repeat(40)),
+            })
+          )
+        );
+
+        expect(Result.isFailure(attempt)).toBe(true);
+        expect(yield* fs.exists(target)).toBe(true);
+        const branch = yield* runRepoCommandCapture(
+          "git",
+          ["show-ref", "--verify", "--quiet", "refs/heads/feat/unauthorized"],
+          repoRoot
+        );
+        expect(branch.exitCode).toBe(0);
       })
     )
   );

@@ -827,6 +827,18 @@ const deleteArchivedBranch = Effect.fn("WorktreeRemovalService.deleteArchivedBra
   });
 });
 
+const assertAuthorizedHead = Effect.fnUntraced(function* (
+  request: WorktreeRemovalRequest,
+  head: string
+): Effect.fn.Return<void, WorktreeCommandError, never> {
+  const expected = request.expectedHead;
+  if (O.isSome(expected) && !Str.Equivalence(head, expected.value)) {
+    return yield* WorktreeCommandError.make({
+      message: `Refusing to remove ${request.targetPath}: HEAD ${head} is not the authorized ${expected.value}; the checkout changed after its removal was decided.`,
+    });
+  }
+});
+
 const removeLegacyWorktree = Effect.fn("WorktreeRemovalService.removeLegacyWorktree")(function* (
   request: WorktreeRemovalRequest
 ): Effect.fn.Return<
@@ -834,6 +846,14 @@ const removeLegacyWorktree = Effect.fn("WorktreeRemovalService.removeLegacyWorkt
   WorktreeCommandError | WorktreeDirtyError,
   ChildProcessSpawner.ChildProcessSpawner
 > {
+  if (O.isSome(request.expectedHead)) {
+    const head = yield* resolveGitCommit(
+      request.targetPath,
+      "HEAD",
+      commandErrorAdapter(`Failed to resolve HEAD for ${request.targetPath}.`)
+    );
+    yield* assertAuthorizedHead(request, Str.trim(head));
+  }
   const changes = yield* inspectRemovalChanges(
     request.targetPath,
     commandErrorAdapter(`Failed to inspect ${request.targetPath}.`)
@@ -860,6 +880,10 @@ const removeArchivedWorktree = Effect.fn("WorktreeRemovalService.removeArchivedW
     preservationErrorAdapter("inspect-residue", `Failed to inspect ${request.targetPath}.`, request.targetPath)
   );
   const head = yield* inspectArchiveHead(request);
+  // The removal-time HEAD must still be the object id the caller's authority was
+  // decided under; a checkout that advanced past it is refused outright — before any
+  // archive, removal, or branch deletion — rather than merely preserved.
+  yield* assertAuthorizedHead(request, head);
   const [reason, manifest] = yield* planArchiveRemoval(request, head, A.isReadonlyArrayNonEmpty(changes));
   yield* removeWorktree(request, O.isSome(manifest));
   yield* pruneWorktreeMetadata(request.mainCheckout);
