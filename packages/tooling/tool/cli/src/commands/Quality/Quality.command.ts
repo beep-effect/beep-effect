@@ -2629,10 +2629,10 @@ const turboConfigProofCommand = Command.make(
  *
  * **Details**
  *
- * Default verification first runs the selected package's Turbo build closure,
- * whose graph includes upstream `build` tasks, and only then runs the package
- * audit. A genuine closure-build or audit failure still records the existing
- * P0 package-audit inbox shard. Quick mode continues to run only lint and check.
+ * Default verification first runs the selected package's upstream Turbo build
+ * closure without rebuilding the package itself, and only then runs the package
+ * audit. A genuine closure-build or audit failure still records the existing P0
+ * package-audit inbox shard. Quick mode continues to run only lint and check.
  *
  * **Example** (Verify the repository CLI package)
  *
@@ -2655,7 +2655,7 @@ const packageVerifyCommand = Command.make(
   },
   ({ packageArgs, quick }) =>
     runQualityProgram(runPackageVerifyCli({ packageArgs: variadicStrings(packageArgs), quick }))
-).pipe(Command.withDescription("Build a package dependency closure, then run package-local verification"));
+).pipe(Command.withDescription("Build a package's upstream dependencies, then run package-local verification"));
 
 const changesetGraphCommand = Command.make("changeset-graph", {}, () =>
   runQualityProgram(

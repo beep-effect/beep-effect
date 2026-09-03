@@ -86,7 +86,7 @@ describe("package verify", () => {
     expect(A.map(packageVerifyStepSpecsForTesting(false), (spec) => spec.step)).toEqual(["audit", "docgen"]);
   });
 
-  it("builds the audit dependency closure through Turbo before the package script", () => {
+  it("builds upstream audit dependencies through Turbo before the package script", () => {
     const plan = packageVerifyStepPlanForTesting(
       "/repo",
       demoWorkspace,
@@ -97,7 +97,7 @@ describe("package verify", () => {
       {
         label: "audit:build-closure",
         command: "bun",
-        args: ["x", "turbo", "run", "build", "--filter=@beep/demo..."],
+        args: ["x", "turbo", "run", "build", "--filter=@beep/demo^..."],
         cwd: "/repo",
       },
       {
@@ -409,7 +409,7 @@ describe("package verify", () => {
           expect(row?.kind).toBe("local-shard-failed");
           if (row?.kind === "local-shard-failed") {
             expect(row.severity).toBe("P0");
-            expect(row.capsule.command).toBe("bun x turbo run build --filter=@beep/demo... && bun run beep:audit");
+            expect(row.capsule.command).toBe("bun x turbo run build --filter=@beep/demo^... && bun run beep:audit");
           }
         })
       )

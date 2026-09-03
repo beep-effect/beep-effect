@@ -455,7 +455,7 @@ const packageVerifyStepPlan = (
         QualityTaskStep.make({
           label: "audit:build-closure",
           command: "bun",
-          args: ["x", "turbo", "run", "build", `--filter=${workspace.name}...`],
+          args: ["x", "turbo", "run", "build", `--filter=${workspace.name}^...`],
           cwd: repoRoot,
         }),
         packageStep,
@@ -625,7 +625,7 @@ export const recordPackageVerifyInboxForTesting = Effect.fn("PackageVerify.recor
       report.repoRoot,
       YeetLocalShardOutcome.make({
         command: PackageVerifyStepName.is.audit(result.step)
-          ? `bun x turbo run build --filter=${report.packageName}... && bun run ${result.script}`
+          ? `bun x turbo run build --filter=${report.packageName}^... && bun run ${result.script}`
           : `bun run ${result.script}`,
         exitCode: O.getOrElse(result.exitCode, () => (result.ok ? 0 : 1)),
         headSha: report.headSha,
@@ -774,9 +774,9 @@ export const packageVerifyStepSpecsForTesting = packageVerifyStepSpecs;
  *
  * **Details**
  *
- * Audit plans refresh the selected package's complete Turbo build closure
- * before invoking its package-local audit. Other steps remain direct package
- * script invocations.
+ * Audit plans refresh the selected package's upstream Turbo build closure
+ * without rebuilding the package itself before invoking its package-local
+ * audit. Other steps remain direct package script invocations.
  *
  * **Example** (Inspect an audit plan)
  *
