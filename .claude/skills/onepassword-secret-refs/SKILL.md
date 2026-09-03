@@ -150,8 +150,12 @@ op run --env-file=.env -- <command>
 
 Report:
 
-- Whether MCP was used successfully or skipped.
-- Whether `op` was signed in.
+- Which backend the shim used (`op-agent-auth status`: service account or
+  Connect) and whether `op-doctor` passed; on failure, the single failing
+  doctor line, never a desktop sign-in status.
+- Whether the desktop Environments MCP was used or skipped.
 - Which files changed.
 - How many secret references were written or displayed.
-- Any remaining user action, such as unlocking 1Password desktop.
+- Any remaining operator action, such as rotating the service account or
+  granting a vault to the Connect server. Never list "unlock 1Password
+  desktop" as an agent remediation.
