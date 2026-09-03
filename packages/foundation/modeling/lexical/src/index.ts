@@ -129,4 +129,10 @@ export {
   withTextFormat,
   YouTubeNode,
 } from "./Lexical.model.ts";
+/**
+ * Current `@beep/lexical-schema` package version.
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
 export { VERSION } from "./Version.ts";

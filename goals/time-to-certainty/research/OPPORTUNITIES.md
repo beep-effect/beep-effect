@@ -58,3 +58,19 @@ session/machine ids, quote only the minimal identifying error text.
   on stdin.
 - **Would have prevented it:** a detached job surface that puts every agent-submitted proof in its
   own scope with a durable id and journals its termination (SPEC B5/B6).
+
+## 2026-09-03 — Two inherited hosted reds blocked every open PR for an afternoon
+
+- **Doing:** driving the A5b (#978) and html-coverage (#983) PRs to merge-ready.
+- **Evidence:** both PRs failed JSDoc Ratchet with `no-root-package-import: 3771 > 3770 (+1)`; the
+  extra violation was a doctest import of the `@beep/schema` package root in
+  `packages/foundation/modeling/md/src/Md.safe.ts`, merged on main in #949, so the ratchet was red
+  on main itself and on every merge ref. The fix PR (#985) then failed Heavy / Docgen on
+  `@beep/md` for two bare re-export statements that predate it; running `beep docgen check` by
+  hand showed the same latent failure in eight more packages (bare `export { VERSION }` lines from
+  #971 and older export lists), each waiting for the next PR that touches its package.
+- **Would have prevented it:** the ratchet and the docgen check are both cheap and precise, but
+  they run only on hosted merge refs and only for packages in the changed scope, so a defect
+  merged in one PR surfaces as an unrelated red on the next; the packet's B3 (cheap precise gates
+  first, on every merge to main) and A4's reason-carrying ack ledger make the inheritance visible
+  at the moment it lands rather than one PR later.
