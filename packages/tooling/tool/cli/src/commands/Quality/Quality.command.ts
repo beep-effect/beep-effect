@@ -524,6 +524,14 @@ const withExitCode = (label: string, command: string, args: ReadonlyArray<string
     exitCode,
   });
 
+const qualityFileContext = Effect.fn("QualityScriptCommands.qualityFileContext")(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const repoRoot = yield* findRepoRoot().pipe(QualityScriptCommandError.mapError("Failed to locate repository root."));
+
+  return { fs, path, repoRoot };
+});
+
 const runStep = Effect.fn("QualityScriptCommands.runStep")(function* (
   step: QualityTaskStep
 ): Effect.fn.Return<void, QualityScriptCommandError, ChildProcessSpawner.ChildProcessSpawner> {
@@ -1498,9 +1506,7 @@ const writeTestTsgoPackageResult = Effect.fn("QualityScriptCommands.writeTestTsg
 const runTestTsgoPackageTask = Effect.fn("QualityScriptCommands.runTestTsgoPackageTask")(function* (
   extraArgs: unknown
 ): Effect.fn.Return<void, QualityScriptCommandError, QualityScriptEnvironment> {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const repoRoot = yield* findRepoRoot().pipe(QualityScriptCommandError.mapError("Failed to locate repository root."));
+  const { fs, path, repoRoot } = yield* qualityFileContext();
   const packageDir = path.resolve(process.cwd());
   const files = yield* collectOwnedTestTsgoFiles(repoRoot, packageDir);
   const groups = yield* collectTestTsgoPackageGroups(repoRoot, files);
@@ -2253,9 +2259,7 @@ export const runTsgoRulesCheck = Effect.fn("QualityScriptCommands.runTsgoRulesCh
   QualityScriptCommandError,
   QualityScriptEnvironment
 > {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const repoRoot = yield* findRepoRoot().pipe(QualityScriptCommandError.mapError("Failed to locate repository root."));
+  const { fs, path, repoRoot } = yield* qualityFileContext();
   const readmePath = path.join(repoRoot, "node_modules", "@effect", "tsgo", "README.md");
   const tsconfigPath = path.join(repoRoot, "tsconfig.base.json");
   const rootTsconfigPath = path.join(repoRoot, "tsconfig.json");
@@ -2409,9 +2413,7 @@ export const runTsgoRulesCheck = Effect.fn("QualityScriptCommands.runTsgoRulesCh
 export const runTestTsgoChecks = Effect.fn("QualityScriptCommands.runTestTsgoChecks")(function* (
   extraArgs: unknown
 ): Effect.fn.Return<void, QualityScriptCommandError, QualityScriptEnvironment> {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const repoRoot = yield* findRepoRoot().pipe(QualityScriptCommandError.mapError("Failed to locate repository root."));
+  const { fs, path, repoRoot } = yield* qualityFileContext();
   const discoveredFiles = yield* Effect.forEach(
     testSearchRoots,
     (root) => collectTestTsgoFilesUnder(path.join(repoRoot, root)),
@@ -2490,9 +2492,7 @@ export const runTsgoSmokeCheck = Effect.fn("QualityScriptCommands.runTsgoSmokeCh
   QualityScriptCommandError,
   QualityScriptEnvironment
 > {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const repoRoot = yield* findRepoRoot().pipe(QualityScriptCommandError.mapError("Failed to locate repository root."));
+  const { fs, path, repoRoot } = yield* qualityFileContext();
   const tempRoot = path.join(repoRoot, "node_modules", ".tmp");
   const smokeDir = yield* fs
     .makeTempDirectory({ directory: tempRoot })
@@ -2618,11 +2618,7 @@ export const isModuleTagScannedPathForTesting =
  */
 export const runJSDocModuleTagsCheck = Effect.fn("QualityScriptCommands.runJSDocModuleTagsCheck")(
   function* (): Effect.fn.Return<void, QualityScriptCommandError, QualityScriptEnvironment> {
-    const fs = yield* FileSystem.FileSystem;
-    const path = yield* Path.Path;
-    const repoRoot = yield* findRepoRoot().pipe(
-      QualityScriptCommandError.mapError("Failed to locate repository root.")
-    );
+    const { fs, path, repoRoot } = yield* qualityFileContext();
     const result = yield* collectOutput(
       QualityTaskStep.make({
         label: "lint:jsdoc-module-tags:git-ls-files",
