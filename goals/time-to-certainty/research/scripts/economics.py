@@ -1,20 +1,11 @@
 #!/usr/bin/env python3
 """Reproduce the time-to-certainty verification-economics snapshot.
 
-The normal mode is deterministic: it reads the immutable run2 fleet corpus and
-the two captured JSON inputs under ../inputs/, then rewrites economics.json,
-economics.md, and report.md with stable ordering and nearest-rank percentiles.
-
-Capture the mutable inputs deliberately before normal mode:
-
-  PATH="$HOME/.local/share/mise/shims:$PATH" \
-    python3 scripts/economics.py --capture-live
-  PATH="$HOME/.local/share/mise/shims:$PATH" \
-    python3 scripts/economics.py --capture-hosted
-  python3 scripts/economics.py
-
-No repository files are written. Captured strings and rendered paths replace
-the operator's absolute home prefix with ``~``.
+The default mode reads the two committed compact gzip inputs under ../inputs/
+and rewrites economics.json and economics.md with stable ordering and
+nearest-rank percentiles. Pass --corpus to validate the embedded frozen facts
+against a run2 fleet corpus; when the repository-owned default is absent, the
+script reports the fallback and remains exactly reproducible from the inputs.
 """
 
 from __future__ import annotations
@@ -23,6 +14,7 @@ import argparse
 import collections
 import concurrent.futures
 import datetime as dt
+import gzip
 import hashlib
 import json
 import math
@@ -38,13 +30,10 @@ from typing import Any, Iterable
 SCRIPT = Path(__file__).resolve()
 OUTPUT_ROOT = SCRIPT.parent.parent
 INPUT_ROOT = OUTPUT_ROOT / "inputs"
-HOME = Path.home().resolve()
-PROJECTS_ROOT = HOME / "YeeBois" / "projects"
-REPO_ROOT = PROJECTS_ROOT / "beep-effect"
-FROZEN_ROOT = (
-    PROJECTS_ROOT
-    / "beep-effect8-s5"
-    / "explorations"
+REPO_ROOT = SCRIPT.parents[4]
+PROJECTS_ROOT = REPO_ROOT.parent
+DEFAULT_CORPUS_RELATIVE = (
+    Path("explorations")
     / "beep-ci-operational-ontology"
     / "ontology"
     / "extraction"
@@ -53,17 +42,16 @@ FROZEN_ROOT = (
     / "corpus"
     / "run2-fleet"
 )
-ETL_SCRIPT = FROZEN_ROOT.parent / "etl_fleet_corpus.py"
-LIVE_SNAPSHOT = INPUT_ROOT / "live-journals.json"
-HOSTED_SNAPSHOT = INPUT_ROOT / "hosted-runs.json"
-OPPORTUNITIES = REPO_ROOT / "goals" / "ship-velocity" / "research" / "OPPORTUNITIES.md"
-SHIP_SPEC = REPO_ROOT / "goals" / "ship-velocity" / "SPEC.md"
+DEFAULT_CORPUS = REPO_ROOT / DEFAULT_CORPUS_RELATIVE
+LIVE_SNAPSHOT = INPUT_ROOT / "live-journals.json.gz"
+HOSTED_SNAPSHOT = INPUT_ROOT / "hosted-runs.json.gz"
 
 ATTEMPT_SCHEMA = "yeet-attempt-journal/v1"
 VERDICT_SCHEMA_V2 = "yeet-verdict/v2"
-LIVE_SCHEMA = "verification-economics-live-input/v1"
-HOSTED_SCHEMA = "verification-economics-hosted-input/v1"
+LIVE_SCHEMA = "verification-economics-live-input/v2"
+HOSTED_SCHEMA = "verification-economics-hosted-input/v2"
 REPORT_SCHEMA = "verification-economics/v1"
+FROZEN_CAPTURE_AT = "2026-09-03T02:27:19.384Z"
 LOCK_SENTENCE = "Another Yeet full proof"
 COMPARABLE_MODES = {"verify", "repair", "publish"}
 COMPARABLE_EPISODE_CUT_MS = 24 * 60 * 60 * 1000
@@ -125,19 +113,76 @@ REPO_SANITY_PREFIX = "repo-sanity:"
 EXECUTED_STATUSES = {"passed", "failed"}
 REUSED_STATUSES = {"reused"}
 
+ATTEMPT_START_FIELDS = ("_tag", "attemptId", "base", "branch", "head", "mode", "schemaVersion", "startedAt")
+ATTEMPT_FINISH_FIELDS = ("_tag", "attemptId", "recordedAt", "schemaVersion")
+VERDICT_FIELDS = (
+    "attemptId",
+    "base",
+    "branch",
+    "committed",
+    "createdAt",
+    "elapsedMs",
+    "endedAt",
+    "failedStepId",
+    "failureKind",
+    "head",
+    "message",
+    "mode",
+    "outcome",
+    "pushed",
+    "schemaVersion",
+    "startedAt",
+)
+LANE_FIELDS = (
+    "commandHash",
+    "diffFingerprint",
+    "durationMs",
+    "id",
+    "label",
+    "phase",
+    "repairCommand",
+    "status",
+)
+ADMISSION_FIELDS = (
+    "_tag",
+    "admittedAtMillis",
+    "enqueuedAtMillis",
+    "kind",
+    "nonce",
+    "releasedAtMillis",
+)
+HOSTED_RUN_FIELDS = (
+    "attempt",
+    "conclusion",
+    "createdAt",
+    "databaseId",
+    "event",
+    "headBranch",
+    "headSha",
+    "status",
+    "updatedAt",
+)
+HOSTED_JOB_FIELDS = ("completedAt", "conclusion", "name", "startedAt")
+
 
 def portable_path(path: Path) -> str:
     resolved = path.resolve()
     try:
-        relative = resolved.relative_to(HOME)
+        relative = resolved.relative_to(REPO_ROOT)
     except ValueError:
-        return str(resolved)
-    return "~/" + relative.as_posix()
+        return f"<external>/{resolved.name}"
+    return relative.as_posix()
 
 
 def redact(value: Any) -> Any:
     if isinstance(value, str):
-        return value.replace(str(HOME), "~")
+        value = value.replace(str(Path.home().resolve()), "~")
+        value = re.sub(r"(https?://)[^/@\s]+:[^/@\s]+@", r"\1", value)
+        return re.sub(
+            r"(?i)([?&](?:access_?token|api_?key|auth|key|secret|signature|token)=)[^&\s]+",
+            r"\1<redacted>",
+            value,
+        )
     if isinstance(value, list):
         return [redact(item) for item in value]
     if isinstance(value, dict):
@@ -159,7 +204,13 @@ def canonical_json(value: Any, *, indent: int | None = 2) -> str:
 
 def write_json(path: Path, value: Any) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(canonical_json(redact(value)), encoding="utf-8")
+    data = canonical_json(redact(value)).encode("utf-8")
+    if path.suffix == ".gz":
+        with path.open("wb") as raw:
+            with gzip.GzipFile(filename="", mode="wb", fileobj=raw, mtime=0) as compressed:
+                compressed.write(data)
+        return
+    path.write_bytes(data)
 
 
 def sha256_12_bytes(data: bytes) -> str:
@@ -177,7 +228,108 @@ def file_receipt(path: Path, kind: str) -> dict[str, Any]:
 
 
 def parse_json_file(path: Path) -> Any:
+    if path.suffix == ".gz":
+        with gzip.open(path, "rt", encoding="utf-8") as compressed:
+            return json.load(compressed)
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def select_fields(value: dict[str, Any], fields: Iterable[str]) -> dict[str, Any]:
+    return {field: value[field] for field in fields if field in value}
+
+
+def compact_lane(lane: dict[str, Any]) -> dict[str, Any]:
+    return select_fields(lane, LANE_FIELDS)
+
+
+def compact_verdict(verdict: dict[str, Any]) -> dict[str, Any]:
+    compact = select_fields(verdict, VERDICT_FIELDS)
+    if isinstance(verdict.get("lanes"), list):
+        compact["lanes"] = [compact_lane(lane) for lane in verdict["lanes"] if isinstance(lane, dict)]
+    return compact
+
+
+def compact_attempt_record(record: dict[str, Any]) -> dict[str, Any]:
+    fields = ATTEMPT_START_FIELDS if record.get("_tag") == "attempt-started" else ATTEMPT_FINISH_FIELDS
+    compact = select_fields(record, fields)
+    if record.get("_tag") == "attempt-finished" and isinstance(record.get("verdict"), dict):
+        compact["verdict"] = compact_verdict(record["verdict"])
+    return compact
+
+
+def compact_frozen_inputs(corpus_root: Path) -> dict[str, Any]:
+    attempts, verdicts, admissions = frozen_payloads(corpus_root)
+    return {
+        "admissions": [
+            {
+                "journal": envelope["journal"],
+                "record": select_fields(envelope["record"], ADMISSION_FIELDS),
+            }
+            for envelope in admissions
+        ],
+        "attemptSources": [
+            {
+                "checkout": source["checkout"],
+                "records": [compact_attempt_record(record) for record in source["records"]],
+                "runId": source["runId"],
+                "source": "frozen",
+            }
+            for source in attempts
+        ],
+        "verdictSources": [
+            {
+                "checkout": source["checkout"],
+                "document": compact_verdict(source["document"]),
+                "runId": source["runId"],
+                "source": "frozen",
+            }
+            for source in verdicts
+        ],
+    }
+
+
+def compact_live_snapshot(snapshot: dict[str, Any], corpus_root: Path) -> dict[str, Any]:
+    files: list[dict[str, Any]] = []
+    for entry in snapshot.get("files", []):
+        compact = select_fields(entry, ("checkout", "kind", "runId"))
+        if entry.get("kind") == "attempts" and isinstance(entry.get("payload"), list):
+            compact["payload"] = [
+                compact_attempt_record(record) for record in entry["payload"] if isinstance(record, dict)
+            ]
+        elif entry.get("kind") == "verdict" and isinstance(entry.get("payload"), dict):
+            compact["payload"] = compact_verdict(entry["payload"])
+        elif entry.get("kind") == "state" and isinstance(entry.get("payload"), dict):
+            state = entry["payload"]
+            compact["payload"] = select_fields(state, ("diffFingerprint", "schemaVersion"))
+            if isinstance(state.get("laneProofs"), list):
+                compact["payload"]["laneProofs"] = [{} for _ in state["laneProofs"]]
+        elif entry.get("kind") == "rss":
+            compact["peakRssKb"] = entry.get("peakRssKb")
+        files.append(compact)
+    return {
+        "capturedAt": snapshot.get("capturedAt"),
+        "files": files,
+        "frozen": compact_frozen_inputs(corpus_root),
+        "frozenCaptureAt": FROZEN_CAPTURE_AT,
+        "schemaVersion": LIVE_SCHEMA,
+    }
+
+
+def compact_hosted_snapshot(snapshot: dict[str, Any]) -> dict[str, Any]:
+    runs: list[dict[str, Any]] = []
+    for run in snapshot.get("runs", []):
+        compact = select_fields(run, HOSTED_RUN_FIELDS)
+        compact["jobs"] = [
+            select_fields(job, HOSTED_JOB_FIELDS) for job in run.get("jobs", []) if isinstance(job, dict)
+        ]
+        runs.append(compact)
+    return {
+        "capturedAt": snapshot.get("capturedAt"),
+        "cutoffDateUtc": snapshot.get("cutoffDateUtc"),
+        "requiredContexts": snapshot.get("requiredContexts"),
+        "runs": runs,
+        "schemaVersion": HOSTED_SCHEMA,
+    }
 
 
 def parse_ndjson_bytes(data: bytes, label: str) -> list[dict[str, Any]]:
@@ -278,7 +430,7 @@ def checkout_label(root: Path) -> str:
         return root.name
 
 
-def capture_live() -> None:
+def capture_live(corpus_root: Path) -> None:
     roots = discover_live_roots()
     files: list[dict[str, Any]] = []
     captured_at = dt.datetime.now(dt.timezone.utc)
@@ -334,15 +486,17 @@ def capture_live() -> None:
     snapshot = {
         "capturedAt": format_ts(captured_at),
         "discoveryRule": [
-            "~/YeeBois/projects/beep-effect",
-            "~/YeeBois/projects/beep-effect[0-9]* with .beep/yeet/runs",
-            "~/YeeBois/projects/beep-effect-worktrees/* with .beep/yeet/runs",
+            "repository root",
+            "numbered sibling checkouts with .beep/yeet/runs",
+            "sibling beep-effect-worktrees children with .beep/yeet/runs",
         ],
         "files": sorted(files, key=lambda entry: (entry["path"], entry["kind"])),
         "roots": [portable_path(root) for root in roots],
         "schemaVersion": LIVE_SCHEMA,
     }
-    write_json(LIVE_SNAPSHOT, snapshot)
+    if not corpus_root.is_dir():
+        raise SystemExit("cannot capture live input without a run2 fleet corpus; pass --corpus <dir>")
+    write_json(LIVE_SNAPSHOT, compact_live_snapshot(snapshot, corpus_root))
     print(f"captured {len(files)} live files from {len(roots)} roots -> {portable_path(LIVE_SNAPSHOT)}")
 
 
@@ -438,69 +592,55 @@ def capture_hosted() -> None:
         "schemaVersion": HOSTED_SCHEMA,
         "workflow": "Check",
     }
-    write_json(HOSTED_SNAPSHOT, snapshot)
+    write_json(HOSTED_SNAPSHOT, compact_hosted_snapshot(snapshot))
     print(f"captured {len(runs)} hosted Check runs -> {portable_path(HOSTED_SNAPSHOT)}")
 
 
-def frozen_payloads() -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
+def frozen_payloads(corpus_root: Path) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
     attempt_sources: list[dict[str, Any]] = []
     verdict_sources: list[dict[str, Any]] = []
     admissions: list[dict[str, Any]] = []
-    receipts: list[dict[str, Any]] = []
-    for source in sorted(FROZEN_ROOT.glob("attempts/*/*/attempts.ndjson")):
-        relative = source.relative_to(FROZEN_ROOT).parts
+    for source in sorted(corpus_root.glob("attempts/*/*/attempts.ndjson")):
+        relative = source.relative_to(corpus_root).parts
         data = source.read_bytes()
-        receipts.append(file_receipt(source, "frozen-attempts"))
         attempt_sources.append(
             {
                 "checkout": relative[1],
-                "path": portable_path(source),
+                "path": f"frozen/attempts/{relative[1]}/{relative[2]}",
                 "records": parse_ndjson_bytes(data, portable_path(source)),
                 "runId": relative[2],
                 "source": "frozen",
             }
         )
-    for source in sorted(FROZEN_ROOT.glob("verdicts/*/*/verdict.json")):
-        relative = source.relative_to(FROZEN_ROOT).parts
-        receipts.append(file_receipt(source, "frozen-verdict"))
+    for source in sorted(corpus_root.glob("verdicts/*/*/verdict.json")):
+        relative = source.relative_to(corpus_root).parts
         verdict_sources.append(
             {
                 "checkout": relative[1],
                 "document": parse_json_file(source),
-                "path": portable_path(source),
+                "path": f"frozen/verdicts/{relative[1]}/{relative[2]}",
                 "runId": relative[2],
                 "source": "frozen",
             }
         )
-    for source in sorted(FROZEN_ROOT.glob("admission/*/journal.ndjson")):
+    for source in sorted(corpus_root.glob("admission/*/journal.ndjson")):
         label = source.parent.name
-        receipts.append(file_receipt(source, "frozen-admission"))
         for record in parse_ndjson_bytes(source.read_bytes(), portable_path(source)):
             admissions.append({"journal": label, "record": record})
-    for reference, kind in (
-        (FROZEN_ROOT / "MANIFEST.yaml", "frozen-manifest"),
-        (ETL_SCRIPT, "method-reference"),
-        (OPPORTUNITIES, "classification-reference"),
-        (SHIP_SPEC, "metric-law-reference"),
-    ):
-        if reference.is_file():
-            receipts.append(file_receipt(reference, kind))
-    return attempt_sources, verdict_sources, admissions, receipts
+    return attempt_sources, verdict_sources, admissions
 
 
-def live_payloads(snapshot: dict[str, Any]) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
+def live_payloads(
+    snapshot: dict[str, Any],
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
     attempts: list[dict[str, Any]] = []
     verdicts: list[dict[str, Any]] = []
     states: list[dict[str, Any]] = []
     rss: list[dict[str, Any]] = []
-    receipts: list[dict[str, Any]] = []
-    for entry in snapshot.get("files", []):
-        receipt = {key: entry.get(key) for key in ("bytes", "kind", "path", "sha256_12")}
-        receipt["kind"] = "live-" + str(receipt["kind"])
-        receipts.append(receipt)
+    for index, entry in enumerate(snapshot.get("files", [])):
         base = {
             "checkout": entry.get("checkout"),
-            "path": entry.get("path"),
+            "path": f"captured/{entry.get('checkout')}/{entry.get('runId')}/{entry.get('kind')}/{index}",
             "runId": entry.get("runId"),
             "source": "live",
         }
@@ -512,7 +652,7 @@ def live_payloads(snapshot: dict[str, Any]) -> tuple[list[dict[str, Any]], list[
             states.append({**base, "document": entry["payload"]})
         elif entry.get("kind") == "rss":
             rss.append({**base, "peakRssKb": entry.get("peakRssKb")})
-    return attempts, verdicts, states, rss, receipts
+    return attempts, verdicts, states, rss
 
 
 def attempt_key(checkout: str, run_id: str, attempt_id: str) -> tuple[str, str, str]:
@@ -1057,7 +1197,9 @@ def hosted_metrics(snapshot: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def match_hosted_runs_to_attempts(attempts: list[dict[str, Any]], hosted_snapshot: dict[str, Any]) -> dict[int, tuple[str, str, str]]:
+def match_hosted_runs_to_attempts(
+    attempts: list[dict[str, Any]], hosted_snapshot: dict[str, Any]
+) -> dict[int, tuple[str, str, str]]:
     publish_by_branch: dict[str, list[dict[str, Any]]] = collections.defaultdict(list)
     for attempt in attempts:
         if (
@@ -1069,38 +1211,56 @@ def match_hosted_runs_to_attempts(attempts: list[dict[str, Any]], hosted_snapsho
             publish_by_branch[str(attempt["branch"])].append(attempt)
     for rows in publish_by_branch.values():
         rows.sort(key=lambda row: row["startedAt"])
-    matches: dict[int, tuple[str, str, str]] = {}
-    used: set[tuple[str, str, str]] = set()
     hosted_runs = sorted(
         (
             run
             for run in hosted_snapshot.get("runs", [])
             if run.get("event") == "pull_request" and parse_ts(run.get("createdAt")) is not None
         ),
-        key=lambda run: (run.get("createdAt"), run.get("databaseId")),
+        key=lambda run: (
+            run.get("headSha") or "",
+            run.get("attempt") or 0,
+            run.get("createdAt"),
+            run.get("databaseId"),
+        ),
     )
+    runs_by_change: dict[str, list[dict[str, Any]]] = collections.defaultdict(list)
     for run in hosted_runs:
-        created = parse_ts(run.get("createdAt"))
-        assert created is not None
-        candidates: list[tuple[float, dict[str, Any]]] = []
-        for attempt in publish_by_branch.get(str(run.get("headBranch")), []):
-            if attempt["key"] in used:
-                continue
-            lower = attempt["startedAt"] - dt.timedelta(minutes=10)
-            upper = attempt["endedAt"] + dt.timedelta(minutes=60)
-            if not (lower <= created <= upper):
-                continue
-            if attempt["startedAt"] <= created <= attempt["endedAt"]:
-                distance = 0.0
-            else:
-                distance = min(abs((created - attempt["startedAt"]).total_seconds()), abs((created - attempt["endedAt"]).total_seconds()))
-            candidates.append((distance, attempt))
+        run_id = run.get("databaseId")
+        change = run.get("headSha") if isinstance(run.get("headSha"), str) else f"run:{run_id}"
+        runs_by_change[change].append(run)
+
+    matches: dict[int, tuple[str, str, str]] = {}
+    used_attempts: set[tuple[str, str, str]] = set()
+    for change in sorted(runs_by_change):
+        change_runs = runs_by_change[change]
+        candidates: list[tuple[float, dt.datetime, str, dict[str, Any]]] = []
+        for run in change_runs:
+            created = parse_ts(run.get("createdAt"))
+            assert created is not None
+            for attempt in publish_by_branch.get(str(run.get("headBranch")), []):
+                if attempt["key"] in used_attempts:
+                    continue
+                lower = attempt["startedAt"] - dt.timedelta(minutes=10)
+                upper = attempt["endedAt"] + dt.timedelta(minutes=60)
+                if not (lower <= created <= upper):
+                    continue
+                if attempt["startedAt"] <= created <= attempt["endedAt"]:
+                    distance = 0.0
+                else:
+                    distance = min(
+                        abs((created - attempt["startedAt"]).total_seconds()),
+                        abs((created - attempt["endedAt"]).total_seconds()),
+                    )
+                candidates.append((distance, attempt["startedAt"], attempt["attemptId"], attempt))
         if not candidates:
             continue
-        candidates.sort(key=lambda item: (item[0], item[1]["startedAt"], item[1]["attemptId"]))
-        winner = candidates[0][1]
-        used.add(winner["key"])
-        matches[int(run["databaseId"])] = winner["key"]
+        candidates.sort(key=lambda item: item[:3])
+        winner = candidates[0][3]
+        used_attempts.add(winner["key"])
+        for run in change_runs:
+            if isinstance(run.get("databaseId"), int):
+                matches[run["databaseId"]] = winner["key"]
     return matches
 
 
@@ -1187,7 +1347,10 @@ def execution_amplification(
         "hostedJobsMatched": executed_hosted_jobs,
         "hostedPrRunsMatchedToPublishAttempts": len(matches),
         "hostedPrRunsUnmatched": sum(1 for run in hosted_snapshot.get("runs", []) if run.get("event") == "pull_request") - len(matches),
-        "matchRule": "same branch; hosted run created from 10m before local publish start through 60m after local publish end; one-to-one nearest interval",
+        "matchRule": (
+            "same headSha change and branch; any (headSha, workflow attempt, run id) within the publish "
+            "window anchors every hosted rerun for that change to the nearest local publish interval"
+        ),
         "mergedPreviewFailedWrappersWithUnallocatedInnerRuns": parity_failures_unallocated,
         "rows": rows,
     }
@@ -1293,7 +1456,16 @@ def markdown_table(headers: list[str], rows: list[list[Any]]) -> list[str]:
 
 
 def render_economics(report: dict[str, Any]) -> str:
-    lines: list[str] = ["# Verification economics — fleet snapshot", ""]
+    lines: list[str] = [
+        "# Verification economics — fleet snapshot",
+        "",
+        "Reproduce from a clean repository clone with the committed compact inputs:",
+        "",
+        "```sh",
+        "python3 goals/time-to-certainty/research/scripts/economics.py --from-inputs",
+        "```",
+        "",
+    ]
     lines += markdown_table(
         ["Method", "Value"],
         [
@@ -1549,7 +1721,25 @@ def render_report(report: dict[str, Any]) -> str:
     return text
 
 
-def build_report() -> dict[str, Any]:
+def embedded_frozen_payloads(
+    live_snapshot: dict[str, Any],
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
+    frozen = live_snapshot.get("frozen")
+    if not isinstance(frozen, dict):
+        raise SystemExit("compact live input has no embedded frozen facts; provide --corpus <dir>")
+    attempts = frozen.get("attemptSources")
+    verdicts = frozen.get("verdictSources")
+    admissions = frozen.get("admissions")
+    if not isinstance(attempts, list) or not isinstance(verdicts, list) or not isinstance(admissions, list):
+        raise SystemExit("compact live input has malformed embedded frozen facts")
+    for index, source in enumerate(attempts):
+        source.setdefault("path", f"embedded/frozen/attempts/{index}")
+    for index, source in enumerate(verdicts):
+        source.setdefault("path", f"embedded/frozen/verdicts/{index}")
+    return attempts, verdicts, admissions
+
+
+def build_report(corpus_root: Path) -> dict[str, Any]:
     if not LIVE_SNAPSHOT.is_file():
         raise SystemExit(f"missing {portable_path(LIVE_SNAPSHOT)}; run --capture-live")
     if not HOSTED_SNAPSHOT.is_file():
@@ -1561,16 +1751,22 @@ def build_report() -> dict[str, Any]:
     if hosted_snapshot.get("schemaVersion") != HOSTED_SCHEMA:
         raise SystemExit("unsupported hosted snapshot schema")
 
-    frozen_attempts, frozen_verdicts, admissions, source_receipts = frozen_payloads()
-    live_attempts, live_verdicts, states, rss, live_receipts = live_payloads(live_snapshot)
-    source_receipts.extend(live_receipts)
-    source_receipts.extend(
-        [
-            file_receipt(LIVE_SNAPSHOT, "replay-live-snapshot"),
-            file_receipt(HOSTED_SNAPSHOT, "replay-hosted-snapshot"),
-            file_receipt(SCRIPT, "reproduction-script"),
-        ]
-    )
+    if corpus_root.is_dir():
+        frozen_attempts, frozen_verdicts, admissions = frozen_payloads(corpus_root)
+        print(f"using run2 fleet corpus from {portable_path(corpus_root)}", file=sys.stderr)
+    else:
+        frozen_attempts, frozen_verdicts, admissions = embedded_frozen_payloads(live_snapshot)
+        print(
+            f"repository corpus absent at {DEFAULT_CORPUS_RELATIVE.as_posix()}; "
+            "using frozen facts embedded in live-journals.json.gz",
+            file=sys.stderr,
+        )
+    live_attempts, live_verdicts, states, rss = live_payloads(live_snapshot)
+    source_receipts = [
+        file_receipt(LIVE_SNAPSHOT, "replay-live-snapshot"),
+        file_receipt(HOSTED_SNAPSHOT, "replay-hosted-snapshot"),
+        file_receipt(SCRIPT, "reproduction-script"),
+    ]
     all_attempt_sources = [*frozen_attempts, *live_attempts]
     all_verdict_sources = [*frozen_verdicts, *live_verdicts]
     attempts, diagnostics = load_attempts(all_attempt_sources, all_verdict_sources)
@@ -1618,8 +1814,8 @@ def build_report() -> dict[str, Any]:
         "requiredContextRows": merge_context_tables(hosted, amplification),
         "schemaVersion": REPORT_SCHEMA,
         "sources": {
-            "frozenCaptureAt": "2026-09-03T02:27:19.384Z",
-            "frozenCorpus": portable_path(FROZEN_ROOT),
+            "frozenCaptureAt": live_snapshot.get("frozenCaptureAt"),
+            "frozenCorpus": DEFAULT_CORPUS_RELATIVE.as_posix(),
             "hostedSnapshot": portable_path(HOSTED_SNAPSHOT),
             "liveSnapshot": portable_path(LIVE_SNAPSHOT),
         },
@@ -1629,36 +1825,52 @@ def build_report() -> dict[str, Any]:
 
 
 def validate_public_hygiene(paths: list[Path]) -> None:
-    forbidden = str(HOME).encode("utf-8")
+    forbidden = str(Path.home().resolve()).encode("utf-8")
     for path in paths:
-        data = path.read_bytes()
+        data = gzip.decompress(path.read_bytes()) if path.suffix == ".gz" else path.read_bytes()
         if forbidden in data:
             raise SystemExit(f"absolute home path leaked into {portable_path(path)}")
+        if path != SCRIPT and re.search(
+            rb"(?i)(?:authorization:\s*bearer|github_pat_|gh[pousr]_[A-Za-z0-9])", data
+        ):
+            raise SystemExit(f"credential-shaped text leaked into {portable_path(path)}")
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--capture-live", action="store_true", help="capture current mutable fleet journal inputs")
     parser.add_argument("--capture-hosted", action="store_true", help="capture the last 14 UTC dates of Check runs")
+    parser.add_argument(
+        "--corpus",
+        type=Path,
+        default=DEFAULT_CORPUS,
+        help=f"run2 fleet corpus directory (default: {DEFAULT_CORPUS_RELATIVE.as_posix()})",
+    )
+    parser.add_argument(
+        "--from-inputs",
+        action="store_true",
+        help="replay the committed compact gzip inputs (automatic when both inputs exist)",
+    )
     args = parser.parse_args()
     if args.capture_live:
-        capture_live()
+        capture_live(args.corpus)
     if args.capture_hosted:
         capture_hosted()
     if args.capture_live or args.capture_hosted:
         return
 
-    report = build_report()
+    from_inputs = args.from_inputs or (LIVE_SNAPSHOT.is_file() and HOSTED_SNAPSHOT.is_file())
+    if not from_inputs:
+        raise SystemExit("committed compact inputs are absent; run --capture-live and --capture-hosted")
+
+    report = build_report(args.corpus)
     economics_json = OUTPUT_ROOT / "economics.json"
     economics_md = OUTPUT_ROOT / "economics.md"
-    short_report = OUTPUT_ROOT / "report.md"
     write_json(economics_json, report)
     economics_md.write_text(render_economics(report), encoding="utf-8")
-    short_report.write_text(render_report(report), encoding="utf-8")
-    validate_public_hygiene([SCRIPT, LIVE_SNAPSHOT, HOSTED_SNAPSHOT, economics_json, economics_md, short_report])
+    validate_public_hygiene([SCRIPT, LIVE_SNAPSHOT, HOSTED_SNAPSHOT, economics_json, economics_md])
     print(f"wrote {portable_path(economics_json)}")
     print(f"wrote {portable_path(economics_md)} ({len(economics_md.read_text(encoding='utf-8').splitlines())} lines)")
-    print(f"wrote {portable_path(short_report)} ({len(short_report.read_text(encoding='utf-8').splitlines())} lines)")
 
 
 if __name__ == "__main__":

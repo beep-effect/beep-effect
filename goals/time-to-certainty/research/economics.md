@@ -1,6 +1,10 @@
-<!-- Provenance: Codex GPT-5.6 Sol (xhigh) measurement lane, 2026-09-03, read-only over the frozen fleet corpus (ontology packet, 2026-09-03T02:27Z) plus live attempt journals in every checkout and hosted Check runs since 2026-08-20. Reproduce with research/scripts/economics.py; input digests in research/economics.json. -->
-
 # Verification economics — fleet snapshot
+
+Reproduce from a clean repository clone with the committed compact inputs:
+
+```sh
+python3 goals/time-to-certainty/research/scripts/economics.py --from-inputs
+```
 
 | Method | Value |
 | --- | --- |
@@ -15,23 +19,23 @@
 
 | Context | logical attempts | runs | runs/attempt | local inner | preview inferred | hosted matched | hosted n | p50 ms | p95 ms | hosted time share | local p50 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Lint | 426 | 495 | 1.162 | 277 | 13 | 205 | 881 | 267000 | 1231000 | 12.99% | unmeasured |
-| Heavy / Lint Policy | 280 | 349 | 1.246 | 131 | 13 | 205 | 881 | 363000 | 432000 | 9.73% | unmeasured |
-| Heavy / Check | 426 | 495 | 1.162 | 277 | 13 | 205 | 881 | 383000 | 765000 | 12.27% | unmeasured |
-| Test Unit | 252 | 317 | 1.258 | 99 | 13 | 205 | 881 | 495000 | 1410000 | 14.71% | unmeasured |
-| Heavy / Test Integration | 250 | 315 | 1.26 | 97 | 13 | 205 | 881 | 137000 | 211000 | 4.16% | unmeasured |
-| Heavy / Docgen | 250 | 315 | 1.26 | 97 | 13 | 205 | 881 | 115000 | 439000 | 5.42% | unmeasured |
-| Codegen Drift | 213 | 232 | 1.089 | 14 | 13 | 205 | 881 | 107000 | 283000 | 2.89% | unmeasured |
-| Repo Sanity | 540 | 619 | 1.146 | 401 | 13 | 205 | 881 | 183000 | 307000 | 5.14% | unmeasured |
-| Heavy / Coverage Regression | 206 | 223 | 1.083 | 5 | 13 | 205 | 881 | 603000 | 928000 | 15.14% | unmeasured |
-| Knip | 789 | 930 | 1.179 | 712 | 13 | 205 | 881 | 80000 | 122000 | 2.49% | unmeasured |
-| Commitlint | 213 | 232 | 1.089 | 14 | 13 | 205 | 881 | 63000 | 107000 | 2.07% | unmeasured |
-| Secret Scanning | 538 | 609 | 1.132 | 391 | 13 | 205 | 881 | 54000 | 130000 | 1.89% | unmeasured |
-| Security | 538 | 609 | 1.132 | 391 | 13 | 205 | 881 | 28000 | 68000 | 1.23% | unmeasured |
-| SAST | 538 | 608 | 1.13 | 390 | 13 | 205 | 881 | 82000 | 141000 | 2.5% | unmeasured |
-| Nix Shell | 538 | 608 | 1.13 | 390 | 13 | 205 | 881 | 102000 | 141000 | 3.07% | unmeasured |
-| Professional Desktop IPC Stdio | 206 | 223 | 1.083 | 5 | 13 | 205 | 881 | 69000 | 111000 | 1.64% | unmeasured |
-| Heavy / Doctest | 90 | 103 | 1.144 | 0 | 13 | 90 | 661 | 82000 | 219000 | 2.65% | unmeasured |
+| Lint | 426 | 496 | 1.164 | 277 | 13 | 206 | 881 | 267000 | 1231000 | 12.99% | unmeasured |
+| Heavy / Lint Policy | 280 | 350 | 1.25 | 131 | 13 | 206 | 881 | 363000 | 432000 | 9.73% | unmeasured |
+| Heavy / Check | 426 | 496 | 1.164 | 277 | 13 | 206 | 881 | 383000 | 765000 | 12.27% | unmeasured |
+| Test Unit | 252 | 318 | 1.262 | 99 | 13 | 206 | 881 | 495000 | 1410000 | 14.71% | unmeasured |
+| Heavy / Test Integration | 250 | 316 | 1.264 | 97 | 13 | 206 | 881 | 137000 | 211000 | 4.16% | unmeasured |
+| Heavy / Docgen | 250 | 316 | 1.264 | 97 | 13 | 206 | 881 | 115000 | 439000 | 5.42% | unmeasured |
+| Codegen Drift | 213 | 233 | 1.094 | 14 | 13 | 206 | 881 | 107000 | 283000 | 2.89% | unmeasured |
+| Repo Sanity | 540 | 620 | 1.148 | 401 | 13 | 206 | 881 | 183000 | 307000 | 5.14% | unmeasured |
+| Heavy / Coverage Regression | 206 | 224 | 1.087 | 5 | 13 | 206 | 881 | 603000 | 928000 | 15.14% | unmeasured |
+| Knip | 789 | 931 | 1.18 | 712 | 13 | 206 | 881 | 80000 | 122000 | 2.49% | unmeasured |
+| Commitlint | 213 | 233 | 1.094 | 14 | 13 | 206 | 881 | 63000 | 107000 | 2.07% | unmeasured |
+| Secret Scanning | 538 | 610 | 1.134 | 391 | 13 | 206 | 881 | 54000 | 130000 | 1.89% | unmeasured |
+| Security | 538 | 610 | 1.134 | 391 | 13 | 206 | 881 | 28000 | 68000 | 1.23% | unmeasured |
+| SAST | 538 | 609 | 1.132 | 390 | 13 | 206 | 881 | 82000 | 141000 | 2.5% | unmeasured |
+| Nix Shell | 538 | 609 | 1.132 | 390 | 13 | 206 | 881 | 102000 | 141000 | 3.07% | unmeasured |
+| Professional Desktop IPC Stdio | 206 | 224 | 1.087 | 5 | 13 | 206 | 881 | 69000 | 111000 | 1.64% | unmeasured |
+| Heavy / Doctest | 90 | 104 | 1.156 | 0 | 13 | 91 | 661 | 82000 | 219000 | 2.65% | unmeasured |
 
 ## B. Directly measured local wrapper lanes
 
@@ -162,8 +166,8 @@
 | Fingerprint join | attempt rows carry head=HEAD and no diffFingerprint; state.json is one overwritten latest-green snapshot per run directory |
 | Clock | all ISO timestamps normalized to UTC; admission epoch milliseconds interpreted as UTC instants |
 | Hosted duration | job startedAt -> completedAt; includes job setup, excludes skipped and missing/negative intervals |
-| Tier join | 205/725 PR workflows time-matched to publish attempts; 520 unmatched |
+| Tier join | 206/725 PR workflows time-matched to publish attempts; 519 unmatched |
 | Failed preview allocation | 2 failed merged-preview wrappers have unknown child execution sets |
 | Episode tail | 7 >24h closed episodes censored only for article comparison |
 | Cache | forbidden by ship-velocity C5; inputs contain no first-cold-lane task accounting |
-| Inputs | 2115 source files; every path and sha256_12 in economics.json |
+| Inputs | 3 source files; every path and sha256_12 in economics.json |
