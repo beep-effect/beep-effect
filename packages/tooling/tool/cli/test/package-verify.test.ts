@@ -66,33 +66,32 @@ const runGit = (cwd: string, args: ReadonlyArray<string>) =>
     }
   });
 
-const seedWorkspaceRepository = (
+const seedWorkspaceRepository = Effect.fn("seedWorkspaceRepository")(function* (
   repoRoot: string,
   scripts: Readonly<Record<string, string>>,
   options: { readonly commit?: boolean } = {}
-) =>
-  Effect.gen(function* () {
-    const fs = yield* FileSystem.FileSystem;
-    const path = yield* Path.Path;
-    const packageDir = path.join(repoRoot, "packages/demo");
-    yield* fs.makeDirectory(packageDir, { recursive: true });
-    yield* fs.writeFileString(
-      path.join(repoRoot, "package.json"),
-      yield* encodeJson({ name: "verify-root", private: true, workspaces: ["packages/*"] })
-    );
-    yield* fs.writeFileString(
-      path.join(packageDir, "package.json"),
-      yield* encodeJson({ name: "@beep/demo", private: true, scripts })
-    );
-    yield* runGit(repoRoot, ["init", "--quiet"]);
-    yield* runGit(repoRoot, ["config", "user.email", "codex@example.invalid"]);
-    yield* runGit(repoRoot, ["config", "user.name", "Codex"]);
-    if (options.commit !== false) {
-      yield* runGit(repoRoot, ["add", "."]);
-      yield* runGit(repoRoot, ["commit", "--quiet", "-m", "initial"]);
-    }
-    return packageDir;
-  });
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const packageDir = path.join(repoRoot, "packages/demo");
+  yield* fs.makeDirectory(packageDir, { recursive: true });
+  yield* fs.writeFileString(
+    path.join(repoRoot, "package.json"),
+    yield* encodeJson({ name: "verify-root", private: true, workspaces: ["packages/*"] })
+  );
+  yield* fs.writeFileString(
+    path.join(packageDir, "package.json"),
+    yield* encodeJson({ name: "@beep/demo", private: true, scripts })
+  );
+  yield* runGit(repoRoot, ["init", "--quiet"]);
+  yield* runGit(repoRoot, ["config", "user.email", "codex@example.invalid"]);
+  yield* runGit(repoRoot, ["config", "user.name", "Codex"]);
+  if (options.commit !== false) {
+    yield* runGit(repoRoot, ["add", "."]);
+    yield* runGit(repoRoot, ["commit", "--quiet", "-m", "initial"]);
+  }
+  return packageDir;
+});
 
 const withTempDirectory = <Result, Error, Requirements>(
   use: (tmpDir: string) => Effect.Effect<Result, Error, Requirements>
