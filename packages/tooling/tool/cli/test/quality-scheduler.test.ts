@@ -74,9 +74,10 @@ const reapClaimPath = (lockPath: string, observedToken: string): string =>
   `${lockPath}.reap-${createHash("sha256").update(observedToken).digest("hex")}`;
 const reapAdopterPath = (
   claimPath: string,
-  generation: Pick<AdmissionJournalLockGeneration, "ownerToken" | "pid" | "procStart">
+  generation: Pick<AdmissionJournalLockGeneration, "ownerToken" | "pid" | "procStart">,
+  claimedAtMillis: number
 ): string =>
-  `${claimPath}.adopt-${generation.pid}.${Encoding.encodeBase64Url(generation.procStart)}.${Encoding.encodeBase64Url(generation.ownerToken)}`;
+  `${claimPath}.adopt-${generation.pid}.${Encoding.encodeBase64Url(generation.procStart)}.${Encoding.encodeBase64Url(generation.ownerToken)}.${claimedAtMillis}`;
 
 describe("process identity liveness", () => {
   it.effect("uses a portable process identity when procfs is unavailable", () =>
@@ -920,6 +921,48 @@ describe("quality-scheduler", () => {
       })
     ));
 
+  it("finishes an adopted lock reclaim before honoring interruption", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const lockPath = path.join(tempRoot.root, "journal.lock");
+            const observedToken = `${DEAD_PID}:interrupted-adoption`;
+            const adopted = yield* Deferred.make<void>();
+            const finishAdoption = yield* Deferred.make<void>();
+            yield* fs.makeDirectory(tempRoot.root, { recursive: true, mode: 0o700 });
+            yield* fs.writeFileString(lockPath, observedToken);
+            const pausedFileSystem = FileSystem.FileSystem.of({
+              ...fs,
+              rename: Effect.fn("FileSystem.FileSystem.rename")(function* (oldPath, newPath) {
+                yield* fs.rename(oldPath, newPath);
+                if (Str.includes(".reap-")(oldPath) && Str.includes(".adopt-")(newPath)) {
+                  yield* Deferred.succeed(adopted, undefined);
+                  yield* Deferred.await(finishAdoption);
+                }
+              }),
+            });
+            const reaper = yield* Effect.forkChild(
+              acquireJournalFileLock(lockPath, `${process.pid}:interrupted-contender`, 1).pipe(
+                Effect.provideService(FileSystem.FileSystem, pausedFileSystem)
+              )
+            );
+            yield* Deferred.await(adopted);
+            const interrupter = yield* Effect.forkChild(Fiber.interrupt(reaper));
+            yield* Effect.yieldNow;
+            yield* Deferred.succeed(finishAdoption, undefined);
+            yield* Fiber.join(interrupter);
+
+            expect(yield* fs.exists(lockPath)).toBe(false);
+            expect(A.filter(yield* fs.readDirectory(tempRoot.root), Str.includes(".reap-"))).toHaveLength(0);
+          })
+        );
+      })
+    ));
+
   it("elects one claim adopter and restores a replacement published before the reclaim rename", () =>
     Effect.runPromise(
       Effect.gen(function* () {
@@ -1230,6 +1273,7 @@ describe("quality-scheduler", () => {
             const path = yield* Path.Path;
             yield* fs.makeDirectory(tempRoot.root, { recursive: true, mode: 0o700 });
             const procStart = O.getOrThrow(yield* processStartIdentityForPid(process.pid));
+            const nowMillis = yield* Clock.currentTimeMillis;
 
             const liveLockPath = path.join(tempRoot.root, "live-adopter.lock");
             const liveToken = `${DEAD_PID}:live-adopter-generation`;
@@ -1241,7 +1285,8 @@ describe("quality-scheduler", () => {
                 pid: process.pid,
                 procStart,
                 ownerToken: `${process.pid}:live-adopter`,
-              })
+              }),
+              nowMillis
             );
             yield* fs.writeFileString(liveLockPath, liveToken);
             yield* fs.writeFileString(liveAdopterPath, liveToken);
@@ -1306,7 +1351,28 @@ describe("quality-scheduler", () => {
             const fs = yield* FileSystem.FileSystem;
             const path = yield* Path.Path;
             yield* fs.makeDirectory(tempRoot.root, { recursive: true, mode: 0o700 });
-            const agedSeconds = ((yield* Clock.currentTimeMillis) - 301_000) / 1_000;
+            const nowMillis = yield* Clock.currentTimeMillis;
+            const agedSeconds = (nowMillis - 31_000) / 1_000;
+
+            const staleLiveLockPath = path.join(tempRoot.root, "stale-live-adopter.lock");
+            const staleLiveToken = `${DEAD_PID}:stale-live-adopter-generation`;
+            const staleLiveClaimPath = reapClaimPath(staleLiveLockPath, staleLiveToken);
+            const staleLiveAdopterPath = reapAdopterPath(
+              staleLiveClaimPath,
+              AdmissionJournalLockGeneration.make({
+                schemaVersion: "yeet-admission-journal-lock/v1",
+                pid: process.pid,
+                procStart: O.getOrThrow(yield* processStartIdentityForPid(process.pid)),
+                ownerToken: `${process.pid}:stale-live-adopter`,
+              }),
+              nowMillis - 31_000
+            );
+            yield* fs.writeFileString(staleLiveLockPath, staleLiveToken);
+            yield* fs.writeFileString(staleLiveAdopterPath, staleLiveToken);
+            const staleLiveContender = `${process.pid}:stale-live-contender`;
+            expect(yield* acquireJournalFileLock(staleLiveLockPath, staleLiveContender, 2)).toBe(true);
+            expect(yield* fs.exists(staleLiveAdopterPath)).toBe(false);
+            yield* releaseAdmissionJournalLockForTesting(staleLiveLockPath, staleLiveContender);
 
             const staleLockPath = path.join(tempRoot.root, "stale-malformed-adopter.lock");
             const staleToken = `${DEAD_PID}:stale-malformed-generation`;
@@ -1327,7 +1393,8 @@ describe("quality-scheduler", () => {
                 pid: DEAD_PID,
                 procStart: "proc:dead-start",
                 ownerToken: `${DEAD_PID}:dead-adopter`,
-              })
+              }),
+              nowMillis
             );
             yield* fs.writeFileString(deadLockPath, deadToken);
             yield* fs.writeFileString(deadAdopterPath, deadToken);

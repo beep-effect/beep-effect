@@ -39,6 +39,7 @@ const LOCK_FILE_NAME = "journal.lock";
 const RETAINED_ADMISSIONS = 200;
 const LOCK_RETRY_ATTEMPTS = 8;
 const LOCK_RETRY_DELAY_MILLIS = 25;
+const LOCK_REAP_ADOPTION_BOUND_MILLIS = 30_000;
 // No legitimate writer publishes an unparseable token. The age backstop
 // therefore applies only to malformed generations, never a parseable live
 // owner whose lock could still be released concurrently.
@@ -85,8 +86,24 @@ export class AdmissionJournalLockGeneration extends S.Class<AdmissionJournalLock
 const encodeLockGeneration = S.encodeUnknownEffect(S.fromJsonString(AdmissionJournalLockGeneration));
 const decodeLockGeneration = S.decodeUnknownEffect(S.fromJsonString(AdmissionJournalLockGeneration));
 const decodeReapAdopterPathParts = S.decodeUnknownEffect(
-  S.Tuple([S.String, S.StringFromBase64Url, S.StringFromBase64Url])
+  S.Tuple([S.FiniteFromString, S.StringFromBase64Url, S.StringFromBase64Url, S.FiniteFromString])
 );
+const decodeLegacyReapAdopterPathParts = S.decodeUnknownEffect(
+  S.Tuple([S.FiniteFromString, S.StringFromBase64Url, S.StringFromBase64Url])
+);
+
+class AdmissionJournalLockReapAdopter extends S.Class<AdmissionJournalLockReapAdopter>(
+  $I`AdmissionJournalLockReapAdopter`
+)(
+  {
+    schemaVersion: S.Literal("yeet-admission-journal-lock-reap-adopter/v1"),
+    generation: AdmissionJournalLockGeneration,
+    claimedAtMillis: S.Finite,
+  },
+  $I.annote("AdmissionJournalLockReapAdopter", {
+    description: "Process-fenced ownership record for one journal-lock reap adoption.",
+  })
+) {}
 
 /**
  * Durable transition recorded when a queued ticket becomes an active lease.
@@ -399,30 +416,48 @@ const journalLockReapClaimPath = (lockPath: string, observedToken: string): stri
 
 const journalLockReapAdopterPrefix = (claimPath: string): string => `${claimPath}.adopt-`;
 
-const journalLockReapAdopterPath = (claimPath: string, generation: AdmissionJournalLockGeneration): string =>
-  `${journalLockReapAdopterPrefix(claimPath)}${generation.pid}.${Encoding.encodeBase64Url(generation.procStart)}.${Encoding.encodeBase64Url(generation.ownerToken)}`;
+const journalLockReapAdopterPath = (claimPath: string, adopter: AdmissionJournalLockReapAdopter): string =>
+  `${journalLockReapAdopterPrefix(claimPath)}${adopter.generation.pid}.${Encoding.encodeBase64Url(adopter.generation.procStart)}.${Encoding.encodeBase64Url(adopter.generation.ownerToken)}.${adopter.claimedAtMillis}`;
 
 const journalLockReapTombstonePath = (claimPath: string): string =>
   `${claimPath}.tombstone-${process.pid}-${randomUUID()}`;
 
-const decodeReapAdopterGeneration = Effect.fnUntraced(function* (
+const decodeReapAdopter = Effect.fnUntraced(function* (
   adopterPath: string,
   claimPath: string
-): Effect.fn.Return<O.Option<AdmissionJournalLockGeneration>> {
+): Effect.fn.Return<O.Option<AdmissionJournalLockReapAdopter>> {
   const prefix = journalLockReapAdopterPrefix(claimPath);
   const parts = yield* decodeReapAdopterPathParts(Str.split(".")(Str.slice(prefix.length)(adopterPath))).pipe(
     Effect.option
   );
-  if (O.isNone(parts)) {
-    return O.none();
-  }
-  const pid = N.parse(parts.value[0]);
-  return O.map(pid, (value) =>
+  return O.map(parts, ([pid, procStart, ownerToken, claimedAtMillis]) =>
+    AdmissionJournalLockReapAdopter.make({
+      schemaVersion: "yeet-admission-journal-lock-reap-adopter/v1",
+      generation: AdmissionJournalLockGeneration.make({
+        schemaVersion: "yeet-admission-journal-lock/v1",
+        pid,
+        procStart,
+        ownerToken,
+      }),
+      claimedAtMillis,
+    })
+  );
+});
+
+const decodeLegacyReapAdopterGeneration = Effect.fnUntraced(function* (
+  adopterPath: string,
+  claimPath: string
+): Effect.fn.Return<O.Option<AdmissionJournalLockGeneration>> {
+  const prefix = journalLockReapAdopterPrefix(claimPath);
+  const parts = yield* decodeLegacyReapAdopterPathParts(Str.split(".")(Str.slice(prefix.length)(adopterPath))).pipe(
+    Effect.option
+  );
+  return O.map(parts, ([pid, procStart, ownerToken]) =>
     AdmissionJournalLockGeneration.make({
       schemaVersion: "yeet-admission-journal-lock/v1",
-      pid: value,
-      procStart: parts.value[1],
-      ownerToken: parts.value[2],
+      pid,
+      procStart,
+      ownerToken,
     })
   );
 });
@@ -500,15 +535,30 @@ const reapAdopterMayStillAct = Effect.fnUntraced(function* (
   nowMillis: number
 ): Effect.fn.Return<boolean, never, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
-  const generation = yield* decodeReapAdopterGeneration(adopterPath, claimPath);
-  if (O.isSome(generation)) {
-    return !(yield* lockGenerationIsDead(generation.value));
-  }
+  const adopter = yield* decodeReapAdopter(adopterPath, claimPath);
   const info = yield* fs.stat(adopterPath).pipe(Effect.option);
-  return !pipe(
-    info,
-    O.flatMap((fileInfo) => fileInfo.mtime),
-    O.exists((mtime) => nowMillis - mtime.getTime() > LOCK_REUSE_BACKSTOP_MILLIS)
+  const claimedAtMillis = O.match(adopter, {
+    onNone: () =>
+      pipe(
+        info,
+        O.flatMap((fileInfo) => fileInfo.mtime),
+        O.map((mtime) => mtime.getTime())
+      ),
+    onSome: (claim) => O.some(claim.claimedAtMillis),
+  });
+  if (O.exists(claimedAtMillis, (claimedAt) => nowMillis - claimedAt > LOCK_REAP_ADOPTION_BOUND_MILLIS)) {
+    return false;
+  }
+  const generation = yield* O.match(adopter, {
+    onNone: () => decodeLegacyReapAdopterGeneration(adopterPath, claimPath),
+    onSome: (claim) => Effect.succeedSome(claim.generation),
+  });
+  return !O.exists(
+    yield* O.match(generation, {
+      onNone: () => Effect.succeed(O.none<boolean>()),
+      onSome: (current) => lockGenerationIsDead(current).pipe(Effect.asSome),
+    }),
+    (dead) => dead
   );
 });
 
@@ -565,7 +615,14 @@ const adoptJournalLockReapClaim = Effect.fnUntraced(function* (
   if (O.isNone(adopterGeneration)) {
     return O.none();
   }
-  const adopterPath = journalLockReapAdopterPath(claimPath, adopterGeneration.value);
+  const adopterPath = journalLockReapAdopterPath(
+    claimPath,
+    AdmissionJournalLockReapAdopter.make({
+      schemaVersion: "yeet-admission-journal-lock-reap-adopter/v1",
+      generation: adopterGeneration.value,
+      claimedAtMillis: nowMillis,
+    })
+  );
   return yield* fs
     .rename(claimPath, adopterPath)
     .pipe(Effect.as(O.some(adopterPath)), Effect.orElseSucceed(O.none<string>));
@@ -605,6 +662,18 @@ const finishJournalLockReap = Effect.fnUntraced(function* (
     }
   }
   yield* fs.remove(adopterPath, { force: true }).pipe(Effect.ignore);
+});
+
+const claimAndFinishJournalLockReap = Effect.fnUntraced(function* (
+  lockPath: string,
+  claimPath: string,
+  observedToken: string,
+  nowMillis: number
+): Effect.fn.Return<void, never, FileSystem.FileSystem | Path.Path> {
+  const adopterPath = yield* adoptJournalLockReapClaim(lockPath, claimPath, observedToken, nowMillis);
+  if (O.isSome(adopterPath)) {
+    yield* finishJournalLockReap(lockPath, claimPath, adopterPath.value, observedToken);
+  }
 });
 
 // A generation-specific hard link is the immutable claim snapshot. Renaming
@@ -648,10 +717,7 @@ const reapAbandonedJournalLock = Effect.fnUntraced(function* (
     return;
   }
   const claimPath = journalLockReapClaimPath(lockPath, observedToken.value);
-  const adopterPath = yield* adoptJournalLockReapClaim(lockPath, claimPath, observedToken.value, nowMillis);
-  if (O.isSome(adopterPath)) {
-    yield* finishJournalLockReap(lockPath, claimPath, adopterPath.value, observedToken.value);
-  }
+  yield* Effect.uninterruptible(claimAndFinishJournalLockReap(lockPath, claimPath, observedToken.value, nowMillis));
 });
 
 const tryAcquireJournalLock = Effect.fnUntraced(function* (
