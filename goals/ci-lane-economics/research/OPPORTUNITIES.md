@@ -859,3 +859,58 @@ evidence, what would have prevented it). Redact for the public repo.
 - **Would have prevented it:** require the coverage and JSDoc ratchets to finish on the
   exact main-bound merge commit for each burst PR, even when intermediate push runs are
   intentionally skipped.
+
+## 2026-09-03 — the requested gh mise shim was absent
+
+- **Doing:** reading the live required contexts from ruleset `10240248` before
+  implementing the fail-closed admission census.
+- **Evidence:** the requested `~/.local/share/mise/shims/gh api ...` probe
+  stopped before launch with `no such file or directory`; `command -v gh`
+  resolved `/usr/bin/gh`, while the sibling Bun mise shim was present.
+- **Would have prevented it:** provision a managed `gh` shim beside the Bun
+  shim, or document that repo tooling should resolve `gh` from `PATH` when the
+  managed shim is absent.
+
+## 2026-09-03 — the admission ruleset now has an eighteenth context
+
+- **Doing:** verifying the live required-context cardinality that the admission
+  census must fail closed against.
+- **Evidence:** `gh api repos/{owner}/{repo}/rules/branches/main` returned
+  ruleset `10240248` with 18 unique required contexts; `JSDoc Ratchet` is the
+  addition to the packet's signed 17-context population.
+- **Would have prevented it:** coordinate required-context changes with active
+  timing packets, or version the expected population and its effective date so
+  an admission week cannot begin against an unratified denominator.
+
+## 2026-09-03 — Bun's built-in test runner hung after scoped Effect assertions
+
+- **Doing:** proving the legacy and new lane-timing collectors with their
+  injected process and GitHub client layers.
+- **Evidence:** `bun test .../ci-lane-timings.test.ts` reached every assertion
+  but timed out while closing the two scoped-layer tests; the canonical
+  `bunx --bun vitest run .../ci-lane-timings.test.ts` completed all 23 tests
+  successfully in about four seconds.
+- **Would have prevented it:** make focused-test recipes name Vitest explicitly
+  for `@effect/vitest` suites, or teach the Bun runner to close Effect scoped
+  layers with the same lifecycle semantics.
+
+## 2026-09-03 — raw hundred-run pages exceeded the shared capture bound
+
+- **Doing:** auditing the paginated admission collector against a prior busy
+  representative week before declaring its memory behavior reproducible.
+- **Evidence:** one unprojected 100-run Actions response was 1,265,684 bytes,
+  above the repo command capture's 512 KiB limit; schema-field projection reduced
+  the same page to 14,838 bytes.
+- **Would have prevented it:** require API collectors that use bounded subprocess
+  capture to project remote payloads to their decode schema before stdout.
+
+## 2026-09-03 — the coverage proof could not use the canonical runtime root
+
+- **Doing:** running the requested full `@beep/repo-cli` coverage ratchet in the managed
+  workspace profile.
+- **Evidence:** 24 Yeet proof-lock tests failed with `EROFS: read-only file system` while
+  creating lock directories beneath `~/.beep/runtime`; the canonical runtime-root
+  implementation intentionally ignores temporary-directory environment overrides.
+- **Would have prevented it:** consistently provide the repository's test runtime-root
+  layer to proof-lock tests, or admit coverage in a profile where the canonical runtime
+  directory is writable.

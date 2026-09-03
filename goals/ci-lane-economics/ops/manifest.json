@@ -10,7 +10,7 @@
   },
   "packetPath": "goals/ci-lane-economics",
   "lifecycle": "active",
-  "statusNote": "P0-P2 are complete; the $0 shard repair landed in PR #982 via check.yml shards and aggregators plus beep ci lane --partition. After merge, only a fresh representative half-open UTC week remains: attempt-one successes, effective critical paths from earliest shard start through aggregator completion, required set exactly 17, and both Lint and Test Unit effective p95 below 20m00s.",
+  "statusNote": "P0-P2 are complete; PR #982 merged at 2026-09-03T19:35:51Z and the 2026-09-04T00:00:00Z to 2026-09-11T00:00:00Z admission window is open. P3 remains in progress pending the reproducible lane-timings census, every required p95 below 20m00s, and an exact 17-context set; live preflight currently fails closed at 18 after JSDoc Ratchet joined the ruleset.",
   "mission": "No required CI job waits 20 minutes (p95, not median): re-measure every lane cache-warm, then place each on the cheapest runner that meets the bar.",
   "executionCapable": true,
   "reflectionRequired": true,
