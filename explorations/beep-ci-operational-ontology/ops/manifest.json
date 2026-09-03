@@ -6,18 +6,16 @@
     "status": "active",
     "stage": "research",
     "openQuestions": [
-      "Auditor run 2 (first_run: false, prior index orun-2026-08-29T08:20:55Z.index.yaml): review the updated ontology-foundational-auditor skill on main first, then run over the extended corpus — 163 parked candidates, 76 parked ledger rows, 4 waived constraints, the VerificationLane placement obligation, the six S6-surfaced vocabulary/telemetry gaps, PLUS the S7 additions: the five provisional ciops-prov: ordering predicates + class ScheduleStep (ruling 2, sitting 1 of S7) and the replay censorship finding 'lease death is unjournaled' (phantom grant evidence in research/s7-replay-evidence.md). S5/S6/S7 are COMPLETE — do not redo them.",
+      "Auditor run 2 IN FLIGHT (launched 2026-09-02): skill review done, intake docket at research/auditor-run2-intake.md, nine launch rulings in DECISIONS.md (2026-09-02 entry — no TS re-extraction, fresh fleet corpus capture, full docket one run, run-1 seat assignment, validator v13 as-is, clustered ratification sittings, one end-of-run PR). Remaining: corpus capture, adapter v1.1.0, pin + manifest, observe, seats, gate, sittings, close. S5/S6/S7 are COMPLETE — do not redo them.",
       "S8 IRI scheme: deferred per the standing pipeline; ciops-prov: namespace re-proposal rides auditor run 2."
     ],
-    "sources": [
-      "research/SOURCES.md"
-    ],
+    "sources": ["research/SOURCES.md"],
     "links": {
       "goals": [],
       "docs": [],
       "supersededBy": null
     },
     "created": "2026-08-27",
-    "updated": "2026-08-30"
+    "updated": "2026-09-02"
   }
 }

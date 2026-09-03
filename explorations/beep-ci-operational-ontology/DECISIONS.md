@@ -650,3 +650,65 @@ semantic finding and becomes run-2 evidence. This is the loop-closer's proof
 and seeds the S9 dogfood.
 
 Binding contract: `ontology/docs/s7-projection-contract.md`.
+
+## 2026-09-02 — auditor run-2 launch grill (nine rulings, steward: Benjamin)
+
+Grilled after the S7 lane closed (#936, #940 merged) and the intake docket landed
+(`research/auditor-run2-intake.md`). All nine resolved to the recommended arm;
+frontier closed in two rounds.
+
+**Ruling 1 — no TypeScript re-extraction in run 2.** The run-1 TS engine used the
+compiler API and cannot execute in the #902 stdlib-only python3 sandbox. Run 2 is
+re-adjudication: parked candidates ride their run-1 SourceObservations through the
+prior-index chain; new vocabulary grounds in journal/verdict NDJSON, emitted `.ttl`
+outputs, and prose. TS adapter v1.1.0 is deferred until a run needs new TS
+observations. Rejected: a stdlib-Python TS adapter (fidelity downgrade from the
+compiler API) and extending the sandbox runner upstream first (re-opens the closed
+skill-hardening loop and delays the run).
+
+**Ruling 2 — fresh journal/verdict corpus capture, S6 choreography.** Capture the
+live journals now (attempt ring buffers self-erase), redact per the S6 rules, and
+commit the raw snapshot beside the S6 precedent (`extraction/s6/snapshot/raw/`).
+This is what grounds the 149 waiver-parked measurement/episode rows. Rejected:
+reusing only the 79-event S6 snapshot (most rows could not discharge; another
+unresolved-fraction waiver likely) and adding a historical-evidence sweep
+(bigger ETL/redaction surface than the docket needs).
+
+**Ruling 3 — full docket, one run.** All five intake buckets (149 re-opened rows,
+163 parked candidates, 76 ledger rows, 4 waived constraints + VerificationLane,
+six S6 gaps + the ciops-prov re-proposal) go through run 2. Rejected: a core-first
+run with `carried_from_prior` retirement of the tail.
+
+**Ruling 4 — seats keep the run-1 assignment.** Denotation/foundational/synthesis
+= codex Sol max; adversary = codex max in an independent context; blinded
+alternative = grok xhigh, now minting `-alt`-namespaced ids per the updated
+prompt. Rejected: routing the blinded seat through the proxy harness (more moving
+parts mid-run) and dropping the main seats to medium effort.
+
+**Ruling 5 — validator v13 as-is; no upstream skill amendments.** Adapter v1.1.0
+mirrors v13 exactly; the JSON pairing-grammar limitation stays a recorded honest
+under-emission, and its fix queues as a skill follow-up outside this run.
+Rejected: amending the validator first (re-opens the engine surface mid-packet).
+
+**Ruling 6 — run 2 executes on `ontology-run2-prep`.** The branch is fresh off
+current main and already carries the intake docket. Rejected: minting a
+differently-named branch with the docket cherry-picked (same content, extra
+choreography).
+
+**Ruling 7 — ratification via clustered dockets, S5 style.** As each docket
+bucket clears the mechanical gate, the steward sits over a suggested-disposition
+table clustered by kind (bulk default + individually pulled contested rows);
+rulings scribed per sitting. Rejected: one end-of-run marathon sitting and rigid
+per-bucket sittings regardless of kind clustering.
+
+**Ruling 8 — one end-of-run PR, #889 choreography.** Pin commit (corpus +
+adapters + goldens + scribe), frozen HEAD through the run with `work/` untracked,
+final commit of run artifacts + ratifications, single PR babysat to merge-ready;
+merge readiness = checks + threads + GitHub mergeability (Greptile cannot score
+at this size). Steward merges. Rejected: an infrastructure PR merged to main
+before the run (blocks the stint on a mid-way merge cycle).
+
+**Ruling 9 — corpus breadth is the local fleet sweep.** All beep-effect checkouts
+on the workstation feed the capture (attempt journals, verdict artifacts,
+admission/transition journals), matching the fleet-aggregated KPI framing.
+Rejected: primary-checkout-only capture.
