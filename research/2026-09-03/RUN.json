@@ -1,0 +1,77 @@
+{
+  "schema": "beep.research.nightly.run/v0",
+  "date": "2026-09-03",
+  "status": "partial",
+  "supervised": false,
+  "firstRun": false,
+  "window": {
+    "start": "2026-08-31T08:52:00-05:00",
+    "end": "2026-09-03T08:49:00-05:00",
+    "timezone": "America/Chicago",
+    "fallbackHours": 24,
+    "note": "Delta since lastAttemptedRun of merged 2026-08-31 packet (#942). Trigger/end 2026-09-03T08:49:00-05:00; stamp 2026-08-31T08:52:00-05:00. #942 merged 2026-09-02T18:19:29-05:00. No open research PR at preflight. Window 71h57m. Thursday: no weekly consolidation / tombstone reaper. SPEC amendment 2026-09-03: P0 only; CLI/timers remain planned."
+  },
+  "claimsEmitted": 15,
+  "collisionRate": 0.267,
+  "collisionNote": "4/15=.267 URL collisions are intentional refute re-cites (ODP, #7446, #7265, drizzle #6162). Novel-URL collision rate 0. selfReject false. SEP-2640 checked OPEN unchanged; note only, no 16th claim.",
+  "selfReject": false,
+  "sourcesSeen": {
+    "web": 5,
+    "arxiv": 20,
+    "github": 30,
+    "x": 0
+  },
+  "quotaPools": {
+    "search": "grok-bot+web+gh+arxiv",
+    "x": "blocked-client-not-enrolled",
+    "verify": "none (no Sol/Luna seat in this harness)",
+    "writer": "grok-bot",
+    "publisher": "cursor-cloud-agent"
+  },
+  "refutationQuota": {
+    "attempted": 4,
+    "held": 4,
+    "heldAndMoved": 1,
+    "broken": 0,
+    "standingClaims": [
+      "USPTO ODP four fields",
+      "effect@4.0.0-rc.112 / no rc.113",
+      "Effect #7265 MCP 2026-07-28 adapter",
+      "drizzle TaggedErrorClass #6162"
+    ],
+    "note": "All four hold. Claim 6 (#7265) HOLD+MOVED (updated 2026-09-02T16:32:07Z) but not broken. Cheap-check MOVE (not quota): Jazz #2467 closed unmerged; alpha.54 RC #2361 still OPEN. SEP-2640 OPEN unchanged (note only)."
+  },
+  "frictions": [
+    {
+      "id": "x-client-not-enrolled",
+      "severity": "source-gap",
+      "detail": "Native X post/news search attempted across all axes; all returned client-not-enrolled. x=0. No x.com posts in this packet."
+    },
+    {
+      "id": "no-cross-provider-verify",
+      "severity": "process-gap",
+      "detail": "Sol/Luna blinded verify unavailable. Writer used structured sanitized records only. Packet cannot be success without this stage."
+    }
+  ],
+  "resume": {
+    "retry": ["x-search", "verify"],
+    "cursor": "enroll X developer App in a Project at https://console.x.com, then re-search window 2026-08-31T08:52-05:00/2026-09-03T08:49-05:00; retry Sol/Luna blinded verify on the same 15 records"
+  },
+  "repoReplay": {
+    "merged": [
+      942, 938, 941, 940, 939, 943, 944, 945, 947, 948, 951, 952, 953, 950, 955,
+      954, 959, 957, 961, 956, 960, 962, 963, 965, 966, 968, 969, 970, 972, 958,
+      964
+    ],
+    "open": [978, 975],
+    "blockingResearchPr": null,
+    "closedUnmergedResearchPr": 862,
+    "lastMergedResearchPr": 942
+  },
+  "weekly": {
+    "sunday": false,
+    "tombstonesEmitted": 0,
+    "tombstonePath": null,
+    "note": "Thursday: no weekly consolidation, no tombstone reaper. Leave 2026-08-30 tombstones as-is."
+  }
+}

@@ -478,3 +478,43 @@ What would have prevented it: make early-PR local proof refresh and test the
 current pull-request merge candidate, or at minimum report when its base SHA is
 newer than the locally tested `origin/main`. Exact branch-head proof and exact
 merge-candidate proof are different evidence when the base moves.
+
+## 2026-09-03 — fleet JSON output truncates before it can be decoded
+
+Lived while taking the required post-merge adoption census. The read-only
+`bun run beep worktree fleet --json` scan reported 22 clones and 103 total
+checkouts, but piping its output to `jq` failed with
+`Unfinished string at EOF at line 1, column 131072`. The command had cut the
+single JSON line in the middle of a string while still exiting zero. The
+rollout therefore used the scan's top-level coverage counters plus a separate
+bounded direct-clone inventory instead of treating the truncated payload as a
+complete fleet document.
+
+What would have prevented it: emit complete JSON independently of terminal
+render limits, add a compact projection that omits large per-checkout path
+arrays, or fail nonzero with explicit truncation metadata. A successful
+`--json` command must never hand automation an undecodable prefix.
+
+## 2026-09-03 — local proof stalled without liveness under I/O pressure
+
+Lived while repairing the exact-head JSDoc Ratchet failure in `@beep/md`.
+`bun run docgen:local -- --package @beep/md` produced a valid scoped plan, then
+remained silent for more than three minutes with only the repo CLI process
+alive and no compiler or Turbo child. It was interrupted cleanly so the edit
+loop could continue through explicit package-filtered checks and the exact
+JSDoc Ratchet lane. Subsequent package-filtered lint and build processes, and
+the pre-commit Biome check over the single touched source file, likewise made
+no terminal progress while the host reported more than 190 processes in
+uninterruptible I/O wait. The completed package verifier, type check, unit
+tests, and parallel integration tests were retained as local evidence; the
+stalled processes were stopped before publishing to exact-head CI. After the
+host restarted, the same dependency-aware docgen run completed 26 packages in
+1 minute 28 seconds and the package-filtered lint, check, test, and build lanes
+returned normally, attributing the earlier wait to host health rather than the
+repository change.
+
+What would have prevented it: emit phase-level liveness while orchestration is
+waiting, including the awaited resource or operation, and apply a bounded
+timeout that fails with diagnostic context. A scoped documentation command
+that has finished planning, or a hook checking one named file, should not be
+indistinguishable from a dead wait when its host is unhealthy.

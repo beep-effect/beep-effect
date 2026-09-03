@@ -3,8 +3,8 @@
 Date: 2026-09-03
 Baseline revision: `log-only-0`
 Treatment revision: `desktop-ntfy-1`
-Status: live in this checkout, with fleet rollout, post-intervention sampling,
-and phone delivery still open
+Status: merged and in guarded fleet rollout, with a first treatment readout
+recorded and phone delivery still open
 
 ## Preconditions
 
@@ -145,19 +145,96 @@ ledger still contained zero files, and the current process exposed neither an
 ntfy topic nor a bearer token. This increases observation time but
 does not satisfy either open evidence gate.
 
-## Remaining P1 gates
+## Post-merge guarded rollout
 
-P1 stays `in-progress` for two evidence reasons:
+PR #973 merged at `2026-09-03T14:32:50Z` as `e60fe8ff66`; fresh `origin/main`
+was `a1652c1923` after the immediately following mainline merges. The read-only
+fleet mirror discovered 22 same-origin clones and 103 total clone/worktree
+checkouts, with 2 degraded checkouts. That denominator is much wider than the
+set safe to mutate automatically.
 
-1. No post-cutover `AskUserQuestion` bracket has accrued yet, so the first wait
-   reduction and interrupted time-series estimate do not exist yet. The tracked
-   cutover is live only in this checkout until it ships through the PR gate.
-2. Desktop delivery is live, but phone delivery is not configured. The session
+Two direct clones already carried `desktop-ntfy-1`. Five more direct clones
+were on clean, process-idle `main` worktrees, so each was fetched through the
+shared network circuit breaker and fast-forwarded to `a1652c1923`. Their
+post-merge hooks passed the version-sync check. The seven adopted direct clones
+each expose all nine Claude and six Codex `desktop-ntfy-1` command stamps.
+Active, dirty, detached, and feature-branch checkouts were left untouched;
+their rows remain valid revision-labeled controls rather than being silently
+reclassified at merge time.
+
+By `2026-09-03T14:53:43.103Z`, subsequent owner integrations had raised the
+direct-clone adoption count to 17 of 22. The five non-adopters were one archived
+Effect-v3 clone, two active dirty feature branches, one active clean feature
+branch, and one idle clean feature branch owned by another workstream. None was
+mutated by this rollout. They remain explicit controls pending a safe owned
+integration point or an evidence-backed exclusion.
+
+At `2026-09-03T17:12:07.940Z`, another read-only fleet scan found 22 direct
+clones and 101 total checkouts, with one degraded checkout. Owner integrations
+had raised sharp adoption to 19 of 22. The three non-adopters were the archived
+Effect-v3 clone, one live dirty feature checkout whose PR remained open, and
+one clean inactive feature checkout with no associated PR in the exact branch
+query or observed liveness signal. These three are explicitly excluded
+from the current rollout denominator: the archive is outside the current
+runtime population, and out-of-band changes to the two feature checkouts would
+violate worktree ownership. Their revision-labelled rows remain controls. The
+disposition must be revisited if either feature checkout integrates or
+reactivates. No other worktree was mutated.
+
+At `2026-09-03T14:38:50.654Z`, the post-boundary ledger held 15,501 rows:
+1,423 `desktop-ntfy-1` and 14,078 `log-only-0`. The only
+`AskUserQuestion` `PermissionRequest` was still `log-only-0`, so the sharp
+human-input denominator remained zero. The canonical allowlist scan found zero
+rows with forbidden content keys. The instrument was armed, the notification
+ledger held zero files and zero rows, and the ntfy base URL, topic, and token
+were all absent from the runtime environment.
+
+A later `2026-09-03T14:50:35.999Z` census held 16,649 rows: 2,361 sharp and
+14,288 comparison. The same single comparison-population request remained the
+only `AskUserQuestion` start; the sharp denominator and notification ledger
+both remained zero.
+
+The packet launcher-size, manifest JSON, packet whitespace, goals-doctor, and
+reflection-lint checks passed after the record was updated. `goals index
+--check` remained red on an unrelated generated-index drift already present at
+clean `main` `a1652c1923`; a second clean clone reproduced the same failure.
+This change did not rewrite `goals/INDEX.md` or absorb that separate repair.
+
+After integrating fresh `main`, the scheduler-independent local proof ran each
+`@beep/repo-ai-metrics` lane with `--filter`: lint and typecheck passed, all 304
+tests passed, branch coverage held at 371/475 (78.10%), and the 27-file build
+passed. This re-proves the instrument against the integrated tree without
+claiming entry into the canonical scheduled Yeet lane.
+
+## First sharp treatment readout
+
+At `2026-09-03T17:04:13.599Z`, the post-boundary ledger held 17,735 rows:
+3,298 `desktop-ntfy-1` and 14,437 `log-only-0`. Eight sharp
+`AskUserQuestion` starts had accrued. The strict two-hop matcher closed seven
+on exact-ID `PostToolUse`, tombstoned one at `SessionEnd`, and guessed or
+ambiguously attributed none. Closed waits were 4.435–27.430 s with p50 7.439 s,
+30.025 s / 80.1% below the fixed baseline median. Because the treatment
+denominator is small and its permission-mode mix differs from baseline, this is
+a favorable early descriptive estimate, not an unqualified causal claim.
+
+The notification ledger held 18 valid rows across all eight sharp request
+timestamps. Two initial desktop sends were accepted, six retries were
+storm-damped per session/target, and a reminder pair was skipped after exact
+replay found the originating bracket resolved. The two eligible ntfy attempts
+were `transport-unconfigured`; no phone-delivery claim is made. Full method,
+mode strata, durations, and privacy checks are in
+`research/2026-09-03-p1-first-treatment-readout.md`.
+
+## Remaining P1 gate
+
+P1 stays `in-progress` for one evidence reason:
+
+1. Desktop delivery is live, but phone delivery is not configured. The session
    had no 1Password Environments MCP tool. The permitted agent credential check
    ran `op-doctor` once and stopped on `FAIL UUID op read: could not resolve a
    non-empty field`; no inventory, secret, or reference was printed or written.
    The notifier records ntfy as `transport-unconfigured` until a secret topic is
    safely injected at runtime.
 
-Neither limitation is converted into guessed evidence. P2 remains gated until
-P1's post-intervention denominator and phone-delivery receipt are real.
+The limitation is not converted into guessed evidence. P2 remains gated until
+the phone-delivery receipt is real.
