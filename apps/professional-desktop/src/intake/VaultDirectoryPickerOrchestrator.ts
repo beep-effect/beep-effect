@@ -9,10 +9,12 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability";
-import { O } from "@beep/utils";
-import { Cause, Config, Effect, Stream } from "effect";
+import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability/CauseRedaction";
+import * as O from "@beep/utils/Option";
+import * as Cause from "effect/Cause";
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import { VaultDirectoryPickError, VaultDirectoryPickerRpcs } from "./VaultDirectoryPicker.rpc.ts";
@@ -116,8 +118,7 @@ const vaultPickerDisabled = Config.boolean("BEEP_DESKTOP_VAULT_PICKER_DISABLED")
  *
  * ```ts
  * import { VaultDirectoryPickerHandlersLive } from "@/intake/VaultDirectoryPickerOrchestrator"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(VaultDirectoryPickerHandlersLive)) // true
  * ```
  *

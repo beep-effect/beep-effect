@@ -57,24 +57,35 @@ import {
   VerifyTextAnchorInput,
   verifyTextAnchor,
 } from "@beep/provenance/VerifiedTextAnchor";
-import { LiteralKit, NonNegativeInt, PosInt, Sha256HexFromBytes } from "@beep/schema";
 import { Cuid } from "@beep/schema/Cuid";
+import { PosInt } from "@beep/schema/Int";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import { NonNegativeInt } from "@beep/schema/Number";
 import { PosixPath } from "@beep/schema/PosixPath";
+import { Sha256HexFromBytes } from "@beep/schema/Sha256";
 import { SystemPrincipal } from "@beep/shared-domain/entity/Principal";
 import * as PublicEntityId from "@beep/shared-domain/entity/PublicEntityId";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 import * as EpistemicIdentity from "@beep/shared-domain/identity/Epistemic";
 import * as Shared from "@beep/shared-domain/identity/Shared";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
-import { A, O, Str } from "@beep/utils";
+import * as A from "@beep/utils/Array";
+import * as O from "@beep/utils/Option";
+import * as Str from "@beep/utils/Str";
 import { WorkspaceVaultRootPath } from "@beep/workspace-domain/entities/Workspace";
 import { Workspace } from "@beep/workspace-use-cases/server";
-import { Config, DateTime, Effect, FileSystem, Layer, Path, pipe } from "effect";
+import * as Config from "effect/Config";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import type { JsonObject } from "@beep/schema/Json";
-import type { Crypto } from "effect";
+import type * as Crypto from "effect/Crypto";
 
 const $I = $ProfessionalDesktopId.create("contradiction/ContradictionQaSeed");
 
@@ -1008,8 +1019,7 @@ const prepareCanonicalSource = Effect.fn("ContradictionQaSeed.prepareCanonicalSo
  *
  * ```ts
  * import { seedContradictionQaFixtures } from "@/contradiction/ContradictionQaSeed"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(seedContradictionQaFixtures()))
  * ```
  *
@@ -1115,8 +1125,7 @@ export const seedContradictionQaFixtures = Effect.fn("ContradictionQaSeed.seed")
  *
  * ```ts
  * import { ContradictionQaSeedLive } from "@/contradiction/ContradictionQaSeed"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(ContradictionQaSeedLive))
  * ```
  *

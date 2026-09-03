@@ -3,13 +3,14 @@
   "initiative": {
     "id": "per-module-imports",
     "title": "Per-Module Imports",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-08-23",
     "updated": "2026-09-03",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/per-module-imports",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
+  "statusNote": "Terminal at the measured P2 stop. P1 shipped through PR #971 and the bounded Professional Desktop pilot shipped through PR #990. All correctness gates passed, but no stable qualifying performance win authorized P3; the mass migration, Biome ratchet, written-law flip, and global enforcement flip were not executed. P4 closeout is complete and the packet is retained as evidence.",
   "mission": "Migrate effect + @beep foundation barrel imports to per-module form, enforced by a Biome warn-to-error ratchet and an inverted effect-imports law, gated on a measured pilot.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -65,17 +66,21 @@
     {
       "id": "P2",
       "name": "Pilot gate",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Batches & ratchet",
-      "status": "pending"
+      "status": "complete",
+      "disposition": "stopped-by-p2-inconclusive-gate",
+      "exit": "Not executed. SPEC D14 denied continuation authority after the inconclusive pilot."
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "complete",
+      "disposition": "close-bookkeeping-complete-2026-09-03",
+      "exit": "Reflection, packet lifecycle, and terminal-route acceptance updated in the closeout PR; the ignored local goals index projection was regenerated and checked."
     }
   ],
   "verificationCommands": [

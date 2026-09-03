@@ -5,7 +5,7 @@ import {
   unreconciledTurnAtoms,
 } from "@beep/agents-client/Chat.atoms";
 import * as MdModel from "@beep/md/Md.model";
-import { NonNegativeInt } from "@beep/schema";
+import { NonNegativeInt } from "@beep/schema/Number";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { ThreadTimeline, TimelineMessageItem, TimelineTurn } from "@beep/workspace-use-cases/aggregates/Thread";
 import * as A from "effect/Array";

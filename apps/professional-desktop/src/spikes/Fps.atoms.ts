@@ -5,9 +5,8 @@
  * @category atoms
  * @since 0.0.0
  */
-
-import { P } from "@beep/utils";
-import { Duration } from "effect";
+import * as P from "@beep/utils/Predicate";
+import * as Duration from "effect/Duration";
 import { Atom } from "effect/unstable/reactivity";
 
 const FPS_SAMPLE_INTERVAL = Duration.millis(500);

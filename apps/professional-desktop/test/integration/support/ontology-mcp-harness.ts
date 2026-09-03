@@ -4,10 +4,17 @@ import { OntologyMcpConfigLive } from "@beep/ontology-config/layer";
 import { OntologyFilePath } from "@beep/ontology-use-cases/aggregates/Session";
 import { OpenInspectRequest, OpenInspectResponse } from "@beep/ontology-use-cases/tools";
 import { NodeHttpServer, NodeServices } from "@effect/platform-node";
-import { Config, ConfigProvider, Effect, FileSystem, Layer, Path, Redacted, Ref } from "effect";
 import * as A from "effect/Array";
+import * as Config from "effect/Config";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as Redacted from "effect/Redacted";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as McpSchema from "effect/unstable/ai/McpSchema";
 import { HttpClient, HttpClientRequest, HttpRouter, HttpServer } from "effect/unstable/http";
@@ -17,8 +24,7 @@ import { makeOntologyMcpTransportLayer } from "../../../server/OntologyMcpTransp
 import { rpcSessionAuthorizationHeader } from "../../../server/RpcSessionAuth.ts";
 import type { EpistemicConfig } from "@beep/epistemic-config/server";
 import type { ExecutionDecisionRecord, ExecutionOutcomeRecord } from "@beep/epistemic-domain/values/ExecutionRecord";
-import type { Scope } from "effect";
-
+import type * as Scope from "effect/Scope";
 export const token = Redacted.make("ontology-mcp-http-test-token");
 export const allowedOrigin = "http://professional-desktop.beep.localhost:1355";
 const socketTransportConfig = Config.boolean("BEEP_TEST_ONTOLOGY_MCP_SOCKET").pipe(Config.withDefault(false));
@@ -117,7 +123,11 @@ const transportServer = (root: string, options: TransportOptions) => {
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
   <A2, E, R>(effect: Effect.Effect<A2, E, R>): Effect.Effect<A2, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
+    layer.pipe(
+      Layer.build,
+      Effect.flatMap((context) => effect.pipe(Effect.provide(context))),
+      Effect.scoped
+    );
 
 const nodeLoopbackLayer = HttpServer.layerTestClient.pipe(
   Layer.provide(
