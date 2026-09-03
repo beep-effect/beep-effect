@@ -36,6 +36,7 @@ import { YeetCommandError } from "../Yeet.errors.ts";
 import {
   renderYeetAckResolution,
   writeYeetAckReceipt,
+  YeetAckEnvironmentOnlyResolution,
   YeetAckFixResolution,
   YeetAckReceipt,
   YeetAckThreadResolution,
@@ -82,6 +83,7 @@ interface YeetInboxListOptions extends YeetInboxListFilter {
  */
 interface YeetAckResolutionFlags {
   readonly actor: string;
+  readonly environmentOnly: boolean;
   readonly expiresAt: string;
   readonly fixSha: string;
   readonly reason: string;
@@ -220,11 +222,12 @@ export const renderYeetInboxView = (view: YeetInboxView): string => {
  *
  * **Details**
  *
- * The three resolution flags are mutually exclusive because a receipt records
- * one closing move — SPEC A2's fix SHA, wontfix plus reason, or thread URL.
- * `--wontfix` without `--reason` is refused rather than defaulted: an
- * unexplained wontfix is exactly the dismissal-button failure mode the
- * resolution union exists to prevent.
+ * The permanent resolution flags are mutually exclusive because a receipt
+ * records one closing move — fix SHA, environment-only plus reason, wontfix
+ * plus reason, or thread URL.
+ * `--environment-only` or `--wontfix` without `--reason` is refused rather
+ * than defaulted: an unexplained attribution is exactly the dismissal-button
+ * failure mode the resolution union exists to prevent.
  *
  * **Example** (A fix SHA parses)
  *
@@ -233,7 +236,10 @@ export const renderYeetInboxView = (view: YeetInboxView): string => {
  * import { Effect } from "effect"
  *
  * const resolution = Effect.runSync(
- *   parseYeetAckResolution({ fixSha: "2817f28", reason: "", threadUrl: "", wontfix: false })
+ *   parseYeetAckResolution({
+ *     actor: "", environmentOnly: false, expiresAt: "", fixSha: "2817f28",
+ *     reason: "", shard: "", threadUrl: "", waive: false, wontfix: false
+ *   })
  * )
  * console.log(resolution.kind) // "fix-sha"
  * ```
@@ -268,18 +274,18 @@ export const parseYeetAckResolution = Effect.fn("Yeet.parseYeetAckResolution")(f
   if (!A.isReadonlyArrayNonEmpty(candidates) || A.length(candidates) !== 1) {
     return yield* YeetCommandError.make({
       message:
-        "yeet inbox ack requires exactly one of --fix-sha <sha>, --wontfix --reason <text>, --thread-url <url>, or --waive with attribution and expiry.",
+        "yeet inbox ack requires exactly one of --fix-sha <sha>, --environment-only --reason <text>, --wontfix --reason <text>, --thread-url <url>, or --waive with attribution and expiry.",
     });
   }
   return A.headNonEmpty(candidates);
 });
 
 const yeetAckReasonFlagViolation = (flags: YeetAckResolutionFlags): O.Option<string> => {
-  if ((flags.wontfix || flags.waive) && Str.isEmpty(flags.reason)) {
-    return O.some("yeet inbox ack --wontfix/--waive requires --reason.");
+  if ((flags.environmentOnly || flags.wontfix || flags.waive) && Str.isEmpty(flags.reason)) {
+    return O.some("yeet inbox ack --environment-only/--wontfix/--waive requires --reason.");
   }
-  if (!flags.wontfix && !flags.waive && Str.isNonEmpty(flags.reason)) {
-    return O.some("yeet inbox ack --reason only applies with --wontfix or --waive.");
+  if (!flags.environmentOnly && !flags.wontfix && !flags.waive && Str.isNonEmpty(flags.reason)) {
+    return O.some("yeet inbox ack --reason only applies with --environment-only, --wontfix, or --waive.");
   }
   return O.none();
 };
@@ -306,6 +312,7 @@ const yeetAckReasonRuleViolation = (flags: YeetAckResolutionFlags): O.Option<str
 const yeetAckResolutionCandidates = (flags: YeetAckResolutionFlags): ReadonlyArray<YeetAckResolution> =>
   A.getSomes([
     Str.isNonEmpty(flags.fixSha) ? O.some(YeetAckFixResolution.make({ sha: flags.fixSha })) : O.none(),
+    flags.environmentOnly ? O.some(YeetAckEnvironmentOnlyResolution.make({ reason: flags.reason })) : O.none(),
     flags.wontfix ? O.some(YeetAckWontfixResolution.make({ reason: flags.reason })) : O.none(),
     Str.isNonEmpty(flags.threadUrl) ? O.some(YeetAckThreadResolution.make({ url: flags.threadUrl })) : O.none(),
     flags.waive
