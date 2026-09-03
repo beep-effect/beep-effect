@@ -16,9 +16,11 @@ import {
   ProofReuseMiss,
   ProofStage,
 } from "@beep/repo-cli/test/Yeet";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Exit } from "effect";
+import { Effect, Exit, Result } from "effect";
 import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 
 const epoch = ProofEpoch.make({
   lockfileDigest: "lock-digest",
@@ -93,6 +95,18 @@ const assertRejects = Effect.fn("ProofFactTest.assertRejects")(function* <Schema
 });
 
 describe("ProofFact schemas", () => {
+  it("round-trips schema-derived arbitrary ledger rows", () => {
+    const arbitrary = S.toArbitrary(ProofLedgerRow)(fc);
+    const encode = S.encodeResult(ProofLedgerRow);
+    const decode = S.decodeUnknownResult(ProofLedgerRow);
+    const equivalent = S.toEquivalence(ProofLedgerRow);
+
+    fc.assert(
+      fc.property(arbitrary, (value) => equivalent(Result.getOrThrow(decode(Result.getOrThrow(encode(value)))), value)),
+      fcRuns(20)
+    );
+  });
+
   it.effect("round-trips every schema and derives a working S.is guard", () =>
     Effect.gen(function* () {
       yield* assertRoundTrip(ProofEnvProfile, "local");

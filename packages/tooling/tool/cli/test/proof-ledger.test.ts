@@ -173,6 +173,25 @@ describe("ProofLedger", () => {
           expect(yield* ledger.lookup(input({ key: "new-input", inputDigest: "changed-input" }), NOW)).toStrictEqual(
             ProofReuseMiss.make({ key: "new-input", reason: "no-fact" })
           );
+
+          yield* ledger.record(
+            fact({
+              key: input({ commandDigest: "corrupt-command", key: "colliding-key" }),
+            })
+          );
+          expect(yield* ledger.lookup(input({ key: "colliding-key" }), NOW)).toStrictEqual(
+            ProofReuseMiss.make({ key: "colliding-key", reason: "no-fact" })
+          );
+
+          yield* ledger.record(
+            fact({
+              epoch: epoch("stored-epoch"),
+              key: input({ epochDigest: "different-epoch", key: "inconsistent-epoch" }),
+            })
+          );
+          expect(
+            yield* ledger.lookup(input({ epochDigest: "different-epoch", key: "inconsistent-epoch" }), NOW)
+          ).toStrictEqual(ProofReuseMiss.make({ key: "inconsistent-epoch", reason: "no-fact" }));
         })
       )
     ).pipe(provideScopedLayer(PlatformLayer))
@@ -256,6 +275,16 @@ describe("ProofLedger", () => {
           expect(yield* ledger.lookup(input(), NOW)).toStrictEqual(
             ProofReuseHit.make({ key: "proof-key", factRecordedAt: "2026-09-03T12:00:00.000Z" })
           );
+
+          const recoveredFact = fact({
+            key: input({ key: "recovered-key" }),
+            recordedAt: "2026-09-03T12:40:00.000Z",
+          });
+          yield* ledger.record(recoveredFact);
+          expect(yield* ledger.lookup(input({ key: "recovered-key" }), NOW)).toStrictEqual(
+            ProofReuseHit.make({ key: "recovered-key", factRecordedAt: "2026-09-03T12:40:00.000Z" })
+          );
+          expect(yield* ledger.malformedRows).toBe(2);
         })
       )
     ).pipe(provideScopedLayer(PlatformLayer))

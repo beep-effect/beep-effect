@@ -81,10 +81,23 @@ const appendRow = Effect.fn("Yeet.ProofLedger.appendRow")(function* (
   row: ProofLedgerRow
 ): Effect.fn.Return<void, YeetCommandError, FileSystem.FileSystem | Path.Path> {
   const ledgerPath = yield* proofLedgerPathForCheckout(repoRoot);
+  const read = yield* readContainedFileStringNoFollow(repoRoot, ledgerPath).pipe(
+    Effect.mapError(YeetCommandError.new(`Failed to inspect proof ledger "${ledgerPath}" before appending.`))
+  );
+  if (read.exists && O.isNone(read.contents)) {
+    return yield* YeetCommandError.make({
+      message: `Proof ledger "${ledgerPath}" exists but is not a readable regular file.`,
+      file: ledgerPath,
+    });
+  }
+  const recoveryPrefix = O.match(read.contents, {
+    onNone: () => "",
+    onSome: (contents) => (Str.isNonEmpty(contents) && !Str.endsWith("\n")(contents) ? "\n" : ""),
+  });
   const line = yield* ProofLedgerRowJson.encode(row).pipe(
     Effect.mapError(YeetCommandError.new("Failed to encode a proof ledger row."))
   );
-  yield* appendContainedFileString(repoRoot, ledgerPath, `${line}\n`).pipe(
+  yield* appendContainedFileString(repoRoot, ledgerPath, `${recoveryPrefix}${line}\n`).pipe(
     Effect.mapError(YeetCommandError.new(`Failed to append proof ledger "${ledgerPath}".`))
   );
 });
@@ -99,6 +112,11 @@ const sameActionInputs = (left: ProofInputDigest, right: ProofInputDigest): bool
   Str.Equivalence(left.laneId, right.laneId) &&
   Str.Equivalence(left.commandDigest, right.commandDigest) &&
   Str.Equivalence(left.inputDigest, right.inputDigest);
+
+const sameReuseIdentity = (left: ProofInputDigest, right: ProofInputDigest): boolean =>
+  sameActionInputs(left, right) &&
+  Str.Equivalence(left.envProfile, right.envProfile) &&
+  Str.Equivalence(left.epochDigest, right.epochDigest);
 
 const miss = (key: string, reason: ProofReuseMiss["reason"]): ProofReuseMiss => ProofReuseMiss.make({ key, reason });
 
@@ -205,7 +223,13 @@ export class ProofLedger extends Context.Service<ProofLedger, ProofLedgerShape>(
         }
         const loaded = yield* loadProofLedger(repoRoot).pipe(Effect.provide(runtimeContext));
         const facts = A.reverse(A.map(A.filter(loaded.rows, isFactRow), (row) => row.fact));
-        const exact = A.findFirst(facts, (fact) => Str.Equivalence(fact.key.key, key.key));
+        const exact = A.findFirst(
+          facts,
+          (fact) =>
+            Str.Equivalence(fact.key.key, key.key) &&
+            sameReuseIdentity(fact.key, key) &&
+            Str.Equivalence(fact.key.epochDigest, fact.epoch.digest)
+        );
         if (O.isSome(exact)) {
           return decideExactFact(exact.value, now);
         }
