@@ -11,15 +11,23 @@ import { IntakeBatchId } from "@beep/documents-domain/aggregates/IntakeBatch";
 import { DefaultVaultFilingContext, slugVaultSegment } from "@beep/documents-domain/values/Taxonomy";
 import { DocumentsRpcs, IntakeDroppedFilePayload } from "@beep/documents-use-cases/public";
 import { $ProfessionalDesktopId } from "@beep/identity/packages";
-import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability";
-import { Defect, LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability/CauseRedaction";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import { NonNegativeInt } from "@beep/schema/Number";
+import { Defect } from "@beep/schema/Opaque";
+import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
-import { A, N, O, P } from "@beep/utils";
+import * as A from "@beep/utils/Array";
+import * as N from "@beep/utils/Number";
+import * as O from "@beep/utils/Option";
+import * as P from "@beep/utils/Predicate";
 import { SetWorkspaceVaultInput, WorkspaceVaultRpcs } from "@beep/workspace-use-cases/public";
 import { invoke } from "@tauri-apps/api/core";
-import { Effect, Match, Tuple } from "effect";
+import * as Effect from "effect/Effect";
+import * as Match from "effect/Match";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as Tuple from "effect/Tuple";
 import { AsyncResult, Atom, AtomRpc, Reactivity } from "effect/unstable/reactivity";
 import { failureMessageOr } from "@/lib/failureMessage";
 import { professionalBrowserRuntime } from "@/runtime/ProfessionalAtomRuntime";
@@ -314,7 +322,7 @@ export type VaultSelectionState = typeof VaultSelectionState.Type;
  * **Example** (Create initial intake state)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema"
+ * import { NonNegativeInt } from "@beep/schema/Number";
  * import { DocumentIntakeState, VaultSelectionState } from "@/intake/Intake.atoms"
  *
  * const state = DocumentIntakeState.make({

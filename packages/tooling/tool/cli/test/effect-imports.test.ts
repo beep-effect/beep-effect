@@ -139,6 +139,10 @@ const demoSource = A.join(
 );
 
 describe("effect import laws", () => {
+  it("keeps the promoted-family ratchet empty after the P2 stop", () => {
+    expect(EffectImportRulesOptions.make({}).promotedFamilyPrefixes).toEqual(A.empty<string>());
+  });
+
   it("validates candidate CLI flags and renders text and JSON summaries", () =>
     Effect.runPromise(
       withTempWorkingDirectory(

@@ -124,9 +124,9 @@ env PATH="$MISE_SHIMS:/usr/bin:/bin" node_modules/.bin/tsgo --version \
 
 foundation_names=$(find packages/foundation -name package.json -not -path '*/node_modules/*' -print0 \
   | xargs -0 jq -r '.name' | sed 's#@beep/##' | paste -sd'|' -)
-rg -l --glob '*.{ts,tsx}' --glob '!dist/**' --glob '!node_modules/**' \
-  "from[[:space:]]+\"(effect|@beep/($foundation_names))\"" apps/professional-desktop \
-  | sort | tee "$RESULTS/target-import-files.txt"
+{ rg -l --glob '*.{ts,tsx}' --glob '!dist/**' --glob '!node_modules/**' \
+    "from[[:space:]]+\"(effect|@beep/($foundation_names))\"" apps/professional-desktop \
+    || true; } | sort | tee "$RESULTS/target-import-files.txt"
 ```
 
 The before inventory must contain 103 files in the current snapshot. The after inventory must be empty. If package names or counts drift before execution, record and review the new inventory; do not force the historical count.
@@ -154,11 +154,19 @@ done
 
 /usr/bin/time -f 'wall_s=%e max_rss_kb=%M' \
   -o "$RESULTS/package-check.time" \
-  "$MISE_BUN" --cwd apps/professional-desktop run beep:check \
+  "$MISE_BUN" run --cwd apps/professional-desktop beep:check \
   >"$RESULTS/package-check.log" 2>&1
 ```
 
-Primary compiler metrics are source-program median wall time, tsgo `Check time`, `Files`, `Types`, `Instantiations`, and maximum RSS. Scripts-program and complete-package times are secondary/regression metrics. Structural counts should be identical across the seven runs; differing counts mean the environment or source changed during sampling.
+Primary compiler metrics are source-program median wall time, tsgo `Check time`,
+`Files`, `Types`, `Instantiations`, and maximum RSS. Scripts-program and
+complete-package times are secondary/regression metrics. `Files` must be
+identical across the seven runs. Preserve every structural-counter sample and
+prove the tracked source hash is stable: the native parallel tsgo build can
+vary `Types` and `Instantiations` slightly across identical invocations, so
+compare those counters by median/MAD and require the same stability test as a
+timing change. A 5% structural movement remains the minimum qualifying change;
+do not treat sub-threshold counter jitter as source drift or a measured win.
 
 Capture one CI-shaped cold local graph separately. The isolated cache directory avoids deleting or reading the user's normal Turbo cache; `--summarize` leaves the task-level run artifact under `.turbo/runs` and the log identifies it.
 
@@ -183,23 +191,27 @@ measure_dev_once() {
   local log="$RESULTS/dev-$label.log"
   local start_ns end_ns elapsed_ms server_pid ready=0
 
-  rm -rf \
+  for cache_dir in \
     "$REPO_ROOT/apps/professional-desktop/node_modules/.vite" \
-    "$REPO_ROOT/apps/professional-desktop/node_modules/.vite-temp"
+    "$REPO_ROOT/apps/professional-desktop/node_modules/.vite-temp"; do
+    if [ -d "$cache_dir" ]; then find "$cache_dir" -depth -delete; fi
+  done
 
-  if /usr/bin/curl -fsS --max-time 1 \
+  # Follow Portless's normal HTTP-to-HTTPS redirect; the proxy returns 404 at
+  # the HTTPS route when no app is registered, while a live app returns 200.
+  if /usr/bin/curl -fsSL --max-time 1 \
     http://professional-desktop.beep.localhost:1355/ >/dev/null 2>&1; then
     echo "professional-desktop route is already active" >&2
     return 2
   fi
 
   start_ns=$("$MISE_NODE" -p 'process.hrtime.bigint().toString()')
-  /usr/bin/setsid "$MISE_BUN" --cwd apps/professional-desktop run dev \
+  /usr/bin/setsid "$MISE_BUN" run --cwd apps/professional-desktop dev \
     >"$log" 2>&1 &
   server_pid=$!
 
   for _attempt in $(seq 1 480); do
-    if /usr/bin/curl -fsS --max-time 1 \
+    if /usr/bin/curl -fsSL --max-time 1 \
       http://professional-desktop.beep.localhost:1355/ >/dev/null 2>&1; then
       ready=1
       break
@@ -236,9 +248,11 @@ The selected file's test body is tiny compared with its imported graph. Clear th
 
 ```bash
 for run in $(seq 1 7); do
-  rm -rf \
+  for cache_dir in \
     "$REPO_ROOT/apps/professional-desktop/node_modules/.vite" \
-    "$REPO_ROOT/apps/professional-desktop/node_modules/.vite-temp"
+    "$REPO_ROOT/apps/professional-desktop/node_modules/.vite-temp"; do
+    if [ -d "$cache_dir" ]; then find "$cache_dir" -depth -delete; fi
+  done
   (
     cd apps/professional-desktop
     /usr/bin/time -f 'wall_s=%e max_rss_kb=%M' \
@@ -249,7 +263,7 @@ for run in $(seq 1 7); do
   )
 done
 
-"$MISE_BUN" --cwd apps/professional-desktop run beep:test \
+"$MISE_BUN" run --cwd apps/professional-desktop beep:test \
   >"$RESULTS/package-test.log" 2>&1
 ```
 
@@ -286,14 +300,16 @@ effect_assets() {
 printf 'run\ttotal_raw\ttotal_gzip\ttotal_brotli\teffect_raw\teffect_gzip\teffect_brotli\n' \
   >"$RESULTS/bundle-bytes.tsv"
 for run in $(seq 1 5); do
-  rm -rf \
+  for build_dir in \
     "$REPO_ROOT/apps/professional-desktop/dist" \
     "$REPO_ROOT/apps/professional-desktop/node_modules/.vite" \
-    "$REPO_ROOT/apps/professional-desktop/node_modules/.vite-temp"
+    "$REPO_ROOT/apps/professional-desktop/node_modules/.vite-temp"; do
+    if [ -d "$build_dir" ]; then find "$build_dir" -depth -delete; fi
+  done
 
   /usr/bin/time -f 'wall_s=%e max_rss_kb=%M' \
     -o "$RESULTS/vite-build-$run.time" \
-    "$MISE_BUN" --cwd apps/professional-desktop run beep:build \
+    "$MISE_BUN" run --cwd apps/professional-desktop beep:build \
     >"$RESULTS/vite-build-$run.log" 2>&1
 
   printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
@@ -339,6 +355,14 @@ stats() {
 
 sed -n 's/^wall_s=\([^ ]*\).*/\1/p' "$RESULTS"/tsgo-source-*.time | stats \
   | tee "$RESULTS/stats-tsgo-source.json"
+sed -n 's/^wall_s=[^ ]* max_rss_kb=\([^ ]*\).*/\1/p' "$RESULTS"/tsgo-source-*.time | stats \
+  | tee "$RESULTS/stats-tsgo-source-rss.json"
+awk '/^Check time:/{sub(/s$/, "", $3); print $3}' "$RESULTS"/tsgo-source-*.log | stats \
+  | tee "$RESULTS/stats-tsgo-check-time.json"
+awk '/^Types:/{print $2}' "$RESULTS"/tsgo-source-*.log | stats \
+  | tee "$RESULTS/stats-tsgo-types.json"
+awk '/^Instantiations:/{print $2}' "$RESULTS"/tsgo-source-*.log | stats \
+  | tee "$RESULTS/stats-tsgo-instantiations.json"
 cut -f2 "$RESULTS/dev-cold.tsv" | stats \
   | tee "$RESULTS/stats-dev-cold.json"
 sed -n 's/^wall_s=\([^ ]*\).*/\1/p' "$RESULTS"/vitest-start-*.time | stats \
@@ -347,7 +371,14 @@ sed -n 's/^wall_s=\([^ ]*\).*/\1/p' "$RESULTS"/vite-build-*.time | stats \
   | tee "$RESULTS/stats-vite-build.json"
 ```
 
-For each metric, compute `delta % = 100 × (after median − before median) / before median`; negative timing/byte deltas are improvements. Treat a timing change as stable only when its magnitude is greater than both the threshold below and twice the larger state's relative MAD. If it misses that noise test, extend that metric to 15 runs in each state and recompute; never selectively add runs to only the preferred state.
+For each metric, compute `delta % = 100 × (after median − before median) / before median`; negative timing/byte deltas are improvements. Treat a timing, RSS, `Types`, or `Instantiations` change as stable only when its magnitude is greater than both the threshold below and twice the larger state's relative MAD. If it misses that noise test, extend that metric to 15 runs in each state and recompute; never selectively add runs to only the preferred state.
+
+Before accepting an extension, prove its first appended sample has the same
+tracked source state, checkout path, toolchain, and exact `Files` count as that
+state's original seven samples. A sibling worktree is not interchangeable when
+its resolved compiler graph changes. Quarantine any mismatched attempt and
+repeat it in the original checkout path; rejected samples never enter the
+summary.
 
 ### Win, no-win, and stop rules
 

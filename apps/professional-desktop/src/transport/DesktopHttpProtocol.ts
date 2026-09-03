@@ -7,7 +7,7 @@
  */
 
 import { resolveChatRpcHttpUrl } from "@beep/agents-client/Chat.layer";
-import { Layer } from "effect";
+import * as Layer from "effect/Layer";
 import { FetchHttpClient, HttpClient, HttpClientRequest } from "effect/unstable/http";
 import { RpcClient, RpcSerialization } from "effect/unstable/rpc";
 
@@ -24,8 +24,7 @@ const SERVER_URL = resolveChatRpcHttpUrl();
  *
  * ```ts
  * import { makeDesktopHttpProtocolLive } from "@/transport/DesktopHttpProtocol"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * const layer = makeDesktopHttpProtocolLive("session-token")
  * console.log(Layer.isLayer(layer)) // true
  * ```
