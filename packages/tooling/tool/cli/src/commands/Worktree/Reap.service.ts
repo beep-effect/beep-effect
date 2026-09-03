@@ -47,9 +47,13 @@ type ReapCommandRunner = (
   cwd: string
 ) => Effect.Effect<ProbeCapture, DomainError, ChildProcessSpawner.ChildProcessSpawner>;
 
+type ReapLivenessRequest = {
+  readonly targetPath: string;
+  readonly idleHours: O.Option<number>;
+};
+
 type ReapLivenessProber = (
-  targetPath: string,
-  idleHours: O.Option<number>
+  request: ReapLivenessRequest
 ) => Effect.Effect<FleetLivenessVerdict, never, FileSystem.FileSystem>;
 
 type WorktreeReapRunOptions = {
@@ -258,27 +262,25 @@ const scanProcessCwdMatches = Effect.fnUntraced(function* (
  * import { Effect } from "effect"
  * import * as O from "effect/Option"
  *
- * console.log(Effect.isEffect(probeWorktreeLiveness(process.cwd(), O.some(400)))) // true
+ * console.log(Effect.isEffect(probeWorktreeLiveness({ targetPath: process.cwd(), idleHours: O.some(400) }))) // true
  * ```
  *
- * @param targetPath - Absolute directory whose liveness is being classified.
- * @param idleHours - Already-measured idle age used as the worktree-mtime reading.
+ * @param request - Target directory and its already-measured idle age.
  * @returns The classified liveness verdict for the directory.
  * @category utilities
  * @since 0.0.0
  */
 export const probeWorktreeLiveness: ReapLivenessProber = Effect.fnUntraced(function* (
-  targetPath: string,
-  idleHours: O.Option<number>
+  request: ReapLivenessRequest
 ): Effect.fn.Return<FleetLivenessVerdict, never, FileSystem.FileSystem> {
-  const matches = yield* scanProcessCwdMatches(targetPath);
+  const matches = yield* scanProcessCwdMatches(request.targetPath);
   return classifyFleetLiveness(
     FleetLivenessReadings.make({
       processMatches: O.getOrElse(matches, () => 0),
       processScanComplete: O.isSome(matches),
       sessionMatches: 0,
       transcript: { _tag: "absent" },
-      worktreeMtime: O.match(idleHours, {
+      worktreeMtime: O.match(request.idleHours, {
         onNone: (): FleetProbeReading => ({ _tag: "failed" }),
         onSome: (hours): FleetProbeReading => ({ _tag: "measured", ageSeconds: hours * 3_600 }),
       }),
@@ -428,7 +430,7 @@ const assessCandidate = Effect.fn("WorktreeReap.assessCandidate")(function* (
   if (O.isSome(skipReason)) {
     return { candidate: WorktreeReapCandidate.make({ ...enriched, skipReason }), warnings: A.empty() };
   }
-  const liveness = livenessSkipReason(yield* ctx.prober(entry.path, evidence.idleHours));
+  const liveness = livenessSkipReason(yield* ctx.prober({ targetPath: entry.path, idleHours: evidence.idleHours }));
   if (O.isSome(liveness)) {
     return { candidate: WorktreeReapCandidate.make({ ...enriched, skipReason: liveness }), warnings: A.empty() };
   }

@@ -248,10 +248,10 @@ describe("worktree reap", () => {
   it.effect("probes real same-uid liveness: the invoking cwd is live, a fresh temp dir is dormant", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
-      const live = yield* probeWorktreeLiveness(process.cwd(), O.some(400));
+      const live = yield* probeWorktreeLiveness({ targetPath: process.cwd(), idleHours: O.some(400) });
       expect(live.status).toBe("live");
       const temp = yield* fs.makeTempDirectory({ prefix: "worktree-reap-liveness-" });
-      const dormant = yield* probeWorktreeLiveness(temp, O.some(400));
+      const dormant = yield* probeWorktreeLiveness({ targetPath: temp, idleHours: O.some(400) });
       expect(dormant.status).toBe("dormant");
       yield* fs.remove(temp, { force: true, recursive: true });
     }).pipe(provideScopedLayer(NodeServices.layer))
