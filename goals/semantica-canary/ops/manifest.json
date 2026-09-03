@@ -3,14 +3,14 @@
   "initiative": {
     "id": "semantica-canary",
     "title": "Semantica Canary",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-08-24",
-    "updated": "2026-08-31",
+    "updated": "2026-09-02",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/semantica-canary",
-  "lifecycle": "active",
-  "statusNote": "P4 C2 passed: restricted-EYE oracle agreement, per-event rule validation, commit/SIGKILL/restart projection identity, Tier-L, and full-W1 R2 all cleared with byte-identical live/replay reports, zero unexpected degradation, and no retry. P5 closes the packet; see history/p4-c2-r2.md.",
+  "lifecycle": "completed-retained",
+  "statusNote": "P1-P5 completed 2026-09-02: archived checksums and replay equality were audited, all five dated family verdicts were confirmed, the closeout reflection was added, and the packet was retained. The C2-fired storage gate routes the source exploration to decompose; the reasoning spike stays gated on its G-entailment/rules fixture. Six final park values were synced to the Notion atlas; see history/p5-atlas-sync.md.",
   "mission": "Scaffold the headless-first Tauri lab at apps/labs/semantica and run the staged canary C0 -> C1 -> C2 over F1 + W1 under the probe breaker (S1), emitting replay-identical EvalReports; each passing stage flips its families from park-pending-canary to a verdict (B1).",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -73,7 +73,7 @@
     {
       "id": "P5",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [

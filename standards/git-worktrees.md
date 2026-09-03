@@ -286,6 +286,18 @@ For an existing duplicate clone:
 When several agents (or an agent team) write into the **same** worktree
 concurrently, the working directory and index are shared mutable state. Rules:
 
+- **Cleanup is not gated, but it is scoped.** Agents may `git stash drop` a stash entry they
+  own (confirm the entry by its `git stash list` message first; never drop a marked Yeet
+  stash or another lane's entry), retire a worktree through `bun run beep worktree
+  remove` (raw `git worktree remove` is not auto-approved because a trailing `--force`
+  would slip past the prefix denial), delete a local branch, create
+  archive refs under `refs/archive/`, and retire merged branches with `bun run beep yeet
+  sweep`, all without operator approval. The committed `.claude/settings.json` allows exactly
+  those and still denies the destroyers: `git worktree remove --force`, `git clean`,
+  `git reset --hard`, `git checkout .`, `git stash clear/pop`, raw remote branch deletion,
+  and force pushes. Preserve residue before removal; the archive-first
+  `bun run beep worktree remove <name> --archive` lands in #956 and becomes the
+  sanctioned path once merged.
 - **Never `git stash` in a shared multi-agent worktree.** Stash sweeps *every*
   writer's uncommitted work into one stash entry, silently pulling other
   lanes' in-flight edits out from under them; a later `stash pop` then

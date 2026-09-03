@@ -9,7 +9,7 @@ holds now; when a log entry disagrees with it, the table wins.
 
 | Topic | Holds now | Supersedes |
 | --- | --- | --- |
-| Next work | Finish the C1 evidence PR at `merge-ready: yes` and land it, then begin `P4 C2`: ρdf closure plus the EYE oracle, crash identity, and Tier-L bundle gates. | P3 C1 projection probe and R2 gate; P2 live probe and R2 gate; E1-E9 re-entry work; stage `graduate` and its PR A/B/C sequence |
+| Next work | Decompose the C2-fired `semantica-storage-inversion` gate; `semantica-reasoning-spike` also needs its `G-entailment/rules` fixture committed before it fires (MAP Sequencing 5); `semantica-atlas-sync` re-enters on the atlas-edit need its unblocked positive row values create (O3/M4). | P5 close |
 | Stop rule | Probe-denominated circuit breaker (S1): first-probe candidate, one retry, then the family parks and the packet drops to decompose; wall-clock is `EvalRunTelemetry` sidecar telemetry (R1), never a gate. Re-entry is bounded (E8): one decompose re-entry candidate per family per stage; a second park is terminal absent an explicit operator ratification recorded in this file | BRIEF v0.1 "two weeks, C0 in four days"; contract v1.2 two-week falsifier; unbounded slate re-entry |
 | Gold labels | Gold-proposer provider family ≠ extraction provider family, enforced as a schema refinement on EvalRun; spot-checked fraction committed as a number in gold/v1 (S2) | contract v1.2 "LLM-proposed and spot-checked" |
 | Lab shape | `--app-kind tauri`, one local `cargo check`, `src-tauri` frozen through C0-C2, hand-written `server/main.ts` + `src/runtime/Layer.ts` as the headless proof surface (S4) | D12/G2 wording without a runtime entry |
@@ -22,7 +22,7 @@ holds now; when a log entry disagrees with it, the table wins.
 | Canary | staged C0 then C1 then C2 (G1), each stage bounded by the probe breaker (S1), no calendar; code lives in the lab after graduation; every stage pass includes the full W1 + F1 run, live and replay, with equal digests and zero unexpected typed-degraded document failures (F1 malformed specimens decode to their declared degraded states; any W1 paper degrading fails the gate) (R2); C1 checks `G-projection` before rebuild identity (R3) | B2's monolithic offline run; G1 "C0 (days)" |
 | Budgets | Tier-L hard bar: cold start <5s, p95 <100ms; 16GB bundle-RSS alarm, not a park; laptop-class numbers are Tier-D telemetry in the per-run `EvalRunTelemetry` sidecar, never in the report digest (R1) | B5/A8 2GB/250MB/600MB as gates |
 | Offline | replay-offline, hosted-live: cache every provider result content-addressed; re-run must reproduce the `EvalReport` digest with network off; Tier-L/Tier-D numbers live in a per-run `EvalRunTelemetry` sidecar outside the digest (R1) | A8's fully-offline M1; "byte-identical EvalReports" |
-| Atlas writes | only final `park`/`drop` today; `adopt`/`pick-one` values wait for a passed canary stage | D3 columns as live verdicts |
+| Atlas writes | final `park` values written 2026-09-02 (six rows; `goals/semantica-canary/history/p5-atlas-sync.md`); no `drop` warranted; row-level `adopt`/`adapt`/`already-have` are unblocked by the passed canary and belong to `semantica-atlas-sync` (O3/M4) | B1 "only final park/drop today"; D3 columns as live verdicts |
 | Atlas backlog | O3 verbatim (M4): template exemplars, IR row-fill and the 27 module analyses are async codex batches off the critical path, not a goal and not gated; `semantica-atlas-sync` = the D5 render/diff sync pipeline only, re-entry = semantica 0.6.7+ or atlas-edit need | MAP v0.1 "gate = C0 pass" |
 | Repo defects | O1 exception (M2): the `@beep/nlp` Handoff mention/span drop is fixed now in its own PR (`nlp-ir/1.1`, required `mentions`); the relation drop stays repo-issues Draft 2, cleanup-on-touch | O1 "fixes ride cleanup-on-touch" for this one defect |
 | Graduation | M5/M6: three PRs — fix → docs-only ceremony → lab mint; both packets graduate in one ceremony; `openai-driver` scaffolds `active` with no dependency edge; `docs/ROADMAP.md` funnel policy gains a lab-canary slot-free clause and a Labs line | G2 "graduate this week" |
@@ -715,7 +715,40 @@ Source:
   projection digest, and the 34-document live and replay reports were
   byte-identical at digest
   `2a2089eacaa7f341649b6e1d86991fda526f5d9708e9eaa1f4e9d06e0533b5d1`.
-  Live cold start was 1 ms and interactive p95 was 3 ms, clearing Tier-L; the
-  retry was not used. EYE is not a runtime dependency. `G-entailment/rules`,
+  Live cold start was 1,183 ms and interactive p95 was 7 ms, clearing Tier-L
+  (corrected 2026-09-02 from the archived sidecar; the entry originally quoted
+  1 ms and 3 ms from an earlier probe); the retry was not used. EYE is not a runtime dependency. `G-entailment/rules`,
   the v3 Rete salvage, and the proof-ledger kernel remain the separately gated
   reasoning spike and re-enter at `decompose`.
+
+## 2026-09-02 (P5 close) — packet closeout and successor re-entry
+
+- All five family verdicts are dated entries in this file. Input and
+  Extraction were recorded in the 2026-08-30 C0 entry. Storage and Embeddings
+  were recorded in the 2026-08-31 C1 entry. Reasoning was recorded in the
+  2026-08-31 C2 entry.
+- `semantica-canary` flips to `completed-retained` in this closeout change.
+  Its checksum-controlled evidence inventory and reflection remain under
+  `goals/semantica-canary/history/`.
+- The closeout audit found that the merged C2 archive lagged the ratified
+  full-state run: the C2 entry above cites digest
+  `2a2089eacaa7f341649b6e1d86991fda526f5d9708e9eaa1f4e9d06e0533b5d1`, but the
+  commit archiving that run was never pushed before #938 merged, so main held
+  the earlier `7fff1dc0…` run until the follow-up archive PR landed it. The
+  archive, `p4-c2-r2.md`, and the verdict now agree; its telemetry records
+  live cold start 1,183 ms and p95 7 ms, superseding the entry's "1 ms / 3 ms"
+  figures from an earlier probe. The Reasoning verdict remains a pass.
+- Per MAP Sequencing 5 and the Explore graduation contract, the C2 pass fired
+  the queued `semantica-storage-inversion` gate (its only precondition) and
+  satisfied the first of `semantica-reasoning-spike`'s two preconditions; that
+  spike still needs a committed `G-entailment/rules` fixture, which does not
+  exist yet. The exploration re-enters at `decompose` with both bounded spikes
+  as its open questions. This closeout scaffolds neither successor.
+- Final atlas values: six catalog rows (`sqlite-vec`, `PgVector`, `Apache AGE`, `BGE`,
+  `DoclingParser`, `ml`) were set to `park` in the Notion atlas after the verdicts were
+  confirmed; no `drop` was warranted. Evidence and the not-written list live in
+  `goals/semantica-canary/history/p5-atlas-sync.md`. Row-level `adopt`/`adapt`/`already-have`
+  values are unblocked by the passed canary and remain with `semantica-atlas-sync` (O3/M4).
+- Those unblocked positive row values are the "atlas-edit need" that O3/M4 name as
+  the `semantica-atlas-sync` re-entry trigger, so that gate joins the two spikes as
+  the exploration's third open question. Nothing is scaffolded for it either.

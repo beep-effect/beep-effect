@@ -50,6 +50,40 @@ method inventories and plans again, compares the new digest with the reviewed
 digest, and fails with `BoxProvisioningDriftError` before any write if they
 differ.
 
+## Apply safety
+
+`applyReviewedPlan` is the only write entry point on the root barrel. Before
+the first mutation it re-inventories, compares digests, validates the tenant
+and subject, and enforces the blocker contract: every `Blocked` action must be
+a declared metadata or retention `BlockedByEntitlement`; ambiguity, policy,
+dependency, and permission blockers reject the plan with zero writes. The
+returned `BoxReviewedApplyResult` carries the receipt, the immediate post-apply
+plan, and a verdict that requires the same entitlement blockers plus `Noop`
+for everything else.
+
+Pre-existing Box folders are never adopted silently. A desired folder that
+matches a live sibling (Box compares sibling names case-insensitively after
+trimming trailing whitespace, and the planner uses that same equivalence) is
+`BlockedByPolicy` unless one `adoptions` entry binds its logical key to that
+exact provider id and parent id. An empty allowlist blocks every collision.
+
+Each dependent write re-reads its parent folder and compares the redacted
+identity digest (provider id, parent id, name, etag) before the POST. Provide
+`BoxProvisioningApplyJournal` to persist sanitized `Started`, `Applied`, and
+`Failed` entries as the apply runs; the default layer discards them. Plan
+counts such as `declaredExternalCollaboratorCount` come from the intent
+author's `billingImpact` declarations and are not provider-verified.
+
+Ownership of folders the apply creates is returned as `adoptions` on the
+`BoxReviewedApplyResult`, so the caller persists it into the versioned intent
+and the next reconciliation plans those folders as `Noop` instead of blocking
+them as unowned matches. Every journal entry carries the reviewed plan digest
+and an attempt id; after a mid-apply failure, the exported recovery function
+rebuilds the adoption allowlist from the latest attempt's `Applied` folder
+entries so the remaining work can resume. Dependency revalidation compares the
+parent's provider id, parent id, and canonical name, not its etag, because Box
+does not document whether child membership changes a folder's etag.
+
 ## Development checks
 
 ```bash

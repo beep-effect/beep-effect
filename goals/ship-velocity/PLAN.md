@@ -122,7 +122,7 @@ the C5 metric correction and the new C7 item below.
   correctness inputs, first-touch dashboard accounting, key de-fragmentation, and a cached
   once-per-process 1Password-reference probe are implemented. See `research/cache-proof.md`.
 
-## P5 — Hot-file endgame + close — IMPLEMENTATION COMPLETE 2026-08-27
+## P5 — Hot-file endgame + close — COMPLETE 2026-09-02
 
 - ~~E2 INDEX end-state; E3 derived-only auto-heal + merge-driver tripwires; E4 ATLAS generator;
   E5 contention families.~~ INDEX is an ignored manifest projection. ATLAS is an ignored D3
@@ -142,16 +142,15 @@ the C5 metric correction and the new C7 item below.
   non-cancelled main-push success rate is 65.4%, below the 80% gate, and workflows have no
   `merge_group` coverage. Queue stays off; strict required checks stay false. See
   `research/merge-queue-evaluation.md`.
-- **Metrics observation gate remains open.** On 2026-08-30 the operator accepted the observed
-  24-hour event volume in place of the original seven-day duration proxy. PR #921 later
-  superseded A4; it is recorded as an operator scope replacement rather than counted as takeover
-  success. Current backpressure, parity, and hot-file receipts satisfy the authorized sample. Two
-  independent same-origin full proofs overlapped for 48 minutes 49.201 seconds and both completed
-  every lane at exit 0. PR #929 reached Yeet `merge-ready: yes` and merged on 2026-08-31 as the
-  implementation-repair PR. The existing 1Password reference resolves, but the authenticated
-  cache canary rejects its credentials. Timestamp drift makes a stale mirror the leading
-  hypothesis, not a proven mismatch or cause. The operator must repair authentication before the
-  cross-checkout remote-read observation can run. PR #937 merged on 2026-08-31 without that
-  evidence, the status flip, or the reflection, so it did not satisfy the final closeout PR gate.
-  A successor final-evidence PR now owns those artifacts and must reach Yeet `merge-ready: yes`;
-  see `research/metrics-closeout.md`.
+- ~~Metrics observation and packet closeout.~~ Complete 2026-09-02. The operator-authorized event
+  volume, backpressure, parity, concurrency, and hot-file receipts remain satisfied. Digest-only
+  evidence retracted the cache mirror-drift hypothesis: the checkouts held a stale February
+  reference while the infra-vault item still matched SSM. The helper's explicit replacement mode
+  repaired 27 ignored quads. In the six-root frozen sample, the main checkout and four siblings
+  observed eight first-touch remote hits each, one GET-200 root was authenticated-cold on a
+  different revision and lockfile, and zero roots were `auth-failed`. One remote-hit root used a
+  separately labelled cache-only canary because an unrelated reference failed its exact all-file
+  wrapper before HTTP. PR #937 remains an incomplete historical follow-up. The
+  successor final-evidence PR on branch goals/ship-velocity-cache-auth-evidence carries this
+  receipt, the lifecycle flip, and the closeout reflection and must reach Yeet `merge-ready: yes`
+  before merge; see `research/metrics-closeout.md` and `research/cache-proof.md`.

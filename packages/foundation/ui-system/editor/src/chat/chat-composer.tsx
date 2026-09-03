@@ -156,23 +156,10 @@ export interface ChatComposerProps {
   /** Class for the outer composer container. */
   readonly className?: string;
   /**
-   * Which plugins mount. Accepts a partial plain object; omitted flags are
-   * filled by {@link ComposerFeatures.make}.
-   *
-   * @deprecated Use {@link ChatComposerMountConfig} through `mountConfig`.
-   */
-  readonly features?: Partial<ComposerFeatures>;
-  /**
    * Optional schema-decoded initial editor state. Lexical reads it once; change
    * the component `key` to replace it after mount.
    */
   readonly initialState?: SerializedEditorState.Type;
-  /**
-   * Max captured attachment size in bytes.
-   *
-   * @deprecated Use {@link ChatComposerMountConfig} through `mountConfig`.
-   */
-  readonly maxAttachmentBytes?: number;
   /** App-injected `@` mention source. Mentions are skipped if omitted. */
   readonly mentionSource?: MentionSource;
   /** Immutable config seeded once for the lifetime of this composer mount. */
@@ -184,24 +171,6 @@ export interface ChatComposerProps {
    * @defaultValue "beep-chat-editor"
    */
   readonly namespace?: string;
-  /**
-   * Upload-port callback invoked with captured files (drag-drop / paste /
-   * picker). Promise rejection rolls the current batch back.
-   *
-   * @deprecated Use {@link ChatComposerMountConfig} through `mountConfig`.
-   */
-  readonly onAttach?: AttachmentPort;
-  /**
-   * Convenience send handler (registered at low priority for the send command).
-   * Receives the editor's CURRENT serialized state (read live at send time, so it
-   * never misses content). Return `true` to signal a turn was dispatched — the
-   * composer then clears the editor in place (keeping focus) so the user can keep
-   * typing. Return `false`/`void` (e.g. empty content or already streaming) to
-   * leave the content alone.
-   *
-   * @deprecated Use {@link ChatComposerMountConfig} through `mountConfig`.
-   */
-  readonly onSend?: SendPort;
   /** Called with the schema-decoded state on every content change. */
   readonly onSerializedChange?: (state: SerializedEditorState.Type) => void;
   /** Stop handler invoked while `streaming`. */
@@ -592,7 +561,6 @@ function AttachmentSweep({ editor }: { readonly editor: LexicalEditor }): null {
 // forwarding would obscure which mount-time values enter the atom-backed body.
 // fallow-ignore-next-line complexity -- component assembles plugins and optional consumer ports at one declarative boundary
 export function ChatComposer(props: ChatComposerProps): JSX.Element {
-  const compatibilityConfig: ChatComposerMountConfig = props;
   const {
     ariaLabel = DEFAULT_ARIA_LABEL,
     mountConfig,
@@ -609,11 +577,10 @@ export function ChatComposer(props: ChatComposerProps): JSX.Element {
     sendLabel = "Send",
     children,
   } = props;
-  const { features, maxAttachmentBytes = DEFAULT_MAX_ATTACHMENT_BYTES, onAttach, onSend } = compatibilityConfig;
-  const resolved = ComposerFeatures.make(mountConfig?.features ?? features ?? {});
-  const resolvedMaxAttachmentBytes = mountConfig?.maxAttachmentBytes ?? maxAttachmentBytes;
-  const resolvedOnAttach = mountConfig?.onAttach ?? onAttach;
-  const resolvedOnSend = mountConfig?.onSend ?? onSend;
+  const resolved = ComposerFeatures.make(mountConfig?.features ?? {});
+  const resolvedMaxAttachmentBytes = mountConfig?.maxAttachmentBytes ?? DEFAULT_MAX_ATTACHMENT_BYTES;
+  const resolvedOnAttach = mountConfig?.onAttach;
+  const resolvedOnSend = mountConfig?.onSend;
   const resolvedSlashItems = O.getOrElse(S.decodeOption(SlashItems)(slashItems), () => defaultChatSlashItems);
   const runtimeInitialState = O.flatMap(O.fromUndefinedOr(initialState), (state) =>
     Result.getSuccess(decodeEditorStateForRuntimeResult(state))

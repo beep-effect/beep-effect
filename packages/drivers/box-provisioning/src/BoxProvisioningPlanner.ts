@@ -18,6 +18,7 @@ import {
   BoxMetadataIntent,
   BoxRetentionIntent,
   BoxWebhookIntent,
+  boxFolderNamesEquivalent,
 } from "./BoxProvisioningIntent.ts";
 import {
   BoxObservedCollaboration,
@@ -48,8 +49,8 @@ import {
   sealBoxProvisioningPlan,
 } from "./internal/canonical.ts";
 import type * as S from "effect/Schema";
-import type { BoxEntitlementAvailability, BoxLogicalKey } from "./BoxProvisioningIntent.ts";
-import type { BoxDiscovery } from "./BoxProvisioningObserved.ts";
+import type { BoxAdoption, BoxEntitlementAvailability, BoxLogicalKey, BoxPlanName } from "./BoxProvisioningIntent.ts";
+import type { BoxDiscovery, BoxProviderRevision } from "./BoxProvisioningObserved.ts";
 import type { BoxPlanAction, BoxResourceKind } from "./BoxProvisioningPlan.ts";
 
 const $I = $BoxProvisioningId.create("BoxProvisioningPlanner");
@@ -66,7 +67,7 @@ type ActionBaseInput = {
   readonly beforeDigest: O.Option<Sha256Hex>;
   readonly dependencies: ReadonlyArray<Sha256Hex>;
   readonly destructive: boolean;
-  readonly etag: O.Option<string>;
+  readonly etag: O.Option<BoxProviderRevision>;
   readonly logicalKey: BoxLogicalKey;
   readonly providerId: O.Option<BoxProviderId>;
   readonly resourceKind: BoxResourceKind;
@@ -77,7 +78,7 @@ type DependentActionInput = {
   readonly afterDigest: O.Option<Sha256Hex>;
   readonly folder: FolderResolution;
   readonly logicalKey: BoxLogicalKey;
-  readonly matchKind: string;
+  readonly matchKind: BoxBlockedByAmbiguity["matchKind"];
   readonly resourceKind: "collaboration" | "webhook";
 };
 
@@ -190,6 +191,7 @@ const dependentAction = <Candidate>(
 const folderAction = (
   desired: BoxFolderIntent,
   candidates: ReadonlyArray<BoxObservedFolder>,
+  adoptions: ReadonlyArray<BoxAdoption>,
   dependencies: ReadonlyArray<Sha256Hex>
 ): BoxPlanAction => {
   const afterDigest = O.some(encodedDigest(BoxFolderIntent, desired));
@@ -213,6 +215,30 @@ const folderAction = (
       A.match(A.drop(matches, 1), {
         onEmpty: () => {
           const observed = matches[0];
+          const authorizations = A.filter(
+            adoptions,
+            (adoption) =>
+              Equal.equals(adoption.logicalKey, desired.logicalKey) &&
+              Equal.equals(adoption.expectedProviderId, observed.providerId) &&
+              O.contains(observed.parentProviderId, adoption.expectedParentProviderId)
+          );
+          if (A.length(authorizations) !== 1) {
+            return BoxBlockedAction.make({
+              ...actionBase({
+                actionTag: "Blocked",
+                afterDigest,
+                beforeDigest: O.none(),
+                dependencies,
+                destructive: false,
+                etag: O.none(),
+                logicalKey: desired.logicalKey,
+                providerId: O.none(),
+                resourceKind: "folder",
+                state: "present",
+              }),
+              reason: BoxBlockedByPolicy.make({ policy: "foreign-name-collision" }),
+            });
+          }
           return BoxNoopAction.make(
             actionBase({
               actionTag: "Noop",
@@ -244,7 +270,7 @@ const folderAction = (
             }),
             reason: BoxBlockedByAmbiguity.make({
               candidateCount: A.length(matches),
-              matchKind: "exact-name-sibling",
+              matchKind: "provider-equivalent-name-sibling",
             }),
           }),
       }),
@@ -346,28 +372,35 @@ const blockedCapabilityAction = <A extends BoxMetadataIntent | BoxRetentionInten
   desired: A,
   schema: S.Codec<A, I>,
   resourceKind: "metadata" | "retention",
-  planName: string,
+  planName: BoxPlanName,
   assertedAvailability: BoxEntitlementAvailability,
   discovery: BoxDiscovery,
   folder: FolderResolution
 ): BoxPlanAction => {
-  const reason = Match.value(discovery).pipe(
-    Match.tagsExhaustive({
-      Available: () =>
-        assertedAvailability === "available"
-          ? BoxBlockedByPolicy.make({ policy: `${resourceKind}-mutation-out-of-scope-v1` })
-          : BoxBlockedByPolicy.make({
-              policy: `${resourceKind}-entitlement-assertion-conflicts-with-live-discovery`,
-            }),
-      BlockedByEntitlement: () =>
-        assertedAvailability === "unavailable"
-          ? BoxBlockedByEntitlement.make({ entitlement: resourceKind, planName })
-          : BoxBlockedByPolicy.make({
-              policy: `${resourceKind}-entitlement-assertion-conflicts-with-live-discovery`,
-            }),
-      BlockedByPermission: () => BoxBlockedByPolicy.make({ policy: `${resourceKind}-discovery-permission-denied` }),
-    })
-  );
+  const reason = folder.blocked
+    ? BoxBlockedByPolicy.make({ policy: "blocked-folder-dependency" })
+    : Match.value(discovery).pipe(
+        Match.tagsExhaustive({
+          Available: (available) =>
+            assertedAvailability === "unavailable"
+              ? available.count > 0
+                ? BoxBlockedByPolicy.make({
+                    policy: `${resourceKind}-entitlement-assertion-conflicts-with-live-discovery`,
+                  })
+                : BoxBlockedByEntitlement.make({ entitlement: resourceKind, planName })
+              : BoxBlockedByPolicy.make({ policy: `${resourceKind}-mutation-out-of-scope-v1` }),
+          BlockedByEntitlement: () =>
+            assertedAvailability === "unavailable"
+              ? BoxBlockedByEntitlement.make({ entitlement: resourceKind, planName })
+              : BoxBlockedByPolicy.make({
+                  policy: `${resourceKind}-entitlement-assertion-conflicts-with-live-discovery`,
+                }),
+          BlockedByPermission: () =>
+            assertedAvailability === "unavailable"
+              ? BoxBlockedByEntitlement.make({ entitlement: resourceKind, planName })
+              : BoxBlockedByPolicy.make({ policy: `${resourceKind}-discovery-permission-denied` }),
+        })
+      );
   return BoxBlockedAction.make({
     ...actionBase({
       actionTag: "Blocked",
@@ -408,16 +441,17 @@ const blockedCapabilityAction = <A extends BoxMetadataIntent | BoxRetentionInten
  */
 export const planBoxProvisioning = Effect.fn("BoxProvisioningPlanner.plan")(function* (
   desired: BoxDesiredState,
-  observed: BoxObservedState
+  observed: BoxObservedState,
+  additionalAdoptions: ReadonlyArray<BoxAdoption> = A.empty()
 ) {
-  const expectedEnterpriseId = BoxProviderId.make(desired.expectedEnterpriseId);
+  const expectedEnterpriseId = desired.expectedEnterpriseId;
   if (!Equal.equals(expectedEnterpriseId, observed.enterpriseId)) {
     return yield* BoxProvisioningTenantMismatchError.make({
       expectedEnterpriseId,
       actualEnterpriseId: observed.enterpriseId,
     });
   }
-  const expectedSubjectId = BoxProviderId.make(desired.expectedSubjectId);
+  const expectedSubjectId = desired.expectedSubjectId;
   if (!Equal.equals(expectedSubjectId, observed.subjectId)) {
     return yield* BoxProvisioningSubjectMismatchError.make({
       expectedSubjectId,
@@ -456,7 +490,8 @@ export const planBoxProvisioning = Effect.fn("BoxProvisioningPlanner.plan")(func
         A.filter(
           canonicalObserved.folders,
           (candidate) =>
-            O.contains(candidate.parentProviderId, parentProviderId) && Equal.equals(candidate.name, folder.name)
+            O.contains(candidate.parentProviderId, parentProviderId) &&
+            boxFolderNamesEquivalent(candidate.name, folder.name)
         ),
     });
     const dependencies = O.isSome(folder.parentKey) ? [parent.actionKey] : [];
@@ -476,7 +511,12 @@ export const planBoxProvisioning = Effect.fn("BoxProvisioningPlanner.plan")(func
           }),
           reason: BoxBlockedByPolicy.make({ policy: "blocked-folder-dependency" }),
         })
-      : folderAction(folder, candidates, dependencies);
+      : folderAction(
+          folder,
+          candidates,
+          A.appendAll(canonicalDesired.adoptions.entries, additionalAdoptions),
+          dependencies
+        );
     const providerId = action._tag === "Noop" ? action.precondition.providerId : O.none<BoxProviderId>();
     O.match(providerId, {
       onNone: () => undefined,
@@ -604,8 +644,21 @@ export const planBoxProvisioning = Effect.fn("BoxProvisioningPlanner.plan")(func
     foreignResources,
     blockerCount: A.length(A.filter(actions, (action) => action._tag === "Blocked")),
     destructiveCount: A.length(A.filter(actions, (action) => action.destructive)),
-    externalCollaboratorCount: A.length(
+    declaredExternalCollaboratorCount: A.length(
       A.filter(canonicalDesired.collaborations, (collaboration) => collaboration.billingImpact === "external")
+    ),
+    declaredExternalCollaboratorCreateCount: A.length(
+      A.filter(
+        collaborationActions,
+        (action) =>
+          action._tag === "Create" &&
+          A.some(
+            canonicalDesired.collaborations,
+            (collaboration) =>
+              collaboration.billingImpact === "external" &&
+              Equal.equals(action.logicalKeyDigest, digestText(collaboration.logicalKey))
+          )
+      )
     ),
   });
   return sealBoxProvisioningPlan(draft);
@@ -621,6 +674,12 @@ export interface BoxProvisioningPlannerShape {
   readonly plan: (
     desired: BoxDesiredState,
     observed: BoxObservedState
+  ) => Effect.Effect<BoxProvisioningPlan, BoxProvisioningTenantMismatchError | BoxProvisioningSubjectMismatchError>;
+  /** Plan with trusted in-memory ownership evidence returned by the same guarded apply. */
+  readonly planWithAdoptions: (
+    desired: BoxDesiredState,
+    observed: BoxObservedState,
+    additionalAdoptions: ReadonlyArray<BoxAdoption>
   ) => Effect.Effect<BoxProvisioningPlan, BoxProvisioningTenantMismatchError | BoxProvisioningSubjectMismatchError>;
 }
 
@@ -648,6 +707,6 @@ export class BoxProvisioningPlanner extends Context.Service<BoxProvisioningPlann
 ) {
   static readonly layer = Layer.succeed(
     BoxProvisioningPlanner,
-    BoxProvisioningPlanner.of({ plan: planBoxProvisioning })
+    BoxProvisioningPlanner.of({ plan: planBoxProvisioning, planWithAdoptions: planBoxProvisioning })
   );
 }
