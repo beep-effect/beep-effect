@@ -219,16 +219,18 @@ let handledByCiFastPath = false;
 
 if (!handledByQualityFastPath && canUseCiFastPath(argv)) {
   handledByCiFastPath = true;
-  const [{ ciCommand }, { Command }] = await Promise.all([
+  const [{ ciCommand }, { FsUtilsLive }, { Command }] = await Promise.all([
     import("./commands/Ci/index.ts"),
+    import("@beep/repo-utils"),
     import("effect/unstable/cli"),
   ]);
   const ciRootCommand = Command.make("beep-cli").pipe(
     Command.withDescription("CLI tool for managing beep-effect monorepo packages"),
     Command.withSubcommands([ciCommand])
   );
+  const CiLayers = FsUtilsLive.pipe(Layer.provideMerge(BaseLayers));
   const ciProgram = Effect.scoped(
-    Layer.build(BaseLayers).pipe(
+    Layer.build(CiLayers).pipe(
       Effect.flatMap(
         Effect.fnUntraced(function* (context) {
           return yield* Command.run(ciRootCommand, { version: "0.0.0" }).pipe(Effect.provide(context));
