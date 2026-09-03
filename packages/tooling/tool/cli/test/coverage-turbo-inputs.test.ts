@@ -1,5 +1,6 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils/Root";
+import { encodeJsonString } from "@beep/schema/Json";
 import { provideScopedLayer } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
@@ -59,7 +60,6 @@ const TurboConfiguration = S.Struct({
 
 const decodeTurboConfiguration = S.decodeUnknownEffect(S.fromJsonString(TurboConfiguration));
 const decodeTurboRunSummary = S.decodeUnknownEffect(S.fromJsonString(TurboRunSummary));
-const encodeJson = S.encodeUnknownEffect(S.UnknownFromJsonString);
 
 const writeFixtureFile = Effect.fn("CoverageTurboInputsTest.writeFixtureFile")(function* (
   root: string,
@@ -79,7 +79,7 @@ const writeFixtureJson = Effect.fn("CoverageTurboInputsTest.writeFixtureJson")(f
   relativePath: string,
   document: unknown
 ) {
-  yield* writeFixtureFile(root, relativePath, `${yield* encodeJson(document)}\n`);
+  yield* writeFixtureFile(root, relativePath, `${yield* encodeJsonString(document)}\n`);
 });
 
 const coverageHashFromSummary = Effect.fn("CoverageTurboInputsTest.coverageHashFromSummary")(function* (
