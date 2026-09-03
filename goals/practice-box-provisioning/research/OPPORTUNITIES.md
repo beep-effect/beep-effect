@@ -70,3 +70,21 @@ Friction receipts captured while shipping, per the repository friction law.
    **What would have prevented it:** the planner's initial determinism tests
    should have included permutation invariance, not only repeated execution of
    one fixed input ordering.
+
+5. **Syncing the goal branch to main left stale dependency declarations.** `unowned`
+
+   After merging `origin/main` (which landed the codec-statics refactor in
+   `@beep/schema` after this packet's first PR merged),
+   `bun run beep quality package-verify @beep/box` failed in
+   `tsc -p tsconfig.json` with every schema helper collapsing to `never` in
+   `Box.errors.ts` and `Box.streaming.ts`. The reconciler package verified
+   green first because it consumes `@beep/box` declarations that were still
+   consistent. `bun run beep quality package-verify @beep/schema` rebuilt the
+   dependency; the box verify then hit one locationless native TS2589 and
+   passed on an unchanged rerun (audit 26.1s, docgen 9.0s), which auto-acked
+   the armed P0 inbox row at the same commit.
+
+   **What would have prevented it:** package verification could detect built
+   declarations older than their source across project references and rebuild
+   them before auditing, or the packet playbook's merge step could say to
+   verify changed dependency packages first.

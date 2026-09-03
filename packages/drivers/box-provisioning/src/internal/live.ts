@@ -11,6 +11,7 @@ import {
   BoxObservedFolder,
   BoxObservedWebhook,
   BoxProviderId,
+  BoxProviderRevision,
 } from "../BoxProvisioningObserved.ts";
 import { canonicalObservedWebhook } from "./canonical.ts";
 
@@ -124,7 +125,7 @@ export const toObservedFolderFromMini: {
     onSome: (name) =>
       Effect.succeed(
         BoxObservedFolder.make({
-          etag: O.fromNullishOr(item.etag),
+          etag: pipe(O.fromNullishOr(item.etag), O.map(BoxProviderRevision.make)),
           name,
           parentProviderId: O.some(parentProviderId),
           providerId: BoxProviderId.make(item.id),
@@ -149,7 +150,7 @@ export const toObservedFolderFromFull = (
       onSome: ({ name, parentProviderId }) =>
         Effect.succeed(
           BoxObservedFolder.make({
-            etag: O.fromNullishOr(folder.etag),
+            etag: pipe(O.fromNullishOr(folder.etag), O.map(BoxProviderRevision.make)),
             name,
             parentProviderId: O.some(BoxProviderId.make(parentProviderId)),
             providerId: BoxProviderId.make(folder.id),

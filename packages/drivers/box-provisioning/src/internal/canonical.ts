@@ -6,7 +6,7 @@ import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { BoxDesiredState, BoxWebhookIntent } from "../BoxProvisioningIntent.ts";
+import { BoxAdoptions, BoxDesiredState, BoxWebhookIntent } from "../BoxProvisioningIntent.ts";
 import { BoxObservedState, BoxObservedWebhook } from "../BoxProvisioningObserved.ts";
 import { BoxProvisioningPlan } from "../BoxProvisioningPlan.ts";
 import type { BoxLogicalKey } from "../BoxProvisioningIntent.ts";
@@ -71,6 +71,10 @@ export const canonicalObservedWebhook = (webhook: BoxObservedWebhook): BoxObserv
 export const canonicalBoxDesiredState = (desired: BoxDesiredState): BoxDesiredState =>
   BoxDesiredState.make({
     ...desired,
+    adoptions: BoxAdoptions.make({
+      ...desired.adoptions,
+      entries: byLogicalKey(desired.adoptions.entries),
+    }),
     folders: byLogicalKey(desired.folders),
     collaborations: byLogicalKey(desired.collaborations),
     webhooks: byLogicalKey(A.map(desired.webhooks, canonicalWebhookIntent)),

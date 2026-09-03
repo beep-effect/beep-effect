@@ -36,7 +36,7 @@ export class BoxProvisioningSchemaError extends S.TaggedError<BoxProvisioningSch
   $I`BoxProvisioningSchemaError`
 )(
   "BoxProvisioningSchemaError",
-  { stage: LiteralKit(["desired-state", "observed-state", "plan", "receipt"]) },
+  { stage: LiteralKit(["desired-state", "observed-state", "plan", "receipt", "journal"]) },
   $I.annoteError<BoxProvisioningSchemaError>("BoxProvisioningSchemaError", {
     description: "Sanitized failure decoding a Box provisioning boundary schema.",
   })
@@ -195,6 +195,75 @@ export class BoxProvisioningInvariantError extends S.TaggedError<BoxProvisioning
 }
 
 /**
+ * Apply rejected a plan that violates the reviewed entitlement-blocker contract.
+ *
+ * **Example** (Reject an unexpected policy blocker)
+ *
+ * ```ts
+ * import { BoxProvisioningBlockerContractError } from "@beep/box-provisioning/BoxProvisioningErrors"
+ *
+ * const error = BoxProvisioningBlockerContractError.make({
+ *   code: "non-entitlement-blocker",
+ *   phase: "pre-apply"
+ * })
+ * console.log(error.code)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class BoxProvisioningBlockerContractError extends S.TaggedError<BoxProvisioningBlockerContractError>(
+  $I`BoxProvisioningBlockerContractError`
+)(
+  "BoxProvisioningBlockerContractError",
+  {
+    phase: LiteralKit(["pre-apply", "post-apply"]),
+    code: LiteralKit([
+      "non-entitlement-blocker",
+      "entitlement-blocker-mismatch",
+      "invalid-entitlement-dependency",
+      "post-apply-non-noop-action",
+    ]),
+  },
+  $I.annoteError<BoxProvisioningBlockerContractError>("BoxProvisioningBlockerContractError", {
+    description: "Sanitized failure when a reviewed or post-apply plan violates its strict blocker contract.",
+  })
+) {
+  override get message(): string {
+    return `Box provisioning ${this.phase} blocker contract failed: ${this.code}.`;
+  }
+}
+
+/**
+ * Durable apply-journal persistence failed at the mutation boundary.
+ *
+ * **Example** (Create an append failure)
+ *
+ * ```ts
+ * import { BoxProvisioningApplyJournalError } from "@beep/box-provisioning/BoxProvisioningErrors"
+ *
+ * const error = BoxProvisioningApplyJournalError.make({ operation: "append" })
+ * console.log(error.message)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class BoxProvisioningApplyJournalError extends S.TaggedError<BoxProvisioningApplyJournalError>(
+  $I`BoxProvisioningApplyJournalError`
+)(
+  "BoxProvisioningApplyJournalError",
+  { operation: LiteralKit(["append", "encode"]) },
+  $I.annoteError<BoxProvisioningApplyJournalError>("BoxProvisioningApplyJournalError", {
+    description: "Sanitized failure to encode or append Box apply-journal evidence.",
+  })
+) {
+  override get message(): string {
+    return `Box provisioning apply journal failed to ${this.operation}.`;
+  }
+}
+
+/**
  * Technical errors produced directly by the Box reconciliation engine.
  *
  * @category errors
@@ -205,4 +274,6 @@ export type BoxProvisioningError =
   | BoxProvisioningTenantMismatchError
   | BoxProvisioningSubjectMismatchError
   | BoxProvisioningDriftError
-  | BoxProvisioningInvariantError;
+  | BoxProvisioningInvariantError
+  | BoxProvisioningBlockerContractError
+  | BoxProvisioningApplyJournalError;

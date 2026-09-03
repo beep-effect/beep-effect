@@ -6,15 +6,15 @@
     "title": "Practice Box Provisioning",
     "status": "active",
     "created": "2026-08-30",
-    "updated": "2026-08-30",
+    "updated": "2026-09-02",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/practice-box-provisioning",
   "lifecycle": "active",
   "mission": "Expand @beep/box with the provisioning manager surface and ship the Effect-native desired-state reconciler for the service-identity-owned client/matter tree",
-  "statusNote": "P0 and P1 are complete. The budgeted driver and reconciler pass canonical package verification. P2 private CCG injection and read-only identity bootstrap pass; private practice inputs, live dry-run, and attended apply remain.",
+  "statusNote": "P0 and P1 are complete. P2 passed private CCG injection, the read-only identity bootstrap, and the 2026-09-02 pre-apply hardening after an adversarial review found the merged reconciler NOT SAFE for a first apply. Private practice inputs, 1Password CLI integration, live dry-run, and attended apply remain.",
   "blockedBy": [
-    "P2 live dry-run and apply require the three private practice inputs and the operator present; CCG injection and identity guards are established."
+    "P2 live dry-run and apply require the operator: 1Password CLI desktop integration enabled and unlocked, the three private practice inputs filled, and the apply attended."
   ],
   "executionCapable": true,
   "reflectionRequired": true,

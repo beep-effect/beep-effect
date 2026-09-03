@@ -6,9 +6,10 @@
  */
 
 import { $BoxId } from "@beep/identity";
-import { JsonObject, LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import * as O from "@beep/utils/Option";
 import { pipe, Result } from "effect";
+import * as A from "effect/Array";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { BoxMethodName } from "./_generated/Box.models.gen.ts";
@@ -80,6 +81,43 @@ export const BoxErrorReason = BoxErrorReasonBase.pipe(
  */
 export type BoxErrorReason = typeof BoxErrorReason.Type;
 
+const BoxConflictResourceType = LiteralKit(["file", "folder", "web_link"]).pipe(
+  $I.annoteSchema("BoxConflictResourceType", {
+    description: "Closed Box resource classifications retained from conflict diagnostics.",
+  })
+);
+
+const BoxProviderResourceId = S.String.check(
+  S.isPattern(/^[0-9]{1,32}$/u, {
+    identifier: $I`BoxProviderResourceIdPattern`,
+    title: "Box provider resource id",
+    description: "One to 32 decimal digits identifying a Box resource without carrying its name.",
+    message: "Expected a Box provider resource id",
+  })
+).pipe(
+  $I.annoteSchema("BoxProviderResourceId", {
+    description: "Numeric Box resource identifier safe to retain in driver diagnostics.",
+  })
+);
+
+const BoxApiFailureConflict = S.Struct({
+  id: BoxProviderResourceId,
+  type: BoxConflictResourceType,
+}).pipe(
+  $I.annoteSchema("BoxApiFailureConflict", {
+    description: "Safe identity-only projection of a Box conflict resource.",
+  })
+);
+
+const BoxApiFailureContextValues = S.Struct({
+  conflictCount: NonNegativeInt,
+  conflicts: S.Array(BoxApiFailureConflict),
+}).pipe(
+  $I.annoteSchema("BoxApiFailureContextValues", {
+    description: "Closed conflict summary retained from Box API failure context.",
+  })
+);
+
 /**
  * Sanitized context copied from Box API failures.
  *
@@ -87,9 +125,12 @@ export type BoxErrorReason = typeof BoxErrorReason.Type;
  *
  * ```ts
  * import { BoxApiFailureContext } from "@beep/box"
+ * import { NonNegativeInt } from "@beep/schema"
  *
- * const context = BoxApiFailureContext.make({ values: { reason: "invalid" } })
- * console.log(context.values)
+ * const context = BoxApiFailureContext.make({
+ *   values: { conflictCount: NonNegativeInt.make(1), conflicts: [{ id: "123", type: "file" }] }
+ * })
+ * console.log(context.values.conflictCount)
  * ```
  *
  * @category errors
@@ -97,16 +138,78 @@ export type BoxErrorReason = typeof BoxErrorReason.Type;
  */
 export class BoxApiFailureContext extends S.Class<BoxApiFailureContext>($I`BoxApiFailureContext`)(
   {
-    // JSON-only so the sanitized context round-trips deterministically across the
-    // driver boundary. `S.Unknown` here let arbitrary non-serializable values
-    // (Errors, functions, symbols) leak into a wire-crossing error, whose
-    // encode/decode equivalence depended on host-sensitive structural `Equal`.
-    values: JsonObject,
+    values: BoxApiFailureContextValues,
   },
   $I.annote("BoxApiFailureContext", {
-    description: "Sanitized JSON key-value context copied from a Box API failure.",
+    description: "Strict conflict-only projection copied from a Box API failure.",
   })
 ) {}
+
+const BoxErrorCode = S.String.check(
+  S.isPattern(/^[a-z][a-z0-9_]{0,127}$/u, {
+    identifier: $I`BoxErrorCodePattern`,
+    title: "Box error code",
+    description: "Bounded lowercase classification syntax used by Box API error codes.",
+    message: "Expected a Box error code",
+  })
+).pipe(
+  $I.annoteSchema("BoxErrorCode", {
+    description: "Bounded Box API error classification safe to retain in diagnostics.",
+  }),
+  SchemaUtils.withCodecStatics(["is"])
+);
+
+const BoxRequestId = S.String.check(
+  S.isPattern(/^[A-Za-z0-9._:-]{1,200}$/u, {
+    identifier: $I`BoxRequestIdPattern`,
+    title: "Box request id",
+    description: "Bounded technical identifier syntax accepted for Box request correlation.",
+    message: "Expected a Box request id",
+  })
+).pipe(
+  $I.annoteSchema("BoxRequestId", {
+    description: "Technical Box request identifier safe to retain in diagnostics.",
+  }),
+  SchemaUtils.withCodecStatics(["is"])
+);
+
+const BoxSdkVersion = S.Literal(BOX_SDK_VERSION).pipe(
+  $I.annoteSchema("BoxSdkVersion", {
+    description: "Exact Box SDK version used by this driver build.",
+  }),
+  SchemaUtils.withCodecStatics(["is"])
+);
+
+const BoxRedactedHelpUrl = S.Literal("redacted").pipe(
+  $I.annoteSchema("BoxRedactedHelpUrl", {
+    description: "Fixed marker replacing provider help URLs in Box errors.",
+  })
+);
+
+const BoxErrorCauseBase = LiteralKit([
+  "AbortError",
+  "BlockedHostError",
+  "BoxSdkError",
+  "BoxSdkShapeError",
+  "ConfigError",
+  "Error",
+  "RangeError",
+  "SchemaError",
+  "String",
+  "SyntaxError",
+  "TypeError",
+  "Unknown",
+]);
+
+const BoxErrorCause = BoxErrorCauseBase.pipe(
+  $I.annoteSchema("BoxErrorCause", {
+    description: "Closed error-class classification retained without provider or schema issue text.",
+  }),
+  withLiteralKitCodecStatics,
+  SchemaUtils.withLiteralKitStatics(BoxErrorCauseBase)
+);
+
+type BoxErrorCause = typeof BoxErrorCause.Type;
 
 const BoxHttpStatusCode = S.Int.check(
   S.makeFilterGroup(
@@ -138,12 +241,12 @@ const BoxHttpStatusCode = S.Int.check(
 );
 
 const BoxErrorContextFields = {
-  cause: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-  code: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+  cause: S.OptionFromOptionalKey(BoxErrorCause).pipe(SchemaUtils.withNoneDefault),
+  code: S.OptionFromOptionalKey(BoxErrorCode).pipe(SchemaUtils.withNoneDefault),
   context: S.OptionFromOptionalKey(BoxApiFailureContext).pipe(SchemaUtils.withNoneDefault),
-  helpUrl: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+  helpUrl: S.OptionFromOptionalKey(BoxRedactedHelpUrl).pipe(SchemaUtils.withNoneDefault),
   method: S.OptionFromOptionalKey(BoxMethodName).pipe(SchemaUtils.withNoneDefault),
-  requestId: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+  requestId: S.OptionFromOptionalKey(BoxRequestId).pipe(SchemaUtils.withNoneDefault),
   status: S.OptionFromOptionalKey(BoxHttpStatusCode).pipe(SchemaUtils.withNoneDefault),
 } satisfies S.Struct.Fields;
 
@@ -166,7 +269,7 @@ const BoxErrorContextFields = {
 export class BoxErrorOptions extends S.Class<BoxErrorOptions>($I`BoxErrorOptions`)(
   {
     ...BoxErrorContextFields,
-    sdkVersion: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    sdkVersion: S.OptionFromOptionalKey(BoxSdkVersion).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("BoxErrorOptions", {
     description: "Sanitized options for constructing Box driver errors.",
@@ -186,6 +289,40 @@ class BoxErrorOptionsInput extends S.Class<BoxErrorOptionsInput>($I`BoxErrorOpti
   },
   $I.annote("BoxErrorOptionsInput", {
     description: "Raw option input accepted by BoxError.fromReason before schema-owned normalization.",
+  })
+) {}
+
+const BoxErrorDiagnosticFields = {
+  cause: S.OptionFromOptionalKey(BoxErrorCause).pipe(SchemaUtils.withNoneDefault),
+  code: S.OptionFromOptionalKey(BoxErrorCode).pipe(SchemaUtils.withNoneDefault),
+  context: S.OptionFromOptionalKey(BoxApiFailureContext).pipe(SchemaUtils.withNoneDefault),
+  method: S.OptionFromOptionalKey(BoxMethodName).pipe(SchemaUtils.withNoneDefault),
+  provider: S.Literal("box"),
+  reason: BoxErrorReason,
+  requestId: S.OptionFromOptionalKey(BoxRequestId).pipe(SchemaUtils.withNoneDefault),
+  sdkVersion: S.OptionFromOptionalKey(BoxSdkVersion).pipe(SchemaUtils.withNoneDefault),
+  status: S.OptionFromOptionalKey(BoxHttpStatusCode).pipe(SchemaUtils.withNoneDefault),
+} satisfies S.Struct.Fields;
+
+/**
+ * Explicit safe projection of a Box driver error for logging and serialization.
+ *
+ * **Example** (Inspect a safe diagnostic)
+ *
+ * ```ts
+ * import { BoxError } from "@beep/box"
+ *
+ * const diagnostic = BoxError.toDiagnostic(BoxError.fromReason("transport"))
+ * console.log(diagnostic.provider)
+ * ```
+ *
+ * @category diagnostics
+ * @since 0.0.0
+ */
+export class BoxErrorDiagnostic extends S.Class<BoxErrorDiagnostic>($I`BoxErrorDiagnostic`)(
+  BoxErrorDiagnosticFields,
+  $I.annote("BoxErrorDiagnostic", {
+    description: "Schema-backed Box error projection containing only approved diagnostic classifications.",
   })
 ) {}
 
@@ -209,7 +346,7 @@ export class BoxError extends S.TaggedError<BoxError>($I`BoxError`)(
   {
     ...BoxErrorContextFields,
     reason: BoxErrorReason,
-    sdkVersion: S.String.pipe(S.optionalKey, SchemaUtils.withKeyDefaults(BOX_SDK_VERSION)),
+    sdkVersion: BoxSdkVersion.pipe(S.optionalKey, SchemaUtils.withKeyDefaults(BOX_SDK_VERSION)),
   },
   $I.annoteError<BoxError>("BoxError", {
     description: "Sanitized technical failure raised by the Box driver boundary.",
@@ -234,18 +371,46 @@ export class BoxError extends S.TaggedError<BoxError>($I`BoxError`)(
     const input = BoxErrorOptionsInput.make({ ...options });
     return BoxError.make({
       reason,
-      cause: pipe(O.fromUndefinedOr(input.cause), O.map(causeLabelFromInput)),
-      code: O.fromUndefinedOr(input.code),
+      cause: pipe(O.fromUndefinedOr(input.cause), O.map(causeLabel)),
+      code: pipe(O.fromUndefinedOr(input.code), O.filter(BoxErrorCode.is)),
       context: O.fromUndefinedOr(input.context),
-      helpUrl: O.fromUndefinedOr(input.helpUrl),
+      helpUrl: O.none(),
       method: O.fromUndefinedOr(input.method),
-      requestId: O.fromUndefinedOr(input.requestId),
+      requestId: pipe(O.fromUndefinedOr(input.requestId), O.filter(BoxRequestId.is)),
       status: pipe(O.fromUndefinedOr(input.status), O.filter(BoxHttpStatusCode.is)),
       ...O.getSomesStruct({
-        sdkVersion: O.fromUndefinedOr(input.sdkVersion),
+        sdkVersion: pipe(O.fromUndefinedOr(input.sdkVersion), O.filter(BoxSdkVersion.is)),
       }),
     });
   };
+
+  /**
+   * Project a Box error to the closed diagnostic schema used by serializers.
+   *
+   * **Example** (Project an error)
+   *
+   * ```ts
+   * import { BoxError } from "@beep/box"
+   *
+   * const diagnostic = BoxError.toDiagnostic(BoxError.fromReason("sdk thrown"))
+   * console.log(diagnostic.reason)
+   * ```
+   *
+   * @category diagnostics
+   * @since 0.0.0
+   */
+  static readonly toDiagnostic = (error: BoxError): BoxErrorDiagnostic =>
+    BoxErrorDiagnostic.make({
+      cause: error.cause,
+      code: error.code,
+      context: error.context,
+      method: error.method,
+      provider: "box",
+      reason: error.reason,
+      requestId: error.requestId,
+      sdkVersion: O.fromUndefinedOr(error.sdkVersion),
+      status: error.status,
+    });
 
   /**
    * Convert an unknown SDK throw into a sanitized Box driver error.
@@ -267,7 +432,6 @@ export class BoxError extends S.TaggedError<BoxError>($I`BoxError`)(
     const responseInfo = responseInfoFromUnknown(cause);
     const code = pipe(responseInfo, O.flatMap(readString("code")));
     const context = pipe(responseInfo, O.flatMap(readContextInfo));
-    const helpUrl = pipe(responseInfo, O.flatMap(readString("helpUrl")));
     const requestId = pipe(responseInfo, O.flatMap(readString("requestId")));
     const status = pipe(responseInfo, O.flatMap(readHttpStatusCode("statusCode")));
 
@@ -276,7 +440,6 @@ export class BoxError extends S.TaggedError<BoxError>($I`BoxError`)(
       method,
       ...O.getSomesStruct({
         code,
-        helpUrl,
         requestId,
       }),
       ...O.getSomesStruct({
@@ -287,6 +450,18 @@ export class BoxError extends S.TaggedError<BoxError>($I`BoxError`)(
       }),
     });
   };
+
+  override get message(): string {
+    return this.reason;
+  }
+
+  override toString(): string {
+    return `${this._tag}: ${this.message}`;
+  }
+
+  override toJSON(): BoxErrorDiagnostic {
+    return BoxError.toDiagnostic(this);
+  }
 }
 
 const readProperty =
@@ -320,58 +495,34 @@ const readHttpStatusCode =
 
 const responseInfoFromUnknown = (cause: unknown): O.Option<unknown> => readProperty("responseInfo")(cause);
 
-const decodeApiFailureContext = S.decodeUnknownOption(BoxApiFailureContext);
+const decodeApiFailureConflict = S.decodeUnknownResult(BoxApiFailureConflict);
 
 const readContextInfo = (value: unknown): O.Option<BoxApiFailureContext> =>
   pipe(
     readProperty("contextInfo")(value),
-    O.filter(P.isObject),
-    // Total: non-JSON contextInfo sanitizes to `None` rather than throwing on the error path.
-    O.flatMap((contextInfo) => decodeApiFailureContext({ values: contextInfo }))
-  );
-
-/**
- * How much of a schema failure's issue tree is worth carrying.
- *
- * Enough to name the field and say what was expected; not so much that a large
- * response's failure becomes the payload.
- */
-const SCHEMA_ISSUE_LIMIT = 2_000;
-
-/**
- * A schema failure's whole value is its issue tree.
- *
- * `_tag` is read first, and a decode failure's `_tag` is the literal `"SchemaError"` —
- * so every schema failure in this driver stringified to the word "SchemaError" and
- * discarded the one thing that would have explained it. Diagnosing the Box decode bug
- * (absent optional fields arriving as present-but-undefined keys, which broke every
- * final-page listing) meant writing a standalone reproduction, because the error, the
- * log, and the trace all said "SchemaError" and stopped.
- */
-const schemaIssueLabel = (cause: unknown): O.Option<string> =>
-  pipe(
-    readString("_tag")(cause),
-    O.filter((tag) => tag === "SchemaError"),
-    O.flatMap(() => readString("message")(cause)),
-    O.map((message) => `SchemaError: ${message.slice(0, SCHEMA_ISSUE_LIMIT)}`)
+    O.flatMap(readProperty("conflicts")),
+    O.filter((conflicts): conflicts is ReadonlyArray<unknown> => A.isArray(conflicts)),
+    O.map((conflicts) =>
+      BoxApiFailureContext.make({
+        values: {
+          conflictCount: NonNegativeInt.make(A.length(conflicts)),
+          conflicts: A.filterMap(conflicts, (conflict) => decodeApiFailureConflict(conflict)),
+        },
+      })
+    )
   );
 
 // shared driver boundary idiom; no in-family home; future foundation capability candidate.
-// fallow-ignore-next-line code-duplication -- driver-local cause labeling preserves Box schema issue diagnostics
-const causeLabel = (cause: unknown): string =>
+// fallow-ignore-next-line code-duplication -- driver-local cause labeling retains only closed error classifications
+const causeLabel = (cause: unknown): BoxErrorCause =>
   pipe(
     O.firstSomeOf([
-      schemaIssueLabel(cause),
-      readString("_tag")(cause),
-      readString("name")(cause),
-      readString("code")(cause),
+      P.isString(cause) ? BoxErrorCause.decodeOption(cause) : O.none(),
+      pipe(readString("_tag")(cause), O.flatMap(BoxErrorCause.decodeOption)),
+      pipe(readString("name")(cause), O.flatMap(BoxErrorCause.decodeOption)),
     ]),
-    // shared driver boundary idiom; no in-family home; future foundation capability candidate.
-    // fallow-ignore-next-line code-duplication -- Box fallback labels mirror peer drivers but stay at the driver boundary
     O.getOrElse(() => (P.isString(cause) ? "String" : "Unknown"))
   );
-
-const causeLabelFromInput = (cause: unknown): string => (P.isString(cause) ? cause : causeLabel(cause));
 
 const isBoxSdkShapeError = P.isTagged("BoxSdkShapeError");
 

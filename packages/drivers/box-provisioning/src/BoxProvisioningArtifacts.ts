@@ -10,7 +10,7 @@ import * as S from "effect/Schema";
 import { BoxProvisioningSchemaError } from "./BoxProvisioningErrors.ts";
 import { BoxDesiredState } from "./BoxProvisioningIntent.ts";
 import { BoxProvisioningPlan } from "./BoxProvisioningPlan.ts";
-import { BoxApplyReceipt } from "./BoxProvisioningReceipt.ts";
+import { BoxApplyJournalEntry, BoxApplyReceipt } from "./BoxProvisioningReceipt.ts";
 
 const schemaError = (stage: BoxProvisioningSchemaError["stage"]) => BoxProvisioningSchemaError.make({ stage });
 
@@ -98,3 +98,20 @@ export const encodeBoxApplyReceipt = (receipt: BoxApplyReceipt) =>
  */
 export const decodeBoxApplyReceipt = (text: unknown) =>
   S.decodeUnknownEffect(S.fromJsonString(BoxApplyReceipt))(text).pipe(Effect.mapError(() => schemaError("receipt")));
+
+/**
+ * Encode one sanitized apply-journal entry as a single JSON value.
+ *
+ * **Example** (Inspect the journal encoder)
+ *
+ * ```ts
+ * import { encodeBoxApplyJournalEntry } from "@beep/box-provisioning/BoxProvisioningArtifacts"
+ *
+ * console.log(encodeBoxApplyJournalEntry)
+ * ```
+ *
+ * @category codecs
+ * @since 0.0.0
+ */
+export const encodeBoxApplyJournalEntry = (entry: BoxApplyJournalEntry) =>
+  S.encodeEffect(S.fromJsonString(BoxApplyJournalEntry))(entry).pipe(Effect.mapError(() => schemaError("journal")));

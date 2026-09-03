@@ -25,10 +25,14 @@ const $I = $BoxProvisioningId.create("BoxProvisioningObserved");
  * @category identifiers
  * @since 0.0.0
  */
-export const BoxProviderId = S.NonEmptyString.pipe(
-  S.brand("BoxProviderId"),
-  $I.annoteSchema("BoxProviderId", { description: "Opaque Box resource identifier." })
-);
+export const BoxProviderId = S.String.check(
+  S.isPattern(/^[A-Za-z0-9._-]{1,128}$/u, {
+    identifier: $I`BoxProviderIdCheck`,
+    title: "Box Provider Identifier",
+    description: "An opaque provider identifier containing at most 128 safe identifier characters.",
+    message: "Box provider identifiers must match ^[A-Za-z0-9._-]{1,128}$",
+  })
+).pipe(S.brand("BoxProviderId"), $I.annoteSchema("BoxProviderId", { description: "Opaque Box resource identifier." }));
 
 /**
  * Runtime type for {@link BoxProviderId}.
@@ -37,6 +41,42 @@ export const BoxProviderId = S.NonEmptyString.pipe(
  * @since 0.0.0
  */
 export type BoxProviderId = typeof BoxProviderId.Type;
+
+/**
+ * Bounded opaque provider revision used for reviewed identity preconditions.
+ *
+ * **Example** (Create a provider revision)
+ *
+ * ```ts
+ * import { BoxProviderRevision } from "@beep/box-provisioning/BoxProvisioningObserved"
+ *
+ * console.log(BoxProviderRevision.make("etag-1"))
+ * ```
+ *
+ * @category identifiers
+ * @since 0.0.0
+ */
+export const BoxProviderRevision = S.String.check(
+  S.isPattern(/^[A-Za-z0-9._-]{1,128}$/u, {
+    identifier: $I`BoxProviderRevisionCheck`,
+    title: "Box Provider Revision",
+    description: "An opaque provider revision containing at most 128 safe identifier characters.",
+    message: "Box provider revisions must match ^[A-Za-z0-9._-]{1,128}$",
+  })
+).pipe(
+  S.brand("BoxProviderRevision"),
+  $I.annoteSchema("BoxProviderRevision", {
+    description: "Bounded opaque Box revision safe for redacted plan preconditions.",
+  })
+);
+
+/**
+ * Runtime type for {@link BoxProviderRevision}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type BoxProviderRevision = typeof BoxProviderRevision.Type;
 
 /**
  * Resource families probed by a Box inventory run.
@@ -206,7 +246,7 @@ export class BoxObservedFolder extends S.Class<BoxObservedFolder>($I`BoxObserved
     providerId: BoxProviderId,
     parentProviderId: S.OptionFromOptionalKey(BoxProviderId).pipe(SchemaUtils.withNoneDefault),
     name: S.NonEmptyString,
-    etag: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+    etag: S.OptionFromOptionalKey(BoxProviderRevision).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("BoxObservedFolder", {
     description: "Normalized folder identity, parent, exact name, and optional etag from Box.",

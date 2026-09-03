@@ -10,9 +10,11 @@ import { HttpsUrl, LiteralKit, SchemaUtils } from "@beep/schema";
 import { MutableHashSet } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
-import { pipe } from "effect/Function";
+import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
+import { BoxProviderId } from "./BoxProvisioningObserved.ts";
 
 const $I = $BoxProvisioningId.create("BoxProvisioningIntent");
 
@@ -47,6 +49,197 @@ export const BoxLogicalKey = S.NonEmptyString.pipe(
 export type BoxLogicalKey = typeof BoxLogicalKey.Type;
 
 /**
+ * Resource families eligible for explicit adoption in desired-state version 1.
+ *
+ * **Example** (Check folder adoption support)
+ *
+ * ```ts
+ * import { BoxAdoptionResourceKind } from "@beep/box-provisioning/BoxProvisioningIntent"
+ *
+ * console.log(BoxAdoptionResourceKind.is.folder("folder"))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const BoxAdoptionResourceKind = LiteralKit(["folder"]).pipe(
+  $I.annoteSchema("BoxAdoptionResourceKind", {
+    description: "Box resource family that desired-state version 1 may explicitly adopt.",
+  })
+);
+
+/**
+ * Runtime type for {@link BoxAdoptionResourceKind}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type BoxAdoptionResourceKind = typeof BoxAdoptionResourceKind.Type;
+
+const BoxFolderNameChecks = S.makeFilterGroup(
+  [
+    S.isLengthBetween(1, 255, {
+      identifier: $I`BoxFolderNameLengthCheck`,
+      title: "Box Folder Name Length",
+      description: "A Box folder name containing between 1 and 255 characters.",
+      message: "Box folder names must contain between 1 and 255 characters",
+    }),
+    S.isPattern(/^[^\u0000-\u001f\u007f/\\]*$/u, {
+      identifier: $I`BoxFolderNameCharacterCheck`,
+      title: "Box Folder Name Characters",
+      description: "A Box folder name without slash, backslash, or non-printable ASCII characters.",
+      message: "Box folder names must not contain slash, backslash, or non-printable ASCII characters",
+    }),
+    S.makeFilter((value: string) => !Eq.equals(value, ".") && !Eq.equals(value, ".."), {
+      identifier: $I`BoxFolderNameDotSegmentCheck`,
+      title: "Box Folder Name Dot Segment",
+      description: "A Box folder name other than the reserved dot and dot-dot segments.",
+      message: "Box folder names must not be . or ..",
+    }),
+    S.makeFilter((value: string) => Eq.equals(Str.trimEnd(value), value), {
+      identifier: $I`BoxFolderNameTrailingWhitespaceCheck`,
+      title: "Box Folder Name Trailing Whitespace",
+      description: "A Box folder name without trailing whitespace.",
+      message: "Box folder names must not end with whitespace",
+    }),
+  ],
+  {
+    identifier: $I`BoxFolderNameChecks`,
+    title: "Box Folder Name",
+    description: "Provider-compatible checks for a Box folder name.",
+  }
+);
+
+/**
+ * Provider-compatible Box folder name accepted by desired state.
+ *
+ * **Details**
+ *
+ * Box documents a 1–255 character range and rejects trailing spaces, slash,
+ * backslash, non-printable ASCII, `.` and `..`.
+ *
+ * **Example** (Create a valid Box folder name)
+ *
+ * ```ts
+ * import { BoxFolderName } from "@beep/box-provisioning/BoxProvisioningIntent"
+ *
+ * console.log(BoxFolderName.make("Workspace"))
+ * ```
+ *
+ * @see {@link https://developer.box.com/reference/post-folders} for the create-folder name contract.
+ * @see {@link https://developer.box.com/guides/folders/single/create} for the trailing-space restriction.
+ * @category value-objects
+ * @since 0.0.0
+ */
+export const BoxFolderName = S.String.check(BoxFolderNameChecks).pipe(
+  $I.annoteSchema("BoxFolderName", {
+    description: "Desired folder name accepted by Box's documented create-folder contract.",
+  })
+);
+
+/**
+ * Runtime type for {@link BoxFolderName}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type BoxFolderName = typeof BoxFolderName.Type;
+
+/**
+ * Compares folder names using Box's provider-equivalent sibling-name rules.
+ *
+ * **Details**
+ *
+ * Box sibling uniqueness is case-insensitive. Trailing whitespace is trimmed
+ * for defensive comparison with anomalous observed state even though new
+ * desired names containing it are rejected by {@link BoxFolderName}.
+ *
+ * **Example** (Compare provider-equivalent names)
+ *
+ * ```ts
+ * import { boxFolderNamesEquivalent } from "@beep/box-provisioning/BoxProvisioningIntent"
+ *
+ * console.log(boxFolderNamesEquivalent("Workspace", "workspace "))
+ * ```
+ *
+ * @see {@link https://developer.box.com/reference/post-folders} for case-insensitive sibling uniqueness.
+ * @see {@link https://developer.box.com/guides/folders/single/create} for the trailing-space restriction.
+ * @category normalization
+ * @since 0.0.0
+ */
+export const boxFolderNamesEquivalent: {
+  (right: string): (left: string) => boolean;
+  (left: string, right: string): boolean;
+} = dual(2, (left: string, right: string): boolean =>
+  Eq.equals(pipe(left, Str.trimEnd, Str.toLowerCase), pipe(right, Str.trimEnd, Str.toLowerCase))
+);
+
+/**
+ * Explicit authorization to bind one observed Box folder to one desired key.
+ *
+ * **Details**
+ *
+ * Both provider identifiers must match live inventory. A natural-key match
+ * alone never grants ownership.
+ *
+ * **Example** (Authorize one existing folder)
+ *
+ * ```ts
+ * import { BoxAdoption, BoxLogicalKey } from "@beep/box-provisioning/BoxProvisioningIntent"
+ * import { BoxProviderId } from "@beep/box-provisioning/BoxProvisioningObserved"
+ *
+ * const adoption = BoxAdoption.make({
+ *   expectedParentProviderId: BoxProviderId.make("0"),
+ *   expectedProviderId: BoxProviderId.make("100"),
+ *   logicalKey: BoxLogicalKey.make("folder.workspace"),
+ *   resourceKind: "folder"
+ * })
+ * console.log(adoption.resourceKind)
+ * ```
+ *
+ * @category policies
+ * @since 0.0.0
+ */
+export class BoxAdoption extends S.Class<BoxAdoption>($I`BoxAdoption`)(
+  {
+    resourceKind: BoxAdoptionResourceKind,
+    logicalKey: BoxLogicalKey,
+    expectedProviderId: BoxProviderId,
+    expectedParentProviderId: BoxProviderId,
+  },
+  $I.annote("BoxAdoption", {
+    description: "Explicit desired-to-provider identity binding required before adopting an existing Box folder.",
+  })
+) {}
+
+/**
+ * Versioned allowlist of observed resources that the reconciler may adopt.
+ *
+ * **Example** (Declare an empty adoption allowlist)
+ *
+ * ```ts
+ * import { BoxAdoptions } from "@beep/box-provisioning/BoxProvisioningIntent"
+ *
+ * const adoptions = BoxAdoptions.make({ entries: [] })
+ * console.log(adoptions.version)
+ * ```
+ *
+ * @category policies
+ * @since 0.0.0
+ */
+export class BoxAdoptions extends S.Class<BoxAdoptions>($I`BoxAdoptions`)(
+  {
+    version: S.Literal("box-provisioning-adoptions/v1").pipe(
+      SchemaUtils.withConstantDefault("box-provisioning-adoptions/v1")
+    ),
+    entries: S.Array(BoxAdoption).pipe(SchemaUtils.withEmptyArrayDefaults<BoxAdoption>()),
+  },
+  $I.annote("BoxAdoptions", {
+    description: "Versioned explicit adoption authorizations for pre-existing Box resources.",
+  })
+) {}
+
+/**
  * Box plan feature availability asserted by the operator's commercial posture.
  *
  * **Example** (Check an unavailable entitlement)
@@ -75,6 +268,70 @@ export const BoxEntitlementAvailability = LiteralKit(["available", "unavailable"
 export type BoxEntitlementAvailability = typeof BoxEntitlementAvailability.Type;
 
 /**
+ * Closed Box commercial plans supported by desired-state version 1.
+ *
+ * **Example** (Check the Business plan)
+ *
+ * ```ts
+ * import { BoxPlanName } from "@beep/box-provisioning/BoxProvisioningIntent"
+ *
+ * console.log(BoxPlanName.is.Business("Business"))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const BoxPlanName = LiteralKit(["Business", "BusinessPlus", "Enterprise", "EnterprisePlus"]).pipe(
+  $I.annoteSchema("BoxPlanName", {
+    description: "Closed Box commercial plan name accepted by desired-state version 1.",
+  })
+);
+
+/**
+ * Runtime type for {@link BoxPlanName}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type BoxPlanName = typeof BoxPlanName.Type;
+
+/**
+ * Bounded opaque identifier for the source revision behind desired state.
+ *
+ * **Example** (Create a source revision)
+ *
+ * ```ts
+ * import { BoxSourceRevision } from "@beep/box-provisioning/BoxProvisioningIntent"
+ *
+ * console.log(BoxSourceRevision.make("intent-1"))
+ * ```
+ *
+ * @category identifiers
+ * @since 0.0.0
+ */
+export const BoxSourceRevision = S.String.check(
+  S.isPattern(/^[A-Za-z0-9._-]{1,64}$/u, {
+    identifier: $I`BoxSourceRevisionCheck`,
+    title: "Box Source Revision",
+    description: "An opaque revision identifier containing 1 to 64 safe identifier characters.",
+    message: "Box source revisions must match ^[A-Za-z0-9._-]{1,64}$",
+  })
+).pipe(
+  S.brand("BoxSourceRevision"),
+  $I.annoteSchema("BoxSourceRevision", {
+    description: "Bounded opaque source revision safe for redacted plan artifacts.",
+  })
+);
+
+/**
+ * Runtime type for {@link BoxSourceRevision}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type BoxSourceRevision = typeof BoxSourceRevision.Type;
+
+/**
  * Commercial facts that gate plan actions before any provider mutation.
  *
  * **Example** (Describe a Business posture)
@@ -98,7 +355,7 @@ export type BoxEntitlementAvailability = typeof BoxEntitlementAvailability.Type;
  */
 export class BoxEntitlements extends S.Class<BoxEntitlements>($I`BoxEntitlements`)(
   {
-    planName: S.NonEmptyString,
+    planName: BoxPlanName,
     metadata: BoxEntitlementAvailability,
     retention: BoxEntitlementAvailability,
     externalCollaboratorsRequirePaidSeats: S.Boolean,
@@ -139,7 +396,7 @@ export class BoxFolderIntent extends S.Class<BoxFolderIntent>($I`BoxFolderIntent
   {
     logicalKey: BoxLogicalKey,
     parentKey: S.OptionFromOptionalKey(BoxLogicalKey).pipe(SchemaUtils.withNoneDefault),
-    name: S.NonEmptyString,
+    name: BoxFolderName,
   },
   $I.annote("BoxFolderIntent", {
     description: "Desired Box folder identified by an opaque logical key and optional desired parent key.",
@@ -313,6 +570,7 @@ const recordDuplicateNaturalKeys = <Resource>(
   });
 
 const desiredStateCoherence = S.makeFilter<{
+  readonly adoptions: BoxAdoptions;
   readonly collaborations: ReadonlyArray<BoxCollaborationIntent>;
   readonly folders: ReadonlyArray<BoxFolderIntent>;
   readonly metadata: ReadonlyArray<BoxMetadataIntent>;
@@ -355,6 +613,15 @@ const desiredStateCoherence = S.makeFilter<{
       }
     });
 
+    A.forEach(state.adoptions.entries, (adoption, index) => {
+      if (!MutableHashSet.has(folderKeys, adoption.logicalKey)) {
+        issues.push({
+          path: ["adoptions", "entries", index, "logicalKey"],
+          issue: "Adoption logicalKey does not name a desired folder.",
+        });
+      }
+    });
+
     const referencedFolderKeys = A.flatMap(
       [state.collaborations, state.webhooks, state.metadata, state.retention] as const,
       A.map((resource) => resource.folderKey)
@@ -369,7 +636,7 @@ const desiredStateCoherence = S.makeFilter<{
       issues,
       "folders",
       state.folders,
-      (left, right) => Eq.equals(left.parentKey, right.parentKey) && left.name === right.name
+      (left, right) => Eq.equals(left.parentKey, right.parentKey) && boxFolderNamesEquivalent(left.name, right.name)
     );
     recordDuplicateNaturalKeys(
       issues,
@@ -398,7 +665,8 @@ const desiredStateCoherence = S.makeFilter<{
 
 const BoxDesiredStateFields = S.Struct({
   version: S.Literal("box-provisioning/v1").pipe(SchemaUtils.withConstantDefault("box-provisioning/v1")),
-  sourceRevision: S.NonEmptyString,
+  adoptions: SchemaUtils.withKeyDefaults(BoxAdoptions, BoxAdoptions.make({ entries: [] })),
+  sourceRevision: BoxSourceRevision,
   expectedEnterpriseId: S.NonEmptyString,
   expectedSubjectId: S.NonEmptyString,
   rootFolderId: S.NonEmptyString,
@@ -422,10 +690,16 @@ const BoxDesiredStateFields = S.Struct({
  * **Example** (Create an empty anchored desired state)
  *
  * ```ts
- * import { BoxDesiredState, BoxEntitlements } from "@beep/box-provisioning/BoxProvisioningIntent"
+ * import {
+ *   BoxAdoptions,
+ *   BoxDesiredState,
+ *   BoxEntitlements,
+ *   BoxSourceRevision
+ * } from "@beep/box-provisioning/BoxProvisioningIntent"
  * import * as O from "effect/Option"
  *
  * const desired = BoxDesiredState.make({
+ *   adoptions: BoxAdoptions.make({ entries: [] }),
  *   collaborations: [],
  *   entitlements: BoxEntitlements.make({
  *     externalCollaboratorsRequirePaidSeats: true,
@@ -440,7 +714,7 @@ const BoxDesiredStateFields = S.Struct({
  *   metadata: [],
  *   retention: [],
  *   rootFolderId: "0",
- *   sourceRevision: "intent-1",
+ *   sourceRevision: BoxSourceRevision.make("intent-1"),
  *   webhooks: []
  * })
  * console.log(desired.version)
