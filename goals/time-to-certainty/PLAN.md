@@ -39,8 +39,14 @@ orchestrator owns schemas, contracts, and judgment.
 
 ## P2 — Proof reuse
 
-- [ ] C1 ProofFact schema + migration from `YeetLaneProofState` (schema PR, no behavior change).
-- [ ] C2 ProofLedger Context.Service (record / lookup / expire) over an append-only NDJSON ledger.
+- [x] C1 ProofFact schema — done 2026-09-03 (PR #954 merged as 3e46822475): ProofEnvProfile, ProofStage,
+      ProofOutcome, ProofInputSource, ProofEpoch, ProofInputDigest, ProofProvenance, ProofFact,
+      ProofMissReason, hit/miss decisions, fact/shadow ledger rows; migration from `YeetLaneProofState`
+      rides the C4 wiring PR.
+- [x] C2 ProofLedger Context.Service — done 2026-09-03 (PR #954): record / recordShadow / lookup /
+      expire / disagreements over an append-only per-checkout NDJSON ledger with a tolerant reader,
+      key derivation and epoch collection, identity-field verification on lookup, undeclared-input
+      facts never reused; not yet wired into any lane.
 - [~] C3 declared inputs per script lane; Turbo lanes adopt the task hash; undeclared lanes report
       as non-reusable. Coverage done 2026-09-03 (PR #952 merged as 1ef10a6906: package-owned
       inputs replace the default glob, `cache: false` kept, a docs-only edit leaves the hash
