@@ -640,8 +640,7 @@ const validateMatchPersonInputs = Effect.fn("Files.validateMatchPersonInputs")(f
   }
   const outputDirectory = yield* O.match(options.outDir, {
     onNone: () => Effect.succeed(O.none<string>()),
-    onSome: (directory) =>
-      canonicalizeFileTargetPath(directory, "person-match output directory").pipe(Effect.map(O.some)),
+    onSome: (directory) => canonicalizeFileTargetPath(directory, "person-match output directory").pipe(Effect.asSome),
   });
   const cacheRoot = yield* resolveCacheRoot(options.cacheDir);
   const uvPath = yield* resolveTrustedUvPath();

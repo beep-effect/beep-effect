@@ -410,7 +410,7 @@ const processStartTime = Effect.fn("CorpusRestoration.processStartTime")(functio
 ): Effect.fn.Return<O.Option<string>, CorpusCommandError, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
   const stat = yield* fs.readFileString(`/proc/${pid}/stat`).pipe(
-    Effect.map(O.some),
+    Effect.asSome,
     Effect.catchTag("PlatformError", (error) =>
       error.reason._tag === "NotFound"
         ? Effect.succeed(O.none<string>())
@@ -2436,10 +2436,12 @@ const validateArchiveTerminalIndex = Effect.fn("CorpusRestoration.validateTermin
       "Current sealed run terminal count does not reconcile to its approved preflight denominator."
     );
   }
-  const destinationPaths = A.getSomes(
-    A.map(A.fromIterable(index.terminals), ([, terminal]) =>
+  const destinationPaths = index.terminals.pipe(
+    A.fromIterable,
+    A.map(([, terminal]) =>
       terminal.recordType === "archive-failure" ? O.none<string>() : O.some(terminal.destinationRelativePath)
-    )
+    ),
+    A.getSomes
   );
   if (HashSet.size(HashSet.fromIterable(destinationPaths)) !== destinationPaths.length) {
     return yield* failArchiveVerification(
@@ -2458,12 +2460,13 @@ const requireArchivePayloadOwned = Effect.fn("CorpusRestoration.requireArchivePa
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const payloadRoot = path.join(archiveRoot, "payload");
-  const expected = HashSet.fromIterable(
-    A.getSomes(
-      A.map(A.fromIterable(terminals), ([, terminal]) =>
-        terminal.recordType === "archive-failure" ? O.none<string>() : O.some(terminal.destinationRelativePath)
-      )
-    )
+  const expected = terminals.pipe(
+    A.fromIterable,
+    A.map(([, terminal]) =>
+      terminal.recordType === "archive-failure" ? O.none<string>() : O.some(terminal.destinationRelativePath)
+    ),
+    A.getSomes,
+    HashSet.fromIterable
   );
   const actual: Array<string> = [];
   const walkAt: (directory: string) => Effect.Effect<void, CorpusCommandError, RestorationRequirements> = Effect.fn(

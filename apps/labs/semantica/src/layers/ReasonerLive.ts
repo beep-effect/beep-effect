@@ -119,10 +119,7 @@ const makeAddition = Effect.fn("Reasoner.makeAddition")(function* (
   inferredByConclusion: HashMap.HashMap<StatementId, InferenceEvent>
 ) {
   const triple = yield* instantiate(rule, matched.bindings).pipe(
-    O.match({
-      onNone: () => Effect.fail(failed("rule-invalid", `Rule ${rule.id} left its conclusion unbound.`)),
-      onSome: Effect.succeed,
-    })
+    Effect.fromOption(() => failed("rule-invalid", `Rule ${rule.id} left its conclusion unbound.`))
   );
   const statement = yield* Effect.fromResult(makeRdfStatement(triple)).pipe(
     Effect.mapError(() => failed("rule-invalid", `Rule ${rule.id} produced a statement that did not encode.`))
@@ -214,19 +211,13 @@ const validateEvent = Effect.fn("Reasoner.validateEvent")(function* (
   event: InferenceEvent
 ) {
   const rule = yield* ruleFor(event).pipe(
-    O.match({
-      onNone: () => Effect.fail(failed("event-invalid", `Inference event ${event.id} names an unknown rule.`)),
-      onSome: Effect.succeed,
-    })
+    Effect.fromOption(() => failed("event-invalid", `Inference event ${event.id} names an unknown rule.`))
   );
   const premises = yield* Effect.forEach(
     event.premises,
     (id) =>
       statementFor(closure, id).pipe(
-        O.match({
-          onNone: () => Effect.fail(failed("event-invalid", `Inference event ${event.id} has a missing premise.`)),
-          onSome: Effect.succeed,
-        })
+        Effect.fromOption(() => failed("event-invalid", `Inference event ${event.id} has a missing premise.`))
       ),
     { concurrency: 1 }
   );
@@ -239,16 +230,10 @@ const validateEvent = Effect.fn("Reasoner.validateEvent")(function* (
     (current, [pattern, premise]) => current.pipe(O.flatMap((bound) => matchStatement(pattern, premise, bound)))
   );
   const bound = yield* bindings.pipe(
-    O.match({
-      onNone: () => Effect.fail(failed("event-invalid", `Inference event ${event.id} is not a valid rule instance.`)),
-      onSome: Effect.succeed,
-    })
+    Effect.fromOption(() => failed("event-invalid", `Inference event ${event.id} is not a valid rule instance.`))
   );
   const triple = yield* instantiate(rule, bound).pipe(
-    O.match({
-      onNone: () => Effect.fail(failed("event-invalid", `Inference event ${event.id} is not a valid rule instance.`)),
-      onSome: Effect.succeed,
-    })
+    Effect.fromOption(() => failed("event-invalid", `Inference event ${event.id} is not a valid rule instance.`))
   );
   const conclusion = yield* Effect.fromResult(makeRdfStatement(triple)).pipe(
     Effect.mapError(() => failed("event-invalid", `Inference event ${event.id} has a malformed conclusion.`))

@@ -90,8 +90,8 @@ const fetchHandler = Effect.fn("fetchHandler")(function* (
     const enrichResult = yield* Effect.serviceOption(ContentEnrichmentAgent).pipe(
       Effect.flatMap((opt) =>
         O.match(opt, {
-          onNone: () => Effect.succeed(O.none()),
-          onSome: (enricher) => enricher.enrichFromJina(content).pipe(Effect.map(O.some)),
+          onNone: () => Effect.succeedNone,
+          onSome: (enricher) => enricher.enrichFromJina(content).pipe(Effect.asSome),
         })
       ),
       Effect.catch(
@@ -303,7 +303,7 @@ const documentsHandler = Effect.fn("documentsHandler")(function* (
 ): Effect.fn.Return<void, DrizzleError | S.SchemaError, LinkIngestionService> {
   const ingestion = yield* LinkIngestionService;
   const canonicalStatus = yield* O.match(status, {
-    onNone: () => Effect.succeed(O.none()),
+    onNone: () => Effect.succeedNone,
     onSome: flow(S.decodeUnknownEffect(LinkStatus), Effect.map(O.some)),
   });
   const documents = yield* ingestion.list({

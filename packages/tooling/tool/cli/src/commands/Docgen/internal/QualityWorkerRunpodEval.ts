@@ -483,10 +483,7 @@ const podIdOption = (pod: Pod): O.Option<string> =>
 const requirePodId = (pod: Pod): Effect.Effect<string, DomainError> =>
   pipe(
     podIdOption(pod),
-    O.match({
-      onNone: () => Effect.fail(DomainError.make({ message: "Runpod createPod returned a pod without an id." })),
-      onSome: Effect.succeed,
-    })
+    Effect.fromOption(() => DomainError.make({ message: "Runpod createPod returned a pod without an id." }))
   );
 
 const findCreatedPodIdByName = Effect.fn("DocgenQualityWorkerRunpodEval.findCreatedPodIdByName")(function* ({
@@ -506,10 +503,7 @@ const findCreatedPodIdByName = Effect.fn("DocgenQualityWorkerRunpodEval.findCrea
 
   return yield* pipe(
     podId,
-    O.match({
-      onNone: () => Effect.fail(DomainError.make({ message: `Runpod pod "${podName}" did not expose an id.` })),
-      onSome: Effect.succeed,
-    })
+    Effect.fromOption(() => DomainError.make({ message: `Runpod pod "${podName}" did not expose an id.` }))
   );
 });
 

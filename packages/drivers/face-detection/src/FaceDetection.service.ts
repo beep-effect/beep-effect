@@ -398,7 +398,7 @@ const fixedInputDimensions = (
   );
 
   if (O.isNone(inputMetadata)) {
-    return Effect.succeed(O.none());
+    return Effect.succeedNone;
   }
 
   const metadata = inputMetadata.value;
@@ -416,7 +416,7 @@ const fixedInputDimensions = (
   const width = metadata.shape[3];
 
   if (!P.isNumber(height) || !P.isNumber(width) || height < 1 || width < 1) {
-    return Effect.succeed(O.none());
+    return Effect.succeedNone;
   }
 
   return checkedPixelCount("model input", undefined, width, height, MAX_FACE_DETECTION_TENSOR_PIXELS).pipe(
@@ -570,16 +570,12 @@ const outputTensor = (
 ): Effect.Effect<OrtTensor, FaceDetectionError> =>
   pipe(
     O.fromUndefinedOr(outputs[name]),
-    O.match({
-      onNone: () =>
-        Effect.fail(
-          FaceDetectionError.make({
-            message: `YuNet model output "${name}" was not returned.`,
-            operation: "postprocess",
-          })
-        ),
-      onSome: Effect.succeed,
-    })
+    Effect.fromOption(() =>
+      FaceDetectionError.make({
+        message: `YuNet model output "${name}" was not returned.`,
+        operation: "postprocess",
+      })
+    )
   );
 
 const confidenceScore = (value: number | undefined): RawFaceDetectionConfidence =>
@@ -765,16 +761,12 @@ const makeLoadedDetector = (ort: Ort, session: OrtSession): LoadedFaceDetector =
     );
     const inputName = yield* pipe(
       A.head(session.inputNames),
-      O.match({
-        onNone: () =>
-          Effect.fail(
-            FaceDetectionError.make({
-              message: "YuNet model did not expose an input tensor name.",
-              operation: "detect",
-            })
-          ),
-        onSome: Effect.succeed,
-      })
+      Effect.fromOption(() =>
+        FaceDetectionError.make({
+          message: "YuNet model did not expose an input tensor name.",
+          operation: "detect",
+        })
+      )
     );
     const inputDimensions = yield* fixedInputDimensions(session, inputName);
     const image = yield* preprocessImage(validatedRequest.imagePath, inputDimensions);

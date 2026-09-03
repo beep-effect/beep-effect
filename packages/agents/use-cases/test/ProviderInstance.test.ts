@@ -41,12 +41,9 @@ const makeRepository = (initial: ReadonlyArray<Domain.ProviderInstance>) => {
   let stored = initial;
   const unavailable = () => Effect.die("unreachable test path");
   const get = (providerInstanceId: Agents.ProviderInstanceId) =>
-    O.match(
+    Effect.fromOption(
       A.findFirst(stored, (instance) => instance.id === providerInstanceId),
-      {
-        onNone: () => Effect.fail(ProviderInstanceNotFound.make({ providerInstanceId })),
-        onSome: Effect.succeed,
-      }
+      () => ProviderInstanceNotFound.make({ providerInstanceId })
     );
   const repository: ProviderInstanceRepositoryShape = {
     add: () => unavailable(),

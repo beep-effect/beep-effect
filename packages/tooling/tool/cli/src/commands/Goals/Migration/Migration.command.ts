@@ -368,7 +368,7 @@ const snapshotManifestTranslations = Effect.fn("Goals.snapshotManifestTranslatio
 const readOptionalSnapshot = Effect.fn("Goals.readOptionalSnapshot")(function* (filePath: string, context: string) {
   const fs = yield* FileSystem.FileSystem;
   return yield* fs.readFileString(filePath).pipe(
-    Effect.map(O.some),
+    Effect.asSome,
     Effect.catchIf(
       (error) => error.reason._tag === "NotFound",
       () => Effect.succeed(O.none<string>())

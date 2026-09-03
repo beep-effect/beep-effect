@@ -990,7 +990,7 @@ const backpressureOverflow = Match.type<BackpressureConfig["strategy"]>().pipe(
           eventQueue: [...state.eventQueue.slice(1), event],
         })).pipe(Effect.as(O.none()))
   ),
-  Match.when("drop_newest", () => (_context: BackpressureOverflowContext) => Effect.succeed(O.none())),
+  Match.when("drop_newest", () => (_context: BackpressureOverflowContext) => Effect.succeedNone),
   Match.when("block_producer", () =>
     Effect.fn("ProgressStreaming.backpressureOverflow.blockProducer")(function* ({
       ref,

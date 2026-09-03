@@ -283,19 +283,15 @@ const resolveDocumentId = (
   rawId: DocumentId | string,
   operation: string
 ): Effect.Effect<DocumentId, TokenizationError> =>
-  O.match(decodeDocumentIdOption(rawId), {
-    onNone: () =>
-      Effect.fail(
-        TokenizationError.make({
-          cause: {
-            input: rawId,
-            reason: "Document ids must be non-empty strings.",
-          },
-          operation,
-        })
-      ),
-    onSome: Effect.succeed,
-  });
+  Effect.fromOption(decodeDocumentIdOption(rawId), () =>
+    TokenizationError.make({
+      cause: {
+        input: rawId,
+        reason: "Document ids must be non-empty strings.",
+      },
+      operation,
+    })
+  );
 
 const makeWinkTokenization = Effect.gen(function* () {
   const engine = yield* WinkEngine;

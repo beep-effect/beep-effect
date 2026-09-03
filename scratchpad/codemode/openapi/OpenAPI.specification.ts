@@ -167,7 +167,7 @@ export const isRecord = UnknownRecord.is;
  * @category parsing
  * @since 0.0.0
  */
-export const nonEmptyString = NonEmptyString.decodeUnknownOption;
+export const nonEmptyString = (input: unknown): O.Option<string> => NonEmptyString.decodeUnknownOption(input);
 
 /**
  * Own-property lookup for spec-controlled records.

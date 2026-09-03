@@ -549,7 +549,7 @@ export const buildExplorationProjection = Effect.fn("Explore.buildExplorationPro
       .pipe(
         Effect.flatMap(UnknownFromJsonString.decodeUnknownEffect),
         Effect.flatMap(decodeManifest),
-        Effect.map(O.some),
+        Effect.asSome,
         Effect.orElseSucceed(O.none<ExplorationManifest>)
       );
     if (O.isNone(manifest)) {

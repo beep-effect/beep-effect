@@ -8,14 +8,18 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A } from "@beep/utils";
+import { Effect as EffectRuntime } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { LINT_POLICY_SUBCOMMANDS } from "../../internal/cli/LintRouting.ts";
 import { QualityTaskStep } from "../../internal/process/index.ts";
-import { GITHUB_CHECK_MODE_VALUES, GithubCheckMode as GithubCheckModeSchema } from "../../internal/repo-run/index.ts";
+import {
+  GITHUB_CHECK_MODE_VALUES,
+  GithubCheckMode as GithubCheckModeSchema,
+} from "../../internal/repo-run/RepoRun.proofs.ts";
 import type * as Effect from "effect/Effect";
 import type * as AST from "effect/SchemaAST";
-import type { GithubCheckMode as GithubCheckModeType } from "../../internal/repo-run/index.ts";
+import type { GithubCheckMode as GithubCheckModeType } from "../../internal/repo-run/RepoRun.proofs.ts";
 
 const $I = $RepoCliId.create("commands/Quality/Quality.schemas");
 
@@ -35,6 +39,55 @@ const $I = $RepoCliId.create("commands/Quality/Quality.schemas");
  * @since 0.0.0
  */
 export const GITHUB_CHECK_RUN_REPORT_PREFIX = "[beep-github-check-run] ";
+
+/**
+ * Output-line prefix carrying execution facts for the lanes inside a wrapper.
+ *
+ * **Example** (Recognize a lane report line)
+ *
+ * ```ts
+ * import { QUALITY_TASK_LANE_RUN_REPORT_PREFIX } from "@beep/repo-cli/commands/Quality"
+ * import * as Str from "effect/String"
+ *
+ * console.log(Str.startsWith(QUALITY_TASK_LANE_RUN_REPORT_PREFIX)(`${QUALITY_TASK_LANE_RUN_REPORT_PREFIX}{}`)) // true
+ * ```
+ *
+ * @category protocols
+ * @since 0.0.0
+ */
+export const QUALITY_TASK_LANE_RUN_REPORT_PREFIX = "[beep-quality-task-lane-run] ";
+
+/**
+ * Environment key naming the durable NDJSON side channel for wrapper lane facts.
+ *
+ * **Example** (Pass the side-channel path)
+ *
+ * ```ts
+ * import { QUALITY_TASK_LANE_RUN_ARTIFACT_PATH_ENV } from "@beep/repo-cli/commands/Quality"
+ *
+ * console.log(QUALITY_TASK_LANE_RUN_ARTIFACT_PATH_ENV) // "BEEP_YEET_INNER_LANE_REPORT_PATH"
+ * ```
+ *
+ * @category protocols
+ * @since 0.0.0
+ */
+export const QUALITY_TASK_LANE_RUN_ARTIFACT_PATH_ENV = "BEEP_YEET_INNER_LANE_REPORT_PATH";
+
+/**
+ * Environment key joining a durable inner-lane report to its wrapper lane.
+ *
+ * **Example** (Pass the wrapper lane id)
+ *
+ * ```ts
+ * import { QUALITY_TASK_LANE_RUN_PARENT_ID_ENV } from "@beep/repo-cli/commands/Quality"
+ *
+ * console.log(QUALITY_TASK_LANE_RUN_PARENT_ID_ENV) // "BEEP_YEET_INNER_LANE_PARENT_ID"
+ * ```
+ *
+ * @category protocols
+ * @since 0.0.0
+ */
+export const QUALITY_TASK_LANE_RUN_PARENT_ID_ENV = "BEEP_YEET_INNER_LANE_PARENT_ID";
 
 /**
  * Canonical quality task name.
@@ -906,6 +959,88 @@ export const GithubCheckLaneRunStatus = LiteralKit(["passed", "reused", "failed"
  * @since 0.0.0
  */
 export type GithubCheckLaneRunStatus = typeof GithubCheckLaneRunStatus.Type;
+
+const OptionalLaneRunString = S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault);
+const OptionalLaneRunFinite = S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault);
+const NullableLaneInputDigest = S.OptionFromNullOr(S.String).pipe(
+  SchemaUtils.withNoneDefault,
+  S.withDecodingDefaultKey(EffectRuntime.succeed(null))
+);
+
+/**
+ * Timing and outcome facts for one lane executed inside a wrapper command.
+ *
+ * **Details**
+ *
+ * `inputDigest` encodes absence as `null`; callers supply a digest only when it
+ * comes from the executor, such as a Turbo task hash.
+ *
+ * **Example** (Record a completed lane)
+ *
+ * ```ts
+ * import { QualityTaskLaneRun } from "@beep/repo-cli/commands/Quality"
+ * import * as O from "effect/Option"
+ *
+ * const lane = QualityTaskLaneRun.make({
+ *   id: "quality:check",
+ *   label: "quality:check",
+ *   status: "passed",
+ *   startedAt: O.some("2026-09-03T00:00:00.000Z"),
+ *   endedAt: O.some("2026-09-03T00:00:01.000Z"),
+ *   durationMs: O.some(1000),
+ *   exitCode: O.some(0),
+ *   inputDigest: O.none()
+ * })
+ * console.log(lane.status) // "passed"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class QualityTaskLaneRun extends S.Class<QualityTaskLaneRun>($I`QualityTaskLaneRun`)(
+  {
+    id: S.String,
+    label: S.String,
+    status: GithubCheckLaneRunStatus,
+    startedAt: OptionalLaneRunString,
+    endedAt: OptionalLaneRunString,
+    durationMs: OptionalLaneRunFinite,
+    exitCode: OptionalLaneRunFinite,
+    inputDigest: NullableLaneInputDigest,
+  },
+  $I.annote("QualityTaskLaneRun", {
+    description: "Timing and outcome facts for one lane executed inside a wrapper command.",
+  })
+) {}
+
+/**
+ * Machine-readable execution facts emitted by a lane wrapper.
+ *
+ * **Example** (Build an empty lane report)
+ *
+ * ```ts
+ * import { QualityTaskLaneRunReport } from "@beep/repo-cli/commands/Quality"
+ *
+ * const report = QualityTaskLaneRunReport.make({
+ *   schemaVersion: "quality-task-lane-run/v1",
+ *   lanes: []
+ * })
+ * console.log(report.lanes.length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class QualityTaskLaneRunReport extends S.Class<QualityTaskLaneRunReport>($I`QualityTaskLaneRunReport`)(
+  {
+    schemaVersion: S.Literal("quality-task-lane-run/v1"),
+    parentLaneId: OptionalLaneRunString,
+    lanes: S.Array(QualityTaskLaneRun),
+  },
+  $I.annote("QualityTaskLaneRunReport", {
+    description: "Machine-readable execution facts emitted by a quality or CI lane wrapper.",
+  })
+) {}
 
 /**
  * One lane outcome in a local GitHub-check wave report.

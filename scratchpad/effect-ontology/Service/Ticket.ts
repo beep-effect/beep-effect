@@ -109,7 +109,7 @@ const makeTicketService = Effect.gen(function* () {
       Effect.flatMap(
         O.match({
           onNone: () => Effect.succeed(O.none<TicketRecord>()),
-          onSome: (content) => S.decodeEffect(TicketRecordJson)(content).pipe(Effect.map(O.some)),
+          onSome: (content) => S.decodeEffect(TicketRecordJson)(content).pipe(Effect.asSome),
         })
       ),
       Effect.mapError(ticketStorageError("load"))

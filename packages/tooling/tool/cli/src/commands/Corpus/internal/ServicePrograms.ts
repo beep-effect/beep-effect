@@ -327,10 +327,7 @@ const singleRow: {
   2,
   <Row>(rows: ReadonlyArray<Row>, label: string): Effect.Effect<Row, CorpusCommandError> =>
     A.head(rows).pipe(
-      O.match({
-        onNone: () => Effect.fail(CorpusCommandError.make({ message: `DuckDB returned no rows for ${label}.` })),
-        onSome: Effect.succeed,
-      })
+      Effect.fromOption(() => CorpusCommandError.make({ message: `DuckDB returned no rows for ${label}.` }))
     )
 );
 
@@ -2788,14 +2785,7 @@ const enrichCorpusImpl = Effect.fn("CorpusCommandService.enrichCorpus")(function
           candidate.kind === "application"
             ? yield* uspto.getApplication(normalized).pipe(Effect.result)
             : yield* uspto.searchApplications(`applicationMetaData.patentNumber:"${normalized}"`).pipe(
-                Effect.flatMap((results) =>
-                  A.head(results).pipe(
-                    O.match({
-                      onNone: () => Effect.fail(makeUsptoError("not-found")),
-                      onSome: Effect.succeed,
-                    })
-                  )
-                ),
+                Effect.flatMap((results) => A.head(results).pipe(Effect.fromOption(() => makeUsptoError("not-found")))),
                 Effect.result
               );
 

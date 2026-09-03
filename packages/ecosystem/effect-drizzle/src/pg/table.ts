@@ -435,15 +435,12 @@ const invokeDeclaredExtras = (
  * @since 0.0.0
  */
 export function toPgTable<M extends AnyModel>(
-  model: M,
-  additionalExtras?: AdditionalExtras<M>,
-  enums?: EnumRegistry
+  ...args: readonly [model: M, additionalExtras?: AdditionalExtras<M>, enums?: EnumRegistry]
 ): TableOf<M>;
 export function toPgTable(
-  model: AnyModel,
-  additionalExtras?: AdditionalExtras<AnyModel>,
-  enums?: EnumRegistry
+  ...args: readonly [model: AnyModel, additionalExtras?: AdditionalExtras<AnyModel>, enums?: EnumRegistry]
 ): unknown {
+  const [model, additionalExtras, enums] = args;
   const builders = reduce(
     Object.entries(model.sql.fields),
     empty<string, PgColumn.DrizzleBuilder>(),

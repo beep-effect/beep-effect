@@ -5,6 +5,7 @@ import {
   AdmissionJournalEvent,
   AdmissionRequest,
   AdmissionSnapshot,
+  acquireJournalFileLock,
   admissionCapacityTokensFor,
   admissionJournalPath,
   admissionStatus,
@@ -24,11 +25,19 @@ import {
   RuntimeRootChoice,
   reapAdmissionState,
   releaseAdmissionJournalLockForTesting,
+  repoRunSafeArtifactName,
   validatePrivateCoordinationDirectory,
   withQualityAdmission,
   YeetAdmissionLease,
   YeetAdmissionTicket,
 } from "@beep/repo-cli/test/RepoRun";
+import {
+  attemptJournalPath,
+  decodeYeetAttemptJournalEvent,
+  RepoRunContext,
+  TurboPlanSnapshot,
+} from "@beep/repo-cli/test/Yeet";
+import { UUID } from "@beep/schema/String";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeChildProcessSpawner } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
@@ -47,6 +56,7 @@ const PlatformLayer = NodeChildProcessSpawner.layer.pipe(
 );
 
 const DEAD_PID = 2_147_483_647;
+const JOURNALED_ATTEMPT_ID = S.decodeSync(UUID)("550e8400-e29b-41d4-a716-446655440020");
 
 describe("process identity liveness", () => {
   it.effect("uses a portable process identity when procfs is unavailable", () =>
@@ -108,6 +118,7 @@ const fastConfig = AdmissionConfig.make({
 });
 
 const encodeLease = S.encodeUnknownEffect(S.fromJsonString(YeetAdmissionLease));
+const encodeTicket = S.encodeUnknownEffect(S.fromJsonString(YeetAdmissionTicket));
 const decodeLease = S.decodeUnknownEffect(S.fromJsonString(YeetAdmissionLease));
 const decodeTicket = S.decodeUnknownEffect(S.fromJsonString(YeetAdmissionTicket));
 const decodeJsonObject = S.decodeUnknownEffect(S.fromJsonString(S.JsonObject));
@@ -262,6 +273,33 @@ const writeFakeLease = Effect.fnUntraced(function* (
   const name = `fake-${Math.abs(lease.weightTokens)}-${lease.originKey}-${lease.kind}.lease.json`;
   const filePath = path.join(tempRoot.leases, name);
   yield* fs.writeFileString(filePath, `${yield* encodeLease(lease)}\n`);
+  return filePath;
+});
+
+const writeFakeTicket = Effect.fnUntraced(function* (
+  tempRoot: AdmissionTempRoot,
+  overrides: Partial<Parameters<typeof YeetAdmissionTicket.make>[0]>
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const ticket = YeetAdmissionTicket.make({
+    schemaVersion: "yeet-admission-ticket/v1",
+    pid: process.pid,
+    procStart: yield* ownProcStart(),
+    kind: "full-proof",
+    weightTokens: 3,
+    priority: "verify",
+    originKey: "origin-ticket",
+    checkoutRoot: "/repo/ticket",
+    branch: "feat/ticket",
+    enqueuedAtMillis: 0,
+    heartbeatAtMillis: 0,
+    nonce: "ticket-nonce",
+    ...overrides,
+  });
+  yield* fs.makeDirectory(tempRoot.queue, { recursive: true, mode: 0o700 });
+  const filePath = path.join(tempRoot.queue, `${ticket.nonce}.ticket.json`);
+  yield* fs.writeFileString(filePath, `${yield* encodeTicket(ticket)}\n`);
   return filePath;
 });
 
@@ -431,7 +469,7 @@ describe("quality-scheduler", () => {
         const gibRef = yield* Ref.make(50);
         yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
           Effect.gen(function* () {
-            const admissionRequest = request();
+            const admissionRequest = request({ attemptId: O.some(JOURNALED_ATTEMPT_ID) });
             yield* withQualityAdmission(admissionRequest, noAdmissionOriginGate, Effect.void, fastConfig);
             expect(yield* listDirectory(tempRoot.leases)).toHaveLength(0);
             expect(yield* listDirectory(tempRoot.queue)).toHaveLength(0);
@@ -454,6 +492,8 @@ describe("quality-scheduler", () => {
             expect(admitted.pid).toBe(process.pid);
             expect(released.nonce).toBe(admitted.nonce);
             expect(released.pid).toBe(admitted.pid);
+            expect(admitted.attemptId).toStrictEqual(O.some(JOURNALED_ATTEMPT_ID));
+            expect(released.attemptId).toStrictEqual(O.some(JOURNALED_ATTEMPT_ID));
             expect(admitted.enqueuedAtMillis).toBeLessThanOrEqual(admitted.admittedAtMillis);
             expect(admitted.admittedAtMillis).toBeLessThanOrEqual(released.releasedAtMillis);
           })
@@ -552,7 +592,7 @@ describe("quality-scheduler", () => {
       })
     ));
 
-  it("recovers from a torn trailing journal record", () =>
+  it("preserves an unknown protocol row byte-for-byte through a v1 append", () =>
     Effect.runPromise(
       Effect.gen(function* () {
         const gibRef = yield* Ref.make(50);
@@ -562,16 +602,23 @@ describe("quality-scheduler", () => {
             const journalPath = yield* admissionJournalPath(tempRoot.root);
             yield* appendAdmissionJournalEvent(tempRoot.root, journalAdmitted(1));
             const intact = yield* fs.readFileString(journalPath);
-            yield* fs.writeFileString(journalPath, `${intact}{"schemaVersion":"yeet-admission-jour`);
+            const unknown =
+              '{"schemaVersion":"yeet-admission-journal/v3","_tag":"admission-future","opaque":"keep  bytes"}';
+            yield* fs.writeFileString(journalPath, `${intact}${unknown}\n`);
             yield* appendAdmissionJournalEvent(tempRoot.root, journalAdmitted(2));
-            const events = yield* readJournalEvents(tempRoot.root);
-            expect(A.map(events, (event) => event.nonce)).toStrictEqual(["nonce-1", "nonce-2"]);
+            const rewritten = yield* fs.readFileString(journalPath);
+            const second = yield* S.encodeUnknownEffect(S.fromJsonString(AdmissionJournalEvent))(journalAdmitted(2));
+            expect(pipe(rewritten, Str.split("\n"), A.filter(Str.isNonEmpty))).toStrictEqual([
+              Str.trim(intact),
+              unknown,
+              second,
+            ]);
           })
         );
       })
     ));
 
-  it("fails the append under live or fresh unparseable locks and reaps dead or aged locks", () =>
+  it("fails under live or fresh malformed locks and reaps dead or aged malformed generations", () =>
     Effect.runPromise(
       Effect.gen(function* () {
         const gibRef = yield* Ref.make(50);
@@ -585,6 +632,10 @@ describe("quality-scheduler", () => {
             const busy = yield* appendAdmissionJournalEvent(tempRoot.root, journalAdmitted(0)).pipe(Effect.flip);
             expect(busy.message).toContain("stayed busy");
             expect(yield* readJournalEvents(tempRoot.root)).toHaveLength(0);
+            const agedLiveSeconds = ((yield* Clock.currentTimeMillis) - 301_000) / 1_000;
+            yield* fs.utimes(lockPath, agedLiveSeconds, agedLiveSeconds);
+            const agedLive = yield* appendAdmissionJournalEvent(tempRoot.root, journalAdmitted(0)).pipe(Effect.flip);
+            expect(agedLive.message).toContain("stayed busy");
             // A fresh unparseable lock is a just-published generation mid-race,
             // never insta-reaped.
             yield* fs.writeFileString(lockPath, "not-a-pid");
@@ -593,15 +644,81 @@ describe("quality-scheduler", () => {
             yield* fs.writeFileString(lockPath, `${DEAD_PID}:dead-holder`);
             yield* appendAdmissionJournalEvent(tempRoot.root, journalAdmitted(1));
             expect(O.isNone(yield* fs.stat(lockPath).pipe(Effect.option))).toBe(true);
-            // Pid reuse: a live owner pid with an over-age lock clears through
-            // the backstop.
-            yield* fs.writeFileString(lockPath, `${process.pid}:reused-pid`);
+            // Only a malformed generation can age through the backstop; a
+            // parseable live owner is never raced by time-based reclamation.
+            yield* fs.writeFileString(lockPath, "aged-malformed-token");
             const agedSeconds = ((yield* Clock.currentTimeMillis) - 301_000) / 1_000;
             yield* fs.utimes(lockPath, agedSeconds, agedSeconds);
             yield* appendAdmissionJournalEvent(tempRoot.root, journalAdmitted(2));
             expect(O.isNone(yield* fs.stat(lockPath).pipe(Effect.option))).toBe(true);
             const events = yield* readJournalEvents(tempRoot.root);
             expect(A.map(events, (event) => event.nonce)).toStrictEqual(["nonce-1", "nonce-2"]);
+          })
+        );
+      })
+    ));
+
+  it("binds concurrent stale-lock reclamation to one observed generation", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const lockPath = path.join(tempRoot.root, "journal.lock");
+            const contenderTokens = A.makeBy(16, (index) => `${process.pid}:contender-${index}`);
+            yield* fs.makeDirectory(tempRoot.root, { recursive: true, mode: 0o700 });
+            yield* fs.writeFileString(lockPath, `${DEAD_PID}:abandoned-generation`);
+
+            const acquired = yield* Effect.forEach(
+              contenderTokens,
+              (token) => acquireJournalFileLock(lockPath, token, 16),
+              { concurrency: "unbounded" }
+            );
+            expect(A.filter(acquired, (value) => value)).toHaveLength(1);
+            const winnerIndex = A.findFirstIndex(acquired, (value) => value);
+            const lockToken = yield* fs.readFileString(lockPath);
+            expect(lockToken).toBe(
+              pipe(
+                winnerIndex,
+                O.flatMap((index) => A.get(contenderTokens, index)),
+                O.getOrThrow
+              )
+            );
+            yield* releaseAdmissionJournalLockForTesting(lockPath, lockToken);
+          })
+        );
+      })
+    ));
+
+  it("preserves an abandoned lock when its reaper claim token cannot be verified", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const lockPath = path.join(tempRoot.root, "journal.lock");
+            const observedToken = `${DEAD_PID}:abandoned-generation`;
+            yield* fs.makeDirectory(tempRoot.root, { recursive: true, mode: 0o700 });
+            yield* fs.writeFileString(lockPath, observedToken);
+            const mismatchedClaimFileSystem = FileSystem.FileSystem.of({
+              ...fs,
+              readFileString: Effect.fn("FileSystem.FileSystem.readFileString")((target, encoding) =>
+                Str.includes(".reap-")(target)
+                  ? Effect.succeed(`${process.pid}:replacement-generation`)
+                  : fs.readFileString(target, encoding)
+              ),
+            });
+
+            const acquired = yield* acquireJournalFileLock(lockPath, `${process.pid}:contender`, 1).pipe(
+              Effect.provideService(FileSystem.FileSystem, mismatchedClaimFileSystem)
+            );
+
+            expect(acquired).toBe(false);
+            expect(yield* fs.readFileString(lockPath)).toBe(observedToken);
           })
         );
       })
@@ -626,6 +743,10 @@ describe("quality-scheduler", () => {
         );
       })
     ));
+
+  it("uses a stable fallback for an empty artifact-safe name", () => {
+    expect(repoRunSafeArtifactName("///")).toBe("repo");
+  });
 
   it("decodes legacy lease files without nonce or enqueuedAtMillis", () =>
     Effect.runPromise(
@@ -1128,7 +1249,12 @@ describe("quality-scheduler", () => {
             yield* fs.makeDirectory(binDirectory, { recursive: true });
             yield* writeExecutable(path.join(binDirectory, "systemctl"), "#!/bin/sh\nexit 0\n");
             const live = yield* writeFakeLease(tempRoot, { weightTokens: 3, originKey: "origin-live" });
-            const dead = yield* writeFakeLease(tempRoot, { pid: DEAD_PID, weightTokens: 5, originKey: "origin-dead" });
+            const dead = yield* writeFakeLease(tempRoot, {
+              pid: DEAD_PID,
+              weightTokens: 5,
+              originKey: "origin-dead",
+              attemptId: O.some(JOURNALED_ATTEMPT_ID),
+            });
             const snapshot = yield* admissionStatus(fastConfig);
             expect(A.length(snapshot.leases)).toBe(1);
             expect(snapshot.activeTokens).toBe(3);
@@ -1143,6 +1269,149 @@ describe("quality-scheduler", () => {
             expect(applied.dead).toStrictEqual([dead]);
             const remaining = yield* listDirectory(tempRoot.leases);
             expect(remaining).toStrictEqual([path.basename(live)]);
+            const events = yield* readJournalEvents(tempRoot.root);
+            const eviction = pipe(
+              events,
+              A.findFirst(AdmissionJournalEvent.guards["admission-lease-evicted"]),
+              O.getOrThrow
+            );
+            expect(eviction.nonce).toBe("");
+            expect(eviction.pid).toBe(DEAD_PID);
+            expect(eviction.attemptId).toStrictEqual(O.some(JOURNALED_ATTEMPT_ID));
+            expect(eviction.schemaVersion).toBe("yeet-admission-journal/v2");
+            expect(eviction.reason).toBe("owner-dead-or-reused");
+          })
+        );
+      })
+    ));
+
+  it("atomically claims dead leases and tickets before journaling each death once", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const checkoutRoot = path.join(path.dirname(path.dirname(tempRoot.root)), "checkout");
+            const leaseAttemptId = yield* S.decodeEffect(UUID)("550e8400-e29b-41d4-a716-446655440021");
+            const ticketAttemptId = yield* S.decodeEffect(UUID)("550e8400-e29b-41d4-a716-446655440022");
+            yield* fs.makeDirectory(checkoutRoot, { recursive: true });
+            yield* writeFakeLease(tempRoot, {
+              pid: DEAD_PID,
+              nonce: "",
+              checkoutRoot,
+              branch: "feat/dead-lease",
+              attemptId: O.some(leaseAttemptId),
+            });
+            yield* writeFakeTicket(tempRoot, {
+              pid: DEAD_PID,
+              nonce: "dead-ticket",
+              checkoutRoot,
+              branch: "feat/dead-ticket",
+              attemptId: O.some(ticketAttemptId),
+            });
+
+            yield* Effect.all([reapAdmissionState({ apply: true }), reapAdmissionState({ apply: true })], {
+              concurrency: "unbounded",
+            });
+
+            const admissionEvents = yield* readJournalEvents(tempRoot.root);
+            expect(A.filter(admissionEvents, AdmissionJournalEvent.guards["admission-lease-evicted"])).toHaveLength(1);
+            expect(A.filter(admissionEvents, AdmissionJournalEvent.guards["admission-ticket-evicted"])).toHaveLength(1);
+            const attemptEvents = yield* Effect.forEach(
+              [
+                ["feat/dead-lease", "lease-eviction"],
+                ["feat/dead-ticket", "queued-submitter-death"],
+              ] as const,
+              ([branch, reason]) =>
+                Effect.gen(function* () {
+                  const context = RepoRunContext.make({
+                    repoRoot: checkoutRoot,
+                    cwd: checkoutRoot,
+                    base: "origin/main",
+                    head: "HEAD",
+                    branch,
+                    packetDir: ".beep/yeet",
+                    originalArgv: [],
+                    turbo: TurboPlanSnapshot.make({
+                      graphHealthStatus: "ok",
+                      graphHealthWarnings: [],
+                      tasks: [],
+                    }),
+                  });
+                  const text = yield* fs.readFileString(yield* attemptJournalPath(context));
+                  const rows = yield* Effect.forEach(pipe(text, Str.split("\n"), A.filter(Str.isNonEmpty)), (line) =>
+                    decodeYeetAttemptJournalEvent(line)
+                  );
+                  expect(rows).toHaveLength(1);
+                  expect(rows[0]).toMatchObject({ _tag: "attempt-terminated", reason });
+                  return rows[0];
+                })
+            );
+            expect(attemptEvents).toHaveLength(2);
+            expect(yield* listDirectory(tempRoot.leases)).toHaveLength(0);
+            expect(yield* listDirectory(tempRoot.queue)).toHaveLength(0);
+          })
+        );
+      })
+    ));
+
+  it("still frees a dead lease when its eviction receipt cannot be published", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const binDirectory = path.join(path.dirname(path.dirname(tempRoot.root)), "bin");
+            yield* fs.makeDirectory(binDirectory, { recursive: true });
+            yield* writeExecutable(path.join(binDirectory, "systemctl"), "#!/bin/sh\nexit 0\n");
+            const dead = yield* writeFakeLease(tempRoot, {
+              pid: DEAD_PID,
+              weightTokens: 5,
+              originKey: "origin-dead-journal-failure",
+              attemptId: O.some(JOURNALED_ATTEMPT_ID),
+            });
+            yield* fs.makeDirectory(path.join(tempRoot.root, "journal.ndjson"));
+
+            const applied = yield* withPrependedPath(binDirectory, reapAdmissionState({ apply: true }));
+
+            expect(applied.dead).toStrictEqual([dead]);
+            expect(yield* listDirectory(tempRoot.leases)).toHaveLength(0);
+          })
+        );
+      })
+    ));
+
+  it("does not journal an eviction when the dead lease file cannot be removed", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const binDirectory = path.join(path.dirname(path.dirname(tempRoot.root)), "bin");
+            yield* fs.makeDirectory(binDirectory, { recursive: true });
+            yield* writeExecutable(path.join(binDirectory, "systemctl"), "#!/bin/sh\nexit 0\n");
+            const dead = yield* writeFakeLease(tempRoot, {
+              pid: DEAD_PID,
+              weightTokens: 5,
+              originKey: "origin-dead-remove-failure",
+              attemptId: O.some(JOURNALED_ATTEMPT_ID),
+            });
+
+            const applied = yield* Effect.acquireUseRelease(
+              fs.chmod(tempRoot.leases, 0o500),
+              () => withPrependedPath(binDirectory, reapAdmissionState({ apply: true })),
+              () => fs.chmod(tempRoot.leases, 0o700)
+            );
+
+            expect(applied.dead).toStrictEqual([dead]);
+            expect(yield* listDirectory(tempRoot.leases)).toStrictEqual([path.basename(dead)]);
+            expect(yield* readJournalEvents(tempRoot.root)).toHaveLength(0);
           })
         );
       })
@@ -1793,8 +2062,8 @@ describe("quality-scheduler", () => {
             const fs = yield* FileSystem.FileSystem;
             const releases = yield* Ref.make(0);
             const gate = {
-              tryAcquire: Effect.succeed(O.some("origin-lease")),
-              tryAcquireFallback: Effect.succeed(O.some("origin-lease")),
+              tryAcquire: Effect.succeedSome("origin-lease"),
+              tryAcquireFallback: Effect.succeedSome("origin-lease"),
               release: (_: string) => Ref.update(releases, (count) => count + 1),
             };
             // Materialize the directories, then make the leases dir unwritable
@@ -1866,8 +2135,8 @@ describe("quality-scheduler", () => {
             Effect.gen(function* () {
               const releases = yield* Ref.make(0);
               const gate = {
-                tryAcquire: Effect.succeed(O.some("origin-lease")),
-                tryAcquireFallback: Effect.succeed(O.some("origin-lease")),
+                tryAcquire: Effect.succeedSome("origin-lease"),
+                tryAcquireFallback: Effect.succeedSome("origin-lease"),
                 release: (_: string) => Ref.update(releases, (count) => count + 1),
               };
               const result = yield* withQualityAdmission(request(), gate, Effect.succeed("ran"), fastConfig);

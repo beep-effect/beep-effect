@@ -152,10 +152,7 @@ const stripGsPrefix = (uri: string): string =>
   Str.startsWith("gs://")(uri) ? Str.replace(/^gs:\/\/[^/]+\//, "")(uri) : uri;
 
 const requireContent = (opt: O.Option<string>, key: string) =>
-  O.match(opt, {
-    onNone: () => Effect.fail(notFoundError("StorageObject", key)),
-    onSome: Effect.succeed,
-  });
+  Effect.fromOption(opt, () => notFoundError("StorageObject", key));
 
 const resolveBucket = (config: { storage: { bucket: O.Option<string> } }) =>
   O.getOrElse(config.storage.bucket, () => "local-bucket");
