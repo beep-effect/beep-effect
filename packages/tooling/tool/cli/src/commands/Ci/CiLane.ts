@@ -28,10 +28,14 @@ import { LABS_TURBO_EXCLUDE_FILTER, LABS_TURBO_SELECT_FILTER } from "../../inter
 import { resolveTurboCachePlan, turboCachePlanArgs } from "../../internal/cli/TurboCache.ts";
 import { isDoctestSourcePath } from "../../internal/jsdoc/DoctestSource.ts";
 import { runCaptured, runToExit } from "../../internal/process/StepExec.ts";
-import { QualityTaskStep, runQualityTaskStreamingStepGroup } from "../Quality/Tasks.ts";
+import {
+  QualityTaskStep,
+  runQualityTaskStreamingLaneGroup,
+  runQualityTaskStreamingStepGroup,
+} from "../Quality/Tasks.ts";
 import { CiCommandError } from "./Ci.errors.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
-import type { QualityTaskConfigurationError, QualityTaskGroupFailed } from "../Quality/Tasks.ts";
+import type { QualityTaskConfigurationError, QualityTaskGroupFailed, QualityTaskLaneInput } from "../Quality/Tasks.ts";
 
 const $I = $RepoCliId.create("commands/Ci/CiLane");
 
@@ -1886,6 +1890,39 @@ export const ciLocalStepsForTesting: {
 );
 
 /**
+ * Pair selected local-CI lane ids with their executable steps and known input digests.
+ *
+ * **Details**
+ *
+ * Local CI currently has no executor-issued Turbo task hash at planning time,
+ * so each lane records an explicitly absent digest rather than substituting a
+ * proof-tree hash.
+ *
+ * **Example** (Pair a local CI lane with its step)
+ *
+ * ```ts
+ * import { CiLocalStepPlan, ciLocalLaneInputsForTesting, ciLocalStepsForTesting } from "@beep/repo-cli/commands/Ci"
+ *
+ * const selection = ["check"] as const
+ * const plan = CiLocalStepPlan.make({ affected: false, base: "origin/main", onMainBranch: false })
+ * const inputs = ciLocalLaneInputsForTesting(selection, ciLocalStepsForTesting("/repo", selection, plan))
+ * console.log(inputs[0]?.[0]) // "check"
+ * ```
+ *
+ * @param selection - Stable selected local-CI lane ids.
+ * @param steps - Executable steps created for the same ordered selection.
+ * @returns Ordered lane inputs with absent executor digests.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const ciLocalLaneInputsForTesting: {
+  (selection: ReadonlyArray<CiLaneId>, steps: ReadonlyArray<QualityTaskStep>): ReadonlyArray<QualityTaskLaneInput>;
+  (steps: ReadonlyArray<QualityTaskStep>): (selection: ReadonlyArray<CiLaneId>) => ReadonlyArray<QualityTaskLaneInput>;
+} = dual(2, (selection: ReadonlyArray<CiLaneId>, steps: ReadonlyArray<QualityTaskStep>) =>
+  A.map(A.zip(selection, steps), ([laneId, step]) => [laneId, step, O.none()])
+);
+
+/**
  * Run the faithful local CI battery: every locally-runnable check.yml lane.
  *
  * **Example** (Configure a CI lane)
@@ -1925,7 +1962,7 @@ export const runCiLocal = Effect.fn("CiLane.runCiLocal")(function* (
   yield* Console.log("[ci] CI-only (not replayed): pr-size, dependency-review — see beep ci lane --list");
   yield* Console.log("[ci] approximate replays: secrets, security (hosted CI runs pinned images/actions)");
 
-  yield* runQualityTaskStreamingStepGroup("ci:local", steps);
+  yield* runQualityTaskStreamingLaneGroup("ci:local", ciLocalLaneInputsForTesting(selection, steps));
 });
 
 /**

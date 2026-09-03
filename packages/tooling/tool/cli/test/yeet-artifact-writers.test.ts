@@ -1,5 +1,8 @@
 import {
+  attemptJournalPath,
+  decodeYeetAttemptJournalEvent,
   defaultYeetRunOptions,
+  ensureAttemptTerminatedForTesting,
   GreptileSummary,
   PrCloseoutReport,
   PrCloseoutReportJson,
@@ -10,6 +13,7 @@ import {
   writePrCloseoutReportForTesting,
   writeRunVerdictForTesting,
   writeYeetStatusSnapshot,
+  YeetAttemptJournalEvent,
   YeetAttemptStarted,
   YeetMergeReady,
   YeetMergeReadyCriteria,
@@ -24,10 +28,11 @@ import { UUID } from "@beep/schema/String";
 import { provideScopedLayer } from "@beep/test-utils";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
-import { Effect, FileSystem, Layer, Path, Ref } from "effect";
+import { Effect, Exit, FileSystem, Layer, Path, pipe, Ref } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { describe, expect, it } from "vitest";
 import type { YeetExecutedStep, YeetVerdictExtrasForTesting } from "@beep/repo-cli/test/Yeet";
 
@@ -67,9 +72,12 @@ const attemptFor = (context: RepoRunContext): YeetAttemptStarted =>
     runId: "feat_merge-loop",
     branch: context.branch,
     base: context.base,
-    head: context.head,
+    head: "0123456789abcdef0123456789abcdef01234567",
     mode: "publish",
     startedAt: "2026-08-04T00:00:00.000Z",
+    resolvedHeadSha: O.some("0123456789abcdef0123456789abcdef01234567"),
+    diffFingerprint: O.some("abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcd"),
+    proofTier: O.some("full"),
   });
 
 const blockedMergeReady = YeetMergeReady.make({
@@ -110,6 +118,7 @@ describe("writeRunVerdict", () => {
   itEffect("writes a verdict file that decodes back through YeetVerdictJson", () =>
     withTempDirectory(
       Effect.fnUntraced(function* (tmpDir) {
+        const fs = yield* FileSystem.FileSystem;
         const context = contextForRoot(tmpDir);
         const plan = RepoRunPlan.make({ context, steps: A.empty() });
         const recorder = yield* Ref.make<ReadonlyArray<YeetExecutedStep>>(A.empty());
@@ -134,8 +143,26 @@ describe("writeRunVerdict", () => {
         expect(decoded.outcome).toBe("success");
         expect(decoded.mode).toBe("publish");
         expect(decoded.attemptId).toStrictEqual(O.some(attemptId));
+        expect(decoded.resolvedHeadSha).toStrictEqual(O.some("0123456789abcdef0123456789abcdef01234567"));
+        expect(decoded.diffFingerprint).toStrictEqual(
+          O.some("abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcd")
+        );
+        expect(decoded.proofTier).toStrictEqual(O.some("full"));
         // Threaded from the status snapshot the publish/monitor path read.
         expect(O.flatMap(decoded.mergeReady, (value) => value.failing)).toStrictEqual(O.some("threads-resolved"));
+
+        const journalText = yield* fs.readFileString(yield* attemptJournalPath(context));
+        const journalEvents = yield* Effect.forEach(
+          pipe(journalText, Str.split("\n"), A.filter(Str.isNonEmpty)),
+          decodeYeetAttemptJournalEvent
+        );
+        const terminal = pipe(
+          journalEvents,
+          A.findFirst(YeetAttemptJournalEvent.guards["attempt-terminated"]),
+          O.getOrThrow
+        );
+        expect(terminal.reason).toBe("success");
+        expect(terminal.verdict).toMatchObject({ _tag: "Some" });
       })
     )
   );
@@ -143,6 +170,7 @@ describe("writeRunVerdict", () => {
   itEffect("omits merge readiness from the artifact when no status snapshot was read", () =>
     withTempDirectory(
       Effect.fnUntraced(function* (tmpDir) {
+        const fs = yield* FileSystem.FileSystem;
         const context = contextForRoot(tmpDir);
         const plan = RepoRunPlan.make({ context, steps: A.empty() });
         const recorder = yield* Ref.make<ReadonlyArray<YeetExecutedStep>>(A.empty());
@@ -155,8 +183,8 @@ describe("writeRunVerdict", () => {
           0,
           recorder,
           extras,
-          "success",
-          "yeet verify succeeded.",
+          "failure",
+          "yeet verify failed.",
           O.none()
         );
 
@@ -165,6 +193,39 @@ describe("writeRunVerdict", () => {
 
         const decoded = yield* YeetVerdictJson.decode(text);
         expect(decoded.mergeReady).toStrictEqual(O.none());
+        const journalText = yield* fs.readFileString(yield* attemptJournalPath(context));
+        const events = yield* Effect.forEach(
+          pipe(journalText, Str.split("\n"), A.filter(Str.isNonEmpty)),
+          decodeYeetAttemptJournalEvent
+        );
+        expect(
+          pipe(events, A.findFirst(YeetAttemptJournalEvent.guards["attempt-terminated"]), O.getOrThrow).reason
+        ).toBe("failure");
+      })
+    )
+  );
+
+  itEffect("writes one interruption terminal when execution exits before a verdict", () =>
+    withTempDirectory(
+      Effect.fnUntraced(function* (tmpDir) {
+        const fs = yield* FileSystem.FileSystem;
+        const context = contextForRoot(tmpDir);
+        const attempt = attemptFor(context);
+        const terminalWritten = yield* Ref.make(false);
+
+        yield* ensureAttemptTerminatedForTesting(context, attempt, terminalWritten, Exit.interrupt());
+        yield* ensureAttemptTerminatedForTesting(context, attempt, terminalWritten, Exit.interrupt());
+
+        const journalText = yield* fs.readFileString(yield* attemptJournalPath(context));
+        const events = yield* Effect.forEach(
+          pipe(journalText, Str.split("\n"), A.filter(Str.isNonEmpty)),
+          decodeYeetAttemptJournalEvent
+        );
+        const terminals = A.filter(events, YeetAttemptJournalEvent.guards["attempt-terminated"]);
+        expect(terminals).toHaveLength(1);
+        expect(terminals[0]?.reason).toBe("interrupted");
+        expect(terminals[0]?.verdict).toStrictEqual(O.none());
+        expect(terminals[0]?.proofTier).toStrictEqual(O.some("full"));
       })
     )
   );

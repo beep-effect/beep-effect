@@ -15,7 +15,8 @@
 
 import { randomUUID } from "node:crypto";
 import { $RepoCliId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { UUID } from "@beep/schema/String";
 import { Clock, Console, Duration, Effect, FileSystem, Number as N, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import { constant, dual, flow } from "effect/Function";
@@ -64,6 +65,7 @@ export class AdmissionJournalAdmitted extends S.Class<AdmissionJournalAdmitted>(
     originKey: S.String,
     enqueuedAtMillis: S.Finite,
     admittedAtMillis: S.Finite,
+    attemptId: UUID.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   },
   $I.annote("AdmissionJournalAdmitted", {
     description: "Durable transition recorded when a queued ticket becomes an active admission lease.",
@@ -92,9 +94,79 @@ export class AdmissionJournalReleased extends S.Class<AdmissionJournalReleased>(
     pid: S.Finite,
     releasedAtMillis: S.Finite,
     memoryPeakBytes: S.optionalKey(S.Finite),
+    attemptId: UUID.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   },
   $I.annote("AdmissionJournalReleased", {
     description: "Durable transition recorded when an active admission lease is released.",
+  })
+) {}
+
+/**
+ * Why a dead scheduler lease was evicted from capacity accounting.
+ *
+ * **Example** (Recognize an owner death)
+ *
+ * ```ts
+ * import { AdmissionLeaseEvictionReason } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(AdmissionLeaseEvictionReason.is["owner-dead-or-reused"]("owner-dead-or-reused")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const AdmissionLeaseEvictionReason = LiteralKit(["owner-dead-or-reused"]).pipe(
+  $I.annoteSchema("AdmissionLeaseEvictionReason", {
+    description: "Reason a dead admission lease was evicted from scheduler capacity accounting.",
+  })
+);
+
+/**
+ * Reason a dead admission lease was evicted from scheduler capacity accounting.
+ *
+ * **Example** (Name an eviction reason)
+ *
+ * ```ts
+ * import type { AdmissionLeaseEvictionReason } from "@beep/repo-cli/test/RepoRun"
+ *
+ * const reason: AdmissionLeaseEvictionReason = "owner-dead-or-reused"
+ * console.log(reason) // "owner-dead-or-reused"
+ * ```
+ *
+ * @see {@link AdmissionLeaseEvictionReason} for the runtime schema and literal helpers.
+ * @category models
+ * @since 0.0.0
+ */
+export type AdmissionLeaseEvictionReason = typeof AdmissionLeaseEvictionReason.Type;
+
+/**
+ * Durable transition recorded after the scheduler reaps a verified dead lease.
+ *
+ * **Example** (Reference an eviction transition)
+ *
+ * ```ts
+ * import { AdmissionJournalLeaseEvicted } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(typeof AdmissionJournalLeaseEvicted) // "function"
+ * ```
+ *
+ * @category domain-events
+ * @since 0.0.0
+ */
+export class AdmissionJournalLeaseEvicted extends S.Class<AdmissionJournalLeaseEvicted>(
+  $I`AdmissionJournalLeaseEvicted`
+)(
+  {
+    schemaVersion: S.Literal("yeet-admission-journal/v1"),
+    _tag: S.Literal("admission-lease-evicted"),
+    nonce: S.String,
+    pid: S.Finite,
+    attemptId: UUID.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    evictedAtMillis: S.Finite,
+    reason: AdmissionLeaseEvictionReason,
+  },
+  $I.annote("AdmissionJournalLeaseEvicted", {
+    description: "Durable transition recorded after the scheduler reaps a verified dead admission lease.",
   })
 ) {}
 
@@ -112,7 +184,11 @@ export class AdmissionJournalReleased extends S.Class<AdmissionJournalReleased>(
  * @category schemas
  * @since 0.0.0
  */
-export const AdmissionJournalEvent = S.Union([AdmissionJournalAdmitted, AdmissionJournalReleased]).pipe(
+export const AdmissionJournalEvent = S.Union([
+  AdmissionJournalAdmitted,
+  AdmissionJournalReleased,
+  AdmissionJournalLeaseEvicted,
+]).pipe(
   S.toTaggedUnion("_tag"),
   $I.annoteSchema("AdmissionJournalEvent", {
     description: "Schema-decoded transition stored in the machine-wide admission journal.",

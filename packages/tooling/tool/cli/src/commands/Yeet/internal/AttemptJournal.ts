@@ -6,24 +6,31 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { UUID } from "@beep/schema/String";
-import { Console, Effect, FileSystem, Path, pipe } from "effect";
+import { Console, DateTime, Effect, FileSystem, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import { constant, dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { runArtifactPathForContext } from "./ArtifactPaths.ts";
+import { YeetProofTier } from "./Planner.ts";
 import { YeetVerdict } from "./Verdict.ts";
 import type * as SchemaAST from "effect/SchemaAST";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/AttemptJournal");
 const JOURNAL_FILE_NAME = "attempts.ndjson";
-const RETAINED_ATTEMPTS = 50;
+const RETAINED_ROWS = 50;
 const textEncoder = new TextEncoder();
+
+const attemptInputFactFields = {
+  resolvedHeadSha: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  diffFingerprint: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  proofTier: YeetProofTier.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+};
 
 /**
  * A durable marker written immediately before a Yeet attempt executes.
@@ -50,6 +57,7 @@ export class YeetAttemptStarted extends S.Class<YeetAttemptStarted>($I`YeetAttem
     head: S.String,
     mode: S.String,
     startedAt: S.String,
+    ...attemptInputFactFields,
   },
   $I.annote("YeetAttemptStarted", {
     description: "A durable marker written immediately before a Yeet attempt executes.",
@@ -57,7 +65,12 @@ export class YeetAttemptStarted extends S.Class<YeetAttemptStarted>($I`YeetAttem
 ) {}
 
 /**
- * A durable terminal marker embedding the exact verdict written for an attempt.
+ * Legacy terminal marker embedding the exact verdict written for an attempt.
+ *
+ * **Details**
+ *
+ * Current writers emit {@link YeetAttemptTerminated}; this variant remains in
+ * the union so journals written before guaranteed interruption handling decode.
  *
  * **Example** (Use YeetAttemptFinished)
  *
@@ -77,9 +90,109 @@ export class YeetAttemptFinished extends S.Class<YeetAttemptFinished>($I`YeetAtt
     attemptId: UUID,
     recordedAt: S.String,
     verdict: YeetVerdict,
+    ...attemptInputFactFields,
   },
   $I.annote("YeetAttemptFinished", {
-    description: "A durable terminal marker embedding the exact verdict written for an attempt.",
+    description: "Legacy terminal marker retained for decoding compatibility with prior attempt journals.",
+  })
+) {}
+
+/**
+ * Terminal reason retained for every completed or interrupted Yeet attempt.
+ *
+ * **Example** (Recognize an interruption)
+ *
+ * ```ts
+ * import { YeetAttemptTerminationReason } from "@beep/repo-cli/commands/Yeet/internal/AttemptJournal"
+ *
+ * console.log(YeetAttemptTerminationReason.is.interrupted("interrupted")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const YeetAttemptTerminationReason = LiteralKit(["success", "failure", "interrupted"]).pipe(
+  $I.annoteSchema("YeetAttemptTerminationReason", {
+    description: "Terminal reason retained for a completed or interrupted Yeet attempt.",
+  })
+);
+
+/**
+ * Terminal reason retained for a completed or interrupted Yeet attempt.
+ *
+ * **Example** (Name a terminal reason)
+ *
+ * ```ts
+ * import type { YeetAttemptTerminationReason } from "@beep/repo-cli/commands/Yeet/internal/AttemptJournal"
+ *
+ * const reason: YeetAttemptTerminationReason = "interrupted"
+ * console.log(reason) // "interrupted"
+ * ```
+ *
+ * @see {@link YeetAttemptTerminationReason} for the runtime schema and literal helpers.
+ * @category models
+ * @since 0.0.0
+ */
+export type YeetAttemptTerminationReason = typeof YeetAttemptTerminationReason.Type;
+
+/**
+ * Guaranteed terminal marker for a Yeet attempt, including interrupts.
+ *
+ * **Details**
+ *
+ * Successful and failed attempts carry their verdict; an interruption can
+ * terminate before a complete verdict exists and therefore leaves it absent.
+ *
+ * **Example** (Reference a terminal attempt row)
+ *
+ * ```ts
+ * import { YeetAttemptTerminated } from "@beep/repo-cli/commands/Yeet/internal/AttemptJournal"
+ *
+ * console.log(typeof YeetAttemptTerminated) // "function"
+ * ```
+ *
+ * @category domain-events
+ * @since 0.0.0
+ */
+export class YeetAttemptTerminated extends S.Class<YeetAttemptTerminated>($I`YeetAttemptTerminated`)(
+  {
+    schemaVersion: S.Literal("yeet-attempt-journal/v1"),
+    _tag: S.Literal("attempt-terminated"),
+    attemptId: UUID,
+    recordedAt: S.String,
+    reason: YeetAttemptTerminationReason,
+    verdict: YeetVerdict.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    ...attemptInputFactFields,
+  },
+  $I.annote("YeetAttemptTerminated", {
+    description: "Guaranteed terminal marker for a Yeet attempt, including process interruption.",
+  })
+) {}
+
+/**
+ * Receipt proving that bounded journal retention evicted older rows.
+ *
+ * **Example** (Reference a compaction receipt)
+ *
+ * ```ts
+ * import { YeetAttemptJournalCompacted } from "@beep/repo-cli/commands/Yeet/internal/AttemptJournal"
+ *
+ * console.log(typeof YeetAttemptJournalCompacted) // "function"
+ * ```
+ *
+ * @category domain-events
+ * @since 0.0.0
+ */
+export class YeetAttemptJournalCompacted extends S.Class<YeetAttemptJournalCompacted>($I`YeetAttemptJournalCompacted`)(
+  {
+    schemaVersion: S.Literal("yeet-attempt-journal/v1"),
+    _tag: S.Literal("journal-compacted"),
+    recordedAt: S.String,
+    evictedCount: NonNegativeInt,
+    oldestEvictedRecordedAt: S.String,
+  },
+  $I.annote("YeetAttemptJournalCompacted", {
+    description: "Receipt proving that bounded Yeet attempt-journal retention evicted older rows.",
   })
 ) {}
 
@@ -97,7 +210,12 @@ export class YeetAttemptFinished extends S.Class<YeetAttemptFinished>($I`YeetAtt
  * @category models
  * @since 0.0.0
  */
-export const YeetAttemptJournalEvent = S.Union([YeetAttemptStarted, YeetAttemptFinished]).pipe(
+export const YeetAttemptJournalEvent = S.Union([
+  YeetAttemptStarted,
+  YeetAttemptFinished,
+  YeetAttemptTerminated,
+  YeetAttemptJournalCompacted,
+]).pipe(
   S.toTaggedUnion("_tag"),
   $I.annoteSchema("YeetAttemptJournalEvent", {
     description: "Schema-decoded event stored in a branch-scoped Yeet attempt journal.",
@@ -166,7 +284,7 @@ const hasTornTrailingRecord = (lines: ReadonlyArray<string>): Effect.Effect<bool
   pipe(
     A.last(lines),
     O.match({
-      onNone: () => Effect.succeed(false),
+      onNone: constant(Effect.succeed(false)),
       onSome: (line) =>
         decodeYeetAttemptJournalEvent(line).pipe(
           Effect.as(false),
@@ -174,6 +292,14 @@ const hasTornTrailingRecord = (lines: ReadonlyArray<string>): Effect.Effect<bool
         ),
     })
   );
+
+const eventRecordedAt = (event: YeetAttemptJournalEvent): string =>
+  YeetAttemptJournalEvent.match(event, {
+    "attempt-started": (started) => started.startedAt,
+    "attempt-finished": (finished) => finished.recordedAt,
+    "attempt-terminated": (terminated) => terminated.recordedAt,
+    "journal-compacted": (compacted) => compacted.recordedAt,
+  });
 
 const compactJournal = Effect.fn("YeetAttemptJournal.compact")(function* (
   journalPath: string
@@ -195,28 +321,48 @@ const compactJournal = Effect.fn("YeetAttemptJournal.compact")(function* (
       Effect.mapError(YeetCommandError.new(`Failed to decode Yeet attempt journal "${journalPath}".`))
     )
   );
-  const startIndexes = pipe(
-    A.zip(events, A.range(0, A.length(events) - 1)),
-    A.map(([event, index]) => (event._tag === "attempt-started" ? O.some(index) : O.none())),
-    A.getSomes
-  );
-  const firstRetainedIndex =
-    A.length(startIndexes) <= RETAINED_ATTEMPTS
-      ? 0
-      : pipe(
-          startIndexes,
-          A.takeRight(RETAINED_ATTEMPTS),
-          A.head,
-          O.getOrElse(() => 0)
-        );
-  if (!torn && firstRetainedIndex === 0) {
+  if (!torn && A.length(events) <= RETAINED_ROWS) {
     return;
   }
+  const requiresReceipt = A.length(events) > RETAINED_ROWS;
+  const attemptRows = pipe(
+    A.zip(events, lines),
+    A.filter(([event]) => event._tag !== "journal-compacted")
+  );
+  const retainedRows = requiresReceipt ? A.takeRight(attemptRows, RETAINED_ROWS - 1) : attemptRows;
+  const retainedLines = requiresReceipt ? A.map(retainedRows, ([, line]) => line) : lines;
+  const evictedCount = requiresReceipt ? A.length(events) - A.length(retainedRows) : 0;
+  const recordedAt = requiresReceipt ? yield* DateTime.now.pipe(Effect.map(DateTime.formatIso)) : Str.empty;
+  const receiptLines = requiresReceipt
+    ? A.of(
+        yield* encodeEvent(
+          YeetAttemptJournalCompacted.make({
+            schemaVersion: "yeet-attempt-journal/v1",
+            _tag: "journal-compacted",
+            recordedAt,
+            evictedCount: NonNegativeInt.make(evictedCount),
+            oldestEvictedRecordedAt: pipe(
+              A.appendAll(
+                A.filter(events, YeetAttemptJournalEvent.guards["journal-compacted"]),
+                A.dropRight(
+                  A.filter(events, (event) => event._tag !== "journal-compacted"),
+                  RETAINED_ROWS - 1
+                )
+              ),
+              A.sortWith(eventRecordedAt, Order.String),
+              A.head,
+              O.map(eventRecordedAt),
+              O.getOrElse(constant(recordedAt))
+            ),
+          })
+        ).pipe(Effect.mapError(YeetCommandError.new("Failed to encode Yeet attempt journal compaction receipt.")))
+      )
+    : A.empty<string>();
   yield* fs
     .writeFileString(
       journalPath,
       pipe(
-        A.drop(lines, firstRetainedIndex),
+        A.appendAll(retainedLines, receiptLines),
         A.map((line) => `${line}\n`),
         A.join(Str.empty)
       )
@@ -254,6 +400,8 @@ export const appendYeetAttemptJournalEvent = Effect.fn("YeetAttemptJournal.appen
   yield* fs
     .makeDirectory(path.dirname(journalPath), { recursive: true })
     .pipe(Effect.mapError(YeetCommandError.new(`Failed to create Yeet attempt journal directory.`)));
+  const journalExists = yield* fs.exists(journalPath).pipe(Effect.orElseSucceed(constant(false)));
+  yield* journalExists ? compactJournal(journalPath) : Effect.void;
   yield* Effect.scoped(
     Effect.gen(function* () {
       const file = yield* fs
