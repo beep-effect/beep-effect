@@ -1045,6 +1045,54 @@ describe("quality task adapter", () => {
       }).pipe(provideScopedLayer(PlatformLayer))
     ));
 
+  it("rebuilds an unscoped lane report from an unscoped artifact", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const tempDir = yield* fs.makeTempDirectory();
+        const artifactPath = path.join(tempDir, "unscoped-inner-lanes.ndjson");
+        const durableReport = yield* S.encodeEffect(S.fromJsonString(QualityTaskLaneRunReport))(
+          QualityTaskLaneRunReport.make({
+            schemaVersion: "quality-task-lane-run/v1",
+            parentLaneId: O.none(),
+            lanes: [
+              QualityTaskLaneRun.make({
+                id: "check",
+                label: "ci:check",
+                status: "passed",
+                inputDigest: O.none(),
+              }),
+            ],
+          })
+        );
+        yield* fs.writeFileString(artifactPath, `${durableReport}\n`);
+
+        yield* withEnvVarEffect(
+          QUALITY_TASK_LANE_RUN_ARTIFACT_PATH_ENV,
+          artifactPath,
+          withEnvVarEffect(
+            QUALITY_TASK_LANE_RUN_PARENT_ID_ENV,
+            undefined,
+            runQualityTaskStreamingLaneGroup("ci:local", [])
+          )
+        );
+
+        const emitted = pipe(
+          yield* TestConsole.logLines,
+          A.filter(isString),
+          A.findFirst(Str.startsWith(QUALITY_TASK_LANE_RUN_REPORT_PREFIX)),
+          O.getOrThrow
+        );
+        const emittedReport = yield* S.decodeEffect(S.fromJsonString(QualityTaskLaneRunReport))(
+          Str.slice(QUALITY_TASK_LANE_RUN_REPORT_PREFIX.length)(emitted)
+        );
+        expect(emittedReport.parentLaneId).toStrictEqual(O.none());
+        expect(A.map(emittedReport.lanes, (lane) => lane.id)).toEqual(["check"]);
+        yield* fs.remove(tempDir, { recursive: true, force: true });
+      }).pipe(provideScopedLayer(PlatformLayer))
+    ));
+
   it("falls back when a lane artifact is missing or belongs to another parent", () =>
     Effect.runPromise(
       Effect.gen(function* () {
