@@ -286,6 +286,12 @@ For an existing duplicate clone:
 When several agents (or an agent team) write into the **same** worktree
 concurrently, the working directory and index are shared mutable state. Rules:
 
+- **Cleanup is not gated.** Agents may `git stash drop` a stash entry they own, remove a
+  worktree, delete a local or remote branch, and create archive refs without operator
+  approval; the committed `.claude/settings.json` allows those and denies only the
+  working-tree destroyers (`git clean`, `git reset --hard`, `git checkout .`, `git stash
+  clear`, force pushes). Prefer `bun run beep worktree remove <name> --archive` so the
+  residue is preserved before removal.
 - **Never `git stash` in a shared multi-agent worktree.** Stash sweeps *every*
   writer's uncommitted work into one stash entry, silently pulling other
   lanes' in-flight edits out from under them; a later `stash pop` then
