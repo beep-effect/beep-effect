@@ -15,6 +15,7 @@ import * as S from "effect/Schema";
 import { FlightRecord, FlightRecordWriteEvent } from "./flight-record.ts";
 import { IngestEnumeration, IngestManifest } from "./ingest-manifest.ts";
 import { hashPublicTextSha256 } from "./privacy.ts";
+import { SessionLeaseReconciliation, SessionLeaseTransition } from "./session-lease.ts";
 import { combineOipTaints, weakestEvidenceTier } from "./telemetry-v2.ts";
 import type { AiMetricsAbsoluteDataRoot } from "./data-root.ts";
 import type { FlightRecordCompositionInput } from "./flight-record.ts";
@@ -42,6 +43,8 @@ export const TelemetryV2ArtifactKind = LiteralKit([
   "flight-record-event",
   "ingest-enumeration",
   "ingest-manifest",
+  "session-lease-transition",
+  "session-lease-reconciliation",
 ]).pipe(
   $I.annoteSchema("TelemetryV2ArtifactKind", {
     description: "Content-addressed artifact families written by the telemetry-v2 store.",
@@ -96,6 +99,8 @@ const TelemetryV2StoreOperation = LiteralKit([
   "encode-flight-record-event",
   "encode-ingest-enumeration",
   "encode-ingest-manifest",
+  "encode-session-lease-transition",
+  "encode-session-lease-reconciliation",
   "hash-artifact",
   "write-artifact",
   "validate-ingest-manifest",
@@ -217,6 +222,12 @@ export interface TelemetryV2StoreShape {
   readonly appendFlightRecordEvent: (
     event: FlightRecordWriteEvent
   ) => Effect.Effect<TelemetryV2ArtifactReceipt, TelemetryV2StoreError>;
+  readonly appendSessionLeaseReconciliation: (
+    reconciliation: SessionLeaseReconciliation
+  ) => Effect.Effect<TelemetryV2ArtifactReceipt, TelemetryV2StoreError>;
+  readonly appendSessionLeaseTransition: (
+    transition: SessionLeaseTransition
+  ) => Effect.Effect<TelemetryV2ArtifactReceipt, TelemetryV2StoreError>;
   readonly runIngest: <E, R>(
     enumeration: IngestEnumeration,
     afterEnumeration: (receipt: TelemetryV2ArtifactReceipt) => Effect.Effect<IngestManifest, E, R>
@@ -237,6 +248,8 @@ const artifactDirectory = (kind: TelemetryV2ArtifactKind): string =>
     "flight-record-event": () => "flight-record-events",
     "ingest-enumeration": () => "ingest-enumerations",
     "ingest-manifest": () => "ingest-manifests",
+    "session-lease-transition": () => "session-lease-transitions",
+    "session-lease-reconciliation": () => "session-lease-reconciliations",
   });
 
 const subjectEquals = (left: IngestSubject, right: IngestSubject): boolean =>
@@ -347,6 +360,28 @@ const makeTelemetryV2Store = Effect.fnUntraced(function* (dataRoot: AiMetricsAbs
     return TelemetryV2FlightRecordWriteResult.make({ receipt, record });
   });
 
+  const appendSessionLeaseTransition = Effect.fn("TelemetryV2Store.appendSessionLeaseTransition")(function* (
+    transition: SessionLeaseTransition
+  ) {
+    const json = yield* SessionLeaseTransition.encodeJsonEffect(transition).pipe(
+      Effect.mapError((cause) =>
+        storeFailure("encode-session-lease-transition", "Failed to encode a session-lease transition.", cause)
+      )
+    );
+    return yield* persistArtifact(TelemetryV2ArtifactKind.Enum["session-lease-transition"], json);
+  });
+
+  const appendSessionLeaseReconciliation = Effect.fn("TelemetryV2Store.appendSessionLeaseReconciliation")(function* (
+    reconciliation: SessionLeaseReconciliation
+  ) {
+    const json = yield* SessionLeaseReconciliation.encodeJsonEffect(reconciliation).pipe(
+      Effect.mapError((cause) =>
+        storeFailure("encode-session-lease-reconciliation", "Failed to encode a session-lease reconciliation.", cause)
+      )
+    );
+    return yield* persistArtifact(TelemetryV2ArtifactKind.Enum["session-lease-reconciliation"], json);
+  });
+
   const runIngest = Effect.fn("TelemetryV2Store.runIngest")(function* <E, R>(
     enumeration: IngestEnumeration,
     afterEnumeration: (receipt: TelemetryV2ArtifactReceipt) => Effect.Effect<IngestManifest, E, R>
@@ -379,6 +414,8 @@ const makeTelemetryV2Store = Effect.fnUntraced(function* (dataRoot: AiMetricsAbs
 
   const service: TelemetryV2StoreShape = {
     appendFlightRecordEvent,
+    appendSessionLeaseReconciliation,
+    appendSessionLeaseTransition,
     runIngest,
     writeFlightRecord,
   };
@@ -416,6 +453,8 @@ export class TelemetryV2Store extends Context.Service<TelemetryV2Store, Telemetr
    * console.log(TelemetryV2Store.layer(root))
    * ```
    *
+   * @param dataRoot - Validated absolute root beneath which telemetry-v2 artifacts are written.
+   * @returns A layer that builds the path-confined telemetry-v2 store.
    * @category layers
    * @since 0.0.0
    */

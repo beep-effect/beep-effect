@@ -11,10 +11,11 @@ import {
 import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
-import { Effect, FileSystem, Path } from "effect";
+import { Context, Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
+import type { TelemetryV2StoreShape } from "@beep/repo-ai-metrics";
 
 const fixtureDir = NodeURL.fileURLToPath(new URL("./fixtures/telemetry-v2/", import.meta.url));
 const fixturePath = (name: string): string => `${fixtureDir}${name}`;
@@ -30,12 +31,13 @@ const readManifest = Effect.flatMap(readFixture("ingest-manifest.json"), IngestM
 const readFlightRecord = Effect.flatMap(readFixture("flight-record.json"), FlightRecord.decodeJsonEffect);
 
 const withTempStore = Effect.fnUntraced(function* <A2, E, R>(
-  use: (dataRoot: string) => Effect.Effect<A2, E, R | TelemetryV2Store>
+  use: (dataRoot: string, store: TelemetryV2StoreShape) => Effect.Effect<A2, E, R>
 ) {
   const fs = yield* FileSystem.FileSystem;
   const dataRoot = yield* fs.makeTempDirectoryScoped({ prefix: "beep-telemetry-v2-store-" });
   const absoluteDataRoot = yield* requireAbsoluteAiMetricsDataRoot(dataRoot);
-  return yield* use(dataRoot).pipe(Effect.provide(TelemetryV2Store.layer(absoluteDataRoot)));
+  const context = yield* Layer.build(TelemetryV2Store.layer(absoluteDataRoot));
+  return yield* use(dataRoot, Context.get(context, TelemetryV2Store));
 });
 
 const compositionInputFrom = (record: FlightRecord): FlightRecordCompositionInput =>
@@ -64,11 +66,10 @@ layer(NodeServices.layer)("telemetry-v2 store", (it) => {
 
   it.effect("commits the enumeration before source reading and the linked manifest afterward", () =>
     Effect.scoped(
-      withTempStore((dataRoot) =>
+      withTempStore((dataRoot, store) =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
-          const store = yield* TelemetryV2Store;
           const enumeration = yield* readEnumeration;
           const manifest = yield* readManifest;
           const manifestsDirectory = path.join(dataRoot, "telemetry-v2/ingest-manifests");
@@ -98,11 +99,10 @@ layer(NodeServices.layer)("telemetry-v2 store", (it) => {
 
   it.effect("leaves the initial denominator durable when source reading fails", () =>
     Effect.scoped(
-      withTempStore((dataRoot) =>
+      withTempStore((dataRoot, store) =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
-          const store = yield* TelemetryV2Store;
           const enumeration = yield* readEnumeration;
 
           const failure = yield* store
@@ -119,11 +119,10 @@ layer(NodeServices.layer)("telemetry-v2 store", (it) => {
 
   it.effect("refuses a final manifest whose subject set differs from the persisted denominator", () =>
     Effect.scoped(
-      withTempStore((dataRoot) =>
+      withTempStore((dataRoot, store) =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
-          const store = yield* TelemetryV2Store;
           const enumeration = yield* readEnumeration;
           const manifest = yield* readManifest;
           const encodedManifest = yield* IngestManifest.encodeEffect(manifest);
@@ -146,11 +145,10 @@ layer(NodeServices.layer)("telemetry-v2 store", (it) => {
 
   it.effect("derives record-wide evidence fields and idempotently writes the accepted event", () =>
     Effect.scoped(
-      withTempStore((dataRoot) =>
+      withTempStore((dataRoot, store) =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
-          const store = yield* TelemetryV2Store;
           const sourceRecord = yield* readFlightRecord;
           const input = compositionInputFrom(sourceRecord);
 
@@ -165,7 +163,7 @@ layer(NodeServices.layer)("telemetry-v2 store", (it) => {
           expect(first.record.evidenceTier).toBe(sourceRecord.evidenceTier);
           expect(first.record.oipTaint).toBe(sourceRecord.oipTaint);
           expect(persisted.status).toBe("accepted");
-          if (persisted.status !== "accepted") return yield* Effect.dieMessage("expected an accepted event");
+          if (persisted.status !== "accepted") return yield* Effect.die(new Error("expected an accepted event"));
           expect(persisted.record.recordId).toBe(sourceRecord.recordId);
           expect(yield* fs.readDirectory(path.join(dataRoot, "telemetry-v2/flight-record-events"))).toHaveLength(1);
         })
@@ -175,12 +173,11 @@ layer(NodeServices.layer)("telemetry-v2 store", (it) => {
 
   it.effect("durably records a content-free invalid candidate event", () =>
     Effect.scoped(
-      withTempStore((dataRoot) =>
+      withTempStore((dataRoot, store) =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
-          const store = yield* TelemetryV2Store;
-          const invalidEvent = yield* S.decodeUnknownEffect(FlightRecordWriteEvent)({
+          const invalidEvent = yield* S.decodeEffect(FlightRecordWriteEvent)({
             status: "invalid",
             candidateDigest: otherHash,
             violations: ["schema-invalid"],

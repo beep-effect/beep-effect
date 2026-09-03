@@ -208,6 +208,15 @@ export * from "./scorecard.ts";
  */
 export * from "./sequence-break.ts";
 /**
+ * Telemetry-v2 active-session leases, exact wait transitions, expiry
+ * candidates, and source-gated tombstone reconciliation. Examples live on the
+ * owning declarations in `./session-lease.ts`.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./session-lease.ts";
+/**
  * Shell rendering helpers used to build the operator command strings printed by
  * install plans. Examples live on the owning declarations in `./shell.ts`.
  *

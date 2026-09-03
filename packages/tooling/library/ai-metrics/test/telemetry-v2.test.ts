@@ -16,6 +16,7 @@ import { NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
 import { Effect, FileSystem, Result } from "effect";
 import * as A from "effect/Array";
+import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
@@ -161,7 +162,7 @@ layer(NodeServices.layer)("telemetry-v2 contracts", (it) => {
       )
     );
     const encoded = Result.getOrThrow(IngestManifest.encodeResult(decoded));
-    const firstDisposition = A.headNonEmpty(encoded.dispositions);
+    const firstDisposition = O.getOrThrow(A.head(encoded.dispositions));
 
     expect("reason" in firstDisposition).toBe(false);
   });
