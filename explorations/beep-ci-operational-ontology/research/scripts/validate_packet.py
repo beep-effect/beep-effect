@@ -301,7 +301,11 @@ if _args.s6:
             continue
         if row.get("predicates") != scanned:
             blocker(f"{cid}: coverage predicate set disagrees with the mechanical gate scan")
-        ratified_count = sum(1 for predicate in scanned if registry[predicate].get("status") == "ratified")
+        ratified_count = sum(
+            1
+            for predicate in scanned
+            if registry.get(predicate, {}).get("status") == "ratified"
+        )
         if row.get("predicate_count") != len(scanned) or row.get("ratified_count") != ratified_count:
             blocker(f"{cid}: coverage counts drifted from registry statuses")
         if bool(row.get("full_predicate_set_ratified")) != (ratified_count == len(scanned)):
@@ -617,7 +621,16 @@ if _args.s5:
     ledger = yaml.safe_load((S4D / "LEDGER.yaml").read_text())
     cons = yaml.safe_load((S5 / "CONSTRAINTS.yaml").read_text())
     index = yaml.safe_load((BC / "runs/orun-2026-08-29T08:20:55Z.index.yaml").read_text())
+    # Ratifications resolve from the live governance dir AND the archived
+    # per-run governance dirs: auditor run 2 relocated run-1's rat-001..031
+    # to extraction/s4/archives/ (the v13 scanner has no archive exemption;
+    # see the relocation notes in the run-1 rotation README), so the S5
+    # joins bound to those records must follow the relocation.
     rats = {f.stem for f in (BC / "governance/ratifications").glob("rat-*.yaml")}
+    rats |= {
+        f.stem
+        for f in (S4D / "archives").glob("*/orun-*.governance/ratifications/rat-*.yaml")
+    }
     con_ids = {c["id"] for c in cons.get("constraints", [])}
     ledger_ids = {e["id"] for e in ledger}
     # constraints reference real ledger entries
@@ -687,9 +700,14 @@ if _args.s5:
         terms = {t.get("term"): t for t in term_list}
         accepted_terms = set(terms)
         # REQUIRED set derives from the ratified proposals + accepted dispositions,
-        # never from what the seats submitted (PR #905 review)
+        # never from what the seats submitted (PR #905 review). The proposals
+        # S5 consumed are RUN 1's survivors, which auditor run 2 relocated to
+        # extraction/s4/archives/ — the live work/proposals dir belongs to
+        # later runs and must not leak into the S5-era derivation (this gate
+        # already pins run 1's index above for the same reason).
         required = set()
-        for f in sorted((BC / "work/proposals").glob("otp-*.yaml")):
+        s5_proposals = S4D / "archives/beep-ci-ops/orun-2026-08-29T08:20:55Z.work/proposals"
+        for f in sorted(s5_proposals.glob("otp-*.yaml")):
             if "review" not in f.name:
                 required.add(yaml.safe_load(f.read_text())["term"]["local_name"])
         allowed_extra = set()
