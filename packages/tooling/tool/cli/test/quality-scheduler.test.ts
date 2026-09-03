@@ -42,6 +42,9 @@ import * as Str from "effect/String";
 import * as Struct from "effect/Struct";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeAdmissionJournalEventJsonSync = S.decodeSync(S.fromJsonString(AdmissionJournalEvent));
+const encodeAdmissionJournalEventJsonSync = S.encodeSync(S.fromJsonString(AdmissionJournalEvent));
+
 const PlatformLayer = NodeChildProcessSpawner.layer.pipe(
   Layer.provideMerge(Layer.mergeAll(NodeFileSystem.layer, NodePath.layer))
 );
@@ -699,13 +702,13 @@ describe("quality-scheduler", () => {
     const EventArbitrary = S.toArbitrary(AdmissionJournalEvent)(fc);
     fc.assert(
       fc.property(EventArbitrary, (event) => {
-        const encoded = S.encodeSync(S.fromJsonString(AdmissionJournalEvent))(event);
-        const decoded = S.decodeSync(S.fromJsonString(AdmissionJournalEvent))(encoded);
+        const encoded = encodeAdmissionJournalEventJsonSync(event);
+        const decoded = decodeAdmissionJournalEventJsonSync(encoded);
         expect(decoded._tag).toBe(event._tag);
         expect(decoded.nonce).toBe(event.nonce);
         // JSON drops the sign of -0, so the codec law is encode-stability
         // rather than Object.is identity on numeric fields.
-        expect(S.encodeSync(S.fromJsonString(AdmissionJournalEvent))(decoded)).toBe(encoded);
+        expect(encodeAdmissionJournalEventJsonSync(decoded)).toBe(encoded);
       }),
       fcRuns(32)
     );

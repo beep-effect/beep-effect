@@ -9,6 +9,8 @@ import * as Str from "effect/String";
 import { describe, expect, it } from "vitest";
 import type { GlobOptions, Pattern } from "@beep/utils/Glob";
 
+const isGlobError = S.is(GlobError);
+
 type TestEffect<A, E = never> = Effect.Effect<A, E, never>;
 
 const runTest = <A, E>(effect: TestEffect<A, E>): Promise<A> => Effect.runPromise(effect);
@@ -330,7 +332,7 @@ describe("@beep/utils Glob", () => {
           })
         ).pipe(Effect.flip);
 
-        expect(S.is(GlobError)(error)).toBe(true);
+        expect(isGlobError(error)).toBe(true);
       })
     ));
 

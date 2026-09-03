@@ -6,6 +6,8 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { BackpressureConfig, withBackpressure } from "../../Cluster/BackpressureHandler.ts";
 import { ChunkingProgressEvent } from "../../Contract/ProgressStreaming.ts";
+const decodeChunkingProgressEvent = S.decodeEffect(ChunkingProgressEvent);
+const isPosInt = S.is(PosInt);
 
 const decodeConfig = S.decodeUnknownResult(BackpressureConfig);
 
@@ -16,7 +18,7 @@ describe("BackpressureConfig", () => {
     expect(config.maxQueuedEvents).toBe(1000);
     expect(config.samplingThreshold).toBe(0.8);
     expect(config.samplingRate).toBe(0.1);
-    expect(S.is(PosInt)(config.maxQueuedEvents)).toBe(true);
+    expect(isPosInt(config.maxQueuedEvents)).toBe(true);
     expect(UnitInterval.is(config.samplingThreshold)).toBe(true);
     expect(UnitInterval.is(config.samplingRate)).toBe(true);
   });
@@ -33,7 +35,7 @@ describe("BackpressureConfig", () => {
   it.effect(
     "drains the producer through the scoped queue",
     Effect.fnUntraced(function* () {
-      const event = yield* S.decodeEffect(ChunkingProgressEvent)({
+      const event = yield* decodeChunkingProgressEvent({
         _tag: "chunking_progress",
         eventId: "00000000-0000-4000-8000-000000000001",
         runId: "doc-0123456789ab",

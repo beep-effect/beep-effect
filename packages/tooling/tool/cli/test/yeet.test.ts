@@ -126,6 +126,17 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { FastCheck as fc } from "effect/testing";
 
+const decodePrCloseoutReport = S.decodeEffect(PrCloseoutReport);
+const decodeRepoStepRunResult = S.decodeEffect(RepoStepRunResult);
+const decodeQualityIssueIndexJson = S.decodeEffect(S.fromJsonString(QualityIssueIndex));
+const decodeYeetPublishIntent = S.decodeEffect(YeetPublishIntent);
+const decodeYeetStatusRemote = S.decodeEffect(YeetStatusRemote);
+const decodeYeetVerdict = S.decodeEffect(YeetVerdict);
+const decodeYeetVerdictSync = S.decodeSync(YeetVerdict);
+const encodeYeetStatusRemote = S.encodeEffect(YeetStatusRemote);
+const encodeYeetVerdict = S.encodeEffect(YeetVerdict);
+const encodeYeetVerdictSync = S.encodeSync(YeetVerdict);
+
 const PlatformLayer = NodeChildProcessSpawner.layer.pipe(
   Layer.provideMerge(Layer.mergeAll(NodeCrypto.layer, NodeFileSystem.layer, NodePath.layer))
 );
@@ -1543,7 +1554,7 @@ describe("yeet quality issue index", () => {
           );
 
           const emittedText = yield* fs.readFileString(emitPath);
-          const index = yield* S.decodeEffect(S.fromJsonString(QualityIssueIndex))(emittedText);
+          const index = yield* decodeQualityIssueIndexJson(emittedText);
 
           expect(index.issues).toHaveLength(1);
           expect(index.issues[0]).toMatchObject({
@@ -1595,7 +1606,7 @@ describe("yeet quality issue index", () => {
           expect(yield* fs.exists(envelopePath)).toBe(false);
 
           const emittedText = yield* fs.readFileString(emitPath);
-          const index = yield* S.decodeEffect(S.fromJsonString(QualityIssueIndex))(emittedText);
+          const index = yield* decodeQualityIssueIndexJson(emittedText);
           expect(index.issues).toEqual([]);
         })
       )
@@ -2059,8 +2070,8 @@ describe("yeet status helpers", () => {
           unresolvedReviewThreadCount: 1,
           unresolvedReviewThreads: ["PRRT_1 (src/example.ts)"],
         });
-        const encoded = yield* S.encodeEffect(YeetStatusRemote)(remote);
-        const decoded = yield* S.decodeEffect(YeetStatusRemote)(encoded);
+        const encoded = yield* encodeYeetStatusRemote(remote);
+        const decoded = yield* decodeYeetStatusRemote(encoded);
 
         expect(decoded.unresolvedReviewThreadCount).toBe(1);
         expect(decoded.rerunFailedCommand).toBe(yeetRerunJobListingCommand(123));
@@ -2155,7 +2166,7 @@ describe("yeet attempt journal", () => {
   it("schema-decodes repository step timing fields", () =>
     Effect.runPromise(
       Effect.gen(function* () {
-        const result = yield* S.decodeEffect(RepoStepRunResult)({
+        const result = yield* decodeRepoStepRunResult({
           stepId: "feedback:check",
           commandText: "bun run check",
           exitCode: 0,
@@ -2284,8 +2295,8 @@ describe("yeet publish scope helpers", () => {
   it("decodes both publish intent states", () =>
     Effect.runPromise(
       Effect.gen(function* () {
-        const staged = yield* S.decodeEffect(YeetPublishIntent)({ kind: "staged", paths: ["src/a.ts"] });
-        const existing = yield* S.decodeEffect(YeetPublishIntent)({
+        const staged = yield* decodeYeetPublishIntent({ kind: "staged", paths: ["src/a.ts"] });
+        const existing = yield* decodeYeetPublishIntent({
           commitSha: "abc123",
           kind: "existing-commit",
           paths: ["src/a.ts"],
@@ -2574,8 +2585,8 @@ describe("yeet publish scope helpers", () => {
         );
 
         expect(verdict.pushed).toBe(true);
-        const encoded = yield* S.encodeEffect(YeetVerdict)(verdict);
-        const decoded = yield* S.decodeEffect(YeetVerdict)(encoded);
+        const encoded = yield* encodeYeetVerdict(verdict);
+        const decoded = yield* decodeYeetVerdict(encoded);
         expect(decoded.lanes[0]?.status).toBe("passed");
         expect(decoded.schemaVersion).toBe("yeet-verdict/v2");
       })
@@ -2627,8 +2638,8 @@ describe("yeet publish scope helpers", () => {
     const VerdictArbitrary = S.toArbitrary(YeetVerdict)(fc);
     fc.assert(
       fc.property(VerdictArbitrary, (verdict) => {
-        const encoded = S.encodeSync(YeetVerdict)(verdict);
-        const decoded = S.decodeSync(YeetVerdict)(encoded);
+        const encoded = encodeYeetVerdictSync(verdict);
+        const decoded = decodeYeetVerdictSync(encoded);
         expect(decoded.schemaVersion).toBe("yeet-verdict/v2");
         expect(decoded.lanes.length).toBe(verdict.lanes.length);
         expect(decoded.outcome).toBe(verdict.outcome);
@@ -3750,7 +3761,7 @@ describe("yeet publish scope helpers", () => {
   it("decodes closeout reports without writeActions for backwards compatibility", () =>
     Effect.runPromise(
       Effect.gen(function* () {
-        const decoded = yield* S.decodeEffect(PrCloseoutReport)({
+        const decoded = yield* decodePrCloseoutReport({
           actionableReviewThreadCount: 0,
           botCommentCount: 0,
           greptile: {},

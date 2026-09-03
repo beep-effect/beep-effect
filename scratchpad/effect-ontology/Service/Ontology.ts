@@ -70,6 +70,9 @@ import { RdfBuilder } from "./Rdf.ts";
 const namedNodeValue = (value: IRI | NamedNode): string => (P.isString(value) ? value : value.value);
 
 import type { StorageServiceMethods } from "./Storage.ts";
+const decodeUnknownClassDefinition = S.decodeUnknownEffect(ClassDefinition);
+const decodeUnknownOntologyContext = S.decodeUnknownEffect(OntologyContext);
+const decodeUnknownPropertyDefinition = S.decodeUnknownEffect(PropertyDefinition);
 import { StorageService } from "./Storage.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/Ontology");
@@ -531,7 +534,7 @@ export const parseOntologyFromStore: {
           const label = O.orElse(getFirst(labels, id), () => getFirst(prefLabels, id));
           if (O.isSome(label)) {
             finalClasses.push(
-              yield* S.decodeUnknownEffect(ClassDefinition)({
+              yield* decodeUnknownClassDefinition({
                 id: IRI.make(id),
                 label: label.value,
                 comment: getFirst(comments, id),
@@ -562,7 +565,7 @@ export const parseOntologyFromStore: {
         const label = O.orElse(getFirst(labels, id), () => getFirst(prefLabels, id));
         if (O.isSome(label)) {
           finalProperties.push(
-            yield* S.decodeUnknownEffect(PropertyDefinition)({
+            yield* decodeUnknownPropertyDefinition({
               id: IRI.make(id),
               label: label.value,
               comment: getFirst(comments, id),
@@ -680,7 +683,7 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
     const getBm25Index = yield* Effect.cachedWithTTL(cacheTtl)(
       Effect.gen(function* () {
         const { classes, hierarchy, properties, propertyHierarchy } = yield* getOntology;
-        const ontology = yield* S.decodeUnknownEffect(OntologyContext)({
+        const ontology = yield* decodeUnknownOntologyContext({
           classes: Chunk.toReadonlyArray(classes),
           hierarchy,
           propertyHierarchy,
@@ -694,7 +697,7 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
     const getSemanticIndex = yield* Effect.cachedWithTTL(cacheTtl)(
       Effect.gen(function* () {
         const { classes, hierarchy, properties, propertyHierarchy } = yield* getOntology;
-        const ontology = yield* S.decodeUnknownEffect(OntologyContext)({
+        const ontology = yield* decodeUnknownOntologyContext({
           classes: Chunk.toReadonlyArray(classes),
           hierarchy,
           propertyHierarchy,

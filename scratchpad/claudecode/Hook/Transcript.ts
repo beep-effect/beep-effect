@@ -25,6 +25,7 @@ import { TranscriptReadError } from "../Errors.ts";
 
 // ---------------------------------------------------------------------------
 // Helpers
+const decodeJsonValue = S.decodeEffect(JsonValue);
 // ---------------------------------------------------------------------------
 
 const $I = $ScratchpadId.create("claudecode/Hook/Transcript");
@@ -81,6 +82,6 @@ export const readTranscript = (
       .pipe(Effect.mapError((cause) => TranscriptReadError.make({ path, cause })));
     const lines = pipe(content, Str.split("\n"), A.map(Str.trim), A.filter(Str.isNonEmpty));
     return yield* Effect.forEach(lines, (line) =>
-      S.decodeEffect(JsonValue)(line).pipe(Effect.mapError((cause) => TranscriptReadError.make({ path, cause })))
+      decodeJsonValue(line).pipe(Effect.mapError((cause) => TranscriptReadError.make({ path, cause })))
     );
   });

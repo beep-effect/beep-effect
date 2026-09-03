@@ -24,6 +24,17 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeGroundedExtractionFromCandidate = S.decodeEffect(GroundedExtractionFromCandidate);
+const decodeGroundedExtractionsFromCandidates = S.decodeEffect(GroundedExtractionsFromCandidates);
+const decodeMatchedTextFromScored = S.decodeEffect(MatchedTextFromScored);
+const decodeSpanFromMatch = S.decodeEffect(SpanFromMatch);
+const encodeGroundedExtractionFromCandidate = S.encodeEffect(GroundedExtractionFromCandidate);
+const encodeMatchedTextFromScored = S.encodeEffect(MatchedTextFromScored);
+const encodeSpanFromMatch = S.encodeEffect(SpanFromMatch);
+const ExactMatch = AlignedMatchFromMatchedText("match_exact");
+const decodeExactMatch = S.decodeEffect(ExactMatch);
+const encodeExactMatch = S.encodeEffect(ExactMatch);
+
 const ExtractionCandidateArbitrary = S.toArbitrary(ExtractionCandidate)(fc);
 
 const sourceOf = (sourceText: string) => AlignmentSource.make({ sourceText });
@@ -344,7 +355,7 @@ describe("alignCandidate", () => {
 describe("SpanFromMatch", () => {
   it.effect("decodes a matched slice into a half-open span", () =>
     Effect.gen(function* () {
-      const span = yield* S.decodeEffect(SpanFromMatch)([4, "Lovelace"]);
+      const span = yield* decodeSpanFromMatch([4, "Lovelace"]);
 
       expect(span.start).toBe(4);
       expect(span.end).toBe(12);
@@ -356,7 +367,7 @@ describe("SpanFromMatch", () => {
     "encodes a span back to its matched slice through the current alignment source",
     Effect.fnUntraced(function* () {
       const span = Contract.Span.make({ end: NonNegativeInt.make(12), start: NonNegativeInt.make(4) });
-      const match = yield* S.encodeEffect(SpanFromMatch)(span).pipe(
+      const match = yield* encodeSpanFromMatch(span).pipe(
         Effect.provideService(CurrentAlignmentSource, sourceOf("Ada Lovelace wrote notes."))
       );
 
@@ -368,7 +379,7 @@ describe("SpanFromMatch", () => {
     "fails closed when a span exceeds the current alignment source",
     Effect.fnUntraced(function* () {
       const span = Contract.Span.make({ end: NonNegativeInt.make(99), start: NonNegativeInt.make(4) });
-      const error = yield* S.encodeEffect(SpanFromMatch)(span).pipe(
+      const error = yield* encodeSpanFromMatch(span).pipe(
         Effect.provideService(CurrentAlignmentSource, sourceOf("Ada")),
         Effect.flip
       );
@@ -381,15 +392,15 @@ describe("SpanFromMatch", () => {
 describe("MatchedTextFromScored", () => {
   it.effect("drops the similarity score on decode", () =>
     Effect.gen(function* () {
-      expect(yield* S.decodeEffect(MatchedTextFromScored)([0, "Acme.", 0.8])).toStrictEqual([0, "Acme."]);
+      expect(yield* decodeMatchedTextFromScored([0, "Acme.", 0.8])).toStrictEqual([0, "Acme."]);
     })
   );
 
   it.effect(
     "forbids encoding because scores are not recoverable",
     Effect.fnUntraced(function* () {
-      const match = yield* S.decodeEffect(MatchedTextFromScored)([0, "Acme.", 0.8]);
-      const error = yield* S.encodeEffect(MatchedTextFromScored)(match).pipe(Effect.flip);
+      const match = yield* decodeMatchedTextFromScored([0, "Acme.", 0.8]);
+      const error = yield* encodeMatchedTextFromScored(match).pipe(Effect.flip);
 
       expect(error._tag).toBe("SchemaError");
     })
@@ -399,11 +410,10 @@ describe("MatchedTextFromScored", () => {
 describe("AlignedMatchFromMatchedText", () => {
   it.effect("tags and untags a matched slice", () =>
     Effect.gen(function* () {
-      const ExactMatch = AlignedMatchFromMatchedText("match_exact");
-      const aligned = yield* S.decodeEffect(ExactMatch)([0, "Ada"]);
+      const aligned = yield* decodeExactMatch([0, "Ada"]);
 
       expect(aligned).toStrictEqual(["match_exact", 0, "Ada"]);
-      expect(yield* S.encodeEffect(ExactMatch)(aligned)).toStrictEqual([0, "Ada"]);
+      expect(yield* encodeExactMatch(aligned)).toStrictEqual([0, "Ada"]);
     })
   );
 });
@@ -412,7 +422,7 @@ describe("GroundedExtractionFromCandidate", () => {
   it.effect(
     "grounds a candidate against the current alignment source",
     Effect.fnUntraced(function* () {
-      const grounded = yield* S.decodeEffect(GroundedExtractionFromCandidate)({
+      const grounded = yield* decodeGroundedExtractionFromCandidate({
         label: "person",
         text: "Ada Lovelace",
       }).pipe(Effect.provideService(CurrentAlignmentSource, sourceOf("Ada Lovelace wrote notes.")));
@@ -428,7 +438,7 @@ describe("GroundedExtractionFromCandidate", () => {
   it.effect(
     "grounds unmatched candidates as unaligned instead of failing",
     Effect.fnUntraced(function* () {
-      const grounded = yield* S.decodeEffect(GroundedExtractionFromCandidate)({
+      const grounded = yield* decodeGroundedExtractionFromCandidate({
         label: "place",
         text: "Paris",
       }).pipe(Effect.provideService(CurrentAlignmentSource, sourceOf("Ada Lovelace wrote notes.")));
@@ -441,11 +451,11 @@ describe("GroundedExtractionFromCandidate", () => {
   it.effect(
     "encodes a grounded extraction back to its validated candidate",
     Effect.fnUntraced(function* () {
-      const grounded = yield* S.decodeEffect(GroundedExtractionFromCandidate)({
+      const grounded = yield* decodeGroundedExtractionFromCandidate({
         label: "person",
         text: "Ada Lovelace",
       }).pipe(Effect.provideService(CurrentAlignmentSource, sourceOf("Ada Lovelace wrote notes.")));
-      const candidate = yield* S.encodeEffect(GroundedExtractionFromCandidate)(grounded);
+      const candidate = yield* encodeGroundedExtractionFromCandidate(grounded);
 
       expect(candidate.label).toBe("person");
       expect(candidate.text).toBe("Ada Lovelace");
@@ -457,7 +467,7 @@ describe("GroundedExtractionsFromCandidates", () => {
   it.effect(
     "grounds a batch and honors the resolved extraction cap",
     Effect.fnUntraced(function* () {
-      const grounded = yield* S.decodeEffect(GroundedExtractionsFromCandidates)([
+      const grounded = yield* decodeGroundedExtractionsFromCandidates([
         { label: "person", text: "Ada Lovelace" },
         { label: "topic", text: "notes" },
       ]).pipe(

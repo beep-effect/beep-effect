@@ -80,6 +80,9 @@ import type * as HttpClient from "effect/unstable/http/HttpClient";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { ProcessFilesOptions } from "../Files.schemas.ts";
 
+const decodeSha256HexFromBytes = S.decodeEffect(Sha256HexFromBytes);
+const decodeTikaServerEngineConfig = S.decodeEffect(TikaServerEngineConfig);
+
 type FilesProcessRequirements =
   | FileSystem.FileSystem
   | Path.Path
@@ -246,7 +249,7 @@ const makeProcessEngineResolver = Effect.fn("Files.makeProcessEngineResolver")(f
           })
         ).pipe(Effect.provide(runtimeContext))
       : tikaUrl !== undefined
-        ? S.decodeEffect(TikaServerEngineConfig)({ baseUrl: tikaUrl }).pipe(
+        ? decodeTikaServerEngineConfig({ baseUrl: tikaUrl }).pipe(
             Effect.mapError((cause) =>
               FilesCommandError.make({ cause, exitCode: 2, message: `Invalid --tika-url "${tikaUrl}"` })
             ),
@@ -291,7 +294,7 @@ const processHashBytes = Effect.fn("Files.processHashBytes")(function* (
   bytes: Uint8Array,
   label: string
 ): Effect.fn.Return<string, FilesCommandError, Crypto.Crypto> {
-  return yield* S.decodeEffect(Sha256HexFromBytes)(bytes).pipe(
+  return yield* decodeSha256HexFromBytes(bytes).pipe(
     FilesCommandError.mapError(`Failed to compute SHA-256 for ${label}`)
   );
 });

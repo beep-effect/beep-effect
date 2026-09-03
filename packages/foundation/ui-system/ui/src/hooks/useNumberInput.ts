@@ -50,6 +50,7 @@ const numberInputTextPatternSource = "(-|\\+)?(0|[1-9]\\d*)?(\\.)?(\\d+)?";
 const numberInputTextPattern = new RegExp(`^${numberInputTextPatternSource}$`);
 
 type NumberInputEventKey = typeof NumberInputEventKey.Type;
+const isNumberInputEventKey = S.is(NumberInputEventKey);
 
 type EventKeyMap = Partial<Record<NumberInputEventKey, () => void>>;
 
@@ -156,7 +157,7 @@ const normalizeEventKey = (event: KeyboardLikeEvent): O.Option<NumberInputEventK
     event.keyCode >= 37 && event.keyCode <= 40 && !pipe(event.key, Str.startsWith("Arrow"))
       ? `Arrow${event.key}`
       : event.key,
-    O.liftPredicate(S.is(NumberInputEventKey))
+    O.liftPredicate(isNumberInputEventKey)
   );
 
 const isVoidHandler = (value: unknown): value is () => void => P.isFunction(value);

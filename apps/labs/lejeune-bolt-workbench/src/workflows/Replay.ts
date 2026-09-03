@@ -30,6 +30,8 @@ import { verifyFrozenProviderRecording } from "@/workflows/ProviderRecording";
 import { evaluateRules } from "@/workflows/Rules";
 import type { ProviderRecording, RetentionAuthorization } from "@/domain/Bundle";
 
+const encodeImmutableDemoBundleFromJsonString = S.encodeEffect(ImmutableDemoBundleFromJsonString);
+
 const $I = $LejeuneBoltWorkbenchId.create("workflows/Replay");
 
 /**
@@ -66,7 +68,7 @@ class ReplayError extends S.TaggedError<ReplayError>($I`ReplayError`)(
 ) {}
 
 const hashBundle = Effect.fnUntraced(function* (bundle: ImmutableDemoBundle) {
-  const encoded = yield* S.encodeEffect(ImmutableDemoBundleFromJsonString)(bundle).pipe(
+  const encoded = yield* encodeImmutableDemoBundleFromJsonString(bundle).pipe(
     Effect.mapError((cause) =>
       ReplayError.make({
         cause,

@@ -285,6 +285,7 @@ const NormalizedFixtureChecks = S.makeFilterGroup(
 );
 
 const NormalizedFixtureSchema = NormalizedFixtureFields.mapFields(identity).check(NormalizedFixtureChecks);
+const decodeUnknownNormalizedFixtureSchemaType = S.decodeUnknownEffect(S.toType(NormalizedFixtureSchema));
 
 export class NormalizedFixture extends S.Class<NormalizedFixture>($I`NormalizedFixture`)(
   NormalizedFixtureSchema,
@@ -295,9 +296,7 @@ export class NormalizedFixture extends S.Class<NormalizedFixture>($I`NormalizedF
 
 /** Validate already-decoded nested values and construct one normalized fixture. @category constructors @since 0.0.0 */
 export const makeNormalizedFixture = (input: unknown) =>
-  S.decodeUnknownEffect(S.toType(NormalizedFixtureSchema))(input).pipe(
-    Effect.map((fields) => NormalizedFixture.make(fields))
-  );
+  decodeUnknownNormalizedFixtureSchemaType(input).pipe(Effect.map((fields) => NormalizedFixture.make(fields)));
 
 const canonicalSourceDocument = (input: {
   readonly format: typeof SourceFormat.Type;
@@ -1398,6 +1397,7 @@ const PublishedReplayAggregateCheck = S.makeFilter(publishedReplayAggregateIsClo
 
 const PublishedReplayAggregateModel =
   PublishedReplayAggregateFields.mapFields(identity).check(PublishedReplayAggregateCheck);
+const decodeUnknownPublishedReplayAggregateModelType = S.decodeUnknownEffect(S.toType(PublishedReplayAggregateModel));
 
 /** Decoded readback proof for every persisted publication document promoted by the builder. */
 class PublishedReplayAggregate extends S.Class<PublishedReplayAggregate>($I`PublishedReplayAggregate`)(
@@ -1422,7 +1422,7 @@ class PublishedReplayAggregate extends S.Class<PublishedReplayAggregate>($I`Publ
  * @since 0.0.0
  */
 export const makePublishedReplayAggregate = (input: unknown) =>
-  S.decodeUnknownEffect(S.toType(PublishedReplayAggregateModel))(input).pipe(
+  decodeUnknownPublishedReplayAggregateModelType(input).pipe(
     Effect.map((fields) => PublishedReplayAggregate.make(fields))
   );
 

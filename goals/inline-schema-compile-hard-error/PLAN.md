@@ -2,15 +2,15 @@
 
 ## Status
 
-Status: `pending`
+Status: `in-progress`
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Research | pending | Reproduce and classify the 2,931-finding opening baseline. | Every finding has an ownership family and migration shape; drift is explained. |
-| P1 Implement | pending | Hoist compilers family by family and update generators before outputs. | All governed findings are removed without semantic changes. |
-| P2 Verify | pending | Promote the rule to error and run local proof. | Rule tests, affected package checks, docgen, and canonical verification are green. |
+| P0 Research | complete | Reproduce and classify the 2,931-finding opening baseline. | Every finding has an ownership family and migration shape; drift is explained. |
+| P1 Implement | complete | Hoist compilers family by family and update generators before outputs. | All governed findings are removed without semantic changes. |
+| P2 Verify | in-progress | Promote the rule to error and run local proof. | Rule tests, affected package checks, docgen, and canonical verification are green. |
 | P3 Yeet: PR to mergeable | pending | Publish through Yeet and close checks and review threads. | `bun run beep yeet monitor` reports `merge-ready: yes`. |
 | P4 Close | pending | Write the reflection and flip packet state. | Packet status and evidence are synchronized; reflection validates. |
 

@@ -39,6 +39,11 @@ import {
 import { composerDocumentFromEditorState } from "@/chat/ui/ComposerPolicy";
 import type { Atom } from "effect/unstable/reactivity";
 
+const decodeYouTubeWatchRequestResult = S.decodeResult(YouTubeWatchRequest);
+const decodeComposerFeaturesSync = S.decodeSync(ComposerFeatures);
+const encodeSerializedEditorState = S.encodeEffect(SerializedEditorState);
+const encodeComposerFeaturesSync = S.encodeSync(ComposerFeatures);
+
 function SeedEditor({ label, text }: { readonly label: string; readonly text: string }) {
   const [editor] = useLexicalComposerContext();
   return (
@@ -1064,7 +1069,7 @@ describe("editor contract hardening", { concurrent: false }, () => {
     );
     expect(
       Result.isFailure(
-        S.decodeResult(YouTubeWatchRequest)({
+        decodeYouTubeWatchRequestResult({
           url: "https://evil.example/?v=M7lc1UVf-VE",
         })
       )
@@ -1074,8 +1079,8 @@ describe("editor contract hardening", { concurrent: false }, () => {
   it("round-trips generated composer feature configurations through the production schema", () => {
     fc.assert(
       fc.property(S.toArbitrary(ComposerFeatures)(fc), (features) => {
-        const encoded = S.encodeSync(ComposerFeatures)(features);
-        expect(S.decodeSync(ComposerFeatures)(encoded)).toEqual(features);
+        const encoded = encodeComposerFeaturesSync(features);
+        expect(decodeComposerFeaturesSync(encoded)).toEqual(features);
         expect(["enter", "modifierEnter"]).toContain(features.sendOn);
       })
     );
@@ -1220,8 +1225,8 @@ describe("editor contract hardening", { concurrent: false }, () => {
         });
       const first = yield* documentToEditorState(document("first persisted value"));
       const second = yield* documentToEditorState(document("second persisted value"));
-      const firstWire = yield* S.encodeEffect(SerializedEditorState)(first);
-      const secondWire = yield* S.encodeEffect(SerializedEditorState)(second);
+      const firstWire = yield* encodeSerializedEditorState(first);
+      const secondWire = yield* encodeSerializedEditorState(second);
       const view = render(<EditorWireComposer input={firstWire} />);
       const editable = () => view.container.querySelector<HTMLElement>("[contenteditable='true']");
 

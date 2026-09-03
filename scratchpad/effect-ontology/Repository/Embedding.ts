@@ -201,6 +201,7 @@ export class HybridSearchOptions extends S.Class<HybridSearchOptions>($I`HybridS
     description: "Bounded result count and fusion weights for hybrid vector and text search.",
   })
 ) {}
+const decodeUnknownEmbeddingSqlRowArray = S.decodeUnknownEffect(S.Array(EmbeddingSqlRow));
 
 /**
  * Constructor input accepted by {@link HybridSearchOptions}.
@@ -210,6 +211,7 @@ export class HybridSearchOptions extends S.Class<HybridSearchOptions>($I`HybridS
  * @since 0.0.0
  */
 export type HybridSearchOptionsInput = (typeof HybridSearchOptions)["~type.make.in"];
+const decodeUnknownEmbeddingVectorSqlRowArray = S.decodeUnknownEffect(S.Array(EmbeddingVectorSqlRow));
 
 const PgVector = S.Finite.pipe(
   S.Array,
@@ -218,18 +220,21 @@ const PgVector = S.Finite.pipe(
     description: "PostgreSQL pgvector text decoded to a finite numeric vector.",
   })
 );
+const decodeUnknownSimilaritySqlRowArray = S.decodeUnknownEffect(S.Array(SimilaritySqlRow));
 
 const EmbeddingSqlRow = Embeddings.pipe(
   $I.annoteSchema("EmbeddingSqlRow", {
     description: "Decoded row returned by raw SQL queries against the embeddings table.",
   })
 );
+const decodeUnknownHybridSearchSqlRowArray = S.decodeUnknownEffect(S.Array(HybridSearchSqlRow));
 
 const EmbeddingVectorSqlRow = S.Struct({ embedding: PgVector }).pipe(
   $I.annoteSchema("EmbeddingVectorSqlRow", {
     description: "Decoded pgvector projection returned by an embedding lookup.",
   })
 );
+const decodeUnknownTextSearchSqlRowArray = S.decodeUnknownEffect(S.Array(TextSearchSqlRow));
 
 const SimilaritySqlRow = SimilarityResult.pipe(
   $I.annoteSchema("SimilaritySqlRow", {
@@ -242,6 +247,7 @@ const HybridSearchSqlRow = HybridSearchResult.pipe(
     description: "Decoded reciprocal-rank-fusion projection returned by PostgreSQL.",
   })
 );
+const decodeUnknownEmbeddingTypeCountSqlRowArray = S.decodeUnknownEffect(S.Array(EmbeddingTypeCountSqlRow));
 
 const TextSearchSqlRow = S.Struct({
   entityId: S.String,
@@ -251,6 +257,7 @@ const TextSearchSqlRow = S.Struct({
     description: "Decoded full-text ranking projection returned by PostgreSQL.",
   })
 );
+const decodeUnknownModelCountSqlRowArray = S.decodeUnknownEffect(S.Array(ModelCountSqlRow));
 
 const CountSqlRow = S.Struct({ count: S.Int }).pipe(
   $I.annoteSchema("CountSqlRow", {
@@ -289,21 +296,21 @@ const OneExistsSqlRow = S.Tuple([ExistsSqlRow]).pipe(SchemaUtils.withCodecStatic
 const normalizeDecodedRows = normalizeDrizzleError("decodeRows");
 const normalizeExecution = normalizeDrizzleError("execute");
 const decodeEmbeddingSqlRows = (rows: unknown) =>
-  normalizeDecodedRows(S.decodeUnknownEffect(S.Array(EmbeddingSqlRow))(rows));
+  normalizeDecodedRows(decodeUnknownEmbeddingSqlRowArray(rows));
 const decodeOneEmbeddingSqlRow = (rows: unknown) => normalizeDecodedRows(OneEmbeddingSqlRow.decodeUnknownEffect(rows));
 const decodeEmbeddingVectorSqlRows = (rows: unknown) =>
-  normalizeDecodedRows(S.decodeUnknownEffect(S.Array(EmbeddingVectorSqlRow))(rows));
+  normalizeDecodedRows(decodeUnknownEmbeddingVectorSqlRowArray(rows));
 const decodeSimilaritySqlRows = (rows: unknown) =>
-  normalizeDecodedRows(S.decodeUnknownEffect(S.Array(SimilaritySqlRow))(rows));
+  normalizeDecodedRows(decodeUnknownSimilaritySqlRowArray(rows));
 const decodeHybridSearchSqlRows = (rows: unknown) =>
-  normalizeDecodedRows(S.decodeUnknownEffect(S.Array(HybridSearchSqlRow))(rows));
+  normalizeDecodedRows(decodeUnknownHybridSearchSqlRowArray(rows));
 const decodeTextSearchSqlRows = (rows: unknown) =>
-  normalizeDecodedRows(S.decodeUnknownEffect(S.Array(TextSearchSqlRow))(rows));
+  normalizeDecodedRows(decodeUnknownTextSearchSqlRowArray(rows));
 const decodeOneCountSqlRow = (rows: unknown) => normalizeDecodedRows(OneCountSqlRow.decodeUnknownEffect(rows));
 const decodeEmbeddingTypeCountSqlRows = (rows: unknown) =>
-  normalizeDecodedRows(S.decodeUnknownEffect(S.Array(EmbeddingTypeCountSqlRow))(rows));
+  normalizeDecodedRows(decodeUnknownEmbeddingTypeCountSqlRowArray(rows));
 const decodeModelCountSqlRows = (rows: unknown) =>
-  normalizeDecodedRows(S.decodeUnknownEffect(S.Array(ModelCountSqlRow))(rows));
+  normalizeDecodedRows(decodeUnknownModelCountSqlRowArray(rows));
 const decodeOneExistsSqlRow = (rows: unknown) => normalizeDecodedRows(OneExistsSqlRow.decodeUnknownEffect(rows));
 
 // =============================================================================

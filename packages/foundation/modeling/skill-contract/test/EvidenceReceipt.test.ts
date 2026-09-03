@@ -10,6 +10,12 @@ const emptySha256 = Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b
 const predicateType = EvidencePredicateType.make("https://beep.dev/evidence/artifact-exists/v1");
 const Predicate = S.Struct({ checkedPaths: S.Array(S.String), passed: S.Boolean });
 const Receipt = EvidenceReceipt(predicateType, Predicate);
+const decodeReceipt = S.decodeEffect(Receipt);
+const decodeReceiptResult = S.decodeResult(Receipt);
+const decodeUnknownReceipt = S.decodeUnknownEffect(Receipt);
+const encodeUnknownReceipt = S.encodeUnknownEffect(Receipt);
+const encodeUnknownReceiptResult = S.encodeUnknownResult(Receipt);
+const isReceipt = S.is(Receipt);
 
 describe("@beep/skill-contract EvidenceReceipt", () => {
   it.effect("round-trips an unsigned digest-bound typed receipt with a pinned predicate identity", () =>
@@ -24,8 +30,8 @@ describe("@beep/skill-contract EvidenceReceipt", () => {
           }),
         ],
       });
-      const encoded = yield* S.encodeUnknownEffect(Receipt)(receipt);
-      const decoded = yield* S.decodeEffect(Receipt)(encoded);
+      const encoded = yield* encodeUnknownReceipt(receipt);
+      const decoded = yield* decodeReceipt(encoded);
 
       expect(encoded).toEqual({
         predicate: { checkedPaths: ["frames/drag.png"], passed: true },
@@ -58,12 +64,12 @@ describe("@beep/skill-contract EvidenceReceipt", () => {
         predicateType,
         subject: [{ digest: { sha256: "not-a-digest" }, name: "frames/ghost.png" }],
       };
-      const unrelatedType = yield* S.decodeUnknownEffect(Receipt)(unrelatedTypeInput).pipe(Effect.flip);
-      const emptySubject = yield* S.decodeUnknownEffect(Receipt)(emptySubjectInput).pipe(Effect.flip);
-      const malformedDigest = yield* S.decodeUnknownEffect(Receipt)(malformedDigestInput).pipe(Effect.flip);
+      const unrelatedType = yield* decodeUnknownReceipt(unrelatedTypeInput).pipe(Effect.flip);
+      const emptySubject = yield* decodeUnknownReceipt(emptySubjectInput).pipe(Effect.flip);
+      const malformedDigest = yield* decodeUnknownReceipt(malformedDigestInput).pipe(Effect.flip);
 
       expect(unrelatedType.message).toContain(predicateType);
-      expect(S.is(Receipt)(emptySubjectInput)).toBe(false);
+      expect(isReceipt(emptySubjectInput)).toBe(false);
       expect(emptySubject.message).toContain('["subject"]');
       expect(malformedDigest.message).toContain("SHA-256 digest must be exactly 64 characters long");
     })
@@ -80,8 +86,8 @@ describe("@beep/skill-contract EvidenceReceipt", () => {
   it("round-trips schema-derived arbitrary receipts", () =>
     fc.assert(
       fc.property(S.toArbitrary(Receipt)(fc), (candidate) => {
-        const encoded = Result.getOrThrow(S.encodeUnknownResult(Receipt)(candidate));
-        const decoded = Result.getOrThrow(S.decodeResult(Receipt)(encoded));
+        const encoded = Result.getOrThrow(encodeUnknownReceiptResult(candidate));
+        const decoded = Result.getOrThrow(decodeReceiptResult(encoded));
 
         expect(S.toEquivalence(Receipt)(decoded, candidate)).toBe(true);
       }),

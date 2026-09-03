@@ -57,6 +57,8 @@ import {
 } from "./TsconfigSync.schemas.ts";
 import type { WorkspaceDeps } from "@beep/repo-utils";
 
+const decodeJsonObjectJson = S.decodeEffect(S.fromJsonString(JsonObject));
+
 const toPosixPath = normalizePath;
 
 const uniqueSorted: (values: ReadonlyArray<string>) => ReadonlyArray<string> = flow(
@@ -86,7 +88,7 @@ const parseJsonc = Effect.fn(function* <Schema extends S.Top>(content: string, f
 });
 
 const parseJsonObject = Effect.fn(function* (content: string, filePath: string) {
-  return yield* S.decodeEffect(S.fromJsonString(JsonObject))(content).pipe(
+  return yield* decodeJsonObjectJson(content).pipe(
     Effect.mapError(DomainError.newCause(`Failed to parse JSON in "${filePath}"`))
   );
 });

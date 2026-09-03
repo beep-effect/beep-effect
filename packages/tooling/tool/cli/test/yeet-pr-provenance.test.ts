@@ -21,6 +21,11 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { FastCheck as fc } from "effect/testing";
 
+const decodePublicPrProvenanceJson = S.decodeEffect(S.fromJsonString(PublicPrProvenance));
+const decodePublicPrProvenanceResult = S.decodeResult(PublicPrProvenance);
+const encodePublicPrProvenanceResult = S.encodeResult(PublicPrProvenance);
+const isPrProvenanceBranch = S.is(PrProvenanceBranch);
+
 const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 
 const withTempDirectory = <Result, Error, Requirements>(
@@ -34,16 +39,13 @@ const withTempDirectory = <Result, Error, Requirements>(
 
 describe("Yeet PR provenance", () => {
   it("round-trips schema-derived public provenance values", () => {
-    const encode = S.encodeResult(PublicPrProvenance);
-    const decode = S.decodeResult(PublicPrProvenance);
-
     fc.assert(
       fc.property(S.toArbitrary(PublicPrProvenance)(fc), (value) => {
-        const encoded = encode(value);
+        const encoded = encodePublicPrProvenanceResult(value);
         if (Result.isFailure(encoded)) {
           return assert.fail("Expected schema-derived public provenance to encode");
         }
-        const decoded = decode(encoded.success);
+        const decoded = decodePublicPrProvenanceResult(encoded.success);
         if (Result.isFailure(decoded)) {
           return assert.fail("Expected encoded public provenance to decode");
         }
@@ -54,10 +56,8 @@ describe("Yeet PR provenance", () => {
   });
 
   it("accepts Git-valid hostile branches and rejects invalid ref names", () => {
-    const isBranch = S.is(PrProvenanceBranch);
-
-    expect(isBranch("feat/evil`payload-->still-branch")).toBe(true);
-    expect(isBranch("feat/a]b")).toBe(true);
+    expect(isPrProvenanceBranch("feat/evil`payload-->still-branch")).toBe(true);
+    expect(isPrProvenanceBranch("feat/a]b")).toBe(true);
     for (const invalid of [
       "",
       "-option",
@@ -72,7 +72,7 @@ describe("Yeet PR provenance", () => {
       "feature/@{upstream}",
       "@",
     ]) {
-      expect(isBranch(invalid), invalid).toBe(false);
+      expect(isPrProvenanceBranch(invalid), invalid).toBe(false);
     }
   });
 
@@ -261,7 +261,7 @@ describe("Yeet PR provenance", () => {
         O.getOrThrow
       );
       assert.deepStrictEqual(
-        yield* S.decodeEffect(S.fromJsonString(PublicPrProvenance))(encoded),
+        yield* decodePublicPrProvenanceJson(encoded),
         PublicPrProvenance.make({
           schemaVersion: 1,
           branch: "fix/yeet-footer-redact-home",
@@ -333,7 +333,7 @@ describe("Yeet PR provenance", () => {
         O.getOrThrow
       );
       assert.deepStrictEqual(
-        yield* S.decodeEffect(S.fromJsonString(PublicPrProvenance))(encoded),
+        yield* decodePublicPrProvenanceJson(encoded),
         PublicPrProvenance.make({
           schemaVersion: 1,
           branch: "feat/yeet-pr-provenance",
@@ -374,7 +374,7 @@ describe("Yeet PR provenance", () => {
       assert.strictEqual(A.length(Str.split("-->")(footer)), 2);
       assert.isTrue(Str.includes("\\u003e")(encoded));
       assert.deepStrictEqual(
-        yield* S.decodeEffect(S.fromJsonString(PublicPrProvenance))(encoded),
+        yield* decodePublicPrProvenanceJson(encoded),
         PublicPrProvenance.make({ schemaVersion: 1, branch, harness: "unknown" })
       );
     })

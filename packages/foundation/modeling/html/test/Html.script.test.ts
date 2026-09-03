@@ -18,6 +18,12 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeHtmlMimeTypeResult = S.decodeResult(HtmlMimeType);
+const decodeScriptDataBlockMimeTypeResult = S.decodeResult(ScriptDataBlockMimeType);
+const decodeScriptStateResult = S.decodeResult(ScriptState);
+const encodeScriptStateResult = S.encodeResult(ScriptState);
+const isInvalidScriptType = S.is(InvalidScriptType);
+
 const ScriptStateArbitrary = S.toArbitrary(ScriptState)(fc);
 
 describe("HTML script semantic states", () => {
@@ -70,13 +76,13 @@ describe("HTML script semantic states", () => {
       Result.getOrThrow(resolveScriptState(Script.make({ content: "", type: O.some("SpeculationRules") })))
     ).toStrictEqual(ScriptState.cases.speculationRules.make({}));
 
-    const jsonMime = Result.getOrThrow(S.decodeResult(ScriptDataBlockMimeType)("application/ld+json"));
+    const jsonMime = Result.getOrThrow(decodeScriptDataBlockMimeTypeResult("application/ld+json"));
     expect(
       Result.getOrThrow(resolveScriptState(Script.make({ content: "", type: O.some("application/ld+json") })))
     ).toStrictEqual(ScriptState.cases.dataBlock.make({ mimeType: jsonMime }));
 
     const parameterizedJavaScriptMime = Result.getOrThrow(
-      S.decodeResult(ScriptDataBlockMimeType)("text/javascript; charset=utf-8")
+      decodeScriptDataBlockMimeTypeResult("text/javascript; charset=utf-8")
     );
     expect(
       Result.getOrThrow(
@@ -89,7 +95,7 @@ describe("HTML script semantic states", () => {
     const invalidScript = Script.make({ content: "", type: O.some("beep") });
     expect(
       Result.match(resolveScriptState(invalidScript), {
-        onFailure: (error) => ({ isInvalid: S.is(InvalidScriptType)(error), tag: error._tag, value: error.value }),
+        onFailure: (error) => ({ isInvalid: isInvalidScriptType(error), tag: error._tag, value: error.value }),
         onSuccess: () => ({ isInvalid: false, tag: "unexpected", value: "" }),
       })
     ).toStrictEqual({ isInvalid: true, tag: "InvalidScriptType", value: "beep" });
@@ -231,7 +237,7 @@ describe("HTML script semantic states", () => {
   });
 
   it("enforces script MIME correlations at compile and decode boundaries", () => {
-    const mimeType = Result.getOrThrow(S.decodeResult(ScriptDataBlockMimeType)("application/json"));
+    const mimeType = Result.getOrThrow(decodeScriptDataBlockMimeTypeResult("application/json"));
     const validState: ScriptState = ScriptState.cases.dataBlock.make({ mimeType });
     // @ts-expect-error -- data-block MIME types are schema-refined rather than arbitrary strings.
     const invalidMimeType: ScriptDataBlockMimeType = "application/json";
@@ -241,12 +247,10 @@ describe("HTML script semantic states", () => {
     expect(validState.state).toBe("dataBlock");
     expect(invalidMimeType).toBe("application/json");
     expect(invalidState.state).toBe("unsupported");
-    expect(Result.isSuccess(S.decodeResult(HtmlMimeType)("application/json"))).toBe(true);
-    expect(Result.isFailure(S.decodeResult(HtmlMimeType)("beep"))).toBe(true);
-    expect(Result.isFailure(S.decodeResult(ScriptDataBlockMimeType)("text/javascript"))).toBe(true);
-    expect(Result.isFailure(S.decodeResult(ScriptState)({ state: "dataBlock", mimeType: "text/javascript" }))).toBe(
-      true
-    );
+    expect(Result.isSuccess(decodeHtmlMimeTypeResult("application/json"))).toBe(true);
+    expect(Result.isFailure(decodeHtmlMimeTypeResult("beep"))).toBe(true);
+    expect(Result.isFailure(decodeScriptDataBlockMimeTypeResult("text/javascript"))).toBe(true);
+    expect(Result.isFailure(decodeScriptStateResult({ state: "dataBlock", mimeType: "text/javascript" }))).toBe(true);
   });
 
   it("exhaustively matches every script semantic state", () => {
@@ -257,7 +261,7 @@ describe("HTML script semantic states", () => {
       speculationRules: () => "speculation-rules",
       dataBlock: ({ mimeType }) => `data-block:${mimeType}`,
     });
-    const mimeType = Result.getOrThrow(S.decodeResult(ScriptDataBlockMimeType)("application/json"));
+    const mimeType = Result.getOrThrow(decodeScriptDataBlockMimeTypeResult("application/json"));
 
     expect(describeState(ScriptState.cases.classic.make({}))).toBe("classic");
     expect(describeState(ScriptState.cases.module.make({}))).toBe("module");
@@ -269,8 +273,8 @@ describe("HTML script semantic states", () => {
   it("round-trips schema-derived script semantic states", () => {
     fc.assert(
       fc.property(ScriptStateArbitrary, (state) => {
-        const encoded = Result.getOrThrow(S.encodeResult(ScriptState)(state));
-        const decoded = Result.getOrThrow(S.decodeResult(ScriptState)(encoded));
+        const encoded = Result.getOrThrow(encodeScriptStateResult(state));
+        const decoded = Result.getOrThrow(decodeScriptStateResult(encoded));
         expect(Eq.equals(decoded, state)).toBe(true);
       }),
       fcRuns(25)

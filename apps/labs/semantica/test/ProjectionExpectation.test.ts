@@ -8,6 +8,7 @@ import { describe, expect, it } from "vitest";
 import { GProjectionExpectation } from "@/schema/Projection";
 
 const GProjectionExpectationJson = S.fromJsonString(GProjectionExpectation);
+const decodeGProjectionExpectationJson = S.decodeEffect(GProjectionExpectationJson);
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
   <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
@@ -20,7 +21,7 @@ describe("G-projection expectations", () => {
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const source = yield* fs.readFileString("fixtures/gold/v1/g-projection.json");
-          const expected = yield* S.decodeEffect(GProjectionExpectationJson)(source);
+          const expected = yield* decodeGProjectionExpectationJson(source);
 
           expect(expected.model.provider).toBe("openai");
           expect(expected.model.name).toBe("text-embedding-3-small");

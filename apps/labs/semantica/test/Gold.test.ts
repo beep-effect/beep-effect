@@ -35,13 +35,26 @@ import { CanaryC2 } from "@/services/CanaryC2";
 import { Chunker } from "@/services/Chunker";
 import { DocumentSource } from "@/services/DocumentSource";
 import { Parser } from "@/services/Parser";
+
+const isCorpusPaperId = S.is(CorpusPaperId);
+
 import { ProviderCache } from "@/services/ProviderCache";
 
 const CorpusManifestJson = S.fromJsonString(CorpusManifest);
+const decodeCorpusManifestJson = S.decodeEffect(CorpusManifestJson);
+
 const F1IndexJson = S.fromJsonString(F1Index);
+const decodeF1IndexJson = S.decodeEffect(F1IndexJson);
+
 const GoldFileJson = S.fromJsonString(GoldFile);
+const encodeGoldFileJson = S.encodeEffect(GoldFileJson);
+const decodeGoldFileJson = S.decodeEffect(GoldFileJson);
+
 const GoldFileEncodedJson = S.fromJsonString(GoldFileEncoded);
+const decodeGoldFileEncodedJson = S.decodeEffect(GoldFileEncodedJson);
+
 const GoldRefJson = S.fromJsonString(GoldRef);
+const decodeGoldRefJson = S.decodeEffect(GoldRefJson);
 
 const goldLabelCount = (file: GoldFileEncoded): number =>
   Match.value(file).pipe(
@@ -217,7 +230,7 @@ const makeGoldTestLayer = (
 describe("C0 gold proposer", () => {
   it("generates schema-valid corpus paper ids", () => {
     fc.assert(
-      fc.property(S.toArbitrary(CorpusPaperId)(fc), (paperId) => S.is(CorpusPaperId)(paperId)),
+      fc.property(S.toArbitrary(CorpusPaperId)(fc), (paperId) => isCorpusPaperId(paperId)),
       { numRuns: 20 }
     );
   });
@@ -229,7 +242,7 @@ describe("C0 gold proposer", () => {
           const fs = yield* FileSystem.FileSystem;
           const reference = yield* fs
             .readFileString("fixtures/gold/v1/gold.json")
-            .pipe(Effect.flatMap(S.decodeEffect(GoldRefJson)));
+            .pipe(Effect.flatMap(decodeGoldRefJson));
           const files = A.sort(
             yield* Effect.forEach(
               GOLD_SUBSETS,
@@ -237,7 +250,7 @@ describe("C0 gold proposer", () => {
                 Effect.forEach(reference.subsets[subset], (paperId) =>
                   fs
                     .readFileString(`fixtures/gold/v1/${paperId}.${subset}.json`)
-                    .pipe(Effect.flatMap(S.decodeEffect(GoldFileEncodedJson)))
+                    .pipe(Effect.flatMap(decodeGoldFileEncodedJson))
                 ),
               { concurrency: 1 }
             ).pipe(Effect.map(A.flatten)),
@@ -304,10 +317,8 @@ describe("C0 gold proposer", () => {
             const fs = yield* FileSystem.FileSystem;
             const manifest = yield* fs
               .readFileString("fixtures/w1.manifest.json")
-              .pipe(Effect.flatMap(S.decodeEffect(CorpusManifestJson)));
-            const fixtures = yield* fs
-              .readFileString("fixtures/f1/index.json")
-              .pipe(Effect.flatMap(S.decodeEffect(F1IndexJson)));
+              .pipe(Effect.flatMap(decodeCorpusManifestJson));
+            const fixtures = yield* fs.readFileString("fixtures/f1/index.json").pipe(Effect.flatMap(decodeF1IndexJson));
             const outputDirectory = yield* fs.makeTempDirectoryScoped({ prefix: "semantica-gold-timeout-" });
             const error = yield* provideScopedLayer(makeGoldTestLayer(manifest, fixtures, Duration.zero, true))(
               proposeGold({
@@ -335,10 +346,8 @@ describe("C0 gold proposer", () => {
             const path = yield* Path.Path;
             const manifest = yield* fs
               .readFileString("fixtures/w1.manifest.json")
-              .pipe(Effect.flatMap(S.decodeEffect(CorpusManifestJson)));
-            const fixtures = yield* fs
-              .readFileString("fixtures/f1/index.json")
-              .pipe(Effect.flatMap(S.decodeEffect(F1IndexJson)));
+              .pipe(Effect.flatMap(decodeCorpusManifestJson));
+            const fixtures = yield* fs.readFileString("fixtures/f1/index.json").pipe(Effect.flatMap(decodeF1IndexJson));
             const paperId = A.getUnsafe(manifest.rows, 0).id;
             const outputDirectory = yield* fs.makeTempDirectoryScoped({
               prefix: "semantica-gold-",
@@ -374,10 +383,7 @@ describe("C0 gold proposer", () => {
             const decodedFiles = yield* Effect.forEach(["structure", "entity", "relation"] as const, (subset) =>
               fs
                 .readFileString(path.join(outputDirectory, `${paperId}.${subset}.json`))
-                .pipe(
-                  Effect.flatMap(S.decodeEffect(GoldFileJson)),
-                  Effect.provideService(CurrentGoldDocumentText, sourceText)
-                )
+                .pipe(Effect.flatMap(decodeGoldFileJson), Effect.provideService(CurrentGoldDocumentText, sourceText))
             );
             const structureFile = A.findFirst(decodedFiles, (file) => file.subset === "structure");
             expect(O.map(structureFile, (file) => A.length(file.labels))).toEqual(O.some(2));
@@ -404,10 +410,8 @@ describe("C0 gold proposer", () => {
             const path = yield* Path.Path;
             const manifest = yield* fs
               .readFileString("fixtures/w1.manifest.json")
-              .pipe(Effect.flatMap(S.decodeEffect(CorpusManifestJson)));
-            const fixtures = yield* fs
-              .readFileString("fixtures/f1/index.json")
-              .pipe(Effect.flatMap(S.decodeEffect(F1IndexJson)));
+              .pipe(Effect.flatMap(decodeCorpusManifestJson));
+            const fixtures = yield* fs.readFileString("fixtures/f1/index.json").pipe(Effect.flatMap(decodeF1IndexJson));
             const outputDirectory = yield* fs.makeTempDirectoryScoped({ prefix: "semantica-gold-complete-" });
             const result = yield* provideScopedLayer(makeGoldTestLayer(manifest, fixtures))(
               proposeGold({
@@ -424,7 +428,7 @@ describe("C0 gold proposer", () => {
             expect(result.reference.status).toBe("written");
             const reference = yield* fs
               .readFileString(path.join(outputDirectory, "gold.json"))
-              .pipe(Effect.flatMap(S.decodeEffect(GoldRefJson)));
+              .pipe(Effect.flatMap(decodeGoldRefJson));
             expect(reference.proposer).toEqual(proposer);
             expect(reference.spotCheckedFraction).toBe(0);
           })
@@ -441,10 +445,8 @@ describe("C0 gold proposer", () => {
             const path = yield* Path.Path;
             const manifest = yield* fs
               .readFileString("fixtures/w1.manifest.json")
-              .pipe(Effect.flatMap(S.decodeEffect(CorpusManifestJson)));
-            const fixtures = yield* fs
-              .readFileString("fixtures/f1/index.json")
-              .pipe(Effect.flatMap(S.decodeEffect(F1IndexJson)));
+              .pipe(Effect.flatMap(decodeCorpusManifestJson));
+            const fixtures = yield* fs.readFileString("fixtures/f1/index.json").pipe(Effect.flatMap(decodeF1IndexJson));
             const outputDirectory = yield* fs.makeTempDirectoryScoped({ prefix: "semantica-gold-rerun-" });
             const layer = makeGoldTestLayer(manifest, fixtures);
             yield* provideScopedLayer(layer)(
@@ -483,10 +485,8 @@ describe("C0 gold proposer", () => {
             const path = yield* Path.Path;
             const manifest = yield* fs
               .readFileString("fixtures/w1.manifest.json")
-              .pipe(Effect.flatMap(S.decodeEffect(CorpusManifestJson)));
-            const fixtures = yield* fs
-              .readFileString("fixtures/f1/index.json")
-              .pipe(Effect.flatMap(S.decodeEffect(F1IndexJson)));
+              .pipe(Effect.flatMap(decodeCorpusManifestJson));
+            const fixtures = yield* fs.readFileString("fixtures/f1/index.json").pipe(Effect.flatMap(decodeF1IndexJson));
             const outputDirectory = yield* fs.makeTempDirectoryScoped({ prefix: "semantica-gold-mixed-" });
             const layer = makeGoldTestLayer(manifest, fixtures);
             yield* provideScopedLayer(layer)(
@@ -502,17 +502,14 @@ describe("C0 gold proposer", () => {
             const stalePath = path.join(outputDirectory, `${stalePaper}.structure.json`);
             const staleFile = yield* fs
               .readFileString(stalePath)
-              .pipe(
-                Effect.flatMap(S.decodeEffect(GoldFileJson)),
-                Effect.provideService(CurrentGoldDocumentText, sourceText)
-              );
+              .pipe(Effect.flatMap(decodeGoldFileJson), Effect.provideService(CurrentGoldDocumentText, sourceText));
             const staleProposer = ModelIdentity.make({
               ...proposer,
               name: "stale-gold-20260825",
               revision: "stale-gold-20260825",
             });
             const staleValue = yield* GoldFile.makeEffect({ ...staleFile, proposer: staleProposer });
-            const staleJson = yield* S.encodeEffect(GoldFileJson)(staleValue);
+            const staleJson = yield* encodeGoldFileJson(staleValue);
             yield* fs.writeFileString(stalePath, `${staleJson}\n`);
 
             const selectedPaper = A.getUnsafe(manifest.rows, 0).id;
@@ -539,10 +536,8 @@ describe("C0 gold proposer", () => {
           const fs = yield* FileSystem.FileSystem;
           const manifest = yield* fs
             .readFileString("fixtures/w1.manifest.json")
-            .pipe(Effect.flatMap(S.decodeEffect(CorpusManifestJson)));
-          const fixtures = yield* fs
-            .readFileString("fixtures/f1/index.json")
-            .pipe(Effect.flatMap(S.decodeEffect(F1IndexJson)));
+            .pipe(Effect.flatMap(decodeCorpusManifestJson));
+          const fixtures = yield* fs.readFileString("fixtures/f1/index.json").pipe(Effect.flatMap(decodeF1IndexJson));
           const paperId = A.getUnsafe(manifest.rows, 0).id;
           const runCanary = Command.runWith(CanaryCommand, {
             renderErrors: false,

@@ -33,17 +33,18 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — not started.
+P2 Verify — in progress.
 
 ## Latest Evidence
 
-- The predecessor census closed with 2,931 remaining
-  `beep(no-inline-schema-compile)` findings, down from its 2,935 opening
-  baseline.
-- The predecessor left no warning on a touched line and removed its named
-  `ProvRdf.ts` inline compiler.
-- The packet was compiled from the repository's `standard-delivery` bootstrap
-  archetype on 2026-08-30 with no conflicts.
+- The predecessor's 2,931 findings reproduce exactly; current opening `HEAD`
+  contained 3,087 findings across 566 files and 105 ownership families, with
+  the +156 drift fully attributed.
+- The generator owner was updated first, 3,087 findings reconcile to zero, and
+  `research/residual-census.json` records the empty repository-wide result.
+- `beep/no-inline-schema-compile` is configured as an error. Focused policy,
+  assertion, and manually migrated package tests are green; package-wide and
+  Yeet verification remain in progress.
 
 ## Notes
 

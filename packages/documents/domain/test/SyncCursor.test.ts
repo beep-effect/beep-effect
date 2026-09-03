@@ -7,6 +7,10 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeUnknownSyncCursorSyncCursorSync = S.decodeUnknownSync(SyncCursor.SyncCursor);
+const decodeUnknownSyncCursorSyncCursorStatusSync = S.decodeUnknownSync(SyncCursor.SyncCursorStatus);
+const encodeSyncCursorSyncCursorSync = S.encodeSync(SyncCursor.SyncCursor);
+
 const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
   const arbitrary = S.toArbitrary(schema)(fc);
   const encode = S.encodeResult(schema);
@@ -52,17 +56,17 @@ describe("SyncCursor entity", () => {
   });
 
   it("decodes and encodes a fresh cursor row", () => {
-    const decoded = S.decodeUnknownSync(SyncCursor.SyncCursor)(freshCursorRow);
+    const decoded = decodeUnknownSyncCursorSyncCursorSync(freshCursorRow);
 
     expect(decoded).toBeInstanceOf(SyncCursor.SyncCursor);
     expect(decoded.lastEventId).toEqual(O.none());
     expect(decoded.lastError).toEqual(O.none());
     expect(decoded.status).toBe("active");
-    expect(S.encodeSync(SyncCursor.SyncCursor)(decoded)).toStrictEqual(freshCursorRow);
+    expect(encodeSyncCursorSyncCursorSync(decoded)).toStrictEqual(freshCursorRow);
   });
 
   it("decodes advanced cursors with recorded event and error state", () => {
-    const decoded = S.decodeUnknownSync(SyncCursor.SyncCursor)({
+    const decoded = decodeUnknownSyncCursorSyncCursorSync({
       ...freshCursorRow,
       lastError: "box stream returned 429",
       lastEventId: "evt-9",
@@ -79,7 +83,7 @@ describe("SyncCursor entity", () => {
     expect(SyncCursor.SyncCursorStatus.is.active("active")).toBe(true);
     expect(SyncCursor.SyncCursorStatus.is.error("active")).toBe(false);
     expect(SyncCursor.SyncCursorStatus.Enum.error).toBe("error");
-    expect(() => S.decodeUnknownSync(SyncCursor.SyncCursorStatus)("paused")).toThrow();
+    expect(() => decodeUnknownSyncCursorSyncCursorStatusSync("paused")).toThrow();
   });
 
   it("round-trips schema-derived sync cursor values", () => {

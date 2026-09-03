@@ -31,12 +31,14 @@ import {
   SecuritySchemeOAuth2,
   SecuritySchemeOpenIdConnect,
 } from "./OpenAPI.types.ts";
+const decodeURLFromStringResult = S.decodeResult(S.URLFromString);
 
 const $I = $ScratchpadId.create("codemode/openapi/OpenAPI.specification");
 
 const UnknownRecord = S.Record(S.String, S.Unknown).pipe(SchemaUtils.withCodecStatics(["is"]));
 const NonEmptyString = S.NonEmptyString.pipe(SchemaUtils.withCodecStatics(["decodeUnknownOption"]));
 const SuccessStatus = S.String.check(S.isPattern(/^2\d\d$/u));
+const isSuccessStatus = S.is(SuccessStatus);
 
 /**
  * OpenAPI parameter locations supported as wire parameters: path, query, and
@@ -1056,7 +1058,7 @@ const successfulResponses = (
   const selected = A.appendAll(
     pipe(
       entries,
-      A.filter(([status]) => S.is(SuccessStatus)(status)),
+      A.filter(([status]) => isSuccessStatus(status)),
       A.sort(Order.mapInput(Order.String, ([status]: readonly [string, unknown]) => status))
     ),
     A.filter(entries, ([status]) => Str.toUpperCase(status) === "2XX")
@@ -1348,7 +1350,7 @@ export const operationPath = (
  */
 export const validateBaseUrl = (value: string): Result.Result<string, string> =>
   pipe(
-    S.decodeResult(S.URLFromString)(value),
+    decodeURLFromStringResult(value),
     Result.mapError(() => `server URL '${value}' is not an absolute HTTP(S) URL`),
     Result.flatMap((url) => {
       if (url.protocol !== "http:" && url.protocol !== "https:") {

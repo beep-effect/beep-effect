@@ -18,6 +18,9 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeUnknownRedactCauseOptionsOption = S.decodeUnknownOption(RedactCauseOptions);
+const encodeRedactCauseOptionsOption = S.encodeOption(RedactCauseOptions);
+
 class CapturedAnnotations extends Context.Service<CapturedAnnotations, Array<Record<string, unknown>>>()(
   "@beep/observability/test/CauseRedaction.test/CapturedAnnotations"
 ) {}
@@ -168,10 +171,7 @@ describe("CauseRedaction", () => {
   it("round-trips schema-derived redaction options", () => {
     fc.assert(
       fc.property(S.toArbitrary(RedactCauseOptions)(fc), (options) => {
-        const decoded = O.flatMap(
-          S.encodeOption(RedactCauseOptions)(options),
-          S.decodeUnknownOption(RedactCauseOptions)
-        );
+        const decoded = O.flatMap(encodeRedactCauseOptionsOption(options), decodeUnknownRedactCauseOptionsOption);
         expect(O.exists(decoded, (value) => Equal.equals(value, options))).toBe(true);
       }),
       fcRuns(50)

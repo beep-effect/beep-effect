@@ -32,6 +32,21 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import type { PlatformError } from "effect";
 
+const decodeAgentModeSync = S.decodeSync(AgentMode);
+const decodeRootAssistantBlockSync = S.decodeSync(RootAssistantBlock);
+const decodeSkillFrontmatterSync = S.decodeSync(SkillFrontmatter);
+const decodeTableBlockSync = S.decodeSync(TableBlock);
+const decodeYouTubeBlockSync = S.decodeSync(YouTubeBlock);
+const decodeUnknownAssistantContentResult = S.decodeUnknownResult(AssistantContent);
+const decodeUnknownSkillResult = S.decodeUnknownResult(Skill);
+const decodeUnknownAgentSync = S.decodeUnknownSync(Agent);
+const decodeUnknownSkillSync = S.decodeUnknownSync(Skill);
+const encodeAgentResult = S.encodeResult(Agent);
+const encodeAssistantContentResult = S.encodeResult(AssistantContent);
+const encodeSkillResult = S.encodeResult(Skill);
+const encodeSkillFrontmatterResult = S.encodeResult(SkillFrontmatter);
+const encodeAgentModeSync = S.encodeSync(AgentMode);
+
 const AgentModeArbitrary = S.toArbitrary(AgentMode)(fc);
 
 const repoRoot = fileURLToPath(new URL("../../../..", import.meta.url));
@@ -81,7 +96,7 @@ describe("@beep/agents-domain", () => {
       name: "Reviewer Agent",
       skillFixtureKey: "skill.review",
     };
-    const decoded = S.decodeUnknownSync(Agent)(encoded);
+    const decoded = decodeUnknownAgentSync(encoded);
     const constructed = Agent.make(decoded);
 
     expect(decoded).toBeInstanceOf(Agent);
@@ -89,7 +104,7 @@ describe("@beep/agents-domain", () => {
     expect(constructed.entityType).toBe("AgentsAgent");
     expect(constructed.mode).toBe("deterministic_fixture");
     expect(constructed.skillFixtureKey).toBe("skill.review");
-    expect(Result.getOrThrow(S.encodeResult(Agent)(decoded))).toStrictEqual(encoded);
+    expect(Result.getOrThrow(encodeAgentResult(decoded))).toStrictEqual(encoded);
   });
 
   it("decodes and constructs a Skill row", () => {
@@ -103,7 +118,7 @@ describe("@beep/agents-domain", () => {
       metadata: null,
       name: "review-skill",
     };
-    const decoded = S.decodeUnknownSync(Skill)(encoded);
+    const decoded = decodeUnknownSkillSync(encoded);
     const constructed = Skill.make(decoded);
 
     expect(decoded).toBeInstanceOf(Skill);
@@ -116,7 +131,7 @@ describe("@beep/agents-domain", () => {
     expect(Object.keys(Skill.update.fields)).toContain("id");
     expect(Object.keys(Skill.update.fields)).toContain("rowVersion");
     expect(Skill.sql.columns.compatibility.column.length).toBe(500);
-    expect(Result.getOrThrow(S.encodeResult(Skill)(decoded))).toStrictEqual(encoded);
+    expect(Result.getOrThrow(encodeSkillResult(decoded))).toStrictEqual(encoded);
   });
 
   it("rejects Skill names outside the frontmatter contract", () => {
@@ -129,15 +144,15 @@ describe("@beep/agents-domain", () => {
       license: null,
       metadata: null,
     };
-    expect(Result.isFailure(S.decodeUnknownResult(Skill)({ ...base, name: "Review Skill" }))).toBe(true);
-    expect(Result.isFailure(S.decodeUnknownResult(Skill)({ ...base, name: "-review" }))).toBe(true);
-    expect(Result.isFailure(S.decodeUnknownResult(Skill)({ ...base, name: "review_skill" }))).toBe(true);
-    expect(Result.isFailure(S.decodeUnknownResult(Skill)({ ...base, name: "review.skill" }))).toBe(true);
-    expect(Result.isFailure(S.decodeUnknownResult(Skill)({ ...base, name: "review--skill" }))).toBe(true);
+    expect(Result.isFailure(decodeUnknownSkillResult({ ...base, name: "Review Skill" }))).toBe(true);
+    expect(Result.isFailure(decodeUnknownSkillResult({ ...base, name: "-review" }))).toBe(true);
+    expect(Result.isFailure(decodeUnknownSkillResult({ ...base, name: "review_skill" }))).toBe(true);
+    expect(Result.isFailure(decodeUnknownSkillResult({ ...base, name: "review.skill" }))).toBe(true);
+    expect(Result.isFailure(decodeUnknownSkillResult({ ...base, name: "review--skill" }))).toBe(true);
   });
 
   it("decodes Agent Skills frontmatter through the derived codec", () => {
-    const decoded = S.decodeSync(SkillFrontmatter)({
+    const decoded = decodeSkillFrontmatterSync({
       "allowed-tools": "Bash, Read",
       compatibility: null,
       description: "Formats commit messages.",
@@ -148,7 +163,7 @@ describe("@beep/agents-domain", () => {
 
     expect(O.getOrThrow(decoded.allowedTools)).toBe("Bash, Read");
     expect(O.getOrThrow(decoded.license)).toBe("MIT");
-    const encoded = Result.getOrThrow(S.encodeResult(SkillFrontmatter)(decoded));
+    const encoded = Result.getOrThrow(encodeSkillFrontmatterResult(decoded));
     expect(encoded["allowed-tools"]).toBe("Bash, Read");
     expect(Object.keys(encoded)).not.toContain("allowedTools");
     expect(Object.keys(encoded)).not.toContain("fixtureKey");
@@ -157,8 +172,8 @@ describe("@beep/agents-domain", () => {
   it("round-trips schema-derived agent modes", () =>
     fc.assert(
       fc.property(AgentModeArbitrary, (mode) => {
-        const decoded = S.decodeSync(AgentMode)(mode);
-        const encoded = S.encodeSync(AgentMode)(decoded);
+        const decoded = decodeAgentModeSync(mode);
+        const encoded = encodeAgentModeSync(decoded);
 
         expect(encoded).toBe(mode);
         expect(AgentMode.is.deterministic_fixture(decoded)).toBe(true);
@@ -192,7 +207,7 @@ describe("@beep/agents-domain", () => {
     );
     expect(assistantContentDocument).toStrictEqual(S.toJsonSchemaDocument(AssistantContent));
 
-    const decoded = S.decodeSync(RootAssistantBlock)({
+    const decoded = decodeRootAssistantBlockSync({
       type: "paragraph",
       children: [{ type: "text", text: "hello" }],
     });
@@ -224,9 +239,9 @@ describe("@beep/agents-domain", () => {
         },
       ],
     };
-    const decoded = Result.getOrThrow(S.decodeUnknownResult(AssistantContent)(encoded));
+    const decoded = Result.getOrThrow(decodeUnknownAssistantContentResult(encoded));
 
-    expect(Result.getOrThrow(S.encodeResult(AssistantContent)(decoded))).toStrictEqual(encoded);
+    expect(Result.getOrThrow(encodeAssistantContentResult(decoded))).toStrictEqual(encoded);
     expect(AssistantBlock.is(AssistantBlock.decodeUnknownSync(encoded.blocks[0]))).toBe(true);
     expect(InlineNode.is(InlineNode.decodeUnknownSync({ type: "text", text: "Install" }))).toBe(true);
   });
@@ -333,7 +348,7 @@ describe("@beep/agents-domain", () => {
 
   it("rejects malformed assistant table and youtube blocks at the domain boundary", () => {
     expect(() =>
-      S.decodeSync(TableBlock)({
+      decodeTableBlockSync({
         type: "table",
         rows: [
           { cells: [{ children: [{ type: "text", text: "Name" }] }] },
@@ -345,7 +360,7 @@ describe("@beep/agents-domain", () => {
     ).toThrow(/Tables must contain/);
 
     expect(() =>
-      S.decodeSync(YouTubeBlock)({
+      decodeYouTubeBlockSync({
         type: "youtube",
         videoId: "https://youtu.be/dQw4w9WgXcQ",
       })

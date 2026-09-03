@@ -28,6 +28,14 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeUnknownHtmlDocumentResult = S.decodeUnknownResult(HtmlDocument);
+const decodeUnknownHtmlNodeResult = S.decodeUnknownResult(HtmlNode);
+const decodeUnknownLosslessDocumentResult = S.decodeUnknownResult(LosslessDocument);
+const encodeDoctypeSync = S.encodeSync(Doctype);
+const encodeGlobalAttributesStructSync = S.encodeSync(GlobalAttributesStruct);
+const encodeHtmlElementMetaSync = S.encodeSync(HtmlElementMeta);
+const encodeInputSync = S.encodeSync(Input);
+
 const decode = S.decodeUnknownSync(HtmlNode);
 const encode = S.encodeSync(HtmlNode);
 const GlobalAttributesArbitrary = S.toArbitrary(GlobalAttributesStruct)(fc);
@@ -76,12 +84,10 @@ describe("HtmlNode AST — structure & nodes", () => {
       { encoded: { _tag: "#doctype", name: "html" }, type: Doctype.html() },
     ];
 
-    expect(Result.isSuccess(S.decodeUnknownResult(HtmlDocument)(canonical))).toBe(true);
+    expect(Result.isSuccess(decodeUnknownHtmlDocumentResult(canonical))).toBe(true);
     expect(HtmlDocument.make({ children: [comment, documentElement] })).toBeDefined();
     for (const { encoded, type } of excludedChildren) {
-      expect(Result.isFailure(S.decodeUnknownResult(HtmlDocument)({ _tag: "#document", children: [encoded] }))).toBe(
-        true
-      );
+      expect(Result.isFailure(decodeUnknownHtmlDocumentResult({ _tag: "#document", children: [encoded] }))).toBe(true);
       expect(() =>
         HtmlDocument.make({
           // @ts-expect-error -- exercise constructor validation for excluded document child kinds.
@@ -90,7 +96,7 @@ describe("HtmlNode AST — structure & nodes", () => {
       ).toThrow();
     }
 
-    expect(Result.isSuccess(S.decodeUnknownResult(LosslessDocument)(diagnostic))).toBe(true);
+    expect(Result.isSuccess(decodeUnknownLosslessDocumentResult(diagnostic))).toBe(true);
     expect(LosslessDocument.make({ children: [Div.make({ children: [] })] })).toBeDefined();
   });
 
@@ -184,9 +190,9 @@ describe("HtmlNode AST — attributes", () => {
 
 describe("HtmlNode AST — schema laws", () => {
   it("keeps option-defaulted fields byte-identical on the encoded wire", () => {
-    expect(S.encodeSync(GlobalAttributesStruct)(GlobalAttributesStruct.make({}))).toStrictEqual({});
+    expect(encodeGlobalAttributesStructSync(GlobalAttributesStruct.make({}))).toStrictEqual({});
     expect(
-      S.encodeSync(GlobalAttributesStruct)(
+      encodeGlobalAttributesStructSync(
         GlobalAttributesStruct.make({
           autofocus: O.some(true),
           dataset: O.some({ testid: "save" }),
@@ -198,9 +204,9 @@ describe("HtmlNode AST — schema laws", () => {
       dataset: { testid: "save" },
       id: "root",
     });
-    expect(S.encodeSync(Doctype)(Doctype.html())).toStrictEqual({ _tag: "#doctype", name: "html" });
+    expect(encodeDoctypeSync(Doctype.html())).toStrictEqual({ _tag: "#doctype", name: "html" });
     expect(
-      S.encodeSync(Input)(
+      encodeInputSync(
         Input.make({
           alt: O.some("Search"),
           src: O.some("x.png"),
@@ -209,7 +215,7 @@ describe("HtmlNode AST — schema laws", () => {
       )
     ).toStrictEqual({ _tag: "input", alt: "Search", src: "x.png", type: "text" });
     expect(
-      S.encodeSync(HtmlElementMeta)(
+      encodeHtmlElementMetaSync(
         HtmlElementMeta.make({
           tag: "a",
           interface: "HTMLAnchorElement",
@@ -281,7 +287,7 @@ describe("ELEMENT_META", () => {
   });
 
   it("rejects tags outside the generated HtmlNode inventory", () => {
-    expect(Result.isFailure(S.decodeUnknownResult(HtmlNode)({ _tag: "not-an-html-element", children: [] }))).toBe(true);
+    expect(Result.isFailure(decodeUnknownHtmlNodeResult({ _tag: "not-an-html-element", children: [] }))).toBe(true);
   });
 
   it("tags conformance, void, and raw-text correctly", () => {

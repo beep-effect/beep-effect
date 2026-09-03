@@ -5,20 +5,25 @@ import { describe, expect, it } from "@effect/vitest";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
+const decodeAbsoluteIRISync = S.decodeSync(AbsoluteIRI);
+const decodeIRISync = S.decodeSync(IRI);
+const decodeIRIReferenceSync = S.decodeSync(IRIReference);
+const decodeRelativeIRIReferenceSync = S.decodeSync(RelativeIRIReference);
+
 describe("IRI", () => {
   it("accepts representative internationalized and relative forms through the facade", () => {
-    expect(S.decodeSync(IRI)("https://例え.テスト/δοκιμή?q=値#片段")).toBe("https://例え.テスト/δοκιμή?q=値#片段");
-    expect(S.decodeSync(AbsoluteIRI)("mailto:用户@example.org")).toBe("mailto:用户@example.org");
-    expect(S.decodeSync(IRIReference)("../résumé/δοκιμή?x=値#片段")).toBe("../résumé/δοκιμή?x=値#片段");
-    expect(S.decodeSync(RelativeIRIReference)("folder/child:leaf")).toBe("folder/child:leaf");
+    expect(decodeIRISync("https://例え.テスト/δοκιμή?q=値#片段")).toBe("https://例え.テスト/δοκιμή?q=値#片段");
+    expect(decodeAbsoluteIRISync("mailto:用户@example.org")).toBe("mailto:用户@example.org");
+    expect(decodeIRIReferenceSync("../résumé/δοκιμή?x=値#片段")).toBe("../résumé/δοκιμή?x=値#片段");
+    expect(decodeRelativeIRIReferenceSync("folder/child:leaf")).toBe("folder/child:leaf");
   });
 
   it("rejects invalid facade inputs with the RDF schema diagnostics", () => {
-    expect(() => S.decodeSync(IRI)("https://example.com/%ZZ")).toThrow("Expected a valid RFC 3987 IRI");
-    expect(() => S.decodeSync(AbsoluteIRI)("https://example.com/path#frag")).toThrow(
+    expect(() => decodeIRISync("https://example.com/%ZZ")).toThrow("Expected a valid RFC 3987 IRI");
+    expect(() => decodeAbsoluteIRISync("https://example.com/path#frag")).toThrow(
       "Expected a valid RFC 3987 absolute IRI"
     );
-    expect(() => S.decodeSync(RelativeIRIReference)("folder:child/leaf")).toThrow(
+    expect(() => decodeRelativeIRIReferenceSync("folder:child/leaf")).toThrow(
       "Expected a valid RFC 3987 relative IRI reference"
     );
   });

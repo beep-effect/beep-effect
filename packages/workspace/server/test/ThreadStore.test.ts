@@ -17,8 +17,14 @@ import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
 import { FastCheck as fc, TestClock } from "effect/testing";
 
+const decodeWorkspaceIdentityThreadId = S.decodeEffect(WorkspaceIdentity.ThreadId);
+
 const SetThreadTitleIfEmptyInputArbitrary = S.toArbitrary(SetThreadTitleIfEmptyInput)(fc);
 const { InMemoryState, MessageEntityInput, ThreadEntityInput, TurnEntityInput } = ThreadStoreRepoTestSchemas;
+const encodeInMemoryStateSync = S.encodeSync(InMemoryState);
+const encodeMessageEntityInputSync = S.encodeSync(MessageEntityInput);
+const encodeThreadEntityInputSync = S.encodeSync(ThreadEntityInput);
+const encodeTurnEntityInputSync = S.encodeSync(TurnEntityInput);
 const InMemoryStateArbitrary = S.toArbitrary(InMemoryState)(fc);
 const MessageEntityInputArbitrary = S.toArbitrary(MessageEntityInput)(fc);
 const ThreadEntityInputArbitrary = S.toArbitrary(ThreadEntityInput)(fc);
@@ -184,7 +190,7 @@ describe("ThreadStore in-memory", () => {
     "fails with ThreadStoreNotFound when appending to an unknown thread",
     Effect.fnUntraced(function* () {
       const store = yield* makeTestThreadStore;
-      const missing = yield* S.decodeEffect(WorkspaceIdentity.ThreadId)(999);
+      const missing = yield* decodeWorkspaceIdentityThreadId(999);
       const error = yield* store
         .appendTurn({ threadId: missing, parentTurnId: O.none(), role: "user", content: docOf("x") })
         .pipe(Effect.flip);
@@ -288,7 +294,7 @@ describe("ThreadStore in-memory", () => {
 
   it("keeps crispened construction schema encoded shapes stable", () => {
     expect(
-      S.encodeSync(ThreadEntityInput)(
+      encodeThreadEntityInputSync(
         ThreadEntityInput.make({
           id: PosInt.make(1),
           title: "Matter intake",
@@ -298,7 +304,7 @@ describe("ThreadStore in-memory", () => {
     ).toEqual({ id: 1, title: "Matter intake", workspaceId: 2 });
 
     expect(
-      S.encodeSync(TurnEntityInput)(
+      encodeTurnEntityInputSync(
         TurnEntityInput.make({
           id: PosInt.make(3),
           messageId: PosInt.make(4),
@@ -310,7 +316,7 @@ describe("ThreadStore in-memory", () => {
     ).toEqual({ id: 3, messageId: 4, parentTurnId: null, threadId: 1, turnIndex: 0 });
 
     expect(
-      S.encodeSync(MessageEntityInput)(
+      encodeMessageEntityInputSync(
         MessageEntityInput.make({
           content: docOf("Hello"),
           id: PosInt.make(4),
@@ -330,7 +336,7 @@ describe("ThreadStore in-memory", () => {
       turnId: 3,
     });
 
-    const encodedState = S.encodeSync(InMemoryState)(InMemoryState.make({}));
+    const encodedState = encodeInMemoryStateSync(InMemoryState.make({}));
     expect(encodedState.nextId).toBe(1);
     expect(HashMap.size(encodedState.messages)).toBe(0);
     expect(HashMap.size(encodedState.threads)).toBe(0);
@@ -360,7 +366,7 @@ describe("ThreadStore in-memory", () => {
     "fails with ThreadStoreNotFound when setting the title for an unknown thread",
     Effect.fnUntraced(function* () {
       const store = yield* makeTestThreadStore;
-      const missing = yield* S.decodeEffect(WorkspaceIdentity.ThreadId)(999);
+      const missing = yield* decodeWorkspaceIdentityThreadId(999);
       const error = yield* store
         .setTitleIfEmpty({ threadId: missing, emptyTitle: "New thread", title: "Missing" })
         .pipe(Effect.flip);

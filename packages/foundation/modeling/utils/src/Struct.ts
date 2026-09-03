@@ -54,6 +54,7 @@ type FromEntries<E extends readonly [PropertyKey, unknown]> = Simplify<{
 }>;
 
 const NonEmptyStringKeys = S.NonEmptyArray(S.String);
+const isNonEmptyStringKeys = S.is(NonEmptyStringKeys);
 // input is opaque unknown data: equivalence is declared diagnostic identity, input stays payload.
 
 /**
@@ -86,7 +87,7 @@ function assertStructHasStringKeys<T extends string>(
   input: Array<T>,
   source: object
 ): asserts input is A.NonEmptyArray<T> {
-  return Match.value(S.is(NonEmptyStringKeys)(input)).pipe(
+  return Match.value(isNonEmptyStringKeys(input)).pipe(
     Match.when(true, () => undefined),
     Match.orElse(() => {
       throw EmptyStructError.make({

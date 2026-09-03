@@ -6,6 +6,7 @@
  */
 
 import { $SchemaId } from "@beep/identity/packages";
+import { compileAssertion } from "@beep/utils/Schema";
 import { MutableHashSet } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
@@ -268,7 +269,7 @@ const nativeCodecStatic =
   };
 
 const codecStaticFactories = {
-  asserts: (schema) => (input: unknown) => S.asserts(schema, input),
+  asserts: (schema: CodecSchema) => compileAssertion(schema),
   decodeEffect: nativeCodecStatic("decodeEffect"),
   decodeExit: nativeCodecStatic("decodeExit"),
   decodeOption: nativeCodecStatic("decodeOption"),

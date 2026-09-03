@@ -6,7 +6,7 @@
     "title": "Inline Schema Compiler Hard Error",
     "status": "active",
     "created": "2026-08-30",
-    "updated": "2026-08-30",
+    "updated": "2026-09-03",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/inline-schema-compile-hard-error",
@@ -51,17 +51,19 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending"
+      "status": "complete",
+      "evidence": "research/opening-census.json and research/opening-census.md reproduce 2,931 at the predecessor evidence commit, classify the current 3,087 findings, explain +156 drift, and resolve the sole generated owner."
     },
     {
       "id": "P1",
       "name": "Implement",
-      "status": "pending"
+      "status": "complete",
+      "evidence": "research/mechanical-migration.json, research/manual-followup-migration.json, and research/residual-census.json reconcile all 3,087 opening findings to zero after generator-first and authored migrations."
     },
     {
       "id": "P2",
       "name": "Verify",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P3",

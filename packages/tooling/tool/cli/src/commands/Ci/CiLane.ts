@@ -632,6 +632,7 @@ const turboShapeArgs = (options: CiLaneRunOptions): ReadonlyArray<string> => [
 // Default BEEP_FC_NUM_RUNS floor for the property lane. A blank or
 // whitespace-only `--runs` (e.g. `--runs ""`) would otherwise reach the
 // lane as `BEEP_FC_NUM_RUNS=""`, which the parsers treat as absent — the
+
 // sweep would silently drop to fast-check's 100-run default. Normalize
 // blank input back to the intended floor.
 const DEFAULT_PROPERTY_LANE_RUNS = "400";
@@ -689,11 +690,12 @@ const bunRunStep = (repoRoot: string, label: string, args: ReadonlyArray<string>
 // instead of inheriting the fleet default that boundedRootTurboArgs applies in CI.
 const HOSTED_16GB_TURBO_CONCURRENCY_ARG = "--concurrency=2";
 const QualityCheckConcurrency = LiteralKit(["2", "3"]);
+const decodeUnknownQualityCheckConcurrencyOption = S.decodeUnknownOption(QualityCheckConcurrency);
 
 const qualityCheckConcurrencyArg = (): string =>
   `--concurrency=${pipe(
     // biome-ignore lint/suspicious/noUndeclaredEnvVars: Declared in turbo.json global.passThroughEnv.
-    S.decodeUnknownOption(QualityCheckConcurrency)(Bun.env.BEEP_QUALITY_CHECK_CONCURRENCY),
+    decodeUnknownQualityCheckConcurrencyOption(Bun.env.BEEP_QUALITY_CHECK_CONCURRENCY),
     // biome-ignore lint/suspicious/noUndeclaredEnvVars: Declared in turbo.json global.passThroughEnv.
     O.getOrElse(() => (Bun.env.GITHUB_ACTIONS === "true" ? "2" : "3"))
   )}`;

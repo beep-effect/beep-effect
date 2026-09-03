@@ -28,6 +28,12 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as SqlClient from "effect/unstable/sql/SqlClient";
 
+const decodeUnknownActFrame = S.decodeUnknownEffect(ActFrame);
+const decodeUnknownCorrectionDelta = S.decodeUnknownEffect(CorrectionDelta);
+const decodeUnknownLegalOppositionCandidate = S.decodeUnknownEffect(LegalOppositionCandidate);
+const decodeUnknownLegalPositionRelator = S.decodeUnknownEffect(LegalPositionRelator);
+const decodeUnknownPowerExercise = S.decodeUnknownEffect(PowerExercise);
+
 const { shouldRunPgliteIntegration } = makePgliteIntegrationGate();
 const migrationsFolder = fileURLToPath(new URL("../../drizzle", import.meta.url));
 
@@ -254,16 +260,16 @@ const migrateAndRecord = Effect.fnUntraced(function* () {
   // A privilege to enter and a claim that the same act be omitted: the pair the
   // recorded candidate below screens as prima facie opposed. Screening it is a
   // record, never a finding, and neither row is the other's correlative.
-  const privilege = yield* S.decodeUnknownEffect(LegalPositionRelator)(
+  const privilege = yield* decodeUnknownLegalPositionRelator(
     relatorInput(RELATOR_PRIVILEGE_ID, "privilege", "act", "lessee", "lessor", 1)
   );
-  const claim = yield* S.decodeUnknownEffect(LegalPositionRelator)(
+  const claim = yield* decodeUnknownLegalPositionRelator(
     relatorInput(RELATOR_CLAIM_ID, "claim", "omission", "lessor", "lessee", 2)
   );
-  const frame = yield* S.decodeUnknownEffect(ActFrame)(frameInput);
-  const exercise = yield* S.decodeUnknownEffect(PowerExercise)(exerciseInput);
-  const correction = yield* S.decodeUnknownEffect(CorrectionDelta)(correctionInput);
-  const candidate = yield* S.decodeUnknownEffect(LegalOppositionCandidate)(candidateInput);
+  const frame = yield* decodeUnknownActFrame(frameInput);
+  const exercise = yield* decodeUnknownPowerExercise(exerciseInput);
+  const correction = yield* decodeUnknownCorrectionDelta(correctionInput);
+  const candidate = yield* decodeUnknownLegalOppositionCandidate(candidateInput);
 
   // The converters return `Result` because encoding is fallible; converting them
   // keeps a schema failure in the error channel instead of inserting defaults.

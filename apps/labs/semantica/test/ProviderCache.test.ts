@@ -64,8 +64,9 @@ const makeKey = (prompt: string): ProviderCacheKey =>
   });
 
 const ProviderCacheEntryPrettyJson = S.fromJsonString(ProviderCacheEntry, { space: 2 });
+const encodeProviderCacheEntryPrettyJson = S.encodeEffect(ProviderCacheEntryPrettyJson);
 const encodeProviderCacheEntry = Effect.fn("ProviderCacheTest.encodeProviderCacheEntry")((entry: ProviderCacheEntry) =>
-  S.encodeEffect(ProviderCacheEntryPrettyJson)(entry)
+  encodeProviderCacheEntryPrettyJson(entry)
 );
 const CacheTestServices = Layer.mergeAll(BunServices.layer, TestClock.layer());
 

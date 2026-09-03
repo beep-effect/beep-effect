@@ -13,6 +13,9 @@ import { CachedClaimRepository } from "../../Repository/CachedClaim.ts";
 import { CanonicalEntityId, EntityRegistryRepository } from "../../Repository/EntityRegistry.ts";
 import { ExamplesRepository } from "../../Repository/Examples.ts";
 import { IngestedLinks, LinkBatches, LinkBatchItems } from "../../Repository/schema.ts";
+const isIngestedLinksSelectFieldsStatus = S.is(IngestedLinks.select.fields.status);
+const isLinkBatchItemsSelectFieldsStatus = S.is(LinkBatchItems.select.fields.status);
+const isLinkBatchesSelectFieldsStatus = S.is(LinkBatches.select.fields.status);
 
 const DatabaseTestLayer = makeDrizzleLayer().pipe(Layer.provideMerge(PgliteTestLayer));
 const RepositoryTestLayer = Layer.mergeAll(
@@ -604,12 +607,12 @@ describe.sequential("repository ontology isolation", () => {
     );
 
     it("enforces persisted link lifecycle domains", () => {
-      assert.isTrue(S.is(IngestedLinks.select.fields.status)("processed"));
-      assert.isFalse(S.is(IngestedLinks.select.fields.status)("unknown"));
-      assert.isTrue(S.is(LinkBatches.select.fields.status)("running"));
-      assert.isFalse(S.is(LinkBatches.select.fields.status)("processing"));
-      assert.isTrue(S.is(LinkBatchItems.select.fields.status)("processing"));
-      assert.isFalse(S.is(LinkBatchItems.select.fields.status)("running"));
+      assert.isTrue(isIngestedLinksSelectFieldsStatus("processed"));
+      assert.isFalse(isIngestedLinksSelectFieldsStatus("unknown"));
+      assert.isTrue(isLinkBatchesSelectFieldsStatus("running"));
+      assert.isFalse(isLinkBatchesSelectFieldsStatus("processing"));
+      assert.isTrue(isLinkBatchItemsSelectFieldsStatus("processing"));
+      assert.isFalse(isLinkBatchItemsSelectFieldsStatus("running"));
     });
   });
 });

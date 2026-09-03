@@ -3,6 +3,8 @@ import { Result } from "effect";
 import * as S from "effect/Schema";
 import { describe, expect, it } from "vitest";
 
+const decodeUnknownYouTubeWatchRequestResult = S.decodeUnknownResult(YouTubeWatchRequest);
+
 interface TauriConfig {
   readonly app: {
     readonly security: {
@@ -95,8 +97,7 @@ describe("packaged YouTube security boundaries", () => {
   });
 
   it("rejects watch-url lookalikes and suffixes at the typed event boundary", () => {
-    const isWatchRequest = (input: unknown): boolean =>
-      Result.isSuccess(S.decodeUnknownResult(YouTubeWatchRequest)(input));
+    const isWatchRequest = (input: unknown): boolean => Result.isSuccess(decodeUnknownYouTubeWatchRequestResult(input));
 
     expect(isWatchRequest({ url: "https://www.youtube.com/watch?v=M7lc1UVf-VE" })).toBe(true);
     expect(isWatchRequest({ url: "https://www.youtube.com/watchXv=M7lc1UVf-VE" })).toBe(false);

@@ -24,6 +24,10 @@ import {
 } from "./Pattern.ts";
 import type { PatternElement as PatternElementType } from "./Pattern.ts";
 
+const isEntityPatternOption = S.is(EntityPatternOption);
+const isLiteralPatternOption = S.is(LiteralPatternOption);
+const isPOSPatternOption = S.is(POSPatternOption);
+
 const $I = $NlpId.create("Core/PatternParsers");
 type NonEmptyChoices<A> = readonly [A, ...A[]];
 
@@ -45,17 +49,15 @@ const parseBracketValues = (input: string): O.Option<NonEmptyChoices<string>> =>
   });
 
 const decodePOSPatternElement = (input: string): O.Option<POSPatternElement> =>
-  O.map(O.filter(parseBracketValues(input), S.is(POSPatternOption)), (parts) =>
-    POSPatternElement.make({ value: parts })
-  );
+  O.map(O.filter(parseBracketValues(input), isPOSPatternOption), (parts) => POSPatternElement.make({ value: parts }));
 
 const decodeEntityPatternElement = (input: string): O.Option<EntityPatternElement> =>
-  O.map(O.filter(parseBracketValues(input), S.is(EntityPatternOption)), (parts) =>
+  O.map(O.filter(parseBracketValues(input), isEntityPatternOption), (parts) =>
     EntityPatternElement.make({ value: parts })
   );
 
 const decodeLiteralPatternElement = (input: string): O.Option<LiteralPatternElement> =>
-  O.map(O.filter(parseBracketValues(input), S.is(LiteralPatternOption)), (parts) =>
+  O.map(O.filter(parseBracketValues(input), isLiteralPatternOption), (parts) =>
     LiteralPatternElement.make({ value: parts })
   );
 

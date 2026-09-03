@@ -4,6 +4,7 @@ import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { Correction, correctionShouldApply } from "../../Service/Agent/CorrectorAgent.ts";
+const decodeUnknownCorrection = S.decodeUnknownEffect(Correction);
 
 describe("CorrectorAgent correction model", () => {
   it.effect(
@@ -33,7 +34,7 @@ describe("CorrectorAgent correction model", () => {
   it.effect(
     "rejects a value strategy whose required replacement value is absent",
     Effect.fnUntraced(function* () {
-      const error = yield* S.decodeUnknownEffect(Correction)({
+      const error = yield* decodeUnknownCorrection({
         strategy: "generate-value",
         focusNode: "https://example.com/entity/1",
         path: "https://example.com/property/name",

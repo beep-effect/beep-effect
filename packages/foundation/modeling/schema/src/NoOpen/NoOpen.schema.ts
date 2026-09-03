@@ -60,6 +60,7 @@ export const NoOpenValue = NoOpenValueBase.pipe(
  * @since 0.0.0
  */
 export type NoOpenValue = typeof NoOpenValue.Type;
+const isNoOpenValue = S.is(NoOpenValue);
 
 const NoOpenOptionBase = LiteralKit([false, ...NoOpenValueBase.Options]);
 
@@ -177,7 +178,7 @@ export const NoOpenHeader = S.UndefinedOr(NoOpenOption).pipe(
           return O.none<string>();
         }
 
-        if (S.is(NoOpenValue)(option)) {
+        if (isNoOpenValue(option)) {
           return O.some(option);
         }
 

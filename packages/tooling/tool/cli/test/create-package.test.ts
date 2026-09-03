@@ -61,9 +61,11 @@ const StoriesTsconfig = S.Struct({
     types: S.Array(S.String),
   }),
 });
+const encodeStoriesTsconfigSync = S.encodeSync(StoriesTsconfig);
 const StoriesDirectoryTsconfig = S.Struct({
   extends: S.Literal("../tsconfig.stories.json"),
 });
+const encodeStoriesDirectoryTsconfigSync = S.encodeSync(StoriesDirectoryTsconfig);
 const TypeScriptPluginsConfig = S.Struct({
   compilerOptions: S.Struct({
     plugins: S.Array(S.Record(S.String, S.Unknown)),
@@ -509,8 +511,8 @@ describe("create-package", { concurrent: false }, () => {
   it("property: Storybook tsconfig schemas round-trip derived values", () => {
     fc.assert(
       fc.property(StoriesTsconfigArbitrary, StoriesDirectoryTsconfigArbitrary, (storiesTsconfig, storiesDirectory) => {
-        expect(decodeStoriesTsconfig(S.encodeSync(StoriesTsconfig)(storiesTsconfig))).toEqual(storiesTsconfig);
-        expect(decodeStoriesDirectoryTsconfig(S.encodeSync(StoriesDirectoryTsconfig)(storiesDirectory))).toEqual(
+        expect(decodeStoriesTsconfig(encodeStoriesTsconfigSync(storiesTsconfig))).toEqual(storiesTsconfig);
+        expect(decodeStoriesDirectoryTsconfig(encodeStoriesDirectoryTsconfigSync(storiesDirectory))).toEqual(
           storiesDirectory
         );
       }),

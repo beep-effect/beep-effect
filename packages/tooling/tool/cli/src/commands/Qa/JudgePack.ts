@@ -324,6 +324,7 @@ export class JudgeManifest extends S.Class<JudgeManifest>($I`JudgeManifest`)(
 ) {}
 
 const JudgeManifestJson = S.fromJsonString(JudgeManifest);
+const encodeJudgeManifestJson = S.encodeEffect(JudgeManifestJson);
 
 const LegacyAssertion = S.Struct({
   detail: S.optionalKey(S.String),
@@ -343,6 +344,7 @@ const LegacyManifest = S.Struct({
 });
 
 const LegacyManifestJson = S.fromJsonString(LegacyManifest);
+const decodeUnknownLegacyManifestJson = S.decodeUnknownEffect(LegacyManifestJson);
 
 /**
  * Legacy screenshot-harness manifest, when the round produced one.
@@ -365,7 +367,7 @@ export const readLegacyManifest = Effect.fn("QaJudgePack.readLegacyManifest")(fu
   return yield* fs
     .readFileString(manifestPath)
     .pipe(
-      Effect.flatMap(S.decodeUnknownEffect(LegacyManifestJson)),
+      Effect.flatMap(decodeUnknownLegacyManifestJson),
       Effect.map(O.some),
       Effect.orElseSucceed(O.none<typeof LegacyManifest.Type>)
     );
@@ -915,7 +917,7 @@ export const runQaJudgePack = Effect.fn("QaJudgePack.run")(function* (
     })
   );
 
-  const manifestJson = yield* S.encodeEffect(JudgeManifestJson)(judgeManifest).pipe(
+  const manifestJson = yield* encodeJudgeManifestJson(judgeManifest).pipe(
     QaCommandError.mapError("qa judge-pack could not encode the judge manifest.")
   );
 

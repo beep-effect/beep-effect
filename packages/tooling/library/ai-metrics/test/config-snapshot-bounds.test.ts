@@ -18,6 +18,8 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const isAiMetricsConfigSnapshotTruncationReason = S.is(AiMetricsConfigSnapshotTruncationReason);
+
 const encodeConfigSnapshotBoundsReport = S.encodeUnknownEffect(AiMetricsConfigSnapshotBoundsReport);
 const encodeConfigSnapshotInput = S.encodeUnknownEffect(AiMetricsConfigSnapshotInput);
 const encodeUnknownJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
@@ -114,7 +116,7 @@ describe("@beep/repo-ai-metrics bounded config snapshots", () => {
     fc.assert(
       fc.property(
         S.toArbitrary(AiMetricsConfigSnapshotTruncationReason)(fc),
-        S.is(AiMetricsConfigSnapshotTruncationReason)
+        isAiMetricsConfigSnapshotTruncationReason
       ),
       fcRuns(25)
     ));

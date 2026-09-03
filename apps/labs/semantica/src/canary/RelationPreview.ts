@@ -106,8 +106,11 @@ class RelationPreviewReport extends S.Class<RelationPreviewReport>($I`RelationPr
 ) {}
 
 const PreviewManifestJson = S.fromJsonString(RelationPreviewManifest);
+const decodePreviewManifestJson = S.decodeEffect(PreviewManifestJson);
 const ProviderCacheEntryJson = S.fromJsonString(ProviderCacheEntry);
+const decodeProviderCacheEntryJson = S.decodeEffect(ProviderCacheEntryJson);
 const PreviewReportJson = S.fromJsonString(RelationPreviewReport, { space: 2 });
+const encodePreviewReportJson = S.encodeEffect(PreviewReportJson);
 
 const failed = (reason: RelationPreviewFailed["reason"], message: string): RelationPreviewFailed =>
   RelationPreviewFailed.make({ message, reason });
@@ -152,7 +155,7 @@ const loadCanonicalPaper = Effect.fn("RelationPreview.loadCanonicalPaper")(funct
 const readPreviewManifest = Effect.fn("RelationPreview.readManifest")(function* (filePath: string) {
   const fs = yield* FileSystem.FileSystem;
   return yield* fs.readFileString(filePath).pipe(
-    Effect.flatMap(S.decodeEffect(PreviewManifestJson)),
+    Effect.flatMap(decodePreviewManifestJson),
     Effect.mapError(() => failed("manifest-invalid", "The E5 preview manifest could not be read or decoded."))
   );
 });
@@ -165,7 +168,7 @@ const readCacheEntry = Effect.fn("RelationPreview.readCacheEntry")(function* (ca
   const source = yield* fs
     .readFileString(filePath)
     .pipe(Effect.mapError(() => failed("cache-unavailable", "A required E5 provider-cache entry is unavailable.")));
-  const entry = yield* S.decodeEffect(ProviderCacheEntryJson)(source).pipe(
+  const entry = yield* decodeProviderCacheEntryJson(source).pipe(
     Effect.mapError(() => failed("cache-invalid", "A required E5 provider-cache entry failed integrity decoding."))
   );
   if (!Str.Equivalence(entry.cacheKey, cacheKey)) {
@@ -254,7 +257,7 @@ export const runRelationPreview = Effect.fn("RelationPreview.run")(function* (op
     passed: true,
     schemaVersion: "semantica-relation-preview-report/v1",
   });
-  const json = yield* S.encodeEffect(PreviewReportJson)(report).pipe(Effect.orDie);
+  const json = yield* encodePreviewReportJson(report).pipe(Effect.orDie);
   yield* Console.log(json);
   return report;
 });

@@ -38,6 +38,8 @@ import {
 import type * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
 import type { M365AuthShape, M365InteractiveAuthorizer } from "./M365.auth.ts";
 
+const decodeM365ConfigInput = S.decodeEffect(M365ConfigInput);
+
 const $I = $M365Id.create("M365.service");
 
 const QueryValue = S.Union([S.Finite, S.String]).pipe(
@@ -66,6 +68,7 @@ const M365ScopesFromCsv = S.String.pipe(
     description: "Comma-delimited M365 scope environment value decoded to non-empty scope entries.",
   })
 );
+const decodeM365ScopesFromCsv = S.decodeEffect(M365ScopesFromCsv);
 
 // The service runtime's token provider and HTTP client are in-process handles,
 // never decoded from external input; structural `S.declare`s carry them through
@@ -1046,14 +1049,14 @@ const loadEnvConfig = Effect.fn("M365.loadEnvConfig")(function* () {
     O.match({
       onNone: () => Effect.succeed(O.none<ReadonlyArray<string>>()),
       onSome: (value) =>
-        S.decodeEffect(M365ScopesFromCsv)(value).pipe(
+        decodeM365ScopesFromCsv(value).pipe(
           Effect.map(O.some),
           Effect.mapError((cause) => M365Error.fromReason("config", { cause }))
         ),
     })
   );
 
-  return yield* S.decodeEffect(M365ConfigInput)({
+  return yield* decodeM365ConfigInput({
     clientId,
     tenantId,
     ...getSomesStruct({

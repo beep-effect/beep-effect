@@ -43,6 +43,12 @@ import { FastCheck as fc } from "effect/testing";
 import { envelope, groupOne, groupTwo, panelOne, panelThree, panelTwo, splitOne, splitTwo } from "./Fixtures.ts";
 import type { DockChanged, DockMutationOutcome } from "@beep/dock";
 
+const decodeDockSnapshot = S.decodeEffect(DockSnapshot);
+const decodeUnknownAnchoredBoxOption = S.decodeUnknownOption(AnchoredBox);
+const decodeUnknownDockWorkspaceResult = S.decodeUnknownResult(DockWorkspace);
+const encodeDockSnapshot = S.encodeEffect(DockSnapshot);
+const encodeAnchoredBoxOption = S.encodeOption(AnchoredBox);
+
 const firstBox = TopLeftAnchoredBox.make({ left: 10, top: 20, width: 300, height: 200 });
 const secondBox = BottomRightAnchoredBox.make({ right: 5, bottom: 6, width: 250, height: 180 });
 const tabsOne = TabsNode.make({ groupId: groupOne, active: panelOne });
@@ -179,8 +185,8 @@ describe("floating dock topology", () => {
             )
           )
         ).state;
-        const encoded = yield* S.encodeEffect(DockSnapshot)(DockSnapshot.make({ workspace: state }));
-        const decoded = yield* S.decodeEffect(DockSnapshot)(encoded);
+        const encoded = yield* encodeDockSnapshot(DockSnapshot.make({ workspace: state }));
+        const decoded = yield* decodeDockSnapshot(encoded);
         expect(decoded.workspace).toEqual(state);
       })
     );
@@ -538,7 +544,7 @@ describe("floating dock topology", () => {
 
   it("schema-rejects duplicate identities across docked and floating roots", () => {
     expect(
-      S.decodeUnknownResult(DockWorkspace)({
+      decodeUnknownDockWorkspaceResult({
         kind: "populated",
         revision: 0,
         root: tabsOne,
@@ -555,7 +561,7 @@ describe("anchored box codec properties", () => {
     Effect.sync(() =>
       fc.assert(
         fc.property(S.toArbitrary(AnchoredBox)(fc), (box) => {
-          const decoded = O.flatMap(S.encodeOption(AnchoredBox)(box), S.decodeUnknownOption(AnchoredBox));
+          const decoded = O.flatMap(encodeAnchoredBoxOption(box), decodeUnknownAnchoredBoxOption);
           expect(O.exists(decoded, (value) => Equal.equals(value, box))).toBe(true);
         })
       )

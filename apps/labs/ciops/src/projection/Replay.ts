@@ -28,6 +28,8 @@ import {
 } from "./Schemas.ts";
 import type { AdmissionJournalAdmitted, AdmissionJournalReleased, AdmissionPolicyParams } from "./Schemas.ts";
 
+const decodeAdmissionJournalEventJson = S.decodeEffect(S.fromJsonString(AdmissionJournalEvent));
+
 const $I = $CiopsId.create("projection/Replay");
 
 /**
@@ -184,7 +186,7 @@ const decodeJournalLine = Effect.fnUntraced(function* (
   line: string,
   lineIndex: number
 ): Effect.fn.Return<AdmissionJournalEvent, PolicyDecodeError> {
-  return yield* S.decodeEffect(S.fromJsonString(AdmissionJournalEvent))(line).pipe(
+  return yield* decodeAdmissionJournalEventJson(line).pipe(
     Effect.mapError(() => replayInputFailure(`Admission journal line ${lineIndex + 1} did not match its schema.`))
   );
 });

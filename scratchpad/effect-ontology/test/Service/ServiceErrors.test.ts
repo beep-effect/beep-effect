@@ -19,6 +19,7 @@ import { SparqlCorrectionError, SparqlGenerationError, SparqlSyntaxError } from 
 import { GenerationMismatchError } from "../../Service/Storage.ts";
 import { ExplanationError } from "../../Service/ViolationExplainer.ts";
 import { WikidataApiError, WikidataRateLimitError } from "../../Service/WikidataClient.ts";
+const decodeExtractionRunError = S.decodeEffect(ExtractionRunError);
 
 describe("schema-backed service errors", () => {
   it.effect(
@@ -91,7 +92,7 @@ describe("schema-backed service errors", () => {
       assert.isTrue(WikidataApiError.is(WikidataApiError.make({ message: "Wikidata failed." })));
       assert.isTrue(WikidataRateLimitError.is(WikidataRateLimitError.make({ retryAfter: Duration.seconds(5) })));
 
-      const decoded = yield* S.decodeEffect(ExtractionRunError)({
+      const decoded = yield* decodeExtractionRunError({
         _tag: "ExtractionRunError",
         message: "Run metadata is missing.",
         cause: undefined,

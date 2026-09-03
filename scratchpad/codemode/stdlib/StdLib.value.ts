@@ -30,6 +30,7 @@ import {
   GlobalNamespaceName,
   InterpreterRuntimeError,
 } from "../interpreter/Interpreter.model.ts";
+const isErrorConstructorName = S.is(ErrorConstructorName);
 
 const $I = $ScratchpadId.create("codemode/stdlib/StdLib.value");
 
@@ -468,7 +469,7 @@ export const createAggregateErrorValue = (errors: Array<unknown>, message: strin
 export const errorBrandName = (value: unknown): ErrorConstructorName | undefined => {
   if (P.isNull(value) || !P.isObjectKeyword(value)) return undefined;
   const name = Reflect.get(value, ErrorBrand);
-  return S.is(ErrorConstructorName)(name) ? name : undefined;
+  return isErrorConstructorName(name) ? name : undefined;
 };
 
 /**

@@ -5,6 +5,8 @@ import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const isDid2 = S.is(Did);
+
 const DidArbitrary = S.toArbitrary(Did)(fc);
 const decodeDid = S.decodeUnknownEffect(Did);
 
@@ -53,11 +55,9 @@ describe("Did", () => {
   );
 
   it("derives schema arbitrary values that remain valid DID Core identifiers", () => {
-    const isDid = S.is(Did);
-
     fc.assert(
       fc.property(DidArbitrary, (did) => {
-        expect(isDid(did)).toBe(true);
+        expect(isDid2(did)).toBe(true);
         expect(did).toMatch(/^did:[a-z0-9]+:/u);
         expect(did).not.toMatch(/[/?#\s]/u);
       }),

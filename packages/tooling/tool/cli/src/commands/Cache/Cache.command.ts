@@ -59,6 +59,7 @@ const TurboRunSummary = S.Struct({
 });
 
 type TurboRunSummary = typeof TurboRunSummary.Type;
+const decodeUnknownTurboRunSummary = S.decodeUnknownEffect(TurboRunSummary);
 
 const runText = (command: ReadonlyArray<string>, cwd: string): Effect.Effect<string, CacheCommandError> =>
   Effect.try({
@@ -284,7 +285,7 @@ const readRunFiles = Effect.fn("Cache.readRunFiles")(function* (runsDir: string)
         try: () => Bun.file(filePath).json(),
         catch: (cause) => CacheCommandError.new(`Failed to read ${filePath}.`, cause),
       }).pipe(
-        Effect.flatMap(S.decodeUnknownEffect(TurboRunSummary)),
+        Effect.flatMap(decodeUnknownTurboRunSummary),
         Effect.mapError((cause) => CacheCommandError.new(`Invalid Turbo summary ${filePath}.`, cause))
       )
   );

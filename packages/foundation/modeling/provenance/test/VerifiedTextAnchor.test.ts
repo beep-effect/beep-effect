@@ -22,6 +22,14 @@ import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeTextAnchorVerificationReceipt = S.decodeEffect(TextAnchorVerificationReceipt);
+const decodeSourceTextIdentityResult = S.decodeResult(SourceTextIdentity);
+const decodeUnknownVerifiedTextAnchor = S.decodeUnknownEffect(VerifiedTextAnchor);
+const encodeUnknownTextAnchorVerificationReceipt = S.encodeUnknownEffect(TextAnchorVerificationReceipt);
+const encodeUnknownSourceTextIdentityResult = S.encodeUnknownResult(SourceTextIdentity);
+const isVerifiedSourceText = S.is(VerifiedSourceText);
+const isVerifiedTextAnchor = S.is(VerifiedTextAnchor);
+
 const emptyDigest = SourceTextDigest.make("sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
 const alternateDigest = SourceTextDigest.make(
   "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
@@ -63,7 +71,7 @@ describe("@beep/provenance VerifiedTextAnchor", () => {
         })
       );
 
-      expect(S.is(VerifiedSourceText)(verifiedSource)).toBe(true);
+      expect(isVerifiedSourceText(verifiedSource)).toBe(true);
       expect(verifiedSource.source).toEqual(source);
       expect(verifiedSource.sourceText).toBe("fact");
     }, provideBunCrypto)
@@ -136,8 +144,8 @@ describe("@beep/provenance VerifiedTextAnchor", () => {
       expect(Reflect.set(verifiedSource.source.extractor, "version", "2")).toBe(true);
       expect(Reflect.set(verified.anchor, "quote", "fake")).toBe(true);
       expect(Reflect.set(verified.source, "sourceRef", "source:mutated")).toBe(true);
-      expect(S.is(VerifiedSourceText)(verifiedSource)).toBe(true);
-      expect(S.is(VerifiedTextAnchor)(verified)).toBe(true);
+      expect(isVerifiedSourceText(verifiedSource)).toBe(true);
+      expect(isVerifiedTextAnchor(verified)).toBe(true);
       expect(verifiedSource.sourceText).toBe("fact");
       expect(verified.anchor.quote).toBe("fact");
       expect(verified.source.sourceRef).toBe("source:example");
@@ -159,7 +167,7 @@ describe("@beep/provenance VerifiedTextAnchor", () => {
 
       expect(verified.anchor.quote).toBe("😀");
       expect(verified.source).toEqual(source);
-      expect(S.is(VerifiedTextAnchor)(verified)).toBe(true);
+      expect(isVerifiedTextAnchor(verified)).toBe(true);
     }, provideBunCrypto)
   );
 
@@ -336,14 +344,14 @@ describe("@beep/provenance VerifiedTextAnchor", () => {
         })
       );
       const receipt = toTextAnchorVerificationReceipt(verified);
-      const encoded = yield* S.encodeUnknownEffect(TextAnchorVerificationReceipt)(receipt);
-      const decodedReceipt = yield* S.decodeEffect(TextAnchorVerificationReceipt)(encoded);
-      const verificationFailure = yield* S.decodeUnknownEffect(VerifiedTextAnchor)(encoded).pipe(Effect.flip);
+      const encoded = yield* encodeUnknownTextAnchorVerificationReceipt(receipt);
+      const decodedReceipt = yield* decodeTextAnchorVerificationReceipt(encoded);
+      const verificationFailure = yield* decodeUnknownVerifiedTextAnchor(encoded).pipe(Effect.flip);
       const receiptIsNotVerified: TextAnchorVerificationReceipt extends VerifiedTextAnchor ? false : true = true;
 
       expect(encoded).toEqual({ anchor: verified.anchor, source: verified.source });
       expect(S.toEquivalence(TextAnchorVerificationReceipt)(decodedReceipt, receipt)).toBe(true);
-      expect(S.is(VerifiedTextAnchor)(decodedReceipt)).toBe(false);
+      expect(isVerifiedTextAnchor(decodedReceipt)).toBe(false);
       expect(receiptIsNotVerified).toBe(true);
       expect(verificationFailure.message).toContain("VerifiedTextAnchor");
     }, provideBunCrypto)
@@ -352,8 +360,8 @@ describe("@beep/provenance VerifiedTextAnchor", () => {
   it("derives constructive arbitrary source identities from the schema", () =>
     fc.assert(
       fc.property(S.toArbitrary(SourceTextIdentity)(fc), (source) => {
-        const encoded = Result.getOrThrow(S.encodeUnknownResult(SourceTextIdentity)(source));
-        const decoded = Result.getOrThrow(S.decodeResult(SourceTextIdentity)(encoded));
+        const encoded = Result.getOrThrow(encodeUnknownSourceTextIdentityResult(source));
+        const decoded = Result.getOrThrow(decodeSourceTextIdentityResult(encoded));
 
         expect(S.toEquivalence(SourceTextIdentity)(decoded, source)).toBe(true);
       }),

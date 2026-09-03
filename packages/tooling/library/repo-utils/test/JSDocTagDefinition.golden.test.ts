@@ -13,13 +13,16 @@ import { FastCheck as fc } from "effect/testing";
 import golden from "./__golden__/jsdoc-tag-fingerprints.json" with { type: "json" };
 import type { TagName } from "@beep/repo-utils/JSDoc/models/tag-values";
 
+const decodeJSDocTagDefinitionResult = S.decodeResult(JSDocTagDefinition);
+const encodeJSDocTagDefinitionSync = S.encodeSync(JSDocTagDefinition);
+
 const legacyMake: typeof make = dual(
   2,
   <const Tag extends TagName, const Def extends typeof JSDocTagDefinition.Encoded>(
     _tag: Tag,
     meta: Omit<JSDocTagDefinition.Instance<Tag, Def>, "_tag">
   ) => {
-    const def = Result.getOrThrow(S.decodeResult(JSDocTagDefinition)({ _tag, ...meta }));
+    const def = Result.getOrThrow(decodeJSDocTagDefinitionResult({ _tag, ...meta }));
     return JSDocTagDefinition.mapFields((_) => ({
       _tag: S.tag(_tag),
       value: TagValue.cases[_tag],
@@ -47,7 +50,7 @@ const fingerprint = (schema: MemberSchema, sample: unknown) => {
 
   return {
     ast: String(schema.ast),
-    annotation: S.encodeSync(JSDocTagDefinition)(metadata),
+    annotation: encodeJSDocTagDefinitionSync(metadata),
     fieldKeys: R.keys(schema.fields),
     roundTrip: S.encodeSync(synchronous)(decoded),
   };
@@ -57,7 +60,7 @@ const fingerprints = (implementation: MakeMember, jsDocTag: JSDocTagSchema) =>
   R.fromEntries(
     A.map(jsDocTag.discriminants, (tag, index) => {
       const definition = pipe(getJSDocTagMetadata(jsDocTag.cases[tag]), O.getOrThrow);
-      const { _tag: _, ...meta } = S.encodeSync(JSDocTagDefinition)(definition);
+      const { _tag: _, ...meta } = encodeJSDocTagDefinitionSync(definition);
       const schema = implementation(tag, meta);
 
       return [tag, fingerprint(schema, sampleMember(tag, index + 1))] as const;

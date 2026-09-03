@@ -115,6 +115,8 @@ import type {
 } from "./Quality.schemas.ts";
 import type { QualityTaskConfigurationError, QualityTaskFailed, QualityTaskGroupFailed } from "./Tasks.ts";
 
+const encodeUnknownTmpfsReapReport = S.encodeUnknownEffect(TmpfsReapReport);
+
 /**
  * Public quality script command error export.
  *
@@ -2868,7 +2870,7 @@ const tmpfsReapCommand = Command.make(
   Effect.fn(function* ({ apply, json }) {
     const report = yield* runTmpfsReap({ apply });
     if (json) {
-      const encoded = yield* S.encodeUnknownEffect(TmpfsReapReport)(report);
+      const encoded = yield* encodeUnknownTmpfsReapReport(report);
       yield* printLines([yield* jsonStringifyPretty(encoded)]);
       return;
     }

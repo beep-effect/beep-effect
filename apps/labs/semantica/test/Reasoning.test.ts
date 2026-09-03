@@ -18,6 +18,11 @@ import {
   RDFS_RULES,
   RdfTriple,
 } from "@/schema/Reasoning";
+
+const decodeCrashProjectionInputJson = S.decodeEffect(S.fromJsonString(CrashProjectionInput));
+const decodeGEntailmentExpectationJson = S.decodeEffect(S.fromJsonString(GEntailmentExpectation));
+const isSha256Hex = S.is(Sha256Hex);
+
 import { Reasoner } from "@/services/Reasoner";
 
 const statement = (subject: string, predicate: string, object: string) =>
@@ -88,7 +93,7 @@ describe("C2 declarative reasoner", () => {
         Effect.gen(function* () {
           const expectation = yield* Effect.promise(() =>
             Bun.file("fixtures/gold/v1/g-entailment-rdfs.json").text()
-          ).pipe(Effect.flatMap(S.decodeEffect(S.fromJsonString(GEntailmentExpectation))));
+          ).pipe(Effect.flatMap(decodeGEntailmentExpectationJson));
           const rules = yield* Effect.promise(() => Bun.file("fixtures/gold/v1/g-entailment-rdfs.n3").text());
           expect(sha256TextSync(rules)).toBe(expectation.rulesSha256);
           const processSpawner = yield* ChildProcessSpawner.ChildProcessSpawner;
@@ -151,7 +156,7 @@ describe("C2 declarative reasoner", () => {
                   stdout: "pipe",
                 })
               );
-              const input = yield* S.decodeEffect(S.fromJsonString(CrashProjectionInput))(fixture);
+              const input = yield* decodeCrashProjectionInputJson(fixture);
               expect(input.outcomes).toHaveLength(2);
               expect(input.events).toHaveLength(2);
               const inputPath = path.join(ledgerRoot, "projection-input.json");
@@ -187,7 +192,7 @@ describe("C2 declarative reasoner", () => {
               expect(Exit.isFailure(crashExit)).toBe(true);
               const recoveredDigest = yield* recover;
               const repeatedDigest = yield* recover;
-              expect(S.is(Sha256Hex)(recoveredDigest)).toBe(true);
+              expect(isSha256Hex(recoveredDigest)).toBe(true);
               expect(recoveredDigest).not.toBe(emptyDigest);
               expect(repeatedDigest).toBe(recoveredDigest);
             })

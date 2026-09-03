@@ -12,6 +12,7 @@ import * as S from "effect/Schema";
 import { type NumberMethod, type NumberStatic, numberMethods, numberStatics } from "../Codemode.method-names.ts";
 import { type AstNode, InterpreterRuntimeError } from "../interpreter/Interpreter.model.ts";
 import { boundedData, coerceToString } from "./StdLib.value.ts";
+const isFinite2 = S.is(S.Finite);
 
 export {
   numberMethods,
@@ -129,7 +130,7 @@ export const invokeNumberStatic = (name: NumberStatic, args: Array<unknown>, nod
   const value = args[0];
   return numberStatics.$match(name, {
     isInteger: () => N.isInteger(value),
-    isFinite: () => S.is(S.Finite)(value),
+    isFinite: () => isFinite2(value),
     isNaN: () => Number.isNaN(value),
     isSafeInteger: () => Number.isSafeInteger(value),
     parseInt: () => {

@@ -34,6 +34,8 @@ import { enforceSafeHtml, SafeHtmlAst, safeHtmlAstRoot } from "./Html.policy.ts"
 import type { ForeignElementName } from "./Html.attributes.ts";
 import type { ConformantHtml } from "./Html.conformance.ts";
 
+const encodeHtmlRootResult = S.encodeResult(HtmlRoot);
+
 const $I = $HtmlId.create("Html.serialize");
 const isHtmlTag = S.is(HtmlTag);
 const isBooleanAttributeName = S.is(HtmlBooleanAttributeName);
@@ -569,7 +571,7 @@ const serializeRuntimeNode = (
 };
 
 const serializeRoot = Effect.fn("Html.serializeRoot")(function* (root: HtmlRoot.Type) {
-  const encoded = yield* Result.match(S.encodeResult(HtmlRoot)(root), {
+  const encoded = yield* Result.match(encodeHtmlRootResult(root), {
     onFailure: () =>
       Effect.fail(makeError([], "encodingFailure", "The HTML root did not satisfy its generated schema")),
     onSuccess: Effect.succeed,

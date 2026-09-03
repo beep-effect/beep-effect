@@ -39,6 +39,7 @@ import type { ChunkId, DocumentId } from "@/schema/Ids";
 import type { EmbeddingVector } from "@/schema/Projection";
 
 const GProjectionExpectationJson = S.fromJsonString(GProjectionExpectation);
+const decodeGProjectionExpectationJson = S.decodeEffect(GProjectionExpectationJson);
 const C1EvalReportJson = S.fromJsonString(C1EvalReport, { space: 2 });
 const C1EvalTelemetryJson = S.fromJsonString(C1EvalTelemetry, { space: 2 });
 const modelEquivalence = S.toEquivalence(ModelIdentity);
@@ -230,7 +231,7 @@ const makeCanaryC1 = Effect.fn("CanaryC1.make")(function* <E>(
     const base = yield* c0.runWithSnapshot(CanaryOptions.make({ ...options, out: O.none() }));
     const expectationPath = path.join(config.goldDirectory, "g-projection.json");
     const expectation = yield* fs.readFileString(expectationPath).pipe(
-      Effect.flatMap(S.decodeEffect(GProjectionExpectationJson)),
+      Effect.flatMap(decodeGProjectionExpectationJson),
       Effect.mapError(() =>
         failed("expectation-unavailable", "The committed G-projection expectation could not be decoded.")
       )

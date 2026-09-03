@@ -41,6 +41,8 @@ import {
 } from "./Fixtures.ts";
 import type { DockChanged, DockMutationOutcome } from "@beep/dock";
 
+const encodeTabsNodeJson = S.encodeEffect(S.fromJsonString(TabsNode));
+
 const splitThree = SplitId.make("split-three");
 const panelFour = Panel.make({
   id: PanelId.make("panel-four"),
@@ -379,7 +381,7 @@ describe("dock gesture command parity", () => {
           )
         )).state;
         const before = O.getOrThrow(DockWorkspace.findTabs(state, groupTwo));
-        const beforeEncoded = yield* S.encodeEffect(S.fromJsonString(TabsNode))(before);
+        const beforeEncoded = yield* encodeTabsNodeJson(before);
         const moved = yield* requireChanged(
           yield* engine.transition(
             state,
@@ -398,7 +400,7 @@ describe("dock gesture command parity", () => {
           )
         );
         const after = O.getOrThrow(DockWorkspace.findTabs(moved.state, groupTwo));
-        expect(yield* S.encodeEffect(S.fromJsonString(TabsNode))(after)).toBe(beforeEncoded);
+        expect(yield* encodeTabsNodeJson(after)).toBe(beforeEncoded);
         expect(DockWorkspace.groupCount(moved.state)).toBe(3);
         expect(
           O.isNone(

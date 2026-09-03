@@ -13,6 +13,10 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { AdmissionPolicyParams, AdmissionPriority, AdmissionTokenWeights, PolicyDecodeError } from "./Schemas.ts";
 
+const decodePosInt = S.decodeEffect(PosInt);
+const decodeFiniteFromString = S.decodeEffect(S.FiniteFromString);
+const decodeUnknownAdmissionPriority = S.decodeUnknownEffect(AdmissionPriority);
+
 // The pattern binds the complete committed document shape while leaving every
 // policy value and declared priority to be decoded from artifact bytes.
 const knownAboxShape =
@@ -38,10 +42,10 @@ const decodePositiveInteger = Effect.fnUntraced(function* (
   raw: string,
   label: string
 ): Effect.fn.Return<PosInt, PolicyDecodeError> {
-  const finite = yield* S.decodeEffect(S.FiniteFromString)(raw).pipe(
+  const finite = yield* decodeFiniteFromString(raw).pipe(
     Effect.mapError(() => schemaFailure(`A-Box value "${label}" was not a finite number.`))
   );
-  return yield* S.decodeEffect(PosInt)(finite).pipe(
+  return yield* decodePosInt(finite).pipe(
     Effect.mapError(() => schemaFailure(`A-Box value "${label}" was not a positive integer.`))
   );
 });
@@ -49,7 +53,7 @@ const decodePositiveInteger = Effect.fnUntraced(function* (
 const decodePriority = Effect.fnUntraced(function* (
   raw: string
 ): Effect.fn.Return<AdmissionPriority, PolicyDecodeError> {
-  return yield* S.decodeUnknownEffect(AdmissionPriority)(raw).pipe(
+  return yield* decodeUnknownAdmissionPriority(raw).pipe(
     Effect.mapError(() => schemaFailure("A-Box declared an unknown admission priority."))
   );
 });

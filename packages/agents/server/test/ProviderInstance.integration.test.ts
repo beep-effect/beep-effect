@@ -42,6 +42,9 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import type { AiProviderCliRunner } from "@beep/ai-provider-cli";
 
+const decodeDomainEnvVars = S.decodeEffect(Domain.EnvVars);
+const isDomainAuthenticatedSnapshot = S.is(Domain.AuthenticatedSnapshot);
+
 const { makePgliteLayer, pgliteIntegrationTimeoutMillis } = makePgliteIntegrationGate();
 const ProviderInstancePublicId = PublicEntityId.factory(Agents.ProviderInstanceId);
 const decodeActorScope = S.decodeUnknownSync(ProviderInstanceActorScope);
@@ -155,7 +158,7 @@ describe("ProviderInstance PGLite integration", { concurrent: false }, () => {
         yield* prepareTable();
         const useCases = yield* ProviderInstanceUseCases;
         yield* Ref.set(runnerRequests, []);
-        const envVars = yield* S.decodeEffect(Domain.EnvVars)({ NO_PROXY: "localhost" });
+        const envVars = yield* decodeDomainEnvVars({ NO_PROXY: "localhost" });
         const added = yield* useCases.add(
           AddProviderInstanceCommand.make({
             binaryPath: Domain.BinaryPath.make("/opt/bin/claude"),
@@ -172,7 +175,7 @@ describe("ProviderInstance PGLite integration", { concurrent: false }, () => {
         expect(O.getOrThrow(probed.lastProbe).status).toBe("authenticated");
         expect(O.getOrThrow(listed[0]?.lastProbe).status).toBe("authenticated");
         const snapshot = O.getOrThrow(listed[0]?.lastProbe);
-        expect(S.is(Domain.AuthenticatedSnapshot)(snapshot)).toBe(true);
+        expect(isDomainAuthenticatedSnapshot(snapshot)).toBe(true);
         const requests = yield* Ref.get(runnerRequests);
         expect(requests[0]?.executable).toBe("/opt/bin/claude");
         expect(requests[0]?.env).toEqual({ HOME: "/tmp/claude-home", NO_PROXY: "localhost" });

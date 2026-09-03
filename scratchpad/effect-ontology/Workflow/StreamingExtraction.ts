@@ -57,6 +57,8 @@ import { StorageServiceLive } from "../Service/Storage.ts";
 import { captureExtractionTelemetry, recordExtractionChunkCount } from "../Telemetry/ExtractionTelemetry.ts";
 import { annotateExtraction, LlmAttributes } from "../Telemetry/LlmAttributes.ts";
 import { mergeGraphs } from "./Merge.ts";
+const decodeEvidenceSpan = S.decodeEffect(EvidenceSpan);
+const decodeObjectRef2 = S.decodeEffect(ObjectRef);
 
 const $I = $ScratchpadId.create("effect-ontology/Workflow/StreamingExtraction");
 
@@ -130,7 +132,7 @@ const rejectTypeMismatch = (decision: GroundingDecision, typeMatch: boolean): Gr
   });
 
 const evidenceForContext = Effect.fn("StreamingExtraction.evidenceForContext")(function* (context: string) {
-  return yield* S.decodeEffect(EvidenceSpan)({
+  return yield* decodeEvidenceSpan({
     text: context,
     startChar: 0,
     endChar: context.length,
@@ -155,7 +157,7 @@ const relationEvidence = Effect.fn("StreamingExtraction.relationEvidence")(funct
 });
 
 const decodeObjectRef = Effect.fn("StreamingExtraction.decodeObjectRef")(function* (value: string) {
-  return yield* S.decodeEffect(ObjectRef)(value);
+  return yield* decodeObjectRef2(value);
 });
 
 /**

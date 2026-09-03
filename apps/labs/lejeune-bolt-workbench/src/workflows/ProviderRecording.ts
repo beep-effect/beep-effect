@@ -20,6 +20,9 @@ import {
 } from "@/domain/Bundle";
 import type { ProviderRecording } from "@/domain/Bundle";
 
+const decodeFrozenProviderRecording = S.decodeEffect(FrozenProviderRecording);
+const encodeProviderCandidateListFromJsonString = S.encodeEffect(ProviderCandidateListFromJsonString);
+
 const $I = $LejeuneBoltWorkbenchId.create("workflows/ProviderRecording");
 
 const ProviderRecordingIntegrityIssue = LiteralKit([
@@ -72,7 +75,7 @@ export const verifyProviderRecording = Effect.fn("lejeune.provider.verify_record
   recording: ProviderRecording,
   sourceText: string
 ) {
-  const candidateJson = yield* S.encodeEffect(ProviderCandidateListFromJsonString)(recording.candidates).pipe(
+  const candidateJson = yield* encodeProviderCandidateListFromJsonString(recording.candidates).pipe(
     Effect.mapError((cause) =>
       providerIntegrityError(
         "candidate-encoding",
@@ -142,7 +145,7 @@ export const verifyFrozenProviderRecording = Effect.fn("lejeune.provider.verify_
       "The frozen provider recording must be grounded in the exact canonical RFQ A source document."
     );
   }
-  return yield* S.decodeEffect(FrozenProviderRecording)(verified).pipe(
+  return yield* decodeFrozenProviderRecording(verified).pipe(
     Effect.mapError((cause) =>
       providerIntegrityError(
         "frozen-contract",

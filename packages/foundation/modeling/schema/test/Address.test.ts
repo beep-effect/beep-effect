@@ -5,6 +5,10 @@ import { sha256 } from "@noble/hashes/sha2.js";
 import { base58, bech32, bech32m } from "@scure/base";
 import * as S from "effect/Schema";
 
+const decodeUnknownCryptoWalletAddressSync = S.decodeUnknownSync(CryptoWalletAddress);
+const CryptoWalletAddressPayload = S.Struct({ address: CryptoWalletAddress });
+const decodeCryptoWalletAddressPayloadSync = S.decodeSync(CryptoWalletAddressPayload);
+
 const evmLowercase = "0x52908400098527886e0f7030069857d2e4169ee7";
 const evmChecksummed = "0x5AEDA56215b167893e80B4fE645BA6d5Bab767DE";
 const bitcoinP2pkh = "16L5yRNPTuciSgXGHqYwn9N6NeoKqopAu";
@@ -33,75 +37,71 @@ const bitcoinWitnessUnsupportedVersion = bech32.encode("bc", [1, ...bech32.toWor
 const bitcoinTaprootUnsupportedVersion = bech32m.encode("bc", [0, ...bech32m.toWords(new Uint8Array(32).fill(1))]);
 
 describe("CryptoWalletAddress", () => {
-  const decode = S.decodeUnknownSync(CryptoWalletAddress);
-
   it("accepts canonical EVM addresses", () => {
-    expect(decode(evmLowercase)).toBe(evmLowercase);
-    expect(decode(evmChecksummed)).toBe(evmChecksummed);
+    expect(decodeUnknownCryptoWalletAddressSync(evmLowercase)).toBe(evmLowercase);
+    expect(decodeUnknownCryptoWalletAddressSync(evmChecksummed)).toBe(evmChecksummed);
   });
 
   it("accepts canonical Bitcoin addresses", () => {
-    expect(decode(bitcoinP2pkh)).toBe(bitcoinP2pkh);
-    expect(decode(bitcoinP2sh)).toBe(bitcoinP2sh);
-    expect(decode(bitcoinWitness)).toBe(bitcoinWitness);
-    expect(decode(bitcoinP2wsh)).toBe(bitcoinP2wsh);
-    expect(decode(bitcoinTaproot)).toBe(bitcoinTaproot);
+    expect(decodeUnknownCryptoWalletAddressSync(bitcoinP2pkh)).toBe(bitcoinP2pkh);
+    expect(decodeUnknownCryptoWalletAddressSync(bitcoinP2sh)).toBe(bitcoinP2sh);
+    expect(decodeUnknownCryptoWalletAddressSync(bitcoinWitness)).toBe(bitcoinWitness);
+    expect(decodeUnknownCryptoWalletAddressSync(bitcoinP2wsh)).toBe(bitcoinP2wsh);
+    expect(decodeUnknownCryptoWalletAddressSync(bitcoinTaproot)).toBe(bitcoinTaproot);
   });
 
   it("accepts canonical Solana addresses", () => {
-    expect(decode(solanaCryptoWalletAddress)).toBe(solanaCryptoWalletAddress);
+    expect(decodeUnknownCryptoWalletAddressSync(solanaCryptoWalletAddress)).toBe(solanaCryptoWalletAddress);
   });
 
   it("rejects malformed EVM addresses", () => {
-    expect(() => decode(Str.toUpperCase(evmChecksummed))).toThrow(
+    expect(() => decodeUnknownCryptoWalletAddressSync(Str.toUpperCase(evmChecksummed))).toThrow(
       "CryptoWalletAddress must be a canonical mainnet EVM, Bitcoin, or Solana wallet address"
     );
-    expect(() => decode("52908400098527886e0f7030069857d2e4169ee7")).toThrow(
+    expect(() => decodeUnknownCryptoWalletAddressSync("52908400098527886e0f7030069857d2e4169ee7")).toThrow(
       "CryptoWalletAddress must be a canonical mainnet EVM, Bitcoin, or Solana wallet address"
     );
-    expect(() => decode("0x52908400098527886E0F7030069857D2E4169Ee7")).toThrow(
+    expect(() => decodeUnknownCryptoWalletAddressSync("0x52908400098527886E0F7030069857D2E4169Ee7")).toThrow(
       "CryptoWalletAddress must be a canonical mainnet EVM, Bitcoin, or Solana wallet address"
     );
   });
 
   it("rejects malformed Bitcoin addresses", () => {
-    expect(() => decode("tb1qqypqxpq9qcrsszg2pvxq6rs0zqg3yyc5f8j3j2")).toThrow(
+    expect(() => decodeUnknownCryptoWalletAddressSync("tb1qqypqxpq9qcrsszg2pvxq6rs0zqg3yyc5f8j3j2")).toThrow(
       "CryptoWalletAddress must be a canonical mainnet EVM, Bitcoin, or Solana wallet address"
     );
-    expect(() => decode("bc1qQypqxpq9qcrsszg2pvxq6rs0zqg3yyc5fcj4z3")).toThrow(
+    expect(() => decodeUnknownCryptoWalletAddressSync("bc1qQypqxpq9qcrsszg2pvxq6rs0zqg3yyc5fcj4z3")).toThrow(
       "CryptoWalletAddress must be a canonical mainnet EVM, Bitcoin, or Solana wallet address"
     );
-    expect(() => decode("16L5yRNPTuciSgXGHqYwn9N6NeoKqopAv")).toThrow(
+    expect(() => decodeUnknownCryptoWalletAddressSync("16L5yRNPTuciSgXGHqYwn9N6NeoKqopAv")).toThrow(
       "CryptoWalletAddress must be a canonical mainnet EVM, Bitcoin, or Solana wallet address"
     );
-    expect(() => decode(bitcoinBase58UnsupportedVersion)).toThrow(
+    expect(() => decodeUnknownCryptoWalletAddressSync(bitcoinBase58UnsupportedVersion)).toThrow(
       "CryptoWalletAddress must be a canonical mainnet EVM, Bitcoin, or Solana wallet address"
     );
-    expect(() => decode(bitcoinWitnessEmptyProgram)).toThrow(
+    expect(() => decodeUnknownCryptoWalletAddressSync(bitcoinWitnessEmptyProgram)).toThrow(
       "CryptoWalletAddress must be a canonical mainnet EVM, Bitcoin, or Solana wallet address"
     );
-    expect(() => decode(bitcoinWitnessUnsupportedVersion)).toThrow(
+    expect(() => decodeUnknownCryptoWalletAddressSync(bitcoinWitnessUnsupportedVersion)).toThrow(
       "CryptoWalletAddress must be a canonical mainnet EVM, Bitcoin, or Solana wallet address"
     );
-    expect(() => decode(bitcoinTaprootUnsupportedVersion)).toThrow(
+    expect(() => decodeUnknownCryptoWalletAddressSync(bitcoinTaprootUnsupportedVersion)).toThrow(
       "CryptoWalletAddress must be a canonical mainnet EVM, Bitcoin, or Solana wallet address"
     );
   });
 
   it("rejects malformed Solana addresses", () => {
     expect(() =>
-      decode("2YeNeP1Xwhs2QCXnqvbDHktoF5v2ZDByARS2fWeiW5x8oENhfydKP6pwhQ8SarrG3Nhb3AeFMiwD38oj24uqC9um")
+      decodeUnknownCryptoWalletAddressSync(
+        "2YeNeP1Xwhs2QCXnqvbDHktoF5v2ZDByARS2fWeiW5x8oENhfydKP6pwhQ8SarrG3Nhb3AeFMiwD38oj24uqC9um"
+      )
     ).toThrow("CryptoWalletAddress must be a canonical mainnet EVM, Bitcoin, or Solana wallet address");
-    expect(() => decode("O0Il")).toThrow(
+    expect(() => decodeUnknownCryptoWalletAddressSync("O0Il")).toThrow(
       "CryptoWalletAddress must be a canonical mainnet EVM, Bitcoin, or Solana wallet address"
     );
   });
 
   it("reports nested field failures at the address key", () => {
-    const Payload = S.Struct({
-      address: CryptoWalletAddress,
-    });
-
-    expect(() => S.decodeSync(Payload)({ address: "invalid" })).toThrow(`at ["address"]`);
+    expect(() => decodeCryptoWalletAddressPayloadSync({ address: "invalid" })).toThrow(`at ["address"]`);
   });
 });

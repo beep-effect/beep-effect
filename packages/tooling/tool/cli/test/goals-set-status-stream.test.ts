@@ -21,6 +21,8 @@ import { Command } from "effect/unstable/cli";
 import { describe, expect, it } from "vitest";
 import { withTempWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
 
+const decodePacketTransitionRequest = S.decodeEffect(PacketTransitionRequest);
+
 const runGoalsCommand = Command.runWith(goalsCommand, { version: "0.0.0" });
 const encodeJson = S.encodeUnknownSync(S.fromJsonString(S.Unknown));
 
@@ -407,7 +409,7 @@ describe("set-status guarded stream writer", () => {
       Effect.runPromise(
         Effect.gen(function* () {
           const decoded = yield* Effect.exit(
-            S.decodeEffect(PacketTransitionRequest)({
+            decodePacketTransitionRequest({
               locator: { packet: "decode-demo", root: "goals", packetPath: "goals/decode-demo" },
               status: "paused",
               previousStatus: "active",

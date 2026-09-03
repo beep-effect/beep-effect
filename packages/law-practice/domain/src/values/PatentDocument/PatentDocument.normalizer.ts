@@ -23,6 +23,9 @@ import {
 import type { Block, Document } from "@beep/md";
 import type { PatentApplicationSectionRole } from "./PatentDocument.model.ts";
 
+const decodeUnknownPatentApplicationDocument = S.decodeUnknownEffect(PatentApplicationDocument);
+const decodeUnknownPatentClaims = S.decodeUnknownEffect(PatentClaims);
+
 const $I = $LawPracticeDomainId.create("values/PatentDocument/PatentDocument.normalizer");
 const claimBlockPattern = /(?:^|\n)[\t ]*(\d+)\.[\t ]+(.+?)(?=\n[\t ]*\d+\.[\t ]+|\s*$)/gsu;
 const transitionPattern = /\b(consisting essentially of|consisting of|comprising|including|having|wherein)\b/giu;
@@ -34,6 +37,7 @@ const isOrderedList = S.is(Ol);
 const ambiguousTransitionPrefixPattern = /\b(?:by|for|of|without)\s*$/iu;
 
 const ClaimNumberFromString = S.FiniteFromString.pipe(S.decodeTo(PosInt));
+const decodeClaimNumberFromStringOption = S.decodeOption(ClaimNumberFromString);
 
 const PatentDocumentNormalizationReason = LiteralKit([
   "content-before-first-section",
@@ -314,7 +318,7 @@ const collectSectionDrafts = (document: Document): SectionDraftState =>
     flushCurrent
   );
 
-const parseClaimNumber = (value: string): O.Option<PosInt> => S.decodeOption(ClaimNumberFromString)(value);
+const parseClaimNumber = (value: string): O.Option<PosInt> => decodeClaimNumberFromStringOption(value);
 const parseClaimTransition: (value: string) => PatentClaimTransition = flow(
   Str.toLowerCase,
   S.decodeUnknownOption(PatentClaimTransition),
@@ -429,7 +433,7 @@ const claimsFromDraft = Effect.fn("PatentDocument.claimsFromDraft")(function* (
   const claims = yield* Effect.forEach(matches, (match) =>
     parseClaim(pipe(A.get(match, 1), O.getOrThrow), pipe(A.get(match, 2), O.getOrThrow))
   );
-  return yield* S.decodeUnknownEffect(PatentClaims)(claims).pipe(
+  return yield* decodeUnknownPatentClaims(claims).pipe(
     Effect.mapError((cause) =>
       PatentDocumentNormalizationError.make({
         message: `Invalid patent claim dependency graph: ${String(cause)}`,
@@ -510,7 +514,7 @@ export const normalizePatentApplicationDocument = Effect.fn("PatentDocument.norm
       onSome: claimsFromDraft,
     })
   );
-  return yield* S.decodeUnknownEffect(PatentApplicationDocument)({
+  return yield* decodeUnknownPatentApplicationDocument({
     claims,
     sections,
     sourceText: renderPatentTextBlocks(document.children),

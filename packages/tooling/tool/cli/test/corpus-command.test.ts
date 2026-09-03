@@ -58,6 +58,25 @@ import * as TestClock from "effect/testing/TestClock";
 import { ChildProcess } from "effect/unstable/process";
 import type { PlatformError } from "effect";
 
+const decodeRestorationVerifyOptions = S.decodeEffect(RestorationVerifyOptions);
+const decodeUnknownCollectorManifestRecordResult = S.decodeUnknownResult(CollectorManifestRecord);
+const isTransformationLedgerRecordCasesAttachmentTypeRepair = S.is(
+  TransformationLedgerRecord.cases["attachment-type-repair"]
+);
+const isTransformationLedgerRecordCasesFamilyAttemptInterrupted = S.is(
+  TransformationLedgerRecord.cases["family-attempt-interrupted"]
+);
+const isTransformationLedgerRecordCasesFamilyAttemptStart = S.is(
+  TransformationLedgerRecord.cases["family-attempt-start"]
+);
+const isTransformationLedgerRecordCasesFamilyRunSummary = S.is(TransformationLedgerRecord.cases["family-run-summary"]);
+const isTransformationLedgerRecordCasesMailChildPass = S.is(TransformationLedgerRecord.cases["mail-child-pass"]);
+const isTransformationLedgerRecordCasesMailStoreException = S.is(
+  TransformationLedgerRecord.cases["mail-store-exception"]
+);
+const isTransformationLedgerRecordCasesMailStorePass = S.is(TransformationLedgerRecord.cases["mail-store-pass"]);
+const isTransformationLedgerRecordCasesMailWarning = S.is(TransformationLedgerRecord.cases["mail-warning"]);
+
 const testLayer = Layer.mergeAll(
   CorpusCommandServiceLive.pipe(Layer.provideMerge(NodeServices.layer)),
   NodeServices.layer
@@ -92,11 +111,9 @@ describe("corpus evidence schemas", () => {
   });
 
   it("decodes inherited collector failures and secret exclusions without destination fields", () => {
-    const decode = S.decodeUnknownResult(CollectorManifestRecord);
-
     expect(
       Result.isSuccess(
-        decode({
+        decodeUnknownCollectorManifestRecordResult({
           reason: "source unreadable",
           src: "C:\\source\\unreadable.bin",
           status: "error",
@@ -105,7 +122,7 @@ describe("corpus evidence schemas", () => {
     ).toBe(true);
     expect(
       Result.isSuccess(
-        decode({
+        decodeUnknownCollectorManifestRecordResult({
           src: "C:\\source\\excluded.bin",
           status: "excluded-secret",
         })
@@ -144,14 +161,14 @@ const exerciseEvidenceVariant = (
   summary: TransformationLedgerRecord,
   variant: ReadonlyArray<TransformationLedgerRecord>
 ): void => {
-  if (!S.is(TransformationLedgerRecord.cases["family-run-summary"])(summary)) return;
-  const starts = A.filter(variant, S.is(TransformationLedgerRecord.cases["family-attempt-start"]));
-  const interruptions = A.filter(variant, S.is(TransformationLedgerRecord.cases["family-attempt-interrupted"]));
-  const passes = A.filter(variant, S.is(TransformationLedgerRecord.cases["mail-store-pass"]));
-  const exceptions = A.filter(variant, S.is(TransformationLedgerRecord.cases["mail-store-exception"]));
-  const warnings = A.filter(variant, S.is(TransformationLedgerRecord.cases["mail-warning"]));
-  const children = A.filter(variant, S.is(TransformationLedgerRecord.cases["mail-child-pass"]));
-  const repairs = A.filter(variant, S.is(TransformationLedgerRecord.cases["attachment-type-repair"]));
+  if (!isTransformationLedgerRecordCasesFamilyRunSummary(summary)) return;
+  const starts = A.filter(variant, isTransformationLedgerRecordCasesFamilyAttemptStart);
+  const interruptions = A.filter(variant, isTransformationLedgerRecordCasesFamilyAttemptInterrupted);
+  const passes = A.filter(variant, isTransformationLedgerRecordCasesMailStorePass);
+  const exceptions = A.filter(variant, isTransformationLedgerRecordCasesMailStoreException);
+  const warnings = A.filter(variant, isTransformationLedgerRecordCasesMailWarning);
+  const children = A.filter(variant, isTransformationLedgerRecordCasesMailChildPass);
+  const repairs = A.filter(variant, isTransformationLedgerRecordCasesAttachmentTypeRepair);
   const terminals = RT.attemptTerminalBindings(variant);
 
   A.forEach([".", "..", "safe-attempt", "unsafe/attempt", "unsafe\\attempt"], RT.safeAttemptId);
@@ -176,7 +193,7 @@ const exerciseEvidenceVariant = (
 };
 
 const exerciseEvidenceMutations = (records: ReadonlyArray<TransformationLedgerRecord>): void =>
-  O.match(A.findFirst(records, S.is(TransformationLedgerRecord.cases["family-run-summary"])), {
+  O.match(A.findFirst(records, isTransformationLedgerRecordCasesFamilyRunSummary), {
     onNone: () => undefined,
     onSome: (summary) => {
       const variants: ReadonlyArray<ReadonlyArray<TransformationLedgerRecord>> = [
@@ -1497,7 +1514,7 @@ describe("corpus restoration preservation", () => {
   it.effect(
     "rejects traversal-bearing run labels and archive-relative paths at decode boundaries",
     Effect.fnUntraced(function* () {
-      const runLabelResult = yield* S.decodeEffect(RestorationVerifyOptions)({
+      const runLabelResult = yield* decodeRestorationVerifyOptions({
         corpusRoot: "/tmp/corpus",
         runLabel: "../escape",
       }).pipe(Effect.option);

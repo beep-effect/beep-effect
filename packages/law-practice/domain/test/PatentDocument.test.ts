@@ -16,6 +16,12 @@ import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodePatentApplicationDocumentResult = S.decodeResult(PatentApplicationDocument);
+const decodePatentApplicationSectionsResult = S.decodeResult(PatentApplicationSections);
+const decodeUnknownPatentApplicationSectionSync = S.decodeUnknownSync(PatentApplicationSection);
+const encodePatentApplicationSectionSync = S.encodeSync(PatentApplicationSection);
+const isPatentClaims = S.is(PatentClaims);
+
 const patentFixture = Md.make([
   Md.h1("TITLE OF THE INVENTION"),
   Md.p("Optical sensor alert system"),
@@ -71,12 +77,12 @@ const dependentClaim = (claimNumber: number, parentClaimNumber: number) =>
 describe("PatentDocument", () => {
   it("round-trips schema-derived patent application sections", () => {
     const arbitrary = S.toArbitrary(PatentApplicationSection)(fc);
-    const decode = S.decodeUnknownSync(PatentApplicationSection);
-    const encode = S.encodeSync(PatentApplicationSection);
     const equivalent = S.toEquivalence(PatentApplicationSection);
 
     fc.assert(
-      fc.property(arbitrary, (section) => equivalent(decode(encode(section)), section)),
+      fc.property(arbitrary, (section) =>
+        equivalent(decodeUnknownPatentApplicationSectionSync(encodePatentApplicationSectionSync(section)), section)
+      ),
       { numRuns: 20 }
     );
   });
@@ -165,8 +171,8 @@ describe("PatentDocument", () => {
       sourceEnd: NonNegativeInt.make(65),
       sourceStart: NonNegativeInt.make(48),
     });
-    const rejectedOrder = S.decodeResult(PatentApplicationSections)([background, title]);
-    const rejectedDuplicate = S.decodeResult(PatentApplicationSections)([title, title]);
+    const rejectedOrder = decodePatentApplicationSectionsResult([background, title]);
+    const rejectedDuplicate = decodePatentApplicationSectionsResult([title, title]);
 
     expect(Result.isFailure(rejectedOrder)).toBe(true);
     expect(Result.isFailure(rejectedDuplicate)).toBe(true);
@@ -182,15 +188,15 @@ describe("PatentDocument", () => {
 
     expect(issueKinds).toContain("forward-reference");
     expect(issueKinds).toContain("cycle");
-    expect(S.is(PatentClaims)(claims)).toBe(false);
+    expect(isPatentClaims(claims)).toBe(false);
     expect(A.map(inspectPatentClaimDependencies(missingParentClaims), ({ kind }) => kind)).toContain("missing-parent");
     expect(A.map(inspectPatentClaimDependencies(selfReferentialClaims), ({ kind }) => kind)).toContain(
       "self-reference"
     );
-    expect(S.is(PatentClaims)(duplicateClaims)).toBe(false);
-    expect(S.is(PatentClaims)(nonconsecutiveClaims)).toBe(false);
-    expect(S.is(PatentClaims)(missingParentClaims)).toBe(false);
-    expect(S.is(PatentClaims)(selfReferentialClaims)).toBe(false);
+    expect(isPatentClaims(duplicateClaims)).toBe(false);
+    expect(isPatentClaims(nonconsecutiveClaims)).toBe(false);
+    expect(isPatentClaims(missingParentClaims)).toBe(false);
+    expect(isPatentClaims(selfReferentialClaims)).toBe(false);
   });
 
   it("rejects documents without a claims section or aligned claim text", () => {
@@ -212,7 +218,7 @@ describe("PatentDocument", () => {
 
     expect(
       Result.isFailure(
-        S.decodeResult(PatentApplicationDocument)({
+        decodePatentApplicationDocumentResult({
           claims: [claim],
           sections: [title],
           sourceText: claim.claimText,
@@ -221,7 +227,7 @@ describe("PatentDocument", () => {
     ).toBe(true);
     expect(
       Result.isFailure(
-        S.decodeResult(PatentApplicationDocument)({
+        decodePatentApplicationDocumentResult({
           claims: [claim],
           sections: [claims],
           sourceText: "CLAIMS\n1. A different system comprising a detector.",

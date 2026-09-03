@@ -7,6 +7,11 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeUnknownSyncOperationSyncOperationSync = S.decodeUnknownSync(SyncOperation.SyncOperation);
+const decodeUnknownSyncOperationSyncOperationStatusSync = S.decodeUnknownSync(SyncOperation.SyncOperationStatus);
+const decodeUnknownSyncOperationSyncOperationTypeSync = S.decodeUnknownSync(SyncOperation.SyncOperationType);
+const encodeSyncOperationSyncOperationSync = S.encodeSync(SyncOperation.SyncOperation);
+
 const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
   const arbitrary = S.toArbitrary(schema)(fc);
   const encode = S.encodeResult(schema);
@@ -53,18 +58,18 @@ describe("SyncOperation entity", () => {
   });
 
   it("decodes and encodes a full upload outbox row", () => {
-    const decoded = S.decodeUnknownSync(SyncOperation.SyncOperation)(uploadRow);
+    const decoded = decodeUnknownSyncOperationSyncOperationSync(uploadRow);
 
     expect(decoded).toBeInstanceOf(SyncOperation.SyncOperation);
     expect(decoded.inputContentDigest).toEqual(O.some("abc123"));
     expect(decoded.targetParentRelPath).toEqual(O.some("matters/client-default"));
     expect(decoded.lastError).toEqual(O.none());
     expect(decoded.status).toBe("queued");
-    expect(S.encodeSync(SyncOperation.SyncOperation)(decoded)).toStrictEqual(uploadRow);
+    expect(encodeSyncOperationSyncOperationSync(decoded)).toStrictEqual(uploadRow);
   });
 
   it("decodes folder creation rows targeting the mirror root", () => {
-    const decoded = S.decodeUnknownSync(SyncOperation.SyncOperation)({
+    const decoded = decodeUnknownSyncOperationSyncOperationSync({
       ...uploadRow,
       inputContentDigest: null,
       lastError: "box responded 503",
@@ -85,8 +90,8 @@ describe("SyncOperation entity", () => {
     expect(SyncOperation.SyncOperationType.is.moveItem("uploadFile")).toBe(false);
     expect(SyncOperation.SyncOperationStatus.is.queued("queued")).toBe(true);
     expect(SyncOperation.SyncOperationStatus.Enum.leased).toBe("leased");
-    expect(() => S.decodeUnknownSync(SyncOperation.SyncOperationType)("deleteItem")).toThrow();
-    expect(() => S.decodeUnknownSync(SyncOperation.SyncOperationStatus)("cancelled")).toThrow();
+    expect(() => decodeUnknownSyncOperationSyncOperationTypeSync("deleteItem")).toThrow();
+    expect(() => decodeUnknownSyncOperationSyncOperationStatusSync("cancelled")).toThrow();
   });
 
   it("round-trips schema-derived sync operation values", () => {

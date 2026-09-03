@@ -40,6 +40,21 @@ import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeHeadingResult = S.decodeResult(Heading);
+const decodeUnknownBlockResult = S.decodeUnknownResult(Block);
+const decodeUnknownDelResult = S.decodeUnknownResult(Del);
+const decodeUnknownHeadingResult = S.decodeUnknownResult(Heading);
+const decodeUnknownInlineResult = S.decodeUnknownResult(Inline);
+const decodeUnknownListItemChildResult = S.decodeUnknownResult(ListItemChild);
+const decodeUnknownTableCellResult = S.decodeUnknownResult(TableCell);
+const decodeUnknownTaskItemResult = S.decodeUnknownResult(TaskItem);
+const encodeHeadingResult = S.encodeResult(Heading);
+const isBeepMarkdownDocument = S.is(BeepMarkdownDocument);
+const isCommonMarkDocument = S.is(CommonMarkDocument);
+const isDocument = S.is(Document);
+const isGfmDocument = S.is(GfmDocument);
+const isHeadingLevel = S.is(HeadingLevel);
+
 const HeadingArbitrary = S.toArbitrary(Heading)(fc);
 
 const tags = (issues: ReadonlyArray<MarkdownConformanceIssue>): ReadonlyArray<MarkdownConformanceIssue["_tag"]> =>
@@ -49,7 +64,7 @@ describe("Markdown semantic conformance", () => {
   it("exposes six flat heading payload cases with exhaustive helpers", () => {
     const heading = HeadingValue.cases[2].make({ children: [Text.make({ value: "Overview" })] });
 
-    expect(S.is(HeadingLevel)(heading.level)).toBe(true);
+    expect(isHeadingLevel(heading.level)).toBe(true);
     expect(heading).toEqual({ level: 2, children: [Text.make({ value: "Overview" })] });
     expect(HeadingValue.guards[2](heading)).toBe(true);
     expect(HeadingValue.guards[1](heading)).toBe(false);
@@ -81,7 +96,7 @@ describe("Markdown semantic conformance", () => {
   });
 
   it("rejects block children at the heading schema boundary", () => {
-    const result = S.decodeUnknownResult(Heading)({
+    const result = decodeUnknownHeadingResult({
       _tag: "heading",
       level: 2,
       children: [{ _tag: "p", children: [] }],
@@ -93,8 +108,8 @@ describe("Markdown semantic conformance", () => {
   it("round-trips schema-derived headings through their codec", () =>
     fc.assert(
       fc.property(HeadingArbitrary, (heading) => {
-        const encoded = Result.getOrThrow(S.encodeResult(Heading)(heading));
-        const decoded = Result.getOrThrow(S.decodeResult(Heading)(encoded));
+        const encoded = Result.getOrThrow(encodeHeadingResult(heading));
+        const decoded = Result.getOrThrow(decodeHeadingResult(encoded));
 
         expect(decoded).toEqual(heading);
       }),
@@ -102,18 +117,18 @@ describe("Markdown semantic conformance", () => {
     ));
 
   it("rejects unknown Markdown variant tags", () => {
-    expect(Result.isFailure(S.decodeUnknownResult(Inline)({ _tag: "futureInline" }))).toBe(true);
-    expect(Result.isFailure(S.decodeUnknownResult(Block)({ _tag: "futureBlock" }))).toBe(true);
+    expect(Result.isFailure(decodeUnknownInlineResult({ _tag: "futureInline" }))).toBe(true);
+    expect(Result.isFailure(decodeUnknownBlockResult({ _tag: "futureBlock" }))).toBe(true);
   });
 
   it("rejects values outside the list item content grammar", () => {
-    const result = S.decodeUnknownResult(ListItemChild)({ _tag: "futureListItemChild" });
+    const result = decodeUnknownListItemChildResult({ _tag: "futureListItemChild" });
 
     expect(Result.isFailure(result)).toBe(true);
   });
 
   it("rejects non-boolean GFM task item state", () => {
-    const result = S.decodeUnknownResult(TaskItem)({
+    const result = decodeUnknownTaskItemResult({
       _tag: "taskItem",
       checked: "yes",
       children: [],
@@ -123,7 +138,7 @@ describe("Markdown semantic conformance", () => {
   });
 
   it("rejects block children inside GFM strikethrough", () => {
-    const result = S.decodeUnknownResult(Del)({
+    const result = decodeUnknownDelResult({
       _tag: "del",
       children: [{ _tag: "p", children: [] }],
     });
@@ -132,7 +147,7 @@ describe("Markdown semantic conformance", () => {
   });
 
   it("rejects block children inside GFM table cells", () => {
-    const result = S.decodeUnknownResult(TableCell)({
+    const result = decodeUnknownTableCellResult({
       _tag: "tableCell",
       children: [{ _tag: "p", children: [] }],
     });
@@ -234,7 +249,7 @@ describe("Markdown semantic conformance", () => {
   it("reports empty lists without narrowing the broad document schema", () => {
     const document = Md.make([Md.ul([]), Md.taskListFromItems([])]);
 
-    expect(S.is(CommonMarkDocument)(document)).toBe(false);
+    expect(isCommonMarkDocument(document)).toBe(false);
     expect(tags(markdownConformanceIssues(document, MarkdownConformanceProfile.Enum.CommonMark))).toEqual([
       "EmptyList",
       "UnsupportedNode",
@@ -249,13 +264,13 @@ describe("Markdown semantic conformance", () => {
     const document = Md.make([Md.table([["a", "b"], ["c"]], { headerRow: false, align: ["left"] })]);
     const emptyTable = Md.make([Md.table([], { headerRow: false })]);
 
-    expect(S.is(Document)(document)).toBe(true);
+    expect(isDocument(document)).toBe(true);
     expect(tags(markdownConformanceIssues(document, MarkdownConformanceProfile.Enum.Gfm))).toEqual([
       "GfmTableHeader",
       "GfmTableRowWidth",
       "GfmTableAlignmentWidth",
     ]);
-    expect(S.is(GfmDocument)(document)).toBe(false);
+    expect(isGfmDocument(document)).toBe(false);
     expect(tags(markdownConformanceIssues(emptyTable, MarkdownConformanceProfile.Enum.Gfm))).toEqual([
       "GfmTableHeader",
     ]);
@@ -284,7 +299,7 @@ describe("Markdown semantic conformance", () => {
       "DuplicateFootnoteDefinition",
       "UndefinedFootnoteReference",
     ]);
-    expect(S.is(BeepMarkdownDocument)(document)).toBe(false);
+    expect(isBeepMarkdownDocument(document)).toBe(false);
   });
 
   it("accepts one recursively discovered definition for its matching footnote reference", () => {
@@ -294,22 +309,22 @@ describe("Markdown semantic conformance", () => {
     ]);
 
     expect(markdownConformanceIssues(document, MarkdownConformanceProfile.Enum.Beep)).toEqual([]);
-    expect(S.is(BeepMarkdownDocument)(document)).toBe(true);
+    expect(isBeepMarkdownDocument(document)).toBe(true);
   });
 
   it("walks nested block children inside list items", () => {
     const document = Md.make([Md.ul([Md.li([Md.p("Parent"), Md.ul(["Child"])])])]);
 
     expect(markdownConformanceIssues(document, MarkdownConformanceProfile.Enum.CommonMark)).toEqual([]);
-    expect(S.is(CommonMarkDocument)(document)).toBe(true);
+    expect(isCommonMarkDocument(document)).toBe(true);
   });
 
   it("issues distinct strict brands for documents accepted by each profile", () => {
     const document = Md.make([Md.p("Hello")]);
 
-    expect(S.is(CommonMarkDocument)(document)).toBe(true);
-    expect(S.is(GfmDocument)(document)).toBe(true);
-    expect(S.is(BeepMarkdownDocument)(document)).toBe(true);
+    expect(isCommonMarkDocument(document)).toBe(true);
+    expect(isGfmDocument(document)).toBe(true);
+    expect(isBeepMarkdownDocument(document)).toBe(true);
     expect(Result.isSuccess(refineStrictMarkdownDocument(document, MarkdownConformanceProfile.Enum.CommonMark))).toBe(
       true
     );

@@ -31,6 +31,11 @@ import type {
   OperationPlanCheckResult,
 } from "./Architecture.schemas.ts";
 
+const decodeUnknownArchitectureDomainKind = S.decodeUnknownEffect(ArchitectureDomainKind);
+const decodeUnknownArchitecturePackageRole = S.decodeUnknownEffect(ArchitecturePackageRole);
+const decodeUnknownArchitecturePlanStage = S.decodeUnknownEffect(ArchitecturePlanStage);
+const decodeUnknownArchitectureSliceRole = S.decodeUnknownEffect(ArchitectureSliceRole);
+
 const planFileFlag = Flag.string("file").pipe(
   Flag.withAlias("f"),
   Flag.withDescription("Path to a JSON operation plan emitted by `beep architecture plan`")
@@ -63,22 +68,22 @@ const planConceptFlag = Flag.string("concept").pipe(
 );
 
 const decodeStage = (value: string): Effect.Effect<ArchitecturePlanStage, DomainError> =>
-  S.decodeUnknownEffect(ArchitecturePlanStage)(value).pipe(
+  decodeUnknownArchitecturePlanStage(value).pipe(
     Effect.mapError(DomainError.newCause(`Invalid architecture stage "${value}"`))
   );
 
 const decodeDomainKind = (value: string): Effect.Effect<ArchitectureDomainKind, DomainError> =>
-  S.decodeUnknownEffect(ArchitectureDomainKind)(value).pipe(
+  decodeUnknownArchitectureDomainKind(value).pipe(
     Effect.mapError(DomainError.newCause(`Invalid architecture domain kind "${value}"`))
   );
 
 const decodeRole = (value: string): Effect.Effect<ArchitectureSliceRole, DomainError> =>
-  S.decodeUnknownEffect(ArchitectureSliceRole)(value).pipe(
+  decodeUnknownArchitectureSliceRole(value).pipe(
     Effect.mapError(DomainError.newCause(`Invalid architecture role "${value}"`))
   );
 
 const decodePackageRole = (value: string): Effect.Effect<ArchitecturePackageRole, DomainError> =>
-  S.decodeUnknownEffect(ArchitecturePackageRole)(value).pipe(
+  decodeUnknownArchitecturePackageRole(value).pipe(
     Effect.mapError(
       DomainError.newCause(
         `Invalid architecture package role "${value}". Supported package roles: domain, use-cases, config, server, tables, client, ui`

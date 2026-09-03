@@ -61,6 +61,7 @@ export const NoSniffValue = NoSniffValueBase.pipe(
  * @since 0.0.0
  */
 export type NoSniffValue = typeof NoSniffValue.Type;
+const isNoSniffValue = S.is(NoSniffValue);
 
 const NoSniffOptionBase = LiteralKit([false, ...NoSniffValueBase.Options]);
 
@@ -179,7 +180,7 @@ export const NoSniffHeader = S.Union([NoSniffOption, S.Undefined]).pipe(
           return O.none<string>();
         }
 
-        if (S.is(NoSniffValue)(option)) {
+        if (isNoSniffValue(option)) {
           return O.some(option);
         }
 

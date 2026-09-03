@@ -24,6 +24,9 @@ import {
 } from "./live-fixtures.ts";
 import type { FileFormatFamily } from "@beep/file-processing/Strategy";
 
+const decodePosixPath = S.decodeEffect(PosixPath);
+const decodeTikaServerEngineConfig = S.decodeEffect(TikaServerEngineConfig);
+
 const BEEP_TEST_TIKA_URL_ENV = "BEEP_TEST_TIKA_URL";
 const liveMarker = "hello live tika corpus";
 
@@ -39,7 +42,7 @@ const skipNotice = Effect.logInfo(
 
 const liveEngine = Effect.fn("TikaLive.engine")(function* (baseUrl: string) {
   return yield* makeTikaServerFileProcessingEngine(
-    yield* S.decodeEffect(TikaServerEngineConfig)({ baseUrl, timeoutMillis: 30_000 })
+    yield* decodeTikaServerEngineConfig({ baseUrl, timeoutMillis: 30_000 })
   );
 });
 
@@ -56,8 +59,8 @@ const liveOperation = Effect.fn("TikaLive.operation")(function* (
   yield* fs.writeFile(filePath, bytes);
 
   const { artifactId, digest, operationId } = yield* decodeTestOperationIdentifiers();
-  const locatorValue = yield* S.decodeEffect(PosixPath)(filePath);
-  const relativePath = yield* S.decodeEffect(PosixPath)(name);
+  const locatorValue = yield* decodePosixPath(filePath);
+  const relativePath = yield* decodePosixPath(name);
 
   return ExtractFileOperation.make({
     format,

@@ -36,6 +36,9 @@ import type { Crypto } from "effect";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { BakeConfig } from "./Runners.schemas.ts";
 
+const decodeSha256Hex = S.decodeEffect(Sha256Hex);
+const decodeUnknownSha256HexOption = S.decodeUnknownOption(Sha256Hex);
+
 const $I = $RepoCliId.create("commands/Runners/Runners.service");
 const BAKE_COMPLETE_MARKER = "BEEP_RUNNERS_BAKE_COMPLETE";
 const BAKE_FAILED_MARKER = "BEEP_RUNNERS_BAKE_FAILED";
@@ -48,6 +51,7 @@ const AWS_POLL_INTERVAL = Duration.seconds(15);
 const BAKE_WAIT_LIMIT = Duration.hours(6);
 // EC2 posts a stopped instance's console output minutes after the stop; the
 // window an empty read is propagation rather than a bake failure. Observed
+
 // live: one bake posted within ~2 minutes, the next took over 6.
 const CONSOLE_POST_LIMIT = Duration.minutes(20);
 const IMAGE_WAIT_LIMIT = Duration.hours(2);
@@ -60,6 +64,7 @@ const BunVersion = S.String.check(
     message: "Expected an exact Bun semantic version",
   })
 ).pipe($I.annoteSchema("BunVersion", { description: "Validated Bun release used by the runner bake." }));
+const decodeBunVersion = S.decodeEffect(BunVersion);
 
 const AwsTagResourceType = LiteralKit(["image", "instance"]).pipe(
   $I.annoteSchema("AwsTagResourceType", { description: "EC2 resource types tagged by the runner bake." })
@@ -345,13 +350,13 @@ const loadLocalInputs = Effect.fn("Runners.loadLocalInputs")(function* (): Effec
   const rawBunVersion = yield* fs
     .readFileString(bunVersionPath)
     .pipe(Effect.map(Str.trim), RunnersCommandError.mapError(`Failed to read ${bunVersionPath}.`));
-  const bunVersion = yield* S.decodeEffect(BunVersion)(rawBunVersion).pipe(
+  const bunVersion = yield* decodeBunVersion(rawBunVersion).pipe(
     RunnersCommandError.mapError(`${bunVersionPath} must contain an exact Bun semantic version.`)
   );
   const rawBunArchiveSha256 = yield* fs
     .readFileString(bunArchiveSha256Path)
     .pipe(Effect.map(Str.trim), RunnersCommandError.mapError(`Failed to read ${bunArchiveSha256Path}.`));
-  const bunArchiveSha256 = yield* S.decodeEffect(Sha256Hex)(rawBunArchiveSha256).pipe(
+  const bunArchiveSha256 = yield* decodeSha256Hex(rawBunArchiveSha256).pipe(
     RunnersCommandError.mapError(`${bunArchiveSha256Path} must contain one SHA-256 digest.`)
   );
   const gitRevision = yield* runGitRevision(repoRoot);
@@ -758,9 +763,9 @@ const checkBake = Effect.fn("Runners.check")(function* (region: string) {
     O.getOrElse(A.empty<AwsTag>)
   );
   const rawLockfile = tagValue(tags, "beep-ci:lockfile-sha256");
-  const actualLockfileSha256 = pipe(rawLockfile, O.flatMap(S.decodeUnknownOption(Sha256Hex)));
+  const actualLockfileSha256 = pipe(rawLockfile, O.flatMap(decodeUnknownSha256HexOption));
   const rawBunArchive = tagValue(tags, "beep-ci:bun-archive-sha256");
-  const actualBunArchiveSha256 = pipe(rawBunArchive, O.flatMap(S.decodeUnknownOption(Sha256Hex)));
+  const actualBunArchiveSha256 = pipe(rawBunArchive, O.flatMap(decodeUnknownSha256HexOption));
   const actualBunVersion = tagValue(tags, "beep-ci:bun-version");
   const sha256Equivalence = S.toEquivalence(Sha256Hex);
   const lockfileMatches = pipe(

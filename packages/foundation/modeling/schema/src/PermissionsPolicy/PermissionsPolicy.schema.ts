@@ -303,6 +303,7 @@ export type PermissionsPolicyDirectiveValue = typeof PermissionsPolicyDirectiveV
 
 const PermissionsPolicyDirectivesInput = S.Record(S.String, PermissionsPolicyDirectiveValue);
 const PermissionsPolicyDirectivesValue = S.Record(PermissionsPolicyDirectiveKey, PermissionsPolicyDirectiveValue);
+const decodePermissionsPolicyDirectivesValue = S.decodeEffect(PermissionsPolicyDirectivesValue);
 const isPermissionsPolicyDirectiveKey = S.is(PermissionsPolicyDirectiveKey);
 
 /**
@@ -327,7 +328,7 @@ export const PermissionsPolicyDirectives = PermissionsPolicyDirectivesInput.pipe
     SchemaTransformation.transformOrFail({
       decode: (input, options) =>
         A.every(R.keys(input), isPermissionsPolicyDirectiveKey)
-          ? S.decodeEffect(PermissionsPolicyDirectivesValue)(input).pipe(Effect.mapError((error) => error.issue))
+          ? decodePermissionsPolicyDirectivesValue(input).pipe(Effect.mapError((error) => error.issue))
           : Effect.fail(new SchemaIssue.InvalidValue({ message: "Invalid directive name" }, input, options)),
       encode: Effect.succeed,
     })
@@ -379,6 +380,7 @@ export class PermissionsPolicyOptionStruct extends S.Class<PermissionsPolicyOpti
     description: "Structured configuration for the `Permissions-Policy` header.",
   })
 ) {}
+const decodePermissionsPolicyOptionStruct = S.decodeEffect(PermissionsPolicyOptionStruct);
 
 /**
  * Schema for enabled or disabled `Permissions-Policy` configuration.
@@ -520,7 +522,7 @@ export const PermissionsPolicyHeader = S.Union([PermissionsPolicyOption, S.Undef
         return O.none<string>();
       }
 
-      const decodedOption = yield* S.decodeEffect(PermissionsPolicyOptionStruct)(option).pipe(
+      const decodedOption = yield* decodePermissionsPolicyOptionStruct(option).pipe(
         Effect.mapError((cause) =>
           PermissionsPolicyError.make({
             message: cause.message,

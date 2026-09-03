@@ -1,0 +1,95 @@
+{
+  "write": true,
+  "files": 9,
+  "filesChanged": 0,
+  "findings": 0,
+  "rewritten": 0,
+  "compilerConstants": 0,
+  "reusedConstants": 0,
+  "orderingRepairs": 15,
+  "manualCount": 0,
+  "fileResults": [
+    {
+      "filename": "packages/drivers/drizzle/src/Drizzle.errors.ts",
+      "findings": 0,
+      "rewritten": 0,
+      "compilerConstants": 0,
+      "reusedConstants": 0,
+      "orderingRepairs": 1,
+      "manual": []
+    },
+    {
+      "filename": "packages/drivers/postgres/src/PostgresDrizzle.service.ts",
+      "findings": 0,
+      "rewritten": 0,
+      "compilerConstants": 0,
+      "reusedConstants": 0,
+      "orderingRepairs": 3,
+      "manual": []
+    },
+    {
+      "filename": "packages/foundation/capability/mcp-kit/test/ApiKeyRequired.test.ts",
+      "findings": 0,
+      "rewritten": 0,
+      "compilerConstants": 0,
+      "reusedConstants": 0,
+      "orderingRepairs": 2,
+      "manual": []
+    },
+    {
+      "filename": "packages/foundation/modeling/identity/src/Id.ts",
+      "findings": 0,
+      "rewritten": 0,
+      "compilerConstants": 0,
+      "reusedConstants": 0,
+      "orderingRepairs": 3,
+      "manual": []
+    },
+    {
+      "filename": "packages/foundation/ui-system/editor/src/chat/attachment-model.ts",
+      "findings": 0,
+      "rewritten": 0,
+      "compilerConstants": 0,
+      "reusedConstants": 0,
+      "orderingRepairs": 1,
+      "manual": []
+    },
+    {
+      "filename": "packages/tooling/library/repo-utils/src/schemas/JSDocCategories.ts",
+      "findings": 0,
+      "rewritten": 0,
+      "compilerConstants": 0,
+      "reusedConstants": 0,
+      "orderingRepairs": 1,
+      "manual": []
+    },
+    {
+      "filename": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
+      "findings": 0,
+      "rewritten": 0,
+      "compilerConstants": 0,
+      "reusedConstants": 0,
+      "orderingRepairs": 1,
+      "manual": []
+    },
+    {
+      "filename": "packages/tooling/tool/cli/src/commands/Qa/Qa.session.ts",
+      "findings": 0,
+      "rewritten": 0,
+      "compilerConstants": 0,
+      "reusedConstants": 0,
+      "orderingRepairs": 2,
+      "manual": []
+    },
+    {
+      "filename": "packages/tooling/tool/cli/src/commands/Runners/Runners.service.ts",
+      "findings": 0,
+      "rewritten": 0,
+      "compilerConstants": 0,
+      "reusedConstants": 0,
+      "orderingRepairs": 1,
+      "manual": []
+    }
+  ],
+  "manual": []
+}

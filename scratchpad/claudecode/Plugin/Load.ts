@@ -35,6 +35,11 @@ import {
 } from "./Define.ts";
 import { isJsonFilePath, isMarkdownFilePath, isSkillFilePath, pathSpecs, syncManifest } from "./Layout.ts";
 import { ExperimentalSpec, PluginManifest } from "./Manifest.ts";
+const decodeUnknownMcpJsonFile = S.decodeUnknownEffect(McpJsonFile);
+const decodeUnknownHooksSectionSync = S.decodeUnknownSync(HooksSection);
+const encodeHooksSectionSync = S.encodeSync(HooksSection);
+const encodeMcpJsonFileSync = S.encodeSync(McpJsonFile);
+const isHooksSection = S.is(HooksSection);
 
 const $I = $ScratchpadId.create("claudecode/Plugin/Load");
 
@@ -112,7 +117,9 @@ export class LoadedPlugin extends S.Class<LoadedPlugin>($I`LoadedPlugin`)(
 // ---------------------------------------------------------------------------
 
 const manifestFileName = "plugin.json";
+const decodePluginManifestJson = S.decodeEffect(PluginManifestJson);
 const sortStrings = Order.String;
+const decodeHooksFileJson = S.decodeEffect(HooksFileJson);
 
 const listSorted = (paths: ReadonlyArray<string>): ReadonlyArray<string> => A.sort(paths, sortStrings);
 
@@ -138,7 +145,7 @@ const readOptionalManifest = (
     Effect.flatMap((maybeContent) =>
       O.isNone(maybeContent)
         ? Effect.succeed(O.none())
-        : S.decodeEffect(PluginManifestJson)(maybeContent.value).pipe(
+        : decodePluginManifestJson(maybeContent.value).pipe(
             Effect.map(O.some),
             Effect.mapError((cause) => PluginLoadError.make({ path, cause }))
           )
@@ -180,7 +187,7 @@ const readStringFile = (path: string): Effect.Effect<string, PluginLoadError, Fi
 const readHooksFile = (path: string): Effect.Effect<HooksSection, PluginLoadError, FileSystem.FileSystem> =>
   readStringFile(path).pipe(
     Effect.flatMap((content) =>
-      S.decodeEffect(HooksFileJson)(content).pipe(
+      decodeHooksFileJson(content).pipe(
         Effect.map((file) => file.hooks),
         Effect.mapError((cause) => PluginLoadError.make({ path, cause }))
       )
@@ -400,7 +407,7 @@ const isPathSpec = (input: unknown): input is string | ReadonlyArray<string> =>
   P.isString(input) || (A.isArray(input) && A.every(input, P.isString));
 
 const inlineHooksConfigFromManifest = (manifest: O.Option<PluginManifest>): O.Option<HooksSection> =>
-  O.flatMap(manifest, ({ hooks }) => O.filter(hooks, S.is(HooksSection)));
+  O.flatMap(manifest, ({ hooks }) => O.filter(hooks, isHooksSection));
 
 const inlineMcpSpecFromManifest = (manifest: O.Option<PluginManifest>): O.Option<R.ReadonlyRecord<string, unknown>> =>
   O.flatMap(manifest, ({ mcpServers }) =>
@@ -485,8 +492,8 @@ const toPluginConfig = (input: {
   agents: input.agents,
   skills: input.skills,
   outputStyles: input.outputStyles,
-  ...(O.isSome(input.hooksConfig) ? { hooksConfig: S.encodeSync(HooksSection)(input.hooksConfig.value) } : {}),
-  ...(O.isSome(input.mcpConfig) ? { mcpConfig: S.encodeSync(McpJsonFile)(input.mcpConfig.value) } : {}),
+  ...(O.isSome(input.hooksConfig) ? { hooksConfig: encodeHooksSectionSync(input.hooksConfig.value) } : {}),
+  ...(O.isSome(input.mcpConfig) ? { mcpConfig: encodeMcpJsonFileSync(input.mcpConfig.value) } : {}),
 });
 
 const loadCommandEntries = (
@@ -584,7 +591,7 @@ const mergeHooksConfigs = (configs: ReadonlyArray<HooksSection>): HooksSection =
       merged[eventName] = [...(merged[eventName] ?? []), ...groups];
     }
   }
-  return S.decodeUnknownSync(HooksSection)(merged);
+  return decodeUnknownHooksSectionSync(merged);
 };
 
 const mergeMcpConfigs = (configs: ReadonlyArray<McpJsonFile>): McpJsonFile =>
@@ -677,7 +684,7 @@ export const scan = Effect.fn("Plugin.scan")(function* (
   const inlineMcpSpec = inlineMcpSpecFromManifest(sourceManifest);
   const inlineMcpConfig = O.isSome(inlineMcpSpec)
     ? O.some(
-        yield* S.decodeUnknownEffect(McpJsonFile)({
+        yield* decodeUnknownMcpJsonFile({
           mcpServers: inlineMcpSpec.value,
         }).pipe(Effect.mapError((cause) => PluginLoadError.make({ path: manifestPath, cause })))
       )

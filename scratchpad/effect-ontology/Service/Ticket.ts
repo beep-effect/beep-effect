@@ -33,6 +33,10 @@ import { AuthenticationError, TicketExpiredError, TicketNotFoundError } from "..
 import { ErrorMessage, Milliseconds } from "../Domain/Error/Base.ts";
 import { TicketRecord } from "../Domain/Schema/Auth.ts";
 import { StorageService } from "./Storage.ts";
+const decodeTicketRecord = S.decodeEffect(TicketRecord);
+const TicketRecordJson = S.fromJsonString(TicketRecord);
+const encodeTicketRecordJson = S.encodeEffect(TicketRecordJson);
+const decodeTicketRecordJson = S.decodeEffect(TicketRecordJson);
 
 const $I = $ScratchpadId.create("effect-ontology/Service/Ticket");
 
@@ -96,10 +100,8 @@ const makeTicketService = Effect.gen(function* () {
     return Encoding.encodeBase64Url(yield* crypto.randomBytes(32));
   });
 
-  const TicketRecordJson = S.fromJsonString(TicketRecord);
-
   const persistTicket = (ticket: string, record: TicketRecord) =>
-    S.encodeEffect(TicketRecordJson)(record).pipe(
+    encodeTicketRecordJson(record).pipe(
       Effect.flatMap((encoded) => storage.set(ticketStorageKey(ticket), encoded)),
       Effect.mapError(ticketStorageError("persist"))
     );
@@ -109,7 +111,7 @@ const makeTicketService = Effect.gen(function* () {
       Effect.flatMap(
         O.match({
           onNone: () => Effect.succeed(O.none<TicketRecord>()),
-          onSome: (content) => S.decodeEffect(TicketRecordJson)(content).pipe(Effect.map(O.some)),
+          onSome: (content) => decodeTicketRecordJson(content).pipe(Effect.map(O.some)),
         })
       ),
       Effect.mapError(ticketStorageError("load"))
@@ -131,7 +133,7 @@ const makeTicketService = Effect.gen(function* () {
             O.match({
               onNone: () => Effect.void,
               onSome: (content) =>
-                S.decodeEffect(TicketRecordJson)(content).pipe(
+                decodeTicketRecordJson(content).pipe(
                   Effect.flatMap((record) =>
                     record.expiresAt.epochMilliseconds <= now ? storage.remove(key) : Effect.void
                   )
@@ -159,7 +161,7 @@ const makeTicketService = Effect.gen(function* () {
     const ticket = yield* generateSecureToken();
     const now = yield* Clock.currentTimeMillis;
     const expiresAt = now + Duration.toMillis(ttl);
-    const record = yield* S.decodeEffect(TicketRecord)({ ticket, ontologyId, apiKey, createdAt: now, expiresAt }).pipe(
+    const record = yield* decodeTicketRecord({ ticket, ontologyId, apiKey, createdAt: now, expiresAt }).pipe(
       Effect.mapError(() => AuthenticationError.make({ message: "Invalid ticket record", reason: "invalid" }))
     );
     yield* persistTicket(ticket, record);
@@ -202,7 +204,7 @@ const makeTicketService = Effect.gen(function* () {
           O.match({
             onNone: () => Effect.succeed(false),
             onSome: (content) =>
-              S.decodeEffect(TicketRecordJson)(content).pipe(
+              decodeTicketRecordJson(content).pipe(
                 Effect.map((record) => record.expiresAt.epochMilliseconds > now)
               ),
           })

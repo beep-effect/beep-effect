@@ -134,6 +134,7 @@ const TextChunkDefinition = TextChunkModel.check(
     message: "Expected endOffset to be greater than or equal to startOffset.",
   })
 );
+const isTextChunkDefinition = S.is(TextChunkDefinition);
 
 /**
  * Source-aligned text chunk with ordered UTF-16 offsets.
@@ -160,7 +161,7 @@ const TextChunkDefinition = TextChunkModel.check(
 export const TextChunk = TextChunkDefinition.pipe(
   $I.annoteSchema("TextChunk", {
     description: "Zero-based source-aligned text chunk whose UTF-16 offsets are non-negative and ordered.",
-    toArbitrary: () => (fc) => S.toArbitrary(TextChunkModel)(fc).filter(S.is(TextChunkDefinition)),
+    toArbitrary: () => (fc) => S.toArbitrary(TextChunkModel)(fc).filter(isTextChunkDefinition),
   })
 );
 

@@ -172,6 +172,20 @@ import {
   typeofValue,
 } from "./Interpreter.references.ts";
 import { ScopeStack } from "./Interpreter.scope.ts";
+const isAssignmentOperator = S.is(AssignmentOperator);
+const isBinaryOperator = S.is(BinaryOperator);
+const isConsoleMethod = S.is(ConsoleMethod);
+const isErrorConstructorName = S.is(ErrorConstructorName);
+const isJsonMethodName = S.is(JsonMethodName);
+const isLogicalAssignmentOperator = S.is(LogicalAssignmentOperator);
+const isLogicalOperator = S.is(LogicalOperator);
+const isPromiseMethodName = S.is(PromiseMethodName);
+const isSafeObjectSchema = S.is(SafeObjectSchema);
+const isUnaryOperator = S.is(UnaryOperator);
+const isUpdateOperatorTo = S.is(UpdateOperator.To);
+const isUrlMethod = S.is(UrlMethod);
+const isUrlSearchParamsMethod = S.is(UrlSearchParamsMethod);
+const isUrlStatic = S.is(UrlStatic);
 
 const MAX_ARRAY_LENGTH = 4_294_967_295;
 const encodeJson = UnknownFromJsonString.encodeUnknownSync;
@@ -196,6 +210,7 @@ const StatementNodeType = LiteralKit([
   "EmptyStatement",
   "FunctionDeclaration",
 ]);
+const isStatementNodeType = S.is(StatementNodeType);
 
 const ExpressionNodeType = LiteralKit([
   "ArrowFunctionExpression",
@@ -219,6 +234,7 @@ const ExpressionNodeType = LiteralKit([
   "YieldExpression",
   "NewExpression",
 ]);
+const isExpressionNodeType = S.is(ExpressionNodeType);
 
 const parseArrayIndex = (key: string | number): number | undefined => {
   const property = String(key);
@@ -367,7 +383,7 @@ const OpaqueMemberReference = S.Union([
 type OpaqueMemberReference = typeof OpaqueMemberReference.Type;
 
 const isDestructurableObject = (value: unknown): value is SafeObject | Array<unknown> =>
-  A.isArray(value) || S.is(SafeObjectSchema)(value);
+  A.isArray(value) || isSafeObjectSchema(value);
 
 const copyIteratorSymbols = (
   source: object,
@@ -705,7 +721,7 @@ export class Interpreter<R> {
    * @since 0.0.0
    */
   private evaluateStatement(node: AstNode): Effect.Effect<StatementResult, InterpreterFailure, R> {
-    if (!S.is(StatementNodeType)(node.type)) {
+    if (!isStatementNodeType(node.type)) {
       return Effect.fail(unsupportedSyntax(node.type, node));
     }
     return Match.value(node.type).pipe(
@@ -1684,7 +1700,7 @@ export class Interpreter<R> {
    * @since 0.0.0
    */
   private requireIteratorObject(value: unknown, context: string, node: AstNode): SafeObject {
-    if (S.is(SafeObjectSchema)(value) && !isRuntimeReference(value)) return value;
+    if (isSafeObjectSchema(value) && !isRuntimeReference(value)) return value;
     throw InterpreterRuntimeError.new(`${context} must be an object.`, node).as("TypeError");
   }
 
@@ -2440,7 +2456,7 @@ export class Interpreter<R> {
    */
   private evaluateExpression(node: AstNode): Effect.Effect<unknown, InterpreterFailure, R> {
     const nodeType = node.type;
-    if (!S.is(ExpressionNodeType)(nodeType)) {
+    if (!isExpressionNodeType(nodeType)) {
       return Effect.fail(unsupportedSyntax(nodeType, node));
     }
     if (nodeType === "ArrowFunctionExpression" || nodeType === "FunctionExpression") {
@@ -2532,7 +2548,7 @@ export class Interpreter<R> {
         constructPromise(self.runner, self.promises, args[0], node)
       );
     }
-    if (S.is(ErrorConstructorName)(name)) {
+    if (isErrorConstructorName(name)) {
       return Effect.flatMap(this.evaluateCallArguments(argNodes), (args) =>
         name === "AggregateError"
           ? constructAggregateErrorValue(self.runner, args, node)
@@ -3058,7 +3074,7 @@ export class Interpreter<R> {
    */
   private evaluateBinaryExpression(node: AstNode): Effect.Effect<unknown, InterpreterFailure, R> {
     const operator = getString(node, "operator");
-    if (!S.is(BinaryOperator)(operator)) {
+    if (!isBinaryOperator(operator)) {
       return Effect.fail(InterpreterRuntimeError.new(`Unsupported binary operator '${operator}'.`, node));
     }
     const self = this;
@@ -3188,7 +3204,7 @@ export class Interpreter<R> {
    */
   private evaluateLogicalExpression(node: AstNode): Effect.Effect<unknown, InterpreterFailure, R> {
     const operator = getString(node, "operator");
-    if (!S.is(LogicalOperator)(operator)) {
+    if (!isLogicalOperator(operator)) {
       return Effect.fail(InterpreterRuntimeError.new(`Unsupported logical operator '${operator}'.`, node));
     }
     return Effect.flatMap(this.evaluateExpression(getNode(node, "left")), (left) => {
@@ -3225,7 +3241,7 @@ export class Interpreter<R> {
   private evaluateUnaryExpression(node: AstNode): Effect.Effect<unknown, InterpreterFailure, R> {
     const operator = getString(node, "operator");
     const argument = getNode(node, "argument");
-    if (!S.is(UnaryOperator)(operator)) {
+    if (!isUnaryOperator(operator)) {
       return Effect.fail(InterpreterRuntimeError.new(`Unsupported unary operator '${operator}'.`, node));
     }
     const numeric = (apply: (operand: number) => number): Effect.Effect<unknown, InterpreterFailure, R> =>
@@ -3279,12 +3295,12 @@ export class Interpreter<R> {
   private evaluateAssignmentExpression(node: AstNode): Effect.Effect<unknown, InterpreterFailure, R> {
     const left = getNode(node, "left");
     const operator = getString(node, "operator");
-    if (!S.is(AssignmentOperator)(operator)) {
+    if (!isAssignmentOperator(operator)) {
       return Effect.fail(InterpreterRuntimeError.new(`Unsupported assignment operator '${operator}'.`, node));
     }
     const self = this;
     return Effect.gen(function* () {
-      if (S.is(LogicalAssignmentOperator)(operator)) {
+      if (isLogicalAssignmentOperator(operator)) {
         return yield* self.evaluateLogicalAssignment(node, left, operator);
       }
       if (operator === "=" && (left.type === "ObjectPattern" || left.type === "ArrayPattern")) {
@@ -3408,7 +3424,7 @@ export class Interpreter<R> {
     const operator = getString(node, "operator");
     const argument = getNode(node, "argument");
     const prefix = getBoolean(node, "prefix");
-    if (!S.is(UpdateOperator.To)(operator)) {
+    if (!isUpdateOperatorTo(operator)) {
       return Effect.fail(InterpreterRuntimeError.new(`Unsupported update operator '${operator}'.`, node));
     }
     const increment = UpdateOperator.Enum[operator];
@@ -4583,7 +4599,7 @@ export class Interpreter<R> {
       }
 
       if (RuntimeReference.guards.PromiseNamespace(objectValue)) {
-        if (P.isString(key) && S.is(PromiseMethodName)(key)) {
+        if (P.isString(key) && isPromiseMethodName(key)) {
           return PromiseMethodReference.new(key);
         }
         throw InterpreterRuntimeError.new(
@@ -4612,7 +4628,7 @@ export class Interpreter<R> {
               : S.is(mathMethods)(key)
                 ? GlobalMethodReference.new(GlobalMethod.cases.Math.make({ name: key }))
                 : missing(),
-          JSON: () => (S.is(JsonMethodName)(key) ? JsonMethodReference.new(key) : missing()),
+          JSON: () => (isJsonMethodName(key) ? JsonMethodReference.new(key) : missing()),
           Object: () =>
             S.is(objectStatics)(key)
               ? GlobalMethodReference.new(GlobalMethod.cases.Object.make({ name: key }))
@@ -4622,7 +4638,7 @@ export class Interpreter<R> {
               ? GlobalMethodReference.new(GlobalMethod.cases.Array.make({ name: key }))
               : missing(),
           console: () =>
-            S.is(ConsoleMethod)(key)
+            isConsoleMethod(key)
               ? GlobalMethodReference.new(GlobalMethod.cases.console.make({ name: key }))
               : missing(),
           Date: () =>
@@ -4635,7 +4651,7 @@ export class Interpreter<R> {
             S.is(mapStatics)(key) ? GlobalMethodReference.new(GlobalMethod.cases.Map.make({ name: key })) : missing(),
           Set: missing,
           URL: () =>
-            S.is(UrlStatic)(key) ? GlobalMethodReference.new(GlobalMethod.cases.URL.make({ name: key })) : missing(),
+            isUrlStatic(key) ? GlobalMethodReference.new(GlobalMethod.cases.URL.make({ name: key })) : missing(),
           URLSearchParams: missing,
         });
       }
@@ -4718,7 +4734,7 @@ export class Interpreter<R> {
         if (key === "searchParams") {
           return ComputedValue.new(objectValue.searchParams);
         }
-        if (P.isString(key) && S.is(UrlMethod)(key)) {
+        if (P.isString(key) && isUrlMethod(key)) {
           return IntrinsicReference.new(IntrinsicMethod.cases.URL.make({ receiver: objectValue, name: key }));
         }
         if (P.isString(key) && S.is(urlProperties)(key)) {
@@ -4728,7 +4744,7 @@ export class Interpreter<R> {
       }
       if (CodeModeURLSearchParams.is(objectValue)) {
         if (key === "size") return ComputedValue.new(objectValue.params.size);
-        if (P.isString(key) && S.is(UrlSearchParamsMethod)(key)) {
+        if (P.isString(key) && isUrlSearchParamsMethod(key)) {
           return IntrinsicReference.new(
             IntrinsicMethod.cases.URLSearchParams.make({ receiver: objectValue, name: key })
           );
@@ -4791,7 +4807,7 @@ export class Interpreter<R> {
         return MemberReference.new(objectValue, index ?? key);
       }
 
-      if (!S.is(SafeObjectSchema)(objectValue)) {
+      if (!isSafeObjectSchema(objectValue)) {
         throw InterpreterRuntimeError.new("Cannot access a property on a non-data object.", objectNode);
       }
       return MemberReference.new(objectValue, key);
@@ -5057,7 +5073,7 @@ export class Interpreter<R> {
       reference.target.lastIndex = next;
       return;
     }
-    if (!S.is(SafeObjectSchema)(reference.target)) {
+    if (!isSafeObjectSchema(reference.target)) {
       throw InterpreterRuntimeError.new("Cannot assign a property on a non-data object.", node);
     }
     const target = reference.target;

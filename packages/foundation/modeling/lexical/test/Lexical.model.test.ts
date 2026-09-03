@@ -38,6 +38,30 @@ import { FastCheck as fc } from "effect/testing";
 import { createEditor } from "lexical";
 import type { SerializedTableCellNode } from "@lexical/table";
 
+const decodeEditorStateWireFromJson = S.decodeEffect(EditorStateWireFromJson);
+const decodeEditorStateFromJsonResult = S.decodeResult(EditorStateFromJson);
+const decodeLexicalNodeResult = S.decodeResult(LexicalNode);
+const decodeSerializedEditorStateResult = S.decodeResult(SerializedEditorState);
+const decodeEditorStateFromJsonSync = S.decodeSync(EditorStateFromJson);
+const decodeLexicalNodeSync = S.decodeSync(LexicalNode);
+const decodeSafeUrlSync = S.decodeSync(SafeUrl);
+const decodeTextFormatMaskSync = S.decodeSync(TextFormatMask);
+const decodeUnknownListNode = S.decodeUnknownEffect(ListNode);
+const decodeUnknownLexicalNodeResult = S.decodeUnknownResult(LexicalNode);
+const decodeUnknownListNodeResult = S.decodeUnknownResult(ListNode);
+const decodeUnknownSerializedEditorStateResult = S.decodeUnknownResult(SerializedEditorState);
+const decodeUnknownLexicalNodeSync = S.decodeUnknownSync(LexicalNode);
+const decodeUnknownRootNodeSync = S.decodeUnknownSync(RootNode);
+const encodeEditorStateFromJson = S.encodeEffect(EditorStateFromJson);
+const encodeSerializedEditorStateWire = S.encodeEffect(SerializedEditorStateWire);
+const encodeEditorStateFromJsonResult = S.encodeResult(EditorStateFromJson);
+const encodeSerializedEditorStateResult = S.encodeResult(SerializedEditorState);
+const encodeEditorStateFromJsonSync = S.encodeSync(EditorStateFromJson);
+const encodeSafeUrlSync = S.encodeSync(SafeUrl);
+const encodeUnknownEditorStateFromJsonResult = S.encodeUnknownResult(EditorStateFromJson);
+const encodeUnknownSerializedEditorStateResult = S.encodeUnknownResult(SerializedEditorState);
+const isListNodeValue = S.is(ListNodeValue);
+
 const ListNodeArbitrary = S.toArbitrary(ListNode)(fc);
 const NodeArbitrary = S.toArbitrary(LexicalNode)(fc);
 const SafeUrlArbitrary = S.toArbitrary(SafeUrl)(fc);
@@ -242,7 +266,7 @@ const fixture = {
 
 describe("Lexical.model", { concurrent: false }, () => {
   it("decodes the fixture editor state and captures nullish wire values as Options", () => {
-    const state = S.decodeUnknownSync(SerializedEditorState)(fixture);
+    const state = decodeEditorState(fixture);
 
     expect(O.isSome(SerializedEditorState.decodeOption(fixture))).toBe(true);
     expect(state.root.direction).toEqual(O.none());
@@ -292,18 +316,18 @@ describe("Lexical.model", { concurrent: false }, () => {
       },
     };
 
-    expect(S.decodeUnknownResult(SerializedEditorState)(invalidDirection)._tag).toBe("Failure");
+    expect(decodeUnknownSerializedEditorStateResult(invalidDirection)._tag).toBe("Failure");
   });
 
   it("round-trips the fixture through decode/encode without wire drift", () => {
-    const state = S.decodeUnknownSync(SerializedEditorState)(fixture);
-    expect(S.encodeSync(SerializedEditorState)(state)).toEqual(fixture);
+    const state = decodeEditorState(fixture);
+    expect(encodeEditorState(state)).toEqual(fixture);
   });
 
   it("round-trips through the JSON string codec", () => {
     const json = JSON.stringify(fixture);
-    const state = S.decodeSync(EditorStateFromJson)(json);
-    expect(JSON.parse(S.encodeSync(EditorStateFromJson)(state))).toEqual(fixture);
+    const state = decodeEditorStateFromJsonSync(json);
+    expect(JSON.parse(encodeEditorStateFromJsonSync(state))).toEqual(fixture);
   });
 
   it("round-trips schema-derived arbitrary nodes through encode/decode", () => {
@@ -331,19 +355,19 @@ describe("Lexical.model", { concurrent: false }, () => {
   });
 
   it("sanitizes link URLs at the schema boundary and keeps safe URLs fixed", () => {
-    expect(S.decodeSync(SafeUrl)("javascript:alert(1)")).toBe("#");
-    expect(S.decodeSync(SafeUrl)("file:///tmp/beep.txt")).toBe("#");
-    expect(S.decodeSync(SafeUrl)("/\n/evil.example/path")).toBe("#");
-    expect(S.decodeSync(SafeUrl)("/\r/evil.example/path")).toBe("#");
-    expect(S.decodeSync(SafeUrl)("/\t/evil.example/path")).toBe("#");
-    expect(S.decodeSync(SafeUrl)("https://example.com/docs")).toBe("https://example.com/docs");
-    expect(S.decodeSync(SafeUrl)("docs/page")).toBe("docs/page");
-    expect(S.encodeSync(SafeUrl)(S.decodeSync(SafeUrl)("data:text/html,<script>x</script>"))).toBe("#");
+    expect(decodeSafeUrlSync("javascript:alert(1)")).toBe("#");
+    expect(decodeSafeUrlSync("file:///tmp/beep.txt")).toBe("#");
+    expect(decodeSafeUrlSync("/\n/evil.example/path")).toBe("#");
+    expect(decodeSafeUrlSync("/\r/evil.example/path")).toBe("#");
+    expect(decodeSafeUrlSync("/\t/evil.example/path")).toBe("#");
+    expect(decodeSafeUrlSync("https://example.com/docs")).toBe("https://example.com/docs");
+    expect(decodeSafeUrlSync("docs/page")).toBe("docs/page");
+    expect(encodeSafeUrlSync(decodeSafeUrlSync("data:text/html,<script>x</script>"))).toBe("#");
 
     fc.assert(
       fc.property(SafeUrlArbitrary, (url) => {
         expect(sanitizeUrl(url)).toBe(url);
-        expect(S.decodeSync(SafeUrl)(S.encodeSync(SafeUrl)(url))).toBe(url);
+        expect(decodeSafeUrlSync(encodeSafeUrlSync(url))).toBe(url);
       }),
       fcRuns(50)
     );
@@ -416,12 +440,10 @@ describe("Lexical.model", { concurrent: false }, () => {
       },
     };
 
-    const decoded = Result.getOrThrow(S.decodeUnknownResult(SerializedEditorState)(valid));
-    expect(Result.getOrThrow(S.encodeResult(SerializedEditorState)(decoded))).toEqual(valid);
+    const decoded = Result.getOrThrow(decodeUnknownSerializedEditorStateResult(valid));
+    expect(Result.getOrThrow(encodeSerializedEditorStateResult(decoded))).toEqual(valid);
     expect(
-      Result.isSuccess(
-        S.decodeResult(EditorStateFromJson)(Result.getOrThrow(S.encodeResult(EditorStateFromJson)(decoded)))
-      )
+      Result.isSuccess(decodeEditorStateFromJsonResult(Result.getOrThrow(encodeEditorStateFromJsonResult(decoded))))
     ).toBe(true);
 
     const nonJsonValues: ReadonlyArray<unknown> = [
@@ -442,10 +464,10 @@ describe("Lexical.model", { concurrent: false }, () => {
         },
       };
 
-      expect(S.decodeUnknownResult(SerializedEditorState)(invalid)._tag).toBe("Failure");
+      expect(decodeUnknownSerializedEditorStateResult(invalid)._tag).toBe("Failure");
       expect(Effect.runSyncExit(decodeEditorStateStrict(invalid))._tag).toBe("Failure");
-      expect(S.encodeUnknownResult(SerializedEditorState)(invalid)._tag).toBe("Failure");
-      expect(S.encodeUnknownResult(EditorStateFromJson)(invalid)._tag).toBe("Failure");
+      expect(encodeUnknownSerializedEditorStateResult(invalid)._tag).toBe("Failure");
+      expect(encodeUnknownEditorStateFromJsonResult(invalid)._tag).toBe("Failure");
       expect(Effect.runSyncExit(decodeEditorStateLossless(invalid))._tag).toBe("Failure");
     });
   });
@@ -475,17 +497,17 @@ describe("Lexical.model", { concurrent: false }, () => {
       ],
     ] as const;
 
-    expect(S.decodeResult(LexicalNode)(nodeWithExtension)._tag).toBe("Failure");
+    expect(decodeLexicalNodeResult(nodeWithExtension)._tag).toBe("Failure");
     expect(O.isNone(LexicalNode.decodeUnknownOption(nodeWithExtension))).toBe(true);
-    expect(S.decodeResult(LexicalNode)(rootWithNestedExtension)._tag).toBe("Failure");
+    expect(decodeLexicalNodeResult(rootWithNestedExtension)._tag).toBe("Failure");
     expect(O.isNone(LexicalNode.decodeUnknownOption(rootWithNestedExtension))).toBe(true);
     A.forEach(cases, ([stateWithExtension, jsonWithExtension]) => {
-      expect(S.decodeResult(SerializedEditorState)(stateWithExtension)._tag).toBe("Failure");
+      expect(decodeSerializedEditorStateResult(stateWithExtension)._tag).toBe("Failure");
       expect(O.isNone(SerializedEditorState.decodeOption(stateWithExtension))).toBe(true);
-      expect(S.decodeResult(EditorStateFromJson)(jsonWithExtension)._tag).toBe("Failure");
+      expect(decodeEditorStateFromJsonResult(jsonWithExtension)._tag).toBe("Failure");
       expect(Effect.runSyncExit(decodeEditorStateStrict(stateWithExtension))._tag).toBe("Failure");
       expect(Effect.runSync(decodeEditorStateLossless(stateWithExtension))).toEqual(stateWithExtension);
-      expect(Effect.runSync(S.decodeEffect(EditorStateWireFromJson)(jsonWithExtension))).toEqual(stateWithExtension);
+      expect(Effect.runSync(decodeEditorStateWireFromJson(jsonWithExtension))).toEqual(stateWithExtension);
     });
   });
 
@@ -495,7 +517,7 @@ describe("Lexical.model", { concurrent: false }, () => {
         const decoded = Effect.runSync(decodeEditorStateLossless(wire));
 
         expect(decoded).toEqual(wire);
-        expect(Effect.runSync(S.encodeEffect(SerializedEditorStateWire)(decoded))).toEqual(wire);
+        expect(Effect.runSync(encodeSerializedEditorStateWire(decoded))).toEqual(wire);
       }),
       fcRuns(50)
     ));
@@ -538,7 +560,7 @@ describe("Lexical.model", { concurrent: false }, () => {
         check: ({ tag }) => tag,
       })
     ).toBe("ol");
-    expect(S.is(ListNodeValue)({ ...numberPayload, tag: "ul" })).toBe(false);
+    expect(isListNodeValue({ ...numberPayload, tag: "ul" })).toBe(false);
 
     const node = ListNode.make(numberPayload);
     expect(ListNode.is(node)).toBe(true);
@@ -581,16 +603,16 @@ describe("Lexical.model", { concurrent: false }, () => {
         bullet: ListTag.thunk.ul,
         check: ListTag.thunk.ul,
       });
-      const semanticNode = Effect.runSync(S.decodeUnknownEffect(ListNode)({ ...node, tag: canonicalTag }));
+      const semanticNode = Effect.runSync(decodeUnknownListNode({ ...node, tag: canonicalTag }));
       const semanticMismatch = { ...semanticNode, tag };
 
       expect(() => ListNode.make(semanticMismatch)).toThrow();
       expect(Effect.runSyncExit(ListNode.makeEffect(semanticMismatch))._tag).toBe("Failure");
-      expect(S.decodeUnknownResult(ListNode)(node)._tag).toBe("Failure");
-      expect(S.decodeUnknownResult(LexicalNode)(node)._tag).toBe("Failure");
-      expect(S.decodeUnknownResult(SerializedEditorState)(state)._tag).toBe("Failure");
+      expect(decodeUnknownListNodeResult(node)._tag).toBe("Failure");
+      expect(decodeUnknownLexicalNodeResult(node)._tag).toBe("Failure");
+      expect(decodeUnknownSerializedEditorStateResult(state)._tag).toBe("Failure");
       expect(O.isNone(SerializedEditorState.decodeOption(state))).toBe(true);
-      expect(S.decodeResult(EditorStateFromJson)(source)._tag).toBe("Failure");
+      expect(decodeEditorStateFromJsonResult(source)._tag).toBe("Failure");
       expect(Effect.runSyncExit(decodeEditorStateStrict(state))._tag).toBe("Failure");
 
       const compatibility = Effect.runSync(analyzeEditorStateCompatibility(state));
@@ -601,8 +623,8 @@ describe("Lexical.model", { concurrent: false }, () => {
 
       const wire = Effect.runSync(decodeEditorStateLossless(state));
       expect(wire).toEqual(state);
-      expect(Effect.runSync(S.encodeEffect(SerializedEditorStateWire)(wire))).toEqual(state);
-      expect(Effect.runSync(S.decodeEffect(EditorStateWireFromJson)(source))).toEqual(state);
+      expect(Effect.runSync(encodeSerializedEditorStateWire(wire))).toEqual(state);
+      expect(Effect.runSync(decodeEditorStateWireFromJson(source))).toEqual(state);
     });
   });
 
@@ -657,7 +679,7 @@ describe("Lexical.model", { concurrent: false }, () => {
       };
 
       const strict = Effect.runSync(decodeEditorStateStrict(state));
-      const source = Effect.runSync(S.encodeEffect(EditorStateFromJson)(strict));
+      const source = Effect.runSync(encodeEditorStateFromJson(strict));
 
       expect(editor.parseEditorState(source).toJSON().root.children[0]).toMatchObject({ listType, tag });
     });
@@ -683,7 +705,7 @@ describe("Lexical.model", { concurrent: false }, () => {
       },
     };
     const strict = Effect.runSync(decodeEditorStateStrict(state));
-    const source = Effect.runSync(S.encodeEffect(EditorStateFromJson)(strict));
+    const source = Effect.runSync(encodeEditorStateFromJson(strict));
 
     expect(editor.parseEditorState(source).toJSON()).toEqual(state);
   });
@@ -697,9 +719,9 @@ describe("Lexical.model", { concurrent: false }, () => {
       },
     };
 
-    const misplacedRoot = S.decodeUnknownSync(RootNode)(misplacedText.root);
+    const misplacedRoot = decodeUnknownRootNodeSync(misplacedText.root);
     expect(() => SerializedEditorState.make({ root: misplacedRoot })).toThrow();
-    expect(() => S.decodeUnknownSync(SerializedEditorState)(misplacedText)).toThrow();
+    expect(() => decodeEditorState(misplacedText)).toThrow();
     expect(Effect.runSync(decodeEditorStateLossless(misplacedText))).toEqual(misplacedText);
     expect(Effect.runSyncExit(decodeEditorStateStrict(misplacedText))._tag).toBe("Failure");
   });
@@ -721,7 +743,7 @@ describe("Lexical.model", { concurrent: false }, () => {
     const root = { ...element, type: "root", children: [paragraph, list, table] };
 
     A.forEach([text("standalone leaf"), paragraph, list, table, root], (input) => {
-      const result = S.decodeUnknownResult(LexicalNode)(input);
+      const result = decodeUnknownLexicalNodeResult(input);
       expect(Result.isSuccess(result)).toBe(true);
       if (Result.isSuccess(result)) {
         expect(matchedNodeType(result.success)).toBe(input.type);
@@ -737,7 +759,7 @@ describe("Lexical.model", { concurrent: false }, () => {
         { ...tableRow, children: [paragraph] },
         { ...tableCell, children: [text("misplaced cell text")] },
       ],
-      (input) => expect(Result.isFailure(S.decodeUnknownResult(LexicalNode)(input))).toBe(true)
+      (input) => expect(Result.isFailure(decodeUnknownLexicalNodeResult(input))).toBe(true)
     );
   });
 
@@ -760,14 +782,14 @@ describe("Lexical.model", { concurrent: false }, () => {
   });
 
   it("rejects impossible serialized formatting and structural values", () => {
-    const boldUnderline = S.decodeSync(TextFormatMask)(TextFormatBits.bold | TextFormatBits.underline);
+    const boldUnderline = decodeTextFormatMaskSync(TextFormatBits.bold | TextFormatBits.underline);
     expect(hasTextFormat(boldUnderline, TextFormatBits.bold)).toBe(true);
     expect(hasTextFormat(boldUnderline, TextFormatBits.underline)).toBe(true);
 
-    expect(() => S.decodeSync(LexicalNode)({ ...text("bad format"), format: 1 << 11 })).toThrow();
-    expect(() => S.decodeSync(LexicalNode)({ ...text("bad detail"), detail: 1 << 2 })).toThrow();
+    expect(() => decodeLexicalNodeSync({ ...text("bad format"), format: 1 << 11 })).toThrow();
+    expect(() => decodeLexicalNodeSync({ ...text("bad detail"), detail: 1 << 2 })).toThrow();
     expect(() =>
-      S.decodeSync(LexicalNode)({
+      decodeLexicalNodeSync({
         ...element,
         type: "list",
         listType: "number",
@@ -777,7 +799,7 @@ describe("Lexical.model", { concurrent: false }, () => {
       })
     ).toThrow();
     expect(() =>
-      S.decodeUnknownSync(LexicalNode)({
+      decodeUnknownLexicalNodeSync({
         ...element,
         type: "tablecell",
         headerState: 4,
@@ -787,7 +809,7 @@ describe("Lexical.model", { concurrent: false }, () => {
   });
 
   it("normalizes legacy serialized list starts and rejects corrupt item zeros", () => {
-    const list = S.decodeSync(LexicalNode)({
+    const list = decodeLexicalNodeSync({
       ...element,
       type: "list",
       listType: "number",
@@ -807,13 +829,13 @@ describe("Lexical.model", { concurrent: false }, () => {
       start: 1,
       children: [{ value: 1 }],
     });
-    expect(S.encodeSync(LexicalNode)(list)).toMatchObject({
+    expect(encodeLexicalNode(list)).toMatchObject({
       start: 1,
       children: [{ value: 1 }],
     });
 
     expect(() =>
-      S.decodeSync(LexicalNode)({
+      decodeLexicalNodeSync({
         ...element,
         type: "list",
         listType: "number",
@@ -842,7 +864,7 @@ describe("Lexical.model", { concurrent: false }, () => {
     expect(legacyYouTubeVideoId("https://youtube.com/embed/AbCdEfGhI12")).toBe("AbCdEfGhI12");
 
     expect(
-      S.decodeSync(LexicalNode)({
+      decodeLexicalNodeSync({
         type: "youtube",
         version: 1,
         videoID: "https://youtu.be/M7lc1UVf-VE",
@@ -850,7 +872,7 @@ describe("Lexical.model", { concurrent: false }, () => {
       })
     ).toMatchObject({ videoID: "M7lc1UVf-VE" });
     expect(
-      S.decodeSync(LexicalNode)({
+      decodeLexicalNodeSync({
         ...element,
         type: "code",
         language: "ts bad",
@@ -859,22 +881,22 @@ describe("Lexical.model", { concurrent: false }, () => {
     ).toMatchObject({ language: O.none() });
 
     expect(() =>
-      S.decodeSync(LexicalNode)({
+      decodeLexicalNodeSync({
         type: "youtube",
         version: 1,
         videoID: "https://youtu.be/not-valid",
         format: "",
       })
     ).toThrow();
-    expect(() => S.decodeSync(LexicalNode)({ type: "artifact-ref", version: 1, artifactId: "bad id" })).toThrow();
+    expect(() => decodeLexicalNodeSync({ type: "artifact-ref", version: 1, artifactId: "bad id" })).toThrow();
   });
 
   it("rejects nodes outside the v1 union", () => {
-    expect(() => S.decodeUnknownSync(LexicalNode)({ type: "mermaid", version: 1, source: "flowchart TD" })).toThrow();
+    expect(() => decodeUnknownLexicalNodeSync({ type: "mermaid", version: 1, source: "flowchart TD" })).toThrow();
   });
 
   it("projects plain text", () => {
-    const state = S.decodeUnknownSync(SerializedEditorState)(fixture);
+    const state = decodeEditorState(fixture);
     const plain = editorStateToPlainText(state);
     expect(plain).toContain("Plan");
     expect(plain).toContain("See the docs");
@@ -884,11 +906,11 @@ describe("Lexical.model", { concurrent: false }, () => {
     expect(plain).toContain("Language");
     expect(plain).toContain("[artifact:artifact-123]");
 
-    const node = S.decodeSync(LexicalNode)({ type: "linebreak", version: 1 });
+    const node = decodeLexicalNodeSync({ type: "linebreak", version: 1 });
     expect(nodeToPlainText(node)).toBe("\n");
     expect(
       nodeToPlainText(
-        S.decodeSync(LexicalNode)({
+        decodeLexicalNodeSync({
           type: "tab",
           version: 1,
           detail: 2,

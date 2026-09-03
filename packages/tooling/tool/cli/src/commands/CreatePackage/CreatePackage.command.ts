@@ -227,10 +227,11 @@ const AppKind = LiteralKit(VALID_APP_KINDS).pipe(
     description: "Supported app scaffold kinds.",
   })
 );
+const decodeUnknownAppKind = S.decodeUnknownEffect(AppKind);
 type AppKind = typeof AppKind.Type;
 const isAppKind = S.is(AppKind);
 const decodeAppKindEffect = (input: unknown) =>
-  S.decodeUnknownEffect(AppKind)(input).pipe(
+  decodeUnknownAppKind(input).pipe(
     Effect.mapError(
       DomainError.newCause(`Invalid app kind "${input}". Must be one of: ${A.join(VALID_APP_KINDS, ", ")}`)
     )
@@ -242,10 +243,11 @@ const PackageFamily = LiteralKit(VALID_FAMILIES).pipe(
     description: "Supported canonical package family scaffold targets.",
   })
 );
+const decodeUnknownPackageFamily = S.decodeUnknownEffect(PackageFamily);
 type PackageFamily = typeof PackageFamily.Type;
 const isPackageFamily = S.is(PackageFamily);
 const decodePackageFamilyEffect = (input: unknown) =>
-  S.decodeUnknownEffect(PackageFamily)(input).pipe(
+  decodeUnknownPackageFamily(input).pipe(
     Effect.mapError(
       DomainError.newCause(`Invalid package family "${input}". Must be one of: ${A.join(VALID_FAMILIES, ", ")}`)
     )
@@ -257,11 +259,12 @@ const FoundationKind = LiteralKit(VALID_FOUNDATION_KINDS).pipe(
     description: "Supported foundation package kinds.",
   })
 );
+const decodeUnknownFoundationKind = S.decodeUnknownEffect(FoundationKind);
 
 type FoundationKind = typeof FoundationKind.Type;
 const isFoundationKind = S.is(FoundationKind);
 const decodeFoundationKindEffect = (input: unknown) =>
-  S.decodeUnknownEffect(FoundationKind)(input).pipe(
+  decodeUnknownFoundationKind(input).pipe(
     Effect.mapError(
       DomainError.newCause(
         `Invalid foundation kind "${input}". Must be one of: ${A.join(VALID_FOUNDATION_KINDS, ", ")}`
@@ -274,10 +277,11 @@ const ToolingKind = LiteralKit(VALID_TOOLING_KINDS).pipe(
     description: "Supported tooling package kinds.",
   })
 );
+const decodeUnknownToolingKind = S.decodeUnknownEffect(ToolingKind);
 type ToolingKind = typeof ToolingKind.Type;
 const isToolingKind = S.is(ToolingKind);
 const decodeToolingKindEffect = (input: unknown) =>
-  S.decodeUnknownEffect(ToolingKind)(input).pipe(
+  decodeUnknownToolingKind(input).pipe(
     Effect.mapError(
       DomainError.newCause(`Invalid tooling kind "${input}". Must be one of: ${A.join(VALID_TOOLING_KINDS, ", ")}`)
     )

@@ -32,6 +32,8 @@ import * as HttpClientError from "effect/unstable/http/HttpClientError";
 import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
 import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
 
+const decodeUnknownPodCreateInput = S.decodeUnknownEffect(PodCreateInput);
+
 const $TestI = $RunpodId.create("Runpod.service.test");
 
 type CapturedRequest = {
@@ -293,14 +295,12 @@ describe("@beep/runpod", () => {
     it.effect(
       "enforces generated OpenAPI enum schemas while leaving dynamic ids flexible",
       Effect.fnUntraced(function* () {
-        const decodePodCreateInput = S.decodeUnknownEffect(PodCreateInput);
-
-        const decoded = yield* decodePodCreateInput({
+        const decoded = yield* decodeUnknownPodCreateInput({
           cloudType: "SECURE",
           computeType: "GPU",
           gpuTypeIds: ["dynamic-gpu-id"],
         });
-        const error = yield* decodePodCreateInput({
+        const error = yield* decodeUnknownPodCreateInput({
           cloudType: "LOCAL",
         }).pipe(Effect.flip);
 

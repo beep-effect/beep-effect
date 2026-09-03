@@ -8,6 +8,8 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { Response } from "effect/unstable/ai";
 
+const isBlockRepairFailed = S.is(BlockRepairFailed);
+
 const invalidParagraph = IssueReport.make({
   index: 0,
   raw: '{"type":"paragraph","children":[{"type":"text","text":1}]}',
@@ -122,7 +124,7 @@ describe("BlockRepair", () => {
         const error = Cause.findErrorOption(exit.cause);
         expect(O.isSome(error)).toBe(true);
         if (O.isSome(error)) {
-          expect(S.is(BlockRepairFailed)(error.value)).toBe(true);
+          expect(isBlockRepairFailed(error.value)).toBe(true);
         }
       }
     })

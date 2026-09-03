@@ -18,6 +18,16 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeLocalDateFromString = S.decodeEffect(LocalDateFromString);
+const decodeUnknownEntityIdOptionsSync = S.decodeUnknownSync(EntityId.Options);
+const encodeLocalDateFromString = S.encodeEffect(LocalDateFromString);
+const encodeLocalDateModel = S.encodeEffect(LocalDateModel);
+const encodeEntityIdDefinitionSync = S.encodeSync(EntityId.Definition);
+const encodeEntityIdOptionsSync = S.encodeSync(EntityId.Options);
+const encodePrincipalAgentPrincipalSync = S.encodeSync(Principal.AgentPrincipal);
+const encodePrincipalConnectorAccountPrincipalSync = S.encodeSync(Principal.ConnectorAccountPrincipal);
+const encodePrincipalServiceAccountPrincipalSync = S.encodeSync(Principal.ServiceAccountPrincipal);
+
 const $I = $SharedDomainId.create("test/SchemaParity");
 const makeSharedId = EntityId.factory("shared", $I);
 const DocumentId = makeSharedId("document");
@@ -43,9 +53,8 @@ const assertCodecRoundTrip = <A, I>(schema: S.Codec<A, I, never, never>, options
 
 describe("shared-domain schema parity", () => {
   it("keeps EntityId option defaults encoded as optional keys", () => {
-    const decodeOptions = S.decodeUnknownSync(EntityId.Options);
     const emptyOptions = EntityId.Options.make({});
-    const explicitOptions = decodeOptions({
+    const explicitOptions = decodeUnknownEntityIdOptionsSync({
       brand: "CustomDocumentId",
       description: "Custom document id.",
       entityType: "CustomDocument",
@@ -54,15 +63,15 @@ describe("shared-domain schema parity", () => {
     });
 
     expect(O.isNone(emptyOptions.brand)).toBe(true);
-    expect(S.encodeSync(EntityId.Options)(emptyOptions)).toEqual({});
-    expect(S.encodeSync(EntityId.Options)(explicitOptions)).toEqual({
+    expect(encodeEntityIdOptionsSync(emptyOptions)).toEqual({});
+    expect(encodeEntityIdOptionsSync(explicitOptions)).toEqual({
       brand: "CustomDocumentId",
       description: "Custom document id.",
       entityType: "CustomDocument",
       resource: "custom.document",
       tableName: "custom_document",
     });
-    expect(S.encodeSync(EntityId.Definition)(CustomDocumentId.definition)).toEqual({
+    expect(encodeEntityIdDefinitionSync(CustomDocumentId.definition)).toEqual({
       brand: "CustomDocumentId",
       description: "Custom document id.",
       entityType: "CustomDocument",
@@ -96,17 +105,17 @@ describe("shared-domain schema parity", () => {
       kind: "ConnectorAccount",
     });
 
-    expect(S.encodeSync(Principal.ServiceAccountPrincipal)(serviceAccount)).toEqual({
+    expect(encodePrincipalServiceAccountPrincipalSync(serviceAccount)).toEqual({
       kind: "ServiceAccount",
       serviceAccountId: 1,
     });
-    expect(S.encodeSync(Principal.AgentPrincipal)(agent)).toEqual({
+    expect(encodePrincipalAgentPrincipalSync(agent)).toEqual({
       agentId: 1,
       agentVersionId: 1,
       kind: "Agent",
       onBehalfOfUserId: 1,
     });
-    expect(S.encodeSync(Principal.ConnectorAccountPrincipal)(connector)).toEqual({
+    expect(encodePrincipalConnectorAccountPrincipalSync(connector)).toEqual({
       connectorAccountId: 1,
       kind: "ConnectorAccount",
     });
@@ -116,11 +125,11 @@ describe("shared-domain schema parity", () => {
     "keeps fromString byte-identical with the LocalDateFromString codec",
     Effect.fnUntraced(function* () {
       const viaHelper = yield* fromString("2024-06-15");
-      const viaSchema = yield* S.decodeEffect(LocalDateFromString)("2024-06-15");
+      const viaSchema = yield* decodeLocalDateFromString("2024-06-15");
 
       assert.strictEqual(Equal.equals(viaHelper, viaSchema), true);
-      assert.deepEqual(yield* S.encodeEffect(LocalDateFromString)(viaHelper), "2024-06-15");
-      assert.deepEqual(yield* S.encodeEffect(LocalDateModel)(viaHelper), {
+      assert.deepEqual(yield* encodeLocalDateFromString(viaHelper), "2024-06-15");
+      assert.deepEqual(yield* encodeLocalDateModel(viaHelper), {
         day: 15,
         month: 6,
         year: 2024,

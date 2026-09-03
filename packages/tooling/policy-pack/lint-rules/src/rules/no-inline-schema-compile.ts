@@ -6,11 +6,12 @@
  * @since 0.1.0
  */
 
-import { thunkFalse } from "@beep/utils/thunk";
+import { thunkFalse, thunkTrue } from "@beep/utils/thunk";
 import { defineRule } from "@oxlint/plugins";
 import { HashSet, MutableHashSet } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Str from "effect/String";
 import {
   classifyImportSpecifier,
   getPropertyName,
@@ -64,10 +65,10 @@ const isStaticSchemaReference = (node: MaybeNode): boolean => {
 
   if (expression.value.type === "Identifier") {
     const [firstChar] = expression.value.name;
-    return firstChar !== undefined && firstChar.toUpperCase() === firstChar;
+    return firstChar !== undefined && Str.toUpperCase(firstChar) === firstChar;
   }
 
-  return expression.value.type === "MemberExpression";
+  return expression.value.type === "MemberExpression" && isStaticSchemaReference(expression.value.object);
 };
 
 const messageHigh = (method: string) =>
@@ -146,10 +147,22 @@ export default defineRule({
     const isNestedStaticSchemaCall = (node: MaybeNode): boolean =>
       O.match(asSchemaMethodCall(node), {
         onNone: thunkFalse,
-        onSome: ({ method, args }) => {
-          if (!O.exists(method, (name) => name === "fromJsonString")) return true;
+        onSome: ({ args }) => {
           const [firstArg] = args;
-          return isStaticSchemaReference(firstArg) || isNestedStaticSchemaCall(firstArg);
+          if (firstArg === undefined) return true;
+          const firstExpression = unwrapExpression(firstArg);
+          if (
+            O.exists(
+              firstExpression,
+              (expression) => expression.type !== "Identifier" && expression.type !== "MemberExpression"
+            )
+          ) {
+            return O.match(asSchemaMethodCall(firstArg), {
+              onNone: thunkTrue,
+              onSome: () => isNestedStaticSchemaCall(firstArg),
+            });
+          }
+          return isStaticSchemaReference(firstArg);
         },
       });
 

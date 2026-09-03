@@ -24,6 +24,8 @@ import type { DuckDbError } from "@beep/duckdb";
 import type { SparqlQueryError } from "@beep/semantic-web/services/sparql-query";
 import type * as SqlError from "effect/unstable/sql/SqlError";
 
+const decodeUnknownProjectionSnapshot = S.decodeUnknownEffect(ProjectionSnapshot);
+
 const $I = $LejeuneBoltWorkbenchId.create("runtime/Projections");
 const LEJEUNE_ONTOLOGY_NAMESPACE = "https://beep.dev/lejeune/ontology/";
 const RDF_TYPE = Rdf.makeNamedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type");
@@ -366,7 +368,7 @@ export const buildProjectionSnapshot = Effect.fn("lejeune.projection.build")(fun
   const [pglite, duckdb, ontologyClasses] = yield* Effect.all([pgliteEffect, duckDbEffect, oxigraphEffect], {
     concurrency: 3,
   });
-  return yield* S.decodeUnknownEffect(ProjectionSnapshot)({
+  return yield* decodeUnknownProjectionSnapshot({
     citations: duckdb.citations,
     documentCount: duckdb.documentCount,
     documentDigests: duckdb.documentDigests,
@@ -405,7 +407,7 @@ export const verifyDurableProjectionSnapshot = Effect.fn("lejeune.projection.ver
     ],
     { concurrency: 2 }
   );
-  const actual = yield* S.decodeUnknownEffect(ProjectionSnapshot)({
+  const actual = yield* decodeUnknownProjectionSnapshot({
     citations: duckdb.citations,
     documentCount: duckdb.documentCount,
     documentDigests: duckdb.documentDigests,

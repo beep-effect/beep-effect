@@ -68,11 +68,14 @@ import type {
 } from "./BoxProvisioningPlan.ts";
 import type { BoxApplyJournalEntry, BoxApplyOutcome } from "./BoxProvisioningReceipt.ts";
 
+const isBFolderMini = S.is(B.FolderMini);
+
 const $I = $BoxProvisioningId.create("BoxProvisioningApplier");
 
 const sha256Equivalence = S.toEquivalence(Sha256Hex);
 
 const RawResourceIdentity = S.Struct({ id: S.NonEmptyString });
+const decodeUnknownRawResourceIdentity = S.decodeUnknownEffect(RawResourceIdentity);
 
 type DesiredResource =
   | BoxFolderIntent
@@ -225,7 +228,7 @@ const collaborationAccessibleBy = (
   );
 
 const decodeCreatedIdentity = (value: unknown): Effect.Effect<BoxProviderId, BoxProvisioningInvariantError> =>
-  S.decodeUnknownEffect(RawResourceIdentity)(value).pipe(
+  decodeUnknownRawResourceIdentity(value).pipe(
     Effect.map((identity) => BoxProviderId.make(identity.id)),
     Effect.mapError(() => invariant("unreadable-sdk-response"))
   );
@@ -237,7 +240,7 @@ const validateFolderAbsent = Effect.fn("BoxProvisioningApplier.validateFolderAbs
 ) {
   const items = yield* listFolderItems(box, parentProviderId);
   const names = yield* Effect.forEach(
-    A.filter(items, S.is(B.FolderMini)),
+    A.filter(items, isBFolderMini),
     (item) =>
       O.match(O.fromNullishOr(item.name), {
         onNone: () => Effect.fail(invariant("unreadable-sdk-response")),

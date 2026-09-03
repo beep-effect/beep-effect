@@ -74,6 +74,14 @@ import { XSD_BOOLEAN, XSD_DATE_TIME, XSD_DOUBLE, XSD_STRING } from "./Vocab/Xsd.
 import type { ObjectRef, ProvRecord as ProvRecordType } from "./Prov.ts";
 import type { GraphTerm, ObjectTerm, Subject } from "./Rdf.ts";
 
+const decodeProvDateTimeResult = S.decodeResult(ProvDateTime);
+const decodeFiniteFromStringResult = S.decodeResult(S.FiniteFromString);
+const encodeFiniteFromStringResult = S.encodeResult(S.FiniteFromString);
+const isDataset = S.is(Dataset);
+const isLiteral = S.is(Literal);
+const isNamedNode = S.is(NamedNode);
+const isProvBundle = S.is(ProvBundle);
+
 const $I = $RdfId.create("prov-rdf");
 const REF_IRI_PREFIX = "urn:beep:rdf:prov:ref:";
 const RECORD_IRI_PREFIX = "urn:beep:rdf:prov:record:";
@@ -208,7 +216,7 @@ const encodeScalar = (value: string | number | boolean): Result.Result<Literal, 
     Match.when(P.isString, (text) => Result.succeed(literal(text, XSD_STRING))),
     Match.when(P.isNumber, (number) =>
       pipe(
-        S.encodeResult(S.FiniteFromString)(number),
+        encodeFiniteFromStringResult(number),
         Result.map((encoded) => literal(encoded, XSD_DOUBLE)),
         /* istanbul ignore next -- Entity's schema admits only finite numeric prov:value inputs */
         Result.mapError(() => codecError("Unable to encode a finite prov:value number"))
@@ -530,7 +538,7 @@ const provBundleToDatasetInternal = (
   );
 
 /** @internal */
-const isProvBundleDataFirst = (args: IArguments): boolean => S.is(ProvBundle)(args[0]);
+const isProvBundleDataFirst = (args: IArguments): boolean => isProvBundle(args[0]);
 
 /**
  * Projects a supported provenance bundle into deterministic PROV-O quads.
@@ -608,7 +616,7 @@ const parentSubjects = (quads: ReadonlyArray<Quad>, predicate: NamedNode, object
   );
 
 const decodeRefNode = (term: ObjectTerm | Subject): Result.Result<ObjectRef, ProvRdfCodecError> =>
-  S.is(NamedNode)(term)
+  isNamedNode(term)
     ? pipe(
         Str.startsWith(REF_IRI_PREFIX)(term.value)
           ? pipe(
@@ -627,7 +635,7 @@ const decodeRefNode = (term: ObjectTerm | Subject): Result.Result<ObjectRef, Pro
     : Result.fail(codecError("Expected a named node for a PROV object reference"));
 
 const decodeOptionalId = (subject: Subject): Result.Result<O.Option<ObjectRef>, ProvRdfCodecError> =>
-  S.is(NamedNode)(subject)
+  isNamedNode(subject)
     ? Str.startsWith(RECORD_IRI_PREFIX)(subject.value)
       ? Result.succeed(O.none())
       : pipe(decodeRefNode(subject), Result.map(O.some))
@@ -651,7 +659,7 @@ const decodePlainLiteralScalar = Match.type<Literal>().pipe(
     (term) => term.datatype.value === XSD_DOUBLE.value,
     (term) =>
       pipe(
-        S.decodeResult(S.FiniteFromString)(term.value),
+        decodeFiniteFromStringResult(term.value),
         Result.mapError(() => codecError(`Invalid finite prov:value number: ${term.value}`))
       )
   ),
@@ -677,7 +685,7 @@ const decodeScalar = (
   O.match(value, {
     onNone: () => Result.succeed(O.none()),
     onSome: (term) =>
-      S.is(Literal)(term)
+      isLiteral(term)
         ? pipe(decodeLiteralScalar(term), Result.map(O.some))
         : Result.fail(codecError("Expected an RDF literal for prov:value")),
   });
@@ -686,15 +694,15 @@ const decodeTimestamp = (value: O.Option<ObjectTerm>): Result.Result<O.Option<Pr
   O.match(value, {
     onNone: () => Result.succeed(O.none()),
     onSome: (term) =>
-      S.is(Literal)(term) && term.datatype.value === XSD_DATE_TIME.value && O.isNone(term.language)
+      isLiteral(term) && term.datatype.value === XSD_DATE_TIME.value && O.isNone(term.language)
         ? pipe(
-            S.decodeResult(ProvDateTime)(term.value),
+            decodeProvDateTimeResult(term.value),
             Result.map(O.some),
             Result.mapError(() => codecError(`Invalid PROV timestamp: ${term.value}`))
           )
         : Result.fail(
             codecError(
-              S.is(Literal)(term)
+              isLiteral(term)
                 ? `Expected an xsd:dateTime literal for a PROV timestamp, received ${term.datatype.value}`
                 : "Expected an RDF literal for a PROV timestamp"
             )
@@ -711,7 +719,7 @@ const decodeName = (quads: ReadonlyArray<Quad>, subject: Subject): Result.Result
       O.match({
         onNone: () => Result.succeed(O.none()),
         onSome: (term) =>
-          S.is(Literal)(term) && term.datatype.value === XSD_STRING.value && O.isNone(term.language)
+          isLiteral(term) && term.datatype.value === XSD_STRING.value && O.isNone(term.language)
             ? Result.succeed(O.some(term.value))
             : Result.fail(codecError("Expected a plain xsd:string RDF literal for rdfs:label")),
       })
@@ -890,7 +898,7 @@ const decodeRecordByType = Match.type<string>().pipe(
 );
 
 const isProvType = (value: ObjectTerm): value is NamedNode =>
-  S.is(NamedNode)(value) && Str.startsWith(PROV_NAMESPACE)(value.value);
+  isNamedNode(value) && Str.startsWith(PROV_NAMESPACE)(value.value);
 
 const isProvTypeQuad = (value: Quad): value is Quad & { readonly object: NamedNode } =>
   samePredicate(value.predicate, RDF_TYPE) && isProvType(value.object);
@@ -945,7 +953,7 @@ const datasetToProvBundleInternal = (
 };
 
 /** @internal */
-const isDatasetDataFirst = (args: IArguments): boolean => S.is(Dataset)(args[0]);
+const isDatasetDataFirst = (args: IArguments): boolean => isDataset(args[0]);
 
 /**
  * Reconstructs a supported provenance bundle from one RDF dataset graph.

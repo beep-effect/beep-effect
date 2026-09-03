@@ -85,6 +85,7 @@ export const ExpectCTEnabled = S.Tuple([S.Literal(true), ExpectCTConfig]).pipe(
  * @since 0.0.0
  */
 export type ExpectCTEnabled = typeof ExpectCTEnabled.Type;
+const decodeExpectCTEnabled = S.decodeEffect(ExpectCTEnabled);
 
 /**
  * Schema for enabled or disabled `Expect-CT` options.
@@ -254,7 +255,7 @@ export const ExpectCTHeader = S.Union([ExpectCTOption, S.Undefined]).pipe(
         return O.some(`max-age=${defaultMaxAge}`);
       }
 
-      const enabled = yield* S.decodeEffect(ExpectCTEnabled)(option).pipe(
+      const enabled = yield* decodeExpectCTEnabled(option).pipe(
         Effect.mapError((cause) =>
           ExpectCtError.make({
             message: cause.message,

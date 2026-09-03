@@ -15,6 +15,10 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import { describe, expect, it } from "vitest";
 
+const decodeBaseIdentityInputOption = S.decodeOption(BaseIdentityInput);
+const decodeUnknownBaseIdentityInputOption = S.decodeUnknownOption(BaseIdentityInput);
+const encodeBaseIdentityInputOption = S.encodeOption(BaseIdentityInput);
+
 declare module "effect/Schema" {
   namespace Annotations {
     interface Annotations {
@@ -41,8 +45,8 @@ describe("@beep/identity", () => {
   });
 
   it("normalizes package constructor bases through the schema codec", () => {
-    expect(S.decodeOption(BaseIdentityInput)("@beep/my-pkg")).toEqual(O.some("my-pkg"));
-    expect(S.decodeOption(BaseIdentityInput)("@my-pkg")).toEqual(O.some("my-pkg"));
+    expect(decodeBaseIdentityInputOption("@beep/my-pkg")).toEqual(O.some("my-pkg"));
+    expect(decodeBaseIdentityInputOption("@my-pkg")).toEqual(O.some("my-pkg"));
     expect(make("my-pkg").$MyPkgId.string()).toBe("@beep/my-pkg");
     expect(make("@my-pkg").$MyPkgId.string()).toBe("@beep/my-pkg");
     expect(make("@beep/my-pkg").$MyPkgId.string()).toBe("@beep/my-pkg");
@@ -51,7 +55,7 @@ describe("@beep/identity", () => {
   it("round-trips generated base constructor input values", () => {
     fc.assert(
       fc.property(S.toArbitrary(BaseIdentityInput)(fc), (base) => {
-        const decoded = O.flatMap(S.encodeOption(BaseIdentityInput)(base), S.decodeUnknownOption(BaseIdentityInput));
+        const decoded = O.flatMap(encodeBaseIdentityInputOption(base), decodeUnknownBaseIdentityInputOption);
 
         expect(O.exists(decoded, (value) => Equal.equals(value, base))).toBe(true);
       })

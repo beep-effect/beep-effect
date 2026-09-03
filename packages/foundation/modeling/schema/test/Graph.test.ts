@@ -6,36 +6,43 @@ import * as Graph_ from "effect/Graph";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeGraphSchemaEdgeIndexSync = S.decodeSync(GraphSchema.EdgeIndex);
+const decodeGraphSchemaEdgeIndexFromStringSync = S.decodeSync(GraphSchema.EdgeIndexFromString);
+const decodeGraphSchemaGraphKindSync = S.decodeSync(GraphSchema.GraphKind);
+const decodeGraphSchemaNodeIndexSync = S.decodeSync(GraphSchema.NodeIndex);
+const decodeGraphSchemaNodeIndexFromStringSync = S.decodeSync(GraphSchema.NodeIndexFromString);
+const isGraphSchemaEdgeIndex = S.is(GraphSchema.EdgeIndex);
+const isGraphSchemaGraphKind = S.is(GraphSchema.GraphKind);
+const isGraphSchemaNodeIndex = S.is(GraphSchema.NodeIndex);
+
 const NodeIndexArbitrary = S.toArbitrary(GraphSchema.NodeIndex)(fc);
 const EdgeIndexArbitrary = S.toArbitrary(GraphSchema.EdgeIndex)(fc);
 const GraphKindArbitrary = S.toArbitrary(GraphSchema.GraphKind)(fc);
 
 describe("Graph indices", () => {
   it("brands non-negative integer node and edge indices", () => {
-    expect(S.decodeSync(GraphSchema.NodeIndex)(0)).toBe(0);
-    expect(S.decodeSync(GraphSchema.NodeIndexFromString)("2")).toBe(2);
-    expect(S.decodeSync(GraphSchema.EdgeIndex)(1)).toBe(1);
-    expect(S.decodeSync(GraphSchema.EdgeIndexFromString)("3")).toBe(3);
+    expect(decodeGraphSchemaNodeIndexSync(0)).toBe(0);
+    expect(decodeGraphSchemaNodeIndexFromStringSync("2")).toBe(2);
+    expect(decodeGraphSchemaEdgeIndexSync(1)).toBe(1);
+    expect(decodeGraphSchemaEdgeIndexFromStringSync("3")).toBe(3);
   });
 
   it("rejects invalid indices", () => {
-    expect(() => S.decodeSync(GraphSchema.NodeIndex)(-1)).toThrow("Expected a value greater than or equal to 0");
-    expect(() => S.decodeSync(GraphSchema.EdgeIndexFromString)("-1")).toThrow(
-      "Expected a value greater than or equal to 0"
-    );
+    expect(() => decodeGraphSchemaNodeIndexSync(-1)).toThrow("Expected a value greater than or equal to 0");
+    expect(() => decodeGraphSchemaEdgeIndexFromStringSync("-1")).toThrow("Expected a value greater than or equal to 0");
   });
 
   it("decodes graph kind discriminators", () => {
-    expect(S.decodeSync(GraphSchema.GraphKind)("directed")).toBe("directed");
-    expect(S.decodeSync(GraphSchema.GraphKind)("undirected")).toBe("undirected");
+    expect(decodeGraphSchemaGraphKindSync("directed")).toBe("directed");
+    expect(decodeGraphSchemaGraphKindSync("undirected")).toBe("undirected");
   });
 
   it("derives valid graph primitives from their source schemas", () => {
     fc.assert(
       fc.property(NodeIndexArbitrary, EdgeIndexArbitrary, GraphKindArbitrary, (nodeIndex, edgeIndex, graphKind) => {
-        expect(S.is(GraphSchema.NodeIndex)(nodeIndex)).toBe(true);
-        expect(S.is(GraphSchema.EdgeIndex)(edgeIndex)).toBe(true);
-        expect(S.is(GraphSchema.GraphKind)(graphKind)).toBe(true);
+        expect(isGraphSchemaNodeIndex(nodeIndex)).toBe(true);
+        expect(isGraphSchemaEdgeIndex(edgeIndex)).toBe(true);
+        expect(isGraphSchemaGraphKind(graphKind)).toBe(true);
       }),
       fcRuns(50)
     );

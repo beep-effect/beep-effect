@@ -48,6 +48,12 @@ import * as Response from "effect/unstable/ai/Response";
 import * as SqlClient from "effect/unstable/sql/SqlClient";
 import { OFFICE_ACTION_FIXTURE } from "./fixture.ts";
 
+const decodePracticeKgOptionsSync = S.decodeSync(PracticeKgOptions);
+const decodePracticeKgToolResultSync = S.decodeSync(PracticeKgToolResult);
+const decodeUnknownPracticeKgToolResultSync = S.decodeUnknownSync(PracticeKgToolResult);
+const isPracticeKgCandidateClaimsNotLoadedResult = S.is(PracticeKgCandidateClaimsNotLoadedResult);
+const isString = S.is(S.String);
+
 class FixtureSourceRow extends S.Class<FixtureSourceRow>("FixtureSourceRow")({
   artifactId: S.String,
   digest: S.String,
@@ -449,7 +455,7 @@ describe("practice KG projections", () => {
   it("generates schema-valid fixture source rows", () => {
     fc.assert(
       fc.property(S.toArbitrary(S.String)(fc), (value) => {
-        expect(S.is(S.String)(value)).toBe(true);
+        expect(isString(value)).toBe(true);
       }),
       { numRuns: 10 }
     );
@@ -464,14 +470,14 @@ describe("practice KG projections", () => {
     });
     expect(options.maxTextBytes).toBe(2_097_152);
     expect(options.bundleOut).toBeUndefined();
-    const decoded = S.decodeSync(PracticeKgOptions)({
+    const decoded = decodePracticeKgOptionsSync({
       corpusRoot: "/corpus",
       includeRefresh: false,
       overwrite: false,
       skipEmails: true,
     });
     expect(decoded.maxTextBytes).toBe(2_097_152);
-    const spineRow = S.decodeSync(PracticeKgToolResult)({
+    const spineRow = decodePracticeKgToolResultSync({
       bundle_version: "2026-07-27-01",
       data: { columns: ["family"], rows: [["10008"]] },
       epistemic_status: "derived-from-official-records",
@@ -481,7 +487,7 @@ describe("practice KG projections", () => {
     });
     expect(spineRow.epistemic_status).toBe("derived-from-official-records");
     expect(() =>
-      S.decodeUnknownSync(PracticeKgToolResult)({
+      decodeUnknownPracticeKgToolResultSync({
         bundle_version: "2026-07-27-01",
         data: { columns: [], rows: [] },
         epistemic_status: "settled-fact",
@@ -638,8 +644,8 @@ describe("practice KG projections", () => {
         const candidate = yield* callToolText("kg_candidate_claims", { family: "20001" }).pipe(
           Effect.flatMap(decodeCandidateClaimsJson)
         );
-        expect(S.is(PracticeKgCandidateClaimsNotLoadedResult)(candidate)).toBe(true);
-        if (S.is(PracticeKgCandidateClaimsNotLoadedResult)(candidate)) {
+        expect(isPracticeKgCandidateClaimsNotLoadedResult(candidate)).toBe(true);
+        if (isPracticeKgCandidateClaimsNotLoadedResult(candidate)) {
           expect(candidate.available).toBe(false);
           expect(candidate.bundle_version).toBe(manifest.bundleVersion);
           expect(candidate.reason).toBe("claims batch not yet loaded");

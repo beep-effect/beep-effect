@@ -14,6 +14,8 @@ import { CandidateOutputSet } from "./ProfessionalRuntime.contracts.ts";
 import { ProfessionalRuntimeValidationError } from "./ProfessionalRuntime.errors.ts";
 import { RuntimeFixtureScenarioId } from "./ProfessionalRuntime.values.ts";
 
+const isProfessionalRuntimeValidationError = S.is(ProfessionalRuntimeValidationError);
+
 // cspell:words Priya Raman
 
 const $I = $AgentsUseCasesId.create("processes/ProfessionalRuntime/ProfessionalRuntime.fixtures");
@@ -754,7 +756,7 @@ export const runRuntimeFixture = Effect.fn("RuntimeFixture.run")((input: Runtime
       return fixtureRunnerForScenario(input.email.scenarioId)(input);
     },
     catch: (error) =>
-      S.is(ProfessionalRuntimeValidationError)(error)
+      isProfessionalRuntimeValidationError(error)
         ? error
         : ProfessionalRuntimeValidationError.make({ message: String(error) }),
   })

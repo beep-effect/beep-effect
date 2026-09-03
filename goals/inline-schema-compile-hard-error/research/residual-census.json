@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "inline-schema-compile-census/v1",
+  "measuredTree": {
+    "commit": "39aa4149b7ab794dfa9431441593dec419307541",
+    "committedAt": "2026-09-03T03:38:13-05:00"
+  },
+  "predecessor": {
+    "commit": "01d400f0323cfa25cddacdbef4f602e114ff6a17",
+    "expectedCount": 2931,
+    "reproducedCount": 2931
+  },
+  "summary": {
+    "currentCount": 0,
+    "driftFromPredecessor": -2931,
+    "fileCount": 0,
+    "ownerFamilyCount": 0,
+    "generatedCount": 0,
+    "unresolvedGeneratedCount": 0,
+    "authoredCount": 0
+  },
+  "byScope": {},
+  "byCompiler": {},
+  "byOwnerFamily": {},
+  "byMigrationShape": {},
+  "files": [],
+  "findings": []
+}

@@ -11,6 +11,8 @@ import { BoxObservedState, BoxObservedWebhook } from "../BoxProvisioningObserved
 import { BoxProvisioningPlan } from "../BoxProvisioningPlan.ts";
 import type { BoxLogicalKey } from "../BoxProvisioningIntent.ts";
 
+const decodeUnknownJsonSync = S.decodeUnknownSync(S.Json);
+
 type CanonicalEntry = readonly [key: string, value: unknown];
 
 const byKeyAscending = Order.mapInput(Order.String, ([key]: CanonicalEntry) => key);
@@ -35,7 +37,7 @@ const canonicalJson = (value: unknown): string => {
 };
 
 export const digestEncoded = (value: unknown): Sha256Hex => {
-  const json = S.decodeUnknownSync(S.Json)(value);
+  const json = decodeUnknownJsonSync(value);
   return Sha256Hex.make(createHash("sha256").update(canonicalJson(json), "utf8").digest("hex"));
 };
 

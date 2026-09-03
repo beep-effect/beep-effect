@@ -135,6 +135,7 @@ const makeStageCommand = (stage: CanaryStage) =>
   );
 
 const ManifestJson = S.fromJsonString(CorpusManifest, { space: 2 });
+const encodeManifestJson = S.encodeEffect(ManifestJson);
 
 const manifestOutput = Flag.path("out").pipe(
   Flag.withDescription("Output path for the generated, pretty-printed W1 manifest.")
@@ -150,7 +151,7 @@ const buildManifest = Effect.fn("SemanticaCanary.buildManifest")(function* ({ ou
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const built = yield* builder.build;
-  const json = yield* S.encodeEffect(ManifestJson)(built).pipe(Effect.orDie);
+  const json = yield* encodeManifestJson(built).pipe(Effect.orDie);
   yield* fs.makeDirectory(path.dirname(out), { recursive: true }).pipe(
     Effect.mapError(() =>
       ManifestWriteFailed.make({

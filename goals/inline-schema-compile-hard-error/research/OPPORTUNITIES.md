@@ -1,0 +1,150 @@
+# Opportunities
+
+## 2026-09-03 — Generated HTML output had inherited drift
+
+- **Work:** Update the sole generated `beep(no-inline-schema-compile)` finding
+  in `@beep/html`, generator first.
+- **Evidence:** The first `bun run generate` after the one-line compiler-template
+  change also changed 202 lines in `src/Html.model.ts`. Attribution showed
+  commit `09ad07d1fc` updated `scripts/generate.ts` without updating that
+  generated output, so `main` was already non-idempotent before this packet.
+- **Prevention:** Require each generated-source owner to run its package
+  `generate:check` in the PR that changes a generator template, and include the
+  generated outputs in the same commit.
+
+## 2026-09-03 — Whole-corpus ts-morph analysis was not memory-bounded
+
+- **Work:** Classify safe and manual hoists across the 566-file opening census.
+- **Evidence:** A single ts-morph project reached roughly 10.9 GiB RSS and was
+  still CPU-bound after 48 seconds while three full-proof scheduler leases were
+  active; the analysis process was stopped without writing source.
+- **Prevention:** Corpus codemods should load bounded file chunks, release each
+  project between chunks, and expose an analysis-only mode before writes.
+
+## 2026-09-03 — Ordering audit recomputed declaration indexes quadratically
+
+- **Work:** Repair compiler constants inserted before locally declared schema
+  dependencies after the mechanical migration.
+- **Evidence:** The corpus ordering audit remained CPU-bound after 11 minutes
+  because it rebuilt the file-wide declaration map for each compiler constant.
+  The pass was interrupted after its per-file saves; an independent Biome check
+  reduced the residual from 37 to 21 ordering diagnostics.
+- **Prevention:** Build each source file's runtime-declaration index once per
+  syntax-tree revision, and constrain the repair scan to compiler constants
+  whose referenced local declaration occurs later in the module.
+
+## 2026-09-03 — Scratchpad conflict test cannot initialize on main
+
+- **Work:** Run the focused scratchpad tests after moving the ticket and HTTP
+  response codecs to module scope.
+- **Evidence:** `vitest run test/Service/ConflictRepository.test.ts` fails before
+  collecting tests with `Schema property 'annotate' would be lost by the owned
+  rebuild`. A disposable worktree at the exact starting `HEAD` reproduced the
+  same failure and stack in `Domain/Schema/KnowledgeModel.ts`.
+- **Prevention:** Keep scratchpad schemas that attach custom statics on the
+  supported `withCodecStatics` ordering, and add the conflict suite to the
+  owning verification lane so initialization drift is caught when introduced.
+
+## 2026-09-03 — Shared assertion adapter invalidated incremental dependents
+
+- **Work:** Verify the new shared compiled assertion through the selective
+  codec-static registry and its downstream packages.
+- **Evidence:** `@beep/acp` and `@beep/agents-domain` initially armed P0 local
+  audit shards after the registry used the generic helper directly. A
+  monomorphic `CodecSchema` adapter restored the registry boundary; forced
+  project-reference rebuilds then showed the remaining agents-domain and
+  agents-client diagnostics were stale incremental state. All three canonical
+  package verifiers subsequently passed their audit and docgen lanes, and Yeet
+  reconciled the rows to zero unacknowledged work.
+- **Prevention:** Test generic helpers through the exact monomorphic registry
+  slot that consumes them, and force project-reference invalidation when a
+  shared declaration signature changes before attributing downstream type
+  diagnostics to source.
+
+## 2026-09-03 — Scheduler dry-run guidance contradicts its command parser
+
+- **Work:** Inspect scheduler liveness after the admitted package matrix waited
+  ten minutes behind live proof work.
+- **Evidence:** The scheduler escalation recommended `bun run beep quality
+  scheduler reap`; that command describes `--apply` as optional and says the
+  default is a dry-run report, but exits with `Missing required flag: --apply`.
+  The separate status command reported no dead leases, so no mutating reap was
+  attempted.
+- **Prevention:** Make `scheduler reap` execute the documented dry-run path
+  without `--apply`, reserving `--apply` solely for confirmed mutation.
+
+## 2026-09-03 — Box verifier reused stale project-reference state
+
+- **Work:** Run the scheduler-admitted package-owner verification matrix after
+  the corpus-wide compiler hoist.
+- **Evidence:** `@beep/box` generated successfully and then failed its first
+  audit with only `TS2589: Type instantiation is excessively deep and possibly
+  infinite`. An exact forced project-reference build passed, followed by a
+  green canonical package verifier (`audit` and `docgen`); Yeet then reported
+  the Box P0 row acknowledged with zero unacknowledged inbox work.
+- **Prevention:** When a shared schema declaration changes across a large
+  project-reference graph, invalidate the affected package build before its
+  first verification rather than diagnosing an unlocated incremental
+  instantiation failure as a source regression.
+
+## 2026-09-03 — Documents domain also reused stale declarations
+
+- **Work:** Resume the package-owner matrix after clearing the Box checkpoint.
+- **Evidence:** The first `@beep/documents-domain` audit reported `unknown`
+  inference cascades in an untouched taxonomy seed and projection plus a typed
+  decoder diagnostic. Its only packet change was an unrelated module-scoped
+  path-segment decoder. A forced exact project-reference build passed, followed
+  by a green canonical package verifier (`audit` and `docgen`) and a Yeet inbox
+  with zero unacknowledged rows.
+- **Prevention:** Make package verification invalidate dependent declaration
+  state when a shared schema utility changes; repeated per-package forced
+  rebuilds turn a single graph invalidation into many fail-fast queue cycles.
+
+## 2026-09-03 — Package-owner roots are not confined to packages
+
+- **Work:** Add an exact project-reference refresh before each canonical owner
+  verification after repeated stale declaration failures.
+- **Evidence:** The first hardened matrix passed through owner 46, then stopped
+  before `@beep/infra` because manifest discovery only searched
+  `packages/**/package.json`; that package is owned by `infra/package.json`.
+- **Prevention:** Derive owner locations from all tracked workspace manifests
+  and validate that every census owner resolves before admitting the matrix.
+
+## 2026-09-03 — Build-mode refresh is not authoritative for every owner
+
+- **Work:** Pre-refresh project-reference state inside the admitted owner
+  matrix before each canonical package verifier.
+- **Evidence:** The refresh stopped at `@beep/lejeune-bolt-workbench` with
+  `TS6307` for tracked JSON fixtures and a generated Vitest-alias file because
+  `tsc -b` applies composite-project file-list constraints that the package's
+  canonical `tsc -p` build does not. The canonical package verifier had not run.
+- **Prevention:** Treat forced build-mode refresh as best-effort cache
+  invalidation and always use `package-verify` as the owner proof authority;
+  retain refresh diagnostics only when the canonical verifier also fails.
+
+## 2026-09-03 — Reused optional decoder broke lane-proof reuse
+
+- **Work:** Verify the compiler hoists in `@beep/repo-cli` through its complete
+  owner test suite.
+- **Evidence:** One of 2,806 tests failed because a second identical
+  property-floor lane ran instead of reusing its proof. The isolated test
+  failed on the packet tree, passed at the exact starting HEAD, and passed
+  again when only the hoisted `S.decodeUnknownOption(LaneProofMode)` call was
+  temporarily restored. A module-scoped `S.is(LaneProofMode)` guard retained
+  compile-once validation and made the isolated test pass.
+- **Prevention:** For repeatedly sampled environment literal domains, prefer a
+  compiled schema guard over a reused optional decoder, and keep lane-proof
+  reuse tests in the owner gate for compiler-hoist migrations.
+
+## 2026-09-03 — Shared Vite temp cache invalidated control-worktree proof
+
+- **Work:** Reproduce the lane-proof failure at the exact starting HEAD in the
+  disposable control worktree.
+- **Evidence:** Running Vitest from the control worktree root fanned out across
+  workspace configs, while its shared `node_modules` symlink wrote Vite temp
+  module paths anchored in the active checkout; startup failed before tests.
+  Running from the exact package directory matched the canonical owner context
+  and produced a valid passing control result.
+- **Prevention:** Give disposable control worktrees an isolated Vite cache, or
+  run package-scoped Vitest from the package directory when dependencies are
+  shared by symlink.

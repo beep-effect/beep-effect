@@ -31,6 +31,9 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import type { PhoenixSdkShape } from "@beep/phoenix";
 
+const decodeUnknownPhoenixConfigInputResult = S.decodeUnknownResult(PhoenixConfigInput);
+const encodeUnknownPhoenixConfigInputResult = S.encodeUnknownResult(PhoenixConfigInput);
+
 const expectEncodedRoundTrip = <Schema extends S.Top & S.ConstraintDecoder<unknown> & S.ConstraintEncoder<unknown>>(
   schema: Schema,
   value: Schema["Type"]
@@ -160,12 +163,10 @@ const failingSdk: PhoenixSdkShape = {
 
 describe("@beep/phoenix", () => {
   it("keeps Phoenix config encoded shape stable while normalizing base URLs", () => {
-    const decode = S.decodeUnknownResult(PhoenixConfigInput);
-    const encode = S.encodeUnknownResult(PhoenixConfigInput);
-    const decoded = Result.getOrThrow(decode({ baseUrl: "https://phoenix.test///" }));
+    const decoded = Result.getOrThrow(decodeUnknownPhoenixConfigInputResult({ baseUrl: "https://phoenix.test///" }));
 
     expect(decoded.baseUrl).toBe("https://phoenix.test");
-    expect(Result.getOrThrow(encode(decoded))).toEqual({
+    expect(Result.getOrThrow(encodeUnknownPhoenixConfigInputResult(decoded))).toEqual({
       baseUrl: "https://phoenix.test",
       headers: {},
     });

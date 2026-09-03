@@ -25,6 +25,8 @@ import type { BM25Config } from "@beep/nlp/Core/Vectorization";
 import type { ItsHelpers } from "wink-nlp";
 import type { BM25VectorizerInstance, BM25VectorizerWithBowInstance } from "./internal/bm25.ts";
 
+const decodeUnknownWinkStringArrayOption = S.decodeUnknownOption(WinkStringArray);
+
 const $I = $WinkId.create("Wink/WinkVectorizer");
 
 type VectorizerState = {
@@ -107,9 +109,10 @@ const TermFrequencyPairs = S.Array(TermFrequencyPair).pipe(
     description: "Array of term and frequency pairs returned by wink vectorizer accessors.",
   })
 );
+const decodeUnknownTermFrequencyPairsOption = S.decodeUnknownOption(TermFrequencyPairs);
 
 const decodeStringArray = (value: unknown, operation: string): Effect.Effect<ReadonlyArray<string>, VectorizerError> =>
-  O.match(S.decodeUnknownOption(WinkStringArray)(value), {
+  O.match(decodeUnknownWinkStringArrayOption(value), {
     onNone: () => Effect.fail(VectorizerError.fromMessage(`Invalid ${operation} result: expected string[]`, operation)),
     onSome: Effect.succeed,
   });
@@ -118,7 +121,7 @@ const decodeTermFrequencyPairs = (
   value: unknown,
   operation: string
 ): Effect.Effect<ReadonlyArray<readonly [string, number]>, VectorizerError> =>
-  O.match(S.decodeUnknownOption(TermFrequencyPairs)(value), {
+  O.match(decodeUnknownTermFrequencyPairsOption(value), {
     onNone: () =>
       Effect.fail(VectorizerError.fromMessage(`Invalid ${operation} result: expected [string, number][]`, operation)),
     onSome: Effect.succeed,

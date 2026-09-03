@@ -265,6 +265,7 @@ export class MigrationBundleEntry extends S.Class<MigrationBundleEntry>($I`Migra
 ) {}
 
 const migrationNameEquivalence = S.toEquivalence(MigrationBundleEntryName);
+
 const MigrationBundleLegacyNames = S.NonEmptyArray(MigrationBundleEntryName)
   .check(
     S.makeFilter(
@@ -350,11 +351,13 @@ const MigrationJournalShapeRow = S.Struct({ exists: S.Boolean, hasName: S.Boolea
     description: "Information-schema projection used to detect a current or legacy Drizzle journal.",
   })
 );
+const decodeUnknownMigrationJournalShapeRowArray = S.decodeUnknownEffect(S.Array(MigrationJournalShapeRow));
 const MigrationJournalNameRow = S.Struct({ name: S.NullOr(S.String) }).pipe(
   $I.annoteSchema("MigrationJournalNameRow", {
     description: "Current Drizzle journal-name row decoded from a migration table.",
   })
 );
+const decodeUnknownMigrationJournalNameRowArray = S.decodeUnknownEffect(S.Array(MigrationJournalNameRow));
 const MigrationJournalCreatedAtText = S.String.check(
   S.isPattern(/^\d{4,}$/u, {
     identifier: $I`MigrationJournalCreatedAtTextCheck`,
@@ -376,6 +379,7 @@ const LegacyMigrationJournalRow = S.Struct({
   })
 );
 type LegacyMigrationJournalRow = typeof LegacyMigrationJournalRow.Type;
+const decodeUnknownLegacyMigrationJournalRowArray = S.decodeUnknownEffect(S.Array(LegacyMigrationJournalRow));
 const decodeJournalMillis = S.decodeUnknownEffect(S.FiniteFromString.check(S.isInt()));
 const migrationMillisEquivalence = S.toEquivalence(S.Int);
 
@@ -459,7 +463,7 @@ const readMigrationJournalState = Effect.fn("Postgres.readMigrationJournalState"
           AND column_name = 'name'
       ) AS "hasName"
     `;
-    const shape = yield* S.decodeUnknownEffect(S.Array(MigrationJournalShapeRow))(shapeRows).pipe(
+    const shape = yield* decodeUnknownMigrationJournalShapeRowArray(shapeRows).pipe(
       Effect.flatMap((rows) =>
         A.head(rows).pipe(
           O.match({
@@ -478,7 +482,7 @@ const readMigrationJournalState = Effect.fn("Postgres.readMigrationJournalState"
         FROM ${Statement.identifier(migrationsSchema)}.${Statement.identifier(migrationsTable)}
         ORDER BY id
       `;
-      const decodedRows = yield* S.decodeUnknownEffect(S.Array(LegacyMigrationJournalRow))(legacyRows);
+      const decodedRows = yield* decodeUnknownLegacyMigrationJournalRowArray(legacyRows);
       const legacyCandidates = pipe(
         legacyNameSets,
         A.flatMap((entry) => entry.legacyNames),
@@ -501,7 +505,7 @@ const readMigrationJournalState = Effect.fn("Postgres.readMigrationJournalState"
       FROM ${Statement.identifier(migrationsSchema)}.${Statement.identifier(migrationsTable)}
       ORDER BY id
     `;
-    const decodedNames = yield* S.decodeUnknownEffect(S.Array(MigrationJournalNameRow))(nameRows);
+    const decodedNames = yield* decodeUnknownMigrationJournalNameRowArray(nameRows);
     return [A.getSomes(A.map(decodedNames, (row) => O.fromNullishOr(row.name))), A.empty<MigrationMeta>()] as const;
   },
   Effect.mapError((cause) => PostgresError.fromUnknown("migrateBundle", cause))

@@ -25,10 +25,17 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeVerifiedSpanAttemptFailureResult = S.decodeResult(VerifiedSpanAttemptFailure);
+const decodeUnknownVerifiedSpanHistoryResult = S.decodeUnknownResult(VerifiedSpanHistory);
+const encodeVerifiedSpanHistory = S.encodeEffect(VerifiedSpanHistory);
+const encodeUnknownVerifiedSpanAttemptFailureResult = S.encodeUnknownResult(VerifiedSpanAttemptFailure);
+
 const utf8Encoder = new TextEncoder();
 const decodeSha256HexFromBytes = S.decodeUnknownEffect(Sha256HexFromBytes);
 const historyEquivalence = S.toEquivalence(VerifiedSpanHistory);
 const HistoryJson = S.fromJsonString(VerifiedSpanHistory);
+const decodeHistoryJson = S.decodeEffect(HistoryJson);
+const encodeHistoryJson = S.encodeEffect(HistoryJson);
 const engine = VerifiedSpanEngine.make({ name: "fixture-extractor", version: "1" });
 
 const TestCrypto = Layer.succeed(
@@ -122,16 +129,16 @@ const historyAttemptAt = Effect.fnUntraced(function* (history: VerifiedSpanHisto
 });
 
 const persistAndReload = Effect.fnUntraced(function* (history: VerifiedSpanHistory) {
-  const persisted = yield* S.encodeEffect(HistoryJson)(history);
-  return yield* S.decodeEffect(HistoryJson)(persisted);
+  const persisted = yield* encodeHistoryJson(history);
+  return yield* decodeHistoryJson(persisted);
 });
 
 describe("verified-span persistence and re-anchor history", () => {
   it("round-trips schema-derived persisted failures", () =>
     fc.assert(
       fc.property(S.toArbitrary(VerifiedSpanAttemptFailure)(fc), (failure) => {
-        const encoded = Result.getOrThrow(S.encodeUnknownResult(VerifiedSpanAttemptFailure)(failure));
-        const decoded = Result.getOrThrow(S.decodeResult(VerifiedSpanAttemptFailure)(encoded));
+        const encoded = Result.getOrThrow(encodeUnknownVerifiedSpanAttemptFailureResult(failure));
+        const decoded = Result.getOrThrow(decodeVerifiedSpanAttemptFailureResult(encoded));
 
         expect(S.toEquivalence(VerifiedSpanAttemptFailure)(decoded, failure)).toBe(true);
       }),
@@ -239,7 +246,7 @@ describe("verified-span persistence and re-anchor history", () => {
       const sourceText = "The engine emitted no candidates.";
       const source = yield* sourceIdentity(sourceText);
       const history = yield* beginVerifiedSpanHistory(beginInput(1, [], source, source, sourceText));
-      const encoded = yield* S.encodeEffect(VerifiedSpanHistory)(history);
+      const encoded = yield* encodeVerifiedSpanHistory(history);
       const restarted = yield* persistAndReload(history);
       const driftedSource = yield* sourceIdentity("Different source text.");
       const staleNegative = yield* beginVerifiedSpanHistory(
@@ -317,7 +324,7 @@ describe("verified-span persistence and re-anchor history", () => {
 
       expect(history.attempts[0].outcome.status).toBe("verified");
       expect(yield* Ref.get(digestCalls)).toBe(1);
-      const encoded = yield* S.encodeEffect(VerifiedSpanHistory)(history);
+      const encoded = yield* encodeVerifiedSpanHistory(history);
       const encodedOutcome = encoded.attempts[0].outcome;
       if (encodedOutcome.status === "verified") {
         const swappedAssociations: unknown = {
@@ -356,9 +363,9 @@ describe("verified-span persistence and re-anchor history", () => {
             },
           ],
         };
-        expect(Result.isFailure(S.decodeUnknownResult(VerifiedSpanHistory)(swappedAssociations))).toBe(true);
-        expect(Result.isFailure(S.decodeUnknownResult(VerifiedSpanHistory)(swappedReceipts))).toBe(true);
-        expect(Result.isFailure(S.decodeUnknownResult(VerifiedSpanHistory)(duplicatedReceipt))).toBe(true);
+        expect(Result.isFailure(decodeUnknownVerifiedSpanHistoryResult(swappedAssociations))).toBe(true);
+        expect(Result.isFailure(decodeUnknownVerifiedSpanHistoryResult(swappedReceipts))).toBe(true);
+        expect(Result.isFailure(decodeUnknownVerifiedSpanHistoryResult(duplicatedReceipt))).toBe(true);
       }
     }, provideTestCrypto)
   );
@@ -386,7 +393,7 @@ describe("verified-span persistence and re-anchor history", () => {
       const restartedCrossMatter = yield* persistAndReload(crossMatter);
       const restartedUnsupported = yield* persistAndReload(unsupported);
       const restartedMixedVersion = yield* persistAndReload(mixedVersion);
-      const encodedUnsupported = yield* S.encodeEffect(VerifiedSpanHistory)(unsupported);
+      const encodedUnsupported = yield* encodeVerifiedSpanHistory(unsupported);
       const wrongNormalizationMatter: unknown = {
         attempts: [{ ...encodedUnsupported.attempts[0], matterRef: "matter:other" }],
       };
@@ -422,8 +429,8 @@ describe("verified-span persistence and re-anchor history", () => {
       expect(historyEquivalence(restartedCrossMatter, crossMatter)).toBe(true);
       expect(historyEquivalence(restartedUnsupported, unsupported)).toBe(true);
       expect(historyEquivalence(restartedMixedVersion, mixedVersion)).toBe(true);
-      expect(Result.isFailure(S.decodeUnknownResult(VerifiedSpanHistory)(wrongNormalizationMatter))).toBe(true);
-      expect(Result.isFailure(S.decodeUnknownResult(VerifiedSpanHistory)(wrongNormalizationSourceScope))).toBe(true);
+      expect(Result.isFailure(decodeUnknownVerifiedSpanHistoryResult(wrongNormalizationMatter))).toBe(true);
+      expect(Result.isFailure(decodeUnknownVerifiedSpanHistoryResult(wrongNormalizationSourceScope))).toBe(true);
     }, provideTestCrypto)
   );
 
@@ -466,7 +473,7 @@ describe("verified-span persistence and re-anchor history", () => {
         drifted,
         continuationInput(3, [candidate(locator)], revisedSource, revisedText)
       );
-      const encoded = yield* S.encodeEffect(VerifiedSpanHistory)(reanchored);
+      const encoded = yield* encodeVerifiedSpanHistory(reanchored);
       const first = encoded.attempts[0];
       const second = yield* Effect.fromOption(A.get(encoded.attempts, 1), () => "Missing encoded drift attempt.");
       const third = yield* Effect.fromOption(A.get(encoded.attempts, 2), () => "Missing encoded re-anchor attempt.");
@@ -670,7 +677,7 @@ describe("verified-span persistence and re-anchor history", () => {
       ];
 
       expect(
-        A.every(tamperedHistories, (history) => Result.isFailure(S.decodeUnknownResult(VerifiedSpanHistory)(history)))
+        A.every(tamperedHistories, (history) => Result.isFailure(decodeUnknownVerifiedSpanHistoryResult(history)))
       ).toBe(true);
     }, provideTestCrypto)
   );

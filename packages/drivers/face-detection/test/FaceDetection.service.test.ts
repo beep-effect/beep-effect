@@ -25,6 +25,13 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const encodeFaceDetectionResult = S.encodeResult(FaceDetection);
+const encodeFaceDetectionBoxResult = S.encodeResult(FaceDetectionBox);
+const encodeFaceDetectionErrorResult = S.encodeResult(FaceDetectionError);
+const encodeFaceDetectionErrorFromUnknownOptionsResult = S.encodeResult(FaceDetectionErrorFromUnknownOptions);
+const encodeFaceDetectionImageRequestResult = S.encodeResult(FaceDetectionImageRequest);
+const encodeFaceDetectionResultResult = S.encodeResult(FaceDetectionResult);
+
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
   <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
@@ -92,7 +99,7 @@ describe("@beep/face-detection", () => {
     expect(
       JSON.stringify(
         Result.getOrThrow(
-          S.encodeResult(FaceDetectionImageRequest)(FaceDetectionImageRequest.make({ imagePath: "./photo.jpg" }))
+          encodeFaceDetectionImageRequestResult(FaceDetectionImageRequest.make({ imagePath: "./photo.jpg" }))
         )
       )
     ).toBe(
@@ -103,10 +110,10 @@ describe("@beep/face-detection", () => {
         topK: 5000,
       })
     );
-    expect(JSON.stringify(Result.getOrThrow(S.encodeResult(FaceDetectionBox)(fakeFace.box)))).toBe(
+    expect(JSON.stringify(Result.getOrThrow(encodeFaceDetectionBoxResult(fakeFace.box)))).toBe(
       JSON.stringify({ height: 24, width: 20, x: 10, y: 12 })
     );
-    expect(JSON.stringify(Result.getOrThrow(S.encodeResult(FaceDetection)(fakeFace)))).toBe(
+    expect(JSON.stringify(Result.getOrThrow(encodeFaceDetectionResult(fakeFace)))).toBe(
       JSON.stringify({
         box: { height: 24, width: 20, x: 10, y: 12 },
         confidence: 0.9,
@@ -122,7 +129,7 @@ describe("@beep/face-detection", () => {
     expect(
       JSON.stringify(
         Result.getOrThrow(
-          S.encodeResult(FaceDetectionResult)(
+          encodeFaceDetectionResultResult(
             FaceDetectionResult.make({
               faces: [fakeFace],
               height: 100,
@@ -134,7 +141,7 @@ describe("@beep/face-detection", () => {
       )
     ).toBe(
       JSON.stringify({
-        faces: [Result.getOrThrow(S.encodeResult(FaceDetection)(fakeFace))],
+        faces: [Result.getOrThrow(encodeFaceDetectionResult(fakeFace))],
         height: 100,
         imagePath: "./photo.jpg",
         width: 100,
@@ -143,7 +150,7 @@ describe("@beep/face-detection", () => {
     expect(
       JSON.stringify(
         Result.getOrThrow(
-          S.encodeResult(FaceDetectionErrorFromUnknownOptions)(
+          encodeFaceDetectionErrorFromUnknownOptionsResult(
             FaceDetectionErrorFromUnknownOptions.make({ modelPath: O.some("./yunet.onnx") })
           )
         )
@@ -152,9 +159,7 @@ describe("@beep/face-detection", () => {
     expect(
       JSON.stringify(
         Result.getOrThrow(
-          S.encodeResult(FaceDetectionError)(
-            FaceDetectionError.make({ message: "model failed", operation: "loadModel" })
-          )
+          encodeFaceDetectionErrorResult(FaceDetectionError.make({ message: "model failed", operation: "loadModel" }))
         )
       )
     ).toBe(JSON.stringify({ _tag: "FaceDetectionError", message: "model failed", operation: "loadModel" }));

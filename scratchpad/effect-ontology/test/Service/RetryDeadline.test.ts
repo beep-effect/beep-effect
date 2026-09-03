@@ -6,6 +6,7 @@ import * as S from "effect/Schema";
 import * as TestClock from "effect/testing/TestClock";
 import { StageTimeoutService, StageTimeoutServiceTest, TimeoutError } from "../../Service/LlmControl/StageTimeout.ts";
 import { RetryPolicy, retryEffect } from "../../Service/Retry.ts";
+const decodeRetryPolicyResult = S.decodeResult(RetryPolicy);
 
 class TransientFailure extends S.TaggedError<TransientFailure>()("TransientFailure", {}) {}
 
@@ -88,7 +89,7 @@ describe("RetryPolicy", () => {
         maxDelay: Duration.seconds(2),
         maxAttempts: PosInt.make(3),
       };
-      const result = S.decodeResult(RetryPolicy)(invalidPolicy);
+      const result = decodeRetryPolicyResult(invalidPolicy);
       const attempts = yield* Ref.make(0);
       const error = yield* Ref.update(attempts, (attempt) => attempt + 1).pipe(retryEffect(invalidPolicy), Effect.flip);
 

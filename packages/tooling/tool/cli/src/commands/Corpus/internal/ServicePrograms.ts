@@ -129,6 +129,10 @@ import type {
 } from "../Corpus.schemas.ts";
 import type { CorpusLedgerRecord } from "./Preservation.schemas.ts";
 
+const decodeCorpusOrganizeRecordJson = S.decodeEffect(S.fromJsonString(CorpusOrganizeRecord));
+const decodeSourceProcessingRecordJson = S.decodeEffect(S.fromJsonString(SourceProcessingRecord));
+const decodeUnknownFileProcessingCoverageSummary = S.decodeUnknownEffect(FileProcessingCoverageSummary);
+
 const isCorpusProvenanceRecord = S.is(CorpusProvenanceRecord);
 
 const retainCorpusProvenanceRecords = (
@@ -1032,7 +1036,7 @@ const buildExtractCoverage = (
     counts[record.status] = (counts[record.status] ?? 0) + 1;
     byFormat[record.format] = counts;
   }
-  return S.decodeUnknownEffect(FileProcessingCoverageSummary)({
+  return decodeUnknownFileProcessingCoverageSummary({
     byFormat,
     failedCount: A.length(A.filter(sourceRecords, (record) => record.status === "failed")),
     skippedCount: A.length(A.filter(sourceRecords, (record) => record.status === "skipped")),
@@ -2657,7 +2661,7 @@ const loadEnrichOrganizeRecords = Effect.fn("CorpusCommandService.loadEnrichOrga
       CorpusCommandError.mapError(`Failed reading organize manifest "${organizeManifestPath}"; run organize first.`)
     );
   return yield* Effect.forEach(A.filter(Str.split(organizeText, "\n"), Str.isNonEmpty), (line) =>
-    S.decodeEffect(S.fromJsonString(CorpusOrganizeRecord))(line).pipe(
+    decodeCorpusOrganizeRecordJson(line).pipe(
       CorpusCommandError.mapError("Organize manifest line failed schema validation.")
     )
   );
@@ -2688,7 +2692,7 @@ const buildFamilyByTextName = Effect.fn("CorpusCommandService.buildFamilyByTextN
     .readFileString(sourcesPath)
     .pipe(CorpusCommandError.mapError(`Failed reading extraction sources "${sourcesPath}".`));
   const sourceRows = yield* Effect.forEach(A.filter(Str.split(sourcesText, "\n"), Str.isNonEmpty), (line) =>
-    S.decodeEffect(S.fromJsonString(SourceProcessingRecord))(line).pipe(
+    decodeSourceProcessingRecordJson(line).pipe(
       CorpusCommandError.mapError("Extraction sources line failed schema validation.")
     )
   );

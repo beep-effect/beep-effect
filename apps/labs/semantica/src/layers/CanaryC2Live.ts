@@ -31,6 +31,8 @@ import { CanaryC2 } from "@/services/CanaryC2";
 import { RdfProjection } from "@/services/RdfProjection";
 import { Reasoner } from "@/services/Reasoner";
 
+const decodeSha256Hex = S.decodeEffect(Sha256Hex);
+
 const C2_SCHEMA_VERSION = "c2-eval-report/v1";
 const C2_STAGE = "c2";
 const expectationJson = S.fromJsonString(GEntailmentExpectation);
@@ -76,7 +78,7 @@ const runProjectionProbe = Effect.fn("CanaryC2.runProjectionProbe")(function* (
       Effect.timeout("30 seconds"),
       Effect.mapError(() => failed("crash-mismatch", "The crash probe could not rebuild the persisted ledger."))
     );
-  return yield* S.decodeEffect(Sha256Hex)(Str.trim(output)).pipe(
+  return yield* decodeSha256Hex(Str.trim(output)).pipe(
     Effect.mapError(() => failed("crash-mismatch", "The crash probe returned an invalid projection digest."))
   );
 });

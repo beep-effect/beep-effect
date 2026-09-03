@@ -464,13 +464,14 @@ class PatchSummarization extends S.Class<PatchSummarization>($I`PatchSummarizati
       "Summarize a JSON patch into non-sensitive structural metadata: the operation count and, per operation, the op kind plus a redacted/truncated JSON Pointer. The `value` field of add/replace operations carries repaired assistant content and is intentionally never logged.",
   })
 ) {}
+const decodePatchSummarizationSync = S.decodeSync(PatchSummarization);
 
 // Summarize a JSON patch into non-sensitive structural metadata: the operation
 // count and, per operation, the op kind plus a redacted/truncated JSON Pointer.
 // The `value` field of add/replace operations carries repaired assistant content
 // and is intentionally never logged.
 const summarizePatch = (patch: JsonPatch.JsonPatch): PatchSummarization =>
-  S.decodeSync(PatchSummarization)({
+  decodePatchSummarizationSync({
     operations: A.length(patch),
     ops: A.map(patch, (operation) => ({ op: operation.op, path: redactString(operation.path, PATCH_PATH_LIMIT) })),
   });

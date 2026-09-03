@@ -60,6 +60,7 @@ export const CoopValue = CoopValueBase.pipe(
  * @since 0.0.0
  */
 export type CoopValue = typeof CoopValue.Type;
+const isCoopValue = S.is(CoopValue);
 
 const CrossOriginOpenerPolicyOptionBase = LiteralKit([false, ...CoopValueBase.Options]);
 
@@ -178,7 +179,7 @@ export const CrossOriginOpenerPolicyHeader = S.Union([CrossOriginOpenerPolicyOpt
         return O.none<string>();
       }
 
-      if (S.is(CoopValue)(option)) {
+      if (isCoopValue(option)) {
         return O.some(option);
       }
 

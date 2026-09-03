@@ -143,6 +143,14 @@ import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import type { CiLaneId } from "@beep/repo-cli/commands/Ci";
 import type { GithubCheckLaneWave, QualityTaskInvocation } from "@beep/repo-cli/test/Quality";
 
+const decodeCoverageComparisonFailure = S.decodeEffect(CoverageComparisonFailure);
+const decodeGithubCheckFailurePolicy = S.decodeEffect(GithubCheckFailurePolicy);
+const decodeGithubCheckRunReport = S.decodeEffect(GithubCheckRunReport);
+const decodeGithubCheckRunReportSync = S.decodeSync(GithubCheckRunReport);
+const decodeUnknownCoverageRegressionBaseline = S.decodeUnknownEffect(CoverageRegressionBaseline);
+const encodeCoverageRegressionBaseline = S.encodeEffect(CoverageRegressionBaseline);
+const encodeGithubCheckRunReportSync = S.encodeSync(GithubCheckRunReport);
+
 const FileSystemLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 const PlatformLayer = Layer.mergeAll(
   FileSystemLayer,
@@ -401,7 +409,8 @@ const laneProofTestLane = (
   id: string,
   wave: GithubCheckLaneWave,
   source: string,
-  useLocalEnv = false
+  useLocalEnv = false,
+  env: Readonly<Record<string, string>> = {}
 ): GithubCheckLaneSpec =>
   GithubCheckLaneSpec.make({
     id,
@@ -413,6 +422,7 @@ const laneProofTestLane = (
       command: "bash",
       args: ["-c", source],
       cwd: repoRoot,
+      env,
       useLocalEnv,
     }),
   });
@@ -890,8 +900,8 @@ describe("quality task adapter", () => {
   it("decodes the failure policy and wave report schemas", () =>
     Effect.runPromise(
       Effect.gen(function* () {
-        expect(yield* S.decodeEffect(GithubCheckFailurePolicy)("fail-fast")).toBe("fail-fast");
-        const report = yield* S.decodeEffect(GithubCheckRunReport)({
+        expect(yield* decodeGithubCheckFailurePolicy("fail-fast")).toBe("fail-fast");
+        const report = yield* decodeGithubCheckRunReport({
           failurePolicy: "collect-all",
           lanes: [
             {
@@ -911,7 +921,7 @@ describe("quality task adapter", () => {
     const ReportArbitrary = S.toArbitrary(GithubCheckRunReport)(fc);
     fc.assert(
       fc.property(ReportArbitrary, (report) => {
-        const decoded = S.decodeSync(GithubCheckRunReport)(S.encodeSync(GithubCheckRunReport)(report));
+        const decoded = decodeGithubCheckRunReportSync(encodeGithubCheckRunReportSync(report));
         expect(decoded.schemaVersion).toBe("github-check-run/v1");
         expect(decoded.failurePolicy).toBe(report.failurePolicy);
         expect(A.map(decoded.lanes, (lane) => lane.id)).toEqual(A.map(report.lanes, (lane) => lane.id));
@@ -1046,17 +1056,18 @@ describe("quality task adapter", () => {
       const markerPath = path.join(tempRoot, ".beep", "property-marker.txt");
       yield* initializeLaneProofRepository(tempRoot);
 
-      const lane = laneProofTestLane(
-        tempRoot,
-        "quality:test-unit",
-        "heavy",
-        "echo run >> .beep/property-marker.txt",
-        true
-      );
-      const waves = [GithubCheckLaneWaveSpec.make({ wave: "heavy", lanes: [lane] })];
-      const run = collectGithubCheckLaneWavesForTesting("proof-fc-runs", waves, "fail-fast");
-      const atRuns = (runs: string) =>
-        withEnvVarEffect("BEEP_YEET_LANE_PROOF_MODE", "active", withEnvVarEffect("BEEP_FC_NUM_RUNS", runs, run));
+      const atRuns = (runs: string) => {
+        const lane = laneProofTestLane(
+          tempRoot,
+          "quality:test-unit",
+          "heavy",
+          "echo run >> .beep/property-marker.txt",
+          false,
+          { BEEP_FC_NUM_RUNS: runs }
+        );
+        const waves = [GithubCheckLaneWaveSpec.make({ wave: "heavy", lanes: [lane] })];
+        return collectGithubCheckLaneWavesForTesting("proof-fc-runs", waves, "fail-fast", "active");
+      };
 
       expect(A.map((yield* atRuns("100")).report.lanes, (result) => result.status)).toEqual(["passed"]);
       expect(A.map((yield* atRuns("100")).report.lanes, (result) => result.status)).toEqual(["reused"]);
@@ -2489,7 +2500,7 @@ describe("quality task adapter", () => {
     "rejects current coverage baselines without per-file provenance",
     Effect.fnUntraced(function* () {
       const decoded = yield* Effect.exit(
-        S.decodeUnknownEffect(CoverageRegressionBaseline)({
+        decodeUnknownCoverageRegressionBaseline({
           schema_version: 2,
           generated_at: "2026-07-06T00:00:00.000Z",
           git_sha: "test-sha",
@@ -2577,14 +2588,14 @@ describe("quality task adapter", () => {
       yield* Effect.forEach(
         invalidDocuments,
         Effect.fnUntraced(function* ({ input, label }) {
-          const decoded = yield* Effect.exit(S.decodeUnknownEffect(CoverageRegressionBaseline)(input));
+          const decoded = yield* Effect.exit(decodeUnknownCoverageRegressionBaseline(input));
           assert.isTrue(Exit.isFailure(decoded), `Expected ${label} to fail baseline decoding`);
         }),
         { discard: true }
       );
 
       const unsafeFailure = yield* Effect.exit(
-        S.decodeEffect(CoverageComparisonFailure)({
+        decodeCoverageComparisonFailure({
           _tag: "baseline-drop",
           actual: 0,
           baseline: 100,
@@ -2616,7 +2627,7 @@ describe("quality task adapter", () => {
     "rejects legacy schema versions after the per-file migration",
     Effect.fnUntraced(function* () {
       const decoded = yield* Effect.exit(
-        S.decodeUnknownEffect(CoverageRegressionBaseline)({
+        decodeUnknownCoverageRegressionBaseline({
           schema_version: 1,
           generated_at: "2026-07-06T00:00:00.000Z",
           git_sha: "test-sha",
@@ -3293,7 +3304,7 @@ describe("quality task adapter", () => {
             const repoRoot = process.cwd();
             const baselinePath = path.join(repoRoot, "standards/coverage.regression-baseline.jsonc");
             const writeBaseline = (document: CoverageRegressionBaseline) =>
-              S.encodeEffect(CoverageRegressionBaseline)(document).pipe(
+              encodeCoverageRegressionBaseline(document).pipe(
                 Effect.flatMap((encoded) => fs.writeFileString(baselinePath, encodeJson(encoded)))
               );
 
@@ -3352,7 +3363,7 @@ describe("quality task adapter", () => {
             const repoRoot = process.cwd();
             const baselinePath = path.join(repoRoot, "standards/coverage.regression-baseline.jsonc");
             const writeBaseline = (document: CoverageRegressionBaseline) =>
-              S.encodeEffect(CoverageRegressionBaseline)(document).pipe(
+              encodeCoverageRegressionBaseline(document).pipe(
                 Effect.flatMap((encoded) => fs.writeFileString(baselinePath, encodeJson(encoded)))
               );
 
@@ -3418,7 +3429,7 @@ describe("quality task adapter", () => {
             const baselinePath = path.join(repoRoot, "standards/coverage.regression-baseline.jsonc");
 
             yield* fs.makeDirectory(path.dirname(baselinePath), { recursive: true });
-            yield* S.encodeEffect(CoverageRegressionBaseline)(
+            yield* encodeCoverageRegressionBaseline(
               CoverageRegressionBaseline.make({ ...coverageRegressionBaseline, generated_at: "workspace" })
             ).pipe(Effect.flatMap((encoded) => fs.writeFileString(baselinePath, encodeJson(encoded))));
 
@@ -3439,7 +3450,7 @@ describe("quality task adapter", () => {
             const repoRoot = process.cwd();
             const baselinePath = path.join(repoRoot, "standards/coverage.regression-baseline.jsonc");
             yield* fs.makeDirectory(path.dirname(baselinePath), { recursive: true });
-            yield* S.encodeEffect(CoverageRegressionBaseline)(coverageRegressionBaseline).pipe(
+            yield* encodeCoverageRegressionBaseline(coverageRegressionBaseline).pipe(
               Effect.flatMap((encoded) => fs.writeFileString(baselinePath, encodeJson(encoded)))
             );
             yield* runGit(repoRoot, ["init"]);
@@ -3466,7 +3477,7 @@ describe("quality task adapter", () => {
             const repoRoot = process.cwd();
             const baselinePath = path.join(repoRoot, "standards/coverage.regression-baseline.jsonc");
             const writeBaseline = (document: CoverageRegressionBaseline) =>
-              S.encodeEffect(CoverageRegressionBaseline)(document).pipe(
+              encodeCoverageRegressionBaseline(document).pipe(
                 Effect.flatMap((encoded) => fs.writeFileString(baselinePath, encodeJson(encoded)))
               );
 

@@ -15,7 +15,11 @@ import { ProviderCache } from "@/services/ProviderCache";
 import type { PosInt } from "@beep/schema";
 import type { EmbeddingInput } from "@/schema/Projection";
 
+const decodeEmbeddingVectorType = S.decodeEffect(S.toType(EmbeddingVector));
+
 const EmbeddingVectorJson = S.fromJsonString(EmbeddingVector);
+const decodeEmbeddingVectorJson = S.decodeEffect(EmbeddingVectorJson);
+const encodeEmbeddingVectorJson = S.encodeEffect(EmbeddingVectorJson);
 const modelEquivalence = S.toEquivalence(ModelIdentity);
 const vectorOrder = Order.mapInput(Order.String, (vector: EmbeddingVector) => vector.chunk);
 const degradedOrder = Order.mapInput(Order.String, (degraded: DegradedEmbedding) => degraded.chunk);
@@ -62,7 +66,7 @@ const cachedVector = Effect.fn("Embedder.cachedVector")(function* (
       onSuccess: O.match({
         onNone: () => Effect.succeed<CacheResolution>({ _tag: "Miss", input, key }),
         onSome: (entry) =>
-          S.decodeEffect(EmbeddingVectorJson)(entry.response).pipe(
+          decodeEmbeddingVectorJson(entry.response).pipe(
             Effect.match({
               onFailure: () =>
                 ({
@@ -99,7 +103,7 @@ const storeVector = Effect.fn("Embedder.storeVector")(function* (
   vector: EmbeddingVector,
   cache: ProviderCache["Service"]
 ): Effect.fn.Return<Result.Result<EmbeddingVector, DegradedEmbedding>, never, Crypto.Crypto> {
-  const response = yield* S.encodeEffect(EmbeddingVectorJson)(vector).pipe(Effect.orDie);
+  const response = yield* encodeEmbeddingVectorJson(vector).pipe(Effect.orDie);
   const cacheKey = yield* contentDigest(ProviderCacheKey)(key).pipe(Effect.orDie);
   return yield* cache
     .store(
@@ -160,7 +164,7 @@ const providerBatch = Effect.fn("Embedder.providerBatch")(function* (
             Result.fail(degraded(input, model, "response-invalid", "The embedding provider returned an empty vector."))
           ),
         onNonEmpty: (values) =>
-          S.decodeEffect(S.toType(EmbeddingVector))(EmbeddingVector.make({ chunk: input.chunk, model, values })).pipe(
+          decodeEmbeddingVectorType(EmbeddingVector.make({ chunk: input.chunk, model, values })).pipe(
             Effect.match({
               onFailure: () =>
                 Result.fail(

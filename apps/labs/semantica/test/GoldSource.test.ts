@@ -25,11 +25,21 @@ import { LedgerDocumentSnapshot } from "@/schema/Ledger";
 import { ModelIdentity } from "@/schema/Model";
 import { ParseOutcome } from "@/schema/Text";
 import { GoldSource } from "@/services/GoldSource";
+
+const decodeGoldFileEncoded = S.decodeEffect(GoldFileEncoded);
+const encodeGoldFile = S.encodeEffect(GoldFile);
+const isCorpusPaperId = S.is(CorpusPaperId);
+
 import type { GoldFile as GoldFileValue } from "@/schema/Gold";
 
 const GoldFileJson = S.fromJsonString(GoldFile, { space: 2 });
+const encodeGoldFileJson = S.encodeEffect(GoldFileJson);
+
 const GoldFileEncodedJson = S.fromJsonString(GoldFileEncoded, { space: 2 });
+const encodeGoldFileEncodedJson = S.encodeEffect(GoldFileEncodedJson);
+
 const GoldRefJson = S.fromJsonString(GoldRef, { space: 2 });
+const encodeGoldRefJson = S.encodeEffect(GoldRefJson);
 const goldFileOrder = Order.mapInput(Order.String, (file: GoldFileValue) => `${file.paperId}:${file.subset}`);
 const goldPapers = A.map(
   [
@@ -77,13 +87,13 @@ const writeGoldFixture = Effect.fn("GoldSourceTest.writeFixture")(function* (dir
     goldFileOrder
   );
   yield* Effect.forEach(files, (file) =>
-    S.encodeEffect(GoldFileJson)(file).pipe(
+    encodeGoldFileJson(file).pipe(
       Effect.flatMap((json) =>
         fs.writeFileString(path.join(directory, `${file.paperId}.${file.subset}.json`), `${json}\n`)
       )
     )
   );
-  const encodedFiles = yield* Effect.forEach(files, (file) => S.encodeEffect(GoldFile)(file));
+  const encodedFiles = yield* Effect.forEach(files, (file) => encodeGoldFile(file));
   const digest = yield* contentDigest(S.Array(GoldFileEncoded))(encodedFiles);
   const reference = GoldRef.make({
     digest,
@@ -92,7 +102,7 @@ const writeGoldFixture = Effect.fn("GoldSourceTest.writeFixture")(function* (dir
     subsets,
     version: "gold/v1",
   });
-  const referenceJson = yield* S.encodeEffect(GoldRefJson)(reference);
+  const referenceJson = yield* encodeGoldRefJson(reference);
   yield* fs.writeFileString(path.join(directory, "gold.json"), `${referenceJson}\n`);
   return { encodedFiles, files };
 });
@@ -100,7 +110,7 @@ const writeGoldFixture = Effect.fn("GoldSourceTest.writeFixture")(function* (dir
 describe("C0 gold source", () => {
   it("generates schema-valid gold source paper ids", () => {
     fc.assert(
-      fc.property(S.toArbitrary(CorpusPaperId)(fc), (paperId) => S.is(CorpusPaperId)(paperId)),
+      fc.property(S.toArbitrary(CorpusPaperId)(fc), (paperId) => isCorpusPaperId(paperId)),
       { numRuns: 20 }
     );
   });
@@ -161,7 +171,7 @@ describe("C0 gold source", () => {
             const directory = yield* fs.makeTempDirectoryScoped({ prefix: "semantica-gold-stale-reference-" });
             yield* writeGoldFixture(directory);
             const paperId = A.getUnsafe(goldPapers, 0);
-            const tampered = yield* S.decodeEffect(GoldFileEncoded)({
+            const tampered = yield* decodeGoldFileEncoded({
               labels: [
                 {
                   depth: 0,
@@ -177,7 +187,7 @@ describe("C0 gold source", () => {
               subset: "structure",
               version: "gold/v1",
             });
-            const tamperedJson = yield* S.encodeEffect(GoldFileEncodedJson)(tampered);
+            const tamperedJson = yield* encodeGoldFileEncodedJson(tampered);
             yield* fs.writeFileString(path.join(directory, `${paperId}.structure.json`), `${tamperedJson}\n`);
 
             const error = yield* GoldSource.pipe(
@@ -203,7 +213,7 @@ describe("C0 gold source", () => {
             const directory = yield* fs.makeTempDirectoryScoped({ prefix: "semantica-gold-digest-mismatch-" });
             const fixture = yield* writeGoldFixture(directory);
             const paperId = A.getUnsafe(goldPapers, 0);
-            const mismatched = yield* S.decodeEffect(GoldFileEncoded)({
+            const mismatched = yield* decodeGoldFileEncoded({
               labels: [
                 {
                   depth: 0,
@@ -222,10 +232,10 @@ describe("C0 gold source", () => {
             const encodedFiles = A.map(fixture.encodedFiles, (file) =>
               Str.Equivalence(file.paperId, paperId) && Str.Equivalence(file.subset, "structure") ? mismatched : file
             );
-            const mismatchedJson = yield* S.encodeEffect(GoldFileEncodedJson)(mismatched);
+            const mismatchedJson = yield* encodeGoldFileEncodedJson(mismatched);
             yield* fs.writeFileString(path.join(directory, `${paperId}.structure.json`), `${mismatchedJson}\n`);
             const digest = yield* contentDigest(S.Array(GoldFileEncoded))(encodedFiles);
-            const referenceJson = yield* S.encodeEffect(GoldRefJson)(
+            const referenceJson = yield* encodeGoldRefJson(
               GoldRef.make({
                 digest,
                 proposer,
