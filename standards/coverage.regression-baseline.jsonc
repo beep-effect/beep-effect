@@ -24217,15 +24217,15 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts": {
-          "lines": 40.61,
-          "statements": 40.43,
-          "branches": 31.67,
-          "functions": 32.39,
+          "lines": 40.41,
+          "statements": 40.28,
+          "branches": 29.95,
+          "functions": 32.76,
           "uncovered": {
-            "lines": 427,
-            "statements": 436,
-            "branches": 151,
-            "functions": 144
+            "lines": 488,
+            "statements": 498,
+            "branches": 173,
+            "functions": 158
           }
         },
         "packages/tooling/tool/cli/src/commands/Quality/Quality.errors.ts": {
@@ -26929,15 +26929,15 @@
           }
         },
         "packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.ts": {
-          "lines": 83.15,
-          "statements": 81.97,
-          "branches": 72.25,
-          "functions": 81.57,
+          "lines": 82.9,
+          "statements": 81.48,
+          "branches": 71.33,
+          "functions": 80.51,
           "uncovered": {
-            "lines": 46,
-            "statements": 53,
-            "branches": 43,
-            "functions": 14
+            "lines": 47,
+            "statements": 55,
+            "branches": 45,
+            "functions": 15
           }
         },
         "packages/tooling/tool/cli/src/internal/repo-run/RunScope.schemas.ts": {

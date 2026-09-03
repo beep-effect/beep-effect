@@ -1,3 +1,4 @@
+import { renderResidueReportLinesForTesting } from "@beep/repo-cli/test/Quality";
 import {
   ResidueReapCandidate,
   ResidueReapReport,
@@ -360,6 +361,60 @@ describe("residue reap", () => {
       expect(Result.isFailure(relative)).toBe(true);
     }).pipe(provideScopedLayer(NodeServices.layer))
   );
+
+  it("renders reaped, eligible, and skipped rows with totals and warnings", () => {
+    const base = {
+      scannedAt: "2026-09-03T12:00:00.000Z",
+      homeRoot: "/home/me",
+      repoRoot: "/repo",
+      maxAgeDays: 30,
+      turboMaxAgeDays: 14,
+      classes: ["codex-sessions", "codex-worktrees"],
+      reapedCount: 1,
+      reclaimedBytes: 4096,
+      warnings: ["Failed to remove /home/me/.codex/worktrees/stuck."],
+    } as const;
+    const applied = ResidueReapReport.make({
+      ...base,
+      applied: true,
+      candidates: [
+        ResidueReapCandidate.make({
+          root: "/home/me/.codex/sessions",
+          path: "/home/me/.codex/sessions/old.jsonl",
+          reapClass: "codex-sessions",
+          ageDays: 45.25,
+          action: "remove-file",
+          bytes: 4096,
+        }),
+        ResidueReapCandidate.make({
+          root: "/home/me/.codex/worktrees",
+          path: "/home/me/.codex/worktrees/opaque",
+          reapClass: "codex-worktrees",
+          action: "skip",
+          skipReason: "census-failed",
+          entriesScanned: 7,
+        }),
+      ],
+    });
+    const rendered = renderResidueReportLinesForTesting(applied).join("\n");
+    expect(rendered).toContain("RESIDUE REAP APPLY");
+    expect(rendered).toContain("home root: /home/me");
+    expect(rendered).toContain("thresholds: default=30d turbo=14d");
+    expect(rendered).toContain("classes: codex-sessions, codex-worktrees");
+    expect(rendered).toContain(
+      "- remove-file class=codex-sessions age=45.3d bytes=4096 /home/me/.codex/sessions/old.jsonl"
+    );
+    expect(rendered).toContain(
+      "- skip class=codex-worktrees age=unknown entries=7 reason=census-failed /home/me/.codex/worktrees/opaque"
+    );
+    expect(rendered).toContain("totals: candidates=2 reaped=1 reclaimed-bytes=4096");
+    expect(rendered).toContain("warning: Failed to remove /home/me/.codex/worktrees/stuck.");
+
+    const dryRun = renderResidueReportLinesForTesting(
+      ResidueReapReport.make({ ...base, applied: false, candidates: [], reapedCount: 0, reclaimedBytes: 0 })
+    ).join("\n");
+    expect(dryRun).toContain("RESIDUE REAP DRY RUN");
+  });
 
   it.effect("round-trips the residue-reap/v1 report schema and honors class filtering", () =>
     withTempDirectory((root) =>

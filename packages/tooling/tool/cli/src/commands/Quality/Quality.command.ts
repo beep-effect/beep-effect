@@ -3464,6 +3464,31 @@ const renderResidueReportLines = (report: ResidueReapReport): ReadonlyArray<stri
 ];
 
 /**
+ * Render the operator-facing residue janitor report without running the command.
+ *
+ * **Example** (Render an empty dry-run report)
+ *
+ * ```ts
+ * import { ResidueReapReport } from "@beep/repo-cli/test/RepoRun"
+ * import { renderResidueReportLinesForTesting } from "@beep/repo-cli/test/Quality"
+ *
+ * const report = ResidueReapReport.make({
+ *   scannedAt: "2026-09-03T12:00:00.000Z", homeRoot: "/home/me", repoRoot: "/repo",
+ *   maxAgeDays: 30, turboMaxAgeDays: 14, applied: false, classes: ["codex-sessions"],
+ *   candidates: [], reapedCount: 0, reclaimedBytes: 0, warnings: [],
+ * })
+ * console.log(renderResidueReportLinesForTesting(report)[1]) // "home root: /home/me"
+ * ```
+ *
+ * @param report - Completed janitor report to render.
+ * @returns Operator-facing summary, candidate, total, and warning lines.
+ * @category testing
+ * @since 0.0.0
+ */
+export const renderResidueReportLinesForTesting: (report: ResidueReapReport) => ReadonlyArray<string> =
+  renderResidueReportLines;
+
+/**
  * Dry-run-first janitor for explicitly owned home-residue classes.
  *
  * **Details**
