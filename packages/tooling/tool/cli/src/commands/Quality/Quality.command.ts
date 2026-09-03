@@ -7,25 +7,23 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
-import { LiteralKit } from "@beep/schema";
-import { A, Str, thunkFalse } from "@beep/utils";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as A from "@beep/utils/Array";
 import * as OptionUtils from "@beep/utils/Option";
-import {
-  Clock,
-  Console,
-  DateTime,
-  Effect,
-  Equal,
-  FileSystem,
-  flow,
-  Inspectable,
-  Layer,
-  Order,
-  Path,
-  pipe,
-} from "effect";
-import { dual } from "effect/Function";
+import * as Str from "@beep/utils/Str";
+import { thunkFalse } from "@beep/utils/thunk";
+import * as Clock from "effect/Clock";
+import * as Console from "effect/Console";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import * as FileSystem from "effect/FileSystem";
+import { dual, flow, pipe } from "effect/Function";
+import * as Inspectable from "effect/Inspectable";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -42,7 +40,10 @@ import {
   AdmissionConfig,
   admissionStatus,
   GITHUB_CHECK_MODE_VALUES,
+  ResidueReapClass,
+  ResidueReapReport,
   reapAdmissionState,
+  runResidueReap,
   runTmpfsReap,
   TmpfsReapReport,
 } from "../../internal/repo-run/index.ts";
@@ -2692,21 +2693,20 @@ const jsdocMigrateTitlesCommand = Command.make(
     ),
   },
   ({ concurrency, extract, limitFiles, model, proxyUrl, titles }) =>
-    runQualityProgram(
-      Effect.scoped(
-        Layer.build(FetchHttpClient.layer).pipe(
-          Effect.flatMap((context) =>
-            Effect.provideContext(
-              runJSDocMigrateTitles(
-                RunJSDocMigrateTitlesOptions.make({
-                  ...OptionUtils.getSomesStruct({ extract, titles, proxyUrl, model, limitFiles, concurrency }),
-                })
-              ),
-              context
-            )
-          )
+    FetchHttpClient.layer.pipe(
+      Layer.build,
+      Effect.flatMap((context) =>
+        Effect.provideContext(
+          runJSDocMigrateTitles(
+            RunJSDocMigrateTitlesOptions.make({
+              ...OptionUtils.getSomesStruct({ extract, titles, proxyUrl, model, limitFiles, concurrency }),
+            })
+          ),
+          context
         )
-      )
+      ),
+      Effect.scoped,
+      runQualityProgram
     )
 ).pipe(Command.withDescription("Append per-anchor title records from the local model proxy (data only)"));
 
@@ -3124,6 +3124,96 @@ const tmpfsReapCommand = Command.make(
   )
 );
 
+const renderResidueCandidateLine = (candidate: ResidueReapReport["candidates"][number]): string => {
+  const age = pipe(
+    O.fromUndefinedOr(candidate.ageDays),
+    O.map((value) => ` age=${value.toFixed(1)}d`),
+    O.getOrElse(() => " age=unknown")
+  );
+  const entries = pipe(
+    O.fromUndefinedOr(candidate.entriesScanned),
+    O.map((value) => ` entries=${value}`),
+    O.getOrElse(() => "")
+  );
+  const bytes = pipe(
+    O.fromUndefinedOr(candidate.bytes),
+    O.map((value) => ` bytes=${value}`),
+    O.getOrElse(() => "")
+  );
+  const skip = pipe(
+    O.fromUndefinedOr(candidate.skipReason),
+    O.map((reason) => ` reason=${reason}`),
+    O.getOrElse(() => "")
+  );
+  return `- ${candidate.action} class=${candidate.reapClass}${age}${entries}${bytes}${skip} ${candidate.path}`;
+};
+
+const renderResidueReportLines = (report: ResidueReapReport): ReadonlyArray<string> => [
+  report.applied
+    ? "RESIDUE REAP APPLY — removed only old, revalidated entries from closed home-residue classes"
+    : "RESIDUE REAP DRY RUN — nothing will be removed; pass --apply to reap eligible entries",
+  `home root: ${report.homeRoot}`,
+  `repo root: ${report.repoRoot}`,
+  `thresholds: default=${report.maxAgeDays}d turbo=${report.turboMaxAgeDays}d`,
+  `classes: ${A.join(report.classes, ", ")}`,
+  ...A.map(report.candidates, renderResidueCandidateLine),
+  `totals: candidates=${A.length(report.candidates)} reaped=${report.reapedCount} reclaimed-bytes=${report.reclaimedBytes}`,
+  ...A.map(report.warnings, (warning) => `warning: ${warning}`),
+];
+
+/**
+ * Dry-run-first janitor for explicitly owned home-residue classes.
+ *
+ * **Details**
+ *
+ * Version 1 does not VACUUM SQLite databases, sweep Turbo caches across other
+ * checkouts, or perform size-based eviction. It uses age or bounded idleness
+ * only, defaults to a non-mutating report, and revalidates every apply action.
+ *
+ * **Example** (Reference the registered subcommand)
+ *
+ * ```ts
+ * console.log("bun run beep quality residue-reap --json")
+ * ```
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+const residueReapCommand = Command.make(
+  "residue-reap",
+  {
+    apply: Flag.boolean("apply").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Apply eligible removals (default: dry run)")
+    ),
+    json: Flag.boolean("json").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Emit the encoded residue-reap/v1 report as JSON")
+    ),
+    classes: Flag.choice("classes", ResidueReapClass.Options).pipe(
+      Flag.between(0, A.length(ResidueReapClass.Options)),
+      Flag.withDescription("Restrict cleanup to repeatable residue classes (default: all classes)")
+    ),
+    maxAgeDays: Flag.float("max-age-days").pipe(
+      Flag.withDefault(30),
+      Flag.withDescription("Minimum age or idleness in days for Codex and beep-cache entries")
+    ),
+    turboMaxAgeDays: Flag.float("turbo-max-age-days").pipe(
+      Flag.withDefault(14),
+      Flag.withDescription("Minimum age in days for entries in this checkout's .turbo/cache")
+    ),
+  },
+  Effect.fn(function* ({ apply, classes, json, maxAgeDays, turboMaxAgeDays }) {
+    const report = yield* runResidueReap({ apply, classes, maxAgeDays, turboMaxAgeDays });
+    if (json) {
+      const encoded = yield* S.encodeUnknownEffect(ResidueReapReport)(report);
+      yield* printLines([yield* jsonStringifyPretty(encoded)]);
+      return;
+    }
+    yield* printLines(renderResidueReportLines(report));
+  })
+).pipe(Command.withDescription("Dry-run-first janitor for bounded Codex, Turbo, and beep cache residue"));
+
 /**
  * Quality command group for repo operational checks.
  *
@@ -3162,6 +3252,7 @@ export const qualityCommand = Command.make("quality", {}, () =>
     "- bun run beep quality turbo-config-proof --base origin/main --head HEAD",
     "- bun run beep quality profile detect",
     "- bun run beep quality tmpfs-reap [--apply] [--json]",
+    "- bun run beep quality residue-reap [--apply] [--json] [--classes <class>]",
     "- bun run beep quality package-verify @beep/repo-cli",
     "- bun run beep quality changeset-graph",
     "- bun run beep quality fallow audit --advisory",
@@ -3185,6 +3276,7 @@ export const qualityCommand = Command.make("quality", {}, () =>
     qualityProfileCommand,
     qualitySchedulerCommand,
     tmpfsReapCommand,
+    residueReapCommand,
     packageVerifyCommand,
     changesetGraphCommand,
     changesetStatusCommand,
