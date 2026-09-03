@@ -206,11 +206,29 @@ describe("worktree argument builders", () => {
         "feature x",
         "20260902-123456"
       );
+      const reservedSuffixPlan = worktreeArchivePlan(
+        path,
+        "/cache",
+        "beep-effect",
+        WorktreeRepositoryHash.make("0123456789ab"),
+        ".Feature_9.lock",
+        "20260902-123456"
+      );
+      const emptySanitizedPlan = worktreeArchivePlan(
+        path,
+        "/cache",
+        "beep-effect",
+        WorktreeRepositoryHash.make("0123456789ab"),
+        "🚀",
+        "20260902-123456"
+      );
       expect(plan.archiveRef).toBe("refs/archive/worktrees/feature-x/20260902-123456");
       expect(plan.residueRoot).toBe("/cache/beep-effect-0123456789ab/feature-x-20260902-123456");
       expect(plan.patchPath).toBe("/cache/beep-effect-0123456789ab/feature-x-20260902-123456/tracked.patch");
       expect(otherClonePlan.residueRoot).not.toBe(plan.residueRoot);
       expect(unsafeNamePlan.archiveRef).toBe("refs/archive/worktrees/feature-x/20260902-123456");
+      expect(reservedSuffixPlan.archiveRef).toBe("refs/archive/worktrees/Feature_9.lock-worktree/20260902-123456");
+      expect(emptySanitizedPlan.archiveRef).toBe("refs/archive/worktrees/worktree/20260902-123456");
       expect(worktreeResidueReason(true, false)).toBe("dirty");
       expect(worktreeResidueReason(false, true)).toBe("unpushed-commits");
       expect(worktreeResidueReason(true, true)).toBe("dirty+unpushed");
@@ -456,15 +474,15 @@ describe("worktree output rendering", () => {
       const detached = WorktreeRemovalReceipt.make({ ...attached, branch: O.none() });
 
       expect(Effect.isEffect(renderWorktreeRemovalReceipt(false)(attached))).toBe(true);
-      expect(yield* collectRemovalReceiptLines(attached, false).pipe(Effect.provide(TestConsole.layer))).toEqual([
+      expect(yield* collectRemovalReceiptLines(attached, false)).toEqual([
         "Removed worktree /repo-worktrees/feature-x",
         "Branch retained. Delete it when ready:\n  git branch -D feat/feature-x",
       ]);
-      expect(yield* collectRemovalReceiptLines(detached, false).pipe(Effect.provide(TestConsole.layer))).toEqual([
+      expect(yield* collectRemovalReceiptLines(detached, false)).toEqual([
         "Removed worktree /repo-worktrees/feature-x",
         "Branch retained; delete it manually when ready.",
       ]);
-    })
+    }).pipe(provideScopedLayer(TestConsole.layer))
   );
 
   it.effect("renders clean and residue-free archive retirement", () =>
@@ -477,7 +495,7 @@ describe("worktree output rendering", () => {
         branchDeleted: false,
       });
 
-      expect(yield* collectRemovalReceiptLines(receipt, true).pipe(Effect.provide(TestConsole.layer))).toEqual([
+      expect(yield* collectRemovalReceiptLines(receipt, true)).toEqual([
         "",
         "Worktree retirement complete: /repo-worktrees/feature-x",
         "  reason: clean",
@@ -485,7 +503,7 @@ describe("worktree output rendering", () => {
         "  removed: /repo-worktrees/feature-x",
         "  branch retained. Delete it when ready:\n    git branch -D feat/feature-x",
       ]);
-    })
+    }).pipe(provideScopedLayer(TestConsole.layer))
   );
 
   it.effect("renders archived patches, untracked files, and retained branches", () =>
@@ -501,7 +519,7 @@ describe("worktree output rendering", () => {
         ),
         branchDeleted: false,
       });
-      const lines = yield* collectRemovalReceiptLines(receipt, true).pipe(Effect.provide(TestConsole.layer));
+      const lines = yield* collectRemovalReceiptLines(receipt, true);
 
       expect(lines).toContain("  repository hash: 0123456789ab");
       expect(lines).toContain(
@@ -515,7 +533,7 @@ describe("worktree output rendering", () => {
         "    copy /cache/beep-effect-0123456789ab/feature-x-20260902-123456/untracked/ contents back into <restore-path>"
       );
       expect(lines).toContain("  branch retained. Delete it when ready:\n    git branch -D feat/feature-x");
-    })
+    }).pipe(provideScopedLayer(TestConsole.layer))
   );
 
   it.effect("renders patch-free archived residue and deleted branch labels", () =>
@@ -528,14 +546,14 @@ describe("worktree output rendering", () => {
         branchDeleted: true,
       });
       const detached = WorktreeRemovalReceipt.make({ ...archived, branch: O.none() });
-      const archivedLines = yield* collectRemovalReceiptLines(archived, true).pipe(Effect.provide(TestConsole.layer));
-      const detachedLines = yield* collectRemovalReceiptLines(detached, true).pipe(Effect.provide(TestConsole.layer));
+      const archivedLines = yield* collectRemovalReceiptLines(archived, true);
+      const detachedLines = yield* collectRemovalReceiptLines(detached, true);
 
       expect(archivedLines).toContain("  tracked patch: (none)");
       expect(archivedLines).toContain("  untracked files: 0");
       expect(archivedLines).toContain("  branch deleted: feat/feature-x");
       expect(detachedLines).toContain("  branch deleted: (detached HEAD)");
-    })
+    }).pipe(provideScopedLayer(TestConsole.layer))
   );
 });
 

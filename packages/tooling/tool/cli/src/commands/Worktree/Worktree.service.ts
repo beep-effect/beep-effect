@@ -41,8 +41,6 @@ import type { WorktreeRemovalRequest, WorktreeResidueReason as WorktreeResidueRe
 const $I = $RepoCliId.create("commands/Worktree/Worktree.service");
 
 const RESIDUE_ROOT_ENV = "BEEP_WORKTREE_RESIDUE_ROOT";
-const ARCHIVE_REF_REPLACEMENT_BYTE = 45;
-const textDecoder = new TextDecoder();
 const textEncoder = new TextEncoder();
 
 const GitCountFromString = S.FiniteFromString.pipe(
@@ -221,19 +219,9 @@ export const worktreeArchivePlan: {
     name: string,
     stamp: string
   ) => {
-    const bytes = textEncoder.encode(name);
-    const encodedBytes = Uint8Array.from(
-      A.map(A.fromIterable(bytes), (byte) => {
-        const digit = byte >= 48 && byte <= 57;
-        const uppercase = byte >= 65 && byte <= 90;
-        const lowercase = byte >= 97 && byte <= 122;
-        return digit || uppercase || lowercase || byte === 45 || byte === 46 || byte === 95
-          ? byte
-          : ARCHIVE_REF_REPLACEMENT_BYTE;
-      })
-    );
     const sanitizedName = pipe(
-      textDecoder.decode(encodedBytes),
+      name,
+      Str.replaceAll(/[^0-9A-Za-z._-]+/gu, "-"),
       Str.replaceAll(/-+/gu, "-"),
       Str.replaceAll(/\.{2,}/gu, "-"),
       Str.replaceAll(/-+/gu, "-"),
