@@ -77,3 +77,20 @@
   sandbox's own processes; and smoke-test any fail-closed sandbox wrapper on a
   session at realistic load before shipping it, since per-UID rlimits are
   environment-dependent in a way per-process limits are not.
+
+## 2026-09-03: yeet cannot plan archival-scale packet branches
+
+- **Work:** publishing the auditor run-2 close (PR #957) through
+  `bun run beep yeet publish --start-pr-early`.
+- **Evidence:** the plan stage died with `git diff --name-only -z <base>..HEAD
+  output exceeded the repo-run capture limit.` — `repoRunOutputBound.maxChars`
+  is 512 KiB, and this branch's changed-path list (fleet corpus plus the
+  run-1 archive relocations, roughly five thousand paths) exceeds it.
+- **Cost:** the canonical publish path is unusable for exactly the class of PR
+  this packet produces every run (run 1's #889 at three thousand files slid
+  under the same bound); fell back to manual `gh pr create` plus
+  `yeet monitor`, the #889 precedent.
+- **Prevention:** stream or chunk the changed-path enumeration in the yeet
+  planner instead of a single bounded capture (or raise the bound for
+  `--name-only -z` specifically, whose output is inherently proportional to
+  repo churn, not misbehavior).
