@@ -38,7 +38,7 @@ import {
 } from "effect/Match";
 import { Order as NumberOrder } from "effect/Number";
 import { fromUndefinedOr, getOrElse, isSome, match as matchOption } from "effect/Option";
-import { hasProperty, isNumber, isString, isUndefined } from "effect/Predicate";
+import { isString, isUndefined } from "effect/Predicate";
 import {
   Finite,
   flip,
@@ -474,7 +474,7 @@ export const unsafeCustom =
  * import { String } from "effect/Schema"
  * import { numeric } from "@beep/effect-drizzle/pg"
  *
- * String.pipe(numeric({ precision: 10, scale: 2 })).meta.column?.kind // => "numeric"
+ * String.pipe(numeric(10, 2)).meta.column?.kind // => "numeric"
  * ```
  *
  * @category combinators
@@ -488,15 +488,15 @@ export function numeric<const Precision extends number>(
 ): <I extends Field.Input>(
   input: I & Field.ValidateEncoded<I, string, "pg.numeric requires a string-encoded schema">
 ) => Field.Patched<I, { readonly column: PgColumn.Numeric<Precision, undefined> }>;
-export function numeric<const Precision extends number, const Scale extends number>(options: {
-  readonly precision: Precision;
-  readonly scale: Scale;
-}): <I extends Field.Input>(
+export function numeric<const Precision extends number, const Scale extends number>(
+  ...args: readonly [precision: Precision, scale: Scale]
+): <I extends Field.Input>(
   input: I & Field.ValidateEncoded<I, string, "pg.numeric requires a string-encoded schema">
 ) => Field.Patched<I, { readonly column: PgColumn.Numeric<Precision, Scale> }>;
-export function numeric(options?: number | { readonly precision: number; readonly scale: number }): unknown {
-  const precision = isNumber(options) ? options : options?.precision;
-  const scale = isNumber(options) ? undefined : options?.scale;
+export function numeric(
+  ...args: readonly [] | readonly [precision: number] | readonly [precision: number, scale: number]
+): unknown {
+  const [precision, scale] = args;
   return (input: Field.Input): Field.Any =>
     Field.patch(injectStringCheck(input, isStringFinite()), {
       column: PgColumn.Numeric.make({ precision, scale }),
@@ -1083,7 +1083,7 @@ const everyArrayElement = (value: unknown, depth: number, accepts: (value: unkno
  * import { array, text } from "@beep/effect-drizzle/pg"
  *
  * const matrix = Array(Array(String)).pipe(
- *   array({ element: String.pipe(text()), suffix: "[][]" })
+ *   array(String.pipe(text()), "[][]")
  * )
  * matrix.meta.dimensions // => 2
  * ```
@@ -1096,18 +1096,16 @@ export function array<const Element extends Field.Input>(
 ): <I extends Field.Input>(
   input: I & Field.ValidateArrayEncoded<I, Element, 1> & ValidateArrayModifiers<I>
 ) => Field.Patched<I, ArrayPatch<Element, 1>>;
-export function array<const Element extends Field.Input, const Suffix extends PgColumn.ArrayDimensionString>(options: {
-  readonly element: Element & Field.ValidateArrayElement<Element>;
-  readonly suffix: Suffix;
-}): <I extends Field.Input>(
+export function array<const Element extends Field.Input, const Suffix extends PgColumn.ArrayDimensionString>(
+  ...args: readonly [element: Element & Field.ValidateArrayElement<Element>, suffix: Suffix]
+): <I extends Field.Input>(
   input: I & Field.ValidateArrayEncoded<I, Element, PgColumn.DimensionOf<Suffix>> & ValidateArrayModifiers<I>
 ) => Field.Patched<I, ArrayPatch<Element, PgColumn.DimensionOf<Suffix>>>;
 export function array(
-  input: Field.Input | { readonly element: Field.Input; readonly suffix: PgColumn.ArrayDimensionString }
+  ...args: readonly [element: Field.Input] | readonly [element: Field.Input, suffix: PgColumn.ArrayDimensionString]
 ): unknown {
-  const configured = hasProperty(input, "element") && hasProperty(input, "suffix");
-  const element = configured ? input.element : input;
-  const suffix = configured && isString(input.suffix) ? input.suffix : "[]";
+  const [element, configuredSuffix] = args;
+  const suffix = isUndefined(configuredSuffix) ? "[]" : configuredSuffix;
   return (input: Field.Input): Field.Any => {
     const outer = Field.from(input);
     const base = Field.from(element);
@@ -1749,10 +1747,7 @@ export const columnName =
  *   static readonly entityType = "User"
  * }
  * const reference = Int.pipe(
- *   references({
- *     id: UserId,
- *     options: { name: "membership_user_id_user_id_fkey" }
- *   })
+ *   references(UserId, { name: "membership_user_id_user_id_fkey" })
  * ).meta.references
  *
  * console.log(reference?.tableName) // "user"
@@ -1794,22 +1789,16 @@ type ValidateReferenceActions<I extends Field.Input, Options> =
  * @category combinators
  * @since 0.0.0
  */
-export function references<const Id extends EntityIdLike>(
-  id: Id
+export function references<
+  const Id extends EntityIdLike,
+  const Options extends ReferenceOptions | undefined = undefined,
+>(
+  ...args: readonly [id: Id, options?: Options & ValidateReferenceName<Options>]
 ): <I extends Field.Input>(
-  input: I & ValidateReferenceActions<NoInfer<I>, undefined>
-) => Field.Patched<I, { readonly references: Meta.References<Id["tableName"], "id"> }>;
-export function references<const Id extends EntityIdLike, const Options extends ReferenceOptions>(config: {
-  readonly id: Id;
-  readonly options: Options & ValidateReferenceName<Options>;
-}): <I extends Field.Input>(
   input: I & ValidateReferenceActions<NoInfer<I>, Options>
 ) => Field.Patched<I, { readonly references: Meta.References<Id["tableName"], "id"> }>;
-export function references(
-  idOrConfig: EntityIdLike | { readonly id: EntityIdLike; readonly options: ReferenceOptions }
-): unknown {
-  const id = isEntityIdLike(idOrConfig) ? idOrConfig : idOrConfig.id;
-  const options = isEntityIdLike(idOrConfig) ? undefined : idOrConfig.options;
+export function references(...args: readonly [id: EntityIdLike, options?: ReferenceOptions]): unknown {
+  const [id, options] = args;
   return (input: Field.Input): Field.Any => {
     const ref: Meta.References = matchOption(fromUndefinedOr(options?.name), {
       onNone: () => ({

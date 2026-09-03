@@ -300,11 +300,6 @@ const enumChecks = (
     return [check(`${model.sql.tableName}_${snakeCase(key)}_enum_check`, sql`${column} in (${values})`)];
   });
 
-type TableProjectionOptions<M extends AnyModel> = {
-  readonly additionalExtras?: AdditionalExtras<M>;
-  readonly model: M;
-};
-
 /**
  * Projects one model class into a real, fully typed Drizzle SQLite table.
  *
@@ -339,24 +334,13 @@ type TableProjectionOptions<M extends AnyModel> = {
  * @category tables
  * @since 0.0.0
  */
-export function toSqliteTable<M extends AnyModel>(model: M): TableOf<M>;
-export function toSqliteTable(model: AnyModel): unknown {
-  return toSqliteTableWithOptions({ model });
-}
-
-/**
- * @internal
- * @category tables
- * @since 0.0.0
- */
-export function toSqliteTableWithOptions<M extends AnyModel>(options: TableProjectionOptions<M>): TableOf<M>;
-/**
- * @internal
- * @category tables
- * @since 0.0.0
- */
-export function toSqliteTableWithOptions(options: TableProjectionOptions<AnyModel>): unknown {
-  const { additionalExtras, model } = options;
+export function toSqliteTable<M extends AnyModel>(
+  ...args: readonly [model: M, additionalExtras?: AdditionalExtras<M>]
+): TableOf<M>;
+export function toSqliteTable(
+  ...args: readonly [model: AnyModel, additionalExtras?: AdditionalExtras<AnyModel>]
+): unknown {
+  const [model, additionalExtras] = args;
   const builders = reduce(
     Object.entries(model.sql.fields),
     empty<string, SqliteColumn.DrizzleBuilder>(),

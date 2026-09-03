@@ -401,12 +401,6 @@ const invokeDeclaredExtras = (
   });
 };
 
-type TableProjectionOptions<M extends AnyModel> = {
-  readonly additionalExtras?: AdditionalExtras<M>;
-  readonly enums?: EnumRegistry;
-  readonly model: M;
-};
-
 /**
  * Projects one model class into a real, fully typed Drizzle PostgreSQL table.
  *
@@ -440,24 +434,13 @@ type TableProjectionOptions<M extends AnyModel> = {
  * @category tables
  * @since 0.0.0
  */
-export function toPgTable<M extends AnyModel>(model: M): TableOf<M>;
-export function toPgTable(model: AnyModel): unknown {
-  return toPgTableWithOptions({ model });
-}
-
-/**
- * @internal
- * @category tables
- * @since 0.0.0
- */
-export function toPgTableWithOptions<M extends AnyModel>(options: TableProjectionOptions<M>): TableOf<M>;
-/**
- * @internal
- * @category tables
- * @since 0.0.0
- */
-export function toPgTableWithOptions(options: TableProjectionOptions<AnyModel>): unknown {
-  const { additionalExtras, enums, model } = options;
+export function toPgTable<M extends AnyModel>(
+  ...args: readonly [model: M, additionalExtras?: AdditionalExtras<M>, enums?: EnumRegistry]
+): TableOf<M>;
+export function toPgTable(
+  ...args: readonly [model: AnyModel, additionalExtras?: AdditionalExtras<AnyModel>, enums?: EnumRegistry]
+): unknown {
+  const [model, additionalExtras, enums] = args;
   const builders = reduce(
     Object.entries(model.sql.fields),
     empty<string, PgColumn.DrizzleBuilder>(),

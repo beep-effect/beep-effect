@@ -50,7 +50,7 @@ class User extends Model<User>("User")({
   id: Int.pipe(pg.integer(), pg.identity("always"), pg.primaryKey()),
   organizationId: OrganizationId.pipe(
     pg.integer(),
-    pg.references({ id: OrganizationId, options: { name: "user_organization_id_organization_id_fkey" } })
+    pg.references(OrganizationId, { name: "user_organization_id_organization_id_fkey" })
   ),
   name: String.pipe(pg.varchar(120)),
   active: Boolean,
@@ -189,7 +189,7 @@ it("preserves migrated PostgreSQL fixture compile contracts", () => {
   }) {}
   class Bare extends kit.Model<Bare>("Bare")({ value: String }) {}
   class Mechanical extends Model<Mechanical>("Mechanical")({
-    amount: String.pipe(pg.numeric({ precision: 10, scale: 2 })),
+    amount: String.pipe(pg.numeric(10, 2)),
     objectDate: DateSchema.pipe(pg.date({ mode: "date" })),
     largeSequence: Int.pipe(pg.bigserial("number")),
     nativeSequence: BigInt.pipe(pg.bigserial("bigint")),
@@ -197,12 +197,7 @@ it("preserves migrated PostgreSQL fixture compile contracts", () => {
   const mechanicalTable = pg.toPgTable(Mechanical);
   class ArrayContract extends Model<ArrayContract>("ArrayContract")({
     labels: Array(String).pipe(pg.array(String.pipe(pg.text()))),
-    matrix: String.pipe(
-      Array,
-      Array,
-      pg.array({ element: String.pipe(pg.text()), suffix: "[][]" }),
-      pg.default([["seed"]])
-    ),
+    matrix: String.pipe(Array, Array, pg.array(String.pipe(pg.text()), "[][]"), pg.default([["seed"]])),
   }) {}
   const arrayTable = pg.toPgTable(ArrayContract);
 
@@ -352,9 +347,9 @@ it("pins public PostgreSQL diagnostic literals", () => {
     "identity() requires an explicit integer-family column first (pg.integer/pg.smallint/pg.bigint) — bare number schemas derive doublePrecision"
   );
   expect(NullOr(Int).pipe(pg.integer(), pg.version())).type.toRaiseError("version() forbids a nullable schema");
-  expect(
-    OrganizationId.pipe(pg.integer(), pg.references({ id: OrganizationId, options: { onDelete: "set null" } }))
-  ).type.toRaiseError("SET NULL references require a nullable encoded schema");
+  expect(OrganizationId.pipe(pg.integer(), pg.references(OrganizationId, { onDelete: "set null" }))).type.toRaiseError(
+    "SET NULL references require a nullable encoded schema"
+  );
 });
 
 it("pins public SQLite diagnostic literals", () => {
@@ -362,10 +357,7 @@ it("pins public SQLite diagnostic literals", () => {
   expect(Int.pipe(sqlite.text())).type.toRaiseError("sqlite.text requires a string-encoded schema");
   expect(Int.pipe(sqlite.version())).type.toRaiseError("version() requires sqlite.integer number mode");
   expect(
-    OrganizationId.pipe(
-      sqlite.integer(),
-      sqlite.references({ id: OrganizationId, options: { onDelete: "set default" } })
-    )
+    OrganizationId.pipe(sqlite.integer(), sqlite.references(OrganizationId, { onDelete: "set default" }))
   ).type.toRaiseError("SET DEFAULT references require a declared database default");
 });
 
@@ -418,7 +410,7 @@ it("pins PostgreSQL carrier and modifier diagnostics", () => {
 
 it("pins public SQL-name and table-extra diagnostics", () => {
   expect(String.pipe(pg.columnName("Bad Name"))).type.toRaiseError("pg.columnName requires a lowercase SQL identifier");
-  expect(Int.pipe(pg.references({ id: OrganizationId, options: { name: "Bad Foreign Key" } }))).type.toRaiseError(
+  expect(Int.pipe(pg.references(OrganizationId, { name: "Bad Foreign Key" }))).type.toRaiseError(
     "pg.references constraint name must be a valid PostgreSQL identifier"
   );
   expect(Literals(["ok"]).pipe(pg.enum("Bad-Enum"))).type.toRaiseError(
