@@ -58,3 +58,22 @@
 - **Prevention:** Biome `files.includes` now excludes the packet's `adapters/` and `runs/`
   trees (this change); frozen evidence must always ship with a formatter exemption in the same
   PR that freezes it, since a digest lock can only detect corruption, not stop a write sweep.
+
+## 2026-09-02: the #902 adapter sandbox fails closed on any busy desktop session
+
+- **Work:** auditor run-2 launch — smoke-testing the new
+  `run_adapter_sandbox.sh` (PR #902) before building adapter v1.1.0 against it.
+- **Evidence:** every invocation died with `bwrap: Creating new namespace failed:
+  Resource temporarily unavailable` while bare `bwrap --unshare-all` succeeded.
+  Bisecting the runner's five prlimit bounds isolated `--nproc=64`: RLIMIT_NPROC
+  is charged against the invoking UID's host-wide task count (about 10,800 tasks
+  on a loaded desktop), so wrapping bwrap in `prlimit --nproc=64` can never
+  clone. The runner had only ever been exercised where the UID ran few tasks.
+- **Cost:** the fail-closed design blocked the entire observe stage; roughly an
+  hour of diagnosis before any run-2 adapter work could start.
+- **Prevention:** apply resource limits INSIDE the sandbox's fresh user
+  namespace (the fix: `resource_limits` array wrapping the adapter command,
+  `exec bwrap` directly), where the per-user task count restarts at the
+  sandbox's own processes; and smoke-test any fail-closed sandbox wrapper on a
+  session at realistic load before shipping it, since per-UID rlimits are
+  environment-dependent in a way per-process limits are not.
