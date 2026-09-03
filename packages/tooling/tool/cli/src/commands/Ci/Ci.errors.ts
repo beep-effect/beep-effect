@@ -80,6 +80,23 @@ export const CiLanePartitionErrorReason = LiteralKit([
 );
 
 /**
+ * Reason a fail-closed CI lane partition proof could not proceed.
+ *
+ * **Example** (Type a partition failure reason)
+ *
+ * ```ts
+ * import type { CiLanePartitionErrorReason } from "@beep/repo-cli/commands/Ci"
+ *
+ * const reason: CiLanePartitionErrorReason = "missing-package"
+ * console.log(reason)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type CiLanePartitionErrorReason = typeof CiLanePartitionErrorReason.Type;
+
+/**
  * Failure raised when a CI lane partition cannot be proved safe to execute.
  *
  * **Example** (Create a missing placement error)
