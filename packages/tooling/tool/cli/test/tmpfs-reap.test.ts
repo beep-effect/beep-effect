@@ -11,10 +11,11 @@ import { describe, expect, it } from "@effect/vitest";
 import { ConfigProvider, Duration, Effect, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { FastCheck as fc } from "effect/testing";
-import { ChildProcess } from "effect/unstable/process";
+import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 
 const FIXTURE_NOW_MILLIS = 2_000_000_000_000;
 const noProcessCommandLines = () => Effect.succeed(A.empty<string>());
@@ -102,6 +103,7 @@ const makeClassificationFixture = Effect.fn("TmpfsReapTest.makeClassificationFix
   return {
     cacheRoot,
     dirtyWorktree,
+    fakeParent,
     fakeWorktree,
     fallow,
     fallowSiblingLastUsed,
@@ -131,6 +133,12 @@ const makeNewClassFixtures = Effect.fn("TmpfsReapTest.makeNewClassFixtures")(fun
   const stubExistingTarget = path.join(worktreesRoot, "target-exists");
   const stubParentPresent = path.join(worktreesRoot, "parent-present");
   const stubContentsPresent = path.join(worktreesRoot, "contents-present");
+  const stubTrackedContent = path.join(worktreesRoot, "tracked-content");
+  const stubUntrackedContent = path.join(worktreesRoot, "untracked-content");
+  const stubNestedContent = path.join(worktreesRoot, "nested-content");
+  const stubSymlinkContent = path.join(worktreesRoot, "symlink-content");
+  const stubSymlinkGitFile = path.join(worktreesRoot, "symlink-git-file");
+  const stubOversizedGitFile = path.join(worktreesRoot, "oversized-git-file");
   const soleWorktreesRoot = path.join(tmpRoot, "sole-worktrees");
   const stubSoleEligible = path.join(soleWorktreesRoot, "eligible");
   const missingRepo = path.join(root, "missing-repo");
@@ -156,6 +164,12 @@ const makeNewClassFixtures = Effect.fn("TmpfsReapTest.makeNewClassFixtures")(fun
       stubExistingTarget,
       stubParentPresent,
       stubContentsPresent,
+      stubTrackedContent,
+      stubUntrackedContent,
+      path.join(stubNestedContent, "nested"),
+      stubSymlinkContent,
+      stubSymlinkGitFile,
+      stubOversizedGitFile,
       stubSoleEligible,
       existingGitDir,
       parentPresentRepo,
@@ -180,6 +194,23 @@ const makeNewClassFixtures = Effect.fn("TmpfsReapTest.makeNewClassFixtures")(fun
     `gitdir: ${missingRepo}/.git/worktrees/contents-present\n`
   );
   yield* fs.writeFileString(path.join(stubContentsPresent, "unsaved.bin"), Str.repeat(1024 * 1024 + 1)("x"));
+  yield* Effect.forEach(
+    [stubTrackedContent, stubUntrackedContent, stubNestedContent, stubSymlinkContent],
+    (candidate) =>
+      fs.writeFileString(
+        path.join(candidate, ".git"),
+        `gitdir: ${missingRepo}/.git/worktrees/${path.basename(candidate)}\n`
+      ),
+    { discard: true }
+  );
+  yield* fs.writeFileString(path.join(stubTrackedContent, "tracked.txt"), "small tracked bytes\n");
+  yield* fs.writeFileString(path.join(stubUntrackedContent, "untracked.txt"), "small untracked bytes\n");
+  yield* fs.writeFileString(path.join(stubNestedContent, "nested", "notes.txt"), "nested bytes\n");
+  yield* fs.symlink(path.join(root, "outside-target"), path.join(stubSymlinkContent, "linked-data"));
+  const outsideGitFile = path.join(root, "outside-git-file");
+  yield* fs.writeFileString(outsideGitFile, `gitdir: ${missingRepo}/.git/worktrees/symlink-git-file\n`);
+  yield* fs.symlink(outsideGitFile, path.join(stubSymlinkGitFile, ".git"));
+  yield* fs.writeFileString(path.join(stubOversizedGitFile, ".git"), Str.repeat(4097)("x"));
   yield* fs.writeFileString(
     path.join(vitestWrongShape, ".git"),
     `gitdir: ${missingRepo}/.git/worktrees/nanoid-git-worktree\n`
@@ -195,6 +226,12 @@ const makeNewClassFixtures = Effect.fn("TmpfsReapTest.makeNewClassFixtures")(fun
       stubExistingTarget,
       stubParentPresent,
       stubContentsPresent,
+      stubTrackedContent,
+      stubUntrackedContent,
+      stubNestedContent,
+      stubSymlinkContent,
+      stubSymlinkGitFile,
+      stubOversizedGitFile,
       stubSoleEligible,
       unclassifiedWorktree,
       vitestWrongShape,
@@ -226,6 +263,12 @@ const makeNewClassFixtures = Effect.fn("TmpfsReapTest.makeNewClassFixtures")(fun
     stubMalformedGitFile,
     stubParentPresent,
     stubContentsPresent,
+    stubTrackedContent,
+    stubUntrackedContent,
+    stubNestedContent,
+    stubSymlinkContent,
+    stubSymlinkGitFile,
+    stubOversizedGitFile,
     stubRelativeGitDir,
     stubSoleEligible,
     stubWrongShape,
@@ -421,6 +464,10 @@ describe("tmpfs reap", () => {
           expect(yield* fs.exists(fixture.stubWrongShape)).toBe(true);
 
           expect(candidateByPath(report, fixture.stubMalformedGitFile).skipReason).toBe("wrong-shape");
+          expect(candidateByPath(report, fixture.stubSymlinkGitFile).skipReason).toBe("wrong-shape");
+          expect(candidateByPath(report, fixture.stubOversizedGitFile).skipReason).toBe("wrong-shape");
+          expect(yield* fs.exists(fixture.stubSymlinkGitFile)).toBe(true);
+          expect(yield* fs.exists(fixture.stubOversizedGitFile)).toBe(true);
 
           const stubRelativeGitDir = candidateByPath(report, fixture.stubRelativeGitDir);
           expect(stubRelativeGitDir.action).toBe("remove-dir");
@@ -440,6 +487,18 @@ describe("tmpfs reap", () => {
           expect(stubContentsPresent.skipReason).toBe("contents-present");
           expect(stubContentsPresent.bytes).toBeUndefined();
           expect(yield* fs.exists(fixture.stubContentsPresent)).toBe(true);
+
+          for (const preserved of [
+            fixture.stubTrackedContent,
+            fixture.stubUntrackedContent,
+            fixture.stubNestedContent,
+            fixture.stubSymlinkContent,
+          ]) {
+            const candidate = candidateByPath(report, preserved);
+            expect(candidate.skipReason).toBe("contents-present");
+            expect(candidate.bytes).toBeUndefined();
+            expect(yield* fs.exists(preserved)).toBe(true);
+          }
 
           expect(candidateByPath(report, fixture.unclassifiedWorktree).skipReason).toBe("unclassified");
 
@@ -486,6 +545,185 @@ describe("tmpfs reap", () => {
     ).pipe(provideScopedLayer(NodeServices.layer))
   );
 
+  it.effect("rejects a dangling stub whose Git marker becomes a symlink during discovery", () =>
+    withTempDirectory((root) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const fixture = yield* makeNewClassFixtures(root);
+        const gitFile = path.join(fixture.stubEligible, ".git");
+        let readLinkCount = 0;
+        const racingFileSystem = FileSystem.makeNoop({
+          ...fs,
+          readLink: (target) => {
+            if (!Str.Equivalence(target, gitFile)) return fs.readLink(target);
+            readLinkCount += 1;
+            return readLinkCount === 2 ? Effect.succeed("raced-git-marker") : fs.readLink(target);
+          },
+        });
+
+        const report = yield* runTmpfsReap({
+          cacheRoot: fixture.cacheRoot,
+          classes: ["dangling-worktree-stub"],
+          listProcessCommandLines: noProcessCommandLines,
+          nowMillis: FIXTURE_NOW_MILLIS,
+          tmpRoot: fixture.tmpRoot,
+        }).pipe(Effect.provideService(FileSystem.FileSystem, racingFileSystem));
+
+        expect(readLinkCount).toBe(2);
+        expect(candidateByPath(report, fixture.stubEligible).skipReason).toBe("contents-present");
+        expect(yield* fs.exists(fixture.stubEligible)).toBe(true);
+      })
+    ).pipe(provideScopedLayer(NodeServices.layer))
+  );
+
+  it.effect("revalidates dangling-stub eligibility immediately before removal", () =>
+    withTempDirectory((root) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const fixture = yield* makeNewClassFixtures(root);
+        const gitFile = path.join(fixture.stubEligible, ".git");
+        const missingStatTarget = path.join(root, "missing-stat-target");
+        let gitFileStatCount = 0;
+        const racingFileSystem = FileSystem.makeNoop({
+          ...fs,
+          stat: (target) => {
+            if (!Str.Equivalence(target, gitFile)) return fs.stat(target);
+            gitFileStatCount += 1;
+            return gitFileStatCount === 3 ? fs.stat(missingStatTarget) : fs.stat(target);
+          },
+        });
+
+        const report = yield* runTmpfsReap({
+          apply: true,
+          cacheRoot: fixture.cacheRoot,
+          classes: ["dangling-worktree-stub"],
+          listProcessCommandLines: noProcessCommandLines,
+          nowMillis: FIXTURE_NOW_MILLIS,
+          tmpRoot: fixture.tmpRoot,
+        }).pipe(Effect.provideService(FileSystem.FileSystem, racingFileSystem));
+
+        expect(gitFileStatCount).toBe(3);
+        expect(yield* fs.exists(fixture.stubEligible)).toBe(true);
+        expect(report.warnings).toContain(
+          `Skipped ${fixture.stubEligible}: dangling-stub eligibility changed before removal.`
+        );
+      })
+    ).pipe(provideScopedLayer(NodeServices.layer))
+  );
+
+  it.effect("preserves candidates when guarded filesystem removal fails", () =>
+    withTempDirectory((root) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const fixture = yield* makeNewClassFixtures(root);
+        const gitFile = path.join(fixture.stubSoleEligible, ".git");
+        const scopedCandidate = path.join(fixture.tmpRoot, "beep-knowledge-refs-remove-failure");
+        yield* fs.makeDirectory(scopedCandidate, { recursive: true });
+        yield* fs.writeFileString(path.join(scopedCandidate, "payload.txt"), "preserve\n");
+        yield* runCommand("touch", ["-d", fixtureTimestamp(3), scopedCandidate], root);
+        const failingFileSystem = FileSystem.makeNoop({
+          ...fs,
+          remove: (target, options) =>
+            Str.Equivalence(target, gitFile) || Str.Equivalence(target, scopedCandidate)
+              ? Effect.fail(
+                  PlatformError.badArgument({
+                    description: "simulated guarded removal failure",
+                    method: "remove",
+                    module: "FileSystem",
+                  })
+                )
+              : fs.remove(target, options),
+        });
+
+        const report = yield* runTmpfsReap({
+          apply: true,
+          cacheRoot: fixture.cacheRoot,
+          classes: ["dangling-worktree-stub", "scoped-temp"],
+          listProcessCommandLines: noProcessCommandLines,
+          nowMillis: FIXTURE_NOW_MILLIS,
+          tmpRoot: fixture.tmpRoot,
+        }).pipe(Effect.provideService(FileSystem.FileSystem, failingFileSystem));
+
+        expect(report.warnings).toContain(`Failed to remove ${gitFile}.`);
+        expect(report.warnings).toContain(`Failed to remove ${scopedCandidate}.`);
+        expect(yield* fs.exists(fixture.stubSoleEligible)).toBe(true);
+        expect(yield* fs.exists(scopedCandidate)).toBe(true);
+      })
+    ).pipe(provideScopedLayer(NodeServices.layer))
+  );
+
+  it.effect("preserves an emptied dangling stub when the guarded rmdir process cannot start", () =>
+    withTempDirectory((root) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const fixture = yield* makeNewClassFixtures(root);
+        const failingSpawner = ChildProcessSpawner.make(() =>
+          Effect.fail(
+            PlatformError.badArgument({
+              description: "simulated rmdir spawn failure",
+              method: "spawn",
+              module: "ChildProcessSpawner",
+            })
+          )
+        );
+
+        const report = yield* runTmpfsReap({
+          apply: true,
+          cacheRoot: fixture.cacheRoot,
+          classes: ["dangling-worktree-stub"],
+          listProcessCommandLines: noProcessCommandLines,
+          nowMillis: FIXTURE_NOW_MILLIS,
+          tmpRoot: fixture.tmpRoot,
+        }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, failingSpawner));
+
+        expect(yield* fs.exists(fixture.stubSoleEligible)).toBe(true);
+        expect(report.warnings).toContain(
+          `Preserved raced contents under ${fixture.stubSoleEligible}; directory was not empty.`
+        );
+      })
+    ).pipe(provideScopedLayer(NodeServices.layer))
+  );
+
+  it.effect("removes a worktree directory directly when its parent repository disappears", () =>
+    withTempDirectory((root) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const fixture = yield* makeClassificationFixture(root);
+        const parentGitDirectory = path.join(fixture.fakeParent, ".git");
+        const missingParentFileSystem = FileSystem.makeNoop({
+          ...fs,
+          exists: (target) =>
+            Str.Equivalence(target, parentGitDirectory)
+              ? Effect.fail(
+                  PlatformError.badArgument({
+                    description: "simulated vanished parent repository",
+                    method: "exists",
+                    module: "FileSystem",
+                  })
+                )
+              : fs.exists(target),
+        });
+
+        const report = yield* runTmpfsReap({
+          apply: true,
+          cacheRoot: fixture.cacheRoot,
+          classes: ["git-worktree"],
+          gitWorktreePaths: [fixture.fakeWorktree],
+          listProcessCommandLines: noProcessCommandLines,
+          nowMillis: FIXTURE_NOW_MILLIS,
+          tmpRoot: fixture.tmpRoot,
+        }).pipe(Effect.provideService(FileSystem.FileSystem, missingParentFileSystem));
+
+        expect(report.reapedCount).toBe(1);
+        expect(yield* fs.exists(fixture.fakeWorktree)).toBe(false);
+      })
+    ).pipe(provideScopedLayer(NodeServices.layer))
+  );
+
   it.effect("preserves a container child created when non-recursive cleanup begins", () =>
     withTempDirectory((root) =>
       Effect.gen(function* () {
@@ -495,10 +733,18 @@ describe("tmpfs reap", () => {
         const racedChild = path.join(fixture.soleWorktreesRoot, "concurrent-worktree");
         const racingFileSystem = FileSystem.makeNoop({
           ...fs,
-          remove: (target, options) =>
+          readDirectory: (target) =>
             Str.Equivalence(target, fixture.soleWorktreesRoot)
-              ? fs.makeDirectory(racedChild).pipe(Effect.andThen(fs.remove(target, options)))
-              : fs.remove(target, options),
+              ? fs
+                  .exists(fixture.stubSoleEligible)
+                  .pipe(
+                    Effect.flatMap((stubExists) =>
+                      stubExists
+                        ? fs.readDirectory(target)
+                        : fs.makeDirectory(racedChild).pipe(Effect.andThen(fs.readDirectory(target)))
+                    )
+                  )
+              : fs.readDirectory(target),
         });
         const report = yield* runTmpfsReap({
           apply: true,
@@ -524,14 +770,16 @@ describe("tmpfs reap", () => {
         const path = yield* Path.Path;
         const fixture = yield* makeNewClassFixtures(root);
         const gitFile = path.join(fixture.stubEligible, ".git");
+        const relativeGitFile = path.join(fixture.stubRelativeGitDir, ".git");
+        const racedContent = path.join(fixture.stubRelativeGitDir, "raced-content");
         const missingStatTarget = path.join(root, "missing-stat-target");
         const missingCacheRoot = path.join(root, "missing-cache");
         let gitFileStatCount = 0;
         const racingFileSystem = FileSystem.makeNoop({
           ...fs,
           remove: (target, options) =>
-            Str.Equivalence(target, fixture.stubRelativeGitDir)
-              ? fs.remove(missingStatTarget)
+            Str.Equivalence(target, relativeGitFile)
+              ? fs.remove(target, options).pipe(Effect.andThen(fs.writeFileString(racedContent, "race")))
               : fs.remove(target, options),
           stat: (target) => {
             if (!Str.Equivalence(target, gitFile)) return fs.stat(target);
@@ -555,7 +803,9 @@ describe("tmpfs reap", () => {
         expect(yield* fs.exists(fixture.stubEligible)).toBe(true);
         expect(gitFileStatCount).toBe(2);
         expect(yield* fs.exists(fixture.stubRelativeGitDir)).toBe(true);
-        expect(report.warnings).toContain(`Failed to remove ${fixture.stubRelativeGitDir}.`);
+        expect(report.warnings).toContain(
+          `Preserved raced contents under ${fixture.stubRelativeGitDir}; directory was not empty.`
+        );
       })
     ).pipe(provideScopedLayer(NodeServices.layer))
   );

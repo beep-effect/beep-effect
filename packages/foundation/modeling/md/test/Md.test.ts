@@ -70,6 +70,7 @@ import {
   decodeSafeDocumentUnsafe,
   documentSafetyIssues,
   HtmlProjectionSafetyViolation,
+  MAX_SAFE_DOCUMENT_NODES,
   refineSafeDocument,
   SafeDocument,
 } from "@beep/md/Md.safe";
@@ -77,6 +78,7 @@ import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Cause, Effect, Exit, Result } from "effect";
+import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
@@ -980,6 +982,7 @@ Demo video`);
 
     const hostile = Md.make([
       Md.p([
+        Md.rawMarkdown("**trusted**"),
         Md.rawHtml("<script>alert(1)</script>"),
         Md.a("http://example.com", "Insecure"),
         Md.img("//example.com/tracker.png", { alt: "Tracker" }),
@@ -989,18 +992,55 @@ Demo video`);
     expect(Result.isFailure(decodeSafeDocument(encodedHostile))).toBe(true);
     expect(() => decodeSafeDocumentUnsafe(encodedHostile)).toThrow();
     expect(documentSafetyIssues(hostile)).toMatchObject([
-      { _tag: "RawNode", path: ["children", 0, "children", 0], nodeTag: "rawHtml" },
+      { _tag: "RawNode", path: ["children", 0, "children", 0], nodeTag: "rawMarkdown" },
+      { _tag: "RawNode", path: ["children", 0, "children", 1], nodeTag: "rawHtml" },
       {
         _tag: "UnsafeUrl",
-        path: ["children", 0, "children", 1, "href"],
+        path: ["children", 0, "children", 2, "href"],
         nodeTag: "a",
         destinationKind: "link",
       },
       {
         _tag: "UnsafeUrl",
-        path: ["children", 0, "children", 2, "src"],
+        path: ["children", 0, "children", 3, "src"],
         nodeTag: "img",
         destinationKind: "image",
+      },
+    ]);
+  });
+
+  it("rejects documents above the global AST-node budget before HTML projection", () => {
+    const atLimit = Md.make(A.makeBy(MAX_SAFE_DOCUMENT_NODES - 1, () => Md.hr));
+    const overLimit = Md.make(A.makeBy(MAX_SAFE_DOCUMENT_NODES, () => Md.hr));
+
+    expect(documentSafetyIssues(atLimit)).toStrictEqual([]);
+    expect(documentSafetyIssues(overLimit)).toMatchObject([
+      {
+        _tag: "DocumentComplexity",
+        maxNodes: MAX_SAFE_DOCUMENT_NODES,
+        observedNodes: MAX_SAFE_DOCUMENT_NODES + 1,
+      },
+    ]);
+    expect(Result.isFailure(refineSafeDocument(overLimit))).toBe(true);
+  });
+
+  it("ignores forged scalar children and stops reading once the global AST-node budget is exceeded", () => {
+    const children = A.makeBy(MAX_SAFE_DOCUMENT_NODES + 1, () => Md.hr);
+    Object.defineProperty(children, 0, {
+      get: () => "not-a-node",
+    });
+    Object.defineProperty(children, MAX_SAFE_DOCUMENT_NODES, {
+      get: () => {
+        throw new Error("child beyond the document budget was read");
+      },
+    });
+    const overwide: Document = { ...Md.make([]), children };
+
+    expect(documentSafetyIssues(overwide)).toMatchObject([
+      {
+        _tag: "DocumentComplexity",
+        maxNodes: MAX_SAFE_DOCUMENT_NODES,
+        observedNodes: MAX_SAFE_DOCUMENT_NODES + 1,
       },
     ]);
   });

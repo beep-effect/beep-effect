@@ -2,8 +2,9 @@
 
 ## Status
 
-Status: `active`. Validation and remediation are complete; repo proof is in
-progress.
+Status: `completed-retained`. PR #902 merged the packet remediations, all
+required hosted checks passed, every review thread was resolved, and the exact
+eleven-ID audit confirmed automatic no-longer-detected closure.
 
 ## Phases
 
@@ -14,11 +15,11 @@ progress.
 | P2 validate | complete | Reproduce each report at current HEAD. | Every item has strict verdict, disposition, rationale, and owner surface. |
 | P3 lane-partition | complete | Group shared root causes and disjoint paths. | Five lanes recorded without overlapping implementation ownership. |
 | P4 remediate | complete | Fix all real findings with focused checks. | Ten remediations implemented; one current-main fix strictly proved. |
-| P5 repo-proof | in progress | Run packet validation and Yeet repair/verify. | No packet drift; local proof green. |
-| P6 publish | pending | Publish one intentional PR through Yeet. | Exact branch head pushed and PR opened. |
-| P7 monitor | pending | Close hosted checks and actionable reviews. | PR green and mergeable. |
-| P8 merge-and-close | pending | Merge and close captured findings. | PR merged; all 11 IDs resolved. |
-| P9 close | pending | Record evidence, reflection, and lifecycle. | Packet set to `completed-retained` in the same closeout PR state. |
+| P5 repo-proof | complete | Run packet validation and Yeet repair/verify. | Packet and repository proof passed for PR #902. |
+| P6 publish | complete | Publish one intentional PR through Yeet. | Exact head `62ea090d6fbb010a68a19dbaee955ac521ce8e98` published as PR #902. |
+| P7 monitor | complete | Close hosted checks and actionable reviews. | Required checks passed and all five review threads resolved; two Vercel failures were rate-limit-only. |
+| P8 merge-and-close | complete | Merge and close captured findings. | PR #902 merged as `3b27a0c17900a28578ec6a0d59dc70a2887c5bc9`; all 11 exact IDs show automatic closure. |
+| P9 close | complete | Record evidence, reflection, and lifecycle. | Closure ledger and reflection recorded; packet set to `completed-retained`. |
 
 ## Execution Rules
 

@@ -331,12 +331,13 @@ export class RestorationMailOptions extends S.Class<RestorationMailOptions>($I`R
     pffexportPath: S.NonEmptyString,
     runLabel: RunLabel.pipe(SchemaUtils.withKeyDefaults("t7-salvage-2026-08-10")),
     scope: MailRestorationScope,
+    systemdRunPath: S.NonEmptyString.pipe(SchemaUtils.withKeyDefaults("systemd-run")),
     tikaJarPath: S.NonEmptyString,
     javaPath: S.NonEmptyString.pipe(SchemaUtils.withKeyDefaults("java")),
   },
   $I.annote("RestorationMailOptions", {
     description:
-      "Frozen engine locations, denominator, elapsed-time ceiling, and disk amplification ceiling for one mail restoration scope.",
+      "Frozen engine and sandbox locations, denominator, elapsed-time ceiling, and disk amplification ceiling for one mail restoration scope.",
   })
 ) {}
 
