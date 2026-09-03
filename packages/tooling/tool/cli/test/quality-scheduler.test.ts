@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { renderAdmissionSnapshotLinesForTesting } from "@beep/repo-cli/test/Quality";
+import { qualityCommand, renderAdmissionSnapshotLinesForTesting } from "@beep/repo-cli/test/Quality";
 import {
   AdmissionAttemptTerminationJournal,
   AdmissionConfig,
@@ -60,10 +60,13 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Struct from "effect/Struct";
 import { FastCheck as fc, TestClock } from "effect/testing";
+import * as TestConsole from "effect/testing/TestConsole";
+import { Command } from "effect/unstable/cli";
 
 const PlatformLayer = NodeChildProcessSpawner.layer.pipe(
   Layer.provideMerge(Layer.mergeAll(NodeFileSystem.layer, NodePath.layer))
 );
+const runQualityCommand = Command.runWith(qualityCommand, { version: "0.0.0" });
 
 const DEAD_PID = 2_147_483_647;
 const JOURNALED_ATTEMPT_ID = S.decodeSync(UUID)("550e8400-e29b-41d4-a716-446655440020");
@@ -572,6 +575,35 @@ describe("quality-scheduler", () => {
     expect(O.getOrElse(parseAdmissionProcStatStartTime(stat), () => "none")).toBe("424242");
     expect(O.isNone(parseAdmissionProcStatStartTime("garbage"))).toBe(true);
   });
+
+  it("runs scheduler status and reap command paths", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+          Effect.gen(function* () {
+            yield* runQualityCommand(["scheduler", "status", "--no-json"]);
+            yield* runQualityCommand(["scheduler", "status", "--json"]);
+            yield* runQualityCommand(["scheduler", "reap", "--no-apply"]);
+            yield* writeFakeTicket(tempRoot, {
+              pid: DEAD_PID,
+              procStart: "dead-command-owner",
+              nonce: "dead-command-ticket",
+              originKey: "dead-command-origin",
+            });
+            yield* runQualityCommand(["scheduler", "reap", "--no-apply"]);
+            yield* runQualityCommand(["scheduler", "reap", "--apply"]);
+
+            const output = A.join(A.map(yield* TestConsole.logLines, String), "\n");
+            expect(output).toContain("admission capacity:");
+            expect(output).toContain('"capacityTokens": 8');
+            expect(output).toContain("dry run — would reap:");
+            expect(output).toContain("dead-command-ticket");
+            expect(output).toContain("reaped dead admission state:");
+          })
+        );
+      }).pipe(provideScopedLayer(TestConsole.layer))
+    ));
 
   it("admits immediately at free capacity and cleans up every artifact", () =>
     Effect.runPromise(
@@ -1130,6 +1162,27 @@ describe("quality-scheduler", () => {
             expect(yield* fs.exists(raceTombstonePath)).toBe(false);
             expect(yield* fs.readFileString(raceLockPath)).toBe(thirdGeneration);
             yield* releaseAdmissionJournalLockForTesting(raceLockPath, thirdOwnerToken);
+
+            const retainedLockPath = path.join(tempRoot.root, "recovery-link-failed.lock");
+            const retainedTombstonePath = `${retainedLockPath}.reap-stale.tombstone-orphan`;
+            const retainedOwnerToken = `${process.pid}:recovery-link-failed-owner`;
+            yield* fs.writeFileString(retainedTombstonePath, `${DEAD_PID}:displaced-generation`);
+            const failedRestoreFileSystem = FileSystem.FileSystem.of({
+              ...fs,
+              link: Effect.fn("FileSystem.FileSystem.link")((existingPath, newPath) =>
+                Str.Equivalence(existingPath, retainedTombstonePath) && Str.Equivalence(newPath, retainedLockPath)
+                  ? fs.link(path.join(tempRoot.root, "missing-tombstone"), newPath)
+                  : fs.link(existingPath, newPath)
+              ),
+            });
+
+            expect(
+              yield* acquireJournalFileLock(retainedLockPath, retainedOwnerToken, 1).pipe(
+                Effect.provideService(FileSystem.FileSystem, failedRestoreFileSystem)
+              )
+            ).toBe(true);
+            expect(yield* fs.exists(retainedTombstonePath)).toBe(true);
+            yield* releaseAdmissionJournalLockForTesting(retainedLockPath, retainedOwnerToken);
           })
         );
       })

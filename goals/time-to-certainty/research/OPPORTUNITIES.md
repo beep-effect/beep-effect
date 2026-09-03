@@ -130,3 +130,14 @@ session/machine ids, quote only the minimal identifying error text.
 - **Would have prevented it:** take the lock path into a reclaimer-owned tombstone before inspecting
   its generation, restore a displaced generation with a no-clobber hard link, and require every
   journal publisher to revalidate its acquired lock generation at the publication boundary.
+
+## 2026-09-03 — Per-file coverage attributed an indirect callee change to an untouched command
+
+- **Doing:** restoring the A5c hosted coverage ratchet after the scheduler recovery suite was green.
+- **Evidence:** PR #993 changed admission reap, promotion, and reconciliation behavior, but the
+  per-file ratchet reported `Quality.command.ts` below its committed floor even though that file had
+  no diff; scheduler tests no longer reached enough of the command adapters that call those paths.
+- **Would have prevented it:** extend A4's environment-only and attribution taxonomy with an
+  `indirect` kind that records an untouched caller whose coverage changed because its callee or
+  driving fixture changed, so the ratchet identifies the causal PR without presenting the caller
+  as a direct source regression.
