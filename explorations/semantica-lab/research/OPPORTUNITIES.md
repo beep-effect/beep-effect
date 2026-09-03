@@ -55,6 +55,15 @@ closeout. Redact per repo law (public repo: no secrets, `~` for home paths, mini
   — a success-shaped fallback in-repo. Both are repo-issue candidates independent of this
   packet, and both validate the shared-schema laws (span fidelity, typed degradation).
 
+- **2026-09-03 — The archived C2 ledger is a zero-spend fixture.** `c2 --offline` regenerates the
+  ratified full-W1 ledger from the provider cache (report digest `2a2089ea…`) in about thirteen
+  minutes with no hosted calls, so the storage-inversion probes (retraction, compaction, erasure,
+  crash mid-compaction) can all be judged as "does the C2 report digest survive". Same trick
+  bounds the reasoning spike's retraction fixture class. Absorbed into MAP v1.1 §S and §R.
+- **2026-09-03 — The atlas-edit need never touches the IR extractor.** The rows P5 declined are
+  decision data (A9), so the D5 sync splits into a verdict lane (hours, docs plus Notion) and a
+  facts lane (the Python extractor, still gated on 0.6.7+). Absorbed into MAP v1.1 §A.
+
 ## Dispositions (2026-08-24 opportunities grill — DECISIONS O1–O5)
 
 Every entry above now has a fate: **absorbed** — pgvector convergence (storage runner-up),
@@ -502,3 +511,52 @@ ratifies.
   session's own Notion connection with a canary write and SQL read-back. Prevention: check
   `codex mcp list` auth state before delegating Notion work, and re-run `codex mcp login notion`
   when it reports a revoked grant.
+
+- **2026-09-03 — The D5 IR extractor was deleted with no successor home.** PR #882 ("clear final
+  quality diagnostics") removed `scratchpad/semantica-ir/{extract.py,ir-schema.json,README.md}`
+  that #790 had committed, so the only pipeline stage D5 ever shipped now lives in git history
+  (`fd560ca8e5`) and in stale sibling checkouts. The facts lane cannot start without re-deciding
+  its home. Prevention: when a quality sweep deletes a packet's working tool, record the deletion
+  and the recovery pointer in that packet's ledger in the same PR.
+
+- **2026-09-03 — The v3 `beep-effect-logos` archive is absent from its recorded path.**
+  `research/SOURCES.md` places the Apache-2.0 clone under `projects/beep-effect-logos`; a
+  depth-4 search of `~/YeeBois`, `~/data-home`, and `~/.cache/beep` found nothing on 2026-09-03,
+  so the `rete` salvage and its 46-test oracle are unreachable until the archive is relocated or
+  restored. MAP v1.1 makes that a P3 entry condition. Prevention: out-of-repo sources cited as
+  salvage inputs need a durable locator (remote URL or archive digest), not a workstation path.
+
+- **2026-09-03 — A read-only Codex review lane cannot deliver its report as a file.** The Sol
+  skeptic pass over MAP v1.1 ran with `-s read-only` plus `--add-dir <scratchpad>`, yet its
+  `apply_patch` to the scratchpad was rejected, so the report survived only in the `-o` last-message
+  capture and was archived by the orchestrator. Prevention: give review lanes `-s workspace-write`
+  scoped to a scratch directory, or always capture `-o` and treat that file as the deliverable.
+
+### 2026-09-03 (ratification session) — friction receipts
+
+- **Workflow children cannot route to Sol from a direct session.** Doing: building source-verified
+  teaching briefs for R1–R3 with the native Workflow tool. Evidence: a probe child on
+  `gpt-5.6-sol(xhigh)` failed in 460 ms with "There's an issue with the selected model"; the
+  session's `ANTHROPIC_BASE_URL` was `api.anthropic.com`. Cost: the first extraction and two verify
+  passes ran on Fable children before the operator stopped the workflow; the work was redone as
+  three `codex exec -m gpt-5.6-sol` xhigh lanes plus a critic (refuted 8/12, 9/12, 6/12 checks
+  on briefs that had already passed two Fable passes). Prevention: check the base URL before any
+  Workflow launch and start Fable orchestrators that need Sol children as `claudep`.
+- **Codex `-o` last-message capture is unreliable for long JSON answers.** Doing: the same lanes,
+  each asked to print its corrected brief as the final message and to write it under the handoff
+  directory. Evidence: only the R3 lane produced `<handoff>/sol-verify-R3.last.md`; R1 and R2
+  produced none, while all three wrote their JSON files. Prevention: always require the file
+  write; treat `-o` as a courtesy copy.
+
+### 2026-09-03 (graduation ceremony) — friction receipts
+
+- **`beep goals bootstrap` compiles a plan but has no writer.** Doing: scaffolding the three
+  re-entry packets per the graduation contract ("scaffold from `goals/_template`"). Evidence:
+  `bun run beep goals bootstrap --slug … --plan --json` prints a `goal-materialization-plan/v1`
+  with nine `create` entries per packet and the help text says "no writer exists"; the ceremony
+  wrote each entry's payload to its path with a nine-line `jq` loop, then patched phases, sources
+  of truth, stop conditions and capability edges by hand. Cost: a hand-rolled writer per
+  ceremony and no `validations` run (`manifest-decodes`, `doctor-clean`, `index-regenerates`,
+  `readme-lifecycle-line`, `goal-md-within-budget`) until the gates were run separately.
+  Prevention: ship `--apply` for the plan the compiler already produces and run its declared
+  validations after writing.
