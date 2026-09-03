@@ -25,6 +25,7 @@ import {
   RuntimeRootChoice,
   reapAdmissionState,
   releaseAdmissionJournalLockForTesting,
+  repoRunSafeArtifactName,
   validatePrivateCoordinationDirectory,
   withQualityAdmission,
   YeetAdmissionLease,
@@ -691,6 +692,38 @@ describe("quality-scheduler", () => {
       })
     ));
 
+  it("preserves an abandoned lock when its reaper claim token cannot be verified", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const lockPath = path.join(tempRoot.root, "journal.lock");
+            const observedToken = `${DEAD_PID}:abandoned-generation`;
+            yield* fs.makeDirectory(tempRoot.root, { recursive: true, mode: 0o700 });
+            yield* fs.writeFileString(lockPath, observedToken);
+            const mismatchedClaimFileSystem = FileSystem.FileSystem.of({
+              ...fs,
+              readFileString: Effect.fn("FileSystem.FileSystem.readFileString")((target, encoding) =>
+                Str.includes(".reap-")(target)
+                  ? Effect.succeed(`${process.pid}:replacement-generation`)
+                  : fs.readFileString(target, encoding)
+              ),
+            });
+
+            const acquired = yield* acquireJournalFileLock(lockPath, `${process.pid}:contender`, 1).pipe(
+              Effect.provideService(FileSystem.FileSystem, mismatchedClaimFileSystem)
+            );
+
+            expect(acquired).toBe(false);
+            expect(yield* fs.readFileString(lockPath)).toBe(observedToken);
+          })
+        );
+      })
+    ));
+
   it("releases only the owned journal lock generation", () =>
     Effect.runPromise(
       Effect.gen(function* () {
@@ -710,6 +743,10 @@ describe("quality-scheduler", () => {
         );
       })
     ));
+
+  it("uses a stable fallback for an empty artifact-safe name", () => {
+    expect(repoRunSafeArtifactName("///")).toBe("repo");
+  });
 
   it("decodes legacy lease files without nonce or enqueuedAtMillis", () =>
     Effect.runPromise(

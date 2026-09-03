@@ -7,7 +7,11 @@ import {
   QualityTaskLaneRun,
   QualityTaskLaneRunReport,
 } from "@beep/repo-cli/test/Quality";
-import { provideRuntimeRootForTesting, RuntimeRootChoice } from "@beep/repo-cli/test/RepoRun";
+import {
+  appendEncodedAttemptJournalEvent,
+  provideRuntimeRootForTesting,
+  RuntimeRootChoice,
+} from "@beep/repo-cli/test/RepoRun";
 import {
   acquireFullProofFallbackLockOrObserveAtPath,
   acquireFullProofFallbackLockOrObserveAtPathForTesting,
@@ -2179,6 +2183,24 @@ describe("yeet attempt journal", () => {
 
         expect(result.elapsedMs).toBe(1000);
       })
+    ));
+
+  it("reports an exhausted attempt-journal lock without appending", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const journalPath = path.join(tmpDir, "attempts.ndjson");
+          yield* fs.writeFileString(`${journalPath}.lock`, `${process.pid}:live-holder`);
+
+          const failure = yield* appendEncodedAttemptJournalEvent(journalPath, "{}", "attempt-started", 1).pipe(
+            Effect.flip
+          );
+
+          expect(failure.message).toContain("stayed busy");
+        })
+      )
     ));
 
   it("schema-decodes events, retains 50 rows, and receipts every eviction", () =>

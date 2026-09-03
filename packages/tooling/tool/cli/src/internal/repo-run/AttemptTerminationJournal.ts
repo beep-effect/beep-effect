@@ -274,6 +274,7 @@ const compactJournal = Effect.fn("AttemptTerminationJournal.compact")(function* 
  * @param journalPath - Absolute path of the branch-scoped attempt journal.
  * @param line - A schema-encoded event without a trailing newline.
  * @param eventTag - Event tag used in a lock-contention diagnostic.
+ * @param retryAttempts - Maximum journal-lock acquisition attempts.
  * @returns An effect that appends, syncs, and compacts the journal.
  * @category utilities
  * @since 0.0.0
@@ -281,7 +282,8 @@ const compactJournal = Effect.fn("AttemptTerminationJournal.compact")(function* 
 export const appendEncodedAttemptJournalEvent = Effect.fn("AttemptTerminationJournal.appendEncoded")(function* (
   journalPath: string,
   line: string,
-  eventTag: AttemptJournalRetentionEvent["_tag"]
+  eventTag: AttemptJournalRetentionEvent["_tag"],
+  retryAttempts = LOCK_RETRY_ATTEMPTS
 ): Effect.fn.Return<void, QualitySchedulerError, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -290,7 +292,7 @@ export const appendEncodedAttemptJournalEvent = Effect.fn("AttemptTerminationJou
   yield* fs
     .makeDirectory(path.dirname(journalPath), { recursive: true })
     .pipe(Effect.mapError(QualitySchedulerError.new(`Failed to create Yeet attempt journal directory.`)));
-  if (!(yield* acquireJournalFileLock(lockPath, lockToken, LOCK_RETRY_ATTEMPTS))) {
+  if (!(yield* acquireJournalFileLock(lockPath, lockToken, retryAttempts))) {
     return yield* QualitySchedulerError.make({
       message: `Yeet attempt journal lock "${lockPath}" stayed busy; could not append ${eventTag}.`,
     });
