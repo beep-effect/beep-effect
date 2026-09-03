@@ -3,6 +3,7 @@ import {
   AdmissionConfig,
   AdmissionJournalAdmitted,
   AdmissionJournalEvent,
+  AdmissionJournalLeaseEvicted,
   AdmissionRequest,
   AdmissionSnapshot,
   acquireJournalFileLock,
@@ -11,6 +12,7 @@ import {
   admissionProtocolStatus,
   admissionStatus,
   admissionTokenWeight,
+  appendAdmissionEvictionJournalEvent,
   appendAdmissionJournalEvent,
   attemptJournalPathForCheckout,
   decodeAdmissionJournalEvent,
@@ -22,6 +24,7 @@ import {
   processIdentityStatus,
   processIdentityStatusWithStartForTesting,
   processStartIdentityForPid,
+  processStartIdentityProbeForTesting,
   provideRuntimeRootForTesting,
   RunScopeRecord,
   RuntimeRootChoice,
@@ -62,6 +65,23 @@ const DEAD_PID = 2_147_483_647;
 const JOURNALED_ATTEMPT_ID = S.decodeSync(UUID)("550e8400-e29b-41d4-a716-446655440020");
 
 describe("process identity liveness", () => {
+  it("builds both portable process-inspector probes", () => {
+    expect(processStartIdentityProbeForTesting({ pid: 42, platform: "linux" })).toStrictEqual({
+      prefix: "ps",
+      command: ["ps", "-o", "lstart=", "-p", "42"],
+    });
+    expect(processStartIdentityProbeForTesting({ pid: 42, platform: "win32" })).toStrictEqual({
+      prefix: "win",
+      command: [
+        "powershell.exe",
+        "-NoProfile",
+        "-NonInteractive",
+        "-Command",
+        "(Get-Process -Id 42 -ErrorAction Stop).StartTime.ToUniversalTime().Ticks",
+      ],
+    });
+  });
+
   it.effect("uses a portable process identity when procfs is unavailable", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
@@ -84,6 +104,7 @@ describe("process identity liveness", () => {
           )
         ).toBe("alive");
       }
+      expect(O.isNone(yield* processStartIdentityForPid(DEAD_PID))).toBe(true);
     }).pipe(provideScopedLayer(PlatformLayer))
   );
 
@@ -187,6 +208,15 @@ const journalAdmitted = (index: number) =>
     enqueuedAtMillis: index,
     admittedAtMillis: index,
   });
+
+const journalLeaseEvicted = AdmissionJournalLeaseEvicted.make({
+  schemaVersion: "yeet-admission-journal/v2",
+  _tag: "admission-lease-evicted",
+  nonce: "evicted-lease",
+  pid: DEAD_PID,
+  evictedAtMillis: 1,
+  reason: "owner-dead-or-reused",
+});
 
 const request = (overrides: Partial<Parameters<typeof AdmissionRequest.make>[0]> = {}) =>
   AdmissionRequest.make({
@@ -634,6 +664,12 @@ describe("quality-scheduler", () => {
             yield* fs.writeFileString(lockPath, `${process.pid}:live-holder`);
             const busy = yield* appendAdmissionJournalEvent(tempRoot.root, journalAdmitted(0)).pipe(Effect.flip);
             expect(busy.message).toContain("stayed busy");
+            const protocolBusy = yield* setAdmissionEvictionProtocol("on").pipe(Effect.flip);
+            expect(protocolBusy.message).toContain("could not change the protocol marker");
+            const evictionBusy = yield* appendAdmissionEvictionJournalEvent(tempRoot.root, journalLeaseEvicted).pipe(
+              Effect.flip
+            );
+            expect(evictionBusy.message).toContain("dropping one admission-lease-evicted event");
             expect(yield* readJournalEvents(tempRoot.root)).toHaveLength(0);
             const agedLiveSeconds = ((yield* Clock.currentTimeMillis) - 301_000) / 1_000;
             yield* fs.utimes(lockPath, agedLiveSeconds, agedLiveSeconds);

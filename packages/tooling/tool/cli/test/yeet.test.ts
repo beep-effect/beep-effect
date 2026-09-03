@@ -2436,6 +2436,7 @@ describe("yeet attempt journal", () => {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
           const journalPath = path.join(tmpDir, "attempts.ndjson");
+          expect(yield* reconcileAttemptJournalsForCheckout(tmpDir)).toBe(0);
           expect(yield* reconcileAttemptJournal(journalPath)).toBe(0);
 
           yield* fs.writeFileString(journalPath, "");

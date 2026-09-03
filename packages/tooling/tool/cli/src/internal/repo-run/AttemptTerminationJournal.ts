@@ -194,7 +194,6 @@ const retainedJournalLines = Effect.fn("AttemptTerminationJournal.retainedLines"
   events: ReadonlyArray<AttemptJournalRetentionEvent>,
   lines: ReadonlyArray<string>
 ) {
-  if (A.length(events) <= RETAINED_ROWS) return lines;
   const attemptRows = A.getSomes(
     A.map(A.zip(events, lines), ([event, line]) =>
       AttemptJournalRetentionEvent.guards["journal-compacted"](event) ? O.none() : O.some({ event, line })

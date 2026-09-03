@@ -79,6 +79,7 @@ export {
   processIdentityStatus,
   processIdentityStatusWithStartForTesting,
   processStartIdentityForPid,
+  processStartIdentityProbeForTesting,
   processStartTimeForPid,
 } from "./ProcessIdentity.ts";
 

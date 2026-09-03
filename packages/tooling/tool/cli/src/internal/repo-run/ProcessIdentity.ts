@@ -103,10 +103,12 @@ export const processStartTimeForPid = Effect.fnUntraced(function* (
     .pipe(Effect.map(parseAdmissionProcStatStartTime), Effect.orElseSucceed(O.none<string>));
 });
 
-const processStartIdentityFromSystemCommand = (pid: number): Effect.Effect<O.Option<string>> =>
-  Effect.try(() => {
-    const windows = process.platform === "win32";
-    const command = windows
+const processStartIdentityProbe = (options: { readonly pid: number; readonly platform: NodeJS.Platform }) => {
+  const { pid, platform } = options;
+  const windows = platform === "win32";
+  return {
+    prefix: windows ? "win" : "ps",
+    command: windows
       ? [
           "powershell.exe",
           "-NoProfile",
@@ -114,15 +116,39 @@ const processStartIdentityFromSystemCommand = (pid: number): Effect.Effect<O.Opt
           "-Command",
           `(Get-Process -Id ${pid} -ErrorAction Stop).StartTime.ToUniversalTime().Ticks`,
         ]
-      : ["ps", "-o", "lstart=", "-p", `${pid}`];
+      : ["ps", "-o", "lstart=", "-p", `${pid}`],
+  };
+};
+
+/**
+ * Build the platform process-inspector probe used when procfs is unavailable.
+ *
+ * **Example** (Build a Unix probe)
+ *
+ * ```ts
+ * import { processStartIdentityProbeForTesting } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(processStartIdentityProbeForTesting({ pid: 42, platform: "linux" }).prefix) // "ps"
+ * ```
+ *
+ * @param options - Process id and platform whose process inspector should be selected.
+ * @returns The identity prefix and command arguments for the selected platform.
+ * @category testing
+ * @since 0.0.0
+ */
+export const processStartIdentityProbeForTesting = processStartIdentityProbe;
+
+const processStartIdentityFromSystemCommand = (pid: number): Effect.Effect<O.Option<string>> =>
+  Effect.try(() => {
+    const probe = processStartIdentityProbe({ pid, platform: process.platform });
     const result = Bun.spawnSync({
-      cmd: command,
+      cmd: probe.command,
       env: { ...Bun.env, LANG: "C", LC_ALL: "C" },
       stderr: "ignore",
       stdout: "pipe",
     });
     const output = Str.trim(result.stdout.toString());
-    return result.success && Str.isNonEmpty(output) ? O.some(`${windows ? "win" : "ps"}:${output}`) : O.none<string>();
+    return result.success && Str.isNonEmpty(output) ? O.some(`${probe.prefix}:${output}`) : O.none<string>();
   }).pipe(Effect.orElseSucceed(O.none<string>));
 
 /**
