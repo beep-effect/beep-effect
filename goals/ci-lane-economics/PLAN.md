@@ -9,7 +9,7 @@ Status: `active`
 | P0 Cache-warm census | complete | Re-measure every required lane's p50/p95 on cache-warm PR and push waves (attempt-one successful runs only; failures and reruns feed flake attribution, never the percentiles). | Completed 2026-08-13 via the explicit 10-wave alternative; see `research/cache-warm-lane-census.md`. |
 | P1 Placement decisions | complete | Decide fleet vs hosted vs free re-fit per lane from the census plus cost model. | Signed and live-falsified 2026-08-13; see `research/placement-decision.md`. No fleet additions; the one hosted re-fit candidate remains on its existing fleet placement after two runner shutdowns. |
 | P2 Execute moves | complete | Move lanes per the placement table (workflow lane edits; sharding where caching cannot help). | Completed 2026-08-16: every signed zero-expansion move merged through #719. |
-| P3 Evidence + close | in progress | Prove the charter on live waves and close. | The 2026-08-23 through 2026-08-29 UTC week failed on Lint at 20m31s and Test Unit at 22m48s; repair decision pending. |
+| P3 Evidence + close | in progress | Prove the charter on live waves and close. | The current-ruleset week still fails at Lint 21m00s and Test Unit 24m50s. Tail attribution and the signed $0 hosted-shard repair are in `research/current-ruleset-week-p95.md`, `research/tail-attribution.md`, and `research/repair-decision.md`; implementation plus a fresh representative-week admission remain. |
 
 ## Notes
 

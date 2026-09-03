@@ -567,3 +567,60 @@ evidence, what would have prevented it). Redact for the public repo.
 - **Would have prevented it:** fetch the durable base independently from an
   optional topic ref, confirm the topic with `ls-remote`, and prune only that
   exact tracking ref after the base ref and merge ancestry are proven.
+
+## 2026-09-03 — prior CI-economics memory recap was missing
+
+- **Doing:** recovering the prior P2/P3 evidence context before reproducing the
+  current-ruleset census and signing the next repair decision.
+- **Evidence:** the durable memory registry named a CI-lane-economics rollout
+  summary, but that referenced file was absent from the rollout-summary
+  directory; only the older August 13 census recap was present.
+- **Would have prevented it:** validate registry targets when producing durable
+  memory summaries, or retain the packet-local evidence as the only canonical
+  handoff pointer.
+
+## 2026-09-03 — Actions job logs require explicit escape-sequence consent
+
+- **Doing:** fetching a representative p90-tail job log to extract Turbo task
+  counts, cache outcomes, and the package-level long poles.
+- **Evidence:** `gh api .../actions/jobs/<id>/logs` refused to emit the log
+  because it contains terminal escape sequences and left the redirected raw
+  file empty; the diagnostic requires `--allow-escape-sequences`.
+- **Would have prevented it:** make the packet's log-collection recipe include
+  the explicit flag, or provide a structured Turbo-summary artifact that avoids
+  terminal control data entirely.
+
+## 2026-09-03 — historical PR heads no longer equal their associated PR head
+
+- **Doing:** checking whether each representative tail wave changed `bun.lock`
+  or root configuration by comparing its head SHA with the PR base SHA.
+- **Evidence:** the commits-to-pulls endpoint associated several historical
+  commits with a PR whose current `head.sha` had advanced, so an exact-head
+  predicate left 14 of 29 selected heads without a base even though the PR
+  association was still present.
+- **Would have prevented it:** retain the run-time PR number and base SHA in the
+  census corpus, or archive a per-run compare receipt before the branch head can
+  advance or disappear.
+
+## 2026-09-03 — hosted-runner disk documentation does not describe live geometry
+
+- **Doing:** deciding whether Lint and Test Unit can safely avoid destructive
+  image cleanup from their measured disk headroom.
+- **Evidence:** GitHub documents 14 GB SSD for standard Ubuntu runners, while
+  every one of the 87 current tail logs reported a 145 GiB root with at least
+  86 GiB free before cleanup; the cleanup reclaimed 21–22 GiB. The published
+  capacity cannot establish a safe unconditional skip for this live image.
+- **Would have prevented it:** expose a stable runner-image free-space
+  guarantee or make the workflow gate cleanup from its own pre-step `df`
+  census, retaining the current cleanup below an evidence-backed threshold.
+
+## 2026-09-03 — manifest evidence update again drifted the goals index
+
+- **Doing:** verifying packet bookkeeping after adding the three P3 research
+  reports and signed repair status to the initiative manifest.
+- **Evidence:** `bun run beep goals index --check` failed with `local
+  goals/INDEX.md drifts from goals/*/ops/manifest.json` even though
+  `goals doctor` had already reported no blocking findings.
+- **Would have prevented it:** make manifest-changing packet commands update
+  the deterministic goals projection atomically, or have `goals doctor`
+  surface projection drift before a separate index check.
