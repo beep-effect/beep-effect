@@ -2269,6 +2269,53 @@ describe("yeet attempt journal", () => {
       )
     ));
 
+  it("serializes concurrent appenders while compacting the bounded journal", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const tempContext = RepoRunContext.make({ ...context, cwd: tmpDir, repoRoot: tmpDir });
+          const attemptStarted = (index: number) =>
+            YeetAttemptStarted.make({
+              schemaVersion: "yeet-attempt-journal/v1",
+              _tag: "attempt-started",
+              attemptId: attemptUuid(`00000000-0000-4000-8000-${Str.padStart(12, "0")(`${index}`)}`),
+              runId: "repo-cli-yeet",
+              branch: "repo-cli-yeet",
+              base: "origin/main",
+              head: "HEAD",
+              mode: "verify",
+              startedAt: "2026-09-03T00:00:00.000Z",
+            });
+          yield* Effect.forEach(
+            A.makeBy(50, attemptStarted),
+            (event) => appendYeetAttemptJournalEvent(tempContext, event),
+            {
+              discard: true,
+              concurrency: 1,
+            }
+          );
+          const concurrent = A.makeBy(10, (offset) => attemptStarted(100 + offset));
+          yield* Effect.forEach(concurrent, (event) => appendYeetAttemptJournalEvent(tempContext, event), {
+            discard: true,
+            concurrency: "unbounded",
+          });
+
+          const journalPath = yield* attemptJournalPath(tempContext);
+          const lines = pipe(yield* fs.readFileString(journalPath), Str.split("\n"), A.filter(Str.isNonEmpty));
+          const events = yield* Effect.forEach(lines, decodeYeetAttemptJournalEvent);
+          const starts = A.filter(events, YeetAttemptJournalEvent.guards["attempt-started"]);
+          const retainedIds = A.map(starts, (event) => event.attemptId);
+
+          expect(events).toHaveLength(50);
+          expect(starts).toHaveLength(49);
+          expect(A.length(A.dedupe(retainedIds))).toBe(49);
+          expect(A.every(concurrent, (event) => A.contains(retainedIds, event.attemptId))).toBe(true);
+          expect(yield* fs.exists(`${journalPath}.lock`)).toBe(false);
+        })
+      )
+    ));
+
   it("recovers from a torn trailing record instead of bricking later attempts", () =>
     Effect.runPromise(
       withTempDirectory((tmpDir) =>

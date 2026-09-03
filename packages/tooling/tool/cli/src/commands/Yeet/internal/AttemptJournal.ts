@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { randomUUID } from "node:crypto";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { UUID } from "@beep/schema/String";
@@ -14,6 +15,7 @@ import { constant, dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { acquireJournalFileLock, releaseJournalFileLock } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { runArtifactPathForContext } from "./ArtifactPaths.ts";
 import { YeetProofTier } from "./Planner.ts";
@@ -24,6 +26,7 @@ import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 const $I = $RepoCliId.create("commands/Yeet/internal/AttemptJournal");
 const JOURNAL_FILE_NAME = "attempts.ndjson";
 const RETAINED_ROWS = 50;
+const LOCK_RETRY_ATTEMPTS = 400;
 const textEncoder = new TextEncoder();
 
 const attemptInputFactFields = {
@@ -301,6 +304,44 @@ const eventRecordedAt = (event: YeetAttemptJournalEvent): string =>
     "journal-compacted": (compacted) => compacted.recordedAt,
   });
 
+const retainedJournalLines = Effect.fn("YeetAttemptJournal.retainedLines")(function* (
+  events: ReadonlyArray<YeetAttemptJournalEvent>,
+  lines: ReadonlyArray<string>
+) {
+  if (A.length(events) <= RETAINED_ROWS) return lines;
+  const attemptRows = pipe(
+    A.zip(events, lines),
+    A.filter(([event]) => event._tag !== "journal-compacted")
+  );
+  const retainedRows = A.takeRight(attemptRows, RETAINED_ROWS - 1);
+  const recordedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
+  const receipt = yield* encodeEvent(
+    YeetAttemptJournalCompacted.make({
+      schemaVersion: "yeet-attempt-journal/v1",
+      _tag: "journal-compacted",
+      recordedAt,
+      evictedCount: NonNegativeInt.make(A.length(events) - A.length(retainedRows)),
+      oldestEvictedRecordedAt: pipe(
+        A.appendAll(
+          A.filter(events, YeetAttemptJournalEvent.guards["journal-compacted"]),
+          A.dropRight(
+            A.filter(events, (event) => event._tag !== "journal-compacted"),
+            RETAINED_ROWS - 1
+          )
+        ),
+        A.sortWith(eventRecordedAt, Order.String),
+        A.head,
+        O.map(eventRecordedAt),
+        O.getOrElse(constant(recordedAt))
+      ),
+    })
+  ).pipe(Effect.mapError(YeetCommandError.new("Failed to encode Yeet attempt journal compaction receipt.")));
+  return A.append(
+    A.map(retainedRows, ([, line]) => line),
+    receipt
+  );
+});
+
 const compactJournal = Effect.fn("YeetAttemptJournal.compact")(function* (
   journalPath: string
 ): Effect.fn.Return<void, YeetCommandError, FileSystem.FileSystem> {
@@ -324,45 +365,12 @@ const compactJournal = Effect.fn("YeetAttemptJournal.compact")(function* (
   if (!torn && A.length(events) <= RETAINED_ROWS) {
     return;
   }
-  const requiresReceipt = A.length(events) > RETAINED_ROWS;
-  const attemptRows = pipe(
-    A.zip(events, lines),
-    A.filter(([event]) => event._tag !== "journal-compacted")
-  );
-  const retainedRows = requiresReceipt ? A.takeRight(attemptRows, RETAINED_ROWS - 1) : attemptRows;
-  const retainedLines = requiresReceipt ? A.map(retainedRows, ([, line]) => line) : lines;
-  const evictedCount = requiresReceipt ? A.length(events) - A.length(retainedRows) : 0;
-  const recordedAt = requiresReceipt ? yield* DateTime.now.pipe(Effect.map(DateTime.formatIso)) : Str.empty;
-  const receiptLines = requiresReceipt
-    ? A.of(
-        yield* encodeEvent(
-          YeetAttemptJournalCompacted.make({
-            schemaVersion: "yeet-attempt-journal/v1",
-            _tag: "journal-compacted",
-            recordedAt,
-            evictedCount: NonNegativeInt.make(evictedCount),
-            oldestEvictedRecordedAt: pipe(
-              A.appendAll(
-                A.filter(events, YeetAttemptJournalEvent.guards["journal-compacted"]),
-                A.dropRight(
-                  A.filter(events, (event) => event._tag !== "journal-compacted"),
-                  RETAINED_ROWS - 1
-                )
-              ),
-              A.sortWith(eventRecordedAt, Order.String),
-              A.head,
-              O.map(eventRecordedAt),
-              O.getOrElse(constant(recordedAt))
-            ),
-          })
-        ).pipe(Effect.mapError(YeetCommandError.new("Failed to encode Yeet attempt journal compaction receipt.")))
-      )
-    : A.empty<string>();
+  const retainedLines = yield* retainedJournalLines(events, lines);
   yield* fs
     .writeFileString(
       journalPath,
       pipe(
-        A.appendAll(retainedLines, receiptLines),
+        retainedLines,
         A.map((line) => `${line}\n`),
         A.join(Str.empty)
       )
@@ -394,26 +402,36 @@ export const appendYeetAttemptJournalEvent = Effect.fn("YeetAttemptJournal.appen
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const journalPath = yield* attemptJournalPath(context);
+  const lockPath = `${journalPath}.lock`;
+  const lockToken = `${process.pid}:${randomUUID()}`;
   const line = yield* encodeEvent(event).pipe(
     Effect.mapError(YeetCommandError.new("Failed to encode Yeet attempt journal event."))
   );
   yield* fs
     .makeDirectory(path.dirname(journalPath), { recursive: true })
     .pipe(Effect.mapError(YeetCommandError.new(`Failed to create Yeet attempt journal directory.`)));
-  const journalExists = yield* fs.exists(journalPath).pipe(Effect.orElseSucceed(constant(false)));
-  yield* journalExists ? compactJournal(journalPath) : Effect.void;
-  yield* Effect.scoped(
-    Effect.gen(function* () {
-      const file = yield* fs
-        .open(journalPath, { flag: "a" })
-        .pipe(Effect.mapError(YeetCommandError.new(`Failed to open Yeet attempt journal "${journalPath}".`)));
-      yield* file
-        .writeAll(textEncoder.encode(`${line}\n`))
-        .pipe(Effect.mapError(YeetCommandError.new(`Failed to append Yeet attempt journal "${journalPath}".`)));
-      yield* file.sync.pipe(
-        Effect.mapError(YeetCommandError.new(`Failed to sync Yeet attempt journal "${journalPath}".`))
-      );
-    })
-  );
-  yield* compactJournal(journalPath);
+  if (!(yield* acquireJournalFileLock(lockPath, lockToken, LOCK_RETRY_ATTEMPTS))) {
+    return yield* YeetCommandError.make({
+      message: `Yeet attempt journal lock "${lockPath}" stayed busy; could not append ${event._tag}.`,
+    });
+  }
+  const appendLocked = Effect.gen(function* () {
+    const journalExists = yield* fs.exists(journalPath).pipe(Effect.orElseSucceed(constant(false)));
+    yield* journalExists ? compactJournal(journalPath) : Effect.void;
+    yield* Effect.scoped(
+      Effect.gen(function* () {
+        const file = yield* fs
+          .open(journalPath, { flag: "a" })
+          .pipe(Effect.mapError(YeetCommandError.new(`Failed to open Yeet attempt journal "${journalPath}".`)));
+        yield* file
+          .writeAll(textEncoder.encode(`${line}\n`))
+          .pipe(Effect.mapError(YeetCommandError.new(`Failed to append Yeet attempt journal "${journalPath}".`)));
+        yield* file.sync.pipe(
+          Effect.mapError(YeetCommandError.new(`Failed to sync Yeet attempt journal "${journalPath}".`))
+        );
+      })
+    );
+    yield* compactJournal(journalPath);
+  });
+  yield* Effect.ensuring(appendLocked, releaseJournalFileLock(lockPath, lockToken));
 });

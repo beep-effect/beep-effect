@@ -320,11 +320,36 @@ const tryAcquireJournalLock = Effect.fnUntraced(function* (
   return acquired;
 });
 
-const acquireJournalLock = Effect.fnUntraced(function* (
+/**
+ * Acquire an owned-generation lock for a serialized journal rewrite.
+ *
+ * **Details**
+ *
+ * A hard link publishes the complete owner token atomically. Contenders retry
+ * briefly and reclaim locks whose owning process is dead or whose age exceeds
+ * the corruption backstop.
+ *
+ * **Example** (Acquire a journal lock)
+ *
+ * ```ts
+ * import { acquireJournalFileLock } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(typeof acquireJournalFileLock) // "function"
+ * ```
+ *
+ * @param lockPath - Exclusive lock path adjacent to the serialized journal.
+ * @param token - Unique `pid:uuid` generation owned by the caller.
+ * @param retryAttempts - Maximum atomic-acquisition attempts before returning false.
+ * @returns Whether the caller acquired the lock within the retry window.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const acquireJournalFileLock = Effect.fnUntraced(function* (
   lockPath: string,
-  token: string
+  token: string,
+  retryAttempts = LOCK_RETRY_ATTEMPTS
 ): Effect.fn.Return<boolean, never, FileSystem.FileSystem> {
-  for (let attempt = 0; attempt < LOCK_RETRY_ATTEMPTS; attempt++) {
+  for (let attempt = 0; attempt < retryAttempts; attempt++) {
     if (yield* tryAcquireJournalLock(lockPath, token)) {
       return true;
     }
@@ -333,7 +358,24 @@ const acquireJournalLock = Effect.fnUntraced(function* (
   return false;
 });
 
-const releaseJournalLock = Effect.fnUntraced(function* (
+/**
+ * Release a serialized journal lock only while its generation is still owned.
+ *
+ * **Example** (Release a journal lock)
+ *
+ * ```ts
+ * import { releaseJournalFileLock } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(typeof releaseJournalFileLock) // "function"
+ * ```
+ *
+ * @param lockPath - Exclusive lock path adjacent to the serialized journal.
+ * @param token - Unique `pid:uuid` generation previously acquired by the caller.
+ * @returns An effect that removes only the caller's lock generation.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const releaseJournalFileLock = Effect.fnUntraced(function* (
   lockPath: string,
   token: string
 ): Effect.fn.Return<void, never, FileSystem.FileSystem> {
@@ -363,7 +405,7 @@ const releaseJournalLock = Effect.fnUntraced(function* (
  * @category utilities
  * @since 0.0.0
  */
-export const releaseAdmissionJournalLockForTesting = releaseJournalLock;
+export const releaseAdmissionJournalLockForTesting = releaseJournalFileLock;
 
 const publishJournalAtomic = Effect.fnUntraced(function* (
   journalPath: string,
@@ -475,10 +517,10 @@ export const appendAdmissionJournalEvent = Effect.fn("AdmissionJournal.append")(
   yield* fs
     .makeDirectory(root, { recursive: true, mode: 0o700 })
     .pipe(Effect.mapError(QualitySchedulerError.new("Failed to create admission journal directory.")));
-  if (!(yield* acquireJournalLock(lockPath, token))) {
+  if (!(yield* acquireJournalFileLock(lockPath, token))) {
     return yield* QualitySchedulerError.make({
       message: `Admission journal lock "${lockPath}" stayed busy; dropping one ${event._tag} event.`,
     });
   }
-  yield* Effect.ensuring(rewriteJournalLocked(journalPath, event, line), releaseJournalLock(lockPath, token));
+  yield* Effect.ensuring(rewriteJournalLocked(journalPath, event, line), releaseJournalFileLock(lockPath, token));
 });
