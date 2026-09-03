@@ -110,8 +110,8 @@ export const contactRequestResponseWithSubmit: {
   2,
   Effect.fn("OipContact.contactRequestResponseWithSubmit")(function* (request: Request, submit: SubmitContact) {
     const payloadOption = yield* readContactFormPayload(request).pipe(
-      Effect.map(O.some),
-      Effect.catchTag("ContactRoutePayloadError", () => Effect.succeed(O.none()))
+      Effect.asSome,
+      Effect.catchTag("ContactRoutePayloadError", () => Effect.succeedNone)
     );
 
     if (O.isNone(payloadOption)) {

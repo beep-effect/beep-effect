@@ -8,6 +8,7 @@
  */
 
 import { taggedEnum } from "effect/Data";
+import { dual } from "effect/Function";
 import { hasProperty, isString, isUndefined } from "effect/Predicate";
 import { String as StringSchema, TaggedError } from "effect/Schema";
 import { declaredFieldsEquivalence } from "./declaredFieldsEquivalence.ts";
@@ -35,14 +36,17 @@ class SqlExpressionError extends TaggedError<SqlExpressionError>("@beep/effect-d
  * @category utilities
  * @since 0.0.0
  */
-export const assertNoSqlParameters = (params: ReadonlyArray<unknown>, context: string): void => {
+export const assertNoSqlParameters: {
+  (context: string): (params: ReadonlyArray<unknown>) => void;
+  (params: ReadonlyArray<unknown>, context: string): void;
+} = dual(2, (params: ReadonlyArray<unknown>, context: string): void => {
   if (params.length !== 0) {
     throw SqlExpressionError.make({
       message: `${context} cannot contain bound parameters; use a literal SQL fragment or an explicitly unsafe raw-SQL escape hatch.`,
       context,
     });
   }
-};
+});
 
 /**
  * Minimal column identity carried through public field inference.
@@ -383,16 +387,12 @@ export type Merge<M extends Meta, P extends Patch> = {
  * @category utilities
  * @since 0.0.0
  */
-export function merge<const M extends Meta, const P extends Patch>(meta: M, patch: P): Merge<M, P>;
-/**
- * Internal helper `merge`.
- *
- * @internal
- * @category utilities
- * @since 0.0.0
- */
-export function merge(meta: Meta, patch: Patch): Meta {
-  return {
+export const merge: {
+  <const P extends Patch>(patch: P): <const M extends Meta>(meta: M) => Merge<M, P>;
+  <const M extends Meta, const P extends Patch>(meta: M, patch: P): Merge<M, P>;
+} = dual(
+  2,
+  (meta: Meta, patch: Patch): Meta => ({
     column: isUndefined(patch.column) ? meta.column : patch.column,
     dimensions: isUndefined(patch.dimensions) ? meta.dimensions : patch.dimensions,
     primaryKey: isUndefined(patch.primaryKey) ? meta.primaryKey : patch.primaryKey,
@@ -405,5 +405,5 @@ export function merge(meta: Meta, patch: Patch): Meta {
     version: isUndefined(patch.version) ? meta.version : patch.version,
     columnName: isUndefined(patch.columnName) ? meta.columnName : patch.columnName,
     references: isUndefined(patch.references) ? meta.references : patch.references,
-  };
-}
+  })
+);

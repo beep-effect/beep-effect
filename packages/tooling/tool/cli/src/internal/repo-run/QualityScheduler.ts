@@ -733,7 +733,7 @@ const classifyAdmissionEntry = Effect.fnUntraced(function* <Entry, DecodeError>(
   if (Str.isEmpty(text)) {
     return { kind: "skip" };
   }
-  const decoded = yield* codec.decode(text).pipe(Effect.map(O.some), Effect.orElseSucceed(O.none<Entry>));
+  const decoded = yield* codec.decode(text).pipe(Effect.asSome, Effect.orElseSucceed(O.none<Entry>));
   if (O.isNone(decoded)) {
     return { kind: "malformed" };
   }
@@ -982,8 +982,8 @@ export interface AdmissionOriginGate<OriginLease, GateError, GateRequirements> {
  * @since 0.0.0
  */
 export const noAdmissionOriginGate: AdmissionOriginGate<Record<string, never>, never, never> = {
-  tryAcquire: Effect.succeed(O.some({})),
-  tryAcquireFallback: Effect.succeed(O.some({})),
+  tryAcquire: Effect.succeedSome({}),
+  tryAcquireFallback: Effect.succeedSome({}),
   release: () => Effect.void,
 };
 

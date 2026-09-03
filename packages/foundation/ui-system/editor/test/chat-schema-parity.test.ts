@@ -15,7 +15,7 @@ import {
   SlashItems,
 } from "@beep/editor/chat/config";
 import { describe, expect, it } from "@effect/vitest";
-import { Result } from "effect";
+import { pipe, Result } from "effect";
 import * as Equal from "effect/Equal";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
@@ -76,14 +76,16 @@ describe("@beep/editor schema crispening parity", () => {
     );
     fc.assert(
       fc.property(S.toArbitrary(ComposerFeatures)(fc), (value) => {
-        expect(Equal.equals(S.decodeSync(ComposerFeatures)(S.encodeSync(ComposerFeatures)(value)), value)).toBe(true);
+        expect(pipe(value, S.encodeSync(ComposerFeatures), S.decodeSync(ComposerFeatures), Equal.equals(value))).toBe(
+          true
+        );
       })
     );
     fc.assert(
       fc.property(S.toArbitrary(AttachmentRejection)(fc), (value) => {
-        expect(Equal.equals(S.decodeSync(AttachmentRejection)(S.encodeSync(AttachmentRejection)(value)), value)).toBe(
-          true
-        );
+        expect(
+          pipe(value, S.encodeSync(AttachmentRejection), S.decodeSync(AttachmentRejection), Equal.equals(value))
+        ).toBe(true);
       })
     );
   });

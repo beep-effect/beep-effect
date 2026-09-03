@@ -1252,7 +1252,12 @@ export const createTSMorphService = Effect.fn("createTSMorphService")(function* 
                   : Inspectable.toStringUnknown(cause)
               }`,
             }),
-        }).pipe(Effect.catch((error) => (isMissingDirectoryError(error.message) ? Effect.void : Effect.fail(error))));
+        }).pipe(
+          Effect.catchIf(
+            (error) => isMissingDirectoryError(error.message),
+            () => Effect.void
+          )
+        );
       }
 
       if (!A.isReadonlyArrayEmpty(request.sourceFileGlobs)) {

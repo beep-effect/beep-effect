@@ -86,10 +86,9 @@ const runInherited = (command: ReadonlyArray<string>, cwd: string): Effect.Effec
     const ended = yield* Clock.currentTimeMillis;
     return CacheWarmLane.make({ command, durationMs: NonNegativeInt.make(ended - started), exitCode });
   }).pipe(
-    Effect.flatMap((lane) =>
-      lane.exitCode === 0
-        ? Effect.succeed(lane)
-        : Effect.fail(CacheCommandError.new(`${A.join(command, " ")} exited ${lane.exitCode}.`))
+    Effect.filterOrFail(
+      (lane) => lane.exitCode === 0,
+      (lane) => CacheCommandError.new(`${A.join(command, " ")} exited ${lane.exitCode}.`)
     )
   );
 

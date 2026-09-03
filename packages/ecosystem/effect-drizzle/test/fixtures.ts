@@ -116,7 +116,7 @@ class BareJunction extends auditKit.Model<BareJunction>("BareJunction")(
 ) {}
 
 class MechanicalColumns extends Model<MechanicalColumns>("MechanicalColumns")({
-  amount: String.pipe(pg.numeric(10, 2)),
+  amount: String.pipe(pg.numeric({ precision: 10, scale: 2 })),
   calendarDate: String.pipe(pg.date()),
   objectDate: DateSchema.pipe(pg.date({ mode: "date" })),
   code: String.check(isLengthBetween(4, 4)).pipe(pg.char()),
@@ -154,7 +154,7 @@ const NullableOrganizationId = entityId(NullOr(Finite.pipe(brand("OrganizationId
 export class Organization extends Model<Organization>("Organization")(
   {
     id: OrganizationId.pipe(pg.integer(), pg.identity("byDefault"), pg.primaryKey()),
-    parentOrgId: NullableOrganizationId.pipe(pg.references(OrganizationId, { onDelete: "set null" })),
+    parentOrgId: NullableOrganizationId.pipe(pg.references({ id: OrganizationId, options: { onDelete: "set null" } })),
     slug: String.check(isMaxLength(50)).pipe(pg.varchar(50)),
     name: String,
     code: String,
@@ -220,7 +220,12 @@ class DualOrgLink extends Model<DualOrgLink>("DualOrgLink")({
 export class ArrayRecord extends Model<ArrayRecord>("ArrayRecord")({
   id: Int.pipe(pg.integer(), pg.identity("byDefault"), pg.primaryKey()),
   labels: Array(String).pipe(pg.array(String.pipe(pg.text())), pg.unique()),
-  matrix: String.pipe(Array, Array, pg.array(String.pipe(pg.text()), "[][]"), pg.default([["seed"]])),
+  matrix: String.pipe(
+    Array,
+    Array,
+    pg.array({ element: String.pipe(pg.text()), suffix: "[][]" }),
+    pg.default([["seed"]])
+  ),
 }) {}
 
 class EnumArrayRecord extends Model<EnumArrayRecord>("EnumArrayRecord")({
@@ -342,7 +347,7 @@ export const _badArrayCarrier = () =>
 export const _badArrayDepth = () =>
   Array(String).pipe(
     // @ts-expect-error invariant: declared dimensions must match the encoded array depth
-    pg.array(String.pipe(pg.text()), "[][]")
+    pg.array({ element: String.pipe(pg.text()), suffix: "[][]" })
   );
 export const _badArrayThenPrimaryKey = () => {
   class BadArrayThenPrimaryKey extends Model<BadArrayThenPrimaryKey>("BadArrayThenPrimaryKey")({
@@ -717,7 +722,7 @@ export const _scalarArrayFkMismatch = () =>
 
 const MatrixTextId = entityId(String.pipe(Array, Array), "matrix_text_target", "MatrixTextTarget");
 class MatrixTextTarget extends Model<MatrixTextTarget>("MatrixTextTarget")({
-  id: MatrixTextId.pipe(pg.array(String.pipe(pg.text()), "[][]"), pg.unique()),
+  id: MatrixTextId.pipe(pg.array({ element: String.pipe(pg.text()), suffix: "[][]" }), pg.unique()),
 }) {}
 class ShallowArraySource extends Model<ShallowArraySource>("ShallowArraySource")({
   targetId: Array(String).pipe(pg.array(String.pipe(pg.text())), pg.references(MatrixTextId)),
@@ -756,7 +761,10 @@ class ResolutionDecoy extends Model<ResolutionDecoy>("ResolutionDecoy")({
 class ResolutionSource extends Model<ResolutionSource>("ResolutionSource")({
   targetId: Int.pipe(
     pg.integer(),
-    pg.references(ResolutionTargetId, { name: "resolution_source_target_id_resolution_target_id_fkey" })
+    pg.references({
+      id: ResolutionTargetId,
+      options: { name: "resolution_source_target_id_resolution_target_id_fkey" },
+    })
   ),
 }) {}
 
@@ -869,7 +877,7 @@ export const pgCheckedNumeric = String.pipe(pg.numeric());
 
 export const _pgVarcharTooWide = () => WaveEString.pipe(pg.varchar(10_485_761));
 export const _pgNumericPrecisionTooWide = () => WaveEString.pipe(pg.numeric(1_001));
-export const _pgNumericScaleTooWide = () => WaveEString.pipe(pg.numeric(10, 1_001));
+export const _pgNumericScaleTooWide = () => WaveEString.pipe(pg.numeric({ precision: 10, scale: 1_001 }));
 
 export const _pgInvalidFiniteDefault = () => {
   class InvalidFiniteDefault extends Model<InvalidFiniteDefault>("InvalidFiniteDefault")({
@@ -973,7 +981,7 @@ export const _pgSetNullNonNullable = () => {
     targetId: OrganizationId.pipe(
       pg.integer(),
       // @ts-expect-error invariant: SET NULL requires nullable encoded source
-      pg.references(OrganizationId, { onDelete: "set null" })
+      pg.references({ id: OrganizationId, options: { onDelete: "set null" } })
     ),
   }) {}
   // @ts-expect-error invariant: runtime schema assembly mirrors SET NULL validation
@@ -984,7 +992,7 @@ export const _pgSetDefaultWithoutDefault = () => {
     targetId: OrganizationId.pipe(
       pg.integer(),
       // @ts-expect-error invariant: SET DEFAULT requires a declared database default
-      pg.references(OrganizationId, { onDelete: "set default" })
+      pg.references({ id: OrganizationId, options: { onDelete: "set default" } })
     ),
   }) {}
   // @ts-expect-error invariant: runtime schema assembly mirrors SET DEFAULT validation

@@ -47,7 +47,7 @@ import * as Meta from "../core/Meta.ts";
 import { snakeCase } from "../internal/case.ts";
 import * as PgColumn from "./Column.ts";
 import * as Derive from "./derive.ts";
-import { toPgTable } from "./table.ts";
+import { toPgTableWithOptions } from "./table.ts";
 import type { RelationsBuilder, RelationsBuilderConfig } from "drizzle-orm";
 import type { Option } from "effect/Option";
 import type { Edge, Junction, SchemaName } from "../core/assembly.ts";
@@ -658,9 +658,9 @@ export function schema(models: ModelRecord): unknown {
     runtimeTables = set(
       runtimeTables,
       key,
-      toPgTable(
+      toPgTableWithOptions({
         model,
-        (columns) =>
+        additionalExtras: (columns) =>
           edges
             .filter((edge) => edge.sourceKey === key)
             .map((edge) => {
@@ -706,8 +706,8 @@ export function schema(models: ModelRecord): unknown {
                 onSome: (action) => withDelete.onUpdate(action),
               });
             }),
-        enums
-      )
+        enums,
+      })
     );
   });
 

@@ -334,8 +334,21 @@ const enumChecks = (
  * @category tables
  * @since 0.0.0
  */
-export function toSqliteTable<M extends AnyModel>(model: M, additionalExtras?: AdditionalExtras<M>): TableOf<M>;
-export function toSqliteTable(model: AnyModel, additionalExtras?: AdditionalExtras<AnyModel>): unknown {
+type TableProjectionOptions<M extends AnyModel> = {
+  readonly additionalExtras?: AdditionalExtras<M>;
+  readonly model: M;
+};
+
+export function toSqliteTable<M extends AnyModel>(model: M): TableOf<M>;
+export function toSqliteTable(model: AnyModel): unknown {
+  return toSqliteTableWithOptions({ model });
+}
+
+/** @internal */
+export function toSqliteTableWithOptions<M extends AnyModel>(options: TableProjectionOptions<M>): TableOf<M>;
+/** @internal */
+export function toSqliteTableWithOptions(options: TableProjectionOptions<AnyModel>): unknown {
+  const { additionalExtras, model } = options;
   const builders = reduce(
     Object.entries(model.sql.fields),
     empty<string, SqliteColumn.DrizzleBuilder>(),

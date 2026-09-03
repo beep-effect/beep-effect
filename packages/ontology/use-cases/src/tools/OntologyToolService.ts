@@ -536,17 +536,13 @@ const makeOntologyToolService = Effect.gen(function* () {
             const proposal = yield* pipe(
               before.repairs,
               A.findFirst((candidate) => candidate.id === request.proposalId),
-              O.match({
-                onNone: () =>
-                  Effect.fail(
-                    executionError(
-                      "repair",
-                      "The requested verified repair proposal is not available for the current file.",
-                      true
-                    )
-                  ),
-                onSome: Effect.succeed,
-              })
+              Effect.fromOption(() =>
+                executionError(
+                  "repair",
+                  "The requested verified repair proposal is not available for the current file.",
+                  true
+                )
+              )
             );
             const operations = yield* A.match(proposal.operations, {
               onEmpty: () =>

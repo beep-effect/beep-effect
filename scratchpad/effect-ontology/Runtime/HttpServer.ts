@@ -254,8 +254,8 @@ const claimRowToClaimWithRank = Effect.fn("HttpServer.claimRowToClaimWithRank")(
         })
       : O.none();
   const confidence = yield* O.match(O.fromNullishOr(claim.confidenceScore), {
-    onNone: () => Effect.succeed(O.none()),
-    onSome: (value) => UnitInterval.decodeEffect(Number(value)).pipe(Effect.map(O.some)),
+    onNone: () => Effect.succeedNone,
+    onSome: (value) => UnitInterval.decodeEffect(Number(value)).pipe(Effect.asSome),
   });
   const evidence = yield* O.match(
     O.all({
@@ -264,7 +264,7 @@ const claimRowToClaimWithRank = Effect.fn("HttpServer.claimRowToClaimWithRank")(
       end: O.fromNullishOr(claim.evidenceEndOffset),
     }),
     {
-      onNone: () => Effect.succeed(O.none()),
+      onNone: () => Effect.succeedNone,
       onSome: flow(TextSpan.decodeEffect, Effect.map(O.some)),
     }
   );

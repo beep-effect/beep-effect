@@ -5,20 +5,12 @@
  * @category utilities
  * @since 0.0.0
  */
-export function assignStatics<Self extends object, Statics extends object>(
-  self: Self,
-  statics: Statics
-): Self & Statics;
-/**
- * Internal helper `assignStatics`.
- *
- * @internal
- * @category utilities
- * @since 0.0.0
- */
-export function assignStatics(self: object, statics: object): object {
-  return Object.assign(self, statics);
-}
+export const assignStatics: {
+  <Statics extends object>(statics: Statics): <Self extends object>(self: Self) => Self & Statics;
+  <Self extends object, Statics extends object>(self: Self, statics: Statics): Self & Statics;
+} = dual(2, <Self extends object, Statics extends object>(self: Self, statics: Statics): Self & Statics =>
+  Object.assign(self, statics)
+);
 
 /**
  * Compute and attach typed statics to a value.
@@ -27,7 +19,11 @@ export function assignStatics(self: object, statics: object): object {
  * @category utilities
  * @since 0.0.0
  */
-export const withStatics = <Self extends object, Statics extends object>(
-  self: Self,
-  make: (self: Self) => Statics
-): Self & Statics => assignStatics(self, make(self));
+export const withStatics: {
+  <Self extends object, Statics extends object>(make: (self: Self) => Statics): (self: Self) => Self & Statics;
+  <Self extends object, Statics extends object>(self: Self, make: (self: Self) => Statics): Self & Statics;
+} = dual(2, <Self extends object, Statics extends object>(self: Self, make: (self: Self) => Statics): Self & Statics =>
+  assignStatics(self, make(self))
+);
+
+import { dual } from "effect/Function";

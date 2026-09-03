@@ -705,11 +705,8 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
                       [LlmAttributes.CHUNK_TEXT_LENGTH]: chunk.text.length,
                     },
                   }),
-                  Effect.catch((error) => {
-                    if (isSystemicError(error)) {
-                      return Effect.fail(error);
-                    }
-                    return Effect.gen(function* () {
+                  Effect.catchIf(P.not(isSystemicError), (error) =>
+                    Effect.gen(function* () {
                       yield* Effect.logError("Chunk processing failed (content error - skipping)", {
                         stage: "chunk-processing",
                         chunkIndex: chunk.index,
@@ -720,8 +717,8 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
                       yield* Effect.annotateCurrentSpan("chunk.failed", true);
                       yield* Effect.annotateCurrentSpan("chunk.error_type", unknownErrorType(error));
                       return KnowledgeGraph.make({ entities: [], relations: [] });
-                    });
-                  }),
+                    })
+                  ),
                   Effect.exit
                 )
             ),

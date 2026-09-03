@@ -8,6 +8,7 @@
  */
 // fallow-ignore-file code-duplication -- pg/sqlite are deliberately mirrored dialect implementations; shared logic lives in src/core and the remaining parallelism is per-dialect vocabulary that must evolve independently (doc 14 family; review at next dialect addition)
 import { last, reduce } from "effect/Array";
+import { dual } from "effect/Function";
 import { fromUndefinedOr, getOrElse, getOrUndefined, match, none, orElse, some } from "effect/Option";
 import { isFunction, isNotUndefined, isNumber, isString, isUint8Array } from "effect/Predicate";
 import { empty, set } from "effect/Record";
@@ -492,194 +493,196 @@ const finiteRealSchema = (schema: Field.AnySchema): Field.AnySchema => {
  * @category constructors
  * @since 0.0.0
  */
-export function makeModelClass<Self, const F extends FieldsInput>(
-  identifier: string,
-  fields: F,
-  annotations: Annotations.Annotations | undefined,
-  extras: TableExtras.Callback<F> | undefined
-): ModelClass<Self, F>;
-/**
- * Internal helper `makeModelClass`.
- *
- * @internal
- * @category utilities
- * @since 0.0.0
- */
-export function makeModelClass(
-  identifier: string,
-  fields: FieldsInput,
-  annotations: Annotations.Annotations | undefined,
-  extras: TableExtras.Callback<FieldsInput> | undefined
-): object {
-  const tableName = deriveTableName(identifier);
-  validateModelNames(tableName, fields);
-  const fieldCount = Object.keys(fields).length;
-  if (fieldCount === 0 || fieldCount > 2_000) {
-    throw ModelInvariantError.make({
-      message: `SQLite models require from 1 through 2,000 columns; '${identifier}' declares ${fieldCount}.`,
-      fieldName: "(model)",
-    });
-  }
-  const state = reduce(
-    Object.entries(fields),
-    {
-      columns: empty<string, Meta.Meta<SqliteColumn.Spec>>(),
-      primaryKeys: 0,
-      versionFields: 0,
-      ordinaryColumns: 0,
-      schemaFields: empty<string, Field.AnySchema>(),
-    },
-    function collectSqliteModelState(state, [key, input]) {
-      const field = Field.from(input);
-      if (field.meta.version && VariantSchema.isField(field.schema)) {
-        throw ModelInvariantError.make({
-          message: `Version field '${key}' cannot use an explicit VariantSchema.Field.`,
-          fieldName: key,
-        });
-      }
-      const select = Derive.selectSchemaOf(field.schema);
-      const classified = match(fromUndefinedOr(field.meta.column), {
-        onNone: () => Derive.classify(field.schema, key),
-        onSome: (column) => {
-          if (!SqliteColumn.isSpec(column)) {
-            throw ModelInvariantError.make({
-              message: `Field '${key}' has an invalid or foreign SQLite column descriptor.`,
-              fieldName: key,
-            });
-          }
-          return { column, nullable: Derive.isNullable(field.schema) };
-        },
+export const makeModelClass: {
+  <Self, const F extends FieldsInput>(
+    fields: F,
+    annotations: Annotations.Annotations | undefined,
+    extras: TableExtras.Callback<F> | undefined
+  ): (identifier: string) => ModelClass<Self, F>;
+  <Self, const F extends FieldsInput>(
+    identifier: string,
+    fields: F,
+    annotations: Annotations.Annotations | undefined,
+    extras: TableExtras.Callback<F> | undefined
+  ): ModelClass<Self, F>;
+} = dual(
+  4,
+  (
+    identifier: string,
+    fields: FieldsInput,
+    annotations: Annotations.Annotations | undefined,
+    extras: TableExtras.Callback<FieldsInput> | undefined
+  ): object => {
+    const tableName = deriveTableName(identifier);
+    validateModelNames(tableName, fields);
+    const fieldCount = Object.keys(fields).length;
+    if (fieldCount === 0 || fieldCount > 2_000) {
+      throw ModelInvariantError.make({
+        message: `SQLite models require from 1 through 2,000 columns; '${identifier}' declares ${fieldCount}.`,
+        fieldName: "(model)",
       });
-      if (field.meta.dimensions !== 0) {
-        throw ModelInvariantError.make({
-          message: `SQLite field '${key}' cannot carry array dimensions.`,
-          fieldName: key,
-        });
-      }
-      if (
-        ((SqliteColumn.Spec.guards.text(classified.column) && classified.column.mode === "json") ||
-          (SqliteColumn.Spec.guards.blob(classified.column) && classified.column.mode === "json")) &&
-        !Derive.isStructuralJson(field.schema)
-      ) {
-        throw ModelInvariantError.make({
-          message: `SQLite JSON field '${key}' requires an array- or record-encoded schema.`,
-          fieldName: key,
-        });
-      }
-      if (field.meta.primaryKey && classified.nullable) {
-        throw ModelInvariantError.make({
-          message: `Primary key '${key}' derives a nullable encoded representation.`,
-          fieldName: key,
-        });
-      }
-      if (
-        field.meta.identity !== false &&
-        (field.meta.identity !== "byDefault" ||
-          !SqliteColumn.Spec.guards.integer(classified.column) ||
-          classified.column.mode !== "number" ||
-          !field.meta.primaryKey)
-      ) {
-        throw ModelInvariantError.make({
-          message: `SQLite db-assigned key '${key}' must be a number-mode INTEGER PRIMARY KEY.`,
-          fieldName: key,
-        });
-      }
-      if (field.meta.generated !== false && (field.meta.hasDefault || isNotUndefined(field.meta.default))) {
-        throw ModelInvariantError.make({
-          message: `Field '${key}' cannot be both defaulted and generated.`,
-          fieldName: key,
-        });
-      }
-      if (
-        field.meta.version &&
-        (!SqliteColumn.Spec.guards.integer(classified.column) || classified.column.mode !== "number")
-      ) {
-        throw ModelInvariantError.make({
-          message: `Version field '${key}' requires sqlite.integer number mode.`,
-          fieldName: key,
-        });
-      }
-      if (field.meta.version && classified.nullable) {
-        throw ModelInvariantError.make({
-          message: `Version field '${key}' cannot be nullable.`,
-          fieldName: key,
-        });
-      }
-      if (field.meta.version && (field.meta.identity !== false || field.meta.generated !== false)) {
-        throw ModelInvariantError.make({
-          message: `Version field '${key}' cannot use identity or generated-column semantics.`,
-          fieldName: key,
-        });
-      }
-      validateLiteralDefault(field, select, classified.column, key);
-      const resolved = Meta.merge(field.meta, {
-        column: classified.column,
-        references: resolveReferences(field.meta, select, key),
-      });
-      const faithfulSchema = SqliteColumn.Spec.guards.real(classified.column)
-        ? finiteRealSchema(field.schema)
-        : field.schema;
-      return {
-        columns: set(state.columns, key, resolved),
-        primaryKeys: state.primaryKeys + (field.meta.primaryKey ? 1 : 0),
-        versionFields: state.versionFields + (field.meta.version ? 1 : 0),
-        ordinaryColumns: state.ordinaryColumns + (field.meta.generated === false ? 1 : 0),
-        schemaFields: set(state.schemaFields, key, effectiveSchema(faithfulSchema, resolved)),
-      };
     }
-  );
-  if (state.primaryKeys > 1) {
-    throw ModelInvariantError.make({
-      message: `Model '${identifier}' declares multiple inline primary keys.`,
-      fieldName: "(model)",
-    });
-  }
-  if (state.ordinaryColumns === 0) {
-    throw ModelInvariantError.make({
-      message: `SQLite model '${identifier}' must declare at least one non-generated column.`,
-      fieldName: "(model)",
-    });
-  }
-  if (state.versionFields > 1) {
-    throw ModelInvariantError.make({
-      message: `Model '${identifier}' declares multiple optimistic-version fields.`,
-      fieldName: "(model)",
-    });
-  }
-  const harvested = Object.entries(state.columns).flatMap(
-    ([key, meta]): ReadonlyArray<readonly [string, Meta.IndexIntent, string]> => {
-      if (meta.indexed === false) return [];
-      const intent = meta.indexed;
-      const physical = getOrElse(fromUndefinedOr(meta.columnName), () => snakeCase(key));
-      const name = getOrElse(
-        fromUndefinedOr(intent.name),
-        () => `${tableName}_${physical}_${intent.unique ? "unique_idx" : "btree_idx"}`
-      );
-      return [[key, intent, name]];
-    }
-  );
-  if (harvested.length > 0) {
-    assertUniqueSqlNames(
-      harvested.map(([key, , name]): readonly [string, string] => [key, name]),
-      "sqlite",
-      "SQLite colocated index name"
+    const state = reduce(
+      Object.entries(fields),
+      {
+        columns: empty<string, Meta.Meta<SqliteColumn.Spec>>(),
+        primaryKeys: 0,
+        versionFields: 0,
+        ordinaryColumns: 0,
+        schemaFields: empty<string, Field.AnySchema>(),
+      },
+      function collectSqliteModelState(state, [key, input]) {
+        const field = Field.from(input);
+        if (field.meta.version && VariantSchema.isField(field.schema)) {
+          throw ModelInvariantError.make({
+            message: `Version field '${key}' cannot use an explicit VariantSchema.Field.`,
+            fieldName: key,
+          });
+        }
+        const select = Derive.selectSchemaOf(field.schema);
+        const classified = match(fromUndefinedOr(field.meta.column), {
+          onNone: () => Derive.classify(field.schema, key),
+          onSome: (column) => {
+            if (!SqliteColumn.isSpec(column)) {
+              throw ModelInvariantError.make({
+                message: `Field '${key}' has an invalid or foreign SQLite column descriptor.`,
+                fieldName: key,
+              });
+            }
+            return { column, nullable: Derive.isNullable(field.schema) };
+          },
+        });
+        if (field.meta.dimensions !== 0) {
+          throw ModelInvariantError.make({
+            message: `SQLite field '${key}' cannot carry array dimensions.`,
+            fieldName: key,
+          });
+        }
+        if (
+          ((SqliteColumn.Spec.guards.text(classified.column) && classified.column.mode === "json") ||
+            (SqliteColumn.Spec.guards.blob(classified.column) && classified.column.mode === "json")) &&
+          !Derive.isStructuralJson(field.schema)
+        ) {
+          throw ModelInvariantError.make({
+            message: `SQLite JSON field '${key}' requires an array- or record-encoded schema.`,
+            fieldName: key,
+          });
+        }
+        if (field.meta.primaryKey && classified.nullable) {
+          throw ModelInvariantError.make({
+            message: `Primary key '${key}' derives a nullable encoded representation.`,
+            fieldName: key,
+          });
+        }
+        if (
+          field.meta.identity !== false &&
+          (field.meta.identity !== "byDefault" ||
+            !SqliteColumn.Spec.guards.integer(classified.column) ||
+            classified.column.mode !== "number" ||
+            !field.meta.primaryKey)
+        ) {
+          throw ModelInvariantError.make({
+            message: `SQLite db-assigned key '${key}' must be a number-mode INTEGER PRIMARY KEY.`,
+            fieldName: key,
+          });
+        }
+        if (field.meta.generated !== false && (field.meta.hasDefault || isNotUndefined(field.meta.default))) {
+          throw ModelInvariantError.make({
+            message: `Field '${key}' cannot be both defaulted and generated.`,
+            fieldName: key,
+          });
+        }
+        if (
+          field.meta.version &&
+          (!SqliteColumn.Spec.guards.integer(classified.column) || classified.column.mode !== "number")
+        ) {
+          throw ModelInvariantError.make({
+            message: `Version field '${key}' requires sqlite.integer number mode.`,
+            fieldName: key,
+          });
+        }
+        if (field.meta.version && classified.nullable) {
+          throw ModelInvariantError.make({
+            message: `Version field '${key}' cannot be nullable.`,
+            fieldName: key,
+          });
+        }
+        if (field.meta.version && (field.meta.identity !== false || field.meta.generated !== false)) {
+          throw ModelInvariantError.make({
+            message: `Version field '${key}' cannot use identity or generated-column semantics.`,
+            fieldName: key,
+          });
+        }
+        validateLiteralDefault(field, select, classified.column, key);
+        const resolved = Meta.merge(field.meta, {
+          column: classified.column,
+          references: resolveReferences(field.meta, select, key),
+        });
+        const faithfulSchema = SqliteColumn.Spec.guards.real(classified.column)
+          ? finiteRealSchema(field.schema)
+          : field.schema;
+        return {
+          columns: set(state.columns, key, resolved),
+          primaryKeys: state.primaryKeys + (field.meta.primaryKey ? 1 : 0),
+          versionFields: state.versionFields + (field.meta.version ? 1 : 0),
+          ordinaryColumns: state.ordinaryColumns + (field.meta.generated === false ? 1 : 0),
+          schemaFields: set(state.schemaFields, key, effectiveSchema(faithfulSchema, resolved)),
+        };
+      }
     );
+    if (state.primaryKeys > 1) {
+      throw ModelInvariantError.make({
+        message: `Model '${identifier}' declares multiple inline primary keys.`,
+        fieldName: "(model)",
+      });
+    }
+    if (state.ordinaryColumns === 0) {
+      throw ModelInvariantError.make({
+        message: `SQLite model '${identifier}' must declare at least one non-generated column.`,
+        fieldName: "(model)",
+      });
+    }
+    if (state.versionFields > 1) {
+      throw ModelInvariantError.make({
+        message: `Model '${identifier}' declares multiple optimistic-version fields.`,
+        fieldName: "(model)",
+      });
+    }
+    const harvested = Object.entries(state.columns).flatMap(
+      ([key, meta]): ReadonlyArray<readonly [string, Meta.IndexIntent, string]> => {
+        if (meta.indexed === false) return [];
+        const intent = meta.indexed;
+        const physical = getOrElse(fromUndefinedOr(meta.columnName), () => snakeCase(key));
+        const name = getOrElse(
+          fromUndefinedOr(intent.name),
+          () => `${tableName}_${physical}_${intent.unique ? "unique_idx" : "btree_idx"}`
+        );
+        return [[key, intent, name]];
+      }
+    );
+    if (harvested.length > 0) {
+      assertUniqueSqlNames(
+        harvested.map(([key, , name]): readonly [string, string] => [key, name]),
+        "sqlite",
+        "SQLite colocated index name"
+      );
+    }
+    const composedExtras: TableExtras.Callback<FieldsInput> | undefined =
+      harvested.length === 0
+        ? extras
+        : (columns) => [
+            ...harvested.map(([key, intent, name]) =>
+              intent.unique ? TableExtras.uniqueIndex(name, [columns[key]]) : TableExtras.index(name, [columns[key]])
+            ),
+            ...match(fromUndefinedOr(extras), {
+              onNone: () => [],
+              onSome: (callback) => callback(columns),
+            }),
+          ];
+    const Base = V.Class<object>(identifier)(state.schemaFields, annotations);
+    return withStatics(Base, () => ({ sql: { tableName, fields, columns: state.columns, extras: composedExtras } }));
   }
-  const composedExtras: TableExtras.Callback<FieldsInput> | undefined =
-    harvested.length === 0
-      ? extras
-      : (columns) => [
-          ...harvested.map(([key, intent, name]) =>
-            intent.unique ? TableExtras.uniqueIndex(name, [columns[key]]) : TableExtras.index(name, [columns[key]])
-          ),
-          ...match(fromUndefinedOr(extras), {
-            onNone: () => [],
-            onSome: (callback) => callback(columns),
-          }),
-        ];
-  const Base = V.Class<object>(identifier)(state.schemaFields, annotations);
-  return withStatics(Base, () => ({ sql: { tableName, fields, columns: state.columns, extras: composedExtras } }));
-}
+);
 
 /**
  * Builds a SQLite model class whose schemas own resolved storage metadata.

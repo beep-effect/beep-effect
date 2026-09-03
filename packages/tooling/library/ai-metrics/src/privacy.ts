@@ -501,7 +501,7 @@ const optionalHashPrivateIdentifier = Effect.fn("AiMetrics.optionalHashPrivateId
   hashSalt: O.Option<string>
 ) {
   return yield* O.match(value, {
-    onNone: () => Effect.succeed(O.none()),
+    onNone: () => Effect.succeedNone,
     onSome: flow(hashPrivateIdentifier(hashSalt), Effect.map(O.some)),
   });
 });

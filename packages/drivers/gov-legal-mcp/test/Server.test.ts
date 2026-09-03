@@ -129,7 +129,7 @@ const rawGovinfoFailure = GovinfoError.of(
 const FixtureFailingGovinfo = Layer.succeed(
   Govinfo,
   Govinfo.of({
-    rateLimit: Effect.succeed(O.none()),
+    rateLimit: Effect.succeedNone,
     search: Effect.fn("FixtureGovinfo.search")(function* (_request: Search.Payload) {
       return yield* rawGovinfoFailure;
     }),

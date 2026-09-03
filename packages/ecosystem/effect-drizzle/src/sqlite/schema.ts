@@ -44,7 +44,7 @@ import * as Meta from "../core/Meta.ts";
 import { snakeCase } from "../internal/case.ts";
 import * as SqliteColumn from "./Column.ts";
 import * as Derive from "./derive.ts";
-import { toSqliteTable } from "./table.ts";
+import { toSqliteTableWithOptions } from "./table.ts";
 import type { RelationsBuilder, RelationsBuilderConfig } from "drizzle-orm";
 import type { Option } from "effect/Option";
 import type { Edge, Junction, SchemaName } from "../core/assembly.ts";
@@ -614,39 +614,46 @@ export function schema(models: ModelRecord): unknown {
     runtimeTables = set(
       runtimeTables,
       key,
-      toSqliteTable(model, (columns) =>
-        edges
-          .filter((edge) => edge.sourceKey === key)
-          .map((edge) => {
-            const targetTable = getOrElse(getRecord(runtimeTables, edge.targetKey), () =>
-              fail("Resolved foreign-key table or column is unavailable.", key, edge.sourceField, edge.targetKey)
-            );
-            if (!hasProperty(targetTable, edge.targetField)) {
-              return fail(
-                "Resolved foreign-key table or column is unavailable.",
-                key,
-                edge.sourceField,
-                edge.targetKey
+      toSqliteTableWithOptions({
+        model,
+        additionalExtras: (columns) =>
+          edges
+            .filter((edge) => edge.sourceKey === key)
+            .map((edge) => {
+              const targetTable = getOrElse(getRecord(runtimeTables, edge.targetKey), () =>
+                fail("Resolved foreign-key table or column is unavailable.", key, edge.sourceField, edge.targetKey)
               );
-            }
-            const targetColumn = targetTable[edge.targetField];
-            if (!isDrizzleEntity(targetColumn, DrizzleSqliteColumn)) {
-              return fail("Resolved foreign-key target is not a SQLite column.", key, edge.sourceField, edge.targetKey);
-            }
-            const builder = foreignKey({
-              columns: [columns[edge.sourceField]],
-              foreignColumns: [targetColumn],
-            });
-            const withDelete = match(fromUndefinedOr(edge.reference.onDelete), {
-              onNone: () => builder,
-              onSome: (action) => builder.onDelete(action),
-            });
-            return match(fromUndefinedOr(edge.reference.onUpdate), {
-              onNone: () => withDelete,
-              onSome: (action) => withDelete.onUpdate(action),
-            });
-          })
-      )
+              if (!hasProperty(targetTable, edge.targetField)) {
+                return fail(
+                  "Resolved foreign-key table or column is unavailable.",
+                  key,
+                  edge.sourceField,
+                  edge.targetKey
+                );
+              }
+              const targetColumn = targetTable[edge.targetField];
+              if (!isDrizzleEntity(targetColumn, DrizzleSqliteColumn)) {
+                return fail(
+                  "Resolved foreign-key target is not a SQLite column.",
+                  key,
+                  edge.sourceField,
+                  edge.targetKey
+                );
+              }
+              const builder = foreignKey({
+                columns: [columns[edge.sourceField]],
+                foreignColumns: [targetColumn],
+              });
+              const withDelete = match(fromUndefinedOr(edge.reference.onDelete), {
+                onNone: () => builder,
+                onSome: (action) => builder.onDelete(action),
+              });
+              return match(fromUndefinedOr(edge.reference.onUpdate), {
+                onNone: () => withDelete,
+                onSome: (action) => withDelete.onUpdate(action),
+              });
+            }),
+      })
     );
   });
 

@@ -389,7 +389,7 @@ const makeVerifiedGoldLabel = Effect.fnUntraced(function* (
   }
   if (isRelationProposalLabel(label)) {
     return yield* O.match(endpoints, {
-      onNone: () => Effect.succeed(O.none()),
+      onNone: () => Effect.succeedNone,
       onSome: (resolved) =>
         GoldRelationLabel.makeEffect({
           endChar: anchor.endChar,
@@ -551,16 +551,11 @@ const nearestWhitespaceFoldedSpan = (
  * @category anchoring
  * @since 0.0.0
  */
+type GoldQuoteAnchor = readonly [startChar: number, endChar: number, quote: string];
+
 export const resolveGoldQuoteAnchor: {
-  (
-    quote: string,
-    claimedStart: number
-  ): (text: string) => O.Option<readonly [startChar: number, endChar: number, quote: string]>;
-  (
-    text: string,
-    quote: string,
-    claimedStart: number
-  ): O.Option<readonly [startChar: number, endChar: number, quote: string]>;
+  (quote: string, claimedStart: number): (text: string) => O.Option<GoldQuoteAnchor>;
+  (text: string, quote: string, claimedStart: number): O.Option<GoldQuoteAnchor>;
 } = dual(3, (text: string, quote: string, claimedStart: number) => {
   if (Str.isEmpty(quote)) {
     return O.none();

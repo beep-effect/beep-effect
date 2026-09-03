@@ -274,32 +274,20 @@ const eventDefinition = Effect.fn("EventBus.eventDefinition")(function* <Definit
   category: "curation" | "extraction"
 ) {
   return yield* R.get(events, tag).pipe(
-    O.match({
-      onNone: () =>
-        Effect.fail(
-          EventBusError.make({
-            method: "eventDefinition",
-            message: `Unknown ${category} event: ${tag}`,
-          })
-        ),
-      onSome: Effect.succeed,
-    })
+    Effect.fromOption(() => EventBusError.make({
+    method: "eventDefinition",
+    message: `Unknown ${category} event: ${tag}`,
+}))
   );
 });
 
 const decodeEventPayload = Effect.fn("EventBus.decodeEventPayload")(function* (event: string, payload: Uint8Array) {
   const definition = yield* R.get(CurationEventGroup.events, event).pipe(
     O.orElse(() => R.get(ExtractionEventGroup.events, event)),
-    O.match({
-      onNone: () =>
-        Effect.fail(
-          EventBusError.make({
-            method: "decodeEventPayload",
-            message: `Unknown journal event: ${event}`,
-          })
-        ),
-      onSome: Effect.succeed,
-    })
+    Effect.fromOption(() => EventBusError.make({
+    method: "decodeEventPayload",
+    message: `Unknown journal event: ${event}`,
+}))
   );
   const decodePayloadMsgPack = pipe(definition.payloadMsgPack, S.decodeEffect);
   return yield* decodePayloadMsgPack(new Uint8Array(payload)).pipe(
@@ -656,7 +644,7 @@ export const EventBusServiceSql = Layer.effect(
             handler(job, {
               id,
               attempts,
-            }).pipe(Effect.map(O.some)),
+            }).pipe(Effect.asSome),
           { maxAttempts }
         );
       },

@@ -35,12 +35,12 @@ describe("CurationJobProcessor", () => {
       "polls while its scope is open and stops when the scope closes",
       Effect.fnUntraced(function* () {
         const polls = yield* Ref.make(0);
-        const processJob: EventBusServiceMethods["processJob"] = () => Effect.succeed(O.none());
+        const processJob: EventBusServiceMethods["processJob"] = () => Effect.succeedNone;
         const eventBus = EventBusService.of({
           publishCurationEvent: Effect.fn("CurationJobProcessorTest.publishCurationEvent")(() => Effect.void),
           publishExtractionEvent: Effect.fn("CurationJobProcessorTest.publishExtractionEvent")(() => Effect.void),
           enqueueJob: Effect.fn("CurationJobProcessorTest.enqueueJob")(() => Effect.succeed("job-unused")),
-          takeJob: Effect.succeed(O.none()),
+          takeJob: Effect.succeedNone,
           processJob,
           subscribeEvents: Effect.succeed(Stream.empty),
           pendingJobCount: Ref.updateAndGet(polls, (count) => count + 1).pipe(Effect.as(0)),

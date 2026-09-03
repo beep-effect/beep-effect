@@ -556,10 +556,21 @@ export type Callback<F extends { readonly [key: string]: Field.Input }> = (
  * @category constructors
  * @since 0.0.0
  */
-export const compositeUnique = <const Name extends string, const Columns extends CompositeColumns>(
-  name: Name & ValidateSqlName<Name, "Table.compositeUnique name must be a lowercase SQL identifier">,
-  columns: Columns & ValidateDistinctColumns<Columns>
-): CompositeUnique => Nodes.compositeUnique({ name: validateName(name), columns });
+export const compositeUnique: {
+  <const Columns extends CompositeColumns>(
+    columns: Columns & ValidateDistinctColumns<Columns>
+  ): <const Name extends string>(
+    name: Name & ValidateSqlName<Name, "Table.compositeUnique name must be a lowercase SQL identifier">
+  ) => CompositeUnique;
+  <const Name extends string, const Columns extends CompositeColumns>(
+    name: Name & ValidateSqlName<Name, "Table.compositeUnique name must be a lowercase SQL identifier">,
+    columns: Columns & ValidateDistinctColumns<Columns>
+  ): CompositeUnique;
+} = dual(
+  2,
+  (name: string, columns: CompositeColumns): CompositeUnique =>
+    Nodes.compositeUnique({ name: validateName(name), columns })
+);
 
 /**
  * Constructs a named primary key over at least two columns.
@@ -584,10 +595,21 @@ export const compositeUnique = <const Name extends string, const Columns extends
  * @category constructors
  * @since 0.0.0
  */
-export const compositePrimaryKey = <const Name extends string, const Columns extends CompositeColumns>(
-  name: Name & ValidateSqlName<Name, "Table.compositePrimaryKey name must be a lowercase SQL identifier">,
-  columns: Columns & ValidateDistinctColumns<Columns> & ValidatePrimaryKeyColumns<Columns>
-): CompositePrimaryKey => Nodes.compositePrimaryKey({ name: validateName(name), columns });
+export const compositePrimaryKey: {
+  <const Columns extends CompositeColumns>(
+    columns: Columns & ValidateDistinctColumns<Columns> & ValidatePrimaryKeyColumns<Columns>
+  ): <const Name extends string>(
+    name: Name & ValidateSqlName<Name, "Table.compositePrimaryKey name must be a lowercase SQL identifier">
+  ) => CompositePrimaryKey;
+  <const Name extends string, const Columns extends CompositeColumns>(
+    name: Name & ValidateSqlName<Name, "Table.compositePrimaryKey name must be a lowercase SQL identifier">,
+    columns: Columns & ValidateDistinctColumns<Columns> & ValidatePrimaryKeyColumns<Columns>
+  ): CompositePrimaryKey;
+} = dual(
+  2,
+  (name: string, columns: CompositeColumns): CompositePrimaryKey =>
+    Nodes.compositePrimaryKey({ name: validateName(name), columns })
+);
 
 /**
  * Constructs a PostgreSQL index with an optional method and predicate.
@@ -621,17 +643,30 @@ export const compositePrimaryKey = <const Name extends string, const Columns ext
  * @category constructors
  * @since 0.0.0
  */
-export const index = <const Name extends string, const Columns extends NonEmptyColumns>(
-  name: Name & ValidateSqlName<Name, "Table.index name must be a lowercase SQL identifier">,
-  columns: Columns & ValidateDistinctColumns<Columns>,
-  options?: { readonly using?: PgIndexMethod; readonly where?: SQL<boolean> }
-): Index =>
-  Nodes.index({
-    name: validateName(name),
-    columns,
-    using: options?.using,
-    where: options?.where,
-  });
+type IndexOptions = { readonly using?: PgIndexMethod; readonly where?: SQL<boolean> };
+
+export const index: {
+  <const Columns extends NonEmptyColumns>(
+    columns: Columns & ValidateDistinctColumns<Columns>,
+    options?: IndexOptions
+  ): <const Name extends string>(
+    name: Name & ValidateSqlName<Name, "Table.index name must be a lowercase SQL identifier">
+  ) => Index;
+  <const Name extends string, const Columns extends NonEmptyColumns>(
+    name: Name & ValidateSqlName<Name, "Table.index name must be a lowercase SQL identifier">,
+    columns: Columns & ValidateDistinctColumns<Columns>,
+    options?: IndexOptions
+  ): Index;
+} = dual(
+  (args) => isString(args[0]),
+  (name: string, columns: NonEmptyColumns, options?: IndexOptions): Index =>
+    Nodes.index({
+      name: validateName(name),
+      columns,
+      using: options?.using,
+      where: options?.where,
+    })
+);
 
 /**
  * Constructs a named unique index over one or more columns.
@@ -657,16 +692,29 @@ export const index = <const Name extends string, const Columns extends NonEmptyC
  * @category constructors
  * @since 0.0.0
  */
-export const uniqueIndex = <const Name extends string, const Columns extends NonEmptyColumns>(
-  name: Name & ValidateSqlName<Name, "Table.uniqueIndex name must be a lowercase SQL identifier">,
-  columns: Columns & ValidateDistinctColumns<Columns>,
-  options?: { readonly where?: SQL<boolean> }
-): UniqueIndex =>
-  Nodes.uniqueIndex({
-    name: validateName(name),
-    columns,
-    where: options?.where,
-  });
+type UniqueIndexOptions = { readonly where?: SQL<boolean> };
+
+export const uniqueIndex: {
+  <const Columns extends NonEmptyColumns>(
+    columns: Columns & ValidateDistinctColumns<Columns>,
+    options?: UniqueIndexOptions
+  ): <const Name extends string>(
+    name: Name & ValidateSqlName<Name, "Table.uniqueIndex name must be a lowercase SQL identifier">
+  ) => UniqueIndex;
+  <const Name extends string, const Columns extends NonEmptyColumns>(
+    name: Name & ValidateSqlName<Name, "Table.uniqueIndex name must be a lowercase SQL identifier">,
+    columns: Columns & ValidateDistinctColumns<Columns>,
+    options?: UniqueIndexOptions
+  ): UniqueIndex;
+} = dual(
+  (args) => isString(args[0]),
+  (name: string, columns: NonEmptyColumns, options?: UniqueIndexOptions): UniqueIndex =>
+    Nodes.uniqueIndex({
+      name: validateName(name),
+      columns,
+      where: options?.where,
+    })
+);
 
 /**
  * Constructs a typed SQL check in data-first or data-last form.
@@ -727,10 +775,20 @@ export const check: {
  * @category constructors
  * @since 0.0.0
  */
-export const unsafeCheckSql = <const Name extends string>(
-  name: Name & ValidateSqlName<Name, "Table.unsafeCheckSql name must be a lowercase SQL identifier">,
-  value: string
-): UnsafeCheckSql => Nodes.unsafeCheckSql({ name: validateName(name), sql: value });
+export const unsafeCheckSql: {
+  (
+    value: string
+  ): <const Name extends string>(
+    name: Name & ValidateSqlName<Name, "Table.unsafeCheckSql name must be a lowercase SQL identifier">
+  ) => UnsafeCheckSql;
+  <const Name extends string>(
+    name: Name & ValidateSqlName<Name, "Table.unsafeCheckSql name must be a lowercase SQL identifier">,
+    value: string
+  ): UnsafeCheckSql;
+} = dual(
+  2,
+  (name: string, value: string): UnsafeCheckSql => Nodes.unsafeCheckSql({ name: validateName(name), sql: value })
+);
 
 const emitIndex = (node: Index): PgTableExtraConfigValue => {
   const on = drizzleIndex(node.name);
@@ -785,7 +843,10 @@ const validateColumns = (node: Node): void => {
  * @category constructors
  * @since 0.0.0
  */
-export const validateNodes = (nodes: ReadonlyArray<Node>, inlinePrimaryKeys: number): void => {
+export const validateNodes: {
+  (inlinePrimaryKeys: number): (nodes: ReadonlyArray<Node>) => void;
+  (nodes: ReadonlyArray<Node>, inlinePrimaryKeys: number): void;
+} = dual(2, (nodes: ReadonlyArray<Node>, inlinePrimaryKeys: number): void => {
   const names = nodes.map((node) => node.name);
   if (HashSet.size(HashSet.fromIterable(names)) !== names.length) {
     fail("PostgreSQL table-extra names must be unique within their owning table.");
@@ -795,7 +856,7 @@ export const validateNodes = (nodes: ReadonlyArray<Node>, inlinePrimaryKeys: num
     fail("A PostgreSQL table can declare at most one primary key across inline and composite forms.");
   }
   nodes.forEach(validateColumns);
-};
+});
 
 /**
  * Compiles one table-extra descriptor to a Drizzle PostgreSQL config value.

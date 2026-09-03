@@ -12,6 +12,7 @@
 import { Cause, DateTime, Effect, HashSet, Inspectable, Redacted } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as Str from "effect/String";
 import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/unstable/http";
 import { AuthenticationError } from "../Domain/Error/Auth.ts";
@@ -168,17 +169,17 @@ export const AuthRouter = HttpRouter.addAll([
     "/v1/auth/ticket",
     createTicketHandler.pipe(
       Effect.catchTag("AuthenticationError", handleAuthError),
-      Effect.catchCause((cause) =>
-        Cause.hasInterrupts(cause)
-          ? Effect.failCause(cause)
-          : Effect.logError("Ticket request failed unexpectedly", { cause: Cause.pretty(cause) }).pipe(
-              Effect.as(
-                HttpServerResponse.jsonUnsafe(
-                  { error: "INTERNAL_SERVER_ERROR", message: "Ticket creation failed" },
-                  { status: 500 }
-                )
+      Effect.catchCauseIf(
+        P.not(Cause.hasInterrupts),
+        (cause) =>
+          Effect.logError("Ticket request failed unexpectedly", { cause: Cause.pretty(cause) }).pipe(
+            Effect.as(
+              HttpServerResponse.jsonUnsafe(
+                { error: "INTERNAL_SERVER_ERROR", message: "Ticket creation failed" },
+                { status: 500 }
               )
             )
+          )
       )
     )
   ),

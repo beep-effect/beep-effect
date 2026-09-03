@@ -895,17 +895,17 @@ const executeWithRetry = Effect.fnUntraced(function* (
     .pipe(Effect.mapError((cause) => M365Error.fromReason("transport", { cause, resource, url })));
 
   return yield* ensureSuccess(response, resource, url).pipe(
-    Effect.catch((error) =>
-      error.reason === "throttled" && remaining > 0
-        ? Effect.sleep(
-            Duration.seconds(
-              pipe(
-                error.retryAfterSeconds,
-                O.getOrElse(() => DEFAULT_THROTTLE_RETRY_AFTER_SECONDS)
-              )
+    Effect.catchIf(
+      (error) => error.reason === "throttled" && remaining > 0,
+      (error) =>
+        Effect.sleep(
+          Duration.seconds(
+            pipe(
+              error.retryAfterSeconds,
+              O.getOrElse(() => DEFAULT_THROTTLE_RETRY_AFTER_SECONDS)
             )
-          ).pipe(Effect.flatMap(() => executeWithRetry(client, makeRequest, resource, url, remaining - 1)))
-        : Effect.fail(error)
+          )
+        ).pipe(Effect.flatMap(() => executeWithRetry(client, makeRequest, resource, url, remaining - 1)))
     )
   );
 });
@@ -1047,7 +1047,7 @@ const loadEnvConfig = Effect.fn("M365.loadEnvConfig")(function* () {
       onNone: () => Effect.succeed(O.none<ReadonlyArray<string>>()),
       onSome: (value) =>
         S.decodeEffect(M365ScopesFromCsv)(value).pipe(
-          Effect.map(O.some),
+          Effect.asSome,
           Effect.mapError((cause) => M365Error.fromReason("config", { cause }))
         ),
     })

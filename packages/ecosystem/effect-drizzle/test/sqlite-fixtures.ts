@@ -393,7 +393,7 @@ export const _sqliteSetNullNonNullable = () => {
     targetId: SharedOrganizationId.pipe(
       sqlite.integer(),
       // @ts-expect-error invariant: SET NULL requires nullable encoded source
-      sqlite.references(SharedOrganizationId, { onDelete: "set null" })
+      sqlite.references({ id: SharedOrganizationId, options: { onDelete: "set null" } })
     ),
   }) {}
   // @ts-expect-error invariant: runtime schema assembly mirrors SET NULL validation
@@ -405,7 +405,7 @@ export const _sqliteSetDefaultWithoutDefault = () => {
     targetId: SharedOrganizationId.pipe(
       sqlite.integer(),
       // @ts-expect-error invariant: SET DEFAULT requires a declared database default
-      sqlite.references(SharedOrganizationId, { onDelete: "set default" })
+      sqlite.references({ id: SharedOrganizationId, options: { onDelete: "set default" } })
     ),
   }) {}
   return sqliteKit.schema({

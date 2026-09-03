@@ -535,15 +535,13 @@ const readRequiredRedactedConfig = (key: string): Effect.Effect<Redacted.Redacte
         cause,
       })
     ),
-    Effect.flatMap((value) =>
-      Str.isNonEmpty(normalizeWhitespace(Redacted.value(value)))
-        ? Effect.succeed(value)
-        : Effect.fail(
-            SyncDataToTsError.make({
-              message: `${key} is required for the authenticated ISO 3166 sync target.`,
-              targetId,
-            })
-          )
+    Effect.filterOrFail(
+      (value) => Str.isNonEmpty(normalizeWhitespace(Redacted.value(value))),
+      () =>
+        SyncDataToTsError.make({
+          message: `${key} is required for the authenticated ISO 3166 sync target.`,
+          targetId,
+        })
     )
   );
 

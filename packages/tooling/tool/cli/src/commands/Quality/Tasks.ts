@@ -1394,7 +1394,7 @@ const runStepWithQuarantine = Effect.fn("QualityTasks.runStepWithQuarantine")(fu
   if (step.flakeQuarantine === undefined || isCi()) {
     return yield* runStep(step).pipe(
       Effect.as(O.none<QualityTaskFailed>()),
-      Effect.catchTag("QualityTaskFailed", (failure) => Effect.succeed(O.some(failure)))
+      Effect.catchTag("QualityTaskFailed", (failure) => Effect.succeedSome(failure))
     );
   }
 

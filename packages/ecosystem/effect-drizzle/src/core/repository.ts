@@ -359,6 +359,16 @@ const validateRepositoryModel = (model: AnyModel, idColumn: string): void => {
  * @since 0.0.0
  */
 export const makeRepository: {
+  <const Id extends string>(options: {
+    readonly spanPrefix: string;
+    readonly idColumn: Id;
+  }): <const M extends RepositoryModel>(
+    model: M & ValidateVersionModel<M> & ValidateColumnNames<M> & ValidateLocator<M, Id>
+  ) => Effect<Repository<M, Id & IdKey<M>>, never, SqlClient>;
+  <const M extends RepositoryModel, const Id extends IdKey<M>>(options: {
+    readonly spanPrefix: string;
+    readonly idColumn: Id;
+  }): (model: M & ValidateVersionModel<M> & ValidateColumnNames<M>) => Effect<Repository<M, Id>, never, SqlClient>;
   <const M extends RepositoryModel, const Id extends IdKey<M>>(
     model: M & ValidateVersionModel<M> & ValidateColumnNames<M>,
     options: {
@@ -366,12 +376,6 @@ export const makeRepository: {
       readonly idColumn: Id;
     }
   ): Effect<Repository<M, Id>, never, SqlClient>;
-  <const Id extends string>(options: {
-    readonly spanPrefix: string;
-    readonly idColumn: Id;
-  }): <const M extends RepositoryModel>(
-    model: M & ValidateVersionModel<M> & ValidateColumnNames<M> & ValidateLocator<M, Id>
-  ) => Effect<Repository<M, Id & IdKey<M>>, never, SqlClient>;
 } = dual(
   2,
   <const M extends RepositoryModel, const Id extends IdKey<M>>(

@@ -10,6 +10,8 @@
  *
  * @since 0.0.0
  */
+
+import { dual } from "effect/Function";
 import { pipeArguments } from "effect/Pipeable";
 import { hasProperty } from "effect/Predicate";
 import * as Meta from "./Meta.ts";
@@ -90,12 +92,15 @@ const Proto = {
  * @category constructors
  * @since 0.0.0
  */
-export const make = <const Sch extends AnySchema, const M extends Meta.Meta>(schema: Sch, meta: M): Field<Sch, M> => {
+export const make: {
+  <const M extends Meta.Meta>(meta: M): <const Sch extends AnySchema>(schema: Sch) => Field<Sch, M>;
+  <const Sch extends AnySchema, const M extends Meta.Meta>(schema: Sch, meta: M): Field<Sch, M>;
+} = dual(2, <const Sch extends AnySchema, const M extends Meta.Meta>(schema: Sch, meta: M): Field<Sch, M> => {
   const self = Object.create(Proto);
   self.schema = schema;
   self.meta = meta;
   return self;
-};
+});
 
 /**
  * Test whether an unknown value is a `@beep/effect-drizzle` field wrapper.
@@ -161,10 +166,13 @@ export type Patched<I extends Input, Patch extends Meta.Patch> = Field<SchemaFro
  * @category combinators
  * @since 0.0.0
  */
-export const patch = <I extends Input, const Patch extends Meta.Patch>(input: I, p: Patch): Patched<I, Patch> => {
+export const patch: {
+  <const Patch extends Meta.Patch>(p: Patch): <I extends Input>(input: I) => Patched<I, Patch>;
+  <I extends Input, const Patch extends Meta.Patch>(input: I, p: Patch): Patched<I, Patch>;
+} = dual(2, <I extends Input, const Patch extends Meta.Patch>(input: I, p: Patch): Patched<I, Patch> => {
   const f = from(input);
   return make(f.schema, Meta.merge(f.meta, p));
-};
+});
 
 // ---------------------------------------------------------------------------
 // Encoded-type extraction (the SQL-facing side of an Input)

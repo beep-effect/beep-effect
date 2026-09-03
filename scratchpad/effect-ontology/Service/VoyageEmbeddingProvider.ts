@@ -582,16 +582,10 @@ export const VoyageEmbeddingProviderLive: Layer.Layer<
     const config = yield* ConfigService;
 
     // Get API key from config (will be added in Config.ts update)
-    const apiKey = yield* O.match(config.embedding.voyageApiKey, {
-      onNone: () =>
-        Effect.fail(
-          EmbeddingError.make({
-            message: "EMBEDDING_VOYAGE_API_KEY is required for the Voyage provider",
-            provider: "voyage",
-          })
-        ),
-      onSome: Effect.succeed,
-    });
+    const apiKey = yield* Effect.fromOption(config.embedding.voyageApiKey, () => EmbeddingError.make({
+    message: "EMBEDDING_VOYAGE_API_KEY is required for the Voyage provider",
+    provider: "voyage",
+}));
     const model = yield* VoyageModel.decodeUnknownEffect(config.embedding.voyageModel).pipe(
       Effect.mapError((cause) =>
         EmbeddingError.make({

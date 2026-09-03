@@ -2543,10 +2543,9 @@ const queryPhoenixProjectStats = (client: HttpClient.HttpClient, baseUrl: string
         .execute(pipe(statsRequest, HttpClientRequest.accept("application/json")))
         .pipe(Effect.mapError(() => "Phoenix could not be reached for the aggregate query"))
     ),
-    Effect.flatMap((statsResponse) =>
-      isOkHttpStatus(statsResponse.status)
-        ? Effect.succeed(statsResponse)
-        : Effect.fail(`Phoenix answered the aggregate query with HTTP ${statsResponse.status}`)
+    Effect.filterOrFail(
+      (statsResponse) => isOkHttpStatus(statsResponse.status),
+      (statsResponse) => `Phoenix answered the aggregate query with HTTP ${statsResponse.status}`
     ),
     Effect.flatMap((statsResponse) =>
       HttpClientResponse.schemaBodyJson(S.Unknown)(statsResponse).pipe(
@@ -3718,7 +3717,7 @@ const isDatasetNotFoundError = (error: PhoenixError): boolean =>
 const findPhoenixDatasetInfo = Effect.fn("AiMetrics.findPhoenixDatasetInfo")(
   (phoenix: PhoenixShape, selector: PhoenixDatasetSelector) =>
     phoenix.getDatasetInfo(selector).pipe(
-      Effect.map(O.some),
+      Effect.asSome,
       Effect.catchIf(isDatasetNotFoundError, () => Effect.succeedNone)
     )
 );

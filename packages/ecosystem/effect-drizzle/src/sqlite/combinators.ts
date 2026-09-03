@@ -969,14 +969,23 @@ type ValidateReferenceActions<I extends Field.Input, Options> =
  * @category combinators
  * @since 0.0.0
  */
-export const references =
-  <const Id extends EntityIdLike, const Options extends ReferenceOptions | undefined = undefined>(
-    id: Id,
-    options?: Options
-  ) =>
-  <I extends Field.Input>(
-    input: I & ValidateReferenceActions<NoInfer<I>, Options>
-  ): Field.Patched<I, { readonly references: Meta.References<Id["tableName"], "id"> }> =>
+export function references<const Id extends EntityIdLike>(
+  id: Id
+): <I extends Field.Input>(
+  input: I & ValidateReferenceActions<NoInfer<I>, undefined>
+) => Field.Patched<I, { readonly references: Meta.References<Id["tableName"], "id"> }>;
+export function references<const Id extends EntityIdLike, const Options extends ReferenceOptions>(config: {
+  readonly id: Id;
+  readonly options: Options;
+}): <I extends Field.Input>(
+  input: I & ValidateReferenceActions<NoInfer<I>, Options>
+) => Field.Patched<I, { readonly references: Meta.References<Id["tableName"], "id"> }>;
+export function references(
+  idOrConfig: EntityIdLike | { readonly id: EntityIdLike; readonly options: ReferenceOptions }
+): unknown {
+  const id = isEntityIdLike(idOrConfig) ? idOrConfig : idOrConfig.id;
+  const options = isEntityIdLike(idOrConfig) ? undefined : idOrConfig.options;
+  return (input: Field.Input): Field.Any =>
     Field.patch(input, {
       references: {
         tableName: id.tableName,
@@ -985,3 +994,4 @@ export const references =
         onUpdate: options?.onUpdate,
       },
     });
+}

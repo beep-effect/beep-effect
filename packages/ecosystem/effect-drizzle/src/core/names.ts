@@ -4,6 +4,7 @@
  * @since 0.0.0
  */
 
+import { dual } from "effect/Function";
 import { String as StringSchema, TaggedError } from "effect/Schema";
 import { declaredFieldsEquivalence } from "./declaredFieldsEquivalence.ts";
 
@@ -133,7 +134,10 @@ const utf8ByteLength = (value: string): number => encoder.encode(value).byteLeng
  * @category validation
  * @since 0.0.0
  */
-export const sqlNameIssue = (name: string, dialect: Dialect): string | undefined => {
+export const sqlNameIssue: {
+  (dialect: Dialect): (name: string) => string | undefined;
+  (name: string, dialect: Dialect): string | undefined;
+} = dual(2, (name: string, dialect: Dialect): string | undefined => {
   if (name.length === 0) return "must not be empty";
   if (name.includes("\0")) return "must not contain NUL (U+0000)";
   if (!/^[_a-z][_a-z0-9]*$/.test(name) || name.endsWith("_")) {
@@ -141,7 +145,7 @@ export const sqlNameIssue = (name: string, dialect: Dialect): string | undefined
   }
   if (dialect === "pg" && utf8ByteLength(name) > 63) return "must be at most 63 UTF-8 bytes";
   return undefined;
-};
+});
 
 /**
  * Return the PostgreSQL enum-label violation, preserving the valid empty label.
@@ -181,12 +185,15 @@ const canonicalSqlName = (name: string, dialect: Dialect): string => {
  * @category assertions
  * @since 0.0.0
  */
-export const assertSqlName = (name: string, dialect: Dialect, surface: string): void => {
+export const assertSqlName: {
+  (dialect: Dialect, surface: string): (name: string) => void;
+  (name: string, dialect: Dialect, surface: string): void;
+} = dual(3, (name: string, dialect: Dialect, surface: string): void => {
   const issue = sqlNameIssue(name, dialect);
   if (issue !== undefined) {
     throw SqlNameError.make({ message: `${surface} '${name}' ${issue}.`, name, surface });
   }
-};
+});
 
 /**
  * Throw the shared tagged name error for a PostgreSQL enum-label violation.
@@ -218,16 +225,18 @@ export interface SqlNameCollision {
   readonly secondOwner: string;
 }
 
+type SqlNameEntries = ReadonlyArray<readonly [owner: string, name: string]>;
+
 /**
  * Find the first case-fold, snake-case, or PostgreSQL truncation-prefix collision.
  * @internal
  * @category validation
  * @since 0.0.0
  */
-export const findSqlNameCollision = (
-  entries: ReadonlyArray<readonly [owner: string, name: string]>,
-  dialect: Dialect
-): SqlNameCollision | undefined => {
+export const findSqlNameCollision: {
+  (dialect: Dialect): (entries: SqlNameEntries) => SqlNameCollision | undefined;
+  (entries: SqlNameEntries, dialect: Dialect): SqlNameCollision | undefined;
+} = dual(2, (entries: SqlNameEntries, dialect: Dialect): SqlNameCollision | undefined => {
   const seen = new Map<string, readonly [owner: string, name: string]>();
   for (const [owner, name] of entries) {
     const canonical = canonicalSqlName(name, dialect);
@@ -243,7 +252,7 @@ export const findSqlNameCollision = (
     seen.set(canonical, [owner, name]);
   }
   return undefined;
-};
+});
 
 /**
  * Validate names and reject their normalized dialect collision keys.
@@ -251,11 +260,10 @@ export const findSqlNameCollision = (
  * @category validation
  * @since 0.0.0
  */
-export const assertUniqueSqlNames = (
-  entries: ReadonlyArray<readonly [owner: string, name: string]>,
-  dialect: Dialect,
-  surface: string
-): void => {
+export const assertUniqueSqlNames: {
+  (dialect: Dialect, surface: string): (entries: SqlNameEntries) => void;
+  (entries: SqlNameEntries, dialect: Dialect, surface: string): void;
+} = dual(3, (entries: SqlNameEntries, dialect: Dialect, surface: string): void => {
   const collision = findSqlNameCollision(entries, dialect);
   if (collision !== undefined) {
     throw SqlNameError.make({
@@ -265,4 +273,4 @@ export const assertUniqueSqlNames = (
     });
   }
   entries.forEach(([, name]) => assertSqlName(name, dialect, surface));
-};
+});

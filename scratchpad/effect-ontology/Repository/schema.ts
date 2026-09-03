@@ -263,7 +263,7 @@ export class Claims extends Model<Claims>("Claims")(
     id: generatedUuidPrimaryKey,
     articleId: S.String.pipe(
       pg.uuid(),
-      pg.references(ArticlesReference, { onDelete: "cascade" }),
+      pg.references({ id: ArticlesReference, options: { onDelete: "cascade" } }),
       pg.columnName("article_id")
     ),
     ontologyId: S.String.pipe(pg.text(), pg.columnName("ontology_id")),
@@ -288,7 +288,7 @@ export class Claims extends Model<Claims>("Claims")(
       pg.references(CorrectionsReference),
       pg.columnName("deprecated_by")
     ),
-    confidenceScore: nullableColumn(S.String).pipe(pg.numeric(4, 3), pg.columnName("confidence_score")),
+    confidenceScore: nullableColumn(S.String).pipe(pg.numeric({ precision: 4, scale: 3 }), pg.columnName("confidence_score")),
     evidenceText: nullableColumn(S.String).pipe(pg.text(), pg.columnName("evidence_text")),
     evidenceStartOffset: nullableColumn(S.Int).pipe(pg.integer(), pg.columnName("evidence_start_offset")),
     evidenceEndOffset: nullableColumn(S.Int).pipe(pg.integer(), pg.columnName("evidence_end_offset")),
@@ -343,7 +343,7 @@ export class CorrectionClaims extends Model<CorrectionClaims>("CorrectionClaims"
   {
     correctionId: S.String.pipe(
       pg.uuid(),
-      pg.references(CorrectionsReference, { onDelete: "cascade" }),
+      pg.references({ id: CorrectionsReference, options: { onDelete: "cascade" } }),
       pg.columnName("correction_id")
     ),
     originalClaimId: S.String.pipe(pg.uuid(), pg.references(ClaimsReference), pg.columnName("original_claim_id")),
@@ -584,7 +584,7 @@ export class CanonicalEntities extends Model<CanonicalEntities>("CanonicalEntiti
 
     // Resolution metadata
     mergeCount: nullableColumn(S.Int).pipe(pg.integer(), pg.default(1), pg.columnName("merge_count")),
-    confidenceAvg: nullableColumn(S.String).pipe(pg.numeric(4, 3), pg.columnName("confidence_avg")),
+    confidenceAvg: nullableColumn(S.String).pipe(pg.numeric({ precision: 4, scale: 3 }), pg.columnName("confidence_avg")),
 
     // Temporal tracking
     firstSeenAt: nullableColumn(S.Date).pipe(
@@ -646,7 +646,7 @@ export class EntityAliases extends Model<EntityAliases>("EntityAliases")(
     ontologyId: defaultOntologyId,
 
     canonicalEntityId: canonicalEntityReferenceId.pipe(
-      pg.references(CanonicalEntitiesReference, { onDelete: "cascade" }),
+      pg.references({ id: CanonicalEntitiesReference, options: { onDelete: "cascade" } }),
       pg.columnName("canonical_entity_id")
     ),
 
@@ -657,7 +657,7 @@ export class EntityAliases extends Model<EntityAliases>("EntityAliases")(
 
     // Resolution metadata
     resolutionMethod: S.String.pipe(pg.text(), pg.columnName("resolution_method")),
-    resolutionConfidence: S.String.pipe(pg.numeric(4, 3), pg.columnName("resolution_confidence")),
+    resolutionConfidence: S.String.pipe(pg.numeric({ precision: 4, scale: 3 }), pg.columnName("resolution_confidence")),
 
     // Source tracking
     firstBatchId: nullableColumn(S.String).pipe(pg.text(), pg.columnName("first_batch_id")),
@@ -705,10 +705,10 @@ export class EntityBlockingTokens extends Model<EntityBlockingTokens>("EntityBlo
     ontologyId: defaultOntologyId,
 
     canonicalEntityId: canonicalEntityReferenceId.pipe(
-      pg.references(CanonicalEntitiesReference, {
+      pg.references({ id: CanonicalEntitiesReference, options: {
         name: "entity_blocking_tokens_Sx4xpmtdQjTC_fkey",
         onDelete: "cascade",
-      }),
+      } }),
       pg.columnName("canonical_entity_id")
     ),
     token: S.String.pipe(pg.text()),
@@ -1127,18 +1127,18 @@ export class LinkBatchItems extends Model<LinkBatchItems>("LinkBatchItems")(
   {
     batchId: S.String.pipe(
       pg.uuid(),
-      pg.references(LinkBatchesReference, {
+      pg.references({ id: LinkBatchesReference, options: {
         name: "link_batch_items_batch_id_link_batches_id_fkey",
         onDelete: "cascade",
-      }),
+      } }),
       pg.columnName("batch_id")
     ),
     linkId: S.String.pipe(
       pg.uuid(),
-      pg.references(IngestedLinksReference, {
+      pg.references({ id: IngestedLinksReference, options: {
         name: "link_batch_items_link_id_ingested_links_id_fkey",
         onDelete: "cascade",
-      }),
+      } }),
       pg.columnName("link_id")
     ),
 
@@ -1327,7 +1327,7 @@ export class LlmExamples extends Model<LlmExamples>("LlmExamples")(
 
     // Quality metrics
     usageCount: nullableColumn(S.Int).pipe(pg.integer(), pg.default(0), pg.columnName("usage_count")),
-    successRate: nullableColumn(S.String).pipe(pg.numeric(4, 3), pg.columnName("success_rate")),
+    successRate: nullableColumn(S.String).pipe(pg.numeric({ precision: 4, scale: 3 }), pg.columnName("success_rate")),
 
     // Lifecycle
     createdAt: nullableColumn(S.Date).pipe(

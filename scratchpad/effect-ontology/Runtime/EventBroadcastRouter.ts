@@ -666,10 +666,10 @@ export const EventBroadcastRouter = HttpRouter.addAll([
 
       return HttpServerResponse.empty();
     }).pipe(
-      Effect.catchCause((cause) =>
-        Cause.hasInterrupts(cause)
-          ? Effect.failCause(cause)
-          : Effect.gen(function* () {
+      Effect.catchCauseIf(
+        P.not(Cause.hasInterrupts),
+        (cause) =>
+          Effect.gen(function* () {
               yield* Effect.logError("WebSocket upgrade failed", { cause: Cause.pretty(cause) });
               return yield* HttpServerResponse.json(
                 {

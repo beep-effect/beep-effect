@@ -7,6 +7,8 @@
  *
  * @since 0.0.0
  */
+
+import { dual } from "effect/Function";
 import { ModelInvariantError } from "./core/model.ts";
 import { make as makePgKit } from "./pg/kit.ts";
 import { make as makeSqliteKit } from "./sqlite/kit.ts";
@@ -124,19 +126,29 @@ type DialectKit<D extends Dialect, Defaults extends DialectFields<D>> = D extend
  * @category factories
  * @since 0.0.0
  */
-export function make<const Defaults extends PgFieldsInput>(
-  dialect: "pg",
-  build: (pg: PgToolkit) => PgKitConfig<Defaults>
-): PgKit<Defaults>;
-export function make<const Defaults extends SqliteFieldsInput>(
-  dialect: "sqlite",
-  build: (sqlite: SqliteToolkit) => SqliteKitConfig<Defaults>
-): SqliteKit<Defaults>;
-export function make<const D extends Dialect, const Defaults extends DialectFields<D>>(
-  dialect: D,
-  build: (toolkit: DialectToolkit<D>) => DialectConfig<D, Defaults>
-): DialectKit<D, Defaults>;
-export function make(dialect: Dialect, build: unknown): unknown {
+export const make: {
+  <const Defaults extends PgFieldsInput>(
+    build: (pg: PgToolkit) => PgKitConfig<Defaults>
+  ): (dialect: "pg") => PgKit<Defaults>;
+  <const Defaults extends SqliteFieldsInput>(
+    build: (sqlite: SqliteToolkit) => SqliteKitConfig<Defaults>
+  ): (dialect: "sqlite") => SqliteKit<Defaults>;
+  <const D extends Dialect, const Defaults extends DialectFields<D>>(
+    build: (toolkit: DialectToolkit<D>) => DialectConfig<D, Defaults>
+  ): (dialect: D) => DialectKit<D, Defaults>;
+  <const Defaults extends PgFieldsInput>(
+    dialect: "pg",
+    build: (pg: PgToolkit) => PgKitConfig<Defaults>
+  ): PgKit<Defaults>;
+  <const Defaults extends SqliteFieldsInput>(
+    dialect: "sqlite",
+    build: (sqlite: SqliteToolkit) => SqliteKitConfig<Defaults>
+  ): SqliteKit<Defaults>;
+  <const D extends Dialect, const Defaults extends DialectFields<D>>(
+    dialect: D,
+    build: (toolkit: DialectToolkit<D>) => DialectConfig<D, Defaults>
+  ): DialectKit<D, Defaults>;
+} = dual(2, (dialect: Dialect, build: unknown): unknown => {
   if (dialect === "pg") return makePgKit(build as (pg: PgToolkit) => PgKitConfig<PgFieldsInput>);
   if (dialect === "sqlite")
     return makeSqliteKit(build as (sqlite: SqliteToolkit) => SqliteKitConfig<SqliteFieldsInput>);
@@ -144,4 +156,4 @@ export function make(dialect: Dialect, build: unknown): unknown {
     message: "Unsupported @beep/effect-drizzle kit dialect.",
     fieldName: "(dialect)",
   });
-}
+});

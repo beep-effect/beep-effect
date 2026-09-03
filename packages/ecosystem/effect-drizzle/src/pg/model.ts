@@ -16,6 +16,7 @@
  * @since 0.0.0
  */
 import { every, findFirst, last as lastArray, reduce } from "effect/Array";
+import { dual } from "effect/Function";
 import { fromUndefinedOr, getOrElse, getOrUndefined, isSome, match, none, orElse, some } from "effect/Option";
 import { isFunction, isNotUndefined, isNumber, isString, isUint8Array } from "effect/Predicate";
 import { empty, set } from "effect/Record";
@@ -535,217 +536,219 @@ const effectiveSchema = (schema: Field.AnySchema, meta: Meta.Meta): Field.AnySch
  * @category constructors
  * @since 0.0.0
  */
-export function makeModelClass<Self, const F extends FieldsInput>(
-  identifier: string,
-  fields: F,
-  annotations: Annotations.Annotations | undefined,
-  extras: TableExtras.Callback<F> | undefined
-): ModelClass<Self, F>;
-/**
- * Internal helper `makeModelClass`.
- *
- * @internal
- * @category utilities
- * @since 0.0.0
- */
-export function makeModelClass(
-  identifier: string,
-  fields: FieldsInput,
-  annotations: Annotations.Annotations | undefined,
-  extras: TableExtras.Callback<FieldsInput> | undefined
-): object {
-  const tableName = deriveTableName(identifier);
-  validateModelNames(tableName, fields);
-  const fieldCount = Object.keys(fields).length;
-  if (fieldCount === 0 || fieldCount > 1_600) {
-    throw ModelInvariantError.make({
-      message: `PostgreSQL models require from 1 through 1,600 columns; '${identifier}' declares ${fieldCount}.`,
-      fieldName: "(model)",
-    });
-  }
-  const state = reduce(
-    Object.entries(fields),
-    {
-      columns: empty<string, Meta.Meta<PgColumn.Spec>>(),
-      primaryKeys: 0,
-      versionFields: 0,
-      schemaFields: empty<string, Field.AnySchema>(),
-    },
-    function collectPgModelState(state, [key, input]) {
-      const field = Field.from(input);
-      if (field.meta.version && VariantSchema.isField(field.schema)) {
-        throw ModelInvariantError.make({
-          message: `Version field '${key}' cannot use an explicit VariantSchema.Field.`,
-          fieldName: key,
+export const makeModelClass: {
+  <Self, const F extends FieldsInput>(
+    fields: F,
+    annotations: Annotations.Annotations | undefined,
+    extras: TableExtras.Callback<F> | undefined
+  ): (identifier: string) => ModelClass<Self, F>;
+  <Self, const F extends FieldsInput>(
+    identifier: string,
+    fields: F,
+    annotations: Annotations.Annotations | undefined,
+    extras: TableExtras.Callback<F> | undefined
+  ): ModelClass<Self, F>;
+} = dual(
+  4,
+  (
+    identifier: string,
+    fields: FieldsInput,
+    annotations: Annotations.Annotations | undefined,
+    extras: TableExtras.Callback<FieldsInput> | undefined
+  ): object => {
+    const tableName = deriveTableName(identifier);
+    validateModelNames(tableName, fields);
+    const fieldCount = Object.keys(fields).length;
+    if (fieldCount === 0 || fieldCount > 1_600) {
+      throw ModelInvariantError.make({
+        message: `PostgreSQL models require from 1 through 1,600 columns; '${identifier}' declares ${fieldCount}.`,
+        fieldName: "(model)",
+      });
+    }
+    const state = reduce(
+      Object.entries(fields),
+      {
+        columns: empty<string, Meta.Meta<PgColumn.Spec>>(),
+        primaryKeys: 0,
+        versionFields: 0,
+        schemaFields: empty<string, Field.AnySchema>(),
+      },
+      function collectPgModelState(state, [key, input]) {
+        const field = Field.from(input);
+        if (field.meta.version && VariantSchema.isField(field.schema)) {
+          throw ModelInvariantError.make({
+            message: `Version field '${key}' cannot use an explicit VariantSchema.Field.`,
+            fieldName: key,
+          });
+        }
+        const select = Derive.selectSchemaOf(field.schema);
+        const classified = match(fromUndefinedOr(field.meta.column), {
+          onNone: () => Derive.classify(field.schema, key),
+          onSome: (column) => {
+            if (!PgColumn.isSpec(column)) {
+              throw ModelInvariantError.make({
+                message: `Field '${key}' has an invalid or foreign PostgreSQL column descriptor.`,
+                fieldName: key,
+              });
+            }
+            return {
+              column,
+              nullable: Derive.isNullable(field.schema),
+            };
+          },
         });
-      }
-      const select = Derive.selectSchemaOf(field.schema);
-      const classified = match(fromUndefinedOr(field.meta.column), {
-        onNone: () => Derive.classify(field.schema, key),
-        onSome: (column) => {
-          if (!PgColumn.isSpec(column)) {
+
+        if (!PgColumn.Spec.guards.custom(classified.column)) {
+          const expected = PgColumn.carrier(classified.column, field.meta.dimensions);
+          const actual = Derive.carrier(field.schema, field.meta.dimensions);
+          if (actual.tag !== expected.tag || actual.dimensions !== expected.dimensions) {
             throw ModelInvariantError.make({
-              message: `Field '${key}' has an invalid or foreign PostgreSQL column descriptor.`,
+              message: `Field '${key}' encodes ${actual.tag}[${actual.dimensions}] but its PostgreSQL column carries ${expected.tag}[${expected.dimensions}].`,
               fieldName: key,
             });
           }
-          return {
-            column,
-            nullable: Derive.isNullable(field.schema),
-          };
-        },
-      });
+        }
 
-      if (!PgColumn.Spec.guards.custom(classified.column)) {
-        const expected = PgColumn.carrier(classified.column, field.meta.dimensions);
-        const actual = Derive.carrier(field.schema, field.meta.dimensions);
-        if (actual.tag !== expected.tag || actual.dimensions !== expected.dimensions) {
+        if (field.meta.primaryKey && classified.nullable) {
           throw ModelInvariantError.make({
-            message: `Field '${key}' encodes ${actual.tag}[${actual.dimensions}] but its PostgreSQL column carries ${expected.tag}[${expected.dimensions}].`,
+            message: `Primary key '${key}' derives a nullable encoded representation.`,
             fieldName: key,
           });
         }
-      }
-
-      if (field.meta.primaryKey && classified.nullable) {
-        throw ModelInvariantError.make({
-          message: `Primary key '${key}' derives a nullable encoded representation.`,
-          fieldName: key,
-        });
-      }
-      if (
-        field.meta.dimensions !== 0 &&
-        (field.meta.primaryKey || field.meta.identity !== false || field.meta.version)
-      ) {
-        throw ModelInvariantError.make({
-          message: `Array field '${key}' cannot use primary-key, identity, or version semantics.`,
-          fieldName: key,
-        });
-      }
-      if (field.meta.identity !== false && !PgColumn.isIdentityKind(classified.column.kind)) {
-        throw ModelInvariantError.make({
-          message: `Identity on '${key}' requires an integer-family column, got '${classified.column.kind}'.`,
-          fieldName: key,
-        });
-      }
-      if (field.meta.generated !== false && (field.meta.hasDefault || isNotUndefined(field.meta.default))) {
-        throw ModelInvariantError.make({
-          message: `Field '${key}' cannot be both defaulted and generated.`,
-          fieldName: key,
-        });
-      }
-      if (field.meta.version && !PgColumn.isNumberInteger(classified.column)) {
-        throw ModelInvariantError.make({
-          message: `Version field '${key}' requires a number-encoded integer-family column.`,
-          fieldName: key,
-        });
-      }
-      if (field.meta.version && classified.nullable) {
-        throw ModelInvariantError.make({
-          message: `Version field '${key}' cannot be nullable.`,
-          fieldName: key,
-        });
-      }
-      if (field.meta.version && (field.meta.identity !== false || field.meta.generated !== false)) {
-        throw ModelInvariantError.make({
-          message: `Version field '${key}' cannot use identity or generated-column semantics.`,
-          fieldName: key,
-        });
-      }
-      if (PgColumn.Spec.guards.char(classified.column)) {
-        const char = classified.column;
-        const lengths = Derive.exactLengths(field.schema);
-        if (lengths.length === 0 || !every(lengths, (length) => length === char.length)) {
+        if (
+          field.meta.dimensions !== 0 &&
+          (field.meta.primaryKey || field.meta.identity !== false || field.meta.version)
+        ) {
           throw ModelInvariantError.make({
-            message: `char(${char.length}) on '${key}' requires an exact matching schema length.`,
+            message: `Array field '${key}' cannot use primary-key, identity, or version semantics.`,
             fieldName: key,
           });
         }
-      }
-      const bounded = PgColumn.Spec.guards.varchar(classified.column)
-        ? some({ kind: "varchar", length: classified.column.length })
-        : none<{ readonly kind: string; readonly length: number }>();
-      if (isSome(bounded)) {
-        const incompatible = findFirst(
-          Derive.maxLengths(field.schema),
-          (maxLength) => maxLength > bounded.value.length
-        );
-        if (isSome(incompatible)) {
+        if (field.meta.identity !== false && !PgColumn.isIdentityKind(classified.column.kind)) {
           throw ModelInvariantError.make({
-            message: `${bounded.value.kind}(${bounded.value.length}) on '${key}' is narrower than schema maxLength ${incompatible.value}.`,
+            message: `Identity on '${key}' requires an integer-family column, got '${classified.column.kind}'.`,
             fieldName: key,
           });
         }
+        if (field.meta.generated !== false && (field.meta.hasDefault || isNotUndefined(field.meta.default))) {
+          throw ModelInvariantError.make({
+            message: `Field '${key}' cannot be both defaulted and generated.`,
+            fieldName: key,
+          });
+        }
+        if (field.meta.version && !PgColumn.isNumberInteger(classified.column)) {
+          throw ModelInvariantError.make({
+            message: `Version field '${key}' requires a number-encoded integer-family column.`,
+            fieldName: key,
+          });
+        }
+        if (field.meta.version && classified.nullable) {
+          throw ModelInvariantError.make({
+            message: `Version field '${key}' cannot be nullable.`,
+            fieldName: key,
+          });
+        }
+        if (field.meta.version && (field.meta.identity !== false || field.meta.generated !== false)) {
+          throw ModelInvariantError.make({
+            message: `Version field '${key}' cannot use identity or generated-column semantics.`,
+            fieldName: key,
+          });
+        }
+        if (PgColumn.Spec.guards.char(classified.column)) {
+          const char = classified.column;
+          const lengths = Derive.exactLengths(field.schema);
+          if (lengths.length === 0 || !every(lengths, (length) => length === char.length)) {
+            throw ModelInvariantError.make({
+              message: `char(${char.length}) on '${key}' requires an exact matching schema length.`,
+              fieldName: key,
+            });
+          }
+        }
+        const bounded = PgColumn.Spec.guards.varchar(classified.column)
+          ? some({ kind: "varchar", length: classified.column.length })
+          : none<{ readonly kind: string; readonly length: number }>();
+        if (isSome(bounded)) {
+          const incompatible = findFirst(
+            Derive.maxLengths(field.schema),
+            (maxLength) => maxLength > bounded.value.length
+          );
+          if (isSome(incompatible)) {
+            throw ModelInvariantError.make({
+              message: `${bounded.value.kind}(${bounded.value.length}) on '${key}' is narrower than schema maxLength ${incompatible.value}.`,
+              fieldName: key,
+            });
+          }
+        }
+        validateLiteralDefault(field, select, classified.column, key);
+        const resolvedColumn = PgColumn.resolveName(classified.column, key);
+        if (PgColumn.Spec.guards.enum(resolvedColumn)) {
+          assertSqlName(resolvedColumn.name, "pg", "PostgreSQL enum name");
+          resolvedColumn.values.forEach(assertPgEnumLabel);
+        }
+        const resolvedMeta = Meta.merge(field.meta, {
+          column: resolvedColumn,
+          references: resolveReferences(field.meta, select, key),
+        });
+        return {
+          columns: set(state.columns, key, resolvedMeta),
+          primaryKeys: state.primaryKeys + (field.meta.primaryKey ? 1 : 0),
+          versionFields: state.versionFields + (field.meta.version ? 1 : 0),
+          schemaFields: set(state.schemaFields, key, effectiveSchema(field.schema, resolvedMeta)),
+        };
       }
-      validateLiteralDefault(field, select, classified.column, key);
-      const resolvedColumn = PgColumn.resolveName(classified.column, key);
-      if (PgColumn.Spec.guards.enum(resolvedColumn)) {
-        assertSqlName(resolvedColumn.name, "pg", "PostgreSQL enum name");
-        resolvedColumn.values.forEach(assertPgEnumLabel);
-      }
-      const resolvedMeta = Meta.merge(field.meta, {
-        column: resolvedColumn,
-        references: resolveReferences(field.meta, select, key),
-      });
-      return {
-        columns: set(state.columns, key, resolvedMeta),
-        primaryKeys: state.primaryKeys + (field.meta.primaryKey ? 1 : 0),
-        versionFields: state.versionFields + (field.meta.version ? 1 : 0),
-        schemaFields: set(state.schemaFields, key, effectiveSchema(field.schema, resolvedMeta)),
-      };
-    }
-  );
-
-  if (state.primaryKeys > 1) {
-    throw ModelInvariantError.make({
-      message: `Model '${identifier}' declares ${state.primaryKeys} inline primary keys; use Table.compositePrimaryKey in the extras callback.`,
-      fieldName: "(model)",
-    });
-  }
-
-  if (state.versionFields > 1) {
-    throw ModelInvariantError.make({
-      message: `Model '${identifier}' declares ${state.versionFields} optimistic-version fields; at most one is allowed.`,
-      fieldName: "(model)",
-    });
-  }
-
-  const harvested = Object.entries(state.columns).flatMap(
-    ([key, meta]): ReadonlyArray<readonly [string, Meta.IndexIntent, string]> => {
-      if (meta.indexed === false) return [];
-      const intent = meta.indexed;
-      const physical = getOrElse(fromUndefinedOr(meta.columnName), () => snakeCase(key));
-      const name = getOrElse(
-        fromUndefinedOr(intent.name),
-        () => `${tableName}_${physical}_${intent.unique ? "unique_idx" : "btree_idx"}`
-      );
-      return [[key, intent, name]];
-    }
-  );
-  if (harvested.length > 0) {
-    assertUniqueSqlNames(
-      harvested.map(([key, , name]): readonly [string, string] => [key, name]),
-      "pg",
-      "PostgreSQL colocated index name"
     );
+
+    if (state.primaryKeys > 1) {
+      throw ModelInvariantError.make({
+        message: `Model '${identifier}' declares ${state.primaryKeys} inline primary keys; use Table.compositePrimaryKey in the extras callback.`,
+        fieldName: "(model)",
+      });
+    }
+
+    if (state.versionFields > 1) {
+      throw ModelInvariantError.make({
+        message: `Model '${identifier}' declares ${state.versionFields} optimistic-version fields; at most one is allowed.`,
+        fieldName: "(model)",
+      });
+    }
+
+    const harvested = Object.entries(state.columns).flatMap(
+      ([key, meta]): ReadonlyArray<readonly [string, Meta.IndexIntent, string]> => {
+        if (meta.indexed === false) return [];
+        const intent = meta.indexed;
+        const physical = getOrElse(fromUndefinedOr(meta.columnName), () => snakeCase(key));
+        const name = getOrElse(
+          fromUndefinedOr(intent.name),
+          () => `${tableName}_${physical}_${intent.unique ? "unique_idx" : "btree_idx"}`
+        );
+        return [[key, intent, name]];
+      }
+    );
+    if (harvested.length > 0) {
+      assertUniqueSqlNames(
+        harvested.map(([key, , name]): readonly [string, string] => [key, name]),
+        "pg",
+        "PostgreSQL colocated index name"
+      );
+    }
+    const composedExtras: TableExtras.Callback<FieldsInput> | undefined =
+      harvested.length === 0
+        ? extras
+        : (columns) => [
+            ...harvested.map(([key, intent, name]) =>
+              intent.unique ? TableExtras.uniqueIndex(name, [columns[key]]) : TableExtras.index(name, [columns[key]])
+            ),
+            ...match(fromUndefinedOr(extras), {
+              onNone: () => [],
+              onSome: (callback) => callback(columns),
+            }),
+          ];
+    const Base = V.Class<object>(identifier)(state.schemaFields, annotations);
+    return withStatics(Base, () => ({
+      sql: { tableName, fields, columns: state.columns, extras: composedExtras },
+    }));
   }
-  const composedExtras: TableExtras.Callback<FieldsInput> | undefined =
-    harvested.length === 0
-      ? extras
-      : (columns) => [
-          ...harvested.map(([key, intent, name]) =>
-            intent.unique ? TableExtras.uniqueIndex(name, [columns[key]]) : TableExtras.index(name, [columns[key]])
-          ),
-          ...match(fromUndefinedOr(extras), {
-            onNone: () => [],
-            onSome: (callback) => callback(columns),
-          }),
-        ];
-  const Base = V.Class<object>(identifier)(state.schemaFields, annotations);
-  return withStatics(Base, () => ({
-    sql: { tableName, fields, columns: state.columns, extras: composedExtras },
-  }));
-}
+);
 
 /**
  * Builds a PostgreSQL model class whose schemas own resolved SQL metadata.

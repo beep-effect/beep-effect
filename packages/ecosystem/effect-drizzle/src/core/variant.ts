@@ -7,6 +7,7 @@
  * @since 0.0.0
  */
 import { VariantSchema } from "effect/unstable/schema";
+import type { Top } from "effect/Schema";
 
 const variantTuple = <const Values extends readonly [string, ...string[]]>(...values: Values): Values => values;
 
@@ -170,7 +171,41 @@ export const FieldExcept = factory.FieldExcept;
  * @category combinators
  * @since 0.0.0
  */
-export const fieldEvolve = factory.fieldEvolve;
+// biome-ignore lint/suspicious/noExplicitAny: Effect uses Field<any> as its invariant variant-field existential.
+type FieldEvolveInput = VariantSchema.Field<any> | Top;
+
+type FieldEvolveMapping<Self extends FieldEvolveInput> =
+  Self extends VariantSchema.Field<infer Schemas>
+    ? { readonly [Key in keyof Schemas]?: (variant: Schemas[Key]) => Top }
+    : { readonly [Key in Variant]?: (variant: Self) => Top };
+
+type EvolvedField<Self extends FieldEvolveInput, Mapping extends FieldEvolveMapping<Self>> = VariantSchema.Field<
+  Self extends VariantSchema.Field<infer Schemas>
+    ? {
+        readonly [Key in keyof Schemas]: Key extends keyof Mapping
+          ? Mapping[Key] extends (argument: never) => infer Result
+            ? Extract<Result, Top>
+            : Schemas[Key]
+          : Schemas[Key];
+      }
+    : {
+        readonly [Key in Variant]: Key extends keyof Mapping
+          ? Mapping[Key] extends (argument: never) => infer Result
+            ? Extract<Result, Top>
+            : Self
+          : Self;
+      }
+>;
+
+export const fieldEvolve: {
+  <Self extends FieldEvolveInput, const Mapping extends FieldEvolveMapping<Self>>(
+    f: Mapping
+  ): (self: Self) => EvolvedField<Self, Mapping>;
+  <Self extends FieldEvolveInput, const Mapping extends FieldEvolveMapping<Self>>(
+    self: Self,
+    f: Mapping
+  ): EvolvedField<Self, Mapping>;
+} = factory.fieldEvolve;
 
 /**
  * Extracts the schema for one variant from a variant-aware model structure.

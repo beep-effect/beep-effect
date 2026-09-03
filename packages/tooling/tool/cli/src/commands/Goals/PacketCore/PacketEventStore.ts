@@ -282,16 +282,16 @@ const makePacketEventStore = Effect.fn("PacketEventStore.make")(function* () {
     }
     const text = yield* fs
       .readFileString(path.join(directory, fileName))
-      .pipe(Effect.map(O.some), Effect.orElseSucceed(O.none<string>));
+      .pipe(Effect.asSome, Effect.orElseSucceed(O.none<string>));
     if (O.isNone(text)) {
       return issueOutcome(issue("event-unreadable", fileName, "event file could not be read."));
     }
-    const raw = yield* decodeJsonUnknown(text.value).pipe(Effect.map(O.some), Effect.orElseSucceed(O.none<unknown>));
+    const raw = yield* decodeJsonUnknown(text.value).pipe(Effect.asSome, Effect.orElseSucceed(O.none<unknown>));
     if (O.isNone(raw)) {
       return issueOutcome(issue("event-invalid", fileName, "event file is not valid JSON."));
     }
     const event = yield* decodePacketEventEffect(upcastPacketEventJson(raw.value)).pipe(
-      Effect.map(O.some),
+      Effect.asSome,
       Effect.orElseSucceed(O.none<PacketEvent>)
     );
     if (O.isNone(event)) {
