@@ -10,6 +10,10 @@ foundation barrels uses per-module form (`import * as Effect from
 `noRestrictedImports` with a warn→error family ratchet — gated on a measured
 pilot. Barrels stay as the public/docgen surface.
 
+Terminal disposition: P2 selected the normative stop route in `SPEC.md` D14.
+P3 was not authorized, so this run closes after P4 with the bounded P1/P2
+vehicle and pilot evidence retained; it does not claim the global outcome.
+
 This is a compact `/goal` launcher. The packet files are the contract:
 
 - `goals/per-module-imports/README.md`
@@ -57,9 +61,10 @@ Workflow:
 
 Acceptance:
 
-- [ ] `SPEC.md` acceptance boxes all check.
-- [ ] Pilot verdict + raw stats recorded; operator sign-off at the gate.
-- [ ] Zero forbidden root specifiers in migrated scope; root rule at `error`.
+- [x] `SPEC.md` terminal-route acceptance boxes all check.
+- [x] Pilot verdict + raw stats recorded; the gate's stop disposition applied.
+- [x] Strict-pass-only P3 outcomes are explicitly not executed under D14 and
+  are not represented as completed migration work.
 
 Stop and report instead of improvising when: the gate says no-win or material
 regression; leaf bypass exposes a design-level cycle; a foundation batch's CI

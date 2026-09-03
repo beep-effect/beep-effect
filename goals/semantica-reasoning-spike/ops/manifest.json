@@ -1,0 +1,106 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "semantica-reasoning-spike",
+    "packetId": "goal-packet/v1:e224fb3059f490505bb04385457c81dcb221bf50729c2143073dbffce6629720",
+    "title": "Semantica Reasoning Spike",
+    "status": "active",
+    "created": "2026-09-03",
+    "updated": "2026-09-03",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/semantica-reasoning-spike",
+  "lifecycle": "active",
+  "mission": "Dated NET-NEW reasoning spike: P1 builds the G-entailment/rules fixture (g-entailment-rules/v1: twenty cases in five classes under the restricted EYE pins, no negation class), then P2-P4 run the adhd probes (proof-ledger kernel, budget-certified rules, evidence-graph workspace) as kill criteria ablated against EYE, with the v3 rete salvage entering at P3 once the archive is located; one S1 candidate (MAP v1.1 section R, R2).",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/semantica-lab",
+    "graduated": "2026-09-03",
+    "note": "MAP v1.1 re-entry packet R (DECISIONS 2026-09-03 R2, ratified with R2.a-R2.g, R0.a, R1.g). The v1.0 precondition 'G-entailment/rules fixture committed' had no owner and became this packet's P1 (R2.a); the C2 pass (2026-08-31) satisfied the other. P2-P4 and the R-c class wait for the sibling semantica-storage-inversion's P-S1 (R1.g); the archived beep-effect-logos root must be located before P3 (R2.g). The O4 OSS gate reasoning-package stays behind this spike surviving ablation."
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "explorations/semantica-lab/BRIEF.md",
+    "explorations/semantica-lab/MAP.md",
+    "explorations/semantica-lab/DECISIONS.md",
+    "explorations/semantica-lab/research/adhd-reasoning.md",
+    "explorations/semantica-lab/research/grounding-v3-logos.md",
+    "goals/semantica-reasoning-spike/README.md",
+    "goals/semantica-reasoning-spike/SPEC.md",
+    "goals/semantica-reasoning-spike/PLAN.md",
+    "goals/semantica-reasoning-spike/GOAL.md",
+    "goals/semantica-reasoning-spike/research/SOURCES.md",
+    "goals/semantica-canary/SPEC.md",
+    "goals/semantica-storage-inversion/SPEC.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/semantica-reasoning-spike/GOAL.md"
+    }
+  ],
+  "provides": ["semantica/rules-fixture", "semantica/reasoning-kernel"],
+  "requires": ["semantica/tombstone-law"],
+  "phases": [
+    {
+      "id": "P1",
+      "name": "Rules fixture (g-entailment-rules/v1)",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "P-R1 proof-ledger kernel",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "P-R2 budget-certified rules",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "P-R3 evidence-graph workspace",
+      "status": "pending"
+    },
+    {
+      "id": "P5",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/semantica-reasoning-spike/GOAL.md)\" -le 4000",
+    "jq . goals/semantica-reasoning-spike/ops/manifest.json",
+    "rg -n \"semantica-reasoning-spike|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/semantica-reasoning-spike",
+    "git diff --check -- goals/semantica-reasoning-spike explorations/semantica-lab",
+    "bun run beep goals index --check",
+    "bun run beep goals doctor",
+    "bun run beep lint reflection-artifacts",
+    "bun run beep yeet verify"
+  ],
+  "stopConditions": [
+    "Probe breaker (S1 as amended by R0.a): P1-P4 are one stage of the reasoning family's opening candidate; a failed probe buys exactly one more candidate for that probe, redesigned when the failure was a design fault; a second failure parks the family, records the park in explorations/semantica-lab/DECISIONS.md, and drops the exploration back to decompose. Never a calendar.",
+    "P2-P4 and the R-c fixture class cannot start until semantica-storage-inversion's P-S1 has landed (R1.g); R-a, R-b, R-d and R-e build in parallel with the storage spike.",
+    "P3 (P-R2) cannot start until the archived beep-effect-logos root is located and its LICENSE re-verified as Apache-2.0; until then the rete salvage is reference-only (R2.g).",
+    "Kill criteria per probe: canonicalization drift across premise-order permutations or cold replays (P2); certificate unsoundness, unsound admission or bounds that reject real rules (P3); unstable identity or invalidation across re-extraction and replay (P4).",
+    "Any change to the pinned g-entailment-rdfs/v1 fixture or its seven C2 cases; any change to the EYE oracle pins without regenerating every gold; a negation case added to gold/v1 before restricted EYE is shown to accept scoped negation (R2.b, R2.d).",
+    "A fixture-local retraction law that differs from the ledger's Invalidated semantics (R2.e); a rules expectation that asks EYE for something it cannot independently establish (R2.c).",
+    "A change would cross a BRIEF No-Go (the spike is never the M1 runtime; no reusable @beep/* export from the lab; the reasoning-package OSS gate stays closed until ablation is survived).",
+    "Verification requires credentials, cost, destructive side effects, or policy approval not named in SPEC.md.",
+    "The same blocker repeats after reasonable investigation."
+  ],
+  "statusNote": "Scaffolded 2026-09-03 at the semantica-lab graduation ceremony (MAP v1.1 §R, R2); execution not started. P1 (the g-entailment-rules/v1 fixture, minus R-c) can begin now; R-c and P2-P4 wait for semantica-storage-inversion P-S1; P3 waits for the archived beep-effect-logos root to be located."
+}

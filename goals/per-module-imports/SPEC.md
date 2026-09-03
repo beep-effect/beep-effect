@@ -236,12 +236,20 @@ imports can regress cold start; a material regression stops the migration.
       Yeet repair and Lint Policy run the new semantics.
 - [x] Pilot measured under the protocol; verdict + raw stats recorded in the
       packet; operator sign-off on continuation (or a recorded stop).
-- [ ] Post-gate: zero forbidden root specifiers in scope (executable and doc
-      fences); Biome rule at root `error` with family overrides removed.
 - [x] Foundation leaf exports shipped in both export maps; docgen green.
-- [ ] Law-flip checklist (`research/enforcement-census.md` §B) fully applied.
-- [ ] Every batch shipped as a PR driven to mergeable via `/yeet`.
-- [ ] Closeout reflection passes `bun run beep lint reflection-artifacts`.
+- [x] The selected terminal route is explicit: D14 stopped P3, so the
+      post-gate zero-root census, Biome root-`error` flip, and remaining
+      law-flip checklist items were not executed or claimed as complete.
+- [x] Every authorized batch shipped through `/yeet`: P1 via PR #971 and P2
+      via PR #990. No P3 batch was authorized.
+- [x] Closeout reflection passes `bun run beep lint reflection-artifacts`.
+
+The strict-pass route would additionally require zero forbidden root
+specifiers in the complete in-scope corpus, the Biome rule at root `error`
+with family overrides removed, and the full law-flip checklist in
+`research/enforcement-census.md` §B. D14 made that route inapplicable to this
+run. Reaching those outcomes requires a new decision backed by new evidence;
+closing this packet does not waive or silently satisfy them.
 
 ## Verification Matrix
 

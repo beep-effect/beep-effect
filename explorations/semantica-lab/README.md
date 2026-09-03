@@ -3,16 +3,19 @@
 ## Status
 
 <!-- BEGIN GENERATED: EXPLORATION STATUS -->
-Stage: `decompose`
-Status: `active`
+Stage: `graduate`
+Status: `graduated`
 <!-- END GENERATED: EXPLORATION STATUS -->
 
-Source: [`ops/manifest.json`](./ops/manifest.json). The `semantica-canary`
-goal passed C0 through C2 and closes as retained on 2026-09-02. Per MAP
-Sequencing 5, the C2 pass fired the storage-inversion gate and left the
-reasoning spike gated on its `G-entailment/rules` fixture. The exploration
-therefore re-enters as `active` at `decompose`; this closeout does not
-scaffold either successor.
+Source: [`ops/manifest.json`](./ops/manifest.json). Graduated for the second
+time on 2026-09-03: the C2 pass (2026-08-31) and the P5 closeout (2026-09-02)
+re-entered this packet at `decompose`; MAP v1.1 §Re-entry Decomposition was
+ratified as R1–R3 and scaffolded into
+[`goals/semantica-atlas-sync`](../../goals/semantica-atlas-sync/README.md),
+[`goals/semantica-storage-inversion`](../../goals/semantica-storage-inversion/README.md)
+and
+[`goals/semantica-reasoning-spike`](../../goals/semantica-reasoning-spike/README.md).
+The packet remains as provenance; a fired MAP gate reopens it at `decompose`.
 
 ## Spark
 
@@ -23,19 +26,14 @@ and opens a neuro-symbolic reasoning work stream.
 
 ## Next Open Question
 
-Two queued gates are now open:
-
-- MAP Sequencing 5: the C2 pass fired `semantica-storage-inversion`; what
-  bounded spike proves delete and compaction semantics for the append-only
-  provenance ledger?
-- MAP Sequencing 5: the C2 pass satisfied one of `semantica-reasoning-spike`'s
-  two preconditions; its `G-entailment/rules` fixture is still uncommitted. What
-  bounded spike should build that fixture and test the queued reasoning
-  candidates?
-- O3/M4: the passed canary unblocked row-level `adopt`/`adapt`/`already-have`
-  atlas values (DECISIONS `Atlas writes` row). That is the atlas-edit need which
-  re-enters `semantica-atlas-sync`; what bounded D5 render/diff sync writes them
-  from the schema-validated IR?
+None open; the packet is `graduated` (2026-09-03). Execution continues in the three goal
+packets in the ratified order — `semantica-atlas-sync` verdict lane, then
+`semantica-storage-inversion` (P-S1 before the reasoning spike's R-c and P2–P4), then
+`semantica-reasoning-spike` (P1 fixture now, P3 after the v3 archive is located). Re-entry points
+that stay in `MAP.md` and reopen this packet at `decompose` when they fire: the facts-lane
+trigger (semantica 0.6.7+, held as `semantica-atlas-sync` P2), the O4 OSS gates
+(`reasoning-package` after the spike survives ablation; `evals-harness` after a non-semantica
+reuse proof), the Explorer/UI milestone (A5/D12/D16), and any family park under S1/E8.
 
 ## Read This First
 
@@ -43,7 +41,8 @@ Two queued gates are now open:
 2. [`BRIEF.md`](./BRIEF.md) - v1.1 ratified pitch (stage 3): problem, stop rule, staged canary,
    service roster, rabbit holes, no-gos.
 3. [`MAP.md`](./MAP.md) - v1.0 ratified (stage 4): candidate packets, capability check, first
-   slice, inherited constraints, dispositions M1–M6.
+   slice, inherited constraints, dispositions M1–M6; v1.1 §Re-entry Decomposition (2026-09-03,
+   ratified and graduated): the three re-entry packets as bounded probes with capability checks.
 4. [`DECISIONS.md`](./DECISIONS.md) - open with the Current law table; the dated log below it
    is history. Terminology table lives there too.
 5. [`research/criteria-rubric.md`](./research/criteria-rubric.md) - v2.0, ratified.
@@ -59,6 +58,21 @@ owns *decisions and research* (D2).
 
 ## Trail
 
+- 2026-09-03 (decompose re-entry, MAP v1.1 proposed): re-verified the three queued gates
+  against the live checkout and decomposed each into a bounded spike. Storage: the lab's
+  `Invalidated` body exists but is never emitted, and no `DELETE`/`UPDATE` exists, so the
+  spike is framed as tombstone ≠ erasure with `Redacted`/`Compacted` events and three
+  probes judged by whether the C2 report digest survives an offline-regenerated ledger.
+  Reasoning: the `G-entailment/rules` precondition had no owner, so it becomes the spike's
+  P1 (twenty cases, five classes) ahead of the adhd probes; the v3 archive is absent from
+  its recorded path. Atlas: the fired need is decision data, so D5 splits into a verdict
+  lane (now) and a facts lane (extractor recoverable from `fd560ca8e5`, deleted by #882).
+  A Sol adversarial pass (`research/reviews/2026-09-03-sol-reentry-review.md`) returned
+  REWORK with eight P1s; all eight verified against source and folded (identity bridge,
+  checkpoint-continuity chain claim, document-keyed erasure closure, corrected paths, NET-NEW
+  rules-fixture family, split R-d/R-e oracles, S1/S8 wording, Verdict map coherence).
+  Frontier = ratification R1–R3; nothing scaffolded. Worked from a sibling worktree
+  because the primary checkout hosts an unrelated Codex lane.
 - 2026-09-02 (C2 archive reconciled): the commit archiving the ratified
   full-state C2 run (digest `2a2089ea…`) had never been pushed before #938
   merged, so `main` carried the earlier `7fff1dc0…` run. The follow-up landed
@@ -232,3 +246,20 @@ owns *decisions and research* (D2).
   (envelope, bake-off roster, charter split vs trustgraph-workbench, Tauri headless-first,
   eval corpus, phase-2 design laws); criteria rubric drafted; v3 `beep-effect-logos`
   rules/rete/logos exploration agent launched. Stopped at: rubric adversarial pass + ratification.
+- 2026-09-03 (ratification grill, MAP v1.1 RATIFIED): Benjamin ratified R1–R3 over a teaching
+  lesson built for the purpose (three verified briefs, Sol xhigh re-verification and a completeness
+  critic behind it), one frontier round at a time; seven rounds, 25 labelled sub-decisions (R0.a, R1.a–R1.i, R2.a–R2.g, R3.a–R3.g, R4.a), amendments
+  R0.a/R1.b/R1.c/R1.d/R1.h/R1.i/R2.g/R3.b/R3.d/R4.a applied inline in MAP v1.1 and logged in
+  DECISIONS. Manifest cleared and moved to `graduate`; no goal packet scaffolded yet.
+- 2026-09-03 (graduation ceremony): definition-of-ready re-checked (brief complete, no open
+  questions, MAP v1.1 names slugs/missions/edges/first slices, every component cited or NET-NEW);
+  three goal packets materialized from the `beep goals bootstrap` plan and authored from MAP v1.1
+  and the ratification grill — `semantica-atlas-sync` (P0–P3, facts lane gated as P2),
+  `semantica-storage-inversion` (P-S0..3 as P0–P3, close P4), `semantica-reasoning-spike` (P1
+  fixture, P-R1..3 as P2–P4, close P5); capability edge `semantica/tombstone-law` provided by the
+  storage spike and required by the reasoning spike; SOURCES mirrored; manifests cross-linked;
+  status flipped to `graduated`; Atlas and goals index regenerated.
+- 2026-09-03 (PR #996 review): Codex review left four threads on the new packets; folded as
+  review amendments Q1–Q4 in `DECISIONS.md` (facts lane in scope once fired; completion after a
+  successful P2; pause flip in the P1 PR; erasure journaled across stores with a mid-erasure
+  crash test). Greptile 5/5, zero issues.
