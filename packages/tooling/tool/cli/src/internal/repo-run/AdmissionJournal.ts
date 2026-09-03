@@ -17,7 +17,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { UUID } from "@beep/schema/String";
-import { Clock, Duration, Effect, FileSystem, Number as N, Path, pipe } from "effect";
+import { Clock, Duration, Effect, Encoding, FileSystem, Number as N, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import { constant, dual, flow } from "effect/Function";
 import * as O from "effect/Option";
@@ -53,7 +53,7 @@ const textEncoder = new TextEncoder();
  * const generation = AdmissionJournalLockGeneration.make({
  *   schemaVersion: "yeet-admission-journal-lock/v1",
  *   pid: 1234,
- *   procStart: "8241991",
+ *   procStart: "proc:8241991",
  *   ownerToken: "1234:5a47b2ac"
  * })
  * console.log(generation.pid) // 1234
@@ -78,6 +78,9 @@ export class AdmissionJournalLockGeneration extends S.Class<AdmissionJournalLock
 
 const encodeLockGeneration = S.encodeUnknownEffect(S.fromJsonString(AdmissionJournalLockGeneration));
 const decodeLockGeneration = S.decodeUnknownEffect(S.fromJsonString(AdmissionJournalLockGeneration));
+const decodeReapAdopterPathParts = S.decodeUnknownEffect(
+  S.Tuple([S.String, S.StringFromBase64Url, S.StringFromBase64Url])
+);
 
 /**
  * Durable transition recorded when a queued ticket becomes an active lease.
@@ -410,14 +413,36 @@ const processStartIdentityFromSystemCommand = (pid: number): Effect.Effect<O.Opt
     return result.success && Str.isNonEmpty(output) ? O.some(`${windows ? "win" : "ps"}:${output}`) : O.none<string>();
   }).pipe(Effect.orElseSucceed(O.none<string>));
 
+const processIdentityHasKnownSource = (identity: string): boolean =>
+  Str.startsWith("proc:")(identity) || Str.startsWith("ps:")(identity) || Str.startsWith("win:")(identity);
+
+const normalizeRecordedLockIdentity = (identity: string): string =>
+  processIdentityHasKnownSource(identity) ? identity : `proc:${identity}`;
+
+const processIdentitySourcesMatch = (left: string, right: string): boolean =>
+  (Str.startsWith("proc:")(left) && Str.startsWith("proc:")(right)) ||
+  (Str.startsWith("ps:")(left) && Str.startsWith("ps:")(right)) ||
+  (Str.startsWith("win:")(left) && Str.startsWith("win:")(right));
+
 const processStartIdentityForLock = Effect.fnUntraced(function* (
-  pid: number
+  pid: number,
+  recordedIdentity = O.none<string>()
 ): Effect.fn.Return<O.Option<string>, never, FileSystem.FileSystem> {
+  const normalizedRecorded = O.map(recordedIdentity, normalizeRecordedLockIdentity);
+  if (O.exists(normalizedRecorded, (identity) => Str.startsWith("ps:")(identity) || Str.startsWith("win:")(identity))) {
+    return yield* processStartIdentityFromSystemCommand(pid);
+  }
   const fs = yield* FileSystem.FileSystem;
   const procStart = yield* fs
     .readFileString(`/proc/${pid}/stat`)
-    .pipe(Effect.map(parseProcStatStartTime), Effect.orElseSucceed(O.none<string>));
-  return O.isSome(procStart) ? procStart : yield* processStartIdentityFromSystemCommand(pid);
+    .pipe(
+      Effect.map(parseProcStatStartTime),
+      Effect.map(O.map((identity) => `proc:${identity}`)),
+      Effect.orElseSucceed(O.none<string>)
+    );
+  return O.isSome(procStart) || O.isSome(normalizedRecorded)
+    ? procStart
+    : yield* processStartIdentityFromSystemCommand(pid);
 });
 
 const lockGenerationIsDead = Effect.fnUntraced(function* (
@@ -426,7 +451,10 @@ const lockGenerationIsDead = Effect.fnUntraced(function* (
   if (!pidIsAlive(generation.pid)) {
     return true;
   }
-  return O.exists(yield* processStartIdentityForLock(generation.pid), (current) => current !== generation.procStart);
+  const recorded = normalizeRecordedLockIdentity(generation.procStart);
+  return O.exists(yield* processStartIdentityForLock(generation.pid, O.some(recorded)), (current) =>
+    processIdentitySourcesMatch(recorded, current) ? current !== recorded : false
+  );
 });
 
 const isOwnedLockGeneration = Effect.fnUntraced(function* (
@@ -440,14 +468,192 @@ const isOwnedLockGeneration = Effect.fnUntraced(function* (
 const journalLockReapClaimPath = (lockPath: string, observedToken: string): string =>
   `${lockPath}.reap-${createHash("sha256").update(observedToken).digest("hex")}`;
 
-// A generation-specific hard link is both the reaper claim and an immutable
-// snapshot of the inode it observed. Only one contender can claim a given
-// generation; a delayed contender therefore cannot unlink its replacement.
-const reapAbandonedJournalLock = Effect.fnUntraced(function* (
+const journalLockReapAdopterPrefix = (claimPath: string): string => `${claimPath}.adopt-`;
+
+const journalLockReapAdopterPath = (claimPath: string, generation: AdmissionJournalLockGeneration): string =>
+  `${journalLockReapAdopterPrefix(claimPath)}${generation.pid}.${Encoding.encodeBase64Url(generation.procStart)}.${Encoding.encodeBase64Url(generation.ownerToken)}`;
+
+const journalLockReapTombstonePath = (claimPath: string): string =>
+  `${claimPath}.tombstone-${process.pid}-${randomUUID()}`;
+
+const decodeReapAdopterGeneration = Effect.fnUntraced(function* (
+  adopterPath: string,
+  claimPath: string
+): Effect.fn.Return<O.Option<AdmissionJournalLockGeneration>> {
+  const prefix = journalLockReapAdopterPrefix(claimPath);
+  if (!Str.startsWith(prefix)(adopterPath)) {
+    return O.none();
+  }
+  const parts = yield* decodeReapAdopterPathParts(Str.slice(prefix.length)(adopterPath)).pipe(Effect.option);
+  if (O.isNone(parts)) {
+    return O.none();
+  }
+  const pid = N.parse(parts.value[0]);
+  return O.map(pid, (value) =>
+    AdmissionJournalLockGeneration.make({
+      schemaVersion: "yeet-admission-journal-lock/v1",
+      pid: value,
+      procStart: parts.value[1],
+      ownerToken: parts.value[2],
+    })
+  );
+});
+
+const pathsWithPrefix = Effect.fnUntraced(function* (
+  prefixPath: string
+): Effect.fn.Return<O.Option<ReadonlyArray<string>>, never, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const directory = path.dirname(prefixPath);
+  const prefix = path.basename(prefixPath);
+  const entries = yield* fs.readDirectory(directory).pipe(Effect.option);
+  return O.map(
+    entries,
+    flow(
+      A.filter(Str.startsWith(prefix)),
+      A.map((entry) => path.join(directory, entry))
+    )
+  );
+});
+
+const journalLockReapSidecars = (
   lockPath: string
+): Effect.Effect<ReadonlyArray<string>, never, FileSystem.FileSystem | Path.Path> =>
+  pathsWithPrefix(`${lockPath}.reap-`).pipe(Effect.map(O.getOrElse(A.empty<string>)));
+
+const sweepOrphanJournalLockClaims = Effect.fnUntraced(function* (
+  lockPath: string
+): Effect.fn.Return<void, never, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  if (yield* fs.exists(lockPath).pipe(Effect.orElseSucceed(constant(true)))) {
+    return;
+  }
+  const sidecars = yield* journalLockReapSidecars(lockPath);
+  yield* Effect.forEach(
+    sidecars,
+    (sidecar) => fs.remove(sidecar, { force: true, recursive: true }).pipe(Effect.ignore),
+    {
+      discard: true,
+    }
+  );
+});
+
+const reapAdopterMayStillAct = Effect.fnUntraced(function* (
+  adopterPath: string,
+  claimPath: string,
+  nowMillis: number
+): Effect.fn.Return<boolean, never, FileSystem.FileSystem> {
+  const fs = yield* FileSystem.FileSystem;
+  const generation = yield* decodeReapAdopterGeneration(adopterPath, claimPath);
+  if (O.isSome(generation)) {
+    return !(yield* lockGenerationIsDead(generation.value));
+  }
+  const info = yield* fs.stat(adopterPath).pipe(Effect.option);
+  return !pipe(
+    info,
+    O.flatMap((fileInfo) => fileInfo.mtime),
+    O.exists((mtime) => nowMillis - mtime.getTime() > LOCK_REUSE_BACKSTOP_MILLIS)
+  );
+});
+
+const activeReapAdopterExists = Effect.fnUntraced(function* (
+  claimPath: string,
+  nowMillis: number
+): Effect.fn.Return<boolean, never, FileSystem.FileSystem | Path.Path> {
+  const adopterPrefix = journalLockReapAdopterPrefix(claimPath);
+  const adopters = yield* pathsWithPrefix(adopterPrefix);
+  if (O.isNone(adopters)) {
+    return true;
+  }
+  for (const adopterPath of adopters.value) {
+    if (yield* reapAdopterMayStillAct(adopterPath, claimPath, nowMillis)) {
+      return true;
+    }
+  }
+  return false;
+});
+
+const makeLockGeneration = Effect.fnUntraced(function* (
+  token: string
+): Effect.fn.Return<O.Option<AdmissionJournalLockGeneration>, never, FileSystem.FileSystem> {
+  const procStart = yield* processStartIdentityForLock(process.pid);
+  return O.map(procStart, (identity) =>
+    AdmissionJournalLockGeneration.make({
+      schemaVersion: "yeet-admission-journal-lock/v1",
+      pid: process.pid,
+      procStart: identity,
+      ownerToken: token,
+    })
+  );
+});
+
+const sameFileIdentity = (left: FileSystem.File.Info, right: FileSystem.File.Info): boolean =>
+  left.dev === right.dev && O.exists(left.ino, (leftIno) => O.exists(right.ino, (rightIno) => leftIno === rightIno));
+
+const adoptJournalLockReapClaim = Effect.fnUntraced(function* (
+  lockPath: string,
+  claimPath: string,
+  observedToken: string,
+  nowMillis: number
+): Effect.fn.Return<O.Option<string>, never, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  if (yield* activeReapAdopterExists(claimPath, nowMillis)) {
+    return O.none();
+  }
+  yield* fs.link(lockPath, claimPath).pipe(Effect.ignore);
+  const claimedToken = yield* fs.readFileString(claimPath).pipe(Effect.option);
+  if (!O.exists(claimedToken, (token) => token === observedToken)) {
+    return O.none();
+  }
+  const adopterGeneration = yield* makeLockGeneration(`${process.pid}:${randomUUID()}`);
+  if (O.isNone(adopterGeneration)) {
+    return O.none();
+  }
+  const adopterPath = journalLockReapAdopterPath(claimPath, adopterGeneration.value);
+  return yield* fs
+    .rename(claimPath, adopterPath)
+    .pipe(Effect.as(O.some(adopterPath)), Effect.orElseSucceed(O.none<string>));
+});
+
+const finishJournalLockReap = Effect.fnUntraced(function* (
+  lockPath: string,
+  claimPath: string,
+  adopterPath: string,
+  observedToken: string
 ): Effect.fn.Return<void, never, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
+  const adopterToken = yield* fs.readFileString(adopterPath).pipe(Effect.option);
+  const currentToken = yield* fs.readFileString(lockPath).pipe(Effect.option);
+  const adopterInfo = yield* fs.stat(adopterPath).pipe(Effect.option);
+  const currentInfo = yield* fs.stat(lockPath).pipe(Effect.option);
+  const generationStillPublished =
+    O.exists(adopterToken, (token) => token === observedToken) &&
+    O.exists(currentToken, (token) => token === observedToken) &&
+    O.exists(adopterInfo, (claim) => O.exists(currentInfo, (current) => sameFileIdentity(claim, current)));
+  if (!generationStillPublished) {
+    yield* fs.remove(adopterPath, { force: true }).pipe(Effect.ignore);
+    return;
+  }
+  const tombstonePath = journalLockReapTombstonePath(claimPath);
+  const moved = yield* fs.rename(lockPath, tombstonePath).pipe(Effect.as(true), Effect.orElseSucceed(constant(false)));
+  if (moved) {
+    yield* fs.remove(tombstonePath, { force: true }).pipe(Effect.ignore);
+  }
+  yield* fs.remove(adopterPath, { force: true }).pipe(Effect.ignore);
+});
+
+// A generation-specific hard link is the immutable claim snapshot. Renaming
+// that deterministic name elects exactly one source-fenced adopter; only that
+// owner may move the validated lock inode to an adopter-owned tombstone.
+const reapAbandonedJournalLock = Effect.fnUntraced(function* (
+  lockPath: string
+): Effect.fn.Return<void, never, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
   const content = yield* fs.readFileString(lockPath).pipe(Effect.option);
+  if (O.isNone(content)) {
+    yield* sweepOrphanJournalLockClaims(lockPath);
+    return;
+  }
   const info = yield* fs.stat(lockPath).pipe(Effect.option);
   const nowMillis = yield* Clock.currentTimeMillis;
   // A decoded owner that died or no longer matches its recorded process start
@@ -475,36 +681,23 @@ const reapAbandonedJournalLock = Effect.fnUntraced(function* (
     return;
   }
   const claimPath = journalLockReapClaimPath(lockPath, observedToken.value);
-  const claimed = yield* fs.link(lockPath, claimPath).pipe(Effect.as(true), Effect.orElseSucceed(constant(false)));
-  const claimedToken = yield* fs.readFileString(claimPath).pipe(Effect.option);
-  // An existing deterministic claim is adoptable recovery state. Revalidate
-  // both the immutable claim snapshot and the currently published generation
-  // before finishing the unlink, so a stale contender cannot remove a
-  // replacement owner.
-  const currentToken = yield* fs.readFileString(lockPath).pipe(Effect.option);
-  const matchesObservedGeneration =
-    O.exists(claimedToken, (token) => token === observedToken.value) &&
-    O.exists(currentToken, (token) => token === observedToken.value);
-  yield* matchesObservedGeneration ? fs.remove(lockPath, { force: false }).pipe(Effect.ignore) : Effect.void;
-  yield* claimed || matchesObservedGeneration ? fs.remove(claimPath, { force: true }).pipe(Effect.ignore) : Effect.void;
+  const adopterPath = yield* adoptJournalLockReapClaim(lockPath, claimPath, observedToken.value, nowMillis);
+  if (O.isSome(adopterPath)) {
+    yield* finishJournalLockReap(lockPath, claimPath, adopterPath.value, observedToken.value);
+  }
 });
 
 const tryAcquireJournalLock = Effect.fnUntraced(function* (
   lockPath: string,
   token: string
-): Effect.fn.Return<boolean, never, FileSystem.FileSystem> {
+): Effect.fn.Return<boolean, never, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
-  const procStart = yield* processStartIdentityForLock(process.pid);
-  if (O.isNone(procStart)) {
+  yield* sweepOrphanJournalLockClaims(lockPath);
+  const generation = yield* makeLockGeneration(token);
+  if (O.isNone(generation)) {
     return false;
   }
-  const generation = AdmissionJournalLockGeneration.make({
-    schemaVersion: "yeet-admission-journal-lock/v1",
-    pid: process.pid,
-    procStart: procStart.value,
-    ownerToken: token,
-  });
-  const generationText = yield* encodeLockGeneration(generation).pipe(Effect.orDie);
+  const generationText = yield* encodeLockGeneration(generation.value).pipe(Effect.orDie);
   // Publish the lock via hard link so it never exists without its token: a
   // contender reading a just-created lock always sees a full generation.
   const stagingPath = `${lockPath}.stage-${process.pid}-${randomUUID()}`;
@@ -549,7 +742,7 @@ export const acquireJournalFileLock = Effect.fnUntraced(function* (
   lockPath: string,
   token: string,
   retryAttempts = LOCK_RETRY_ATTEMPTS
-): Effect.fn.Return<boolean, never, FileSystem.FileSystem> {
+): Effect.fn.Return<boolean, never, FileSystem.FileSystem | Path.Path> {
   for (let attempt = 0; attempt < retryAttempts; attempt++) {
     if (yield* tryAcquireJournalLock(lockPath, token)) {
       return true;

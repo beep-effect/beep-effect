@@ -45,7 +45,7 @@ import { NodeChildProcessSpawner } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
-import { Clock, ConfigProvider, Effect, Fiber, FileSystem, Layer, Path, pipe, Ref } from "effect";
+import { Clock, ConfigProvider, Deferred, Effect, Fiber, FileSystem, Layer, Path, pipe, Ref } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -716,6 +716,140 @@ describe("quality-scheduler", () => {
 
             expect(O.isNone(yield* fs.stat(claimPath).pipe(Effect.option))).toBe(true);
             expect(A.map(yield* readJournalEvents(tempRoot.root), (event) => event.nonce)).toStrictEqual(["nonce-1"]);
+          })
+        );
+      })
+    ));
+
+  it("elects one claim adopter and preserves a replacement published during tombstone cleanup", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const lockPath = path.join(tempRoot.root, "journal.lock");
+            const replacementSeedPath = path.join(tempRoot.root, "replacement-seed.lock");
+            const replacementToken = `${process.pid}:replacement-writer`;
+            yield* fs.makeDirectory(tempRoot.root, { recursive: true, mode: 0o700 });
+            expect(yield* acquireJournalFileLock(replacementSeedPath, replacementToken, 1)).toBe(true);
+            const replacementGeneration = yield* fs.readFileString(replacementSeedPath);
+            yield* releaseAdmissionJournalLockForTesting(replacementSeedPath, replacementToken);
+            yield* fs.writeFileString(lockPath, `${DEAD_PID}:abandoned-generation`);
+
+            const stageLinks = yield* Ref.make(0);
+            const bothContendersReady = yield* Deferred.make<void>();
+            const lockTombstones = yield* Ref.make(0);
+            const interleavedFileSystem = FileSystem.FileSystem.of({
+              ...fs,
+              link: Effect.fn("FileSystem.FileSystem.link")(function* (existingPath, newPath) {
+                if (Str.includes(".stage-")(existingPath) && Str.Equivalence(newPath, lockPath)) {
+                  const count = yield* Ref.updateAndGet(stageLinks, (value) => value + 1);
+                  if (count === 2) {
+                    yield* Deferred.succeed(bothContendersReady, undefined);
+                  }
+                  yield* Deferred.await(bothContendersReady);
+                }
+                return yield* fs.link(existingPath, newPath);
+              }),
+              rename: Effect.fn("FileSystem.FileSystem.rename")(function* (oldPath, newPath) {
+                yield* fs.rename(oldPath, newPath);
+                if (Str.Equivalence(oldPath, lockPath) && Str.includes(".tombstone-")(newPath)) {
+                  yield* Ref.update(lockTombstones, (value) => value + 1);
+                  yield* fs.writeFileString(lockPath, replacementGeneration);
+                }
+              }),
+            });
+
+            const acquired = yield* Effect.forEach(
+              ["first-adopter", "second-adopter"],
+              (token) =>
+                acquireJournalFileLock(lockPath, `${process.pid}:${token}`, 1).pipe(
+                  Effect.provideService(FileSystem.FileSystem, interleavedFileSystem)
+                ),
+              { concurrency: "unbounded" }
+            );
+
+            expect(acquired).toStrictEqual([false, false]);
+            expect(yield* Ref.get(lockTombstones)).toBe(1);
+            expect(yield* fs.readFileString(lockPath)).toBe(replacementGeneration);
+            yield* releaseAdmissionJournalLockForTesting(lockPath, replacementToken);
+          })
+        );
+      })
+    ));
+
+  it("probes only the process-identity source recorded by each live lock generation", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const withoutProcfs = FileSystem.FileSystem.of({
+              ...fs,
+              readFileString: Effect.fn("FileSystem.FileSystem.readFileString")((target, encoding) =>
+                Str.startsWith("/proc/")(target) ? Effect.succeed("") : fs.readFileString(target, encoding)
+              ),
+            });
+            yield* fs.makeDirectory(tempRoot.root, { recursive: true, mode: 0o700 });
+
+            const systemLockPath = path.join(tempRoot.root, "system-source.lock");
+            const systemOwner = `${process.pid}:system-source-owner`;
+            expect(
+              yield* acquireJournalFileLock(systemLockPath, systemOwner, 1).pipe(
+                Effect.provideService(FileSystem.FileSystem, withoutProcfs)
+              )
+            ).toBe(true);
+            const systemGeneration = yield* fs
+              .readFileString(systemLockPath)
+              .pipe(Effect.flatMap(decodeJournalLockGeneration));
+            expect(Str.startsWith(process.platform === "win32" ? "win:" : "ps:")(systemGeneration.procStart)).toBe(
+              true
+            );
+            expect(yield* acquireJournalFileLock(systemLockPath, `${process.pid}:proc-contender`, 1)).toBe(false);
+            expect(Str.includes(systemOwner)(yield* fs.readFileString(systemLockPath))).toBe(true);
+            yield* releaseAdmissionJournalLockForTesting(systemLockPath, systemOwner);
+
+            const procLockPath = path.join(tempRoot.root, "proc-source.lock");
+            const procOwner = `${process.pid}:proc-source-owner`;
+            expect(yield* acquireJournalFileLock(procLockPath, procOwner, 1)).toBe(true);
+            const procGeneration = yield* fs
+              .readFileString(procLockPath)
+              .pipe(Effect.flatMap(decodeJournalLockGeneration));
+            expect(Str.startsWith("proc:")(procGeneration.procStart)).toBe(true);
+            expect(
+              yield* acquireJournalFileLock(procLockPath, `${process.pid}:system-contender`, 1).pipe(
+                Effect.provideService(FileSystem.FileSystem, withoutProcfs)
+              )
+            ).toBe(false);
+            expect(Str.includes(procOwner)(yield* fs.readFileString(procLockPath))).toBe(true);
+            yield* releaseAdmissionJournalLockForTesting(procLockPath, procOwner);
+          })
+        );
+      })
+    ));
+
+  it("sweeps stale reap sidecars before acquiring an absent journal lock", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const lockPath = path.join(tempRoot.root, "journal.lock");
+            const claimPath = `${lockPath}.reap-stale-claim`;
+            const ownerToken = `${process.pid}:orphan-sweeper`;
+            yield* fs.makeDirectory(tempRoot.root, { recursive: true, mode: 0o700 });
+            yield* fs.writeFileString(claimPath, `${DEAD_PID}:orphaned-claim`);
+
+            expect(yield* acquireJournalFileLock(lockPath, ownerToken, 1)).toBe(true);
+
+            expect(yield* fs.exists(claimPath)).toBe(false);
+            yield* releaseAdmissionJournalLockForTesting(lockPath, ownerToken);
           })
         );
       })
