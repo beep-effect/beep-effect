@@ -18,7 +18,11 @@
 import { ChatRpcs } from "@beep/agents-use-cases/public";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { describe, expect, it } from "@effect/vitest";
-import { Chunk, Data, Effect, FileSystem, Layer } from "effect";
+import * as Chunk from "effect/Chunk";
+import * as Data from "effect/Data";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as Stream from "effect/Stream";
 import { RpcClient, RpcSerialization } from "effect/unstable/rpc";
 import { Socket } from "effect/unstable/socket";

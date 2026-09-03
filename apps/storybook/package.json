@@ -24,6 +24,7 @@
     "codegen": "echo 'no codegen needed'",
     "lint": "bun run beep:lint",
     "lint:fix": "bun run beep:lint:fix",
+    "package-test-typecheck": "beep-cli quality test-tsgo-package",
     "storybook": "portless storybook.beep sh -c 'storybook dev -p \"${PORT:-6006}\"'",
     "storybook:build": "NODE_OPTIONS=--disable-warning=DEP0205 storybook build -o storybook-static",
     "storybook:start": "portless storybook.beep sh -c 'vite preview --host 0.0.0.0 --port \"${PORT:-6006}\" --outDir storybook-static'",

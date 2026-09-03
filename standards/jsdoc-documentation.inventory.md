@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-09-03T20:22:14.890Z
+Generated: 2026-09-03T20:53:06.257Z
 
 ## Scope
 
@@ -15,15 +15,15 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | packagesWithoutPublicSrcSurface | 3 |
 | packagesNeedingRemediation | 117 |
 | publicModules | 3007 |
-| publicExports | 21287 |
+| publicExports | 21288 |
 | openModules | 375 |
-| openExports | 3498 |
+| openExports | 3461 |
 | missingExportExamples | 5 |
 | missingExportCategories | 0 |
 | missingExportSince | 0 |
 | forbiddenTagFindings | 0 |
 | malformedConditionalTagFindings | 0 |
-| exampleImportFindings | 3777 |
+| exampleImportFindings | 3739 |
 | unsafeExampleFindings | 0 |
 | schemaAnnotationFindings | 0 |
 | undescribed-see | 12 |
@@ -40,7 +40,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | duplicate-example | 0 |
 | loose-ts-fence | 0 |
 | forbidden-remarks | 0 |
-| no-root-package-import | 3776 |
+| no-root-package-import | 3738 |
 | rootPolicyOpen | 0 |
 
 ## Root Policy
@@ -74,7 +74,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 16 | `@beep/ontology-use-cases` | `packages/ontology/use-cases` | needs-remediation | 23 | 214 | 1 | 17 |
 | 17 | `@beep/architecture-lab-client` | `packages/architecture-lab/client` | needs-remediation | 3 | 7 | 0 | 4 |
 | 18 | `@beep/dock` | `packages/foundation/ui-system/dock` | needs-remediation | 20 | 212 | 0 | 189 |
-| 19 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 223 | 1819 | 47 | 286 |
+| 19 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 223 | 1820 | 47 | 286 |
 | 20 | `@beep/pglite` | `packages/drivers/pglite` | needs-remediation | 4 | 11 | 3 | 0 |
 | 21 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | needs-remediation | 10 | 86 | 0 | 18 |
 | 22 | `@beep/agents-server` | `packages/agents/server` | needs-remediation | 11 | 39 | 2 | 7 |
@@ -138,7 +138,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 80 | `@beep/documents-server` | `packages/documents/server` | needs-remediation | 28 | 103 | 2 | 8 |
 | 81 | `@beep/nlp-processing` | `packages/foundation/capability/nlp-processing` | needs-remediation | 48 | 312 | 13 | 80 |
 | 82 | `@beep/anthropic` | `packages/drivers/anthropic` | needs-remediation | 5 | 29 | 0 | 10 |
-| 83 | `@beep/professional-desktop` | `apps/professional-desktop` | needs-remediation | 58 | 200 | 25 | 37 |
+| 83 | `@beep/professional-desktop` | `apps/professional-desktop` | needs-remediation | 58 | 200 | 25 | 0 |
 | 84 | `@beep/epistemic-domain` | `packages/epistemic/domain` | needs-remediation | 54 | 236 | 8 | 18 |
 | 85 | `@beep/ontology-client` | `packages/ontology/client` | clean | 3 | 93 | 0 | 0 |
 | 86 | `@beep/architecture-lab-use-cases` | `packages/architecture-lab/use-cases` | needs-remediation | 18 | 64 | 0 | 10 |
@@ -1021,8 +1021,8 @@ Export findings:
 - `src/commands/Quality/ChangesetGraph.ts:384` `changesetPackageReferencesFromText` (const) - 1 example import violation(s)
 - `src/commands/Quality/FallowQuality.command.ts:1238` `collectAuditDiffInputForTesting` (const) - 1 example import violation(s)
 - `src/commands/Quality/FallowQuality.command.ts:2376` `qualityFallowCommand` (const) - 1 example import violation(s)
-- `src/commands/Quality/Quality.command.ts:665` `runBunAudit` (const) - 1 documentation section/link violation(s)
-- `src/commands/Quality/Quality.command.ts:791` `devQualityStepsForTesting` (const) - 1 example import violation(s)
+- `src/commands/Quality/Quality.command.ts:731` `runBunAudit` (const) - 1 documentation section/link violation(s)
+- `src/commands/Quality/Quality.command.ts:857` `devQualityStepsForTesting` (const) - 1 example import violation(s)
 - `src/commands/Quality/Quality.osv-ignore.ts:105` `selectOsvIgnoreIdsForAudit` (const) - 1 example import violation(s)
 - `src/commands/Quality/Quality.osv-ignore.ts:154` `activeOsvIgnoreIdsForTesting` (const) - 1 example import violation(s)
 - `src/commands/Quality/Quality.render.ts:71` `printQualityProfileConfig` (const) - 1 example import violation(s)
@@ -3638,45 +3638,6 @@ Module findings:
 - `src/transport/TauriIpcSocket.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/workspace/dock.atoms.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 
-Export findings:
-- `src/chat/ChatOrchestrator.ts:1136` `makeChatOperations` (const) - 1 example import violation(s)
-- `src/chat/ChatOrchestrator.ts:1188` `ChatHandlersLive` (const) - 1 example import violation(s)
-- `src/chat/UsagePricing.ts:112` `approximateCostUsdMicros` (const) - 1 example import violation(s)
-- `src/chat/UsageRecordSink.ts:44` `UsageRecordSinkShape` (interface) - 1 example import violation(s)
-- `src/chat/UsageRecordSink.ts:67` `UsageRecordSink` (class) - 1 example import violation(s)
-- `src/chat/UsageRecordSink.ts:91` `makeInMemoryUsageRecordSink` (const) - 1 example import violation(s)
-- `src/chat/UsageRecordSink.ts:125` `UsageRecordSinkInMemory` (const) - 1 example import violation(s)
-- `src/chat/UsageRecordSink.ts:196` `UsageRecordSinkDrizzle` (const) - 1 example import violation(s)
-- `src/chat/ui/ComposerPolicy.ts:276` `composerDocumentFromEditorState` (const) - 2 example import violation(s)
-- `src/contradiction/ContradictionQaSeed.ts:1022` `seedContradictionQaFixtures` (const) - 1 example import violation(s)
-- `src/contradiction/ContradictionQaSeed.ts:1126` `ContradictionQaSeedLive` (const) - 1 example import violation(s)
-- `src/intake/DocumentIntakeOrchestrator.ts:97` `WorkspaceVaultHandlersLive` (const) - 1 example import violation(s)
-- `src/intake/DocumentIntakeOrchestrator.ts:130` `DocumentIntakeHandlersLive` (const) - 1 example import violation(s)
-- `src/intake/Intake.atoms.ts:332` `DocumentIntakeState` (class) - 1 example import violation(s)
-- `src/intake/VaultDirectoryPickerOrchestrator.ts:127` `VaultDirectoryPickerHandlersLive` (const) - 1 example import violation(s)
-- `src/ontology/OntologyOrchestrator.ts:207` `OntologyHandlersLive` (const) - 1 example import violation(s)
-- `src/ontology/OntologyWorkspaceSeed.ts:73` `seedPizzaTutorial` (const) - 1 example import violation(s)
-- `src/ontology/OntologyWorkspaceSeed.ts:130` `OntologyWorkspaceSeedLive` (const) - 1 example import violation(s)
-- `src/runtime/Layer.ts:342` `RuntimeLive` (const) - 1 example import violation(s)
-- `src/runtime/Layer.ts:378` `RuntimeTest` (const) - 1 example import violation(s)
-- `src/runtime/Migrations.ts:120` `migrateProfessionalDesktopDatabase` (const) - 1 example import violation(s)
-- `src/runtime/Migrations.ts:168` `migrateOnBoot` (const) - 1 example import violation(s)
-- `src/runtime/Observability.ts:116` `ObservabilityLive` (const) - 1 example import violation(s)
-- `src/runtime/Pglite.ts:171` `markCompatibleChatDbDataDir` (const) - 1 example import violation(s)
-- `src/runtime/Pglite.ts:249` `ensureCompatibleChatDbDataDir` (const) - 1 example import violation(s)
-- `src/runtime/Pglite.ts:397` `PgliteDrizzleLive` (const) - 1 example import violation(s)
-- `src/runtime/ProfessionalAtomRuntime.ts:52` `ProfessionalStorageLive` (const) - 1 example import violation(s)
-- `src/runtime/RendererObservabilityConfig.ts:45` `RendererObservabilityConfig` (class) - 1 example import violation(s)
-- `src/sync/DmsMirrorDisconnected.ts:49` `DmsMirrorDisconnectedLayer` (const) - 1 example import violation(s)
-- `src/sync/DmsMirrorDisconnected.ts:80` `DmsMirrorAvailabilityDisconnectedLayer` (const) - 1 example import violation(s)
-- `src/sync/VaultSyncOrchestrator.ts:77` `VaultSyncHandlersLive` (const) - 1 example import violation(s)
-- `src/theme/Theme.atoms.ts:63` `migrateWorkbenchThemeMode` (const) - 1 example import violation(s)
-- `src/transport/DesktopHttpProtocol.ts:36` `makeDesktopHttpProtocolLive` (const) - 1 example import violation(s)
-- `src/transport/IpcChatClient.ts:33` `IpcChatProtocolLive` (const) - 1 example import violation(s)
-- `src/transport/TauriIpcSocket.ts:501` `TauriIpcSocketLive` (const) - 1 example import violation(s)
-- `src/workspace/dock.atoms.ts:377` `makeResetDockSnapshotAtom` (const) - 1 example import violation(s)
-- `src/workspace/dock.atoms.ts:542` `dockPersistenceBindingAtom` (const) - 1 example import violation(s)
-
 ### @beep/epistemic-domain
 
 Path: `packages/epistemic/domain`
@@ -4208,8 +4169,8 @@ Export findings:
 - `src/Freshbooks.models.ts:566` `FreshbooksDecode` (const) - missing @example
 - `src/Freshbooks.service.ts:84` `ResolvedFreshbooksConfig` (class) - 1 example import violation(s)
 - `src/Freshbooks.service.ts:121` `resolveConfig` (const) - 1 example import violation(s)
-- `src/Freshbooks.service.ts:316` `Freshbooks` (class) - 1 example import violation(s)
-- `src/Freshbooks.service.ts:423` `makeFreshbooksAuthLayer` (const) - 1 example import violation(s)
+- `src/Freshbooks.service.ts:315` `Freshbooks` (class) - 1 example import violation(s)
+- `src/Freshbooks.service.ts:422` `makeFreshbooksAuthLayer` (const) - 1 example import violation(s)
 - `src/Freshbooks.token.ts:74` `FreshbooksTokenResponse` (class) - 1 example import violation(s)
 - `src/Freshbooks.token.ts:124` `FreshbooksStoredToken` (class) - 1 example import violation(s)
 - `src/Freshbooks.token.ts:178` `FreshbooksTokenStore` (class) - 1 example import violation(s)

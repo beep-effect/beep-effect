@@ -7,7 +7,8 @@ import {
   TurtleCodec,
 } from "@beep/ontology-use-cases/aggregates/Session";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Ref } from "effect";
+import * as Effect from "effect/Effect";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import { seedPizzaTutorial } from "@/ontology/OntologyWorkspaceSeed";
 
