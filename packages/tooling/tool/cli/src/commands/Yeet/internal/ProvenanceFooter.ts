@@ -218,6 +218,66 @@ const writePrBody = Effect.fn("ProvenanceFooter.writePrBody")(function* (
   }
 });
 
+type ReconcileRequirements = FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner;
+
+const findForeignEdit = (
+  edits: ReadonlyArray<PrBodyEdit>,
+  baseline: DateTime.Utc,
+  writtenBody: string,
+  preservedForeign: O.Option<PrBodyEdit>
+): O.Option<PrBodyEdit> =>
+  O.isNone(preservedForeign)
+    ? newestForeignEditSince(edits, baseline, writtenBody)
+    : pipe(
+        newestEditOfBodySince(edits, baseline, writtenBody),
+        O.flatMap((ownEdit) => newestForeignEditSince(edits, ownEdit.editedAt, writtenBody))
+      );
+
+const yieldToConcurrentEdit = Effect.fn("ProvenanceFooter.yieldToConcurrentEdit")(function* (
+  capture: typeof runRepoCommandCapture,
+  context: RepoRunContext,
+  prNumber: PrNumber,
+  bodyPath: string,
+  writtenBody: string,
+  foreign: PrBodyEdit
+): Effect.fn.Return<O.Option<string>, DomainError | S.SchemaError | YeetCommandError, ReconcileRequirements> {
+  const finalReadback = yield* readPrBody(capture, context, prNumber);
+  const restoring = Str.Equivalence(finalReadback, writtenBody);
+  if (restoring) {
+    yield* writePrBody(capture, context, prNumber, bodyPath, foreign.body);
+  }
+  const outcome = restoring
+    ? `restored the concurrent body edit by ${bodyEditorLabel(foreign)} that its last write had overtaken`
+    : `left the newer concurrent body edit by ${bodyEditorLabel(foreign)} in place`;
+  const warning = `[yeet] provenance footer for PR #${prNumber} yielded after ${maxReconcileRounds} reconcile rounds and ${outcome}; the next yeet monitor re-asserts the footer`;
+  yield* Console.warn(warning);
+  return O.some(warning);
+});
+
+const verifyReconciledBody = Effect.fn("ProvenanceFooter.verifyReconciledBody")(function* (
+  capture: typeof runRepoCommandCapture,
+  context: RepoRunContext,
+  prNumber: PrNumber,
+  sourceBody: string,
+  preservedForeign: O.Option<PrBodyEdit>
+): Effect.fn.Return<O.Option<string>, DomainError | S.SchemaError | YeetCommandError, ReconcileRequirements> {
+  const readback = yield* readPrBody(capture, context, prNumber);
+  const drifted = !Str.Equivalence(bodyWithoutProvenanceFooter(readback), bodyWithoutProvenanceFooter(sourceBody));
+  const warning = drifted
+    ? O.some(
+        O.isSome(preservedForeign)
+          ? `[yeet] provenance footer repair for PR #${prNumber} did not preserve the expected concurrent body; leaving the latest body unchanged`
+          : `[yeet] provenance footer for PR #${prNumber} may have overwritten a concurrent body edit; leaving the latest body unchanged`
+      )
+    : O.map(
+        preservedForeign,
+        (edit) =>
+          `[yeet] provenance footer for PR #${prNumber} preserved a concurrent body edit by ${bodyEditorLabel(edit)}`
+      );
+  yield* O.match(warning, { onNone: () => Effect.void, onSome: (text) => Console.warn(text) });
+  return warning;
+});
+
 const reconcilePrBodyAfterWrite = Effect.fn("ProvenanceFooter.reconcileAfterWrite")(function* (
   capture: typeof runRepoCommandCapture,
   context: RepoRunContext,
@@ -229,60 +289,29 @@ const reconcilePrBodyAfterWrite = Effect.fn("ProvenanceFooter.reconcileAfterWrit
   baseline: DateTime.Utc,
   round: number,
   preservedForeign: O.Option<PrBodyEdit>
-): Effect.fn.Return<
-  O.Option<string>,
-  DomainError | S.SchemaError | YeetCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
-> {
+): Effect.fn.Return<O.Option<string>, DomainError | S.SchemaError | YeetCommandError, ReconcileRequirements> {
   const writtenBody = splicePrProvenanceFooter(sourceBody, rendered);
   yield* writePrBody(capture, context, prNumber, bodyPath, writtenBody);
   const edits = yield* readPrBodyEdits(capture, context, repository, prNumber);
-  const foreign = O.isNone(preservedForeign)
-    ? newestForeignEditSince(edits, baseline, writtenBody)
-    : pipe(
-        newestEditOfBodySince(edits, baseline, writtenBody),
-        O.flatMap((ownEdit) => newestForeignEditSince(edits, ownEdit.editedAt, writtenBody))
-      );
-  if (O.isSome(foreign)) {
-    if (round < maxReconcileRounds) {
-      return yield* reconcilePrBodyAfterWrite(
-        capture,
-        context,
-        repository,
-        prNumber,
-        bodyPath,
-        rendered,
-        foreign.value.body,
-        foreign.value.editedAt,
-        round + 1,
-        foreign
-      );
-    }
-    const finalReadback = yield* readPrBody(capture, context, prNumber);
-    if (Str.Equivalence(finalReadback, writtenBody)) {
-      yield* writePrBody(capture, context, prNumber, bodyPath, foreign.value.body);
-      const restored = `[yeet] provenance footer for PR #${prNumber} yielded after ${maxReconcileRounds} reconcile rounds and restored the concurrent body edit by ${bodyEditorLabel(foreign.value)} that its last write had overtaken; the next yeet monitor re-asserts the footer`;
-      yield* Console.warn(restored);
-      return O.some(restored);
-    }
-    const warning = `[yeet] provenance footer for PR #${prNumber} yielded after ${maxReconcileRounds} reconcile rounds and left the newer concurrent body edit by ${bodyEditorLabel(foreign.value)} in place; the next yeet monitor re-asserts the footer`;
-    yield* Console.warn(warning);
-    return O.some(warning);
+  const foreign = findForeignEdit(edits, baseline, writtenBody, preservedForeign);
+  if (O.isNone(foreign)) {
+    return yield* verifyReconciledBody(capture, context, prNumber, sourceBody, preservedForeign);
   }
-  const readback = yield* readPrBody(capture, context, prNumber);
-  if (!Str.Equivalence(bodyWithoutProvenanceFooter(readback), bodyWithoutProvenanceFooter(sourceBody))) {
-    const warning = O.isSome(preservedForeign)
-      ? `[yeet] provenance footer repair for PR #${prNumber} did not preserve the expected concurrent body; leaving the latest body unchanged`
-      : `[yeet] provenance footer for PR #${prNumber} may have overwritten a concurrent body edit; leaving the latest body unchanged`;
-    yield* Console.warn(warning);
-    return O.some(warning);
+  if (round >= maxReconcileRounds) {
+    return yield* yieldToConcurrentEdit(capture, context, prNumber, bodyPath, writtenBody, foreign.value);
   }
-  if (O.isSome(preservedForeign)) {
-    const warning = `[yeet] provenance footer for PR #${prNumber} preserved a concurrent body edit by ${bodyEditorLabel(preservedForeign.value)}`;
-    yield* Console.warn(warning);
-    return O.some(warning);
-  }
-  return O.none<string>();
+  return yield* reconcilePrBodyAfterWrite(
+    capture,
+    context,
+    repository,
+    prNumber,
+    bodyPath,
+    rendered,
+    foreign.value.body,
+    foreign.value.editedAt,
+    round + 1,
+    foreign
+  );
 });
 
 const readPrBody = Effect.fn("ProvenanceFooter.readPrBody")(function* (
