@@ -463,3 +463,18 @@ What would have prevented it: include tracked and untracked working-tree
 changesets when `HEAD` names the local checkout, or state that the command is a
 committed-range-only check and provide a dirty-aware local mode. The PR lane can
 remain commit-only while the edit loop gives authors evidence before committing.
+
+## 2026-09-03 — branch-local coverage missed merge-candidate drift
+
+Lived while repairing the P1 PR after a package-filtered coverage run reported
+the committed 77.98% branch floor exactly, but GitHub's synthetic merge against
+newer `main` reported 77.89%. The newer base had refactored two covered branches
+out of `agent-effectiveness.ts`; once that exact base commit was merged locally,
+`bun run coverage -- --filter=@beep/repo-ai-metrics --summarize` reproduced the
+hosted 370/475 result. One focused normalization law restored 371/475 without
+lowering the baseline.
+
+What would have prevented it: make early-PR local proof refresh and test the
+current pull-request merge candidate, or at minimum report when its base SHA is
+newer than the locally tested `origin/main`. Exact branch-head proof and exact
+merge-candidate proof are different evidence when the base moves.
