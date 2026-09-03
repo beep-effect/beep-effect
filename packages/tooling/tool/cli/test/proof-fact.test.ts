@@ -152,8 +152,8 @@ describe("ProofFact schemas", () => {
       const factJson = yield* S.encodeUnknownEffect(S.fromJsonString(ProofLedgerFactRow))(factRow);
       const shadowJson = yield* S.encodeUnknownEffect(S.fromJsonString(ProofLedgerShadowRow))(shadowRow);
 
-      const decodedFact = yield* S.decodeUnknownEffect(S.fromJsonString(ProofLedgerFactRow))(factJson);
-      const decodedShadow = yield* S.decodeUnknownEffect(S.fromJsonString(ProofLedgerShadowRow))(shadowJson);
+      const decodedFact = yield* S.decodeEffect(S.fromJsonString(ProofLedgerFactRow))(factJson);
+      const decodedShadow = yield* S.decodeEffect(S.fromJsonString(ProofLedgerShadowRow))(shadowJson);
 
       expect(S.is(ProofLedgerFactRow)(decodedFact)).toBe(true);
       expect(S.is(ProofLedgerShadowRow)(decodedShadow)).toBe(true);
