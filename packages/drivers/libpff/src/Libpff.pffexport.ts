@@ -18,7 +18,7 @@ import { $LibpffId } from "@beep/identity";
 import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { A, O, R, Str, Struct } from "@beep/utils";
-import { Effect, FileSystem, flow, Match, Order, Path, Stream } from "effect";
+import { Effect, FileSystem, flow, Match, Number as Num, Order, Path, Stream } from "effect";
 import * as S from "effect/Schema";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import {
@@ -34,13 +34,20 @@ import { PFFEXPORT_MESSAGES_SUFFIX, PffexportMessageRecord } from "./Libpff.mess
 import { LibpffFileProcessingEngine, LibpffFileProcessingEngineDescriptor } from "./Libpff.service.ts";
 import type { ExportArchiveOperation, ExtractFileOperation } from "@beep/file-processing/Operation";
 import type { FileProcessingEngineShape } from "@beep/file-processing/Service";
+import type { Scope } from "effect";
 import type * as Crypto from "effect/Crypto";
 import type { LibpffError } from "./Libpff.errors.ts";
 
 const $I = $LibpffId.create("Libpff.pffexport");
 
 const defaultPffexportPath = "pffexport";
+const defaultSystemdRunPath = "systemd-run";
 const defaultForceKillAfterMillis = 10_000;
+const sandboxMemoryHeadroomBytes = 512 * 1024 * 1024;
+const sandboxOutputEntryLimit = 65_536;
+const sandboxOutputLimitExitCode = 97;
+const sandboxOutputEntryLimitExitCode = 98;
+const sandboxUnexpectedEntryExitCode = 99;
 const sandboxRuntimeRoots: ReadonlyArray<string> = ["/usr", "/bin", "/sbin", "/lib", "/lib64", "/etc", "/var"];
 const PffexportModeBase = LiteralKit(["all", "items", "recovered"]);
 const PffexportFormatBase = LiteralKit(["all", "html", "rtf", "text"]);
@@ -51,6 +58,34 @@ const textDecoder = new TextDecoder();
 const versionOutputPattern = /^pffexport\s+(\S+)/;
 const artifactIdPrefixLength = "artifact:".length;
 const emlBoundaryHexLength = 40;
+
+interface PffexportProcessResult {
+  readonly exitCode: number;
+  readonly stderr: string;
+}
+
+const quotaExportScript = `set -eu
+"$@" 1>&2
+set +e
+/usr/bin/find /output -mindepth 1 -printf '%y\\t%s\\n' | /usr/bin/awk \
+  -v max_bytes="$BEEP_PFFEXPORT_MAX_BYTES" \
+  -v max_entries="$BEEP_PFFEXPORT_MAX_ENTRIES" '
+    { entries += 1; if ($1 == "f") bytes += $2; else if ($1 != "d") unexpected = 1 }
+    END {
+      if (unexpected) exit 99
+      if (entries > max_entries) exit 98
+      if (bytes > max_bytes) exit 97
+    }
+  '
+quota_status=$?
+set -e
+case "$quota_status" in
+  0) ;;
+  97|98|99) exit "$quota_status" ;;
+  *) exit 96 ;;
+esac
+/usr/bin/tar --format=posix --sort=name --numeric-owner --owner=0 --group=0 -C /output -cf - .
+`;
 
 // pffexport suffixes the -t basename per mode: `items` fills `.export`,
 // `recovered` fills `.orphans` + `.recovered`, `all` fills all three — and it
@@ -242,6 +277,9 @@ export class PffexportEngineConfig extends S.Class<PffexportEngineConfig>($I`Pff
     ),
     pffexportPath: S.String.pipe(SchemaUtils.withKeyDefaults(defaultPffexportPath)).annotateKey({
       description: "Executable path or command name used to spawn pffexport.",
+    }),
+    systemdRunPath: S.String.pipe(SchemaUtils.withKeyDefaults(defaultSystemdRunPath)).annotateKey({
+      description: "systemd-run executable used to apply a hard memory cgroup around quota-limited sandbox exports.",
     }),
     timeoutMillis: S.OptionFromOptionalKey(PosInt).pipe(
       SchemaUtils.withNoneDefault,
@@ -789,61 +827,99 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
       ? []
       : ["--ro-bind", executableRuntimePrefix, executableRuntimePrefix];
     const shebangPlan = yield* sandboxShebangPlan(hostPffexportPath);
-    return ChildProcess.make(
-      bwrapPath,
-      [
-        "--die-with-parent",
-        "--new-session",
-        "--unshare-all",
-        "--clearenv",
-        ...(yield* sandboxRuntimeBinds()),
-        "--proc",
-        "/proc",
-        "--dev",
-        "/dev",
+    const pffexportArguments = [
+      shebangPlan.command,
+      ...shebangPlan.commandArguments,
+      "-f",
+      exportFormat,
+      "-m",
+      exportMode,
+      "-q",
+      "-t",
+      sandboxTarget,
+      "/input/source.pst",
+    ];
+    const outputMountArguments = O.match(config.maxOutputBytes, {
+      onNone: (): ReadonlyArray<string> => ["--dir", "/output", "--bind", config.exportRoot, "/output"],
+      onSome: (limit): ReadonlyArray<string> => [
+        "--size",
+        `${limit}`,
         "--tmpfs",
-        "/tmp",
-        "--dir",
-        "/input",
-        "--dir",
-        "/output",
-        ...executableBind,
-        "--setenv",
-        "PATH",
-        shebangPlan.searchPath,
-        ...shebangPlan.bindArguments,
-        "--ro-bind",
-        sourcePath,
-        "/input/source.pst",
-        "--bind",
-        config.exportRoot,
         "/output",
         "--setenv",
-        "HOME",
-        "/tmp",
+        "BEEP_PFFEXPORT_MAX_BYTES",
+        `${limit}`,
         "--setenv",
-        "LANG",
-        "C.UTF-8",
-        "--",
-        shebangPlan.command,
-        ...shebangPlan.commandArguments,
-        "-f",
-        exportFormat,
-        "-m",
-        exportMode,
-        "-q",
-        "-t",
-        sandboxTarget,
-        "/input/source.pst",
+        "BEEP_PFFEXPORT_MAX_ENTRIES",
+        `${sandboxOutputEntryLimit}`,
       ],
-      spawnOptions
-    );
+    });
+    const sandboxCommandArguments = O.isSome(config.maxOutputBytes)
+      ? ["/bin/sh", "-c", quotaExportScript, "pffexport-quota", ...pffexportArguments]
+      : pffexportArguments;
+    const bwrapArguments = [
+      "--die-with-parent",
+      "--new-session",
+      "--unshare-all",
+      "--clearenv",
+      ...(yield* sandboxRuntimeBinds()),
+      "--proc",
+      "/proc",
+      "--dev",
+      "/dev",
+      "--tmpfs",
+      "/tmp",
+      "--dir",
+      "/input",
+      ...outputMountArguments,
+      ...executableBind,
+      "--setenv",
+      "PATH",
+      shebangPlan.searchPath,
+      ...shebangPlan.bindArguments,
+      "--ro-bind",
+      sourcePath,
+      "/input/source.pst",
+      "--setenv",
+      "HOME",
+      "/tmp",
+      "--setenv",
+      "LANG",
+      "C.UTF-8",
+      "--",
+      ...sandboxCommandArguments,
+    ];
+    return O.match(config.maxOutputBytes, {
+      onNone: () => ChildProcess.make(bwrapPath, bwrapArguments, spawnOptions),
+      onSome: (limit) =>
+        ChildProcess.make(
+          config.systemdRunPath,
+          [
+            "--user",
+            "--scope",
+            "--collect",
+            "--quiet",
+            `--property=MemoryMax=${Num.sum(limit, sandboxMemoryHeadroomBytes)}`,
+            "--property=MemorySwapMax=0",
+            "--property=TasksMax=64",
+            "--",
+            bwrapPath,
+            ...bwrapArguments,
+          ],
+          spawnOptions
+        ),
+    });
   });
 
   const pffexportCommand = Effect.fn("Libpff.pffexport.command")(function* (
     sourcePath: string,
     targetBase: string
   ): Effect.fn.Return<ReturnType<typeof ChildProcess.make>, LibpffError> {
+    if (O.isSome(config.maxOutputBytes) && O.isNone(config.bwrapPath)) {
+      return yield* makeLibpffError("config", {
+        cause: "maxOutputBytes requires bubblewrap so pffexport writes only to a quota-limited tmpfs",
+      });
+    }
     return yield* O.match(config.bwrapPath, {
       onNone: () =>
         Effect.succeed(
@@ -959,6 +1035,49 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
     return yield* walkFilesWithin(canonicalRoot, root, directory);
   });
 
+  const inspectQuotaHandoff = Effect.fn("Libpff.pffexport.inspectQuotaHandoff")(function* (
+    stagingRoot: string,
+    targetBase: string
+  ): Effect.fn.Return<ReadonlyArray<string>, LibpffError> {
+    const targetName = path.basename(targetBase);
+    const permittedNames = A.map(targetTreeSuffixesFor(exportMode), (suffix) => `${targetName}${suffix}`);
+    const stagedNames = yield* fs
+      .readDirectory(stagingRoot)
+      .pipe(Effect.mapError(() => makeLibpffError("process", { cause: "quota handoff inspection failed" })));
+    if (A.some(stagedNames, (name) => !A.contains(permittedNames, name))) {
+      return yield* makeLibpffError("process", { cause: "quota handoff contained an unexpected entry" });
+    }
+    for (const name of stagedNames) {
+      const stagedTree = path.join(stagingRoot, name);
+      const info = yield* requireCanonicalExportEntry(stagingRoot, stagedTree);
+      if (info.type !== "Directory") {
+        return yield* makeLibpffError("process", { cause: "quota handoff tree was not a directory" });
+      }
+      yield* walkFiles(stagingRoot, stagedTree);
+    }
+    return stagedNames;
+  });
+
+  const publishQuotaHandoff = Effect.fn("Libpff.pffexport.publishQuotaHandoff")(function* (
+    stagingRoot: string,
+    stagedNames: ReadonlyArray<string>
+  ): Effect.fn.Return<void, LibpffError> {
+    const published: Array<string> = [];
+    for (const name of stagedNames) {
+      const destination = path.join(config.exportRoot, name);
+      const renamed = yield* fs.rename(path.join(stagingRoot, name), destination).pipe(Effect.option);
+      if (O.isNone(renamed)) {
+        yield* Effect.forEach(
+          published,
+          (publishedPath) => fs.remove(publishedPath, { recursive: true }).pipe(Effect.ignore),
+          { discard: true }
+        );
+        return yield* makeLibpffError("process", { cause: "quota handoff publish failed" });
+      }
+      published.push(destination);
+    }
+  });
+
   const runPffexport = Effect.fn("Libpff.pffexport.run")(function* (
     sourcePath: string,
     targetBase: string
@@ -972,72 +1091,95 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
         const handle = yield* spawner
           .spawn(command)
           .pipe(Effect.mapError(() => makeLibpffError("engine-unavailable", { cause: "pffexport spawn failed" })));
-        const processResult = Effect.all(
+        const directProcessResult: Effect.Effect<PffexportProcessResult, LibpffError> = Effect.all(
           [drainStream(handle.stdout), captureBoundedProcessText(handle.stderr), handle.exitCode],
           { concurrency: "unbounded" }
         ).pipe(
           Effect.map(([, capturedStderr, code]) => ({ exitCode: code, stderr: capturedStderr })),
           Effect.mapError(() => makeLibpffError("process", { cause: "pffexport terminated abnormally" }))
         );
-        const monitor = O.match(config.maxOutputBytes, {
-          onNone: () => Effect.never,
-          onSome: (maxOutputBytes) => monitorOutputBytes(handle, targetBase, maxOutputBytes),
-        });
+        const quotaProcessResult: Effect.Effect<PffexportProcessResult, LibpffError, Scope.Scope> = Effect.gen(
+          function* () {
+            const stagingRoot = yield* fs
+              .makeTempDirectoryScoped({ directory: config.exportRoot, prefix: ".pffexport-quota-" })
+              .pipe(
+                Effect.mapError(() => makeLibpffError("process", { cause: "quota handoff directory creation failed" }))
+              );
+            const extractor = yield* spawner
+              .spawn(
+                ChildProcess.make(
+                  "/usr/bin/tar",
+                  [
+                    "--extract",
+                    "--file",
+                    "-",
+                    "--directory",
+                    stagingRoot,
+                    "--no-same-owner",
+                    "--no-same-permissions",
+                    "--delay-directory-restore",
+                  ],
+                  { ...spawnOptions, stdin: "pipe" }
+                )
+              )
+              .pipe(
+                Effect.mapError(() => makeLibpffError("engine-unavailable", { cause: "tar extraction spawn failed" }))
+              );
+            const [, capturedStderr, code, , tarStderr, tarExitCode] = yield* Effect.all(
+              [
+                Stream.run(handle.stdout, extractor.stdin),
+                captureBoundedProcessText(handle.stderr),
+                handle.exitCode,
+                drainStream(extractor.stdout),
+                captureBoundedProcessText(extractor.stderr),
+                extractor.exitCode,
+              ],
+              { concurrency: "unbounded" }
+            );
+            if (code !== 0) return { exitCode: code, stderr: capturedStderr };
+            if (tarExitCode !== 0) {
+              return yield* makeLibpffError("process", {
+                cause: Str.isNonEmpty(tarStderr) ? tarStderr : "quota handoff extraction failed",
+              });
+            }
+
+            const stagedNames = yield* inspectQuotaHandoff(stagingRoot, targetBase);
+            yield* publishQuotaHandoff(stagingRoot, stagedNames);
+            return { exitCode: code, stderr: capturedStderr };
+          }
+        ).pipe(Effect.mapError(() => makeLibpffError("process", { cause: "pffexport terminated abnormally" })));
+        const processResult: Effect.Effect<PffexportProcessResult, LibpffError, Scope.Scope> = O.isNone(
+          config.maxOutputBytes
+        )
+          ? directProcessResult
+          : quotaProcessResult;
         const stopProcess = handle.kill({ forceKillAfter: "1 second" }).pipe(Effect.ignore);
-        const watchedProcess = Effect.raceFirst(processResult, monitor);
-        const timedProcess = O.match(config.timeoutMillis, {
-          onNone: () => watchedProcess,
-          onSome: (timeoutMillis) =>
-            watchedProcess.pipe(
+        const timedProcess = O.isNone(config.timeoutMillis)
+          ? processResult
+          : processResult.pipe(
               Effect.timeoutOrElse({
-                duration: `${timeoutMillis} millis`,
+                duration: `${config.timeoutMillis.value} millis`,
                 orElse: () => Effect.fail(makeLibpffError("timeout")),
               })
-            ),
-        });
+            );
         return yield* timedProcess.pipe(
-          Effect.catch((error) => stopProcess.pipe(Effect.andThen(Effect.fail(error)))),
+          Effect.onError(() => stopProcess),
           Effect.onInterrupt(() => stopProcess)
         );
       })
     );
 
+    if (exitCode === sandboxOutputLimitExitCode || exitCode === sandboxOutputEntryLimitExitCode) {
+      return yield* makeLibpffError("output-limit", { cause: "pffexport quota-limited output ceiling exceeded" });
+    }
+    if (exitCode === sandboxUnexpectedEntryExitCode) {
+      return yield* makeLibpffError("process", { cause: "pffexport emitted a non-regular output entry" });
+    }
     if (exitCode !== 0) {
       return yield* makeLibpffError("process", {
         exitCode: NonNegativeInt.make(Math.max(0, exitCode)),
         ...O.getSomesStruct({ processClassification: classifyProcessFailure(stderr) }),
       });
-    }
-  });
-
-  const measureRawOutputBytes = Effect.fn("Libpff.pffexport.measureRawOutputBytes")(function* (
-    targetBase: string
-  ): Effect.fn.Return<number, LibpffError> {
-    let total = 0;
-    for (const suffix of allTargetTreeSuffixes) {
-      const treeRoot = `${targetBase}${suffix}`;
-      const exists = yield* fs
-        .exists(treeRoot)
-        .pipe(Effect.mapError(() => makeLibpffError("output-limit", { cause: "export output check failed" })));
-      if (!exists) continue;
-      const files = yield* walkFiles(config.exportRoot, treeRoot);
-      total = A.reduce(files, total, (bytes, file) => bytes + file.sizeBytes);
-    }
-    return total;
-  });
-
-  const monitorOutputBytes = Effect.fn("Libpff.pffexport.monitorOutputBytes")(function* (
-    handle: ChildProcessSpawner.ChildProcessHandle,
-    targetBase: string,
-    maxOutputBytes: number
-  ): Effect.fn.Return<never, LibpffError> {
-    while (true) {
-      yield* Effect.sleep("20 millis");
-      const retainedBytes = yield* measureRawOutputBytes(targetBase);
-      if (retainedBytes > maxOutputBytes) {
-        yield* handle.kill({ killSignal: "SIGKILL" }).pipe(Effect.ignore);
-        return yield* makeLibpffError("output-limit", { cause: "pffexport output ceiling exceeded" });
-      }
     }
   });
 

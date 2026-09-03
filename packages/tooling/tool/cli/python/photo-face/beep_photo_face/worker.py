@@ -62,7 +62,21 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
 
 
-SCHEMA_VERSION = "beep.files.match-person.worker.v2"
+SCHEMA_VERSION = "beep.files.match-person.worker.v3"
+MAX_REFERENCE_IMAGES = 256
+MAX_CANDIDATE_IMAGES = 10_000
+MAX_FACES_PER_IMAGE = 32
+MAX_REPORTED_FACES = 65_536
+MAX_REPORT_BYTES = 64 * 1024 * 1024
+MAX_DIAGNOSTIC_BYTES = 1024 * 1024
+WORKER_LIMITS = {
+    "referenceImages": MAX_REFERENCE_IMAGES,
+    "candidateImages": MAX_CANDIDATE_IMAGES,
+    "facesPerImage": MAX_FACES_PER_IMAGE,
+    "reportedFaces": MAX_REPORTED_FACES,
+    "reportBytes": MAX_REPORT_BYTES,
+    "diagnosticBytes": MAX_DIAGNOSTIC_BYTES,
+}
 MODEL_NAME = "buffalo_l"
 MODEL_RUNTIME_NAME = "beep_buffalo_l_v1"
 MODEL_ARTIFACT_NAMES = ("det_10g.onnx", "w600k_r50.onnx")
@@ -92,15 +106,26 @@ class WorkerArgumentParser(argparse.ArgumentParser):
         raise WorkerError("invalid-arguments", message)
 
 
-def discover_images(directory: Path, recursive: bool) -> list[Path]:
+def discover_images(
+    directory: Path,
+    recursive: bool,
+    limit: int = MAX_CANDIDATE_IMAGES,
+    label: str = "candidate",
+) -> list[Path]:
     candidates = directory.rglob("*") if recursive else directory.iterdir()
-    images = [
-        path
-        for path in candidates
-        if path.is_file()
-        and not path.is_symlink()
-        and path.suffix.lower() in SUPPORTED_EXTENSIONS
-    ]
+    images: list[Path] = []
+    for path in candidates:
+        if (
+            path.is_file()
+            and not path.is_symlink()
+            and path.suffix.lower() in SUPPORTED_EXTENSIONS
+        ):
+            images.append(path)
+            if len(images) > limit:
+                raise WorkerError(
+                    "input-limit-exceeded",
+                    f"{label} image count exceeds {limit}; split the scan into smaller batches",
+                )
     return sorted(
         images,
         key=lambda path: (
@@ -682,6 +707,14 @@ def read_image(path: Path) -> NDArray[np.uint8] | None:
 
 def sorted_faces(analysis: Any, image: NDArray[np.uint8]) -> list[Any]:
     faces = list(analysis.get(image))
+    if len(faces) > MAX_FACES_PER_IMAGE:
+        raise WorkerError(
+            "input-limit-exceeded",
+            (
+                f"detected face count exceeds {MAX_FACES_PER_IMAGE} for one image; "
+                "split the scan or use images with fewer faces"
+            ),
+        )
     return sorted(
         faces,
         key=lambda face: (
@@ -947,8 +980,18 @@ def build_summary(
 
 
 def run_worker(arguments: WorkerArguments, started_at: float) -> dict[str, Any]:
-    reference_paths = discover_images(arguments.reference_dir, arguments.recursive)
-    source_paths = discover_images(arguments.source_dir, arguments.recursive)
+    reference_paths = discover_images(
+        arguments.reference_dir,
+        arguments.recursive,
+        MAX_REFERENCE_IMAGES,
+        "reference",
+    )
+    source_paths = discover_images(
+        arguments.source_dir,
+        arguments.recursive,
+        MAX_CANDIDATE_IMAGES,
+        "candidate",
+    )
     if not reference_paths:
         raise WorkerError(
             "no-reference-images",
@@ -975,6 +1018,15 @@ def run_worker(arguments: WorkerArguments, started_at: float) -> dict[str, Any]:
     references, reference_vectors, reference_names = collect_references(
         analysis, reference_paths
     )
+    reported_face_count = sum(int(reference["faceCount"]) for reference in references)
+    if reported_face_count > MAX_REPORTED_FACES:
+        raise WorkerError(
+            "input-limit-exceeded",
+            (
+                f"reported face count exceeds {MAX_REPORTED_FACES}; "
+                "split the scan into smaller batches"
+            ),
+        )
     validate_unique_recursive_reference_names(reference_names, arguments.recursive)
     if not reference_vectors:
         raise WorkerError(
@@ -988,22 +1040,31 @@ def run_worker(arguments: WorkerArguments, started_at: float) -> dict[str, Any]:
     total = len(source_paths)
     for index, path in enumerate(source_paths, start=1):
         print(f"[photo-face] candidate {index}/{total}: {path.name}", file=sys.stderr)
-        entries.append(
-            candidate_entry(
-                analysis,
-                path,
-                arguments.source_dir,
-                reference_embeddings,
-                centroid,
-                reference_names,
-                arguments,
-                align_face,
-            )
+        entry = candidate_entry(
+            analysis,
+            path,
+            arguments.source_dir,
+            reference_embeddings,
+            centroid,
+            reference_names,
+            arguments,
+            align_face,
         )
+        reported_face_count += int(entry["faceCount"])
+        if reported_face_count > MAX_REPORTED_FACES:
+            raise WorkerError(
+                "input-limit-exceeded",
+                (
+                    f"reported face count exceeds {MAX_REPORTED_FACES}; "
+                    "split the scan into smaller batches"
+                ),
+            )
+        entries.append(entry)
 
     return {
         "schemaVersion": SCHEMA_VERSION,
         "ok": True,
+        "limits": WORKER_LIMITS,
         "model": loaded.model,
         "parameters": parameters_payload(arguments, loaded.selection),
         "references": references,
@@ -1017,33 +1078,80 @@ def failure_payload(error: WorkerError, started_at: float) -> dict[str, Any]:
     return {
         "schemaVersion": SCHEMA_VERSION,
         "ok": False,
+        "limits": WORKER_LIMITS,
         "error": {"code": error.code, "message": error.message},
         "elapsedSeconds": round(time.perf_counter() - started_at, 3),
     }
 
 
+class BoundedDiagnosticWriter:
+    def __init__(self, target: Any, max_bytes: int) -> None:
+        self.target = target
+        self.remaining = max_bytes
+
+    def write(self, text: str) -> int:
+        encoded = text.encode("utf-8")
+        if self.remaining <= 0:
+            return len(text)
+        retained = encoded[: self.remaining]
+        self.remaining -= len(retained)
+        self.target.write(retained.decode("utf-8", errors="ignore"))
+        return len(text)
+
+    def flush(self) -> None:
+        self.target.flush()
+
+
+def encode_payload(payload: dict[str, Any]) -> str:
+    chunks: list[str] = []
+    encoded_bytes = 0
+    encoder = json.JSONEncoder(
+        ensure_ascii=False, separators=(",", ":"), allow_nan=False
+    )
+    for chunk in encoder.iterencode(payload):
+        encoded_bytes += len(chunk.encode("utf-8"))
+        if encoded_bytes > MAX_REPORT_BYTES:
+            raise WorkerError(
+                "report-limit-exceeded",
+                (
+                    f"worker JSON exceeds {MAX_REPORT_BYTES} bytes; "
+                    "split the scan into smaller batches"
+                ),
+            )
+        chunks.append(chunk)
+    return "".join(chunks)
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     started_at = time.perf_counter()
     exit_code = 0
-    try:
-        arguments = parse_arguments(argv)
-        with contextlib.redirect_stdout(sys.stderr):
-            payload = run_worker(arguments, started_at)
-    except WorkerError as error:
-        print(f"[photo-face] {error.code}: {error.message}", file=sys.stderr)
-        payload = failure_payload(error, started_at)
-        exit_code = 2
-    except Exception as error:  # noqa: BLE001  # pragma: no cover - process boundary
-        print("[photo-face] unexpected worker failure", file=sys.stderr)
-        traceback.print_exc(file=sys.stderr)
-        payload = failure_payload(
-            WorkerError("worker-failed", f"{type(error).__name__}: {error}"), started_at
-        )
-        exit_code = 1
+    diagnostics = BoundedDiagnosticWriter(sys.stderr, MAX_DIAGNOSTIC_BYTES)
+    with contextlib.redirect_stderr(diagnostics):
+        try:
+            arguments = parse_arguments(argv)
+            with contextlib.redirect_stdout(diagnostics):
+                payload = run_worker(arguments, started_at)
+        except WorkerError as error:
+            print(f"[photo-face] {error.code}: {error.message}", file=sys.stderr)
+            payload = failure_payload(error, started_at)
+            exit_code = 2
+        except Exception as error:  # noqa: BLE001  # pragma: no cover - process boundary
+            print("[photo-face] unexpected worker failure", file=sys.stderr)
+            traceback.print_exc(file=sys.stderr)
+            payload = failure_payload(
+                WorkerError("worker-failed", f"{type(error).__name__}: {error}"),
+                started_at,
+            )
+            exit_code = 1
 
-    json.dump(
-        payload, sys.stdout, ensure_ascii=False, separators=(",", ":"), allow_nan=False
-    )
+        try:
+            encoded_payload = encode_payload(payload)
+        except WorkerError as error:
+            print(f"[photo-face] {error.code}: {error.message}", file=sys.stderr)
+            encoded_payload = encode_payload(failure_payload(error, started_at))
+            exit_code = 2
+
+    sys.stdout.write(encoded_payload)
     sys.stdout.write("\n")
     sys.stdout.flush()
     return exit_code

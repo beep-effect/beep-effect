@@ -117,3 +117,13 @@
 - Prevention: explicitly test default, disabled, and optional proof-planning
   branches with scoped environment overrides so coverage is invariant across
   standalone, CI, and nested Yeet invocations.
+
+## 2026-09-03 — Codex closed-list counts disagreed with exact finding state
+
+- Work: completed the post-merge closure audit for the eleven captured Codex
+  security findings.
+- Evidence: every exact-ID detail page exposed Reopen and an automatic
+  no-longer-detected notice, while the closed-list summary displayed zero of
+  zero.
+- Prevention: audit packet closure from the exact captured-ID allowlist and
+  treat list counts only as navigation metadata, not authoritative state.

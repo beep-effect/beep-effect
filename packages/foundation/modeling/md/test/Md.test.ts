@@ -70,6 +70,7 @@ import {
   decodeSafeDocumentUnsafe,
   documentSafetyIssues,
   HtmlProjectionSafetyViolation,
+  MAX_SAFE_DOCUMENT_NODES,
   refineSafeDocument,
   SafeDocument,
 } from "@beep/md/Md.safe";
@@ -77,6 +78,7 @@ import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Cause, Effect, Exit, Result } from "effect";
+import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
@@ -1003,6 +1005,21 @@ Demo video`);
         destinationKind: "image",
       },
     ]);
+  });
+
+  it("rejects documents above the global AST-node budget before HTML projection", () => {
+    const atLimit = Md.make(A.makeBy(MAX_SAFE_DOCUMENT_NODES - 1, () => Md.hr));
+    const overLimit = Md.make(A.makeBy(MAX_SAFE_DOCUMENT_NODES, () => Md.hr));
+
+    expect(documentSafetyIssues(atLimit)).toStrictEqual([]);
+    expect(documentSafetyIssues(overLimit)).toMatchObject([
+      {
+        _tag: "DocumentComplexity",
+        maxNodes: MAX_SAFE_DOCUMENT_NODES,
+        observedNodes: MAX_SAFE_DOCUMENT_NODES + 1,
+      },
+    ]);
+    expect(Result.isFailure(refineSafeDocument(overLimit))).toBe(true);
   });
 
   it("keeps canonical URL-policy sanitization at a fixed point", () =>

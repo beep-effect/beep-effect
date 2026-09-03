@@ -131,6 +131,10 @@ const makeNewClassFixtures = Effect.fn("TmpfsReapTest.makeNewClassFixtures")(fun
   const stubExistingTarget = path.join(worktreesRoot, "target-exists");
   const stubParentPresent = path.join(worktreesRoot, "parent-present");
   const stubContentsPresent = path.join(worktreesRoot, "contents-present");
+  const stubTrackedContent = path.join(worktreesRoot, "tracked-content");
+  const stubUntrackedContent = path.join(worktreesRoot, "untracked-content");
+  const stubNestedContent = path.join(worktreesRoot, "nested-content");
+  const stubSymlinkContent = path.join(worktreesRoot, "symlink-content");
   const soleWorktreesRoot = path.join(tmpRoot, "sole-worktrees");
   const stubSoleEligible = path.join(soleWorktreesRoot, "eligible");
   const missingRepo = path.join(root, "missing-repo");
@@ -156,6 +160,10 @@ const makeNewClassFixtures = Effect.fn("TmpfsReapTest.makeNewClassFixtures")(fun
       stubExistingTarget,
       stubParentPresent,
       stubContentsPresent,
+      stubTrackedContent,
+      stubUntrackedContent,
+      path.join(stubNestedContent, "nested"),
+      stubSymlinkContent,
       stubSoleEligible,
       existingGitDir,
       parentPresentRepo,
@@ -180,6 +188,19 @@ const makeNewClassFixtures = Effect.fn("TmpfsReapTest.makeNewClassFixtures")(fun
     `gitdir: ${missingRepo}/.git/worktrees/contents-present\n`
   );
   yield* fs.writeFileString(path.join(stubContentsPresent, "unsaved.bin"), Str.repeat(1024 * 1024 + 1)("x"));
+  yield* Effect.forEach(
+    [stubTrackedContent, stubUntrackedContent, stubNestedContent, stubSymlinkContent],
+    (candidate) =>
+      fs.writeFileString(
+        path.join(candidate, ".git"),
+        `gitdir: ${missingRepo}/.git/worktrees/${path.basename(candidate)}\n`
+      ),
+    { discard: true }
+  );
+  yield* fs.writeFileString(path.join(stubTrackedContent, "tracked.txt"), "small tracked bytes\n");
+  yield* fs.writeFileString(path.join(stubUntrackedContent, "untracked.txt"), "small untracked bytes\n");
+  yield* fs.writeFileString(path.join(stubNestedContent, "nested", "notes.txt"), "nested bytes\n");
+  yield* fs.symlink(path.join(root, "outside-target"), path.join(stubSymlinkContent, "linked-data"));
   yield* fs.writeFileString(
     path.join(vitestWrongShape, ".git"),
     `gitdir: ${missingRepo}/.git/worktrees/nanoid-git-worktree\n`
@@ -195,6 +216,10 @@ const makeNewClassFixtures = Effect.fn("TmpfsReapTest.makeNewClassFixtures")(fun
       stubExistingTarget,
       stubParentPresent,
       stubContentsPresent,
+      stubTrackedContent,
+      stubUntrackedContent,
+      stubNestedContent,
+      stubSymlinkContent,
       stubSoleEligible,
       unclassifiedWorktree,
       vitestWrongShape,
@@ -226,6 +251,10 @@ const makeNewClassFixtures = Effect.fn("TmpfsReapTest.makeNewClassFixtures")(fun
     stubMalformedGitFile,
     stubParentPresent,
     stubContentsPresent,
+    stubTrackedContent,
+    stubUntrackedContent,
+    stubNestedContent,
+    stubSymlinkContent,
     stubRelativeGitDir,
     stubSoleEligible,
     stubWrongShape,
@@ -441,6 +470,18 @@ describe("tmpfs reap", () => {
           expect(stubContentsPresent.bytes).toBeUndefined();
           expect(yield* fs.exists(fixture.stubContentsPresent)).toBe(true);
 
+          for (const preserved of [
+            fixture.stubTrackedContent,
+            fixture.stubUntrackedContent,
+            fixture.stubNestedContent,
+            fixture.stubSymlinkContent,
+          ]) {
+            const candidate = candidateByPath(report, preserved);
+            expect(candidate.skipReason).toBe("contents-present");
+            expect(candidate.bytes).toBeUndefined();
+            expect(yield* fs.exists(preserved)).toBe(true);
+          }
+
           expect(candidateByPath(report, fixture.unclassifiedWorktree).skipReason).toBe("unclassified");
 
           expect(candidateByPath(report, fixture.stubSoleEligible).action).toBe("remove-dir");
@@ -495,10 +536,18 @@ describe("tmpfs reap", () => {
         const racedChild = path.join(fixture.soleWorktreesRoot, "concurrent-worktree");
         const racingFileSystem = FileSystem.makeNoop({
           ...fs,
-          remove: (target, options) =>
+          readDirectory: (target) =>
             Str.Equivalence(target, fixture.soleWorktreesRoot)
-              ? fs.makeDirectory(racedChild).pipe(Effect.andThen(fs.remove(target, options)))
-              : fs.remove(target, options),
+              ? fs
+                  .exists(fixture.stubSoleEligible)
+                  .pipe(
+                    Effect.flatMap((stubExists) =>
+                      stubExists
+                        ? fs.readDirectory(target)
+                        : fs.makeDirectory(racedChild).pipe(Effect.andThen(fs.readDirectory(target)))
+                    )
+                  )
+              : fs.readDirectory(target),
         });
         const report = yield* runTmpfsReap({
           apply: true,
@@ -524,14 +573,16 @@ describe("tmpfs reap", () => {
         const path = yield* Path.Path;
         const fixture = yield* makeNewClassFixtures(root);
         const gitFile = path.join(fixture.stubEligible, ".git");
+        const relativeGitFile = path.join(fixture.stubRelativeGitDir, ".git");
+        const racedContent = path.join(fixture.stubRelativeGitDir, "raced-content");
         const missingStatTarget = path.join(root, "missing-stat-target");
         const missingCacheRoot = path.join(root, "missing-cache");
         let gitFileStatCount = 0;
         const racingFileSystem = FileSystem.makeNoop({
           ...fs,
           remove: (target, options) =>
-            Str.Equivalence(target, fixture.stubRelativeGitDir)
-              ? fs.remove(missingStatTarget)
+            Str.Equivalence(target, relativeGitFile)
+              ? fs.remove(target, options).pipe(Effect.andThen(fs.writeFileString(racedContent, "race")))
               : fs.remove(target, options),
           stat: (target) => {
             if (!Str.Equivalence(target, gitFile)) return fs.stat(target);
@@ -555,7 +606,9 @@ describe("tmpfs reap", () => {
         expect(yield* fs.exists(fixture.stubEligible)).toBe(true);
         expect(gitFileStatCount).toBe(2);
         expect(yield* fs.exists(fixture.stubRelativeGitDir)).toBe(true);
-        expect(report.warnings).toContain(`Failed to remove ${fixture.stubRelativeGitDir}.`);
+        expect(report.warnings).toContain(
+          `Preserved raced contents under ${fixture.stubRelativeGitDir}; directory was not empty.`
+        );
       })
     ).pipe(provideScopedLayer(NodeServices.layer))
   );

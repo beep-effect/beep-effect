@@ -16,6 +16,7 @@ import { Html } from "@beep/html";
 import { HtmlConformanceIssue } from "@beep/html/Html.conformance";
 import { SafeImageUrlAttribute, SafeUrlAttribute } from "@beep/html/Html.policy";
 import { $MdId } from "@beep/identity";
+import { NonNegativeInt } from "@beep/schema/Int";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import * as A from "@beep/utils/Array";
@@ -36,6 +37,22 @@ import type * as AST from "effect/SchemaAST";
 import type { FootnoteIdentifier as FootnoteIdentifierValue, ListItemChild } from "./Md.model.ts";
 
 const $I = $MdId.create("Md.safe");
+
+/**
+ * Maximum Markdown AST nodes admitted by the user-content document boundary.
+ *
+ * **Example** (Inspect the document complexity ceiling)
+ *
+ * ```ts import.meta.vitest name="Inspect the document complexity ceiling"
+ * import { MAX_SAFE_DOCUMENT_NODES } from "@beep/md/Md.safe"
+ *
+ * MAX_SAFE_DOCUMENT_NODES // => 10000
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const MAX_SAFE_DOCUMENT_NODES = 10_000;
 
 const schemaIssueToError = (cause: S.SchemaError | S.SchemaError["issue"]): S.SchemaError =>
   cause instanceof S.SchemaError ? cause : new S.SchemaError(cause);
@@ -312,6 +329,38 @@ export class HtmlProjectionSafetyViolation extends S.TaggedError<HtmlProjectionS
 ) {}
 
 /**
+ * A Markdown tree whose node count exceeds the RPC/editor safety budget.
+ *
+ * **Example** (Construct a complexity violation)
+ *
+ * ```ts import.meta.vitest name="Construct a complexity violation"
+ * import { DocumentComplexitySafetyViolation, MAX_SAFE_DOCUMENT_NODES } from "@beep/md/Md.safe"
+ * import { NonNegativeInt } from "@beep/schema"
+ *
+ * const issue = DocumentComplexitySafetyViolation.make({
+ *   maxNodes: NonNegativeInt.make(MAX_SAFE_DOCUMENT_NODES),
+ *   observedNodes: NonNegativeInt.make(MAX_SAFE_DOCUMENT_NODES + 1),
+ * })
+ * issue._tag // => "DocumentComplexity"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class DocumentComplexitySafetyViolation extends S.TaggedError<DocumentComplexitySafetyViolation>(
+  $I`DocumentComplexitySafetyViolation`
+)(
+  "DocumentComplexity",
+  {
+    maxNodes: NonNegativeInt,
+    observedNodes: NonNegativeInt,
+  },
+  $I.annoteError<DocumentComplexitySafetyViolation>("DocumentComplexitySafetyViolation", {
+    description: "A Markdown AST whose bounded node count exceeds the user-content safety budget.",
+  })
+) {}
+
+/**
  * Structured safety issue returned before a document crosses an editor or RPC
  * trust boundary.
  *
@@ -329,6 +378,7 @@ export class HtmlProjectionSafetyViolation extends S.TaggedError<HtmlProjectionS
  * @since 0.0.0
  */
 export const DocumentSafetyViolation = S.Union([
+  DocumentComplexitySafetyViolation,
   DuplicateFootnoteDefinitionSafetyViolation,
   HtmlProjectionSafetyViolation,
   RawNodeSafetyViolation,
@@ -362,6 +412,39 @@ export type DocumentSafetyViolation = typeof DocumentSafetyViolation.Type;
 type SafetyPath = ReadonlyArray<string | number>;
 
 const invalidScalarPattern = /\u0000|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/u;
+
+const appendCandidateChildren = (pending: Array<unknown>, candidate: object): void => {
+  const children = Reflect.get(candidate, "children");
+  if (A.isArray(children)) {
+    for (const child of children) pending.push(child);
+  }
+};
+
+const boundedDocumentNodeCount = (document: Document): number => {
+  const pending: Array<unknown> = [document];
+  let index = 0;
+  let count = 0;
+  while (index < pending.length && count <= MAX_SAFE_DOCUMENT_NODES) {
+    const candidate = pending[index];
+    index = N.increment(index);
+    if (!P.isObject(candidate)) continue;
+    count = N.increment(count);
+    appendCandidateChildren(pending, candidate);
+  }
+  return count;
+};
+
+const documentComplexitySafetyIssues = (document: Document): ReadonlyArray<DocumentSafetyViolation> => {
+  const observedNodes = boundedDocumentNodeCount(document);
+  return observedNodes > MAX_SAFE_DOCUMENT_NODES
+    ? [
+        DocumentComplexitySafetyViolation.make({
+          maxNodes: NonNegativeInt.make(MAX_SAFE_DOCUMENT_NODES),
+          observedNodes: NonNegativeInt.make(observedNodes),
+        }),
+      ]
+    : A.emptyReadonly();
+};
 
 const appendPath = (path: SafetyPath, ...segments: ReadonlyArray<string | number>): SafetyPath => [
   ...path,
@@ -642,11 +725,16 @@ const htmlProjectionSafetyIssues = flow(
  * @category validation
  * @since 0.0.0
  */
-export const documentSafetyIssues = (document: Document): ReadonlyArray<DocumentSafetyViolation> => [
-  ...pipeChildren(document.children, (block, index) => blockSafetyIssues(block, ["children", index])),
-  ...duplicateFootnoteDefinitionIssues(document),
-  ...htmlProjectionSafetyIssues(document),
-];
+export const documentSafetyIssues = (document: Document): ReadonlyArray<DocumentSafetyViolation> => {
+  const complexityIssues = documentComplexitySafetyIssues(document);
+  return A.isReadonlyArrayNonEmpty(complexityIssues)
+    ? complexityIssues
+    : [
+        ...pipeChildren(document.children, (block, index) => blockSafetyIssues(block, ["children", index])),
+        ...duplicateFootnoteDefinitionIssues(document),
+        ...htmlProjectionSafetyIssues(document),
+      ];
+};
 
 /**
  * Returns every user-content safety violation below an inline node.
@@ -680,9 +768,9 @@ const SafeDocumentCheck = S.makeFilter<Document>(
     identifier: $I`SafeDocumentCheck`,
     title: "Safe Markdown Document",
     description:
-      "A document without trusted raw content, unsafe URLs, duplicate footnotes, invalid scalars, or HTML projection issues.",
+      "A bounded document without trusted raw content, unsafe URLs, duplicate footnotes, invalid scalars, or HTML projection issues.",
     message:
-      "Document contains trusted raw content, an unsafe URL, duplicate footnotes, an invalid scalar string, or an HTML projection issue.",
+      "Document exceeds the complexity budget or contains trusted raw content, an unsafe URL, duplicate footnotes, an invalid scalar string, or an HTML projection issue.",
   }
 );
 

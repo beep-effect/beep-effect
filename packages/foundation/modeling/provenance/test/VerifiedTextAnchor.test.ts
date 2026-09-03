@@ -132,6 +132,12 @@ describe("@beep/provenance VerifiedTextAnchor", () => {
       expect(verified.source).toEqual(source);
       expect(failure.reason).toBe("quote-mismatch");
       expect(Reflect.set(verifiedSource, "sourceText", "fake")).toBe(false);
+      expect(() => globalThis.Object.defineProperty(verifiedSource, "sourceText", { value: "fake" })).toThrow();
+      expect(() =>
+        globalThis.Object.defineProperty(globalThis.Object.getPrototypeOf(verifiedSource), "sourceText", {
+          value: "fake",
+        })
+      ).toThrow();
       expect(Reflect.set(verifiedSource.source, "sourceRef", "source:mutated")).toBe(true);
       expect(Reflect.set(verifiedSource.source.extractor, "version", "2")).toBe(true);
       expect(Reflect.set(verified.anchor, "quote", "fake")).toBe(true);
@@ -141,6 +147,34 @@ describe("@beep/provenance VerifiedTextAnchor", () => {
       expect(verifiedSource.sourceText).toBe("fact");
       expect(verified.anchor.quote).toBe("fact");
       expect(verified.source.sourceRef).toBe("source:example");
+    }, provideBunCrypto)
+  );
+
+  it.effect(
+    "rejects proofs constructed through recovered constructors",
+    Effect.fnUntraced(function* () {
+      const source = identity({ textDigest: factDigest });
+      const verifiedSource = yield* verifySourceTextIdentity(
+        VerifySourceTextIdentityInput.make({ expectedSource: source, source, sourceText: "fact" })
+      );
+      const verified = yield* verifyTextAnchorAgainstVerifiedSource(
+        VerifyTextAnchorAgainstVerifiedSourceInput.make({
+          anchor: decodeTextAnchor({ endChar: 4, quote: "fact", startChar: 0 }),
+          verifiedSource,
+        })
+      );
+      const counterfeitSource = Reflect.construct(verifiedSource.constructor, []);
+      const counterfeitAnchor = Reflect.construct(verified.constructor, []);
+
+      expect(S.is(VerifiedSourceText)(counterfeitSource)).toBe(false);
+      expect(S.is(VerifiedTextAnchor)(counterfeitAnchor)).toBe(false);
+      expect(() => globalThis.Object.getOwnPropertyDescriptor(verifiedSource, "sourceText")).not.toThrow();
+      expect(() => globalThis.Object.defineProperty(verified, "anchor", { value: verified.anchor })).toThrow();
+      expect(() =>
+        globalThis.Object.defineProperty(globalThis.Object.getPrototypeOf(verified), "anchor", {
+          value: verified.anchor,
+        })
+      ).toThrow();
     }, provideBunCrypto)
   );
 

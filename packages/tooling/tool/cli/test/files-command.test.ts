@@ -452,6 +452,15 @@ const adaFaceRocmParametersFixture = {
   recursive: false,
 };
 
+const workerLimitsFixture = {
+  referenceImages: 256,
+  candidateImages: 10_000,
+  facesPerImage: 32,
+  reportedFaces: 65_536,
+  reportBytes: 67_108_864,
+  diagnosticBytes: 1_048_576,
+};
+
 const makePersonMatchFaceFixture = (matchScore: number) => ({
   box: { x1: 10, y1: 20, x2: 110, y2: 140 },
   detectionScore: 0.99,
@@ -470,8 +479,9 @@ const makeAdaFaceRocmWorkerReportFixture = (
   candidateDir: string,
   referencePath: string
 ) => ({
-  schemaVersion: "beep.files.match-person.worker.v2",
+  schemaVersion: "beep.files.match-person.worker.v3",
   ok: true,
+  limits: workerLimitsFixture,
   model: makeAdaFaceModelFixture(path, cacheDir),
   parameters: adaFaceRocmParametersFixture,
   references: [
@@ -541,8 +551,9 @@ const makeBuffaloWorkerReportFixture = (
   candidateDir: string,
   referencePath: string
 ) => ({
-  schemaVersion: "beep.files.match-person.worker.v2",
+  schemaVersion: "beep.files.match-person.worker.v3",
   ok: true,
+  limits: workerLimitsFixture,
   model: makeBuffaloModelFixture(path, cacheDir),
   parameters: buffaloParametersFixture,
   references: [
@@ -1699,8 +1710,9 @@ describe("files command", { concurrent: false }, () => {
           const path = yield* Path.Path;
           const adaFaceModel = makeAdaFaceModelFixture(path, path.join(tmpDir, "cache"));
           const mismatchedWorkerReport = {
-            schemaVersion: "beep.files.match-person.worker.v2",
+            schemaVersion: "beep.files.match-person.worker.v3",
             ok: true,
+            limits: workerLimitsFixture,
             model: {
               backend: "buffalo-l",
               name: "buffalo_l",

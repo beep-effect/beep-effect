@@ -3,14 +3,14 @@
   "initiative": {
     "id": "codex-security-findings-2026-08-30",
     "title": "Codex Security Findings (2026-08-30)",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-08-30",
-    "updated": "2026-08-30",
+    "updated": "2026-09-03",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/codex-security-findings-2026-08-30",
-  "lifecycle": "active",
-  "statusNote": "P0 through P4 complete on 2026-08-30: 11 findings captured and validated in five lanes, ten remediated on this branch, and CSF-003 strictly proved already fixed by #876. P5 repo proof is in progress; raw evidence remains ignored.",
+  "lifecycle": "completed-retained",
+  "statusNote": "Complete on 2026-09-03: PR #902 merged ten remediations, CSF-003 was already fixed by #876, required checks passed, all review threads resolved, and every exact captured Codex ID shows automatic no-longer-detected closure.",
   "mission": "Remediate and close the 11 Codex Cloud security findings captured on 2026-08-30.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -118,27 +118,27 @@
     {
       "id": "P5",
       "name": "Repo proof",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P6",
       "name": "Publish",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P7",
       "name": "Monitor",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P8",
       "name": "Merge and close findings",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P9",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [

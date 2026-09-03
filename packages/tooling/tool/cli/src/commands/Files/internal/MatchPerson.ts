@@ -8,7 +8,19 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, NonNegativeInt } from "@beep/schema";
 import { A, HostProcessArchitecture, HostProcessPlatform, Str } from "@beep/utils";
-import { Config, Console, Effect, FileSystem, flow, Match, MutableHashSet, Number as Num, Path, pipe } from "effect";
+import {
+  Config,
+  Console,
+  Effect,
+  FileSystem,
+  flow,
+  Match,
+  MutableHashSet,
+  MutableRef,
+  Number as Num,
+  Path,
+  pipe,
+} from "effect";
 import * as Bool from "effect/Boolean";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -27,7 +39,13 @@ import {
   StagedFileCommitRecord,
 } from "./FileTransaction.ts";
 import { toFilesCommandError } from "./MatchPerson.errors.ts";
-import { encodePersonMatchReport, PersonMatchModel, PersonMatchReport } from "./MatchPerson.schemas.ts";
+import {
+  encodePersonMatchReport,
+  PERSON_MATCH_MAX_CANDIDATE_IMAGES,
+  PERSON_MATCH_MAX_REFERENCE_IMAGES,
+  PersonMatchModel,
+  PersonMatchReport,
+} from "./MatchPerson.schemas.ts";
 import { CanonicalMatchPersonInputs, PersonMatchWorkerService } from "./MatchPerson.worker-service.ts";
 import type {
   MatchPersonOptions,
@@ -60,6 +78,12 @@ const PersonMatchSupportedImageExtension = LiteralKit(["jpg", "jpeg", "png", "we
   })
 );
 const isPersonMatchSupportedImageExtension = S.is(PersonMatchSupportedImageExtension);
+
+type PersonMatchDiscoveryBudget = {
+  readonly count: MutableRef.MutableRef<number>;
+  readonly label: "candidate" | "reference";
+  readonly limit: number;
+};
 
 const adaFaceRuntimeSupportsPlatform = (platform: string, architecture: string): boolean =>
   Str.Equivalence(platform, "linux") && Str.Equivalence(architecture, "x64");
@@ -697,10 +721,11 @@ const validateMatchPersonInputs = Effect.fn("Files.validateMatchPersonInputs")(f
 const discoverSupportedPersonMatchFiles: (
   root: string,
   directory: string,
-  recursive: boolean
+  recursive: boolean,
+  budget: PersonMatchDiscoveryBudget
 ) => Effect.Effect<ReadonlyArray<string>, FilesCommandError, FileSystem.FileSystem | Path.Path> = Effect.fn(
   "Files.discoverSupportedPersonMatchFiles"
-)(function* (root, directory, recursive) {
+)(function* (root, directory, recursive, budget) {
   const fs = yield* FileSystem.FileSystem;
   const names = yield* fs
     .readDirectory(directory)
@@ -711,7 +736,7 @@ const discoverSupportedPersonMatchFiles: (
     );
   const discovered = yield* Effect.forEach(
     A.sort(names, Str.Order),
-    (name) => discoverSupportedPersonMatchEntry(root, directory, name, recursive),
+    (name) => discoverSupportedPersonMatchEntry(root, directory, name, recursive, budget),
     { concurrency: 1 }
   );
   return A.sort(A.flatten(discovered), Str.Order);
@@ -744,14 +769,33 @@ const supportedPersonMatchSourcePath = (
   );
 };
 
+const admitSupportedPersonMatchPath = (
+  supportedPath: O.Option<string>,
+  budget: PersonMatchDiscoveryBudget
+): Effect.Effect<ReadonlyArray<string>, FilesCommandError> =>
+  O.match(supportedPath, {
+    onNone: () => Effect.succeed(A.empty<string>()),
+    onSome: (path) => {
+      const count = Num.sum(MutableRef.get(budget.count), 1);
+      if (count > budget.limit) {
+        return FilesCommandError.make({
+          message: `${budget.label} image count exceeds ${budget.limit}; split the scan into smaller batches.`,
+        });
+      }
+      MutableRef.set(budget.count, count);
+      return Effect.succeed([path]);
+    },
+  });
+
 const discoverSupportedPersonMatchEntry: (
   root: string,
   directory: string,
   name: string,
-  recursive: boolean
+  recursive: boolean,
+  budget: PersonMatchDiscoveryBudget
 ) => Effect.Effect<ReadonlyArray<string>, FilesCommandError, FileSystem.FileSystem | Path.Path> = Effect.fn(
   "Files.discoverSupportedPersonMatchEntry"
-)(function* (root, directory, name, recursive) {
+)(function* (root, directory, name, recursive, budget) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const sourcePath = path.join(directory, name);
@@ -769,11 +813,11 @@ const discoverSupportedPersonMatchEntry: (
         Match.when("Directory", () =>
           Bool.match(recursive, {
             onFalse: () => Effect.succeed(A.empty<string>()),
-            onTrue: () => discoverSupportedPersonMatchFiles(root, sourcePath, recursive),
+            onTrue: () => discoverSupportedPersonMatchFiles(root, sourcePath, recursive, budget),
           })
         ),
         Match.when("File", () =>
-          Effect.succeed(A.fromOption(supportedPersonMatchSourcePath(path, root, sourcePath, name)))
+          admitSupportedPersonMatchPath(supportedPersonMatchSourcePath(path, root, sourcePath, name), budget)
         ),
         Match.orElse(() => Effect.succeed(A.empty<string>()))
       ),
@@ -784,10 +828,30 @@ const discoverExpectedPersonMatchFiles = Effect.fn("Files.discoverExpectedPerson
   inputs: CanonicalMatchPersonInputs,
   recursive: boolean
 ): Effect.fn.Return<ExpectedPersonMatchFiles, FilesCommandError, FileSystem.FileSystem | Path.Path> {
+  const candidateBudget: PersonMatchDiscoveryBudget = {
+    count: MutableRef.make(0),
+    label: "candidate",
+    limit: PERSON_MATCH_MAX_CANDIDATE_IMAGES,
+  };
+  const referenceBudget: PersonMatchDiscoveryBudget = {
+    count: MutableRef.make(0),
+    label: "reference",
+    limit: PERSON_MATCH_MAX_REFERENCE_IMAGES,
+  };
   const [candidatePaths, referencePaths] = yield* Effect.all(
     [
-      discoverSupportedPersonMatchFiles(inputs.candidateDirectory, inputs.candidateDirectory, recursive),
-      discoverSupportedPersonMatchFiles(inputs.referenceDirectory, inputs.referenceDirectory, recursive),
+      discoverSupportedPersonMatchFiles(
+        inputs.candidateDirectory,
+        inputs.candidateDirectory,
+        recursive,
+        candidateBudget
+      ),
+      discoverSupportedPersonMatchFiles(
+        inputs.referenceDirectory,
+        inputs.referenceDirectory,
+        recursive,
+        referenceBudget
+      ),
     ],
     { concurrency: 2 }
   );

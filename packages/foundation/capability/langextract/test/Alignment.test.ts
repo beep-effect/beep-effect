@@ -7,6 +7,7 @@ import {
   DEFAULT_MAX_EXTRACTIONS,
   GroundedExtractionFromCandidate,
   GroundedExtractionsFromCandidates,
+  MAX_MINIMAL_FOLD_TRANSITIONS,
   MatchedTextFromScored,
   SpanFromMatch,
   spanFromMatch,
@@ -233,6 +234,33 @@ describe("alignCandidate", () => {
     );
 
     expect(extraction.alignmentStatus).toBe("unaligned");
+  });
+
+  it("rejects the former repeated-hyphen backtracking case deterministically", () => {
+    const repeatedHyphens = Str.repeat(12)("-\n");
+    const extraction = alignCandidate(
+      ExtractionCandidate.make({ label: "relation", text: `a${repeatedHyphens}b` }),
+      AlignmentSource.make({ fuzzyThreshold: UnitInterval.make(1), sourceText: `a${repeatedHyphens}c` })
+    );
+
+    expect(extraction.alignmentStatus).toBe("unaligned");
+  });
+
+  it("shares the minimal-fold transition ceiling across a batch and suppresses fuzzy fallback", () => {
+    expect(MAX_MINIMAL_FOLD_TRANSITIONS).toBe(1_000_000);
+    const repeatedHyphens = Str.repeat(1_050)("-\n");
+    const aligned = alignCandidates(
+      [
+        ExtractionCandidate.make({ label: "relation", text: `a${repeatedHyphens}b` }),
+        ExtractionCandidate.make({ label: "relation", text: "target" }),
+      ],
+      AlignmentSource.make({
+        fuzzyThreshold: UnitInterval.make(0),
+        sourceText: `a${repeatedHyphens}c target`,
+      })
+    );
+
+    expect(A.map(aligned, ({ alignmentStatus }) => alignmentStatus)).toStrictEqual(["unaligned", "unaligned"]);
   });
 
   it("uses bounded fuzzy matching", () => {

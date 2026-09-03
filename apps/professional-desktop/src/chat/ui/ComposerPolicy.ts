@@ -174,6 +174,7 @@ const documentViolationFlags = (issues: ReadonlyArray<DocumentSafetyViolation>):
   A.reduce(issues, DocumentViolationFlags.empty, (flags, issue) =>
     Match.value(issue).pipe(
       Match.tagsExhaustive({
+        DocumentComplexity: () => flags,
         DuplicateFootnoteDefinition: () => ({ ...flags, footnote: true }),
         HtmlProjection: () => ({ ...flags, htmlProjection: true }),
         RawNode: () => flags,
