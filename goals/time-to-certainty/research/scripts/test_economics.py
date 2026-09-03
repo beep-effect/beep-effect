@@ -204,12 +204,14 @@ class CorpusValidationTest(unittest.TestCase):
         )
 
     def test_corpus_mode_still_validates_embedded_inputs(self) -> None:
+        payloads = economics.frozen_payloads(self.corpus)
         with contextlib.redirect_stderr(io.StringIO()):
             with mock.patch.object(economics, "load_committed_corpus_receipts", return_value=self.receipts):
-                with mock.patch.object(
-                    economics, "validate_embedded_inputs", return_value="embedded"
-                ) as validated:
-                    economics.build_report(self.corpus, corpus_requested=True, allow_corpus_drift=False)
+                with mock.patch.object(economics, "validate_corpus", return_value=("validated", payloads)):
+                    with mock.patch.object(
+                        economics, "validate_embedded_inputs", return_value="embedded"
+                    ) as validated:
+                        economics.build_report(self.corpus, corpus_requested=True, allow_corpus_drift=False)
         validated.assert_called_once_with(False)
 
     def test_allow_corpus_drift_stamps_json_and_markdown(self) -> None:
