@@ -39,8 +39,15 @@ orchestrator owns schemas, contracts, and judgment.
 
 - [ ] C1 ProofFact schema + migration from `YeetLaneProofState` (schema PR, no behavior change).
 - [ ] C2 ProofLedger Context.Service (record / lookup / expire) over an append-only NDJSON ledger.
-- [ ] C3 declared inputs per script lane; Turbo lanes adopt the task hash; undeclared lanes report
-      as non-reusable.
+- [~] C3 declared inputs per script lane; Turbo lanes adopt the task hash; undeclared lanes report
+      as non-reusable. Coverage done 2026-09-03 (PR #952 merged as 1ef10a6906: package-owned
+      inputs replace the default glob, `cache: false` kept, a docs-only edit leaves the hash
+      stable, `tasks[].hash` in `.turbo/runs/<run-id>.json` is the ledger's input digest). Next in
+      ruling-10 order with the blockers the C3 lane recorded: tsgo tests (the script scans
+      apps/infra/packages, writes synthetic tsconfigs, and aggregates serially; package ownership
+      and identical failure rendering must survive), lint-policy (heterogeneous sublanes with
+      root-wide inputs; one union glob would recreate a whole-tree hash), labs (three task-hash
+      sets rather than one declared action; must keep the PR path gate and zero-labs-is-green).
 - [ ] C4 shadow mode with a disagreement report; enforcement between pre-push and merged preview
       only after zero disagreements over a ratified sample; hosted reuse recorded as a separate
       decision.
