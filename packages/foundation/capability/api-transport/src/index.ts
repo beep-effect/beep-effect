@@ -23,7 +23,7 @@ export * from "./Transport.ts";
 /**
  * Current `@beep/api-transport` package version.
  *
- * @category configuration
+ * @category constants
  * @since 0.0.0
  */
 export { VERSION } from "./Version.ts";
