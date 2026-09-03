@@ -782,23 +782,6 @@ declare module "effect/Schema" {
 }
 
 /**
- * Deprecated compatibility alias for Effect's request payload encoding metadata.
- *
- * **Example** (Describe a JSON payload encoding)
- *
- * ```ts import.meta.vitest name="Describe a JSON payload encoding"
- * import type { HttpApiEncoding } from "@beep/identity"
- *
- * const enc: HttpApiEncoding = { _tag: "Json", contentType: "application/json" }
- * ```
- *
- * @deprecated Use {@link PayloadEncoding} from `effect/unstable/httpapi/HttpApiSchema` directly.
- * @category models
- * @since 0.0.0
- */
-export type HttpApiEncoding = PayloadEncoding;
-
-/**
  * Annotation fields accepted by `annoteHttp`, extending schema extras with HTTP API metadata.
  *
  * **Details**

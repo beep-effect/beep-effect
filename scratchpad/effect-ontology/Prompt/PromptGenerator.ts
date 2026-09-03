@@ -981,38 +981,6 @@ export const generateStructuredPromptWithExamples = dual4(
 );
 
 /**
- * Generate complete extraction prompt
- *
- * **Details**
- *
- * Combines all prompt sections using rules from the RuleSet
- * to ensure schema and prompt are aligned.
- *
- * **Example** (Usage)
- *
- * ```ts
- * import { generatePrompt, OntologyPromptContext } from "@effect-ontology/Prompt/PromptGenerator"
- * import { makeMentionRuleSet } from "@effect-ontology/Prompt/RuleSet"
- *
- * const ruleSet = makeMentionRuleSet()
- * const context = OntologyPromptContext.make({ classes: [], objectProperties: [], datatypeProperties: [] })
- * console.log(generatePrompt("Ada wrote notes.", ruleSet, context).includes("INPUT TEXT")) // true
- * ```
- *
- * @param text - Source text to extract from
- * @param ruleSet - Rule set for the extraction stage
- * @param ctx - Ontology context (classes, properties, entities)
- * @returns Complete prompt string
- * @deprecated Use {@link generateStructuredPrompt} to preserve cacheable message boundaries.
- * @category formatting
- * @since 0.0.0
- */
-export const generatePrompt = dual3((text: string, ruleSet: RuleSet, ctx: OntologyPromptContext): string => {
-  const structured = generateStructuredPrompt(text, ruleSet, ctx);
-  return `${structured.systemMessage}\n\n${structured.userMessage}`;
-});
-
-/**
  * Generate structured entity extraction prompt
  *
  * **Details**
@@ -1051,40 +1019,6 @@ export const generateStructuredEntityPrompt = dual3(
         datatypeProperties,
       })
     );
-  }
-);
-
-/**
- * Generate entity extraction prompt
- *
- * **Details**
- *
- * Convenience wrapper that creates RuleSet internally.
- *
- * **Example** (Build a legacy entity prompt)
- *
- * ```ts
- * import { generateEntityPrompt } from "@effect-ontology/Prompt/PromptGenerator"
- *
- * console.log(generateEntityPrompt("Ada wrote notes.", [], []).includes("INPUT TEXT")) // true
- * ```
- *
- * @param text - Source text to extract from
- * @param classes - Available ontology classes
- * @param datatypeProperties - Available datatype properties
- * @returns Complete entity extraction prompt
- * @deprecated Use {@link generateStructuredEntityPrompt} to preserve cacheable message boundaries.
- * @category formatting
- * @since 0.0.0
- */
-export const generateEntityPrompt = dual3(
-  (
-    text: string,
-    classes: ReadonlyArray<ClassDefinition>,
-    datatypeProperties: ReadonlyArray<PropertyDefinition>
-  ): string => {
-    const structured = generateStructuredEntityPrompt(text, classes, datatypeProperties);
-    return `${structured.systemMessage}\n\n${structured.userMessage}`;
   }
 );
 
@@ -1132,36 +1066,6 @@ export const generateStructuredRelationPrompt = dual3(
 );
 
 /**
- * Generate relation extraction prompt
- *
- * **Details**
- *
- * Convenience wrapper that creates RuleSet internally.
- *
- * **Example** (Build a legacy relation prompt)
- *
- * ```ts
- * import { generateRelationPrompt } from "@effect-ontology/Prompt/PromptGenerator"
- *
- * console.log(generateRelationPrompt("Ada joined Acme.", [], []).includes("INPUT TEXT")) // true
- * ```
- *
- * @param text - Source text to extract from
- * @param entities - Entities from Stage 1
- * @param properties - Available properties
- * @returns Complete relation extraction prompt
- * @deprecated Use {@link generateStructuredRelationPrompt} to preserve cacheable message boundaries.
- * @category formatting
- * @since 0.0.0
- */
-export const generateRelationPrompt = dual3(
-  (text: string, entities: ReadonlyArray<Entity>, properties: ReadonlyArray<PropertyDefinition>): string => {
-    const structured = generateStructuredRelationPrompt(text, entities, properties);
-    return `${structured.systemMessage}\n\n${structured.userMessage}`;
-  }
-);
-
-/**
  * Generate structured mention extraction prompt
  *
  * **Details**
@@ -1193,32 +1097,6 @@ export const generateStructuredMentionPrompt = (text: string): StructuredPrompt 
       datatypeProperties: [],
     })
   );
-};
-
-/**
- * Generate mention extraction prompt
- *
- * **Details**
- *
- * Convenience wrapper for pre-Stage 1 mention detection.
- *
- * **Example** (Build a legacy mention prompt)
- *
- * ```ts
- * import { generateMentionPrompt } from "@effect-ontology/Prompt/PromptGenerator"
- *
- * console.log(generateMentionPrompt("Ada wrote notes.").includes("INPUT TEXT")) // true
- * ```
- *
- * @param text - Source text to extract from
- * @returns Complete mention extraction prompt
- * @deprecated Use {@link generateStructuredMentionPrompt} to preserve cacheable message boundaries.
- * @category formatting
- * @since 0.0.0
- */
-export const generateMentionPrompt = (text: string): string => {
-  const structured = generateStructuredMentionPrompt(text);
-  return `${structured.systemMessage}\n\n${structured.userMessage}`;
 };
 
 // =============================================================================
