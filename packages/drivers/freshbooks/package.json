@@ -19,8 +19,7 @@
     "babel": "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
     "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run beep:policy && bun run beep:docgen && bun run beep:lint",
     "beep:build": "tsc -p tsconfig.json && bun run babel",
-    "beep:check": "tsgo -p tsconfig.check.json && bun run beep:check:tests",
-    "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",
+    "beep:check": "tsgo -p tsconfig.check.json",
     "beep:docgen": "bun run ../../../packages/tooling/tool/docgen/src/bin.ts",
     "beep:lint": "biome check .",
     "beep:lint:fix": "biome check . --write",
@@ -33,6 +32,7 @@
     "docgen": "bun run beep:docgen",
     "lint": "bun run beep:lint",
     "lint:fix": "bun run beep:lint:fix",
+    "package-test-typecheck": "beep-cli quality test-tsgo-package",
     "test": "bun run beep:test",
     "test:integration": "bun run beep:test:integration"
   },
