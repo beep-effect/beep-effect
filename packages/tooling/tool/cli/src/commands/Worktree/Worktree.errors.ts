@@ -11,6 +11,8 @@ import { O } from "@beep/utils";
 import { Runtime } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import { WorktreePreservationStep } from "./Worktree.schemas.ts";
+import type { WorktreePreservationStep as WorktreePreservationStepType } from "./Worktree.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Worktree/Worktree.errors");
 
@@ -117,7 +119,73 @@ export class WorktreeDirtyError extends S.TaggedError<WorktreeDirtyError>($I`Wor
     WorktreeDirtyError.make({
       path,
       changeCount,
-      message: `Worktree ${path} has ${changeCount} uncommitted change(s); pass --force to remove it anyway.`,
+      message: `Worktree ${path} has ${changeCount} uncommitted change(s); pass --archive to preserve and remove it, or --force to discard it.`,
+    });
+}
+
+type WorktreePreservationErrorOptions =
+  | undefined
+  | {
+      readonly cause?: unknown;
+      readonly path?: string;
+    };
+
+/**
+ * Archive retirement failure that occurred before worktree removal.
+ *
+ * **Details**
+ *
+ * `step` names the preservation boundary that failed. The archive-removal
+ * workflow does not invoke `git worktree remove` after this error is raised.
+ *
+ * **Example** (Identify a failed manifest write)
+ *
+ * ```ts
+ * import { WorktreePreservationError } from "@beep/repo-cli/commands/Worktree"
+ *
+ * const error = WorktreePreservationError.new("write-manifest", "Could not write manifest.")
+ * console.log(error.step) // "write-manifest"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class WorktreePreservationError extends S.TaggedError<WorktreePreservationError>($I`WorktreePreservationError`)(
+  "WorktreePreservationError",
+  {
+    message: S.String,
+    step: WorktreePreservationStep,
+    path: S.optionalKey(S.String),
+    cause: S.optionalKey(Defect({ includeStack: true })),
+  },
+  $I.annoteError<WorktreePreservationError>("WorktreePreservationError", {
+    description: "A named worktree-residue preservation step failed before removal began.",
+  })
+) {
+  /** Process exit code reported when this error reaches the runtime boundary. */
+  override readonly [Runtime.errorExitCode] = 1;
+
+  /**
+   * Construct a preservation error with the step that failed.
+   *
+   * @param step - Preservation step that failed.
+   * @param message - Human-readable failure description.
+   * @param options - Optional cause and affected filesystem path.
+   * @returns The constructed preservation error.
+   * @category constructors
+   */
+  static readonly new = (
+    step: WorktreePreservationStepType,
+    message: string,
+    options: WorktreePreservationErrorOptions = undefined
+  ): WorktreePreservationError =>
+    WorktreePreservationError.make({
+      step,
+      message: `Preservation step ${step} failed: ${message}`,
+      ...O.getSomesStruct({
+        cause: O.fromUndefinedOr(options?.cause),
+        path: O.fromUndefinedOr(options?.path),
+      }),
     });
 }
 

@@ -11,22 +11,31 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, NonEmptyTrimmedStr } from "@beep/schema";
 import { A, O, Str } from "@beep/utils";
 import { Console, Effect, FileSystem, Path } from "effect";
+import * as Bool from "effect/Boolean";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { Argument, Command, Flag } from "effect/unstable/cli";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
-import { runGitOutput, runRepoCommandStreamingCapture } from "../../internal/repo-run/index.ts";
+import { runRepoCommandStreamingCapture } from "../../internal/repo-run/index.ts";
 import { worktreeFleetCommand } from "./Fleet.command.ts";
 import { WORKTREES_ROOT_SUFFIX } from "./Worktree.constants.ts";
-import { WorktreeCommandError, WorktreeDirtyError, WorktreeExistsError } from "./Worktree.errors.ts";
-import { parseWorktreePorcelain, WorktreeListEntry } from "./Worktree.schemas.ts";
+import { WorktreeCommandError, WorktreeExistsError } from "./Worktree.errors.ts";
+import { parseWorktreePorcelain, WorktreeListEntry, WorktreeRemovalRequest } from "./Worktree.schemas.ts";
+import {
+  branchDeleteCommand,
+  runWorktreeGitCapture,
+  WorktreeRemovalService,
+  WorktreeRemovalServiceLive,
+} from "./Worktree.service.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
-import type { GitCommandErrorAdapter } from "../../internal/repo-run/index.ts";
+import type { WorktreeDirtyError, WorktreePreservationError } from "./Worktree.errors.ts";
+import type { WorktreeRemovalReceipt } from "./Worktree.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Worktree/Worktree.command");
+const decodeWorktreeName = S.decodeUnknownEffect(NonEmptyTrimmedStr);
 
 /**
  * Local-only files copied from the main checkout into a fresh worktree.
@@ -100,52 +109,6 @@ export const worktreeAddArgs: {
   2,
   (targetPath: string, branch: string): ReadonlyArray<string> => ["worktree", "add", targetPath, "-b", branch]
 );
-
-/**
- * Build the `git worktree remove` argument vector, optionally forced.
- *
- * **Example** (Forced removal carries an extra flag)
- *
- * ```ts
- * import { worktreeRemoveArgs } from "@beep/repo-cli/commands/Worktree"
- *
- * console.log(worktreeRemoveArgs("/repo-worktrees/feature-x", true))
- * // ["worktree", "remove", "--force", "/repo-worktrees/feature-x"]
- * console.log(worktreeRemoveArgs("/repo-worktrees/feature-x", false).length) // 3
- * ```
- *
- * @param targetPath - Absolute path of the worktree to remove.
- * @param force - Whether to pass `--force` so removal ignores dirty state.
- * @returns The `git` argument vector (excluding the `git` executable).
- * @category utilities
- * @since 0.0.0
- */
-export const worktreeRemoveArgs: {
-  (force: boolean): (targetPath: string) => ReadonlyArray<string>;
-  (targetPath: string, force: boolean): ReadonlyArray<string>;
-} = dual(
-  2,
-  (targetPath: string, force: boolean): ReadonlyArray<string> =>
-    force ? ["worktree", "remove", "--force", targetPath] : ["worktree", "remove", targetPath]
-);
-
-/**
- * Suggested command an operator can run to delete a retired branch.
- *
- * **Example** (Render the cleanup hint after a removal)
- *
- * ```ts
- * import { branchDeleteCommand } from "@beep/repo-cli/commands/Worktree"
- *
- * console.log(branchDeleteCommand("feat/feature-x")) // "git branch -D feat/feature-x"
- * ```
- *
- * @param branch - Branch left behind after a worktree is removed.
- * @returns The `git branch -D <branch>` command string.
- * @category utilities
- * @since 0.0.0
- */
-export const branchDeleteCommand = (branch: string): string => `git branch -D ${branch}`;
 
 /**
  * Resolved worktree layout for the invoking repository.
@@ -229,7 +192,8 @@ export class WorktreeCopyOutcome extends S.Class<WorktreeCopyOutcome>($I`Worktre
  *
  * `branch` is `null` for a detached checkout. `hasEnv` and `hasNodeModules`
  * report whether bootstrap survived, so a `clean` worktree can still be
- * unusable.
+ * unusable. `unpushed` reports whether `HEAD` has commits absent from
+ * `origin/main` or the branch's configured upstream.
  *
  * **Example** (Construct a healthy bootstrapped row)
  *
@@ -261,6 +225,10 @@ export class WorktreeDoctorEntry extends S.Class<WorktreeDoctorEntry>($I`Worktre
     locked: S.Boolean,
     prunable: S.Boolean,
     clean: S.Boolean,
+    unpushed: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultKey(Effect.succeed(false))
+    ),
     changeCount: S.Finite,
     hasEnv: S.Boolean,
     hasNodeModules: S.Boolean,
@@ -328,21 +296,6 @@ const failOnNonZeroExit = Effect.fn("Worktree.failOnNonZeroExit")(function* (
   }
 });
 
-const worktreeGitErrorAdapter = (failMessage: string): GitCommandErrorAdapter<WorktreeCommandError> => ({
-  onSpawnFailure: (commandLine) => WorktreeCommandError.new(failMessage, { command: commandLine }),
-  onNonZeroExit: ({ commandLine, exitCode }) =>
-    WorktreeCommandError.make({ message: `${failMessage} (exit ${exitCode}).`, command: commandLine, exitCode }),
-  onTruncated: O.none(),
-});
-
-const runGitCapture = Effect.fn("Worktree.runGitCapture")(function* (
-  cwd: string,
-  args: ReadonlyArray<string>,
-  failMessage: string
-): Effect.fn.Return<string, WorktreeCommandError, ChildProcessSpawner.ChildProcessSpawner> {
-  return yield* runGitOutput(cwd, args, worktreeGitErrorAdapter(failMessage));
-});
-
 const runStreamingStep = Effect.fn("Worktree.runStreamingStep")(function* (
   command: string,
   args: ReadonlyArray<string>,
@@ -389,7 +342,7 @@ export const resolveWorktreeContext = Effect.fn("Worktree.resolveWorktreeContext
   const currentRoot = yield* findRepoRoot(startFrom).pipe(
     Effect.mapError(WorktreeCommandError.new("Failed to locate the current repository root."))
   );
-  const porcelain = yield* runGitCapture(
+  const porcelain = yield* runWorktreeGitCapture(
     currentRoot,
     ["worktree", "list", "--porcelain"],
     "Failed to list git worktrees."
@@ -522,12 +475,18 @@ const inspectWorktreeEntry = Effect.fn("Worktree.inspectWorktreeEntry")(function
 ): Effect.fn.Return<
   WorktreeDoctorEntry,
   WorktreeCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | WorktreeRemovalService
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const statusOutput = yield* runGitCapture(entry.path, ["status", "--porcelain"], `Failed to inspect ${entry.path}.`);
+  const removalService = yield* WorktreeRemovalService;
+  const statusOutput = yield* runWorktreeGitCapture(
+    entry.path,
+    ["status", "--porcelain"],
+    `Failed to inspect ${entry.path}.`
+  );
   const changes = A.filter(Str.split(statusOutput, "\n"), Str.isNonEmpty);
+  const unpushed = yield* removalService.hasUnpushedCommits(entry.path, O.fromNullishOr(entry.branch));
   const hasEnv = yield* fs.exists(path.join(entry.path, ".env")).pipe(Effect.orElseSucceed(() => false));
   const hasNodeModules = yield* fs
     .exists(path.join(entry.path, "node_modules"))
@@ -539,6 +498,7 @@ const inspectWorktreeEntry = Effect.fn("Worktree.inspectWorktreeEntry")(function
     locked: entry.locked,
     prunable: entry.prunable,
     clean: changes.length === 0,
+    unpushed,
     changeCount: changes.length,
     hasEnv,
     hasNodeModules,
@@ -577,10 +537,10 @@ export const worktreeDoctorReportForContext = Effect.fn("Worktree.worktreeDoctor
 ): Effect.fn.Return<
   WorktreeDoctorReport,
   WorktreeCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | WorktreeRemovalService
 > {
   const path = yield* Path.Path;
-  const pruneOutput = yield* runGitCapture(
+  const pruneOutput = yield* runWorktreeGitCapture(
     context.currentRoot,
     ["worktree", "prune", "--dry-run"],
     "Failed to compute prunable worktrees."
@@ -631,21 +591,76 @@ const renderCreationSummary = Effect.fn("Worktree.renderCreationSummary")(functi
   yield* Console.log(`  next: cd ${targetPath}`);
 });
 
-const doctorEntryLines = (entry: WorktreeDoctorEntry): ReadonlyArray<string> => {
-  const branchLabel = entry.branch ?? (entry.detached ? "(detached)" : "(unknown)");
-  const statusLabel = entry.clean ? "clean" : `dirty (${entry.changeCount})`;
-  const notes = A.filter(
-    [
-      entry.locked ? "locked" : undefined,
-      entry.prunable ? "prunable" : undefined,
-      entry.hasEnv ? undefined : "missing .env",
-      entry.hasNodeModules ? undefined : "missing node_modules",
-    ],
-    (note): note is string => note !== undefined
+const doctorNote = (enabled: boolean, note: string): O.Option<string> =>
+  Bool.match(enabled, {
+    onFalse: () => O.none(),
+    onTrue: () => O.some(note),
+  });
+
+const doctorNotes = (entry: WorktreeDoctorEntry): ReadonlyArray<string> =>
+  A.getSomes([
+    doctorNote(entry.locked, "locked"),
+    doctorNote(entry.prunable, "prunable"),
+    doctorNote(!entry.hasEnv, "missing .env"),
+    doctorNote(!entry.hasNodeModules, "missing node_modules"),
+  ]);
+
+const doctorBranchLabel = (entry: WorktreeDoctorEntry): string =>
+  O.getOrElse(O.fromNullishOr(entry.branch), () =>
+    Bool.match(entry.detached, {
+      onFalse: () => "(unknown)",
+      onTrue: () => "(detached)",
+    })
   );
+
+/**
+ * Format one worktree doctor entry as its two human-readable output lines.
+ *
+ * **Details**
+ *
+ * Detached and unknown branches receive distinct labels. Dirty and unpushed
+ * state is rendered independently, while lock, prune, and missing-bootstrap
+ * notes are appended only when present.
+ *
+ * **Example** (Format a clean attached worktree)
+ *
+ * ```ts
+ * import { WorktreeDoctorEntry, worktreeDoctorEntryLines } from "@beep/repo-cli/commands/Worktree"
+ *
+ * const lines = worktreeDoctorEntryLines(WorktreeDoctorEntry.make({
+ *   path: "/repo-worktrees/feature-x",
+ *   branch: "feat/feature-x",
+ *   detached: false,
+ *   locked: false,
+ *   prunable: false,
+ *   clean: true,
+ *   unpushed: false,
+ *   changeCount: 0,
+ *   hasEnv: true,
+ *   hasNodeModules: true,
+ * }))
+ * console.log(lines[0]) // "- /repo-worktrees/feature-x"
+ * ```
+ *
+ * @param entry - Inspected worktree state to format.
+ * @returns The path line followed by the branch, status, and notes line.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const worktreeDoctorEntryLines = (entry: WorktreeDoctorEntry): ReadonlyArray<string> => {
+  const branchLabel = doctorBranchLabel(entry);
+  const statusLabel = Bool.match(entry.clean, {
+    onFalse: () => `dirty (${entry.changeCount})`,
+    onTrue: () => "clean",
+  });
+  const unpushedLabel = Bool.match(entry.unpushed, { onFalse: () => "no", onTrue: () => "yes" });
+  const notesSuffix = A.match(doctorNotes(entry), {
+    onEmpty: () => "",
+    onNonEmpty: (notes) => `  notes: ${A.join(notes, ", ")}`,
+  });
   return [
     `- ${entry.path}`,
-    `    branch: ${branchLabel}  status: ${statusLabel}${notes.length === 0 ? "" : `  notes: ${A.join(notes, ", ")}`}`,
+    `    branch: ${branchLabel}  status: ${statusLabel}  unpushed: ${unpushedLabel}${notesSuffix}`,
   ];
 };
 
@@ -656,7 +671,7 @@ const renderDoctorReport = Effect.fn("Worktree.renderDoctorReport")(function* (r
     yield* Console.log("No managed worktrees found under the worktrees root.");
   }
   for (const entry of report.entries) {
-    for (const line of doctorEntryLines(entry)) {
+    for (const line of worktreeDoctorEntryLines(entry)) {
       yield* Console.log(line);
     }
   }
@@ -690,18 +705,110 @@ const runWorktreeNew = Effect.fn("Worktree.runWorktreeNew")(function* (options: 
   yield* renderCreationSummary(options.name, branch, targetPath, copies);
 });
 
+const renderRemovalReceipt = Effect.fn("Worktree.renderRemovalReceipt")(function* (
+  receipt: WorktreeRemovalReceipt,
+  archive: boolean
+) {
+  if (!archive) {
+    yield* Console.log(`Removed worktree ${receipt.targetPath}`);
+    yield* Console.log(
+      O.match(receipt.branch, {
+        onNone: () => "Branch retained; delete it manually when ready.",
+        onSome: (branch) => `Branch retained. Delete it when ready:\n  ${branchDeleteCommand(branch)}`,
+      })
+    );
+    return;
+  }
+
+  yield* Console.log("");
+  yield* Console.log(`Worktree retirement complete: ${receipt.targetPath}`);
+  yield* Console.log(`  reason: ${receipt.reason}`);
+  yield* O.match(receipt.manifest, {
+    onNone: Effect.fn("Worktree.renderCleanRemovalReceipt")(function* () {
+      yield* Console.log("  archived: no residue needed (clean with no unpushed commits)");
+    }),
+    onSome: Effect.fn("Worktree.renderArchivedRemovalReceipt")(function* (manifest) {
+      yield* Console.log(`  archive ref: ${manifest.archiveRef}`);
+      yield* Console.log(`  tracked patch: ${O.getOrElse(manifest.patchPath, () => "(none)")}`);
+      yield* Console.log(`  untracked files: ${manifest.untrackedFiles.length}`);
+      yield* Console.log(`  residue root: ${manifest.residueRoot}`);
+      yield* Console.log(`  manifest: ${manifest.residueRoot}/manifest.json`);
+      yield* Console.log("  restore:");
+      yield* Console.log(`    git worktree add <restore-path> ${manifest.archiveRef}`);
+      if (O.isSome(manifest.patchPath)) {
+        yield* Console.log(`    git -C <restore-path> apply ${manifest.patchPath.value}`);
+      }
+      if (manifest.untrackedFiles.length > 0) {
+        yield* Console.log(`    copy ${manifest.residueRoot}/untracked/ contents back into <restore-path>`);
+      }
+    }),
+  });
+  yield* Console.log(`  removed: ${receipt.targetPath}`);
+  if (receipt.branchDeleted) {
+    yield* Console.log(`  branch deleted: ${O.getOrElse(receipt.branch, () => "(detached HEAD)")}`);
+    return;
+  }
+  yield* Console.log(
+    O.match(receipt.branch, {
+      onNone: () => "  branch: detached HEAD (no branch to delete)",
+      onSome: (branch) => `  branch retained. Delete it when ready:\n    ${branchDeleteCommand(branch)}`,
+    })
+  );
+});
+
+/**
+ * Write a completed worktree-removal receipt to the Effect console.
+ *
+ * **Details**
+ *
+ * Archive receipts include restoration instructions only for residue that was
+ * actually preserved. Non-archive receipts retain the shorter legacy output.
+ *
+ * **Example** (Build clean archive output)
+ *
+ * ```ts
+ * import { renderWorktreeRemovalReceipt, WorktreeRemovalReceipt } from "@beep/repo-cli/commands/Worktree"
+ * import { Effect } from "effect"
+ * import * as O from "effect/Option"
+ *
+ * const receipt = WorktreeRemovalReceipt.make({
+ *   targetPath: "/repo-worktrees/feature-x",
+ *   branch: O.some("feat/feature-x"),
+ *   reason: "clean",
+ *   manifest: O.none(),
+ *   branchDeleted: false,
+ * })
+ * console.log(Effect.isEffect(renderWorktreeRemovalReceipt(receipt, true))) // true
+ * ```
+ *
+ * @param receipt - Completed removal result to render.
+ * @param archive - Whether the command ran in archive-retirement mode.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const renderWorktreeRemovalReceipt: {
+  (archive: boolean): (receipt: WorktreeRemovalReceipt) => Effect.Effect<void>;
+  (receipt: WorktreeRemovalReceipt, archive: boolean): Effect.Effect<void>;
+} = dual(2, renderRemovalReceipt);
+
 const runWorktreeRemove = Effect.fn("Worktree.runWorktreeRemove")(function* (options: {
   readonly name: string;
   readonly force: boolean;
+  readonly archive: boolean;
+  readonly deleteBranch: boolean;
 }): Effect.fn.Return<
   void,
-  WorktreeCommandError | WorktreeDirtyError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  WorktreeCommandError | WorktreeDirtyError | WorktreePreservationError,
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | WorktreeRemovalService
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
+  const removalService = yield* WorktreeRemovalService;
   const context = yield* resolveWorktreeContext();
-  const targetPath = path.join(context.worktreesRoot, options.name);
+  const name = yield* decodeWorktreeName(options.name).pipe(
+    Effect.mapError(WorktreeCommandError.new("Worktree name must be non-empty and contain no surrounding whitespace."))
+  );
+  const targetPath = path.join(context.worktreesRoot, name);
   const exists = yield* fs.exists(targetPath).pipe(Effect.orElseSucceed(() => false));
   if (!exists) {
     return yield* WorktreeCommandError.make({
@@ -709,39 +816,26 @@ const runWorktreeRemove = Effect.fn("Worktree.runWorktreeRemove")(function* (opt
       path: targetPath,
     });
   }
-  if (!options.force) {
-    const statusOutput = yield* runGitCapture(
-      targetPath,
-      ["status", "--porcelain"],
-      `Failed to inspect ${targetPath}.`
-    );
-    const changes = A.filter(Str.split(statusOutput, "\n"), Str.isNonEmpty);
-    if (changes.length > 0) {
-      return yield* WorktreeDirtyError.new(targetPath, changes.length);
-    }
-  }
-  yield* runStreamingStep(
-    "git",
-    worktreeRemoveArgs(targetPath, options.force),
-    context.currentRoot,
-    "Failed to remove the git worktree."
-  );
-  yield* Console.log(`Removed worktree ${targetPath}`);
   const removed = A.findFirst(context.entries, (entry) => entry.path === targetPath);
-  const hint = O.match(removed, {
-    onNone: () => "Branch retained; delete it manually when ready.",
-    onSome: (entry) =>
-      entry.branch === null
-        ? "Branch retained; delete it manually when ready."
-        : `Branch retained. Delete it when ready:\n  ${branchDeleteCommand(entry.branch)}`,
-  });
-  yield* Console.log(hint);
+  const branch = O.flatMap(removed, (entry) => O.fromNullishOr(entry.branch));
+  const receipt = yield* removalService.remove(
+    WorktreeRemovalRequest.make({
+      name,
+      targetPath,
+      mainCheckout: context.mainCheckout,
+      branch,
+      force: options.force,
+      archive: options.archive,
+      deleteBranch: options.deleteBranch,
+    })
+  );
+  yield* renderWorktreeRemovalReceipt(receipt, options.archive);
 });
 
 const runWorktreeDoctor = Effect.fn("Worktree.runWorktreeDoctor")(function* (): Effect.fn.Return<
   void,
   WorktreeCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | WorktreeRemovalService
 > {
   const context = yield* resolveWorktreeContext();
   const report = yield* worktreeDoctorReportForContext(context);
@@ -786,9 +880,17 @@ const worktreeRemoveCommand = Command.make(
       Flag.withDefault(false),
       Flag.withDescription("Remove even when the worktree has uncommitted changes")
     ),
+    archive: Flag.boolean("archive").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Preserve dirty files and unpushed commits before removing the worktree")
+    ),
+    deleteBranch: Flag.boolean("delete-branch").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Delete the local branch after archive retirement (requires --archive)")
+    ),
   },
-  Effect.fn(function* ({ name, force }) {
-    yield* runWorktreeRemove({ name, force }).pipe(
+  Effect.fn(function* ({ name, force, archive, deleteBranch }) {
+    yield* runWorktreeRemove({ name, force, archive, deleteBranch }).pipe(
       Effect.catchTags({
         WorktreeCommandError: Effect.fn(function* (error) {
           yield* Console.error(`worktree remove: ${error.message}`);
@@ -798,10 +900,17 @@ const worktreeRemoveCommand = Command.make(
           yield* Console.error(`worktree remove: ${error.message}`);
           return yield* failWithReportedExit(`worktree remove: ${error.message}`);
         }),
+        WorktreePreservationError: Effect.fn(function* (error) {
+          yield* Console.error(`worktree remove: ${error.message}`);
+          return yield* failWithReportedExit(`worktree remove: ${error.message}`);
+        }),
       })
     );
   })
-).pipe(Command.withDescription("Remove a sibling worktree (refuses on uncommitted changes unless --force)"));
+).pipe(
+  Command.withDescription("Remove a sibling worktree, optionally preserving dirty or unpushed residue first"),
+  Command.provide(WorktreeRemovalServiceLive)
+);
 
 const worktreeDoctorCommand = Command.make(
   "doctor",
@@ -819,8 +928,9 @@ const worktreeDoctorCommand = Command.make(
   })
 ).pipe(
   Command.withDescription(
-    "Inspect managed worktrees: branch, clean/dirty status, bootstrap files, and prunable metadata"
-  )
+    "Inspect managed worktrees: branch, clean/dirty and unpushed status, bootstrap files, and prunable metadata"
+  ),
+  Command.provide(WorktreeRemovalServiceLive)
 );
 
 /**
@@ -850,7 +960,7 @@ export const worktreeCommand = Command.make("worktree", {}, () =>
     [
       "Worktree commands:",
       "- bun run beep worktree new <name> [--branch <branch>]",
-      "- bun run beep worktree remove <name> [--force]",
+      "- bun run beep worktree remove <name> [--archive] [--delete-branch] [--force]",
       "- bun run beep worktree doctor",
       "- bun run beep worktree fleet [--json]",
     ].join("\n")

@@ -12,7 +12,9 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, NonEmptyTrimmedStr } from "@beep/schema";
+import { GitObjectId } from "@beep/schema/Conformance";
+import { ISOStr } from "@beep/schema/Timestamp";
 import { A, Str } from "@beep/utils";
 import * as S from "effect/Schema";
 
@@ -54,6 +56,241 @@ export class WorktreeListEntry extends S.Class<WorktreeListEntry>($I`WorktreeLis
   },
   $I.annote("WorktreeListEntry", {
     description: "One parsed entry from git worktree list --porcelain.",
+  })
+) {}
+
+/**
+ * Why a worktree retirement needed preservation before removal.
+ *
+ * **Example** (Identify combined residue)
+ *
+ * ```ts
+ * import { WorktreeResidueReason } from "@beep/repo-cli/commands/Worktree"
+ *
+ * console.log(WorktreeResidueReason.Enum["dirty+unpushed"]) // "dirty+unpushed"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const WorktreeResidueReason = LiteralKit(["dirty", "unpushed-commits", "dirty+unpushed", "clean"]).annotate(
+  $I.annote("WorktreeResidueReason", {
+    description: "Reason a worktree retirement did or did not require residue preservation.",
+  })
+);
+
+/**
+ * Decoded worktree-residue reason.
+ *
+ * @see {@link WorktreeResidueReason} for the runtime schema and literal helpers.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type WorktreeResidueReason = typeof WorktreeResidueReason.Type;
+
+/**
+ * Preservation step reported when archive retirement fails before removal.
+ *
+ * **Example** (Name a failed preservation step)
+ *
+ * ```ts
+ * import { WorktreePreservationStep } from "@beep/repo-cli/commands/Worktree"
+ *
+ * console.log(WorktreePreservationStep.Enum["create-archive-ref"]) // "create-archive-ref"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const WorktreePreservationStep = LiteralKit([
+  "inspect-head",
+  "inspect-residue",
+  "inspect-origin-main",
+  "inspect-upstream",
+  "resolve-residue-root",
+  "create-archive-ref",
+  "prepare-residue",
+  "write-tracked-patch",
+  "copy-untracked-files",
+  "write-manifest",
+]).annotate(
+  $I.annote("WorktreePreservationStep", {
+    description: "Named preservation step that can abort archive retirement before worktree removal.",
+  })
+);
+
+/**
+ * Decoded worktree-preservation step.
+ *
+ * @see {@link WorktreePreservationStep} for the runtime schema and literal helpers.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type WorktreePreservationStep = typeof WorktreePreservationStep.Type;
+
+/**
+ * Durable receipt for worktree state preserved before archive removal.
+ *
+ * **Details**
+ *
+ * `branch` is absent for detached worktrees and `patchPath` is absent when no
+ * tracked changes differed from `HEAD`. Untracked paths remain repository
+ * relative so they can be copied back without rewriting their layout.
+ *
+ * **Example** (Describe archived untracked residue)
+ *
+ * ```ts
+ * import { WorktreeResidueManifest } from "@beep/repo-cli/commands/Worktree"
+ * import { NonEmptyTrimmedStr } from "@beep/schema"
+ * import { ISOStr } from "@beep/schema/Timestamp"
+ * import * as O from "effect/Option"
+ *
+ * const manifest = WorktreeResidueManifest.make({
+ *   name: NonEmptyTrimmedStr.make("feature-x"),
+ *   branch: O.some("feat/feature-x"),
+ *   head: "1ed08f66df016a18c6d7d56bd97aa778912cb37b",
+ *   archivedAt: ISOStr.make(NonEmptyTrimmedStr.make("2026-09-02T12:34:56.000Z")),
+ *   archiveRef: "refs/archive/worktrees/feature-x/20260902-123456",
+ *   patchPath: O.none(),
+ *   untrackedFiles: ["notes.txt"],
+ *   residueRoot: "/home/operator/.cache/beep/worktree-residue/repo/feature-x-20260902-123456",
+ *   reason: "unpushed-commits",
+ * })
+ * console.log(manifest.untrackedFiles.length) // 1
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class WorktreeResidueManifest extends S.Class<WorktreeResidueManifest>($I`WorktreeResidueManifest`)(
+  {
+    name: NonEmptyTrimmedStr,
+    branch: S.OptionFromNullOr(S.String),
+    head: GitObjectId,
+    archivedAt: ISOStr,
+    archiveRef: S.NonEmptyString,
+    patchPath: S.OptionFromNullOr(S.String),
+    untrackedFiles: S.Array(S.String),
+    residueRoot: S.String,
+    reason: WorktreeResidueReason,
+  },
+  $I.annote("WorktreeResidueManifest", {
+    description:
+      "Durable receipt for a worktree HEAD, tracked patch, and copied untracked files preserved before removal.",
+  })
+) {}
+
+/**
+ * Deterministic archive-ref and residue paths for one retirement attempt.
+ *
+ * **Example** (Construct a retirement layout)
+ *
+ * ```ts
+ * import { WorktreeArchivePlan } from "@beep/repo-cli/commands/Worktree"
+ *
+ * const plan = WorktreeArchivePlan.make({
+ *   archiveRef: "refs/archive/worktrees/feature-x/20260902-123456",
+ *   residueRoot: "/cache/repo/feature-x-20260902-123456",
+ *   patchPath: "/cache/repo/feature-x-20260902-123456/tracked.patch",
+ *   untrackedRoot: "/cache/repo/feature-x-20260902-123456/untracked",
+ *   manifestPath: "/cache/repo/feature-x-20260902-123456/manifest.json",
+ * })
+ * console.log(plan.manifestPath)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class WorktreeArchivePlan extends S.Class<WorktreeArchivePlan>($I`WorktreeArchivePlan`)(
+  {
+    archiveRef: S.NonEmptyString,
+    residueRoot: S.String,
+    patchPath: S.String,
+    untrackedRoot: S.String,
+    manifestPath: S.String,
+  },
+  $I.annote("WorktreeArchivePlan", {
+    description: "Deterministic archive reference and filesystem layout for one worktree retirement attempt.",
+  })
+) {}
+
+/**
+ * Fully resolved request accepted by the worktree-removal service.
+ *
+ * **Example** (Request archive retirement)
+ *
+ * ```ts
+ * import { WorktreeRemovalRequest } from "@beep/repo-cli/commands/Worktree"
+ * import { NonEmptyTrimmedStr } from "@beep/schema"
+ * import * as O from "effect/Option"
+ *
+ * const request = WorktreeRemovalRequest.make({
+ *   name: NonEmptyTrimmedStr.make("feature-x"),
+ *   targetPath: "/repo-worktrees/feature-x",
+ *   mainCheckout: "/repo",
+ *   branch: O.some("feat/feature-x"),
+ *   force: false,
+ *   archive: true,
+ *   deleteBranch: false,
+ * })
+ * console.log(request.archive) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class WorktreeRemovalRequest extends S.Class<WorktreeRemovalRequest>($I`WorktreeRemovalRequest`)(
+  {
+    name: NonEmptyTrimmedStr,
+    targetPath: S.String,
+    mainCheckout: S.String,
+    branch: S.OptionFromNullOr(S.String),
+    force: S.Boolean,
+    archive: S.Boolean,
+    deleteBranch: S.Boolean,
+  },
+  $I.annote("WorktreeRemovalRequest", {
+    description: "Resolved worktree removal request passed from the CLI boundary to the removal service.",
+  })
+) {}
+
+/**
+ * Result returned after a worktree removal completes.
+ *
+ * **Details**
+ *
+ * `manifest` is present only when archive mode found dirty state or unpushed
+ * commits. Clean archive removals therefore leave no residue directory.
+ *
+ * **Example** (Represent a clean archive removal)
+ *
+ * ```ts
+ * import { WorktreeRemovalReceipt } from "@beep/repo-cli/commands/Worktree"
+ * import * as O from "effect/Option"
+ *
+ * const receipt = WorktreeRemovalReceipt.make({
+ *   targetPath: "/repo-worktrees/feature-x",
+ *   branch: O.some("feat/feature-x"),
+ *   reason: "clean",
+ *   manifest: O.none(),
+ *   branchDeleted: false,
+ * })
+ * console.log(O.isNone(receipt.manifest)) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class WorktreeRemovalReceipt extends S.Class<WorktreeRemovalReceipt>($I`WorktreeRemovalReceipt`)(
+  {
+    targetPath: S.String,
+    branch: S.OptionFromNullOr(S.String),
+    reason: WorktreeResidueReason,
+    manifest: S.OptionFromNullOr(WorktreeResidueManifest),
+    branchDeleted: S.Boolean,
+  },
+  $I.annote("WorktreeRemovalReceipt", {
+    description: "Completed worktree removal receipt with optional preserved residue manifest.",
   })
 ) {}
 

@@ -126,7 +126,7 @@ checklist above remain the reference for what the tooling does under the hood.
 
 ```bash
 bun run beep worktree new <name> [--branch <branch>]
-bun run beep worktree remove <name> [--force]
+bun run beep worktree remove <name> [--archive] [--delete-branch]
 bun run beep worktree doctor
 ```
 
@@ -139,14 +139,57 @@ bun run beep worktree doctor
   copy). It prints a
   summary of what was copied, skipped, and the absolute path.
 - `worktree remove <name>` refuses when the target worktree has uncommitted
-  changes unless you pass `--force`. It runs `git worktree remove` and prints
-  the separate `git branch -D <branch>` cleanup command. Branch deletion stays
-  explicit so the target can be checked first; an authorized agent can run it
-  directly under the checked-in settings.
+  changes unless you use the preservation-first `--archive` mode or explicitly
+  pass `--force`. Archive mode can also delete the preserved local branch with
+  `--delete-branch`; otherwise the command prints the separate
+  `git branch -D <branch>` cleanup command.
 - `worktree doctor` is read-only. It lists every worktree under the worktrees
-  root with its branch, clean/dirty status, missing bootstrap files (`.env`,
-  `node_modules`), and any prunable metadata from
+  root with its branch, clean/dirty and unpushed status, missing bootstrap files
+  (`.env`, `node_modules`), and any prunable metadata from
   `git worktree prune --dry-run`.
+
+## Retiring a worktree
+
+The sanctioned retirement command for a lane that may contain local residue is:
+
+```bash
+bun run beep worktree remove <name> --archive [--delete-branch]
+```
+
+`--force` is permitted by agent policy but discards another lane's uncommitted
+work with no record. Archive mode is the sanctioned alternative: the CLI inspects
+tracked and untracked changes plus commits absent from `origin/main` and, when
+configured, commits ahead of the branch upstream.
+If preservation is needed, it completes all of these steps before removal:
+
+1. Creates a new create-only
+   `refs/archive/worktrees/<name>/<YYYYMMDD-HHMMSS>` ref at the old `HEAD`.
+2. Writes tracked changes as `tracked.patch` using `git diff --binary HEAD`.
+3. Copies every untracked, non-ignored file under `untracked/`, preserving its
+   repository-relative path.
+4. Writes a schema-decoded `manifest.json` with the branch, old `HEAD`, archive
+   ref, artifact paths, and retirement reason.
+
+Residue defaults to
+`~/.cache/beep/worktree-residue/<repo-basename>/<name>-<stamp>/`. Set
+`BEEP_WORKTREE_RESIDUE_ROOT` to override the leading residue root. Files are
+copied, never moved, and the worktree is removed only after the ref, patch,
+untracked copies, and manifest all succeed. A clean worktree with no unpushed
+commits is removed normally and prints a receipt without creating residue.
+
+The receipt prints the exact archive ref and artifact paths. To restore an
+archived lane, choose a fresh path and run:
+
+```bash
+git worktree add <restore-path> <archive-ref>
+git -C <restore-path> apply <residue-dir>/tracked.patch # when the patch exists
+cp -a <residue-dir>/untracked/. <restore-path>/          # when untracked files exist
+```
+
+Without `--delete-branch`, the original local branch remains available. With
+the flag, detached worktrees simply skip branch deletion. Each lane is expected
+to retire its own worktree after its PR merges, or during the next worktree
+sweep, using archive mode whenever local residue is present.
 
 ## Tool Integrations
 
