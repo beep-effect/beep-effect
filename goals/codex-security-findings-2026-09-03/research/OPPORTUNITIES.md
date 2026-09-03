@@ -35,3 +35,21 @@
   against the immediate parent revision and name every concrete legacy root;
   older historical roots can be listed in addition, but cannot replace the
   direct predecessor in the drain procedure.
+
+## 2026-09-03 — Coverage fixtures bypassed the hardened sandbox contract
+
+- **What I was doing:** Repairing the exact-head Coverage Regression failure
+  after the review fixes were published to PR #949.
+- **Evidence:** The Markdown coverage shard showed that `Array.filter` read an
+  adversarial child slot beyond the 10,000-node decision boundary before the
+  queue limit ran. The repo-cli shard showed that the mail-restoration fixtures
+  still modeled bind-mounted host output and a directly invoked bubblewrap
+  process, while the hardened engine now requires a user-scope memory cgroup
+  and publishes successful quota-limited output only through a validated tar
+  handoff. The stale fixture therefore invoked the host `systemd-run` and could
+  not produce terminal mail evidence in CI.
+- **What would have prevented it:** Hostile collection tests must assert that
+  the first out-of-budget slot is never read. Process-boundary fixtures must
+  model every security-relevant wrapper and publication boundary—including
+  cgroup launch, private output staging, success-only handoff, and the absence
+  of failed partial publication—rather than only translating bind paths.

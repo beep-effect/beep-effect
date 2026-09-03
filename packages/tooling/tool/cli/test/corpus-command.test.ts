@@ -2253,6 +2253,14 @@ if [ "$saw_unshare" != "1" ] || [ "$#" -lt 1 ]; then
 fi
 command="$1"
 shift
+quota_root=""
+if [ "$command" = "/bin/sh" ] && [ "\${1:-}" = "-c" ]; then
+  shift 3
+  command="$1"
+  shift
+  quota_root="$(mktemp -d -p "$(dirname "$0")" quota-output.XXXXXX)"
+  trap 'rm -rf -- "$quota_root"' EXIT
+fi
 mapped_command="$command"
 for index in "\${!mount_targets[@]}"; do
   target="\${mount_targets[$index]}"
@@ -2275,9 +2283,33 @@ for argument in "$@"; do
       mapped_argument="$host\${argument#$target}"
     fi
   done
+  if [ -n "$quota_root" ]; then
+    if [ "$argument" = "/output" ]; then
+      mapped_argument="$quota_root"
+    elif [[ "$argument" = "/output/"* ]]; then
+      mapped_argument="$quota_root\${argument#/output}"
+    fi
+  fi
   mapped+=("$mapped_argument")
 done
+if [ -n "$quota_root" ]; then
+  set +e
+  "$mapped_command" "\${mapped[@]}" 1>&2
+  status="$?"
+  set -e
+  if [ "$status" -ne 0 ]; then exit "$status"; fi
+  exec /usr/bin/tar --format=posix --sort=name --numeric-owner --owner=0 --group=0 -C "$quota_root" -cf - .
+fi
 exec "$mapped_command" "\${mapped[@]}"
+`;
+
+const restorationSystemdRunStub = `#!/usr/bin/env bash
+set -eu
+while [ "$#" -gt 0 ]; do
+  if [ "$1" = "--" ]; then shift; break; fi
+  shift
+done
+exec "$@"
 `;
 
 const restorationPffexportStub = `#!/usr/bin/env bash
@@ -2385,6 +2417,7 @@ const makeMailRestorationFixture = Effect.fn("CorpusTest.makeMailRestorationFixt
   const pffexportPath = path.join(root, "pffexport-stub");
   const tikaPath = path.join(root, "tika-stub");
   const bwrapPath = path.join(root, "bwrap-stub");
+  const systemdRunPath = path.join(root, "systemd-run-stub");
   yield* fs.makeDirectory(corpusRoot, { recursive: true });
   yield* fs.makeDirectory(mailRoot, { recursive: true });
   const mailBytes = new Uint8Array(1024 * 1024 + 31);
@@ -2403,6 +2436,7 @@ const makeMailRestorationFixture = Effect.fn("CorpusTest.makeMailRestorationFixt
   yield* writeStub(pffexportScript, pffexportPath);
   yield* writeStub(tikaScript, tikaPath);
   yield* writeStub(restorationBwrapStub, bwrapPath);
+  yield* writeStub(restorationSystemdRunStub, systemdRunPath);
   const denominators = yield* measurePreservationDenominators(sourceRoot, rootArchive);
   const preservationOptions = RestorationPreserveOptions.make({
     absentRecycleTreePath: absentTree,
@@ -2427,7 +2461,7 @@ const makeMailRestorationFixture = Effect.fn("CorpusTest.makeMailRestorationFixt
     sourceRoot,
   });
   yield* preserveRestorationArchive(preservationOptions);
-  return { bwrapPath, corpusRoot, pffexportPath, preservationOptions, tikaPath };
+  return { bwrapPath, corpusRoot, pffexportPath, preservationOptions, systemdRunPath, tikaPath };
 });
 
 const mailRestorationOptions = (
@@ -2435,6 +2469,7 @@ const mailRestorationOptions = (
     readonly bwrapPath: string;
     readonly corpusRoot: string;
     readonly pffexportPath: string;
+    readonly systemdRunPath: string;
     readonly tikaPath: string;
   },
   scope: "full" | "slice" = "slice"
@@ -2451,6 +2486,7 @@ const mailRestorationOptions = (
     pffexportPath: fixture.pffexportPath,
     runLabel: "synthetic-mail-restoration",
     scope,
+    systemdRunPath: fixture.systemdRunPath,
     tikaJarPath: fixture.tikaPath,
   });
 
@@ -2859,7 +2895,7 @@ describe("corpus restoration mail", () => {
   );
 
   it.effect(
-    "binds approved corrupt-store partial output to terminal evidence and rejects later drift",
+    "records approved corrupt stores without publishing failed sandbox output",
     Effect.fnUntraced(
       function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -2872,19 +2908,19 @@ describe("corpus restoration mail", () => {
         const records = yield* Effect.forEach(lines, decodeTransformationLedgerRecordJson);
         const terminal = A.findFirst(records, (record) => record.recordType === "mail-store-exception");
         if (O.isNone(terminal) || terminal.value.recordType !== "mail-store-exception") {
-          return yield* Effect.die("Expected an approved corrupt-store terminal with retained output.");
+          return yield* Effect.die("Expected an approved corrupt-store terminal.");
         }
         expect(terminal.value.approved).toBe(true);
-        expect(terminal.value.retainedOutputBytes).toBeGreaterThan(0);
-        expect(summary.outputBytes).toBe(terminal.value.retainedOutputBytes);
+        expect(terminal.value.retainedOutputBytes).toBe(0);
+        expect(summary.outputBytes).toBe(0);
 
-        const beforeTamper = yield* reconcileRestorationAcceptance(
+        const acceptanceError = yield* reconcileRestorationAcceptance(
           RestorationVerifyOptions.make({
             corpusRoot: fixture.corpusRoot,
             runLabel: "synthetic-mail-restoration",
           })
         ).pipe(Effect.flip);
-        expect(beforeTamper.message).not.toContain("Final mail acceptance evidence");
+        expect(acceptanceError.message).not.toContain("Final mail acceptance evidence");
 
         const partialRoot = path.join(
           runRoot,
@@ -2894,17 +2930,7 @@ describe("corpus restoration mail", () => {
           "attempts",
           `${terminal.value.attemptId}.partial`
         );
-        const exportTree = A.findFirst(yield* fs.readDirectory(partialRoot), Str.endsWith(".export"));
-        if (O.isNone(exportTree)) return yield* Effect.die("Expected retained partial pffexport output.");
-        yield* fs.writeFileString(path.join(partialRoot, exportTree.value, "partial-output.bin"), "drifted");
-
-        const afterTamper = yield* reconcileRestorationAcceptance(
-          RestorationVerifyOptions.make({
-            corpusRoot: fixture.corpusRoot,
-            runLabel: "synthetic-mail-restoration",
-          })
-        ).pipe(Effect.flip);
-        expect(afterTamper.message).toContain("Final mail acceptance evidence");
+        expect(yield* fs.readDirectory(partialRoot)).toStrictEqual([]);
       },
       Effect.scoped,
       provideTestLayer

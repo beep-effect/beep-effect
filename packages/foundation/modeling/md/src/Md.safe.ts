@@ -422,9 +422,10 @@ const appendCandidateChildren = (
   const children = Reflect.get(candidate, "children");
   if (!A.isArray(children)) return true;
 
-  for (const child of A.filter(children, P.isObject)) {
+  for (let childIndex = 0; childIndex < children.length; childIndex = N.increment(childIndex)) {
     if (count + pending.length - nextIndex >= MAX_SAFE_DOCUMENT_NODES) return false;
-    pending.push(child);
+    const child = pipe(A.get(children, childIndex), O.getOrThrow);
+    if (P.isObject(child)) pending.push(child);
   }
   return true;
 };

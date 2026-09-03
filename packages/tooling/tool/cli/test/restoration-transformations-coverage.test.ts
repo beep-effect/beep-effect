@@ -3008,6 +3008,7 @@ else exit 92; fi
       const pffexportPath = path.join(root, "pffexport");
       const tikaPath = path.join(root, "tika");
       const bwrapPath = path.join(root, "bwrap");
+      const systemdRunPath = path.join(root, "systemd-run");
       const converterPath = path.join(root, "converter");
       yield* fs.makeDirectory(corpusRoot, { recursive: true });
       yield* fs.makeDirectory(mailRoot, { recursive: true });
@@ -3043,6 +3044,14 @@ while [ "$#" -gt 0 ]; do
 done
 command="$1"
 shift
+quota_root=""
+if [ "$command" = "/bin/sh" ] && [ "\${1:-}" = "-c" ]; then
+  shift 3
+  command="$1"
+  shift
+  quota_root="$(mktemp -d -p "$(dirname "$0")" quota-output.XXXXXX)"
+  trap 'rm -rf -- "$quota_root"' EXIT
+fi
 mapped_command="$command"
 for index in "\${!targets[@]}"; do
   target="\${targets[$index]}"
@@ -3059,9 +3068,32 @@ for argument in "$@"; do
     if [ "$argument" = "$target" ]; then value="$host";
     elif [[ "$argument" = "$target/"* ]]; then value="$host\${argument#$target}"; fi
   done
+  if [ -n "$quota_root" ]; then
+    if [ "$argument" = "/output" ]; then value="$quota_root";
+    elif [[ "$argument" = "/output/"* ]]; then value="$quota_root\${argument#/output}"; fi
+  fi
   mapped+=("$value")
 done
+if [ -n "$quota_root" ]; then
+  set +e
+  "$mapped_command" "\${mapped[@]}" 1>&2
+  status="$?"
+  set -e
+  if [ "$status" -ne 0 ]; then exit "$status"; fi
+  exec /usr/bin/tar --format=posix --sort=name --numeric-owner --owner=0 --group=0 -C "$quota_root" -cf - .
+fi
 exec "$mapped_command" "\${mapped[@]}"
+`
+      );
+      yield* writeExecutable(
+        systemdRunPath,
+        `#!/usr/bin/env bash
+set -eu
+while [ "$#" -gt 0 ]; do
+  if [ "$1" = "--" ]; then shift; break; fi
+  shift
+done
+exec "$@"
 `
       );
       yield* writeExecutable(
@@ -3125,6 +3157,7 @@ printf '%%PDF-1.4 synthetic attachment' > "$item/Attachment00001/report.bin"
           pffexportPath,
           runLabel: mailRunLabel,
           scope: "full",
+          systemdRunPath,
           tikaJarPath: tikaPath,
         });
       const recycleOptions = (recycleRunLabel: string, expectedSurfaceCount = 1, maxTotalOutputBytes = 1024 ** 3) =>
