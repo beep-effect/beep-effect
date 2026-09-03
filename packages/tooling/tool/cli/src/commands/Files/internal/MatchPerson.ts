@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { opendir } from "node:fs/promises";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, NonNegativeInt } from "@beep/schema";
 import { A, HostProcessArchitecture, HostProcessPlatform, Str } from "@beep/utils";
@@ -81,6 +82,7 @@ const isPersonMatchSupportedImageExtension = S.is(PersonMatchSupportedImageExten
 
 type PersonMatchDiscoveryBudget = {
   readonly count: MutableRef.MutableRef<number>;
+  readonly entryCount: MutableRef.MutableRef<number>;
   readonly label: "candidate" | "reference";
   readonly limit: number;
 };
@@ -718,6 +720,72 @@ const validateMatchPersonInputs = Effect.fn("Files.validateMatchPersonInputs")(f
   });
 });
 
+const readBoundedPersonMatchDirectory = Effect.fn("Files.readBoundedPersonMatchDirectory")(function* (
+  directory: string,
+  budget: PersonMatchDiscoveryBudget
+): Effect.fn.Return<ReadonlyArray<string>, FilesCommandError> {
+  const admittedEntryCount = MutableRef.get(budget.entryCount);
+  const remaining = Num.subtract(budget.limit, admittedEntryCount);
+  const names = yield* Effect.tryPromise({
+    try: async (): Promise<O.Option<ReadonlyArray<string>>> => {
+      const handle = await opendir(directory);
+      const discovered: Array<string> = [];
+      try {
+        while (discovered.length <= remaining) {
+          const entry = await handle.read();
+          if (entry === null) return O.some(discovered);
+          discovered.push(entry.name);
+        }
+        return O.none();
+      } finally {
+        await handle.close();
+      }
+    },
+    catch: (cause) => formatPlatformError("Failed to discover person-match image inputs", directory, { cause }),
+  });
+  return yield* O.match(names, {
+    onNone: () =>
+      FilesCommandError.make({
+        message: `${budget.label} directory entry count exceeds ${budget.limit}; split the scan into smaller batches.`,
+      }),
+    onSome: (boundedNames) => {
+      MutableRef.set(budget.entryCount, Num.sum(admittedEntryCount, A.length(boundedNames)));
+      return Effect.succeed(boundedNames);
+    },
+  });
+});
+
+/**
+ * Exercises bounded directory enumeration without invoking a person-match
+ * worker.
+ *
+ * **Example** (Create a bounded enumeration effect)
+ *
+ * ```ts
+ * import { boundedPersonMatchDirectoryNamesForTesting } from "@beep/repo-cli/test/Files"
+ *
+ * const names = boundedPersonMatchDirectoryNamesForTesting("/images", 256)
+ * console.log(typeof names) // "object"
+ * ```
+ *
+ * @internal
+ * @param directory - Physical directory to enumerate.
+ * @param limit - Maximum entries the test enumeration may retain.
+ * @returns A bounded enumeration effect that fails on the first excess entry.
+ * @category testing
+ * @since 0.0.0
+ */
+export const boundedPersonMatchDirectoryNamesForTesting = (
+  directory: string,
+  limit: number
+): Effect.Effect<ReadonlyArray<string>, FilesCommandError> =>
+  readBoundedPersonMatchDirectory(directory, {
+    count: MutableRef.make(0),
+    entryCount: MutableRef.make(0),
+    label: "candidate",
+    limit,
+  });
+
 const discoverSupportedPersonMatchFiles: (
   root: string,
   directory: string,
@@ -726,14 +794,7 @@ const discoverSupportedPersonMatchFiles: (
 ) => Effect.Effect<ReadonlyArray<string>, FilesCommandError, FileSystem.FileSystem | Path.Path> = Effect.fn(
   "Files.discoverSupportedPersonMatchFiles"
 )(function* (root, directory, recursive, budget) {
-  const fs = yield* FileSystem.FileSystem;
-  const names = yield* fs
-    .readDirectory(directory)
-    .pipe(
-      Effect.mapError((cause) =>
-        formatPlatformError("Failed to discover person-match image inputs", directory, { cause })
-      )
-    );
+  const names = yield* readBoundedPersonMatchDirectory(directory, budget);
   const discovered = yield* Effect.forEach(
     A.sort(names, Str.Order),
     (name) => discoverSupportedPersonMatchEntry(root, directory, name, recursive, budget),
@@ -830,11 +891,13 @@ const discoverExpectedPersonMatchFiles = Effect.fn("Files.discoverExpectedPerson
 ): Effect.fn.Return<ExpectedPersonMatchFiles, FilesCommandError, FileSystem.FileSystem | Path.Path> {
   const candidateBudget: PersonMatchDiscoveryBudget = {
     count: MutableRef.make(0),
+    entryCount: MutableRef.make(0),
     label: "candidate",
     limit: PERSON_MATCH_MAX_CANDIDATE_IMAGES,
   };
   const referenceBudget: PersonMatchDiscoveryBudget = {
     count: MutableRef.make(0),
+    entryCount: MutableRef.make(0),
     label: "reference",
     limit: PERSON_MATCH_MAX_REFERENCE_IMAGES,
   };

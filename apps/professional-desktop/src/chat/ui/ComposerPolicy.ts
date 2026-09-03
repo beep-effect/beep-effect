@@ -147,6 +147,7 @@ export class ComposerSafetyRefusal extends S.Class<ComposerSafetyRefusal>($I`Com
  */
 class DocumentViolationFlags extends S.Class<DocumentViolationFlags>($I`DocumentViolationFlags`)(
   {
+    complexity: S.Boolean,
     footnote: S.Boolean,
     htmlProjection: S.Boolean,
     scalar: S.Boolean,
@@ -157,6 +158,7 @@ class DocumentViolationFlags extends S.Class<DocumentViolationFlags>($I`Document
   })
 ) {
   static readonly empty = DocumentViolationFlags.make({
+    complexity: false,
     footnote: false,
     htmlProjection: false,
     scalar: false,
@@ -174,7 +176,7 @@ const documentViolationFlags = (issues: ReadonlyArray<DocumentSafetyViolation>):
   A.reduce(issues, DocumentViolationFlags.empty, (flags, issue) =>
     Match.value(issue).pipe(
       Match.tagsExhaustive({
-        DocumentComplexity: () => flags,
+        DocumentComplexity: () => ({ ...flags, complexity: true }),
         DuplicateFootnoteDefinition: () => ({ ...flags, footnote: true }),
         HtmlProjection: () => ({ ...flags, htmlProjection: true }),
         RawNode: () => flags,
@@ -187,6 +189,7 @@ const documentViolationFlags = (issues: ReadonlyArray<DocumentSafetyViolation>):
 const documentViolationReason = flow(
   documentViolationFlags,
   Match.type<DocumentViolationFlags>().pipe(
+    Match.when({ complexity: true }, () => "a document whose structure exceeds the safe size and complexity limit"),
     Match.when(
       { footnote: true, scalar: true, url: true },
       () =>
@@ -218,11 +221,13 @@ const documentViolationReason = flow(
  * **Gotchas**
  *
  * Trusted raw nodes carry no presence flag of their own, so an issue list that
- * names no footnote, scalar, URL, or HTML-projection violation renders the
- * raw-node phrasing. When multiple specialized categories are present, the
- * more actionable URL, scalar, and footnote explanations take precedence over
- * the structural HTML-projection explanation. Callers pass a non-empty
- * violation list; an empty one would read as a raw-node refusal.
+ * names no complexity, footnote, scalar, URL, or HTML-projection violation
+ * renders the raw-node phrasing. A complexity violation takes precedence
+ * because the bounded scan intentionally does not inspect nodes beyond the
+ * ceiling. Otherwise, the more actionable URL, scalar, and footnote
+ * explanations take precedence over the structural HTML-projection
+ * explanation. Callers pass a non-empty violation list; an empty one would
+ * read as a raw-node refusal.
  *
  * **Example** (Explain a trusted raw node refusal)
  *

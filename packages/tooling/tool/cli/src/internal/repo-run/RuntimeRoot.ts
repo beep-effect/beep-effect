@@ -7,12 +7,15 @@
  * base below the effective user's home at `.beep/runtime` on every platform.
  * Each consumer appends its existing scoped leaf.
  *
- * This change is a hard cutover, not a mixed-version migration. Before adopting
- * it, operators must drain every Yeet process, admission lease or ticket,
- * proof-lock file, and `agent-run-*.scope` created by a version that coordinates
- * under `/run/user/<uid>`. Running the two root schemes concurrently is not
- * supported: an old process cannot observe a compatibility lock introduced only
- * in the new process, so a one-sided bridge would provide false safety.
+ * This change is a hard cutover, not a mixed-version migration. The immediate
+ * predecessor coordinated below `/tmp`; still older versions could select
+ * `/run/user/<uid>`. Before adopting this version, operators must drain every
+ * Yeet process and `agent-run-*.scope` from those versions, then remove their
+ * admission leases or tickets and proof-lock files only after proving the
+ * owning processes are gone. Running a legacy root concurrently with the new
+ * home-backed root is not supported: an old process cannot observe a
+ * compatibility lock introduced only in the new process, so a one-sided bridge
+ * would provide false safety.
  *
  * @since 0.0.0
  */
@@ -101,9 +104,11 @@ export const provideRuntimeRootForTesting: {
  * cannot independently select different coordination trees or reserve a
  * victim's namespace in a shared temporary directory. Admission and proof
  * consumers retain their existing scoped leaves below this base.
- * Deployment must follow the module-level hard-cutover procedure; mixed-version
- * coordination with the prior `/run/user/<uid>` scheme is intentionally refused
- * as an operational rollout shape.
+ * Deployment must follow the module-level hard-cutover procedure; in
+ * particular, the immediate predecessor's `/tmp/beep-admit-uid-<uid>` and
+ * `/tmp/beep-yeet-proof-locks-*-uid-<uid>` trees must be drained before new
+ * coordination begins. Mixed-version coordination with either legacy root is
+ * intentionally refused as an operational rollout shape.
  *
  * **Example** (Resolve the invariant host base)
  *
@@ -147,7 +152,7 @@ export const perUserRuntimeRoot = Effect.fn("RuntimeRoot.perUserRuntimeRoot")(fu
  * import { Effect, Path } from "effect"
  *
  * const root = Effect.map(Path.Path, (path) =>
- *   admissionRootFor(path, RuntimeRootChoice.make({ kind: "canonical", root: "/tmp" }))
+ *   admissionRootFor(path, RuntimeRootChoice.make({ kind: "canonical", root: "/home/alice/.beep/runtime" }))
  * ).pipe(Effect.provide(NodePath.layer))
  * Effect.runPromise(root).then(console.log) // "/home/alice/.beep/runtime/beep-admit-uid-1000"
  * ```

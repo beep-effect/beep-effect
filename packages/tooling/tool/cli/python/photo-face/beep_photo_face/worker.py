@@ -1105,16 +1105,17 @@ class BoundedDiagnosticWriter:
 def encode_payload(payload: dict[str, Any]) -> str:
     chunks: list[str] = []
     encoded_bytes = 0
+    max_payload_bytes = MAX_REPORT_BYTES - len("\n".encode("utf-8"))
     encoder = json.JSONEncoder(
         ensure_ascii=False, separators=(",", ":"), allow_nan=False
     )
     for chunk in encoder.iterencode(payload):
         encoded_bytes += len(chunk.encode("utf-8"))
-        if encoded_bytes > MAX_REPORT_BYTES:
+        if encoded_bytes > max_payload_bytes:
             raise WorkerError(
                 "report-limit-exceeded",
                 (
-                    f"worker JSON exceeds {MAX_REPORT_BYTES} bytes; "
+                    f"framed worker JSON exceeds {MAX_REPORT_BYTES} bytes; "
                     "split the scan into smaller batches"
                 ),
             )

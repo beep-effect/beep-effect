@@ -413,23 +413,34 @@ type SafetyPath = ReadonlyArray<string | number>;
 
 const invalidScalarPattern = /\u0000|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/u;
 
-const appendCandidateChildren = (pending: Array<unknown>, candidate: object): void => {
+const appendCandidateChildren = (
+  pending: Array<object>,
+  nextIndex: number,
+  count: number,
+  candidate: object
+): boolean => {
   const children = Reflect.get(candidate, "children");
   if (A.isArray(children)) {
-    for (const child of children) pending.push(child);
+    for (const child of children) {
+      if (!P.isObject(child)) continue;
+      if (count + pending.length - nextIndex >= MAX_SAFE_DOCUMENT_NODES) return false;
+      pending.push(child);
+    }
   }
+  return true;
 };
 
 const boundedDocumentNodeCount = (document: Document): number => {
-  const pending: Array<unknown> = [document];
+  const pending: Array<object> = [document];
   let index = 0;
   let count = 0;
   while (index < pending.length && count <= MAX_SAFE_DOCUMENT_NODES) {
-    const candidate = pending[index];
+    const candidate = pipe(A.get(pending, index), O.getOrThrow);
     index = N.increment(index);
-    if (!P.isObject(candidate)) continue;
     count = N.increment(count);
-    appendCandidateChildren(pending, candidate);
+    if (!appendCandidateChildren(pending, index, count, candidate)) {
+      return N.increment(MAX_SAFE_DOCUMENT_NODES);
+    }
   }
   return count;
 };

@@ -12,6 +12,7 @@ import { filesCommand } from "@beep/repo-cli";
 import { CommandJsonOutput } from "@beep/repo-cli/test/Cli";
 import {
   ArchivePoorCandidatesManifest,
+  boundedPersonMatchDirectoryNamesForTesting,
   CanonicalMatchPersonInputs,
   DetectBordersReport,
   DetectFacesReport,
@@ -2074,6 +2075,26 @@ describe("files command", { concurrent: false }, () => {
             disposition: "no-face",
             reason: "aligner-confidence-failed",
           });
+        })
+      )
+    ));
+
+  it("bounds person-match directory enumeration before sorting the discovered names", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const directory = path.join(tmpDir, "wide-person-match-input");
+          yield* fs.makeDirectory(directory, { recursive: true });
+          yield* Effect.forEach(
+            ["first.jpg", "second.jpg", "third.jpg"],
+            (name) => fs.writeFileString(path.join(directory, name), name),
+            { concurrency: 1, discard: true }
+          );
+
+          const error = yield* Effect.flip(boundedPersonMatchDirectoryNamesForTesting(directory, 2));
+          expect(error.message).toContain("directory entry count exceeds 2");
         })
       )
     ));

@@ -158,6 +158,13 @@ def test_encode_payload_and_diagnostics_are_bounded(
         worker.encode_payload({"value": "too large"})
     assert raised.value.code == "report-limit-exceeded"
 
+    monkeypatch.setattr(worker, "MAX_REPORT_BYTES", 9)
+    assert worker.encode_payload({"v": ""}) == '{"v":""}'
+    monkeypatch.setattr(worker, "MAX_REPORT_BYTES", 8)
+    with pytest.raises(WorkerError) as framed:
+        worker.encode_payload({"v": ""})
+    assert framed.value.code == "report-limit-exceeded"
+
     target = io.StringIO()
     diagnostics = worker.BoundedDiagnosticWriter(target, 4)
     assert diagnostics.write("abcdef") == 6

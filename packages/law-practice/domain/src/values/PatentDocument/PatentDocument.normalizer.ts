@@ -376,14 +376,18 @@ const parentClaimNumbers = (preamble: string, currentClaimNumber: PosInt): O.Opt
       onSome: (marker) => {
         const markerIndex = pipe(O.fromUndefinedOr(marker.index), O.getOrThrow);
         const value = Str.slice(Num.sum(markerIndex, Str.length(marker[0])))(preamble);
-        const matches = A.fromIterable(Str.matchAll(claimReferencePattern)(value));
-        return A.isReadonlyArrayEmpty(matches)
-          ? O.none()
-          : pipe(
-              A.map(matches, (match) => claimReferencesFromMatch(match, currentClaimNumber)),
-              O.all,
-              O.map(flow(A.flatten, A.dedupe))
-            );
+        let expanded: ReadonlyArray<PosInt> = A.empty();
+        let expandedCount = 0;
+        let matched = false;
+        for (const match of Str.matchAll(claimReferencePattern)(value)) {
+          matched = true;
+          const references = claimReferencesFromMatch(match, currentClaimNumber);
+          if (O.isNone(references)) return O.none();
+          expandedCount = Num.sum(expandedCount, A.length(references.value));
+          if (expandedCount > MAX_PARENT_CLAIM_RANGE_CARDINALITY) return O.none();
+          expanded = A.appendAll(expanded, references.value);
+        }
+        return matched ? O.some(A.dedupe(expanded)) : O.none();
       },
     })
   );

@@ -1022,6 +1022,24 @@ Demo video`);
     expect(Result.isFailure(refineSafeDocument(overLimit))).toBe(true);
   });
 
+  it("stops reading wide child lists as soon as the global AST-node budget is exceeded", () => {
+    const children = A.makeBy(MAX_SAFE_DOCUMENT_NODES + 1, () => Md.hr);
+    Object.defineProperty(children, MAX_SAFE_DOCUMENT_NODES, {
+      get: () => {
+        throw new Error("child beyond the document budget was read");
+      },
+    });
+    const overwide = Document.make({ children });
+
+    expect(documentSafetyIssues(overwide)).toMatchObject([
+      {
+        _tag: "DocumentComplexity",
+        maxNodes: MAX_SAFE_DOCUMENT_NODES,
+        observedNodes: MAX_SAFE_DOCUMENT_NODES + 1,
+      },
+    ]);
+  });
+
   it("keeps canonical URL-policy sanitization at a fixed point", () =>
     fc.assert(
       fc.property(fc.string(), (destination) => {
