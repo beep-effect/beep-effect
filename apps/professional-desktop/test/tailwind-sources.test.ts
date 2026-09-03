@@ -1,7 +1,8 @@
 import { provideScopedLayer } from "@beep/test-utils";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, FileSystem } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import * as S from "effect/Schema";
 
 // Tailwind v4 roots content detection at the app's CSS and skips node_modules, and

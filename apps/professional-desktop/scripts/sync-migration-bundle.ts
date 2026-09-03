@@ -10,9 +10,14 @@
 import { BunRuntime } from "@effect/platform-bun";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
-import { Effect, FileSystem, Layer, Match, Order, Path } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import type { Equivalence } from "effect/Equivalence";
 
@@ -139,6 +144,6 @@ const program = Effect.gen(function* () {
 });
 
 const MainLive = Layer.mergeAll(BunFileSystem.layer, BunPath.layer);
-const main = Effect.scoped(Layer.build(Layer.effectDiscard(program).pipe(Layer.provide(MainLive))));
+const main = program.pipe(Layer.effectDiscard, Layer.provide(MainLive), Layer.build, Effect.scoped);
 
 BunRuntime.runMain(main);

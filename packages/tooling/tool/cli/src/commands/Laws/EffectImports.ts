@@ -37,10 +37,10 @@ import type {
 
 const $I = $RepoCliId.create("commands/Laws/EffectImports");
 
-// P1 is deliberately inert for ordinary code checks. Each approved family is
-// appended here in the same PR that promotes its Biome restriction; the final
-// P3 flip removes the temporary positive list.
-const EFFECT_IMPORT_PROMOTED_FAMILY_PREFIXES = A.empty<string>();
+// P2 promotes only the approved pilot before either measurement state so the
+// enforcement configuration remains identical across the pair. Later families
+// join with their Biome restriction during P3; the final flip removes this list.
+const EFFECT_IMPORT_PROMOTED_FAMILY_PREFIXES = A.of("apps/professional-desktop");
 
 /**
  * Corpus representation scanned by the per-module import vehicle.

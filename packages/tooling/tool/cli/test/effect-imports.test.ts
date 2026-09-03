@@ -139,6 +139,10 @@ const demoSource = A.join(
 );
 
 describe("effect import laws", () => {
+  it("promotes only the approved P2 pilot by default", () => {
+    expect(EffectImportRulesOptions.make({}).promotedFamilyPrefixes).toEqual(["apps/professional-desktop"]);
+  });
+
   it("validates candidate CLI flags and renders text and JSON summaries", () =>
     Effect.runPromise(
       withTempWorkingDirectory(

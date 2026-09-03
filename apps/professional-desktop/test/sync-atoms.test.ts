@@ -2,8 +2,14 @@ import { VaultSyncActionError } from "@beep/documents-use-cases/public";
 import { SyncConflictId } from "@beep/shared-domain/identity/Documents/SyncConflictId";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { it } from "@effect/vitest";
-import { Deferred, Duration, Effect, Equal, Layer, Ref, Schedule } from "effect";
 import * as A from "effect/Array";
+import * as Deferred from "effect/Deferred";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import * as Layer from "effect/Layer";
+import * as Ref from "effect/Ref";
+import * as Schedule from "effect/Schedule";
 import { AtomRegistry, Reactivity } from "effect/unstable/reactivity";
 import { describe, expect } from "vitest";
 import {

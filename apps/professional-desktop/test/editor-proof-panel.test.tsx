@@ -2,7 +2,7 @@ import "@testing-library/jest-dom/vitest";
 import { RegistryProvider } from "@effect/atom-react";
 import { describe, expect, it } from "@effect/vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { afterEach } from "vitest";
 import { EditorProofPanel } from "@/editor-proof/EditorProofPanel";
 

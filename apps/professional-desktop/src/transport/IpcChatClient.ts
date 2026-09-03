@@ -11,7 +11,7 @@
  * @category protocols
  * @since 0.0.0
  */
-import { Layer } from "effect";
+import * as Layer from "effect/Layer";
 import { RpcClient, RpcSerialization } from "effect/unstable/rpc";
 import { TauriIpcSocketLive } from "./TauriIpcSocket.ts";
 
@@ -22,8 +22,7 @@ import { TauriIpcSocketLive } from "./TauriIpcSocket.ts";
  *
  * ```ts
  * import { IpcChatProtocolLive } from "@/transport/IpcChatClient"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(IpcChatProtocolLive)) // true
  * ```
  *

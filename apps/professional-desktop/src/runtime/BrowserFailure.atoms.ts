@@ -4,11 +4,11 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import { $ProfessionalDesktopId } from "@beep/identity";
-import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability";
-import { LiteralKit } from "@beep/schema";
-import { Effect, Metric } from "effect";
+import { $ProfessionalDesktopId } from "@beep/identity/packages";
+import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability/CauseRedaction";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as Effect from "effect/Effect";
+import * as Metric from "effect/Metric";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { Atom } from "effect/unstable/reactivity";

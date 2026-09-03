@@ -9,7 +9,7 @@ import {
 import { ParagraphBlock, TextInline } from "@beep/agents-domain/values/AssistantContent";
 import { ChatActionError } from "@beep/agents-use-cases/public";
 import * as MdModel from "@beep/md/Md.model";
-import { NonNegativeInt } from "@beep/schema";
+import { NonNegativeInt } from "@beep/schema/Number";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { ThreadTimeline, TimelineMessageItem, TimelineTurn } from "@beep/workspace-use-cases/aggregates/Thread";
 import { Composer } from "@/chat/ui/Composer";
@@ -18,7 +18,8 @@ import "@testing-library/jest-dom/vitest";
 import { RegistryProvider, useAtomRefresh, useAtomSet } from "@effect/atom-react";
 import { it } from "@effect/vitest";
 import { cleanup, render, waitFor, within } from "@testing-library/react";
-import { Effect, Layer } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { AsyncResult, Reactivity } from "effect/unstable/reactivity";
