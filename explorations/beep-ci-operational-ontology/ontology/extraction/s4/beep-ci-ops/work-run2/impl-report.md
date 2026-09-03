@@ -15,7 +15,7 @@ numbers land only at run close.
 ## Engine and environment findings
 
 The run is locked by
-`explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/work/run-manifest.yaml`
+`explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/runs/orun-2026-09-03T02:46:18Z.manifest.yaml`
 to run `orun-2026-09-03T02:46:18Z`, validator digest `c036e5316511`, contracts
 digest `db5aefe804fe`, and one repository commit. Four launch findings changed
 how the locked engine could execute. They are operational findings and pins,
@@ -70,7 +70,7 @@ cross-root lifecycle join.
 | `explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/etl_fleet_corpus.py` | Captures the fleet's admission, attempt, and verdict records; applies the public redaction contract; writes deterministic properties projections; and emits the complete digest manifest. |
 | `explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal.py` | Standard-library-only SourceObservation adapter for the three properties families. Its behavior and run-2 rationale are recorded in `explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/README.md`. |
 | `explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/po_transcriber_run2.py` | Deterministically transcribes exact parked evidence quotes and the three declared S7 prose sources into pinned ProseObservations. It splits explicit elisions, recovers the smallest bounded source window when recorded coordinates drift, reports corrections, and emits nothing for text it cannot locate. |
-| Three narrow ProseObservations | `explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/work/prose-observations/po-736ad92a1de7.yaml` captures the provisional ordering terms; `explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/work/prose-observations/po-35a69c5bcbf7.yaml` captures the `ScheduleStep` and `ScheduleProposal` schema span; `explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/work/prose-observations/po-d1f555913267.yaml` captures the later `SeatRequest` correction and `schedulesSeatRequest` rename. These hand captures ground the exact ordering-vocabulary claims rather than relying on a broad neighboring section. |
+| Three narrow ProseObservations | `explorations/beep-ci-operational-ontology/ontology/extraction/s4/archives/beep-ci-ops/orun-2026-09-03T02:46:18Z.observations/prose-observations/po-736ad92a1de7.yaml` captures the provisional ordering terms; `explorations/beep-ci-operational-ontology/ontology/extraction/s4/archives/beep-ci-ops/orun-2026-09-03T02:46:18Z.observations/prose-observations/po-35a69c5bcbf7.yaml` captures the `ScheduleStep` and `ScheduleProposal` schema span; `explorations/beep-ci-operational-ontology/ontology/extraction/s4/archives/beep-ci-ops/orun-2026-09-03T02:46:18Z.observations/prose-observations/po-d1f555913267.yaml` captures the later `SeatRequest` correction and `schedulesSeatRequest` rename. These hand captures ground the exact ordering-vocabulary claims rather than relying on a broad neighboring section. |
 
 The journal adapter is intentionally kind-local and vocabulary-bounded.
 Admission, attempt, and verdict files are each visited in lexicographic
@@ -167,4 +167,5 @@ Run 2 closed 2026-09-03 as `orun-2026-09-03T02:46:18Z` with the gate reading
 - **Rotation:** manifest and index archived at
   `runs/orun-2026-09-03T02:46:18Z.*` (run 3's `prior_index_sha256_12`
   `a207a106de68`); observations archived under
-  `../archives/beep-ci-ops/` per the scanner-defect relocation.
+  `explorations/beep-ci-operational-ontology/ontology/extraction/s4/archives/beep-ci-ops/orun-2026-09-03T02:46:18Z.observations/`
+  per the scanner-defect relocation.

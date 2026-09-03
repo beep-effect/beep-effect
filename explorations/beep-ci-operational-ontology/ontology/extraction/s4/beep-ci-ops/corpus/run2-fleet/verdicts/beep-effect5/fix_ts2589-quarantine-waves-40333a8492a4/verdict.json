@@ -32,7 +32,7 @@
       "status": "not-run"
     }
   ],
-  "message": "Another Yeet full proof for this repository is active. Owner checkout <fleet>/beep-effect on feat/api-docs-lab, pid <redacted>, started 2026-08-26T16:22:05.047Z.\nThe machine-local coordinator prevents sibling checkouts from overlapping Docker, Bun-cache, and Turbo work. Wait for it to finish, run the cheap/review-fix tier, or remove /tmp/beep-yeet-proof-locks/4cc31eeb4dec.lock only after confirming its owner is gone.",
+  "message": "Another Yeet full proof for this repository is active. Owner checkout <fleet>/beep-effect on feat/api-docs-lab, pid <redacted>, started 2026-08-26T16:22:05.047Z.\nThe machine-local coordinator prevents sibling checkouts from overlapping Docker, Bun-cache, and Turbo work. Wait for it to finish, run the cheap/review-fix tier, or remove <tmp>/beep-yeet-proof-locks/4cc31eeb4dec.lock only after confirming its owner is gone.",
   "mode": "verify",
   "outcome": "failure",
   "packetPaths": [],

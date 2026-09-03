@@ -94,3 +94,22 @@
   planner instead of a single bounded capture (or raise the bound for
   `--name-only -z` specifically, whose output is inherently proportional to
   repo churn, not misbehavior).
+
+## 2026-09-03: fleet-corpus host-path scan missed the system temp root
+
+- **Work:** repairing PR #957 after its hosted Lint Policy lane rejected the
+  pinned run-2 fleet corpus.
+- **Evidence:** `bun run beep knowledge refs --check` found three live
+  system-temp lock-path observations in captured verdicts even though `MANIFEST.yaml`
+  recorded `host_path_scan: PASS`. The generator derived its replacement prefix
+  from the session temp root under the portable home convention, while its byte
+  scan rejected operator-home paths only, so system-temp strings escaped both
+  controls.
+- **Cost:** Lint Policy failed after the ontology run had closed, and the repair
+  had to re-redact 22 raw payloads, regenerate two affected scalar projections,
+  and rebuild the digest manifest rather than changing the three surfaced
+  verdicts alone.
+- **Prevention:** redact the explicit system temporary-directory prefix and
+  make the corpus byte scan fail on both operator-home and system-temp anchors;
+  keep a regression case where the process temp root differs from the system
+  temp root.

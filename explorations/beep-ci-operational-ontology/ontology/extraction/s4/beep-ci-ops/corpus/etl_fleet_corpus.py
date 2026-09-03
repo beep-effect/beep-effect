@@ -79,7 +79,7 @@ def admission_sources() -> list[tuple[str, Path]]:
     ]
 FLEET_PATH_PREFIX = f"{FLEET_ROOT}/"
 HOME_PATH_PREFIX = str(Path.home())
-TEMP_PATH_PREFIX = f"{tempfile.gettempdir()}/"
+SYSTEM_TEMP_PATH_PREFIX = f"{Path(os.sep) / 'tmp'}/"
 
 ADMISSION_SCHEMA = "yeet-admission-journal/v1"
 ATTEMPT_SCHEMA = "yeet-attempt-journal/v1"
@@ -219,7 +219,7 @@ def redact_string(value: str) -> str:
 
     redacted = value.replace(FLEET_PATH_PREFIX, "<fleet>/")
     redacted = redacted.replace(HOME_PATH_PREFIX, "<home>")
-    redacted = redacted.replace(TEMP_PATH_PREFIX, "<tmp>/")
+    redacted = redacted.replace(SYSTEM_TEMP_PATH_PREFIX, "<tmp>/")
     return PID_IN_TEXT.sub("pid <redacted>", redacted)
 
 
@@ -753,6 +753,8 @@ def scan_output_bytes(files: list[tuple[str, bytes]]) -> None:
     for path, data in files:
         if b"/home/" in data:
             fail(f"host-path scan failed for {path}: forbidden /home/ bytes")
+        if b"/tmp/" in data:
+            fail(f"host-path scan failed for {path}: forbidden /tmp/ bytes")
         if b"ghp_" in data:
             fail(f"secret scan failed for {path}: forbidden GitHub token prefix")
         if b"github_pat_" in data:
