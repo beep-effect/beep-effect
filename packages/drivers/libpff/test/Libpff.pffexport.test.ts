@@ -1183,7 +1183,7 @@ exec "$@"
   );
 
   it.effect(
-    "publishes a validated quota handoff only after the sandbox exits",
+    "publishes repeated validated quota handoffs after each sandbox exits",
     Effect.fnUntraced(
       function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -1224,6 +1224,7 @@ exec "$@"
         const engine = yield* makePffexportFileProcessingEngine(
           PffexportEngineConfig.make({
             bwrapPath: O.some(bwrapPath),
+            existingExportPolicy: "replace",
             exportRoot,
             maxOutputBytes: O.some(PosInt.make(1_000_000)),
             pffexportPath: stubPath,
@@ -1231,9 +1232,11 @@ exec "$@"
           })
         );
 
-        const result = yield* engine.exportArchive(operation);
+        const firstResult = yield* engine.exportArchive(operation);
+        const secondResult = yield* engine.exportArchive(operation);
 
-        expect(result.children.length).toBeGreaterThan(0);
+        expect(firstResult.children.length).toBeGreaterThan(0);
+        expect(secondResult.children.length).toBe(firstResult.children.length);
         expect(yield* fs.exists(path.join(exportRoot, `${operation.source.id}.export`))).toBe(true);
         expect(A.some(yield* fs.readDirectory(exportRoot), Str.startsWith(".pffexport-quota-"))).toBe(false);
       },

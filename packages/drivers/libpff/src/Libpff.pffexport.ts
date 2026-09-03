@@ -1127,7 +1127,9 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
               );
             const [, capturedStderr, code, , tarStderr, tarExitCode] = yield* Effect.all(
               [
-                Stream.run(handle.stdout, extractor.stdin),
+                // Tar can finish after consuming a complete archive while the
+                // stdin sink is still waiting for the producer stream to close.
+                Effect.raceFirst(Stream.run(handle.stdout, extractor.stdin), extractor.exitCode.pipe(Effect.asVoid)),
                 captureBoundedProcessText(handle.stderr),
                 handle.exitCode,
                 drainStream(extractor.stdout),

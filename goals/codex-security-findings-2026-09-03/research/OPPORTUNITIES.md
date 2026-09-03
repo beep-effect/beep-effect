@@ -119,3 +119,20 @@
   and give intentionally exhaustive end-to-end cases an explicit timeout above
   their measured coverage runtime; suite-level scheduling is not sufficient
   proof for the wrapper.
+
+## 2026-09-03 — A successful extractor exit left its stdin sink pending
+
+- **What I was doing:** Investigating the replacement Coverage Regression run
+  after process-heavy restoration tests had been serialized.
+- **Evidence:** Two same-availability-zone Spot runners were terminated during
+  the first exact-head run, obscuring the initial signal. An isolated rerun then
+  showed four restoration tests reaching Vitest's five-minute ceiling. Focused
+  Effect diagnostics proved that the quota producer and destination `tar`
+  processes had exited and every diagnostic stream had drained, while
+  `Stream.run` feeding the extractor's stdin remained pending. The same four
+  cases passed in seconds after racing that transfer against the extractor exit.
+- **What would have prevented it:** A child-process pipeline should treat the
+  destination process exit as a completion boundary for its stdin transfer,
+  while still checking both process exit codes and propagating any transfer
+  failure. Package tests for process handoffs should repeat the operation in one
+  Effect test scope so leaked or non-terminating stream fibers are observable.
