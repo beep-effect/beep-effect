@@ -22,6 +22,7 @@ import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import { constant, dual, flow } from "effect/Function";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import {
@@ -39,6 +40,7 @@ const LOCK_FILE_NAME = "journal.lock";
 const RETAINED_ADMISSIONS = 200;
 const LOCK_RETRY_ATTEMPTS = 8;
 const LOCK_RETRY_DELAY_MILLIS = 25;
+const LOCKED_OPERATION_RETRY_ATTEMPTS = 5;
 const LOCK_REAP_ADOPTION_BOUND_MILLIS = 30_000;
 // No legitimate writer publishes an unparseable token. The age backstop
 // therefore applies only to malformed generations, never a parseable live
@@ -869,8 +871,65 @@ export const assertJournalFileLockOwned = Effect.fnUntraced(function* (
   if (!(yield* journalLockIsOwned(lockPath, token))) {
     return yield* QualitySchedulerError.make({
       message: `Admission journal lock "${lockPath}" was lost before publication; retry the locked operation.`,
+      reason: "journal-lock-lost",
     });
   }
+});
+
+/**
+ * Run one journal operation under a fenced lock generation with bounded replay.
+ *
+ * **Details**
+ *
+ * A lost generation never acknowledges the operation. The boundary releases
+ * any surviving generation, reacquires with a fresh token, and reruns the
+ * operation from its durable read state. Only lock-loss failures retry; an I/O
+ * failure is surfaced unchanged.
+ *
+ * **Example** (Reference the locked journal boundary)
+ *
+ * ```ts
+ * import { withJournalFileLock } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(typeof withJournalFileLock) // "function"
+ * ```
+ *
+ * @param lockPath - Exclusive lock path adjacent to the journal.
+ * @param operation - Complete read-and-publish operation fenced by the supplied token.
+ * @param retryAttempts - Maximum fresh generations after repeated ownership loss.
+ * @returns The operation result after one successful fenced publication.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const withJournalFileLock = Effect.fnUntraced(function* <Success, Requirements>(
+  lockPath: string,
+  operation: (lockToken: string) => Effect.Effect<Success, QualitySchedulerError, Requirements>,
+  retryAttempts = LOCKED_OPERATION_RETRY_ATTEMPTS
+): Effect.fn.Return<Success, QualitySchedulerError, FileSystem.FileSystem | Path.Path | Requirements> {
+  for (let attempt = 0; attempt < retryAttempts; attempt++) {
+    const lockToken = `${process.pid}:${randomUUID()}`;
+    if (!(yield* acquireJournalFileLock(lockPath, lockToken))) {
+      return yield* QualitySchedulerError.make({
+        message: `Journal lock "${lockPath}" stayed busy; could not start the locked operation.`,
+      });
+    }
+    const outcome = yield* Effect.ensuring(operation(lockToken), releaseJournalFileLock(lockPath, lockToken)).pipe(
+      Effect.result
+    );
+    if (Result.isSuccess(outcome)) {
+      return outcome.success;
+    }
+    if (outcome.failure.reason !== "journal-lock-lost") {
+      return yield* outcome.failure;
+    }
+    if (attempt + 1 < retryAttempts) {
+      yield* Effect.sleep(Duration.millis(LOCK_RETRY_DELAY_MILLIS));
+    }
+  }
+  return yield* QualitySchedulerError.make({
+    message: `Journal lock "${lockPath}" was lost ${retryAttempts} times; retry bound exhausted.`,
+    reason: "journal-lock-retry-exhausted",
+  });
 });
 
 const publishJournalAtomic = Effect.fnUntraced(function* (
@@ -997,6 +1056,8 @@ const rewriteJournalLocked = Effect.fnUntraced(function* (
  * PID/start-time-fenced generation by hard link so the lock never exists
  * without an owner. A lock whose owner process is dead or PID-reused is
  * reaped, and release removes only the generation this writer stamped. The
+ * A writer displaced during publication reacquires a fresh generation and
+ * reruns the whole read-and-publish operation through a bounded retry. The
  * rewrite drops undecodable records, ring-trims to the
  * newest admitted transitions, and publishes atomically via temp-file
  * rename. A lock that stays busy fails the append with a typed error;
@@ -1028,21 +1089,14 @@ const appendAdmissionJournalEventWithMode = Effect.fnUntraced(function* (
   const path = yield* Path.Path;
   const journalPath = path.join(root, JOURNAL_FILE_NAME);
   const lockPath = path.join(root, LOCK_FILE_NAME);
-  const token = `${process.pid}:${randomUUID()}`;
   const line = yield* encodeEvent(event).pipe(
     Effect.mapError(QualitySchedulerError.new("Failed to encode admission journal event."))
   );
   yield* fs
     .makeDirectory(root, { recursive: true, mode: 0o700 })
     .pipe(Effect.mapError(QualitySchedulerError.new("Failed to create admission journal directory.")));
-  if (!(yield* acquireJournalFileLock(lockPath, token))) {
-    return yield* QualitySchedulerError.make({
-      message: `Admission journal lock "${lockPath}" stayed busy; dropping one ${event._tag} event.`,
-    });
-  }
-  yield* Effect.ensuring(
-    rewriteJournalLocked(journalPath, lockPath, token, event, line, idempotent),
-    releaseJournalFileLock(lockPath, token)
+  yield* withJournalFileLock(lockPath, (lockToken) =>
+    rewriteJournalLocked(journalPath, lockPath, lockToken, event, line, idempotent)
   );
 });
 

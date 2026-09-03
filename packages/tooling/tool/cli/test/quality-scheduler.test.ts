@@ -821,6 +821,74 @@ describe("quality-scheduler", () => {
       })
     ));
 
+  it("reacquires after crash recovery displaces its lock and publishes exactly once", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const lockPath = path.join(tempRoot.root, "journal.lock");
+            const tombstonePath = `${lockPath}.reap-crashed-reclaimer.tombstone-${process.pid}`;
+            const lockReads = yield* Ref.make(0);
+            const displacedFileSystem = FileSystem.FileSystem.of({
+              ...fs,
+              readFileString: Effect.fn("FileSystem.FileSystem.readFileString")(function* (target, encoding) {
+                if (!Str.Equivalence(target, lockPath)) {
+                  return yield* fs.readFileString(target, encoding);
+                }
+                if ((yield* Ref.updateAndGet(lockReads, (count) => count + 1)) === 2) {
+                  yield* fs.rename(lockPath, tombstonePath);
+                }
+                return yield* fs.readFileString(target, encoding);
+              }),
+            });
+
+            yield* appendAdmissionJournalEvent(tempRoot.root, journalAdmitted(1)).pipe(
+              Effect.provideService(FileSystem.FileSystem, displacedFileSystem)
+            );
+
+            expect(yield* fs.exists(tombstonePath)).toBe(false);
+            expect(A.map(yield* readJournalEvents(tempRoot.root), (event) => event.nonce)).toStrictEqual(["nonce-1"]);
+          })
+        );
+      })
+    ));
+
+  it("surfaces typed retry exhaustion without publishing a partial event", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const lockPath = path.join(tempRoot.root, "journal.lock");
+            const journalPath = yield* admissionJournalPath(tempRoot.root);
+            const repeatedlyDisplacedFileSystem = FileSystem.FileSystem.of({
+              ...fs,
+              readFileString: Effect.fn("FileSystem.FileSystem.readFileString")(function* (target, encoding) {
+                if (Str.Equivalence(target, lockPath)) {
+                  yield* fs.remove(lockPath, { force: true });
+                }
+                return yield* fs.readFileString(target, encoding);
+              }),
+            });
+
+            const failure = yield* appendAdmissionJournalEvent(tempRoot.root, journalAdmitted(1)).pipe(
+              Effect.provideService(FileSystem.FileSystem, repeatedlyDisplacedFileSystem),
+              Effect.flip
+            );
+
+            expect(failure.reason).toBe("journal-lock-retry-exhausted");
+            expect(failure.message).toContain("retry bound exhausted");
+            expect(yield* fs.exists(journalPath)).toBe(false);
+          })
+        );
+      })
+    ));
+
   it("fails under live or fresh malformed locks and reaps dead or aged malformed generations", () =>
     Effect.runPromise(
       Effect.gen(function* () {

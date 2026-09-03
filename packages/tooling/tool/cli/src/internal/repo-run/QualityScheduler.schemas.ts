@@ -696,7 +696,12 @@ export type DeadLeaseScopePlan = typeof DeadLeaseScopePlan.Type;
 
 interface QualitySchedulerErrorOptions {
   readonly exitCode?: number;
+  readonly reason?: QualitySchedulerErrorReason;
 }
+
+const QualitySchedulerErrorReason = LiteralKit(["journal-lock-lost", "journal-lock-retry-exhausted"]);
+
+type QualitySchedulerErrorReason = typeof QualitySchedulerErrorReason.Type;
 
 /**
  * Failure raised while coordinating machine-wide admission.
@@ -718,6 +723,7 @@ export class QualitySchedulerError extends S.TaggedError<QualitySchedulerError>(
   {
     message: S.String,
     exitCode: S.optionalKey(S.Finite),
+    reason: S.optionalKey(QualitySchedulerErrorReason),
     cause: S.optionalKey(Defect({ includeStack: true })),
   },
   $I.annoteError<QualitySchedulerError>("QualitySchedulerError", {
@@ -737,12 +743,13 @@ export class QualitySchedulerError extends S.TaggedError<QualitySchedulerError>(
     (message: string, opts?: QualitySchedulerErrorOptions): (cause: unknown) => QualitySchedulerError;
   } = dual(
     3,
-    (cause: unknown, message: string, { exitCode }: QualitySchedulerErrorOptions = {}): QualitySchedulerError =>
+    (cause: unknown, message: string, { exitCode, reason }: QualitySchedulerErrorOptions = {}): QualitySchedulerError =>
       QualitySchedulerError.make({
         cause,
         message,
         ...O.getSomesStruct({
           exitCode: O.fromUndefinedOr(exitCode),
+          reason: O.fromUndefinedOr(reason),
         }),
       })
   );
