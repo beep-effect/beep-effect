@@ -35,13 +35,25 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — the endpoint-validation spike: invoice-PDF endpoint verdict,
-live request-limit numbers, and the webhook retry/disable schedule, all
-against the existing dev app.
+P3 Yeet — the `@beep/freshbooks` driver is implemented and verified; driving
+the PR toward mergeable. One item remains operator-gated: the invoice-PDF
+verb's live validation needs a one-time FreshBooks OAuth grant (see below).
 
 ## Latest Evidence
 
-Not started.
+- `history/2026-09-03-p0-endpoint-spike.md` — P0 spike report: OAuth mechanics,
+  live request limits (no numeric ceiling published; 100-per-page cap), webhook
+  retry/disable schedule (qualitative), and the invoice-PDF verdict recorded as
+  PENDING live validation.
+- `research/live-spike-harness.md` — the ready read-only harness + the single
+  operator step (register a localhost redirect URI, click Authorize once) that
+  finishes the PDF verdict.
+- `packages/drivers/freshbooks/` — driver package: `bun run beep quality
+  package-verify @beep/freshbooks` green (audit + docgen). Token helper with
+  single-refresh-owner rotation (concurrent-refresh test passes) and
+  schema-decoded identity/clients/invoices/payments read verbs.
+- The invoice-PDF verb is intentionally absent from the shipped surface until
+  its live half is validated (SPEC: "dropped without shame" until proven).
 
 ## Notes
 

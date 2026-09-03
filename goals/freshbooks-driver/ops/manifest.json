@@ -6,13 +6,13 @@
     "title": "FreshBooks Driver",
     "status": "active",
     "created": "2026-08-30",
-    "updated": "2026-08-30",
+    "updated": "2026-09-03",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/freshbooks-driver",
   "lifecycle": "active",
   "mission": "Ship @beep/freshbooks on the hubspot pattern: rotation-safe token helper, clients/invoices/payments reads, and spike-gated invoice-PDF retrieval",
-  "statusNote": "Graduated 2026-08-30 from explorations/practice-office-provisioning; P0 not started. First action: the endpoint-validation spike against the existing dev app.",
+  "statusNote": "2026-09-03: @beep/freshbooks driver implemented and verified (package-verify green) \u2014 token helper with single-refresh-owner rotation (concurrent-refresh test), schema-decoded identity/clients/invoices/payments read verbs across distinct account_id/business_id namespaces. P0 spike report records live request limits and the webhook retry/disable schedule. The invoice-PDF verb is DEFERRED: its live validation needs a one-time operator OAuth grant (redirect-URI registration + Authorize consent) an agent cannot perform; the ready harness is in research/live-spike-harness.md and the verdict stays PENDING in history/. Verb kept out of the shipped surface per SPEC until live-proven.",
   "blockedBy": [],
   "executionCapable": true,
   "reflectionRequired": true,
@@ -52,22 +52,22 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Implement",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Verify",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P4",
