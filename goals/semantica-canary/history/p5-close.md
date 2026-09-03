@@ -118,26 +118,30 @@ These artifacts back `DECISIONS.md` entry
 - `c2/full-w1.replay.eval-report.json`
   SHA-256: `d83c382754bd4853a277a05fd5f078c8d27c5275fef96b61a50cd6a37f0ce80c`
 - `c2/full-w1.replay.eval-telemetry.json`
-  SHA-256: `d27ddc978dac116e4948410181184c7ef04389e2f2ec4e388d3ec07519f72c2b`
+  SHA-256: `3dc9a998a35dad996570942c8ba9b859186a9eebe941c1432e48196b70041133`
 - `c2/crash-identity.log`
-  SHA-256: `8cd729e31edec455e4f5bca05200603cc0e2e1b3a6b369f828f28bf0f4041cb5`
+  SHA-256: `b26ec191499a5fb76999630c00ce433f3d57891cfdb73670926cba506670b392`
 - `c2/SHA256SUMS`
-  SHA-256: `83e755b02c3ddf58ede250f66c5f89f09f4d7f3888fabf2b155df0a6f08c014c`
+  SHA-256: `c4f9ba234607d3bd0654a97b2ccd2faee2d37ecc868c1d5fa2b21867c0ac727b`
 
 Stage record: `p4-c2-r2.md`, SHA-256
-`9ab62101b3e21de0a89ebf184fed1f4b62a74d1d8264c7ba1b0f96766252636b`.
+``.
 
-The C2 checksum manifest now covers the four JSON artifacts and
-`crash-identity.log`. The archived report pair, `p4-c2-r2.md`, and the dated C2
-entry in `DECISIONS.md` agree on report digest
+The C2 checksum manifest covers the four JSON artifacts and `crash-identity.log`.
+The archived report pair, `p4-c2-r2.md`, and the dated C2 entry in `DECISIONS.md`
+agree on report digest
 `2a2089eacaa7f341649b6e1d86991fda526f5d9708e9eaa1f4e9d06e0533b5d1`, the
 ratified full-state crash run. At the first closeout pass the merged archive
 still held the earlier `7fff1dc0…` run: the commit that archived the full-state
 run (authored 2026-08-31 14:33, "archive full-state crash evidence") was never
 pushed before #938 merged, so main's archive lagged the verdict by one commit
-until the follow-up archive PR landed it. The archived telemetry records live
-cold start 1,183 ms and interactive p95 7 ms; the C2 entry's "1 ms / 3 ms"
-figures came from an earlier probe and are superseded by the archive.
+until the follow-up archive PR landed it. That PR also replaced the replay pair
+with a cache-only rerun executed on 2026-09-02 (21:40 CDT, 02:40Z on 2026-09-03)
+after the ratified live run, so the archived replay sidecar postdates the live
+sidecar as SPEC requires. The
+archived live telemetry records cold start 1,183 ms and interactive p95 7 ms;
+the C2 entry's original "1 ms / 3 ms" figures came from an earlier probe and
+were corrected in place.
 
 ## Verdict coverage
 

@@ -715,8 +715,9 @@ Source:
   projection digest, and the 34-document live and replay reports were
   byte-identical at digest
   `2a2089eacaa7f341649b6e1d86991fda526f5d9708e9eaa1f4e9d06e0533b5d1`.
-  Live cold start was 1 ms and interactive p95 was 3 ms, clearing Tier-L; the
-  retry was not used. EYE is not a runtime dependency. `G-entailment/rules`,
+  Live cold start was 1,183 ms and interactive p95 was 7 ms, clearing Tier-L
+  (corrected 2026-09-02 from the archived sidecar; the entry originally quoted
+  1 ms and 3 ms from an earlier probe); the retry was not used. EYE is not a runtime dependency. `G-entailment/rules`,
   the v3 Rete salvage, and the proof-ledger kernel remain the separately gated
   reasoning spike and re-enter at `decompose`.
 

@@ -59,6 +59,11 @@ owns *decisions and research* (D2).
 
 ## Trail
 
+- 2026-09-02 (C2 archive reconciled): the commit archiving the ratified
+  full-state C2 run (digest `2a2089ea…`) had never been pushed before #938
+  merged, so `main` carried the earlier `7fff1dc0…` run. The follow-up landed
+  the archive, extended its checksum manifest to the crash log, and corrected
+  the P5 closeout account and the C2 entry's Tier-L figures.
 - 2026-09-02 (P5 close and successor re-entry): `semantica-canary` completed
   its evidence audit and closeout reflection. All five family verdicts remain
   dated in `DECISIONS.md`. The C2 pass fired the storage gate and left the reasoning spike gated on
