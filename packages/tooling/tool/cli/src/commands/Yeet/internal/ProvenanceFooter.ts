@@ -10,7 +10,7 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { Cause, Console, DateTime, Effect, Exit } from "effect";
+import { Cause, Console, DateTime, Effect, Exit, Order, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -42,8 +42,235 @@ class GhPrBody extends S.Class<GhPrBody>($I`GhPrBody`)(
   { body: S.NullOr(S.String) },
   $I.annote("GhPrBody", { description: "Narrow gh pr view response carrying the body." })
 ) {}
+
+class GhPrBodySnapshot extends S.Class<GhPrBodySnapshot>($I`GhPrBodySnapshot`)(
+  {
+    body: S.NullOr(S.String),
+    createdAt: S.DateTimeUtcFromString,
+    lastEditedAt: S.OptionFromNullOr(S.DateTimeUtcFromString),
+  },
+  $I.annote("GhPrBodySnapshot", {
+    description: "Fresh pull-request body plus the GitHub edit timestamp used as a race-detection baseline.",
+  })
+) {}
+
+/**
+ * One full pull-request body revision from GitHub's user-content edit history.
+ *
+ * **Details**
+ *
+ * GitHub names the full-body field `diff`; the decoded model calls it `body`
+ * so downstream race recovery cannot mistake it for a unified patch.
+ *
+ * **Example** (Describe a pull-request body revision)
+ *
+ * ```ts
+ * import { PrBodyEdit } from "@beep/repo-cli/test/Yeet"
+ * import { DateTime } from "effect"
+ * import * as O from "effect/Option"
+ *
+ * const edit = PrBodyEdit.make({
+ *   body: "Updated summary",
+ *   editedAt: DateTime.makeUnsafe("2026-09-03T12:00:00Z"),
+ *   editor: O.some("octocat"),
+ * })
+ * console.log(edit.body) // Updated summary
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class PrBodyEdit extends S.Class<PrBodyEdit>($I`PrBodyEdit`)(
+  {
+    editedAt: S.DateTimeUtcFromString,
+    editor: S.OptionFromNullOr(S.String),
+    body: S.String,
+  },
+  $I.annote("PrBodyEdit", { description: "A timestamped full pull-request body revision and its optional editor." })
+) {}
+
+class GhPrBodyEditNode extends S.Class<GhPrBodyEditNode>($I`GhPrBodyEditNode`)(
+  {
+    editedAt: S.DateTimeUtcFromString,
+    editor: S.NullOr(S.Struct({ login: S.String })),
+    diff: S.String,
+  },
+  $I.annote("GhPrBodyEditNode", { description: "Raw GitHub pull-request user-content edit node." })
+) {}
+
+class GhPrBodyEditsDocument extends S.Class<GhPrBodyEditsDocument>($I`GhPrBodyEditsDocument`)(
+  {
+    data: S.Struct({
+      repository: S.Struct({
+        pullRequest: S.Struct({ userContentEdits: S.Struct({ nodes: S.Array(GhPrBodyEditNode) }) }),
+      }),
+    }),
+  },
+  $I.annote("GhPrBodyEditsDocument", { description: "GitHub GraphQL response containing recent PR body edits." })
+) {}
+
 const decodeGhPrBody = S.decodeUnknownEffect(S.fromJsonString(GhPrBody));
+const decodeGhPrBodySnapshot = S.decodeUnknownEffect(S.fromJsonString(GhPrBodySnapshot));
+const decodeGhPrBodyEditsDocument = S.decodeUnknownEffect(S.fromJsonString(GhPrBodyEditsDocument));
 const encodeRecord = S.encodeEffect(S.fromJsonString(PrSessionRecord));
+
+const prBodyEditsQuery =
+  "query($owner:String!,$name:String!,$number:Int!){repository(owner:$owner,name:$name){pullRequest(number:$number){userContentEdits(last:5){nodes{editedAt editor{login} diff}}}}}";
+
+const readPrBodySnapshot = Effect.fn("ProvenanceFooter.readPrBodySnapshot")(function* (
+  capture: typeof runRepoCommandCapture,
+  context: RepoRunContext,
+  prNumber: PrNumber
+) {
+  const viewed = yield* capture(
+    "gh",
+    ["pr", "view", `${prNumber}`, "--json", "body,createdAt,lastEditedAt"],
+    context.repoRoot
+  );
+  if (viewed.exitCode !== 0) {
+    return yield* YeetCommandError.make({ message: viewed.output, exitCode: viewed.exitCode });
+  }
+  return yield* decodeGhPrBodySnapshot(viewed.output);
+});
+
+const readPrBodyEdits = Effect.fn("ProvenanceFooter.readPrBodyEdits")(function* (
+  capture: typeof runRepoCommandCapture,
+  context: RepoRunContext,
+  repository: PrRepository,
+  prNumber: PrNumber
+) {
+  const response = yield* capture(
+    "gh",
+    [
+      "api",
+      "graphql",
+      "-f",
+      `query=${prBodyEditsQuery}`,
+      "-F",
+      `owner=${repository.owner}`,
+      "-F",
+      `name=${repository.name}`,
+      "-F",
+      `number=${prNumber}`,
+    ],
+    context.repoRoot
+  );
+  if (response.exitCode !== 0) {
+    return yield* YeetCommandError.make({ message: response.output, exitCode: response.exitCode });
+  }
+  const document = yield* decodeGhPrBodyEditsDocument(response.output);
+  return A.map(document.data.repository.pullRequest.userContentEdits.nodes, (edit) =>
+    PrBodyEdit.make({
+      body: edit.diff,
+      editedAt: edit.editedAt,
+      editor: pipe(
+        O.fromNullishOr(edit.editor),
+        O.map((editor) => editor.login)
+      ),
+    })
+  );
+});
+
+const prBodyEditOrder = Order.mapInput(DateTime.Order, (edit: PrBodyEdit) => edit.editedAt);
+const editedAfter = Order.isGreaterThan(DateTime.Order);
+
+const newestEditSince = (
+  edits: ReadonlyArray<PrBodyEdit>,
+  baseline: DateTime.Utc,
+  bodyMatches: (body: string) => boolean
+): O.Option<PrBodyEdit> =>
+  pipe(
+    edits,
+    A.filter((edit) => editedAfter(edit.editedAt, baseline) && bodyMatches(edit.body)),
+    A.sort(prBodyEditOrder),
+    A.last
+  );
+
+const newestForeignEditSince = (
+  edits: ReadonlyArray<PrBodyEdit>,
+  baseline: DateTime.Utc,
+  writtenBody: string
+): O.Option<PrBodyEdit> => newestEditSince(edits, baseline, (body) => !Str.Equivalence(body, writtenBody));
+
+const newestEditOfBodySince = (
+  edits: ReadonlyArray<PrBodyEdit>,
+  baseline: DateTime.Utc,
+  writtenBody: string
+): O.Option<PrBodyEdit> => newestEditSince(edits, baseline, (body) => Str.Equivalence(body, writtenBody));
+
+const bodyEditorLabel = (edit: PrBodyEdit): string => O.getOrElse(edit.editor, () => "an unknown editor");
+
+const writePrBody = Effect.fn("ProvenanceFooter.writePrBody")(function* (
+  capture: typeof runRepoCommandCapture,
+  context: RepoRunContext,
+  prNumber: PrNumber,
+  bodyPath: string,
+  body: string
+) {
+  yield* writeTextFile(bodyPath, body);
+  const edited = yield* capture("gh", ["pr", "edit", `${prNumber}`, "--body-file", bodyPath], context.repoRoot);
+  if (edited.exitCode !== 0) {
+    return yield* YeetCommandError.make({ message: edited.output, exitCode: edited.exitCode });
+  }
+});
+
+const repairForeignPrBodyEdit = Effect.fn("ProvenanceFooter.repairForeignEdit")(function* (
+  capture: typeof runRepoCommandCapture,
+  context: RepoRunContext,
+  repository: PrRepository,
+  prNumber: PrNumber,
+  bodyPath: string,
+  rendered: string,
+  foreign: PrBodyEdit
+) {
+  const repairedBody = splicePrProvenanceFooter(foreign.body, rendered);
+  yield* writePrBody(capture, context, prNumber, bodyPath, repairedBody);
+  const warning = `[yeet] provenance footer for PR #${prNumber} preserved a concurrent body edit by ${bodyEditorLabel(foreign)}`;
+  yield* Console.warn(warning);
+  const repairEdits = yield* readPrBodyEdits(capture, context, repository, prNumber);
+  const repairWrite = newestEditOfBodySince(repairEdits, foreign.editedAt, repairedBody);
+  const newerForeign = O.flatMap(repairWrite, (ownEdit) =>
+    newestForeignEditSince(repairEdits, ownEdit.editedAt, repairedBody)
+  );
+  if (O.isSome(newerForeign)) {
+    const raceWarning = `[yeet] provenance footer repair for PR #${prNumber} detected another concurrent body edit by ${bodyEditorLabel(newerForeign.value)}; no third write attempted`;
+    yield* Console.warn(raceWarning);
+    return O.some(raceWarning);
+  }
+  const repairedReadback = yield* readPrBody(capture, context, prNumber);
+  if (!Str.Equivalence(bodyWithoutProvenanceFooter(repairedReadback), bodyWithoutProvenanceFooter(foreign.body))) {
+    const readbackWarning = `[yeet] provenance footer repair for PR #${prNumber} did not preserve the expected concurrent body; no third write attempted`;
+    yield* Console.warn(readbackWarning);
+    return O.some(readbackWarning);
+  }
+  return O.some(warning);
+});
+
+const stampPrBodyWithRaceRepair = Effect.fn("ProvenanceFooter.stampWithRaceRepair")(function* (
+  capture: typeof runRepoCommandCapture,
+  context: RepoRunContext,
+  repository: PrRepository,
+  prNumber: PrNumber,
+  bodyPath: string,
+  rendered: string,
+  freshBody: string,
+  baseline: DateTime.Utc
+) {
+  const next = splicePrProvenanceFooter(freshBody, rendered);
+  yield* writePrBody(capture, context, prNumber, bodyPath, next);
+  const edits = yield* readPrBodyEdits(capture, context, repository, prNumber);
+  const foreign = newestForeignEditSince(edits, baseline, next);
+  if (O.isSome(foreign)) {
+    return yield* repairForeignPrBodyEdit(capture, context, repository, prNumber, bodyPath, rendered, foreign.value);
+  }
+  const writtenBody = yield* readPrBody(capture, context, prNumber);
+  if (!Str.Equivalence(bodyWithoutProvenanceFooter(writtenBody), bodyWithoutProvenanceFooter(freshBody))) {
+    const warning = `[yeet] provenance footer for PR #${prNumber} may have overwritten a concurrent body edit; leaving the latest body unchanged`;
+    yield* Console.warn(warning);
+    return O.some(warning);
+  }
+  return O.none<string>();
+});
 
 const readPrBody = Effect.fn("ProvenanceFooter.readPrBody")(function* (
   capture: typeof runRepoCommandCapture,
@@ -360,21 +587,22 @@ export const ensureProvenanceFooter = Effect.fn("ProvenanceFooter.ensure")(funct
     const rendered = renderPrProvenance(publicValue);
     const body = yield* readPrBody(capture, context, prNumber);
     if (Str.Equivalence(splicePrProvenanceFooter(body, rendered), body)) return O.none<string>();
-    const freshBody = yield* readPrBody(capture, context, prNumber);
+    const fresh = yield* readPrBodySnapshot(capture, context, prNumber);
+    const freshBody = fresh.body ?? "";
     const next = splicePrProvenanceFooter(freshBody, rendered);
     if (Str.Equivalence(next, freshBody)) return O.none<string>();
     const bodyPath = yield* runArtifactPathForContext(context, "pr-provenance-body.md");
-    yield* writeTextFile(bodyPath, next);
-    const edited = yield* capture("gh", ["pr", "edit", `${prNumber}`, "--body-file", bodyPath], context.repoRoot);
-    if (edited.exitCode !== 0)
-      return yield* YeetCommandError.make({ message: edited.output, exitCode: edited.exitCode });
-    const writtenBody = yield* readPrBody(capture, context, prNumber);
-    if (!Str.Equivalence(bodyWithoutProvenanceFooter(writtenBody), bodyWithoutProvenanceFooter(freshBody))) {
-      const warning = `[yeet] provenance footer for PR #${prNumber} may have overwritten a concurrent body edit; leaving the latest body unchanged`;
-      yield* Console.warn(warning);
-      return O.some(warning);
-    }
-    return O.none<string>();
+    const baseline = O.getOrElse(fresh.lastEditedAt, () => fresh.createdAt);
+    return yield* stampPrBodyWithRaceRepair(
+      capture,
+      context,
+      repository,
+      prNumber,
+      bodyPath,
+      rendered,
+      freshBody,
+      baseline
+    );
   }).pipe(
     Effect.catchCause((cause) => {
       const warning = `[yeet] provenance footer stamp skipped: ${Cause.pretty(cause)}`;

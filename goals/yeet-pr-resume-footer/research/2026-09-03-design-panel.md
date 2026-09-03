@@ -2,7 +2,7 @@
 
 ## Ranking
 - security: 8 — Cleanest public surface (PR number, branch, harness, entrypoint, workspace label, optional session label) and the only design that treats the operator's `cd "$BEEP_PROJECTS/<clone>"` as fileable and functionally wrong (Codex worktrees, session-home != clone). Number-only fence, XDG append-only JSONL registry, records appended from monitor/reply/closeout, transcript pr-link scan as a better-than-native fallback. Its critiques hold but are all incremental: branch-in-fence injection, derived-name suffix unexplained, 'session'/'resume' wording, Codex sandbox cannot write XDG, sessionHome source order, fork-aware pr-link scan, stamp must splice not overwrite.
-- architecture: 7 — Best schema -> service -> impl spec (PrSessionLink extends PrProvenance, PrSessionRegistry with tagged error and memory layer, detection/nameSource LiteralKits, index-sessionId-must-match guard, live-session guard, hostHarness, boundary property test as the CSF-007 evidence, Flags precedent, changeset). Loses points on the public surface: it ships the `cd "$BEEP_PROJECTS/beep-effect10" && ...` block (a path template plus resume command, CSF-007's literal wording, and redundant because the resolver already owns cwd), publishes agentLabel by default including Codex names (a verified resume key), renders the branch in a fence at create time, and writes the registry only on `gh pr create` so scenario (g) fails.
+- architecture: 7 — Best schema -> service -> impl spec (PrSessionLink extends PrProvenance, PrSessionRegistry with tagged error and memory layer, detection/nameSource LiteralKits, index-sessionId-must-match guard, live-session guard, hostHarness, boundary property test as the CSF-007 evidence, Flags precedent, changeset). Loses points on the public surface: it ships the `cd "$BEEP_PROJECTS/<clone-a>" && ...` block (a path template plus resume command, CSF-007's literal wording, and redundant because the resolver already owns cwd), publishes agentLabel by default including Codex names (a verified resume key), renders the branch in a fence at create time, and writes the registry only on `gh pr create` so scenario (g) fails.
 - operator: 6.5 — Best answer to 'which agent(s)': an append-only ledger with parentAgent, roles, and the most thoroughly verified failure walk (live desktop sessions, CODEX_COMPANION_* mislabeling Claude publishes as codex on #946, .claude/worktrees transcript dirs, codesmith footer clobbering, exec-originated Codex rollouts). But the design as written has a fresh-PR block with no usable argument (number unknown at create, no post-create edit), treats the PR body as trusted input in the degradation ladder (label -> argv, clone -> cwd, reassert ingests footer rows), publishes free-text session names, uses a GFM table that `|` in a label can spoof, and spawns into live desktop sessions with no guard.
 
 ## Synthesis
@@ -16,7 +16,7 @@ Take the security design's public surface, the architecture design's schema/serv
 
 1. `PrProvenanceService.detect` reads exact identity through `Config`/`ConfigProvider` only. Codex = exact `CODEX_THREAD_ID`; Claude = exact `CLAUDE_CODE_SESSION_ID`. `CODEX_COMPANION_*` is a Claude signal, never a Codex marker (this fixes the live bug that stamped #946 `Harness: codex` from a Claude session: `detectCodexEnvironment` today treats any `CODEX` config node as Codex). Both ids present -> `harness: codex`, `hostHarness: claude-code`.
 2. Session home resolution order, tagged in the record as `sessionHomeSource`: (a) `CODEX_COMPANION_TRANSCRIPT_PATH` if set, else glob `~/.claude/projects/*/<sessionId>.jsonl`, first record's `cwd` (`transcript`); (b) `~/.claude/sessions/<CLAUDE_PID>.json` only when its `sessionId` equals the env id (`index`; also the sole source of `name`, `nameSource`, `entrypoint`); (c) checkout path (`checkout`). Codex: rollout header `cwd` from `~/.codex/sessions/**` and `~/.codex/archived_sessions/**` matched by filename thread id, bounded 2 s, else checkout path; record `originator`. `findRecentClaudeSession` is deleted: with exact ids in the environment the mtime heuristic is only the documented wrong-session hazard, and with no id the honest answer is `unknown`.
-3. Git facts as today plus `rev-parse --short HEAD`; workspace label = `git config beep.workspace.label` else basename of the main clone; agent workspace label = same rule applied to the session home's main clone, published only when it differs (scenario a: session in `beep-effect3`, branch in `beep-effect3-pra`).
+3. Git facts as today plus `rev-parse --short HEAD`; workspace label = `git config beep.workspace.label` else basename of the main clone; agent workspace label = same rule applied to the session home's main clone, published only when it differs (scenario a: session in `<clone-b>`, branch in `<clone-b>-pra`).
 4. The create-time body renders the Provenance section WITHOUT the fence (number unknown). After `gh pr create` returns the URL, in the same process: parse `owner/repo/number`, append a `created` record to the registry, mirror it to `.beep/yeet/runs/<run-id>/provenance.json`, then `ensureProvenanceFooter(n)`. Verified ordering: with `--start-pr-early` this runs right after the early push, before the proof, so the stamp lands in seconds.
 5. `ensureProvenanceFooter`: `gh pr view --json body` -> render from REGISTRY rows only (never ingest footer rows) -> splice strictly within `<!-- yeet-provenance:start -->` / `<!-- yeet-provenance:end -->` (insert before any foreign `<!-- x:footer -->` block when absent, so codesmith's tail survives) -> re-read immediately before `gh pr edit --body-file` -> write only on drift. Non-fatal. Runs after create, on the existing-PR branch of `ensurePullRequest` (which also appends a `pushed` record), at monitor start, after `reply`, in `closeout` and `merge`. Never per poll tick.
 6. Every PR-touching Yeet command appends a record with a `role` (`created|pushed|verified|monitored|replied|closed|merged|linked`); `verify`/`repair` append branch-keyed records so Codex implementation lanes become discoverable; new `yeet link [--pr n]` registers a lane that never publishes. Records carry `childSession` (from `CLAUDE_CODE_CHILD_SESSION`) so a subagent publish still resumes the interactive parent.
@@ -74,12 +74,12 @@ Rejected critique points: exec-vs-print default (kept exec, because the live gua
 <!-- yeet-provenance:start -->
 ## Provenance
 
-- Workspace: <code>beep-effect10</code>
+- Workspace: <code><clone-a></code>
 - Branch: <code>feat/time-to-certainty-p0</code>
 - Agents (newest first):
-  - `claude-code` (desktop) · label <code>SHIP_VELOCITY</code> · pushed
+  - `claude-code` (desktop) · label <code><USER_LABEL></code> · pushed
   - `codex` (exec, via `claude-code`) · linked
-  - `claude-code` (desktop) · workspace <code>beep-effect3</code> · created
+  - `claude-code` (desktop) · workspace <code><clone-b></code> · created
 
 Reopen the publishing agent from any up-to-date beep-effect checkout on the publishing workstation (the local Yeet registry resolves it; nothing in this block is a path or an identifier):
 
@@ -92,17 +92,17 @@ bun run beep yeet resume 950
   "schemaVersion": 2,
   "pr": 950,
   "branch": "feat/time-to-certainty-p0",
-  "workspace": "beep-effect10",
+  "workspace": "<clone-a>",
   "agents": [
-    { "harness": "claude-code", "entrypoint": "claude-desktop", "hostHarness": null, "label": "SHIP_VELOCITY", "workspace": null, "role": "pushed" },
+    { "harness": "claude-code", "entrypoint": "claude-desktop", "hostHarness": null, "label": "<USER_LABEL>", "workspace": null, "role": "pushed" },
     { "harness": "codex", "entrypoint": "codex-exec", "hostHarness": "claude-code", "label": null, "workspace": null, "role": "linked" },
-    { "harness": "claude-code", "entrypoint": "claude-desktop", "hostHarness": null, "label": null, "workspace": "beep-effect3", "role": "created" }
+    { "harness": "claude-code", "entrypoint": "claude-desktop", "hostHarness": null, "label": null, "workspace": "<clone-b>", "role": "created" }
   ]
 }
 -->
 <!-- yeet-provenance:end -->
 
-Notes on the example (not part of the footer): the create-time body carries the same section without the "Reopen..." sentence and fence, with `"pr": null`; the post-create stamp adds both seconds later, and monitor/reply/closeout/merge re-add them if a `gh pr edit` erased the block. `label` appears only for a Claude session the operator named (`claude --name`); derived names and every Codex name stay in the local registry. `workspace` inside an agent row appears only when that session's home differs from the PR workspace (row 3 is scenario a: session started in beep-effect3, branch published from beep-effect3-pra). A single-agent PR renders one bullet. Harness `unknown` renders `unknown` with no entrypoint. Variable strings are `<code>`-wrapped and HTML-escaped; LiteralKit values use backticks.
+Notes on the example (not part of the footer): the create-time body carries the same section without the "Reopen..." sentence and fence, with `"pr": null`; the post-create stamp adds both seconds later, and monitor/reply/closeout/merge re-add them if a `gh pr edit` erased the block. `label` appears only for a Claude session the operator named (`claude --name`); derived names and every Codex name stay in the local registry. `workspace` inside an agent row appears only when that session's home differs from the PR workspace (row 3 is scenario a: session started in <clone-b>, branch published from <clone-b>-pra). A single-agent PR renders one bullet. Harness `unknown` renders `unknown` with no entrypoint. Variable strings are `<code>`-wrapped and HTML-escaped; LiteralKit values use backticks.
 
 ## Rejected ideas
 - `cd "$BEEP_PROJECTS/<clone>"` (or `${BEEP_PROJECTS:?...}`) in the PR body: a path template plus resume command, redundant because the resolver owns cwd, wrong for Codex worktrees and session-home != clone.

@@ -29,9 +29,24 @@ import { makeRecord, PlatformLayer, repository } from "./yeet-pr-fixtures.ts";
 import type { YeetExecutedStep } from "@beep/repo-cli/test/Yeet";
 
 const footer = renderPrProvenance(toPublicPrProvenance([makeRecord()], O.some(42), true));
-const GhBody = S.Struct({ body: S.String });
-const encodeGhBody = (body: string): string =>
-  Result.getOrThrow(S.encodeUnknownResult(S.fromJsonString(GhBody))({ body }));
+const GhBody = S.Struct({ body: S.String, createdAt: S.String, lastEditedAt: S.NullOr(S.String) });
+const GhBodyEdit = S.Struct({ editedAt: S.String, editor: S.NullOr(S.Struct({ login: S.String })), diff: S.String });
+const GhBodyEditsDocument = S.Struct({
+  data: S.Struct({
+    repository: S.Struct({ pullRequest: S.Struct({ userContentEdits: S.Struct({ nodes: S.Array(GhBodyEdit) }) }) }),
+  }),
+});
+type GhBodyEdit = typeof GhBodyEdit.Type;
+const createdAt = "2026-09-03T12:00:00Z";
+const editedAt = "2026-09-03T12:01:00Z";
+const encodeGhBody = (body: string, lastEditedAt: string | null = editedAt): string =>
+  Result.getOrThrow(S.encodeUnknownResult(S.fromJsonString(GhBody))({ body, createdAt, lastEditedAt }));
+const encodeGhBodyEdits = (nodes: ReadonlyArray<GhBodyEdit>): string =>
+  Result.getOrThrow(
+    S.encodeUnknownResult(S.fromJsonString(GhBodyEditsDocument))({
+      data: { repository: { pullRequest: { userContentEdits: { nodes } } } },
+    })
+  );
 const context = (root: string) =>
   RepoRunContext.make({
     base: "origin/main",
@@ -77,11 +92,21 @@ const makeGhRunner = Effect.fn("test.makeGhRunner")(function* (
   fs: FileSystem.FileSystem,
   initialBody: string,
   freshBody: string,
-  afterWrite: (body: string) => string = (body) => body
+  afterWrite: (body: string) => string = (body) => body,
+  editHistory: (writtenBodies: ReadonlyArray<string>, read: number) => ReadonlyArray<GhBodyEdit> = (writtenBodies) => [
+    {
+      diff: O.getOrElse(A.last(writtenBodies), () => ""),
+      editedAt: "2026-09-03T12:03:00Z",
+      editor: { login: "yeet" },
+    },
+  ],
+  freshLastEditedAt: string | null = editedAt
 ) {
   const views = yield* Ref.make(0);
   const writes = yield* Ref.make(0);
   const written = yield* Ref.make("");
+  const writtenBodies = yield* Ref.make<ReadonlyArray<string>>([]);
+  const historyReads = yield* Ref.make(0);
   const capture = Effect.fn("test.fakeGhRunner")(function* (
     _command: string,
     args: ReadonlyArray<string>,
@@ -91,21 +116,32 @@ const makeGhRunner = Effect.fn("test.makeGhRunner")(function* (
     if (args[1] === "view") {
       const view = yield* Ref.getAndUpdate(views, (count) => count + 1);
       const current = view === 0 ? initialBody : view === 1 ? freshBody : afterWrite(yield* Ref.get(written));
-      return { exitCode: 0, output: encodeGhBody(current), truncated: false };
+      return { exitCode: 0, output: encodeGhBody(current, freshLastEditedAt), truncated: false };
+    }
+    if (args[1] === "graphql") {
+      const read = yield* Ref.getAndUpdate(historyReads, (count) => count + 1);
+      return {
+        exitCode: 0,
+        output: encodeGhBodyEdits(editHistory(yield* Ref.get(writtenBodies), read)),
+        truncated: false,
+      };
     }
     const bodyPath = O.getOrElse(A.last(args), () => "");
     const body = yield* fs.readFileString(bodyPath).pipe(Effect.orDie);
     yield* Ref.set(written, body);
+    yield* Ref.update(writtenBodies, A.append(body));
     yield* Ref.update(writes, (count) => count + 1);
     return { exitCode: 0, output: "", truncated: false };
   });
-  return { capture, views, writes, written };
+  return { capture, historyReads, views, writes, written, writtenBodies };
 });
 
 const runStamp = Effect.fn("test.runStamp")(function* (
   initialBody: string,
   freshBody: string,
-  afterWrite?: (body: string) => string
+  afterWrite?: (body: string) => string,
+  editHistory?: (writtenBodies: ReadonlyArray<string>, read: number) => ReadonlyArray<GhBodyEdit>,
+  freshLastEditedAt?: string | null
 ) {
   const fs = yield* FileSystem.FileSystem;
   const root = yield* fs.makeTempDirectory();
@@ -115,12 +151,14 @@ const runStamp = Effect.fn("test.runStamp")(function* (
     Effect.provideService(ConfigProvider.ConfigProvider, provider)
   );
   yield* registry.append(makeRecord());
-  const runner = yield* makeGhRunner(fs, initialBody, freshBody, afterWrite);
+  const runner = yield* makeGhRunner(fs, initialBody, freshBody, afterWrite, editHistory, freshLastEditedAt);
   yield* ensureProvenanceFooter(context(root), repository, 42, runner.capture).pipe(
     Effect.provideService(ConfigProvider.ConfigProvider, provider)
   );
   return {
     body: yield* Ref.get(runner.written),
+    bodies: yield* Ref.get(runner.writtenBodies),
+    historyReads: yield* Ref.get(runner.historyReads),
     views: yield* Ref.get(runner.views),
     writes: yield* Ref.get(runner.writes),
   };
@@ -141,6 +179,19 @@ const makePublishGhRunner = Effect.fn("test.makePublishGhRunner")(function* (fs:
       return { exitCode: 0, output: "https://github.com/beep-effect/beep-effect/pull/42", truncated: false };
     }
     if (args[1] === "view") return { exitCode: 0, output: encodeGhBody(yield* Ref.get(body)), truncated: false };
+    if (args[1] === "graphql") {
+      return {
+        exitCode: 0,
+        output: encodeGhBodyEdits([
+          {
+            diff: yield* Ref.get(body),
+            editedAt: "2026-09-03T12:03:00Z",
+            editor: { login: "yeet" },
+          },
+        ]),
+        truncated: false,
+      };
+    }
     const bodyPath = O.getOrElse(A.last(args), () => "");
     yield* Ref.set(body, yield* fs.readFileString(bodyPath).pipe(Effect.orDie));
     return { exitCode: 0, output: "", truncated: false };
@@ -186,7 +237,7 @@ describe("Yeet provenance footer splice", () => {
     }).pipe(provideScopedLayer(PlatformLayer))
   );
 
-  it.effect("warns once and never rewrites after a post-write mismatch", () =>
+  it.effect("repairs a foreign edit between the fresh read and first write", () =>
     Effect.gen(function* () {
       let warnings = A.empty<unknown>();
       const currentConsole = yield* Console.Console;
@@ -196,13 +247,97 @@ describe("Yeet provenance footer splice", () => {
           warnings = A.appendAll(warnings, args);
         },
       };
-      const result = yield* runStamp("Original body", "Original body", (body) => `${body}\nConcurrent edit`).pipe(
+      const result = yield* runStamp("Original body", "Original body", undefined, (bodies) => [
+        { diff: "Foreign body", editedAt: "2026-09-03T12:02:00Z", editor: { login: "blacksmith-sh" } },
+        {
+          diff: O.getOrElse(A.head(bodies), () => ""),
+          editedAt: "2026-09-03T12:03:00Z",
+          editor: { login: "yeet" },
+        },
+        ...O.match(A.get(bodies, 1), {
+          onNone: A.empty,
+          onSome: (diff) => [{ diff, editedAt: "2026-09-03T12:04:00Z", editor: { login: "yeet" } }],
+        }),
+      ]).pipe(Effect.provideService(Console.Console, warningConsole));
+      expect(result.writes).toBe(2);
+      expect(result.historyReads).toBe(2);
+      expect(result.body).toContain("Foreign body");
+      expect(result.body).toContain("<!-- yeet-provenance:start -->");
+      expect(warnings).toHaveLength(1);
+      expect(A.join(A.map(warnings, globalThis.String), "\n")).toContain("PR #42");
+      expect(A.join(A.map(warnings, globalThis.String), "\n")).toContain("blacksmith-sh");
+      expect(A.join(A.map(warnings, globalThis.String), "\n")).toContain("preserved");
+    }).pipe(provideScopedLayer(PlatformLayer))
+  );
+
+  it.effect("writes once without warning when edit history has no foreign edit", () =>
+    Effect.gen(function* () {
+      let warnings = A.empty<unknown>();
+      const currentConsole = yield* Console.Console;
+      const warningConsole: Console.Console = {
+        ...currentConsole,
+        warn: (...args) => {
+          warnings = A.appendAll(warnings, args);
+        },
+      };
+      const result = yield* runStamp("Original body", "Original body").pipe(
         Effect.provideService(Console.Console, warningConsole)
       );
       expect(result.views).toBe(3);
       expect(result.writes).toBe(1);
-      expect(A.join(A.map(warnings, globalThis.String), "\n")).toContain("PR #42");
-      expect(A.join(A.map(warnings, globalThis.String), "\n")).toContain("concurrent body edit");
+      expect(result.historyReads).toBe(1);
+      expect(warnings).toHaveLength(0);
+    }).pipe(provideScopedLayer(PlatformLayer))
+  );
+
+  it.effect("stops after warning when another foreign edit follows the repair", () =>
+    Effect.gen(function* () {
+      let warnings = A.empty<unknown>();
+      const currentConsole = yield* Console.Console;
+      const warningConsole: Console.Console = {
+        ...currentConsole,
+        warn: (...args) => {
+          warnings = A.appendAll(warnings, args);
+        },
+      };
+      const result = yield* runStamp("Original body", "Original body", undefined, (bodies, read) => {
+        const firstWrite = O.getOrElse(A.head(bodies), () => "");
+        const firstHistory: ReadonlyArray<GhBodyEdit> = [
+          { diff: "First foreign body", editedAt: "2026-09-03T12:02:00Z", editor: { login: "alice" } },
+          { diff: firstWrite, editedAt: "2026-09-03T12:03:00Z", editor: { login: "yeet" } },
+        ];
+        if (read === 0) return firstHistory;
+        const repairWrite = O.getOrElse(A.get(bodies, 1), () => "");
+        return [
+          ...firstHistory,
+          { diff: repairWrite, editedAt: "2026-09-03T12:04:00Z", editor: { login: "yeet" } },
+          { diff: "Second foreign body", editedAt: "2026-09-03T12:05:00Z", editor: { login: "bob" } },
+        ];
+      }).pipe(Effect.provideService(Console.Console, warningConsole));
+      expect(result.writes).toBe(2);
+      expect(result.historyReads).toBe(2);
+      expect(A.join(A.map(warnings, globalThis.String), "\n")).toContain("alice");
+      expect(A.join(A.map(warnings, globalThis.String), "\n")).toContain("bob");
+      expect(A.join(A.map(warnings, globalThis.String), "\n")).toContain("no third write attempted");
+    }).pipe(provideScopedLayer(PlatformLayer))
+  );
+
+  it.effect("uses createdAt as the baseline when lastEditedAt is null", () =>
+    Effect.gen(function* () {
+      let warnings = A.empty<unknown>();
+      const currentConsole = yield* Console.Console;
+      const warningConsole: Console.Console = {
+        ...currentConsole,
+        warn: (...args) => {
+          warnings = A.appendAll(warnings, args);
+        },
+      };
+      const result = yield* runStamp("Original body", "Original body", undefined, undefined, null).pipe(
+        Effect.provideService(Console.Console, warningConsole)
+      );
+      expect(result.writes).toBe(1);
+      expect(result.historyReads).toBe(1);
+      expect(warnings).toHaveLength(0);
     }).pipe(provideScopedLayer(PlatformLayer))
   );
 
