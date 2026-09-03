@@ -139,16 +139,12 @@ const resolveLabFacts = Effect.fn("DeletePackage.resolveLabFacts")(function* (re
         `[delete-package] warning: ${manifestFile} is missing or invalid; continuing without lab manifest facts.`
       ).pipe(Effect.as(O.none<LabTargetFacts>())),
     onSome: (labManifest) =>
-      Effect.succeed(
-        O.some(
-          LabTargetFacts.make({
-            manifestFile: PosixPath.make(manifestFile),
-            postgresSchema: labManifest.postgresSchema,
-            // P2 treats every lab as local-by-default (P2-D2: the manifest
-            // declares no locality field).
-            localOnly: true,
-          })
-        )
+      Effect.succeedSome(
+        LabTargetFacts.make({
+          manifestFile: PosixPath.make(manifestFile),
+          postgresSchema: labManifest.postgresSchema,
+          localOnly: true,
+        })
       ),
   });
 });

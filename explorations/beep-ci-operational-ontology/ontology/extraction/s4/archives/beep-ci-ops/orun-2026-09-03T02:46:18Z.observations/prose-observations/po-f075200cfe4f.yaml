@@ -1,0 +1,10 @@
+id: po:sha256:f075200cfe4f55412deeeaf7fae01297c0807a1b5870fc2b772679fb1961844d
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts
+source_span:
+  start_line: 73
+  end_line: 80
+quote: 'attemptId: UUID,'
+epistemic_status: quoted_prose

@@ -15,6 +15,36 @@ const messageWithCause = (message: string, cause: unknown): string =>
   `${message}: ${Inspectable.toStringUnknown(cause, 0)}`;
 
 /**
+ * Failure raised when Effect import rule options violate a runner invariant.
+ *
+ * **Example** (Read an Effect import rules configuration error)
+ *
+ * ```ts
+ * import { EffectImportRulesConfigurationError } from "@beep/repo-cli/commands/Laws/Laws.errors"
+ *
+ * const error = EffectImportRulesConfigurationError.new("Candidate scans are dry-run only.")
+ * console.log(error.message)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class EffectImportRulesConfigurationError extends S.TaggedError<EffectImportRulesConfigurationError>(
+  $I`EffectImportRulesConfigurationError`
+)(
+  "EffectImportRulesConfigurationError",
+  {
+    message: S.String,
+  },
+  $I.annoteError<EffectImportRulesConfigurationError>("EffectImportRulesConfigurationError", {
+    description: "Effect import rule options violate a runner invariant.",
+  })
+) {
+  static readonly new = (message: string): EffectImportRulesConfigurationError =>
+    EffectImportRulesConfigurationError.make({ message });
+}
+
+/**
  * Failure raised when Effect import rule updates cannot be written.
  *
  * **Example** (Read an effect import rules persistence error entry)

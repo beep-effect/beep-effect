@@ -6,23 +6,6 @@
  */
 
 /**
- * Package version.
- *
- * **Example** (Import and type VERSION)
- *
- * ```ts
- * import { VERSION } from "@beep/md"
- *
- * const version: "0.0.2" = VERSION
- * console.log(version)
- * ```
- *
- * @category configuration
- * @since 0.0.0
- */
-export const VERSION = "0.0.2" as const;
-
-/**
  * Shared list-item run segmentation and compatibility aliases for schema-owned plain-text projections.
  *
  * **Example** (Render plain-text heading)
@@ -149,3 +132,10 @@ export * from "./Md.safe.ts";
  * @since 0.0.0
  */
 export * from "./Md.ts";
+/**
+ * Current `@beep/md` package release version.
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export { VERSION } from "./Version.ts";

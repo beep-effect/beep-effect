@@ -460,15 +460,11 @@ const resolveConfig = Effect.fn("Firecrawl.resolveConfig")(function* (input: Fir
   );
   const apiKey = yield* pipe(
     O.fromUndefinedOr(config.apiKey),
-    O.match({
-      onNone: () =>
-        Effect.fail(
-          FirecrawlError.fromReason("config", {
-            cause: "missing FIRECRAWL_API_KEY",
-          })
-        ),
-      onSome: Effect.succeed,
-    })
+    Effect.fromOption(() =>
+      FirecrawlError.fromReason("config", {
+        cause: "missing FIRECRAWL_API_KEY",
+      })
+    )
   );
 
   return {

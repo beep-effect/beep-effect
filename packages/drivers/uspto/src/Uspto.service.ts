@@ -191,7 +191,7 @@ const documentFromRecord = (
 ): Effect.Effect<O.Option<UsptoDocumentReference>, UsptoError> => {
   const identifier = stringField(record, "documentIdentifier");
   if (O.isNone(identifier)) {
-    return Effect.succeed(O.none());
+    return Effect.succeedNone;
   }
   const downloadOptions = O.fromUndefinedOr(record.downloadOptionBag).pipe(
     O.filter(Array.isArray),
@@ -205,7 +205,7 @@ const documentFromRecord = (
     ...optionalField(record, "officialDate"),
     ...O.getSomesStruct({ downloadUrl: downloadOptions }),
   }).pipe(
-    Effect.map(O.some),
+    Effect.asSome,
     Effect.mapError(() => UsptoError.fromReason("response-decoding"))
   );
 };

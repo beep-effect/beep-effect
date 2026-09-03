@@ -76,10 +76,22 @@ import type { HtmlRootView } from "./internal/conformance/Html.conformance-contr
 
 const $I = $HtmlId.create("Html.conformance");
 
+/**
+ * Conformance contracts re-exported from the internal registry.
+ *
+ * @category validation
+ * @since 0.0.0
+ */
 export {
   HtmlConformanceIssue,
   HtmlConformanceRule,
 } from "./internal/conformance/Html.conformance-contracts.ts";
+/**
+ * Heading-level conformance rules re-exported from the internal registry.
+ *
+ * @category validation
+ * @since 0.0.0
+ */
 export {
   computeHeadingOutline,
   HtmlBestPracticeIssue,
@@ -430,20 +442,30 @@ const exactIntegerIsLessThan = (left: ExactInteger, right: ExactInteger): boolea
 type ElementOccurrence = {
   readonly node: HtmlChildView;
   readonly path: ReadonlyArray<string>;
+  readonly tablePath: O.Option<ReadonlyArray<string>>;
   readonly tag: HtmlTag;
 };
 
-const elementOccurrences = (node: HtmlChildView, path: ReadonlyArray<string>): ReadonlyArray<ElementOccurrence> => {
+const elementOccurrences = (
+  node: HtmlChildView,
+  path: ReadonlyArray<string>,
+  enclosingTable: O.Option<ReadonlyArray<string>> = O.none()
+): ReadonlyArray<ElementOccurrence> => {
+  const tablePath = node._tag === "table" ? O.some(path) : enclosingTable;
   const own = isHtmlTag(node._tag)
     ? [
         {
           node,
           path,
+          tablePath,
           tag: node._tag,
         },
       ]
     : A.emptyReadonly<ElementOccurrence>();
-  return [...own, ...A.flatMap(childrenOf(node), (child, index) => elementOccurrences(child, childPath(path, index)))];
+  return [
+    ...own,
+    ...A.flatMap(childrenOf(node), (child, index) => elementOccurrences(child, childPath(path, index), tablePath)),
+  ];
 };
 
 const forbiddenDescendantConstraints = pipe(
@@ -1442,31 +1464,17 @@ const inspectDuplicateIds = (root: HtmlChildView): ReadonlyArray<HtmlConformance
     )
   );
 
-const pathStartsWith = (path: ReadonlyArray<string>, prefix: ReadonlyArray<string>): boolean =>
-  prefix.length <= path.length && A.every(prefix, (segment, index) => path[index] === segment);
-
-const nearestTablePath = (
-  path: ReadonlyArray<string>,
-  tables: ReadonlyArray<ElementOccurrence>
-): O.Option<ReadonlyArray<string>> =>
-  A.reduce(tables, O.none<ReadonlyArray<string>>(), (nearest, table) =>
-    pathStartsWith(path, table.path) && (O.isNone(nearest) || table.path.length > nearest.value.length)
-      ? O.some(table.path)
-      : nearest
-  );
-
 const samePath = (left: ReadonlyArray<string>, right: ReadonlyArray<string>): boolean =>
   left.length === right.length && A.every(left, (segment, index) => right[index] === segment);
 
 const inspectIdReferences = (root: HtmlChildView): ReadonlyArray<HtmlConformanceIssue> => {
   const ids = idOccurrences(root, []);
   const elements = elementOccurrences(root, []);
-  const tables = A.filter(elements, (occurrence) => occurrence.tag === "table");
   const headingCells = A.flatMap(elements, (occurrence) =>
     occurrence.tag === "th"
       ? pipe(
           stringAttributeValue(occurrence.node.id),
-          O.map((id) => ({ id, table: nearestTablePath(occurrence.path, tables) })),
+          O.map((id) => ({ id, table: occurrence.tablePath })),
           O.toArray
         )
       : A.emptyReadonly()
@@ -1503,7 +1511,7 @@ const inspectIdReferences = (root: HtmlChildView): ReadonlyArray<HtmlConformance
       );
     }
     if (occurrence.tag !== "td" && occurrence.tag !== "th") return A.emptyReadonly();
-    const table = nearestTablePath(occurrence.path, tables);
+    const table = occurrence.tablePath;
     return pipe(
       stringAttributeValue(readProperty(occurrence.node, "headers")),
       O.filter((value) =>

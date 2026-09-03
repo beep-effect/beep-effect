@@ -82,7 +82,7 @@ const journalFields = {
  *   BoxApplyAttemptId,
  *   BoxApplyJournalStarted
  * } from "@beep/box-provisioning/BoxProvisioningReceipt"
- * import { Sha256Hex } from "@beep/schema"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
  * import * as O from "effect/Option"
  *
  * const entry = BoxApplyJournalStarted.make({

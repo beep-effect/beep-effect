@@ -1,0 +1,17 @@
+id: "fa:pb-resolved-cache-posture:001"
+hypothesis_ref: "dh:pb-resolved-cache-posture:001"
+identity_card_ref: "ic:pb-resolved-cache-posture:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+  - label: "Model only per-invocation resolver-result tokens."
+    still_viable: false
+  - label: "Model execution-borne modes without a governed classification vocabulary."
+    still_viable: false
+  - label: "The resolver's tagged return value supplies CachePosture identity."
+    still_viable: false
+strongest_counterexample: "A planned resolver result can differ from effective execution arguments, so classification must use the governed effective-posture meanings rather than identify CachePosture with a return token or invocation mode."
+verdict: analyzed

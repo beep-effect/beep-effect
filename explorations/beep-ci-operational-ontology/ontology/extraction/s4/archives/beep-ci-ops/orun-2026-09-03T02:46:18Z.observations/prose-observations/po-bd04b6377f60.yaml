@@ -1,0 +1,10 @@
+id: po:sha256:bd04b6377f602e0ba9dd134a21d1233fa1a2c10c31ee362a87dd820979cb68af
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts
+source_span:
+  start_line: 168
+  end_line: 168
+quote: '"commitlint",'
+epistemic_status: quoted_prose

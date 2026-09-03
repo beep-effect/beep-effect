@@ -20,7 +20,8 @@
     "lint": "biome check .",
     "lint:fix": "biome check . --write",
     "test": "bunx --bun vitest run",
-    "test:property": "bunx --bun vitest run"
+    "test:property": "bunx --bun vitest run",
+    "package-test-typecheck": "beep-cli quality test-tsgo-package"
   },
   "exports": {
     ".": "./src/index.ts",
@@ -32,6 +33,7 @@
     "./Md.model": "./src/Md.model.ts",
     "./Md.render": "./src/Md.render.ts",
     "./Md.safe": "./src/Md.safe.ts",
+    "./Version": "./src/Version.ts",
     "./internal/*": null,
     "./package.json": "./package.json"
   },
@@ -56,6 +58,7 @@
       "./Md.model": "./dist/Md.model.js",
       "./Md.render": "./dist/Md.render.js",
       "./Md.safe": "./dist/Md.safe.js",
+      "./Version": "./dist/Version.js",
       "./internal/*": null,
       "./package.json": "./package.json"
     }

@@ -10,6 +10,7 @@ type InventoryClientOptions = {
   readonly collaboration?: boolean;
   readonly folderMetadataRead?: () => void;
   readonly metadataFailure?: unknown;
+  readonly signRequestsFailure?: unknown;
   readonly paginateMetadata?: boolean;
   readonly webhookEntries?: ReadonlyArray<unknown>;
 };
@@ -77,7 +78,10 @@ const makeInventoryClient = (options: InventoryClientOptions = {}) => ({
     getRetentionPolicies: (_queryParams: unknown): Promise<unknown> => Promise.resolve({ entries: [] }),
   },
   signRequests: {
-    getSignRequests: (_queryParams: unknown): Promise<unknown> => Promise.resolve({ entries: [] }),
+    getSignRequests: (_queryParams: unknown): Promise<unknown> =>
+      options.signRequestsFailure === undefined
+        ? Promise.resolve({ entries: [] })
+        : Promise.reject(options.signRequestsFailure),
   },
   signTemplates: {
     getSignTemplates: (_queryParams: unknown): Promise<unknown> => Promise.resolve({ entries: [] }),
@@ -190,6 +194,23 @@ describe("@beep/box-provisioning inventory", () => {
       if (observed.metadata._tag === "BlockedByPermission") {
         expect(O.getOrUndefined(observed.metadata.code)).toBe("forbidden");
       }
+    })
+  );
+
+  it.effect(
+    "classifies a Box Sign listing 403 as permission-blocked instead of failing",
+    Effect.fnUntraced(function* () {
+      const observed = yield* observeWithClient(
+        makeInventoryClient({
+          signRequestsFailure: { responseInfo: { code: "forbidden", statusCode: 403 } },
+        })
+      );
+
+      expect(observed.signRequests._tag).toBe("BlockedByPermission");
+      if (observed.signRequests._tag === "BlockedByPermission") {
+        expect(O.getOrUndefined(observed.signRequests.code)).toBe("forbidden");
+      }
+      expect(observed.signTemplates._tag).toBe("Available");
     })
   );
 

@@ -12,30 +12,52 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { decodePackageJsonEffect, findRepoRoot, jsonStringifyPretty, readPackageJsonFile } from "@beep/repo-utils";
+import {
+  decodePackageJsonEffect,
+  findRepoRoot,
+  jsonStringifyPretty,
+  readPackageJsonFile,
+  resolveWorkspacePackages,
+} from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, Str, thunkFalse } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Console, Duration, Effect, FileSystem, HashSet, Match, Order, Path, pipe } from "effect";
+import { Console, Duration, Effect, FileSystem, HashMap, HashSet, Match, Order, Path, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { Argument, Command, Flag } from "effect/unstable/cli";
 import { readTurboCacheEnvironment, turboEnvExtendsAmbient, turboEnvOverrides } from "../../internal/cli/EnvConfig.ts";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
-import { LABS_TURBO_EXCLUDE_FILTER, LABS_TURBO_SELECT_FILTER } from "../../internal/cli/Labs/index.ts";
+import {
+  isLabsWorkspaceDir,
+  LABS_TURBO_EXCLUDE_FILTER,
+  LABS_TURBO_SELECT_FILTER,
+} from "../../internal/cli/Labs/index.ts";
 import { resolveTurboCachePlan, turboCachePlanArgs } from "../../internal/cli/TurboCache.ts";
 import { isDoctestSourcePath } from "../../internal/jsdoc/DoctestSource.ts";
 import { runCaptured, runToExit } from "../../internal/process/StepExec.ts";
-import { QualityTaskStep, runQualityTaskStreamingStepGroup } from "../Quality/Tasks.ts";
-import { CiCommandError } from "./Ci.errors.ts";
+import {
+  QualityTaskStep,
+  runQualityTaskStreamingLaneGroup,
+  runQualityTaskStreamingStepGroup,
+} from "../Quality/Tasks.ts";
+import { CiCommandError, CiLanePartitionError } from "./Ci.errors.ts";
+import {
+  CI_LANE_PARTITION_TABLE_PATH,
+  CI_LANE_PARTITIONS,
+  CiLanePartitionId,
+  PartitionedCiLane as PartitionedCiLaneSchema,
+} from "./CiLanePartitions.ts";
+import type { FsUtils } from "@beep/repo-utils";
 import type { ChildProcessSpawner } from "effect/unstable/process";
-import type { QualityTaskConfigurationError, QualityTaskGroupFailed } from "../Quality/Tasks.ts";
+import type { QualityTaskConfigurationError, QualityTaskGroupFailed, QualityTaskLaneInput } from "../Quality/Tasks.ts";
+import type { CiLanePartition, PartitionedCiLane } from "./CiLanePartitions.ts";
 
 const $I = $RepoCliId.create("commands/Ci/CiLane");
 
-type CiLaneEnvironment = FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner;
+type CiLaneEnvironment = FileSystem.FileSystem | FsUtils | Path.Path | ChildProcessSpawner.ChildProcessSpawner;
 
 const JSDOC_CI_INVENTORY_JSON_PATH = ".beep/ci/jsdoc-documentation.inventory.jsonc";
 const JSDOC_CI_INVENTORY_MARKDOWN_PATH = ".beep/ci/jsdoc-documentation.inventory.md";
@@ -352,7 +374,7 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
     required: true,
     laneClass: "cli-runnable",
     replay: "exact",
-    flags: [...TURBO_SHAPE_FLAGS],
+    flags: [...TURBO_SHAPE_FLAGS, "--partition", "--dry-run", "--force"],
   }),
   CiLaneDescriptor.make({
     id: "lint-policy",
@@ -385,7 +407,7 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
     required: true,
     laneClass: "cli-runnable",
     replay: "exact",
-    flags: [...TURBO_SHAPE_FLAGS],
+    flags: [...TURBO_SHAPE_FLAGS, "--partition", "--dry-run", "--force"],
   }),
   CiLaneDescriptor.make({
     id: "test-integration",
@@ -584,7 +606,9 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
  *   to: "HEAD",
  *   last: false,
  *   changesetStatus: false,
- *   validateEnvelopes: false
+ *   validateEnvelopes: false,
+ *   dryRun: false,
+ *   force: false
  * })
  * console.log(options.base)
  * ```
@@ -607,6 +631,9 @@ export class CiLaneRunOptions extends S.Class<CiLaneRunOptions>($I`CiLaneRunOpti
     runs: S.optionalKey(S.String),
     seed: S.optionalKey(S.String),
     filter: S.optionalKey(S.String),
+    partition: S.optionalKey(CiLanePartitionId),
+    dryRun: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
+    force: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
   },
   $I.annote("CiLaneRunOptions", {
     description: "Shape and optional Turbo scope for running one CI lane body.",
@@ -705,6 +732,365 @@ const directTurboArgs = (tasks: ReadonlyArray<string>, args: ReadonlyArray<strin
   ...turboCachePlanArgs(resolveTurboCachePlan(readTurboCacheEnvironment(Bun.env), { args, ci: Bun.env.CI === "true" })),
   ...args,
 ];
+
+const CI_LANE_PARTITION_REPAIR =
+  "Regenerate the deterministic LPT placement from goals/ci-lane-economics/research/tail-attribution.md and update the partition table.";
+
+const ciLanePartitionError = (
+  reason: CiLanePartitionError["reason"],
+  laneId: string,
+  detail: string,
+  partition?: string,
+  cause?: unknown
+): CiLanePartitionError =>
+  CiLanePartitionError.make({
+    reason,
+    laneId,
+    ...O.getSomesStruct({ cause: O.fromUndefinedOr(cause), partition: O.fromUndefinedOr(partition) }),
+    tablePath: CI_LANE_PARTITION_TABLE_PATH,
+    repair: CI_LANE_PARTITION_REPAIR,
+    message: `${detail} Table: ${CI_LANE_PARTITION_TABLE_PATH}. Repair: ${CI_LANE_PARTITION_REPAIR}`,
+  });
+
+const firstDuplicate = (values: ReadonlyArray<string>): O.Option<string> => {
+  let seen = HashSet.empty<string>();
+  for (const value of values) {
+    if (HashSet.has(seen, value)) {
+      return O.some(value);
+    }
+    seen = HashSet.add(seen, value);
+  }
+  return O.none();
+};
+
+const NonNegativeTaskCount = S.Int.check(S.isGreaterThanOrEqualTo(0));
+
+/**
+ * Proven intersection for one CI lane partition.
+ *
+ * **Example** (Inspect the selected task count)
+ *
+ * ```ts
+ * import { CiLanePartitionProof } from "@beep/repo-cli/commands/Ci"
+ *
+ * const proof = CiLanePartitionProof.make({
+ *   laneId: "lint",
+ *   partition: "lint-a",
+ *   selectedTaskCount: 2,
+ *   partitionTaskCount: 1,
+ *   packages: ["@beep/repo-cli"]
+ * })
+ * console.log(proof.partitionTaskCount)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CiLanePartitionProof extends S.Class<CiLanePartitionProof>($I`CiLanePartitionProof`)(
+  {
+    laneId: PartitionedCiLaneSchema,
+    partition: CiLanePartitionId,
+    selectedTaskCount: NonNegativeTaskCount,
+    partitionTaskCount: NonNegativeTaskCount,
+    packages: S.Array(S.String),
+  },
+  $I.annote("CiLanePartitionProof", {
+    description: "Validated intersection between Turbo's selected task set and one committed partition.",
+  })
+) {}
+
+const proveCiLanePartitionDefinition = Effect.fn("CiLane.proveCiLanePartitionDefinition")(function* (
+  laneId: PartitionedCiLane,
+  partitionId: CiLanePartitionId,
+  lanePartitions: ReadonlyArray<CiLanePartition>,
+  table: ReadonlyArray<CiLanePartition>
+): Effect.fn.Return<CiLanePartition, CiLanePartitionError> {
+  const duplicatePartition = firstDuplicate(A.map(lanePartitions, (candidate) => candidate.id));
+  if (O.isSome(duplicatePartition)) {
+    return yield* ciLanePartitionError(
+      "duplicate-partition",
+      laneId,
+      `Partition id ${duplicatePartition.value} appears more than once in the ${laneId} table.`,
+      partitionId
+    );
+  }
+
+  const definition = yield* O.match(
+    A.findFirst(table, (candidate) => candidate.id === partitionId),
+    {
+      onNone: () =>
+        ciLanePartitionError(
+          "invalid-assignment",
+          laneId,
+          `Partition ${partitionId} is absent from the committed table.`,
+          partitionId
+        ),
+      onSome: Effect.succeed,
+    }
+  );
+
+  if (definition.lane !== laneId) {
+    return yield* ciLanePartitionError(
+      "invalid-assignment",
+      laneId,
+      `Partition ${partitionId} belongs to ${definition.lane}, not ${laneId}.`,
+      partitionId
+    );
+  }
+
+  return definition;
+});
+
+const proveCiLanePartitionCoverage = Effect.fn("CiLane.proveCiLanePartitionCoverage")(function* (
+  laneId: PartitionedCiLane,
+  partitionId: CiLanePartitionId,
+  workspacePackageNames: ReadonlyArray<string>,
+  taskPackageNames: ReadonlyArray<string>,
+  lanePartitions: ReadonlyArray<CiLanePartition>
+): Effect.fn.Return<HashSet.HashSet<string>, CiLanePartitionError> {
+  const assignedPackages = A.flatMap(lanePartitions, (candidate) => candidate.packages);
+  const duplicate = firstDuplicate(assignedPackages);
+  if (O.isSome(duplicate)) {
+    return yield* ciLanePartitionError(
+      "duplicate-package",
+      laneId,
+      `Package ${duplicate.value} appears in more than one ${laneId} partition.`,
+      partitionId
+    );
+  }
+
+  const workspacePackages = HashSet.fromIterable(workspacePackageNames);
+  const taskPackages = HashSet.fromIterable(taskPackageNames);
+  const assignedPackageSet = HashSet.fromIterable(assignedPackages);
+  const staleWorkspacePackage = A.findFirst(assignedPackages, (name) => !HashSet.has(workspacePackages, name));
+  if (O.isSome(staleWorkspacePackage)) {
+    return yield* ciLanePartitionError(
+      "stale-package",
+      laneId,
+      `Package ${staleWorkspacePackage.value} is assigned but absent from the workspace.`,
+      partitionId
+    );
+  }
+
+  const staleTaskPackage = A.findFirst(assignedPackages, (name) => !HashSet.has(taskPackages, name));
+  if (O.isSome(staleTaskPackage)) {
+    return yield* ciLanePartitionError(
+      "stale-package",
+      laneId,
+      `Package ${staleTaskPackage.value} is assigned but has no executable ${laneId} task.`,
+      partitionId
+    );
+  }
+
+  const missingTaskPackage = A.findFirst(taskPackageNames, (name) => !HashSet.has(assignedPackageSet, name));
+  if (O.isSome(missingTaskPackage)) {
+    return yield* ciLanePartitionError(
+      "missing-package",
+      laneId,
+      `Package ${missingTaskPackage.value} has an executable ${laneId} task but no deterministic placement.`,
+      partitionId
+    );
+  }
+
+  return assignedPackageSet;
+});
+
+/**
+ * Prove complete, disjoint partition coverage and select one partition's tasks.
+ *
+ * **Details**
+ *
+ * The proof checks the entire current non-labs workspace task inventory before
+ * considering the requested Turbo shape. It fails closed for duplicate,
+ * missing, stale, or unassigned packages, then intersects the dry-run selected
+ * task set with the requested partition.
+ *
+ * **Example** (Prove a small lint partition)
+ *
+ * ```ts
+ * import { proveCiLanePartition } from "@beep/repo-cli/commands/Ci"
+ *
+ * const proof = proveCiLanePartition(
+ *   "lint",
+ *   "lint-a",
+ *   ["@beep/repo-cli"],
+ *   ["@beep/repo-cli"],
+ *   ["@beep/repo-cli"],
+ *   false
+ * )
+ * console.log(proof)
+ * ```
+ *
+ * @param laneId - Partitioned lane being proved.
+ * @param partitionId - Requested partition for the lane.
+ * @param workspacePackageNames - Every package currently in the workspace.
+ * @param taskPackageNames - Every current non-labs workspace package with the lane task.
+ * @param selectedTaskPackageNames - Executable packages selected by Turbo's shaped dry run.
+ * @param affected - Whether Turbo may select only packages affected relative to the base.
+ * @param table - Schema-backed table to validate; injectable for focused failure tests.
+ * @returns A typed effect containing the requested partition intersection.
+ * @category validation
+ * @since 0.0.0
+ */
+export const proveCiLanePartition = Effect.fn("CiLane.proveCiLanePartition")(function* (
+  laneId: PartitionedCiLane,
+  partitionId: CiLanePartitionId,
+  workspacePackageNames: ReadonlyArray<string>,
+  taskPackageNames: ReadonlyArray<string>,
+  selectedTaskPackageNames: ReadonlyArray<string>,
+  affected: boolean,
+  table: ReadonlyArray<CiLanePartition> = CI_LANE_PARTITIONS
+): Effect.fn.Return<CiLanePartitionProof, CiLanePartitionError> {
+  const lanePartitions = A.filter(table, (candidate) => candidate.lane === laneId);
+  const definition = yield* proveCiLanePartitionDefinition(laneId, partitionId, lanePartitions, table);
+  const assignedPackageSet = yield* proveCiLanePartitionCoverage(
+    laneId,
+    partitionId,
+    workspacePackageNames,
+    taskPackageNames,
+    lanePartitions
+  );
+
+  const selectedPackages = HashSet.fromIterable(selectedTaskPackageNames);
+  const unknownSelectedPackage = A.findFirst(
+    selectedTaskPackageNames,
+    (name) => !HashSet.has(assignedPackageSet, name)
+  );
+  if (O.isSome(unknownSelectedPackage)) {
+    return yield* ciLanePartitionError(
+      "unknown-selected-task",
+      laneId,
+      `Turbo selected ${unknownSelectedPackage.value}, which has no deterministic ${laneId} placement.`,
+      partitionId
+    );
+  }
+
+  const missingSelectedPackages = affected
+    ? A.empty<string>()
+    : A.filter(taskPackageNames, (name) => !HashSet.has(selectedPackages, name));
+  if (A.isReadonlyArrayNonEmpty(missingSelectedPackages)) {
+    return yield* ciLanePartitionError(
+      "incomplete-selection",
+      laneId,
+      `Turbo's unscoped ${laneId} dry run omitted executable packages: ${A.join(missingSelectedPackages, ", ")}.`,
+      partitionId
+    );
+  }
+
+  const packages = A.filter(definition.packages, (name) => HashSet.has(selectedPackages, name));
+  return CiLanePartitionProof.make({
+    laneId,
+    partition: partitionId,
+    selectedTaskCount: A.length(selectedTaskPackageNames),
+    partitionTaskCount: A.length(packages),
+    packages,
+  });
+});
+
+const partitionedLaneTask = (laneId: PartitionedCiLane): string =>
+  PartitionedCiLaneSchema.$match(laneId, { lint: () => "lint", "test-unit": () => "test" });
+
+const partitionDryRunArgs = (laneId: PartitionedCiLane, options: CiLaneRunOptions): ReadonlyArray<string> =>
+  directTurboArgs(
+    [partitionedLaneTask(laneId)],
+    [...(options.affected ? ["--affected"] : A.empty<string>()), LABS_TURBO_EXCLUDE_FILTER, "--only", "--dry-run=json"]
+  );
+
+const partitionExecutionArgs = (
+  laneId: PartitionedCiLane,
+  packages: ReadonlyArray<string>,
+  options: CiLaneRunOptions
+): ReadonlyArray<string> =>
+  directTurboArgs(
+    A.map(packages, (name) => `${name}#${partitionedLaneTask(laneId)}`),
+    [
+      "--only",
+      HOSTED_16GB_TURBO_CONCURRENCY_ARG,
+      LABS_TURBO_EXCLUDE_FILTER,
+      ...A.map(packages, (name) => `--filter=${name}`),
+      ...(options.force ? ["--force"] : A.empty<string>()),
+      ...(options.summarize ? ["--summarize"] : A.empty<string>()),
+    ]
+  );
+
+/**
+ * Selection and execution argv used by a partitioned CI lane.
+ *
+ * **Example** (Inspect execution argv)
+ *
+ * ```ts
+ * import { CiLanePartitionArgs } from "@beep/repo-cli/commands/Ci"
+ *
+ * const args = CiLanePartitionArgs.make({ selection: ["turbo"], execution: ["turbo"] })
+ * console.log(args.execution)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CiLanePartitionArgs extends S.Class<CiLanePartitionArgs>($I`CiLanePartitionArgs`)(
+  { selection: S.Array(S.String), execution: S.Array(S.String) },
+  $I.annote("CiLanePartitionArgs", {
+    description: "Exact Turbo argv for partition selection and execution.",
+  })
+) {}
+
+/**
+ * Build the selection and execution argv used by a partitioned CI lane.
+ *
+ * **Example** (Inspect partition argv)
+ *
+ * ```ts
+ * import { CiLaneRunOptions, ciLanePartitionArgsForTesting } from "@beep/repo-cli/commands/Ci"
+ *
+ * const options = CiLaneRunOptions.make({
+ *   affected: false, base: "origin/main", head: "HEAD", summarize: false,
+ *   mode: "auto", to: "HEAD", last: false, changesetStatus: false,
+ *   validateEnvelopes: false
+ * })
+ * console.log(ciLanePartitionArgsForTesting("lint", ["@beep/repo-cli"], options))
+ * ```
+ *
+ * @param laneId - Partitioned lane being planned.
+ * @param packages - Proved package intersection for the execution command.
+ * @param options - Requested lane shape and proof flags.
+ * @returns Exact Turbo argv for the dry-run selection and package execution.
+ * @category testing
+ * @since 0.0.0
+ */
+export const ciLanePartitionArgsForTesting: {
+  (laneId: PartitionedCiLane, packages: ReadonlyArray<string>, options: CiLaneRunOptions): CiLanePartitionArgs;
+  (packages: ReadonlyArray<string>, options: CiLaneRunOptions): (laneId: PartitionedCiLane) => CiLanePartitionArgs;
+} = dual(
+  3,
+  (laneId: PartitionedCiLane, packages: ReadonlyArray<string>, options: CiLaneRunOptions): CiLanePartitionArgs =>
+    CiLanePartitionArgs.make({
+      selection: partitionDryRunArgs(laneId, options),
+      execution: partitionExecutionArgs(laneId, packages, options),
+    })
+);
+
+class TurboPartitionDryRunTask extends S.Class<TurboPartitionDryRunTask>($I`TurboPartitionDryRunTask`)(
+  {
+    command: S.String,
+    package: S.String,
+    task: S.String,
+    taskId: S.String,
+  },
+  $I.annote("TurboPartitionDryRunTask", {
+    description: "Task entry read from Turbo's JSON dry-run plan for a partitioned CI lane.",
+  })
+) {}
+
+class TurboPartitionDryRun extends S.Class<TurboPartitionDryRun>($I`TurboPartitionDryRun`)(
+  { tasks: S.Array(TurboPartitionDryRunTask) },
+  $I.annote("TurboPartitionDryRun", {
+    description: "Turbo JSON dry-run document used to prove a partitioned CI lane's selected tasks.",
+  })
+) {}
+
+const decodeTurboPartitionDryRun = S.decodeUnknownEffect(S.fromJsonString(TurboPartitionDryRun));
+const TURBO_NONEXISTENT_TASK_COMMAND = "<NONEXISTENT>";
 
 const turboRootLaneStep = (
   repoRoot: string,
@@ -1476,9 +1862,9 @@ const runCiDoctestLane = Effect.fn("CiLane.runCiDoctestLane")(function* (
   options: CiLaneRunOptions
 ): Effect.fn.Return<void, CiCommandError | QualityTaskConfigurationError | QualityTaskGroupFailed, CiLaneEnvironment> {
   const files = yield* DocgenLaneMode.$match(options.mode, {
-    auto: () => Effect.map(resolveAffectedDoctestFiles(repoRoot, options.base, options.head), O.some),
+    auto: () => Effect.asSome(resolveAffectedDoctestFiles(repoRoot, options.base, options.head)),
     none: () => Effect.succeed(O.none<ReadonlyArray<string>>()),
-    affected: () => Effect.map(resolveAffectedDoctestFiles(repoRoot, options.base, options.head), O.some),
+    affected: () => Effect.asSome(resolveAffectedDoctestFiles(repoRoot, options.base, options.head)),
     full: () => Effect.succeed(O.none<ReadonlyArray<string>>()),
   });
   const steps =
@@ -1490,6 +1876,202 @@ const runCiDoctestLane = Effect.fn("CiLane.runCiDoctestLane")(function* (
   yield* runQualityTaskStreamingStepGroup("ci:doctest", steps);
 });
 
+type PartitionedLaneRequest = {
+  readonly laneId: PartitionedCiLane;
+  readonly partition: CiLanePartitionId;
+};
+
+const isPartitionedCiLane = S.is(PartitionedCiLaneSchema);
+
+const proofOnlyPartitionFlags = (options: CiLaneRunOptions): ReadonlyArray<string> => [
+  ...(options.dryRun ? ["--dry-run"] : A.empty<string>()),
+  ...(options.force ? ["--force"] : A.empty<string>()),
+];
+
+const validatePartitionedLaneRequest = Effect.fn("CiLane.validatePartitionedLaneRequest")(function* (
+  laneId: CiLaneId,
+  partition: CiLanePartitionId,
+  options: CiLaneRunOptions
+): Effect.fn.Return<PartitionedLaneRequest, CiLanePartitionError> {
+  if (!isPartitionedCiLane(laneId)) {
+    return yield* ciLanePartitionError(
+      "invalid-options",
+      laneId,
+      `Lane ${laneId} does not support --partition.`,
+      partition
+    );
+  }
+
+  if (options.filter !== undefined) {
+    return yield* ciLanePartitionError(
+      "invalid-options",
+      laneId,
+      "--filter cannot be combined with --partition because Turbo unions filters instead of intersecting them.",
+      partition
+    );
+  }
+
+  const definition = A.findFirst(CI_LANE_PARTITIONS, (candidate) => candidate.id === partition);
+  if (O.isNone(definition) || definition.value.lane !== laneId) {
+    return yield* ciLanePartitionError(
+      "invalid-assignment",
+      laneId,
+      `Partition ${partition} does not belong to lane ${laneId}.`,
+      partition
+    );
+  }
+
+  return { laneId, partition };
+});
+
+const resolvePartitionedLaneRequest = Effect.fn("CiLane.resolvePartitionedLaneRequest")(function* (
+  laneId: CiLaneId,
+  options: CiLaneRunOptions
+): Effect.fn.Return<O.Option<PartitionedLaneRequest>, CiLanePartitionError> {
+  if (options.partition !== undefined) {
+    return O.some(yield* validatePartitionedLaneRequest(laneId, options.partition, options));
+  }
+
+  const proofOnlyFlags = proofOnlyPartitionFlags(options);
+  if (A.isReadonlyArrayNonEmpty(proofOnlyFlags)) {
+    return yield* ciLanePartitionError(
+      "invalid-options",
+      laneId,
+      `${A.headNonEmpty(proofOnlyFlags)} requires --partition.`
+    );
+  }
+
+  return O.none();
+});
+
+const runCiPartitionedLane = Effect.fn("CiLane.runCiPartitionedLane")(function* (
+  repoRoot: string,
+  request: PartitionedLaneRequest,
+  options: CiLaneRunOptions
+): Effect.fn.Return<
+  void,
+  CiLanePartitionError | QualityTaskConfigurationError | QualityTaskGroupFailed,
+  CiLaneEnvironment
+> {
+  const { laneId, partition } = request;
+  const task = partitionedLaneTask(laneId);
+  const selectionArgs = partitionDryRunArgs(laneId, options);
+  yield* Console.log(`[ci] ci:${laneId}:${partition}: bunx ${A.join(selectionArgs, " ")}`);
+
+  const envOverrides = yield* turboEnvOverrides("bunx", selectionArgs, Bun.env);
+  const selectedResult = yield* runCaptured({
+    command: "bunx",
+    args: selectionArgs,
+    cwd: repoRoot,
+    env: { ...envOverrides, ...(options.affected ? { TURBO_SCM_BASE: options.base } : {}) },
+    extendEnv: turboEnvExtendsAmbient("bunx", selectionArgs),
+    source: "stdout",
+    trim: true,
+  }).pipe(
+    Effect.mapError((cause) =>
+      ciLanePartitionError(
+        "turbo-dry-run",
+        laneId,
+        `Failed to spawn Turbo's ${laneId} selection dry run.`,
+        partition,
+        cause
+      )
+    )
+  );
+  if (selectedResult.exitCode !== 0) {
+    return yield* ciLanePartitionError(
+      "turbo-dry-run",
+      laneId,
+      `Turbo's ${laneId} selection dry run exited with code ${selectedResult.exitCode}.`,
+      partition
+    );
+  }
+  if (selectedResult.truncated) {
+    return yield* ciLanePartitionError(
+      "turbo-dry-run",
+      laneId,
+      `Turbo's ${laneId} selection dry run exceeded the capture bound.`,
+      partition
+    );
+  }
+
+  const dryRun = yield* decodeTurboPartitionDryRun(selectedResult.output).pipe(
+    Effect.mapError((cause) =>
+      ciLanePartitionError(
+        "turbo-dry-run",
+        laneId,
+        `Turbo emitted invalid JSON for the ${laneId} selection dry run.`,
+        partition,
+        cause
+      )
+    )
+  );
+  const selectedTaskPackages = pipe(
+    dryRun.tasks,
+    A.filter((entry) => entry.task === task && entry.command !== TURBO_NONEXISTENT_TASK_COMMAND),
+    A.map((entry) => entry.package),
+    A.dedupe,
+    A.sort(Order.String)
+  );
+
+  const workspaces = yield* resolveWorkspacePackages(repoRoot).pipe(
+    Effect.mapError((cause) =>
+      ciLanePartitionError(
+        "workspace-read",
+        laneId,
+        `Failed to resolve the current workspace package inventory for ${laneId}.`,
+        partition,
+        cause
+      )
+    )
+  );
+  const path = yield* Path.Path;
+  const workspaceEntries = A.fromIterable(HashMap.entries(workspaces));
+  const workspacePackageNames = pipe(
+    workspaceEntries,
+    A.map(([name]) => name),
+    A.sort(Order.String)
+  );
+  const taskPackageNames = pipe(
+    workspaceEntries,
+    A.filter(([, workspace]) => {
+      const relativeDir = normalizeSlashes(path.relative(repoRoot, workspace.dir));
+      return !isLabsWorkspaceDir(relativeDir) && R.has(workspace.scripts, task);
+    }),
+    A.map(([name]) => name),
+    A.sort(Order.String)
+  );
+
+  const proof = yield* proveCiLanePartition(
+    laneId,
+    partition,
+    workspacePackageNames,
+    taskPackageNames,
+    selectedTaskPackages,
+    options.affected
+  );
+  yield* Console.log(
+    `[ci] ${laneId} partition union proved: ${taskPackageNames.length} executable tasks, ${proof.selectedTaskCount} selected, ${proof.partitionTaskCount} in ${partition}.`
+  );
+
+  if (options.dryRun) {
+    yield* Console.log(`[ci] ${laneId} ${partition}: dry-run proof complete; no tasks executed.`);
+    return;
+  }
+  if (A.isReadonlyArrayEmpty(proof.packages)) {
+    yield* Console.log(`[ci] ${laneId} ${partition}: partition has no selected tasks (skipped).`);
+    return;
+  }
+
+  const step = QualityTaskStep.make({
+    label: `ci:${laneId}:${partition}`,
+    command: "bunx",
+    args: partitionExecutionArgs(laneId, proof.packages, options),
+    cwd: repoRoot,
+  });
+  yield* runQualityTaskStreamingStepGroup(`ci:${laneId}:${partition}`, [step]);
+});
+
 /**
  * Run a CI lane body exactly as hosted CI would.
  *
@@ -1497,7 +2079,7 @@ const runCiDoctestLane = Effect.fn("CiLane.runCiDoctestLane")(function* (
  *
  * ```ts
  * import { CiLaneRunOptions, runCiLane } from "@beep/repo-cli/commands/Ci"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const program = runCiLane("knip", CiLaneRunOptions.make({
  *   affected: false,
@@ -1522,14 +2104,26 @@ const runCiDoctestLane = Effect.fn("CiLane.runCiDoctestLane")(function* (
 export const runCiLane = Effect.fn("CiLane.runCiLane")(function* (
   laneId: CiLaneId,
   options: CiLaneRunOptions
-): Effect.fn.Return<void, CiCommandError | QualityTaskConfigurationError | QualityTaskGroupFailed, CiLaneEnvironment> {
+): Effect.fn.Return<
+  void,
+  CiCommandError | CiLanePartitionError | QualityTaskConfigurationError | QualityTaskGroupFailed,
+  CiLaneEnvironment
+> {
+  const partitionedRequest = yield* resolvePartitionedLaneRequest(laneId, options);
   const repoRoot = yield* findRepoRoot().pipe(CiCommandError.mapError("Failed to locate repository root."));
 
   yield* pipe(
-    Match.value(laneId),
-    Match.when("doctest", () => runCiDoctestLane(repoRoot, options)),
-    Match.when("fallow", () => runCiFallowLane(repoRoot, options)),
-    Match.orElse((stepLaneId) => runCiStepLane(repoRoot, stepLaneId, options))
+    partitionedRequest,
+    O.match({
+      onNone: () =>
+        pipe(
+          Match.value(laneId),
+          Match.when("doctest", () => runCiDoctestLane(repoRoot, options)),
+          Match.when("fallow", () => runCiFallowLane(repoRoot, options)),
+          Match.orElse((stepLaneId) => runCiStepLane(repoRoot, stepLaneId, options))
+        ),
+      onSome: (request) => runCiPartitionedLane(repoRoot, request, options),
+    })
   );
 });
 
@@ -1550,7 +2144,12 @@ const docgenModeFlagChoices: ReadonlyArray<readonly [DocgenLaneMode, DocgenLaneM
   (mode) => [mode, mode] as const
 );
 
-const reportCiCommandError = (error: CiCommandError) =>
+const partitionFlagChoices: ReadonlyArray<readonly [CiLanePartitionId, CiLanePartitionId]> = A.map(
+  CiLanePartitionId.Options,
+  (partition) => [partition, partition] as const
+);
+
+const reportCiCommandError = (error: { readonly message: string }) =>
   Console.error(`[ci] ${error.message}`).pipe(Effect.andThen(failWithReportedExit(`[ci] ${error.message}`)));
 
 /**
@@ -1561,7 +2160,7 @@ const reportCiCommandError = (error: CiCommandError) =>
  * ```ts
  * import { ciLaneCommand } from "@beep/repo-cli/commands/Ci"
  * import { Command } from "effect/unstable/cli"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const run = Command.run(ciLaneCommand, { version: "0.0.0" })
  * console.log(Effect.isEffect(run)) // true
@@ -1616,6 +2215,18 @@ export const ciLaneCommand = Command.make(
       Flag.withDescription("Pass one package filter to the Turbo invocation inside the selected lane"),
       Flag.optional
     ),
+    partition: Flag.choiceWithValue("partition", partitionFlagChoices).pipe(
+      Flag.withDescription("Run one deterministic Lint or Test Unit package partition"),
+      Flag.optional
+    ),
+    dryRun: Flag.boolean("dry-run").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Prove a partition's full union and selected intersection without executing tasks")
+    ),
+    force: Flag.boolean("force").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Proof-only partition replay: pass --force to Turbo task execution")
+    ),
     list: Flag.boolean("list").pipe(
       Flag.withDefault(false),
       Flag.withDescription("Print the machine-readable lane inventory and exit")
@@ -1629,13 +2240,16 @@ export const ciLaneCommand = Command.make(
     affected,
     base,
     changesetStatus,
+    dryRun,
     filter,
+    force,
     from,
     head,
     lane,
     last,
     list,
     mode,
+    partition,
     runs,
     seed,
     summarize,
@@ -1648,13 +2262,15 @@ export const ciLaneCommand = Command.make(
       head,
       summarize,
       mode,
-      ...O.getSomesStruct({ filter, from }),
+      ...O.getSomesStruct({ filter, from, partition }),
       to,
       last,
       changesetStatus,
       validateEnvelopes,
       runs,
       seed,
+      dryRun,
+      force,
     });
 
     if (list) {
@@ -1666,7 +2282,13 @@ export const ciLaneCommand = Command.make(
         reportCiCommandError(
           CiCommandError.make({ message: "Specify a lane id or pass --list. See beep ci lane --list." })
         ),
-      onSome: (laneId) => runCiLane(laneId, options).pipe(Effect.catchTag("CiCommandError", reportCiCommandError)),
+      onSome: (laneId) =>
+        runCiLane(laneId, options).pipe(
+          Effect.catchTags({
+            CiCommandError: reportCiCommandError,
+            CiLanePartitionError: reportCiCommandError,
+          })
+        ),
     });
   }
 ).pipe(Command.withDescription("Run one check.yml CI lane body exactly as hosted CI does"));
@@ -1886,13 +2508,47 @@ export const ciLocalStepsForTesting: {
 );
 
 /**
+ * Pair selected local-CI lane ids with their executable steps and known input digests.
+ *
+ * **Details**
+ *
+ * Local CI currently has no executor-issued Turbo task hash at planning time,
+ * so each lane records an explicitly absent digest rather than substituting a
+ * proof-tree hash.
+ *
+ * **Example** (Pair a local CI lane with its step)
+ *
+ * ```ts
+ * import { CiLocalStepPlan, ciLocalLaneInputsForTesting, ciLocalStepsForTesting } from "@beep/repo-cli/commands/Ci"
+ * import type { CiLaneId } from "@beep/repo-cli/commands/Ci"
+ *
+ * const selection: ReadonlyArray<CiLaneId> = ["check"]
+ * const plan = CiLocalStepPlan.make({ affected: false, base: "origin/main", onMainBranch: false })
+ * const inputs = ciLocalLaneInputsForTesting(selection, ciLocalStepsForTesting("/repo", selection, plan))
+ * console.log(inputs[0]?.[0]) // "check"
+ * ```
+ *
+ * @param selection - Stable selected local-CI lane ids.
+ * @param steps - Executable steps created for the same ordered selection.
+ * @returns Ordered lane inputs with absent executor digests.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const ciLocalLaneInputsForTesting: {
+  (selection: ReadonlyArray<CiLaneId>, steps: ReadonlyArray<QualityTaskStep>): ReadonlyArray<QualityTaskLaneInput>;
+  (steps: ReadonlyArray<QualityTaskStep>): (selection: ReadonlyArray<CiLaneId>) => ReadonlyArray<QualityTaskLaneInput>;
+} = dual(2, (selection: ReadonlyArray<CiLaneId>, steps: ReadonlyArray<QualityTaskStep>) =>
+  A.map(A.zip(selection, steps), ([laneId, step]) => [laneId, step, O.none()])
+);
+
+/**
  * Run the faithful local CI battery: every locally-runnable check.yml lane.
  *
  * **Example** (Configure a CI lane)
  *
  * ```ts
  * import { runCiLocal } from "@beep/repo-cli/commands/Ci"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * import * as O from "effect/Option"
  *
  * const program = runCiLocal({
@@ -1925,7 +2581,7 @@ export const runCiLocal = Effect.fn("CiLane.runCiLocal")(function* (
   yield* Console.log("[ci] CI-only (not replayed): pr-size, dependency-review — see beep ci lane --list");
   yield* Console.log("[ci] approximate replays: secrets, security (hosted CI runs pinned images/actions)");
 
-  yield* runQualityTaskStreamingStepGroup("ci:local", steps);
+  yield* runQualityTaskStreamingLaneGroup("ci:local", ciLocalLaneInputsForTesting(selection, steps));
 });
 
 /**
@@ -1936,7 +2592,7 @@ export const runCiLocal = Effect.fn("CiLane.runCiLocal")(function* (
  * ```ts
  * import { ciLocalCommand } from "@beep/repo-cli/commands/Ci"
  * import { Command } from "effect/unstable/cli"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const run = Command.run(ciLocalCommand, { version: "0.0.0" })
  * console.log(Effect.isEffect(run)) // true

@@ -3,13 +3,14 @@
   "initiative": {
     "id": "per-module-imports",
     "title": "Per-Module Imports",
-    "status": "active",
+    "status": "paused",
     "created": "2026-08-23",
-    "updated": "2026-08-23",
+    "updated": "2026-09-03",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/per-module-imports",
-  "lifecycle": "active",
+  "lifecycle": "paused",
+  "statusNote": "P2 completed 2026-09-03 with an inconclusive stop after the one permitted symmetric extension: all correctness gates passed, but no stable qualifying performance win authorized P3. The bounded pilot and evidence proceed through Yeet start-pr-early; merging remains unauthorized.",
   "mission": "Migrate effect + @beep foundation barrel imports to per-module form, enforced by a Biome warn-to-error ratchet and an inverted effect-imports law, gated on a measured pilot.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -60,12 +61,12 @@
     {
       "id": "P1",
       "name": "Vehicle & unblocks",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Pilot gate",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P3",

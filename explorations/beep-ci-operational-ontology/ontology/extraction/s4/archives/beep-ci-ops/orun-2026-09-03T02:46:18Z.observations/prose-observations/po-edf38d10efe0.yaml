@@ -1,0 +1,10 @@
+id: po:sha256:edf38d10efe0552b7de770a0cc24a9596cc4b5141b693889e987465f4174b4bb
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts
+source_span:
+  start_line: 277
+  end_line: 277
+quote: 'blockedOnOriginAtMillis: S.Finite'
+epistemic_status: quoted_prose

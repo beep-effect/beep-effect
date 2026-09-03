@@ -1,0 +1,10 @@
+id: po:sha256:f8ed741ad70c5bb5a2e89afd526ded84f977270652d48985e8c5d0a33458344a
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: turbo.json
+source_span:
+  start_line: 100
+  end_line: 101
+quote: "},\n    \"lint:fix\": {"
+epistemic_status: quoted_prose

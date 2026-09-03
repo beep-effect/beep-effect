@@ -45,12 +45,27 @@ machine-visible run-2 input), the provisional 138-package census graph, the pinn
 golden snapshot (79 redacted admission-journal events), SHACL closure+typing shapes,
 and the `--s6` gate at 0 blockers / 0 warns. The deferral is discharged
 (`apply_s6_dispositions.py`): historical rulings intact, S4 statuses accepted.
-**NEXT: auditor run 2** (`first_run: false`, prior index
-`orun-2026-08-29T08:20:55Z.index.yaml`) with the journal/verdict corpus extension and
-adapter v1.1.0 — its queue: 163 parked candidates, 76 parked ledger obligations,
-4 waived constraints, the VerificationLane placement obligation, and the six
-S6-surfaced vocabulary/telemetry gaps (DECISIONS.md, S6 sitting 2). Then S7
-projection function. Do NOT rerun §4b.
+**AUDITOR RUN 2 IS COMPLETE AND RATIFIED** (2026-09-03, `orun-2026-09-03T02:46:18Z`,
+gate `ARTIFACTS VALID — GATE PASSED`): 21 ratifications (`rat-032..rat-052` — 15
+clean accepts + 6 flagged reuse mappings), all 149 carried run-1 rows adjudicated
+(146 retired, 3 kept with named corpus requirements), 24 proposals withdrawn or
+deferred with named run-3 evidence, unresolved-fraction waiver (56%) steward-ratified.
+The run report is
+[`work-run2/impl-report.md`](./ontology/extraction/s4/beep-ci-ops/work-run2/impl-report.md);
+sittings 1–3 are scribed in DECISIONS.md.
+**THE CQ-020 AMENDMENT IS APPLIED** (2026-09-03, post-merge as sanctioned): the ordering
+question now asks for the SeatRequest sequence under its governing
+`AdmissionProjectionSpecification`, with the step's literal `hasScopeTag` (a distinct
+data property — the no-punning ruling keeps `hasScope` an object property), and the S6
+predicate registry regenerated to track it.
+**NEXT: auditor run 3 prerequisites, then S8 IRI scheme.** Run 3's queue: the full
+ordering cluster (`ScheduleStep` + its four
+relations ratify together), the deferred identity-provenance corpora (evidence/result
+issuance-custody lineage, plan-identity contract, priority-class registry lineage),
+and the grant-contention + checkout-identity captures (sitting 2). Prior chain:
+`runs/orun-2026-09-03T02:46:18Z.index.yaml`, sha12 `a207a106de68`. Upstream skill
+follow-ups queued in the run report (scanner archive shelter; the sandbox rlimits fix
+is already vendored in this repo). Do NOT rerun §4b or run 2.
 
 **The 3-round pre-S4 review loop is COMPLETE** (2026-08-27). Round 3 (seat H codex
 ultra delta-attack, seat I codex max disposition audit, seat J grok xhigh carrier
@@ -117,6 +132,76 @@ graduation. Full plan with locked decisions: [`DECISIONS.md`](./DECISIONS.md).
 
 ## Trail
 
+- 2026-09-03 (twenty-first stint): RUN-3 CORPORA DESIGN SETTLED — sixteen rulings
+  locked at a three-round grill (all on recommended arms; DECISIONS.md "run-3
+  corpora design grill"), fed by a four-lane evidence sweep synthesized into
+  `research/run3-corpora-design-brief.md`. Shape: staged capture (Stage A gateless:
+  checkout-identity + existing-journal provenance + granted-work contention; Stage B
+  behind the additive v3 journal PR, organic traffic, and proof-ledger
+  materialization — the bundled S7 emission-v2 PR runs in parallel, gating the
+  ordering-cluster evidence at the run itself, not the capture); fleet-wide scope;
+  new sibling generators (run-2
+  ETL immutable); VerificationEpisode grounded via emission; timestamped-binding
+  checkout identity; ownerRef custody surrogate; turbo-topology cache mounts;
+  fixture-induced evictions labeled synthetic; 13 scope-surprise families re-park
+  with two verdict-corpus riders promoted; TS adapter non-trigger recorded; 0-based
+  stepIndex; S8 stays out with nonce evidence carried. Key sweep findings: the
+  contention loss population is traceless (no enqueue event; silent ticket
+  deletion), the canonical runtime admission root is invisible to the run-2 ETL,
+  originKey is repo-grain, and two S7-era blockers (unjournaled lease death;
+  self-erasing grant handoff) are already fixed on main. Stopped at: design PR
+  publish; next = Stage A generators + the two instrumentation PRs.
+- 2026-09-03 (twentieth stint): UPSTREAM SKILL FOLLOW-UPS APPLIED — validator
+  v14. Both engine defects run 2 queued in `work-run2/impl-report.md` are
+  discharged in the vendored skill: the scanner now treats `runs/` as a
+  rotation ledger (record-prefixed files there are a LOUD violation instead
+  of silently-absorbed live evidence — the defect that forced run 2's ad-hoc
+  archive relocation), the rotation recipe archives per-run records at the
+  sibling shelter `../archives/<root-name>/` this packet already uses, and
+  `safe_join` resolves strict-first so symlink-loop confinement stays
+  fail-closed on Python 3.13+ (the 3.12 runtime pin is LIFTED — self-test
+  green on 3.12/3.13/3.14, 157 families). v13→v14 output proven
+  byte-identical over this packet's live post-rotation tree; run 3 pins the
+  v14 digest at its own pin commit. Frozen run-2 bytes untouched.
+- 2026-09-03 (nineteenth stint): CQ-020 AMENDMENT APPLIED (PR #963). The
+  steward-sanctioned post-run-2 amendment landed once the pinned run merged:
+  SeatRequest ordering (`schedulesSeatRequest`), the required governing
+  `AdmissionProjectionSpecification`, and the step's literal scope on a NEW
+  data property `hasScopeTag` — the review wave caught that reusing `hasScope`
+  would pun one IRI as both object and data property (OWL 2 DL + the packet's
+  no-punning ruling), that the seed's scope literal had to be the deployed
+  `admission` value (fixture realism), and that CQ-019's closed
+  scope-provenance arms needed extending to the amended step shape with a new
+  must-fail fixture. Two generator drifts repaired en route: regen now emits
+  the #919 golden `legs` block itself, and the S6 predicate registry
+  regenerates through `build_predicates.py` (the `--s6` scan no longer
+  KeyErrors on unregistered predicates). Inherited finding logged: `--s5`
+  reads 43 blockers on main, pre-dating this branch. Stopped at: PR #963
+  babysit.
+- 2026-09-03 (eighteenth stint): AUDITOR RUN 2 COMPLETE — `orun-2026-09-03T02:46:18Z`,
+  gate `ARTIFACTS VALID — GATE PASSED`. Launch grill locked nine rulings (no TS
+  re-extraction, fresh fleet corpus, full docket, run-1 seats, validator v13 as-is,
+  clustered sittings, one end-of-run PR). Engine findings before any seat ran: the
+  #902 sandbox runner could never start on a busy desktop (per-UID RLIMIT_NPROC vs
+  bwrap — fixed by applying limits inside the user namespace), the v13 validator
+  self-test breaks on Python 3.13 (pinned to 3.12, 156/156 families), the scanner
+  has no archive exemption (run-1 archives relocated to `extraction/s4/archives/`),
+  and `.ndjson` is outside `CONFIG_EXTS` (derived `.properties` projections became
+  the grounding channel). Corpus: 30-checkout fleet capture, 6,213 events, both
+  split-brain admission roots, digest-pinned with byte-idempotent regeneration.
+  Pipeline at pin `341cfef8b6e8`: 20 sandbox-proven SourceObservations + 218
+  ProseObservations (163 parked candidates re-grounded via transcription), 121
+  denotation hypotheses across five seats, 40 primary ic/fa pairs, 40 blinded grok
+  pairs converging independently on identical survivor sets, 45 proposals, three
+  adversary rounds (36 FAIL → 0 FAIL; 100 landed attacks audited, 80 demonstrated,
+  20 struck at sitting 1). Sitting 2 adjudicated all 149 carried run-1 rows (146
+  retired, 3 kept with named corpus requirements — the 57.75% waiver debt paid).
+  Sitting 3 (locked via /grill-with-docs, which caught `hasStep`/`stepIndex`
+  binding the withdrawn `ScheduleStep` — deferred so no dangling ends entered the
+  taxonomy): 21 ratifications `rat-032..rat-052`, 24 withdrawals with named run-3
+  evidence, 56% unresolved waiver ratified. Run-3 queue: the ordering cluster after
+  the CQ-020 amendment, identity-provenance corpora, grant-contention and
+  checkout-identity captures. Stopped at: run artifacts committed, PR next.
 - 2026-08-30 (seventeenth stint): S7 PROJECTION SHIPPED — REPLAY CLOSES THE
   LOOP. Steward re-ordered the queue on merging #919: S7 now, auditor run 2
   after. Design-first: sitting 1 locked four rulings (layered scope with a

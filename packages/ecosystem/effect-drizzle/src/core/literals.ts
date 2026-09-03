@@ -8,6 +8,7 @@
  */
 import { append, appendAll, dedupe, empty, every, getSomes, map, match, of, reduce, some } from "effect/Array";
 import { equals } from "effect/Equal";
+import { dual } from "effect/Function";
 import { flatMap, map as mapOption, none, some as someOption } from "effect/Option";
 import { isString, isTagged } from "effect/Predicate";
 import { toEncoded } from "effect/SchemaAST";
@@ -43,6 +44,8 @@ const stringLiteralsFromAST = (
   return none();
 };
 
+type SchemaSelector = (schema: Field.AnySchema) => { readonly ast: AST };
+
 /**
  * Collect a finite non-empty encoded string-literal union for a dialect adapter.
  *
@@ -50,22 +53,25 @@ const stringLiteralsFromAST = (
  * @category getters
  * @since 0.0.0
  */
-export const stringLiteralValues = (
-  schema: Field.AnySchema,
-  selectSchemaOf: (schema: Field.AnySchema) => { readonly ast: AST }
-): Option<readonly [string, ...string[]]> =>
-  flatMap(stringLiteralsFromAST(toEncoded(selectSchemaOf(schema).ast), selectSchemaOf), (values) =>
-    match(dedupe(values), {
-      onEmpty: none,
-      onNonEmpty: (normalized) => {
-        if (some(normalized, (value) => value.includes("\0"))) {
-          throw DeriveColumnError.make({
-            message: "SQL enum literals cannot contain NUL (U+0000).",
-            fieldName: "(unknown — set at model definition)",
-            astTag: "(encoded literals)",
-          });
-        }
-        return someOption(normalized);
-      },
-    })
-  );
+export const stringLiteralValues: {
+  (selectSchemaOf: SchemaSelector): (schema: Field.AnySchema) => Option<readonly [string, ...string[]]>;
+  (schema: Field.AnySchema, selectSchemaOf: SchemaSelector): Option<readonly [string, ...string[]]>;
+} = /* @__PURE__ */ dual(
+  2,
+  (schema: Field.AnySchema, selectSchemaOf: SchemaSelector): Option<readonly [string, ...string[]]> =>
+    flatMap(stringLiteralsFromAST(toEncoded(selectSchemaOf(schema).ast), selectSchemaOf), (values) =>
+      match(dedupe(values), {
+        onEmpty: none,
+        onNonEmpty: (normalized) => {
+          if (some(normalized, (value) => value.includes("\0"))) {
+            throw DeriveColumnError.make({
+              message: "SQL enum literals cannot contain NUL (U+0000).",
+              fieldName: "(unknown — set at model definition)",
+              astTag: "(encoded literals)",
+            });
+          }
+          return someOption(normalized);
+        },
+      })
+    )
+);

@@ -87,3 +87,77 @@ proxy for order).
 **Open frontier after round 3:** the machine-wide ledger as a P3 candidate; the second enforced
 pair (pre-push to merged preview) once env profiles are in the key; the head-install preflight's
 349 failures (classify before deciding whether it is backpressure or a hygiene class).
+
+## 2026-09-03 — A5 journal-facts review, round 4 (six rulings, ratified by the steward: Benjamin)
+
+Inputs: the six chatgpt-codex-connector threads on PR #964 (A5 journal facts), the four threads on
+PR #968, and the C1 vocabulary landed in PR #954. Proposed by the orchestrator during review and
+ratified as amended by the operator on 2026-09-03; the A5 implementation on PR #964 follows them.
+
+**Ruling 11 — normal completions keep `attempt-finished`; `attempt-terminated` is abnormal only.**
+The attempt journal is a schema with consumers (the economics script, the ontology corpus ETL).
+Interrupts, signals, queued-submitter deaths, and lease evictions terminate with a LiteralKit reason;
+the economics loader accepts both tags and feeds M5 from the terminated rows. Rejected: renaming
+every completion (breaks every consumer and every frozen corpus).
+
+**Ruling 12 — inner-lane reports travel through a durable side channel, never captured stdout.**
+The wrapper writes a schema-versioned inner-lane report file under the run's artifact directory and
+the journal writer reads it; the 512 KiB stdout capture bound makes stdout parsing lossy on noisy runs.
+
+**Ruling 13 — a dead queued ticket is a terminal event, claimed atomically first.** A reaper
+claims the dead ticket (rename or non-forced unlink) and only the process whose claim succeeded
+emits `attempt-terminated` with reason queued-submitter-death plus the admission row, so a
+submitter killed while waiting never leaves an unfinished start and concurrent contenders cannot
+journal the same death twice.
+
+**Ruling 14 — lease eviction is an explicit journal variant, shipped forward-compatibly, and the
+CI-ops projection lab folds it as a release.** The journal states the fact instead of leaving replay
+to infer it. Because fleet checkouts run mixed revisions and an older writer's locked rewrite
+decodes every row with a closed union and drops what it cannot decode, the variant cannot simply be
+added under v1: writers must first preserve unknown rows verbatim through every rewrite (a
+compatibility transition that lands and rolls out before any eviction row is written), and the
+variant ships under a versioned protocol (v2) whose readers accept v1 rows. The lab's schema and
+replay accept the variant with a fixture, and the ontology packet's ledger records that the
+eviction fact is now carried.
+
+**Ruling 15 — evictions and ticket deaths are claimed atomically before they are emitted.**
+Concurrent reapers rename or non-forcibly unlink the lease (or ticket) and only the process whose
+claim succeeded emits the event, so a death is journaled once.
+
+**Ruling 16 — attempt facts carry stage and env profile using the C1 vocabulary.** The merged-preview
+bypass path emits no admission event, so the attempt row records `ProofStage` and `ProofEnvProfile`
+(from the ProofFact module) directly; A5 rows and ProofFacts share one vocabulary rather than a
+parallel field.
+
+**Ratification status:** rulings 11–16 ratified by the operator on 2026-09-03 (all six, as amended
+after the PR #968 review).
+
+## 2026-09-03 — A5b compaction review, round 5 (two rulings, steward: Benjamin)
+
+Inputs: the third Greptile P1 on PR #978 (unfinished attempts erase terminal facts) and an
+independent four-lens review of head 9c37b20d67 run on GPT-5.6 Sol (xhigh) with three adversarial
+refuters per finding; six of nine candidates survived.
+
+**Ruling 17 — the retention budget is over terminal attempts only.** The journal keeps the newest
+50 unprotected terminal *attempts* (each a start/terminal pair, so up to 100 paired event rows) plus
+every unfinished start and the compaction receipt; unfinished starts are never counted toward the
+budget and never evicted, and stale-start reconciliation is what bounds the unfinished set.
+Amendment (Codex review of this PR, ratified 2026-09-03): a start recorded before process identity
+existed (no owner pid and start time; the frozen baseline holds 327 such unmatched starts) cannot be
+classified dead by pid-plus-start-time reconciliation, so the first post-rollout reconciliation closes
+it with `attempt-terminated` reason `legacy-unowned-start` (a new LiteralKit member) and one journal
+receipt per pass; the P0 baseline stays frozen, M5 counts these rows as unfinished inside the
+baseline window and as terminated thereafter. Rejected: a separate ceiling on unverifiable unfinished
+starts (can drop a start whose owner is merely unverifiable); a single total cap that never evicts
+unfinished (terminal facts still vanish whenever the unfinished count nears 50); a 24-hour grace
+period for legacy starts (protects an unlikely window at the cost of a second rule).
+
+**Ruling 18 — economics left-censors from compaction receipts.** The journal-compacted receipt keeps
+the evicted attempt ids and a monotonic cutoff: the newest `recordedAt` among every terminal attempt
+evicted so far on that journal (the existing accumulated `oldestEvictedRecordedAt` is not sufficient,
+because after a second compaction an episode that started between the two evictions may have lost
+its leading red attempts). The economics loader marks the branch left-censored at that cutoff and
+excludes, or reports separately with a count, any red-to-green episode that starts at or before it.
+No archive file and no second writer. Rejected: an append-only economics archive (exact M1 forever,
+unbounded second file); accepting the gap with a report caveat (M1 comparability at close-out
+unproven).

@@ -1,0 +1,25 @@
+id: "dh:pb-docgen-proof-marker:001"
+observation_refs:
+  - "po:sha256:5e054a0ca76202b43a8a8e26efa82a965ed2998450b6e19ea3b1e86baf294141"
+cq_warrants:
+  - "CQ-005"
+proposed_referent:
+  label: "docgen-proof-manifest record-kind label"
+  description: "A possible lexical label for a documentation-generation verification-evidence record kind."
+representation_status: lexical_alias
+alternatives:
+  - label: "serialization discriminator only"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+  - label: "documentation verification-evidence artifact"
+    representation_status: information_artifact
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observation supplies only one LiteralKit member. It does not show that a manifest instance exists, what claim it records, which tree or epoch it concerns, or whether it licenses any verification decision."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.37
+  use_for_acceptance: false

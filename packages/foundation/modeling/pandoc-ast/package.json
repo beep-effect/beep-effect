@@ -35,7 +35,8 @@
     "test": "bun run beep:test",
     "test:property": "bun run beep:test",
     "test:integration": "bun run beep:test:integration",
-    "test:integration:parallel": "bun run beep:test:integration"
+    "test:integration:parallel": "bun run beep:test:integration",
+    "package-test-typecheck": "beep-cli quality test-tsgo-package"
   },
   "exports": {
     ".": "./src/index.ts",
@@ -44,6 +45,7 @@
     "./Pandoc.mapping": "./src/Pandoc.mapping.ts",
     "./Pandoc.model": "./src/Pandoc.model.ts",
     "./Pandoc.report": "./src/Pandoc.report.ts",
+    "./Version": "./src/Version.ts",
     "./internal/*": null,
     "./package.json": "./package.json"
   },
@@ -65,6 +67,7 @@
       "./Pandoc.mapping": "./dist/Pandoc.mapping.js",
       "./Pandoc.model": "./dist/Pandoc.model.js",
       "./Pandoc.report": "./dist/Pandoc.report.js",
+      "./Version": "./dist/Version.js",
       "./internal/*": null,
       "./package.json": "./package.json"
     }

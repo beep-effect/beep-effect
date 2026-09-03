@@ -37,13 +37,20 @@ import {
   pipe,
 } from "effect";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import { constant, dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { AdmissionJournalAdmitted, AdmissionJournalReleased, appendAdmissionJournalEvent } from "./AdmissionJournal.ts";
+import {
+  AdmissionJournalAdmitted,
+  AdmissionJournalLeaseEvicted,
+  AdmissionJournalReleased,
+  AdmissionJournalTicketEvicted,
+  appendAdmissionJournalEvent,
+} from "./AdmissionJournal.ts";
+import { appendSchedulerAttemptTerminated } from "./AttemptTerminationJournal.ts";
 import {
   AdmissionConfig,
   AdmissionCoordinationProtocol,
@@ -57,7 +64,34 @@ import {
 import { RunScopeRecord, RunScopeStopOutcome, RunScopeSupport, RunScopeTelemetry } from "./RunScope.schemas.ts";
 import { enterRunScope, readRunScopeTelemetry, runScopeUnitName, stopRunScopeForReap } from "./RunScope.ts";
 import { admissionRootFor, perUserRuntimeRoot } from "./RuntimeRoot.ts";
+import type { UUID } from "@beep/schema/String";
 import type { ChildProcessSpawner } from "effect/unstable/process";
+
+const warnAdmissionJournalError = (error: QualitySchedulerError) =>
+  Console.warn(`[yeet] admission journal append failed: ${error.message}`);
+
+const appendAbnormalAttemptEnd = Effect.fn("QualityScheduler.appendAbnormalAttemptEnd")(function* (
+  owner: YeetAdmissionLease | YeetAdmissionTicket,
+  reason: "lease-eviction" | "queued-submitter-death",
+  attemptId: UUID
+) {
+  yield* appendSchedulerAttemptTerminated(owner.checkoutRoot, owner.branch, attemptId, reason);
+});
+
+const journalAbnormalAttemptEnd = Effect.fn("QualityScheduler.journalAbnormalAttemptEnd")(function* (
+  owner: YeetAdmissionLease | YeetAdmissionTicket,
+  reason: "lease-eviction" | "queued-submitter-death"
+) {
+  yield* O.match(owner.attemptId, {
+    onNone: () => Effect.void,
+    onSome: (attemptId) =>
+      appendAbnormalAttemptEnd(owner, reason, attemptId).pipe(
+        Effect.catch((error) =>
+          Console.warn(`[yeet] attempt journal append failed for ${owner.nonce}: ${error.message}`)
+        )
+      ),
+  });
+});
 
 const $I = $RepoCliId.create("internal/repo-run/QualityScheduler");
 
@@ -715,6 +749,7 @@ const quarantineEntry = Effect.fnUntraced(function* (
 interface AdmissionEntryCodec<Entry, DecodeError> {
   readonly decode: (text: string) => Effect.Effect<Entry, DecodeError>;
   readonly describe: (entry: Entry) => string;
+  readonly onReap?: (entry: Entry) => Effect.Effect<void, never, FileSystem.FileSystem | Path.Path>;
   readonly ownerOf: (entry: Entry) => { readonly pid: number; readonly procStart: string };
 }
 
@@ -733,7 +768,7 @@ const classifyAdmissionEntry = Effect.fnUntraced(function* <Entry, DecodeError>(
   if (Str.isEmpty(text)) {
     return { kind: "skip" };
   }
-  const decoded = yield* codec.decode(text).pipe(Effect.map(O.some), Effect.orElseSucceed(O.none<Entry>));
+  const decoded = yield* codec.decode(text).pipe(Effect.asSome, Effect.orElseSucceed(O.none<Entry>));
   if (O.isNone(decoded)) {
     return { kind: "malformed" };
   }
@@ -745,10 +780,21 @@ const reapDeadAdmissionEntry = Effect.fnUntraced(function* <Entry, DecodeError>(
   entryPath: string,
   entry: Entry,
   codec: AdmissionEntryCodec<Entry, DecodeError>
-): Effect.fn.Return<void, never, FileSystem.FileSystem> {
+): Effect.fn.Return<void, never, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   yield* Console.error(`[yeet] reaping dead admission state for ${codec.describe(entry)} at ${entryPath}`);
-  yield* fs.remove(entryPath, { force: true }).pipe(Effect.ignore);
+  const claimPath = `${entryPath}.reap-claim-${process.pid}-${randomUUID()}`;
+  const claimed = yield* fs.rename(entryPath, claimPath).pipe(Effect.as(true), Effect.orElseSucceed(constant(false)));
+  yield* claimed
+    ? pipe(
+        O.fromUndefinedOr(codec.onReap),
+        O.match({
+          onNone: constant(Effect.void),
+          onSome: (onReap) => onReap(entry),
+        }),
+        Effect.ensuring(fs.remove(claimPath, { force: true }).pipe(Effect.ignore))
+      )
+    : Console.error(`[yeet] dead admission state at ${entryPath} was already claimed; no eviction was journaled`);
 });
 
 const repairAdmissionEntries = Effect.fnUntraced(function* <Entry, DecodeError>(
@@ -825,6 +871,22 @@ const scanAdmissionState = Effect.fnUntraced(function* (
       decode: decodeLease,
       ownerOf: (lease: YeetAdmissionLease) => lease,
       describe: (lease: YeetAdmissionLease) => `pid ${lease.pid} (${lease.kind}, ${lease.checkoutRoot})`,
+      onReap: Effect.fn("QualityScheduler.onLeaseReap")(function* (lease: YeetAdmissionLease) {
+        const evictedAtMillis = yield* Clock.currentTimeMillis;
+        yield* journalAbnormalAttemptEnd(lease, "lease-eviction");
+        yield* appendAdmissionJournalEvent(
+          directories.root,
+          AdmissionJournalLeaseEvicted.make({
+            schemaVersion: "yeet-admission-journal/v2",
+            _tag: "admission-lease-evicted",
+            nonce: lease.nonce,
+            pid: lease.pid,
+            attemptId: lease.attemptId,
+            evictedAtMillis,
+            reason: "owner-dead-or-reused",
+          })
+        ).pipe(Effect.catch(warnAdmissionJournalError));
+      }),
     },
     repair,
     retainedDeadLeasePaths
@@ -836,6 +898,22 @@ const scanAdmissionState = Effect.fnUntraced(function* (
       decode: decodeTicket,
       ownerOf: (ticket: YeetAdmissionTicket) => ticket,
       describe: (ticket: YeetAdmissionTicket) => `pid ${ticket.pid} (queued ${ticket.kind}, ${ticket.checkoutRoot})`,
+      onReap: Effect.fn("QualityScheduler.onTicketReap")(function* (ticket: YeetAdmissionTicket) {
+        const evictedAtMillis = yield* Clock.currentTimeMillis;
+        yield* journalAbnormalAttemptEnd(ticket, "queued-submitter-death");
+        yield* appendAdmissionJournalEvent(
+          directories.root,
+          AdmissionJournalTicketEvicted.make({
+            schemaVersion: "yeet-admission-journal/v2",
+            _tag: "admission-ticket-evicted",
+            nonce: ticket.nonce,
+            pid: ticket.pid,
+            attemptId: ticket.attemptId,
+            evictedAtMillis,
+            reason: "queued-submitter-death",
+          })
+        ).pipe(Effect.catch(warnAdmissionJournalError));
+      }),
     },
     repair
   );
@@ -982,8 +1060,8 @@ export interface AdmissionOriginGate<OriginLease, GateError, GateRequirements> {
  * @since 0.0.0
  */
 export const noAdmissionOriginGate: AdmissionOriginGate<Record<string, never>, never, never> = {
-  tryAcquire: Effect.succeed(O.some({})),
-  tryAcquireFallback: Effect.succeed(O.some({})),
+  tryAcquire: Effect.succeedSome({}),
+  tryAcquireFallback: Effect.succeedSome({}),
   release: () => Effect.void,
 };
 
@@ -1174,6 +1252,7 @@ const stageSelfLease = Effect.fnUntraced(function* (
     heartbeatAtMillis: nowMillis,
     enqueuedAtMillis: ticket.enqueuedAtMillis,
     nonce: ticket.nonce,
+    attemptId: ticket.attemptId,
   });
   const leasePath = path.join(directories.leases, `${ticket.nonce}-${ticket.pid}.lease.json`);
   const created = yield* tryCreateExclusive(leasePath, `${yield* encodeLeaseText(lease)}\n`);
@@ -1266,8 +1345,9 @@ const tryPromoteTicket = Effect.fnUntraced(function* <OriginLease, GateError, Ga
       originKey: ticket.originKey,
       enqueuedAtMillis: ticket.enqueuedAtMillis,
       admittedAtMillis: attempt.admitted.value.lease.admittedAtMillis,
+      attemptId: ticket.attemptId,
     })
-  ).pipe(Effect.catch((error) => Console.warn(`[yeet] admission journal append failed: ${error.message}`)));
+  ).pipe(Effect.catch(warnAdmissionJournalError));
   const fs = yield* FileSystem.FileSystem;
   yield* fs.remove(ticketPath, { force: true }).pipe(Effect.ignore);
   return { admitted: attempt.admitted, info, originBusy: false };
@@ -1412,11 +1492,12 @@ const runAdmitted = Effect.fnUntraced(function* <Success, UseError, UseRequireme
           nonce: admitted.lease.nonce,
           pid: admitted.lease.pid,
           releasedAtMillis,
+          attemptId: admitted.lease.attemptId,
           ...OptionUtils.getSomesStruct({
             memoryPeakBytes: O.fromUndefinedOr(telemetry.memoryPeakBytes),
           }),
         })
-      ).pipe(Effect.catch((error) => Console.warn(`[yeet] admission journal append failed: ${error.message}`)));
+      ).pipe(Effect.catch(warnAdmissionJournalError));
       const fs = yield* FileSystem.FileSystem;
       yield* fs.remove(admitted.leasePath, { force: true }).pipe(Effect.ignore);
       yield* releaseOrigin(admitted.originLease);
@@ -1515,6 +1596,7 @@ export const withQualityAdmission = Effect.fn("QualityScheduler.withQualityAdmis
     enqueuedAtMillis: nowMillis,
     heartbeatAtMillis: nowMillis,
     nonce: randomUUID(),
+    attemptId: admittedRequest.attemptId,
   });
   const ticketPath = path.join(directories.queue, `${ticket.nonce}-${ticket.pid}.ticket.json`);
   return yield* Effect.uninterruptibleMask((restore) =>

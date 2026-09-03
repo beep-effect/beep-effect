@@ -6,25 +6,6 @@
  * @since 0.0.0
  */
 
-export * from "./Number.ts";
-
-/**
- * Package version.
- *
- * **Example** (Read package version)
- *
- * ```ts import.meta.vitest name="Read package version"
- * import { VERSION } from "@beep/schema"
- *
- * const schemaPackageVersion: typeof VERSION = VERSION
- * schemaPackageVersion.startsWith("0.") // => true
- * ```
- *
- * @category configuration
- * @since 0.0.0
- */
-export const VERSION = "0.0.0";
-
 /**
  * @since 0.0.0
  * @category validation
@@ -340,6 +321,11 @@ export * from "./MutableHashMap.ts";
  */
 export * from "./MutableHashSet.ts";
 /**
+ * @category validation
+ * @since 0.0.0
+ */
+export * from "./Number.ts";
+/**
  * Opaque payload schemas (`Defect`, `OpaqueUnknown`) whose equivalence is declared always-true.
  *
  * @category schemas
@@ -529,6 +515,13 @@ export * from "./Unknown.ts";
  * @category validation
  */
 export * from "./URL.ts";
+/**
+ * Current `@beep/schema` package version.
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export { VERSION } from "./Version.ts";
 /**
  * @since 0.0.0
  * @category validation

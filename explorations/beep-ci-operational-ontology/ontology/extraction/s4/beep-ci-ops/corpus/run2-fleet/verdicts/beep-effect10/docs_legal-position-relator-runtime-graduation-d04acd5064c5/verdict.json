@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "docs/legal-position-relator-runtime-graduation",
+  "committed": false,
+  "createdAt": "2026-08-06T15:15:08.297Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "closeout:01-pr-context",
+      "label": "closeout:pr-context",
+      "phase": "monitor",
+      "status": "not-run"
+    },
+    {
+      "id": "closeout:02-review-gates",
+      "label": "closeout:review-gates",
+      "phase": "monitor",
+      "status": "not-run"
+    }
+  ],
+  "message": "yeet closeout succeeded.",
+  "mode": "closeout",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "docs_legal-position-relator-runtime-graduation-d04acd5064c5",
+  "attemptId": "0222dcaf-7338-4dce-ae6d-c11dbcbe6768",
+  "startedAt": "2026-08-06T15:15:04.110Z",
+  "endedAt": "2026-08-06T15:15:08.297Z",
+  "elapsedMs": 4187,
+  "indexPath": "<fleet>/beep-effect10/.beep/yeet/quality-issue-index.json"
+}

@@ -7,10 +7,10 @@
 
 import { ANTHROPIC_DEFAULT_APPROXIMATE_PRICE } from "@beep/anthropic";
 import { $ProfessionalDesktopId } from "@beep/identity/packages";
-import { NonNegativeInt } from "@beep/schema";
-import { Number as N } from "effect";
+import { NonNegativeInt } from "@beep/schema/Number";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
+import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -93,7 +93,7 @@ class ApproximateModelPrice extends S.Class<ApproximateModelPrice>($I`Approximat
  * ```ts
  * import { approximateCostUsdMicros } from "@/chat/UsagePricing"
  * import { ProviderUsageMetadata } from "@beep/agents-use-cases/public"
- * import { NonNegativeInt } from "@beep/schema"
+ * import { NonNegativeInt } from "@beep/schema/Number";
  * import * as O from "effect/Option"
  *
  * const cost = approximateCostUsdMicros(ProviderUsageMetadata.make({

@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "docs/ci-lane-economics-p3",
+  "committed": false,
+  "createdAt": "2026-08-31T04:05:49.076Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "closeout:01-pr-context",
+      "label": "closeout:pr-context",
+      "phase": "monitor",
+      "status": "not-run"
+    },
+    {
+      "id": "closeout:02-review-gates",
+      "label": "closeout:review-gates",
+      "phase": "monitor",
+      "status": "not-run"
+    }
+  ],
+  "message": "yeet closeout succeeded.",
+  "mode": "closeout",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "docs_ci-lane-economics-p3-7952c01ee70e",
+  "attemptId": "f2f3fece-5dd7-49a6-bd87-38d766042e8a",
+  "startedAt": "2026-08-31T04:05:44.481Z",
+  "endedAt": "2026-08-31T04:05:49.076Z",
+  "elapsedMs": 4595,
+  "indexPath": "<fleet>/beep-effect18/.beep/yeet/quality-issue-index.json"
+}

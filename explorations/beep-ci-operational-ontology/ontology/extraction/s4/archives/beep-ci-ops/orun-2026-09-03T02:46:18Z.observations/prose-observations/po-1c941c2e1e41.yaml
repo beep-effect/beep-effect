@@ -1,0 +1,10 @@
+id: po:sha256:1c941c2e1e41a932dfd00e48631a9dd6217c6e51fe9c681369139a8c0402ea84
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: packages/drivers/hubspot/package.json
+source_span:
+  start_line: 62
+  end_line: 62
+quote: '"@beep/identity": "workspace:^",'
+epistemic_status: quoted_prose

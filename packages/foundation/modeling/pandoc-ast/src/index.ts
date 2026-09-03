@@ -6,23 +6,6 @@
  */
 
 /**
- * Package version.
- *
- * **Example** (Access typed package version)
- *
- * ```ts import.meta.vitest name="Access typed package version"
- * import { VERSION } from "@beep/pandoc-ast"
- *
- * const packageVersion: "0.0.0" = VERSION
- * packageVersion // => "0.0.0"
- * ```
- *
- * @category constants
- * @since 0.0.0
- */
-export const VERSION = "0.0.0";
-
-/**
  * Pandoc JSON wire codecs.
  *
  * **Example** (Import decodePandocJsonString codec)
@@ -103,3 +86,10 @@ export * from "./Pandoc.model.ts";
  * @since 0.0.0
  */
 export * from "./Pandoc.report.ts";
+/**
+ * Current `@beep/pandoc-ast` package version.
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export { VERSION } from "./Version.ts";

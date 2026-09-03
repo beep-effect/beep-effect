@@ -16,6 +16,7 @@
 import { $PacerId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
 import { Context, Duration, Effect, Layer, pipe, Redacted, Ref, Result, Schedule, Stream, Tuple } from "effect";
+import { constant } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -267,10 +268,9 @@ export class PclClient extends Context.Service<PclClient, PclClientShape>()($I`P
               schedule: POLL_SCHEDULE,
               until: (info) => O.exists(info.status, isTerminalReportStatus),
             }),
-            Effect.flatMap((info) =>
-              O.exists(info.status, isTerminalReportStatus)
-                ? Effect.succeed(info)
-                : Effect.fail(PacerPclError.fromReason("server-error", { cause: "report polling timed out" }))
+            Effect.filterOrFail(
+              (info) => O.exists(info.status, isTerminalReportStatus),
+              constant(PacerPclError.fromReason("server-error", { cause: "report polling timed out" }))
             )
           );
 
@@ -299,10 +299,9 @@ export class PclClient extends Context.Service<PclClient, PclClientShape>()($I`P
           return yield* withReportCleanup(
             started.reportId,
             Effect.gen(function* () {
-              const reportId = yield* O.match(ReportId.decodeUnknownOption(started.reportId), {
-                onNone: () => Effect.fail(invalidReportIdError()),
-                onSome: Effect.succeed,
-              });
+              const reportId = yield* Effect.fromOption(ReportId.decodeUnknownOption(started.reportId), () =>
+                invalidReportIdError()
+              );
               const completed = yield* pollUntilComplete(reportId);
               if (O.contains(completed.status, ReportStatus.Enum.FAILED)) {
                 return yield* PacerPclError.fromReason("server-error", { cause: "report failed" });

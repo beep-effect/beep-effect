@@ -6,23 +6,6 @@
  */
 
 /**
- * Package version.
- *
- * **Example** (Check package version)
- *
- * ```ts import.meta.vitest name="Check package version"
- * import { VERSION } from "@beep/rdf"
- *
- * const isInitialVersion = VERSION === "0.0.0"
- * isInitialVersion // => true
- * ```
- *
- * @category configuration
- * @since 0.0.0
- */
-export const VERSION = "0.0.0" as const;
-
-/**
  * Web Annotation value models.
  *
  * @category models
@@ -92,3 +75,10 @@ export * from "./SemanticSchemaMetadata/index.ts";
  * @since 0.0.0
  */
 export * from "./Uri.ts";
+/**
+ * Current `@beep/rdf` package version.
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export { VERSION } from "./Version.ts";

@@ -140,7 +140,7 @@ const statusDriftFindings = Effect.fn("Explore.statusDriftFindings")(function* (
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const manifestPath = path.join(packetPath, "ops", "manifest.json");
-  const text = yield* fs.readFileString(manifestPath).pipe(Effect.map(O.some), Effect.orElseSucceed(O.none<string>));
+  const text = yield* fs.readFileString(manifestPath).pipe(Effect.asSome, Effect.orElseSucceed(O.none<string>));
   if (O.isNone(text)) {
     return A.empty<GoalDoctorFinding>();
   }
@@ -153,7 +153,7 @@ const statusDriftFindings = Effect.fn("Explore.statusDriftFindings")(function* (
       decodeGoalPacketManifestStatus(parsed.value).pipe(Effect.map((manifest) => manifest.initiative.status)),
     explorations: () =>
       decodeExplorationPacketManifestStatus(parsed.value).pipe(Effect.map((manifest) => manifest.exploration.status)),
-  }).pipe(Effect.map(O.some), Effect.orElseSucceed(O.none<string>));
+  }).pipe(Effect.asSome, Effect.orElseSucceed(O.none<string>));
   if (O.isNone(manifestStatus) || derived.status === undefined || manifestStatus.value === derived.status) {
     return A.empty<GoalDoctorFinding>();
   }
@@ -176,7 +176,7 @@ const traceFindings = Effect.fn("Explore.traceFindings")(function* (
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const tracePath = path.join(packetPath, ...PACKET_TRACE_SEGMENTS);
-  const text = yield* fs.readFileString(tracePath).pipe(Effect.map(O.some), Effect.orElseSucceed(O.none<string>));
+  const text = yield* fs.readFileString(tracePath).pipe(Effect.asSome, Effect.orElseSucceed(O.none<string>));
   if (O.isNone(text)) {
     return A.of(
       finding(
@@ -191,7 +191,7 @@ const traceFindings = Effect.fn("Explore.traceFindings")(function* (
     return A.of(finding(slug, "packet-trace-stale", `${tracePath} does not parse as JSON; regenerate it.`));
   }
   const trace = yield* decodePacketTraceProjection(parsed.value).pipe(
-    Effect.map(O.some),
+    Effect.asSome,
     Effect.orElseSucceed(O.none<PacketTraceProjection>)
   );
   if (O.isNone(trace)) {
@@ -211,7 +211,7 @@ const traceFindings = Effect.fn("Explore.traceFindings")(function* (
   // The trace is a whole-file derivation: any byte drift from the re-rendered
   // projection (not just a moved sourceTip) means the committed copy lies.
   const rendered = yield* renderPacketTraceFile(projectPacketTrace(derived, events)).pipe(
-    Effect.map(O.some),
+    Effect.asSome,
     Effect.orElseSucceed(O.none<string>)
   );
   if (O.isSome(rendered) && rendered.value !== text.value) {

@@ -5,6 +5,10 @@ import {
   ciLocalStepsForTesting,
 } from "@beep/repo-cli/commands/Ci";
 import {
+  QUALITY_TASK_LANE_RUN_ARTIFACT_PATH_ENV,
+  QUALITY_TASK_LANE_RUN_PARENT_ID_ENV,
+} from "@beep/repo-cli/commands/Quality";
+import {
   collectAuditDiffInputForTesting,
   fallowAuditDiffFallbackArgsForTesting,
   fallowAuditNeedsDiffFallbackForTesting,
@@ -13,6 +17,9 @@ import {
 import {
   collectCoverageChangedFilesForTesting,
   collectGithubCheckLaneWavesForTesting,
+  collectQualityTaskLaneRunsForTesting,
+  runQualityTaskGithubCheckLaneWaves,
+  runQualityTaskStreamingLaneGroup,
 } from "@beep/repo-cli/commands/Quality/Tasks";
 import {
   baselineEntriesLostByReplacement,
@@ -65,6 +72,7 @@ import {
   LaneProofSession,
   lintFixChangedStepForTesting,
   mergeCoverageBaselinePackagesForTesting,
+  missingTestTsgoTaskMessageForTesting,
   normalizeKnipReportForTesting,
   parseQualityTaskInvocation,
   persistLaneProofs,
@@ -75,8 +83,11 @@ import {
   planWorkspaceCoverageAffectedScope,
   prepareLaneProofSession,
   promotedFallowGithubCheckLaneIdsForTesting,
+  QUALITY_TASK_LANE_RUN_REPORT_PREFIX,
   QualityTaskFailed,
   QualityTaskGroupFailed,
+  QualityTaskLaneRun,
+  QualityTaskLaneRunReport,
   QualityTaskStep,
   qualityProfileConfigForTesting,
   readCoverageComparisonBaselineForTesting,
@@ -907,6 +918,101 @@ describe("quality task adapter", () => {
       })
     ));
 
+  it("decodes legacy lane rows and encodes unknown input digests as null", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const legacy = yield* S.decodeEffect(QualityTaskLaneRun)({
+          id: "check",
+          label: "ci:check",
+          status: "passed",
+        });
+        expect(legacy.startedAt).toStrictEqual(O.none());
+        expect(legacy.endedAt).toStrictEqual(O.none());
+        expect(legacy.durationMs).toStrictEqual(O.none());
+        expect(legacy.exitCode).toStrictEqual(O.none());
+        expect(legacy.inputDigest).toStrictEqual(O.none());
+
+        const encoded = yield* S.encodeEffect(QualityTaskLaneRunReport)(
+          QualityTaskLaneRunReport.make({
+            schemaVersion: "quality-task-lane-run/v1",
+            lanes: [legacy],
+          })
+        );
+        expect(encoded.lanes[0]?.inputDigest).toBeNull();
+      })
+    ));
+
+  it("records timings, exits, and only executor-provided lane digests", () =>
+    Effect.runPromise(
+      collectQualityTaskLaneRunsForTesting(
+        "ci:local",
+        [
+          ["check", bunScriptStep("ci:check", "process.exit(0)"), O.some("turbo-task-hash")],
+          ["nix", bunScriptStep("ci:nix", "process.exit(7)"), O.none()],
+        ],
+        2
+      ).pipe(
+        Effect.map(({ failures, report }) => {
+          expect(failures).toHaveLength(1);
+          expect(A.map(report.lanes, (lane) => lane.status)).toEqual(["passed", "failed"]);
+          expect(A.map(report.lanes, (lane) => lane.exitCode)).toEqual([O.some(0), O.some(7)]);
+          expect(report.lanes[0]?.inputDigest).toStrictEqual(O.some("turbo-task-hash"));
+          expect(report.lanes[1]?.inputDigest).toStrictEqual(O.none());
+          expect(A.every(report.lanes, (lane) => O.exists(lane.startedAt, Str.isNonEmpty))).toBe(true);
+          expect(A.every(report.lanes, (lane) => O.exists(lane.endedAt, Str.isNonEmpty))).toBe(true);
+          expect(A.every(report.lanes, (lane) => O.exists(lane.durationMs, (duration) => duration >= 0))).toBe(true);
+        }),
+        provideScopedLayer(PlatformLayer)
+      )
+    ));
+
+  it("emits machine-readable lane reports from both wrapper writers", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        yield* runQualityTaskGithubCheckLaneWaves("pre-push", [], "fail-fast");
+        yield* runQualityTaskStreamingLaneGroup("ci:local", []);
+        const reportLines = pipe(
+          yield* TestConsole.logLines,
+          A.filter(isString),
+          A.filter(Str.startsWith(QUALITY_TASK_LANE_RUN_REPORT_PREFIX))
+        );
+        expect(reportLines).toHaveLength(2);
+        yield* Effect.forEach(
+          reportLines,
+          (line) =>
+            S.decodeEffect(S.fromJsonString(QualityTaskLaneRunReport))(
+              Str.slice(QUALITY_TASK_LANE_RUN_REPORT_PREFIX.length)(line)
+            ),
+          { discard: true }
+        );
+      }).pipe(provideScopedLayer(PlatformLayer))
+    ));
+
+  it("appends a schema-versioned wrapper report to the durable side channel", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const tempDir = yield* fs.makeTempDirectory();
+        const artifactPath = path.join(tempDir, "inner-lanes.ndjson");
+        yield* withEnvVarEffect(
+          QUALITY_TASK_LANE_RUN_ARTIFACT_PATH_ENV,
+          artifactPath,
+          withEnvVarEffect(
+            QUALITY_TASK_LANE_RUN_PARENT_ID_ENV,
+            "full:02-ci-parity",
+            runQualityTaskStreamingLaneGroup("ci:local", [])
+          )
+        );
+        const lines = pipe(yield* fs.readFileString(artifactPath), Str.split("\n"), A.filter(Str.isNonEmpty));
+        expect(lines).toHaveLength(1);
+        const report = yield* S.decodeEffect(S.fromJsonString(QualityTaskLaneRunReport))(lines[0]);
+        expect(report.schemaVersion).toBe("quality-task-lane-run/v1");
+        expect(report.parentLaneId).toStrictEqual(O.some("full:02-ci-parity"));
+        yield* fs.remove(tempDir, { recursive: true, force: true });
+      }).pipe(provideScopedLayer(PlatformLayer))
+    ));
+
   it("property: the wave report schema round-trips arbitrary reports", () => {
     const ReportArbitrary = S.toArbitrary(GithubCheckRunReport)(fc);
     fc.assert(
@@ -939,13 +1045,20 @@ describe("quality task adapter", () => {
         ],
         "fail-fast"
       ).pipe(
-        Effect.map(({ failures, report }) => {
+        Effect.map(({ failures, laneReport, report }) => {
           expect(A.map(failures, (failure) => failure.label)).toEqual(["preflight:a", "preflight:b"]);
           expect(A.map(report.lanes, (lane) => [lane.id, lane.status])).toEqual([
             ["preflight:a", "failed"],
             ["preflight:b", "failed"],
             ["heavy:check", "not-run-early-stop"],
           ]);
+          expect(A.map(laneReport.lanes, (lane) => [lane.id, lane.status])).toEqual([
+            ["preflight:a", "failed"],
+            ["preflight:b", "failed"],
+            ["heavy:check", "not-run-early-stop"],
+          ]);
+          expect(A.every(A.take(laneReport.lanes, 2), (lane) => O.isSome(lane.startedAt))).toBe(true);
+          expect(laneReport.lanes[2]?.inputDigest).toStrictEqual(O.none());
         }),
         provideScopedLayer(PlatformLayer)
       )
@@ -996,12 +1109,14 @@ describe("quality task adapter", () => {
       expect(A.map(first.report.lanes, (result) => result.status)).toEqual(["passed"]);
       const second = yield* runWithLaneProof;
       expect(A.map(second.report.lanes, (result) => result.status)).toEqual(["reused"]);
-      expect(yield* fs.readFileString(markerPath)).toBe("run\n");
+      const shadow = yield* withEnvVarEffect("BEEP_YEET_LANE_PROOF_MODE", "shadow", run);
+      expect(A.map(shadow.report.lanes, (result) => result.status)).toEqual(["passed"]);
+      expect(yield* fs.readFileString(markerPath)).toBe("run\nrun\n");
 
       yield* fs.writeFileString(path.join(tempRoot, "README.md"), "# changed\n");
       const invalidated = yield* runWithLaneProof;
       expect(A.map(invalidated.report.lanes, (result) => result.status)).toEqual(["passed"]);
-      expect(yield* fs.readFileString(markerPath)).toBe("run\nrun\n");
+      expect(yield* fs.readFileString(markerPath)).toBe("run\nrun\nrun\n");
     }, provideScopedLayer(PlatformLayer))
   );
 
@@ -1013,7 +1128,7 @@ describe("quality task adapter", () => {
       const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: "lane-proof-defaults-" });
       yield* initializeLaneProofRepository(tempRoot);
 
-      const lane = laneProofTestLane(tempRoot, "proof:defaults", "preflight", "process.exit(0)");
+      const lane = laneProofTestLane(tempRoot, "proof:defaults", "preflight", "process.exit(0)", true);
       const disabled = yield* withEnvVarEffect("BEEP_YEET_LANE_PROOF_MODE", undefined, prepareLaneProofSession([lane]));
       const invalid = yield* withEnvVarEffect("BEEP_YEET_LANE_PROOF_MODE", "invalid", prepareLaneProofSession([lane]));
       const withDefaultBase = yield* withEnvVarEffect(
@@ -1046,17 +1161,15 @@ describe("quality task adapter", () => {
       const markerPath = path.join(tempRoot, ".beep", "property-marker.txt");
       yield* initializeLaneProofRepository(tempRoot);
 
-      const lane = laneProofTestLane(
-        tempRoot,
-        "quality:test-unit",
-        "heavy",
-        "echo run >> .beep/property-marker.txt",
-        true
-      );
+      const lane = laneProofTestLane(tempRoot, "quality:test-unit", "heavy", "echo run >> .beep/property-marker.txt");
       const waves = [GithubCheckLaneWaveSpec.make({ wave: "heavy", lanes: [lane] })];
       const run = collectGithubCheckLaneWavesForTesting("proof-fc-runs", waves, "fail-fast");
       const atRuns = (runs: string) =>
-        withEnvVarEffect("BEEP_YEET_LANE_PROOF_MODE", "active", withEnvVarEffect("BEEP_FC_NUM_RUNS", runs, run));
+        withEnvVarEffect(
+          "BEEP_YEET_LANE_PROOF_MODE",
+          "active",
+          withEnvVarEffect("BEEP_YEET_PROOF_BASE", undefined, withEnvVarEffect("BEEP_FC_NUM_RUNS", runs, run))
+        );
 
       expect(A.map((yield* atRuns("100")).report.lanes, (result) => result.status)).toEqual(["passed"]);
       expect(A.map((yield* atRuns("100")).report.lanes, (result) => result.status)).toEqual(["reused"]);
@@ -1774,6 +1887,24 @@ describe("quality task adapter", () => {
     expect(diagnostics).toEqual(["src/example.test.ts:1:1 - warning TS90001: unsafe effect(service) usage"]);
   });
 
+  it("names packages missing the required test tsgo Turbo script", () => {
+    expect(
+      missingTestTsgoTaskMessageForTesting([
+        { packageName: "@beep/ready", hasTaskScript: true },
+        { packageName: "@beep/zulu", hasTaskScript: false },
+        { packageName: "@beep/alpha", hasTaskScript: false },
+      ])
+    ).toEqual(
+      O.some(
+        '[check:tsgo:tests] missing required "package-test-typecheck" package script for @beep/alpha, ' +
+          '@beep/zulu. Add "package-test-typecheck": "beep-cli quality test-tsgo-package" to each named package.json.'
+      )
+    );
+    expect(missingTestTsgoTaskMessageForTesting([{ packageName: "@beep/ready", hasTaskScript: true }])).toEqual(
+      O.none()
+    );
+  });
+
   it("normalizes Knip findings with stable ordering and without position fields", () =>
     Effect.runPromise(
       Effect.gen(function* () {
@@ -1925,6 +2056,7 @@ describe("quality task adapter", () => {
       "lint:effect-fn",
       "lint:package-test-imports",
       "lint:effect-imports",
+      "lint:effect-imports-markdown",
       "lint:package-test-typecheck",
       "lint:tsgo-rules",
       "lint:oxlint",
@@ -1960,6 +2092,7 @@ describe("quality task adapter", () => {
       "lint:effect-fn",
       "lint:package-test-imports",
       "lint:effect-imports",
+      "lint:effect-imports-markdown",
       "lint:package-test-typecheck",
       "lint:tsgo-rules",
       "lint:oxlint",
@@ -1977,6 +2110,9 @@ describe("quality task adapter", () => {
     expect(steps.find((step) => step.label === "lint:terse-effect")?.args).toContain("--advisory");
     expect(steps.find((step) => step.label === "lint:native-runtime")?.args).toEqual(
       repoCliEntryArgs("laws", "native-runtime", "--check")
+    );
+    expect(steps.find((step) => step.label === "lint:effect-imports-markdown")?.args).toEqual(
+      repoCliEntryArgs("laws", "effect-imports", "--mode", "markdown", "--check")
     );
     expect(steps.every((step) => step.captureTimeoutMillis === 15 * 60 * 1_000)).toBe(true);
   });
@@ -2016,6 +2152,7 @@ describe("quality task adapter", () => {
     const labels = A.map(steps, (step) => step.label);
 
     expect(labels).not.toContain("lint:effect-imports");
+    expect(labels).toContain("lint:effect-imports-markdown");
     expect(labels).not.toContain("lint:terse-effect");
     expect(labels).not.toContain("lint:effect-fn");
     expect(labels).not.toContain("lint:frozen-grant-set");

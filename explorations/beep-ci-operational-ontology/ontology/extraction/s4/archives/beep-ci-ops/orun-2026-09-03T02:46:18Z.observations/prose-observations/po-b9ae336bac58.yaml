@@ -1,0 +1,27 @@
+id: po:sha256:b9ae336bac58198b66b7f959048d6b3ecc68845fe1f1046a7995bf19e6df7f4a
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: explorations/beep-ci-operational-ontology/ontology/extraction/s7/work-s7/impl-report.md
+source_span:
+  start_line: 36
+  end_line: 45
+quote: '## Reuse decision
+
+
+  The deployed request and journal shapes were evaluated for direct reuse from
+
+  `@beep/repo-cli/test/RepoRun`. That path is a source-only test-kit export:
+
+  `packages/tooling/tool/cli/package.json` exposes `./test/*` in the workspace
+
+  source map but sets the test exports to `null` in `publishConfig` and excludes
+
+  the test sources from published files. The lab therefore mirrors the narrow
+
+  journal and request views it needs instead of coupling production-like S7 code
+
+  to a non-publishable test-kit surface. The mirror remains schema-decoded and is
+
+  covered by the frozen journal replay.'
+epistemic_status: quoted_prose

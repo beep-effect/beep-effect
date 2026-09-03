@@ -1,12 +1,19 @@
-import { documentToEditorState } from "@beep/lexical-schema";
+import { documentToEditorState } from "@beep/lexical-schema/Lexical.codec";
 import * as Md from "@beep/md/Md.model";
 import { renderPlainTextUnsafe } from "@beep/md/Md.render";
+import { DocumentComplexitySafetyViolation, MAX_SAFE_DOCUMENT_NODES } from "@beep/md/Md.safe";
+import { NonNegativeInt } from "@beep/schema/Number";
 import { it } from "@effect/vitest";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as Str from "effect/String";
 import { describe, expect } from "vitest";
-import { ComposerSendDecision, composerPolicy, MAX_MESSAGE_CHARACTERS } from "@/chat/ui/ComposerPolicy";
-import type { SerializedEditorState } from "@beep/lexical-schema";
+import {
+  ComposerSendDecision,
+  composerPolicy,
+  MAX_MESSAGE_CHARACTERS,
+  unsafeDocumentMessage,
+} from "@/chat/ui/ComposerPolicy";
+import type { SerializedEditorState } from "@beep/lexical-schema/Lexical.model";
 
 const textDocument = (value: string): Md.Document =>
   Md.Document.make({ children: [Md.P.make({ children: [Md.Text.make({ value })] })] });
@@ -27,6 +34,17 @@ const decisionSummary = (decision: ComposerSendDecision): string =>
   });
 
 describe("composerPolicy.decideSend", () => {
+  it("explains document-complexity refusals without misdiagnosing trusted raw content", () => {
+    const issue = DocumentComplexitySafetyViolation.make({
+      maxNodes: NonNegativeInt.make(MAX_SAFE_DOCUMENT_NODES),
+      observedNodes: NonNegativeInt.make(MAX_SAFE_DOCUMENT_NODES + 1),
+    });
+
+    expect(unsafeDocumentMessage([issue])).toBe(
+      "This draft contains a document whose structure exceeds the safe size and complexity limit. Edit or replace that content before sending."
+    );
+  });
+
   it.effect("silently gates while a seed-time safety gate is open", () =>
     Effect.gen(function* () {
       const state = yield* documentToEditorState(textDocument("hello"));

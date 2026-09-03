@@ -30,10 +30,7 @@ const makeRepository = (): WorkerServer.Worker.WorkerRepositoryShape => {
     get: (id) =>
       pipe(
         HashMap.get(workers, id),
-        O.match({
-          onNone: () => Effect.fail(WorkerServer.Worker.WorkerRepositoryNotFound.make({ workerId: id })),
-          onSome: Effect.succeed,
-        })
+        Effect.fromOption(() => WorkerServer.Worker.WorkerRepositoryNotFound.make({ workerId: id }))
       ),
     list: Effect.sync(() => A.fromIterable(HashMap.values(workers))),
   };

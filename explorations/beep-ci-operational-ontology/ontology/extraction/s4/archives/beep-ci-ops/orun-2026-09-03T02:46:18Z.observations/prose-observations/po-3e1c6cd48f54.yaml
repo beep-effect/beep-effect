@@ -1,0 +1,10 @@
+id: po:sha256:3e1c6cd48f541482c5471d901e96c829dd47de787108d7ee9cc4fec91966eb97
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: turbo.json
+source_span:
+  start_line: 54
+  end_line: 54
+quote: '"dependsOn": ["^build"],'
+epistemic_status: quoted_prose

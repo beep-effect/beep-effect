@@ -17,7 +17,8 @@ import {
   DmsMirrorProbe,
   DmsMirrorUnavailable,
 } from "@beep/documents-use-cases/aggregates/Sync/server";
-import { Effect, Layer } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 
 const disconnected = Effect.fail(
@@ -38,8 +39,7 @@ const failDisconnected = () => disconnected;
  *
  * ```ts
  * import { DmsMirrorDisconnectedLayer } from "@/sync/DmsMirrorDisconnected"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(DmsMirrorDisconnectedLayer)) // true
  * ```
  *
@@ -69,8 +69,7 @@ const disconnectedProbe = Effect.succeed(
  *
  * ```ts
  * import { DmsMirrorAvailabilityDisconnectedLayer } from "@/sync/DmsMirrorDisconnected"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(DmsMirrorAvailabilityDisconnectedLayer)) // true
  * ```
  *

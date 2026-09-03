@@ -1,0 +1,97 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "goals/candor-gate-followups-closeout",
+  "committed": false,
+  "createdAt": "2026-08-14T00:17:05.569Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "prepare:01-effect-imports",
+      "label": "prepare:laws:effect-imports",
+      "phase": "prepare",
+      "status": "passed",
+      "durationMs": 11131.315324,
+      "exitCode": 0
+    },
+    {
+      "id": "prepare:02-terse-effect",
+      "label": "prepare:laws:terse-effect",
+      "phase": "prepare",
+      "status": "passed",
+      "durationMs": 24671.354843,
+      "exitCode": 0
+    },
+    {
+      "id": "prepare:03-config-sync",
+      "label": "prepare:config-sync",
+      "phase": "prepare",
+      "status": "passed",
+      "durationMs": 6963.413155,
+      "exitCode": 0
+    },
+    {
+      "id": "prepare:04-lint-fix",
+      "label": "prepare:lint:fix",
+      "phase": "prepare",
+      "status": "passed",
+      "durationMs": 3378.882314,
+      "exitCode": 0
+    },
+    {
+      "id": "prepare:05-docgen",
+      "label": "prepare:docgen",
+      "phase": "prepare",
+      "status": "passed",
+      "durationMs": 2901.519874,
+      "exitCode": 0
+    },
+    {
+      "id": "feedback:01-build",
+      "label": "feedback:build",
+      "phase": "feedback",
+      "status": "failed",
+      "durationMs": 22787.705839,
+      "exitCode": 2,
+      "repairCommand": "Run `bun run docgen:local` for edit loops or `bun run docgen` for the full proof."
+    },
+    {
+      "id": "feedback:02-check",
+      "label": "feedback:check",
+      "phase": "feedback",
+      "status": "passed",
+      "durationMs": 55901.030088,
+      "exitCode": 0
+    },
+    {
+      "id": "feedback:03-lint",
+      "label": "feedback:lint",
+      "phase": "feedback",
+      "status": "passed",
+      "durationMs": 141239.623341,
+      "exitCode": 0
+    },
+    {
+      "id": "feedback:04-test",
+      "label": "feedback:test",
+      "phase": "feedback",
+      "status": "passed",
+      "durationMs": 323232.231825,
+      "exitCode": 0
+    }
+  ],
+  "message": "yeet feedback phase failed.",
+  "mode": "repair",
+  "outcome": "failure",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "goals_candor-gate-followups-closeout-08bfb2151c0b",
+  "attemptId": "a758a588-ec97-409e-8bc9-b86881f622b7",
+  "startedAt": "2026-08-14T00:07:12.680Z",
+  "endedAt": "2026-08-14T00:17:05.569Z",
+  "elapsedMs": 592889,
+  "indexPath": "<fleet>/beep-effect12/.beep/yeet/quality-issue-index.json",
+  "failedStepId": "feedback:01-build",
+  "failureKind": "step-exit"
+}

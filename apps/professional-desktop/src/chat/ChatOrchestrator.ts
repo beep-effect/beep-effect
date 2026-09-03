@@ -34,30 +34,32 @@ import { appendTurnFinalizationUsageRecord, TurnFinalizationUsageAppend } from "
 import { $ProfessionalDesktopId } from "@beep/identity/packages";
 import { Document, P, Text } from "@beep/md/Md.model";
 import { renderPlainTextUnsafe } from "@beep/md/Md.render";
-import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability";
-import { LiteralKit } from "@beep/schema";
-import { A, Eq, flow, O, Str, thunkEffectVoid, thunkFalse } from "@beep/utils";
+import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability/CauseRedaction";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as A from "@beep/utils/Array";
+import * as Eq from "@beep/utils/Equal";
+import * as O from "@beep/utils/Option";
+import * as Str from "@beep/utils/Str";
+import { thunkEffectVoid, thunkFalse } from "@beep/utils/thunk";
 import { MessageRole } from "@beep/workspace-domain/entities/Message";
 import { Thread } from "@beep/workspace-use-cases/server";
-import {
-  Cause,
-  Clock,
-  Context,
-  Duration,
-  Effect,
-  Exit,
-  HashMap,
-  Layer,
-  Metric,
-  Number as N,
-  Order,
-  pipe,
-  Ref,
-  Semaphore,
-  Stream,
-  Tuple,
-} from "effect";
+import * as Cause from "effect/Cause";
+import * as Clock from "effect/Clock";
+import * as Context from "effect/Context";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import { flow, pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
+import * as Layer from "effect/Layer";
+import * as Metric from "effect/Metric";
+import * as N from "effect/Number";
+import * as Order from "effect/Order";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
+import * as Semaphore from "effect/Semaphore";
+import * as Stream from "effect/Stream";
+import * as Tuple from "effect/Tuple";
 import { DerivedThreadTitle } from "./DerivedThreadTitle.ts";
 import { approximateCostUsdMicros } from "./UsagePricing.ts";
 import { UsageRecordSink } from "./UsageRecordSink.ts";
@@ -375,15 +377,11 @@ const streamAndPersist = (
             finalizedAt: yield* Ref.get(finalizedAt),
             usage: yield* Ref.get(finalizedUsage),
           });
-          return yield* O.match(observed, {
-            onNone: () =>
-              Effect.fail(
-                TurnGenerationError.make({
-                  message: "Assistant turn stream ended without a provider-usage finalization signal",
-                })
-              ),
-            onSome: Effect.succeed,
-          });
+          return yield* Effect.fromOption(observed, () =>
+            TurnGenerationError.make({
+              message: "Assistant turn stream ended without a provider-usage finalization signal",
+            })
+          );
         });
 
         // Persist runs once. A finished turn stores the streamed blocks, sorted by
@@ -981,7 +979,7 @@ const trackedThreadTurn = (
  * ```ts
  * import { AgentTurnKernel } from "@beep/agents-use-cases/public"
  * import { Thread } from "@beep/workspace-use-cases/server"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { makeChatOperations } from "@/chat/ChatOrchestrator"
  * import { UsageRecordSink } from "@/chat/UsageRecordSink"
  *
@@ -1122,7 +1120,7 @@ const makeChatOperationsWith = (
  * ```ts
  * import { AgentTurnKernel } from "@beep/agents-use-cases/public"
  * import { Thread } from "@beep/workspace-use-cases/server"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { makeChatOperations } from "@/chat/ChatOrchestrator"
  * import { UsageRecordSink } from "@/chat/UsageRecordSink"
  *
@@ -1181,8 +1179,7 @@ const makeChatHandlers = (operations: ChatOperations) =>
  *
  * ```ts
  * import { ChatHandlersLive } from "@/chat/ChatOrchestrator"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(ChatHandlersLive)) // true
  * ```
  *

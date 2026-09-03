@@ -8,9 +8,9 @@
   "regeneration_command": "bun run beep quality jsdoc-inventory",
   "snapshot_command": "bun run beep quality jsdoc-ratchet --write-baseline",
   "comparison": "fail-on-growth: generated inventory totals must not exceed this committed baseline",
-  "generated_at": "2026-08-31T09:35:51.829Z",
+  "generated_at": "2026-09-03T19:51:34.847Z",
   "tracked_totals": {
-    "packagesNeedingRemediation": 58,
+    "packagesNeedingRemediation": 116,
     "missingExportExamples": 4,
     "missingExportCategories": 0,
     "missingExportSince": 0,
@@ -29,6 +29,7 @@
     "malformed-example": 0,
     "duplicate-example": 0,
     "loose-ts-fence": 0,
-    "forbidden-remarks": 0
+    "forbidden-remarks": 0,
+    "no-root-package-import": 3728
   }
 }

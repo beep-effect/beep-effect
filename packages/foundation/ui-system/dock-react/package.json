@@ -34,10 +34,13 @@
     "lint": "bun run beep:lint",
     "lint:fix": "bun run beep:lint:fix",
     "test": "bun run beep:test",
-    "test:integration": "bun run beep:test:integration"
+    "test:integration": "bun run beep:test:integration",
+    "package-test-typecheck": "beep-cli quality test-tsgo-package"
   },
   "exports": {
     ".": "./src/index.ts",
+    "./DockReact.types": "./src/DockReact.types.ts",
+    "./DockviewReact": "./src/DockviewReact.tsx",
     "./internal/*": "./src/internal/*.ts",
     "./package.json": "./package.json"
   },
@@ -55,6 +58,8 @@
     "provenance": true,
     "exports": {
       ".": "./dist/index.js",
+      "./DockReact.types": "./dist/DockReact.types.js",
+      "./DockviewReact": "./dist/DockviewReact.js",
       "./internal/*": null,
       "./package.json": "./package.json"
     }

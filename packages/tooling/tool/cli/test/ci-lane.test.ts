@@ -1,33 +1,45 @@
 import {
   CI_LANE_DESCRIPTORS,
   CI_LANE_ID_VALUES,
+  CI_LANE_PARTITIONS,
+  CiLanePartition,
   CiLaneRunOptions,
   CiLocalStepPlan,
+  ciLanePartitionArgsForTesting,
   ciLaneStepsForTesting,
+  ciLocalLaneInputsForTesting,
   ciLocalStepsForTesting,
   docgenLaneModeForChangedPaths,
   doctestStepForTesting,
+  proveCiLanePartition,
   runCiLane,
 } from "@beep/repo-cli/commands/Ci";
 import {
+  isLabsWorkspaceDir,
   readTurboCacheEnvironment,
   resolveTurboCachePlan,
   turboCachePlanArgs,
 } from "@beep/repo-cli/test/SharedInternals";
+import { FsUtilsLive, findRepoRoot, resolveWorkspacePackages } from "@beep/repo-utils";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A } from "@beep/utils";
+import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it, layer } from "@effect/vitest";
-import { Cause, Effect, Exit, FileSystem, Layer, Order, Path, pipe, Sink, Stream } from "effect";
+import { Cause, Effect, Exit, FileSystem, HashMap, Layer, Order, Path, pipe, Sink, Stream } from "effect";
 import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
 import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
+import { parseDocument } from "yaml";
 
 const REPO_ROOT = "/repo";
 const MERGE_BASE_SHA = "mergebase1234";
 const encoder = new TextEncoder();
+const encodeJson = UnknownFromJsonString.encodeUnknownSync;
 
 const withEnvVar = <A>(name: string, value: string | undefined, use: () => A): A => {
   const previous = Bun.env[name];
@@ -134,7 +146,13 @@ const doctestCiLayer = (
       return Effect.succeed(commandHandle(output, exitCode));
     })
   );
-  return Layer.mergeAll(fileSystemLayer, Path.layer, processLayer, TestConsole.layer);
+  const fileSystemAndPath = Layer.merge(fileSystemLayer, Path.layer);
+  return Layer.mergeAll(
+    fileSystemAndPath,
+    FsUtilsLive.pipe(Layer.provide(fileSystemAndPath)),
+    processLayer,
+    TestConsole.layer
+  );
 };
 
 const firstOf = <T>(items: ReadonlyArray<T>): T => O.getOrThrow(A.head(items));
@@ -174,6 +192,133 @@ const branchProtectionContextSnapshotUrl = new URL(
   "../../../../../goals/ship-velocity/research/branch-protection-contexts.json",
   import.meta.url
 );
+const checkWorkflowUrl = new URL("../../../../../.github/workflows/check.yml", import.meta.url);
+const LiveRepoLayer = Layer.mergeAll(NodeServices.layer, FsUtilsLive.pipe(Layer.provide(NodeServices.layer)));
+const PartitionLaneLayer = Layer.merge(LiveRepoLayer, TestConsole.layer);
+
+// Tests build the layer in a scope instead of Effect.provide so the effect-lsp
+// entry-point rule (TS377032) stays satisfied, mirroring the sibling CLI tests.
+const provideScopedLayer =
+  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
+  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
+    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
+
+const withEnvVarEffect = <A, E, R>(
+  name: string,
+  value: string | undefined,
+  use: Effect.Effect<A, E, R>
+): Effect.Effect<A, E, R> =>
+  Effect.acquireUseRelease(
+    Effect.sync(() => {
+      const previous = Bun.env[name];
+      if (value === undefined) delete Bun.env[name];
+      else Bun.env[name] = value;
+      return previous;
+    }),
+    () => use,
+    (previous) =>
+      Effect.sync(() => {
+        if (previous === undefined) delete Bun.env[name];
+        else Bun.env[name] = previous;
+      })
+  );
+
+type PartitionShimOptions = {
+  readonly dryRunOutput: string;
+  readonly dryRunExitCode?: number;
+  readonly executionExitCode?: number;
+};
+
+const withPartitionShim = <A, E, R>(
+  options: PartitionShimOptions,
+  use: (fixture: { readonly commandLogPath: string; readonly tempDir: string }) => Effect.Effect<A, E, R>
+) =>
+  Effect.scoped(
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const tempDir = yield* fs.makeTempDirectory();
+      const binDir = path.join(tempDir, "bin");
+      const commandLogPath = path.join(tempDir, "commands.log");
+      const bunxPath = path.join(binDir, "bunx");
+
+      yield* fs.makeDirectory(binDir, { recursive: true });
+      yield* fs.writeFileString(
+        bunxPath,
+        A.join(
+          [
+            "#!/usr/bin/env sh",
+            'printf \'%s\\n\' "$*" >> "$CI_LANE_TEST_COMMAND_LOG"',
+            'case " $* " in',
+            '  *" --dry-run=json "*)',
+            "    printf '%s\\n' \"$CI_LANE_TEST_DRY_RUN_OUTPUT\"",
+            '    exit "${CI_LANE_TEST_DRY_RUN_EXIT:-0}"',
+            "    ;;",
+            "esac",
+            'exit "${CI_LANE_TEST_EXECUTION_EXIT:-0}"',
+            "",
+          ],
+          "\n"
+        )
+      );
+      yield* fs.chmod(bunxPath, 0o755);
+      yield* Effect.addFinalizer(() => fs.remove(tempDir, { force: true, recursive: true }).pipe(Effect.orDie));
+
+      return yield* withEnvVarEffect(
+        "PATH",
+        `${binDir}:${Bun.env.PATH ?? ""}`,
+        withEnvVarEffect(
+          "CI_LANE_TEST_COMMAND_LOG",
+          commandLogPath,
+          withEnvVarEffect(
+            "CI_LANE_TEST_DRY_RUN_OUTPUT",
+            options.dryRunOutput,
+            withEnvVarEffect(
+              "CI_LANE_TEST_DRY_RUN_EXIT",
+              String(options.dryRunExitCode ?? 0),
+              withEnvVarEffect(
+                "CI_LANE_TEST_EXECUTION_EXIT",
+                String(options.executionExitCode ?? 0),
+                use({ commandLogPath, tempDir })
+              )
+            )
+          )
+        )
+      );
+    })
+  );
+
+const withWorkingDirectory = <A, E, R>(directory: string, use: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>
+  Effect.acquireUseRelease(
+    Effect.sync(() => {
+      const previous = process.cwd();
+      process.chdir(directory);
+      return previous;
+    }),
+    () => use,
+    (previous) => Effect.sync(() => process.chdir(previous))
+  );
+
+const partitionPackages = (partitionId: string): ReadonlyArray<string> =>
+  O.getOrThrow(A.findFirst(CI_LANE_PARTITIONS, (partition) => partition.id === partitionId)).packages;
+
+const lanePackages = (laneId: "lint" | "test-unit"): ReadonlyArray<string> =>
+  pipe(
+    CI_LANE_PARTITIONS,
+    A.filter((partition) => partition.lane === laneId),
+    A.flatMap((partition) => partition.packages),
+    A.sort(Order.String)
+  );
+
+const turboDryRunOutput = (task: string, packages: ReadonlyArray<string>): string =>
+  encodeJson({
+    tasks: A.map(packages, (packageName) => ({
+      command: `bun run ${task}`,
+      package: packageName,
+      task,
+      taskId: `${packageName}#${task}`,
+    })),
+  });
 
 describe("CI lane descriptors", () => {
   it("enumerates every check.yml lane exactly once", () => {
@@ -234,6 +379,479 @@ describe("CI lane descriptors", () => {
     );
     expect(residue).toEqual(["dependency-review", "pr-size"]);
   });
+});
+
+describe("CI lane partitions", () => {
+  it("preserves the signed bin counts and p95 weights", () => {
+    expect(
+      A.map(CI_LANE_PARTITIONS, (partition) => ({
+        id: partition.id,
+        packages: A.length(partition.packages),
+        weightSeconds: partition.weightSeconds,
+      }))
+    ).toEqual([
+      { id: "lint-a", packages: 67, weightSeconds: 1132 },
+      { id: "lint-b", packages: 67, weightSeconds: 1134 },
+      { id: "repo-cli", packages: 1, weightSeconds: 879 },
+      { id: "unit-a", packages: 66, weightSeconds: 1214 },
+      { id: "unit-b", packages: 67, weightSeconds: 1214 },
+    ]);
+  });
+
+  it.effect("rejects a partition that belongs to another lane", () =>
+    Effect.gen(function* () {
+      const error = yield* proveCiLanePartition("lint", "unit-a", [], [], [], false).pipe(Effect.flip);
+      expect(error._tag).toBe("CiLanePartitionError");
+      expect(error.reason).toBe("invalid-assignment");
+      expect(error.message).toContain("CiLanePartitions.ts");
+      expect(error.message).toContain("Regenerate the deterministic LPT placement");
+    })
+  );
+
+  it.effect("fails closed for a missing placement and a duplicate assignment", () =>
+    Effect.gen(function* () {
+      const lintPartitions = A.filter(CI_LANE_PARTITIONS, (partition) => partition.lane === "lint");
+      const allLintPackages = A.flatMap(lintPartitions, (partition) => partition.packages);
+      const lintA = O.getOrThrow(A.findFirst(lintPartitions, (partition) => partition.id === "lint-a"));
+      const lintB = O.getOrThrow(A.findFirst(lintPartitions, (partition) => partition.id === "lint-b"));
+      const firstLintA = O.getOrThrow(A.head(lintA.packages));
+      const missingTable = A.map(CI_LANE_PARTITIONS, (partition) =>
+        partition.id === "lint-a"
+          ? CiLanePartition.make({ ...partition, packages: A.drop(partition.packages, 1) })
+          : partition
+      );
+      const duplicateTable = A.map(CI_LANE_PARTITIONS, (partition) =>
+        partition.id === "lint-b"
+          ? CiLanePartition.make({ ...partition, packages: A.prepend(partition.packages, firstLintA) })
+          : partition
+      );
+
+      const missing = yield* proveCiLanePartition(
+        "lint",
+        "lint-a",
+        allLintPackages,
+        allLintPackages,
+        allLintPackages,
+        false,
+        missingTable
+      ).pipe(Effect.flip);
+      expect(missing.reason).toBe("missing-package");
+      expect(missing.message).toContain(firstLintA);
+
+      const duplicate = yield* proveCiLanePartition(
+        "lint",
+        "lint-b",
+        allLintPackages,
+        allLintPackages,
+        allLintPackages,
+        false,
+        duplicateTable
+      ).pipe(Effect.flip);
+      expect(duplicate.reason).toBe("duplicate-package");
+      expect(duplicate.message).toContain(firstLintA);
+      expect(lintB.packages).not.toContain(firstLintA);
+    })
+  );
+
+  it.effect("fails closed for absent, stale, and unknown-selected partition entries", () =>
+    Effect.gen(function* () {
+      const packageName = "@beep/repo-cli";
+      const table = [
+        CiLanePartition.make({
+          id: "lint-a",
+          lane: "lint",
+          packages: [packageName],
+          weightSeconds: 1,
+        }),
+      ];
+
+      const absent = yield* proveCiLanePartition("lint", "lint-a", [], [], [], false, []).pipe(Effect.flip);
+      expect(absent.reason).toBe("invalid-assignment");
+      expect(absent.message).toContain("absent from the committed table");
+
+      const staleWorkspace = yield* proveCiLanePartition("lint", "lint-a", [], [], [], false, table).pipe(Effect.flip);
+      expect(staleWorkspace.reason).toBe("stale-package");
+      expect(staleWorkspace.message).toContain("absent from the workspace");
+
+      const staleTask = yield* proveCiLanePartition("lint", "lint-a", [packageName], [], [], false, table).pipe(
+        Effect.flip
+      );
+      expect(staleTask.reason).toBe("stale-package");
+      expect(staleTask.message).toContain("has no executable lint task");
+
+      const unknownSelected = yield* proveCiLanePartition(
+        "lint",
+        "lint-a",
+        [packageName],
+        [packageName],
+        ["@beep/not-assigned"],
+        false,
+        table
+      ).pipe(Effect.flip);
+      expect(unknownSelected.reason).toBe("unknown-selected-task");
+      expect(unknownSelected.message).toContain("@beep/not-assigned");
+
+      const duplicatePartitionTable = [
+        ...table,
+        CiLanePartition.make({
+          id: "lint-a",
+          lane: "lint",
+          packages: [],
+          weightSeconds: 1,
+        }),
+      ];
+      const duplicatePartition = yield* proveCiLanePartition(
+        "lint",
+        "lint-a",
+        [packageName],
+        [packageName],
+        [packageName],
+        false,
+        duplicatePartitionTable
+      ).pipe(Effect.flip);
+      expect(duplicatePartition.reason).toBe("duplicate-partition");
+      expect(duplicatePartition.message).toContain("Partition id lint-a appears more than once");
+    })
+  );
+
+  it.effect("rejects every invalid partition option shape before repository discovery", () =>
+    Effect.gen(function* () {
+      const invalidLane = yield* runCiLane(
+        "build",
+        CiLaneRunOptions.make({ ...baseOptions, partition: "lint-a" })
+      ).pipe(Effect.flip);
+      expect(invalidLane._tag).toBe("CiLanePartitionError");
+      expect(invalidLane.message).toContain("Lane build does not support --partition");
+
+      const combinedFilter = yield* runCiLane(
+        "lint",
+        CiLaneRunOptions.make({ ...baseOptions, filter: "@beep/repo-cli", partition: "lint-a" })
+      ).pipe(Effect.flip);
+      expect(combinedFilter._tag).toBe("CiLanePartitionError");
+      expect(combinedFilter.message).toContain("--filter cannot be combined with --partition");
+
+      const wrongLane = yield* runCiLane("lint", CiLaneRunOptions.make({ ...baseOptions, partition: "unit-a" })).pipe(
+        Effect.flip
+      );
+      expect(wrongLane._tag).toBe("CiLanePartitionError");
+      expect(wrongLane.message).toContain("Partition unit-a does not belong to lane lint");
+
+      const dryRunWithoutPartition = yield* runCiLane(
+        "lint",
+        CiLaneRunOptions.make({ ...baseOptions, dryRun: true })
+      ).pipe(Effect.flip);
+      expect(dryRunWithoutPartition._tag).toBe("CiLanePartitionError");
+      expect(dryRunWithoutPartition.message).toContain("--dry-run requires --partition");
+
+      const forceWithoutPartition = yield* runCiLane(
+        "lint",
+        CiLaneRunOptions.make({ ...baseOptions, force: true })
+      ).pipe(Effect.flip);
+      expect(forceWithoutPartition._tag).toBe("CiLanePartitionError");
+      expect(forceWithoutPartition.message).toContain("--force requires --partition");
+    }).pipe(provideScopedLayer(PartitionLaneLayer))
+  );
+
+  it("keeps affected selection shaping out of the exact package execution", () => {
+    const options = CiLaneRunOptions.make({
+      ...prShapeOptions,
+      partition: "lint-a",
+      force: true,
+    });
+    const args = ciLanePartitionArgsForTesting("lint", ["@beep/repo-cli", "@beep/types"], options);
+    const selectionShape = ["--affected", "--filter=!./apps/labs/**", "--only", "--dry-run=json"];
+    const executionShape = [
+      "--only",
+      "--concurrency=2",
+      "--filter=!./apps/labs/**",
+      "--filter=@beep/repo-cli",
+      "--filter=@beep/types",
+      "--force",
+      "--summarize",
+    ];
+
+    expect([...args.selection]).toEqual([
+      "turbo",
+      "run",
+      "lint",
+      ...expectedTurboCacheArgs(selectionShape),
+      ...selectionShape,
+    ]);
+    expect([...args.execution]).toEqual([
+      "turbo",
+      "run",
+      "@beep/repo-cli#lint",
+      "@beep/types#lint",
+      ...expectedTurboCacheArgs(executionShape),
+      ...executionShape,
+    ]);
+    expect(args.execution).not.toContain("--affected");
+    expect(args.execution).not.toContain("--base");
+  });
+
+  it.effect("makes the live non-labs task inventory a complete disjoint union", () =>
+    Effect.gen(function* () {
+      const repoRoot = yield* findRepoRoot();
+      const path = yield* Path.Path;
+      const workspaces = yield* resolveWorkspacePackages(repoRoot);
+      const workspaceEntries = A.fromIterable(HashMap.entries(workspaces));
+      const workspacePackageNames = A.map(workspaceEntries, ([name]) => name);
+
+      for (const [laneId, task, partition] of [
+        ["lint", "lint", "lint-a"],
+        ["test-unit", "test", "repo-cli"],
+      ] as const) {
+        const taskPackageNames = pipe(
+          workspaceEntries,
+          A.filter(([, workspace]) => {
+            const relativeDir = Str.replace(/\\/g, "/")(path.relative(repoRoot, workspace.dir));
+            return !isLabsWorkspaceDir(relativeDir) && R.has(workspace.scripts, task);
+          }),
+          A.map(([name]) => name),
+          A.sort(Order.String)
+        );
+        const proof = yield* proveCiLanePartition(
+          laneId,
+          partition,
+          workspacePackageNames,
+          taskPackageNames,
+          taskPackageNames,
+          false
+        );
+        const assignments = pipe(
+          CI_LANE_PARTITIONS,
+          A.filter((entry) => entry.lane === laneId),
+          A.flatMap((entry) => entry.packages)
+        );
+
+        expect(A.length(A.dedupe(assignments))).toBe(A.length(assignments));
+        expect(A.sort(assignments, Order.String)).toEqual(taskPackageNames);
+        expect(proof.selectedTaskCount).toBe(134);
+      }
+    }).pipe(provideScopedLayer(LiveRepoLayer))
+  );
+
+  it.effect("keeps literal required aggregators and fails every non-success shard result", () =>
+    Effect.gen(function* () {
+      const workflowText = yield* Effect.tryPromise(() => Bun.file(checkWorkflowUrl).text());
+      const workflow = parseDocument(workflowText);
+      expect(workflow.errors).toHaveLength(0);
+      expect(workflowText).not.toMatch(/ci lane (?:lint|test-unit)[^\n]*--force/u);
+      expect(workflow.getIn(["jobs", "lint", "name"])).toBe("Lint");
+      expect(workflow.getIn(["jobs", "lint", "if"])).toBe("${{ always() }}");
+      expect(workflow.getIn(["jobs", "test-unit", "name"])).toBe("Test Unit");
+      expect(workflow.getIn(["jobs", "test-unit", "if"])).toBe("${{ always() }}");
+      expect(workflow.getIn(["jobs", "lint-shard", "strategy", "fail-fast"])).toBe(false);
+      expect(workflow.getIn(["jobs", "test-unit-shard", "strategy", "fail-fast"])).toBe(false);
+
+      const lintGate = String(workflow.getIn(["jobs", "lint", "steps", 0, "run"]));
+      const unitGate = String(workflow.getIn(["jobs", "test-unit", "steps", 0, "run"]));
+      expect(lintGate).toContain('needs.lint-shard.result }}" != "success"');
+      expect(unitGate).toContain('needs.test-unit-shard.result }}" != "success"');
+      expect(lintGate).toContain("exit 1");
+      expect(unitGate).toContain("exit 1");
+    })
+  );
+});
+
+describe("partitioned CI lane execution", () => {
+  it.effect("proves and executes a full lint partition with exact package tasks", () =>
+    Effect.gen(function* () {
+      const selectedPackages = lanePackages("lint");
+      const firstPackage = firstOf(partitionPackages("lint-a"));
+      const nonexistentPackage = firstPackage;
+      const dryRunOutput = encodeJson({
+        tasks: [
+          ...A.map(selectedPackages, (packageName) => ({
+            command: "bun run lint",
+            package: packageName,
+            task: "lint",
+            taskId: `${packageName}#lint`,
+          })),
+          {
+            command: "bun run lint",
+            package: firstPackage,
+            task: "lint",
+            taskId: `${firstPackage}#lint`,
+          },
+          {
+            command: "<NONEXISTENT>",
+            package: nonexistentPackage,
+            task: "lint",
+            taskId: `${nonexistentPackage}#lint`,
+          },
+          {
+            command: "bun run test",
+            package: firstPackage,
+            task: "test",
+            taskId: `${firstPackage}#test`,
+          },
+        ],
+      });
+
+      yield* withPartitionShim({ dryRunOutput }, ({ commandLogPath }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          yield* runCiLane(
+            "lint",
+            CiLaneRunOptions.make({
+              ...baseOptions,
+              force: true,
+              partition: "lint-a",
+              summarize: true,
+            })
+          );
+
+          const commands = pipe(yield* fs.readFileString(commandLogPath), Str.split("\n"), A.filter(Str.isNonEmpty));
+          expect(commands).toHaveLength(2);
+          const selection = firstOf(commands);
+          const execution = lastOf(commands);
+          expect(selection).toContain("turbo run lint");
+          expect(selection).toContain("--filter=!./apps/labs/** --only --dry-run=json");
+          expect(selection).not.toContain("--affected");
+          expect(execution).toContain(`turbo run ${firstPackage}#lint`);
+          expect(execution).toContain("--only --concurrency=2 --filter=!./apps/labs/**");
+          expect(execution).toContain(`--filter=${firstPackage}`);
+          expect(execution).toContain("--force --summarize");
+          expect(execution).not.toContain("--affected");
+
+          const output = A.join(A.filter(yield* TestConsole.logLines, P.isString), "\n");
+          expect(output).toContain("lint partition union proved: 134 executable tasks, 134 selected, 67 in lint-a");
+        })
+      );
+    }).pipe(provideScopedLayer(PartitionLaneLayer))
+  );
+
+  it.effect("rejects partial unscoped selections but allows affected selections", () =>
+    Effect.gen(function* () {
+      const selectedPackage = firstOf(partitionPackages("lint-a"));
+      const dryRunOutput = turboDryRunOutput("lint", [selectedPackage]);
+      const incomplete = yield* withPartitionShim({ dryRunOutput }, () =>
+        runCiLane("lint", CiLaneRunOptions.make({ ...baseOptions, partition: "lint-a" })).pipe(Effect.flip)
+      );
+      expect(incomplete._tag).toBe("CiLanePartitionError");
+      if (incomplete._tag === "CiLanePartitionError") {
+        expect(incomplete.reason).toBe("incomplete-selection");
+        expect(incomplete.message).toContain("Turbo's unscoped lint dry run omitted executable packages");
+      }
+
+      yield* withPartitionShim({ dryRunOutput }, () =>
+        runCiLane("lint", CiLaneRunOptions.make({ ...baseOptions, affected: true, dryRun: true, partition: "lint-a" }))
+      );
+    }).pipe(provideScopedLayer(PartitionLaneLayer))
+  );
+
+  it.effect("skips execution when an affected unit selection misses the requested partition", () =>
+    Effect.gen(function* () {
+      const selectedPackage = firstOf(partitionPackages("unit-a"));
+      yield* withPartitionShim({ dryRunOutput: turboDryRunOutput("test", [selectedPackage]) }, ({ commandLogPath }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          yield* runCiLane(
+            "test-unit",
+            CiLaneRunOptions.make({
+              ...baseOptions,
+              affected: true,
+              partition: "repo-cli",
+            })
+          );
+
+          const commands = pipe(yield* fs.readFileString(commandLogPath), Str.split("\n"), A.filter(Str.isNonEmpty));
+          expect(commands).toHaveLength(1);
+          expect(firstOf(commands)).toContain("turbo run test");
+          expect(firstOf(commands)).toContain("--affected --filter=!./apps/labs/** --only --dry-run=json");
+
+          const output = A.join(A.filter(yield* TestConsole.logLines, P.isString), "\n");
+          expect(output).toContain("test-unit partition union proved: 134 executable tasks, 1 selected, 0 in repo-cli");
+          expect(output).toContain("test-unit repo-cli: partition has no selected tasks (skipped)");
+        })
+      );
+    }).pipe(provideScopedLayer(PartitionLaneLayer))
+  );
+
+  it.effect("completes a successful partition dry run without execution", () =>
+    withPartitionShim({ dryRunOutput: turboDryRunOutput("test", lanePackages("test-unit")) }, ({ commandLogPath }) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        yield* runCiLane("test-unit", CiLaneRunOptions.make({ ...baseOptions, dryRun: true, partition: "repo-cli" }));
+
+        const commands = pipe(yield* fs.readFileString(commandLogPath), Str.split("\n"), A.filter(Str.isNonEmpty));
+        expect(commands).toHaveLength(1);
+        const output = A.join(A.filter(yield* TestConsole.logLines, P.isString), "\n");
+        expect(output).toContain("test-unit repo-cli: dry-run proof complete; no tasks executed");
+      })
+    ).pipe(provideScopedLayer(PartitionLaneLayer))
+  );
+
+  it.effect("surfaces Turbo dry-run exits and malformed dry-run JSON as typed failures", () =>
+    Effect.gen(function* () {
+      const nonZero = yield* withPartitionShim({ dryRunExitCode: 9, dryRunOutput: "{}" }, () =>
+        runCiLane("lint", CiLaneRunOptions.make({ ...baseOptions, partition: "lint-a" })).pipe(Effect.flip)
+      );
+      expect(nonZero._tag).toBe("CiLanePartitionError");
+      if (nonZero._tag === "CiLanePartitionError") {
+        expect(nonZero.reason).toBe("turbo-dry-run");
+        expect(nonZero.message).toContain("selection dry run exited with code 9");
+      }
+
+      const malformed = yield* withPartitionShim({ dryRunOutput: "not-json" }, () =>
+        runCiLane("lint", CiLaneRunOptions.make({ ...baseOptions, partition: "lint-a" })).pipe(Effect.flip)
+      );
+      expect(malformed._tag).toBe("CiLanePartitionError");
+      if (malformed._tag === "CiLanePartitionError") {
+        expect(malformed.reason).toBe("turbo-dry-run");
+        expect(malformed.message).toContain("Turbo emitted invalid JSON");
+        expect(malformed.cause).toBeDefined();
+      }
+    }).pipe(provideScopedLayer(PartitionLaneLayer))
+  );
+
+  it.effect("surfaces a non-zero partition execution as a quality task failure", () =>
+    Effect.gen(function* () {
+      const selectedPackage = firstOf(partitionPackages("repo-cli"));
+      const error = yield* withPartitionShim(
+        {
+          dryRunOutput: turboDryRunOutput("test", [selectedPackage]),
+          executionExitCode: 7,
+        },
+        () =>
+          runCiLane("test-unit", CiLaneRunOptions.make({ ...baseOptions, affected: true, partition: "repo-cli" })).pipe(
+            Effect.flip
+          )
+      );
+
+      expect(error._tag).toBe("QualityTaskGroupFailed");
+      if (error._tag === "QualityTaskGroupFailed") {
+        expect(error.exitCode).toBe(7);
+        expect(error.label).toBe("ci:test-unit:repo-cli");
+      }
+    }).pipe(provideScopedLayer(PartitionLaneLayer))
+  );
+
+  it.effect("maps an unreadable workspace inventory to the typed partition error", () =>
+    Effect.gen(function* () {
+      const selectedPackage = firstOf(partitionPackages("repo-cli"));
+      const error = yield* withPartitionShim(
+        { dryRunOutput: turboDryRunOutput("test", [selectedPackage]) },
+        ({ tempDir }) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            yield* fs.makeDirectory(path.join(tempDir, ".git"), { recursive: true });
+            return yield* withWorkingDirectory(
+              tempDir,
+              runCiLane("test-unit", CiLaneRunOptions.make({ ...baseOptions, partition: "repo-cli" })).pipe(Effect.flip)
+            );
+          })
+      );
+
+      expect(error._tag).toBe("CiLanePartitionError");
+      if (error._tag === "CiLanePartitionError") {
+        expect(error.reason).toBe("workspace-read");
+        expect(error.message).toContain("Failed to resolve the current workspace package inventory");
+      }
+    }).pipe(provideScopedLayer(PartitionLaneLayer))
+  );
 });
 
 describe("ciLaneStepsForTesting", () => {
@@ -589,6 +1207,17 @@ describe("ciLocalStepsForTesting", () => {
   it("dispatches each lane through beep ci lane", () => {
     const step = firstOf(ciLocalStepsForTesting(REPO_ROOT, ["knip"], branchPlan));
     expect([...step.args]).toEqual(["run", "beep", "ci", "lane", "knip"]);
+  });
+
+  it("pairs inner-lane ids with steps and honest absent executor digests", () => {
+    const selection = ["knip"] as const;
+    const steps = ciLocalStepsForTesting(REPO_ROOT, selection, branchPlan);
+    const inputs = ciLocalLaneInputsForTesting(selection, steps);
+
+    expect(inputs).toHaveLength(1);
+    expect(inputs[0]?.[0]).toBe("knip");
+    expect(inputs[0]?.[1]).toBe(steps[0]);
+    expect(inputs[0]?.[2]).toStrictEqual(O.none());
   });
 
   it("dispatches the labs lane bare, without affected shaping", () => {

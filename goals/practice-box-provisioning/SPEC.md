@@ -96,9 +96,12 @@ none of them; it binds to them.
       and unit tests per the driver's existing pattern.
 - [ ] The reconciler produces a schema-validated dry-run plan artifact
       against the live tenant from a starter-taxonomy intent document:
-      the staging drop is reported foreign, `BlockedByEntitlement` rows
-      cover metadata/retention, zero mutations execute, and a second
-      dry-run over an unchanged tenant yields an identical plan.
+      foreign resources under the anchor root are reported, resources under
+      other users' roots (the 2026-07 staging drop under the admin root) are
+      out of the reconciler's scope and are reported from a read-only listing
+      in the evidence, `BlockedByEntitlement` rows cover metadata/retention,
+      zero mutations execute, and a second dry-run over an unchanged tenant
+      yields an identical plan.
 - [ ] An operator-attended apply provisions the starter tree under the
       service identity with attorney collaborations, and an immediate
       re-plan is all-`Noop`; the receipt is recorded in `history/`.
@@ -131,4 +134,5 @@ none of them; it binds to them.
 
 | Exception | Scope | Owner | Rationale | Removal condition |
 | --- | --- | --- | --- | --- |
-| None | N/A | N/A | N/A | N/A |
+| Closeout on a follow-up PR | `PLAN.md` P4 for this packet | operator | The final fix (#959) was merged before the closeout was written; the operator chose a follow-up PR (#960) over reverting. | One-time; no removal (packet closed). |
+| Foreign report via admin-root listing | `SPEC.md` acceptance criterion 2 | operator | The tree is anchored at the service identity's root (ratified topology), so the staging drop under the admin root cannot appear in the plan; it is reported from a read-only admin-root listing in `history/2026-09-03-p2-live-apply.md`. | One-time; criterion amended on 2026-09-03. |

@@ -1,0 +1,9 @@
+id: rat:35
+proposal_ref: otp:pa-docgen-work-unit:001
+proposal_sha256: c67626ce97bd5c9892383198cc0ddc87b3c15e7c4e41b9e987720334a0028ebf
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-09-03T09:05:00Z'
+verbatim_decision: Accept the DocgenAffectedWorkUnit reuse against CQ-002's complete-answer reading.

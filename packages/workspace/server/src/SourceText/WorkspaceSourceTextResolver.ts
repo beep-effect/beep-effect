@@ -133,20 +133,14 @@ const extractDocumentText = Effect.fnUntraced(function* (
     .extract(operation)
     .pipe(Effect.mapError(resolverError("extraction-failed", "Document text extraction failed.")));
   const engineVersion = yield* O.fromUndefinedOr(extraction.engineVersion).pipe(
-    O.match({
-      onNone: () =>
-        Effect.fail(SourceTextResolverError.new("extractor-unavailable", "The document extractor has no version.")),
-      onSome: Effect.succeed,
-    })
+    Effect.fromOption(() =>
+      SourceTextResolverError.new("extractor-unavailable", "The document extractor has no version.")
+    )
   );
   yield* verifyExtractor(request.identity.extractor, extraction.engine, engineVersion);
 
   return yield* O.fromUndefinedOr(extraction.text).pipe(
-    O.match({
-      onNone: () =>
-        Effect.fail(SourceTextResolverError.new("text-unavailable", "The document extractor returned no text.")),
-      onSome: Effect.succeed,
-    })
+    Effect.fromOption(() => SourceTextResolverError.new("text-unavailable", "The document extractor returned no text."))
   );
 });
 
@@ -212,13 +206,9 @@ export const makeWorkspaceSourceTextResolver = Effect.fnUntraced(function* () {
             Effect.mapError(resolverError("scope-unavailable", "The workspace vault configuration is unavailable."))
           );
         const vaultRoot = yield* vaultConfig.vaultRootPath.pipe(
-          O.match({
-            onNone: () =>
-              Effect.fail(
-                SourceTextResolverError.new("scope-unavailable", "The workspace has no configured vault root.")
-              ),
-            onSome: Effect.succeed,
-          })
+          Effect.fromOption(() =>
+            SourceTextResolverError.new("scope-unavailable", "The workspace has no configured vault root.")
+          )
         );
         const canonicalRoot = yield* fs
           .realPath(vaultRoot)

@@ -1,0 +1,15 @@
+id: po:sha256:d9e1c6941fe61eb8e8a4f7e40853d6090190ec18523931c3af4551bb2b880c76
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: explorations/beep-ci-operational-ontology/ontology/docs/s7-projection-contract.md
+source_span:
+  start_line: 99
+  end_line: 107
+quote: "### 3.3 Determinism rules (NFR-1)\n\n- No `Date.now`/clock in the core — the projection instant\
+  \ is an argument.\n- Canonical request ordering before any iteration: sort by\n  (priority rank, enqueuedAtMillis,\
+  \ originKey, nonce) — total and stable.\n- `Graph` construction (planner seam, v2) inserts nodes in\
+  \ canonical order —\n  `Graph.topo` (Kahn's over CSR) is deterministic only for a fixed insertion\n\
+  \  order; cyclic input fails typed after an `isAcyclic` pre-check.\n- Emission is byte-deterministic:\
+  \ same input → byte-equal Turtle."
+epistemic_status: quoted_prose

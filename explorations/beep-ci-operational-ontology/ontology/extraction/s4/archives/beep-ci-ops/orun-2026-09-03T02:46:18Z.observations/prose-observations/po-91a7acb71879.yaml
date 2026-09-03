@@ -1,0 +1,10 @@
+id: po:sha256:91a7acb71879927b51916b77d75557bce0347d66aa15536e1cce20d776c60786
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: packages/tooling/tool/cli/src/internal/cli/TurboCache.ts
+source_span:
+  start_line: 408
+  end_line: 435
+quote: The resolved cache decision for one Turbo invocation.
+epistemic_status: quoted_prose

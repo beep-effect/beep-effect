@@ -1,0 +1,70 @@
+id: "otp:pa-admission-request:001"
+hypothesis_ref: "dh:pa-admission-request:001"
+identity_card_ref: "ic:pa-admission-request:001"
+foundational_status: analyzed
+term:
+  preferred_label: "seat request"
+  local_name: SeatRequest
+  proposed_iri: "https://oip.law/ontology/ci-ops#SeatRequest"
+  owl_entity_kind: class
+definition:
+  text: >-
+    A durable queued admission-ticket information artifact created by one
+    enqueue act, ordered and aged while its Agent-owned contender waits for
+    machine-wide admission, and removed when a grant is staged or the wait
+    ends; live input DTOs and replay-derived views are separate representations
+    unless their carrier lineage is explicitly joined.
+  source:
+    - "CQ-021"
+    - "po:sha256:0f770a52d6074ae2a158234d536178589a6353333147509d21a526ac41305d59"
+    - "po:sha256:292a0d656c3996d634bbcc4cde62da942c52bd9a0a3c5d1f9246bf5977066841"
+    - "po:sha256:35fb67c441193ece032d71a3f3e53107352fd83cd469df203eac69b27f2461d9"
+    - "po:sha256:4a30b60df83c527a6da561402d3755e6b194e0f657659d3510c506549f3c9021"
+    - "po:sha256:55c2897fcdfe9318041fe93947653642729b7d3b83ca8f7964e83043085abeac"
+foundational:
+  ufo_category: information_object
+  gufo_alignment: "gufo:Endurant"
+ontoclean:
+  rigidity: rigid
+  identity: supplies
+  dependence: relational
+parents: []
+revision_log:
+  - from_sha256: "5b7577e223874db092827181647c489d660518d20c16ae9584452a0ccc4c0fc1"
+    addressed:
+      - "exact-reuse-identity-unresolved"
+      - "discriminator-true-of-request-dto"
+    disposition: >-
+      Run-2 sitting 1 narrowed exact reuse to the durable queued-ticket record;
+      live and replay-derived views are not asserted to share its identity.
+reuse:
+  searched: true
+  exact_reuse_found: true
+  mappings:
+    - iri: "https://oip.law/ontology/ci-ops#SeatRequest"
+      compatibility: >-
+        The ratified SeatRequest already covers the queued request artifact
+        carrying work kind, priority, charge, origin, and enqueue data; the
+        unresolved carrier-continuity question does not justify a second IRI.
+operational_warrant:
+  competency_questions: ["CQ-021", "CQ-023"]
+  semantic_support_for: []
+alternatives_rejected:
+  - >-
+    The implementation-only null is rejected because the projection derives
+    pending requests from operational admission history and accepts live
+    requests carrying decision-bearing queue data.
+  - >-
+    Field equality is rejected as sufficient identity across live request,
+    journal event, and replay-derived view.
+open_issues:
+  - >-
+    Live AdmissionRequest content and replay-derived PendingRequest content are
+    not asserted identical to the durable ticket; run-3 may propose their
+    relation only with an authoritative carrier-lineage join.
+  - >-
+    The world-side requesting-relator model remains viable and needs its own
+    category-matched identity analysis.
+revision_requests: []
+review: {foundational_agent: pending, adversarial_agent: pending, steward: pending}
+status: proposed

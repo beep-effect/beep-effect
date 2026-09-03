@@ -40,8 +40,7 @@ const GIT_WORKTREE_MARKER = "/.git/worktrees/";
 const VitestForksChild = LiteralKit(["ssr", "client"]);
 const PROC_ROOT = "/proc";
 const PROC_LOCKS = "/proc/locks";
-const DANGLING_STUB_ENTRY_LIMIT = 16;
-const DANGLING_STUB_BYTE_LIMIT = FileSystem.Size(1024 * 1024);
+const DANGLING_GIT_FILE_BYTE_LIMIT = FileSystem.Size(4096);
 
 const ProcPidName = S.String.pipe(
   S.check(S.isPattern(/^[0-9]+$/u)),
@@ -97,12 +96,6 @@ type MeasuredCandidate = {
   readonly bytes: O.Option<number>;
   readonly liveness: CandidateLiveness;
   readonly skipReason: O.Option<TmpfsReapSkipReason>;
-};
-
-type DanglingStubCensus = {
-  readonly bytes: bigint;
-  readonly complete: boolean;
-  readonly entries: number;
 };
 
 type ApplyOutcome = {
@@ -176,7 +169,7 @@ const statIsMissing = Effect.fnUntraced(function* (
   return yield* fs.stat(entryPath).pipe(
     Effect.as(O.some(false)),
     Effect.catch((error) =>
-      Str.Equivalence(error.reason._tag, "NotFound") ? Effect.succeed(O.some(true)) : Effect.succeed(O.none<boolean>())
+      Str.Equivalence(error.reason._tag, "NotFound") ? Effect.succeedSome(true) : Effect.succeed(O.none<boolean>())
     )
   );
 });
@@ -209,10 +202,16 @@ const gitDirForCandidate = Effect.fnUntraced(function* (
   const fs = yield* FileSystem.FileSystem;
   const pathService = yield* Path.Path;
   const gitFile = pathService.join(candidatePath, ".git");
+  if (O.isSome(yield* fs.readLink(gitFile).pipe(Effect.option))) {
+    return O.none();
+  }
   const gitFileInfo = yield* fs.stat(gitFile).pipe(Effect.option);
   const gitFileContent = yield* pipe(
     gitFileInfo,
-    O.filter((info) => Str.Equivalence(info.type, "File")),
+    O.filter(
+      (info) =>
+        Str.Equivalence(info.type, "File") && BigInt.isLessThanOrEqualTo(info.size, DANGLING_GIT_FILE_BYTE_LIMIT)
+    ),
     O.match({
       onNone: () => Effect.succeed(O.none<string>()),
       onSome: () => fs.readFileString(gitFile).pipe(Effect.option),
@@ -246,77 +245,26 @@ const danglingStubShape = (
   return { classified, shapeSkipReason: classified ? O.none() : shapeSkipReason };
 };
 
-const censusWithinLimits = (census: DanglingStubCensus): boolean =>
-  census.complete &&
-  census.entries <= DANGLING_STUB_ENTRY_LIMIT &&
-  BigInt.isLessThanOrEqualTo(census.bytes, DANGLING_STUB_BYTE_LIMIT);
-
-const censusEntry = Effect.fnUntraced(function* (
-  candidateRoot: string,
-  entryPath: string,
-  census: DanglingStubCensus
-): Effect.fn.Return<DanglingStubCensus, never, FileSystem.FileSystem | Path.Path> {
-  const fs = yield* FileSystem.FileSystem;
-  if (O.isSome(yield* fs.readLink(entryPath).pipe(Effect.option))) {
-    return { ...census, complete: false };
-  }
-  const info = yield* fs.stat(entryPath).pipe(Effect.option);
-  if (O.isNone(info)) {
-    return { ...census, complete: false };
-  }
-  const next = {
-    bytes: Str.Equivalence(info.value.type, "Directory") ? census.bytes : BigInt.sum(census.bytes, info.value.size),
-    complete: true,
-    entries: N.increment(census.entries),
-  } satisfies DanglingStubCensus;
-  return Str.Equivalence(info.value.type, "Directory") && censusWithinLimits(next)
-    ? yield* censusDirectory(candidateRoot, entryPath, next)
-    : next;
-});
-
-const censusDirectory = Effect.fnUntraced(function* (
-  candidateRoot: string,
-  directory: string,
-  initial: DanglingStubCensus
-): Effect.fn.Return<DanglingStubCensus, never, FileSystem.FileSystem | Path.Path> {
-  const fs = yield* FileSystem.FileSystem;
-  const pathService = yield* Path.Path;
-  const names = yield* readDirectoryOption(directory);
-  if (O.isNone(names)) {
-    return { ...initial, complete: false };
-  }
-  return yield* Effect.reduce(
-    names.value,
-    () => initial,
-    (census, name) => {
-      if (!censusWithinLimits(census)) {
-        return Effect.succeed(census);
-      }
-      const entryPath = pathService.join(directory, name);
-      return Str.Equivalence(directory, candidateRoot) && Str.Equivalence(name, ".git")
-        ? fs.stat(entryPath).pipe(
-            Effect.option,
-            Effect.map(
-              O.match({
-                onNone: () => ({ ...census, complete: false }),
-                onSome: (info) => ({ ...census, bytes: BigInt.sum(census.bytes, info.size) }),
-              })
-            )
-          )
-        : censusEntry(candidateRoot, entryPath, census);
-    }
-  );
-});
-
-const danglingStubContentsWithinLimits = Effect.fnUntraced(function* (
+const danglingStubContentsAreExact = Effect.fnUntraced(function* (
   candidatePath: string
 ): Effect.fn.Return<boolean, never, FileSystem.FileSystem | Path.Path> {
-  const census = yield* censusDirectory(candidatePath, candidatePath, {
-    bytes: BigInt.BigInt(0),
-    complete: true,
-    entries: 0,
-  });
-  return censusWithinLimits(census);
+  const fs = yield* FileSystem.FileSystem;
+  const pathService = yield* Path.Path;
+  const names = yield* readDirectoryOption(candidatePath);
+  if (O.isNone(names) || A.length(names.value) !== 1 || !Str.Equivalence(names.value[0] ?? "", ".git")) {
+    return false;
+  }
+  const gitFile = pathService.join(candidatePath, ".git");
+  if (O.isSome(yield* fs.readLink(gitFile).pipe(Effect.option))) {
+    return false;
+  }
+  return pipe(
+    yield* fs.stat(gitFile).pipe(Effect.option),
+    O.exists(
+      (info) =>
+        Str.Equivalence(info.type, "File") && BigInt.isLessThanOrEqualTo(info.size, DANGLING_GIT_FILE_BYTE_LIMIT)
+    )
+  );
 });
 
 const discoverGitWorktree = Effect.fnUntraced(function* (
@@ -436,14 +384,14 @@ const discoverDanglingWorktreeStub = Effect.fnUntraced(function* (
   const gitDirMissing = yield* optionalStatIsMissing(gitDir);
   const parentRepoMissing = yield* optionalStatIsMissing(parentRepo);
   const shape = danglingStubShape(gitDirMissing, parentRepoMissing);
-  const contentsWithinLimits = shape.classified ? yield* danglingStubContentsWithinLimits(candidatePath) : false;
+  const contentsAreExact = shape.classified ? yield* danglingStubContentsAreExact(candidatePath) : false;
   return {
     root,
     path: candidatePath,
     reapClass: "dangling-worktree-stub",
     idleSinceMillis,
-    classified: shape.classified && contentsWithinLimits,
-    shapeSkipReason: shape.classified && !contentsWithinLimits ? O.some("contents-present") : shape.shapeSkipReason,
+    classified: shape.classified && contentsAreExact,
+    shapeSkipReason: shape.classified && !contentsAreExact ? O.some("contents-present") : shape.shapeSkipReason,
     parentRepo,
   };
 });
@@ -894,12 +842,68 @@ const releaseNestedHeadInstallCheckout = Effect.fnUntraced(function* (
     : A.append(outcome.warnings, `Nested head-install checkout ${checkout} was not released through Git.`);
 });
 
+const removeDanglingWorktreeStub = Effect.fnUntraced(function* (
+  candidate: DiscoveredCandidate,
+  nestedWarnings: ReadonlyArray<string>
+): Effect.fn.Return<ApplyOutcome, never, FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner> {
+  const fs = yield* FileSystem.FileSystem;
+  const pathService = yield* Path.Path;
+  if (!(yield* danglingStubContentsAreExact(candidate.path))) {
+    return emptyApplyOutcome(`Skipped ${candidate.path}: dangling-stub contents changed before removal.`);
+  }
+  const gitFile = pathService.join(candidate.path, ".git");
+  const gitFileRemoved = yield* fs.remove(gitFile, { force: true, recursive: false }).pipe(
+    Effect.as(true),
+    Effect.orElseSucceed(() => false)
+  );
+  if (!gitFileRemoved) {
+    return { reaped: false, warnings: A.append(nestedWarnings, `Failed to remove ${gitFile}.`) };
+  }
+  const removed = yield* runRepoCommandCapture(
+    "rmdir",
+    ["--", candidate.path],
+    pathService.dirname(candidate.path)
+  ).pipe(
+    Effect.map((result) => result.exitCode === 0),
+    Effect.orElseSucceed(() => false)
+  );
+  if (!removed) {
+    return {
+      reaped: false,
+      warnings: A.append(nestedWarnings, `Preserved raced contents under ${candidate.path}; directory was not empty.`),
+    };
+  }
+  const parent = pathService.dirname(candidate.path);
+  const parentEntries = yield* readDirectoryOption(parent);
+  if (O.isNone(parentEntries)) {
+    return {
+      reaped: true,
+      warnings: A.append(nestedWarnings, `Could not verify whether dangling-stub container ${parent} is empty.`),
+    };
+  }
+  if (!A.isReadonlyArrayEmpty(parentEntries.value) || !pathIsWithin(pathService, candidate.root, parent)) {
+    return { reaped: true, warnings: nestedWarnings };
+  }
+  const parentRemoved = yield* runRepoCommandCapture("rmdir", ["--", parent], pathService.dirname(parent)).pipe(
+    Effect.map((result) => result.exitCode === 0),
+    Effect.orElseSucceed(() => false)
+  );
+  return parentRemoved
+    ? { reaped: true, warnings: nestedWarnings }
+    : {
+        reaped: true,
+        warnings: A.append(nestedWarnings, `Preserved raced contents under dangling-stub container ${parent}.`),
+      };
+});
+
 const removeDirectoryCandidate = Effect.fnUntraced(function* (
   candidate: DiscoveredCandidate,
   nestedWarnings: ReadonlyArray<string> = A.empty()
-): Effect.fn.Return<ApplyOutcome, never, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<ApplyOutcome, never, FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner> {
   const fs = yield* FileSystem.FileSystem;
-  const pathService = yield* Path.Path;
+  if (Str.Equivalence(candidate.reapClass, "dangling-worktree-stub")) {
+    return yield* removeDanglingWorktreeStub(candidate, nestedWarnings);
+  }
   const extras = Str.Equivalence(candidate.reapClass, "fallow-cache")
     ? yield* fallowSiblingArtifacts(candidate.path)
     : A.empty();
@@ -914,21 +918,6 @@ const removeDirectoryCandidate = Effect.fnUntraced(function* (
     discard: true,
     concurrency: 4,
   });
-  if (!Str.Equivalence(candidate.reapClass, "dangling-worktree-stub")) {
-    return { reaped: true, warnings: nestedWarnings };
-  }
-  const parent = pathService.dirname(candidate.path);
-  const parentEntries = yield* readDirectoryOption(parent);
-  if (O.isNone(parentEntries)) {
-    return {
-      reaped: true,
-      warnings: A.append(nestedWarnings, `Could not verify whether dangling-stub container ${parent} is empty.`),
-    };
-  }
-  if (!A.isReadonlyArrayEmpty(parentEntries.value) || !pathIsWithin(pathService, candidate.root, parent)) {
-    return { reaped: true, warnings: nestedWarnings };
-  }
-  yield* fs.remove(parent).pipe(Effect.ignore);
   return { reaped: true, warnings: nestedWarnings };
 });
 
@@ -985,14 +974,37 @@ const candidatePathIsStillSafe = Effect.fnUntraced(function* (
   );
 });
 
+const danglingCandidateIsStillEligible = Effect.fnUntraced(function* (
+  candidate: DiscoveredCandidate,
+  processListing: ProcessCommandLineListing,
+  nowMillis: number
+): Effect.fn.Return<boolean, never, FileSystem.FileSystem | Path.Path> {
+  const pathService = yield* Path.Path;
+  const currentMtime = yield* statMtimeMillis(candidate.path);
+  if (O.isNone(currentMtime)) return false;
+  const rediscovered = yield* discoverDanglingWorktreeStub(candidate.root, candidate.path, currentMtime.value);
+  const proc = yield* scanProcReferences(processListing);
+  const liveness = yield* candidateLiveness(rediscovered, proc, A.empty(), pathService.sep);
+  const ageHours = Duration.toHours(Duration.millis(N.max(0, nowMillis - rediscovered.idleSinceMillis)));
+  return O.isNone(skipReasonFor(rediscovered, ageHours, liveness, false, proc.vitestRunning));
+});
+
 const applyCandidate = Effect.fnUntraced(function* (
-  candidate: MeasuredCandidate
+  candidate: MeasuredCandidate,
+  processListing: ProcessCommandLineListing,
+  nowMillis: number
 ): Effect.fn.Return<ApplyOutcome, never, FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner> {
   if (O.isSome(candidate.skipReason)) {
     return { reaped: false, warnings: [] };
   }
   if (!(yield* candidatePathIsStillSafe(candidate.discovered))) {
     return emptyApplyOutcome(`Skipped ${candidate.discovered.path}: path changed or escaped its discovery root.`);
+  }
+  if (
+    Str.Equivalence(candidate.discovered.reapClass, "dangling-worktree-stub") &&
+    !(yield* danglingCandidateIsStillEligible(candidate.discovered, processListing, nowMillis))
+  ) {
+    return emptyApplyOutcome(`Skipped ${candidate.discovered.path}: dangling-stub eligibility changed before removal.`);
   }
   if (Str.Equivalence(candidate.discovered.reapClass, "git-worktree")) {
     return yield* removeGitWorktreeCandidate(candidate.discovered);
@@ -1241,7 +1253,7 @@ export const runTmpfsReap = Effect.fn("TmpfsReap.runTmpfsReap")(function* (
 
   const apply = O.getOrElse(O.fromUndefinedOr(options.apply), () => false);
   const outcomes = apply
-    ? yield* Effect.forEach(measured, applyCandidate)
+    ? yield* Effect.forEach(measured, (candidate) => applyCandidate(candidate, processListing, effectiveNowMillis))
     : A.map(measured, (): ApplyOutcome => ({ reaped: false, warnings: [] }));
   const reapedIndexes = A.map(
     A.filter(A.zip(measured, outcomes), ([, outcome]) => outcome.reaped),

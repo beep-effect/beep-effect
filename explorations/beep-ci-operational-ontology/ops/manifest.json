@@ -6,18 +6,16 @@
     "status": "active",
     "stage": "research",
     "openQuestions": [
-      "Auditor run 2 (first_run: false, prior index orun-2026-08-29T08:20:55Z.index.yaml): review the updated ontology-foundational-auditor skill on main first, then run over the extended corpus — 163 parked candidates, 76 parked ledger rows, 4 waived constraints, the VerificationLane placement obligation, the six S6-surfaced vocabulary/telemetry gaps, PLUS the S7 additions: the five provisional ciops-prov: ordering predicates + class ScheduleStep (ruling 2, sitting 1 of S7) and the replay censorship finding 'lease death is unjournaled' (phantom grant evidence in research/s7-replay-evidence.md). S5/S6/S7 are COMPLETE — do not redo them.",
-      "S8 IRI scheme: deferred per the standing pipeline; ciops-prov: namespace re-proposal rides auditor run 2."
+      "Auditor run 3 execution (design SETTLED 2026-09-03 — sixteen rulings in DECISIONS.md 'run-3 corpora design grill', brief at research/run3-corpora-design-brief.md; run 2 COMPLETE, orun-2026-09-03T02:46:18Z, do not rerun): staged capture. Stage A (no gate): checkout-identity fleet inventory (worktree fleet snapshot, timestamped-binding identity, turbo-cache mounts + git-common-dir) + identity-provenance capture of existing journals (three admission roots incl. the canonical runtime root, fleet attempts/verdicts incl. linked worktrees, ownerRef custody surrogate) + granted-work contention facts — new generators, sibling run3-* pins, run-2 ETL stays byte-identical. Stage B gates: (1) additive v3 journal PR (admission-enqueued, admission-withdrawn, checkoutRoot+branch on release/evict, lastHeartbeat on eviction), (2) organic traffic + proof-ledger materialization; then loss-population contention + issuance rows + fixture-induced evictions (labeled synthetic). Parallel instrumentation, gating the ordering-cluster evidence at the run itself (never the Stage B capture): S7 emission v2 bundled PR (scope-literal rename, typed AdmissionProjectionSpecification + edge, digest serialization, typed VerificationEpisode subject, deferred-tail decision, nonce carried beside positional ids; contract-doc refresh). Then the run itself: ordering cluster ratifies together (0-based stepIndex; schedulesWorkUnit stays historical; hasScope/Scope ratify-if-exercised), scope surprises re-park + two promoted verdict-corpus riders, TS adapter non-trigger recorded. Prior chain: runs/orun-2026-09-03T02:46:18Z.index.yaml sha12 a207a106de68; run 3 pins validator v14 digest at its pin commit.",
+      "S8 IRI scheme: deferred per the standing pipeline (Ruling 15: emission v2 carries the SeatRequest nonce alongside positional node ids so identity criteria ratify semantically without IRI syntax); the ciops-prov: namespace re-proposal rides run 3 with the ordering cluster."
     ],
-    "sources": [
-      "research/SOURCES.md"
-    ],
+    "sources": ["research/SOURCES.md"],
     "links": {
       "goals": [],
       "docs": [],
       "supersededBy": null
     },
     "created": "2026-08-27",
-    "updated": "2026-08-30"
+    "updated": "2026-09-03"
   }
 }

@@ -1,0 +1,32 @@
+id: ic:pa-docgen-work-unit-alt:001
+hypothesis_ref: dh:pa-docgen-work-unit:001
+identity:
+  supplies_identity: true
+  identity_criterion: Two docgen work-unit specifications are the same iff they prescribe
+    the same documentation-verification procedure with the same scope rule. docgen:local (bounded
+    edit loops) and full docgen (repo-wide proof) are different specifications. A particular
+    run of either command is not a new spec.
+  reidentification_key:
+  - command spelling (evidence)
+  - scope rule (evidence)
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: one repeatable documentation-verification procedure with one scope rule
+  dependence: none
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - process
+  existential_dependencies: []
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+- description: Running bun run docgen:local twice would be two executions; if those were identified
+    with the work-unit spec, the spec would be destroyed after one edit loop.
+- description: If the two commands were mere aliases of one procedure, the AGENTS.md split
+    between bounded edit loops and repo-wide proof would be inexplicable.
+status: proposed

@@ -109,20 +109,17 @@ const TermFrequencyPairs = S.Array(TermFrequencyPair).pipe(
 );
 
 const decodeStringArray = (value: unknown, operation: string): Effect.Effect<ReadonlyArray<string>, VectorizerError> =>
-  O.match(S.decodeUnknownOption(WinkStringArray)(value), {
-    onNone: () => Effect.fail(VectorizerError.fromMessage(`Invalid ${operation} result: expected string[]`, operation)),
-    onSome: Effect.succeed,
-  });
+  Effect.fromOption(S.decodeUnknownOption(WinkStringArray)(value), () =>
+    VectorizerError.fromMessage(`Invalid ${operation} result: expected string[]`, operation)
+  );
 
 const decodeTermFrequencyPairs = (
   value: unknown,
   operation: string
 ): Effect.Effect<ReadonlyArray<readonly [string, number]>, VectorizerError> =>
-  O.match(S.decodeUnknownOption(TermFrequencyPairs)(value), {
-    onNone: () =>
-      Effect.fail(VectorizerError.fromMessage(`Invalid ${operation} result: expected [string, number][]`, operation)),
-    onSome: Effect.succeed,
-  });
+  Effect.fromOption(S.decodeUnknownOption(TermFrequencyPairs)(value), () =>
+    VectorizerError.fromMessage(`Invalid ${operation} result: expected [string, number][]`, operation)
+  );
 
 const readNormalizedTokensFromWink = (
   engine: WinkEngineService,

@@ -89,17 +89,11 @@ const findDesired = <T extends DesiredResource>(
 ): Effect.Effect<T, BoxProvisioningInvariantError> =>
   pipe(
     A.findFirst(resources, (resource) => Equal.equals(digestText(resource.logicalKey), logicalKeyDigest)),
-    O.match({
-      onNone: () => Effect.fail(invariant("unresolved-dependency")),
-      onSome: Effect.succeed,
-    })
+    Effect.fromOption(() => invariant("unresolved-dependency"))
   );
 
 const requiredProviderId = (action: BoxPlanAction): Effect.Effect<BoxProviderId, BoxProvisioningInvariantError> =>
-  O.match(action.precondition.providerId, {
-    onNone: () => Effect.fail(invariant("missing-provider-id")),
-    onSome: Effect.succeed,
-  });
+  Effect.fromOption(action.precondition.providerId, () => invariant("missing-provider-id"));
 
 const resolveFolderProviderId = (
   folderProviderIds: MutableHashMap.MutableHashMap<Sha256Hex, BoxProviderId>,
@@ -107,10 +101,7 @@ const resolveFolderProviderId = (
 ): Effect.Effect<BoxProviderId, BoxProvisioningInvariantError> =>
   pipe(
     MutableHashMap.get(folderProviderIds, digestText(logicalKey)),
-    O.match({
-      onNone: () => Effect.fail(invariant("unresolved-dependency")),
-      onSome: Effect.succeed,
-    })
+    Effect.fromOption(() => invariant("unresolved-dependency"))
   );
 
 const collaborationMatches = (
@@ -238,11 +229,7 @@ const validateFolderAbsent = Effect.fn("BoxProvisioningApplier.validateFolderAbs
   const items = yield* listFolderItems(box, parentProviderId);
   const names = yield* Effect.forEach(
     A.filter(items, S.is(B.FolderMini)),
-    (item) =>
-      O.match(O.fromNullishOr(item.name), {
-        onNone: () => Effect.fail(invariant("unreadable-sdk-response")),
-        onSome: Effect.succeed,
-      }),
+    (item) => Effect.fromOption(O.fromNullishOr(item.name), () => invariant("unreadable-sdk-response")),
     { concurrency: 1 }
   );
   if (A.some(names, (name) => boxFolderNamesEquivalent(name, desired.name))) {
@@ -313,10 +300,7 @@ const validateFolderDependency = Effect.fn("BoxProvisioningApplier.validateFolde
   const logicalKeyDigest = digestText(logicalKey);
   const providerId = yield* resolveFolderProviderId(folderProviderIds, logicalKey);
   const reviewedIdentity = yield* MutableHashMap.get(folderIdentities, logicalKeyDigest).pipe(
-    O.match({
-      onNone: () => Effect.fail(invariant("unresolved-dependency")),
-      onSome: Effect.succeed,
-    })
+    Effect.fromOption(() => invariant("unresolved-dependency"))
   );
   const liveIdentity = yield* readObservedFolder(box, providerId);
   if (
@@ -574,10 +558,9 @@ const validateEntitlementFamily = Effect.fn("BoxProvisioningApplier.validateEnti
       if (A.length(matches) !== 1) {
         return yield* blockerContractError(phase, "entitlement-blocker-mismatch");
       }
-      const blockedAction = yield* O.match(A.head(matches), {
-        onNone: () => Effect.fail(blockerContractError(phase, "entitlement-blocker-mismatch")),
-        onSome: Effect.succeed,
-      });
+      const blockedAction = yield* Effect.fromOption(A.head(matches), () =>
+        blockerContractError(phase, "entitlement-blocker-mismatch")
+      );
       const folderLogicalKeyDigest = digestText(desired.folderKey);
       const folderAction = A.findFirst(
         plan.actions,
@@ -706,7 +689,7 @@ const noopApplyJournal: BoxProvisioningApplyJournalShape = {
  *
  * ```ts
  * import { BoxProvisioningApplyJournal } from "@beep/box-provisioning/BoxProvisioningApplier"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const program = BoxProvisioningApplyJournal.pipe(
  *   Effect.provide(BoxProvisioningApplyJournal.noopLayer)

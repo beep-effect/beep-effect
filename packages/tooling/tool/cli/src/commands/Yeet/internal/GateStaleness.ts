@@ -567,7 +567,7 @@ const witnessFile = Effect.fn("Yeet.witnessGateFile")(function* (
   const path = yield* Path.Path;
   const info = yield* fs
     .stat(path.isAbsolute(relativePath) ? relativePath : path.join(repoRoot, relativePath))
-    .pipe(Effect.map(O.some), Effect.orElseSucceed(O.none<FileSystem.File.Info>));
+    .pipe(Effect.asSome, Effect.orElseSucceed(O.none<FileSystem.File.Info>));
   return pipe(
     info,
     O.flatMap((value) => value.mtime),

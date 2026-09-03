@@ -9,12 +9,12 @@ import { GroundedExtraction } from "@beep/langextract/Extraction";
 import { Contract, UnitInterval } from "@beep/nlp/Handoff";
 import { NonNegativeInt } from "@beep/schema/Int";
 import * as O from "@beep/utils/Option";
-import { Match, Number as Num } from "effect";
+import { Match, MutableHashSet, Number as Num } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import { dual, flow, identity, pipe } from "effect/Function";
 import * as Str from "effect/String";
-import { MAX_FUZZY_QUERY_LENGTH, MAX_FUZZY_SOURCE_LENGTH } from "./Alignment.config.ts";
+import { MAX_FUZZY_QUERY_LENGTH, MAX_FUZZY_SOURCE_LENGTH, MAX_MINIMAL_FOLD_TRANSITIONS } from "./Alignment.config.ts";
 import type { ExtractionCandidate } from "@beep/langextract/Extraction";
 import type { AlignedMatch, AlignedStatus, AlignmentSource, MatchedText, ScoredMatch } from "./Alignment.model.ts";
 
@@ -104,7 +104,15 @@ interface MinimalFoldToken {
 }
 
 interface MinimalFoldSourceOffsets extends SourceOffsets {
-  readonly encoded: string;
+  readonly tokens: ReadonlyArray<MinimalFoldToken>;
+}
+
+interface MinimalFoldBudget {
+  remaining: number;
+}
+
+interface MinimalFoldMatchSearch extends UniqueMatchSearch {
+  readonly exhausted: boolean;
 }
 
 const MINIMAL_FOLD_SEGMENTS = /(-[^\S\r\n]*(?:\r\n|[\n\r])[^\S\r\n]*)|(\s+)|([^\s-]+)|(-)/gu;
@@ -203,48 +211,10 @@ const minimalFoldTokens: (sourceText: string) => ReadonlyArray<MinimalFoldToken>
 const minimalFoldWithSourceOffsets = (sourceText: string): MinimalFoldSourceOffsets => {
   const tokens = minimalFoldTokens(sourceText);
   return {
-    encoded: A.join(
-      A.map(tokens, (token) => token.encoded),
-      ""
-    ),
     ends: A.map(tokens, (token) => token.sourceEnd),
     starts: A.map(tokens, (token) => token.sourceStart),
-  };
-};
-
-const minimalFoldPatternForTokens = (
-  tokens: ReadonlyArray<MinimalFoldToken>,
-  optionalHyphensRequired: boolean
-): string => {
-  const optionalSourceHyphens = `(?:${MINIMAL_FOLD_OPTIONAL_HYPHEN})*`;
-  const tokenPatterns = A.map(tokens, (token) =>
-    token.optionalHyphen
-      ? `(?:${MINIMAL_FOLD_HYPHEN}|${MINIMAL_FOLD_OPTIONAL_HYPHEN})${optionalHyphensRequired ? "" : "?"}`
-      : Eq.equals(token.encoded, MINIMAL_FOLD_HYPHEN)
-        ? `(?:${MINIMAL_FOLD_HYPHEN}|${MINIMAL_FOLD_OPTIONAL_HYPHEN})`
-        : token.encoded
-  );
-
-  return A.join(tokenPatterns, optionalSourceHyphens);
-};
-
-const minimalFoldPatterns = (query: string): ReadonlyArray<string> => {
-  const tokens = minimalFoldTokens(query);
-  if (A.every(tokens, (token) => token.optionalHyphen)) {
-    return [minimalFoldPatternForTokens(A.take(tokens, 1), true)];
-  }
-
-  const withoutTrailingOptionalHyphens = pipe(
     tokens,
-    A.reverse,
-    A.dropWhile((token) => token.optionalHyphen),
-    A.reverse
-  );
-
-  return A.dedupe([
-    minimalFoldPatternForTokens(tokens, false),
-    minimalFoldPatternForTokens(withoutTrailingOptionalHyphens, false),
-  ]);
+  };
 };
 
 const matchedTextFromOffsets = (
@@ -272,45 +242,122 @@ const findLesser = (
   );
 };
 
-const sameMatchedText = (left: MatchedText, right: MatchedText): boolean =>
-  Num.Equivalence(left[0], right[0]) && Eq.equals(left[1], right[1]);
+const spendMinimalFoldTransition = (budget: MinimalFoldBudget): boolean => {
+  if (budget.remaining <= 0) return false;
+  budget.remaining = Num.decrement(budget.remaining);
+  return true;
+};
+
+const sourceTokenMatches = (source: MinimalFoldToken, query: MinimalFoldToken): boolean =>
+  query.optionalHyphen || Eq.equals(query.encoded, MINIMAL_FOLD_HYPHEN)
+    ? source.optionalHyphen || Eq.equals(source.encoded, MINIMAL_FOLD_HYPHEN)
+    : Eq.equals(source.encoded, query.encoded);
+
+type MinimalFoldState = readonly [queryIndex: number, sourceIndex: number];
+
+const minimalFoldTransitions = (
+  queryIndex: number,
+  sourceIndex: number,
+  queryToken: MinimalFoldToken,
+  sourceToken: O.Option<MinimalFoldToken>,
+  allOptional: boolean
+): Array<MinimalFoldState> => {
+  const transitions: Array<MinimalFoldState> = [];
+  if (queryToken.optionalHyphen && !allOptional) transitions.push([Num.increment(queryIndex), sourceIndex]);
+  if (queryIndex > 0 && O.exists(sourceToken, (token) => token.optionalHyphen)) {
+    transitions.push([queryIndex, Num.increment(sourceIndex)]);
+  }
+  if (O.exists(sourceToken, (token) => sourceTokenMatches(token, queryToken))) {
+    transitions.push([Num.increment(queryIndex), Num.increment(sourceIndex)]);
+  }
+  return transitions;
+};
+
+const enqueueMinimalFoldTransitions = (
+  pending: Array<MinimalFoldState>,
+  transitions: ReadonlyArray<MinimalFoldState>,
+  budget: MinimalFoldBudget
+): boolean => {
+  for (const transition of transitions) {
+    if (!spendMinimalFoldTransition(budget)) return false;
+    pending.push(transition);
+  }
+  return true;
+};
+
+interface MinimalFoldStartSearch {
+  readonly exhausted: boolean;
+  readonly matches: ReadonlyArray<MatchedText>;
+}
+
+const findMinimalFoldAtStart = (
+  normalizedSource: MinimalFoldSourceOffsets,
+  sourceText: string,
+  queryTokens: ReadonlyArray<MinimalFoldToken>,
+  allOptional: boolean,
+  start: number,
+  budget: MinimalFoldBudget
+): MinimalFoldStartSearch => {
+  const pending: Array<MinimalFoldState> = [[0, start]];
+  const visited = MutableHashSet.empty<number>();
+  const matches: Array<MatchedText> = [];
+  const sourceLength = A.length(normalizedSource.tokens);
+  const queryLength = A.length(queryTokens);
+  while (A.isReadonlyArrayNonEmpty(pending)) {
+    const [queryIndex, sourceIndex] = O.getOrThrow(O.fromUndefinedOr(pending.pop()));
+    const stateKey = Num.sum(Num.multiply(queryIndex, Num.increment(sourceLength)), sourceIndex);
+    if (MutableHashSet.has(visited, stateKey)) continue;
+    MutableHashSet.add(visited, stateKey);
+
+    if (queryIndex === queryLength) {
+      O.map(matchedTextFromOffsets(normalizedSource, sourceText, start, Num.subtract(sourceIndex, start)), (match) =>
+        matches.push(match)
+      );
+      continue;
+    }
+
+    const queryToken = O.getOrThrow(A.get(queryTokens, queryIndex));
+    const sourceToken = A.get(normalizedSource.tokens, sourceIndex);
+    const transitions = minimalFoldTransitions(queryIndex, sourceIndex, queryToken, sourceToken, allOptional);
+    if (!enqueueMinimalFoldTransitions(pending, transitions, budget)) return { exhausted: true, matches };
+  }
+  return { exhausted: false, matches };
+};
+
+const mergeMinimalFoldStartMatches = (
+  matches: Array<MatchedText>,
+  startSearch: MinimalFoldStartSearch
+): Pick<MinimalFoldMatchSearch, "ambiguous" | "exhausted"> => {
+  for (const match of startSearch.matches) {
+    matches.push(match);
+    if (A.length(matches) > 1) return { ambiguous: true, exhausted: false };
+  }
+  return { ambiguous: false, exhausted: startSearch.exhausted };
+};
 
 const findMinimalFold = (
   normalizedSource: MinimalFoldSourceOffsets,
   sourceText: string,
-  query: string
-): UniqueMatchSearch => {
-  const matches = pipe(
-    minimalFoldPatterns(query),
-    A.flatMap((pattern) =>
-      pipe(
-        Str.matchAll(new RegExp(`(?=(${pattern}))`, "gu"))(normalizedSource.encoded),
-        A.fromIterable,
-        A.flatMap((match) =>
-          A.fromOption(
-            O.flatMap(
-              O.all({
-                encodedStart: O.fromUndefinedOr(match.index),
-                encodedText: O.fromUndefinedOr(match[1]),
-              }),
-              ({ encodedStart, encodedText }) => {
-                const normalizedStart = Num.divideUnsafe(encodedStart, 2);
-                const normalizedLength = Num.divideUnsafe(Str.length(encodedText), 2);
-                return matchedTextFromOffsets(normalizedSource, sourceText, normalizedStart, normalizedLength);
-              }
-            )
-          )
-        )
-      )
-    ),
-    A.dedupeWith(sameMatchedText)
-  );
+  query: string,
+  budget: MinimalFoldBudget
+): MinimalFoldMatchSearch => {
+  const rawQueryTokens = minimalFoldTokens(query);
+  const allOptional =
+    A.isReadonlyArrayNonEmpty(rawQueryTokens) && A.every(rawQueryTokens, (token) => token.optionalHyphen);
+  const queryTokens = allOptional ? A.take(rawQueryTokens, 1) : rawQueryTokens;
+  const matches: Array<MatchedText> = [];
+  const sourceLength = A.length(normalizedSource.tokens);
 
-  return Match.value(A.length(matches)).pipe(
-    Match.when(0, () => noMatch),
-    Match.when(1, () => ({ ambiguous: false, match: A.head(matches) })),
-    Match.orElse(() => ({ ambiguous: true, match: O.none() }))
-  );
+  for (let start = 0; start < sourceLength; start = Num.increment(start)) {
+    const startSearch = findMinimalFoldAtStart(normalizedSource, sourceText, queryTokens, allOptional, start, budget);
+    const merged = mergeMinimalFoldStartMatches(matches, startSearch);
+    if (merged.exhausted) return { ...noMatch, exhausted: true };
+    if (merged.ambiguous) return { ambiguous: true, exhausted: false, match: O.none() };
+  }
+
+  return A.isReadonlyArrayNonEmpty(matches)
+    ? { ambiguous: false, exhausted: false, match: A.head(matches) }
+    : { ...noMatch, exhausted: false };
 };
 
 const toCodePoints = A.fromIterable<string>;
@@ -408,18 +455,25 @@ const prepareAlignmentSource = (source: AlignmentSource): PreparedAlignmentSourc
   source,
 });
 
-const bestAlignedMatch = (prepared: PreparedAlignmentSource, query: string): O.Option<AlignedMatch> => {
-  const minimalFold = findMinimalFold(prepared.minimalFold, prepared.source.sourceText, query);
+const bestAlignedMatch = (
+  prepared: PreparedAlignmentSource,
+  query: string,
+  minimalFoldBudget: MinimalFoldBudget
+): O.Option<AlignedMatch> => {
+  const exact = findExact(prepared.source.sourceText, query);
+  const lesser = findLesser(prepared.lesser, prepared.source.sourceText, query);
+  const minimalFold = findMinimalFold(prepared.minimalFold, prepared.source.sourceText, query, minimalFoldBudget);
+  if (minimalFold.exhausted) {
+    return O.none();
+  }
   if (minimalFold.ambiguous) {
     return O.none();
   }
 
-  const exact = findExact(prepared.source.sourceText, query);
   if (O.isSome(exact.match)) {
     return O.some(alignedMatch("match_exact", exact.match.value));
   }
 
-  const lesser = findLesser(prepared.lesser, prepared.source.sourceText, query);
   if (O.isSome(lesser.match)) {
     return O.some(alignedMatch("match_lesser", lesser.match.value));
   }
@@ -437,9 +491,10 @@ const bestAlignedMatch = (prepared: PreparedAlignmentSource, query: string): O.O
 
 const alignPreparedCandidate = (
   prepared: PreparedAlignmentSource,
-  candidate: ExtractionCandidate
+  candidate: ExtractionCandidate,
+  minimalFoldBudget: MinimalFoldBudget
 ): GroundedExtraction =>
-  O.match(bestAlignedMatch(prepared, candidate.text), {
+  O.match(bestAlignedMatch(prepared, candidate.text, minimalFoldBudget), {
     onNone: () => GroundedExtraction.cases.unaligned.make(candidateFields(candidate)),
     onSome: ([status, start, text]) =>
       Match.value(status).pipe(
@@ -504,7 +559,7 @@ export const alignCandidate: {
 } = dual(
   2,
   (candidate: ExtractionCandidate, source: AlignmentSource): GroundedExtraction =>
-    alignPreparedCandidate(prepareAlignmentSource(source), candidate)
+    alignPreparedCandidate(prepareAlignmentSource(source), candidate, { remaining: MAX_MINIMAL_FOLD_TRANSITIONS })
 );
 
 /**
@@ -541,7 +596,8 @@ export const alignCandidates: {
       onEmpty: A.empty,
       onNonEmpty: (cappedCandidates) => {
         const prepared = prepareAlignmentSource(source);
-        return A.map(cappedCandidates, (candidate) => alignPreparedCandidate(prepared, candidate));
+        const minimalFoldBudget: MinimalFoldBudget = { remaining: MAX_MINIMAL_FOLD_TRANSITIONS };
+        return A.map(cappedCandidates, (candidate) => alignPreparedCandidate(prepared, candidate, minimalFoldBudget));
       },
     })
 );

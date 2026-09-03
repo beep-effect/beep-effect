@@ -53,8 +53,10 @@ type KnowledgePublicDetail = typeof KnowledgePublicDetail.Type;
  * **Details**
  *
  * Stage 1 emits only `broken-tracked-path`, `unknown-beep-command`, `index-drift`, and
- * `failed-assertion`. `unknown-beep-option` and the other members are reserved for later evaluators
- * and are never emitted by this scanner, so a report containing them came from a newer producer.
+ * `failed-assertion`. A `broken-tracked-path` excludes inline spans that exactly name a live local
+ * branch, remote-tracking branch, or tag. `unknown-beep-option` and the other members are reserved
+ * for later evaluators and are never emitted by this scanner, so a report containing them came from
+ * a newer producer.
  *
  * **Example** (Classify a Stage-1 finding kind)
  *

@@ -20,19 +20,10 @@ export * from "./EgressDenied.ts";
  * @category ports
  */
 export * from "./Transport.ts";
-
 /**
- * Package version.
- *
- * **Example** (Log package version)
- *
- * ```ts
- * import { VERSION } from "@beep/api-transport"
- *
- * console.log(VERSION)
- * ```
+ * Current `@beep/api-transport` package version.
  *
  * @category constants
  * @since 0.0.0
  */
-export const VERSION = "0.0.0" as const;
+export { VERSION } from "./Version.ts";

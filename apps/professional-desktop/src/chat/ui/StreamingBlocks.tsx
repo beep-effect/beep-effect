@@ -18,9 +18,13 @@ import { CodeBlockView } from "@beep/editor/code-block-view";
 import { MermaidView } from "@beep/editor/mermaid-view";
 import { YouTubeEmbed } from "@beep/editor/youtube-embed";
 import { sanitizeUrl } from "@beep/lexical-schema/Lexical.normalize";
-import { A, O, Str, thunk0 } from "@beep/utils";
-import { Hash, MutableHashMap } from "effect";
+import * as A from "@beep/utils/Array";
+import * as O from "@beep/utils/Option";
+import * as Str from "@beep/utils/Str";
+import { thunk0 } from "@beep/utils/thunk";
 import { dual } from "effect/Function";
+import * as Hash from "effect/Hash";
+import * as MutableHashMap from "effect/MutableHashMap";
 import type { TableBlock } from "@beep/agents-domain/values/AssistantContent";
 import type { JSX, ReactNode } from "react";
 

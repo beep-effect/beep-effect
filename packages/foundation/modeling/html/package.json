@@ -34,10 +34,12 @@
     "lint:fix": "bun run beep:lint:fix",
     "test": "bun run beep:test",
     "test:property": "bun run beep:test",
-    "test:integration": "bun run beep:test:integration"
+    "test:integration": "bun run beep:test:integration",
+    "package-test-typecheck": "beep-cli quality test-tsgo-package"
   },
   "exports": {
     ".": "./src/index.ts",
+    "./Html": "./src/Html.ts",
     "./Html.attributes": "./src/Html.attributes.ts",
     "./Html.conformance": "./src/Html.conformance.ts",
     "./Html.contract": "./src/Html.contract.ts",
@@ -50,6 +52,7 @@
     "./Html.serialize": "./src/Html.serialize.ts",
     "./Html.source-size": "./src/Html.source-size.ts",
     "./Html.srcset": "./src/Html.srcset.ts",
+    "./Version": "./src/Version.ts",
     "./internal/*": null,
     "./package.json": "./package.json"
   },
@@ -66,6 +69,7 @@
     "provenance": true,
     "exports": {
       ".": "./dist/index.js",
+      "./Html": "./dist/Html.js",
       "./Html.attributes": "./dist/Html.attributes.js",
       "./Html.conformance": "./dist/Html.conformance.js",
       "./Html.contract": "./dist/Html.contract.js",
@@ -78,6 +82,7 @@
       "./Html.serialize": "./dist/Html.serialize.js",
       "./Html.source-size": "./dist/Html.source-size.js",
       "./Html.srcset": "./dist/Html.srcset.js",
+      "./Version": "./dist/Version.js",
       "./internal/*": null,
       "./package.json": "./package.json"
     }

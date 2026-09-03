@@ -79,19 +79,10 @@ export * from "./ToolAnnotations.ts";
  * @category layers
  */
 export * from "./ToolkitComposition.ts";
-
 /**
- * Package version.
- *
- * **Example** (Log package version)
- *
- * ```ts
- * import { VERSION } from "@beep/mcp-kit"
- *
- * console.log(VERSION)
- * ```
+ * Current `@beep/mcp-kit` package version.
  *
  * @category constants
  * @since 0.0.0
  */
-export const VERSION = "0.0.0" as const;
+export { VERSION } from "./Version.ts";

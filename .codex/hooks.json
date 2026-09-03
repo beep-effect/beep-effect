@@ -25,7 +25,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"$(git rev-parse --show-toplevel)/.codex/hooks/hook-pulse.sh\""
+            "command": "BEEP_HOOK_PULSE_NOTIFIER_REV=desktop-ntfy-1 \"$(git rev-parse --show-toplevel)/.codex/hooks/hook-pulse.sh\""
           },
           {
             "type": "command",
@@ -42,7 +42,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"$(git rev-parse --show-toplevel)/.codex/hooks/hook-pulse.sh\""
+            "command": "BEEP_HOOK_PULSE_NOTIFIER_REV=desktop-ntfy-1 \"$(git rev-parse --show-toplevel)/.codex/hooks/hook-pulse.sh\""
           }
         ]
       }
@@ -73,7 +73,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"$(git rev-parse --show-toplevel)/.codex/hooks/hook-pulse.sh\""
+            "command": "BEEP_HOOK_PULSE_NOTIFIER_REV=desktop-ntfy-1 \"$(git rev-parse --show-toplevel)/.codex/hooks/hook-pulse.sh\""
           }
         ]
       }
@@ -83,7 +83,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"$(git rev-parse --show-toplevel)/.codex/hooks/hook-pulse.sh\""
+            "command": "BEEP_HOOK_PULSE_NOTIFIER_REV=desktop-ntfy-1 \"$(git rev-parse --show-toplevel)/.codex/hooks/hook-pulse.sh\""
           }
         ]
       }
@@ -93,7 +93,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"$(git rev-parse --show-toplevel)/.codex/hooks/hook-pulse.sh\""
+            "command": "BEEP_HOOK_PULSE_NOTIFIER_REV=desktop-ntfy-1 \"$(git rev-parse --show-toplevel)/.codex/hooks/hook-pulse.sh\""
           },
           {
             "type": "command",
@@ -110,7 +110,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"$(git rev-parse --show-toplevel)/.codex/hooks/hook-pulse.sh\""
+            "command": "BEEP_HOOK_PULSE_NOTIFIER_REV=desktop-ntfy-1 \"$(git rev-parse --show-toplevel)/.codex/hooks/hook-pulse.sh\""
           },
           {
             "type": "command",

@@ -1,0 +1,10 @@
+id: po:sha256:4fc13f1c056d4666ad83f3944408c9437bbcc0eebd583f907ec05449b5730594
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: turbo.json
+source_span:
+  start_line: 52
+  end_line: 52
+quote: '"persistent": false,'
+epistemic_status: quoted_prose

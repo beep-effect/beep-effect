@@ -1,0 +1,46 @@
+target: "otp:pa-docgen-work-unit:001"
+target_sha256: "c67626ce97bd5c9892383198cc0ddc87b3c15e7c4e41b9e987720334a0028ebf"
+chain_sha256: "25cc809557619310b128a4cd0c6fb6e38d4cd2896010cd85a4285b099dc40366"
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    This exact-reuse proposal is for a named individual and asserts no parents;
+    it supplies no new is-a relation to test.
+revision_requests: []
+attacks:
+  - surface: identity
+    rule: work-unit-specification-identity
+    counterexample: >-
+      Different dated executions can realize the same affected-scope docgen
+      prescription, while repo-wide docgen realizes a different prescription.
+      The card reidentifies the reusable specification by governed scope rather
+      than by execution or command token.
+    outcome: survived
+  - surface: warrant
+    rule: exhaustive-cq-warrant
+    counterexample: >-
+      Under the sitting's ratified-individual precedent, CQ-002 asks for the
+      complete admissible WorkUnit set and the affected-scope docgen
+      specification is one such ratified individual. Removing it makes that
+      answer incomplete.
+    outcome: survived
+  - surface: null_discriminator
+    rule: governed-procedure-discriminator
+    counterexample: >-
+      Renaming docgen:local while preserving the repository-governed affected
+      scope preserves this work-unit specification, whereas changing to the
+      full-repository proof scope changes it. The referent is not a command alias.
+    outcome: survived
+rival_models_still_viable:
+  - "An abstract procedure universal realized by specification artifacts."
+evidence:
+  - "po:sha256:2f4a9d86f9018ff3add768e859f83488c2df28a9d004ef9b3e580f4c9a358668"
+  - "po:sha256:39654605207ddc525fd7a94dc32f91540979a9a0605500594d3b95445ed2dd80"
+  - "CQ-002"

@@ -7,6 +7,7 @@
 import { NonNegativeInt } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import { Clock, Console, DateTime, Effect, MutableHashMap, MutableHashSet, Order } from "effect";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
@@ -86,10 +87,9 @@ const runInherited = (command: ReadonlyArray<string>, cwd: string): Effect.Effec
     const ended = yield* Clock.currentTimeMillis;
     return CacheWarmLane.make({ command, durationMs: NonNegativeInt.make(ended - started), exitCode });
   }).pipe(
-    Effect.flatMap((lane) =>
-      lane.exitCode === 0
-        ? Effect.succeed(lane)
-        : Effect.fail(CacheCommandError.new(`${A.join(command, " ")} exited ${lane.exitCode}.`))
+    Effect.filterOrFail(
+      (lane) => lane.exitCode === 0,
+      (lane) => CacheCommandError.new(`${A.join(command, " ")} exited ${lane.exitCode}.`)
     )
   );
 
@@ -247,6 +247,31 @@ export const runCacheWarm = Effect.fn("Cache.runCacheWarm")(function* (repoRoot:
  * @since 0.0.0
  */
 export const runCacheWarmForTesting = runCacheWarmWith;
+
+/**
+ * Run one inherited cache-warm command for focused exit-code tests.
+ *
+ * **Example** (Exercise a failing cache-warm lane)
+ *
+ * ```ts
+ * import { runCacheWarmLaneForTesting } from "@beep/repo-cli/test/Cache"
+ * import * as Effect from "effect/Effect"
+ *
+ * const exit = Effect.runSync(
+ *   Effect.exit(runCacheWarmLaneForTesting(".")(["bun", "-e", "process.exit(7)"]))
+ * )
+ *
+ * console.log(exit._tag) // "Failure"
+ * ```
+ *
+ * @internal
+ * @category testing
+ * @since 0.0.0
+ */
+export const runCacheWarmLaneForTesting: {
+  (cwd: string): (command: ReadonlyArray<string>) => Effect.Effect<CacheWarmLane, CacheCommandError>;
+  (command: ReadonlyArray<string>, cwd: string): Effect.Effect<CacheWarmLane, CacheCommandError>;
+} = dual(2, runInherited);
 
 const unknownStrings = (value: unknown): ReadonlyArray<string> => {
   if (P.isString(value)) return [value];

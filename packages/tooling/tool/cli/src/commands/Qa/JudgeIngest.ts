@@ -13,7 +13,7 @@
 
 import { SessionStore } from "@beep/qa-capture";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
-import { A, O } from "@beep/utils";
+import { A } from "@beep/utils";
 import { Effect, FileSystem, Path } from "effect";
 import { dual } from "effect/Function";
 import { printLines } from "../../internal/cli/Printer.ts";
@@ -121,15 +121,11 @@ export const inventoryJsonPath: {
 export const parseJudgeOutput = Effect.fn("QaJudgeIngest.parseJudgeOutput")(function* (
   text: string
 ): Effect.fn.Return<QaInventory, QaCommandError> {
-  const block = yield* O.match(extractLastJsonBlock(text), {
-    onNone: () =>
-      Effect.fail(
-        QaCommandError.make({
-          message: "qa judge-ingest found no parseable JSON inventory object (fenced or unfenced) in the judge output.",
-        })
-      ),
-    onSome: Effect.succeed,
-  });
+  const block = yield* Effect.fromOption(extractLastJsonBlock(text), () =>
+    QaCommandError.make({
+      message: "qa judge-ingest found no parseable JSON inventory object (fenced or unfenced) in the judge output.",
+    })
+  );
   const verdict = yield* evaluateJudgeOutputInventoryDecodes(
     JudgeOutputInventoryDecodesInput.make({ candidate: block })
   );

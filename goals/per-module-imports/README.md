@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `paused`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -36,20 +36,22 @@ tsserver, dev tooling), not production bundle bytes.
 
 ## Current Phase
 
-P1 Vehicle & unblocks. Next concrete action: invert
-`packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts` (it currently
-enforces the *opposite* convention and Yeet repair auto-applies it) and build
-the mapping-table-driven migration command on its scaffold.
+P2 Pilot gate complete with an **inconclusive — stop** verdict. The approved
+`apps/professional-desktop` pilot passed every correctness gate, reached zero
+root imports, and was idempotent, but its one permitted symmetric extension
+produced no stable qualifying performance improvement. The strict-pass
+authority therefore did not activate P3; the default promoted-family ratchet
+is empty again, and the packet is paused at the gate.
 
 ## Latest Evidence
 
-P0 research complete 2026-08-23: six cited reports under
-[`research/`](./research/) from a 4× codex `gpt-5.6-sol` (xhigh) + 2× grok CLI
-fan-out — enforcement census with law-flip checklist, full import census with
-a validated 84/84 + 33/33 + 60-binding mapping table, executed tooling
-evaluation (Biome/GritQL/ESLint/oxlint/tsgo/codemod), a paste-ready pilot
-measurement gate, and community/upstream evidence that the Effect core team
-itself enforces this convention in lib-land.
+P2 complete 2026-09-03: 15 valid source-tsgo and Vitest samples per state, 7
+cold route samples, and 5 deterministic builds produced no decisive win and
+no stable material regression. The full threshold math and stop decision are
+recorded in [`history/p2-pilot-verdict.md`](./history/p2-pilot-verdict.md),
+with auditable raw samples under
+[`history/measurements/`](./history/measurements/). P1 evidence remains in
+[`research/p1-census-baseline.md`](./research/p1-census-baseline.md).
 
 ## Notes
 

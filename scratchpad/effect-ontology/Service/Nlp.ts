@@ -718,23 +718,10 @@ export class NlpService extends Context.Service<NlpService>()($I`NlpService`, {
         const queryVector = yield* embedding
           .embed(query, "search_query")
           .pipe(Effect.retry(embeddingRetrySchedule), Effect.timeout(EMBEDDING_TIMEOUT));
-        const docEmbeddings = yield* Effect.all(
-          docs.map((doc, index) =>
-            embedding.embed(doc, "search_document").pipe(
-              Effect.retry(embeddingRetrySchedule),
-              Effect.timeout(EMBEDDING_TIMEOUT),
-              Effect.map((docVector) => O.some({ doc, index, embedding: docVector })),
-              Effect.tapError((error) =>
-                Effect.logWarning("Embedding failed after retries", {
-                  docPreview: doc.slice(0, 100),
-                  error: Inspectable.toStringUnknown(error),
-                })
-              ),
-              Effect.orElseSucceed(O.none)
-            )
-          ),
-          { concurrency: 5 }
-        );
+        const docEmbeddings = yield* Effect.forEach(docs, (doc, index) => embedding.embed(doc, "search_document").pipe(Effect.retry(embeddingRetrySchedule), Effect.timeout(EMBEDDING_TIMEOUT), Effect.map(docVector => O.some({ doc, index, embedding: docVector })), Effect.tapError(error => Effect.logWarning("Embedding failed after retries", {
+    docPreview: doc.slice(0, 100),
+    error: Inspectable.toStringUnknown(error),
+})), Effect.orElseSucceed(O.none)), { concurrency: 5 });
 
         return pipe(
           A.getSomes(docEmbeddings),

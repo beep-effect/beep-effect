@@ -375,9 +375,9 @@ const getPriorPin = (
   region: string
 ): Effect.Effect<O.Option<string>, RunnersCommandError, ChildProcessSpawner.ChildProcessSpawner> =>
   getParameter(region, RUNNER_AMI_PIN_PARAMETER).pipe(
-    Effect.map(O.some),
+    Effect.asSome,
     Effect.catchTag("RunnersCommandError", (error) =>
-      Str.includes("ParameterNotFound")(error.message) ? Effect.succeed(O.none()) : Effect.fail(error)
+      Str.includes("ParameterNotFound")(error.message) ? Effect.succeedNone : Effect.fail(error)
     )
   );
 
@@ -515,10 +515,7 @@ const runInstance = Effect.fn("Runners.runInstance")(function* (
   const response = yield* parseAws("EC2 run-instances", decodeRunInstances, output);
   return yield* A.head(response.Instances).pipe(
     O.map((instance) => instance.InstanceId),
-    O.match({
-      onNone: () => Effect.fail(RunnersCommandError.make({ message: "AWS launched no bake instance." })),
-      onSome: Effect.succeed,
-    })
+    Effect.fromOption(() => RunnersCommandError.make({ message: "AWS launched no bake instance." }))
   );
 });
 
@@ -581,10 +578,7 @@ const readInstanceState = Effect.fn("Runners.readInstanceState")(function* (regi
   ]).pipe(pendingWhileNotFound(instanceId, "InvalidInstanceID.NotFound"));
   const states = yield* parseAws("EC2 describe-instances state", decodeAwsStates, output);
   return yield* A.head(states).pipe(
-    O.match({
-      onNone: () => Effect.fail(RunnersCommandError.make({ message: `AWS returned no state for ${instanceId}.` })),
-      onSome: Effect.succeed,
-    })
+    Effect.fromOption(() => RunnersCommandError.make({ message: `AWS returned no state for ${instanceId}.` }))
   );
 });
 
@@ -601,10 +595,7 @@ const readImageState = Effect.fn("Runners.readImageState")(function* (region: st
   ]).pipe(pendingWhileNotFound(imageId, "InvalidAMIID.NotFound"));
   const states = yield* parseAws("EC2 describe-images state", decodeAwsStates, output);
   return yield* A.head(states).pipe(
-    O.match({
-      onNone: () => Effect.fail(RunnersCommandError.make({ message: `AWS returned no state for ${imageId}.` })),
-      onSome: Effect.succeed,
-    })
+    Effect.fromOption(() => RunnersCommandError.make({ message: `AWS returned no state for ${imageId}.` }))
   );
 });
 
