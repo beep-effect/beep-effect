@@ -190,6 +190,14 @@ const sha256Equivalence = S.toEquivalence(Sha256Hex);
 
 const entryId = (entry: ApiReferenceEntry): string => `${entry.version}/${entry.packageSlug}/${entry.modulePath}`;
 
+type LoadReflectionEffect = Effect.Effect<
+  TypeDocProjectReflection,
+  LoadReflectionError,
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path
+>;
+
+const isApiReferenceEntry = S.is(ApiReferenceEntry);
+
 /**
  * Reads the reflection JSON for `entry`, verifies it stays inside the dataset
  * and matches the recorded SHA-256 digest, then decodes it.
@@ -240,14 +248,6 @@ const entryId = (entry: ApiReferenceEntry): string => `${entry.version}/${entry.
  * @category utilities
  * @since 0.0.0
  */
-type LoadReflectionEffect = Effect.Effect<
-  TypeDocProjectReflection,
-  LoadReflectionError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path
->;
-
-const isApiReferenceEntry = S.is(ApiReferenceEntry);
-
 export const loadReflection: {
   (options?: ReflectionOptions): (entry: ApiReferenceEntry) => LoadReflectionEffect;
   (entry: ApiReferenceEntry, options?: ReflectionOptions): LoadReflectionEffect;
