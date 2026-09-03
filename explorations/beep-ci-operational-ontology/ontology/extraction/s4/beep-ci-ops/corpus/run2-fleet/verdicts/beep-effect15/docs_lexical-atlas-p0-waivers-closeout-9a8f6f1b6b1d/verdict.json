@@ -1,0 +1,47 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "docs/lexical-atlas-p0-waivers-closeout",
+  "committed": false,
+  "createdAt": "2026-08-24T22:50:25.231Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "monitor:01-pr-context",
+      "label": "monitor:pr-context",
+      "phase": "monitor",
+      "status": "passed",
+      "durationMs": 434.246131,
+      "exitCode": 0
+    },
+    {
+      "id": "monitor:02-pr-checks-watch",
+      "label": "monitor:pr-checks:watch",
+      "phase": "monitor",
+      "status": "passed",
+      "durationMs": 3181406.663767,
+      "exitCode": 0
+    }
+  ],
+  "message": "yeet monitor succeeded.",
+  "mode": "monitor",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "docs_lexical-atlas-p0-waivers-closeout-9a8f6f1b6b1d",
+  "attemptId": "94c4838c-38a4-4fdf-8b39-2fd38bf48023",
+  "startedAt": "2026-08-24T21:36:01.104Z",
+  "endedAt": "2026-08-24T22:50:25.231Z",
+  "elapsedMs": 4464127,
+  "indexPath": "<fleet>/beep-effect15/.beep/yeet/quality-issue-index.json",
+  "mergeReady": {
+    "ready": false,
+    "failing": "closeout-run",
+    "criteria": {
+      "closeoutRun": false,
+      "checksGreen": true,
+      "threadsResolved": true
+    }
+  }
+}

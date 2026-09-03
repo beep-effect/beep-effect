@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "chore/install-unslop-skill",
+  "committed": false,
+  "createdAt": "2026-08-23T21:12:51.820Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "closeout:01-pr-context",
+      "label": "closeout:pr-context",
+      "phase": "monitor",
+      "status": "not-run"
+    },
+    {
+      "id": "closeout:02-review-gates",
+      "label": "closeout:review-gates",
+      "phase": "monitor",
+      "status": "not-run"
+    }
+  ],
+  "message": "yeet closeout succeeded.",
+  "mode": "closeout",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "chore_install-unslop-skill-3262781474ea",
+  "attemptId": "f22bbc89-1ac2-4160-96bc-aae4e3785783",
+  "startedAt": "2026-08-23T21:12:46.374Z",
+  "endedAt": "2026-08-23T21:12:51.820Z",
+  "elapsedMs": 5446,
+  "indexPath": "<fleet>/beep-effect5/.beep/yeet/quality-issue-index.json"
+}

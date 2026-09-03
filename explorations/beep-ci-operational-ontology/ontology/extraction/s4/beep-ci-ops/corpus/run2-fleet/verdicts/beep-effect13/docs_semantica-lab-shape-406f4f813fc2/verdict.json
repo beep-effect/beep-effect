@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "docs/semantica-lab-shape",
+  "committed": false,
+  "createdAt": "2026-08-24T18:15:13.794Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "closeout:01-pr-context",
+      "label": "closeout:pr-context",
+      "phase": "monitor",
+      "status": "not-run"
+    },
+    {
+      "id": "closeout:02-review-gates",
+      "label": "closeout:review-gates",
+      "phase": "monitor",
+      "status": "not-run"
+    }
+  ],
+  "message": "yeet closeout succeeded.",
+  "mode": "closeout",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "docs_semantica-lab-shape-406f4f813fc2",
+  "attemptId": "408988eb-d31a-4875-9045-fb7e69c9887e",
+  "startedAt": "2026-08-24T18:15:08.197Z",
+  "endedAt": "2026-08-24T18:15:13.794Z",
+  "elapsedMs": 5597,
+  "indexPath": "<fleet>/beep-effect13/.beep/yeet/quality-issue-index.json"
+}

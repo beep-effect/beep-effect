@@ -1,0 +1,33 @@
+{
+  "schemaVersion": "yeet-verdict/v1",
+  "base": "origin/main",
+  "branch": "feat/graph-3d-view",
+  "committed": false,
+  "createdAt": "2026-07-17T12:37:25.097Z",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "monitor:01-pr-context",
+      "label": "monitor:pr-context",
+      "phase": "monitor",
+      "status": "passed",
+      "durationMs": 405.182496,
+      "exitCode": 0
+    },
+    {
+      "id": "monitor:02-pr-checks-watch",
+      "label": "monitor:pr-checks:watch",
+      "phase": "monitor",
+      "status": "passed",
+      "durationMs": 522550.019693,
+      "exitCode": 0
+    }
+  ],
+  "message": "yeet monitor succeeded.",
+  "mode": "monitor",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "feat_graph-3d-view-1aac0cd65bad",
+  "indexPath": "<fleet>/beep-effect3/.beep/yeet/quality-issue-index.json"
+}

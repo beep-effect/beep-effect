@@ -1,0 +1,46 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "fix/schedule-max-unbounded-retries",
+  "committed": false,
+  "createdAt": "2026-08-10T06:41:40.109Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "publish:00-head-install-preflight",
+      "label": "publish:head-install-preflight",
+      "phase": "prepare",
+      "status": "passed",
+      "durationMs": 3820.538318,
+      "exitCode": 0
+    },
+    {
+      "id": "advisory:01-fallow-feedback",
+      "label": "fallow-advisory-feedback",
+      "phase": "feedback",
+      "status": "passed",
+      "durationMs": 1841.345695,
+      "exitCode": 0
+    },
+    {
+      "id": "full:01-pre-push",
+      "label": "full:pre-push",
+      "phase": "full",
+      "status": "passed",
+      "durationMs": 1130912.835985,
+      "exitCode": 0
+    }
+  ],
+  "message": "yeet verify succeeded.",
+  "mode": "verify",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "fix_schedule-max-unbounded-retries-15c9ed0e7276",
+  "attemptId": "65162f2c-8e8f-446f-a718-7966e2ef6bf1",
+  "startedAt": "2026-08-10T06:22:43.471Z",
+  "endedAt": "2026-08-10T06:41:40.109Z",
+  "elapsedMs": 1136638,
+  "indexPath": "<fleet>/beep-effect2/.beep/yeet/quality-issue-index.json"
+}

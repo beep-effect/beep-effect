@@ -1,0 +1,38 @@
+{
+  "schemaVersion": "yeet-verdict/v1",
+  "base": "origin/main",
+  "branch": "feat/graduate-exploration-portfolio",
+  "committed": false,
+  "createdAt": "2026-07-14T12:01:29.504Z",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "publish:00-head-install-preflight",
+      "label": "publish:head-install-preflight",
+      "phase": "publish",
+      "status": "passed",
+      "durationMs": 3992.394536,
+      "exitCode": 0
+    },
+    {
+      "id": "publish:01-git-push",
+      "label": "publish:git:push",
+      "phase": "publish",
+      "status": "passed",
+      "durationMs": 1306.007759,
+      "exitCode": 0
+    }
+  ],
+  "message": "yeet publish succeeded.",
+  "mode": "publish",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": true,
+  "runId": "feat_graduate-exploration-portfolio-28d2f3072082",
+  "indexPath": "<fleet>/beep-effect3/.beep/yeet/quality-issue-index.json",
+  "baseFreshness": {
+    "behindCount": 0,
+    "mergeBase": "0458e97bb0497c812aa638eb546521e95df5c6a7",
+    "overlappingPaths": []
+  }
+}

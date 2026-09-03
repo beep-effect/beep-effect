@@ -1,0 +1,47 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "fun-08-13-26",
+  "committed": false,
+  "createdAt": "2026-08-17T03:33:25.482Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "monitor:01-pr-context",
+      "label": "monitor:pr-context",
+      "phase": "monitor",
+      "status": "passed",
+      "durationMs": 344.814544,
+      "exitCode": 0
+    },
+    {
+      "id": "monitor:02-pr-checks-watch",
+      "label": "monitor:pr-checks:watch",
+      "phase": "monitor",
+      "status": "passed",
+      "durationMs": 1387796.970224,
+      "exitCode": 0
+    }
+  ],
+  "message": "yeet monitor succeeded.",
+  "mode": "monitor",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "fun-08-13-26-6842bfa6463c",
+  "attemptId": "ca4cfc33-43eb-4c4b-8b88-814060c46edb",
+  "startedAt": "2026-08-17T03:10:15.373Z",
+  "endedAt": "2026-08-17T03:33:25.482Z",
+  "elapsedMs": 1390109,
+  "indexPath": "<fleet>/beep-effect/.beep/yeet/quality-issue-index.json",
+  "mergeReady": {
+    "ready": false,
+    "failing": "closeout-run",
+    "criteria": {
+      "closeoutRun": false,
+      "checksGreen": true,
+      "threadsResolved": true
+    }
+  }
+}

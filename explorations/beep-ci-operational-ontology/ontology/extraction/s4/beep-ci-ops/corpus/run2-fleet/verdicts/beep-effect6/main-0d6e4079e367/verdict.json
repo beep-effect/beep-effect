@@ -1,0 +1,31 @@
+{
+  "schemaVersion": "yeet-verdict/v1",
+  "base": "origin/main",
+  "branch": "main",
+  "committed": false,
+  "createdAt": "2026-07-01T19:12:36.172Z",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "advisory:01-fallow-feedback",
+      "label": "fallow-advisory-feedback",
+      "phase": "feedback",
+      "status": "passed",
+      "exitCode": 0
+    },
+    {
+      "id": "full:01-pre-push",
+      "label": "full:pre-push",
+      "phase": "full",
+      "status": "passed",
+      "exitCode": 0
+    }
+  ],
+  "message": "yeet verify succeeded.",
+  "mode": "verify",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "main-0d6e4079e367",
+  "indexPath": "<fleet>/beep-effect6/.beep/yeet/quality-issue-index.json"
+}

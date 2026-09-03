@@ -1,0 +1,42 @@
+{
+  "schemaVersion": "yeet-verdict/v1",
+  "base": "origin/main",
+  "branch": "feat/epistemic-governed-tier-gate",
+  "committed": false,
+  "createdAt": "2026-07-27T16:31:48.613Z",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "advisory:01-fallow-feedback",
+      "label": "fallow-advisory-feedback",
+      "phase": "feedback",
+      "status": "passed",
+      "durationMs": 1688.028931,
+      "exitCode": 0
+    },
+    {
+      "id": "full:01-pre-push",
+      "label": "full:pre-push",
+      "phase": "full",
+      "status": "failed",
+      "durationMs": 1492698.695882,
+      "exitCode": 1,
+      "repairCommand": "Run `bun run beep laws terse-effect --check` and inspect blocking, rewritable, and informational files."
+    },
+    {
+      "id": "publish:00-head-install-preflight",
+      "label": "publish:head-install-preflight",
+      "phase": "full",
+      "status": "passed",
+      "durationMs": 4932.315065,
+      "exitCode": 0
+    }
+  ],
+  "message": "yeet verification proof failed.",
+  "mode": "verify",
+  "outcome": "failure",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "feat_epistemic-governed-tier-gate-631d9b53008d",
+  "indexPath": "<fleet>/beep-effect9/.beep/yeet/quality-issue-index.json"
+}

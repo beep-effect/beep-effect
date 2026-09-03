@@ -1,0 +1,50 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "docs/jsdoc-override-kind-field",
+  "committed": false,
+  "createdAt": "2026-08-06T12:29:30.076Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "publish:00-head-install-preflight",
+      "label": "publish:head-install-preflight",
+      "phase": "publish",
+      "status": "passed",
+      "durationMs": 8661.987445,
+      "exitCode": 0
+    },
+    {
+      "id": "publish:01-git-push",
+      "label": "publish:git:push",
+      "phase": "publish",
+      "status": "passed",
+      "durationMs": 1565.481492,
+      "exitCode": 0
+    },
+    {
+      "id": "publish:02-pr-create",
+      "label": "publish:pr-create",
+      "phase": "publish",
+      "status": "passed",
+      "exitCode": 0
+    }
+  ],
+  "message": "yeet publish succeeded.",
+  "mode": "publish",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": true,
+  "runId": "docs_jsdoc-override-kind-field-a8504a412d02",
+  "attemptId": "f8ad9036-2e30-44cc-8896-32a18d08bce6",
+  "startedAt": "2026-08-06T12:29:17.083Z",
+  "endedAt": "2026-08-06T12:29:30.076Z",
+  "elapsedMs": 12993,
+  "indexPath": "<fleet>/beep-effect14/.beep/yeet/quality-issue-index.json",
+  "baseFreshness": {
+    "behindCount": 3,
+    "mergeBase": "4fdec7a200c418cbc5565142fee37ddc3a259c58",
+    "overlappingPaths": []
+  }
+}

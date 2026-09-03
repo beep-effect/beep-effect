@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "feat/ontology-foundational-auditor-skill",
+  "committed": false,
+  "createdAt": "2026-08-29T11:47:02.073Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "closeout:01-pr-context",
+      "label": "closeout:pr-context",
+      "phase": "monitor",
+      "status": "not-run"
+    },
+    {
+      "id": "closeout:02-review-gates",
+      "label": "closeout:review-gates",
+      "phase": "monitor",
+      "status": "not-run"
+    }
+  ],
+  "message": "yeet closeout succeeded.",
+  "mode": "closeout",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "feat_ontology-foundational-auditor-skill-b6a364a2d1d2",
+  "attemptId": "e56ee953-1b07-41f3-9145-b83704a5bf29",
+  "startedAt": "2026-08-29T11:46:58.308Z",
+  "endedAt": "2026-08-29T11:47:02.073Z",
+  "elapsedMs": 3765,
+  "indexPath": "<fleet>/beep-effect7/.beep/yeet/quality-issue-index.json"
+}

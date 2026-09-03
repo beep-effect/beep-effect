@@ -1,0 +1,47 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "docs/lab-apps-lifecycle-p1-status-flip",
+  "committed": false,
+  "createdAt": "2026-08-16T22:23:12.876Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "monitor:01-pr-context",
+      "label": "monitor:pr-context",
+      "phase": "monitor",
+      "status": "passed",
+      "durationMs": 387.765526,
+      "exitCode": 0
+    },
+    {
+      "id": "monitor:02-pr-checks-watch",
+      "label": "monitor:pr-checks:watch",
+      "phase": "monitor",
+      "status": "passed",
+      "durationMs": 1165549.695508,
+      "exitCode": 0
+    }
+  ],
+  "message": "yeet monitor succeeded.",
+  "mode": "monitor",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "docs_lab-apps-lifecycle-p1-status-flip-4a10049b7eb4",
+  "attemptId": "003ff84c-733d-43a9-a555-da37e4a80543",
+  "startedAt": "2026-08-16T22:03:45.021Z",
+  "endedAt": "2026-08-16T22:23:12.876Z",
+  "elapsedMs": 1167855,
+  "indexPath": "<fleet>/beep-effect6/.beep/yeet/quality-issue-index.json",
+  "mergeReady": {
+    "ready": true,
+    "criteria": {
+      "closeoutRun": true,
+      "checksGreen": true,
+      "threadsResolved": true,
+      "greptileScore": "4/5"
+    }
+  }
+}

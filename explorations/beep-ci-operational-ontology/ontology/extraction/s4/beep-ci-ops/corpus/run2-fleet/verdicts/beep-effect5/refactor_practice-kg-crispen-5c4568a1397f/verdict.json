@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "yeet-verdict/v1",
+  "base": "origin/main",
+  "branch": "refactor/practice-kg-crispen",
+  "committed": false,
+  "createdAt": "2026-07-30T03:59:26.889Z",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "advisory:01-fallow-feedback",
+      "label": "fallow-advisory-feedback",
+      "phase": "feedback",
+      "status": "passed",
+      "durationMs": 1702.354003,
+      "exitCode": 0
+    },
+    {
+      "id": "full:01-pre-push",
+      "label": "full:pre-push",
+      "phase": "full",
+      "status": "passed",
+      "durationMs": 1139669.810476,
+      "exitCode": 0
+    },
+    {
+      "id": "publish:00-head-install-preflight",
+      "label": "publish:head-install-preflight",
+      "phase": "full",
+      "status": "passed",
+      "durationMs": 5629.70205,
+      "exitCode": 0
+    }
+  ],
+  "message": "yeet verify succeeded.",
+  "mode": "verify",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "refactor_practice-kg-crispen-5c4568a1397f",
+  "indexPath": "<fleet>/beep-effect5/.beep/yeet/quality-issue-index.json"
+}

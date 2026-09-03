@@ -1,0 +1,47 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "chore/allow-git-cleanup",
+  "committed": false,
+  "createdAt": "2026-08-25T18:26:34.585Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "monitor:01-pr-context",
+      "label": "monitor:pr-context",
+      "phase": "monitor",
+      "status": "passed",
+      "durationMs": 466.983706,
+      "exitCode": 0
+    },
+    {
+      "id": "monitor:02-pr-checks-watch",
+      "label": "monitor:pr-checks:watch",
+      "phase": "monitor",
+      "status": "passed",
+      "durationMs": 870073.153651,
+      "exitCode": 0
+    }
+  ],
+  "message": "yeet monitor succeeded.",
+  "mode": "monitor",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "chore_allow-git-cleanup-776c61f5a823",
+  "attemptId": "3f5195f4-fc17-446b-b14b-f97a614ac9b2",
+  "startedAt": "2026-08-25T18:12:01.172Z",
+  "endedAt": "2026-08-25T18:26:34.585Z",
+  "elapsedMs": 873413,
+  "indexPath": "<fleet>/beep-effect13/.beep/yeet/quality-issue-index.json",
+  "mergeReady": {
+    "ready": true,
+    "criteria": {
+      "closeoutRun": true,
+      "checksGreen": true,
+      "threadsResolved": true,
+      "greptileScore": "3/5"
+    }
+  }
+}

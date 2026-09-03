@@ -1,0 +1,43 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "feat/lab-apps-p4-round-trip",
+  "committed": false,
+  "createdAt": "2026-08-17T18:05:14.380Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "publish:00-head-install-preflight",
+      "label": "publish:head-install-preflight",
+      "phase": "publish",
+      "status": "passed",
+      "durationMs": 5257.541729,
+      "exitCode": 0
+    },
+    {
+      "id": "publish:01-git-push",
+      "label": "publish:git:push",
+      "phase": "publish",
+      "status": "passed",
+      "durationMs": 2116.240392,
+      "exitCode": 0
+    }
+  ],
+  "message": "yeet publish succeeded.",
+  "mode": "publish",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": true,
+  "runId": "feat_lab-apps-p4-round-trip-ded0495e496c",
+  "attemptId": "feda671b-9298-465f-bd38-4b03bac1a0e7",
+  "startedAt": "2026-08-17T18:05:06.846Z",
+  "endedAt": "2026-08-17T18:05:14.380Z",
+  "elapsedMs": 7534,
+  "indexPath": "<fleet>/beep-effect7/.beep/yeet/quality-issue-index.json",
+  "baseFreshness": {
+    "behindCount": 1,
+    "mergeBase": "ae1c7a90d325a0b2fa65b1cf1ec529757539123d",
+    "overlappingPaths": []
+  }
+}

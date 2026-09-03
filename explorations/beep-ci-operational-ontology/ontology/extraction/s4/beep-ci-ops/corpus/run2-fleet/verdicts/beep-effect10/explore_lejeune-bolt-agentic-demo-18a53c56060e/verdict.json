@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "explore/lejeune-bolt-agentic-demo",
+  "committed": false,
+  "createdAt": "2026-08-26T07:33:21.493Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "closeout:01-pr-context",
+      "label": "closeout:pr-context",
+      "phase": "monitor",
+      "status": "not-run"
+    },
+    {
+      "id": "closeout:02-review-gates",
+      "label": "closeout:review-gates",
+      "phase": "monitor",
+      "status": "not-run"
+    }
+  ],
+  "message": "yeet closeout succeeded.",
+  "mode": "closeout",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "explore_lejeune-bolt-agentic-demo-18a53c56060e",
+  "attemptId": "428d7fcf-3c1b-45b8-965c-a9e56763444f",
+  "startedAt": "2026-08-26T07:33:16.166Z",
+  "endedAt": "2026-08-26T07:33:21.493Z",
+  "elapsedMs": 5327,
+  "indexPath": "<fleet>/beep-effect10/.beep/yeet/quality-issue-index.json"
+}

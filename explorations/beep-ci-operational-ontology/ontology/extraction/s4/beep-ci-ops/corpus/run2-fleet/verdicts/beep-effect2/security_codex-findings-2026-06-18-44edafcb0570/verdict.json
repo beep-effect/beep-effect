@@ -1,0 +1,32 @@
+{
+  "schemaVersion": "yeet-verdict/v1",
+  "base": "origin/main",
+  "branch": "security/codex-findings-2026-06-18",
+  "committed": false,
+  "createdAt": "2026-06-18T10:32:39.524Z",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "advisory:01-fallow-feedback",
+      "label": "fallow-advisory-feedback",
+      "phase": "feedback",
+      "status": "passed",
+      "exitCode": 0
+    },
+    {
+      "id": "full:01-pre-push",
+      "label": "full:pre-push",
+      "phase": "full",
+      "status": "failed",
+      "exitCode": 1,
+      "repairCommand": "Run `bun run beep laws dual-arity --check` and fix enforced candidates."
+    }
+  ],
+  "message": "yeet verification proof failed.",
+  "mode": "verify",
+  "outcome": "failure",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "security_codex-findings-2026-06-18-44edafcb0570",
+  "indexPath": "<fleet>/beep-effect2/.beep/yeet/quality-issue-index.json"
+}

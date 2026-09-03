@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "feat/coverage-deterministic-runtime",
+  "committed": false,
+  "createdAt": "2026-08-24T22:12:59.291Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "closeout:01-pr-context",
+      "label": "closeout:pr-context",
+      "phase": "monitor",
+      "status": "not-run"
+    },
+    {
+      "id": "closeout:02-review-gates",
+      "label": "closeout:review-gates",
+      "phase": "monitor",
+      "status": "not-run"
+    }
+  ],
+  "message": "yeet closeout succeeded.",
+  "mode": "closeout",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "feat_coverage-deterministic-runtime-8fdd74ef982b",
+  "attemptId": "52876ab6-63c1-4d16-a926-66914d367726",
+  "startedAt": "2026-08-24T22:12:55.200Z",
+  "endedAt": "2026-08-24T22:12:59.291Z",
+  "elapsedMs": 4091,
+  "indexPath": "<fleet>/beep-effect12/.beep/yeet/quality-issue-index.json"
+}

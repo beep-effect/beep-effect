@@ -1,0 +1,46 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "feat/ci-lane-economics-p0",
+  "committed": false,
+  "createdAt": "2026-08-13T18:41:31.596Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "publish:00-head-install-preflight",
+      "label": "publish:head-install-preflight",
+      "phase": "prepare",
+      "status": "passed",
+      "durationMs": 16178.55685,
+      "exitCode": 0
+    },
+    {
+      "id": "advisory:01-fallow-feedback",
+      "label": "fallow-advisory-feedback",
+      "phase": "feedback",
+      "status": "passed",
+      "durationMs": 2496.987393,
+      "exitCode": 0
+    },
+    {
+      "id": "full:01-pre-push",
+      "label": "full:pre-push",
+      "phase": "full",
+      "status": "passed",
+      "durationMs": 2633026.400025,
+      "exitCode": 0
+    }
+  ],
+  "message": "yeet verify succeeded.",
+  "mode": "verify",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "feat_ci-lane-economics-p0-89ca54e3ac19",
+  "attemptId": "78c9cda1-036f-47d9-8836-fb156b2e9586",
+  "startedAt": "2026-08-13T17:57:19.506Z",
+  "endedAt": "2026-08-13T18:41:31.596Z",
+  "elapsedMs": 2652090,
+  "indexPath": "<fleet>/beep-effect3/.beep/yeet/quality-issue-index.json"
+}

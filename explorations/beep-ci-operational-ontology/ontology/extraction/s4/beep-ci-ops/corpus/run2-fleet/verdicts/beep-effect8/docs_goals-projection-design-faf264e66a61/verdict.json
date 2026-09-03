@@ -1,0 +1,217 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "docs/goals-projection-design",
+  "committed": true,
+  "createdAt": "2026-08-18T00:30:49.221Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "advisory:01-fallow-feedback",
+      "label": "fallow-advisory-feedback",
+      "phase": "feedback",
+      "status": "passed",
+      "durationMs": 1844.465823,
+      "exitCode": 0
+    },
+    {
+      "id": "commit:01-git-commit",
+      "label": "commit:git:commit",
+      "phase": "commit",
+      "status": "passed",
+      "durationMs": 2774.448362,
+      "exitCode": 0
+    },
+    {
+      "id": "publish:00-head-install-preflight",
+      "label": "publish:head-install-preflight",
+      "phase": "publish",
+      "status": "passed",
+      "durationMs": 8681.440138,
+      "exitCode": 0
+    },
+    {
+      "id": "full:01-pre-push",
+      "label": "full:pre-push",
+      "phase": "full",
+      "status": "passed",
+      "durationMs": 694077.833101,
+      "exitCode": 0
+    },
+    {
+      "id": "publish:01-git-push",
+      "label": "publish:git:push",
+      "phase": "publish",
+      "status": "passed",
+      "durationMs": 1426.29232,
+      "exitCode": 0
+    },
+    {
+      "id": "quality:changeset-status",
+      "label": "quality:changeset-status",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "repo-sanity:changeset-graph",
+      "label": "repo-sanity:changeset-graph",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "repo-sanity:tsconfig-sync",
+      "label": "repo-sanity:tsconfig-sync",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "repo-sanity:fallow-boundaries-config",
+      "label": "repo-sanity:fallow-boundaries-config",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "repo-sanity:versions",
+      "label": "repo-sanity:versions",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "repo-sanity:syncpack",
+      "label": "repo-sanity:syncpack",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "repo-sanity:sherif",
+      "label": "repo-sanity:sherif",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "repo-sanity:bun-audit",
+      "label": "repo-sanity:bun-audit",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "quality:knip",
+      "label": "quality:knip",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "fallow:audit",
+      "label": "fallow:audit",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "fallow:dead-code",
+      "label": "fallow:dead-code",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "pre-push:secrets",
+      "label": "pre-push:secrets",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "pre-push:security",
+      "label": "pre-push:security",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "pre-push:sast",
+      "label": "pre-push:sast",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "pre-push:nix",
+      "label": "pre-push:nix",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "quality:build",
+      "label": "quality:build",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "quality:lint",
+      "label": "quality:lint",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "quality:lint-policy",
+      "label": "quality:lint-policy",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "quality:check",
+      "label": "quality:check",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "quality:check:tsgo-tests",
+      "label": "quality:check:tsgo-tests",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "quality:check:tsgo-smoke",
+      "label": "quality:check:tsgo-smoke",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "quality:test-unit",
+      "label": "quality:test-unit",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "quality:test-integration",
+      "label": "quality:test-integration",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "quality:jsdoc-ratchet",
+      "label": "quality:jsdoc-ratchet",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "quality:docgen",
+      "label": "quality:docgen",
+      "phase": "full",
+      "status": "passed"
+    }
+  ],
+  "message": "yeet publish succeeded.",
+  "mode": "publish",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": true,
+  "runId": "docs_goals-projection-design-faf264e66a61",
+  "attemptId": "3932c655-aa46-4783-a355-c001ab19ba59",
+  "startedAt": "2026-08-18T00:18:59.968Z",
+  "endedAt": "2026-08-18T00:30:49.221Z",
+  "elapsedMs": 709253,
+  "indexPath": "<fleet>/beep-effect8/.beep/yeet/quality-issue-index.json",
+  "baseFreshness": {
+    "behindCount": 0,
+    "mergeBase": "ac8acbab3b40133884860f7f49368fc78086b371",
+    "overlappingPaths": []
+  }
+}

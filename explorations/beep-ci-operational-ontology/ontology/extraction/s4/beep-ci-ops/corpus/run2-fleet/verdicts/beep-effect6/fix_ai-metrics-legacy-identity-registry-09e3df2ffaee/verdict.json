@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "fix/ai-metrics-legacy-identity-registry",
+  "committed": false,
+  "createdAt": "2026-08-13T19:43:42.377Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "closeout:01-pr-context",
+      "label": "closeout:pr-context",
+      "phase": "monitor",
+      "status": "not-run"
+    },
+    {
+      "id": "closeout:02-review-gates",
+      "label": "closeout:review-gates",
+      "phase": "monitor",
+      "status": "not-run"
+    }
+  ],
+  "message": "yeet closeout succeeded.",
+  "mode": "closeout",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "fix_ai-metrics-legacy-identity-registry-09e3df2ffaee",
+  "attemptId": "facd23df-28f5-465f-b075-e7e8bcc94a91",
+  "startedAt": "2026-08-13T19:43:38.327Z",
+  "endedAt": "2026-08-13T19:43:42.377Z",
+  "elapsedMs": 4050,
+  "indexPath": "<fleet>/beep-effect6/.beep/yeet/quality-issue-index.json"
+}

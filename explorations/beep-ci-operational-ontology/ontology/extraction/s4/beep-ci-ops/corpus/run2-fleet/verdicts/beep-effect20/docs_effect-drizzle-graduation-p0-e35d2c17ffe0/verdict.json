@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "docs/effect-drizzle-graduation-p0",
+  "committed": false,
+  "createdAt": "2026-08-11T03:34:05.369Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "closeout:01-pr-context",
+      "label": "closeout:pr-context",
+      "phase": "monitor",
+      "status": "not-run"
+    },
+    {
+      "id": "closeout:02-review-gates",
+      "label": "closeout:review-gates",
+      "phase": "monitor",
+      "status": "not-run"
+    }
+  ],
+  "message": "yeet closeout succeeded.",
+  "mode": "closeout",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "docs_effect-drizzle-graduation-p0-e35d2c17ffe0",
+  "attemptId": "a0b94449-2fca-41a9-aeba-2e6a3b562c52",
+  "startedAt": "2026-08-11T03:34:00.889Z",
+  "endedAt": "2026-08-11T03:34:05.369Z",
+  "elapsedMs": 4480,
+  "indexPath": "<fleet>/beep-effect20/.beep/yeet/quality-issue-index.json"
+}

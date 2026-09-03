@@ -1,0 +1,43 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "codex/security-findings-2026-08-24",
+  "committed": false,
+  "createdAt": "2026-08-24T10:57:33.642Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "publish:00-head-install-preflight",
+      "label": "publish:head-install-preflight",
+      "phase": "publish",
+      "status": "passed",
+      "durationMs": 8908.242597,
+      "exitCode": 0
+    },
+    {
+      "id": "publish:01-git-push",
+      "label": "publish:git:push",
+      "phase": "publish",
+      "status": "passed",
+      "durationMs": 3660.199368,
+      "exitCode": 0
+    }
+  ],
+  "message": "yeet publish succeeded.",
+  "mode": "publish",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": true,
+  "runId": "codex_security-findings-2026-08-24-e003c6c176f9",
+  "attemptId": "651ca8f2-363d-49e1-b36d-261722f4fce8",
+  "startedAt": "2026-08-24T10:57:20.926Z",
+  "endedAt": "2026-08-24T10:57:33.642Z",
+  "elapsedMs": 12716,
+  "indexPath": "<fleet>/beep-effect19/.beep/yeet/quality-issue-index.json",
+  "baseFreshness": {
+    "behindCount": 1,
+    "mergeBase": "a97b709429fd28f629fcd8e0e35680d5ce49b409",
+    "overlappingPaths": []
+  }
+}

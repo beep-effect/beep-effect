@@ -1,0 +1,46 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "chore/tsgo-033-adoption",
+  "committed": false,
+  "createdAt": "2026-08-10T23:30:28.339Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "publish:00-head-install-preflight",
+      "label": "publish:head-install-preflight",
+      "phase": "prepare",
+      "status": "passed",
+      "durationMs": 6438.20852,
+      "exitCode": 0
+    },
+    {
+      "id": "advisory:01-fallow-feedback",
+      "label": "fallow-advisory-feedback",
+      "phase": "feedback",
+      "status": "passed",
+      "durationMs": 2347.808288,
+      "exitCode": 0
+    },
+    {
+      "id": "full:01-pre-push",
+      "label": "full:pre-push",
+      "phase": "full",
+      "status": "passed",
+      "durationMs": 1459641.349089,
+      "exitCode": 0
+    }
+  ],
+  "message": "yeet verify succeeded.",
+  "mode": "verify",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "chore_tsgo-033-adoption-cb296d08aba2",
+  "attemptId": "ae638258-f547-45ba-a97d-5f0d6af0a898",
+  "startedAt": "2026-08-10T23:05:59.808Z",
+  "endedAt": "2026-08-10T23:30:28.339Z",
+  "elapsedMs": 1468531,
+  "indexPath": "<fleet>/beep-effect7/.beep/yeet/quality-issue-index.json"
+}

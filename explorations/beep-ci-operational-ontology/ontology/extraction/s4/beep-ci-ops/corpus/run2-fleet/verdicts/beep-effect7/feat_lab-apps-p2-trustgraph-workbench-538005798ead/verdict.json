@@ -1,0 +1,72 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "feat/lab-apps-p2-trustgraph-workbench",
+  "committed": false,
+  "createdAt": "2026-08-17T08:34:53.256Z",
+  "failurePolicy": "collect-all",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "advisory:01-fallow-feedback",
+      "label": "fallow-advisory-feedback",
+      "phase": "feedback",
+      "status": "passed",
+      "durationMs": 1932.527664,
+      "exitCode": 0
+    },
+    {
+      "id": "publish:00-head-install-preflight",
+      "label": "publish:head-install-preflight",
+      "phase": "publish",
+      "status": "passed",
+      "durationMs": 4714.54339,
+      "exitCode": 0
+    },
+    {
+      "id": "full:01-pre-push",
+      "label": "full:pre-push",
+      "phase": "full",
+      "status": "passed",
+      "durationMs": 1743863.964771,
+      "exitCode": 0
+    },
+    {
+      "id": "publish:01-git-push",
+      "label": "publish:git:push",
+      "phase": "publish",
+      "status": "passed",
+      "durationMs": 2453.268353,
+      "exitCode": 0
+    },
+    {
+      "id": "publish:02-pr-create",
+      "label": "publish:pr-create",
+      "phase": "publish",
+      "status": "passed",
+      "exitCode": 0
+    },
+    {
+      "id": "commit:01-git-commit",
+      "label": "commit:git:commit",
+      "phase": "commit",
+      "status": "not-run"
+    }
+  ],
+  "message": "yeet publish succeeded.",
+  "mode": "publish",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": true,
+  "runId": "feat_lab-apps-p2-trustgraph-workbench-538005798ead",
+  "attemptId": "e664ed0c-d506-487e-88ac-f77dc127e62b",
+  "startedAt": "2026-08-17T08:05:37.766Z",
+  "endedAt": "2026-08-17T08:34:53.256Z",
+  "elapsedMs": 1755490,
+  "indexPath": "<fleet>/beep-effect7/.beep/yeet/quality-issue-index.json",
+  "baseFreshness": {
+    "behindCount": 2,
+    "mergeBase": "afe4cdfaa7e28cbdc311150afffe58315c41ed0d",
+    "overlappingPaths": []
+  }
+}

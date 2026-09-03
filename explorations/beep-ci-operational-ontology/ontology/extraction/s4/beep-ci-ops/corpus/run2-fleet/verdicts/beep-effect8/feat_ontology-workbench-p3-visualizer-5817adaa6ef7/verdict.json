@@ -1,0 +1,55 @@
+{
+  "schemaVersion": "yeet-verdict/v1",
+  "base": "origin/main",
+  "branch": "feat/ontology-workbench-p3-visualizer",
+  "committed": true,
+  "createdAt": "2026-07-09T14:27:47.207Z",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "advisory:01-fallow-feedback",
+      "label": "fallow-advisory-feedback",
+      "phase": "feedback",
+      "status": "passed",
+      "exitCode": 0
+    },
+    {
+      "id": "commit:01-git-commit",
+      "label": "commit:git:commit",
+      "phase": "commit",
+      "status": "passed",
+      "exitCode": 0
+    },
+    {
+      "id": "full:01-pre-push",
+      "label": "full:pre-push",
+      "phase": "full",
+      "status": "passed",
+      "exitCode": 0
+    },
+    {
+      "id": "publish:01-git-push",
+      "label": "publish:git:push",
+      "phase": "publish",
+      "status": "passed",
+      "exitCode": 0
+    }
+  ],
+  "message": "yeet publish succeeded.",
+  "mode": "publish",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": true,
+  "runId": "feat_ontology-workbench-p3-visualizer-5817adaa6ef7",
+  "indexPath": "<fleet>/beep-effect8/.beep/yeet/quality-issue-index.json",
+  "baseFreshness": {
+    "behindCount": 0,
+    "mergeBase": "10f031117f93f8e44eaec03f09020c467cedfa35",
+    "overlappingPaths": []
+  },
+  "stash": {
+    "createdAt": "2026-07-09T14:09:35.059Z",
+    "marker": "yeet-staged-only/feat_ontology-workbench-p3-visualizer-5817adaa6ef7/2026-07-09T14:09:35.059Z",
+    "stashSha": "de1287ffe34eebf670ba1fd291d39b073c27a2c0"
+  }
+}

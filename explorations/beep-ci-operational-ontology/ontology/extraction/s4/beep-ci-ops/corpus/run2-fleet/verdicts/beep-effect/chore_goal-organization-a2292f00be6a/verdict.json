@@ -1,0 +1,46 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "@chore/goal-organization",
+  "committed": false,
+  "createdAt": "2026-08-25T20:01:37.303Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "publish:00-head-install-preflight",
+      "label": "publish:head-install-preflight",
+      "phase": "prepare",
+      "status": "passed",
+      "durationMs": 7761.142448,
+      "exitCode": 0
+    },
+    {
+      "id": "advisory:01-fallow-feedback",
+      "label": "fallow-advisory-feedback",
+      "phase": "feedback",
+      "status": "passed",
+      "durationMs": 1709.086189,
+      "exitCode": 0
+    },
+    {
+      "id": "full:01-pre-push",
+      "label": "full:pre-push",
+      "phase": "full",
+      "status": "passed",
+      "durationMs": 1623940.654915,
+      "exitCode": 0
+    }
+  ],
+  "message": "yeet verify succeeded.",
+  "mode": "verify",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "chore_goal-organization-a2292f00be6a",
+  "attemptId": "6e03279d-5729-4269-95b4-c6580ac2bb1c",
+  "startedAt": "2026-08-25T19:34:23.842Z",
+  "endedAt": "2026-08-25T20:01:37.303Z",
+  "elapsedMs": 1633461,
+  "indexPath": "<fleet>/beep-effect/.beep/yeet/quality-issue-index.json"
+}

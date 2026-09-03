@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "feat/jsdoc-generator-templates",
+  "committed": false,
+  "createdAt": "2026-08-07T00:43:46.425Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "monitor:01-pr-context",
+      "label": "monitor:pr-context",
+      "phase": "monitor",
+      "status": "passed",
+      "durationMs": 321.255105,
+      "exitCode": 0
+    },
+    {
+      "id": "monitor:02-pr-checks-watch",
+      "label": "monitor:pr-checks:watch",
+      "phase": "monitor",
+      "status": "failed",
+      "durationMs": 2064028.918603,
+      "exitCode": 1,
+      "repairCommand": "Run `bun run docgen:local` for edit loops or `bun run docgen` for the full proof."
+    }
+  ],
+  "message": "yeet monitor failed.\nSame-SHA rerun decision: same-SHA red detected for Check; rerun one job with `gh run rerun --job <databaseId>`, never `--failed`.\nRun: gh run view 31133604403 --json jobs --jq '.jobs[] | select(.conclusion == \"failure\") | [.databaseId, .name] | @tsv'",
+  "mode": "monitor",
+  "outcome": "failure",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "feat_jsdoc-generator-templates-df18c9ed1589",
+  "attemptId": "25925065-a7e1-41b6-a211-fe32241dedcd",
+  "startedAt": "2026-08-07T00:09:19.929Z",
+  "endedAt": "2026-08-07T00:43:46.425Z",
+  "elapsedMs": 2066496,
+  "indexPath": "<fleet>/beep-effect14/.beep/yeet/quality-issue-index.json",
+  "failedStepId": "monitor:02-pr-checks-watch",
+  "failureKind": "step-exit"
+}

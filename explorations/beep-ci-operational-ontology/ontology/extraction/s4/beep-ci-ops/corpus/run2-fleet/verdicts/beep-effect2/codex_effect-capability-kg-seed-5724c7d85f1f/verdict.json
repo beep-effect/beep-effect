@@ -1,0 +1,73 @@
+{
+  "schemaVersion": "yeet-verdict/v1",
+  "base": "origin/main",
+  "branch": "codex/effect-capability-kg-seed",
+  "committed": true,
+  "createdAt": "2026-06-15T12:00:26.777Z",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "advisory:01-fallow-feedback",
+      "label": "fallow-advisory-feedback",
+      "phase": "feedback",
+      "status": "passed",
+      "exitCode": 0
+    },
+    {
+      "id": "commit:01-git-commit",
+      "label": "commit:git:commit",
+      "phase": "commit",
+      "status": "passed",
+      "exitCode": 0
+    },
+    {
+      "id": "full:01-pre-push",
+      "label": "full:pre-push",
+      "phase": "full",
+      "status": "failed",
+      "exitCode": 1,
+      "repairCommand": "Run `bun run beep laws terse-effect --check` and inspect blocking, rewritable, and informational files."
+    },
+    {
+      "id": "publish:01-git-push",
+      "label": "publish:git:push",
+      "phase": "publish",
+      "status": "not-run"
+    },
+    {
+      "id": "publish:02-pr-create",
+      "label": "publish:pr-create",
+      "phase": "publish",
+      "status": "not-run"
+    },
+    {
+      "id": "monitor:01-pr-context",
+      "label": "monitor:pr-context",
+      "phase": "monitor",
+      "status": "not-run"
+    },
+    {
+      "id": "monitor:02-pr-checks-watch",
+      "label": "monitor:pr-checks:watch",
+      "phase": "monitor",
+      "status": "not-run"
+    }
+  ],
+  "message": "yeet publish proof failed after creating the local commit. Fix the issue, then amend or reset the commit that has not yet been pushed before retrying.",
+  "mode": "publish",
+  "outcome": "failure",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "codex_effect-capability-kg-seed-5724c7d85f1f",
+  "indexPath": "<fleet>/beep-effect2/.beep/yeet/quality-issue-index.json",
+  "baseFreshness": {
+    "behindCount": 0,
+    "mergeBase": "6d9f289b449c3e487b5419ebbcd13f963f3d6ca0",
+    "overlappingPaths": []
+  },
+  "stash": {
+    "createdAt": "2026-06-15T11:40:52.844Z",
+    "marker": "yeet-staged-only/codex_effect-capability-kg-seed-5724c7d85f1f/2026-06-15T11:40:52.844Z",
+    "stashSha": "f857f58d9b505f8c10ea9e440205f7223512e3e3"
+  }
+}

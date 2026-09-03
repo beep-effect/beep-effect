@@ -1,0 +1,45 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "docs/compound-engineering",
+  "committed": false,
+  "createdAt": "2026-08-06T13:00:34.311Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "monitor:01-pr-context",
+      "label": "monitor:pr-context",
+      "phase": "monitor",
+      "status": "passed",
+      "durationMs": 414.008852,
+      "exitCode": 0
+    },
+    {
+      "id": "monitor:02-pr-checks-watch",
+      "label": "monitor:pr-checks:watch",
+      "phase": "monitor",
+      "status": "passed",
+      "durationMs": 295490.052262,
+      "exitCode": 0
+    }
+  ],
+  "message": "yeet monitor succeeded.",
+  "mode": "monitor",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "docs_compound-engineering-5bed0c0e6c21",
+  "attemptId": "2bd9508b-e2cf-4528-bb95-0ea2838563bb",
+  "startedAt": "2026-08-06T12:55:35.922Z",
+  "endedAt": "2026-08-06T13:00:34.311Z",
+  "elapsedMs": 298389,
+  "indexPath": "<fleet>/beep-effect3-pra/.beep/yeet/quality-issue-index.json",
+  "mergeReady": {
+    "ready": true,
+    "criteria": {
+      "checksGreen": true,
+      "threadsResolved": true
+    }
+  }
+}

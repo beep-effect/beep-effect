@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "fix/nightly-property-laws-677",
+  "committed": false,
+  "createdAt": "2026-08-24T07:23:13.571Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "closeout:01-pr-context",
+      "label": "closeout:pr-context",
+      "phase": "monitor",
+      "status": "not-run"
+    },
+    {
+      "id": "closeout:02-review-gates",
+      "label": "closeout:review-gates",
+      "phase": "monitor",
+      "status": "not-run"
+    }
+  ],
+  "message": "yeet closeout succeeded.",
+  "mode": "closeout",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "fix_nightly-property-laws-677-4cc2583fde6d",
+  "attemptId": "8f159043-b70e-45dd-a8c8-c7324d3c12dc",
+  "startedAt": "2026-08-24T07:23:09.603Z",
+  "endedAt": "2026-08-24T07:23:13.571Z",
+  "elapsedMs": 3968,
+  "indexPath": "<fleet>/beep-effect20/.beep/yeet/quality-issue-index.json"
+}

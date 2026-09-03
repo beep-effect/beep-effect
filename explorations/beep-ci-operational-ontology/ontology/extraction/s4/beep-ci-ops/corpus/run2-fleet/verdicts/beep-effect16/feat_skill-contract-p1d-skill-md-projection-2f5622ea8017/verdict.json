@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "feat/skill-contract-p1d-skill-md-projection",
+  "committed": false,
+  "createdAt": "2026-08-25T21:22:33.631Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "closeout:01-pr-context",
+      "label": "closeout:pr-context",
+      "phase": "monitor",
+      "status": "not-run"
+    },
+    {
+      "id": "closeout:02-review-gates",
+      "label": "closeout:review-gates",
+      "phase": "monitor",
+      "status": "not-run"
+    }
+  ],
+  "message": "yeet closeout succeeded.",
+  "mode": "closeout",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "feat_skill-contract-p1d-skill-md-projection-2f5622ea8017",
+  "attemptId": "ace86617-71d2-4665-9846-8ca62ef5e797",
+  "startedAt": "2026-08-25T21:22:26.148Z",
+  "endedAt": "2026-08-25T21:22:33.631Z",
+  "elapsedMs": 7483,
+  "indexPath": "<fleet>/beep-effect16/.beep/yeet/quality-issue-index.json"
+}
