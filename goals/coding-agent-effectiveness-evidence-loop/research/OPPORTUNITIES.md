@@ -416,3 +416,20 @@ What would have prevented it: structured plan output must either stream the
 complete JSON document or fail nonzero with explicit truncation metadata. A
 size-capped JSON prefix with exit zero is not a machine-readable plan and can
 make automation act on an incomplete affected-package universe.
+
+## 2026-09-03 — fast monitored publish still entered the full-proof queue
+
+Lived while opening the P1 pull request early under an explicit operator
+instruction to bypass scheduler admission and substitute package-filtered local
+checks. The human-readable plan for
+`bun run beep yeet publish --fast --monitor --pr` contained preflight, push, PR,
+and monitor steps only, but execution queued `full-proof(3)` at position 6 before
+the push step. The run was interrupted cleanly before admission, no lease was
+created for this checkout, and the documented manual non-force push plus PR
+creation fallback was used instead.
+
+What would have prevented it: make publish execution consume the same resolved
+step graph rendered by `--plan`, or reject a contradictory flag combination
+before enqueueing. A fast plan that omits local proof must never silently admit
+full proof at execution time, because callers cannot safely reason about queue
+occupancy or whether an early PR will actually be opened.
