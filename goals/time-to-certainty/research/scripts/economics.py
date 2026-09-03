@@ -118,8 +118,42 @@ REPO_SANITY_PREFIX = "repo-sanity:"
 EXECUTED_STATUSES = {"passed", "failed"}
 REUSED_STATUSES = {"reused"}
 
-ATTEMPT_START_FIELDS = ("_tag", "attemptId", "base", "branch", "head", "mode", "schemaVersion", "startedAt")
-ATTEMPT_FINISH_FIELDS = ("_tag", "attemptId", "recordedAt", "schemaVersion")
+ATTEMPT_FACT_FIELDS = ("diffFingerprint", "envProfile", "proofTier", "resolvedHeadSha", "stage")
+ATTEMPT_START_FIELDS = (
+    "_tag",
+    "attemptId",
+    "base",
+    "branch",
+    "head",
+    "mode",
+    "schemaVersion",
+    "startedAt",
+    *ATTEMPT_FACT_FIELDS,
+)
+ATTEMPT_FINISH_FIELDS = ("_tag", "attemptId", "recordedAt", "schemaVersion", *ATTEMPT_FACT_FIELDS)
+ATTEMPT_TERMINATION_FIELDS = (
+    "_tag",
+    "attemptId",
+    "reason",
+    "recordedAt",
+    "schemaVersion",
+    *ATTEMPT_FACT_FIELDS,
+)
+ATTEMPT_COMPACTION_FIELDS = (
+    "_tag",
+    "evictedAttemptIds",
+    "evictedCount",
+    "oldestEvictedRecordedAt",
+    "recordedAt",
+    "schemaVersion",
+    "terminalEvictionCutoffRecordedAt",
+)
+ATTEMPT_FIELDS_BY_TAG = {
+    "attempt-finished": ATTEMPT_FINISH_FIELDS,
+    "attempt-started": ATTEMPT_START_FIELDS,
+    "attempt-terminated": ATTEMPT_TERMINATION_FIELDS,
+    "journal-compacted": ATTEMPT_COMPACTION_FIELDS,
+}
 VERDICT_FIELDS = (
     "attemptId",
     "base",
@@ -282,7 +316,7 @@ def compact_verdict(verdict: dict[str, Any]) -> dict[str, Any]:
 
 
 def compact_attempt_record(record: dict[str, Any]) -> dict[str, Any]:
-    fields = ATTEMPT_START_FIELDS if record.get("_tag") == "attempt-started" else ATTEMPT_FINISH_FIELDS
+    fields = ATTEMPT_FIELDS_BY_TAG.get(record.get("_tag"), ("_tag", "schemaVersion"))
     compact = select_fields(record, fields)
     if record.get("_tag") == "attempt-finished" and isinstance(record.get("verdict"), dict):
         compact["verdict"] = compact_verdict(record["verdict"])
@@ -706,6 +740,8 @@ def load_attempts(
     duplicate_starts = 0
     duplicate_finishes = 0
     invalid_rows = 0
+    compaction_receipts = 0
+    journal_cutoffs: dict[tuple[str, str], dt.datetime] = {}
     for source in sources:
         checkout = str(source["checkout"])
         run_id = str(source["runId"])
@@ -714,6 +750,13 @@ def load_attempts(
                 invalid_rows += 1
                 continue
             if record.get("_tag") == "journal-compacted":
+                compaction_receipts += 1
+                cutoff = parse_ts(
+                    record.get("terminalEvictionCutoffRecordedAt") or record.get("oldestEvictedRecordedAt")
+                )
+                journal_key = (checkout, run_id)
+                if cutoff is not None and (journal_key not in journal_cutoffs or cutoff > journal_cutoffs[journal_key]):
+                    journal_cutoffs[journal_key] = cutoff
                 continue
             if not isinstance(record.get("attemptId"), str):
                 invalid_rows += 1
@@ -784,6 +827,7 @@ def load_attempts(
                 "failureKind": verdict.get("failureKind"),
                 "head": verdict.get("head") or start_record.get("head"),
                 "key": key,
+                "leftCensorCutoff": journal_cutoffs.get((key[0], key[1])),
                 "lanes": verdict.get("lanes") if isinstance(verdict.get("lanes"), list) else [],
                 "message": verdict.get("message") or "",
                 "mode": verdict.get("mode") or start_record.get("mode"),
@@ -808,10 +852,12 @@ def load_attempts(
         )
     )
     diagnostics = {
+        "compactionReceipts": compaction_receipts,
         "duplicateFinishedRowsDeduplicated": duplicate_finishes,
         "duplicateStartedRowsDeduplicated": duplicate_starts,
         "finishedAttempts": len(attempts),
         "invalidRows": invalid_rows,
+        "leftCensoredJournals": len(journal_cutoffs),
         "orphanVerdictFilesAdded": orphan_verdicts_added,
         "starts": len(starts),
         "startsWithoutFinish": len(set(starts) - set(finishes)),
@@ -1012,7 +1058,9 @@ def comparable_attempts(attempts: list[dict[str, Any]]) -> list[dict[str, Any]]:
     ]
 
 
-def build_episodes(attempts: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+def build_episodes(
+    attempts: list[dict[str, Any]],
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
     grouped: dict[tuple[str, str], list[dict[str, Any]]] = collections.defaultdict(list)
     for attempt in attempts:
         if attempt["startedAt"] is None:
@@ -1020,8 +1068,11 @@ def build_episodes(attempts: list[dict[str, Any]]) -> tuple[list[dict[str, Any]]
         grouped[(attempt["checkout"], str(attempt["branch"]))].append(attempt)
     closed: list[dict[str, Any]] = []
     censored: list[dict[str, Any]] = []
+    left_censored: list[dict[str, Any]] = []
     for (checkout, branch), rows in grouped.items():
         rows.sort(key=lambda row: (row["startedAt"], row["attemptId"]))
+        cutoffs = [row["leftCensorCutoff"] for row in rows if row.get("leftCensorCutoff") is not None]
+        cutoff = max(cutoffs) if cutoffs else None
         streak: list[dict[str, Any]] = []
         for attempt in rows:
             if attempt.get("outcome") != "success":
@@ -1033,22 +1084,21 @@ def build_episodes(attempts: list[dict[str, Any]]) -> tuple[list[dict[str, Any]]
             end = attempt["endedAt"] or attempt["startedAt"]
             members = [*streak, attempt]
             span_ms = max(0.0, (end - start).total_seconds() * 1000)
-            closed.append(
-                {
-                    "attemptKeys": [member["key"] for member in members],
-                    "attempts": len(members),
-                    "branch": branch,
-                    "checkout": checkout,
-                    "laneDurationMs": sum(
-                        float(lane["durationMs"])
-                        for member in members
-                        for lane in member["lanes"]
-                        if isinstance(lane.get("durationMs"), (int, float)) and lane["durationMs"] >= 0
-                    ),
-                    "measuredAttemptMachineMs": sum(member["elapsedMs"] or 0 for member in members),
-                    "spanMs": span_ms,
-                }
-            )
+            episode = {
+                "attemptKeys": [member["key"] for member in members],
+                "attempts": len(members),
+                "branch": branch,
+                "checkout": checkout,
+                "laneDurationMs": sum(
+                    float(lane["durationMs"])
+                    for member in members
+                    for lane in member["lanes"]
+                    if isinstance(lane.get("durationMs"), (int, float)) and lane["durationMs"] >= 0
+                ),
+                "measuredAttemptMachineMs": sum(member["elapsedMs"] or 0 for member in members),
+                "spanMs": span_ms,
+            }
+            (left_censored if cutoff is not None and start <= cutoff else closed).append(episode)
             streak = []
         if streak:
             start = streak[0]["startedAt"]
@@ -1063,14 +1113,19 @@ def build_episodes(attempts: list[dict[str, Any]]) -> tuple[list[dict[str, Any]]
             )
     closed.sort(key=lambda row: (row["spanMs"], row["checkout"], row["branch"]))
     censored.sort(key=lambda row: (row["checkout"], row["branch"]))
-    return closed, censored
+    left_censored.sort(key=lambda row: (row["spanMs"], row["checkout"], row["branch"]))
+    return closed, censored, left_censored
 
 
-def episode_summary(rows: list[dict[str, Any]], censored: list[dict[str, Any]], label: str) -> dict[str, Any]:
+def episode_summary(
+    rows: list[dict[str, Any]], censored: list[dict[str, Any]], left_censored: list[dict[str, Any]], label: str
+) -> dict[str, Any]:
     spans = [row["spanMs"] for row in rows]
     return {
         "closedEpisodes": len(rows),
         "label": label,
+        "leftCensoredEpisodesExcluded": len(left_censored),
+        "leftCensoredObservedAttempts": sum(row["attempts"] for row in left_censored),
         "measuredAttemptMachineMinutes": round(sum(row["measuredAttemptMachineMs"] for row in rows) / 60_000, 2),
         "measuredLaneMachineMinutes": round(sum(row["laneDurationMs"] for row in rows) / 60_000, 2),
         "p50Ms": rounded_ms(nearest_rank(spans, 50)),
@@ -1083,10 +1138,20 @@ def episode_summary(rows: list[dict[str, Any]], censored: list[dict[str, Any]], 
 
 def red_to_green(attempts: list[dict[str, Any]]) -> dict[str, Any]:
     comparable = comparable_attempts(attempts)
-    uncut, censored = build_episodes(comparable)
+    uncut, censored, left_censored = build_episodes(comparable)
     cut = [row for row in uncut if row["spanMs"] <= COMPARABLE_EPISODE_CUT_MS]
-    cut_summary = episode_summary(cut, censored, "article-comparable: modes verify/repair/publish; lock bounces excluded; <=24h")
-    uncut_summary = episode_summary(uncut, censored, "uncut tail: same modes/bounce rule; no duration ceiling")
+    cut_summary = episode_summary(
+        cut,
+        censored,
+        left_censored,
+        "article-comparable: modes verify/repair/publish; lock bounces and left-censored episodes excluded; <=24h",
+    )
+    uncut_summary = episode_summary(
+        uncut,
+        censored,
+        left_censored,
+        "uncut tail: same modes/bounce/censor rule; no duration ceiling",
+    )
     cut_summary["closedEpisodesOver24hExcluded"] = len(uncut) - len(cut)
     current_p50 = cut_summary["p50Ms"]
     current_p95 = cut_summary["p95Ms"]

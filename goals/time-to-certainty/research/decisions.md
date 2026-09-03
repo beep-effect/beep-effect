@@ -131,3 +131,25 @@ parallel field.
 
 **Ratification status:** rulings 11–16 ratified by the operator on 2026-09-03 (all six, as amended
 after the PR #968 review).
+
+## 2026-09-03 — A5 journal-facts review, round 5 (two rulings, steward: Benjamin)
+
+Inputs: the retention and economics review threads on PRs #978 and #991. Proposed by the
+orchestrator during review and ratified as amended by the operator on 2026-09-03.
+
+**Ruling 17 — attempt-journal retention is a budget of 50 unprotected terminal attempts.** Each
+retained terminal attempt keeps its start/terminal pair; unfinished starts do not consume the
+budget and are never evicted. A current-operation attempt is protected from that operation.
+Legacy starts without either owner PID or process-start identity are closed on the first
+post-rollout reconciliation with `legacy-unowned-start`; owned live or unverifiable starts remain
+open. Rejected: a row budget, counting unfinished starts, or evicting unfinished facts to reach a
+hard file-size bound.
+
+**Ruling 18 — compaction receipts define the economics left-censor boundary.** A receipt carries
+the evicted attempt IDs and a monotonic cutoff equal to the newest terminal `recordedAt` evicted
+from that journal so far. The economics report excludes and counts red-to-green episodes whose
+observed start is at or before that cutoff. Rejected: an archive file and using only the oldest
+evicted timestamp, which misses later evictions that remove an episode's leading red attempts.
+
+**Ratification status:** rulings 17–18 and their PR #991 amendments were ratified by the operator
+on 2026-09-03.

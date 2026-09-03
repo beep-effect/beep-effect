@@ -346,6 +346,8 @@ export const AdmissionJournalEvent = S.Union([
  */
 export type AdmissionJournalEvent = typeof AdmissionJournalEvent.Type;
 
+type AdmissionJournalV1Event = AdmissionJournalAdmitted | AdmissionJournalReleased;
+
 const encodeEvent = S.encodeUnknownEffect(S.fromJsonString(AdmissionJournalEvent));
 
 /**
@@ -760,14 +762,14 @@ const rewriteJournalLocked = Effect.fnUntraced(function* (
  * ```
  *
  * @param root - Machine-wide admission root directory.
- * @param event - Admission transition to append.
+ * @param event - Ungated v1 admission or release transition to append.
  * @returns An effect that appends to the serialized admission journal.
  * @category utilities
  * @since 0.0.0
  */
 export const appendAdmissionJournalEvent = Effect.fn("AdmissionJournal.append")(function* (
   root: string,
-  event: AdmissionJournalEvent
+  event: AdmissionJournalV1Event
 ): Effect.fn.Return<void, QualitySchedulerError, FileSystem.FileSystem | Path.Path> {
   const line = yield* encodeEvent(event).pipe(
     Effect.mapError(QualitySchedulerError.new("Failed to encode admission journal event."))

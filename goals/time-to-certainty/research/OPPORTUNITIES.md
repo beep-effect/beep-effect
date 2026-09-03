@@ -47,3 +47,13 @@ session/machine ids, quote only the minimal identifying error text.
   on stdin.
 - **Would have prevented it:** a detached job surface that puts every agent-submitted proof in its
   own scope with a durable id and journals its termination (SPEC B5/B6).
+
+## 2026-09-03 — Embedded economics replay was coupled to mutable corpus presence
+
+- **Doing:** regenerating the ratified economics outputs after adding compaction left-censor
+  accounting.
+- **Evidence:** `economics.py --from-inputs` stopped on unrelated corpus differences whenever the
+  default corpus directory existed, despite the command being documented as replaying committed
+  compact inputs.
+- **Would have prevented it:** make `--from-inputs` select embedded frozen facts unconditionally;
+  validate a live corpus only when the operator passes `--corpus` explicitly.
