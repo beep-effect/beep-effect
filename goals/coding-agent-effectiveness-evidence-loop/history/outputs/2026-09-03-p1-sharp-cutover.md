@@ -3,7 +3,7 @@
 Date: 2026-09-03
 Baseline revision: `log-only-0`
 Treatment revision: `desktop-ntfy-1`
-Status: live in this checkout, with fleet rollout, post-intervention sampling,
+Status: merged and in guarded fleet rollout, with post-intervention sampling
 and phone delivery still open
 
 ## Preconditions
@@ -145,13 +145,51 @@ ledger still contained zero files, and the current process exposed neither an
 ntfy topic nor a bearer token. This increases observation time but
 does not satisfy either open evidence gate.
 
+## Post-merge guarded rollout
+
+PR #973 merged at `2026-09-03T14:32:50Z` as `e60fe8ff66`; fresh `origin/main`
+was `a1652c1923` after the immediately following mainline merges. The read-only
+fleet mirror discovered 22 same-origin clones and 103 total clone/worktree
+checkouts, with 2 degraded checkouts. That denominator is much wider than the
+set safe to mutate automatically.
+
+Two direct clones already carried `desktop-ntfy-1`. Five more direct clones
+were on clean, process-idle `main` worktrees, so each was fetched through the
+shared network circuit breaker and fast-forwarded to `a1652c1923`. Their
+post-merge hooks passed the version-sync check. The seven adopted direct clones
+each expose all nine Claude and six Codex `desktop-ntfy-1` command stamps.
+Active, dirty, detached, and feature-branch checkouts were left untouched;
+their rows remain valid revision-labeled controls rather than being silently
+reclassified at merge time.
+
+At `2026-09-03T14:38:50.654Z`, the post-boundary ledger held 15,501 rows:
+1,423 `desktop-ntfy-1` and 14,078 `log-only-0`. The only
+`AskUserQuestion` `PermissionRequest` was still `log-only-0`, so the sharp
+human-input denominator remained zero. The canonical allowlist scan found zero
+rows with forbidden content keys. The instrument was armed, the notification
+ledger held zero files and zero rows, and the ntfy base URL, topic, and token
+were all absent from the runtime environment.
+
+The packet launcher-size, manifest JSON, packet whitespace, goals-doctor, and
+reflection-lint checks passed after the record was updated. `goals index
+--check` remained red on an unrelated generated-index drift already present at
+clean `main` `a1652c1923`; a second clean clone reproduced the same failure.
+This change did not rewrite `goals/INDEX.md` or absorb that separate repair.
+
+After integrating fresh `main`, the scheduler-independent local proof ran each
+`@beep/repo-ai-metrics` lane with `--filter`: lint and typecheck passed, all 304
+tests passed, branch coverage held at 371/475 (78.10%), and the 27-file build
+passed. This re-proves the instrument against the integrated tree without
+claiming entry into the canonical scheduled Yeet lane.
+
 ## Remaining P1 gates
 
 P1 stays `in-progress` for two evidence reasons:
 
 1. No post-cutover `AskUserQuestion` bracket has accrued yet, so the first wait
    reduction and interrupted time-series estimate do not exist yet. The tracked
-   cutover is live only in this checkout until it ships through the PR gate.
+   cutover has begun its post-merge rollout, but adoption remains deliberately
+   staggered around live and non-clean worktrees.
 2. Desktop delivery is live, but phone delivery is not configured. The session
    had no 1Password Environments MCP tool. The permitted agent credential check
    ran `op-doctor` once and stopped on `FAIL UUID op read: could not resolve a

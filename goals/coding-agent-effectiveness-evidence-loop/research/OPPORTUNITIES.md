@@ -478,3 +478,19 @@ What would have prevented it: make early-PR local proof refresh and test the
 current pull-request merge candidate, or at minimum report when its base SHA is
 newer than the locally tested `origin/main`. Exact branch-head proof and exact
 merge-candidate proof are different evidence when the base moves.
+
+## 2026-09-03 — fleet JSON output truncates before it can be decoded
+
+Lived while taking the required post-merge adoption census. The read-only
+`bun run beep worktree fleet --json` scan reported 22 clones and 103 total
+checkouts, but piping its output to `jq` failed with
+`Unfinished string at EOF at line 1, column 131072`. The command had cut the
+single JSON line in the middle of a string while still exiting zero. The
+rollout therefore used the scan's top-level coverage counters plus a separate
+bounded direct-clone inventory instead of treating the truncated payload as a
+complete fleet document.
+
+What would have prevented it: emit complete JSON independently of terminal
+render limits, add a compact projection that omits large per-checkout path
+arrays, or fail nonzero with explicit truncation metadata. A successful
+`--json` command must never hand automation an undecodable prefix.
