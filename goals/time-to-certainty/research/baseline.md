@@ -1,8 +1,9 @@
 # time-to-certainty — P0 baseline (ratified 2026-09-03, decisions.md ruling 8)
 
 Source: `research/economics.md` (2026-09-03), reproducible with `research/scripts/economics.py`
-from the committed compact inputs. `--corpus` validates the embedded frozen facts against the
-fleet corpus captured at 2026-09-03T02:27Z. Hosted Check runs start 2026-08-20; the attempt window
+from the committed compact inputs. `--corpus` validates every replayed path and digest, the corpus
+manifest digest, and the embedded frozen facts before use; drift fails closed unless explicitly
+allowed and stamped non-ratified. Hosted Check runs start 2026-08-20; the attempt window
 is 2026-08-04T12:22Z to 2026-09-03T06:26Z, with 2,742 attempts in the union population and 1,833
 in the article-comparable filter. Input receipts for the two gzip captures and reproduction script
 are in `research/economics.json`.

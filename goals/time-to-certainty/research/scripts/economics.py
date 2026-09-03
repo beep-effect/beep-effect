@@ -3,9 +3,9 @@
 
 The default mode reads the two committed compact gzip inputs under ../inputs/
 and rewrites economics.json and economics.md with stable ordering and
-nearest-rank percentiles. Pass --corpus to validate the embedded frozen facts
-against a run2 fleet corpus; when the repository-owned default is absent, the
-script reports the fallback and remains exactly reproducible from the inputs.
+nearest-rank percentiles. Pass --corpus to validate every replayed corpus file
+and its compact facts against the committed ratified baseline before use. A
+drifted corpus fails closed unless --allow-corpus-drift is explicit.
 """
 
 from __future__ import annotations
@@ -45,6 +45,8 @@ DEFAULT_CORPUS_RELATIVE = (
 DEFAULT_CORPUS = REPO_ROOT / DEFAULT_CORPUS_RELATIVE
 LIVE_SNAPSHOT = INPUT_ROOT / "live-journals.json.gz"
 HOSTED_SNAPSHOT = INPUT_ROOT / "hosted-runs.json.gz"
+ECONOMICS_JSON = OUTPUT_ROOT / "economics.json"
+ECONOMICS_MD = OUTPUT_ROOT / "economics.md"
 
 ATTEMPT_SCHEMA = "yeet-attempt-journal/v1"
 VERDICT_SCHEMA_V2 = "yeet-verdict/v2"
@@ -227,6 +229,33 @@ def file_receipt(path: Path, kind: str) -> dict[str, Any]:
     }
 
 
+def corpus_source_files(corpus_root: Path) -> list[tuple[str, Path]]:
+    sources = [
+        *(("frozen-attempts", path) for path in corpus_root.glob("attempts/*/*/attempts.ndjson")),
+        *(("frozen-verdict", path) for path in corpus_root.glob("verdicts/*/*/verdict.json")),
+        *(("frozen-admission", path) for path in corpus_root.glob("admission/*/journal.ndjson")),
+    ]
+    manifest = corpus_root / "MANIFEST.yaml"
+    if manifest.is_file():
+        sources.append(("frozen-manifest", manifest))
+    return sorted(sources, key=lambda entry: (entry[1].relative_to(corpus_root).as_posix(), entry[0]))
+
+
+def corpus_file_receipts(corpus_root: Path) -> list[dict[str, Any]]:
+    receipts: list[dict[str, Any]] = []
+    for kind, path in corpus_source_files(corpus_root):
+        data = path.read_bytes()
+        receipts.append(
+            {
+                "bytes": len(data),
+                "kind": kind,
+                "path": path.relative_to(corpus_root).as_posix(),
+                "sha256_12": sha256_12_bytes(data),
+            }
+        )
+    return receipts
+
+
 def parse_json_file(path: Path) -> Any:
     if path.suffix == ".gz":
         with gzip.open(path, "rt", encoding="utf-8") as compressed:
@@ -259,6 +288,14 @@ def compact_attempt_record(record: dict[str, Any]) -> dict[str, Any]:
 
 def compact_frozen_inputs(corpus_root: Path) -> dict[str, Any]:
     attempts, verdicts, admissions = frozen_payloads(corpus_root)
+    return compact_frozen_inputs_from_payloads(attempts, verdicts, admissions)
+
+
+def compact_frozen_inputs_from_payloads(
+    attempts: list[dict[str, Any]],
+    verdicts: list[dict[str, Any]],
+    admissions: list[dict[str, Any]],
+) -> dict[str, Any]:
     return {
         "admissions": [
             {
@@ -600,33 +637,32 @@ def frozen_payloads(corpus_root: Path) -> tuple[list[dict[str, Any]], list[dict[
     attempt_sources: list[dict[str, Any]] = []
     verdict_sources: list[dict[str, Any]] = []
     admissions: list[dict[str, Any]] = []
-    for source in sorted(corpus_root.glob("attempts/*/*/attempts.ndjson")):
+    for kind, source in corpus_source_files(corpus_root):
         relative = source.relative_to(corpus_root).parts
-        data = source.read_bytes()
-        attempt_sources.append(
-            {
-                "checkout": relative[1],
-                "path": f"frozen/attempts/{relative[1]}/{relative[2]}",
-                "records": parse_ndjson_bytes(data, portable_path(source)),
-                "runId": relative[2],
-                "source": "frozen",
-            }
-        )
-    for source in sorted(corpus_root.glob("verdicts/*/*/verdict.json")):
-        relative = source.relative_to(corpus_root).parts
-        verdict_sources.append(
-            {
-                "checkout": relative[1],
-                "document": parse_json_file(source),
-                "path": f"frozen/verdicts/{relative[1]}/{relative[2]}",
-                "runId": relative[2],
-                "source": "frozen",
-            }
-        )
-    for source in sorted(corpus_root.glob("admission/*/journal.ndjson")):
-        label = source.parent.name
-        for record in parse_ndjson_bytes(source.read_bytes(), portable_path(source)):
-            admissions.append({"journal": label, "record": record})
+        if kind == "frozen-attempts":
+            attempt_sources.append(
+                {
+                    "checkout": relative[1],
+                    "path": f"frozen/attempts/{relative[1]}/{relative[2]}",
+                    "records": parse_ndjson_bytes(source.read_bytes(), portable_path(source)),
+                    "runId": relative[2],
+                    "source": "frozen",
+                }
+            )
+        elif kind == "frozen-verdict":
+            verdict_sources.append(
+                {
+                    "checkout": relative[1],
+                    "document": parse_json_file(source),
+                    "path": f"frozen/verdicts/{relative[1]}/{relative[2]}",
+                    "runId": relative[2],
+                    "source": "frozen",
+                }
+            )
+        elif kind == "frozen-admission":
+            label = source.parent.name
+            for record in parse_ndjson_bytes(source.read_bytes(), portable_path(source)):
+                admissions.append({"journal": label, "record": record})
     return attempt_sources, verdict_sources, admissions
 
 
@@ -1465,7 +1501,22 @@ def render_economics(report: dict[str, Any]) -> str:
         "python3 goals/time-to-certainty/research/scripts/economics.py --from-inputs",
         "```",
         "",
+        "Validate an available frozen corpus before replaying it:",
+        "",
+        "```sh",
+        "python3 goals/time-to-certainty/research/scripts/economics.py --from-inputs --corpus <dir>",
+        "```",
+        "",
+        "Corpus path, digest, manifest, or compact-fact drift fails closed before either output is written.",
+        "Use `--allow-corpus-drift` only for exploratory output: JSON gets",
+        "`corpusValidation: \"drifted\"`, and Markdown gets a visible non-ratified banner.",
+        "",
     ]
+    if report.get("corpusValidation") == "drifted":
+        lines[2:2] = [
+            "> **NON-RATIFIED CORPUS DRIFT:** generated with `--allow-corpus-drift`; do not use as the baseline.",
+            "",
+        ]
     lines += markdown_table(
         ["Method", "Value"],
         [
@@ -1664,7 +1715,7 @@ def render_economics(report: dict[str, Any]) -> str:
             ["Failed preview allocation", f"{report['executionAmplification']['mergedPreviewFailedWrappersWithUnallocatedInnerRuns']} failed merged-preview wrappers have unknown child execution sets"],
             ["Episode tail", f"{report['redToGreen']['comparable24h']['closedEpisodesOver24hExcluded']} >24h closed episodes censored only for article comparison"],
             ["Cache", dq["wholeProofCacheHitRatio"]["reason"]],
-            ["Inputs", f"{len(report['inputs']['sourceFiles'])} source files; every path and sha256_12 in economics.json"],
+            ["Inputs", f"{len(report['inputs']['sourceFiles'])} replay files and {len(report['inputs']['corpusFiles'])} frozen corpus receipts; every path and sha256_12 in economics.json"],
         ],
     )
     text = "\n".join(lines) + "\n"
@@ -1739,7 +1790,140 @@ def embedded_frozen_payloads(
     return attempts, verdicts, admissions
 
 
-def build_report(corpus_root: Path) -> dict[str, Any]:
+def corpus_receipts_from_report(report: dict[str, Any], label: str) -> list[dict[str, Any]]:
+    inputs = report.get("inputs")
+    receipts = inputs.get("corpusFiles") if isinstance(inputs, dict) else None
+    if not isinstance(receipts, list) or not receipts:
+        raise SystemExit(f"corpus validation failed; {label} has no frozen corpus receipts")
+    normalized: list[dict[str, Any]] = []
+    for index, receipt in enumerate(receipts):
+        if not isinstance(receipt, dict):
+            raise SystemExit(f"corpus validation failed; {label} corpus receipt {index} is malformed")
+        path = receipt.get("path")
+        digest = receipt.get("sha256_12")
+        if not isinstance(path, str) or not path or not isinstance(digest, str) or not digest:
+            raise SystemExit(f"corpus validation failed; {label} corpus receipt {index} is malformed")
+        normalized.append(
+            {
+                "bytes": receipt.get("bytes"),
+                "kind": receipt.get("kind"),
+                "path": path,
+                "sha256_12": digest,
+            }
+        )
+    return sorted(normalized, key=lambda row: (row["path"], str(row.get("kind"))))
+
+
+def load_worktree_corpus_receipts() -> list[dict[str, Any]]:
+    if not ECONOMICS_JSON.is_file():
+        raise SystemExit(f"missing {portable_path(ECONOMICS_JSON)} with frozen corpus receipts")
+    report = parse_json_file(ECONOMICS_JSON)
+    if not isinstance(report, dict):
+        raise SystemExit(f"malformed {portable_path(ECONOMICS_JSON)}")
+    return corpus_receipts_from_report(report, portable_path(ECONOMICS_JSON))
+
+
+def load_committed_corpus_receipts() -> list[dict[str, Any]]:
+    relative = ECONOMICS_JSON.relative_to(REPO_ROOT).as_posix()
+    completed = subprocess.run(
+        ["git", "show", f"HEAD:{relative}"],
+        cwd=REPO_ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if completed.returncode != 0:
+        raise SystemExit("corpus validation failed; cannot read committed economics.json")
+    try:
+        report = json.loads(completed.stdout)
+    except json.JSONDecodeError as error:
+        raise SystemExit("corpus validation failed; committed economics.json is malformed") from error
+    if not isinstance(report, dict):
+        raise SystemExit("corpus validation failed; committed economics.json is malformed")
+    return corpus_receipts_from_report(report, "committed economics.json")
+
+
+def differing_receipt_paths(
+    actual_receipts: list[dict[str, Any]], expected_receipts: list[dict[str, Any]]
+) -> list[str]:
+    def indexed(receipts: list[dict[str, Any]]) -> dict[str, tuple[Any, Any, Any]]:
+        return {
+            str(receipt.get("path")): (
+                receipt.get("sha256_12"),
+                receipt.get("bytes"),
+                receipt.get("kind"),
+            )
+            for receipt in receipts
+        }
+
+    actual = indexed(actual_receipts)
+    expected = indexed(expected_receipts)
+    return sorted(path for path in actual.keys() | expected.keys() if actual.get(path) != expected.get(path))
+
+
+def frozen_fact_index(frozen: dict[str, Any]) -> dict[str, list[Any]]:
+    indexed: dict[str, list[Any]] = collections.defaultdict(list)
+    for index, source in enumerate(frozen.get("attemptSources", [])):
+        if not isinstance(source, dict):
+            indexed[f"attempts/<malformed-{index}>/attempts.ndjson"].append(source)
+            continue
+        path = f"attempts/{source.get('checkout')}/{source.get('runId')}/attempts.ndjson"
+        indexed[path].append(source)
+    for index, source in enumerate(frozen.get("verdictSources", [])):
+        if not isinstance(source, dict):
+            indexed[f"verdicts/<malformed-{index}>/verdict.json"].append(source)
+            continue
+        path = f"verdicts/{source.get('checkout')}/{source.get('runId')}/verdict.json"
+        indexed[path].append(source)
+    for index, envelope in enumerate(frozen.get("admissions", [])):
+        if not isinstance(envelope, dict):
+            indexed[f"admission/<malformed-{index}>/journal.ndjson"].append(envelope)
+            continue
+        path = f"admission/{envelope.get('journal')}/journal.ndjson"
+        indexed[path].append(envelope)
+    return dict(indexed)
+
+
+def differing_frozen_fact_paths(actual: dict[str, Any], expected: dict[str, Any]) -> list[str]:
+    actual_index = frozen_fact_index(actual)
+    expected_index = frozen_fact_index(expected)
+    return sorted(
+        path
+        for path in actual_index.keys() | expected_index.keys()
+        if actual_index.get(path) != expected_index.get(path)
+    )
+
+
+def corpus_validation_error(paths: list[str]) -> str:
+    rendered = "\n".join(f"  - {path}" for path in sorted(set(paths)))
+    return f"corpus validation failed; differing paths:\n{rendered}"
+
+
+def validate_corpus(
+    corpus_root: Path,
+    expected_receipts: list[dict[str, Any]],
+    embedded_frozen: dict[str, Any],
+    allow_corpus_drift: bool,
+) -> tuple[str, tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]]:
+    actual_receipts = corpus_file_receipts(corpus_root)
+    differing_paths = differing_receipt_paths(actual_receipts, expected_receipts)
+    if differing_paths and not allow_corpus_drift:
+        raise SystemExit(corpus_validation_error(differing_paths))
+
+    payloads = frozen_payloads(corpus_root)
+    actual_frozen = compact_frozen_inputs_from_payloads(*payloads)
+    fact_paths = differing_frozen_fact_paths(actual_frozen, embedded_frozen)
+    differing_paths = sorted(set(differing_paths) | set(fact_paths))
+    if differing_paths and not allow_corpus_drift:
+        raise SystemExit(corpus_validation_error(differing_paths))
+    if differing_paths:
+        print(corpus_validation_error(differing_paths), file=sys.stderr)
+        print("continuing with non-ratified output because --allow-corpus-drift was supplied", file=sys.stderr)
+        return "drifted", payloads
+    return "validated", payloads
+
+
+def build_report(corpus_root: Path, *, corpus_requested: bool, allow_corpus_drift: bool) -> dict[str, Any]:
     if not LIVE_SNAPSHOT.is_file():
         raise SystemExit(f"missing {portable_path(LIVE_SNAPSHOT)}; run --capture-live")
     if not HOSTED_SNAPSHOT.is_file():
@@ -1751,9 +1935,27 @@ def build_report(corpus_root: Path) -> dict[str, Any]:
     if hosted_snapshot.get("schemaVersion") != HOSTED_SCHEMA:
         raise SystemExit("unsupported hosted snapshot schema")
 
+    embedded_frozen = live_snapshot.get("frozen")
+    if not isinstance(embedded_frozen, dict):
+        raise SystemExit("compact live input has no embedded frozen facts")
+    expected_corpus_receipts = load_worktree_corpus_receipts()
+    corpus_validation = "embedded"
     if corpus_root.is_dir():
-        frozen_attempts, frozen_verdicts, admissions = frozen_payloads(corpus_root)
-        print(f"using run2 fleet corpus from {portable_path(corpus_root)}", file=sys.stderr)
+        committed_receipts = load_committed_corpus_receipts()
+        corpus_validation, payloads = validate_corpus(
+            corpus_root,
+            committed_receipts,
+            embedded_frozen,
+            allow_corpus_drift,
+        )
+        frozen_attempts, frozen_verdicts, admissions = payloads
+        expected_corpus_receipts = committed_receipts
+        print(
+            f"using {corpus_validation} run2 fleet corpus from {portable_path(corpus_root)}",
+            file=sys.stderr,
+        )
+    elif corpus_requested:
+        raise SystemExit(f"corpus validation failed; corpus directory is missing: {portable_path(corpus_root)}")
     else:
         frozen_attempts, frozen_verdicts, admissions = embedded_frozen_payloads(live_snapshot)
         print(
@@ -1804,6 +2006,7 @@ def build_report(corpus_root: Path) -> dict[str, Any]:
         "firstFailure": first_failure,
         "hosted": hosted,
         "inputs": {
+            "corpusFiles": expected_corpus_receipts,
             "digestAlgorithm": "sha256 truncated to 12 lowercase hex characters",
             "sourceFiles": sorted(source_receipts, key=lambda row: (str(row.get("path")), str(row.get("kind")))),
         },
@@ -1821,6 +2024,8 @@ def build_report(corpus_root: Path) -> dict[str, Any]:
         },
         "unchangedFingerprint": fingerprint,
     }
+    if corpus_validation == "drifted":
+        report["corpusValidation"] = "drifted"
     return redact(report)
 
 
@@ -1843,8 +2048,12 @@ def main() -> None:
     parser.add_argument(
         "--corpus",
         type=Path,
-        default=DEFAULT_CORPUS,
-        help=f"run2 fleet corpus directory (default: {DEFAULT_CORPUS_RELATIVE.as_posix()})",
+        help=f"run2 fleet corpus directory to validate (repository fallback: {DEFAULT_CORPUS_RELATIVE.as_posix()})",
+    )
+    parser.add_argument(
+        "--allow-corpus-drift",
+        action="store_true",
+        help="allow a differing corpus and stamp both outputs as non-ratified",
     )
     parser.add_argument(
         "--from-inputs",
@@ -1852,8 +2061,11 @@ def main() -> None:
         help="replay the committed compact gzip inputs (automatic when both inputs exist)",
     )
     args = parser.parse_args()
+    if args.allow_corpus_drift and args.corpus is None:
+        parser.error("--allow-corpus-drift requires --corpus <dir>")
+    corpus_root = args.corpus if args.corpus is not None else DEFAULT_CORPUS
     if args.capture_live:
-        capture_live(args.corpus)
+        capture_live(corpus_root)
     if args.capture_hosted:
         capture_hosted()
     if args.capture_live or args.capture_hosted:
@@ -1863,14 +2075,16 @@ def main() -> None:
     if not from_inputs:
         raise SystemExit("committed compact inputs are absent; run --capture-live and --capture-hosted")
 
-    report = build_report(args.corpus)
-    economics_json = OUTPUT_ROOT / "economics.json"
-    economics_md = OUTPUT_ROOT / "economics.md"
-    write_json(economics_json, report)
-    economics_md.write_text(render_economics(report), encoding="utf-8")
-    validate_public_hygiene([SCRIPT, LIVE_SNAPSHOT, HOSTED_SNAPSHOT, economics_json, economics_md])
-    print(f"wrote {portable_path(economics_json)}")
-    print(f"wrote {portable_path(economics_md)} ({len(economics_md.read_text(encoding='utf-8').splitlines())} lines)")
+    report = build_report(
+        corpus_root,
+        corpus_requested=args.corpus is not None,
+        allow_corpus_drift=args.allow_corpus_drift,
+    )
+    write_json(ECONOMICS_JSON, report)
+    ECONOMICS_MD.write_text(render_economics(report), encoding="utf-8")
+    validate_public_hygiene([SCRIPT, LIVE_SNAPSHOT, HOSTED_SNAPSHOT, ECONOMICS_JSON, ECONOMICS_MD])
+    print(f"wrote {portable_path(ECONOMICS_JSON)}")
+    print(f"wrote {portable_path(ECONOMICS_MD)} ({len(ECONOMICS_MD.read_text(encoding='utf-8').splitlines())} lines)")
 
 
 if __name__ == "__main__":

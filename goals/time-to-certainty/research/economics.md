@@ -6,6 +6,16 @@ Reproduce from a clean repository clone with the committed compact inputs:
 python3 goals/time-to-certainty/research/scripts/economics.py --from-inputs
 ```
 
+Validate an available frozen corpus before replaying it:
+
+```sh
+python3 goals/time-to-certainty/research/scripts/economics.py --from-inputs --corpus <dir>
+```
+
+Corpus path, digest, manifest, or compact-fact drift fails closed before either output is written.
+Use `--allow-corpus-drift` only for exploratory output: JSON gets
+`corpusValidation: "drifted"`, and Markdown gets a visible non-ratified banner.
+
 | Method | Value |
 | --- | --- |
 | Schema | verification-economics/v1 |
@@ -170,4 +180,4 @@ python3 goals/time-to-certainty/research/scripts/economics.py --from-inputs
 | Failed preview allocation | 2 failed merged-preview wrappers have unknown child execution sets |
 | Episode tail | 7 >24h closed episodes censored only for article comparison |
 | Cache | forbidden by ship-velocity C5; inputs contain no first-cold-lane task accounting |
-| Inputs | 3 source files; every path and sha256_12 in economics.json |
+| Inputs | 3 replay files and 795 frozen corpus receipts; every path and sha256_12 in economics.json |
