@@ -40,10 +40,13 @@ import { unknownRecordKeys, unknownRecordProperty } from "../../internal/cli/Unk
 import { formatCommandLine, QualityTaskStep, runCaptured, runToExit } from "../../internal/process/index.ts";
 import {
   AdmissionConfig,
+  admissionProtocolStatus,
   admissionStatus,
   GITHUB_CHECK_MODE_VALUES,
   reapAdmissionState,
+  reconcileAttemptJournalsForCheckout,
   runTmpfsReap,
+  setAdmissionEvictionProtocol,
   TmpfsReapReport,
 } from "../../internal/repo-run/index.ts";
 import { runChangesetGraphCheck } from "./ChangesetGraph.ts";
@@ -3005,6 +3008,48 @@ const schedulerReapCommand = Command.make(
   })
 ).pipe(Command.withDescription("Reap dead admission leases and tickets (dry-run by default)"));
 
+const schedulerProtocolCommand = Command.make(
+  "protocol",
+  {
+    enableEvictions: Flag.boolean("enable-evictions").pipe(
+      Flag.withDescription("Enable v2 eviction rows after every live checkout runs the preservation release")
+    ),
+    disableEvictions: Flag.boolean("disable-evictions").pipe(
+      Flag.withDescription("Disable v2 eviction rows while mixed fleet revisions may still rewrite the journal")
+    ),
+  },
+  Effect.fn(function* ({ disableEvictions, enableEvictions }) {
+    if (disableEvictions && enableEvictions) {
+      return yield* QualityScriptCommandError.make({
+        message: "Choose only one of --enable-evictions or --disable-evictions.",
+        command: "bun run beep quality scheduler protocol",
+        exitCode: 1,
+      });
+    }
+    const protocol = enableEvictions
+      ? yield* setAdmissionEvictionProtocol("on")
+      : disableEvictions
+        ? yield* setAdmissionEvictionProtocol("off")
+        : yield* admissionProtocolStatus();
+    yield* printLines([
+      `admission eviction rows: ${protocol.eviction}`,
+      "Enable only after every live checkout runs the preservation release.",
+    ]);
+  })
+).pipe(Command.withDescription("Inspect or change the mixed-checkout eviction-row protocol gate"));
+
+const schedulerReconcileAttemptsCommand = Command.make(
+  "reconcile-attempts",
+  {},
+  Effect.fn(function* () {
+    const repoRoot = yield* findRepoRoot().pipe(
+      QualityScriptCommandError.mapError("Failed to locate repository root.")
+    );
+    const reconciled = yield* reconcileAttemptJournalsForCheckout(repoRoot);
+    yield* printLines([`reconciled owner-dead attempts: ${reconciled}`]);
+  })
+).pipe(Command.withDescription("Close unfinished attempt starts whose PID/start-time owner is dead"));
+
 const qualitySchedulerCommand = Command.make("scheduler", {}, () =>
   printLines([
     "Quality scheduler commands:",
@@ -3012,10 +3057,20 @@ const qualitySchedulerCommand = Command.make("scheduler", {}, () =>
     "- bun run beep quality scheduler status --json",
     "- bun run beep quality scheduler reap",
     "- bun run beep quality scheduler reap --apply",
+    "- bun run beep quality scheduler protocol",
+    "- bun run beep quality scheduler protocol --enable-evictions",
+    "- bun run beep quality scheduler protocol --disable-evictions",
+    "- bun run beep quality scheduler reconcile-attempts",
+    "Eviction rows default off; enable only after every live checkout runs the preservation release.",
   ])
 ).pipe(
   Command.withDescription("Inspect and repair machine-wide quality admission"),
-  Command.withSubcommands([schedulerStatusCommand, schedulerReapCommand])
+  Command.withSubcommands([
+    schedulerStatusCommand,
+    schedulerReapCommand,
+    schedulerProtocolCommand,
+    schedulerReconcileAttemptsCommand,
+  ])
 );
 
 const renderTmpfsCandidateLine = (candidate: TmpfsReapReport["candidates"][number]): string => {

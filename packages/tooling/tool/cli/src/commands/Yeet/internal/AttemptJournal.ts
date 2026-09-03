@@ -63,6 +63,8 @@ export class YeetAttemptStarted extends S.Class<YeetAttemptStarted>($I`YeetAttem
     head: S.String,
     mode: S.String,
     startedAt: S.String,
+    ownerPid: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    ownerProcStart: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     ...attemptInputFactFields,
   },
   $I.annote("YeetAttemptStarted", {

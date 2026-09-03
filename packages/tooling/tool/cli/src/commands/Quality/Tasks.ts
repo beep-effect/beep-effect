@@ -1566,15 +1566,14 @@ const runGithubCheckWave = Effect.fn("QualityTasks.runGithubCheckWave")(function
     }
     if (activeReuse) {
       activeReusableIds = A.append(activeReusableIds, lane.id);
-      laneRuns = A.append(
-        laneRuns,
-        QualityTaskLaneRun.make({
-          id: lane.id,
-          label: lane.step.label,
-          status: "reused",
-          inputDigest: O.none(),
-        })
-      );
+      const laneRun = QualityTaskLaneRun.make({
+        id: lane.id,
+        label: lane.step.label,
+        status: "reused",
+        inputDigest: O.none(),
+      });
+      yield* appendQualityTaskLaneRun(laneRun);
+      laneRuns = A.append(laneRuns, laneRun);
       continue;
     }
 
@@ -1582,6 +1581,7 @@ const runGithubCheckWave = Effect.fn("QualityTasks.runGithubCheckWave")(function
     const result = yield* collectQualityTaskLaneRuns(`${label}:${lane.id}`, [[lane.id, lane.step, O.none()]], 1);
     const run = A.head(result.report.lanes);
     if (O.isSome(run)) {
+      yield* appendQualityTaskLaneRun(run.value);
       laneRuns = A.append(laneRuns, run.value);
     }
     if (A.isReadonlyArrayNonEmpty(result.failures)) {
@@ -1658,14 +1658,15 @@ const collectGithubCheckLaneWaves = Effect.fn("QualityTasks.collectGithubCheckLa
       );
       qualityTaskLaneRuns = A.appendAll(
         qualityTaskLaneRuns,
-        A.map(wave.lanes, (lane) =>
-          QualityTaskLaneRun.make({
+        yield* Effect.forEach(wave.lanes, (lane) => {
+          const laneRun = QualityTaskLaneRun.make({
             id: lane.id,
             label: lane.step.label,
             status: "not-run-early-stop",
             inputDigest: O.none(),
-          })
-        )
+          });
+          return appendQualityTaskLaneRun(laneRun).pipe(Effect.as(laneRun));
+        })
       );
       continue;
     }
@@ -1708,22 +1709,25 @@ const collectGithubCheckLaneWaves = Effect.fn("QualityTasks.collectGithubCheckLa
 
 const githubCheckRunReportJson = JsonStringCodec(GithubCheckRunReport);
 const qualityTaskLaneRunReportJson = JsonStringCodec(QualityTaskLaneRunReport);
+const decodeQualityTaskLaneRunReportOption = S.decodeUnknownOption(S.fromJsonString(QualityTaskLaneRunReport));
 const laneReportTextEncoder = new TextEncoder();
 
-const emitQualityTaskLaneRunReport = Effect.fn("QualityTasks.emitLaneRunReport")(function* (
-  report: QualityTaskLaneRunReport
-) {
+const appendQualityTaskLaneRun = Effect.fn("QualityTasks.appendLaneRun")(function* (lane: QualityTaskLaneRun) {
   const parentLaneId = O.fromUndefinedOr(Bun.env[QUALITY_TASK_LANE_RUN_PARENT_ID_ENV]);
-  const enriched = QualityTaskLaneRunReport.make({ ...report, parentLaneId });
-  const reportJson = yield* qualityTaskLaneRunReportJson
-    .encode(enriched)
-    .pipe(QualityTaskConfigurationError.mapError("Failed to encode the quality-task lane run report."));
-  yield* Console.log(`${QUALITY_TASK_LANE_RUN_REPORT_PREFIX}${reportJson}`);
   const artifactPath = O.fromUndefinedOr(Bun.env[QUALITY_TASK_LANE_RUN_ARTIFACT_PATH_ENV]);
   yield* O.match(artifactPath, {
     onNone: () => Effect.void,
-    onSome: (target) =>
-      Effect.scoped(
+    onSome: Effect.fn("QualityTasks.appendLaneRun.onSome")(function* (target) {
+      const reportJson = yield* qualityTaskLaneRunReportJson
+        .encode(
+          QualityTaskLaneRunReport.make({
+            schemaVersion: "quality-task-lane-run/v1",
+            parentLaneId,
+            lanes: [lane],
+          })
+        )
+        .pipe(QualityTaskConfigurationError.mapError("Failed to encode the quality-task lane run report."));
+      yield* Effect.scoped(
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
@@ -1732,8 +1736,51 @@ const emitQualityTaskLaneRunReport = Effect.fn("QualityTasks.emitLaneRunReport")
           yield* file.writeAll(laneReportTextEncoder.encode(`${reportJson}\n`));
           yield* file.sync;
         }).pipe(QualityTaskConfigurationError.mapError("Failed to write the durable quality-task lane report."))
-      ),
+      );
+    }),
   });
+});
+
+const qualityTaskLaneRunReportFromArtifact = Effect.fn("QualityTasks.reportFromArtifact")(function* (
+  fallback: QualityTaskLaneRunReport
+) {
+  const artifactPath = O.fromUndefinedOr(Bun.env[QUALITY_TASK_LANE_RUN_ARTIFACT_PATH_ENV]);
+  const parentLaneId = O.fromUndefinedOr(Bun.env[QUALITY_TASK_LANE_RUN_PARENT_ID_ENV]);
+  return yield* O.match(artifactPath, {
+    onNone: () => Effect.succeed(QualityTaskLaneRunReport.make({ ...fallback, parentLaneId })),
+    onSome: Effect.fn("QualityTasks.reportFromArtifact.onSome")(function* (target) {
+      const fs = yield* FileSystem.FileSystem;
+      const text = yield* fs.readFileString(target).pipe(Effect.option);
+      if (O.isNone(text)) {
+        return QualityTaskLaneRunReport.make({ ...fallback, parentLaneId });
+      }
+      const reports = A.getSomes(
+        A.map(pipe(text.value, Str.split("\n"), A.filter(Str.isNonEmpty)), (line) =>
+          decodeQualityTaskLaneRunReportOption(line)
+        )
+      );
+      const matchingReports = A.filter(
+        reports,
+        (report) => O.getOrElse(report.parentLaneId, () => Str.empty) === O.getOrElse(parentLaneId, () => Str.empty)
+      );
+      return A.isReadonlyArrayNonEmpty(matchingReports)
+        ? QualityTaskLaneRunReport.make({
+            schemaVersion: "quality-task-lane-run/v1",
+            parentLaneId,
+            lanes: A.flatMap(matchingReports, (report) => report.lanes),
+          })
+        : QualityTaskLaneRunReport.make({ ...fallback, parentLaneId });
+    }),
+  });
+});
+
+const emitQualityTaskLaneRunReport = Effect.fn("QualityTasks.emitLaneRunReport")(function* (
+  report: QualityTaskLaneRunReport
+) {
+  const reportJson = yield* qualityTaskLaneRunReportJson
+    .encode(report)
+    .pipe(QualityTaskConfigurationError.mapError("Failed to encode the quality-task lane run report."));
+  yield* Console.log(`${QUALITY_TASK_LANE_RUN_REPORT_PREFIX}${reportJson}`);
 });
 
 /**
@@ -1765,7 +1812,7 @@ export const runQualityTaskGithubCheckLaneWaves = Effect.fn("QualityTasks.runGit
     .encode(result.report)
     .pipe(QualityTaskConfigurationError.mapError("Failed to encode the GitHub-check wave report."));
   yield* Console.log(`${GITHUB_CHECK_RUN_REPORT_PREFIX}${reportJson}`);
-  yield* emitQualityTaskLaneRunReport(result.laneReport);
+  yield* emitQualityTaskLaneRunReport(yield* qualityTaskLaneRunReportFromArtifact(result.laneReport));
   yield* failQualityTaskFailures(label, result.failures);
 });
 
@@ -1794,7 +1841,8 @@ export const runQualityTaskStreamingLaneGroup = Effect.fn("QualityTasks.runStrea
   concurrency = 1
 ) {
   const result = yield* collectQualityTaskLaneRuns(label, lanes, concurrency);
-  yield* emitQualityTaskLaneRunReport(result.report);
+  yield* Effect.forEach(result.report.lanes, appendQualityTaskLaneRun, { discard: true, concurrency: 1 });
+  yield* emitQualityTaskLaneRunReport(yield* qualityTaskLaneRunReportFromArtifact(result.report));
   yield* failQualityTaskFailures(label, result.failures);
 });
 

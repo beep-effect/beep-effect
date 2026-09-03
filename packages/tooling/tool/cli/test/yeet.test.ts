@@ -9,8 +9,10 @@ import {
 } from "@beep/repo-cli/test/Quality";
 import {
   appendEncodedAttemptJournalEvent,
+  processStartIdentityForPid,
   provideRuntimeRootForTesting,
   RuntimeRootChoice,
+  reconcileAttemptJournalsForCheckout,
 } from "@beep/repo-cli/test/RepoRun";
 import {
   acquireFullProofFallbackLockOrObserveAtPath,
@@ -98,6 +100,7 @@ import {
   validatePublishCommitMessageForTesting,
   YeetAttemptJournalEvent,
   YeetAttemptStarted,
+  YeetAttemptTerminated,
   YeetCommandError,
   YeetExecutedStep,
   YeetExistingCommitPublishIntent,
@@ -140,6 +143,7 @@ const PlatformLayer = NodeChildProcessSpawner.layer.pipe(
 );
 const encodeJson = UnknownFromJsonString.encodeUnknownEffect;
 const attemptUuid = S.decodeUnknownSync(UUID);
+const DEAD_PID = 2_147_483_647;
 const proofLockReapClaimPath = (lockPath: string, observedText: string): string =>
   `${lockPath}.reap-${createHash("sha256").update(observedText).digest("hex")}.claim`;
 const proofLockReapClaimTombstonePath = (claimPath: string, observedText: string): string =>
@@ -2293,10 +2297,130 @@ describe("yeet attempt journal", () => {
             pipe(yield* fs.readFileString(journalPath), Str.split("\n"), A.filter(Str.isNonEmpty)),
             (line) => decodeYeetAttemptJournalEvent(line)
           );
-          expect(events).toHaveLength(50);
+          expect(events.length).toBeLessThanOrEqual(50);
           expect(A.filter(events, YeetAttemptJournalEvent.guards["journal-compacted"])).toHaveLength(1);
-          expect(A.some(events, YeetAttemptJournalEvent.guards["attempt-finished"])).toBe(true);
           expect(A.some(events, YeetAttemptJournalEvent.guards["attempt-terminated"])).toBe(true);
+        })
+      )
+    ));
+
+  it("compacts complete start and terminal pairs as one retention unit", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const tempContext = RepoRunContext.make({ ...context, cwd: tmpDir, repoRoot: tmpDir });
+          yield* Effect.forEach(
+            A.makeBy(30, (index) => index),
+            (index) => {
+              const attemptId = attemptUuid(`00000000-0000-4000-8001-${Str.padStart(12, "0")(`${index}`)}`);
+              return Effect.all(
+                [
+                  appendYeetAttemptJournalEvent(
+                    tempContext,
+                    YeetAttemptStarted.make({
+                      schemaVersion: "yeet-attempt-journal/v1",
+                      _tag: "attempt-started",
+                      attemptId,
+                      runId: `paired-${index}`,
+                      branch: "paired-compaction",
+                      base: "origin/main",
+                      head: "HEAD",
+                      mode: "verify",
+                      startedAt: "2026-09-03T00:00:00.000Z",
+                    })
+                  ),
+                  appendYeetAttemptJournalEvent(
+                    tempContext,
+                    YeetAttemptTerminated.make({
+                      schemaVersion: "yeet-attempt-journal/v1",
+                      _tag: "attempt-terminated",
+                      attemptId,
+                      recordedAt: "2026-09-03T00:00:01.000Z",
+                      reason: "interrupted",
+                    })
+                  ),
+                ],
+                { concurrency: 1, discard: true }
+              );
+            },
+            { concurrency: 1, discard: true }
+          );
+
+          const text = yield* fs.readFileString(yield* attemptJournalPath(tempContext));
+          const events = yield* Effect.forEach(pipe(text, Str.split("\n"), A.filter(Str.isNonEmpty)), (line) =>
+            decodeYeetAttemptJournalEvent(line)
+          );
+          const starts = A.filter(events, YeetAttemptJournalEvent.guards["attempt-started"]);
+          const terminals = A.filter(events, YeetAttemptJournalEvent.guards["attempt-terminated"]);
+          expect(events.length).toBeLessThanOrEqual(50);
+          expect(starts).toHaveLength(terminals.length);
+          expect(
+            A.every(starts, (start) => A.some(terminals, (terminal) => terminal.attemptId === start.attemptId))
+          ).toBe(true);
+          expect(
+            A.every(terminals, (terminal) => A.some(starts, (start) => start.attemptId === terminal.attemptId))
+          ).toBe(true);
+        })
+      )
+    ));
+
+  it("reconciles dead attempt owners without closing a live pid and start-time identity", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const tempContext = RepoRunContext.make({ ...context, cwd: tmpDir, repoRoot: tmpDir });
+          const journalPath = yield* attemptJournalPath(tempContext);
+          const ownerProcStart = pipe(yield* processStartIdentityForPid(process.pid), O.getOrThrow);
+          const deadAttemptId = attemptUuid("00000000-0000-4000-8002-000000000001");
+          const liveAttemptId = attemptUuid("00000000-0000-4000-8002-000000000002");
+          const started = (attemptId: UUID, ownerPid: number, procStart: string) =>
+            YeetAttemptStarted.make({
+              schemaVersion: "yeet-attempt-journal/v1",
+              _tag: "attempt-started",
+              attemptId,
+              runId: `owner-${ownerPid}`,
+              branch: "owner-reconciliation",
+              base: "origin/main",
+              head: "HEAD",
+              mode: "repair",
+              startedAt: "2026-09-03T00:00:00.000Z",
+              ownerPid: O.some(ownerPid),
+              ownerProcStart: O.some(procStart),
+              resolvedHeadSha: O.some("0123456789abcdef0123456789abcdef01234567"),
+              diffFingerprint: O.some("abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcd"),
+              proofTier: O.some("cheap-gates"),
+              envProfile: O.some("local"),
+              stage: O.some("repair-loop"),
+            });
+          const encodeStarted = S.encodeEffect(S.fromJsonString(YeetAttemptStarted));
+          const lines = yield* Effect.forEach(
+            [started(deadAttemptId, DEAD_PID, "fake-dead-owner"), started(liveAttemptId, process.pid, ownerProcStart)],
+            encodeStarted
+          );
+          yield* fs.makeDirectory(path.dirname(journalPath), { recursive: true });
+          yield* fs.writeFileString(journalPath, `${A.join(lines, "\n")}\n`);
+
+          expect(yield* reconcileAttemptJournalsForCheckout(tmpDir)).toBe(1);
+          expect(yield* reconcileAttemptJournalsForCheckout(tmpDir)).toBe(0);
+          const events = yield* Effect.forEach(
+            pipe(yield* fs.readFileString(journalPath), Str.split("\n"), A.filter(Str.isNonEmpty)),
+            (line) => decodeYeetAttemptJournalEvent(line)
+          );
+          const terminals = A.filter(events, YeetAttemptJournalEvent.guards["attempt-terminated"]);
+          expect(terminals).toHaveLength(1);
+          expect(terminals[0]).toMatchObject({
+            attemptId: deadAttemptId,
+            reason: "owner-dead",
+            resolvedHeadSha: O.some("0123456789abcdef0123456789abcdef01234567"),
+            diffFingerprint: O.some("abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcd"),
+            proofTier: O.some("cheap-gates"),
+            envProfile: O.some("local"),
+            stage: O.some("repair-loop"),
+          });
+          expect(A.some(terminals, (terminal) => terminal.attemptId === liveAttemptId)).toBe(false);
         })
       )
     ));

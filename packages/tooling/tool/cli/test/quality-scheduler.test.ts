@@ -8,9 +8,11 @@ import {
   acquireJournalFileLock,
   admissionCapacityTokensFor,
   admissionJournalPath,
+  admissionProtocolStatus,
   admissionStatus,
   admissionTokenWeight,
   appendAdmissionJournalEvent,
+  attemptJournalPathForCheckout,
   decodeAdmissionJournalEvent,
   isOvershootLoserForTesting,
   isProcessIdentityAliveWithStartForTesting,
@@ -26,6 +28,7 @@ import {
   reapAdmissionState,
   releaseAdmissionJournalLockForTesting,
   repoRunSafeArtifactName,
+  setAdmissionEvictionProtocol,
   validatePrivateCoordinationDirectory,
   withQualityAdmission,
   YeetAdmissionLease,
@@ -783,6 +786,7 @@ describe("quality-scheduler", () => {
             expect(decoded.nonce).toBe("");
             expect(decoded.enqueuedAtMillis).toBe(0);
             const snapshot = yield* admissionStatus(fastConfig);
+            expect((yield* admissionProtocolStatus()).eviction).toBe("off");
             expect(snapshot.leases).toHaveLength(1);
           })
         );
@@ -1248,11 +1252,14 @@ describe("quality-scheduler", () => {
             const binDirectory = path.join(path.dirname(path.dirname(tempRoot.root)), "bin");
             yield* fs.makeDirectory(binDirectory, { recursive: true });
             yield* writeExecutable(path.join(binDirectory, "systemctl"), "#!/bin/sh\nexit 0\n");
+            const checkoutRoot = path.join(path.dirname(path.dirname(tempRoot.root)), "off-checkout");
+            yield* fs.makeDirectory(checkoutRoot, { recursive: true });
             const live = yield* writeFakeLease(tempRoot, { weightTokens: 3, originKey: "origin-live" });
             const dead = yield* writeFakeLease(tempRoot, {
               pid: DEAD_PID,
               weightTokens: 5,
               originKey: "origin-dead",
+              checkoutRoot,
               attemptId: O.some(JOURNALED_ATTEMPT_ID),
             });
             const snapshot = yield* admissionStatus(fastConfig);
@@ -1270,16 +1277,17 @@ describe("quality-scheduler", () => {
             const remaining = yield* listDirectory(tempRoot.leases);
             expect(remaining).toStrictEqual([path.basename(live)]);
             const events = yield* readJournalEvents(tempRoot.root);
-            const eviction = pipe(
-              events,
-              A.findFirst(AdmissionJournalEvent.guards["admission-lease-evicted"]),
-              O.getOrThrow
+            expect(events).toHaveLength(0);
+            const attemptLines = pipe(
+              yield* fs.readFileString(yield* attemptJournalPathForCheckout(checkoutRoot, "feat/other")),
+              Str.split("\n"),
+              A.filter(Str.isNonEmpty)
             );
-            expect(eviction.nonce).toBe("");
-            expect(eviction.pid).toBe(DEAD_PID);
-            expect(eviction.attemptId).toStrictEqual(O.some(JOURNALED_ATTEMPT_ID));
-            expect(eviction.schemaVersion).toBe("yeet-admission-journal/v2");
-            expect(eviction.reason).toBe("owner-dead-or-reused");
+            expect(attemptLines).toHaveLength(1);
+            expect(yield* decodeYeetAttemptJournalEvent(attemptLines[0])).toMatchObject({
+              _tag: "attempt-terminated",
+              reason: "lease-eviction",
+            });
           })
         );
       })
@@ -1303,6 +1311,11 @@ describe("quality-scheduler", () => {
               checkoutRoot,
               branch: "feat/dead-lease",
               attemptId: O.some(leaseAttemptId),
+              resolvedHeadSha: O.some("0123456789abcdef0123456789abcdef01234567"),
+              diffFingerprint: O.some("abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcd"),
+              proofTier: O.some("full"),
+              envProfile: O.some("local"),
+              stage: O.some("pre-push"),
             });
             yield* writeFakeTicket(tempRoot, {
               pid: DEAD_PID,
@@ -1310,7 +1323,14 @@ describe("quality-scheduler", () => {
               checkoutRoot,
               branch: "feat/dead-ticket",
               attemptId: O.some(ticketAttemptId),
+              resolvedHeadSha: O.some("fedcba9876543210fedcba9876543210fedcba98"),
+              diffFingerprint: O.some("1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"),
+              proofTier: O.some("review-fix"),
+              envProfile: O.some("hosted"),
+              stage: O.some("hosted"),
             });
+
+            yield* setAdmissionEvictionProtocol("on");
 
             yield* Effect.all([reapAdmissionState({ apply: true }), reapAdmissionState({ apply: true })], {
               concurrency: "unbounded",
@@ -1350,6 +1370,20 @@ describe("quality-scheduler", () => {
                 })
             );
             expect(attemptEvents).toHaveLength(2);
+            expect(attemptEvents[0]).toMatchObject({
+              resolvedHeadSha: O.some("0123456789abcdef0123456789abcdef01234567"),
+              diffFingerprint: O.some("abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcd"),
+              proofTier: O.some("full"),
+              envProfile: O.some("local"),
+              stage: O.some("pre-push"),
+            });
+            expect(attemptEvents[1]).toMatchObject({
+              resolvedHeadSha: O.some("fedcba9876543210fedcba9876543210fedcba98"),
+              diffFingerprint: O.some("1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"),
+              proofTier: O.some("review-fix"),
+              envProfile: O.some("hosted"),
+              stage: O.some("hosted"),
+            });
             expect(yield* listDirectory(tempRoot.leases)).toHaveLength(0);
             expect(yield* listDirectory(tempRoot.queue)).toHaveLength(0);
           })

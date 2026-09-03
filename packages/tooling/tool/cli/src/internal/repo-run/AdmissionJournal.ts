@@ -28,6 +28,7 @@ import type * as SchemaAST from "effect/SchemaAST";
 
 const $I = $RepoCliId.create("internal/repo-run/AdmissionJournal");
 const JOURNAL_FILE_NAME = "journal.ndjson";
+const PROTOCOL_FILE_NAME = "protocol.json";
 const LOCK_FILE_NAME = "journal.lock";
 const RETAINED_ADMISSIONS = 200;
 const LOCK_RETRY_ATTEMPTS = 8;
@@ -37,6 +38,69 @@ const LOCK_RETRY_DELAY_MILLIS = 25;
 // owner whose lock could still be released concurrently.
 const LOCK_REUSE_BACKSTOP_MILLIS = 300_000;
 const textEncoder = new TextEncoder();
+
+/**
+ * Whether v2 eviction events may be emitted into the shared admission journal.
+ *
+ * **Example** (Recognize the rollout-safe default)
+ *
+ * ```ts
+ * import { AdmissionEvictionEmission } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(AdmissionEvictionEmission.is.off("off")) // true
+ * ```
+ *
+ * @category protocols
+ * @since 0.0.0
+ */
+export const AdmissionEvictionEmission = LiteralKit(["off", "on"]).pipe(
+  $I.annoteSchema("AdmissionEvictionEmission", {
+    description: "Whether current scheduler writers may emit v2 admission eviction events.",
+  })
+);
+
+/**
+ * Whether current scheduler writers may emit v2 admission eviction events.
+ *
+ * @category protocols
+ * @since 0.0.0
+ */
+export type AdmissionEvictionEmission = typeof AdmissionEvictionEmission.Type;
+
+/**
+ * Versioned mixed-checkout protocol marker stored in the admission root.
+ *
+ * **Example** (Construct the disabled protocol)
+ *
+ * ```ts
+ * import { AdmissionProtocol } from "@beep/repo-cli/test/RepoRun"
+ *
+ * const protocol = AdmissionProtocol.make({
+ *   schemaVersion: "yeet-admission-protocol/v1",
+ *   eviction: "off",
+ * })
+ * console.log(protocol.eviction) // "off"
+ * ```
+ *
+ * @category protocols
+ * @since 0.0.0
+ */
+export class AdmissionProtocol extends S.Class<AdmissionProtocol>($I`AdmissionProtocol`)(
+  {
+    schemaVersion: S.Literal("yeet-admission-protocol/v1"),
+    eviction: AdmissionEvictionEmission,
+  },
+  $I.annote("AdmissionProtocol", {
+    description: "Versioned rollout marker controlling admission-journal eviction event emission.",
+  })
+) {}
+
+const disabledAdmissionProtocol = AdmissionProtocol.make({
+  schemaVersion: "yeet-admission-protocol/v1",
+  eviction: AdmissionEvictionEmission.Enum.off,
+});
+const decodeAdmissionProtocol = S.decodeUnknownOption(S.fromJsonString(AdmissionProtocol));
+const encodeAdmissionProtocol = S.encodeUnknownEffect(S.fromJsonString(AdmissionProtocol));
 
 /**
  * Durable transition recorded when a queued ticket becomes an active lease.
@@ -328,6 +392,64 @@ export const admissionJournalPath = Effect.fn("AdmissionJournal.path")(function*
   return path.join(root, JOURNAL_FILE_NAME);
 });
 
+/**
+ * Resolve the admission protocol marker path beneath a scheduler root.
+ *
+ * **Example** (Reference the protocol path resolver)
+ *
+ * ```ts
+ * import { admissionProtocolPath } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(typeof admissionProtocolPath) // "function"
+ * ```
+ *
+ * @param root - Machine-wide admission root directory.
+ * @returns The protocol marker path effect.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const admissionProtocolPath = Effect.fn("AdmissionJournal.protocolPath")(function* (
+  root: string
+): Effect.fn.Return<string, never, Path.Path> {
+  const path = yield* Path.Path;
+  return path.join(root, PROTOCOL_FILE_NAME);
+});
+
+/**
+ * Read the admission protocol, failing closed to eviction emission off.
+ *
+ * **Details**
+ *
+ * A missing, unreadable, or undecodable marker means the mixed-checkout
+ * preservation rollout is not proven, so v2 eviction rows remain disabled.
+ *
+ * **Example** (Read a protocol marker)
+ *
+ * ```ts
+ * import { readAdmissionProtocol } from "@beep/repo-cli/test/RepoRun"
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(readAdmissionProtocol("/tmp/admission"))) // true
+ * ```
+ *
+ * @param root - Machine-wide admission root directory.
+ * @returns The decoded protocol or the disabled default.
+ * @category protocols
+ * @since 0.0.0
+ */
+export const readAdmissionProtocol = Effect.fn("AdmissionJournal.readProtocol")(function* (
+  root: string
+): Effect.fn.Return<AdmissionProtocol, never, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const protocolPath = yield* admissionProtocolPath(root);
+  const text = yield* fs.readFileString(protocolPath).pipe(Effect.option);
+  return pipe(
+    text,
+    O.flatMap(decodeAdmissionProtocol),
+    O.getOrElse(() => disabledAdmissionProtocol)
+  );
+});
+
 // EPERM cannot masquerade as liveness here: the admission root is 0o700 and
 // uid-validated, so every lock writer shares the probing user.
 const pidIsAlive = (pid: number): boolean => {
@@ -488,22 +610,57 @@ export const releaseJournalFileLock = Effect.fnUntraced(function* (
  */
 export const releaseAdmissionJournalLockForTesting = releaseJournalFileLock;
 
-const publishJournalAtomic = Effect.fnUntraced(function* (
-  journalPath: string,
-  content: string
+const publishTextAtomic = Effect.fnUntraced(function* (
+  targetPath: string,
+  content: string,
+  label: string
 ): Effect.fn.Return<void, QualitySchedulerError, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
-  const stagingPath = `${journalPath}.tmp-${process.pid}-${randomUUID()}`;
+  const stagingPath = `${targetPath}.tmp-${process.pid}-${randomUUID()}`;
   yield* Effect.scoped(
     Effect.gen(function* () {
       const file = yield* fs.open(stagingPath, { flag: "w" });
       yield* file.writeAll(textEncoder.encode(content));
       yield* file.sync;
     })
-  ).pipe(Effect.mapError(QualitySchedulerError.new(`Failed to stage admission journal "${journalPath}".`)));
+  ).pipe(Effect.mapError(QualitySchedulerError.new(`Failed to stage ${label} "${targetPath}".`)));
   yield* fs
-    .rename(stagingPath, journalPath)
-    .pipe(Effect.mapError(QualitySchedulerError.new(`Failed to publish admission journal "${journalPath}".`)));
+    .rename(stagingPath, targetPath)
+    .pipe(Effect.mapError(QualitySchedulerError.new(`Failed to publish ${label} "${targetPath}".`)));
+});
+
+/**
+ * Atomically write the admission protocol marker.
+ *
+ * **Example** (Enable eviction emission)
+ *
+ * ```ts
+ * import { writeAdmissionProtocol } from "@beep/repo-cli/test/RepoRun"
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(writeAdmissionProtocol("/tmp/admission", "on"))) // true
+ * ```
+ *
+ * @param root - Machine-wide admission root directory.
+ * @param eviction - Desired eviction-event emission state.
+ * @returns The protocol that was durably published.
+ * @category protocols
+ * @since 0.0.0
+ */
+export const writeAdmissionProtocol = Effect.fn("AdmissionJournal.writeProtocol")(function* (
+  root: string,
+  eviction: AdmissionEvictionEmission
+): Effect.fn.Return<AdmissionProtocol, QualitySchedulerError, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  yield* fs
+    .makeDirectory(root, { recursive: true, mode: 0o700 })
+    .pipe(Effect.mapError(QualitySchedulerError.new(`Failed to create admission protocol root "${root}".`)));
+  const protocol = AdmissionProtocol.make({ schemaVersion: "yeet-admission-protocol/v1", eviction });
+  const content = yield* encodeAdmissionProtocol(protocol).pipe(
+    Effect.mapError(QualitySchedulerError.new("Failed to encode the admission protocol marker."))
+  );
+  yield* publishTextAtomic(yield* admissionProtocolPath(root), `${content}\n`, "admission protocol marker");
+  return protocol;
 });
 
 const rewriteJournalLocked = Effect.fnUntraced(function* (
@@ -547,13 +704,14 @@ const rewriteJournalLocked = Effect.fnUntraced(function* (
       ? 0
       : pipe(admittedIndexes, A.takeRight(RETAINED_ADMISSIONS), A.head, O.getOrElse(constant(0)));
   const retainedRecords = A.filter(records, (record, index) => index >= firstRetainedIndex || O.isNone(record.event));
-  yield* publishJournalAtomic(
+  yield* publishTextAtomic(
     journalPath,
     pipe(
       retainedRecords,
       A.map((record) => `${record.line}\n`),
       A.join(Str.empty)
-    )
+    ),
+    "admission journal"
   );
 });
 
