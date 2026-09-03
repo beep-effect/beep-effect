@@ -1,29 +1,38 @@
 import {
   CI_LANE_DESCRIPTORS,
   CI_LANE_ID_VALUES,
+  CI_LANE_PARTITIONS,
+  CiLanePartition,
   CiLaneRunOptions,
   CiLocalStepPlan,
+  ciLanePartitionArgsForTesting,
   ciLaneStepsForTesting,
   ciLocalStepsForTesting,
   docgenLaneModeForChangedPaths,
   doctestStepForTesting,
+  proveCiLanePartition,
   runCiLane,
 } from "@beep/repo-cli/commands/Ci";
 import {
+  isLabsWorkspaceDir,
   readTurboCacheEnvironment,
   resolveTurboCachePlan,
   turboCachePlanArgs,
 } from "@beep/repo-cli/test/SharedInternals";
+import { FsUtilsLive, findRepoRoot, resolveWorkspacePackages } from "@beep/repo-utils";
 import { A } from "@beep/utils";
+import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it, layer } from "@effect/vitest";
-import { Cause, Effect, Exit, FileSystem, Layer, Order, Path, pipe, Sink, Stream } from "effect";
+import { Cause, Effect, Exit, FileSystem, HashMap, Layer, Order, Path, pipe, Sink, Stream } from "effect";
 import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
 import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
+import { parseDocument } from "yaml";
 
 const REPO_ROOT = "/repo";
 const MERGE_BASE_SHA = "mergebase1234";
@@ -134,7 +143,13 @@ const doctestCiLayer = (
       return Effect.succeed(commandHandle(output, exitCode));
     })
   );
-  return Layer.mergeAll(fileSystemLayer, Path.layer, processLayer, TestConsole.layer);
+  const fileSystemAndPath = Layer.merge(fileSystemLayer, Path.layer);
+  return Layer.mergeAll(
+    fileSystemAndPath,
+    FsUtilsLive.pipe(Layer.provide(fileSystemAndPath)),
+    processLayer,
+    TestConsole.layer
+  );
 };
 
 const firstOf = <T>(items: ReadonlyArray<T>): T => O.getOrThrow(A.head(items));
@@ -174,6 +189,15 @@ const branchProtectionContextSnapshotUrl = new URL(
   "../../../../../goals/ship-velocity/research/branch-protection-contexts.json",
   import.meta.url
 );
+const checkWorkflowUrl = new URL("../../../../../.github/workflows/check.yml", import.meta.url);
+const LiveRepoLayer = Layer.mergeAll(NodeServices.layer, FsUtilsLive.pipe(Layer.provide(NodeServices.layer)));
+
+// Tests build the layer in a scope instead of Effect.provide so the effect-lsp
+// entry-point rule (TS377032) stays satisfied, mirroring the sibling CLI tests.
+const provideScopedLayer =
+  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
+  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
+    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
 
 describe("CI lane descriptors", () => {
   it("enumerates every check.yml lane exactly once", () => {
@@ -234,6 +258,177 @@ describe("CI lane descriptors", () => {
     );
     expect(residue).toEqual(["dependency-review", "pr-size"]);
   });
+});
+
+describe("CI lane partitions", () => {
+  it("preserves the signed bin counts and p95 weights", () => {
+    expect(
+      A.map(CI_LANE_PARTITIONS, (partition) => ({
+        id: partition.id,
+        packages: A.length(partition.packages),
+        weightSeconds: partition.weightSeconds,
+      }))
+    ).toEqual([
+      { id: "lint-a", packages: 67, weightSeconds: 1132 },
+      { id: "lint-b", packages: 67, weightSeconds: 1134 },
+      { id: "repo-cli", packages: 1, weightSeconds: 879 },
+      { id: "unit-a", packages: 66, weightSeconds: 1214 },
+      { id: "unit-b", packages: 67, weightSeconds: 1214 },
+    ]);
+  });
+
+  it.effect("rejects a partition that belongs to another lane", () =>
+    Effect.gen(function* () {
+      const error = yield* proveCiLanePartition("lint", "unit-a", [], [], []).pipe(Effect.flip);
+      expect(error._tag).toBe("CiLanePartitionError");
+      expect(error.reason).toBe("invalid-assignment");
+      expect(error.message).toContain("CiLanePartitions.ts");
+      expect(error.message).toContain("Regenerate the deterministic LPT placement");
+    })
+  );
+
+  it.effect("fails closed for a missing placement and a duplicate assignment", () =>
+    Effect.gen(function* () {
+      const lintPartitions = A.filter(CI_LANE_PARTITIONS, (partition) => partition.lane === "lint");
+      const allLintPackages = A.flatMap(lintPartitions, (partition) => partition.packages);
+      const lintA = O.getOrThrow(A.findFirst(lintPartitions, (partition) => partition.id === "lint-a"));
+      const lintB = O.getOrThrow(A.findFirst(lintPartitions, (partition) => partition.id === "lint-b"));
+      const firstLintA = O.getOrThrow(A.head(lintA.packages));
+      const missingTable = A.map(CI_LANE_PARTITIONS, (partition) =>
+        partition.id === "lint-a"
+          ? CiLanePartition.make({ ...partition, packages: A.drop(partition.packages, 1) })
+          : partition
+      );
+      const duplicateTable = A.map(CI_LANE_PARTITIONS, (partition) =>
+        partition.id === "lint-b"
+          ? CiLanePartition.make({ ...partition, packages: A.prepend(partition.packages, firstLintA) })
+          : partition
+      );
+
+      const missing = yield* proveCiLanePartition(
+        "lint",
+        "lint-a",
+        allLintPackages,
+        allLintPackages,
+        allLintPackages,
+        missingTable
+      ).pipe(Effect.flip);
+      expect(missing.reason).toBe("missing-package");
+      expect(missing.message).toContain(firstLintA);
+
+      const duplicate = yield* proveCiLanePartition(
+        "lint",
+        "lint-b",
+        allLintPackages,
+        allLintPackages,
+        allLintPackages,
+        duplicateTable
+      ).pipe(Effect.flip);
+      expect(duplicate.reason).toBe("duplicate-package");
+      expect(duplicate.message).toContain(firstLintA);
+      expect(lintB.packages).not.toContain(firstLintA);
+    })
+  );
+
+  it("keeps affected selection shaping out of the exact package execution", () => {
+    const options = CiLaneRunOptions.make({
+      ...prShapeOptions,
+      partition: "lint-a",
+      force: true,
+    });
+    const args = ciLanePartitionArgsForTesting("lint", ["@beep/repo-cli", "@beep/types"], options);
+    const selectionShape = ["--affected", "--filter=!./apps/labs/**", "--only", "--dry-run=json"];
+    const executionShape = [
+      "--only",
+      "--concurrency=2",
+      "--filter=!./apps/labs/**",
+      "--filter=@beep/repo-cli",
+      "--filter=@beep/types",
+      "--force",
+      "--summarize",
+    ];
+
+    expect([...args.selection]).toEqual([
+      "turbo",
+      "run",
+      "lint",
+      ...expectedTurboCacheArgs(selectionShape),
+      ...selectionShape,
+    ]);
+    expect([...args.execution]).toEqual([
+      "turbo",
+      "run",
+      "@beep/repo-cli#lint",
+      "@beep/types#lint",
+      ...expectedTurboCacheArgs(executionShape),
+      ...executionShape,
+    ]);
+    expect(args.execution).not.toContain("--affected");
+    expect(args.execution).not.toContain("--base");
+  });
+
+  it.effect("makes the live non-labs task inventory a complete disjoint union", () =>
+    Effect.gen(function* () {
+      const repoRoot = yield* findRepoRoot();
+      const path = yield* Path.Path;
+      const workspaces = yield* resolveWorkspacePackages(repoRoot);
+      const workspaceEntries = A.fromIterable(HashMap.entries(workspaces));
+      const workspacePackageNames = A.map(workspaceEntries, ([name]) => name);
+
+      for (const [laneId, task, partition] of [
+        ["lint", "lint", "lint-a"],
+        ["test-unit", "test", "repo-cli"],
+      ] as const) {
+        const taskPackageNames = pipe(
+          workspaceEntries,
+          A.filter(([, workspace]) => {
+            const relativeDir = Str.replace(/\\/g, "/")(path.relative(repoRoot, workspace.dir));
+            return !isLabsWorkspaceDir(relativeDir) && R.has(workspace.scripts, task);
+          }),
+          A.map(([name]) => name),
+          A.sort(Order.String)
+        );
+        const proof = yield* proveCiLanePartition(
+          laneId,
+          partition,
+          workspacePackageNames,
+          taskPackageNames,
+          taskPackageNames
+        );
+        const assignments = pipe(
+          CI_LANE_PARTITIONS,
+          A.filter((entry) => entry.lane === laneId),
+          A.flatMap((entry) => entry.packages)
+        );
+
+        expect(A.length(A.dedupe(assignments))).toBe(A.length(assignments));
+        expect(A.sort(assignments, Order.String)).toEqual(taskPackageNames);
+        expect(proof.selectedTaskCount).toBe(134);
+      }
+    }).pipe(provideScopedLayer(LiveRepoLayer))
+  );
+
+  it.effect("keeps literal required aggregators and fails every non-success shard result", () =>
+    Effect.gen(function* () {
+      const workflowText = yield* Effect.tryPromise(() => Bun.file(checkWorkflowUrl).text());
+      const workflow = parseDocument(workflowText);
+      expect(workflow.errors).toHaveLength(0);
+      expect(workflowText).not.toMatch(/ci lane (?:lint|test-unit)[^\n]*--force/u);
+      expect(workflow.getIn(["jobs", "lint", "name"])).toBe("Lint");
+      expect(workflow.getIn(["jobs", "lint", "if"])).toBe("${{ always() }}");
+      expect(workflow.getIn(["jobs", "test-unit", "name"])).toBe("Test Unit");
+      expect(workflow.getIn(["jobs", "test-unit", "if"])).toBe("${{ always() }}");
+      expect(workflow.getIn(["jobs", "lint-shard", "strategy", "fail-fast"])).toBe(false);
+      expect(workflow.getIn(["jobs", "test-unit-shard", "strategy", "fail-fast"])).toBe(false);
+
+      const lintGate = String(workflow.getIn(["jobs", "lint", "steps", 0, "run"]));
+      const unitGate = String(workflow.getIn(["jobs", "test-unit", "steps", 0, "run"]));
+      expect(lintGate).toContain('needs.lint-shard.result }}" != "success"');
+      expect(unitGate).toContain('needs.test-unit-shard.result }}" != "success"');
+      expect(lintGate).toContain("exit 1");
+      expect(unitGate).toContain("exit 1");
+    })
+  );
 });
 
 describe("ciLaneStepsForTesting", () => {

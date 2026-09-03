@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { Defect } from "@beep/schema";
+import { Defect, LiteralKit } from "@beep/schema";
 import { Err } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
@@ -49,3 +49,69 @@ export class CiCommandError extends S.TaggedError<CiCommandError>($I`CiCommandEr
 
   static readonly mapError = Err.mapToError(this.new);
 }
+
+/**
+ * Failure reasons emitted by the fail-closed CI lane partition proof.
+ *
+ * **Example** (Recognize a stale package failure)
+ *
+ * ```ts
+ * import { CiLanePartitionErrorReason } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(CiLanePartitionErrorReason.is["stale-package"]("stale-package"))
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const CiLanePartitionErrorReason = LiteralKit([
+  "invalid-assignment",
+  "invalid-options",
+  "duplicate-package",
+  "missing-package",
+  "stale-package",
+  "unknown-selected-task",
+  "workspace-read",
+  "turbo-dry-run",
+]).pipe(
+  $I.annoteSchema("CiLanePartitionErrorReason", {
+    description: "Reason a fail-closed CI lane partition proof could not proceed.",
+  })
+);
+
+/**
+ * Failure raised when a CI lane partition cannot be proved safe to execute.
+ *
+ * **Example** (Create a missing placement error)
+ *
+ * ```ts
+ * import { CiLanePartitionError } from "@beep/repo-cli/commands/Ci"
+ *
+ * const error = CiLanePartitionError.make({
+ *   reason: "missing-package",
+ *   laneId: "lint",
+ *   tablePath: "packages/tooling/tool/cli/src/commands/Ci/CiLanePartitions.ts",
+ *   repair: "Regenerate the deterministic LPT table.",
+ *   message: "Missing package @beep/example."
+ * })
+ * console.log(error._tag)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class CiLanePartitionError extends S.TaggedError<CiLanePartitionError>($I`CiLanePartitionError`)(
+  "CiLanePartitionError",
+  {
+    reason: CiLanePartitionErrorReason,
+    laneId: S.String,
+    partition: S.optionalKey(S.String),
+    tablePath: S.String,
+    repair: S.String,
+    message: S.String,
+    cause: S.optionalKey(Defect({ includeStack: true })),
+  },
+  $I.annoteError<CiLanePartitionError>("CiLanePartitionError", {
+    description: "Fail-closed CI lane partition validation or discovery failure.",
+  })
+) {}
