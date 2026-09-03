@@ -774,7 +774,24 @@ export const releaseJournalFileLock = Effect.fnUntraced(function* (
  */
 export const releaseAdmissionJournalLockForTesting = releaseJournalFileLock;
 
-const requireJournalLockOwnership = Effect.fnUntraced(function* (
+/**
+ * Require that a caller still owns the published journal-lock generation.
+ *
+ * **Example** (Fence a locked journal rewrite)
+ *
+ * ```ts
+ * import { assertJournalFileLockOwned } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(typeof assertJournalFileLockOwned) // "function"
+ * ```
+ *
+ * @param lockPath - Published journal-lock path.
+ * @param token - Unique token used to acquire the expected generation.
+ * @returns An effect that fails with a typed scheduler error when ownership was lost.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const assertJournalFileLockOwned = Effect.fnUntraced(function* (
   lockPath: string,
   token: string
 ): Effect.fn.Return<void, QualitySchedulerError, FileSystem.FileSystem> {
@@ -808,7 +825,7 @@ const publishJournalAtomic = Effect.fnUntraced(function* (
           yield* file.sync;
         })
       ).pipe(Effect.mapError(QualitySchedulerError.new(`Failed to stage admission journal "${journalPath}".`)));
-      yield* requireJournalLockOwnership(lockPath, lockToken);
+      yield* assertJournalFileLockOwned(lockPath, lockToken);
       yield* fs
         .rename(stagingPath, journalPath)
         .pipe(Effect.mapError(QualitySchedulerError.new(`Failed to publish admission journal "${journalPath}".`)));
@@ -847,7 +864,7 @@ const rewriteJournalLocked = Effect.fnUntraced(function* (
   idempotent: boolean
 ): Effect.fn.Return<void, QualitySchedulerError, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
-  yield* requireJournalLockOwnership(lockPath, lockToken);
+  yield* assertJournalFileLockOwned(lockPath, lockToken);
   const text = yield* fs
     .readFileString(journalPath)
     .pipe(
