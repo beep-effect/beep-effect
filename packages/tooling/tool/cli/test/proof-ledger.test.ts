@@ -330,6 +330,10 @@ describe("ProofLedger", () => {
           const error = yield* ledger.malformedRows.pipe(Effect.flip);
           expect(error._tag).toBe("YeetCommandError");
           expect(error.message).toContain("not a readable regular file");
+
+          const appendError = yield* ledger.record(fact()).pipe(Effect.flip);
+          expect(appendError._tag).toBe("YeetCommandError");
+          expect(appendError.message).toContain("not a readable regular file");
         })
       )
     ).pipe(provideScopedLayer(PlatformLayer))
