@@ -2993,45 +2993,47 @@ else exit 92; fi
     expect(RT.legacySegmentReconciles(legacySummary, [...legacySegment, legacyPass])).toBe(false);
   });
 
-  it.effect.sequential("resumes a pending legacy summary and reconciles all four acceptance families", () =>
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const root = yield* fs.makeTempDirectoryScoped({ prefix: "all-family-acceptance-" });
-      const corpusRoot = path.join(root, "corpus");
-      const sourceRoot = path.join(root, "source");
-      const mailRoot = path.join(sourceRoot, "$Recycle.Bin", "surface-a");
-      const mailPath = path.join(mailRoot, "$Rstore.pst");
-      const rootArchive = path.join(root, "root-archive.zip");
-      const collectorManifest = path.join(root, "collector.jsonl");
-      const absentTree = path.join(root, "recorded-absent");
-      const pffexportPath = path.join(root, "pffexport");
-      const tikaPath = path.join(root, "tika");
-      const bwrapPath = path.join(root, "bwrap");
-      const systemdRunPath = path.join(root, "systemd-run");
-      const converterPath = path.join(root, "converter");
-      yield* fs.makeDirectory(corpusRoot, { recursive: true });
-      yield* fs.makeDirectory(mailRoot, { recursive: true });
-      const mailBytes = new Uint8Array(1024 * 1024 + 31);
-      mailBytes.fill(0x42);
-      yield* fs.writeFile(mailPath, mailBytes);
-      yield* fs.writeFileString(rootArchive, "verbatim-root-archive");
-      const collectorRow = yield* S.encodeEffect(S.fromJsonString(CollectorManifestRecord))(
-        CollectorManifestRecord.cases.copied.make({
-          dst: "F:\\salvage\\$Recycle.Bin\\surface-a\\$Rstore.pst",
-          size: NonNegativeInt.make(mailBytes.length),
-          src: "C:\\source\\mail-store.pst",
-          status: "copied",
-        })
-      );
-      yield* fs.writeFileString(collectorManifest, `${collectorRow}\n`);
-      const writeExecutable = Effect.fnUntraced(function* (filePath: string, script: string) {
-        yield* fs.writeFileString(filePath, script);
-        yield* fs.chmod(filePath, 0o755);
-      });
-      yield* writeExecutable(
-        bwrapPath,
-        `#!/usr/bin/env bash
+  it.effect(
+    "resumes a pending legacy summary and reconciles all four acceptance families",
+    () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "all-family-acceptance-" });
+        const corpusRoot = path.join(root, "corpus");
+        const sourceRoot = path.join(root, "source");
+        const mailRoot = path.join(sourceRoot, "$Recycle.Bin", "surface-a");
+        const mailPath = path.join(mailRoot, "$Rstore.pst");
+        const rootArchive = path.join(root, "root-archive.zip");
+        const collectorManifest = path.join(root, "collector.jsonl");
+        const absentTree = path.join(root, "recorded-absent");
+        const pffexportPath = path.join(root, "pffexport");
+        const tikaPath = path.join(root, "tika");
+        const bwrapPath = path.join(root, "bwrap");
+        const systemdRunPath = path.join(root, "systemd-run");
+        const converterPath = path.join(root, "converter");
+        yield* fs.makeDirectory(corpusRoot, { recursive: true });
+        yield* fs.makeDirectory(mailRoot, { recursive: true });
+        const mailBytes = new Uint8Array(1024 * 1024 + 31);
+        mailBytes.fill(0x42);
+        yield* fs.writeFile(mailPath, mailBytes);
+        yield* fs.writeFileString(rootArchive, "verbatim-root-archive");
+        const collectorRow = yield* S.encodeEffect(S.fromJsonString(CollectorManifestRecord))(
+          CollectorManifestRecord.cases.copied.make({
+            dst: "F:\\salvage\\$Recycle.Bin\\surface-a\\$Rstore.pst",
+            size: NonNegativeInt.make(mailBytes.length),
+            src: "C:\\source\\mail-store.pst",
+            status: "copied",
+          })
+        );
+        yield* fs.writeFileString(collectorManifest, `${collectorRow}\n`);
+        const writeExecutable = Effect.fnUntraced(function* (filePath: string, script: string) {
+          yield* fs.writeFileString(filePath, script);
+          yield* fs.chmod(filePath, 0o755);
+        });
+        yield* writeExecutable(
+          bwrapPath,
+          `#!/usr/bin/env bash
 set -eu
 hosts=()
 targets=()
@@ -3084,10 +3086,10 @@ if [ -n "$quota_root" ]; then
 fi
 exec "$mapped_command" "\${mapped[@]}"
 `
-      );
-      yield* writeExecutable(
-        systemdRunPath,
-        `#!/usr/bin/env bash
+        );
+        yield* writeExecutable(
+          systemdRunPath,
+          `#!/usr/bin/env bash
 set -eu
 while [ "$#" -gt 0 ]; do
   if [ "$1" = "--" ]; then shift; break; fi
@@ -3095,10 +3097,10 @@ while [ "$#" -gt 0 ]; do
 done
 exec "$@"
 `
-      );
-      yield* writeExecutable(
-        pffexportPath,
-        `#!/usr/bin/env bash
+        );
+        yield* writeExecutable(
+          pffexportPath,
+          `#!/usr/bin/env bash
 if [ "$1" = "-V" ]; then printf 'pffexport 20260608\n'; exit 0; fi
 target=""
 previous=""
@@ -3112,153 +3114,163 @@ printf 'Subject:\tSynthetic\n' > "$item/OutlookHeaders.txt"
 printf 'synthetic mail body' > "$item/Message.txt"
 printf '%%PDF-1.4 synthetic attachment' > "$item/Attachment00001/report.bin"
 `
-      );
-      yield* writeExecutable(tikaPath, "#!/bin/sh\nprintf 'synthetic extracted attachment text\\n'\n");
-      yield* writeExecutable(
-        converterPath,
-        '#!/bin/sh\nif [ "${1:-}" = "--version" ]; then printf \'LibreOffice synthetic 1.0\\n\'; exit 0; fi\nexit 2\n'
-      );
-      const preserveRun = (preservationRunLabel: string) =>
-        RestorationPreserveOptions.make({
-          absentRecycleTreePath: absentTree,
-          capacityCeilingBytes: PosInt.make(10 * 1024 * 1024),
-          chunkSizeBytes: PosInt.make(4_096),
-          collectorDestinationPrefixSegments: NonNegativeInt.make(2),
-          corpusRoot,
-          expectedCollectorCopiedCount: NonNegativeInt.make(1),
-          expectedCollectorErrorCount: NonNegativeInt.make(0),
-          expectedCollectorExcludedSecretCount: NonNegativeInt.make(0),
-          expectedCollectorPresentSuccessfulRowCount: NonNegativeInt.make(1),
-          expectedCollectorResumedCount: NonNegativeInt.make(0),
-          expectedCollectorRowCount: NonNegativeInt.make(1),
-          expectedCollectorUniqueSuccessfulDestinationCount: NonNegativeInt.make(1),
-          expectedMissingRecyclePayloadCount: NonNegativeInt.make(0),
-          expectedMutatedDestinationCount: NonNegativeInt.make(0),
-          expectedRootArchiveBytes: NonNegativeInt.make("verbatim-root-archive".length),
-          expectedSourceDirectoryCount: NonNegativeInt.make(3),
-          expectedSourceFileCount: NonNegativeInt.make(1),
-          expectedSourceTreeBytes: NonNegativeInt.make(mailBytes.length),
-          minimumFreeAfterBytes: NonNegativeInt.make(0),
-          rootArchivePath: rootArchive,
-          runLabel: preservationRunLabel,
-          sourceManifestPath: collectorManifest,
-          sourceRoot,
-        });
-      const mailOptions = (mailRunLabel: string, expectedStoreCount = 1, maxTotalOutputBytes = 1024 * 1024 * 1024) =>
-        RestorationMailOptions.make({
-          bwrapPath,
-          corpusRoot,
-          expectedStoreCount: NonNegativeInt.make(expectedStoreCount),
-          javaPath: tikaPath,
-          maxAmplificationRatio: 10,
-          maxElapsedMillis: PosInt.make(30_000),
-          maxTotalElapsedMillis: PosInt.make(30_000),
-          maxTotalOutputBytes: PosInt.make(maxTotalOutputBytes),
-          pffexportPath,
-          runLabel: mailRunLabel,
-          scope: "full",
-          systemdRunPath,
-          tikaJarPath: tikaPath,
-        });
-      const recycleOptions = (recycleRunLabel: string, expectedSurfaceCount = 1, maxTotalOutputBytes = 1024 ** 3) =>
-        RestorationRecycleOptions.make({
-          corpusRoot,
-          expectedMissingContentCount: NonNegativeInt.make(0),
-          expectedSurfaceCount: NonNegativeInt.make(expectedSurfaceCount),
-          maxTotalElapsedMillis: PosInt.make(30_000),
-          maxTotalOutputBytes: PosInt.make(maxTotalOutputBytes),
-          runLabel: recycleRunLabel,
-        });
-      const legacyOptions = (legacyRunLabel: string, expectedOccurrenceCount = 0, maxTotalOutputBytes = 1024 ** 3) =>
-        RestorationLegacyWordOptions.make({
-          comparePath: "/bin/true",
+        );
+        yield* writeExecutable(tikaPath, "#!/bin/sh\nprintf 'synthetic extracted attachment text\\n'\n");
+        yield* writeExecutable(
           converterPath,
+          '#!/bin/sh\nif [ "${1:-}" = "--version" ]; then printf \'LibreOffice synthetic 1.0\\n\'; exit 0; fi\nexit 2\n'
+        );
+        const preserveRun = (preservationRunLabel: string) =>
+          RestorationPreserveOptions.make({
+            absentRecycleTreePath: absentTree,
+            capacityCeilingBytes: PosInt.make(10 * 1024 * 1024),
+            chunkSizeBytes: PosInt.make(4_096),
+            collectorDestinationPrefixSegments: NonNegativeInt.make(2),
+            corpusRoot,
+            expectedCollectorCopiedCount: NonNegativeInt.make(1),
+            expectedCollectorErrorCount: NonNegativeInt.make(0),
+            expectedCollectorExcludedSecretCount: NonNegativeInt.make(0),
+            expectedCollectorPresentSuccessfulRowCount: NonNegativeInt.make(1),
+            expectedCollectorResumedCount: NonNegativeInt.make(0),
+            expectedCollectorRowCount: NonNegativeInt.make(1),
+            expectedCollectorUniqueSuccessfulDestinationCount: NonNegativeInt.make(1),
+            expectedMissingRecyclePayloadCount: NonNegativeInt.make(0),
+            expectedMutatedDestinationCount: NonNegativeInt.make(0),
+            expectedRootArchiveBytes: NonNegativeInt.make("verbatim-root-archive".length),
+            expectedSourceDirectoryCount: NonNegativeInt.make(3),
+            expectedSourceFileCount: NonNegativeInt.make(1),
+            expectedSourceTreeBytes: NonNegativeInt.make(mailBytes.length),
+            minimumFreeAfterBytes: NonNegativeInt.make(0),
+            rootArchivePath: rootArchive,
+            runLabel: preservationRunLabel,
+            sourceManifestPath: collectorManifest,
+            sourceRoot,
+          });
+        const mailOptions = (mailRunLabel: string, expectedStoreCount = 1, maxTotalOutputBytes = 1024 * 1024 * 1024) =>
+          RestorationMailOptions.make({
+            bwrapPath,
+            corpusRoot,
+            expectedStoreCount: NonNegativeInt.make(expectedStoreCount),
+            javaPath: tikaPath,
+            maxAmplificationRatio: 10,
+            maxElapsedMillis: PosInt.make(30_000),
+            maxTotalElapsedMillis: PosInt.make(30_000),
+            maxTotalOutputBytes: PosInt.make(maxTotalOutputBytes),
+            pffexportPath,
+            runLabel: mailRunLabel,
+            scope: "full",
+            systemdRunPath,
+            tikaJarPath: tikaPath,
+          });
+        const recycleOptions = (recycleRunLabel: string, expectedSurfaceCount = 1, maxTotalOutputBytes = 1024 ** 3) =>
+          RestorationRecycleOptions.make({
+            corpusRoot,
+            expectedMissingContentCount: NonNegativeInt.make(0),
+            expectedSurfaceCount: NonNegativeInt.make(expectedSurfaceCount),
+            maxTotalElapsedMillis: PosInt.make(30_000),
+            maxTotalOutputBytes: PosInt.make(maxTotalOutputBytes),
+            runLabel: recycleRunLabel,
+          });
+        const legacyOptions = (legacyRunLabel: string, expectedOccurrenceCount = 0, maxTotalOutputBytes = 1024 ** 3) =>
+          RestorationLegacyWordOptions.make({
+            comparePath: "/bin/true",
+            converterPath,
+            corpusRoot,
+            expectedConverterVersion: "LibreOffice synthetic 1.0",
+            expectedOccurrenceCount: NonNegativeInt.make(expectedOccurrenceCount),
+            maxElapsedMillis: PosInt.make(30_000),
+            maxTotalElapsedMillis: PosInt.make(30_000),
+            maxTotalOutputBytes: PosInt.make(maxTotalOutputBytes),
+            maxVisualRmse: 0,
+            pdfinfoPath: "/bin/true",
+            pdftoppmPath: "/bin/true",
+            runLabel: legacyRunLabel,
+            tikaJarPath: tikaPath,
+          });
+        const runLabel = "all-family";
+        yield* preserveRestorationArchive(preserveRun(runLabel));
+        yield* restoreMail(mailOptions(runLabel));
+        yield* restoreRecycle(recycleOptions(runLabel));
+        const recycleLedgerPath = path.join(
           corpusRoot,
-          expectedConverterVersion: "LibreOffice synthetic 1.0",
-          expectedOccurrenceCount: NonNegativeInt.make(expectedOccurrenceCount),
-          maxElapsedMillis: PosInt.make(30_000),
-          maxTotalElapsedMillis: PosInt.make(30_000),
-          maxTotalOutputBytes: PosInt.make(maxTotalOutputBytes),
-          maxVisualRmse: 0,
-          pdfinfoPath: "/bin/true",
-          pdftoppmPath: "/bin/true",
-          runLabel: legacyRunLabel,
-          tikaJarPath: tikaPath,
-        });
-      const runLabel = "all-family";
-      yield* preserveRestorationArchive(preserveRun(runLabel));
-      yield* restoreMail(mailOptions(runLabel));
-      yield* restoreRecycle(recycleOptions(runLabel));
-      const recycleLedgerPath = path.join(
-        corpusRoot,
-        "staging/restoration/runs",
-        runLabel,
-        "ledgers/recycle/full.jsonl"
-      );
-      const recycleLines = (yield* fs.readFileString(recycleLedgerPath)).trimEnd().split("\n");
-      const lastRecycleLine = recycleLines.at(-1);
-      if (lastRecycleLine === undefined) return yield* Effect.die("Recycle ledger was unexpectedly empty.");
-      expect((yield* decodeTransformationLedgerRecordJson(lastRecycleLine)).recordType).toBe("family-acceptance-pass");
-      yield* fs.writeFileString(recycleLedgerPath, `${recycleLines.slice(0, -1).join("\n")}\n`);
-      yield* restoreRecycle(recycleOptions(runLabel));
-      const legacyWordOptions = legacyOptions(runLabel);
-      yield* restoreLegacyWord(legacyWordOptions);
-      const legacyLedgerPath = path.join(
-        corpusRoot,
-        "staging/restoration/runs",
-        runLabel,
-        "ledgers/legacy-word/full.jsonl"
-      );
-      const legacyLines = (yield* fs.readFileString(legacyLedgerPath)).trimEnd().split("\n");
-      const lastLegacyLine = legacyLines.at(-1);
-      if (lastLegacyLine === undefined) return yield* Effect.die("Legacy ledger was unexpectedly empty.");
-      expect((yield* decodeTransformationLedgerRecordJson(lastLegacyLine)).recordType).toBe("family-acceptance-pass");
-      yield* fs.writeFileString(legacyLedgerPath, `${legacyLines.slice(0, -1).join("\n")}\n`);
-      yield* restoreLegacyWord(legacyWordOptions);
-      const acceptances = yield* reconcileRestorationAcceptance({ corpusRoot, runLabel });
-      expect(acceptances.map((acceptance) => acceptance.family)).toEqual([
-        "preservation",
-        "mail",
-        "recycle",
-        "legacy-word",
-      ]);
-      expect(acceptances.every((acceptance) => acceptance.status === "pass")).toBe(true);
+          "staging/restoration/runs",
+          runLabel,
+          "ledgers/recycle/full.jsonl"
+        );
+        const recycleLines = (yield* fs.readFileString(recycleLedgerPath)).trimEnd().split("\n");
+        const lastRecycleLine = recycleLines.at(-1);
+        if (lastRecycleLine === undefined) return yield* Effect.die("Recycle ledger was unexpectedly empty.");
+        expect((yield* decodeTransformationLedgerRecordJson(lastRecycleLine)).recordType).toBe(
+          "family-acceptance-pass"
+        );
+        yield* fs.writeFileString(recycleLedgerPath, `${recycleLines.slice(0, -1).join("\n")}\n`);
+        yield* restoreRecycle(recycleOptions(runLabel));
+        const legacyWordOptions = legacyOptions(runLabel);
+        yield* restoreLegacyWord(legacyWordOptions);
+        const legacyLedgerPath = path.join(
+          corpusRoot,
+          "staging/restoration/runs",
+          runLabel,
+          "ledgers/legacy-word/full.jsonl"
+        );
+        const legacyLines = (yield* fs.readFileString(legacyLedgerPath)).trimEnd().split("\n");
+        const lastLegacyLine = legacyLines.at(-1);
+        if (lastLegacyLine === undefined) return yield* Effect.die("Legacy ledger was unexpectedly empty.");
+        expect((yield* decodeTransformationLedgerRecordJson(lastLegacyLine)).recordType).toBe("family-acceptance-pass");
+        yield* fs.writeFileString(legacyLedgerPath, `${legacyLines.slice(0, -1).join("\n")}\n`);
+        yield* restoreLegacyWord(legacyWordOptions);
+        const acceptances = yield* reconcileRestorationAcceptance({ corpusRoot, runLabel });
+        expect(acceptances.map((acceptance) => acceptance.family)).toEqual([
+          "preservation",
+          "mail",
+          "recycle",
+          "legacy-word",
+        ]);
+        expect(acceptances.every((acceptance) => acceptance.status === "pass")).toBe(true);
 
-      yield* preserveRestorationArchive(preserveRun("mail-denominator"));
-      const mailDenominatorError = yield* restoreMail(mailOptions("mail-denominator", 2)).pipe(Effect.flip);
-      expect(mailDenominatorError.message).toContain("denominator");
+        yield* preserveRestorationArchive(preserveRun("mail-denominator"));
+        const mailDenominatorError = yield* restoreMail(mailOptions("mail-denominator", 2)).pipe(Effect.flip);
+        expect(mailDenominatorError.message).toContain("denominator");
 
-      yield* preserveRestorationArchive(preserveRun("recycle-denominator"));
-      const recycleDenominatorError = yield* restoreRecycle(recycleOptions("recycle-denominator", 2)).pipe(Effect.flip);
-      expect(recycleDenominatorError.message).toContain("denominator");
+        yield* preserveRestorationArchive(preserveRun("recycle-denominator"));
+        const recycleDenominatorError = yield* restoreRecycle(recycleOptions("recycle-denominator", 2)).pipe(
+          Effect.flip
+        );
+        expect(recycleDenominatorError.message).toContain("denominator");
 
-      yield* preserveRestorationArchive(preserveRun("legacy-denominator"));
-      const legacyDenominatorError = yield* restoreLegacyWord(legacyOptions("legacy-denominator", 1)).pipe(Effect.flip);
-      expect(legacyDenominatorError.message).toContain("occurrence or converter-version gate");
+        yield* preserveRestorationArchive(preserveRun("legacy-denominator"));
+        const legacyDenominatorError = yield* restoreLegacyWord(legacyOptions("legacy-denominator", 1)).pipe(
+          Effect.flip
+        );
+        expect(legacyDenominatorError.message).toContain("occurrence or converter-version gate");
 
-      yield* preserveRestorationArchive(preserveRun("mail-retained"));
-      const mailOutputRoot = path.join(corpusRoot, "staging/restoration/runs/mail-retained/output/mail/full");
-      yield* fs.makeDirectory(mailOutputRoot, { recursive: true });
-      yield* fs.writeFileString(path.join(mailOutputRoot, "retained.bin"), "over");
-      const mailRetainedError = yield* restoreMail(mailOptions("mail-retained", 1, 1)).pipe(Effect.flip);
-      expect(mailRetainedError.message).toContain("retained");
+        yield* preserveRestorationArchive(preserveRun("mail-retained"));
+        const mailOutputRoot = path.join(corpusRoot, "staging/restoration/runs/mail-retained/output/mail/full");
+        yield* fs.makeDirectory(mailOutputRoot, { recursive: true });
+        yield* fs.writeFileString(path.join(mailOutputRoot, "retained.bin"), "over");
+        const mailRetainedError = yield* restoreMail(mailOptions("mail-retained", 1, 1)).pipe(Effect.flip);
+        expect(mailRetainedError.message).toContain("retained");
 
-      yield* preserveRestorationArchive(preserveRun("recycle-retained"));
-      const recycleOutputRoot = path.join(corpusRoot, "staging/restoration/runs/recycle-retained/output/recycle/full");
-      yield* fs.makeDirectory(recycleOutputRoot, { recursive: true });
-      yield* fs.writeFileString(path.join(recycleOutputRoot, "retained.bin"), "over");
-      const recycleRetainedError = yield* restoreRecycle(recycleOptions("recycle-retained", 1, 1)).pipe(Effect.flip);
-      expect(recycleRetainedError.message).toContain("retained");
+        yield* preserveRestorationArchive(preserveRun("recycle-retained"));
+        const recycleOutputRoot = path.join(
+          corpusRoot,
+          "staging/restoration/runs/recycle-retained/output/recycle/full"
+        );
+        yield* fs.makeDirectory(recycleOutputRoot, { recursive: true });
+        yield* fs.writeFileString(path.join(recycleOutputRoot, "retained.bin"), "over");
+        const recycleRetainedError = yield* restoreRecycle(recycleOptions("recycle-retained", 1, 1)).pipe(Effect.flip);
+        expect(recycleRetainedError.message).toContain("retained");
 
-      yield* preserveRestorationArchive(preserveRun("legacy-retained"));
-      const legacyOutputRoot = path.join(
-        corpusRoot,
-        "staging/restoration/runs/legacy-retained/output/legacy-word/full"
-      );
-      yield* fs.makeDirectory(legacyOutputRoot, { recursive: true });
-      yield* fs.writeFileString(path.join(legacyOutputRoot, "retained.bin"), "over");
-      const legacyRetainedError = yield* restoreLegacyWord(legacyOptions("legacy-retained", 0, 1)).pipe(Effect.flip);
-      expect(legacyRetainedError.message).toContain("retained");
-    })
+        yield* preserveRestorationArchive(preserveRun("legacy-retained"));
+        const legacyOutputRoot = path.join(
+          corpusRoot,
+          "staging/restoration/runs/legacy-retained/output/legacy-word/full"
+        );
+        yield* fs.makeDirectory(legacyOutputRoot, { recursive: true });
+        yield* fs.writeFileString(path.join(legacyOutputRoot, "retained.bin"), "over");
+        const legacyRetainedError = yield* restoreLegacyWord(legacyOptions("legacy-retained", 0, 1)).pipe(Effect.flip);
+        expect(legacyRetainedError.message).toContain("retained");
+      }),
+    { concurrent: false }
   );
 });

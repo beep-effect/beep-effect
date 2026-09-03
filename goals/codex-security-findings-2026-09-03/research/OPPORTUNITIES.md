@@ -66,7 +66,9 @@
   slice-acceptance case completed in seconds, confirming contention rather
   than a stuck production operation. The first scheduler annotation used
   Vitest's deprecated `.sequential` chain; exact-head Lint Policy required the
-  supported `{ concurrent: false }` option instead.
+  supported `{ concurrent: false }` option instead, and exact-head typechecking
+  confirmed that the Effect-aware test wrapper exposes the same option only as
+  the test call's third argument.
 - **What would have prevented it:** Suites that create real child-process
   pipelines or repeatedly mutate durable lifecycle fixtures should declare
   sequential execution explicitly. A fixture change that adds another
