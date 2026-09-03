@@ -1,5 +1,7 @@
 # Install:
 #   cp scripts/systemd/agent-runs.slice ~/.config/systemd/user/
+#   mkdir -p ~/.config/systemd/user/agent-runs.slice.d
+#   cp scripts/systemd/agent-runs.slice.d/50-oomd.conf ~/.config/systemd/user/agent-runs.slice.d/
 #   systemctl --user daemon-reload
 
 [Unit]
@@ -10,3 +12,8 @@ CPUAccounting=yes
 MemoryAccounting=yes
 IOAccounting=yes
 TasksAccounting=yes
+# Throttle (not kill) the slice once admitted work exceeds this. Sized from observed single-proof
+# peaks of 25-30 GiB (#888 follow-up): two concurrent heavy proofs fit before reclaim pressure,
+# while >=60 GiB stays free for the desktop session on a 125 GiB workstation. Sustained pressure
+# beyond throttling is handled by systemd-oomd via agent-runs.slice.d/50-oomd.conf.
+MemoryHigh=64G

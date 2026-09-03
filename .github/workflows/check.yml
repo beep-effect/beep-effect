@@ -62,23 +62,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - id: lint
-            name: Lint
-            runner: ubuntu-24.04
-            timeout_minutes: 60
-            uses_turbo: "true"
-            install_typos: "true"
           - id: repo-sanity
             name: Repo Sanity
             runner: ubuntu-24.04
             timeout_minutes: 30
             uses_turbo: "false"
-            install_typos: "false"
-          - id: test-unit
-            name: Test Unit
-            runner: ubuntu-24.04
-            timeout_minutes: 60
-            uses_turbo: "true"
             install_typos: "false"
           - id: ecosystem
             name: Ecosystem Contracts
@@ -253,7 +241,7 @@ jobs:
           shape_args+=(--summarize)
 
           case "${{ matrix.id }}" in
-            lint|check|test-unit|test-integration|coverage)
+            check|test-integration|coverage)
               run_lane ci lane "${{ matrix.id }}" "${shape_args[@]}"
               ;;
             lint-policy|codegen|ecosystem)
@@ -293,6 +281,286 @@ jobs:
       - name: Skip lane
         if: steps.lane-gate.outputs.should_run != 'true'
         run: echo "Skipping ${{ matrix.name }} for this change set."
+
+  lint-shard:
+    name: Lint (${{ matrix.partition }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    environment: ${{ github.event_name == 'push' && 'turbo-cache-write' || null }}
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        partition: [lint-a, lint-b]
+    env:
+      # Same-repository pull requests receive read-only cache access; forks
+      # stay local-only. Trusted main pushes receive read-write access.
+      TURBO_API: ${{ github.event_name == 'push' && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_TOKEN && vars.TURBO_API || github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_READ_TOKEN && vars.TURBO_API || '' }}
+      TURBO_TOKEN: ${{ github.event_name == 'push' && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_TOKEN || github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_READ_TOKEN || '' }}
+      TURBO_TEAM: ${{ github.event_name == 'push' && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_TOKEN && vars.TURBO_TEAM || github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_READ_TOKEN && vars.TURBO_TEAM || '' }}
+      TURBO_CACHE: ${{ github.event_name == 'push' && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_TOKEN && 'local:rw,remote:rw' || github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_READ_TOKEN && 'local:rw,remote:r' || 'local:rw' }}
+      TURBO_LOG_ORDER: stream
+      DATABASE_URL: ${{ github.event_name == 'push' && secrets.DATABASE_URL || '' }}
+      DATABASE_URL_UNPOOLED: ${{ github.event_name == 'push' && secrets.DATABASE_URL_UNPOOLED || '' }}
+      EMAIL_RESEND_API_KEY: ${{ github.event_name == 'push' && secrets.EMAIL_RESEND_API_KEY || '' }}
+      AUTH_SECRET: ${{ github.event_name == 'push' && secrets.AUTH_SECRET || '' }}
+      BETTER_AUTH_SECRET: ${{ github.event_name == 'push' && secrets.BETTER_AUTH_SECRET || '' }}
+      BETTER_AUTH_URL: ${{ github.event_name == 'push' && secrets.BETTER_AUTH_URL || '' }}
+      SECURITY_TRUSTED_ORIGINS: ${{ github.event_name == 'push' && secrets.SECURITY_TRUSTED_ORIGINS || '' }}
+      LIVEBLOCKS_SECRET_KEY: ${{ github.event_name == 'push' && secrets.LIVEBLOCKS_SECRET_KEY || '' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
+
+      - name: Fetch pull request base
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
+
+      - name: Determine lane execution
+        id: lane-gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          should_run=true
+          eval "$(scripts/ci-change-profile.sh "origin/${GITHUB_BASE_REF:-main}")"
+          if [[ "$goals_only" == "true" ]]; then
+            should_run=false
+          fi
+          echo "should_run=$should_run" >> "$GITHUB_OUTPUT"
+
+      - name: Free runner disk for Lint shard
+        if: steps.lane-gate.outputs.should_run == 'true' && runner.os == 'Linux' && !startsWith(runner.name, 'beep-')
+        shell: bash
+        run: |
+          set -euo pipefail
+          available_gib="$(df --output=avail -B1G / | tail -n 1 | tr -d '[:space:]')"
+          echo "Root free space before cleanup: ${available_gib} GiB"
+          if (( available_gib >= 64 )); then
+            echo "At least 64 GiB is available; skipping runner image cleanup."
+            exit 0
+          fi
+          echo "Disk before cleanup:"
+          df -h /
+          sudo rm -rf \
+            /opt/ghc \
+            /usr/local/.ghcup \
+            /usr/local/lib/android \
+            /usr/local/share/boost \
+            /usr/share/dotnet
+          sudo apt-get clean
+          docker system prune --all --force --volumes || true
+          echo "Disk after cleanup:"
+          df -h /
+
+      - name: Setup monorepo CI
+        if: steps.lane-gate.outputs.should_run == 'true'
+        uses: ./.github/actions/setup-monorepo-ci
+        with:
+          cache-turbo: "true"
+          cache-write: "false"
+          turbo-cache-key-suffix: -${{ matrix.partition }}
+
+      - name: Install typos
+        if: steps.lane-gate.outputs.should_run == 'true'
+        uses: taiki-e/install-action@91ddec75689c4c78665b598d188dc821c5a43e5c # v2.85.9
+        with:
+          tool: typos-cli@1.44.0
+
+      - name: Run Lint shard
+        if: steps.lane-gate.outputs.should_run == 'true'
+        run: |
+          set -euo pipefail
+          run_lane() {
+            setsid bun run beep "$@" < /dev/null &
+            local pgid=$!
+            local status=0
+            wait "$pgid" || status=$?
+            kill -TERM -- "-$pgid" 2>/dev/null || true
+            sleep 2
+            kill -KILL -- "-$pgid" 2>/dev/null || true
+            return "$status"
+          }
+
+          shape_args=()
+          if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+            shape_args+=(--affected --base "origin/${GITHUB_BASE_REF:-main}")
+          fi
+          shape_args+=(--summarize)
+          run_lane ci lane lint --partition "${{ matrix.partition }}" "${shape_args[@]}"
+
+      - name: Append Turbo summary
+        if: steps.lane-gate.outputs.should_run == 'true' && always()
+        run: bun run beep ci append-turbo-summary
+
+      - name: Save post-lane Turbo fallback
+        if: github.event_name == 'push' && steps.lane-gate.outputs.should_run == 'true' && success()
+        continue-on-error: true
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: .turbo/cache
+          key: turbo-${{ runner.os }}-${{ startsWith(runner.name, 'beep-ci-') && 'fleet' || 'shared' }}-${{ github.job }}-${{ matrix.partition }}-${{ hashFiles('turbo.json', 'package.json', 'bun.lock') }}-${{ github.sha }}
+
+      - name: Skip lane
+        if: steps.lane-gate.outputs.should_run != 'true'
+        run: echo "Skipping Lint (${{ matrix.partition }}) for this change set."
+
+  lint:
+    name: Lint
+    needs: [lint-shard]
+    if: ${{ always() }}
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Require every Lint shard
+        shell: bash
+        run: |
+          if [[ "${{ needs.lint-shard.result }}" != "success" ]]; then
+            echo "Lint shards finished with result: ${{ needs.lint-shard.result }}"
+            exit 1
+          fi
+
+  test-unit-shard:
+    name: Test Unit (${{ matrix.partition }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    environment: ${{ github.event_name == 'push' && 'turbo-cache-write' || null }}
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        partition: [repo-cli, unit-a, unit-b]
+    env:
+      # Same-repository pull requests receive read-only cache access; forks
+      # stay local-only. Trusted main pushes receive read-write access.
+      TURBO_API: ${{ github.event_name == 'push' && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_TOKEN && vars.TURBO_API || github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_READ_TOKEN && vars.TURBO_API || '' }}
+      TURBO_TOKEN: ${{ github.event_name == 'push' && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_TOKEN || github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_READ_TOKEN || '' }}
+      TURBO_TEAM: ${{ github.event_name == 'push' && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_TOKEN && vars.TURBO_TEAM || github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_READ_TOKEN && vars.TURBO_TEAM || '' }}
+      TURBO_CACHE: ${{ github.event_name == 'push' && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_TOKEN && 'local:rw,remote:rw' || github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_READ_TOKEN && 'local:rw,remote:r' || 'local:rw' }}
+      TURBO_LOG_ORDER: stream
+      DATABASE_URL: ${{ github.event_name == 'push' && secrets.DATABASE_URL || '' }}
+      DATABASE_URL_UNPOOLED: ${{ github.event_name == 'push' && secrets.DATABASE_URL_UNPOOLED || '' }}
+      EMAIL_RESEND_API_KEY: ${{ github.event_name == 'push' && secrets.EMAIL_RESEND_API_KEY || '' }}
+      AUTH_SECRET: ${{ github.event_name == 'push' && secrets.AUTH_SECRET || '' }}
+      BETTER_AUTH_SECRET: ${{ github.event_name == 'push' && secrets.BETTER_AUTH_SECRET || '' }}
+      BETTER_AUTH_URL: ${{ github.event_name == 'push' && secrets.BETTER_AUTH_URL || '' }}
+      SECURITY_TRUSTED_ORIGINS: ${{ github.event_name == 'push' && secrets.SECURITY_TRUSTED_ORIGINS || '' }}
+      LIVEBLOCKS_SECRET_KEY: ${{ github.event_name == 'push' && secrets.LIVEBLOCKS_SECRET_KEY || '' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
+
+      - name: Fetch pull request base
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
+
+      - name: Determine lane execution
+        id: lane-gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          should_run=true
+          eval "$(scripts/ci-change-profile.sh "origin/${GITHUB_BASE_REF:-main}")"
+          if [[ "$goals_only" == "true" ]]; then
+            should_run=false
+          fi
+          echo "should_run=$should_run" >> "$GITHUB_OUTPUT"
+
+      - name: Free runner disk for Test Unit shard
+        if: steps.lane-gate.outputs.should_run == 'true' && runner.os == 'Linux' && !startsWith(runner.name, 'beep-')
+        shell: bash
+        run: |
+          set -euo pipefail
+          available_gib="$(df --output=avail -B1G / | tail -n 1 | tr -d '[:space:]')"
+          echo "Root free space before cleanup: ${available_gib} GiB"
+          if (( available_gib >= 64 )); then
+            echo "At least 64 GiB is available; skipping runner image cleanup."
+            exit 0
+          fi
+          echo "Disk before cleanup:"
+          df -h /
+          sudo rm -rf \
+            /opt/ghc \
+            /usr/local/.ghcup \
+            /usr/local/lib/android \
+            /usr/local/share/boost \
+            /usr/share/dotnet
+          sudo apt-get clean
+          docker system prune --all --force --volumes || true
+          echo "Disk after cleanup:"
+          df -h /
+
+      - name: Setup monorepo CI
+        if: steps.lane-gate.outputs.should_run == 'true'
+        uses: ./.github/actions/setup-monorepo-ci
+        with:
+          cache-turbo: "true"
+          cache-write: "false"
+          turbo-cache-key-suffix: -${{ matrix.partition }}
+
+      - name: Run Test Unit shard
+        if: steps.lane-gate.outputs.should_run == 'true'
+        run: |
+          set -euo pipefail
+          run_lane() {
+            setsid bun run beep "$@" < /dev/null &
+            local pgid=$!
+            local status=0
+            wait "$pgid" || status=$?
+            kill -TERM -- "-$pgid" 2>/dev/null || true
+            sleep 2
+            kill -KILL -- "-$pgid" 2>/dev/null || true
+            return "$status"
+          }
+
+          shape_args=()
+          if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+            shape_args+=(--affected --base "origin/${GITHUB_BASE_REF:-main}")
+          fi
+          shape_args+=(--summarize)
+          run_lane ci lane test-unit --partition "${{ matrix.partition }}" "${shape_args[@]}"
+
+      - name: Append Turbo summary
+        if: steps.lane-gate.outputs.should_run == 'true' && always()
+        run: bun run beep ci append-turbo-summary
+
+      - name: Save post-lane Turbo fallback
+        if: github.event_name == 'push' && steps.lane-gate.outputs.should_run == 'true' && success()
+        continue-on-error: true
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: .turbo/cache
+          key: turbo-${{ runner.os }}-${{ startsWith(runner.name, 'beep-ci-') && 'fleet' || 'shared' }}-${{ github.job }}-${{ matrix.partition }}-${{ hashFiles('turbo.json', 'package.json', 'bun.lock') }}-${{ github.sha }}
+
+      - name: Skip lane
+        if: steps.lane-gate.outputs.should_run != 'true'
+        run: echo "Skipping Test Unit (${{ matrix.partition }}) for this change set."
+
+  test-unit:
+    name: Test Unit
+    needs: [test-unit-shard]
+    if: ${{ always() }}
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Require every Test Unit shard
+        shell: bash
+        run: |
+          if [[ "${{ needs.test-unit-shard.result }}" != "success" ]]; then
+            echo "Test Unit shards finished with result: ${{ needs.test-unit-shard.result }}"
+            exit 1
+          fi
 
   professional-desktop-ipc-stdio:
     name: Professional Desktop IPC Stdio

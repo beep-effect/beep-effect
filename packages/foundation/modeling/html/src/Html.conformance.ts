@@ -76,10 +76,22 @@ import type { HtmlRootView } from "./internal/conformance/Html.conformance-contr
 
 const $I = $HtmlId.create("Html.conformance");
 
+/**
+ * Conformance contracts re-exported from the internal registry.
+ *
+ * @category validation
+ * @since 0.0.0
+ */
 export {
   HtmlConformanceIssue,
   HtmlConformanceRule,
 } from "./internal/conformance/Html.conformance-contracts.ts";
+/**
+ * Heading-level conformance rules re-exported from the internal registry.
+ *
+ * @category validation
+ * @since 0.0.0
+ */
 export {
   computeHeadingOutline,
   HtmlBestPracticeIssue,

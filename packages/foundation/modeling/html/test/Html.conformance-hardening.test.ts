@@ -1491,11 +1491,13 @@ describe("@beep/html exact attribute conformance", () => {
         Link.make({ color: O.some("oklch(70% 0.15 30)"), href: O.some("/mask.svg"), rel: O.some("mask-icon") })
       )
     ).toStrictEqual([]);
-    expect(
-      issuesAtPath(Link.make({ color: O.some("not-a-color"), href: O.some("/mask.svg"), rel: O.some("mask-icon") }), [
-        "attributes.color",
-      ])
-    ).toHaveLength(1);
+    for (const color of ["not-a-color", "rgb("]) {
+      expect(
+        issuesAtPath(Link.make({ color: O.some(color), href: O.some("/mask.svg"), rel: O.some("mask-icon") }), [
+          "attributes.color",
+        ])
+      ).toHaveLength(1);
+    }
   });
 
   it("resolves case-sensitive id references in the same root and nearest table", () => {

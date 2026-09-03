@@ -39,8 +39,10 @@ checkmarks as items land; the status flip and closeout reflection ride the final
 
 Status (2026-09-03): P0 complete. `research/baseline.md` is ratified (ruling 8: M1 P50 43.3 min /
 P95 3.95 h; pre-push wave 65.9% of local wrapper time; hosted-wait 19.4%; M3/M4 unmeasurable until
-journals carry fingerprints and inner lanes). `research/decisions.md` holds sixteen ratified rulings: seven on the
-ProofFact schema, baseline ratification, A5 first, coverage-first migration, and six from the A5
+journals carry fingerprints and inner lanes). `research/decisions.md` holds eighteen ratified rulings: seven on the
+ProofFact schema, baseline ratification, A5 first, coverage-first migration, six from the A5
 journal-facts review (terminal tags, durable inner-lane reports, ticket death, forward-compatible
-eviction variant, atomic claims, stage and profile via the C1 vocabulary). Landed: A5 (partial, A5b owes four gaps), A4, B2, B4, C3 coverage, C1/C2; in flight: B1 and
+eviction variant, atomic claims, stage and profile via the C1 vocabulary), and two from the A5b
+compaction review (retention budget over terminal attempts only; economics left-censored from
+compaction receipts). Landed: A5 (partial, A5b owes four gaps), A4, B2, B4, C3 coverage, C1/C2; in flight: B1 and
 A5b. B3 and A3 are unblocked now that journal facts exist.
