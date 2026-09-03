@@ -433,3 +433,19 @@ step graph rendered by `--plan`, or reject a contradictory flag combination
 before enqueueing. A fast plan that omits local proof must never silently admit
 full proof at execution time, because callers cannot safely reason about queue
 occupancy or whether an early PR will actually be opened.
+
+## 2026-09-03 — local `gh` usage errors open the remote-probe cooldown
+
+Lived while fetching paginated PR review threads after the shared `gh` circuit
+had recovered. The installed CLI rejected the local combination of `--slurp`
+and `--jq` before making an API request, but the wrapper classified that exit 1
+like a remote probe failure and opened the machine-wide 15-minute cooldown.
+The corrected query could not run without either waiting or using the
+operator-only reset path, so review work continued from the already-fetched
+summary while the circuit remained authoritative.
+
+What would have prevented it: distinguish validated local invocation failures
+from commands that actually reached the guarded service, or provide a dry-run
+argument-validation step before the breaker owns the command. A local syntax
+mistake should remain observable, but it should not suppress unrelated agents'
+GitHub reads for a full remote-failure cooldown.

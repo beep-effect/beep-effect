@@ -33,6 +33,7 @@ const writerPath = `${repoRoot}.claude/hooks/hook-pulse.sh`;
 const SESSION_ID = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 const CWD_ID = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
 const TOOL_USE_ID = "toolu_sequence_break_1";
+const AMBIGUOUS_TOOL_USE_ID = "toolu_sequence_break_2";
 const PRE_TS = "2026-09-03T12:00:00.000Z";
 const REQUEST_TS = "2026-09-03T12:00:00.001Z";
 const POST_TS = "2026-09-03T12:00:00.002Z";
@@ -67,7 +68,7 @@ const canonicalDampingKeys = [
 const decodeHookPulse = S.decodeUnknownSync(HookPulseV1);
 const hookPulseLine = (input: unknown): string => HookPulseV1.encodeJsonSync(decodeHookPulse(input));
 
-const preToolUseLine = (sessionId = SESSION_ID, cwd = CWD_ID, ts = PRE_TS): string =>
+const preToolUseLine = (sessionId = SESSION_ID, cwd = CWD_ID, ts = PRE_TS, toolUseId = TOOL_USE_ID): string =>
   hookPulseLine({
     schemaVersion: "hook-pulse/v1",
     ts,
@@ -80,7 +81,7 @@ const preToolUseLine = (sessionId = SESSION_ID, cwd = CWD_ID, ts = PRE_TS): stri
     evidenceTier: "derived",
     waitReason: "none",
     toolName: "AskUserQuestion",
-    toolUseId: TOOL_USE_ID,
+    toolUseId,
   });
 
 const permissionRequestLine = hookPulseLine({
@@ -110,6 +111,21 @@ const postToolUseLine = hookPulseLine({
   waitReason: "none",
   toolName: "AskUserQuestion",
   toolUseId: TOOL_USE_ID,
+});
+
+const ambiguousPostToolUseLine = hookPulseLine({
+  schemaVersion: "hook-pulse/v1",
+  ts: POST_TS,
+  sessionId: SESSION_ID,
+  agentKind: "claude-code",
+  hookEvent: "PostToolUse",
+  cwd: CWD_ID,
+  notifierRev: "desktop-ntfy-1",
+  instrumentClass: "production",
+  evidenceTier: "derived",
+  waitReason: "none",
+  toolName: "AskUserQuestion",
+  toolUseId: AMBIGUOUS_TOOL_USE_ID,
 });
 
 interface NotifierStore {
@@ -368,6 +384,27 @@ layer(NodeServices.layer)("sequence-break notification contracts", (it) => {
           { status: "skipped", reason: "bracket-resolved" },
         ]);
         expect(A.every(yield* notificationRows(store), (row) => !row.includes(CANARY))).toBe(true);
+      })
+    )
+  );
+
+  it.effect("refuses equal-time same-tool candidates even when one candidate later closes", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const store = yield* makeNotifierStore();
+        yield* fs.writeFileString(
+          store.hookPath,
+          `${preToolUseLine()}\n${preToolUseLine(SESSION_ID, CWD_ID, PRE_TS, AMBIGUOUS_TOOL_USE_ID)}\n${permissionRequestLine}\n${ambiguousPostToolUseLine}\n`
+        );
+
+        expectSilentSuccess(yield* runNotifier(store));
+        const notifications = yield* decodedNotifications(store);
+        expect(A.map(notifications, ({ delivery }) => delivery)).toEqual([
+          { status: "skipped", reason: "bracket-unattributed" },
+          { status: "skipped", reason: "bracket-unattributed" },
+        ]);
+        expect(yield* fs.exists(store.dampingPath)).toBe(false);
       })
     )
   );

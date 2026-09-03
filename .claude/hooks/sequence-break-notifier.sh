@@ -177,7 +177,9 @@ append_pair_skipped() {
 
 # Replays one session's HookPulseV1 rows with the PLAN.md two-hop rule and
 # returns only the state of this exact PermissionRequest timestamp. Each request
-# claims the nearest preceding unpaired PreToolUse for the same tool; only that
+# claims the unique nearest preceding unpaired PreToolUse for the same tool. If
+# distinct candidates share that nearest timestamp, attribution is refused; row
+# sort order is not evidence of invocation identity. Only the claimed
 # toolUseId's terminal event can close it. SessionEnd tombstones open brackets.
 bracket_status() {
   local files=()
@@ -212,18 +214,28 @@ bracket_status() {
             stack=tool
             top[stack]++
             stackId[key2(stack,top[stack])]=toolUseId
+            stackTs[key2(stack,top[stack])]=ts
             status[toolUseId]="unpaired"
           } else if (event == "PermissionRequest") {
             stack=tool
             found=""
+            foundTs=""
+            ambiguous=0
             for (position=top[stack]; position>=1; position--) {
               candidate=stackId[key2(stack,position)]
               if (status[candidate] == "unpaired") {
-                found=candidate
-                break
+                candidateTs=stackTs[key2(stack,position)]
+                if (found == "") {
+                  found=candidate
+                  foundTs=candidateTs
+                } else if (candidateTs != foundTs) {
+                  break
+                } else if (candidate != found) {
+                  ambiguous=1
+                }
               }
             }
-            if (found != "") {
+            if (found != "" && ambiguous == 0) {
               status[found]="claimed"
               if (ts == targetTs && tool == targetTool) {
                 targetMatches++
