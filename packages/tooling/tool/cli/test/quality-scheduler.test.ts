@@ -1487,13 +1487,14 @@ describe("quality-scheduler", () => {
       })
     ));
 
-  it("gives publish priority over a newer verify but lets an aged verify keep its place", () =>
+  it("gives publish priority over a newer verify before its aging threshold", () =>
     Effect.runPromise(
       Effect.gen(function* () {
         const gibRef = yield* Ref.make(50);
         yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
           Effect.gen(function* () {
             const fs = yield* FileSystem.FileSystem;
+            const priorityConfig = AdmissionConfig.make({ ...fastConfig, publishAgingSeconds: 60 });
             const blocking = yield* writeFakeLease(tempRoot, { weightTokens: 6, originKey: "origin-other" });
             const order = yield* Ref.make(A.empty<string>());
             const record = (label: string) => Ref.update(order, A.append(label));
@@ -1502,7 +1503,7 @@ describe("quality-scheduler", () => {
                 request({ originKey: "origin-v", checkoutRoot: "/repo/v" }),
                 noAdmissionOriginGate,
                 record("verify"),
-                fastConfig
+                priorityConfig
               )
             );
             yield* Effect.sleep("60 millis");
@@ -1511,7 +1512,7 @@ describe("quality-scheduler", () => {
                 request({ originKey: "origin-p", checkoutRoot: "/repo/p", priority: "publish" }),
                 noAdmissionOriginGate,
                 record("publish"),
-                fastConfig
+                priorityConfig
               )
             );
             yield* Effect.sleep("60 millis");
@@ -1519,8 +1520,8 @@ describe("quality-scheduler", () => {
             yield* Fiber.join(verify);
             yield* Fiber.join(publish);
             // Publish enqueued later but outranks the young verify ticket.
-            // (The verify ticket ages to publish rank only after 250ms here,
-            // and the blocker was released before that.)
+            // The long test-local threshold keeps runner load from changing
+            // the policy state while the contenders are being enqueued.
             expect(yield* Ref.get(order)).toStrictEqual(["publish", "verify"]);
           })
         );
