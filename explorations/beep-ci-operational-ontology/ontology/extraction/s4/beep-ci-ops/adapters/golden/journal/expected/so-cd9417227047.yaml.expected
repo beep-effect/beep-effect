@@ -1,4 +1,4 @@
-id: "so:sha256:28455be3872f9f5d49b8bfb51a33ac4800fc69446186e0068f9a370dc38043a4"
+id: "so:sha256:cd9417227047069e1be93ff61053c7db3cc595cbd49cd1f0e7765c713750c1a3"
 schema_version: 1
 repository:
   commit: "0123456789abcdef0123456789abcdef01234567"
@@ -6,20 +6,20 @@ repository:
 source_span:
   start_line: 1
   end_line: 4
-  content_sha256: "ee974281507ef32250579e2784a6407508f72ee784e3feb0f4cf39d4d741d546"
+  content_sha256: "9ddcd8b62816a7fe208dc237fdab4ca292c40f8def586e457ab14b101fe831d2"
 extractor:
   id: "adapter-journal"
   version: "1.0.0"
   parser: "python-stdlib-properties"
   script: "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal.py"
 symbol:
-  qualified_name: "verdict-record"
-  lexical_name: "verdict-record"
+  qualified_name: "yeet-verdict"
+  lexical_name: "yeet-verdict"
   syntactic_kind: "properties_projection"
 observed_facts:
   - predicate: "config_key_value"
-    object: "schemaVersion=golden-verdict-record/v1"
+    object: "schemaVersion=yeet-verdict/v1"
   - predicate: "config_key_value"
     object: "status=passed"
-source_excerpt: "schemaVersion=golden-verdict-record/v1"
+source_excerpt: "schemaVersion=yeet-verdict/v1"
 epistemic_status: "parser_derived"

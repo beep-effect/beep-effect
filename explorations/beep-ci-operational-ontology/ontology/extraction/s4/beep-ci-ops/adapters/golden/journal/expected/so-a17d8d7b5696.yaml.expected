@@ -1,4 +1,4 @@
-id: "so:sha256:23a1e4d60a3024cb4a6216dea6f0b0efb8126c31afc874dd147326335a324325"
+id: "so:sha256:a17d8d7b56964070d0eb4fd4a7e0580122907f6858d2f1f9059f37d0b4dbe545"
 schema_version: 1
 repository:
   commit: "0123456789abcdef0123456789abcdef01234567"
@@ -6,15 +6,15 @@ repository:
 source_span:
   start_line: 1
   end_line: 5
-  content_sha256: "067fdee216c291d4a2ddc15cbdbed61f4e5c1289793653446b5a41a0d494ba7c"
+  content_sha256: "e244c6c0720cf9e28847e65c26477f3e894b24de6ce5df1bc4553b48ce330188"
 extractor:
   id: "adapter-journal"
   version: "1.0.0"
   parser: "python-stdlib-properties"
   script: "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal.py"
 symbol:
-  qualified_name: "admission-journal"
-  lexical_name: "admission-journal"
+  qualified_name: "yeet-admission-journal"
+  lexical_name: "yeet-admission-journal"
   syntactic_kind: "properties_projection"
 observed_facts:
   - predicate: "config_key_value"
@@ -22,6 +22,6 @@ observed_facts:
   - predicate: "config_key_value"
     object: "nonce=n-001"
   - predicate: "config_key_value"
-    object: "schemaVersion=golden-admission-journal/v1"
+    object: "schemaVersion=yeet-admission-journal/v1"
 source_excerpt: "_tag=admission-admitted"
 epistemic_status: "parser_derived"

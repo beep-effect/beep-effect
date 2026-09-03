@@ -14,8 +14,10 @@ those sorted facts, and only emitted keys enter the kind's observed-key set.
 
 Each record spans the whole file. Its content digest covers the exact decoded
 UTF-8 file text, and its excerpt is the first-occurrence line of the first
-fact after canonical fact sorting. The symbols are ``admission-journal``,
-``attempt-journal``, and ``verdict-record`` respectively, all with syntactic
+fact after canonical fact sorting. The symbols are the record-family tokens
+``yeet-admission-journal``, ``yeet-attempt-journal``, and ``yeet-verdict`` —
+each occurs token-bounded in every span through its ``schemaVersion``
+pairing, which the validator requires of a symbol — all with syntactic
 kind ``properties_projection``. This yields at most one observation point per
 distinct validator-representable key in each corpus kind.
 
@@ -60,9 +62,9 @@ GOLDEN_INPUT_REL = f"{ONTOLOGY_REL}/adapters/golden/journal/input"
 
 # kind, corpus-relative glob, symbol name
 KIND_SPECS = (
-    ("admission", "admission/*/journal.properties", "admission-journal"),
-    ("attempts", "attempts/*/*/attempts.properties", "attempt-journal"),
-    ("verdicts", "verdicts/*/*/verdict.properties", "verdict-record"),
+    ("admission", "admission/*/journal.properties", "yeet-admission-journal"),
+    ("attempts", "attempts/*/*/attempts.properties", "yeet-attempt-journal"),
+    ("verdicts", "verdicts/*/*/verdict.properties", "yeet-verdict"),
 )
 
 COMMIT_RE = re.compile(
@@ -223,6 +225,15 @@ def make_record(
         return None
 
     stripped = strip_comments_config(text, logical_path)
+    # The validator requires the symbol to occur token-bounded in its own
+    # comment-stripped span (its `occurs` rule: word chars, $ and # bound a
+    # token; `-` and `/` do not), so every span must carry the record-family
+    # token — the schemaVersion pairing provides it in real corpus files.
+    if re.search(rf"(?<![\w$#]){re.escape(symbol_name)}(?![\w$#])", stripped) is None:
+        raise AdapterError(
+            f"{logical_path}: symbol {symbol_name!r} does not occur "
+            "token-bounded in the comment-stripped span"
+        )
     for pair, fact_object in candidates:
         if not config_pair_occurs(pair.key, pair.value, stripped):
             raise AdapterError(

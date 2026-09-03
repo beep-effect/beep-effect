@@ -1,4 +1,4 @@
-id: "so:sha256:3ede6df64dd5b3ed57964b9c5db86bf7dd5c705e9159959923e5ea0c76aaf017"
+id: "so:sha256:06dba95034081bdb0c924270de4cb8bca0c2a7741ba575d116c1de036027e0bd"
 schema_version: 1
 repository:
   commit: "0123456789abcdef0123456789abcdef01234567"
@@ -6,15 +6,15 @@ repository:
 source_span:
   start_line: 1
   end_line: 6
-  content_sha256: "af31eae6fc8718c4b22a9c9c2b2cff99fedf82fea127215c99128e2bc9415f15"
+  content_sha256: "d8a8a1ed8c2ec08378de4804abaac4e526f6ea4c19bc45c0024fb30a7e2d5897"
 extractor:
   id: "adapter-journal"
   version: "1.0.0"
   parser: "python-stdlib-properties"
   script: "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal.py"
 symbol:
-  qualified_name: "attempt-journal"
-  lexical_name: "attempt-journal"
+  qualified_name: "yeet-attempt-journal"
+  lexical_name: "yeet-attempt-journal"
   syntactic_kind: "properties_projection"
 observed_facts:
   - predicate: "config_key_value"
@@ -24,6 +24,6 @@ observed_facts:
   - predicate: "config_key_value"
     object: "mode=verify"
   - predicate: "config_key_value"
-    object: "schemaVersion=golden-attempt-journal/v1"
+    object: "schemaVersion=yeet-attempt-journal/v1"
 source_excerpt: "_tag=attempt-started"
 epistemic_status: "parser_derived"

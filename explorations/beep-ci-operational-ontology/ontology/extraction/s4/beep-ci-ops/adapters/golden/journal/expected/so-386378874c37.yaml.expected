@@ -6,15 +6,15 @@ repository:
 source_span:
   start_line: 1
   end_line: 5
-  content_sha256: "2ad2ea3798e64ca10d0eabb0adcb01510bb73c9eb2a45d868fabaf8deb948d76"
+  content_sha256: "42167e011b8803e529c78f7cc4bd72f718bc7c22b64d395194e671687c802928"
 extractor:
   id: "adapter-journal"
   version: "1.0.0"
   parser: "python-stdlib-properties"
   script: "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal.py"
 symbol:
-  qualified_name: "verdict-record"
-  lexical_name: "verdict-record"
+  qualified_name: "yeet-verdict"
+  lexical_name: "yeet-verdict"
   syntactic_kind: "properties_projection"
 observed_facts:
   - predicate: "config_key_value"
