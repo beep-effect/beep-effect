@@ -4,6 +4,14 @@ Record friction at the moment it happens (what you were doing, evidence, what wo
 prevented it). Public repo: redact secrets, replace absolute home paths with `~`, drop
 session/machine ids.
 
+## 2026-09-02 — replacement accepted an incomplete secret reference
+
+- **Doing:** closing the automated review of the remote-cache reference replacement mode.
+- **Evidence:** review showed that the helper accepted any value with an `op://` prefix, so an
+  incomplete path could replace a working configured token and fail only during later resolution.
+- **Would have prevented it:** validate the documented `op://vault/item/field` structure before
+  any `.env` creation or replacement and cover the no-modification failure path directly.
+
 ## 2026-09-02 — two provisioning passes preserved the wrong cache reference
 
 - **Doing:** proving the final cache credential against its infrastructure source before repeating

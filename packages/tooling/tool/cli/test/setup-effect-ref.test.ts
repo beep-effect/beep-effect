@@ -265,6 +265,59 @@ describe("setup-effect-ref", () => {
       })
     ).pipe(provideScopedLayer(NodeServices.layer))
   );
+  it.effect("rejects an incomplete replacement reference without modifying the configured token", () =>
+    withTempDirectory((tempDir) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const ambientPath = yield* Config.string("PATH");
+        const setupScriptPath = yield* path.fromFileUrl(
+          new URL("../../../../../scripts/enable-turbo-remote-reads.sh", import.meta.url)
+        );
+        const repoRoot = path.join(tempDir, "repo");
+        const envPath = path.join(repoRoot, ".env");
+        const original = [
+          "TURBO_API=https://existing.example.test",
+          "TURBO_TOKEN=op://existing/item/field",
+          "TURBO_TEAM=existing-team",
+          "TURBO_CACHE=local:rw,remote:r",
+          "",
+        ].join("\n");
+        yield* fs.makeDirectory(repoRoot, { recursive: true });
+        yield* fs.writeFileString(path.join(repoRoot, "turbo.json"), "{}\n");
+        yield* fs.writeFileString(envPath, original);
+
+        const result = yield* Effect.scoped(
+          Effect.gen(function* () {
+            const handle = yield* ChildProcess.make("bash", [setupScriptPath, repoRoot], {
+              cwd: tempDir,
+              env: {
+                PATH: ambientPath,
+                TURBO_API: "https://replacement.example.test",
+                TURBO_TEAM: "replacement-team",
+                TURBO_TOKEN_REF: "op://vault-only",
+                TURBO_TOKEN_REPLACE: "1",
+              },
+              stdin: "ignore",
+              stderr: "pipe",
+              stdout: "pipe",
+            });
+            const [exitCode, stderr] = yield* Effect.all(
+              [handle.exitCode, handle.stderr.pipe(Stream.decodeText(), Stream.mkString)],
+              { concurrency: "unbounded" }
+            );
+            return { exitCode, stderr };
+          })
+        );
+
+        expect(result.exitCode).toBe(1);
+        expect(result.stderr).toContain(
+          "TURBO_TOKEN_REF must be a 1Password reference (op://vault/item/field), never a token value"
+        );
+        expect(yield* fs.readFileString(envPath)).toBe(original);
+      })
+    ).pipe(provideScopedLayer(NodeServices.layer))
+  );
   it.effect("rejects duplicate remote-cache assignments without modifying the file", () =>
     withTempDirectory((tempDir) =>
       Effect.gen(function* () {
