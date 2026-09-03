@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -31,7 +31,7 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P3 Yeet — PR #975 on `feat/yeet-pr-resume-footer` driving to mergeable (see `PLAN.md`).
+P4 Close — PR #975 merge-ready; closeout reflection at `history/reflections/2026-09-03-claude.md`. PR 2 surfaces in `PLAN.md`.
 
 ## Latest Evidence
 

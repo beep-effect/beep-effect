@@ -36,3 +36,15 @@ Greptile). All accepted and fixed in the follow-up commit.
   node `bunx vitest`. Codex briefs must say `--pool=threads`.
 - Stale dependency dists make `package-verify` fail in untouched files; rebuild
   the closure with `bunx turbo run build --filter="@beep/repo-cli^..."`.
+
+## Round 3 (Greptile on `a82e32c4cd`)
+
+| Thread | Ruling |
+| --- | --- |
+| Repository casing splits registry partitions (`detectPrRepository` kept origin casing, `PrRef` lowercased URLs) | Valid; fixed in `11bc482030` with a mixed-case-origin regression test. |
+| Scrubbed metadata remains in the PR's earlier commits | Not fixable by editing: force-push is denied and GitHub keeps a PR's commits viewable after close or squash-merge. Main only receives the squash-merged tree. Left open for the owner to decide whether a clean-ancestry replacement PR is worth a fresh review cycle. |
+
+Divergence with `main` was resolved by merging `origin/main` through a
+temporary sync branch into the PR branch (no rewrite), then pushing. The local
+proof's `pre-push:nix` red was environment-only (no `nix` on the detached
+publish PATH; hosted Nix Shell passes) and is acknowledged as such.
