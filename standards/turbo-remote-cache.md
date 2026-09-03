@@ -140,6 +140,36 @@ caching. Hosted Coverage Regression already supplies `--summarize` through the
 shared `beep ci lane coverage` builder, and its workflow summary step reads all
 of the shard summaries with `beep ci append-turbo-summary --all`.
 
+### Reading tsgo tests task hashes
+
+The repo-wide `quality test-tsgo` lane is an aggregate over the package-owned
+`package-test-typecheck` Turbo task. That task remains `cache: false`: test
+diagnostics must run for the current checkout, while Turbo still computes a
+hash from the package manifest, the package `test/**` tree and `tsconfig*.json`
+files, package source directories, transitive dependency `transit` hashes, the
+root `tsconfig.base.json`, and the CLI worker plus its synthetic tsconfig template.
+Package documentation is deliberately outside the owning package's direct
+input set, so a README-only edit does not change that package task hash.
+Every discovered package must expose the matching package script. The aggregate
+checks this before invoking Turbo and fails with the package name plus the exact
+`"package-test-typecheck": "beep-cli quality test-tsgo-package"` entry to add;
+it never treats a missing task as a successful package result.
+
+The aggregate discovers package ownership exactly as the pre-Turbo lane did,
+then invokes Turbo with `--concurrency=1`, `--continue=always`, suppressed task
+logs, and `--summarize`. Each package worker writes its versioned result to
+`.turbo/package-test-typecheck-result.json`. The worker records tsgo's output
+and exit code without turning a diagnostic into an early Turbo stop; after all
+packages finish, the aggregate consumes the artifacts in its original sorted
+package order and retains the existing diagnostic rendering and exit semantics.
+
+`--summarize` is how the lane surfaces the input digest. Turbo writes
+`.turbo/runs/<run-id>.json`; select the `tasks[]` entry whose `taskId` is
+`<package-name>#package-test-typecheck` and read its non-empty `hash`. The
+ProofLedger records that value with input source `turbo-task-hash`. The result
+artifact is execution evidence, not an alternate digest, and the run id is not
+an input digest.
+
 ## Rules
 
 - Never put the trusted write token on a workstation. A read token that leaks
