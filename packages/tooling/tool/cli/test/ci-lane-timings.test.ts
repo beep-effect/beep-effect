@@ -8,6 +8,7 @@ import {
   CiWorkflowWindowRun,
   CiWorkflowWindowRunJobs,
   ciLaneTimingRow,
+  ciLaneTimingsCommand,
   ciLaneTimingsReport,
   ciRunnerClassForLabels,
   ciTimestampSpanSeconds,
@@ -22,10 +23,13 @@ import {
 } from "@beep/repo-cli/commands/Ci";
 import { provideScopedLayer } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
+import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { DateTime, Effect, Exit, Layer, pipe, Sink, Stream } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as TestConsole from "effect/testing/TestConsole";
+import { Command } from "effect/unstable/cli";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import type { CiLaneTimingWindowReport } from "@beep/repo-cli/commands/Ci";
 
@@ -79,23 +83,20 @@ const stubHandle = (output: string) =>
     unref: Effect.succeed(Effect.void),
   });
 
-const laneTimingsSpawnerLayer = Layer.effect(
-  ChildProcessSpawner.ChildProcessSpawner,
-  Effect.succeed(
-    ChildProcessSpawner.make((command) => {
-      if (!ChildProcess.isStandardCommand(command)) {
-        return Effect.die("lane timings never spawns a piped command");
-      }
-      const rendered = A.join([command.command, ...command.args], " ");
-      const output = Str.includes("actions/runs?per_page=1")(rendered)
-        ? '{"workflow_runs":[{"id":42}]}'
-        : Str.includes("per_page=100&page=1")(rendered)
-          ? '{"jobs":[{"completed_at":"2026-08-06T12:10:00Z","conclusion":"success","created_at":"2026-08-06T12:00:00Z","id":991,"labels":["self-hosted"],"name":"Test Unit","run_attempt":1,"run_id":42,"runner_name":"runner-1","started_at":"2026-08-06T12:00:30Z","status":"completed","steps":[]}],"total_count":2}'
-          : '{"jobs":[{"completed_at":"2026-08-06T12:11:00Z","conclusion":"success","created_at":"2026-08-06T12:01:00Z","id":992,"labels":["self-hosted"],"name":"Test Unit 2","run_attempt":1,"run_id":42,"runner_name":"runner-1","started_at":"2026-08-06T12:01:30Z","status":"completed","steps":[]}],"total_count":2}';
-      return Effect.succeed(stubHandle(output));
-    })
-  )
-);
+const laneTimingsSpawner = ChildProcessSpawner.make((command) => {
+  if (!ChildProcess.isStandardCommand(command)) {
+    return Effect.die("lane timings never spawns a piped command");
+  }
+  const rendered = A.join([command.command, ...command.args], " ");
+  const output = Str.includes("actions/runs?per_page=1")(rendered)
+    ? '{"workflow_runs":[{"id":42}]}'
+    : Str.includes("per_page=100&page=1")(rendered)
+      ? '{"jobs":[{"completed_at":"2026-08-06T12:10:00Z","conclusion":"success","created_at":"2026-08-06T12:00:00Z","id":991,"labels":["self-hosted"],"name":"Test Unit","run_attempt":1,"run_id":42,"runner_name":"runner-1","started_at":"2026-08-06T12:00:30Z","status":"completed","steps":[]}],"total_count":2}'
+      : '{"jobs":[{"completed_at":"2026-08-06T12:11:00Z","conclusion":"success","created_at":"2026-08-06T12:01:00Z","id":992,"labels":["self-hosted"],"name":"Test Unit 2","run_attempt":1,"run_id":42,"runner_name":"runner-1","started_at":"2026-08-06T12:01:30Z","status":"completed","steps":[]}],"total_count":2}';
+  return Effect.succeed(stubHandle(output));
+});
+
+const laneTimingsSpawnerLayer = Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, laneTimingsSpawner);
 
 const REQUIRED_CONTEXTS = [
   "Heavy / Check",
@@ -221,16 +222,39 @@ const windowGithubResponse = Effect.fn("TestCiLaneTimingGithubClient.route")((en
   )
 );
 
-const windowGithubLayer = (commands: Array<string>) =>
+const windowGithubLayer = (
+  commands: Array<string>,
+  response: (endpoint: string) => Effect.Effect<string> = windowGithubResponse
+) =>
   Layer.succeed(
     CiLaneTimingGithubClient,
     CiLaneTimingGithubClient.of({
       getJson: Effect.fn("TestCiLaneTimingGithubClient.getJson")(function* (_repoRoot, endpoint) {
         A.appendInPlace(commands, endpoint);
-        return yield* windowGithubResponse(endpoint);
+        return yield* response(endpoint);
       }),
     })
   );
+
+const laneTimingsWindowCliSpawner = (commands: Array<string>) =>
+  ChildProcessSpawner.make((command) => {
+    if (!ChildProcess.isStandardCommand(command)) {
+      return Effect.die("lane timings never spawns a piped command");
+    }
+    const rendered = A.join([command.command, ...command.args], " ");
+    A.appendInPlace(commands, rendered);
+    return windowGithubResponse(command.args[1] ?? "").pipe(Effect.map(stubHandle));
+  });
+
+const laneTimingsCommandLayer = Layer.mergeAll(NodeServices.layer, TestConsole.layer);
+const runLaneTimingsCommand = Command.runWith(ciLaneTimingsCommand, { version: "0.0.0" });
+const isString = (value: unknown): value is string => typeof value === "string";
+
+const testConsoleText = Effect.fn("TestCiLaneTimings.consoleText")(function* () {
+  const logs = A.filter(yield* TestConsole.logLines, isString);
+  const errors = A.filter(yield* TestConsole.errorLines, isString);
+  return A.join(A.appendAll(logs, errors), "\n");
+});
 
 describe("ci lane timings attempt filter", () => {
   it.effect("collects every page of all-attempt jobs", () =>
@@ -239,6 +263,14 @@ describe("ci lane timings attempt filter", () => {
 
       expect(report.jobCount).toBe(2);
       expect(A.map(report.rows, (row) => row.jobId)).toStrictEqual([991, 992]);
+    }).pipe(provideScopedLayer(laneTimingsSpawnerLayer))
+  );
+
+  it.effect("rejects recent-run limits outside the API bounds", () =>
+    Effect.gen(function* () {
+      const exits = yield* Effect.forEach([0, 101], (limit) => Effect.exit(collectCiLaneTimings(".", limit)));
+
+      expect(A.every(exits, Exit.isFailure)).toBe(true);
     }).pipe(provideScopedLayer(laneTimingsSpawnerLayer))
   );
 
@@ -267,6 +299,10 @@ describe("ci lane timings attempt filter", () => {
     expect(report.jobCount).toBe(2);
     expect(report.attemptOneJobCount).toBe(1);
     expect(report.medianAttemptOnePickupSeconds).toStrictEqual(O.some(30));
+  });
+
+  it("reports no pickup median for an empty recent-run population", () => {
+    expect(ciLaneTimingsReport([]).medianAttemptOnePickupSeconds).toStrictEqual(O.none());
   });
 
   it("computes the midpoint for an even number of pickup samples", () => {
@@ -552,6 +588,22 @@ describe("ci lane timing admission window", () => {
     })
   );
 
+  it.effect("attributes a cancelled effective lane without admitting its span", () =>
+    Effect.gen(function* () {
+      const run = windowRun({ id: 160 });
+      const report = yield* buildCiLaneTimingWindowReport(REQUIRED_CONTEXTS, [
+        windowRunJobs(run, [
+          job({ conclusion: "cancelled", id: 161, name: "Lint (lint-a)", run_id: run.id }),
+          job({ id: 162, name: "Lint (lint-b)", run_id: run.id }),
+          job({ id: 163, name: "Lint", run_id: run.id }),
+        ]),
+      ]);
+
+      expect(laneStat(report, "Lint").n).toBe(0);
+      expect(attributionStat(report, "Lint").cancellations).toBe(1);
+    })
+  );
+
   it.effect("uses the green attempt-one Lint span when a later attempt is also present", () =>
     Effect.gen(function* () {
       const run = windowRun({ id: 175 });
@@ -638,6 +690,50 @@ describe("ci lane timing admission window", () => {
     })
   );
 
+  it.effect("renders unavailable and passing queue tripwires", () =>
+    Effect.gen(function* () {
+      const emptyReport = yield* buildCiLaneTimingWindowReport(REQUIRED_CONTEXTS, []);
+      expect(renderCiLaneTimingWindowMarkdown(emptyReport)).toContain(
+        "Queue tripwire: unavailable — no attempt-one shard pickup carried both timestamps."
+      );
+
+      const run = windowRun({ id: 250 });
+      const passingReport = yield* buildCiLaneTimingWindowReport(REQUIRED_CONTEXTS, [
+        windowRunJobs(run, [
+          job({
+            completed_at: "2026-09-04T00:03:00Z",
+            created_at: "2026-09-04T00:00:00Z",
+            id: 251,
+            name: "Lint (lint-a)",
+            run_id: run.id,
+            started_at: "2026-09-04T00:00:20Z",
+          }),
+          job({
+            completed_at: "2026-09-04T00:04:00Z",
+            created_at: "2026-09-04T00:00:00Z",
+            id: 252,
+            name: "Lint (lint-b)",
+            run_id: run.id,
+            started_at: "2026-09-04T00:00:30Z",
+          }),
+          job({
+            completed_at: "2026-09-04T00:05:00Z",
+            created_at: "2026-09-04T00:00:00Z",
+            id: 253,
+            name: "Lint",
+            run_id: run.id,
+            started_at: "2026-09-04T00:04:00Z",
+          }),
+        ]),
+      ]);
+
+      expect(passingReport.pickup.breached).toBe(false);
+      expect(renderCiLaneTimingWindowMarkdown(passingReport)).toContain(
+        "Queue tripwire: Pass — shard pickup p95 0m30s ≤ 5m00s"
+      );
+    })
+  );
+
   it.effect("uses nearest rank for small p50 and p95 populations", () =>
     Effect.gen(function* () {
       const durations = [10, 20, 30];
@@ -700,5 +796,122 @@ describe("ci lane timing admission window", () => {
       expect(A.some(commands, (command) => Str.includes("/actions/runs/101/jobs")(command))).toBe(false);
       expect(A.some(commands, (command) => Str.includes("/actions/runs/103/jobs")(command))).toBe(false);
     }).pipe(provideScopedLayer(windowGithubLayer(commands)));
+  });
+
+  it.effect("rejects reversed collection bounds before reading GitHub", () => {
+    const commands = A.empty<string>();
+    return Effect.gen(function* () {
+      const boundary = DateTime.makeUnsafe("2026-09-04T00:00:00Z");
+      const exit = yield* Effect.exit(
+        collectCiLaneTimingWindow(".", windowOptions({ since: boundary, until: boundary }))
+      );
+
+      expect(Exit.isFailure(exit)).toBe(true);
+      expect(Exit.isFailure(exit) ? exit.cause.toString() : "").toContain("--since must be earlier than --until");
+      expect(commands).toStrictEqual([]);
+    }).pipe(provideScopedLayer(windowGithubLayer(commands)));
+  });
+
+  it.effect("fails closed when a workflow-run page is empty before total_count is reached", () => {
+    const commands = A.empty<string>();
+    const response = (endpoint: string) =>
+      Effect.succeed(
+        Str.includes("rules/branches/main")(endpoint) ? RULESET_18_JSON : '{"total_count":1,"workflow_runs":[]}'
+      );
+    return Effect.gen(function* () {
+      const exit = yield* Effect.exit(collectCiLaneTimingWindow(".", windowOptions({ event: "pull_request" })));
+
+      expect(Exit.isFailure(exit)).toBe(true);
+      expect(Exit.isFailure(exit) ? exit.cause.toString() : "").toContain(
+        "pull_request workflow-runs pagination ended after 0 of 1 runs"
+      );
+    }).pipe(provideScopedLayer(windowGithubLayer(commands, response)));
+  });
+
+  it.effect("dispatches recent CLI summary and TSV variants", () =>
+    Effect.gen(function* () {
+      yield* runLaneTimingsCommand(["--runs", "1"]);
+      yield* runLaneTimingsCommand(["--runs", "1", "--tsv"]);
+
+      const output = yield* testConsoleText();
+      expect(output).toContain("ci lane timings");
+      expect(output).toContain("runId\trunAttempt\tjobId\tjobName");
+    }).pipe(
+      Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, laneTimingsSpawner),
+      provideScopedLayer(laneTimingsCommandLayer)
+    )
+  );
+
+  it.effect("rejects conflicting census formats and reversed CLI bounds", () =>
+    Effect.gen(function* () {
+      const formatsExit = yield* Effect.exit(runLaneTimingsCommand(["--window", "--tsv", "--markdown"]));
+      const boundsExit = yield* Effect.exit(
+        runLaneTimingsCommand(["--window", "--since", "2026-09-11T00:00:00Z", "--until", "2026-09-04T00:00:00Z"])
+      );
+
+      expect(Exit.isFailure(formatsExit)).toBe(true);
+      expect(Exit.isFailure(boundsExit)).toBe(true);
+      expect(Exit.isFailure(formatsExit) ? formatsExit.cause.toString() : "").toContain(
+        "Choose only one of --tsv or --markdown"
+      );
+      expect(Exit.isFailure(boundsExit) ? boundsExit.cause.toString() : "").toContain(
+        "--since must be earlier than --until"
+      );
+    }).pipe(
+      Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, laneTimingsSpawner),
+      provideScopedLayer(laneTimingsCommandLayer)
+    )
+  );
+
+  it.effect("dispatches every bounded CLI renderer with event and provenance filters", () => {
+    const commands = A.empty<string>();
+    return Effect.gen(function* () {
+      yield* runLaneTimingsCommand([
+        "--window",
+        "--event",
+        "pull_request",
+        "--branch",
+        "feature/census",
+        "--head-sha",
+        "included",
+        "--since",
+        "2026-09-04T00:00:00Z",
+        "--until",
+        "2026-09-11T00:00:00Z",
+        "--tsv",
+      ]);
+      yield* runLaneTimingsCommand([
+        "--window",
+        "--event",
+        "push",
+        "--since",
+        "2026-09-04T00:00:00Z",
+        "--until",
+        "2026-09-11T00:00:00Z",
+        "--markdown",
+      ]);
+      yield* runLaneTimingsCommand([
+        "--window",
+        "--event",
+        "push",
+        "--branch",
+        "release/census",
+        "--since",
+        "2026-09-04T00:00:00Z",
+        "--until",
+        "2026-09-11T00:00:00Z",
+      ]);
+
+      const output = yield* testConsoleText();
+      expect(output).toContain("population\tlane\trunId\trunAttempt");
+      expect(output).toContain("## Successful attempt-one durations");
+      expect(output).toContain("ci lane timing window");
+      expect(A.some(commands, Str.includes("event=pull_request&branch=feature%2Fcensus"))).toBe(true);
+      expect(A.some(commands, Str.includes("event=push&branch=main"))).toBe(true);
+      expect(A.some(commands, Str.includes("event=push&branch=release%2Fcensus"))).toBe(true);
+    }).pipe(
+      Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, laneTimingsWindowCliSpawner(commands)),
+      provideScopedLayer(laneTimingsCommandLayer)
+    );
   });
 });
