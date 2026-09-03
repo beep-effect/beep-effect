@@ -1149,7 +1149,7 @@ class ProvenanceSessionEvidence extends S.Class<ProvenanceSessionEvidence>($I`Pr
   })
 ) {}
 const optionalConfigString = (name: string): Effect.Effect<O.Option<string>> =>
-  Config.option(Config.string(name)).pipe(Effect.orElseSucceed(() => O.none<string>()));
+  Config.option(Config.string(name)).pipe(Effect.orElseSucceed(O.none));
 const readDetectionEnvironment = Effect.fn("PrProvenance.readDetectionEnvironment")(function* () {
   const [home, claudeId, claudePid, configuredEntrypoint, hostSessionId, childSession, companionTranscript, codexId] =
     yield* Effect.all(

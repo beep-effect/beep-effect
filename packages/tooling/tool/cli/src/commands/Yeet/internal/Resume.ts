@@ -235,14 +235,13 @@ export const isClaudeSessionLive = Effect.fn("Resume.isClaudeSessionLive")(funct
   if (record.harness !== "claude-code" || O.isNone(record.sessionId)) return O.none<ClaudeLiveSession>();
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const names = yield* fs.readDirectory(sessionsRoot).pipe(Effect.orElseSucceed(() => A.empty<string>()));
+  const names = yield* fs.readDirectory(sessionsRoot).pipe(Effect.orElseSucceed(A.empty));
   const indexes = yield* Effect.forEach(
     A.filter(names, Str.endsWith(".json")),
     (name) =>
-      fs.readFileString(path.join(sessionsRoot, name)).pipe(
-        Effect.map(decodeClaudeIndex),
-        Effect.orElseSucceed(() => O.none<ClaudeIndex>())
-      ),
+      fs
+        .readFileString(path.join(sessionsRoot, name))
+        .pipe(Effect.map(decodeClaudeIndex), Effect.orElseSucceed(O.none)),
     { concurrency: 8 }
   );
   const sessionId = record.sessionId.value;
@@ -270,7 +269,7 @@ const transcriptFallback = Effect.fn("Resume.transcriptFallback")(function* (
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const root = path.join(home, ".claude", "projects");
-  const names = yield* fs.readDirectory(root, { recursive: true }).pipe(Effect.orElseSucceed(() => A.empty<string>()));
+  const names = yield* fs.readDirectory(root, { recursive: true }).pipe(Effect.orElseSucceed(A.empty));
   const records = yield* Effect.forEach(
     A.filter(names, Str.endsWith(".jsonl")),
     Effect.fnUntraced(function* (name) {
@@ -468,11 +467,7 @@ const resolveDisplayRows = (
 ): ReadonlyArray<ResolvedResume> => {
   const selectedRecords = options.list
     ? records
-    : pipe(
-        selectResumeRecord(records, options.agent),
-        O.map(A.of),
-        O.getOrElse(() => A.empty<PrSessionRecord>())
-      );
+    : pipe(selectResumeRecord(records, options.agent), O.map(A.of), O.getOrElse(A.empty));
   return A.map(selectedRecords, (record, index) => {
     const parts = commandParts(record);
     return ResolvedResume.make({
