@@ -16,6 +16,7 @@ import {
   isProcessIdentityAliveWithStartForTesting,
   MemoryStats,
   noAdmissionOriginGate,
+  noteAdmissionWaitForTesting,
   parseAdmissionProcStatStartTime,
   processIdentityStatus,
   processIdentityStatusWithStartForTesting,
@@ -396,6 +397,42 @@ describe("quality-scheduler", () => {
         fcRuns()
       );
     });
+  });
+
+  it.effect("escalates a queued admission after two minutes", () => {
+    const ticket = YeetAdmissionTicket.make({
+      schemaVersion: "yeet-admission-ticket/v1",
+      pid: process.pid,
+      procStart: "test-start",
+      kind: "full-proof",
+      weightTokens: 3,
+      priority: "verify",
+      originKey: "origin-escalation",
+      checkoutRoot: "/repo/escalation",
+      branch: "feat/escalation",
+      enqueuedAtMillis: 0,
+      heartbeatAtMillis: 0,
+      blockedOnOriginAtMillis: 0,
+      nonce: "escalation-ticket",
+    });
+
+    return noteAdmissionWaitForTesting(request(), ticket, 0, { escalated: 0, lastProgressMillis: 0 }, fastConfig, {
+      availableGib: 10,
+      capacityTokens: 0,
+      nowMillis: 120_000,
+      state: {
+        dead: [],
+        deadLeases: [],
+        leases: [],
+        quarantined: [],
+        tickets: [],
+      },
+    }).pipe(
+      Effect.map((progress) => {
+        expect(progress.escalated).toBe(1);
+        expect(progress.lastProgressMillis).toBe(120_000);
+      })
+    );
   });
 
   it("pins the chartered token weights", () => {
@@ -2038,6 +2075,8 @@ describe("quality-scheduler", () => {
     expect(isOvershootLoserForTesting(state, 8, third)).toBe(true);
     // Within capacity nothing rolls back.
     expect(isOvershootLoserForTesting(state, 15, third)).toBe(false);
+    // A lease absent from the scan cannot be selected as the rollback loser.
+    expect(isOvershootLoserForTesting(state, 8, lease(4, 400, 5))).toBe(false);
   });
 
   it("fails closed when the admission state directory cannot be listed", () =>

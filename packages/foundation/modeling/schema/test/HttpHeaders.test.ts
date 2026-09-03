@@ -50,6 +50,7 @@ const decodeXSSProtectionHeader = S.decodeEffect(XSSProtectionHeader);
 const decodeCrossOriginEmbedderPolicyHeaderSync = S.decodeSync(CrossOriginEmbedderPolicyHeader);
 const decodeCrossOriginOpenerPolicyHeaderSync = S.decodeSync(CrossOriginOpenerPolicyHeader);
 const decodeCrossOriginResourcePolicyHeaderSync = S.decodeSync(CrossOriginResourcePolicyHeader);
+const encodeCrossOriginEmbedderPolicyHeaderSync = S.encodeSync(CrossOriginEmbedderPolicyHeader);
 
 type HeaderLike = {
   readonly name: string;
@@ -137,6 +138,14 @@ describe("Secure header schemas", () => {
         );
       }),
       fcRuns(25)
+    );
+  });
+
+  it("rejects encoding a normalized COEP header back to its one-way input boundary", () => {
+    const header = decodeCrossOriginEmbedderPolicyHeaderSync("require-corp");
+
+    expect(() => encodeCrossOriginEmbedderPolicyHeaderSync(header)).toThrow(
+      "Encoding CrossOriginEmbedderPolicyHeader back to the original input is not supported"
     );
   });
 

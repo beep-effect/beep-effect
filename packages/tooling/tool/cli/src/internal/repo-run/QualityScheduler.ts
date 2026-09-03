@@ -1399,6 +1399,23 @@ const noteAdmissionWait = Effect.fnUntraced(function* (
   return O.isSome(escalation) ? { ...next, escalated: escalationLevelFor(waitedMillis) } : next;
 });
 
+/**
+ * Exposes one admission wait-progress step for deterministic scheduler tests.
+ *
+ * **Example** (Reference the wait-progress test seam)
+ *
+ * ```ts import.meta.vitest name="Reference the wait-progress test seam"
+ * import { noteAdmissionWaitForTesting } from "@beep/repo-cli/test/RepoRun"
+ *
+ * typeof noteAdmissionWaitForTesting // => "function"
+ * ```
+ *
+ * @internal
+ * @category testing
+ * @since 0.0.0
+ */
+export const noteAdmissionWaitForTesting = noteAdmissionWait;
+
 // Interruption is masked around promotion (so a scheduler lease and any
 // fallback origin lease can never be created without their release installed)
 // and restored across the sleep, which is where a Ctrl-C lands and unwinds to

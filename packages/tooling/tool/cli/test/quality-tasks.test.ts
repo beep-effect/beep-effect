@@ -96,6 +96,7 @@ import {
   reviewFixDocgenLocalArgsForTesting,
   rootLintPolicyStepsForTesting,
   rootQualityStepsForTesting,
+  runBunAudit,
   runGithubChecks,
   runQualityTask,
   runQualityTaskStepGroupForTesting,
@@ -146,11 +147,13 @@ import {
   Stream,
 } from "effect";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import * as TestConsole from "effect/testing/TestConsole";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
+import { vi } from "vitest";
 import type { CiLaneId } from "@beep/repo-cli/commands/Ci";
 import type { GithubCheckLaneWave, QualityTaskInvocation } from "@beep/repo-cli/test/Quality";
 
@@ -425,7 +428,7 @@ const laneProofTestLane = (
   wave: GithubCheckLaneWave,
   source: string,
   useLocalEnv = false,
-  env: Readonly<Record<string, string>> = {}
+  env?: Readonly<Record<string, string>>
 ): GithubCheckLaneSpec =>
   GithubCheckLaneSpec.make({
     id,
@@ -437,7 +440,7 @@ const laneProofTestLane = (
       command: "bash",
       args: ["-c", source],
       cwd: repoRoot,
-      env,
+      ...(P.isUndefined(env) ? {} : { env }),
       useLocalEnv,
     }),
   });
@@ -459,25 +462,25 @@ const qualityCommandHandle = (output: string, exitCode: number) =>
     unref: Effect.succeed(Effect.void),
   });
 
-const cheapGatesSpawnerLayer = (spawned: Array<string>, failedCommands: ReadonlyArray<string>) =>
-  Layer.succeed(
-    ChildProcessSpawner.ChildProcessSpawner,
-    ChildProcessSpawner.make((command) => {
-      if (ChildProcess.isStandardCommand(command)) {
-        const commandText = A.join([command.command, ...command.args], " ");
-        A.appendInPlace(spawned, commandText);
-        const output = A.contains(command.args, "--is-shallow-repository")
-          ? "false"
-          : A.contains(command.args, "--show-current")
-            ? "feature/cheap-gates"
-            : "";
-        const exitCode = A.contains(failedCommands, commandText) ? 1 : 0;
-        return Effect.succeed(qualityCommandHandle(output, exitCode));
-      }
+const cheapGatesSpawner = (spawned: Array<string>, failedCommands: ReadonlyArray<string>) =>
+  ChildProcessSpawner.make((command) => {
+    if (ChildProcess.isStandardCommand(command)) {
+      const commandText = A.join([command.command, ...command.args], " ");
+      A.appendInPlace(spawned, commandText);
+      const output = A.contains(command.args, "--is-shallow-repository")
+        ? "false"
+        : A.contains(command.args, "--show-current")
+          ? "feature/cheap-gates"
+          : "";
+      const exitCode = A.contains(failedCommands, commandText) ? 1 : 0;
+      return Effect.succeed(qualityCommandHandle(output, exitCode));
+    }
 
-      return Effect.die("the cheap-gates test never spawns a piped command");
-    })
-  );
+    return Effect.die("the cheap-gates test never spawns a piped command");
+  });
+
+const cheapGatesSpawnerLayer = (spawned: Array<string>, failedCommands: ReadonlyArray<string>) =>
+  Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, cheapGatesSpawner(spawned, failedCommands));
 
 const cheapGatesTestLayer = (spawned: Array<string>, failedCommands: ReadonlyArray<string>) =>
   Layer.mergeAll(FileSystemLayer, TestConsole.layer, cheapGatesSpawnerLayer(spawned, failedCommands));
@@ -517,6 +520,50 @@ const expectSubstringBefore = (text: string, before: string, after: string): voi
 };
 
 describe("quality task adapter", () => {
+  it.effect(
+    "runs Bun audit with active OSV ignores and reports dropped entries",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const repoRoot = yield* fs.makeTempDirectoryScoped({ prefix: "quality-bun-audit-" });
+      yield* fs.writeFileString(
+        path.join(repoRoot, "osv-scanner.toml"),
+        [
+          "[[IgnoredVulns]]",
+          'id = "GHSA-active"',
+          "",
+          "[[IgnoredVulns]]",
+          'id = "GHSA-expired"',
+          "ignoreUntil = definitely-not-a-date",
+          "",
+        ].join("\n")
+      );
+
+      const spawned: Array<string> = [];
+      yield* runBunAudit(repoRoot).pipe(
+        Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, cheapGatesSpawner(spawned, A.empty()))
+      );
+
+      expect(spawned).toEqual(["bun audit --audit-level=high --ignore=GHSA-active"]);
+      expect(A.join(A.filter(yield* TestConsole.logLines, isString), "\n")).toContain("GHSA-expired");
+    }, provideScopedLayer(PlatformLayer))
+  );
+
+  it.effect(
+    "runs the review-fix command sequence with its default range",
+    Effect.fnUntraced(function* () {
+      const spawned: Array<string> = [];
+      yield* runGithubChecks("review-fix").pipe(
+        Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, cheapGatesSpawner(spawned, A.empty()))
+      );
+
+      expect(spawned).toContain("bun run build -- --affected --summarize");
+      expect(spawned).toContain(
+        A.join(["bun", "run", ...reviewFixDocgenLocalArgsForTesting("origin/main", "HEAD")], " ")
+      );
+    }, provideScopedLayer(PlatformLayer))
+  );
+
   it("parses canonical task invocations and preserves passthrough args", () => {
     expect(getInvocation(["build", "--affected", "--summarize"])).toMatchObject({
       task: "build",
@@ -1160,6 +1207,34 @@ describe("quality task adapter", () => {
       });
       yield* persistLaneProofs(emptySession, []);
       yield* withEnvVarEffect("BEEP_YEET_LANE_PROOF_MODE", undefined, persistLaneProofs(emptySession, [[lane, 1]]));
+    }, provideScopedLayer(PlatformLayer))
+  );
+
+  it.effect(
+    "disables lane-proof reuse when the virtual tree cannot be created",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: "lane-proof-tree-failure-" });
+      yield* initializeLaneProofRepository(tempRoot);
+
+      const lane = laneProofTestLane(tempRoot, "proof:tree-failure", "preflight", "process.exit(0)");
+      const originalSpawnSync = Bun.spawnSync;
+      const spawnSync = vi.spyOn(Bun, "spawnSync").mockImplementation(((
+        command: ReadonlyArray<string>,
+        options: unknown
+      ) => {
+        if (A.contains(command, "write-tree")) {
+          throw new Error("simulated write-tree failure");
+        }
+        return originalSpawnSync(command as never, options as never);
+      }) as never);
+
+      try {
+        const session = yield* prepareLaneProofSession([lane], "active");
+        expect(O.isNone(session)).toBe(true);
+      } finally {
+        spawnSync.mockRestore();
+      }
     }, provideScopedLayer(PlatformLayer))
   );
 
