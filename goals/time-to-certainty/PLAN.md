@@ -29,8 +29,10 @@ orchestrator owns schemas, contracts, and judgment.
       environment-only attribution when no package source differs from base.
 - [ ] A4 ack ledger accepts reasons; resolution kinds distinguish fix, wontfix, environment-only.
 - [ ] B2 semantic-delta exempts git-ref-shaped spans (or lints the rule before the proof).
-- [ ] B4 remote-read plan resolves only its four references; whole-file env health reported
-      separately with the failing variable named.
+- [x] B4 remote-read plan resolves only its four references; whole-file env health reported
+      separately with the failing variable named — done 2026-09-03 (PR #953 merged as 484e24c2e9:
+      the secret resolver receives only the cache quad, unrelated references cannot block remote
+      reads, the quad still fails closed, and the health probe names failing variables only).
 - [ ] B3 cheap precise gates first, wave fails immediately; ordering seeded from A1.
 - [ ] B5 detached durable proof jobs in their own systemd user scope with inbox completion.
 - [ ] B6 lease and submitter death journaled as admission events.
