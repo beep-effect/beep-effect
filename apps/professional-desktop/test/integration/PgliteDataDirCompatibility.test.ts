@@ -3,7 +3,12 @@ import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
 import { describe, expect, layer } from "@effect/vitest";
 import { PGlite as LegacyPglite046 } from "@electric-sql/pglite-legacy-046";
-import { ConfigProvider, Effect, Exit, FileSystem, Layer, Path } from "effect";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
 import * as SqlClient from "effect/unstable/sql/SqlClient";
 import {
   ChatDbCompatibilityMarker,
@@ -18,7 +23,11 @@ const TestServices = Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer, BunPat
 const provideScopedLayer =
   <ROut, E2, RIn>(scopeLayer: Layer.Layer<ROut, E2, RIn>) =>
   <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(scopeLayer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
+    scopeLayer.pipe(
+      Layer.build,
+      Effect.flatMap((context) => effect.pipe(Effect.provide(context))),
+      Effect.scoped
+    );
 
 const withPgliteSql = <A, E, R>(dataDir: string, effect: Effect.Effect<A, E, R>) =>
   effect.pipe(provideScopedLayer(makeBundledPgliteLayer({ dataDir, relaxedDurability: true })));
@@ -290,7 +299,7 @@ layer(TestServices)("Pglite data-dir compatibility gate", (it) => {
 
         expect(yield* fs.exists(markerPath(path, dataDir))).toBe(false);
 
-        yield* Effect.scoped(Layer.build(PgliteDrizzleLive).pipe(Effect.asVoid, withChatDbPath(dataDir)));
+        yield* PgliteDrizzleLive.pipe(Layer.build, Effect.asVoid, withChatDbPath(dataDir), Effect.scoped);
 
         expect(yield* fs.exists(markerPath(path, dataDir))).toBe(true);
         yield* withPgliteSql(

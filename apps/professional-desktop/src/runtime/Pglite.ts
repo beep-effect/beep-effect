@@ -29,14 +29,20 @@
 
 import * as NodeURL from "node:url";
 import { $ProfessionalDesktopId } from "@beep/identity/packages";
-import { LogRedactedCauseOptions, logRedactedCause, profilePhase } from "@beep/observability";
+import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability/CauseRedaction";
+import { profilePhase } from "@beep/observability/PhaseProfiler";
 import { makeLayer as makePgliteLayer } from "@beep/pglite";
 import { makeDrizzleLayer } from "@beep/postgres";
-import { OpaqueUnknown } from "@beep/schema";
+import { OpaqueUnknown } from "@beep/schema/Opaque";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
-import { Clock, Config, Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
+import * as Clock from "effect/Clock";
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as SqlClient from "effect/unstable/sql/SqlClient";
 import btreeGistBundlePath from "../../../../node_modules/@electric-sql/pglite/dist/btree_gist.tar.gz" with {
@@ -48,7 +54,8 @@ import pgliteWasmPath from "../../../../node_modules/@electric-sql/pglite/dist/p
 import { migrateOnBoot } from "./Migrations.ts";
 import type { PgliteClientOptions } from "@beep/pglite";
 import type { PostgresDrizzle } from "@beep/postgres";
-import type { Context, Crypto } from "effect";
+import type * as Context from "effect/Context";
+import type * as Crypto from "effect/Crypto";
 
 const $I = $ProfessionalDesktopId.create("runtime/Pglite");
 
@@ -158,8 +165,7 @@ const writeCompatibilityMarker = Effect.fn("ProfessionalDesktop.Pglite.writeComp
  *
  * ```ts
  * import { markCompatibleChatDbDataDir } from "@/runtime/Pglite"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = markCompatibleChatDbDataDir("/tmp/example-chat-db")
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -178,16 +184,14 @@ export const markCompatibleChatDbDataDir = Effect.fn("ProfessionalDesktop.Pglite
 
 const assertCanOpenInProcessPgliteDataDir = Effect.fn("ProfessionalDesktop.Pglite.assertCanOpenInProcessPgliteDataDir")(
   function* (dataDir: string) {
-    yield* Effect.scoped(
-      Layer.build(makeBundledPgliteLayer({ dataDir })).pipe(
-        Effect.flatMap((context) =>
-          Effect.gen(function* () {
-            const sql = (yield* SqlClient.SqlClient).withoutTransforms();
-            yield* sql`SELECT 1`;
-          }).pipe(Effect.provide(context))
-        )
-      )
-    ).pipe(
+    yield* Layer.build(makeBundledPgliteLayer({ dataDir })).pipe(
+      Effect.flatMap((context) =>
+        Effect.gen(function* () {
+          const sql = (yield* SqlClient.SqlClient).withoutTransforms();
+          yield* sql`SELECT 1`;
+        }).pipe(Effect.provide(context))
+      ),
+      Effect.scoped,
       Effect.catchCause((cause) =>
         logRedactedCause(
           cause,
@@ -236,8 +240,7 @@ const assertCanOpenInProcessPgliteDataDir = Effect.fn("ProfessionalDesktop.Pglit
  *
  * ```ts
  * import { ensureCompatibleChatDbDataDir } from "@/runtime/Pglite"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = ensureCompatibleChatDbDataDir("/tmp/example-chat-db")
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -386,8 +389,7 @@ export const makeBundledPgliteLayer = (options: PgliteClientOptions = {}) =>
  *
  * ```ts
  * import { PgliteDrizzleLive } from "@/runtime/Pglite"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(PgliteDrizzleLive)) // true
  * ```
  *

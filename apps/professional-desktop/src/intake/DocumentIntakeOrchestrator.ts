@@ -7,10 +7,14 @@
 
 import { DocumentIntakeActionError, DocumentsRpcs } from "@beep/documents-use-cases/public";
 import * as DocumentUseCases from "@beep/documents-use-cases/server";
-import { LogRedactedCauseOptions, logRedactedCause, observeWorkflow } from "@beep/observability";
+import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability/CauseRedaction";
+import { observeWorkflow } from "@beep/observability/Metric";
 import { WorkspaceVaultActionError, WorkspaceVaultRpcs } from "@beep/workspace-use-cases/public";
 import * as WorkspaceUseCases from "@beep/workspace-use-cases/server";
-import { Cause, Effect, Metric, pipe } from "effect";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as Metric from "effect/Metric";
 import * as O from "effect/Option";
 
 const intakeStarted = Metric.counter("desktop_intake_operations_started_total", { incremental: true });
@@ -86,8 +90,7 @@ const toDocumentIntakeActionError = (context: string) =>
  *
  * ```ts
  * import { WorkspaceVaultHandlersLive } from "@/intake/DocumentIntakeOrchestrator"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(WorkspaceVaultHandlersLive)) // true
  * ```
  *
@@ -119,8 +122,7 @@ export const WorkspaceVaultHandlersLive = WorkspaceVaultRpcs.toLayer(
  *
  * ```ts
  * import { DocumentIntakeHandlersLive } from "@/intake/DocumentIntakeOrchestrator"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(DocumentIntakeHandlersLive)) // true
  * ```
  *

@@ -17,9 +17,13 @@
 import { createThreadAtom, selectedThreadAtom, threadsAtoms } from "@beep/agents-client/Chat.atoms";
 import { Button } from "@beep/ui/components/button";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@beep/ui/components/resizable";
-import { A, DateTime, O } from "@beep/utils";
+import * as A from "@beep/utils/Array";
+import * as DateTime from "@beep/utils/DateTime";
+import * as O from "@beep/utils/Option";
 import { useAtomMount, useAtomSet, useAtomValue } from "@effect/atom-react";
-import { Effect, Order, Stream } from "effect";
+import * as Effect from "effect/Effect";
+import * as Order from "effect/Order";
+import * as Stream from "effect/Stream";
 import { AsyncResult, Atom } from "effect/unstable/reactivity";
 import { professionalBrowserRuntime } from "@/runtime/ProfessionalAtomRuntime";
 import { DEFAULT_PROFESSIONAL_WORKSPACE_ID } from "@/workspace/ProfessionalWorkspace";

@@ -13,10 +13,13 @@ import {
   SOURCE_TEXT_PAGE_CODE_UNITS,
 } from "@beep/file-processing/SourceText";
 import { makeDrizzleLayer, PostgresDrizzle } from "@beep/postgres";
-import { NonNegativeInt, PosInt } from "@beep/schema";
+import { PosInt } from "@beep/schema/Int";
+import { NonNegativeInt } from "@beep/schema/Number";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { makePgliteSqlTestLayer, provideScopedLayer } from "@beep/test-utils";
-import { A, O, Str } from "@beep/utils";
+import * as A from "@beep/utils/Array";
+import * as O from "@beep/utils/Option";
+import * as Str from "@beep/utils/Str";
 import { WorkspaceVaultRootPath } from "@beep/workspace-domain/entities/Workspace";
 import { WorkspaceVaultStoreDrizzleLayer } from "@beep/workspace-server/aggregates/Workspace";
 import { Workspace } from "@beep/workspace-use-cases/server";
@@ -25,7 +28,12 @@ import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
-import { ConfigProvider, Effect, FileSystem, flow, Layer, Path } from "effect";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { flow } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import {
@@ -38,7 +46,7 @@ import {
   seedContradictionQaFixtures,
 } from "@/contradiction/ContradictionQaSeed";
 import { migrateOnBoot } from "@/runtime/Migrations";
-import type { Context } from "effect";
+import type * as Context from "effect/Context";
 
 const desktopWorkspaceId = WorkspaceIdentity.WorkspaceId.make(1);
 const instant = flow(S.decodeUnknownResult(S.DateTimeUtcFromMillis), Result.getOrThrow);

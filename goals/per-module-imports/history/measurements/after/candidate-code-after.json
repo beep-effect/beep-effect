@@ -1,0 +1,18 @@
+{
+  "mappingTableVersion": "root-export-graph/v1",
+  "mode": "code",
+  "write": false,
+  "candidate": true,
+  "scannedFiles": 134,
+  "scannedFences": 0,
+  "touchedFiles": 0,
+  "rootImportsRewritten": 0,
+  "rootExportsRewritten": 0,
+  "emittedImports": 0,
+  "emittedExports": 0,
+  "rootSpecifierCounts": {},
+  "strictFailure": false,
+  "changedFiles": [],
+  "manualReviews": [],
+  "parserWarnings": []
+}

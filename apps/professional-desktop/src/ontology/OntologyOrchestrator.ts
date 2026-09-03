@@ -4,8 +4,8 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import { LogRedactedCauseOptions, logRedactedCause, observeWorkflow } from "@beep/observability";
+import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability/CauseRedaction";
+import { observeWorkflow } from "@beep/observability/Metric";
 import { applyChangeOperationsWithDelta } from "@beep/ontology-domain/aggregates/Session";
 import {
   ApplyOntologyBatchResult,
@@ -23,7 +23,9 @@ import {
   SerializeOntologySessionCommand,
   SessionUseCases,
 } from "@beep/ontology-use-cases/public";
-import { Cause, Effect, Metric } from "effect";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Metric from "effect/Metric";
 import type {
   ApplyOntologyBatchCommand,
   OntologyFilePath,
@@ -196,8 +198,7 @@ const makeOntologyHandlers = (operations: OntologyOperations) =>
  *
  * ```ts
  * import { OntologyHandlersLive } from "@/ontology/OntologyOrchestrator"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(OntologyHandlersLive)) // true
  * ```
  *

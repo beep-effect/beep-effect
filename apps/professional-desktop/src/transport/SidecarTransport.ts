@@ -5,9 +5,8 @@
  * @category protocols
  * @since 0.0.0
  */
-
-import { $ProfessionalDesktopId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
+import { $ProfessionalDesktopId } from "@beep/identity/packages";
+import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import * as S from "effect/Schema";
 
 const $I = $ProfessionalDesktopId.create("transport/SidecarTransport");

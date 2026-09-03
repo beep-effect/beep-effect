@@ -26,6 +26,13 @@ export * from "./Ci.errors.ts";
  */
 export * from "./CiLane.ts";
 /**
+ * Public CI lane partition definitions export.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./CiLanePartitions.ts";
+/**
  * Public CI lane-timings collector export.
  *
  * @category cli-commands

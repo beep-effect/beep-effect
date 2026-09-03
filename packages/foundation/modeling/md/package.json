@@ -20,7 +20,8 @@
     "lint": "biome check .",
     "lint:fix": "biome check . --write",
     "test": "bunx --bun vitest run",
-    "test:property": "bunx --bun vitest run"
+    "test:property": "bunx --bun vitest run",
+    "package-test-typecheck": "beep-cli quality test-tsgo-package"
   },
   "exports": {
     ".": "./src/index.ts",

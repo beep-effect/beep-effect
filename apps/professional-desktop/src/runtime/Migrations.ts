@@ -13,15 +13,15 @@
  */
 
 import { $ProfessionalDesktopId } from "@beep/identity/packages";
-import { profilePhase } from "@beep/observability";
+import { profilePhase } from "@beep/observability/PhaseProfiler";
 import { MigrationBundleLegacyNameSet, migrateBundle, PostgresDrizzle } from "@beep/postgres";
-import { SchemaUtils } from "@beep/schema";
-import { Effect } from "effect";
+import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { migrationBundle } from "./Migrations.gen.ts";
 import type { PostgresError } from "@beep/postgres";
-import type { Crypto } from "effect";
+import type * as Crypto from "effect/Crypto";
 
 const $I = $ProfessionalDesktopId.create("runtime/Migrations");
 
@@ -108,8 +108,7 @@ export class ProfessionalDesktopMigrationOptions extends S.Class<ProfessionalDes
  *
  * ```ts
  * import { migrateProfessionalDesktopDatabase } from "@/runtime/Migrations"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(migrateProfessionalDesktopDatabase())) // true
  * ```
  *
@@ -156,8 +155,7 @@ export const SidecarReadyMarker = "BEEP_PROFESSIONAL_DESKTOP_SIDECAR_READY";
  *
  * ```ts
  * import { migrateOnBoot } from "@/runtime/Migrations"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(migrateOnBoot)) // true
  * ```
  *

@@ -270,5 +270,17 @@ export {
   UntrustedHtml,
   untrustedHtmlValue,
 } from "./Html.serialize.ts";
+/**
+ * Staged HTML validation facade (conformance, then safety policy).
+ *
+ * @category validation
+ * @since 0.0.0
+ */
 export { Html } from "./Html.ts";
+/**
+ * Current `@beep/html` package version.
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
 export { VERSION } from "./Version.ts";

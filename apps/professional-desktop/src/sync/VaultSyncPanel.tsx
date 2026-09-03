@@ -9,9 +9,12 @@
 
 import { DmsMirrorDisconnectReason } from "@beep/documents-use-cases/public";
 import { Button } from "@beep/ui/components/button";
-import { A, O, thunkNull } from "@beep/utils";
+import * as A from "@beep/utils/Array";
+import * as O from "@beep/utils/Option";
+import { thunkNull } from "@beep/utils/thunk";
 import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
-import { DateTime, pipe } from "effect";
+import * as DateTime from "effect/DateTime";
+import { pipe } from "effect/Function";
 import { AsyncResult } from "effect/unstable/reactivity";
 import { DEFAULT_PROFESSIONAL_WORKSPACE_ID } from "@/workspace/ProfessionalWorkspace";
 import {

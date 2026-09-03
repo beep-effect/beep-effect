@@ -58,7 +58,9 @@ import * as SharedIdentity from "@beep/shared-domain/identity/Shared";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { SourceText, Thread, Workspace } from "@beep/workspace-server";
 import { BunServices } from "@effect/platform-bun";
-import { Config, Effect, Layer } from "effect";
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import { ChatHandlersLive } from "@/chat/ChatOrchestrator";
 import { UsageRecordSinkDrizzle, UsageRecordSinkInMemory } from "@/chat/UsageRecordSink";
@@ -331,8 +333,7 @@ const DocumentsSyncLive = selectByChatAgent(
  *
  * ```ts
  * import { RuntimeLive } from "@/runtime/Layer"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(RuntimeLive)) // true
  * ```
  *
@@ -367,8 +368,7 @@ export const RuntimeLive: DesktopHandlersLayer = DesktopHandlersLive.pipe(
  *
  * ```ts
  * import { RuntimeTest } from "@/runtime/Layer"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(RuntimeTest)) // true
  * ```
  *

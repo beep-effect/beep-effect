@@ -27,7 +27,8 @@
     "lint": "bun run beep:lint",
     "lint:fix": "bun run beep:lint:fix",
     "provider:smoke": "bun run server/provider-smoke.ts",
-    "test": "bun run beep:test"
+    "test": "bun run beep:test",
+    "package-test-typecheck": "beep-cli quality test-tsgo-package"
   },
   "dependencies": {
     "@beep/anthropic": "workspace:^",

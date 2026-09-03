@@ -25,7 +25,8 @@
     "dev": "portless trustgraph-workbench.labs.beep sh -c 'vite --host 127.0.0.1 --port \"${PORT:-5173}\" --strictPort'",
     "lint": "bun run beep:lint",
     "lint:fix": "bun run beep:lint:fix",
-    "test": "bun run beep:test"
+    "test": "bun run beep:test",
+    "package-test-typecheck": "beep-cli quality test-tsgo-package"
   },
   "dependencies": {
     "@beep/brand": "workspace:^",

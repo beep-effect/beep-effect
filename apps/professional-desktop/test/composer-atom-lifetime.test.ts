@@ -1,10 +1,14 @@
 import { draftAtoms } from "@beep/agents-client/Chat.atoms";
-import { documentToEditorState } from "@beep/lexical-schema";
+import { documentToEditorState } from "@beep/lexical-schema/Lexical.codec";
 import * as Md from "@beep/md/Md.model";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { it } from "@effect/vitest";
-import { Duration, Effect, Equal, Layer, Schedule } from "effect";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Schedule from "effect/Schedule";
 import { AtomRegistry } from "effect/unstable/reactivity";
 import { describe, expect } from "vitest";
 import { composerSerializedChangeHandlerAtoms } from "@/chat/ui/Composer.atoms";

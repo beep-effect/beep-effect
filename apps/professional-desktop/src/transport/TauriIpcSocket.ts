@@ -26,14 +26,23 @@
  * @category protocols
  * @since 0.0.0
  */
-
-import { $ProfessionalDesktopId } from "@beep/identity";
-import { LogRedactedCauseOptions, tapRedactedCause } from "@beep/observability";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { O, P, Str, thunkEffectVoid } from "@beep/utils";
+import { $ProfessionalDesktopId } from "@beep/identity/packages";
+import { LogRedactedCauseOptions, tapRedactedCause } from "@beep/observability/CauseRedaction";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as SchemaUtils from "@beep/schema/SchemaUtils";
+import * as O from "@beep/utils/Option";
+import * as P from "@beep/utils/Predicate";
+import * as Str from "@beep/utils/Str";
+import { thunkEffectVoid } from "@beep/utils/thunk";
 import { invoke } from "@tauri-apps/api/core";
-import { Effect, flow, Layer, Metric, Queue, Ref, Stream } from "effect";
+import * as Effect from "effect/Effect";
+import { flow } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Metric from "effect/Metric";
+import * as Queue from "effect/Queue";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import { Socket } from "effect/unstable/socket";
 import { SidecarTransport } from "./SidecarTransport.ts";
 import type { UnlistenFn } from "@tauri-apps/api/event";
@@ -304,8 +313,9 @@ const decodeInboundEvent = (event: InboundEvent): Effect.Effect<InboundFrame, So
                 )
               ),
               Effect.andThen(
-                Effect.fail(
-                  toSocketError(SidecarClosedError.make({ message: sidecarClosedMessage(decoded), payload: decoded }))
+                SidecarClosedError.make({ message: sidecarClosedMessage(decoded), payload: decoded }).pipe(
+                  toSocketError,
+                  Effect.fail
                 )
               )
             ),
@@ -490,8 +500,7 @@ const makeSocket: Effect.Effect<Socket.Socket> = Effect.sync(() =>
  *
  * ```ts
  * import { TauriIpcSocketLive } from "@/transport/TauriIpcSocket"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(TauriIpcSocketLive)) // true
  * ```
  *

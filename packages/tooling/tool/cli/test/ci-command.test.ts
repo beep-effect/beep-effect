@@ -1,10 +1,12 @@
-import { appendTurboSummary, runCiLocal } from "@beep/repo-cli/commands/Ci";
+import { appendTurboSummary, ciLaneCommand, runCiLocal } from "@beep/repo-cli/commands/Ci";
+import { FsUtilsLive } from "@beep/repo-utils";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import * as O from "effect/Option";
 import * as TestConsole from "effect/testing/TestConsole";
+import { Command } from "effect/unstable/cli";
 import { describe, expect, it } from "vitest";
 
 const provideScopedLayer =
@@ -12,7 +14,12 @@ const provideScopedLayer =
   <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
     Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
 
-const TestLayer = Layer.mergeAll(NodeServices.layer, TestConsole.layer);
+const TestLayer = Layer.mergeAll(
+  NodeServices.layer,
+  FsUtilsLive.pipe(Layer.provide(NodeServices.layer)),
+  TestConsole.layer
+);
+const runCiLaneCommand = Command.runWith(ciLaneCommand, { version: "0.0.0" });
 const encodeJson = UnknownFromJsonString.encodeUnknownSync;
 const isString = (value: unknown): value is string => typeof value === "string";
 
@@ -44,6 +51,29 @@ const withTempRepo = <A, E, R>(use: Effect.Effect<A, E, R>) =>
   ).pipe(provideScopedLayer(TestLayer));
 
 describe("CI commands", () => {
+  it("parses --partition and reports a typed lane-assignment failure", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const exit = yield* Effect.exit(runCiLaneCommand(["lint", "--partition", "unit-a"]));
+        const errors = A.join(A.filter(yield* TestConsole.errorLines, isString), "\n");
+
+        expect(exit._tag).toBe("Failure");
+        expect(errors).toContain("Partition unit-a does not belong to lane lint");
+        expect(errors).toContain("CiLanePartitions.ts");
+      }).pipe(provideScopedLayer(TestLayer))
+    ));
+
+  it("rejects proof-only --force without a partition", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const exit = yield* Effect.exit(runCiLaneCommand(["lint", "--force"]));
+        const errors = A.join(A.filter(yield* TestConsole.errorLines, isString), "\n");
+
+        expect(exit._tag).toBe("Failure");
+        expect(errors).toContain("--force requires --partition");
+      }).pipe(provideScopedLayer(TestLayer))
+    ));
+
   it("fails local planning when Git cannot resolve the current branch", () =>
     Effect.runPromise(
       withTempRepo(

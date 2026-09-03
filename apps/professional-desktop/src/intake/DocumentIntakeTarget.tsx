@@ -9,7 +9,9 @@
 
 import { FilingOutcome } from "@beep/documents-domain/aggregates/Document";
 import { Button } from "@beep/ui/components/button";
-import { A, O, P } from "@beep/utils";
+import * as A from "@beep/utils/Array";
+import * as O from "@beep/utils/Option";
+import * as P from "@beep/utils/Predicate";
 import { useAtomValue } from "@effect/atom-react";
 import { Fragment } from "react";
 import { DEFAULT_PROFESSIONAL_WORKSPACE_ID } from "@/workspace/ProfessionalWorkspace";

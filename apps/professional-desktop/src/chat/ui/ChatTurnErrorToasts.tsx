@@ -10,9 +10,9 @@
 
 import { turnErrorAtom } from "@beep/agents-client/Chat.atoms";
 import { toast } from "@beep/ui/components/sonner";
-import { O } from "@beep/utils";
+import * as O from "@beep/utils/Option";
 import { useAtomMount, useAtomValue } from "@effect/atom-react";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { Atom } from "effect/unstable/reactivity";
 import { professionalBrowserRuntime } from "@/runtime/ProfessionalAtomRuntime";
 import type { ChatActionError } from "@beep/agents-use-cases/public";

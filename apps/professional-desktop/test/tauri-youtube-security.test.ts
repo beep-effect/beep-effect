@@ -1,5 +1,5 @@
 import { YouTubeWatchRequest } from "@beep/editor/youtube-embed";
-import { Result } from "effect";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { describe, expect, it } from "vitest";
 

@@ -15,7 +15,7 @@ import {
 } from "@beep/epistemic-domain/values/ExecutionGrant";
 import { GovernedEgressLive, GovernedEgressOptions } from "@beep/epistemic-server/GovernedEgress";
 import { GovernedTierGateLive, GovernedTierGateOptions } from "@beep/epistemic-server/GovernedTierGate";
-import { sanitizedToolkit } from "@beep/mcp-kit";
+import { sanitizedToolkit } from "@beep/mcp-kit/SanitizedSpan";
 import { OntologyMcpConfig } from "@beep/ontology-config/server";
 import {
   OntologyMcpMutationToolsLive,
@@ -28,14 +28,20 @@ import {
   OntologyReadOnlyToolkit,
   PublishProvenanceTool,
 } from "@beep/ontology-use-cases/tools";
-import { A, O } from "@beep/utils";
-import { Context, Data, Duration, Effect, Layer, Metric } from "effect";
+import * as A from "@beep/utils/Array";
+import * as O from "@beep/utils/Option";
+import * as Context from "effect/Context";
+import * as Data from "effect/Data";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Metric from "effect/Metric";
 import * as McpProtocol from "effect/unstable/ai/McpProtocol";
 import * as McpServer from "effect/unstable/ai/McpServer";
 import { Headers, HttpMiddleware, HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/unstable/http";
 import * as FetchHttpClient from "effect/unstable/http/FetchHttpClient";
 import { requireRpcSessionToken } from "./RpcSessionAuth.ts";
-import type { Redacted } from "effect";
+import type * as Redacted from "effect/Redacted";
 
 const ontologyMcpOriginDecisions = Metric.counter("desktop_ontology_mcp_origin_decisions_total", {
   incremental: true,
@@ -100,11 +106,6 @@ const ontologyMcpSecurityMiddleware = (token: Redacted.Redacted) =>
       )
     );
 
-/** Ontology mutation tools eligible to dispatch once registration is enabled.
- * @remarks Registration and approval are separate gates; this list is the approval half and is inert while mutations stay unregistered. It becomes the granted operations of each MCP session's frozen grant set.
- * @category constants
- * @since 0.0.0
- */
 // Every governed ontology mutation writes the local workspace; the sink triple
 // is a composition-root fact, so the boundary classifies its audience by
 // construction (the URL-parsing resolver is for network-egress destinations).
@@ -132,12 +133,29 @@ const ontologyEgressSink = ExecutionSink.make({
 // expire together and an expired run can only deny.
 const ontologySessionGrantTtl = Duration.hours(12);
 
-/** Build the `/mcp` route layer with read-only registration independent of mutation enablement.
- * @remarks Mutation registration is decided by `OntologyMcpConfig` inside `Layer.unwrap`, so the layer-shape branch stays where the layer is built; every mutation dispatches through the governed TierGate, which freezes a per-session grant set and writes a write-ahead ledger decision before any effect runs. The returned layer therefore requires `ExecutionLedger` and `EpistemicConfig`; the entrypoint provides the Drizzle ledger over the shared PGlite, and a test may inject a failing ledger to prove the fail-closed refusal.
- * @remarks `approvedMutationTools` exists so a test can register the mutation tools while granting none of them, which is the only way to prove that registration is not authorization. Production never passes it.
- * @example
+/**
+ * Builds the `/mcp` route layer with read-only registration independent of mutation enablement.
+ *
+ * **Details**
+ *
+ * Mutation registration is decided by `OntologyMcpConfig` inside
+ * `Layer.unwrap`, so the layer-shape branch stays where the layer is built.
+ * Every mutation dispatches through the governed TierGate, which freezes a
+ * per-session grant set and writes a write-ahead ledger decision before any
+ * effect runs. The returned layer therefore requires `ExecutionLedger` and
+ * `EpistemicConfig`; the entrypoint provides the Drizzle ledger over the shared
+ * PGlite, and a test may inject a failing ledger to prove the fail-closed
+ * refusal.
+ *
+ * `approvedMutationTools` lets a test register mutation tools while granting
+ * none of them, proving that registration is not authorization. Production
+ * never passes it.
+ *
+ * **Example** (Build the ontology transport layer)
+ *
  * ```ts
- * import { Layer, Redacted } from "effect"
+ * import * as Layer from "effect/Layer";
+ * import * as Redacted from "effect/Redacted";
  * import { makeOntologyMcpTransportLayer } from "./OntologyMcpTransport.ts"
  * const layer = makeOntologyMcpTransportLayer({ token: Redacted.make("test-token") })
  * console.log(Layer.isLayer(layer))

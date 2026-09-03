@@ -7,11 +7,15 @@
 
 import * as HttpMethod from "@beep/schema/HttpMethod";
 import { HttpStatus } from "@beep/schema/HttpStatus";
-import { Config, Context, Effect, Metric, Redacted } from "effect";
+import * as Config from "effect/Config";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
+import * as Metric from "effect/Metric";
 import * as O from "effect/Option";
+import * as Redacted from "effect/Redacted";
 import { Headers, HttpMiddleware, HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/unstable/http";
-import type { Layer } from "effect";
+import type * as Layer from "effect/Layer";
 
 const rpcAuthDecisions = Metric.counter("desktop_rpc_auth_decisions_total", { incremental: true });
 
@@ -73,7 +77,7 @@ export const isAuthorizedRpcSessionRequest: {
  *
  * @example
  * ```ts
- * import { Redacted } from "effect"
+ * import * as Redacted from "effect/Redacted";
  * import { requireRpcSessionToken } from "./RpcSessionAuth.ts"
  * console.log(requireRpcSessionToken(Redacted.make("test-token")))
  * ```

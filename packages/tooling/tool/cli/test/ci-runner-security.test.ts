@@ -149,6 +149,8 @@ describe("CI runner security", () => {
 
       const pullRequestControlledEnvPaths: ReadonlyArray<ReadonlyArray<string | number>> = [
         ["jobs", "verify", "env"],
+        ["jobs", "lint-shard", "env"],
+        ["jobs", "test-unit-shard", "env"],
         ["jobs", "property-laws", "env"],
         ["jobs", "fallow-advisory", "steps", 4, "env"],
       ];
@@ -168,8 +170,8 @@ describe("CI runner security", () => {
       assert.strictEqual(workflow.getIn(["jobs", "build", "env", "TURBO_CACHE"]), PUSH_ONLY_TURBO_CACHE);
 
       const workflowLines = Str.split(workflowText, "\n");
-      assert.lengthOf(A.filter(workflowLines, Str.includes("TURBO_TOKEN:")), 4);
-      assert.lengthOf(A.filter(workflowLines, Str.includes("TURBO_CACHE:")), 4);
+      assert.lengthOf(A.filter(workflowLines, Str.includes("TURBO_TOKEN:")), 6);
+      assert.lengthOf(A.filter(workflowLines, Str.includes("TURBO_CACHE:")), 6);
       assert.include(workflowText, "github.event.pull_request.head.repo.full_name == github.repository");
       assert.include(workflowText, "secrets.TURBO_READ_TOKEN");
       assert.include(workflowText, "'local:rw,remote:r'");
@@ -225,12 +227,28 @@ describe("CI runner security", () => {
         "-${{ matrix.id }}"
       );
       assert.strictEqual(
+        check.getIn(["jobs", "lint-shard", "steps", 4, "with", "turbo-cache-key-suffix"]),
+        "-${{ matrix.partition }}"
+      );
+      assert.strictEqual(
+        check.getIn(["jobs", "test-unit-shard", "steps", 4, "with", "turbo-cache-key-suffix"]),
+        "-${{ matrix.partition }}"
+      );
+      assert.strictEqual(
         heavy.getIn(["jobs", "verify", "steps", 4, "with", "turbo-cache-key-suffix"]),
         "-${{ matrix.id }}"
       );
       assert.include(
         String(check.getIn(["jobs", "verify", "steps", 9, "with", "key"])),
         "-${{ github.job }}-${{ matrix.id }}-"
+      );
+      assert.include(
+        String(check.getIn(["jobs", "lint-shard", "steps", 8, "with", "key"])),
+        "-${{ github.job }}-${{ matrix.partition }}-"
+      );
+      assert.include(
+        String(check.getIn(["jobs", "test-unit-shard", "steps", 7, "with", "key"])),
+        "-${{ github.job }}-${{ matrix.partition }}-"
       );
       assert.include(
         String(heavy.getIn(["jobs", "verify", "steps", 10, "with", "key"])),

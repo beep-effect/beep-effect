@@ -5,11 +5,11 @@
  * @category projections
  * @since 0.0.0
  */
-
-import { $ProfessionalDesktopId } from "@beep/identity";
-import { TrimmedNonEmptyText } from "@beep/schema";
-import { flow, identity, SchemaTransformation } from "effect";
+import { $ProfessionalDesktopId } from "@beep/identity/packages";
+import { TrimmedNonEmptyText } from "@beep/schema/CommonTextSchemas";
+import { flow, identity } from "effect/Function";
 import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as Str from "effect/String";
 
 const $I = $ProfessionalDesktopId.create("chat/DerivedThreadTitle");

@@ -1,6 +1,6 @@
 import { MermaidView } from "@beep/editor/mermaid-view";
 import { EditorViewer } from "@beep/editor/viewer";
-import { documentToEditorState } from "@beep/lexical-schema";
+import { documentToEditorState } from "@beep/lexical-schema/Lexical.codec";
 import * as MdModel from "@beep/md/Md.model";
 import "@testing-library/jest-dom/vitest";
 import { it } from "@effect/vitest";

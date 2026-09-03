@@ -1,6 +1,6 @@
-import { O } from "@beep/utils";
+import * as O from "@beep/utils/Option";
 import { assert, describe, layer } from "@effect/vitest";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as PlatformError from "effect/PlatformError";
 import * as Sink from "effect/Sink";

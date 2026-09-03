@@ -27,20 +27,24 @@ import { ResolvedSourceText, SourceTextResolver } from "@beep/file-processing/So
 import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { TextAnchor } from "@beep/provenance/TextAnchor";
 import { TextAnchorVerificationReceipt } from "@beep/provenance/VerifiedTextAnchor";
-import { NonNegativeInt, PosInt, Sha256HexFromBytes } from "@beep/schema";
+import { PosInt } from "@beep/schema/Int";
+import { NonNegativeInt } from "@beep/schema/Number";
 import { PosixPath } from "@beep/schema/PosixPath";
+import { Sha256HexFromBytes } from "@beep/schema/Sha256";
 import { UserPrincipal } from "@beep/shared-domain/entity/Principal";
 import * as SharedIdentity from "@beep/shared-domain/identity/Shared";
 import { productEntityFixtureInput, provideScopedLayer } from "@beep/test-utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, flow, Layer } from "effect";
+import * as Effect from "effect/Effect";
+import { flow } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { RpcTest } from "effect/unstable/rpc";
-import type { DateTime } from "effect";
+import type * as DateTime from "effect/DateTime";
 
 const leftLogicalKey = Str.repeat(64)("a");
 const rightLogicalKey = Str.repeat(64)("b");

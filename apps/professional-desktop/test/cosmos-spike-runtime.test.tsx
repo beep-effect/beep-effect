@@ -2,7 +2,7 @@ import "@testing-library/jest-dom/vitest";
 import { RegistryProvider } from "@effect/atom-react";
 import { it } from "@effect/vitest";
 import { cleanup, render, within } from "@testing-library/react";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { afterEach, describe, expect, vi } from "vitest";
 import { CosmosSpike } from "@/spikes/CosmosSpike";
 

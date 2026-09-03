@@ -27,7 +27,8 @@
     "lint": "bun run beep:lint",
     "lint:fix": "bun run beep:lint:fix",
     "start": "next start",
-    "test": "bun run beep:test"
+    "test": "bun run beep:test",
+    "package-test-typecheck": "beep-cli quality test-tsgo-package"
   },
   "dependencies": {
     "next": "catalog:",

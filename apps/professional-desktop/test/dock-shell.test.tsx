@@ -1,8 +1,9 @@
 import "@testing-library/jest-dom/vitest";
-import { SaveDockSnapshot, validateWorkspace } from "@beep/dock";
+import { SaveDockSnapshot } from "@beep/dock/Dock.protocol";
+import { validateWorkspace } from "@beep/dock/Dock.reducer";
 import { it } from "@effect/vitest";
 import { cleanup, fireEvent, render, within } from "@testing-library/react";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { AtomRegistry } from "effect/unstable/reactivity";
 import { afterEach, describe, expect } from "vitest";
 import { App } from "@/App";

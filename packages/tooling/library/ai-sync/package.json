@@ -39,7 +39,8 @@
     "test": "bun run beep:test",
     "test:property": "bun run beep:test",
     "test:integration": "bun run beep:test:integration",
-    "validate": "bun run ai-sync validate"
+    "validate": "bun run ai-sync validate",
+    "package-test-typecheck": "beep-cli quality test-tsgo-package"
   },
   "exports": {
     ".": "./src/index.ts",

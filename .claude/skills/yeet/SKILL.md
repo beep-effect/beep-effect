@@ -261,12 +261,15 @@ deterministic fixers, runs the same collected tier, and stops before heavy
 feedback if a cheap gate still fails.
 
 The full proof then dispatches the *hosted lane bodies themselves* — `beep ci lane`
-`check`, `lint`, `lint-policy`, `test-unit`, and `test-integration`, each with
-the affected shape `check.yml` passes its matrix jobs — alongside the full root
-build, bounded docgen (which compiles the fenced code in every titled
-`**Example** (Title)` section), the repo-wide tsgo test/smoke extras, and the
-secrets/security/SAST/Nix lanes. The command is literally the one CI runs, so if
-`yeet verify` is green, CI should be green on the first push. What it does not
+`check`, bare `lint`, `lint-policy`, bare `test-unit`, and `test-integration`,
+each with the affected shape used to select work in `check.yml`. Hosted Lint
+and Test Unit intersect that selected set with their deterministic package
+partitions; the bare commands retain the complete local proof contract. The
+full proof also runs the root build and bounded docgen (which compiles the
+fenced code in every titled `**Example** (Title)` section), the repo-wide tsgo
+test/smoke extras, and the secrets/security/SAST/Nix lanes. The command is
+literally the one CI runs, so a green `yeet verify` should predict green CI on
+the first push. What it does not
 yet replay is CI's *environment* (`CI=true`, blank PR secrets, PR cache posture)
 or the merged tree — use `verify --merged` for the tree.
 

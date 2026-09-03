@@ -553,3 +553,309 @@ evidence, what would have prevented it). Redact for the public repo.
 - **Would have prevented it:** keep the monitor attached while required checks
   are pending, and derive repair commands only from terminal failing required
   contexts rather than from a generic nonzero pending-check exit.
+
+## 2026-08-30 — combined post-merge fetch lost the base tracking ref
+
+- **Doing:** proving PR #930 merged before cleaning its deleted remote topic
+  ref, while refreshing `origin/main` for the ancestry check.
+- **Evidence:** a single fetch requested both the live main ref and the already
+  deleted topic ref; it stopped with `couldn't find remote ref`, after which a
+  main-only prune fetch failed with `cannot lock ref` because `origin/HEAD`
+  pointed at the now-missing `origin/main`. The configured origin fetchspec
+  restored `origin/main` to merge commit `8adba76f`, and the guarded ancestry
+  check then passed.
+- **Would have prevented it:** fetch the durable base independently from an
+  optional topic ref, confirm the topic with `ls-remote`, and prune only that
+  exact tracking ref after the base ref and merge ancestry are proven.
+
+## 2026-09-03 — prior CI-economics memory recap was missing
+
+- **Doing:** recovering the prior P2/P3 evidence context before reproducing the
+  current-ruleset census and signing the next repair decision.
+- **Evidence:** the durable memory registry named a CI-lane-economics rollout
+  summary, but that referenced file was absent from the rollout-summary
+  directory; only the older August 13 census recap was present.
+- **Would have prevented it:** validate registry targets when producing durable
+  memory summaries, or retain the packet-local evidence as the only canonical
+  handoff pointer.
+
+## 2026-09-03 — Actions job logs require explicit escape-sequence consent
+
+- **Doing:** fetching a representative p90-tail job log to extract Turbo task
+  counts, cache outcomes, and the package-level long poles.
+- **Evidence:** `gh api .../actions/jobs/<id>/logs` refused to emit the log
+  because it contains terminal escape sequences and left the redirected raw
+  file empty; the diagnostic requires `--allow-escape-sequences`.
+- **Would have prevented it:** make the packet's log-collection recipe include
+  the explicit flag, or provide a structured Turbo-summary artifact that avoids
+  terminal control data entirely.
+
+## 2026-09-03 — historical PR heads no longer equal their associated PR head
+
+- **Doing:** checking whether each representative tail wave changed `bun.lock`
+  or root configuration by comparing its head SHA with the PR base SHA.
+- **Evidence:** the commits-to-pulls endpoint associated several historical
+  commits with a PR whose current `head.sha` had advanced, so an exact-head
+  predicate left 14 of 29 selected heads without a base even though the PR
+  association was still present.
+- **Would have prevented it:** retain the run-time PR number and base SHA in the
+  census corpus, or archive a per-run compare receipt before the branch head can
+  advance or disappear.
+
+## 2026-09-03 — hosted-runner disk documentation does not describe live geometry
+
+- **Doing:** deciding whether Lint and Test Unit can safely avoid destructive
+  image cleanup from their measured disk headroom.
+- **Evidence:** GitHub documents 14 GB SSD for standard Ubuntu runners, while
+  every one of the 87 current tail logs reported a 145 GiB root with at least
+  86 GiB free before cleanup; the cleanup reclaimed 21–22 GiB. The published
+  capacity cannot establish a safe unconditional skip for this live image.
+- **Would have prevented it:** expose a stable runner-image free-space
+  guarantee or make the workflow gate cleanup from its own pre-step `df`
+  census, retaining the current cleanup below an evidence-backed threshold.
+
+## 2026-09-03 — manifest evidence update again drifted the goals index
+
+- **Doing:** verifying packet bookkeeping after adding the three P3 research
+  reports and signed repair status to the initiative manifest.
+- **Evidence:** `bun run beep goals index --check` failed with `local
+  goals/INDEX.md drifts from goals/*/ops/manifest.json` even though
+  `goals doctor` had already reported no blocking findings.
+- **Would have prevented it:** make manifest-changing packet commands update
+  the deterministic goals projection atomically, or have `goals doctor`
+  surface projection drift before a separate index check.
+
+## 2026-09-03 — architecture gate cannot validate a plain role-file addition
+
+- **Doing:** running the required architecture gate before adding the CI lane
+  partition-table role beside the existing lane command.
+- **Evidence:** `bun run beep architecture` only listed subcommands, while
+  `bun run beep architecture check` exited with `Missing required flag:
+  --file`; the check accepts only a previously emitted architecture operation
+  plan and has no mode for validating an ordinary role file.
+- **Would have prevented it:** document the applicable command for a plain
+  role-file addition, or add an architecture check mode that validates the
+  live source topology without requiring a generated mutation plan.
+
+## 2026-09-03 — bun test cannot initialize the Effect Vitest suite
+
+- **Doing:** running the first focused partition-table proof with the packet's
+  permitted `bun test packages/tooling/tool/cli/test/ci-lane.test.ts` command.
+- **Evidence:** Bun's test runner failed before test collection inside
+  `@vitest/runner` with `TypeError: undefined is not an object (evaluating
+  'runner.config')` at the first `@effect/vitest` layer suite.
+- **Would have prevented it:** route `@effect/vitest` files through the repo's
+  Vitest configuration by default, or make the documented Bun fallback reject
+  incompatible suites with a direct diagnostic.
+
+## 2026-09-03 — the threaded fallback conflicts with command-test cwd isolation
+
+- **Doing:** running both required focused suites with the sandbox-safe Vitest
+  thread pool after the Bun runner failed during suite initialization.
+- **Evidence:** all 58 collected CI-lane tests passed, but three pre-existing
+  command tests failed at their temporary-repository setup with
+  `process.chdir() is not supported in workers`.
+- **Would have prevented it:** make command tests pass an explicit working
+  directory instead of mutating process-wide cwd, or document a mixed proof
+  command that uses threads only for suites without cwd isolation.
+
+## 2026-09-03 — Turbo has no base flag for affected selection
+
+- **Doing:** proving all five PR-shaped partitions with the signed
+  `--affected --base origin/main` lane invocation.
+- **Evidence:** the CLI initially forwarded both shape arguments into Turbo
+  2.10.12, which rejected every dry run with `unexpected argument '--base'
+  found`; the existing lane contract carries the base to Turbo through
+  `TURBO_SCM_BASE` while forwarding only `--affected`.
+- **Would have prevented it:** distinguish the outer `beep ci lane --base`
+  flag from Turbo's environment-only base override in the implementation
+  constraint and command example.
+
+## 2026-09-03 — only does not suppress same-name task dependencies
+
+- **Doing:** running the first forced Lint partition after its 134-task union
+  proof selected the committed 67-package `lint-a` bin.
+- **Evidence:** `turbo run lint --only --filter=@beep/colors` planned seven
+  tasks, including six transitive `^lint` dependencies; the 67-filter forced
+  run expanded to 106 tasks. In contrast, `turbo run @beep/colors#lint --only`
+  planned exactly one task, and two explicit package task ids planned exactly
+  two while retaining their package filters.
+- **Would have prevented it:** make the Turbo guidance distinguish generic
+  task names from package-qualified task ids when `dependsOn: ["^lint"]` is
+  present, and include a dry-run exact-cardinality assertion in the shard spec.
+
+## 2026-09-03 — managed sandbox blocks libpff symlink targets
+
+- **Doing:** running the forced 67-package `unit-b` shard to prove its exact
+  execution set and complete the three-bin Test Unit runtime proof.
+- **Evidence:** the shard selected exactly 67 tasks, then two existing
+  `@beep/libpff` tests failed with `EROFS: read-only file system` while creating
+  symlinks whose targets were under `/var/tmp` and the external Bun install.
+- **Would have prevented it:** provide the unit-shard proof in a native runner
+  with writable test fixture targets, or make the libpff fixtures place their
+  external-target substitutes beneath the workspace-approved temp root.
+
+## 2026-09-03 — inherited schema export break blocks package verification
+
+- **Doing:** running the required `@beep/repo-cli` package verifier after the
+  focused shard contracts and runtime union proofs passed.
+- **Evidence:** docgen passed, but the audit failed because
+  `@beep/schema/Unknown` does not currently export `UnknownFromJsonString`;
+  the same diagnostic appears across many untouched repo-cli files, and the
+  pre-repair `CiLane.ts` already imported that symbol.
+- **Would have prevented it:** keep the schema package and repo-cli consumer
+  branch heads synchronized, or gate scoped work on a baseline package audit
+  before creating a new failure-inbox row for inherited compiler failures.
+
+## 2026-09-03 — managed sandbox blocks the Yeet base refresh
+
+- **Doing:** running the canonical Yeet cheap-gates tier after the focused,
+  partition, package, and workflow proofs.
+- **Evidence:** `bun run beep yeet verify --tier cheap-gates` exited 255 before
+  any quality gate because its mandatory `git fetch` could not update the
+  sandbox's read-only `.git` metadata.
+- **Would have prevented it:** run the canonical operator in a profile with
+  writable Git metadata, or provide an explicitly offline verification mode
+  that accepts a previously refreshed base ref.
+
+## 2026-09-03 — package audit asserted a bare lint label that a live 1Password session rewrites
+
+- **Doing:** running the required `beep quality package-verify @beep/repo-cli` handoff proof
+  for the shard implementation on a workstation with a usable `op` session.
+- **Evidence:** the audit's Vitest pass failed one untouched test,
+  `keeps running repo-wide root lint policy checks after aggregate lint fails`, with
+  `expected [ 'lint (op run)' ] to deeply equal [ 'lint' ]`; the same test passed once `op`
+  was removed from `PATH`, and Yeet's own proof lanes never hit it because they run with
+  `CI=true`.
+- **Would have prevented it:** stub the secret-session predicate in the test or assert the
+  label prefix, so the audit's verdict does not depend on whether the machine holds a
+  1Password session.
+
+## 2026-09-03 — stale schema build output masqueraded as new type errors
+
+- **Doing:** running the package audit after cutting the branch from a moved `origin/main`
+  without rebuilding dependency outputs.
+- **Evidence:** `tsgo` reported `Module '"@beep/schema/Unknown"' has no exported member
+  'UnknownFromJsonString'` across untouched CLI files; a
+  `turbo run build --filter="@beep/repo-cli^..."` cleared every error in 24 seconds.
+- **Would have prevented it:** make the package audit rebuild, or at least fingerprint,
+  the dependency outputs it type-checks against, so a moved base cannot present as a
+  branch regression.
+
+## 2026-09-03 — a well-tested feature tripped a single-file coverage floor
+
+- **Doing:** adding deterministic partition proof and execution tests after the scoped
+  coverage ratchet rejected the CI lane economics repair.
+- **Evidence:** the partition feature already had table-law and workflow-shape tests, but
+  concentrating its runtime implementation in `CiLane.ts` lowered that file's committed
+  branch, function, line, and statement rows even though package-level coverage remained
+  broad.
+- **Would have prevented it:** require end-to-end execution-path tests in the same change
+  whenever a large runtime path is added to a file with a high committed per-file floor,
+  and show the projected per-file delta before pre-push.
+
+## 2026-09-03 — package verification used a sandbox-read-only uv cache
+
+- **Doing:** running the required `@beep/repo-cli` package verifier after restoring the
+  partition execution coverage row.
+- **Evidence:** build, typecheck, 2,819 tests, and docgen passed, then the Python audit
+  stopped because `uv` could not create a temporary lock beneath `~/.cache/uv`, which is
+  read-only in the managed workspace profile.
+- **Would have prevented it:** have the package verifier route `UV_CACHE_DIR` to the
+  workspace-approved temporary root when the default user cache is not writable.
+
+## 2026-09-03 — package verification hit a nondeterministic tmpfs reference probe
+
+- **Doing:** rerunning the required `@beep/repo-cli` package verifier with its Python
+  cache redirected to the writable temporary root.
+- **Evidence:** the audit's earlier 146-file run passed the tmpfs suite, but the rerun
+  observed `refCount` 0 instead of a live file-descriptor reference; the exact failing
+  test passed immediately in isolated single-worker reproduction.
+- **Would have prevented it:** make the tmpfs live-reference fixture wait for the
+  descriptor to become visible before asserting, or retry the reference census within a
+  small deterministic bound.
+
+## 2026-09-03 — base-freshness overlap check overflowed on a busy main
+
+- **Doing:** publishing the verified shard head with `yeet publish --push-only
+  --reuse-verified --pr --monitor` after a full local proof, while `origin/main` had
+  advanced 17 commits during that proof.
+- **Evidence:** publish stopped before pushing with `git diff --name-only -z
+  <merge-base>..origin/main output exceeded the repo-run capture limit`; main's window
+  touched 5,269 paths (exploration and time-to-certainty docs), none overlapping the
+  branch, so the guard failed on volume rather than on a real conflict.
+- **Would have prevented it:** intersect the branch's changed paths with the base delta
+  through git (`git diff --name-only base...head` against a pathspec) or stream the
+  listing, instead of capturing the whole base delta into a bounded buffer.
+
+## 2026-09-03 — a lane-proof reuse assertion flaked under the contended full proof
+
+- **Doing:** re-proving the merged shard head with `yeet verify` after `origin/main`
+  advanced during the previous proof.
+- **Evidence:** the test-unit and coverage lanes both failed on one untouched test,
+  `quality-tasks.test.ts` "invalidates a lane proof when the property-test run floor
+  increases", with `expected [ 'passed' ] to deeply equal [ 'reused' ]`; the same test
+  passed in isolation immediately afterwards (1 passed, 170 skipped), and the coverage
+  lane reported no ratchet regression of its own.
+- **Would have prevented it:** make the reuse assertion independent of wall-clock or
+  filesystem timing under load (deterministic proof fingerprints in the fixture), or let
+  the proof rerun a single failed test file before failing two lanes on it.
+
+## 2026-09-03 — base-freshness overlap check overflowed on a busy main
+
+- **Doing:** publishing the verified shard head with `yeet publish --push-only
+  --reuse-verified --pr --monitor` after a full local proof, while `origin/main` had
+  advanced 17 commits during that proof.
+- **Evidence:** publish stopped before pushing with `git diff --name-only -z
+  <merge-base>..origin/main output exceeded the repo-run capture limit`; main's window
+  touched 5,269 paths (exploration and time-to-certainty docs), none overlapping the
+  branch, so the guard failed on volume rather than on a real conflict.
+- **Would have prevented it:** intersect the branch's changed paths with the base delta
+  through git (`git diff --name-only base...head` against a pathspec) or stream the
+  listing, instead of capturing the whole base delta into a bounded buffer.
+
+## 2026-09-03 — hosted-log inspection assumed a writable user cache
+
+- **Doing:** attributing the failed hosted JSDoc Ratchet job on PR #982 after the
+  supplied log excerpt proved empty.
+- **Evidence:** `gh run view --job <job> --log` stopped before reading the completed
+  job with `creating cache entry: open ~/.cache/gh/run-log-<run>.zip: read-only file
+  system` in the managed workspace profile.
+- **Would have prevented it:** let `gh run view` honor a workspace-approved cache
+  directory automatically, or make the log command stream the archive without first
+  writing beneath the user cache.
+
+## 2026-09-03 — a concurrent base merge invalidated a long coverage proof
+
+- **Doing:** running the requested full `@beep/repo-cli` coverage ratchet after the
+  focused shard-repair tests passed.
+- **Evidence:** the 12-minute coverage run began on head `1e87340074`; while it was
+  active, the orchestrator committed the repair and merged current `origin/main`,
+  advancing the checkout to `26d90f4417`. The run then failed six unrelated tests
+  whose source, fixtures, and built exports came from the moving pre/post-merge graph.
+- **Would have prevented it:** hold the checkout head stable for the duration of a
+  heavyweight proof, then merge or commit only after its subprocess exits.
+
+## 2026-09-03 — concurrent coverage lanes shared a destructive reports directory
+
+- **Doing:** rerunning the requested `@beep/repo-cli` coverage ratchet against the
+  stable post-merge head.
+- **Evidence:** Vitest stopped after 73 seconds because
+  `packages/tooling/tool/cli/coverage/.tmp/coverage-4.json` disappeared, reporting
+  that something removed the coverage directory and warning against simultaneous
+  Vitest runs with the same `coverage.reportsDirectory`.
+- **Would have prevented it:** assign every admitted coverage lane a unique reports
+  directory and merge summaries afterward, or serialize coverage ownership with a
+  checkout-scoped lease.
+
+## 2026-09-03 — main's skipped intermediate push proofs exported two red ratchets
+
+- **Doing:** proving an unrelated PR after merging the latest `origin/main` burst from
+  #967 through #977.
+- **Evidence:** hosted merge-commit checks inherited both `@beep/html` coverage below
+  its committed function and line floors and one added JSDoc root-package import; the
+  burst's intermediate push runs had been skipped, so the unrelated PR had to repair
+  both regressions in-branch before its own checks could pass.
+- **Would have prevented it:** require the coverage and JSDoc ratchets to finish on the
+  exact main-bound merge commit for each burst PR, even when intermediate push runs are
+  intentionally skipped.

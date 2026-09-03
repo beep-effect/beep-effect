@@ -15,13 +15,17 @@
 "use client";
 
 import { createThreadAtom, editTargetAtom, selectedThreadAtom, threadsAtoms } from "@beep/agents-client/Chat.atoms";
-import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability";
+import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability/CauseRedaction";
 import { Button } from "@beep/ui/components/button";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@beep/ui/components/empty";
 import { toast } from "@beep/ui/components/sonner";
-import { A, DateTime, O } from "@beep/utils";
+import * as A from "@beep/utils/Array";
+import * as DateTime from "@beep/utils/DateTime";
+import * as O from "@beep/utils/Option";
 import { useAtomMount, useAtomSet, useAtomValue } from "@effect/atom-react";
-import { Effect, Order, Stream } from "effect";
+import * as Effect from "effect/Effect";
+import * as Order from "effect/Order";
+import * as Stream from "effect/Stream";
 import { AsyncResult } from "effect/unstable/reactivity";
 import { professionalBrowserRuntime } from "@/runtime/ProfessionalAtomRuntime";
 import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";

@@ -33,7 +33,8 @@
     "test": "bun run beep:test",
     "test:property": "bun run beep:test",
     "test:integration": "bun run beep:test:integration",
-    "test:integration:parallel": "bun run beep:test:integration"
+    "test:integration:parallel": "bun run beep:test:integration",
+    "package-test-typecheck": "beep-cli quality test-tsgo-package"
   },
   "exports": {
     ".": "./src/index.ts",

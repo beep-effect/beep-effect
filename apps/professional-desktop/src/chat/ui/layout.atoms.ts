@@ -12,8 +12,10 @@
  */
 
 import { $ProfessionalDesktopId } from "@beep/identity/packages";
-import { N, O, R } from "@beep/utils";
-import { Effect } from "effect";
+import * as N from "@beep/utils/Number";
+import * as O from "@beep/utils/Option";
+import * as R from "@beep/utils/Record";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { Atom } from "effect/unstable/reactivity";
 import { professionalStorageRuntime } from "@/runtime/ProfessionalAtomRuntime";

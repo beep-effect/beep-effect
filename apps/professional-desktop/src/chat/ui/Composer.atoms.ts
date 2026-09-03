@@ -17,8 +17,10 @@ import {
 } from "@beep/agents-client/Chat.atoms";
 import { documentSafetyIssues } from "@beep/md/Md.safe";
 import { toast } from "@beep/ui/components/sonner";
-import { A, O } from "@beep/utils";
-import { Duration, Effect } from "effect";
+import * as A from "@beep/utils/Array";
+import * as O from "@beep/utils/Option";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import { AsyncResult, Atom, AtomRegistry } from "effect/unstable/reactivity";
 import { professionalBrowserRuntime } from "@/runtime/ProfessionalAtomRuntime";
@@ -31,7 +33,7 @@ import {
   unsafeDocumentMessage,
 } from "./ComposerPolicy.ts";
 import type { EditTarget } from "@beep/agents-client/Chat.atoms";
-import type { SerializedEditorState } from "@beep/lexical-schema";
+import type { SerializedEditorState } from "@beep/lexical-schema/Lexical.model";
 import type * as Md from "@beep/md/Md.model";
 import type { SafeDocument } from "@beep/md/Md.safe";
 import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
@@ -200,7 +202,7 @@ const TURN_DISPATCH_CONFIRM_TIMEOUT = Duration.seconds(2);
  * console.log(typeof dispatchTurnWithConfirm === "function") // true
  * ```
  *
- * @category actions
+ * @category workflows
  * @since 0.0.0
  */
 export const dispatchTurnWithConfirm: {

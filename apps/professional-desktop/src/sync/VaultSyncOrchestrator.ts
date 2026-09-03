@@ -13,9 +13,13 @@ import {
   VaultSyncStatusInput,
 } from "@beep/documents-use-cases/aggregates/Sync/server";
 import { VaultSyncActionError, VaultSyncRpcs } from "@beep/documents-use-cases/public";
-import { LogRedactedCauseOptions, logRedactedCause, observeWorkflow } from "@beep/observability";
+import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability/CauseRedaction";
+import { observeWorkflow } from "@beep/observability/Metric";
 import * as WorkspaceUseCases from "@beep/workspace-use-cases/server";
-import { Cause, Effect, Metric, pipe } from "effect";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as Metric from "effect/Metric";
 import * as O from "effect/Option";
 
 const syncStarted = Metric.counter("desktop_vault_sync_operations_started_total", { incremental: true });
@@ -66,8 +70,7 @@ const toVaultSyncActionError = (context: string) =>
  *
  * ```ts
  * import { VaultSyncHandlersLive } from "@/sync/VaultSyncOrchestrator"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(VaultSyncHandlersLive)) // true
  * ```
  *

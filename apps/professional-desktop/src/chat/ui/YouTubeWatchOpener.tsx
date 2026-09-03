@@ -7,12 +7,14 @@
 "use client";
 
 import { YOUTUBE_WATCH_EVENT, YouTubeWatchRequest } from "@beep/editor/youtube-embed";
-import { $ProfessionalDesktopId } from "@beep/identity";
-import { Defect } from "@beep/schema";
-import { O, thunkNull, thunkUndefined } from "@beep/utils";
+import { $ProfessionalDesktopId } from "@beep/identity/packages";
+import { Defect } from "@beep/schema/Opaque";
+import * as O from "@beep/utils/Option";
+import { thunkNull, thunkUndefined } from "@beep/utils/thunk";
 import { useAtom, useAtomMount } from "@effect/atom-react";
 import { openUrl } from "@tauri-apps/plugin-opener";
-import { Cause, Effect } from "effect";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { AsyncResult, Atom } from "effect/unstable/reactivity";
 import { professionalBrowserRuntime } from "@/runtime/ProfessionalAtomRuntime";

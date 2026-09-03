@@ -75,4 +75,10 @@ export * from "./SemanticSchemaMetadata/index.ts";
  * @since 0.0.0
  */
 export * from "./Uri.ts";
+/**
+ * Current `@beep/rdf` package version.
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
 export { VERSION } from "./Version.ts";

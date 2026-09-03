@@ -34,7 +34,8 @@
     "lint:fix": "bun run beep:lint:fix",
     "render": "bun run scripts/render.ts",
     "test": "bun run beep:test",
-    "test:integration": "bun run beep:test:integration"
+    "test:integration": "bun run beep:test:integration",
+    "package-test-typecheck": "beep-cli quality test-tsgo-package"
   },
   "exports": {
     ".": "./src/index.ts",

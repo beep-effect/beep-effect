@@ -1,5 +1,5 @@
 import { SOURCE_TEXT_PAGE_CODE_UNITS } from "@beep/file-processing/SourceText";
-import { Str } from "@beep/utils";
+import * as Str from "@beep/utils/Str";
 import { describe, expect, it } from "@effect/vitest";
 import {
   CONTRADICTION_QA_ANCHOR_START,

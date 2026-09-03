@@ -12,49 +12,43 @@
  * @since 0.0.0
  */
 
+import { makeDockAtomsWith } from "@beep/dock/Dock.atoms";
 import {
   ActivatePanelCommand,
   ApiCommandOrigin,
-  CommandId,
-  ComponentPanelView,
-  DispatchDockCommand,
   DockCommandEnvelope,
-  DockEngineLive,
-  DockNode,
-  DockPersistenceError,
-  DockSnapshotStore,
-  DockWorkspace,
-  GroupId,
-  HorizontalSplitLayout,
-  makeDockAtomsWith,
   OpenPanelCommand,
-  Panel,
-  PanelConstraints,
-  PanelId,
-  PopulatedWorkspace,
-  RendererKey,
-  RestoreDockSnapshot,
   RestoreSnapshotRequest,
-  RootPlacement,
-  SaveDockSnapshot,
-  SplitId,
-  SplitNode,
-  SplitRatio,
-  TabPlacement,
-  TabsNode,
   UserCommandOrigin,
+} from "@beep/dock/Dock.commands";
+import { DockPersistenceError } from "@beep/dock/Dock.errors";
+import { CommandId, GroupId, PanelId, RendererKey, SplitId, SplitRatio } from "@beep/dock/Dock.ids";
+import { ComponentPanelView, Panel, PanelConstraints } from "@beep/dock/Dock.models";
+import { RootPlacement, TabPlacement } from "@beep/dock/Dock.placement";
+import { DispatchDockCommand, RestoreDockSnapshot, SaveDockSnapshot } from "@beep/dock/Dock.protocol";
+import {
+  DockNode,
+  DockWorkspace,
+  HorizontalSplitLayout,
+  PopulatedWorkspace,
+  SplitNode,
+  TabsNode,
   VerticalSplitLayout,
-} from "@beep/dock";
-import { Duration, Effect, Layer, Stream } from "effect";
+} from "@beep/dock/Dock.tree";
+import { DockEngineLive, DockSnapshotStore } from "@beep/dock/DockEngine.service";
 import * as A from "effect/Array";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Stream from "effect/Stream";
 import { KeyValueStore } from "effect/unstable/persistence";
 import { AsyncResult, Atom, AtomRegistry } from "effect/unstable/reactivity";
 import { professionalBrowserRuntime, professionalStorageRuntime } from "@/runtime/ProfessionalAtomRuntime";
-import type { DockAtomOperation, DockPersistenceOperation } from "@beep/dock";
-import type { DockAtomGraph } from "@beep/dock-react";
-
+import type { DockPersistenceOperation } from "@beep/dock/Dock.errors";
+import type { DockAtomOperation } from "@beep/dock/Dock.protocol";
+import type { DockAtomGraph } from "@beep/dock-react/DockReact.types";
 /**
  * Every desktop dock panel: the five shell surfaces plus the nine ontology
  * workbench regions. `cluster` names the default-layout group a panel calls
@@ -359,8 +353,7 @@ export const DOCK_SNAPSHOT_KEY = "desktop:dock-workspace:v3";
  * ```tsx
  * import { makeResetDockSnapshotAtom } from "@/workspace/dock.atoms"
  * import { useAtomSet } from "@effect/atom-react"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const resetAtom = makeResetDockSnapshotAtom(Effect.logInfo("reload requested"))
  *
  * function ResetButton() {
@@ -525,8 +518,7 @@ const DOCK_SAVE_DEBOUNCE_MS = 400;
  *
  * ```ts
  * import { dockPersistenceBindingAtom, makeDesktopDockGraph } from "@/workspace/dock.atoms"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * // Mounting the binding arms debounced saves; releasing it cancels them.
  * const program = Effect.map(makeDesktopDockGraph, (graph) => {
  *   const release = graph.registry.mount(dockPersistenceBindingAtom(graph))

@@ -30,7 +30,8 @@
     "fixtures:f1:text": "bun run scripts/generate-f1-text.ts",
     "lint": "bun run beep:lint",
     "lint:fix": "bun run beep:lint:fix",
-    "test": "bun run beep:test"
+    "test": "bun run beep:test",
+    "package-test-typecheck": "beep-cli quality test-tsgo-package"
   },
   "dependencies": {
     "@beep/anthropic": "workspace:^",

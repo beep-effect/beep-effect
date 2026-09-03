@@ -7,7 +7,7 @@
  */
 
 import { $ProfessionalDesktopId } from "@beep/identity/packages";
-import { LogLevel } from "@beep/schema";
+import { LogLevel } from "@beep/schema/Logs";
 import * as S from "effect/Schema";
 
 const $I = $ProfessionalDesktopId.create("runtime/RendererObservabilityConfig");
@@ -28,8 +28,7 @@ const $I = $ProfessionalDesktopId.create("runtime/RendererObservabilityConfig");
  *
  * ```ts
  * import { RendererObservabilityConfig } from "@/runtime/RendererObservabilityConfig"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const decoded = RendererObservabilityConfig.decode({
  *   deploymentEnvironment: "development",
  *   launchId: "launch-1",

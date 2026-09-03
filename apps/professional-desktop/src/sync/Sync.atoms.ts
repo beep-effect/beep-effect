@@ -13,11 +13,13 @@ import {
   VaultSyncWorkspacePayload,
 } from "@beep/documents-use-cases/public";
 import { $ProfessionalDesktopId } from "@beep/identity/packages";
-import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability";
-import { LiteralKit } from "@beep/schema";
+import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability/CauseRedaction";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import { SyncConflictId } from "@beep/shared-domain/identity/Documents/SyncConflictId";
-import { Effect, Semaphore, Tuple } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+import * as Semaphore from "effect/Semaphore";
+import * as Tuple from "effect/Tuple";
 import { Atom, AtomRegistry, AtomRpc, Reactivity } from "effect/unstable/reactivity";
 import { failureMessageOr } from "@/lib/failureMessage";
 import { professionalBrowserRuntime } from "@/runtime/ProfessionalAtomRuntime";

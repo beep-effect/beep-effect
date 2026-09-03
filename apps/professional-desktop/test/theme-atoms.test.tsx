@@ -3,7 +3,7 @@ import { ThemeMode } from "@beep/ui/themes";
 import { RegistryProvider } from "@effect/atom-react";
 import { it } from "@effect/vitest";
 import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { AtomRegistry } from "effect/unstable/reactivity";
 import { afterEach, describe, expect, vi } from "vitest";

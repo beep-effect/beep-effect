@@ -6,8 +6,8 @@
  */
 
 import { resolveThemeMode, ThemeMode } from "@beep/ui/themes";
-import { P } from "@beep/utils";
-import { Effect } from "effect";
+import * as P from "@beep/utils/Predicate";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { KeyValueStore } from "effect/unstable/persistence";
 import { Atom } from "effect/unstable/reactivity";
@@ -51,8 +51,7 @@ export const workbenchThemeModeAtom = Atom.kvs({
  *
  * ```ts
  * import { migrateWorkbenchThemeMode } from "@/theme/Theme.atoms"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(migrateWorkbenchThemeMode())) // true
  * ```
  *
