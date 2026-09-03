@@ -8,6 +8,7 @@ import { $ProvenanceId } from "@beep/identity/packages";
 import { LiteralKit, Sha256HexFromBytes } from "@beep/schema";
 import { Effect } from "effect";
 import * as Eq from "effect/Equal";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "./SourceTextIdentity.ts";
@@ -184,7 +185,7 @@ class VerifiedSourceTextValue {
   get source(): SourceTextIdentity {
     const snapshot = verifiedSourceTextSnapshots.get(this);
     if (snapshot === undefined) {
-      throw new TypeError("Unissued verified-source proof.");
+      throw VerifiedTextAnchorError.fromReason("invalid-anchor");
     }
     return copySourceTextIdentity(snapshot.source);
   }
@@ -192,13 +193,13 @@ class VerifiedSourceTextValue {
   get sourceText(): string {
     const snapshot = verifiedSourceTextSnapshots.get(this);
     if (snapshot === undefined) {
-      throw new TypeError("Unissued verified-source proof.");
+      throw VerifiedTextAnchorError.fromReason("invalid-anchor");
     }
     return snapshot.sourceText;
   }
 
   static readonly is = (input: unknown): input is VerifiedSourceTextValue =>
-    typeof input === "object" && input !== null && verifiedSourceTextSnapshots.has(input);
+    P.isObject(input) && verifiedSourceTextSnapshots.has(input);
 }
 
 globalThis.Object.freeze(VerifiedSourceTextValue.prototype);
@@ -360,7 +361,7 @@ class VerifiedTextAnchorValue {
   get anchor(): TextAnchor {
     const snapshot = verifiedTextAnchorSnapshots.get(this);
     if (snapshot === undefined) {
-      throw new TypeError("Unissued verified-anchor proof.");
+      throw VerifiedTextAnchorError.fromReason("invalid-anchor");
     }
     return copyTextAnchor(snapshot.anchor);
   }
@@ -368,13 +369,13 @@ class VerifiedTextAnchorValue {
   get source(): SourceTextIdentity {
     const snapshot = verifiedTextAnchorSnapshots.get(this);
     if (snapshot === undefined) {
-      throw new TypeError("Unissued verified-anchor proof.");
+      throw VerifiedTextAnchorError.fromReason("invalid-anchor");
     }
     return copySourceTextIdentity(snapshot.source);
   }
 
   static readonly is = (input: unknown): input is VerifiedTextAnchorValue =>
-    typeof input === "object" && input !== null && verifiedTextAnchorSnapshots.has(input);
+    P.isObject(input) && verifiedTextAnchorSnapshots.has(input);
 }
 
 globalThis.Object.freeze(VerifiedTextAnchorValue.prototype);
@@ -512,7 +513,7 @@ export const toTextAnchorVerificationReceipt = (verified: VerifiedTextAnchor): T
   (() => {
     const snapshot = verifiedTextAnchorSnapshots.get(verified);
     if (snapshot === undefined) {
-      throw new TypeError("Unissued verified-anchor proof.");
+      throw VerifiedTextAnchorError.fromReason("invalid-anchor");
     }
     return TextAnchorVerificationReceipt.make({
       anchor: copyTextAnchor(snapshot.anchor),

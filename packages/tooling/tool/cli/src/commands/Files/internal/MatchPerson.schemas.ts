@@ -478,17 +478,35 @@ export const PersonMatchEntryReason = LiteralKit(["aligner-confidence-failed", "
  */
 export type PersonMatchEntryReason = typeof PersonMatchEntryReason.Type;
 
-/** @internal */
+/**
+ * @internal
+ * @category constants
+ */
 export const PERSON_MATCH_MAX_REFERENCE_IMAGES = 256;
-/** @internal */
+/**
+ * @internal
+ * @category constants
+ */
 export const PERSON_MATCH_MAX_CANDIDATE_IMAGES = 10_000;
-/** @internal */
+/**
+ * @internal
+ * @category constants
+ */
 export const PERSON_MATCH_MAX_FACES_PER_IMAGE = 32;
-/** @internal */
+/**
+ * @internal
+ * @category constants
+ */
 export const PERSON_MATCH_MAX_REPORTED_FACES = 65_536;
-/** @internal */
+/**
+ * @internal
+ * @category constants
+ */
 export const PERSON_MATCH_MAX_REPORT_BYTES = 64 * 1024 * 1024;
-/** @internal */
+/**
+ * @internal
+ * @category constants
+ */
 export const PERSON_MATCH_MAX_DIAGNOSTIC_BYTES = 1024 * 1024;
 
 /**

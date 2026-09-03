@@ -19,7 +19,8 @@
     "requiresPullRequest": true,
     "requiresMergeable": true,
     "statement": "Not achieved until the work ships as a Yeet-driven mergeable PR, is merged, and the exact 11 Codex findings are resolved with zero packet-applicable open findings.",
-    "grandfathered": false
+    "grandfathered": true,
+    "grandfatheredNote": "PRs #876 and #902 merged before this retroactive retained-packet closeout recorded their immutable evidence in ops/closures.json; their historical merge messages cannot be amended to cite the packet."
   },
   "branch": "security/codex-findings-2026-08-30",
   "currentSourceOfTruth": [

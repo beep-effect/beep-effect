@@ -9,7 +9,7 @@ import { GroundedExtraction } from "@beep/langextract/Extraction";
 import { Contract, UnitInterval } from "@beep/nlp/Handoff";
 import { NonNegativeInt } from "@beep/schema/Int";
 import * as O from "@beep/utils/Option";
-import { Match, Number as Num } from "effect";
+import { Match, MutableHashSet, Number as Num } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import { dual, flow, identity, pipe } from "effect/Function";
@@ -312,15 +312,15 @@ const findMinimalFoldAtStart = (
   budget: MinimalFoldBudget
 ): MinimalFoldStartSearch => {
   const pending: Array<MinimalFoldState> = [[0, start]];
-  const visited = new Set<number>();
+  const visited = MutableHashSet.empty<number>();
   const matches: Array<MatchedText> = [];
   const sourceLength = A.length(normalizedSource.tokens);
   const queryLength = A.length(queryTokens);
   while (A.isReadonlyArrayNonEmpty(pending)) {
     const [queryIndex, sourceIndex] = O.getOrThrow(O.fromUndefinedOr(pending.pop()));
     const stateKey = Num.sum(Num.multiply(queryIndex, Num.increment(sourceLength)), sourceIndex);
-    if (visited.has(stateKey)) continue;
-    visited.add(stateKey);
+    if (MutableHashSet.has(visited, stateKey)) continue;
+    MutableHashSet.add(visited, stateKey);
 
     if (queryIndex === queryLength) {
       O.map(matchedTextFromOffsets(normalizedSource, sourceText, start, Num.subtract(sourceIndex, start)), (match) =>
