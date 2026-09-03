@@ -120,7 +120,7 @@ session/machine ids, quote only the minimal identifying error text.
 - **Would have prevented it:** make `--from-inputs` select embedded frozen facts unconditionally;
   validate a live corpus only when the operator passes `--corpus` explicitly.
 
-## 2026-09-04 — Merging A5b took eighteen hosted cycles for five real defects
+## 2026-09-03 — Merging A5b took eighteen hosted cycles for five real defects
 
 - **Doing:** driving PR #978 (A5b) and #993 (A5c) to merge-ready under the push-first rule.
 - **Evidence:** across the two PRs, hosted reds came from an npm advisory 503 (three times), Docker-gated
@@ -133,14 +133,14 @@ session/machine ids, quote only the minimal identifying error text.
   `indirect` kinds the hosted lanes can emit, not only the local inbox), coverage floors that ignore
   conditionally skipped suites, and a rule that lanes never cancel a run on an unreplaced head.
 
-## 2026-09-04 — Fallow's new-only duplication gate fires on every helper a lane writes twice
+## 2026-09-03 — Fallow's new-only duplication gate fires on every helper a lane writes twice
 
 - **Doing:** landing the A5b and A5c journal changes through Sol lanes.
 - **Evidence:** four consecutive pushes tripped Fallow on clone groups the lane had just created
   (atomic-rewrite sequence in two journals, process-identity comparison in two files, tombstone
   cleanup twice in one file) and once on a lock boundary at cognitive complexity 9; each cost a full
-  hosted cycle before the helper was extracted. The `normalizeJournal` split (cyclomatic 10) and the
-  shared staging-file atomic rewrite are still owed after the merge.
+  hosted cycle before the helper was extracted. The `normalizeJournal` split (cyclomatic 10) is still
+  owed after the merge; the shared staging-file rewrite was extracted into `JournalFile.ts`.
 - **Would have prevented it:** running `beep quality fallow audit --check` locally before the first
   push (about 20 seconds) as part of every lane's push checklist, and extracting helpers as they are
   written rather than after review.

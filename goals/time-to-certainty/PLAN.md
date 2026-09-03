@@ -28,7 +28,7 @@ orchestrator owns schemas, contracts, and judgment.
       while normal completions keep `attempt-finished`; dead tickets and leases are claimed atomically
       before their event is journaled; writers preserve unknown journal rows; the economics loader
       accepts both terminal tags.
-- [x] A5b journal-facts completion — done 2026-09-04 (PR #978 merged as c772d25970, under rulings 17–18
+- [x] A5b journal-facts completion — done 2026-09-03 (PR #978 merged as c772d25970, under rulings 17–18
       and their amendments): eviction-row emission is gated behind the protocol switch; scheduler-owned
       termination rows carry head, fingerprint, tier, stage and env profile and compaction keeps
       start/terminal pairs together; stale-start reconciliation closes starts whose owner is dead,
@@ -36,8 +36,8 @@ orchestrator owns schemas, contracts, and judgment.
       inner-lane result as it completes; retention is a budget of terminal attempts only; compaction
       receipts carry the monotonic cutoff the economics loader left-censors from; unknown journal rows
       survive every rewrite path. Owed follow-up (recorded in `research/OPPORTUNITIES.md`): split
-      `normalizeJournal` (cyclomatic 10) and extract the staging-file atomic rewrite shared by the
-      admission and attempt journals into one helper.
+      `normalizeJournal` (cyclomatic 10); the shared staging-file atomic rewrite already lives in
+      `JournalFile.ts` (`publishJournalTextAtomically`).
 - [x] B1 package verification through the Turbo graph — done 2026-09-03 (PR #967 merged as
       715c6a5767): `package-verify` builds the package's upstream graph before verifying, so a stale
       upstream dist can no longer raise a P0; environment-only attribution when no package source
@@ -53,10 +53,11 @@ orchestrator owns schemas, contracts, and judgment.
       reads, the quad still fails closed, and the health probe names failing variables only).
 - [ ] B3 cheap precise gates first, wave fails immediately; ordering seeded from A1.
 - [ ] B5 detached durable proof jobs in their own systemd user scope with inbox completion.
-- [x] B6 lease and submitter death journaled as admission events — done 2026-09-04 (PR #964 rows,
-      completed by PR #978 as c772d25970: `admission-lease-evicted` and `admission-ticket-evicted` are
-      claimed atomically and their emission is gated behind the unknown-row preservation rollout).
-      Crash-recoverable claims, promotion and lock reclamation continue as A5c (PR #993).
+- [~] B6 lease and submitter death journaled as admission events — rows landed in PR #964 and their
+      emission gated behind the unknown-row preservation rollout in PR #978 (c772d25970);
+      complete when A5c (PR #993) makes the reap claim crash-recoverable, because today a reaper that
+      dies after renaming an entry to its claim but before appending the termination events leaves
+      that death unjournaled.
 
 ## P2 — Proof reuse
 
