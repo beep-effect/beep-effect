@@ -44,9 +44,10 @@ import {
   RepoRunContext,
   TurboPlanSnapshot,
 } from "@beep/repo-cli/test/Yeet";
+import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { UUID } from "@beep/schema/String";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
-import { NodeChildProcessSpawner } from "@effect/platform-node";
+import { NodeChildProcessSpawner, NodeServices } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
@@ -63,6 +64,7 @@ import { Command } from "effect/unstable/cli";
 const PlatformLayer = NodeChildProcessSpawner.layer.pipe(
   Layer.provideMerge(Layer.mergeAll(NodeFileSystem.layer, NodePath.layer))
 );
+const SchedulerCommandLayer = Layer.mergeAll(NodeServices.layer, FsUtilsLive.pipe(Layer.provide(NodeServices.layer)));
 const runQualityCommand = Command.runWith(qualityCommand, { version: "0.0.0" });
 
 const DEAD_PID = 2_147_483_647;
@@ -876,14 +878,16 @@ describe("quality-scheduler", () => {
     Effect.runPromise(
       Effect.gen(function* () {
         const gibRef = yield* Ref.make(50);
-        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+        yield* withAdmissionTempRoot(gibRef, () =>
           Effect.gen(function* () {
             const fs = yield* FileSystem.FileSystem;
             const path = yield* Path.Path;
             const repositoryMarker = path.join(process.cwd(), ".git");
             const repositoryMarkerFileSystem = FileSystem.FileSystem.of({
               ...fs,
-              exists: (target) => (target === repositoryMarker ? Effect.succeed(true) : fs.exists(target)),
+              exists: Effect.fnUntraced(function* (target: string) {
+                return target === repositoryMarker ? true : yield* fs.exists(target);
+              }),
             });
 
             yield* Effect.gen(function* () {
@@ -907,7 +911,7 @@ describe("quality-scheduler", () => {
             }).pipe(Effect.provideService(FileSystem.FileSystem, repositoryMarkerFileSystem));
           }).pipe(provideScopedLayer(TestConsole.layer))
         );
-      })
+      }).pipe(provideScopedLayer(SchedulerCommandLayer))
     ));
 
   it("claims dead tickets when terminal publication is absent or cannot be written", () =>

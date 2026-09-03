@@ -589,7 +589,7 @@ describe("yeet planner", () => {
               stage: O.some("repair-loop"),
             });
           const cases = [
-            [attempt("000000000001"), yield* Effect.exit(Effect.succeed(undefined)), "terminal-row-missing"],
+            [attempt("000000000001"), yield* Effect.exit(Effect.void), "terminal-row-missing"],
             [attempt("000000000002"), yield* Effect.exit(Effect.interrupt), "interrupted"],
             [attempt("000000000003"), yield* Effect.exit(Effect.fail("boom")), "unrecorded-failure"],
           ] as const;
@@ -611,7 +611,7 @@ describe("yeet planner", () => {
           const journalPath = yield* attemptJournalPath(tempContext);
           const events = yield* Effect.forEach(
             pipe(yield* fs.readFileString(journalPath), Str.split("\n"), A.filter(Str.isNonEmpty)),
-            decodeYeetAttemptJournalEvent
+            (line) => decodeYeetAttemptJournalEvent(line)
           );
           const terminals = A.filter(events, YeetAttemptJournalEvent.guards["attempt-terminated"]);
           expect(A.map(terminals, (terminal) => terminal.reason)).toEqual(A.map(cases, ([, , reason]) => reason));
