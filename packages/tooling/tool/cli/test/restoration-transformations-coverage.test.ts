@@ -2993,7 +2993,7 @@ else exit 92; fi
     expect(RT.legacySegmentReconciles(legacySummary, [...legacySegment, legacyPass])).toBe(false);
   });
 
-  it.effect("resumes a pending legacy summary and reconciles all four acceptance families", () =>
+  it.effect.sequential("resumes a pending legacy summary and reconciles all four acceptance families", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;

@@ -53,3 +53,20 @@
   model every security-relevant wrapper and publication boundary—including
   cgroup launch, private output staging, success-only handoff, and the absence
   of failed partial publication—rather than only translating bind paths.
+
+## 2026-09-03 — Process-heavy restoration tests inherited global concurrency
+
+- **What I was doing:** Following the replacement exact-head Coverage
+  Regression run after repairing the restoration sandbox fixtures.
+- **Evidence:** Property Laws and the ordinary mail-restoration cases passed,
+  but five resume, tamper, and aggregate-acceptance cases reached Vitest's
+  five-minute per-test ceiling. The repository test configuration runs tests
+  globally concurrent; the affected cases each provision process wrappers,
+  stream a tar handoff, and exercise durable restoration state. The isolated
+  slice-acceptance case completed in seconds, confirming contention rather
+  than a stuck production operation.
+- **What would have prevented it:** Suites that create real child-process
+  pipelines or repeatedly mutate durable lifecycle fixtures should declare
+  sequential execution explicitly. A fixture change that adds another
+  security boundary should trigger a concurrency audit in addition to its
+  functional assertions.

@@ -2570,7 +2570,7 @@ const tamperRestartedMailSegment = (
     Match.exhaustive
   );
 
-describe("corpus restoration mail", () => {
+describe.sequential("corpus restoration mail", () => {
   it.effect(
     "runs the public source-path engine with all-item mode and accounts every raw and repaired child",
     Effect.fnUntraced(
@@ -3464,7 +3464,7 @@ describe("corpus restoration legacy Word", () => {
   );
 });
 
-describe("corpus restoration acceptance", () => {
+describe.sequential("corpus restoration acceptance", () => {
   it.effect(
     "rejects slice-only mail evidence when final acceptance requires the full-estate ledger",
     Effect.fnUntraced(
