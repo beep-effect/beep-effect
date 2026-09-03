@@ -1718,6 +1718,11 @@ type TsconfigInheritanceResolution =
 
 const reachedTsconfigBase: TsconfigInheritanceResolution = { _tag: "ReachedBase" };
 
+const unresolvedTsconfigInheritance = (file: string, detail: string): TsconfigInheritanceResolution => ({
+  _tag: "Unresolved",
+  diagnostic: `${file}: ${detail}`,
+});
+
 const resolveTsconfigInheritance = (
   file: string,
   current: string,
@@ -1728,41 +1733,38 @@ const resolveTsconfigInheritance = (
     return reachedTsconfigBase;
   }
   if (A.contains(visited, current)) {
-    return { _tag: "Unresolved", diagnostic: `${file}: tsconfig extends cycle encountered at ${current}` };
+    return unresolvedTsconfigInheritance(file, `tsconfig extends cycle encountered at ${current}`);
   }
 
   const currentConfig = R.get(configByFile, current);
   if (O.isNone(currentConfig)) {
-    return {
-      _tag: "Unresolved",
-      diagnostic: `${file}: tsconfig extends chain references missing config ${current}`,
-    };
+    return unresolvedTsconfigInheritance(file, `tsconfig extends chain references missing config ${current}`);
   }
-  const extended = findTsconfigExtends(currentConfig.value);
+
+  return resolveTsconfigInheritanceBranches(file, current, currentConfig.value, configByFile, visited);
+};
+
+const resolveTsconfigInheritanceBranches = (
+  file: string,
+  current: string,
+  currentConfig: unknown,
+  configByFile: Readonly<Record<string, unknown>>,
+  visited: ReadonlyArray<string>
+): TsconfigInheritanceResolution => {
+  const extended = findTsconfigExtends(currentConfig);
   if (O.isNone(extended) || A.isReadonlyArrayEmpty(extended.value)) {
-    return { _tag: "Unresolved", diagnostic: `${file}: tsconfig extends chain does not reach tsconfig.base.json` };
+    return unresolvedTsconfigInheritance(file, "tsconfig extends chain does not reach tsconfig.base.json");
   }
 
   const nextVisited = A.append(visited, current);
-  let firstFailure: O.Option<TsconfigInheritanceResolution & { readonly _tag: "Unresolved" }> = O.none();
-  for (const base of extended.value) {
-    const resolution = resolveTsconfigInheritance(
-      file,
-      resolveRelativeTsconfigPath(current, base),
-      configByFile,
-      nextVisited
-    );
-    if (resolution._tag === "ReachedBase") {
-      return resolution;
-    }
-    if (O.isNone(firstFailure)) {
-      firstFailure = O.some(resolution);
-    }
-  }
-  return O.getOrElse(firstFailure, () => ({
-    _tag: "Unresolved" as const,
-    diagnostic: `${file}: tsconfig extends chain does not reach tsconfig.base.json`,
-  }));
+  const resolutions = A.map(extended.value, (base) =>
+    resolveTsconfigInheritance(file, resolveRelativeTsconfigPath(current, base), configByFile, nextVisited)
+  );
+  return pipe(
+    A.findFirst(resolutions, (resolution) => resolution._tag === "ReachedBase"),
+    O.orElse(() => A.head(resolutions)),
+    O.getOrElse(() => unresolvedTsconfigInheritance(file, "tsconfig extends chain does not reach tsconfig.base.json"))
+  );
 };
 
 const collectTsconfigInheritanceDiagnostics = (
