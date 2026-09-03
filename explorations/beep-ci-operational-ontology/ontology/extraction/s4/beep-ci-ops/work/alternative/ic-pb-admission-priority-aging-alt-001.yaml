@@ -1,0 +1,33 @@
+id: ic:pb-admission-priority-aging-alt:001
+hypothesis_ref: dh:pb-admission-priority-aging:001
+identity:
+  supplies_identity: true
+  identity_criterion: Two priority-aging rules are the same iff they prescribe the same time-dependent
+    change of ordering rank after the same publish-aging interval. The comparison nowMillis
+    - enqueuedAtMillis >= publishAgingSeconds * 1000 is an encoding of that rule, not a new
+    individual per evaluation. A request's aged rank at a moment is not the rule.
+  reidentification_key:
+  - publishAgingSeconds (evidence)
+  - rank 0-versus-1 comparison (evidence)
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: one time-dependent ordering rule over waiting requests
+  dependence: none
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - phase
+  - quality
+  existential_dependencies: []
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+- description: Evaluating the comparison for one ticket yields a rank, not a new rule. Treating
+    each true evaluation as an aging individual would be snapshot-as-continuant.
+- description: The starvation bound in the same contract paragraph is a different norm; identifying
+    aging with starvation is the weak alternative the hypothesis already rejects.
+status: proposed

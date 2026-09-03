@@ -6,8 +6,8 @@
     "status": "active",
     "stage": "research",
     "openQuestions": [
-      "Auditor run 2 IN FLIGHT (launched 2026-09-02): skill review done, intake docket at research/auditor-run2-intake.md, nine launch rulings in DECISIONS.md (2026-09-02 entry — no TS re-extraction, fresh fleet corpus capture, full docket one run, run-1 seat assignment, validator v13 as-is, clustered ratification sittings, one end-of-run PR). Remaining: corpus capture, adapter v1.1.0, pin + manifest, observe, seats, gate, sittings, close. S5/S6/S7 are COMPLETE — do not redo them.",
-      "S8 IRI scheme: deferred per the standing pipeline; ciops-prov: namespace re-proposal rides auditor run 2."
+      "Auditor run 3 prerequisites (run 2 COMPLETE 2026-09-03, orun-2026-09-03T02:46:18Z, 21 ratifications rat-032..rat-052, gate PASSED — do not rerun): the CQ-020 wording amendment (WorkUnit -> SeatRequest ordering; post-run because the suite digest was manifest-pinned), the full ordering cluster (ScheduleStep + its four relations ratify together), the deferred identity-provenance corpora, and the grant-contention + checkout-identity captures. Prior chain: runs/orun-2026-09-03T02:46:18Z.index.yaml sha12 a207a106de68. Upstream skill follow-ups (scanner archive shelter; Python 3.13 validator fix) queued in work-run2/impl-report.md.",
+      "S8 IRI scheme: deferred per the standing pipeline; the ciops-prov: namespace re-proposal now rides run 3 with the ordering cluster."
     ],
     "sources": ["research/SOURCES.md"],
     "links": {

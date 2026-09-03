@@ -1,0 +1,34 @@
+id: "ic:pb-planned-lane-status:001"
+hypothesis_ref: "dh:pb-planned-lane-status:001"
+identity:
+  supplies_identity: unresolved
+  identity_criterion: "Unresolved for the broad exact-reused VerificationResultArtifact extension: the corpus does not decide whether repeatable result content, each authoritative issuance, or custody-tracked carrier lineage supplies identity across heterogeneous verification-result artifacts."
+  reidentification_key:
+    - "reported verification execution and outcome content"
+    - "producing act, authority, and applicability context"
+    - "issuance, custody, copy, correction, and revision lineage"
+ontoclean:
+  rigidity: unresolved
+  carries_identity: unresolved
+  supplies_identity: unresolved
+  unity: "Broad result-artifact unity is unresolved between one repeatable outcome-content unit and one provenance-bound issued record or carrier realizing that content."
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "repeatable verification-result content realized by multiple carriers"
+    - "each authoritatively issued verification-result record token"
+    - "a transient in-memory verdict value with no independently useful artifact identity"
+    - "the WorkUnit execution occurrence reported by a result artifact"
+  existential_dependencies:
+    - "a verification execution or result-bearing process that the content reports"
+    - "a producing act and at least one faithful carrier"
+    - "the policy and applicability context under which the result may bear an evidence role"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: unresolved
+  terminal_states:
+    - "superseded, corrected, revoked, or left without a faithful carrier"
+counterexamples:
+  - description: "A hosted-check result and a planned-lane status can both instantiate VerificationResultArtifact while following different production and custody practices, so a lane-status-specific identity criterion cannot govern the broad exact-reused class."
+status: proposed

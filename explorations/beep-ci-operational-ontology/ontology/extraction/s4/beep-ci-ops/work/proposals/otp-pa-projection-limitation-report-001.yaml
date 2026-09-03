@@ -1,0 +1,86 @@
+id: "otp:pa-projection-limitation-report:001"
+hypothesis_ref: "dh:pa-projection-limitation-report:001"
+identity_card_ref: "ic:pa-projection-limitation-report:001"
+foundational_status: explicitly_deferred
+term:
+  preferred_label: "verification result artifact"
+  local_name: VerificationResultArtifact
+  proposed_iri: "https://oip.law/ontology/ci-ops#VerificationResultArtifact"
+  owl_entity_kind: class
+definition:
+  text: >-
+    An information object recording the outcome of a verification execution in
+    a form that may bear the contingent VerificationEvidence role when
+    policy-required applicability and provenance are present. A result report
+    containing projection-applicability caveats is one possible instance; its
+    caveat section may instead be a proper component and does not define this
+    broad class or establish an independent limitation-report identity.
+  source:
+    - "po:sha256:37dade1cef0b41d87b0656f26afcacbbb5abd10dc718d45d7e0c966b19061610"
+foundational:
+  ufo_category: information_object
+  gufo_alignment: "gufo:Endurant"
+ontoclean:
+  rigidity: unresolved
+  identity: unresolved
+  dependence: relational
+parents: []
+revision_log:
+  - from_sha256: "62db7a3cab03caa05ba5a95d8f8921d7096473e8f1765afd169c18fc5b626e03"
+    addressed:
+      - "independent-artifact-identity-unwarranted"
+      - "semantic-support-not-necessary"
+      - "discriminator-true-of-report-section"
+    sitting_struck:
+      - "discriminator-true-of-report-section"
+    disposition: >-
+      Run-2 sitting 1 struck the carrier-only attack and conceded an
+      independently identified limitation-report term as unresolved pending
+      issuance, lineage, and decision evidence.
+  - from_sha256: "9e83b97432becd35420af72cc8b3aa699c276ceda3c73e0b5bf21018b3b05360"
+    addressed:
+      - "exact-reuse-extension-narrowing"
+    disposition: >-
+      Round 3 restores the full ratified VerificationResultArtifact extension.
+      Projection-limitation caveats are treated as possible instance content or
+      a report component, never as necessary membership conditions on the
+      exact-reused class.
+reuse:
+  searched: true
+  exact_reuse_found: true
+  mappings:
+    - iri: "https://oip.law/ontology/ci-ops#VerificationResultArtifact"
+      compatibility: >-
+        The ratified class covers heterogeneous information objects that record
+        verification outcomes and may bear an evidence role. A result report
+        containing projection caveats is an accommodated instance; the caveat
+        section does not narrow the class's extension.
+operational_warrant:
+  competency_questions: []
+  semantic_support_for: ["otp:pb-verification-evidence-receipt:001"]
+alternatives_rejected:
+  - >-
+    The implementation-section null is rejected because the four caveats
+    constrain how projection evidence may be interpreted operationally.
+  - >-
+    The report is rejected as identical to the world-side limitations because
+    implementation changes can remove a limitation while the report persists.
+open_issues:
+  - >-
+    Steward must choose whether the applicability context warrants a distinct
+    situation term rather than being represented only by content within a
+    broader VerificationResultArtifact.
+  - >-
+    Identity across the broad exact-reused class remains unresolved between
+    repeatable result content, authoritative issuance, and custody-tracked
+    carrier lineage.
+  - >-
+    ROUND-3 REPAIR — the independent ProjectionLimitationReport specialization
+    remains withdrawn from run-2 admission, not false. Run-3 evidence required:
+    an independently issued caveat artifact with identified target result,
+    provenance, authority, version and revision lineage, plus a Must/Should CQ
+    that consumes it separately. None of those conditions narrow the broad
+    exact-reused VerificationResultArtifact term retained here.
+revision_requests: []
+review: {foundational_agent: pending, adversarial_agent: pending, steward: pending}
+status: proposed

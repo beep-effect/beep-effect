@@ -1,0 +1,23 @@
+id: "fa:pb-yeet-proof-tier:001"
+hypothesis_ref: "dh:pb-yeet-proof-tier:001"
+identity_card_ref: "ic:pb-yeet-proof-tier:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+  - label: "A selected tier is an anti-rigid role or mode borne by a proof-plan specification under one planner policy."
+    still_viable: true
+  - label: "Each tier denotes a rigid subkind of WorkUnit specification rather than a member of a classification scheme."
+    still_viable: true
+  - label: "Yeet proof tiers are the ontology's AssuranceTiers because both use the word tier."
+    still_viable: false
+  - label: "The literal set is only dispatch syntax with no plan-selection content."
+    still_viable: false
+strongest_counterexample: "Changing repository context can change the lane sequence selected by cheap-gates, while completing that sequence need not discharge every assurance obligation; selector, plan specification, execution, and AssuranceTier therefore remain distinct."
+verdict: explicitly_deferred
+needed_evidence: >-
+  Planner governance and version lineage must decide one shared scheme versus
+  copied domains or plan-borne classifications, and a Must/Should CQ must
+  require the selector before admission.

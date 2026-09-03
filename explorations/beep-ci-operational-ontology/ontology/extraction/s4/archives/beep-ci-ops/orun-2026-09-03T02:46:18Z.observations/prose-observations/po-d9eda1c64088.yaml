@@ -1,0 +1,10 @@
+id: po:sha256:d9eda1c640883d4b056abf114a0a2482b0fff4170ccd6462c26a9772ec0f9c59
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: turbo.json
+source_span:
+  start_line: 157
+  end_line: 157
+quote: '"test:integration:parallel": {'
+epistemic_status: quoted_prose

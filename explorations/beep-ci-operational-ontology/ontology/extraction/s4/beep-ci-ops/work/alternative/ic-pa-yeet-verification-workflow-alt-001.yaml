@@ -1,0 +1,35 @@
+id: ic:pa-yeet-verification-workflow-alt:001
+hypothesis_ref: dh:pa-yeet-verification-workflow:001
+identity:
+  supplies_identity: true
+  identity_criterion: Two Yeet verification-workflow specifications are the same iff they
+    prescribe the same canonical quality path, the same family of proof plans, and the same
+    terminal merge-readiness condition. cheap-gates versus review-fix are plan-variants of
+    that specification, not distinct workflows, unless a source splits them as separate procedures.
+    A particular yeet run is not the spec.
+  reidentification_key:
+  - Yeet canonical-path statement (evidence)
+  - planner proof-plan branches (evidence)
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: one canonical quality procedure with its proof-plan family and terminal condition
+  dependence: none
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - process
+  existential_dependencies: []
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+- description: 'bun run beep yeet monitor until merge-ready: yes describes a termination condition
+    of executions; identifying the workflow spec with one monitor session would end the spec
+    when the session ends.'
+- description: If cheap-gates and review-fix are separate workflows, the 'canonical path'
+    quote is a counterexample to splitting them; if they are phases of one run, the planner
+    quotations are a counterexample to one unchanging spec body.
+status: proposed

@@ -1,0 +1,35 @@
+id: ic:pb-admission-priority-class-alt:001
+hypothesis_ref: dh:pb-admission-priority-class:001
+identity:
+  supplies_identity: false
+  identity_criterion: The priority-class quality of a request is the same quality iff it is
+    that request's verify-or-publish classification. Handler literals 'verify' and 'publish'
+    are evidence of the value, never the quality. Aging can change ordering rank without the
+    observations showing a change of class, so rank is not this quality.
+  reidentification_key:
+  - 'priority: verify|publish (evidence of value)'
+ontoclean:
+  rigidity: rigid
+  carries_identity: false
+  supplies_identity: false
+  unity: one verify-or-publish classification inhering in one request
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: quality
+  alternatives:
+  - role
+  - subkind
+  existential_dependencies:
+  - the admission request that bears the classification
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+- description: Aging changing a verify request's rank from 1 to 0 without a quoted change
+    of the priority field is a counterexample to identifying the class with the momentary
+    rank.
+- description: If verify/publish were subkinds of request, a request could not have been the
+    other class; the handler can assign either value at creation, which is also compatible
+    with a quality set at birth.
+status: proposed

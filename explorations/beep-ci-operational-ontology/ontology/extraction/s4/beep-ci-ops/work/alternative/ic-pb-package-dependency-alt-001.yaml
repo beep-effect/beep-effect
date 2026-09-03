@@ -1,0 +1,36 @@
+id: ic:pb-package-dependency-alt:001
+hypothesis_ref: dh:pb-package-dependency:001
+identity:
+  supplies_identity: true
+  identity_criterion: Two direct workspace-package dependencies are the same relator iff they
+    are the same directed import mediation from the same importer package to the same imported
+    package in the same manifest snapshot. Arrow direction in a diagram and the property name
+    dependsOn are evidence of that mediation, never the relator. Removing the import ends
+    this relator.
+  reidentification_key:
+  - dependsOn (evidence)
+  - importer→imported pair (evidence)
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: one directed import mediation from one package to one package
+  dependence: relational
+ufo_analysis:
+  candidate_category: relator
+  alternatives:
+  - none
+  existential_dependencies:
+  - the importing package
+  - the imported package
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+  - removed
+counterexamples:
+- description: An architecture-diagram arrow convention without an import would not be this
+    relator; the ARCHITECTURE.md quote is directional evidence, not a second kind of edge.
+- description: Treating dependsOn as only a property spelling would leave the fixpoint's base
+    relation without a mediation; that is the weak lexical alternative.
+status: proposed

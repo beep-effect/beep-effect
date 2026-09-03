@@ -1,0 +1,10 @@
+id: po:sha256:d0e190e143df1788d957dc00bbdf6faf804b7b76ae3e47e147c558e44f802424
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
+source_span:
+  start_line: 184
+  end_line: 184
+quote: Math.min(config.capacityMaxTokens, raw)
+epistemic_status: quoted_prose

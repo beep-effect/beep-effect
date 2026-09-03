@@ -1,0 +1,36 @@
+id: ic:pb-admission-capacity-state-alt:001
+hypothesis_ref: dh:pb-admission-capacity-state:001
+identity:
+  supplies_identity: false
+  identity_criterion: The admission-capacity quality of a scheduler/machine is the same quality
+    iff it is the available-token quantity of that same bearer. Values derived from available
+    GiB, reserve, slot size, and the hard-floor rule are states of that quality, not new individuals.
+    A snapshot record of capacityTokens is evidence of a value, never the quality itself.
+  reidentification_key:
+  - capacityTokens (evidence of value)
+  - memAvailableGib (evidence)
+  - hardFloorEngaged (evidence)
+ontoclean:
+  rigidity: rigid
+  carries_identity: false
+  supplies_identity: false
+  unity: one available-token quantity inhering in one scheduler/machine bearer
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: quality
+  alternatives:
+  - situation
+  - information_object
+  existential_dependencies:
+  - the scheduler/machine whose memory is observed
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+  - zero-capacity hard floor
+counterexamples:
+- description: if (availableGib < config.hardFloorGib) return 0 is a rule for a value, not
+    a new kind of capacity. Treating the hard-floor branch as a subclass would be state-as-kind.
+- description: capacityTokens on a schema is a snapshot field; identifying the quality with
+    that field would mint a new capacity whenever the schema is decoded.
+status: proposed

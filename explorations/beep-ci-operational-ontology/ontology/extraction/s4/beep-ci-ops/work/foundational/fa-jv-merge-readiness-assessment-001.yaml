@@ -1,0 +1,24 @@
+id: "fa:jv-merge-readiness-assessment:001"
+hypothesis_ref: "dh:jv-merge-readiness-assessment:001"
+identity_card_ref: "ic:jv-merge-readiness-assessment:001"
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+  - label: "VerificationEvidence identity follows repeatable claim content across faithful carriers."
+    still_viable: true
+  - label: "VerificationEvidence identity follows each issued and custody-tracked carrier token."
+    still_viable: true
+  - label: "A time-indexed merge-readiness situation is distinct from the evidence record about it."
+    still_viable: true
+strongest_counterexample: >-
+  The exact-reused class includes evidence unlike merge-readiness evaluations;
+  a criterion tied to one pull-request head and readiness policy would narrow
+  the broad ratified extension and cannot reidentify all its instances.
+verdict: explicitly_deferred
+needed_evidence: >-
+  Authoritative generation, issuance, custody, copy, correction, and
+  claim-realization provenance across heterogeneous VerificationEvidence
+  instances is required to decide content versus carrier identity.

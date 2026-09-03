@@ -1,0 +1,20 @@
+id: fa:pa-turbo-task-specification-alt:001
+hypothesis_ref: dh:pa-turbo-task-specification:001
+identity_card_ref: ic:pa-turbo-task-specification-alt:001
+tests:
+  spec_vs_execution: separated
+  world_vs_information: not_applicable
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+- label: verification lane as a domain process type (kind of work)
+  still_viable: true
+- label: Turbo configuration object with no work prescription
+  still_viable: false
+strongest_counterexample: Several distinct task names are cited as one hypothesized kind of
+  spec. That is coherent as a type of information object, but unity of 'the Turbo task specification'
+  as one individual is a counterexample — they are many specs of one category.
+verdict: analyzed
+needed_evidence: An observation that task specifications are reidentified across turbo.json
+  and invocation as plans, versus treated only as config keys, and whether lanes are a different
+  sortal from these specs.

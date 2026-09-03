@@ -1,0 +1,39 @@
+id: ic:jv-verification-attempt-alt:001
+hypothesis_ref: dh:jv-verification-attempt:001
+identity:
+  supplies_identity: true
+  identity_criterion: Two verification attempts are the same process iff they are the same
+    bounded verification unfolding on the same checkout and work from start to a terminal
+    outcome. attemptId and runId are reidentification evidence, never the criterion. A second
+    start with a different interval is a different attempt even on the same branch.
+  reidentification_key:
+  - attemptId (evidence)
+  - runId (evidence)
+  - startedAt/endedAt (evidence)
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: one start-to-terminal verification unfolding on one checkout/work
+  dependence: relational
+ufo_analysis:
+  candidate_category: process
+  alternatives:
+  - information_object
+  - event
+  existential_dependencies:
+  - the checkout/work under verification
+  - the planned steps that compose it
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+  - failure
+  - success
+counterexamples:
+- description: 'The attempt-started journal also carries id=prepare:01-effect-imports, status=passed,
+    durationMs of a step, and failedStepId=prepare:05-docgen: one file mixes attempt-level
+    and step-level facts, so ''the attempt'' is not isolated by that observation.'
+- description: A verdict for the same run name records a different attemptId with a four-second
+    elapsed interval; treating runId as the attempt would wrongly merge those unfoldings.
+status: proposed

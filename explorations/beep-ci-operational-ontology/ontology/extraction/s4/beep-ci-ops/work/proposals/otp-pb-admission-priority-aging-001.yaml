@@ -1,0 +1,62 @@
+id: "otp:pb-admission-priority-aging:001"
+hypothesis_ref: "dh:pb-admission-priority-aging:001"
+identity_card_ref: "ic:pb-admission-priority-aging:001"
+foundational_status: analyzed
+term:
+  preferred_label: "admission policy"
+  local_name: AdmissionPolicy
+  proposed_iri: "https://oip.law/ontology/ci-ops#AdmissionPolicy"
+  owl_entity_kind: class
+definition:
+  text: >-
+    A governed policy-specification information object that normatively fixes
+    admission ordering, capacity, aging, class-cap, starvation, applicability,
+    and revision semantics for queued SeatRequests.
+  source:
+    - "po:sha256:60e90bd17b628d4d6d815cfd05ddcf88cbc2a724790b05ac88b4411619f535be"
+    - "po:sha256:6b2e1d71b18197d5aabdde8f443d63fb71885b277f825b9ad13103f0de607a29"
+foundational:
+  ufo_category: information_object
+  gufo_alignment: "gufo:Endurant"
+ontoclean:
+  rigidity: rigid
+  identity: supplies
+  dependence: relational
+parents: []
+revision_log:
+  - from_sha256: "1c796a6eb377b7fda1323e8bc51ff4016da0a03191df29d3f0204c67b47662d6"
+    addressed:
+      - "semantic-support-not-necessary"
+      - "discriminator-true-of-sort-implementation"
+    sitting_struck:
+      - "discriminator-true-of-sort-implementation"
+    disposition: >-
+      Run-2 sitting 1 struck the carrier-only attack and folded the supported
+      aging content into exact reuse of the complete AdmissionPolicy rather
+      than retaining an unnecessary clause class.
+reuse:
+  searched: true
+  exact_reuse_found: true
+  mappings:
+    - iri: "https://oip.law/ontology/ci-ops#AdmissionPolicy"
+      compatibility: >-
+        The observed aging threshold is one clause of the already-ratified
+        complete AdmissionPolicy; it supplies no independently authoritative
+        clause identity or narrower policy kind.
+operational_warrant:
+  competency_questions: ["CQ-023"]
+  semantic_support_for: []
+alternatives_rejected:
+  - >-
+    A numeric comparator with no governed content is rejected because the
+    quoted threshold changes a queued request's operational ordering treatment.
+  - >-
+    A starvation guarantee is rejected because capacity can keep an aged
+    request inadmissible after its rank changes.
+open_issues:
+  - >-
+    A threshold-crossing phase or request role remains a possible world-side
+    model, but this record asserts only exact reuse of the complete policy.
+revision_requests: []
+review: {foundational_agent: pending, adversarial_agent: pending, steward: pending}
+status: proposed

@@ -1,0 +1,21 @@
+id: po:sha256:ed86c2d18b12ff797604eac97a917b36527e390ce417fce35ac583fd829b2709
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: explorations/beep-ci-operational-ontology/ontology/docs/s7-projection-contract.md
+source_span:
+  start_line: 1
+  end_line: 7
+quote: '# S7 Projection Contract (binding)
+
+
+  Stage S7 of the pipeline: the **projection function** — the loop-closer.
+
+  `(T-Box, A-Box, live instance data) → WorkUnit schedule`, deterministic and
+
+  property-tested (uncontested amendment 1, DECISIONS.md 2026-08-27). This
+
+  contract binds the v1 implementation. Rulings: DECISIONS.md
+
+  §"2026-08-30 — S7 sitting 1".'
+epistemic_status: quoted_prose

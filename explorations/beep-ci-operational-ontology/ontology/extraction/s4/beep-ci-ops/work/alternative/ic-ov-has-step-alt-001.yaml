@@ -1,0 +1,39 @@
+id: ic:ov-has-step-alt:001
+hypothesis_ref: dh:ov-has-step:001
+identity:
+  supplies_identity: false
+  identity_criterion: 'The has-step association is not a further individual beyond
+    a ScheduleStep being a constituent of a ScheduleProposal. Two has-step facts are
+    the same iff they are the same constituency of the same step in the same proposal.
+    The ordering-predicate spelling hasStep is evidence of that constituency, never
+    a second relator beside the step. Replacing RDF encoding with another carrier
+    of ordered proposal content leaves the same parthood.'
+  reidentification_key:
+  - hasStep predicate spelling (evidence)
+  - ordered-steps field of ScheduleProposal (evidence)
+ontoclean:
+  rigidity: rigid
+  carries_identity: false
+  supplies_identity: false
+  unity: not an individual; one constituency tuple of one proposal and one step
+  dependence: relational
+ufo_analysis:
+  candidate_category: none
+  alternatives:
+  - relator
+  - information_object
+  existential_dependencies:
+  - the ScheduleProposal
+  - the ScheduleStep constituent
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+- description: 'If hasStep were participation of an admission act in a projected schedule,
+    a deferred-tail request would participate without being admitted. The covering
+    reading is proposal-to-step constituency of information content.'
+- description: 'Reifying hasStep as its own relator would duplicate ScheduleStep,
+    which already carries index, scheduled-target, and scope as properties of the
+    component.'
+status: proposed

@@ -1,0 +1,20 @@
+id: fa:pa-projection-contract-alt:001
+hypothesis_ref: dh:pa-projection-contract:001
+identity_card_ref: ic:pa-projection-contract-alt:001
+tests:
+  spec_vs_execution: separated
+  world_vs_information: not_applicable
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+- label: the same contract document as pb-schedule-projection-specification and pc-projection-contract
+  still_viable: true
+- label: admission projection execution / Effect service
+  still_viable: false
+strongest_counterexample: This hypothesis, the pb schedule-projection specification, and the
+  pc binding contract all quote overlapping slices of s7-projection-contract.md. On current
+  evidence they are observationally equivalent as one information object versus layered specs.
+verdict: analyzed
+needed_evidence: An observation that architects treat architecture-schemas, determinism rules,
+  and non-goals as separately versioned specifications, or that they are always cited as one
+  binding document.

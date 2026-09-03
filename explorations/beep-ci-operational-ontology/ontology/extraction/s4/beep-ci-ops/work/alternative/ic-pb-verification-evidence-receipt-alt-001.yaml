@@ -1,0 +1,34 @@
+id: ic:pb-verification-evidence-receipt-alt:001
+hypothesis_ref: dh:pb-verification-evidence-receipt:001
+identity:
+  supplies_identity: true
+  identity_criterion: 'Two verification evidence receipts are the same iff they are the same
+    recorded replay-pass or mismatch census under the same custody conditions (digest-locked,
+    read-only, used in named gates). Byte identity of the evidence file is evidence of the
+    same encoding rather than a technical substitute for aboutness: a regenerated file with
+    the same prose would still be a different receipt if custody was broken.'
+  reidentification_key:
+  - s7-replay-evidence.md bytes (evidence of encoding)
+  - S6 digest lock (evidence)
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: one digest-bound replay outcome under read-only custody for gated handoff
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - event
+  existential_dependencies:
+  - the replay or verification whose outcome is recorded
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+- description: Generated Markdown marked as generated can still be this receipt; 'generated'
+    does not reduce it to an implementation artifact once digest-lock and gate use are required.
+- description: Identifying the receipt with a successful verification occurrence would make
+    a mismatch census impossible as the same kind of individual.
+status: proposed

@@ -1,0 +1,23 @@
+id: "so:sha256:78cf821b0771a1c60ef1f80746484a8da1df72bcf2b1eaa9ebed337144e5a245"
+schema_version: 1
+repository:
+  commit: "341cfef8b6e80d49f6cef894e9eecd5337f70e8f"
+  path: "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run2-fleet/attempts/beep-effect/fix_ship-velocity-main-push-parity-d7281d09fe50/attempts.properties"
+source_span:
+  start_line: 1
+  end_line: 328
+  content_sha256: "2a133654cc6dbb8700f4ccc945da26b45efacec5a309ca21d2e14209c81c78ce"
+extractor:
+  id: "adapter-journal"
+  version: "1.0.0"
+  parser: "python-stdlib-properties"
+  script: "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal.py"
+symbol:
+  qualified_name: "yeet-attempt-journal"
+  lexical_name: "yeet-attempt-journal"
+  syntactic_kind: "properties_projection"
+observed_facts:
+  - predicate: "config_key_value"
+    object: "peakRssKb=511788"
+source_excerpt: "peakRssKb=511788"
+epistemic_status: "parser_derived"

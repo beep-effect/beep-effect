@@ -1,0 +1,33 @@
+id: "ic:pb-schedule-projection-specification:001"
+hypothesis_ref: "dh:pb-schedule-projection-specification:001"
+identity:
+  supplies_identity: true
+  identity_criterion: "Two AdmissionProjectionSpecification records are the same only when they continue one governing authority, version, and applicability lineage with the same input interpretation, policy and ledger reconstruction, ordering, explicit-time, output, provenance, replay, failure, and non-goal semantics."
+  reidentification_key:
+    - "governing authority, version, and applicability lineage"
+    - "input, state-reconstruction, time, and ordered-output semantics"
+    - "provenance, replay, failure, and non-goal clauses"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: "One repeatable prescriptive content unit whose projection, provenance, replay, failure, and exclusion clauses share one revision boundary."
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "a separately authoritative schedule-specific contract distinct from the pa and pc chains"
+    - "one schedule-projection execution occurrence"
+    - "one emitted schedule information artifact"
+  existential_dependencies:
+    - "an authoritative specification carrier and versioning context"
+    - "the referenced ontology, journal, schema, and output vocabularies for interpretation"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - "superseded by a semantically changed contract version"
+    - "withdrawn as the governing projection specification"
+counterexamples:
+  - description: "Two projection runs over identical frozen inputs are distinct executions even when byte determinism makes their emitted Turtle equal, while neither run is the reusable specification."
+status: proposed

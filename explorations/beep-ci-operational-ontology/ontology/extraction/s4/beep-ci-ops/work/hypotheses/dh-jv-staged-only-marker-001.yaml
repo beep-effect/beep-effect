@@ -1,0 +1,28 @@
+id: "dh:jv-staged-only-marker:001"
+observation_refs:
+  - "so:sha256:7c677ff0b3659f5c4353476b6c688b1c31496db4c596b18a1a0da467f02ce584"
+  - "so:sha256:c9bd093bed43447337e1bf9a5abfaf8f1cf53db5521e70d9c3bb15e28b011161"
+cq_warrants: []
+proposed_referent:
+  label: "Yeet staged-only stash marker encoding"
+  description: >-
+    A mechanism-specific marker path paired with a stash commit hash for two
+    verification runs.
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "Preserved staged-work snapshot record"
+    representation_status: information_artifact
+    plausibility: weak
+  - label: "Worktree preservation occurrence"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: >-
+    The observations expose a Yeet-specific path convention and Git hash but
+    provide no CQ warrant, lifecycle semantics, or discriminator showing that
+    the mechanism itself deserves a domain-ontology referent.
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.8, use_for_acceptance: false}

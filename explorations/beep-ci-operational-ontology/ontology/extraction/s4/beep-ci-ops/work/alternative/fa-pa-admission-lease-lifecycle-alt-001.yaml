@@ -1,0 +1,21 @@
+id: fa:pa-admission-lease-lifecycle-alt:001
+hypothesis_ref: dh:pa-admission-lease-lifecycle:001
+identity_card_ref: ic:pa-admission-lease-lifecycle-alt:001
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: false
+rival_models:
+- label: lifecycle process of holding then losing capacity
+  still_viable: true
+- label: seat-grant lease record / lease-file only
+  still_viable: true
+strongest_counterexample: The schema quote 'One active admission lease' names an endurant-like
+  holder of capacity, while the replay table is a historical transition. Relator and process
+  are observationally equivalent until something is predicated of the lease while it holds
+  that is not predicated of the eviction event.
+verdict: analyzed
+needed_evidence: An observation of properties (weight, origin, remaining hold) attributed
+  to the lease during its active interval independently of eviction/removal events, versus
+  only event-level telemetry.

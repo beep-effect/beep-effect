@@ -1,0 +1,17 @@
+id: po:sha256:51fa8a9b8fcef0856134c3599ef68eabe588532203230c5b0ac8c892da47c95a
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: explorations/beep-ci-operational-ontology/research/s7-replay-evidence.md
+source_span:
+  start_line: 17
+  end_line: 21
+quote: '## Inferred dead-lease evictions
+
+
+  | Event index | Evicted nonce | Weight | Active before | Active after |
+
+  | ---: | --- | ---: | ---: | ---: |
+
+  | 66 | `1813f29f` | 5 | 8 | 3 |'
+epistemic_status: quoted_prose
