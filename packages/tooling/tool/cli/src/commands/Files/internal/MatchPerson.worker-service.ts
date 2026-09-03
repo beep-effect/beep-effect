@@ -16,7 +16,7 @@ import * as S from "effect/Schema";
 import { OutputBound, runCapturedStreams } from "../../../internal/process/StepExec.ts";
 import { MatchPersonError } from "./MatchPerson.errors.ts";
 import { prepareAdaFaceArtifacts, verifyPersonMatchModelArtifacts } from "./MatchPerson.model-store.ts";
-import { decodePersonMatchWorkerReportJson } from "./MatchPerson.schemas.ts";
+import { decodePersonMatchWorkerReportJson, PERSON_MATCH_MAX_REPORTED_FACES } from "./MatchPerson.schemas.ts";
 import type * as Crypto from "effect/Crypto";
 import type { HttpClient } from "effect/unstable/http";
 import type { ChildProcessSpawner } from "effect/unstable/process";
@@ -42,9 +42,13 @@ import type {
 const $I = $RepoCliId.create("commands/Files/internal/MatchPerson.worker-service");
 
 const workerProjectDirectory = fileURLToPath(new URL("../../../../python/photo-face/", import.meta.url));
-const workerOutputBound = OutputBound.make({
-  maxChars: 268_435_456,
-  truncatedNotice: "\n[files match-person output truncated]",
+const workerReportOutputBound = OutputBound.make({
+  maxChars: 67_108_864,
+  truncatedNotice: "\n[files match-person JSON truncated]",
+});
+const workerDiagnosticOutputBound = OutputBound.make({
+  maxChars: 1_048_576,
+  truncatedNotice: "\n[files match-person diagnostics truncated]",
 });
 const workerSetupOutputBound = OutputBound.make({
   maxChars: 16_384,
@@ -507,7 +511,7 @@ const decodeWorkerExecution = Effect.fn("Files.PersonMatchWorker.decodeExecution
 ): Effect.fn.Return<PersonMatchWorkerSuccess, PersonMatchWorkerServiceError> {
   if (truncated) {
     return yield* protocolError(
-      "Person-match worker output exceeded the 256 MiB safety bound; split the scan into smaller batches."
+      "Person-match worker JSON or diagnostics exceeded its safety bound; split the scan into smaller batches."
     );
   }
   const diagnostic = Str.trim(stderr);
@@ -731,6 +735,23 @@ const validateBackendRuntime = Effect.fn("Files.PersonMatchWorker.validateBacken
   );
 });
 
+const validateWorkerSizeEvidence = Effect.fn("Files.PersonMatchWorker.validateSizeEvidence")(function* (
+  worker: PersonMatchWorkerSuccess
+): Effect.fn.Return<void, MatchPersonSemanticError> {
+  const referenceFaceCount = A.reduce(worker.references, 0, (count, reference) => count + reference.faceCount);
+  const entryFaceCount = A.reduce(worker.entries, 0, (count, entry) => count + entry.faceCount);
+  if (referenceFaceCount + entryFaceCount > PERSON_MATCH_MAX_REPORTED_FACES) {
+    return yield* semanticError(
+      `Person-match worker reported more than ${PERSON_MATCH_MAX_REPORTED_FACES} faces; split the scan into smaller batches.`
+    );
+  }
+  if (A.some(worker.entries, (entry) => entry.faceCount !== A.length(entry.faces))) {
+    return yield* semanticError(
+      "Person-match worker reported a face count inconsistent with its retained face evidence."
+    );
+  }
+});
+
 const validateWorkerEnvelope = Effect.fn("Files.PersonMatchWorker.validateEnvelope")(function* (
   worker: PersonMatchWorkerSuccess,
   options: MatchPersonOptions,
@@ -739,6 +760,7 @@ const validateWorkerEnvelope = Effect.fn("Files.PersonMatchWorker.validateEnvelo
   yield* validateRequestedWorkerEvidence(worker, options, inputs);
   yield* validateWorkerComputeSelection(worker, options);
   yield* validateBackendRuntime(worker, options);
+  yield* validateWorkerSizeEvidence(worker);
 });
 
 const validateUniqueRecursiveReferenceNames = Effect.fn("Files.PersonMatchWorker.validateReferenceNames")(function* (
@@ -867,7 +889,8 @@ const executeWorker = Effect.fn("Files.PersonMatchWorker.execute")(function* (
     cwd: workerProjectDirectory,
     extendEnv: true,
     env: processEnvironment,
-    bound: workerOutputBound,
+    stdoutBound: workerReportOutputBound,
+    stderrBound: workerDiagnosticOutputBound,
     trim: true,
   }).pipe(Effect.mapError((cause) => processError("Failed to start the local person-match worker.", cause)));
   const worker = yield* decodeWorkerExecution(result.stdout, result.stderr, result.exitCode, result.truncated);

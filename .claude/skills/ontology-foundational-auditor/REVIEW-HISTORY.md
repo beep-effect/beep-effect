@@ -61,3 +61,32 @@ archive; each round's `roundN-triage.md` register names every finding and
 its disposition. Future hardening resumes by running the same loop
 protocol against v12 — two independent seats, the round-4 severity
 boundary, exhaustive registers, one-pass fixes, full replay.
+
+## Field amendments (post-loop)
+
+Amendments after the loop closed come from field use, not review seats;
+each names its provenance and ships with self-test families.
+
+- **v13** (2026-08-30, vendoring): PR-review (codex connector) families
+  added during project-scope vendoring — 156 families. Predates this
+  section; recorded for continuity.
+- **v14** (2026-09-03, auditor run 2 field defects — the
+  beep-ci-operational-ontology run-2 impl-report queued both): two
+  amendments. (1) *Runs-shelter poison guard*: v13's scanner absorbed
+  record-prefixed files under `runs/` into the live scan, so a rotated
+  predecessor's observations validated against the successor's manifest
+  (1,896 dangling references in run 2 before an ad-hoc relocation). v14
+  makes `runs/` a rotation ledger — record-prefixed or review-suffixed
+  files there are a LOUD violation, quarantined from every join — and the
+  rotation recipe now archives per-run records at the sibling shelter
+  `../archives/<root-name>/`, outside the scan root, so no in-root
+  exemption exists to hide live records in. Shadow manifests/indexes under
+  `runs/` still fall through to the authoritative-location checks.
+  (2) *Strict-first loop resolution*: Python 3.13 changed non-strict
+  `Path.resolve()` to swallow symlink loops, breaking `safe_join`'s
+  fail-closed confinement (the symlink-loop self-test family caught it —
+  the 3.12 runtime pin during run 2 was the workaround). `safe_join` now
+  resolves strict-first, with a lenient fallback reachable only for
+  merely-missing tails. 157 families; self-test green on CPython
+  3.12/3.13/3.14; v13→v14 output byte-identical over run 2's live
+  post-rotation tree.

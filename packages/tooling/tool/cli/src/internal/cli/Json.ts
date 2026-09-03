@@ -16,6 +16,28 @@ import * as jsonc from "jsonc-parser";
 const $I = $RepoCliId.create("internal/cli/Json");
 const encodeJson = UnknownFromJsonString.encodeUnknownEffect;
 const encodeJsonResult = UnknownFromJsonString.encodeUnknownResult;
+const COMMAND_JSON_STDOUT_CHUNK_SIZE_BYTES = 8 * 1024;
+const utf8Encoder = new TextEncoder();
+
+const writeCommandJsonStdout = (text: string): Effect.Effect<void> =>
+  Effect.callback<void>((resume) => {
+    const bytes = utf8Encoder.encode(text);
+    let offset = 0;
+
+    const writeNext = (): void => {
+      if (offset >= bytes.byteLength) {
+        resume(Effect.void);
+        return;
+      }
+
+      const nextOffset = offset + COMMAND_JSON_STDOUT_CHUNK_SIZE_BYTES;
+      const chunk = bytes.subarray(offset, nextOffset);
+      offset = nextOffset;
+      process.stdout.write(chunk, writeNext);
+    };
+
+    writeNext();
+  });
 
 /**
  * Default `jsonc.format` options shared by repo-cli pretty JSON renderers.
@@ -63,8 +85,9 @@ export const DEFAULT_JSON_PRETTY_MAX_LENGTH = 500_000;
  *
  * **Details**
  *
- * The default writes directly to stdout so payloads are not capped by Bun's
- * platform Console. In-process callers can provide this reference with a
+ * The default writes directly to stdout in bounded UTF-8 chunks so payloads
+ * are not capped by Bun's platform Console or a nested `bun run` wrapper's
+ * per-write boundary. In-process callers can provide this reference with a
  * capturing or silent writer without leaking output to the host process.
  *
  * **Example** (Capture command JSON without writing to stdout)
@@ -92,10 +115,7 @@ export const DEFAULT_JSON_PRETTY_MAX_LENGTH = 500_000;
 export const CommandJsonOutput: Context.Reference<(text: string) => Effect.Effect<void>> = Context.Reference(
   $I`CommandJsonOutput`,
   {
-    defaultValue: () => (text: string) =>
-      Effect.sync(() => {
-        process.stdout.write(text);
-      }),
+    defaultValue: () => writeCommandJsonStdout,
   }
 );
 

@@ -178,12 +178,12 @@ const workerReportJson = `{
   }
 }`;
 
-const workerReportJsonWithTwoViolations = `{
+const workerReportJsonWithMultipleViolations = `{
   "cleanup": { "deleteStatus": "completed", "stopStatus": "completed" },
   "otlp": { "status": "exported" },
   "workerEval": {
     "summary": { "completed": 2, "failed": 0, "selectedPackets": 2, "timedOut": 0 },
-    "policyViolations": [{ "code": "missing-example" }, { "code": "missing-since" }]
+    "policyViolations": [{ "code": "missing-example" }, { "code": "missing-since" }, { "code": "!!!" }]
   }
 }`;
 
@@ -751,7 +751,7 @@ describe("@beep/repo-ai-metrics agent-effectiveness", () => {
         yield* Effect.gen(function* () {
           const dataRoot = path.join(tmpDir, "metrics");
           const workerReportPath = path.join(tmpDir, "worker-eval.json");
-          yield* writeText(workerReportPath, workerReportJsonWithTwoViolations);
+          yield* writeText(workerReportPath, workerReportJsonWithMultipleViolations);
           yield* writeText(path.join(dataRoot, "derived", ".keep"), "");
           yield* seedScorecardWithCoverageGaps(`["no_labels","no_benchmark_runs"]`);
 
@@ -787,6 +787,7 @@ describe("@beep/repo-ai-metrics agent-effectiveness", () => {
           expect(workerViolationIds).toEqual([
             "jsdoc-worker-eval:worker-report:jsdoc-worker-eval-latest:worker.policy_violation:missing-example",
             "jsdoc-worker-eval:worker-report:jsdoc-worker-eval-latest:worker.policy_violation:missing-since",
+            "jsdoc-worker-eval:worker-report:jsdoc-worker-eval-latest:worker.policy_violation:value",
           ]);
         }).pipe(provideScopedLayer(runtimeLayer(path.join(tmpDir, "metrics/derived/ai-metrics.duckdb"))));
       })

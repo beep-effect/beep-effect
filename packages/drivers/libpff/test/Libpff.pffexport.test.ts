@@ -13,12 +13,13 @@ import {
   PffexportEngineConfig,
   PffexportMessageRecord,
 } from "@beep/libpff";
-import { NonNegativeInt } from "@beep/schema";
+import { NonNegativeInt, PosInt } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Encoding, FileSystem, Path, Result } from "effect";
+import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -301,7 +302,6 @@ describe("makePffexportFileProcessingEngine", () => {
         const { exportRoot, operation, stubPath } = yield* fixture(stubPffexport);
         const config = yield* S.decodeEffect(PffexportEngineConfig)({
           exportRoot,
-          maxOutputBytes: 1_000_000,
           pffexportPath: stubPath,
         });
         const engine = yield* makePffexportFileProcessingEngine(config);
@@ -1107,11 +1107,10 @@ exec "$mapped_command" "\${mapped[@]}"`
   );
 
   it.effect(
-    "fails closed when raw pffexport output reaches the configured retained-byte ceiling",
+    "requires the quota sandbox and retains no output when a ceiling is configured",
     Effect.fnUntraced(
       function* () {
         const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
         const { operation, exportRoot, stubPath } = yield* fixture(stubPffexport);
         const config = yield* S.decodeEffect(PffexportEngineConfig)({
           exportRoot,
@@ -1121,10 +1120,125 @@ exec "$mapped_command" "\${mapped[@]}"`
         const engine = yield* makePffexportFileProcessingEngine(config);
 
         const error = yield* engine.exportArchive(operation).pipe(Effect.flip);
-        const retainedTree = path.join(exportRoot, `${operation.source.id}.export`);
+
+        expect(error.reason).toBe("archive-export-failed");
+        expect(yield* fs.readDirectory(exportRoot)).toStrictEqual([]);
+      },
+      Effect.scoped,
+      provideTestLayer
+    )
+  );
+
+  it.effect(
+    "maps quota exhaustion before host publication to an output-limit failure",
+    Effect.fnUntraced(
+      function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const { operation, exportRoot, stubPath } = yield* fixture(stubPffexport);
+        const fixtureRoot = path.dirname(stubPath);
+        const bwrapPath = path.join(fixtureRoot, "quota-bwrap-stub");
+        const systemdRunPath = path.join(fixtureRoot, "systemd-run-stub");
+        const argumentsPath = path.join(fixtureRoot, "quota-bwrap-arguments");
+        yield* fs.writeFileString(
+          bwrapPath,
+          `#!/usr/bin/env bash
+printf '%s\n' "$@" > ${argumentsPath}
+exit 97
+`
+        );
+        yield* fs.writeFileString(
+          systemdRunPath,
+          `#!/usr/bin/env bash
+set -eu
+while [ "$#" -gt 0 ]; do
+  if [ "$1" = "--" ]; then shift; break; fi
+  shift
+done
+exec "$@"
+`
+        );
+        yield* Effect.forEach([bwrapPath, systemdRunPath], (file) => fs.chmod(file, 0o755), { discard: true });
+        const engine = yield* makePffexportFileProcessingEngine(
+          PffexportEngineConfig.make({
+            bwrapPath: O.some(bwrapPath),
+            exportRoot,
+            maxOutputBytes: O.some(PosInt.make(1)),
+            pffexportPath: stubPath,
+            systemdRunPath,
+          })
+        );
+
+        const error = yield* engine.exportArchive(operation).pipe(Effect.flip);
+        const sandboxArguments = yield* fs.readFileString(argumentsPath);
 
         expect(error.reason).toBe("output-limit-exceeded");
-        expect(yield* fs.exists(retainedTree)).toBe(true);
+        expect(sandboxArguments).toContain("--size\n1\n--tmpfs\n/output\n");
+        expect(sandboxArguments).not.toContain(`${exportRoot}\n/output\n`);
+        expect(yield* fs.readDirectory(exportRoot)).toStrictEqual([]);
+      },
+      Effect.scoped,
+      provideTestLayer
+    )
+  );
+
+  it.effect(
+    "publishes repeated validated quota handoffs after each sandbox exits",
+    Effect.fnUntraced(
+      function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const { operation, exportRoot, stubPath } = yield* fixture(stubPffexport);
+        const fixtureRoot = path.dirname(stubPath);
+        const handoffSource = path.join(fixtureRoot, "quota-handoff-source");
+        const itemDirectory = path.join(
+          handoffSource,
+          `${operation.source.id}.export`,
+          "Top of Personal Folders",
+          "Inbox",
+          "Message00001"
+        );
+        const bwrapPath = path.join(fixtureRoot, "successful-quota-bwrap-stub");
+        const systemdRunPath = path.join(fixtureRoot, "successful-systemd-run-stub");
+        yield* fs.makeDirectory(itemDirectory, { recursive: true });
+        yield* fs.writeFileString(path.join(itemDirectory, "OutlookHeaders.txt"), "Subject:\tquota handoff\n");
+        yield* fs.writeFileString(path.join(itemDirectory, "Message.txt"), "bounded body");
+        yield* fs.writeFileString(
+          bwrapPath,
+          `#!/usr/bin/env bash
+exec /usr/bin/tar -C ${handoffSource} -cf - .
+`
+        );
+        yield* fs.writeFileString(
+          systemdRunPath,
+          `#!/usr/bin/env bash
+set -eu
+while [ "$#" -gt 0 ]; do
+  if [ "$1" = "--" ]; then shift; break; fi
+  shift
+done
+exec "$@"
+`
+        );
+        yield* Effect.forEach([bwrapPath, systemdRunPath], (file) => fs.chmod(file, 0o755), { discard: true });
+        const engine = yield* makePffexportFileProcessingEngine(
+          PffexportEngineConfig.make({
+            bwrapPath: O.some(bwrapPath),
+            existingExportPolicy: "replace",
+            exportRoot,
+            maxOutputBytes: O.some(PosInt.make(1_000_000)),
+            pffexportPath: stubPath,
+            systemdRunPath,
+          })
+        );
+
+        const firstResult = yield* engine.exportArchive(operation);
+        const secondResult = yield* engine.exportArchive(operation);
+
+        expect(firstResult.children.length).toBeGreaterThan(0);
+        expect(secondResult.children.length).toBe(firstResult.children.length);
+        expect(yield* fs.exists(path.join(exportRoot, `${operation.source.id}.export`))).toBe(true);
+        expect(A.some(yield* fs.readDirectory(exportRoot), Str.startsWith(".pffexport-quota-"))).toBe(false);
       },
       Effect.scoped,
       provideTestLayer

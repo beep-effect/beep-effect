@@ -2037,6 +2037,7 @@ describe("quality task adapter", () => {
       "lint:effect-fn",
       "lint:package-test-imports",
       "lint:effect-imports",
+      "lint:effect-imports-markdown",
       "lint:package-test-typecheck",
       "lint:tsgo-rules",
       "lint:oxlint",
@@ -2072,6 +2073,7 @@ describe("quality task adapter", () => {
       "lint:effect-fn",
       "lint:package-test-imports",
       "lint:effect-imports",
+      "lint:effect-imports-markdown",
       "lint:package-test-typecheck",
       "lint:tsgo-rules",
       "lint:oxlint",
@@ -2089,6 +2091,9 @@ describe("quality task adapter", () => {
     expect(steps.find((step) => step.label === "lint:terse-effect")?.args).toContain("--advisory");
     expect(steps.find((step) => step.label === "lint:native-runtime")?.args).toEqual(
       repoCliEntryArgs("laws", "native-runtime", "--check")
+    );
+    expect(steps.find((step) => step.label === "lint:effect-imports-markdown")?.args).toEqual(
+      repoCliEntryArgs("laws", "effect-imports", "--mode", "markdown", "--check")
     );
     expect(steps.every((step) => step.captureTimeoutMillis === 15 * 60 * 1_000)).toBe(true);
   });
@@ -2128,6 +2133,7 @@ describe("quality task adapter", () => {
     const labels = A.map(steps, (step) => step.label);
 
     expect(labels).not.toContain("lint:effect-imports");
+    expect(labels).toContain("lint:effect-imports-markdown");
     expect(labels).not.toContain("lint:terse-effect");
     expect(labels).not.toContain("lint:effect-fn");
     expect(labels).not.toContain("lint:frozen-grant-set");

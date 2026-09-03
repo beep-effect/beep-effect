@@ -121,7 +121,7 @@ the observed system and current delivery state.
 **Question:** Should bot automation define a new receipt model family?
 
 **Answer:** No. Bot receipts and evidence bind `EvidenceReceipt`,
-`EvidenceDigest`, `EvidenceLadder`, and `RecoveryAttemptReceipt` from
+`EvidenceDigest`, `EvidenceLadderState`, and `RecoveryAttemptReceipt` from
 `@beep/skill-contract`. Every run persists a receipt for success, no-op,
 partial, and failure outside the Bot UI's 20-run window.
 

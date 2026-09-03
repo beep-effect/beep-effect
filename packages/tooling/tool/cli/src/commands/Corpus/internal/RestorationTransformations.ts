@@ -1197,6 +1197,7 @@ const exportPstArchive = Effect.fn("CorpusRestoration.exportPstArchive")(functio
       exportRoot: attempt.partialRoot,
       maxOutputBytes: O.some(PosInt.make(Math.max(1, Math.floor(attempt.attemptOutputCeiling)))),
       pffexportPath: attempt.options.pffexportPath,
+      systemdRunPath: attempt.options.systemdRunPath,
       timeoutMillis: O.some(PosInt.make(Math.min(attempt.options.maxElapsedMillis, remainingElapsedMillis))),
     })
   );
