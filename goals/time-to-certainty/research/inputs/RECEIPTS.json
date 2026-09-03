@@ -1,0 +1,15 @@
+{
+  "files": [
+    {
+      "bytes": 236879,
+      "path": "goals/time-to-certainty/research/inputs/hosted-runs.json.gz",
+      "sha256_12": "b5445a0a4e4d"
+    },
+    {
+      "bytes": 1203750,
+      "path": "goals/time-to-certainty/research/inputs/live-journals.json.gz",
+      "sha256_12": "bb6c7387e24a"
+    }
+  ],
+  "schemaVersion": "verification-economics-input-receipts/v1"
+}

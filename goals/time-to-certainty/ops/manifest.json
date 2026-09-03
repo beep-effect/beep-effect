@@ -1,0 +1,92 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "time-to-certainty",
+    "title": "Time To Certainty",
+    "status": "active",
+    "created": "2026-09-03",
+    "updated": "2026-09-03",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/time-to-certainty",
+  "lifecycle": "active",
+  "statusNote": "P0 complete 2026-09-03: economics report, prior-art survey, baseline ratified (ruling 8: M1 P50 43.3 min / P95 3.95 h; M5 327 of 3,069 starts unfinished, 10.7%), ten rulings in research/decisions.md. In flight as separate PRs: A5 journal facts, B1, A4, B2, B4, C3, and the C1/C2 ledger service; B3 and A3 deferred until A5 lands. Review on PR #950 asked for portable reproduction inputs and full hosted-rerun matching in the economics script; that repair rides this PR.",
+  "mission": "Cut the fleet-aggregated P50/P95 time-to-certainty per verification episode by removing redundant lane executions across tiers, false-positive gate round-trips, and silent process deaths, measured before and after on the same operational proxies.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "goal": "goals/ship-velocity",
+    "graduated": "2026-09-03",
+    "note": "Successor to ship-velocity (completed-retained 2026-09-03, PR #946). Carries its parked B5 per-lane proof reuse (shadow), the C5 first-cold-lane accounting law, the E8 merge-queue flip condition, and the six false-red and cord-severing receipts from the 2026-09-02 closeout episode. The KPI definition and planner are owned by explorations/beep-ci-operational-ontology."
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until, on an operator-ratified sample: the economics report has run at baseline and at close; redundant executions per change for lanes with unchanged input digests are at most 1.2 across pre-push and merged preview with zero shadow disagreements; false-red round trips are zero for the three named gate classes; unjournaled submitter and lease deaths are zero; the median red-to-green episode is lower than the P0 baseline with the number stated; and the final PR is driven to Yeet merge-ready with the status flip and closeout reflection riding it.",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/time-to-certainty/README.md",
+    "goals/time-to-certainty/SPEC.md",
+    "goals/time-to-certainty/PLAN.md",
+    "goals/time-to-certainty/GOAL.md"
+  ],
+  "researchReports": [
+    "research/g1-prior-art.md",
+    "research/economics.md",
+    "research/baseline.md",
+    "research/decisions.md"
+  ],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/time-to-certainty/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Measure and ratify",
+      "status": "complete"
+    },
+    {
+      "id": "P1",
+      "name": "Hygiene",
+      "status": "in-progress"
+    },
+    {
+      "id": "P2",
+      "name": "Proof reuse",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Ordering handoff",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/time-to-certainty/GOAL.md)\" -le 4000",
+    "jq . goals/time-to-certainty/ops/manifest.json",
+    "bun run beep goals doctor",
+    "git diff --check -- goals/time-to-certainty"
+  ],
+  "stopConditions": [
+    "Proof reuse would satisfy a lane for a package whose source the change touches, or would reuse across cache epochs or env profiles - fail loud and stop; the must-fail fixtures are the gate.",
+    "Enforcement is proposed before the shadow disagreement report is zero over a ratified sample.",
+    "Hosted-tier reuse of local proofs is proposed without a recorded parity-ledger decision.",
+    "A hygiene change weakens a security lane (gitleaks pinning, OSV, fork isolation) or a required hosted check to make local green easier.",
+    "Any new lock, lease, or scheduler is proposed; admission already exists and this packet changes what runs, not who may run."
+  ]
+}
