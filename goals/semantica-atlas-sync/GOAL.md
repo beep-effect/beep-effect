@@ -30,10 +30,11 @@ Scope:
   `apps/labs/semantica/scripts/`; `Verdict` and `Beep counterpart` on the
   enumerated atlas rows; this packet's receipts; dated row-specific
   `DECISIONS.md` entries proposed for `already-have` rows.
-- Out: every `SPEC.md` non-goal — new Notion rows/properties/schema, the IR
-  extractor and its home, family vocabulary in the atlas, `already-have` on
-  package existence, a `bun run beep` command, Notion ids or machine paths in
-  tracked files.
+- Out: every `SPEC.md` non-goal — new Notion rows/properties/schema, family
+  vocabulary in the atlas, `already-have` on package existence, a
+  `bun run beep` command, Notion ids or machine paths in tracked files; the
+  IR extractor and its home while P2 is gated (P2 brings them in once
+  semantica 0.6.7+ ships).
 
 Execution:
 
@@ -48,9 +49,10 @@ Execution:
    lab script (decode → render → diff → apply plan, archived before any
    write); one canary write and read-back; apply; SQL read-back must return
    exactly the file's rows and no other non-empty `Verdict`. Receipt as
-   `history/p1-verdict-lane.md` without Notion ids. Yeet to
-   `merge-ready: yes`; then set the packet `paused` with the resume
-   condition "semantica 0.6.7+ ships, recorded in a dated entry".
+   `history/p1-verdict-lane.md` without Notion ids. In the same PR set the
+   packet `paused` with the resume condition "semantica 0.6.7+ ships,
+   recorded in a dated entry" (same-PR state flip), then Yeet to
+   `merge-ready: yes`.
 3. P2 only when the gate fires and a dated entry decides the extractor's
    home; P3 `/reflect` and state flip.
 

@@ -69,7 +69,9 @@ Schema first, then contracts, then Layers (repo law):
    erasure (closure rows deleted in one transaction, then copy-to-fresh-
    `dataDir` or `VACUUM FULL`); the copy-class inventory (WAL and TOAST inside
    `dataDir`, report and telemetry files, provider-cache entries) with a proof
-   or an out-of-scope ruling per class (R1.h).
+   or an out-of-scope ruling per class (R1.h); the purge journal: `Redacted`
+   as durable intent, idempotent out-of-DB purges keyed by event id, a purge
+   receipt, and restart-time completion of any receipt-less erasure (Q4).
 4. Gate: compaction alone reproduces the C2 digest byte-for-byte; erasure of
    one W1 document equals a cache-only run over the manifest minus that
    document; continuity verifies.
@@ -81,6 +83,9 @@ Schema first, then contracts, then Layers (repo law):
    size accounting (bytes before and after) in the `EvalRunTelemetry` sidecar.
 2. SIGKILL mid-compaction via the existing `CrashProbeChild` pattern; the
    restarted ledger must verify as exactly the pre- or post-compaction chain.
+   Then SIGKILL between the closure commit and the out-of-DB purge; the
+   restarted ledger must complete the purge, record the receipt, and leave no
+   closure copy in any inventoried class (Q4).
 3. If `VACUUM FULL` cannot reclaim bytes under PGlite WASM, the redesigned
    candidate is copy-to-fresh-`dataDir` compaction (R1.e); a second failure
    parks the family.

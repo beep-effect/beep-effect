@@ -129,11 +129,17 @@ Each line cites the sub-decision or law it inherits.
    copies derived from it; provider-cache entries via a reverse index the spike
    adds; and the event rows whose bodies name it, which keep
    `(id, prev, body_digest)` and drop `payload` (R1.b, R1.c).
-4. **Erasure is atomic and inventoried.** Closure rows are deleted in one
-   transaction, then a copy-to-fresh-`dataDir` or `VACUUM FULL` step purges
-   dead tuples; the spec and the P-S2 gate list every copy class (WAL and
-   TOAST inside `dataDir`, report and telemetry files, provider-cache entries)
-   and prove each is gone or documented as out of scope (R1.h).
+4. **Erasure is atomic and inventoried, and recoverable across stores.**
+   Closure rows are deleted in one transaction, then a copy-to-fresh-`dataDir`
+   or `VACUUM FULL` step purges dead tuples; the spec and the P-S2 gate list
+   every copy class (WAL and TOAST inside `dataDir`, report and telemetry
+   files, provider-cache entries) and prove each is gone or documented as out
+   of scope (R1.h). Because the file and provider-cache copy classes sit
+   outside the PGlite transaction, the protocol is journaled: the `Redacted`
+   event is the durable intent, every out-of-DB purge is idempotent and keyed
+   by that event id, a restart re-runs the purge for any `Redacted` event with
+   no recorded purge receipt, and erasure is reported complete only once the
+   receipt exists (PR #996 review, Q4).
 5. **`Compacted` is the trust root.** A content-addressed `CompactedSnapshot`
    (event range, fold digest, projection digests) anchors everything before
    it; the verifiable chain property is continuity from the last checkpoint:
@@ -195,6 +201,7 @@ The rows below are the ones this spike executes against, one line each.
 | R1.h | Atomic erasure protocol plus a copy-class inventory proven by the P-S2 gate. |
 | R1.i | Chain order via `prev` is canonical for folds and replay; `recorded_at` is telemetry. |
 | R1 (PR #802) | Digests never carry telemetry; size accounting lives in the sidecar. |
+| Q4 (PR #996 review) | Erasure is journaled across stores: `Redacted` is the intent, out-of-DB purges are idempotent and re-run on restart until a purge receipt exists; P-S3 adds a mid-erasure SIGKILL. Stricter than MAP §S, not in conflict with R1.h. |
 
 ## Acceptance Criteria
 
@@ -222,7 +229,10 @@ each probe passes over the full C2 ledger, not a sample.
 - [ ] **P-S3** — on-disk bytes decrease after compaction and erasure under a
       file-backed `dataDir` (measured, recorded in the sidecar); after a
       SIGKILL mid-compaction the restarted ledger verifies as exactly the
-      pre- or post-compaction chain, never a torn one.
+      pre- or post-compaction chain, never a torn one; after a SIGKILL between
+      the closure commit and the out-of-DB purge, the restarted ledger
+      completes the purge, records the receipt, and the closure is gone from
+      every copy class (Q4).
 - [ ] Schemas land before services and services before Layers: the two event
       bodies, `CompactedSnapshot`, the extended witness and the three DDL
       changes are schema-first; the chain validator and the erasure-closure
@@ -272,8 +282,9 @@ Proof is a lab test or a CLI run, never a screenshot (A5, S4).
   documented out-of-scope ruling, or any digest drift after compaction alone
   (the P-S2 kill).
 - Bytes that cannot be reclaimed under PGlite WASM after the
-  copy-to-fresh-`dataDir` redesigned candidate, or a torn chain after the
-  SIGKILL restart (the P-S3 kill).
+  copy-to-fresh-`dataDir` redesigned candidate, a torn chain after the
+  SIGKILL restart, or a purge left incomplete after the mid-erasure restart
+  (the P-S3 kill).
 - A change to the id preimage, to `g-entailment-rdfs/v1`, or to any C2 fixture
   digest; any hosted provider call; committing the regenerated ledger or the
   provider cache.

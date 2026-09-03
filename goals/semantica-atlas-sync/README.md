@@ -75,6 +75,6 @@ Not started.
 - **Access.** Notion access was not live-verified on 2026-09-03; the Codex
   Notion MCP grant was revoked on 2026-09-02. The writes come from the
   operating session's own connection, as P5's did.
-- **After P1.** The packet is set `paused` with the resume condition
+- **After P1.** In the verdict-lane PR itself the packet is set `paused` with the resume condition
   "semantica 0.6.7+ ships, recorded in a dated `DECISIONS.md` entry"; the
   extractor (git history `fd560ca8e5`) and its home wait for that lane.

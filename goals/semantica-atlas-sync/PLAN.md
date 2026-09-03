@@ -11,16 +11,17 @@ Notion, no code risk. P2 (the facts lane) is gated on semantica 0.6.7+ shipping,
 ## Phases
 
 The verdict lane ships as one PR driven to mergeable via `/yeet`. Phase ids
-match `ops/manifest.json` `phases[]`. After P1 ships with P2 still gated, the
-packet is set `paused` with the resume condition below; it closes at P3 when
-the facts lane has run or has been retired by a dated entry.
+match `ops/manifest.json` `phases[]`. If P2 is still gated when P1 ships, the
+P1 PR itself sets the packet `paused` with the resume condition below; the
+packet closes at P3 when the facts lane has run or has been retired by a dated
+entry.
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
 | P0 Access check + live baseline | pending | Re-verify Notion access; read `Verdict` across the 33 catalogs; enumerate every row the lane will touch. | One-catalog read succeeds; baseline archived with per-catalog counts; every unexplained non-empty value dispositioned; `verdicts.json` lists exact rows. |
 | P1 Verdict lane | pending | Schema + data file + lab render/diff script; one canary write; apply; SQL read-back. | Read-back returns exactly the file's rows; receipt archived without Notion ids; PR `merge-ready: yes`. |
 | P2 Facts lane (gated: semantica 0.6.7+) | pending | IR → component rows once the trigger fires; extractor home decided first. | semantica 0.6.7+ shipped, recorded in a dated `DECISIONS.md` entry; home decided; IR SHA-256 recorded; rows synced by the same render/diff method. |
-| P3 Close | pending | Reflection; packet state flip. | Closeout reflection validates; packet `completed-retained` (or `paused` with resume condition while P2 waits). |
+| P3 Close | pending | Reflection; packet state flip after P2 has run or has been retired by a dated entry. | Closeout reflection validates; packet `completed-retained`. While P2 is still gated the packet stays `paused` (flipped in the P1 PR) and P3 does not run. |
 
 ## P0 Access check + live baseline
 
@@ -57,9 +58,12 @@ Schema first, then data, then the script, then the write:
 5. Apply the rest; SQL read-back across the 33 catalogs must return exactly
    the file's rows and no other non-empty `Verdict`.
 6. Receipt as `history/p1-verdict-lane.md` (rows, before/after, evidence;
-   rollback = row page history); publish through Yeet; `merge-ready: yes`.
-7. Set the packet `paused` with resume condition "semantica 0.6.7+ ships, recorded in a
-   dated `DECISIONS.md` entry" (`bun run beep goals set-status`).
+   rollback = row page history).
+7. In the same PR, set the packet `paused` with resume condition "semantica
+   0.6.7+ ships, recorded in a dated `DECISIONS.md` entry"
+   (`bun run beep goals set-status`): packet-state flips land in the PR that
+   ships the work, never after `merge-ready: yes`.
+8. Publish through Yeet; `merge-ready: yes`.
 
 ## P2 Facts lane (gated)
 

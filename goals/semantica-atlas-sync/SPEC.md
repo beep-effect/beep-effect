@@ -43,11 +43,13 @@ This lane adds:
 - No new Notion rows, properties, views or databases; "zero schema" means
   zero Notion schema (R3.e). Selected winners with no catalog row are not
   created.
-- No IR extraction, module analyses, template exemplars or row-fill: the
-  facts lane is P2 and gated; the atlas backlog stays async codex batches off
-  the critical path (O3, M4).
+- No IR extraction, and no extractor recovery, while the facts lane is gated
+  (P0–P1): once semantica 0.6.7+ ships and the firing is recorded, P2 brings
+  the extractor and one IR run into scope. Module analyses, template exemplars
+  and row-fill stay async codex batches off the critical path in every phase
+  (O3, M4).
 - No decision about the Python extractor's lawful home before the facts lane
-  fires (R3.g).
+  fires; P2 opens with that decision as a dated `DECISIONS.md` entry (R3.g).
 - No family vocabulary in the atlas (`pick-one`, `bundle`,
   `park-pending-canary`), and no positive value for a family whose canary
   stage has not passed (B1).
@@ -185,9 +187,11 @@ The rows below are the ones this lane executes against, one line each.
 - [ ] **Facts lane** — P2 remains `pending` with its gate stated in `PLAN.md`
       until the trigger fires; when it fires, the extractor's home is decided
       in a dated `DECISIONS.md` entry before any IR run.
-- [ ] The verdict-lane PR is driven to mergeable; the packet is set `paused`
-      with an explicit resume condition while P2 is gated, or
-      `completed-retained` at P3 if the facts lane is retired by a dated entry.
+- [ ] The verdict-lane PR is driven to mergeable with the packet set `paused`
+      in that same PR while P2 is gated (same-PR state flip); the packet
+      reaches `completed-retained` at P3 either after P2 has run (facts rows
+      synced and read back) or after a dated `DECISIONS.md` entry retires the
+      facts lane.
 - [ ] No unrelated refactors or formatting churn.
 
 ## Verification Matrix

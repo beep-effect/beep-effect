@@ -259,3 +259,7 @@ owns *decisions and research* (D2).
   fixture, P-R1..3 as P2–P4, close P5); capability edge `semantica/tombstone-law` provided by the
   storage spike and required by the reasoning spike; SOURCES mirrored; manifests cross-linked;
   status flipped to `graduated`; Atlas and goals index regenerated.
+- 2026-09-03 (PR #996 review): Codex review left four threads on the new packets; folded as
+  review amendments Q1–Q4 in `DECISIONS.md` (facts lane in scope once fired; completion after a
+  successful P2; pause flip in the P1 PR; erasure journaled across stores with a mid-erasure
+  crash test). Greptile 5/5, zero issues.

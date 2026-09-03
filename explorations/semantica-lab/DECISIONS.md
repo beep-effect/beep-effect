@@ -1113,3 +1113,29 @@ challenged by the Sol review. All four hold; the ceremony ran.
   `GEntailmentWitness`; the Trail's "23 sub-decisions" is 25 labelled including R0.a and R4.a.
 - **Not done here.** No `docs/ROADMAP.md` change (the Labs line is slot-free, M6); no code; no
   Notion write; the queued `research/drafts/*` upstream lane is untouched (O1/O2).
+
+## 2026-09-03 (PR #996 review closeout) — Q1–Q4, review amendments
+
+The graduation PR's Codex review left four threads; each was checked against the ratified text
+and folded into the goal packets as a review amendment (the PR #802 precedent). None changes a
+ratified sub-decision; Q4 makes the storage SPEC stricter than MAP §S.
+
+- **Q1 (atlas: the gated facts lane is inside scope once it fires).** The SPEC non-goals and the
+  launcher's Out list excluded the IR extractor and its home outright, which made P2 unlawful
+  under the packet's own source hierarchy. Both now exclude them only while P2 is gated (P0–P1);
+  P2 brings the extractor, its home decision and one IR run into scope once semantica 0.6.7+ is
+  recorded as shipped (R3.g unchanged).
+- **Q2 (atlas: completion after a successful P2).** The acceptance bullet named only "paused
+  while gated" and "completed-retained after retirement"; a facts lane that ran had no completion
+  path. P3 now closes the packet after P2 has run or after a dated retirement entry.
+- **Q3 (atlas: the pause flip lands in the P1 PR).** The launcher sequenced "Yeet to
+  merge-ready, then set paused", which either leaves the state flip outside the shipped work or
+  invalidates the readiness it just obtained. The flip now lands in the verdict-lane PR before
+  the final monitor (AGENTS.md same-PR packet-state flips).
+- **Q4 (storage: erasure recoverable across stores).** R1.h's protocol was atomic only inside
+  PGlite; report and telemetry files and provider-cache entries sit outside the transaction, and
+  the only crash probe was mid-compaction. The storage SPEC now journals erasure — `Redacted` is
+  the durable intent, out-of-DB purges are idempotent and keyed by the event id, a restart re-runs
+  any receipt-less purge, erasure is complete only with the receipt — and P-S3 adds a SIGKILL
+  between the closure commit and the purge. MAP §S is unchanged; the goal constraint is stricter,
+  not in conflict.

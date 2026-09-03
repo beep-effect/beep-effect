@@ -48,15 +48,17 @@ Execution:
    byte-identical after compaction alone; erasure equals manifest-minus-one
    replay; continuity verifies.
 4. P3 P-S3: file-backed `dataDir`, bytes before/after in the telemetry
-   sidecar, SIGKILL mid-compaction via `CrashProbeChild`; redesigned
-   candidate = copy-to-fresh-`dataDir`.
+   sidecar, SIGKILL mid-compaction and SIGKILL mid-erasure (between the
+   closure commit and the out-of-DB purge; the restart completes the purge)
+   via `CrashProbeChild`; redesigned candidate = copy-to-fresh-`dataDir`.
 5. P4: verdict to `DECISIONS.md` (Current law "Storage" row amended),
    `/reflect`, evidence under `history/`, state flip in the final PR.
 
 Non-negotiable:
 
 - Tombstone ≠ erasure. `Invalidated` stays claim-targeted with derived
-  reach; `Redacted` erases a computed closure including run outputs.
+  reach; `Redacted` erases a computed closure including run outputs, and is
+  the durable intent a restart re-runs until a purge receipt exists.
 - The id preimage `(prev, body)` never changes; redacted ids are
   `(id, prev, body_digest)` commitments, never recomputed.
 - Chain order via `prev` is canonical for folds and replay; `recorded_at`

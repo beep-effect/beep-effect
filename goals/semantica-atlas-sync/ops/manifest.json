@@ -92,5 +92,5 @@
     "Verification requires credentials, cost, destructive side effects, or policy approval not named in SPEC.md.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "Scaffolded 2026-09-03 at the semantica-lab graduation ceremony (MAP v1.1 §A, R3); execution not started. Runs first of the three re-entry packets: P0 access check + live 33-catalog baseline, then the P1 verdict lane; P2 (facts lane) is gated on semantica 0.6.7+ and the packet is set paused after P1 ships if the gate has not fired."
+  "statusNote": "Scaffolded 2026-09-03 at the semantica-lab graduation ceremony (MAP v1.1 §A, R3); execution not started. Runs first of the three re-entry packets: P0 access check + live 33-catalog baseline, then the P1 verdict lane; P2 (facts lane) is gated on semantica 0.6.7+; if the gate has not fired when P1 ships, the P1 PR itself sets the packet paused (same-PR state flip)."
 }
