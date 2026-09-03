@@ -2406,16 +2406,12 @@ const makeService = Effect.fn("FFmpeg.make")(function* (configInput?: FFmpegConf
     const durationSeconds = yield* pipe(
       probe.durationSeconds,
       O.filter((value) => value > 0),
-      O.match({
-        onNone: () =>
-          Effect.fail(
-            FFmpegError.make({
-              message: `ffprobe reported no positive duration for "${videoPath}"; remux or re-encode (extractClip) before rendering a contact sheet.`,
-              operation: "renderContactSheet",
-            })
-          ),
-        onSome: Effect.succeed,
-      })
+      Effect.fromOption(() =>
+        FFmpegError.make({
+          message: `ffprobe reported no positive duration for "${videoPath}"; remux or re-encode (extractClip) before rendering a contact sheet.`,
+          operation: "renderContactSheet",
+        })
+      )
     );
     const sheetFps = (request.columns * request.rows) / durationSeconds;
     const fileSizeBytes = yield* runCaptureOutput({

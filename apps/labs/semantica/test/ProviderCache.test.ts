@@ -125,7 +125,7 @@ const makeStubLanguageModel = (calls: Ref.Ref<number>) =>
 const noOpProviderCache = Layer.succeed(
   ProviderCache,
   ProviderCache.of({
-    lookup: Effect.fn("ProviderCache.lookup")(() => Effect.succeed(O.none())),
+    lookup: Effect.fn("ProviderCache.lookup")(() => Effect.succeedNone),
     store: Effect.fn("ProviderCache.store")(() => Effect.void),
   })
 );
@@ -269,7 +269,7 @@ describe("C0 provider cache and language-model boundary", () => {
         const trackingCache = Layer.succeed(
           ProviderCache,
           ProviderCache.of({
-            lookup: Effect.fn("ProviderCache.lookup")(() => Effect.succeed(O.none())),
+            lookup: Effect.fn("ProviderCache.lookup")(() => Effect.succeedNone),
             store: Effect.fn("ProviderCache.store")(() => Ref.update(stored, (count) => count + 1)),
           })
         );

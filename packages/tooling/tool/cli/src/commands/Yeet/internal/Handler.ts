@@ -1294,7 +1294,7 @@ const writeRunVerdict = Effect.fn("Yeet.writeRunVerdict")(function* (
           Effect.orElseSucceed(() => false),
           Effect.map((exists) => (exists ? O.some(fallbackIndexPath) : O.none<string>()))
         ),
-      onSome: (value) => Effect.succeed(O.some(value)),
+      onSome: (value) => Effect.succeedSome(value),
     })
   );
 

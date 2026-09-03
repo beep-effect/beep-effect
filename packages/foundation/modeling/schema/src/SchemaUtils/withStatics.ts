@@ -19,13 +19,6 @@ import { staticDescriptorInstaller } from "./internal/staticDescriptors.ts";
  */
 type WithStatics<Schema extends object, Statics extends Record<string, unknown>> = Schema & Statics;
 
-/**
- * The data-last application step produced by {@link withStatics}.
- */
-type WithStaticsTransform<Schema extends object, Statics extends Record<string, unknown>> = (
-  schema: Schema
-) => WithStatics<Schema, Statics>;
-
 const attachStatics = <S extends object, M extends Record<string, unknown>>(
   schema: S,
   methods: (schema: S) => M,
@@ -96,6 +89,6 @@ const attachStatics = <S extends object, M extends Record<string, unknown>>(
  * @since 0.0.0
  */
 export const withStatics: {
-  <S extends object, M extends Record<string, unknown>>(methods: (schema: S) => M): WithStaticsTransform<S, M>;
+  <S extends object, M extends Record<string, unknown>>(methods: (schema: S) => M): (schema: S) => WithStatics<S, M>;
   <S extends object, M extends Record<string, unknown>>(schema: S, methods: (schema: S) => M): WithStatics<S, M>;
 } = dual(2, attachStatics);

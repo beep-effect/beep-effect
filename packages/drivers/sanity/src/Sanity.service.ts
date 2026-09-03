@@ -193,17 +193,11 @@ const resolveConfig = Effect.fn("Sanity.resolveConfig")(function* (
   );
   const projectId = yield* pipe(
     O.fromNullishOr(config.projectId),
-    O.match({
-      onNone: () => Effect.fail(SanityError.fromReason("config")),
-      onSome: Effect.succeed,
-    })
+    Effect.fromOption(() => SanityError.fromReason("config"))
   );
   const dataset = yield* pipe(
     O.fromNullishOr(config.dataset),
-    O.match({
-      onNone: () => Effect.fail(SanityError.fromReason("config")),
-      onSome: Effect.succeed,
-    })
+    Effect.fromOption(() => SanityError.fromReason("config"))
   );
   const apiHost = yield* pipe(
     decodeApiHost(config.apiHost),

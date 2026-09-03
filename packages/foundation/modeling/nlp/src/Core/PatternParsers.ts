@@ -101,11 +101,9 @@ const decodePatternElement = (input: string) =>
 export const BracketStringToPOSPatternElement = S.String.pipe(
   S.decodeTo(POSPatternElement, {
     decode: SchemaGetter.transformOrFail((input) =>
-      O.match(decodePOSPatternElement(input), {
-        onNone: () =>
-          Effect.fail(invalidBracketString("POS pattern must be bracketed and contain valid wink POS tags.")),
-        onSome: Effect.succeed,
-      })
+      Effect.fromOption(decodePOSPatternElement(input), () =>
+        invalidBracketString("POS pattern must be bracketed and contain valid wink POS tags.")
+      )
     ),
     encode: SchemaGetter.transform((element) => Pattern.POS.toBracketString(element.value)),
   }),
@@ -149,11 +147,9 @@ export type BracketStringToPOSPatternElement = typeof BracketStringToPOSPatternE
 export const BracketStringToEntityPatternElement = S.String.pipe(
   S.decodeTo(EntityPatternElement, {
     decode: SchemaGetter.transformOrFail((input) =>
-      O.match(decodeEntityPatternElement(input), {
-        onNone: () =>
-          Effect.fail(invalidBracketString("Entity pattern must be bracketed and contain valid wink entity types.")),
-        onSome: Effect.succeed,
-      })
+      Effect.fromOption(decodeEntityPatternElement(input), () =>
+        invalidBracketString("Entity pattern must be bracketed and contain valid wink entity types.")
+      )
     ),
     encode: SchemaGetter.transform((element) => Pattern.Entity.toBracketString(element.value)),
   }),
@@ -197,11 +193,9 @@ export type BracketStringToEntityPatternElement = typeof BracketStringToEntityPa
 export const BracketStringToLiteralPatternElement = S.String.pipe(
   S.decodeTo(LiteralPatternElement, {
     decode: SchemaGetter.transformOrFail((input) =>
-      O.match(decodeLiteralPatternElement(input), {
-        onNone: () =>
-          Effect.fail(invalidBracketString("Literal pattern must be bracketed and contain non-empty literal choices.")),
-        onSome: Effect.succeed,
-      })
+      Effect.fromOption(decodeLiteralPatternElement(input), () =>
+        invalidBracketString("Literal pattern must be bracketed and contain non-empty literal choices.")
+      )
     ),
     encode: SchemaGetter.transform((element) => Pattern.Literal.toBracketString(element.value)),
   }),

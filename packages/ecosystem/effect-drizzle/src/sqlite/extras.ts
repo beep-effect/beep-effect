@@ -399,10 +399,21 @@ export type Callback<F extends { readonly [key: string]: Field.Input }> = (
  * @category constructors
  * @since 0.0.0
  */
-export const compositeUnique = <const Name extends string, const Columns extends CompositeColumns>(
-  name: Name & ValidateSqlName<Name, "Table.compositeUnique name must be a lowercase SQL identifier">,
-  columns: Columns & ValidateDistinctColumns<Columns>
-): CompositeUnique => Nodes.compositeUnique({ name: validateName(name), columns });
+export const compositeUnique: {
+  <const Columns extends CompositeColumns>(
+    columns: Columns & ValidateDistinctColumns<Columns>
+  ): <const Name extends string>(
+    name: Name & ValidateSqlName<Name, "Table.compositeUnique name must be a lowercase SQL identifier">
+  ) => CompositeUnique;
+  <const Name extends string, const Columns extends CompositeColumns>(
+    name: Name & ValidateSqlName<Name, "Table.compositeUnique name must be a lowercase SQL identifier">,
+    columns: Columns & ValidateDistinctColumns<Columns>
+  ): CompositeUnique;
+} = /* @__PURE__ */ dual(
+  2,
+  (name: string, columns: CompositeColumns): CompositeUnique =>
+    Nodes.compositeUnique({ name: validateName(name), columns })
+);
 /**
  * Constructs a named primary key over at least two SQLite columns.
  *
@@ -425,10 +436,23 @@ export const compositeUnique = <const Name extends string, const Columns extends
  * @category constructors
  * @since 0.0.0
  */
-export const compositePrimaryKey = <const Name extends string, const Columns extends CompositeColumns>(
-  name: Name & ValidateSqlName<Name, "Table.compositePrimaryKey name must be a lowercase SQL identifier">,
-  columns: Columns & ValidateDistinctColumns<Columns> & ValidatePrimaryKeyColumns<Columns>
-): CompositePrimaryKey => Nodes.compositePrimaryKey({ name: validateName(name), columns });
+export const compositePrimaryKey: {
+  <const Columns extends CompositeColumns>(
+    columns: Columns & ValidateDistinctColumns<Columns> & ValidatePrimaryKeyColumns<Columns>
+  ): <const Name extends string>(
+    name: Name & ValidateSqlName<Name, "Table.compositePrimaryKey name must be a lowercase SQL identifier">
+  ) => CompositePrimaryKey;
+  <const Name extends string, const Columns extends CompositeColumns>(
+    name: Name & ValidateSqlName<Name, "Table.compositePrimaryKey name must be a lowercase SQL identifier">,
+    columns: Columns & ValidateDistinctColumns<Columns> & ValidatePrimaryKeyColumns<Columns>
+  ): CompositePrimaryKey;
+} = /* @__PURE__ */ dual(
+  2,
+  (name: string, columns: CompositeColumns): CompositePrimaryKey =>
+    Nodes.compositePrimaryKey({ name: validateName(name), columns })
+);
+type IndexOptions = { readonly where?: SQL<boolean> };
+
 /**
  * Constructs a SQLite index with an optional partial-index predicate.
  *
@@ -454,11 +478,25 @@ export const compositePrimaryKey = <const Name extends string, const Columns ext
  * @category constructors
  * @since 0.0.0
  */
-export const index = <const Name extends string, const Columns extends NonEmptyColumns>(
-  name: Name & ValidateSqlName<Name, "Table.index name must be a lowercase SQL identifier">,
-  columns: Columns & ValidateDistinctColumns<Columns>,
-  options?: { readonly where?: SQL<boolean> }
-): Index => Nodes.index({ name: validateName(name), columns, where: options?.where });
+export const index: {
+  <const Columns extends NonEmptyColumns>(
+    columns: Columns & ValidateDistinctColumns<Columns>,
+    options?: IndexOptions
+  ): <const Name extends string>(
+    name: Name & ValidateSqlName<Name, "Table.index name must be a lowercase SQL identifier">
+  ) => Index;
+  <const Name extends string, const Columns extends NonEmptyColumns>(
+    name: Name & ValidateSqlName<Name, "Table.index name must be a lowercase SQL identifier">,
+    columns: Columns & ValidateDistinctColumns<Columns>,
+    options?: IndexOptions
+  ): Index;
+} = /* @__PURE__ */ dual(
+  (args) => isString(args[0]),
+  (name: string, columns: NonEmptyColumns, options?: IndexOptions): Index =>
+    Nodes.index({ name: validateName(name), columns, where: options?.where })
+);
+
+type UniqueIndexOptions = { readonly where?: SQL<boolean> };
 
 /**
  * Constructs a named unique index over one or more SQLite columns.
@@ -484,11 +522,23 @@ export const index = <const Name extends string, const Columns extends NonEmptyC
  * @category constructors
  * @since 0.0.0
  */
-export const uniqueIndex = <const Name extends string, const Columns extends NonEmptyColumns>(
-  name: Name & ValidateSqlName<Name, "Table.uniqueIndex name must be a lowercase SQL identifier">,
-  columns: Columns & ValidateDistinctColumns<Columns>,
-  options?: { readonly where?: SQL<boolean> }
-): UniqueIndex => Nodes.uniqueIndex({ name: validateName(name), columns, where: options?.where });
+export const uniqueIndex: {
+  <const Columns extends NonEmptyColumns>(
+    columns: Columns & ValidateDistinctColumns<Columns>,
+    options?: UniqueIndexOptions
+  ): <const Name extends string>(
+    name: Name & ValidateSqlName<Name, "Table.uniqueIndex name must be a lowercase SQL identifier">
+  ) => UniqueIndex;
+  <const Name extends string, const Columns extends NonEmptyColumns>(
+    name: Name & ValidateSqlName<Name, "Table.uniqueIndex name must be a lowercase SQL identifier">,
+    columns: Columns & ValidateDistinctColumns<Columns>,
+    options?: UniqueIndexOptions
+  ): UniqueIndex;
+} = /* @__PURE__ */ dual(
+  (args) => isString(args[0]),
+  (name: string, columns: NonEmptyColumns, options?: UniqueIndexOptions): UniqueIndex =>
+    Nodes.uniqueIndex({ name: validateName(name), columns, where: options?.where })
+);
 /**
  * Constructs a typed SQLite check in data-first or data-last form.
  *
@@ -522,7 +572,10 @@ export const check: {
     expression: SQL<boolean>,
     name: Name & ValidateSqlName<Name, "Table.check name must be a lowercase SQL identifier">
   ): Check;
-} = dual(2, (expression: SQL<boolean>, name: string): Check => Nodes.check({ name: validateName(name), expression }));
+} = /* @__PURE__ */ dual(
+  2,
+  (expression: SQL<boolean>, name: string): Check => Nodes.check({ name: validateName(name), expression })
+);
 /**
  * Constructs an explicitly unsafe raw-SQL SQLite check.
  *
@@ -547,10 +600,20 @@ export const check: {
  * @category constructors
  * @since 0.0.0
  */
-export const unsafeCheckSql = <const Name extends string>(
-  name: Name & ValidateSqlName<Name, "Table.unsafeCheckSql name must be a lowercase SQL identifier">,
-  value: string
-): UnsafeCheckSql => Nodes.unsafeCheckSql({ name: validateName(name), sql: value });
+export const unsafeCheckSql: {
+  (
+    value: string
+  ): <const Name extends string>(
+    name: Name & ValidateSqlName<Name, "Table.unsafeCheckSql name must be a lowercase SQL identifier">
+  ) => UnsafeCheckSql;
+  <const Name extends string>(
+    name: Name & ValidateSqlName<Name, "Table.unsafeCheckSql name must be a lowercase SQL identifier">,
+    value: string
+  ): UnsafeCheckSql;
+} = /* @__PURE__ */ dual(
+  2,
+  (name: string, value: string): UnsafeCheckSql => Nodes.unsafeCheckSql({ name: validateName(name), sql: value })
+);
 
 const emitUniqueIndex = (node: UniqueIndex): SQLiteTableExtraConfigValue => {
   const builder = drizzleUniqueIndex(node.name).on(...node.columns);
@@ -598,7 +661,10 @@ const validateColumns = (node: Node): void => {
  * @category constructors
  * @since 0.0.0
  */
-export const validateNodes = (nodes: ReadonlyArray<Node>, inlinePrimaryKeys: number): void => {
+export const validateNodes: {
+  (inlinePrimaryKeys: number): (nodes: ReadonlyArray<Node>) => void;
+  (nodes: ReadonlyArray<Node>, inlinePrimaryKeys: number): void;
+} = /* @__PURE__ */ dual(2, (nodes: ReadonlyArray<Node>, inlinePrimaryKeys: number): void => {
   const names = nodes.map((node) => node.name);
   if (new Set(names).size !== names.length) {
     fail("SQLite table-extra names must be unique within their owning table.");
@@ -608,7 +674,7 @@ export const validateNodes = (nodes: ReadonlyArray<Node>, inlinePrimaryKeys: num
     fail("A SQLite table can declare at most one primary key across inline and composite forms.");
   }
   nodes.forEach(validateColumns);
-};
+});
 
 /**
  * Compiles one descriptor to a Drizzle SQLite extra-config value.

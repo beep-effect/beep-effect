@@ -130,10 +130,7 @@ const requiredVector = (
   message: string
 ): Effect.Effect<EmbeddingVector, ProjectionFailed> =>
   A.findFirst(vectors, (vector) => Str.Equivalence(vector.chunk, chunk)).pipe(
-    O.match({
-      onNone: () => Effect.fail(failed("expectation-mismatch", message)),
-      onSome: Effect.succeed,
-    })
+    Effect.fromOption(() => failed("expectation-mismatch", message))
   );
 
 /**

@@ -6,7 +6,6 @@
  */
 
 import { Context, Effect, HashMap, Layer, pipe, Tuple } from "effect";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { $IdentityId } from "./packages.ts";
 import type { IdentityComposer } from "./Id.ts";
@@ -305,10 +304,7 @@ const makeLocalRegistry = Effect.fn("IdentityRegistry.layerLocal")(function* (en
 
       return yield* pipe(
         found,
-        O.match({
-          onNone: () => Effect.fail(IdentityNotFoundError.make({ ref })),
-          onSome: Effect.succeed,
-        })
+        Effect.fromOption(() => IdentityNotFoundError.make({ ref }))
       );
     }),
   });

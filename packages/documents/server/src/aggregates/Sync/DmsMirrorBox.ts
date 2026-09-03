@@ -417,7 +417,7 @@ const sourceInfoFromEvent = (source: BoxEventModel["source"]): BoxSourceInfo =>
  */
 const remoteEventFromEntry = (entry: BoxEventModel): Effect.Effect<O.Option<DmsRemoteEvent>, DmsMirrorUnavailable> =>
   O.match(nonEmptyStringOption(entry.eventId), {
-    onNone: () => Effect.succeed(O.none()),
+    onNone: () => Effect.succeedNone,
     onSome: (eventId) =>
       encodeBoxEvent(entry).pipe(
         Effect.flatMap(decodeUnknownRecord),

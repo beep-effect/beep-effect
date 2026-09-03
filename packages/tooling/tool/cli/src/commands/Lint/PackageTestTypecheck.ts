@@ -261,7 +261,7 @@ const exists = (fs: FileSystem.FileSystem, filePath: string): Effect.Effect<bool
   fs.exists(filePath).pipe(Effect.orElseSucceed(thunkFalse));
 
 const readOptionalText = (fs: FileSystem.FileSystem, filePath: string): Effect.Effect<O.Option<string>> =>
-  fs.readFileString(filePath).pipe(Effect.map(O.some), Effect.orElseSucceed(O.none<string>));
+  fs.readFileString(filePath).pipe(Effect.asSome, Effect.orElseSucceed(O.none<string>));
 
 // `File`, `Directory`, or none when the path is missing or unreadable. Both
 // tree walks classify through this so neither repeats the stat-and-unwrap dance.

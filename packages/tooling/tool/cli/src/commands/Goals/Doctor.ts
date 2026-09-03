@@ -514,7 +514,7 @@ const packetFindings = Effect.fn("Goals.packetFindings")(function* (record: Goal
   }
   const raw = parsed.value as Readonly<Record<string, unknown>>;
   const decoded = yield* decodeGoalManifest(parsed.value).pipe(
-    Effect.map(O.some),
+    Effect.asSome,
     Effect.orElseSucceed(O.none<GoalManifest>)
   );
   if (O.isNone(decoded)) {
@@ -547,7 +547,7 @@ const gitAdapter: GitCommandErrorAdapter<GoalsGitError> = {
 };
 
 const gitOutputOrNone = Effect.fn("Goals.gitOutputOrNone")(function* (args: ReadonlyArray<string>) {
-  return yield* runGitOutput(".", args, gitAdapter).pipe(Effect.map(O.some), Effect.orElseSucceed(O.none<string>));
+  return yield* runGitOutput(".", args, gitAdapter).pipe(Effect.asSome, Effect.orElseSucceed(O.none<string>));
 });
 
 type DoctorPacket = {
@@ -713,7 +713,7 @@ const loadDoctorBaselineKeys = Effect.fn("Goals.loadDoctorBaselineKeys")(functio
   const fs = yield* FileSystem.FileSystem;
   const baselineText = yield* fs
     .readFileString(GOALS_DOCTOR_BASELINE_PATH)
-    .pipe(Effect.map(O.some), Effect.orElseSucceed(O.none<string>));
+    .pipe(Effect.asSome, Effect.orElseSucceed(O.none<string>));
   if (O.isNone(baselineText)) {
     return A.empty<string>();
   }

@@ -9,6 +9,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Config, Effect, flow, MutableHashMap, Order, pipe, Redacted } from "effect";
+import { constant } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -535,15 +536,14 @@ const readRequiredRedactedConfig = (key: string): Effect.Effect<Redacted.Redacte
         cause,
       })
     ),
-    Effect.flatMap((value) =>
-      Str.isNonEmpty(normalizeWhitespace(Redacted.value(value)))
-        ? Effect.succeed(value)
-        : Effect.fail(
-            SyncDataToTsError.make({
-              message: `${key} is required for the authenticated ISO 3166 sync target.`,
-              targetId,
-            })
-          )
+    Effect.filterOrFail(
+      (value) => Str.isNonEmpty(normalizeWhitespace(Redacted.value(value))),
+      constant(
+        SyncDataToTsError.make({
+          message: `${key} is required for the authenticated ISO 3166 sync target.`,
+          targetId,
+        })
+      )
     )
   );
 

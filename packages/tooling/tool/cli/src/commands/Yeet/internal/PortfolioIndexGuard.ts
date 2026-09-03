@@ -216,7 +216,7 @@ export const enforcePortfolioIndexPublishIntent = Effect.fn("Yeet.enforcePortfol
       YeetCommandError.new(`Failed to render ${PORTFOLIO_INDEX_PATH} from ${GOALS_DIR}/*/ops/manifest.json.`)
     )
   );
-  const committed = yield* fs.readFileString(indexPath).pipe(Effect.map(O.some), Effect.orElseSucceed(O.none<string>));
+  const committed = yield* fs.readFileString(indexPath).pipe(Effect.asSome, Effect.orElseSucceed(O.none<string>));
   const staged = A.contains(intent.paths, PORTFOLIO_INDEX_PATH);
   const stagedDeletions = staged
     ? yield* runGitPathList(context.repoRoot, [
