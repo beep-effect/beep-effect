@@ -876,6 +876,33 @@ export const assertJournalFileLockOwned = Effect.fnUntraced(function* (
   }
 });
 
+const acquireFencedGeneration = Effect.fnUntraced(function* (
+  lockPath: string
+): Effect.fn.Return<string, QualitySchedulerError, FileSystem.FileSystem | Path.Path> {
+  const lockToken = `${process.pid}:${randomUUID()}`;
+  if (yield* acquireJournalFileLock(lockPath, lockToken)) {
+    return lockToken;
+  }
+  return yield* QualitySchedulerError.make({
+    message: `Journal lock "${lockPath}" stayed busy; could not start the locked operation.`,
+  });
+});
+
+const runFencedOperation = Effect.fnUntraced(function* <Success, Requirements>(
+  lockPath: string,
+  operation: (lockToken: string) => Effect.Effect<Success, QualitySchedulerError, Requirements>
+): Effect.fn.Return<
+  Result.Result<Success, QualitySchedulerError>,
+  QualitySchedulerError,
+  FileSystem.FileSystem | Path.Path | Requirements
+> {
+  const lockToken = yield* acquireFencedGeneration(lockPath);
+  return yield* Effect.ensuring(operation(lockToken), releaseJournalFileLock(lockPath, lockToken)).pipe(Effect.result);
+});
+
+const pauseBeforeLockRetry = (attempt: number, retryAttempts: number): Effect.Effect<void, never, never> =>
+  attempt + 1 < retryAttempts ? Effect.sleep(Duration.millis(LOCK_RETRY_DELAY_MILLIS)) : Effect.void;
+
 /**
  * Run one journal operation under a fenced lock generation with bounded replay.
  *
@@ -907,24 +934,14 @@ export const withJournalFileLock = Effect.fnUntraced(function* <Success, Require
   retryAttempts = LOCKED_OPERATION_RETRY_ATTEMPTS
 ): Effect.fn.Return<Success, QualitySchedulerError, FileSystem.FileSystem | Path.Path | Requirements> {
   for (let attempt = 0; attempt < retryAttempts; attempt++) {
-    const lockToken = `${process.pid}:${randomUUID()}`;
-    if (!(yield* acquireJournalFileLock(lockPath, lockToken))) {
-      return yield* QualitySchedulerError.make({
-        message: `Journal lock "${lockPath}" stayed busy; could not start the locked operation.`,
-      });
-    }
-    const outcome = yield* Effect.ensuring(operation(lockToken), releaseJournalFileLock(lockPath, lockToken)).pipe(
-      Effect.result
-    );
+    const outcome = yield* runFencedOperation(lockPath, operation);
     if (Result.isSuccess(outcome)) {
       return outcome.success;
     }
     if (outcome.failure.reason !== "journal-lock-lost") {
       return yield* outcome.failure;
     }
-    if (attempt + 1 < retryAttempts) {
-      yield* Effect.sleep(Duration.millis(LOCK_RETRY_DELAY_MILLIS));
-    }
+    yield* pauseBeforeLockRetry(attempt, retryAttempts);
   }
   return yield* QualitySchedulerError.make({
     message: `Journal lock "${lockPath}" was lost ${retryAttempts} times; retry bound exhausted.`,
