@@ -948,18 +948,54 @@ const gitAdapter: GitCommandErrorAdapter<KnowledgeOperationalError> = {
   onTruncated: O.none(),
 };
 
-const GIT_REF_NAME_PATTERN = /^refs\/(?:heads|tags)\/(.+)$|^refs\/remotes\/[^/]+\/(.+)$/u;
+const GIT_LOCAL_REF_NAME_PATTERN = /^refs\/(?:heads|tags)\/(.+)$/u;
+const GIT_REMOTE_REF_NAME_PATTERN = /^refs\/remotes\/([^/]+)\/(.+)$/u;
 
 /**
- * Parses one full Git ref into the exact inline spelling that can otherwise resemble a tracked path.
+ * Parses one full Git ref into the exact inline spellings that can otherwise resemble tracked paths.
  *
  * @param fullRef - Fully qualified ref name emitted by `git for-each-ref`.
- * @returns The branch or tag spelling used in prose when the namespace is supported.
+ * @returns Branch or tag spellings used in prose when the namespace is supported.
  */
-const gitRefSpanName = (fullRef: string): O.Option<string> => {
-  const match = GIT_REF_NAME_PATTERN.exec(fullRef);
-  return match === null ? O.none() : A.findFirst(A.drop(match, 1), P.isString);
+const gitRefSpanNames = (fullRef: string): ReadonlyArray<string> => {
+  const localMatch = GIT_LOCAL_REF_NAME_PATTERN.exec(fullRef);
+  const localName = localMatch?.[1];
+  if (P.isString(localName)) {
+    return [localName];
+  }
+
+  const remoteMatch = GIT_REMOTE_REF_NAME_PATTERN.exec(fullRef);
+  const remoteName = remoteMatch?.[1];
+  const branchName = remoteMatch?.[2];
+  return P.isString(remoteName) && P.isString(branchName)
+    ? [`${remoteName}/${branchName}`, branchName]
+    : A.empty<string>();
 };
+
+/**
+ * Parses a fully qualified Git ref into the exact prose spellings used by semantic-delta.
+ *
+ * **Details**
+ *
+ * Local branches and tags yield their unqualified name. Remote-tracking branches yield both the
+ * conventional remote-qualified spelling and its branch-name suffix. Unsupported namespaces yield
+ * an empty collection.
+ *
+ * **Example** (Parse a remote-tracking branch)
+ *
+ * ```ts
+ * import { gitRefSpanNamesForTesting } from "@beep/repo-cli/test/Knowledge"
+ *
+ * console.log(gitRefSpanNamesForTesting("refs/remotes/origin/goals/example"))
+ * // ["origin/goals/example", "goals/example"]
+ * ```
+ *
+ * @param fullRef - Fully qualified ref name emitted by `git for-each-ref`.
+ * @returns Exact local, tag, or remote-tracking spellings accepted by the ref exclusion.
+ * @category testing
+ * @since 0.0.0
+ */
+export const gitRefSpanNamesForTesting = gitRefSpanNames;
 
 /** Collects local branch, remote-tracking branch, and tag names with one Git process per comparison. */
 const readGitRefNames = Effect.fn("Knowledge.readGitRefNames")(function* (repoRoot: string) {
@@ -968,7 +1004,7 @@ const readGitRefNames = Effect.fn("Knowledge.readGitRefNames")(function* (repoRo
     ["for-each-ref", "--format=%(refname)", "refs/heads", "refs/remotes", "refs/tags"],
     gitAdapter
   );
-  return HashSet.fromIterable(A.getSomes(A.map(fullRefs, gitRefSpanName)));
+  return HashSet.fromIterable(A.flatMap(fullRefs, gitRefSpanNames));
 });
 
 /**

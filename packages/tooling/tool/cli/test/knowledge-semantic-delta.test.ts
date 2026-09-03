@@ -16,6 +16,7 @@ import {
   resolveKnowledgeProbePolicy,
 } from "@beep/repo-cli/commands/Knowledge";
 import {
+  gitRefSpanNamesForTesting,
   KnowledgeCommandSurface,
   makeKnowledgeArchiveOracle,
   renderKnowledgeSemanticDeltaHumanReport,
@@ -247,6 +248,16 @@ const sortedKinds = (findings: ReadonlyArray<KnowledgeFinding>): ReadonlyArray<K
   );
 
 describe("knowledge semantic-delta golden paired fixtures", () => {
+  it("parses local, remote-tracking, and tag ref spellings without accepting other namespaces", () => {
+    expect(gitRefSpanNamesForTesting("refs/heads/goals/local-branch")).toEqual(["goals/local-branch"]);
+    expect(gitRefSpanNamesForTesting("refs/remotes/origin/goals/remote-branch")).toEqual([
+      "origin/goals/remote-branch",
+      "goals/remote-branch",
+    ]);
+    expect(gitRefSpanNamesForTesting("refs/tags/goals/release-tag")).toEqual(["goals/release-tag"]);
+    expect(gitRefSpanNamesForTesting("refs/notes/goals/not-a-branch")).toEqual([]);
+  });
+
   it.effect("treats retired deterministic projections as virtual targets and skips index drift", () =>
     Effect.gen(function* () {
       const files = {
@@ -563,13 +574,14 @@ describe("knowledge semantic-delta golden paired fixtures", () => {
   it.effect("a real Git ref span is exempt while a genuinely missing path remains", () =>
     Effect.gen(function* () {
       const branchName = "goals/time-to-certainty-kickoff";
+      const remoteRef = `refs/remotes/origin/${branchName}`;
       const report = yield* scan(
         fixture(
           { "docs/guide.md": "No references.\n" },
           {
             "docs/guide.md": `Continue branch \`${branchName}\`; repair \`goals/genuinely-missing.md\`.\n`,
           },
-          { gitRefNames: [branchName] }
+          { gitRefNames: gitRefSpanNamesForTesting(remoteRef) }
         )
       );
 
