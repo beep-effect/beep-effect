@@ -404,6 +404,11 @@ deliver_ntfy() {
   local token="${BEEP_SEQUENCE_BREAK_NTFY_TOKEN:-}"
   local title body priority exit_code
 
+  # Keep secret-bearing configuration out of every child process. The local
+  # copies stay in this worker only; curl receives the topic over JSON stdin and
+  # an optional bearer header over an inherited file descriptor.
+  unset BEEP_SEQUENCE_BREAK_NTFY_TOPIC BEEP_SEQUENCE_BREAK_NTFY_TOKEN
+
   case "${topic}" in "" | *[!A-Za-z0-9_-]*)
     append_delivery ntfy "${stage}" skipped transport-unconfigured "${measured_age}"
     return 0

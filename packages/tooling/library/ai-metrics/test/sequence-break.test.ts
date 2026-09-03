@@ -151,7 +151,7 @@ const makeNotifierStore = Effect.fnUntraced(function* () {
   } satisfies NotifierStore;
 });
 
-const runNotifier = Effect.fnUntraced(function* (store: NotifierStore, ntfyTopic = "") {
+const runNotifier = Effect.fnUntraced(function* (store: NotifierStore, ntfyTopic = "", ntfyToken = "") {
   const handle = yield* ChildProcess.make(
     notifierPath,
     ["claude-code", SESSION_ID, REQUEST_TS, "tool-permission", "human-input", "AskUserQuestion", "desktop-ntfy-1"],
@@ -168,6 +168,7 @@ const runNotifier = Effect.fnUntraced(function* (store: NotifierStore, ntfyTopic
         BEEP_SEQUENCE_BREAK_DESKTOP_ENABLED: "1",
         BEEP_SEQUENCE_BREAK_MAX_STAGE: "initial",
         BEEP_SEQUENCE_BREAK_NTFY_TOPIC: ntfyTopic,
+        BEEP_SEQUENCE_BREAK_NTFY_TOKEN: ntfyToken,
       },
       stdin: "ignore",
       stdout: "pipe",
@@ -428,6 +429,35 @@ layer(NodeServices.layer)("sequence-break notification contracts", (it) => {
         ]);
         expect(A.every(yield* notificationRows(store), (row) => !row.includes(CANARY))).toBe(true);
         expect(A.every(yield* breakerEventRows(store), (row) => !row.includes(CANARY))).toBe(true);
+      })
+    )
+  );
+
+  it.effect("keeps the ntfy topic and bearer token out of transport child environments", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const store = yield* makeNotifierStore();
+        const fakeCurl = `${store.fakeBin}/curl`;
+        yield* fs.writeFileString(store.hookPath, `${preToolUseLine()}\n${permissionRequestLine}\n`);
+        yield* fs.writeFileString(
+          fakeCurl,
+          `#!/usr/bin/env bash
+if [ -n "\${BEEP_SEQUENCE_BREAK_NTFY_TOPIC:-}\${BEEP_SEQUENCE_BREAK_NTFY_TOKEN:-}" ]; then
+  exit 97
+fi
+cat >/dev/null
+exit 0
+`
+        );
+        yield* fs.chmod(fakeCurl, 0o755);
+
+        expectSilentSuccess(yield* runNotifier(store, "private-topic", "private-token"));
+        const notifications = yield* decodedNotifications(store);
+        expect(A.map(notifications, ({ delivery, transport }) => `${transport}:${delivery.status}`)).toEqual([
+          "desktop:sent",
+          "ntfy:sent",
+        ]);
       })
     )
   );

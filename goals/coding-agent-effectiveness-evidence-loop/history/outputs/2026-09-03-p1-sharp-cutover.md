@@ -81,7 +81,7 @@ bunx --bun vitest run test/hook-pulse-writer.test.ts \
   test/sequence-break.test.ts test/circuit-breaker.test.ts
 
 Test Files  3 passed (3)
-Tests       75 passed (75)
+Tests       76 passed (76)
 ```
 
 The conformance cases prove:
@@ -92,6 +92,8 @@ The conformance cases prove:
 - exact `PostToolUse` closure as two `bracket-resolved` decisions;
 - configured ntfy publishing consults the network breaker and retains neither
   the topic nor transport body in either ledger;
+- topic and bearer-token configuration is removed from the environment before
+  either reachability or delivery curl processes start;
 - a kill switch raised during the reachability probe suppresses the subsequent
   phone POST at the transport boundary;
 - one breaker failure, a cross-adapter retry skip that does not execute, an
@@ -138,7 +140,7 @@ A follow-up census at `2026-09-03T11:08:44Z` found 5,898 post-boundary rows:
 `PermissionRequest` had accrued, but it was in the `log-only-0` comparison
 population; the sharp treatment denominator remained zero. The notification
 ledger still contained zero files, and the current process exposed neither an
-ntfy topic nor a token file descriptor. This increases observation time but
+ntfy topic nor a bearer token. This increases observation time but
 does not satisfy either open evidence gate.
 
 ## Remaining P1 gates
