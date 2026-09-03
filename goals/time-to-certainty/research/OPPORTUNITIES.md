@@ -1,0 +1,26 @@
+# time-to-certainty — friction ledger
+
+Record friction at the moment it happens (what you were doing, evidence, what would have
+prevented it). Public repo: redact secrets, replace absolute home paths with `~`, drop
+session/machine ids, quote only the minimal identifying error text.
+
+## 2026-09-03 — A Monitor watchdog matched its own command line and never exited
+
+- **Doing:** closing out the ship-velocity successor PR after its Codex lane had finished.
+- **Evidence:** the watchdog's exit test was a process-name search for the Codex command string;
+  the search also matched the watchdog's own shell, so the task stayed listed as running after the
+  process it watched was gone. A sibling `pkill` with the same pattern had earlier killed the
+  calling shell.
+- **Would have prevented it:** anchor process searches to the program name or watch a pid captured
+  at launch; never search for a substring that appears in the searcher's own command line.
+
+## 2026-09-03 — Three agent-launched processes died with no journal entry anywhere
+
+- **Doing:** running the ship-velocity closeout lanes as detached Codex processes and a detached
+  Yeet publish.
+- **Evidence:** two Codex sessions and one `nohup` publish ended mid tool-call; the scheduler
+  journal, the user journal, the OOM killer's log, and the Codex rollout recorded nothing. The only
+  long process that survived ran in its own systemd user scope with its own session and its prompt
+  on stdin.
+- **Would have prevented it:** a detached job surface that puts every agent-submitted proof in its
+  own scope with a durable id and journals its termination (SPEC B5/B6).
