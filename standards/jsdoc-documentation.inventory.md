@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-09-03T17:45:20.093Z
+Generated: 2026-09-03T20:22:14.890Z
 
 ## Scope
 
@@ -14,16 +14,16 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 17 |
 | packagesWithoutPublicSrcSurface | 3 |
 | packagesNeedingRemediation | 117 |
-| publicModules | 3006 |
-| publicExports | 21283 |
-| openModules | 376 |
-| openExports | 3503 |
+| publicModules | 3007 |
+| publicExports | 21287 |
+| openModules | 375 |
+| openExports | 3498 |
 | missingExportExamples | 5 |
 | missingExportCategories | 0 |
 | missingExportSince | 0 |
 | forbiddenTagFindings | 0 |
 | malformedConditionalTagFindings | 0 |
-| exampleImportFindings | 3782 |
+| exampleImportFindings | 3777 |
 | unsafeExampleFindings | 0 |
 | schemaAnnotationFindings | 0 |
 | undescribed-see | 12 |
@@ -40,7 +40,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | duplicate-example | 0 |
 | loose-ts-fence | 0 |
 | forbidden-remarks | 0 |
-| no-root-package-import | 3781 |
+| no-root-package-import | 3776 |
 | rootPolicyOpen | 0 |
 
 ## Root Policy
@@ -74,7 +74,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 16 | `@beep/ontology-use-cases` | `packages/ontology/use-cases` | needs-remediation | 23 | 214 | 1 | 17 |
 | 17 | `@beep/architecture-lab-client` | `packages/architecture-lab/client` | needs-remediation | 3 | 7 | 0 | 4 |
 | 18 | `@beep/dock` | `packages/foundation/ui-system/dock` | needs-remediation | 20 | 212 | 0 | 189 |
-| 19 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 222 | 1804 | 47 | 290 |
+| 19 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 223 | 1819 | 47 | 286 |
 | 20 | `@beep/pglite` | `packages/drivers/pglite` | needs-remediation | 4 | 11 | 3 | 0 |
 | 21 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | needs-remediation | 10 | 86 | 0 | 18 |
 | 22 | `@beep/agents-server` | `packages/agents/server` | needs-remediation | 11 | 39 | 2 | 7 |
@@ -113,7 +113,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 55 | `@beep/langextract` | `packages/foundation/capability/langextract` | needs-remediation | 26 | 126 | 0 | 31 |
 | 56 | `@beep/shared-tables` | `packages/shared/tables` | clean | 9 | 12 | 0 | 0 |
 | 57 | `@beep/scratchpad` | `scratchpad` | needs-remediation | 469 | 4226 | 3 | 693 |
-| 58 | `@beep/md` | `packages/foundation/modeling/md` | needs-remediation | 10 | 263 | 4 | 117 |
+| 58 | `@beep/md` | `packages/foundation/modeling/md` | needs-remediation | 10 | 263 | 4 | 116 |
 | 59 | `@beep/practice-kg-mcp` | `apps/practice-kg-mcp` | needs-remediation | 7 | 14 | 0 | 3 |
 | 60 | `@beep/tailscale` | `packages/drivers/tailscale` | needs-remediation | 5 | 29 | 0 | 3 |
 | 61 | `@beep/law-practice-use-cases` | `packages/law-practice/use-cases` | needs-remediation | 32 | 113 | 4 | 23 |
@@ -155,7 +155,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 97 | `@beep/schema` | `packages/foundation/modeling/schema` | needs-remediation | 263 | 1605 | 26 | 170 |
 | 98 | `@beep/epistemic-server` | `packages/epistemic/server` | needs-remediation | 23 | 51 | 8 | 18 |
 | 99 | `@beep/box-provisioning` | `packages/drivers/box-provisioning` | needs-remediation | 11 | 110 | 0 | 10 |
-| 100 | `@beep/freshbooks` | `packages/drivers/freshbooks` | needs-remediation | 6 | 60 | 5 | 12 |
+| 100 | `@beep/freshbooks` | `packages/drivers/freshbooks` | needs-remediation | 6 | 49 | 5 | 12 |
 | 101 | `@beep/rdf` | `packages/foundation/modeling/rdf` | needs-remediation | 29 | 266 | 1 | 8 |
 | 102 | `@beep/onepassword-cli` | `packages/drivers/onepassword-cli` | needs-remediation | 4 | 16 | 0 | 2 |
 | 103 | `@beep/architecture-lab-config` | `packages/architecture-lab/config` | needs-remediation | 9 | 21 | 0 | 3 |
@@ -174,7 +174,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 116 | `@beep/m365` | `packages/drivers/m365` | needs-remediation | 6 | 74 | 2 | 5 |
 | 117 | `@beep/observability` | `packages/foundation/capability/observability` | needs-remediation | 25 | 164 | 8 | 112 |
 | 118 | `@beep/tsgo-shim` | `tools/tsgo-shim` | no-public-src-surface | 0 | 0 | 0 | 0 |
-| 119 | `@beep/html` | `packages/foundation/modeling/html` | needs-remediation | 16 | 546 | 10 | 52 |
+| 119 | `@beep/html` | `packages/foundation/modeling/html` | needs-remediation | 16 | 546 | 9 | 52 |
 | 120 | `@beep/n3` | `packages/drivers/n3` | needs-remediation | 3 | 11 | 0 | 1 |
 | 121 | `@beep/ui` | `packages/foundation/ui-system/ui` | needs-remediation | 134 | 554 | 1 | 7 |
 | 122 | `@beep/pandoc-ast` | `packages/foundation/modeling/pandoc-ast` | needs-remediation | 7 | 203 | 0 | 18 |
@@ -839,12 +839,8 @@ Export findings:
 - `src/commands/Cache/Cache.schemas.ts:232` `CacheDashboardReportJson` (const) - 1 example import violation(s)
 - `src/commands/Cache/Cache.schemas.ts:249` `CacheWarmReceiptJson` (const) - 1 example import violation(s)
 - `src/commands/Ci/Ci.command.ts:269` `appendTurboSummary` (const) - 1 example import violation(s)
-- `src/commands/Ci/CiLane.ts:343` `CI_LANE_DESCRIPTORS` (const) - 1 documentation section/link violation(s)
-- `src/commands/Ci/CiLane.ts:920` `ciLaneStepsForTesting` (const) - 1 documentation section/link violation(s)
-- `src/commands/Ci/CiLane.ts:1526` `runCiLane` (const) - 1 example import violation(s)
-- `src/commands/Ci/CiLane.ts:1577` `ciLaneCommand` (const) - 1 example import violation(s)
-- `src/commands/Ci/CiLane.ts:1950` `runCiLocal` (const) - 1 example import violation(s)
-- `src/commands/Ci/CiLane.ts:1986` `ciLocalCommand` (const) - 1 example import violation(s)
+- `src/commands/Ci/CiLane.ts:361` `CI_LANE_DESCRIPTORS` (const) - 1 documentation section/link violation(s)
+- `src/commands/Ci/CiLane.ts:1302` `ciLaneStepsForTesting` (const) - 1 documentation section/link violation(s)
 - `src/commands/Ci/LaneTimings.ts:688` `decodeCiWorkflowJobsPage` (const) - 1 example import violation(s)
 - `src/commands/Ci/LaneTimings.ts:781` `collectCiLaneTimings` (const) - 1 example import violation(s)
 - `src/commands/Codex/Findings.capture.schemas.ts:576` `CodexFindingsCapturePayload` (class) - 1 example import violation(s)
@@ -2737,11 +2733,11 @@ Export findings:
 - `src/Md.behavior.ts:132` `renderPlainTextInline` (const) - 1 example import violation(s)
 - `src/Md.behavior.ts:149` `renderPlainTextBlock` (const) - 1 example import violation(s)
 - `src/Md.behavior.ts:166` `renderPlainTextBlocks` (const) - 1 example import violation(s)
-- `src/Md.conformance.ts:229` `CommonMarkDocument` (const) - 1 example import violation(s)
-- `src/Md.conformance.ts:279` `GfmDocument` (const) - 1 example import violation(s)
-- `src/Md.conformance.ts:325` `BeepMarkdownDocument` (const) - 1 example import violation(s)
-- `src/Md.conformance.ts:376` `refineStrictMarkdownDocument` (const) - 2 example import violation(s)
-- `src/Md.conformance.ts:460` `inspectMarkdownSpecificationConformance` (const) - 1 example import violation(s)
+- `src/Md.conformance.ts:235` `CommonMarkDocument` (const) - 1 example import violation(s)
+- `src/Md.conformance.ts:285` `GfmDocument` (const) - 1 example import violation(s)
+- `src/Md.conformance.ts:331` `BeepMarkdownDocument` (const) - 1 example import violation(s)
+- `src/Md.conformance.ts:382` `refineStrictMarkdownDocument` (const) - 2 example import violation(s)
+- `src/Md.conformance.ts:466` `inspectMarkdownSpecificationConformance` (const) - 1 example import violation(s)
 - `src/Md.escape.ts:158` `UrlPolicySpec` (const) - 1 example import violation(s)
 - `src/Md.escape.ts:708` `maxBackticks` (const) - 1 example import violation(s)
 - `src/Md.escape.ts:773` `renderFencedCode` (const) - 1 example import violation(s)
@@ -2786,7 +2782,6 @@ Export findings:
 - `src/Md.render.ts:1524` `renderHtml` (const) - 2 example import violation(s)
 - `src/Md.render.ts:1549` `renderPlainText` (const) - 2 example import violation(s)
 - `src/Md.safe.ts:79` `DocumentSafetyPathSegment` (const) - 1 example import violation(s)
-- `src/Md.safe.ts:350` `DocumentComplexitySafetyViolation` (class) - 1 example import violation(s)
 - `src/Md.safe.ts:739` `documentSafetyIssues` (const) - 1 example import violation(s)
 - `src/Md.safe.ts:765` `inlineSafetyIssuesAtRoot` (const) - 1 example import violation(s)
 - `src/Md.safe.ts:806` `SafeInline` (const) - 1 example import violation(s)
@@ -4143,8 +4138,8 @@ Export findings:
 - `src/Yaml.ts:127` `decodeYamlTextAs` (const) - 1 example import violation(s)
 - `src/index.ts:226` `export * as HttpMethod from "./HttpMethod/index.ts";` (re-export) - 1 example import violation(s)
 - `src/index.ts:262` `export * as JSONSchema from "./JSONSchema/index.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:358` `export * from "./Port.ts";` (re-export) - 2 example import violation(s)
-- `src/index.ts:403` `export { SafeObject, SafeObjectFromObjectKeyword } from "./SafeObject/index.ts";` (re-export) - 2 example import violation(s)
+- `src/index.ts:362` `export * from "./Port.ts";` (re-export) - 2 example import violation(s)
+- `src/index.ts:407` `export { SafeObject, SafeObjectFromObjectKeyword } from "./SafeObject/index.ts";` (re-export) - 2 example import violation(s)
 
 ### @beep/epistemic-server
 
@@ -4208,18 +4203,18 @@ Module findings:
 - `src/index.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 
 Export findings:
-- `src/Freshbooks.config.ts:260` `FreshbooksConfigInput` (class) - 1 example import violation(s); 1 documentation section/link violation(s)
-- `src/Freshbooks.errors.ts:45` `FreshbooksErrorReason` (const) - 1 documentation section/link violation(s)
-- `src/Freshbooks.models.ts:734` `FreshbooksDecode` (const) - missing @example
+- `src/Freshbooks.config.ts:286` `FreshbooksConfigInput` (class) - 1 example import violation(s); 1 documentation section/link violation(s)
+- `src/Freshbooks.errors.ts:73` `FreshbooksErrorReason` (const) - 1 documentation section/link violation(s)
+- `src/Freshbooks.models.ts:566` `FreshbooksDecode` (const) - missing @example
 - `src/Freshbooks.service.ts:84` `ResolvedFreshbooksConfig` (class) - 1 example import violation(s)
 - `src/Freshbooks.service.ts:121` `resolveConfig` (const) - 1 example import violation(s)
-- `src/Freshbooks.service.ts:325` `Freshbooks` (class) - 1 example import violation(s)
-- `src/Freshbooks.service.ts:432` `makeFreshbooksAuthLayer` (const) - 1 example import violation(s)
-- `src/Freshbooks.token.ts:74` `FreshbooksTokenResponse` (const) - 1 example import violation(s)
-- `src/Freshbooks.token.ts:152` `FreshbooksStoredToken` (class) - 1 example import violation(s)
-- `src/Freshbooks.token.ts:206` `FreshbooksTokenStore` (class) - 1 example import violation(s)
-- `src/Freshbooks.token.ts:260` `FreshbooksTokenStoreShape` (type) - 1 example import violation(s)
-- `src/Freshbooks.token.ts:285` `FreshbooksAuthShape` (type) - 1 example import violation(s)
+- `src/Freshbooks.service.ts:316` `Freshbooks` (class) - 1 example import violation(s)
+- `src/Freshbooks.service.ts:423` `makeFreshbooksAuthLayer` (const) - 1 example import violation(s)
+- `src/Freshbooks.token.ts:74` `FreshbooksTokenResponse` (class) - 1 example import violation(s)
+- `src/Freshbooks.token.ts:124` `FreshbooksStoredToken` (class) - 1 example import violation(s)
+- `src/Freshbooks.token.ts:178` `FreshbooksTokenStore` (class) - 1 example import violation(s)
+- `src/Freshbooks.token.ts:232` `FreshbooksTokenStoreShape` (type) - 1 example import violation(s)
+- `src/Freshbooks.token.ts:257` `FreshbooksAuthShape` (type) - 1 example import violation(s)
 
 ### @beep/rdf
 
@@ -4619,7 +4614,6 @@ Module findings:
 - `src/Html.nodes.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/Html.policy.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/Html.serialize.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/Html.ts:1` (none) - missing summary; missing @since
 - `src/index.ts:1` (packageDocumentation) - 2 example import violation(s)
 
 Export findings:
@@ -4636,10 +4630,10 @@ Export findings:
 - `src/Html.attributes.ts:1631` `AutocompleteAttribute` (const) - 1 example import violation(s)
 - `src/Html.attributes.ts:1833` `EnumeratedGlobalAttributes` (const) - 1 example import violation(s)
 - `src/Html.attributes.ts:1943` `DatasetKey` (type) - 1 example import violation(s)
-- `src/Html.conformance.ts:159` `ConformantHtml` (const) - 1 example import violation(s)
-- `src/Html.conformance.ts:201` `ConformantHtmlNode` (const) - 2 example import violation(s)
-- `src/Html.conformance.ts:2244` `conform` (const) - 1 example import violation(s)
-- `src/Html.conformance.ts:2276` `conformantRoot` (const) - 1 example import violation(s)
+- `src/Html.conformance.ts:171` `ConformantHtml` (const) - 1 example import violation(s)
+- `src/Html.conformance.ts:213` `ConformantHtmlNode` (const) - 2 example import violation(s)
+- `src/Html.conformance.ts:2256` `conform` (const) - 1 example import violation(s)
+- `src/Html.conformance.ts:2288` `conformantRoot` (const) - 1 example import violation(s)
 - `src/Html.contract.ts:103` `HtmlDocumentChild` (type) - 1 example import violation(s)
 - `src/Html.form-control.ts:43` `InputState` (const) - 1 example import violation(s)
 - `src/Html.form-control.ts:128` `resolveInputState` (const) - 1 example import violation(s)
