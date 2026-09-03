@@ -9,7 +9,9 @@ import {
 } from "@beep/repo-cli/test/Quality";
 import {
   acquireJournalFileLock,
+  admissionStatus,
   appendEncodedAttemptJournalEvent,
+  MemoryStats,
   processStartIdentityForPid,
   provideRuntimeRootForTesting,
   RuntimeRootChoice,
@@ -85,6 +87,7 @@ import {
   restoreStashedWorktreeForTesting,
   retireFullProofLockOrObserveAtPath,
   runGhPullRequestView,
+  runWithFullProofCoordinatorForTesting,
   runYeetFallowFeedbackForTesting,
   safeOriginBranchFromBaseForTesting,
   shouldSkipCommitForReusablePublishForTesting,
@@ -625,6 +628,60 @@ describe("yeet planner", () => {
                 O.contains(terminal.stage, "repair-loop")
             )
           ).toBe(true);
+        })
+      )
+    ));
+
+  it("carries immutable attempt facts through full-proof admission", () =>
+    Effect.runPromise(
+      withProofCoordinatorRepo(({ tempContext, tmpDir }) =>
+        Effect.gen(function* () {
+          const path = yield* Path.Path;
+          const attempt = YeetAttemptStarted.make({
+            schemaVersion: "yeet-attempt-journal/v1",
+            _tag: "attempt-started",
+            attemptId: attemptUuid("00000000-0000-4000-8020-000000000004"),
+            runId: "full-proof-admission-facts",
+            branch: tempContext.branch,
+            base: tempContext.base,
+            head: tempContext.head,
+            mode: "verify",
+            startedAt: "2026-09-03T00:00:00.000Z",
+            resolvedHeadSha: O.some("0123456789abcdef0123456789abcdef01234567"),
+            diffFingerprint: O.some("abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcd"),
+            proofTier: O.some("full"),
+            envProfile: O.some("local"),
+            stage: O.some("pre-push"),
+          });
+          const liveLease = yield* runWithFullProofCoordinatorForTesting(
+            tempContext,
+            [prePushStep],
+            Effect.gen(function* () {
+              const snapshot = yield* admissionStatus();
+              return pipe(snapshot.leases, A.head, O.getOrThrow);
+            }),
+            undefined,
+            O.some(attempt)
+          ).pipe(
+            provideRuntimeRootForTesting(
+              RuntimeRootChoice.make({ kind: "test-override", root: path.join(tmpDir, "runtime") })
+            ),
+            provideScopedLayer(
+              Layer.succeed(
+                MemoryStats,
+                MemoryStats.of({ availableGib: Effect.succeed(50), totalGib: Effect.succeed(128) })
+              )
+            )
+          );
+
+          expect(liveLease).toMatchObject({
+            attemptId: O.some(attempt.attemptId),
+            resolvedHeadSha: attempt.resolvedHeadSha,
+            diffFingerprint: attempt.diffFingerprint,
+            proofTier: attempt.proofTier,
+            envProfile: attempt.envProfile,
+            stage: attempt.stage,
+          });
         })
       )
     ));

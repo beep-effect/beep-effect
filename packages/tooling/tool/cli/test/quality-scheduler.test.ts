@@ -19,6 +19,7 @@ import {
   isOvershootLoserForTesting,
   isProcessIdentityAliveWithStartForTesting,
   MemoryStats,
+  MemoryStatsLive,
   noAdmissionOriginGate,
   parseAdmissionProcStatStartTime,
   processIdentityStatus,
@@ -380,6 +381,15 @@ const listDirectory = Effect.fnUntraced(function* (directory: string) {
 });
 
 describe("quality-scheduler", () => {
+  it.effect("reads the live memory inputs used by the scheduler capacity model", () =>
+    Effect.gen(function* () {
+      const stats = yield* MemoryStats;
+
+      expect(yield* stats.availableGib).toBeGreaterThan(0);
+      expect(yield* stats.totalGib).toBeGreaterThan(0);
+    }).pipe(provideScopedLayer(MemoryStatsLive), provideScopedLayer(NodeFileSystem.layer))
+  );
+
   it.effect("accepts an owner-agnostic private directory and rejects an unsafe mode", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
