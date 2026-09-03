@@ -1156,7 +1156,7 @@ const readDetectionEnvironment = Effect.fn("PrProvenance.readDetectionEnvironmen
       [
         optionalConfigString("HOME"),
         optionalConfigString("CLAUDE_CODE_SESSION_ID"),
-        Config.option(Config.number("CLAUDE_PID")).pipe(Effect.orElseSucceed(() => O.none<number>())),
+        Config.option(Config.number("CLAUDE_PID")).pipe(Effect.orElseSucceed(O.none)),
         optionalConfigString("CLAUDE_CODE_ENTRYPOINT"),
         optionalConfigString("CLAUDE_CODE_HOST_SESSION_ID"),
         Config.boolean("CLAUDE_CODE_CHILD_SESSION").pipe(Config.withDefault(false)),
@@ -1230,7 +1230,7 @@ const findCodexSession = Effect.fn("PrProvenance.findCodexSession")(function* (h
   const names = yield* fs.readDirectory(root, { recursive: true });
   const match = yield* Effect.reduce(
     A.filter(names, Str.endsWith(".jsonl")),
-    () => O.none<{ readonly cwd: string; readonly model: O.Option<PrProvenanceModel> }>(),
+    O.none,
     Effect.fnUntraced(function* (found, name) {
       if (O.isSome(found)) return found;
       const content = yield* fs.readFileString(path.join(root, name));
@@ -1314,7 +1314,7 @@ const readCodexEvidence = Effect.fn("PrProvenance.readCodexEvidence")(function* 
   const coordinates = O.all({ home: environment.home, codexId: environment.codexId });
   if (O.isNone(coordinates)) return fallback;
   const session = yield* findCodexSession(coordinates.value.home, coordinates.value.codexId).pipe(
-    Effect.orElseSucceed(() => O.none<{ readonly cwd: string; readonly model: O.Option<string> }>())
+    Effect.orElseSucceed(O.none)
   );
   return O.map(session, (record) =>
     ProvenanceSessionEvidence.make({
@@ -1332,9 +1332,7 @@ const readClaudeTranscriptEvidence = Effect.fn("PrProvenance.readClaudeTranscrip
   if (O.isNone(coordinates)) return O.none<{ readonly cwd: O.Option<string>; readonly model: O.Option<string> }>();
   const transcriptPath = yield* O.match(environment.companionTranscript, {
     onNone: () =>
-      findClaudeTranscript(coordinates.value.home, coordinates.value.claudeId).pipe(
-        Effect.orElseSucceed(() => O.none<string>())
-      ),
+      findClaudeTranscript(coordinates.value.home, coordinates.value.claudeId).pipe(Effect.orElseSucceed(O.none)),
     onSome: Effect.succeedSome,
   });
   return yield* O.match(transcriptPath, {
@@ -1354,11 +1352,13 @@ const readClaudeIndexEvidence = Effect.fn("PrProvenance.readClaudeIndexEvidence"
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const indexPath = path.join(coordinates.value.home, ".claude", "sessions", `${coordinates.value.claudePid}.json`);
-  return yield* fs.readFileString(indexPath).pipe(
-    Effect.map(decodeClaudeIndex),
-    Effect.map(O.filter((index) => index.sessionId === coordinates.value.claudeId)),
-    Effect.orElseSucceed(() => O.none<ClaudeSessionIndex>())
-  );
+  return yield* fs
+    .readFileString(indexPath)
+    .pipe(
+      Effect.map(decodeClaudeIndex),
+      Effect.map(O.filter((index) => index.sessionId === coordinates.value.claudeId)),
+      Effect.orElseSucceed(O.none)
+    );
 });
 const readClaudeEvidence = Effect.fn("PrProvenance.readClaudeEvidence")(function* (
   environment: ProvenanceDetectionEnvironment,
