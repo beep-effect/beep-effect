@@ -715,8 +715,9 @@ Source:
   projection digest, and the 34-document live and replay reports were
   byte-identical at digest
   `2a2089eacaa7f341649b6e1d86991fda526f5d9708e9eaa1f4e9d06e0533b5d1`.
-  Live cold start was 1 ms and interactive p95 was 3 ms, clearing Tier-L; the
-  retry was not used. EYE is not a runtime dependency. `G-entailment/rules`,
+  Live cold start was 1,183 ms and interactive p95 was 7 ms, clearing Tier-L
+  (corrected 2026-09-02 from the archived sidecar; the entry originally quoted
+  1 ms and 3 ms from an earlier probe); the retry was not used. EYE is not a runtime dependency. `G-entailment/rules`,
   the v3 Rete salvage, and the proof-ledger kernel remain the separately gated
   reasoning spike and re-enter at `decompose`.
 
@@ -729,11 +730,14 @@ Source:
 - `semantica-canary` flips to `completed-retained` in this closeout change.
   Its checksum-controlled evidence inventory and reflection remain under
   `goals/semantica-canary/history/`.
-- The closeout audit found that the archived C2 report and `p4-c2-r2.md` agree
-  on digest `7fff1dc09bf517841a840071393ecc0f4a914366ff355d246964124d2ea9417e`,
-  cold start 1,166 ms, and p95 7 ms. The older C2 entry above quotes an earlier
-  passing digest and measurements. The archived values are the controlling
-  closeout evidence; the Reasoning verdict remains a pass.
+- The closeout audit found that the merged C2 archive lagged the ratified
+  full-state run: the C2 entry above cites digest
+  `2a2089eacaa7f341649b6e1d86991fda526f5d9708e9eaa1f4e9d06e0533b5d1`, but the
+  commit archiving that run was never pushed before #938 merged, so main held
+  the earlier `7fff1dc0…` run until the follow-up archive PR landed it. The
+  archive, `p4-c2-r2.md`, and the verdict now agree; its telemetry records
+  live cold start 1,183 ms and p95 7 ms, superseding the entry's "1 ms / 3 ms"
+  figures from an earlier probe. The Reasoning verdict remains a pass.
 - Per MAP Sequencing 5 and the Explore graduation contract, the C2 pass fired
   the queued `semantica-storage-inversion` gate (its only precondition) and
   satisfied the first of `semantica-reasoning-spike`'s two preconditions; that

@@ -2,7 +2,8 @@
 command: bunx vitest run test/Reasoning.test.ts
 checkpoint: projection-state-committed
 signal: SIGKILL
-precondition: empty projection digest captured before the killed child transaction
+fixture: 2 distinct projection-relevant extraction batches and provenance events
+precondition: empty projection digest captured before the killed child transactions
 restart processes: 2 after SIGKILL
-result: PASS - recovered projection differed from empty and both restart digests were equal SHA-256 values
+result: PASS - recovery after SIGKILL differed from the empty precondition digest and both restart digests were equal SHA-256 values; batch-level completeness is witnessed by the full R2 report, whose independently computed expected projection digest equals the after-restart digest
 test: recovers projection-relevant state committed before SIGKILL
