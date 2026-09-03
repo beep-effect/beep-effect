@@ -321,8 +321,8 @@ export * from "./MutableHashMap.ts";
  */
 export * from "./MutableHashSet.ts";
 /**
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export * from "./Number.ts";
 /**
