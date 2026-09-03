@@ -2210,7 +2210,7 @@ describe("yeet attempt journal", () => {
       )
     ));
 
-  it("schema-decodes events, retains 50 rows, and receipts every eviction", () =>
+  it("schema-decodes events, retains 50 attempts, and receipts every eviction", () =>
     Effect.runPromise(
       withTempDirectory((tmpDir) =>
         Effect.gen(function* () {
@@ -2239,12 +2239,12 @@ describe("yeet attempt journal", () => {
           const lines = pipe(yield* fs.readFileString(journalPath), Str.split("\n"), A.filter(Str.isNonEmpty));
           const events = yield* Effect.forEach(lines, (line) => decodeYeetAttemptJournalEvent(line));
 
-          expect(events).toHaveLength(50);
+          expect(events).toHaveLength(51);
           const starts = A.filter(events, YeetAttemptJournalEvent.guards["attempt-started"]);
           const receipts = A.filter(events, YeetAttemptJournalEvent.guards["journal-compacted"]);
-          expect(starts).toHaveLength(49);
-          expect(starts[0]?.attemptId).toBe("00000000-0000-4000-8000-000000000011");
-          expect(starts[48]?.attemptId).toBe("00000000-0000-4000-8000-000000000059");
+          expect(starts).toHaveLength(50);
+          expect(starts[0]?.attemptId).toBe("00000000-0000-4000-8000-000000000010");
+          expect(starts[49]?.attemptId).toBe("00000000-0000-4000-8000-000000000059");
           expect(receipts).toHaveLength(1);
           expect(receipts[0]).toMatchObject({
             evictedCount: 2,
@@ -2254,7 +2254,7 @@ describe("yeet attempt journal", () => {
       )
     ));
 
-  it("compacts mixed legacy and current event shapes through the same bounded journal", () =>
+  it("counts mixed legacy and current event shapes by attempt instead of by row", () =>
     Effect.runPromise(
       withTempDirectory((tmpDir) =>
         Effect.gen(function* () {
@@ -2275,7 +2275,7 @@ describe("yeet attempt journal", () => {
             A.flatten
           );
           const seededLines = pipe(
-            A.makeBy(15, () => fixtureLines),
+            A.makeBy(30, () => fixtureLines),
             A.flatten
           );
           yield* fs.makeDirectory(path.dirname(journalPath), { recursive: true });
@@ -2300,8 +2300,8 @@ describe("yeet attempt journal", () => {
             pipe(yield* fs.readFileString(journalPath), Str.split("\n"), A.filter(Str.isNonEmpty)),
             (line) => decodeYeetAttemptJournalEvent(line)
           );
-          expect(events.length).toBeLessThanOrEqual(50);
-          expect(A.filter(events, YeetAttemptJournalEvent.guards["journal-compacted"])).toHaveLength(1);
+          expect(events).toHaveLength(151);
+          expect(A.filter(events, YeetAttemptJournalEvent.guards["journal-compacted"])).toHaveLength(30);
           expect(A.some(events, YeetAttemptJournalEvent.guards["attempt-terminated"])).toBe(true);
         })
       )
@@ -2314,7 +2314,7 @@ describe("yeet attempt journal", () => {
           const fs = yield* FileSystem.FileSystem;
           const tempContext = RepoRunContext.make({ ...context, cwd: tmpDir, repoRoot: tmpDir });
           yield* Effect.forEach(
-            A.makeBy(30, (index) => index),
+            A.makeBy(60, (index) => index),
             (index) => {
               const attemptId = attemptUuid(`00000000-0000-4000-8001-${Str.padStart(12, "0")(`${index}`)}`);
               return Effect.all(
@@ -2356,7 +2356,8 @@ describe("yeet attempt journal", () => {
           );
           const starts = A.filter(events, YeetAttemptJournalEvent.guards["attempt-started"]);
           const terminals = A.filter(events, YeetAttemptJournalEvent.guards["attempt-terminated"]);
-          expect(events.length).toBeLessThanOrEqual(50);
+          expect(events.length).toBeLessThanOrEqual(101);
+          expect(starts).toHaveLength(50);
           expect(starts).toHaveLength(terminals.length);
           expect(
             A.every(starts, (start) => A.some(terminals, (terminal) => terminal.attemptId === start.attemptId))
@@ -2494,7 +2495,18 @@ describe("yeet attempt journal", () => {
               pipe(yield* fs.readFileString(journalPath), Str.split("\n"), A.filter(Str.isNonEmpty)),
               (line) => decodeYeetAttemptJournalEvent(line)
             );
-            expect(events.length).toBeLessThanOrEqual(50);
+            expect(events).toHaveLength(52);
+            expect(
+              A.length(
+                A.dedupe(
+                  A.getSomes(
+                    A.map(events, (event) =>
+                      YeetAttemptJournalEvent.guards["journal-compacted"](event) ? O.none() : O.some(event.attemptId)
+                    )
+                  )
+                )
+              )
+            ).toBe(50);
             expect(
               A.some(
                 events,
@@ -2532,6 +2544,99 @@ describe("yeet attempt journal", () => {
             })
           );
           yield* readDeadPair;
+        })
+      )
+    ));
+
+  it("protects an over-limit reconciliation batch and receipts older terminated attempts", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const tempContext = RepoRunContext.make({ ...context, cwd: tmpDir, repoRoot: tmpDir });
+          const journalPath = yield* attemptJournalPath(tempContext);
+          const encodeStarted = S.encodeEffect(S.fromJsonString(YeetAttemptStarted));
+          const encodeTerminated = S.encodeEffect(S.fromJsonString(YeetAttemptTerminated));
+          const priorPairs = A.flatten(
+            yield* Effect.forEach(
+              A.makeBy(30, (index) => index),
+              (index) => {
+                const attemptId = attemptUuid(`00000000-0000-4000-8004-${Str.padStart(12, "0")(`${index}`)}`);
+                return Effect.all([
+                  encodeStarted(
+                    YeetAttemptStarted.make({
+                      schemaVersion: "yeet-attempt-journal/v1",
+                      _tag: "attempt-started",
+                      attemptId,
+                      runId: `prior-${index}`,
+                      branch: "dead-batch-reconciliation",
+                      base: "origin/main",
+                      head: "HEAD",
+                      mode: "repair",
+                      startedAt: `2026-09-02T00:00:${Str.padStart(2, "0")(`${index}`)}.000Z`,
+                    })
+                  ),
+                  encodeTerminated(
+                    YeetAttemptTerminated.make({
+                      schemaVersion: "yeet-attempt-journal/v1",
+                      _tag: "attempt-terminated",
+                      attemptId,
+                      recordedAt: `2026-09-02T00:01:${Str.padStart(2, "0")(`${index}`)}.000Z`,
+                      reason: "interrupted",
+                    })
+                  ),
+                ]);
+              }
+            )
+          );
+          const deadAttemptIds = A.makeBy(30, (index) =>
+            attemptUuid(`00000000-0000-4000-8005-${Str.padStart(12, "0")(`${index}`)}`)
+          );
+          const deadStarts = yield* Effect.forEach(deadAttemptIds, (attemptId, index) =>
+            encodeStarted(
+              YeetAttemptStarted.make({
+                schemaVersion: "yeet-attempt-journal/v1",
+                _tag: "attempt-started",
+                attemptId,
+                runId: `dead-batch-${index}`,
+                branch: "dead-batch-reconciliation",
+                base: "origin/main",
+                head: "HEAD",
+                mode: "repair",
+                startedAt: `2026-09-03T00:00:${Str.padStart(2, "0")(`${index}`)}.000Z`,
+                ownerPid: O.some(DEAD_PID),
+                ownerProcStart: O.some(`dead-batch-${index}`),
+              })
+            )
+          );
+          const seededLines = A.appendAll(priorPairs, deadStarts);
+          yield* fs.makeDirectory(path.dirname(journalPath), { recursive: true });
+          yield* fs.writeFileString(journalPath, `${A.join(seededLines, "\n")}\n`);
+
+          expect(yield* reconcileAttemptJournal(journalPath)).toBe(30);
+          const events = yield* Effect.forEach(
+            pipe(yield* fs.readFileString(journalPath), Str.split("\n"), A.filter(Str.isNonEmpty)),
+            (line) => decodeYeetAttemptJournalEvent(line)
+          );
+          const retainedStarts = A.filter(events, YeetAttemptJournalEvent.guards["attempt-started"]);
+          const terminals = A.filter(events, YeetAttemptJournalEvent.guards["attempt-terminated"]);
+          const receipts = A.filter(events, YeetAttemptJournalEvent.guards["journal-compacted"]);
+          expect(retainedStarts).toHaveLength(50);
+          expect(terminals).toHaveLength(50);
+          expect(
+            A.every(
+              deadAttemptIds,
+              (attemptId) =>
+                A.some(retainedStarts, (start) => start.attemptId === attemptId) &&
+                A.some(terminals, (terminal) => terminal.attemptId === attemptId && terminal.reason === "owner-dead")
+            )
+          ).toBe(true);
+          expect(receipts).toHaveLength(1);
+          expect(receipts[0]).toMatchObject({
+            evictedCount: 20,
+            oldestEvictedRecordedAt: "2026-09-02T00:00:00.000Z",
+          });
         })
       )
     ));
@@ -2574,9 +2679,9 @@ describe("yeet attempt journal", () => {
           const starts = A.filter(events, YeetAttemptJournalEvent.guards["attempt-started"]);
           const retainedIds = A.map(starts, (event) => event.attemptId);
 
-          expect(events).toHaveLength(50);
-          expect(starts).toHaveLength(49);
-          expect(A.length(A.dedupe(retainedIds))).toBe(49);
+          expect(events).toHaveLength(51);
+          expect(starts).toHaveLength(50);
+          expect(A.length(A.dedupe(retainedIds))).toBe(50);
           expect(A.every(concurrent, (event) => A.contains(retainedIds, event.attemptId))).toBe(true);
           expect(yield* fs.exists(`${journalPath}.lock`)).toBe(false);
         })

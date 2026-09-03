@@ -24,7 +24,7 @@ import type { YeetAdmissionLease, YeetAdmissionTicket } from "./QualityScheduler
 
 const $I = $RepoCliId.create("internal/repo-run/AttemptTerminationJournal");
 const JOURNAL_FILE_NAME = "attempts.ndjson";
-const RETAINED_ROWS = 50;
+const RETAINED_ATTEMPTS = 50;
 const LOCK_RETRY_ATTEMPTS = 400;
 const textEncoder = new TextEncoder();
 
@@ -192,28 +192,51 @@ const eventRecordedAt = (event: AttemptJournalRetentionEvent): string =>
 
 const retainedJournalLines = Effect.fn("AttemptTerminationJournal.retainedLines")(function* (
   events: ReadonlyArray<AttemptJournalRetentionEvent>,
-  lines: ReadonlyArray<string>
+  lines: ReadonlyArray<string>,
+  protectedAttemptIds: ReadonlyArray<UUID>
 ) {
   const attemptRows = A.getSomes(
     A.map(A.zip(events, lines), ([event, line]) =>
       AttemptJournalRetentionEvent.guards["journal-compacted"](event) ? O.none() : O.some({ event, line })
     )
   );
-  const newestAttemptIds = A.reduceRight(attemptRows, A.empty<UUID>(), (attemptIds, { event }) =>
-    A.contains(attemptIds, event.attemptId) ? attemptIds : A.append(attemptIds, event.attemptId)
+  const attemptIds = A.dedupe(A.map(attemptRows, ({ event }) => event.attemptId));
+  const terminalAttemptIds = A.dedupe(
+    A.map(
+      A.filter(attemptRows, ({ event }) =>
+        AttemptJournalRetentionEvent.isAnyOf(["attempt-finished", "attempt-terminated"])(event)
+      ),
+      ({ event }) => event.attemptId
+    )
   );
-  let retainedCount = 0;
-  let retainedAttemptIds = A.empty<UUID>();
-  for (const attemptId of newestAttemptIds) {
-    const attemptRowCount = A.length(A.filter(attemptRows, ({ event }) => event.attemptId === attemptId));
-    if (retainedCount + attemptRowCount <= RETAINED_ROWS - 1) {
-      retainedAttemptIds = A.append(retainedAttemptIds, attemptId);
-      retainedCount = retainedCount + attemptRowCount;
-    }
+  const oldestRecordedAtForAttempt = (attemptId: UUID) =>
+    pipe(
+      attemptRows,
+      A.filter(({ event }) => event.attemptId === attemptId),
+      A.map(({ event }) => eventRecordedAt(event)),
+      A.sort(Order.String),
+      A.head,
+      O.getOrElse(constant(Str.empty))
+    );
+  const oldestFirst = (attemptIds: ReadonlyArray<UUID>) =>
+    A.sortWith(attemptIds, oldestRecordedAtForAttempt, Order.String);
+  const evictableAttemptIds = A.filter(attemptIds, (attemptId) => !A.contains(protectedAttemptIds, attemptId));
+  const terminatedAttemptIds = oldestFirst(
+    A.filter(evictableAttemptIds, (attemptId) => A.contains(terminalAttemptIds, attemptId))
+  );
+  const unfinishedAttemptIds = oldestFirst(
+    A.filter(evictableAttemptIds, (attemptId) => !A.contains(terminalAttemptIds, attemptId))
+  );
+  const evictedAttemptIds = A.take(
+    A.appendAll(terminatedAttemptIds, unfinishedAttemptIds),
+    A.length(attemptIds) - RETAINED_ATTEMPTS
+  );
+  if (A.isReadonlyArrayEmpty(evictedAttemptIds)) {
+    return lines;
   }
-  const retainedRows = A.filter(attemptRows, ({ event }) => A.contains(retainedAttemptIds, event.attemptId));
+  const retainedRows = A.filter(attemptRows, ({ event }) => !A.contains(evictedAttemptIds, event.attemptId));
   const evictedEvents = A.map(
-    A.filter(attemptRows, ({ event }) => !A.contains(retainedAttemptIds, event.attemptId)),
+    A.filter(attemptRows, ({ event }) => A.contains(evictedAttemptIds, event.attemptId)),
     ({ event }) => event
   );
   const recordedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
@@ -240,7 +263,8 @@ const retainedJournalLines = Effect.fn("AttemptTerminationJournal.retainedLines"
 
 const normalizeJournal = Effect.fn("AttemptTerminationJournal.normalize")(function* (
   journalPath: string,
-  retainRows: boolean
+  retainRows: boolean,
+  protectedAttemptIds: ReadonlyArray<UUID> = A.empty()
 ): Effect.fn.Return<void, QualitySchedulerError, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
   const text = yield* fs
@@ -259,10 +283,19 @@ const normalizeJournal = Effect.fn("AttemptTerminationJournal.normalize")(functi
       Effect.mapError(QualitySchedulerError.new(`Failed to decode Yeet attempt journal "${journalPath}".`))
     )
   );
-  if (!torn && (!retainRows || A.length(events) <= RETAINED_ROWS)) {
+  const attemptIds = A.dedupe(
+    A.getSomes(
+      A.map(events, (event) =>
+        AttemptJournalRetentionEvent.guards["journal-compacted"](event) ? O.none() : O.some(event.attemptId)
+      )
+    )
+  );
+  const exceedsRetention = A.length(attemptIds) > RETAINED_ATTEMPTS;
+  if (!torn && (!retainRows || !exceedsRetention)) {
     return;
   }
-  const retainedLines = retainRows ? yield* retainedJournalLines(events, lines) : lines;
+  const retainedLines =
+    retainRows && exceedsRetention ? yield* retainedJournalLines(events, lines, protectedAttemptIds) : lines;
   yield* fs
     .writeFileString(
       journalPath,
@@ -277,7 +310,8 @@ const normalizeJournal = Effect.fn("AttemptTerminationJournal.normalize")(functi
 
 const repairTornJournal = (journalPath: string) => normalizeJournal(journalPath, false);
 
-const compactJournal = (journalPath: string) => normalizeJournal(journalPath, true);
+const compactJournal = (journalPath: string, protectedAttemptIds: ReadonlyArray<UUID> = A.empty()) =>
+  normalizeJournal(journalPath, true, protectedAttemptIds);
 
 const appendLinesLocked = Effect.fnUntraced(function* (
   journalPath: string,
@@ -312,7 +346,7 @@ const appendLinesLocked = Effect.fnUntraced(function* (
 
 const reconcileJournalLocked = Effect.fn("AttemptTerminationJournal.reconcileLocked")(function* (
   journalPath: string
-): Effect.fn.Return<number, QualitySchedulerError, FileSystem.FileSystem> {
+): Effect.fn.Return<ReadonlyArray<UUID>, QualitySchedulerError, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
   const text = yield* fs
     .readFileString(journalPath)
@@ -332,7 +366,7 @@ const reconcileJournalLocked = Effect.fn("AttemptTerminationJournal.reconcileLoc
     (event) => !A.contains(terminalAttemptIds, event.attemptId)
   );
   const recordedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
-  const terminalLines = A.getSomes(
+  const terminalRows = A.getSomes(
     yield* Effect.forEach(unfinishedStarts, (started) =>
       pipe(
         O.all({ pid: started.ownerPid, procStart: started.ownerProcStart }),
@@ -355,7 +389,7 @@ const reconcileJournalLocked = Effect.fn("AttemptTerminationJournal.reconcileLoc
                       stage: started.stage,
                     }).pipe(
                       Effect.mapError(QualitySchedulerError.new("Failed to encode reconciled attempt terminal event.")),
-                      Effect.asSome
+                      Effect.map((line) => O.some({ attemptId: started.attemptId, line }))
                     )
                   : Effect.succeedNone
               )
@@ -364,8 +398,11 @@ const reconcileJournalLocked = Effect.fn("AttemptTerminationJournal.reconcileLoc
       )
     )
   );
-  yield* appendLinesLocked(journalPath, terminalLines);
-  return A.length(terminalLines);
+  yield* appendLinesLocked(
+    journalPath,
+    A.map(terminalRows, ({ line }) => line)
+  );
+  return A.map(terminalRows, ({ attemptId }) => attemptId);
 });
 
 /**
@@ -407,9 +444,9 @@ export const reconcileAttemptJournal = Effect.fn("AttemptTerminationJournal.reco
   return yield* Effect.ensuring(
     Effect.gen(function* () {
       yield* repairTornJournal(journalPath);
-      const reconciled = yield* reconcileJournalLocked(journalPath);
-      yield* compactJournal(journalPath);
-      return reconciled;
+      const reconciledAttemptIds = yield* reconcileJournalLocked(journalPath);
+      yield* compactJournal(journalPath, reconciledAttemptIds);
+      return A.length(reconciledAttemptIds);
     }),
     releaseJournalFileLock(lockPath, lockToken)
   );
@@ -501,8 +538,8 @@ export const appendEncodedAttemptJournalEvent = Effect.fn("AttemptTerminationJou
     const journalExists = yield* fs.exists(journalPath).pipe(Effect.orElseSucceed(constant(false)));
     yield* journalExists ? repairTornJournal(journalPath) : Effect.void;
     yield* appendLinesLocked(journalPath, [line]);
-    yield* reconcileJournalLocked(journalPath);
-    yield* compactJournal(journalPath);
+    const reconciledAttemptIds = yield* reconcileJournalLocked(journalPath);
+    yield* compactJournal(journalPath, reconciledAttemptIds);
   });
   yield* Effect.ensuring(appendLocked, releaseJournalFileLock(lockPath, lockToken));
 });
