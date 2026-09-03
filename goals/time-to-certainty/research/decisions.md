@@ -131,3 +131,23 @@ parallel field.
 
 **Ratification status:** rulings 11–16 ratified by the operator on 2026-09-03 (all six, as amended
 after the PR #968 review).
+
+## 2026-09-03 — A5b compaction review, round 5 (two rulings, steward: Benjamin)
+
+Inputs: the third Greptile P1 on PR #978 (unfinished attempts erase terminal facts) and an
+independent four-lens review of head 9c37b20d67 run on GPT-5.6 Sol (xhigh) with three adversarial
+refuters per finding; six of nine candidates survived.
+
+**Ruling 17 — the retention budget is over terminal attempts only.** The journal keeps the newest
+50 unprotected terminal attempts; unfinished starts are never counted toward the budget and never
+evicted, so the journal may hold (unfinished + 50) rows and stale-start reconciliation is what bounds
+the unfinished set. Rejected: a separate ceiling on unverifiable unfinished starts (can drop a start
+whose owner is merely unverifiable); a single total cap that never evicts unfinished (terminal facts
+still vanish whenever the unfinished count nears 50).
+
+**Ruling 18 — economics left-censors from compaction receipts.** The journal-compacted receipt keeps
+the evicted attempt ids and the boundary timestamp; the economics loader marks the branch
+left-censored there and excludes, or reports separately with a count, any red-to-green episode whose
+start may have been evicted. No archive file and no second writer. Rejected: an append-only economics
+archive (exact M1 forever, unbounded second file); accepting the gap with a report caveat (M1
+comparability at close-out unproven).
