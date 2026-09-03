@@ -632,7 +632,7 @@ describe("canUseTurboCacheSecretSession", () => {
       expect(result.usable).toBe(true);
       expect(turboCachePlanArgs(result.plan)).toEqual(["--cache=local:rw,remote:r"]);
       expect(A.map(result.warnings, (warning) => warning.variableName)).toEqual(["STALE_SERVICE_TOKEN"]);
-      const warningText = renderTurboEnvironmentHealthWarning(O.getOrThrow(A.head(result.warnings)));
+      const warningText = renderTurboEnvironmentHealthWarning(A.head(result.warnings).pipe(O.getOrThrow));
       expect(warningText).toContain("STALE_SERVICE_TOKEN");
       expect(warningText).not.toContain(staleReference);
 
