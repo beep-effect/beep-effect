@@ -1035,10 +1035,12 @@ describe("quality-scheduler", () => {
             expect(yield* fs.exists(journalPath)).toBe(false);
             expect(A.filter(yield* fs.readDirectory(tempRoot.root), Str.includes(".tombstone-"))).toHaveLength(1);
             yield* releaseAdmissionJournalLockForTesting(lockPath, thirdToken);
-            expect(yield* acquireJournalFileLock(lockPath, `${process.pid}:recovery-contender`, 1)).toBe(false);
-            expect(yield* fs.readFileString(lockPath)).toBe(replacementGeneration);
+            const recoveryToken = `${process.pid}:recovery-contender`;
+            expect(yield* acquireJournalFileLock(lockPath, recoveryToken, 1)).toBe(true);
             expect(A.filter(yield* fs.readDirectory(tempRoot.root), Str.includes(".tombstone-"))).toHaveLength(0);
-            yield* releaseAdmissionJournalLockForTesting(lockPath, replacementToken);
+            yield* publishAdmissionJournalForTesting(journalPath, lockPath, recoveryToken, "fresh recovery writer\n");
+            expect(yield* fs.readFileString(journalPath)).toBe("fresh recovery writer\n");
+            yield* releaseAdmissionJournalLockForTesting(lockPath, recoveryToken);
           })
         );
       })
@@ -1119,7 +1121,7 @@ describe("quality-scheduler", () => {
       })
     ));
 
-  it("sweeps stale tombstones beside a live lock and after a recovery-link race", () =>
+  it("sweeps orphaned tombstones without reviving an abandoned generation", () =>
     Effect.runPromise(
       Effect.gen(function* () {
         const gibRef = yield* Ref.make(50);
@@ -1138,56 +1140,26 @@ describe("quality-scheduler", () => {
             expect(yield* fs.exists(liveTombstonePath)).toBe(false);
             yield* releaseAdmissionJournalLockForTesting(liveLockPath, liveOwnerToken);
 
-            const raceLockPath = path.join(tempRoot.root, "recovery-link-race.lock");
-            const seedLockPath = path.join(tempRoot.root, "recovery-link-race-seed.lock");
-            const thirdOwnerToken = `${process.pid}:recovery-link-race-winner`;
-            const raceTombstonePath = `${raceLockPath}.reap-stale.tombstone-orphan`;
-            expect(yield* acquireJournalFileLock(seedLockPath, thirdOwnerToken, 1)).toBe(true);
-            const thirdGeneration = yield* fs.readFileString(seedLockPath);
-            yield* releaseAdmissionJournalLockForTesting(seedLockPath, thirdOwnerToken);
-            yield* fs.writeFileString(raceTombstonePath, `${DEAD_PID}:displaced-generation`);
-            const racedFileSystem = FileSystem.FileSystem.of({
-              ...fs,
-              link: Effect.fn("FileSystem.FileSystem.link")(function* (existingPath, newPath) {
-                if (Str.Equivalence(existingPath, raceTombstonePath) && Str.Equivalence(newPath, raceLockPath)) {
-                  yield* fs.writeFileString(raceLockPath, thirdGeneration);
-                }
-                return yield* fs.link(existingPath, newPath);
-              }),
-            });
+            const crashLockPath = path.join(tempRoot.root, "crashed-reclaimer.lock");
+            const crashTombstonePath = `${crashLockPath}.reap-stale.tombstone-orphan`;
+            const recoveryOwnerToken = `${process.pid}:post-crash-writer`;
+            const journalPath = yield* admissionJournalPath(tempRoot.root);
+            yield* fs.writeFileString(crashTombstonePath, `${process.pid}:abandoned-live-generation`);
 
-            expect(
-              yield* acquireJournalFileLock(raceLockPath, `${process.pid}:recovery-contender`, 1).pipe(
-                Effect.provideService(FileSystem.FileSystem, racedFileSystem)
-              )
-            ).toBe(false);
-            expect(yield* fs.exists(raceTombstonePath)).toBe(false);
-            expect(yield* fs.readFileString(raceLockPath)).toBe(thirdGeneration);
-            yield* releaseAdmissionJournalLockForTesting(raceLockPath, thirdOwnerToken);
-
-            const retainedLockPath = path.join(tempRoot.root, "recovery-link-failed.lock");
-            const retainedTombstonePath = `${retainedLockPath}.reap-stale.tombstone-orphan`;
-            const retainedOwnerToken = `${process.pid}:recovery-link-failed-owner`;
-            yield* fs.writeFileString(retainedTombstonePath, `${DEAD_PID}:displaced-generation`);
-            const failedRestoreFileSystem = FileSystem.FileSystem.of({
-              ...fs,
-              link: Effect.fn("FileSystem.FileSystem.link")((existingPath, newPath) =>
-                Str.Equivalence(existingPath, retainedTombstonePath) && Str.Equivalence(newPath, retainedLockPath)
-                  ? fs.link(path.join(tempRoot.root, "missing-tombstone"), newPath)
-                  : fs.link(existingPath, newPath)
-              ),
-            });
-
-            expect(
-              yield* acquireJournalFileLock(retainedLockPath, retainedOwnerToken, 1).pipe(
-                Effect.provideService(FileSystem.FileSystem, failedRestoreFileSystem)
-              )
-            ).toBe(true);
-            expect(yield* fs.exists(retainedTombstonePath)).toBe(true);
-            yield* releaseAdmissionJournalLockForTesting(retainedLockPath, retainedOwnerToken);
+            expect(yield* acquireJournalFileLock(crashLockPath, recoveryOwnerToken, 1)).toBe(true);
+            expect(yield* fs.exists(crashTombstonePath)).toBe(false);
+            yield* publishAdmissionJournalForTesting(
+              journalPath,
+              crashLockPath,
+              recoveryOwnerToken,
+              "post-crash writer\n"
+            );
+            expect(yield* fs.readFileString(journalPath)).toBe("post-crash writer\n");
+            expect(A.join(A.map(yield* TestConsole.errorLines, String), "\n")).toContain(crashTombstonePath);
+            yield* releaseAdmissionJournalLockForTesting(crashLockPath, recoveryOwnerToken);
           })
         );
-      })
+      }).pipe(provideScopedLayer(TestConsole.layer))
     ));
 
   it("reaps a journal lock when its live PID has a different process start identity", () =>

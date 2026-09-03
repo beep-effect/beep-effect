@@ -463,21 +463,14 @@ const restoreJournalLockReapTombstone = Effect.fnUntraced(function* (
   return restored;
 });
 
-const recoverJournalLockReapTombstone = Effect.fnUntraced(function* (
-  lockPath: string,
+const discardOrphanJournalLockReapTombstone = Effect.fnUntraced(function* (
   tombstonePath: string
 ): Effect.fn.Return<void, never, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
-  if (yield* fs.exists(lockPath).pipe(Effect.orElseSucceed(constant(true)))) {
-    yield* fs.remove(tombstonePath, { force: true }).pipe(Effect.ignore);
-    return;
-  }
-  if (yield* restoreJournalLockReapTombstone(lockPath, tombstonePath)) {
-    return;
-  }
-  if (yield* fs.exists(lockPath).pipe(Effect.orElseSucceed(constant(false)))) {
-    yield* fs.remove(tombstonePath, { force: true }).pipe(Effect.ignore);
-  }
+  yield* fs.remove(tombstonePath, { force: true }).pipe(Effect.ignore);
+  yield* Console.error(
+    `[yeet] swept orphaned journal lock tombstone ${tombstonePath}; its displaced writer must reacquire.`
+  );
 });
 
 const sweepOrphanJournalLockClaims = Effect.fnUntraced(function* (
@@ -486,7 +479,7 @@ const sweepOrphanJournalLockClaims = Effect.fnUntraced(function* (
   const fs = yield* FileSystem.FileSystem;
   const sidecars = yield* journalLockReapSidecars(lockPath);
   const tombstones = A.filter(sidecars, isJournalLockReapTombstone);
-  yield* Effect.forEach(tombstones, (tombstonePath) => recoverJournalLockReapTombstone(lockPath, tombstonePath), {
+  yield* Effect.forEach(tombstones, discardOrphanJournalLockReapTombstone, {
     discard: true,
   });
   if (yield* fs.exists(lockPath).pipe(Effect.orElseSucceed(constant(true)))) {
