@@ -106,7 +106,7 @@
   scan rejected operator-home paths only, so system-temp strings escaped both
   controls.
 - **Cost:** Lint Policy failed after the ontology run had closed, and the repair
-  had to re-redact 22 raw payloads, regenerate two affected scalar projections,
+  had to re-redact 20 raw payloads, regenerate two affected scalar projections,
   and rebuild the digest manifest rather than changing the three surfaced
   verdicts alone.
 - **Prevention:** redact the explicit system temporary-directory prefix and
