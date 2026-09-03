@@ -675,8 +675,8 @@ export class ArtifactCompatibilityPolicy extends S.Class<ArtifactCompatibilityPo
 const CourtReporterArtifactVersionCoherenceCheck = S.makeFilter(
   (artifact: {
     readonly artifactVersion: CourtReporterArtifactVersion;
-    readonly courts: CourtVocabularyArtifact;
-    readonly reporters: ReporterVocabularyArtifact;
+    readonly courts: { readonly artifactVersion: CourtReporterArtifactVersion };
+    readonly reporters: { readonly artifactVersion: CourtReporterArtifactVersion };
   }) =>
     Eq.equals(artifact.artifactVersion, artifact.courts.artifactVersion) &&
     Eq.equals(artifact.artifactVersion, artifact.reporters.artifactVersion),
@@ -778,14 +778,14 @@ class ReporterVocabularyArtifactComparison extends S.Class<ReporterVocabularyArt
 export class CourtReporterArtifactComparison extends S.Class<CourtReporterArtifactComparison>(
   $I`CourtReporterArtifactComparison`
 )(
-  {
+  S.Struct({
     schemaVersion: S.NonEmptyString,
     projectionVersion: S.Finite,
     artifactVersion: CourtReporterArtifactVersion,
     policy: ArtifactCompatibilityPolicy,
     courts: CourtVocabularyArtifactComparison,
     reporters: ReporterVocabularyArtifactComparison,
-  },
+  }).check(CourtReporterArtifactVersionCoherenceCheck),
   $I.annote("CourtReporterArtifactComparison", {
     description: "Cross-version comparison input with open schema and projection header fields.",
   })

@@ -11,10 +11,11 @@ import { findRepoRoot, resolveWorkspaceDirs } from "@beep/repo-utils";
 import { LiteralKit, normalizePath } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import { Clock, Console, Effect, FileSystem, HashMap, Order, Path, pipe } from "effect";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { runCaptured } from "../../../internal/process/index.ts";
+import { QualityTaskStep, runCaptured } from "../../../internal/process/index.ts";
 import { collectDirtyWorktreeFiles } from "../../../internal/repo-run/ChangedFiles.ts";
 import { recordYeetLocalShardOutcome, YeetLocalShardOutcome } from "../../Yeet/internal/LocalShardPoison.ts";
 import { QualityScriptCommandError } from "../Quality.errors.ts";
@@ -438,7 +439,58 @@ const collectStepOutput = Effect.fn("PackageVerify.collectStepOutput")(function*
   );
 });
 
+const packageVerifyStepPlan = (
+  repoRoot: string,
+  workspace: PackageVerifyWorkspace,
+  spec: PackageVerifyStepSpec
+): ReadonlyArray<QualityTaskStep> => {
+  const packageStep = QualityTaskStep.make({
+    label: spec.step,
+    command: "bun",
+    args: ["run", spec.script],
+    cwd: workspace.dir,
+  });
+  return PackageVerifyStepName.is.audit(spec.step)
+    ? [
+        QualityTaskStep.make({
+          label: "audit:build-closure",
+          command: "bun",
+          args: ["x", "turbo", "run", "build", `--filter=${workspace.name}^...`],
+          cwd: repoRoot,
+        }),
+        packageStep,
+      ]
+    : [packageStep];
+};
+
+const runPackageVerifyStepPlan = Effect.fn("PackageVerify.runPackageVerifyStepPlan")(function* (
+  plan: ReadonlyArray<QualityTaskStep>
+): Effect.fn.Return<
+  { readonly exitCode: number; readonly output: string },
+  QualityScriptCommandError,
+  ChildProcessSpawner.ChildProcessSpawner
+> {
+  const result = yield* Effect.reduce(
+    plan,
+    () => ({ exitCode: 0, outputs: A.empty<string>() }),
+    (accumulator, invocation) =>
+      accumulator.exitCode === 0
+        ? collectStepOutput(invocation.cwd, invocation.command, invocation.args).pipe(
+            Effect.map((step) => ({
+              exitCode: step.exitCode,
+              outputs: A.append(
+                accumulator.outputs,
+                `${commandText(invocation.command, invocation.args)}\n${step.output}`
+              ),
+            }))
+          )
+        : Effect.succeed(accumulator)
+  );
+  return { exitCode: result.exitCode, output: A.join(result.outputs, "\n") };
+});
+
 const runPackageVerifyStep = Effect.fn("PackageVerify.runPackageVerifyStep")(function* (
+  repoRoot: string,
   workspace: PackageVerifyWorkspace,
   spec: PackageVerifyStepSpec
 ): Effect.fn.Return<PackageVerifyStepResult, QualityScriptCommandError, ChildProcessSpawner.ChildProcessSpawner> {
@@ -455,7 +507,7 @@ const runPackageVerifyStep = Effect.fn("PackageVerify.runPackageVerifyStep")(fun
   }
 
   const startedAt = yield* Clock.currentTimeMillis;
-  const result = yield* collectStepOutput(workspace.dir, "bun", ["run", spec.script]);
+  const result = yield* runPackageVerifyStepPlan(packageVerifyStepPlan(repoRoot, workspace, spec));
   const completedAt = yield* Clock.currentTimeMillis;
 
   return PackageVerifyStepResult.make({
@@ -466,6 +518,46 @@ const runPackageVerifyStep = Effect.fn("PackageVerify.runPackageVerifyStep")(fun
     durationMillis: completedAt - startedAt,
     exitCode: O.some(result.exitCode),
     output: result.output,
+  });
+});
+
+const runPackageVerifyAtRoot = Effect.fn("PackageVerify.runPackageVerifyAtRoot")(function* (
+  repoRoot: string,
+  {
+    packageName,
+    quick,
+  }: {
+    readonly packageName: O.Option<string>;
+    readonly quick: boolean;
+  }
+): Effect.fn.Return<
+  PackageVerifyReport,
+  QualityScriptCommandError,
+  FsUtils | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> {
+  const workspaces = yield* collectWorkspaces(repoRoot);
+  const changedFiles = O.isSome(packageName) ? A.empty<string>() : yield* collectPackageVerifyChangedFiles(repoRoot);
+  const workspace = yield* selectPackageVerifyTargetForTesting({ changedFiles, packageName, repoRoot, workspaces });
+  const results = yield* Effect.forEach(
+    packageVerifyStepSpecs(quick),
+    (spec) => runPackageVerifyStep(repoRoot, workspace, spec),
+    {
+      concurrency: quick ? PACKAGE_VERIFY_STEP_CONCURRENCY : 1,
+    }
+  );
+  const headLines = yield* runGitLines(repoRoot, ["rev-parse", "HEAD"]);
+  const headSha = yield* O.match(A.head(headLines), {
+    onNone: () => fail("pkg-verify: git rev-parse HEAD returned no commit SHA."),
+    onSome: Effect.succeed,
+  });
+
+  return PackageVerifyReport.make({
+    headSha,
+    packageName: workspace.name,
+    packageDir: workspace.dir,
+    quick,
+    repoRoot,
+    results,
   });
 });
 
@@ -503,30 +595,7 @@ export const runPackageVerify = Effect.fn("PackageVerify.runPackageVerify")(func
   const repoRoot = yield* findRepoRoot(path.resolve(process.cwd())).pipe(
     QualityScriptCommandError.mapError("Failed to locate repository root.")
   );
-  const workspaces = yield* collectWorkspaces(repoRoot);
-  const changedFiles = O.isSome(packageName) ? A.empty<string>() : yield* collectPackageVerifyChangedFiles(repoRoot);
-  const workspace = yield* selectPackageVerifyTargetForTesting({ changedFiles, packageName, repoRoot, workspaces });
-  const results = yield* Effect.forEach(
-    packageVerifyStepSpecs(quick),
-    (spec) => runPackageVerifyStep(workspace, spec),
-    {
-      concurrency: quick ? PACKAGE_VERIFY_STEP_CONCURRENCY : 1,
-    }
-  );
-  const headLines = yield* runGitLines(repoRoot, ["rev-parse", "HEAD"]);
-  const headSha = yield* O.match(A.head(headLines), {
-    onNone: () => fail("pkg-verify: git rev-parse HEAD returned no commit SHA."),
-    onSome: Effect.succeed,
-  });
-
-  return PackageVerifyReport.make({
-    headSha,
-    packageName: workspace.name,
-    packageDir: workspace.dir,
-    quick,
-    repoRoot,
-    results,
-  });
+  return yield* runPackageVerifyAtRoot(repoRoot, { packageName, quick });
 });
 
 /**
@@ -555,7 +624,9 @@ export const recordPackageVerifyInboxForTesting = Effect.fn("PackageVerify.recor
     recordYeetLocalShardOutcome(
       report.repoRoot,
       YeetLocalShardOutcome.make({
-        command: `bun run ${result.script}`,
+        command: PackageVerifyStepName.is.audit(result.step)
+          ? `bun x turbo run build --filter=${report.packageName}^... && bun run ${result.script}`
+          : `bun run ${result.script}`,
         exitCode: O.getOrElse(result.exitCode, () => (result.ok ? 0 : 1)),
         headSha: report.headSha,
         shard: `package:${report.packageName}:${shardStep}`,
@@ -697,6 +768,98 @@ export const runPackageVerifyCli = Effect.fn("PackageVerify.runPackageVerifyCli"
  * @since 0.0.0
  */
 export const packageVerifyStepSpecsForTesting = packageVerifyStepSpecs;
+
+/**
+ * Build the subprocess plan for one package verification step.
+ *
+ * **Details**
+ *
+ * Audit plans refresh the selected package's upstream Turbo build closure
+ * without rebuilding the package itself before invoking its package-local
+ * audit. Other steps remain direct package script invocations.
+ *
+ * **Example** (Inspect an audit plan)
+ *
+ * ```ts
+ * import {
+ *   PackageVerifyStepSpec,
+ *   PackageVerifyWorkspace,
+ *   packageVerifyStepPlanForTesting
+ * } from "@beep/repo-cli/test/Quality"
+ *
+ * const plan = packageVerifyStepPlanForTesting(
+ *   "/repo",
+ *   PackageVerifyWorkspace.make({ name: "@beep/demo", dir: "/repo/packages/demo", scripts: {} }),
+ *   PackageVerifyStepSpec.make({ step: "audit", script: "beep:audit" })
+ * )
+ * console.log(plan[0]?.label) // "audit:build-closure"
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const packageVerifyStepPlanForTesting: {
+  (repoRoot: string, workspace: PackageVerifyWorkspace, spec: PackageVerifyStepSpec): ReadonlyArray<QualityTaskStep>;
+  (
+    workspace: PackageVerifyWorkspace,
+    spec: PackageVerifyStepSpec
+  ): (repoRoot: string) => ReadonlyArray<QualityTaskStep>;
+} = dual(3, packageVerifyStepPlan);
+
+/**
+ * Run a package verification subprocess plan until its first non-zero exit.
+ *
+ * **Example** (Create an empty successful plan)
+ *
+ * ```ts
+ * import { runPackageVerifyStepPlanForTesting } from "@beep/repo-cli/test/Quality"
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(runPackageVerifyStepPlanForTesting([]))) // true
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const runPackageVerifyStepPlanForTesting = runPackageVerifyStepPlan;
+
+/**
+ * Run package verification against an explicit repository root.
+ *
+ * **Example** (Verify a fixture repository)
+ *
+ * ```ts
+ * import { runPackageVerifyAtRootForTesting } from "@beep/repo-cli/test/Quality"
+ * import * as O from "effect/Option"
+ *
+ * const program = runPackageVerifyAtRootForTesting("/repo", {
+ *   packageName: O.some("@beep/demo"),
+ *   quick: true
+ * })
+ * console.log(program) // example value
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const runPackageVerifyAtRootForTesting = runPackageVerifyAtRoot;
+
+/**
+ * Read one workspace package manifest from an explicit directory.
+ *
+ * **Example** (Read a fixture workspace)
+ *
+ * ```ts
+ * import { readPackageWorkspaceForTesting } from "@beep/repo-cli/test/Quality"
+ *
+ * const program = readPackageWorkspaceForTesting("@beep/demo", "/repo/packages/demo")
+ * console.log(program) // example value
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const readPackageWorkspaceForTesting = readPackageWorkspace;
 
 /**
  * Collect changed paths used for package verification auto-detection.

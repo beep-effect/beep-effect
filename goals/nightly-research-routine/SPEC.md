@@ -124,7 +124,7 @@ tombstoned idea returns only with evidence that post-dates its death.
 `RUN.json` is truth for the run and records typed per-source capability
 results. Every success, no-op, partial, and failure persists evidence and
 recovery receipts outside the hosted UI's 20-run window by reusing
-`EvidenceReceipt`, `EvidenceDigest`, `EvidenceLadder`, and
+`EvidenceReceipt`, `EvidenceDigest`, `EvidenceLadderState`, and
 `RecoveryAttemptReceipt` from `@beep/skill-contract`. The publisher exports
 `beep.research.nightly.*` metrics (sources seen, claims emitted, collision
 rate, per-pool usage, wall time, status) to the dankserver OTLP endpoint.

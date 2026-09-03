@@ -1754,7 +1754,7 @@ digests, completion, and redaction before model or publisher use; partial
 recovery is rejected. Private records use a content-addressed local store.
 Inline base64 or gzip prompt payloads are forbidden.
 
-Bot evidence reuses `EvidenceReceipt`, `EvidenceDigest`, `EvidenceLadder`, and
+Bot evidence reuses `EvidenceReceipt`, `EvidenceDigest`, `EvidenceLadderState`, and
 `RecoveryAttemptReceipt` from `@beep/skill-contract`. Every success, no-op,
 partial, and failure persists a receipt outside the hosted UI's 20-run window.
 The shared Bot VM receives provider OAuth only: no 1Password or publisher
