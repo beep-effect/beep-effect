@@ -1,0 +1,96 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "semantica-atlas-sync",
+    "packetId": "goal-packet/v1:16d01916bc8ad0601bf108988f91a6ce23df7ad147052e69d05212138aeb6892",
+    "title": "Semantica Atlas Sync",
+    "status": "active",
+    "created": "2026-09-03",
+    "updated": "2026-09-03",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/semantica-atlas-sync",
+  "lifecycle": "active",
+  "mission": "Write the ratified positive Verdict and Beep counterpart values into the Notion @beep/semantica atlas from a schema-validated verdicts file (atlas-verdicts/v1) through the P5 method (render, diff against a live 33-catalog read, one canary write, apply, SQL read-back) on exactly the rows the file lists and with zero Notion schema; the IR facts lane stays a gated P2 on semantica 0.6.7+ (MAP v1.1 section A, R3).",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/semantica-lab",
+    "graduated": "2026-09-03",
+    "note": "MAP v1.1 re-entry packet A (DECISIONS 2026-09-03 R3, ratified with R3.a-R3.g and the Verdict-map cell R3.f). Fired by the atlas-edit need the canary's P5 closeout left (2026-09-02: four rows declined for lack of positive vocabulary); D5 is split into a verdict lane (P1, now) and a facts lane (P2, gated on the O3 version trigger, semantica 0.6.7+, unverified as of 2026-09-03). The repo is the single writer of decision facts (A9)."
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "explorations/semantica-lab/MAP.md",
+    "explorations/semantica-lab/DECISIONS.md",
+    "goals/semantica-atlas-sync/README.md",
+    "goals/semantica-atlas-sync/SPEC.md",
+    "goals/semantica-atlas-sync/PLAN.md",
+    "goals/semantica-atlas-sync/GOAL.md",
+    "goals/semantica-atlas-sync/research/SOURCES.md",
+    "goals/semantica-canary/history/p5-atlas-sync.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/semantica-atlas-sync/GOAL.md"
+    }
+  ],
+  "provides": ["semantica/atlas-verdicts"],
+  "requires": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Access check + live baseline",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Verdict lane",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Facts lane (gated: semantica 0.6.7+)",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/semantica-atlas-sync/GOAL.md)\" -le 4000",
+    "jq . goals/semantica-atlas-sync/ops/manifest.json",
+    "rg -n \"semantica-atlas-sync|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/semantica-atlas-sync",
+    "git diff --check -- goals/semantica-atlas-sync explorations/semantica-lab",
+    "bun run beep goals index --check",
+    "bun run beep goals doctor",
+    "bun run beep lint reflection-artifacts",
+    "bun run beep yeet verify"
+  ],
+  "stopConditions": [
+    "Notion access is not live-verified: re-check the connection (a read of one catalog) before the one canary write; a failed read stops the lane before any write.",
+    "A write to any row not enumerated in research/atlas/verdicts.json; any new Notion row, property, or schema; a positive Verdict without its Beep counterpart in the same write (R3.b, R3.c, R3.e).",
+    "An already-have record without a dated, row-specific entry in explorations/semantica-lab/DECISIONS.md naming its shipped @beep/* counterpart; package existence alone is never a verdict (R3.d, D7).",
+    "Family vocabulary (pick-one, bundle, park-pending-canary) reaching the atlas, or a positive value for a family whose canary stage has not passed (B1).",
+    "The facts lane (P2) starting before semantica 0.6.7+ ships (the firing recorded in a dated DECISIONS entry); deciding the extractor's home outside that lane (R3.g).",
+    "Notion page identifiers, machine paths, or session ids in committed packet data (review-loop law, 2026-08-24).",
+    "Verification requires credentials, cost, destructive side effects, or policy approval not named in SPEC.md.",
+    "The same blocker repeats after reasonable investigation."
+  ],
+  "statusNote": "Scaffolded 2026-09-03 at the semantica-lab graduation ceremony (MAP v1.1 §A, R3); execution not started. Runs first of the three re-entry packets: P0 access check + live 33-catalog baseline, then the P1 verdict lane; P2 (facts lane) is gated on semantica 0.6.7+ and the packet is set paused after P1 ships if the gate has not fired."
+}

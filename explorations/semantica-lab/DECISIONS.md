@@ -9,8 +9,8 @@ holds now; when a log entry disagrees with it, the table wins.
 
 | Topic | Holds now | Supersedes |
 | --- | --- | --- |
-| Next work | Decompose the C2-fired `semantica-storage-inversion` gate; `semantica-reasoning-spike` also needs its `G-entailment/rules` fixture committed before it fires (MAP Sequencing 5); `semantica-atlas-sync` re-enters on the atlas-edit need its unblocked positive row values create (O3/M4). | P5 close |
-| Stop rule | Probe-denominated circuit breaker (S1): first-probe candidate, one retry, then the family parks and the packet drops to decompose; wall-clock is `EvalRunTelemetry` sidecar telemetry (R1), never a gate. Re-entry is bounded (E8): one decompose re-entry candidate per family per stage; a second park is terminal absent an explicit operator ratification recorded in this file | BRIEF v0.1 "two weeks, C0 in four days"; contract v1.2 two-week falsifier; unbounded slate re-entry |
+| Next work | Graduated 2026-09-03: `goals/semantica-atlas-sync`, `goals/semantica-storage-inversion` and `goals/semantica-reasoning-spike` exist (materialized from the `beep goals bootstrap` plan; SPECs seeded from MAP v1.1 and this file's ratification grill); exploration status `graduated`. Execution runs in the goal packets in the ratified order (verdict lane → storage spike → reasoning spike; P-S1 before R-c and P2–P4; the v3 archive before P3). This packet reopens at `decompose` only when a MAP gate fires: the facts-lane trigger, an O4 OSS gate, the Explorer/UI milestone, or a family park. | 2026-09-03 "Graduation ceremony: scaffold …" |
+| Stop rule | Probe-denominated circuit breaker (S1): each family gets its first-probe candidate; a stage failure buys exactly one more candidate, redesigned when the failure was a design fault; a second failure parks the family and the packet drops to decompose (row aligned to the S1 entry by ratification R0.a, 2026-09-03); wall-clock is `EvalRunTelemetry` sidecar telemetry (R1), never a gate. Re-entry is bounded (E8): one decompose re-entry candidate per family per stage; a second park is terminal absent an explicit operator ratification recorded in this file | BRIEF v0.1 "two weeks, C0 in four days"; contract v1.2 two-week falsifier; unbounded slate re-entry |
 | Gold labels | Gold-proposer provider family ≠ extraction provider family, enforced as a schema refinement on EvalRun; spot-checked fraction committed as a number in gold/v1 (S2) | contract v1.2 "LLM-proposed and spot-checked" |
 | Lab shape | `--app-kind tauri`, one local `cargo check`, `src-tauri` frozen through C0-C2, hand-written `server/main.ts` + `src/runtime/Layer.ts` as the headless proof surface (S4) | D12/G2 wording without a runtime entry |
 | Storage | **bundle** (C1, 2026-08-31): authoritative file-backed PGlite ledger + dimension-keyed DuckDB exact-vector projection + Oxigraph RDF rebuild-from-ledger. The C1 G and full-W1 runs passed ordered kNN/SPARQL expectations and empty `QuadDelta` rebuild identity. PGlite adjacency/proof tables remain the C2 derived-graph component; ANN, DuckDB VSS, pgvector-on-PGlite, and persistent RDF stores stay contingent. | `park-pending-canary`; D8 one-of-three; the sheet's provisional `Bundle` verdict |
@@ -25,7 +25,7 @@ holds now; when a log entry disagrees with it, the table wins.
 | Atlas writes | final `park` values written 2026-09-02 (six rows; `goals/semantica-canary/history/p5-atlas-sync.md`); no `drop` warranted; row-level `adopt`/`adapt`/`already-have` are unblocked by the passed canary and belong to `semantica-atlas-sync` (O3/M4) | B1 "only final park/drop today"; D3 columns as live verdicts |
 | Atlas backlog | O3 verbatim (M4): template exemplars, IR row-fill and the 27 module analyses are async codex batches off the critical path, not a goal and not gated; `semantica-atlas-sync` = the D5 render/diff sync pipeline only, re-entry = semantica 0.6.7+ or atlas-edit need | MAP v0.1 "gate = C0 pass" |
 | Repo defects | O1 exception (M2): the `@beep/nlp` Handoff mention/span drop is fixed now in its own PR (`nlp-ir/1.1`, required `mentions`); the relation drop stays repo-issues Draft 2, cleanup-on-touch | O1 "fixes ride cleanup-on-touch" for this one defect |
-| Graduation | M5/M6: three PRs — fix → docs-only ceremony → lab mint; both packets graduate in one ceremony; `openai-driver` scaffolds `active` with no dependency edge; `docs/ROADMAP.md` funnel policy gains a lab-canary slot-free clause and a Labs line | G2 "graduate this week" |
+| Graduation | M5/M6: three PRs — fix → docs-only ceremony → lab mint; both packets graduate in one ceremony; `openai-driver` scaffolds `active` with no dependency edge; `docs/ROADMAP.md` funnel policy gains a lab-canary slot-free clause and a Labs line. 2026-09-03 (R4.a): the three re-entry packets graduate in one docs-only ceremony at their own weights — `semantica-atlas-sync` at template weight with the facts lane as a gated P2, the two spikes carrying their probes as phases — all `active`, with the capability edge `semantica/tombstone-law` provided by the storage spike and required by the reasoning spike | G2 "graduate this week"; 2026-09-02 "no successor packet was scaffolded" |
 
 **Verdict map** (which vocabulary is legal where):
 
@@ -33,7 +33,7 @@ holds now; when a log entry disagrees with it, the table wins.
 | --- | --- | --- |
 | Family (packet) | already-have / pick-one / bundle (storage only) / park / drop | after the matching canary stage passes |
 | Family (today) | park-pending-canary | packet-only; never an atlas value |
-| Atlas row | adopt / adapt / already-have / park / drop | adopt = wrap as-is, adapt = wrap with changes; today only final park/drop |
+| Atlas row | adopt / adapt / already-have / park / drop | adopt = wrap as-is, adapt = wrap with changes; `park`/`drop` any time a sheet or dated verdict warrants; positive values only after the matching canary stage passed (B1) — unblocked 2026-09-02, written by `semantica-atlas-sync` (Atlas writes row; coherence edit 2026-09-03) |
 | Sheet | none | a sheet is slate + probe order; its "winner" is not law |
 
 **Terminology** (one meaning each; prefer sheet, probe, canary in new prose):
@@ -752,3 +752,364 @@ Source:
 - Those unblocked positive row values are the "atlas-edit need" that O3/M4 name as
   the `semantica-atlas-sync` re-entry trigger, so that gate joins the two spikes as
   the exploration's third open question. Nothing is scaffolded for it either.
+
+## 2026-09-03 (decompose re-entry) — bounded spike proposals R1–R3 (PROPOSED, pending ratification)
+
+Source: `MAP.md` §Re-entry Decomposition (v1.1). Every capability cell was re-verified
+against the live checkout at `a1652c1923`, then a Sol (GPT-5.6, medium) adversarial pass
+returned REWORK with eight P1s
+([`research/reviews/2026-09-03-sol-reentry-review.md`](./research/reviews/2026-09-03-sol-reentry-review.md));
+each was re-checked against source and folded (review fold below). These are proposals with
+a recommended answer first; they become law only when Benjamin ratifies them here.
+
+- **R1 (storage-inversion: tombstone ≠ erasure).** *Recommended:* keep `Invalidated` as
+  claim-targeted logical retraction (the body exists in `src/schema/Provenance.ts`, emitted by
+  no Layer); its reach is derived, not stored — `claimQuads` bridges a claim to the
+  content-addressed `StatementId`s the reasoner consumes, and every `InferenceEvent` whose
+  recorded local premises transitively include a retracted statement is removed on rebuild.
+  Add two physical events: `Redacted`, targeting a `DocumentId` with a ledger-computed erasure
+  closure (document, parse-outcome, chunk, batch, claim and conflict rows; provider-cache
+  entries via a new reverse index; the events naming it keep `(id, prev, bodyDigest)` and drop
+  `payload`), and `Compacted`, folding a chain prefix into a content-addressed snapshot that is
+  the trust root. The chain property is continuity from the last checkpoint, checked by a
+  NET-NEW validator (prev exists, unique head, recomputable ids after the checkpoint). Probes
+  P-S0 entry check (cache-only regeneration reproduces `2a2089ea…`), P-S1 retraction, P-S2
+  compaction plus erasure (compaction alone keeps the digest; erasure equals a cache-only run
+  over the manifest minus the document), P-S3 desktop storage with SIGKILL mid-compaction —
+  one S1 candidate, all replay-offline. *Rationale:* a desktop user's "delete" is erasure,
+  which neither a tombstone nor one nulled event payload satisfies, and a redacted event's
+  id cannot be recomputed, so the honest chain claim is checkpoint continuity. *Rejected:*
+  in-place `DELETE`/`UPDATE` of claims (violates the ledger law and C1 rebuild identity);
+  tombstone-only (leaves erasure unanswered); event-id-targeted redaction (misses the rows the
+  read path actually consumes); "chain still verifies end to end" (false under the live
+  `(prev, body)` preimage); a fresh hosted run as fixture.
+- **R2 (reasoning spike: the fixture is P1).** *Recommended:* amend the v1.0 precondition
+  "`G-entailment/rules` fixture committed" into the spike's own first phase, because no
+  packet owns it (the canary is completed-retained and its SPEC constraint 11 excludes the
+  suite). P1 opens with a schema-first `g-entailment-rules/v1` tagged family (case,
+  expectation, witness — the rdfs/v1 classes are pinned and carry none of the needed fields),
+  then twenty cases in five classes (join, recursion, retraction, budget, contradiction; four
+  each) generated by extending `scripts/generate-g-entailment.ts` under the same EYE pins.
+  EYE gold is separated from lab-owned expectation per class: R-c uses two EYE closures
+  (with and without the retracted premise); R-d uses EYE's complete closure for the unbudgeted
+  run and a deterministic truncation witness for the budgeted run; R-e uses EYE derivability
+  of both statements plus a statement-level conflict witness distinct from the claim-level
+  `ConflictWitness`. No negation class in `gold/v1` until restricted EYE is shown to accept
+  scoped negation. The adhd first-step probes are P2–P4 with their kill criteria unchanged;
+  the v3 `rete` salvage enters at P3 and needs the archived `beep-effect-logos` root located
+  first (absent from the recorded workstation path on 2026-09-03). One S1 candidate.
+  *Rationale:* a precondition without an owner is a deadlock, and the fixture is exactly the
+  bounded, engine-free slice a spike should open with. *Rejected:* building the fixture
+  inside the retained canary; reusing `GEntailmentExpectation` as-is (pinned schema version,
+  no fields); "truncated equals EYE untruncated" as one expectation (incoherent); waiting for
+  the archive before any fixture work (P1 and P2 do not need it).
+- **R3 (atlas-sync: verdict lane now, facts lane later).** *Recommended:* split D5. The fired
+  need is decision data (A9): the four rows P5 declined for lack of positive vocabulary
+  (`Oxigraph (embedded)`, embedding-model `OpenAI`, `pattern`, `llm`) plus any
+  `already-have` row whose counterpart is a shipped `@beep/*` package. Write them from a
+  schema-validated `research/atlas/verdicts.json` (`atlas-verdicts/v1`) via the P5 method
+  (render, diff, canary write, apply, read-back), carrying `Beep counterpart` with each
+  positive `Verdict`, zero new rows or schema. The IR-driven facts lane stays queued on the
+  0.6.7+ trigger; the extractor survives in git history (`fd560ca8e5`, deleted by #882) and
+  its lawful home is that lane's question. The Verdict map's "today only final park/drop"
+  cell contradicted the later Atlas-writes row; it is amended above for coherence (later
+  entries win by this file's own rule). Notion access was not live-verified this session.
+  *Rationale:* the Python extractor is not on the verdict path, so the bounded answer is
+  hours of docs-plus-Notion work, not a pipeline. *Rejected:* rebuilding the IR pipeline
+  first (M4 made it async, and nothing in the fired need reads it); writing verdicts without
+  counterparts (the failure mode D3 exists to prevent).
+- **Sequencing (proposed):** verdict lane → storage spike → reasoning spike, with the
+  fixture's retraction class (R-c) sequenced after P-S1 because both share the tombstone
+  law. Three goal packets as v1.0 named them; `semantica-atlas-sync` at template weight.
+- **Review fold (Sol P1s, all verified against source before folding):** (1) `Invalidated`
+  targets `ClaimId` while proof nodes use `StatementId` — bridged through `claimQuads`;
+  (2) `(id, digest)` after payload removal is a commitment, not a proof — chain claim weakened
+  to checkpoint continuity plus a validator; (3) one event's payload is not a document —
+  `Redacted` now targets a `DocumentId` with a computed closure, and the erasure gate
+  compares against a manifest-minus-one replay; (4) `CrashProjectionInput`/
+  `CrashIdentityWitness` live in `Reasoning.ts`, not `Projection.ts` — cell corrected;
+  (5) `GEntailmentExpectation` cannot carry the rules fixture — NET-NEW tagged family;
+  (6) R-d/R-e oracle semantics split; (7) S8 permits retraction over recorded local
+  premises and S1 buys one candidate, not one retry per probe — kill clause and budget
+  rewritten; (8) Verdict map cell amended. Unverified and kept as named risks: PGlite
+  `VACUUM FULL` reclaim under Bun, current Notion authentication, and the O3 version
+  trigger.
+- **Deferred:** the facts-lane extractor home (queued lane); a negation class for the rules
+  fixture (typed gap until restricted EYE is checked); the O3 version trigger itself (the
+  local `danklocal` checkout is 0.6.6 at `add1c006`; upstream was not polled this session).
+
+## 2026-09-03 (ratification grill) — R1–R3 RATIFIED with amendments: round 1 (R0.a, R1.a, R1.b, R1.f, R2.a, R3.f); round 2 RATIFIED (R1.c, R1.e, R1.g, R2.b, R3.a); round 3 RATIFIED (R1.d, R2.c, R3.b, R3.c, R3.e, R3.g); round 4 RATIFIED (R2.d, R2.e, R3.d amends the packet); round 5 RATIFIED (R2.f); round 6 RATIFIED (R2.g, R1.h, R1.i: the Sol critic's additions); round 7 RATIFIED (R4.a, close) — frontier empty
+
+Benjamin is ratifying the v1.1 re-entry proposals in a grilling session run over the teaching
+lesson for R1–R3 (private artifact; teaching workspace outside the repo), one frontier round at a
+time. Every settled answer lands here as Question / Answer / Rationale with the rejected options.
+Sub-decision ids match the lesson and the round table there.
+
+- **R0.a (S1 wording; amends the Current-law Stop rule row).** *Q:* the dated S1 entry says a
+  stage failure "buys exactly one more candidate"; the Current-law row said "first-probe
+  candidate, one retry, then the family parks", and the table wins over the log. Which is law?
+  *A:* one redesigned candidate. The Stop rule row is amended above to the S1 entry's wording.
+  *Rationale:* a retry of an unchanged candidate cannot answer a design-caused failure; both
+  spikes budget against this wording, so it had to be settled before R1.e and R2.f. *Rejected:*
+  one unchanged retry (a design fault fails twice); one retry then one redesign (enlarges the
+  breaker; the inflation the Sol review struck).
+- **R1.a (`Invalidated` stays claim-targeted; reach derived).** *Q:* does `Invalidated` remain a
+  `ClaimId`-targeted logical retraction whose reach to `StatementId`s and `InferenceEvent`s is
+  derived at rebuild through `claimQuads` and the recorded local premises, with nothing stored?
+  *A:* yes. *Rationale:* the bridge is deterministic and already exists as a module-private
+  const; storing reach would add a derived table that must stay identical under rebuild, and
+  R-c can share the same law only if it is derived. *Rejected:* a persisted claim-to-statement
+  lineage table; retargeting `Invalidated` to `StatementId` (loses the claim as the unit a user
+  retracts).
+- **R1.b (`Redacted` is document-targeted with a computed closure).** *Q:* is physical erasure a
+  new `Redacted` event targeting a `DocumentId` whose erasure closure is computed from the ledger
+  (derived rows deleted, provider-cache entries via a new reverse index, named events kept as
+  `(id, prev, body_digest)`)? *A:* yes, with the closure extended to run outputs: the Sol
+  verification found MAP §S lists run outputs as separately retained but omits them from the
+  closure. *Rationale:* a desktop delete is erasure; one nulled event payload leaves the text in
+  `parse_outcomes`, the claims in `claims`, and the rebuild reading `batches`. *Rejected:*
+  rewrite into a fresh `dataDir` as the primary erasure (kept as the P-S3 redesigned candidate
+  for reclaim, not as the erasure semantics); tombstone only (A6 keeps D16 non-binding).
+- **R1.f (fixture = offline-regenerated C2 ledger).** *Q:* is the spike fixture the
+  workstation-regenerated full-W1 C2 ledger from the untracked provider cache, gated by P-S0
+  reproducing report digest `2a2089ea…` with the network off? *A:* yes; zero hosted spend, and
+  no reproduction means the spike does not start. *Rationale:* the committed C2 archive holds
+  reports, telemetry, checksums and a crash log, not a ledger or cache, so P-S0 is the only proof
+  the fixture exists. *Rejected:* a fresh hosted C2 run (spends budget and adds provider
+  nondeterminism to a storage question); committing the regenerated ledger or the ~152 MB cache
+  to the public repo.
+- **R2.a (the rules fixture is the spike's P1).** *Q:* does the `G-entailment/rules` fixture stop
+  being an unowned precondition and become phase P1 of `semantica-reasoning-spike`? *A:* yes.
+  *Rationale:* a precondition without an owner is a deadlock; the fixture is the bounded,
+  engine-free slice a spike should open with, and P1 needs neither the archive nor an engine.
+  *Rejected:* building it inside the retained canary (SPEC constraint 11 excludes the suite);
+  a separate fixture-only goal packet (not in the packet; more ceremony than the work).
+- **R3.f (Verdict map Atlas-row cell amended).** *Q:* ratify the amended Current-law cell
+  ("positive values only after the matching canary stage passed (B1) — unblocked 2026-09-02,
+  written by `semantica-atlas-sync`") in place of "today only final park/drop"? *A:* yes.
+  *Rationale:* the Atlas-writes row already unblocked positive values and the table wins over
+  log entries, so the stale cell would have forbidden the lane R3.a proposes. *Rejected:* leaving
+  the cell and relying on the 2026-09-03 log entry; gating positive atlas values on the storage
+  spike as well (not in the packet; delays docs work behind a spike that never reads the atlas).
+
+Round 2:
+
+- **R1.c (redacted events keep `(id, prev, body_digest)`; three DDL changes).** *Q:* do redacted
+  events keep the commitment triple and null their payload, accepting a nullable payload, a
+  `body_digest` column populated for every event, and a separate `prev` column? *A:* yes,
+  including the `prev` column: the Sol verification found `prev` lives only inside the payload
+  today, so dropping the payload without that column would break every continuity walk.
+  *Rationale:* the triple is a commitment, not a proof, but it is the only thing that lets the
+  chain be walked across an erasure. *Rejected:* deleting the redacted rows outright (the next
+  event's `prev` points at nothing); a placeholder body with forward re-hashing (rewrites ids that
+  reports and witnesses already reference).
+- **R1.e (P-S0..3 are one stage of one S1 candidate).** *Q:* one candidate for the four ordered
+  probes, a failed probe buying one redesigned candidate for that probe under R0.a, a second
+  failure parking the storage family? *A:* yes. The P-S3 redesigned candidate is
+  copy-to-fresh-`dataDir` compaction. *Rationale:* matches the ratified S1 and E8; every probe is
+  replay-offline. *Rejected:* P-S0 outside the breaker as prerequisite evidence (the review's
+  shape for fixtures; the MAP folds it in and Benjamin kept that); one candidate per probe (not
+  in the packet; four times the budget).
+- **R1.g (one tombstone law: P-S1 before R-c and P2–P4).** *Q:* does P-S1 ratify the retraction
+  semantics before R2's R-c class and the P2–P4 probes run? *A:* yes. *Rationale:* the ledger
+  defines retraction once and the fixture inherits it; R-a, R-b, R-d and R-e still build in
+  parallel with the storage spike. *Rejected:* R-c and P-S1 in parallel with reconciliation after
+  (two laws to reconcile); fixture-first with P-S1 conforming (the ledger would inherit
+  statement-level semantics from a test suite).
+- **R2.b (NET-NEW `g-entailment-rules/v1` family; widened rule and engine domains).** *Q:* does
+  P1 open with a sibling tagged family (case, expectation, witness) rather than widening
+  `GEntailmentExpectation`, with `RdfsRuleId` widened to a branded rule id and `InferenceEngine`
+  to a domain? *A:* yes. *Rationale:* rdfs/v1 is the passed C2 gold contract and its case class
+  has no slot for a rule program, an invalidated input, a diff, a budget, a truncation fact or a
+  conflict; a sibling family keeps rdfs/v1 frozen. *Rejected:* optional fields on rdfs/v1 (not in
+  the packet; changes the C2 fixture shape under a passed gate); `g-entailment-rdfs/v2` with a
+  migration of the seven C2 cases (not in the packet; re-proves C2 gold for no reasoning gain).
+- **R3.a (D5 split into a verdict lane now and a facts lane later).** *Q:* split D5 so the
+  verdict lane (repo-owned verdicts file, render, diff, one canary write, apply, SQL read-back)
+  runs now and the IR extractor lane stays queued on semantica 0.6.7+? *A:* yes. *Rationale:*
+  under A9 the fired need is decision data; the extractor is not on its path, and M4's async
+  ruling on IR work stands. *Rejected:* keeping D5 whole and rebuilding the extractor first;
+  running both lanes now (not in the packet; reverses M4 and forces the extractor's home to be
+  decided today).
+
+Round 3:
+
+- **R1.d (`Compacted` is the trust root; continuity from the checkpoint; redacted events are
+  commitments only).** *Q:* is `Compacted` a content-addressed snapshot that becomes the trust
+  root, with the chain property weakened to continuity from the last checkpoint under a NET-NEW
+  validator? *A:* yes, with one amendment from the Sol verification: MAP §S said post-checkpoint
+  ids recompute from `(prev, body)` "or `(prev, bodyDigest)` where redacted", but an existing id
+  was hashed from a body that is gone and can never be recomputed from its digest. The validator
+  therefore checks `prev` exists, the head is unique, every event whose body remains recomputes
+  from `(prev, body)`, the fold digest matches, and redacted events only as `(id, prev,
+  body_digest)` commitments. The id scheme does not change, so the C2 ledger and its
+  `2a2089ea…` digest remain valid fixtures. *Rejected:* changing the id preimage to `(prev,
+  bodyDigest)` for new events (not in the packet; invalidates every C2 id and the P-S0 fixture);
+  keeping end-to-end verification by forbidding redaction outside a compacted prefix (erasure of a
+  recent document would wait for the next compaction).
+- **R2.c (twenty cases, five classes, oracle split).** *Q:* twenty cases, four per class (R-a
+  join, R-b recursion, R-c retraction, R-d budget, R-e contradiction), generated by extending
+  `scripts/generate-g-entailment.ts` under the same EYE pins, with EYE gold separated from
+  lab-owned expectation per class? *A:* yes: R-c two EYE closures; R-d EYE's complete closure
+  plus a lab-owned budgeted run emitting `InferenceTruncated`; R-e EYE derivability plus a
+  statement-level conflict witness. *Rationale:* this is the ablation corpus A6 requires, and no
+  class asks the oracle for something it cannot produce. *Rejected:* eight cases (join and
+  recursion only; not in the packet; P3 and P4 would lack the cases their kill criteria need);
+  unequal class weights (not in the packet).
+- **R3.b (scope frozen; exact rows listed before any write).** *Q:* freeze the positive-write
+  scope at the four P5-declined rows (`Oxigraph (embedded)`, embedding-model `OpenAI`,
+  `pattern`, `llm`) plus `already-have` rows with a shipped `@beep/*` counterpart, zero new
+  Notion rows or properties, and reconcile the park baseline? *A:* yes, and `verdicts.json` must
+  enumerate every row it will touch before the lane is called bounded. The Sol verification found
+  the MAP's "six parks" baseline is one of two dated observations: the 2026-08-24 upgrade report
+  read back 13 D10 auto-parked rows (5 MCP Server Integrations, 8 LLM Providers) that P5's
+  ten-catalog inventory never saw, and no packet file records clearing them; the 33-catalog read
+  establishes the live count. *Rejected:* the four named rows only (drops the `already-have`
+  extension); scope as written with the six-park baseline trusted (the 33-catalog diff could
+  report rows the file cannot explain).
+- **R3.c (`Beep counterpart` rides with every positive `Verdict`).** *Q:* must every positive
+  verdict carry its counterpart text in the same Notion write? *A:* yes. *Rationale:* a positive
+  verdict with no pointer to what beep has is the failure mode D3's columns were created to
+  prevent. *Rejected:* verdict now and counterpart in a later pass; counterpart required only
+  for `adopt`/`adapt` (not in the packet; weakens the pairing where a reader most needs it).
+- **R3.e (homes; "zero schema" means zero Notion schema).** *Q:* script home
+  `apps/labs/semantica/scripts/` beside the `generate-*.ts` files; data home
+  `explorations/semantica-lab/research/atlas/verdicts.json` under a NET-NEW `atlas-verdicts/v1`
+  schema whose `Verdict` is a `@beep/schema` `LiteralKit`; the bullet's "zero schema" read as
+  zero Notion rows, properties or schema? *A:* yes. *Rationale:* the smallest lawful homes: the
+  lab already hosts fixture generators and publishes no API, and A9 puts decision data in the
+  packet. *Rejected:* a `bun run beep` command in `@beep/repo-cli` (not in the packet; a tooling
+  home plus ceremony for an hours-scale task, though the more reusable shape if atlas syncs
+  recur); verdicts as prose in `DECISIONS.md` with no validated file.
+- **R3.g (facts lane stays queued; extractor home deferred; verdict lane first).** *Q:* keep
+  the IR lane queued on semantica 0.6.7+, defer the extractor's lawful home to that lane
+  (default: a pinned out-of-repo clone under the cache root), and sequence the verdict lane
+  first? *A:* yes. *Rationale:* the extractor survives in git history at `fd560ca8e5` and
+  nothing in the fired need reads it. *Rejected:* deciding the extractor's home now; retiring
+  the facts lane (not in the packet; the atlas would go stale by design).
+
+Round 4:
+
+- **R2.d (no negation class in gold/v1; typed gap).** *Q:* omit negation from the first twenty
+  cases and record it as a typed gap in the fixture rather than a silent omission? *A:* yes.
+  *Rationale:* restricted EYE's acceptance of `log:notIncludes` is untested, and the rule
+  language has no negated atom, so oracle acceptance alone would not make the schema support it.
+  *Rejected:* a pre-P1 probe of restricted EYE (settles only the oracle half); a sixth negation
+  class now (not in the packet; leaves the positive fragment the live engine implements).
+- **R2.e (R-c inherits the ratified R1 tombstone law).** *Q:* does R-c reuse claim-targeted
+  `Invalidated` with reach derived through `claimQuads` and recorded premises, so its lab-owned
+  expectation is "the derived set shrinks by exactly the diff; retraction derived from recorded
+  premises"? *A:* yes. *Rationale:* one law across ledger and fixture; R-c's EYE run over
+  (asserted minus retracted) is a recomputation oracle, and incremental truth maintenance is
+  tested in P4, not P1. *Rejected:* a fixture-local statement-level retraction (two laws, the
+  reasoner bridging twice); dropping R-c from gold/v1 (not in the packet; P4 loses its
+  retraction case).
+- **R3.d (`already-have` needs a dated, row-specific entry; AMENDS the R3 proposal).** *Q:* is
+  a shipped `@beep/*` counterpart alone enough to justify an `already-have` row, as MAP §A and
+  the 2026-09-03 R3 block wrote, or must each such row also have a dated, row-specific entry in
+  this file? *A:* the dated row-specific entry is required. Package existence never becomes a
+  verdict; every `already-have` record in `verdicts.json` cites the entry that judged that row.
+  *Rationale:* the record shape already demands evidence, D7 says incumbency is not quality,
+  and A9 makes the repo the writer of decision evidence; the Sol review raised this as a P2 and
+  it had not been folded. *Rejected:* counterpart existence suffices (the packet text as
+  written); the family-level verdicts standing in as the entry for their rows (a middle ground
+  Benjamin declined). MAP §A's scope sentence is amended to match.
+
+Round 5:
+
+- **R2.f (adhd probes are P2–P4; one S1 candidate for P1–P4).** *Q:* are P-R1, P-R2 and P-R3
+  phases P2 to P4 with their kill criteria unchanged (canonicalization drift; certificate
+  unsoundness; unstable identity or invalidation across re-extraction and replay), starting
+  after P-S1 (R1.g), and is the whole P1–P4 run the reasoning family's one S1 candidate under
+  R0.a? *A:* yes. *Clarification recorded for both spikes:* "one S1 candidate" in the MAP
+  ratification bullets means the family's opening candidate; S1's exactly-one redesigned
+  candidate after a stage failure still applies, and a second failure parks the family.
+  *Rejected:* P1 outside the candidate as prerequisite evidence (the review's shape; differs from
+  what was chosen for P-S0 in R1.e); each probe its own candidate (not in the packet).
+
+Round 6 (the archive-phase wording conflict and two clauses the Sol completeness critic found no
+question covered):
+
+- **R2.g (the archive gates P3 = P-R2; MAP probe-table sentence amended).** *Q:* the MAP probe
+  table said the rete salvage enters at P-R3 (P4 under the P2–P4 numbering) while the sequencing
+  prose, the R2 block and the manifest said P3; which phase does locating `beep-effect-logos`
+  gate? *A:* P3, that is P-R2, whose adhd first step is beside the v3 Rete compiler; the P4
+  (P-R3) ablation inherits the gate. P1 and P2 proceed now. *Rejected:* P4 only (P-R2 would
+  proceed without the compiler); naming the check on both phases (redundant).
+- **R1.h (P-S2 states an atomic erasure protocol and a copy-class inventory).** *Q:* the Sol
+  review asked for the complete closure and its atomic rewrite or swap protocol; the fold covered
+  the closure but not atomicity or the WAL, TOAST, report and telemetry copies. Require both?
+  *A:* yes: closure rows are deleted in one transaction, followed by a copy-to-fresh-`dataDir`
+  or `VACUUM FULL` step to purge dead tuples; the spec lists every copy class (WAL and TOAST
+  inside `dataDir`, report and telemetry files, provider-cache entries) and the gate proves each
+  is gone or documented as out of scope. *Rejected:* closure rows only with remnants left to
+  P-S3's byte measurement; deferring atomicity to implementation.
+- **R1.i (chain order is canonical for folds and replay).** *Q:* `Ledger.read` orders events by
+  `recorded_at` then `id`, a wall clock, while the R1 telemetry law keeps wall clocks out of
+  digests and `CompactedSnapshot` speaks in chain-prefix order; which order is canonical? *A:*
+  chain order via `prev` links, made cheap by the `prev` column from R1.c; `recorded_at` stays
+  telemetry and `Ledger.read` walks `prev` from the checkpoint. *Rejected:* keeping the
+  `recorded_at, id` order (fold digests would depend on the wall clock); two orders (replay
+  identity could drift between them).
+
+Round 7 (delivery and close):
+
+- **R4.a (delivery shape).** *Q:* three goal packets as v1.0 named them, each at its own weight:
+  `semantica-atlas-sync` at template weight with the facts lane as a gated P2, and the two
+  spikes carrying their probes as phases (P-S0..3; P1 fixture then P2–P4), with the O4 OSS
+  gates untouched? *A:* yes. *Rejected:* folding the verdict lane into a docs-only PR under this
+  exploration and minting only the two spikes (not in the packet); one packet with three phases
+  (not in the packet; one breaker budget shared across families, which S1 does not allow).
+- **Close.** Benjamin confirmed the shared understanding with the frontier empty: every
+  ratification clause, the three clauses the Sol completeness critic found uncovered (R1.h, R1.i,
+  R4.a) and the wording conflicts (R0.a, R2.g, the meaning of "one S1 candidate", "zero schema")
+  have a recorded answer. Closeout without scaffolding: MAP v1.1 carries the amendments inline,
+  the manifest's open questions are cleared, and the graduation ceremony (three packets from
+  `goals/_template`) is the next session's first step. Execution preconditions carried into the
+  goal packets: P-S0 is a hard fixture gate; Notion access is re-checked before the one canary
+  write; the v3 archive is located before P3.
+
+## 2026-09-03 (graduation ceremony) — three re-entry packets scaffolded; exploration `graduated`
+
+Definition-of-ready (explorations/README.md Graduation Contract) re-checked against the ratified
+state: (1) `BRIEF.md` v1.1 is complete and unchanged; (2) the manifest's `openQuestions` is empty
+and the three deferred items (facts-lane extractor home, a negation class, the O3 version trigger)
+are logged DEFERRED in the 2026-09-03 decompose entry; (3) MAP v1.1 §S/§R/§A name slug, mission,
+dependency edges and first slice per packet, with §Sequencing and delivery giving the order; (4)
+every capability cell cites a live brick or is marked NET-NEW, re-verified at `a1652c1923` and
+challenged by the Sol review. All four hold; the ceremony ran.
+
+- **What was scaffolded.** `goals/semantica-atlas-sync` (phases P0 access check + live baseline,
+  P1 verdict lane, P2 facts lane gated on semantica 0.6.7+, P3 close), `goals/semantica-storage-inversion`
+  (P0 P-S0 entry check, P1 P-S1, P2 P-S2, P3 P-S3, P4 close) and `goals/semantica-reasoning-spike`
+  (P1 rules fixture, P2 P-R1, P3 P-R2, P4 P-R3, P5 close). Each manifest was materialized from the
+  read-only `beep goals bootstrap --plan --json` compiler (no writer exists; the nine files per
+  packet were written from the plan payloads), then patched with phases, sources of truth,
+  verification commands, stop conditions and provenance; every SPEC back-links MAP v1.1 and the
+  ratification grill instead of restating them; each `research/SOURCES.md` mirrors the rows the
+  packet composes and names this packet's ledger as primary.
+- **Edges recorded as capabilities.** `semantica-storage-inversion` provides
+  `semantica/tombstone-law` and `semantica/storage-semantics`; `semantica-reasoning-spike` requires
+  `semantica/tombstone-law` and provides `semantica/rules-fixture` and `semantica/reasoning-kernel`;
+  `semantica-atlas-sync` provides `semantica/atlas-verdicts`. P1 of the reasoning spike (minus R-c)
+  is not blocked by the edge; R-c and P2–P4 are (R1.g).
+- **Statuses.** All three `active`; the atlas-sync packet is set `paused` after its verdict lane
+  ships if P2 is still gated (resume condition recorded in its PLAN). Exploration status
+  `graduated`; `links.goals` lists five packets.
+- **Execution preconditions carried into the packets** (from the ratification Close): P-S0 is a
+  hard fixture gate; Notion access is re-checked with a one-catalog read before the canary write;
+  the v3 archive is located and its license re-verified before P3 of the reasoning spike.
+- **Review fold (Sol xhigh adversarial pass on the ceremony, verdict FIX-THEN-SHIP, 3 P1 / 3 P2 / 3 P3,
+  archived as [`research/reviews/2026-09-03-sol-graduation-review.md`](./research/reviews/2026-09-03-sol-graduation-review.md);
+  all nine verified against source and folded).** P1: the storage non-goal banned every claim-row
+  `DELETE`, which physical erasure requires — re-scoped to "no `DELETE` as the implementation of
+  retraction"; the reasoning telemetry law pushed the R-d declared budget and `InferenceTruncated`
+  witness into the sidecar — only Tier-L/Tier-D measurements live there, the budget and witness are
+  replay-stable fixture data; the atlas packet had widened the facts-lane gate to "0.6.7+ or a dated
+  O3 re-fire" — the ratified gate is 0.6.7+ only (R3.g), the firing recorded in a dated entry. P2: the
+  MAP gate-status cell still said three probes (now P-S0..3, R1.e); two MAP tuples omitted `prev`
+  (now `(id, prev, body_digest)`); the MAP capability table gave semantica Apache-2.0 (it is MIT,
+  Hawksight AI). P3: `premises` is `NonEmptyArray<StatementId>`; the ledger's `Witness` shorthand is
+  `GEntailmentWitness`; the Trail's "23 sub-decisions" is 25 labelled including R0.a and R4.a.
+- **Not done here.** No `docs/ROADMAP.md` change (the Labs line is slot-free, M6); no code; no
+  Notion write; the queued `research/drafts/*` upstream lane is untouched (O1/O2).
