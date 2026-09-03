@@ -3279,8 +3279,11 @@ describe("yeet attempt journal", () => {
           yield* fs.writeFileString(journalPath, original);
           const failingFileSystem = FileSystem.FileSystem.of({
             ...fs,
-            rename: (from, to) =>
-              Str.includes(".staging-")(from) ? fs.rename(path.join(tmpDir, "missing-stage"), to) : fs.rename(from, to),
+            rename: Effect.fnUntraced(function* (from: string, to: string) {
+              return yield* Str.includes(".staging-")(from)
+                ? fs.rename(path.join(tmpDir, "missing-stage"), to)
+                : fs.rename(from, to);
+            }),
           });
 
           const failure = yield* reconcileAttemptJournal(journalPath).pipe(
