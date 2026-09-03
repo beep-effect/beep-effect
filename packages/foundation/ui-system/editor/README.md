@@ -174,9 +174,9 @@ bun run lint:fix   # biome
 ```
 
 Unit tests stay outside `test/integration`; tests import package source
-through exact `@beep/editor/*` or other `@beep/*` aliases. The root and
-`@beep/editor/chat` barrels remain deprecated compatibility facades. Use
-relative imports only for local helpers, fixtures, and snapshots.
+through exact `@beep/editor/<leaf>` subpaths or other `@beep/*` aliases. The
+root export carries only `VERSION`. Use relative imports only for local
+helpers, fixtures, and snapshots.
 
 ## License
 
