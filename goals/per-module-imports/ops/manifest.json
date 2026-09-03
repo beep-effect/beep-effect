@@ -80,7 +80,7 @@
       "name": "Close",
       "status": "complete",
       "disposition": "close-bookkeeping-complete-2026-09-03",
-      "exit": "Reflection, packet lifecycle, terminal-route acceptance, and goals index updated in the closeout PR."
+      "exit": "Reflection, packet lifecycle, and terminal-route acceptance updated in the closeout PR; the ignored local goals index projection was regenerated and checked."
     }
   ],
   "verificationCommands": [

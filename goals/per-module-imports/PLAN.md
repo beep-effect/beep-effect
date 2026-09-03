@@ -15,7 +15,7 @@ extension, so the recorded stop condition prevents the mass migration.
 | P1 Vehicle & unblocks | complete (2026-09-03) | Invert `laws effect-imports` into the per-module law + ts-morph migration command (mapping table as data; code/JSDoc/Markdown modes; manual-review queue); land pilot-blocking foundation leaf exports; fix generator templates; extend the JSDoc example-import detector. | New law green on its own fixtures; dry-run over the pilot reports zero unmapped/ambiguous; new leaves resolve under NodeNext build, Bundler check, and docgen. Shipped via `/yeet`. |
 | P2 Pilot gate | complete — inconclusive stop (2026-09-03) | Run the approved `apps/professional-desktop` before/after measurement protocol; apply win/no-win/stop rules. | The tracked verdict and raw samples record no stable qualifying win after the permitted extension; the stop rule applies. |
 | P3 Batches & ratchet | complete — stopped by P2 gate; not executed | Would introduce and freeze the Biome `noRestrictedImports` warn rule; migrate the foundation kernel, vertical families, tools/tests/apps, and JSDoc/Markdown corpus; flip written laws/skills with enforcement; and finish with the single root-error flip. | Terminal disposition recorded under D14. None of the strict-pass-only work was authorized or claimed complete. |
-| P4 Close | complete (2026-09-03) | Closeout reflection and packet state flip. The operator's global rules file remains unchanged because the convention did not land. | Reflection passes `bun run beep lint reflection-artifacts`; manifest/README/INDEX describe the terminal stop. |
+| P4 Close | complete (2026-09-03) | Closeout reflection and packet state flip. The operator's global rules file remains unchanged because the convention did not land. | Reflection passes `bun run beep lint reflection-artifacts`; tracked packet files describe the terminal stop; the ignored local goals index projection regenerates and checks cleanly. |
 
 ## Working notes per phase
 
@@ -118,8 +118,9 @@ extension, so the recorded stop condition prevents the mass migration.
 1. [x] Write a closeout reflection via `/reflect` to
    `history/reflections/<YYYY-MM-DD>-<agent>.md` (frontmatter must validate).
 2. [x] Run `bun run beep lint reflection-artifacts`.
-3. [x] Update `README.md`, `ops/manifest.json` phase statuses +
-   `initiative.status`, and regenerate `goals/INDEX.md` in the same PR.
+3. [x] Update `README.md`, `ops/manifest.json` phase statuses, and
+   `initiative.status` in the same PR; then regenerate the ignored local
+   `goals/INDEX.md` projection and pass `bun run beep goals index --check`.
 
 ## Execution Notes
 
