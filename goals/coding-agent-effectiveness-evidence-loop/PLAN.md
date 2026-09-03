@@ -3,14 +3,16 @@
 ## Status
 
 Status: `in-progress` (packet opened 2026-07-31; the P1 log-only baseline
-closed and `desktop-ntfy-1` cut over in the implementation checkout on
-2026-09-03 — see
+closed, `desktop-ntfy-1` cut over in the implementation checkout, PR #973
+merged, and a guarded seven-clone rollout slice completed on 2026-09-03 — see
 `research/2026-09-03-p1-baseline-close.md` and
 `history/outputs/2026-09-03-p1-sharp-cutover.md`)
 
 **Current phases (single authority for `/goal` executors):** P1 is current.
 Hook semantics, the production writer, the fixed baseline, notifier/damping
-schemas, desktop delivery, and the shared circuit breaker are complete. The
+schemas, desktop delivery, the shared circuit breaker, and the first guarded
+post-merge rollout slice are complete. The rollout is deliberately staggered:
+active, dirty, detached, and feature-branch checkouts were left untouched. The
 first sharp `AskUserQuestion` wait and phone delivery are not yet observed, so
 P1's interrupted-series exit criterion is not met. **P0 is complete
 (2026-08-07)** — code, atomic store cutover, and live verification all landed;
@@ -28,7 +30,7 @@ P5→P7, P6→P8.
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
 | P0 Storage cutover + identity registry | complete (2026-08-07) | Clone-independent canonical store, source registry, bounded config snapshots. | Store serves all clones; snapshots have stage timings; nested worktrees are independent roots. Met — see `history/outputs/2026-08-07-p0-cutover.md`. |
-| P1 Sequence-break instrument | in-progress (checkout cutover 2026-09-03) | Hooks + hook-pulse ledger + notifications + circuit breaker + kill switch; first wait reduction measured. | Baseline captured; desktop notifications and breaker live in the implementation checkout. Still requires fleet rollout, a sharp human-input denominator/effect, and phone-delivery receipt. |
+| P1 Sequence-break instrument | in-progress (PR merged; guarded fleet rollout started 2026-09-03) | Hooks + hook-pulse ledger + notifications + circuit breaker + kill switch; first wait reduction measured. | Baseline captured; desktop notifications and breaker live; seven direct clones carry the sharp revision. Still requires the remaining safe fleet adoption, a sharp human-input denominator/effect, and phone-delivery receipt. |
 | P2 Telemetry-v2 truth model | pending | FlightRecord + IngestManifest write contract with the five evidence-integrity laws. | Schemas land with fixtures; Claude + Codex emitters flowing; tombstones + leases working. |
 | P3 Yeet mistrial + proof durability | pending | Exhibit-required verdicts, mistrial outcome, per-lane durable proofs, `yeet doctor`. | Exhibit-less failure undecodable; interrupted publish resumes as cache hit; doctor names blocking edge. |
 | P4 Replay, dedup, trust gates | pending | Replay all raw history into v2; replay-twice-diff determinism; gates pass. | Zero duplicate identities; attestation coverage ≥95%; score families replace composite. |
@@ -200,15 +202,17 @@ phase's critical path.
 
 **Implementation checkpoint (2026-09-03):** the fixed `log-only-0` window is
 closed, checkpoint option 3 selects the observed `AskUserQuestion` population,
-and `desktop-ntfy-1` is live in this checkout after an explicitly excluded
-six-second cutover overlap. Notification and damping state, breaker
-state/events, Claude/Codex adapters, exact-bracket rechecks, desktop Plasma
-delivery, and cross-adapter retry suppression have schema and execution proof.
-Sibling checkouts remain revision-labeled controls until the required PR ships;
-they are not mutated out of band. P1 remains open until a real sharp human-input
-denominator supports the first wait-reduction estimate, the tracked cutover
-reaches the fleet, and ntfy phone delivery has a safe runtime secret plus
-receipt. See
+and `desktop-ntfy-1` is live after an explicitly excluded six-second cutover
+overlap. Notification and damping state, breaker state/events, Claude/Codex
+adapters, exact-bracket rechecks, desktop Plasma delivery, and cross-adapter
+retry suppression have schema and execution proof. PR #973 merged at
+`2026-09-03T14:32:50Z`; two direct clones already carried the sharp revision,
+and five clean, process-idle `main` clones were then fast-forwarded to
+`a1652c1923`. Active, dirty, detached, and feature-branch checkouts remain
+revision-labeled controls until their own safe integration point. P1 remains
+open until a real sharp human-input denominator supports the first
+wait-reduction estimate, the tracked cutover reaches the remaining safe fleet,
+and ntfy phone delivery has a safe runtime secret plus receipt. See
 `research/2026-09-03-p1-baseline-close.md` and
 `history/outputs/2026-09-03-p1-sharp-cutover.md`.
 
