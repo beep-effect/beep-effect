@@ -341,7 +341,7 @@ describe("Yeet provenance footer splice", () => {
     }).pipe(provideScopedLayer(PlatformLayer))
   );
 
-  it.effect("restores the newest foreign body verbatim when contention outlasts the bound", () =>
+  it.effect("leaves the newest foreign body in place when contention outlasts the bound", () =>
     Effect.gen(function* () {
       let warnings = A.empty<unknown>();
       const currentConsole = yield* Console.Console;
@@ -369,8 +369,9 @@ describe("Yeet provenance footer splice", () => {
           },
         ];
       }).pipe(Effect.provideService(Console.Console, warningConsole));
-      expect(result.body).toBe("Newest foreign body");
-      expect(result.body).not.toContain("yeet-provenance");
+      expect(result.writes).toBe(4);
+      expect(result.body).toContain("yeet-provenance");
+      expect(result.body).not.toBe("Newest foreign body");
       expect(warnings).toHaveLength(1);
       expect(A.join(A.map(warnings, globalThis.String), "\n")).toContain("PR #42");
       expect(A.join(A.map(warnings, globalThis.String), "\n")).toContain("dana");

@@ -258,8 +258,7 @@ const reconcilePrBodyAfterWrite = Effect.fn("ProvenanceFooter.reconcileAfterWrit
         foreign
       );
     }
-    yield* writePrBody(capture, context, prNumber, bodyPath, foreign.value.body);
-    const warning = `[yeet] provenance footer for PR #${prNumber} yielded after ${maxReconcileRounds} reconcile rounds to a concurrent body edit by ${bodyEditorLabel(foreign.value)}; the footer will be retried by yeet monitor`;
+    const warning = `[yeet] provenance footer for PR #${prNumber} yielded after ${maxReconcileRounds} reconcile rounds and left the concurrent body edit by ${bodyEditorLabel(foreign.value)} in place; the next yeet monitor re-asserts the footer`;
     yield* Console.warn(warning);
     return O.some(warning);
   }
@@ -535,8 +534,9 @@ export const recordCurrentPrSession = Effect.fn("ProvenanceFooter.recordCurrentS
  * The existing PR body is used only as splice framing. Its visible labels and
  * JSON twin never become registry data or process arguments. After every
  * write, a bounded reconcile yields to newer foreign edits: the final body is
- * either that foreign body with the footer or the foreign body restored
- * verbatim when contention outlasts the bound.
+ * either that foreign body with the footer or, when contention outlasts the
+ * bound, the newest foreign body left in place untouched (the next monitor
+ * re-asserts the footer). No write ever starts from a stale snapshot.
  *
  * **Example** (Build footer re-assertion)
  *
