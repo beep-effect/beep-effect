@@ -280,6 +280,7 @@ describe("EnvConfig readers", () => {
 
   it("classifies unresolved op:// secret references", () => {
     expect(isUnresolvedSecretReference("op://vault/item/field")).toBe(true);
+    expect(isUnresolvedSecretReference("postgres://user:op://vault/item/password@host/db")).toBe(true);
     expect(isUnresolvedSecretReference("postgres://localhost")).toBe(false);
     expect(isUnresolvedSecretReference(undefined)).toBe(false);
   });
@@ -413,6 +414,7 @@ describe("turboEnvOverrides", () => {
       TURBO_TEAM: "op://fixture-vault/turbo/team",
       TURBO_CACHE: REMOTE_READ,
       UNRELATED_SECRET: "op://fixture-vault/unrelated/secret",
+      UNRELATED_DATABASE_URL: "postgres://user:op://fixture-vault/database/password@db.test/database",
     };
     const sanitized = {
       PATH: "/fixture/bin",
@@ -577,13 +579,13 @@ describe("canUseTurboCacheSecretSession", () => {
   it.effect(
     "keeps a correct cache quad remote when an unrelated reference is stale",
     Effect.fnUntraced(function* () {
-      const staleReference = "op://fixture-vault/unrelated/missing";
+      const staleReference = "postgres://user:op://fixture-vault/unrelated/missing@db.test/database";
       const environment = {
         TURBO_API: "https://cache.example.test",
         TURBO_TOKEN: "op://fixture-vault/turbo/token",
         TURBO_TEAM: "fixture-team",
         TURBO_CACHE: TurboCacheMode.Enum.LocalWriteRemoteRead,
-        STALE_SERVICE_TOKEN: staleReference,
+        STALE_DATABASE_URL: staleReference,
       };
       const envFileFixture = A.join(
         [
@@ -591,7 +593,7 @@ describe("canUseTurboCacheSecretSession", () => {
           `TURBO_TOKEN=${environment.TURBO_TOKEN}`,
           `TURBO_TEAM=${environment.TURBO_TEAM}`,
           `TURBO_CACHE=${environment.TURBO_CACHE}`,
-          `STALE_SERVICE_TOKEN=${staleReference}`,
+          `STALE_DATABASE_URL=${staleReference}`,
         ],
         "\n"
       );
@@ -599,16 +601,22 @@ describe("canUseTurboCacheSecretSession", () => {
         exists: () => Effect.succeed(true),
         readFileString: () => Effect.succeed(envFileFixture),
       });
-      const spawnedEnvironments = yield* Ref.make<ReadonlyArray<Record<string, string | undefined>>>([]);
+      const spawnedCommands = yield* Ref.make<
+        ReadonlyArray<{
+          readonly args: ReadonlyArray<string>;
+          readonly environment: Record<string, string | undefined>;
+        }>
+      >([]);
       const spawner = ChildProcessSpawner.make((command) => {
         if (!ChildProcess.isStandardCommand(command)) {
           return Effect.die("the cache reference fixture never spawns a piped command");
         }
         const childEnvironment = command.options.env ?? {};
         const fails =
-          A.some(command.args, Str.startsWith("--env-file=")) ||
-          childEnvironment.STALE_SERVICE_TOKEN === staleReference;
-        return Ref.update(spawnedEnvironments, A.append(childEnvironment)).pipe(Effect.as(stubHandle(fails ? 1 : 0)));
+          A.some(command.args, Str.startsWith("--env-file=")) || childEnvironment.STALE_DATABASE_URL === staleReference;
+        return Ref.update(spawnedCommands, A.append({ args: command.args, environment: childEnvironment })).pipe(
+          Effect.as(stubHandle(fails ? 1 : 0))
+        );
       });
 
       clearTurboCacheSecretSessionVerdictsForTesting();
@@ -631,14 +639,19 @@ describe("canUseTurboCacheSecretSession", () => {
       );
       expect(result.usable).toBe(true);
       expect(turboCachePlanArgs(result.plan)).toEqual(["--cache=local:rw,remote:r"]);
-      expect(A.map(result.warnings, (warning) => warning.variableName)).toEqual(["STALE_SERVICE_TOKEN"]);
+      expect(A.map(result.warnings, (warning) => warning.variableName)).toEqual(["STALE_DATABASE_URL"]);
       const warningText = renderTurboEnvironmentHealthWarning(A.head(result.warnings).pipe(O.getOrThrow));
-      expect(warningText).toContain("STALE_SERVICE_TOKEN");
+      expect(warningText).toContain("STALE_DATABASE_URL");
       expect(warningText).not.toContain(staleReference);
 
-      const spawned = yield* Ref.get(spawnedEnvironments);
-      expect(spawned[0]?.STALE_SERVICE_TOKEN).toBeUndefined();
-      expect(spawned[0]?.TURBO_TOKEN).toBe(environment.TURBO_TOKEN);
+      const spawned = yield* Ref.get(spawnedCommands);
+      expect(spawned[0]?.args).toEqual(["run", "--", "true"]);
+      expect(spawned[0]?.environment.STALE_DATABASE_URL).toBeUndefined();
+      expect(spawned[0]?.environment.TURBO_TOKEN).toBe(environment.TURBO_TOKEN);
+      const wholeFileProbe = A.findFirst(spawned, ({ args }) => A.some(args, Str.startsWith("--env-file="))).pipe(
+        O.getOrThrow
+      );
+      expect(wholeFileProbe.args).toEqual(["run", "--env-file=/repo/correct-quad/.env", "--", "true"]);
     })
   );
 

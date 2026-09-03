@@ -238,7 +238,8 @@ export const booleanEnvValue: {
 });
 
 /**
- * Whether a value is an unresolved 1Password secret reference (`op://...`).
+ * Whether a value contains an unresolved 1Password secret reference
+ * (`op://...`).
  *
  * **Example** (Detect unresolved op references)
  *
@@ -246,16 +247,17 @@ export const booleanEnvValue: {
  * import { isUnresolvedSecretReference } from "@beep/repo-cli/internal/cli/EnvConfig"
  *
  * console.log(isUnresolvedSecretReference("op://vault/item/field"))
+ * console.log(isUnresolvedSecretReference("postgres://user:op://vault/item/password@host/db"))
  * console.log(isUnresolvedSecretReference("postgres://localhost"))
  * ```
  *
  * @param value - The candidate value.
- * @returns Whether the value is a still-unresolved `op://` reference.
+ * @returns Whether the value contains a still-unresolved `op://` reference.
  * @category configuration
  * @since 0.0.0
  */
 export const isUnresolvedSecretReference = (value: string | undefined): boolean =>
-  value !== undefined && Str.startsWith("op://")(value);
+  value !== undefined && Str.includes("op://")(value);
 
 const OP_RUN_ARGUMENT_SEPARATOR = "--";
 
@@ -289,22 +291,33 @@ const environmentWithoutSecretReferences = (
 ): Record<string, string> =>
   R.filter(environment, (value): value is string => value !== undefined && !isUnresolvedSecretReference(value));
 
-const ENV_FILE_SECRET_REFERENCE_ASSIGNMENT =
-  /^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=\s*["']?(op:\/\/[^"'\s#]+)["']?\s*(?:#.*)?$/u;
+const ENV_FILE_ASSIGNMENT_NAME = /^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=/u;
 
-const envFileSecretReferenceEntry = (line: string): O.Option<readonly [string, string]> =>
+const envFileAssignmentName = (line: string): O.Option<string> =>
   pipe(
-    Str.match(ENV_FILE_SECRET_REFERENCE_ASSIGNMENT)(line),
-    O.flatMap((match) =>
-      pipe(
-        O.all({ variableName: O.fromUndefinedOr(match[1]), reference: O.fromUndefinedOr(match[2]) }),
-        O.map(({ reference, variableName }) => Tuple.make(variableName, reference))
+    Str.match(ENV_FILE_ASSIGNMENT_NAME)(line),
+    O.flatMap((match) => O.fromUndefinedOr(match[1]))
+  );
+
+const envFileSecretReferenceEntries = Effect.fn("EnvConfig.envFileSecretReferenceEntries")(function* (
+  contents: string
+) {
+  const provider = ConfigProvider.fromDotEnvContents(contents, { preserveEmptyStrings: true });
+  const variableNames = pipe(Str.split(contents, "\n"), A.map(envFileAssignmentName), A.getSomes, A.dedupe);
+  const entries = yield* Effect.forEach(variableNames, (variableName) =>
+    provider.load([variableName]).pipe(
+      Effect.orDie,
+      Effect.map((node) =>
+        O.fromUndefinedOr(node).pipe(
+          O.flatMap((loaded) => O.fromUndefinedOr(loaded.value)),
+          O.filter(isUnresolvedSecretReference),
+          O.map((value) => Tuple.make(variableName, value))
+        )
       )
     )
   );
-
-const envFileSecretReferenceEntries = (contents: string): ReadonlyArray<readonly [string, string]> =>
-  pipe(Str.split(contents, "\n"), A.map(envFileSecretReferenceEntry), A.getSomes);
+  return A.getSomes(entries);
+});
 
 /**
  * Remove unrelated `op://` references from a Turbo secret-session environment.
@@ -345,7 +358,7 @@ export const turboCacheSecretSessionEnvironment = (
 const secretReferenceProbe = Effect.fn("EnvConfig.secretReferenceProbe")(function* (
   repoRoot: string,
   environment: Record<string, string>,
-  args: ReadonlyArray<string> = ["run", "--", "/usr/bin/true"]
+  args: ReadonlyArray<string> = ["run", "--", "true"]
 ): Effect.fn.Return<boolean, never, ChildProcessSpawner.ChildProcessSpawner> {
   const exitCode = yield* runToExit({
     command: "op",
@@ -416,7 +429,7 @@ export const turboEnvironmentHealthWarnings = Effect.fn("EnvConfig.turboEnvironm
   }
 
   const contents = yield* fs.readFileString(envFilePath).pipe(Effect.orElseSucceed(() => ""));
-  const references = envFileSecretReferenceEntries(contents);
+  const references = yield* envFileSecretReferenceEntries(contents);
   if (A.isReadonlyArrayEmpty(references)) {
     const warnings = A.empty<TurboEnvironmentHealthWarning>();
     MutableHashMap.set(turboEnvironmentHealthVerdicts, repoRoot, warnings);
@@ -428,7 +441,7 @@ export const turboEnvironmentHealthWarnings = Effect.fn("EnvConfig.turboEnvironm
     "run",
     `--env-file=${envFilePath}`,
     "--",
-    "/usr/bin/true",
+    "true",
   ]);
   if (healthy) {
     const warnings = A.empty<TurboEnvironmentHealthWarning>();
