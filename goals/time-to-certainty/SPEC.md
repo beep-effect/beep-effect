@@ -64,7 +64,7 @@ divergence; friction receipts written at the moment they happen in `research/OPP
 - **A5 Journal facts.** The economics report could not compute M3, M4, or M5 from the journals:
   attempt rows record `head=HEAD` and no tree fingerprint, run state is overwritten after the
   latest green, the pre-push and merged-preview wrappers journal one aggregate row each, and 327
-  attempts (11.9%) started without ever recording a finish. Every attempt row carries the tree
+  of 3,069 started attempts (10.7%) never recorded a finish. Every attempt row carries the tree
   fingerprint and tier; wrappers journal each inner lane (id, tier, start, end, duration, input
   digest when known); unfinished starts and lease or submitter deaths become terminal rows. This
   precedes both the hygiene measurements and the C4 shadow report.
@@ -98,7 +98,9 @@ Each item is one small PR with its own receipt. All six were paid for on 2026-09
 Schema first, then the service contract, then a shadow ledger, then enforcement.
 
 - **C1 ProofFact schema.** A proof is a fact about a lane's inputs at an epoch, not about a
-  branch. Sketch, to be validated against the Effect v4 reference checkout before implementation:
+  branch. Sketch, to be validated against the Effect v4 reference checkout before implementation.
+
+  **Example** (ProofFact schema sketch)
 
   ```ts
   export const ProofTier = LiteralKit(["repair-loop", "pre-push", "merged-preview", "hosted"]);

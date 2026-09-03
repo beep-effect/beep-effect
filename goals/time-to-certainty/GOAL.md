@@ -37,8 +37,9 @@ orchestrator writes schemas and contracts and judges evidence. Record friction r
 `research/OPPORTUNITIES.md` at the moment they happen, redacted for a public repo. Update PLAN
 checkmarks as items land; the status flip and closeout reflection ride the final PR.
 
-Status (2026-09-03): P0 evidence landed. `research/economics.md` (baseline M1 P50 43.3 min /
+Status (2026-09-03): P0 complete. `research/baseline.md` is ratified (ruling 8: M1 P50 43.3 min /
 P95 3.95 h; pre-push wave 65.9% of local wrapper time; hosted-wait 19.4%; M3/M4 unmeasurable until
-journals carry fingerprints and inner lanes) and `research/g1-prior-art.md` are in the packet;
-seven C1 rulings are in `research/decisions.md`; `research/baseline.md` awaits ratification.
-Next: A5 journal facts, then the hygiene PRs, then the ProofFact schema PR.
+journals carry fingerprints and inner lanes). `research/decisions.md` holds ten rulings: seven on
+the ProofFact schema, plus baseline ratification, A5 journal facts first, and coverage-first Turbo
+migration. In flight as separate PRs: A5, B1, A4, B2, B4, C3, and the C1/C2 ledger service.
+Deferred until A5 lands: B3 and A3.

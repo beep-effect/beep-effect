@@ -14,7 +14,7 @@ files with sha256_12) are in `research/economics.json`.
 | M2 | First actionable failure | start offset P50 9.7 s, P95 18.9 min; completion P50 8.4 min, P95 30.6 min | n=832 reconstructable failures | 778 red attempts have no reconstructable duration (handler failures, no lane duration) |
 | M3 | Lane executions per change across tiers | hosted only: Test Integration 1.26 runs per attempt (max 3); local inner lanes unmeasurable | 250 attempts (hosted) | The pre-push wrapper journals one aggregate row; inner lane executions and tiers are not journaled locally |
 | M4 | False-red round trips per gate class | unmeasurable | 0 attempts carry a tree fingerprint | Attempt rows record `head=HEAD`; run state is overwritten after the latest green; needs per-attempt fingerprint and per-lane input digest |
-| M5 | Unjournaled terminations | 327 attempts started and never recorded a finish (11.9% of the union population) | 2,742 attempts | A start-without-finish is the closest journal proxy for a severed cord; lease and submitter deaths are not journaled at all |
+| M5 | Unjournaled terminations | 327 attempts started and never recorded a finish (10.7% of 3,069 starts) | 3,069 starts, 2,742 finishes | A start-without-finish is the closest journal proxy for a severed cord; the denominator is every start, never the finished count; lease and submitter deaths are not journaled at all |
 
 ## Where local wall time goes (directly measured wrapper lanes)
 
