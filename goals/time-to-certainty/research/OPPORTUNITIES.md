@@ -4,6 +4,16 @@ Record friction at the moment it happens (what you were doing, evidence, what wo
 prevented it). Public repo: redact secrets, replace absolute home paths with `~`, drop
 session/machine ids, quote only the minimal identifying error text.
 
+## 2026-09-03 — Economics replay depended on private capture state
+
+- **Doing:** reviewing the measurement lane's clean-clone reproducibility before ratification.
+- **Evidence:** `research/scripts/economics.py` required two untracked JSON captures and selected
+  its frozen corpus through a fixed sibling-checkout path, so a clean clone stopped before
+  producing the published economics.
+- **Would have prevented it:** require committed, redacted, size-bounded reproduction fixtures; a
+  repository-relative corpus default with an explicit fallback; and a clean-clone replay gate for
+  every measurement artifact.
+
 ## 2026-09-03 — A Monitor watchdog matched its own command line and never exited
 
 - **Doing:** closing out the ship-velocity successor PR after its Codex lane had finished.

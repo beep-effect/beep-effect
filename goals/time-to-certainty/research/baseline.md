@@ -1,10 +1,11 @@
 # time-to-certainty — P0 baseline (ratified 2026-09-03, decisions.md ruling 8)
 
 Source: `research/economics.md` (2026-09-03), reproducible with `research/scripts/economics.py`
-over the frozen fleet corpus (2026-09-03T02:27Z) plus live attempt journals in every checkout and
-hosted Check runs since 2026-08-20. Attempt window 2026-08-04T12:22Z to 2026-09-03T06:26Z; 2,742
-attempts in the union population, 1,833 in the article-comparable filter. Input receipts (2,115
-files with sha256_12) are in `research/economics.json`.
+from the committed compact inputs. `--corpus` validates the embedded frozen facts against the
+fleet corpus captured at 2026-09-03T02:27Z. Hosted Check runs start 2026-08-20; the attempt window
+is 2026-08-04T12:22Z to 2026-09-03T06:26Z, with 2,742 attempts in the union population and 1,833
+in the article-comparable filter. Input receipts for the two gzip captures and reproduction script
+are in `research/economics.json`.
 
 ## Proxies
 
@@ -12,9 +13,11 @@ files with sha256_12) are in `research/economics.json`.
 | --- | --- | --- | --- | --- |
 | M1 | Red-to-green episode per branch | P50 43.3 min, P95 3.95 h | n=328 episodes | Up from the ontology article's 41 min / 3.1 h on its earlier window; the 24 h comparison censor must not become the target, so an uncut-tail row is retained beside it |
 | M2 | First actionable failure | start offset P50 9.7 s, P95 18.9 min; completion P50 8.4 min, P95 30.6 min | n=832 reconstructable failures | 778 red attempts have no reconstructable duration (handler failures, no lane duration) |
-| M3 | Lane executions per change across tiers | hosted only: Test Integration 1.26 runs per attempt (max 3); local inner lanes unmeasurable | 250 attempts (hosted) | The pre-push wrapper journals one aggregate row; inner lane executions and tiers are not journaled locally |
+| M3 | Lane executions per change across tiers | Test Integration and Docgen: 1.264 runs per attempt (max 3) | 316 executions / 250 logical attempts; 206 hosted PR runs matched | Pre-push inner durations are unmeasured; failed merged previews do not identify their child lane sets |
 | M4 | False-red round trips per gate class | unmeasurable | 0 attempts carry a tree fingerprint | Attempt rows record `head=HEAD`; run state is overwritten after the latest green; needs per-attempt fingerprint and per-lane input digest |
 | M5 | Unjournaled terminations | 327 attempts started and never recorded a finish (10.7% of 3,069 starts) | 3,069 starts, 2,742 finishes | A start-without-finish is the closest journal proxy for a severed cord; the denominator is every start, never the finished count; lease and submitter deaths are not journaled at all |
+
+M3 note: recomputed after review fix b4e073ea40.
 
 ## Where local wall time goes (directly measured wrapper lanes)
 
@@ -30,8 +33,8 @@ files with sha256_12) are in `research/economics.json`.
 ## Where hosted required-lane time goes
 
 Coverage Regression is the largest hosted pool: P50 10.1 min, P95 15.5 min, 15.1% of required-lane
-time across 881 runs. Test Integration shows the highest tier amplification (1.26 runs per attempt,
-max 3).
+time across 881 runs. Test Integration and Docgen tie for the highest tier amplification (1.264
+runs per attempt, max 3).
 
 ## Which lanes fail first
 
