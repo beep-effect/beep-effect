@@ -133,6 +133,14 @@ sibling checkouts that do not contain this unmerged branch. They remain a
 revision-labeled comparison population; they must receive the change through
 the required PR lifecycle, not by dirtying their worktrees out of band.
 
+A follow-up census at `2026-09-03T11:08:44Z` found 5,898 post-boundary rows:
+417 `desktop-ntfy-1` and 5,481 `log-only-0`. One `AskUserQuestion`
+`PermissionRequest` had accrued, but it was in the `log-only-0` comparison
+population; the sharp treatment denominator remained zero. The notification
+ledger still contained zero files, and the current process exposed neither an
+ntfy topic nor a token file descriptor. This increases observation time but
+does not satisfy either open evidence gate.
+
 ## Remaining P1 gates
 
 P1 stays `in-progress` for two evidence reasons:
