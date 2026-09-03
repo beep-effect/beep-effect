@@ -26916,6 +26916,30 @@
             "functions": 0
           }
         },
+        "packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.schemas.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.ts": {
+          "lines": 83.15,
+          "statements": 81.97,
+          "branches": 72.25,
+          "functions": 81.57,
+          "uncovered": {
+            "lines": 46,
+            "statements": 53,
+            "branches": 43,
+            "functions": 14
+          }
+        },
         "packages/tooling/tool/cli/src/internal/repo-run/RunScope.schemas.ts": {
           "lines": 100,
           "statements": 100,
