@@ -2,12 +2,15 @@
 
 ## Status
 
-Status: `active`
+Status: `completed-retained`
 
-P1-P4 are complete. C2 passed its restricted-EYE oracle, per-event rule
+P1-P5 are complete. C2 passed its restricted-EYE oracle, per-event rule
 validation, commit/SIGKILL/restart projection proof, Tier-L bars, and the
 full-W1 R2 gate with byte-identical live/replay reports and no unexpected
-degradation. Its retry was never used. P5 closes the retained packet.
+degradation. P5 audited the archived evidence, added the closeout reflection,
+retained the packet, and returned the fired storage gate and the still-gated reasoning spike to the
+source exploration at `decompose`. Six final `park` values were synced
+to the Notion atlas (`history/p5-atlas-sync.md`).
 
 ## Phases
 
@@ -21,7 +24,7 @@ completion gate binds per phase, not only at close. Phase ids match
 | P2 C0 | complete | The spine, first vertical slice first, then all three G-relation papers. | Evidence-quote candidate passed the slice, relation extension, and full-W1 R2 gate; Input and Extraction verdicts written. |
 | P3 C1 | complete | Derived projections: dimension-keyed vector table and RDF rebuild-from-ledger. | G projection, alternate-dimension keying, rebuild identity, and full-W1 R2 passed; Storage and Embeddings verdicts written. |
 | P4 C2 | complete | Reasoning, crash injection, and the Tier-L bars at bundle level. | C2 pass criteria; Reasoning verdict written; all Tier-L bars green. |
-| P5 Close | pending | Verdicts to DECISIONS then atlas; reflection; packet state flip in the same PR. | Closeout reflection validates; final park/drop values synced to the atlas; packet `completed-retained`. |
+| P5 Close | complete | Verdicts to DECISIONS then atlas; reflection; packet state flip in the same PR. | Closeout reflection validates; six final `park` values synced to the atlas; packet `completed-retained`. |
 
 ## P1 Scaffold
 

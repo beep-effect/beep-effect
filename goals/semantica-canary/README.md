@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -50,15 +50,22 @@ Use this command for execution-capable sessions:
 
 ## Current phase
 
-P4 C2 is complete. The first valid combined candidate passed all seven
-restricted-EYE oracle cases, per-event rule validation, the real
-commit/SIGKILL/restart projection probe, both Tier-L bars, and the full-W1 R2
-gate live and replay. The 34-document reports were byte-identical with zero
-unexpected degradation; the retry was never used. P5 closes the packet with
-the atlas disposition, reflection, evidence audit, and final state flip.
+P5 Close is complete. C0, C1, and C2 passed their full-W1 live/replay gates,
+and all five family verdicts are dated in the exploration's `DECISIONS.md`.
+The closeout audited every stage artifact, added the required reflection, and
+retained the packet. The C2 pass fired the storage gate and left the reasoning spike gated on
+its `G-entailment/rules` fixture; both return to the exploration at
+`decompose`, and no successor packet was scaffolded. The six final
+`park` values were synced to the Notion atlas; see `history/p5-atlas-sync.md`.
 
 ## Latest evidence
 
+[`history/p5-close.md`](./history/p5-close.md) records the checksum, artifact,
+and replay-identity audit. The closeout
+[`reflection`](./history/reflections/2026-09-02-codex.md) records execution
+lessons and codification work.
+[`history/p5-atlas-sync.md`](./history/p5-atlas-sync.md) records the six final
+`park` values written to the Notion atlas, the read-back, and what was left unwritten.
 [`history/p4-c2-r2.md`](./history/p4-c2-r2.md) records the C2 oracle, crash,
 Tier-L, full-W1 live/replay gate, and Reasoning verdict.
 [`history/p3-c1-r2.md`](./history/p3-c1-r2.md) records the C1 G-projection,
