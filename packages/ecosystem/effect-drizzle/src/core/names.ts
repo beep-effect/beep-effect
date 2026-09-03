@@ -137,7 +137,7 @@ const utf8ByteLength = (value: string): number => encoder.encode(value).byteLeng
 export const sqlNameIssue: {
   (dialect: Dialect): (name: string) => string | undefined;
   (name: string, dialect: Dialect): string | undefined;
-} = dual(2, (name: string, dialect: Dialect): string | undefined => {
+} = /* @__PURE__ */ dual(2, (name: string, dialect: Dialect): string | undefined => {
   if (name.length === 0) return "must not be empty";
   if (name.includes("\0")) return "must not contain NUL (U+0000)";
   if (!/^[_a-z][_a-z0-9]*$/.test(name) || name.endsWith("_")) {
@@ -188,7 +188,7 @@ const canonicalSqlName = (name: string, dialect: Dialect): string => {
 export const assertSqlName: {
   (dialect: Dialect, surface: string): (name: string) => void;
   (name: string, dialect: Dialect, surface: string): void;
-} = dual(3, (name: string, dialect: Dialect, surface: string): void => {
+} = /* @__PURE__ */ dual(3, (name: string, dialect: Dialect, surface: string): void => {
   const issue = sqlNameIssue(name, dialect);
   if (issue !== undefined) {
     throw SqlNameError.make({ message: `${surface} '${name}' ${issue}.`, name, surface });
@@ -236,7 +236,7 @@ type SqlNameEntries = ReadonlyArray<readonly [owner: string, name: string]>;
 export const findSqlNameCollision: {
   (dialect: Dialect): (entries: SqlNameEntries) => SqlNameCollision | undefined;
   (entries: SqlNameEntries, dialect: Dialect): SqlNameCollision | undefined;
-} = dual(2, (entries: SqlNameEntries, dialect: Dialect): SqlNameCollision | undefined => {
+} = /* @__PURE__ */ dual(2, (entries: SqlNameEntries, dialect: Dialect): SqlNameCollision | undefined => {
   const seen = new Map<string, readonly [owner: string, name: string]>();
   for (const [owner, name] of entries) {
     const canonical = canonicalSqlName(name, dialect);
@@ -263,7 +263,7 @@ export const findSqlNameCollision: {
 export const assertUniqueSqlNames: {
   (dialect: Dialect, surface: string): (entries: SqlNameEntries) => void;
   (entries: SqlNameEntries, dialect: Dialect, surface: string): void;
-} = dual(3, (entries: SqlNameEntries, dialect: Dialect, surface: string): void => {
+} = /* @__PURE__ */ dual(3, (entries: SqlNameEntries, dialect: Dialect, surface: string): void => {
   const collision = findSqlNameCollision(entries, dialect);
   if (collision !== undefined) {
     throw SqlNameError.make({

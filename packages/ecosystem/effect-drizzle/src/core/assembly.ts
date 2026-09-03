@@ -119,7 +119,7 @@ export type AssemblyFailure = (message: string, sourceTable: string, fieldName: 
 export const validatePhysicalTableNames: {
   (dialect: Dialect, fail: AssemblyFailure): (models: RelationModels) => void;
   (models: RelationModels, dialect: Dialect, fail: AssemblyFailure): void;
-} = dual(3, (models: RelationModels, dialect: Dialect, fail: AssemblyFailure): void => {
+} = /* @__PURE__ */ dual(3, (models: RelationModels, dialect: Dialect, fail: AssemblyFailure): void => {
   const entries = Object.entries(models).map(([key, model]): readonly [string, string] => [key, model.sql.tableName]);
   const collision = findSqlNameCollision(entries, dialect);
   if (collision !== undefined) {
@@ -157,7 +157,7 @@ export interface SchemaName {
 export const validateSchemaNames: {
   (dialect: Dialect, fail: AssemblyFailure): (names: ReadonlyArray<SchemaName>) => void;
   (names: ReadonlyArray<SchemaName>, dialect: Dialect, fail: AssemblyFailure): void;
-} = dual(3, (names: ReadonlyArray<SchemaName>, dialect: Dialect, fail: AssemblyFailure): void => {
+} = /* @__PURE__ */ dual(3, (names: ReadonlyArray<SchemaName>, dialect: Dialect, fail: AssemblyFailure): void => {
   const entries = names.map(({ owner, name }): readonly [string, string] => [owner, name]);
   const collision = findSqlNameCollision(entries, dialect);
   if (collision !== undefined) {
@@ -237,7 +237,7 @@ export const makeRelationsConfig: {
     junctions: ReadonlyArray<Junction>,
     fail: AssemblyFailure
   ): (helpers: RelationsBuilder<Tables>) => RelationsBuilderConfig<Tables>;
-} = dual(
+} = /* @__PURE__ */ dual(
   5,
   <Tables extends Schema>(
     models: RelationModels,

@@ -92,7 +92,7 @@ const fail = (fieldName: string, astTag: string, message: string): never => {
 export const flattenEncoded: {
   (fieldName: string, visited?: ReadonlyArray<AST>): (node: AST) => ReadonlyArray<AST>;
   (node: AST, fieldName: string, visited?: ReadonlyArray<AST>): ReadonlyArray<AST>;
-} = dual(
+} = /* @__PURE__ */ dual(
   (args) => !isString(args[0]),
   (node: AST, fieldName: string, visited: ReadonlyArray<AST> = empty()): ReadonlyArray<AST> => {
     if (some(visited, equals(node))) {
@@ -124,7 +124,7 @@ export const classify: {
     fieldName: string,
     classifier: Classifier<Column>
   ): Classified<Column>;
-} = dual(
+} = /* @__PURE__ */ dual(
   3,
   <Column extends Meta.ColumnSpec>(
     schema: Field.AnySchema,

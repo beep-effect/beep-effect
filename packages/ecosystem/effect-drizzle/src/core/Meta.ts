@@ -39,7 +39,7 @@ class SqlExpressionError extends TaggedError<SqlExpressionError>("@beep/effect-d
 export const assertNoSqlParameters: {
   (context: string): (params: ReadonlyArray<unknown>) => void;
   (params: ReadonlyArray<unknown>, context: string): void;
-} = dual(2, (params: ReadonlyArray<unknown>, context: string): void => {
+} = /* @__PURE__ */ dual(2, (params: ReadonlyArray<unknown>, context: string): void => {
   if (params.length !== 0) {
     throw SqlExpressionError.make({
       message: `${context} cannot contain bound parameters; use a literal SQL fragment or an explicitly unsafe raw-SQL escape hatch.`,
@@ -390,7 +390,7 @@ export type Merge<M extends Meta, P extends Patch> = {
 export const merge: {
   <const P extends Patch>(patch: P): <const M extends Meta>(meta: M) => Merge<M, P>;
   <const M extends Meta, const P extends Patch>(meta: M, patch: P): Merge<M, P>;
-} = dual(
+} = /* @__PURE__ */ dual(
   2,
   (meta: Meta, patch: Patch): Meta => ({
     column: isUndefined(patch.column) ? meta.column : patch.column,

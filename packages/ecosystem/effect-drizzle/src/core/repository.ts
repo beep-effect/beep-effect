@@ -376,7 +376,7 @@ export const makeRepository: {
       readonly idColumn: Id;
     }
   ): Effect<Repository<M, Id>, never, SqlClient>;
-} = dual(
+} = /* @__PURE__ */ dual(
   2,
   <const M extends RepositoryModel, const Id extends IdKey<M>>(
     model: M & ValidateVersionModel<M> & ValidateColumnNames<M>,

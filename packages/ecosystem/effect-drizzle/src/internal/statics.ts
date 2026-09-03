@@ -8,8 +8,10 @@
 export const assignStatics: {
   <Statics extends object>(statics: Statics): <Self extends object>(self: Self) => Self & Statics;
   <Self extends object, Statics extends object>(self: Self, statics: Statics): Self & Statics;
-} = dual(2, <Self extends object, Statics extends object>(self: Self, statics: Statics): Self & Statics =>
-  Object.assign(self, statics)
+} = /* @__PURE__ */ dual(
+  2,
+  <Self extends object, Statics extends object>(self: Self, statics: Statics): Self & Statics =>
+    Object.assign(self, statics)
 );
 
 /**
@@ -22,8 +24,10 @@ export const assignStatics: {
 export const withStatics: {
   <Self extends object, Statics extends object>(make: (self: Self) => Statics): (self: Self) => Self & Statics;
   <Self extends object, Statics extends object>(self: Self, make: (self: Self) => Statics): Self & Statics;
-} = dual(2, <Self extends object, Statics extends object>(self: Self, make: (self: Self) => Statics): Self & Statics =>
-  assignStatics(self, make(self))
+} = /* @__PURE__ */ dual(
+  2,
+  <Self extends object, Statics extends object>(self: Self, make: (self: Self) => Statics): Self & Statics =>
+    assignStatics(self, make(self))
 );
 
 import { dual } from "effect/Function";

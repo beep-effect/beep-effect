@@ -409,7 +409,7 @@ export const compositeUnique: {
     name: Name & ValidateSqlName<Name, "Table.compositeUnique name must be a lowercase SQL identifier">,
     columns: Columns & ValidateDistinctColumns<Columns>
   ): CompositeUnique;
-} = dual(
+} = /* @__PURE__ */ dual(
   2,
   (name: string, columns: CompositeColumns): CompositeUnique =>
     Nodes.compositeUnique({ name: validateName(name), columns })
@@ -446,7 +446,7 @@ export const compositePrimaryKey: {
     name: Name & ValidateSqlName<Name, "Table.compositePrimaryKey name must be a lowercase SQL identifier">,
     columns: Columns & ValidateDistinctColumns<Columns> & ValidatePrimaryKeyColumns<Columns>
   ): CompositePrimaryKey;
-} = dual(
+} = /* @__PURE__ */ dual(
   2,
   (name: string, columns: CompositeColumns): CompositePrimaryKey =>
     Nodes.compositePrimaryKey({ name: validateName(name), columns })
@@ -490,7 +490,7 @@ export const index: {
     columns: Columns & ValidateDistinctColumns<Columns>,
     options?: IndexOptions
   ): Index;
-} = dual(
+} = /* @__PURE__ */ dual(
   (args) => isString(args[0]),
   (name: string, columns: NonEmptyColumns, options?: IndexOptions): Index =>
     Nodes.index({ name: validateName(name), columns, where: options?.where })
@@ -534,7 +534,7 @@ export const uniqueIndex: {
     columns: Columns & ValidateDistinctColumns<Columns>,
     options?: UniqueIndexOptions
   ): UniqueIndex;
-} = dual(
+} = /* @__PURE__ */ dual(
   (args) => isString(args[0]),
   (name: string, columns: NonEmptyColumns, options?: UniqueIndexOptions): UniqueIndex =>
     Nodes.uniqueIndex({ name: validateName(name), columns, where: options?.where })
@@ -572,7 +572,10 @@ export const check: {
     expression: SQL<boolean>,
     name: Name & ValidateSqlName<Name, "Table.check name must be a lowercase SQL identifier">
   ): Check;
-} = dual(2, (expression: SQL<boolean>, name: string): Check => Nodes.check({ name: validateName(name), expression }));
+} = /* @__PURE__ */ dual(
+  2,
+  (expression: SQL<boolean>, name: string): Check => Nodes.check({ name: validateName(name), expression })
+);
 /**
  * Constructs an explicitly unsafe raw-SQL SQLite check.
  *
@@ -607,7 +610,7 @@ export const unsafeCheckSql: {
     name: Name & ValidateSqlName<Name, "Table.unsafeCheckSql name must be a lowercase SQL identifier">,
     value: string
   ): UnsafeCheckSql;
-} = dual(
+} = /* @__PURE__ */ dual(
   2,
   (name: string, value: string): UnsafeCheckSql => Nodes.unsafeCheckSql({ name: validateName(name), sql: value })
 );
@@ -661,7 +664,7 @@ const validateColumns = (node: Node): void => {
 export const validateNodes: {
   (inlinePrimaryKeys: number): (nodes: ReadonlyArray<Node>) => void;
   (nodes: ReadonlyArray<Node>, inlinePrimaryKeys: number): void;
-} = dual(2, (nodes: ReadonlyArray<Node>, inlinePrimaryKeys: number): void => {
+} = /* @__PURE__ */ dual(2, (nodes: ReadonlyArray<Node>, inlinePrimaryKeys: number): void => {
   const names = nodes.map((node) => node.name);
   if (new Set(names).size !== names.length) {
     fail("SQLite table-extra names must be unique within their owning table.");

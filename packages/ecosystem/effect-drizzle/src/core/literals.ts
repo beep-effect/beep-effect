@@ -56,7 +56,7 @@ type SchemaSelector = (schema: Field.AnySchema) => { readonly ast: AST };
 export const stringLiteralValues: {
   (selectSchemaOf: SchemaSelector): (schema: Field.AnySchema) => Option<readonly [string, ...string[]]>;
   (schema: Field.AnySchema, selectSchemaOf: SchemaSelector): Option<readonly [string, ...string[]]>;
-} = dual(
+} = /* @__PURE__ */ dual(
   2,
   (schema: Field.AnySchema, selectSchemaOf: SchemaSelector): Option<readonly [string, ...string[]]> =>
     flatMap(stringLiteralsFromAST(toEncoded(selectSchemaOf(schema).ast), selectSchemaOf), (values) =>

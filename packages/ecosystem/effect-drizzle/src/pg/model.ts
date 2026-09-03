@@ -548,7 +548,7 @@ export const makeModelClass: {
     annotations: Annotations.Annotations | undefined,
     extras: TableExtras.Callback<F> | undefined
   ): ModelClass<Self, F>;
-} = dual(
+} = /* @__PURE__ */ dual(
   4,
   (
     identifier: string,

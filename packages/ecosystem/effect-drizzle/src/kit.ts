@@ -148,7 +148,7 @@ export const make: {
     dialect: D,
     build: (toolkit: DialectToolkit<D>) => DialectConfig<D, Defaults>
   ): DialectKit<D, Defaults>;
-} = dual(2, (dialect: Dialect, build: unknown): unknown => {
+} = /* @__PURE__ */ dual(2, (dialect: Dialect, build: unknown): unknown => {
   if (dialect === "pg") return makePgKit(build as (pg: PgToolkit) => PgKitConfig<PgFieldsInput>);
   if (dialect === "sqlite")
     return makeSqliteKit(build as (sqlite: SqliteToolkit) => SqliteKitConfig<SqliteFieldsInput>);

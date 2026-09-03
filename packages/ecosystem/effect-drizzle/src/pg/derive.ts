@@ -386,7 +386,7 @@ const maxLengthFromCheck = (check: Check<unknown>): ReadonlyArray<number> => {
 const collectMaxLengths: {
   (visited: ReadonlyArray<AST>): (node: AST) => ReadonlyArray<number>;
   (node: AST, visited: ReadonlyArray<AST>): ReadonlyArray<number>;
-} = dual(2, (node: AST, visited: ReadonlyArray<AST>): ReadonlyArray<number> => {
+} = /* @__PURE__ */ dual(2, (node: AST, visited: ReadonlyArray<AST>): ReadonlyArray<number> => {
   if (some(visited, equals(node))) return empty();
   const nextVisited = append(visited, node);
   const collectNested = collectMaxLengths(nextVisited);
@@ -433,7 +433,7 @@ const exactLengthFromCheck = (check: Check<unknown>): ReadonlyArray<number> => {
 const collectExactLengths: {
   (visited: ReadonlyArray<AST>): (node: AST) => ReadonlyArray<number>;
   (node: AST, visited: ReadonlyArray<AST>): ReadonlyArray<number>;
-} = dual(2, (node: AST, visited: ReadonlyArray<AST>): ReadonlyArray<number> => {
+} = /* @__PURE__ */ dual(2, (node: AST, visited: ReadonlyArray<AST>): ReadonlyArray<number> => {
   if (some(visited, equals(node))) return empty();
   const nextVisited = append(visited, node);
   const collectNested = collectExactLengths(nextVisited);
