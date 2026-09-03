@@ -5,25 +5,25 @@ import { compareBundleSize, formatBundleSizeLine } from "./bundle-size.ts";
 
 describe("bundle size comparison", () => {
   it("passes when the current size equals the baseline", () => {
-    expect(compareBundleSize(100, 100).isRegression).toBe(false);
+    expect(compareBundleSize(100, { baselineRawBytes: 100 }).isRegression).toBe(false);
   });
 
   it("passes when the current size decreases", () => {
-    expect(compareBundleSize(99, 100).isRegression).toBe(false);
+    expect(compareBundleSize(99, { baselineRawBytes: 100 }).isRegression).toBe(false);
   });
 
   it("fails when the current size increases by one byte", () => {
-    expect(compareBundleSize(101, 100).isRegression).toBe(true);
+    expect(compareBundleSize(101, { baselineRawBytes: 100 }).isRegression).toBe(true);
   });
 
   it("flags a collapse below the stub floor even when it is a decrease", () => {
-    const comparison = compareBundleSize(30, 7864, 4096);
+    const comparison = compareBundleSize(30, { baselineRawBytes: 7864, minimumRawBytes: 4096 });
     expect(comparison.isRegression).toBe(false);
     expect(comparison.isCollapse).toBe(true);
   });
 
   it("does not flag healthy sizes above the floor", () => {
-    expect(compareBundleSize(7000, 7864, 4096).isCollapse).toBe(false);
+    expect(compareBundleSize(7000, { baselineRawBytes: 7864, minimumRawBytes: 4096 }).isCollapse).toBe(false);
   });
 });
 

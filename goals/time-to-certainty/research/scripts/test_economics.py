@@ -155,6 +155,63 @@ class EmbeddedInputValidationTest(unittest.TestCase):
         self.assertEqual(self.outputs(), outputs_before)
 
 
+class AttemptLoaderTest(unittest.TestCase):
+    def test_finished_and_abnormal_terminal_rows_both_close_started_attempts(self) -> None:
+        source = {
+            "checkout": "fixture",
+            "runId": "run",
+            "source": "live",
+            "path": "attempts.ndjson",
+            "records": [
+                {
+                    "schemaVersion": economics.ATTEMPT_SCHEMA,
+                    "_tag": "attempt-started",
+                    "attemptId": "normal",
+                    "startedAt": "2026-09-03T00:00:00Z",
+                    "diffFingerprint": "fingerprint-normal",
+                },
+                {
+                    "schemaVersion": economics.ATTEMPT_SCHEMA,
+                    "_tag": "attempt-finished",
+                    "attemptId": "normal",
+                    "recordedAt": "2026-09-03T00:00:01Z",
+                    "verdict": {"outcome": "success", "createdAt": "2026-09-03T00:00:01Z"},
+                },
+                {
+                    "schemaVersion": economics.ATTEMPT_SCHEMA,
+                    "_tag": "attempt-started",
+                    "attemptId": "abnormal",
+                    "startedAt": "2026-09-03T00:00:02Z",
+                },
+                {
+                    "schemaVersion": economics.ATTEMPT_SCHEMA,
+                    "_tag": "attempt-terminated",
+                    "attemptId": "abnormal",
+                    "recordedAt": "2026-09-03T00:00:03Z",
+                    "reason": "queued-submitter-death",
+                },
+            ],
+        }
+
+        attempts, diagnostics = economics.load_attempts([source], [])
+
+        self.assertEqual(diagnostics["finishedAttempts"], 2)
+        self.assertEqual(diagnostics["startsWithoutFinish"], 0)
+        by_id = {attempt["attemptId"]: attempt for attempt in attempts}
+        self.assertEqual(by_id["normal"]["diffFingerprint"], "fingerprint-normal")
+        self.assertEqual(by_id["abnormal"]["terminationReason"], "queued-submitter-death")
+
+    def test_fingerprint_quality_counts_only_recorded_string_facts(self) -> None:
+        attempts = [
+            {"diffFingerprint": None, "lanes": [{"commandHash": None}]},
+            {"diffFingerprint": "fingerprint", "lanes": []},
+        ]
+
+        result = economics.fingerprint_quality(attempts, [])
+
+        self.assertEqual(result["attemptsWithPerAttemptFingerprint"], 1)
+
+
 class CorpusValidationTest(unittest.TestCase):
     def setUp(self) -> None:
         self.temporary = tempfile.TemporaryDirectory()

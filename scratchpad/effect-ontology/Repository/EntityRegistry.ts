@@ -896,7 +896,7 @@ export class EntityRegistryRepository extends Context.Service<
       "insertCanonicalEntitiesBatch"
     )(function* (entities: Array<CanonicalEntityInsertRow>) {
       if (A.isReadonlyArrayEmpty(entities)) return [];
-      return yield* Effect.all(entities.map(insertCanonicalEntity), { concurrency: 10 });
+      return yield* Effect.forEach(entities, insertCanonicalEntity, { concurrency: 10 });
     });
 
     /**

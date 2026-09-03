@@ -137,9 +137,9 @@ const readOptionalManifest = (
   readOptionalStringFile(path).pipe(
     Effect.flatMap((maybeContent) =>
       O.isNone(maybeContent)
-        ? Effect.succeed(O.none())
+        ? Effect.succeedNone
         : S.decodeEffect(PluginManifestJson)(maybeContent.value).pipe(
-            Effect.map(O.some),
+            Effect.asSome,
             Effect.mapError((cause) => PluginLoadError.make({ path, cause }))
           )
     )
@@ -173,7 +173,7 @@ const missingDeclaredPath = (path: string): PluginLoadError =>
 const readStringFile = (path: string): Effect.Effect<string, PluginLoadError, FileSystem.FileSystem> =>
   readOptionalStringFile(path).pipe(
     Effect.flatMap((maybeContent) =>
-      O.isNone(maybeContent) ? Effect.fail(missingDeclaredPath(path)) : Effect.succeed(maybeContent.value)
+      Effect.fromOption(maybeContent, () => missingDeclaredPath(path))
     )
   );
 
@@ -797,7 +797,7 @@ export const load = Effect.fn("Plugin.load")(function* (
   const skills = yield* loadSkillEntries(rootDir, scanned.skillPaths);
   const outputStyles = yield* loadOutputStyleEntries(rootDir, scanned.outputStylePaths);
   const hooksConfig = yield* O.match(scanned.inlineHooksConfig, {
-    onSome: (config) => Effect.succeed(O.some(config)),
+    onSome: (config) => Effect.succeedSome(config),
     onNone: () =>
       A.isReadonlyArrayEmpty(scanned.hooksPaths)
         ? Effect.succeed(O.none<HooksSection>())
@@ -806,7 +806,7 @@ export const load = Effect.fn("Plugin.load")(function* (
           }).pipe(Effect.map((configs) => O.some(mergeHooksConfigs(configs)))),
   });
   const mcpConfig = yield* O.match(scanned.inlineMcpConfig, {
-    onSome: (config) => Effect.succeed(O.some(config)),
+    onSome: (config) => Effect.succeedSome(config),
     onNone: () =>
       A.isReadonlyArrayEmpty(scanned.mcpPaths)
         ? Effect.succeed(O.none<McpJsonFile>())

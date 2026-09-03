@@ -43,16 +43,11 @@ export const requireLiveHandle = Effect.fn("QaControl.requireLiveHandle")(functi
   const handle = yield* store
     .readCollectorHandle(qaRoot)
     .pipe(QaCommandError.mapError("qa could not read the collector handle at .beep/qa/current.json."));
-  return yield* O.match(handle, {
-    onNone: () =>
-      Effect.fail(
-        QaCommandError.make({
-          message:
-            "No live QA session: .beep/qa/current.json is absent. Start one with `bun run beep qa record` first.",
-        })
-      ),
-    onSome: Effect.succeed,
-  });
+  return yield* Effect.fromOption(handle, () =>
+    QaCommandError.make({
+      message: "No live QA session: .beep/qa/current.json is absent. Start one with `bun run beep qa record` first.",
+    })
+  );
 });
 
 const collectorUrl = (handle: CollectorHandle, path: string): string => `http://127.0.0.1:${handle.port}${path}`;

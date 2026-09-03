@@ -458,7 +458,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
 
         // Execute agent with optional timeout
         const executeWithTimeout = O.match(execution.policy.agentTimeout, {
-          onNone: () => agent.execute(input).pipe(Effect.map(O.some)),
+          onNone: () => agent.execute(input).pipe(Effect.asSome),
           onSome: (timeout) => agent.execute(input).pipe(Effect.timeoutOption(timeout)),
         });
 
@@ -596,7 +596,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
         });
 
         const result = yield* executeAgent(agent, currentInput, eventsRef, execution).pipe(
-          Effect.map(O.some),
+          Effect.asSome,
           Effect.catch(
             Effect.fnUntraced(function* (error) {
               if (execution.policy.continueOnError) {
@@ -739,7 +739,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
           });
 
           const result = yield* executeAgent(agent, currentInput, eventsRef, execution).pipe(
-            Effect.map(O.some),
+            Effect.asSome,
             Effect.catch(
               Effect.fnUntraced(function* (error) {
                 if (execution.policy.continueOnError) return O.none();

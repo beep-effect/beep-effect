@@ -114,10 +114,7 @@ const realtimeVoiceDescriptor = (): Effect.Effect<XAiEndpointDescriptor, XAiErro
   pipe(
     XAI_ENDPOINTS,
     A.findFirst((descriptor) => descriptor.methodName === "connectRealtimeVoice"),
-    O.match({
-      onNone: () => Effect.fail(XAiError.make({ reason: "request encoding" })),
-      onSome: Effect.succeed,
-    })
+    Effect.fromOption(() => XAiError.make({ reason: "request encoding" }))
   );
 
 const makeJsonResponse = (body: unknown, status = 200) =>

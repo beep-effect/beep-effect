@@ -176,7 +176,7 @@ const statIsMissing = Effect.fnUntraced(function* (
   return yield* fs.stat(entryPath).pipe(
     Effect.as(O.some(false)),
     Effect.catch((error) =>
-      Str.Equivalence(error.reason._tag, "NotFound") ? Effect.succeed(O.some(true)) : Effect.succeed(O.none<boolean>())
+      Str.Equivalence(error.reason._tag, "NotFound") ? Effect.succeedSome(true) : Effect.succeed(O.none<boolean>())
     )
   );
 });

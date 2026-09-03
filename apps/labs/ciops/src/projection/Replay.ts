@@ -26,7 +26,12 @@ import {
   ReplayMismatchError,
   TokenLedgerState,
 } from "./Schemas.ts";
-import type { AdmissionJournalAdmitted, AdmissionJournalReleased, AdmissionPolicyParams } from "./Schemas.ts";
+import type {
+  AdmissionJournalAdmitted,
+  AdmissionJournalLeaseEvicted,
+  AdmissionJournalReleased,
+  AdmissionPolicyParams,
+} from "./Schemas.ts";
 
 const $I = $CiopsId.create("projection/Replay");
 
@@ -248,11 +253,15 @@ const phantomGrantNonces = (events: ReadonlyArray<AdmissionJournalEvent>): HashS
                 AdmissionJournalEvent.match({
                   "admission-admitted": () => false,
                   "admission-released": (released) => Eq.equals(released.nonce, admitted.nonce),
+                  "admission-lease-evicted": (evicted) => Eq.equals(evicted.nonce, admitted.nonce),
+                  "admission-ticket-evicted": () => false,
                 })
               )
                 ? O.none<string>()
                 : O.some(admitted.nonce),
             "admission-released": O.none<string>,
+            "admission-lease-evicted": O.none<string>,
+            "admission-ticket-evicted": O.none<string>,
           })
       )
     )
@@ -280,10 +289,7 @@ const releaseFromLedger = Effect.fnUntraced(function* (
 ): Effect.fn.Return<TokenLedgerState, PolicyDecodeError> {
   const releasedWeight = yield* pipe(
     HashMap.get(ledger.activeGrants, nonce),
-    O.match({
-      onNone: () => Effect.fail(replayInputFailure(`Release nonce "${nonce}" had no active admitted pair.`)),
-      onSome: Effect.succeed,
-    })
+    Effect.fromOption(() => replayInputFailure(`Release nonce "${nonce}" had no active admitted pair.`))
   );
   return TokenLedgerState.make({
     activeGrants: HashMap.remove(ledger.activeGrants, nonce),
@@ -347,6 +353,8 @@ export const replayAdmissionJournal = Effect.fn("Replay.replayAdmissionJournal")
         AdmissionJournalEvent.match(event, {
           "admission-admitted": (admitted) => O.some(admitted),
           "admission-released": O.none<AdmissionJournalAdmitted>,
+          "admission-lease-evicted": O.none<AdmissionJournalAdmitted>,
+          "admission-ticket-evicted": O.none<AdmissionJournalAdmitted>,
         })
     )
   );
@@ -382,16 +390,10 @@ export const replayAdmissionJournal = Effect.fn("Replay.replayAdmissionJournal")
         );
       }
       const phantom = yield* A.head(activePhantomAdmissions).pipe(
-        O.match({
-          onNone: () => Effect.fail(replayInputFailure("Phantom candidate set became empty mid-eviction.")),
-          onSome: Effect.succeed,
-        })
+        Effect.fromOption(() => replayInputFailure("Phantom candidate set became empty mid-eviction."))
       );
       const weightTokens = yield* HashMap.get(ledger.activeGrants, phantom.nonce).pipe(
-        O.match({
-          onNone: () => Effect.fail(replayInputFailure(`Phantom admission nonce "${phantom.nonce}" was not active.`)),
-          onSome: Effect.succeed,
-        })
+        Effect.fromOption(() => replayInputFailure(`Phantom admission nonce "${phantom.nonce}" was not active.`))
       );
       const activeTokenTotalBefore = ledger.activeTokenTotal;
       const activeTokenTotalAfter = NonNegativeInt.make(activeTokenTotalBefore - weightTokens);
@@ -468,10 +470,19 @@ export const replayAdmissionJournal = Effect.fn("Replay.replayAdmissionJournal")
     releasedCount += 1;
   });
 
+  const replayLeaseEvicted = Effect.fn("Replay.leaseEvicted")(function* (
+    evicted: AdmissionJournalLeaseEvicted
+  ): Effect.fn.Return<void, PolicyDecodeError> {
+    ledger = yield* releaseFromLedger(ledger, evicted.nonce);
+    releasedCount += 1;
+  });
+
   for (const event of events) {
     yield* AdmissionJournalEvent.match(event, {
       "admission-admitted": replayAdmitted,
       "admission-released": replayReleased,
+      "admission-lease-evicted": replayLeaseEvicted,
+      "admission-ticket-evicted": () => Effect.void,
     });
     eventIndex += 1;
   }
@@ -600,13 +611,13 @@ export const renderReplayEvidence: {
       "",
       verdictBody,
       "",
-      "The replay decodes every NDJSON row through `AdmissionJournalEvent`, folds admitted and released token deltas by nonce, reconstructs the pending set at each grant boundary, and compares the projection's first admission with the recorded grant.",
+      "The replay decodes every NDJSON row through `AdmissionJournalEvent`, folds admitted plus v1 release and v2 lease-eviction token deltas by nonce, reconstructs the pending set at each grant boundary, and compares the projection's first admission with the recorded grant.",
       "",
       "## Inferred dead-lease evictions",
       "",
       evictionBody,
       "",
-      "The deployed scheduler reaps dead admission state through pid and `/proc` start-time liveness without writing a release event (`packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts`). The replay therefore evicts provably phantom grants—grants never released within the journal horizon—only when a recorded admission proves the deployed ledger no longer contained them, and only when the phantom attribution is unique: with more than one active never-released grant the replay fails typed instead of guessing which lease died. This is a run-2 censorship finding: journal lacks lease-eviction events.",
+      "V1 journals did not record lease death, so replay still infers a provably phantom grant only when a later admission proves the deployed ledger no longer contained it and the attribution is unique. V2 lease-eviction rows fold directly as releases; they become reliable fleet evidence only after unknown-row preservation has rolled out to every live writer.",
     ],
     "\n"
   )}\n`;

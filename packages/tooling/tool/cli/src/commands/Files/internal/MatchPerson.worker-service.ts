@@ -308,11 +308,11 @@ const resolveWorkerLibraryPath = Effect.fn("Files.PersonMatchWorker.resolveLibra
         ),
         Effect.flatMap((exists) =>
           exists
-            ? canonicalizeRocmLibraryDirectory(localDirectory, true).pipe(Effect.map(O.some))
+            ? canonicalizeRocmLibraryDirectory(localDirectory, true).pipe(Effect.asSome)
             : Effect.succeed(O.none<string>())
         )
       ),
-    onSome: (directory) => canonicalizeRocmLibraryDirectory(directory, false).pipe(Effect.map(O.some)),
+    onSome: (directory) => canonicalizeRocmLibraryDirectory(directory, false).pipe(Effect.asSome),
   });
   if (O.isNone(selectedDirectory)) return O.none();
   const inherited = yield* readOptionalConfig("LD_LIBRARY_PATH");
@@ -354,7 +354,7 @@ const prepareBackendArtifacts = Effect.fn("Files.PersonMatchWorker.prepareBacken
 > {
   return yield* Match.value(options.backend).pipe(
     Match.when("buffalo-l", () => Effect.succeed(O.none<PreparedAdaFaceArtifacts>())),
-    Match.when("adaface-kprpe", () => prepareAdaFaceArtifacts(inputs.modelRoot).pipe(Effect.map(O.some))),
+    Match.when("adaface-kprpe", () => prepareAdaFaceArtifacts(inputs.modelRoot).pipe(Effect.asSome)),
     Match.exhaustive
   );
 });

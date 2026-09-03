@@ -529,7 +529,7 @@ const makeExtractionRunService = Effect.gen(function* () {
     const content = yield* storage.getOption(metadataKey(runId.value));
     return yield* O.match(content, {
       onNone: () => Effect.succeed(O.none<ExtractionRun>()),
-      onSome: (value) => decodeExtractionRun(value).pipe(Effect.map(O.some)),
+      onSome: (value) => decodeExtractionRun(value).pipe(Effect.asSome),
     });
   });
   const getByKey = (key: IdempotencyKey) =>

@@ -367,10 +367,7 @@ const stripGsPrefix = (uri: string): string =>
 const DocumentPriorityOrder = Order.mapInput(Order.Number, (document: DocumentMetadata) => document.priority);
 
 const requireContent = (opt: O.Option<string>, key: string) =>
-  O.match(opt, {
-    onNone: () => Effect.fail(notFoundError("StorageObject", key)),
-    onSome: (value) => Effect.succeed(value),
-  });
+  Effect.fromOption(opt, () => notFoundError("StorageObject", key));
 
 const summarizeViolations = (violations: ReadonlyArray<ShaclValidationViolation>) => {
   const grouped = MutableHashMap.empty<
@@ -1436,18 +1433,14 @@ export const makeCrossBatchResolutionActivity = (input: CrossBatchResolutionInpu
       // Runtime compositions outside the server may omit the resolver, so the
       // enabled path must fail explicitly rather than reporting false success.
       const resolverOpt = yield* Effect.serviceOption(CrossBatchEntityResolver);
-      const resolver = yield* O.match(resolverOpt, {
-        onNone: () =>
-          Effect.fail(
-            ActivityError.serviceFailure(
-              "CrossBatchEntityResolver",
-              "resolve enabled batch",
-              "Cross-batch resolution is enabled but its resolver service is unavailable.",
-              false
-            )
-          ),
-        onSome: Effect.succeed,
-      });
+      const resolver = yield* Effect.fromOption(resolverOpt, () =>
+        ActivityError.serviceFailure(
+          "CrossBatchEntityResolver",
+          "resolve enabled batch",
+          "Cross-batch resolution is enabled but its resolver service is unavailable.",
+          false
+        )
+      );
       const storage = yield* StorageService;
       const rdf = yield* RdfBuilder;
 

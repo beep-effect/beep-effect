@@ -139,19 +139,13 @@ const captureAt = (
   pipe(
     captures,
     A.get(index),
-    O.match({
-      onNone: () => Effect.fail(testError(label)),
-      onSome: Effect.succeed,
-    })
+    Effect.fromOption(() => testError(label))
   );
 
 const bodyTextFromCapture = (capture: CapturedRequest, label: string): Effect.Effect<string, RunpodError> =>
   pipe(
     O.fromUndefinedOr(capture.bodyText),
-    O.match({
-      onNone: () => Effect.fail(testError(label)),
-      onSome: Effect.succeed,
-    })
+    Effect.fromOption(() => testError(label))
   );
 
 const RunpodTestHttpLayer = Layer.effect(

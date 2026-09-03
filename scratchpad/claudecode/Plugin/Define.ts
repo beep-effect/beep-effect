@@ -541,10 +541,10 @@ const resolveConfigRelativePath = (options: {
     onSome: (spec) => (P.isString(spec) || isStringArray(spec) ? pathSpecs(O.some(spec)) : []),
   });
   if (O.isSome(options.spec) && specs.length === 0) {
-    return Effect.succeed(O.none());
+    return Effect.succeedNone;
   }
   if (specs.length === 0) {
-    return Effect.succeed(O.some(options.fallback));
+    return Effect.succeedSome(options.fallback);
   }
   if (specs.length > 1) {
     return Effect.fail(
@@ -559,7 +559,7 @@ const resolveConfigRelativePath = (options: {
   if (!isJsonFilePath(target)) {
     return Effect.fail(layoutError(options.destDir, `${options.field} target path must be a JSON file path`));
   }
-  return Effect.succeed(O.some(target));
+  return Effect.succeedSome(target);
 };
 
 /**

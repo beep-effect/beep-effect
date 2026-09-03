@@ -69,7 +69,7 @@ const EntityIndexTest = Layer.succeed(
     findByType: Effect.fn("EntityIndex.findByType")(() => Effect.succeed([])),
     add: Effect.fn("EntityIndex.add")(() => Effect.void),
     remove: Effect.fn("EntityIndex.remove")(() => Effect.succeed(false)),
-    get: Effect.fn("EntityIndex.get")(() => Effect.succeed(O.none())),
+    get: Effect.fn("EntityIndex.get")(() => Effect.succeedNone),
     clear: Effect.void,
     size: Effect.succeed(A.length(ranked)),
   })

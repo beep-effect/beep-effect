@@ -947,14 +947,17 @@ type ValidateReferenceActions<I extends Field.Input, Options> =
  * @category combinators
  * @since 0.0.0
  */
-export const references =
-  <const Id extends EntityIdLike, const Options extends ReferenceOptions | undefined = undefined>(
-    id: Id,
-    options?: Options
-  ) =>
-  <I extends Field.Input>(
-    input: I & ValidateReferenceActions<NoInfer<I>, Options>
-  ): Field.Patched<I, { readonly references: Meta.References<Id["tableName"], "id"> }> =>
+export function references<
+  const Id extends EntityIdLike,
+  const Options extends ReferenceOptions | undefined = undefined,
+>(
+  ...args: readonly [id: Id, options?: Options]
+): <I extends Field.Input>(
+  input: I & ValidateReferenceActions<NoInfer<I>, Options>
+) => Field.Patched<I, { readonly references: Meta.References<Id["tableName"], "id"> }>;
+export function references(...args: readonly [id: EntityIdLike, options?: ReferenceOptions]): unknown {
+  const [id, options] = args;
+  return (input: Field.Input): Field.Any =>
     Field.patch(input, {
       references: {
         tableName: id.tableName,
@@ -963,3 +966,4 @@ export const references =
         onUpdate: options?.onUpdate,
       },
     });
+}

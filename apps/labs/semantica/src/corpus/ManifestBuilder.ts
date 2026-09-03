@@ -105,17 +105,15 @@ const makeCorpusManifestBuilder = Effect.gen(function* () {
   const path = yield* Path.Path;
 
   const resolveCorpusRoot = Effect.fn("CorpusManifestBuilder.resolveCorpusRoot")(function* () {
-    const corpusRoot = yield* O.match(config.corpusRoot, {
-      onNone: () =>
-        Effect.fail(
-          makeCorpusRootUnavailable(
-            O.none(),
-            "not-configured",
-            "SEMANTICA_CORPUS_ROOT is not configured for the external W1 corpus."
-          )
-        ),
-      onSome: Effect.succeed,
-    });
+    const corpusRoot = yield* config.corpusRoot.pipe(
+      Effect.fromOption(() =>
+        makeCorpusRootUnavailable(
+          O.none(),
+          "not-configured",
+          "SEMANTICA_CORPUS_ROOT is not configured for the external W1 corpus."
+        )
+      )
+    );
     const exists = yield* fs
       .exists(corpusRoot)
       .pipe(

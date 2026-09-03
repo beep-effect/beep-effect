@@ -892,7 +892,7 @@ const readPreviousSnapshotAt = Effect.fn("AiMetrics.readPreviousConfigSnapshotAt
     );
 
   return yield* AiMetricsConfigSnapshotResult.decodeJsonEffect(content).pipe(
-    Effect.map(O.some),
+    Effect.asSome,
     Effect.mapError((cause) =>
       configSnapshotFailure("Failed to decode previous AI metrics config snapshot artifact.", cause)
     )

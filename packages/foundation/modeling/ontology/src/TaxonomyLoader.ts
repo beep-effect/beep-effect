@@ -527,17 +527,17 @@ const decodeLoadManifestEntry = Effect.fn("TaxonomyLoader.decodeLoadManifestEntr
   return yield* Match.value({ hasLoadKind: O.isSome(row.loadKind), hasLoadStatus: O.isSome(row.loadStatus) }).pipe(
     Match.when({ hasLoadKind: true }, () =>
       decodeAlignmentManifestEntry(line).pipe(
-        Effect.map(O.some),
+        Effect.asSome,
         Effect.mapError(() => manifestParseError(path, index + 1))
       )
     ),
     Match.when({ hasLoadStatus: true }, () =>
       decodeManifestEntry(line).pipe(
-        Effect.map(O.some),
+        Effect.asSome,
         Effect.mapError(() => manifestParseError(path, index + 1))
       )
     ),
-    Match.orElse(() => Effect.succeed(O.none()))
+    Match.orElse(() => Effect.succeedNone)
   );
 });
 

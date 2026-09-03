@@ -41,8 +41,11 @@ export {
   PackageJsonDocument,
   PackageJsonWorkspacesDocument,
   PackageTaskProfile,
+  QUALITY_TASK_LANE_RUN_REPORT_PREFIX,
   QualityTaskBypassArgName,
   QualityTaskInvocation,
+  QualityTaskLaneRun,
+  QualityTaskLaneRunReport,
   QualityTaskName,
   RootAuditMode,
 } from "@beep/repo-cli/commands/Quality/Quality.schemas";

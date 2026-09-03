@@ -558,10 +558,7 @@ export const cata: {
       if (O.isSome(cached)) {
         return cached.value;
       }
-      const node = yield* O.match(getNode(graph, nodeId), {
-        onNone: () => Effect.fail(NodeNotFoundError.make({ nodeId })),
-        onSome: (n) => Effect.succeed(n),
-      });
+      const node = yield* Effect.fromOption(getNode(graph, nodeId), () => NodeNotFoundError.make({ nodeId }));
       // children first (bottom-up); sequential to bound memory on deep graphs
       const processedChildren = yield* Effect.all(
         A.map(getChildren(graph, nodeId), (child) => go(child.id)),

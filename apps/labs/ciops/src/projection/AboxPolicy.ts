@@ -8,7 +8,6 @@
 import { PosInt } from "@beep/schema";
 import { Effect, pipe } from "effect";
 import * as A from "effect/Array";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { AdmissionPolicyParams, AdmissionPriority, AdmissionTokenWeights, PolicyDecodeError } from "./Schemas.ts";
@@ -27,10 +26,7 @@ const captureAt = Effect.fnUntraced(function* (
 ): Effect.fn.Return<string, PolicyDecodeError> {
   return yield* pipe(
     A.get(captures, index),
-    O.match({
-      onNone: () => Effect.fail(schemaFailure(`Known-shape A-Box capture "${label}" was absent.`)),
-      onSome: Effect.succeed,
-    })
+    Effect.fromOption(() => schemaFailure(`Known-shape A-Box capture "${label}" was absent.`))
   );
 });
 
@@ -83,10 +79,7 @@ export const decodeAdmissionPolicyParams = Effect.fn("AboxPolicy.decodeAdmission
   const captures = yield* pipe(
     source,
     Str.match(knownAboxShape),
-    O.match({
-      onNone: () => Effect.fail(schemaFailure("Policy A-Box did not match the ratified S6 document shape.")),
-      onSome: Effect.succeed,
-    })
+    Effect.fromOption(() => schemaFailure("Policy A-Box did not match the ratified S6 document shape."))
   );
 
   const values = yield* Effect.all(
