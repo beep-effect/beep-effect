@@ -105,36 +105,39 @@ These artifacts back `DECISIONS.md` entry
 Stage record: `p3-c1-r2.md`, SHA-256
 `8da9c8e9219e8a0f114e6e7733527a319b19448b39039874e2b009f7dd2924b6`.
 
+
 ## C2 archive
 
 These artifacts back `DECISIONS.md` entry
 `2026-08-31 (C2 pass) — Reasoning verdict`.
 
 - `c2/full-w1.live.eval-report.json`
-  SHA-256: `ce9daaaa776b16b5be3796f67c815ca9dd847947419ae7f966484143bf12d32f`
+  SHA-256: `d83c382754bd4853a277a05fd5f078c8d27c5275fef96b61a50cd6a37f0ce80c`
 - `c2/full-w1.live.eval-telemetry.json`
-  SHA-256: `86a42b07366c88f49764a39d5e8696ed2579bdef3844aa25e8e19c09b1a9ace7`
+  SHA-256: `8a84d910de42edd055eb7f59b0786cad13b943935aedafc4be5e0d94a24aefdb`
 - `c2/full-w1.replay.eval-report.json`
-  SHA-256: `ce9daaaa776b16b5be3796f67c815ca9dd847947419ae7f966484143bf12d32f`
+  SHA-256: `d83c382754bd4853a277a05fd5f078c8d27c5275fef96b61a50cd6a37f0ce80c`
 - `c2/full-w1.replay.eval-telemetry.json`
-  SHA-256: `8b2ead434d9a566933abddac4e89691ad3690523191f28922485a902cbc34fc5`
+  SHA-256: `d27ddc978dac116e4948410181184c7ef04389e2f2ec4e388d3ec07519f72c2b`
 - `c2/crash-identity.log`
-  SHA-256: `5c4de3b07a78a877d4565731b594f5fe492b450edf03bbbf837bf14f5eccb7f5`
+  SHA-256: `8cd729e31edec455e4f5bca05200603cc0e2e1b3a6b369f828f28bf0f4041cb5`
 - `c2/SHA256SUMS`
-  SHA-256: `e3c75c70a9afa4531874ead101fa33dfc744867a667c0827894b81a0ed0818ad`
+  SHA-256: `83e755b02c3ddf58ede250f66c5f89f09f4d7f3888fabf2b155df0a6f08c014c`
 
 Stage record: `p4-c2-r2.md`, SHA-256
-`9bc680d461035e96a68679d5d3d430cca4c7f36a5e556ecdc3ed8bb9917db496`.
+`9ab62101b3e21de0a89ebf184fed1f4b62a74d1d8264c7ba1b0f96766252636b`.
 
-The C2 checksum manifest covers the four JSON artifacts but not
-`crash-identity.log`; the direct digest above records the log's current bytes.
-The archived report pair and `p4-c2-r2.md` agree on report digest
-`7fff1dc09bf517841a840071393ecc0f4a914366ff355d246964124d2ea9417e`,
-live cold start 1,166 ms, and p95 7 ms. The older dated C2 entry in
-`DECISIONS.md` instead quotes report digest
-`2a2089eacaa7f341649b6e1d86991fda526f5d9708e9eaa1f4e9d06e0533b5d1`,
-cold start 1 ms, and p95 3 ms. Both number sets clear the C2 gates, but only
-the first set matches the checksum-controlled closeout archive.
+The C2 checksum manifest now covers the four JSON artifacts and
+`crash-identity.log`. The archived report pair, `p4-c2-r2.md`, and the dated C2
+entry in `DECISIONS.md` agree on report digest
+`2a2089eacaa7f341649b6e1d86991fda526f5d9708e9eaa1f4e9d06e0533b5d1`, the
+ratified full-state crash run. At the first closeout pass the merged archive
+still held the earlier `7fff1dc0…` run: the commit that archived the full-state
+run (authored 2026-08-31 14:33, "archive full-state crash evidence") was never
+pushed before #938 merged, so main's archive lagged the verdict by one commit
+until the follow-up archive PR landed it. The archived telemetry records live
+cold start 1,183 ms and interactive p95 7 ms; the C2 entry's "1 ms / 3 ms"
+figures came from an earlier probe and are superseded by the archive.
 
 ## Verdict coverage
 
