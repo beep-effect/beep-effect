@@ -194,23 +194,34 @@ class CorpusValidationTest(unittest.TestCase):
         self.change_attempt()
         outputs_before = (economics.ECONOMICS_JSON.read_bytes(), economics.ECONOMICS_MD.read_bytes())
         with mock.patch.object(economics, "load_committed_corpus_receipts", return_value=self.receipts):
-            with self.assertRaises(SystemExit) as raised:
-                economics.build_report(self.corpus, corpus_requested=True, allow_corpus_drift=False)
+            with mock.patch.object(economics, "validate_embedded_inputs", return_value="embedded"):
+                with self.assertRaises(SystemExit) as raised:
+                    economics.build_report(self.corpus, corpus_requested=True, allow_corpus_drift=False)
         self.assertIn("attempts/checkout/run/attempts.ndjson", str(raised.exception))
         self.assertEqual(
             (economics.ECONOMICS_JSON.read_bytes(), economics.ECONOMICS_MD.read_bytes()),
             outputs_before,
         )
 
+    def test_corpus_mode_still_validates_embedded_inputs(self) -> None:
+        with contextlib.redirect_stderr(io.StringIO()):
+            with mock.patch.object(economics, "load_committed_corpus_receipts", return_value=self.receipts):
+                with mock.patch.object(
+                    economics, "validate_embedded_inputs", return_value="embedded"
+                ) as validated:
+                    economics.build_report(self.corpus, corpus_requested=True, allow_corpus_drift=False)
+        validated.assert_called_once_with(False)
+
     def test_allow_corpus_drift_stamps_json_and_markdown(self) -> None:
         self.change_attempt()
         with contextlib.redirect_stderr(io.StringIO()):
             with mock.patch.object(economics, "load_committed_corpus_receipts", return_value=self.receipts):
-                report = economics.build_report(
-                    self.corpus,
-                    corpus_requested=True,
-                    allow_corpus_drift=True,
-                )
+                with mock.patch.object(economics, "validate_embedded_inputs", return_value="embedded"):
+                    report = economics.build_report(
+                        self.corpus,
+                        corpus_requested=True,
+                        allow_corpus_drift=True,
+                    )
         markdown = economics.render_economics(report)
         self.assertEqual(report["corpusValidation"], "drifted")
         self.assertIn("NON-RATIFIED CORPUS DRIFT", markdown)

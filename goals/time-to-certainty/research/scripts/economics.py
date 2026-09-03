@@ -2048,9 +2048,10 @@ def build_report(
     allow_corpus_drift: bool,
     allow_input_drift: bool = False,
 ) -> dict[str, Any]:
-    embedded_validation: str | None = None
-    if not corpus_root.is_dir() and not corpus_requested:
-        embedded_validation = validate_embedded_inputs(allow_input_drift)
+    # The compact snapshots and receipts are consumed on every path, so they are
+    # verified against committed evidence on every path; corpus validation is an
+    # additional check, never a substitute for it.
+    embedded_validation = validate_embedded_inputs(allow_input_drift)
     if not LIVE_SNAPSHOT.is_file():
         raise SystemExit(f"missing {portable_path(LIVE_SNAPSHOT)}; run --capture-live")
     if not HOSTED_SNAPSHOT.is_file():
