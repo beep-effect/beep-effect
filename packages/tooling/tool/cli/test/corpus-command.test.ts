@@ -303,7 +303,8 @@ describe("corpus restoration evidence invariants", () => {
       },
       Effect.scoped,
       provideTestLayer
-    )
+    ),
+    { concurrent: false }
   );
 });
 
@@ -2728,7 +2729,8 @@ describe("corpus restoration mail", { concurrent: false }, () => {
       },
       Effect.scoped,
       provideTestLayer
-    )
+    ),
+    { concurrent: false }
   );
 
   it.effect(
@@ -2770,7 +2772,8 @@ describe("corpus restoration mail", { concurrent: false }, () => {
       },
       Effect.scoped,
       provideTestLayer
-    )
+    ),
+    { concurrent: false }
   );
 
   it.effect(
@@ -2834,7 +2837,8 @@ describe("corpus restoration mail", { concurrent: false }, () => {
       },
       Effect.scoped,
       provideTestLayer
-    )
+    ),
+    { concurrent: false }
   );
 
   it.effect(
@@ -2853,7 +2857,8 @@ describe("corpus restoration mail", { concurrent: false }, () => {
       },
       Effect.scoped,
       provideTestLayer
-    )
+    ),
+    { concurrent: false }
   );
 
   it.effect(
@@ -3482,7 +3487,8 @@ describe("corpus restoration acceptance", { concurrent: false }, () => {
       },
       Effect.scoped,
       provideTestLayer
-    )
+    ),
+    { concurrent: false }
   );
 
   it.effect(

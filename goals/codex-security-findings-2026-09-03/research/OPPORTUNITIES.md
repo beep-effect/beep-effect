@@ -102,3 +102,20 @@
 - **What would have prevented it:** Stream or bound the stale-base path set
   independently of the generic command-output capture limit, while preserving
   enough structured output to report real overlap conflicts.
+
+## 2026-09-03 — Suite-level serialization did not reach Effect tests
+
+- **What I was doing:** Monitoring the exact-head Coverage Regression job after
+  restoring the changed-file coverage floors.
+- **Evidence:** The repo-cli coverage task passed 2,833 tests, but six
+  process-heavy restoration tests in `corpus-command.test.ts` simultaneously
+  exhausted Vitest's five-minute timeout. Two affected suites already declared
+  `{ concurrent: false }`; the Effect-aware wrapper requires the option on each
+  `it.effect` call to override repository-wide concurrent scheduling. An
+  interrupted local package run also showed the existing serialized
+  all-family restoration test straddling the default 300-second limit.
+- **What would have prevented it:** Apply the supported per-test concurrency
+  option whenever an Effect test launches restoration subprocess pipelines,
+  and give intentionally exhaustive end-to-end cases an explicit timeout above
+  their measured coverage runtime; suite-level scheduling is not sufficient
+  proof for the wrapper.

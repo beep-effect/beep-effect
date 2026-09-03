@@ -3271,6 +3271,6 @@ printf '%%PDF-1.4 synthetic attachment' > "$item/Attachment00001/report.bin"
         const legacyRetainedError = yield* restoreLegacyWord(legacyOptions("legacy-retained", 0, 1)).pipe(Effect.flip);
         expect(legacyRetainedError.message).toContain("retained");
       }),
-    { concurrent: false }
+    { concurrent: false, timeout: 600_000 }
   );
 });
