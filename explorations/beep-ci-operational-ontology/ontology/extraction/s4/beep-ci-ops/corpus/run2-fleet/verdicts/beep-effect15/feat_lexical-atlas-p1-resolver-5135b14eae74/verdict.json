@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "feat/lexical-atlas-p1-resolver",
+  "committed": false,
+  "createdAt": "2026-08-26T05:06:05.221Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "monitor:01-pr-context",
+      "label": "monitor:pr-context",
+      "phase": "monitor",
+      "status": "passed",
+      "durationMs": 440.236598,
+      "exitCode": 0
+    },
+    {
+      "id": "monitor:02-pr-checks-watch",
+      "label": "monitor:pr-checks:watch",
+      "phase": "monitor",
+      "status": "failed",
+      "durationMs": 880.649285,
+      "exitCode": 1,
+      "repairCommand": "Rerun `bun run beep quality github-checks nix` and inspect the Nix error."
+    }
+  ],
+  "message": "yeet monitor failed.",
+  "mode": "monitor",
+  "outcome": "failure",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "feat_lexical-atlas-p1-resolver-5135b14eae74",
+  "attemptId": "01b6fedd-093e-4d7a-9cb2-8a13aba7dd18",
+  "startedAt": "2026-08-26T05:06:01.179Z",
+  "endedAt": "2026-08-26T05:06:05.221Z",
+  "elapsedMs": 4042,
+  "indexPath": "<fleet>/beep-effect15/.beep/yeet/quality-issue-index.json",
+  "failedStepId": "monitor:02-pr-checks-watch",
+  "failureKind": "step-exit"
+}

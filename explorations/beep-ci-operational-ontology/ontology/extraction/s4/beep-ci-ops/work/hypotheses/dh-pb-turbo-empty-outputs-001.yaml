@@ -1,0 +1,24 @@
+id: "dh:pb-turbo-empty-outputs:001"
+observation_refs:
+  - "po:sha256:a97000510cad9d27597ad301943d9f42226a9f042ddfa51dfe62d6d90eb5f12c"
+cq_warrants: []
+proposed_referent:
+  label: "Turbo empty-output declaration"
+  description: "A task configuration fragment declaring an empty outputs list."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "output-free verification procedure"
+    representation_status: domain_referent
+    plausibility: weak
+  - label: "cache-output configuration"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "An empty outputs array does not identify the containing task, whether it executes, whether it emits logs or evidence, or how caching treats it. The fragment is fully explained by configuration representation."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.96
+  use_for_acceptance: false

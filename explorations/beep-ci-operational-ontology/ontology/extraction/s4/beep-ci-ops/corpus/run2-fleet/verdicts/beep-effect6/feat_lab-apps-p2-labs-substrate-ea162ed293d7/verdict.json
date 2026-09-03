@@ -1,0 +1,175 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "feat/lab-apps-p2-labs-substrate",
+  "committed": false,
+  "createdAt": "2026-08-17T03:02:37.426Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "publish:00-head-install-preflight",
+      "label": "publish:head-install-preflight",
+      "phase": "prepare",
+      "status": "passed",
+      "durationMs": 8668.176053,
+      "exitCode": 0
+    },
+    {
+      "id": "advisory:01-fallow-feedback",
+      "label": "fallow-advisory-feedback",
+      "phase": "feedback",
+      "status": "passed",
+      "durationMs": 2057.454598,
+      "exitCode": 0
+    },
+    {
+      "id": "full:01-pre-push",
+      "label": "full:pre-push",
+      "phase": "full",
+      "status": "failed",
+      "durationMs": 496605.059268,
+      "exitCode": 1,
+      "repairCommand": "Inspect the OSV finding and rerun `bun run beep quality github-checks security`."
+    },
+    {
+      "id": "quality:changeset-status",
+      "label": "quality:changeset-status",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "repo-sanity:changeset-graph",
+      "label": "repo-sanity:changeset-graph",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "repo-sanity:tsconfig-sync",
+      "label": "repo-sanity:tsconfig-sync",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "repo-sanity:fallow-boundaries-config",
+      "label": "repo-sanity:fallow-boundaries-config",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "repo-sanity:versions",
+      "label": "repo-sanity:versions",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "repo-sanity:syncpack",
+      "label": "repo-sanity:syncpack",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "repo-sanity:sherif",
+      "label": "repo-sanity:sherif",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "repo-sanity:bun-audit",
+      "label": "repo-sanity:bun-audit",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "quality:knip",
+      "label": "quality:knip",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "fallow:audit",
+      "label": "fallow:audit",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "fallow:dead-code",
+      "label": "fallow:dead-code",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "pre-push:secrets",
+      "label": "pre-push:secrets",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "pre-push:security",
+      "label": "pre-push:security",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "pre-push:sast",
+      "label": "pre-push:sast",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "pre-push:nix",
+      "label": "pre-push:nix",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "quality:build",
+      "label": "quality:build",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "quality:lint",
+      "label": "quality:lint",
+      "phase": "full",
+      "status": "failed"
+    },
+    {
+      "id": "quality:check",
+      "label": "quality:check",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "quality:test",
+      "label": "quality:test",
+      "phase": "full",
+      "status": "not-run-early-stop"
+    },
+    {
+      "id": "quality:jsdoc-ratchet",
+      "label": "quality:jsdoc-ratchet",
+      "phase": "full",
+      "status": "not-run-early-stop"
+    },
+    {
+      "id": "quality:docgen",
+      "label": "quality:docgen",
+      "phase": "full",
+      "status": "not-run-early-stop"
+    }
+  ],
+  "message": "yeet verification proof failed.",
+  "mode": "verify",
+  "outcome": "failure",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "feat_lab-apps-p2-labs-substrate-ea162ed293d7",
+  "attemptId": "c5fd3047-7395-45c5-b09c-9eaab390b0ad",
+  "startedAt": "2026-08-17T02:54:10.013Z",
+  "endedAt": "2026-08-17T03:02:37.426Z",
+  "elapsedMs": 507413,
+  "indexPath": "<fleet>/beep-effect6/.beep/yeet/quality-issue-index.json",
+  "failedStepId": "full:01-pre-push",
+  "failureKind": "step-exit"
+}

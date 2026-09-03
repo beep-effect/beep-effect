@@ -1,0 +1,10 @@
+id: po:sha256:1b3960c2341fc83dbf21899c3ff4e856c1fe32d9157a472c84ff2d9577a91cf1
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts
+source_span:
+  start_line: 777
+  end_line: 806
+quote: LiteralKit(["fail-fast", "collect-all"])
+epistemic_status: quoted_prose

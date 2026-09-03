@@ -1,0 +1,46 @@
+id: "ic:ov-has-step:001"
+hypothesis_ref: "dh:ov-has-step:001"
+identity:
+  supplies_identity: false
+  identity_criterion: >-
+    This object property supplies no identity: one proposal-to-step membership
+    assertion is the same fact only for the same ScheduleProposal content and
+    the same proposal-relative ScheduleStep under one ordering interpretation;
+    identical step payloads copied into another proposal do not preserve the
+    membership fact.
+  reidentification_key:
+    - "ScheduleProposal identity and input provenance"
+    - "proposal-relative ScheduleStep identity"
+    - "ordered-content interpretation and validity interval"
+ontoclean:
+  rigidity: unresolved
+  carries_identity: false
+  supplies_identity: false
+  unity: >-
+    One membership assertion connecting one ScheduleProposal information
+    object to one ScheduleStep component of its ordered content.
+  dependence: relational
+ufo_analysis:
+  candidate_category: none
+  alternatives:
+    - "an ordered sequence-membership relation rather than generic information-content parthood"
+    - "a reified membership situation carrying position and proposal provenance"
+    - "a representation relation from a proposal to a world-side admission act"
+    - "an RDF-only containment edge between emitted nodes"
+  existential_dependencies:
+    - "The containing ScheduleProposal information object"
+    - "The ScheduleStep information object or rival represented admission act"
+    - "The proposal's ordered-content and provenance context"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - "removing the step from the proposal ends the membership assertion"
+    - "a semantic revision of proposal membership creates a successor assertion"
+counterexamples:
+  - description: >-
+      Two proposals produced from different journal prefixes can contain
+      byte-identical step fields, while one proposal can also repeat a target
+      at a different position; field equality therefore supplies neither step
+      identity nor proposal-membership identity.
+status: proposed

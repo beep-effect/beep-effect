@@ -1,0 +1,50 @@
+target: "otp:pa-admission-request:001"
+target_sha256: "b76b268746838304dd9ab835b2292ef9a289ff0fd9fa1e763dda7cc067abde35"
+chain_sha256: "c4e3f31fd60a431000e22c77fdd5c153f9313b6b0d4ab0b308da0bd64fea1abb"
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The revised exact-reuse proposal asserts no parents, so it introduces no
+    is-a edge and inherits no proposed identity criterion through subsumption.
+revision_requests: []
+attacks:
+  - surface: identity
+    rule: exact-reuse-identity-resolved
+    counterexample: >-
+      A live input DTO and a later replay-derived view can repeat every queue
+      field without being the same artifact. The revision confines SeatRequest
+      to the enqueue-created durable ticket and requires carrier lineage before
+      either representation can be identified with it.
+    outcome: survived
+  - surface: warrant
+    rule: direct-cq-warrant
+    counterexample: >-
+      Removing SeatRequest leaves CQ-021 unable to enumerate queued tickets and
+      CQ-023 unable to relate pending demand to capacity. Both questions need
+      the class directly, independently of any later SeatGrant lifecycle.
+    outcome: survived
+  - surface: null_discriminator
+    rule: durable-ticket-not-request-dto
+    counterexample: >-
+      The ticket remains the same governed queue artifact as its age and order
+      change, while equal-valued input and replay DTOs remain separate absent a
+      lineage join. Its identity therefore is not just the current field shape.
+    outcome: survived
+rival_models_still_viable:
+  - "A world-side requesting relator represented by the queued ticket."
+  - "Separate live-input and replay-view artifacts related to the ticket."
+evidence:
+  - "po:sha256:0f770a52d6074ae2a158234d536178589a6353333147509d21a526ac41305d59"
+  - "po:sha256:292a0d656c3996d634bbcc4cde62da942c52bd9a0a3c5d1f9246bf5977066841"
+  - "po:sha256:35fb67c441193ece032d71a3f3e53107352fd83cd469df203eac69b27f2461d9"
+  - "po:sha256:4a30b60df83c527a6da561402d3755e6b194e0f657659d3510c506549f3c9021"
+  - "po:sha256:55c2897fcdfe9318041fe93947653642729b7d3b83ca8f7964e83043085abeac"
+  - "CQ-021"
+  - "CQ-023"

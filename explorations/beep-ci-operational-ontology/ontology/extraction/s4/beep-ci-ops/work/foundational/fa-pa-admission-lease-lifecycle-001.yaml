@@ -1,0 +1,24 @@
+id: "fa:pa-admission-lease-lifecycle:001"
+hypothesis_ref: "dh:pa-admission-lease-lifecycle:001"
+identity_card_ref: "ic:pa-admission-lease-lifecycle:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+  - label: "The intended referent is the active grant relator, with activation and removal only changing its state."
+    still_viable: true
+  - label: "The intended referent is the lease-record carrier lineage rather than a world-side lifecycle process."
+    still_viable: true
+  - label: "The queued request ticket and the active grant lease are one persisting individual."
+    still_viable: false
+strongest_counterexample: >-
+  The evidence reports one inferred dead-lease eviction and separately quotes
+  an ignored file removal; it does not establish that either carrier operation
+  is coextensive with the grant's end, much less with the preceding request.
+verdict: explicitly_deferred
+needed_evidence: >-
+  A joined grant identifier across lease creation, heartbeat rewrite,
+  release or eviction, ledger decrement, and carrier lineage is required,
+  together with a CQ needing a lifecycle distinct from SeatGrant.

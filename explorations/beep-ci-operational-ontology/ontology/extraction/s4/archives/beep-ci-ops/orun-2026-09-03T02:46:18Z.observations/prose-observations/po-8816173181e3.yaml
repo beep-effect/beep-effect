@@ -1,0 +1,11 @@
+id: po:sha256:8816173181e3b06a711847fa03ad9d050c9f1d74d131af70eb367a8ea99f99cd
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: explorations/beep-ci-operational-ontology/ontology/docs/pre-glossary.csv
+source_span:
+  start_line: 55
+  end_line: 55
+quote: 'dependsOn,property,CQ-004,"direct workspace dependency edge; semantic-support (two-kind law):
+  supports=dependsOnTransitive — the fixpoint''s base relation (round-3 I-03/H-09 licensing fix)"'
+epistemic_status: quoted_prose

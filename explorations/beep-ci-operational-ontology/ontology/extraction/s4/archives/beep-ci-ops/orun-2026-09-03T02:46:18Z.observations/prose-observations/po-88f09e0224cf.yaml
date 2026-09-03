@@ -1,0 +1,29 @@
+id: po:sha256:88f09e0224cf8cc48710903fe1e017b9369bc5dada8def6024d42f2841f9a654
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: explorations/beep-ci-operational-ontology/ontology/docs/s7-projection-contract.md
+source_span:
+  start_line: 13
+  end_line: 21
+quote: '## 1. Inputs (all frozen at the branch cut, `ontology-s7-projection`)
+
+
+  | Input | Artifact | Role |
+
+  | --- | --- | --- |
+
+  | T-Box | `ontology/extraction/s5/TAXONOMY.yaml` (38 ratified terms) | node-class vocabulary |
+
+  | A-Box | `ontology/extraction/s6/graphs/abox.ttl` + `ABOX.yaml` | policy parameters, weights, priorities
+  |
+
+  | Live instance data | `ontology/extraction/s6/snapshot/raw/journal.ndjson` — pinned golden journal
+  (79 events, redacted digest recorded in `snapshot/raw/MANIFEST.yaml`) | replay corpus |
+
+  | Live schema mirror | `packages/tooling/tool/cli/src/internal/repo-run/{AdmissionJournal,QualityScheduler.schemas}.ts`
+  | decoded event/request shapes |
+
+  | Deployed invariant | `QualityScheduler.ts` charge-vs-capacity check (`activeTokenTotal + weight <=
+  capacityTokens`) | the semantics v1 must reproduce |'
+epistemic_status: quoted_prose

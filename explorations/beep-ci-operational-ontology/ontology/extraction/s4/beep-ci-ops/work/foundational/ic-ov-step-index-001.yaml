@@ -1,0 +1,45 @@
+id: "ic:ov-step-index:001"
+hypothesis_ref: "dh:ov-step-index:001"
+identity:
+  supplies_identity: false
+  identity_criterion: >-
+    This data property supplies no identity: one step-index assertion is the
+    same fact only for the same ScheduleStep, the same containing
+    ScheduleProposal sequence, the same ordinal convention, and the same
+    numeric position; equal integers on different steps or proposals do not
+    merge the assertions.
+  reidentification_key:
+    - "ScheduleStep and containing ScheduleProposal identities"
+    - "ordered-sequence and ordinal-convention semantics"
+    - "numeric index value as supporting evidence"
+ontoclean:
+  rigidity: unresolved
+  carries_identity: false
+  supplies_identity: false
+  unity: >-
+    One data assertion relating one proposal-relative ScheduleStep to its
+    numeric ordinal position in one ScheduleProposal sequence.
+  dependence: relational
+ufo_analysis:
+  candidate_category: none
+  alternatives:
+    - "a reified ordinal-position mode borne by the ScheduleStep"
+    - "a sequence-membership situation joining proposal, step, and position"
+    - "a successor or precedence relation from which an index is derived"
+    - "an array offset with no domain meaning beyond serialization"
+  existential_dependencies:
+    - "The ScheduleStep whose position is asserted"
+    - "The containing ScheduleProposal and its ordered sequence"
+    - "The ordinal convention used to interpret the integer"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - "reordering or replacing the step creates a new index assertion"
+    - "the proposal sequence ceases to have a faithful realization"
+counterexamples:
+  - description: >-
+      Every proposal can contain a step numbered one, and the same
+      SeatRequest can move between positions in successor proposals; numeric
+      equality identifies neither one assertion nor one scheduled occurrence.
+status: proposed

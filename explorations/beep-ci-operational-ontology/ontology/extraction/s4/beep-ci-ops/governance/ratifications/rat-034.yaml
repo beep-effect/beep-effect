@@ -1,0 +1,9 @@
+id: rat:34
+proposal_ref: otp:pa-admission-request:001
+proposal_sha256: b76b268746838304dd9ab835b2292ef9a289ff0fd9fa1e763dda7cc067abde35
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-09-03T09:05:00Z'
+verbatim_decision: Accept the SeatRequest reuse — the queued ticket record, exactly the ratified term.

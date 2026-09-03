@@ -1,0 +1,22 @@
+id: "dh:pa-closeout-source-vocabulary:001"
+observation_refs:
+  - "po:sha256:4eaab6102c962dee4fa2994903e026bdec486cbf481cac243bd9246d1502e6ca"
+cq_warrants: ["CQ-005", "CQ-006"]
+proposed_referent:
+  label: "Yeet closeout-source literal vocabulary"
+  description: "Implementation literals for hosted checks and several review-provider or review-thread sources in closeout state."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "Verification-evidence source classification"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "Assurance-obligation family"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The enum alone does not show whether its members are evidence sources, obligation types, service bearers, or only closeout implementation branches."
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.22, use_for_acceptance: false}

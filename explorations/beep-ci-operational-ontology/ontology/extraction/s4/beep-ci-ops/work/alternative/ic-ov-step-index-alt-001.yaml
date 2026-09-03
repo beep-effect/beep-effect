@@ -1,0 +1,40 @@
+id: ic:ov-step-index-alt:001
+hypothesis_ref: dh:ov-step-index:001
+identity:
+  supplies_identity: false
+  identity_criterion: 'The ordinal-position quality of a ScheduleStep is the same
+    quality iff it is that step''s place in that ScheduleProposal''s ordered sequence.
+    Integers and the field name stepIndex are evidence of the value, never the quality.
+    A successor encoding without integers would still be this quality if it placed
+    that step in the same sequence position. Two steps with the same integer in different
+    proposals bear different quality particulars.'
+  reidentification_key:
+  - stepIndex integer (evidence of value)
+  - 0-based replay event index (evidence of comparison, not of this quality)
+ontoclean:
+  rigidity: rigid
+  carries_identity: false
+  supplies_identity: false
+  unity: one ordinal place inhering in one step relative to one proposal sequence
+  dependence: relational
+ufo_analysis:
+  candidate_category: quality
+  alternatives:
+  - relator
+  - information_object
+  existential_dependencies:
+  - the ScheduleStep whose place this is
+  - the ScheduleProposal sequence against which the place is defined
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+- description: 'Differential replay can find a projected first choice unequal to the
+    deployed grant. That is a fact about order, not about an array offset. Identifying
+    the quality with the implementation index type would make a correct order unstateable
+    after a recoding to successor links.'
+- description: 'Journal event indices 66, 68, 71 used in replay adjudication are indices
+    into the journal, not stepIndex values of a proposal. Collapsing the two integers
+    would mix evidence of the comparison with the hypothesized quality.'
+status: proposed

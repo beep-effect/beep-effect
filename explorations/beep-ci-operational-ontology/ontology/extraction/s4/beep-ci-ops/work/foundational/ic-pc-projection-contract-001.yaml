@@ -1,0 +1,33 @@
+id: "ic:pc-projection-contract:001"
+hypothesis_ref: "dh:pc-projection-contract:001"
+identity:
+  supplies_identity: true
+  identity_criterion: "Two AdmissionProjectionSpecification records are the same only when they continue one governing authority, version, and applicability lineage with the same input interpretation, policy and ledger reconstruction, ordering, explicit-time, output, provenance, replay, failure, and non-goal semantics."
+  reidentification_key:
+    - "governing authority, version, and applicability lineage"
+    - "input, state-reconstruction, time, and ordered-output semantics"
+    - "provenance, replay, failure, and non-goal clauses"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: "One repeatable prescriptive content unit whose projection, provenance, replay, failure, and exclusion clauses share one revision boundary."
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "a separately authoritative binding contract distinct from the pa and pb chains"
+    - "a schedule-projection process governed by the contract"
+    - "implementation documentation without operational force"
+  existential_dependencies:
+    - "an authoritative carrier and contract-version context"
+    - "the ontology, live-input, WorkUnit, and serialization vocabularies needed to interpret the contract"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - "superseded by a semantically revised projection contract"
+    - "withdrawn as binding for the v1 implementation"
+counterexamples:
+  - description: "Two executions can obey the same binding contract and emit byte-equal Turtle for equal inputs while remaining two processes and two output-producing occurrences."
+status: proposed

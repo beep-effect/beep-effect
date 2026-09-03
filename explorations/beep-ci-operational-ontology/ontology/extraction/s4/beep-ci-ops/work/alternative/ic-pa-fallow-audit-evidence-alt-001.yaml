@@ -1,0 +1,35 @@
+id: ic:pa-fallow-audit-evidence-alt:001
+hypothesis_ref: dh:pa-fallow-audit-evidence:001
+identity:
+  supplies_identity: true
+  identity_criterion: Two fallow boundary-audit evidence objects are the same iff they are
+    the same pairing of a stated audit procedure with a reported boundary-violation count
+    about the same inventory snapshot. The command string and the integer count are evidence
+    of that pairing, never independently the whole individual.
+  reidentification_key:
+  - command (evidence)
+  - boundaryViolations (evidence)
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: one procedure-plus-reported-count pairing about one audit snapshot
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - event
+  existential_dependencies:
+  - the audit procedure used
+  - the repository snapshot audited
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+- description: boundaryViolations=0 without the command would be a bare count; the command
+    without the count would be a spec. The hypothesized individual is their pairing in the
+    inventory, which can merge spec, run, and evidence if not split.
+- description: A later audit with the same command and a non-zero count is different evidence,
+    not a change of one enduring count-quality.
+status: proposed

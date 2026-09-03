@@ -1,0 +1,48 @@
+target: "otp:pb-review-fix-class-cap:001"
+target_sha256: "05cb39c97a6a5f2b3ef2aca25568346b91189e4521d1fefef1cce8f4fc0a437f"
+chain_sha256: "6472061bd6c94ebb8dcfda807b46edfe6719475fe41147ed177566dc56b21f6a"
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The invalid clause-is-a-policy edge was removed; the revision exact-reuses
+    only the complete AdmissionPolicy and asserts no candidate is-a edge.
+revision_requests: []
+attacks:
+  - surface: identity
+    rule: clause-identity-lineage-unobserved
+    counterexample: >-
+      One policy revision can change the review-fix cap with other parameters
+      without issuing a separately versioned clause. The revision no longer
+      identifies a clause individual: it uses the cap only as content of the
+      complete exact-reused AdmissionPolicy.
+    outcome: survived
+  - surface: warrant
+    rule: semantic-support-not-necessary
+    counterexample: >-
+      CQ-023 does not require a separate class-cap term, as round 1 showed. The
+      revision removes that term and directly warrants only the complete
+      AdmissionPolicy that CQ-023 explicitly queries, so the counterexample no
+      longer defeats the asserted entity.
+    outcome: survived
+  - surface: null_discriminator
+    rule: discriminator-true-of-guard
+    counterexample: >-
+      A Boolean guard can implement the class cap without minting an
+      independent clause. The revision asserts no clause entity; under the
+      sitting's carrier-only strike, the guard is implementation evidence for
+      governed content in the whole policy rather than a competing referent.
+    outcome: survived
+rival_models_still_viable:
+  - "The review-fix cap is a proper clause component of the policy."
+  - "A deployed policy regime realizes the complete specification."
+evidence:
+  - "po:sha256:60e90bd17b628d4d6d815cfd05ddcf88cbc2a724790b05ac88b4411619f535be"
+  - "po:sha256:71ff33a91cd202789d604775c82a3100091dee4dead6fe88e84f7712ffd84a31"
+  - "CQ-023"

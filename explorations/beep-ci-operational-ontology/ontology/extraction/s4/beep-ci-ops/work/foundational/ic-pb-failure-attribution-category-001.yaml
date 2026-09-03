@@ -1,0 +1,33 @@
+id: "ic:pb-failure-attribution-category:001"
+hypothesis_ref: "dh:pb-failure-attribution-category:001"
+identity:
+  supplies_identity: false
+  identity_criterion: "Two attribution tokens could be the same only when they classify the same failure occurrence against the same candidate change, baseline, environment, assessment criteria, and continuous assessment interval; the four labels do not identify the failure."
+  reidentification_key:
+    - "failure-occurrence provenance"
+    - "candidate change, baseline, and environment context"
+    - "assessment act, criteria version, and validity interval"
+ontoclean:
+  rigidity: unresolved
+  carries_identity: unresolved
+  supplies_identity: false
+  unity: "Unresolved because the prose does not say whether one mutually exclusive role assignment, one revisable judgment record, or several overlapping attribution dimensions unite the four labels."
+  dependence: relational
+ufo_analysis:
+  candidate_category: unresolved
+  alternatives:
+    - "an anti-rigid attribution role borne by a verification-failure occurrence"
+    - "an information-object judgment that records an analyst's attribution"
+    - "a governed controlled vocabulary with independently defined members"
+  existential_dependencies:
+    - "a verification-failure occurrence that remains distinct from its attribution"
+    - "a candidate-change, baseline, environment, and assessment context"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+    - "superseded by a later attribution judgment"
+    - "closed when the operative repair-or-report decision is finalized"
+counterexamples:
+  - description: "One environment-caused failure can also be unrelated to the candidate change, so the four labels need not be mutually exclusive without definitions and precedence rules."
+status: proposed

@@ -1,0 +1,28 @@
+id: "dh:pb-schedule-projection-specification:001"
+observation_refs:
+  - "po:sha256:6fa9ae087c8d411c0218a0491a20989f722773cb08d8b57d733514a58cc86742"
+  - "po:sha256:88f09e0224cf8cc48710903fe1e017b9369bc5dada8def6024d42f2841f9a654"
+  - "po:sha256:959a603a7bc88415101c1c6e9073034271081d03a55dd625f763898feb579ea2"
+cq_warrants:
+  - "CQ-010"
+  - "CQ-020"
+proposed_referent:
+  label: "admission-order schedule-projection specification"
+  description: "A versioned information object specifying a deterministic admission-order projection, its frozen inputs, provisional schedule output vocabulary, differential replay gate, and explicit non-goals."
+representation_status: information_artifact
+alternatives:
+  - label: "the projected schedule occurrence"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "incubation-plan documentation only"
+    representation_status: implementation_artifact_only
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: "The excerpts define frozen T-Box, A-Box, journal, schema, and deployed-invariant inputs; require a deterministic admission-order projection and replay comparison; describe emitted ordered schedule nodes; and delimit non-goals. Those are stable normative and informational contents of a projection specification."
+  discriminator: "The specification requires projected grant order to reproduce the deployed scheduler on a pinned journal and turns mismatches into run evidence while declaring exactly which schedule nodes are emitted; those prescribed truth conditions would not exist for incidental implementation notes."
+epistemic_status: proposed
+confidence:
+  value: 0.93
+  use_for_acceptance: false

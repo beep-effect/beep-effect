@@ -62,7 +62,7 @@ const observeCollaborations = (box: B.Box["Service"], folders: ReadonlyArray<Box
   ).pipe(Effect.map(A.flatten));
 
 const entitlementDiscovery = (
-  kind: "metadata" | "retention",
+  kind: BoxDiscoveryKind,
   count: Effect.Effect<number, B.BoxError>
 ): Effect.Effect<BoxDiscovery, B.BoxError> =>
   count.pipe(
@@ -156,9 +156,7 @@ const observeSimpleMarkerCount = <A>(
   kind: Extract<BoxDiscoveryKind, "signRequests" | "signTemplates">,
   load: (marker: O.Option<string>) => Effect.Effect<MarkerPage<A>, B.BoxError>
 ): Effect.Effect<BoxDiscovery, B.BoxError> =>
-  collectMarkerPages(load).pipe(
-    Effect.map((entries) => BoxDiscoveryAvailable.make({ count: A.length(entries), kind }))
-  );
+  entitlementDiscovery(kind, collectMarkerPages(load).pipe(Effect.map(A.length)));
 
 const observeSignRequests = (box: B.Box["Service"]) =>
   observeSimpleMarkerCount<B.SignRequest>("signRequests", (marker) =>

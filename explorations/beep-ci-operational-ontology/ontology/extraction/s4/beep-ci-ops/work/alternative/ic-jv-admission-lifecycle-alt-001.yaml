@@ -1,0 +1,40 @@
+id: ic:jv-admission-lifecycle-alt:001
+hypothesis_ref: dh:jv-admission-lifecycle:001
+identity:
+  supplies_identity: true
+  identity_criterion: Two admission-lifecycle occurrences are the same process iff they are
+    the same historically bounded holding of scheduler capacity for one admitted request from
+    enqueue through release. A nonce, origin key, or journal tag is reidentification evidence,
+    never the criterion. Distinct admit/release pairs are distinct occurrences even if work
+    kind and weight match.
+  reidentification_key:
+  - nonce (evidence)
+  - originKey (evidence)
+  - enqueuedAtMillis/admittedAtMillis/releasedAtMillis (evidence)
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: one enqueue-admit-release episode of one grant, including its telemetry
+  dependence: relational
+ufo_analysis:
+  candidate_category: process
+  alternatives:
+  - relator
+  - information_object
+  existential_dependencies:
+  - the admitted request/work
+  - the scheduler capacity that is held and released
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+  - released
+  - evicted
+counterexamples:
+- description: A journal tagged admission-admitted with enqueuedAtMillis, admittedAtMillis,
+    and releasedAtMillis can be read as one process or as the history of a lease relator;
+    those are not the same UFO category.
+- description: memoryPeakBytes on a different admission journal does not by itself identify
+    which grant's lifecycle it belongs to.
+status: proposed

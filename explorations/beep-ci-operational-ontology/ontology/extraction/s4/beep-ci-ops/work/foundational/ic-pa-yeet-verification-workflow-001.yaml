@@ -1,0 +1,50 @@
+id: "ic:pa-yeet-verification-workflow:001"
+hypothesis_ref: "dh:pa-yeet-verification-workflow:001"
+identity:
+  supplies_identity: unresolved
+  identity_criterion: >-
+    Unresolved for the broad exact-reused VerificationPlanSpecification
+    extension: two realizations represent the same plan content only if they
+    preserve the same prescribed WorkUnit sequence, applicable scope,
+    authority, and revision lineage, but the corpus does not settle content
+    identity versus contextual plan-copy identity across heterogeneous plans.
+  reidentification_key:
+    - "prescribed WorkUnit membership, ordering, and applicable scope"
+    - "governing authority and plan-version lineage"
+    - "contextual copy, replacement, and revision provenance"
+ontoclean:
+  rigidity: unresolved
+  carries_identity: unresolved
+  supplies_identity: unresolved
+  unity: >-
+    Broad plan unity is one repeatable ordered verification prescription with
+    its applicable scope; whether contextual copies or coordinated constituent
+    plans share identity remains unresolved.
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "information_object: repeatable plan content realized by multiple carriers"
+    - "information_object: context-bound plan copies with distinct revision identity"
+    - "information_object: distinct Yeet cheap-gates, review-fix, and monitor constituent plans"
+    - "process: a dated verification workflow execution"
+    - "none: an abstract procedure universal realized by plan specifications"
+  existential_dependencies:
+    - "At least one faithful policy, planner, or documentary carrier"
+    - "The WorkUnit and Scope vocabularies needed to interpret the prescription"
+    - "A governing authority and applicability context"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - "superseded by changed membership, ordering, scope, or authority semantics"
+    - "withdrawn or left without any faithful realization"
+counterexamples:
+  - description: >-
+      A non-Yeet verification plan can prescribe ordered WorkUnits and scope
+      without proof-tier, monitor, or merge-ready clauses, so a Yeet-only unity
+      criterion cannot govern the broad exact-reused class.
+  - description: >-
+      Two dated executions can realize the same plan while differing in head,
+      duration, and result, so execution identity cannot supply plan identity.
+status: proposed

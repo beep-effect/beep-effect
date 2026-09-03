@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "fix/scratchpad-type-repairs",
+  "committed": false,
+  "createdAt": "2026-08-13T16:28:26.073Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "closeout:01-pr-context",
+      "label": "closeout:pr-context",
+      "phase": "monitor",
+      "status": "not-run"
+    },
+    {
+      "id": "closeout:02-review-gates",
+      "label": "closeout:review-gates",
+      "phase": "monitor",
+      "status": "not-run"
+    }
+  ],
+  "message": "yeet closeout succeeded.",
+  "mode": "closeout",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "fix_scratchpad-type-repairs-6d8c7e3c6d1b",
+  "attemptId": "483d63ca-b449-4376-9b1f-475552b130a2",
+  "startedAt": "2026-08-13T16:28:21.359Z",
+  "endedAt": "2026-08-13T16:28:26.073Z",
+  "elapsedMs": 4714,
+  "indexPath": "<fleet>/beep-effect19-scratchpad-type-repairs/.beep/yeet/quality-issue-index.json"
+}
