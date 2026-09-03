@@ -320,6 +320,10 @@ export * from "./MutableHashMap.ts";
  * @category validation
  */
 export * from "./MutableHashSet.ts";
+/**
+ * @since 0.0.0
+ * @category validation
+ */
 export * from "./Number.ts";
 /**
  * Opaque payload schemas (`Defect`, `OpaqueUnknown`) whose equivalence is declared always-true.
@@ -511,6 +515,12 @@ export * from "./Unknown.ts";
  * @category validation
  */
 export * from "./URL.ts";
+/**
+ * Current `@beep/schema` package version.
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
 export { VERSION } from "./Version.ts";
 /**
  * @since 0.0.0
