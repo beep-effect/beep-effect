@@ -16,6 +16,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { acquireJournalFileLock, releaseJournalFileLock } from "./AdmissionJournal.ts";
+import { publishJournalTextAtomically } from "./JournalFile.ts";
 import { ProcessIdentityStatus, processIdentityStatus } from "./ProcessIdentity.ts";
 import { attemptInputFactFields, QualitySchedulerError } from "./QualityScheduler.schemas.ts";
 import { repoRunArtifactId } from "./RepoRunArtifacts.ts";
@@ -327,31 +328,47 @@ const retainedJournalLines = Effect.fn("AttemptTerminationJournal.retainedLines"
   return A.append(retainedLines, receipt);
 });
 
-const publishJournalAtomic = Effect.fn("AttemptTerminationJournal.publishAtomic")(function* (
+interface ClassifiedJournalLines {
+  readonly lines: ReadonlyArray<string>;
+  readonly needsTrailingNewline: boolean;
+  readonly rows: ReadonlyArray<JournalLine>;
+  readonly torn: boolean;
+}
+
+const classifyJournalLines = Effect.fn("AttemptTerminationJournal.classifyLines")(function* (
   journalPath: string,
-  content: string
-): Effect.fn.Return<void, QualitySchedulerError, FileSystem.FileSystem | Path.Path> {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const stagingPath = `${journalPath}.staging-${process.pid}-${randomUUID()}`;
-  yield* Effect.ensuring(
-    Effect.gen(function* () {
-      yield* Effect.scoped(
-        Effect.gen(function* () {
-          const file = yield* fs.open(stagingPath, { flag: "w" });
-          yield* file.writeAll(textEncoder.encode(content));
-          yield* file.sync;
-        })
-      ).pipe(Effect.mapError(QualitySchedulerError.new(`Failed to stage Yeet attempt journal "${journalPath}".`)));
-      yield* fs
-        .rename(stagingPath, journalPath)
-        .pipe(Effect.mapError(QualitySchedulerError.new(`Failed to publish Yeet attempt journal "${journalPath}".`)));
-      yield* Effect.scoped(
-        fs.open(path.dirname(journalPath), { flag: "r" }).pipe(Effect.flatMap((directory) => directory.sync))
-      ).pipe(Effect.ignore);
-    }),
-    fs.remove(stagingPath, { force: true }).pipe(Effect.ignore)
+  text: string
+): Effect.fn.Return<ClassifiedJournalLines> {
+  const rawLines = pipe(Str.split("\n")(text), A.filter(Str.isNonEmpty));
+  // Only invalid JSON at an unterminated EOF is torn. Complete unknown or
+  // corrupt records remain opaque rows and survive every rewrite verbatim.
+  const torn = yield* hasTornTrailingRecord(text, rawLines);
+  yield* Effect.when(
+    Console.warn(`[yeet] dropped a torn trailing record from the Yeet attempt journal "${journalPath}"`),
+    Effect.succeed(torn)
   );
+  const lines = torn ? A.dropRight(rawLines, 1) : rawLines;
+  return {
+    lines,
+    needsTrailingNewline: Str.isNonEmpty(text) && !Str.endsWith("\n")(text),
+    rows: yield* decodeJournalLines(lines),
+    torn,
+  };
+});
+
+const retainedLinesForNormalization = Effect.fn("AttemptTerminationJournal.retainedSet")(function* (
+  classified: ClassifiedJournalLines,
+  retainRows: boolean,
+  protectedAttemptIds: ReadonlyArray<UUID>
+): Effect.fn.Return<O.Option<ReadonlyArray<string>>, QualitySchedulerError> {
+  const exceedsRetention = A.length(terminalAttemptIds(knownJournalEvents(classified.rows))) > RETAINED_ATTEMPTS;
+  if (!classified.torn && !classified.needsTrailingNewline && (!retainRows || !exceedsRetention)) {
+    return O.none();
+  }
+  if (retainRows && exceedsRetention) {
+    return O.some(yield* retainedJournalLines(classified.rows, protectedAttemptIds));
+  }
+  return O.some(classified.lines);
 });
 
 const normalizeJournal = Effect.fn("AttemptTerminationJournal.normalize")(function* (
@@ -363,29 +380,21 @@ const normalizeJournal = Effect.fn("AttemptTerminationJournal.normalize")(functi
   const text = yield* fs
     .readFileString(journalPath)
     .pipe(Effect.mapError(QualitySchedulerError.new(`Failed to read Yeet attempt journal "${journalPath}".`)));
-  const rawLines = pipe(Str.split("\n")(text), A.filter(Str.isNonEmpty));
-  // A host that dies mid-append leaves a torn final record; dropping it keeps the
-  // journal usable instead of failing every later attempt on the same bad line.
-  const torn = yield* hasTornTrailingRecord(text, rawLines);
-  if (torn) {
-    yield* Console.warn(`[yeet] dropped a torn trailing record from the Yeet attempt journal "${journalPath}"`);
-  }
-  const lines = torn ? A.dropRight(rawLines, 1) : rawLines;
-  const rows = yield* decodeJournalLines(lines);
-  const exceedsRetention = A.length(terminalAttemptIds(knownJournalEvents(rows))) > RETAINED_ATTEMPTS;
-  const needsTrailingNewline = Str.isNonEmpty(text) && !Str.endsWith("\n")(text);
-  if (!torn && !needsTrailingNewline && (!retainRows || !exceedsRetention)) {
-    return;
-  }
-  const retainedLines = retainRows && exceedsRetention ? yield* retainedJournalLines(rows, protectedAttemptIds) : lines;
-  yield* publishJournalAtomic(
-    journalPath,
-    pipe(
-      retainedLines,
-      A.map((line) => `${line}\n`),
-      A.join(Str.empty)
-    )
-  );
+  const classified = yield* classifyJournalLines(journalPath, text);
+  const retainedLines = yield* retainedLinesForNormalization(classified, retainRows, protectedAttemptIds);
+  yield* O.match(retainedLines, {
+    onNone: () => Effect.void,
+    onSome: (lines) =>
+      publishJournalTextAtomically(
+        journalPath,
+        pipe(
+          lines,
+          A.map((line) => `${line}\n`),
+          A.join(Str.empty)
+        ),
+        "Yeet attempt journal"
+      ),
+  });
 });
 
 const repairTornJournal = (journalPath: string) => normalizeJournal(journalPath, false);

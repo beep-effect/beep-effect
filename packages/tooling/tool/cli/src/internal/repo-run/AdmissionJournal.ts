@@ -23,6 +23,7 @@ import { constant, dual, flow } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { publishJournalTextAtomically } from "./JournalFile.ts";
 import { AdmissionPriority, AdmissionWorkKind, QualitySchedulerError } from "./QualityScheduler.schemas.ts";
 import type * as SchemaAST from "effect/SchemaAST";
 
@@ -37,7 +38,6 @@ const LOCK_RETRY_DELAY_MILLIS = 25;
 // therefore applies only to malformed generations, never a parseable live
 // owner whose lock could still be released concurrently.
 const LOCK_REUSE_BACKSTOP_MILLIS = 300_000;
-const textEncoder = new TextEncoder();
 
 /**
  * Whether v2 eviction events may be emitted into the shared admission journal.
@@ -631,25 +631,6 @@ const withAdmissionJournalLock = Effect.fnUntraced(function* <Success, Error, Re
   return yield* Effect.ensuring(use(journalPath), releaseJournalFileLock(lockPath, token));
 });
 
-const publishTextAtomic = Effect.fnUntraced(function* (
-  targetPath: string,
-  content: string,
-  label: string
-): Effect.fn.Return<void, QualitySchedulerError, FileSystem.FileSystem> {
-  const fs = yield* FileSystem.FileSystem;
-  const stagingPath = `${targetPath}.tmp-${process.pid}-${randomUUID()}`;
-  yield* Effect.scoped(
-    Effect.gen(function* () {
-      const file = yield* fs.open(stagingPath, { flag: "w" });
-      yield* file.writeAll(textEncoder.encode(content));
-      yield* file.sync;
-    })
-  ).pipe(Effect.mapError(QualitySchedulerError.new(`Failed to stage ${label} "${targetPath}".`)));
-  yield* fs
-    .rename(stagingPath, targetPath)
-    .pipe(Effect.mapError(QualitySchedulerError.new(`Failed to publish ${label} "${targetPath}".`)));
-});
-
 /**
  * Atomically write the admission protocol marker.
  *
@@ -680,7 +661,11 @@ export const writeAdmissionProtocol = Effect.fn("AdmissionJournal.writeProtocol"
     root,
     (lockPath) => `Admission journal lock "${lockPath}" stayed busy; could not change the protocol marker.`,
     Effect.fnUntraced(function* () {
-      yield* publishTextAtomic(yield* admissionProtocolPath(root), `${content}\n`, "admission protocol marker");
+      yield* publishJournalTextAtomically(
+        yield* admissionProtocolPath(root),
+        `${content}\n`,
+        "admission protocol marker"
+      );
       return protocol;
     })
   );
@@ -690,7 +675,7 @@ const rewriteJournalLocked = Effect.fnUntraced(function* (
   journalPath: string,
   event: AdmissionJournalEvent,
   line: string
-): Effect.fn.Return<void, QualitySchedulerError, FileSystem.FileSystem> {
+): Effect.fn.Return<void, QualitySchedulerError, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const text = yield* fs
     .readFileString(journalPath)
@@ -727,7 +712,7 @@ const rewriteJournalLocked = Effect.fnUntraced(function* (
       ? 0
       : pipe(admittedIndexes, A.takeRight(RETAINED_ADMISSIONS), A.head, O.getOrElse(constant(0)));
   const retainedRecords = A.filter(records, (record, index) => index >= firstRetainedIndex || O.isNone(record.event));
-  yield* publishTextAtomic(
+  yield* publishJournalTextAtomically(
     journalPath,
     pipe(
       retainedRecords,
