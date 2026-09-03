@@ -10,7 +10,7 @@ Status: **v1.0 — RATIFIED by Benjamin 2026-08-24 (MAP grill M1–M6 applied; s
 > Extraction probe breaker on 2026-08-26 and paused `semantica-canary` at P2.
 > The evidence-quote replacement in DECISIONS E1-E8 later passed C0, followed
 > by C1 and C2. On 2026-09-02, MAP Sequencing 5 reopened this exploration at
-> `decompose` for the two C2-fired successor gates. The PR A/B/C delivery
+> `decompose` for the C2-fired storage gate and the fixture-gated reasoning spike. The PR A/B/C delivery
 > vehicle below is historical. Where extractor prose disagrees with the
 > DECISIONS Current law table, the table wins. Derived from `BRIEF.md`
 v1.1, the `DECISIONS.md` Current law table (D1–D18, A1–A9, B1–B6, G1–G7, O1–O5, S1–S8, T1–T3),

@@ -10,7 +10,7 @@
   },
   "packetPath": "goals/semantica-canary",
   "lifecycle": "completed-retained",
-  "statusNote": "P1-P5 completed 2026-09-02: archived checksums and replay equality were audited, all five dated family verdicts were confirmed, the closeout reflection was added, and the packet was retained. The C2-fired successor gates route the source exploration to decompose. Six final park values were synced to the Notion atlas; see history/p5-atlas-sync.md.",
+  "statusNote": "P1-P5 completed 2026-09-02: archived checksums and replay equality were audited, all five dated family verdicts were confirmed, the closeout reflection was added, and the packet was retained. The C2-fired storage gate routes the source exploration to decompose; the reasoning spike stays gated on its G-entailment/rules fixture. Six final park values were synced to the Notion atlas; see history/p5-atlas-sync.md.",
   "mission": "Scaffold the headless-first Tauri lab at apps/labs/semantica and run the staged canary C0 -> C1 -> C2 over F1 + W1 under the probe breaker (S1), emitting replay-identical EvalReports; each passing stage flips its families from park-pending-canary to a verdict (B1).",
   "executionCapable": true,
   "reflectionRequired": true,

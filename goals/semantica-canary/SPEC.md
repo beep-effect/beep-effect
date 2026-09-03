@@ -268,7 +268,7 @@ Canonicalizer row).
       referencing the `reportDigest`; the Tier-L measurements and the Tier-D
       telemetry including wall-clock are required solely there and never enter
       the report digest (R1).
-- [ ] Base packet checks and `bun run beep yeet verify` are green; each stage
+- [x] Base packet checks and `bun run beep yeet verify` are green; each stage
       ships as a PR driven to mergeable; P5 records a valid closeout
       reflection.
 - [x] No unrelated refactors or formatting churn.

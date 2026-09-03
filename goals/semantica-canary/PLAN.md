@@ -8,8 +8,8 @@ P1-P5 are complete. C2 passed its restricted-EYE oracle, per-event rule
 validation, commit/SIGKILL/restart projection proof, Tier-L bars, and the
 full-W1 R2 gate with byte-identical live/replay reports and no unexpected
 degradation. P5 audited the archived evidence, added the closeout reflection,
-retained the packet, and returned both fired successor gates to the source
-exploration at `decompose`. Six final `park` values were synced
+retained the packet, and returned the fired storage gate and the still-gated reasoning spike to the
+source exploration at `decompose`. Six final `park` values were synced
 to the Notion atlas (`history/p5-atlas-sync.md`).
 
 ## Phases

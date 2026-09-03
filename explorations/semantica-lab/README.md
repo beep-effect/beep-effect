@@ -9,9 +9,10 @@ Status: `active`
 
 Source: [`ops/manifest.json`](./ops/manifest.json). The `semantica-canary`
 goal passed C0 through C2 and closes as retained on 2026-09-02. Per MAP
-Sequencing 5, C2 fired the storage-inversion and reasoning-spike gates. The
-exploration therefore re-enters as `active` at `decompose`; this closeout does
-not scaffold either successor.
+Sequencing 5, the C2 pass fired the storage-inversion gate and left the
+reasoning spike gated on its `G-entailment/rules` fixture. The exploration
+therefore re-enters as `active` at `decompose`; this closeout does not
+scaffold either successor.
 
 ## Spark
 
@@ -27,8 +28,9 @@ Two queued gates are now open:
 - MAP Sequencing 5: the C2 pass fired `semantica-storage-inversion`; what
   bounded spike proves delete and compaction semantics for the append-only
   provenance ledger?
-- MAP Sequencing 5: the C2 pass fired `semantica-reasoning-spike`; what bounded
-  spike should build `G-entailment/rules` and test the queued reasoning
+- MAP Sequencing 5: the C2 pass satisfied one of `semantica-reasoning-spike`'s
+  two preconditions; its `G-entailment/rules` fixture is still uncommitted. What
+  bounded spike should build that fixture and test the queued reasoning
   candidates?
 
 ## Read This First
@@ -55,8 +57,9 @@ owns *decisions and research* (D2).
 
 - 2026-09-02 (P5 close and successor re-entry): `semantica-canary` completed
   its evidence audit and closeout reflection. All five family verdicts remain
-  dated in `DECISIONS.md`. The C2 pass fired the two MAP Sequencing 5 gates, so
-  this exploration re-entered at `decompose` without scaffolding a successor.
+  dated in `DECISIONS.md`. The C2 pass fired the storage gate and left the reasoning spike gated on
+  its `G-entailment/rules` fixture, so this exploration re-entered at
+  `decompose` without scaffolding a successor.
 - 2026-08-31 (C1 pass): the first-probe projection candidate rebuilt the C0
   PGlite ledger into dimension-keyed DuckDB exact-vector tables and an
   Oxigraph RDF view. The frozen G kNN and SPARQL witnesses, alternate-dimension

@@ -53,8 +53,9 @@ Use this command for execution-capable sessions:
 P5 Close is complete. C0, C1, and C2 passed their full-W1 live/replay gates,
 and all five family verdicts are dated in the exploration's `DECISIONS.md`.
 The closeout audited every stage artifact, added the required reflection, and
-retained the packet. The C2 pass returned the two fired successor gates to the
-exploration at `decompose`; no successor packet was scaffolded. The six final
+retained the packet. The C2 pass fired the storage gate and left the reasoning spike gated on
+its `G-entailment/rules` fixture; both return to the exploration at
+`decompose`, and no successor packet was scaffolded. The six final
 `park` values were synced to the Notion atlas; see `history/p5-atlas-sync.md`.
 
 ## Latest evidence

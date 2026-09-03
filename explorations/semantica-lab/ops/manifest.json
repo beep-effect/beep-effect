@@ -7,7 +7,7 @@
     "stage": "decompose",
     "openQuestions": [
       "MAP Sequencing 5: the C2 pass fired semantica-storage-inversion; what bounded spike proves delete and compaction semantics for the append-only provenance ledger?",
-      "MAP Sequencing 5: the C2 pass fired semantica-reasoning-spike; what bounded spike should build G-entailment/rules and test the queued reasoning candidates?"
+      "MAP Sequencing 5: the C2 pass satisfied one of semantica-reasoning-spike's two preconditions; the G-entailment/rules fixture is still uncommitted. What bounded spike should build that fixture and test the queued reasoning candidates?"
     ],
     "sources": ["research/SOURCES.md"],
     "links": {

@@ -149,11 +149,17 @@ and crash log named by the packet. No required artifact was missing.
 
 ## Repo quality proof
 
-The full local `bun run beep yeet verify` proof ran on this closeout change on 2026-09-02.
-Every packet, docs, knowledge, and code lane passed except two dependency-advisory lanes,
-`repo-sanity:bun-audit` and `pre-push:security` (osv-scan), which fail on `browserslist@4.28.6`
-and `qs@6.15.3` in the shared `bun.lock`. Attribution: inherited. The same two lanes fail on
-`main` itself at the branch point, and the open dependency-update PR #943 already bumps both
-packages to the fixed releases. This docs-only change does not touch the lockfile, so the fix is
-not taken here; the SPEC acceptance item for a green `yeet verify` stays unticked until the
-closeout branch carries that lockfile through `main`.
+Three `bun run beep yeet verify` attempts bracket this closeout on 2026-09-02:
+
+1. The Codex closeout lane's sandbox attempt never reached a quality lane: its preflight
+   `git fetch` could not write the linked worktree's Git metadata (environment-only; recorded in
+   `explorations/semantica-lab/research/OPPORTUNITIES.md` and in the closeout reflection).
+2. The orchestrating session's full proof on `dee32f6713` (the first closeout commit, cut from
+   `main` at `dbad7e065a`) ran every packet, docs, knowledge, and code lane and failed only
+   `repo-sanity:bun-audit` and `pre-push:security` (osv-scan) on `browserslist@4.28.6` and
+   `qs@6.15.3` in the shared `bun.lock`. Attribution: inherited. `main` failed the same two
+   lanes at that commit, and the dependency-update PR #943 owned the bump.
+3. After #943 merged, this branch merged `origin/main` (`c41f0d16c2`, lockfile now resolving
+   `browserslist@4.28.7` and `qs@6.16.0`) and the full proof reran green with exit 0 at
+   20:03 local time. The SPEC acceptance item for a green `yeet verify` is ticked on that run.
+   The final docs-only commit after it is proven by the hosted required checks on PR #944.

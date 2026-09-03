@@ -9,7 +9,7 @@ holds now; when a log entry disagrees with it, the table wins.
 
 | Topic | Holds now | Supersedes |
 | --- | --- | --- |
-| Next work | Decompose the two C2-fired successor gates in MAP Sequencing 5. | P5 close |
+| Next work | Decompose the C2-fired `semantica-storage-inversion` gate; `semantica-reasoning-spike` also needs its `G-entailment/rules` fixture committed before it fires (MAP Sequencing 5). | P5 close |
 | Stop rule | Probe-denominated circuit breaker (S1): first-probe candidate, one retry, then the family parks and the packet drops to decompose; wall-clock is `EvalRunTelemetry` sidecar telemetry (R1), never a gate. Re-entry is bounded (E8): one decompose re-entry candidate per family per stage; a second park is terminal absent an explicit operator ratification recorded in this file | BRIEF v0.1 "two weeks, C0 in four days"; contract v1.2 two-week falsifier; unbounded slate re-entry |
 | Gold labels | Gold-proposer provider family ≠ extraction provider family, enforced as a schema refinement on EvalRun; spot-checked fraction committed as a number in gold/v1 (S2) | contract v1.2 "LLM-proposed and spot-checked" |
 | Lab shape | `--app-kind tauri`, one local `cargo check`, `src-tauri` frozen through C0-C2, hand-written `server/main.ts` + `src/runtime/Layer.ts` as the headless proof surface (S4) | D12/G2 wording without a runtime entry |
@@ -735,8 +735,10 @@ Source:
   passing digest and measurements. The archived values are the controlling
   closeout evidence; the Reasoning verdict remains a pass.
 - Per MAP Sequencing 5 and the Explore graduation contract, the C2 pass fired
-  the queued `semantica-storage-inversion` and `semantica-reasoning-spike`
-  gates. The exploration re-enters at `decompose` with those two bounded spikes
+  the queued `semantica-storage-inversion` gate (its only precondition) and
+  satisfied the first of `semantica-reasoning-spike`'s two preconditions; that
+  spike still needs a committed `G-entailment/rules` fixture, which does not
+  exist yet. The exploration re-enters at `decompose` with both bounded spikes
   as its open questions. This closeout scaffolds neither successor.
 - Final atlas values: six catalog rows (`sqlite-vec`, `PgVector`, `Apache AGE`, `BGE`,
   `DoclingParser`, `ml`) were set to `park` in the Notion atlas after the verdicts were
