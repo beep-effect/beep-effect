@@ -518,3 +518,25 @@ waiting, including the awaited resource or operation, and apply a bounded
 timeout that fails with diagnostic context. A scoped documentation command
 that has finished planning, or a hook checking one named file, should not be
 indistinguishable from a dead wait when its host is unhealthy.
+
+## 2026-09-03 — service-account archive drill cannot attribute plaintext-hash drift
+
+Lived while exercising the newly available service-account lane for one
+bounded AI-metrics pass. The agent shim and both current secret references
+resolved successfully, and the archive drill decrypted the selected object,
+but the content-free integrity gate stopped on `AI metrics archive decrypt
+drill failed plaintext hash verification.` No secret value or decrypted
+content was printed, the pass was not retried, and its temporary reference
+file was removed. This separates a healthy credential lane from an unresolved
+archive-integrity failure, but the current error does not identify whether the
+stored hash, archive lineage, or hashing implementation drifted.
+One local control using the already installed mode-0600 AI-metrics environment
+failed at the same plaintext-hash gate, so the failure is not attributable to
+the new service-account route or the supplied references.
+
+What would have prevented it: make the drill emit a content-free diagnostic
+record containing the archive object's schema/algorithm version, writer
+revision, stored-hash version, and computed-hash version, with distinct typed
+outcomes for authentication, authenticated decryption, and plaintext-hash
+comparison. A credential-backed integrity proof should make the failing edge
+attributable without requiring a second secret-resolving run.

@@ -38,10 +38,11 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 is in progress. The fixed baseline is closed, the sharp notifier revision is
+P2 is in progress. P1 closed on 2026-09-03 after the ntfy phone transport was
+restored to its original optional status and deferred with an explicit trigger.
+The fixed baseline is closed, the sharp notifier revision is
 merged, the guarded fleet rollout is dispositioned, and the first treatment
-readout is favorable; the phase is now waiting on a safely configured phone
-transport:
+readout is favorable:
 
 1. **Hook semantics verified** (2026-08-01) — all three wait classes emit
    distinguishable, sessionId-bearing events. **`PermissionRequest`** (not
@@ -92,12 +93,17 @@ records two accepted initial desktop sends, storm damping for six same-session
 retries, and exact-bracket suppression of a resolved reminder. This remains a
 staggered, revision-qualified intervention, not a merge-time claim of
 fleet-wide adoption.
-Phone delivery also remains explicitly unconfigured: the one permitted agent
-credential diagnostic failed before any 1Password inventory or reference could
-be returned. P1 therefore remains current, and P2 stays gated. Full evidence
-is in
+Phone delivery remains unconfigured, but it is not a P1 exit gate. The
+normative spec never requires a phone transport, and the originating amendment
+called ntfy optional. A repository audit found no provisioned ntfy service,
+runtime reference, or existing operator dependency. The implemented transport
+continues to fail open as `transport-unconfigured`; reconsider it only after an
+explicit operator request and a least-privilege design. The historical
+`desktop-ntfy-1` revision name remains unchanged because evidence labels are
+immutable. P1 is complete and P2 is current. Full evidence is in
 [`research/2026-09-03-p1-baseline-close.md`](./research/2026-09-03-p1-baseline-close.md),
 [`research/2026-09-03-p1-first-treatment-readout.md`](./research/2026-09-03-p1-first-treatment-readout.md),
+[`research/2026-09-03-p1-phone-transport-disposition.md`](./research/2026-09-03-p1-phone-transport-disposition.md),
 and
 [`history/outputs/2026-09-03-p1-sharp-cutover.md`](./history/outputs/2026-09-03-p1-sharp-cutover.md).
 
