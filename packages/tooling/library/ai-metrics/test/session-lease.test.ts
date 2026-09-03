@@ -45,10 +45,10 @@ const activeLease = (transition: SessionLeaseTransition): SessionLease => {
 
 const startedLease = (): SessionLease => activeLease(transitionSessionLease(O.none(), startEvent));
 
-const activityEvent = (observedAt = "2026-09-03T12:01:00.000Z", eventDigest = hashC) =>
+const activityEvent = (observedAt = "2026-09-03T12:01:00.000Z", eventDigest = hashC, sessionId = hashA) =>
   decodeEvent({
     event: "activity",
-    sessionId: hashA,
+    sessionId,
     observedAt,
     eventDigest,
     evidenceTier: "observed",
@@ -122,20 +122,51 @@ describe("telemetry-v2 session leases", () => {
 
   it("quarantines missing, duplicate, and backwards transitions", () => {
     const missing = transitionSessionLease(O.none(), activityEvent());
+    const missingOpen = transitionSessionLease(O.none(), openWaitEvent);
+    const missingClose = transitionSessionLease(
+      O.none(),
+      decodeEvent({
+        event: "wait-closed",
+        sessionId: hashA,
+        observedAt: "2026-09-03T12:03:00.000Z",
+        eventDigest: hashF,
+        waitId: hashE,
+        evidenceTier: "derived",
+        oipTaint: "clear",
+      })
+    );
+    const missingEnd = transitionSessionLease(
+      O.none(),
+      decodeEvent({
+        event: "session-end",
+        sessionId: hashA,
+        observedAt: "2026-09-03T12:05:00.000Z",
+        eventDigest: hashF,
+        evidenceTier: "derived",
+        oipTaint: "clear",
+      })
+    );
     const lease = startedLease();
     const duplicate = transitionSessionLease(O.some(lease), startEvent);
     const backwards = transitionSessionLease(O.some(lease), activityEvent("2026-09-03T11:59:59.000Z", hashD));
+    const mismatched = transitionSessionLease(O.some(lease), activityEvent("2026-09-03T12:01:00.000Z", hashC, hashB));
 
     expect(missing.status === "quarantined" && missing.reason).toBe("missing-lease");
+    expect(missingOpen.status === "quarantined" && missingOpen.reason).toBe("missing-lease");
+    expect(missingClose.status === "quarantined" && missingClose.reason).toBe("missing-lease");
+    expect(missingEnd.status === "quarantined" && missingEnd.reason).toBe("missing-lease");
     expect(duplicate.status === "quarantined" && duplicate.reason).toBe("duplicate-start");
     expect(backwards.status === "quarantined" && backwards.reason).toBe("time-regression");
+    expect(mismatched.status === "quarantined" && mismatched.reason).toBe("session-mismatch");
   });
 
   it("closes only the exact pending wait and keeps an unmatched close open", () => {
     const opened = transitionSessionLease(O.some(startedLease()), openWaitEvent);
     const openedLease = activeLease(opened);
+    const duplicate = transitionSessionLease(O.some(openedLease), openWaitEvent);
+    const duplicateLease = activeLease(duplicate);
     const unmatched = transitionSessionLease(
-      O.some(openedLease),
+      O.some(duplicateLease),
       decodeEvent({
         event: "wait-closed",
         sessionId: hashA,
@@ -161,6 +192,8 @@ describe("telemetry-v2 session leases", () => {
     );
 
     expect(opened.status === "active" && opened.outcome).toBe("wait-opened");
+    expect(duplicate.status === "active" && duplicate.outcome).toBe("wait-open-duplicate");
+    expect(duplicateLease.openWaits).toHaveLength(1);
     expect(unmatched.status === "active" && unmatched.outcome).toBe("wait-close-unmatched");
     expect(unmatchedLease.openWaits).toHaveLength(1);
     expect(matched.status === "active" && matched.outcome).toBe("wait-closed");

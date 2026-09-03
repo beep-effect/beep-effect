@@ -6,6 +6,8 @@ import {
   IngestEnumeration,
   IngestManifest,
   requireAbsoluteAiMetricsDataRoot,
+  SessionLeaseReconciliation,
+  SessionLeaseTransition,
   TelemetryV2Store,
 } from "@beep/repo-ai-metrics";
 import { fcRuns } from "@beep/test-utils";
@@ -193,6 +195,63 @@ layer(NodeServices.layer)("telemetry-v2 store", (it) => {
           expect(persistedText).not.toMatch(/"(?:prompt|command|toolArgument|toolResult|path)"/iu);
         })
       )
+    )
+  );
+
+  it.effect("durably records lease transitions and reconciliation decisions", () =>
+    Effect.scoped(
+      withTempStore((dataRoot, store) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const transition = yield* S.decodeEffect(SessionLeaseTransition)({
+            status: "quarantined",
+            sessionId: otherHash,
+            eventDigest: otherHash,
+            reason: "missing-lease",
+            evidenceTier: "unknown",
+            oipTaint: "unknown",
+          });
+          const reconciliation = yield* S.decodeEffect(SessionLeaseReconciliation)({
+            status: "deferred",
+            sessionId: otherHash,
+            leaseDigest: otherHash,
+            reason: "lease-missing",
+          });
+
+          const transitionReceipt = yield* store.appendSessionLeaseTransition(transition);
+          const reconciliationReceipt = yield* store.appendSessionLeaseReconciliation(reconciliation);
+          const persistedTransition = yield* SessionLeaseTransition.decodeJsonEffect(
+            yield* fs.readFileString(path.join(dataRoot, transitionReceipt.relativePath))
+          );
+          const persistedReconciliation = yield* SessionLeaseReconciliation.decodeJsonEffect(
+            yield* fs.readFileString(path.join(dataRoot, reconciliationReceipt.relativePath))
+          );
+
+          expect(transitionReceipt.artifactKind).toBe("session-lease-transition");
+          expect(reconciliationReceipt.artifactKind).toBe("session-lease-reconciliation");
+          expect(persistedTransition.status).toBe("quarantined");
+          expect(persistedReconciliation.status).toBe("deferred");
+        })
+      )
+    )
+  );
+
+  it.effect("maps a non-directory data root to a typed preparation failure", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const tempDirectory = yield* fs.makeTempDirectoryScoped({ prefix: "beep-telemetry-v2-store-invalid-" });
+        const dataRootPath = path.join(tempDirectory, "not-a-directory");
+        yield* fs.writeFileString(dataRootPath, "occupied\n");
+        const dataRoot = yield* requireAbsoluteAiMetricsDataRoot(dataRootPath);
+
+        const error = yield* Layer.build(TelemetryV2Store.layer(dataRoot)).pipe(Effect.flip);
+
+        expect(error._tag).toBe("TelemetryV2StoreError");
+        expect(error.operation).toBe("prepare-root");
+      })
     )
   );
 });

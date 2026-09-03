@@ -21037,15 +21037,15 @@
     },
     "@beep/repo-cli": {
       "path": "packages/tooling/tool/cli",
-      "lines": 79.75,
-      "statements": 79.54,
-      "branches": 69.4,
-      "functions": 73.58,
+      "lines": 79.72,
+      "statements": 79.52,
+      "branches": 69.42,
+      "functions": 73.59,
       "uncovered": {
-        "lines": 8418,
-        "statements": 8893,
-        "branches": 4810,
-        "functions": 3297
+        "lines": 8475,
+        "statements": 8952,
+        "branches": 4831,
+        "functions": 3312
       },
       "files": {
         "packages/tooling/tool/cli/src/bin-main.ts": {
@@ -21054,8 +21054,8 @@
           "branches": 0,
           "functions": 0,
           "uncovered": {
-            "lines": 91,
-            "statements": 96,
+            "lines": 92,
+            "statements": 97,
             "branches": 54,
             "functions": 22
           }
@@ -21506,7 +21506,7 @@
         },
         "packages/tooling/tool/cli/src/commands/Ci/Ci.errors.ts": {
           "lines": 100,
-          "statements": 75,
+          "statements": 80,
           "branches": 100,
           "functions": 0,
           "uncovered": {
@@ -21517,15 +21517,27 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts": {
-          "lines": 88.42,
-          "statements": 88.51,
-          "branches": 85.84,
-          "functions": 85.13,
+          "lines": 92.44,
+          "statements": 92.52,
+          "branches": 90.79,
+          "functions": 89.36,
           "uncovered": {
-            "lines": 36,
-            "statements": 38,
+            "lines": 33,
+            "statements": 35,
             "branches": 15,
-            "functions": 22
+            "functions": 20
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Ci/CiLanePartitions.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
           }
         },
         "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts": {
@@ -24289,15 +24301,15 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts": {
-          "lines": 40.61,
-          "statements": 40.43,
-          "branches": 31.67,
-          "functions": 32.39,
+          "lines": 39.6,
+          "statements": 39.41,
+          "branches": 29.62,
+          "functions": 31.03,
           "uncovered": {
-            "lines": 427,
-            "statements": 436,
-            "branches": 151,
-            "functions": 144
+            "lines": 485,
+            "statements": 495,
+            "branches": 171,
+            "functions": 160
           }
         },
         "packages/tooling/tool/cli/src/commands/Quality/Quality.errors.ts": {
@@ -24598,6 +24610,18 @@
             "statements": 26,
             "branches": 32,
             "functions": 3
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Quality/internal/TestTsgoSyntheticConfig.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
           }
         },
         "packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts": {
@@ -26929,15 +26953,15 @@
           }
         },
         "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts": {
-          "lines": 92.85,
-          "statements": 92.82,
-          "branches": 87.5,
-          "functions": 88.67,
+          "lines": 92.63,
+          "statements": 92.39,
+          "branches": 86.87,
+          "functions": 88.05,
           "uncovered": {
-            "lines": 32,
-            "statements": 33,
-            "branches": 20,
-            "functions": 18
+            "lines": 33,
+            "statements": 35,
+            "branches": 21,
+            "functions": 19
           }
         },
         "packages/tooling/tool/cli/src/internal/repo-run/RepoRun.executor.ts": {

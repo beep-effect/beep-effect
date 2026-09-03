@@ -10,6 +10,7 @@ import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils, Sha256Hex } from "@bee
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import { dual } from "effect/Function";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { AiMetricsTranscriptSource } from "./models.ts";
@@ -415,45 +416,46 @@ const transitionExistingLease = (
     return quarantineTransition(event, SessionLeaseTransitionFailure.Enum["time-regression"]);
   }
 
-  return SessionLeaseEvent.match({
-    "session-start": () => quarantineTransition(event, SessionLeaseTransitionFailure.Enum["duplicate-start"]),
-    activity: (activity) =>
-      ActiveSessionLeaseTransition.make({
-        outcome: SessionLeaseActiveOutcome.Enum.renewed,
-        lease: renewLease(lease, activity, lease.openWaits),
-      }),
-    "wait-opened": (opened) => {
-      const duplicate = A.some(lease.openWaits, (wait) => wait.waitId === opened.wait.waitId);
-      const openWaits = duplicate ? lease.openWaits : A.append(lease.openWaits, opened.wait);
-      return ActiveSessionLeaseTransition.make({
-        outcome: duplicate
-          ? SessionLeaseActiveOutcome.Enum["wait-open-duplicate"]
-          : SessionLeaseActiveOutcome.Enum["wait-opened"],
-        lease: renewLease(lease, opened, openWaits),
-      });
-    },
-    "wait-closed": (closed) => {
-      const matched = A.some(lease.openWaits, (wait) => wait.waitId === closed.waitId);
-      return ActiveSessionLeaseTransition.make({
-        outcome: matched
-          ? SessionLeaseActiveOutcome.Enum["wait-closed"]
-          : SessionLeaseActiveOutcome.Enum["wait-close-unmatched"],
-        lease: renewLease(
-          lease,
-          closed,
-          A.filter(lease.openWaits, (wait) => wait.waitId !== closed.waitId)
-        ),
-      });
-    },
-    "session-end": (ended) => {
-      const finalLease = renewLease(lease, ended, lease.openWaits);
-      return EndedSessionLeaseTransition.make({
-        finalLease,
-        endedAt: ended.observedAt,
-        terminalEventDigest: ended.eventDigest,
-      });
-    },
-  })(event);
+  return Match.value(event).pipe(
+    Match.discriminatorsExhaustive("event")({
+      activity: (activity) =>
+        ActiveSessionLeaseTransition.make({
+          outcome: SessionLeaseActiveOutcome.Enum.renewed,
+          lease: renewLease(lease, activity, lease.openWaits),
+        }),
+      "wait-opened": (opened) => {
+        const duplicate = A.some(lease.openWaits, (wait) => wait.waitId === opened.wait.waitId);
+        const openWaits = duplicate ? lease.openWaits : A.append(lease.openWaits, opened.wait);
+        return ActiveSessionLeaseTransition.make({
+          outcome: duplicate
+            ? SessionLeaseActiveOutcome.Enum["wait-open-duplicate"]
+            : SessionLeaseActiveOutcome.Enum["wait-opened"],
+          lease: renewLease(lease, opened, openWaits),
+        });
+      },
+      "wait-closed": (closed) => {
+        const matched = A.some(lease.openWaits, (wait) => wait.waitId === closed.waitId);
+        return ActiveSessionLeaseTransition.make({
+          outcome: matched
+            ? SessionLeaseActiveOutcome.Enum["wait-closed"]
+            : SessionLeaseActiveOutcome.Enum["wait-close-unmatched"],
+          lease: renewLease(
+            lease,
+            closed,
+            A.filter(lease.openWaits, (wait) => wait.waitId !== closed.waitId)
+          ),
+        });
+      },
+      "session-end": (ended) => {
+        const finalLease = renewLease(lease, ended, lease.openWaits);
+        return EndedSessionLeaseTransition.make({
+          finalLease,
+          endedAt: ended.observedAt,
+          terminalEventDigest: ended.eventDigest,
+        });
+      },
+    })
+  );
 };
 
 /**

@@ -540,3 +540,36 @@ revision, stored-hash version, and computed-hash version, with distinct typed
 outcomes for authentication, authenticated decryption, and plaintext-hash
 comparison. A credential-backed integrity proof should make the failing edge
 attributable without requiring a second secret-resolving run.
+
+## 2026-09-03 — package coverage consumes a stale ignored goals index
+
+Lived while reproducing PR coverage with
+`bun run coverage -- --filter=@beep/repo-cli --summarize` after merging current
+`main`. The 12-minute package run failed one otherwise unrelated goals test
+because the ignored local `goals/INDEX.md` still described 172 packets while
+the merged manifests generated 175. Regenerating the projection with
+`bun run beep goals index --write` made the exact 24-test file pass. The
+coverage ratchet never ran, so the failure provided no evidence about the
+reported coverage regression.
+
+What would have prevented it: have the package coverage preflight regenerate
+ignored derived inputs whose manifests changed, or make the test construct its
+expected local projection inside its isolated fixture. A package-filtered
+coverage run should not spend its full suite budget before discovering that an
+untracked workspace cache predates the tested commit.
+
+## 2026-09-03 — full-run coverage floors exceeded package-lane observations
+
+Lived while repairing PR #992 after both the hosted affected lane and two clean
+`bun run coverage -- --filter=@beep/repo-cli` runs agreed that
+`Quality.command.ts` and `QualityScheduler.ts` were below floors written by the
+preceding repo-wide baseline refresh. The source delta in `Quality.command.ts`
+belonged to merged PR #989, while `QualityScheduler.ts` had not changed since
+PR #964. The gate's scoped writer merged the reproducible package-lane results
+without lowering any other package.
+
+What would have prevented it: require each package row in a repo-wide baseline
+refresh to be measured with the same isolated package command used by affected
+CI, or attach a provenance field that names the measurement scope. A floor
+observed only through incidental cross-package execution is not reproducible in
+the lane that enforces it.
