@@ -2,14 +2,14 @@
 
 ## Status
 
-Status: `active` — P0 complete; next action is P1.
+Status: `active` — P1 complete; next action is the P2 pilot gate.
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
 | P0 Research | complete | Ground the migration: enforcement census, import census + mapping table, tooling evaluation, pilot/measurement design, community evidence. | Six cited reports under `research/` (2026-08-23 fan-out: 4 codex `gpt-5.6-sol` xhigh lanes + 2 grok CLI lanes). |
-| P1 Vehicle & unblocks | pending | Invert `laws effect-imports` into the per-module law + ts-morph migration command (mapping table as data; code/JSDoc/Markdown modes; manual-review queue); land pilot-blocking foundation leaf exports; fix generator templates; extend the JSDoc example-import detector. | New law green on its own fixtures; dry-run over the pilot reports zero unmapped/ambiguous; new leaves resolve under NodeNext build, Bundler check, and docgen. Shipped via `/yeet`. |
+| P1 Vehicle & unblocks | complete (2026-09-03) | Invert `laws effect-imports` into the per-module law + ts-morph migration command (mapping table as data; code/JSDoc/Markdown modes; manual-review queue); land pilot-blocking foundation leaf exports; fix generator templates; extend the JSDoc example-import detector. | New law green on its own fixtures; dry-run over the pilot reports zero unmapped/ambiguous; new leaves resolve under NodeNext build, Bundler check, and docgen. Shipped via `/yeet`. |
 | P2 Pilot gate | pending | Operator approves the pilot slice (research proposes `apps/professional-desktop`); run the full before/after measurement protocol; apply win/no-win/stop rules. | Verdict + raw stats recorded in the packet; operator sign-off to continue (or a recorded stop). |
 | P3 Batches & ratchet | pending | Introduce and freeze the Biome `noRestrictedImports` warn rule; migrate the foundation kernel as one batch, then vertical families, then tools/tests/apps (composition roots last); migrate the JSDoc/Markdown corpus; flip written laws/skills with enforcement; final single root-error flip. | Zero forbidden specifiers in scope; law-flip checklist (`research/enforcement-census.md` §B) complete; every batch PR mergeable via `/yeet`. |
 | P4 Close | pending | Closeout reflection, packet state flip, and off-repo follow-ups (operator's global rules file update happens in-session when the convention lands, per the grilled decision). | Reflection passes `bun run beep lint reflection-artifacts`; manifest/README/INDEX updated in the final PR. |

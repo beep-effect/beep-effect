@@ -26,23 +26,6 @@
  */
 
 /**
- * Current version of the `@beep/observability` package.
- *
- * **Example** (Import package version)
- *
- * ```ts import.meta.vitest name="Import package version"
- * import { VERSION } from "@beep/observability"
- *
- * const version: string = VERSION
- * version // => "0.0.3"
- * ```
- *
- * @category configuration
- * @since 0.0.0
- */
-export const VERSION = "0.0.3" as const;
-
-/**
  * Cause and exit diagnostic utilities.
  *
  * @since 0.0.0
@@ -98,3 +81,4 @@ export * from "./Observed.ts";
  * @category observability
  */
 export * from "./PhaseProfiler.ts";
+export { VERSION } from "./Version.ts";

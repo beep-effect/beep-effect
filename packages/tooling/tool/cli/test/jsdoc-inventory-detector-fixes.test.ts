@@ -64,6 +64,7 @@ type ExportFinding = {
   readonly missingSummary: boolean;
   readonly remediationStatus: string;
   readonly documentationShapeViolations: ReadonlyArray<{ readonly rule: string }>;
+  readonly exampleImportViolations: ReadonlyArray<{ readonly rule: string; readonly detail: string }>;
   readonly unsafeExampleViolations: ReadonlyArray<{ readonly rule: string }>;
 };
 
@@ -71,7 +72,11 @@ type PackageFinding = {
   readonly packageName: string;
   readonly status: string;
   readonly sourceCoverage: { readonly publicExportCount: number };
-  readonly counts: { readonly missingExportExamples: number };
+  readonly counts: {
+    readonly missingExportExamples: number;
+    readonly exampleImportFindings: number;
+    readonly documentationRuleFindings: Readonly<Record<string, number>>;
+  };
   readonly exports: ReadonlyArray<ExportFinding>;
 };
 
@@ -112,7 +117,7 @@ const acquireFixtureRepo = Effect.fnUntraced(function* (options: {
     scripts: {
       "topo-sort": options.topoSortScript,
     },
-    workspaces: ["packages/*"],
+    workspaces: ["packages/*", "packages/*/*"],
   });
   yield* writeJsonFile(path.join(repoRoot, "tsdoc.json"), tsdocPolicy);
 
@@ -1068,4 +1073,102 @@ export const real = 1;
     expect(comments[0]).toContain("Real doc.");
     expect(comments[0]).not.toContain("addSourceFilesAtPaths");
   });
+
+  it("flags Effect and discovered foundation roots in examples without banning other workspace roots", () =>
+    Effect.runPromise(
+      withFixtureRepo(
+        {
+          topoSortScript: "printf '@beep/foundation-demo\\n@beep/consumer\\n'",
+          packages: [
+            {
+              name: "@beep/foundation-demo",
+              dir: "foundation/demo",
+              files: [
+                [
+                  "src/index.ts",
+                  `/**
+ * Foundation fixture.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
+/**
+ * Foundation value.
+ *
+ * **Example** (Read the value)
+ *
+ * \`\`\`ts
+ * console.log(value)
+ * \`\`\`
+ *
+ * @category helpers
+ * @since 0.0.0
+ */
+export const value = 1;
+`,
+                ],
+              ],
+            },
+            {
+              name: "@beep/consumer",
+              dir: "consumer",
+              files: [
+                [
+                  "src/index.ts",
+                  `/**
+ * Consumer fixture.
+ *
+ * **Example** (Import consumer dependencies)
+ *
+ * \`\`\`ts
+ * import { Effect } from "effect"
+ * import { value } from '@beep/foundation-demo'
+ * console.log(Effect.succeed(value))
+ * \`\`\`
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
+/**
+ * Consumer value.
+ *
+ * **Example** (Use roots)
+ *
+ * \`\`\`ts
+ * import { Effect } from 'effect'
+ * import { value } from "@beep/foundation-demo"
+ * import { consumerValue } from '@beep/consumer'
+ * console.log(Effect.succeed(value + consumerValue))
+ * \`\`\`
+ *
+ * @category helpers
+ * @since 0.0.0
+ */
+export const consumerValue = 1;
+`,
+                ],
+              ],
+            },
+          ],
+        },
+        Effect.fnUntraced(function* (repoRoot) {
+          const inventory = yield* buildInventory(repoRoot);
+          const consumer = inventory.packages.find((entry) => entry.packageName === "@beep/consumer");
+          const value = consumer?.exports.find((entry) => entry.symbolName === "consumerValue");
+          const rootFindings = value?.exampleImportViolations.filter(
+            (finding) => finding.rule === "no-root-package-import"
+          );
+
+          expect(rootFindings).toHaveLength(2);
+          expect(rootFindings?.map((finding) => finding.detail)).toEqual([
+            "Import stable public modules instead of the effect package root.",
+            "Import stable public modules instead of the @beep/foundation-demo package root.",
+          ]);
+          expect(consumer?.counts.exampleImportFindings).toBe(4);
+          expect(consumer?.counts.documentationRuleFindings["no-root-package-import"]).toBe(4);
+        })
+      )
+    ));
 });

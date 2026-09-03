@@ -706,7 +706,7 @@ const noopApplyJournal: BoxProvisioningApplyJournalShape = {
  *
  * ```ts
  * import { BoxProvisioningApplyJournal } from "@beep/box-provisioning/BoxProvisioningApplier"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const program = BoxProvisioningApplyJournal.pipe(
  *   Effect.provide(BoxProvisioningApplyJournal.noopLayer)

@@ -1,5 +1,7 @@
 import { EffectImportRulesOptions, runEffectImportRules } from "@beep/repo-cli/test/Laws";
-import { A } from "@beep/utils";
+import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
+import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import { describe, expect, it } from "vitest";
@@ -9,7 +11,8 @@ const provideScopedLayer =
   <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
     Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
 
-const testLayer = Layer.mergeAll(NodeServices.layer);
+const testLayer = Layer.mergeAll(NodeServices.layer, FsUtilsLive.pipe(Layer.provide(NodeServices.layer)));
+const encodeJson = UnknownFromJsonString.encodeUnknownSync;
 
 const withTempWorkingDirectory = <A, E, R>(use: Effect.Effect<A, E, R>) =>
   Effect.acquireUseRelease(
@@ -49,111 +52,716 @@ const writeTsconfig = writeProjectFile(
   A.join(["{", '  "compilerOptions": {', '    "target": "ES2022",', '    "module": "ESNext"', "  }", "}"], "\n")
 );
 
+const writeDemoFoundationPackage = Effect.fn(function* (
+  publishModelsLeaf: boolean,
+  ambiguousHelperLeaf = false,
+  includePublishConfig = true
+) {
+  const workspaceExports = {
+    ".": "./src/index.ts",
+    "./Demo": "./src/Demo.ts",
+    "./Helper": "./src/Helper.ts",
+    ...(ambiguousHelperLeaf === true ? { "./HelperAlias": "./src/Helper.ts" } : {}),
+    "./Models": "./src/Models.ts",
+  };
+  const publishExports = {
+    ".": "./dist/index.js",
+    "./Demo": "./dist/Demo.js",
+    "./Helper": "./dist/Helper.js",
+    ...(ambiguousHelperLeaf === true ? { "./HelperAlias": "./dist/Helper.js" } : {}),
+    ...(publishModelsLeaf === true ? { "./Models": "./dist/Models.js" } : {}),
+  };
+
+  yield* writeProjectFile(
+    "packages/foundation/modeling/demo/package.json",
+    `${encodeJson({
+      name: "@beep/demo",
+      version: "0.0.0",
+      private: true,
+      type: "module",
+      exports: workspaceExports,
+      ...(includePublishConfig === true ? { publishConfig: { exports: publishExports } } : {}),
+    })}\n`
+  );
+  yield* writeProjectFile(
+    "packages/foundation/modeling/demo/src/index.ts",
+    A.join(
+      [
+        'export * as Demo from "./Demo.ts";',
+        'export { default } from "./Demo.ts";',
+        'export { helper as renamedHelper } from "./Helper.ts";',
+        'export * from "./Models.ts";',
+        'export const VERSION = "0.0.0";',
+        "",
+      ],
+      "\n"
+    )
+  );
+  yield* writeProjectFile(
+    "packages/foundation/modeling/demo/src/Demo.ts",
+    "export const value = 1;\nexport default { value } as const;\n"
+  );
+  yield* writeProjectFile(
+    "packages/foundation/modeling/demo/src/Helper.ts",
+    "export const helper = 2;\nexport const another = 3;\n"
+  );
+  yield* writeProjectFile(
+    "packages/foundation/modeling/demo/src/Models.ts",
+    "export interface Model { value: number }\n"
+  );
+});
+
+const demoSource = A.join(
+  [
+    'import { Effect as Fx, MutableList, pipe as p, type Scope } from "effect";',
+    'import * as Command from "effect/unstable/cli";',
+    "",
+    "export const program: Fx.Effect<void> = Fx.void;",
+    "export const items = MutableList.make<number>();",
+    "export const scoped: Scope.Scope | undefined = undefined;",
+    "export const piped = p(1, (value) => value + 1);",
+    "export const command = Command.run;",
+    "",
+  ],
+  "\n"
+);
+
 describe("effect import laws", () => {
-  it("flags stable submodule namespace imports in dry-run mode while ignoring unstable ones", () =>
+  it("is a no-op before a family is promoted", () =>
     Effect.runPromise(
       withTempWorkingDirectory(
         Effect.gen(function* () {
           yield* writeTsconfig;
-          yield* writeProjectFile(
-            "packages/demo/src/index.ts",
-            A.join(
-              [
-                'import * as Duration from "effect/Duration";',
-                'import * as Command from "effect/unstable/cli";',
-                "",
-                "export const duration = Duration.seconds(1);",
-                "export const command = Command.run;",
-                "",
-              ],
-              "\n"
-            )
+          yield* writeProjectFile("packages/demo/src/index.ts", demoSource);
+
+          const summary = yield* runEffectImportRules(
+            EffectImportRulesOptions.make({ write: false, strictCheck: true, excludePaths: [] })
           );
+
+          expect(summary.scannedFiles).toBe(0);
+          expect(summary.touchedFiles).toBe(0);
+          expect(summary.rootImportsRewritten).toBe(0);
+          expect(summary.strictFailure).toBe(false);
+          expect(yield* readProjectFile("packages/demo/src/index.ts")).toBe(demoSource);
+        })
+      ).pipe(provideScopedLayer(testLayer))
+    ));
+
+  it("plans aliases, Function bindings, and type-only namespaces in candidate mode without writing", () =>
+    Effect.runPromise(
+      withTempWorkingDirectory(
+        Effect.gen(function* () {
+          yield* writeTsconfig;
+          yield* writeProjectFile("packages/ecosystem/member/test/index.test.ts", demoSource);
 
           const summary = yield* runEffectImportRules(
             EffectImportRulesOptions.make({
               write: false,
               strictCheck: true,
+              candidate: true,
               excludePaths: [],
+              includePrefixes: ["packages/ecosystem/member"],
             })
           );
-          const source = yield* readProjectFile("packages/demo/src/index.ts");
 
+          expect(summary.scannedFiles).toBe(1);
           expect(summary.touchedFiles).toBe(1);
-          expect(summary.aliasRenamed).toBe(0);
-          expect(summary.stableConverted).toBe(1);
+          expect(summary.rootImportsRewritten).toBe(1);
+          expect(summary.emittedImports).toBe(4);
+          expect(summary.rootSpecifierCounts).toEqual({ effect: 1 });
+          expect(summary.manualReviews).toEqual([]);
           expect(summary.strictFailure).toBe(true);
-          expect(summary.changedFiles).toEqual(["packages/demo/src/index.ts"]);
-          expect(source).toContain('import * as Duration from "effect/Duration";');
-          expect(source).toContain('import * as Command from "effect/unstable/cli";');
+          expect(yield* readProjectFile("packages/ecosystem/member/test/index.test.ts")).toBe(demoSource);
         })
       ).pipe(provideScopedLayer(testLayer))
     ));
 
-  it("rewrites stable submodule namespace imports to root effect imports in write mode", () =>
+  it("rewrites promoted roots to per-module imports and never reverses stable submodules", () =>
     Effect.runPromise(
       withTempWorkingDirectory(
         Effect.gen(function* () {
           yield* writeTsconfig;
-          yield* writeProjectFile(
-            "packages/demo/src/index.ts",
-            A.join(
-              [
-                'import * as Duration from "effect/Duration";',
-                'import * as Command from "effect/unstable/cli";',
-                "",
-                "export const duration = Duration.seconds(1);",
-                "export const command = Command.run;",
-                "",
-              ],
-              "\n"
-            )
+          yield* writeProjectFile("packages/demo/src/index.ts", demoSource);
+
+          const first = yield* runEffectImportRules(
+            EffectImportRulesOptions.make({
+              write: true,
+              strictCheck: true,
+              excludePaths: [],
+              promotedFamilyPrefixes: ["packages/demo"],
+            })
           );
+          const source = yield* readProjectFile("packages/demo/src/index.ts");
+
+          expect(first.touchedFiles).toBe(1);
+          expect(first.rootImportsRewritten).toBe(1);
+          expect(first.emittedImports).toBe(4);
+          expect(first.strictFailure).toBe(true);
+          expect(source).toContain('import * as Fx from "effect/Effect";');
+          expect(source).toContain('import * as MutableList from "effect/MutableList";');
+          expect(source).toContain('import type * as Scope from "effect/Scope";');
+          expect(source).toContain('import { pipe as p } from "effect/Function";');
+          expect(source).toContain('import * as Command from "effect/unstable/cli";');
+          expect(source).not.toContain('from "effect"');
+
+          const second = yield* runEffectImportRules(
+            EffectImportRulesOptions.make({
+              write: true,
+              strictCheck: true,
+              excludePaths: [],
+              promotedFamilyPrefixes: ["packages/demo"],
+            })
+          );
+
+          expect(second.touchedFiles).toBe(0);
+          expect(second.rootImportsRewritten).toBe(0);
+          expect(second.emittedImports).toBe(0);
+          expect(second.strictFailure).toBe(false);
+          expect(yield* readProjectFile("packages/demo/src/index.ts")).toBe(source);
+        })
+      ).pipe(provideScopedLayer(testLayer))
+    ));
+
+  it("keeps executable shebangs ahead of newly emitted imports", () =>
+    Effect.runPromise(
+      withTempWorkingDirectory(
+        Effect.gen(function* () {
+          yield* writeTsconfig;
+          const source = A.join(
+            [
+              "#!/usr/bin/env bun",
+              "",
+              "/**",
+              " * Executable package entrypoint.",
+              " *",
+              " * @packageDocumentation",
+              " */",
+              'import { Config, Effect, Layer } from "effect";',
+              "",
+              "export const program = Effect.succeed([Config.string, Layer.empty]);",
+              "",
+            ],
+            "\n"
+          );
+          yield* writeProjectFile("apps/demo/src/bin.ts", source);
+
+          const first = yield* runEffectImportRules(
+            EffectImportRulesOptions.make({
+              write: true,
+              strictCheck: true,
+              excludePaths: [],
+              promotedFamilyPrefixes: ["apps/demo"],
+            })
+          );
+          const rewritten = yield* readProjectFile("apps/demo/src/bin.ts");
+
+          expect(first.rootImportsRewritten).toBe(1);
+          expect(rewritten).toMatch(/^#!\/usr\/bin\/env bun\n\n\/\*\*/);
+          expect(Str.split("#!")(rewritten)).toHaveLength(2);
+          expect(rewritten).toContain('import * as Config from "effect/Config";');
+          expect(rewritten).toContain('import * as Effect from "effect/Effect";');
+          expect(rewritten).toContain('import * as Layer from "effect/Layer";');
+
+          const second = yield* runEffectImportRules(
+            EffectImportRulesOptions.make({
+              write: true,
+              strictCheck: true,
+              excludePaths: [],
+              promotedFamilyPrefixes: ["apps/demo"],
+            })
+          );
+          expect(second.touchedFiles).toBe(0);
+          expect(yield* readProjectFile("apps/demo/src/bin.ts")).toBe(rewritten);
+        })
+      ).pipe(provideScopedLayer(testLayer))
+    ));
+
+  it("keeps manual-review line numbers anchored after a shebang prefix", () =>
+    Effect.runPromise(
+      withTempWorkingDirectory(
+        Effect.gen(function* () {
+          yield* writeTsconfig;
+          const source = A.join(
+            [
+              "#!/usr/bin/env bun",
+              "",
+              'import { FutureModule } from "effect";',
+              "export const value = FutureModule;",
+              "",
+            ],
+            "\n"
+          );
+          yield* writeProjectFile("apps/demo/src/bin.ts", source);
+
+          const summary = yield* runEffectImportRules(
+            EffectImportRulesOptions.make({
+              write: false,
+              strictCheck: true,
+              candidate: true,
+              excludePaths: [],
+              includePrefixes: ["apps/demo"],
+            })
+          );
+
+          expect(summary.manualReviews).toHaveLength(1);
+          expect(summary.manualReviews[0]?.binding).toBe("FutureModule");
+          expect(summary.manualReviews[0]?.line).toBe(3);
+          expect(yield* readProjectFile("apps/demo/src/bin.ts")).toBe(source);
+        })
+      ).pipe(provideScopedLayer(testLayer))
+    ));
+
+  it("leaves an entire declaration unchanged when any binding is unmapped", () =>
+    Effect.runPromise(
+      withTempWorkingDirectory(
+        Effect.gen(function* () {
+          yield* writeTsconfig;
+          const source = 'import { Effect, FutureModule } from "effect";\nexport const value = Effect.void;\n';
+          yield* writeProjectFile("infra/example.ts", source);
 
           const summary = yield* runEffectImportRules(
             EffectImportRulesOptions.make({
               write: true,
-              strictCheck: false,
+              strictCheck: true,
               excludePaths: [],
+              promotedFamilyPrefixes: ["infra"],
             })
           );
-          const source = yield* readProjectFile("packages/demo/src/index.ts");
 
           expect(summary.touchedFiles).toBe(1);
-          expect(summary.stableConverted).toBe(1);
-          expect(summary.strictFailure).toBe(false);
-          expect(source).toContain('import { Duration } from "effect";');
-          expect(source).toContain('import * as Command from "effect/unstable/cli";');
-          expect(source).not.toContain('import * as Duration from "effect/Duration";');
+          expect(summary.rootImportsRewritten).toBe(0);
+          expect(summary.manualReviews).toHaveLength(1);
+          expect(summary.manualReviews[0]?.binding).toBe("FutureModule");
+          expect(summary.strictFailure).toBe(true);
+          expect(yield* readProjectFile("infra/example.ts")).toBe(source);
         })
       ).pipe(provideScopedLayer(testLayer))
     ));
 
-  it("exempts ecosystem members in full and explicit include scans", () =>
+  it("derives foundation mappings from source barrels and both export maps", () =>
     Effect.runPromise(
       withTempWorkingDirectory(
         Effect.gen(function* () {
           yield* writeTsconfig;
-          const source = 'import * as Duration from "effect/Duration";\nexport const value = Duration.seconds(1);\n';
-          yield* writeProjectFile("packages/ecosystem/member/src/index.ts", source);
+          yield* writeDemoFoundationPackage(true);
+          const source = A.join(
+            [
+              'import { another } from "@beep/demo/Helper";',
+              'import DemoDefault, { Demo as D, renamedHelper, type Model } from "@beep/demo";',
+              "",
+              "export const result = DemoDefault.value + D.value + renamedHelper + another;",
+              "export const model: Model = { value: result };",
+              "",
+            ],
+            "\n"
+          );
+          yield* writeProjectFile("apps/demo/src/index.ts", source);
+
+          const summary = yield* runEffectImportRules(
+            EffectImportRulesOptions.make({
+              write: true,
+              strictCheck: true,
+              excludePaths: [],
+              promotedFamilyPrefixes: ["apps/demo"],
+            })
+          );
+          const rewritten = yield* readProjectFile("apps/demo/src/index.ts");
+
+          expect(summary.rootImportsRewritten).toBe(1);
+          expect(summary.emittedImports).toBe(4);
+          expect(summary.manualReviews).toEqual([]);
+          expect(rewritten).toContain('import DemoDefault, * as D from "@beep/demo/Demo";');
+          expect(rewritten).toContain('import { another, helper as renamedHelper } from "@beep/demo/Helper";');
+          expect(rewritten).toContain('import type { Model } from "@beep/demo/Models";');
+          expect(rewritten).not.toContain('from "@beep/demo"');
+        })
+      ).pipe(provideScopedLayer(testLayer))
+    ));
+
+  it("refuses a foundation target missing from the published export map", () =>
+    Effect.runPromise(
+      withTempWorkingDirectory(
+        Effect.gen(function* () {
+          yield* writeTsconfig;
+          yield* writeDemoFoundationPackage(false);
+          const source = 'import { type Model } from "@beep/demo";\nexport type Example = Model;\n';
+          yield* writeProjectFile("apps/demo/src/index.ts", source);
+
+          const summary = yield* runEffectImportRules(
+            EffectImportRulesOptions.make({
+              write: true,
+              strictCheck: true,
+              excludePaths: [],
+              promotedFamilyPrefixes: ["apps/demo"],
+            })
+          );
+
+          expect(summary.rootImportsRewritten).toBe(0);
+          expect(summary.manualReviews).toHaveLength(1);
+          expect(summary.manualReviews[0]?.binding).toBe("Model");
+          expect(yield* readProjectFile("apps/demo/src/index.ts")).toBe(source);
+        })
+      ).pipe(provideScopedLayer(testLayer))
+    ));
+
+  it("refuses foundation targets when a private package has no published export map", () =>
+    Effect.runPromise(
+      withTempWorkingDirectory(
+        Effect.gen(function* () {
+          yield* writeTsconfig;
+          yield* writeDemoFoundationPackage(true, false, false);
+          const source = 'import { Demo } from "@beep/demo";\nexport const value = Demo.value;\n';
+          yield* writeProjectFile("apps/demo/src/index.ts", source);
+
+          const summary = yield* runEffectImportRules(
+            EffectImportRulesOptions.make({
+              write: true,
+              strictCheck: true,
+              excludePaths: [],
+              promotedFamilyPrefixes: ["apps/demo"],
+            })
+          );
+
+          expect(summary.rootImportsRewritten).toBe(0);
+          expect(summary.manualReviews).toHaveLength(1);
+          expect(summary.manualReviews[0]?.kind).toBe("missing-mapping");
+          expect(summary.manualReviews[0]?.binding).toBe("Demo");
+          expect(yield* readProjectFile("apps/demo/src/index.ts")).toBe(source);
+        })
+      ).pipe(provideScopedLayer(testLayer))
+    ));
+
+  it("queues an ambiguous review when two public leaves expose the same source module", () =>
+    Effect.runPromise(
+      withTempWorkingDirectory(
+        Effect.gen(function* () {
+          yield* writeTsconfig;
+          yield* writeDemoFoundationPackage(true, true);
+          const source = 'import { renamedHelper } from "@beep/demo";\nexport const value = renamedHelper;\n';
+          yield* writeProjectFile("apps/demo/src/index.ts", source);
+
+          const summary = yield* runEffectImportRules(
+            EffectImportRulesOptions.make({
+              write: true,
+              strictCheck: true,
+              excludePaths: [],
+              promotedFamilyPrefixes: ["apps/demo"],
+            })
+          );
+
+          expect(summary.rootImportsRewritten).toBe(0);
+          expect(summary.manualReviews).toHaveLength(1);
+          expect(summary.manualReviews[0]?.kind).toBe("ambiguous");
+          expect(summary.manualReviews[0]?.binding).toBe("renamedHelper");
+          expect(yield* readProjectFile("apps/demo/src/index.ts")).toBe(source);
+        })
+      ).pipe(provideScopedLayer(testLayer))
+    ));
+
+  it("merges compatible destination imports and preserves declaration comments", () =>
+    Effect.runPromise(
+      withTempWorkingDirectory(
+        Effect.gen(function* () {
+          yield* writeTsconfig;
+          const source = A.join(
+            [
+              "/** Root import rationale. */",
+              'import { Effect, pipe } from "effect"; // trailing-root-comment',
+              'import { flow } from "effect/Function";',
+              "",
+              "export const value = pipe(Effect.void, flow((item) => item));",
+              "",
+            ],
+            "\n"
+          );
           yield* writeProjectFile("packages/demo/src/index.ts", source);
 
-          const fullSummary = yield* runEffectImportRules(
-            EffectImportRulesOptions.make({ write: false, strictCheck: true, excludePaths: [] })
+          yield* runEffectImportRules(
+            EffectImportRulesOptions.make({
+              write: true,
+              strictCheck: true,
+              excludePaths: [],
+              promotedFamilyPrefixes: ["packages/demo"],
+            })
           );
-          expect(fullSummary.changedFiles).toEqual(["packages/demo/src/index.ts"]);
-          expect(fullSummary.strictFailure).toBe(true);
+          const rewritten = yield* readProjectFile("packages/demo/src/index.ts");
 
-          const explicitSummary = yield* runEffectImportRules(
+          expect(rewritten).toContain('import * as Effect from "effect/Effect";');
+          expect(rewritten).toContain('import { flow, pipe } from "effect/Function";');
+          expect(rewritten).toContain("Root import rationale.");
+          expect(rewritten).toContain("trailing-root-comment");
+        })
+      ).pipe(provideScopedLayer(testLayer))
+    ));
+
+  it("merges a comment-bearing declaration without deleting unrelated unused imports", () =>
+    Effect.runPromise(
+      withTempWorkingDirectory(
+        Effect.gen(function* () {
+          yield* writeTsconfig;
+          const source = A.join(
+            [
+              'import { unused } from "./unused.ts";',
+              'import { flow } from "effect/Function";',
+              "/** Keep this rationale with the merged destination. */",
+              'import { pipe } from "effect"; // keep-this-trailing-comment',
+              "",
+              "export const value = pipe(1, flow((item) => item));",
+              "",
+            ],
+            "\n"
+          );
+          yield* writeProjectFile("packages/demo/src/index.ts", source);
+
+          yield* runEffectImportRules(
+            EffectImportRulesOptions.make({
+              write: true,
+              strictCheck: true,
+              excludePaths: [],
+              promotedFamilyPrefixes: ["packages/demo"],
+            })
+          );
+          const rewritten = yield* readProjectFile("packages/demo/src/index.ts");
+
+          expect(rewritten).toContain('import { unused } from "./unused.ts";');
+          expect(rewritten).toContain('import { flow, pipe } from "effect/Function";');
+          expect(rewritten).toContain("Keep this rationale with the merged destination.");
+          expect(rewritten).toContain("keep-this-trailing-comment");
+          expect(rewritten.match(/effect\/Function/g)).toHaveLength(1);
+        })
+      ).pipe(provideScopedLayer(testLayer))
+    ));
+
+  it("preserves aliases instead of inventing collision-prone canonical names", () =>
+    Effect.runPromise(
+      withTempWorkingDirectory(
+        Effect.gen(function* () {
+          yield* writeTsconfig;
+          const source = A.join(
+            [
+              'import { Option as Maybe } from "effect";',
+              "const O = { sentinel: true };",
+              "export const value = [Maybe.some(1), O.sentinel] as const;",
+              "",
+            ],
+            "\n"
+          );
+          yield* writeProjectFile("apps/demo/src/index.ts", source);
+
+          const summary = yield* runEffectImportRules(
+            EffectImportRulesOptions.make({
+              write: true,
+              strictCheck: true,
+              excludePaths: [],
+              promotedFamilyPrefixes: ["apps/demo"],
+            })
+          );
+          const rewritten = yield* readProjectFile("apps/demo/src/index.ts");
+
+          expect(summary.manualReviews).toEqual([]);
+          expect(rewritten).toContain('import * as Maybe from "effect/Option";');
+          expect(rewritten).toContain("const O = { sentinel: true };");
+          expect(rewritten).not.toContain("import * as O");
+        })
+      ).pipe(provideScopedLayer(testLayer))
+    ));
+
+  it("rewrites named root re-exports and preserves their exported aliases", () =>
+    Effect.runPromise(
+      withTempWorkingDirectory(
+        Effect.gen(function* () {
+          yield* writeTsconfig;
+          yield* writeDemoFoundationPackage(true);
+          const source = A.join(
+            [
+              'export { renamedHelper as publicHelper } from "@beep/demo";',
+              'export { Effect as Fx, pipe as p } from "effect";',
+              "",
+            ],
+            "\n"
+          );
+          yield* writeProjectFile("packages/demo-consumer/src/index.ts", source);
+
+          const summary = yield* runEffectImportRules(
+            EffectImportRulesOptions.make({
+              write: true,
+              strictCheck: true,
+              excludePaths: [],
+              promotedFamilyPrefixes: ["packages/demo-consumer"],
+            })
+          );
+          const rewritten = yield* readProjectFile("packages/demo-consumer/src/index.ts");
+
+          expect(summary.rootExportsRewritten).toBe(2);
+          expect(summary.emittedExports).toBe(3);
+          expect(summary.manualReviews).toEqual([]);
+          expect(rewritten).toContain('export { helper as publicHelper } from "@beep/demo/Helper";');
+          expect(rewritten).toContain('export * as Fx from "effect/Effect";');
+          expect(rewritten).toContain('export { pipe as p } from "effect/Function";');
+          expect(rewritten).not.toContain('from "@beep/demo"');
+          expect(rewritten).not.toContain('from "effect"');
+        })
+      ).pipe(provideScopedLayer(testLayer))
+    ));
+
+  it("routes dynamic, import-type, and import-equals roots to structured manual review", () =>
+    Effect.runPromise(
+      withTempWorkingDirectory(
+        Effect.gen(function* () {
+          yield* writeTsconfig;
+          const source = A.join(
+            [
+              'const load = () => import("effect");',
+              'type Program = import("effect").Effect.Effect<void>;',
+              'import EffectRoot = require("effect");',
+              "export type { Program };",
+              "export { load, EffectRoot };",
+              "",
+            ],
+            "\n"
+          );
+          yield* writeProjectFile("infra/manual.ts", source);
+
+          const summary = yield* runEffectImportRules(
+            EffectImportRulesOptions.make({
+              write: true,
+              strictCheck: true,
+              excludePaths: [],
+              promotedFamilyPrefixes: ["infra"],
+            })
+          );
+
+          expect(A.map(summary.manualReviews, (review) => review.kind)).toEqual([
+            "dynamic-import",
+            "import-type",
+            "import-equals",
+          ]);
+          expect(A.map(summary.manualReviews, (review) => review.line)).toEqual([1, 2, 3]);
+          expect(summary.rootSpecifierCounts).toEqual({ effect: 3 });
+          expect(summary.strictFailure).toBe(true);
+          expect(yield* readProjectFile("infra/manual.ts")).toBe(source);
+        })
+      ).pipe(provideScopedLayer(testLayer))
+    ));
+
+  it("rewrites imports inside JSDoc TypeScript fences without touching executable imports", () =>
+    Effect.runPromise(
+      withTempWorkingDirectory(
+        Effect.gen(function* () {
+          yield* writeTsconfig;
+          const source = A.join(
+            [
+              "/**",
+              " * Demonstrates a fenced program.",
+              " *",
+              " * **Example** (Run a program)",
+              " *",
+              " * ```ts",
+              ' * import { Effect, pipe } from "effect"',
+              " * console.log(pipe(Effect.void, Effect.as(1)))",
+              " * ```",
+              " *",
+              " * @since 0.0.0",
+              " */",
+              "export const value = 1;",
+              "",
+            ],
+            "\n"
+          );
+          yield* writeProjectFile("packages/demo/src/index.ts", source);
+
+          const first = yield* runEffectImportRules(
+            EffectImportRulesOptions.make({
+              write: true,
+              strictCheck: true,
+              mode: "jsdoc",
+              excludePaths: [],
+              promotedFamilyPrefixes: ["packages/demo"],
+            })
+          );
+          const rewritten = yield* readProjectFile("packages/demo/src/index.ts");
+
+          expect(first.scannedFiles).toBe(1);
+          expect(first.scannedFences).toBe(1);
+          expect(first.rootImportsRewritten).toBe(1);
+          expect(rewritten).toContain(' * import * as Effect from "effect/Effect";');
+          expect(rewritten).toContain(' * import { pipe } from "effect/Function";');
+          expect(rewritten).toContain(" * @since 0.0.0");
+          expect(rewritten).toContain("export const value = 1;");
+
+          const second = yield* runEffectImportRules(
+            EffectImportRulesOptions.make({
+              write: true,
+              strictCheck: true,
+              mode: "jsdoc",
+              excludePaths: [],
+              promotedFamilyPrefixes: ["packages/demo"],
+            })
+          );
+          expect(second.touchedFiles).toBe(0);
+          expect(yield* readProjectFile("packages/demo/src/index.ts")).toBe(rewritten);
+        })
+      ).pipe(provideScopedLayer(testLayer))
+    ));
+
+  it("keeps the Markdown gate advisory until explicitly enforced and supports promoted writes", () =>
+    Effect.runPromise(
+      withTempWorkingDirectory(
+        Effect.gen(function* () {
+          yield* writeTsconfig;
+          const markdown = A.join(
+            [
+              "# Guide",
+              "",
+              "```ts",
+              'import { Effect, flow } from "effect"',
+              "console.log(flow(() => Effect.void)())",
+              "```",
+              "",
+            ],
+            "\n"
+          );
+          yield* writeProjectFile("docs/guide.md", markdown);
+
+          const advisory = yield* runEffectImportRules(
             EffectImportRulesOptions.make({
               write: false,
               strictCheck: true,
+              mode: "markdown",
               excludePaths: [],
-              includePaths: ["packages/ecosystem/member/src/index.ts"],
             })
           );
-          expect(explicitSummary.changedFiles).toEqual([]);
-          expect(explicitSummary.strictFailure).toBe(false);
+          expect(advisory.scannedFiles).toBe(1);
+          expect(advisory.scannedFences).toBe(1);
+          expect(advisory.touchedFiles).toBe(1);
+          expect(advisory.strictFailure).toBe(false);
+          expect(yield* readProjectFile("docs/guide.md")).toBe(markdown);
+
+          const written = yield* runEffectImportRules(
+            EffectImportRulesOptions.make({
+              write: true,
+              strictCheck: true,
+              mode: "markdown",
+              excludePaths: [],
+              promotedFamilyPrefixes: ["docs"],
+            })
+          );
+          const rewritten = yield* readProjectFile("docs/guide.md");
+          expect(written.rootImportsRewritten).toBe(1);
+          expect(rewritten).toContain('import * as Effect from "effect/Effect";');
+          expect(rewritten).toContain('import { flow } from "effect/Function";');
+
+          const enforced = yield* runEffectImportRules(
+            EffectImportRulesOptions.make({
+              write: false,
+              strictCheck: true,
+              mode: "markdown",
+              enforceDocumentation: true,
+              excludePaths: [],
+            })
+          );
+          expect(enforced.touchedFiles).toBe(0);
+          expect(enforced.strictFailure).toBe(false);
         })
       ).pipe(provideScopedLayer(testLayer))
     ));

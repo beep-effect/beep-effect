@@ -79,12 +79,18 @@ describe("internal/cli/Json printCommandJson", () => {
     })
   );
 
-  it("emits payloads larger than 64 KiB intact across a process boundary", () => {
+  it("emits payloads larger than 64 KiB intact in bounded stdout writes", () => {
     const payload = { value: "x".repeat(70_000) };
     const moduleUrl = new URL("../src/internal/cli/Json.ts", import.meta.url).href;
     const program = [
       `import { printCommandJson } from ${JSON.stringify(moduleUrl)};`,
       'import { Effect } from "effect";',
+      "const rawWrite = process.stdout.write.bind(process.stdout);",
+      "process.stdout.write = (chunk, ...args) => {",
+      '  const bytes = typeof chunk === "string" ? new TextEncoder().encode(chunk) : chunk;',
+      '  if (bytes.byteLength > 8_192) throw new Error("oversized stdout write");',
+      "  return rawWrite(bytes, ...args);",
+      "};",
       'await Effect.runPromise(printCommandJson({ value: "x".repeat(70_000) }));',
     ].join("\n");
     const result = Bun.spawnSync(["bun", "--eval", program], {
