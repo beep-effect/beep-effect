@@ -1,0 +1,29 @@
+id: "dh:ov-has-current-proposal:001"
+observation_refs:
+  - "po:sha256:736ad92a1de7991caa17d905c310e2dac02d5a4d9b7cd3b709adfcabd690e4cc"
+  - "po:sha256:959a603a7bc88415101c1c6e9073034271081d03a55dd625f763898feb579ea2"
+cq_warrants: ["CQ-020"]
+proposed_referent:
+  label: "putative current-schedule-proposal association"
+  description: >-
+    A possible temporally qualified association between a schedule-bearing
+    operational subject and the ScheduleProposal regarded as current for it.
+representation_status: unresolved
+alternatives:
+  - label: "Snapshot-relative episode-to-proposal relation"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "Mutable projection pointer to the latest emitted RDF node"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: >-
+    The observations enumerate hasCurrentProposal among predicates emitted in
+    an open provisional graph, but do not state its subject, supersession rule,
+    temporal or snapshot index, or persistence conditions. Its spelling and CQ
+    use do not provide an observation-backed discriminator.
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.31, use_for_acceptance: false}

@@ -16,20 +16,20 @@ import { Effect, SchemaTransformation } from "effect";
 import * as A from "effect/Array";
 import { dual, identity, pipe } from "effect/Function";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
-import { commandTextForStep, RepoPlanStep, RepoStepRunResult } from "../../../internal/repo-run/index.ts";
+import { commandTextForStep, RepoPlanStep, RepoStepRunResult } from "../../../internal/repo-run/RepoRun.models.ts";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 import { FlakeQuarantineIncident } from "../../Quality/internal/FlakeQuarantine.ts";
-import {
-  GITHUB_CHECK_RUN_REPORT_PREFIX,
-  GithubCheckFailurePolicy,
-  GithubCheckRunReport,
-} from "../../Quality/Quality.schemas.ts";
-import { GIT_PUSH_STEP_ID } from "./Planner.ts";
+import { GithubCheckFailurePolicy, QualityTaskLaneRunReport } from "../../Quality/Quality.schemas.ts";
+import { GIT_PUSH_STEP_ID, YeetProofTier } from "./Planner.ts";
 import { knownSubLaneRemediationFromOutput } from "./QualityIssueIndex.ts";
-import type { GithubCheckLaneRun } from "../../Quality/Quality.schemas.ts";
+import type { QualityTaskLaneRun } from "../../Quality/Quality.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/Verdict");
+const OptionalVerdictString = S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault);
+const NullableInputDigest = S.OptionFromNullOr(S.String).pipe(
+  SchemaUtils.withNoneDefault,
+  S.withDecodingDefaultKey(Effect.succeed(null))
+);
 
 /**
  * Execution status of one planned yeet lane.
@@ -157,6 +157,10 @@ export class YeetVerdictLane extends S.Class<YeetVerdictLane>($I`YeetVerdictLane
     peakRssKb: S.optionalKey(S.Finite),
     exitCode: S.optionalKey(S.Finite),
     repairCommand: S.optionalKey(S.String),
+    tier: YeetProofTier.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    startedAt: OptionalVerdictString,
+    endedAt: OptionalVerdictString,
+    inputDigest: NullableInputDigest,
   },
   $I.annote("YeetVerdictLane", {
     description: "One planned yeet lane with its execution status and repair command.",
@@ -518,10 +522,11 @@ export const YeetMergeReadyFromEncoded = YeetMergeReadyEncoded.pipe(
  *
  * **Gotchas**
  *
- * `attemptId` and the run-timing trio (`startedAt`, `endedAt`, `elapsedMs`) are
- * `Option`-typed optional keys so verdict documents written before the attempt
- * journal landed still decode off disk as `None`; every current writer supplies
- * all four, and omitting them at construction yields `None` rather than an error.
+ * Attempt identity, immutable input facts (`resolvedHeadSha`,
+ * `diffFingerprint`, `proofTier`), and the run-timing trio (`startedAt`,
+ * `endedAt`, `elapsedMs`) are `Option`-typed optional keys. Verdict documents
+ * written before those facts landed still decode as `None`; current attempt
+ * writers supply every fact.
  *
  * **Example** (Construct a yeet verdict)
  *
@@ -574,6 +579,9 @@ export class YeetVerdict extends S.Class<YeetVerdict>($I`YeetVerdict`)(
     pushed: S.Boolean,
     runId: S.String,
     attemptId: UUID.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    resolvedHeadSha: OptionalVerdictString,
+    diffFingerprint: OptionalVerdictString,
+    proofTier: YeetProofTier.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     startedAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     endedAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     elapsedMs: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
@@ -658,7 +666,7 @@ export class YeetExecutedStep extends S.Class<YeetExecutedStep>($I`YeetExecutedS
   })
 ) {}
 
-const laneFromExecuted = (executed: YeetExecutedStep): YeetVerdictLane => {
+const laneFromExecuted = (executed: YeetExecutedStep, tier: O.Option<YeetProofTier>): YeetVerdictLane => {
   const failed = executed.result.exitCode !== 0;
   const repairCommand = failed
     ? O.some(
@@ -674,6 +682,8 @@ const laneFromExecuted = (executed: YeetExecutedStep): YeetVerdictLane => {
     phase: executed.step.phase,
     status: failed ? "failed" : "passed",
     exitCode: executed.result.exitCode,
+    tier,
+    inputDigest: O.none(),
     ...O.getSomesStruct({
       durationMs: pipe(
         O.fromUndefinedOr(executed.result.elapsedMs),
@@ -685,30 +695,42 @@ const laneFromExecuted = (executed: YeetExecutedStep): YeetVerdictLane => {
   });
 };
 
-const laneFromPlanned = (step: RepoPlanStep): YeetVerdictLane =>
+const laneFromPlanned = (step: RepoPlanStep, tier: O.Option<YeetProofTier>): YeetVerdictLane =>
   YeetVerdictLane.make({
     id: step.id,
     label: step.label,
     phase: step.phase,
     status: "not-run",
+    tier,
+    inputDigest: O.none(),
   });
 
-const githubCheckRunReportJson = JsonStringCodec(GithubCheckRunReport);
-
-const githubCheckRunReportFromOutput = (output: string): O.Option<GithubCheckRunReport> =>
-  pipe(
-    Str.split("\n")(output),
-    A.findLast(Str.startsWith(GITHUB_CHECK_RUN_REPORT_PREFIX)),
-    O.flatMap((line) => githubCheckRunReportJson.decodeOption(Str.slice(GITHUB_CHECK_RUN_REPORT_PREFIX.length)(line)))
-  );
-
-const laneFromGithubCheckRun = (lane: GithubCheckLaneRun): YeetVerdictLane =>
+const laneFromQualityTaskRun = (lane: QualityTaskLaneRun, tier: O.Option<YeetProofTier>): YeetVerdictLane =>
   YeetVerdictLane.make({
     id: lane.id,
-    label: lane.id,
+    label: lane.label,
     phase: "full",
     status: lane.status,
+    tier,
+    inputDigest: lane.inputDigest,
+    startedAt: lane.startedAt,
+    endedAt: lane.endedAt,
+    ...O.getSomesStruct({
+      durationMs: lane.durationMs,
+      exitCode: lane.exitCode,
+    }),
   });
+
+const innerLanesForWrapper = (
+  reports: ReadonlyArray<QualityTaskLaneRunReport>,
+  wrapperLaneId: string,
+  tier: O.Option<YeetProofTier>
+): ReadonlyArray<YeetVerdictLane> =>
+  pipe(
+    reports,
+    A.filter((report) => O.exists(report.parentLaneId, (parentLaneId) => parentLaneId === wrapperLaneId)),
+    A.flatMap((report) => A.map(report.lanes, (lane) => laneFromQualityTaskRun(lane, tier)))
+  );
 
 /**
  * Run identity, outcome, planned steps, and executed results used to build the run verdict.
@@ -720,6 +742,9 @@ export class BuildYeetVerdictInput extends S.Class<BuildYeetVerdictInput>($I`Bui
   {
     base: S.String,
     attemptId: UUID.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    resolvedHeadSha: OptionalVerdictString,
+    diffFingerprint: OptionalVerdictString,
+    proofTier: YeetProofTier.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     baseFreshness: S.optionalKey(YeetBaseFreshness),
     branch: S.String,
     createdAt: S.String,
@@ -727,6 +752,9 @@ export class BuildYeetVerdictInput extends S.Class<BuildYeetVerdictInput>($I`Bui
     endedAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     elapsedMs: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     executed: S.Array(YeetExecutedStep),
+    innerLaneReports: S.Array(QualityTaskLaneRunReport).pipe(
+      S.withConstructorDefault(Effect.succeed(A.empty<QualityTaskLaneRunReport>()))
+    ),
     failurePolicy: GithubCheckFailurePolicy.pipe(
       S.withConstructorDefault(Effect.succeed(GithubCheckFailurePolicy.Enum["fail-fast"]))
     ),
@@ -790,20 +818,18 @@ export const buildYeetVerdict = (input: BuildYeetVerdictInput): YeetVerdict => {
   );
   const lanes = pipe(
     input.executed,
-    A.map(laneFromExecuted),
+    A.map((entry) => laneFromExecuted(entry, input.proofTier)),
     A.appendAll(
       pipe(
         input.executed,
-        A.map((entry) => pipe(O.fromUndefinedOr(entry.result.output), O.flatMap(githubCheckRunReportFromOutput))),
-        A.getSomes,
-        A.flatMap((report) => A.map(report.lanes, laneFromGithubCheckRun))
+        A.flatMap((entry) => innerLanesForWrapper(input.innerLaneReports, entry.step.id, input.proofTier))
       )
     ),
     A.appendAll(
       pipe(
         input.planned,
         A.filter((step) => !A.contains(executedIds, step.id)),
-        A.map(laneFromPlanned)
+        A.map((step) => laneFromPlanned(step, input.proofTier))
       )
     )
   );
@@ -829,6 +855,9 @@ export const buildYeetVerdict = (input: BuildYeetVerdictInput): YeetVerdict => {
     ),
     runId: input.runId,
     attemptId: input.attemptId,
+    resolvedHeadSha: input.resolvedHeadSha,
+    diffFingerprint: input.diffFingerprint,
+    proofTier: input.proofTier,
     startedAt: input.startedAt,
     endedAt: input.endedAt,
     elapsedMs: input.elapsedMs,

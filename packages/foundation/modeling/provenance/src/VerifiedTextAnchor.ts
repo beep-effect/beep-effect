@@ -8,6 +8,7 @@ import { $ProvenanceId } from "@beep/identity/packages";
 import { LiteralKit, Sha256HexFromBytes } from "@beep/schema";
 import { Effect } from "effect";
 import * as Eq from "effect/Equal";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "./SourceTextIdentity.ts";
@@ -32,6 +33,19 @@ const WellFormedSourceText = S.String.check(
 );
 const isWellFormedSourceText = S.is(WellFormedSourceText);
 const utf8Encoder = new TextEncoder();
+
+type VerifiedSourceTextSnapshot = {
+  readonly source: SourceTextIdentity;
+  readonly sourceText: string;
+};
+
+type VerifiedTextAnchorSnapshot = {
+  readonly anchor: TextAnchor;
+  readonly source: SourceTextIdentity;
+};
+
+const verifiedSourceTextSnapshots = new WeakMap<object, VerifiedSourceTextSnapshot>();
+const verifiedTextAnchorSnapshots = new WeakMap<object, VerifiedTextAnchorSnapshot>();
 
 const copySourceTextIdentity = (source: SourceTextIdentity): SourceTextIdentity =>
   SourceTextIdentity.make({
@@ -166,26 +180,40 @@ export class VerifySourceTextIdentityInput extends S.Class<VerifySourceTextIdent
 ) {}
 
 class VerifiedSourceTextValue {
-  readonly #verified = true;
-  readonly #source: SourceTextIdentity;
-  readonly #sourceText: string;
-
-  constructor(source: SourceTextIdentity, sourceText: string) {
-    this.#source = copySourceTextIdentity(source);
-    this.#sourceText = sourceText;
-  }
+  private declare readonly verifiedSourceTextCapability: void;
 
   get source(): SourceTextIdentity {
-    return copySourceTextIdentity(this.#source);
+    const snapshot = verifiedSourceTextSnapshots.get(this);
+    if (snapshot === undefined) {
+      throw VerifiedTextAnchorError.fromReason("invalid-anchor");
+    }
+    return copySourceTextIdentity(snapshot.source);
   }
 
   get sourceText(): string {
-    return this.#sourceText;
+    const snapshot = verifiedSourceTextSnapshots.get(this);
+    if (snapshot === undefined) {
+      throw VerifiedTextAnchorError.fromReason("invalid-anchor");
+    }
+    return snapshot.sourceText;
   }
 
   static readonly is = (input: unknown): input is VerifiedSourceTextValue =>
-    input instanceof VerifiedSourceTextValue && input.#verified;
+    P.isObject(input) && verifiedSourceTextSnapshots.has(input);
 }
+
+globalThis.Object.freeze(VerifiedSourceTextValue.prototype);
+globalThis.Object.freeze(VerifiedSourceTextValue);
+
+const issueVerifiedSourceText = (source: SourceTextIdentity, sourceText: string): VerifiedSourceTextValue => {
+  const proof = new VerifiedSourceTextValue();
+  verifiedSourceTextSnapshots.set(proof, {
+    source: copySourceTextIdentity(source),
+    sourceText,
+  });
+  globalThis.Object.freeze(proof);
+  return proof;
+};
 
 /**
  * Opaque runtime proof that raw text matches one exact authorized source.
@@ -328,26 +356,40 @@ export class TextAnchorVerificationReceipt extends S.Class<TextAnchorVerificatio
 ) {}
 
 class VerifiedTextAnchorValue {
-  readonly #verified = true;
-  readonly #anchor: TextAnchor;
-  readonly #source: SourceTextIdentity;
-
-  constructor(anchor: TextAnchor, source: SourceTextIdentity) {
-    this.#anchor = copyTextAnchor(anchor);
-    this.#source = copySourceTextIdentity(source);
-  }
+  private declare readonly verifiedTextAnchorCapability: void;
 
   get anchor(): TextAnchor {
-    return copyTextAnchor(this.#anchor);
+    const snapshot = verifiedTextAnchorSnapshots.get(this);
+    if (snapshot === undefined) {
+      throw VerifiedTextAnchorError.fromReason("invalid-anchor");
+    }
+    return copyTextAnchor(snapshot.anchor);
   }
 
   get source(): SourceTextIdentity {
-    return copySourceTextIdentity(this.#source);
+    const snapshot = verifiedTextAnchorSnapshots.get(this);
+    if (snapshot === undefined) {
+      throw VerifiedTextAnchorError.fromReason("invalid-anchor");
+    }
+    return copySourceTextIdentity(snapshot.source);
   }
 
   static readonly is = (input: unknown): input is VerifiedTextAnchorValue =>
-    input instanceof VerifiedTextAnchorValue && input.#verified;
+    P.isObject(input) && verifiedTextAnchorSnapshots.has(input);
 }
+
+globalThis.Object.freeze(VerifiedTextAnchorValue.prototype);
+globalThis.Object.freeze(VerifiedTextAnchorValue);
+
+const issueVerifiedTextAnchor = (anchor: TextAnchor, source: SourceTextIdentity): VerifiedTextAnchorValue => {
+  const proof = new VerifiedTextAnchorValue();
+  verifiedTextAnchorSnapshots.set(proof, {
+    anchor: copyTextAnchor(anchor),
+    source: copySourceTextIdentity(source),
+  });
+  globalThis.Object.freeze(proof);
+  return proof;
+};
 
 /**
  * Opaque runtime proof that a text anchor matches one exact resolved source.
@@ -468,10 +510,16 @@ export const VerifiedTextAnchor = S.declare<VerifiedTextAnchor>(VerifiedTextAnch
  * @since 0.0.0
  */
 export const toTextAnchorVerificationReceipt = (verified: VerifiedTextAnchor): TextAnchorVerificationReceipt =>
-  TextAnchorVerificationReceipt.make({
-    anchor: verified.anchor,
-    source: verified.source,
-  });
+  (() => {
+    const snapshot = verifiedTextAnchorSnapshots.get(verified);
+    if (snapshot === undefined) {
+      throw VerifiedTextAnchorError.fromReason("invalid-anchor");
+    }
+    return TextAnchorVerificationReceipt.make({
+      anchor: copyTextAnchor(snapshot.anchor),
+      source: copySourceTextIdentity(snapshot.source),
+    });
+  })();
 
 /**
  * Prove that resolved raw text belongs to the exact authorized source
@@ -549,7 +597,7 @@ export const verifySourceTextIdentity = Effect.fn("VerifiedTextAnchor.verifySour
     return yield* VerifiedTextAnchorError.fromReason("stale-source");
   }
 
-  return new VerifiedSourceTextValue(source, sourceText);
+  return issueVerifiedSourceText(source, sourceText);
 });
 
 /**
@@ -579,7 +627,11 @@ export const verifyTextAnchorAgainstVerifiedSource = Effect.fn("VerifiedTextAnch
   function* (
     input: VerifyTextAnchorAgainstVerifiedSourceInput
   ): Effect.fn.Return<VerifiedTextAnchor, VerifiedTextAnchorError> {
-    const { source, sourceText } = input.verifiedSource;
+    const snapshot = verifiedSourceTextSnapshots.get(input.verifiedSource);
+    if (snapshot === undefined) {
+      return yield* VerifiedTextAnchorError.fromReason("stale-source");
+    }
+    const { source, sourceText } = snapshot;
     if (
       input.anchor.endChar > Str.length(sourceText) ||
       !isUtf16Boundary(sourceText, input.anchor.startChar) ||
@@ -591,7 +643,7 @@ export const verifyTextAnchorAgainstVerifiedSource = Effect.fn("VerifiedTextAnch
       return yield* VerifiedTextAnchorError.fromReason("quote-mismatch");
     }
 
-    return new VerifiedTextAnchorValue(input.anchor, source);
+    return issueVerifiedTextAnchor(input.anchor, source);
   }
 );
 

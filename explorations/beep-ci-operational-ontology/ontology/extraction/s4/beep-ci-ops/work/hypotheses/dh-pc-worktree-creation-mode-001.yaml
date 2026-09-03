@@ -1,0 +1,24 @@
+id: "dh:pc-worktree-creation-mode:001"
+observation_refs:
+  - "po:sha256:c2505dc57cfcdbd4bbceb25491bd2f483dc2c07ee27732bce2dc3d7928a985d0"
+cq_warrants: []
+proposed_referent:
+  label: "worktree creation-mode vocabulary"
+  description: >-
+    The source spellings clone and linked-worktree for an implementation-level
+    choice about checkout creation.
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "kinds of checkout"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: >-
+    The observation is a two-member literal kit and supplies no checkout
+    instance, persistence criterion, verification consequence, or competency
+    question that distinguishes creation modes in the operational ontology.
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.88, use_for_acceptance: false}

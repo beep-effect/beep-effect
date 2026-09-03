@@ -1,0 +1,31 @@
+id: "dh:pc-yeet-proof-tier-planning:001"
+observation_refs:
+  - "po:sha256:c09e465bf53e82d7992f460294e19bae8ea0ea4f8a5f9e91ec64e8691c259f35"
+  - "po:sha256:e06b55997f54a7f842cf0bf07a560c0d4cc9ff9cf68515662196dabcd47b777c"
+  - "po:sha256:edfa76c75c94c0c93b2d95145a84c744876e10af1bc3f9f2cc8f562ccc54268b"
+cq_warrants:
+  - "CQ-001"
+  - "CQ-017"
+proposed_referent:
+  label: "Yeet proof-tier planning vocabulary"
+  description: >-
+    Source labels for proof tiers together with planner fragments that may
+    encode how tiers select pre-push or GitHub-check work.
+representation_status: lexical_alias
+alternatives:
+  - label: "planner dispatch branches and internal enum values"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+  - label: "repeatable proof-plan specifications distinct from assurance tiers"
+    representation_status: information_artifact
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: >-
+    Although the fragments suggest mappings, they show no complete plan,
+    emitted work sequence, tier obligation, or execution. The source branches
+    alone cannot establish a domain plan or a mapping to assurance tiers.
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.67, use_for_acceptance: false}

@@ -192,10 +192,17 @@
         "VITEST_COVERAGE_RATCHET"
       ],
       "inputs": [
-        "$TURBO_DEFAULT$",
+        "package.json",
+        "server/**",
+        "src/**",
+        "src-tauri/**",
+        "test/**",
+        "tsconfig*.json",
+        "vitest.config.ts",
+        "vitest.coverage.config.ts",
+        "$TURBO_ROOT$/vitest.aliases.generated.json",
         "$TURBO_ROOT$/vitest.shared.ts",
-        "$TURBO_ROOT$/vitest.setup.ts",
-        "!.beep/**"
+        "$TURBO_ROOT$/vitest.setup.ts"
       ],
       "outputs": ["coverage/**"]
     },

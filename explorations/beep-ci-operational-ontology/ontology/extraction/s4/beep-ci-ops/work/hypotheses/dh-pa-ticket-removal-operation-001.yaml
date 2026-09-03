@@ -1,0 +1,22 @@
+id: "dh:pa-ticket-removal-operation:001"
+observation_refs:
+  - "po:sha256:1e660064d1ea4f712a62b8e4440612413263dc165cb8fc6711b52fb488110e59"
+cq_warrants: ["CQ-021"]
+proposed_referent:
+  label: "Admission-ticket file removal operation"
+  description: "The implementation step that force-removes a scheduler ticket path while ignoring removal failure."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "Seat-request consumption event"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "Queue-state transition record"
+    representation_status: information_artifact
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "A filesystem removal expression does not establish that request consumption itself must be represented as an ontology referent rather than inferred from queue snapshots."
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.18, use_for_acceptance: false}

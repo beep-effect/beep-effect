@@ -1,0 +1,52 @@
+target: "otp:pb-scheduler-process-owner:001"
+target_sha256: "19a78396be96c0b0d5db9420d25417e11daee04b17bc8b8f4ad0c46384ce9c64"
+chain_sha256: "24ef01514f28ba6024c28fc13ac0d52052a91209a3859240cf47686f2f90da07"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: "The revised proposal asserts no candidate is-a edge."
+revision_requests:
+  - >-
+    Preserve exact-reused Agent as the anti-rigid admission-owner role whose
+    process bearer supplies continuity across changing owned items, without
+    minting one role token per item; otherwise mint a distinct OSProcess class
+    and relate the Agent role to that bearer.
+attacks:
+  - surface: identity
+    rule: role-bearer-collapse-on-exact-reuse
+    counterexample: >-
+      The same operating-system process exists before it owns a request, while
+      it owns several requests, and after it owns none. The revised definition
+      classifies that rigid process as Agent even at zero ownership, collapsing
+      the exact-reused anti-rigid admission-owner role into its identity-
+      supplying process bearer.
+    outcome: landed
+  - surface: warrant
+    rule: decision-cq-requires-term
+    counterexample: >-
+      CQ-021 explicitly asks which Agent owns each queued SeatRequest through
+      requestedBy. An admission-owner role linked to its continuing process
+      bearer is therefore required even though the current definition chooses
+      the wrong side of that role/bearer distinction.
+    outcome: survived
+  - surface: null_discriminator
+    rule: discriminator-false-in-null-world
+    counterexample: >-
+      A serialized pid and process-start tuple alone cannot distinguish reused
+      PIDs across real process lifetimes. The process bearer and its ownership
+      relation remain real referents; the failure is their collapse under one
+      exact-reused class, not an implementation-only null.
+    outcome: survived
+rival_models_still_viable:
+  - "Agent is an anti-rigid ownership role borne by one causally continuous OS process."
+  - "OSProcess is a separate rigid class that supplies identity to changing Agent roles."
+evidence:
+  - "po:sha256:5f469b32b1a76b6af2b9ebbed7334996404ec4029d63bca140ebd2a796e0ba87"
+  - "po:sha256:7debc0657f601d5714b767d284e75c22c236b1da704789e970affedec30e3a1b"
+  - "CQ-021"

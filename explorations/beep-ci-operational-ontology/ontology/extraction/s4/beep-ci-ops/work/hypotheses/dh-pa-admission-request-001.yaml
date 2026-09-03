@@ -1,0 +1,26 @@
+id: "dh:pa-admission-request:001"
+observation_refs:
+  - "po:sha256:0f770a52d6074ae2a158234d536178589a6353333147509d21a526ac41305d59"
+  - "po:sha256:292a0d656c3996d634bbcc4cde62da942c52bd9a0a3c5d1f9246bf5977066841"
+  - "po:sha256:35fb67c441193ece032d71a3f3e53107352fd83cd469df203eac69b27f2461d9"
+  - "po:sha256:4a30b60df83c527a6da561402d3755e6b194e0f657659d3510c506549f3c9021"
+  - "po:sha256:55c2897fcdfe9318041fe93947653642729b7d3b83ca8f7964e83043085abeac"
+cq_warrants: ["CQ-021"]
+proposed_referent:
+  label: "Admission request information artifact"
+  description: "A request for scheduler admission carrying work kind, priority, charge, origin, checkout, and enqueue information, including the pending projection view derived from journal events."
+representation_status: information_artifact
+alternatives:
+  - label: "Requesting relation between an agent and planned work"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "Scheduler request DTO"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: "The combined observations specify an operational request record whose content is derived from admission history and is also shaped for live scheduler input."
+  discriminator: "The projection contract derives the pending-request view from admitted journal events and accepts live requests while carrying enqueue, charge, priority, work-kind, and origin data."
+epistemic_status: proposed
+confidence: {value: 0.83, use_for_acceptance: false}

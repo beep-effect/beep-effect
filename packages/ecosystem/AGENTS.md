@@ -13,9 +13,9 @@ These rules apply to `packages/ecosystem/*` and carry the published-package styl
   `optionalDependencies`) free of `@beep/*`, and never declare bundled dependencies. Tests and
   `devDependencies` may use repo packages. The contract is "publishable from the monorepo," not
   "extractable repo-free."
-- Member tsconfigs carry the family effect-lsp profile: the root plugin block restated with
-  exactly two style rules off (`missedPipeableOpportunity`, `missingPipeableSignature`) because
-  the published data-first API surface and named-import style conflict with the repo's pipe
-  idiom. Every correctness diagnostic stays `error`, and inline `@effect-diagnostics ... :off`
-  directives remain banned. `beep quality tsgo-rules` verifies member profiles against
-  base ⊕ this delta; do not widen the delta without an operator decision.
+- Effect Drizzle tsconfigs carry the root effect-lsp plugin block restated with exactly one style
+  rule off (`missedPipeableOpportunity`) because the published data-first API surface conflicts
+  with the repo's pipe idiom. `missingPipeableSignature` and every correctness diagnostic stay
+  `error`; all other ecosystem members inherit the root profile unchanged. Inline
+  `@effect-diagnostics ... :off` directives remain banned. `beep quality tsgo-rules` verifies
+  profiles against base ⊕ this delta; do not widen the delta without an operator decision.

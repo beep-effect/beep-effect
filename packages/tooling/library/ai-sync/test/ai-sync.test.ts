@@ -12,6 +12,7 @@ import {
   AiSyncSourceUrl,
   AiSyncValidationResult,
   AiSyncVersionPin,
+  assertNoStrictDrift,
   ClaudeMcpJson,
   CodexConfig,
   checkGeneratedArtifacts,
@@ -41,6 +42,7 @@ import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
+import { HttpClient, HttpClientResponse } from "effect/unstable/http";
 import type { TUnsafe } from "@beep/types";
 import type { Layer } from "effect";
 
@@ -52,7 +54,6 @@ const requiredClaudeRepoDenyPermissions: ReadonlyArray<string> = [
   "Bash(git push --force-with-lease:*)",
   "Bash(git push --mirror:*)",
   "Bash(git stash clear:*)",
-  "Bash(git stash drop:*)",
   "Bash(git stash pop:*)",
   "Bash(git worktree remove --force:*)",
   "Bash(bun run beep worktree remove --force:*)",
@@ -119,6 +120,21 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/ai-sync", (it) => {
     Effect.fn(function* () {
       const report = yield* checkGeneratedArtifacts();
       expect(report.findings).toEqual([]);
+    })
+  );
+
+  it.effect(
+    "reports strict upstream drift through the typed failure channel",
+    Effect.fn(function* () {
+      const client = HttpClient.make((request) =>
+        Effect.succeed(HttpClientResponse.fromWeb(request, new Response("synthetic upstream drift")))
+      );
+      const error = yield* assertNoStrictDrift().pipe(
+        Effect.provideService(HttpClient.HttpClient, client),
+        Effect.flip
+      );
+
+      expect(error.message).toContain(" -> ");
     })
   );
 
@@ -545,7 +561,7 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/ai-sync", (it) => {
   );
 
   it.effect(
-    "keeps checked-in Claude grants inside the exact 47-value allow domain",
+    "keeps checked-in Claude grants inside the exact 50-value allow domain",
     Effect.fn(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -559,11 +575,13 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/ai-sync", (it) => {
         )
       )(settingsText);
 
-      assert.lengthOf(settings.permissions.allow, 47);
+      assert.lengthOf(settings.permissions.allow, 50);
       assert.include(settings.permissions.allow, "Bash(git worktree prune:*)");
-      assert.notInclude(settings.permissions.allow, "Bash(bun run beep yeet sweep)");
-      assert.notInclude(settings.permissions.allow, "Bash(bun run beep yeet sweep:*)");
+      assert.include(settings.permissions.allow, "Bash(bun run beep yeet sweep:*)");
       assert.notInclude(settings.permissions.allow, "Bash(git worktree remove:*)");
+      assert.include(settings.permissions.allow, "Bash(git stash drop:*)");
+      assert.include(settings.permissions.allow, "Bash(git update-ref refs/archive/:*)");
+      assert.notInclude(settings.permissions.allow, "Bash(git update-ref:*)");
       assert.notInclude(settings.permissions.allow, "Bash(git push --delete:*)");
       assert.notInclude(settings.permissions.allow, "Bash(git push origin --delete:*)");
       assert.notInclude(settings.permissions.allow, "Bash(git push:*)");

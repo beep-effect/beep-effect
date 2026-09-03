@@ -125,7 +125,7 @@ const BoxApiFailureContextValues = S.Struct({
  *
  * ```ts
  * import { BoxApiFailureContext } from "@beep/box"
- * import { NonNegativeInt } from "@beep/schema"
+ * import { NonNegativeInt } from "@beep/schema/Number"
  *
  * const context = BoxApiFailureContext.make({
  *   values: { conflictCount: NonNegativeInt.make(1), conflicts: [{ id: "123", type: "file" }] }

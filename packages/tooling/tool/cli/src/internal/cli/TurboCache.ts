@@ -99,6 +99,52 @@ export const TurboCacheEnvName = LiteralKit(["TURBO_API", "TURBO_TOKEN", "TURBO_
  */
 export type TurboCacheEnvName = typeof TurboCacheEnvName.Type;
 
+const TurboEnvironmentVariableName = S.String.check(
+  S.isPattern(/^[A-Za-z_][A-Za-z0-9_]*$/u, {
+    identifier: $I`TurboEnvironmentVariableNamePatternCheck`,
+    title: "Environment Variable Name Pattern",
+    description: "Environment variable names use a portable shell identifier form.",
+    message: "Expected an environment variable name matching ^[A-Za-z_][A-Za-z0-9_]*$",
+  })
+).pipe(
+  $I.annoteSchema("TurboEnvironmentVariableName", {
+    description: "A portable shell environment variable name.",
+  })
+);
+
+/**
+ * A checkout `.env` variable whose 1Password reference failed the separate
+ * environment-health check.
+ *
+ * **Details**
+ *
+ * The warning deliberately carries only the variable name. The unresolved
+ * reference and any resolved value stay inside the value-suppressed probe and
+ * can never reach plan output through this model.
+ *
+ * **Example** (Name an unhealthy environment variable)
+ *
+ * ```ts
+ * import { TurboEnvironmentHealthWarning } from "@beep/repo-cli/test/SharedInternals"
+ *
+ * const warning = TurboEnvironmentHealthWarning.make({ variableName: "STALE_SERVICE_TOKEN" })
+ * console.log(warning.variableName)
+ * ```
+ *
+ * @category diagnostics
+ * @since 0.0.0
+ */
+export class TurboEnvironmentHealthWarning extends S.Class<TurboEnvironmentHealthWarning>(
+  $I`TurboEnvironmentHealthWarning`
+)(
+  {
+    variableName: TurboEnvironmentVariableName,
+  },
+  $I.annote("TurboEnvironmentHealthWarning", {
+    description: "A checkout .env variable whose 1Password reference failed a value-suppressed health check.",
+  })
+) {}
+
 /**
  * Environment overrides that reduce any checkout to the hosted pull-request
  * cache posture: every credential scrubbed, cache pinned local-only.
@@ -566,6 +612,10 @@ const requestedTurboCacheMode = (environment: TurboCacheEnvironment): O.Option<T
  * anything else — a missing quad member, a blank value, or any other posture
  * including a remote *write* posture, which no workstation is credentialed for
  * — resolves to local-only.
+ *
+ * Only the four {@link TurboCacheEnvName} entries participate in this decision.
+ * Unrelated reference failures belong to the separate environment-health check:
+ * they are rendered as named warnings and never downgrade a healthy cache quad.
  *
  * **Gotchas**
  *

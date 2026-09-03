@@ -1,0 +1,50 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "chore/gitleaks-vendored-subtree-allowlist",
+  "committed": false,
+  "createdAt": "2026-08-06T04:49:07.968Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "closeout:01-pr-context",
+      "label": "closeout:pr-context",
+      "phase": "monitor",
+      "status": "not-run"
+    },
+    {
+      "id": "closeout:02-review-gates",
+      "label": "closeout:review-gates",
+      "phase": "monitor",
+      "status": "not-run"
+    }
+  ],
+  "message": "yeet closeout succeeded.",
+  "mode": "closeout",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "chore_gitleaks-vendored-subtree-allowlist-f7a0f929cb0b",
+  "attemptId": {
+    "_id": "Option",
+    "_tag": "Some",
+    "value": "84325467-2649-48a4-aa23-9deb6e265822"
+  },
+  "startedAt": {
+    "_id": "Option",
+    "_tag": "Some",
+    "value": "2026-08-06T04:49:04.019Z"
+  },
+  "endedAt": {
+    "_id": "Option",
+    "_tag": "Some",
+    "value": "2026-08-06T04:49:07.968Z"
+  },
+  "elapsedMs": {
+    "_id": "Option",
+    "_tag": "Some",
+    "value": 3949
+  },
+  "indexPath": "<fleet>/beep-effect7/.beep/yeet/quality-issue-index.json"
+}

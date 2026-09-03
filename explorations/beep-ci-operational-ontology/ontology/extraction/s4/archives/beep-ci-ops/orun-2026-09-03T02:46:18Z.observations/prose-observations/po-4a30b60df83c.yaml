@@ -1,0 +1,10 @@
+id: po:sha256:4a30b60df83c527a6da561402d3755e6b194e0f657659d3510c506549f3c9021
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts
+source_span:
+  start_line: 156
+  end_line: 158
+quote: 'priority: AdmissionPriority, originKey: S.String, checkoutRoot: S.String'
+epistemic_status: quoted_prose

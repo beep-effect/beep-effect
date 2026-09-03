@@ -14,6 +14,7 @@ import {
   runYeetInboxAppend,
   runYeetInboxList,
   writeYeetAckReceipt,
+  YeetAckEnvironmentOnlyResolution,
   YeetAckFixResolution,
   YeetAckReceipt,
   YeetAckState,
@@ -70,6 +71,7 @@ const entry = (subject: YeetCheckFailedRow, acked = false): YeetInboxEntry =>
 
 const noResolutionFlags = {
   actor: "",
+  environmentOnly: false,
   expiresAt: "",
   fixSha: "",
   reason: "",
@@ -201,9 +203,14 @@ describe("renderYeetInboxListOutput", () => {
 });
 
 describe("parseYeetAckResolution", () => {
-  it.effect("builds each of the three resolutions", () =>
+  it.effect("builds each resolution", () =>
     Effect.gen(function* () {
       const fix = yield* parseYeetAckResolution({ ...noResolutionFlags, fixSha: "2817f28" });
+      const environmentOnly = yield* parseYeetAckResolution({
+        ...noResolutionFlags,
+        environmentOnly: true,
+        reason: "stale upstream dist",
+      });
       const wontfix = yield* parseYeetAckResolution({ ...noResolutionFlags, reason: "flaky", wontfix: true });
       const thread = yield* parseYeetAckResolution({ ...noResolutionFlags, threadUrl: "https://example.test/t/1" });
       const waive = yield* parseYeetAckResolution({
@@ -216,6 +223,7 @@ describe("parseYeetAckResolution", () => {
       });
 
       expect(fix.kind).toBe("fix-sha");
+      expect(environmentOnly).toStrictEqual(YeetAckEnvironmentOnlyResolution.make({ reason: "stale upstream dist" }));
       expect(wontfix.kind).toBe("wontfix");
       expect(thread.kind).toBe("thread-url");
       expect(waive).toStrictEqual(
@@ -241,13 +249,17 @@ describe("parseYeetAckResolution", () => {
     })
   );
 
-  it.effect("refuses a wontfix without a reason, and a reason without wontfix", () =>
+  it.effect("refuses reasonless environment-only and wontfix resolutions, and a dangling reason", () =>
     Effect.gen(function* () {
+      const unexplainedEnvironment = yield* Effect.flip(
+        parseYeetAckResolution({ ...noResolutionFlags, environmentOnly: true })
+      );
       const unexplained = yield* Effect.flip(parseYeetAckResolution({ ...noResolutionFlags, wontfix: true }));
       const dangling = yield* Effect.flip(parseYeetAckResolution({ ...noResolutionFlags, reason: "flaky" }));
 
+      expect(unexplainedEnvironment.message).toContain("requires --reason");
       expect(unexplained.message).toContain("requires --reason");
-      expect(dangling.message).toContain("only applies with --wontfix");
+      expect(dangling.message).toContain("only applies with --environment-only, --wontfix, or --waive");
     })
   );
 
@@ -419,24 +431,26 @@ describe("appendYeetInboxRowFromText", () => {
 });
 
 // The runners resolve the checkout through findRepoRoot from process.cwd, so
-// these tests chdir into a temp directory carrying a bun.lock root marker.
-// The suite runs with fileParallelism disabled, so the cwd swap cannot race
-// another file.
+// these tests temporarily point cwd at a temp directory carrying a bun.lock
+// root marker. Replacing the getter works in both fork and worker-thread pools;
+// Node forbids process.chdir inside worker threads.
 const inTempCheckout = Effect.fn("inTempCheckout")(function* <Value, Failure, Requirements>(
   use: (root: string) => Effect.Effect<Value, Failure, Requirements>
 ) {
   const fs = yield* FileSystem.FileSystem;
-  const original = process.cwd();
+  const originalCwd = process.cwd;
   const enter = Effect.gen(function* () {
     const made = yield* fs.makeTempDirectory();
     yield* fs.writeFileString(`${made}/bun.lock`, "");
-    yield* Effect.sync(() => process.chdir(made));
-    // findRepoRoot walks from process.cwd(), which may canonicalize the temp
-    // path, so the tests join on whatever cwd now reports.
-    return process.cwd();
+    yield* Effect.sync(() => {
+      process.cwd = () => made;
+    });
+    return made;
   });
   return yield* Effect.acquireUseRelease(enter, use, (root) =>
-    Effect.sync(() => process.chdir(original)).pipe(Effect.andThen(Effect.ignore(fs.remove(root, { recursive: true }))))
+    Effect.sync(() => {
+      process.cwd = originalCwd;
+    }).pipe(Effect.andThen(Effect.ignore(fs.remove(root, { recursive: true }))))
   );
 });
 

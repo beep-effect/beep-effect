@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "feat/repo-cli-adaface-kprpe",
+  "committed": false,
+  "createdAt": "2026-08-31T09:02:59.760Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "closeout:01-pr-context",
+      "label": "closeout:pr-context",
+      "phase": "monitor",
+      "status": "not-run"
+    },
+    {
+      "id": "closeout:02-review-gates",
+      "label": "closeout:review-gates",
+      "phase": "monitor",
+      "status": "not-run"
+    }
+  ],
+  "message": "yeet closeout succeeded.",
+  "mode": "closeout",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "feat_repo-cli-adaface-kprpe-0100c1063471",
+  "attemptId": "07efe9d3-908b-4438-a398-aeef1ab19fc2",
+  "startedAt": "2026-08-31T09:02:54.641Z",
+  "endedAt": "2026-08-31T09:02:59.760Z",
+  "elapsedMs": 5119,
+  "indexPath": "<fleet>/beep-effect22/.beep/yeet/quality-issue-index.json"
+}

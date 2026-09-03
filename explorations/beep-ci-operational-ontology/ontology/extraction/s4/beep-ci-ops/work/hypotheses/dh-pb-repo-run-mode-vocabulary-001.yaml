@@ -1,0 +1,25 @@
+id: "dh:pb-repo-run-mode-vocabulary:001"
+observation_refs:
+  - "po:sha256:9cd9b66e1a2335a52fcc44086f95092406c75898e149c5ac63ed773aa36da974"
+cq_warrants:
+  - "CQ-022"
+proposed_referent:
+  label: "read-only, write, and publish repository-run mode labels"
+  description: "A possible lexical vocabulary classifying repository-run modes by their apparent mutation intent."
+representation_status: lexical_alias
+alternatives:
+  - label: "operational mutation modes"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "LiteralKit union members"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The LiteralKit members suggest mutation intent, but no observation connects them to an execution, cancellation safety, side effect, or scheduling decision. Enum membership alone cannot establish operational modes."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.46
+  use_for_acceptance: false

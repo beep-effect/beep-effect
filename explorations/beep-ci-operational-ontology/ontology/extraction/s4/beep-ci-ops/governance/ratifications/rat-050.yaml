@@ -1,0 +1,9 @@
+id: rat:50
+proposal_ref: otp:pb-admission-priority-class:001
+proposal_sha256: 245a76a0dc8f1a77b08d7ed84c6ef626213ba8424b7366ab0ce3d66911c71ce6
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-09-03T09:05:00Z'
+verbatim_decision: Accept AdmissionPriorityClass, registry lineage deferred to run 3 as flagged.

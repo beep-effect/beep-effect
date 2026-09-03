@@ -1,0 +1,63 @@
+target: "otp:pb-planned-lane-status:001"
+target_sha256: "e11b9e8dbb7b00499309a1b02edd206557e1aa50eb29d2f144e3ff6e520be7f0"
+chain_sha256: "fa45f3f929f9d08f83c1f4eee6ae4c0d1aba82292c51c89bc536e3fcd14c3c72"
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The restored broad result-artifact proposal asserts no parent edge, so no
+    proposed is-a relation is present; extension compatibility is tested below.
+revision_requests: []
+attacks:
+  - surface: identity
+    rule: exact-reuse-extension-narrowing
+    counterexample: >-
+      A hosted-check result can record a verification outcome without a lane
+      identifier, repair instruction, or duration. It remains inside the
+      restored definition because planned-lane status is only a possible
+      instance and those fields are not conditions on VerificationResultArtifact.
+    outcome: survived
+  - surface: identity
+    rule: record-issuance-identity-unobserved
+    counterexample: >-
+      Equal transient lane-status values may be allocated or reconstructed
+      without retained issuance. The revision no longer claims an independently
+      issued PlannedLaneStatusArtifact; it leaves that specialization withdrawn
+      and keeps broad result-content versus issued-token identity open.
+    outcome: survived
+  - surface: warrant
+    rule: semantic-support-not-necessary
+    counterexample: >-
+      A result artifact can record an outcome without satisfying the
+      applicability and provenance conditions for VerificationEvidence, while
+      evidence needs a result-bearing information object on which those
+      conditions depend. The broad class therefore supplies the necessary
+      bearer side of the role distinction for the cited decision term.
+    outcome: survived
+  - surface: null_discriminator
+    rule: discriminator-true-of-dto
+    counterexample: >-
+      A transient DTO may carry lane-result content without retained issuance.
+      The revised proposal makes no issuance claim and accommodates a retained
+      lane record only as a possible instance of the broad information-object
+      class, so the DTO twin does not narrow or reidentify that class.
+    outcome: survived
+rival_models_still_viable:
+  - "VerificationResultArtifact identity follows repeatable result content across faithful carriers."
+  - "VerificationResultArtifact identity follows each authoritative issuance and custody-tracked token."
+  - "A transient planned-lane verdict may remain a value object without independently useful artifact identity."
+evidence:
+  - "po:sha256:59e3f07184abaf7f8075745f636d111ccdf14c2c058c5b08adb59b9745033ac0"
+  - "po:sha256:900957ece232a7fe12a98b7a2894aff6e0ab77fdbaaf5e453e16b17977e5dec6"
+  - "po:sha256:960216354d31160a6fac7280f6375dc8731cfd58c667bcb4c4bcdfde75887792"
+  - "po:sha256:97d6383547ad97c34937c34179413d35651dcf44fed758f70e6de129e163901c"
+  - "CQ-005"
+  - "CQ-015"
+  - "CQ-022"
+  - "CQ-025"

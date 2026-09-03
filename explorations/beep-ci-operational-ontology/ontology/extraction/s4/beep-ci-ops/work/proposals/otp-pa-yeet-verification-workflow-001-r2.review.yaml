@@ -1,0 +1,64 @@
+target: "otp:pa-yeet-verification-workflow:001"
+target_sha256: "b8f1c37715443df889ef7aac74f3b9e003d659fcc9d61e27e95a95c1beaf36a7"
+chain_sha256: "4f93fb4e3b74cb48bdbfa3d4ee3566a15c9e0118c8089d06176158c9fb9bb941"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: "The revised proposal asserts no candidate is-a edge."
+revision_requests:
+  - >-
+    Keep the exact-reused VerificationPlanSpecification definition broad and
+    represent the Yeet plan as an instance or a separately deferred,
+    separately warranted specialization; the concession does not license a
+    Yeet-only definition on the broad reused class.
+attacks:
+  - surface: identity
+    rule: exact-reuse-extension-narrowing
+    counterexample: >-
+      A non-Yeet verification plan can prescribe an ordered WorkUnit sequence
+      and scope and remain a VerificationPlanSpecification, yet it fails the
+      revised definition's Yeet proof-plan, monitor, and merge-ready clauses.
+      Exact reuse therefore still narrows the broad class despite the new
+      deferral language.
+    outcome: landed
+  - surface: identity
+    rule: plan-unity-underdetermined
+    counterexample: >-
+      Cheap-gates, review-fix, and monitoring can be separately versioned
+      subplans coordinated by policy. The revision now concedes that choice,
+      marks the analysis deferred, and names authority and lineage evidence,
+      so this unresolved unity question is not itself treated as a failed
+      repair in round 2.
+    outcome: survived
+  - surface: warrant
+    rule: semantic-support-not-necessary
+    counterexample: >-
+      VerificationLane remains definable and CQ-001/CQ-011 remain answerable
+      without a higher-level Yeet selector. The revision expressly withdraws
+      that helper pending a Must/Should CQ, so the honest warrant concession is
+      not the basis of this FAIL.
+    outcome: survived
+  - surface: null_discriminator
+    rule: discriminator-false-in-null-world
+    counterexample: >-
+      A CLI branch table alone would not establish canonical repository policy
+      or a merge-ready terminal condition. The AGENTS prescriptions do supply
+      that information content, so the implementation-only null remains
+      rejected even though plan unity is deferred.
+    outcome: survived
+rival_models_still_viable:
+  - "Cheap-gates, review-fix, and monitoring are distinct coordinated plan specifications."
+  - "A procedure universal is distinct from its documentary plan specification."
+evidence:
+  - "po:sha256:33182e9f689b24bcb01d622aa789cd78093af067a6594b2e0c2c950ac0867715"
+  - "po:sha256:45d50fea9a4a18913111c9152e3c2ffad848b8e8f869cb5e694c910c604264f3"
+  - "po:sha256:4c265303ec2062df5a841185cf1032b9beab1cefafb63f3468298c2bc7917e1b"
+  - "po:sha256:53cb7d2cdb081cbfab7b6f42091d51256ea65d70c7a4a592209b542cc6cf4d79"
+  - "CQ-001"
+  - "CQ-011"

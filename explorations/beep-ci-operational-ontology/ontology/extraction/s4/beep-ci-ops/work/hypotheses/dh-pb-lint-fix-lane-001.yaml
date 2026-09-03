@@ -1,0 +1,26 @@
+id: "dh:pb-lint-fix-lane:001"
+observation_refs:
+  - "po:sha256:65838f1f7c6af55a49e291e32979c1a29e016cd340e2e3b65bd4cd974c5c2471"
+  - "po:sha256:a9ee0881022c5204f761eb8fd19ab3ad9344c1e916c83b798bbde01e809b9d45"
+cq_warrants:
+  - "CQ-001"
+proposed_referent:
+  label: "lint-fix verification lane"
+  description: "A possible Turbo task lane lexically indicated by a lint:fix key inside a tasks configuration."
+representation_status: lexical_alias
+alternatives:
+  - label: "Turbo task configuration key"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+  - label: "mutating lint-repair procedure"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observations establish only a tasks mapping and a lint:fix key. They do not record an executable command, an occurrence, a scope, an obligation, or a verdict, so the key need not denote a verification lane."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.45
+  use_for_acceptance: false

@@ -13,6 +13,7 @@ export {
   verifyPersonMatchModelArtifacts,
 } from "../commands/Files/internal/MatchPerson.model-store.ts";
 export {
+  boundedPersonMatchDirectoryNamesForTesting,
   defaultPersonMatchBackendForPlatform,
   runMatchPerson,
   trustedUvExecutableNameForPlatform,

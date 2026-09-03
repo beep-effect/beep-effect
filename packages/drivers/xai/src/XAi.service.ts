@@ -289,10 +289,7 @@ const selectToken = (
       "api-key": () => config.apiKey,
       "management-key": () => config.managementApiKey,
     }),
-    O.match({
-      onNone: () => Effect.fail(XAiError.fromDescriptor(descriptor, "config")),
-      onSome: Effect.succeed,
-    })
+    Effect.fromOption(() => XAiError.fromDescriptor(descriptor, "config"))
   );
 
 // shared driver boundary idiom; no in-family home; future foundation capability candidate.
@@ -890,10 +887,7 @@ const endpointByMethodName = Effect.fn("XAi.endpointByMethodName")(function* (me
   return yield* pipe(
     XAI_ENDPOINTS,
     A.findFirst((descriptor) => descriptor.methodName === methodName),
-    O.match({
-      onNone: () => Effect.fail(XAiError.make({ methodName: O.some(methodName), reason: "config" })),
-      onSome: Effect.succeed,
-    })
+    Effect.fromOption(() => XAiError.make({ methodName: O.some(methodName), reason: "config" }))
   );
 });
 

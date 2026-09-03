@@ -564,7 +564,7 @@ const readProofCoordinationFile = Effect.fn("Yeet.readProofCoordinationFile")(fu
 ): Effect.fn.Return<O.Option<string>, YeetCommandError, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
   return yield* fs.readFileString(filePath).pipe(
-    Effect.map(O.some),
+    Effect.asSome,
     Effect.catchTag("PlatformError", (error) =>
       error.reason._tag === "NotFound"
         ? Effect.succeed(O.none<string>())
@@ -590,7 +590,7 @@ const tryRecoverObservedProofLockReapClaim = Effect.fn("Yeet.tryRecoverObservedP
     }
 
     const tombstoneClaim = yield* decodeProofLockReapClaim(tombstoneText.value).pipe(
-      Effect.map(O.some),
+      Effect.asSome,
       Effect.orElseSucceed(O.none<YeetProofLockReapClaim>)
     );
     if (O.isNone(tombstoneClaim)) {
@@ -680,7 +680,7 @@ const tryClaimProofLockReapClaim = Effect.fn("Yeet.tryClaimProofLockReapClaim")(
   }
 
   const observedClaim = yield* decodeProofLockReapClaim(observedClaimText.value).pipe(
-    Effect.map(O.some),
+    Effect.asSome,
     Effect.orElseSucceed(O.none<YeetProofLockReapClaim>)
   );
   if (O.isNone(observedClaim)) {
@@ -790,17 +790,14 @@ const observeProofLockState = Effect.fn("Yeet.observeProofLockState")(function* 
     yield* readProofCoordinationFile(lockPath, `Failed to inspect Yeet proof lock at ${lockPath}.`),
     () => ""
   );
-  const state = yield* decodeProofLockState(text).pipe(
-    Effect.map(O.some),
-    Effect.orElseSucceed(O.none<YeetProofLockState>)
-  );
+  const state = yield* decodeProofLockState(text).pipe(Effect.asSome, Effect.orElseSucceed(O.none<YeetProofLockState>));
   const legacyState = O.isNone(state)
-    ? yield* decodeProofLockStateV2(text).pipe(Effect.map(O.some), Effect.orElseSucceed(O.none<YeetProofLockStateV2>))
+    ? yield* decodeProofLockStateV2(text).pipe(Effect.asSome, Effect.orElseSucceed(O.none<YeetProofLockStateV2>))
     : O.none<YeetProofLockStateV2>();
   const retirementState =
     O.isNone(state) && O.isNone(legacyState)
       ? yield* decodeProofLockRetirementState(text).pipe(
-          Effect.map(O.some),
+          Effect.asSome,
           Effect.orElseSucceed(O.none<YeetProofLockRetirementState>)
         )
       : O.none<YeetProofLockRetirementState>();
@@ -1354,20 +1351,16 @@ const acquireFullProofFallbackLockOrObserveAtPathWithProcessStart = Effect.fn(
   const fallbackPath = path.join(path.dirname(lockPath), "scheduler-fallback.lock");
   const procStart = yield* pipe(
     processStart,
-    O.match({
-      onNone: () =>
-        Effect.fail(
-          YeetCommandError.make({
-            message:
-              `Cannot acquire the machine-wide Yeet proof fallback lock at ${fallbackPath} because the current ` +
-              "process start identity is unavailable. Refusing PID-only ownership because PID reuse could strand the lock.",
-            command,
-            exitCode: 1,
-            file: fallbackPath,
-          })
-        ),
-      onSome: Effect.succeed,
-    })
+    Effect.fromOption(() =>
+      YeetCommandError.make({
+        message:
+          `Cannot acquire the machine-wide Yeet proof fallback lock at ${fallbackPath} because the current ` +
+          "process start identity is unavailable. Refusing PID-only ownership because PID reuse could strand the lock.",
+        command,
+        exitCode: 1,
+        file: fallbackPath,
+      })
+    )
   );
   const prepared = yield* prepareFullProofLockLeaseForCommandAt(fallbackPath, context, command, procStart);
   return yield* tryAcquirePreparedFullProofLock(prepared);
@@ -1664,7 +1657,7 @@ export const loadVerifiedState = Effect.fn("Yeet.loadVerifiedState")(function* (
       .readFileString(path)
       .pipe(
         Effect.map(verifiedStateArtifactForPath(path)),
-        Effect.map(O.some),
+        Effect.asSome,
         Effect.orElseSucceed(O.none<{ readonly path: string; readonly text: string }>)
       );
   const primary = yield* readState(statePath);

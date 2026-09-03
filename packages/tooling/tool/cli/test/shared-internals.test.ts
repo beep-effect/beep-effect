@@ -34,25 +34,34 @@ import {
   isUnresolvedSecretReference,
   JsonStringCodec,
   jsonText,
+  localOnlyTurboCacheArgs,
   nextCursor,
+  RemoteReadTurboCache,
   readOptionalConfigString,
   readOptionalRedactedConfigString,
   readTurboCacheEnvironment,
   renderSchemaFirstPolicyFindingLine,
+  renderTurboEnvironmentHealthWarning,
+  resolveTurboCachePlan,
   SchemaFirstPolicyFinding,
   SchemaFirstPolicyIssuePrefix,
   SchemaFirstPolicySeverity,
   TurboCacheEnvironment,
+  TurboCacheMode,
+  turboCachePlanArgs,
   turboCacheSecretSessionEnvironment,
   turboEnvExtendsAmbient,
+  turboEnvironmentHealthWarnings,
   turboEnvOverrides,
 } from "@beep/repo-cli/test/SharedInternals";
 import { describe, expect, it } from "@effect/vitest";
-import { ConfigProvider, Data, Effect, Layer, Redacted, Ref, Sink, Stream } from "effect";
+import { ConfigProvider, Data, Effect, FileSystem, Layer, Path, Redacted, Ref, Sink, Stream } from "effect";
+import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
-import { ChildProcessSpawner } from "effect/unstable/process";
+import * as Str from "effect/String";
+import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
@@ -271,6 +280,7 @@ describe("EnvConfig readers", () => {
 
   it("classifies unresolved op:// secret references", () => {
     expect(isUnresolvedSecretReference("op://vault/item/field")).toBe(true);
+    expect(isUnresolvedSecretReference("postgres://user:op://vault/item/password@host/db")).toBe(true);
     expect(isUnresolvedSecretReference("postgres://localhost")).toBe(false);
     expect(isUnresolvedSecretReference(undefined)).toBe(false);
   });
@@ -383,7 +393,7 @@ describe("turboEnvOverrides", () => {
   it("scrubs unresolved references and pins the cache posture on a direct spawn", () => {
     expect(
       overridesFor(
-        { TURBO_API: OP_REFERENCE, TURBO_TOKEN: OP_REFERENCE, TURBO_TEAM: "beep", TURBO_CACHE: REMOTE_READ },
+        { TURBO_API: OP_REFERENCE, TURBO_TOKEN: OP_REFERENCE, TURBO_TEAM: OP_REFERENCE, TURBO_CACHE: REMOTE_READ },
         "bunx",
         ["turbo", "run", "check"]
       )
@@ -391,6 +401,7 @@ describe("turboEnvOverrides", () => {
       TURBO_UI: "false",
       TURBO_API: undefined,
       TURBO_TOKEN: undefined,
+      TURBO_TEAM: undefined,
       TURBO_CACHE: "local:rw",
     });
   });
@@ -404,6 +415,7 @@ describe("turboEnvOverrides", () => {
       TURBO_TEAM: "op://fixture-vault/turbo/team",
       TURBO_CACHE: REMOTE_READ,
       UNRELATED_SECRET: "op://fixture-vault/unrelated/secret",
+      UNRELATED_DATABASE_URL: "postgres://user:op://fixture-vault/database/password@db.test/database",
     };
     const sanitized = {
       PATH: "/fixture/bin",
@@ -524,7 +536,7 @@ describe("canUseTurboCacheSecretSession", () => {
       ).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner));
       expect(yield* probe).toBe(true);
       expect(yield* probe).toBe(true);
-      expect(yield* Ref.get(spawned)).toBe(2);
+      expect(yield* Ref.get(spawned)).toBe(1);
     })
   );
 
@@ -539,15 +551,15 @@ describe("canUseTurboCacheSecretSession", () => {
   );
 
   it.effect(
-    "requires both a live session and resolvable secret references",
+    "requires the cache references to resolve",
     Effect.fnUntraced(function* () {
-      expect(yield* sessionWith({}, [Effect.succeed(stubHandle(0)), Effect.succeed(stubHandle(0))])).toEqual({
+      expect(yield* sessionWith({}, [Effect.succeed(stubHandle(0))])).toEqual({
         usable: true,
-        spawned: 2,
+        spawned: 1,
       });
-      expect(yield* sessionWith({}, [Effect.succeed(stubHandle(0)), Effect.succeed(stubHandle(1))])).toEqual({
+      expect(yield* sessionWith({}, [Effect.succeed(stubHandle(1))])).toEqual({
         usable: false,
-        spawned: 2,
+        spawned: 1,
       });
       expect(yield* sessionWith({ CI: "false" }, [Effect.succeed(stubHandle(1))])).toEqual({
         usable: false,
@@ -558,10 +570,178 @@ describe("canUseTurboCacheSecretSession", () => {
         method: "spawn",
         description: "reference probe failed",
       });
-      expect(yield* sessionWith({}, [Effect.succeed(stubHandle(0)), Effect.fail(probeFailure)])).toEqual({
+      expect(yield* sessionWith({}, [Effect.fail(probeFailure)])).toEqual({
         usable: false,
-        spawned: 2,
+        spawned: 1,
       });
+    })
+  );
+
+  it.effect(
+    "keeps a correct cache quad remote when an unrelated reference is stale",
+    Effect.fnUntraced(function* () {
+      const staleReference = "postgres://user:op://fixture-vault/unrelated/missing@db.test/database";
+      const environment = {
+        TURBO_API: "https://cache.example.test",
+        TURBO_TOKEN: "op://fixture-vault/turbo/token",
+        TURBO_TEAM: "fixture-team",
+        TURBO_CACHE: TurboCacheMode.Enum.LocalWriteRemoteRead,
+        STALE_DATABASE_URL: staleReference,
+      };
+      const envFileFixture = A.join(
+        [
+          `TURBO_API=${environment.TURBO_API}`,
+          `TURBO_TOKEN=${environment.TURBO_TOKEN}`,
+          `TURBO_TEAM=${environment.TURBO_TEAM}`,
+          `TURBO_CACHE=${environment.TURBO_CACHE}`,
+          `STALE_DATABASE_URL=${staleReference}`,
+        ],
+        "\n"
+      );
+      const fileSystemLayer = FileSystem.layerNoop({
+        exists: () => Effect.succeed(true),
+        readFileString: () => Effect.succeed(envFileFixture),
+      });
+      const spawnedCommands = yield* Ref.make<
+        ReadonlyArray<{
+          readonly args: ReadonlyArray<string>;
+          readonly environment: Record<string, string | undefined>;
+        }>
+      >([]);
+      const spawner = ChildProcessSpawner.make((command) => {
+        if (!ChildProcess.isStandardCommand(command)) {
+          return Effect.die("the cache reference fixture never spawns a piped command");
+        }
+        const childEnvironment = command.options.env ?? {};
+        const fails =
+          A.some(command.args, Str.startsWith("--env-file=")) || childEnvironment.STALE_DATABASE_URL === staleReference;
+        return Ref.update(spawnedCommands, A.append({ args: command.args, environment: childEnvironment })).pipe(
+          Effect.as(stubHandle(fails ? 1 : 0))
+        );
+      });
+
+      clearTurboCacheSecretSessionVerdictsForTesting();
+      const result = yield* provideScopedLayer(
+        Layer.mergeAll(ConfigProvider.layer(ConfigProvider.fromUnknown(environment)), fileSystemLayer, Path.layer)
+      )(
+        Effect.gen(function* () {
+          const plan = resolveTurboCachePlan(readTurboCacheEnvironment(environment), { args: [], ci: false });
+          const usable = yield* canUseTurboCacheSecretSession("/repo/correct-quad", environment);
+          const warnings = yield* turboEnvironmentHealthWarnings("/repo/correct-quad", environment);
+          const cachedWarnings = yield* turboEnvironmentHealthWarnings("/repo/correct-quad", environment);
+          return { cachedWarnings, plan, usable, warnings };
+        })
+      ).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner));
+
+      expect(result.plan).toEqual(
+        RemoteReadTurboCache.make({
+          mode: TurboCacheMode.Enum.LocalWriteRemoteRead,
+          requiresSecretSession: true,
+        })
+      );
+      expect(result.usable).toBe(true);
+      expect(result.cachedWarnings).toBe(result.warnings);
+      expect(turboCachePlanArgs(result.plan)).toEqual(["--cache=local:rw,remote:r"]);
+      expect(A.map(result.warnings, (warning) => warning.variableName)).toEqual(["STALE_DATABASE_URL"]);
+      const warningText = renderTurboEnvironmentHealthWarning(A.head(result.warnings).pipe(O.getOrThrow));
+      expect(warningText).toContain("STALE_DATABASE_URL");
+      expect(warningText).not.toContain(staleReference);
+
+      const spawned = yield* Ref.get(spawnedCommands);
+      expect(spawned[0]?.args).toEqual(["run", "--", "true"]);
+      expect(spawned[0]?.environment.STALE_DATABASE_URL).toBeUndefined();
+      expect(spawned[0]?.environment.TURBO_TOKEN).toBe(environment.TURBO_TOKEN);
+      const wholeFileProbe = A.findFirst(spawned, ({ args }) => A.some(args, Str.startsWith("--env-file="))).pipe(
+        O.getOrThrow
+      );
+      expect(wholeFileProbe.args).toEqual(["run", "--env-file=/repo/correct-quad/.env", "--", "true"]);
+    })
+  );
+
+  it.effect(
+    "keeps environment-health file fallbacks and healthy references non-blocking",
+    Effect.fnUntraced(function* () {
+      const fileSystemError = (method: string, pathOrDescriptor: string) =>
+        PlatformError.systemError({
+          _tag: "PermissionDenied",
+          module: "FileSystem",
+          method,
+          pathOrDescriptor,
+          description: "fixture denied",
+        });
+      const spawner = ChildProcessSpawner.make(() => Effect.succeed(stubHandle(0)));
+      const warningsWith = (repoRoot: string, fileSystemLayer: Layer.Layer<FileSystem.FileSystem>) =>
+        provideScopedLayer(Layer.merge(fileSystemLayer, Path.layer))(turboEnvironmentHealthWarnings(repoRoot, {})).pipe(
+          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
+        );
+
+      clearTurboCacheSecretSessionVerdictsForTesting();
+      const existsFailure = yield* warningsWith(
+        "/repo/exists-failure",
+        FileSystem.layerNoop({
+          exists: (target) => Effect.fail(fileSystemError("exists", target)),
+        })
+      );
+      const readFailure = yield* warningsWith(
+        "/repo/read-failure",
+        FileSystem.layerNoop({
+          exists: () => Effect.succeed(true),
+          readFileString: (target) => Effect.fail(fileSystemError("readFileString", target)),
+        })
+      );
+      const referenceFree = yield* warningsWith(
+        "/repo/reference-free",
+        FileSystem.layerNoop({
+          exists: () => Effect.succeed(true),
+          readFileString: () => Effect.succeed("PLAIN_VALUE=fixture\n# no secret references"),
+        })
+      );
+      const healthy = yield* warningsWith(
+        "/repo/healthy-reference",
+        FileSystem.layerNoop({
+          exists: () => Effect.succeed(true),
+          readFileString: () => Effect.succeed("SERVICE_TOKEN=op://fixture-vault/service/token"),
+        })
+      );
+
+      expect(existsFailure).toEqual([]);
+      expect(readFailure).toEqual([]);
+      expect(referenceFree).toEqual([]);
+      expect(healthy).toEqual([]);
+    })
+  );
+
+  it.effect(
+    "fails closed when a cache-quad reference is broken",
+    Effect.fnUntraced(function* () {
+      const brokenReference = "op://fixture-vault/turbo/missing-token";
+      const environment = {
+        TURBO_API: "https://cache.example.test",
+        TURBO_TOKEN: brokenReference,
+        TURBO_TEAM: "fixture-team",
+        TURBO_CACHE: TurboCacheMode.Enum.LocalWriteRemoteRead,
+      };
+      const spawner = ChildProcessSpawner.make((command) => {
+        if (!ChildProcess.isStandardCommand(command)) {
+          return Effect.die("the cache reference fixture never spawns a piped command");
+        }
+        return Effect.succeed(stubHandle(command.options.env?.TURBO_TOKEN === brokenReference ? 1 : 0));
+      });
+
+      clearTurboCacheSecretSessionVerdictsForTesting();
+      const result = yield* provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown(environment)))(
+        Effect.gen(function* () {
+          const plan = resolveTurboCachePlan(readTurboCacheEnvironment(environment), { args: [], ci: false });
+          const usable = yield* canUseTurboCacheSecretSession("/repo/broken-quad", environment);
+          return { plan, usable };
+        })
+      ).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner));
+
+      expect(result.plan._tag).toBe("remote-read");
+      expect(result.usable).toBe(false);
+      expect(
+        result.usable ? turboCachePlanArgs(result.plan) : localOnlyTurboCacheArgs(turboCachePlanArgs(result.plan))
+      ).toEqual(["--cache=local:rw"]);
     })
   );
 

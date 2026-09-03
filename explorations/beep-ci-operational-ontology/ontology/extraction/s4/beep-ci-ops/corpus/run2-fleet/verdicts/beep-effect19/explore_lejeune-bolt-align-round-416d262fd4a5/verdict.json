@@ -1,0 +1,47 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "explore/lejeune-bolt-align-round",
+  "committed": false,
+  "createdAt": "2026-08-26T09:24:48.181Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "monitor:01-pr-context",
+      "label": "monitor:pr-context",
+      "phase": "monitor",
+      "status": "passed",
+      "durationMs": 351.502669,
+      "exitCode": 0
+    },
+    {
+      "id": "monitor:02-pr-checks-watch",
+      "label": "monitor:pr-checks:watch",
+      "phase": "monitor",
+      "status": "passed",
+      "durationMs": 794.640647,
+      "exitCode": 0
+    }
+  ],
+  "message": "yeet monitor succeeded.",
+  "mode": "monitor",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "explore_lejeune-bolt-align-round-416d262fd4a5",
+  "attemptId": "51b8bcdb-c3fa-4bb4-8e6c-4a23ab63b39e",
+  "startedAt": "2026-08-26T09:24:44.566Z",
+  "endedAt": "2026-08-26T09:24:48.181Z",
+  "elapsedMs": 3615,
+  "indexPath": "<fleet>/beep-effect19/.beep/yeet/quality-issue-index.json",
+  "mergeReady": {
+    "ready": true,
+    "criteria": {
+      "closeoutRun": true,
+      "checksGreen": true,
+      "threadsResolved": true,
+      "greptileScore": "5/5"
+    }
+  }
+}

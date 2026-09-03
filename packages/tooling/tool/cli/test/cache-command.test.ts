@@ -1,5 +1,5 @@
 import { buildCacheDashboard, CacheCommandError, CacheWarmLane } from "@beep/repo-cli/commands/Cache";
-import { runCacheWarmForTesting } from "@beep/repo-cli/test/Cache";
+import { runCacheWarmForTesting, runCacheWarmLaneForTesting } from "@beep/repo-cli/test/Cache";
 import { NonNegativeInt } from "@beep/schema";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { NodeServices } from "@effect/platform-node";
@@ -75,6 +75,19 @@ const validWarmEnvironment = {
 } as const;
 
 describe("cache command", () => {
+  it("reports a non-zero inherited cache-warm lane exit", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const error = yield* runCacheWarmLaneForTesting(process.cwd())(["bun", "-e", "process.exit(7)"]).pipe(
+          Effect.flip
+        );
+        const lane = yield* runCacheWarmLaneForTesting(["bun", "-e", "process.exit(0)"], process.cwd());
+
+        expect(error.message).toContain("exited 7");
+        expect(lane.exitCode).toBe(0);
+      })
+    ));
+
   it(
     "counts only the first remote-eligible touch and keeps correctness tripwires",
     () =>

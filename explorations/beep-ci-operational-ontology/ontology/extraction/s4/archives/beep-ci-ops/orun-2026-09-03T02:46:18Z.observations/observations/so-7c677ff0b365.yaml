@@ -1,0 +1,25 @@
+id: "so:sha256:7c677ff0b3659f5c4353476b6c688b1c31496db4c596b18a1a0da467f02ce584"
+schema_version: 1
+repository:
+  commit: "341cfef8b6e80d49f6cef894e9eecd5337f70e8f"
+  path: "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run2-fleet/verdicts/beep-effect/coding-agent-effectiveness-evidence-loop-0b12cb9b250e/verdict.properties"
+source_span:
+  start_line: 1
+  end_line: 55
+  content_sha256: "6d5226dc026cf7ebdb4a381297101ba90c2402f8e0e4dcdc99b3e7235b496708"
+extractor:
+  id: "adapter-journal"
+  version: "1.0.0"
+  parser: "python-stdlib-properties"
+  script: "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal.py"
+symbol:
+  qualified_name: "yeet-verdict"
+  lexical_name: "yeet-verdict"
+  syntactic_kind: "properties_projection"
+observed_facts:
+  - predicate: "config_key_value"
+    object: "marker=yeet-staged-only/coding-agent-effectiveness-evidence-loop-0b12cb9b250e/2026-08-01T02:16:10.352Z"
+  - predicate: "config_key_value"
+    object: "stashSha=b6b26e97c99e55005e09044bff780e177bdce33d"
+source_excerpt: "marker=yeet-staged-only/coding-agent-effectiveness-evidence-loop-0b12cb9b250e/2026-08-01T02:16:10.352Z"
+epistemic_status: "parser_derived"

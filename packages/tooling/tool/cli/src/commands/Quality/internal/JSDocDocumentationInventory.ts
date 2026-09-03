@@ -3,10 +3,11 @@ import { extractFencedCodeBlocks } from "@beep/repo-docgen/Core";
 import { LiteralKit } from "@beep/schema";
 import { A, O, Str, thunkFalse } from "@beep/utils";
 import { DateTime, Effect, FileSystem, MutableHashMap, MutableHashSet, Path } from "effect";
+import { pipe } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { Node, SyntaxKind } from "ts-morph";
+import { Node, SyntaxKind, ts } from "ts-morph";
 import { formatJsonc } from "../../../internal/artifacts/index.ts";
 import { isLabsWorkspacePath } from "../../../internal/cli/Labs/index.ts";
 import { globPatternToRegExp as sharedGlobPatternToRegExp } from "../../../internal/GlobPattern.ts";
@@ -64,6 +65,7 @@ const JSDocDocumentationRuleCode = LiteralKit([
   "loose-ts-fence",
   "forbidden-remarks",
   "no-deprecated-effect-schema-import",
+  "no-root-package-import",
   "use-required-namespace-import",
   "wrong-required-namespace-alias",
   "no-declare-statements",
@@ -95,6 +97,7 @@ const newDocumentationRuleCodes = JSDocDocumentationRuleCode.pickOptions([
   "duplicate-example",
   "loose-ts-fence",
   "forbidden-remarks",
+  "no-root-package-import",
 ]);
 
 /**
@@ -567,7 +570,56 @@ const requiredNamespaceImportViolations = (
   ]);
 };
 
-const exampleImportViolations = (commentText: string): ReadonlyArray<DocumentationIssue> =>
+const rootModuleSpecifiers = (example: string): ReadonlyArray<string> => {
+  const sourceFile = ts.createSourceFile("example.tsx", example, ts.ScriptTarget.Latest, false, ts.ScriptKind.TSX);
+  const moduleSpecifiers = A.empty<string>();
+
+  const appendStringLiteral = (node: ts.Node | undefined): void => {
+    if (P.isNotUndefined(node) && ts.isStringLiteralLike(node)) {
+      A.appendInPlace(moduleSpecifiers, node.text);
+    }
+  };
+  const visit = (node: ts.Node): void => {
+    if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) {
+      appendStringLiteral(node.moduleSpecifier);
+    } else if (ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword) {
+      appendStringLiteral(node.arguments[0]);
+    } else if (ts.isImportEqualsDeclaration(node) && ts.isExternalModuleReference(node.moduleReference)) {
+      appendStringLiteral(node.moduleReference.expression);
+    } else if (ts.isImportTypeNode(node) && ts.isLiteralTypeNode(node.argument)) {
+      appendStringLiteral(node.argument.literal);
+    }
+    ts.forEachChild(node, visit);
+  };
+
+  visit(sourceFile);
+  return moduleSpecifiers;
+};
+
+const rootPackageImportViolations = (
+  example: string,
+  exampleNumber: number,
+  forbiddenRootImports: MutableHashSet.MutableHashSet<string>
+): ReadonlyArray<DocumentationIssue> =>
+  pipe(
+    rootModuleSpecifiers(example),
+    A.flatMap((moduleSpecifier) =>
+      MutableHashSet.has(forbiddenRootImports, moduleSpecifier)
+        ? [
+            {
+              example: exampleNumber,
+              rule: "no-root-package-import" as const,
+              detail: `Import stable public modules instead of the ${moduleSpecifier} package root.`,
+            },
+          ]
+        : A.empty<DocumentationIssue>()
+    )
+  );
+
+const exampleImportViolations = (
+  commentText: string,
+  forbiddenRootImports: MutableHashSet.MutableHashSet<string>
+): ReadonlyArray<DocumentationIssue> =>
   A.flatMap(A.entries(extractExamples(commentText)), ([exampleIndex, example]) => {
     const exampleNumber = exampleIndex + 1;
     const deprecatedSchemaImport: ReadonlyArray<DocumentationIssue> = /@effect\/schema/.test(example)
@@ -580,7 +632,7 @@ const exampleImportViolations = (commentText: string): ReadonlyArray<Documentati
         ]
       : [];
     return A.appendAll(
-      deprecatedSchemaImport,
+      A.appendAll(deprecatedSchemaImport, rootPackageImportViolations(example, exampleNumber, forbiddenRootImports)),
       A.flatMap(requiredNamespaceImports, (required) =>
         requiredNamespaceImportViolations(example, exampleNumber, required)
       )
@@ -761,7 +813,8 @@ const analyzeModule = (
   packagePath: string,
   exportCount: number,
   repoRoot: string,
-  path: Path.Path
+  path: Path.Path,
+  forbiddenRootImports: MutableHashSet.MutableHashSet<string>
 ): InventoryEntry => {
   const filePath = repoRelative(sourceFile.getFilePath(), repoRoot, path);
   const relativeFilePath = normalizeSlashes(path.relative(packagePath, sourceFile.getFilePath()));
@@ -772,11 +825,15 @@ const analyzeModule = (
   const missingSummary = fileoverview === undefined ? exportCount > 0 : O.isNone(summaryFromComment(fileoverview));
   const docKind = moduleDocumentationKind(fileoverview, presentTags);
   const { malformedTags, categoryIssues, shapeIssues } = moduleDocumentationIssues(fileoverview);
+  const importIssues = P.isUndefined(fileoverview)
+    ? A.empty<DocumentationIssue>()
+    : exampleImportViolations(fileoverview, forbiddenRootImports);
   const findingCount = countFindings(
     missingSummary,
     missingTags,
     forbidden,
     malformedTags,
+    importIssues,
     categoryIssues,
     shapeIssues
   );
@@ -792,7 +849,7 @@ const analyzeModule = (
     forbiddenTags: forbidden,
     missingSummary,
     malformedConditionalTags: malformedTags,
-    exampleImportViolations: [],
+    exampleImportViolations: importIssues,
     unsafeExampleViolations: [],
     schemaAnnotationGaps: [],
     categoryViolations: categoryIssues,
@@ -819,13 +876,14 @@ const analyzeExportDeclaration = (
   sourceFile: SourceFile,
   packagePath: string,
   repoRoot: string,
-  path: Path.Path
+  path: Path.Path,
+  forbiddenRootImports: MutableHashSet.MutableHashSet<string>
 ): InventoryEntry => {
   const commentText = `${leadingJsDocText(declaration)}\n${declaration.getText()}`;
   const presentTags = tagsFromComment(commentText);
   const { filePath, repoPath, line } = declarationLocationOf(declaration, sourceFile, packagePath, repoRoot, path);
   const malformedTags = malformedConditionalTags(commentText);
-  const importIssues = exampleImportViolations(commentText);
+  const importIssues = exampleImportViolations(commentText, forbiddenRootImports);
   const unsafeIssues = unsafeExampleViolations(commentText);
   const categoryIssues = categoryViolations(commentText);
   const forbidden = forbiddenTagsIn(presentTags);
@@ -874,14 +932,15 @@ const analyzeDirectExport = (
   sourceFile: SourceFile,
   packagePath: string,
   repoRoot: string,
-  path: Path.Path
+  path: Path.Path,
+  forbiddenRootImports: MutableHashSet.MutableHashSet<string>
 ): InventoryEntry => {
   const docText = getJsDocText(declaration);
   const presentTags = tagsFromComment(docText);
   const missingTags = missingRequiredExportTags(declaration, docText, presentTags);
   const { filePath, repoPath, line } = declarationLocationOf(declaration, sourceFile, packagePath, repoRoot, path);
   const malformedTags = malformedConditionalTags(docText);
-  const importIssues = exampleImportViolations(docText);
+  const importIssues = exampleImportViolations(docText, forbiddenRootImports);
   const unsafeIssues = unsafeExampleViolations(docText);
   const categoryIssues = categoryViolations(docText);
   const forbidden = forbiddenTagsIn(presentTags);
@@ -939,7 +998,8 @@ const analyzeFunctionOverloadGroup = (
   sourceFile: SourceFile,
   packagePath: string,
   repoRoot: string,
-  path: Path.Path
+  path: Path.Path,
+  forbiddenRootImports: MutableHashSet.MutableHashSet<string>
 ): InventoryEntry => {
   const anchor = anchorDeclarationForOverloadGroup(declarations);
   const docText = getJsDocText(anchor);
@@ -956,7 +1016,7 @@ const analyzeFunctionOverloadGroup = (
   // comment on a non-anchor overload signature must still surface.
   const groupDocTexts = A.filter(A.map(declarations, getJsDocText), Str.isNonEmpty);
   const malformedTags = A.flatMap(groupDocTexts, malformedConditionalTags);
-  const importIssues = A.flatMap(groupDocTexts, exampleImportViolations);
+  const importIssues = A.flatMap(groupDocTexts, (docText) => exampleImportViolations(docText, forbiddenRootImports));
   const unsafeIssues = A.flatMap(groupDocTexts, unsafeExampleViolations);
   const categoryIssues = A.flatMap(groupDocTexts, categoryViolations);
   const shapeIssues = A.flatMap(groupDocTexts, documentationShapeViolations);
@@ -998,7 +1058,8 @@ const collectReExportDescriptors = (
   packagePath: string,
   repoRoot: string,
   path: Path.Path,
-  seen: MutableHashSet.MutableHashSet<string>
+  seen: MutableHashSet.MutableHashSet<string>,
+  forbiddenRootImports: MutableHashSet.MutableHashSet<string>
 ): ReadonlyArray<DirectExportDescriptor> => {
   const descriptors: Array<DirectExportDescriptor> = [];
   for (const declaration of sourceFile.getDescendantsOfKind(SyntaxKind.ExportDeclaration)) {
@@ -1009,7 +1070,7 @@ const collectReExportDescriptors = (
     MutableHashSet.add(seen, key);
     A.appendInPlace(descriptors, {
       key,
-      analysis: analyzeExportDeclaration(declaration, sourceFile, packagePath, repoRoot, path),
+      analysis: analyzeExportDeclaration(declaration, sourceFile, packagePath, repoRoot, path, forbiddenRootImports),
     });
   }
   return descriptors;
@@ -1026,7 +1087,8 @@ const collectDirectExportDescriptorsForName = (
   packagePath: string,
   repoRoot: string,
   path: Path.Path,
-  seen: MutableHashSet.MutableHashSet<string>
+  seen: MutableHashSet.MutableHashSet<string>,
+  forbiddenRootImports: MutableHashSet.MutableHashSet<string>
 ): ReadonlyArray<DirectExportDescriptor> => {
   if (ownDeclarations.length > 1 && A.every(ownDeclarations, Node.isFunctionDeclaration)) {
     const key = `${name}:group:${A.headNonEmpty(ownDeclarations).getStart()}`;
@@ -1037,7 +1099,15 @@ const collectDirectExportDescriptorsForName = (
     return [
       {
         key,
-        analysis: analyzeFunctionOverloadGroup(name, ownDeclarations, sourceFile, packagePath, repoRoot, path),
+        analysis: analyzeFunctionOverloadGroup(
+          name,
+          ownDeclarations,
+          sourceFile,
+          packagePath,
+          repoRoot,
+          path,
+          forbiddenRootImports
+        ),
       },
     ];
   }
@@ -1058,11 +1128,12 @@ const exportedDeclarationsFor = (
   sourceFile: SourceFile,
   packagePath: string,
   repoRoot: string,
-  path: Path.Path
+  path: Path.Path,
+  forbiddenRootImports: MutableHashSet.MutableHashSet<string>
 ): ReadonlyArray<DirectExportDescriptor> => {
   const seen = MutableHashSet.empty<string>();
   const exports: Array<DirectExportDescriptor> = [
-    ...collectReExportDescriptors(sourceFile, packagePath, repoRoot, path, seen),
+    ...collectReExportDescriptors(sourceFile, packagePath, repoRoot, path, seen, forbiddenRootImports),
   ];
 
   for (const [name, declarationsForName] of sourceFile.getExportedDeclarations()) {
@@ -1072,7 +1143,16 @@ const exportedDeclarationsFor = (
     }
     A.appendAllInPlace(
       exports,
-      collectDirectExportDescriptorsForName(name, ownDeclarations, sourceFile, packagePath, repoRoot, path, seen)
+      collectDirectExportDescriptorsForName(
+        name,
+        ownDeclarations,
+        sourceFile,
+        packagePath,
+        repoRoot,
+        path,
+        seen,
+        forbiddenRootImports
+      )
     );
   }
 
@@ -1086,7 +1166,11 @@ const documentationRuleCounts = (entries: ReadonlyArray<InventoryEntry>): JsonRe
       A.reduce(
         entries,
         0,
-        (total, entry) => total + A.filter(entry.documentationShapeViolations, (issue) => issue.rule === rule).length
+        (total, entry) =>
+          total +
+          A.filter(A.appendAll(entry.documentationShapeViolations, entry.exampleImportViolations), (issue) =>
+            Str.equivalence(rule)(issue.rule)
+          ).length
       ),
     ])
   );
@@ -1112,16 +1196,25 @@ const analyzePackageSourceFile = (
   sourceFile: SourceFile,
   packageInfo: WorkspacePackageInfo,
   repoRoot: string,
-  path: Path.Path
+  path: Path.Path,
+  forbiddenRootImports: MutableHashSet.MutableHashSet<string>
 ): ReadonlyArray<InventoryEntry> =>
-  A.map(exportedDeclarationsFor(sourceFile, packageInfo.absolutePath, repoRoot, path), (entry) =>
+  A.map(exportedDeclarationsFor(sourceFile, packageInfo.absolutePath, repoRoot, path, forbiddenRootImports), (entry) =>
     entry.analysis !== undefined
       ? {
           ...entry.analysis,
           filePath: normalizeSlashes(path.relative(packageInfo.absolutePath, sourceFile.getFilePath())),
           repoPath: repoRelative(sourceFile.getFilePath(), repoRoot, path),
         }
-      : analyzeDirectExport(entry.name, entry.declaration, sourceFile, packageInfo.absolutePath, repoRoot, path)
+      : analyzeDirectExport(
+          entry.name,
+          entry.declaration,
+          sourceFile,
+          packageInfo.absolutePath,
+          repoRoot,
+          path,
+          forbiddenRootImports
+        )
   );
 
 const packageInventoryStatus = (
@@ -1159,7 +1252,7 @@ const packageInventoryCounts = (
   malformedConditionalTagFindings:
     entryFindingCount(modules, (entry) => entry.malformedConditionalTags) +
     entryFindingCount(exports, (entry) => entry.malformedConditionalTags),
-  exampleImportFindings: entryFindingCount(exports, (entry) => entry.exampleImportViolations),
+  exampleImportFindings: entryFindingCount(A.appendAll(modules, exports), (entry) => entry.exampleImportViolations),
   unsafeExampleFindings: entryFindingCount(exports, (entry) => entry.unsafeExampleViolations),
   schemaAnnotationFindings: entryFindingCount(exports, (entry) => entry.schemaAnnotationGaps),
   documentationRuleFindings: documentationRuleCounts(A.appendAll(modules, exports)),
@@ -1170,7 +1263,8 @@ const analyzePackage = Effect.fn("JSDocDocumentationInventory.analyzePackage")(f
   topoOrder: number,
   repoRoot: string,
   path: Path.Path,
-  trackedPaths: O.Option<MutableHashSet.MutableHashSet<string>>
+  trackedPaths: O.Option<MutableHashSet.MutableHashSet<string>>,
+  forbiddenRootImports: MutableHashSet.MutableHashSet<string>
 ): Effect.fn.Return<PackageInventory, QualityArtifactGeneratorError, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
   const docgenPath = path.join(packageInfo.absolutePath, "docgen.json");
@@ -1188,12 +1282,12 @@ const analyzePackage = Effect.fn("JSDocDocumentationInventory.analyzePackage")(f
 
   for (const sourceFilePath of sourceFiles) {
     const sourceFile = project.addSourceFileAtPath(sourceFilePath);
-    const packageExports = analyzePackageSourceFile(sourceFile, packageInfo, repoRoot, path);
+    const packageExports = analyzePackageSourceFile(sourceFile, packageInfo, repoRoot, path, forbiddenRootImports);
 
     if (packageExports.length > 0) {
       A.appendInPlace(
         modules,
-        analyzeModule(sourceFile, packageInfo.absolutePath, packageExports.length, repoRoot, path)
+        analyzeModule(sourceFile, packageInfo.absolutePath, packageExports.length, repoRoot, path, forbiddenRootImports)
       );
       A.appendAllInPlace(exports, packageExports);
     }
@@ -1469,6 +1563,15 @@ export const buildJSDocDocumentationInventory = Effect.fn("JSDocDocumentationInv
   const fs = yield* FileSystem.FileSystem;
   const { generatedAt, repoRoot } = yield* resolveJSDocInventoryOptions(options);
   const packageByName = yield* discoverWorkspacePackages(repoRoot, path);
+  const forbiddenRootImports = MutableHashSet.fromIterable(
+    pipe(
+      MutableHashMap.values(packageByName),
+      A.fromIterable,
+      A.filter((packageInfo) => Str.startsWith("packages/foundation/")(packageInfo.path)),
+      A.map((packageInfo) => packageInfo.name),
+      (packageNames) => A.prepend(packageNames, "effect")
+    )
+  );
   const topoNames = yield* topoSortPackageNames(repoRoot, path);
   const hasGitMetadata = yield* fs
     .exists(path.join(repoRoot, ".git"))
@@ -1496,7 +1599,7 @@ export const buildJSDocDocumentationInventory = Effect.fn("JSDocDocumentationInv
       const packageInfo = MutableHashMap.get(packageByName, packageName);
       return O.isNone(packageInfo)
         ? Effect.succeed(analyzeMissingPackage(packageName, index + 1))
-        : analyzePackage(packageInfo.value, index + 1, repoRoot, path, trackedPaths);
+        : analyzePackage(packageInfo.value, index + 1, repoRoot, path, trackedPaths, forbiddenRootImports);
     },
     { concurrency: 1 }
   );

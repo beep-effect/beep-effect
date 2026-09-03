@@ -489,12 +489,14 @@ export function numeric<const Precision extends number>(
   input: I & Field.ValidateEncoded<I, string, "pg.numeric requires a string-encoded schema">
 ) => Field.Patched<I, { readonly column: PgColumn.Numeric<Precision, undefined> }>;
 export function numeric<const Precision extends number, const Scale extends number>(
-  precision: Precision,
-  scale: Scale
+  ...args: readonly [precision: Precision, scale: Scale]
 ): <I extends Field.Input>(
   input: I & Field.ValidateEncoded<I, string, "pg.numeric requires a string-encoded schema">
 ) => Field.Patched<I, { readonly column: PgColumn.Numeric<Precision, Scale> }>;
-export function numeric(precision?: number, scale?: number): unknown {
+export function numeric(
+  ...args: readonly [] | readonly [precision: number] | readonly [precision: number, scale: number]
+): unknown {
+  const [precision, scale] = args;
   return (input: Field.Input): Field.Any =>
     Field.patch(injectStringCheck(input, isStringFinite()), {
       column: PgColumn.Numeric.make({ precision, scale }),
@@ -1095,12 +1097,15 @@ export function array<const Element extends Field.Input>(
   input: I & Field.ValidateArrayEncoded<I, Element, 1> & ValidateArrayModifiers<I>
 ) => Field.Patched<I, ArrayPatch<Element, 1>>;
 export function array<const Element extends Field.Input, const Suffix extends PgColumn.ArrayDimensionString>(
-  element: Element & Field.ValidateArrayElement<Element>,
-  suffix: Suffix
+  ...args: readonly [element: Element & Field.ValidateArrayElement<Element>, suffix: Suffix]
 ): <I extends Field.Input>(
   input: I & Field.ValidateArrayEncoded<I, Element, PgColumn.DimensionOf<Suffix>> & ValidateArrayModifiers<I>
 ) => Field.Patched<I, ArrayPatch<Element, PgColumn.DimensionOf<Suffix>>>;
-export function array(element: Field.Input, suffix: PgColumn.ArrayDimensionString = "[]"): unknown {
+export function array(
+  ...args: readonly [element: Field.Input] | readonly [element: Field.Input, suffix: PgColumn.ArrayDimensionString]
+): unknown {
+  const [element, configuredSuffix] = args;
+  const suffix = isUndefined(configuredSuffix) ? "[]" : configuredSuffix;
   return (input: Field.Input): Field.Any => {
     const outer = Field.from(input);
     const base = Field.from(element);
@@ -1534,28 +1539,6 @@ export const unsafeDefaultSql =
       hasDefault: true,
     });
 
-/**
- * Compatibility alias for {@link unsafeDefaultSql}.
- *
- * **Gotchas**
- *
- * The alias is equally unsafe; its older name does not communicate that boundary.
- *
- * **Example** (Use the compatibility alias)
- *
- * ```ts
- * import { String } from "effect/Schema"
- * import { defaultSql } from "@beep/effect-drizzle/pg"
- *
- * String.pipe(defaultSql("current_user")).meta.hasDefault // => true
- * ```
- *
- * @deprecated Use the explicitly unsafe-named {@link unsafeDefaultSql}.
- * @category combinators
- * @since 0.0.0
- */
-export const defaultSql = unsafeDefaultSql;
-
 type ValidateVersionColumn<I extends Field.Input> = Field.MetaFrom<I>["column"] extends
   | PgColumn.Integer
   | PgColumn.Smallint
@@ -1806,15 +1789,18 @@ type ValidateReferenceActions<I extends Field.Input, Options> =
  * @category combinators
  * @since 0.0.0
  */
-export const references =
-  <const Id extends EntityIdLike, const Options extends ReferenceOptions | undefined = undefined>(
-    id: Id,
-    options?: Options & ValidateReferenceName<Options>
-  ) =>
-  <I extends Field.Input>(
-    input: I & ValidateReferenceActions<NoInfer<I>, Options>
-  ): Field.Patched<I, { readonly references: Meta.References<Id["tableName"], "id"> }> => {
-    const ref: Meta.References<Id["tableName"], "id"> = matchOption(fromUndefinedOr(options?.name), {
+export function references<
+  const Id extends EntityIdLike,
+  const Options extends ReferenceOptions | undefined = undefined,
+>(
+  ...args: readonly [id: Id, options?: Options & ValidateReferenceName<Options>]
+): <I extends Field.Input>(
+  input: I & ValidateReferenceActions<NoInfer<I>, Options>
+) => Field.Patched<I, { readonly references: Meta.References<Id["tableName"], "id"> }>;
+export function references(...args: readonly [id: EntityIdLike, options?: ReferenceOptions]): unknown {
+  const [id, options] = args;
+  return (input: Field.Input): Field.Any => {
+    const ref: Meta.References = matchOption(fromUndefinedOr(options?.name), {
       onNone: () => ({
         tableName: id.tableName,
         columnName: "id",
@@ -1834,3 +1820,4 @@ export const references =
     }
     return Field.patch(input, { references: ref });
   };
+}

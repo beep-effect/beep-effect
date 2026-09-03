@@ -13,6 +13,7 @@ export default mergeConfig(
     test: {
       environment: "jsdom",
       include: ["test/**/*.test.{ts,tsx}"],
+      testTimeout: 90_000,
     },
   })
 );

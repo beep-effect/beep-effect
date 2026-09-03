@@ -65,10 +65,9 @@ const makeRenderMarkdownHtml = (options?: undefined | MarkdownRenderOptions) => 
   const renderOptions = { ...defaultMarkdownRenderOptions, ...options };
 
   return Effect.fn("Markdown.renderMarkdownHtml")(function* (content: string) {
-    const renderMarkdownHtml = yield* O.match(getMarkdownHtmlRender(), {
-      onNone: () => Effect.fail(invalidMarkdownInput("Bun.markdown.html is unavailable in the current runtime.")),
-      onSome: Effect.succeed,
-    });
+    const renderMarkdownHtml = yield* Effect.fromOption(getMarkdownHtmlRender(), () =>
+      invalidMarkdownInput("Bun.markdown.html is unavailable in the current runtime.")
+    );
     const rendered = yield* Effect.try({
       try: () => renderMarkdownHtml(content, renderOptions),
       catch: (cause) =>

@@ -1,0 +1,21 @@
+id: fa:pb-yeet-proof-tier-alt:001
+hypothesis_ref: dh:pb-yeet-proof-tier:001
+identity_card_ref: ic:pb-yeet-proof-tier-alt:001
+tests:
+  spec_vs_execution: separated
+  world_vs_information: not_applicable
+  role_vs_bearer: separated
+  context_reification_needed: false
+rival_models:
+- label: controlled vocabulary with no quality/sortal (enum is not taxonomy)
+  still_viable: true
+- label: subkind of Yeet proof plan
+  still_viable: true
+- label: assurance tier
+  still_viable: false
+strongest_counterexample: LiteralKit plus planner expansion is compatible with a nominal quality
+  of a plan and with remaining a controlled vocabulary. Enum-is-taxonomy (three subkinds)
+  is the failure mode to resist unless a sortal use is observed.
+verdict: analyzed
+needed_evidence: An observation that plans or runs are counted as kinds of cheap-gates/full/review-fix
+  individuals, versus the literals only selecting a lane list.

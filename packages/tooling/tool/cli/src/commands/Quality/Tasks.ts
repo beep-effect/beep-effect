@@ -33,8 +33,10 @@ import {
   configStringOption,
   isUnresolvedSecretReference,
   readTurboCacheEnvironmentSync,
+  renderTurboEnvironmentHealthWarning,
   turboCacheSecretSessionEnvironment,
   turboEnvExtendsAmbient,
+  turboEnvironmentHealthWarnings,
   turboEnvOverrides,
 } from "../../internal/cli/EnvConfig.ts";
 import { isLabsWorkspacePath, LABS_TURBO_EXCLUDE_FILTER } from "../../internal/cli/Labs/index.ts";
@@ -92,8 +94,13 @@ import {
   GithubCheckRunReport,
   LintPolicySubcommand,
   PackageTaskProfile,
+  QUALITY_TASK_LANE_RUN_ARTIFACT_PATH_ENV,
+  QUALITY_TASK_LANE_RUN_PARENT_ID_ENV,
+  QUALITY_TASK_LANE_RUN_REPORT_PREFIX,
   QualityTaskBypassArgName,
   QualityTaskInvocation,
+  QualityTaskLaneRun,
+  QualityTaskLaneRunReport,
   QualityTaskName,
   RootAuditMode,
 } from "./Quality.schemas.ts";
@@ -1080,9 +1087,14 @@ const withTurboSecretSession = Effect.fn("QualityTasks.withTurboSecretSession")(
     return withoutUnusableRemoteCache(step, needsTurboSecretSession());
   }
 
+  const environmentWarnings = yield* turboEnvironmentHealthWarnings(step.cwd, Bun.env);
+  yield* Effect.forEach(environmentWarnings, flow(renderTurboEnvironmentHealthWarning, Console.warn), {
+    discard: true,
+  });
+
   // A missing, expired, or denied 1Password session degrades the lane to
   // local-only instead of failing it.
-  const canUseSecretSession = yield* canUseTurboCacheSecretSession(step.cwd);
+  const canUseSecretSession = yield* canUseTurboCacheSecretSession(step.cwd, Bun.env);
   if (!canUseSecretSession) {
     return withoutUnusableRemoteCache(step, needsTurboSecretSession());
   }
@@ -1394,7 +1406,7 @@ const runStepWithQuarantine = Effect.fn("QualityTasks.runStepWithQuarantine")(fu
   if (step.flakeQuarantine === undefined || isCi()) {
     return yield* runStep(step).pipe(
       Effect.as(O.none<QualityTaskFailed>()),
-      Effect.catchTag("QualityTaskFailed", (failure) => Effect.succeed(O.some(failure)))
+      Effect.catchTag("QualityTaskFailed", (failure) => Effect.succeedSome(failure))
     );
   }
 
@@ -1411,13 +1423,21 @@ const runStepWithQuarantine = Effect.fn("QualityTasks.runStepWithQuarantine")(fu
   return O.none();
 });
 
-const collectStreamingStepFailures = Effect.fn("QualityTasks.collectStreamingStepFailures")(function* (
+interface StreamingStepOutcome {
+  readonly durationMs: number;
+  readonly endedAt: string;
+  readonly failure: O.Option<QualityTaskFailed>;
+  readonly startedAt: string;
+  readonly step: QualityTaskStep;
+}
+
+const collectStreamingStepOutcomes = Effect.fn("QualityTasks.collectStreamingStepOutcomes")(function* (
   label: string,
   steps: ReadonlyArray<QualityTaskStep>,
   concurrency = 1
 ) {
   if (A.isReadonlyArrayEmpty(steps)) {
-    return A.empty<QualityTaskFailed>();
+    return A.empty<StreamingStepOutcome>();
   }
 
   yield* Console.log(`[beep-cli] ${label}: running ${A.length(steps)} streaming step(s)`);
@@ -1427,18 +1447,16 @@ const collectStreamingStepFailures = Effect.fn("QualityTasks.collectStreamingSte
     onNone: () => Effect.void,
     onSome: removeStaleFlakeQuarantineArtifact,
   });
-  const failures = yield* Effect.forEach(
+  const outcomes = yield* Effect.forEach(
     steps,
-    (step) =>
-      runStepWithQuarantine(step, incidents).pipe(
-        Effect.timed,
-        Effect.tap(([elapsed, outcome]) =>
-          Console.log(
-            `[beep-cli] ${step.label}: ${O.isNone(outcome) ? "ok" : "failed"} in ${Duration.toMillis(elapsed)}ms`
-          )
-        ),
-        Effect.map(([, outcome]) => outcome)
-      ),
+    Effect.fnUntraced(function* (step) {
+      const startedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
+      const [elapsed, failure] = yield* runStepWithQuarantine(step, incidents).pipe(Effect.timed);
+      const endedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
+      const durationMs = Duration.toMillis(elapsed);
+      yield* Console.log(`[beep-cli] ${step.label}: ${O.isNone(failure) ? "ok" : "failed"} in ${durationMs}ms`);
+      return { durationMs, endedAt, failure, startedAt, step };
+    }),
     { concurrency }
   );
   yield* O.match(artifactCwd, {
@@ -1446,7 +1464,89 @@ const collectStreamingStepFailures = Effect.fn("QualityTasks.collectStreamingSte
     onSome: (cwd) => Effect.flatMap(Ref.get(incidents), (recorded) => writeFlakeQuarantineArtifact(cwd, recorded)),
   });
 
-  return A.getSomes(failures);
+  return outcomes;
+});
+
+const collectStreamingStepFailures = Effect.fn("QualityTasks.collectStreamingStepFailures")(function* (
+  label: string,
+  steps: ReadonlyArray<QualityTaskStep>,
+  concurrency = 1
+) {
+  return pipe(
+    yield* collectStreamingStepOutcomes(label, steps, concurrency),
+    A.map((outcome) => outcome.failure),
+    A.getSomes
+  );
+});
+
+/**
+ * Named wrapper-lane input paired with an executor-provided digest when one exists.
+ *
+ * **Example** (Name a lane without a digest)
+ *
+ * ```ts
+ * import type { QualityTaskLaneInput } from "@beep/repo-cli/commands/Quality/Tasks"
+ * import { QualityTaskStep } from "@beep/repo-cli/commands/Quality"
+ * import * as O from "effect/Option"
+ *
+ * const input: QualityTaskLaneInput = [
+ *   "check",
+ *   QualityTaskStep.make({ label: "check", command: "bun", args: ["run", "check"], cwd: "." }),
+ *   O.none()
+ * ]
+ * console.log(input[0]) // "check"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type QualityTaskLaneInput = readonly [id: string, step: QualityTaskStep, inputDigest: O.Option<string>];
+
+const qualityTaskLaneRunFromOutcome = (
+  id: string,
+  inputDigest: O.Option<string>,
+  outcome: StreamingStepOutcome
+): QualityTaskLaneRun =>
+  QualityTaskLaneRun.make({
+    id,
+    label: outcome.step.label,
+    status: O.isSome(outcome.failure) ? "failed" : "passed",
+    startedAt: O.some(outcome.startedAt),
+    endedAt: O.some(outcome.endedAt),
+    durationMs: O.some(outcome.durationMs),
+    exitCode: O.some(
+      pipe(
+        outcome.failure,
+        O.map((failure) => failure.exitCode),
+        O.getOrElse(() => 0)
+      )
+    ),
+    inputDigest,
+  });
+
+const collectQualityTaskLaneRuns = Effect.fn("QualityTasks.collectQualityTaskLaneRuns")(function* (
+  label: string,
+  lanes: ReadonlyArray<QualityTaskLaneInput>,
+  concurrency = 1
+) {
+  const outcomes = yield* collectStreamingStepOutcomes(
+    label,
+    A.map(lanes, ([, step]) => step),
+    concurrency
+  );
+  return {
+    report: QualityTaskLaneRunReport.make({
+      schemaVersion: "quality-task-lane-run/v1",
+      lanes: A.map(A.zip(lanes, outcomes), ([[id, , inputDigest], outcome]) =>
+        qualityTaskLaneRunFromOutcome(id, inputDigest, outcome)
+      ),
+    }),
+    failures: pipe(
+      outcomes,
+      A.map((outcome) => outcome.failure),
+      A.getSomes
+    ),
+  };
 });
 
 // fallow-ignore-next-line complexity -- each lane must complete its proof lookup, run, failure capture, and receipt write in order
@@ -1454,8 +1554,9 @@ const runGithubCheckWave = Effect.fn("QualityTasks.runGithubCheckWave")(function
   label: string,
   wave: GithubCheckLaneWaveSpec
 ) {
-  const activeReusableIds: Array<string> = [];
-  const failures: Array<QualityTaskFailed> = [];
+  let activeReusableIds = A.empty<string>();
+  let failures = A.empty<QualityTaskFailed>();
+  let laneRuns = A.empty<QualityTaskLaneRun>();
   for (const lane of wave.lanes) {
     const session = yield* prepareLaneProofSession([lane]);
     const reusable = O.exists(session, (prepared) => hasReusableLaneProof(prepared, lane.id));
@@ -1464,18 +1565,33 @@ const runGithubCheckWave = Effect.fn("QualityTasks.runGithubCheckWave")(function
       yield* Console.log(`[lane-proof] ${activeReuse ? "reusing" : "shadow hit for"} exact lane proof: ${lane.id}`);
     }
     if (activeReuse) {
-      activeReusableIds.push(lane.id);
+      activeReusableIds = A.append(activeReusableIds, lane.id);
+      laneRuns = A.append(
+        laneRuns,
+        QualityTaskLaneRun.make({
+          id: lane.id,
+          label: lane.step.label,
+          status: "reused",
+          inputDigest: O.none(),
+        })
+      );
       continue;
     }
 
     yield* Console.log(`[beep-cli] ${label}: running lane ${lane.id}`);
-    const [elapsed, laneFailures] = yield* collectStreamingStepFailures(`${label}:${lane.id}`, [lane.step]).pipe(
-      Effect.timed
-    );
-    const durationMs = Duration.toMillis(elapsed);
-    if (A.isReadonlyArrayNonEmpty(laneFailures)) {
-      failures.push(...laneFailures);
+    const result = yield* collectQualityTaskLaneRuns(`${label}:${lane.id}`, [[lane.id, lane.step, O.none()]], 1);
+    const run = A.head(result.report.lanes);
+    if (O.isSome(run)) {
+      laneRuns = A.append(laneRuns, run.value);
+    }
+    if (A.isReadonlyArrayNonEmpty(result.failures)) {
+      failures = A.appendAll(failures, result.failures);
     } else {
+      const durationMs = pipe(
+        run,
+        O.flatMap((laneRun) => laneRun.durationMs),
+        O.getOrElse(() => 0)
+      );
       yield* O.match(session, {
         onNone: () => Effect.void,
         onSome: (prepared) =>
@@ -1487,7 +1603,7 @@ const runGithubCheckWave = Effect.fn("QualityTasks.runGithubCheckWave")(function
       });
     }
   }
-  return { activeReusableIds, failures };
+  return { activeReusableIds, failures, laneRuns };
 });
 
 const runStreamingStepGroup = Effect.fn("QualityTasks.runStreamingStepGroup")(function* (
@@ -1529,6 +1645,7 @@ const collectGithubCheckLaneWaves = Effect.fn("QualityTasks.collectGithubCheckLa
 ) {
   let failures = A.empty<QualityTaskFailed>();
   let laneRuns = A.empty<GithubCheckLaneRun>();
+  let qualityTaskLaneRuns = A.empty<QualityTaskLaneRun>();
   let stopped = false;
 
   for (const wave of waves) {
@@ -1539,10 +1656,25 @@ const collectGithubCheckLaneWaves = Effect.fn("QualityTasks.collectGithubCheckLa
           GithubCheckLaneRun.make({ id: lane.id, stage: lane.stage, status: "not-run-early-stop", wave: lane.wave })
         )
       );
+      qualityTaskLaneRuns = A.appendAll(
+        qualityTaskLaneRuns,
+        A.map(wave.lanes, (lane) =>
+          QualityTaskLaneRun.make({
+            id: lane.id,
+            label: lane.step.label,
+            status: "not-run-early-stop",
+            inputDigest: O.none(),
+          })
+        )
+      );
       continue;
     }
 
-    const { activeReusableIds, failures: waveFailures } = yield* runGithubCheckWave(`${label}:${wave.wave}`, wave);
+    const {
+      activeReusableIds,
+      failures: waveFailures,
+      laneRuns: waveLaneRuns,
+    } = yield* runGithubCheckWave(`${label}:${wave.wave}`, wave);
     const failedLabels = A.map(waveFailures, (failure) => failure.label);
     laneRuns = A.appendAll(
       laneRuns,
@@ -1559,17 +1691,50 @@ const collectGithubCheckLaneWaves = Effect.fn("QualityTasks.collectGithubCheckLa
         })
       )
     );
+    qualityTaskLaneRuns = A.appendAll(qualityTaskLaneRuns, waveLaneRuns);
     failures = A.appendAll(failures, waveFailures);
     stopped = failurePolicy === "fail-fast" && A.isReadonlyArrayNonEmpty(waveFailures);
   }
 
   return {
     report: GithubCheckRunReport.make({ failurePolicy, lanes: laneRuns, schemaVersion: "github-check-run/v1" }),
+    laneReport: QualityTaskLaneRunReport.make({
+      schemaVersion: "quality-task-lane-run/v1",
+      lanes: qualityTaskLaneRuns,
+    }),
     failures,
   };
 });
 
 const githubCheckRunReportJson = JsonStringCodec(GithubCheckRunReport);
+const qualityTaskLaneRunReportJson = JsonStringCodec(QualityTaskLaneRunReport);
+const laneReportTextEncoder = new TextEncoder();
+
+const emitQualityTaskLaneRunReport = Effect.fn("QualityTasks.emitLaneRunReport")(function* (
+  report: QualityTaskLaneRunReport
+) {
+  const parentLaneId = O.fromUndefinedOr(Bun.env[QUALITY_TASK_LANE_RUN_PARENT_ID_ENV]);
+  const enriched = QualityTaskLaneRunReport.make({ ...report, parentLaneId });
+  const reportJson = yield* qualityTaskLaneRunReportJson
+    .encode(enriched)
+    .pipe(QualityTaskConfigurationError.mapError("Failed to encode the quality-task lane run report."));
+  yield* Console.log(`${QUALITY_TASK_LANE_RUN_REPORT_PREFIX}${reportJson}`);
+  const artifactPath = O.fromUndefinedOr(Bun.env[QUALITY_TASK_LANE_RUN_ARTIFACT_PATH_ENV]);
+  yield* O.match(artifactPath, {
+    onNone: () => Effect.void,
+    onSome: (target) =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          yield* fs.makeDirectory(path.dirname(target), { recursive: true });
+          const file = yield* fs.open(target, { flag: "a" });
+          yield* file.writeAll(laneReportTextEncoder.encode(`${reportJson}\n`));
+          yield* file.sync;
+        }).pipe(QualityTaskConfigurationError.mapError("Failed to write the durable quality-task lane report."))
+      ),
+  });
+});
 
 /**
  * Run local GitHub-check waves, emit their schema-backed report, and fail with
@@ -1600,6 +1765,36 @@ export const runQualityTaskGithubCheckLaneWaves = Effect.fn("QualityTasks.runGit
     .encode(result.report)
     .pipe(QualityTaskConfigurationError.mapError("Failed to encode the GitHub-check wave report."));
   yield* Console.log(`${GITHUB_CHECK_RUN_REPORT_PREFIX}${reportJson}`);
+  yield* emitQualityTaskLaneRunReport(result.laneReport);
+  yield* failQualityTaskFailures(label, result.failures);
+});
+
+/**
+ * Execute named streaming lanes, emit their execution report, and retain every
+ * failure before returning.
+ *
+ * **Example** (Run an empty named battery)
+ *
+ * ```ts
+ * import { runQualityTaskStreamingLaneGroup } from "@beep/repo-cli/commands/Quality/Tasks"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(runQualityTaskStreamingLaneGroup("ci:local", []))) // true
+ * ```
+ *
+ * @param label - Group label rendered in CLI output.
+ * @param lanes - Stable lane ids, executable steps, and optional executor-provided digests.
+ * @param concurrency - Maximum number of lanes executed concurrently.
+ * @category execution
+ * @since 0.0.0
+ */
+export const runQualityTaskStreamingLaneGroup = Effect.fn("QualityTasks.runStreamingLaneGroup")(function* (
+  label: string,
+  lanes: ReadonlyArray<QualityTaskLaneInput>,
+  concurrency = 1
+) {
+  const result = yield* collectQualityTaskLaneRuns(label, lanes, concurrency);
+  yield* emitQualityTaskLaneRunReport(result.report);
   yield* failQualityTaskFailures(label, result.failures);
 });
 
@@ -2101,6 +2296,15 @@ const rootRepoLintPolicySteps = (repoRoot: string, files?: ReadonlyArray<string>
         files
       ),
       ...scopedLawStep(repoRoot, "lint:effect-imports", "effect-imports", ["--check"], files),
+      // Standalone Markdown is invisible to Biome and the JSDoc inventory. Keep this
+      // full authored-corpus pass advisory until the final per-module import flip.
+      repoCliStep(repoRoot, "lint:effect-imports-markdown", [
+        "laws",
+        "effect-imports",
+        "--mode",
+        "markdown",
+        "--check",
+      ]),
       repoCliStep(repoRoot, "lint:package-test-typecheck", ["lint", "package-test-typecheck"]),
       repoCliStep(repoRoot, "lint:tsgo-rules", ["quality", "tsgo-rules"]),
       // Gate on mandatory (error) oxlint rules; --quiet suppresses the large advisory (warn)
@@ -2904,6 +3108,23 @@ export const runQualityTaskStreamingStepGroup = runStreamingStepGroup;
  * @since 0.0.0
  */
 export const collectGithubCheckLaneWavesForTesting = collectGithubCheckLaneWaves;
+
+/**
+ * Collect named wrapper-lane execution facts without raising collected failures.
+ *
+ * **Example** (Inspect a report effect)
+ *
+ * ```ts
+ * import { collectQualityTaskLaneRunsForTesting } from "@beep/repo-cli/test/Quality"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(collectQualityTaskLaneRunsForTesting("ci:local", []))) // true
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const collectQualityTaskLaneRunsForTesting = collectQualityTaskLaneRuns;
 
 /**
  * Run a bounded quality task group. Exposed for focused unit tests.

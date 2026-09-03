@@ -315,6 +315,7 @@ const moduleTagScannedExtensions = [".hbs", ".md", ".ts", ".tsx"] as const;
 const effectDiagnosticsDirectiveScannedRoots = ["apps", "packages", "tooling", "infra"] as const;
 const effectDiagnosticsDirectiveScannedExtensions = [".cts", ".mts", ".ts", ".tsx"] as const;
 const effectDiagnosticsDirectiveIgnoredDirectoryNames = ["node_modules", "dist", "coverage", "tmp"] as const;
+const tsgoProfileScannedRoots = ["apps", "packages", "infra", "scratchpad"] as const;
 const effectTsgoDiagnosticsTableStartMarker = "<!-- diagnostics-table:start -->";
 const effectTsgoDiagnosticsTableEndMarker = "<!-- diagnostics-table:end -->";
 const effectDiagnosticsDirectivePrefix = "@effect-diagnostics";
@@ -323,12 +324,13 @@ const effectDiagnosticsDirectivePattern = new RegExp(
   "u"
 );
 const effectTsgoDiagnosticPattern = /\b(?:error|warning) TS\d+: .* effect\([^)]+\)/u;
-const EcosystemEffectDiagnosticOffRule = LiteralKit(["missedPipeableOpportunity", "missingPipeableSignature"]);
+const EcosystemEffectDiagnosticOffRule = LiteralKit(["missedPipeableOpportunity"]);
 const isEcosystemEffectDiagnosticOffRule = S.is(EcosystemEffectDiagnosticOffRule);
 const TsconfigFileName = S.String.check(S.isPattern(/^tsconfig(?:\..+)?\.json$/u));
 const isTsconfigFileName = S.is(TsconfigFileName);
 const decodeUnknownRecordOption = S.decodeUnknownOption(S.Record(S.String, S.Unknown));
 const decodeUnknownArrayOption = S.decodeUnknownOption(S.Array(S.Unknown));
+const decodeStringArrayOption = S.decodeUnknownOption(S.Array(S.String));
 const decodeAliasPathsOption = S.decodeUnknownOption(S.Record(S.String, S.Array(S.String)));
 const effectTsgoReadmeParser = new XMLParser({
   ignoreAttributes: false,
@@ -1450,20 +1452,26 @@ const extractEffectTsgoReadmeRuleNames = flow(
   O.getOrElse(A.empty<string>)
 );
 
-const findEffectLanguageServicePlugin = (config: unknown): O.Option<Readonly<Record<string, unknown>>> =>
+const findConfiguredPlugins = (config: unknown): O.Option<ReadonlyArray<unknown>> =>
   pipe(
     unknownRecordProperty(config, "compilerOptions"),
     O.flatMap((compilerOptions) => unknownRecordProperty(compilerOptions, "plugins")),
-    O.flatMap(decodeUnknownArrayOption),
-    O.flatMap(
-      A.findFirst((plugin) =>
+    O.flatMap(decodeUnknownArrayOption)
+  );
+
+const findEffectLanguageServicePlugins = (config: unknown): ReadonlyArray<Readonly<Record<string, unknown>>> =>
+  pipe(
+    findConfiguredPlugins(config),
+    O.map(
+      A.flatMap((plugin) =>
         pipe(
-          unknownRecordProperty(plugin, "name"),
-          O.exists((name) => name === "@effect/language-service")
+          decodeUnknownRecordOption(plugin),
+          O.filter((record) => record.name === "@effect/language-service"),
+          O.match({ onNone: A.empty<Readonly<Record<string, unknown>>>, onSome: A.of })
         )
       )
     ),
-    O.flatMap(decodeUnknownRecordOption)
+    O.getOrElse(A.empty<Readonly<Record<string, unknown>>>)
   );
 
 const collectDisabledDiagnosticSeverityEntries = (
@@ -1516,13 +1524,13 @@ const renderTsgoRuleDiagnostics = (label: string, diagnostics: ReadonlyArray<str
     ? [`${label}:`, ...A.map(diagnostics, (diagnostic) => `  - ${diagnostic}`)]
     : [];
 
-const isDirectEcosystemMemberTsconfig = (filePath: string): boolean => {
+const isDirectEffectDrizzleTsconfig = (filePath: string): boolean => {
   const segments = Str.split(normalizePath(filePath), "/");
   return (
     A.length(segments) === 4 &&
     O.exists(A.get(segments, 0), Str.equivalence("packages")) &&
     O.exists(A.get(segments, 1), Str.equivalence("ecosystem")) &&
-    O.exists(A.get(segments, 2), Str.isNonEmpty) &&
+    O.exists(A.get(segments, 2), Str.equivalence("effect-drizzle")) &&
     O.exists(A.get(segments, 3), isTsconfigFileName)
   );
 };
@@ -1532,7 +1540,7 @@ const findDiagnosticSeverityMap = (
 ): O.Option<Readonly<Record<string, unknown>>> =>
   pipe(unknownRecordProperty(plugin, "diagnosticSeverity"), O.flatMap(decodeUnknownRecordOption));
 
-const collectEcosystemSeverityDiffDiagnostics = (
+const collectEffectDrizzleSeverityDiffDiagnostics = (
   file: string,
   baseSeverity: Readonly<Record<string, unknown>>,
   severity: Readonly<Record<string, unknown>>
@@ -1542,12 +1550,12 @@ const collectEcosystemSeverityDiffDiagnostics = (
   const missing = pipe(
     baseRuleNames,
     A.filter((ruleName) => !A.contains(configuredRuleNames, ruleName)),
-    A.map((ruleName) => `${file}: ecosystem diagnosticSeverity is missing rule ${ruleName}`)
+    A.map((ruleName) => `${file}: Effect Drizzle diagnosticSeverity is missing rule ${ruleName}`)
   );
   const unexpected = pipe(
     configuredRuleNames,
     A.filter((ruleName) => !A.contains(baseRuleNames, ruleName)),
-    A.map((ruleName) => `${file}: ecosystem diagnosticSeverity has unexpected rule ${ruleName}`)
+    A.map((ruleName) => `${file}: Effect Drizzle diagnosticSeverity has unexpected rule ${ruleName}`)
   );
   const mismatched = pipe(
     baseRuleNames,
@@ -1563,70 +1571,265 @@ const collectEcosystemSeverityDiffDiagnostics = (
         ? "off"
         : pipe(R.get(baseSeverity, ruleName), O.getOrUndefined);
       const actualSeverity = pipe(R.get(severity, ruleName), O.getOrUndefined);
-      return `${file}: ecosystem diagnosticSeverity.${ruleName} must be ${Inspectable.toStringUnknown(expectedSeverity, 0)}; found ${Inspectable.toStringUnknown(actualSeverity, 0)}`;
+      return `${file}: Effect Drizzle diagnosticSeverity.${ruleName} must be ${Inspectable.toStringUnknown(expectedSeverity, 0)}; found ${Inspectable.toStringUnknown(actualSeverity, 0)}`;
     })
   );
   return A.appendAll(A.appendAll(missing, unexpected), mismatched);
 };
 
-const collectEcosystemMemberProfileDiagnostics = (
-  file: string,
-  config: unknown,
-  baseSeverity: Readonly<Record<string, unknown>>
-): ReadonlyArray<string> => {
-  const plugin = findEffectLanguageServicePlugin(config);
-  if (O.isNone(plugin)) {
-    return isDirectEcosystemMemberTsconfig(file)
-      ? A.of(`ecosystem member tsconfig ${file} is missing the @effect/language-service family profile`)
-      : A.empty();
+interface LocalEffectPluginResolution {
+  readonly diagnostics: ReadonlyArray<string>;
+  readonly plugin: O.Option<Readonly<Record<string, unknown>>>;
+}
+
+const localEffectPluginResolution = (file: string, config: unknown): LocalEffectPluginResolution => {
+  const localPluginsProperty = pipe(
+    unknownRecordProperty(config, "compilerOptions"),
+    O.flatMap((compilerOptions) => unknownRecordProperty(compilerOptions, "plugins"))
+  );
+  if (O.isNone(localPluginsProperty)) {
+    return {
+      diagnostics: isDirectEffectDrizzleTsconfig(file)
+        ? A.of(`Effect Drizzle tsconfig ${file} is missing its explicit @effect/language-service profile`)
+        : A.empty(),
+      plugin: O.none(),
+    };
   }
-  if (!isDirectEcosystemMemberTsconfig(file)) {
-    return A.of(
-      `${file}: package tsconfigs may override @effect/language-service only under packages/ecosystem/<member>/tsconfig*.json`
-    );
+  if (O.isNone(decodeUnknownArrayOption(localPluginsProperty.value))) {
+    return { diagnostics: A.of(`${file}: compilerOptions.plugins must be an array`), plugin: O.none() };
   }
-  const severity = findDiagnosticSeverityMap(plugin.value);
-  return O.match(severity, {
-    onNone: () => A.of(`${file}: ecosystem @effect/language-service profile is missing diagnosticSeverity`),
-    onSome: (configured) => collectEcosystemSeverityDiffDiagnostics(file, baseSeverity, configured),
+
+  const effectPlugins = findEffectLanguageServicePlugins(config);
+  if (A.isReadonlyArrayEmpty(effectPlugins)) {
+    return {
+      diagnostics: A.of(
+        `${file}: local compilerOptions.plugins replaces the inherited @effect/language-service profile`
+      ),
+      plugin: O.none(),
+    };
+  }
+  if (A.length(effectPlugins) !== 1) {
+    return {
+      diagnostics: A.of(`${file}: compilerOptions.plugins must contain @effect/language-service exactly once`),
+      plugin: O.none(),
+    };
+  }
+  return O.match(A.head(effectPlugins), {
+    onNone: () => ({
+      diagnostics: A.of(`${file}: failed to read the local @effect/language-service profile`),
+      plugin: O.none(),
+    }),
+    onSome: (plugin) => ({ diagnostics: A.empty(), plugin: O.some(plugin) }),
   });
 };
 
-const collectEcosystemPluginProfileDiagnostics = (
+const collectPluginMismatchDiagnostics = (
+  file: string,
+  plugin: Readonly<Record<string, unknown>>,
+  basePlugin: Readonly<Record<string, unknown>>,
+  baseSeverity: Readonly<Record<string, unknown>>
+): ReadonlyArray<string> => {
+  const expectedPlugin = isDirectEffectDrizzleTsconfig(file)
+    ? {
+        ...basePlugin,
+        diagnosticSeverity: {
+          ...baseSeverity,
+          missedPipeableOpportunity: "off",
+        },
+      }
+    : basePlugin;
+  if (Equal.equals(plugin, expectedPlugin)) {
+    return A.empty();
+  }
+  if (!isDirectEffectDrizzleTsconfig(file)) {
+    return A.of(`${file}: local @effect/language-service profile must exactly match tsconfig.base.json`);
+  }
+
+  const severityDiagnostics = O.match(findDiagnosticSeverityMap(plugin), {
+    onNone: () => A.of(`${file}: Effect Drizzle @effect/language-service profile is missing diagnosticSeverity`),
+    onSome: (configured) => collectEffectDrizzleSeverityDiffDiagnostics(file, baseSeverity, configured),
+  });
+  return A.isReadonlyArrayNonEmpty(severityDiagnostics)
+    ? severityDiagnostics
+    : A.of(
+        `${file}: Effect Drizzle @effect/language-service profile differs from tsconfig.base.json beyond missedPipeableOpportunity`
+      );
+};
+
+const collectLocalPluginProfileDiagnostics = (
+  file: string,
+  config: unknown,
+  basePlugin: Readonly<Record<string, unknown>>,
+  baseSeverity: Readonly<Record<string, unknown>>
+): ReadonlyArray<string> => {
+  if (file === "tsconfig.base.json") {
+    return A.empty();
+  }
+
+  const resolution = localEffectPluginResolution(file, config);
+  return O.match(resolution.plugin, {
+    onNone: () => resolution.diagnostics,
+    onSome: (plugin) => collectPluginMismatchDiagnostics(file, plugin, basePlugin, baseSeverity),
+  });
+};
+
+const collectPluginProfileDiagnostics = (
   basePlugin: Readonly<Record<string, unknown>>,
   configs: ReadonlyArray<readonly [file: string, config: unknown]>
 ): ReadonlyArray<string> =>
   O.match(findDiagnosticSeverityMap(basePlugin), {
     onNone: () => A.of("tsconfig.base.json is missing the root @effect/language-service diagnosticSeverity map"),
     onSome: (baseSeverity) =>
-      A.flatMap(configs, ([file, config]) => collectEcosystemMemberProfileDiagnostics(file, config, baseSeverity)),
+      A.flatMap(configs, ([file, config]) =>
+        collectLocalPluginProfileDiagnostics(file, config, basePlugin, baseSeverity)
+      ),
   });
 
+const excludedStandaloneTsconfigs = [
+  "infra/ci-runners/sdks/ghaRunners/tsconfig.json",
+  "infra/lambda/turbo-cache/tsconfig.json",
+] as const;
+
+const isExcludedTsgoProfileTsconfig = (file: string): boolean =>
+  Str.includes("/test/fixtures/")(file) ||
+  Str.includes("/docs/examples/")(file) ||
+  A.contains(excludedStandaloneTsconfigs, file);
+
+const resolveRelativeTsconfigPath = (file: string, extended: string): string => {
+  let segments = A.dropRight(Str.split(file, "/"), 1);
+  for (const segment of Str.split(extended, "/")) {
+    if (segment === "" || segment === ".") {
+      continue;
+    }
+    segments = segment === ".." ? A.dropRight(segments, 1) : A.append(segments, segment);
+  }
+  return A.join(segments, "/");
+};
+
+const findTsconfigExtends = (config: unknown): O.Option<ReadonlyArray<string>> =>
+  pipe(
+    unknownRecordProperty(config, "extends"),
+    O.flatMap((extended) => (P.isString(extended) ? O.some(A.of(extended)) : decodeStringArrayOption(extended)))
+  );
+
+type TsconfigInheritanceResolution =
+  | { readonly _tag: "ReachedBase" }
+  | { readonly _tag: "Unresolved"; readonly diagnostic: string };
+
+const reachedTsconfigBase: TsconfigInheritanceResolution = { _tag: "ReachedBase" };
+
+const unresolvedTsconfigInheritance = (file: string, detail: string): TsconfigInheritanceResolution => ({
+  _tag: "Unresolved",
+  diagnostic: `${file}: ${detail}`,
+});
+
+const resolveTsconfigInheritance = (
+  file: string,
+  current: string,
+  configByFile: Readonly<Record<string, unknown>>,
+  visited: ReadonlyArray<string>
+): TsconfigInheritanceResolution => {
+  if (current === "tsconfig.base.json") {
+    return reachedTsconfigBase;
+  }
+  if (A.contains(visited, current)) {
+    return unresolvedTsconfigInheritance(file, `tsconfig extends cycle encountered at ${current}`);
+  }
+
+  const currentConfig = R.get(configByFile, current);
+  if (O.isNone(currentConfig)) {
+    return unresolvedTsconfigInheritance(file, `tsconfig extends chain references missing config ${current}`);
+  }
+
+  return resolveTsconfigInheritanceBranches(file, current, currentConfig.value, configByFile, visited);
+};
+
+const resolveTsconfigInheritanceBranches = (
+  file: string,
+  current: string,
+  currentConfig: unknown,
+  configByFile: Readonly<Record<string, unknown>>,
+  visited: ReadonlyArray<string>
+): TsconfigInheritanceResolution => {
+  const extended = findTsconfigExtends(currentConfig);
+  if (O.isNone(extended) || A.isReadonlyArrayEmpty(extended.value)) {
+    return unresolvedTsconfigInheritance(file, "tsconfig extends chain does not reach tsconfig.base.json");
+  }
+
+  const nextVisited = A.append(visited, current);
+  const resolutions = A.map(extended.value, (base) =>
+    resolveTsconfigInheritance(file, resolveRelativeTsconfigPath(current, base), configByFile, nextVisited)
+  );
+  return pipe(
+    A.findFirst(resolutions, (resolution) => resolution._tag === "ReachedBase"),
+    O.orElse(() => A.head(resolutions)),
+    O.getOrElse(() => unresolvedTsconfigInheritance(file, "tsconfig extends chain does not reach tsconfig.base.json"))
+  );
+};
+
+const collectTsconfigInheritanceDiagnostics = (
+  configs: ReadonlyArray<readonly [file: string, config: unknown]>
+): ReadonlyArray<string> => {
+  const configByFile = R.fromEntries(configs);
+  return pipe(
+    configs,
+    A.filter(([file]) => file !== "tsconfig.base.json" && !isExcludedTsgoProfileTsconfig(file)),
+    A.flatMap(([file]) => {
+      if (O.isNone(R.get(configByFile, "tsconfig.base.json"))) {
+        return A.of(`${file}: tsconfig extends chain references missing config tsconfig.base.json`);
+      }
+      const resolution = resolveTsconfigInheritance(file, file, configByFile, A.empty());
+      return resolution._tag === "ReachedBase" ? A.empty<string>() : A.of(resolution.diagnostic);
+    })
+  );
+};
+
+interface TsgoPluginProfileDiagnosticsInput {
+  readonly basePlugin: Readonly<Record<string, unknown>>;
+  readonly configs: ReadonlyArray<readonly [file: string, config: unknown]>;
+}
+
 /**
- * Validate package-local Effect language-service profiles against the ecosystem family delta.
+ * Validate local Effect language-service profiles against the root profile.
  *
- * **Example** (Check a conforming member profile)
+ * **Example** (Check inherited profiles)
  *
  * ```ts
  * import { collectTsgoPluginProfileDiagnosticsForTesting } from "@beep/repo-cli/commands/Quality/Quality.command"
  *
- * const basePlugin = { diagnosticSeverity: { floatingEffect: "error" } }
- * const diagnostics = collectTsgoPluginProfileDiagnosticsForTesting(basePlugin, [])
+ * const basePlugin = { name: "@effect/language-service", diagnosticSeverity: { floatingEffect: "error" } }
+ * const diagnostics = collectTsgoPluginProfileDiagnosticsForTesting({ basePlugin, configs: [] })
+ * console.log(diagnostics.length) // => 0
+ * ```
+ *
+ * @param input - Root plugin profile and repository tsconfig documents to validate.
+ * @returns Human-readable profile diagnostics; empty when every profile obeys the repository policy.
+ * @category testing
+ * @since 0.0.0
+ */
+export const collectTsgoPluginProfileDiagnosticsForTesting = (
+  input: TsgoPluginProfileDiagnosticsInput
+): ReadonlyArray<string> => collectPluginProfileDiagnostics(input.basePlugin, input.configs);
+
+/**
+ * Validate that tsconfig inheritance reaches the repository base profile.
+ *
+ * **Example** (Check an indirect extends chain)
+ *
+ * ```ts
+ * import { collectTsconfigInheritanceDiagnosticsForTesting } from "@beep/repo-cli/commands/Quality/Quality.command"
+ *
+ * const diagnostics = collectTsconfigInheritanceDiagnosticsForTesting([
+ *   ["tsconfig.base.json", {}],
+ *   ["packages/example/tsconfig.json", { extends: "../../../tsconfig.base.json" }],
+ * ])
  * console.log(diagnostics.length) // => 0
  * ```
  *
  * @category testing
  * @since 0.0.0
  */
-export const collectTsgoPluginProfileDiagnosticsForTesting: {
-  (
-    configs: ReadonlyArray<readonly [file: string, config: unknown]>
-  ): (basePlugin: Readonly<Record<string, unknown>>) => ReadonlyArray<string>;
-  (
-    basePlugin: Readonly<Record<string, unknown>>,
-    configs: ReadonlyArray<readonly [file: string, config: unknown]>
-  ): ReadonlyArray<string>;
-} = dual(2, collectEcosystemPluginProfileDiagnostics);
+export const collectTsconfigInheritanceDiagnosticsForTesting = collectTsconfigInheritanceDiagnostics;
 
 const collectGeneratedVitestAliasDiagnostics = (
   rootTsconfig: unknown,
@@ -1646,18 +1849,29 @@ const collectGeneratedVitestAliasDiagnostics = (
     : A.of("vitest.aliases.generated.json differs from tsconfig.json compilerOptions.paths; regenerate the alias data");
 };
 
-const collectPackageTsconfigProfileDiagnostics = Effect.fn(
-  "QualityScriptCommands.collectPackageTsconfigProfileDiagnostics"
+const collectWorkspaceTsconfigProfileDiagnostics = Effect.fn(
+  "QualityScriptCommands.collectWorkspaceTsconfigProfileDiagnostics"
 )(function* (repoRoot: string, basePlugin: Readonly<Record<string, unknown>>) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const packageTsconfigFiles = yield* collectFiles(
-    path.join(repoRoot, "packages"),
-    (_normalized, name) => isTsconfigFileName(name),
-    (_normalized, name) => A.contains(effectDiagnosticsDirectiveIgnoredDirectoryNames, name)
+  const rootTsconfigFiles = pipe(
+    yield* fs.readDirectory(repoRoot).pipe(QualityScriptCommandError.mapError(`Failed to read ${repoRoot}.`)),
+    A.filter(isTsconfigFileName),
+    A.map((name) => path.join(repoRoot, name))
   );
-  const packageTsconfigs = yield* Effect.forEach(
-    packageTsconfigFiles,
+  const workspaceTsconfigFiles = yield* Effect.forEach(
+    tsgoProfileScannedRoots,
+    (root) =>
+      collectFiles(
+        path.join(repoRoot, root),
+        (_normalized, name) => isTsconfigFileName(name),
+        (_normalized, name) => A.contains(effectDiagnosticsDirectiveIgnoredDirectoryNames, name)
+      ),
+    { concurrency: 1 }
+  ).pipe(Effect.map(A.flatten));
+  const tsconfigFiles = pipe(A.appendAll(rootTsconfigFiles, workspaceTsconfigFiles), A.dedupe, A.sort(Order.String));
+  const tsconfigs = yield* Effect.forEach(
+    tsconfigFiles,
     Effect.fnUntraced(function* (filePath) {
       const text = yield* fs
         .readFileString(filePath)
@@ -1674,7 +1888,10 @@ const collectPackageTsconfigProfileDiagnostics = Effect.fn(
     }),
     { concurrency: 8 }
   );
-  return collectEcosystemPluginProfileDiagnostics(basePlugin, packageTsconfigs);
+  return A.appendAll(
+    collectPluginProfileDiagnostics(basePlugin, tsconfigs),
+    collectTsconfigInheritanceDiagnostics(tsconfigs)
+  );
 });
 
 const collectDisabledEffectDiagnosticDirectives = Effect.fn(
@@ -1727,7 +1944,7 @@ const assembleTsgoRuleDiagnostics = (
   ...renderTsgoRuleDiagnostics("unexpected configured rules", extraRuleNames),
   ...renderTsgoRuleDiagnostics("rules not configured as error", nonErrorSeverities),
   ...renderTsgoRuleDiagnostics("diagnosticSeverity entries set to off", disabledSeverityEntries),
-  ...renderTsgoRuleDiagnostics("invalid package Effect language-service profiles", pluginProfileDiagnostics),
+  ...renderTsgoRuleDiagnostics("invalid workspace Effect language-service profiles", pluginProfileDiagnostics),
   ...renderTsgoRuleDiagnostics("generated Vitest alias drift", generatedAliasDiagnostics),
   ...renderTsgoRuleDiagnostics("disabled Effect diagnostic directives", disabledDirectives),
 ];
@@ -1820,10 +2037,17 @@ export const runTsgoRulesCheck = Effect.fn("QualityScriptCommands.runTsgoRulesCh
     });
   }
 
-  const plugin = findEffectLanguageServicePlugin(config);
+  const rootEffectPlugins = findEffectLanguageServicePlugins(config);
+  if (A.length(rootEffectPlugins) !== 1) {
+    return yield* QualityScriptCommandError.make({
+      message: "tsconfig.base.json must contain @effect/language-service exactly once.",
+      exitCode: 1,
+    });
+  }
+  const plugin = A.head(rootEffectPlugins);
   if (O.isNone(plugin)) {
     return yield* QualityScriptCommandError.make({
-      message: "tsconfig.base.json is missing the @effect/language-service plugin.",
+      message: "Failed to read the root @effect/language-service plugin.",
       exitCode: 1,
     });
   }
@@ -1856,7 +2080,7 @@ export const runTsgoRulesCheck = Effect.fn("QualityScriptCommands.runTsgoRulesCh
     "plugins",
     "@effect/language-service",
   ]);
-  const pluginProfileDiagnostics = yield* collectPackageTsconfigProfileDiagnostics(repoRoot, plugin.value);
+  const pluginProfileDiagnostics = yield* collectWorkspaceTsconfigProfileDiagnostics(repoRoot, plugin.value);
   const disabledDirectives = yield* collectDisabledEffectDiagnosticDirectives(repoRoot);
   const diagnostics = assembleTsgoRuleDiagnostics(
     missingRuleNames,
@@ -2624,6 +2848,26 @@ const turboConfigProofCommand = Command.make(
     )
 ).pipe(Command.withDescription("Summarize Turbo affected and dry-run task-input blast radius"));
 
+/**
+ * Verify one workspace package against freshly built dependency artifacts.
+ *
+ * **Details**
+ *
+ * Default verification first runs the selected package's upstream Turbo build
+ * closure without rebuilding the package itself, and only then runs the package
+ * audit. A genuine closure-build or audit failure still records the existing P0
+ * package-audit inbox shard. Quick mode continues to run only lint and check.
+ *
+ * **Example** (Verify the repository CLI package)
+ *
+ * ```ts
+ * const command = "bun run beep quality package-verify @beep/repo-cli"
+ * console.log(command)
+ * ```
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
 const packageVerifyCommand = Command.make(
   "package-verify",
   {
@@ -2635,7 +2879,7 @@ const packageVerifyCommand = Command.make(
   },
   ({ packageArgs, quick }) =>
     runQualityProgram(runPackageVerifyCli({ packageArgs: variadicStrings(packageArgs), quick }))
-).pipe(Command.withDescription("Run package-local lint/check/test verification"));
+).pipe(Command.withDescription("Build a package's upstream dependencies, then run package-local verification"));
 
 const changesetGraphCommand = Command.make("changeset-graph", {}, () =>
   runQualityProgram(

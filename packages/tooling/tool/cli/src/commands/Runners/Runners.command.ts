@@ -88,10 +88,7 @@ const printEncoded = Effect.fn("Runners.printEncoded")(function* <A>(
 });
 
 const requiredFlag = <A>(name: string, value: O.Option<A>): Effect.Effect<A, RunnersCommandError> =>
-  O.match(value, {
-    onNone: () => Effect.fail(RunnersCommandError.make({ message: `runners bake: --${name} is required.` })),
-    onSome: Effect.succeed,
-  });
+  Effect.fromOption(value, () => RunnersCommandError.make({ message: `runners bake: --${name} is required.` }));
 
 type BakeCliOptions = {
   readonly plan: boolean;

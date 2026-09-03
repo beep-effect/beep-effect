@@ -106,15 +106,12 @@ const decodeNumberInputFiniteText = (value: string): Effect.Effect<number, Schem
     Str.trim(value),
     O.liftPredicate(Str.isNonEmpty),
     O.map(Number),
-    O.match({
-      onNone: () =>
-        Effect.fail(
-          new SchemaIssue.InvalidValue({
-            message: "Number input text must contain a parseable finite number.",
-          })
-        ),
-      onSome: Effect.succeed,
-    })
+    Effect.fromOption(
+      () =>
+        new SchemaIssue.InvalidValue({
+          message: "Number input text must contain a parseable finite number.",
+        })
+    )
   );
 
 const encodeNumberInputFiniteText = (value: number): Effect.Effect<string> => Effect.succeed(value.toString());

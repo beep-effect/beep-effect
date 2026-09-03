@@ -1,0 +1,29 @@
+{
+  "schemaVersion": "yeet-verdict/v1",
+  "base": "origin/main",
+  "branch": "chore/deps-update-7-13-26",
+  "committed": false,
+  "createdAt": "2026-07-14T04:21:47.772Z",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "closeout:01-pr-context",
+      "label": "closeout:pr-context",
+      "phase": "monitor",
+      "status": "not-run"
+    },
+    {
+      "id": "closeout:02-review-gates",
+      "label": "closeout:review-gates",
+      "phase": "monitor",
+      "status": "not-run"
+    }
+  ],
+  "message": "yeet closeout succeeded.",
+  "mode": "closeout",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "chore_deps-update-7-13-26-3a7a4139ea68",
+  "indexPath": "<fleet>/beep-effect/.beep/yeet/quality-issue-index.json"
+}

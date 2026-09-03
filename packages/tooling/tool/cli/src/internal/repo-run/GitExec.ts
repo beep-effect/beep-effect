@@ -690,10 +690,7 @@ export const readGitTree = Effect.fn("GitExec.readGitTree")(function* <E>(
   onMalformed: () => E
 ): Effect.fn.Return<ReadonlyArray<GitTreeEntry>, E, ChildProcessSpawner.ChildProcessSpawner> {
   const output = yield* runGitRawOutput(cwd, ["ls-tree", "-r", "-z", "--full-tree", commit], adapter);
-  return yield* O.match(gitTreeEntriesFromNulOutput(output), {
-    onNone: () => Effect.fail(onMalformed()),
-    onSome: Effect.succeed,
-  });
+  return yield* Effect.fromOption(gitTreeEntriesFromNulOutput(output), () => onMalformed());
 });
 
 /** Read and strictly parse the rename table for one paired diff and path scope. @category execution @since 0.0.0 */
@@ -710,10 +707,7 @@ export const readGitRenames = Effect.fn("GitExec.readGitRenames")(function* <E>(
     ["diff", "--name-status", "-z", "--find-renames=50%", baseCommit, headCommit, "--", ...pathspec],
     adapter
   );
-  return yield* O.match(gitRenameEntriesFromNulOutput(output), {
-    onNone: () => Effect.fail(onMalformed()),
-    onSome: Effect.succeed,
-  });
+  return yield* Effect.fromOption(gitRenameEntriesFromNulOutput(output), () => onMalformed());
 });
 
 /**

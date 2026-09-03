@@ -1,0 +1,42 @@
+{
+  "schemaVersion": "yeet-verdict/v1",
+  "base": "origin/main",
+  "branch": "feat/explore-ontology-agent-surface",
+  "committed": false,
+  "createdAt": "2026-07-11T04:38:16.409Z",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "advisory:01-fallow-feedback",
+      "label": "fallow-advisory-feedback",
+      "phase": "feedback",
+      "status": "passed",
+      "exitCode": 0
+    },
+    {
+      "id": "commit:01-git-commit",
+      "label": "commit:git:commit",
+      "phase": "commit",
+      "status": "not-run"
+    },
+    {
+      "id": "full:01-pre-push",
+      "label": "full:pre-push",
+      "phase": "full",
+      "status": "not-run"
+    },
+    {
+      "id": "publish:01-git-push",
+      "label": "publish:git:push",
+      "phase": "publish",
+      "status": "not-run"
+    }
+  ],
+  "message": "yeet publish refuses a stale base: files changed on this branch were also changed on origin/main since the merge-base, so the PR would conflict or silently regress them.\n10 path(s) across 1 top-level entry: explorations\n  - explorations/ATLAS.md\n  - explorations/ontology-agent-surface/BRIEF.md\n  - explorations/ontology-agent-surface/CAPTURE.md\n  - explorations/ontology-agent-surface/DECISIONS.md\n  - explorations/ontology-agent-surface/MAP.md\n  - explorations/ontology-agent-surface/README.md\n  - explorations/ontology-agent-surface/RESEARCH.md\n  - explorations/ontology-agent-surface/assets/.gitkeep\n  - explorations/ontology-agent-surface/ops/manifest.json\n  - explorations/ontology-agent-surface/research/SOURCES.md\nRemedy: git fetch origin && git rebase origin/main, re-run bun run beep yeet verify, then publish again. Pass --allow-stale-base to proceed anyway.",
+  "mode": "publish",
+  "outcome": "failure",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "feat_explore-ontology-agent-surface-452288905287",
+  "indexPath": "<fleet>/beep-effect8/.beep/yeet/quality-issue-index.json"
+}

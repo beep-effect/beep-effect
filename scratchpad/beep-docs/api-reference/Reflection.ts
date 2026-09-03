@@ -9,6 +9,7 @@ import { $ScratchpadId } from "@beep/identity";
 import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema/Sha256";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Crypto, Effect, FileSystem, Path } from "effect";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import {
   ApiReferenceEntry,
@@ -189,6 +190,14 @@ const sha256Equivalence = S.toEquivalence(Sha256Hex);
 
 const entryId = (entry: ApiReferenceEntry): string => `${entry.version}/${entry.packageSlug}/${entry.modulePath}`;
 
+type LoadReflectionEffect = Effect.Effect<
+  TypeDocProjectReflection,
+  LoadReflectionError,
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path
+>;
+
+const isApiReferenceEntry = S.is(ApiReferenceEntry);
+
 /**
  * Reads the reflection JSON for `entry`, verifies it stays inside the dataset
  * and matches the recorded SHA-256 digest, then decodes it.
@@ -239,12 +248,15 @@ const entryId = (entry: ApiReferenceEntry): string => `${entry.version}/${entry.
  * @category utilities
  * @since 0.0.0
  */
-export const loadReflection: (
-  entry: ApiReferenceEntry,
-  options?: ReflectionOptions
-) => Effect.Effect<TypeDocProjectReflection, LoadReflectionError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> = Effect.fn(
-  "Reflection.loadReflection"
-)(function* (entry: ApiReferenceEntry, options: ReflectionOptions = ReflectionOptions.make({})) {
+export const loadReflection: {
+  (options?: ReflectionOptions): (entry: ApiReferenceEntry) => LoadReflectionEffect;
+  (entry: ApiReferenceEntry, options?: ReflectionOptions): LoadReflectionEffect;
+} = dual(
+  (args) => args.length > 0 && isApiReferenceEntry(args[0]),
+  Effect.fn("Reflection.loadReflection")(function* (
+    entry: ApiReferenceEntry,
+    options: ReflectionOptions = ReflectionOptions.make({})
+  ) {
   const fs = yield* FileSystem.FileSystem;
   const reflectionPath = yield* resolveWithinDataset(options.baseDirectory, entry.reflectionPath);
   const bytes = yield* fs
@@ -265,4 +277,5 @@ export const loadReflection: (
   return yield* TypeDocProjectReflectionFromBytes.decodeEffect(bytes).pipe(
     Effect.mapError((cause) => ReflectionDecodeFailed.make({ path: reflectionPath, cause }))
   );
-});
+  })
+);

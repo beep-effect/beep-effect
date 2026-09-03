@@ -45,7 +45,6 @@
     "./capability/shortcut-help": "./src/capability/shortcut-help.tsx",
     "./capability/toolbar": "./src/capability/toolbar.tsx",
     "./capability/*": "./src/capability/*.ts",
-    "./chat": "./src/chat/index.ts",
     "./chat/attachment-model": "./src/chat/attachment-model.ts",
     "./chat/attachments": "./src/chat/attachments.tsx",
     "./chat/atoms": "./src/chat/atoms.ts",
@@ -68,6 +67,7 @@
     "./viewer": "./src/viewer.tsx",
     "./youtube-embed": "./src/youtube-embed.tsx",
     "./youtube-node": "./src/youtube-node.tsx",
+    "./Version": "./src/Version.ts",
     "./package.json": "./package.json",
     "./internal/*": null
   },
@@ -92,7 +92,6 @@
       "./capability/shortcut-help": "./dist/capability/shortcut-help.js",
       "./capability/toolbar": "./dist/capability/toolbar.js",
       "./capability/*": "./dist/capability/*.js",
-      "./chat": "./dist/chat/index.js",
       "./chat/attachment-model": "./dist/chat/attachment-model.js",
       "./chat/attachments": "./dist/chat/attachments.js",
       "./chat/atoms": "./dist/chat/atoms.js",
@@ -115,6 +114,7 @@
       "./viewer": "./dist/viewer.js",
       "./youtube-embed": "./dist/youtube-embed.js",
       "./youtube-node": "./dist/youtube-node.js",
+      "./Version": "./dist/Version.js",
       "./package.json": "./package.json",
       "./internal/*": null
     }

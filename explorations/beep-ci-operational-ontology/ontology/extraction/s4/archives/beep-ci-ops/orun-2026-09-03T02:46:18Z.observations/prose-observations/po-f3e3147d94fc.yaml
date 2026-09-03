@@ -1,0 +1,10 @@
+id: po:sha256:f3e3147d94fc10d3f19baa227380325d13ef3a56e8c2172ff1e218662278deca
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/GateStaleness.ts
+source_span:
+  start_line: 109
+  end_line: 113
+quote: LiteralKit(["repo-code", "goals-packets"])
+epistemic_status: quoted_prose

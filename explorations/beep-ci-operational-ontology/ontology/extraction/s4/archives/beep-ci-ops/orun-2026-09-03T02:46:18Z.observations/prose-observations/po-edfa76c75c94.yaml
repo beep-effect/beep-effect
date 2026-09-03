@@ -1,0 +1,10 @@
+id: po:sha256:edfa76c75c94c0c93b2d95145a84c744876e10af1bc3f9f2cc8f562ccc54268b
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: packages/tooling/tool/cli/src/internal/repo-run/RepoRun.proofs.ts
+source_span:
+  start_line: 74
+  end_line: 77
+quote: LiteralKit(["cheap-gates", "quality", "review-fix", "pre-push"])
+epistemic_status: quoted_prose

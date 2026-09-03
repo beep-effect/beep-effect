@@ -35,6 +35,9 @@
       "Bash(git stash push:*)",
       "Bash(git stash show:*)",
       "Bash(git stash list:*)",
+      "Bash(git stash drop:*)",
+      "Bash(git update-ref refs/archive/:*)",
+      "Bash(bun run beep yeet sweep:*)",
       "Bash(bun run beep yeet repair:*)",
       "Bash(bun run beep yeet publish:*)",
       "Bash(bun run beep yeet monitor:*)",
@@ -55,7 +58,6 @@
       "Bash(git push --force-with-lease:*)",
       "Bash(git push --mirror:*)",
       "Bash(git stash clear:*)",
-      "Bash(git stash drop:*)",
       "Bash(git stash pop:*)",
       "Bash(git worktree remove --force:*)",
       "Bash(bun run beep worktree remove --force:*)",
@@ -84,7 +86,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/hook-pulse.sh"
+            "command": "BEEP_HOOK_PULSE_NOTIFIER_REV=desktop-ntfy-1 $CLAUDE_PROJECT_DIR/.claude/hooks/hook-pulse.sh"
           },
           {
             "type": "command",
@@ -100,7 +102,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/hook-pulse.sh"
+            "command": "BEEP_HOOK_PULSE_NOTIFIER_REV=desktop-ntfy-1 $CLAUDE_PROJECT_DIR/.claude/hooks/hook-pulse.sh"
           }
         ]
       }
@@ -110,7 +112,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/hook-pulse.sh"
+            "command": "BEEP_HOOK_PULSE_NOTIFIER_REV=desktop-ntfy-1 $CLAUDE_PROJECT_DIR/.claude/hooks/hook-pulse.sh"
           }
         ]
       }
@@ -129,7 +131,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/hook-pulse.sh"
+            "command": "BEEP_HOOK_PULSE_NOTIFIER_REV=desktop-ntfy-1 $CLAUDE_PROJECT_DIR/.claude/hooks/hook-pulse.sh"
           }
         ]
       }
@@ -139,7 +141,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/hook-pulse.sh"
+            "command": "BEEP_HOOK_PULSE_NOTIFIER_REV=desktop-ntfy-1 $CLAUDE_PROJECT_DIR/.claude/hooks/hook-pulse.sh"
           }
         ]
       }
@@ -149,7 +151,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/hook-pulse.sh"
+            "command": "BEEP_HOOK_PULSE_NOTIFIER_REV=desktop-ntfy-1 $CLAUDE_PROJECT_DIR/.claude/hooks/hook-pulse.sh"
           }
         ]
       }
@@ -159,7 +161,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/hook-pulse.sh"
+            "command": "BEEP_HOOK_PULSE_NOTIFIER_REV=desktop-ntfy-1 $CLAUDE_PROJECT_DIR/.claude/hooks/hook-pulse.sh"
           },
           {
             "type": "command",
@@ -193,7 +195,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/hook-pulse.sh"
+            "command": "BEEP_HOOK_PULSE_NOTIFIER_REV=desktop-ntfy-1 $CLAUDE_PROJECT_DIR/.claude/hooks/hook-pulse.sh"
           },
           {
             "type": "command",
@@ -209,7 +211,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/hook-pulse.sh"
+            "command": "BEEP_HOOK_PULSE_NOTIFIER_REV=desktop-ntfy-1 $CLAUDE_PROJECT_DIR/.claude/hooks/hook-pulse.sh"
           }
         ]
       }

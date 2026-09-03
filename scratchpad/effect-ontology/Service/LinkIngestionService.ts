@@ -858,16 +858,16 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
         })
       )
     ),
-    getByContentHash: Effect.fn("LinkIngestionService.getByContentHash")(() => Effect.succeed(O.none())),
-    getById: Effect.fn("LinkIngestionService.getById")(() => Effect.succeed(O.none())),
+    getByContentHash: Effect.fn("LinkIngestionService.getByContentHash")(() => Effect.succeedNone),
+    getById: Effect.fn("LinkIngestionService.getById")(() => Effect.succeedNone),
     getByIds: Effect.fn("LinkIngestionService.getByIds")(() => Effect.succeed([])),
     list: Effect.fn("LinkIngestionService.list")(() => Effect.succeed([])),
     getPending: Effect.fn("LinkIngestionService.getPending")(() => Effect.succeed([])),
     getEnriched: Effect.fn("LinkIngestionService.getEnriched")(() => Effect.succeed([])),
-    markProcessed: Effect.fn("LinkIngestionService.markProcessed")(() => Effect.succeed(O.none())),
-    markProcessing: Effect.fn("LinkIngestionService.markProcessing")(() => Effect.succeed(O.none())),
-    markFailed: Effect.fn("LinkIngestionService.markFailed")(() => Effect.succeed(O.none())),
-    getContent: Effect.fn("LinkIngestionService.getContent")(() => Effect.succeed(O.none())),
+    markProcessed: Effect.fn("LinkIngestionService.markProcessed")(() => Effect.succeedNone),
+    markProcessing: Effect.fn("LinkIngestionService.markProcessing")(() => Effect.succeedNone),
+    markFailed: Effect.fn("LinkIngestionService.markFailed")(() => Effect.succeedNone),
+    getContent: Effect.fn("LinkIngestionService.getContent")(() => Effect.succeedNone),
     reEnrich: Effect.fn("LinkIngestionService.reEnrich")(() =>
       Effect.fail(
         LinkIngestionError.make({
