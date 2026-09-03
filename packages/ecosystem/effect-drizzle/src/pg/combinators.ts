@@ -1541,28 +1541,6 @@ export const unsafeDefaultSql =
       hasDefault: true,
     });
 
-/**
- * Compatibility alias for {@link unsafeDefaultSql}.
- *
- * **Gotchas**
- *
- * The alias is equally unsafe; its older name does not communicate that boundary.
- *
- * **Example** (Use the compatibility alias)
- *
- * ```ts
- * import { String } from "effect/Schema"
- * import { defaultSql } from "@beep/effect-drizzle/pg"
- *
- * String.pipe(defaultSql("current_user")).meta.hasDefault // => true
- * ```
- *
- * @deprecated Use the explicitly unsafe-named {@link unsafeDefaultSql}.
- * @category combinators
- * @since 0.0.0
- */
-export const defaultSql = unsafeDefaultSql;
-
 type ValidateVersionColumn<I extends Field.Input> = Field.MetaFrom<I>["column"] extends
   | PgColumn.Integer
   | PgColumn.Smallint

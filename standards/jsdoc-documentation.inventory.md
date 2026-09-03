@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-08-31T09:31:22.627Z
+Generated: 2026-09-03T02:43:26.992Z
 
 ## Scope
 
@@ -14,9 +14,9 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 75 |
 | packagesWithoutPublicSrcSurface | 3 |
 | packagesNeedingRemediation | 58 |
-| publicModules | 2986 |
-| publicExports | 21138 |
-| openModules | 347 |
+| publicModules | 2985 |
+| publicExports | 21101 |
+| openModules | 346 |
 | openExports | 99 |
 | missingExportExamples | 4 |
 | missingExportCategories | 0 |
@@ -27,7 +27,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | unsafeExampleFindings | 0 |
 | schemaAnnotationFindings | 0 |
 | undescribed-see | 12 |
-| multiple-description-paragraphs | 427 |
+| multiple-description-paragraphs | 426 |
 | leading-blank | 0 |
 | trailing-blank | 1 |
 | invalid-heading | 1 |
@@ -78,7 +78,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 21 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | clean | 10 | 86 | 0 | 0 |
 | 22 | `@beep/agents-server` | `packages/agents/server` | needs-remediation | 11 | 39 | 2 | 0 |
 | 23 | `@beep/workspace-use-cases` | `packages/workspace/use-cases` | needs-remediation | 12 | 46 | 1 | 0 |
-| 24 | `@beep/editor` | `packages/foundation/ui-system/editor` | needs-remediation | 36 | 241 | 14 | 0 |
+| 24 | `@beep/editor` | `packages/foundation/ui-system/editor` | needs-remediation | 35 | 210 | 13 | 0 |
 | 25 | `@beep/nlp-mcp` | `packages/drivers/nlp-mcp` | needs-remediation | 9 | 123 | 8 | 1 |
 | 26 | `@beep/law-practice-domain` | `packages/law-practice/domain` | needs-remediation | 214 | 648 | 9 | 4 |
 | 27 | `@beep/repo-docgen` | `packages/tooling/tool/docgen` | clean | 10 | 86 | 0 | 0 |
@@ -111,8 +111,8 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 54 | `@beep/lexical-schema` | `packages/foundation/modeling/lexical` | needs-remediation | 6 | 125 | 4 | 4 |
 | 55 | `@beep/langextract` | `packages/foundation/capability/langextract` | clean | 26 | 125 | 0 | 0 |
 | 56 | `@beep/shared-tables` | `packages/shared/tables` | clean | 9 | 12 | 0 | 0 |
-| 57 | `@beep/scratchpad` | `scratchpad` | clean | 469 | 4233 | 0 | 0 |
-| 58 | `@beep/md` | `packages/foundation/modeling/md` | needs-remediation | 9 | 259 | 4 | 0 |
+| 57 | `@beep/scratchpad` | `scratchpad` | clean | 469 | 4226 | 0 | 0 |
+| 58 | `@beep/md` | `packages/foundation/modeling/md` | needs-remediation | 9 | 260 | 4 | 0 |
 | 59 | `@beep/practice-kg-mcp` | `apps/practice-kg-mcp` | clean | 7 | 14 | 0 | 0 |
 | 60 | `@beep/tailscale` | `packages/drivers/tailscale` | clean | 5 | 29 | 0 | 0 |
 | 61 | `@beep/law-practice-use-cases` | `packages/law-practice/use-cases` | needs-remediation | 32 | 113 | 4 | 0 |
@@ -399,7 +399,6 @@ Module findings:
 Path: `packages/foundation/ui-system/editor`
 
 Module findings:
-- `src/capability/index.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/chat/atoms.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/chat/attachment-model.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/chat/attachments.tsx:1` (packageDocumentation) - 1 documentation section/link violation(s)
