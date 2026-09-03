@@ -133,7 +133,7 @@ export * from "./Md.safe.ts";
  */
 export * from "./Md.ts";
 /**
- * Current `@beep/md` package version.
+ * Current `@beep/md` package release version.
  *
  * @category configuration
  * @since 0.0.0

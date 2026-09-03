@@ -43,7 +43,7 @@ import {
 import { Document } from "./Md.model.ts";
 
 /**
- * Lossless conformance inspection surface re-exported from the semantic inspector.
+ * Public semantic Markdown conformance schemas, diagnostics, and inspection helpers.
  *
  * @category validation
  * @since 0.0.0
