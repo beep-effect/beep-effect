@@ -1,0 +1,105 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "semantica-storage-inversion",
+    "packetId": "goal-packet/v1:c92385a2f57988c9ed227fb8d3981b62de4cf80c02640fcac17fd0c10f33a2b1",
+    "title": "Semantica Storage Inversion",
+    "status": "active",
+    "created": "2026-09-03",
+    "updated": "2026-09-03",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/semantica-storage-inversion",
+  "lifecycle": "active",
+  "mission": "Spike the storage semantics D16 needs before it can bind: Invalidated retraction with derived reach, Redacted document erasure with a ledger-computed closure and an atomic purge protocol, Compacted trust-root snapshots and checkpoint continuity in chain order, proven by probes P-S0..3 on the offline-regenerated C2 ledger as one S1 candidate (MAP v1.1 section S, R1).",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/semantica-lab",
+    "graduated": "2026-09-03",
+    "note": "MAP v1.1 re-entry packet S (DECISIONS 2026-09-03 R1, ratified with amendments R0.a, R1.a-R1.i). Fired by the C2 pass (2026-08-31) per MAP v1.0 Sequencing 5; the fixture is the offline-regenerated full-W1 C2 ledger gated by P-S0. P-S1 must land before the sibling semantica-reasoning-spike runs its R-c class and P2-P4 (R1.g). Stop rule is the probe breaker (S1 as amended by R0.a), never a calendar."
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "explorations/semantica-lab/BRIEF.md",
+    "explorations/semantica-lab/MAP.md",
+    "explorations/semantica-lab/DECISIONS.md",
+    "explorations/semantica-lab/research/shared-schema.md",
+    "goals/semantica-storage-inversion/README.md",
+    "goals/semantica-storage-inversion/SPEC.md",
+    "goals/semantica-storage-inversion/PLAN.md",
+    "goals/semantica-storage-inversion/GOAL.md",
+    "goals/semantica-storage-inversion/research/SOURCES.md",
+    "goals/semantica-canary/SPEC.md",
+    "goals/semantica-reasoning-spike/SPEC.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/semantica-storage-inversion/GOAL.md"
+    }
+  ],
+  "provides": ["semantica/tombstone-law", "semantica/storage-semantics"],
+  "requires": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "P-S0 entry check",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "P-S1 retraction",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "P-S2 compaction + erasure",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "P-S3 desktop storage",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/semantica-storage-inversion/GOAL.md)\" -le 4000",
+    "jq . goals/semantica-storage-inversion/ops/manifest.json",
+    "rg -n \"semantica-storage-inversion|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/semantica-storage-inversion",
+    "git diff --check -- goals/semantica-storage-inversion explorations/semantica-lab",
+    "bun run beep goals index --check",
+    "bun run beep goals doctor",
+    "bun run beep lint reflection-artifacts",
+    "bun run beep yeet verify"
+  ],
+  "stopConditions": [
+    "Probe breaker (S1 as amended by R0.a): P-S0..3 are one stage of the storage family's opening candidate; a failed probe buys exactly one more candidate for that probe, redesigned when the failure was a design fault; a second failure parks the family, records the park in explorations/semantica-lab/DECISIONS.md, and drops the exploration back to decompose. Never a calendar.",
+    "P-S0 is a hard fixture gate: if the cache-only regeneration does not reproduce the C2 full-W1 report digest with the network off, the spike has no fixture and does not start (R1.f).",
+    "Any in-place UPDATE, any row DELETE used to implement retraction, or a retraction whose reach cannot be derived from claimQuads and the recorded local premises, is the P-S1 kill (S8; R1.a). Physical Redacted erasure deletes its computed closure atomically (R1.b, R1.h).",
+    "A Redacted closure that must be hand-listed, a snapshot that retains a redacted payload, any closure row or copy class surviving erasure without being documented out of scope, an erasure reported complete without its purge receipt, or any digest drift after compaction alone is the P-S2 kill (R1.b, R1.h, Q4).",
+    "Bytes that cannot be reclaimed under PGlite WASM after the copy-to-fresh-dataDir redesigned candidate, a torn chain after the SIGKILL restart, or a purge left incomplete after the mid-erasure restart, is the P-S3 kill (R1.e; PR #996 review Q4).",
+    "A change to the ProvenanceEvent id preimage, to g-entailment-rdfs/v1, or to any C2 fixture digest (R1.d); any hosted provider call (every probe is replay-offline); committing the regenerated ledger or the provider cache to the repo.",
+    "A change would cross a BRIEF No-Go (window, sidecar/IPC, local models, consumption-side retrieval, atlas backlog, reusable lab export) or touch a brick outside cleanup-on-touch.",
+    "Verification requires credentials, cost, destructive side effects, or policy approval not named in SPEC.md.",
+    "The same blocker repeats after reasonable investigation."
+  ],
+  "statusNote": "Scaffolded 2026-09-03 at the semantica-lab graduation ceremony (MAP v1.1 §S, R1); execution not started. Opens with the P-S0 fixture gate (offline regeneration of the C2 ledger must reproduce the archived report digest); P-S1 must land before the reasoning spike's R-c class and P2-P4."
+}
