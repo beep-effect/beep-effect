@@ -193,7 +193,9 @@
       ],
       "inputs": [
         "package.json",
+        "server/**",
         "src/**",
+        "src-tauri/**",
         "test/**",
         "tsconfig*.json",
         "vitest.config.ts",
