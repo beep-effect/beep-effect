@@ -22,7 +22,7 @@ import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
 import { FreshbooksBaseUrl, FreshbooksConfigInput } from "./Freshbooks.config.ts";
 import { FreshbooksError } from "./Freshbooks.errors.ts";
-import { FreshbooksDecode } from "./Freshbooks.models.ts";
+import { FreshbooksDecode, FreshbooksPagination } from "./Freshbooks.models.ts";
 import { FreshbooksAuth, FreshbooksTokenStore, makeFreshbooksAuth } from "./Freshbooks.token.ts";
 import type { Redacted } from "effect";
 import type { FreshbooksAccountId } from "./Freshbooks.config.ts";
@@ -43,6 +43,14 @@ const $I = $FreshbooksId.create("Freshbooks.service");
 /**
  * FreshBooks per-page cap. FreshBooks silently limits list results to 100 rows
  * regardless of the requested `per_page` (P0 spike, Request Limits page).
+ *
+ * **Example** (Log the per-page cap)
+ *
+ * ```ts
+ * import { FRESHBOOKS_MAX_PER_PAGE } from "@beep/freshbooks"
+ *
+ * console.log(FRESHBOOKS_MAX_PER_PAGE) // 100
+ * ```
  *
  * @category constants
  * @since 0.0.0
@@ -90,6 +98,23 @@ export class ResolvedFreshbooksConfig extends S.Class<ResolvedFreshbooksConfig>(
 /**
  * Resolve a {@link FreshbooksConfigInput} into a {@link ResolvedFreshbooksConfig}.
  *
+ * **Example** (Resolve config input)
+ *
+ * ```ts
+ * import { FreshbooksConfigInput, resolveConfig } from "@beep/freshbooks"
+ * import { Redacted } from "effect"
+ *
+ * const resolved = resolveConfig(
+ *   FreshbooksConfigInput.make({
+ *     clientId: "dev-client-id",
+ *     clientSecret: Redacted.make("dev-client-secret"),
+ *     redirectUri: "https://localhost:8443/callback"
+ *   })
+ * )
+ *
+ * console.log(resolved)
+ * ```
+ *
  * @category constructors
  * @since 0.0.0
  */
@@ -110,13 +135,9 @@ export const resolveConfig = Effect.fn("Freshbooks.resolveConfig")(
   Effect.mapError((cause) => FreshbooksError.fromReason("config", { cause }))
 );
 
-/**
- * Options accepted by the FreshBooks list verbs.
- *
- * @category models
- * @since 0.0.0
- */
-export type FreshbooksListOptions = {
+// Options accepted by the FreshBooks list verbs. Kept internal: consumers pass
+// an object literal (e.g. `{ page: 2 }`) without naming the type.
+type ListOptions = {
   readonly page?: number;
 };
 
@@ -139,7 +160,7 @@ export type FreshbooksShape = {
   readonly getIdentity: Effect.Effect<FreshbooksIdentity, FreshbooksError>;
   readonly listClients: (
     accountId: FreshbooksAccountId,
-    options?: FreshbooksListOptions
+    options?: ListOptions
   ) => Effect.Effect<FreshbooksPage<FreshbooksClient>, FreshbooksError>;
   readonly getClient: (
     accountId: FreshbooksAccountId,
@@ -147,7 +168,7 @@ export type FreshbooksShape = {
   ) => Effect.Effect<FreshbooksClient, FreshbooksError>;
   readonly listInvoices: (
     accountId: FreshbooksAccountId,
-    options?: FreshbooksListOptions
+    options?: ListOptions
   ) => Effect.Effect<FreshbooksPage<FreshbooksInvoice>, FreshbooksError>;
   readonly getInvoice: (
     accountId: FreshbooksAccountId,
@@ -155,7 +176,7 @@ export type FreshbooksShape = {
   ) => Effect.Effect<FreshbooksInvoice, FreshbooksError>;
   readonly listPayments: (
     accountId: FreshbooksAccountId,
-    options?: FreshbooksListOptions
+    options?: ListOptions
   ) => Effect.Effect<FreshbooksPage<FreshbooksPayment>, FreshbooksError>;
   readonly getPayment: (
     accountId: FreshbooksAccountId,
@@ -163,7 +184,7 @@ export type FreshbooksShape = {
   ) => Effect.Effect<FreshbooksPayment, FreshbooksError>;
 };
 
-const listQuery = (options: FreshbooksListOptions | undefined): string => {
+const listQuery = (options: ListOptions | undefined): string => {
   const page = options?.page ?? 1;
   return `?page=${page}&per_page=${FRESHBOOKS_MAX_PER_PAGE}`;
 };
@@ -228,7 +249,7 @@ const makeService = (
       const body = yield* runGet("clients", url);
       const decoded = yield* decodeAt("clients", url, FreshbooksDecode.clients, body);
       const { clients, ...pagination } = decoded.response.result;
-      return { items: clients, pagination };
+      return { items: clients, pagination: FreshbooksPagination.make(pagination) };
     }),
     getClient: Effect.fn("Freshbooks.getClient")(function* (accountId, clientId) {
       const url = `${accountBase(config, accountId)}/users/clients/${clientId}`;
@@ -241,7 +262,7 @@ const makeService = (
       const body = yield* runGet("invoices", url);
       const decoded = yield* decodeAt("invoices", url, FreshbooksDecode.invoices, body);
       const { invoices, ...pagination } = decoded.response.result;
-      return { items: invoices, pagination };
+      return { items: invoices, pagination: FreshbooksPagination.make(pagination) };
     }),
     getInvoice: Effect.fn("Freshbooks.getInvoice")(function* (accountId, invoiceId) {
       const url = `${accountBase(config, accountId)}/invoices/invoices/${invoiceId}`;
@@ -254,7 +275,7 @@ const makeService = (
       const body = yield* runGet("payments", url);
       const decoded = yield* decodeAt("payments", url, FreshbooksDecode.payments, body);
       const { payments, ...pagination } = decoded.response.result;
-      return { items: payments, pagination };
+      return { items: payments, pagination: FreshbooksPagination.make(pagination) };
     }),
     getPayment: Effect.fn("Freshbooks.getPayment")(function* (accountId, paymentId) {
       const url = `${accountBase(config, accountId)}/payments/payments/${paymentId}`;

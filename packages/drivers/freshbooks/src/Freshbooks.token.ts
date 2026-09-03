@@ -34,6 +34,14 @@ const $I = $FreshbooksId.create("Freshbooks.token");
  * Clock skew margin: a token within this window of expiry is treated as
  * already expired so a refresh happens before a call can fail mid-flight.
  *
+ * **Example** (Log the skew margin)
+ *
+ * ```ts
+ * import { FRESHBOOKS_TOKEN_SKEW_MILLIS } from "@beep/freshbooks"
+ *
+ * console.log(FRESHBOOKS_TOKEN_SKEW_MILLIS) // 60000
+ * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -56,66 +64,38 @@ export const FRESHBOOKS_TOKEN_SKEW_MILLIS = 60_000;
  *   refresh_token: "refresh"
  * })
  *
- * console.log(token.expiresIn) // 43200
- * console.log(Redacted.value(token.accessToken)) // "access"
+ * console.log(token.expires_in) // 43200
+ * console.log(Redacted.value(token.access_token)) // "access"
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export const FreshbooksTokenResponse = S.Struct({
-  accessToken: S.String.pipe(S.RedactedFromValue).annotateKey({
-    description: "Redacted bearer access token.",
-  }),
-  tokenType: S.optionalKey(S.String).annotateKey({
-    description: "Token type, always Bearer.",
-  }),
-  expiresIn: S.Int.annotateKey({
-    description: "Access-token lifetime in seconds.",
-  }),
-  refreshToken: S.String.pipe(S.RedactedFromValue).annotateKey({
-    description: "Redacted single-use refresh token.",
-  }),
-  scope: S.optionalKey(S.String).annotateKey({
-    description: "Granted scope string.",
-  }),
-  createdAt: S.optionalKey(S.Int).annotateKey({
-    description: "Token issuance time in epoch seconds.",
-  }),
-}).pipe(
-  S.encodeKeys({
-    accessToken: "access_token",
-    tokenType: "token_type",
-    expiresIn: "expires_in",
-    refreshToken: "refresh_token",
-    createdAt: "created_at",
-  }),
-  $I.annoteSchema("FreshbooksTokenResponse", {
+export class FreshbooksTokenResponse extends S.Class<FreshbooksTokenResponse>($I`FreshbooksTokenResponse`)(
+  {
+    access_token: S.String.pipe(S.RedactedFromValue).annotateKey({
+      description: "Redacted bearer access token.",
+    }),
+    token_type: S.optionalKey(S.String).annotateKey({
+      description: "Token type, always Bearer.",
+    }),
+    expires_in: S.Int.annotateKey({
+      description: "Access-token lifetime in seconds.",
+    }),
+    refresh_token: S.String.pipe(S.RedactedFromValue).annotateKey({
+      description: "Redacted single-use refresh token.",
+    }),
+    scope: S.optionalKey(S.String).annotateKey({
+      description: "Granted scope string.",
+    }),
+    created_at: S.optionalKey(S.Int).annotateKey({
+      description: "Token issuance time in epoch seconds.",
+    }),
+  },
+  $I.annote("FreshbooksTokenResponse", {
     description: "Decoded FreshBooks OAuth token endpoint response.",
   })
-);
-
-/**
- * Type for {@link FreshbooksTokenResponse}.
- *
- * **Example** (Assign token response type)
- *
- * ```ts
- * import { FreshbooksTokenResponse } from "@beep/freshbooks"
- * import * as S from "effect/Schema"
- *
- * const token: FreshbooksTokenResponse = S.decodeUnknownSync(FreshbooksTokenResponse)({
- *   access_token: "a",
- *   expires_in: 43200,
- *   refresh_token: "r"
- * })
- * console.log(token.expiresIn) // 43200
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type FreshbooksTokenResponse = typeof FreshbooksTokenResponse.Type;
+) {}
 
 const decodeTokenResponse = S.decodeUnknownEffect(FreshbooksTokenResponse);
 
@@ -257,6 +237,20 @@ export type FreshbooksTokenStoreShape = {
 /**
  * Public shape of {@link FreshbooksAuth}.
  *
+ * **Example** (Read a bearer token from the service)
+ *
+ * ```ts
+ * import { FreshbooksAuth } from "@beep/freshbooks"
+ * import { Effect } from "effect"
+ *
+ * const program = Effect.gen(function* () {
+ *   const auth = yield* FreshbooksAuth
+ *   return yield* auth.accessToken
+ * })
+ *
+ * console.log(program)
+ * ```
+ *
  * @category services
  * @since 0.0.0
  */
@@ -271,9 +265,9 @@ const tokenEndpoint = (config: ResolvedFreshbooksConfig): string => `${config.ap
 
 const toStored = (response: FreshbooksTokenResponse, now: number): FreshbooksStoredToken =>
   FreshbooksStoredToken.make({
-    accessToken: response.accessToken,
-    refreshToken: response.refreshToken,
-    expiresAt: now + response.expiresIn * 1_000,
+    accessToken: response.access_token,
+    refreshToken: response.refresh_token,
+    expiresAt: now + response.expires_in * 1_000,
     ...O.getSomesStruct({ scope: O.fromUndefinedOr(response.scope) }),
   });
 
@@ -326,9 +320,27 @@ const callTokenEndpoint = (
   });
 
 /**
- * Build a {@link FreshbooksAuth} service value from its dependencies. The
- * refresh permit is created per service instance, so a single owner serializes
- * every rotation within the layer's scope.
+ * Build a {@link FreshbooksAuth} service value from its dependencies.
+ *
+ * **Details**
+ *
+ * The refresh permit is created once per service instance, so the single
+ * refresh owner is scoped to one layer instance. This is the intended
+ * deployment shape: provide exactly one FreshBooks driver layer per runtime
+ * (Effect layers are memoized singletons), and every fiber sharing that layer
+ * shares the one permit and the one {@link FreshbooksTokenStore}, so the
+ * single-owner guarantee holds process-wide. Two independent layers (or two
+ * processes) would each hold their own permit; cross-process single-ownership
+ * is the token store's responsibility, not this permit's — back it with a
+ * store whose `write` is atomic and whose reads reflect the latest rotation.
+ *
+ * **Example** (Reference the constructor)
+ *
+ * ```ts
+ * import { makeFreshbooksAuth } from "@beep/freshbooks"
+ *
+ * console.log(typeof makeFreshbooksAuth) // "function"
+ * ```
  *
  * @category constructors
  * @since 0.0.0

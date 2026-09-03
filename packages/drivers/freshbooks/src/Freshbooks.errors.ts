@@ -7,9 +7,8 @@
 
 import { $FreshbooksId } from "@beep/identity";
 import { Defect, LiteralKit } from "@beep/schema";
-import { O, thunkUndefined } from "@beep/utils";
+import { O } from "@beep/utils";
 import { Effect, flow, pipe, Result } from "effect";
-import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as HttpClientError from "effect/unstable/http/HttpClientError";
@@ -224,15 +223,13 @@ const readProperty = (value: unknown, key: PropertyKey): O.Option<unknown> => {
   return O.fromUndefinedOr(
     Result.getOrElse(
       Result.try(() => Reflect.get(value, key)),
-      thunkUndefined
+      () => undefined
     )
   );
 };
 
-const readString: {
-  (value: unknown, key: PropertyKey): O.Option<string>;
-  (key: PropertyKey): (value: unknown) => O.Option<string>;
-} = dual(2, (value: unknown, key: PropertyKey): O.Option<string> => O.filter(readProperty(value, key), P.isString));
+const readString = (value: unknown, key: PropertyKey): O.Option<string> =>
+  O.filter(readProperty(value, key), P.isString);
 
 const safeBoolean = (evaluate: () => boolean): boolean => Result.getOrElse(Result.try(evaluate), () => false);
 
@@ -240,11 +237,13 @@ const httpClientCauseLabel = (cause: unknown): O.Option<string> =>
   safeBoolean(() => HttpClientError.isHttpClientError(cause))
     ? pipe(
         readProperty(cause, "reason"),
-        O.flatMap(readString("_tag")),
+        O.flatMap((reason) => readString(reason, "_tag")),
         O.map((tag) => `HttpClientError:${tag}`)
       )
     : O.none();
 
+// shared driver boundary idiom; no in-family home; future foundation capability candidate.
+// fallow-ignore-next-line code-duplication -- FreshBooks cause normalization preserves provider-specific HTTP labels
 const causeFromUnknown = (cause: unknown): O.Option<string> =>
   P.isUndefined(cause)
     ? O.none()

@@ -173,22 +173,22 @@ const TestLayer = Freshbooks.makeLayer(
 );
 
 describe("@beep/freshbooks models", () => {
-  it("renames wire snake_case keys to camelCase on decode and back on encode", () => {
+  it("decodes wire keys into annotated S.Class models and re-encodes to the wire shape", () => {
     const client = decode(FreshbooksClient, clientWire);
-    expect(client.firstName).toBe("Sample");
-    expect(client.currencyCode).toBe("USD");
-    expect(client.visState).toBe(0);
+    expect(client.fname).toBe("Sample");
+    expect(client.currency_code).toBe("USD");
+    expect(client.vis_state).toBe(0);
     expect(encode(FreshbooksClient, client)).toEqual(clientWire);
 
     const invoice = decode(FreshbooksInvoice, invoiceWire);
-    expect(invoice.invoiceNumber).toBe("TEST-0001");
-    expect(invoice.customerId).toBe(1001);
+    expect(invoice.invoice_number).toBe("TEST-0001");
+    expect(invoice.customerid).toBe(1001);
     expect(invoice.amount?.amount).toBe("500.00");
     expect(encode(FreshbooksInvoice, invoice)).toEqual(invoiceWire);
 
     const payment = decode(FreshbooksPayment, paymentWire);
-    expect(payment.invoiceId).toBe(2001);
-    expect(payment.clientId).toBe(1001);
+    expect(payment.invoiceid).toBe(2001);
+    expect(payment.clientid).toBe(1001);
     expect(encode(FreshbooksPayment, payment)).toEqual(paymentWire);
   });
 });
@@ -202,8 +202,8 @@ describe("@beep/freshbooks read service", () => {
         const identity = yield* freshbooks.getIdentity;
         const capture = findUrl(yield* capturesOf, "https://api.freshbooks.com/auth/api/v1/users/me");
 
-        expect(identity.businessMemberships[0]?.business.accountId).toBe("TESTACCT");
-        expect(identity.businessMemberships[0]?.business.id).toBe(240340);
+        expect(identity.business_memberships[0]?.business.account_id).toBe("TESTACCT");
+        expect(identity.business_memberships[0]?.business.id).toBe(240340);
         expect(capture?.method).toBe("GET");
         expect(capture?.authorization).toBe("Bearer access-token");
       })
@@ -220,7 +220,7 @@ describe("@beep/freshbooks read service", () => {
         );
 
         expect(page.items[0]?.organization).toBe("Sample Org LLC");
-        expect(page.pagination.perPage).toBe(100);
+        expect(page.pagination.per_page).toBe(100);
         expect(page.pagination.total).toBe(1);
         expect(capture?.method).toBe("GET");
       })
@@ -235,8 +235,8 @@ describe("@beep/freshbooks read service", () => {
         const captures = yield* capturesOf;
 
         expect(client.email).toBe("sample.client@example.com");
-        expect(invoice.invoiceNumber).toBe("TEST-0001");
-        expect(invoice.paymentStatus).toBe("unpaid");
+        expect(invoice.invoice_number).toBe("TEST-0001");
+        expect(invoice.payment_status).toBe("unpaid");
         expect(
           findUrl(captures, "https://api.freshbooks.com/accounting/account/TESTACCT/users/clients/1001")
         ).toBeDefined();

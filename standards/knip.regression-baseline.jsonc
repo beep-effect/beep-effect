@@ -11,10 +11,10 @@
     "omitted_fields": ["line", "col", "pos"]
   },
   "check": {
-    "total_findings": 0,
+    "total_findings": 2,
     "binaries": 0,
     "dependencies": 0,
-    "devDependencies": 0,
+    "devDependencies": 1,
     "enumMembers": 0,
     "exports": 0,
     "files": 0,
@@ -22,7 +22,18 @@
     "optionalPeerDependencies": 0,
     "types": 0,
     "unlisted": 0,
-    "unresolved": 0
+    "unresolved": 1
   },
-  "findings": []
+  "findings": [
+    {
+      "kind": "devDependencies",
+      "file": "packages/drivers/freshbooks/package.json",
+      "name": "@beep/test-utils"
+    },
+    {
+      "kind": "unresolved",
+      "file": "packages/drivers/freshbooks/tsconfig.test.json",
+      "name": "bun-types"
+    }
+  ]
 }
