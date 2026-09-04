@@ -29,8 +29,11 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
+import { ProofEnvProfile, ProofStage } from "../../../internal/repo-run/QualityScheduler.schemas.ts";
 import { CiLaneClass, CiLaneId } from "../../Ci/CiLane.ts";
 import { YeetProofTier } from "./Planner.ts";
+
+export { ProofEnvProfile, ProofStage } from "../../../internal/repo-run/QualityScheduler.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/ProofFact");
 
@@ -49,65 +52,6 @@ const $I = $RepoCliId.create("commands/Yeet/internal/ProofFact");
  * @since 0.0.0
  */
 export const PROOF_FACT_SCHEMA_VERSION = "proof-fact/v1";
-
-/**
- * The env profile a lane ran under; part of the reuse key because PR-posture
- * env (blank DB secrets, pinned concurrency) and local env produce different
- * outcomes for the same inputs.
- *
- * **Example** (Check a profile literal)
- *
- * ```ts
- * import { ProofEnvProfile } from "@beep/repo-cli/test/Yeet"
- *
- * console.log(ProofEnvProfile.is["pr-posture"]("pr-posture")) // true
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export const ProofEnvProfile = LiteralKit(["local", "pr-posture", "hosted"]).pipe(
-  $I.annoteSchema("ProofEnvProfile", {
-    description: "Environment posture a lane executed under: local workstation, PR posture, or hosted CI.",
-  })
-);
-
-/**
- * Type of {@link ProofEnvProfile}.
- *
- * @category type-level
- * @since 0.0.0
- */
-export type ProofEnvProfile = typeof ProofEnvProfile.Type;
-
-/**
- * The stage of the verification episode that produced a fact. Distinct from
- * the local `YeetProofTier`, which names the proof recipe, not the stage.
- *
- * **Example** (Check a stage literal)
- *
- * ```ts
- * import { ProofStage } from "@beep/repo-cli/test/Yeet"
- *
- * console.log(ProofStage.is["pre-push"]("pre-push")) // true
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export const ProofStage = LiteralKit(["repair-loop", "pre-push", "merged-preview", "hosted"]).pipe(
-  $I.annoteSchema("ProofStage", {
-    description: "Verification stage that produced the fact: repair loop, pre-push wave, merged preview, or hosted.",
-  })
-);
-
-/**
- * Type of {@link ProofStage}.
- *
- * @category type-level
- * @since 0.0.0
- */
-export type ProofStage = typeof ProofStage.Type;
 
 /**
  * Terminal outcome a fact records. Pending or interrupted lanes never become

@@ -13,6 +13,7 @@ import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { YeetProofTier } from "../../../internal/repo-run/QualityScheduler.schemas.ts";
 import {
   byRepoPlanStepAscending,
   enforceConservativeResume,
@@ -35,6 +36,8 @@ import {
 import { HEAD_INSTALL_PREFLIGHT_STEP_ID } from "./HeadInstallPreflight.ts";
 import type { RepoRunContext, TurboPlanTask } from "../../../internal/repo-run/RepoRun.models.ts";
 import type { GithubCheckLaneSpec } from "../../Quality/Quality.schemas.ts";
+
+export { YeetProofTier } from "../../../internal/repo-run/QualityScheduler.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/Planner");
 
@@ -98,34 +101,6 @@ export const YeetRunMode = LiteralKit([
  * @since 0.0.0
  */
 export type YeetRunMode = typeof YeetRunMode.Type;
-
-/**
- * Yeet local proof tier.
- *
- * **Example** (Plan a Yeet run)
- *
- * ```ts
- * import { YeetProofTier } from "@beep/repo-cli/test/Yeet"
- *
- * console.log(YeetProofTier.is["review-fix"]("review-fix"))
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export const YeetProofTier = LiteralKit(["full", "cheap-gates", "review-fix"]).pipe(
-  $I.annoteSchema("YeetProofTier", {
-    description: "Local proof tier selected for yeet verify loops.",
-  })
-);
-
-/**
- * Yeet local proof tier.
- *
- * @category models
- * @since 0.0.0
- */
-export type YeetProofTier = typeof YeetProofTier.Type;
 
 /**
  * Options for building a Yeet run plan in a specific mode.

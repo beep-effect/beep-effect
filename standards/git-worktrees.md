@@ -148,6 +148,17 @@ bun run beep worktree doctor
   (`.env`, `node_modules`), and any prunable metadata from
   `git worktree prune --dry-run`.
 
+### Admission eviction protocol rollout
+
+The machine-wide admission protocol defaults eviction-row emission to `off`.
+Reaping still atomically claims dead leases and tickets and journals their
+attempt termination, but it does not emit v2 admission eviction rows while an
+older checkout could erase unknown rows during a locked rewrite. Only after
+every live checkout runs the preservation release, enable emission with
+`bun run beep quality scheduler protocol --enable-evictions`. Disable it before
+introducing an older checkout; inspect the current state with
+`bun run beep quality scheduler protocol`.
+
 ## Retiring a worktree
 
 The sanctioned retirement command for a lane that may contain local residue is:

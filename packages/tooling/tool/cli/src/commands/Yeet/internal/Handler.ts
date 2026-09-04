@@ -35,6 +35,7 @@ import {
   admissionTokenWeight,
   commandTextForStep,
   noAdmissionOriginGate,
+  processStartIdentityForPid,
   QualitySchedulerError,
   RepoPlanStep,
   RepoRunContext,
@@ -154,6 +155,15 @@ export { defaultYeetRunOptions } from "../Yeet.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/Handler");
 type YeetAttemptId = YeetAttemptStarted["attemptId"];
+
+const admissionAttemptFields = (attempt: O.Option<YeetAttemptStarted>) => ({
+  attemptId: O.map(attempt, (value) => value.attemptId),
+  resolvedHeadSha: O.flatMap(attempt, (value) => value.resolvedHeadSha),
+  diffFingerprint: O.flatMap(attempt, (value) => value.diffFingerprint),
+  proofTier: O.flatMap(attempt, (value) => value.proofTier),
+  envProfile: O.flatMap(attempt, (value) => value.envProfile),
+  stage: O.flatMap(attempt, (value) => value.stage),
+});
 
 const generateAttemptId = Effect.fn("Yeet.generateAttemptId")(function* (): Effect.fn.Return<
   YeetAttemptId,
@@ -470,7 +480,7 @@ const runWithFullProofCoordinator = Effect.fn("Yeet.runWithFullProofCoordinator"
   proofSteps: ReadonlyArray<RepoPlanStep>,
   use: Effect.Effect<Success, Error, Requirements>,
   intent?: FullProofAdmissionIntent,
-  attemptId: O.Option<YeetAttemptId> = O.none()
+  attempt: O.Option<YeetAttemptStarted> = O.none()
 ) {
   const resolved = intent ?? defaultFullProofAdmissionIntent;
   const path = yield* Path.Path;
@@ -484,7 +494,7 @@ const runWithFullProofCoordinator = Effect.fn("Yeet.runWithFullProofCoordinator"
     checkoutRoot: context.repoRoot,
     branch: context.branch,
     command: A.join(A.map(proofSteps, commandTextForStep), " && "),
-    attemptId,
+    ...admissionAttemptFields(attempt),
   });
   const originGate = fullProofAdmissionOriginGate(lockPath, context, request.command);
   return yield* schedulerErrorToYeetError(withQualityAdmission(request, originGate, use));
@@ -494,7 +504,7 @@ const runWithMergedPreviewAdmission = Effect.fn("Yeet.runWithMergedPreviewAdmiss
   Success,
   Error,
   Requirements,
->(context: RepoRunContext, use: Effect.Effect<Success, Error, Requirements>, attemptId: YeetAttemptId) {
+>(context: RepoRunContext, use: Effect.Effect<Success, Error, Requirements>, attempt: YeetAttemptStarted) {
   const path = yield* Path.Path;
   const lockPath = yield* proofLockPathForContext(context);
   const request = AdmissionRequest.make({
@@ -505,7 +515,7 @@ const runWithMergedPreviewAdmission = Effect.fn("Yeet.runWithMergedPreviewAdmiss
     checkoutRoot: context.repoRoot,
     branch: context.branch,
     command: "bun run beep yeet verify --merged",
-    attemptId: O.some(attemptId),
+    ...admissionAttemptFields(O.some(attempt)),
   });
   const originGate = fullProofAdmissionOriginGate(lockPath, context, request.command);
   return yield* schedulerErrorToYeetError(withQualityAdmission(request, originGate, use));
@@ -517,7 +527,7 @@ const runWithMergedPreviewAdmission = Effect.fn("Yeet.runWithMergedPreviewAdmiss
 const runWithReviewFixAdmission = Effect.fn("Yeet.runWithReviewFixAdmission")(function* <Success, Error, Requirements>(
   context: RepoRunContext,
   use: Effect.Effect<Success, Error, Requirements>,
-  attemptId: O.Option<YeetAttemptId> = O.none()
+  attempt: O.Option<YeetAttemptStarted> = O.none()
 ) {
   const request = AdmissionRequest.make({
     kind: "review-fix",
@@ -527,7 +537,7 @@ const runWithReviewFixAdmission = Effect.fn("Yeet.runWithReviewFixAdmission")(fu
     checkoutRoot: context.repoRoot,
     branch: context.branch,
     command: "bun run beep yeet verify --tier review-fix",
-    attemptId,
+    ...admissionAttemptFields(attempt),
   });
   return yield* schedulerErrorToYeetError(withQualityAdmission(request, noAdmissionOriginGate, use));
 });
@@ -808,7 +818,7 @@ const runStartPrEarlyPublishPhases = Effect.fn("Yeet.runStartPrEarlyPublishPhase
   recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>,
   extras: Ref.Ref<YeetVerdictExtras>,
   skipCommit: boolean,
-  attemptId: YeetAttemptId
+  attempt: YeetAttemptStarted
 ) {
   yield* Console.log(
     "[yeet] start-pr-early: pushing before local proof; full proof and hosted monitor remain required"
@@ -848,7 +858,7 @@ const runStartPrEarlyPublishPhases = Effect.fn("Yeet.runStartPrEarlyPublishPhase
       yield* validatePostCommitProofDidNotChangeWorktree(plan.context, postCommitProofChangedAfterEarlyPushMessage);
     }),
     { priority: "publish" },
-    O.some(attemptId)
+    O.some(attempt)
   );
   return yield* runPublishMonitorAndResult(plan.context, monitorSteps, recorder, extras, skipCommit);
 });
@@ -862,7 +872,7 @@ const runStandardPublishPhases = Effect.fn("Yeet.runStandardPublishPhases")(func
   recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>,
   extras: Ref.Ref<YeetVerdictExtras>,
   skipCommit: boolean,
-  attemptId: YeetAttemptId
+  attempt: YeetAttemptStarted
 ) {
   yield* runWithFullProofCoordinator(
     plan.context,
@@ -892,7 +902,7 @@ const runStandardPublishPhases = Effect.fn("Yeet.runStandardPublishPhases")(func
       yield* validatePostCommitProofDidNotChangeWorktree(plan.context);
     }),
     { priority: "publish" },
-    O.some(attemptId)
+    O.some(attempt)
   );
 
   yield* warnOnMismatchedPublishUpstream(plan.context);
@@ -921,7 +931,7 @@ const runPublishMode = Effect.fn("Yeet.runPublishMode")(function* (
   monitorSteps: ReadonlyArray<RepoPlanStep>,
   recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>,
   extras: Ref.Ref<YeetVerdictExtras>,
-  attemptId: YeetAttemptId
+  attempt: YeetAttemptStarted
 ): Effect.fn.Return<
   YeetRunResult,
   YeetCommandError,
@@ -951,7 +961,7 @@ const runPublishMode = Effect.fn("Yeet.runPublishMode")(function* (
         recorder,
         extras,
         skipCommit,
-        attemptId
+        attempt
       )
     : runStandardPublishPhases(
         plan,
@@ -962,7 +972,7 @@ const runPublishMode = Effect.fn("Yeet.runPublishMode")(function* (
         recorder,
         extras,
         skipCommit,
-        attemptId
+        attempt
       );
 
   return yield* pipe(
@@ -1324,7 +1334,7 @@ type YeetVerdictExtras = {
 // run — anything else could attach a previous run's incidents.
 const PRE_PUSH_PROOF_STEP_ID = repoProofStepDefinition("pre-push").id;
 const INNER_LANE_REPORT_FILE_NAME = "inner-lanes.ndjson";
-const decodeInnerLaneReport = S.decodeEffect(S.fromJsonString(QualityTaskLaneRunReport));
+const decodeInnerLaneReportOption = S.decodeUnknownOption(S.fromJsonString(QualityTaskLaneRunReport));
 
 const readInnerLaneReports = Effect.fn("Yeet.readInnerLaneReports")(function* (
   context: RepoRunContext
@@ -1338,11 +1348,7 @@ const readInnerLaneReports = Effect.fn("Yeet.readInnerLaneReports")(function* (
     .readFileString(reportPath)
     .pipe(Effect.mapError(YeetCommandError.new(`Failed to read durable inner-lane report "${reportPath}".`)));
   const lines = pipe(text, Str.split("\n"), A.filter(Str.isNonEmpty));
-  return yield* Effect.forEach(lines, (line) =>
-    decodeInnerLaneReport(line).pipe(
-      Effect.mapError(YeetCommandError.new(`Failed to decode durable inner-lane report "${reportPath}".`))
-    )
-  );
+  return A.getSomes(A.map(lines, (line) => decodeInnerLaneReportOption(line)));
 });
 
 const readFlakeQuarantineIncidents = Effect.fn("Yeet.readFlakeQuarantineIncidents")(function* (
@@ -1593,6 +1599,39 @@ export const attemptStageForTesting = attemptStageFor;
  */
 export const attemptEnvProfileForTesting = attemptEnvProfileFor;
 
+const makeYeetAttempt = Effect.fn("Yeet.makeAttempt")(function* (
+  context: RepoRunContext,
+  options: YeetRunOptions,
+  attemptId: YeetAttemptId
+): Effect.fn.Return<
+  YeetAttemptStarted,
+  YeetCommandError,
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> {
+  const startedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
+  const resolvedHeadSha = yield* currentCommitSha(context);
+  const diffFingerprint = yield* collectDiffFingerprint(context);
+  const ownerProcStart = yield* processStartIdentityForPid(process.pid);
+  return YeetAttemptStarted.make({
+    schemaVersion: "yeet-attempt-journal/v1",
+    _tag: "attempt-started",
+    attemptId,
+    runId: runIdForContext(context),
+    branch: context.branch,
+    base: context.base,
+    head: resolvedHeadSha,
+    mode: options.mode,
+    startedAt,
+    ownerPid: O.some(process.pid),
+    ownerProcStart,
+    resolvedHeadSha: O.some(resolvedHeadSha),
+    diffFingerprint: O.some(diffFingerprint),
+    proofTier: O.some(options.tier),
+    envProfile: O.some(attemptEnvProfileFor(options)),
+    stage: O.some(attemptStageFor(options)),
+  });
+});
+
 const attachInnerLaneReportSideChannel = (step: RepoPlanStep, reportPath: string): RepoPlanStep =>
   step.id === PRE_PUSH_PROOF_STEP_ID || step.id === CI_PARITY_STEP_ID
     ? RepoPlanStep.make({
@@ -1609,7 +1648,7 @@ const runPlanExecution = Effect.fn("Yeet.runPlanExecution")(function* (
   plan: RepoRunPlan,
   options: YeetRunOptions,
   message: O.Option<string>,
-  providedAttemptId: O.Option<YeetAttemptId> = O.none()
+  providedAttempt: O.Option<YeetAttemptStarted> = O.none()
 ): Effect.fn.Return<
   YeetRunResult,
   YeetCommandError,
@@ -1619,28 +1658,9 @@ const runPlanExecution = Effect.fn("Yeet.runPlanExecution")(function* (
     return yield* runStatusMode(plan.context, options);
   }
   const startedAtEpochMillis = yield* Clock.currentTimeMillis;
-  const startedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
-  const attemptId = yield* O.match(providedAttemptId, {
-    onNone: generateAttemptId,
+  const attempt = yield* O.match(providedAttempt, {
+    onNone: () => Effect.flatMap(generateAttemptId(), (attemptId) => makeYeetAttempt(plan.context, options, attemptId)),
     onSome: Effect.succeed,
-  });
-  const resolvedHeadSha = yield* currentCommitSha(plan.context);
-  const diffFingerprint = yield* collectDiffFingerprint(plan.context);
-  const attempt = YeetAttemptStarted.make({
-    schemaVersion: "yeet-attempt-journal/v1",
-    _tag: "attempt-started",
-    attemptId,
-    runId: runIdForContext(plan.context),
-    branch: plan.context.branch,
-    base: plan.context.base,
-    head: resolvedHeadSha,
-    mode: options.mode,
-    startedAt,
-    resolvedHeadSha: O.some(resolvedHeadSha),
-    diffFingerprint: O.some(diffFingerprint),
-    proofTier: O.some(options.tier),
-    envProfile: O.some(attemptEnvProfileFor(options)),
-    stage: O.some(attemptStageFor(options)),
   });
   const recorder = yield* Ref.make<ReadonlyArray<YeetExecutedStep>>(A.empty());
   const extras = yield* Ref.make<YeetVerdictExtras>({
@@ -1656,7 +1676,7 @@ const runPlanExecution = Effect.fn("Yeet.runPlanExecution")(function* (
   const executionSteps = A.map(plan.steps, (originalStep) =>
     attachInnerLaneReportSideChannel(
       originalStep.id === "advisory:01-fallow-feedback"
-        ? RepoPlanStep.make({ ...originalStep, args: [...originalStep.args, "--run-started-at", startedAt] })
+        ? RepoPlanStep.make({ ...originalStep, args: [...originalStep.args, "--run-started-at", attempt.startedAt] })
         : originalStep,
       innerLaneReportPath
     )
@@ -1695,7 +1715,7 @@ const runPlanExecution = Effect.fn("Yeet.runPlanExecution")(function* (
           monitorSteps,
           recorder,
           extras,
-          attemptId
+          attempt
         ),
       monitor: () => runMonitorMode(plan.context, monitorSteps, recorder, extras),
       closeout: () => runCloseoutMode(plan.context, options),
@@ -1708,9 +1728,9 @@ const runPlanExecution = Effect.fn("Yeet.runPlanExecution")(function* (
     options.mode === "verify" && options.tier === "full"
       ? options.merged
         ? execution
-        : runWithFullProofCoordinator(plan.context, fullSteps, execution, { priority: "verify" }, O.some(attemptId))
+        : runWithFullProofCoordinator(plan.context, fullSteps, execution, { priority: "verify" }, O.some(attempt))
       : options.mode === "verify" && options.tier === "review-fix"
-        ? runWithReviewFixAdmission(plan.context, execution, O.some(attemptId))
+        ? runWithReviewFixAdmission(plan.context, execution, O.some(attempt))
         : execution;
 
   return yield* coordinatedExecution.pipe(
@@ -1822,13 +1842,20 @@ const runMergedVerify = Effect.fn("Yeet.runMergedVerify")(function* (
       yield* Console.log(
         `[yeet] proving the merge preview ${pipe(preview.commitSha, Str.takeLeft(12))} (${context.branch} merged with ${context.base} at ${pipe(preview.baseSha, Str.takeLeft(12))})`
       );
-      yield* installYeetMergePreview(context, preview.worktreePath);
       const previewContext = yeetMergedPreviewContext(context, preview, artifactDir);
-      return yield* runPlanExecution(
-        buildYeetRunPlanWithMode(previewContext, message, modeOptions),
-        options,
-        message,
-        O.some(attemptId)
+      const attempt = yield* makeYeetAttempt(previewContext, options, attemptId);
+      return yield* runWithMergedPreviewAdmission(
+        context,
+        Effect.gen(function* () {
+          yield* installYeetMergePreview(context, preview.worktreePath);
+          return yield* runPlanExecution(
+            buildYeetRunPlanWithMode(previewContext, message, modeOptions),
+            options,
+            message,
+            O.some(attempt)
+          );
+        }),
+        attempt
       );
     })
   );
@@ -1911,10 +1938,7 @@ export const runYeet = Effect.fn("Yeet.runYeet")(function* (
   }
   if (options.merged) {
     const attemptId = yield* generateAttemptId();
-    const merged = runMergedVerify(context, options, message, modeOptions, attemptId);
-    return yield* options.mode === "verify" && options.tier === "full"
-      ? runWithMergedPreviewAdmission(context, merged, attemptId)
-      : merged;
+    return yield* runMergedVerify(context, options, message, modeOptions, attemptId);
   }
 
   return yield* runPlanExecution(plan, options, message);

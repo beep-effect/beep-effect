@@ -132,8 +132,8 @@ Use `--allow-corpus-drift` only for exploratory output: JSON gets
 
 | Population | n | p50 | p95 | span min | attempt-machine min | lane-machine min | right-censored |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| article-comparable: modes verify/repair/publish; lock bounces excluded; <=24h | 328 | 43.3m | 3.95h | 26242.81 | 11353.8 | 11066.43 | 115 |
-| uncut tail: same modes/bounce rule; no duration ceiling | 335 | 43.6m | 6.12h | 43440.31 | 11785.91 | 11498.26 | 115 |
+| article-comparable: modes verify/repair/publish; lock bounces and left-censored episodes excluded; <=24h | 328 | 43.3m | 3.95h | 26242.81 | 11353.8 | 11066.43 | 115 |
+| uncut tail: same modes/bounce/censor rule; no duration ceiling | 335 | 43.6m | 6.12h | 43440.31 | 11785.91 | 11498.26 | 115 |
 
 | Baseline comparison | article | current | delta | moved |
 | --- | --- | --- | --- | --- |
