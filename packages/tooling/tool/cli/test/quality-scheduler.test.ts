@@ -3077,6 +3077,35 @@ describe("quality-scheduler", () => {
       })
     ));
 
+  it.effect("observes promotion settlement after lock contention before reporting it busy", () =>
+    Effect.gen(function* () {
+      const gibRef = yield* Ref.make(50);
+      yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          yield* admissionStatus(fastConfig);
+          const promotion = yield* writePromotionFixture(tempRoot, {
+            keepLease: true,
+            keepTicket: true,
+            nonce: "settling-promotion",
+            phase: "lease-published",
+          });
+          const promotionLockPath = `${promotion.promotionPath}.lock`;
+          const promotionLockToken = `${process.pid}:settling-promotion-lock`;
+          expect(yield* acquireJournalFileLock(promotionLockPath, promotionLockToken, 1)).toBe(true);
+
+          const recovery = yield* Effect.forkChild(reapAdmissionState({ apply: true }));
+          yield* TestClock.adjust(Duration.millis(175));
+          expect(recovery.pollUnsafe()).toBeUndefined();
+          yield* fs.remove(promotion.promotionPath, { force: true });
+          yield* releaseAdmissionJournalLockForTesting(promotionLockPath, promotionLockToken);
+          yield* TestClock.adjust(Duration.millis(25));
+          yield* Fiber.join(recovery);
+        })
+      );
+    })
+  );
+
   it("leaves recovery records retryable when their locked reread is unavailable", () =>
     Effect.runPromise(
       Effect.gen(function* () {
