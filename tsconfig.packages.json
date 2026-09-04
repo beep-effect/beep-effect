@@ -124,6 +124,9 @@
       "path": "packages/drivers/firecrawl"
     },
     {
+      "path": "packages/drivers/freshbooks"
+    },
+    {
       "path": "packages/drivers/gov-legal-mcp"
     },
     {

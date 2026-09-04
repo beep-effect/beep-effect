@@ -177,6 +177,23 @@ session/machine ids, quote only the minimal identifying error text.
   driving fixture changed, so the ratchet identifies the causal PR without presenting the caller
   as a direct source regression.
 
+## 2026-09-03 — B6 closeout lacked the default-off protocol transition
+
+- **Doing:** reviewing the docs-only B6 closeout after A5c's crash-recoverable claims merged.
+- **Evidence:** `appendAdmissionEvictionJournalEvent` returned false on a fresh host, while
+  `processReapClaim` marked the admission sink complete and deleted its sole durable claim anyway.
+- **Would have prevented it:** gate B6 completion on one real-filesystem scenario that starts with
+  eviction emission off, proves the same claim stays pending across reap passes, enables emission,
+  and observes one idempotent eviction row before claim deletion.
+
+## 2026-09-03 — Yeet monitor's provenance read exceeded the installed GitHub CLI schema
+
+- **Doing:** arming the hosted check-and-review watch for PR #1005 after its first complete push.
+- **Evidence:** provenance stamping skipped with `Unknown JSON field: "lastEditedAt"`; the watch still
+  started, but could not reassert its registry-backed footer before polling.
+- **Would have prevented it:** capability-detect the `gh pr view` field set and fall back to
+  `updatedAt`, with a compatibility test against the oldest supported GitHub CLI release.
+
 ## 2026-09-03 — An npm advisories outage cost five audit re-runs across three PRs
 
 - **Doing:** driving #978, #993 and #1001 to merge-ready during the evening (captured as the
@@ -198,3 +215,46 @@ session/machine ids, quote only the minimal identifying error text.
 - **Would have prevented it:** never cancel a run on an unreplaced head; GitHub concurrency already
   cancels superseded runs on push. The rule now sits in every lane brief and belongs in the lane
   launcher's standing instructions.
+
+## 2026-09-03 — The station proof set missed an overloaded test callback
+
+- **Doing:** proving the A5d protocol-deferred claim transition before its review-fix push.
+- **Evidence:** the allowed repo-cli check and focused Vitest file passed, but hosted Heavy Check's
+  test-typecheck pass rejected a direct overloaded schema decoder passed to `Effect.forEach` and
+  reported the resulting unknown error and requirements channels in the two new tests.
+- **Would have prevented it:** expose a package-scoped test-typecheck command that accepts one test
+  file, and include it in station instructions whenever new Effect-based test helpers are added.
+
+## 2026-09-03 — Commitlint included a newly merged upstream squash
+
+- **Doing:** proving PR #1005 after pushing the typed test callback repair.
+- **Evidence:** hosted Commitlint accepted every branch commit, then rejected a long footer line in
+  main's #1003 squash because the lane's range began at this branch's older merge base.
+- **Would have prevented it:** validate server-generated squash messages before merge and have the
+  PR lane lint only commits introduced by the pull request rather than new commits from its base.
+
+## 2026-09-03 — Yeet monitor requested a removed GitHub CLI field
+
+- **Doing:** monitoring PR #1006 at its first exact-head hosted event.
+- **Evidence:** `bun run beep yeet monitor --watch --until-event` warned that the PR provenance
+  snapshot requested unknown JSON field `lastEditedAt`; the installed GitHub CLI listed
+  `updatedAt` but not `lastEditedAt`. The watcher continued and recorded the check event.
+- **Would have prevented it:** derive the edit timestamp from a GitHub CLI field supported by the
+  pinned workstation version, or capability-probe the field list before building the query.
+
+## 2026-09-03 — Escaped newlines collapsed a commit body into one overlong line
+
+- **Doing:** creating the signed review-fix commit for PR #1006.
+- **Evidence:** the commit-message transport preserved `\\n` literally and commitlint rejected the
+  result with `body's lines must not be longer than 100 characters`; no commit was created.
+- **Would have prevented it:** pass each paragraph through a separate `git commit -m` argument or a
+  file-backed message so shell transport cannot turn paragraph separators into literal text.
+
+## 2026-09-03 — Signed-commit verification reported a false unsigned result
+
+- **Doing:** confirming the review-fix commit met the station's signed-commit rule before push.
+- **Evidence:** `git log --show-signature` reported that `gpg.ssh.allowedSignersFile` was not
+  configured and then printed `No signature`, while the commit object contained an SSH `gpgsig`
+  block.
+- **Would have prevented it:** configure a repository-safe SSH allowed-signers file, or make the
+  verification command distinguish an untrusted/unverifiable signature from an absent signature.

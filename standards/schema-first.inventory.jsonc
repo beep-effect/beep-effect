@@ -828,6 +828,26 @@
       "status": "exception",
       "owner": "@beep/repo-cli",
       "reason": "One-call formatting contract intentionally couples runtime colorizer functions with their glyph and fraction operands; it has no decode or persistence boundary."
+    },
+    {
+      "file": "packages/drivers/freshbooks/src/Freshbooks.models.ts",
+      "symbol": "FreshbooksClient.email",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-precision-audit",
+      "line": 344,
+      "owner": "@beep/freshbooks",
+      "reason": "FreshBooks client records carry free-text email addresses populated from the account holder client database; this decode boundary must accept whatever the API returns rather than reject a client on a malformed address."
+    },
+    {
+      "file": "packages/drivers/freshbooks/src/Freshbooks.models.ts",
+      "symbol": "FreshbooksIdentity.email",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-precision-audit",
+      "line": 293,
+      "owner": "@beep/freshbooks",
+      "reason": "The FreshBooks identity (/me) email is external free-text returned by the API; this decode boundary must accept it verbatim rather than fail identity resolution on a non-strict address."
     }
   ]
 }

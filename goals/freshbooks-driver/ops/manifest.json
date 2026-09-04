@@ -4,15 +4,15 @@
     "id": "freshbooks-driver",
     "packetId": "goal-packet/v1:4bae9ffd1e29a0457e337322d7e7831e9efb91d0ff80d993ff32e650805107e3",
     "title": "FreshBooks Driver",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-08-30",
-    "updated": "2026-08-30",
+    "updated": "2026-09-03",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/freshbooks-driver",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Ship @beep/freshbooks on the hubspot pattern: rotation-safe token helper, clients/invoices/payments reads, and spike-gated invoice-PDF retrieval",
-  "statusNote": "Graduated 2026-08-30 from explorations/practice-office-provisioning; P0 not started. First action: the endpoint-validation spike against the existing dev app.",
+  "statusNote": "2026-09-03: closed via PR #987 (driven to mergeable with yeet). Shipped: @beep/freshbooks with single-refresh-owner token rotation (concurrent-refresh proof), schema-decoded identity/clients/invoices/payments read verbs over distinct account_id/business_id namespaces, and the P0 spike report (request limits, webhook retry schedule). Not shipped: the invoice-PDF verb stays out per SPEC because its live validation needs a one-time operator OAuth grant (redirect-URI registration + Authorize consent) an agent cannot perform; the ready harness is research/live-spike-harness.md and the operator-export fallback is recorded in the closeout reflection.",
   "blockedBy": [],
   "executionCapable": true,
   "reflectionRequired": true,
@@ -52,27 +52,27 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Implement",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Verify",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
