@@ -22,6 +22,7 @@ import {
   appendAdmissionJournalEvent,
   attemptJournalPathForCheckout,
   decodeAdmissionJournalEvent,
+  finishAdmissionJournalLockReapForTesting,
   isOvershootLoserForTesting,
   isProcessIdentityAliveWithStartForTesting,
   MemoryStats,
@@ -1214,6 +1215,32 @@ describe("quality-scheduler", () => {
             })
           );
         }
+      })
+    ));
+
+  it("releases the adopter claim after completing a journal lock reap", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const lockPath = path.join(tempRoot.root, "completed-reap.lock");
+            const observedToken = `${DEAD_PID}:completed-reap-generation`;
+            const claimPath = reapClaimPath(lockPath, observedToken);
+            const adopterPath = `${claimPath}.adopt-direct`;
+            yield* fs.makeDirectory(tempRoot.root, { recursive: true, mode: 0o700 });
+            yield* fs.writeFileString(lockPath, observedToken);
+            yield* fs.link(lockPath, adopterPath);
+
+            yield* finishAdmissionJournalLockReapForTesting(lockPath, claimPath, adopterPath, observedToken);
+
+            expect(yield* fs.exists(lockPath)).toBe(false);
+            expect(yield* fs.exists(adopterPath)).toBe(false);
+            expect(A.filter(yield* fs.readDirectory(tempRoot.root), Str.includes(".tombstone-"))).toHaveLength(0);
+          })
+        );
       })
     ));
 
