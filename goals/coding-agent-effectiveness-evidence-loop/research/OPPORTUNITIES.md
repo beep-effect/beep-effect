@@ -615,3 +615,35 @@ What would have prevented it: define committed publish cleanliness over the
 tracked index and committed range, while separately reporting untracked paths
 that do not overlap the published diff. An unrelated future-phase draft should
 not force operators to perturb the worktree or bypass the canonical publisher.
+
+## 2026-09-03 — package verification ran the expensive audit before cheap lint
+
+Lived while resolving PR #992's only merge conflict and running
+`bun run beep quality package-verify @beep/repo-cli`. The verifier completed
+3,093 TypeScript tests, 53 Python tests, dependency builds, and docgen in more
+than six minutes before failing on one Biome-organize-imports finding in the
+conflict-resolved test file. The safe import sort took one formatter pass, and
+the documented quick follow-up then proved lint and type-check in 15 seconds;
+none of the expensive audit results had failed.
+
+What would have prevented it: make package verification run its deterministic
+cheap lint and type-check preflight before dependency builds, full test suites,
+Python environments, or docgen. A merge-conflict import-order defect should be
+reported in seconds, before the verifier spends the package's longest proof
+budget.
+
+## 2026-09-03 — the repo-wide test type-check bypassed an over-capacity scheduler
+
+Lived while running PR #992's collected cheap gates before publish. The
+scheduler reported four tokens of current capacity and eight tokens already
+held by two admitted proofs, but `bun run beep quality test-tsgo` bypassed
+admission and started another repo-wide compiler sweep. After nine quiet
+minutes it failed in an unrelated package with the Go runtime invariant
+`fatal error: bad sweepgen in refill`, not a TypeScript diagnostic. The other
+13 collected gates passed, and the changed packages' focused type-checks had
+already passed.
+
+What would have prevented it: admit the repo-wide test type-check through the
+machine scheduler, or cap its Go/compiler parallelism from the same live memory
+envelope. A nominally cheap gate should not compound an over-capacity host and
+turn a deterministic source check into a runtime crash.
