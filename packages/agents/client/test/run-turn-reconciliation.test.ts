@@ -206,65 +206,74 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
     })
   );
 
-  it.live(
-    "keeps failed prompts non-sendable while receipt evidence is uncertain",
-    Effect.fnUntraced(function* () {
-      const verifyUncertainStatus = Effect.fn("verifyUncertainFailedTurnStatus")(function* (
-        statusKind: UncertainStatusKind
-      ) {
-        let statusReads = 0;
-        let timelineReads = 0;
-        const client = ChatClient.of(((tag: string) => {
-          if (tag === "GetTimeline") {
-            timelineReads += 1;
-            return Effect.succeed(timelineReads === 1 ? emptyTimeline : userOnlyTimeline);
-          }
-          if (tag === "GetTurnRequestStatus") {
-            return Effect.suspend(() => {
-              statusReads += 1;
-              return uncertainStatusResult(statusKind);
-            });
-          }
-          if (tag === "SendMessage") return Stream.fail(ChatActionError.new("generation failed"));
-          return Effect.die(`unexpected chat RPC: ${tag}`);
-        }) as unknown as ChatClient["Service"]);
-        const registry = registryWithClient(client);
-        const timelineAtom = threadTimelineAtoms(threadId);
-        const draftAtom = draftAtoms(threadId);
-        const draftRevisionAtom = draftRevisionAtoms(threadId);
-        const unreconciledAtom = unreconciledTurnAtoms(threadId);
-        const unmountTimeline = registry.mount(timelineAtom);
-        const unmountTurn = registry.mount(runTurnAtom);
-        const unmountDraft = registry.mount(draftAtom);
-        const unmountDraftRevision = registry.mount(draftRevisionAtom);
-        const unmountUnreconciled = registry.mount(unreconciledAtom);
+  const verifyUncertainFailedTurnStatus = Effect.fn("verifyUncertainFailedTurnStatus")(function* (
+    statusKind: UncertainStatusKind
+  ) {
+    let statusReads = 0;
+    let timelineReads = 0;
+    const client = ChatClient.of(((tag: string) => {
+      if (tag === "GetTimeline") {
+        timelineReads += 1;
+        return Effect.succeed(emptyTimeline);
+      }
+      if (tag === "GetTurnRequestStatus") {
+        return Effect.suspend(() => {
+          statusReads += 1;
+          return uncertainStatusResult(statusKind);
+        });
+      }
+      if (tag === "SendMessage") return Stream.fail(ChatActionError.new("generation failed"));
+      return Effect.die(`unexpected chat RPC: ${tag}`);
+    }) as unknown as ChatClient["Service"]);
+    const registry = registryWithClient(client);
+    const timelineAtom = threadTimelineAtoms(threadId);
+    const draftAtom = draftAtoms(threadId);
+    const draftRevisionAtom = draftRevisionAtoms(threadId);
+    const unreconciledAtom = unreconciledTurnAtoms(threadId);
+    const unmountTimeline = registry.mount(timelineAtom);
+    const unmountTurn = registry.mount(runTurnAtom);
+    const unmountDraft = registry.mount(draftAtom);
+    const unmountDraftRevision = registry.mount(draftRevisionAtom);
+    const unmountUnreconciled = registry.mount(unreconciledAtom);
 
-        yield* AtomRegistry.getResult(registry, timelineAtom);
-        registry.set(runTurnAtom, SendTurnRequest.make({ threadId, content }));
-        yield* waitForAtom(registry, unreconciledAtom, A.isReadonlyArrayNonEmpty);
-        yield* AtomRegistry.getResult(registry, runTurnAtom, { suspendOnWaiting: true }).pipe(Effect.exit);
+    yield* AtomRegistry.getResult(registry, timelineAtom);
+    registry.set(runTurnAtom, SendTurnRequest.make({ threadId, content }));
+    yield* waitForAtom(registry, unreconciledAtom, A.isReadonlyArrayNonEmpty).pipe(
+      Effect.timeoutOrElse({
+        duration: Duration.seconds(10),
+        orElse: () =>
+          Effect.fail(ChatActionError.new(`timed out waiting for ${statusKind} failed turn to become unreconciled`)),
+      })
+    );
+    yield* AtomRegistry.getResult(registry, runTurnAtom, { suspendOnWaiting: true }).pipe(Effect.exit);
 
-        expect(registry.get(draftAtom)).toStrictEqual(O.none());
-        expect(registry.get(draftRevisionAtom)).toBe(0);
-        const [fallback] = registry.get(unreconciledAtom);
-        expect(fallback?.userContent).toStrictEqual(content);
-        expect(fallback?.reconciliation).toBe("receipt");
-        expect(fallback?.blocks).toMatchObject([{ type: "paragraph", children: [{ type: "text", text: "(failed)" }] }]);
-        expect(statusReads).toBeGreaterThan(1);
-        expect(timelineReads).toBeGreaterThan(1);
+    expect(registry.get(draftAtom)).toStrictEqual(O.none());
+    expect(registry.get(draftRevisionAtom)).toBe(0);
+    const [fallback] = registry.get(unreconciledAtom);
+    expect(fallback?.userContent).toStrictEqual(content);
+    expect(fallback?.reconciliation).toBe("receipt");
+    expect(fallback?.blocks).toMatchObject([{ type: "paragraph", children: [{ type: "text", text: "(failed)" }] }]);
+    expect(statusReads).toBeGreaterThan(1);
+    expect(timelineReads).toBeGreaterThan(1);
 
-        unmountUnreconciled();
-        unmountDraftRevision();
-        unmountDraft();
-        unmountTurn();
-        unmountTimeline();
-        registry.dispose();
-      });
+    unmountUnreconciled();
+    unmountDraftRevision();
+    unmountDraft();
+    unmountTurn();
+    unmountTimeline();
+    registry.dispose();
+  });
 
-      yield* verifyUncertainStatus("accepted");
-      yield* verifyUncertainStatus("protocol_unknown");
-      yield* verifyUncertainStatus("transport_failure");
-    })
+  it.live("keeps accepted failed prompts non-sendable while receipt evidence is uncertain", () =>
+    verifyUncertainFailedTurnStatus("accepted")
+  );
+
+  it.live("keeps protocol-unknown failed prompts non-sendable while receipt evidence is uncertain", () =>
+    verifyUncertainFailedTurnStatus("protocol_unknown")
+  );
+
+  it.live("keeps transport-failed prompts non-sendable while receipt evidence is uncertain", () =>
+    verifyUncertainFailedTurnStatus("transport_failure")
   );
 
   it.live(
