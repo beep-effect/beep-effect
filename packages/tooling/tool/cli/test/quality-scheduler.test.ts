@@ -518,10 +518,14 @@ const writePromotionFixture = Effect.fnUntraced(function* (
   return { lease, leasePath, promotionPath, ticket, ticketPath };
 });
 
-const writeCompletedLeaseReapClaim = Effect.fnUntraced(function* (
+const writeLeaseReapClaim = Effect.fnUntraced(function* (
   tempRoot: AdmissionTempRoot,
   name: string,
-  nonce: string
+  nonce: string,
+  sinks: {
+    readonly admissionJournal: AdmissionLeaseReapClaim["admissionJournal"];
+    readonly attemptJournal: AdmissionLeaseReapClaim["attemptJournal"];
+  }
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -542,8 +546,8 @@ const writeCompletedLeaseReapClaim = Effect.fnUntraced(function* (
         sourcePath,
         nonce: lease.nonce,
         claimedAtMillis: 1,
-        attemptJournal: "complete",
-        admissionJournal: "complete",
+        attemptJournal: sinks.attemptJournal,
+        admissionJournal: sinks.admissionJournal,
         lease,
       })
     )}\n`
@@ -2807,7 +2811,10 @@ describe("quality-scheduler", () => {
             const fs = yield* FileSystem.FileSystem;
             const path = yield* Path.Path;
             yield* admissionStatus(fastConfig);
-            yield* writeCompletedLeaseReapClaim(tempRoot, "completed.reap.json", "completed-claim");
+            yield* writeLeaseReapClaim(tempRoot, "completed.reap.json", "completed-claim", {
+              attemptJournal: "complete",
+              admissionJournal: "complete",
+            });
             const malformedClaimPath = path.join(tempRoot.claims, "malformed.reap.json");
             const malformedPromotionPath = path.join(tempRoot.promotions, "malformed.promotion.json");
             yield* fs.writeFileString(malformedClaimPath, "not-json");
@@ -2921,7 +2928,10 @@ describe("quality-scheduler", () => {
           Effect.gen(function* () {
             const fs = yield* FileSystem.FileSystem;
             yield* admissionStatus(fastConfig);
-            const claimPath = yield* writeCompletedLeaseReapClaim(tempRoot, "busy.reap.json", "busy-reap-claim");
+            const claimPath = yield* writeLeaseReapClaim(tempRoot, "busy.reap.json", "busy-reap-claim", {
+              attemptJournal: "complete",
+              admissionJournal: "complete",
+            });
             const claimLockPath = `${claimPath}.lock`;
             const claimLockToken = `${process.pid}:busy-reap-claim-lock`;
             expect(yield* acquireJournalFileLock(claimLockPath, claimLockToken, 1)).toBe(true);
@@ -2966,7 +2976,10 @@ describe("quality-scheduler", () => {
             const fs = yield* FileSystem.FileSystem;
             const path = yield* Path.Path;
             yield* admissionStatus(fastConfig);
-            const claimPath = yield* writeCompletedLeaseReapClaim(tempRoot, "reread.reap.json", "reread-reap-claim");
+            const claimPath = yield* writeLeaseReapClaim(tempRoot, "reread.reap.json", "reread-reap-claim", {
+              attemptJournal: "complete",
+              admissionJournal: "complete",
+            });
             const unreadableClaimFileSystem = yield* fileSystemWithReadUnavailableAfterFirst(
               fs,
               claimPath,
@@ -3308,6 +3321,8 @@ describe("quality-scheduler", () => {
             expect(yield* listDirectory(tempRoot.leases)).toHaveLength(0);
             const first = yield* readOnlyReapClaim(tempRoot);
             expect(first.names).toHaveLength(1);
+            expect(first.name).toMatch(/\.reap\.pending-protocol-off\.json$/u);
+            expect(A.filter(first.names, Str.endsWith(".reap.json"))).toHaveLength(0);
             expect(first.claim.attemptJournal).toBe("complete");
             expect(first.claim.admissionJournal).toBe("pending-protocol-off");
             expect(yield* readJournalEvents(tempRoot.root)).toHaveLength(0);
@@ -3335,6 +3350,42 @@ describe("quality-scheduler", () => {
             expect(yield* readAttemptJournalEvents(checkoutRoot, "feat/protocol-deferred")).toHaveLength(1);
 
             yield* reap();
+            expect(
+              A.filter(yield* readJournalEvents(tempRoot.root), AdmissionJournalEvent.guards["admission-lease-evicted"])
+            ).toHaveLength(1);
+          })
+        );
+      })
+    ));
+
+  it("moves a legacy-visible claim behind the protocol-off reader fence", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            yield* admissionStatus(fastConfig);
+            const legacyPath = yield* writeLeaseReapClaim(
+              tempRoot,
+              "legacy-visible.reap.json",
+              "legacy-visible-claim",
+              { attemptJournal: "pending", admissionJournal: "pending" }
+            );
+
+            yield* reapAdmissionState({ apply: true });
+
+            expect(yield* fs.exists(legacyPath)).toBe(false);
+            const deferred = yield* readOnlyReapClaim(tempRoot);
+            expect(deferred.name).toMatch(/\.reap\.pending-protocol-off\.json$/u);
+            expect(deferred.claim.attemptJournal).toBe("complete");
+            expect(deferred.claim.admissionJournal).toBe("pending-protocol-off");
+            expect(yield* readJournalEvents(tempRoot.root)).toHaveLength(0);
+
+            yield* setAdmissionEvictionProtocol("on");
+            yield* reapAdmissionState({ apply: true });
+
+            expect(yield* listDirectory(tempRoot.claims)).toHaveLength(0);
             expect(
               A.filter(yield* readJournalEvents(tempRoot.root), AdmissionJournalEvent.guards["admission-lease-evicted"])
             ).toHaveLength(1);
