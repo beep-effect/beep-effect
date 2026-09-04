@@ -930,6 +930,35 @@ export const GateRedSchedulingDecision = LiteralKit(["stop-after-red", "continue
 export type GateRedSchedulingDecision = typeof GateRedSchedulingDecision.Type;
 
 /**
+ * Coarse B3 partition applied before evidence-based cost ordering.
+ *
+ * **Example** (Identify the first partition)
+ *
+ * ```ts
+ * import { GateOrderLaneClass } from "@beep/repo-cli/commands/Quality"
+ *
+ * console.log(GateOrderLaneClass.is["policy-preflight"]("policy-preflight")) // true
+ * ```
+ *
+ * @category policies
+ * @since 0.0.0
+ */
+export const GateOrderLaneClass = LiteralKit(["policy-preflight", "heavy"]).pipe(
+  $I.annoteSchema("GateOrderLaneClass", {
+    description: "B3 execution partition that keeps policy and preflight gates ahead of heavy work.",
+  })
+);
+
+/**
+ * Coarse B3 partition applied before evidence-based cost ordering.
+ *
+ * @see {@link GateOrderLaneClass} for the runtime schema and literal helpers.
+ * @category policies
+ * @since 0.0.0
+ */
+export type GateOrderLaneClass = typeof GateOrderLaneClass.Type;
+
+/**
  * Evidence-backed scheduling inputs for one local proof gate.
  *
  * **Details**
@@ -948,6 +977,8 @@ export type GateRedSchedulingDecision = typeof GateRedSchedulingDecision.Type;
  *   durationPointer: "/localWrapperLanes/15/p50DurationMs",
  *   firstRedBasis: "Exact A1 actionable-lane row divided by 832.",
  *   firstRedPointer: "/firstFailure/actionableLaneMix/8",
+ *   laneClass: "policy-preflight",
+ *   laneClassBasis: "SPEC B3 policy/preflight partition.",
  *   laneId: "fallow:audit",
  *   precision: "precise",
  *   precisionBasis: "No environment-only or indirect A4 attribution.",
@@ -962,6 +993,8 @@ export type GateRedSchedulingDecision = typeof GateRedSchedulingDecision.Type;
 export class GateOrderSeedRow extends S.Class<GateOrderSeedRow>($I`GateOrderSeedRow`)(
   {
     laneId: S.NonEmptyString,
+    laneClass: GateOrderLaneClass,
+    laneClassBasis: S.NonEmptyString,
     costP50Seconds: S.Finite.check(S.isGreaterThanOrEqualTo(0)),
     redProbability: S.Finite.check(S.isBetween({ minimum: 0, maximum: 1 })),
     precision: GatePrecisionClass,

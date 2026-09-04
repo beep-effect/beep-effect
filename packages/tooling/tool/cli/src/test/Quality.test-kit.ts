@@ -27,6 +27,7 @@ export {
   FallowQualityCiMode,
   FallowQualityFeatureFamily,
   FallowQualityPromotionStatus,
+  GateOrderLaneClass,
   GateOrderSeed,
   GateOrderSeedRow,
   GatePrecisionClass,

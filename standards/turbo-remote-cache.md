@@ -181,10 +181,12 @@ for its source in `goals/time-to-certainty/research/economics.json`. Aggregate
 or related-lane proxies are named explicitly where A1 predates A5's durable
 inner-lane timing report.
 
-Seeded lanes sort by P50 cost ascending, first-red probability descending,
-precision (`precise` before `imprecise`), then declaration order. That puts the
-short, policy-bearing gates ahead of heavy lanes and leaves Coverage Regression
-at the expensive tail. A lane absent from the seed is never guessed: all
+Seeded lanes first partition into `policy-preflight` and `heavy`, with each
+row carrying the SPEC B3 basis for that classification. Within a partition,
+lanes sort by P50 cost ascending, first-red probability descending, precision
+(`precise` before `imprecise`), then declaration order. That puts every
+policy/preflight gate ahead of build, test, and documentation work and leaves
+Coverage Regression at the expensive tail. A lane absent from the seed is never guessed: all
 unseeded lanes append after the seeded plan in their original declaration
 order. Their precision defaults conservatively to stoppable until a seed row
 explicitly classifies them. Wave labels are retained for reporting without

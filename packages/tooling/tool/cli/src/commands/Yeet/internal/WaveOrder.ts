@@ -13,6 +13,7 @@ import * as HM from "effect/HashMap";
 import * as O from "effect/Option";
 import * as Tuple from "effect/Tuple";
 import {
+  GateOrderLaneClass,
   GateOrderSeed,
   GateOrderSeedRow,
   GatePrecisionClass,
@@ -25,6 +26,8 @@ const NO_EXACT_FIRST_RED_POINTER = "/firstFailure/actionableLaneMix";
 const PRECISE_BASIS = "No environment-only or indirect A4 attribution is assigned to this terminal red.";
 const HOSTED_DURATION_BASIS = "A1 hosted required-context P50 for this lane family.";
 const NO_EXACT_FIRST_RED_BASIS = "No exact lane row appears in A1 actionableLaneMix; zero of 832 was observed.";
+const POLICY_PREFLIGHT_BASIS = "SPEC B3 policy/preflight partition; this lane is a preflight policy gate.";
+const HEAVY_BASIS = "SPEC B3 heavy partition; this lane performs build, test, or documentation work.";
 
 const hostedDurationPointer = (index: number): string => `/hosted/laneRows/${index}/p50DurationMs`;
 const localDurationPointer = (index: number): string => `/localWrapperLanes/${index}/p50DurationMs`;
@@ -38,7 +41,9 @@ const seedRow = (
   redProbability: number,
   firstRedIndex: O.Option<number>,
   precision: GatePrecisionClass,
-  precisionBasis: string
+  precisionBasis: string,
+  laneClass: GateOrderLaneClass,
+  laneClassBasis: string
 ): GateOrderSeedRow =>
   GateOrderSeedRow.make({
     laneId,
@@ -54,6 +59,8 @@ const seedRow = (
       O.map(firstRedPointer),
       O.getOrElse(() => NO_EXACT_FIRST_RED_POINTER)
     ),
+    laneClass,
+    laneClassBasis,
     precision,
     precisionBasis,
   });
@@ -65,7 +72,9 @@ const hostedRow = (
   redProbability: number,
   firstRedIndex: O.Option<number> = O.none(),
   precision: GatePrecisionClass = "precise",
-  precisionBasis: string = PRECISE_BASIS
+  precisionBasis: string = PRECISE_BASIS,
+  laneClass: GateOrderLaneClass = "heavy",
+  laneClassBasis: string = HEAVY_BASIS
 ): GateOrderSeedRow =>
   seedRow(
     laneId,
@@ -75,7 +84,30 @@ const hostedRow = (
     redProbability,
     firstRedIndex,
     precision,
-    precisionBasis
+    precisionBasis,
+    laneClass,
+    laneClassBasis
+  );
+
+const policyHostedRow = (
+  laneId: string,
+  costP50Seconds: number,
+  durationIndex: number,
+  redProbability: number,
+  firstRedIndex: O.Option<number> = O.none(),
+  precision: GatePrecisionClass = "precise",
+  precisionBasis: string = PRECISE_BASIS
+): GateOrderSeedRow =>
+  hostedRow(
+    laneId,
+    costP50Seconds,
+    durationIndex,
+    redProbability,
+    firstRedIndex,
+    precision,
+    precisionBasis,
+    "policy-preflight",
+    POLICY_PREFLIGHT_BASIS
   );
 
 const repoSanityRow = (
@@ -91,13 +123,17 @@ const repoSanityRow = (
     redProbability,
     firstRedIndex,
     "precise",
-    PRECISE_BASIS
+    PRECISE_BASIS,
+    "policy-preflight",
+    POLICY_PREFLIGHT_BASIS
   );
 
 const cheapWrapperRow = (
   laneId: string,
   redProbability: number,
-  firstRedIndex: O.Option<number> = O.none()
+  firstRedIndex: O.Option<number> = O.none(),
+  laneClass: GateOrderLaneClass = "policy-preflight",
+  laneClassBasis: string = POLICY_PREFLIGHT_BASIS
 ): GateOrderSeedRow =>
   seedRow(
     laneId,
@@ -107,7 +143,9 @@ const cheapWrapperRow = (
     redProbability,
     firstRedIndex,
     "precise",
-    PRECISE_BASIS
+    PRECISE_BASIS,
+    laneClass,
+    laneClassBasis
   );
 
 /**
@@ -153,7 +191,9 @@ export const DEFAULT_GATE_ORDER_SEED = GateOrderSeed.make({
       65 / 832,
       O.some(7),
       "precise",
-      "Terminal reds occur after the established environment-only TS2589 quarantine."
+      "Terminal reds occur after the established environment-only TS2589 quarantine.",
+      "heavy",
+      HEAVY_BASIS
     ),
     hostedRow("quality:lint", 267, 0, 67 / 832, O.some(6)),
     hostedRow("quality:lint-policy", 363, 1, 23 / 832, O.some(12)),
@@ -166,9 +206,9 @@ export const DEFAULT_GATE_ORDER_SEED = GateOrderSeed.make({
       "precise",
       "Terminal reds occur after the established environment-only TS2589 quarantine."
     ),
-    cheapWrapperRow("quality:check:tsgo-tests", 6 / 832, O.some(24)),
+    cheapWrapperRow("quality:check:tsgo-tests", 6 / 832, O.some(24), "heavy", HEAVY_BASIS),
     hostedRow("quality:check:tsgo-smoke", 383, 2, 0),
-    hostedRow("quality:knip", 80, 9, 11 / 832, O.some(20)),
+    policyHostedRow("quality:knip", 80, 9, 11 / 832, O.some(20)),
     hostedRow("quality:jsdoc-ratchet", 82, 16, 0),
     hostedRow("quality:docgen", 115, 5, 0),
     hostedRow(
@@ -180,8 +220,8 @@ export const DEFAULT_GATE_ORDER_SEED = GateOrderSeed.make({
       "imprecise",
       "A4 indirect attribution: an edited callee can move coverage in an untouched caller."
     ),
-    hostedRow("quality:codegen", 107, 6, 0),
-    hostedRow("quality:commitlint", 63, 10, 0),
+    policyHostedRow("quality:codegen", 107, 6, 0),
+    policyHostedRow("quality:commitlint", 63, 10, 0),
     hostedRow("quality:desktop-ipc", 69, 15, 0),
     hostedRow("quality:test-unit", 495, 3, 0),
     hostedRow("quality:test-integration", 137, 4, 0),
@@ -193,7 +233,9 @@ export const DEFAULT_GATE_ORDER_SEED = GateOrderSeed.make({
       47 / 832,
       O.some(8),
       "precise",
-      PRECISE_BASIS
+      PRECISE_BASIS,
+      "policy-preflight",
+      POLICY_PREFLIGHT_BASIS
     ),
     seedRow(
       "fallow:dead-code",
@@ -203,12 +245,30 @@ export const DEFAULT_GATE_ORDER_SEED = GateOrderSeed.make({
       3 / 832,
       O.some(33),
       "precise",
-      PRECISE_BASIS
+      PRECISE_BASIS,
+      "policy-preflight",
+      POLICY_PREFLIGHT_BASIS
     ),
-    hostedRow("pre-push:secrets", 54, 11, 4 / 832, O.some(31)),
-    hostedRow("pre-push:security", 28, 12, 5 / 832, O.some(27)),
-    hostedRow("pre-push:sast", 82, 13, 0),
-    hostedRow(
+    policyHostedRow("pre-push:secrets", 54, 11, 4 / 832, O.some(31)),
+    policyHostedRow(
+      "pre-push:security",
+      28,
+      12,
+      5 / 832,
+      O.some(27),
+      "imprecise",
+      "A4 environment-only attribution: Docker daemon and image-pull failures share this lane's exit."
+    ),
+    policyHostedRow(
+      "pre-push:sast",
+      82,
+      13,
+      0,
+      O.none(),
+      "imprecise",
+      "A4 environment-only attribution: Docker daemon and image-pull failures share this lane's exit."
+    ),
+    policyHostedRow(
       "pre-push:nix",
       102,
       14,
@@ -231,6 +291,15 @@ const estimateNumber = (entry: IndexedLane, select: (estimate: GateOrderSeedRow)
 
 const indexedLaneOrder = Order.combineAll<IndexedLane>([
   Order.mapInput(Order.Number, (entry) => (O.isSome(entry[1].orderEstimate) ? 0 : 1)),
+  Order.mapInput(Order.Number, (entry) =>
+    pipe(
+      entry[1].orderEstimate,
+      O.map((estimate) =>
+        GateOrderLaneClass.$match(estimate.laneClass, { "policy-preflight": () => 0, heavy: () => 1 })
+      ),
+      O.getOrElse(() => 0)
+    )
+  ),
   Order.mapInput(Order.Number, (entry) => estimateNumber(entry, (estimate) => estimate.costP50Seconds, 0)),
   Order.mapInput(Order.flip(Order.Number), (entry) => estimateNumber(entry, (estimate) => estimate.redProbability, 0)),
   Order.mapInput(Order.Number, (entry) =>
@@ -248,9 +317,10 @@ const indexedLaneOrder = Order.combineAll<IndexedLane>([
  *
  * **Details**
  *
- * Seeded lanes are ordered by P50 cost ascending, first-red share descending,
- * precision, then declaration order. Lanes absent from the seed are appended
- * after every seeded lane and retain declaration order.
+ * Seeded lanes are partitioned into policy/preflight and heavy work, then
+ * ordered within each partition by P50 cost ascending, first-red share
+ * descending, precision, and declaration order. Lanes absent from the seed
+ * are appended after every seeded lane and retain declaration order.
  *
  * **Example** (Keep unknown lanes at the tail)
  *

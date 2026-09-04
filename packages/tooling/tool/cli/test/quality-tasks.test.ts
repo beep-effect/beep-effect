@@ -156,7 +156,7 @@ import { FastCheck as fc } from "effect/testing";
 import * as TestConsole from "effect/testing/TestConsole";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import type { CiLaneId } from "@beep/repo-cli/commands/Ci";
-import type { GithubCheckLaneWave, QualityTaskInvocation } from "@beep/repo-cli/test/Quality";
+import type { GateOrderLaneClass, GithubCheckLaneWave, QualityTaskInvocation } from "@beep/repo-cli/test/Quality";
 
 const FileSystemLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 const PlatformLayer = Layer.mergeAll(
@@ -405,10 +405,13 @@ const githubCheckTestLane = (
 const githubCheckTestEstimate = (
   laneId: string,
   costP50Seconds: number,
-  precision: "precise" | "imprecise" = "precise"
+  precision: "precise" | "imprecise" = "precise",
+  laneClass: typeof GateOrderLaneClass.Type = "policy-preflight"
 ): GateOrderSeedRow =>
   GateOrderSeedRow.make({
     laneId,
+    laneClass,
+    laneClassBasis: "Test fixture partition.",
     costP50Seconds,
     durationBasis: "Test fixture duration.",
     durationPointer: "/test/duration",
@@ -1309,6 +1312,26 @@ describe("quality task adapter", () => {
     })
   );
 
+  it.effect(
+    "keeps policy and preflight gates ahead of cheaper heavy work",
+    Effect.fnUntraced(function* () {
+      const lanes = [
+        githubCheckTestLane("heavy:cheap", "heavy", "process.exit(0)"),
+        githubCheckTestLane("policy:expensive", "preflight", "process.exit(0)"),
+      ];
+      const seed = GateOrderSeed.make({
+        ...DEFAULT_GATE_ORDER_SEED,
+        lanes: [
+          githubCheckTestEstimate("heavy:cheap", 1, "precise", "heavy"),
+          githubCheckTestEstimate("policy:expensive", 100),
+        ],
+      });
+      const waveOrder = yield* WaveOrder.make(seed);
+
+      expect(A.map(waveOrder.order(lanes), (lane) => lane.id)).toEqual(["policy:expensive", "heavy:cheap"]);
+    })
+  );
+
   it("stops after a precise red and marks the unlaunched tail", () =>
     Effect.runPromise(
       collectGithubCheckLaneWavesForTesting(
@@ -1396,7 +1419,7 @@ describe("quality task adapter", () => {
       )
     ));
 
-  it("treats an estimate-less red as precise and stops later waves", () =>
+  it("stops later quality-mode waves after an estimate-less red", () =>
     Effect.runPromise(
       collectGithubCheckLaneWavesForTesting(
         "quality",
