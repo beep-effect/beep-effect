@@ -19,6 +19,27 @@ export * from "./Fleet.command.ts";
  */
 export * from "./Fleet.service.ts";
 /**
+ * Public worktree-reap subcommand export.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./Reap.command.ts";
+/**
+ * Public worktree-reap schema exports.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./Reap.schemas.ts";
+/**
+ * Public worktree-reap workflow export.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./Reap.service.ts";
+/**
  * Public worktree command export.
  *
  * @category cli-commands

@@ -38,10 +38,11 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 is in progress. The fixed baseline is closed, the sharp notifier revision is
+P2 is in progress. P1 closed on 2026-09-03 after the ntfy phone transport was
+restored to its original optional status and deferred with an explicit trigger.
+The fixed baseline is closed, the sharp notifier revision is
 merged, the guarded fleet rollout is dispositioned, and the first treatment
-readout is favorable; the phase is now waiting on a safely configured phone
-transport:
+readout is favorable:
 
 1. **Hook semantics verified** (2026-08-01) — all three wait classes emit
    distinguishable, sessionId-bearing events. **`PermissionRequest`** (not
@@ -82,6 +83,16 @@ transport:
    descriptive reduction of 30.025 s / 80.1%. The treatment is retained, but
    the small, mode-shifted sample is not promoted to an unqualified causal
    claim.
+7. **Telemetry-v2 contracts landed** (2026-09-03). Schema-first flight
+   records now separate agent-supplied semantics from mechanical evidence, and
+   ingest has distinct pre-read enumeration and final attestation contracts.
+   The durable store writes the initial denominator before entering its
+   source-reading callback, validates the final subject set, derives
+   record-wide evidence/OIP fields, and commits hash-addressed atomic
+   artifacts. The first fixtures cover one real Codex session and all six
+   current source instances without retaining transcript content. P2 remains
+   open for emitters, leases, reconciliation, divergence, and the coverage
+   gate.
 
 The interrupted-series lower bound is `2026-09-03T09:41:33.322Z`, after a
 six-second old/new writer overlap excluded from analysis. The census through
@@ -92,12 +103,18 @@ records two accepted initial desktop sends, storm damping for six same-session
 retries, and exact-bracket suppression of a resolved reminder. This remains a
 staggered, revision-qualified intervention, not a merge-time claim of
 fleet-wide adoption.
-Phone delivery also remains explicitly unconfigured: the one permitted agent
-credential diagnostic failed before any 1Password inventory or reference could
-be returned. P1 therefore remains current, and P2 stays gated. Full evidence
-is in
+Phone delivery remains unconfigured, but it is not a P1 exit gate. The
+normative spec never requires a phone transport, and the originating amendment
+called ntfy optional. A repository audit found no provisioned ntfy service,
+runtime reference, or existing operator dependency. The implemented transport
+continues to fail open as `transport-unconfigured`; reconsider it only after an
+explicit operator request and a least-privilege design. The historical
+`desktop-ntfy-1` revision name remains unchanged because evidence labels are
+immutable. P1 is complete and P2 is current. Full evidence is in
 [`research/2026-09-03-p1-baseline-close.md`](./research/2026-09-03-p1-baseline-close.md),
 [`research/2026-09-03-p1-first-treatment-readout.md`](./research/2026-09-03-p1-first-treatment-readout.md),
+[`research/2026-09-03-p1-phone-transport-disposition.md`](./research/2026-09-03-p1-phone-transport-disposition.md),
+[`research/2026-09-03-p2-contract-foundation.md`](./research/2026-09-03-p2-contract-foundation.md),
 and
 [`history/outputs/2026-09-03-p1-sharp-cutover.md`](./history/outputs/2026-09-03-p1-sharp-cutover.md).
 

@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-09-03T19:43:19.255Z
+Generated: 2026-09-03T20:25:14.249Z
 
 ## Scope
 
@@ -14,16 +14,16 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 17 |
 | packagesWithoutPublicSrcSurface | 3 |
 | packagesNeedingRemediation | 116 |
-| publicModules | 3001 |
-| publicExports | 21237 |
+| publicModules | 3005 |
+| publicExports | 21286 |
 | openModules | 370 |
-| openExports | 3449 |
+| openExports | 3451 |
 | missingExportExamples | 4 |
 | missingExportCategories | 0 |
 | missingExportSince | 0 |
 | forbiddenTagFindings | 0 |
 | malformedConditionalTagFindings | 0 |
-| exampleImportFindings | 3729 |
+| exampleImportFindings | 3731 |
 | unsafeExampleFindings | 0 |
 | schemaAnnotationFindings | 0 |
 | undescribed-see | 12 |
@@ -40,7 +40,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | duplicate-example | 0 |
 | loose-ts-fence | 0 |
 | forbidden-remarks | 0 |
-| no-root-package-import | 3728 |
+| no-root-package-import | 3730 |
 | rootPolicyOpen | 0 |
 
 ## Root Policy
@@ -74,7 +74,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 16 | `@beep/ontology-use-cases` | `packages/ontology/use-cases` | needs-remediation | 23 | 214 | 1 | 17 |
 | 17 | `@beep/architecture-lab-client` | `packages/architecture-lab/client` | needs-remediation | 3 | 7 | 0 | 4 |
 | 18 | `@beep/dock` | `packages/foundation/ui-system/dock` | needs-remediation | 20 | 212 | 0 | 189 |
-| 19 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 223 | 1819 | 47 | 286 |
+| 19 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 223 | 1820 | 47 | 286 |
 | 20 | `@beep/pglite` | `packages/drivers/pglite` | needs-remediation | 4 | 11 | 3 | 0 |
 | 21 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | needs-remediation | 10 | 86 | 0 | 18 |
 | 22 | `@beep/agents-server` | `packages/agents/server` | needs-remediation | 11 | 39 | 2 | 7 |
@@ -122,7 +122,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 64 | `@beep/todox` | `apps/todox` | clean | 2 | 3 | 0 | 0 |
 | 65 | `@beep/semantic-web` | `packages/foundation/capability/semantic-web` | needs-remediation | 8 | 56 | 0 | 15 |
 | 66 | `@beep/utils` | `packages/foundation/modeling/utils` | needs-remediation | 28 | 214 | 6 | 118 |
-| 67 | `@beep/repo-ai-metrics` | `packages/tooling/library/ai-metrics` | needs-remediation | 24 | 415 | 0 | 79 |
+| 67 | `@beep/repo-ai-metrics` | `packages/tooling/library/ai-metrics` | needs-remediation | 28 | 463 | 0 | 81 |
 | 68 | `@beep/architecture-lab-tables` | `packages/architecture-lab/tables` | clean | 7 | 21 | 0 | 0 |
 | 69 | `@beep/tika` | `packages/drivers/tika` | needs-remediation | 8 | 34 | 3 | 7 |
 | 70 | `@beep/libpff` | `packages/drivers/libpff` | needs-remediation | 7 | 40 | 4 | 8 |
@@ -1020,8 +1020,8 @@ Export findings:
 - `src/commands/Quality/ChangesetGraph.ts:384` `changesetPackageReferencesFromText` (const) - 1 example import violation(s)
 - `src/commands/Quality/FallowQuality.command.ts:1238` `collectAuditDiffInputForTesting` (const) - 1 example import violation(s)
 - `src/commands/Quality/FallowQuality.command.ts:2376` `qualityFallowCommand` (const) - 1 example import violation(s)
-- `src/commands/Quality/Quality.command.ts:665` `runBunAudit` (const) - 1 documentation section/link violation(s)
-- `src/commands/Quality/Quality.command.ts:791` `devQualityStepsForTesting` (const) - 1 example import violation(s)
+- `src/commands/Quality/Quality.command.ts:731` `runBunAudit` (const) - 1 documentation section/link violation(s)
+- `src/commands/Quality/Quality.command.ts:857` `devQualityStepsForTesting` (const) - 1 example import violation(s)
 - `src/commands/Quality/Quality.osv-ignore.ts:105` `selectOsvIgnoreIdsForAudit` (const) - 1 example import violation(s)
 - `src/commands/Quality/Quality.osv-ignore.ts:154` `activeOsvIgnoreIdsForTesting` (const) - 1 example import violation(s)
 - `src/commands/Quality/Quality.render.ts:71` `printQualityProfileConfig` (const) - 1 example import violation(s)
@@ -3083,10 +3083,10 @@ Export findings:
 - `src/forwarder.ts:1019` `runAiMetricsForwarder` (const) - 1 example import violation(s)
 - `src/forwarder.ts:1153` `forwarderRunResultToJson` (const) - 1 example import violation(s)
 - `src/forwarder.ts:1199` `forwarderTimerPlanToJson` (const) - 1 example import violation(s)
-- `src/hook-pulse.ts:602` `HookPulseRawEvent` (class) - 1 example import violation(s)
-- `src/hook-pulse.ts:746` `hookPulseHashSalt` (const) - 1 example import violation(s)
-- `src/hook-pulse.ts:876` `HookPulseV1` (class) - 1 example import violation(s)
-- `src/hook-pulse.ts:1118` `HookPulseV1FromRawEvent` (const) - 1 example import violation(s)
+- `src/hook-pulse.ts:608` `HookPulseRawEvent` (class) - 1 example import violation(s)
+- `src/hook-pulse.ts:752` `hookPulseHashSalt` (const) - 1 example import violation(s)
+- `src/hook-pulse.ts:882` `HookPulseV1` (class) - 1 example import violation(s)
+- `src/hook-pulse.ts:1124` `HookPulseV1FromRawEvent` (const) - 1 example import violation(s)
 - `src/identity-registry.ts:534` `isNestedGitRoot` (const) - 1 example import violation(s)
 - `src/identity-registry.ts:588` `makeAiMetricsCanonicalRoot` (const) - 1 example import violation(s)
 - `src/identity-registry.ts:740` `readAiMetricsIdentityRegistry` (const) - 1 example import violation(s)
@@ -3135,6 +3135,8 @@ Export findings:
 - `src/scorecard.ts:1709` `aiMetricsWeeklyReportToJson` (const) - 1 example import violation(s)
 - `src/source-discovery.ts:619` `discoverAiMetricsSources` (const) - 1 example import violation(s)
 - `src/source-discovery.ts:691` `sourceDiscoveryToJson` (const) - 1 example import violation(s)
+- `src/telemetry-v2-store.ts:221` `TelemetryV2StoreShape` (interface) - 1 example import violation(s)
+- `src/telemetry-v2-store.ts:442` `TelemetryV2Store` (class) - 1 example import violation(s)
 
 ### @beep/tika
 

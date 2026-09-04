@@ -106,6 +106,7 @@ import {
   runSqlIntegrationTestLaneForTesting,
   sqlIntegrationConnectionUriFromEnvForTesting,
   sqlIntegrationStepForTesting,
+  testTsgoPlanningForTesting,
   turboSecretSessionStepForTesting,
   turboStepLocalEnvForTesting,
   validateCoverageTaskArgsForTesting,
@@ -2305,6 +2306,69 @@ describe("quality task adapter", () => {
       O.none()
     );
   });
+
+  it("plans package-owned tsgo tasks without filesystem-dependent coverage", () => {
+    const group = {
+      packageName: "@beep/example",
+      packageDir: "/repo/packages/example",
+      tsconfigPath: "/repo/packages/example/tsconfig.test.json",
+      files: ["/repo/packages/example/test/example.test.ts"],
+      hasTaskScript: true,
+    };
+
+    expect(testTsgoPlanningForTesting.isTestFile(group.files[0] ?? "", "example.test.ts")).toBe(true);
+    expect(testTsgoPlanningForTesting.isTestFile("/repo/packages/example/src/example.ts", "example.ts")).toBe(false);
+    expect(
+      testTsgoPlanningForTesting.isTestFile("/repo/packages/example/test/fixtures/example.test.ts", "example.test.ts")
+    ).toBe(false);
+    expect(testTsgoPlanningForTesting.isTestFile("/repo/packages/example/test/example.js", "example.js")).toBe(false);
+    expect(testTsgoPlanningForTesting.isIgnoredDirectory("/repo/packages/example/node_modules/", "node_modules")).toBe(
+      true
+    );
+    expect(testTsgoPlanningForTesting.isIgnoredDirectory("/repo/packages/example/test/fixtures/", "fixtures")).toBe(
+      true
+    );
+    expect(testTsgoPlanningForTesting.isIgnoredDirectory("/repo/packages/example/src/", "src")).toBe(false);
+    expect(testTsgoPlanningForTesting.packageLabel("/repo", "/repo/packages/@beep/example")).toBe(
+      "packages-beep-example"
+    );
+
+    expect(testTsgoPlanningForTesting.turboArgs([group], [])).toEqual([
+      "run",
+      "package-test-typecheck",
+      "--concurrency=1",
+      "--continue=always",
+      "--output-logs=none",
+      "--summarize",
+      "--filter=@beep/example",
+    ]);
+    expect(testTsgoPlanningForTesting.turboArgs([group], ["--explain"])).toEqual([
+      "run",
+      "package-test-typecheck",
+      "--concurrency=1",
+      "--continue=always",
+      "--output-logs=none",
+      "--summarize",
+      "--filter=@beep/example",
+      "--",
+      "--explain",
+    ]);
+    expect(testTsgoPlanningForTesting.turboSummaryPath("ok\nSummary: .turbo/runs/example.json\n")).toEqual(
+      O.some(".turbo/runs/example.json")
+    );
+    expect(testTsgoPlanningForTesting.turboSummaryPath("no summary")).toEqual(O.none());
+    expect(testTsgoPlanningForTesting.turboSummaryPath("Summary:   ")).toEqual(O.none());
+  });
+
+  it.effect("places package-owned tsgo results in the package Turbo directory", () =>
+    Effect.gen(function* () {
+      const path = yield* Path.Path;
+
+      expect(testTsgoPlanningForTesting.packageResultPath(path, "/repo/packages/example")).toBe(
+        "/repo/packages/example/.turbo/package-test-typecheck-result.json"
+      );
+    }).pipe(provideScopedLayer(NodePath.layer))
+  );
 
   it("normalizes Knip findings with stable ordering and without position fields", () =>
     Effect.runPromise(

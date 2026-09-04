@@ -82,6 +82,7 @@ export {
 export * from "../commands/Quality/internal/TurboConfigProof.ts";
 export {
   renderAdmissionSnapshotLinesForTesting,
+  renderResidueReportLinesForTesting,
   renderTmpfsReportLinesForTesting,
 } from "../commands/Quality/Quality.command.ts";
 export * from "../internal/process/index.ts";

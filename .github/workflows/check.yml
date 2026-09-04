@@ -926,7 +926,8 @@ jobs:
         shell: bash
         env:
           BEFORE_SHA: ${{ github.event.before }}
-          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_BASE_REF: ${{ github.event.pull_request.base.ref }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           set -euo pipefail
 
@@ -935,8 +936,15 @@ jobs:
           to_ref="HEAD"
 
           if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
-            from_ref="${PR_BASE_SHA:?missing pull request base sha}"
-            git rev-parse --verify "${from_ref}^{commit}" >/dev/null 2>&1 || git fetch --quiet --no-tags --depth=1 origin "$from_ref"
+            # Lint only the pull request's own commits. The checkout is the merge
+            # ref and `pull_request.base.sha` is frozen when the PR opens, so
+            # base.sha..HEAD also linted every commit the base branch gained
+            # since — including the bodies GitHub generates for squash merges.
+            to_ref="${PR_HEAD_SHA:?missing pull request head sha}"
+            base_branch="${PR_BASE_REF:-main}"
+            git fetch --quiet --no-tags origin "+refs/heads/${base_branch}:refs/remotes/origin/${base_branch}"
+            git rev-parse --verify "${to_ref}^{commit}" >/dev/null 2>&1 || git fetch --quiet --no-tags origin "$to_ref"
+            from_ref="$(git merge-base "refs/remotes/origin/${base_branch}" "$to_ref")"
           elif [[ -n "${BEFORE_SHA:-}" && ! "$BEFORE_SHA" =~ ^0+$ ]]; then
             from_ref="$BEFORE_SHA"
             to_ref="${GITHUB_SHA:-HEAD}"

@@ -2,23 +2,24 @@
 
 ## Status
 
-Status: `in-progress` (packet opened 2026-07-31; the P1 log-only baseline
-closed, `desktop-ntfy-1` cut over in the implementation checkout, PR #973
-merged, and a guarded 19-adopter/3-exclusion direct-clone rollout completed on
-2026-09-03 — see
+Status: `in-progress` (packet opened 2026-07-31; P1 completed after the
+log-only baseline closed, `desktop-ntfy-1` cut over in the implementation
+checkout, PR #973 merged, and a guarded 19-adopter/3-exclusion direct-clone
+rollout completed on 2026-09-03 — see
 `research/2026-09-03-p1-baseline-close.md` and
-`research/2026-09-03-p1-first-treatment-readout.md`)
+`research/2026-09-03-p1-phone-transport-disposition.md`)
 
-**Current phases (single authority for `/goal` executors):** P1 is current.
-Hook semantics, the production writer, the fixed baseline, notifier/damping
-schemas, desktop delivery, the shared circuit breaker, and the first guarded
-post-merge rollout slice are complete. The rollout is deliberately staggered:
-active, dirty, detached, and feature-branch checkouts were left untouched. The
-first sharp `AskUserQuestion` readout is favorable but small and mode-shifted;
-phone delivery is not yet observed, so P1's exit criterion is not met.
+**Current phases (single authority for `/goal` executors):** P2 is current.
+P1's hook semantics, production writer, fixed baseline, notifier/damping
+schemas, desktop delivery, shared circuit breaker, guarded rollout, and first
+sharp readout are complete. The optional ntfy phone transport is deferred with
+an explicit trigger; it was never provisioned and is not required by the
+normative spec. The rollout remains deliberately staggered: active, dirty,
+detached, and feature-branch checkouts were left untouched. The first sharp
+`AskUserQuestion` readout is favorable but small and mode-shifted.
 **P0 is complete (2026-08-07)** — code, atomic store cutover, and live
 verification all landed;
-evidence in `history/outputs/2026-08-07-p0-cutover.md`. P2–P8 are not current
+evidence in `history/outputs/2026-08-07-p0-cutover.md`. P3–P8 are not current
 until the manifest marks their predecessors' exit criteria met; the "proceeds
 in parallel" notes below describe scheduling intent between phases, never
 permission to start ahead of this section.
@@ -32,8 +33,8 @@ P5→P7, P6→P8.
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
 | P0 Storage cutover + identity registry | complete (2026-08-07) | Clone-independent canonical store, source registry, bounded config snapshots. | Store serves all clones; snapshots have stage timings; nested worktrees are independent roots. Met — see `history/outputs/2026-08-07-p0-cutover.md`. |
-| P1 Sequence-break instrument | in-progress (PR merged; guarded fleet rollout completed 2026-09-03) | Hooks + hook-pulse ledger + notifications + circuit breaker + kill switch; first wait reduction measured. | Baseline captured; desktop notifications and breaker live; eight sharp human-input starts produced seven closures, one tombstone, and an early 80.1% median reduction. Fleet disposition is 19 adopters plus 3 explicit protected/archive exclusions. Still requires a phone-delivery receipt. |
-| P2 Telemetry-v2 truth model | pending | FlightRecord + IngestManifest write contract with the five evidence-integrity laws. | Schemas land with fixtures; Claude + Codex emitters flowing; tombstones + leases working. |
+| P1 Sequence-break instrument | complete (2026-09-03) | Hooks + hook-pulse ledger + notifications + circuit breaker + kill switch; first wait reduction measured. | Baseline captured; desktop notifications and breaker live; eight sharp human-input starts produced seven closures, one tombstone, and an early 80.1% median reduction. Fleet disposition is 19 adopters plus 3 explicit protected/archive exclusions. Optional phone transport deferred with an explicit trigger. |
+| P2 Telemetry-v2 truth model | in-progress | FlightRecord + IngestManifest write contract with the five evidence-integrity laws. | Schemas land with fixtures; Claude + Codex emitters flowing; tombstones + leases working. |
 | P3 Yeet mistrial + proof durability | pending | Exhibit-required verdicts, mistrial outcome, per-lane durable proofs, `yeet doctor`. | Exhibit-less failure undecodable; interrupted publish resumes as cache hit; doctor names blocking edge. |
 | P4 Replay, dedup, trust gates | pending | Replay all raw history into v2; replay-twice-diff determinism; gates pass. | Zero duplicate identities; attestation coverage ≥95%; score families replace composite. |
 | P5 Assessment + eval corpus | pending | Bottleneck ranking; 12-task held-out corpus with paired repetitions. | Rankings render with denominators; corpus runnable with memory-ablation profile. |
@@ -65,9 +66,9 @@ post-P0 code) are in `history/outputs/2026-08-07-p0-cutover.md`.
 
 ## P1 — Sequence-break instrument (audit P0.5)
 
-The headline wait (plan-approval p95 105 min) needs hooks and timestamps,
-not the telemetry rebuild. P2–P4 proceed in parallel but are off this
-phase's critical path.
+**DONE 2026-09-03.** The headline wait (plan-approval p95 105 min) needed hooks
+and timestamps, not the telemetry rebuild. P1 delivered the instrument,
+guarded treatment, and first measured readout. P2 is now current.
 
 - **First step (before any schema): DONE 2026-08-01** — verified on Claude
   Code 2.1.220 across three rounds and seven real sessions; full evidence in
@@ -170,9 +171,12 @@ phase's critical path.
   no-match Notification case: jq's `capture()` returns an empty stream on
   no-match, which silently annihilates the whole output object while the
   fail-open script still exits 0 (this defect was caught in the spike).
-- Notifications: ntfy desktop/phone push on plan-approval and permission
-  blocks, with an escalation ladder and per-session storm damping (one ping
-  per retry storm). Stretch: remote Approve/Deny action buttons bridging to
+- Notifications: Plasma desktop push on plan-approval and permission blocks,
+  with an escalation ladder and per-session storm damping (one ping per retry
+  storm). The implemented ntfy phone transport remains fail-open and
+  unconfigured. It is deferred as an optional treatment until the operator
+  explicitly requests phone delivery and a least-privilege runtime path exists.
+  Stretch: remote Approve/Deny action buttons bridging to
   `ccd_session send_message`.
   - **Escalation triggers on `PermissionRequest`, never on `PreToolUse` and
     never on idle notifications.** Plan-parked sessions emit no `Stop` and
@@ -216,13 +220,15 @@ Effect-v3 clone, one live dirty feature checkout with an open PR, and one clean
 inactive feature checkout not owned by this executor. They are explicitly
 excluded from the current rollout denominator rather than mutated out of band;
 their revision-labelled rows remain controls, and the disposition is
-re-evaluated on owner integration or reactivation. P1 now has eight sharp
-human-input starts: seven exact-ID closures, one honest
-tombstone, and a revision-qualified 80.1% descriptive median reduction. P1
-remains open until ntfy phone delivery has a safe runtime secret plus receipt.
-See
+re-evaluated on owner integration or reactivation. P1 has eight sharp
+human-input starts: seven exact-ID closures, one honest tombstone, and a
+revision-qualified 80.1% descriptive median reduction. The normative spec does
+not require phone delivery, and the originating amendment described ntfy as
+optional. No provisioned ntfy service or runtime reference exists, so phone
+delivery is deferred with the trigger recorded in the P1 transport
+disposition. P1 is complete. See
 `research/2026-09-03-p1-baseline-close.md` and
-`research/2026-09-03-p1-first-treatment-readout.md`.
+`research/2026-09-03-p1-phone-transport-disposition.md`.
 
 ## P2 — Telemetry-v2 truth model (audit P1)
 
@@ -267,6 +273,22 @@ See
   with the mechanical/semantic split plus lease-driven tombstone
   reconciliation, so channel dropout is a measured number with an alarm
   threshold.
+
+**Contract checkpoint (2026-09-03):** the first P2 milestone is complete in
+`@beep/repo-ai-metrics`. The shared LiteralKit vocabularies, structurally split
+`FlightRecord`, distinct pre-read `IngestEnumeration`, exact final
+`IngestManifest`, content-free invalid/quarantine events, JSON codecs, and the
+durable `TelemetryV2Store` service are landed with round-trip, property, and
+filesystem coverage. The store atomically commits the initial enumeration
+before invoking the source-reading callback, rejects a final manifest whose
+subject set or run/config linkage differs, derives record-wide evidence and
+OIP fields, and makes identical writes content-addressed and idempotent. The
+real-session fixture retains
+37 privacy-safe hook events as counts and hashes only. The real workstation
+inventory accounts for all six registered source instances as `dry-run`
+without opening transcript content. P2 remains in progress for emitters,
+leases, reconciliation, divergence metric, and the seven-day coverage gate.
+See `research/2026-09-03-p2-contract-foundation.md`.
 
 ## P3 — Yeet mistrial doctrine and proof durability (audit P1.5)
 
