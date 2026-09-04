@@ -923,7 +923,7 @@ export const runQaJudgePack = Effect.fn("QaJudgePack.run")(function* (
     `qa judge-pack: round ${options.round} -> ${judgeDir}`,
     `  files: ${A.length(judgeManifest.files)} (${judgeManifest.totalBytes} bytes)`,
     `  dropped: ${A.length(judgeManifest.dropped)}`,
-    `  next: node "\${CLAUDE_PLUGIN_ROOT}/scripts/codex-companion.mjs" task --model gpt-5.6-sol --effort high --prompt-file ${path.join(judgeDir, "prompt.md")}`,
+    `  next: node "\${CLAUDE_PLUGIN_ROOT}/scripts/codex-companion.mjs" task --model gpt-daybreak-blue-latest --effort high --prompt-file ${path.join(judgeDir, "prompt.md")}`,
   ]);
 
   return judgeManifest;
