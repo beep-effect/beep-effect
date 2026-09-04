@@ -22,10 +22,12 @@ import {
 } from "@beep/repo-cli/test/Yeet";
 import { provideScopedLayer } from "@beep/test-utils";
 import { assert, describe, expect, it } from "@effect/vitest";
-import { ConfigProvider, Console, Effect, FileSystem, Layer, Ref, Result } from "effect";
+import { ConfigProvider, Console, Effect, FileSystem, Layer, pipe, Ref, Result } from "effect";
 import * as A from "effect/Array";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { makeRecord, PlatformLayer, repository } from "./yeet-pr-fixtures.ts";
 import type { YeetExecutedStep } from "@beep/repo-cli/test/Yeet";
 
@@ -39,6 +41,21 @@ const GhBodyEditsDocument = S.Struct({
 });
 type GhBodyEdit = typeof GhBodyEdit.Type;
 const editedAt = "2026-09-03T12:01:00Z";
+// The `gh pr view --json` fields gh 2.99 exposes that the stamp may ask for.
+// A field outside this set is exactly what shipped the `lastEditedAt` skip, so
+// the fake refuses it the way gh does instead of returning a snapshot anyway.
+const GhPrViewJsonFields = HashSet.make("body", "createdAt", "updatedAt", "number", "title", "url", "state");
+const unsupportedGhPrViewField = (args: ReadonlyArray<string>): O.Option<string> =>
+  pipe(
+    A.findFirstIndex(args, (arg) => arg === "--json"),
+    O.flatMap((index) => A.get(args, index + 1)),
+    O.flatMap((fields) => A.findFirst(Str.split(fields, ","), (field) => !HashSet.has(GhPrViewJsonFields, field)))
+  );
+const ghUnknownJsonField = (field: string) => ({
+  exitCode: 1,
+  output: `Unknown JSON field: "${field}"\nAvailable fields:\n  body\n  createdAt\n  updatedAt`,
+  truncated: false,
+});
 const encodeGhBody = (body: string, updatedAt: string = editedAt): string =>
   Result.getOrThrow(S.encodeUnknownResult(S.fromJsonString(GhBody))({ body, updatedAt }));
 const encodeGhBodyEdits = (nodes: ReadonlyArray<GhBodyEdit>): string =>
@@ -114,6 +131,8 @@ const makeGhRunner = Effect.fn("test.makeGhRunner")(function* (
     _env: Record<string, string | undefined> | undefined = undefined
   ) {
     if (args[1] === "view") {
+      const unsupported = unsupportedGhPrViewField(args);
+      if (O.isSome(unsupported)) return ghUnknownJsonField(unsupported.value);
       const view = yield* Ref.getAndUpdate(views, (count) => count + 1);
       const current = view === 0 ? initialBody : view === 1 ? freshBody : afterWrite(yield* Ref.get(written));
       return { exitCode: 0, output: encodeGhBody(current, freshUpdatedAt), truncated: false };
@@ -178,7 +197,11 @@ const makePublishGhRunner = Effect.fn("test.makePublishGhRunner")(function* (fs:
       yield* Ref.set(createBody, yield* fs.readFileString(bodyPath).pipe(Effect.orDie));
       return { exitCode: 0, output: "https://github.com/beep-effect/beep-effect/pull/42", truncated: false };
     }
-    if (args[1] === "view") return { exitCode: 0, output: encodeGhBody(yield* Ref.get(body)), truncated: false };
+    if (args[1] === "view") {
+      const unsupported = unsupportedGhPrViewField(args);
+      if (O.isSome(unsupported)) return ghUnknownJsonField(unsupported.value);
+      return { exitCode: 0, output: encodeGhBody(yield* Ref.get(body)), truncated: false };
+    }
     if (args[1] === "graphql") {
       return {
         exitCode: 0,
@@ -200,6 +223,14 @@ const makePublishGhRunner = Effect.fn("test.makePublishGhRunner")(function* (fs:
 });
 
 describe("Yeet provenance footer splice", () => {
+  it("refuses gh pr view fields the CLI does not expose, as gh does", () => {
+    expect(unsupportedGhPrViewField(["pr", "view", "42", "--json", "body,createdAt,lastEditedAt"])).toStrictEqual(
+      O.some("lastEditedAt")
+    );
+    expect(unsupportedGhPrViewField(["pr", "view", "42", "--json", "body,updatedAt"])).toStrictEqual(O.none());
+    expect(unsupportedGhPrViewField(["pr", "view", "42", "--json", "body"])).toStrictEqual(O.none());
+  });
+
   it("is idempotent for current markers", () => {
     const once = splicePrProvenanceFooter("Body", footer);
     expect(splicePrProvenanceFooter(once, footer)).toBe(once);
