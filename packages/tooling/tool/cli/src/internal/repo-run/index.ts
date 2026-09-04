@@ -7,6 +7,7 @@
 
 export * from "./AdmissionJournal.ts";
 export * from "./AttemptTerminationJournal.ts";
+export * from "./DirectoryHandle.ts";
 export * from "./GitExec.ts";
 export * from "./JournalFile.ts";
 export * from "./ProcessIdentity.ts";

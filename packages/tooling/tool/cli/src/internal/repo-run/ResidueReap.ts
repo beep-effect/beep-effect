@@ -22,21 +22,31 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
+import * as Match from "effect/Match";
 import * as N from "effect/Number";
 import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import {
+  directoryIdentity,
+  openDirectoryHandle,
+  removeThroughDirectoryHandle,
+  sameDirectoryIdentity,
+} from "./DirectoryHandle.ts";
 import { runRepoCommandCapture } from "./RepoRun.executor.ts";
 import {
+  ResidueReapAction,
   ResidueReapAgeDays,
   ResidueReapCandidate,
   ResidueReapClass,
   ResidueReapHomeRoot,
   ResidueReapReport,
 } from "./ResidueReap.schemas.ts";
+import type * as Scope from "effect/Scope";
 import type { ChildProcessSpawner } from "effect/unstable/process";
-import type { ResidueReapAction, ResidueReapSkipReason } from "./ResidueReap.schemas.ts";
+import type { DirectoryIdentity } from "./DirectoryHandle.ts";
+import type { ResidueReapSkipReason } from "./ResidueReap.schemas.ts";
 
 const DEFAULT_MAX_AGE_DAYS = 30;
 const DEFAULT_TURBO_MAX_AGE_DAYS = 14;
@@ -679,9 +689,16 @@ const reassessCandidate = Effect.fnUntraced(function* (
   );
 });
 
+// Internal apply-time shape (never decoded or serialized): the resolved candidate and
+// the identity of the inode every apply-time check ran against.
+type ResolvedApplyTarget = {
+  readonly candidate: ResidueReapCandidate;
+  readonly identity: DirectoryIdentity;
+};
+
 const resolveApplyTarget = Effect.fnUntraced(function* (
   assessed: ResidueReapCandidate
-): Effect.fn.Return<O.Option<ResidueReapCandidate>, never, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<O.Option<ResolvedApplyTarget>, never, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   // The candidate itself must not be a link (its target was never assessed), and its
@@ -696,7 +713,40 @@ const resolveApplyTarget = Effect.fnUntraced(function* (
   if (O.isNone(root) || O.isNone(target) || !pathIsStrictlyWithin(path, root.value, target.value)) {
     return O.none();
   }
-  return O.some(ResidueReapCandidate.make({ ...assessed, root: root.value, path: target.value }));
+  // The inode behind the resolved path is what the removal is later bound to, so an
+  // entry renamed into that path after the checks carries another identity and is
+  // never touched.
+  const identity = O.flatMap(yield* fs.stat(target.value).pipe(Effect.option), directoryIdentity);
+  return O.map(identity, (bound) => ({
+    candidate: ResidueReapCandidate.make({ ...assessed, root: root.value, path: target.value }),
+    identity: bound,
+  }));
+});
+
+const ResolvedRemovalOutcome = LiteralKit(["removed", "path-changed", "removal-failed"]);
+type ResolvedRemovalOutcome = typeof ResolvedRemovalOutcome.Type;
+
+const removeResolvedCandidate = Effect.fnUntraced(function* (
+  candidate: ResidueReapCandidate,
+  identity: DirectoryIdentity
+): Effect.fn.Return<ResolvedRemovalOutcome, never, FileSystem.FileSystem | Scope.Scope> {
+  const fs = yield* FileSystem.FileSystem;
+  if (!ResidueReapAction.is["remove-dir"](candidate.action)) {
+    // A file is unlinked by name: unlink never follows a link, so nothing can redirect it.
+    return yield* fs.remove(candidate.path, { force: false }).pipe(
+      Effect.as<ResolvedRemovalOutcome>("removed"),
+      Effect.orElseSucceed((): ResolvedRemovalOutcome => "removal-failed")
+    );
+  }
+  // A tree is emptied through a descriptor bound to the inode the checks ran against.
+  // The O_NOFOLLOW open refuses a link swapped into the path, and a directory renamed
+  // into it has another identity; either is reported as a changed path and left alone.
+  const handle = yield* openDirectoryHandle(candidate.path);
+  if (O.isNone(handle) || !sameDirectoryIdentity(handle.value.identity, identity)) {
+    return "path-changed";
+  }
+  const removed = yield* removeThroughDirectoryHandle(handle.value, candidate.path);
+  return removed ? "removed" : "removal-failed";
 });
 
 const applyCandidate = Effect.fnUntraced(function* (
@@ -711,7 +761,6 @@ const applyCandidate = Effect.fnUntraced(function* (
   never,
   FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
-  const fs = yield* FileSystem.FileSystem;
   // Reports keep speaking the operator's lexical path even though the checks and the
   // removal below run on the resolved one.
   const reported = (candidate: ResidueReapCandidate): ResidueReapCandidate =>
@@ -726,7 +775,7 @@ const applyCandidate = Effect.fnUntraced(function* (
     };
   }
   const rechecked = yield* reassessCandidate(
-    resolved.value,
+    resolved.value.candidate,
     nowMillis,
     maxAgeDays,
     turboMaxAgeDays,
@@ -743,26 +792,24 @@ const applyCandidate = Effect.fnUntraced(function* (
         : [`Skipped ${assessed.path}: eligibility changed before removal.`],
     };
   }
-  const removed = yield* fs
-    .remove(rechecked.path, { force: false, recursive: Str.Equivalence(rechecked.action, "remove-dir") })
-    .pipe(
-      Effect.as(true),
-      Effect.orElseSucceed(() => false)
-    );
-  if (!removed) {
-    return {
-      candidate: reported(ResidueReapCandidate.make({ ...rechecked, action: "skip", skipReason: "removal-failed" })),
-      reaped: false,
-      reclaimedBytes: 0,
-      warnings: [`Failed to remove ${assessed.path}.`],
-    };
-  }
-  return {
-    candidate: reported(rechecked),
-    reaped: true,
-    reclaimedBytes: O.getOrElse(O.fromUndefinedOr(rechecked.bytes), () => 0),
-    warnings: A.empty(),
-  };
+  const skipped = (skipReason: ResidueReapSkipReason, warning: string): AppliedCandidate => ({
+    candidate: reported(ResidueReapCandidate.make({ ...rechecked, action: "skip", skipReason })),
+    reaped: false,
+    reclaimedBytes: 0,
+    warnings: [warning],
+  });
+  const outcome = yield* removeResolvedCandidate(rechecked, resolved.value.identity).pipe(Effect.scoped);
+  return Match.value(outcome).pipe(
+    Match.when("removed", () => ({
+      candidate: reported(rechecked),
+      reaped: true,
+      reclaimedBytes: O.getOrElse(O.fromUndefinedOr(rechecked.bytes), () => 0),
+      warnings: A.empty<string>(),
+    })),
+    Match.when("path-changed", () => skipped("path-changed", `Skipped ${assessed.path}: path changed before removal.`)),
+    Match.when("removal-failed", () => skipped("removal-failed", `Failed to remove ${assessed.path}.`)),
+    Match.exhaustive
+  );
 });
 
 /**

@@ -15,6 +15,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
+import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -422,6 +423,89 @@ describe("residue reap", () => {
         expect(skipped.action).toBe("skip");
         // The bystander the link pointed at is never followed for deletion.
         expect(yield* fs.exists(path.join(bystander, "keep.txt"))).toBe(true);
+      })
+    ).pipe(provideScopedLayer(NodeServices.layer))
+  );
+
+  it.effect("leaves a directory renamed into the candidate's path after reassessment untouched", () =>
+    withTempDirectory((root) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const fixture = yield* makeFixture(root);
+        const moved = path.join(root, "moved");
+        const probes = yield* Ref.make(0);
+        // utimes takes Unix seconds: forty days before the fixture clock.
+        const staleSeconds =
+          (FIXTURE_NOW_MILLIS - Duration.toMillis(Duration.days(40))) / Duration.toMillis(Duration.seconds(1));
+        // The liveness probe runs after the apply-time resolution and before the bound
+        // removal. On its second visit to the candidate it moves the assessed directory
+        // aside and puts an equally old-looking directory with another inode in its place.
+        const swappingProbe = Effect.fn("swappingProbe")(function* (target: string) {
+          if (!Str.Equivalence(target, fixture.oldWorktree)) {
+            return O.some(false);
+          }
+          const visit = yield* Ref.updateAndGet(probes, (count) => count + 1);
+          if (visit === 2) {
+            yield* fs.rename(fixture.oldWorktree, moved);
+            yield* fs.makeDirectory(fixture.oldWorktree);
+            yield* fs.writeFileString(path.join(fixture.oldWorktree, "fresh.txt"), "live\n");
+            yield* fs.utimes(path.join(fixture.oldWorktree, "fresh.txt"), staleSeconds, staleSeconds);
+            yield* fs.utimes(fixture.oldWorktree, staleSeconds, staleSeconds);
+          }
+          return O.some(false);
+        }, Effect.orDie);
+
+        const applied = yield* runResidueReap({
+          apply: true,
+          classes: ["codex-worktrees"],
+          homeRoot: fixture.homeRoot,
+          nowMillis: FIXTURE_NOW_MILLIS,
+          probeLiveCwd: swappingProbe,
+          repoRoot: fixture.repoRoot,
+        });
+
+        const skipped = candidateByPath(applied, fixture.oldWorktree);
+        expect(skipped.action).toBe("skip");
+        expect(skipped.skipReason).toBe("path-changed");
+        // Neither the directory that was assessed nor the one that replaced it was deleted.
+        expect(yield* fs.exists(path.join(fixture.oldWorktree, "fresh.txt"))).toBe(true);
+        expect(A.isReadonlyArrayNonEmpty(yield* fs.readDirectory(moved))).toBe(true);
+      })
+    ).pipe(provideScopedLayer(NodeServices.layer))
+  );
+
+  it.effect("reports a removal failure when the bound tree cannot be emptied", () =>
+    withTempDirectory((root) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const fixture = yield* makeFixture(root);
+        const sealed = path.join(fixture.oldWorktree, "sealed");
+        yield* fs.makeDirectory(sealed);
+        yield* fs.writeFileString(path.join(sealed, "pinned.txt"), "stale\n");
+        yield* touchTreeDaysAgo(root, fixture.oldWorktree, 40);
+
+        // A directory without write permission cannot have its entries unlinked, so the
+        // descriptor-bound removal fails part-way and says so instead of reporting a reap.
+        const applied = yield* Effect.acquireUseRelease(
+          fs.chmod(sealed, 0o500),
+          () =>
+            runResidueReap({
+              apply: true,
+              classes: ["codex-worktrees"],
+              homeRoot: fixture.homeRoot,
+              nowMillis: FIXTURE_NOW_MILLIS,
+              probeLiveCwd: noLiveCwd,
+              repoRoot: fixture.repoRoot,
+            }),
+          () => fs.chmod(sealed, 0o700).pipe(Effect.ignore)
+        );
+
+        const failed = candidateByPath(applied, fixture.oldWorktree);
+        expect(failed.action).toBe("skip");
+        expect(failed.skipReason).toBe("removal-failed");
+        expect(yield* fs.exists(path.join(sealed, "pinned.txt"))).toBe(true);
       })
     ).pipe(provideScopedLayer(NodeServices.layer))
   );
