@@ -198,3 +198,14 @@ session/machine ids, quote only the minimal identifying error text.
 - **Would have prevented it:** never cancel a run on an unreplaced head; GitHub concurrency already
   cancels superseded runs on push. The rule now sits in every lane brief and belongs in the lane
   launcher's standing instructions.
+
+## 2026-09-03 — Main's lint-policy lane went red on a runner-memory ceiling, and every PR inherited it
+
+- **Doing:** driving #1005 and #1006 to merge-ready late in the evening.
+- **Evidence:** `Heavy / Lint Policy` failed on main (c78ee7471a and later) inside `lint deprecated-apis`
+  with `FATAL ERROR: Ineffective mark-compacts near heap limit … JavaScript heap out of memory`; the
+  step runs 25 eslint shards four at a time, each allowed an 8 GB heap, on a 16 GB hosted runner. The
+  PR-side capture bound hid the OOM text, so the PR logs showed only an exit code after 337 seconds.
+- **Would have prevented it:** a shard concurrency that fits the runner (two 8 GB heaps), and a lane
+  that prints the failing shard name before its exit code so an inherited red is attributable from
+  the PR log alone.
