@@ -1,5 +1,5 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "installCommand": "cd ../.. && rm -rf node_modules && npx --yes bun@1.4.0 install --frozen-lockfile",
-  "buildCommand": "cd ../.. && npx --yes bun@1.4.0 run --cwd apps/oip-web build:pwa"
+  "installCommand": "cd ../.. && rm -rf node_modules && npx --yes bun@1.4.1 install --frozen-lockfile",
+  "buildCommand": "cd ../.. && npx --yes bun@1.4.1 run --cwd apps/oip-web build:pwa"
 }
