@@ -62,13 +62,11 @@ orchestrator owns schemas, contracts, and judgment.
       reads, the quad still fails closed, and the health probe names failing variables only).
 - [ ] B3 cheap precise gates first, wave fails immediately; ordering seeded from A1.
 - [ ] B5 detached durable proof jobs in their own systemd user scope with inbox completion.
-- [~] B6 lease and submitter death journaled as admission events — rows in PR #964, emission gated in
-      PR #978, crash-recoverable claims in PR #993 (00655a974e). Still open: on a host whose
-      `protocol.json` leaves eviction emission off, `appendAdmissionEvictionJournalEvent` returns
-      false and `processReapClaim` still marks the admission sink complete and deletes the claim, so
-      that death is never journaled and no successor retries. Complete when a disabled sink keeps the
-      claim pending (per-sink acknowledgement only on a real write) until the protocol enables
-      emission, with a test on a fresh host.
+- [x] B6 lease and submitter death journaled as admission events — completed 2026-09-03 (PR #1005):
+      rows landed in PR #964, emission was gated behind the unknown-row preservation rollout in PR
+      #978, and PR #993 made each death a crash-recoverable per-sink claim. A disabled admission sink
+      now persists as `pending-protocol-off`; every reap pass retries the same claim, and the first
+      enabled pass writes or acknowledges the idempotent eviction row before deleting the claim.
 
 ## P2 — Proof reuse
 
