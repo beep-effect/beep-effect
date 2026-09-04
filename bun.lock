@@ -3040,7 +3040,7 @@
     "uuid": "^11.1.1",
   },
   "catalog": {
-    "@arizeai/phoenix-client": "7.7.1",
+    "@arizeai/phoenix-client": "7.8.0",
     "@azure/msal-node": "^6.0.0",
     "@azure/msal-node-extensions": "^5.5.0",
     "@babel/cli": "^8.0.4",
@@ -3315,7 +3315,7 @@
 
     "@arizeai/openinference-vercel": ["@arizeai/openinference-vercel@3.1.10", "", { "dependencies": { "@arizeai/openinference-core": "2.6.1", "@arizeai/openinference-genai": "0.3.6", "@arizeai/openinference-semantic-conventions": "2.8.0", "@opentelemetry/core": "^2.8.0", "@opentelemetry/semantic-conventions": ">=1.41.1 <2.0.0" }, "peerDependencies": { "@ai-sdk/otel": "^1.0.0", "@opentelemetry/api": ">=1.7.0 <2.0.0", "ai": "^7.0.0" } }, "sha512-1SzxjL/3dIHfkd712nkWxQHRV+l78p6XtqyG0IZAsZcrChrn/ZHmQY6trdJZYUUSGiLm8njLRQEYlRgInqPBbw=="],
 
-    "@arizeai/phoenix-client": ["@arizeai/phoenix-client@7.7.1", "", { "dependencies": { "@arizeai/openinference-semantic-conventions": "^2.7.0", "@arizeai/phoenix-config": "0.5.0", "@arizeai/phoenix-otel": "2.2.0", "async": "^3.2.6", "openapi-fetch": "^0.17.0", "tiny-invariant": "^1.3.3", "zod": "^4.4.3" }, "peerDependencies": { "@anthropic-ai/sdk": "^0.35.0", "ai": "^7.0.0", "jest": ">=27", "openai": "^6.10.0 || ^7.0.0", "vitest": ">=1" }, "optionalPeers": ["@anthropic-ai/sdk", "ai", "jest", "openai", "vitest"] }, "sha512-K/R5P+RA4tKvpWhATcfr3o373CkteT16MIJTh/D1PoedJm6IPLKT6uYUOe+8Z+Ax0HHd2uVU5m8gzXiIuMoh4w=="],
+    "@arizeai/phoenix-client": ["@arizeai/phoenix-client@7.8.0", "", { "dependencies": { "@arizeai/openinference-semantic-conventions": "^2.7.0", "@arizeai/phoenix-config": "0.5.0", "@arizeai/phoenix-otel": "2.2.0", "async": "^3.2.6", "openapi-fetch": "^0.17.0", "tiny-invariant": "^1.3.3", "zod": "^4.4.3" }, "peerDependencies": { "@anthropic-ai/sdk": "^0.35.0", "ai": "^7.0.0", "jest": ">=27", "openai": "^6.10.0 || ^7.0.0", "vitest": ">=1" }, "optionalPeers": ["@anthropic-ai/sdk", "ai", "jest", "openai", "vitest"] }, "sha512-95rkjJEwqiDjqP0YWD07elnyOJoffwvjbpKpwpoiv/wCJ5OiwDSDePdbbZvCJNI4M/Gf5e5p6HogFdbJM9UPmQ=="],
 
     "@arizeai/phoenix-config": ["@arizeai/phoenix-config@0.5.0", "", {}, "sha512-8wi9liumJ4LmbSEZwkhU9dY5NKWeR8Zmfj//GMLf5Jj2d87nugzR5+ODovRkZOs7UGWnYRtCn1ChVCJwqV/bkg=="],
 

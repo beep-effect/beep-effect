@@ -1,6 +1,6 @@
 {
   "catalog": {
-    "@arizeai/phoenix-client": "7.7.1",
+    "@arizeai/phoenix-client": "7.8.0",
     "@azure/msal-node": "^6.0.0",
     "@azure/msal-node-extensions": "^5.5.0",
     "@babel/cli": "^8.0.4",
