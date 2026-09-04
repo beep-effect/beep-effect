@@ -406,7 +406,7 @@ const githubCheckTestEstimate = (
   laneId: string,
   costP50Seconds: number,
   precision: "precise" | "imprecise" = "precise",
-  laneClass: typeof GateOrderLaneClass.Type = "policy-preflight"
+  laneClass: GateOrderLaneClass = "policy-preflight"
 ): GateOrderSeedRow =>
   GateOrderSeedRow.make({
     laneId,
