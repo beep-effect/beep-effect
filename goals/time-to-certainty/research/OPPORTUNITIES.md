@@ -185,3 +185,11 @@ session/machine ids, quote only the minimal identifying error text.
 - **Would have prevented it:** gate B6 completion on one real-filesystem scenario that starts with
   eviction emission off, proves the same claim stays pending across reap passes, enables emission,
   and observes one idempotent eviction row before claim deletion.
+
+## 2026-09-03 — Yeet monitor's provenance read exceeded the installed GitHub CLI schema
+
+- **Doing:** arming the hosted check-and-review watch for PR #1005 after its first complete push.
+- **Evidence:** provenance stamping skipped with `Unknown JSON field: "lastEditedAt"`; the watch still
+  started, but could not reassert its registry-backed footer before polling.
+- **Would have prevented it:** capability-detect the `gh pr view` field set and fall back to
+  `updatedAt`, with a compatibility test against the oldest supported GitHub CLI release.
