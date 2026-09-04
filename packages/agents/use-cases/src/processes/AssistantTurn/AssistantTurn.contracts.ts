@@ -98,7 +98,8 @@ export const TurnHistoryItem = S.Union([UserTurnHistoryItem, AssistantTurnHistor
   S.toTaggedUnion("role"),
   $I.annoteSchema("TurnHistoryItem", {
     description: "Plain-text prompt projection of a thread item consumed by the turn kernel.",
-  })
+  }),
+  SchemaUtils.withCodecStatics(["decodeSync", "encodeResult"])
 );
 
 /**
@@ -149,7 +150,9 @@ export class IndexedBlock extends S.Class<IndexedBlock>($I`IndexedBlock`)(
   $I.annote("IndexedBlock", {
     description: "Generated assistant block paired with the block's position in the turn stream.",
   })
-) {}
+) {
+  static readonly encodeResult = S.encodeResult(IndexedBlock);
+}
 
 /**
  * Provider-reported token usage attached to a successfully finalized assistant
@@ -197,7 +200,11 @@ export class ProviderUsageMetadata extends S.Class<ProviderUsageMetadata>($I`Pro
   $I.annote("ProviderUsageMetadata", {
     description: "Provider-reported model and token usage for a successfully finalized assistant turn.",
   })
-) {}
+) {
+  static readonly encodeResult = S.encodeResult(ProviderUsageMetadata);
+
+  static readonly encodeEffect = S.encodeEffect(ProviderUsageMetadata);
+}
 
 /**
  * Stream event carrying one completed assistant block.

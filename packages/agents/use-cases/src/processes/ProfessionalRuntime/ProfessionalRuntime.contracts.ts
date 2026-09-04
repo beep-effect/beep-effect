@@ -222,7 +222,9 @@ export class RuntimeEvidenceRef extends S.Class<RuntimeEvidenceRef>($I`RuntimeEv
   $I.annote("RuntimeEvidenceRef", {
     description: "Reference to one or more source spans on an artifact.",
   })
-) {}
+) {
+  static readonly encodeResult = S.encodeResult(RuntimeEvidenceRef);
+}
 
 /**
  * Candidate claim proposed by the runtime.
@@ -273,7 +275,9 @@ export class RuntimeCandidateClaim extends S.Class<RuntimeCandidateClaim>($I`Run
   $I.annote("RuntimeCandidateClaim", {
     description: "Candidate claim with source evidence and producing principal provenance.",
   })
-) {}
+) {
+  static readonly encodeResult = S.encodeResult(RuntimeCandidateClaim);
+}
 
 /**
  * Candidate project proposed by the runtime.
@@ -633,7 +637,9 @@ export class RuntimeActivity extends S.Class<RuntimeActivity>($I`RuntimeActivity
   $I.annote("RuntimeActivity", {
     description: "Provenance activity for ingestion and candidate proposal events.",
   })
-) {}
+) {
+  static readonly encodeResult = S.encodeResult(RuntimeActivity);
+}
 
 /**
  * Runtime usage attribution included in a context packet.
@@ -845,4 +851,6 @@ export class CandidateOutputSet extends S.Class<CandidateOutputSet>($I`Candidate
   })
 ) {
   static readonly fromUnknown = S.decodeUnknownSync(CandidateOutputSet);
+
+  static readonly encodeResult = S.encodeResult(CandidateOutputSet);
 }

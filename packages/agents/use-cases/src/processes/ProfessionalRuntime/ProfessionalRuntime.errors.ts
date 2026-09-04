@@ -46,6 +46,8 @@ export class ProfessionalRuntimeValidationError extends S.TaggedError<Profession
   });
 
   static readonly failEffectThunk = flow(this.failEffect, (effect) => () => effect);
+
+  static readonly is = S.is(ProfessionalRuntimeValidationError);
 }
 
 /**

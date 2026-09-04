@@ -46,7 +46,7 @@ const $I = $LejeuneBoltWorkbenchId.create("workflows/Replay");
  * @category models
  * @since 0.0.0
  */
-export class ReplayBuild extends S.Class<ReplayBuild>($I`ReplayBuild`)(
+class ReplayBuild extends S.Class<ReplayBuild>($I`ReplayBuild`)(
   {
     bundle: ImmutableDemoBundle,
     mutableLedger: MutableReviewLedger,
@@ -60,7 +60,7 @@ export class ReplayBuild extends S.Class<ReplayBuild>($I`ReplayBuild`)(
 
 const ReplayOperation = LiteralKit(["encode-bundle", "hash-bundle"]);
 
-export class ReplayError extends S.TaggedError<ReplayError>($I`ReplayError`)(
+class ReplayError extends S.TaggedError<ReplayError>($I`ReplayError`)(
   "ReplayError",
   {
     cause: S.Defect({ includeStack: true }),

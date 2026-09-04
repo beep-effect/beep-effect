@@ -14,6 +14,7 @@ import {
   fixtureEventsFor,
   fixtureProviderUsage,
 } from "@beep/agents-use-cases/test";
+import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Result, Stream } from "effect";
@@ -34,7 +35,7 @@ const roundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, value: Schem
 
 describe("@beep/agents-use-cases AssistantTurn", () => {
   it("models history as a role-tagged union of user and assistant items", () => {
-    const decoded = S.decodeSync(TurnHistoryItem)({ role: "user", text: "hello" });
+    const decoded = TurnHistoryItem.decodeSync({ role: "user", text: "hello" });
     const user = userItem("hello");
     const assistant = assistantItem("hi");
 
@@ -53,18 +54,18 @@ describe("@beep/agents-use-cases AssistantTurn", () => {
     const block = ParagraphBlock.make({ children: [TextInline.make({ text: "Hello" })] });
     const indexed = IndexedBlock.make({ block, index: 0 });
 
-    expect(Result.getOrThrow(S.encodeResult(TurnHistoryItem)(userItem("hello")))).toStrictEqual({
+    expect(Result.getOrThrow(TurnHistoryItem.encodeResult(userItem("hello")))).toStrictEqual({
       role: "user",
       text: "hello",
     });
-    expect(Result.getOrThrow(S.encodeResult(IndexedBlock)(indexed))).toStrictEqual({
+    expect(Result.getOrThrow(IndexedBlock.encodeResult(indexed))).toStrictEqual({
       block: {
         type: "paragraph",
         children: [{ type: "text", text: "Hello" }],
       },
       index: 0,
     });
-    expect(Result.getOrThrow(S.encodeResult(ProviderUsageMetadata)(fixtureProviderUsage))).toStrictEqual({
+    expect(Result.getOrThrow(ProviderUsageMetadata.encodeResult(fixtureProviderUsage))).toStrictEqual({
       inputTokens: 12,
       model: "fixture",
       outputTokens: 8,
@@ -93,7 +94,7 @@ describe("@beep/agents-use-cases AssistantTurn", () => {
     "round-trips provider usage through its JSON-safe encoded boundary",
     Effect.fnUntraced(function* () {
       const usage = ProviderUsageMetadata.make({ ...fixtureProviderUsage, stopReason: O.none() });
-      const encoded = yield* S.encodeEffect(ProviderUsageMetadata)(usage);
+      const encoded = yield* ProviderUsageMetadata.encodeEffect(usage);
       expect(encoded).toStrictEqual({
         inputTokens: 12,
         model: "fixture",
@@ -102,9 +103,11 @@ describe("@beep/agents-use-cases AssistantTurn", () => {
         stopReason: null,
       });
 
-      const JsonProviderUsage = S.fromJsonString(ProviderUsageMetadata);
-      const json = yield* S.encodeEffect(JsonProviderUsage)(usage);
-      const decoded = yield* S.decodeEffect(JsonProviderUsage)(json);
+      const JsonProviderUsage = S.fromJsonString(ProviderUsageMetadata).pipe(
+        SchemaUtils.withCodecStatics(["encodeEffect", "decodeEffect"])
+      );
+      const json = yield* JsonProviderUsage.encodeEffect(usage);
+      const decoded = yield* JsonProviderUsage.decodeEffect(json);
 
       expect(decoded).toStrictEqual(usage);
       expect(O.isNone(decoded.stopReason)).toBe(true);
