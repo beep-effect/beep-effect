@@ -282,3 +282,31 @@
 - **Prevention:** Give each test-TSGo run a run-scoped temp directory, or
   serialize the command per checkout before creating and recursively removing
   synthetic configs.
+
+## 2026-09-03 — Managed scheduler status misclassified host PIDs as dead
+
+- **Work:** Inspect a canonical Yeet verify that remained first in the
+  admission queue behind two active host proofs.
+- **Evidence:** `beep quality scheduler status --json` inside the managed PID
+  namespace reported both host leases and the queued ticket as dead with zero
+  active tokens. The same command in the unrestricted host lane reported the
+  two leases and ticket as live with advancing heartbeats; the host reaper
+  correctly removed nothing. During the same wait, the admission loop also
+  reported one unrelated dead queue ticket as reaped on every poll without
+  removing it.
+- **Prevention:** Make scheduler liveness checks namespace-aware, or route
+  status and reap through the same host execution boundary as admitted proof
+  processes before declaring their PIDs dead. Remove dead ticket files
+  atomically, or suppress repeat notices once another waiter owns cleanup.
+
+## 2026-09-03 — Ignored goals index drifted across the base merge
+
+- **Work:** Reverify `@beep/repo-cli` after merging the latest `origin/main`.
+- **Evidence:** The package audit passed build and check but one
+  `goals-bootstrap-plan.test.ts` assertion compared a freshly generated
+  176-packet index with a stale ignored local projection containing 175
+  packets. `bun run beep goals index --write` restored the focused test to
+  24/24 before the complete package audit passed.
+- **Prevention:** Refresh the branch-specific ignored goals projection when a
+  base merge changes packet manifests, or make the deterministic fixture test
+  independent of pre-existing ignored projection state.

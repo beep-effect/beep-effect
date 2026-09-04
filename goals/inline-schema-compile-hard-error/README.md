@@ -42,13 +42,16 @@ P2 Verify — in progress.
   the +156 drift fully attributed.
 - The generator owner was updated first, 3,087 findings reconcile to zero, and
   `research/residual-census.json` records the empty repository-wide result on
-  the current post-merge implementation head.
+  the current implementation head. After `origin/main` advanced, its 20 new
+  repo-cli findings across seven files were classified and hoisted before the
+  census was refreshed to zero again.
 - `beep/no-inline-schema-compile` is configured as an error. Focused policy,
   assertion, and manually migrated package tests are green. The 106-package
   owner matrix is green, and the post-merge `@beep/repo-cli` family was
-  reverified after its newly introduced compilers were hoisted. The isolated
-  1,000-file test-TSGo gate and `@beep/html` generated-output check are green.
-  Exact-head Yeet verification remains in progress.
+  reverified after its newly introduced compilers were hoisted: package audit
+  and docgen both pass, as does its test-TSGo package check. The isolated
+  1,000-file repository test-TSGo gate and `@beep/html` generated-output check
+  are green. Exact-head Yeet verification remains in progress.
 
 ## Notes
 
