@@ -26929,15 +26929,15 @@
           }
         },
         "packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.ts": {
-          "lines": 82.9,
-          "statements": 81.48,
-          "branches": 71.33,
-          "functions": 80.51,
+          "lines": 84.48,
+          "statements": 83.01,
+          "branches": 73.49,
+          "functions": 82.27,
           "uncovered": {
-            "lines": 47,
-            "statements": 55,
-            "branches": 45,
-            "functions": 15
+            "lines": 45,
+            "statements": 53,
+            "branches": 44,
+            "functions": 14
           }
         },
         "packages/tooling/tool/cli/src/internal/repo-run/RunScope.schemas.ts": {

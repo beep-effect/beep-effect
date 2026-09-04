@@ -679,6 +679,26 @@ const reassessCandidate = Effect.fnUntraced(function* (
   );
 });
 
+const resolveApplyTarget = Effect.fnUntraced(function* (
+  assessed: ResidueReapCandidate
+): Effect.fn.Return<O.Option<ResidueReapCandidate>, never, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  // The candidate itself must not be a link (its target was never assessed), and its
+  // ancestors are resolved exactly once here so that every apply-time check AND the
+  // removal share one symlink-free path: an ancestor link repointed after reassessment
+  // can then neither redirect the checks to one directory nor the deletion to another.
+  if (O.isSome(yield* fs.readLink(assessed.path).pipe(Effect.option))) {
+    return O.none();
+  }
+  const root = yield* fs.realPath(assessed.root).pipe(Effect.option);
+  const target = yield* fs.realPath(assessed.path).pipe(Effect.option);
+  if (O.isNone(root) || O.isNone(target) || !pathIsStrictlyWithin(path, root.value, target.value)) {
+    return O.none();
+  }
+  return O.some(ResidueReapCandidate.make({ ...assessed, root: root.value, path: target.value }));
+});
+
 const applyCandidate = Effect.fnUntraced(function* (
   assessed: ResidueReapCandidate,
   nowMillis: number,
@@ -692,10 +712,30 @@ const applyCandidate = Effect.fnUntraced(function* (
   FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const fs = yield* FileSystem.FileSystem;
-  const rechecked = yield* reassessCandidate(assessed, nowMillis, maxAgeDays, turboMaxAgeDays, entryCap, cwdProbe);
+  // Reports keep speaking the operator's lexical path even though the checks and the
+  // removal below run on the resolved one.
+  const reported = (candidate: ResidueReapCandidate): ResidueReapCandidate =>
+    ResidueReapCandidate.make({ ...candidate, root: assessed.root, path: assessed.path });
+  const resolved = yield* resolveApplyTarget(assessed);
+  if (O.isNone(resolved)) {
+    return {
+      candidate: ResidueReapCandidate.make({ ...assessed, action: "skip", skipReason: "path-changed" }),
+      reaped: false,
+      reclaimedBytes: 0,
+      warnings: [`Skipped ${assessed.path}: path changed before removal.`],
+    };
+  }
+  const rechecked = yield* reassessCandidate(
+    resolved.value,
+    nowMillis,
+    maxAgeDays,
+    turboMaxAgeDays,
+    entryCap,
+    cwdProbe
+  );
   if (Str.Equivalence(rechecked.action, "skip")) {
     return {
-      candidate: rechecked,
+      candidate: reported(rechecked),
       reaped: false,
       reclaimedBytes: 0,
       warnings: Str.Equivalence(assessed.action, "skip")
@@ -711,14 +751,14 @@ const applyCandidate = Effect.fnUntraced(function* (
     );
   if (!removed) {
     return {
-      candidate: ResidueReapCandidate.make({ ...rechecked, action: "skip", skipReason: "removal-failed" }),
+      candidate: reported(ResidueReapCandidate.make({ ...rechecked, action: "skip", skipReason: "removal-failed" })),
       reaped: false,
       reclaimedBytes: 0,
-      warnings: [`Failed to remove ${rechecked.path}.`],
+      warnings: [`Failed to remove ${assessed.path}.`],
     };
   }
   return {
-    candidate: rechecked,
+    candidate: reported(rechecked),
     reaped: true,
     reclaimedBytes: O.getOrElse(O.fromUndefinedOr(rechecked.bytes), () => 0),
     warnings: A.empty(),

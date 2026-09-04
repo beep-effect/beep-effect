@@ -353,6 +353,79 @@ describe("residue reap", () => {
     ).pipe(provideScopedLayer(NodeServices.layer))
   );
 
+  it.effect("resolves a symlinked ancestor for removal while the report keeps the operator's path", () =>
+    withTempDirectory((root) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        // The operator's HOME is a symlink to the real store. Every candidate is reached
+        // lexically through the link, but the removal must run on the resolved directory
+        // so a repointed ancestor cannot redirect the recursive delete elsewhere.
+        const realHome = path.join(root, "real-home");
+        const linkedHome = path.join(root, "linked-home");
+        const fixture = yield* makeFixture(realHome);
+        yield* fs.symlink(fixture.homeRoot, linkedHome);
+        const lexicalWorktree = path.join(linkedHome, ".codex", "worktrees", "old-worktree");
+
+        const report = yield* runResidueReap({
+          apply: true,
+          classes: ["codex-worktrees"],
+          homeRoot: linkedHome,
+          nowMillis: FIXTURE_NOW_MILLIS,
+          probeLiveCwd: noLiveCwd,
+          repoRoot: fixture.repoRoot,
+        });
+
+        const reaped = candidateByPath(report, lexicalWorktree);
+        expect(reaped.action).toBe("remove-dir");
+        expect(reaped.path).toBe(lexicalWorktree);
+        // The real directory behind the link is gone; the symlink itself is untouched.
+        expect(yield* fs.exists(fixture.oldWorktree)).toBe(false);
+        expect(O.isSome(yield* fs.readLink(linkedHome).pipe(Effect.option))).toBe(true);
+      })
+    ).pipe(provideScopedLayer(NodeServices.layer))
+  );
+
+  it.effect("skips a candidate whose path became a symlink after classification", () =>
+    withTempDirectory((root) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const fixture = yield* makeFixture(root);
+        // Stand in for the apply-time race: classify the real worktree, then swap it for a
+        // symlink pointing at a live directory outside the reap root before removal.
+        const classified = yield* runResidueReap({
+          classes: ["codex-worktrees"],
+          homeRoot: fixture.homeRoot,
+          nowMillis: FIXTURE_NOW_MILLIS,
+          probeLiveCwd: noLiveCwd,
+          repoRoot: fixture.repoRoot,
+        });
+        expect(candidateByPath(classified, fixture.oldWorktree).action).toBe("remove-dir");
+
+        const bystander = path.join(root, "bystander");
+        yield* fs.makeDirectory(bystander, { recursive: true });
+        yield* fs.writeFileString(path.join(bystander, "keep.txt"), "live\n");
+        yield* fs.remove(fixture.oldWorktree, { force: true, recursive: true });
+        yield* fs.symlink(bystander, fixture.oldWorktree);
+
+        const applied = yield* runResidueReap({
+          apply: true,
+          classes: ["codex-worktrees"],
+          homeRoot: fixture.homeRoot,
+          nowMillis: FIXTURE_NOW_MILLIS,
+          probeLiveCwd: noLiveCwd,
+          repoRoot: fixture.repoRoot,
+        });
+
+        const skipped = candidateByPath(applied, fixture.oldWorktree);
+        expect(skipped.action).toBe("skip");
+        // The bystander the link pointed at is never followed for deletion.
+        expect(yield* fs.exists(path.join(bystander, "keep.txt"))).toBe(true);
+      })
+    ).pipe(provideScopedLayer(NodeServices.layer))
+  );
+
   it.effect("fails closed when the configured home root is empty or relative", () =>
     Effect.gen(function* () {
       const empty = yield* Effect.result(runResidueReap({ homeRoot: "" }));
