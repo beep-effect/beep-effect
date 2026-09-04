@@ -91,3 +91,10 @@ body at or after the baseline as foreign, with an inclusive baseline because
 GitHub records edit times at second resolution. Two regression tests cover the
 slipped-in edit and the same-second edit; the full-suite oracle keeps the
 `ProvenanceFooter.ts` row at its floor (80.39 branches, 10 uncovered arms).
+
+Residual red after round 6: only `test-utils/SqlTest.ts`, whose floor needs the
+PGLite Testcontainers image; the availability probe timed out at 45 s on four
+consecutive pull-request runs while PR #989's lane built it in 17 s earlier the
+same day. The probe budget is raised to 120 s and its failure cause is logged
+(test-only change in `SqlTest.pglite.test.ts`); the real fix is pre-baking or
+mirroring the image so a cold runner never pulls from Docker Hub.

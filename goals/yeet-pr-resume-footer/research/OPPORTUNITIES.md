@@ -33,4 +33,8 @@
    `SqlTest.pglite.test.ts` skipped 7/8 on one EC2 runner (Testcontainers probe timed out at
    45 s) and 5/8 on every `main` run; the floor was minted with Docker present, so the row is
    red whenever the runner's daemon is absent. Prevention: exclude Docker-gated tests from the
-   ratchet lane or mint the floor from the Docker-free posture.
+   ratchet lane or mint the floor from the Docker-free posture. Follow-up evidence: PR #989's
+   lane built the same image in 17 s at 19:46Z, then four consecutive runs of this PR from
+   22:15Z to 00:10Z hit the 45 s probe budget on four different instances; the probe now has a
+   120 s budget and logs its failure cause (`SqlTest.pglite.test.ts`), so the next skip note
+   names the reason instead of "unavailable or redundant".
