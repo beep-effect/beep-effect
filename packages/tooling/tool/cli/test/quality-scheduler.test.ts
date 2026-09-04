@@ -426,17 +426,6 @@ const listDirectory = Effect.fnUntraced(function* (directory: string) {
   return A.filter(names, (name) => !Str.includes(".tmp-")(name));
 });
 
-const waitForDirectoryEntryCount = Effect.fnUntraced(function* (directory: string, count: number) {
-  for (let attempt = 0; attempt < 500; attempt++) {
-    const entries = yield* listDirectory(directory);
-    if (A.length(entries) >= count) {
-      return entries;
-    }
-    yield* Effect.sleep("10 millis");
-  }
-  return yield* Effect.dieMessage(`Timed out waiting for ${count} settled entries in ${directory}.`);
-});
-
 const writePromotionTransition = Effect.fnUntraced(function* (
   tempRoot: AdmissionTempRoot,
   transition: AdmissionPromotionTransition
@@ -1131,6 +1120,63 @@ describe("quality-scheduler", () => {
       })
     ));
 
+  it.effect("invalidates a timed-out adopter before the suspended owner resumes", () =>
+    Effect.gen(function* () {
+      const gibRef = yield* Ref.make(50);
+      yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const lockPath = path.join(tempRoot.root, "timed-out-adopter.lock");
+          const observedToken = `${DEAD_PID}:timed-out-adopter-generation`;
+          const firstAdopted = yield* Deferred.make<void>();
+          const resumeFirst = yield* Deferred.make<void>();
+          yield* fs.makeDirectory(tempRoot.root, { recursive: true, mode: 0o700 });
+          yield* fs.writeFileString(lockPath, observedToken);
+          const pausedFileSystem = FileSystem.FileSystem.of({
+            ...fs,
+            rename: Effect.fn("FileSystem.FileSystem.rename")(function* (oldPath, newPath) {
+              yield* fs.rename(oldPath, newPath);
+              if (Str.includes(".reap-")(oldPath) && Str.includes(".adopt-")(newPath)) {
+                yield* Deferred.succeed(firstAdopted, undefined);
+                yield* Deferred.await(resumeFirst);
+              }
+            }),
+          });
+          const first = yield* Effect.forkChild(
+            acquireJournalFileLock(lockPath, `${process.pid}:first-adopter`, 1).pipe(
+              Effect.provideService(FileSystem.FileSystem, pausedFileSystem)
+            )
+          );
+          yield* Deferred.await(firstAdopted);
+          yield* TestClock.adjust("31001 millis");
+
+          const takeover = yield* Effect.forkChild(
+            acquireJournalFileLock(lockPath, `${process.pid}:takeover-adopter`, 1)
+          );
+          for (let attempt = 0; attempt < 100 && (yield* fs.exists(lockPath)); attempt++) {
+            yield* Effect.yieldNow;
+          }
+          expect(yield* fs.exists(lockPath)).toBe(false);
+
+          const replacementToken = `${process.pid}:replacement-after-takeover`;
+          expect(yield* acquireJournalFileLock(lockPath, replacementToken, 1)).toBe(true);
+          yield* Deferred.succeed(resumeFirst, undefined);
+          yield* Effect.yieldNow;
+          yield* TestClock.adjust("25 millis");
+
+          expect(yield* Fiber.join(first)).toBe(false);
+          expect(yield* Fiber.join(takeover)).toBe(false);
+          const replacement = yield* fs.readFileString(lockPath).pipe(Effect.flatMap(decodeJournalLockGeneration));
+          expect(replacement.ownerToken).toBe(replacementToken);
+          expect(A.join(A.map(yield* TestConsole.errorLines, String), "\n")).toContain("reap claim lost");
+          expect(A.filter(yield* fs.readDirectory(tempRoot.root), Str.includes(".reap-"))).toHaveLength(0);
+          yield* releaseAdmissionJournalLockForTesting(lockPath, replacementToken);
+        })
+      );
+    })
+  );
+
   it("elects one claim adopter and restores a replacement published before the reclaim rename", () =>
     Effect.runPromise(
       Effect.gen(function* () {
@@ -1461,6 +1507,15 @@ describe("quality-scheduler", () => {
             expect(yield* acquireJournalFileLock(liveLockPath, `${process.pid}:contender-live`, 1)).toBe(false);
             expect(yield* fs.exists(liveLockPath)).toBe(true);
 
+            const legacyLockPath = path.join(tempRoot.root, "legacy-live-adopter.lock");
+            const legacyToken = `${DEAD_PID}:legacy-live-adopter-generation`;
+            const legacyClaimPath = reapClaimPath(legacyLockPath, legacyToken);
+            const legacyAdopterPath = `${legacyClaimPath}.adopt-${process.pid}.${Encoding.encodeBase64Url(procStart)}.${Encoding.encodeBase64Url(`${process.pid}:legacy-live-adopter`)}`;
+            yield* fs.writeFileString(legacyLockPath, legacyToken);
+            yield* fs.link(legacyLockPath, legacyAdopterPath);
+            expect(yield* acquireJournalFileLock(legacyLockPath, `${process.pid}:contender-legacy`, 1)).toBe(false);
+            expect(yield* fs.exists(legacyLockPath)).toBe(true);
+
             const freshLockPath = path.join(tempRoot.root, "fresh-malformed-adopter.lock");
             const freshToken = `${DEAD_PID}:fresh-malformed-generation`;
             yield* fs.writeFileString(freshLockPath, freshToken);
@@ -1536,7 +1591,7 @@ describe("quality-scheduler", () => {
               nowMillis - 31_000
             );
             yield* fs.writeFileString(staleLiveLockPath, staleLiveToken);
-            yield* fs.writeFileString(staleLiveAdopterPath, staleLiveToken);
+            yield* fs.link(staleLiveLockPath, staleLiveAdopterPath);
             const staleLiveContender = `${process.pid}:stale-live-contender`;
             expect(yield* acquireJournalFileLock(staleLiveLockPath, staleLiveContender, 2)).toBe(true);
             expect(yield* fs.exists(staleLiveAdopterPath)).toBe(false);
@@ -1546,7 +1601,7 @@ describe("quality-scheduler", () => {
             const staleToken = `${DEAD_PID}:stale-malformed-generation`;
             const staleAdopterPath = `${reapClaimPath(staleLockPath, staleToken)}.adopt-not-a-number.cHJvYzpzdGFydA.b3duZXI`;
             yield* fs.writeFileString(staleLockPath, staleToken);
-            yield* fs.writeFileString(staleAdopterPath, staleToken);
+            yield* fs.link(staleLockPath, staleAdopterPath);
             yield* fs.utimes(staleAdopterPath, agedSeconds, agedSeconds);
             expect(yield* acquireJournalFileLock(staleLockPath, `${process.pid}:contender-stale`, 1)).toBe(false);
             expect(yield* fs.exists(staleLockPath)).toBe(false);
@@ -1565,7 +1620,7 @@ describe("quality-scheduler", () => {
               nowMillis
             );
             yield* fs.writeFileString(deadLockPath, deadToken);
-            yield* fs.writeFileString(deadAdopterPath, deadToken);
+            yield* fs.link(deadLockPath, deadAdopterPath);
             expect(yield* acquireJournalFileLock(deadLockPath, `${process.pid}:contender-dead`, 1)).toBe(false);
             expect(yield* fs.exists(deadLockPath)).toBe(false);
           })
@@ -1700,7 +1755,12 @@ describe("quality-scheduler", () => {
             ).toBe(false);
             expect(yield* fs.exists(vanishedLockPath)).toBe(false);
 
-            yield* releaseAdmissionJournalLockForTesting(path.join(tempRoot.root, "absent-release.lock"), "absent");
+            const absentReleasePath = path.join(tempRoot.root, "absent-release.lock");
+            yield* releaseAdmissionJournalLockForTesting(absentReleasePath, "absent");
+            expect(yield* fs.exists(absentReleasePath)).toBe(false);
+            expect(
+              A.filter(yield* fs.readDirectory(tempRoot.root), Str.startsWith("absent-release.lock.reap-"))
+            ).toHaveLength(0);
           })
         );
       })
@@ -3059,8 +3119,9 @@ describe("quality-scheduler", () => {
               attemptId: O.some(JOURNALED_ATTEMPT_ID),
             });
             const unavailableAttemptJournal = AdmissionAttemptTerminationJournal.of({
-              appendOnce: () =>
-                Effect.fail(QualitySchedulerError.make({ message: "attempt termination sink unavailable" })),
+              appendOnce: Effect.fn("AdmissionAttemptTerminationJournal.appendOnce")(() =>
+                Effect.fail(QualitySchedulerError.make({ message: "attempt termination sink unavailable" }))
+              ),
             });
             yield* setAdmissionEvictionProtocol("on");
 
@@ -3740,6 +3801,7 @@ describe("quality-scheduler", () => {
       tickets: [],
       dead: [],
       deadLeases: [],
+      deadTickets: [],
       quarantined: [],
     };
     // 5 + 5 + 5 against capacity 8: only the oldest admission fits the prefix.

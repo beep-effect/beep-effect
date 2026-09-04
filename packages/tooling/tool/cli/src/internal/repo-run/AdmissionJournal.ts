@@ -17,7 +17,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { UUID } from "@beep/schema/String";
-import { Clock, Console, Duration, Effect, Encoding, FileSystem, Number as N, Path, pipe } from "effect";
+import { Clock, Console, Duration, Effect, Encoding, FileSystem, Number as N, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import { constant, dual, flow } from "effect/Function";
@@ -636,11 +636,7 @@ const restoreJournalLockReapTombstone = Effect.fnUntraced(function* (
   tombstonePath: string
 ): Effect.fn.Return<boolean, never, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
-  const restored = yield* fs.link(tombstonePath, lockPath).pipe(Effect.as(true), Effect.orElseSucceed(constant(false)));
-  if (restored) {
-    yield* fs.remove(tombstonePath, { force: true }).pipe(Effect.ignore);
-  }
-  return restored;
+  return yield* fs.link(tombstonePath, lockPath).pipe(Effect.as(true), Effect.orElseSucceed(constant(false)));
 });
 
 const discardOrphanJournalLockReapTombstone = Effect.fnUntraced(function* (
@@ -707,21 +703,30 @@ const reapAdopterMayStillAct = Effect.fnUntraced(function* (
   );
 });
 
-const activeReapAdopterExists = Effect.fnUntraced(function* (
+type ReapAdopterElection =
+  | { readonly _tag: "blocked" }
+  | { readonly _tag: "unclaimed" }
+  | { readonly _tag: "takeover"; readonly adopterPath: string };
+
+const electReapAdopter = Effect.fnUntraced(function* (
   claimPath: string,
   nowMillis: number
-): Effect.fn.Return<boolean, never, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<ReapAdopterElection, never, FileSystem.FileSystem | Path.Path> {
   const adopterPrefix = journalLockReapAdopterPrefix(claimPath);
   const adopters = yield* pathsWithPrefix(adopterPrefix);
   if (O.isNone(adopters)) {
-    return true;
+    return { _tag: "blocked" };
   }
-  for (const adopterPath of adopters.value) {
+  const ordered = A.sort(adopters.value, Order.String);
+  for (const adopterPath of ordered) {
     if (yield* reapAdopterMayStillAct(adopterPath, claimPath, nowMillis)) {
-      return true;
+      return { _tag: "blocked" };
     }
   }
-  return false;
+  return O.match(A.head(ordered), {
+    onNone: () => ({ _tag: "unclaimed" as const }),
+    onSome: (adopterPath) => ({ _tag: "takeover" as const, adopterPath }),
+  });
 });
 
 const makeLockGeneration = Effect.fnUntraced(function* (
@@ -748,11 +753,15 @@ const adoptJournalLockReapClaim = Effect.fnUntraced(function* (
   nowMillis: number
 ): Effect.fn.Return<O.Option<string>, never, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
-  if (yield* activeReapAdopterExists(claimPath, nowMillis)) {
+  const election = yield* electReapAdopter(claimPath, nowMillis);
+  if (election._tag === "blocked") {
     return O.none();
   }
-  yield* fs.link(lockPath, claimPath).pipe(Effect.ignore);
-  const claimedToken = yield* fs.readFileString(claimPath).pipe(Effect.option);
+  const sourcePath =
+    election._tag === "takeover"
+      ? election.adopterPath
+      : yield* fs.link(lockPath, claimPath).pipe(Effect.as(claimPath), Effect.orElseSucceed(constant(claimPath)));
+  const claimedToken = yield* fs.readFileString(sourcePath).pipe(Effect.option);
   if (!O.exists(claimedToken, (token) => token === observedToken)) {
     return O.none();
   }
@@ -769,8 +778,62 @@ const adoptJournalLockReapClaim = Effect.fnUntraced(function* (
     })
   );
   return yield* fs
-    .rename(claimPath, adopterPath)
+    .rename(sourcePath, adopterPath)
     .pipe(Effect.as(O.some(adopterPath)), Effect.orElseSucceed(O.none<string>));
+});
+
+const journalLockReapClaimIsOwned = Effect.fnUntraced(function* (
+  adopterPath: string,
+  observedToken: string
+): Effect.fn.Return<boolean, never, FileSystem.FileSystem> {
+  const fs = yield* FileSystem.FileSystem;
+  return O.contains(yield* fs.readFileString(adopterPath).pipe(Effect.option), observedToken);
+});
+
+const reportLostJournalLockReapClaim = (adopterPath: string): Effect.Effect<void, never> =>
+  Console.error(`[yeet] journal lock reap claim lost before a fenced step: ${adopterPath}`);
+
+const releaseJournalLockReapClaim = Effect.fnUntraced(function* (
+  adopterPath: string,
+  observedToken: string
+): Effect.fn.Return<void, never, FileSystem.FileSystem> {
+  if (!(yield* journalLockReapClaimIsOwned(adopterPath, observedToken))) {
+    yield* reportLostJournalLockReapClaim(adopterPath);
+    return;
+  }
+  const fs = yield* FileSystem.FileSystem;
+  yield* fs.remove(adopterPath, { force: true }).pipe(Effect.ignore);
+});
+
+const discardReclaimedJournalLock = Effect.fnUntraced(function* (
+  tombstonePath: string,
+  adopterPath: string,
+  observedToken: string
+): Effect.fn.Return<boolean, never, FileSystem.FileSystem> {
+  if (!(yield* journalLockReapClaimIsOwned(adopterPath, observedToken))) {
+    yield* reportLostJournalLockReapClaim(adopterPath);
+    return false;
+  }
+  const fs = yield* FileSystem.FileSystem;
+  yield* fs.remove(tombstonePath, { force: true }).pipe(Effect.ignore);
+  return true;
+});
+
+const restoreDisplacedJournalLock = Effect.fnUntraced(function* (
+  lockPath: string,
+  tombstonePath: string,
+  adopterPath: string,
+  observedToken: string
+): Effect.fn.Return<boolean, never, FileSystem.FileSystem> {
+  if (!(yield* journalLockReapClaimIsOwned(adopterPath, observedToken))) {
+    yield* reportLostJournalLockReapClaim(adopterPath);
+    return false;
+  }
+  if (!(yield* restoreJournalLockReapTombstone(lockPath, tombstonePath))) {
+    yield* Console.error(`[yeet] journal lock generation displaced during reclaim; recovery retained ${tombstonePath}`);
+    return true;
+  }
+  return yield* discardReclaimedJournalLock(tombstonePath, adopterPath, observedToken);
 });
 
 const finishJournalLockReap = Effect.fnUntraced(function* (
@@ -780,15 +843,18 @@ const finishJournalLockReap = Effect.fnUntraced(function* (
   observedToken: string
 ): Effect.fn.Return<void, never, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
-  const adopterToken = yield* fs.readFileString(adopterPath).pipe(Effect.option);
-  if (!O.exists(adopterToken, (token) => token === observedToken)) {
-    yield* fs.remove(adopterPath, { force: true }).pipe(Effect.ignore);
+  if (!(yield* journalLockReapClaimIsOwned(adopterPath, observedToken))) {
+    yield* reportLostJournalLockReapClaim(adopterPath);
     return;
   }
   const tombstonePath = journalLockReapTombstonePath(claimPath);
   const moved = yield* fs.rename(lockPath, tombstonePath).pipe(Effect.as(true), Effect.orElseSucceed(constant(false)));
   if (!moved) {
-    yield* fs.remove(adopterPath, { force: true }).pipe(Effect.ignore);
+    yield* releaseJournalLockReapClaim(adopterPath, observedToken);
+    return;
+  }
+  if (!(yield* journalLockReapClaimIsOwned(adopterPath, observedToken))) {
+    yield* reportLostJournalLockReapClaim(adopterPath);
     return;
   }
   const tombstoneToken = yield* fs.readFileString(tombstonePath).pipe(Effect.option);
@@ -797,16 +863,13 @@ const finishJournalLockReap = Effect.fnUntraced(function* (
   const reclaimedObservedGeneration =
     O.exists(tombstoneToken, (token) => token === observedToken) &&
     O.exists(adopterInfo, (claim) => O.exists(tombstoneInfo, (tombstone) => sameFileIdentity(claim, tombstone)));
-  if (reclaimedObservedGeneration) {
-    yield* fs.remove(tombstonePath, { force: true }).pipe(Effect.ignore);
-  } else {
-    if (!(yield* restoreJournalLockReapTombstone(lockPath, tombstonePath))) {
-      yield* Console.error(
-        `[yeet] journal lock generation displaced during reclaim; recovery retained ${tombstonePath}`
-      );
-    }
+  const completed = reclaimedObservedGeneration
+    ? yield* discardReclaimedJournalLock(tombstonePath, adopterPath, observedToken)
+    : yield* restoreDisplacedJournalLock(lockPath, tombstonePath, adopterPath, observedToken);
+  if (!completed) {
+    return;
   }
-  yield* fs.remove(adopterPath, { force: true }).pipe(Effect.ignore);
+  yield* releaseJournalLockReapClaim(adopterPath, observedToken);
 });
 
 const claimAndFinishJournalLockReap = Effect.fnUntraced(function* (
@@ -822,9 +885,9 @@ const claimAndFinishJournalLockReap = Effect.fnUntraced(function* (
 });
 
 // A generation-specific hard link is the immutable claim snapshot. Renaming
-// that deterministic name elects exactly one source-fenced adopter. The winner
-// takes the published path first, then validates the tombstoned inode and
-// restores a displaced replacement without clobbering a third writer.
+// that deterministic name elects exactly one source-fenced adopter. A timed-out
+// adoption transfers ownership by renaming its old adopter path, invalidating
+// the suspended owner before the winner touches the published lock generation.
 const reapAbandonedJournalLock = Effect.fnUntraced(function* (
   lockPath: string
 ): Effect.fn.Return<void, never, FileSystem.FileSystem | Path.Path> {
