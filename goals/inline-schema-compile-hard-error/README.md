@@ -51,7 +51,10 @@ P2 Verify — in progress.
   reverified after its newly introduced compilers were hoisted: package audit
   and docgen both pass, as does its test-TSGo package check. The isolated
   1,000-file repository test-TSGo gate and `@beep/html` generated-output check
-  are green. Exact-head Yeet verification remains in progress.
+  are green. A later mainline merge retained the zero census and brought in the
+  deprecated-API ESLint sharding fix identified by the first publish attempt;
+  full lint-policy passes on the merged head. Exact-head Yeet verification
+  remains in progress.
 
 ## Notes
 

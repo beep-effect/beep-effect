@@ -310,3 +310,24 @@
 - **Prevention:** Refresh the branch-specific ignored goals projection when a
   base merge changes packet manifests, or make the deterministic fixture test
   independent of pre-existing ignored projection state.
+
+## 2026-09-03 — Merged-preview resource failures lost their inner-lane identity
+
+- **Work:** Publish the zero-census implementation through the canonical Yeet
+  full proof.
+- **Evidence:** The exact head passed the complete pre-push lint-policy,
+  test-TSGo, coverage, test, and docgen proof, then its merged-preview parity
+  copy exhausted an 8 GiB Node heap in the deprecated-API ESLint pass. Sixty-one
+  doctests subsequently reached the identical ten-second timeout, while the
+  aggregate 512 KiB capture omitted the useful doctest and coverage tails and
+  the generated packet incorrectly suggested a changeset repair even though
+  the changeset lane had passed. The full lint-policy rerun passed in isolation,
+  and the newly merged mainline sharding fix directly divides the OOMing pass.
+  During two other admitted full proofs, an affected doctest rerun reduced the
+  timeout set to ten; representative 38-example and one-example files from
+  that set both passed when run individually.
+- **Prevention:** Preserve a bounded tail and exit category for every inner
+  parity lane, propagate those categories into the P0 packet, and admit heavy
+  merged-preview work with enough memory or independently sharded lint passes.
+  Route direct heavy-lane replays through the same admission scheduler so
+  overlapping repository proofs cannot starve their worker deadlines.
