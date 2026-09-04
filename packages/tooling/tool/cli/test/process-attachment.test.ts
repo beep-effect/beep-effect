@@ -4,8 +4,9 @@ import { A, O, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Path } from "effect";
+import type { ProcessAttachment } from "@beep/repo-cli/test/RepoRun";
 
-const ownAttachments = (scan: O.Option<ReadonlyArray<{ readonly pid: number }>>) =>
+const ownAttachments = (scan: O.Option<ReadonlyArray<ProcessAttachment>>): ReadonlyArray<ProcessAttachment> =>
   A.filter(O.getOrThrow(scan), (attachment) => attachment.pid === process.pid);
 
 describe("scanProcessAttachments", () => {
