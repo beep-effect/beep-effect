@@ -190,6 +190,7 @@ export type NonNegNum = typeof NonNegNum.Type;
  * @since 0.0.0
  */
 export const NonNegativeInt = S.Int.pipe(
+  S.brand("Int"),
   S.check(
     S.makeFilterGroup([
       S.isFinite({

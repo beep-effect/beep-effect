@@ -7,6 +7,8 @@
 import { $AgentsDomainId } from "@beep/identity/packages";
 import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as Agents from "@beep/shared-domain/identity/Agents";
+import { Tuple } from "effect";
+import * as S from "effect/Schema";
 import { AgentFixtureKey, AgentName, SkillFixtureKey } from "../Fixture.values.ts";
 import { AgentMode } from "./Agent.values.ts";
 
@@ -38,4 +40,21 @@ export class Agent extends ProductEntity.Entity<Agent>()(Agents.AgentId)(
   $I.annote("Agent", {
     description: "Persisted agent record that binds a fixture key to one skill fixture and execution mode.",
   })
-) {}
+) {
+  static readonly toTagged = () =>
+    Agent.fields.mode
+      .mapMembers(
+        Tuple.evolve([
+          () => {
+            class AgentDeterministicFixtureMember extends S.Class<AgentDeterministicFixtureMember>(
+              $I`AgentDeterministicFixtureMember`
+            )({
+              ...Agent.fields,
+              mode: S.tag("deterministic_fixture"),
+            }) {}
+            return AgentDeterministicFixtureMember;
+          },
+        ])
+      )
+      .pipe(S.toTaggedUnion("mode"));
+}
