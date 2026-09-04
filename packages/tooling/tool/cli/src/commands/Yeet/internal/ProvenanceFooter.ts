@@ -12,6 +12,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { Cause, Console, DateTime, Effect, Exit, Order, pipe } from "effect";
 import * as A from "effect/Array";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -174,31 +175,24 @@ const readPrBodyEdits = Effect.fn("ProvenanceFooter.readPrBodyEdits")(function* 
 });
 
 const prBodyEditOrder = Order.mapInput(DateTime.Order, (edit: PrBodyEdit) => edit.editedAt);
-const editedAfter = Order.isGreaterThan(DateTime.Order);
+const editedAtOrAfter = Order.isGreaterThanOrEqualTo(DateTime.Order);
 
-const newestEditSince = (
+// Every body this stamp wrote or spliced from is known; any other body at or
+// after the baseline is a concurrent edit that must be re-spliced, whether it
+// landed before or after the stamp's own write. The baseline is inclusive
+// because GitHub records edit times at second resolution, so an edit in the
+// same second as the baseline is still foreign.
+const newestUnknownEditSince = (
   edits: ReadonlyArray<PrBodyEdit>,
   baseline: DateTime.Utc,
-  bodyMatches: (body: string) => boolean
+  knownBodies: HashSet.HashSet<string>
 ): O.Option<PrBodyEdit> =>
   pipe(
     edits,
-    A.filter((edit) => editedAfter(edit.editedAt, baseline) && bodyMatches(edit.body)),
+    A.filter((edit) => editedAtOrAfter(edit.editedAt, baseline) && !HashSet.has(knownBodies, edit.body)),
     A.sort(prBodyEditOrder),
     A.last
   );
-
-const newestForeignEditSince = (
-  edits: ReadonlyArray<PrBodyEdit>,
-  baseline: DateTime.Utc,
-  writtenBody: string
-): O.Option<PrBodyEdit> => newestEditSince(edits, baseline, (body) => !Str.Equivalence(body, writtenBody));
-
-const newestEditOfBodySince = (
-  edits: ReadonlyArray<PrBodyEdit>,
-  baseline: DateTime.Utc,
-  writtenBody: string
-): O.Option<PrBodyEdit> => newestEditSince(edits, baseline, (body) => Str.Equivalence(body, writtenBody));
 
 const bodyEditorLabel = (edit: PrBodyEdit): string => O.getOrElse(edit.editor, () => "an unknown editor");
 
@@ -219,19 +213,6 @@ const writePrBody = Effect.fn("ProvenanceFooter.writePrBody")(function* (
 });
 
 type ReconcileRequirements = FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner;
-
-const findForeignEdit = (
-  edits: ReadonlyArray<PrBodyEdit>,
-  baseline: DateTime.Utc,
-  writtenBody: string,
-  preservedForeign: O.Option<PrBodyEdit>
-): O.Option<PrBodyEdit> =>
-  O.isNone(preservedForeign)
-    ? newestForeignEditSince(edits, baseline, writtenBody)
-    : pipe(
-        newestEditOfBodySince(edits, baseline, writtenBody),
-        O.flatMap((ownEdit) => newestForeignEditSince(edits, ownEdit.editedAt, writtenBody))
-      );
 
 const yieldToConcurrentEdit = Effect.fn("ProvenanceFooter.yieldToConcurrentEdit")(function* (
   capture: typeof runRepoCommandCapture,
@@ -288,12 +269,14 @@ const reconcilePrBodyAfterWrite = Effect.fn("ProvenanceFooter.reconcileAfterWrit
   sourceBody: string,
   baseline: DateTime.Utc,
   round: number,
+  knownBodies: HashSet.HashSet<string>,
   preservedForeign: O.Option<PrBodyEdit>
 ): Effect.fn.Return<O.Option<string>, DomainError | S.SchemaError | YeetCommandError, ReconcileRequirements> {
   const writtenBody = splicePrProvenanceFooter(sourceBody, rendered);
+  const known = pipe(knownBodies, HashSet.add(sourceBody), HashSet.add(writtenBody));
   yield* writePrBody(capture, context, prNumber, bodyPath, writtenBody);
   const edits = yield* readPrBodyEdits(capture, context, repository, prNumber);
-  const foreign = findForeignEdit(edits, baseline, writtenBody, preservedForeign);
+  const foreign = newestUnknownEditSince(edits, baseline, known);
   if (O.isNone(foreign)) {
     return yield* verifyReconciledBody(capture, context, prNumber, sourceBody, preservedForeign);
   }
@@ -310,6 +293,7 @@ const reconcilePrBodyAfterWrite = Effect.fn("ProvenanceFooter.reconcileAfterWrit
     foreign.value.body,
     foreign.value.editedAt,
     round + 1,
+    known,
     foreign
   );
 });
@@ -654,6 +638,7 @@ export const ensureProvenanceFooter = Effect.fn("ProvenanceFooter.ensure")(funct
       freshBody,
       baseline,
       0,
+      HashSet.empty<string>(),
       O.none()
     );
   }).pipe(

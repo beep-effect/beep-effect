@@ -78,3 +78,16 @@ Attribution of the `Heavy / Coverage Regression` red, from the hosted logs:
 Verdict: base floors win on PR lanes, so both inherited rows need hosted coverage raised on this branch; the `SqlTest.ts` row reruns the lane.
 
 Oracle: `bunx vitest run --coverage --coverage.include=<file>` over the whole repo-cli suite with the lane's pinned environment (`CI=true GITHUB_ACTIONS=true VITEST_COVERAGE_RATCHET=1`, Turbo quad blank, `TERM_PROGRAM` unset) reproduces the hosted rows to the decimal (39.41/29.63/31.03 and 92.39/86.88/88.05). Fix: `test/quality-command-dispatch.test.ts` (shared byte-for-byte with PR #998's Codex lane, which hit the same row) lifts `Quality.command.ts` to 41.98/32.51/36.21, and `test/quality-scheduler-degraded-inputs.test.ts` (meminfo parser fallbacks, empty admission entries) lifts `QualityScheduler.ts` to 95.0/87.5/93.71, both measured by unioning each test's standalone hit map with the full-suite map.
+
+## Round 6 (Greptile P1 on `e0d4dbb5e6`)
+
+Thread: "Reconciliation overwrites intervening edits". Valid. On rounds after
+the first, `findForeignEdit` anchored its search on the stamp's own edit time,
+so an edit that landed between one history read and the next repair write was
+older than that anchor, never re-spliced, and then reported as preserved
+because the verification compared against the snapshot the repair had spliced
+from. Fix: track every body the stamp wrote or spliced from and treat any other
+body at or after the baseline as foreign, with an inclusive baseline because
+GitHub records edit times at second resolution. Two regression tests cover the
+slipped-in edit and the same-second edit; the full-suite oracle keeps the
+`ProvenanceFooter.ts` row at its floor (80.39 branches, 10 uncovered arms).

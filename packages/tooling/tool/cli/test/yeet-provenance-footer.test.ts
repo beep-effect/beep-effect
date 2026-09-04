@@ -341,6 +341,90 @@ describe("Yeet provenance footer splice", () => {
     }).pipe(provideScopedLayer(PlatformLayer))
   );
 
+  it.effect("repairs an edit that landed between a history read and the next reconcile write", () =>
+    Effect.gen(function* () {
+      let warnings = A.empty<unknown>();
+      const currentConsole = yield* Console.Console;
+      const warningConsole: Console.Console = {
+        ...currentConsole,
+        warn: (...args) => {
+          warnings = A.appendAll(warnings, args);
+        },
+      };
+      const result = yield* runStamp("Original body", "Original body", undefined, (bodies, read) => {
+        const firstWrite = O.getOrElse(A.head(bodies), () => "");
+        const firstHistory: ReadonlyArray<GhBodyEdit> = [
+          { diff: "First foreign body", editedAt: "2026-09-03T12:02:00Z", editor: { login: "alice" } },
+          { diff: firstWrite, editedAt: "2026-09-03T12:03:00Z", editor: { login: "yeet" } },
+        ];
+        if (read === 0) return firstHistory;
+        // Bob's edit lands after the first history read but before the repair
+        // write overtakes it, so it is older than the stamp's own edit.
+        const firstRepair = O.getOrElse(A.get(bodies, 1), () => "");
+        const secondHistory: ReadonlyArray<GhBodyEdit> = [
+          ...firstHistory,
+          {
+            diff: "First foreign body\n\nSlipped in before the repair",
+            editedAt: "2026-09-03T12:03:30Z",
+            editor: { login: "bob" },
+          },
+          { diff: firstRepair, editedAt: "2026-09-03T12:04:00Z", editor: { login: "yeet" } },
+        ];
+        if (read === 1) return secondHistory;
+        return [
+          ...secondHistory,
+          {
+            diff: O.getOrElse(A.get(bodies, 2), () => ""),
+            editedAt: "2026-09-03T12:05:00Z",
+            editor: { login: "yeet" },
+          },
+        ];
+      }).pipe(Effect.provideService(Console.Console, warningConsole));
+      expect(result.writes).toBe(3);
+      expect(result.historyReads).toBe(3);
+      expect(result.body).toContain("Slipped in before the repair");
+      expect(result.body).toContain("<!-- yeet-provenance:start -->");
+      expect(warnings).toHaveLength(1);
+      expect(A.join(A.map(warnings, globalThis.String), "\n")).toContain("bob");
+      expect(A.join(A.map(warnings, globalThis.String), "\n")).toContain("preserved");
+    }).pipe(provideScopedLayer(PlatformLayer))
+  );
+
+  it.effect("treats an edit recorded in the same second as the baseline as foreign", () =>
+    Effect.gen(function* () {
+      const result = yield* runStamp("Original body", "Original body", undefined, (bodies, read) => {
+        const firstWrite = O.getOrElse(A.head(bodies), () => "");
+        const firstHistory: ReadonlyArray<GhBodyEdit> = [
+          { diff: "First foreign body", editedAt: "2026-09-03T12:02:00Z", editor: { login: "alice" } },
+          { diff: firstWrite, editedAt: "2026-09-03T12:03:00Z", editor: { login: "yeet" } },
+        ];
+        if (read === 0) return firstHistory;
+        const firstRepair = O.getOrElse(A.get(bodies, 1), () => "");
+        const secondHistory: ReadonlyArray<GhBodyEdit> = [
+          ...firstHistory,
+          {
+            diff: "First foreign body\n\nSame second as the baseline",
+            editedAt: "2026-09-03T12:02:00Z",
+            editor: { login: "carol" },
+          },
+          { diff: firstRepair, editedAt: "2026-09-03T12:04:00Z", editor: { login: "yeet" } },
+        ];
+        if (read === 1) return secondHistory;
+        return [
+          ...secondHistory,
+          {
+            diff: O.getOrElse(A.get(bodies, 2), () => ""),
+            editedAt: "2026-09-03T12:05:00Z",
+            editor: { login: "yeet" },
+          },
+        ];
+      });
+      expect(result.writes).toBe(3);
+      expect(result.body).toContain("Same second as the baseline");
+      expect(result.body).toContain("<!-- yeet-provenance:start -->");
+    }).pipe(provideScopedLayer(PlatformLayer))
+  );
+
   it.effect("restores the edit its final write overtook when contention outlasts the bound", () =>
     Effect.gen(function* () {
       let warnings = A.empty<unknown>();
