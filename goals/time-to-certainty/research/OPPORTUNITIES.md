@@ -176,3 +176,23 @@ session/machine ids, quote only the minimal identifying error text.
   `indirect` kind that records an untouched caller whose coverage changed because its callee or
   driving fixture changed, so the ratchet identifies the causal PR without presenting the caller
   as a direct source regression.
+
+## 2026-09-03 — An npm advisories outage cost five audit re-runs across three PRs
+
+- **Doing:** driving #978, #993 and #1001 to merge-ready during the evening.
+- **Evidence:** Repo Sanity's `bun audit` step failed five times with `POST
+  https://registry.npmjs.org/-/npm/v1/security/advisories/bulk - 503`; each failure needed the whole
+  workflow run to complete before `gh run rerun --failed` could be issued, and the re-run also
+  replayed every other failed job on the same head.
+- **Would have prevented it:** a bounded retry with backoff inside the audit step and an
+  environment-only verdict (not a hard red) when the advisories endpoint itself is unavailable, so
+  the lane reports "unverified" instead of blocking the merge.
+
+## 2026-09-03 — Lanes cancelled the hosted run on their own current head
+
+- **Doing:** Sol lanes pushing review fixes under the push-first rule.
+- **Evidence:** two lanes ran `gh run cancel` on the run for the head they had not yet replaced, so
+  a full hosted cycle was discarded and the PR sat unmergeable until the next push re-triggered it.
+- **Would have prevented it:** never cancel a run on an unreplaced head; GitHub concurrency already
+  cancels superseded runs on push. The rule now sits in every lane brief and belongs in the lane
+  launcher's standing instructions.
