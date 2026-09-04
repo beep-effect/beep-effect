@@ -1,6 +1,7 @@
+import { MemoryFileSystem } from "@beep/scratchpad/memfs"
 import { assert, describe, it } from "@effect/vitest"
 import { Effect, Fiber, FileSystem, Option, type PlatformError, Result, Stream } from "effect"
-import * as MemoryFileSystem from "../../MemoryFileSystem/MemoryFileSystem.ts"
+import * as A from "effect/Array"
 import { TestClock } from "effect/testing"
 
 const encoder = new TextEncoder()
@@ -8,10 +9,11 @@ const encoder = new TextEncoder()
 const watchEvents = Effect.fnUntraced(function*(
   path: string,
   count: number,
-  mutation: Effect.Effect<void, PlatformError.PlatformError>
+  mutation: Effect.Effect<void, PlatformError.PlatformError>,
+  options?: FileSystem.WatchOptions
 ) {
   const fs = yield* FileSystem.FileSystem
-  const events = yield* fs.watch(path).pipe(
+  const events = yield* fs.watch(path, options).pipe(
     Stream.take(count),
     Stream.runCollect,
     Effect.forkChild({ startImmediately: true })
@@ -76,6 +78,33 @@ it.layer(MemoryFileSystem.layer)("FileSystem (memory-specific)", (it) => {
         assert.strictEqual(yield* fs.readFileString("/target.txt"), "target")
       }))
 
+    it.effect("should follow a final symbolic link for ordinary file operations",
+      Effect.fnUntraced(function*() {
+        const fs = yield* FileSystem.FileSystem
+        yield* fs.writeFileString("/follow-target.txt", "before")
+        yield* fs.symlink("follow-target.txt", "/follow-link.txt")
+
+        yield* fs.writeFileString("/follow-link.txt", "after")
+
+        assert.strictEqual(yield* fs.readLink("/follow-link.txt"), "follow-target.txt")
+        assert.strictEqual(yield* fs.readFileString("/follow-target.txt"), "after")
+        assert.strictEqual(yield* fs.realPath("/follow-link.txt"), "/follow-target.txt")
+      }))
+
+    it.effect("should fail when removing a missing path with force disabled",
+      Effect.fnUntraced(function*() {
+        const fs = yield* FileSystem.FileSystem
+        const result = yield* Effect.result(fs.remove("/missing-without-force.txt", { force: false }))
+
+        assert.isTrue(Result.isFailure(result))
+        if (Result.isFailure(result)) {
+          assert.strictEqual(result.failure.reason._tag, "NotFound")
+          if (result.failure.reason._tag === "NotFound") {
+            assert.strictEqual(result.failure.reason.pathOrDescriptor, "/missing-without-force.txt")
+          }
+        }
+      }))
+
     it.effect("should reject exclusive creation when a dangling symbolic link exists",
       Effect.fnUntraced(function*() {
         const fs = yield* FileSystem.FileSystem
@@ -98,6 +127,26 @@ it.layer(MemoryFileSystem.layer)("FileSystem (memory-specific)", (it) => {
 
         assert.strictEqual(yield* fs.readFileString("/source.txt"), "content")
         assert.strictEqual(yield* fs.readFileString("/destination.txt"), "content")
+      }))
+
+    it.effect("should report the destination path when copy overwrite is disabled",
+      Effect.fnUntraced(function*() {
+        const fs = yield* FileSystem.FileSystem
+        yield* fs.writeFileString("/copy-source.txt", "source")
+        yield* fs.writeFileString("/copy-destination.txt", "destination")
+
+        const result = yield* Effect.result(
+          fs.copy("/copy-source.txt", "/copy-destination.txt", { overwrite: false })
+        )
+
+        assert.isTrue(Result.isFailure(result))
+        if (Result.isFailure(result)) {
+          assert.strictEqual(result.failure.reason._tag, "AlreadyExists")
+          if (result.failure.reason._tag === "AlreadyExists") {
+            assert.strictEqual(result.failure.reason.pathOrDescriptor, "/copy-destination.txt")
+          }
+        }
+        assert.strictEqual(yield* fs.readFileString("/copy-destination.txt"), "destination")
       }))
   })
 
@@ -180,6 +229,22 @@ it.layer(MemoryFileSystem.layer)("FileSystem (memory-specific)", (it) => {
       )
     }))
 
+  it.effect("should fail through the typed channel when copying a directory beyond the nesting bound",
+    Effect.fnUntraced(function*() {
+      const fs = yield* FileSystem.FileSystem
+      const nestedPath = `/bounded-source/${A.join(A.makeBy(258, (index) => `level-${index}`), "/")}`
+      yield* fs.makeDirectory(nestedPath, { recursive: true })
+
+      const result = yield* Effect.result(fs.copy("/bounded-source", "/bounded-copy"))
+
+      assert.isTrue(Result.isFailure(result))
+      if (Result.isFailure(result)) {
+        assert.strictEqual(result.failure.reason._tag, "BadResource")
+        assert.strictEqual(result.failure.reason.method, "copy")
+      }
+      assert.isFalse(yield* fs.exists("/bounded-copy"))
+    }))
+
   it.effect("should publish committed normalized events for memory mutations",
     Effect.fnUntraced(function*() {
       const fs = yield* FileSystem.FileSystem
@@ -220,5 +285,38 @@ it.layer(MemoryFileSystem.layer)("FileSystem (memory-specific)", (it) => {
       )
 
       assert.deepStrictEqual(events, [{ _tag: "Update", path: "/alias.txt" }])
+    }))
+
+  it.effect("should distinguish non-recursive and recursive directory watches",
+    Effect.fnUntraced(function*() {
+      const fs = yield* FileSystem.FileSystem
+      yield* fs.makeDirectory("/watch-tree/nested", { recursive: true })
+
+      const directEvents = yield* watchEvents(
+        "/watch-tree",
+        1,
+        Effect.gen(function*() {
+          yield* fs.writeFileString("/watch-tree/nested/ignored.txt", "nested")
+          yield* fs.writeFileString("/watch-tree/direct.txt", "direct")
+        }),
+        { recursive: false }
+      )
+      const recursiveEvents = yield* watchEvents(
+        "/watch-tree",
+        2,
+        Effect.gen(function*() {
+          yield* fs.writeFileString("/watch-tree/nested/included.txt", "nested")
+          yield* fs.writeFileString("/watch-tree/also-direct.txt", "direct")
+        }),
+        { recursive: true }
+      )
+
+      assert.deepStrictEqual(directEvents, [
+        { _tag: "Create", path: "/watch-tree/direct.txt" }
+      ])
+      assert.deepStrictEqual(recursiveEvents, [
+        { _tag: "Create", path: "/watch-tree/nested/included.txt" },
+        { _tag: "Create", path: "/watch-tree/also-direct.txt" }
+      ])
     }))
 })

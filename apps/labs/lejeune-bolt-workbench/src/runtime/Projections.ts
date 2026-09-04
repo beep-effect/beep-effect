@@ -70,14 +70,33 @@ CROSS JOIN corpus c`,
 ] as const;
 
 /**
- * Input required to rebuild the three local projections.
+ * Collects the fixed fixtures, rule outcomes, and support records consumed by every projection engine.
  *
- * **Example** (Inspect the rules field)
+ * **Example** (Assemble canonical projection input)
  *
  * ```ts
+ * import { Effect } from "effect"
+ * import * as A from "effect/Array"
+ * import { CanonicalNormalizedFixtures } from "@/domain/Bundle"
+ * import { buildReferenceData } from "@/domain/ReferenceData"
  * import { ProjectionInput } from "@/runtime/Projections"
+ * import { evaluateRules } from "@/workflows/Rules"
  *
- * console.log(ProjectionInput.fields.rules !== undefined) // true
+ * const referenceData = buildReferenceData(CanonicalNormalizedFixtures)
+ * const input = Effect.runSync(
+ *   evaluateRules(CanonicalNormalizedFixtures).pipe(
+ *     Effect.map((rules) =>
+ *       ProjectionInput.make({
+ *         certificates: referenceData.certificates,
+ *         fixtures: CanonicalNormalizedFixtures,
+ *         offers: referenceData.offers,
+ *         rules,
+ *       })
+ *     )
+ *   )
+ * )
+ *
+ * console.log([A.length(input.fixtures), A.length(input.rules)]) // [2, 6]
  * ```
  *
  * @category models
@@ -96,7 +115,21 @@ export class ProjectionInput extends S.Class<ProjectionInput>($I`ProjectionInput
 ) {}
 
 /**
- * Typed local projection failure.
+ * Identifies the local projection engine and operation that failed while preserving diagnostic context.
+ *
+ * **Example** (Describe a failed DuckDB query)
+ *
+ * ```ts
+ * import { ProjectionError } from "@/runtime/Projections"
+ *
+ * const error = ProjectionError.make({
+ *   engine: "duckdb",
+ *   message: "The document-count query returned an unexpected row shape.",
+ *   operation: "query",
+ * })
+ *
+ * console.log(`${error.engine}:${error.operation}`) // duckdb:query
+ * ```
  *
  * @category errors
  * @since 0.0.0
@@ -139,6 +172,23 @@ const annotateProjectionOutcome = <A2, E2, R2>(effect: Effect.Effect<A2, E2, R2>
     Effect.tapError(() => Effect.annotateCurrentSpan("db.operation.outcome", "error"))
   );
 
+/**
+ * Selects the DuckDB database and optional PGlite data directory used by a scoped projection layer.
+ *
+ * **Example** (Configure isolated in-memory stores)
+ *
+ * ```ts
+ * import * as O from "effect/Option"
+ * import { ProjectionLayerOptions } from "@/runtime/Projections"
+ *
+ * const options = ProjectionLayerOptions.make({ duckDbPath: ":memory:" })
+ *
+ * console.log([options.duckDbPath, O.isNone(options.pgliteDataDir)]) // [":memory:", true]
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
 export class ProjectionLayerOptions extends S.Class<ProjectionLayerOptions>($I`ProjectionLayerOptions`)(
   {
     duckDbPath: S.NonEmptyString,
@@ -328,14 +378,39 @@ SELECT ?class WHERE { ?class rdf:type owl:Class } ORDER BY ?class`,
 });
 
 /**
- * Build and query the three local projections using their injected service layers.
+ * Rebuilds PGlite, DuckDB, and Oxigraph from one normalized input and returns their validated snapshot.
  *
- * **Example** (Inspect the projection Effect)
+ * **Example** (Build the canonical in-memory snapshot)
  *
  * ```ts
- * import { buildProjectionSnapshot } from "@/runtime/Projections"
+ * import { Effect } from "effect"
+ * import { CanonicalNormalizedFixtures } from "@/domain/Bundle"
+ * import { buildReferenceData } from "@/domain/ReferenceData"
+ * import {
+ *   buildProjectionSnapshot,
+ *   makeProjectionLayer,
+ *   ProjectionInput,
+ *   ProjectionLayerOptions,
+ * } from "@/runtime/Projections"
+ * import { evaluateRules } from "@/workflows/Rules"
  *
- * console.log(typeof buildProjectionSnapshot === "function") // true
+ * const program = Effect.gen(function* () {
+ *   const referenceData = buildReferenceData(CanonicalNormalizedFixtures)
+ *   const rules = yield* evaluateRules(CanonicalNormalizedFixtures)
+ *   return yield* buildProjectionSnapshot(
+ *     ProjectionInput.make({
+ *       certificates: referenceData.certificates,
+ *       fixtures: CanonicalNormalizedFixtures,
+ *       offers: referenceData.offers,
+ *       rules,
+ *     })
+ *   )
+ * })
+ * const snapshot = await Effect.runPromise(
+ *   program.pipe(Effect.provide(makeProjectionLayer(ProjectionLayerOptions.make({ duckDbPath: ":memory:" }))))
+ * )
+ *
+ * console.log(snapshot.documentCount) // 4
  * ```
  *
  * @category projections
@@ -382,14 +457,41 @@ export const buildProjectionSnapshot = Effect.fn("lejeune.projection.build")(fun
 });
 
 /**
- * Reopen the durable projection stores and verify their query results against a committed snapshot.
+ * Reopens the configured PGlite and DuckDB stores and rejects any result that diverges from an expected snapshot.
  *
- * **Example** (Inspect the verification constructor)
+ * **Example** (Verify a freshly built snapshot)
  *
  * ```ts
- * import { verifyDurableProjectionSnapshot } from "@/runtime/Projections"
+ * import { Effect } from "effect"
+ * import { CanonicalNormalizedFixtures } from "@/domain/Bundle"
+ * import { buildReferenceData } from "@/domain/ReferenceData"
+ * import {
+ *   buildProjectionSnapshot,
+ *   makeProjectionLayer,
+ *   ProjectionInput,
+ *   ProjectionLayerOptions,
+ *   verifyDurableProjectionSnapshot,
+ * } from "@/runtime/Projections"
+ * import { evaluateRules } from "@/workflows/Rules"
  *
- * console.log(typeof verifyDurableProjectionSnapshot === "function") // true
+ * const program = Effect.gen(function* () {
+ *   const referenceData = buildReferenceData(CanonicalNormalizedFixtures)
+ *   const rules = yield* evaluateRules(CanonicalNormalizedFixtures)
+ *   const expected = yield* buildProjectionSnapshot(
+ *     ProjectionInput.make({
+ *       certificates: referenceData.certificates,
+ *       fixtures: CanonicalNormalizedFixtures,
+ *       offers: referenceData.offers,
+ *       rules,
+ *     })
+ *   )
+ *   return yield* verifyDurableProjectionSnapshot(expected)
+ * })
+ * const snapshot = await Effect.runPromise(
+ *   program.pipe(Effect.provide(makeProjectionLayer(ProjectionLayerOptions.make({ duckDbPath: ":memory:" }))))
+ * )
+ *
+ * console.log(snapshot.documentCount) // 4
  * ```
  *
  * @category validation
@@ -439,9 +541,12 @@ export const verifyDurableProjectionSnapshot = Effect.fn("lejeune.projection.ver
  * **Example** (Construct an in-memory layer)
  *
  * ```ts
- * import { makeProjectionLayer } from "@/runtime/Projections"
+ * import { Layer } from "effect"
+ * import { makeProjectionLayer, ProjectionLayerOptions } from "@/runtime/Projections"
  *
- * console.log(makeProjectionLayer(ProjectionLayerOptions.make({ duckDbPath: ":memory:" })))
+ * const layer = makeProjectionLayer(ProjectionLayerOptions.make({ duckDbPath: ":memory:" }))
+ *
+ * console.log(Layer.isLayer(layer)) // true
  * ```
  *
  * @category layers

@@ -23,7 +23,6 @@
     "check": "bun run beep:check",
     "codegen": "echo 'no codegen needed'",
     "dev": "portless api-docs.labs.beep sh -c 'bun --watch src/main.ts'",
-    "docgen": "bunx --bun --no-install docgen",
     "lint": "bun run beep:lint",
     "lint:fix": "bun run beep:lint:fix",
     "test": "bun run beep:test",

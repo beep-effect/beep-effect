@@ -41,7 +41,7 @@ const $I = $CiopsId.create("projection/Replay");
  * **Example** (Recognize a passing verdict)
  *
  * ```ts
- * import { ReplayEventOutcome } from "@beep/ciops/src/projection/Replay"
+ * import { ReplayEventOutcome } from "@/projection/Replay"
  *
  * console.log(ReplayEventOutcome.is.pass("pass")) // true
  * ```
@@ -70,7 +70,7 @@ export type ReplayEventOutcome = typeof ReplayEventOutcome.Type;
  * **Example** (Construct a passing event verdict)
  *
  * ```ts
- * import { ReplayEventVerdict } from "@beep/ciops/src/projection/Replay"
+ * import { ReplayEventVerdict } from "@/projection/Replay"
  * import { NonNegativeInt } from "@beep/schema"
  *
  * const verdict = ReplayEventVerdict.make({
@@ -115,7 +115,7 @@ export class ReplayEventVerdict extends S.Class<ReplayEventVerdict>($I`ReplayEve
  * **Example** (Record an inferred eviction)
  *
  * ```ts
- * import { InferredLeaseEviction } from "@beep/ciops/src/projection/Replay"
+ * import { InferredLeaseEviction } from "@/projection/Replay"
  * import { NonNegativeInt, PosInt } from "@beep/schema"
  *
  * const eviction = InferredLeaseEviction.make({
@@ -150,7 +150,7 @@ export class InferredLeaseEviction extends S.Class<InferredLeaseEviction>($I`Inf
  * **Example** (Construct an empty replay report)
  *
  * ```ts
- * import { ReplayReport } from "@beep/ciops/src/projection/Replay"
+ * import { ReplayReport } from "@/projection/Replay"
  * import { NonNegativeInt } from "@beep/schema"
  *
  * const report = ReplayReport.make({
@@ -200,7 +200,7 @@ const decodeJournalLine = Effect.fnUntraced(function* (
  * **Example** (Decode an empty journal)
  *
  * ```ts
- * import { decodeAdmissionJournal } from "@beep/ciops/src/projection/Replay"
+ * import { decodeAdmissionJournal } from "@/projection/Replay"
  * import { Effect } from "effect"
  *
  * console.log(Effect.runSync(decodeAdmissionJournal("")).length) // 0
@@ -312,8 +312,8 @@ const releaseFromLedger = Effect.fnUntraced(function* (
  * **Example** (Replay an empty event stream)
  *
  * ```ts
- * import { replayAdmissionJournal } from "@beep/ciops/src/projection/Replay"
- * import { AdmissionPolicyParams, AdmissionTokenWeights } from "@beep/ciops/src/projection/Schemas"
+ * import { replayAdmissionJournal } from "@/projection/Replay"
+ * import { AdmissionPolicyParams, AdmissionTokenWeights } from "@/projection/Schemas"
  * import { PosInt } from "@beep/schema"
  * import { Effect } from "effect"
  *
@@ -504,7 +504,7 @@ export const replayAdmissionJournal = Effect.fn("Replay.replayAdmissionJournal")
  * **Example** (Accept an empty replay report)
  *
  * ```ts
- * import { ReplayReport, requireReplayMatch } from "@beep/ciops/src/projection/Replay"
+ * import { ReplayReport, requireReplayMatch } from "@/projection/Replay"
  * import { NonNegativeInt } from "@beep/schema"
  * import { Effect } from "effect"
  *
@@ -541,7 +541,7 @@ export const requireReplayMatch = Effect.fn("Replay.requireReplayMatch")(functio
  * **Example** (Render a pass summary)
  *
  * ```ts
- * import { ReplayReport, renderReplayEvidence } from "@beep/ciops/src/projection/Replay"
+ * import { ReplayReport, renderReplayEvidence } from "@/projection/Replay"
  * import { NonNegativeInt } from "@beep/schema"
  *
  * const report = ReplayReport.make({

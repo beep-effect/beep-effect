@@ -3,6 +3,8 @@
 "@beep/agents-domain": patch
 "@beep/agents-server": patch
 "@beep/agents-use-cases": patch
+"@beep/box-provisioning": patch
+"@beep/freshbooks": patch
 "@beep/md": patch
 "@beep/oip-web": patch
 "@beep/practice-kg-mcp": patch

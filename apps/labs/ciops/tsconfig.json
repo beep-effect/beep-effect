@@ -21,8 +21,7 @@
     "isolatedModules": true,
     "incremental": true,
     "paths": {
-      "@/*": ["./src/*"],
-      "@beep/ciops/*": ["./src/*"]
+      "@/*": ["./src/*"]
     },
     "outDir": "dist",
     "rootDir": "../../.."

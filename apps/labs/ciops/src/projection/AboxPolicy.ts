@@ -61,7 +61,7 @@ const decodePriority = Effect.fnUntraced(function* (
  * **Example** (Reject a partial A-Box)
  *
  * ```ts
- * import { decodeAdmissionPolicyParams } from "@beep/ciops/src/projection/AboxPolicy"
+ * import { decodeAdmissionPolicyParams } from "@/projection/AboxPolicy"
  * import { Effect } from "effect"
  * import * as Result from "effect/Result"
  *

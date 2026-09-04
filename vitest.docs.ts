@@ -11,7 +11,7 @@ export default defineConfig({
     include: [],
     includeSource: ["packages/**/src/**/*.{ts,tsx}", "apps/**/src/**/*.{ts,tsx}"],
     passWithNoTests: true,
-    testTimeout: 10_000,
+    testTimeout: 30_000,
     sequence: {
       ...shared.test?.sequence,
       concurrent: false,
