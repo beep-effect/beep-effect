@@ -701,7 +701,10 @@ wrapper with a larger heap still left its ESLint child at the 8 GiB ceiling;
 running that exact failed shard directly with a confirmed 16 GiB heap passed
 without a diagnostic.
 
-What would have prevented it: admit the full lint lane through the shared
-resource envelope and size both shard concurrency and per-process heap from
-that lease. A repository policy scan should report a source finding or a typed
+What would have prevented it: split the oversized `packages/tooling` shard,
+admit the full lint lane through the shared resource envelope, and size both
+shard concurrency and per-process heap from that lease. A follow-up PR should
+also expose a validated concurrency control instead of hard-coding four workers
+and avoid overriding a caller-supplied larger heap for child ESLint processes.
+A repository policy scan should report a source finding or a typed
 resource-exhaustion result, not conflate a V8 heap crash with failed lint.
