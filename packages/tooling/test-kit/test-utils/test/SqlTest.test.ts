@@ -25,7 +25,104 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import * as SqlClient from "effect/unstable/sql/SqlClient";
+import { vi } from "vitest";
 import type { SqlTestHooks } from "@beep/test-utils";
+
+const sqlTransportMock = vi.hoisted(() => ({
+  builds: 0,
+  connections: 0,
+  ends: 0,
+  queries: 0,
+  rejectStart: false,
+  rejectStop: false,
+  starts: 0,
+  stops: 0,
+}));
+
+vi.mock("testcontainers", () => {
+  class MockStartedContainer {
+    getHost(): string {
+      return "127.0.0.1";
+    }
+
+    getId(): string {
+      return "container-fixture";
+    }
+
+    getMappedPort(port: number): number {
+      return port;
+    }
+
+    stop(): Promise<void> {
+      sqlTransportMock.stops += 1;
+      return sqlTransportMock.rejectStop ? Promise.reject(new Error("fixture teardown failure")) : Promise.resolve();
+    }
+  }
+
+  class MockGenericContainer {
+    static fromDockerfile(): { readonly build: () => Promise<void> } {
+      return {
+        build: () => {
+          sqlTransportMock.builds += 1;
+          return Promise.resolve();
+        },
+      };
+    }
+
+    withEnvironment(): this {
+      return this;
+    }
+
+    withExposedPorts(): this {
+      return this;
+    }
+
+    withStartupTimeout(): this {
+      return this;
+    }
+
+    withWaitStrategy(): this {
+      return this;
+    }
+
+    start(): Promise<MockStartedContainer> {
+      sqlTransportMock.starts += 1;
+      return sqlTransportMock.rejectStart
+        ? Promise.reject(new Error("fixture start failure"))
+        : Promise.resolve(new MockStartedContainer());
+    }
+  }
+
+  return {
+    GenericContainer: MockGenericContainer,
+    Wait: {
+      forListeningPorts: () => ({}),
+    },
+  };
+});
+
+vi.mock("pg", (importOriginal) =>
+  importOriginal<typeof import("pg")>().then((actual) => {
+    class MockClient {
+      connect(): Promise<void> {
+        sqlTransportMock.connections += 1;
+        return Promise.resolve();
+      }
+
+      end(): Promise<void> {
+        sqlTransportMock.ends += 1;
+        return Promise.resolve();
+      }
+
+      query(): Promise<{ readonly rows: ReadonlyArray<{ readonly one: number }> }> {
+        sqlTransportMock.queries += 1;
+        return Promise.resolve({ rows: [{ one: 1 }] });
+      }
+    }
+
+    return { ...actual, Client: MockClient };
+  })
+);
 
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
@@ -100,6 +197,72 @@ const doesTableExist = Effect.fn("SqlTest.doesTableExist")(function* (tableName:
 
 describe("SqlTest", () => {
   it.effect(
+    "provisions and releases PGLite container resources through the transport boundary",
+    Effect.fnUntraced(function* () {
+      sqlTransportMock.builds = 0;
+      sqlTransportMock.connections = 0;
+      sqlTransportMock.ends = 0;
+      sqlTransportMock.queries = 0;
+      sqlTransportMock.rejectStart = false;
+      sqlTransportMock.rejectStop = false;
+      sqlTransportMock.starts = 0;
+      sqlTransportMock.stops = 0;
+
+      const resource = yield* Effect.scoped(
+        makePgliteTestcontainerResource({
+          database: "fixture_db",
+          internalPort: 5432,
+          password: "fixture-password",
+          username: "fixture-user",
+        })
+      );
+      const connectionUri = new URL(resource.connectionUri);
+
+      expect(resource.host).toBe("127.0.0.1");
+      expect(resource.port).toBe(5432);
+      expect(resource.container.getId()).toBe("container-fixture");
+      expect(connectionUri.pathname).toBe("/fixture_db");
+      expect(connectionUri.username).toBe("fixture-user");
+
+      sqlTransportMock.rejectStop = true;
+      const resourceWithFailedRelease = yield* Effect.scoped(
+        makePgliteTestcontainerResource({
+          database: "fixture_db",
+          internalPort: 5432,
+          password: "fixture-password",
+          username: "fixture-user",
+        })
+      );
+
+      expect(resourceWithFailedRelease.container.getId()).toBe("container-fixture");
+      sqlTransportMock.rejectStart = true;
+      const failedStart = yield* Effect.exit(Effect.scoped(makePgliteTestcontainerResource()));
+
+      expect(Exit.isFailure(failedStart)).toBe(true);
+      if (Exit.isFailure(failedStart)) {
+        const failure = Cause.squash(failedStart.cause);
+
+        expect(failure).toBeInstanceOf(SqlTestHarnessError);
+        if (SqlTestHarnessError.is(failure)) {
+          expect(failure.driver).toBe("pglite-testcontainers");
+          expect(failure.phase).toBe("provision");
+        }
+      }
+
+      expect(sqlTransportMock).toEqual({
+        builds: 1,
+        connections: 2,
+        ends: 2,
+        queries: 2,
+        rejectStart: true,
+        rejectStop: true,
+        starts: 3,
+        stops: 2,
+      });
+    })
+  );
+
+  it.effect(
     "constructs runtime driver layers and rejects invalid resource configuration before Docker access",
     Effect.fnUntraced(function* () {
       expect(Layer.isLayer(BunSqliteTestDriver.makeLayer(undefined))).toBe(true);
@@ -131,6 +294,98 @@ describe("SqlTest", () => {
       );
 
       expect(info.driver).toBe("pglite-inprocess");
+    })
+  );
+
+  nodeRuntimeEffectIt(
+    "runs migrate and seed hooks through the Docker-free in-process driver",
+    Effect.fnUntraced(function* () {
+      const values = yield* Effect.gen(function* () {
+        const sql = (yield* SqlClient.SqlClient).withoutTransforms();
+        const rows = yield* sql<{ readonly value: string }>`
+          SELECT value
+          FROM seeded_values
+          ORDER BY value ASC
+        `;
+
+        return pipe(
+          rows,
+          A.map((row) => row.value)
+        );
+      }).pipe(
+        provideScopedLayer(
+          makePgliteSqlTestLayer({
+            hooks: {
+              migrate: Effect.gen(function* () {
+                const sql = (yield* SqlClient.SqlClient).withoutTransforms();
+                yield* sql`
+                  CREATE TABLE seeded_values (
+                    value TEXT NOT NULL
+                  )
+                `;
+              }),
+              seed: Effect.gen(function* () {
+                const sql = (yield* SqlClient.SqlClient).withoutTransforms();
+                yield* sql`
+                  INSERT INTO seeded_values (value)
+                  VALUES ('alpha'), ('beta')
+                `;
+              }),
+            },
+            mode: "in-process",
+          })
+        )
+      );
+
+      expect(values).toEqual(["alpha", "beta"]);
+    })
+  );
+
+  nodeRuntimeEffectIt(
+    "wraps Docker-free in-process hook failures in typed harness errors",
+    Effect.fnUntraced(function* () {
+      const migrateExit = yield* Effect.exit(
+        Effect.void.pipe(
+          provideScopedLayer(
+            makePgliteSqlTestLayer({
+              hooks: { migrate: Effect.fail("migrate fixture failure") },
+              mode: "in-process",
+            })
+          )
+        )
+      );
+      const seedExit = yield* Effect.exit(
+        Effect.void.pipe(
+          provideScopedLayer(
+            makePgliteSqlTestLayer({
+              hooks: { seed: Effect.fail("seed fixture failure") },
+              mode: "in-process",
+            })
+          )
+        )
+      );
+
+      expect(Exit.isFailure(migrateExit)).toBe(true);
+      if (Exit.isFailure(migrateExit)) {
+        const failure = Cause.squash(migrateExit.cause);
+
+        expect(failure).toBeInstanceOf(SqlTestHarnessError);
+        if (SqlTestHarnessError.is(failure)) {
+          expect(failure.driver).toBe("pglite-inprocess");
+          expect(failure.phase).toBe("migrate");
+        }
+      }
+
+      expect(Exit.isFailure(seedExit)).toBe(true);
+      if (Exit.isFailure(seedExit)) {
+        const failure = Cause.squash(seedExit.cause);
+
+        expect(failure).toBeInstanceOf(SqlTestHarnessError);
+        if (SqlTestHarnessError.is(failure)) {
+          expect(failure.driver).toBe("pglite-inprocess");
+          expect(failure.phase).toBe("seed");
+        }
+      }
     })
   );
 
@@ -460,6 +715,9 @@ describe("SqlTest", () => {
   });
 
   nodeRuntimeIt("selects PGLite integration gate branches from environment", () => {
+    const environmentGate = makePgliteIntegrationGate();
+    expect(environmentGate.shouldRunPgliteIntegration).toBe(true);
+
     const emptyGate = makePgliteIntegrationGate({ databaseDriver: undefined, databaseUrl: undefined });
     expect(O.isNone(emptyGate.sharedConnectionUri)).toBe(true);
     expect(emptyGate.shouldRunPgliteIntegration).toBe(true);

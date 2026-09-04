@@ -53,6 +53,8 @@ import {
   FallowReportFinding,
   FLAKE_QUARANTINE_ARTIFACT_RELATIVE_PATH,
   FlakeQuarantineArtifactJson,
+  GateOrderSeed,
+  GateOrderSeedRow,
   GITHUB_CHECK_RUN_REPORT_PREFIX,
   GithubCheckFailurePolicy,
   GithubCheckLaneSpec,
@@ -104,6 +106,7 @@ import {
   runSqlIntegrationTestLaneForTesting,
   sqlIntegrationConnectionUriFromEnvForTesting,
   sqlIntegrationStepForTesting,
+  testTsgoPlanningForTesting,
   turboSecretSessionStepForTesting,
   turboStepLocalEnvForTesting,
   validateCoverageTaskArgsForTesting,
@@ -119,6 +122,7 @@ import {
   resolveTurboCachePlan,
   turboCachePlanArgs,
 } from "@beep/repo-cli/test/SharedInternals";
+import { DEFAULT_GATE_ORDER_SEED, WaveOrder } from "@beep/repo-cli/test/Yeet";
 import { DomainError, findRepoRoot } from "@beep/repo-utils";
 import { PosInt } from "@beep/schema/Int";
 import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
@@ -153,7 +157,7 @@ import { FastCheck as fc } from "effect/testing";
 import * as TestConsole from "effect/testing/TestConsole";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import type { CiLaneId } from "@beep/repo-cli/commands/Ci";
-import type { GithubCheckLaneWave, QualityTaskInvocation } from "@beep/repo-cli/test/Quality";
+import type { GateOrderLaneClass, GithubCheckLaneWave, QualityTaskInvocation } from "@beep/repo-cli/test/Quality";
 
 const FileSystemLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 const PlatformLayer = Layer.mergeAll(
@@ -384,13 +388,39 @@ const bunScriptStep = (label: string, source: string) =>
     cwd: process.cwd(),
   });
 
-const githubCheckTestLane = (id: string, wave: GithubCheckLaneWave, source: string): GithubCheckLaneSpec =>
+const githubCheckTestLane = (
+  id: string,
+  wave: GithubCheckLaneWave,
+  source: string,
+  orderEstimate: O.Option<GateOrderSeedRow> = O.none()
+): GithubCheckLaneSpec =>
   GithubCheckLaneSpec.make({
     blockedBy: [],
     id,
+    orderEstimate,
     stage: "repo-quality",
     step: bunScriptStep(id, source),
     wave,
+  });
+
+const githubCheckTestEstimate = (
+  laneId: string,
+  costP50Seconds: number,
+  precision: "precise" | "imprecise" = "precise",
+  laneClass: GateOrderLaneClass = "policy-preflight"
+): GateOrderSeedRow =>
+  GateOrderSeedRow.make({
+    laneId,
+    laneClass,
+    laneClassBasis: "Test fixture partition.",
+    costP50Seconds,
+    durationBasis: "Test fixture duration.",
+    durationPointer: "/test/duration",
+    redProbability: 0,
+    firstRedBasis: "Test fixture probability.",
+    firstRedPointer: "/test/redProbability",
+    precision,
+    precisionBasis: "Test fixture precision.",
   });
 
 const initializeLaneProofRepository = Effect.fn("QualityTasksTest.initializeLaneProofRepository")(function* (
@@ -916,6 +946,8 @@ describe("quality task adapter", () => {
           schemaVersion: "github-check-run/v1",
         });
         expect(report.lanes[0]?.wave).toBe("test");
+        expect(report.firstRed).toStrictEqual(O.none());
+        expect(report.skippedAfterRed).toBe(0);
       })
     ));
 
@@ -932,6 +964,7 @@ describe("quality task adapter", () => {
         expect(legacy.durationMs).toStrictEqual(O.none());
         expect(legacy.exitCode).toStrictEqual(O.none());
         expect(legacy.inputDigest).toStrictEqual(O.none());
+        expect(legacy.redSchedulingDecision).toStrictEqual(O.none());
 
         const encoded = yield* S.encodeEffect(QualityTaskLaneRunReport)(
           QualityTaskLaneRunReport.make({
@@ -1258,7 +1291,69 @@ describe("quality task adapter", () => {
     );
   });
 
-  it("finishes a failed wave, reports sibling failures, and marks later waves not run", () =>
+  it.effect(
+    "must-fail fixture: changing the seed changes order and unknown lanes retain declaration order",
+    Effect.fnUntraced(function* () {
+      const lanes = [
+        githubCheckTestLane("seed:a", "preflight", "process.exit(0)"),
+        githubCheckTestLane("unknown:z", "preflight", "process.exit(0)"),
+        githubCheckTestLane("seed:b", "preflight", "process.exit(0)"),
+        githubCheckTestLane("unknown:y", "preflight", "process.exit(0)"),
+      ];
+      const seed = (aCost: number, bCost: number) =>
+        GateOrderSeed.make({
+          ...DEFAULT_GATE_ORDER_SEED,
+          lanes: [githubCheckTestEstimate("seed:a", aCost), githubCheckTestEstimate("seed:b", bCost)],
+        });
+      const original = yield* WaveOrder.make(seed(1, 2));
+      const changed = yield* WaveOrder.make(seed(2, 1));
+
+      expect(A.map(original.order(lanes), (lane) => lane.id)).toEqual(["seed:a", "seed:b", "unknown:z", "unknown:y"]);
+      expect(A.map(changed.order(lanes), (lane) => lane.id)).toEqual(["seed:b", "seed:a", "unknown:z", "unknown:y"]);
+    })
+  );
+
+  it.effect(
+    "keeps policy and preflight gates ahead of cheaper heavy work",
+    Effect.fnUntraced(function* () {
+      const lanes = [
+        githubCheckTestLane("heavy:cheap", "heavy", "process.exit(0)"),
+        githubCheckTestLane("policy:expensive", "preflight", "process.exit(0)"),
+      ];
+      const seed = GateOrderSeed.make({
+        ...DEFAULT_GATE_ORDER_SEED,
+        lanes: [
+          githubCheckTestEstimate("heavy:cheap", 1, "precise", "heavy"),
+          githubCheckTestEstimate("policy:expensive", 100),
+        ],
+      });
+      const waveOrder = yield* WaveOrder.make(seed);
+
+      expect(A.map(waveOrder.order(lanes), (lane) => lane.id)).toEqual(["policy:expensive", "heavy:cheap"]);
+    })
+  );
+
+  it.effect(
+    "orders a precise gate before an imprecise gate when their evidence ties",
+    Effect.fnUntraced(function* () {
+      const lanes = [
+        githubCheckTestLane("policy:imprecise", "preflight", "process.exit(0)"),
+        githubCheckTestLane("policy:precise", "preflight", "process.exit(0)"),
+      ];
+      const seed = GateOrderSeed.make({
+        ...DEFAULT_GATE_ORDER_SEED,
+        lanes: [
+          githubCheckTestEstimate("policy:imprecise", 1, "imprecise"),
+          githubCheckTestEstimate("policy:precise", 1),
+        ],
+      });
+      const waveOrder = yield* WaveOrder.make(seed);
+
+      expect(A.map(waveOrder.order(lanes), (lane) => lane.id)).toEqual(["policy:precise", "policy:imprecise"]);
+    })
+  );
+
+  it("stops after a precise red and marks the unlaunched tail", () =>
     Effect.runPromise(
       collectGithubCheckLaneWavesForTesting(
         "pre-push",
@@ -1266,8 +1361,18 @@ describe("quality task adapter", () => {
           GithubCheckLaneWaveSpec.make({
             wave: "preflight",
             lanes: [
-              githubCheckTestLane("preflight:a", "preflight", "process.exit(2)"),
-              githubCheckTestLane("preflight:b", "preflight", "process.exit(3)"),
+              githubCheckTestLane(
+                "preflight:a",
+                "preflight",
+                "process.exit(2)",
+                O.some(githubCheckTestEstimate("preflight:a", 1))
+              ),
+              githubCheckTestLane(
+                "preflight:b",
+                "preflight",
+                "process.exit(3)",
+                O.some(githubCheckTestEstimate("preflight:b", 2))
+              ),
             ],
           }),
           GithubCheckLaneWaveSpec.make({
@@ -1278,19 +1383,84 @@ describe("quality task adapter", () => {
         "fail-fast"
       ).pipe(
         Effect.map(({ failures, laneReport, report }) => {
-          expect(A.map(failures, (failure) => failure.label)).toEqual(["preflight:a", "preflight:b"]);
+          expect(A.map(failures, (failure) => failure.label)).toEqual(["preflight:a"]);
           expect(A.map(report.lanes, (lane) => [lane.id, lane.status])).toEqual([
             ["preflight:a", "failed"],
-            ["preflight:b", "failed"],
+            ["preflight:b", "not-run-early-stop"],
             ["heavy:check", "not-run-early-stop"],
           ]);
           expect(A.map(laneReport.lanes, (lane) => [lane.id, lane.status])).toEqual([
             ["preflight:a", "failed"],
-            ["preflight:b", "failed"],
+            ["preflight:b", "not-run-early-stop"],
             ["heavy:check", "not-run-early-stop"],
           ]);
-          expect(A.every(A.take(laneReport.lanes, 2), (lane) => O.isSome(lane.startedAt))).toBe(true);
+          expect(report.firstRed).toStrictEqual(O.some("preflight:a"));
+          expect(report.skippedAfterRed).toBe(2);
+          expect(O.isSome(laneReport.lanes[0]?.startedAt ?? O.none())).toBe(true);
+          expect(laneReport.lanes[0]?.redSchedulingDecision).toStrictEqual(O.some("stop-after-red"));
+          expect(laneReport.lanes[1]?.inputDigest).toStrictEqual(O.none());
           expect(laneReport.lanes[2]?.inputDigest).toStrictEqual(O.none());
+        }),
+        provideScopedLayer(PlatformLayer)
+      )
+    ));
+
+  it("continues after an imprecise red under fail-fast", () =>
+    Effect.runPromise(
+      collectGithubCheckLaneWavesForTesting(
+        "pre-push",
+        [
+          GithubCheckLaneWaveSpec.make({
+            wave: "preflight",
+            lanes: [
+              githubCheckTestLane(
+                "preflight:imprecise",
+                "preflight",
+                "process.exit(1)",
+                O.some(githubCheckTestEstimate("preflight:imprecise", 1, "imprecise"))
+              ),
+              githubCheckTestLane(
+                "preflight:precise",
+                "preflight",
+                "process.exit(0)",
+                O.some(githubCheckTestEstimate("preflight:precise", 2))
+              ),
+            ],
+          }),
+        ],
+        "fail-fast"
+      ).pipe(
+        Effect.map(({ laneReport, report }) => {
+          expect(A.map(report.lanes, (lane) => lane.status)).toEqual(["failed", "passed"]);
+          expect(report.firstRed).toStrictEqual(O.some("preflight:imprecise"));
+          expect(report.skippedAfterRed).toBe(0);
+          expect(laneReport.lanes[0]?.redSchedulingDecision).toStrictEqual(O.some("continue-after-imprecise-red"));
+        }),
+        provideScopedLayer(PlatformLayer)
+      )
+    ));
+
+  it("stops later quality-mode waves after an estimate-less red", () =>
+    Effect.runPromise(
+      collectGithubCheckLaneWavesForTesting(
+        "quality",
+        [
+          GithubCheckLaneWaveSpec.make({
+            wave: "preflight",
+            lanes: [githubCheckTestLane("preflight:unclassified", "preflight", "process.exit(1)")],
+          }),
+          GithubCheckLaneWaveSpec.make({
+            wave: "heavy",
+            lanes: [githubCheckTestLane("heavy:unlaunched", "heavy", "process.exit(0)")],
+          }),
+        ],
+        "fail-fast"
+      ).pipe(
+        Effect.map(({ laneReport, report }) => {
+          expect(A.map(report.lanes, (lane) => lane.status)).toEqual(["failed", "not-run-early-stop"]);
+          expect(report.firstRed).toStrictEqual(O.some("preflight:unclassified"));
+          expect(report.skippedAfterRed).toBe(1);
+          expect(laneReport.lanes[0]?.redSchedulingDecision).toStrictEqual(O.some("stop-after-red"));
         }),
         provideScopedLayer(PlatformLayer)
       )
@@ -2136,6 +2306,69 @@ describe("quality task adapter", () => {
       O.none()
     );
   });
+
+  it("plans package-owned tsgo tasks without filesystem-dependent coverage", () => {
+    const group = {
+      packageName: "@beep/example",
+      packageDir: "/repo/packages/example",
+      tsconfigPath: "/repo/packages/example/tsconfig.test.json",
+      files: ["/repo/packages/example/test/example.test.ts"],
+      hasTaskScript: true,
+    };
+
+    expect(testTsgoPlanningForTesting.isTestFile(group.files[0] ?? "", "example.test.ts")).toBe(true);
+    expect(testTsgoPlanningForTesting.isTestFile("/repo/packages/example/src/example.ts", "example.ts")).toBe(false);
+    expect(
+      testTsgoPlanningForTesting.isTestFile("/repo/packages/example/test/fixtures/example.test.ts", "example.test.ts")
+    ).toBe(false);
+    expect(testTsgoPlanningForTesting.isTestFile("/repo/packages/example/test/example.js", "example.js")).toBe(false);
+    expect(testTsgoPlanningForTesting.isIgnoredDirectory("/repo/packages/example/node_modules/", "node_modules")).toBe(
+      true
+    );
+    expect(testTsgoPlanningForTesting.isIgnoredDirectory("/repo/packages/example/test/fixtures/", "fixtures")).toBe(
+      true
+    );
+    expect(testTsgoPlanningForTesting.isIgnoredDirectory("/repo/packages/example/src/", "src")).toBe(false);
+    expect(testTsgoPlanningForTesting.packageLabel("/repo", "/repo/packages/@beep/example")).toBe(
+      "packages-beep-example"
+    );
+
+    expect(testTsgoPlanningForTesting.turboArgs([group], [])).toEqual([
+      "run",
+      "package-test-typecheck",
+      "--concurrency=1",
+      "--continue=always",
+      "--output-logs=none",
+      "--summarize",
+      "--filter=@beep/example",
+    ]);
+    expect(testTsgoPlanningForTesting.turboArgs([group], ["--explain"])).toEqual([
+      "run",
+      "package-test-typecheck",
+      "--concurrency=1",
+      "--continue=always",
+      "--output-logs=none",
+      "--summarize",
+      "--filter=@beep/example",
+      "--",
+      "--explain",
+    ]);
+    expect(testTsgoPlanningForTesting.turboSummaryPath("ok\nSummary: .turbo/runs/example.json\n")).toEqual(
+      O.some(".turbo/runs/example.json")
+    );
+    expect(testTsgoPlanningForTesting.turboSummaryPath("no summary")).toEqual(O.none());
+    expect(testTsgoPlanningForTesting.turboSummaryPath("Summary:   ")).toEqual(O.none());
+  });
+
+  it.effect("places package-owned tsgo results in the package Turbo directory", () =>
+    Effect.gen(function* () {
+      const path = yield* Path.Path;
+
+      expect(testTsgoPlanningForTesting.packageResultPath(path, "/repo/packages/example")).toBe(
+        "/repo/packages/example/.turbo/package-test-typecheck-result.json"
+      );
+    }).pipe(provideScopedLayer(NodePath.layer))
+  );
 
   it("normalizes Knip findings with stable ordering and without position fields", () =>
     Effect.runPromise(

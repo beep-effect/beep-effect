@@ -63,7 +63,7 @@ screenshots-only loop.
 3. **Judge** — `bun run beep qa judge-pack --round N` builds `judge/`
    (timeline, file manifest with byte sizes, rendered prompt from
    `resources/judge-prompt.md`). Launch the vision judge:
-   `node "${CLAUDE_PLUGIN_ROOT}/scripts/codex-companion.mjs" task --model gpt-5.6-sol --effort high --prompt-file <round>/judge/prompt.md > <round>/judge/stdout.txt`
+   `node "${CLAUDE_PLUGIN_ROOT}/scripts/codex-companion.mjs" task --model gpt-daybreak-blue-latest --effort high --prompt-file <round>/judge/prompt.md > <round>/judge/stdout.txt`
    (read-only sandbox — no `--write`). Then
    `bun run beep qa judge-ingest --round N --from <round>/judge/stdout.txt`
    decodes the JSON verdict, cross-checks every evidence path and event ref,

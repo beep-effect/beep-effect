@@ -1010,6 +1010,21 @@
         "bun-types": "catalog:",
       },
     },
+    "packages/drivers/freshbooks": {
+      "name": "@beep/freshbooks",
+      "version": "0.0.0",
+      "dependencies": {
+        "@beep/identity": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "@beep/utils": "workspace:^",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@beep/test-utils": "workspace:^",
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+      },
+    },
     "packages/drivers/gov-legal-mcp": {
       "name": "@beep/gov-legal-mcp",
       "version": "0.0.0",
@@ -3495,6 +3510,8 @@
     "@beep/file-processing": ["@beep/file-processing@workspace:packages/foundation/capability/file-processing"],
 
     "@beep/firecrawl": ["@beep/firecrawl@workspace:packages/drivers/firecrawl"],
+
+    "@beep/freshbooks": ["@beep/freshbooks@workspace:packages/drivers/freshbooks"],
 
     "@beep/gov-legal-mcp": ["@beep/gov-legal-mcp@workspace:packages/drivers/gov-legal-mcp"],
 

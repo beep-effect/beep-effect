@@ -899,10 +899,13 @@ const finishJournalLockReap = Effect.fnUntraced(function* (
   const completed = reclaimedObservedGeneration
     ? yield* discardReclaimedJournalLock(tombstonePath, adopterPath, observedToken)
     : yield* restoreDisplacedJournalLock(lockPath, tombstonePath, adopterPath, observedToken);
-  if (!completed) {
+  // Both arms stay explicit: V8 credited the trailing implicit guard of this
+  // generator unreliably across suite orders, which read as a coverage drop.
+  if (completed) {
+    yield* releaseJournalLockReapClaim(adopterPath, observedToken);
+  } else {
     return;
   }
-  yield* releaseJournalLockReapClaim(adopterPath, observedToken);
 });
 
 const claimAndFinishJournalLockReap = Effect.fnUntraced(function* (
@@ -936,14 +939,18 @@ const reapAbandonedJournalLock = Effect.fnUntraced(function* (
   // identity abandons the lock immediately. Legacy pid-only tokens remain
   // readable during rollout but cannot prove PID reuse.
   const generation = yield* decodeLockGeneration(content.value).pipe(Effect.option);
-  const ownerDead = yield* O.match(generation, {
-    onNone: () =>
-      O.match(O.flatMap(content, legacyLockOwnerPid), {
-        onNone: () => Effect.succeed(false),
-        onSome: (pid) => isProcessPidAlive(pid).pipe(Effect.map((alive) => !alive)),
-      }),
-    onSome: lockGenerationIsDead,
-  });
+  const ownerDead = yield* pipe(
+    generation,
+    O.map(lockGenerationIsDead),
+    O.getOrElse(() =>
+      pipe(
+        content,
+        O.flatMap(legacyLockOwnerPid),
+        O.map((pid) => isProcessPidAlive(pid).pipe(Effect.map((alive) => !alive))),
+        O.getOrElse(() => Effect.succeed(false))
+      )
+    )
+  );
   const outlivedBackstop = pipe(
     info,
     O.flatMap((fileInfo) => fileInfo.mtime),
@@ -1082,6 +1089,27 @@ export const releaseJournalFileLock = Effect.fnUntraced(function* (
  * @since 0.0.0
  */
 export const releaseAdmissionJournalLockForTesting = releaseJournalFileLock;
+
+/**
+ * Test-only handle for completing an already-adopted journal-lock reap.
+ *
+ * **Example** (Reference the test-only finisher)
+ *
+ * ```ts
+ * import { finishAdmissionJournalLockReapForTesting } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(typeof finishAdmissionJournalLockReapForTesting) // "function"
+ * ```
+ *
+ * @param lockPath - Published journal lock path.
+ * @param claimPath - Generation-specific reap claim path.
+ * @param adopterPath - Elected adopter path for the claim.
+ * @param observedToken - Exact lock generation observed by the reaper.
+ * @returns An effect that completes the fenced reap and releases its adopter claim.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const finishAdmissionJournalLockReapForTesting = finishJournalLockReap;
 
 const journalLockIsOwned = Effect.fnUntraced(function* (
   lockPath: string,

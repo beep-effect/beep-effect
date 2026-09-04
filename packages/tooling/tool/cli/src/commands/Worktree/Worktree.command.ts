@@ -11,16 +11,23 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
-import { LiteralKit, NonEmptyTrimmedStr } from "@beep/schema";
-import { A, O, Str } from "@beep/utils";
-import { Console, Effect, FileSystem, Path } from "effect";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import { NonEmptyTrimmedStr } from "@beep/schema/String";
+import * as A from "@beep/utils/Array";
+import * as O from "@beep/utils/Option";
+import * as Str from "@beep/utils/Str";
 import * as Bool from "effect/Boolean";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { Argument, Command, Flag } from "effect/unstable/cli";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { runRepoCommandStreamingCapture } from "../../internal/repo-run/index.ts";
 import { worktreeFleetCommand } from "./Fleet.command.ts";
+import { worktreeReapCommand } from "./Reap.command.ts";
 import { WORKTREES_ROOT_SUFFIX } from "./Worktree.constants.ts";
 import { WorktreeCommandError, WorktreeExistsError } from "./Worktree.errors.ts";
 import { parseWorktreePorcelain, WorktreeListEntry, WorktreeRemovalRequest } from "./Worktree.schemas.ts";
@@ -826,6 +833,7 @@ const runWorktreeRemove = Effect.fn("Worktree.runWorktreeRemove")(function* (opt
       branch,
       archive: options.archive,
       deleteBranch: options.deleteBranch,
+      expectedHead: O.none(),
     })
   );
   yield* renderWorktreeRemovalReceipt(receipt, options.archive);
@@ -934,7 +942,7 @@ const worktreeDoctorCommand = Command.make(
  * **Details**
  *
  * Bare `worktree` prints the subcommand menu; the work lives in the `new`,
- * `remove`, `doctor`, and `fleet` subcommands.
+ * `remove`, `doctor`, `reap`, and `fleet` subcommands.
  *
  * **Example** (Build the CLI program for the group)
  *
@@ -957,10 +965,17 @@ export const worktreeCommand = Command.make("worktree", {}, () =>
       "- bun run beep worktree new <name> [--branch <branch>]",
       "- bun run beep worktree remove <name> [--archive] [--delete-branch]",
       "- bun run beep worktree doctor",
+      "- bun run beep worktree reap [--apply] [--json] [--idle-hours <hours>]",
       "- bun run beep worktree fleet [--json]",
     ].join("\n")
   )
 ).pipe(
   Command.withDescription("Manage sibling git worktrees under the canonical worktrees root"),
-  Command.withSubcommands([worktreeNewCommand, worktreeRemoveCommand, worktreeDoctorCommand, worktreeFleetCommand])
+  Command.withSubcommands([
+    worktreeNewCommand,
+    worktreeRemoveCommand,
+    worktreeDoctorCommand,
+    worktreeReapCommand,
+    worktreeFleetCommand,
+  ])
 );

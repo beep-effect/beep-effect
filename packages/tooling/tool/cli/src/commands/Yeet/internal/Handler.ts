@@ -49,6 +49,7 @@ import {
   FlakeQuarantineArtifactJson,
 } from "../../Quality/internal/FlakeQuarantine.ts";
 import {
+  GithubCheckLaneRunStatus,
   QUALITY_TASK_LANE_RUN_ARTIFACT_PATH_ENV,
   QUALITY_TASK_LANE_RUN_PARENT_ID_ENV,
   QualityTaskLaneRunReport,
@@ -1342,6 +1343,48 @@ const PRE_PUSH_PROOF_STEP_ID = repoProofStepDefinition("pre-push").id;
 const INNER_LANE_REPORT_FILE_NAME = "inner-lanes.ndjson";
 const decodeInnerLaneReportOption = S.decodeUnknownOption(S.fromJsonString(QualityTaskLaneRunReport));
 
+type PrePushInnerLaneSummary = {
+  readonly firstRed: string;
+  readonly skippedAfterRed: number;
+};
+
+/**
+ * Summarize the first failed pre-push lane and its unlaunched tail.
+ *
+ * **Example** (No pre-push report)
+ *
+ * ```ts
+ * import { summarizePrePushInnerLanesForTesting } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * console.log(O.isNone(summarizePrePushInnerLanesForTesting([]))) // true
+ * ```
+ *
+ * @param reports - Durable inner-lane reports attached to a Yeet attempt.
+ * @returns The first red and skipped count when the pre-push proof failed.
+ * @category testing
+ * @since 0.0.0
+ */
+export const summarizePrePushInnerLanesForTesting = (
+  reports: ReadonlyArray<QualityTaskLaneRunReport>
+): O.Option<PrePushInnerLaneSummary> => {
+  const lanes = pipe(
+    reports,
+    A.filter((report) => O.contains(report.parentLaneId, PRE_PUSH_PROOF_STEP_ID)),
+    A.flatMap((report) => report.lanes)
+  );
+  return pipe(
+    lanes,
+    A.findFirst((lane) => GithubCheckLaneRunStatus.is.failed(lane.status)),
+    O.map((firstRed) => ({
+      firstRed: firstRed.label,
+      skippedAfterRed: A.length(
+        A.filter(lanes, (lane) => GithubCheckLaneRunStatus.is["not-run-early-stop"](lane.status))
+      ),
+    }))
+  );
+};
+
 const readInnerLaneReports = Effect.fn("Yeet.readInnerLaneReports")(function* (
   context: RepoRunContext
 ): Effect.fn.Return<ReadonlyArray<QualityTaskLaneRunReport>, YeetCommandError, FileSystem.FileSystem | Path.Path> {
@@ -1386,6 +1429,14 @@ const writeRunVerdict = Effect.fn("Yeet.writeRunVerdict")(function* (
   const executed = yield* Ref.get(recorder);
   const extraState = yield* Ref.get(extras);
   const innerLaneReports = yield* readInnerLaneReports(plan.context);
+  yield* pipe(
+    summarizePrePushInnerLanesForTesting(innerLaneReports),
+    O.match({
+      onNone: () => Effect.void,
+      onSome: (summary) =>
+        Console.log(`[yeet] pre-push first red: ${summary.firstRed}; skipped after red: ${summary.skippedAfterRed}`),
+    })
+  );
   const endedAtEpochMillis = yield* Clock.currentTimeMillis;
   const endedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
   const artifactDir = yield* artifactDirForContext(plan.context);

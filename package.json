@@ -514,6 +514,7 @@
     "packages/drivers/gov-legal-mcp",
     "packages/drivers/openai",
     "apps/todox",
-    "packages/drivers/box-provisioning"
+    "packages/drivers/box-provisioning",
+    "packages/drivers/freshbooks"
   ]
 }
