@@ -1,25 +1,31 @@
-import { renderAdmissionSnapshotLinesForTesting } from "@beep/repo-cli/test/Quality";
+import { qualityCommand, renderAdmissionSnapshotLinesForTesting } from "@beep/repo-cli/test/Quality";
 import {
   AdmissionConfig,
   AdmissionJournalAdmitted,
   AdmissionJournalEvent,
+  AdmissionJournalLeaseEvicted,
   AdmissionRequest,
   AdmissionSnapshot,
   acquireJournalFileLock,
   admissionCapacityTokensFor,
   admissionJournalPath,
+  admissionProtocolStatus,
   admissionStatus,
   admissionTokenWeight,
+  appendAdmissionEvictionJournalEvent,
   appendAdmissionJournalEvent,
+  attemptJournalPathForCheckout,
   decodeAdmissionJournalEvent,
   isOvershootLoserForTesting,
   isProcessIdentityAliveWithStartForTesting,
   MemoryStats,
+  MemoryStatsLive,
   noAdmissionOriginGate,
   parseAdmissionProcStatStartTime,
   processIdentityStatus,
   processIdentityStatusWithStartForTesting,
   processStartIdentityForPid,
+  processStartIdentityProbeForTesting,
   provideRuntimeRootForTesting,
   qualitySchedulerForTesting,
   RunScopeRecord,
@@ -27,6 +33,7 @@ import {
   reapAdmissionState,
   releaseAdmissionJournalLockForTesting,
   repoRunSafeArtifactName,
+  setAdmissionEvictionProtocol,
   validatePrivateCoordinationDirectory,
   withQualityAdmission,
   YeetAdmissionLease,
@@ -38,9 +45,10 @@ import {
   RepoRunContext,
   TurboPlanSnapshot,
 } from "@beep/repo-cli/test/Yeet";
+import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { UUID } from "@beep/schema/String";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
-import { NodeChildProcessSpawner } from "@effect/platform-node";
+import { NodeChildProcessSpawner, NodeServices } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
@@ -51,10 +59,14 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Struct from "effect/Struct";
 import { FastCheck as fc } from "effect/testing";
+import * as TestConsole from "effect/testing/TestConsole";
+import { Command } from "effect/unstable/cli";
 
 const PlatformLayer = NodeChildProcessSpawner.layer.pipe(
   Layer.provideMerge(Layer.mergeAll(NodeFileSystem.layer, NodePath.layer))
 );
+const SchedulerCommandLayer = Layer.mergeAll(NodeServices.layer, FsUtilsLive.pipe(Layer.provide(NodeServices.layer)));
+const runQualityCommand = Command.runWith(qualityCommand, { version: "0.0.0" });
 
 const DEAD_PID = 2_147_483_647;
 const JOURNALED_ATTEMPT_ID = S.decodeSync(UUID)("550e8400-e29b-41d4-a716-446655440020");
@@ -78,11 +90,22 @@ describe("memory stats", () => {
 });
 
 describe("process identity liveness", () => {
-  it.effect("returns no portable identity for an absent process", () =>
-    Effect.gen(function* () {
-      expect(yield* qualitySchedulerForTesting.processStartIdentityFromSystemCommand(DEAD_PID)).toEqual(O.none());
-    })
-  );
+  it("builds both portable process-inspector probes", () => {
+    expect(processStartIdentityProbeForTesting({ pid: 42, platform: "linux" })).toStrictEqual({
+      prefix: "ps",
+      command: ["ps", "-o", "lstart=", "-p", "42"],
+    });
+    expect(processStartIdentityProbeForTesting({ pid: 42, platform: "win32" })).toStrictEqual({
+      prefix: "win",
+      command: [
+        "powershell.exe",
+        "-NoProfile",
+        "-NonInteractive",
+        "-Command",
+        "(Get-Process -Id 42 -ErrorAction Stop).StartTime.ToUniversalTime().Ticks",
+      ],
+    });
+  });
 
   it.effect("uses a portable process identity when procfs is unavailable", () =>
     Effect.gen(function* () {
@@ -106,6 +129,7 @@ describe("process identity liveness", () => {
           )
         ).toBe("alive");
       }
+      expect(O.isNone(yield* processStartIdentityForPid(DEAD_PID))).toBe(true);
     }).pipe(provideScopedLayer(PlatformLayer))
   );
 
@@ -209,6 +233,15 @@ const journalAdmitted = (index: number) =>
     enqueuedAtMillis: index,
     admittedAtMillis: index,
   });
+
+const journalLeaseEvicted = AdmissionJournalLeaseEvicted.make({
+  schemaVersion: "yeet-admission-journal/v2",
+  _tag: "admission-lease-evicted",
+  nonce: "evicted-lease",
+  pid: DEAD_PID,
+  evictedAtMillis: 1,
+  reason: "owner-dead-or-reused",
+});
 
 const request = (overrides: Partial<Parameters<typeof AdmissionRequest.make>[0]> = {}) =>
   AdmissionRequest.make({
@@ -369,6 +402,15 @@ const listDirectory = Effect.fnUntraced(function* (directory: string) {
 });
 
 describe("quality-scheduler", () => {
+  it.effect("reads the live memory inputs used by the scheduler capacity model", () =>
+    Effect.gen(function* () {
+      const stats = yield* MemoryStats;
+
+      expect(yield* stats.availableGib).toBeGreaterThan(0);
+      expect(yield* stats.totalGib).toBeGreaterThan(0);
+    }).pipe(provideScopedLayer(MemoryStatsLive), provideScopedLayer(NodeFileSystem.layer))
+  );
+
   it.effect("accepts an owner-agnostic private directory and rejects an unsafe mode", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
@@ -484,6 +526,56 @@ describe("quality-scheduler", () => {
             }),
             fastConfig
           )
+        );
+      })
+    ));
+
+  it("carries immutable attempt facts from a waiting ticket onto its admitted lease", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(10);
+        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const attemptId = yield* S.decodeEffect(UUID)("550e8400-e29b-41d4-a716-446655440023");
+            const facts = {
+              attemptId: O.some(attemptId),
+              resolvedHeadSha: O.some("0123456789abcdef0123456789abcdef01234567"),
+              diffFingerprint: O.some("abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcd"),
+              proofTier: O.some("full" as const),
+              envProfile: O.some("local" as const),
+              stage: O.some("pre-push" as const),
+            };
+            const admitted = yield* Effect.forkChild(
+              withQualityAdmission(
+                request(facts),
+                noAdmissionOriginGate,
+                Effect.gen(function* () {
+                  const leaseName = pipe(yield* listDirectory(tempRoot.leases), A.head, O.getOrThrow);
+                  return yield* fs
+                    .readFileString(path.join(tempRoot.leases, leaseName))
+                    .pipe(Effect.flatMap(decodeLease));
+                }),
+                fastConfig
+              )
+            );
+
+            let ticketNames = A.empty<string>();
+            for (let attempt = 0; attempt < 100 && A.isReadonlyArrayEmpty(ticketNames); attempt++) {
+              yield* Effect.sleep("5 millis");
+              ticketNames = yield* listDirectory(tempRoot.queue);
+            }
+            const ticketName = pipe(ticketNames, A.head, O.getOrThrow);
+            const ticket = yield* fs
+              .readFileString(path.join(tempRoot.queue, ticketName))
+              .pipe(Effect.flatMap(decodeTicket));
+            expect(ticket).toMatchObject(facts);
+
+            yield* Ref.set(gibRef, 50);
+            const lease = yield* Fiber.join(admitted);
+            expect(lease).toMatchObject(facts);
+          })
         );
       })
     ));
@@ -656,6 +748,12 @@ describe("quality-scheduler", () => {
             yield* fs.writeFileString(lockPath, `${process.pid}:live-holder`);
             const busy = yield* appendAdmissionJournalEvent(tempRoot.root, journalAdmitted(0)).pipe(Effect.flip);
             expect(busy.message).toContain("stayed busy");
+            const protocolBusy = yield* setAdmissionEvictionProtocol("on").pipe(Effect.flip);
+            expect(protocolBusy.message).toContain("could not change the protocol marker");
+            const evictionBusy = yield* appendAdmissionEvictionJournalEvent(tempRoot.root, journalLeaseEvicted).pipe(
+              Effect.flip
+            );
+            expect(evictionBusy.message).toContain("dropping one admission-lease-evicted event");
             expect(yield* readJournalEvents(tempRoot.root)).toHaveLength(0);
             const agedLiveSeconds = ((yield* Clock.currentTimeMillis) - 301_000) / 1_000;
             yield* fs.utimes(lockPath, agedLiveSeconds, agedLiveSeconds);
@@ -773,6 +871,100 @@ describe("quality-scheduler", () => {
     expect(repoRunSafeArtifactName("///")).toBe("repo");
   });
 
+  it("serializes protocol disablement behind the admission journal lock", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+          Effect.gen(function* () {
+            const path = yield* Path.Path;
+            yield* setAdmissionEvictionProtocol("on");
+            const lockPath = path.join(tempRoot.root, "journal.lock");
+            const lockToken = `${process.pid}:00000000-0000-4000-8000-000000000124`;
+            expect(yield* acquireJournalFileLock(lockPath, lockToken, 1)).toBe(true);
+            const disabling = yield* Effect.forkChild(setAdmissionEvictionProtocol("off"));
+            yield* Effect.sleep("75 millis");
+            expect(disabling.pollUnsafe()).toBeUndefined();
+            expect((yield* admissionProtocolStatus()).eviction).toBe("on");
+            yield* releaseAdmissionJournalLockForTesting(lockPath, lockToken);
+            expect((yield* Fiber.join(disabling)).eviction).toBe("off");
+          })
+        );
+      })
+    ));
+
+  it("executes every scheduler CLI mutation and reporting route", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        yield* withAdmissionTempRoot(gibRef, () =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const repositoryMarker = path.join(process.cwd(), ".git");
+            const repositoryMarkerFileSystem = FileSystem.FileSystem.of({
+              ...fs,
+              exists: Effect.fnUntraced(function* (target: string) {
+                return target === repositoryMarker ? true : yield* fs.exists(target);
+              }),
+            });
+
+            yield* Effect.gen(function* () {
+              const expectCommandSuccess = Effect.fnUntraced(function* (args: ReadonlyArray<string>) {
+                const exit = yield* Effect.exit(runQualityCommand(args));
+                expect(exit._tag, `${A.join(args, " ")}: ${String(exit)}`).toBe("Success");
+              });
+              yield* expectCommandSuccess(["scheduler"]);
+              yield* expectCommandSuccess(["scheduler", "status", "--json"]);
+              yield* expectCommandSuccess(["scheduler", "reap", "--apply"]);
+              yield* expectCommandSuccess(["scheduler", "protocol"]);
+              yield* expectCommandSuccess(["scheduler", "protocol", "--enable-evictions"]);
+              expect((yield* admissionProtocolStatus()).eviction).toBe("on");
+              yield* expectCommandSuccess(["scheduler", "protocol", "--disable-evictions"]);
+              expect((yield* admissionProtocolStatus()).eviction).toBe("off");
+              yield* expectCommandSuccess(["scheduler", "reconcile-attempts"]);
+              const conflict = yield* Effect.exit(
+                runQualityCommand(["scheduler", "protocol", "--enable-evictions", "--disable-evictions"])
+              );
+              expect(conflict._tag).toBe("Failure");
+            }).pipe(Effect.provideService(FileSystem.FileSystem, repositoryMarkerFileSystem));
+          }).pipe(provideScopedLayer(TestConsole.layer))
+        );
+      }).pipe(provideScopedLayer(SchedulerCommandLayer))
+    ));
+
+  it("claims dead tickets when terminal publication is absent or cannot be written", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const blockedCheckoutRoot = path.join(tempRoot.root, "blocked-checkout");
+            yield* fs.makeDirectory(tempRoot.root, { recursive: true, mode: 0o700 });
+            yield* fs.writeFileString(blockedCheckoutRoot, "not a directory");
+            yield* writeFakeTicket(tempRoot, {
+              pid: DEAD_PID,
+              nonce: "dead-without-attempt",
+              attemptId: O.none(),
+            });
+            yield* writeFakeTicket(tempRoot, {
+              pid: DEAD_PID,
+              nonce: "dead-unwritable-attempt",
+              checkoutRoot: blockedCheckoutRoot,
+              attemptId: O.some(JOURNALED_ATTEMPT_ID),
+            });
+
+            const applied = yield* reapAdmissionState({ apply: true });
+
+            expect(applied.dead).toHaveLength(2);
+            expect(yield* listDirectory(tempRoot.queue)).toHaveLength(0);
+          }).pipe(provideScopedLayer(TestConsole.layer))
+        );
+      })
+    ));
+
   it("decodes legacy lease files without nonce or enqueuedAtMillis", () =>
     Effect.runPromise(
       Effect.gen(function* () {
@@ -808,6 +1000,7 @@ describe("quality-scheduler", () => {
             expect(decoded.nonce).toBe("");
             expect(decoded.enqueuedAtMillis).toBe(0);
             const snapshot = yield* admissionStatus(fastConfig);
+            expect((yield* admissionProtocolStatus()).eviction).toBe("off");
             expect(snapshot.leases).toHaveLength(1);
           })
         );
@@ -1273,11 +1466,14 @@ describe("quality-scheduler", () => {
             const binDirectory = path.join(path.dirname(path.dirname(tempRoot.root)), "bin");
             yield* fs.makeDirectory(binDirectory, { recursive: true });
             yield* writeExecutable(path.join(binDirectory, "systemctl"), "#!/bin/sh\nexit 0\n");
+            const checkoutRoot = path.join(path.dirname(path.dirname(tempRoot.root)), "off-checkout");
+            yield* fs.makeDirectory(checkoutRoot, { recursive: true });
             const live = yield* writeFakeLease(tempRoot, { weightTokens: 3, originKey: "origin-live" });
             const dead = yield* writeFakeLease(tempRoot, {
               pid: DEAD_PID,
               weightTokens: 5,
               originKey: "origin-dead",
+              checkoutRoot,
               attemptId: O.some(JOURNALED_ATTEMPT_ID),
             });
             const snapshot = yield* admissionStatus(fastConfig);
@@ -1295,16 +1491,17 @@ describe("quality-scheduler", () => {
             const remaining = yield* listDirectory(tempRoot.leases);
             expect(remaining).toStrictEqual([path.basename(live)]);
             const events = yield* readJournalEvents(tempRoot.root);
-            const eviction = pipe(
-              events,
-              A.findFirst(AdmissionJournalEvent.guards["admission-lease-evicted"]),
-              O.getOrThrow
+            expect(events).toHaveLength(0);
+            const attemptLines = pipe(
+              yield* fs.readFileString(yield* attemptJournalPathForCheckout(checkoutRoot, "feat/other")),
+              Str.split("\n"),
+              A.filter(Str.isNonEmpty)
             );
-            expect(eviction.nonce).toBe("");
-            expect(eviction.pid).toBe(DEAD_PID);
-            expect(eviction.attemptId).toStrictEqual(O.some(JOURNALED_ATTEMPT_ID));
-            expect(eviction.schemaVersion).toBe("yeet-admission-journal/v2");
-            expect(eviction.reason).toBe("owner-dead-or-reused");
+            expect(attemptLines).toHaveLength(1);
+            expect(yield* decodeYeetAttemptJournalEvent(attemptLines[0])).toMatchObject({
+              _tag: "attempt-terminated",
+              reason: "lease-eviction",
+            });
           })
         );
       })
@@ -1328,6 +1525,11 @@ describe("quality-scheduler", () => {
               checkoutRoot,
               branch: "feat/dead-lease",
               attemptId: O.some(leaseAttemptId),
+              resolvedHeadSha: O.some("0123456789abcdef0123456789abcdef01234567"),
+              diffFingerprint: O.some("abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcd"),
+              proofTier: O.some("full"),
+              envProfile: O.some("local"),
+              stage: O.some("pre-push"),
             });
             yield* writeFakeTicket(tempRoot, {
               pid: DEAD_PID,
@@ -1335,7 +1537,14 @@ describe("quality-scheduler", () => {
               checkoutRoot,
               branch: "feat/dead-ticket",
               attemptId: O.some(ticketAttemptId),
+              resolvedHeadSha: O.some("fedcba9876543210fedcba9876543210fedcba98"),
+              diffFingerprint: O.some("1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"),
+              proofTier: O.some("review-fix"),
+              envProfile: O.some("hosted"),
+              stage: O.some("hosted"),
             });
+
+            yield* setAdmissionEvictionProtocol("on");
 
             yield* Effect.all([reapAdmissionState({ apply: true }), reapAdmissionState({ apply: true })], {
               concurrency: "unbounded",
@@ -1375,6 +1584,20 @@ describe("quality-scheduler", () => {
                 })
             );
             expect(attemptEvents).toHaveLength(2);
+            expect(attemptEvents[0]).toMatchObject({
+              resolvedHeadSha: O.some("0123456789abcdef0123456789abcdef01234567"),
+              diffFingerprint: O.some("abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcd"),
+              proofTier: O.some("full"),
+              envProfile: O.some("local"),
+              stage: O.some("pre-push"),
+            });
+            expect(attemptEvents[1]).toMatchObject({
+              resolvedHeadSha: O.some("fedcba9876543210fedcba9876543210fedcba98"),
+              diffFingerprint: O.some("1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"),
+              proofTier: O.some("review-fix"),
+              envProfile: O.some("hosted"),
+              stage: O.some("hosted"),
+            });
             expect(yield* listDirectory(tempRoot.leases)).toHaveLength(0);
             expect(yield* listDirectory(tempRoot.queue)).toHaveLength(0);
           })
