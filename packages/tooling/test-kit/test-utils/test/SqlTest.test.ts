@@ -101,28 +101,28 @@ vi.mock("testcontainers", () => {
   };
 });
 
-vi.mock("pg", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("pg")>();
+vi.mock("pg", (importOriginal) =>
+  importOriginal<typeof import("pg")>().then((actual) => {
+    class MockClient {
+      connect(): Promise<void> {
+        sqlTransportMock.connections += 1;
+        return Promise.resolve();
+      }
 
-  class MockClient {
-    connect(): Promise<void> {
-      sqlTransportMock.connections += 1;
-      return Promise.resolve();
+      end(): Promise<void> {
+        sqlTransportMock.ends += 1;
+        return Promise.resolve();
+      }
+
+      query(): Promise<{ readonly rows: ReadonlyArray<{ readonly one: number }> }> {
+        sqlTransportMock.queries += 1;
+        return Promise.resolve({ rows: [{ one: 1 }] });
+      }
     }
 
-    end(): Promise<void> {
-      sqlTransportMock.ends += 1;
-      return Promise.resolve();
-    }
-
-    query(): Promise<{ readonly rows: ReadonlyArray<{ readonly one: number }> }> {
-      sqlTransportMock.queries += 1;
-      return Promise.resolve({ rows: [{ one: 1 }] });
-    }
-  }
-
-  return { ...actual, Client: MockClient };
-});
+    return { ...actual, Client: MockClient };
+  })
+);
 
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>

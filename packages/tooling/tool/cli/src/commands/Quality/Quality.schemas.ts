@@ -872,6 +872,180 @@ export const GithubCheckLaneWave = LiteralKit(["preflight", "heavy", "test", "do
 export type GithubCheckLaneWave = typeof GithubCheckLaneWave.Type;
 
 /**
+ * Confidence class controlling whether one red may stop a local proof wave.
+ *
+ * **Example** (Identify a precise gate)
+ *
+ * ```ts
+ * import { GatePrecisionClass } from "@beep/repo-cli/commands/Quality"
+ *
+ * console.log(GatePrecisionClass.is.precise("precise")) // true
+ * ```
+ *
+ * @category policies
+ * @since 0.0.0
+ */
+export const GatePrecisionClass = LiteralKit(["precise", "imprecise"]).pipe(
+  $I.annoteSchema("GatePrecisionClass", {
+    description: "Whether a gate red is direct enough to stop scheduling the remaining local proof wave.",
+  })
+);
+
+/**
+ * Confidence class controlling whether one red may stop a local proof wave.
+ *
+ * @see {@link GatePrecisionClass} for the runtime schema and literal helpers.
+ * @category policies
+ * @since 0.0.0
+ */
+export type GatePrecisionClass = typeof GatePrecisionClass.Type;
+
+/**
+ * Scheduling decision recorded when a GitHub-check lane turns red.
+ *
+ * **Example** (Identify a stopping red)
+ *
+ * ```ts
+ * import { GateRedSchedulingDecision } from "@beep/repo-cli/commands/Quality"
+ *
+ * console.log(GateRedSchedulingDecision.is["stop-after-red"]("stop-after-red")) // true
+ * ```
+ *
+ * @category policies
+ * @since 0.0.0
+ */
+export const GateRedSchedulingDecision = LiteralKit(["stop-after-red", "continue-after-imprecise-red"]).pipe(
+  $I.annoteSchema("GateRedSchedulingDecision", {
+    description: "Whether a failed lane stops scheduling or continues because it is explicitly imprecise.",
+  })
+);
+
+/**
+ * Scheduling decision recorded when a GitHub-check lane turns red.
+ *
+ * @see {@link GateRedSchedulingDecision} for the runtime schema and literal helpers.
+ * @category policies
+ * @since 0.0.0
+ */
+export type GateRedSchedulingDecision = typeof GateRedSchedulingDecision.Type;
+
+/**
+ * Coarse B3 partition applied before evidence-based cost ordering.
+ *
+ * **Example** (Identify the first partition)
+ *
+ * ```ts
+ * import { GateOrderLaneClass } from "@beep/repo-cli/commands/Quality"
+ *
+ * console.log(GateOrderLaneClass.is["policy-preflight"]("policy-preflight")) // true
+ * ```
+ *
+ * @category policies
+ * @since 0.0.0
+ */
+export const GateOrderLaneClass = LiteralKit(["policy-preflight", "heavy"]).pipe(
+  $I.annoteSchema("GateOrderLaneClass", {
+    description: "B3 execution partition that keeps policy and preflight gates ahead of heavy work.",
+  })
+);
+
+/**
+ * Coarse B3 partition applied before evidence-based cost ordering.
+ *
+ * @see {@link GateOrderLaneClass} for the runtime schema and literal helpers.
+ * @category policies
+ * @since 0.0.0
+ */
+export type GateOrderLaneClass = typeof GateOrderLaneClass.Type;
+
+/**
+ * Evidence-backed scheduling inputs for one local proof gate.
+ *
+ * **Details**
+ *
+ * `costP50Seconds` is the A1 nearest-rank P50. `redProbability` is the lane's
+ * share of A1 attempts with a reconstructable first actionable failure.
+ *
+ * **Example** (Describe a cheap precise gate)
+ *
+ * ```ts
+ * import { GateOrderSeedRow } from "@beep/repo-cli/commands/Quality"
+ *
+ * const row = GateOrderSeedRow.make({
+ *   costP50Seconds: 2,
+ *   durationBasis: "A1 local wrapper proxy.",
+ *   durationPointer: "/localWrapperLanes/15/p50DurationMs",
+ *   firstRedBasis: "Exact A1 actionable-lane row divided by 832.",
+ *   firstRedPointer: "/firstFailure/actionableLaneMix/8",
+ *   laneClass: "policy-preflight",
+ *   laneClassBasis: "SPEC B3 policy/preflight partition.",
+ *   laneId: "fallow:audit",
+ *   precision: "precise",
+ *   precisionBasis: "No environment-only or indirect A4 attribution.",
+ *   redProbability: 0.05649
+ * })
+ * console.log(row.laneId) // "fallow:audit"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GateOrderSeedRow extends S.Class<GateOrderSeedRow>($I`GateOrderSeedRow`)(
+  {
+    laneId: S.NonEmptyString,
+    laneClass: GateOrderLaneClass,
+    laneClassBasis: S.NonEmptyString,
+    costP50Seconds: S.Finite.check(S.isGreaterThanOrEqualTo(0)),
+    redProbability: S.Finite.check(S.isBetween({ minimum: 0, maximum: 1 })),
+    precision: GatePrecisionClass,
+    durationBasis: S.NonEmptyString,
+    durationPointer: S.NonEmptyString,
+    firstRedBasis: S.NonEmptyString,
+    firstRedPointer: S.NonEmptyString,
+    precisionBasis: S.NonEmptyString,
+  },
+  $I.annote("GateOrderSeedRow", {
+    description: "A1 cost and first-red evidence plus A4 precision attribution for one local proof gate.",
+  })
+) {}
+
+/**
+ * Versioned gate-order seed consumed by the Yeet wave planner.
+ *
+ * **Example** (Build an empty seed)
+ *
+ * ```ts
+ * import { GateOrderSeed } from "@beep/repo-cli/commands/Quality"
+ *
+ * const seed = GateOrderSeed.make({
+ *   firstFailurePopulation: 832,
+ *   lanes: [],
+ *   measurementAsOf: "2026-09-03T06:29:38.367Z",
+ *   schemaVersion: "gate-order/v1",
+ *   sourcePath: "goals/time-to-certainty/research/economics.json"
+ * })
+ * console.log(seed.schemaVersion) // "gate-order/v1"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GateOrderSeed extends S.Class<GateOrderSeed>($I`GateOrderSeed`)(
+  {
+    schemaVersion: S.Literal("gate-order/v1"),
+    sourcePath: S.NonEmptyString,
+    measurementAsOf: S.NonEmptyString,
+    firstFailurePopulation: S.Int.check(S.isGreaterThan(0)),
+    lanes: S.Array(GateOrderSeedRow),
+  },
+  $I.annote("GateOrderSeed", {
+    description: "Versioned A1 and A4 evidence used to order the local Yeet pre-push lane set.",
+  })
+) {}
+
+const OptionalGateOrderSeedRow = GateOrderSeedRow.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault);
+
+/**
  * Executable lane specification for GitHub check collectors.
  *
  * **Example** (Construct a github check lane spec)
@@ -900,6 +1074,7 @@ export class GithubCheckLaneSpec extends S.Class<GithubCheckLaneSpec>($I`GithubC
     wave: GithubCheckLaneWave,
     blockedBy: S.Array(S.String),
     step: QualityTaskStep,
+    orderEstimate: OptionalGateOrderSeedRow,
   },
   $I.annote("GithubCheckLaneSpec", {
     description: "Executable lane specification for GitHub check collectors.",
@@ -962,6 +1137,10 @@ export type GithubCheckLaneRunStatus = typeof GithubCheckLaneRunStatus.Type;
 
 const OptionalLaneRunString = S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault);
 const OptionalLaneRunFinite = S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault);
+const OptionalGateRedSchedulingDecision = GateRedSchedulingDecision.pipe(
+  S.OptionFromOptionalKey,
+  SchemaUtils.withNoneDefault
+);
 const NullableLaneInputDigest = S.OptionFromNullOr(S.String).pipe(
   SchemaUtils.withNoneDefault,
   S.withDecodingDefaultKey(EffectRuntime.succeed(null))
@@ -1007,6 +1186,7 @@ export class QualityTaskLaneRun extends S.Class<QualityTaskLaneRun>($I`QualityTa
     durationMs: OptionalLaneRunFinite,
     exitCode: OptionalLaneRunFinite,
     inputDigest: NullableLaneInputDigest,
+    redSchedulingDecision: OptionalGateRedSchedulingDecision,
   },
   $I.annote("QualityTaskLaneRun", {
     description: "Timing and outcome facts for one lane executed inside a wrapper command.",
@@ -1098,6 +1278,8 @@ export class GithubCheckRunReport extends S.Class<GithubCheckRunReport>($I`Githu
     schemaVersion: S.Literal("github-check-run/v1"),
     failurePolicy: GithubCheckFailurePolicy,
     lanes: S.Array(GithubCheckLaneRun),
+    firstRed: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    skippedAfterRed: S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(SchemaUtils.withKeyDefaults(0)),
   },
   $I.annote("GithubCheckRunReport", {
     description: "Machine-readable lane outcomes and failure policy for a local GitHub-check wave run.",

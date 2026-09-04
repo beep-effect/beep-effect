@@ -214,10 +214,9 @@ Create structured, typed errors using `TaggedErrorClass` from `@beep/schema`:
 
 ```typescript
 import {Effect} from "effect";
-import {$SomePackageId} from "@beep/identity";
+import { $SomePackageId } from "@beep/identity/packages";
 import * as Str from "effect/String";
 import * as S from "effect/Schema";
-import { TaggedErrorClass } from "@beep/schema";
 
 const $I = $SomePackageId.create("relative/path/to/file");
 

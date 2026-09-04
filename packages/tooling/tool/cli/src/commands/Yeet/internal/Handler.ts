@@ -49,6 +49,7 @@ import {
   FlakeQuarantineArtifactJson,
 } from "../../Quality/internal/FlakeQuarantine.ts";
 import {
+  GithubCheckLaneRunStatus,
   QUALITY_TASK_LANE_RUN_ARTIFACT_PATH_ENV,
   QUALITY_TASK_LANE_RUN_PARENT_ID_ENV,
   QualityTaskLaneRunReport,
@@ -118,6 +119,7 @@ import {
   retireFullProofLockOrObserveAtPath,
   writeVerifiedState,
 } from "./ProofState.ts";
+import { recordMonitoredPrSession } from "./ProvenanceFooter.ts";
 import {
   collectPublishIntent,
   enforceBaseFreshness,
@@ -642,7 +644,8 @@ const ensureRequestedPullRequest = Effect.fn("Yeet.ensureRequestedPullRequest")(
   yield* ensurePullRequest(
     context,
     recorder,
-    A.findFirst(steps, (step) => step.id === "publish:02-pr-create")
+    A.findFirst(steps, (step) => step.id === "publish:02-pr-create"),
+    A.findFirst(steps, (step) => step.id === "publish:03-pr-provenance-stamp")
   );
 });
 
@@ -830,7 +833,10 @@ const runStartPrEarlyPublishPhases = Effect.fn("Yeet.runStartPrEarlyPublishPhase
   yield* warnOnMismatchedPublishUpstream(plan.context);
   const earlyPushSteps = A.filter(
     earlyPublishSteps,
-    (step) => step.id !== "publish:02-pr-create" && step.id !== HEAD_INSTALL_PREFLIGHT_STEP_ID
+    (step) =>
+      step.id !== "publish:02-pr-create" &&
+      step.id !== "publish:03-pr-provenance-stamp" &&
+      step.id !== HEAD_INSTALL_PREFLIGHT_STEP_ID
   );
   const earlyPublishResults = yield* runPhase(plan.context, earlyPushSteps, recorder);
   if (A.some(earlyPublishResults, (result) => result.exitCode !== 0)) {
@@ -905,7 +911,10 @@ const runStandardPublishPhases = Effect.fn("Yeet.runStandardPublishPhases")(func
   yield* warnOnMismatchedPublishUpstream(plan.context);
   const pushSteps = A.filter(
     publishSteps,
-    (step) => step.id !== "publish:02-pr-create" && step.id !== HEAD_INSTALL_PREFLIGHT_STEP_ID
+    (step) =>
+      step.id !== "publish:02-pr-create" &&
+      step.id !== "publish:03-pr-provenance-stamp" &&
+      step.id !== HEAD_INSTALL_PREFLIGHT_STEP_ID
   );
   const publishResults = yield* runPhase(plan.context, pushSteps, recorder);
   if (A.some(publishResults, (result) => result.exitCode !== 0)) {
@@ -1180,6 +1189,7 @@ const runMonitorPhase = Effect.fn("Yeet.runMonitorPhase")(function* (
     Effect.map((pullRequest) => pullRequest.number),
     Effect.mapError(YeetCommandError.new("Failed to decode pull request number for yeet monitor."))
   );
+  yield* recordMonitoredPrSession(context, pullRequestNumber);
   yield* Effect.raceFirst(
     runMonitorCheckWatch(context, checkSteps, recorder, failureMessage),
     runYeetPullRequestCommentMonitor(context, pullRequestNumber)
@@ -1333,6 +1343,48 @@ const PRE_PUSH_PROOF_STEP_ID = repoProofStepDefinition("pre-push").id;
 const INNER_LANE_REPORT_FILE_NAME = "inner-lanes.ndjson";
 const decodeInnerLaneReportOption = S.decodeUnknownOption(S.fromJsonString(QualityTaskLaneRunReport));
 
+type PrePushInnerLaneSummary = {
+  readonly firstRed: string;
+  readonly skippedAfterRed: number;
+};
+
+/**
+ * Summarize the first failed pre-push lane and its unlaunched tail.
+ *
+ * **Example** (No pre-push report)
+ *
+ * ```ts
+ * import { summarizePrePushInnerLanesForTesting } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * console.log(O.isNone(summarizePrePushInnerLanesForTesting([]))) // true
+ * ```
+ *
+ * @param reports - Durable inner-lane reports attached to a Yeet attempt.
+ * @returns The first red and skipped count when the pre-push proof failed.
+ * @category testing
+ * @since 0.0.0
+ */
+export const summarizePrePushInnerLanesForTesting = (
+  reports: ReadonlyArray<QualityTaskLaneRunReport>
+): O.Option<PrePushInnerLaneSummary> => {
+  const lanes = pipe(
+    reports,
+    A.filter((report) => O.contains(report.parentLaneId, PRE_PUSH_PROOF_STEP_ID)),
+    A.flatMap((report) => report.lanes)
+  );
+  return pipe(
+    lanes,
+    A.findFirst((lane) => GithubCheckLaneRunStatus.is.failed(lane.status)),
+    O.map((firstRed) => ({
+      firstRed: firstRed.label,
+      skippedAfterRed: A.length(
+        A.filter(lanes, (lane) => GithubCheckLaneRunStatus.is["not-run-early-stop"](lane.status))
+      ),
+    }))
+  );
+};
+
 const readInnerLaneReports = Effect.fn("Yeet.readInnerLaneReports")(function* (
   context: RepoRunContext
 ): Effect.fn.Return<ReadonlyArray<QualityTaskLaneRunReport>, YeetCommandError, FileSystem.FileSystem | Path.Path> {
@@ -1377,6 +1429,14 @@ const writeRunVerdict = Effect.fn("Yeet.writeRunVerdict")(function* (
   const executed = yield* Ref.get(recorder);
   const extraState = yield* Ref.get(extras);
   const innerLaneReports = yield* readInnerLaneReports(plan.context);
+  yield* pipe(
+    summarizePrePushInnerLanesForTesting(innerLaneReports),
+    O.match({
+      onNone: () => Effect.void,
+      onSome: (summary) =>
+        Console.log(`[yeet] pre-push first red: ${summary.firstRed}; skipped after red: ${summary.skippedAfterRed}`),
+    })
+  );
   const endedAtEpochMillis = yield* Clock.currentTimeMillis;
   const endedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
   const artifactDir = yield* artifactDirForContext(plan.context);

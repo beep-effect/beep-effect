@@ -410,6 +410,214 @@ export declare namespace YeetAdmissionTicket {
 }
 
 /**
+ * Durable acknowledgement state for one admission-reap output sink.
+ *
+ * **Example** (Recognize a protocol-deferred sink)
+ *
+ * ```ts
+ * import { AdmissionClaimSinkState } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(AdmissionClaimSinkState.is["pending-protocol-off"]("pending-protocol-off")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const AdmissionClaimSinkState = LiteralKit(["pending", "pending-protocol-off", "complete"]).pipe(
+  $I.annoteSchema("AdmissionClaimSinkState", {
+    description: "Durable acknowledgement state for one admission-reap output sink.",
+  })
+);
+
+/**
+ * Durable acknowledgement state for one admission-reap output sink.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type AdmissionClaimSinkState = typeof AdmissionClaimSinkState.Type;
+
+const admissionReapClaimFields = {
+  schemaVersion: S.Literal("yeet-admission-reap-claim/v1"),
+  sourcePath: S.String,
+  nonce: S.String,
+  claimedAtMillis: S.Finite,
+  attemptJournal: AdmissionClaimSinkState,
+  admissionJournal: AdmissionClaimSinkState,
+};
+
+/**
+ * Recoverable outbox for one dead admission lease lifecycle.
+ *
+ * **Example** (Construct a lease reap claim)
+ *
+ * ```ts
+ * import { AdmissionLeaseReapClaim, YeetAdmissionLease } from "@beep/repo-cli/test/RepoRun"
+ *
+ * const lease = YeetAdmissionLease.make({
+ *   schemaVersion: "yeet-admission-lease/v1",
+ *   pid: 1234,
+ *   procStart: "8241991",
+ *   kind: "full-proof",
+ *   weightTokens: 3,
+ *   priority: "verify",
+ *   originKey: "aaaabbbbcccc",
+ *   checkoutRoot: "/repo",
+ *   branch: "feat/x",
+ *   command: "bun run beep yeet verify",
+ *   startedAt: "2026-09-03T14:00:00Z",
+ *   admittedAtMillis: 1,
+ *   heartbeatAtMillis: 1,
+ *   enqueuedAtMillis: 0,
+ *   nonce: "d0a7b0dc-54ec-4b51-95c7-6fafdc18d206"
+ * })
+ * const claim = AdmissionLeaseReapClaim.make({
+ *   schemaVersion: "yeet-admission-reap-claim/v1",
+ *   _tag: "lease",
+ *   sourcePath: "/runtime/lease.json",
+ *   nonce: lease.nonce,
+ *   claimedAtMillis: 2,
+ *   attemptJournal: "pending",
+ *   admissionJournal: "pending",
+ *   lease
+ * })
+ * console.log(claim._tag) // "lease"
+ * ```
+ *
+ * @category coordination
+ * @since 0.0.0
+ */
+export class AdmissionLeaseReapClaim extends S.Class<AdmissionLeaseReapClaim>($I`AdmissionLeaseReapClaim`)(
+  {
+    ...admissionReapClaimFields,
+    _tag: S.Literal("lease"),
+    lease: YeetAdmissionLease,
+  },
+  $I.annote("AdmissionLeaseReapClaim", {
+    description: "Recoverable per-sink outbox for one verified dead admission lease.",
+  })
+) {}
+
+/**
+ * Recoverable outbox for one dead admission queue-ticket lifecycle.
+ *
+ * **Example** (Reference the ticket claim class)
+ *
+ * ```ts
+ * import { AdmissionTicketReapClaim } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(typeof AdmissionTicketReapClaim) // "function"
+ * ```
+ *
+ * @category coordination
+ * @since 0.0.0
+ */
+export class AdmissionTicketReapClaim extends S.Class<AdmissionTicketReapClaim>($I`AdmissionTicketReapClaim`)(
+  {
+    ...admissionReapClaimFields,
+    _tag: S.Literal("ticket"),
+    ticket: YeetAdmissionTicket,
+  },
+  $I.annote("AdmissionTicketReapClaim", {
+    description: "Recoverable per-sink outbox for one verified dead admission queue ticket.",
+  })
+) {}
+
+/**
+ * Recoverable outbox for one claimed dead admission lifecycle.
+ *
+ * **Example** (Recognize a lease claim)
+ *
+ * ```ts
+ * import { AdmissionReapClaim } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(typeof AdmissionReapClaim.guards.lease) // "function"
+ * ```
+ *
+ * @category coordination
+ * @since 0.0.0
+ */
+export const AdmissionReapClaim = S.Union([AdmissionLeaseReapClaim, AdmissionTicketReapClaim]).pipe(
+  S.toTaggedUnion("_tag"),
+  $I.annoteSchema("AdmissionReapClaim", {
+    description: "Recoverable per-sink outbox for one claimed dead admission lifecycle.",
+  })
+);
+
+/**
+ * Recoverable outbox for one claimed dead admission lifecycle.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type AdmissionReapClaim = typeof AdmissionReapClaim.Type;
+
+/**
+ * Durable phase of a ticket-to-lease promotion transition.
+ *
+ * **Example** (Recognize a published lease phase)
+ *
+ * ```ts
+ * import { AdmissionPromotionPhase } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(AdmissionPromotionPhase.is["lease-published"]("lease-published")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const AdmissionPromotionPhase = LiteralKit([
+  "prepared",
+  "lease-published",
+  "ticket-removed",
+  "admission-journaled",
+]).pipe(
+  $I.annoteSchema("AdmissionPromotionPhase", {
+    description: "Durable recovery phase of one ticket-to-lease promotion transition.",
+  })
+);
+
+/**
+ * Durable recovery phase of one ticket-to-lease promotion transition.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type AdmissionPromotionPhase = typeof AdmissionPromotionPhase.Type;
+
+/**
+ * Recoverable transition tying one queue ticket to its active lease.
+ *
+ * **Example** (Reference the promotion transition class)
+ *
+ * ```ts
+ * import { AdmissionPromotionTransition } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(typeof AdmissionPromotionTransition) // "function"
+ * ```
+ *
+ * @category coordination
+ * @since 0.0.0
+ */
+export class AdmissionPromotionTransition extends S.Class<AdmissionPromotionTransition>(
+  $I`AdmissionPromotionTransition`
+)(
+  {
+    schemaVersion: S.Literal("yeet-admission-promotion/v1"),
+    nonce: S.String,
+    ticketPath: S.String,
+    leasePath: S.String,
+    ticket: YeetAdmissionTicket,
+    lease: YeetAdmissionLease,
+    phase: AdmissionPromotionPhase,
+    createdAtMillis: S.Finite,
+  },
+  $I.annote("AdmissionPromotionTransition", {
+    description: "Recoverable nonce-keyed transition tying one admission ticket to its promoted lease.",
+  })
+) {}
+
+/**
  * Admission policy knobs with the chartered production defaults.
  *
  * Defaults come verbatim from ship-velocity SPEC D1 / research c5: 5 GiB
@@ -596,7 +804,12 @@ export type DeadLeaseScopePlan = typeof DeadLeaseScopePlan.Type;
 
 interface QualitySchedulerErrorOptions {
   readonly exitCode?: number;
+  readonly reason?: QualitySchedulerErrorReason;
 }
+
+const QualitySchedulerErrorReason = LiteralKit(["journal-lock-lost", "journal-lock-retry-exhausted"]);
+
+type QualitySchedulerErrorReason = typeof QualitySchedulerErrorReason.Type;
 
 /**
  * Failure raised while coordinating machine-wide admission.
@@ -618,6 +831,7 @@ export class QualitySchedulerError extends S.TaggedError<QualitySchedulerError>(
   {
     message: S.String,
     exitCode: S.optionalKey(S.Finite),
+    reason: S.optionalKey(QualitySchedulerErrorReason),
     cause: S.optionalKey(Defect({ includeStack: true })),
   },
   $I.annoteError<QualitySchedulerError>("QualitySchedulerError", {
@@ -637,12 +851,13 @@ export class QualitySchedulerError extends S.TaggedError<QualitySchedulerError>(
     (message: string, opts?: QualitySchedulerErrorOptions): (cause: unknown) => QualitySchedulerError;
   } = dual(
     3,
-    (cause: unknown, message: string, { exitCode }: QualitySchedulerErrorOptions = {}): QualitySchedulerError =>
+    (cause: unknown, message: string, { exitCode, reason }: QualitySchedulerErrorOptions = {}): QualitySchedulerError =>
       QualitySchedulerError.make({
         cause,
         message,
         ...O.getSomesStruct({
           exitCode: O.fromUndefinedOr(exitCode),
+          reason: O.fromUndefinedOr(reason),
         }),
       })
   );

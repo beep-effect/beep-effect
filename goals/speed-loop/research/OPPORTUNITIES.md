@@ -959,6 +959,10 @@ durability fixes discovery, not trust.
     transcript path env, never from cwd. Dogfooded: #583/#586 bodies
     carry the corrected footer. Vehicle: small yeet rider; graduates
     into PR-I.
+    GRADUATED 2026-09-03 into `goals/yeet-pr-resume-footer` after CSF-007
+    removed the first footer; the revived design publishes a number-only
+    `bun run beep yeet resume <n>` block and resolves sessions from a local
+    registry (see that packet's `DECISIONS.md`).
 80. **Evaluate GitHub native stacked PRs (public preview).** The docs
     claim the exact fixes for our recorded blockers: required checks run
     for ALL stack layers as if against the default branch (would retire

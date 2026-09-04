@@ -34,6 +34,7 @@ import {
   githubCheckRepoSanityLanes,
 } from "../../Quality/internal/GithubChecks.ts";
 import { HEAD_INSTALL_PREFLIGHT_STEP_ID } from "./HeadInstallPreflight.ts";
+import { DEFAULT_GATE_ORDER_SEED, orderWaveLanes } from "./WaveOrder.ts";
 import type { RepoRunContext, TurboPlanTask } from "../../../internal/repo-run/RepoRun.models.ts";
 import type { GithubCheckLaneSpec } from "../../Quality/Quality.schemas.ts";
 
@@ -404,6 +405,7 @@ const proofStep = (context: RepoRunContext, tier: YeetProofTier, collectAll: boo
   const proofArgs = proofArgsForTier(context, tier, collectAll, proof.args);
   const step = bunRunStep(context, proof.id, proof.label, "full", "beep", proofArgs, "readonly", "repo");
   const lanes = proofLanesForTier(context, tier);
+  const orderedLanes = tier === "full" ? orderWaveLanes(DEFAULT_GATE_ORDER_SEED, lanes) : lanes;
   return RepoPlanStep.make({
     ...step,
     env: {
@@ -412,8 +414,11 @@ const proofStep = (context: RepoRunContext, tier: YeetProofTier, collectAll: boo
       BEEP_YEET_LANE_PROOF_MODE: Bun.env.BEEP_YEET_LANE_PROOF_MODE ?? "active",
       BEEP_YEET_PROOF_BASE: context.base,
     },
-    waves: A.map(githubCheckLanePlan.githubCheckLaneWaves(lanes), (wave) =>
-      RepoPlanWave.make({ id: wave.wave, laneIds: A.map(wave.lanes, (lane) => lane.id) })
+    waves: A.map(
+      tier === "full"
+        ? githubCheckLanePlan.githubCheckOrderedLaneWaves(orderedLanes)
+        : githubCheckLanePlan.githubCheckLaneWaves(orderedLanes),
+      (wave) => RepoPlanWave.make({ id: wave.wave, laneIds: A.map(wave.lanes, (lane) => lane.id) })
     ),
   });
 };
@@ -561,6 +566,20 @@ const prCreateStep = (context: RepoRunContext, phase: RepoPlanStep["phase"] = "p
     resume: "never",
   });
 
+const prProvenanceStampStep = (context: RepoRunContext, phase: RepoPlanStep["phase"] = "publish"): RepoPlanStep =>
+  RepoPlanStep.make({
+    id: "publish:03-pr-provenance-stamp",
+    label: "publish:pr-provenance-stamp",
+    phase,
+    command: "gh",
+    args: ["pr", "edit", "<number>", "--body-file", "<run-artifacts>/pr-provenance-body.md"],
+    cwd: context.repoRoot,
+    scope: "repo",
+    mutability: "publish",
+    resume: "never",
+    verification: "registry-backed-provenance-footer",
+  });
+
 const monitorContextStep = (context: RepoRunContext): RepoPlanStep =>
   RepoPlanStep.make({
     id: "monitor:01-pr-context",
@@ -687,7 +706,7 @@ const publishSteps = (
     ? [
         headInstallPreflightStep(context, "publish"),
         pushStep(context),
-        ...(options.pr ? [prCreateStep(context)] : []),
+        ...(options.pr ? [prCreateStep(context), prProvenanceStampStep(context)] : []),
         ...(options.monitor ? monitorSteps(context) : []),
       ]
     : options.startPrEarly
@@ -696,7 +715,9 @@ const publishSteps = (
           commitStep(context, message, options),
           headInstallPreflightStep(context, "early-publish"),
           earlyPushStep(context),
-          ...(options.pr ? [prCreateStep(context, "early-publish")] : []),
+          ...(options.pr
+            ? [prCreateStep(context, "early-publish"), prProvenanceStampStep(context, "early-publish")]
+            : []),
           ...fullProofSteps(context, options.collectAll),
           ciParityStep(context),
           ...(options.monitor ? monitorSteps(context) : []),
@@ -709,7 +730,7 @@ const publishSteps = (
             : [...fullProofSteps(context, options.collectAll), ciParityStep(context)]),
           headInstallPreflightStep(context, "publish"),
           pushStep(context),
-          ...(options.pr ? [prCreateStep(context)] : []),
+          ...(options.pr ? [prCreateStep(context), prProvenanceStampStep(context)] : []),
           ...(options.monitor ? monitorSteps(context) : []),
         ];
 

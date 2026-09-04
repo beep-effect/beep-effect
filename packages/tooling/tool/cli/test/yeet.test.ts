@@ -93,6 +93,7 @@ import {
   shouldSkipCommitForReusablePublishForTesting,
   stageReviewedPublishIntent,
   stashUnstagedWorktreeForTesting,
+  summarizePrePushInnerLanesForTesting,
   summarizePublishPathsForTesting,
   TurboPlanSnapshot,
   TurboPlanTask,
@@ -297,6 +298,7 @@ const initTrackedFileRepo = Effect.fn("initTrackedFileRepo")(function* (tmpDir: 
   yield* runGit(tmpDir, ["init"]);
   yield* runGit(tmpDir, ["config", "user.email", "yeet@example.test"]);
   yield* runGit(tmpDir, ["config", "user.name", "Yeet Test"]);
+  yield* runGit(tmpDir, ["config", "commit.gpgsign", "false"]);
   yield* fs.writeFileString(filePath, "base\n");
   yield* runGit(tmpDir, ["add", "tracked.txt"]);
   yield* runGit(tmpDir, ["commit", "-m", "init"]);
@@ -761,24 +763,36 @@ describe("yeet planner", () => {
         A.dedupe
       )
     ).toEqual(["readonly", "write"]);
-    expect(findStep(plan.steps, "full:pre-push").waves).toEqual([
-      expect.objectContaining({ id: "preflight" }),
-      expect.objectContaining({
-        id: "heavy",
-        laneIds: [
-          "quality:build",
-          "quality:lint",
-          "quality:lint-policy",
-          "quality:check",
-          "quality:check:tsgo-tests",
-          "quality:check:tsgo-smoke",
-        ],
-      }),
-      expect.objectContaining({
-        id: "test",
-        laneIds: ["quality:coverage", "quality:desktop-ipc", "quality:test-unit", "quality:test-integration"],
-      }),
-      expect.objectContaining({ id: "documentation", laneIds: ["quality:jsdoc-ratchet", "quality:docgen"] }),
+    expect(A.flatMap(findStep(plan.steps, "full:pre-push").waves ?? [], (wave) => wave.laneIds)).toEqual([
+      "fallow:audit",
+      "fallow:dead-code",
+      "pre-push:security",
+      "pre-push:secrets",
+      "quality:commitlint",
+      "quality:knip",
+      "pre-push:sast",
+      "quality:changeset-status",
+      "pre-push:nix",
+      "quality:codegen",
+      "repo-sanity:fallow-boundaries-config",
+      "repo-sanity:bun-audit",
+      "repo-sanity:tsconfig-sync",
+      "repo-sanity:changeset-graph",
+      "repo-sanity:versions",
+      "repo-sanity:syncpack",
+      "repo-sanity:sherif",
+      "quality:build",
+      "quality:desktop-ipc",
+      "quality:jsdoc-ratchet",
+      "quality:check:tsgo-tests",
+      "quality:docgen",
+      "quality:test-integration",
+      "quality:lint",
+      "quality:lint-policy",
+      "quality:check",
+      "quality:check:tsgo-smoke",
+      "quality:test-unit",
+      "quality:coverage",
     ]);
     expect(findStep(plan.steps, "full:cheap-gates").waves).toEqual([
       expect.objectContaining({
@@ -1085,6 +1099,7 @@ describe("yeet planner", () => {
       "publish:head-install-preflight",
       "publish:git:push",
       "publish:pr-create",
+      "publish:pr-provenance-stamp",
     ]);
 
     const earlyWithoutMonitor = buildYeetRunPlanForTesting({
@@ -3708,6 +3723,7 @@ describe("yeet publish scope helpers", () => {
       "publish:head-install-preflight",
       "publish:git:push",
       "publish:pr-create",
+      "publish:pr-provenance-stamp",
     ]);
     expect(findStep(plan.steps, "publish:pr-create").command).toBe("gh");
   });
@@ -3730,6 +3746,7 @@ describe("yeet publish scope helpers", () => {
       "publish:head-install-preflight",
       "early-publish:git:push",
       "publish:pr-create",
+      "publish:pr-provenance-stamp",
       "full:cheap-gates",
       "full:pre-push",
       "full:ci-parity",
@@ -3772,6 +3789,7 @@ describe("yeet publish scope helpers", () => {
         yield* runGit(tmpDir, ["init"]);
         yield* runGit(tmpDir, ["config", "user.email", "yeet@example.test"]);
         yield* runGit(tmpDir, ["config", "user.name", "Yeet Test"]);
+        yield* runGit(tmpDir, ["config", "commit.gpgsign", "false"]);
         yield* fs.writeFileString(path.join(tmpDir, "package.json"), '{"name":"head-install-probe","private":true}\n');
         yield* fs.writeFileString(path.join(tmpDir, "bun.lock"), "not a bun lockfile\n");
         yield* runGit(tmpDir, ["add", "package.json", "bun.lock"]);
@@ -3894,6 +3912,37 @@ describe("yeet publish scope helpers", () => {
     expect(verdict.lanes[1]).toMatchObject({ id: "quality:lint", status: "failed" });
     expect(verdict.lanes[2]).toMatchObject({ id: "quality:docgen", status: "not-run-early-stop" });
     expect(verdict.lanes[3]).toMatchObject({ id: "publish:01-git-push", status: "not-run" });
+  });
+
+  it("summarizes the first pre-push red and skipped tail from durable inner-lane facts", () => {
+    const summary = summarizePrePushInnerLanesForTesting([
+      QualityTaskLaneRunReport.make({
+        schemaVersion: "quality-task-lane-run/v1",
+        parentLaneId: O.some(repoProofStepDefinition("pre-push").id),
+        lanes: [
+          QualityTaskLaneRun.make({
+            id: "quality:lint",
+            label: "quality:lint",
+            status: "failed",
+            inputDigest: O.none(),
+          }),
+          QualityTaskLaneRun.make({
+            id: "quality:docgen",
+            label: "quality:docgen",
+            status: "not-run-early-stop",
+            inputDigest: O.none(),
+          }),
+          QualityTaskLaneRun.make({
+            id: "quality:coverage",
+            label: "quality:coverage",
+            status: "not-run-early-stop",
+            inputDigest: O.none(),
+          }),
+        ],
+      }),
+    ]);
+
+    expect(summary).toStrictEqual(O.some({ firstRed: "quality:lint", skippedAfterRed: 2 }));
   });
 
   it("round-trips the verdict schema and marks executed push lanes", () =>
@@ -5213,6 +5262,7 @@ describe("yeet publish scope helpers", () => {
           yield* runGit(tmpDir, ["init", "-b", "main"]);
           yield* runGit(tmpDir, ["config", "user.email", "yeet@example.test"]);
           yield* runGit(tmpDir, ["config", "user.name", "Yeet Test"]);
+          yield* runGit(tmpDir, ["config", "commit.gpgsign", "false"]);
           yield* fs.writeFileString(path.join(tmpDir, "shared.txt"), "base\n");
           yield* fs.writeFileString(path.join(tmpDir, "other.txt"), "base\n");
           yield* runGit(tmpDir, ["add", "."]);
