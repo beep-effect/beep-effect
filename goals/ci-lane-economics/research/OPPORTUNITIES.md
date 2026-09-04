@@ -914,3 +914,17 @@ evidence, what would have prevented it). Redact for the public repo.
 - **Would have prevented it:** consistently provide the repository's test runtime-root
   layer to proof-lock tests, or admit coverage in a profile where the canonical runtime
   directory is writable.
+
+## 2026-09-03 — minted coverage floors and a Docker-less fleet runner blocked a test-only PR
+
+- **Doing:** driving PR #998 (the admission census command) to mergeable after its own
+  coverage rows were restored with tests.
+- **Evidence:** the hosted `Heavy / Coverage Regression` lane failed twice with identical
+  numbers on head `1f99091ccf`: `QualityScheduler.ts` 92.63/92.39/86.87/88.05 against floors
+  92.85/92.82/87.5/88.67 that a local regeneration on main (#990) minted above what hosted
+  runs reproduce, and `test-utils/SqlTest.ts` 53.76/52.79/56.6/34.1 against 66.3/65.73/58.49/46.51
+  because 5 of 16 tests are Testcontainers-backed and skip on the PR fleet runner without Docker.
+  PR lanes keep main's floors authoritative, so no in-branch baseline change can clear a row.
+- **Would have prevented it:** mint baseline rows only from hosted measurements (or reject a
+  regenerated row that exceeds the last hosted value), and make coverage-bearing test kits
+  Docker-independent or exclude container-gated tests from the ratcheted row.
