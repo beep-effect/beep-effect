@@ -58,6 +58,7 @@ import {
 import { appendSchedulerAttemptTerminated } from "./AttemptTerminationJournal.ts";
 import { isProcessIdentityAlive, processStartIdentityForPid } from "./ProcessIdentity.ts";
 import {
+  AdmissionClaimSinkState,
   AdmissionConfig,
   AdmissionCoordinationProtocol,
   AdmissionLeaseReapClaim,
@@ -136,8 +137,54 @@ export class AdmissionAttemptTerminationJournal extends Context.Service<
   AdmissionAttemptTerminationJournalShape
 >()($I`AdmissionAttemptTerminationJournal`) {}
 
+/**
+ * Service contract for idempotent, protocol-gated admission eviction events.
+ *
+ * A `true` result acknowledges that the eviction event was admitted or was
+ * already present. A `false` result leaves the durable reap claim pending
+ * because the mixed-checkout protocol still disables eviction emission.
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export interface AdmissionEvictionJournalShape {
+  /** Publish or acknowledge one eviction event when the admission protocol permits it. */
+  readonly appendOnce: (
+    root: string,
+    event: AdmissionJournalLeaseEvicted | AdmissionJournalTicketEvicted
+  ) => Effect.Effect<boolean, QualitySchedulerError, FileSystem.FileSystem | Path.Path>;
+}
+
+/**
+ * Protocol-gated admission-eviction sink used by reap-claim recovery.
+ *
+ * **Example** (Provide an acknowledging test sink)
+ *
+ * ```ts
+ * import { AdmissionEvictionJournal } from "@beep/repo-cli/test/RepoRun"
+ * import { Effect, Layer } from "effect"
+ *
+ * const layer = Layer.succeed(
+ *   AdmissionEvictionJournal,
+ *   AdmissionEvictionJournal.of({ appendOnce: () => Effect.succeed(true) })
+ * )
+ * console.log(Layer.isLayer(layer)) // true
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export class AdmissionEvictionJournal extends Context.Service<
+  AdmissionEvictionJournal,
+  AdmissionEvictionJournalShape
+>()($I`AdmissionEvictionJournal`) {}
+
 const defaultAttemptTerminationJournal = AdmissionAttemptTerminationJournal.of({
   appendOnce: appendAbnormalAttemptEnd,
+});
+
+const defaultAdmissionEvictionJournal = AdmissionEvictionJournal.of({
+  appendOnce: appendAdmissionEvictionJournalEvent,
 });
 
 const journalAbnormalAttemptEnd = Effect.fn("QualityScheduler.journalAbnormalAttemptEnd")(function* (
@@ -652,7 +699,10 @@ const reapClaimPath = (path: Path.Path, directories: AdmissionDirectories, claim
 
 const updateReapClaim = (
   claim: AdmissionReapClaim,
-  update: { readonly admissionJournal?: "complete"; readonly attemptJournal?: "complete" }
+  update: {
+    readonly admissionJournal?: AdmissionClaimSinkState;
+    readonly attemptJournal?: AdmissionClaimSinkState;
+  }
 ): AdmissionReapClaim =>
   AdmissionReapClaim.match(claim, {
     lease: (current) => AdmissionLeaseReapClaim.make({ ...current, ...update }),
@@ -707,6 +757,40 @@ const persistReapClaim = Effect.fnUntraced(function* (
   );
 });
 
+const reapClaimSinksComplete = (claim: AdmissionReapClaim): boolean =>
+  AdmissionClaimSinkState.is.complete(claim.attemptJournal) &&
+  AdmissionClaimSinkState.is.complete(claim.admissionJournal);
+
+const processAttemptJournalSink = Effect.fnUntraced(function* (
+  claimPath: string,
+  claim: AdmissionReapClaim,
+  journal: AdmissionAttemptTerminationJournalShape
+): Effect.fn.Return<AdmissionReapClaim, QualitySchedulerError, FileSystem.FileSystem | Path.Path> {
+  if (AdmissionClaimSinkState.is.complete(claim.attemptJournal)) {
+    return claim;
+  }
+  yield* journalAbnormalAttemptEnd(journal, ownerForReapClaim(claim), reasonForReapClaim(claim));
+  const acknowledged = updateReapClaim(claim, { attemptJournal: "complete" });
+  yield* persistReapClaim(claimPath, acknowledged);
+  return acknowledged;
+});
+
+const processAdmissionJournalSink = Effect.fnUntraced(function* (
+  directories: AdmissionDirectories,
+  claimPath: string,
+  claim: AdmissionReapClaim,
+  journal: AdmissionEvictionJournalShape
+): Effect.fn.Return<AdmissionReapClaim, QualitySchedulerError, FileSystem.FileSystem | Path.Path> {
+  if (AdmissionClaimSinkState.is.complete(claim.admissionJournal)) {
+    return claim;
+  }
+  const written = yield* journal.appendOnce(directories.root, admissionEventForReapClaim(claim));
+  const nextState = written ? "complete" : "pending-protocol-off";
+  const updated = updateReapClaim(claim, { admissionJournal: nextState });
+  yield* persistReapClaim(claimPath, updated);
+  return updated;
+});
+
 const processReapClaim = Effect.fnUntraced(function* (
   directories: AdmissionDirectories,
   claimPath: string,
@@ -747,16 +831,14 @@ const processReapClaim = Effect.fnUntraced(function* (
         yield* Effect.serviceOption(AdmissionAttemptTerminationJournal),
         constant(defaultAttemptTerminationJournal)
       );
-      let pending = claim;
-      if (pending.attemptJournal === "pending") {
-        yield* journalAbnormalAttemptEnd(attemptJournal, ownerForReapClaim(pending), reasonForReapClaim(pending));
-        pending = updateReapClaim(pending, { attemptJournal: "complete" });
-        yield* persistReapClaim(claimPath, pending);
-      }
-      if (pending.admissionJournal === "pending") {
-        yield* appendAdmissionEvictionJournalEvent(directories.root, admissionEventForReapClaim(pending));
-        pending = updateReapClaim(pending, { admissionJournal: "complete" });
-        yield* persistReapClaim(claimPath, pending);
+      const admissionJournal = O.getOrElse(
+        yield* Effect.serviceOption(AdmissionEvictionJournal),
+        constant(defaultAdmissionEvictionJournal)
+      );
+      let pending = yield* processAttemptJournalSink(claimPath, claim, attemptJournal);
+      pending = yield* processAdmissionJournalSink(directories, claimPath, pending, admissionJournal);
+      if (!reapClaimSinksComplete(pending)) {
+        return;
       }
       yield* fs
         .remove(claimPath, { force: true })

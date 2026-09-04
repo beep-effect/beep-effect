@@ -3,6 +3,7 @@ import { qualityCommand, renderAdmissionSnapshotLinesForTesting } from "@beep/re
 import {
   AdmissionAttemptTerminationJournal,
   AdmissionConfig,
+  AdmissionEvictionJournal,
   AdmissionJournalAdmitted,
   AdmissionJournalEvent,
   AdmissionJournalLeaseEvicted,
@@ -223,6 +224,12 @@ const readJournalEvents = Effect.fnUntraced(function* (root: string) {
   return yield* Effect.forEach(lines, (line) => decodeAdmissionJournalEvent(line));
 });
 
+const readAttemptJournalEvents = Effect.fnUntraced(function* (checkoutRoot: string, branch: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const text = yield* fs.readFileString(yield* attemptJournalPathForCheckout(checkoutRoot, branch));
+  return yield* Effect.forEach(pipe(text, Str.split("\n"), A.filter(Str.isNonEmpty)), decodeYeetAttemptJournalEvent);
+});
+
 const journalAdmitted = (index: number) =>
   AdmissionJournalAdmitted.make({
     schemaVersion: "yeet-admission-journal/v1",
@@ -384,6 +391,36 @@ const writeFakeTicket = Effect.fnUntraced(function* (
   const filePath = path.join(tempRoot.queue, `${ticket.nonce}.ticket.json`);
   yield* fs.writeFileString(filePath, `${yield* encodeTicket(ticket)}\n`);
   return filePath;
+});
+
+const writeProtocolDeferredLeaseFixture = Effect.fnUntraced(function* (tempRoot: AdmissionTempRoot) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const binDirectory = path.join(path.dirname(path.dirname(tempRoot.root)), "bin");
+  const checkoutRoot = path.join(path.dirname(path.dirname(tempRoot.root)), "checkout");
+  yield* fs.makeDirectory(binDirectory, { recursive: true });
+  yield* fs.makeDirectory(checkoutRoot, { recursive: true });
+  yield* writeExecutable(path.join(binDirectory, "systemctl"), "#!/bin/sh\nexit 0\n");
+  yield* writeFakeLease(tempRoot, {
+    pid: DEAD_PID,
+    nonce: "protocol-deferred-lease",
+    originKey: "origin-protocol-deferred",
+    checkoutRoot,
+    branch: "feat/protocol-deferred",
+    attemptId: O.some(JOURNALED_ATTEMPT_ID),
+  });
+  return { binDirectory, checkoutRoot };
+});
+
+const readOnlyReapClaim = Effect.fnUntraced(function* (tempRoot: AdmissionTempRoot) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const names = yield* listDirectory(tempRoot.claims);
+  const name = O.getOrThrow(A.head(names));
+  const claim = yield* fs
+    .readFileString(path.join(tempRoot.claims, name))
+    .pipe(Effect.flatMap(decodeAdmissionReapClaim));
+  return { claim, name, names };
 });
 
 const writeLegacyTicket = Effect.fnUntraced(function* (
@@ -3250,6 +3287,62 @@ describe("quality-scheduler", () => {
       })
     ));
 
+  it("keeps a protocol-disabled eviction sink pending until one enabled pass acknowledges it", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+          Effect.gen(function* () {
+            const { binDirectory, checkoutRoot } = yield* writeProtocolDeferredLeaseFixture(tempRoot);
+            const evictionJournal = AdmissionEvictionJournal.of({
+              appendOnce: appendAdmissionEvictionJournalEvent,
+            });
+            const reap = Effect.fnUntraced(function* () {
+              return yield* withPrependedPath(binDirectory, reapAdmissionState({ apply: true })).pipe(
+                Effect.provideService(AdmissionEvictionJournal, evictionJournal)
+              );
+            });
+
+            yield* reap();
+
+            expect(yield* listDirectory(tempRoot.leases)).toHaveLength(0);
+            const first = yield* readOnlyReapClaim(tempRoot);
+            expect(first.names).toHaveLength(1);
+            expect(first.claim.attemptJournal).toBe("complete");
+            expect(first.claim.admissionJournal).toBe("pending-protocol-off");
+            expect(yield* readJournalEvents(tempRoot.root)).toHaveLength(0);
+            expect(
+              A.filter(
+                yield* readAttemptJournalEvents(checkoutRoot, "feat/protocol-deferred"),
+                (event) => event._tag === "attempt-terminated"
+              )
+            ).toHaveLength(1);
+
+            yield* reap();
+
+            const second = yield* readOnlyReapClaim(tempRoot);
+            expect(second.names).toStrictEqual(first.names);
+            expect(second.claim.admissionJournal).toBe("pending-protocol-off");
+            expect(yield* readJournalEvents(tempRoot.root)).toHaveLength(0);
+
+            yield* setAdmissionEvictionProtocol("on");
+            yield* reap();
+
+            expect(yield* listDirectory(tempRoot.claims)).toHaveLength(0);
+            expect(
+              A.filter(yield* readJournalEvents(tempRoot.root), AdmissionJournalEvent.guards["admission-lease-evicted"])
+            ).toHaveLength(1);
+            expect(yield* readAttemptJournalEvents(checkoutRoot, "feat/protocol-deferred")).toHaveLength(1);
+
+            yield* reap();
+            expect(
+              A.filter(yield* readJournalEvents(tempRoot.root), AdmissionJournalEvent.guards["admission-lease-evicted"])
+            ).toHaveLength(1);
+          })
+        );
+      })
+    ));
+
   it("retains and retries a dead-lease claim when its eviction receipt cannot be published", () =>
     Effect.runPromise(
       Effect.gen(function* () {
@@ -3292,13 +3385,7 @@ describe("quality-scheduler", () => {
             expect(
               A.filter(yield* readJournalEvents(tempRoot.root), AdmissionJournalEvent.guards["admission-lease-evicted"])
             ).toHaveLength(1);
-            const attemptText = yield* fs.readFileString(
-              yield* attemptJournalPathForCheckout(checkoutRoot, "feat/other")
-            );
-            const attemptRows = yield* Effect.forEach(
-              pipe(attemptText, Str.split("\n"), A.filter(Str.isNonEmpty)),
-              (line) => decodeYeetAttemptJournalEvent(line)
-            );
+            const attemptRows = yield* readAttemptJournalEvents(checkoutRoot, "feat/other");
             expect(A.filter(attemptRows, (event) => event._tag === "attempt-terminated")).toHaveLength(1);
           })
         );

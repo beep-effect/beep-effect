@@ -412,18 +412,18 @@ export declare namespace YeetAdmissionTicket {
 /**
  * Durable acknowledgement state for one admission-reap output sink.
  *
- * **Example** (Recognize a completed sink)
+ * **Example** (Recognize a protocol-deferred sink)
  *
  * ```ts
  * import { AdmissionClaimSinkState } from "@beep/repo-cli/test/RepoRun"
  *
- * console.log(AdmissionClaimSinkState.is.complete("complete")) // true
+ * console.log(AdmissionClaimSinkState.is["pending-protocol-off"]("pending-protocol-off")) // true
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export const AdmissionClaimSinkState = LiteralKit(["pending", "complete"]).pipe(
+export const AdmissionClaimSinkState = LiteralKit(["pending", "pending-protocol-off", "complete"]).pipe(
   $I.annoteSchema("AdmissionClaimSinkState", {
     description: "Durable acknowledgement state for one admission-reap output sink.",
   })
