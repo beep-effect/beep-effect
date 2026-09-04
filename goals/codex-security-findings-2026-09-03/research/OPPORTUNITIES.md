@@ -196,3 +196,31 @@
   packet-only branch with no affected workspace package, it should also
   attribute an untouched repo-wide docgen failure to `origin/main` instead of
   presenting it as a branch regression.
+
+## Hosted security audit coupled required CI to npm availability (2026-09-03)
+
+- **What I was doing:** Monitoring the exact-head Repo Sanity gate for the
+  post-merge closure-evidence PR.
+- **Evidence:** Attempts one and two of Check run `33816590684` passed every
+  preceding Repo Sanity sublane, then `bun audit` waited five minutes before
+  `registry.npmjs.org` returned HTTP 503. The identical local command reached
+  the registry and found no vulnerabilities across 2,332 packages, with only
+  the two documented advisory ignores.
+- **What would have prevented it:** The hosted audit lane should apply bounded
+  retry and backoff to registry 5xx and rate-limit responses, or isolate
+  transient registry availability in a retryable required job, while retaining
+  fail-closed behavior for actual advisories and malformed responses.
+
+## Yeet repeated the full compiler inventory before an orchestration failure (2026-09-03)
+
+- **What I was doing:** Running canonical full Yeet verification for the
+  review-driven retained-packet corrections.
+- **Evidence:** The cheap-gates inventory and the inventory nested under
+  `quality:check` each checked 999 files across 138 packages and passed. The
+  immediately following explicit `quality:check:tsgo-tests` invocation exited
+  in four seconds with `Failed to run package-test-typecheck Turbo tasks` and
+  no compiler diagnostic. An isolated rerun of the same full inventory passed.
+- **What would have prevented it:** Yeet should reuse a successful full-state
+  compiler receipt when the input digest is unchanged, or classify and retry a
+  Turbo task-launch failure separately from TypeScript diagnostics instead of
+  rerunning the same 999-file inventory three times in one proof.

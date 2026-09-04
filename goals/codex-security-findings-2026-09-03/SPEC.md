@@ -58,8 +58,8 @@ exact captured findings until no packet-applicable finding remains open.
       regression check where executable behavior changes.
 - [x] Packet counts, manifest, triage ledger, launcher size, sanitation, and
       whitespace checks pass.
-- [x] Yeet repair and monitoring completed to the available boundary; targeted
-      local package proof and exact-head hosted verification are green.
+- [x] Yeet repair, full local verify, and monitoring completed; targeted local
+      package proof and exact-head hosted verification are green.
 - [x] The branch is published, hosted checks and reviews are closed, and the PR
       is mergeable and merged.
 - [x] All 12 captured Codex findings are resolved after merge and the live view
@@ -91,6 +91,5 @@ exact captured findings until no packet-applicable finding remains open.
 
 ## Exception Ledger
 
-| Exception | Scope | Owner | Rationale | Removal condition |
-| --- | --- | --- | --- | --- |
-| Full local Yeet verify curtailed | P5 | Operator | Repeated fixes were published promptly and exact-head CI was explicitly authorized as proof; run `33764892254` passed all 23 repository jobs. | Complete; hosted proof is immutable. |
+No open exceptions. The earlier P5 local-verify deferral was removed after
+`bun run beep yeet verify` passed during retained-packet closeout.

@@ -10,6 +10,7 @@
   },
   "packetPath": "goals/codex-security-findings-2026-09-03",
   "lifecycle": "completed-retained",
+  "mergedPullRequest": 949,
   "statusNote": "Complete on 2026-09-03: PR #949 merged all 12 remediations, all 23 repository jobs passed, all seven review threads were resolved, Greptile reported 5/5 with zero issues, and every exact captured Codex ID was manually closed as Already fixed.",
   "mission": "Remediate and close the 12 Codex Cloud security findings captured on 2026-09-03.",
   "executionCapable": true,
