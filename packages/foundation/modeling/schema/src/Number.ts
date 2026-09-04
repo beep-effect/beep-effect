@@ -227,10 +227,57 @@ export const NonNegativeInt = S.Int.pipe(
  */
 export type NonNegativeInt = typeof NonNegativeInt.Type;
 
-export const FiniteFromString = S.FiniteFromString.pipe(SchemaUtils.withCodecStatics(["decodeEffect"]));
+/**
+ * Codec that decodes strings into finite numbers and encodes finite numbers as strings.
+ *
+ * **Gotchas**
+ *
+ * Decoding follows JavaScript number coercion, so strings such as whitespace or
+ * hexadecimal notation are accepted when they coerce to finite numbers.
+ *
+ * **Example** (Decode a finite number from a string)
+ *
+ * ```ts import.meta.vitest name="Decode a finite number from a string"
+ * import { Effect } from "effect"
+ * import { FiniteFromString } from "@beep/schema/Number"
+ *
+ * const value = Effect.runSync(FiniteFromString.decodeEffect("42.5"))
+ * value // => 42.5
+ * ```
+ *
+ * @category codecs
+ * @since 0.0.0
+ */
+export const FiniteFromString = S.FiniteFromString.pipe(
+  $I.annoteSchema("FiniteFromString", {
+    description: "A codec that decodes strings into finite numbers and encodes finite numbers as strings.",
+  }),
+  SchemaUtils.withCodecStatics(["decodeEffect"])
+);
 
+/**
+ * Finite number decoded by {@link FiniteFromString}.
+ *
+ * @see {@link FiniteFromString} for the runtime codec and schema-bound Effect decoder.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type FiniteFromString = typeof FiniteFromString.Type;
 
+/**
+ * Type-level companions for {@link FiniteFromString}.
+ *
+ * @see {@link FiniteFromString} for the runtime codec and schema-bound Effect decoder.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace FiniteFromString {
+  /**
+   * Encoded string representation consumed and produced by {@link FiniteFromString}.
+   *
+   * @see {@link FiniteFromString} for the runtime codec and decoded finite-number type.
+   * @category type-level
+   * @since 0.0.0
+   */
   export type Encoded = typeof FiniteFromString.Encoded;
 }

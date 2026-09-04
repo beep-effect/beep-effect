@@ -90,6 +90,7 @@ class InodeMetadata extends S.Class<InodeMetadata>($I`InodeMetadata`)(
 ) {
 }
 
+/** @internal */
 export class FileInode extends InodeMetadata.extend<FileInode>($I`FileInode`)(
   {
     _tag: S.tag("File"),
@@ -102,6 +103,7 @@ export class FileInode extends InodeMetadata.extend<FileInode>($I`FileInode`)(
 }
 
 
+/** @internal */
 export class DirectoryInode extends InodeMetadata.extend<DirectoryInode>($I`DirectoryInode`)(
   {
     _tag: S.tag("Directory"),
@@ -116,6 +118,7 @@ export class DirectoryInode extends InodeMetadata.extend<DirectoryInode>($I`Dire
 ) {
 }
 
+/** @internal */
 export const Size = S.BigInt.pipe(
   S.brand("Size"),
   $I.annoteSchema("Size", {
@@ -123,9 +126,12 @@ export const Size = S.BigInt.pipe(
   })
 );
 
+/** @internal */
 export type Size = typeof Size.Type;
 
+/** @internal */
 export namespace Size {
+  /** @internal */
   export type Encoded = typeof Size.Encoded;
 }
 
@@ -144,6 +150,7 @@ class OpenFileDescriptor extends S.Class<OpenFileDescriptor>($I`OpenFileDescript
 ) {
 }
 
+/** @internal */
 export class SymbolicLinkInode extends InodeMetadata.extend<SymbolicLinkInode>($I`SymbolicLinkInode`)(
   {
     _tag: S.tag("SymbolicLink"),
@@ -155,6 +162,7 @@ export class SymbolicLinkInode extends InodeMetadata.extend<SymbolicLinkInode>($
 ) {
 }
 
+/** @internal */
 export const InodeEntry = S.Union(
   [
     FileInode,
@@ -290,6 +298,7 @@ const SystemErrorTag = LiteralKit(
   })
 );
 
+/** @internal */
 export type SystemErrorTag = typeof SystemErrorTag.Type;
 // =============================================================================
 // state
