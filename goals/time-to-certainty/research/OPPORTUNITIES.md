@@ -224,3 +224,11 @@ session/machine ids, quote only the minimal identifying error text.
   reported the resulting unknown error and requirements channels in the two new tests.
 - **Would have prevented it:** expose a package-scoped test-typecheck command that accepts one test
   file, and include it in station instructions whenever new Effect-based test helpers are added.
+
+## 2026-09-03 — Commitlint included a newly merged upstream squash
+
+- **Doing:** proving PR #1005 after pushing the typed test callback repair.
+- **Evidence:** hosted Commitlint accepted every branch commit, then rejected a long footer line in
+  main's #1003 squash because the lane's range began at this branch's older merge base.
+- **Would have prevented it:** validate server-generated squash messages before merge and have the
+  PR lane lint only commits introduced by the pull request rather than new commits from its base.
