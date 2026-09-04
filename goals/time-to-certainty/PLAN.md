@@ -60,7 +60,7 @@ orchestrator owns schemas, contracts, and judgment.
       separately with the failing variable named — done 2026-09-03 (PR #953 merged as 484e24c2e9:
       the secret resolver receives only the cache quad, unrelated references cannot block remote
       reads, the quad still fails closed, and the health probe names failing variables only).
-- [~] B3 cheap precise gates first, wave fails immediately — implemented in this PR with the
+- [~] B3 cheap precise gates first, wave fails immediately — implemented in PR #1006 with the
       schema-backed `gate-order/v1` A1/A4 seed, `WaveOrder` service, precise-red early stop,
       durable `not-run-early-stop` facts, and the default-off `--no-fail-fast` escape hatch;
       awaiting hosted exact-head proof before completion.

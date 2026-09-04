@@ -198,3 +198,12 @@ session/machine ids, quote only the minimal identifying error text.
 - **Would have prevented it:** never cancel a run on an unreplaced head; GitHub concurrency already
   cancels superseded runs on push. The rule now sits in every lane brief and belongs in the lane
   launcher's standing instructions.
+
+## 2026-09-03 — Yeet monitor requested a removed GitHub CLI field
+
+- **Doing:** monitoring PR #1006 at its first exact-head hosted event.
+- **Evidence:** `bun run beep yeet monitor --watch --until-event` warned that the PR provenance
+  snapshot requested unknown JSON field `lastEditedAt`; the installed GitHub CLI listed
+  `updatedAt` but not `lastEditedAt`. The watcher continued and recorded the check event.
+- **Would have prevented it:** derive the edit timestamp from a GitHub CLI field supported by the
+  pinned workstation version, or capability-probe the field list before building the query.

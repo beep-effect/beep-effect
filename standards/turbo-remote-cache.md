@@ -186,13 +186,16 @@ precision (`precise` before `imprecise`), then declaration order. That puts the
 short, policy-bearing gates ahead of heavy lanes and leaves Coverage Regression
 at the expensive tail. A lane absent from the seed is never guessed: all
 unseeded lanes append after the seeded plan in their original declaration
-order. Contiguous wave labels are retained for reporting without regrouping
-the plan into the former fixed wave order.
+order. Their precision defaults conservatively to stoppable until a seed row
+explicitly classifies them. Wave labels are retained for reporting without
+regrouping the plan into the former fixed wave order.
 
 The default policy stops launching lanes after the first failed `precise` gate.
 Every unlaunched lane is persisted to the A5 inner-lane report as
 `not-run-early-stop`; the GitHub-check and Yeet summaries name the first red and
-the skipped count. An `imprecise` red is recorded but does not stop scheduling.
+the skipped count. The failed lane records `stop-after-red` for both precise
+and unclassified estimates; an explicitly `imprecise` red records
+`continue-after-imprecise-red` and does not stop scheduling.
 Already-running work is allowed to finish and is recorded normally; the
 current local executor is sequential and performs no cancellation.
 

@@ -960,6 +960,7 @@ describe("quality task adapter", () => {
         expect(legacy.durationMs).toStrictEqual(O.none());
         expect(legacy.exitCode).toStrictEqual(O.none());
         expect(legacy.inputDigest).toStrictEqual(O.none());
+        expect(legacy.redSchedulingDecision).toStrictEqual(O.none());
 
         const encoded = yield* S.encodeEffect(QualityTaskLaneRunReport)(
           QualityTaskLaneRunReport.make({
@@ -1352,6 +1353,7 @@ describe("quality task adapter", () => {
           expect(report.firstRed).toStrictEqual(O.some("preflight:a"));
           expect(report.skippedAfterRed).toBe(2);
           expect(O.isSome(laneReport.lanes[0]?.startedAt ?? O.none())).toBe(true);
+          expect(laneReport.lanes[0]?.redSchedulingDecision).toStrictEqual(O.some("stop-after-red"));
           expect(laneReport.lanes[1]?.inputDigest).toStrictEqual(O.none());
           expect(laneReport.lanes[2]?.inputDigest).toStrictEqual(O.none());
         }),
@@ -1384,10 +1386,37 @@ describe("quality task adapter", () => {
         ],
         "fail-fast"
       ).pipe(
-        Effect.map(({ report }) => {
+        Effect.map(({ laneReport, report }) => {
           expect(A.map(report.lanes, (lane) => lane.status)).toEqual(["failed", "passed"]);
           expect(report.firstRed).toStrictEqual(O.some("preflight:imprecise"));
           expect(report.skippedAfterRed).toBe(0);
+          expect(laneReport.lanes[0]?.redSchedulingDecision).toStrictEqual(O.some("continue-after-imprecise-red"));
+        }),
+        provideScopedLayer(PlatformLayer)
+      )
+    ));
+
+  it("treats an estimate-less red as precise and stops later waves", () =>
+    Effect.runPromise(
+      collectGithubCheckLaneWavesForTesting(
+        "quality",
+        [
+          GithubCheckLaneWaveSpec.make({
+            wave: "preflight",
+            lanes: [githubCheckTestLane("preflight:unclassified", "preflight", "process.exit(1)")],
+          }),
+          GithubCheckLaneWaveSpec.make({
+            wave: "heavy",
+            lanes: [githubCheckTestLane("heavy:unlaunched", "heavy", "process.exit(0)")],
+          }),
+        ],
+        "fail-fast"
+      ).pipe(
+        Effect.map(({ laneReport, report }) => {
+          expect(A.map(report.lanes, (lane) => lane.status)).toEqual(["failed", "not-run-early-stop"]);
+          expect(report.firstRed).toStrictEqual(O.some("preflight:unclassified"));
+          expect(report.skippedAfterRed).toBe(1);
+          expect(laneReport.lanes[0]?.redSchedulingDecision).toStrictEqual(O.some("stop-after-red"));
         }),
         provideScopedLayer(PlatformLayer)
       )

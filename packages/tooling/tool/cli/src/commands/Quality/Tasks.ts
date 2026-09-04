@@ -89,6 +89,7 @@ import { QualityTaskConfigurationError, QualityTaskFailed, QualityTaskGroupFaile
 import {
   decodePackageJsonDocument,
   GatePrecisionClass,
+  GateRedSchedulingDecision,
   GITHUB_CHECK_RUN_REPORT_PREFIX,
   GithubCheckFailurePolicy,
   GithubCheckLaneRun,
@@ -1508,12 +1509,18 @@ const collectStreamingStepFailures = Effect.fn("QualityTasks.collectStreamingSte
  * @category models
  * @since 0.0.0
  */
-export type QualityTaskLaneInput = readonly [id: string, step: QualityTaskStep, inputDigest: O.Option<string>];
+export type QualityTaskLaneInput = readonly [
+  id: string,
+  step: QualityTaskStep,
+  inputDigest: O.Option<string>,
+  redSchedulingDecision?: GateRedSchedulingDecision,
+];
 
 const qualityTaskLaneRunFromOutcome = (
   id: string,
   inputDigest: O.Option<string>,
-  outcome: StreamingStepOutcome
+  outcome: StreamingStepOutcome,
+  redSchedulingDecision: O.Option<GateRedSchedulingDecision> = O.none()
 ): QualityTaskLaneRun =>
   QualityTaskLaneRun.make({
     id,
@@ -1530,6 +1537,7 @@ const qualityTaskLaneRunFromOutcome = (
       )
     ),
     inputDigest,
+    redSchedulingDecision: O.isSome(outcome.failure) ? redSchedulingDecision : O.none(),
   });
 
 const skippedQualityTaskLaneRun = (lane: GithubCheckLaneWaveSpec["lanes"][number]): QualityTaskLaneRun =>
@@ -1548,6 +1556,22 @@ const appendSkippedQualityTaskLaneRun = Effect.fn("QualityTasks.appendSkippedLan
   return laneRun;
 });
 
+const stopAfterRed = (): GateRedSchedulingDecision => GateRedSchedulingDecision.Enum["stop-after-red"];
+const continueAfterImpreciseRed = (): GateRedSchedulingDecision =>
+  GateRedSchedulingDecision.Enum["continue-after-imprecise-red"];
+
+const redSchedulingDecision = (
+  estimate: GithubCheckLaneWaveSpec["lanes"][number]["orderEstimate"]
+): GateRedSchedulingDecision =>
+  O.match(estimate, {
+    onNone: stopAfterRed,
+    onSome: (value) =>
+      GatePrecisionClass.$match(value.precision, {
+        precise: stopAfterRed,
+        imprecise: continueAfterImpreciseRed,
+      }),
+  });
+
 const collectQualityTaskLaneRuns = Effect.fn("QualityTasks.collectQualityTaskLaneRuns")(function* (
   label: string,
   lanes: ReadonlyArray<QualityTaskLaneInput>,
@@ -1562,16 +1586,18 @@ const collectQualityTaskLaneRuns = Effect.fn("QualityTasks.collectQualityTaskLan
         A.get(lanes, index),
         O.match({
           onNone: () => Effect.void,
-          onSome: ([id, , inputDigest]) =>
-            appendQualityTaskLaneRun(qualityTaskLaneRunFromOutcome(id, inputDigest, outcome)),
+          onSome: ([id, , inputDigest, decision]) =>
+            appendQualityTaskLaneRun(
+              qualityTaskLaneRunFromOutcome(id, inputDigest, outcome, O.fromUndefinedOr(decision))
+            ),
         })
       )
   );
   return {
     report: QualityTaskLaneRunReport.make({
       schemaVersion: "quality-task-lane-run/v1",
-      lanes: A.map(A.zip(lanes, outcomes), ([[id, , inputDigest], outcome]) =>
-        qualityTaskLaneRunFromOutcome(id, inputDigest, outcome)
+      lanes: A.map(A.zip(lanes, outcomes), ([[id, , inputDigest, decision], outcome]) =>
+        qualityTaskLaneRunFromOutcome(id, inputDigest, outcome, O.fromUndefinedOr(decision))
       ),
     }),
     failures: pipe(
@@ -1592,9 +1618,9 @@ const runGithubCheckWave = Effect.fn("QualityTasks.runGithubCheckWave")(function
   let failures = A.empty<QualityTaskFailed>();
   let laneRuns = A.empty<QualityTaskLaneRun>();
   let skippedLaneIds = A.empty<string>();
-  let stoppedAfterPreciseRed = false;
+  let stoppedAfterRed = false;
   for (const lane of wave.lanes) {
-    if (stoppedAfterPreciseRed) {
+    if (stoppedAfterRed) {
       skippedLaneIds = A.append(skippedLaneIds, lane.id);
       laneRuns = A.append(laneRuns, yield* appendSkippedQualityTaskLaneRun(lane));
       continue;
@@ -1620,16 +1646,22 @@ const runGithubCheckWave = Effect.fn("QualityTasks.runGithubCheckWave")(function
     }
 
     yield* Console.log(`[beep-cli] ${label}: running lane ${lane.id}`);
-    const result = yield* collectQualityTaskLaneRuns(`${label}:${lane.id}`, [[lane.id, lane.step, O.none()]], 1);
+    const result = yield* collectQualityTaskLaneRuns(
+      `${label}:${lane.id}`,
+      [[lane.id, lane.step, O.none(), redSchedulingDecision(lane.orderEstimate)]],
+      1
+    );
     const run = A.head(result.report.lanes);
     if (O.isSome(run)) {
       laneRuns = A.append(laneRuns, run.value);
     }
     if (A.isReadonlyArrayNonEmpty(result.failures)) {
       failures = A.appendAll(failures, result.failures);
-      stoppedAfterPreciseRed =
+      stoppedAfterRed =
         GithubCheckFailurePolicy.is["fail-fast"](failurePolicy) &&
-        O.exists(lane.orderEstimate, (estimate) => GatePrecisionClass.is.precise(estimate.precision));
+        O.exists(run, (laneRun) =>
+          O.exists(laneRun.redSchedulingDecision, GateRedSchedulingDecision.is["stop-after-red"])
+        );
     } else {
       const durationMs = pipe(
         run,
@@ -1647,7 +1679,7 @@ const runGithubCheckWave = Effect.fn("QualityTasks.runGithubCheckWave")(function
       });
     }
   }
-  return { activeReusableIds, failures, laneRuns, skippedLaneIds, stoppedAfterPreciseRed };
+  return { activeReusableIds, failures, laneRuns, skippedLaneIds, stoppedAfterRed };
 });
 
 const githubCheckLaneRunStatus = (
@@ -1731,7 +1763,7 @@ const collectGithubCheckLaneWaves = Effect.fn("QualityTasks.collectGithubCheckLa
       failures: waveFailures,
       laneRuns: waveLaneRuns,
       skippedLaneIds,
-      stoppedAfterPreciseRed,
+      stoppedAfterRed,
     } = yield* runGithubCheckWave(`${label}:${wave.wave}`, wave, failurePolicy);
     const failedLabels = A.map(waveFailures, (failure) => failure.label);
     laneRuns = A.appendAll(
@@ -1747,7 +1779,7 @@ const collectGithubCheckLaneWaves = Effect.fn("QualityTasks.collectGithubCheckLa
     );
     qualityTaskLaneRuns = A.appendAll(qualityTaskLaneRuns, waveLaneRuns);
     failures = A.appendAll(failures, waveFailures);
-    stopped = stoppedAfterPreciseRed;
+    stopped = stoppedAfterRed;
   }
 
   const firstRed = pipe(

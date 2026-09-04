@@ -30,6 +30,7 @@ export {
   GateOrderSeed,
   GateOrderSeedRow,
   GatePrecisionClass,
+  GateRedSchedulingDecision,
   GITHUB_CHECK_RUN_REPORT_PREFIX,
   GithubCheckFailurePolicy,
   GithubCheckLaneRun,

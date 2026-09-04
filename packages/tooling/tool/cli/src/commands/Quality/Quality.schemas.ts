@@ -901,6 +901,35 @@ export const GatePrecisionClass = LiteralKit(["precise", "imprecise"]).pipe(
 export type GatePrecisionClass = typeof GatePrecisionClass.Type;
 
 /**
+ * Scheduling decision recorded when a GitHub-check lane turns red.
+ *
+ * **Example** (Identify a stopping red)
+ *
+ * ```ts
+ * import { GateRedSchedulingDecision } from "@beep/repo-cli/commands/Quality"
+ *
+ * console.log(GateRedSchedulingDecision.is["stop-after-red"]("stop-after-red")) // true
+ * ```
+ *
+ * @category policies
+ * @since 0.0.0
+ */
+export const GateRedSchedulingDecision = LiteralKit(["stop-after-red", "continue-after-imprecise-red"]).pipe(
+  $I.annoteSchema("GateRedSchedulingDecision", {
+    description: "Whether a failed lane stops scheduling or continues because it is explicitly imprecise.",
+  })
+);
+
+/**
+ * Scheduling decision recorded when a GitHub-check lane turns red.
+ *
+ * @see {@link GateRedSchedulingDecision} for the runtime schema and literal helpers.
+ * @category policies
+ * @since 0.0.0
+ */
+export type GateRedSchedulingDecision = typeof GateRedSchedulingDecision.Type;
+
+/**
  * Evidence-backed scheduling inputs for one local proof gate.
  *
  * **Details**
@@ -1075,6 +1104,10 @@ export type GithubCheckLaneRunStatus = typeof GithubCheckLaneRunStatus.Type;
 
 const OptionalLaneRunString = S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault);
 const OptionalLaneRunFinite = S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault);
+const OptionalGateRedSchedulingDecision = GateRedSchedulingDecision.pipe(
+  S.OptionFromOptionalKey,
+  SchemaUtils.withNoneDefault
+);
 const NullableLaneInputDigest = S.OptionFromNullOr(S.String).pipe(
   SchemaUtils.withNoneDefault,
   S.withDecodingDefaultKey(EffectRuntime.succeed(null))
@@ -1120,6 +1153,7 @@ export class QualityTaskLaneRun extends S.Class<QualityTaskLaneRun>($I`QualityTa
     durationMs: OptionalLaneRunFinite,
     exitCode: OptionalLaneRunFinite,
     inputDigest: NullableLaneInputDigest,
+    redSchedulingDecision: OptionalGateRedSchedulingDecision,
   },
   $I.annote("QualityTaskLaneRun", {
     description: "Timing and outcome facts for one lane executed inside a wrapper command.",
