@@ -9,9 +9,10 @@ import { $RepoAiMetricsId } from "@beep/identity/packages";
 import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Clock, Duration, Effect, FileSystem, MutableHashMap, Order, Path, pipe, Random, Schedule } from "effect";
+import { Clock, Duration, Effect, FileSystem, MutableHashMap, Order, Path, pipe } from "effect";
 import * as Eq from "effect/Equal";
 import * as S from "effect/Schema";
+import { aiMetricsWriterToken, withAiMetricsFileLock } from "./internal/file-lock.ts";
 import { AiMetricsTranscriptSource } from "./models.ts";
 import {
   AiMetricsHashSaltStatus,
@@ -621,41 +622,6 @@ const identityRegistryLockPath = (pathApi: Path.Path, dataRoot: string): string 
   pathApi.join(dataRoot, identityDirName, lockFileName);
 
 /**
- * Token that makes one writer's temporary file and lock claim distinguishable from another's.
- *
- * **Details**
- *
- * A clock reading alone is not enough: two processes starting inside the same
- * millisecond would derive the same name. The random suffix comes from
- * `Random.nextIntBetween`, which resolves through the Effect `Random` service —
- * so a test can seed it, and no `Math.random` or `node:crypto` import is needed
- * (the latter is barred from typechecked `src` by the node-builtin gate).
- */
-const writerToken = Effect.fnUntraced(function* () {
-  const nowEpochMillis = yield* Clock.currentTimeMillis;
-  const entropy = yield* Random.nextIntBetween(0, 0xffffffff);
-  return `${nowEpochMillis}-${entropy.toString(16)}`;
-});
-
-// Exclusive create: `flag: "wx"` is O_CREAT | O_EXCL, so exactly one writer can
-// observe the lock as absent and go on to create it. This is the same idiom the
-// Yeet proof lock uses; it lives here rather than being imported because
-// `@beep/repo-cli` depends on this package, not the other way round.
-const claimRegistryLock = Effect.fnUntraced(function* (lockPath: string, token: string) {
-  const fs = yield* FileSystem.FileSystem;
-  return yield* fs.writeFileString(lockPath, token, { flag: "wx" }).pipe(
-    Effect.as(true),
-    Effect.catchTag("PlatformError", (error) =>
-      Eq.equals(error.reason._tag, "AlreadyExists")
-        ? Effect.succeed(false)
-        : Effect.fail(identityRegistryFailure("Failed to create the AI metrics identity registry lock.")(error))
-    )
-  );
-});
-
-const lockRetrySchedule = Schedule.recurs(lockMaxRetries).pipe(Schedule.addDelay(() => Effect.succeed(lockRetryDelay)));
-
-/**
  * Run `use` while holding the registry's advisory lock, releasing it on every exit path.
  *
  * **Details**
@@ -674,40 +640,22 @@ const lockRetrySchedule = Schedule.recurs(lockMaxRetries).pipe(Schedule.addDelay
  * the only honest option — skipping the upsert would leave a store whose
  * provenance silently does not match its data.
  */
-const acquireRegistryLock = Effect.fn("AiMetrics.identityRegistry.acquireRegistryLock")(function* (lockPath: string) {
-  const fs = yield* FileSystem.FileSystem;
-  const pathApi = yield* Path.Path;
-  const token = yield* writerToken();
-
-  yield* fs
-    .makeDirectory(pathApi.dirname(lockPath), { recursive: true })
-    .pipe(Effect.mapError(identityRegistryFailure("Failed to create the AI metrics identity registry directory.")));
-
-  const claimed = yield* claimRegistryLock(lockPath, token).pipe(
-    // `repeat` re-runs only on success, so a real IO failure surfaces at once
-    // instead of being retried as if it were contention.
-    Effect.repeat({ schedule: lockRetrySchedule, until: (claimed: boolean) => claimed })
-  );
-
-  if (!claimed) {
-    return yield* AiMetricsIdentityRegistryError.make({
-      cause: lockPath,
-      message:
-        "Timed out waiting for the AI metrics identity registry lock. Remove the lock file if no other run holds it.",
-    });
-  }
-
-  return lockPath;
-});
-
-const releaseRegistryLock = (lockPath: string): Effect.Effect<void, never, FileSystem.FileSystem> =>
-  Effect.flatMap(FileSystem.FileSystem, (fs) => fs.remove(lockPath).pipe(Effect.ignore));
-
 const withRegistryLock = <A, E, R>(
   lockPath: string,
   use: Effect.Effect<A, E, R>
 ): Effect.Effect<A, E | AiMetricsIdentityRegistryError, R | FileSystem.FileSystem | Path.Path> =>
-  Effect.acquireUseRelease(acquireRegistryLock(lockPath), () => use, releaseRegistryLock);
+  withAiMetricsFileLock({
+    lockPath,
+    maxRetries: lockMaxRetries,
+    onClaimFailure: identityRegistryFailure("Failed to create the AI metrics identity registry lock."),
+    onTimeout: (path) =>
+      AiMetricsIdentityRegistryError.make({
+        cause: path,
+        message:
+          "Timed out waiting for the AI metrics identity registry lock. Remove the lock file if no other run holds it.",
+      }),
+    retryDelay: lockRetryDelay,
+  })(use);
 
 /**
  * Read the persisted identity registry, or an empty registry when none exists yet.
@@ -898,7 +846,7 @@ const mergeAndPersistRegistry = Effect.fnUntraced(function* (args: {
 
   const content = yield* identityRegistryToJson(registry);
   const registryPath = identityRegistryPath(pathApi, input.dataRoot);
-  const registryTmpPath = `${registryPath}.${yield* writerToken()}.tmp`;
+  const registryTmpPath = `${registryPath}.${yield* aiMetricsWriterToken}.tmp`;
   yield* fs
     .makeDirectory(pathApi.dirname(registryPath), { recursive: true })
     .pipe(Effect.mapError(identityRegistryFailure("Failed to create the AI metrics identity registry directory.")));

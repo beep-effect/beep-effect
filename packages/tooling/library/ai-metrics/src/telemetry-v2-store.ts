@@ -13,6 +13,7 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FlightRecord, FlightRecordWriteEvent } from "./flight-record.ts";
+import { HookPulseLeaseProjection } from "./hook-pulse-lease-emitter.ts";
 import { IngestEnumeration, IngestManifest } from "./ingest-manifest.ts";
 import { hashPublicTextSha256 } from "./privacy.ts";
 import { SessionLeaseReconciliation, SessionLeaseTransition } from "./session-lease.ts";
@@ -41,6 +42,7 @@ const flightRecordSchemaVersion = "telemetry-v2/flight-record/v1";
  */
 export const TelemetryV2ArtifactKind = LiteralKit([
   "flight-record-event",
+  "hook-pulse-lease-projection",
   "ingest-enumeration",
   "ingest-manifest",
   "session-lease-transition",
@@ -97,6 +99,7 @@ const TelemetryV2StoreOperation = LiteralKit([
   "prepare-root",
   "compose-flight-record",
   "encode-flight-record-event",
+  "encode-hook-pulse-lease-projection",
   "encode-ingest-enumeration",
   "encode-ingest-manifest",
   "encode-session-lease-transition",
@@ -222,6 +225,9 @@ export interface TelemetryV2StoreShape {
   readonly appendFlightRecordEvent: (
     event: FlightRecordWriteEvent
   ) => Effect.Effect<TelemetryV2ArtifactReceipt, TelemetryV2StoreError>;
+  readonly appendHookPulseLeaseProjection: (
+    projection: HookPulseLeaseProjection
+  ) => Effect.Effect<TelemetryV2ArtifactReceipt, TelemetryV2StoreError>;
   readonly appendSessionLeaseReconciliation: (
     reconciliation: SessionLeaseReconciliation
   ) => Effect.Effect<TelemetryV2ArtifactReceipt, TelemetryV2StoreError>;
@@ -246,6 +252,7 @@ const storeFailure = (
 const artifactDirectory = (kind: TelemetryV2ArtifactKind): string =>
   TelemetryV2ArtifactKind.$match(kind, {
     "flight-record-event": () => "flight-record-events",
+    "hook-pulse-lease-projection": () => "hook-pulse-lease-projections",
     "ingest-enumeration": () => "ingest-enumerations",
     "ingest-manifest": () => "ingest-manifests",
     "session-lease-transition": () => "session-lease-transitions",
@@ -326,6 +333,17 @@ const makeTelemetryV2Store = Effect.fnUntraced(function* (dataRoot: AiMetricsAbs
       )
     );
     return yield* persistArtifact(TelemetryV2ArtifactKind.Enum["flight-record-event"], json);
+  });
+
+  const appendHookPulseLeaseProjection = Effect.fn("TelemetryV2Store.appendHookPulseLeaseProjection")(function* (
+    projection: HookPulseLeaseProjection
+  ) {
+    const json = yield* HookPulseLeaseProjection.encodeJsonEffect(projection).pipe(
+      Effect.mapError((cause) =>
+        storeFailure("encode-hook-pulse-lease-projection", "Failed to encode a hook-pulse lease projection.", cause)
+      )
+    );
+    return yield* persistArtifact(TelemetryV2ArtifactKind.Enum["hook-pulse-lease-projection"], json);
   });
 
   const writeFlightRecord = Effect.fn("TelemetryV2Store.writeFlightRecord")(function* (
@@ -414,6 +432,7 @@ const makeTelemetryV2Store = Effect.fnUntraced(function* (dataRoot: AiMetricsAbs
 
   const service: TelemetryV2StoreShape = {
     appendFlightRecordEvent,
+    appendHookPulseLeaseProjection,
     appendSessionLeaseReconciliation,
     appendSessionLeaseTransition,
     runIngest,

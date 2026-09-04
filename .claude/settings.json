@@ -177,6 +177,10 @@
         "hooks": [
           {
             "type": "command",
+            "command": "BEEP_HOOK_PULSE_NOTIFIER_REV=desktop-ntfy-1 $CLAUDE_PROJECT_DIR/.claude/hooks/hook-pulse.sh"
+          },
+          {
+            "type": "command",
             "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/packet-projections.sh",
             "timeout": 30,
             "statusMessage": "Refreshing packet projections"

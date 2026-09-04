@@ -219,6 +219,24 @@ session_id_hash="$(sha256_private_identifier "${raw_session_id}")" || exit 0
 cwd_hash="$(sha256_private_identifier "${raw_cwd}")" || exit 0
 transcript_path_hash="$(sha256_private_identifier "${raw_transcript_path}")" || exit 0
 
+# Instrumented wrappers may provide two already-content-free correlation
+# digests. Accept only the exact schema shape; a malformed or raw value is
+# omitted rather than hashed here because these references must join byte-for-
+# byte with the wrapper witness that created them.
+flight_invocation_id="${BEEP_FLIGHT_INVOCATION_ID:-}"
+flight_objective_ref="${BEEP_FLIGHT_OBJECTIVE_REF:-}"
+for flight_reference_name in flight_invocation_id flight_objective_ref; do
+  flight_reference="${!flight_reference_name}"
+  case "${flight_reference}" in
+    "" | *[!0-9a-f]*) printf -v "${flight_reference_name}" '%s' "" ;;
+    *)
+      if [ "${#flight_reference}" -ne 64 ]; then
+        printf -v "${flight_reference_name}" '%s' ""
+      fi
+      ;;
+  esac
+done
+
 jq_program='
 def as_string: if type == "string" then . else null end;
 def as_present: as_string | if . == "" then null else . end;
@@ -247,7 +265,7 @@ def put($key; v): ([v][0]) as $value | if $value == null then . else . + { ($key
 # fixture for the other events stays green. `hook-pulse-writer.test.ts`
 # reads both definitions back out of this file and asserts set equality with the
 # schema `Options`, so the duplication is checked rather than merely intended.
-def hook_events: [ "PreToolUse", "PermissionRequest", "PostToolUse", "PostToolUseFailure",
+def hook_events: [ "SessionStart", "PreToolUse", "PermissionRequest", "PostToolUse", "PostToolUseFailure",
                    "Notification", "UserPromptSubmit", "Stop", "SessionEnd",
                    "PermissionDenied" ];
 def notification_types: [ "permission_prompt", "idle_prompt" ];
@@ -268,6 +286,8 @@ def notification_types: [ "permission_prompt", "idle_prompt" ];
 | (.tool_use_id | as_present) as $toolUseId
 | (.prompt_id | as_present) as $promptId
 | ($transcriptPathHash | as_present) as $transcriptPath
+| ($invocationId | as_present) as $invocationId
+| ($objectiveRef | as_present) as $objectiveRef
 | (.permission_mode | as_present) as $permissionMode
 | (.notification_type | as_present) as $notificationTypeRaw
 | (.duration_ms | as_non_negative) as $durationMs
@@ -307,6 +327,8 @@ def notification_types: [ "permission_prompt", "idle_prompt" ];
      | put("promptId"; $promptId)
      | put("transcriptPath"; $transcriptPath)
      | put("permissionMode"; $permissionMode)
+     | put("invocationId"; (if $hookEvent == "SessionStart" then $invocationId else null end))
+     | put("objectiveRef"; (if $hookEvent == "SessionStart" then $objectiveRef else null end))
      | put("notificationType"; (if $hookEvent == "Notification" then $notificationType else null end))
      | put("durationMs"; $durationMs)
      | put("sessionEndReason"; (if $hookEvent == "SessionEnd" then $reason else null end))
@@ -331,6 +353,8 @@ output="$(
     --arg sessionIdHash "${session_id_hash}" \
     --arg cwdHash "${cwd_hash}" \
     --arg transcriptPathHash "${transcript_path_hash}" \
+    --arg invocationId "${flight_invocation_id}" \
+    --arg objectiveRef "${flight_objective_ref}" \
     "${jq_program}" <<<"${payload}" 2>/dev/null
 )" || exit 0
 

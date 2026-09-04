@@ -131,6 +131,7 @@ describe("telemetry-v2 session leases", () => {
         observedAt: "2026-09-03T12:03:00.000Z",
         eventDigest: hashF,
         waitId: hashE,
+        executionDurationMs: 0,
         evidenceTier: "derived",
         oipTaint: "clear",
       })
@@ -173,6 +174,7 @@ describe("telemetry-v2 session leases", () => {
         observedAt: "2026-09-03T12:03:00.000Z",
         eventDigest: hashF,
         waitId: hashB,
+        executionDurationMs: 0,
         evidenceTier: "derived",
         oipTaint: "clear",
       })
@@ -186,6 +188,7 @@ describe("telemetry-v2 session leases", () => {
         observedAt: "2026-09-03T12:04:00.000Z",
         eventDigest: hashC,
         waitId: hashE,
+        executionDurationMs: 0,
         evidenceTier: "derived",
         oipTaint: "clear",
       })

@@ -43,6 +43,7 @@ import {
   AiMetricsTranscriptSource,
   AiMetricsWeeklyReportInput,
   addAiMetricsOutcomeLabel,
+  agentEvidenceRoot,
   aiMetricsBenchmarkCaseListToJson,
   aiMetricsBenchmarkCaseToJson,
   aiMetricsBenchmarkRunToJson,
@@ -228,6 +229,20 @@ const resolveHomeDir = Effect.fn("AIMetrics.resolveHomeDir")(function* (homeDir:
   return yield* AiMetricsCommandError.make({
     cause: "HOME",
     message: "Unable to resolve a home directory. Pass --home-dir explicitly.",
+  });
+});
+
+const resolveAgentEvidenceRoot = Effect.fn("AIMetrics.resolveAgentEvidenceRoot")(function* (homeDir: string) {
+  const path = yield* Path.Path;
+  const configuredRoot = nonBlankOption(yield* readOptionalConfigString("BEEP_AGENT_EVIDENCE_ROOT"));
+  const stateHome = nonBlankOption(yield* readOptionalConfigString("XDG_STATE_HOME"));
+  const resolved = O.getOrElse(configuredRoot, () =>
+    agentEvidenceRoot(O.getOrElse(stateHome, () => path.join(homeDir, ".local/state")))
+  );
+  if (path.isAbsolute(resolved)) return resolved;
+  return yield* AiMetricsCommandError.make({
+    cause: resolved,
+    message: "BEEP_AGENT_EVIDENCE_ROOT and XDG_STATE_HOME must resolve to an absolute path.",
   });
 });
 
@@ -1460,6 +1475,7 @@ const forwarderRunResultWithOtlpExport = (
     archiveObjectCount: result.archiveObjectCount,
     configSnapshotId: result.configSnapshotId,
     duckDbPath: result.duckDbPath,
+    hookPulseLeaseReplay: result.hookPulseLeaseReplay,
     ingestRunId: result.ingestRunId,
     otlpExport: O.some(otlpExport),
     parquetExportDir: result.parquetExportDir,
@@ -1480,6 +1496,7 @@ const forwarderRunCommandToJson = Effect.fn("AIMetrics.forwarderRunCommandToJson
     archiveObjectCount: result.archiveObjectCount,
     configSnapshotId: result.configSnapshotId,
     duckDbPath: result.duckDbPath,
+    ...O.getSomesStruct({ hookPulseLeaseReplay: result.hookPulseLeaseReplay }),
     ingestRunId: result.ingestRunId,
     ...O.getSomesStruct({ otlpExport: result.otlpExport }),
     ...O.getSomesStruct({ parquetExportDir: result.parquetExportDir }),
@@ -1691,6 +1708,12 @@ const renderForwarderRunResult = Effect.fn("AIMetrics.renderForwarderRunResult")
   yield* Console.log(`source files: ${result.sourceFileCount}`);
   yield* Console.log(`archive objects: ${result.archiveObjectCount}`);
   yield* Console.log(`turns: ${result.turnCount}`);
+  if (O.isSome(result.hookPulseLeaseReplay)) {
+    const replay = result.hookPulseLeaseReplay.value;
+    yield* Console.log(
+      `hook leases: files=${replay.enumeratedFileCount} sessions=${replay.sessionCount} active=${replay.openLeaseCount} tombstoned=${replay.tombstonedSessionCount} quarantined=${replay.quarantinedSessionCount}`
+    );
+  }
   yield* Console.log(`raw archive: ${result.rawArchiveDir}`);
   yield* Effect.forEach(
     result.sourceCoverage,
@@ -1784,12 +1807,14 @@ const makeForwarderRunProgram = Effect.fn("AIMetrics.makeForwarderRunProgram")(f
   const spec = yield* makeAiMetricsInstallSpec(installInput);
   const resolvedRawArchiveKey = yield* resolveRawArchiveKey();
   const sinceEpochMillis = all ? undefined : yield* parseSinceEpochMillis(since);
+  const resolvedHomeDir = yield* resolveHomeDir(homeDir);
   const forwarderInput = AiMetricsForwarderInput.make({
+    agentEvidenceRoot: O.some(yield* resolveAgentEvidenceRoot(resolvedHomeDir)),
     dataRoot: O.some(resolvedDataRoot),
     hashSalt: resolvedHashSalt,
     hashSaltSecretRef: installInput.hashSaltSecretRef,
     rawArchiveKeySecretRef: installInput.rawArchiveKeySecretRef,
-    homeDir: yield* resolveHomeDir(homeDir),
+    homeDir: resolvedHomeDir,
     includeAll: all,
     maxFileBytes,
     maxFiles,

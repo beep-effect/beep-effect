@@ -6,6 +6,10 @@
         "hooks": [
           {
             "type": "command",
+            "command": "BEEP_HOOK_PULSE_NOTIFIER_REV=desktop-ntfy-1 \"$(git rev-parse --show-toplevel)/.codex/hooks/hook-pulse.sh\""
+          },
+          {
+            "type": "command",
             "command": "bash \"$(git rev-parse --show-toplevel)/.claude/hooks/packet-projections.sh\"",
             "timeout": 30,
             "statusMessage": "Refreshing packet projections"

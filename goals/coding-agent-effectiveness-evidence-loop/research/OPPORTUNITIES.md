@@ -615,3 +615,19 @@ What would have prevented it: define committed publish cleanliness over the
 tracked index and committed range, while separately reporting untracked paths
 that do not overlap the published diff. An unrelated future-phase draft should
 not force operators to perturb the worktree or bypass the canonical publisher.
+
+## 2026-09-03 — broad source discovery expanded generated data
+
+Lived while searching for an existing cross-process file-lock helper before
+completing the shared session-lease store. A source-only `rg` over broad
+package globs entered a generated legal-data TypeScript module and produced
+more than five megabytes of irrelevant output before truncation. The useful
+lock references were present, but the result was not a reviewable discovery
+receipt and the search had to be repeated with narrow package roots and
+generated-data exclusions.
+
+What would have prevented it: publish a generated-source exclusion glob for
+repository discovery commands, or expose a maintained source manifest that
+omits embedded data modules. Shared-helper discovery should be bounded by code
+topology without requiring every operator to rediscover the largest generated
+exceptions.

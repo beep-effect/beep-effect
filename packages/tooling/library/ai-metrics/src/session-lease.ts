@@ -6,9 +6,10 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils, Sha256Hex } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, NonNegNum, PosInt, SchemaUtils, Sha256Hex } from "@beep/schema";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
 import { dual } from "effect/Function";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
@@ -225,9 +226,11 @@ class SessionLeaseWaitClosed extends S.Class<SessionLeaseWaitClosed>($I`SessionL
     event: S.tag(SessionLeaseEventKind.Enum["wait-closed"]),
     ...sessionLeaseEventFields,
     waitId: Sha256Hex,
+    executionDurationMs: NonNegNum,
   },
   $I.annote("SessionLeaseWaitClosed", {
-    description: "Exact-ID terminal decision observation that closes at most one pending wait.",
+    description:
+      "Exact-ID terminal decision observation that closes at most one pending wait and preserves bounded tool execution time.",
   })
 ) {}
 
@@ -273,7 +276,14 @@ export const SessionLeaseEvent = S.Union([
   $I.annoteSchema("SessionLeaseEvent", {
     description: "Start, renewal, exact wait transition, or terminal event for one active-session lease.",
   }),
-  withJsonEffectStatics
+  withJsonEffectStatics,
+  SchemaUtils.withStatics(() => ({
+    makeActivity: (input: Parameters<typeof SessionLeaseActivity.make>[0]) => SessionLeaseActivity.make(input),
+    makeEnded: (input: Parameters<typeof SessionLeaseEnded.make>[0]) => SessionLeaseEnded.make(input),
+    makeStarted: (input: Parameters<typeof SessionLeaseStarted.make>[0]) => SessionLeaseStarted.make(input),
+    makeWaitClosed: (input: Parameters<typeof SessionLeaseWaitClosed.make>[0]) => SessionLeaseWaitClosed.make(input),
+    makeWaitOpened: (input: Parameters<typeof SessionLeaseWaitOpened.make>[0]) => SessionLeaseWaitOpened.make(input),
+  }))
 );
 
 /**
@@ -813,7 +823,7 @@ export const reconcileExpiredSessionLease: {
         sessionId: candidate.lease.sessionId,
         sourceKind: candidate.lease.sourceKind,
         lastObservedAt: candidate.lease.lastObservedAt,
-        tombstonedAt: candidate.evaluatedAt,
+        tombstonedAt: DateTime.addDuration(candidate.lease.lastObservedAt, Duration.millis(candidate.ttlMs)),
         terminalOutcome: TerminalOutcome.Enum.unknown,
         leaseDigest: candidate.leaseDigest,
         sourceEvidenceDigest: evidence.sourceEvidenceDigest,

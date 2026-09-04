@@ -6,10 +6,10 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { Defect, SchemaUtils } from "@beep/schema";
+import { Defect, PosInt, SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Clock, Effect, FileSystem, flow, Order, Path, pipe } from "effect";
+import { Clock, DateTime, Duration, Effect, FileSystem, flow, Order, Path, pipe } from "effect";
 import * as S from "effect/Schema";
 import { AiMetricsRawArchiveKey, writeEncryptedRawArchiveObject } from "./archive.ts";
 import {
@@ -17,12 +17,19 @@ import {
   makeAiMetricsConfigSnapshot,
   writeAiMetricsConfigSnapshotArtifacts,
 } from "./config-snapshot.ts";
+import { requireAbsoluteAiMetricsDataRoot } from "./data-root.ts";
 import {
   AiMetricsDerivedStorageWriteInput,
   AiMetricsDerivedTranscriptRecord,
   AiMetricsParquetExportMode,
   writeAiMetricsDerivedStorage,
 } from "./derived-storage.ts";
+import { agentEvidenceRoot } from "./hook-pulse.ts";
+import {
+  HookPulseLeaseReplayInput,
+  HookPulseLeaseReplayResult,
+  replayHookPulseLeases,
+} from "./hook-pulse-lease-replay.ts";
 import { AiMetricsIdentityRegistryUpsertInput, upsertAiMetricsIdentityRegistry } from "./identity-registry.ts";
 import { summarizeTranscriptText } from "./ingest.ts";
 import { AiMetricsInstallInput, makeAiMetricsInstallSpec } from "./install.ts";
@@ -35,6 +42,7 @@ import { shellQuote } from "./shell.ts";
 
 const $I = $RepoAiMetricsId.create("forwarder");
 const DEFAULT_MAX_FILES = 200;
+const DEFAULT_SESSION_LEASE_TTL = Duration.hours(24);
 const absoluteExecutablePathPattern = /^(?:[A-Za-z]:[\\/]|\\\\|\/)/u;
 const isAbsoluteExecutablePath = (value: string): boolean => absoluteExecutablePathPattern.test(value);
 const AiMetricsForwarderTimerCommandBase = S.NonEmptyArray(S.String);
@@ -133,6 +141,7 @@ export class AiMetricsForwarderError extends S.TaggedError<AiMetricsForwarderErr
  */
 export class AiMetricsForwarderInput extends S.Class<AiMetricsForwarderInput>($I`AiMetricsForwarderInput`)(
   {
+    agentEvidenceRoot: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     claudeProjectsRoot: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     codexSessionsRoot: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     dataRoot: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
@@ -423,6 +432,7 @@ export class AiMetricsForwarderRunResult extends S.Class<AiMetricsForwarderRunRe
     configSnapshotId: S.String,
     duckDbPath: S.String,
     ingestRunId: S.String,
+    hookPulseLeaseReplay: S.OptionFromOptionalKey(HookPulseLeaseReplayResult).pipe(SchemaUtils.withNoneDefault),
     otlpExport: S.OptionFromOptionalKey(AiMetricsForwarderOtlpExport).pipe(SchemaUtils.withNoneDefault),
     parquetExportDir: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     parquetExportMode: AiMetricsParquetExportMode,
@@ -1029,6 +1039,18 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
       })
     ).pipe(Effect.mapError((cause) => forwarderFailure("Failed to resolve AI metrics install storage layout.", cause)));
     const pathApi = yield* Path.Path;
+    const absoluteDataRoot = yield* requireAbsoluteAiMetricsDataRoot(installSpec.storage.dataRoot).pipe(
+      Effect.mapError((cause) => forwarderFailure("Failed to validate the hook-pulse lease data root.", cause))
+    );
+    const hookPulseLeaseReplay = yield* replayHookPulseLeases(
+      HookPulseLeaseReplayInput.make({
+        dataRoot: absoluteDataRoot,
+        evaluatedAt: DateTime.makeUnsafe({ epochMilliseconds: startedAtEpochMillis }),
+        evidenceRoot: O.getOrElse(input.agentEvidenceRoot, () => agentEvidenceRoot(`${input.homeDir}/.local/state`)),
+        oipTaint: "unknown",
+        ttlMs: PosInt.make(Duration.toMillis(DEFAULT_SESSION_LEASE_TTL)),
+      })
+    ).pipe(Effect.mapError((cause) => forwarderFailure("Failed to replay hook-pulse session leases.", cause)));
     yield* upsertAiMetricsIdentityRegistry(
       AiMetricsIdentityRegistryUpsertInput.make({
         dataRoot: installSpec.storage.dataRoot,
@@ -1087,6 +1109,7 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
       archiveObjectCount: derived.archiveObjectCount,
       configSnapshotId: configSnapshot.snapshot.snapshotId,
       duckDbPath: derived.duckDbPath,
+      hookPulseLeaseReplay: O.some(hookPulseLeaseReplay),
       ingestRunId: derived.ingestRunId,
       parquetExportDir: derived.parquetExportDir,
       parquetExportMode: derived.parquetExportMode,

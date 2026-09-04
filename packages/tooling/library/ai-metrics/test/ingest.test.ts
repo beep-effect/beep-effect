@@ -54,6 +54,7 @@ import {
   forwarderRunResultToJson,
   forwarderTimerPlanToJson,
   generateAiMetricsWeeklyReport,
+  HookPulseV1,
   hashPrivateIdentifier,
   hashPublicTextSha256,
   listAiMetricsBenchmarkCases,
@@ -98,7 +99,22 @@ import { fcRuns } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { expect, it, layer } from "@effect/vitest";
-import { Effect, Encoding, Equal, Exit, Fiber, FileSystem, Layer, Order, Path, pipe, Redacted, Ref } from "effect";
+import {
+  Clock,
+  DateTime,
+  Effect,
+  Encoding,
+  Equal,
+  Exit,
+  Fiber,
+  FileSystem,
+  Layer,
+  Order,
+  Path,
+  pipe,
+  Redacted,
+  Ref,
+} from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -480,6 +496,22 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
           const claudeRoot = path.join(homeDir, ".claude/projects/repo");
           const duckDbPath = path.join(dataRoot, "derived/ai-metrics.duckdb");
           const rawArchiveKey = Redacted.make(Encoding.encodeBase64(new Uint8Array(32).fill(7)));
+          const hookSessionId = "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd";
+          const hookCwd = "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee";
+          const now = yield* Clock.currentTimeMillis;
+          const hookPulseJson = (hookEvent: "SessionStart" | "Stop", epochMilliseconds: number) =>
+            HookPulseV1.decodeEffect({
+              schemaVersion: "hook-pulse/v1",
+              ts: DateTime.formatIso(DateTime.makeUnsafe({ epochMilliseconds })),
+              sessionId: hookSessionId,
+              agentKind: "claude-code",
+              hookEvent,
+              cwd: hookCwd,
+              notifierRev: "desktop-ntfy-1",
+              instrumentClass: "production",
+              evidenceTier: "derived",
+              waitReason: "none",
+            }).pipe(Effect.flatMap(HookPulseV1.encodeJsonEffect));
 
           yield* writeText(
             path.join(codexRoot, "codex.jsonl"),
@@ -494,6 +526,13 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
           yield* writeText(
             path.join(claudeRoot, "claude.jsonl"),
             '{"type":"assistant","timestamp":"2026-05-05T10:02:00Z","message":{"content":"done"}}'
+          );
+          yield* writeText(
+            path.join(
+              homeDir,
+              `.local/state/beep/agent-evidence/hook-events/hook-pulse-2026-09-03-${hookSessionId}.ndjson`
+            ),
+            `${yield* hookPulseJson("SessionStart", now - 1_000)}\n${yield* hookPulseJson("Stop", now)}\n`
           );
           yield* writeText(path.join(repoRoot, "AGENTS.md"), "# Test agent guide\n");
 
@@ -515,6 +554,20 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
             expect(result.sourceFileCount).toBe(2);
             expect(result.archiveObjectCount).toBe(2);
             expect(result.turnCount).toBe(3);
+            expect(result.hookPulseLeaseReplay).toEqual(
+              O.some(
+                expect.objectContaining({
+                  acceptedSessionCount: 1,
+                  enumeratedFileCount: 1,
+                  openLeaseCount: 1,
+                  sessionCount: 1,
+                  tombstonedSessionCount: 0,
+                })
+              )
+            );
+            expect(
+              yield* fs.exists(path.join(dataRoot, "telemetry-v2/session-leases/active", `${hookSessionId}.json`))
+            ).toBe(true);
             expect(result.sourceCoverage).toEqual(
               expect.arrayContaining([
                 expect.objectContaining({

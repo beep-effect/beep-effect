@@ -56,6 +56,8 @@ const CANARY = "CANARY-SECRET-VALUE";
 // writer that ignored the operator salt entirely, because the fallback constant
 // is what such a writer would have used anyway.
 const OPERATOR_SALT = "hook-pulse-writer-operator-salt";
+const FLIGHT_INVOCATION_ID = "1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f";
+const FLIGHT_OBJECTIVE_REF = "2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e";
 
 // The cross-implementation oracle. `sessionId`, `cwd`, and `transcriptPath` are
 // `Sha256Hex` on the schema side, so no assertion can compare against a raw
@@ -113,6 +115,8 @@ const canonicalRowKeys = [
   "instrumentClass",
   "evidenceTier",
   "waitReason",
+  "invocationId",
+  "objectiveRef",
   "toolName",
   "toolUseId",
   "promptId",
@@ -158,6 +162,8 @@ const runWriter = Effect.fnUntraced(function* (
     readonly aiMetricsHashSalt?: string;
     readonly disarmSentinel?: string;
     readonly hashSalt?: string;
+    readonly invocationId?: string;
+    readonly objectiveRef?: string;
     readonly viaXdgFallback?: boolean;
     readonly writerPath?: string;
   } = {}
@@ -228,6 +234,8 @@ const runWriter = Effect.fnUntraced(function* (
       // about projection semantics rather than the current intervention state.
       BEEP_HOOK_PULSE_NOTIFIER_REV: "log-only-0",
       BEEP_HOOK_PULSE_INSTRUMENT_CLASS: "",
+      BEEP_FLIGHT_INVOCATION_ID: options.invocationId ?? "",
+      BEEP_FLIGHT_OBJECTIVE_REF: options.objectiveRef ?? "",
       // Both salt rungs are cleared unless a case sets one, so a developer who
       // exports a real ai-metrics salt cannot change what these digests are.
       // Cleared, they exercise the insecure-default fallback that keeps an
@@ -279,6 +287,12 @@ const baseFields = {
   prompt_id: "prompt-writer-1",
   session_id: session,
   transcript_path: "/tmp/claude/session-writer.jsonl",
+};
+
+const sessionStartPayload = {
+  ...baseFields,
+  hook_event_name: HookPulseEvent.Enum.SessionStart,
+  source: "startup",
 };
 
 // Raw key sets below are the measured 2.1.220 ground truth from
@@ -412,6 +426,12 @@ const sessionEndPayload = {
 // harness omits `permission_mode` on `Notification` and `SessionEnd`, and a
 // writer that invented one — or dropped every real one — would otherwise pass.
 const measuredPayloads = [
+  {
+    label: "SessionStart",
+    payload: sessionStartPayload,
+    permissionMode: O.none(),
+    waitReason: HookPulseWaitReason.Enum.none,
+  },
   {
     label: "PreToolUse",
     payload: preToolUsePayload,
@@ -752,6 +772,43 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
         expect(decodedStop.sessionEndReason).toEqual(O.none());
         // `PermissionDenied` carries its own `reason`, and it is content.
         expect(decodedDenied.sessionEndReason).toEqual(O.none());
+      })
+    )
+  );
+
+  it.effect("carries exact wrapper correlation only on SessionStart", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const options = {
+          invocationId: FLIGHT_INVOCATION_ID,
+          objectiveRef: FLIGHT_OBJECTIVE_REF,
+        };
+        const started = yield* runWriter(encodeJson(sessionStartPayload), options);
+        const active = yield* runWriter(encodeJson(preToolUsePayload), options);
+        const decodedStart = yield* decodeHookPulseRow(expectSingleRow(started));
+        const decodedActive = yield* decodeHookPulseRow(expectSingleRow(active));
+
+        expect(decodedStart.invocationId).toEqual(O.some(FLIGHT_INVOCATION_ID));
+        expect(decodedStart.objectiveRef).toEqual(O.some(FLIGHT_OBJECTIVE_REF));
+        expect(decodedActive.invocationId).toEqual(O.none());
+        expect(decodedActive.objectiveRef).toEqual(O.none());
+      })
+    )
+  );
+
+  it.effect("omits malformed wrapper correlation instead of retaining raw values", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const run = yield* runWriter(encodeJson(sessionStartPayload), {
+          invocationId: "raw-invocation-id",
+          objectiveRef: `${FLIGHT_OBJECTIVE_REF}00`,
+        });
+        const row = expectSingleRow(run);
+        const decoded = yield* decodeHookPulseRow(row);
+
+        expect(decoded.invocationId).toEqual(O.none());
+        expect(decoded.objectiveRef).toEqual(O.none());
+        expect(row).not.toContain("raw-invocation-id");
       })
     )
   );

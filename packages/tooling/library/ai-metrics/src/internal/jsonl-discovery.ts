@@ -19,17 +19,9 @@ export const statOption = Effect.fn("AiMetrics.statOption")(function* (pathName:
   return yield* fs.stat(pathName).pipe(Effect.option);
 });
 
-/**
- * Recursively collect every `.jsonl` file beneath a root directory.
- *
- * Returns an empty array when the root is missing or is not a directory, and
- * skips entries that cannot be read rather than failing the walk.
- *
- * @category utilities
- * @since 0.0.0
- */
-export const collectJsonlFiles = Effect.fn("AiMetrics.collectJsonlFiles")(function* (
-  root: string
+const collectFilesEndingWith = Effect.fn("AiMetrics.collectFilesEndingWith")(function* (
+  root: string,
+  suffix: string
 ): Effect.fn.Return<ReadonlyArray<string>, never, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const pathApi = yield* Path.Path;
@@ -48,7 +40,7 @@ export const collectJsonlFiles = Effect.fn("AiMetrics.collectJsonlFiles")(functi
     }
 
     if (currentInfo.value.type === "File") {
-      return Str.endsWith(".jsonl")(currentPath) ? A.of(currentPath) : A.empty<string>();
+      return Str.endsWith(suffix)(currentPath) ? A.of(currentPath) : A.empty<string>();
     }
 
     if (currentInfo.value.type !== "Directory") {
@@ -61,3 +53,25 @@ export const collectJsonlFiles = Effect.fn("AiMetrics.collectJsonlFiles")(functi
 
   return yield* walk(root);
 });
+
+/**
+ * Recursively collect every `.jsonl` file beneath a root directory.
+ *
+ * Returns an empty array when the root is missing or is not a directory, and
+ * skips entries that cannot be read rather than failing the walk.
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const collectJsonlFiles = (root: string) => collectFilesEndingWith(root, ".jsonl");
+
+/**
+ * Recursively collect every `.ndjson` file beneath a root directory.
+ *
+ * Returns an empty array when the root is missing or is not a directory, and
+ * skips entries that cannot be read rather than failing the walk.
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const collectNdjsonFiles = (root: string) => collectFilesEndingWith(root, ".ndjson");

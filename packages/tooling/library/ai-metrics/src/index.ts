@@ -91,6 +91,15 @@ export * from "./file-inventory.ts";
  * @since 0.0.0
  */
 export * from "./flight-record.ts";
+export * from "./flight-record-emitter.ts";
+/**
+ * Content-free first-person semantic witnesses written by instrumented agent
+ * wrappers and joined to hook sessions by a hash-only invocation reference.
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export * from "./flight-semantic-witness.ts";
 /**
  * The durable forwarder workflow that discovers sources, ingests transcripts,
  * writes derived storage, and exports spans in one pass. Examples live on the
@@ -109,6 +118,8 @@ export * from "./forwarder.ts";
  * @since 0.0.0
  */
 export * from "./hook-pulse.ts";
+export * from "./hook-pulse-lease-emitter.ts";
+export * from "./hook-pulse-lease-replay.ts";
 /**
  * Clone, repository, worktree, revision, and source-instance identity, plus the
  * canonical-root registry persisted inside the data root. Examples live on the
@@ -216,6 +227,15 @@ export * from "./sequence-break.ts";
  * @since 0.0.0
  */
 export * from "./session-lease.ts";
+/**
+ * Durable active-session lease persistence, expiry scans, and source-gated
+ * reconciliation. Examples live on the owning declarations in
+ * `./session-lease-store.ts`.
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export * from "./session-lease-store.ts";
 /**
  * Shell rendering helpers used to build the operator command strings printed by
  * install plans. Examples live on the owning declarations in `./shell.ts`.

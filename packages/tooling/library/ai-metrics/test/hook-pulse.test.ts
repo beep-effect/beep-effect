@@ -43,6 +43,11 @@ const rawInput = <const Event extends object>(ts: string, event: Event) => ({
   event: { ...baseRawEventFixture, ...event },
 });
 
+const sessionStart = rawInput("2026-08-01T06:25:00.000Z", {
+  hook_event_name: HookPulseEvent.Enum.SessionStart,
+  source: "startup",
+});
+
 const autoApprovedPreToolUse = rawInput("2026-08-01T08:39:55.000Z", {
   session_id: "ccd-session-auto-approved",
   hook_event_name: HookPulseEvent.Enum.PreToolUse,
@@ -725,9 +730,10 @@ describe("HookPulseV1", () => {
   );
 
   it.effect(
-    "round-trips all nine hook events and all three observed wait classes after derivation",
+    "round-trips all ten hook events and all three observed wait classes after derivation",
     Effect.fn("HookPulseTest.roundTripsDerivedEvents")(function* () {
       const fixtures = [
+        sessionStart,
         autoApprovedPreToolUse,
         approvedToolPermissionRequest,
         autoApprovedPostToolUse,
@@ -748,6 +754,7 @@ describe("HookPulseV1", () => {
 
       expect(reencoded).toEqual(encoded);
       expect(A.map(roundTripped, (record) => record.hookEvent)).toEqual([
+        "SessionStart",
         "PreToolUse",
         "PermissionRequest",
         "PostToolUse",
@@ -764,6 +771,7 @@ describe("HookPulseV1", () => {
       // otherwise ride along untested.
       expect(A.dedupe(A.map(roundTripped, (record) => record.hookEvent)).length).toBe(HookPulseEvent.Options.length);
       expect(A.map(roundTripped, (record) => record.waitReason)).toEqual([
+        "none",
         "none",
         "tool-permission",
         "none",

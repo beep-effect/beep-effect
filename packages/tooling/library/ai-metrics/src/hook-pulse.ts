@@ -247,7 +247,7 @@ export type HookPulseAgentKind = typeof HookPulseAgentKind.Type;
  *
  * console.log(startsHumanWait(HookPulseEvent.Enum.PermissionRequest)) // true
  * console.log(startsHumanWait(HookPulseEvent.Enum.PreToolUse)) // false
- * console.log(HookPulseEvent.Options.length) // 9
+ * console.log(HookPulseEvent.Options.length) // 10
  * ```
  *
  * @see {@link HookPulseWaitReason} for the attribution derived from these events.
@@ -255,6 +255,7 @@ export type HookPulseAgentKind = typeof HookPulseAgentKind.Type;
  * @since 0.0.0
  */
 export const HookPulseEvent = LiteralKit([
+  "SessionStart",
   "PreToolUse",
   "PermissionRequest",
   "PostToolUse",
@@ -639,6 +640,8 @@ export class HookPulseRawEvent extends S.Class<HookPulseRawEvent>($I`HookPulseRa
 class HookPulseRawEventInput extends S.Class<HookPulseRawEventInput>($I`HookPulseRawEventInput`)(
   {
     event: HookPulseRawEvent,
+    invocationId: S.OptionFromOptionalKey(Sha256Hex),
+    objectiveRef: S.OptionFromOptionalKey(Sha256Hex),
     notifierRev: S.String,
     instrumentClass: HookPulseInstrumentClass,
     agentKind: HookPulseAgentKind,
@@ -666,6 +669,7 @@ const deriveWaitReason = (
   notificationType: O.Option<string>
 ): HookPulseWaitReason =>
   HookPulseEvent.$match(hookEvent, {
+    SessionStart: HookPulseWaitReason.thunk.none,
     PreToolUse: HookPulseWaitReason.thunk.none,
     PermissionRequest: () => derivePermissionWaitReason(toolName),
     PostToolUse: HookPulseWaitReason.thunk.none,
@@ -788,7 +792,13 @@ const hookPulsePrivateReferences = Effect.fnUntraced(function* (input: {
 // `tool_name` but no `tool_use_id`, while `PreToolUse` and `PostToolUse` carry
 // both — so binding them to an event would reject legitimate future rows, and
 // rejecting rows costs real telemetry.
-const HookPulseEventOwnedField = LiteralKit(["notificationType", "sessionEndReason", "isInterrupt"]).pipe(
+const HookPulseEventOwnedField = LiteralKit([
+  "invocationId",
+  "objectiveRef",
+  "notificationType",
+  "sessionEndReason",
+  "isInterrupt",
+]).pipe(
   $I.annoteSchema("HookPulseEventOwnedField", {
     description: "Canonical hook-pulse fields whose meaning is owned by exactly one hook event.",
   })
@@ -796,6 +806,8 @@ const HookPulseEventOwnedField = LiteralKit(["notificationType", "sessionEndReas
 type HookPulseEventOwnedField = typeof HookPulseEventOwnedField.Type;
 
 const hookPulseEventOwningField = HookPulseEventOwnedField.$match({
+  invocationId: HookPulseEvent.thunk.SessionStart,
+  objectiveRef: HookPulseEvent.thunk.SessionStart,
   notificationType: HookPulseEvent.thunk.Notification,
   sessionEndReason: HookPulseEvent.thunk.SessionEnd,
   isInterrupt: HookPulseEvent.thunk.PostToolUseFailure,
@@ -891,6 +903,12 @@ export class HookPulseV1 extends S.Class<HookPulseV1>($I`HookPulseV1`)(
     instrumentClass: HookPulseInstrumentClass,
     evidenceTier: HookPulseEvidenceTier,
     waitReason: HookPulseWaitReason,
+    // Optional wrapper witnesses. These are already content-free SHA-256
+    // references when they enter the hook environment and are accepted only on
+    // SessionStart, so later replay can make an exact join without retaining a
+    // prompt, objective, or model response.
+    invocationId: S.OptionFromOptionalKey(Sha256Hex),
+    objectiveRef: S.OptionFromOptionalKey(Sha256Hex),
     // Non-empty for the same reason `HookPulseRawEvent.tool_name` is, and it has
     // to be non-empty on *both* sides: a canonical row carrying `O.some("")`
     // decodes fine yet can never be encoded back to a raw event, so the drift
@@ -1169,6 +1187,16 @@ export const HookPulseV1FromRawEvent = HookPulseRawEventInput.pipe(
                 O.filter(input.event.notification_type, isHookPulseNotificationType)
               ),
               durationMs: input.event.duration_ms,
+              invocationId: filterHookPulseEventOwnedField(
+                HookPulseEventOwnedField.Enum.invocationId,
+                input.event.hook_event_name,
+                input.invocationId
+              ),
+              objectiveRef: filterHookPulseEventOwnedField(
+                HookPulseEventOwnedField.Enum.objectiveRef,
+                input.event.hook_event_name,
+                input.objectiveRef
+              ),
               sessionEndReason: filterHookPulseEventOwnedField(
                 HookPulseEventOwnedField.Enum.sessionEndReason,
                 input.event.hook_event_name,
@@ -1236,6 +1264,16 @@ export const HookPulseV1FromRawEvent = HookPulseRawEventInput.pipe(
                   Effect.succeed(
                     HookPulseRawEventInput.make({
                       event,
+                      invocationId: filterHookPulseEventOwnedField(
+                        HookPulseEventOwnedField.Enum.invocationId,
+                        input.hookEvent,
+                        O.map(O.fromUndefinedOr(input.invocationId), Sha256Hex.make)
+                      ),
+                      objectiveRef: filterHookPulseEventOwnedField(
+                        HookPulseEventOwnedField.Enum.objectiveRef,
+                        input.hookEvent,
+                        O.map(O.fromUndefinedOr(input.objectiveRef), Sha256Hex.make)
+                      ),
                       notifierRev: input.notifierRev,
                       instrumentClass: input.instrumentClass,
                       agentKind: input.agentKind,

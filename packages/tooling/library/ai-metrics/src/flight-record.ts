@@ -191,7 +191,13 @@ export const FlightWaitSpan = S.Union([OpenFlightWait, ClosedFlightWait, Tombsto
   S.toTaggedUnion("status"),
   $I.annoteSchema("FlightWaitSpan", {
     description: "Tagged mechanical wait bracket that cannot attach close fields to an open wait.",
-  })
+  }),
+  SchemaUtils.withStatics(() => ({
+    makeOpen: (input: Parameters<typeof OpenFlightWait.make>[0]): FlightWaitSpan => OpenFlightWait.make(input),
+    makeClosed: (input: Parameters<typeof ClosedFlightWait.make>[0]): FlightWaitSpan => ClosedFlightWait.make(input),
+    makeTombstoned: (input: Parameters<typeof TombstonedFlightWait.make>[0]): FlightWaitSpan =>
+      TombstonedFlightWait.make(input),
+  }))
 );
 
 /**
@@ -379,6 +385,8 @@ export class FlightRecordAttribution extends S.Class<FlightRecordAttribution>($I
 
 const FlightEvidenceKind = LiteralKit([
   "hook-ledger",
+  "semantic-witness",
+  "session-lease-reconciliation",
   "transcript",
   "config-snapshot",
   "ingest-manifest",
@@ -622,6 +630,10 @@ export const FlightRecordWriteEvent = S.Union([
     decodeJsonEffect: S.decodeUnknownEffect(S.fromJsonString(schema)),
     encodeJsonEffect: S.encodeUnknownEffect(S.fromJsonString(schema)),
     makeAccepted: (record: FlightRecord): FlightRecordWriteEvent => AcceptedFlightRecordWrite.make({ record }),
+    makeInvalid: (input: Parameters<typeof InvalidFlightRecordWrite.make>[0]): FlightRecordWriteEvent =>
+      InvalidFlightRecordWrite.make(input),
+    makeQuarantined: (input: Parameters<typeof QuarantinedFlightRecordWrite.make>[0]): FlightRecordWriteEvent =>
+      QuarantinedFlightRecordWrite.make(input),
   }))
 );
 
