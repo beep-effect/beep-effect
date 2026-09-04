@@ -40,11 +40,13 @@ const GhBodyEditsDocument = S.Struct({
 type GhBodyEdit = typeof GhBodyEdit.Type;
 const createdAt = "2026-09-03T12:00:00Z";
 const editedAt = "2026-09-03T12:01:00Z";
+const encodeGhBodyJsonResult = S.encodeUnknownResult(S.fromJsonString(GhBody));
+const encodeGhBodyEditsDocumentJsonResult = S.encodeUnknownResult(S.fromJsonString(GhBodyEditsDocument));
 const encodeGhBody = (body: string, lastEditedAt: string | null = editedAt): string =>
-  Result.getOrThrow(S.encodeUnknownResult(S.fromJsonString(GhBody))({ body, createdAt, lastEditedAt }));
+  Result.getOrThrow(encodeGhBodyJsonResult({ body, createdAt, lastEditedAt }));
 const encodeGhBodyEdits = (nodes: ReadonlyArray<GhBodyEdit>): string =>
   Result.getOrThrow(
-    S.encodeUnknownResult(S.fromJsonString(GhBodyEditsDocument))({
+    encodeGhBodyEditsDocumentJsonResult({
       data: { repository: { pullRequest: { userContentEdits: { nodes } } } },
     })
   );

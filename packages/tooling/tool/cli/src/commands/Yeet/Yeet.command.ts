@@ -37,6 +37,7 @@ import { YeetRunOptions } from "./Yeet.schemas.ts";
 import type { YeetRunMode } from "./internal/Planner.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/Yeet.command");
+const decodeOptionalPositiveInt = S.decodeEffect(S.Option(PositiveInt));
 
 const baseFlag = Flag.string("base").pipe(
   Flag.withDescription("Base ref for affected feedback planning"),
@@ -643,7 +644,7 @@ const yeetResumeCommand = Command.make(
   ({ ref, list, print, force, json, agent, stateRoot }) =>
     parsePrRef(ref).pipe(
       Effect.flatMap((parsed) =>
-        S.decodeEffect(S.Option(PositiveInt))(agent).pipe(
+        decodeOptionalPositiveInt(agent).pipe(
           Effect.mapError(() =>
             YeetCommandError.make({ message: "Agent selection must be a positive one-based integer.", exitCode: 4 })
           ),

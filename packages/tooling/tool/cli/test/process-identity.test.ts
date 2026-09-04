@@ -19,6 +19,7 @@ import * as Str from "effect/String";
 import { vi } from "vitest";
 
 const DEAD_PID = 2_147_483_647;
+const isProcessStartIdentity = S.is(ProcessStartIdentity);
 const PROC_STAT = "1234 (bun worker) S 1 1234 1234 0 -1 4194560 0 0 0 0 0 0 0 0 20 0 1 0 8241991 0 0";
 
 const withProcStat = Effect.fnUntraced(function* <Value, Error, Requirements>(
@@ -37,15 +38,13 @@ const withProcStat = Effect.fnUntraced(function* <Value, Error, Requirements>(
 
 describe("ProcessIdentity", () => {
   it("models every supported source-prefixed identity", () => {
-    const isIdentity = S.is(ProcessStartIdentity);
-
     expect(ProcessIdentitySource.Options).toStrictEqual(["proc", "ps", "win"]);
     expect(ProcessIdentityStatus.Options).toStrictEqual(["alive", "dead", "unknown"]);
-    expect(isIdentity("proc:8241991")).toBe(true);
-    expect(isIdentity("ps:Thu Sep  3 12:00:00 2026")).toBe(true);
-    expect(isIdentity("win:638925552000000000")).toBe(true);
-    expect(isIdentity("8241991")).toBe(false);
-    expect(isIdentity("proc:")).toBe(false);
+    expect(isProcessStartIdentity("proc:8241991")).toBe(true);
+    expect(isProcessStartIdentity("ps:Thu Sep  3 12:00:00 2026")).toBe(true);
+    expect(isProcessStartIdentity("win:638925552000000000")).toBe(true);
+    expect(isProcessStartIdentity("8241991")).toBe(false);
+    expect(isProcessStartIdentity("proc:")).toBe(false);
   });
 
   it("parses proc stat field 22 after the final closing parenthesis", () => {
