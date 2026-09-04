@@ -15,7 +15,7 @@
     "audit": "bun run --if-present beep:audit",
     "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
     "beep:build": "tsc -p tsconfig.json",
-    "beep:check": "tsgo -p tsconfig.check.json && bun run beep:check:tests",
+    "beep:check": "tsgo -p tsconfig.check.json && tsc -p tsconfig.json --noEmit && bun run beep:check:tests",
     "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",
     "beep:lint": "biome check .",
     "beep:lint:fix": "biome check . --write",

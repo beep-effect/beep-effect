@@ -6,7 +6,8 @@
     "scripts",
     "test",
     "vitest.config.ts",
-    "../../../vitest.shared.ts"
+    "../../../vitest.shared.ts",
+    "../../../vitest.aliases.generated.json"
   ],
   "compilerOptions": {
     "lib": ["esnext"],

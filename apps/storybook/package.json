@@ -15,7 +15,7 @@
     "audit": "bun run --if-present beep:audit",
     "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
     "beep:build": "bun run storybook:build",
-    "beep:check": "tsgo -p tsconfig.check.json && tsc -p tsconfig.stories.json --noEmit",
+    "beep:check": "tsgo -p tsconfig.check.json && tsc -p tsconfig.json --noEmit && tsc -p tsconfig.stories.json --noEmit",
     "beep:lint": "sh -c 'biome check package.json postcss.config.mjs tsconfig.json tsconfig.stories.json vitest.config.ts vitest.storybook.config.ts vitest.storybook.setup.ts .storybook/ scripts/ \"$(git rev-parse --show-toplevel)\"/packages/foundation/ui-system/*/stories/'",
     "beep:lint:fix": "sh -c 'biome check package.json postcss.config.mjs tsconfig.json tsconfig.stories.json vitest.config.ts vitest.storybook.config.ts vitest.storybook.setup.ts .storybook/ scripts/ \"$(git rev-parse --show-toplevel)\"/packages/foundation/ui-system/*/stories/ --write'",
     "beep:test": "bunx --bun vitest run --passWithNoTests",
