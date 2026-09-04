@@ -561,6 +561,20 @@ const prCreateStep = (context: RepoRunContext, phase: RepoPlanStep["phase"] = "p
     resume: "never",
   });
 
+const prProvenanceStampStep = (context: RepoRunContext, phase: RepoPlanStep["phase"] = "publish"): RepoPlanStep =>
+  RepoPlanStep.make({
+    id: "publish:03-pr-provenance-stamp",
+    label: "publish:pr-provenance-stamp",
+    phase,
+    command: "gh",
+    args: ["pr", "edit", "<number>", "--body-file", "<run-artifacts>/pr-provenance-body.md"],
+    cwd: context.repoRoot,
+    scope: "repo",
+    mutability: "publish",
+    resume: "never",
+    verification: "registry-backed-provenance-footer",
+  });
+
 const monitorContextStep = (context: RepoRunContext): RepoPlanStep =>
   RepoPlanStep.make({
     id: "monitor:01-pr-context",
@@ -687,7 +701,7 @@ const publishSteps = (
     ? [
         headInstallPreflightStep(context, "publish"),
         pushStep(context),
-        ...(options.pr ? [prCreateStep(context)] : []),
+        ...(options.pr ? [prCreateStep(context), prProvenanceStampStep(context)] : []),
         ...(options.monitor ? monitorSteps(context) : []),
       ]
     : options.startPrEarly
@@ -696,7 +710,9 @@ const publishSteps = (
           commitStep(context, message, options),
           headInstallPreflightStep(context, "early-publish"),
           earlyPushStep(context),
-          ...(options.pr ? [prCreateStep(context, "early-publish")] : []),
+          ...(options.pr
+            ? [prCreateStep(context, "early-publish"), prProvenanceStampStep(context, "early-publish")]
+            : []),
           ...fullProofSteps(context, options.collectAll),
           ciParityStep(context),
           ...(options.monitor ? monitorSteps(context) : []),
@@ -709,7 +725,7 @@ const publishSteps = (
             : [...fullProofSteps(context, options.collectAll), ciParityStep(context)]),
           headInstallPreflightStep(context, "publish"),
           pushStep(context),
-          ...(options.pr ? [prCreateStep(context)] : []),
+          ...(options.pr ? [prCreateStep(context), prProvenanceStampStep(context)] : []),
           ...(options.monitor ? monitorSteps(context) : []),
         ];
 

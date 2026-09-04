@@ -10,7 +10,7 @@ import {
 } from "@beep/test-utils";
 import { A, O } from "@beep/utils";
 import { beforeAll, describe, expect, it } from "@effect/vitest";
-import { Cause, Context, Duration, Effect, Exit, Layer, pipe, Schedule, Scope } from "effect";
+import { Cause, Console, Context, Duration, Effect, Exit, Layer, pipe, Schedule, Scope } from "effect";
 import * as SqlClient from "effect/unstable/sql/SqlClient";
 import type { SqlTestHooks } from "@beep/test-utils";
 
@@ -23,6 +23,13 @@ const sharedConnectionUri = Bun.env.BEEP_TEST_DATABASE_URL;
 const hasSharedConnectionUri = sharedConnectionUri !== undefined && sharedConnectionUri !== "";
 let pgliteTestcontainersAvailable = false;
 const ContainerInspectTimeout = Duration.seconds(5);
+// The availability probe builds the PGLite image from its Dockerfile, which
+// pulls node:22-bookworm-slim and installs pglite on a cold runner; under a
+// slow registry that exceeds the old 45 s budget and every Testcontainers test
+// silently skipped. Give the probe the same budget as the tests it gates and
+// report why it gave up so the skip note is attributable.
+const PgliteProbeStartupTimeoutMs = 90_000;
+const PgliteProbeTimeoutMs = 120_000;
 // The shared external PGLite lane accepts one connection at a time, so under
 // CI load a scoped-layer provision can queue well past a minute.
 const SharedPgliteIntegrationTimeoutMs = 180_000;
@@ -40,8 +47,22 @@ beforeAll(() => {
   return Effect.runPromise(
     Effect.scoped(
       makePgliteTestcontainerResource({
-        startupTimeoutMs: 30_000,
-      }).pipe(Effect.timeoutOption(Duration.seconds(45)))
+        startupTimeoutMs: PgliteProbeStartupTimeoutMs,
+      }).pipe(
+        Effect.timeoutOption(Duration.millis(PgliteProbeTimeoutMs)),
+        Effect.tap((availability) =>
+          O.isNone(availability)
+            ? Console.warn(
+                `[sql-test] PGLite Testcontainers probe gave up after ${PgliteProbeTimeoutMs} ms; Testcontainers tests will skip.`
+              )
+            : Effect.void
+        ),
+        Effect.tapCause((cause) =>
+          Console.warn(
+            `[sql-test] PGLite Testcontainers probe failed; Testcontainers tests will skip.\n${Cause.pretty(cause)}`
+          )
+        )
+      )
     )
   ).then(
     (availability) => {
@@ -51,7 +72,7 @@ beforeAll(() => {
       pgliteTestcontainersAvailable = false;
     }
   );
-}, 60_000);
+}, PgliteProbeTimeoutMs + 30_000);
 
 const skipWhenNoSharedDatabase = (ctx: { readonly skip: (message?: string) => void }) =>
   Effect.sync(() => {

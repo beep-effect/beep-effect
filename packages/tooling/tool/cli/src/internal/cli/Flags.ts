@@ -125,6 +125,50 @@ export const aiMetricsDataRootFlag = Flag.string("data-root").pipe(
 );
 
 /**
+ * Environment-variable name used to override Yeet's workstation state root.
+ *
+ * **Example** (Build a Yeet state environment)
+ *
+ * ```ts
+ * import { yeetStateRootEnvVar } from "@beep/repo-cli/internal/cli/Flags"
+ *
+ * const environment = { [yeetStateRootEnvVar]: "/var/lib/beep/yeet" }
+ * console.log(environment.BEEP_YEET_STATE_ROOT) // "/var/lib/beep/yeet"
+ * ```
+ *
+ * @category flags
+ * @since 0.0.0
+ */
+export const yeetStateRootEnvVar = "BEEP_YEET_STATE_ROOT";
+
+/**
+ * Optional `--state-root` flag with {@link yeetStateRootEnvVar} as its configuration fallback.
+ *
+ * **Details**
+ *
+ * An explicit CLI value wins over the environment. When neither is supplied,
+ * registry code derives the XDG or home-local default.
+ *
+ * **Example** (Wire the state-root flag)
+ *
+ * ```ts
+ * import { yeetStateRootFlag } from "@beep/repo-cli/internal/cli/Flags"
+ *
+ * console.log(yeetStateRootFlag.kind) // "flag"
+ * ```
+ *
+ * @category flags
+ * @since 0.0.0
+ */
+export const yeetStateRootFlag = Flag.string("state-root").pipe(
+  Flag.withFallbackConfig(Config.string(yeetStateRootEnvVar)),
+  Flag.withDescription(
+    `Yeet state root, or ${yeetStateRootEnvVar}; defaults to \${XDG_STATE_HOME:-$HOME/.local/state}/beep/yeet`
+  ),
+  Flag.optional
+);
+
+/**
  * `--package` / `-p` flag selecting a workspace package.
  *
  * **Details**
