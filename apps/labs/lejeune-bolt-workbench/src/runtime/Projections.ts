@@ -101,7 +101,7 @@ export class ProjectionInput extends S.Class<ProjectionInput>($I`ProjectionInput
  * @category errors
  * @since 0.0.0
  */
-class ProjectionError extends S.TaggedError<ProjectionError>($I`ProjectionError`)(
+export class ProjectionError extends S.TaggedError<ProjectionError>($I`ProjectionError`)(
   "ProjectionError",
   {
     cause: S.optionalKey(S.Defect({ includeStack: true })),
@@ -366,7 +366,7 @@ export const buildProjectionSnapshot = Effect.fn("lejeune.projection.build")(fun
   const [pglite, duckdb, ontologyClasses] = yield* Effect.all([pgliteEffect, duckDbEffect, oxigraphEffect], {
     concurrency: 3,
   });
-  return yield* S.decodeUnknownEffect(ProjectionSnapshot)({
+  return yield* ProjectionSnapshot.decodeUnknownEffect({
     citations: duckdb.citations,
     documentCount: duckdb.documentCount,
     documentDigests: duckdb.documentDigests,
@@ -405,7 +405,7 @@ export const verifyDurableProjectionSnapshot = Effect.fn("lejeune.projection.ver
     ],
     { concurrency: 2 }
   );
-  const actual = yield* S.decodeUnknownEffect(ProjectionSnapshot)({
+  const actual = yield* ProjectionSnapshot.decodeUnknownEffect({
     citations: duckdb.citations,
     documentCount: duckdb.documentCount,
     documentDigests: duckdb.documentDigests,

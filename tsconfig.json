@@ -2125,6 +2125,12 @@
         "./packages/foundation/modeling/schema/src/Version.ts"
       ],
       "@beep/ui/Version": ["./packages/foundation/ui-system/ui/src/Version.ts"]
-    }
+    },
+    "plugins": [
+      {
+        "name": "@effect/language-service",
+        "noExternal": true
+      }
+    ]
   }
 }

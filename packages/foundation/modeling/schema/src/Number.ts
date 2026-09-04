@@ -148,7 +148,8 @@ export const isNonPositive = S.isLessThanOrEqualTo(0);
  * @category validation
  * @since 0.0.0
  */
-export const NonNegNum = S.Finite.check(isNonNegative).pipe(
+export const NonNegNum = S.Finite.pipe(
+  S.check(isNonNegative),
   $I.annoteSchema("NonNegNum", {
     description: "A non-negative number (zero or greater)",
   })
@@ -188,26 +189,25 @@ export type NonNegNum = typeof NonNegNum.Type;
  * @category validation
  * @since 0.0.0
  */
-export const NonNegativeInt = S.Int.pipe(S.brand("Int"))
-  .check(
-    S.isFinite({
-      message: "Expected a finite integer",
-      description: "A finite integer",
-    })
-  )
-  .pipe(S.brand("NonNegativeInt"))
-  .check(
-    isNonNegative.annotate({
-      message: "Expected a non-negative integer",
-      description: "A non-negative integer",
-    })
-  )
-  .pipe(
-    $I.annoteSchema("NonNegativeInt", {
-      description: "A non-negative integer",
-    }),
-    SchemaUtils.withCodecStatics(["decodeUnknownOption", "is"])
-  );
+export const NonNegativeInt = S.Int.pipe(
+  S.check(
+    S.makeFilterGroup([
+      S.isFinite({
+        message: "Expected a finite integer",
+        description: "A finite integer",
+      }),
+      isNonNegative.annotate({
+        message: "Expected a non-negative integer",
+        description: "A non-negative integer",
+      }),
+    ])
+  ),
+  S.brand("NonNegativeInt"),
+  $I.annoteSchema("NonNegativeInt", {
+    description: "A non-negative integer",
+  }),
+  SchemaUtils.withCodecStatics(["decodeUnknownOption", "is"])
+);
 
 /**
  * Type for {@link NonNegativeInt}.
@@ -226,3 +226,11 @@ export const NonNegativeInt = S.Int.pipe(S.brand("Int"))
  * @since 0.0.0
  */
 export type NonNegativeInt = typeof NonNegativeInt.Type;
+
+export const FiniteFromString = S.FiniteFromString.pipe(SchemaUtils.withCodecStatics(["decodeEffect"]));
+
+export type FiniteFromString = typeof FiniteFromString.Type;
+
+export declare namespace FiniteFromString {
+  export type Encoded = typeof FiniteFromString.Encoded;
+}

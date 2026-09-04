@@ -69,7 +69,8 @@ export const Sha256Hex = S.String.check(Sha256HexChecks)
     S.brand("Sha256Hex"),
     $I.annoteSchema("Sha256Hex", {
       description: "A canonical lowercase SHA-256 hex digest.",
-    })
+    }),
+    SchemaUtils.withCodecStatics(["encodeEffect", "decodeEffect"])
   );
 
 /**

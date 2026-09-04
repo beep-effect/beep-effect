@@ -133,4 +133,6 @@ export class ModelIdentity extends S.Class<ModelIdentity>($I`ModelIdentity`)(
   $I.annote("ModelIdentity", {
     description: "Pinned provider, model name, revision, artifact, task role, and embedding dimension when applicable.",
   })
-) {}
+) {
+  static readonly encodeEffect = S.encodeEffect(ModelIdentity);
+}

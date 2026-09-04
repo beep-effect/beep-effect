@@ -32,7 +32,7 @@ const ProviderRecordingIntegrityIssue = LiteralKit([
 ]);
 
 /** Typed failure raised when a persisted provider recording cannot be trusted for offline replay. @category errors @since 0.0.0 */
-class ProviderRecordingIntegrityError extends S.TaggedError<ProviderRecordingIntegrityError>(
+export class ProviderRecordingIntegrityError extends S.TaggedError<ProviderRecordingIntegrityError>(
   $I`ProviderRecordingIntegrityError`
 )(
   "ProviderRecordingIntegrityError",
@@ -72,7 +72,7 @@ export const verifyProviderRecording = Effect.fn("lejeune.provider.verify_record
   recording: ProviderRecording,
   sourceText: string
 ) {
-  const candidateJson = yield* S.encodeEffect(ProviderCandidateListFromJsonString)(recording.candidates).pipe(
+  const candidateJson = yield* ProviderCandidateListFromJsonString.encodeEffect(recording.candidates).pipe(
     Effect.mapError((cause) =>
       providerIntegrityError(
         "candidate-encoding",
@@ -142,7 +142,7 @@ export const verifyFrozenProviderRecording = Effect.fn("lejeune.provider.verify_
       "The frozen provider recording must be grounded in the exact canonical RFQ A source document."
     );
   }
-  return yield* S.decodeEffect(FrozenProviderRecording)(verified).pipe(
+  return yield* FrozenProviderRecording.decodeEffect(verified).pipe(
     Effect.mapError((cause) =>
       providerIntegrityError(
         "frozen-contract",

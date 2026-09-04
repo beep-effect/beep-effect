@@ -9,7 +9,8 @@ import { EcfrApi } from "@beep/ecfr/contract";
 import { GovinfoApi } from "@beep/govinfo/domain/contracts/Api";
 import { PclHttpApi } from "@beep/pacer/Pcl.api";
 import { QaCollectorApi } from "@beep/qa-capture/Collector.api";
-import { Effect, Path } from "effect";
+import * as Effect from "effect/Effect";
+import * as Path from "effect/Path";
 import { CatalogEntry, CatalogEntryMeta, CatalogSlug, CatalogSource, makeContractSource } from "./Catalog.models.ts";
 
 /**

@@ -5,10 +5,9 @@
  * @since 0.0.0
  */
 
-import { PosInt } from "@beep/schema";
+import { FiniteFromString, PosInt } from "@beep/schema";
 import { Effect, pipe } from "effect";
 import * as A from "effect/Array";
-import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { AdmissionPolicyParams, AdmissionPriority, AdmissionTokenWeights, PolicyDecodeError } from "./Schemas.ts";
 
@@ -34,10 +33,10 @@ const decodePositiveInteger = Effect.fnUntraced(function* (
   raw: string,
   label: string
 ): Effect.fn.Return<PosInt, PolicyDecodeError> {
-  const finite = yield* S.decodeEffect(S.FiniteFromString)(raw).pipe(
+  const finite = yield* FiniteFromString.decodeEffect(raw).pipe(
     Effect.mapError(() => schemaFailure(`A-Box value "${label}" was not a finite number.`))
   );
-  return yield* S.decodeEffect(PosInt)(finite).pipe(
+  return yield* PosInt.decodeEffect(finite).pipe(
     Effect.mapError(() => schemaFailure(`A-Box value "${label}" was not a positive integer.`))
   );
 });
@@ -45,7 +44,7 @@ const decodePositiveInteger = Effect.fnUntraced(function* (
 const decodePriority = Effect.fnUntraced(function* (
   raw: string
 ): Effect.fn.Return<AdmissionPriority, PolicyDecodeError> {
-  return yield* S.decodeUnknownEffect(AdmissionPriority)(raw).pipe(
+  return yield* AdmissionPriority.decodeUnknownEffect(raw).pipe(
     Effect.mapError(() => schemaFailure("A-Box declared an unknown admission priority."))
   );
 });

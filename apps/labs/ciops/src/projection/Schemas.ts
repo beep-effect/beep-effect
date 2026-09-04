@@ -7,6 +7,7 @@
 
 import { $CiopsId } from "@beep/identity/packages";
 import { LiteralKit, NonNegativeInt, PosInt } from "@beep/schema";
+import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Effect, HashMap, HashSet } from "effect";
 import * as S from "effect/Schema";
 
@@ -58,7 +59,8 @@ export type AdmissionWorkKind = typeof AdmissionWorkKind.Type;
 export const AdmissionPriority = LiteralKit(["publish", "verify"]).pipe(
   $I.annoteSchema("AdmissionPriority", {
     description: "Priority class attached to a pending admission request.",
-  })
+  }),
+  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
 );
 
 /**
