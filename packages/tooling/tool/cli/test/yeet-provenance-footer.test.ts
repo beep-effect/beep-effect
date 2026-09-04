@@ -51,11 +51,26 @@ const unsupportedGhPrViewField = (args: ReadonlyArray<string>): O.Option<string>
     O.flatMap((index) => A.get(args, index + 1)),
     O.flatMap((fields) => A.findFirst(Str.split(fields, ","), (field) => !HashSet.has(GhPrViewJsonFields, field)))
   );
-const ghUnknownJsonField = (field: string) => ({
+interface GhCaptureResult {
+  readonly exitCode: number;
+  readonly output: string;
+  readonly truncated: boolean;
+}
+const ghUnknownJsonField = (field: string): GhCaptureResult => ({
   exitCode: 1,
   output: `Unknown JSON field: "${field}"\nAvailable fields:\n  body\n  createdAt\n  updatedAt`,
   truncated: false,
 });
+// Answers a `gh pr view --json …` call the way gh does: refuse an unsupported
+// field before serving the snapshot the fake would otherwise return.
+const ghPrView = <E, R>(
+  args: ReadonlyArray<string>,
+  snapshot: Effect.Effect<GhCaptureResult, E, R>
+): Effect.Effect<GhCaptureResult, E, R> =>
+  O.match(unsupportedGhPrViewField(args), {
+    onNone: () => snapshot,
+    onSome: (field) => Effect.succeed(ghUnknownJsonField(field)),
+  });
 const encodeGhBody = (body: string, updatedAt: string = editedAt): string =>
   Result.getOrThrow(S.encodeUnknownResult(S.fromJsonString(GhBody))({ body, updatedAt }));
 const encodeGhBodyEdits = (nodes: ReadonlyArray<GhBodyEdit>): string =>
@@ -131,11 +146,14 @@ const makeGhRunner = Effect.fn("test.makeGhRunner")(function* (
     _env: Record<string, string | undefined> | undefined = undefined
   ) {
     if (args[1] === "view") {
-      const unsupported = unsupportedGhPrViewField(args);
-      if (O.isSome(unsupported)) return ghUnknownJsonField(unsupported.value);
-      const view = yield* Ref.getAndUpdate(views, (count) => count + 1);
-      const current = view === 0 ? initialBody : view === 1 ? freshBody : afterWrite(yield* Ref.get(written));
-      return { exitCode: 0, output: encodeGhBody(current, freshUpdatedAt), truncated: false };
+      return yield* ghPrView(
+        args,
+        Effect.gen(function* () {
+          const view = yield* Ref.getAndUpdate(views, (count) => count + 1);
+          const current = view === 0 ? initialBody : view === 1 ? freshBody : afterWrite(yield* Ref.get(written));
+          return { exitCode: 0, output: encodeGhBody(current, freshUpdatedAt), truncated: false };
+        })
+      );
     }
     if (args[1] === "graphql") {
       const read = yield* Ref.getAndUpdate(historyReads, (count) => count + 1);
@@ -198,9 +216,10 @@ const makePublishGhRunner = Effect.fn("test.makePublishGhRunner")(function* (fs:
       return { exitCode: 0, output: "https://github.com/beep-effect/beep-effect/pull/42", truncated: false };
     }
     if (args[1] === "view") {
-      const unsupported = unsupportedGhPrViewField(args);
-      if (O.isSome(unsupported)) return ghUnknownJsonField(unsupported.value);
-      return { exitCode: 0, output: encodeGhBody(yield* Ref.get(body)), truncated: false };
+      return yield* ghPrView(
+        args,
+        Effect.map(Ref.get(body), (current) => ({ exitCode: 0, output: encodeGhBody(current), truncated: false }))
+      );
     }
     if (args[1] === "graphql") {
       return {
