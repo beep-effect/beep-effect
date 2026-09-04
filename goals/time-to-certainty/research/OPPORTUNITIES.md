@@ -199,13 +199,14 @@ session/machine ids, quote only the minimal identifying error text.
   cancels superseded runs on push. The rule now sits in every lane brief and belongs in the lane
   launcher's standing instructions.
 
-## 2026-09-03 — Main's lint-policy lane went red on a runner-memory ceiling, and every PR inherited it
+## 2026-09-03 — Main's lint-policy lane went red on a per-shard heap cap, and every PR inherited it
 
 - **Doing:** driving #1005 and #1006 to merge-ready late in the evening.
 - **Evidence:** `Heavy / Lint Policy` failed on main (c78ee7471a and later) inside `lint deprecated-apis`
-  with `FATAL ERROR: Ineffective mark-compacts near heap limit … JavaScript heap out of memory`; the
-  step runs 25 eslint shards four at a time, each allowed an 8 GB heap, on a 16 GB hosted runner. The
-  PR-side capture bound hid the OOM text, so the PR logs showed only an exit code after 337 seconds.
-- **Would have prevented it:** a shard concurrency that fits the runner (two 8 GB heaps), and a lane
-  that prints the failing shard name before its exit code so an inherited red is attributable from
-  the PR log alone.
+  with `FATAL ERROR: Ineffective mark-compacts near heap limit … JavaScript heap out of memory` at the
+  8 GiB V8 cap the step sets per eslint shard, on the 64 GiB heavy runner whose profile already
+  records deprecated shards needing 12–16 GiB. The PR-side capture bound hid the OOM text, so PR logs
+  showed only an exit code after 337 seconds, and the first fix attempt wrongly lowered the fanout.
+- **Would have prevented it:** a per-shard heap cap sized from the recorded shard profile (16 GiB),
+  and a lane that surfaces the failing shard and its exit code within the capture bound so an
+  inherited red is attributable from the PR log alone.
