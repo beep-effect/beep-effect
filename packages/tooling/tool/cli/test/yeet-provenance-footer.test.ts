@@ -30,7 +30,7 @@ import { makeRecord, PlatformLayer, repository } from "./yeet-pr-fixtures.ts";
 import type { YeetExecutedStep } from "@beep/repo-cli/test/Yeet";
 
 const footer = renderPrProvenance(toPublicPrProvenance([makeRecord()], O.some(42), true));
-const GhBody = S.Struct({ body: S.String, createdAt: S.String, lastEditedAt: S.NullOr(S.String) });
+const GhBody = S.Struct({ body: S.String, updatedAt: S.String });
 const GhBodyEdit = S.Struct({ editedAt: S.String, editor: S.NullOr(S.Struct({ login: S.String })), diff: S.String });
 const GhBodyEditsDocument = S.Struct({
   data: S.Struct({
@@ -38,10 +38,9 @@ const GhBodyEditsDocument = S.Struct({
   }),
 });
 type GhBodyEdit = typeof GhBodyEdit.Type;
-const createdAt = "2026-09-03T12:00:00Z";
 const editedAt = "2026-09-03T12:01:00Z";
-const encodeGhBody = (body: string, lastEditedAt: string | null = editedAt): string =>
-  Result.getOrThrow(S.encodeUnknownResult(S.fromJsonString(GhBody))({ body, createdAt, lastEditedAt }));
+const encodeGhBody = (body: string, updatedAt: string = editedAt): string =>
+  Result.getOrThrow(S.encodeUnknownResult(S.fromJsonString(GhBody))({ body, updatedAt }));
 const encodeGhBodyEdits = (nodes: ReadonlyArray<GhBodyEdit>): string =>
   Result.getOrThrow(
     S.encodeUnknownResult(S.fromJsonString(GhBodyEditsDocument))({
@@ -101,7 +100,7 @@ const makeGhRunner = Effect.fn("test.makeGhRunner")(function* (
       editor: { login: "yeet" },
     },
   ],
-  freshLastEditedAt: string | null = editedAt
+  freshUpdatedAt: string = editedAt
 ) {
   const views = yield* Ref.make(0);
   const writes = yield* Ref.make(0);
@@ -117,7 +116,7 @@ const makeGhRunner = Effect.fn("test.makeGhRunner")(function* (
     if (args[1] === "view") {
       const view = yield* Ref.getAndUpdate(views, (count) => count + 1);
       const current = view === 0 ? initialBody : view === 1 ? freshBody : afterWrite(yield* Ref.get(written));
-      return { exitCode: 0, output: encodeGhBody(current, freshLastEditedAt), truncated: false };
+      return { exitCode: 0, output: encodeGhBody(current, freshUpdatedAt), truncated: false };
     }
     if (args[1] === "graphql") {
       const read = yield* Ref.getAndUpdate(historyReads, (count) => count + 1);
@@ -142,7 +141,7 @@ const runStamp = Effect.fn("test.runStamp")(function* (
   freshBody: string,
   afterWrite?: (body: string) => string,
   editHistory?: (writtenBodies: ReadonlyArray<string>, read: number) => ReadonlyArray<GhBodyEdit>,
-  freshLastEditedAt?: string | null
+  freshUpdatedAt?: string
 ) {
   const fs = yield* FileSystem.FileSystem;
   const root = yield* fs.makeTempDirectory();
@@ -152,7 +151,7 @@ const runStamp = Effect.fn("test.runStamp")(function* (
     Effect.provideService(ConfigProvider.ConfigProvider, provider)
   );
   yield* registry.append(makeRecord());
-  const runner = yield* makeGhRunner(fs, initialBody, freshBody, afterWrite, editHistory, freshLastEditedAt);
+  const runner = yield* makeGhRunner(fs, initialBody, freshBody, afterWrite, editHistory, freshUpdatedAt);
   yield* ensureProvenanceFooter(context(root), repository, 42, runner.capture).pipe(
     Effect.provideService(ConfigProvider.ConfigProvider, provider)
   );
@@ -502,7 +501,7 @@ describe("Yeet provenance footer splice", () => {
     }).pipe(provideScopedLayer(PlatformLayer))
   );
 
-  it.effect("uses createdAt as the baseline when lastEditedAt is null", () =>
+  it.effect("ignores an edit older than the snapshot's updatedAt whose body the snapshot already carries", () =>
     Effect.gen(function* () {
       let warnings = A.empty<unknown>();
       const currentConsole = yield* Console.Console;
@@ -512,12 +511,50 @@ describe("Yeet provenance footer splice", () => {
           warnings = A.appendAll(warnings, args);
         },
       };
-      const result = yield* runStamp("Original body", "Original body", undefined, undefined, null).pipe(
-        Effect.provideService(Console.Console, warningConsole)
-      );
+      const result = yield* runStamp(
+        "Original body",
+        "Original body",
+        undefined,
+        (bodies) => [
+          { diff: "Original body", editedAt: "2026-09-03T12:00:30Z", editor: { login: "alice" } },
+          { diff: O.getOrElse(A.head(bodies), () => ""), editedAt: "2026-09-03T12:03:00Z", editor: { login: "yeet" } },
+        ],
+        "2026-09-03T12:01:00Z"
+      ).pipe(Effect.provideService(Console.Console, warningConsole));
       expect(result.writes).toBe(1);
       expect(result.historyReads).toBe(1);
       expect(warnings).toHaveLength(0);
+    }).pipe(provideScopedLayer(PlatformLayer))
+  );
+
+  it.effect("re-splices an edit stamped in the same second as the snapshot's updatedAt", () =>
+    Effect.gen(function* () {
+      const result = yield* runStamp(
+        "Original body",
+        "Original body",
+        undefined,
+        (bodies, read) => {
+          const firstWrite = O.getOrElse(A.head(bodies), () => "");
+          const history: ReadonlyArray<GhBodyEdit> = [
+            { diff: "Edited in the snapshot's second", editedAt: "2026-09-03T12:01:00Z", editor: { login: "bob" } },
+            { diff: firstWrite, editedAt: "2026-09-03T12:03:00Z", editor: { login: "yeet" } },
+          ];
+          return read === 0
+            ? history
+            : [
+                ...history,
+                {
+                  diff: O.getOrElse(A.get(bodies, 1), () => ""),
+                  editedAt: "2026-09-03T12:04:00Z",
+                  editor: { login: "yeet" },
+                },
+              ];
+        },
+        "2026-09-03T12:01:00Z"
+      );
+      expect(result.writes).toBe(2);
+      expect(result.body).toContain("Edited in the snapshot's second");
+      expect(result.body).toContain("<!-- yeet-provenance:start -->");
     }).pipe(provideScopedLayer(PlatformLayer))
   );
 

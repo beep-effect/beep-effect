@@ -46,14 +46,17 @@ class GhPrBody extends S.Class<GhPrBody>($I`GhPrBody`)(
   $I.annote("GhPrBody", { description: "Narrow gh pr view response carrying the body." })
 ) {}
 
+// `gh pr view --json` exposes `updatedAt` but not `lastEditedAt` (gh 2.99).
+// Any body edit bumps `updatedAt`, so it is a sound inclusive baseline: an
+// edit that lands after this snapshot is timestamped at or after it, and the
+// snapshot's own body is already a known body for the reconcile.
 class GhPrBodySnapshot extends S.Class<GhPrBodySnapshot>($I`GhPrBodySnapshot`)(
   {
     body: S.NullOr(S.String),
-    createdAt: S.DateTimeUtcFromString,
-    lastEditedAt: S.OptionFromNullOr(S.DateTimeUtcFromString),
+    updatedAt: S.DateTimeUtcFromString,
   },
   $I.annote("GhPrBodySnapshot", {
-    description: "Fresh pull-request body plus the GitHub edit timestamp used as a race-detection baseline.",
+    description: "Fresh pull-request body plus the GitHub update timestamp used as a race-detection baseline.",
   })
 ) {}
 
@@ -125,11 +128,7 @@ const readPrBodySnapshot = Effect.fn("ProvenanceFooter.readPrBodySnapshot")(func
   context: RepoRunContext,
   prNumber: PrNumber
 ) {
-  const viewed = yield* capture(
-    "gh",
-    ["pr", "view", `${prNumber}`, "--json", "body,createdAt,lastEditedAt"],
-    context.repoRoot
-  );
+  const viewed = yield* capture("gh", ["pr", "view", `${prNumber}`, "--json", "body,updatedAt"], context.repoRoot);
   if (viewed.exitCode !== 0) {
     return yield* YeetCommandError.make({ message: viewed.output, exitCode: viewed.exitCode });
   }
@@ -627,7 +626,7 @@ export const ensureProvenanceFooter = Effect.fn("ProvenanceFooter.ensure")(funct
     const next = splicePrProvenanceFooter(freshBody, rendered);
     if (Str.Equivalence(next, freshBody)) return O.none<string>();
     const bodyPath = yield* runArtifactPathForContext(context, "pr-provenance-body.md");
-    const baseline = O.getOrElse(fresh.lastEditedAt, () => fresh.createdAt);
+    const baseline = fresh.updatedAt;
     return yield* reconcilePrBodyAfterWrite(
       capture,
       context,
