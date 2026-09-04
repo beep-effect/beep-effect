@@ -109,6 +109,7 @@ const config = {
     "packages/drivers/openai/package.json",
     "apps/todox/package.json",
     "packages/drivers/box-provisioning/package.json",
+    "packages/drivers/freshbooks/package.json",
   ],
   customTypes: {
     catalog: {

@@ -390,10 +390,10 @@ describe("CI lane partitions", () => {
         weightSeconds: partition.weightSeconds,
       }))
     ).toEqual([
-      { id: "lint-a", packages: 67, weightSeconds: 1132 },
+      { id: "lint-a", packages: 68, weightSeconds: 1132 },
       { id: "lint-b", packages: 67, weightSeconds: 1134 },
       { id: "repo-cli", packages: 1, weightSeconds: 879 },
-      { id: "unit-a", packages: 66, weightSeconds: 1214 },
+      { id: "unit-a", packages: 67, weightSeconds: 1214 },
       { id: "unit-b", packages: 67, weightSeconds: 1214 },
     ]);
   });
@@ -626,7 +626,7 @@ describe("CI lane partitions", () => {
 
         expect(A.length(A.dedupe(assignments))).toBe(A.length(assignments));
         expect(A.sort(assignments, Order.String)).toEqual(taskPackageNames);
-        expect(proof.selectedTaskCount).toBe(134);
+        expect(proof.selectedTaskCount).toBe(135);
       }
     }).pipe(provideScopedLayer(LiveRepoLayer))
   );
@@ -716,7 +716,7 @@ describe("partitioned CI lane execution", () => {
           expect(execution).not.toContain("--affected");
 
           const output = A.join(A.filter(yield* TestConsole.logLines, P.isString), "\n");
-          expect(output).toContain("lint partition union proved: 134 executable tasks, 134 selected, 67 in lint-a");
+          expect(output).toContain("lint partition union proved: 135 executable tasks, 135 selected, 68 in lint-a");
         })
       );
     }).pipe(provideScopedLayer(PartitionLaneLayer))
@@ -762,7 +762,7 @@ describe("partitioned CI lane execution", () => {
           expect(firstOf(commands)).toContain("--affected --filter=!./apps/labs/** --only --dry-run=json");
 
           const output = A.join(A.filter(yield* TestConsole.logLines, P.isString), "\n");
-          expect(output).toContain("test-unit partition union proved: 134 executable tasks, 1 selected, 0 in repo-cli");
+          expect(output).toContain("test-unit partition union proved: 135 executable tasks, 1 selected, 0 in repo-cli");
           expect(output).toContain("test-unit repo-cli: partition has no selected tasks (skipped)");
         })
       );
