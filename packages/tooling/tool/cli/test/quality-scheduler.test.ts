@@ -582,6 +582,23 @@ const fileSystemWithReadUnavailableAfterFirst = Effect.fnUntraced(function* (
   });
 });
 
+const fileSystemWithLostJournalReapClaim = Effect.fnUntraced(function* (fs: FileSystem.FileSystem, lossAtRead: number) {
+  const adopterReads = yield* Ref.make(0);
+  const fileSystem = FileSystem.FileSystem.of({
+    ...fs,
+    readFileString: Effect.fn("FileSystem.FileSystem.readFileString")(function* (target, encoding) {
+      if (Str.includes(".adopt-")(target)) {
+        const read = yield* Ref.updateAndGet(adopterReads, (count) => count + 1);
+        if (read === lossAtRead) {
+          yield* fs.remove(target, { force: true });
+        }
+      }
+      return yield* fs.readFileString(target, encoding);
+    }),
+  });
+  return { adopterReads, fileSystem };
+});
+
 describe("quality-scheduler", () => {
   it.effect("reads the live memory inputs used by the scheduler capacity model", () =>
     Effect.gen(function* () {
@@ -1223,7 +1240,7 @@ describe("quality-scheduler", () => {
   it("fences every destructive reap step when claim ownership is lost", () =>
     Effect.runPromise(
       Effect.gen(function* () {
-        for (const lossAtRead of A.make(1, 2, 3, 4)) {
+        for (const lossAtRead of A.make(1, 2, 4)) {
           const gibRef = yield* Ref.make(50);
           yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
             Effect.gen(function* () {
@@ -1231,32 +1248,48 @@ describe("quality-scheduler", () => {
               const path = yield* Path.Path;
               const lockPath = path.join(tempRoot.root, `claim-loss-${lossAtRead}.lock`);
               const observedToken = `${DEAD_PID}:claim-loss-${lossAtRead}`;
-              const adopterReads = yield* Ref.make(0);
               yield* fs.makeDirectory(tempRoot.root, { recursive: true, mode: 0o700 });
               yield* fs.writeFileString(lockPath, observedToken);
-              const claimLosingFileSystem = FileSystem.FileSystem.of({
-                ...fs,
-                readFileString: Effect.fn("FileSystem.FileSystem.readFileString")(function* (target, encoding) {
-                  if (Str.includes(".adopt-")(target)) {
-                    const read = yield* Ref.updateAndGet(adopterReads, (count) => count + 1);
-                    if (read === lossAtRead) {
-                      yield* fs.remove(target, { force: true });
-                    }
-                  }
-                  return yield* fs.readFileString(target, encoding);
-                }),
-              });
+              const claimLoss = yield* fileSystemWithLostJournalReapClaim(fs, lossAtRead);
 
               expect(
                 yield* acquireJournalFileLock(lockPath, `${process.pid}:claim-loss-contender`, 1).pipe(
-                  Effect.provideService(FileSystem.FileSystem, claimLosingFileSystem)
+                  Effect.provideService(FileSystem.FileSystem, claimLoss.fileSystem)
                 )
               ).toBe(false);
 
-              expect(yield* Ref.get(adopterReads)).toBe(lossAtRead);
+              expect(yield* Ref.get(claimLoss.adopterReads)).toBe(lossAtRead);
             })
           );
         }
+      })
+    ));
+
+  it("retains the reclaimed tombstone when ownership is lost before completion", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const lockPath = path.join(tempRoot.root, "claim-lost-before-completion.lock");
+            const observedToken = `${DEAD_PID}:claim-lost-before-completion`;
+            yield* fs.makeDirectory(tempRoot.root, { recursive: true, mode: 0o700 });
+            yield* fs.writeFileString(lockPath, observedToken);
+            const claimLoss = yield* fileSystemWithLostJournalReapClaim(fs, 3);
+
+            expect(
+              yield* acquireJournalFileLock(lockPath, `${process.pid}:claim-loss-contender`, 1).pipe(
+                Effect.provideService(FileSystem.FileSystem, claimLoss.fileSystem)
+              )
+            ).toBe(false);
+
+            expect(yield* Ref.get(claimLoss.adopterReads)).toBe(3);
+            expect(yield* fs.exists(lockPath)).toBe(false);
+            expect(A.filter(yield* fs.readDirectory(tempRoot.root), Str.includes(".tombstone-"))).toHaveLength(1);
+          })
+        );
       })
     ));
 
