@@ -579,3 +579,22 @@ observed only through incidental cross-package execution is not reproducible in
 the lane that enforces it. The remediation should also distinguish a base-pinned
 PR lane from a baseline-authoring lane instead of recommending an adjustment
 that the current PR comparison cannot consume.
+
+## 2026-09-03 — test-utils coverage depended on a local Docker daemon
+
+Lived while closing PR #992 after the hosted coverage lane measured
+`SqlTest.ts` at 53.76% lines and 34.1% functions against 66.3% and 46.51%
+floors. The package had no source diff, and an ordinary filtered local run
+reproduced the floors exactly. Repeating the package under the hosted Node 24
+environment with Docker forced unavailable reproduced the regression: five
+coverage-mode SQLite cases were intentionally skipped, the external database
+was unconfigured, and seven container/external cases skipped. The committed
+floor therefore depended on successful workstation Testcontainers execution.
+A deterministic transport double plus a Docker-free in-process hook test
+restored every floor with the daemon unavailable; the baseline was not lowered.
+
+What would have prevented it: require baseline writers to run with optional
+database and container transports explicitly disabled, or record those
+capabilities in the baseline provenance and reject non-portable raises. A
+package coverage floor must be attainable in the hosted lane without inheriting
+the baseline author's local infrastructure.
