@@ -232,3 +232,29 @@ session/machine ids, quote only the minimal identifying error text.
   main's #1003 squash because the lane's range began at this branch's older merge base.
 - **Would have prevented it:** validate server-generated squash messages before merge and have the
   PR lane lint only commits introduced by the pull request rather than new commits from its base.
+
+## 2026-09-03 — Yeet monitor requested a removed GitHub CLI field
+
+- **Doing:** monitoring PR #1006 at its first exact-head hosted event.
+- **Evidence:** `bun run beep yeet monitor --watch --until-event` warned that the PR provenance
+  snapshot requested unknown JSON field `lastEditedAt`; the installed GitHub CLI listed
+  `updatedAt` but not `lastEditedAt`. The watcher continued and recorded the check event.
+- **Would have prevented it:** derive the edit timestamp from a GitHub CLI field supported by the
+  pinned workstation version, or capability-probe the field list before building the query.
+
+## 2026-09-03 — Escaped newlines collapsed a commit body into one overlong line
+
+- **Doing:** creating the signed review-fix commit for PR #1006.
+- **Evidence:** the commit-message transport preserved `\\n` literally and commitlint rejected the
+  result with `body's lines must not be longer than 100 characters`; no commit was created.
+- **Would have prevented it:** pass each paragraph through a separate `git commit -m` argument or a
+  file-backed message so shell transport cannot turn paragraph separators into literal text.
+
+## 2026-09-03 — Signed-commit verification reported a false unsigned result
+
+- **Doing:** confirming the review-fix commit met the station's signed-commit rule before push.
+- **Evidence:** `git log --show-signature` reported that `gpg.ssh.allowedSignersFile` was not
+  configured and then printed `No signature`, while the commit object contained an SSH `gpgsig`
+  block.
+- **Would have prevented it:** configure a repository-safe SSH allowed-signers file, or make the
+  verification command distinguish an untrusted/unverifiable signature from an absent signature.

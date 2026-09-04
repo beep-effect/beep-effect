@@ -217,6 +217,11 @@ const githubCheckLaneWaves = (lanes: ReadonlyArray<GithubCheckLaneSpec>): Readon
     A.getSomes
   );
 
+const githubCheckOrderedLaneWaves = (
+  lanes: ReadonlyArray<GithubCheckLaneSpec>
+): ReadonlyArray<GithubCheckLaneWaveSpec> =>
+  A.map(lanes, (lane) => GithubCheckLaneWaveSpec.make({ lanes: [lane], wave: lane.wave }));
+
 /**
  * Command-internal GitHub check lane constructors.
  *
@@ -233,6 +238,7 @@ const githubCheckLaneWaves = (lanes: ReadonlyArray<GithubCheckLaneSpec>): Readon
  */
 export const githubCheckLanePlan = {
   bunRunLane,
+  githubCheckOrderedLaneWaves,
   githubCheckLane,
   githubCheckLaneWaves,
   repoCliLane,

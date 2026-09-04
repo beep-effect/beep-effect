@@ -60,7 +60,11 @@ orchestrator owns schemas, contracts, and judgment.
       separately with the failing variable named — done 2026-09-03 (PR #953 merged as 484e24c2e9:
       the secret resolver receives only the cache quad, unrelated references cannot block remote
       reads, the quad still fails closed, and the health probe names failing variables only).
-- [ ] B3 cheap precise gates first, wave fails immediately; ordering seeded from A1.
+- [~] B3 cheap precise gates first, wave fails immediately — implemented in PR #1006 with the
+      schema-backed `gate-order/v1` A1/A4 seed, policy/preflight-first `WaveOrder` service,
+      early stop for every red not explicitly classified as imprecise, durable
+      `not-run-early-stop` facts, and the default-off `--no-fail-fast` escape hatch; awaiting
+      hosted exact-head proof before completion.
 - [ ] B5 detached durable proof jobs in their own systemd user scope with inbox completion.
 - [x] B6 lease and submitter death journaled as admission events — completed 2026-09-03 (PR #1005):
       rows landed in PR #964, emission was gated behind the unknown-row preservation rollout in PR
