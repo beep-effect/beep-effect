@@ -699,12 +699,16 @@ held a five-token merged-preview lease, but this lint lane was not admitted
 through the scheduler and launched its own four-way shard fan-out. Retrying the
 wrapper with a larger heap still left its ESLint child at the 8 GiB ceiling;
 running that exact failed shard directly with a confirmed 16 GiB heap passed
-without a diagnostic.
+without a diagnostic. The exact hosted head then reproduced the same
+`packages/tooling` heap failure, making the resource defect a merge blocker
+rather than a workstation-only limitation. The immediate repair split that
+root into its four existing first-level tooling families so no ESLint process
+has to construct the entire tooling program at once.
 
-What would have prevented it: split the oversized `packages/tooling` shard,
-admit the full lint lane through the shared resource envelope, and size both
-shard concurrency and per-process heap from that lease. A follow-up PR should
-also expose a validated concurrency control instead of hard-coding four workers
-and avoid overriding a caller-supplied larger heap for child ESLint processes.
-A repository policy scan should report a source finding or a typed
+What would have prevented it: shard by bounded program size before enforcing
+the lane. A follow-up PR should admit the full lint lane through the shared
+resource envelope, size both shard concurrency and per-process heap from that
+lease, expose a validated concurrency control instead of hard-coding four
+workers, and avoid overriding a caller-supplied larger heap for child ESLint
+processes. A repository policy scan should report a source finding or a typed
 resource-exhaustion result, not conflate a V8 heap crash with failed lint.
