@@ -21,27 +21,31 @@ orchestrator owns schemas, contracts, and judgment.
 
 ## P1 — Journal facts, then hygiene — IN PROGRESS (independent small PRs, Codex lanes in sibling worktrees)
 
-- [~] A5 journal facts — landed 2026-09-03 (PR #964 merged as 58e063757b, under rulings 11–16),
-      partial until A5b closes the four gaps review found after the merge:
-      attempt rows carry the resolved head, tree fingerprint, tier, stage and env profile (C1
-      vocabulary); the pre-push and merged-preview wrappers journal each inner lane through a
-      durable report file; abnormal ends (interrupt, queued-submitter death, lease eviction) are
-      `attempt-terminated` rows with a reason while normal completions keep `attempt-finished`;
-      dead tickets and leases are claimed atomically before their event is journaled; writers
-      preserve unknown journal rows and the eviction variant ships under a versioned protocol the
-      CI-ops lab folds as a release; the economics loader accepts both terminal tags.
-- [ ] A5b journal-facts completion (review of PR #964 on the docs PR #976): (1) gate eviction-row
-      emission behind an explicit protocol switch that stays off until the unknown-row preservation
-      release has rolled out to every live checkout, because a v1 writer's locked rewrite still
-      drops v2 rows (ruling 14); (2) scheduler-owned termination rows carry the attempt's resolved
-      head, tree fingerprint, tier, stage and env profile, and compaction keeps start/terminal pairs
-      together so a minimal terminal row never survives its start; (3) stale-start reconciliation
-      closes starts whose owning process (pid plus start time) is dead with no admission owner,
-      covering SIGKILL and host death in repair, monitor and closeout modes; (4) the wrapper persists
-      each inner-lane result as it completes (append-only), so an interrupted wrapper keeps the lanes
-      that already finished. A5 is complete when all four land.
-- [ ] B1 package verification through the Turbo graph (upstream builds) or automatic
-      environment-only attribution when no package source differs from base.
+- [x] A5 journal facts — landed 2026-09-03 (PR #964 merged as 58e063757b, under rulings 11–16) and
+      completed by A5b (PR #978, below): attempt rows carry the resolved head, tree fingerprint, tier,
+      stage and env profile (C1 vocabulary); the pre-push and merged-preview wrappers journal each inner
+      lane through a durable report file; abnormal ends are `attempt-terminated` rows with a reason
+      while normal completions keep `attempt-finished`; dead tickets and leases are claimed atomically
+      before their event is journaled; writers preserve unknown journal rows; the economics loader
+      accepts both terminal tags.
+- [x] A5b journal-facts completion — done 2026-09-03 (PR #978 merged as c772d25970, under rulings 17–18
+      and their amendments): eviction-row emission is gated behind the protocol switch; scheduler-owned
+      termination rows carry head, fingerprint, tier, stage and env profile and compaction keeps
+      start/terminal pairs together; stale-start reconciliation closes starts whose owner is dead,
+      closes legacy unowned starts, and bounds pid-only starts by age; the wrapper persists each
+      inner-lane result as it completes; retention is a budget of terminal attempts only; compaction
+      receipts carry the monotonic cutoff the economics loader left-censors from; unknown journal rows
+      survive every rewrite path. Owed follow-up (recorded in `research/OPPORTUNITIES.md`): split
+      `normalizeJournal` (cyclomatic 10); the shared staging-file atomic rewrite already lives in
+      `JournalFile.ts` (`publishJournalTextAtomically`).
+- [ ] A5c crash-recoverable admission claims: make reaper claims discoverable durable outboxes with
+      per-sink acknowledgements; retry incomplete attempt/admission emissions; journal ticket-to-lease
+      promotion as one recoverable nonce-keyed lifecycle; adopt generation-fenced journal-lock reap
+      claims; and fence every new journal-lock generation with pid plus process-start identity.
+- [x] B1 package verification through the Turbo graph — done 2026-09-03 (PR #967 merged as
+      715c6a5767): `package-verify` builds the package's upstream graph before verifying, so a stale
+      upstream dist can no longer raise a P0; environment-only attribution when no package source
+      differs from base is carried by A4's resolution vocabulary.
 - [x] A4 ack ledger contract — done 2026-09-03 (PR #966 merged as fe70e27f55): the P0 reminder and
       the ack command agree, and the resolution vocabulary carries the environment-only kind.
 - [x] B2 semantic-delta git refs — done 2026-09-03 (PR #965 merged as 23f3e34499): spans naming an
@@ -53,9 +57,11 @@ orchestrator owns schemas, contracts, and judgment.
       reads, the quad still fails closed, and the health probe names failing variables only).
 - [ ] B3 cheap precise gates first, wave fails immediately; ordering seeded from A1.
 - [ ] B5 detached durable proof jobs in their own systemd user scope with inbox completion.
-- [~] B6 lease and submitter death journaled as admission events — landed in PR #964
-      (`admission-lease-evicted` and `admission-ticket-evicted` rows, claimed atomically); complete
-      when A5b gates their emission behind the preservation rollout.
+- [~] B6 lease and submitter death journaled as admission events — rows landed in PR #964 and their
+      emission gated behind the unknown-row preservation rollout in PR #978 (c772d25970);
+      complete when A5c (PR #993) makes the reap claim crash-recoverable, because today a reaper that
+      dies after renaming an entry to its claim but before appending the termination events leaves
+      that death unjournaled.
 
 ## P2 — Proof reuse
 

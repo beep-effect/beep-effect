@@ -17,7 +17,7 @@
  * @since 0.0.0
  */
 
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { freemem, totalmem } from "node:os";
 import { $RepoCliId } from "@beep/identity/packages";
 import * as OptionUtils from "@beep/utils/Option";
@@ -37,6 +37,7 @@ import {
 } from "effect";
 import * as A from "effect/Array";
 import { constant, dual } from "effect/Function";
+import * as HS from "effect/HashSet";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -46,9 +47,12 @@ import {
   AdmissionJournalLeaseEvicted,
   AdmissionJournalReleased,
   AdmissionJournalTicketEvicted,
+  acquireJournalFileLock,
   appendAdmissionEvictionJournalEvent,
   appendAdmissionJournalEvent,
+  appendAdmissionJournalEventOnce,
   readAdmissionProtocol,
+  releaseJournalFileLock,
   writeAdmissionProtocol,
 } from "./AdmissionJournal.ts";
 import { appendSchedulerAttemptTerminated } from "./AttemptTerminationJournal.ts";
@@ -56,8 +60,13 @@ import { isProcessIdentityAlive, processStartIdentityForPid } from "./ProcessIde
 import {
   AdmissionConfig,
   AdmissionCoordinationProtocol,
+  AdmissionLeaseReapClaim,
+  AdmissionPromotionPhase,
+  AdmissionPromotionTransition,
+  AdmissionReapClaim,
   AdmissionRequest,
   AdmissionSnapshot,
+  AdmissionTicketReapClaim,
   DeadLeaseScopePlan,
   QualitySchedulerError,
   YeetAdmissionLease,
@@ -70,18 +79,7 @@ import type { UUID } from "@beep/schema/String";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { AdmissionEvictionEmission } from "./AdmissionJournal.ts";
 
-export {
-  isProcessIdentityAlive,
-  isProcessIdentityAliveWithStartForTesting,
-  isProcessPidAlive,
-  ProcessIdentityStatus,
-  parseAdmissionProcStatStartTime,
-  processIdentityStatus,
-  processIdentityStatusWithStartForTesting,
-  processStartIdentityForPid,
-  processStartIdentityProbeForTesting,
-  processStartTimeForPid,
-} from "./ProcessIdentity.ts";
+const $I = $RepoCliId.create("internal/repo-run/QualityScheduler");
 
 const warnAdmissionJournalError = (error: QualitySchedulerError) =>
   Console.warn(`[yeet] admission journal append failed: ${error.message}`);
@@ -94,30 +92,77 @@ const appendAbnormalAttemptEnd = Effect.fn("QualityScheduler.appendAbnormalAttem
   yield* appendSchedulerAttemptTerminated(owner, attemptId, reason);
 });
 
+/**
+ * Service contract for idempotent scheduler-owned attempt termination.
+ *
+ * Implementations acknowledge an already-published terminal row for the same
+ * attempt instead of appending a second outcome. The admission reaper can then
+ * safely replay a pending outbox after a crash between publication and local
+ * acknowledgement.
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export interface AdmissionAttemptTerminationJournalShape {
+  /** Publish or acknowledge one abnormal terminal outcome by attempt identity. */
+  readonly appendOnce: (
+    owner: YeetAdmissionLease | YeetAdmissionTicket,
+    reason: "lease-eviction" | "queued-submitter-death",
+    attemptId: UUID
+  ) => Effect.Effect<void, QualitySchedulerError, FileSystem.FileSystem | Path.Path>;
+}
+
+/**
+ * Idempotent attempt-terminal sink used by admission claim recovery.
+ *
+ * **Example** (Provide a test implementation)
+ *
+ * ```ts
+ * import { AdmissionAttemptTerminationJournal } from "@beep/repo-cli/test/RepoRun"
+ * import { Effect, Layer } from "effect"
+ *
+ * const layer = Layer.succeed(
+ *   AdmissionAttemptTerminationJournal,
+ *   AdmissionAttemptTerminationJournal.of({ appendOnce: () => Effect.void })
+ * )
+ * console.log(Layer.isLayer(layer)) // true
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export class AdmissionAttemptTerminationJournal extends Context.Service<
+  AdmissionAttemptTerminationJournal,
+  AdmissionAttemptTerminationJournalShape
+>()($I`AdmissionAttemptTerminationJournal`) {}
+
+const defaultAttemptTerminationJournal = AdmissionAttemptTerminationJournal.of({
+  appendOnce: appendAbnormalAttemptEnd,
+});
+
 const journalAbnormalAttemptEnd = Effect.fn("QualityScheduler.journalAbnormalAttemptEnd")(function* (
+  journal: AdmissionAttemptTerminationJournalShape,
   owner: YeetAdmissionLease | YeetAdmissionTicket,
   reason: "lease-eviction" | "queued-submitter-death"
 ) {
   yield* O.match(owner.attemptId, {
     onNone: () => Effect.void,
-    onSome: (attemptId) =>
-      appendAbnormalAttemptEnd(owner, reason, attemptId).pipe(
-        Effect.catch((error) =>
-          Console.warn(`[yeet] attempt journal append failed for ${owner.nonce}: ${error.message}`)
-        )
-      ),
+    onSome: (attemptId) => journal.appendOnce(owner, reason, attemptId),
   });
 });
-
-const $I = $RepoCliId.create("internal/repo-run/QualityScheduler");
 
 const decodeLease = S.decodeUnknownEffect(S.fromJsonString(YeetAdmissionLease));
 const encodeLease = S.encodeUnknownEffect(S.fromJsonString(YeetAdmissionLease));
 const decodeTicket = S.decodeUnknownEffect(S.fromJsonString(YeetAdmissionTicket));
 const encodeTicket = S.encodeUnknownEffect(S.fromJsonString(YeetAdmissionTicket));
+const decodeReapClaim = S.decodeUnknownEffect(S.fromJsonString(AdmissionReapClaim));
+const encodeReapClaim = S.encodeUnknownEffect(S.fromJsonString(AdmissionReapClaim));
+const decodePromotionTransition = S.decodeUnknownEffect(S.fromJsonString(AdmissionPromotionTransition));
+const encodePromotionTransition = S.encodeUnknownEffect(S.fromJsonString(AdmissionPromotionTransition));
 
 const GIB = 1024 * 1024 * 1024;
 const MEMINFO_PATH = "/proc/meminfo";
+const textEncoder = new TextEncoder();
 
 /**
  * Shape of the {@link MemoryStats} service.
@@ -235,7 +280,9 @@ export const admissionCapacityTokensFor: {
 });
 
 interface AdmissionDirectories {
+  readonly claims: string;
   readonly leases: string;
+  readonly promotions: string;
   readonly quarantine: string;
   readonly queue: string;
   readonly root: string;
@@ -243,7 +290,9 @@ interface AdmissionDirectories {
 
 const admissionDirectoriesFor = (path: Path.Path, root: string): AdmissionDirectories => ({
   root,
+  claims: path.join(root, "claims"),
   leases: path.join(root, "leases"),
+  promotions: path.join(root, "promotions"),
   queue: path.join(root, "queue"),
   quarantine: path.join(root, "quarantine"),
 });
@@ -353,7 +402,14 @@ const ensureAdmissionDirectories = Effect.fnUntraced(function* (): Effect.fn.Ret
   const choice = yield* perUserRuntimeRoot();
   const directories = admissionDirectoriesFor(path, admissionRootFor(path, choice));
   yield* Effect.forEach(
-    [directories.root, directories.leases, directories.queue, directories.quarantine],
+    [
+      directories.root,
+      directories.claims,
+      directories.leases,
+      directories.promotions,
+      directories.queue,
+      directories.quarantine,
+    ],
     (directory) =>
       fs
         .makeDirectory(directory, { recursive: true, mode: 0o700 })
@@ -417,9 +473,13 @@ const stageTemporaryFile = Effect.fnUntraced(function* (
 ): Effect.fn.Return<string, QualitySchedulerError, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
   const temporary = `${filePath}.tmp-${process.pid}-${randomUUID()}`;
-  yield* fs
-    .writeFileString(temporary, content)
-    .pipe(Effect.mapError(QualitySchedulerError.new(`Failed to stage admission state at ${temporary}.`)));
+  yield* Effect.scoped(
+    Effect.gen(function* () {
+      const file = yield* fs.open(temporary, { flag: "w" });
+      yield* file.writeAll(textEncoder.encode(content));
+      yield* file.sync;
+    })
+  ).pipe(Effect.mapError(QualitySchedulerError.new(`Failed to stage admission state at ${temporary}.`)));
   return temporary;
 });
 
@@ -455,6 +515,7 @@ const tryCreateExclusive = Effect.fnUntraced(function* (
 interface LiveAdmissionState {
   readonly dead: ReadonlyArray<string>;
   readonly deadLeases: ReadonlyArray<{ readonly path: string; readonly lease: YeetAdmissionLease }>;
+  readonly deadTickets: ReadonlyArray<{ readonly path: string; readonly ticket: YeetAdmissionTicket }>;
   readonly leases: ReadonlyArray<{ readonly path: string; readonly lease: YeetAdmissionLease }>;
   readonly quarantined: ReadonlyArray<string>;
   readonly tickets: ReadonlyArray<{ readonly path: string; readonly ticket: YeetAdmissionTicket }>;
@@ -476,7 +537,6 @@ const quarantineEntry = Effect.fnUntraced(function* (
 interface AdmissionEntryCodec<Entry, DecodeError> {
   readonly decode: (text: string) => Effect.Effect<Entry, DecodeError>;
   readonly describe: (entry: Entry) => string;
-  readonly onReap?: (entry: Entry) => Effect.Effect<void, never, FileSystem.FileSystem | Path.Path>;
   readonly ownerOf: (entry: Entry) => { readonly pid: number; readonly procStart: string };
 }
 
@@ -503,51 +563,11 @@ const classifyAdmissionEntry = Effect.fnUntraced(function* <Entry, DecodeError>(
   return alive ? { kind: "live", entry: decoded.value } : { kind: "dead", entry: decoded.value };
 });
 
-const reapDeadAdmissionEntry = Effect.fnUntraced(function* <Entry, DecodeError>(
-  entryPath: string,
-  entry: Entry,
-  codec: AdmissionEntryCodec<Entry, DecodeError>
-): Effect.fn.Return<void, never, FileSystem.FileSystem | Path.Path> {
-  const fs = yield* FileSystem.FileSystem;
-  yield* Console.error(`[yeet] reaping dead admission state for ${codec.describe(entry)} at ${entryPath}`);
-  const claimPath = `${entryPath}.reap-claim-${process.pid}-${randomUUID()}`;
-  const claimed = yield* fs.rename(entryPath, claimPath).pipe(Effect.as(true), Effect.orElseSucceed(constant(false)));
-  yield* claimed
-    ? pipe(
-        O.fromUndefinedOr(codec.onReap),
-        O.match({
-          onNone: constant(Effect.void),
-          onSome: (onReap) => onReap(entry),
-        }),
-        Effect.ensuring(fs.remove(claimPath, { force: true }).pipe(Effect.ignore))
-      )
-    : Console.error(`[yeet] dead admission state at ${entryPath} was already claimed; no eviction was journaled`);
-});
-
-const repairAdmissionEntries = Effect.fnUntraced(function* <Entry, DecodeError>(
-  directories: AdmissionDirectories,
-  classified: ReadonlyArray<{ readonly entryPath: string; readonly outcome: AdmissionEntryClass<Entry> }>,
-  codec: AdmissionEntryCodec<Entry, DecodeError>,
-  retainedDeadPaths: ReadonlyArray<string>
-): Effect.fn.Return<void, never, FileSystem.FileSystem | Path.Path> {
-  yield* Effect.forEach(
-    classified,
-    ({ entryPath, outcome }) =>
-      outcome.kind === "malformed"
-        ? quarantineEntry(directories, entryPath, "undecodable")
-        : outcome.kind === "dead" && !A.contains(retainedDeadPaths, entryPath)
-          ? reapDeadAdmissionEntry(entryPath, outcome.entry, codec)
-          : Effect.void,
-    { discard: true }
-  );
-});
-
 const collectAdmissionEntries = Effect.fnUntraced(function* <Entry, DecodeError>(
   directories: AdmissionDirectories,
   directory: string,
   codec: AdmissionEntryCodec<Entry, DecodeError>,
-  repair: boolean,
-  retainedDeadPaths: ReadonlyArray<string> = A.empty()
+  repair: boolean
 ): Effect.fn.Return<
   {
     readonly live: ReadonlyArray<{ readonly path: string; readonly entry: Entry }>;
@@ -568,7 +588,14 @@ const collectAdmissionEntries = Effect.fnUntraced(function* <Entry, DecodeError>
     const entryPath = path.join(directory, name);
     return Effect.map(classifyAdmissionEntry(entryPath, codec), (outcome) => ({ entryPath, outcome }));
   });
-  yield* repair ? repairAdmissionEntries(directories, classified, codec, retainedDeadPaths) : Effect.void;
+  yield* repair
+    ? Effect.forEach(
+        classified,
+        ({ entryPath, outcome }) =>
+          outcome.kind === "malformed" ? quarantineEntry(directories, entryPath, "undecodable") : Effect.void,
+        { discard: true }
+      )
+    : Effect.void;
   return {
     live: A.getSomes(
       A.map(classified, ({ entryPath, outcome }) =>
@@ -586,11 +613,454 @@ const collectAdmissionEntries = Effect.fnUntraced(function* <Entry, DecodeError>
   };
 });
 
+const readReapClaims = Effect.fnUntraced(function* (
+  directories: AdmissionDirectories
+): Effect.fn.Return<
+  ReadonlyArray<{ readonly claimPath: string; readonly claim: AdmissionReapClaim }>,
+  QualitySchedulerError,
+  FileSystem.FileSystem | Path.Path
+> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const names = yield* fs
+    .readDirectory(directories.claims)
+    .pipe(Effect.mapError(QualitySchedulerError.new(`Failed to list admission claims in ${directories.claims}.`)));
+  return A.getSomes(
+    yield* Effect.forEach(
+      A.filter(names, Str.endsWith(".reap.json")),
+      Effect.fnUntraced(function* (name: string) {
+        const claimPath = path.join(directories.claims, name);
+        const text = yield* fs.readFileString(claimPath).pipe(Effect.option);
+        if (O.isNone(text)) {
+          return O.none<{ readonly claimPath: string; readonly claim: AdmissionReapClaim }>();
+        }
+        const claim = yield* decodeReapClaim(text.value).pipe(Effect.option);
+        if (O.isNone(claim)) {
+          yield* quarantineEntry(directories, claimPath, "undecodable reap claim");
+          return O.none<{ readonly claimPath: string; readonly claim: AdmissionReapClaim }>();
+        }
+        return O.some({ claimPath, claim: claim.value });
+      })
+    )
+  );
+});
+
+const reapClaimPath = (path: Path.Path, directories: AdmissionDirectories, claim: AdmissionReapClaim): string => {
+  const digest = createHash("sha256").update(`${claim._tag}:${claim.nonce}:${claim.sourcePath}`).digest("hex");
+  return path.join(directories.claims, `${digest}.reap.json`);
+};
+
+const updateReapClaim = (
+  claim: AdmissionReapClaim,
+  update: { readonly admissionJournal?: "complete"; readonly attemptJournal?: "complete" }
+): AdmissionReapClaim =>
+  AdmissionReapClaim.match(claim, {
+    lease: (current) => AdmissionLeaseReapClaim.make({ ...current, ...update }),
+    ticket: (current) => AdmissionTicketReapClaim.make({ ...current, ...update }),
+  });
+
+const ownerForReapClaim = (claim: AdmissionReapClaim): YeetAdmissionLease | YeetAdmissionTicket =>
+  AdmissionReapClaim.match(claim, {
+    lease: (current) => current.lease,
+    ticket: (current) => current.ticket,
+  });
+
+const reasonForReapClaim = (claim: AdmissionReapClaim): "lease-eviction" | "queued-submitter-death" =>
+  AdmissionReapClaim.match(claim, {
+    lease: constant("lease-eviction" as const),
+    ticket: constant("queued-submitter-death" as const),
+  });
+
+const admissionEventForReapClaim = (claim: AdmissionReapClaim) =>
+  AdmissionReapClaim.match(claim, {
+    lease: ({ lease, claimedAtMillis }) =>
+      AdmissionJournalLeaseEvicted.make({
+        schemaVersion: "yeet-admission-journal/v2",
+        _tag: "admission-lease-evicted",
+        nonce: lease.nonce,
+        pid: lease.pid,
+        attemptId: lease.attemptId,
+        evictedAtMillis: claimedAtMillis,
+        reason: "owner-dead-or-reused",
+      }),
+    ticket: ({ ticket, claimedAtMillis }) =>
+      AdmissionJournalTicketEvicted.make({
+        schemaVersion: "yeet-admission-journal/v2",
+        _tag: "admission-ticket-evicted",
+        nonce: ticket.nonce,
+        pid: ticket.pid,
+        attemptId: ticket.attemptId,
+        evictedAtMillis: claimedAtMillis,
+        reason: "queued-submitter-death",
+      }),
+  });
+
+const persistReapClaim = Effect.fnUntraced(function* (
+  claimPath: string,
+  claim: AdmissionReapClaim
+): Effect.fn.Return<void, QualitySchedulerError, FileSystem.FileSystem> {
+  yield* writeFileAtomic(
+    claimPath,
+    `${yield* encodeReapClaim(claim).pipe(
+      Effect.mapError(QualitySchedulerError.new(`Failed to encode admission reap claim ${claimPath}.`))
+    )}\n`
+  );
+});
+
+const processReapClaim = Effect.fnUntraced(function* (
+  directories: AdmissionDirectories,
+  claimPath: string,
+  observedClaim: AdmissionReapClaim
+): Effect.fn.Return<void, QualitySchedulerError, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const lockPath = `${claimPath}.lock`;
+  const lockToken = `${process.pid}:${randomUUID()}`;
+  if (!(yield* acquireJournalFileLock(lockPath, lockToken))) {
+    const claimStillPending = yield* fs.exists(claimPath).pipe(Effect.orElseSucceed(constant(true)));
+    if (claimStillPending) {
+      return yield* QualitySchedulerError.make({
+        message: `Admission reap claim ${claimPath} stayed busy; its outputs remain pending.`,
+      });
+    }
+    return;
+  }
+  yield* Effect.ensuring(
+    Effect.gen(function* () {
+      const currentText = yield* fs.readFileString(claimPath).pipe(Effect.option);
+      if (O.isNone(currentText)) {
+        return;
+      }
+      const claim = yield* decodeReapClaim(currentText.value).pipe(
+        Effect.mapError(QualitySchedulerError.new(`Failed to decode admission reap claim ${claimPath}.`))
+      );
+      if (claim.nonce !== observedClaim.nonce || claim._tag !== observedClaim._tag) {
+        return yield* QualitySchedulerError.make({
+          message: `Admission reap claim ${claimPath} changed lifecycle identity while awaiting its lock.`,
+        });
+      }
+      yield* fs
+        .remove(claim.sourcePath, { force: true })
+        .pipe(
+          Effect.mapError(QualitySchedulerError.new(`Failed to remove claimed admission state ${claim.sourcePath}.`))
+        );
+      const attemptJournal = O.getOrElse(
+        yield* Effect.serviceOption(AdmissionAttemptTerminationJournal),
+        constant(defaultAttemptTerminationJournal)
+      );
+      let pending = claim;
+      if (pending.attemptJournal === "pending") {
+        yield* journalAbnormalAttemptEnd(attemptJournal, ownerForReapClaim(pending), reasonForReapClaim(pending));
+        pending = updateReapClaim(pending, { attemptJournal: "complete" });
+        yield* persistReapClaim(claimPath, pending);
+      }
+      if (pending.admissionJournal === "pending") {
+        yield* appendAdmissionEvictionJournalEvent(directories.root, admissionEventForReapClaim(pending));
+        pending = updateReapClaim(pending, { admissionJournal: "complete" });
+        yield* persistReapClaim(claimPath, pending);
+      }
+      yield* fs
+        .remove(claimPath, { force: true })
+        .pipe(Effect.mapError(QualitySchedulerError.new(`Failed to acknowledge admission reap claim ${claimPath}.`)));
+    }),
+    releaseJournalFileLock(lockPath, lockToken)
+  );
+});
+
+const createReapClaim = Effect.fnUntraced(function* (
+  directories: AdmissionDirectories,
+  claim: AdmissionReapClaim
+): Effect.fn.Return<void, QualitySchedulerError, FileSystem.FileSystem | Path.Path> {
+  const path = yield* Path.Path;
+  const claimPath = reapClaimPath(path, directories, claim);
+  yield* tryCreateExclusive(
+    claimPath,
+    `${yield* encodeReapClaim(claim).pipe(
+      Effect.mapError(QualitySchedulerError.new(`Failed to encode admission reap claim ${claimPath}.`))
+    )}\n`
+  );
+});
+
+const claimDeadLease = Effect.fnUntraced(function* (
+  directories: AdmissionDirectories,
+  sourcePath: string,
+  lease: YeetAdmissionLease
+): Effect.fn.Return<void, QualitySchedulerError, FileSystem.FileSystem | Path.Path> {
+  yield* createReapClaim(
+    directories,
+    AdmissionLeaseReapClaim.make({
+      schemaVersion: "yeet-admission-reap-claim/v1",
+      _tag: "lease",
+      sourcePath,
+      nonce: lease.nonce,
+      claimedAtMillis: yield* Clock.currentTimeMillis,
+      attemptJournal: "pending",
+      admissionJournal: "pending",
+      lease,
+    })
+  );
+});
+
+const claimDeadTicket = Effect.fnUntraced(function* (
+  directories: AdmissionDirectories,
+  sourcePath: string,
+  ticket: YeetAdmissionTicket
+): Effect.fn.Return<void, QualitySchedulerError, FileSystem.FileSystem | Path.Path> {
+  yield* createReapClaim(
+    directories,
+    AdmissionTicketReapClaim.make({
+      schemaVersion: "yeet-admission-reap-claim/v1",
+      _tag: "ticket",
+      sourcePath,
+      nonce: ticket.nonce,
+      claimedAtMillis: yield* Clock.currentTimeMillis,
+      attemptJournal: "pending",
+      admissionJournal: "pending",
+      ticket,
+    })
+  );
+});
+
+const coalesceOverlappingAdmissionState = Effect.fnUntraced(function* (
+  state: LiveAdmissionState
+): Effect.fn.Return<LiveAdmissionState, QualitySchedulerError, FileSystem.FileSystem> {
+  const fs = yield* FileSystem.FileSystem;
+  const leasedNonces = pipe(
+    A.appendAll(state.leases, state.deadLeases),
+    A.map(({ lease }) => lease.nonce),
+    A.filter(Str.isNonEmpty),
+    HS.fromIterable
+  );
+  const duplicateTickets = A.filter(A.appendAll(state.tickets, state.deadTickets), ({ ticket }) =>
+    HS.has(leasedNonces, ticket.nonce)
+  );
+  yield* Effect.forEach(
+    duplicateTickets,
+    ({ path: ticketPath }) =>
+      fs
+        .remove(ticketPath, { force: true })
+        .pipe(
+          Effect.mapError(
+            QualitySchedulerError.new(`Failed to coalesce promoted admission ticket ${ticketPath} with its lease.`)
+          )
+        ),
+    { discard: true }
+  );
+  const duplicatePaths = pipe(
+    duplicateTickets,
+    A.map(({ path: ticketPath }) => ticketPath),
+    HS.fromIterable
+  );
+  return {
+    ...state,
+    dead: A.filter(state.dead, (entryPath) => !HS.has(duplicatePaths, entryPath)),
+    deadTickets: A.filter(state.deadTickets, ({ path: ticketPath }) => !HS.has(duplicatePaths, ticketPath)),
+    tickets: A.filter(state.tickets, ({ path: ticketPath }) => !HS.has(duplicatePaths, ticketPath)),
+  };
+});
+
+const repairDeadAdmissionState = Effect.fnUntraced(function* (
+  directories: AdmissionDirectories,
+  state: LiveAdmissionState,
+  retainedDeadLeasePaths: ReadonlyArray<string>
+): Effect.fn.Return<void, QualitySchedulerError, FileSystem.FileSystem | Path.Path> {
+  const coalesced = yield* coalesceOverlappingAdmissionState(state);
+  yield* Effect.forEach(
+    A.filter(coalesced.deadLeases, ({ path }) => !A.contains(retainedDeadLeasePaths, path)),
+    ({ lease, path: sourcePath }) => claimDeadLease(directories, sourcePath, lease),
+    { discard: true }
+  );
+  yield* Effect.forEach(
+    coalesced.deadTickets,
+    ({ ticket, path: sourcePath }) => claimDeadTicket(directories, sourcePath, ticket),
+    { discard: true }
+  );
+  yield* Effect.forEach(
+    yield* readReapClaims(directories),
+    ({ claimPath, claim }) => processReapClaim(directories, claimPath, claim),
+    { discard: true }
+  );
+});
+
+const promotionTransitionPath = (path: Path.Path, directories: AdmissionDirectories, nonce: string): string =>
+  path.join(directories.promotions, `${nonce}.promotion.json`);
+
+const persistPromotionTransition = Effect.fnUntraced(function* (
+  transitionPath: string,
+  transition: AdmissionPromotionTransition
+): Effect.fn.Return<void, QualitySchedulerError, FileSystem.FileSystem> {
+  const text = yield* encodePromotionTransition(transition).pipe(
+    Effect.mapError(QualitySchedulerError.new(`Failed to encode admission promotion ${transitionPath}.`))
+  );
+  yield* writeFileAtomic(transitionPath, `${text}\n`);
+});
+
+const promotionAdmissionEvent = (transition: AdmissionPromotionTransition): AdmissionJournalAdmitted =>
+  AdmissionJournalAdmitted.make({
+    schemaVersion: "yeet-admission-journal/v1",
+    _tag: "admission-admitted",
+    nonce: transition.nonce,
+    pid: transition.ticket.pid,
+    procStart: transition.ticket.procStart,
+    kind: transition.ticket.kind,
+    weightTokens: transition.ticket.weightTokens,
+    priority: transition.ticket.priority,
+    originKey: transition.ticket.originKey,
+    enqueuedAtMillis: transition.ticket.enqueuedAtMillis,
+    admittedAtMillis: transition.lease.admittedAtMillis,
+    attemptId: transition.ticket.attemptId,
+  });
+
+const readPromotionLease = Effect.fnUntraced(function* (
+  transition: AdmissionPromotionTransition
+): Effect.fn.Return<O.Option<YeetAdmissionLease>, never, FileSystem.FileSystem> {
+  const fs = yield* FileSystem.FileSystem;
+  const text = yield* fs.readFileString(transition.leasePath).pipe(Effect.option);
+  if (O.isNone(text)) {
+    return O.none();
+  }
+  return pipe(
+    yield* decodeLease(text.value).pipe(Effect.option),
+    O.filter((lease) => lease.nonce === transition.nonce && lease.pid === transition.ticket.pid)
+  );
+});
+
+const discardLeaseLessPreparedPromotion = Effect.fnUntraced(function* (
+  transitionPath: string
+): Effect.fn.Return<void, QualitySchedulerError, FileSystem.FileSystem> {
+  const fs = yield* FileSystem.FileSystem;
+  yield* fs
+    .remove(transitionPath, { force: true })
+    .pipe(Effect.mapError(QualitySchedulerError.new(`Failed to discard lease-less promotion ${transitionPath}.`)));
+});
+
+const completePublishedPromotion = Effect.fnUntraced(function* (
+  directories: AdmissionDirectories,
+  transitionPath: string,
+  initial: AdmissionPromotionTransition,
+  lease: YeetAdmissionLease
+): Effect.fn.Return<void, QualitySchedulerError, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  let transition = AdmissionPromotionTransition.make({ ...initial, lease });
+  yield* fs
+    .remove(transition.ticketPath, { force: true })
+    .pipe(Effect.mapError(QualitySchedulerError.new(`Failed to remove promoted ticket ${transition.ticketPath}.`)));
+  if (
+    AdmissionPromotionPhase.is.prepared(transition.phase) ||
+    AdmissionPromotionPhase.is["lease-published"](transition.phase)
+  ) {
+    transition = AdmissionPromotionTransition.make({ ...transition, phase: "ticket-removed" });
+    yield* persistPromotionTransition(transitionPath, transition);
+  }
+  if (!AdmissionPromotionPhase.is["admission-journaled"](transition.phase)) {
+    const journaled = yield* appendAdmissionJournalEventOnce(
+      directories.root,
+      promotionAdmissionEvent(transition)
+    ).pipe(
+      Effect.as(true),
+      Effect.catch((error) => warnAdmissionJournalError(error).pipe(Effect.as(false)))
+    );
+    if (!journaled) {
+      return;
+    }
+    transition = AdmissionPromotionTransition.make({ ...transition, phase: "admission-journaled" });
+    yield* persistPromotionTransition(transitionPath, transition);
+  }
+  yield* fs
+    .remove(transitionPath, { force: true })
+    .pipe(Effect.mapError(QualitySchedulerError.new(`Failed to acknowledge admission promotion ${transitionPath}.`)));
+});
+
+const processPromotionTransition = Effect.fnUntraced(function* (
+  directories: AdmissionDirectories,
+  transitionPath: string,
+  observedNonce: string
+): Effect.fn.Return<void, QualitySchedulerError, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const lockPath = `${transitionPath}.lock`;
+  const lockToken = `${process.pid}:${randomUUID()}`;
+  if (!(yield* acquireJournalFileLock(lockPath, lockToken))) {
+    const transitionPending = yield* fs.exists(transitionPath).pipe(Effect.orElseSucceed(constant(true)));
+    if (transitionPending) {
+      return yield* QualitySchedulerError.make({
+        message: `Admission promotion ${transitionPath} stayed busy; recovery remains pending.`,
+      });
+    }
+    return;
+  }
+  yield* Effect.ensuring(
+    Effect.gen(function* () {
+      const currentText = yield* fs.readFileString(transitionPath).pipe(Effect.option);
+      if (O.isNone(currentText)) {
+        return;
+      }
+      const transition = yield* decodePromotionTransition(currentText.value).pipe(
+        Effect.mapError(QualitySchedulerError.new(`Failed to decode admission promotion ${transitionPath}.`))
+      );
+      if (transition.nonce !== observedNonce) {
+        return yield* QualitySchedulerError.make({
+          message: `Admission promotion ${transitionPath} changed nonce while awaiting its lock.`,
+        });
+      }
+      const lease = yield* readPromotionLease(transition);
+      if (AdmissionPromotionPhase.is.prepared(transition.phase)) {
+        if (O.isSome(lease)) {
+          yield* completePublishedPromotion(
+            directories,
+            transitionPath,
+            AdmissionPromotionTransition.make({ ...transition, phase: "lease-published" }),
+            lease.value
+          );
+          return;
+        }
+        if (yield* isProcessIdentityAlive(transition.ticket)) {
+          return;
+        }
+        yield* discardLeaseLessPreparedPromotion(transitionPath);
+        return;
+      }
+      if (O.isNone(lease)) {
+        yield* completePublishedPromotion(directories, transitionPath, transition, transition.lease);
+        return;
+      }
+      yield* completePublishedPromotion(directories, transitionPath, transition, lease.value);
+    }),
+    releaseJournalFileLock(lockPath, lockToken)
+  );
+});
+
+const recoverPromotionTransitions = Effect.fnUntraced(function* (
+  directories: AdmissionDirectories
+): Effect.fn.Return<void, QualitySchedulerError, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const names = yield* fs
+    .readDirectory(directories.promotions)
+    .pipe(Effect.mapError(QualitySchedulerError.new(`Failed to list promotions in ${directories.promotions}.`)));
+  yield* Effect.forEach(
+    A.filter(names, Str.endsWith(".promotion.json")),
+    Effect.fnUntraced(function* (name) {
+      const transitionPath = path.join(directories.promotions, name);
+      const text = yield* fs.readFileString(transitionPath).pipe(Effect.option);
+      if (O.isNone(text)) {
+        return;
+      }
+      const transition = yield* decodePromotionTransition(text.value).pipe(Effect.option);
+      if (O.isNone(transition)) {
+        yield* quarantineEntry(directories, transitionPath, "undecodable promotion transition");
+        return;
+      }
+      yield* processPromotionTransition(directories, transitionPath, transition.value.nonce);
+    }),
+    { discard: true }
+  );
+});
+
 const scanAdmissionState = Effect.fnUntraced(function* (
   directories: AdmissionDirectories,
   repair: boolean,
   retainedDeadLeasePaths: ReadonlyArray<string> = A.empty()
 ): Effect.fn.Return<LiveAdmissionState, QualitySchedulerError, FileSystem.FileSystem | Path.Path> {
+  yield* repair ? recoverPromotionTransitions(directories) : Effect.void;
   const leases = yield* collectAdmissionEntries(
     directories,
     directories.leases,
@@ -598,25 +1068,8 @@ const scanAdmissionState = Effect.fnUntraced(function* (
       decode: decodeLease,
       ownerOf: (lease: YeetAdmissionLease) => lease,
       describe: (lease: YeetAdmissionLease) => `pid ${lease.pid} (${lease.kind}, ${lease.checkoutRoot})`,
-      onReap: Effect.fn("QualityScheduler.onLeaseReap")(function* (lease: YeetAdmissionLease) {
-        const evictedAtMillis = yield* Clock.currentTimeMillis;
-        yield* journalAbnormalAttemptEnd(lease, "lease-eviction");
-        yield* appendAdmissionEvictionJournalEvent(
-          directories.root,
-          AdmissionJournalLeaseEvicted.make({
-            schemaVersion: "yeet-admission-journal/v2",
-            _tag: "admission-lease-evicted",
-            nonce: lease.nonce,
-            pid: lease.pid,
-            attemptId: lease.attemptId,
-            evictedAtMillis,
-            reason: "owner-dead-or-reused",
-          })
-        ).pipe(Effect.catch(warnAdmissionJournalError));
-      }),
     },
-    repair,
-    retainedDeadLeasePaths
+    repair
   );
   const tickets = yield* collectAdmissionEntries(
     directories,
@@ -625,26 +1078,10 @@ const scanAdmissionState = Effect.fnUntraced(function* (
       decode: decodeTicket,
       ownerOf: (ticket: YeetAdmissionTicket) => ticket,
       describe: (ticket: YeetAdmissionTicket) => `pid ${ticket.pid} (queued ${ticket.kind}, ${ticket.checkoutRoot})`,
-      onReap: Effect.fn("QualityScheduler.onTicketReap")(function* (ticket: YeetAdmissionTicket) {
-        const evictedAtMillis = yield* Clock.currentTimeMillis;
-        yield* journalAbnormalAttemptEnd(ticket, "queued-submitter-death");
-        yield* appendAdmissionEvictionJournalEvent(
-          directories.root,
-          AdmissionJournalTicketEvicted.make({
-            schemaVersion: "yeet-admission-journal/v2",
-            _tag: "admission-ticket-evicted",
-            nonce: ticket.nonce,
-            pid: ticket.pid,
-            attemptId: ticket.attemptId,
-            evictedAtMillis,
-            reason: "queued-submitter-death",
-          })
-        ).pipe(Effect.catch(warnAdmissionJournalError));
-      }),
     },
     repair
   );
-  return {
+  const state: LiveAdmissionState = {
     leases: A.map(leases.live, ({ entry, path: entryPath }) => ({ path: entryPath, lease: entry })),
     tickets: A.map(tickets.live, ({ entry, path: entryPath }) => ({ path: entryPath, ticket: entry })),
     dead: A.appendAll(
@@ -652,8 +1089,11 @@ const scanAdmissionState = Effect.fnUntraced(function* (
       A.map(tickets.dead, ({ path: entryPath }) => entryPath)
     ),
     deadLeases: A.map(leases.dead, ({ entry, path: entryPath }) => ({ path: entryPath, lease: entry })),
+    deadTickets: A.map(tickets.dead, ({ entry, path: entryPath }) => ({ path: entryPath, ticket: entry })),
     quarantined: A.appendAll(leases.quarantined, tickets.quarantined),
   };
+  yield* repair ? repairDeadAdmissionState(directories, state, retainedDeadLeasePaths) : Effect.void;
+  return state;
 });
 
 const effectivePriorityRank = (ticket: YeetAdmissionTicket, nowMillis: number, config: AdmissionConfig): number =>
@@ -663,9 +1103,38 @@ const ticketOrder = (nowMillis: number, config: AdmissionConfig): Order.Order<Ye
   pipe(
     Order.mapInput(Order.Number, (ticket: YeetAdmissionTicket) => effectivePriorityRank(ticket, nowMillis, config)),
     Order.combine(Order.mapInput(Order.Number, (ticket: YeetAdmissionTicket) => ticket.enqueuedAtMillis)),
-    Order.combine(Order.mapInput(Order.Number, (ticket: YeetAdmissionTicket) => ticket.pid)),
     Order.combine(Order.mapInput(Order.String, (ticket: YeetAdmissionTicket) => ticket.nonce))
   );
+
+/**
+ * Orders admission tickets by effective rank, enqueue instant, and nonce.
+ *
+ * The nonce is the durable lifecycle identity and supplies a stable final
+ * tie-break when separate writers enqueue within the same clock tick.
+ *
+ * **Example** (Reference the admission ticket order)
+ *
+ * ```ts
+ * import { orderAdmissionTicketsForTesting } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(typeof orderAdmissionTicketsForTesting) // "function"
+ * ```
+ *
+ * @internal
+ * @category testing
+ * @since 0.0.0
+ */
+export const orderAdmissionTicketsForTesting: {
+  (
+    nowMillis: number,
+    config: AdmissionConfig
+  ): (tickets: ReadonlyArray<YeetAdmissionTicket>) => ReadonlyArray<YeetAdmissionTicket>;
+  (
+    tickets: ReadonlyArray<YeetAdmissionTicket>,
+    nowMillis: number,
+    config: AdmissionConfig
+  ): ReadonlyArray<YeetAdmissionTicket>;
+} = dual(3, (tickets, nowMillis, config) => A.sort(tickets, ticketOrder(nowMillis, config)));
 
 const activeTokenTotal = (state: LiveAdmissionState): number =>
   A.reduce(state.leases, 0, (total, { lease }) => total + lease.weightTokens);
@@ -796,6 +1265,7 @@ interface AdmittedState<OriginLease> {
   readonly lease: YeetAdmissionLease;
   readonly leasePath: string;
   readonly originLease: OriginLease;
+  readonly promotionPath: string;
 }
 
 const admissionProgressReport = Effect.fnUntraced(function* (
@@ -964,6 +1434,7 @@ const tryAdmitSelf = Effect.fnUntraced(function* <OriginLease, GateError, GateRe
       leasePath: selfLease.value.leasePath,
       lease: selfLease.value.lease,
       originLease: originLease.value,
+      promotionPath: selfLease.value.promotionPath,
     }),
     originBusy: false,
   };
@@ -975,7 +1446,7 @@ const stageSelfLease = Effect.fnUntraced(function* (
   ticket: YeetAdmissionTicket,
   config: AdmissionConfig
 ): Effect.fn.Return<
-  O.Option<{ readonly lease: YeetAdmissionLease; readonly leasePath: string }>,
+  O.Option<{ readonly lease: YeetAdmissionLease; readonly leasePath: string; readonly promotionPath: string }>,
   QualitySchedulerError,
   FileSystem.FileSystem | Path.Path | MemoryStats | ChildProcessSpawner.ChildProcessSpawner
 > {
@@ -1006,6 +1477,28 @@ const stageSelfLease = Effect.fnUntraced(function* (
     stage: ticket.stage,
   });
   const leasePath = path.join(directories.leases, `${ticket.nonce}-${ticket.pid}.lease.json`);
+  const promotionPath = promotionTransitionPath(path, directories, ticket.nonce);
+  const prepared = AdmissionPromotionTransition.make({
+    schemaVersion: "yeet-admission-promotion/v1",
+    nonce: ticket.nonce,
+    ticketPath: path.join(directories.queue, `${ticket.nonce}-${ticket.pid}.ticket.json`),
+    leasePath,
+    ticket,
+    lease,
+    phase: "prepared",
+    createdAtMillis: nowMillis,
+  });
+  const transitionCreated = yield* tryCreateExclusive(
+    promotionPath,
+    `${yield* encodePromotionTransition(prepared).pipe(
+      Effect.mapError(QualitySchedulerError.new(`Failed to encode admission promotion ${promotionPath}.`))
+    )}\n`
+  );
+  if (!transitionCreated) {
+    return yield* QualitySchedulerError.make({
+      message: `Admission promotion ${promotionPath} already exists for this ticket; recover it before retrying.`,
+    });
+  }
   const created = yield* tryCreateExclusive(leasePath, `${yield* encodeLeaseText(lease)}\n`);
   if (!created) {
     return yield* QualitySchedulerError.make({
@@ -1018,6 +1511,7 @@ const stageSelfLease = Effect.fnUntraced(function* (
   if (isOvershootLoser(rescanned, capacityNow, lease)) {
     const fs = yield* FileSystem.FileSystem;
     yield* fs.remove(leasePath, { force: true }).pipe(Effect.ignore);
+    yield* fs.remove(promotionPath, { force: true }).pipe(Effect.ignore);
     return O.none();
   }
   const scopedLease = YeetAdmissionLease.make({
@@ -1025,7 +1519,11 @@ const stageSelfLease = Effect.fnUntraced(function* (
     runScope: yield* enterRunScope(ticket.nonce, directories.root),
   });
   yield* refreshHeartbeat(leasePath, yield* encodeLeaseText(scopedLease));
-  return O.some({ lease: scopedLease, leasePath });
+  yield* persistPromotionTransition(
+    promotionPath,
+    AdmissionPromotionTransition.make({ ...prepared, lease: scopedLease, phase: "lease-published" })
+  );
+  return O.some({ lease: scopedLease, leasePath, promotionPath });
 });
 
 const heartbeatLoop = Effect.fnUntraced(function* (
@@ -1060,7 +1558,6 @@ interface PromotionTick<OriginLease> {
 const tryPromoteTicket = Effect.fnUntraced(function* <OriginLease, GateError, GateRequirements>(
   directories: AdmissionDirectories,
   request: AdmissionRequest,
-  ticketPath: string,
   ticket: YeetAdmissionTicket,
   gate: AdmissionOriginGate<OriginLease, GateError, GateRequirements>,
   config: AdmissionConfig
@@ -1069,11 +1566,14 @@ const tryPromoteTicket = Effect.fnUntraced(function* <OriginLease, GateError, Ga
   QualitySchedulerError | GateError,
   FileSystem.FileSystem | Path.Path | MemoryStats | ChildProcessSpawner.ChildProcessSpawner | GateRequirements
 > {
+  // Rank contenders at the start of the attempt. Recovery may perform durable
+  // journal I/O, but that housekeeping must not age a ticket across a priority
+  // boundary before this selection pass compares the queue.
+  const nowMillis = yield* Clock.currentTimeMillis;
   const state = yield* scanAdmissionState(directories, true);
   const stats = yield* MemoryStats;
   const availableGib = yield* stats.availableGib;
   const capacityTokens = admissionCapacityTokensFor(availableGib, config);
-  const nowMillis = yield* Clock.currentTimeMillis;
   const info: PromotionTickInfo = { availableGib, capacityTokens, nowMillis, state };
   if (!selfMayAttempt(state, capacityTokens, nowMillis, config, ticket)) {
     return { admitted: O.none(), info, originBusy: hasLegacySameOriginOwner(state, ticket) };
@@ -1082,25 +1582,10 @@ const tryPromoteTicket = Effect.fnUntraced(function* <OriginLease, GateError, Ga
   if (O.isNone(attempt.admitted)) {
     return { admitted: O.none(), info, originBusy: attempt.originBusy };
   }
-  yield* appendAdmissionJournalEvent(
-    directories.root,
-    AdmissionJournalAdmitted.make({
-      schemaVersion: "yeet-admission-journal/v1",
-      _tag: "admission-admitted",
-      nonce: ticket.nonce,
-      pid: ticket.pid,
-      procStart: ticket.procStart,
-      kind: ticket.kind,
-      weightTokens: ticket.weightTokens,
-      priority: ticket.priority,
-      originKey: ticket.originKey,
-      enqueuedAtMillis: ticket.enqueuedAtMillis,
-      admittedAtMillis: attempt.admitted.value.lease.admittedAtMillis,
-      attemptId: ticket.attemptId,
-    })
-  ).pipe(Effect.catch(warnAdmissionJournalError));
-  const fs = yield* FileSystem.FileSystem;
-  yield* fs.remove(ticketPath, { force: true }).pipe(Effect.ignore);
+  const admitted = attempt.admitted.value;
+  yield* processPromotionTransition(directories, admitted.promotionPath, ticket.nonce).pipe(
+    Effect.onError(() => gate.release(admitted.originLease).pipe(Effect.ignore))
+  );
   return { admitted: attempt.admitted, info, originBusy: false };
 });
 
@@ -1177,7 +1662,7 @@ const waitForAdmission = Effect.fnUntraced(function* <OriginLease, GateError, Ga
     escalated: 0,
   };
   while (true) {
-    const tick = yield* tryPromoteTicket(directories, request, ticketPath, ticket, gate, config);
+    const tick = yield* tryPromoteTicket(directories, request, ticket, gate, config);
     if (O.isSome(tick.admitted)) {
       return tick.admitted.value;
     }
@@ -1233,6 +1718,9 @@ const runAdmitted = Effect.fnUntraced(function* <Success, UseError, UseRequireme
     () => restore(use),
     Effect.fnUntraced(function* (heartbeat) {
       yield* Fiber.interrupt(heartbeat);
+      yield* processPromotionTransition(directories, admitted.promotionPath, admitted.lease.nonce).pipe(
+        Effect.catch(warnAdmissionJournalError)
+      );
       const releasedAtMillis = yield* Clock.currentTimeMillis;
       const telemetry = yield* readLeaseRunScopeTelemetry(admitted.lease);
       yield* appendAdmissionJournalEvent(

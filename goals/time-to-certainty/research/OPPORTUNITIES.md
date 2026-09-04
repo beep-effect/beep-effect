@@ -33,6 +33,17 @@ session/machine ids, quote only the minimal identifying error text.
 - **Would have prevented it:** seed the task script in package templates before the C3 migration,
   or explicitly budget the one-time multi-package release in the ruling and lane handoff.
 
+## 2026-09-03 — Reaper rename claims disappeared from every recovery scan
+
+- **Doing:** adversarially reviewing the admission reaper's atomic dead-ticket and dead-lease claim
+  before extending B6 death journaling.
+- **Evidence:** the reaper renamed `*.json` state to a `.reap-claim-*` suffix, while the only later
+  directory scan filtered exclusively for names ending in `.json`; a crash after rename therefore
+  hid the sole lifecycle authority before either required journal sink was acknowledged.
+- **Would have prevented it:** define claims as schema-decoded, nonce-keyed outbox records in a
+  dedicated scanned directory; persist each sink acknowledgement; and delete a claim only after all
+  required terminal outputs are durably complete.
+
 ## 2026-09-03 — A chained review fix committed and pushed past a red test
 
 - **Doing:** closing a Greptile thread on the economics script by patching a validation branch,
@@ -119,3 +130,49 @@ session/machine ids, quote only the minimal identifying error text.
   compact inputs.
 - **Would have prevented it:** make `--from-inputs` select embedded frozen facts unconditionally;
   validate a live corpus only when the operator passes `--corpus` explicitly.
+
+## 2026-09-03 — Merging A5b took eighteen hosted cycles for five real defects
+
+- **Doing:** driving PR #978 (A5b) and #993 (A5c) to merge-ready under the push-first rule.
+- **Evidence:** across the two PRs, hosted reds came from an npm advisory 503 (three times), Docker-gated
+  integration tests skipping on a slow runner (per-file floors on an untouched package), coverage
+  floors on `Quality.command.ts` that main itself had been failing since #990, a shard aggregator
+  failing after GitHub cancelled a superseded run, and a lane cancelling the run on its own current
+  head. The code defects (retention arithmetic, non-deterministic admission ordering, lock-reclaim
+  races) were five of roughly eighteen full re-runs.
+- **Would have prevented it:** attribution at the gate (A4's ack ledger needs `environment-only` and
+  `indirect` kinds the hosted lanes can emit, not only the local inbox), coverage floors that ignore
+  conditionally skipped suites, and a rule that lanes never cancel a run on an unreplaced head.
+
+## 2026-09-03 — Fallow's new-only duplication gate fires on every helper a lane writes twice
+
+- **Doing:** landing the A5b and A5c journal changes through Sol lanes.
+- **Evidence:** four consecutive pushes tripped Fallow on clone groups the lane had just created
+  (atomic-rewrite sequence in two journals, process-identity comparison in two files, tombstone
+  cleanup twice in one file) and once on a lock boundary at cognitive complexity 9; each cost a full
+  hosted cycle before the helper was extracted. The `normalizeJournal` split (cyclomatic 10) is still
+  owed after the merge; the shared staging-file rewrite was extracted into `JournalFile.ts`.
+- **Would have prevented it:** running `beep quality fallow audit --check` locally before the first
+  push (about 20 seconds) as part of every lane's push checklist, and extracting helpers as they are
+  written rather than after review.
+
+## 2026-09-03 — Path validation did not fence journal lock reclamation
+
+- **Doing:** closing A5c review on exclusive, generation-fenced admission-journal lock recovery.
+- **Evidence:** PR #993 review thread `PRRT_kwDOPbO_N86fFah3` showed that a reclaimer validated the
+  lock path and only later renamed it; a replacement generation published between those operations
+  could be moved to a tombstone and deleted.
+- **Would have prevented it:** take the lock path into a reclaimer-owned tombstone before inspecting
+  its generation, restore a displaced generation with a no-clobber hard link, and require every
+  journal publisher to revalidate its acquired lock generation at the publication boundary.
+
+## 2026-09-03 — Per-file coverage attributed an indirect callee change to an untouched command
+
+- **Doing:** restoring the A5c hosted coverage ratchet after the scheduler recovery suite was green.
+- **Evidence:** PR #993 changed admission reap, promotion, and reconciliation behavior, but the
+  per-file ratchet reported `Quality.command.ts` below its committed floor even though that file had
+  no diff; scheduler tests no longer reached enough of the command adapters that call those paths.
+- **Would have prevented it:** extend A4's environment-only and attribution taxonomy with an
+  `indirect` kind that records an untouched caller whose coverage changed because its callee or
+  driving fixture changed, so the ratchet identifies the causal PR without presenting the caller
+  as a direct source regression.
