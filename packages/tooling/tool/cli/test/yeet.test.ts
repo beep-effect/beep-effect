@@ -156,6 +156,8 @@ const decodeYeetVerdictSync = S.decodeSync(YeetVerdict);
 const encodeYeetStatusRemote = S.encodeEffect(YeetStatusRemote);
 const encodeYeetVerdict = S.encodeEffect(YeetVerdict);
 const encodeYeetVerdictSync = S.encodeSync(YeetVerdict);
+const encodeStarted = S.encodeEffect(S.fromJsonString(YeetAttemptStarted));
+const encodeTerminated = S.encodeEffect(S.fromJsonString(YeetAttemptTerminated));
 
 const PlatformLayer = NodeChildProcessSpawner.layer.pipe(
   Layer.provideMerge(Layer.mergeAll(NodeCrypto.layer, NodeFileSystem.layer, NodePath.layer))
@@ -169,8 +171,6 @@ const liveAttemptOwner = Effect.fnUntraced(function* () {
 });
 
 const encodedAttemptPairs = Effect.fnUntraced(function* (family: string, count: number, offset = 0) {
-  const encodeStarted = S.encodeEffect(S.fromJsonString(YeetAttemptStarted));
-  const encodeTerminated = S.encodeEffect(S.fromJsonString(YeetAttemptTerminated));
   const attemptIds = A.makeBy(count, (index) =>
     attemptUuid(`00000000-0000-4000-${family}-${Str.padStart(12, "0")(`${index + offset}`)}`)
   );
@@ -2459,7 +2459,6 @@ describe("yeet attempt journal", () => {
           const path = yield* Path.Path;
           const tempContext = RepoRunContext.make({ ...context, cwd: tmpDir, repoRoot: tmpDir });
           const journalPath = yield* attemptJournalPath(tempContext);
-          const encodeStarted = S.encodeEffect(S.fromJsonString(YeetAttemptStarted));
           const oldestAttemptId = attemptUuid("00000000-0000-4000-8010-000000000999");
           const oldestStart = yield* encodeStarted(
             YeetAttemptStarted.make({
@@ -2659,7 +2658,6 @@ describe("yeet attempt journal", () => {
               envProfile: O.some("local"),
               stage: O.some("repair-loop"),
             });
-          const encodeStarted = S.encodeEffect(S.fromJsonString(YeetAttemptStarted));
           const lines = yield* Effect.forEach(
             [started(deadAttemptId, DEAD_PID, "fake-dead-owner"), started(liveAttemptId, process.pid, ownerProcStart)],
             (event) => encodeStarted(event)
@@ -2723,7 +2721,6 @@ describe("yeet attempt journal", () => {
           const journalPath = yield* attemptJournalPath(tempContext);
           const deadAttemptId = attemptUuid("00000000-0000-4000-8003-000000000000");
           const ownerProcStart = pipe(yield* processStartIdentityForPid(process.pid), O.getOrThrow);
-          const encodeStarted = S.encodeEffect(S.fromJsonString(YeetAttemptStarted));
           const starts = yield* Effect.forEach(
             A.makeBy(55, (index) => index),
             (index) =>
@@ -2823,8 +2820,6 @@ describe("yeet attempt journal", () => {
           const repoRoot = yield* findRepoRoot();
           const tempContext = RepoRunContext.make({ ...context, cwd: tmpDir, repoRoot: tmpDir });
           const journalPath = yield* attemptJournalPath(tempContext);
-          const encodeStarted = S.encodeEffect(S.fromJsonString(YeetAttemptStarted));
-          const encodeTerminated = S.encodeEffect(S.fromJsonString(YeetAttemptTerminated));
           const legacyLines = pipe(
             yield* fs.readFileString(
               path.join(repoRoot, "packages/tooling/tool/cli/test/fixtures/yeet-attempt-journal-legacy.ndjson")
@@ -2925,7 +2920,6 @@ describe("yeet attempt journal", () => {
           const tempContext = RepoRunContext.make({ ...context, cwd: tmpDir, repoRoot: tmpDir });
           const journalPath = yield* attemptJournalPath(tempContext);
           const ownerProcStart = pipe(yield* processStartIdentityForPid(process.pid), O.getOrThrow);
-          const encodeStarted = S.encodeEffect(S.fromJsonString(YeetAttemptStarted));
           const deadAttemptIds = A.makeBy(50, (index) =>
             attemptUuid(`00000000-0000-4000-8006-${Str.padStart(12, "0")(`${index}`)}`)
           );
@@ -2987,7 +2981,6 @@ describe("yeet attempt journal", () => {
           const path = yield* Path.Path;
           const tempContext = RepoRunContext.make({ ...context, cwd: tmpDir, repoRoot: tmpDir });
           const journalPath = yield* attemptJournalPath(tempContext);
-          const encodeStarted = S.encodeEffect(S.fromJsonString(YeetAttemptStarted));
           const owner = yield* liveAttemptOwner();
           const attemptIds = A.makeBy(55, (index) =>
             attemptUuid(`00000000-0000-4000-8008-${Str.padStart(12, "0")(`${index}`)}`)
@@ -3122,7 +3115,6 @@ describe("yeet attempt journal", () => {
           const tempContext = RepoRunContext.make({ ...context, cwd: tmpDir, repoRoot: tmpDir });
           const journalPath = yield* attemptJournalPath(tempContext);
           const owner = yield* liveAttemptOwner();
-          const encodeStarted = S.encodeEffect(S.fromJsonString(YeetAttemptStarted));
           const attemptIds = A.makeBy(5, (index) =>
             attemptUuid(`00000000-0000-4000-8011-${Str.padStart(12, "0")(`${index}`)}`)
           );
@@ -3172,7 +3164,6 @@ describe("yeet attempt journal", () => {
         yield* TestClock.setTime(DateTime.toEpochMillis(now));
         const tempContext = RepoRunContext.make({ ...context, cwd: tmpDir, repoRoot: tmpDir });
         const journalPath = yield* attemptJournalPath(tempContext);
-        const encodeStarted = S.encodeEffect(S.fromJsonString(YeetAttemptStarted));
         const youngAttemptId = attemptUuid("00000000-0000-4000-8011-000000000005");
         const staleAttemptId = attemptUuid("00000000-0000-4000-8011-000000000006");
         const deadAttemptId = attemptUuid("00000000-0000-4000-8011-000000000007");
@@ -3229,7 +3220,6 @@ describe("yeet attempt journal", () => {
           const tempContext = RepoRunContext.make({ ...context, cwd: tmpDir, repoRoot: tmpDir });
           const journalPath = yield* attemptJournalPath(tempContext);
           const owner = yield* liveAttemptOwner();
-          const encodeStarted = S.encodeEffect(S.fromJsonString(YeetAttemptStarted));
           const unfinishedIds = A.makeBy(50, (index) =>
             attemptUuid(`00000000-0000-4000-8012-${Str.padStart(12, "0")(`${index}`)}`)
           );
@@ -3278,7 +3268,6 @@ describe("yeet attempt journal", () => {
           const tempContext = RepoRunContext.make({ ...context, cwd: tmpDir, repoRoot: tmpDir });
           const journalPath = yield* attemptJournalPath(tempContext);
           const owner = yield* liveAttemptOwner();
-          const encodeStarted = S.encodeEffect(S.fromJsonString(YeetAttemptStarted));
           const unfinishedIds = A.makeBy(60, (index) =>
             attemptUuid(`00000000-0000-4000-8014-${Str.padStart(12, "0")(`${index}`)}`)
           );
@@ -3332,7 +3321,6 @@ describe("yeet attempt journal", () => {
           const path = yield* Path.Path;
           const tempContext = RepoRunContext.make({ ...context, cwd: tmpDir, repoRoot: tmpDir });
           const journalPath = yield* attemptJournalPath(tempContext);
-          const encodeStarted = S.encodeEffect(S.fromJsonString(YeetAttemptStarted));
           const deadIds = A.makeBy(60, (index) =>
             attemptUuid(`00000000-0000-4000-8016-${Str.padStart(12, "0")(`${index}`)}`)
           );
@@ -3510,7 +3498,6 @@ describe("yeet attempt journal", () => {
           const startedLine = pipe(legacyLines, A.head, O.getOrThrow);
           const finishedLine = pipe(legacyLines, A.last, O.getOrThrow);
           const attemptId = attemptUuid("550e8400-e29b-41d4-a716-446655440010");
-          const encodeTerminated = S.encodeEffect(S.fromJsonString(YeetAttemptTerminated));
           const terminatedLine = yield* encodeTerminated(
             YeetAttemptTerminated.make({
               schemaVersion: "yeet-attempt-journal/v1",

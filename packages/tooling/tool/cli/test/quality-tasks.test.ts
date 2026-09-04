@@ -161,6 +161,7 @@ import type { GithubCheckLaneWave, QualityTaskInvocation } from "@beep/repo-cli/
 const decodeQualityTaskLaneRun = S.decodeEffect(QualityTaskLaneRun);
 const decodeQualityTaskLaneRunReportJson = S.decodeEffect(S.fromJsonString(QualityTaskLaneRunReport));
 const encodeQualityTaskLaneRunReport = S.encodeEffect(QualityTaskLaneRunReport);
+const encodeQualityTaskLaneRunReportJson = S.encodeEffect(S.fromJsonString(QualityTaskLaneRunReport));
 
 const decodeCoverageComparisonFailure = S.decodeEffect(CoverageComparisonFailure);
 const decodeGithubCheckFailurePolicy = S.decodeEffect(GithubCheckFailurePolicy);
@@ -1095,7 +1096,7 @@ describe("quality task adapter", () => {
           A.findFirst(Str.startsWith(QUALITY_TASK_LANE_RUN_REPORT_PREFIX)),
           O.getOrThrow
         );
-        const emittedReport = yield* S.decodeEffect(S.fromJsonString(QualityTaskLaneRunReport))(
+        const emittedReport = yield* decodeQualityTaskLaneRunReportJson(
           Str.slice(QUALITY_TASK_LANE_RUN_REPORT_PREFIX.length)(emitted)
         );
         expect(A.map(emittedReport.lanes, (lane) => lane.id)).toEqual(["check"]);
@@ -1110,7 +1111,7 @@ describe("quality task adapter", () => {
         const path = yield* Path.Path;
         const tempDir = yield* fs.makeTempDirectory();
         const artifactPath = path.join(tempDir, "unscoped-inner-lanes.ndjson");
-        const durableReport = yield* S.encodeEffect(S.fromJsonString(QualityTaskLaneRunReport))(
+        const durableReport = yield* encodeQualityTaskLaneRunReportJson(
           QualityTaskLaneRunReport.make({
             schemaVersion: "quality-task-lane-run/v1",
             parentLaneId: O.none(),
@@ -1142,7 +1143,7 @@ describe("quality task adapter", () => {
           A.findFirst(Str.startsWith(QUALITY_TASK_LANE_RUN_REPORT_PREFIX)),
           O.getOrThrow
         );
-        const emittedReport = yield* S.decodeEffect(S.fromJsonString(QualityTaskLaneRunReport))(
+        const emittedReport = yield* decodeQualityTaskLaneRunReportJson(
           Str.slice(QUALITY_TASK_LANE_RUN_REPORT_PREFIX.length)(emitted)
         );
         expect(emittedReport.parentLaneId).toStrictEqual(O.none());
@@ -1159,7 +1160,7 @@ describe("quality task adapter", () => {
         const tempDir = yield* fs.makeTempDirectory();
         const missingPath = path.join(tempDir, "missing.ndjson");
         const foreignPath = path.join(tempDir, "foreign.ndjson");
-        const foreignReport = yield* S.encodeEffect(S.fromJsonString(QualityTaskLaneRunReport))(
+        const foreignReport = yield* encodeQualityTaskLaneRunReportJson(
           QualityTaskLaneRunReport.make({
             schemaVersion: "quality-task-lane-run/v1",
             parentLaneId: O.some("full:foreign-parent"),
@@ -1190,9 +1191,7 @@ describe("quality task adapter", () => {
         );
         expect(reportLines).toHaveLength(2);
         const reports = yield* Effect.forEach(reportLines, (line) =>
-          S.decodeEffect(S.fromJsonString(QualityTaskLaneRunReport))(
-            Str.slice(QUALITY_TASK_LANE_RUN_REPORT_PREFIX.length)(line)
-          )
+          decodeQualityTaskLaneRunReportJson(Str.slice(QUALITY_TASK_LANE_RUN_REPORT_PREFIX.length)(line))
         );
         expect(A.every(reports, (report) => A.isReadonlyArrayEmpty(report.lanes))).toBe(true);
         expect(A.every(reports, (report) => O.contains(report.parentLaneId, "full:current-parent"))).toBe(true);
@@ -1239,9 +1238,7 @@ describe("quality task adapter", () => {
               }
               yield* Fiber.interrupt(wrapper);
               expect(lines).toHaveLength(2);
-              const reports = yield* Effect.forEach(lines, (line) =>
-                S.decodeEffect(S.fromJsonString(QualityTaskLaneRunReport))(line)
-              );
+              const reports = yield* Effect.forEach(lines, (line) => decodeQualityTaskLaneRunReportJson(line));
               expect(A.flatMap(reports, (report) => A.map(report.lanes, (lane) => lane.id))).toEqual([
                 "first",
                 "second",
@@ -1289,9 +1286,7 @@ describe("quality task adapter", () => {
               }
               yield* Fiber.interrupt(wrapper);
               expect(lines).toHaveLength(2);
-              const reports = yield* Effect.forEach(lines, (line) =>
-                S.decodeEffect(S.fromJsonString(QualityTaskLaneRunReport))(line)
-              );
+              const reports = yield* Effect.forEach(lines, (line) => decodeQualityTaskLaneRunReportJson(line));
               expect(A.flatMap(reports, (report) => A.map(report.lanes, (lane) => lane.id))).toEqual([
                 "first",
                 "second",

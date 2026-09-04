@@ -562,7 +562,7 @@ describe("quality-scheduler", () => {
           Effect.gen(function* () {
             const fs = yield* FileSystem.FileSystem;
             const path = yield* Path.Path;
-            const attemptId = yield* S.decodeEffect(UUID)("550e8400-e29b-41d4-a716-446655440023");
+            const attemptId = yield* decodeUUID("550e8400-e29b-41d4-a716-446655440023");
             const facts = {
               attemptId: O.some(attemptId),
               resolvedHeadSha: O.some("0123456789abcdef0123456789abcdef01234567"),
