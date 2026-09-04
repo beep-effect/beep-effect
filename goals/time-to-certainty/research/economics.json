@@ -74,10 +74,12 @@
     "attemptWindowStartUtc": "2026-08-04T12:22:57.623Z",
     "clockAssumption": "all ISO timestamps normalized to UTC; admission epoch milliseconds interpreted as UTC instants",
     "diagnostics": {
+      "compactionReceipts": 0,
       "duplicateFinishedRowsDeduplicated": 2679,
       "duplicateStartedRowsDeduplicated": 2998,
       "finishedAttempts": 2742,
       "invalidRows": 0,
+      "leftCensoredJournals": 0,
       "orphanVerdictFilesAdded": 0,
       "starts": 3069,
       "startsWithoutFinish": 327,
@@ -5557,10 +5559,10 @@
         "sha256_12": "bb6c7387e24a"
       },
       {
-        "bytes": 99614,
+        "bytes": 101730,
         "kind": "reproduction-script",
         "path": "goals/time-to-certainty/research/scripts/economics.py",
-        "sha256_12": "1767b06cea98"
+        "sha256_12": "07306ab03669"
       }
     ]
   },
@@ -5971,7 +5973,9 @@
     "comparable24h": {
       "closedEpisodes": 328,
       "closedEpisodesOver24hExcluded": 7,
-      "label": "article-comparable: modes verify/repair/publish; lock bounces excluded; <=24h",
+      "label": "article-comparable: modes verify/repair/publish; lock bounces and left-censored episodes excluded; <=24h",
+      "leftCensoredEpisodesExcluded": 0,
+      "leftCensoredObservedAttempts": 0,
       "measuredAttemptMachineMinutes": 11353.8,
       "measuredLaneMachineMinutes": 11066.43,
       "p50Ms": 2597852,
@@ -5982,7 +5986,9 @@
     },
     "uncut": {
       "closedEpisodes": 335,
-      "label": "uncut tail: same modes/bounce rule; no duration ceiling",
+      "label": "uncut tail: same modes/bounce/censor rule; no duration ceiling",
+      "leftCensoredEpisodesExcluded": 0,
+      "leftCensoredObservedAttempts": 0,
       "measuredAttemptMachineMinutes": 11785.91,
       "measuredLaneMachineMinutes": 11498.26,
       "p50Ms": 2614412,

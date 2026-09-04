@@ -15,7 +15,6 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
 const $I = $RepoCliId.create("internal/repo-run/ProcessIdentity");
-const SystemProcessIdentitySource = LiteralKit(["ps", "win"]);
 
 /**
  * Process-inspection source encoded into a durable start identity.
@@ -196,18 +195,44 @@ export const processStartTimeForPid = Effect.fnUntraced(function* (
 const procProcessStartIdentity = (pid: number): Effect.Effect<O.Option<string>, never, FileSystem.FileSystem> =>
   processStartTimeForPid(pid).pipe(Effect.map(O.map((identity) => `proc:${identity}`)));
 
+const processStartIdentityProbe = (options: { readonly pid: number; readonly platform: NodeJS.Platform }) => {
+  const { pid, platform } = options;
+  const windows = platform === "win32";
+  return {
+    prefix: windows ? "win" : "ps",
+    command: windows
+      ? [
+          "powershell.exe",
+          "-NoProfile",
+          "-NonInteractive",
+          "-Command",
+          `(Get-Process -Id ${pid} -ErrorAction Stop).StartTime.ToUniversalTime().Ticks`,
+        ]
+      : ["ps", "-o", "lstart=", "-p", `${pid}`],
+  };
+};
+
+/**
+ * Build the platform process-inspector probe used when procfs is unavailable.
+ *
+ * **Example** (Build a Unix probe)
+ *
+ * ```ts
+ * import { processStartIdentityProbeForTesting } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(processStartIdentityProbeForTesting({ pid: 42, platform: "linux" }).prefix) // "ps"
+ * ```
+ *
+ * @param options - Process id and platform whose process inspector should be selected.
+ * @returns The identity prefix and command arguments for the selected platform.
+ * @category testing
+ * @since 0.0.0
+ */
+export const processStartIdentityProbeForTesting = processStartIdentityProbe;
+
 const processStartIdentityFromSystemCommand = (pid: number, source: "ps" | "win"): Effect.Effect<O.Option<string>> =>
   Effect.try(() => {
-    const command = SystemProcessIdentitySource.$match(source, {
-      ps: () => ["ps", "-o", "lstart=", "-p", `${pid}`],
-      win: () => [
-        "powershell.exe",
-        "-NoProfile",
-        "-NonInteractive",
-        "-Command",
-        `(Get-Process -Id ${pid} -ErrorAction Stop).StartTime.ToUniversalTime().Ticks`,
-      ],
-    });
+    const command = processStartIdentityProbe({ pid, platform: source === "win" ? "win32" : "linux" }).command;
     const result = Bun.spawnSync({
       cmd: command,
       env: { ...Bun.env, LANG: "C", LC_ALL: "C" },

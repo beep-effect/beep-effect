@@ -25,6 +25,7 @@ import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { publishJournalTextAtomically } from "./JournalFile.ts";
 import {
   isProcessPidAlive,
   ProcessIdentityStatus,
@@ -36,6 +37,7 @@ import type * as SchemaAST from "effect/SchemaAST";
 
 const $I = $RepoCliId.create("internal/repo-run/AdmissionJournal");
 const JOURNAL_FILE_NAME = "journal.ndjson";
+const PROTOCOL_FILE_NAME = "protocol.json";
 const LOCK_FILE_NAME = "journal.lock";
 const RETAINED_ADMISSIONS = 200;
 const LOCK_RETRY_ATTEMPTS = 8;
@@ -46,7 +48,69 @@ const LOCK_REAP_ADOPTION_BOUND_MILLIS = 30_000;
 // therefore applies only to malformed generations, never a parseable live
 // owner whose lock could still be released concurrently.
 const LOCK_REUSE_BACKSTOP_MILLIS = 300_000;
-const textEncoder = new TextEncoder();
+
+/**
+ * Whether v2 eviction events may be emitted into the shared admission journal.
+ *
+ * **Example** (Recognize the rollout-safe default)
+ *
+ * ```ts
+ * import { AdmissionEvictionEmission } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(AdmissionEvictionEmission.is.off("off")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const AdmissionEvictionEmission = LiteralKit(["off", "on"]).pipe(
+  $I.annoteSchema("AdmissionEvictionEmission", {
+    description: "Whether current scheduler writers may emit v2 admission eviction events.",
+  })
+);
+
+/**
+ * Whether current scheduler writers may emit v2 admission eviction events.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type AdmissionEvictionEmission = typeof AdmissionEvictionEmission.Type;
+
+/**
+ * Versioned mixed-checkout protocol marker stored in the admission root.
+ *
+ * **Example** (Construct the disabled protocol)
+ *
+ * ```ts
+ * import { AdmissionProtocol } from "@beep/repo-cli/test/RepoRun"
+ *
+ * const protocol = AdmissionProtocol.make({
+ *   schemaVersion: "yeet-admission-protocol/v1",
+ *   eviction: "off",
+ * })
+ * console.log(protocol.eviction) // "off"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class AdmissionProtocol extends S.Class<AdmissionProtocol>($I`AdmissionProtocol`)(
+  {
+    schemaVersion: S.Literal("yeet-admission-protocol/v1"),
+    eviction: AdmissionEvictionEmission,
+  },
+  $I.annote("AdmissionProtocol", {
+    description: "Versioned rollout marker controlling admission-journal eviction event emission.",
+  })
+) {}
+
+const disabledAdmissionProtocol = AdmissionProtocol.make({
+  schemaVersion: "yeet-admission-protocol/v1",
+  eviction: AdmissionEvictionEmission.Enum.off,
+});
+const decodeAdmissionProtocol = S.decodeUnknownOption(S.fromJsonString(AdmissionProtocol));
+const encodeAdmissionProtocol = S.encodeUnknownEffect(S.fromJsonString(AdmissionProtocol));
 
 /**
  * One ownership generation published in a serialized journal lock.
@@ -351,6 +415,8 @@ export const AdmissionJournalEvent = S.Union([
  */
 export type AdmissionJournalEvent = typeof AdmissionJournalEvent.Type;
 
+type AdmissionJournalV1Event = AdmissionJournalAdmitted | AdmissionJournalReleased;
+
 const encodeEvent = S.encodeUnknownEffect(S.fromJsonString(AdmissionJournalEvent));
 
 /**
@@ -395,6 +461,83 @@ export const admissionJournalPath = Effect.fn("AdmissionJournal.path")(function*
 ): Effect.fn.Return<string, never, Path.Path> {
   const path = yield* Path.Path;
   return path.join(root, JOURNAL_FILE_NAME);
+});
+
+/**
+ * Resolve the admission protocol marker path beneath a scheduler root.
+ *
+ * **Example** (Reference the protocol path resolver)
+ *
+ * ```ts
+ * import { admissionProtocolPath } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(typeof admissionProtocolPath) // "function"
+ * ```
+ *
+ * @param root - Machine-wide admission root directory.
+ * @returns The protocol marker path effect.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const admissionProtocolPath = Effect.fn("AdmissionJournal.protocolPath")(function* (
+  root: string
+): Effect.fn.Return<string, never, Path.Path> {
+  const path = yield* Path.Path;
+  return path.join(root, PROTOCOL_FILE_NAME);
+});
+
+/**
+ * Read the admission protocol, failing closed to eviction emission off.
+ *
+ * **Details**
+ *
+ * A missing, unreadable, or undecodable marker means the mixed-checkout
+ * preservation rollout is not proven, so v2 eviction rows remain disabled.
+ *
+ * **Example** (Read a protocol marker)
+ *
+ * ```ts
+ * import { readAdmissionProtocol } from "@beep/repo-cli/test/RepoRun"
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(readAdmissionProtocol("/tmp/admission"))) // true
+ * ```
+ *
+ * @param root - Machine-wide admission root directory.
+ * @returns The decoded protocol or the disabled default.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const readAdmissionProtocol = Effect.fn("AdmissionJournal.readProtocol")(function* (
+  root: string
+): Effect.fn.Return<AdmissionProtocol, never, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const protocolPath = yield* admissionProtocolPath(root);
+  const text = yield* fs.readFileString(protocolPath).pipe(Effect.option);
+  return pipe(
+    text,
+    O.flatMap(decodeAdmissionProtocol),
+    O.getOrElse(() => disabledAdmissionProtocol)
+  );
+});
+
+const prepareAdmissionJournalPaths = Effect.fnUntraced(function* (
+  root: string
+): Effect.fn.Return<
+  { readonly journalPath: string; readonly lockPath: string; readonly protocolPath: string },
+  QualitySchedulerError,
+  FileSystem.FileSystem | Path.Path
+> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  yield* fs
+    .makeDirectory(root, { recursive: true, mode: 0o700 })
+    .pipe(Effect.mapError(QualitySchedulerError.new("Failed to create admission journal directory.")));
+  return {
+    journalPath: path.join(root, JOURNAL_FILE_NAME),
+    lockPath: path.join(root, LOCK_FILE_NAME),
+    protocolPath: path.join(root, PROTOCOL_FILE_NAME),
+  };
 });
 
 const legacyLockOwnerPid = flow(Str.split(":"), A.head, O.flatMap(N.parse));
@@ -877,26 +1020,28 @@ export const assertJournalFileLockOwned = Effect.fnUntraced(function* (
 });
 
 const acquireFencedGeneration = Effect.fnUntraced(function* (
-  lockPath: string
+  lockPath: string,
+  busyMessage: string
 ): Effect.fn.Return<string, QualitySchedulerError, FileSystem.FileSystem | Path.Path> {
   const lockToken = `${process.pid}:${randomUUID()}`;
   if (yield* acquireJournalFileLock(lockPath, lockToken)) {
     return lockToken;
   }
   return yield* QualitySchedulerError.make({
-    message: `Journal lock "${lockPath}" stayed busy; could not start the locked operation.`,
+    message: busyMessage,
   });
 });
 
 const runFencedOperation = Effect.fnUntraced(function* <Success, Requirements>(
   lockPath: string,
-  operation: (lockToken: string) => Effect.Effect<Success, QualitySchedulerError, Requirements>
+  operation: (lockToken: string) => Effect.Effect<Success, QualitySchedulerError, Requirements>,
+  busyMessage: string
 ): Effect.fn.Return<
   Result.Result<Success, QualitySchedulerError>,
   QualitySchedulerError,
   FileSystem.FileSystem | Path.Path | Requirements
 > {
-  const lockToken = yield* acquireFencedGeneration(lockPath);
+  const lockToken = yield* acquireFencedGeneration(lockPath, busyMessage);
   return yield* Effect.ensuring(operation(lockToken), releaseJournalFileLock(lockPath, lockToken)).pipe(Effect.result);
 });
 
@@ -924,6 +1069,7 @@ const pauseBeforeLockRetry = (attempt: number, retryAttempts: number): Effect.Ef
  * @param lockPath - Exclusive lock path adjacent to the journal.
  * @param operation - Complete read-and-publish operation fenced by the supplied token.
  * @param retryAttempts - Maximum fresh generations after repeated ownership loss.
+ * @param busyMessage - Typed error message when the initial generation cannot be acquired.
  * @returns The operation result after one successful fenced publication.
  * @category utilities
  * @since 0.0.0
@@ -931,10 +1077,11 @@ const pauseBeforeLockRetry = (attempt: number, retryAttempts: number): Effect.Ef
 export const withJournalFileLock = Effect.fnUntraced(function* <Success, Requirements>(
   lockPath: string,
   operation: (lockToken: string) => Effect.Effect<Success, QualitySchedulerError, Requirements>,
-  retryAttempts = LOCKED_OPERATION_RETRY_ATTEMPTS
+  retryAttempts = LOCKED_OPERATION_RETRY_ATTEMPTS,
+  busyMessage = `Journal lock "${lockPath}" stayed busy; could not start the locked operation.`
 ): Effect.fn.Return<Success, QualitySchedulerError, FileSystem.FileSystem | Path.Path | Requirements> {
   for (let attempt = 0; attempt < retryAttempts; attempt++) {
-    const outcome = yield* runFencedOperation(lockPath, operation);
+    const outcome = yield* runFencedOperation(lockPath, operation, busyMessage);
     if (Result.isSuccess(outcome)) {
       return outcome.success;
     }
@@ -949,29 +1096,59 @@ export const withJournalFileLock = Effect.fnUntraced(function* <Success, Require
   });
 });
 
+/**
+ * Atomically write the admission protocol marker under the fenced journal lock.
+ *
+ * **Example** (Enable eviction emission)
+ *
+ * ```ts
+ * import { writeAdmissionProtocol } from "@beep/repo-cli/test/RepoRun"
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(writeAdmissionProtocol("/tmp/admission", "on"))) // true
+ * ```
+ *
+ * @param root - Machine-wide admission root directory.
+ * @param eviction - Desired v2 eviction-event emission state.
+ * @returns The protocol that was durably published.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const writeAdmissionProtocol = Effect.fn("AdmissionJournal.writeProtocol")(function* (
+  root: string,
+  eviction: AdmissionEvictionEmission
+): Effect.fn.Return<AdmissionProtocol, QualitySchedulerError, FileSystem.FileSystem | Path.Path> {
+  const { lockPath, protocolPath } = yield* prepareAdmissionJournalPaths(root);
+  const protocol = AdmissionProtocol.make({ schemaVersion: "yeet-admission-protocol/v1", eviction });
+  const content = yield* encodeAdmissionProtocol(protocol).pipe(
+    Effect.mapError(QualitySchedulerError.new("Failed to encode the admission protocol marker."))
+  );
+  yield* withJournalFileLock(
+    lockPath,
+    (lockToken) =>
+      publishJournalTextAtomically(
+        protocolPath,
+        `${content}\n`,
+        "admission protocol marker",
+        assertJournalFileLockOwned(lockPath, lockToken)
+      ),
+    LOCKED_OPERATION_RETRY_ATTEMPTS,
+    `Admission journal lock "${lockPath}" stayed busy; could not change the protocol marker.`
+  );
+  return protocol;
+});
+
 const publishJournalAtomic = Effect.fnUntraced(function* (
   journalPath: string,
   lockPath: string,
   lockToken: string,
   content: string
-): Effect.fn.Return<void, QualitySchedulerError, FileSystem.FileSystem> {
-  const fs = yield* FileSystem.FileSystem;
-  const stagingPath = `${journalPath}.tmp-${process.pid}-${randomUUID()}`;
-  yield* Effect.ensuring(
-    Effect.gen(function* () {
-      yield* Effect.scoped(
-        Effect.gen(function* () {
-          const file = yield* fs.open(stagingPath, { flag: "w" });
-          yield* file.writeAll(textEncoder.encode(content));
-          yield* file.sync;
-        })
-      ).pipe(Effect.mapError(QualitySchedulerError.new(`Failed to stage admission journal "${journalPath}".`)));
-      yield* assertJournalFileLockOwned(lockPath, lockToken);
-      yield* fs
-        .rename(stagingPath, journalPath)
-        .pipe(Effect.mapError(QualitySchedulerError.new(`Failed to publish admission journal "${journalPath}".`)));
-    }),
-    fs.remove(stagingPath, { force: true }).pipe(Effect.ignore)
+): Effect.fn.Return<void, QualitySchedulerError, FileSystem.FileSystem | Path.Path> {
+  yield* publishJournalTextAtomically(
+    journalPath,
+    content,
+    "admission journal",
+    assertJournalFileLockOwned(lockPath, lockToken)
   );
 });
 
@@ -1003,7 +1180,7 @@ const rewriteJournalLocked = Effect.fnUntraced(function* (
   event: AdmissionJournalEvent,
   line: string,
   idempotent: boolean
-): Effect.fn.Return<void, QualitySchedulerError, FileSystem.FileSystem> {
+): Effect.fn.Return<void, QualitySchedulerError, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   yield* assertJournalFileLockOwned(lockPath, lockToken);
   const text = yield* fs
@@ -1099,27 +1276,24 @@ const rewriteJournalLocked = Effect.fnUntraced(function* (
  */
 const appendAdmissionJournalEventWithMode = Effect.fnUntraced(function* (
   root: string,
-  event: AdmissionJournalEvent,
+  event: AdmissionJournalV1Event,
   idempotent: boolean
 ): Effect.fn.Return<void, QualitySchedulerError, FileSystem.FileSystem | Path.Path> {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const journalPath = path.join(root, JOURNAL_FILE_NAME);
-  const lockPath = path.join(root, LOCK_FILE_NAME);
+  const { journalPath, lockPath } = yield* prepareAdmissionJournalPaths(root);
   const line = yield* encodeEvent(event).pipe(
     Effect.mapError(QualitySchedulerError.new("Failed to encode admission journal event."))
   );
-  yield* fs
-    .makeDirectory(root, { recursive: true, mode: 0o700 })
-    .pipe(Effect.mapError(QualitySchedulerError.new("Failed to create admission journal directory.")));
-  yield* withJournalFileLock(lockPath, (lockToken) =>
-    rewriteJournalLocked(journalPath, lockPath, lockToken, event, line, idempotent)
+  yield* withJournalFileLock(
+    lockPath,
+    (lockToken) => rewriteJournalLocked(journalPath, lockPath, lockToken, event, line, idempotent),
+    LOCKED_OPERATION_RETRY_ATTEMPTS,
+    `Admission journal lock "${lockPath}" stayed busy; dropping one ${event._tag} event.`
   );
 });
 
 export const appendAdmissionJournalEvent = Effect.fn("AdmissionJournal.append")(function* (
   root: string,
-  event: AdmissionJournalEvent
+  event: AdmissionJournalV1Event
 ): Effect.fn.Return<void, QualitySchedulerError, FileSystem.FileSystem | Path.Path> {
   yield* appendAdmissionJournalEventWithMode(root, event, false);
 });
@@ -1148,7 +1322,52 @@ export const appendAdmissionJournalEvent = Effect.fn("AdmissionJournal.append")(
  */
 export const appendAdmissionJournalEventOnce = Effect.fn("AdmissionJournal.appendOnce")(function* (
   root: string,
-  event: AdmissionJournalEvent
+  event: AdmissionJournalV1Event
 ): Effect.fn.Return<void, QualitySchedulerError, FileSystem.FileSystem | Path.Path> {
   yield* appendAdmissionJournalEventWithMode(root, event, true);
+});
+
+/**
+ * Append one eviction event idempotently while the serialized protocol gate is on.
+ *
+ * **Details**
+ *
+ * The protocol read and admission-journal rewrite share the fenced journal
+ * lock. A displaced writer retries the complete gate read and rewrite under a
+ * fresh generation, so disabling eviction emission cannot race a delayed row.
+ *
+ * **Example** (Reference the gated eviction writer)
+ *
+ * ```ts
+ * import { appendAdmissionEvictionJournalEvent } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(typeof appendAdmissionEvictionJournalEvent) // "function"
+ * ```
+ *
+ * @param root - Machine-wide admission root directory.
+ * @param event - Version-two lease or ticket eviction event.
+ * @returns Whether the enabled protocol admitted or already contained the event.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const appendAdmissionEvictionJournalEvent = Effect.fn("AdmissionJournal.appendEviction")(function* (
+  root: string,
+  event: AdmissionJournalLeaseEvicted | AdmissionJournalTicketEvicted
+): Effect.fn.Return<boolean, QualitySchedulerError, FileSystem.FileSystem | Path.Path> {
+  const { journalPath, lockPath } = yield* prepareAdmissionJournalPaths(root);
+  const line = yield* encodeEvent(event).pipe(
+    Effect.mapError(QualitySchedulerError.new("Failed to encode admission eviction journal event."))
+  );
+  return yield* withJournalFileLock(
+    lockPath,
+    Effect.fnUntraced(function* (lockToken) {
+      if (AdmissionEvictionEmission.is.off((yield* readAdmissionProtocol(root)).eviction)) {
+        return false;
+      }
+      yield* rewriteJournalLocked(journalPath, lockPath, lockToken, event, line, true);
+      return true;
+    }),
+    LOCKED_OPERATION_RETRY_ATTEMPTS,
+    `Admission journal lock "${lockPath}" stayed busy; dropping one ${event._tag} event.`
+  );
 });

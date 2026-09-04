@@ -121,6 +121,112 @@ export const AdmissionCoordinationProtocol = LiteralKit([
 export type AdmissionCoordinationProtocol = typeof AdmissionCoordinationProtocol.Type;
 
 /**
+ * Yeet local proof tier carried by attempt and admission facts.
+ *
+ * **Example** (Recognize a review-fix tier)
+ *
+ * ```ts
+ * import { YeetProofTier } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(YeetProofTier.is["review-fix"]("review-fix")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const YeetProofTier = LiteralKit(["full", "cheap-gates", "review-fix"]).pipe(
+  $I.annoteSchema("YeetProofTier", {
+    description: "Local proof tier selected for a Yeet verification attempt.",
+  })
+);
+
+/**
+ * Local proof tier selected for a Yeet verification attempt.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type YeetProofTier = typeof YeetProofTier.Type;
+
+/**
+ * Environment posture carried by attempt and admission facts.
+ *
+ * **Example** (Recognize PR posture)
+ *
+ * ```ts
+ * import { ProofEnvProfile } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(ProofEnvProfile.is["pr-posture"]("pr-posture")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const ProofEnvProfile = LiteralKit(["local", "pr-posture", "hosted"]).pipe(
+  $I.annoteSchema("ProofEnvProfile", {
+    description: "Environment posture a lane executed under: local workstation, PR posture, or hosted CI.",
+  })
+);
+
+/**
+ * Environment posture carried by attempt and admission facts.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ProofEnvProfile = typeof ProofEnvProfile.Type;
+
+/**
+ * Verification stage carried by attempt and admission facts.
+ *
+ * **Example** (Recognize the pre-push stage)
+ *
+ * ```ts
+ * import { ProofStage } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(ProofStage.is["pre-push"]("pre-push")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const ProofStage = LiteralKit(["repair-loop", "pre-push", "merged-preview", "hosted"]).pipe(
+  $I.annoteSchema("ProofStage", {
+    description: "Verification stage that produced an attempt fact.",
+  })
+);
+
+/**
+ * Verification stage that produced an attempt fact.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ProofStage = typeof ProofStage.Type;
+
+/**
+ * Shared schema fields for immutable facts recorded at attempt start.
+ *
+ * **Example** (Reuse the fact field group)
+ *
+ * ```ts
+ * import { attemptInputFactFields } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log("resolvedHeadSha" in attemptInputFactFields) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const attemptInputFactFields = {
+  resolvedHeadSha: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  diffFingerprint: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  proofTier: YeetProofTier.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  envProfile: ProofEnvProfile.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  stage: ProofStage.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+};
+
+/**
  * Token weight for each admission kind, in 5 GiB token units (SPEC D1).
  *
  * The publish weight covers only the post-proof mutation phase; a publish's
@@ -151,6 +257,7 @@ export const admissionTokenWeight = (kind: AdmissionWorkKind): number =>
 
 const admissionOwnerFields = {
   attemptId: UUID.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  ...attemptInputFactFields,
   pid: S.Finite,
   procStart: S.String,
   kind: AdmissionWorkKind,
@@ -573,6 +680,7 @@ export class AdmissionConfig extends S.Class<AdmissionConfig>($I`AdmissionConfig
 export class AdmissionRequest extends S.Class<AdmissionRequest>($I`AdmissionRequest`)(
   {
     attemptId: UUID.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    ...attemptInputFactFields,
     kind: AdmissionWorkKind,
     weightTokens: S.Finite,
     priority: AdmissionPriority,

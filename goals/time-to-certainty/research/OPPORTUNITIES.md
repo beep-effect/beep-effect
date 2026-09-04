@@ -121,6 +121,16 @@ session/machine ids, quote only the minimal identifying error text.
 - **Would have prevented it:** make the proof launcher derive and export the current user's runtime
   directory and bus address before calling `systemd-run --user`.
 
+## 2026-09-03 — Embedded economics replay was coupled to mutable corpus presence
+
+- **Doing:** regenerating the ratified economics outputs after adding compaction left-censor
+  accounting.
+- **Evidence:** `economics.py --from-inputs` stopped on unrelated corpus differences whenever the
+  default corpus directory existed, despite the command being documented as replaying committed
+  compact inputs.
+- **Would have prevented it:** make `--from-inputs` select embedded frozen facts unconditionally;
+  validate a live corpus only when the operator passes `--corpus` explicitly.
+
 ## 2026-09-03 — Path validation did not fence journal lock reclamation
 
 - **Doing:** closing A5c review on exclusive, generation-fenced admission-journal lock recovery.

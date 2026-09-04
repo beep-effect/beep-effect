@@ -48,9 +48,12 @@ import {
   AdmissionJournalReleased,
   AdmissionJournalTicketEvicted,
   acquireJournalFileLock,
+  appendAdmissionEvictionJournalEvent,
   appendAdmissionJournalEvent,
   appendAdmissionJournalEventOnce,
+  readAdmissionProtocol,
   releaseJournalFileLock,
+  writeAdmissionProtocol,
 } from "./AdmissionJournal.ts";
 import { appendSchedulerAttemptTerminated } from "./AttemptTerminationJournal.ts";
 import { isProcessIdentityAlive, processStartIdentityForPid } from "./ProcessIdentity.ts";
@@ -74,6 +77,7 @@ import { enterRunScope, readRunScopeTelemetry, runScopeUnitName, stopRunScopeFor
 import { admissionRootFor, perUserRuntimeRoot } from "./RuntimeRoot.ts";
 import type { UUID } from "@beep/schema/String";
 import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { AdmissionEvictionEmission } from "./AdmissionJournal.ts";
 
 const $I = $RepoCliId.create("internal/repo-run/QualityScheduler");
 
@@ -85,7 +89,7 @@ const appendAbnormalAttemptEnd = Effect.fn("QualityScheduler.appendAbnormalAttem
   reason: "lease-eviction" | "queued-submitter-death",
   attemptId: UUID
 ) {
-  yield* appendSchedulerAttemptTerminated(owner.checkoutRoot, owner.branch, attemptId, reason);
+  yield* appendSchedulerAttemptTerminated(owner, attemptId, reason);
 });
 
 /**
@@ -416,6 +420,50 @@ const ensureAdmissionDirectories = Effect.fnUntraced(function* (): Effect.fn.Ret
   return directories;
 });
 
+/**
+ * Read the machine-wide admission protocol marker.
+ *
+ * **Example** (Inspect eviction emission)
+ *
+ * ```ts
+ * import { admissionProtocolStatus } from "@beep/repo-cli/test/RepoRun"
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(admissionProtocolStatus())) // true
+ * ```
+ *
+ * @returns The current protocol, defaulting eviction emission to off.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const admissionProtocolStatus = Effect.fn("QualityScheduler.admissionProtocolStatus")(function* () {
+  const directories = yield* ensureAdmissionDirectories();
+  return yield* readAdmissionProtocol(directories.root);
+});
+
+/**
+ * Atomically change admission-journal eviction emission.
+ *
+ * **Example** (Reference the protocol writer)
+ *
+ * ```ts
+ * import { setAdmissionEvictionProtocol } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(typeof setAdmissionEvictionProtocol) // "function"
+ * ```
+ *
+ * @param eviction - Desired v2 eviction-event emission state.
+ * @returns The protocol marker that was published.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const setAdmissionEvictionProtocol = Effect.fn("QualityScheduler.setAdmissionEvictionProtocol")(function* (
+  eviction: AdmissionEvictionEmission
+) {
+  const directories = yield* ensureAdmissionDirectories();
+  return yield* writeAdmissionProtocol(directories.root, eviction);
+});
+
 // Stage the complete content in a sibling temp file so publication (rename or
 // hard link) is atomic and a concurrent repair scan can never observe (and
 // quarantine) a partial write.
@@ -706,7 +754,7 @@ const processReapClaim = Effect.fnUntraced(function* (
         yield* persistReapClaim(claimPath, pending);
       }
       if (pending.admissionJournal === "pending") {
-        yield* appendAdmissionJournalEventOnce(directories.root, admissionEventForReapClaim(pending));
+        yield* appendAdmissionEvictionJournalEvent(directories.root, admissionEventForReapClaim(pending));
         pending = updateReapClaim(pending, { admissionJournal: "complete" });
         yield* persistReapClaim(claimPath, pending);
       }
@@ -1403,6 +1451,11 @@ const stageSelfLease = Effect.fnUntraced(function* (
     enqueuedAtMillis: ticket.enqueuedAtMillis,
     nonce: ticket.nonce,
     attemptId: ticket.attemptId,
+    resolvedHeadSha: ticket.resolvedHeadSha,
+    diffFingerprint: ticket.diffFingerprint,
+    proofTier: ticket.proofTier,
+    envProfile: ticket.envProfile,
+    stage: ticket.stage,
   });
   const leasePath = path.join(directories.leases, `${ticket.nonce}-${ticket.pid}.lease.json`);
   const promotionPath = promotionTransitionPath(path, directories, ticket.nonce);
@@ -1764,6 +1817,11 @@ export const withQualityAdmission = Effect.fn("QualityScheduler.withQualityAdmis
     heartbeatAtMillis: nowMillis,
     nonce: randomUUID(),
     attemptId: admittedRequest.attemptId,
+    resolvedHeadSha: admittedRequest.resolvedHeadSha,
+    diffFingerprint: admittedRequest.diffFingerprint,
+    proofTier: admittedRequest.proofTier,
+    envProfile: admittedRequest.envProfile,
+    stage: admittedRequest.stage,
   });
   const ticketPath = path.join(directories.queue, `${ticket.nonce}-${ticket.pid}.ticket.json`);
   return yield* Effect.uninterruptibleMask((restore) =>

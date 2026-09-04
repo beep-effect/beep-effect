@@ -201,6 +201,119 @@ class AttemptLoaderTest(unittest.TestCase):
         self.assertEqual(by_id["normal"]["diffFingerprint"], "fingerprint-normal")
         self.assertEqual(by_id["abnormal"]["terminationReason"], "queued-submitter-death")
 
+    def test_compact_live_snapshot_preserves_abnormal_terminal_facts(self) -> None:
+        snapshot = {
+            "capturedAt": "2026-09-03T00:00:04Z",
+            "files": [
+                {
+                    "checkout": "fixture",
+                    "kind": "attempts",
+                    "runId": "run",
+                    "payload": [
+                        {
+                            "schemaVersion": economics.ATTEMPT_SCHEMA,
+                            "_tag": "attempt-started",
+                            "attemptId": "abnormal",
+                            "startedAt": "2026-09-03T00:00:02Z",
+                            "branch": "feat/compact",
+                            "mode": "verify",
+                        },
+                        {
+                            "schemaVersion": economics.ATTEMPT_SCHEMA,
+                            "_tag": "attempt-terminated",
+                            "attemptId": "abnormal",
+                            "recordedAt": "2026-09-03T00:00:03Z",
+                            "reason": "stale-unverifiable-owner",
+                            "resolvedHeadSha": "0123456789abcdef0123456789abcdef01234567",
+                            "diffFingerprint": "fingerprint-abnormal",
+                            "proofTier": "full",
+                            "envProfile": "local",
+                            "stage": "repair-loop",
+                        },
+                    ],
+                }
+            ],
+        }
+
+        with tempfile.TemporaryDirectory() as corpus:
+            compact = economics.compact_live_snapshot(snapshot, Path(corpus))
+        sources, verdicts, _, _ = economics.live_payloads(compact)
+        attempts, diagnostics = economics.load_attempts(sources, verdicts)
+
+        self.assertEqual(diagnostics["invalidRows"], 0)
+        self.assertEqual(len(attempts), 1)
+        self.assertEqual(attempts[0]["terminationReason"], "stale-unverifiable-owner")
+        self.assertEqual(attempts[0]["resolvedHeadSha"], "0123456789abcdef0123456789abcdef01234567")
+        self.assertEqual(attempts[0]["diffFingerprint"], "fingerprint-abnormal")
+        self.assertEqual(attempts[0]["proofTier"], "full")
+        self.assertEqual(attempts[0]["envProfile"], "local")
+        self.assertEqual(attempts[0]["stage"], "repair-loop")
+
+    def test_compacted_fixture_excludes_and_counts_left_censored_episode(self) -> None:
+        def started(attempt_id: str, started_at: str) -> dict[str, object]:
+            return {
+                "schemaVersion": economics.ATTEMPT_SCHEMA,
+                "_tag": "attempt-started",
+                "attemptId": attempt_id,
+                "startedAt": started_at,
+                "branch": "feat/censored",
+                "mode": "verify",
+            }
+
+        def terminated(attempt_id: str, recorded_at: str) -> dict[str, object]:
+            return {
+                "schemaVersion": economics.ATTEMPT_SCHEMA,
+                "_tag": "attempt-terminated",
+                "attemptId": attempt_id,
+                "recordedAt": recorded_at,
+                "reason": "failure",
+            }
+
+        def finished(attempt_id: str, recorded_at: str) -> dict[str, object]:
+            return {
+                "schemaVersion": economics.ATTEMPT_SCHEMA,
+                "_tag": "attempt-finished",
+                "attemptId": attempt_id,
+                "recordedAt": recorded_at,
+                "verdict": {"outcome": "success", "createdAt": recorded_at},
+            }
+
+        source = {
+            "checkout": "fixture",
+            "runId": "run",
+            "source": "live",
+            "path": "attempts.ndjson",
+            "records": [
+                {
+                    "schemaVersion": economics.ATTEMPT_SCHEMA,
+                    "_tag": "journal-compacted",
+                    "recordedAt": "2026-09-03T00:00:03Z",
+                    "evictedCount": 4,
+                    "evictedAttemptIds": ["evicted-a", "evicted-b"],
+                    "oldestEvictedRecordedAt": "2026-09-03T00:00:00Z",
+                    "terminalEvictionCutoffRecordedAt": "2026-09-03T00:00:02Z",
+                },
+                started("left-red", "2026-09-03T00:00:01Z"),
+                terminated("left-red", "2026-09-03T00:00:02Z"),
+                started("left-green", "2026-09-03T00:00:03Z"),
+                finished("left-green", "2026-09-03T00:00:04Z"),
+                started("exact-red", "2026-09-03T00:00:05Z"),
+                terminated("exact-red", "2026-09-03T00:00:06Z"),
+                started("exact-green", "2026-09-03T00:00:07Z"),
+                finished("exact-green", "2026-09-03T00:00:08Z"),
+            ],
+        }
+
+        compact_records = [economics.compact_attempt_record(record) for record in source["records"]]
+        attempts, diagnostics = economics.load_attempts([{**source, "records": compact_records}], [])
+        summary = economics.red_to_green(attempts)["uncut"]
+
+        self.assertEqual(diagnostics["compactionReceipts"], 1)
+        self.assertEqual(diagnostics["leftCensoredJournals"], 1)
+        self.assertEqual(summary["closedEpisodes"], 1)
+        self.assertEqual(summary["leftCensoredEpisodesExcluded"], 1)
+        self.assertEqual(summary["leftCensoredObservedAttempts"], 2)
+
     def test_fingerprint_quality_counts_only_recorded_string_facts(self) -> None:
         attempts = [
             {"diffFingerprint": None, "lanes": [{"commandHash": None}]},
