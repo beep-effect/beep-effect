@@ -2,10 +2,12 @@
  * Preservation-first removal service for managed Git worktrees.
  *
  * Archive mode atomically renames the checkout aside first, so nothing new can
- * land under the original path, then captures the fenced copy: the target
- * commit becomes reachable through a create-only ref, tracked and untracked
- * residue is written outside the checkout, and only then is the fenced copy
- * deleted and its branch ref removed by compare-and-swap on the archived head.
+ * land under the original path, refuses while any same-uid process still holds
+ * the fenced copy by cwd or open descriptor, then captures the fenced copy: the
+ * target commit becomes reachable through a create-only ref, tracked and
+ * untracked residue is written outside the checkout, and only then is the
+ * fenced copy deleted and its branch ref removed by compare-and-swap on the
+ * archived head.
  * Plain removal keeps its existing refusal when the target has uncommitted
  * changes.
  *
@@ -24,9 +26,11 @@ import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import {
   collectUntrackedPaths,
+  ProcessAttachmentKind,
   resolveGitCommit,
   runGitOutput,
   runGitRawOutput,
+  scanProcessAttachments,
 } from "../../internal/repo-run/index.ts";
 import { WorktreeCommandError, WorktreeDirtyError, WorktreePreservationError } from "./Worktree.errors.ts";
 import {
@@ -39,7 +43,7 @@ import {
 } from "./Worktree.schemas.ts";
 import type { Crypto } from "effect";
 import type { ChildProcessSpawner } from "effect/unstable/process";
-import type { GitCommandErrorAdapter } from "../../internal/repo-run/index.ts";
+import type { GitCommandErrorAdapter, ProcessAttachment } from "../../internal/repo-run/index.ts";
 import type { WorktreeResidueReason as WorktreeResidueReasonType } from "./Worktree.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Worktree/Worktree.service");
@@ -886,6 +890,36 @@ const removeLegacyWorktree = Effect.fn("WorktreeRemovalService.removeLegacyWorkt
   });
 });
 
+const MAX_REPORTED_HOLDERS = 8;
+
+const describeAttachedProcesses = (attachments: A.NonEmptyReadonlyArray<ProcessAttachment>): string => {
+  const holders = A.dedupeWith(attachments, (left, right) => left.pid === right.pid);
+  const shown = A.take(holders, MAX_REPORTED_HOLDERS);
+  const listed = A.join(
+    A.map(shown, (holder) => `pid ${holder.pid} via ${holder.kind}`),
+    ", "
+  );
+  const hidden = A.length(holders) - A.length(shown);
+  return hidden > 0 ? `${listed} and ${hidden} more` : listed;
+};
+
+const assertQuiescentFence = Effect.fnUntraced(function* (
+  request: WorktreeRemovalRequest,
+  fencedPath: string
+): Effect.fn.Return<void, WorktreeCommandError, FileSystem.FileSystem> {
+  const scan = yield* scanProcessAttachments({ directory: fencedPath, kinds: ProcessAttachmentKind.Options });
+  if (O.isNone(scan)) {
+    return yield* WorktreeCommandError.make({
+      message: `Refusing to retire ${request.targetPath}: the processes attached to it could not be enumerated, so the archive cannot be proven complete.`,
+    });
+  }
+  if (A.isReadonlyArrayNonEmpty(scan.value)) {
+    return yield* WorktreeCommandError.make({
+      message: `Refusing to retire ${request.targetPath}: ${describeAttachedProcesses(scan.value)} still hold it, and any write they make after the archive is captured would be deleted with the fenced copy.`,
+    });
+  }
+});
+
 const fencedArchivePlan = Effect.fn("WorktreeRemovalService.fencedArchivePlan")(function* (
   request: WorktreeRemovalRequest,
   fenced: WorktreeRemovalRequest
@@ -894,6 +928,12 @@ const fencedArchivePlan = Effect.fn("WorktreeRemovalService.fencedArchivePlan")(
   WorktreeCommandError | WorktreePreservationError,
   WorktreeRemovalServiceRequirements
 > {
+  // The fence froze the writer set: nothing reaches the retiring tree by path any
+  // more, so the processes attached to it now — by cwd or an open descriptor — are
+  // exactly the ones able to write after the residue below is captured. The archive
+  // is complete only if that set is empty, so any holder refuses the retirement (the
+  // caller renames the checkout back) instead of racing its writes to the deletion.
+  yield* assertQuiescentFence(request, fenced.targetPath);
   const changes = yield* inspectRemovalChanges(
     fenced.targetPath,
     preservationErrorAdapter("inspect-residue", `Failed to inspect ${fenced.targetPath}.`, fenced.targetPath)

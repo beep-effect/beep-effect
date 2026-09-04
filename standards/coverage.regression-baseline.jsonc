@@ -25525,14 +25525,14 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Worktree/Reap.service.ts": {
-          "lines": 90.6,
-          "statements": 90.42,
-          "branches": 85.39,
-          "functions": 87.27,
+          "lines": 90.53,
+          "statements": 90.28,
+          "branches": 85.54,
+          "functions": 86.53,
           "uncovered": {
-            "lines": 17,
-            "statements": 18,
-            "branches": 13,
+            "lines": 16,
+            "statements": 17,
+            "branches": 12,
             "functions": 7
           }
         },
@@ -25585,15 +25585,15 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts": {
-          "lines": 86.08,
-          "statements": 86.36,
-          "branches": 78.94,
-          "functions": 72.22,
+          "lines": 91.52,
+          "statements": 91.25,
+          "branches": 88.46,
+          "functions": 77.77,
           "uncovered": {
-            "lines": 27,
-            "statements": 27,
-            "branches": 8,
-            "functions": 20
+            "lines": 20,
+            "statements": 21,
+            "branches": 6,
+            "functions": 18
           }
         },
         "packages/tooling/tool/cli/src/commands/Worktree/index.ts": {
@@ -26878,6 +26878,18 @@
             "statements": 56,
             "branches": 43,
             "functions": 13
+          }
+        },
+        "packages/tooling/tool/cli/src/internal/repo-run/ProcessAttachment.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
           }
         },
         "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts": {

@@ -271,7 +271,9 @@ export class WorktreeArchivePlan extends S.Class<WorktreeArchivePlan>($I`Worktre
  * the entire removal — no worktree removal, no branch deletion — if it no
  * longer equals this object id. Archive mode fences the checkout with an
  * atomic rename before capturing residue, so the archive is complete with
- * respect to everything that arrived before the fence, and the branch ref
+ * respect to everything that arrived before the fence, refuses while any
+ * same-uid process still holds the fenced copy by cwd or open descriptor (a
+ * writer the archive could not see), and the branch ref
  * itself always falls to an atomic `git update-ref -d` compare-and-swap on
  * the archived head — an advance at any point up to the final ref update
  * fails the deletion instead of orphaning commits; directory removal never

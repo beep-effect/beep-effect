@@ -23,7 +23,7 @@ import * as N from "effect/Number";
 import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { runRepoCommandCapture } from "../../internal/repo-run/index.ts";
+import { runRepoCommandCapture, scanProcessAttachments } from "../../internal/repo-run/index.ts";
 import { classifyFleetLiveness } from "./Fleet.service.ts";
 import { WorktreeReapCandidate, WorktreeReapClass, WorktreeReapReport } from "./Reap.schemas.ts";
 import { WorktreeCommandError } from "./Worktree.errors.ts";
@@ -242,45 +242,10 @@ const measureBytes = Effect.fn("WorktreeReap.measureBytes")(function* (
   );
 });
 
-const PID_DIRECTORY_NAME = /^[0-9]+$/;
-
-const readPidCwd = Effect.fnUntraced(function* (
-  pid: string
-): Effect.fn.Return<O.Option<string>, never, FileSystem.FileSystem> {
-  const fs = yield* FileSystem.FileSystem;
-  return yield* fs.readLink(`/proc/${pid}/cwd`).pipe(Effect.option);
-});
-
-const scanProcessCwdMatches = Effect.fnUntraced(function* (
-  targetPath: string
-): Effect.fn.Return<O.Option<number>, never, FileSystem.FileSystem> {
-  const fs = yield* FileSystem.FileSystem;
-  const names = yield* fs.readDirectory("/proc").pipe(Effect.option);
-  // /proc/<pid>/cwd targets are fully resolved by the kernel, so the target must be
-  // resolved too or a symlinked ancestor would make every live checkout look idle.
-  const resolvedTarget = yield* fs.realPath(targetPath).pipe(Effect.option);
-  if (O.isNone(names) || O.isNone(resolvedTarget)) {
-    return O.none();
-  }
-  const pids = A.filter(names.value, (name) => PID_DIRECTORY_NAME.test(name));
-  const cwds = A.getSomes(yield* Effect.forEach(pids, readPidCwd));
-  // Unreadable pids are dropped, never fail-closed: measurement on a healthy host
-  // shows a permanent population of unreadable-by-construction pids — every foreign
-  // uid, plus this user's own ptrace-protected processes (systemd --user, sd-pam, the
-  // compositor, gpg-agent, every 1Password op) — so any fail-closed rule for them
-  // wedges the scan on every pass and makes retirement unreachable. The guarded
-  // population (this user's agent processes) is dumpable and observable, and the one
-  // protected kind that plausibly occupies a checkout, an op-run wrapper, spawns
-  // dumpable children that inherit and expose the same cwd to this scan.
-  return O.some(
-    A.length(
-      A.filter(
-        cwds,
-        (cwd) => Str.Equivalence(cwd, resolvedTarget.value) || Str.startsWith(`${resolvedTarget.value}/`)(cwd)
-      )
-    )
-  );
-});
+// The cheap cwd-only form of the shared scan: it runs once per candidate, and the
+// removal service repeats the thorough cwd+descriptor form inside its fence.
+const scanProcessCwdMatches = (targetPath: string): Effect.Effect<O.Option<number>, never, FileSystem.FileSystem> =>
+  scanProcessAttachments({ directory: targetPath, kinds: ["cwd"] }).pipe(Effect.map(O.map(A.length)));
 
 /**
  * Classify one directory's liveness from a same-uid process-cwd scan plus its idle age.

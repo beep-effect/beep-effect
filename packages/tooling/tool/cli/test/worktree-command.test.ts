@@ -81,6 +81,11 @@ const residueManifest = (patchPath: O.Option<string>, untrackedFiles: ReadonlyAr
     reason: "dirty+unpushed",
   });
 
+const residueConfigProvider = (worktreesRoot: string) =>
+  ConfigProvider.fromEnv({
+    env: { BEEP_WORKTREE_RESIDUE_ROOT: `${worktreesRoot}/test-residue`, HOME: worktreesRoot },
+  });
+
 const runGit = Effect.fn("WorktreeCommandTest.runGit")(function* (repoRoot: string, args: ReadonlyArray<string>) {
   const handle = yield* ChildProcess.make("git", [...args], {
     cwd: repoRoot,
@@ -963,6 +968,203 @@ describe("worktree git operations", () => {
         expect(cleanReceipt.branchDeleted).toBe(true);
         expect(yield* fs.exists(cleanPath)).toBe(false);
         expect(afterCleanRemoval).toEqual(beforeCleanRemoval);
+      })
+    )
+  );
+
+  it.effect("refuses archive retirement while a process holds the checkout and restores it in place", () =>
+    withScratchRepo((repoRoot) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const removalService = yield* WorktreeRemovalService;
+        const context = yield* resolveWorktreeContext(repoRoot);
+        const branch = defaultWorktreeBranch("held-demo");
+        const targetPath = yield* addWorktree(context, "held-demo", branch);
+        const configProvider = ConfigProvider.fromEnv({
+          env: {
+            BEEP_WORKTREE_RESIDUE_ROOT: path.join(context.worktreesRoot, "test-residue"),
+            HOME: context.worktreesRoot,
+          },
+        });
+        const remove = removalService
+          .remove(
+            WorktreeRemovalRequest.make({
+              name: NonEmptyTrimmedStr.make("held-demo"),
+              targetPath,
+              mainCheckout: context.mainCheckout,
+              branch: O.some(branch),
+              archive: true,
+              deleteBranch: true,
+              expectedHead: O.none(),
+            })
+          )
+          .pipe(Effect.provideService(ConfigProvider.ConfigProvider, configProvider));
+        const outcome = remove.pipe(
+          Effect.map(() => "retired"),
+          Effect.catchTag("WorktreeCommandError", (error) => Effect.succeed(error.message))
+        );
+
+        // This process holds an open descriptor inside the checkout: the rename fence
+        // cannot detach it, so it could still write into the fenced copy after the
+        // residue is captured. Retirement must refuse and put the checkout back.
+        const refusal = yield* Effect.scoped(
+          Effect.gen(function* () {
+            yield* fs.open(path.join(targetPath, "README.md"), { flag: "r" });
+            return yield* outcome;
+          })
+        );
+        expect(refusal).toContain(`Refusing to retire ${targetPath}: pid ${process.pid} via descriptor`);
+        expect(yield* fs.exists(targetPath)).toBe(true);
+        expect(A.filter(yield* fs.readDirectory(context.worktreesRoot), Str.includes(".retiring-"))).toEqual([]);
+        expect(yield* runGitText(repoRoot, ["worktree", "list", "--porcelain"])).toContain(`worktree ${targetPath}`);
+        expect(yield* runGitText(repoRoot, ["rev-parse", "--verify", `refs/heads/${branch}`])).toHaveLength(40);
+
+        // With the descriptor closed the identical request retires the checkout.
+        expect(yield* outcome).toBe("retired");
+        expect(yield* fs.exists(targetPath)).toBe(false);
+        expect(yield* runGitText(repoRoot, ["branch", "--list", branch])).toBe("");
+      })
+    )
+  );
+
+  it.effect("removes a clean legacy worktree under its authorized head and refuses a dirty one", () =>
+    withScratchRepo((repoRoot) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const removalService = yield* WorktreeRemovalService;
+        const context = yield* resolveWorktreeContext(repoRoot);
+        const legacyRequest = (name: string, targetPath: string, expectedHead: O.Option<GitObjectId>) =>
+          WorktreeRemovalRequest.make({
+            name: NonEmptyTrimmedStr.make(name),
+            targetPath,
+            mainCheckout: context.mainCheckout,
+            branch: O.some(defaultWorktreeBranch(name)),
+            archive: false,
+            deleteBranch: false,
+            expectedHead,
+          });
+
+        const cleanPath = yield* addWorktree(context, "legacy-clean", defaultWorktreeBranch("legacy-clean"));
+        const head = GitObjectId.make(yield* runGitText(cleanPath, ["rev-parse", "HEAD"]));
+        const stale = yield* Effect.flip(
+          removalService.remove(legacyRequest("legacy-clean", cleanPath, O.some(GitObjectId.make("a".repeat(40)))))
+        );
+        expect(stale._tag).toBe("WorktreeCommandError");
+        expect(yield* fs.exists(cleanPath)).toBe(true);
+
+        const receipt = yield* removalService.remove(legacyRequest("legacy-clean", cleanPath, O.some(head)));
+        expect(receipt.reason).toBe("clean");
+        expect(O.isNone(receipt.manifest)).toBe(true);
+        expect(receipt.branchDeleted).toBe(false);
+        expect(yield* fs.exists(cleanPath)).toBe(false);
+
+        const dirtyPath = yield* addWorktree(context, "legacy-dirty", defaultWorktreeBranch("legacy-dirty"));
+        yield* fs.writeFileString(path.join(dirtyPath, "scratch.txt"), "unsaved\n");
+        const dirty = yield* Effect.flip(removalService.remove(legacyRequest("legacy-dirty", dirtyPath, O.none())));
+        expect(dirty._tag).toBe("WorktreeDirtyError");
+        expect(yield* fs.exists(dirtyPath)).toBe(true);
+      })
+    )
+  );
+
+  it.effect("reports a fence that cannot be placed and leaves the checkout untouched", () =>
+    withScratchRepo((repoRoot) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const removalService = yield* WorktreeRemovalService;
+        const context = yield* resolveWorktreeContext(repoRoot);
+        const targetPath = yield* addWorktree(context, "fence-demo", defaultWorktreeBranch("fence-demo"));
+        const outcome = removalService
+          .remove(
+            WorktreeRemovalRequest.make({
+              name: NonEmptyTrimmedStr.make("fence-demo"),
+              targetPath,
+              mainCheckout: context.mainCheckout,
+              branch: O.some(defaultWorktreeBranch("fence-demo")),
+              archive: true,
+              deleteBranch: false,
+              expectedHead: O.none(),
+            })
+          )
+          .pipe(
+            Effect.provideService(ConfigProvider.ConfigProvider, residueConfigProvider(context.worktreesRoot)),
+            Effect.map(() => "retired"),
+            Effect.catchTag("WorktreeCommandError", (error) => Effect.succeed(error.message))
+          );
+
+        // A read-only worktrees root denies the rename that would fence the checkout.
+        const refusal = yield* Effect.acquireUseRelease(
+          fs.chmod(context.worktreesRoot, 0o500),
+          () => outcome,
+          () => fs.chmod(context.worktreesRoot, 0o755)
+        );
+        expect(refusal).toContain(`Failed to fence ${targetPath} for retirement`);
+        expect(yield* fs.exists(targetPath)).toBe(true);
+        expect(yield* runGitText(targetPath, ["status", "--porcelain"])).toBe("");
+      })
+    )
+  );
+
+  it.effect("archives the residue and names the fenced copy when its deletion is denied", () =>
+    withScratchRepo((repoRoot) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const removalService = yield* WorktreeRemovalService;
+        const context = yield* resolveWorktreeContext(repoRoot);
+        const branch = defaultWorktreeBranch("sticky-demo");
+        const targetPath = yield* addWorktree(context, "sticky-demo", branch);
+        const sealed = path.join(targetPath, "sealed");
+        yield* fs.makeDirectory(sealed);
+        yield* fs.writeFileString(path.join(sealed, "keep.txt"), "sealed\n");
+        const fencedCopies = fs
+          .readDirectory(context.worktreesRoot)
+          .pipe(Effect.map(A.filter(Str.startsWith("sticky-demo.retiring-"))));
+        const unseal = fencedCopies.pipe(
+          Effect.flatMap((copies) =>
+            Effect.forEach(copies, (copy) => fs.chmod(path.join(context.worktreesRoot, copy, "sealed"), 0o755))
+          ),
+          Effect.ignore
+        );
+        const outcome = removalService
+          .remove(
+            WorktreeRemovalRequest.make({
+              name: NonEmptyTrimmedStr.make("sticky-demo"),
+              targetPath,
+              mainCheckout: context.mainCheckout,
+              branch: O.some(branch),
+              archive: true,
+              deleteBranch: true,
+              expectedHead: O.none(),
+            })
+          )
+          .pipe(
+            Effect.provideService(ConfigProvider.ConfigProvider, residueConfigProvider(context.worktreesRoot)),
+            Effect.map(() => "retired"),
+            Effect.catchTag("WorktreeCommandError", (error) => Effect.succeed(error.message))
+          );
+
+        // A read-only directory inside the checkout is captured fine (capture only reads
+        // it) but denies the recursive deletion of the fenced copy that follows.
+        const failure = yield* Effect.acquireUseRelease(
+          fs.chmod(sealed, 0o500),
+          () => outcome,
+          () => unseal
+        );
+        expect(failure).toContain(
+          `Archived ${targetPath} but could not delete the fenced copy; it remains at ${targetPath}.retiring-`
+        );
+        expect(yield* fs.exists(targetPath)).toBe(false);
+        const copies = yield* fencedCopies;
+        expect(A.length(copies)).toBe(1);
+        const survivor = path.join(context.worktreesRoot, O.getOrThrow(A.head(copies)), "sealed", "keep.txt");
+        expect(yield* fs.readFileString(survivor)).toBe("sealed\n");
+        // Retirement stopped before the branch compare-and-swap, so the archive ref
+        // exists and the branch survives alongside the named fenced copy.
+        expect(yield* runGitText(repoRoot, ["for-each-ref", "refs/archive/worktrees/sticky-demo/"])).not.toBe("");
+        expect(yield* runGitText(repoRoot, ["branch", "--list", branch])).not.toBe("");
       })
     )
   );
