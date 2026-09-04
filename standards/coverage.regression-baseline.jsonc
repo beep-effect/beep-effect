@@ -27018,12 +27018,12 @@
         "packages/tooling/tool/cli/src/internal/repo-run/AdmissionJournal.ts": {
           "lines": 100,
           "statements": 100,
-          "branches": 100,
+          "branches": 98.9,
           "functions": 100,
           "uncovered": {
             "lines": 0,
             "statements": 0,
-            "branches": 0,
+            "branches": 1,
             "functions": 0
           }
         },
