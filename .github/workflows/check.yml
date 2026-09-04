@@ -752,7 +752,7 @@ jobs:
           TURBO_TEAM: ${{ github.event_name == 'push' && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_TOKEN && vars.TURBO_TEAM || github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_READ_TOKEN && vars.TURBO_TEAM || '' }}
           TURBO_CACHE: ${{ github.event_name == 'push' && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_TOKEN && 'local:rw,remote:rw' || github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_READ_TOKEN && 'local:rw,remote:r' || 'local:rw' }}
         run: |
-          # Lane body (blocking audit/dead-code, advisory sweep, status.md
+          # Lane body (blocking audit/dead-code/health, advisory sweep, status.md
           # accounting, envelope existence) lives in the beep CLI; envelope
           # validation, the step summary, and artifact upload stay below.
           bun run beep ci lane fallow --base "${{ steps.base.outputs.base_ref }}"
@@ -763,11 +763,11 @@ jobs:
         run: |
           set -euo pipefail
 
-          for lane in audit dead-code; do
+          for lane in audit dead-code health; do
             test -s ".beep/fallow/${lane}.check.json"
           done
 
-          for lane in health boundaries flags security fix-preview; do
+          for lane in boundaries flags security fix-preview; do
             bun run beep quality fallow envelope-check ".beep/fallow/${lane}.advisory.json" \
               --require schemaVersion,status,command,exitStatus,baseRef,rawOutputRef \
               --expect-subcommand "$lane" \
@@ -775,7 +775,7 @@ jobs:
               --require-raw-output
           done
 
-          for lane in audit dead-code; do
+          for lane in audit dead-code health; do
             bun run beep quality fallow envelope-check ".beep/fallow/${lane}.check.json" \
               --require schemaVersion,status,command,exitStatus,baseRef,rawOutputRef \
               --expect-subcommand "$lane" \
@@ -788,7 +788,7 @@ jobs:
         shell: bash
         run: |
           {
-            echo "### Fallow Advisory Envelopes"
+            echo "### Fallow Envelopes"
             echo
             echo "- base ref: \`${{ steps.base.outputs.base_ref }}\`"
             echo "- base fetch status: \`${{ steps.base.outputs.base_fetch_status }}\`"

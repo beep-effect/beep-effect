@@ -744,7 +744,7 @@ describe("tsconfig-sync", () => {
             const syncResult = yield* syncTsconfigAtRoot(rootDir, {
               mode: "sync",
               filter: "@beep/example-domain",
-              verbose: false,
+              verbose: true,
             });
             const referenceChanges = A.filter(syncResult.changes, (change) => change.section === "package-references");
             expect(referenceChanges).toHaveLength(1);

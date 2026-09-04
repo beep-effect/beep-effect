@@ -2,15 +2,18 @@
 
 ## Objective
 
-Every function above cognitive complexity 15 (the inherited tail: ~60 functions,
-snapshot in `research/tail-inventory.md`) has a triage verdict executed —
+Every function above cognitive complexity 15 in the live P0 Fallow 3.22.0 scan
+(49 functions in `research/tail-inventory.md`) has a triage verdict executed —
 refactored below the ceiling, waived via `thresholdOverrides` with reason and
 review date, or excluded via `ignorePatterns` with provenance — and the fallow
 health lane is promoted from advisory to a blocking baseline ratchet
 (`--baseline standards/fallow.health.regression-baseline.jsonc`) after three
 consecutive clean runs. The `maxCognitive: 8` gate (law 23,
 `standards/effect-laws-v1.md`; DECISIONS entry 2026-07-30) stays credible:
-suppression count does not grow, and no threshold-appeasement refactors land.
+suppression count does not grow from the current latest-main total of 207, and
+no threshold-appeasement refactors land. The 2026-07-30 scan and original
+refreshed P0 total of 194 remain provenance, not permanent inventories of a
+repository that has since changed.
 
 ## Non-Goals
 
@@ -22,8 +25,9 @@ suppression count does not grow, and no threshold-appeasement refactors land.
 
 ## Source Hierarchy
 
-1. User objective (2026-07-30 calibration session decisions, all seven recorded
-   in `research/calibration.md`).
+1. User objective (2026-09-03 refresh: burn down the current repository's
+   complexity using the latest Fallow release; the historical packet must not
+   block current work).
 2. `AGENTS.md`, `CLAUDE.md`, and required skills.
 3. `standards/effect-laws-v1.md` (law 23), `standards/architecture/DECISIONS.md`
    (2026-07-30 entry), `standards/ARCHITECTURE.md`.
@@ -34,8 +38,8 @@ suppression count does not grow, and no threshold-appeasement refactors land.
 
 ## Target Surfaces
 
-- The tail functions' owning packages (concentrated in `packages/tooling` CLI
-  lint/codegen and `packages/foundation/ui-system`).
+- Every live tail function's owning package; the current inventory spans
+  tooling, UI, modeling, drivers, ontology, and epistemic packages.
 - `.fallowrc.jsonc` (`thresholdOverrides`, `ignorePatterns`).
 - `standards/fallow.health.regression-baseline.jsonc` (shrinks each wave via
   `bun run fallow:health:baseline:write`).
@@ -67,19 +71,23 @@ suppression count does not grow, and no threshold-appeasement refactors land.
 
 ## Acceptance Criteria
 
-- [ ] `research/tail-inventory.md` carries a triage verdict per tail function,
-      each executed (refactor merged, override added, or ignore added).
-- [ ] Wave 1 (five panel-named refactors in `research/calibration.md`) merged.
-- [ ] `bun run fallow:health:baseline:check` exits 0 and the committed baseline
+- [x] `research/tail-inventory.md` carries a triage verdict per tail function,
+      each executed in the candidate branch (refactor landed, override added,
+      or ignore added).
+- [x] Wave 1 (five panel-named seams in `research/calibration.md`) executed and
+      verified; already-landed work counts when current source proves it.
+- [x] `bun run fallow:health:baseline:check` exits 0 and the committed baseline
       shows zero `critical` complexity findings (nothing above cognitive 15
       without an override/ignore).
-- [ ] Health lane promoted to blocking after 3 consecutive clean runs recorded
+- [x] Health lane promoted to blocking after 3 consecutive clean runs recorded
       under `reports/clean-runs.md` (PR2; CiLane + FallowQuality wiring).
-- [ ] P0 adopt/defer verdicts recorded for runtime-coverage CRAP and
+- [x] P0 adopt/defer verdicts recorded for runtime-coverage CRAP and
       `fallow impact` trends, with evidence.
-- [ ] Inline suppression count (fallow suppressions totals) has not grown vs
-      the 2026-07-30 backfilled inventory.
-- [ ] No unrelated refactors or formatting churn.
+- [x] Inline suppression count is at most the latest-main Fallow 3.22.0 total
+      of 207, with zero missing/stale reasons and no campaign-added
+      suppressions. The +13 from the original 194 comparator landed on main
+      independently of this campaign.
+- [x] No unrelated refactors or formatting churn.
 
 ## Verification Matrix
 
@@ -90,7 +98,7 @@ suppression count does not grow, and no threshold-appeasement refactors land.
 | Whitespace | `git diff --check -- goals/complexity-ceiling-burn-down` | Passes |
 | Baseline ratchet | `bun run fallow:health:baseline:check` | Exit 0 |
 | Audit gate | `bun run beep quality fallow audit --check --quiet` | Exit 0 on each wave PR |
-| Suppression hygiene | `bun run fallow suppressions` | Zero missing reasons; totals not above 2026-07-30 inventory |
+| Suppression hygiene | `bun run fallow suppressions` | Zero missing/stale reasons; total at most 207; no campaign-added suppressions |
 | Reflection | `bun run beep lint reflection-artifacts` | Passes at P4 |
 
 ## Stop Conditions
@@ -107,5 +115,5 @@ suppression count does not grow, and no threshold-appeasement refactors land.
 
 | Exception | Scope | Owner | Rationale | Removal condition |
 | --- | --- | --- | --- | --- |
-| `maxCrap: 73` override | `Session.inspector.tsx` `TripleValidationMessages` | ontology/ui | Attribution artifact (pre-existing; import-suffix change misattribution) | Review by 2026-10-30; drop if audit no longer misattributes |
-| `maxCrap: 57` override | `Session.sparql.tsx` `sparqlResultPreview`, `runSparqlFromKeyboard` | ontology/ui | Attribution artifact (same class) | Review by 2026-10-30; drop if audit no longer misattributes |
+| Five inherited/current tail waivers | `collectPgModelState`, `collectSqliteModelState`, `isSpec`, `jsonObjectTextFromMixedOutput`, and `jsonObjectTextFromRight`; exact paths and measured dimensions are recorded in `research/tail-inventory.md` and `.fallowrc.jsonc` | effect-drizzle / repo-cli | Existing attribution boundaries and linear mixed-output recovery algorithms; not budgets for campaign code | Reviews by 2026-11-10 or 2026-11-30; drop or reduce any dimension that no longer reproduces |
+| Fourteen campaign waivers | `Scene`, `LiveWaveform`, `LinkPreview`, `TodoItem`, `Sidebar`, `parseQuotedField`, `SpeechInput`, `visit`, `walk`, `tokenizeLocal`, `scanComponent`, `parseRowAt`, `CalendarEventCard`, and `ChartTooltipContent`; exact paths and measured dimensions are recorded in `research/tail-inventory.md` and `.fallowrc.jsonc` | UI / schema / identity / RDF / repo-utils / repo-cli | Cohesive hook/prop boundaries, parser state machines, and filesystem-safety transactions where extraction would fragment invariants or change public APIs | Review by 2026-12-03; re-measure, lower, or remove when the owning boundary naturally changes |

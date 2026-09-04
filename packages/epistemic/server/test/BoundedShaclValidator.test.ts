@@ -101,5 +101,50 @@ describe("@beep/epistemic-server bounded SHACL validator", () => {
         expect(result.violations).toHaveLength(1);
       })
     );
+
+    it.effect(
+      "filters non-target classes and reports a missing required value",
+      Effect.fnUntraced(function* () {
+        const service = yield* ShaclValidationService;
+        const encodedDataset = yield* S.encodeEffect(Dataset)(dataset);
+        const nonTargetResult = yield* service.validate(
+          yield* S.decodeEffect(ShaclValidationRequest)({
+            dataset: encodedDataset,
+            shapes: [
+              {
+                properties: [{ minCount: 1, path: makeNamedNode("https://schema.org/knows") }],
+                targetClass: makeNamedNode("https://schema.org/Organization"),
+              },
+            ],
+          })
+        );
+        const requiredValueResult = yield* service.validate(
+          yield* S.decodeEffect(ShaclValidationRequest)({
+            dataset: encodedDataset,
+            shapes: [
+              {
+                properties: [
+                  {
+                    hasValue: {
+                      datatype: makeNamedNode(XSD_STRING.value),
+                      termType: "Literal",
+                      value: "Bob",
+                    },
+                    minCount: 1,
+                    path: makeNamedNode("https://schema.org/name"),
+                  },
+                ],
+                targetClass: makeNamedNode("https://schema.org/Person"),
+              },
+            ],
+          })
+        );
+
+        expect(nonTargetResult.conforms).toBe(true);
+        expect(nonTargetResult.violations).toEqual([]);
+        expect(requiredValueResult.conforms).toBe(false);
+        expect(requiredValueResult.violations[0]?.message).toContain("Expected value");
+      })
+    );
   });
 });

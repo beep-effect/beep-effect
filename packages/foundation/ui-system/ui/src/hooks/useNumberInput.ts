@@ -84,6 +84,55 @@ type SpinStartHandler = (event: React.MouseEvent<HTMLButtonElement> | React.Touc
 
 type SpinStartProps = Partial<Pick<ButtonHandlers, "onMouseDown" | "onTouchStart">>;
 
+const resolveBlurInterfaceValue = (
+  parsedValue: string,
+  fallbackValue: string,
+  precision: number,
+  clampValueOnBlur: boolean,
+  min: number,
+  max: number
+): string => {
+  const nextNum = Number(parsedValue);
+
+  if (Number.isNaN(nextNum)) {
+    return fallbackValue;
+  }
+
+  if (!clampValueOnBlur) {
+    return nextNum.toFixed(precision);
+  }
+
+  if (nextNum > max) {
+    return max.toFixed(precision);
+  }
+
+  return nextNum < min ? min.toFixed(precision) : nextNum.toFixed(precision);
+};
+
+/**
+ * Focused verification seams for number-input value normalization.
+ *
+ * **Details**
+ *
+ * Invalid text restores the supplied fallback. Valid numbers are formatted to
+ * the requested precision and optionally clamped to the inclusive bounds.
+ *
+ * **Example** (Clamp a blurred value)
+ *
+ * ```ts
+ * import { NumberInputTestKit } from "@beep/ui/hooks/useNumberInput"
+ *
+ * console.log(NumberInputTestKit.resolveBlurInterfaceValue("12", "0", 1, true, 0, 10))
+ * ```
+ *
+ * @internal
+ * @category testing
+ * @since 0.0.0
+ */
+export const NumberInputTestKit = {
+  resolveBlurInterfaceValue,
+} as const;
+
 const NumberInputText = S.String.check(
   S.isPattern(numberInputTextPattern, {
     identifier: $I`NumberInputTextPattern`,
@@ -925,24 +974,7 @@ export const useNumberInput = (options: UseNumberInputOptions = {}) => {
     const parsedValue = parser(event.target.value);
 
     if (parsedValue !== "") {
-      const nextNum = Number(parsedValue);
-      let result = "";
-
-      if (Number.isNaN(nextNum)) {
-        result = tempInterfaceValue;
-      } else {
-        result = nextNum.toFixed(precision);
-
-        if (clampValueOnBlur) {
-          if (nextNum > max) {
-            result = max.toFixed(precision);
-          }
-
-          if (nextNum < min) {
-            result = min.toFixed(precision);
-          }
-        }
-      }
+      const result = resolveBlurInterfaceValue(parsedValue, tempInterfaceValue, precision, clampValueOnBlur, min, max);
 
       const resolvedValue = toNumberOrUndefined(result);
 

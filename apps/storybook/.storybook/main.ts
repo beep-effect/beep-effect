@@ -63,6 +63,8 @@ const config: StorybookConfig = {
     { from: "../../../packages/foundation/ui-system/brand/assets", to: "/brand" },
   ],
   managerHead: (head) => `${head}<link rel="icon" type="image/svg+xml" href="./brand/favicon.svg" />`,
+  previewHead: (head) =>
+    `${head}<style>html,body,#storybook-root,#storybook-docs{background:oklch(0.145 0 0);color-scheme:dark}.sb-loader{border-color:oklch(0.708 0 0);border-top-color:transparent}</style><script>globalThis.process ??= { env: { NODE_ENV: "development" }, platform: "browser", arch: "browser" };</script>`,
   viteFinal(config) {
     const dedupe = A.dedupe(["react", "react-dom", ...(config.resolve?.dedupe ?? [])]);
     const fsAllow = A.dedupe([repoRoot, ...(config.server?.fs?.allow ?? [])]);
@@ -84,6 +86,11 @@ const config: StorybookConfig = {
       ],
       server: {
         ...config.server,
+        hmr: {
+          protocol: "wss",
+          host: "storybook.beep.localhost",
+          clientPort: 1355,
+        },
         fs: {
           ...config.server?.fs,
           allow: fsAllow,

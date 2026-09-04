@@ -576,6 +576,27 @@ const isExplicitTurboScopeArg = (arg: string): boolean =>
 const isExplicitTurboAffectedOrScopeArg = (arg: string): boolean =>
   arg === "--affected" || isExplicitTurboScopeArg(arg);
 
+const TURBO_FILTER_ARG = "--filter";
+const TURBO_FILTER_ARG_PREFIX = `${TURBO_FILTER_ARG}=`;
+
+const inlineTurboFilterValue = (arg: string): O.Option<string> =>
+  pipe(
+    O.liftPredicate(Str.startsWith(TURBO_FILTER_ARG_PREFIX))(arg),
+    O.map(Str.replace(TURBO_FILTER_ARG_PREFIX, "")),
+    O.filter(Str.isNonEmpty)
+  );
+
+const explicitTurboFilterValues = (args: ReadonlyArray<string>): ReadonlyArray<string> => {
+  const inlineValues = pipe(args, A.map(inlineTurboFilterValue), A.getSomes);
+  const pairedValues = pipe(
+    A.zip(args, A.drop(args, 1)),
+    A.map(([arg, value]) => (arg === TURBO_FILTER_ARG && Str.isNonEmpty(value) ? O.some(value) : O.none())),
+    A.getSomes
+  );
+
+  return pipe(A.appendAll(inlineValues, pairedValues), A.dedupe);
+};
+
 const isCoverageWriteBaselineArg = (arg: string): boolean => arg === COVERAGE_WRITE_BASELINE_ARG;
 const isCoverageReplaceAllArg = (arg: string): boolean => arg === COVERAGE_REPLACE_ALL_ARG;
 
@@ -605,6 +626,46 @@ const parseCoverageTaskOptions = (args: ReadonlyArray<string>): CoverageTaskOpti
     writeBaseline: A.some(stripped, isCoverageWriteBaselineArg),
   };
 };
+
+const resolveExplicitCoveragePackageNames = Effect.fn("QualityTasks.resolveExplicitCoveragePackageNames")(function* (
+  repoRoot: string,
+  args: ReadonlyArray<string>
+) {
+  const requestedPackageNames = explicitTurboFilterValues(args);
+  if (A.isReadonlyArrayEmpty(requestedPackageNames)) {
+    return yield* QualityTaskConfigurationError.new(
+      `Scoped ${COVERAGE_WRITE_BASELINE_ARG} runs require exact --filter=<workspace-package> selectors or --affected; Turbo ranges and --since cannot provide verifier-equivalent coverage shards.`
+    );
+  }
+
+  const coverageOwnerNames = pipe(
+    yield* workspaceTaskOwners(repoRoot),
+    A.filter(ownerDefinesScript("coverage")),
+    A.map((owner) => owner.packageName)
+  );
+  const unsupportedSelectors = A.filter(
+    requestedPackageNames,
+    (packageName) => !A.contains(coverageOwnerNames, packageName)
+  );
+  if (A.isReadonlyArrayNonEmpty(unsupportedSelectors)) {
+    return yield* QualityTaskConfigurationError.new(
+      `Scoped ${COVERAGE_WRITE_BASELINE_ARG} selectors must name exact workspace packages that define coverage. Unsupported selector(s): ${A.join(unsupportedSelectors, ", ")}.`
+    );
+  }
+
+  return requestedPackageNames;
+});
+
+const resolveNonAffectedCoverageTaskOptions = Effect.fn("QualityTasks.resolveNonAffectedCoverageTaskOptions")(
+  function* (repoRoot: string, args: ReadonlyArray<string>, parsed: CoverageTaskOptions) {
+    if (!parsed.writeBaseline || !parsed.scoped) {
+      return parsed;
+    }
+
+    const expectedPackageNames = yield* resolveExplicitCoveragePackageNames(repoRoot, args);
+    return { ...parsed, expectedPackageNames };
+  }
+);
 
 const isCoverageAffectedArg = (arg: string): boolean => arg === "--affected";
 const withoutCoverageAffectedArg: (args: ReadonlyArray<string>) => ReadonlyArray<string> = A.filter(
@@ -667,7 +728,7 @@ const resolveCoverageTaskOptions = Effect.fn("QualityTasks.resolveCoverageTaskOp
     );
   }
   if (!A.some(args, isCoverageAffectedArg)) {
-    return parsed;
+    return yield* resolveNonAffectedCoverageTaskOptions(repoRoot, args, parsed);
   }
   if (A.some(args, (arg) => isExplicitTurboScopeArg(arg))) {
     return yield* QualityTaskConfigurationError.new(
@@ -760,12 +821,13 @@ const resolveCoverageTaskOptions = Effect.fn("QualityTasks.resolveCoverageTaskOp
  *
  * @param repoRoot - Repository root used if affected scope requires workspace discovery.
  * @param args - Root coverage passthrough arguments to validate.
+ * @returns The resolved coverage options after scope validation.
  * @category testing
  * @since 0.0.0
  */
 export const validateCoverageTaskArgsForTesting = Effect.fn("QualityTasks.validateCoverageTaskArgsForTesting")(
   function* (repoRoot: string, args: ReadonlyArray<string>) {
-    yield* resolveCoverageTaskOptions(repoRoot, args);
+    return yield* resolveCoverageTaskOptions(repoRoot, args);
   }
 );
 
@@ -2685,7 +2747,7 @@ const coverageSelectedSteps = (
   options: CoverageTaskOptions,
   shardedExecutor: boolean
 ): readonly [QualityTaskStep, ...ReadonlyArray<QualityTaskStep>] =>
-  shardedExecutor && isWideSelectedCoverage(options)
+  shardedExecutor && (options.writeBaseline || isWideSelectedCoverage(options))
     ? coverageSelectedShardedSteps(repoRoot, options)
     : [coverageStep(repoRoot, options)];
 
@@ -2694,10 +2756,10 @@ const coverageSelectedSteps = (
  *
  * **Details**
  *
- * Narrow selections stay one Turbo invocation. A selection whose planner
- * weight exceeds the single-invocation budget runs like the full lane on
- * hosted runners and baseline writes: one prebuild filtered to the selected
- * owners, then weighted `--only` shards with capped Vitest workers.
+ * Narrow ratchet selections stay one Turbo invocation. Baseline writes and
+ * selections whose planner weight exceeds the single-invocation budget run
+ * like the full lane: one prebuild filtered to the selected owners, then
+ * weighted `--only` shards with verifier-equivalent Vitest worker counts.
  *
  * **Example** (Inspect a narrow selection)
  *
@@ -2821,7 +2883,9 @@ const runSelectedCoverage = Effect.fn("QualityTasks.runSelectedCoverage")(functi
   const steps = coverageSelectedSteps(repoRoot, options, usesShardedCoverageExecutor(isCi(), options.writeBaseline));
   if (A.isReadonlyArrayNonEmpty(A.tailNonEmpty(steps))) {
     yield* Console.log(
-      `[beep-cli] coverage:affected: selection weighs ${Math.round(coverageScopeWeightSeconds(options.expectedPackageNames))}s of planner budget (> ${COVERAGE_SELECTED_SINGLE_RUN_MAX_WEIGHT_SECONDS}s); using the weighted shard executor`
+      options.writeBaseline
+        ? "[beep-cli] coverage:affected: baseline regeneration uses the weighted shard executor for verifier-equivalent worker topology"
+        : `[beep-cli] coverage:affected: selection weighs ${Math.round(coverageScopeWeightSeconds(options.expectedPackageNames))}s of planner budget (> ${COVERAGE_SELECTED_SINGLE_RUN_MAX_WEIGHT_SECONDS}s); using the weighted shard executor`
     );
     return yield* runShardedCoverage("coverage:selected", steps);
   }

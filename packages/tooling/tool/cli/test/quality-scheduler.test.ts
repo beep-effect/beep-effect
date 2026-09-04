@@ -42,6 +42,7 @@ import {
   releaseAdmissionJournalLockForTesting,
   repoRunSafeArtifactName,
   setAdmissionEvictionProtocol,
+  tryCreateExclusiveForTesting,
   validatePrivateCoordinationDirectory,
   withQualityAdmission,
   YeetAdmissionLease,
@@ -549,6 +550,19 @@ describe("quality-scheduler", () => {
     }).pipe(provideScopedLayer(MemoryStatsLive), provideScopedLayer(NodeFileSystem.layer))
   );
 
+  it.effect("preserves an existing file when exclusive publication collides", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "quality-scheduler-exclusive-publication-" });
+      const filePath = `${directory}/existing`;
+      yield* fs.writeFileString(filePath, "original");
+
+      expect(yield* tryCreateExclusiveForTesting(filePath, "replacement")).toBe(false);
+      expect(yield* fs.readFileString(filePath)).toBe("original");
+      expect(A.some(yield* fs.readDirectory(directory), Str.includes(".tmp-"))).toBe(false);
+    }).pipe(provideScopedLayer(NodeFileSystem.layer))
+  );
+
   it.effect("accepts an owner-agnostic private directory and rejects an unsafe mode", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
@@ -563,6 +577,18 @@ describe("quality-scheduler", () => {
       };
 
       yield* validatePrivateCoordinationDirectory(directory, options);
+      const withoutReportedOwner = FileSystem.FileSystem.of({
+        ...fs,
+        stat: Effect.fn("FileSystem.FileSystem.statWithoutReportedOwner")((target) =>
+          fs.stat(target).pipe(Effect.map((info) => ({ ...info, uid: O.none<number>() })))
+        ),
+      });
+      const ownerFailure = yield* validatePrivateCoordinationDirectory(directory, {
+        ...options,
+        effectiveUserId: O.some(1_000),
+      }).pipe(Effect.provideService(FileSystem.FileSystem, withoutReportedOwner), Effect.flip);
+      expect(ownerFailure).toContain("reported no owner");
+
       yield* fs.chmod(directory, 0o755);
       const failure = yield* validatePrivateCoordinationDirectory(directory, options).pipe(Effect.flip);
 

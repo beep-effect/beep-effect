@@ -7,7 +7,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Effect, Order } from "effect";
+import { Effect, Match, Order } from "effect";
 import * as A from "effect/Array";
 import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
@@ -178,8 +178,7 @@ const bunRunStep = (
   args: ReadonlyArray<string>,
   mutability: RepoPlanStep["mutability"],
   scope: RepoPlanStep["scope"],
-  task: O.Option<string> = O.none(),
-  env: O.Option<Record<string, string | undefined>> = O.none()
+  task: O.Option<string> = O.none()
 ): RepoPlanStep =>
   enforceConservativeResume(
     RepoPlanStep.make({
@@ -193,7 +192,6 @@ const bunRunStep = (
       mutability,
       resume: "never",
       ...(O.isSome(task) ? { task: task.value } : {}),
-      ...(O.isSome(env) ? { env: env.value } : {}),
     })
   );
 
@@ -697,37 +695,43 @@ const publishSteps = (
   message: O.Option<string>,
   options: YeetRunPlanModeOptions
 ): ReadonlyArray<RepoPlanStep> =>
-  options.pushOnly
-    ? [
+  Match.value(options).pipe(
+    Match.when(
+      ({ pushOnly }) => pushOnly,
+      () => [
         headInstallPreflightStep(context, "publish"),
         pushStep(context),
         ...(options.pr ? [prCreateStep(context), prProvenanceStampStep(context)] : []),
         ...(options.monitor ? monitorSteps(context) : []),
       ]
-    : options.startPrEarly
-      ? [
-          fallowAdvisoryFeedbackStep(context),
-          commitStep(context, message, options),
-          headInstallPreflightStep(context, "early-publish"),
-          earlyPushStep(context),
-          ...(options.pr
-            ? [prCreateStep(context, "early-publish"), prProvenanceStampStep(context, "early-publish")]
-            : []),
-          ...fullProofSteps(context, options.collectAll),
-          ciParityStep(context),
-          ...(options.monitor ? monitorSteps(context) : []),
-        ]
-      : [
-          fallowAdvisoryFeedbackStep(context),
-          commitStep(context, message, options),
-          ...(options.fast && options.monitor
-            ? []
-            : [...fullProofSteps(context, options.collectAll), ciParityStep(context)]),
-          headInstallPreflightStep(context, "publish"),
-          pushStep(context),
-          ...(options.pr ? [prCreateStep(context), prProvenanceStampStep(context)] : []),
-          ...(options.monitor ? monitorSteps(context) : []),
-        ];
+    ),
+    Match.when(
+      ({ startPrEarly }) => startPrEarly,
+      () => [
+        fallowAdvisoryFeedbackStep(context),
+        commitStep(context, message, options),
+        headInstallPreflightStep(context, "early-publish"),
+        earlyPushStep(context),
+        ...(options.pr
+          ? [prCreateStep(context, "early-publish"), prProvenanceStampStep(context, "early-publish")]
+          : []),
+        ...fullProofSteps(context, options.collectAll),
+        ciParityStep(context),
+        ...(options.monitor ? monitorSteps(context) : []),
+      ]
+    ),
+    Match.orElse(() => [
+      fallowAdvisoryFeedbackStep(context),
+      commitStep(context, message, options),
+      ...(options.fast && options.monitor
+        ? []
+        : [...fullProofSteps(context, options.collectAll), ciParityStep(context)]),
+      headInstallPreflightStep(context, "publish"),
+      pushStep(context),
+      ...(options.pr ? [prCreateStep(context), prProvenanceStampStep(context)] : []),
+      ...(options.monitor ? monitorSteps(context) : []),
+    ])
+  );
 
 const stepsForMode = (
   context: RepoRunContext,

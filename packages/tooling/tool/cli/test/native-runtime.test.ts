@@ -137,6 +137,70 @@ it.layer(NodeTestLayer)("native runtime laws", (it) => {
   );
 
   it.effect(
+    "formats every hotspot violation family",
+    Effect.fnUntraced(function* () {
+      yield* withTempWorkingDirectory(
+        Effect.gen(function* () {
+          yield* writeDefaultTsconfig;
+          yield* writeProjectFile(
+            "scratchpad/effect-ontology/Runtime/HotspotProbe.ts",
+            A.join(
+              [
+                'import * as Fs from "node:fs";',
+                "export const inspect = (value: unknown, values: Array<string>, text: string) => {",
+                "  const keys = Object.keys({ value });",
+                "  const cache = new Map<string, string>();",
+                "  const now = new Date();",
+                '  const error = new Error("boom");',
+                "  const timestamp = Date.now();",
+                "  const copied = Array.from(values);",
+                '  const isText = typeof value === "string";',
+                '  const request = fetch("https://example.com");',
+                "  values.sort();",
+                "  text.trim();",
+                "  switch (isText) {",
+                "    case true:",
+                "      return { Fs, cache, copied, error, keys, now, request, timestamp };",
+                "    default:",
+                "      return undefined;",
+                "  }",
+                "};",
+              ],
+              "\n"
+            )
+          );
+
+          const summary = yield* runNoNativeRuntimeRules(
+            NoNativeRuntimeRulesOptions.make({ strictCheck: true, excludePaths: [] })
+          );
+          const messageIds = A.map(summary.diagnostics, (diagnostic) => diagnostic.messageId);
+
+          expect(summary.warningCount).toBe(0);
+          expect(summary.strictFailure).toBe(true);
+          expect(summary.affectedFiles).toEqual(["scratchpad/effect-ontology/Runtime/HotspotProbe.ts"]);
+          expect(messageIds).toEqual(
+            expect.arrayContaining([
+              "arrayStatic",
+              "dateStatic",
+              "mapSetCtor",
+              "nativeError",
+              "nativeFetch",
+              "nativeSort",
+              "nativeSwitch",
+              "newDate",
+              "nodeRuntimeImport",
+              "objectMethod",
+              "stringMethod",
+              "typeofRuntime",
+            ])
+          );
+          expect(A.every(summary.diagnostics, (diagnostic) => diagnostic.message.length > 0)).toBe(true);
+        })
+      );
+    })
+  );
+
+  it.effect(
     "treats effect-ontology native Error construction as a strict violation",
     Effect.fnUntraced(function* () {
       yield* withTempWorkingDirectory(

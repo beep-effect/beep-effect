@@ -453,55 +453,58 @@ const detectSwitchStatementViolation = (node: SwitchStatement): O.Option<NativeR
 const formatViolationMessage = (violation: NativeRuntimeViolation): string => {
   const data = violation.data;
 
-  if (violation.messageId === "allowlistInvalid") {
-    return `Effect laws allowlist is invalid: ${data?.detail ?? ""}`;
-  }
-
-  if (violation.messageId === "objectMethod") {
-    return `Avoid Object.${data?.method ?? ""} in domain logic. Use Effect modules or add an allowlist entry.`;
-  }
-
-  if (violation.messageId === "mapSetCtor") {
-    return `Avoid new ${data?.ctor ?? ""} in domain logic. Use Effect HashMap/HashSet variants or add an allowlist entry.`;
-  }
-
-  if (violation.messageId === "newDate") {
-    return "Avoid new Date() in domain logic. Use Effect DateTime/Clock or add an allowlist entry.";
-  }
-
-  if (violation.messageId === "nativeError") {
-    return `Avoid native ${data?.ctor ?? ""} in production code. Use S.TaggedError from effect/Schema or add an allowlist entry.`;
-  }
-
-  if (violation.messageId === "dateStatic") {
-    return `Avoid Date.${data?.method ?? ""} in domain logic. Use Effect DateTime/Clock or add an allowlist entry.`;
-  }
-
-  if (violation.messageId === "arrayStatic") {
-    return `Avoid Array.${data?.method ?? ""} in domain logic. Use effect/Array helpers or add an allowlist entry.`;
-  }
-
-  if (violation.messageId === "typeofRuntime") {
-    return "Avoid runtime typeof checks. Use effect/Predicate guards (for example P.isString).";
-  }
-
-  if (violation.messageId === "nodeRuntimeImport") {
-    return `Avoid ${data?.moduleName ?? ""} runtime imports in hotspot runtime code. Use Effect FileSystem/Path/process services.`;
-  }
-
-  if (violation.messageId === "nativeFetch") {
-    return "Avoid native fetch in hotspot runtime code. Use effect/unstable/http HttpClient and runtime client layers.";
-  }
-
-  if (violation.messageId === "nativeSort") {
-    return "Avoid native .sort in hotspot runtime code. Use A.sort with an explicit Order.";
-  }
-
-  if (violation.messageId === "nativeSwitch") {
-    return "Avoid native switch statements. Use effect/Match, Match.tagsExhaustive for _tag unions, or schema .match for tagged-union schemas.";
-  }
-
-  return `Avoid native string method .${data?.method ?? ""} in hotspot runtime code. Prefer effect/String and shared schema transforms.`;
+  return Match.value(violation.messageId).pipe(
+    Match.when("allowlistInvalid", () => `Effect laws allowlist is invalid: ${data?.detail ?? ""}`),
+    Match.when(
+      "objectMethod",
+      () => `Avoid Object.${data?.method ?? ""} in domain logic. Use Effect modules or add an allowlist entry.`
+    ),
+    Match.when(
+      "mapSetCtor",
+      () =>
+        `Avoid new ${data?.ctor ?? ""} in domain logic. Use Effect HashMap/HashSet variants or add an allowlist entry.`
+    ),
+    Match.when(
+      "newDate",
+      () => "Avoid new Date() in domain logic. Use Effect DateTime/Clock or add an allowlist entry."
+    ),
+    Match.when(
+      "nativeError",
+      () =>
+        `Avoid native ${data?.ctor ?? ""} in production code. Use S.TaggedError from effect/Schema or add an allowlist entry.`
+    ),
+    Match.when(
+      "dateStatic",
+      () => `Avoid Date.${data?.method ?? ""} in domain logic. Use Effect DateTime/Clock or add an allowlist entry.`
+    ),
+    Match.when(
+      "arrayStatic",
+      () => `Avoid Array.${data?.method ?? ""} in domain logic. Use effect/Array helpers or add an allowlist entry.`
+    ),
+    Match.when(
+      "typeofRuntime",
+      () => "Avoid runtime typeof checks. Use effect/Predicate guards (for example P.isString)."
+    ),
+    Match.when(
+      "nodeRuntimeImport",
+      () =>
+        `Avoid ${data?.moduleName ?? ""} runtime imports in hotspot runtime code. Use Effect FileSystem/Path/process services.`
+    ),
+    Match.when(
+      "nativeFetch",
+      () => "Avoid native fetch in hotspot runtime code. Use effect/unstable/http HttpClient and runtime client layers."
+    ),
+    Match.when("nativeSort", () => "Avoid native .sort in hotspot runtime code. Use A.sort with an explicit Order."),
+    Match.when(
+      "nativeSwitch",
+      () =>
+        "Avoid native switch statements. Use effect/Match, Match.tagsExhaustive for _tag unions, or schema .match for tagged-union schemas."
+    ),
+    Match.orElse(
+      () =>
+        `Avoid native string method .${data?.method ?? ""} in hotspot runtime code. Prefer effect/String and shared schema transforms.`
+    )
+  );
 };
 
 const collectNativeRuntimeViolations = (

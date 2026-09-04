@@ -2,21 +2,20 @@
 
 ## Status
 
-Status: `pending` (P0 next; PR1 of the campaign — gate, law, baselines,
-suppression backfill, packet scaffold — landed from the 2026-07-30 calibration
-session)
+Status: `active` (P0, P1, P2, and P4 complete locally; P3 publishing and
+exact-head merge-readiness proof active)
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Research | pending | Refresh `research/tail-inventory.md` from a live `fallow health` run; record a triage verdict per tail function (refactor / override / ignore) with hotspot rank (`fallow health --hotspots`); adopt/defer verdicts for runtime-coverage CRAP and `fallow impact`. | Every tail function has a verdict; feature verdicts recorded with evidence. |
-| P1 Implement | pending | Wave 1: the five panel-named refactors (`research/calibration.md` §Panel). Waves 2+: tail functions in hotspot order, batched by owning family; Codex implements, Fable reviews. Rebaseline at each wave boundary in the wave's PR. | All refactor verdicts executed; overrides/ignores landed with reasons. |
-| P2 Verify | pending | `fallow:health:baseline:check` green; zero critical complexity findings; suppression totals not above the 2026-07-30 inventory; record 3 consecutive clean health-lane runs in `reports/clean-runs.md`. | Verification matrix green or blockers attributed and documented. |
-| P3 Yeet: PR to mergeable | pending | Lane promotion PR (PR2): move `health` to `FALLOW_BLOCKING_LANES` (`CiLane.ts:631`), baseline-compare argv + blocking predicate in `FallowQuality.command.ts` (drop `--report-only`, add `--baseline`); drive to mergeable. | Health lane blocking in hosted CI + local pre-push; PR mergeable. |
-| P4 Close | pending | Closeout reflection; packet-state flip in the same PR as final work; revisit-6 decision note appended to the DECISIONS entry's thread if warranted. | Reflection passes lint; manifest statuses current. |
+| P0 Research | complete | Refresh `research/tail-inventory.md` from a live `fallow health` run; record a triage verdict per tail function (refactor / override / ignore) with hotspot rank (`fallow health --hotspots`); adopt/defer verdicts for runtime-coverage CRAP and `fallow impact`. | Every tail function has a verdict; feature verdicts recorded with evidence. |
+| P1 Implement | complete | Execute the five panel seams and every current tail-function verdict in hotspot order, batched by owning family; rebaseline at the final wave boundary. | All 30 refactor verdicts and 19 review-dated override verdicts executed; no ignores added. |
+| P2 Verify | complete | `fallow:health:baseline:check` green; zero unwaived functions above cognitive 15; suppression total at most the latest-main comparator of 207 with no campaign additions; record 3 consecutive clean health-lane runs in `reports/clean-runs.md`. | Local verification matrix green on `53193e5a5e`; final 189-entry comparator matched with zero stale/moved entries. |
+| P3 Yeet: PR to mergeable | active | Publish the completed lane-promotion campaign through Yeet and monitor the exact pull-request head. | Health lane blocking in hosted CI + local pre-push; exact head reports `merge-ready: yes`. |
+| P4 Close | complete | Closeout reflection; same-PR packet status reconciliation; revisit-6 decision note appended to the DECISIONS entry. | Reflection passes lint; active manifest reflects local completion and P3 publication state. |
 
-## P3 Closeout Checklist
+## P4 Closeout Checklist
 
 1. Write a closeout reflection via `/reflect` to
    `history/reflections/<YYYY-MM-DD>-<agent>.md`; frontmatter must validate.

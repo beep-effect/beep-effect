@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-09-03T19:43:19.255Z
+Generated: 2026-09-04T00:59:36.457Z
 
 ## Scope
 
@@ -15,7 +15,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | packagesWithoutPublicSrcSurface | 3 |
 | packagesNeedingRemediation | 116 |
 | publicModules | 3001 |
-| publicExports | 21237 |
+| publicExports | 21243 |
 | openModules | 370 |
 | openExports | 3449 |
 | missingExportExamples | 4 |
@@ -69,12 +69,12 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 11 | `@beep/db-admin` | `packages/_internal/db-admin` | needs-remediation | 13 | 46 | 2 | 2 |
 | 12 | `@beep/shared-domain` | `packages/shared/domain` | needs-remediation | 104 | 368 | 3 | 51 |
 | 13 | `@beep/discord` | `packages/drivers/discord` | needs-remediation | 4 | 15 | 0 | 1 |
-| 14 | `@beep/face-detection` | `packages/drivers/face-detection` | needs-remediation | 4 | 33 | 0 | 7 |
+| 14 | `@beep/face-detection` | `packages/drivers/face-detection` | needs-remediation | 4 | 34 | 0 | 7 |
 | 15 | `@beep/gov-legal-mcp` | `packages/drivers/gov-legal-mcp` | needs-remediation | 8 | 38 | 6 | 3 |
 | 16 | `@beep/ontology-use-cases` | `packages/ontology/use-cases` | needs-remediation | 23 | 214 | 1 | 17 |
 | 17 | `@beep/architecture-lab-client` | `packages/architecture-lab/client` | needs-remediation | 3 | 7 | 0 | 4 |
 | 18 | `@beep/dock` | `packages/foundation/ui-system/dock` | needs-remediation | 20 | 212 | 0 | 189 |
-| 19 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 223 | 1819 | 47 | 286 |
+| 19 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 223 | 1823 | 47 | 286 |
 | 20 | `@beep/pglite` | `packages/drivers/pglite` | needs-remediation | 4 | 11 | 3 | 0 |
 | 21 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | needs-remediation | 10 | 86 | 0 | 18 |
 | 22 | `@beep/agents-server` | `packages/agents/server` | needs-remediation | 11 | 39 | 2 | 7 |
@@ -175,7 +175,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 117 | `@beep/tsgo-shim` | `tools/tsgo-shim` | no-public-src-surface | 0 | 0 | 0 | 0 |
 | 118 | `@beep/html` | `packages/foundation/modeling/html` | needs-remediation | 16 | 546 | 9 | 52 |
 | 119 | `@beep/n3` | `packages/drivers/n3` | needs-remediation | 3 | 11 | 0 | 1 |
-| 120 | `@beep/ui` | `packages/foundation/ui-system/ui` | needs-remediation | 134 | 554 | 1 | 7 |
+| 120 | `@beep/ui` | `packages/foundation/ui-system/ui` | needs-remediation | 134 | 555 | 1 | 7 |
 | 121 | `@beep/pandoc-ast` | `packages/foundation/modeling/pandoc-ast` | needs-remediation | 7 | 203 | 0 | 18 |
 | 122 | `@beep/repo-configs` | `packages/tooling/policy-pack/repo-configs` | needs-remediation | 25 | 139 | 0 | 14 |
 | 123 | `@beep/openai` | `packages/drivers/openai` | needs-remediation | 4 | 17 | 0 | 5 |
@@ -512,10 +512,10 @@ Export findings:
 - `src/FaceDetection.models.ts:144` `RawFaceDetectionConfidence` (const) - 1 example import violation(s)
 - `src/FaceDetection.models.ts:606` `decodeFaceDetectionModelConfig` (const) - 1 example import violation(s)
 - `src/FaceDetection.models.ts:634` `decodeFaceDetectionImageRequest` (const) - 1 example import violation(s)
-- `src/FaceDetection.service.ts:206` `LoadedFaceDetector` (interface) - 1 example import violation(s)
-- `src/FaceDetection.service.ts:254` `FaceDetectionServiceShape` (interface) - 1 example import violation(s)
-- `src/FaceDetection.service.ts:313` `FaceDetectionService` (class) - 1 example import violation(s)
-- `src/FaceDetection.service.ts:886` `withDetector` (const) - 1 example import violation(s)
+- `src/FaceDetection.service.ts:207` `LoadedFaceDetector` (interface) - 1 example import violation(s)
+- `src/FaceDetection.service.ts:255` `FaceDetectionServiceShape` (interface) - 1 example import violation(s)
+- `src/FaceDetection.service.ts:314` `FaceDetectionService` (class) - 1 example import violation(s)
+- `src/FaceDetection.service.ts:958` `withDetector` (const) - 1 example import violation(s)
 
 ### @beep/gov-legal-mcp
 
@@ -545,10 +545,10 @@ Export findings:
 - `src/aggregates/Session/Session.ports.ts:329` `TurtleCodec` (class) - 1 example import violation(s)
 - `src/aggregates/Session/Session.ports.ts:521` `OntologyFileStoreShape` (interface) - 1 example import violation(s)
 - `src/aggregates/Session/Session.ports.ts:546` `OntologyFileStore` (class) - 1 example import violation(s)
-- `src/aggregates/Session/Session.projections.ts:876` `buildOntologySnapshotWithInference` (const) - 1 example import violation(s)
+- `src/aggregates/Session/Session.projections.ts:906` `buildOntologySnapshotWithInference` (const) - 1 example import violation(s)
 - `src/aggregates/Session/Session.reasoner.ts:295` `OntologyInferenceResult` (class) - 1 example import violation(s)
-- `src/aggregates/Session/Session.reasoner.ts:885` `inferredSessionGraphPartitions` (const) - 1 example import violation(s)
-- `src/aggregates/Session/Session.reasoner.ts:917` `OntologyReasoner` (class) - 1 example import violation(s)
+- `src/aggregates/Session/Session.reasoner.ts:906` `inferredSessionGraphPartitions` (const) - 1 example import violation(s)
+- `src/aggregates/Session/Session.reasoner.ts:938` `OntologyReasoner` (class) - 1 example import violation(s)
 - `src/aggregates/Session/Session.service.ts:169` `SessionUseCases` (class) - 1 example import violation(s)
 - `src/aggregates/Session/Session.sparql.ts:210` `RunOntologySparqlResult` (class) - 1 example import violation(s)
 - `src/aggregates/Session/Session.sparql.ts:650` `OntologySparqlRunner` (class) - 1 example import violation(s)
@@ -886,7 +886,7 @@ Export findings:
 - `src/commands/Files/Files.errors.ts:120` `failOnExtensionlessFile` (const) - 1 example import violation(s)
 - `src/commands/Files/Files.plan.ts:195` `uniqueNormalizeTargetName` (const) - 1 example import violation(s)
 - `src/commands/Files/Files.plan.ts:230` `uniqueArchiveTargetName` (const) - 1 example import violation(s)
-- `src/commands/Files/Files.service.ts:2726` `flattenMediaFiles` (const) - 1 example import violation(s)
+- `src/commands/Files/Files.service.ts:2724` `flattenMediaFiles` (const) - 1 example import violation(s)
 - `src/commands/Goals/Adopt.ts:163` `readPacketSnapshot` (const) - 1 example import violation(s)
 - `src/commands/Goals/Bootstrap.ts:718` `renderMaterializationPlanJson` (const) - 1 example import violation(s)
 - `src/commands/Goals/Doctor.ts:784` `runGoalsDoctor` (const) - 1 example import violation(s)
@@ -945,7 +945,7 @@ Export findings:
 - `src/commands/Labs/Labs.command.ts:218` `labsCommand` (const) - 1 example import violation(s)
 - `src/commands/Laws/EffectFn.ts:393` `runEffectFnRules` (const) - 1 example import violation(s)
 - `src/commands/Laws/FrozenGrantSet.ts:328` `runFrozenGrantSetRules` (const) - 1 example import violation(s); 1 documentation section/link violation(s)
-- `src/commands/Laws/NoNativeRuntime.ts:570` `runNoNativeRuntimeRules` (const) - 1 documentation section/link violation(s)
+- `src/commands/Laws/NoNativeRuntime.ts:573` `runNoNativeRuntimeRules` (const) - 1 documentation section/link violation(s)
 - `src/commands/Laws/SchemaDiagnostics.ts:64` `formatSchemaDiagnostics` (const) - 1 example import violation(s)
 - `src/commands/Laws/SchemaDiagnostics.ts:95` `formatRedactedSchemaDiagnostics` (const) - 1 example import violation(s)
 - `src/commands/Lint/EcosystemPolarity.ts:384` `runEcosystemPolarityCheck` (const) - 1 example import violation(s)
@@ -962,7 +962,7 @@ Export findings:
 - `src/commands/Lint/SchemaFirst.ts:130` `export { makeSchemaFirstOwnerResolver, makeSchemaFirstProject } from "./internal/SchemaFirstProject.ts";` (re-export) - 1 example import violation(s)
 - `src/commands/Lint/SchemaFirst.ts:147` `export { runSchemaFirstLint } from "./internal/SchemaFirstScan.ts";` (re-export) - 1 example import violation(s)
 - `src/commands/Lint/SchemaFirst.ts:380` `lintSchemaFirstCommand` (const) - 1 example import violation(s)
-- `src/commands/Lint/SchemaTopology.ts:433` `collectSchemaTopologyViolations` (const) - 1 example import violation(s)
+- `src/commands/Lint/SchemaTopology.ts:421` `collectSchemaTopologyViolations` (const) - 1 example import violation(s)
 - `src/commands/Qa/CitedArtifactExistsGate.ts:235` `evaluateCitedArtifactExists` (const) - 1 example import violation(s)
 - `src/commands/Qa/Control.ts:39` `requireLiveHandle` (const) - 1 example import violation(s)
 - `src/commands/Qa/Control.ts:86` `stopLiveSession` (const) - 1 example import violation(s)
@@ -1018,10 +1018,10 @@ Export findings:
 - `src/commands/Qa/Record.ts:469` `runQaRecord` (const) - 1 example import violation(s)
 - `src/commands/Qa/Report.ts:40` `runQaReport` (const) - 1 example import violation(s)
 - `src/commands/Quality/ChangesetGraph.ts:384` `changesetPackageReferencesFromText` (const) - 1 example import violation(s)
-- `src/commands/Quality/FallowQuality.command.ts:1238` `collectAuditDiffInputForTesting` (const) - 1 example import violation(s)
-- `src/commands/Quality/FallowQuality.command.ts:2376` `qualityFallowCommand` (const) - 1 example import violation(s)
-- `src/commands/Quality/Quality.command.ts:665` `runBunAudit` (const) - 1 documentation section/link violation(s)
-- `src/commands/Quality/Quality.command.ts:791` `devQualityStepsForTesting` (const) - 1 example import violation(s)
+- `src/commands/Quality/FallowQuality.command.ts:1240` `collectAuditDiffInputForTesting` (const) - 1 example import violation(s)
+- `src/commands/Quality/FallowQuality.command.ts:2458` `qualityFallowCommand` (const) - 1 example import violation(s)
+- `src/commands/Quality/Quality.command.ts:755` `runBunAudit` (const) - 1 documentation section/link violation(s)
+- `src/commands/Quality/Quality.command.ts:881` `devQualityStepsForTesting` (const) - 1 example import violation(s)
 - `src/commands/Quality/Quality.osv-ignore.ts:105` `selectOsvIgnoreIdsForAudit` (const) - 1 example import violation(s)
 - `src/commands/Quality/Quality.osv-ignore.ts:154` `activeOsvIgnoreIdsForTesting` (const) - 1 example import violation(s)
 - `src/commands/Quality/Quality.render.ts:71` `printQualityProfileConfig` (const) - 1 example import violation(s)
@@ -1054,8 +1054,8 @@ Export findings:
 - `src/commands/Runners/Runners.schemas.ts:304` `BakeCheckReport` (class) - 1 example import violation(s)
 - `src/commands/Runners/Runners.service.ts:154` `BakeLocalInputs` (class) - 1 example import violation(s)
 - `src/commands/Runners/Runners.service.ts:203` `RunnersService` (class) - 1 example import violation(s)
-- `src/commands/Skills/Skills.command.ts:908` `runSkillsUpdate` (const) - 1 example import violation(s)
-- `src/commands/Skills/Skills.command.ts:1058` `skillsCommand` (const) - 1 example import violation(s)
+- `src/commands/Skills/Skills.command.ts:974` `runSkillsUpdate` (const) - 1 example import violation(s)
+- `src/commands/Skills/Skills.command.ts:1084` `skillsCommand` (const) - 1 example import violation(s)
 - `src/commands/Skills/Skills.schemas.ts:556` `SkillSnapshot` (class) - 1 example import violation(s)
 - `src/commands/Skills/Skills.schemas.ts:1174` `decodeSkillUpstream` (const) - 1 example import violation(s)
 - `src/commands/Skills/Skills.schemas.ts:1207` `encodeSkillUpstream` (const) - 1 example import violation(s)
@@ -3858,17 +3858,17 @@ Export findings:
 - `src/FsUtils.ts:429` `walkFiles` (const) - 1 example import violation(s)
 - `src/FsUtils.ts:528` `exists` (const) - 1 example import violation(s)
 - `src/FsUtils.ts:570` `findNearestPackageDir` (const) - 1 example import violation(s)
-- `src/Graph.ts:104` `topologicalSort` (const) - 1 example import violation(s)
-- `src/Graph.ts:158` `detectCycles` (const) - 1 example import violation(s)
-- `src/Graph.ts:309` `computeTransitiveClosure` (const) - 1 example import violation(s)
+- `src/Graph.ts:101` `topologicalSort` (const) - 1 example import violation(s)
+- `src/Graph.ts:179` `detectCycles` (const) - 1 example import violation(s)
+- `src/Graph.ts:287` `computeTransitiveClosure` (const) - 1 example import violation(s)
 - `src/JSDoc/models/CanonicalJSDocSourceMetadata.model.ts:33` `CanonicalJSDocSourceMetadata` (class) - 1 example import violation(s)
 - `src/JsonUtils.ts:39` `jsonStringifyPretty` (const) - 1 example import violation(s)
 - `src/JsonUtils.ts:67` `jsonStringifyCompact` (const) - 1 example import violation(s)
 - `src/JsonUtils.ts:94` `jsonParse` (const) - 1 example import violation(s)
 - `src/Root.ts:46` `findRepoRoot` (const) - 1 example import violation(s)
 - `src/TSMorph/TSMorph.service.ts:391` `TSMorphService` (class) - 1 example import violation(s)
-- `src/TSMorph/TSMorph.service.ts:697` `createTSMorphService` (const) - 1 example import violation(s)
-- `src/TSMorph/TSMorph.service.ts:1367` `TSMorphServiceLive` (const) - 1 example import violation(s)
+- `src/TSMorph/TSMorph.service.ts:708` `createTSMorphService` (const) - 1 example import violation(s)
+- `src/TSMorph/TSMorph.service.ts:1378` `TSMorphServiceLive` (const) - 1 example import violation(s)
 - `src/TsConfig.ts:51` `collectTsConfigPaths` (const) - 1 example import violation(s)
 - `src/Workspaces.ts:120` `resolveWorkspaceDirs` (const) - 1 example import violation(s)
 - `src/Workspaces.ts:227` `getWorkspaceDir` (const) - 1 example import violation(s)
@@ -4133,7 +4133,7 @@ Export findings:
 - `src/GovernedTierGate/GovernedTierGate.gate.ts:181` `refusalGuidance` (const) - 1 documentation section/link violation(s)
 - `src/GovernedTierGate/GovernedTierGate.gate.ts:238` `makeGovernedTierGate` (const) - 1 example import violation(s); 1 documentation section/link violation(s)
 - `src/GovernedTierGate/GovernedTierGate.layer.ts:52` `GovernedTierGateLive` (const) - 1 example import violation(s)
-- `src/ShaclValidation/BoundedShaclValidator.layer.ts:81` `BoundedShaclValidationServiceLive` (const) - 1 example import violation(s)
+- `src/ShaclValidation/BoundedShaclValidator.layer.ts:252` `BoundedShaclValidationServiceLive` (const) - 1 example import violation(s)
 
 ### @beep/box-provisioning
 
@@ -4159,10 +4159,10 @@ Module findings:
 - `src/Vocab/Dcterms.ts:1` (jsdoc) - 1 documentation section/link violation(s)
 
 Export findings:
-- `src/Iri.ts:939` `IRIReference` (const) - 1 example import violation(s)
-- `src/Iri.ts:987` `RelativeIRIReference` (const) - 1 example import violation(s)
-- `src/Iri.ts:1032` `AbsoluteIRI` (const) - 1 example import violation(s)
-- `src/Iri.ts:1077` `IRI` (const) - 1 example import violation(s)
+- `src/Iri.ts:909` `IRIReference` (const) - 1 example import violation(s)
+- `src/Iri.ts:957` `RelativeIRIReference` (const) - 1 example import violation(s)
+- `src/Iri.ts:1002` `AbsoluteIRI` (const) - 1 example import violation(s)
+- `src/Iri.ts:1047` `IRI` (const) - 1 example import violation(s)
 - `src/SemanticSchemaMetadata/SemanticSchemaMetadata.annotations.ts:62` `makeSemanticSchemaMetadataResult` (const) - 1 example import violation(s)
 - `src/SemanticSchemaMetadata/SemanticSchemaMetadata.annotations.ts:162` `collectSemanticSchemaMetadataResult` (const) - 1 example import violation(s)
 - `src/SemanticSchemaMetadata/SemanticSchemaMetadata.annotations.ts:221` `getSemanticSchemaMetadataResult` (const) - 1 example import violation(s)
@@ -4625,7 +4625,7 @@ Export findings:
 - `src/components/effect-date-time-picker.tsx:755` `EffectDateTimePicker` (function) - 1 example import violation(s)
 - `src/components/effect-date-time-picker.tsx:795` `EffectTimePicker` (function) - 1 example import violation(s)
 - `src/components/effect-date-time-picker.tsx:326` `AdapterEffectDateTime` (class) - 1 example import violation(s)
-- `src/hooks/useNumberInput.ts:481` `getStepFactor` (const) - 1 example import violation(s)
+- `src/hooks/useNumberInput.ts:530` `getStepFactor` (const) - 1 example import violation(s)
 - `src/index.ts:29` `export { VERSION } from "./Version.ts";` (re-export) - 1 example import violation(s)
 
 ### @beep/pandoc-ast

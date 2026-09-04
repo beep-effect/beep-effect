@@ -50,6 +50,7 @@ export {
   RootAuditMode,
 } from "@beep/repo-cli/commands/Quality/Quality.schemas";
 export * from "@beep/repo-cli/commands/Quality/Tasks";
+export { reportInvariantDiagnosticsForTesting } from "../commands/Quality/FallowQuality.command.ts";
 export * from "../commands/Quality/internal/CoverageRegression.ts";
 export * from "../commands/Quality/internal/CoverageScope.ts";
 export * from "../commands/Quality/internal/FallowEnvelope.schema.ts";

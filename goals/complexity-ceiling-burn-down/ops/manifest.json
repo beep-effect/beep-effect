@@ -5,13 +5,13 @@
     "title": "Complexity Ceiling Burn-Down",
     "status": "active",
     "created": "2026-07-30",
-    "updated": "2026-07-30",
+    "updated": "2026-09-03",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/complexity-ceiling-burn-down",
   "lifecycle": "active",
-  "statusNote": "P0 research remains the next authorized phase: refresh the live Fallow tail inventory and record a triage verdict for every tail function before implementation.",
-  "mission": "Clear the cognitive->15 tail (60 fns), promote the fallow health lane to a blocking baseline ratchet, and hold the maxCognitive=8 gate credible.",
+  "statusNote": "P0, P1, P2, and P4 are complete locally against Fallow 3.22.0 on latest main 53193e5a5e: all 49 tail verdicts are executed, the 189-entry baseline matches without stale or moved entries, and the current 207-suppression inventory has no campaign additions. P3 is active until Yeet proves the exact pull-request head merge-ready.",
+  "mission": "Clear the refreshed cognitive->15 tail (49 fns), promote the fallow health lane to a blocking baseline ratchet, and hold the maxCognitive=8 gate credible.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -34,12 +34,16 @@
     "goals/complexity-ceiling-burn-down/SPEC.md",
     "goals/complexity-ceiling-burn-down/PLAN.md",
     "goals/complexity-ceiling-burn-down/GOAL.md",
-    "goals/complexity-ceiling-burn-down/research/SOURCES.md"
+    "goals/complexity-ceiling-burn-down/research/SOURCES.md",
+    "goals/complexity-ceiling-burn-down/research/tail-inventory.md",
+    "goals/complexity-ceiling-burn-down/reports/clean-runs.md",
+    "goals/complexity-ceiling-burn-down/history/reflections/2026-09-03-codex.md"
   ],
   "researchReports": [
     "research/SOURCES.md",
     "research/calibration.md",
-    "research/tail-inventory.md"
+    "research/tail-inventory.md",
+    "research/OPPORTUNITIES.md"
   ],
   "agentLaunchers": [
     {
@@ -54,27 +58,27 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Implement",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Verify",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
@@ -83,7 +87,11 @@
     "rg -n \"complexity-ceiling-burn-down|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/complexity-ceiling-burn-down",
     "git diff --check -- goals/complexity-ceiling-burn-down",
     "bun run beep lint reflection-artifacts",
-    "bun run fallow:health:baseline:check"
+    "bun run fallow:health:baseline:check",
+    "bun run beep quality fallow audit --check --quiet",
+    "bun run fallow suppressions --format json",
+    "bun run beep quality github-checks plan-contract-check --mode pre-push --expect-promoted-fallow-lanes",
+    "bun run beep quality fallow ci-contract-check .github/workflows/check.yml --expect-lanes boundaries,flags,security,fix-preview --expect-blocking-lanes audit,dead-code,health --expect-out-dir .beep/fallow --require-upload --if-no-files-found error --advisory"
   ],
   "stopConditions": [
     "Required source files are missing or materially contradictory.",

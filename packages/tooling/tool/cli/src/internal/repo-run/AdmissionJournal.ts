@@ -899,10 +899,10 @@ const finishJournalLockReap = Effect.fnUntraced(function* (
   const completed = reclaimedObservedGeneration
     ? yield* discardReclaimedJournalLock(tombstonePath, adopterPath, observedToken)
     : yield* restoreDisplacedJournalLock(lockPath, tombstonePath, adopterPath, observedToken);
-  if (!completed) {
-    return;
-  }
-  yield* releaseJournalLockReapClaim(adopterPath, observedToken);
+  yield* releaseJournalLockReapClaim(adopterPath, observedToken).pipe(
+    Effect.when(Effect.succeed(completed)),
+    Effect.asVoid
+  );
 });
 
 const claimAndFinishJournalLockReap = Effect.fnUntraced(function* (

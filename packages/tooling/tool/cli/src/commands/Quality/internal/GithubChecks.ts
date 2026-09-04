@@ -452,9 +452,9 @@ export const githubCheckPrePushExternalLanes = (repoRoot: string): ReadonlyArray
 const fallowGithubCheckLaneId = (featureFamily: FallowQualityFeatureFamily): string => `fallow:${featureFamily}`;
 
 // Promoted blocking Fallow lanes (goals/fallow-quality-enforcement feature
-// matrix rows with promotionStatus blocking). The dead-code lane holds the
-// zero regression baseline. The audit lane (complexity/duplication smells) is
-// advisory-only and is no longer wired here.
+// matrix rows with promotionStatus blocking). Dead-code holds the zero
+// regression baseline, health holds the committed complexity baseline, and
+// audit gates introduced complexity and duplication findings.
 /**
  * Build promoted Fallow lanes included in pre-push checks.
  *
@@ -483,6 +483,12 @@ export const githubCheckFallowLanes = (repoRoot: string): ReadonlyArray<GithubCh
     "repo-quality",
     "preflight",
     repoCliLane(repoRoot, "fallow:dead-code", ["fallow", "dead-code", "--check", "--quiet"])
+  ),
+  githubCheckLane(
+    "fallow:health",
+    "repo-quality",
+    "preflight",
+    repoCliLane(repoRoot, "fallow:health", ["fallow", "health", "--check", "--quiet"])
   ),
 ];
 

@@ -1734,10 +1734,14 @@ export const ProofFixture = 1;
     });
 
     const report = generateAnalysisReport(analysis, true);
+    const findingsReport = generateAnalysisReport(analysis, false);
 
     expect(report).toContain("# JSDoc Analysis Report: @beep/schema");
     expect(report).toContain("bun run beep docgen analyze -p packages/foundation/modeling/schema");
     expect(report).toContain("## Fix Checklist");
+    expect(findingsReport).toContain("## Findings");
+    expect(findingsReport).toContain("### Schema");
+    expect(findingsReport).toContain("- Context: Primary schema export.");
     expect(report).not.toContain("Instructions for Agent");
     expect(report).not.toContain("You are tasked");
   });
@@ -2675,7 +2679,37 @@ export default class {
  */
 const trimDefault = (value: string): string => value.trim();
 
+/**
+ * Default export assignment for the trim helper.
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export default trimDefault;
+`
+          );
+          yield* fs.writeFileString(
+            path.join(packageDir, "src", "LiteralDefault.ts"),
+            `/**
+ * Literal default export fixture.
+ *
+ * @example
+ * \`\`\`ts
+ * import value from "@beep/schema/LiteralDefault"
+ *
+ * console.log(value)
+ * \`\`\`
+ * @category constants
+ * @since 0.0.0
+ */
+export default "literal-default";
+`
+          );
+          yield* fs.writeFileString(
+            path.join(packageDir, "src", "ExportEquals.ts"),
+            `const value = "export-equals";
+
+export = value;
 `
           );
           yield* fs.writeFileString(
@@ -2709,7 +2743,7 @@ export default trimNamedDefault;
             A.filter((subject) => subject.exportName === "default")
           );
 
-          expect(defaultSubjects).toHaveLength(3);
+          expect(defaultSubjects).toHaveLength(4);
           expect(A.map(report.subjects, (subject) => subject.exportName)).toContain("trimNamedDefault");
           expect(
             pipe(
@@ -2727,6 +2761,7 @@ export default trimNamedDefault;
               "packages/foundation/modeling/schema/src/AssignedDefault.ts",
               "packages/foundation/modeling/schema/src/DefaultClass.ts",
               "packages/foundation/modeling/schema/src/DefaultFunction.ts",
+              "packages/foundation/modeling/schema/src/LiteralDefault.ts",
             ])
           );
         })
