@@ -939,14 +939,18 @@ const reapAbandonedJournalLock = Effect.fnUntraced(function* (
   // identity abandons the lock immediately. Legacy pid-only tokens remain
   // readable during rollout but cannot prove PID reuse.
   const generation = yield* decodeLockGeneration(content.value).pipe(Effect.option);
-  const ownerDead = yield* O.match(generation, {
-    onNone: () =>
-      O.match(O.flatMap(content, legacyLockOwnerPid), {
-        onNone: () => Effect.succeed(false),
-        onSome: (pid) => isProcessPidAlive(pid).pipe(Effect.map((alive) => !alive)),
-      }),
-    onSome: lockGenerationIsDead,
-  });
+  const ownerDead = yield* pipe(
+    generation,
+    O.map(lockGenerationIsDead),
+    O.getOrElse(() =>
+      pipe(
+        content,
+        O.flatMap(legacyLockOwnerPid),
+        O.map((pid) => isProcessPidAlive(pid).pipe(Effect.map((alive) => !alive))),
+        O.getOrElse(() => Effect.succeed(false))
+      )
+    )
+  );
   const outlivedBackstop = pipe(
     info,
     O.flatMap((fileInfo) => fileInfo.mtime),
