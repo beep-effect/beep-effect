@@ -2,6 +2,7 @@ You are an inventory scanner for the beep-effect boolean-creep campaign. Work ON
 
 LANE: {{LANE}}
 ROUND: {{ROUND}}
+SOURCE SHA: {{SOURCE_SHA}}
 CORPUS FOR THIS LANE — scan ONLY these paths: {{AREAS}}
 Exclusions: test files (`*.test.*`, `*.spec.*`, any `test/` directory), generated surfaces (paths containing `_generated`, files whose header says they are generated/codegen), and anything outside the lane paths.
 
@@ -32,7 +33,7 @@ CONFIRMED requires at least one evidence class, proven by reading the code, with
 
 - E1 exclusive-write — a write site sets one flag true and siblings false in the same operation.
 - E2 exclusive-read — `if/else-if` or match over the flags that never handles a combined-true case.
-- E3 flag<->payload — a boolean duplicating a sibling field's presence (`{ isError: boolean, error?: E }`), or a runtime coherence check rejecting illegal combos.
+- E3 flag<->payload — a boolean duplicating a sibling field's presence (`{ isError: boolean, error?: E }`). A runtime coherence check is supporting evidence, not E3 by itself; cite E1 or E2 only when the writers/readers prove exclusivity.
 - E4 phase implication — ordered flags where one implies another (`finished => started`): a state machine flattened into bits.
 
 DISQUALIFIED (record it for the census, with its class):

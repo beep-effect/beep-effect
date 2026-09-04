@@ -5,7 +5,6 @@
 - symbol: `ContactForm`
 - members: `isSubmitting`, `isRejected`
 - evidence classes:
-  - E3 at `apps/oip-web/src/components/ContactForm.tsx:135` — isRejected is !isSubmitting && contactStatus===rejected; combined-true cannot be constructed.
   - E2 at `apps/oip-web/src/components/ContactForm.tsx:179` — Submit button disables on isSubmitting; rejected copy renders only when isRejected.
 
 ## 2. Current shape

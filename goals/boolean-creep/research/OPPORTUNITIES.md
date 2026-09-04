@@ -126,3 +126,128 @@ first-class output). Public repo: paths relative, no secrets, no session ids.
 - **Prevention:** invoke repo CLI policy children without the package-script
   wrapper, ignore stdin for noninteractive capture, and bound the full child
   lifetime with explicit process-group cleanup before the workflow timeout.
+
+## 2026-09-03 — completed design review went stale before its user gate
+
+- **Doing:** preparing the reviewed boolean-creep designs for GATE 2
+  ratification against current `main`.
+- **Evidence:** `git diff --name-only ff2184e6b3..HEAD` intersects 27 of the 46
+  primary inventory files and 63 source/test paths cited by the designs. The
+  Tier 2 `yeet-merge-ready-verdict` design still models three criteria and
+  `checksGreen`, while live `Verdict.ts` now models eight hard criteria and
+  `requiredChecksGreen`; the packet's previous zero-findings claim is no
+  longer current proof.
+- **Prevention:** bind design-review evidence to a source commit and run an
+  automatic cited-path drift check immediately before each ratification gate;
+  reopen review whenever a cited path changed instead of presenting stale
+  designs as gate-ready.
+
+## 2026-09-03 — ontology public barrel topology drift
+
+- **Doing:** reclassifying `ontology-inference-recompute-cause` against the
+  current RPC request/response surface.
+- **Evidence:** the live ontology package has pre-existing `/public`
+  export-boundary drift that is broader than the recompute-cause model and its
+  compatibility codec.
+- **Prevention:** open a separate architecture opportunity for the ontology
+  barrel topology. Do not turn the boolean-creep singleton into an unrelated
+  public-export rewrite; migrate only the decoded consumers and wire codec
+  required by this record.
+
+## 2026-09-03 — Grok sweep max-turn exhaustion destroys the transcript
+
+- **Doing:** running the unseeded moving-main current-corpus sweep with the
+  packet's existing bounded lane runner.
+- **Evidence:** several high-density lanes appended valid inventory records,
+  then exited 127 at their turn ceiling and replaced their streaming transcript
+  with only `run-sweep-lane.sh: line 54: max-turns: command not found`.
+- **Prevention:** treat a nonzero lane as incomplete even when its report is
+  schema-valid. Resume it in a named continuation lane seeded from the partial
+  report, retain the report as evidence, and require a clean exit before the
+  area can contribute to a dryness round. The round driver now records every
+  `wait -n` result and exits nonzero if any child failed; previously its final
+  successful child could mask earlier failures. The runner should eventually
+  detect this Grok failure mode and preserve the prior stream separately.
+
+## 2026-09-03 — live lane scripts were mutable beneath Bash
+
+- **Doing:** tightening the sweep runner's default scratch location while five
+  residue lanes were still executing that same script.
+- **Evidence:** after one Grok child returned, its long-lived Bash wrapper
+  reported `syntax error near unexpected token '&'` even though the current
+  file parses cleanly; the script had been replaced on disk while Bash still
+  had later source to read. The lane transcript and partial report survived,
+  but its wrapper exit was not valid completion evidence.
+- **Prevention:** treat an active runner as immutable. Finish or interrupt all
+  processes before patching it, or launch lanes from a content-addressed copy
+  so later packet edits cannot alter the executable beneath a live shell.
+
+## 2026-09-03 — broad residue lane exhausted the model output budget
+
+- **Doing:** running the round-3 drivers, architecture-lab, ecosystem, and
+  internal-package residue lane against exact `main` after earlier census
+  admissions were seeded.
+- **Evidence:** the lane accumulated 3,083,330 model tokens across 25 turns,
+  entered an exact-repetition loop while enumerating remaining package
+  families, and exited nonzero with `response truncated by max_tokens`; its
+  report was empty, so the otherwise-complete four-lane round is inadmissible.
+- **Prevention:** partition high-cardinality source families into bounded lanes
+  before launch, preserve the failed transcript as evidence, and require every
+  replacement partition to exit zero at the same source SHA before treating
+  the parent area or round as complete.
+
+## 2026-09-03 — concurrent Grok lanes stranded after inference-idle startup
+
+- **Doing:** running five round-2 residue lanes concurrently against exact
+  source SHA `58e063757b2440ae1a358cb410ed6a14acfcaf33`.
+- **Evidence:** the domain lane completed with exit zero and no records, while
+  the other four transcripts stopped after `inference idle timeout after 300s
+  with no chunks` during title generation and emitted no further bytes for
+  nine minutes. A serial resumed Apps retry reached five tool-using turns, then
+  exited with `The model is currently at capacity due to high demand`; its
+  report remained empty and is not credited.
+- **Prevention:** preserve the completed lane and raw failed transcripts, stop
+  the non-evidentiary holders, and replay only the missing lanes serially at
+  the same source SHA. Add bounded startup-idle detection to the runner so
+  a stranded lane fails explicitly and can enter the continuation path.
+
+## 2026-09-03 — serial exact-main Grok retry also hit provider capacity
+
+- **Doing:** restarting the required residue census serially after merging the
+  latest `origin/main` into the packet branch.
+- **Evidence:** the first tooling lane at source SHA
+  `a1652c1923eee0c33d9015da7fbf30449fa8269f` made one tool-using model turn,
+  then exited nonzero with `The model is currently at capacity due to high
+  demand` before it could create its report. The lane is not credited.
+- **Prevention:** make the runner's model/service tier configurable, bound
+  provider retries independently of scan turns, and support small resumable
+  source partitions so a transient terminal failure does not discard a full
+  high-density lane attempt.
+
+## 2026-09-03 — desktop continuation terminated a live sweep subprocess
+
+- **Doing:** running the bounded repo-CLI command-family partition of the
+  exact-main residue census in a persistent unified terminal session.
+- **Evidence:** after the thread continued, the terminal handle was unknown,
+  no matching Grok or lane-runner process remained, and the saved transcript
+  ended mid-read without an `end` event; the zero-line report therefore cannot
+  count as a dry result.
+- **Prevention:** keep each partition independently restartable from its named
+  Grok session and report, and teach the desktop continuation path to preserve
+  unified terminal subprocesses or deliver an explicit terminal interruption
+  result. Never infer a dry lane from an empty report without exit-zero proof.
+
+## 2026-09-03 — broad exact-main lanes exhausted output and provider budgets
+
+- **Doing:** completing the second post-admission residue sweep before the
+  independent GATE 2 design review.
+- **Evidence:** the drivers/architecture and foundation lanes exited nonzero
+  with `response truncated by max_tokens` after 26 and 32 turns and produced
+  empty reports. A fresh replacement lane then failed before analysis with
+  HTTP 402, `Grok Build usage balance exhausted`. None of those lanes is
+  credited toward convergence.
+- **Prevention:** split foundation and drivers/architecture into smaller
+  source-family partitions before launch, retain nonzero transcripts under
+  distinct retry names, and preflight provider balance before starting a
+  multi-lane gate. A round becomes admissible only after every replacement
+  partition exits zero at the same source SHA.

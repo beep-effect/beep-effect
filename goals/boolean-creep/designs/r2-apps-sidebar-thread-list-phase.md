@@ -1,16 +1,15 @@
 ## 1. Instance
 
 - id: `r2-apps-sidebar-thread-list-phase`
-- file:line: `apps/professional-desktop/src/chat/ui/Sidebar.tsx:89`
+- file:line: `apps/professional-desktop/src/chat/ui/Sidebar.tsx:93`
 - symbol: `Sidebar`
 - members: `loadFailed`, `isEmpty`
 - evidence classes:
-  - E3 at `apps/professional-desktop/src/chat/ui/Sidebar.tsx:93` — isEmpty is defined as !isInitial && !loadFailed && no threads, so combined-true is unrepresentable.
-  - E2 at `apps/professional-desktop/src/chat/ui/Sidebar.tsx:117` — Render branches if loadFailed then if isEmpty; there is no combined-true arm.
+  - E2 at `apps/professional-desktop/src/chat/ui/Sidebar.tsx:121,131` — Render branches if loadFailed then if isEmpty; there is no combined-true arm.
 
 ## 2. Current shape
 
-Live sibling-state declaration at `apps/professional-desktop/src/chat/ui/Sidebar.tsx:88`:
+Live sibling-state declaration at `apps/professional-desktop/src/chat/ui/Sidebar.tsx:92-97`:
 
 ```ts
 const sorted = AsyncResult.isSuccess(threads) ? A.sort(threads.value, byUpdatedDesc) : [];
@@ -21,7 +20,7 @@ const loadFailed = AsyncResult.isFailure(threads);
 const isEmpty = !AsyncResult.isInitial(threads) && !loadFailed && sorted.length === 0;
 ```
 
-The two reads are independent JSX conditionals at `apps/professional-desktop/src/chat/ui/Sidebar.tsx:117` and `:127`.
+The two reads are independent JSX conditionals at `apps/professional-desktop/src/chat/ui/Sidebar.tsx:121` and `:131`.
 
 ## 3. Cardinality gap
 
@@ -40,7 +39,7 @@ Add the professional-desktop identity composer and `LiteralKit` imports. Name th
 
 ```ts
 import { $ProfessionalDesktopId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 
 const $I = $ProfessionalDesktopId.create("chat/ui/Sidebar");
 
@@ -68,19 +67,18 @@ Replace the render guards with `ThreadListLoadPhase.is.failed(threadListLoadPhas
 
 ## 5. Migration inventory
 
-- `apps/professional-desktop/src/chat/ui/Sidebar.tsx:89` — remove the `loadFailed` write and derive `threadListLoadPhase` from `threads`.
-- `apps/professional-desktop/src/chat/ui/Sidebar.tsx:90` — replace the comment-only flag ordering with the four named phases.
-- `apps/professional-desktop/src/chat/ui/Sidebar.tsx:93` — remove the `isEmpty` coherence formula; emptiness is the successful empty phase.
-- `apps/professional-desktop/src/chat/ui/Sidebar.tsx:117` — use the kit-derived `failed` guard.
-- `apps/professional-desktop/src/chat/ui/Sidebar.tsx:127` — use the kit-derived `empty` guard.
+- `apps/professional-desktop/src/chat/ui/Sidebar.tsx:93` — remove the `loadFailed` write and derive `threadListLoadPhase` from `threads`.
+- `apps/professional-desktop/src/chat/ui/Sidebar.tsx:94-97` — replace the comment-only flag ordering and `isEmpty` coherence formula with the four named phases.
+- `apps/professional-desktop/src/chat/ui/Sidebar.tsx:121` — use the kit-derived `failed` guard.
+- `apps/professional-desktop/src/chat/ui/Sidebar.tsx:131` — use the kit-derived `empty` guard.
 
 No other source or test reads or writes `loadFailed` or `isEmpty` from this component.
 
 ## 6. Guard-deletion accounting
 
-- `apps/professional-desktop/src/chat/ui/Sidebar.tsx:93` — delete `!isInitial && !loadFailed && sorted.length === 0`, the runtime coherence check that prevents the illegal combined-true state.
-- `apps/professional-desktop/src/chat/ui/Sidebar.tsx:90` — delete the comment-only invariant that failure must not masquerade as empty and initial means neither flag; the literal names all cases.
-- `apps/professional-desktop/src/chat/ui/Sidebar.tsx:117` and `:127` — delete the two independent boolean reads in favor of guards over one value.
+- `apps/professional-desktop/src/chat/ui/Sidebar.tsx:97` — delete `!isInitial && !loadFailed && sorted.length === 0`, the runtime coherence check that prevents the illegal combined-true state.
+- `apps/professional-desktop/src/chat/ui/Sidebar.tsx:94-96` — delete the comment-only invariant that failure must not masquerade as empty and initial means neither flag; the literal names all cases.
+- `apps/professional-desktop/src/chat/ui/Sidebar.tsx:121` and `:131` — delete the two independent boolean reads in favor of guards over one value.
 
 There is no legacy normalizer or mutual-exclusion error.
 

@@ -1,15 +1,15 @@
 ## 1. Instance
 
 - id: `thread-transcript-load-state`
-- file:line: `apps/professional-desktop/src/chat/ui/Thread.atoms.ts:228`
+- file:line: `apps/professional-desktop/src/chat/ui/Thread.atoms.ts:253`
 - symbol: `ThreadTranscriptView`
 - members: `empty`, `failed`, `loading`
 - evidence classes:
-  - E1 at `apps/professional-desktop/src/chat/ui/Thread.atoms.ts:300` — All three flags are projected in one write from the single timeline AsyncResult (isFailure/isInitial/success emptiness).
+  - E1 at `apps/professional-desktop/src/chat/ui/Thread.atoms.ts:326-332` — All three flags are projected in one write from the single timeline AsyncResult (isFailure/isInitial/success emptiness).
 
 ## 2. Current shape
 
-Live declaration at `apps/professional-desktop/src/chat/ui/Thread.atoms.ts:227`:
+Live declaration at `apps/professional-desktop/src/chat/ui/Thread.atoms.ts:253-261`:
 
 ```ts
 interface ThreadTranscriptView {
@@ -23,7 +23,7 @@ interface ThreadTranscriptView {
 }
 ```
 
-The current projection at `apps/professional-desktop/src/chat/ui/Thread.atoms.ts:295` is:
+The current projection at `apps/professional-desktop/src/chat/ui/Thread.atoms.ts:326-332` is:
 
 ```ts
 return {
@@ -58,7 +58,7 @@ This is the shared literal design for this instance and `thread-load-state-props
 
 ```ts
 import { $ProfessionalDesktopId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 
 const $I = $ProfessionalDesktopId.create("chat/ui/Thread.atoms");
 
@@ -106,11 +106,11 @@ The ordering preserves current behavior: failure wins over retained/empty conten
 
 ## 5. Migration inventory
 
-- `apps/professional-desktop/src/chat/ui/Thread.atoms.ts:219` — change “timeline load flags” to the single transcript load state.
-- `apps/professional-desktop/src/chat/ui/Thread.atoms.ts:228` — replace the three boolean members with `loadState: ThreadTranscriptLoadState`.
-- `apps/professional-desktop/src/chat/ui/Thread.atoms.ts:300` — replace all three writes with one ordered `loadState` projection.
-- `apps/professional-desktop/src/chat/ui/Thread.tsx:250` — pass `view.loadState` to `ThreadLoadState` instead of passing `view.failed` and `view.loading` separately.
-- `apps/professional-desktop/src/chat/ui/Thread.tsx:251` — derive `EmptyThread.visible` with `ThreadTranscriptLoadState.is.empty(view.loadState)`; do not move empty rendering into `ThreadLoadState`.
+- `apps/professional-desktop/src/chat/ui/Thread.atoms.ts:245` — change “timeline load flags” to the single transcript load state.
+- `apps/professional-desktop/src/chat/ui/Thread.atoms.ts:253-261` — replace the three boolean members with `loadState: ThreadTranscriptLoadState`.
+- `apps/professional-desktop/src/chat/ui/Thread.atoms.ts:326-332` — replace all three writes with one ordered `loadState` projection.
+- `apps/professional-desktop/src/chat/ui/Thread.tsx:252` — pass `view.loadState` to `ThreadLoadState` instead of passing `view.failed` and `view.loading` separately.
+- `apps/professional-desktop/src/chat/ui/Thread.tsx:253` — derive `EmptyThread.visible` with `ThreadTranscriptLoadState.is.empty(view.loadState)`; do not move empty rendering into `ThreadLoadState`.
 - `apps/professional-desktop/test/thread-transcript-view.test.ts:60` — replace `view.empty` with an assertion that `view.loadState` is `ready` for the populated success fixture.
 - `apps/professional-desktop/test/thread-transcript-view.test.ts:61` — remove the redundant independent `view.failed` assertion; the same `ready` equality proves it is neither failed nor loading.
 
@@ -118,9 +118,9 @@ No other repository site reads or writes these `ThreadTranscriptView` members.
 
 ## 6. Guard-deletion accounting
 
-- `apps/professional-desktop/src/chat/ui/Thread.atoms.ts:300` — delete the three independent flag assignments and their implicit mutual-exclusion contract; one ordered literal projection owns the classification.
-- `apps/professional-desktop/src/chat/ui/Thread.tsx:250` — delete the downstream two-boolean prop pairing that could render loading and failure together.
-- `apps/professional-desktop/src/chat/ui/Thread.tsx:251` — delete the independent `empty` flag read and derive it from the same literal.
+- `apps/professional-desktop/src/chat/ui/Thread.atoms.ts:326-332` — delete the three independent flag assignments and their implicit mutual-exclusion contract; one ordered literal projection owns the classification.
+- `apps/professional-desktop/src/chat/ui/Thread.tsx:252` — delete the downstream two-boolean prop pairing that could render loading and failure together.
+- `apps/professional-desktop/src/chat/ui/Thread.tsx:253` — delete the independent `empty` flag read and derive it from the same literal.
 - `apps/professional-desktop/test/thread-transcript-view.test.ts:60` — delete test-by-test coherence checks across separate booleans; assert one legal state instead.
 
 There is no legacy normalizer or explicit mutual-exclusion error.
@@ -133,8 +133,8 @@ The view is recomputed by an atom and consumed in-process by React; it is not a 
 
 ## 8. Test impact
 
-- `apps/professional-desktop/test/thread-transcript-view.test.ts:55` — update existing view assertions to `loadState` and add cases for initial-waiting, failure, and successful emptiness so all four literals are covered.
-- `apps/professional-desktop/test/optimistic-user-turn.test.tsx:443` — the retained-content-on-failure scenario must continue to render `thread-error`; it guards the failure-first ordering in the projection.
+- `apps/professional-desktop/test/thread-transcript-view.test.ts:60-61` — update the live `view.empty`/`view.failed` assertions to `loadState` and add cases for initial-waiting, failure, and successful emptiness so all four literals are covered.
+- `apps/professional-desktop/test/optimistic-user-turn.test.tsx:461` — the retained-content-on-failure scenario must continue to render `thread-error`; it guards the failure-first ordering in the projection.
 
 ## 9. Risk & sequencing
 

@@ -1,15 +1,15 @@
 ## 1. Instance
 
 - id: `desktop-panel-menu-item-state`
-- file:line: `apps/professional-desktop/src/App.tsx:652`
+- file:line: `apps/professional-desktop/src/App.tsx:660`
 - symbol: `OntologyMenuItem`
 - members: `current`, `open`
 - evidence classes:
-  - E4 at `apps/professional-desktop/src/App.tsx:696` — current implies open by construction at every call site — a panel can only be current while open.
+  - E4 at `apps/professional-desktop/src/App.tsx:704-705` — current implies open by construction at every call site — a panel can only be current while open.
 
 ## 2. Current shape
 
-Live declaration at `apps/professional-desktop/src/App.tsx:646`:
+Live declaration at `apps/professional-desktop/src/App.tsx:654`:
 
 ```tsx
 const OntologyMenuItem = ({
@@ -25,7 +25,7 @@ const OntologyMenuItem = ({
 }): JSX.Element => (
 ```
 
-The two reads are at `apps/professional-desktop/src/App.tsx:660` and `:667`:
+The two reads are at `apps/professional-desktop/src/App.tsx:668` and `:675`:
 
 ```tsx
 aria-current={current ? "page" : undefined}
@@ -35,7 +35,7 @@ aria-current={current ? "page" : undefined}
 open ? "h-1.5 w-1.5 rounded-full bg-primary" : "h-1.5 w-1.5 rounded-full border border-muted-foreground/50"
 ```
 
-The sole call site at `apps/professional-desktop/src/App.tsx:693` writes both props:
+The sole call site at `apps/professional-desktop/src/App.tsx:701` writes both props:
 
 ```tsx
 <OntologyMenuItem
@@ -103,34 +103,38 @@ const OntologyMenuItem = ({
 );
 ```
 
-Project the literal once at the call boundary:
+Project the literal once at the call boundary from the sibling migration's
+single workspace query. This design lands atomically with
+`r2-apps-dock-panel-open-active`; the old `isPanelOpen` and `isPanelActive`
+helpers no longer exist in the resulting source:
 
 ```tsx
+const presence = desktopPanelPresence(workspace, panel.key)
+
 state={
   isCurrent(panel.key)
     ? OntologyMenuItemState.Enum.current
-    : isPanelOpen(workspace, panel.key)
-      ? OntologyMenuItemState.Enum.open
-      : OntologyMenuItemState.Enum.closed
+    : DesktopPanelPresence.is.closed(presence)
+      ? OntologyMenuItemState.Enum.closed
+      : OntologyMenuItemState.Enum.open
 }
 ```
 
 ## 5. Migration inventory
 
-- `apps/professional-desktop/src/App.tsx:645` — update the row comment to describe the single item state rather than an open-state flag.
-- `apps/professional-desktop/src/App.tsx:647` — remove `current` and `open` from the destructuring and add `state`.
-- `apps/professional-desktop/src/App.tsx:652` — replace the two boolean prop members with `state: OntologyMenuItemState`.
-- `apps/professional-desktop/src/App.tsx:660` — derive `aria-current` from the `current` literal guard.
-- `apps/professional-desktop/src/App.tsx:667` — choose the filled/open dot for both `open` and `current` by checking only the `closed` case.
-- `apps/professional-desktop/src/App.tsx:696` — replace the `current`/`open` prop pair with one ordered state projection from `isCurrent` and `isPanelOpen`.
+- `apps/professional-desktop/src/App.tsx:653` — update the row comment to describe the single item state rather than an open-state flag.
+- `apps/professional-desktop/src/App.tsx:654-662` — remove `current` and `open` from the destructuring/props and add `state: OntologyMenuItemState`.
+- `apps/professional-desktop/src/App.tsx:668` — derive `aria-current` from the `current` literal guard.
+- `apps/professional-desktop/src/App.tsx:675` — choose the filled/open dot for both `open` and `current` by checking only the `closed` case.
+- `apps/professional-desktop/src/App.tsx:704-705` — replace the `current`/`open` prop pair with one ordered state projection from `isCurrent` and the sibling design's one `desktopPanelPresence(workspace, panel.key)` result. Map both `active` and `open` presence to menu `open` unless focused-group currentness selects `current`.
 
 No other source or test constructs `OntologyMenuItem`.
 
 ## 6. Guard-deletion accounting
 
-- `apps/professional-desktop/src/App.tsx:652` — delete the prop-level comment-only invariant that `current` implies `open`; the literal cannot represent the illegal combination.
-- `apps/professional-desktop/src/App.tsx:660` and `:667` — delete independent boolean reads over `current` and `open`; both presentation choices consume one state.
-- `apps/professional-desktop/src/App.tsx:696` — delete the call-site pair whose coherence depended on two separate helper calls and replace it with one ordered projection.
+- `apps/professional-desktop/src/App.tsx:660-662` — delete the prop-level comment-only invariant that `current` implies `open`; the literal cannot represent the illegal combination.
+- `apps/professional-desktop/src/App.tsx:668` and `:675` — delete independent boolean reads over `current` and `open`; both presentation choices consume one state.
+- `apps/professional-desktop/src/App.tsx:704-705` — delete the call-site pair whose coherence depended on two separate helper calls and replace it with one ordered projection.
 
 There is no legacy normalizer or runtime mutual-exclusion error.
 
@@ -142,9 +146,17 @@ The literal exists only in local React props and is derived from the dock worksp
 
 ## 8. Test impact
 
-- `apps/professional-desktop/test/dock-shell.test.tsx:170` — the existing closed-panel navigation test continues to cover the `closed` transition into an opened panel.
-- `apps/professional-desktop/test/dock-shell.test.tsx:158` — current-page ARIA assertions cover the same semantic contract elsewhere in the shell, but no test currently inspects an ontology menu item's `aria-current` or dot style. Extend this file with closed, open-not-current, and current menu-entry assertions.
+- `apps/professional-desktop/test/dock-shell.test.tsx:172` — the existing closed-panel navigation test continues to cover the `closed` transition into an opened panel.
+- `apps/professional-desktop/test/dock-shell.test.tsx:166` — current-page ARIA assertions cover the same semantic contract elsewhere in the shell, but no test currently inspects an ontology menu item's `aria-current` or dot style. Extend this file with closed, open-not-current, and current menu-entry assertions.
+- Record the affected clickable ontology rail through the portless Professional Desktop script and complete the `browser-qa-loop` record -> extract -> judge sequence with `requiredCount: 0`. The evidence must exercise closed, open-not-current, and current entries, click navigation, `aria-current`, and the outlined/filled dot transitions.
 
 ## 9. Risk & sequencing
 
-The change is confined to `App.tsx`, which is shared with other shell designs and therefore has merge-conflict risk. Keep the kit adjacent to `OntologyMenuItem`; no dock package API changes. Preserve the ordering `current` before `open`, because current is the narrower state.
+Land atomically with `r2-apps-dock-panel-open-active`, which deletes the two
+boolean dock helpers and introduces `DesktopPanelPresence` plus
+`desktopPanelPresence`; this design must consume that replacement rather than
+name either deleted helper. The source change spans `App.tsx`, dock workspace
+state, tests, and recorded browser evidence. Keep the menu kit adjacent to
+`OntologyMenuItem`; no supported package API changes. Preserve focused-group
+currentness ahead of presence, because `current` is narrower than an active tab
+in another group.

@@ -99,7 +99,7 @@ none (internal)
 
 # Test impact
 
-No file under `packages/foundation/ui-system/ui/test/` imports `SpeechInput` or reads these context members. Add component coverage for all three upstream statuses: idle shows/enables the microphone, connecting shows the progress dot and disables the button, and connected shows stop/cancel/transcript UI. No encoded fixtures change.
+No file under `packages/foundation/ui-system/ui/test/` imports `SpeechInput` or reads these context members. Add component coverage for all three upstream statuses: idle shows/enables the microphone, connecting shows the progress dot and disables the button, and connected shows stop/cancel/transcript UI. No encoded fixtures change. Because the record, cancel, and preview controls and their animated connection transitions are gesture-bearing UI, run the `browser-qa-loop` through the portless package script and retain successful record -> extract -> judge evidence with `requiredCount: 0` for idle recording, connecting, connected preview, and cancellation.
 
 # Risk & sequencing
 

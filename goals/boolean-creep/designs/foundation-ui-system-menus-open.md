@@ -1,11 +1,11 @@
 # Instance
 
 - id: `foundation-ui-system-menus-open`
-- file:line: `packages/foundation/ui-system/editor/src/chat/atoms.ts:92`
+- file:line: `packages/foundation/ui-system/editor/src/chat/atoms.ts:91`
 - symbol: `menusOpenAtom`
 - members: `slash`, `mention`
 - evidence classes:
-  - E1 at `packages/foundation/ui-system/editor/src/chat/typeahead.tsx:475` — onOpen writes {slash:true, mention:false}; MentionPlugin line 589 writes the inverse. Comment at 472-474: only one typeahead may hold the combobox.
+  - E1 at `packages/foundation/ui-system/editor/src/chat/typeahead.tsx:491-494` — the exclusivity comment precedes the slash write; MentionPlugin line 608 writes the inverse.
 
 # Current shape
 
@@ -67,20 +67,20 @@ onClose={() => setMenus((current) => O.filter(current, (menu) => !TypeaheadMenu.
 - `packages/foundation/ui-system/editor/src/chat/atoms.ts:91-93` — replace the boolean object atom with `O.Option<TypeaheadMenu>` initialized to none.
 - `packages/foundation/ui-system/editor/src/chat/atoms.ts:116-120` — derive `anyMenuOpenAtom` with `O.isSome` instead of OR-ing members.
 - `packages/foundation/ui-system/editor/src/chat/atoms.ts:226-230` — update the stale-state prose from a stale `true` flag to a stale `some(menu)` report; the DOM confirmation requirement remains.
-- `packages/foundation/ui-system/editor/src/chat/typeahead.tsx:475` — slash `onOpen` writes `O.some(TypeaheadMenu.Enum.slash)`.
-- `packages/foundation/ui-system/editor/src/chat/typeahead.tsx:477` — slash `onClose` writes none only when the current option is slash; preserve a newer mention owner.
-- `packages/foundation/ui-system/editor/src/chat/typeahead.tsx:589` — mention `onOpen` writes `O.some(TypeaheadMenu.Enum.mention)`.
-- `packages/foundation/ui-system/editor/src/chat/typeahead.tsx:591` — mention `onClose` writes none only when the current option is mention.
-- `packages/foundation/ui-system/editor/src/chat/typeahead.tsx:23` and `:37-39` — add `O` to the `@beep/utils` import and import `TypeaheadMenu` with the existing atoms.
-- `packages/foundation/ui-system/editor/src/chat/typeahead.tsx:15`, `:414`, and `:494` — update comments/JSDoc that describe boolean menu-open storage.
-- `packages/foundation/ui-system/editor/src/chat/index.ts:20-23` and `:70-73` — no edit: the existing deprecated re-exports of `anyMenuOpenAtom` and `menusOpenAtom` remain source-compatible by symbol name. `TypeaheadMenu` is exported from the canonical `@beep/editor/chat/atoms` module that owns the atom.
+- `packages/foundation/ui-system/editor/src/chat/typeahead.tsx:494` — slash `onOpen` writes `O.some(TypeaheadMenu.Enum.slash)`.
+- `packages/foundation/ui-system/editor/src/chat/typeahead.tsx:495-498` — slash `onClose` writes none only when the current option is slash; preserve a newer mention owner.
+- `packages/foundation/ui-system/editor/src/chat/typeahead.tsx:608` — mention `onOpen` writes `O.some(TypeaheadMenu.Enum.mention)`.
+- `packages/foundation/ui-system/editor/src/chat/typeahead.tsx:609-612` — mention `onClose` writes none only when the current option is mention.
+- `packages/foundation/ui-system/editor/src/chat/typeahead.tsx:23` and `:38-40` — add `O` to the `@beep/utils` import and import `TypeaheadMenu` with the existing atoms.
+- `packages/foundation/ui-system/editor/src/chat/typeahead.tsx:15`, `:433`, and `:513` — update comments/JSDoc that describe boolean menu-open storage.
+- `packages/foundation/ui-system/editor/package.json:50` — no edit: the existing `./chat/atoms` export maps directly to the canonical owner; adding `TypeaheadMenu` to `atoms.ts` makes it package-alias accessible without a barrel change.
 
 # Guard-deletion accounting
 
 - `packages/foundation/ui-system/editor/src/chat/atoms.ts:118-120` — delete the `menus.slash || menus.mention` combined-state read.
-- `packages/foundation/ui-system/editor/src/chat/typeahead.tsx:472-475` and `:589` — delete paired true/false exclusive writes; one option constructor owns exclusivity.
-- `packages/foundation/ui-system/editor/src/chat/typeahead.tsx:477` and `:591` — delete partial object-spread writes that could preserve or manufacture a correlated pair; owner-aware option clearing replaces them.
-- `packages/foundation/ui-system/editor/src/chat/typeahead.tsx:472-474` — delete the comment-only “only one typeahead” boolean invariant as a write-site obligation; the option type encodes it.
+- `packages/foundation/ui-system/editor/src/chat/typeahead.tsx:491-494` and `:608` — delete paired true/false exclusive writes; one option constructor owns exclusivity.
+- `packages/foundation/ui-system/editor/src/chat/typeahead.tsx:495-498` and `:609-612` — delete partial object-spread writes that could preserve or manufacture a correlated pair; owner-aware option clearing replaces them.
+- `packages/foundation/ui-system/editor/src/chat/typeahead.tsx:491-493` — delete the comment-only “only one typeahead” boolean invariant as a write-site obligation; the option type encodes it.
 - `packages/foundation/ui-system/editor/src/chat/atoms.ts:69-72` — delete the “idempotent booleans” storage explanation.
 
 # Encoded-side impact
@@ -89,7 +89,7 @@ none (internal)
 
 # Test impact
 
-No file under `packages/foundation/ui-system/editor/test/` reads `menusOpenAtom`, `slash`, or `mention` in this state shape; the `slash: true` at `chat-schema-parity.test.ts:56` belongs to independent `ComposerFeatures`. Add atom-level tests for none/slash/mention, `anyMenuOpenAtom`, and the stale-close race (slash close after mention open must leave mention active).
+No file under `packages/foundation/ui-system/editor/test/` reads `menusOpenAtom`, `slash`, or `mention` in this state shape; the `slash: true` at `chat-schema-parity.test.ts:56` belongs to independent `ComposerFeatures`. Add atom-level tests for none/slash/mention, `anyMenuOpenAtom`, and the stale-close race (slash close after mention open must leave mention active). Because `onOpen`/`onClose` ownership is gesture-bearing UI, record the portless slash/mention switching and stale-close flow and complete browser-qa-loop record -> extract -> judge evidence with `requiredCount: 0`.
 
 # Risk & sequencing
 

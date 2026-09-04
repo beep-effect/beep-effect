@@ -1,15 +1,15 @@
 # Instance
 
 - id: `r3-foundation-mention-plugin-lookup-phase`
-- file:line: `packages/foundation/ui-system/editor/src/chat/typeahead.tsx:521`
+- file:line: `packages/foundation/ui-system/editor/src/chat/typeahead.tsx:540`
 - symbol: `MentionPlugin`
 - members: `pending`, `failed`
 - evidence classes:
-  - E2 at `packages/foundation/ui-system/editor/src/chat/typeahead.tsx:559` — menuRenderFn branches pending then failed then the success list; failed is defined as settled && isFailure so both-true is unrepresentable in the if-chain.
+  - E2 at `packages/foundation/ui-system/editor/src/chat/typeahead.tsx:578` — menuRenderFn branches pending then failed then the success list; failed is defined as settled && isFailure so both-true is unrepresentable in the if-chain.
 
 # Current shape
 
-Live sibling declarations at `packages/foundation/ui-system/editor/src/chat/typeahead.tsx:521`:
+Live sibling declarations at `packages/foundation/ui-system/editor/src/chat/typeahead.tsx:540`:
 
 ```ts
 const pending = AsyncResult.isWaiting(lookupState);
@@ -60,15 +60,15 @@ Keep the derivation inline so the existing `lookupState` supplies the precise `A
 # Migration inventory
 
 - `packages/foundation/ui-system/editor/src/chat/typeahead.tsx:21-22` — add `LiteralKit` to the schema imports; reuse the existing `$I = $EditorId.create("chat/typeahead")` at line 50 for annotation.
-- `packages/foundation/ui-system/editor/src/chat/typeahead.tsx:521-527` — replace `pending`, `settled`, and `failed` with one derived `lookupPhase`; derive `options` directly from `AsyncResult.isSuccess(lookupState)`.
-- `packages/foundation/ui-system/editor/src/chat/typeahead.tsx:555-562` — branch on `lookupPhase` literal guards for waiting/failure notices, then render the option list for ready.
-- `packages/foundation/ui-system/editor/src/chat/typeahead.tsx:358` and `:556-558` — update comments from parallel pending/failed booleans to the named lookup phases.
+- `packages/foundation/ui-system/editor/src/chat/typeahead.tsx:540-546` — replace `pending`, `settled`, and `failed` with one derived `lookupPhase`; derive `options` directly from `AsyncResult.isSuccess(lookupState)`.
+- `packages/foundation/ui-system/editor/src/chat/typeahead.tsx:574-601` — branch on `lookupPhase` literal guards for waiting/failure notices, then render the option list for ready.
+- `packages/foundation/ui-system/editor/src/chat/typeahead.tsx:377` and `:575-577` — update the notice and render-chain comments from parallel pending/failed booleans to the named lookup phases.
 
 # Guard-deletion accounting
 
-- `packages/foundation/ui-system/editor/src/chat/typeahead.tsx:521-527` — delete the `settled = !pending` coherence bridge and both `settled && ...` guards that prevent pending/failure or pending/success overlap.
-- `packages/foundation/ui-system/editor/src/chat/typeahead.tsx:559-562` — delete the pending-then-failed boolean if-chain; literal guards identify the one projected phase.
-- `packages/foundation/ui-system/editor/src/chat/typeahead.tsx:556-558` — delete the comment-only invariant that describes “pending and failed lookups” as parallel conditions.
+- `packages/foundation/ui-system/editor/src/chat/typeahead.tsx:540-546` — delete the `settled = !pending` coherence bridge and both `settled && ...` guards that prevent pending/failure or pending/success overlap.
+- `packages/foundation/ui-system/editor/src/chat/typeahead.tsx:578-581` — delete the pending-then-failed boolean if-chain; literal guards identify the one projected phase.
+- `packages/foundation/ui-system/editor/src/chat/typeahead.tsx:575-577` — delete the comment-only invariant that describes “pending and failed lookups” as parallel conditions.
 
 # Encoded-side impact
 
@@ -76,7 +76,7 @@ none (internal)
 
 # Test impact
 
-No file under `packages/foundation/ui-system/editor/test/` reads `pending`, `failed`, `settled`, or `lookupState` from `MentionPlugin`; existing typeahead tests cover only positioning and IDs. Add focused rendering coverage for waiting notice, non-interrupted failure notice, success options, and interrupted/initial ready-with-empty-options behavior.
+No file under `packages/foundation/ui-system/editor/test/` reads `pending`, `failed`, `settled`, or `lookupState` from `MentionPlugin`; existing typeahead tests cover only positioning and IDs. Add focused rendering coverage for waiting notice, non-interrupted failure notice, success options, and interrupted/initial ready-with-empty-options behavior. Because these notices alter gesture ownership in the editor typeahead, record the portless browser flow and complete browser-qa-loop record -> extract -> judge evidence with `requiredCount: 0`.
 
 # Risk & sequencing
 

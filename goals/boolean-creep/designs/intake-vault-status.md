@@ -1,18 +1,18 @@
 ## 1. Instance
 
 - id: `intake-vault-status`
-- file:line: `apps/professional-desktop/src/intake/Intake.atoms.ts:1085`
+- file:line: `apps/professional-desktop/src/intake/Intake.atoms.ts:1109`
 - symbol: `DocumentIntakeSurface`
 - members: `configured`, `needsOnboarding`
 - evidence classes:
-  - E1 at `apps/professional-desktop/src/intake/Intake.atoms.ts:1162` — Both flags are projected in one write from a single AsyncResult<Option<vaultRootPath>>: Some => configured, None => needsOnboarding.
-  - E4 at `apps/professional-desktop/src/intake/Intake.atoms.ts:1163` — JSDoc declares them mutually exclusive; pending state is both-false — an ordered three-state machine flattened into two bits.
+  - E1 at `apps/professional-desktop/src/intake/Intake.atoms.ts:1200-1201` — Both flags are projected in one write from a single AsyncResult<Option<vaultRootPath>>: Some => configured, None => needsOnboarding.
+  - E4 at `apps/professional-desktop/src/intake/Intake.atoms.ts:1103` — JSDoc declares them mutually exclusive; pending state is both-false — an ordered three-state machine flattened into two bits.
 
-The brief's E4 citation is the second projection line; live re-verification found the cited JSDoc invariant at `apps/professional-desktop/src/intake/Intake.atoms.ts:1065`.
+The brief's E4 citation is the second projection line; live re-verification found the cited JSDoc invariant at `apps/professional-desktop/src/intake/Intake.atoms.ts:1103`.
 
 ## 2. Current shape
 
-Live declaration at `apps/professional-desktop/src/intake/Intake.atoms.ts:1071`:
+Live declaration at `apps/professional-desktop/src/intake/Intake.atoms.ts:1109`:
 
 ```ts
 export interface DocumentIntakeSurface {
@@ -35,7 +35,7 @@ export interface DocumentIntakeSurface {
 }
 ```
 
-The single producer is at `apps/professional-desktop/src/intake/Intake.atoms.ts:1160`:
+The single producer is inside `documentIntakeSurfaceAtoms` at `apps/professional-desktop/src/intake/Intake.atoms.ts:1194`, with the exclusive flag projection at lines 1200-1201:
 
 ```ts
 return {
@@ -119,21 +119,20 @@ if (DocumentIntakeVaultStatus.is["needs-onboarding"](surface.vaultStatus)) {
 
 ## 5. Migration inventory
 
-- `apps/professional-desktop/src/intake/Intake.atoms.ts:1065` — rewrite the JSDoc from a two-flag invariant to the three named `DocumentIntakeVaultStatus` cases.
-- `apps/professional-desktop/src/intake/Intake.atoms.ts:1085` — replace `configured` and `needsOnboarding` with `vaultStatus: DocumentIntakeVaultStatus`.
-- `apps/professional-desktop/src/intake/Intake.atoms.ts:1162` — replace both flag writes with the single upstream-derived `vaultStatus` projection.
-- `apps/professional-desktop/src/intake/DocumentIntakeTarget.tsx:238` — change `IntakeFileControls` from a `configured` boolean prop to the literal `vaultStatus` prop.
-- `apps/professional-desktop/src/intake/DocumentIntakeTarget.tsx:243` — replace the truthiness read with `DocumentIntakeVaultStatus.is.configured(vaultStatus)`.
-- `apps/professional-desktop/src/intake/DocumentIntakeTarget.tsx:293` — pass `surface.vaultStatus` instead of `surface.configured`.
-- `apps/professional-desktop/src/intake/DocumentIntakeTarget.tsx:319` — replace `surface.needsOnboarding` with the `needs-onboarding` kit guard.
+- `apps/professional-desktop/src/intake/Intake.atoms.ts:1103` — rewrite the JSDoc from a two-flag invariant to the three named `DocumentIntakeVaultStatus` cases.
+- `apps/professional-desktop/src/intake/Intake.atoms.ts:1109-1126` — replace `configured` and `needsOnboarding` with `vaultStatus: DocumentIntakeVaultStatus`.
+- `apps/professional-desktop/src/intake/Intake.atoms.ts:1194-1203` — replace both flag writes with the single upstream-derived `vaultStatus` projection.
+- `apps/professional-desktop/src/intake/DocumentIntakeTarget.tsx:240-247` — change `IntakeFileControls` from a `configured` boolean prop to the literal `vaultStatus` prop and replace the truthiness read with `DocumentIntakeVaultStatus.is.configured(vaultStatus)`.
+- `apps/professional-desktop/src/intake/DocumentIntakeTarget.tsx:297` — pass `surface.vaultStatus` instead of `surface.configured`.
+- `apps/professional-desktop/src/intake/DocumentIntakeTarget.tsx:362` — replace `surface.needsOnboarding` in `VaultOnboardingGate` with the `needs-onboarding` kit guard.
 
 No other source, package, or test reference to either member exists in the live repository search.
 
 ## 6. Guard-deletion accounting
 
-- `apps/professional-desktop/src/intake/Intake.atoms.ts:1065` — delete the comment-only invariant that `configured` and `needsOnboarding` are mutually exclusive and that both false means pending; the literal names those states.
-- `apps/professional-desktop/src/intake/Intake.atoms.ts:1162` — delete the two parallel `AsyncResult.isSuccess(...) && Option` coherence checks and perform one exhaustive projection.
-- `apps/professional-desktop/src/intake/DocumentIntakeTarget.tsx:243` and `:319` — delete independent reads of the two flags; both branch from one schema-derived value.
+- `apps/professional-desktop/src/intake/Intake.atoms.ts:1103` — delete the comment-only invariant that `configured` and `needsOnboarding` are mutually exclusive and that both false means pending; the literal names those states.
+- `apps/professional-desktop/src/intake/Intake.atoms.ts:1200-1201` — delete the two parallel `AsyncResult.isSuccess(...) && Option` coherence checks and perform one exhaustive projection.
+- `apps/professional-desktop/src/intake/DocumentIntakeTarget.tsx:247` and `:362` — delete independent reads of the two flags; both branch from one schema-derived value.
 
 There is no legacy normalizer or mutual-exclusion error to retain.
 
@@ -145,7 +144,7 @@ none (internal)
 
 ## 8. Test impact
 
-No test currently reads `configured` or `needsOnboarding`. `apps/professional-desktop/test/intake-atoms.test.ts` exercises the underlying intake and vault-selection atoms but does not assert the surface projection. Add focused atom assertions for all three `DocumentIntakeVaultStatus` cases so pending, configured, and needs-onboarding remain tied to the upstream `AsyncResult<Option<...>>`.
+No test currently reads `configured` or `needsOnboarding`. `apps/professional-desktop/test/intake-atoms.test.ts` exercises the underlying intake and vault-selection atoms but does not assert the surface projection. Add focused atom assertions for all three `DocumentIntakeVaultStatus` cases so pending, configured, and needs-onboarding remain tied to the upstream `AsyncResult<Option<...>>`. Record the affected portless vault-onboarding and file-intake controls and complete browser-qa-loop record -> extract -> judge evidence with `requiredCount: 0`.
 
 ## 9. Risk & sequencing
 

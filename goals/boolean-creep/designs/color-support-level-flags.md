@@ -64,6 +64,7 @@ Consumers that need a capability answer derive it from `support.level` and the e
 - `packages/foundation/capability/chalk/src/Chalk.ts:366-371` — update public details to describe the supported level rather than three flags.
 - `packages/foundation/capability/chalk/src/Chalk.ts:380-385` — update the decode example to `{ level: 3 }`.
 - `packages/foundation/capability/chalk/src/Chalk.ts:394-402` — update the public type prose/example to `{ level: 3 }`.
+- `packages/foundation/capability/chalk/README.md` — repair the package-placement proof to name the live `@beep/repo-docgen` consumer at `packages/tooling/tool/docgen/src/Core.ts:10` and the `@beep/repo-cli` progress renderer at `packages/tooling/tool/cli/src/commands/Files/Files.progress.ts:8,20`, while retaining `@beep/chalk` in the foundation capability package.
 
 Whole-package search finds no runtime read of `hasBasic`, `has256`, or `has16m`; all non-declaration occurrences are the constructors and documentation listed above.
 
@@ -87,3 +88,6 @@ none (internal)
 # Risk & sequencing
 
 Although inventory classifies this Tier 1/internal, `ColorSupport` is re-exported by `Chalk.ts` and `Chalk.browser.ts`, so TypeScript consumers observe a public structural simplification. Land internal constructors and public documentation in the same change. Do not alter the existing `ColorSupportLevel` encoding or the `ColorInfo` convention that level 0 is `false`; those are shared by terminal and browser entry points.
+This is an atomic decoded TypeScript migration under the 2026-09-03 ruling;
+do not add a compatibility alias for the removed flags. Keep `@beep/chalk` in
+its current package and include the README named-consumer repair in this PR.

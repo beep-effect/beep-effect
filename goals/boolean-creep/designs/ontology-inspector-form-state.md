@@ -5,8 +5,7 @@
 - symbol: `OntologyInspectorFormState`
 - members: `objectValid`, `predicateValid`, `subjectValid`, `canApplyTriple`, `canApplyGraphGesture`, `showObjectError`, `showPredicateError`, `showSubjectError`
 - evidence classes:
-  - E3 — `packages/ontology/client/src/aggregates/Session/Session.atoms.ts:605`: every flag is derived in one write site from the sibling draft strings and `objectKind`.
-  - E4 — `packages/ontology/client/src/aggregates/Session/Session.atoms.ts:611`: `canApplyTriple` is a stored conjunction of the validity flags; `canApplyGraphGesture` at line 622 implies `canApplyTriple`.
+  - E4 — `packages/ontology/client/src/aggregates/Session/Session.atoms.ts:660`: `canApplyTriple` is a stored conjunction of the validity phases; `canApplyGraphGesture` at line 671 implies `canApplyTriple`, while the error-display phases are determined by the same ordered field states.
 
 # Current shape
 
@@ -98,10 +97,9 @@ UI error reads use `OntologyInspectorFieldState.is.invalid(form.subjectState)` (
 
 - `packages/ontology/client/src/aggregates/Session/Session.atoms.ts:393-411` — replace the eight boolean schema fields with `objectState`, `predicateState`, and `subjectState`; add `OntologyInspectorFieldState` and the two applicability derivations beside the model.
 - `packages/ontology/client/src/aggregates/Session/Session.atoms.ts:580` — retain `decodeOntologyInspectorIri`; it remains the source validator used to select field-state literals.
-- `packages/ontology/client/src/aggregates/Session/Session.atoms.ts:601-610` — replace the three `*Valid` and three `show*Error` local booleans with three `inspectorFieldState(...)` values. The literal-object rule remains: non-empty literals are valid, while IRI objects use `decodeOntologyInspectorIri`.
-- `packages/ontology/client/src/aggregates/Session/Session.atoms.ts:611` — remove the stored `canApplyTriple` conjunction; the atom no longer reads `ontologySessionAtom` merely to persist a duplicated answer.
-- `packages/ontology/client/src/aggregates/Session/Session.atoms.ts:613-626` — construct the class with the three state fields and remove all eight boolean writes.
-- `packages/ontology/client/src/aggregates/Session/Session.atoms.ts:3098-3105` — also read `ctx(ontologySessionAtom)` and map `addTriple` to `ontologyInspectorCanApplyTriple(session, form)` and graph actions to `ontologyInspectorCanApplyGraphGesture(session, form)`.
+- `packages/ontology/client/src/aggregates/Session/Session.atoms.ts:645-660` — replace the three `*Valid` and three `show*Error` local booleans with three `inspectorFieldState(...)` values. The literal-object rule remains: non-empty literals are valid, while IRI objects use `decodeOntologyInspectorIri`; remove the stored `canApplyTriple` conjunction so this atom no longer reads `ontologySessionAtom` merely to persist a duplicated answer.
+- `packages/ontology/client/src/aggregates/Session/Session.atoms.ts:662-675` — construct the class with the three state fields and remove all eight boolean writes.
+- `packages/ontology/client/src/aggregates/Session/Session.atoms.ts:3216-3225` — also read `ctx(ontologySessionAtom)` and map `addTriple` to `ontologyInspectorCanApplyTriple(session, form)` and graph actions to `ontologyInspectorCanApplyGraphGesture(session, form)`.
 - `packages/ontology/ui/src/aggregates/Session/Session.inspector.tsx:9-15` — import `ontologySessionAtom`, `OntologyInspectorFieldState`, and the two applicability derivations from the client package.
 - `packages/ontology/ui/src/aggregates/Session/Session.inspector.tsx:62-73` — replace `showSubjectError`, `showPredicateError`, and `showObjectError` with the kit's `.is.invalid` checks on the corresponding state fields.
 - `packages/ontology/ui/src/aggregates/Session/Session.inspector.tsx:80-86` — read `ontologySessionAtom` once beside the form atom and derive `canApplyTriple` and `canApplyGraphGesture` once for the render.
@@ -113,10 +111,10 @@ Whole-repository search found no other source write or read of the eight members
 
 # Guard-deletion accounting
 
-- `packages/ontology/client/src/aggregates/Session/Session.atoms.ts:601-604` — delete the paired `valid` plus `non-empty && !valid` projections for subject and predicate; one `empty | invalid | valid` selection replaces each pair.
-- `packages/ontology/client/src/aggregates/Session/Session.atoms.ts:605-610` — delete the separately maintained `objectValid` and `showObjectError` coherence pair; one object field state records the result.
-- `packages/ontology/client/src/aggregates/Session/Session.atoms.ts:611-622` — delete the stored conjunction and implication writes that must maintain `canApplyGraphGesture => canApplyTriple`.
-- `packages/ontology/client/src/aggregates/Session/Session.atoms.ts:3099-3105` — delete the branch over two stored permission booleans; the action match derives permission from the field-state literals plus the upstream session.
+- `packages/ontology/client/src/aggregates/Session/Session.atoms.ts:650-653` — delete the paired `valid` plus `non-empty && !valid` projections for subject and predicate; one `empty | invalid | valid` selection replaces each pair.
+- `packages/ontology/client/src/aggregates/Session/Session.atoms.ts:654-659` — delete the separately maintained `objectValid` and `showObjectError` coherence pair; one object field state records the result.
+- `packages/ontology/client/src/aggregates/Session/Session.atoms.ts:660-671` — delete the stored conjunction and implication writes that must maintain `canApplyGraphGesture => canApplyTriple`.
+- `packages/ontology/client/src/aggregates/Session/Session.atoms.ts:3219-3225` — delete the branch over two stored permission booleans; the action match derives permission from the field-state literals plus the upstream session.
 - `packages/ontology/ui/src/aggregates/Session/Session.inspector.tsx:76-78` — revise the comment-only invariant claiming validation and action guards are stored together in one snapshot; the snapshot owns validation state and applicability is derived with the upstream session.
 
 # Encoded-side impact
@@ -127,6 +125,7 @@ none (internal)
 
 - `packages/ontology/client/test/inspector-actions.test.ts:73-84` — assert `invalid.subjectState === "invalid"`, the three valid-state literals, and applicability through the exported derivations with the mounted session option. Remove assertions on `showSubjectError`, `subjectValid`, `predicateValid`, `objectValid`, and `canApplyGraphGesture`.
 - Add the missing `empty` assertion for a blank draft and retain both object-kind branches so the literal-object and IRI-object validation rules remain covered.
+- Record the portless inspector validation and apply/graph gestures and complete browser-qa-loop record -> extract -> judge evidence with `requiredCount: 0`.
 - No other test under `packages/**/test/**` or an app `test/` directory reads these members.
 
 # Risk & sequencing

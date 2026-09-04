@@ -1,16 +1,16 @@
 # Instance
 
 - id: `drivers-migration-journal-shape-row`
-- file:line: `packages/drivers/postgres/src/PostgresDrizzle.service.ts:349`
+- file:line: `packages/drivers/postgres/src/PostgresDrizzle.service.ts:348`
 - symbol: `MigrationJournalShapeRow`
 - members: `exists`, `hasName`
 - evidence classes:
-  - E2 at `packages/drivers/postgres/src/PostgresDrizzle.service.ts:473` — if `!exists` return empty; else if `!hasName` take the legacy journal path; else the named-column path. Combined-true is only the modern path; `!exists && hasName` is never handled.
-  - E4 at `packages/drivers/postgres/src/PostgresDrizzle.service.ts:476` — `hasName` is only inspected after `exists` is true; a name column cannot exist without the table.
+  - E2 at `packages/drivers/postgres/src/PostgresDrizzle.service.ts:469` — if `!exists` return empty; else if `!hasName` take the legacy journal path; else the named-column path. Combined-true is only the modern path; `!exists && hasName` is never handled.
+  - E4 at `packages/drivers/postgres/src/PostgresDrizzle.service.ts:472` — `hasName` is only inspected after `exists` is true; a name column cannot exist without the table.
 
 # Current shape
 
-Live declaration at `packages/drivers/postgres/src/PostgresDrizzle.service.ts:349`:
+Live declaration at `packages/drivers/postgres/src/PostgresDrizzle.service.ts:348`:
 
 ```ts
 const MigrationJournalShapeRow = S.Struct({ exists: S.Boolean, hasName: S.Boolean }).pipe(
@@ -54,17 +54,17 @@ Change the SQL projection to one `CASE` expression aliased as `kind`: table abse
 # Migration inventory
 
 - `packages/drivers/postgres/src/PostgresDrizzle.service.ts:9-17` — import `LiteralKit` from `@beep/schema` alongside the existing imports.
-- `packages/drivers/postgres/src/PostgresDrizzle.service.ts:349-353` — add `MigrationJournalKind` and replace the two-field row with `{ kind }`.
-- `packages/drivers/postgres/src/PostgresDrizzle.service.ts:449-462` — replace both `EXISTS ... AS exists/hasName` projections with a single SQL `CASE ... AS kind`; this is the only write site for the derived row.
-- `packages/drivers/postgres/src/PostgresDrizzle.service.ts:463-472` — continue decoding the single returned row through `MigrationJournalShapeRow`.
-- `packages/drivers/postgres/src/PostgresDrizzle.service.ts:473-476` — replace the ordered boolean `if` chain with exhaustive `missing`/`legacy`/`current` literal arms; the existing legacy and current branch bodies remain unchanged.
+- `packages/drivers/postgres/src/PostgresDrizzle.service.ts:348-352` — add `MigrationJournalKind` and replace the two-field row with `{ kind }`.
+- `packages/drivers/postgres/src/PostgresDrizzle.service.ts:448-461` — replace both `EXISTS ... AS exists/hasName` projections with a single SQL `CASE ... AS kind`; this is the only write site for the derived row.
+- `packages/drivers/postgres/src/PostgresDrizzle.service.ts:462-468` — continue decoding the single returned row through `MigrationJournalShapeRow`.
+- `packages/drivers/postgres/src/PostgresDrizzle.service.ts:469-472` — replace the ordered boolean `if` chain with exhaustive `missing`/`legacy`/`current` literal arms; the existing legacy and current branch bodies remain unchanged.
 
 Repository-wide search finds no other source read or write of `MigrationJournalShapeRow`, `shape.exists`, or `shape.hasName`.
 
 # Guard-deletion accounting
 
-- `packages/drivers/postgres/src/PostgresDrizzle.service.ts:473-476` — delete the ordered coherence chain `if (!exists) ...; if (!hasName) ...`, whose correctness depends on checking table existence before column existence. Exhaustive literal arms make the missing-with-name state unrepresentable.
-- `packages/drivers/postgres/src/PostgresDrizzle.service.ts:449-462` — delete the pair of independent boolean projections whose output type admits the impossible combination; the SQL `CASE` produces exactly one legal literal.
+- `packages/drivers/postgres/src/PostgresDrizzle.service.ts:469-472` — delete the ordered coherence chain `if (!exists) ...; if (!hasName) ...`, whose correctness depends on checking table existence before column existence. Exhaustive literal arms make the missing-with-name state unrepresentable.
+- `packages/drivers/postgres/src/PostgresDrizzle.service.ts:448-461` — delete the pair of independent boolean projections whose output type admits the impossible combination; the SQL `CASE` produces exactly one legal literal.
 
 # Encoded-side impact
 

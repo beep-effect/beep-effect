@@ -1,16 +1,16 @@
 ## Instance
 
 - id: `r3-tooling-terse-effect-file-flags`
-- file:line: `packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts:615`
+- file:line: `packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts:628`
 - symbol: `runTerseEffectRules.fileFlags`
 - members: `fileTouched`, `fileMutated`, `fileHasBlockingCandidate`, `fileHasRewritableCandidate`
 - evidence classes:
-  - E3 — `packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts:641`: fileHasBlockingCandidate/fileHasRewritableCandidate are written in lockstep with appending fileBlockingFindings/fileRewritableFindings — booleans that restate array presence.
-  - E4 — `packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts:743`: Readers nest mutated then touched then blocking/rewritable; writes always set fileTouched with fileHasBlockingCandidate, rewritable only with blocking, mutated only with rewritable.
+  - E3 — `packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts:653`: fileHasBlockingCandidate/fileHasRewritableCandidate are written in lockstep with appending fileBlockingFindings/fileRewritableFindings — booleans that restate array presence.
+  - E4 — `packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts:752`: Readers nest mutated then touched then blocking/rewritable; writes always set fileTouched with fileHasBlockingCandidate, rewritable only with blocking, mutated only with rewritable.
 
 ## Current shape
 
-Live sibling state at `packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts:613` (line 618 is an unrelated, currently constant informational flag):
+Live sibling state at `packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts:626` (line 631 is an unrelated, currently constant informational flag):
 
 ```ts
 for (const sourceFile of sourceFiles) {
@@ -61,27 +61,27 @@ After traversal, use `TerseEffectFilePhase.$match(filePhase, ...)` to update agg
 ## Migration inventory
 
 - `packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts:8` — import `LiteralKit` from `@beep/schema` alongside the existing repo imports.
-- `packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts:615` — delete all four affected sibling booleans; retain the finding arrays as the source of truth.
-- `packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts:637` — delete the mutation flag write for helper-ref replacement.
-- `packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts:640` — delete the touched/blocking/rewritable writes at lines 640–642; the array appends at lines 643–644 remain.
-- `packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts:659` — delete the mutation flag write for thunk-helper replacement.
-- `packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts:662` — delete the touched/blocking/rewritable writes at lines 662–664; retain the finding appends.
-- `packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts:677` — delete touched/blocking writes for flow candidates; retain the append at line 679.
-- `packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts:686` — delete touched/blocking writes for option-object compaction; retain the append at lines 688–691.
-- `packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts:696` — delete touched/blocking writes for nested Option matches; retain the append at lines 698–701.
-- `packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts:706` — delete touched/blocking writes for nested Boolean matches; retain the append at lines 708–711.
-- `packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts:718` — delete touched/blocking writes for conditional optional spreads; retain the append at lines 720–723.
-- `packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts:730` — delete touched/blocking writes for explicit dual overloads; retain the append at lines 732–735.
-- `packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts:739` — replace the mutation guard and nested touched/blocking/rewritable chain through line 758 with one derived `filePhase` and exhaustive `$match`.
+- `packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts:628-635` — delete all four affected sibling booleans; retain the finding arrays as the source of truth.
+- `packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts:650` — delete the mutation flag write for helper-ref replacement.
+- `packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts:653-657` — delete the touched/blocking/rewritable writes; retain the finding-array appends.
+- `packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts:672` — delete the mutation flag write for thunk-helper replacement.
+- `packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts:675-679` — delete the touched/blocking/rewritable writes; retain the finding-array appends.
+- `packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts:690-692` — delete touched/blocking writes for flow candidates; retain the append.
+- `packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts:699-704` — delete touched/blocking writes for option-object compaction; retain the finding append.
+- `packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts:709-714` — delete touched/blocking writes for nested Option matches; retain the finding append.
+- `packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts:719-724` — delete touched/blocking writes for nested Boolean matches; retain the finding append.
+- `packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts:731-736` — delete touched/blocking writes for conditional optional spreads; retain the finding append.
+- `packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts:742-748` — delete touched/blocking writes for explicit dual overloads; retain the finding append.
+- `packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts:752-769` — replace the mutation guard and nested touched/blocking/rewritable chain with one derived `filePhase` and exhaustive `$match`.
 - Export the kit/type only if the focused test uses it directly; otherwise keep both file-local because the phase is an internal aggregation detail.
 
 The exact whole-repo search found no use of these four variables outside `runTerseEffectRules`.
 
 ## Guard-deletion accounting
 
-- `packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts:637`, `:640`, `:659`, `:662`, `:677`, `:686`, `:696`, `:706`, `:718`, and `:730` — delete ten clusters of manual coherence writes that mirror finding-array presence and write mode.
-- `packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts:739` — delete the standalone `fileMutated` guard.
-- `packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts:743` — delete the nested `fileTouched -> blocking -> rewritable` implication chain through line 758; exhaustive phase matching states all four legal cases.
+- `packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts:650-748` — delete ten clusters of manual coherence writes that mirror finding-array presence and write mode.
+- `packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts:752` — delete the standalone `fileMutated` guard.
+- `packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts:756-769` — delete the nested `fileTouched -> blocking -> rewritable` implication chain; exhaustive phase matching states all four legal cases.
 
 ## Encoded-side impact
 

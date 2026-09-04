@@ -1,12 +1,12 @@
 # Instance
 
 - id: `drivers-stream-state`
-- file:line: `packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts:229`
+- file:line: `packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts:221`
 - symbol: `StreamState`
 - members: `finished`, `textEnded`, `textStarted`
 - evidence classes:
-  - E4 at `packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts:821` — text-end is only emitted when `textStarted && !textEnded`; `textEnded` is unreachable without `textStarted`.
-  - E2 at `packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts:845` — readers branch on `textStarted` vs not to emit text-start; `finished` short-circuits the wrap-up path and never treats ended-without-start as a case.
+  - E4 at `packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts:819` — text-end is only emitted when `textStarted && !textEnded`; `textEnded` is unreachable without `textStarted`.
+  - E2 at `packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts:843` — readers branch on `textStarted` vs not to emit text-start; `finished` short-circuits the wrap-up path and never treats ended-without-start as a case.
 
 # Current shape
 
@@ -104,20 +104,20 @@ Transition the phase from emitted parts: any `text-end` yields `closed`; otherwi
 
 - `packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts:9` — extend the existing `@beep/schema` import with `LiteralKit`.
 - `packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts:221-248` — add `StreamTextPhase`, replace `textStarted`/`textEnded` with `textPhase`, and initialize it to `idle`; retain independent `finished`.
-- `packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts:817-823` — `finishStreamParts` matches `textPhase`; only `open` emits the synthetic `text-end`.
+- `packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts:815-821` — `finishStreamParts` matches `textPhase`; only `open` emits the synthetic `text-end`.
 - `packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts:838-848` — the first text delta emits `text-start` only when `state.textPhase` is `idle`.
-- `packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts:883-890` — finish-time `text-end` uses `idle` versus started phases instead of `state.textStarted`.
-- `packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts:900-911` — replace the two accumulating booleans with one phase transition derived from `allParts` and the prior phase.
-- `packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts:913-921` — write `textPhase` into the next state and remove both boolean fields.
+- `packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts:881-890` — finish-time `text-end` uses `idle` versus started phases instead of `state.textStarted`.
+- `packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts:898-909` — replace the two accumulating booleans with one phase transition derived from `allParts` and the prior phase.
+- `packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts:911-921` — write `textPhase` into the next state and remove both boolean fields.
 
 Repository-wide search finds no other source reader or writer of `StreamState`, `textStarted`, or `textEnded` outside this module.
 
 # Guard-deletion accounting
 
-- `packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts:821` — delete the coherence conjunction `textStarted && !textEnded`; one `open` phase names the condition.
-- `packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts:845` — delete the boolean interpretation “not started means emit start”; the `idle` arm owns it.
-- `packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts:887-889` — delete the read that infers an open-or-new span from `textStarted || nonEmpty(textParts)`; the transition computes one phase.
-- `packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts:900-911` — delete the parallel OR-accumulators that can manufacture the illegal ended-without-started pair.
+- `packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts:819` — delete the coherence conjunction `textStarted && !textEnded`; one `open` phase names the condition.
+- `packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts:843` — delete the boolean interpretation “not started means emit start”; the `idle` arm owns it.
+- `packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts:885-887` — delete the read that infers an open-or-new span from `textStarted || nonEmpty(textParts)`; the transition computes one phase.
+- `packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts:898-909` — delete the parallel OR-accumulators that can manufacture the illegal ended-without-started pair.
 
 # Encoded-side impact
 
@@ -125,8 +125,8 @@ none (internal)
 
 # Test impact
 
-- `packages/drivers/openai-compat/test/OpenAiCompat.language-model.test.ts:331-375` — retains the expected `text-start`, deltas, `text-end`, `finish` sequence and proves the `idle -> open -> closed` path behaviorally.
-- `packages/drivers/openai-compat/test/OpenAiCompat.language-model.test.ts:377-435` — retains the trailing-usage case and proves a closed span is not ended twice before finish.
+- `packages/drivers/openai-compat/test/OpenAiCompat.language-model.test.ts:390-434` — retains the expected `text-start`, deltas, `text-end`, `finish` sequence and proves the `idle -> open -> closed` path behaviorally.
+- `packages/drivers/openai-compat/test/OpenAiCompat.language-model.test.ts:436-494` — retains the trailing-usage case and proves a closed span is not ended twice before finish.
 - No test directly constructs or reads the private `StreamState` members. Add a focused no-text completion case if P4 needs direct coverage of `idle + finished`; do not expose `StreamState` for testing.
 
 # Risk & sequencing
