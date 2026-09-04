@@ -50,6 +50,7 @@ import {
   setAdmissionEvictionProtocol,
   TmpfsReapReport,
 } from "../../internal/repo-run/index.ts";
+import { WaveOrder } from "../Yeet/internal/WaveOrder.ts";
 import { runChangesetGraphCheck } from "./ChangesetGraph.ts";
 import { changesetStatusCommand } from "./ChangesetStatus.ts";
 import { qualityFallowCommand } from "./FallowQuality.command.ts";
@@ -312,7 +313,7 @@ export const qualityProfileConfigForTesting = qualityProfileConfigForTestingImpl
 export const activeOsvIgnoreIdsForTesting = activeOsvIgnoreIdsForTestingImpl;
 
 const $I = $RepoCliId.create("commands/Quality/ScriptCommands");
-const { githubCheckLaneWaves } = githubCheckLanePlan;
+const { githubCheckLaneWaves, githubCheckOrderedLaneWaves } = githubCheckLanePlan;
 
 const ignoredTestDirectoryNames = ["node_modules", "dist", "coverage", "tmp"] as const;
 // infra/lambda/**: self-contained esbuild-bundled Lambda packages typecheck
@@ -597,6 +598,21 @@ const runGithubCheckLaneGroup = (
 ): Effect.Effect<void, QualityTaskConfigurationError | QualityTaskGroupFailed, QualityScriptEnvironment> =>
   runQualityTaskGithubCheckLaneWaves(label, githubCheckLaneWaves(lanes), failurePolicy);
 
+const runEvidenceOrderedGithubCheckLaneGroup = Effect.fn(
+  "QualityScriptCommands.runEvidenceOrderedGithubCheckLaneGroup"
+)(function* (
+  label: string,
+  lanes: ReadonlyArray<GithubCheckLaneSpec>,
+  failurePolicy: GithubCheckFailurePolicyType
+): Effect.fn.Return<
+  void,
+  QualityTaskConfigurationError | QualityTaskGroupFailed,
+  QualityScriptEnvironment | WaveOrder
+> {
+  const waveOrder = yield* WaveOrder;
+  yield* runQualityTaskGithubCheckLaneWaves(label, githubCheckOrderedLaneWaves(waveOrder.order(lanes)), failurePolicy);
+});
+
 const collectOutput = Effect.fn("QualityScriptCommands.collectOutput")(function* (
   step: QualityTaskStep
 ): Effect.fn.Return<
@@ -792,7 +808,7 @@ const runPrePushChecks = Effect.fn("QualityScriptCommands.runPrePushChecks")(fun
   QualityScriptEnvironment
 > {
   const changesetStatusLanes = yield* githubCheckChangesetStatusLanes(repoRoot);
-  yield* runGithubCheckLaneGroup(
+  yield* runEvidenceOrderedGithubCheckLaneGroup(
     "github-checks:pre-push",
     [
       ...changesetStatusLanes,
@@ -802,7 +818,7 @@ const runPrePushChecks = Effect.fn("QualityScriptCommands.runPrePushChecks")(fun
       ...githubCheckPrePushExternalLanes(repoRoot),
     ],
     failurePolicy
-  );
+  ).pipe(Effect.provide(WaveOrder.Default));
 });
 
 const runCheapGates = Effect.fn("QualityScriptCommands.runCheapGates")(function* (
@@ -2828,14 +2844,18 @@ const githubChecksCommand = Command.make(
       Flag.withDefault(false),
       Flag.withDescription("Run every local GitHub-check wave after failures instead of stopping before later waves")
     ),
+    noFailFast: Flag.boolean("no-fail-fast").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Keep launching local gates after a precise red to collect the full diagnostic picture")
+    ),
     mode: Argument.choice("mode", GITHUB_CHECK_MODE_VALUES).pipe(Argument.withDescription("GitHub check mode to run")),
   },
-  ({ base, collectAll, head, mode }) =>
+  ({ base, collectAll, head, mode, noFailFast }) =>
     runQualityProgram(
       runGithubChecks(mode, {
         base,
         head,
-        failurePolicy: collectAll ? "collect-all" : "fail-fast",
+        failurePolicy: collectAll || noFailFast ? "collect-all" : "fail-fast",
       })
     )
 ).pipe(Command.withDescription("Run repository GitHub verification lanes"));

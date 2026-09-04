@@ -53,6 +53,8 @@ import {
   FallowReportFinding,
   FLAKE_QUARANTINE_ARTIFACT_RELATIVE_PATH,
   FlakeQuarantineArtifactJson,
+  GateOrderSeed,
+  GateOrderSeedRow,
   GITHUB_CHECK_RUN_REPORT_PREFIX,
   GithubCheckFailurePolicy,
   GithubCheckLaneSpec,
@@ -119,6 +121,7 @@ import {
   resolveTurboCachePlan,
   turboCachePlanArgs,
 } from "@beep/repo-cli/test/SharedInternals";
+import { DEFAULT_GATE_ORDER_SEED, WaveOrder } from "@beep/repo-cli/test/Yeet";
 import { DomainError, findRepoRoot } from "@beep/repo-utils";
 import { PosInt } from "@beep/schema/Int";
 import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
@@ -384,13 +387,36 @@ const bunScriptStep = (label: string, source: string) =>
     cwd: process.cwd(),
   });
 
-const githubCheckTestLane = (id: string, wave: GithubCheckLaneWave, source: string): GithubCheckLaneSpec =>
+const githubCheckTestLane = (
+  id: string,
+  wave: GithubCheckLaneWave,
+  source: string,
+  orderEstimate: O.Option<GateOrderSeedRow> = O.none()
+): GithubCheckLaneSpec =>
   GithubCheckLaneSpec.make({
     blockedBy: [],
     id,
+    orderEstimate,
     stage: "repo-quality",
     step: bunScriptStep(id, source),
     wave,
+  });
+
+const githubCheckTestEstimate = (
+  laneId: string,
+  costP50Seconds: number,
+  precision: "precise" | "imprecise" = "precise"
+): GateOrderSeedRow =>
+  GateOrderSeedRow.make({
+    laneId,
+    costP50Seconds,
+    durationBasis: "Test fixture duration.",
+    durationPointer: "/test/duration",
+    redProbability: 0,
+    firstRedBasis: "Test fixture probability.",
+    firstRedPointer: "/test/redProbability",
+    precision,
+    precisionBasis: "Test fixture precision.",
   });
 
 const initializeLaneProofRepository = Effect.fn("QualityTasksTest.initializeLaneProofRepository")(function* (
@@ -916,6 +942,8 @@ describe("quality task adapter", () => {
           schemaVersion: "github-check-run/v1",
         });
         expect(report.lanes[0]?.wave).toBe("test");
+        expect(report.firstRed).toStrictEqual(O.none());
+        expect(report.skippedAfterRed).toBe(0);
       })
     ));
 
@@ -1258,7 +1286,29 @@ describe("quality task adapter", () => {
     );
   });
 
-  it("finishes a failed wave, reports sibling failures, and marks later waves not run", () =>
+  it.effect(
+    "must-fail fixture: changing the seed changes order and unknown lanes retain declaration order",
+    Effect.fnUntraced(function* () {
+      const lanes = [
+        githubCheckTestLane("seed:a", "preflight", "process.exit(0)"),
+        githubCheckTestLane("unknown:z", "preflight", "process.exit(0)"),
+        githubCheckTestLane("seed:b", "preflight", "process.exit(0)"),
+        githubCheckTestLane("unknown:y", "preflight", "process.exit(0)"),
+      ];
+      const seed = (aCost: number, bCost: number) =>
+        GateOrderSeed.make({
+          ...DEFAULT_GATE_ORDER_SEED,
+          lanes: [githubCheckTestEstimate("seed:a", aCost), githubCheckTestEstimate("seed:b", bCost)],
+        });
+      const original = yield* WaveOrder.make(seed(1, 2));
+      const changed = yield* WaveOrder.make(seed(2, 1));
+
+      expect(A.map(original.order(lanes), (lane) => lane.id)).toEqual(["seed:a", "seed:b", "unknown:z", "unknown:y"]);
+      expect(A.map(changed.order(lanes), (lane) => lane.id)).toEqual(["seed:b", "seed:a", "unknown:z", "unknown:y"]);
+    })
+  );
+
+  it("stops after a precise red and marks the unlaunched tail", () =>
     Effect.runPromise(
       collectGithubCheckLaneWavesForTesting(
         "pre-push",
@@ -1266,8 +1316,18 @@ describe("quality task adapter", () => {
           GithubCheckLaneWaveSpec.make({
             wave: "preflight",
             lanes: [
-              githubCheckTestLane("preflight:a", "preflight", "process.exit(2)"),
-              githubCheckTestLane("preflight:b", "preflight", "process.exit(3)"),
+              githubCheckTestLane(
+                "preflight:a",
+                "preflight",
+                "process.exit(2)",
+                O.some(githubCheckTestEstimate("preflight:a", 1))
+              ),
+              githubCheckTestLane(
+                "preflight:b",
+                "preflight",
+                "process.exit(3)",
+                O.some(githubCheckTestEstimate("preflight:b", 2))
+              ),
             ],
           }),
           GithubCheckLaneWaveSpec.make({
@@ -1278,19 +1338,56 @@ describe("quality task adapter", () => {
         "fail-fast"
       ).pipe(
         Effect.map(({ failures, laneReport, report }) => {
-          expect(A.map(failures, (failure) => failure.label)).toEqual(["preflight:a", "preflight:b"]);
+          expect(A.map(failures, (failure) => failure.label)).toEqual(["preflight:a"]);
           expect(A.map(report.lanes, (lane) => [lane.id, lane.status])).toEqual([
             ["preflight:a", "failed"],
-            ["preflight:b", "failed"],
+            ["preflight:b", "not-run-early-stop"],
             ["heavy:check", "not-run-early-stop"],
           ]);
           expect(A.map(laneReport.lanes, (lane) => [lane.id, lane.status])).toEqual([
             ["preflight:a", "failed"],
-            ["preflight:b", "failed"],
+            ["preflight:b", "not-run-early-stop"],
             ["heavy:check", "not-run-early-stop"],
           ]);
-          expect(A.every(A.take(laneReport.lanes, 2), (lane) => O.isSome(lane.startedAt))).toBe(true);
+          expect(report.firstRed).toStrictEqual(O.some("preflight:a"));
+          expect(report.skippedAfterRed).toBe(2);
+          expect(O.isSome(laneReport.lanes[0]?.startedAt ?? O.none())).toBe(true);
+          expect(laneReport.lanes[1]?.inputDigest).toStrictEqual(O.none());
           expect(laneReport.lanes[2]?.inputDigest).toStrictEqual(O.none());
+        }),
+        provideScopedLayer(PlatformLayer)
+      )
+    ));
+
+  it("continues after an imprecise red under fail-fast", () =>
+    Effect.runPromise(
+      collectGithubCheckLaneWavesForTesting(
+        "pre-push",
+        [
+          GithubCheckLaneWaveSpec.make({
+            wave: "preflight",
+            lanes: [
+              githubCheckTestLane(
+                "preflight:imprecise",
+                "preflight",
+                "process.exit(1)",
+                O.some(githubCheckTestEstimate("preflight:imprecise", 1, "imprecise"))
+              ),
+              githubCheckTestLane(
+                "preflight:precise",
+                "preflight",
+                "process.exit(0)",
+                O.some(githubCheckTestEstimate("preflight:precise", 2))
+              ),
+            ],
+          }),
+        ],
+        "fail-fast"
+      ).pipe(
+        Effect.map(({ report }) => {
+          expect(A.map(report.lanes, (lane) => lane.status)).toEqual(["failed", "passed"]);
+          expect(report.firstRed).toStrictEqual(O.some("preflight:imprecise"));
+          expect(report.skippedAfterRed).toBe(0);
         }),
         provideScopedLayer(PlatformLayer)
       )

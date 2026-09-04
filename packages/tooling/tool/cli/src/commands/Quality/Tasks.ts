@@ -88,8 +88,11 @@ import { hasReusableLaneProof, persistLaneProofs, prepareLaneProofSession } from
 import { QualityTaskConfigurationError, QualityTaskFailed, QualityTaskGroupFailed } from "./Quality.errors.ts";
 import {
   decodePackageJsonDocument,
+  GatePrecisionClass,
   GITHUB_CHECK_RUN_REPORT_PREFIX,
+  GithubCheckFailurePolicy,
   GithubCheckLaneRun,
+  GithubCheckLaneRunStatus,
   GithubCheckMode,
   GithubCheckRunReport,
   LintPolicySubcommand,
@@ -112,12 +115,7 @@ import type { CaptureCommandTimedOutError } from "../../internal/process/index.t
 import type { CoverageBaselineRowDelta } from "./internal/CoverageScope.ts";
 import type { FlakeQuarantineTask } from "./internal/FlakeQuarantine.ts";
 import type { UnexpectedQualityTaskFailure } from "./Quality.errors.ts";
-import type {
-  GithubCheckFailurePolicy,
-  GithubCheckLaneWaveSpec,
-  PackageJsonDocument,
-  PackageJsonWorkspacesDocument,
-} from "./Quality.schemas.ts";
+import type { GithubCheckLaneWaveSpec, PackageJsonDocument, PackageJsonWorkspacesDocument } from "./Quality.schemas.ts";
 
 export { QualityTaskStep } from "../../internal/process/index.ts";
 /**
@@ -1534,6 +1532,22 @@ const qualityTaskLaneRunFromOutcome = (
     inputDigest,
   });
 
+const skippedQualityTaskLaneRun = (lane: GithubCheckLaneWaveSpec["lanes"][number]): QualityTaskLaneRun =>
+  QualityTaskLaneRun.make({
+    id: lane.id,
+    label: lane.step.label,
+    status: "not-run-early-stop",
+    inputDigest: O.none(),
+  });
+
+const appendSkippedQualityTaskLaneRun = Effect.fn("QualityTasks.appendSkippedLaneRun")(function* (
+  lane: GithubCheckLaneWaveSpec["lanes"][number]
+) {
+  const laneRun = skippedQualityTaskLaneRun(lane);
+  yield* appendQualityTaskLaneRun(laneRun);
+  return laneRun;
+});
+
 const collectQualityTaskLaneRuns = Effect.fn("QualityTasks.collectQualityTaskLaneRuns")(function* (
   label: string,
   lanes: ReadonlyArray<QualityTaskLaneInput>,
@@ -1571,12 +1585,21 @@ const collectQualityTaskLaneRuns = Effect.fn("QualityTasks.collectQualityTaskLan
 // fallow-ignore-next-line complexity -- each lane must complete its proof lookup, run, failure capture, and receipt write in order
 const runGithubCheckWave = Effect.fn("QualityTasks.runGithubCheckWave")(function* (
   label: string,
-  wave: GithubCheckLaneWaveSpec
+  wave: GithubCheckLaneWaveSpec,
+  failurePolicy: GithubCheckFailurePolicy
 ) {
   let activeReusableIds = A.empty<string>();
   let failures = A.empty<QualityTaskFailed>();
   let laneRuns = A.empty<QualityTaskLaneRun>();
+  let skippedLaneIds = A.empty<string>();
+  let stoppedAfterPreciseRed = false;
   for (const lane of wave.lanes) {
+    if (stoppedAfterPreciseRed) {
+      skippedLaneIds = A.append(skippedLaneIds, lane.id);
+      laneRuns = A.append(laneRuns, yield* appendSkippedQualityTaskLaneRun(lane));
+      continue;
+    }
+
     const session = yield* prepareLaneProofSession([lane]);
     const reusable = O.exists(session, (prepared) => hasReusableLaneProof(prepared, lane.id));
     const activeReuse = reusable && O.exists(session, (prepared) => prepared.mode === "active");
@@ -1604,6 +1627,9 @@ const runGithubCheckWave = Effect.fn("QualityTasks.runGithubCheckWave")(function
     }
     if (A.isReadonlyArrayNonEmpty(result.failures)) {
       failures = A.appendAll(failures, result.failures);
+      stoppedAfterPreciseRed =
+        GithubCheckFailurePolicy.is["fail-fast"](failurePolicy) &&
+        O.exists(lane.orderEstimate, (estimate) => GatePrecisionClass.is.precise(estimate.precision));
     } else {
       const durationMs = pipe(
         run,
@@ -1621,8 +1647,26 @@ const runGithubCheckWave = Effect.fn("QualityTasks.runGithubCheckWave")(function
       });
     }
   }
-  return { activeReusableIds, failures, laneRuns };
+  return { activeReusableIds, failures, laneRuns, skippedLaneIds, stoppedAfterPreciseRed };
 });
+
+const githubCheckLaneRunStatus = (
+  lane: GithubCheckLaneWaveSpec["lanes"][number],
+  activeReusableIds: ReadonlyArray<string>,
+  failedLabels: ReadonlyArray<string>,
+  skippedLaneIds: ReadonlyArray<string>
+): GithubCheckLaneRun["status"] => {
+  if (A.contains(skippedLaneIds, lane.id)) {
+    return "not-run-early-stop";
+  }
+  if (A.contains(activeReusableIds, lane.id)) {
+    return "reused";
+  }
+  if (A.contains(failedLabels, lane.step.label)) {
+    return "failed";
+  }
+  return "passed";
+};
 
 const runStreamingStepGroup = Effect.fn("QualityTasks.runStreamingStepGroup")(function* (
   label: string,
@@ -1634,8 +1678,9 @@ const runStreamingStepGroup = Effect.fn("QualityTasks.runStreamingStepGroup")(fu
 });
 
 /**
- * Execute static GitHub-check waves and retain every sibling failure in the
- * active wave before applying the selected scheduling policy.
+ * Execute static GitHub-check waves and stop scheduling after a precise red.
+ * Imprecise reds continue so operators still receive independently actionable
+ * evidence; collect-all schedules every lane regardless of precision.
  *
  * **Example** (Inspect an empty fail-fast run)
  *
@@ -1651,7 +1696,7 @@ const runStreamingStepGroup = Effect.fn("QualityTasks.runStreamingStepGroup")(fu
  *
  * @param label - Group label rendered in CLI output.
  * @param waves - Static lane waves in execution order.
- * @param failurePolicy - Whether a failed wave stops later scheduling.
+ * @param failurePolicy - Whether a precise red stops subsequent scheduling.
  * @returns The schema-backed run report and all failures observed in executed waves.
  * @category execution
  * @since 0.0.0
@@ -1676,15 +1721,7 @@ const collectGithubCheckLaneWaves = Effect.fn("QualityTasks.collectGithubCheckLa
       );
       qualityTaskLaneRuns = A.appendAll(
         qualityTaskLaneRuns,
-        yield* Effect.forEach(wave.lanes, (lane) => {
-          const laneRun = QualityTaskLaneRun.make({
-            id: lane.id,
-            label: lane.step.label,
-            status: "not-run-early-stop",
-            inputDigest: O.none(),
-          });
-          return appendQualityTaskLaneRun(laneRun).pipe(Effect.as(laneRun));
-        })
+        yield* Effect.forEach(wave.lanes, appendSkippedQualityTaskLaneRun)
       );
       continue;
     }
@@ -1693,7 +1730,9 @@ const collectGithubCheckLaneWaves = Effect.fn("QualityTasks.collectGithubCheckLa
       activeReusableIds,
       failures: waveFailures,
       laneRuns: waveLaneRuns,
-    } = yield* runGithubCheckWave(`${label}:${wave.wave}`, wave);
+      skippedLaneIds,
+      stoppedAfterPreciseRed,
+    } = yield* runGithubCheckWave(`${label}:${wave.wave}`, wave, failurePolicy);
     const failedLabels = A.map(waveFailures, (failure) => failure.label);
     laneRuns = A.appendAll(
       laneRuns,
@@ -1701,22 +1740,32 @@ const collectGithubCheckLaneWaves = Effect.fn("QualityTasks.collectGithubCheckLa
         GithubCheckLaneRun.make({
           id: lane.id,
           stage: lane.stage,
-          status: A.contains(activeReusableIds, lane.id)
-            ? "reused"
-            : A.contains(failedLabels, lane.step.label)
-              ? "failed"
-              : "passed",
+          status: githubCheckLaneRunStatus(lane, activeReusableIds, failedLabels, skippedLaneIds),
           wave: lane.wave,
         })
       )
     );
     qualityTaskLaneRuns = A.appendAll(qualityTaskLaneRuns, waveLaneRuns);
     failures = A.appendAll(failures, waveFailures);
-    stopped = failurePolicy === "fail-fast" && A.isReadonlyArrayNonEmpty(waveFailures);
+    stopped = stoppedAfterPreciseRed;
   }
 
+  const firstRed = pipe(
+    A.head(failures),
+    O.map((failure) => failure.label)
+  );
+  const skippedAfterRed = A.length(
+    A.filter(laneRuns, (lane) => GithubCheckLaneRunStatus.is["not-run-early-stop"](lane.status))
+  );
+
   return {
-    report: GithubCheckRunReport.make({ failurePolicy, lanes: laneRuns, schemaVersion: "github-check-run/v1" }),
+    report: GithubCheckRunReport.make({
+      failurePolicy,
+      firstRed,
+      lanes: laneRuns,
+      schemaVersion: "github-check-run/v1",
+      skippedAfterRed,
+    }),
     laneReport: QualityTaskLaneRunReport.make({
       schemaVersion: "quality-task-lane-run/v1",
       lanes: qualityTaskLaneRuns,
@@ -1816,7 +1865,7 @@ const emitQualityTaskLaneRunReport = Effect.fn("QualityTasks.emitLaneRunReport")
  *
  * @param label - Group label rendered in CLI output.
  * @param waves - Static lane waves in execution order.
- * @param failurePolicy - Whether a failed wave stops later scheduling.
+ * @param failurePolicy - Whether a precise red stops subsequent scheduling.
  * @category execution
  * @since 0.0.0
  */
@@ -1830,6 +1879,13 @@ export const runQualityTaskGithubCheckLaneWaves = Effect.fn("QualityTasks.runGit
     .encode(result.report)
     .pipe(QualityTaskConfigurationError.mapError("Failed to encode the GitHub-check wave report."));
   yield* Console.log(`${GITHUB_CHECK_RUN_REPORT_PREFIX}${reportJson}`);
+  yield* O.match(result.report.firstRed, {
+    onNone: () => Effect.void,
+    onSome: (firstRed) =>
+      Console.error(
+        `[beep-cli] ${label}: first red ${firstRed}; skipped ${result.report.skippedAfterRed} lane(s) after red`
+      ),
+  });
   yield* emitQualityTaskLaneRunReport(yield* qualityTaskLaneRunReportFromArtifact(result.laneReport));
   yield* failQualityTaskFailures(label, result.failures);
 });
