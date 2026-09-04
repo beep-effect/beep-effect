@@ -1332,6 +1332,26 @@ describe("quality task adapter", () => {
     })
   );
 
+  it.effect(
+    "orders a precise gate before an imprecise gate when their evidence ties",
+    Effect.fnUntraced(function* () {
+      const lanes = [
+        githubCheckTestLane("policy:imprecise", "preflight", "process.exit(0)"),
+        githubCheckTestLane("policy:precise", "preflight", "process.exit(0)"),
+      ];
+      const seed = GateOrderSeed.make({
+        ...DEFAULT_GATE_ORDER_SEED,
+        lanes: [
+          githubCheckTestEstimate("policy:imprecise", 1, "imprecise"),
+          githubCheckTestEstimate("policy:precise", 1),
+        ],
+      });
+      const waveOrder = yield* WaveOrder.make(seed);
+
+      expect(A.map(waveOrder.order(lanes), (lane) => lane.id)).toEqual(["policy:precise", "policy:imprecise"]);
+    })
+  );
+
   it("stops after a precise red and marks the unlaunched tail", () =>
     Effect.runPromise(
       collectGithubCheckLaneWavesForTesting(
