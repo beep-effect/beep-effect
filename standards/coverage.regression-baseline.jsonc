@@ -25585,14 +25585,14 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts": {
-          "lines": 91.52,
-          "statements": 91.25,
-          "branches": 88.46,
+          "lines": 90.83,
+          "statements": 90.57,
+          "branches": 87.03,
           "functions": 77.77,
           "uncovered": {
-            "lines": 20,
-            "statements": 21,
-            "branches": 6,
+            "lines": 22,
+            "statements": 23,
+            "branches": 7,
             "functions": 18
           }
         },

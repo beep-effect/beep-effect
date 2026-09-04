@@ -965,9 +965,9 @@ const removeArchivedWorktree = Effect.fn("WorktreeRemovalService.removeArchivedW
   yield* residueBaseRoot(request.targetPath);
   // ATOMIC FENCE: rename the checkout aside before capturing anything. After this
   // instant no new file can appear under the original path, while writers holding the
-  // directory as cwd or via open descriptors follow the inode into the fenced copy
-  // instead of losing data — so the residue captured below is complete by
-  // construction, closing the capture-to-removal window a re-verification cannot.
+  // directory as cwd or via open descriptors follow the inode into the fenced copy.
+  // The fenced copy is captured only once no such holder remains (below), and its
+  // quiescence is re-verified after capture before the destructive removal.
   const stamp = DateTime.toEpochMillis(yield* DateTime.now);
   const retirePath = `${request.targetPath}.retiring-${stamp}`;
   yield* fs
@@ -992,6 +992,20 @@ const removeArchivedWorktree = Effect.fn("WorktreeRemovalService.removeArchivedW
     return yield* planned.failure;
   }
   const [reason, manifest, head] = planned.success;
+  // Re-verify quiescence after capture and before the destructive remove. A scan is a
+  // one-time observation, so a same-uid process could have attached to the fenced copy
+  // during the capture phase (git status, patch, file copy) — the longest part of the
+  // window. If one did, its later writes are not in the archive, so the fenced copy is
+  // PRESERVED (named) instead of deleted, turning a would-be silent loss into a
+  // recoverable directory. Only the tiny gap between this scan and the remove itself
+  // stays open, which no one-time check on a POSIX tree can close.
+  const reQuiescent = yield* Effect.result(assertQuiescentFence(request, retirePath));
+  if (Result.isFailure(reQuiescent)) {
+    yield* pruneWorktreeMetadata(request.mainCheckout);
+    return yield* WorktreeCommandError.make({
+      message: `Archived ${request.targetPath}, but a process attached to it during capture; the fenced copy is preserved at ${retirePath} rather than deleted so no late write is lost.`,
+    });
+  }
   yield* fs.remove(retirePath, { recursive: true }).pipe(
     Effect.mapError(() =>
       WorktreeCommandError.make({
