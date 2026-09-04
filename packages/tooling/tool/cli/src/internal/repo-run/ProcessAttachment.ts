@@ -80,13 +80,9 @@ export class ProcessAttachment extends S.Class<ProcessAttachment>($I`ProcessAtta
   })
 ) {}
 
-/**
- * Scan request: the directory tree to inspect and the link families to read.
- *
- * @category models
- * @since 0.0.0
- */
-export type ProcessAttachmentScan = {
+// Internal call-argument shape (never decoded or serialized), so it stays a private
+// type alias like the other repo-run request shapes rather than an exported schema.
+type ProcessAttachmentScan = {
   readonly directory: string;
   readonly kinds: ReadonlyArray<ProcessAttachmentKind>;
 };
