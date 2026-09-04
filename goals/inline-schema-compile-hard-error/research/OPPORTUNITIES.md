@@ -255,3 +255,17 @@
 - **Prevention:** Emit failed subprocess labels and exit codes before rendering
   bounded successful output, and carry the nested failed-step category into
   Yeet packets instead of inferring a generic category from the parent lane.
+
+## 2026-09-03 — Managed sandbox blocked the tsgo child process
+
+- **Work:** Verify the newly merged `@beep/repo-cli` compiler-hoist family with
+  its canonical package verifier.
+- **Evidence:** The managed lane reached `tsgo -p tsconfig.check.json` and then
+  failed to spawn the configured Node runtime with `EPERM`. In the unrestricted
+  checkout, the exact package verifier passed with audit and docgen green after
+  the merged inline compilers were hoisted at
+  `ff8164457af9825cb48e37400698727c143675ab`; the P0 inbox row was acknowledged
+  as environment-only.
+- **Prevention:** Start canonical package and Yeet proof sessions with a
+  verified Full-access permission profile, and preserve that profile across
+  Desktop task continuation.

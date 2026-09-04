@@ -41,10 +41,13 @@ P2 Verify — in progress.
   contained 3,087 findings across 566 files and 105 ownership families, with
   the +156 drift fully attributed.
 - The generator owner was updated first, 3,087 findings reconcile to zero, and
-  `research/residual-census.json` records the empty repository-wide result.
+  `research/residual-census.json` records the empty repository-wide result on
+  the current post-merge implementation head.
 - `beep/no-inline-schema-compile` is configured as an error. Focused policy,
-  assertion, and manually migrated package tests are green; package-wide and
-  Yeet verification remain in progress.
+  assertion, and manually migrated package tests are green. The 106-package
+  owner matrix is green, and the post-merge `@beep/repo-cli` family was
+  reverified after its newly introduced compilers were hoisted. Exact-head
+  Yeet verification remains in progress.
 
 ## Notes
 
