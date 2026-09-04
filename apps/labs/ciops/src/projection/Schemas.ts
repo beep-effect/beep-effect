@@ -7,6 +7,7 @@
 
 import { $CiopsId } from "@beep/identity/packages";
 import { LiteralKit, NonNegativeInt, PosInt } from "@beep/schema";
+import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Effect, HashMap, HashSet } from "effect";
 import * as S from "effect/Schema";
 
@@ -18,7 +19,7 @@ const $I = $CiopsId.create("projection/Schemas");
  * **Example** (Recognize a work kind)
  *
  * ```ts
- * import { AdmissionWorkKind } from "@beep/ciops/src/projection/Schemas"
+ * import { AdmissionWorkKind } from "@/projection/Schemas"
  *
  * console.log(AdmissionWorkKind.is["full-proof"]("full-proof")) // true
  * ```
@@ -41,13 +42,15 @@ export const AdmissionWorkKind = LiteralKit(["full-proof", "merged-preview", "re
  */
 export type AdmissionWorkKind = typeof AdmissionWorkKind.Type;
 
+const AdmissionPriorityKit = LiteralKit(["publish", "verify"]);
+
 /**
  * Priority classes used by the deployed scheduler's effective-rank ordering.
  *
  * **Example** (Inspect priority order)
  *
  * ```ts
- * import { AdmissionPriority } from "@beep/ciops/src/projection/Schemas"
+ * import { AdmissionPriority } from "@/projection/Schemas"
  *
  * console.log(AdmissionPriority.Options) // ["publish", "verify"]
  * ```
@@ -55,10 +58,22 @@ export type AdmissionWorkKind = typeof AdmissionWorkKind.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const AdmissionPriority = LiteralKit(["publish", "verify"]).pipe(
+export const AdmissionPriority = S.Literals(AdmissionPriorityKit.Options).pipe(
   $I.annoteSchema("AdmissionPriority", {
     description: "Priority class attached to a pending admission request.",
-  })
+  }),
+  SchemaUtils.withCodecStatics(["decodeUnknownEffect"]),
+  SchemaUtils.withStatics(() => ({
+    $match: AdmissionPriorityKit.$match,
+    Enum: AdmissionPriorityKit.Enum,
+    HashSet: AdmissionPriorityKit.HashSet,
+    is: AdmissionPriorityKit.is,
+    omitOptions: AdmissionPriorityKit.omitOptions,
+    Options: AdmissionPriorityKit.Options,
+    pickOptions: AdmissionPriorityKit.pickOptions,
+    thunk: AdmissionPriorityKit.thunk,
+    toTaggedUnion: AdmissionPriorityKit.toTaggedUnion,
+  }))
 );
 
 /**
@@ -76,7 +91,7 @@ export type AdmissionPriority = typeof AdmissionPriority.Type;
  * **Example** (Recognize the admission scope)
  *
  * ```ts
- * import { ScheduleScope } from "@beep/ciops/src/projection/Schemas"
+ * import { ScheduleScope } from "@/projection/Schemas"
  *
  * console.log(ScheduleScope.is.admission("admission")) // true
  * ```
@@ -105,7 +120,7 @@ export type ScheduleScope = typeof ScheduleScope.Type;
  * **Example** (Construct ratified work weights)
  *
  * ```ts
- * import { AdmissionTokenWeights } from "@beep/ciops/src/projection/Schemas"
+ * import { AdmissionTokenWeights } from "@/projection/Schemas"
  * import { PosInt } from "@beep/schema"
  *
  * const weights = AdmissionTokenWeights.make({
@@ -138,7 +153,7 @@ export class AdmissionTokenWeights extends S.Class<AdmissionTokenWeights>($I`Adm
  * **Example** (Construct an admission policy)
  *
  * ```ts
- * import { AdmissionPolicyParams, AdmissionTokenWeights } from "@beep/ciops/src/projection/Schemas"
+ * import { AdmissionPolicyParams, AdmissionTokenWeights } from "@/projection/Schemas"
  * import { PosInt } from "@beep/schema"
  *
  * const policy = AdmissionPolicyParams.make({
@@ -186,7 +201,7 @@ export class AdmissionPolicyParams extends S.Class<AdmissionPolicyParams>($I`Adm
  * **Example** (Construct a pending request)
  *
  * ```ts
- * import { PendingRequest } from "@beep/ciops/src/projection/Schemas"
+ * import { PendingRequest } from "@/projection/Schemas"
  * import { NonNegativeInt, PosInt } from "@beep/schema"
  *
  * const request = PendingRequest.make({
@@ -229,7 +244,7 @@ export class PendingRequest extends S.Class<PendingRequest>($I`PendingRequest`)(
  * **Example** (Construct an empty token ledger)
  *
  * ```ts
- * import { TokenLedgerState } from "@beep/ciops/src/projection/Schemas"
+ * import { TokenLedgerState } from "@/projection/Schemas"
  * import { NonNegativeInt } from "@beep/schema"
  * import * as HashMap from "effect/HashMap"
  * import * as HashSet from "effect/HashSet"
@@ -262,7 +277,7 @@ export class TokenLedgerState extends S.Class<TokenLedgerState>($I`TokenLedgerSt
  * **Example** (Construct an admission step)
  *
  * ```ts
- * import { PendingRequest, ScheduleStep } from "@beep/ciops/src/projection/Schemas"
+ * import { PendingRequest, ScheduleStep } from "@/projection/Schemas"
  * import { NonNegativeInt, PosInt } from "@beep/schema"
  *
  * const request = PendingRequest.make({
@@ -305,7 +320,7 @@ export class ScheduleStep extends S.Class<ScheduleStep>($I`ScheduleStep`)(
  * **Example** (Construct an empty proposal)
  *
  * ```ts
- * import { ScheduleProposal } from "@beep/ciops/src/projection/Schemas"
+ * import { ScheduleProposal } from "@/projection/Schemas"
  * import { NonNegativeInt } from "@beep/schema"
  *
  * const proposal = ScheduleProposal.make({
@@ -342,7 +357,7 @@ export class ScheduleProposal extends S.Class<ScheduleProposal>($I`SchedulePropo
  * **Example** (Construct projection input)
  *
  * ```ts
- * import { AdmissionPolicyParams, AdmissionTokenWeights, ProjectionInput, TokenLedgerState } from "@beep/ciops/src/projection/Schemas"
+ * import { AdmissionPolicyParams, AdmissionTokenWeights, ProjectionInput, TokenLedgerState } from "@/projection/Schemas"
  * import { NonNegativeInt, PosInt } from "@beep/schema"
  * import * as HashMap from "effect/HashMap"
  * import * as HashSet from "effect/HashSet"
@@ -400,7 +415,7 @@ export class ProjectionInput extends S.Class<ProjectionInput>($I`ProjectionInput
  * **Example** (Wrap deterministic Turtle bytes)
  *
  * ```ts
- * import { TurtleDocument } from "@beep/ciops/src/projection/Schemas"
+ * import { TurtleDocument } from "@/projection/Schemas"
  *
  * const document = TurtleDocument.make({ content: "@prefix ciops: <https://oip.law/ontology/ci-ops#> .\n" })
  * console.log(document.content.startsWith("@prefix")) // true
@@ -422,7 +437,7 @@ export class TurtleDocument extends S.Class<TurtleDocument>($I`TurtleDocument`)(
  * **Example** (Describe a replay mismatch)
  *
  * ```ts
- * import { ProjectionMismatch } from "@beep/ciops/src/projection/Schemas"
+ * import { ProjectionMismatch } from "@/projection/Schemas"
  * import { NonNegativeInt, PosInt } from "@beep/schema"
  *
  * const mismatch = ProjectionMismatch.make({
@@ -467,7 +482,7 @@ export class ProjectionMismatch extends S.Class<ProjectionMismatch>($I`Projectio
  * **Example** (Construct a policy decode failure)
  *
  * ```ts
- * import { PolicyDecodeError } from "@beep/ciops/src/projection/Schemas"
+ * import { PolicyDecodeError } from "@/projection/Schemas"
  *
  * const error = PolicyDecodeError.make({ message: "A-Box shape did not match" })
  * console.log(error._tag) // "PolicyDecodeError"
@@ -490,7 +505,7 @@ export class PolicyDecodeError extends S.TaggedError<PolicyDecodeError>($I`Polic
  * **Example** (Construct a cyclic-plan failure)
  *
  * ```ts
- * import { CyclicPlanError } from "@beep/ciops/src/projection/Schemas"
+ * import { CyclicPlanError } from "@/projection/Schemas"
  *
  * const error = CyclicPlanError.make({ cycleNodes: ["lane-a", "lane-b"] })
  * console.log(error._tag) // "CyclicPlanError"
@@ -513,7 +528,7 @@ export class CyclicPlanError extends S.TaggedError<CyclicPlanError>($I`CyclicPla
  * **Example** (Construct the planner seam failure)
  *
  * ```ts
- * import { PlannerNotImplementedError } from "@beep/ciops/src/projection/Schemas"
+ * import { PlannerNotImplementedError } from "@/projection/Schemas"
  *
  * const error = PlannerNotImplementedError.make({ message: "Lane-DAG planning is reserved for v2." })
  * console.log(error._tag) // "PlannerNotImplementedError"
@@ -538,7 +553,7 @@ export class PlannerNotImplementedError extends S.TaggedError<PlannerNotImplemen
  * **Example** (Construct a replay failure)
  *
  * ```ts
- * import { ReplayMismatchError } from "@beep/ciops/src/projection/Schemas"
+ * import { ReplayMismatchError } from "@/projection/Schemas"
  *
  * const error = ReplayMismatchError.make({ message: "Replay diverged", mismatches: [] })
  * console.log(error._tag) // "ReplayMismatchError"
@@ -566,7 +581,7 @@ export class ReplayMismatchError extends S.TaggedError<ReplayMismatchError>($I`R
  * **Example** (Construct a redacted admitted event)
  *
  * ```ts
- * import { AdmissionJournalAdmitted } from "@beep/ciops/src/projection/Schemas"
+ * import { AdmissionJournalAdmitted } from "@/projection/Schemas"
  * import { NonNegativeInt, PosInt } from "@beep/schema"
  * import * as O from "effect/Option"
  *
@@ -613,7 +628,7 @@ export class AdmissionJournalAdmitted extends S.Class<AdmissionJournalAdmitted>(
  * **Example** (Construct a redacted released event)
  *
  * ```ts
- * import { AdmissionJournalReleased } from "@beep/ciops/src/projection/Schemas"
+ * import { AdmissionJournalReleased } from "@/projection/Schemas"
  * import { NonNegativeInt } from "@beep/schema"
  * import * as O from "effect/Option"
  *
@@ -664,7 +679,7 @@ const AdmissionTicketEvictionReason = LiteralKit(["queued-submitter-death"]).pip
  * **Example** (Construct an eviction event)
  *
  * ```ts
- * import { AdmissionJournalLeaseEvicted } from "@beep/ciops/src/projection/Schemas"
+ * import { AdmissionJournalLeaseEvicted } from "@/projection/Schemas"
  * import { NonNegativeInt } from "@beep/schema"
  * import * as O from "effect/Option"
  *
@@ -718,7 +733,7 @@ class AdmissionJournalTicketEvicted extends S.Class<AdmissionJournalTicketEvicte
  * **Example** (Decode an admitted event)
  *
  * ```ts
- * import { AdmissionJournalEvent } from "@beep/ciops/src/projection/Schemas"
+ * import { AdmissionJournalEvent } from "@/projection/Schemas"
  * import * as S from "effect/Schema"
  *
  * const decoded = S.decodeUnknownSync(AdmissionJournalEvent)({
@@ -760,7 +775,7 @@ export type AdmissionJournalEvent = typeof AdmissionJournalEvent.Type;
  * **Example** (Construct a reserved planner request)
  *
  * ```ts
- * import { PlanEpisodeInput } from "@beep/ciops/src/projection/Schemas"
+ * import { PlanEpisodeInput } from "@/projection/Schemas"
  *
  * const input = PlanEpisodeInput.make({ episodeId: "episode-1" })
  * console.log(input.episodeId) // "episode-1"
@@ -782,7 +797,7 @@ export class PlanEpisodeInput extends S.Class<PlanEpisodeInput>($I`PlanEpisodeIn
  * **Example** (Read an empty ledger)
  *
  * ```ts
- * import { emptyTokenLedger } from "@beep/ciops/src/projection/Schemas"
+ * import { emptyTokenLedger } from "@/projection/Schemas"
  *
  * console.log(emptyTokenLedger.activeTokenTotal) // 0
  * ```
@@ -802,7 +817,7 @@ export const emptyTokenLedger = TokenLedgerState.make({
  * **Example** (Inspect the planner failure effect)
  *
  * ```ts
- * import { plannerNotImplemented } from "@beep/ciops/src/projection/Schemas"
+ * import { plannerNotImplemented } from "@/projection/Schemas"
  * import { Effect } from "effect"
  *
  * console.log(Effect.isEffect(plannerNotImplemented)) // true

@@ -119,8 +119,9 @@ beforeEach(() => {
 
 describe("AnthropicTurnKernel", () => {
   it.layer(AnthropicTurnKernel)("with a deterministic provider stream", (it) => {
-    it.effect("captures finish usage and response metadata, then finalizes after every block", () =>
-      Effect.gen(function* () {
+    it.effect(
+      "captures finish usage and response metadata, then finalizes after every block",
+      Effect.fnUntraced(function* () {
         providerState.parts = [
           metadataPart("claude-test"),
           deltaPart(envelope(validParagraph("first"), validParagraph("second"))),
@@ -154,8 +155,9 @@ describe("AnthropicTurnKernel", () => {
       })
     );
 
-    it.effect("fails after emitted blocks when provider usage and metadata parts are absent", () =>
-      Effect.gen(function* () {
+    it.effect(
+      "fails after emitted blocks when provider usage and metadata parts are absent",
+      Effect.fnUntraced(function* () {
         providerState.parts = [deltaPart(envelope(validParagraph("delivered"))), endPart];
         const observed = yield* Ref.make<ReadonlyArray<string>>([]);
 
@@ -175,8 +177,9 @@ describe("AnthropicTurnKernel", () => {
       })
     );
 
-    it.effect("repairs an invalid block and adds repair-call usage to finalization", () =>
-      Effect.gen(function* () {
+    it.effect(
+      "repairs an invalid block and adds repair-call usage to finalization",
+      Effect.fnUntraced(function* () {
         const invalid = '{"type":"paragraph","children":[{"type":"text","text":1}]}';
         providerState.parts = [
           metadataPart("claude-repair"),
@@ -205,8 +208,9 @@ describe("AnthropicTurnKernel", () => {
       })
     );
 
-    it.effect("translates repair failures at the kernel boundary", () =>
-      Effect.gen(function* () {
+    it.effect(
+      "translates repair failures at the kernel boundary",
+      Effect.fnUntraced(function* () {
         const invalid = '{"type":"paragraph","children":[{"type":"text","text":1}]}';
         providerState.parts = [metadataPart("claude-repair"), deltaPart(envelope(invalid)), endPart, finishPart()];
         providerState.repairError = "repair provider unavailable";
@@ -219,8 +223,9 @@ describe("AnthropicTurnKernel", () => {
       })
     );
 
-    it.effect("translates provider stream failures at the kernel boundary", () =>
-      Effect.gen(function* () {
+    it.effect(
+      "translates provider stream failures at the kernel boundary",
+      Effect.fnUntraced(function* () {
         providerState.providerError = AiError.make({
           method: "streamText",
           module: "Anthropic",
@@ -234,8 +239,9 @@ describe("AnthropicTurnKernel", () => {
       })
     );
 
-    it.effect("translates schema-invalid provider usage", () =>
-      Effect.gen(function* () {
+    it.effect(
+      "translates schema-invalid provider usage",
+      Effect.fnUntraced(function* () {
         providerState.parts = [metadataPart("claude-test"), endPart, finishPart(-1, 8)];
 
         const error = yield* runTurn.pipe(Effect.flip);

@@ -108,8 +108,8 @@ const serializeProposal = (proposal: ScheduleProposal): TurtleDocument => {
  * **Example** (Emit an empty proposal)
  *
  * ```ts
- * import { emitScheduleAbox } from "@beep/ciops/src/projection/Turtle"
- * import { ScheduleProposal } from "@beep/ciops/src/projection/Schemas"
+ * import { emitScheduleAbox } from "@/projection/Turtle"
+ * import { ScheduleProposal } from "@/projection/Schemas"
  * import { NonNegativeInt } from "@beep/schema"
  * import { Effect } from "effect"
  *

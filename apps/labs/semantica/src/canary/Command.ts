@@ -1,4 +1,5 @@
 import { $SemanticaId } from "@beep/identity/packages";
+import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Console, Effect, FileSystem, Layer, Path } from "effect";
 import * as Bool from "effect/Boolean";
 import * as S from "effect/Schema";
@@ -134,7 +135,9 @@ const makeStageCommand = (stage: CanaryStage) =>
     Command.withDescription(stageDescriptions[stage])
   );
 
-const ManifestJson = S.fromJsonString(CorpusManifest, { space: 2 });
+const ManifestJson = S.fromJsonString(CorpusManifest, { space: 2 }).pipe(
+  SchemaUtils.withCodecStatics(["encodeEffect"])
+);
 
 const manifestOutput = Flag.path("out").pipe(
   Flag.withDescription("Output path for the generated, pretty-printed W1 manifest.")
@@ -150,7 +153,7 @@ const buildManifest = Effect.fn("SemanticaCanary.buildManifest")(function* ({ ou
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const built = yield* builder.build;
-  const json = yield* S.encodeEffect(ManifestJson)(built).pipe(Effect.orDie);
+  const json = yield* ManifestJson.encodeEffect(built).pipe(Effect.orDie);
   yield* fs.makeDirectory(path.dirname(out), { recursive: true }).pipe(
     Effect.mapError(() =>
       ManifestWriteFailed.make({

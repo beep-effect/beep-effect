@@ -24,7 +24,7 @@
     "beep:docgen": "bun run ../../../packages/tooling/tool/docgen/src/bin.ts",
     "beep:lint": "biome check .",
     "beep:lint:fix": "biome check . --write",
-    "beep:policy": "bun --cwd ../../../ run beep lint package-test-imports --include-root packages/drivers/freshbooks",
+    "beep:policy": "bun run --cwd ../../../ beep lint package-test-imports --include-root packages/drivers/freshbooks",
     "beep:test": "bunx --bun vitest run --passWithNoTests --exclude=test/integration/**",
     "beep:test:integration": "bunx --bun vitest run test/integration --passWithNoTests",
     "build": "bun run beep:build",

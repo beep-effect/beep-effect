@@ -1,9 +1,9 @@
-import { Health } from "@beep/ciops/Api";
-import { ApiLive } from "@beep/ciops/runtime/Layer";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { HttpRouter } from "effect/unstable/http";
+import { Health } from "@/Api";
+import { ApiLive } from "@/runtime/Layer";
 
 const decodeHealth = S.decodeUnknownEffect(S.fromJsonString(Health));
 

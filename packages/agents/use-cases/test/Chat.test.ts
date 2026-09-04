@@ -54,11 +54,12 @@ describe("@beep/agents-use-cases Chat", () => {
       }),
     ];
 
+    const decodeSendMessageRpcPayload = S.decodeResult(SendMessageRpc.payloadSchema);
     for (const content of hostileDocuments) {
-      const encodedContent = Result.getOrThrow(S.encodeResult(Document)(content));
+      const encodedContent = Result.getOrThrow(Document.encodeResult(content));
       expect(
         Result.isFailure(
-          S.decodeResult(SendMessageRpc.payloadSchema)({
+          decodeSendMessageRpcPayload({
             threadId: WorkspaceIdentity.ThreadId.make(1),
             content: encodedContent,
             requestId: "hostile-remote-payload",

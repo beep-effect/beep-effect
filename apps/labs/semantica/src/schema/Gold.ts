@@ -1,6 +1,7 @@
 import { $SemanticaId } from "@beep/identity/packages";
 import { TextAnchorFields, TextAnchorWidthCheck } from "@beep/provenance";
 import { LiteralKit, NonNegativeInt, Sha256Hex } from "@beep/schema";
+import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { Context, Effect, Equal, HashSet, identity, Number as N, SchemaGetter, SchemaIssue, Tuple } from "effect";
 import * as A from "effect/Array";
@@ -547,7 +548,8 @@ const GoldFileProposerCheck = S.makeFilter(
 export const GoldFile = GoldFileDefinition.check(GoldFileProposerCheck).pipe(
   $I.annoteSchema("GoldFile", {
     description: "Gold-v1 structure, entity, or relation labels for one paper and pinned proposer.",
-  })
+  }),
+  SchemaUtils.withCodecStatics(["decodeEffect"])
 );
 
 /**

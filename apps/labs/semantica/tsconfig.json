@@ -8,7 +8,8 @@
     "test",
     "vite.config.ts",
     "vitest.config.ts",
-    "../../../vitest.shared.ts"
+    "../../../vitest.shared.ts",
+    "../../../vitest.aliases.generated.json"
   ],
   "compilerOptions": {
     "lib": ["dom", "dom.iterable", "esnext"],
