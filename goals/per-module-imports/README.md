@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `paused`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -36,28 +36,38 @@ tsserver, dev tooling), not production bundle bytes.
 
 ## Current Phase
 
-P2 Pilot gate complete with an **inconclusive — stop** verdict. The approved
-`apps/professional-desktop` pilot passed every correctness gate, reached zero
-root imports, and was idempotent, but its one permitted symmetric extension
-produced no stable qualifying performance improvement. The strict-pass
-authority therefore did not activate P3; the default promoted-family ratchet
-is empty again, and the packet is paused at the gate.
+**Terminal at the measured stop.** P2 completed with an
+**inconclusive — stop** verdict. The approved `apps/professional-desktop`
+pilot passed every correctness gate, reached zero root imports, and was
+idempotent, but its one permitted symmetric extension produced no stable
+qualifying performance improvement. The strict-pass authority therefore did
+not activate P3. The mass migration, Biome warn-to-error ratchet, written-law
+flip, and global enforcement flip were not executed. P4 closeout is complete,
+and this packet is retained as the vehicle, pilot, and decision record.
 
 ## Latest Evidence
 
-P2 complete 2026-09-03: 15 valid source-tsgo and Vitest samples per state, 7
-cold route samples, and 5 deterministic builds produced no decisive win and
-no stable material regression. The full threshold math and stop decision are
-recorded in [`history/p2-pilot-verdict.md`](./history/p2-pilot-verdict.md),
-with auditable raw samples under
-[`history/measurements/`](./history/measurements/). P1 evidence remains in
-[`research/p1-census-baseline.md`](./research/p1-census-baseline.md).
+P2 merged through PR #990 on 2026-09-03. Fifteen valid source-tsgo and Vitest
+samples per state, seven cold-route samples, and five deterministic builds
+produced no decisive win and no stable material regression. The full
+threshold math and stop decision are recorded in
+[`history/p2-pilot-verdict.md`](./history/p2-pilot-verdict.md), with auditable
+raw samples under [`history/measurements/`](./history/measurements/).
+
+P1's migration vehicle, foundation leaf exports, generator fixes, and focused
+law/doc gates merged through PR #971. Its evidence remains in
+[`research/p1-census-baseline.md`](./research/p1-census-baseline.md). The P4
+reflection is
+[`history/reflections/2026-09-03-codex.md`](./history/reflections/2026-09-03-codex.md).
 
 ## Notes
 
 - The pilot gate is a real gate: no-win or a material regression stops the
   mass migration (`SPEC.md` § Pilot Gate).
+- P3 is recorded as terminally stopped, not as completed implementation. It
+  may be reconsidered only through a new decision with new evidence; this
+  closed packet grants no continuation authority.
 - Foundation leaf-export work (`@beep/dock`, `@beep/observability`,
   `@beep/schema`, …) must precede the consumers that import those barrels.
-- The operator's global Effect rules file is updated in-session when the
-  in-repo convention lands (see `SPEC.md` Decision Log).
+- The operator's global Effect rules file was not changed because the global
+  convention did not land (see `SPEC.md` D14).
