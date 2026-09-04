@@ -179,14 +179,16 @@ session/machine ids, quote only the minimal identifying error text.
 
 ## 2026-09-03 — An npm advisories outage cost five audit re-runs across three PRs
 
-- **Doing:** driving #978, #993 and #1001 to merge-ready during the evening.
+- **Doing:** driving #978, #993 and #1001 to merge-ready during the evening (captured as the
+  re-runs happened; landed with the A5c closeout because the lane branches were mid-review).
 - **Evidence:** Repo Sanity's `bun audit` step failed five times with `POST
   https://registry.npmjs.org/-/npm/v1/security/advisories/bulk - 503`; each failure needed the whole
   workflow run to complete before `gh run rerun --failed` could be issued, and the re-run also
   replayed every other failed job on the same head.
-- **Would have prevented it:** a bounded retry with backoff inside the audit step and an
-  environment-only verdict (not a hard red) when the advisories endpoint itself is unavailable, so
-  the lane reports "unverified" instead of blocking the merge.
+- **Would have prevented it:** a bounded retry with backoff inside the audit step, and a distinct
+  "advisories endpoint unavailable" failure message so the red is attributed as environment-only at
+  a glance. The lane stays red when no audit result can be established: Repo Sanity is a required
+  security check and the packet's stop condition forbids weakening it.
 
 ## 2026-09-03 — Lanes cancelled the hosted run on their own current head
 

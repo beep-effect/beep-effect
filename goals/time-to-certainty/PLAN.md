@@ -46,7 +46,7 @@ orchestrator owns schemas, contracts, and judgment.
       without clobbering; adopters are fenced at every destructive step and a stale adoption is taken
       over after a bound; a fence can abort a publish but never lose an event, because the lock
       boundary re-acquires and re-runs the whole operation; admission ordering is a total order
-      (rank, enqueue instant, sequence).
+      (rank, enqueue instant, nonce).
 - [x] B1 package verification through the Turbo graph — done 2026-09-03 (PR #967 merged as
       715c6a5767): `package-verify` builds the package's upstream graph before verifying, so a stale
       upstream dist can no longer raise a P0; environment-only attribution when no package source
@@ -62,9 +62,13 @@ orchestrator owns schemas, contracts, and judgment.
       reads, the quad still fails closed, and the health probe names failing variables only).
 - [ ] B3 cheap precise gates first, wave fails immediately; ordering seeded from A1.
 - [ ] B5 detached durable proof jobs in their own systemd user scope with inbox completion.
-- [x] B6 lease and submitter death journaled as admission events — done 2026-09-03 (rows in PR #964,
-      emission gated in PR #978, crash-recoverable claims in PR #993 as 00655a974e: a reaper death at any
-      point between the claim and the termination append is adopted and journaled by its successor).
+- [~] B6 lease and submitter death journaled as admission events — rows in PR #964, emission gated in
+      PR #978, crash-recoverable claims in PR #993 (00655a974e). Still open: on a host whose
+      `protocol.json` leaves eviction emission off, `appendAdmissionEvictionJournalEvent` returns
+      false and `processReapClaim` still marks the admission sink complete and deletes the claim, so
+      that death is never journaled and no successor retries. Complete when a disabled sink keeps the
+      claim pending (per-sink acknowledgement only on a real write) until the protocol enables
+      emission, with a test on a fresh host.
 
 ## P2 — Proof reuse
 

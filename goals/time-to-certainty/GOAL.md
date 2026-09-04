@@ -45,4 +45,5 @@ journal-facts review (terminal tags, durable inner-lane reports, ticket death, f
 eviction variant, atomic claims, stage and profile via the C1 vocabulary), and two from the A5b
 compaction review (retention budget over terminal attempts only; economics left-censored from
 compaction receipts). Landed: A5, A5b and A5c (journal facts complete, admission claims crash-recoverable), A4, B1, B2, B4,
-B6, C1/C2, C3 coverage and tsgo tests. Next: B3 (cheap precise gates first), A3, C3 lint-policy.
+C1/C2, C3 coverage and tsgo tests; B6 stays partial until a disabled eviction sink keeps its claim
+pending. Next: B3 (cheap precise gates first), A3, C3 lint-policy.
