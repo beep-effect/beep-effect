@@ -118,6 +118,7 @@ import {
   retireFullProofLockOrObserveAtPath,
   writeVerifiedState,
 } from "./ProofState.ts";
+import { recordMonitoredPrSession } from "./ProvenanceFooter.ts";
 import {
   collectPublishIntent,
   enforceBaseFreshness,
@@ -642,7 +643,8 @@ const ensureRequestedPullRequest = Effect.fn("Yeet.ensureRequestedPullRequest")(
   yield* ensurePullRequest(
     context,
     recorder,
-    A.findFirst(steps, (step) => step.id === "publish:02-pr-create")
+    A.findFirst(steps, (step) => step.id === "publish:02-pr-create"),
+    A.findFirst(steps, (step) => step.id === "publish:03-pr-provenance-stamp")
   );
 });
 
@@ -830,7 +832,10 @@ const runStartPrEarlyPublishPhases = Effect.fn("Yeet.runStartPrEarlyPublishPhase
   yield* warnOnMismatchedPublishUpstream(plan.context);
   const earlyPushSteps = A.filter(
     earlyPublishSteps,
-    (step) => step.id !== "publish:02-pr-create" && step.id !== HEAD_INSTALL_PREFLIGHT_STEP_ID
+    (step) =>
+      step.id !== "publish:02-pr-create" &&
+      step.id !== "publish:03-pr-provenance-stamp" &&
+      step.id !== HEAD_INSTALL_PREFLIGHT_STEP_ID
   );
   const earlyPublishResults = yield* runPhase(plan.context, earlyPushSteps, recorder);
   if (A.some(earlyPublishResults, (result) => result.exitCode !== 0)) {
@@ -905,7 +910,10 @@ const runStandardPublishPhases = Effect.fn("Yeet.runStandardPublishPhases")(func
   yield* warnOnMismatchedPublishUpstream(plan.context);
   const pushSteps = A.filter(
     publishSteps,
-    (step) => step.id !== "publish:02-pr-create" && step.id !== HEAD_INSTALL_PREFLIGHT_STEP_ID
+    (step) =>
+      step.id !== "publish:02-pr-create" &&
+      step.id !== "publish:03-pr-provenance-stamp" &&
+      step.id !== HEAD_INSTALL_PREFLIGHT_STEP_ID
   );
   const publishResults = yield* runPhase(plan.context, pushSteps, recorder);
   if (A.some(publishResults, (result) => result.exitCode !== 0)) {
@@ -1180,6 +1188,7 @@ const runMonitorPhase = Effect.fn("Yeet.runMonitorPhase")(function* (
     Effect.map((pullRequest) => pullRequest.number),
     Effect.mapError(YeetCommandError.new("Failed to decode pull request number for yeet monitor."))
   );
+  yield* recordMonitoredPrSession(context, pullRequestNumber);
   yield* Effect.raceFirst(
     runMonitorCheckWatch(context, checkSteps, recorder, failureMessage),
     runYeetPullRequestCommentMonitor(context, pullRequestNumber)
