@@ -42,6 +42,8 @@ export const AdmissionWorkKind = LiteralKit(["full-proof", "merged-preview", "re
  */
 export type AdmissionWorkKind = typeof AdmissionWorkKind.Type;
 
+const AdmissionPriorityKit = LiteralKit(["publish", "verify"]);
+
 /**
  * Priority classes used by the deployed scheduler's effective-rank ordering.
  *
@@ -56,11 +58,22 @@ export type AdmissionWorkKind = typeof AdmissionWorkKind.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const AdmissionPriority = LiteralKit(["publish", "verify"]).pipe(
+export const AdmissionPriority = S.Literals(AdmissionPriorityKit.Options).pipe(
   $I.annoteSchema("AdmissionPriority", {
     description: "Priority class attached to a pending admission request.",
   }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  SchemaUtils.withCodecStatics(["decodeUnknownEffect"]),
+  SchemaUtils.withStatics(() => ({
+    $match: AdmissionPriorityKit.$match,
+    Enum: AdmissionPriorityKit.Enum,
+    HashSet: AdmissionPriorityKit.HashSet,
+    is: AdmissionPriorityKit.is,
+    omitOptions: AdmissionPriorityKit.omitOptions,
+    Options: AdmissionPriorityKit.Options,
+    pickOptions: AdmissionPriorityKit.pickOptions,
+    thunk: AdmissionPriorityKit.thunk,
+    toTaggedUnion: AdmissionPriorityKit.toTaggedUnion,
+  }))
 );
 
 /**

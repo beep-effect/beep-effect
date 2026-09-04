@@ -1,7 +1,6 @@
 /**
- * In-memory implementation of Effect's `FileSystem` service.
- *
- * This module provides an isolated virtual POSIX filesystem for tests and
+ * In-memory implementation of Effect's `FileSystem` service. This module
+ * provides an isolated virtual POSIX filesystem for tests and
  * programs that need filesystem behavior without host filesystem I/O. It
  * supports files, directories, links, descriptors, temporary resources, globbing,
  * and file watching through the standard `FileSystem` service.
@@ -24,7 +23,7 @@ import type * as Layer from "effect/Layer"
  *
  * ```ts
  * import * as MemoryFileSystem from "@beep/scratchpad/MemoryFileSystem/MemoryFileSystem"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const program = Effect.gen(function* () {
  *   const fs = yield* MemoryFileSystem.make
@@ -58,7 +57,8 @@ export const make: Effect.Effect<FileSystem.FileSystem> = internal.make
  *
  * ```ts
  * import * as MemoryFileSystem from "@beep/scratchpad/MemoryFileSystem/MemoryFileSystem"
- * import { Effect, FileSystem } from "effect"
+ * import * as Effect from "effect/Effect"
+ * import * as FileSystem from "effect/FileSystem"
  *
  * const program = Effect.gen(function* () {
  *   const fs = yield* FileSystem.FileSystem

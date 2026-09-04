@@ -238,7 +238,7 @@ export type NonNegativeInt = typeof NonNegativeInt.Type;
  * **Example** (Decode a finite number from a string)
  *
  * ```ts import.meta.vitest name="Decode a finite number from a string"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * import { FiniteFromString } from "@beep/schema/Number"
  *
  * const value = Effect.runSync(FiniteFromString.decodeEffect("42.5"))

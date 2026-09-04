@@ -21,7 +21,7 @@
  * @category constants
  * @since 0.0.0
  */
-export const DCTERMS_NAMESPACE = "https://purl.org/dc/terms/" as const;
+export const DCTERMS_NAMESPACE = "http://purl.org/dc/terms/" as const;
 
 /**
  * DCMI Terms local-name inventory generated from the identity `CoreVocab` registry.

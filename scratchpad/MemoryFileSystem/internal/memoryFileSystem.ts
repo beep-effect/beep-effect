@@ -90,8 +90,7 @@ class InodeMetadata extends S.Class<InodeMetadata>($I`InodeMetadata`)(
 ) {
 }
 
-/** @internal */
-export class FileInode extends InodeMetadata.extend<FileInode>($I`FileInode`)(
+class FileInode extends InodeMetadata.extend<FileInode>($I`FileInode`)(
   {
     _tag: S.tag("File"),
     data: S.Uint8Array
@@ -103,8 +102,7 @@ export class FileInode extends InodeMetadata.extend<FileInode>($I`FileInode`)(
 }
 
 
-/** @internal */
-export class DirectoryInode extends InodeMetadata.extend<DirectoryInode>($I`DirectoryInode`)(
+class DirectoryInode extends InodeMetadata.extend<DirectoryInode>($I`DirectoryInode`)(
   {
     _tag: S.tag("Directory"),
     entries: S.HashMap(
@@ -118,19 +116,16 @@ export class DirectoryInode extends InodeMetadata.extend<DirectoryInode>($I`Dire
 ) {
 }
 
-/** @internal */
-export const Size = S.BigInt.pipe(
+const Size = S.BigInt.pipe(
   S.brand("Size"),
   $I.annoteSchema("Size", {
     description: "A file size"
   })
 );
 
-/** @internal */
-export type Size = typeof Size.Type;
+type Size = typeof Size.Type;
 
-/** @internal */
-export namespace Size {
+namespace Size {
   /** @internal */
   export type Encoded = typeof Size.Encoded;
 }
@@ -150,8 +145,7 @@ class OpenFileDescriptor extends S.Class<OpenFileDescriptor>($I`OpenFileDescript
 ) {
 }
 
-/** @internal */
-export class SymbolicLinkInode extends InodeMetadata.extend<SymbolicLinkInode>($I`SymbolicLinkInode`)(
+class SymbolicLinkInode extends InodeMetadata.extend<SymbolicLinkInode>($I`SymbolicLinkInode`)(
   {
     _tag: S.tag("SymbolicLink"),
     target: S.String,
@@ -162,8 +156,7 @@ export class SymbolicLinkInode extends InodeMetadata.extend<SymbolicLinkInode>($
 ) {
 }
 
-/** @internal */
-export const InodeEntry = S.Union(
+const InodeEntry = S.Union(
   [
     FileInode,
     DirectoryInode,
@@ -298,8 +291,7 @@ const SystemErrorTag = LiteralKit(
   })
 );
 
-/** @internal */
-export type SystemErrorTag = typeof SystemErrorTag.Type;
+type SystemErrorTag = typeof SystemErrorTag.Type;
 // =============================================================================
 // state
 // =============================================================================
@@ -2854,7 +2846,25 @@ const watch = (volume: Volume) => (path: string) =>
 // exports
 // =============================================================================
 
-/** @internal */
+/**
+ * Creates an Effect `FileSystem` service backed by a fresh in-memory volume.
+ *
+ * **Example** (Create an isolated filesystem)
+ *
+ * ```ts
+ * import * as MemoryFileSystem from "@beep/scratchpad/MemoryFileSystem/MemoryFileSystem"
+ * import * as Effect from "effect/Effect"
+ *
+ * Effect.runPromise(MemoryFileSystem.make).then((fileSystem) =>
+ *   Effect.runPromise(fileSystem.exists("/missing.txt")).then(console.log)
+ * )
+ * // false
+ * ```
+ *
+ * @internal
+ * @category constructors
+ * @since 0.0.0
+ */
 export const make = Effect.gen(function* () {
   const volume = yield* makeVolume;
   yield* Effect.orDie(makeDirectory(volume)(TEMP_DIR, {recursive: true}));
@@ -2887,5 +2897,27 @@ export const make = Effect.gen(function* () {
   });
 });
 
-/** @internal */
+/**
+ * Provides a fresh in-memory filesystem through the Effect `FileSystem` service.
+ *
+ * **Example** (Provide the filesystem layer)
+ *
+ * ```ts
+ * import * as MemoryFileSystem from "@beep/scratchpad/MemoryFileSystem/MemoryFileSystem"
+ * import * as Effect from "effect/Effect"
+ * import * as FileSystem from "effect/FileSystem"
+ *
+ * const program = Effect.gen(function* () {
+ *   const fileSystem = yield* FileSystem.FileSystem
+ *   return yield* fileSystem.exists("/missing.txt")
+ * })
+ *
+ * Effect.runPromise(Effect.provide(program, MemoryFileSystem.layer)).then(console.log)
+ * // false
+ * ```
+ *
+ * @internal
+ * @category layers
+ * @since 0.0.0
+ */
 export const layer = Layer.effect(FileSystem.FileSystem, make);

@@ -1,5 +1,9 @@
 ---
 "@beep/architecture-lab-proof": patch
+"@beep/agents-domain": patch
+"@beep/agents-server": patch
+"@beep/agents-use-cases": patch
+"@beep/md": patch
 "@beep/oip-web": patch
 "@beep/practice-kg-mcp": patch
 "@beep/professional-desktop": patch
