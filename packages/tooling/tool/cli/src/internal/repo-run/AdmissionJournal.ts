@@ -556,6 +556,16 @@ const isOwnedLockGeneration = Effect.fnUntraced(function* (
   return O.exists(generation, (current) => current.ownerToken === ownerToken) || content === ownerToken;
 });
 
+const takenJournalLockIsOwned = Effect.fnUntraced(function* (
+  content: O.Option<string>,
+  ownerToken: string
+): Effect.fn.Return<boolean> {
+  return yield* O.match(content, {
+    onNone: () => Effect.succeed(false),
+    onSome: (current) => isOwnedLockGeneration(current, ownerToken),
+  });
+});
+
 const journalLockReapClaimPath = (lockPath: string, observedToken: string): string =>
   `${lockPath}.reap-${createHash("sha256").update(observedToken).digest("hex")}`;
 
@@ -566,6 +576,11 @@ const journalLockReapAdopterPath = (claimPath: string, adopter: AdmissionJournal
 
 const journalLockReapTombstonePath = (claimPath: string): string =>
   `${claimPath}.tombstone-${process.pid}-${randomUUID()}`;
+
+interface TakenJournalLockGeneration {
+  readonly content: O.Option<string>;
+  readonly info: O.Option<FileSystem.File.Info>;
+}
 
 const decodeReapAdopter = Effect.fnUntraced(function* (
   adopterPath: string,
@@ -631,6 +646,21 @@ const journalLockReapSidecars = (
 
 const isJournalLockReapTombstone = Str.includes(".tombstone-");
 
+const takeJournalLockGeneration = Effect.fnUntraced(function* (
+  lockPath: string,
+  tombstonePath: string
+): Effect.fn.Return<O.Option<TakenJournalLockGeneration>, never, FileSystem.FileSystem> {
+  const fs = yield* FileSystem.FileSystem;
+  const moved = yield* fs.rename(lockPath, tombstonePath).pipe(Effect.as(true), Effect.orElseSucceed(constant(false)));
+  if (!moved) {
+    return O.none();
+  }
+  return O.some({
+    content: yield* fs.readFileString(tombstonePath).pipe(Effect.option),
+    info: yield* fs.stat(tombstonePath).pipe(Effect.option),
+  });
+});
+
 const restoreJournalLockReapTombstone = Effect.fnUntraced(function* (
   lockPath: string,
   tombstonePath: string
@@ -639,11 +669,17 @@ const restoreJournalLockReapTombstone = Effect.fnUntraced(function* (
   return yield* fs.link(tombstonePath, lockPath).pipe(Effect.as(true), Effect.orElseSucceed(constant(false)));
 });
 
-const discardOrphanJournalLockReapTombstone = Effect.fnUntraced(function* (
+const discardTakenJournalLock = Effect.fnUntraced(function* (
   tombstonePath: string
 ): Effect.fn.Return<void, never, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
   yield* fs.remove(tombstonePath, { force: true }).pipe(Effect.ignore);
+});
+
+const discardOrphanJournalLockReapTombstone = Effect.fnUntraced(function* (
+  tombstonePath: string
+): Effect.fn.Return<void, never, FileSystem.FileSystem> {
+  yield* discardTakenJournalLock(tombstonePath);
   yield* Console.error(
     `[yeet] swept orphaned journal lock tombstone ${tombstonePath}; its displaced writer must reacquire.`
   );
@@ -814,8 +850,7 @@ const discardReclaimedJournalLock = Effect.fnUntraced(function* (
     yield* reportLostJournalLockReapClaim(adopterPath);
     return false;
   }
-  const fs = yield* FileSystem.FileSystem;
-  yield* fs.remove(tombstonePath, { force: true }).pipe(Effect.ignore);
+  yield* discardTakenJournalLock(tombstonePath);
   return true;
 });
 
@@ -848,8 +883,8 @@ const finishJournalLockReap = Effect.fnUntraced(function* (
     return;
   }
   const tombstonePath = journalLockReapTombstonePath(claimPath);
-  const moved = yield* fs.rename(lockPath, tombstonePath).pipe(Effect.as(true), Effect.orElseSucceed(constant(false)));
-  if (!moved) {
+  const taken = yield* takeJournalLockGeneration(lockPath, tombstonePath);
+  if (O.isNone(taken)) {
     yield* releaseJournalLockReapClaim(adopterPath, observedToken);
     return;
   }
@@ -857,12 +892,10 @@ const finishJournalLockReap = Effect.fnUntraced(function* (
     yield* reportLostJournalLockReapClaim(adopterPath);
     return;
   }
-  const tombstoneToken = yield* fs.readFileString(tombstonePath).pipe(Effect.option);
   const adopterInfo = yield* fs.stat(adopterPath).pipe(Effect.option);
-  const tombstoneInfo = yield* fs.stat(tombstonePath).pipe(Effect.option);
   const reclaimedObservedGeneration =
-    O.exists(tombstoneToken, (token) => token === observedToken) &&
-    O.exists(adopterInfo, (claim) => O.exists(tombstoneInfo, (tombstone) => sameFileIdentity(claim, tombstone)));
+    O.exists(taken.value.content, (token) => token === observedToken) &&
+    O.exists(adopterInfo, (claim) => O.exists(taken.value.info, (tombstone) => sameFileIdentity(claim, tombstone)));
   const completed = reclaimedObservedGeneration
     ? yield* discardReclaimedJournalLock(tombstonePath, adopterPath, observedToken)
     : yield* restoreDisplacedJournalLock(lockPath, tombstonePath, adopterPath, observedToken);
@@ -1014,12 +1047,21 @@ export const releaseJournalFileLock = Effect.fnUntraced(function* (
   lockPath: string,
   token: string
 ): Effect.fn.Return<void, never, FileSystem.FileSystem> {
-  // Remove only the generation this writer created; a lock reaped and
-  // replaced mid-write belongs to its new owner and stays.
-  if (yield* journalLockIsOwned(lockPath, token)) {
-    const fs = yield* FileSystem.FileSystem;
-    yield* fs.remove(lockPath, { force: true }).pipe(Effect.ignore);
+  const tombstonePath = journalLockReapTombstonePath(journalLockReapClaimPath(lockPath, token));
+  const taken = yield* takeJournalLockGeneration(lockPath, tombstonePath);
+  if (O.isNone(taken)) {
+    return;
   }
+  const owned = yield* takenJournalLockIsOwned(taken.value.content, token);
+  if (owned) {
+    yield* discardTakenJournalLock(tombstonePath);
+    return;
+  }
+  if (!(yield* restoreJournalLockReapTombstone(lockPath, tombstonePath))) {
+    yield* Console.error(`[yeet] journal lock generation displaced during release; recovery retained ${tombstonePath}`);
+    return;
+  }
+  yield* discardTakenJournalLock(tombstonePath);
 });
 
 /**
@@ -1047,10 +1089,7 @@ const journalLockIsOwned = Effect.fnUntraced(function* (
 ): Effect.fn.Return<boolean, never, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
   const content = yield* fs.readFileString(lockPath).pipe(Effect.option);
-  return yield* O.match(content, {
-    onNone: () => Effect.succeed(false),
-    onSome: (current) => isOwnedLockGeneration(current, token),
-  });
+  return yield* takenJournalLockIsOwned(content, token);
 });
 
 /**
