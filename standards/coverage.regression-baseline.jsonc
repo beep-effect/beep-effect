@@ -25525,14 +25525,14 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Worktree/Reap.service.ts": {
-          "lines": 90.85,
-          "statements": 90.65,
-          "branches": 85.18,
-          "functions": 87.5,
+          "lines": 90.6,
+          "statements": 90.42,
+          "branches": 85.39,
+          "functions": 87.27,
           "uncovered": {
-            "lines": 16,
-            "statements": 17,
-            "branches": 12,
+            "lines": 17,
+            "statements": 18,
+            "branches": 13,
             "functions": 7
           }
         },
