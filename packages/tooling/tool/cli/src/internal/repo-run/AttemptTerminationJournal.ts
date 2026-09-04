@@ -11,7 +11,7 @@ import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { UUID as UUIDSchema } from "@beep/schema/String";
 import { Clock, Console, DateTime, Duration, Effect, FileSystem, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
-import { constant } from "effect/Function";
+import { constant, flow } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -210,13 +210,11 @@ const decodeJournalLines = (lines: ReadonlyArray<string>) =>
 const knownJournalEvents = (rows: ReadonlyArray<JournalLine>): ReadonlyArray<AttemptJournalRetentionEvent> =>
   A.getSomes(A.map(rows, ({ event }) => event));
 
-const terminalAttemptIds = (events: ReadonlyArray<AttemptJournalRetentionEvent>): ReadonlyArray<UUID> =>
-  pipe(
-    events,
-    A.filter(AttemptJournalRetentionEvent.isAnyOf(["attempt-finished", "attempt-terminated"])),
-    A.map((event) => event.attemptId),
-    A.dedupe
-  );
+const terminalAttemptIds: (events: ReadonlyArray<AttemptJournalRetentionEvent>) => ReadonlyArray<UUID> = flow(
+  A.filter(AttemptJournalRetentionEvent.isAnyOf(["attempt-finished", "attempt-terminated"])),
+  A.map((event) => event.attemptId),
+  A.dedupe
+);
 
 const eventRecordedAt = (event: AttemptJournalRetentionEvent): string =>
   event._tag === "attempt-started" ? event.startedAt : event.recordedAt;
@@ -644,11 +642,13 @@ export const appendEncodedAttemptJournalEvent = Effect.fn("AttemptTerminationJou
     );
     const currentEvents = journalExists
       ? knownJournalEvents(
-          yield* fs.readFileString(journalPath).pipe(
-            Effect.mapError(QualitySchedulerError.new(`Failed to read Yeet attempt journal "${journalPath}".`)),
-            Effect.map((text) => pipe(text, Str.split("\n"), A.filter(Str.isNonEmpty))),
-            Effect.flatMap(decodeJournalLines)
-          )
+          yield* fs
+            .readFileString(journalPath)
+            .pipe(
+              Effect.mapError(QualitySchedulerError.new(`Failed to read Yeet attempt journal "${journalPath}".`)),
+              Effect.map(flow(Str.split("\n"), A.filter(Str.isNonEmpty))),
+              Effect.flatMap(decodeJournalLines)
+            )
         )
       : A.empty<AttemptJournalRetentionEvent>();
     const appendedTerminal = AttemptJournalRetentionEvent.isAnyOf(["attempt-finished", "attempt-terminated"])(

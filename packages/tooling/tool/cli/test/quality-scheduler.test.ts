@@ -36,6 +36,7 @@ import {
   provideRuntimeRootForTesting,
   publishAdmissionJournalForTesting,
   QualitySchedulerError,
+  qualitySchedulerForTesting,
   RunScopeRecord,
   RuntimeRootChoice,
   reapAdmissionState,
@@ -60,7 +61,21 @@ import { NodeChildProcessSpawner, NodeServices } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
-import { Clock, ConfigProvider, Deferred, Effect, Encoding, Fiber, FileSystem, Layer, Path, pipe, Ref } from "effect";
+import {
+  Clock,
+  ConfigProvider,
+  Deferred,
+  Duration,
+  Effect,
+  Encoding,
+  Fiber,
+  FileSystem,
+  Layer,
+  Path,
+  pipe,
+  Ref,
+  Schedule,
+} from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -86,6 +101,24 @@ const reapAdopterPath = (
   claimedAtMillis: number
 ): string =>
   `${claimPath}.adopt-${generation.pid}.${Encoding.encodeBase64Url(generation.procStart)}.${Encoding.encodeBase64Url(generation.ownerToken)}.${claimedAtMillis}`;
+
+describe("admission escalation", () => {
+  it("maps each wait threshold to its escalation level", () => {
+    expect(qualitySchedulerForTesting.escalationLevel(0)).toBe(0);
+    expect(qualitySchedulerForTesting.escalationLevel(120_000)).toBe(1);
+    expect(qualitySchedulerForTesting.escalationLevel(600_000)).toBe(2);
+  });
+});
+
+describe("memory stats", () => {
+  it("parses valid meminfo fields and rejects missing or invalid values", () => {
+    expect(qualitySchedulerForTesting.parseMeminfoFieldGib("MemTotal: 2097152 kB\n", "MemTotal:")).toEqual(O.some(2));
+    expect(qualitySchedulerForTesting.parseMeminfoFieldGib("MemTotal: unavailable kB\n", "MemTotal:")).toEqual(
+      O.none()
+    );
+    expect(qualitySchedulerForTesting.parseMeminfoFieldGib("MemFree: 1024 kB\n", "MemTotal:")).toEqual(O.none());
+  });
+});
 
 describe("process identity liveness", () => {
   it("builds both portable process-inspector probes", () => {
@@ -2397,8 +2430,13 @@ describe("quality-scheduler", () => {
               "legacy-origin-lock/v1"
             );
 
-            yield* Effect.sleep("100 millis");
-            const stampedCurrent = yield* fs.readFileString(currentPath).pipe(Effect.flatMap(decodeTicket));
+            const stampedCurrent = yield* Effect.repeat(
+              fs.readFileString(currentPath).pipe(Effect.flatMap(decodeTicket)),
+              {
+                until: (ticket) => ticket.blockedOnOriginAtMillis > 0,
+                schedule: Schedule.spaced(Duration.millis(10)),
+              }
+            ).pipe(Effect.timeout(Duration.seconds(5)));
             expect(stampedCurrent.blockedOnOriginAtMillis).toBeGreaterThan(0);
 
             yield* fs.remove(legacyPath, { force: true });

@@ -14,6 +14,7 @@ import * as Bool from "effect/Boolean";
 import * as Eq from "effect/Equal";
 import * as S from "effect/Schema";
 import { hashPrivateIdentifier } from "./privacy.ts";
+import { EvidenceTier, InstrumentClass, WaitReason } from "./telemetry-v2.ts";
 
 const $I = $RepoAiMetricsId.create("hook-pulse");
 
@@ -308,7 +309,7 @@ export type HookPulseEvent = typeof HookPulseEvent.Type;
  * @category models
  * @since 0.0.0
  */
-export const HookPulseInstrumentClass = LiteralKit(["production", "spike", "meta"]).pipe(
+export const HookPulseInstrumentClass = InstrumentClass.pipe(
   $I.annoteSchema("HookPulseInstrumentClass", {
     description: "Experimental role used to exclude spike and meta sessions from default baselines.",
   })
@@ -357,7 +358,12 @@ export type HookPulseInstrumentClass = typeof HookPulseInstrumentClass.Type;
  * @category models
  * @since 0.0.0
  */
-export const HookPulseEvidenceTier = LiteralKit(["observed", "derived", "heuristic", "unknown"]).pipe(
+export const HookPulseEvidenceTier = LiteralKit([
+  EvidenceTier.Enum.observed,
+  EvidenceTier.Enum.derived,
+  EvidenceTier.Enum.heuristic,
+  EvidenceTier.Enum.unknown,
+]).pipe(
   $I.annoteSchema("HookPulseEvidenceTier", {
     description: "Weakest-link evidence confidence attached to a hook-pulse record.",
   })
@@ -483,11 +489,11 @@ export class HookPulseDisarmWindow extends S.Class<HookPulseDisarmWindow>($I`Hoo
  * @since 0.0.0
  */
 export const HookPulseWaitReason = LiteralKit([
-  "plan-approval",
-  "tool-permission",
-  "idle-input",
-  "none",
-  "unknown",
+  WaitReason.Enum["plan-approval"],
+  WaitReason.Enum["tool-permission"],
+  WaitReason.Enum["idle-input"],
+  WaitReason.Enum.none,
+  WaitReason.Enum.unknown,
 ]).pipe(
   $I.annoteSchema("HookPulseWaitReason", {
     description: "Observed or explicitly unknown reason that an agent session is waiting.",

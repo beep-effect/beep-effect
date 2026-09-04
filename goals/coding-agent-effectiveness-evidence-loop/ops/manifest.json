@@ -41,6 +41,8 @@
     "research/2026-08-06-p1-instrument-live-handoff.md",
     "research/2026-09-03-p1-baseline-close.md",
     "research/2026-09-03-p1-first-treatment-readout.md",
+    "research/2026-09-03-p1-phone-transport-disposition.md",
+    "research/2026-09-03-p2-contract-foundation.md",
     "history/outputs/2026-09-03-p1-sharp-cutover.md",
     "history/evidence/2026-08-01-hook-pulse-spike.ndjson"
   ],
@@ -62,12 +64,12 @@
     {
       "id": "P1",
       "name": "Sequence-break instrument: hooks, notifications, circuit breaker, kill switch",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Telemetry-v2 truth model: flight records and coverage attestation",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P3",

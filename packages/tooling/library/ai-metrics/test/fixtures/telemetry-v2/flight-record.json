@@ -1,0 +1,66 @@
+{
+  "schemaVersion": "telemetry-v2/flight-record/v1",
+  "recordId": "28a5759e5b0ff02ecd7b88bc8d755ed7ff65831f94947e4243fbd55a4b1f9cf6",
+  "sessionId": "8c037d39cb2acb0fd8881b9abf25edaad33bf13f20163d4ca278dec7ef71705a",
+  "sourceKind": "codex",
+  "attribution": {
+    "rootId": "aac575785a820135a5c1e852686e75ad9589120c36ad224c4f3e414b03aa5270",
+    "sourceInstanceId": "c136244bdae889df836e2be1acdbf6d26fef11b04285603063f7de6e21c75d6c",
+    "identityNamespaceId": "d8a2deff993421c1cca651957dd17064f02c4deb8bf3eaa150116b9f58a83cc4",
+    "evidenceTier": "derived"
+  },
+  "instrumentClass": "production",
+  "config": {
+    "status": "last-known",
+    "fingerprint": "5d9aac19caa34a1b2372ac395dbcaf52a62ec29117e6bc2f7fd390e8172e9886",
+    "evidenceTier": "heuristic"
+  },
+  "semantic": {
+    "objective": {
+      "status": "unknown",
+      "evidenceTier": "unknown"
+    },
+    "semanticTurns": [
+      {
+        "turnId": "d0bfe6b09f3414c33c8ed5e94e4588d8f674a4df44391e8648a214d7d4197bae",
+        "sequence": 0,
+        "lifecycleState": "active",
+        "activePhase": "unknown",
+        "selfReportedTerminalOutcome": "unknown",
+        "evidenceTier": "unknown"
+      }
+    ],
+    "selfReportedTerminalOutcome": "unknown",
+    "evidenceTier": "unknown"
+  },
+  "mechanical": {
+    "startedAt": "2026-09-03T17:27:32.753Z",
+    "lastObservedAt": "2026-09-03T17:30:09.173Z",
+    "observedEventCount": 37,
+    "turnCount": 1,
+    "toolCallCount": 17,
+    "toolFailureCount": 0,
+    "lifecycleState": "terminal",
+    "activePhase": "none",
+    "terminalOutcome": "unknown",
+    "terminalProvenance": "harness-event",
+    "waits": [],
+    "evidenceTier": "derived"
+  },
+  "evidenceRefs": [
+    {
+      "kind": "hook-ledger",
+      "digest": "634dddf6f588a9178bb39f620110beaa946b148a690ec5e592834e34c97f43f6",
+      "evidenceTier": "derived",
+      "oipTaint": "unknown"
+    },
+    {
+      "kind": "config-snapshot",
+      "digest": "d42be25eba09f053e86ba4ffcf8ac188d49d8d83494bf0b4f2ac14c21d6e95de",
+      "evidenceTier": "heuristic",
+      "oipTaint": "unknown"
+    }
+  ],
+  "evidenceTier": "unknown",
+  "oipTaint": "unknown"
+}
