@@ -428,11 +428,15 @@ export class ReplacePatchOpSummary extends PatchOpSummaryBase.extend<ReplacePatc
  * @since 0.0.0
  */
 export const PatchOpSummary = S.Union([AddPatchOpSummary, RemovePatchOpSummary, ReplacePatchOpSummary]).pipe(
-  S.toTaggedUnion("op"),
   $I.annoteSchema("PatchOpSummary", {
     description: "A single JSON Patch operation.",
   }),
-  SchemaUtils.withCodecStatics(["encodeResult"])
+  SchemaUtils.withCodecStatics(["encodeResult"]),
+  (schema) =>
+    schema.pipe(
+      S.toTaggedUnion("op"),
+      SchemaUtils.withStatics(() => ({ encodeResult: schema.encodeResult }))
+    )
 );
 
 /**

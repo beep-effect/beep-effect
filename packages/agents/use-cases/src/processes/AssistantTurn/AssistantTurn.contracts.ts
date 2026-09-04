@@ -95,11 +95,15 @@ export class AssistantTurnHistoryItem extends S.Class<AssistantTurnHistoryItem>(
  * @since 0.0.0
  */
 export const TurnHistoryItem = S.Union([UserTurnHistoryItem, AssistantTurnHistoryItem]).pipe(
-  S.toTaggedUnion("role"),
   $I.annoteSchema("TurnHistoryItem", {
     description: "Plain-text prompt projection of a thread item consumed by the turn kernel.",
   }),
-  SchemaUtils.withCodecStatics(["decodeSync", "encodeResult"])
+  SchemaUtils.withCodecStatics(["decodeSync", "encodeResult"]),
+  (schema) =>
+    schema.pipe(
+      S.toTaggedUnion("role"),
+      SchemaUtils.withStatics(() => ({ decodeSync: schema.decodeSync, encodeResult: schema.encodeResult }))
+    )
 );
 
 /**
