@@ -33,6 +33,7 @@ import {
   openDirectoryHandle,
   removeThroughDirectoryHandle,
   sameDirectoryIdentity,
+  unlinkBoundFile,
 } from "./DirectoryHandle.ts";
 import { runRepoCommandCapture } from "./RepoRun.executor.ts";
 import {
@@ -45,7 +46,7 @@ import {
 } from "./ResidueReap.schemas.ts";
 import type * as Scope from "effect/Scope";
 import type { ChildProcessSpawner } from "effect/unstable/process";
-import type { DirectoryIdentity } from "./DirectoryHandle.ts";
+import type { BoundRemovalOutcome, DirectoryIdentity } from "./DirectoryHandle.ts";
 import type { ResidueReapSkipReason } from "./ResidueReap.schemas.ts";
 
 const DEFAULT_MAX_AGE_DAYS = 30;
@@ -723,30 +724,23 @@ const resolveApplyTarget = Effect.fnUntraced(function* (
   }));
 });
 
-const ResolvedRemovalOutcome = LiteralKit(["removed", "path-changed", "removal-failed"]);
-type ResolvedRemovalOutcome = typeof ResolvedRemovalOutcome.Type;
-
 const removeResolvedCandidate = Effect.fnUntraced(function* (
   candidate: ResidueReapCandidate,
   identity: DirectoryIdentity
-): Effect.fn.Return<ResolvedRemovalOutcome, never, FileSystem.FileSystem | Scope.Scope> {
-  const fs = yield* FileSystem.FileSystem;
+): Effect.fn.Return<BoundRemovalOutcome, never, Path.Path | Scope.Scope> {
   if (!ResidueReapAction.is["remove-dir"](candidate.action)) {
-    // A file is unlinked by name: unlink never follows a link, so nothing can redirect it.
-    return yield* fs.remove(candidate.path, { force: false }).pipe(
-      Effect.as<ResolvedRemovalOutcome>("removed"),
-      Effect.orElseSucceed((): ResolvedRemovalOutcome => "removal-failed")
-    );
+    // A file is unlinked through its bound parent, and only while the entry there is
+    // still the regular file whose inode the checks ran against.
+    return yield* unlinkBoundFile(candidate.path, identity);
   }
   // A tree is emptied through a descriptor bound to the inode the checks ran against.
   // The O_NOFOLLOW open refuses a link swapped into the path, and a directory renamed
-  // into it has another identity; either is reported as a changed path and left alone.
+  // into it has another identity; either is left alone and reported as a changed path.
   const handle = yield* openDirectoryHandle(candidate.path);
   if (O.isNone(handle) || !sameDirectoryIdentity(handle.value.identity, identity)) {
-    return "path-changed";
+    return "identity-changed";
   }
-  const removed = yield* removeThroughDirectoryHandle(handle.value, candidate.path);
-  return removed ? "removed" : "removal-failed";
+  return yield* removeThroughDirectoryHandle(handle.value, candidate.path);
 });
 
 const applyCandidate = Effect.fnUntraced(function* (
@@ -806,7 +800,9 @@ const applyCandidate = Effect.fnUntraced(function* (
       reclaimedBytes: O.getOrElse(O.fromUndefinedOr(rechecked.bytes), () => 0),
       warnings: A.empty<string>(),
     })),
-    Match.when("path-changed", () => skipped("path-changed", `Skipped ${assessed.path}: path changed before removal.`)),
+    Match.when("identity-changed", () =>
+      skipped("path-changed", `Skipped ${assessed.path}: path changed before removal.`)
+    ),
     Match.when("removal-failed", () => skipped("removal-failed", `Failed to remove ${assessed.path}.`)),
     Match.exhaustive
   );

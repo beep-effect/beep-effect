@@ -8,7 +8,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { Defect, LiteralKit } from "@beep/schema";
-import { Effect } from "effect";
+import { Effect, Path } from "effect";
 import { dual } from "effect/Function";
 import * as N from "effect/Number";
 import * as O from "effect/Option";
@@ -23,6 +23,7 @@ const $I = $RepoCliId.create("internal/repo-run/DirectoryHandle");
 // import: the FileSystem service cannot express O_DIRECTORY | O_NOFOLLOW or a
 // non-recursive rmdir, and the static-import gate maps node:fs onto that service.
 type NodeFs = typeof import("node:fs");
+type NodeStats = import("node:fs").Stats;
 const nodeFs = (): NodeFs => process.getBuiltinModule("node:fs");
 
 const directoryOpenFlags = (fs: NodeFs): number =>
@@ -275,18 +276,101 @@ const emptyHeldDirectory: (fd: number) => Effect.Effect<void, DirectoryHandleErr
 });
 
 /**
+ * Outcome of a removal bound to an inode.
+ *
+ * **Example** (Recognize a completed removal)
+ *
+ * ```ts
+ * import { BoundRemovalOutcome } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(BoundRemovalOutcome.is.removed("removed")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const BoundRemovalOutcome = LiteralKit(["removed", "identity-changed", "removal-failed"]).pipe(
+  $I.annoteSchema("BoundRemovalOutcome", {
+    description:
+      "Result of an inode-bound removal: removed, the assessed inode is no longer at the path, or a step failed.",
+  })
+);
+
+/**
+ * Outcome family of the inode-bound removals.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type BoundRemovalOutcome = typeof BoundRemovalOutcome.Type;
+
+// The last name-based syscall of a removal: its entry is resolved inside a held
+// parent directory, after the entry's shape and identity were checked through that
+// same parent.
+type BoundFinish = {
+  readonly operation: DirectoryHandleOperation;
+  readonly accepts: (stats: NodeStats) => boolean;
+  readonly finish: (fs: NodeFs, entry: string) => void;
+};
+
+const rmdirFinish: BoundFinish = {
+  operation: "rmdir",
+  accepts: (stats) => stats.isDirectory(),
+  finish: (fs, entry) => fs.rmdirSync(entry),
+};
+
+const unlinkFinish: BoundFinish = {
+  operation: "unlink",
+  accepts: (stats) => stats.isFile(),
+  finish: (fs, entry) => fs.unlinkSync(entry),
+};
+
+const finishBoundEntry = Effect.fnUntraced(function* (
+  path: string,
+  expected: DirectoryIdentity,
+  bound: BoundFinish
+): Effect.fn.Return<BoundRemovalOutcome, never, Path.Path | Scope.Scope> {
+  const fs = nodeFs();
+  const pathService = yield* Path.Path;
+  // Bind the parent so the last component is looked up inside a held directory, then
+  // compare the entry's shape and identity through that parent immediately before the
+  // syscall. Only that one syscall remains between the check and the removal.
+  const parent = yield* openDirectoryHandle(pathService.dirname(path));
+  if (O.isNone(parent)) {
+    return "removal-failed";
+  }
+  const entry = heldEntry(parent.value.fd, pathService.basename(path));
+  const stats = yield* attempt("stat", entry, () => fs.lstatSync(entry)).pipe(Effect.option);
+  const bindsExpected = O.exists(
+    stats,
+    (found) =>
+      bound.accepts(found) &&
+      sameDirectoryIdentity(expected, DirectoryIdentity.make({ dev: found.dev, ino: found.ino }))
+  );
+  if (!bindsExpected) {
+    return "identity-changed";
+  }
+  return yield* attempt(bound.operation, entry, () => bound.finish(fs, entry)).pipe(
+    Effect.as<BoundRemovalOutcome>("removed"),
+    Effect.orElseSucceed((): BoundRemovalOutcome => "removal-failed")
+  );
+});
+
+/**
  * Remove everything under a bound directory through its descriptor, then the
- * now-empty directory itself by name.
+ * now-empty directory itself through a handle on its parent.
  *
  * **Details**
  *
  * Every entry is reached through `/proc/self/fd/<fd>` and every subdirectory is
  * opened with `O_NOFOLLOW` before it is descended, so a component swapped for a
  * symlink after the handle was bound is unlinked where it stands and never
- * followed. The final step is a plain `rmdir` on the caller's path: it cannot
- * follow a link put in the directory's place, and it fails on a directory that
- * gained an entry since it was emptied, so a late write surfaces as a failed
- * removal instead of disappearing. The result is `false` on the first failure.
+ * followed. The final `rmdir` is resolved inside a handle on the parent
+ * directory and runs only once the entry there is confirmed to be a directory
+ * carrying the handle's own identity: a link or another directory put in its
+ * place is left alone and reported as `identity-changed`. A directory that
+ * gained an entry since it was emptied makes the `rmdir` fail, so a late write
+ * surfaces as `removal-failed` instead of disappearing.
  *
  * **Example** (Build a removal effect)
  *
@@ -295,25 +379,56 @@ const emptyHeldDirectory: (fd: number) => Effect.Effect<void, DirectoryHandleErr
  * import * as Effect from "effect/Effect"
  *
  * const handle = DirectoryHandle.make({ fd: 7, identity: DirectoryIdentity.make({ dev: 64769, ino: 1234 }) })
- * console.log(Effect.isEffect(removeThroughDirectoryHandle(handle, "/work/stale"))) // true
+ * console.log(Effect.isEffect(Effect.scoped(removeThroughDirectoryHandle(handle, "/work/stale")))) // true
  * ```
  *
  * @param handle - The bound directory to empty.
- * @param path - The path the directory was bound at, used only for the final `rmdir`.
- * @returns `true` when the tree and the directory are gone.
+ * @param path - The path the directory was bound at; its parent is bound for the final `rmdir`.
+ * @returns The removal outcome.
  * @category utilities
  * @since 0.0.0
  */
 export const removeThroughDirectoryHandle = Effect.fnUntraced(function* (
   handle: DirectoryHandle,
   path: string
-): Effect.fn.Return<boolean, never> {
+): Effect.fn.Return<BoundRemovalOutcome, never, Path.Path | Scope.Scope> {
   const emptied = yield* Effect.result(emptyHeldDirectory(handle.fd));
   if (Result.isFailure(emptied)) {
-    return false;
+    return "removal-failed";
   }
-  return yield* attempt("rmdir", path, () => nodeFs().rmdirSync(path)).pipe(
-    Effect.as(true),
-    Effect.orElseSucceed(() => false)
-  );
+  return yield* finishBoundEntry(path, handle.identity, rmdirFinish);
+});
+
+/**
+ * Unlink a regular file only while it is still the assessed inode.
+ *
+ * **Details**
+ *
+ * The parent directory is bound by descriptor, the entry is `lstat`ed through
+ * it, and the unlink runs only when that entry is a regular file whose device
+ * and inode match `expected`. A replacement file or a link put in its place is
+ * left alone and reported as `identity-changed`; `unlink` itself never follows
+ * a link.
+ *
+ * **Example** (Build a bound unlink)
+ *
+ * ```ts
+ * import { DirectoryIdentity, unlinkBoundFile } from "@beep/repo-cli/test/RepoRun"
+ * import * as Effect from "effect/Effect"
+ *
+ * const program = Effect.scoped(unlinkBoundFile("/work/stale.jsonl", DirectoryIdentity.make({ dev: 64769, ino: 1234 })))
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @param path - File to unlink.
+ * @param expected - Identity captured when the file was assessed.
+ * @returns The removal outcome.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const unlinkBoundFile = Effect.fnUntraced(function* (
+  path: string,
+  expected: DirectoryIdentity
+): Effect.fn.Return<BoundRemovalOutcome, never, Path.Path | Scope.Scope> {
+  return yield* finishBoundEntry(path, expected, unlinkFinish);
 });
