@@ -598,3 +598,20 @@ database and container transports explicitly disabled, or record those
 capabilities in the baseline provenance and reject non-portable raises. A
 package coverage floor must be attainable in the hosted lane without inheriting
 the baseline author's local infrastructure.
+
+## 2026-09-03 — publish rejected committed work beside an unrelated draft
+
+Lived while publishing the verified PR #992 repair. The branch was three
+commits ahead of its remote, every intended change was committed, and the only
+working-tree entry was the packet's preserved untracked P2 draft. `bun run beep
+yeet publish` stopped before push with `yeet publish requires reviewed staged
+changes or a clean local commit ahead of the publish remote/base.` Its verdict
+confirmed the exact ahead commit and a fresh, overlap-free base but classified
+the unrelated untracked file as making the committed publish path unclean. A
+direct non-force push was required to preserve the draft without staging,
+moving, deleting, or locally ignoring it.
+
+What would have prevented it: define committed publish cleanliness over the
+tracked index and committed range, while separately reporting untracked paths
+that do not overlap the published diff. An unrelated future-phase draft should
+not force operators to perturb the worktree or bypass the canonical publisher.
