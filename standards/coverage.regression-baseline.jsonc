@@ -27159,6 +27159,18 @@
             "functions": 0
           }
         },
+        "packages/tooling/tool/cli/src/internal/repo-run/DirectoryHandle.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/tooling/tool/cli/src/internal/repo-run/GitExec.ts": {
           "lines": 62.93,
           "statements": 61.9,
@@ -27253,6 +27265,30 @@
             "statements": 0,
             "branches": 0,
             "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.schemas.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.ts": {
+          "lines": 84.48,
+          "statements": 83.01,
+          "branches": 73.49,
+          "functions": 82.27,
+          "uncovered": {
+            "lines": 45,
+            "statements": 53,
+            "branches": 44,
+            "functions": 14
           }
         },
         "packages/tooling/tool/cli/src/internal/repo-run/RunScope.schemas.ts": {
