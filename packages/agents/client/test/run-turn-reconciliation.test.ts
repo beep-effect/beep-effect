@@ -19,7 +19,7 @@ import { NonNegativeInt } from "@beep/schema";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { ThreadTimeline, TimelineMessageItem, TimelineTurn } from "@beep/workspace-use-cases/aggregates/Thread";
 import { describe, expect, it } from "@effect/vitest";
-import { Deferred, Duration, Effect, Layer, Match, Stream } from "effect";
+import { ConfigProvider, Deferred, Duration, Effect, Layer, Match, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import { AsyncResult, Atom, AtomRegistry, Reactivity } from "effect/unstable/reactivity";
@@ -75,9 +75,19 @@ const completedTimeline = ThreadTimeline.make({
   ],
 });
 
+// Receipt polls are real wall-clock delays in the product; a few millis keep a
+// starved CI runner from stretching eight of them past the case's timeout.
+const FastReceiptPollLayer = ConfigProvider.layer(
+  ConfigProvider.fromUnknown({ BEEP_TURN_RECEIPT_POLL_INTERVAL: "2 millis" })
+);
 const registryWithClient = (client: ChatClient["Service"]) =>
   AtomRegistry.make({
-    initialValues: [[ChatClient.runtime.layer, Layer.mergeAll(Layer.succeed(ChatClient, client), Reactivity.layer)]],
+    initialValues: [
+      [
+        ChatClient.runtime.layer,
+        Layer.mergeAll(Layer.succeed(ChatClient, client), Reactivity.layer, FastReceiptPollLayer),
+      ],
+    ],
   });
 const waitForAtom = Effect.fnUntraced(function* <A>(
   registry: AtomRegistry.AtomRegistry,
