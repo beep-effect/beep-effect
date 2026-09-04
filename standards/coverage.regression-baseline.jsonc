@@ -2555,6 +2555,177 @@
         }
       }
     },
+    "@beep/box-provisioning": {
+      "path": "packages/drivers/box-provisioning",
+      "lines": 86.63,
+      "statements": 85.75,
+      "branches": 78.09,
+      "functions": 76.9,
+      "uncovered": {
+        "lines": 95,
+        "statements": 106,
+        "branches": 46,
+        "functions": 79
+      },
+      "files": {
+        "packages/drivers/box-provisioning/src/BoxProvisioning.ts": {
+          "lines": 92.85,
+          "statements": 93.02,
+          "branches": 100,
+          "functions": 76.92,
+          "uncovered": {
+            "lines": 3,
+            "statements": 3,
+            "branches": 0,
+            "functions": 3
+          }
+        },
+        "packages/drivers/box-provisioning/src/BoxProvisioningApplier.ts": {
+          "lines": 81.17,
+          "statements": 80.59,
+          "branches": 70.65,
+          "functions": 71.9,
+          "uncovered": {
+            "lines": 48,
+            "statements": 52,
+            "branches": 27,
+            "functions": 34
+          }
+        },
+        "packages/drivers/box-provisioning/src/BoxProvisioningArtifacts.ts": {
+          "lines": 76.92,
+          "statements": 60,
+          "branches": 100,
+          "functions": 38.46,
+          "uncovered": {
+            "lines": 3,
+            "statements": 8,
+            "branches": 0,
+            "functions": 8
+          }
+        },
+        "packages/drivers/box-provisioning/src/BoxProvisioningErrors.ts": {
+          "lines": 12.5,
+          "statements": 12.5,
+          "branches": 100,
+          "functions": 0,
+          "uncovered": {
+            "lines": 7,
+            "statements": 7,
+            "branches": 0,
+            "functions": 7
+          }
+        },
+        "packages/drivers/box-provisioning/src/BoxProvisioningIntent.ts": {
+          "lines": 93.65,
+          "statements": 93.93,
+          "branches": 82.6,
+          "functions": 100,
+          "uncovered": {
+            "lines": 4,
+            "statements": 4,
+            "branches": 4,
+            "functions": 0
+          }
+        },
+        "packages/drivers/box-provisioning/src/BoxProvisioningInventory.ts": {
+          "lines": 87.93,
+          "statements": 88.52,
+          "branches": 50,
+          "functions": 86.11,
+          "uncovered": {
+            "lines": 7,
+            "statements": 7,
+            "branches": 2,
+            "functions": 5
+          }
+        },
+        "packages/drivers/box-provisioning/src/BoxProvisioningObserved.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/box-provisioning/src/BoxProvisioningPlan.ts": {
+          "lines": 100,
+          "statements": 87.5,
+          "branches": 100,
+          "functions": 0,
+          "uncovered": {
+            "lines": 0,
+            "statements": 1,
+            "branches": 0,
+            "functions": 1
+          }
+        },
+        "packages/drivers/box-provisioning/src/BoxProvisioningPlanner.ts": {
+          "lines": 93.33,
+          "statements": 92.64,
+          "branches": 82.25,
+          "functions": 85.71,
+          "uncovered": {
+            "lines": 9,
+            "statements": 10,
+            "branches": 11,
+            "functions": 9
+          }
+        },
+        "packages/drivers/box-provisioning/src/BoxProvisioningReceipt.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/box-provisioning/src/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/box-provisioning/src/internal/canonical.ts": {
+          "lines": 97.56,
+          "statements": 97.67,
+          "branches": 90,
+          "functions": 100,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 1,
+            "functions": 0
+          }
+        },
+        "packages/drivers/box-provisioning/src/internal/live.ts": {
+          "lines": 80.3,
+          "statements": 80.88,
+          "branches": 83.33,
+          "functions": 68.42,
+          "uncovered": {
+            "lines": 13,
+            "statements": 13,
+            "branches": 1,
+            "functions": 12
+          }
+        }
+      }
+    },
     "@beep/brand": {
       "path": "packages/foundation/ui-system/brand",
       "lines": 100,
@@ -20650,26 +20821,26 @@
     },
     "@beep/repo-ai-metrics": {
       "path": "packages/tooling/library/ai-metrics",
-      "lines": 89.16,
-      "statements": 89.18,
-      "branches": 77.98,
-      "functions": 75.98,
+      "lines": 89.71,
+      "statements": 89.76,
+      "branches": 79.28,
+      "functions": 76.92,
       "uncovered": {
-        "lines": 276,
-        "statements": 283,
-        "branches": 105,
-        "functions": 237
+        "lines": 285,
+        "statements": 292,
+        "branches": 104,
+        "functions": 246
       },
       "files": {
         "packages/tooling/library/ai-metrics/src/agent-effectiveness.ts": {
-          "lines": 89.9,
-          "statements": 88.94,
-          "branches": 72.72,
-          "functions": 78.65,
+          "lines": 89.92,
+          "statements": 88.96,
+          "branches": 73.1,
+          "functions": 78.78,
           "uncovered": {
             "lines": 42,
             "statements": 47,
-            "branches": 33,
+            "branches": 32,
             "functions": 35
           }
         },
@@ -20683,6 +20854,18 @@
             "statements": 19,
             "branches": 1,
             "functions": 16
+          }
+        },
+        "packages/tooling/library/ai-metrics/src/circuit-breaker.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
           }
         },
         "packages/tooling/library/ai-metrics/src/compose.ts": {
@@ -20757,6 +20940,18 @@
             "functions": 0
           }
         },
+        "packages/tooling/library/ai-metrics/src/flight-record.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/tooling/library/ai-metrics/src/forwarder.ts": {
           "lines": 85.71,
           "statements": 85.18,
@@ -20794,6 +20989,18 @@
           }
         },
         "packages/tooling/library/ai-metrics/src/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/ai-metrics/src/ingest-manifest.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -20937,6 +21144,18 @@
             "functions": 40
           }
         },
+        "packages/tooling/library/ai-metrics/src/sequence-break.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/tooling/library/ai-metrics/src/shell.ts": {
           "lines": 100,
           "statements": 100,
@@ -20959,6 +21178,30 @@
             "statements": 13,
             "branches": 7,
             "functions": 8
+          }
+        },
+        "packages/tooling/library/ai-metrics/src/telemetry-v2-store.ts": {
+          "lines": 87.3,
+          "statements": 87.3,
+          "branches": 100,
+          "functions": 70.37,
+          "uncovered": {
+            "lines": 8,
+            "statements": 8,
+            "branches": 0,
+            "functions": 8
+          }
+        },
+        "packages/tooling/library/ai-metrics/src/telemetry-v2.ts": {
+          "lines": 96,
+          "statements": 96,
+          "branches": 100,
+          "functions": 90,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 0,
+            "functions": 1
           }
         }
       }
@@ -24217,15 +24460,15 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts": {
-          "lines": 40.61,
-          "statements": 40.43,
-          "branches": 31.67,
-          "functions": 32.39,
+          "lines": 35.62,
+          "statements": 35.52,
+          "branches": 19.66,
+          "functions": 26.59,
           "uncovered": {
-            "lines": 427,
-            "statements": 436,
-            "branches": 151,
-            "functions": 144
+            "lines": 412,
+            "statements": 421,
+            "branches": 143,
+            "functions": 138
           }
         },
         "packages/tooling/tool/cli/src/commands/Quality/Quality.errors.ts": {
@@ -25500,6 +25743,42 @@
             "functions": 25
           }
         },
+        "packages/tooling/tool/cli/src/commands/Worktree/Reap.command.ts": {
+          "lines": 71.42,
+          "statements": 73.33,
+          "branches": 62.5,
+          "functions": 80,
+          "uncovered": {
+            "lines": 8,
+            "statements": 8,
+            "branches": 3,
+            "functions": 3
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Worktree/Reap.schemas.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Worktree/Reap.service.ts": {
+          "lines": 90.53,
+          "statements": 90.28,
+          "branches": 85.54,
+          "functions": 86.53,
+          "uncovered": {
+            "lines": 16,
+            "statements": 17,
+            "branches": 12,
+            "functions": 7
+          }
+        },
         "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts": {
           "lines": 65.96,
           "statements": 64.07,
@@ -25549,15 +25828,15 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts": {
-          "lines": 86.08,
-          "statements": 86.36,
-          "branches": 78.94,
-          "functions": 72.22,
+          "lines": 90.83,
+          "statements": 90.57,
+          "branches": 87.03,
+          "functions": 77.77,
           "uncovered": {
-            "lines": 27,
-            "statements": 27,
-            "branches": 8,
-            "functions": 20
+            "lines": 22,
+            "statements": 23,
+            "branches": 7,
+            "functions": 18
           }
         },
         "packages/tooling/tool/cli/src/commands/Worktree/index.ts": {
@@ -25932,6 +26211,18 @@
             "functions": 1
           }
         },
+        "packages/tooling/tool/cli/src/commands/Yeet/internal/PrSessionRegistry.ts": {
+          "lines": 97.72,
+          "statements": 97.95,
+          "branches": 95.23,
+          "functions": 95.23,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 1,
+            "functions": 1
+          }
+        },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/ProofDigest.ts": {
           "lines": 100,
           "statements": 100,
@@ -25990,6 +26281,18 @@
             "statements": 33,
             "branches": 10,
             "functions": 12
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Yeet/internal/ProvenanceFooter.ts": {
+          "lines": 95.34,
+          "statements": 94.2,
+          "branches": 80.39,
+          "functions": 97.05,
+          "uncovered": {
+            "lines": 6,
+            "statements": 8,
+            "branches": 10,
+            "functions": 1
           }
         },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/PublishScope.ts": {
@@ -26062,6 +26365,30 @@
             "statements": 11,
             "branches": 5,
             "functions": 7
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Yeet/internal/Resume.schemas.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Yeet/internal/Resume.ts": {
+          "lines": 92,
+          "statements": 89.7,
+          "branches": 85.96,
+          "functions": 88.37,
+          "uncovered": {
+            "lines": 10,
+            "statements": 14,
+            "branches": 8,
+            "functions": 5
           }
         },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts": {
@@ -26799,12 +27126,12 @@
         "packages/tooling/tool/cli/src/internal/repo-run/AdmissionJournal.ts": {
           "lines": 100,
           "statements": 100,
-          "branches": 100,
+          "branches": 98.9,
           "functions": 100,
           "uncovered": {
             "lines": 0,
             "statements": 0,
-            "branches": 0,
+            "branches": 1,
             "functions": 0
           }
         },
@@ -26832,6 +27159,18 @@
             "functions": 0
           }
         },
+        "packages/tooling/tool/cli/src/internal/repo-run/DirectoryHandle.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/tooling/tool/cli/src/internal/repo-run/GitExec.ts": {
           "lines": 62.93,
           "statements": 61.9,
@@ -26842,6 +27181,18 @@
             "statements": 56,
             "branches": 43,
             "functions": 13
+          }
+        },
+        "packages/tooling/tool/cli/src/internal/repo-run/ProcessAttachment.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
           }
         },
         "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts": {
@@ -26914,6 +27265,30 @@
             "statements": 0,
             "branches": 0,
             "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.schemas.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.ts": {
+          "lines": 84.48,
+          "statements": 83.01,
+          "branches": 73.49,
+          "functions": 82.27,
+          "uncovered": {
+            "lines": 45,
+            "statements": 53,
+            "branches": 44,
+            "functions": 14
           }
         },
         "packages/tooling/tool/cli/src/internal/repo-run/RunScope.schemas.ts": {

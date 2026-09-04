@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-09-03T20:53:06.257Z
+Generated: 2026-09-04T05:07:17.488Z
 
 ## Scope
 
@@ -14,16 +14,16 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 17 |
 | packagesWithoutPublicSrcSurface | 3 |
 | packagesNeedingRemediation | 117 |
-| publicModules | 3007 |
-| publicExports | 21288 |
+| publicModules | 3015 |
+| publicExports | 21380 |
 | openModules | 375 |
-| openExports | 3461 |
+| openExports | 3460 |
 | missingExportExamples | 5 |
 | missingExportCategories | 0 |
 | missingExportSince | 0 |
 | forbiddenTagFindings | 0 |
 | malformedConditionalTagFindings | 0 |
-| exampleImportFindings | 3739 |
+| exampleImportFindings | 3738 |
 | unsafeExampleFindings | 0 |
 | schemaAnnotationFindings | 0 |
 | undescribed-see | 12 |
@@ -40,7 +40,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | duplicate-example | 0 |
 | loose-ts-fence | 0 |
 | forbidden-remarks | 0 |
-| no-root-package-import | 3738 |
+| no-root-package-import | 3737 |
 | rootPolicyOpen | 0 |
 
 ## Root Policy
@@ -74,7 +74,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 16 | `@beep/ontology-use-cases` | `packages/ontology/use-cases` | needs-remediation | 23 | 214 | 1 | 17 |
 | 17 | `@beep/architecture-lab-client` | `packages/architecture-lab/client` | needs-remediation | 3 | 7 | 0 | 4 |
 | 18 | `@beep/dock` | `packages/foundation/ui-system/dock` | needs-remediation | 20 | 212 | 0 | 189 |
-| 19 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 223 | 1820 | 47 | 286 |
+| 19 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 226 | 1851 | 47 | 283 |
 | 20 | `@beep/pglite` | `packages/drivers/pglite` | needs-remediation | 4 | 11 | 3 | 0 |
 | 21 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | needs-remediation | 10 | 86 | 0 | 18 |
 | 22 | `@beep/agents-server` | `packages/agents/server` | needs-remediation | 11 | 39 | 2 | 7 |
@@ -122,7 +122,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 64 | `@beep/todox` | `apps/todox` | clean | 2 | 3 | 0 | 0 |
 | 65 | `@beep/semantic-web` | `packages/foundation/capability/semantic-web` | needs-remediation | 8 | 56 | 0 | 15 |
 | 66 | `@beep/utils` | `packages/foundation/modeling/utils` | needs-remediation | 28 | 214 | 6 | 118 |
-| 67 | `@beep/repo-ai-metrics` | `packages/tooling/library/ai-metrics` | needs-remediation | 24 | 415 | 0 | 79 |
+| 67 | `@beep/repo-ai-metrics` | `packages/tooling/library/ai-metrics` | needs-remediation | 29 | 476 | 0 | 81 |
 | 68 | `@beep/architecture-lab-tables` | `packages/architecture-lab/tables` | clean | 7 | 21 | 0 | 0 |
 | 69 | `@beep/tika` | `packages/drivers/tika` | needs-remediation | 8 | 34 | 3 | 7 |
 | 70 | `@beep/libpff` | `packages/drivers/libpff` | needs-remediation | 7 | 40 | 4 | 8 |
@@ -841,8 +841,6 @@ Export findings:
 - `src/commands/Ci/Ci.command.ts:269` `appendTurboSummary` (const) - 1 example import violation(s)
 - `src/commands/Ci/CiLane.ts:361` `CI_LANE_DESCRIPTORS` (const) - 1 documentation section/link violation(s)
 - `src/commands/Ci/CiLane.ts:1302` `ciLaneStepsForTesting` (const) - 1 documentation section/link violation(s)
-- `src/commands/Ci/LaneTimings.ts:688` `decodeCiWorkflowJobsPage` (const) - 1 example import violation(s)
-- `src/commands/Ci/LaneTimings.ts:781` `collectCiLaneTimings` (const) - 1 example import violation(s)
 - `src/commands/Codex/Findings.capture.schemas.ts:576` `CodexFindingsCapturePayload` (class) - 1 example import violation(s)
 - `src/commands/Codex/Findings.capture.schemas.ts:635` `decodeCodexFindingsCapturePayload` (const) - 1 example import violation(s)
 - `src/commands/Codex/Findings.csv.ts:329` `decodeCodexFindingsCsv` (const) - 1 example import violation(s)
@@ -1021,8 +1019,8 @@ Export findings:
 - `src/commands/Quality/ChangesetGraph.ts:384` `changesetPackageReferencesFromText` (const) - 1 example import violation(s)
 - `src/commands/Quality/FallowQuality.command.ts:1238` `collectAuditDiffInputForTesting` (const) - 1 example import violation(s)
 - `src/commands/Quality/FallowQuality.command.ts:2376` `qualityFallowCommand` (const) - 1 example import violation(s)
-- `src/commands/Quality/Quality.command.ts:731` `runBunAudit` (const) - 1 documentation section/link violation(s)
-- `src/commands/Quality/Quality.command.ts:857` `devQualityStepsForTesting` (const) - 1 example import violation(s)
+- `src/commands/Quality/Quality.command.ts:737` `runBunAudit` (const) - 1 documentation section/link violation(s)
+- `src/commands/Quality/Quality.command.ts:863` `devQualityStepsForTesting` (const) - 1 example import violation(s)
 - `src/commands/Quality/Quality.osv-ignore.ts:105` `selectOsvIgnoreIdsForAudit` (const) - 1 example import violation(s)
 - `src/commands/Quality/Quality.osv-ignore.ts:154` `activeOsvIgnoreIdsForTesting` (const) - 1 example import violation(s)
 - `src/commands/Quality/Quality.render.ts:71` `printQualityProfileConfig` (const) - 1 example import violation(s)
@@ -1094,18 +1092,17 @@ Export findings:
 - `src/commands/VersionSync/VersionSync.command.ts:50` `versionSyncCommand` (const) - 1 example import violation(s)
 - `src/commands/Worktree/Fleet.service.ts:329` `parseProcStatStartTime` (const) - 1 example import violation(s)
 - `src/commands/Worktree/Fleet.service.ts:435` `FleetMirrorService` (class) - 1 example import violation(s)
-- `src/commands/Worktree/Worktree.command.ts:334` `resolveWorktreeContext` (const) - 1 example import violation(s)
-- `src/commands/Worktree/Worktree.command.ts:390` `addWorktree` (const) - 1 example import violation(s)
-- `src/commands/Worktree/Worktree.command.ts:437` `copyLocalFiles` (const) - 1 example import violation(s)
-- `src/commands/Worktree/Worktree.command.ts:535` `worktreeDoctorReportForContext` (const) - 1 example import violation(s)
-- `src/commands/Worktree/Worktree.command.ts:790` `renderWorktreeRemovalReceipt` (const) - 1 example import violation(s)
-- `src/commands/Worktree/Worktree.command.ts:953` `worktreeCommand` (const) - 1 example import violation(s)
+- `src/commands/Worktree/Worktree.command.ts:341` `resolveWorktreeContext` (const) - 1 example import violation(s)
+- `src/commands/Worktree/Worktree.command.ts:397` `addWorktree` (const) - 1 example import violation(s)
+- `src/commands/Worktree/Worktree.command.ts:444` `copyLocalFiles` (const) - 1 example import violation(s)
+- `src/commands/Worktree/Worktree.command.ts:542` `worktreeDoctorReportForContext` (const) - 1 example import violation(s)
+- `src/commands/Worktree/Worktree.command.ts:797` `renderWorktreeRemovalReceipt` (const) - 1 example import violation(s)
+- `src/commands/Worktree/Worktree.command.ts:961` `worktreeCommand` (const) - 1 example import violation(s)
 - `src/commands/Worktree/Worktree.schemas.ts:211` `WorktreeResidueManifest` (class) - 1 example import violation(s)
-- `src/commands/Worktree/Worktree.schemas.ts:288` `WorktreeRemovalRequest` (class) - 1 example import violation(s)
-- `src/commands/Worktree/Worktree.service.ts:196` `worktreeArchivePlan` (const) - 1 example import violation(s)
-- `src/commands/Worktree/Worktree.service.ts:316` `WorktreeRemovalService` (class) - 1 example import violation(s)
-- `src/commands/Worktree/Worktree.service.ts:370` `runWorktreeGitCapture` (const) - 1 example import violation(s)
-- `src/commands/Yeet/Yeet.command.ts:674` `yeetCommand` (const) - 1 example import violation(s)
+- `src/commands/Worktree/Worktree.schemas.ts:304` `WorktreeRemovalRequest` (class) - 1 example import violation(s)
+- `src/commands/Worktree/Worktree.service.ts:218` `worktreeArchivePlan` (const) - 1 example import violation(s)
+- `src/commands/Worktree/Worktree.service.ts:338` `WorktreeRemovalService` (class) - 1 example import violation(s)
+- `src/commands/Worktree/Worktree.service.ts:392` `runWorktreeGitCapture` (const) - 1 example import violation(s)
 
 ### @beep/pglite
 
@@ -3084,10 +3081,10 @@ Export findings:
 - `src/forwarder.ts:1019` `runAiMetricsForwarder` (const) - 1 example import violation(s)
 - `src/forwarder.ts:1153` `forwarderRunResultToJson` (const) - 1 example import violation(s)
 - `src/forwarder.ts:1199` `forwarderTimerPlanToJson` (const) - 1 example import violation(s)
-- `src/hook-pulse.ts:602` `HookPulseRawEvent` (class) - 1 example import violation(s)
-- `src/hook-pulse.ts:746` `hookPulseHashSalt` (const) - 1 example import violation(s)
-- `src/hook-pulse.ts:876` `HookPulseV1` (class) - 1 example import violation(s)
-- `src/hook-pulse.ts:1118` `HookPulseV1FromRawEvent` (const) - 1 example import violation(s)
+- `src/hook-pulse.ts:608` `HookPulseRawEvent` (class) - 1 example import violation(s)
+- `src/hook-pulse.ts:752` `hookPulseHashSalt` (const) - 1 example import violation(s)
+- `src/hook-pulse.ts:882` `HookPulseV1` (class) - 1 example import violation(s)
+- `src/hook-pulse.ts:1124` `HookPulseV1FromRawEvent` (const) - 1 example import violation(s)
 - `src/identity-registry.ts:534` `isNestedGitRoot` (const) - 1 example import violation(s)
 - `src/identity-registry.ts:588` `makeAiMetricsCanonicalRoot` (const) - 1 example import violation(s)
 - `src/identity-registry.ts:740` `readAiMetricsIdentityRegistry` (const) - 1 example import violation(s)
@@ -3136,6 +3133,8 @@ Export findings:
 - `src/scorecard.ts:1709` `aiMetricsWeeklyReportToJson` (const) - 1 example import violation(s)
 - `src/source-discovery.ts:619` `discoverAiMetricsSources` (const) - 1 example import violation(s)
 - `src/source-discovery.ts:691` `sourceDiscoveryToJson` (const) - 1 example import violation(s)
+- `src/telemetry-v2-store.ts:221` `TelemetryV2StoreShape` (interface) - 1 example import violation(s)
+- `src/telemetry-v2-store.ts:442` `TelemetryV2Store` (class) - 1 example import violation(s)
 
 ### @beep/tika
 
@@ -4333,12 +4332,12 @@ Module findings:
 - `src/ClientObservability.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 
 Export findings:
-- `src/Chat.atoms.ts:92` `chatProtocolLayerAtom` (const) - 1 example import violation(s)
-- `src/Chat.atoms.ts:707` `SendTurnRequest` (class) - 2 example import violation(s)
-- `src/Chat.atoms.ts:739` `EditTurnRequest` (class) - 2 example import violation(s)
-- `src/Chat.atoms.ts:777` `TurnRequest` (const) - 2 example import violation(s)
-- `src/Chat.atoms.ts:805` `TurnRequest` (type) - 2 example import violation(s)
-- `src/Chat.atoms.ts:872` `runTurnAtom` (const) - 2 example import violation(s)
+- `src/Chat.atoms.ts:93` `chatProtocolLayerAtom` (const) - 1 example import violation(s)
+- `src/Chat.atoms.ts:708` `SendTurnRequest` (class) - 2 example import violation(s)
+- `src/Chat.atoms.ts:740` `EditTurnRequest` (class) - 2 example import violation(s)
+- `src/Chat.atoms.ts:778` `TurnRequest` (const) - 2 example import violation(s)
+- `src/Chat.atoms.ts:806` `TurnRequest` (type) - 2 example import violation(s)
+- `src/Chat.atoms.ts:880` `runTurnAtom` (const) - 2 example import violation(s)
 - `src/Chat.layer.ts:74` `HttpChatProtocolLive` (const) - 1 example import violation(s)
 - `src/ClientObservability.ts:91` `ClientObservabilityLive` (const) - 1 example import violation(s)
 - `src/index.ts:52` `export * from "./ClientObservability.ts";` (re-export) - 1 example import violation(s)

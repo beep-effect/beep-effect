@@ -72,7 +72,12 @@ const DEPRECATED_API_LINT_SHARDS = [
   "packages/foundation/ui-system",
   "packages/law-practice",
   "packages/shared",
-  "packages/tooling",
+  // One `packages/tooling` shard exhausted the 8 GiB eslint heap on hosted
+  // runners (repo-cli alone is ~1,250 TypeScript files); shard it by subtree.
+  "packages/tooling/library",
+  "packages/tooling/policy-pack",
+  "packages/tooling/test-kit",
+  "packages/tooling/tool",
   "packages/workspace",
 ] as const;
 const deprecatedApiLintCacheLocation = (shard: string): string =>

@@ -104,6 +104,7 @@ import {
   runSqlIntegrationTestLaneForTesting,
   sqlIntegrationConnectionUriFromEnvForTesting,
   sqlIntegrationStepForTesting,
+  testTsgoPlanningForTesting,
   turboSecretSessionStepForTesting,
   turboStepLocalEnvForTesting,
   validateCoverageTaskArgsForTesting,
@@ -136,6 +137,7 @@ import {
   ConfigProvider,
   Effect,
   Exit,
+  Fiber,
   FileSystem,
   Inspectable,
   Layer,
@@ -966,6 +968,23 @@ describe("quality task adapter", () => {
       )
     ));
 
+  it("tolerates an outcome whose mutable lane source disappears while the step runs", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const lanes = [["check", bunScriptStep("ci:check", "await Bun.sleep(100)"), O.none()]] as Array<
+          Parameters<typeof collectQualityTaskLaneRunsForTesting>[1][number]
+        >;
+        const running = yield* Effect.forkChild(collectQualityTaskLaneRunsForTesting("ci:mutable", lanes));
+        yield* Effect.sleep("20 millis");
+        lanes.length = 0;
+
+        const result = yield* Fiber.join(running);
+
+        expect(result.report.lanes).toHaveLength(0);
+        expect(result.failures).toHaveLength(0);
+      }).pipe(provideScopedLayer(PlatformLayer))
+    ));
+
   it("emits machine-readable lane reports from both wrapper writers", () =>
     Effect.runPromise(
       Effect.gen(function* () {
@@ -988,27 +1007,241 @@ describe("quality task adapter", () => {
       }).pipe(provideScopedLayer(PlatformLayer))
     ));
 
-  it("appends a schema-versioned wrapper report to the durable side channel", () =>
+  it("appends schema-versioned lane rows and ignores malformed side-channel rows", () =>
     Effect.runPromise(
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const tempDir = yield* fs.makeTempDirectory();
         const artifactPath = path.join(tempDir, "inner-lanes.ndjson");
+        yield* fs.writeFileString(artifactPath, "not-json\n");
         yield* withEnvVarEffect(
           QUALITY_TASK_LANE_RUN_ARTIFACT_PATH_ENV,
           artifactPath,
           withEnvVarEffect(
             QUALITY_TASK_LANE_RUN_PARENT_ID_ENV,
             "full:02-ci-parity",
-            runQualityTaskStreamingLaneGroup("ci:local", [])
+            runQualityTaskStreamingLaneGroup("ci:local", [
+              ["check", bunScriptStep("ci:check", "process.exit(0)"), O.none()],
+            ])
           )
         );
         const lines = pipe(yield* fs.readFileString(artifactPath), Str.split("\n"), A.filter(Str.isNonEmpty));
-        expect(lines).toHaveLength(1);
-        const report = yield* S.decodeEffect(S.fromJsonString(QualityTaskLaneRunReport))(lines[0]);
+        expect(lines).toHaveLength(2);
+        const report = yield* S.decodeEffect(S.fromJsonString(QualityTaskLaneRunReport))(lines[1]);
         expect(report.schemaVersion).toBe("quality-task-lane-run/v1");
         expect(report.parentLaneId).toStrictEqual(O.some("full:02-ci-parity"));
+        expect(A.map(report.lanes, (lane) => lane.id)).toEqual(["check"]);
+        const emitted = pipe(
+          yield* TestConsole.logLines,
+          A.filter(isString),
+          A.findFirst(Str.startsWith(QUALITY_TASK_LANE_RUN_REPORT_PREFIX)),
+          O.getOrThrow
+        );
+        const emittedReport = yield* S.decodeEffect(S.fromJsonString(QualityTaskLaneRunReport))(
+          Str.slice(QUALITY_TASK_LANE_RUN_REPORT_PREFIX.length)(emitted)
+        );
+        expect(A.map(emittedReport.lanes, (lane) => lane.id)).toEqual(["check"]);
+        yield* fs.remove(tempDir, { recursive: true, force: true });
+      }).pipe(provideScopedLayer(PlatformLayer))
+    ));
+
+  it("rebuilds an unscoped lane report from an unscoped artifact", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const tempDir = yield* fs.makeTempDirectory();
+        const artifactPath = path.join(tempDir, "unscoped-inner-lanes.ndjson");
+        const durableReport = yield* S.encodeEffect(S.fromJsonString(QualityTaskLaneRunReport))(
+          QualityTaskLaneRunReport.make({
+            schemaVersion: "quality-task-lane-run/v1",
+            parentLaneId: O.none(),
+            lanes: [
+              QualityTaskLaneRun.make({
+                id: "check",
+                label: "ci:check",
+                status: "passed",
+                inputDigest: O.none(),
+              }),
+            ],
+          })
+        );
+        yield* fs.writeFileString(artifactPath, `${durableReport}\n`);
+
+        yield* withEnvVarEffect(
+          QUALITY_TASK_LANE_RUN_ARTIFACT_PATH_ENV,
+          artifactPath,
+          withEnvVarEffect(
+            QUALITY_TASK_LANE_RUN_PARENT_ID_ENV,
+            undefined,
+            runQualityTaskStreamingLaneGroup("ci:local", [])
+          )
+        );
+
+        const emitted = pipe(
+          yield* TestConsole.logLines,
+          A.filter(isString),
+          A.findFirst(Str.startsWith(QUALITY_TASK_LANE_RUN_REPORT_PREFIX)),
+          O.getOrThrow
+        );
+        const emittedReport = yield* S.decodeEffect(S.fromJsonString(QualityTaskLaneRunReport))(
+          Str.slice(QUALITY_TASK_LANE_RUN_REPORT_PREFIX.length)(emitted)
+        );
+        expect(emittedReport.parentLaneId).toStrictEqual(O.none());
+        expect(A.map(emittedReport.lanes, (lane) => lane.id)).toEqual(["check"]);
+        yield* fs.remove(tempDir, { recursive: true, force: true });
+      }).pipe(provideScopedLayer(PlatformLayer))
+    ));
+
+  it("falls back when a lane artifact is missing or belongs to another parent", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const tempDir = yield* fs.makeTempDirectory();
+        const missingPath = path.join(tempDir, "missing.ndjson");
+        const foreignPath = path.join(tempDir, "foreign.ndjson");
+        const foreignReport = yield* S.encodeEffect(S.fromJsonString(QualityTaskLaneRunReport))(
+          QualityTaskLaneRunReport.make({
+            schemaVersion: "quality-task-lane-run/v1",
+            parentLaneId: O.some("full:foreign-parent"),
+            lanes: [],
+          })
+        );
+        yield* fs.writeFileString(foreignPath, `${foreignReport}\n`);
+
+        yield* Effect.forEach(
+          [missingPath, foreignPath],
+          (artifactPath) =>
+            withEnvVarEffect(
+              QUALITY_TASK_LANE_RUN_ARTIFACT_PATH_ENV,
+              artifactPath,
+              withEnvVarEffect(
+                QUALITY_TASK_LANE_RUN_PARENT_ID_ENV,
+                "full:current-parent",
+                runQualityTaskGithubCheckLaneWaves("pre-push", [], "fail-fast")
+              )
+            ),
+          { discard: true }
+        );
+
+        const reportLines = pipe(
+          yield* TestConsole.logLines,
+          A.filter(isString),
+          A.filter(Str.startsWith(QUALITY_TASK_LANE_RUN_REPORT_PREFIX))
+        );
+        expect(reportLines).toHaveLength(2);
+        const reports = yield* Effect.forEach(reportLines, (line) =>
+          S.decodeEffect(S.fromJsonString(QualityTaskLaneRunReport))(
+            Str.slice(QUALITY_TASK_LANE_RUN_REPORT_PREFIX.length)(line)
+          )
+        );
+        expect(A.every(reports, (report) => A.isReadonlyArrayEmpty(report.lanes))).toBe(true);
+        expect(A.every(reports, (report) => O.contains(report.parentLaneId, "full:current-parent"))).toBe(true);
+        yield* fs.remove(tempDir, { recursive: true, force: true });
+      }).pipe(provideScopedLayer(PlatformLayer))
+    ));
+
+  it("retains each completed inner lane when its wrapper is interrupted", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const tempDir = yield* fs.makeTempDirectory();
+        const artifactPath = path.join(tempDir, "inner-lanes.ndjson");
+        const waves = [
+          GithubCheckLaneWaveSpec.make({
+            wave: "preflight",
+            lanes: [
+              githubCheckTestLane("first", "preflight", "process.exit(0)"),
+              githubCheckTestLane("second", "preflight", "process.exit(0)"),
+              githubCheckTestLane("interrupted", "preflight", "await Bun.sleep(60_000)"),
+            ],
+          }),
+        ];
+
+        yield* withEnvVarEffect(
+          QUALITY_TASK_LANE_RUN_ARTIFACT_PATH_ENV,
+          artifactPath,
+          withEnvVarEffect(
+            QUALITY_TASK_LANE_RUN_PARENT_ID_ENV,
+            "full:02-ci-parity",
+            Effect.gen(function* () {
+              const wrapper = yield* Effect.forkChild(
+                runQualityTaskGithubCheckLaneWaves("pre-push", waves, "fail-fast")
+              );
+              let lines = A.empty<string>();
+              for (let attempt = 0; attempt < 200 && A.length(lines) < 2; attempt++) {
+                yield* Effect.sleep("10 millis");
+                lines = pipe(
+                  yield* fs.readFileString(artifactPath).pipe(Effect.orElseSucceed(() => Str.empty)),
+                  Str.split("\n"),
+                  A.filter(Str.isNonEmpty)
+                );
+              }
+              yield* Fiber.interrupt(wrapper);
+              expect(lines).toHaveLength(2);
+              const reports = yield* Effect.forEach(lines, (line) =>
+                S.decodeEffect(S.fromJsonString(QualityTaskLaneRunReport))(line)
+              );
+              expect(A.flatMap(reports, (report) => A.map(report.lanes, (lane) => lane.id))).toEqual([
+                "first",
+                "second",
+              ]);
+            })
+          )
+        );
+        yield* fs.remove(tempDir, { recursive: true, force: true });
+      }).pipe(provideScopedLayer(PlatformLayer))
+    ));
+
+  it("retains completed streaming lanes before the group returns", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const tempDir = yield* fs.makeTempDirectory();
+        const artifactPath = path.join(tempDir, "streaming-inner-lanes.ndjson");
+        yield* withEnvVarEffect(
+          QUALITY_TASK_LANE_RUN_ARTIFACT_PATH_ENV,
+          artifactPath,
+          withEnvVarEffect(
+            QUALITY_TASK_LANE_RUN_PARENT_ID_ENV,
+            "full:02-ci-parity",
+            Effect.gen(function* () {
+              const wrapper = yield* Effect.forkChild(
+                runQualityTaskStreamingLaneGroup(
+                  "ci:local",
+                  [
+                    ["first", bunScriptStep("ci:first", "process.exit(0)"), O.none()],
+                    ["second", bunScriptStep("ci:second", "process.exit(0)"), O.none()],
+                    ["interrupted", bunScriptStep("ci:interrupted", "await Bun.sleep(60_000)"), O.none()],
+                  ],
+                  1
+                )
+              );
+              let lines = A.empty<string>();
+              for (let attempt = 0; attempt < 200 && A.length(lines) < 2; attempt++) {
+                yield* Effect.sleep("10 millis");
+                lines = pipe(
+                  yield* fs.readFileString(artifactPath).pipe(Effect.orElseSucceed(() => Str.empty)),
+                  Str.split("\n"),
+                  A.filter(Str.isNonEmpty)
+                );
+              }
+              yield* Fiber.interrupt(wrapper);
+              expect(lines).toHaveLength(2);
+              const reports = yield* Effect.forEach(lines, (line) =>
+                S.decodeEffect(S.fromJsonString(QualityTaskLaneRunReport))(line)
+              );
+              expect(A.flatMap(reports, (report) => A.map(report.lanes, (lane) => lane.id))).toEqual([
+                "first",
+                "second",
+              ]);
+            })
+          )
+        );
         yield* fs.remove(tempDir, { recursive: true, force: true });
       }).pipe(provideScopedLayer(PlatformLayer))
     ));
@@ -1904,6 +2137,69 @@ describe("quality task adapter", () => {
       O.none()
     );
   });
+
+  it("plans package-owned tsgo tasks without filesystem-dependent coverage", () => {
+    const group = {
+      packageName: "@beep/example",
+      packageDir: "/repo/packages/example",
+      tsconfigPath: "/repo/packages/example/tsconfig.test.json",
+      files: ["/repo/packages/example/test/example.test.ts"],
+      hasTaskScript: true,
+    };
+
+    expect(testTsgoPlanningForTesting.isTestFile(group.files[0] ?? "", "example.test.ts")).toBe(true);
+    expect(testTsgoPlanningForTesting.isTestFile("/repo/packages/example/src/example.ts", "example.ts")).toBe(false);
+    expect(
+      testTsgoPlanningForTesting.isTestFile("/repo/packages/example/test/fixtures/example.test.ts", "example.test.ts")
+    ).toBe(false);
+    expect(testTsgoPlanningForTesting.isTestFile("/repo/packages/example/test/example.js", "example.js")).toBe(false);
+    expect(testTsgoPlanningForTesting.isIgnoredDirectory("/repo/packages/example/node_modules/", "node_modules")).toBe(
+      true
+    );
+    expect(testTsgoPlanningForTesting.isIgnoredDirectory("/repo/packages/example/test/fixtures/", "fixtures")).toBe(
+      true
+    );
+    expect(testTsgoPlanningForTesting.isIgnoredDirectory("/repo/packages/example/src/", "src")).toBe(false);
+    expect(testTsgoPlanningForTesting.packageLabel("/repo", "/repo/packages/@beep/example")).toBe(
+      "packages-beep-example"
+    );
+
+    expect(testTsgoPlanningForTesting.turboArgs([group], [])).toEqual([
+      "run",
+      "package-test-typecheck",
+      "--concurrency=1",
+      "--continue=always",
+      "--output-logs=none",
+      "--summarize",
+      "--filter=@beep/example",
+    ]);
+    expect(testTsgoPlanningForTesting.turboArgs([group], ["--explain"])).toEqual([
+      "run",
+      "package-test-typecheck",
+      "--concurrency=1",
+      "--continue=always",
+      "--output-logs=none",
+      "--summarize",
+      "--filter=@beep/example",
+      "--",
+      "--explain",
+    ]);
+    expect(testTsgoPlanningForTesting.turboSummaryPath("ok\nSummary: .turbo/runs/example.json\n")).toEqual(
+      O.some(".turbo/runs/example.json")
+    );
+    expect(testTsgoPlanningForTesting.turboSummaryPath("no summary")).toEqual(O.none());
+    expect(testTsgoPlanningForTesting.turboSummaryPath("Summary:   ")).toEqual(O.none());
+  });
+
+  it.effect("places package-owned tsgo results in the package Turbo directory", () =>
+    Effect.gen(function* () {
+      const path = yield* Path.Path;
+
+      expect(testTsgoPlanningForTesting.packageResultPath(path, "/repo/packages/example")).toBe(
+        "/repo/packages/example/.turbo/package-test-typecheck-result.json"
+      );
+    }).pipe(provideScopedLayer(NodePath.layer))
+  );
 
   it("normalizes Knip findings with stable ordering and without position fields", () =>
     Effect.runPromise(

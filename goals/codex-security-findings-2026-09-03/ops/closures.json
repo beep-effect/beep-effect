@@ -1,0 +1,159 @@
+{
+  "meta": {
+    "schemaVersion": "codex-closure-ledger/v1",
+    "repository": "kriegcloud/beep-effect",
+    "packet": "goals/codex-security-findings-2026-09-03",
+    "capturedCount": 12,
+    "closureCount": 12,
+    "handoffCount": 0,
+    "verifiedAt": "2026-09-03",
+    "auditMethod": "Signed-in Closed view sorted by detection time; every title matched its exact Codex ID, exposed Reopen, and reported reason Fixed."
+  },
+  "mergeEvidence": {
+    "pullRequest": 949,
+    "headCommit": "fcadee1064e33fe45c85a5a2cc2c129d81a12c5a",
+    "mergeCommit": "e552d7da19033c2ce1d2d9b1d30003956f29e298",
+    "mergedAt": "2026-09-03",
+    "workflowRun": 33764892254,
+    "requiredChecks": "passed (23/23 repository jobs)",
+    "reviewThreadTotal": 7,
+    "unresolvedReviewThreads": 0,
+    "greptileScore": "5/5",
+    "greptileIssues": 0,
+    "vercelException": "Two deployment failures were rate-limit-only."
+  },
+  "closures": [
+    {
+      "csfId": "CSF-001",
+      "codexId": "033be00d8a588191b81f6e3d5246ac8a",
+      "status": "closed",
+      "reason": "Already fixed",
+      "closedAt": "2026-09-03",
+      "evidence": {
+        "pullRequest": 949,
+        "closureMode": "manual-already-fixed"
+      }
+    },
+    {
+      "csfId": "CSF-002",
+      "codexId": "165a5b8ffce48191aaced1bb8554e022",
+      "status": "closed",
+      "reason": "Already fixed",
+      "closedAt": "2026-09-03",
+      "evidence": {
+        "pullRequest": 949,
+        "closureMode": "manual-already-fixed"
+      }
+    },
+    {
+      "csfId": "CSF-003",
+      "codexId": "31937b1d88088191a99249e49086b3f7",
+      "status": "closed",
+      "reason": "Already fixed",
+      "closedAt": "2026-09-03",
+      "evidence": {
+        "pullRequest": 949,
+        "closureMode": "manual-already-fixed"
+      }
+    },
+    {
+      "csfId": "CSF-004",
+      "codexId": "34129b90da2881919145836d5bb422c5",
+      "status": "closed",
+      "reason": "Already fixed",
+      "closedAt": "2026-09-03",
+      "evidence": {
+        "pullRequest": 949,
+        "closureMode": "manual-already-fixed"
+      }
+    },
+    {
+      "csfId": "CSF-005",
+      "codexId": "65579c81b8708191b6120fafce470a09",
+      "status": "closed",
+      "reason": "Already fixed",
+      "closedAt": "2026-09-03",
+      "evidence": {
+        "pullRequest": 949,
+        "closureMode": "manual-already-fixed"
+      }
+    },
+    {
+      "csfId": "CSF-006",
+      "codexId": "7841f1bd6ca08191b44b026fb6ffe730",
+      "status": "closed",
+      "reason": "Already fixed",
+      "closedAt": "2026-09-03",
+      "evidence": {
+        "pullRequest": 949,
+        "closureMode": "manual-already-fixed"
+      }
+    },
+    {
+      "csfId": "CSF-007",
+      "codexId": "84c1f9753c888191a7d8a94ac8d55f03",
+      "status": "closed",
+      "reason": "Already fixed",
+      "closedAt": "2026-09-03",
+      "evidence": {
+        "pullRequest": 949,
+        "closureMode": "manual-already-fixed"
+      }
+    },
+    {
+      "csfId": "CSF-008",
+      "codexId": "af1409097bf48191b4481ecd0b9e90d6",
+      "status": "closed",
+      "reason": "Already fixed",
+      "closedAt": "2026-09-03",
+      "evidence": {
+        "pullRequest": 949,
+        "closureMode": "manual-already-fixed"
+      }
+    },
+    {
+      "csfId": "CSF-009",
+      "codexId": "b027eb838a648191b339e4c1550417da",
+      "status": "closed",
+      "reason": "Already fixed",
+      "closedAt": "2026-09-03",
+      "evidence": {
+        "pullRequest": 949,
+        "closureMode": "manual-already-fixed"
+      }
+    },
+    {
+      "csfId": "CSF-010",
+      "codexId": "c7fa61c5b0108191bf651b60c4e142ac",
+      "status": "closed",
+      "reason": "Already fixed",
+      "closedAt": "2026-09-03",
+      "evidence": {
+        "pullRequest": 949,
+        "closureMode": "manual-already-fixed"
+      }
+    },
+    {
+      "csfId": "CSF-011",
+      "codexId": "e92c5a6b08ac819194c3de102e0f9935",
+      "status": "closed",
+      "reason": "Already fixed",
+      "closedAt": "2026-09-03",
+      "evidence": {
+        "pullRequest": 949,
+        "closureMode": "manual-already-fixed"
+      }
+    },
+    {
+      "csfId": "CSF-012",
+      "codexId": "ee6b279568bc8191aab576d4c1ea9783",
+      "status": "closed",
+      "reason": "Already fixed",
+      "closedAt": "2026-09-03",
+      "evidence": {
+        "pullRequest": 949,
+        "closureMode": "manual-already-fixed"
+      }
+    }
+  ]
+}

@@ -83,6 +83,15 @@ export * from "./duckdb.ts";
  */
 export * from "./file-inventory.ts";
 /**
+ * Telemetry-v2 flight records: structurally separate semantic and mechanical
+ * inputs, privacy-safe evidence references, and durable invalid/quarantine events.
+ * Examples live on the owning declarations in `./flight-record.ts`.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./flight-record.ts";
+/**
  * The durable forwarder workflow that discovers sources, ingests transcripts,
  * writes derived storage, and exports spans in one pass. Examples live on the
  * owning declarations in `./forwarder.ts`.
@@ -118,6 +127,15 @@ export * from "./identity-registry.ts";
  * @since 0.0.0
  */
 export * from "./ingest.ts";
+/**
+ * Telemetry-v2 enumerate-before-read denominators and exact final coverage
+ * attestations. Examples live on the owning declarations in
+ * `./ingest-manifest.ts`.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./ingest-manifest.ts";
 /**
  * Install specs and deploy targets: the storage layout, unit text, and operator
  * command plans for a collector deployment. Examples live on the owning
@@ -190,6 +208,15 @@ export * from "./scorecard.ts";
  */
 export * from "./sequence-break.ts";
 /**
+ * Telemetry-v2 active-session leases, exact wait transitions, expiry
+ * candidates, and source-gated tombstone reconciliation. Examples live on the
+ * owning declarations in `./session-lease.ts`.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./session-lease.ts";
+/**
  * Shell rendering helpers used to build the operator command strings printed by
  * install plans. Examples live on the owning declarations in `./shell.ts`.
  *
@@ -206,3 +233,21 @@ export * from "./shell.ts";
  * @since 0.0.0
  */
 export * from "./source-discovery.ts";
+/**
+ * Canonical telemetry-v2 lifecycle, phase, wait, outcome, evidence, skip,
+ * instrument, and confidentiality vocabularies. Examples live on the owning
+ * declarations in `./telemetry-v2.ts`.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./telemetry-v2.ts";
+/**
+ * Durable telemetry-v2 service: enumerate-before-read ingest sequencing,
+ * service-derived flight records, and content-addressed atomic artifacts.
+ * Examples live on the owning declarations in `./telemetry-v2-store.ts`.
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export * from "./telemetry-v2-store.ts";
