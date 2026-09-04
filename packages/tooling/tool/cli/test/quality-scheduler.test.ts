@@ -227,7 +227,9 @@ const readJournalEvents = Effect.fnUntraced(function* (root: string) {
 const readAttemptJournalEvents = Effect.fnUntraced(function* (checkoutRoot: string, branch: string) {
   const fs = yield* FileSystem.FileSystem;
   const text = yield* fs.readFileString(yield* attemptJournalPathForCheckout(checkoutRoot, branch));
-  return yield* Effect.forEach(pipe(text, Str.split("\n"), A.filter(Str.isNonEmpty)), decodeYeetAttemptJournalEvent);
+  return yield* Effect.forEach(pipe(text, Str.split("\n"), A.filter(Str.isNonEmpty)), (line) =>
+    decodeYeetAttemptJournalEvent(line)
+  );
 });
 
 const journalAdmitted = (index: number) =>

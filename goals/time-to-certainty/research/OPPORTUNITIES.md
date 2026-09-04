@@ -215,3 +215,12 @@ session/machine ids, quote only the minimal identifying error text.
 - **Would have prevented it:** never cancel a run on an unreplaced head; GitHub concurrency already
   cancels superseded runs on push. The rule now sits in every lane brief and belongs in the lane
   launcher's standing instructions.
+
+## 2026-09-03 — The station proof set missed an overloaded test callback
+
+- **Doing:** proving the A5d protocol-deferred claim transition before its review-fix push.
+- **Evidence:** the allowed repo-cli check and focused Vitest file passed, but hosted Heavy Check's
+  test-typecheck pass rejected a direct overloaded schema decoder passed to `Effect.forEach` and
+  reported the resulting unknown error and requirements channels in the two new tests.
+- **Would have prevented it:** expose a package-scoped test-typecheck command that accepts one test
+  file, and include it in station instructions whenever new Effect-based test helpers are added.
