@@ -176,3 +176,12 @@ session/machine ids, quote only the minimal identifying error text.
   `indirect` kind that records an untouched caller whose coverage changed because its callee or
   driving fixture changed, so the ratchet identifies the causal PR without presenting the caller
   as a direct source regression.
+
+## 2026-09-03 — B6 closeout lacked the default-off protocol transition
+
+- **Doing:** reviewing the docs-only B6 closeout after A5c's crash-recoverable claims merged.
+- **Evidence:** `appendAdmissionEvictionJournalEvent` returned false on a fresh host, while
+  `processReapClaim` marked the admission sink complete and deleted its sole durable claim anyway.
+- **Would have prevented it:** gate B6 completion on one real-filesystem scenario that starts with
+  eviction emission off, proves the same claim stays pending across reap passes, enables emission,
+  and observes one idempotent eviction row before claim deletion.

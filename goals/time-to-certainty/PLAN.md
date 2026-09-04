@@ -38,10 +38,15 @@ orchestrator owns schemas, contracts, and judgment.
       survive every rewrite path. Owed follow-up (recorded in `research/OPPORTUNITIES.md`): split
       `normalizeJournal` (cyclomatic 10); the shared staging-file atomic rewrite already lives in
       `JournalFile.ts` (`publishJournalTextAtomically`).
-- [ ] A5c crash-recoverable admission claims: make reaper claims discoverable durable outboxes with
-      per-sink acknowledgements; retry incomplete attempt/admission emissions; journal ticket-to-lease
-      promotion as one recoverable nonce-keyed lifecycle; adopt generation-fenced journal-lock reap
-      claims; and fence every new journal-lock generation with pid plus process-start identity.
+- [x] A5c crash-recoverable admission claims — done 2026-09-03 (PR #993 merged as 00655a974e): reaper
+      claims are durable, discoverable records with per-sink acknowledgement that a crashed reaper's
+      successor adopts; ticket-to-lease promotion is a nonce-keyed recoverable transition; journal-lock
+      ownership is fenced by pid plus process-start identity within one identity source; reclaim and
+      release take the lock by atomic rename, verify the generation, and restore a newer generation
+      without clobbering; adopters are fenced at every destructive step and a stale adoption is taken
+      over after a bound; a fence can abort a publish but never lose an event, because the lock
+      boundary re-acquires and re-runs the whole operation; admission ordering is a total order
+      (rank, enqueue instant, nonce).
 - [x] B1 package verification through the Turbo graph — done 2026-09-03 (PR #967 merged as
       715c6a5767): `package-verify` builds the package's upstream graph before verifying, so a stale
       upstream dist can no longer raise a P0; environment-only attribution when no package source
@@ -57,11 +62,11 @@ orchestrator owns schemas, contracts, and judgment.
       reads, the quad still fails closed, and the health probe names failing variables only).
 - [ ] B3 cheap precise gates first, wave fails immediately; ordering seeded from A1.
 - [ ] B5 detached durable proof jobs in their own systemd user scope with inbox completion.
-- [~] B6 lease and submitter death journaled as admission events — rows landed in PR #964 and their
-      emission gated behind the unknown-row preservation rollout in PR #978 (c772d25970);
-      complete when A5c (PR #993) makes the reap claim crash-recoverable, because today a reaper that
-      dies after renaming an entry to its claim but before appending the termination events leaves
-      that death unjournaled.
+- [x] B6 lease and submitter death journaled as admission events — completed 2026-09-03 (PR #1005):
+      rows landed in PR #964, emission was gated behind the unknown-row preservation rollout in PR
+      #978, and PR #993 made each death a crash-recoverable per-sink claim. A disabled admission sink
+      now persists as `pending-protocol-off`; every reap pass retries the same claim, and the first
+      enabled pass writes or acknowledges the idempotent eviction row before deleting the claim.
 
 ## P2 — Proof reuse
 
