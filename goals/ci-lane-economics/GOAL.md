@@ -4,33 +4,43 @@ You are executing `goals/ci-lane-economics`. Read `SPEC.md` and `PLAN.md`
 first; the ledger is `research/OPPORTUNITIES.md` (record friction at the
 moment it happens).
 
-Current phase: P3 live validation. P0-P2 are complete: every
-signed zero-expansion placement and lane-shape move is merged through PR #719.
-The representative 2026-08-23 through 2026-08-29 UTC week proves Coverage
-Regression at 16m26s p95 but fails the charter on Lint at 20m31s and Test Unit
-at 22m48s; see `research/live-week-p95.md`. The first complete week under the
-current 17-context ruleset still fails at Lint 21m00s and Test Unit 24m50s;
-see `research/current-ruleset-week-p95.md`. Tail evidence is in
-`research/tail-attribution.md`.
+Current phase: P3 admission window open. PR #982 merged at
+`2026-09-03T19:35:51Z`; its $0 repair runs two deterministic Lint shards,
+three Test Unit shards, literal-name aggregators, and the guarded cleanup skip
+on free hosted runners. The first complete half-open UTC week after merge is
+canonically:
 
-The signed $0 repair in `research/repair-decision.md` landed in PR #982:
-`.github/workflows/check.yml` now runs two deterministic Lint package shards,
-three Test Unit shards with `@beep/repo-cli#test` isolated, literal-name
-aggregators, and a guarded cleanup skip; `beep ci lane --partition` proves and
-executes each shard. It keeps free hosted runners and concurrency two, adds no
-fleet job or spend, and leaves ruleset `10240248`'s exact 17 required contexts
-unchanged.
+`2026-09-04T00:00:00Z` → `2026-09-11T00:00:00Z`.
 
-Only live validation remains after PR #982 merges. Collect a fresh
-representative half-open UTC week using attempt-one successful runs, measure
-each effective shard critical path from the earliest shard start through its
-aggregator completion, and verify that the required set is exactly 17. Admit
-the repair only if both Lint and Test Unit effective p95 are below 20m00s.
-P3 remains in progress until that gate passes.
+After the interval closes, run exactly:
 
-Failed, cancelled, or rerun attempts feed flake attribution and admission or
-rollback decisions, never the duration percentiles. The exit bar remains p95,
-not the median or the short aggregator span — the charter says no one waits.
+```sh
+bun run beep ci lane-timings --window --workflow check.yml --event all --since 2026-09-04T00:00:00Z --until 2026-09-11T00:00:00Z --markdown
+```
+
+The command reads live contexts from ruleset `10240248`, fails closed unless
+their normalized set size is exactly 18, paginates every Check run and job,
+and retains run/event/head/time/attempt provenance. Only attempt-one successful
+non-negative spans enter nearest-rank p50/p95. For Lint and Test Unit the span
+runs from the earliest successful shard start through the successful literal
+aggregator completion; pickup is separate. Failures, cancellations, reruns,
+invalid spans, and incomplete shard sets remain attribution only.
+
+The required population is 18 contexts since 2026-09-03T17:12:53Z, when
+`JSDoc Ratchet` was promoted to a required context; that lane enters the same
+20m00s measurement as every other required lane, and the whole admission
+window runs under this ruleset. A required set other than 18 rejects the census
+until the packet ratifies a new population.
+
+Write `research/admission-week-p95.md` from the emitted successful-duration
+and attribution tables. Include the verdict for every required lane, the Lint
+and Test Unit effective p95 values, and the shard-pickup queue tripwire (breach
+when p95 is greater than 5m00s). Admit only when every required p95 is below
+20m00s and the context-set check passes.
+
+Close in order: mark PLAN P3 complete, complete the manifest lifecycle, run
+`/reflect ci-lane-economics`, then fire `ci-fleet-endgame` P6. Until the census
+passes, P3 and the manifest stay active.
 
 Rules: placement changes ride `.github/workflows/**` PRs through Yeet; the
 $100/mo projection and $200/mo ceiling from

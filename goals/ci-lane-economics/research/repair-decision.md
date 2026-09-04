@@ -247,3 +247,16 @@ The next lane, and only the next lane, changes execution shape through a
    exact-head required checks must pass. After the orchestrator-authorized
    merge, run the fresh representative-week admission above; only that week
    can complete P3 and the packet.
+
+## Admission revision — 2026-09-03
+
+Ruleset `10240248` was changed at 2026-09-03T17:12:53Z, after this decision was
+signed and before PR #982 merged at 19:35:51Z, to add `JSDoc Ratchet` as an
+eighteenth required context. The signed safety clause that the required set
+must "remain exactly its 17 contexts" is therefore superseded for admission:
+the ratified population is the 18 live contexts, `JSDoc Ratchet` is measured
+against the same 20m00s p95 bar as every other required lane, and the
+`beep ci lane-timings --window` census fails closed on any count other than 18.
+No shard, aggregator, placement, or spend changes; the cost gate is unchanged.
+
+Revised: **Codex-orchestrated, Fable execution session, 2026-09-03**
