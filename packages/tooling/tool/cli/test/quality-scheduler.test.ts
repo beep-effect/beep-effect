@@ -628,6 +628,7 @@ describe("quality-scheduler", () => {
       state: {
         dead: [],
         deadLeases: [],
+        deadTickets: [],
         leases: [],
         quarantined: [],
         tickets: [],
