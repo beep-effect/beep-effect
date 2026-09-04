@@ -46,8 +46,9 @@ P2 Verify — in progress.
 - `beep/no-inline-schema-compile` is configured as an error. Focused policy,
   assertion, and manually migrated package tests are green. The 106-package
   owner matrix is green, and the post-merge `@beep/repo-cli` family was
-  reverified after its newly introduced compilers were hoisted. Exact-head
-  Yeet verification remains in progress.
+  reverified after its newly introduced compilers were hoisted. The isolated
+  1,000-file test-TSGo gate and `@beep/html` generated-output check are green.
+  Exact-head Yeet verification remains in progress.
 
 ## Notes
 

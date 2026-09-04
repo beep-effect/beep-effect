@@ -263,9 +263,22 @@
 - **Evidence:** The managed lane reached `tsgo -p tsconfig.check.json` and then
   failed to spawn the configured Node runtime with `EPERM`. In the unrestricted
   checkout, the exact package verifier passed with audit and docgen green after
-  the merged inline compilers were hoisted at
-  `ff8164457af9825cb48e37400698727c143675ab`; the P0 inbox row was acknowledged
-  as environment-only.
+  the merged inline compilers were hoisted. The P0 inbox row was acknowledged
+  with fix SHA `ff8164457af9825cb48e37400698727c143675ab`.
 - **Prevention:** Start canonical package and Yeet proof sessions with a
   verified Full-access permission profile, and preserve that profile across
   Desktop task continuation.
+
+## 2026-09-03 — Test-TSGo temp configs collided across checkout runners
+
+- **Work:** Publish the current compiler-hoist implementation through the
+  canonical Yeet full proof.
+- **Evidence:** Two overlapping Bun/Turbo trees in the same checkout shared
+  `node_modules/.tmp/tsgo-test-checks`. One runner's recursive cleanup removed
+  the other runner's synthetic `@beep/uspto-mcp` and `@beep/ontology-domain`
+  configs, producing TS5058 missing-path failures with no compiler diagnostic.
+  After the overlap ended, an isolated rerun checked the same 1,000 files
+  across 138 packages and passed without diagnostics.
+- **Prevention:** Give each test-TSGo run a run-scoped temp directory, or
+  serialize the command per checkout before creating and recursively removing
+  synthetic configs.
