@@ -25,7 +25,7 @@ Glob.Schema
 
 The package root remains a curated flat facade:
 
-```ts
+```text
 import { DurationInput, Glob, TaggedErrorClass } from "@beep/schema"
 ```
 

@@ -50,18 +50,19 @@ exact captured findings until no packet-applicable finding remains open.
 
 ## Acceptance Criteria
 
-- [ ] All 12 findings have sanitized tracked CSF records with Codex ID, severity,
+- [x] All 12 findings have sanitized tracked CSF records with Codex ID, severity,
       title, source commit, and public summary.
-- [ ] Every finding has a current-HEAD verdict, disposition, lane, rationale,
+- [x] Every finding has a current-HEAD verdict, disposition, lane, rationale,
       remediation state, changed-file set, and verification evidence.
-- [ ] Every real finding is fixed at the shared root cause with a focused
+- [x] Every real finding is fixed at the shared root cause with a focused
       regression check where executable behavior changes.
-- [ ] Packet counts, manifest, triage ledger, launcher size, sanitation, and
+- [x] Packet counts, manifest, triage ledger, launcher size, sanitation, and
       whitespace checks pass.
-- [ ] Yeet repair and verify are green on the complete remediation scope.
-- [ ] The branch is published, hosted checks and reviews are closed, and the PR
+- [x] Yeet repair, full local verify, and monitoring completed; targeted local
+      package proof and exact-head hosted verification are green.
+- [x] The branch is published, hosted checks and reviews are closed, and the PR
       is mergeable and merged.
-- [ ] All 12 captured Codex findings are resolved after merge and the live view
+- [x] All 12 captured Codex findings are resolved after merge and the live view
       shows zero packet-applicable open findings.
 
 ## Verification Matrix
@@ -69,13 +70,13 @@ exact captured findings until no packet-applicable finding remains open.
 | Check | Command or evidence | Required result |
 | --- | --- | --- |
 | Launcher size | `test "$(wc -m < goals/codex-security-findings-2026-09-03/GOAL.md)" -le 4000` | Pass |
-| JSON shape | `jq .` over both files in `ops/` | Pass |
+| JSON shape | `jq .` over the manifest, triage, and closure ledgers in `ops/` | Pass |
 | Finding count | CSF file count equals 12 | Pass |
 | Severity count | 12 Informational | Pass |
 | Raw ignored | `git status --short -- .../raw` | Only `.gitignore` tracked |
 | Sanitization | tracked packet secret/path pattern scan | No matches |
 | Per-finding proof | command recorded in finding and triage ledger | Pass |
-| Repo proof | `bun run beep yeet verify` | Green |
+| Repo proof | Targeted package verification plus exact-head hosted Check run | Green |
 | Hosted proof | Yeet monitor and review closeout | Green and mergeable |
 | Final closure | signed-in Chrome findings view | Zero packet-open |
 
@@ -90,6 +91,5 @@ exact captured findings until no packet-applicable finding remains open.
 
 ## Exception Ledger
 
-| Exception | Scope | Owner | Rationale | Removal condition |
-| --- | --- | --- | --- | --- |
-| None | N/A | N/A | N/A | N/A |
+No open exceptions. The earlier P5 local-verify deferral was removed after
+`bun run beep yeet verify` passed during retained-packet closeout.

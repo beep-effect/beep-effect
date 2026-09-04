@@ -1,0 +1,86 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "yeet-pr-resume-footer",
+    "packetId": "goal-packet/v1:658ec343e315648d68dbd7b8d4d368d0467fcc8fcbe62ad7048a3cf2540e4ea9",
+    "title": "Yeet PR resume footer",
+    "status": "completed-retained",
+    "created": "2026-09-03",
+    "updated": "2026-09-03",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/yeet-pr-resume-footer",
+  "lifecycle": "completed-retained",
+  "mission": "Every Yeet PR is a durable bookmark to its originating workspace and agent sessions, with a number-only resume block that leaks nothing local.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/yeet-pr-resume-footer/README.md",
+    "goals/yeet-pr-resume-footer/SPEC.md",
+    "goals/yeet-pr-resume-footer/PLAN.md",
+    "goals/yeet-pr-resume-footer/GOAL.md",
+    "goals/yeet-pr-resume-footer/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/yeet-pr-resume-footer/GOAL.md"
+    }
+  ],
+  "provides": [],
+  "requires": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "complete"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "complete"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "complete"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "complete"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "complete"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/yeet-pr-resume-footer/GOAL.md)\" -le 4000",
+    "jq . goals/yeet-pr-resume-footer/ops/manifest.json",
+    "rg -n \"yeet-pr-resume-footer|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/yeet-pr-resume-footer",
+    "git diff --check -- goals/yeet-pr-resume-footer",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "The implementation would exceed named scope.",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "The same blocker repeats after reasonable investigation."
+  ],
+  "statusNote": "PR #975 drove to merge-ready on 2026-09-03; PR 2 surfaces are listed in PLAN.md."
+}

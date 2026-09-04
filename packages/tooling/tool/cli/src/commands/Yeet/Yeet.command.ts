@@ -7,10 +7,12 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { Fn, LiteralKit, SchemaUtils } from "@beep/schema";
-import { Match } from "effect";
+import { ConfigProvider, Effect, Match } from "effect";
 import * as A from "effect/Array";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { Argument, Command, Flag } from "effect/unstable/cli";
+import { yeetStateRootEnvVar, yeetStateRootFlag } from "../../internal/cli/Flags.ts";
 import {
   runYeetFallowFeedback,
   runYeetFallowFixtureCheck,
@@ -28,6 +30,9 @@ import {
   runYeetSweep,
   runYeetWatchLoop,
 } from "./internal/Porcelain.ts";
+import { PositiveInt, ResumeOptions } from "./internal/Resume.schemas.ts";
+import { parsePrRef, runYeetResume } from "./internal/Resume.ts";
+import { YeetCommandError } from "./Yeet.errors.ts";
 import { YeetRunOptions } from "./Yeet.schemas.ts";
 import type { YeetRunMode } from "./internal/Planner.ts";
 
@@ -49,6 +54,41 @@ const headFlag = Flag.string("head").pipe(
 );
 
 const jsonFlag = Flag.boolean("json").pipe(Flag.withDefault(false), Flag.withDescription("Render plan output as JSON"));
+
+const resumeListFlag = Flag.boolean("list").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("List every locally recorded agent for the pull request")
+);
+const resumePrintFlag = Flag.boolean("print").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Print the resolved local command without executing it")
+);
+const resumeForceFlag = Flag.boolean("force").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Resume even when the recorded Claude session is already live")
+);
+const resumeAgentFlag = Flag.integer("agent").pipe(
+  Flag.optional,
+  Flag.withDescription("Select a one-based agent from the newest-first ledger")
+);
+
+const provideYeetStateRoot = Effect.fn("Yeet.provideStateRoot")(function* <A, E, R>(
+  effect: Effect.Effect<A, E, R>,
+  stateRoot: O.Option<string>
+) {
+  return yield* O.match(stateRoot, {
+    onNone: () => effect,
+    onSome: (root) =>
+      Effect.flatMap(ConfigProvider.ConfigProvider, (current) =>
+        effect.pipe(
+          Effect.provideService(
+            ConfigProvider.ConfigProvider,
+            ConfigProvider.orElse(ConfigProvider.fromUnknown({ [yeetStateRootEnvVar]: root }), current)
+          )
+        )
+      ),
+  });
+});
 
 const packetDirFlag = Flag.string("packet-dir").pipe(
   Flag.withDescription("Ignored directory for yeet run context, logs, and packets"),
@@ -357,6 +397,7 @@ const publishFlags = {
   pushOnly: pushOnlyFlag,
   reuseVerified: reuseVerifiedFlag,
   stagedOnly: stagedOnlyFlag,
+  stateRoot: yeetStateRootFlag,
   startPrEarly: startPrEarlyFlag,
   summary: summaryFlag,
 } as const;
@@ -378,6 +419,7 @@ const untilEventFlag = Flag.boolean("until-event").pipe(
 const monitorFlags = {
   ...sharedFlags,
   summary: summaryFlag,
+  stateRoot: yeetStateRootFlag,
   untilEvent: untilEventFlag,
   untilMerged: untilMergedFlag,
   watch: watchFlag,
@@ -496,9 +538,9 @@ const yeetRepairCommand = Command.make("repair", sharedFlags, (options) => runYe
   Command.withDescription("Run deterministic fixers and artifact generators, then affected feedback")
 );
 
-const yeetPublishCommand = Command.make("publish", publishFlags, (options) => runYeetMode("publish", options)).pipe(
-  Command.withDescription("Commit reviewed staged changes, prove the commit, then push")
-);
+const yeetPublishCommand = Command.make("publish", publishFlags, ({ stateRoot, ...options }) =>
+  provideYeetStateRoot(runYeetMode("publish", options), stateRoot)
+).pipe(Command.withDescription("Commit reviewed staged changes, prove the commit, then push"));
 
 const YeetMonitorCommandRoute = LiteralKit(["classic", "invalid-until-event", "merge-loop", "watch"]);
 
@@ -550,15 +592,22 @@ export const yeetMonitorCommandRoute = SelectYeetMonitorCommandRoute.implementSy
   )
 );
 
-const yeetMonitorCommand = Command.make("monitor", monitorFlags, ({ untilEvent, untilMerged, watch, ...options }) => {
-  const route = yeetMonitorCommandRoute({ plan: options.plan, untilEvent, untilMerged, watch });
-  return {
-    classic: runYeetMode("monitor", options),
-    "invalid-until-event": rejectYeetUntilEventPairing,
-    "merge-loop": runYeetMergeLoop(options),
-    watch: runYeetWatchLoop(options, untilEvent),
-  }[route];
-}).pipe(Command.withDescription("Monitor hosted PR checks for the current branch"));
+const yeetMonitorCommand = Command.make(
+  "monitor",
+  monitorFlags,
+  ({ stateRoot, untilEvent, untilMerged, watch, ...options }) => {
+    const route = yeetMonitorCommandRoute({ plan: options.plan, untilEvent, untilMerged, watch });
+    return provideYeetStateRoot(
+      {
+        classic: runYeetMode("monitor", options),
+        "invalid-until-event": rejectYeetUntilEventPairing,
+        "merge-loop": runYeetMergeLoop(options),
+        watch: runYeetWatchLoop(options, untilEvent),
+      }[route],
+      stateRoot
+    );
+  }
+).pipe(Command.withDescription("Monitor hosted PR checks for the current branch"));
 
 const yeetSweepCommand = Command.make("sweep", sweepFlags, (options) => runYeetSweep(options)).pipe(
   Command.withDescription("Reset the clone after a merge: prune refs, fast-forward main, delete merged branches")
@@ -579,6 +628,35 @@ const yeetCloseoutCommand = Command.make("closeout", closeoutFlags, (options) =>
 const yeetStatusCommand = Command.make("status", statusFlags, (options) => runYeetMode("status", options)).pipe(
   Command.withDescription("Summarize local Yeet operator status for the current branch")
 );
+
+const yeetResumeCommand = Command.make(
+  "resume",
+  {
+    ref: Argument.string("number|url").pipe(Argument.withDescription("Pull request number or GitHub pull request URL")),
+    list: resumeListFlag,
+    print: resumePrintFlag,
+    force: resumeForceFlag,
+    json: jsonFlag,
+    agent: resumeAgentFlag,
+    stateRoot: yeetStateRootFlag,
+  },
+  ({ ref, list, print, force, json, agent, stateRoot }) =>
+    parsePrRef(ref).pipe(
+      Effect.flatMap((parsed) =>
+        S.decodeEffect(S.Option(PositiveInt))(agent).pipe(
+          Effect.mapError(() =>
+            YeetCommandError.make({ message: "Agent selection must be a positive one-based integer.", exitCode: 4 })
+          ),
+          Effect.flatMap((validatedAgent) =>
+            provideYeetStateRoot(
+              runYeetResume(ResumeOptions.make({ ref: parsed, list, print, force, json, agent: validatedAgent })),
+              stateRoot
+            )
+          )
+        )
+      )
+    )
+).pipe(Command.withDescription("Resume an agent session recorded for a pull request"));
 
 const yeetPrePushHookCommand = Command.make("pre-push-hook", sharedFlags, (options) =>
   runYeetMode("pre-push-hook", options)
@@ -662,7 +740,7 @@ const yeetPlanContractCheckCommand = Command.make(
  * ```ts
  * import { yeetCommand } from "@beep/repo-cli/commands/Yeet"
  * import { Command } from "effect/unstable/cli"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const run = Command.run(yeetCommand, { version: "0.0.0" })
  * console.log(Effect.isEffect(run)) // true
@@ -671,7 +749,9 @@ const yeetPlanContractCheckCommand = Command.make(
  * @category cli-commands
  * @since 0.0.0
  */
-export const yeetCommand = Command.make("yeet", publishFlags, (options) => runYeetMode("publish", options)).pipe(
+export const yeetCommand = Command.make("yeet", publishFlags, ({ stateRoot, ...options }) =>
+  provideYeetStateRoot(runYeetMode("publish", options), stateRoot)
+).pipe(
   Command.withDescription("Repair, verify, or publish repository work with canonical quality proof"),
   Command.withSubcommands([
     yeetVerifyCommand,
@@ -680,6 +760,7 @@ export const yeetCommand = Command.make("yeet", publishFlags, (options) => runYe
     yeetMonitorCommand,
     yeetCloseoutCommand,
     yeetStatusCommand,
+    yeetResumeCommand,
     yeetSweepCommand,
     yeetMergeCommand,
     yeetReplyCommand,

@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -28,13 +28,16 @@ leave no packet-applicable finding open.
 3. [`PLAN.md`](./PLAN.md)
 4. [`ops/manifest.json`](./ops/manifest.json)
 5. [`ops/triage.json`](./ops/triage.json)
-6. [`findings/INDEX.md`](./findings/INDEX.md)
+6. [`ops/closures.json`](./ops/closures.json)
+7. [`findings/INDEX.md`](./findings/INDEX.md)
+8. [`history/reflections/2026-09-03-codex.md`](./history/reflections/2026-09-03-codex.md)
 
 ## Current Phase
 
-`P5 repo-proof` - all 12 findings are confirmed and remediated in seven
-shared-root lanes. Packet and repository proof are in progress; publication,
-merge, and exact-ID closure remain pending.
+`P9 close` - PR #949 merged all 12 remediations as
+`e552d7da19033c2ce1d2d9b1d30003956f29e298`. All 12 exact captured finding
+IDs are manually closed as `Already fixed`; the closure evidence and reflection
+are recorded, and this packet is retained as a completed audit trail.
 
 ## Findings at a glance
 

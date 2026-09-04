@@ -150,3 +150,77 @@
   test for the refusal path, including boundary revalidation and injected I/O
   failure callbacks. Run the full package-scoped coverage command and inspect
   changed-file rows before the first publish of a security batch.
+
+## 2026-09-03 — Auto-merge outran Yeet's strict closeout receipt
+
+- **What I was doing:** Running strict Yeet closeout immediately after the last
+  exact-head repository job passed on PR #949.
+- **Evidence:** GitHub auto-merged the PR at 14:32:02 UTC, four seconds after
+  the workflow reached terminal success. `beep yeet closeout` then rejected the
+  operation because the PR was no longer open, even though its exact head,
+  terminal checks, review threads, and Greptile result remained immutable and
+  queryable.
+- **What would have prevented it:** Yeet closeout should accept a just-merged PR
+  when the branch head matches the merged PR head and emit a terminal receipt
+  from the immutable hosted state instead of requiring an open PR.
+
+## 2026-09-03 — Codex closure list state lagged detail state
+
+- **What I was doing:** Closing and independently auditing the 12 exact captured
+  Codex finding IDs after PR #949 merged.
+- **Evidence:** The first `Already fixed` submission made the detail page expose
+  `Reopen` while the open-list row briefly remained visible and selection moved
+  asynchronously. Sorting the Closed view by detection time and reopening each
+  captured title proved all 12 exact URL identities, `Reopen` state, and fixed
+  reason without relying on the transient list count.
+- **What would have prevented it:** A packet-aware browser closeout helper should
+  select by captured title, assert the exact URL identity before submission,
+  then independently re-audit every ID from the Closed view before emitting a
+  sanitized closure ledger.
+
+## Base catch-up ran quality against stale dependencies (2026-09-03)
+
+- **What I was doing:** Preparing the post-merge closure-evidence PR after
+  merging the current `origin/main` into the closeout branch.
+- **Evidence:** The first `bun run beep yeet repair` used the pre-merge
+  dependency installation. It reported eight unexpected tsgo rules and four
+  missing-pipeable diagnostics in untouched `effect-drizzle` files. After
+  `bun install --frozen-lockfile` installed `@effect/tsgo` 0.39.1, both
+  `bun run beep quality tsgo-rules` and the 999-file
+  `bun run beep quality test-tsgo` inventory passed. The same repair ran
+  repo-wide docgen and failed on three missing examples in
+  `scratchpad/jsdoc-hover-lab.ts`, an ignored local file that predates this
+  branch and sits outside the packet delta.
+- **What would have prevented it:** After a base merge changes the lockfile or
+  toolchain catalog, Yeet should require a frozen install before repair. For a
+  packet-only branch with no affected workspace package, it should also
+  attribute an untouched repo-wide docgen failure to `origin/main` instead of
+  presenting it as a branch regression.
+
+## Hosted security audit coupled required CI to npm availability (2026-09-03)
+
+- **What I was doing:** Monitoring the exact-head Repo Sanity gate for the
+  post-merge closure-evidence PR.
+- **Evidence:** Attempts one and two of Check run `33816590684` passed every
+  preceding Repo Sanity sublane, then `bun audit` waited five minutes before
+  `registry.npmjs.org` returned HTTP 503. The identical local command reached
+  the registry and found no vulnerabilities across 2,332 packages, with only
+  the two documented advisory ignores.
+- **What would have prevented it:** The hosted audit lane should apply bounded
+  retry and backoff to registry 5xx and rate-limit responses, or isolate
+  transient registry availability in a retryable required job, while retaining
+  fail-closed behavior for actual advisories and malformed responses.
+
+## Yeet repeated the full compiler inventory before an orchestration failure (2026-09-03)
+
+- **What I was doing:** Running canonical full Yeet verification for the
+  review-driven retained-packet corrections.
+- **Evidence:** The cheap-gates inventory and the inventory nested under
+  `quality:check` each checked 999 files across 138 packages and passed. The
+  immediately following explicit `quality:check:tsgo-tests` invocation exited
+  in four seconds with `Failed to run package-test-typecheck Turbo tasks` and
+  no compiler diagnostic. An isolated rerun of the same full inventory passed.
+- **What would have prevented it:** Yeet should reuse a successful full-state
+  compiler receipt when the input digest is unchanged, or classify and retry a
+  Turbo task-launch failure separately from TypeScript diagnostics instead of
+  rerunning the same 999-file inventory three times in one proof.

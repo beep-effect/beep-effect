@@ -1,5 +1,5 @@
 /**
- * PID plus process-start identity probes shared by repo-run coordinators.
+ * Source-fenced process identities shared by repository-run coordination.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -11,15 +11,108 @@ import { Effect, FileSystem, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
 const $I = $RepoCliId.create("internal/repo-run/ProcessIdentity");
 
 /**
+ * Process-inspection source encoded into a durable start identity.
+ *
+ * **Example** (Inspect the supported sources)
+ *
+ * ```ts
+ * import { ProcessIdentitySource } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(ProcessIdentitySource.Options) // ["proc", "ps", "win"]
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const ProcessIdentitySource = LiteralKit(["proc", "ps", "win"]).pipe(
+  $I.annoteSchema("ProcessIdentitySource", {
+    description: "Process-inspection source carried by a durable start identity.",
+  })
+);
+
+/**
+ * Type represented by {@link ProcessIdentitySource}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ProcessIdentitySource = typeof ProcessIdentitySource.Type;
+
+/**
+ * Source-prefixed process start identity used to fence PID reuse.
+ *
+ * **Example** (Validate a procfs identity)
+ *
+ * ```ts
+ * import { ProcessStartIdentity } from "@beep/repo-cli/test/RepoRun"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ProcessStartIdentity)("proc:8241991")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const ProcessStartIdentity = S.TemplateLiteral([ProcessIdentitySource, ":", S.NonEmptyString]).pipe(
+  $I.annoteSchema("ProcessStartIdentity", {
+    description: "Process start identity prefixed by the inspection source that produced it.",
+  })
+);
+
+/**
+ * Type represented by {@link ProcessStartIdentity}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ProcessStartIdentity = typeof ProcessStartIdentity.Type;
+
+/**
+ * Result of inspecting a PID plus its recorded process start identity.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const ProcessIdentityStatus = LiteralKit(["alive", "dead", "unknown"]).pipe(
+  $I.annoteSchema("ProcessIdentityStatus", {
+    description: "Whether a recorded process identity is live, dead, or temporarily unverifiable.",
+  })
+);
+
+/**
+ * Type represented by {@link ProcessIdentityStatus}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ProcessIdentityStatus = typeof ProcessIdentityStatus.Type;
+
+interface ProcessIdentityOwner {
+  readonly pid: number;
+  readonly procStart: string;
+}
+
+const processIdentitySource = (identity: string): ProcessIdentitySource =>
+  A.findFirst(ProcessIdentitySource.Options, (source) => Str.startsWith(`${source}:`)(identity)).pipe(
+    O.getOrElse(ProcessIdentitySource.thunk.proc)
+  );
+
+const normalizeRecordedProcessIdentity = (identity: string): string =>
+  Str.startsWith(`${processIdentitySource(identity)}:`)(identity) ? identity : `proc:${identity}`;
+
+/**
  * Parse the process start time (field 22) out of `/proc/<pid>/stat` content.
  *
- * Splitting after the final `)` keeps executable names containing spaces or
- * parentheses from shifting the field index.
+ * **Details**
+ *
+ * Parsing begins after the final `)` so executable names containing spaces or
+ * parentheses cannot shift the field index.
  *
  * **Example** (Parse a stat line)
  *
@@ -33,7 +126,7 @@ const $I = $RepoCliId.create("internal/repo-run/ProcessIdentity");
  *
  * @param stat - Raw `/proc/<pid>/stat` file content.
  * @returns The start-time field when present.
- * @category utilities
+ * @category liveness
  * @since 0.0.0
  */
 export const parseAdmissionProcStatStartTime = (stat: string): O.Option<string> =>
@@ -45,7 +138,7 @@ export const parseAdmissionProcStatStartTime = (stat: string): O.Option<string> 
   );
 
 /**
- * Probe whether a pid is alive, counting `EPERM` as alive.
+ * Probe whether a PID is alive, counting `EPERM` as alive.
  *
  * **Example** (Probe the current process)
  *
@@ -57,8 +150,8 @@ export const parseAdmissionProcStatStartTime = (stat: string): O.Option<string> 
  * ```
  *
  * @param pid - Process id to probe with signal zero.
- * @returns Whether a process with this pid currently exists.
- * @category utilities
+ * @returns Whether a process with this PID currently exists.
+ * @category liveness
  * @since 0.0.0
  */
 export const isProcessPidAlive = (pid: number): Effect.Effect<boolean> =>
@@ -74,11 +167,7 @@ export const isProcessPidAlive = (pid: number): Effect.Effect<boolean> =>
 /**
  * Read the Linux process start time used to fence PID reuse.
  *
- * **Details**
- *
- * A missing or unreadable proc entry returns `None`.
- *
- * **Example** (Read the current process identity)
+ * **Example** (Read the current process start time)
  *
  * ```ts
  * import { processStartTimeForPid } from "@beep/repo-cli/test/RepoRun"
@@ -90,8 +179,8 @@ export const isProcessPidAlive = (pid: number): Effect.Effect<boolean> =>
  * ```
  *
  * @param pid - Process whose `/proc/<pid>/stat` start time is requested.
- * @returns The process start time when the proc entry is readable.
- * @category utilities
+ * @returns The unprefixed procfs start time when readable.
+ * @category liveness
  * @since 0.0.0
  */
 export const processStartTimeForPid = Effect.fnUntraced(function* (
@@ -102,6 +191,9 @@ export const processStartTimeForPid = Effect.fnUntraced(function* (
     .readFileString(`/proc/${pid}/stat`)
     .pipe(Effect.map(parseAdmissionProcStatStartTime), Effect.orElseSucceed(O.none<string>));
 });
+
+const procProcessStartIdentity = (pid: number): Effect.Effect<O.Option<string>, never, FileSystem.FileSystem> =>
+  processStartTimeForPid(pid).pipe(Effect.map(O.map((identity) => `proc:${identity}`)));
 
 const processStartIdentityProbe = (options: { readonly pid: number; readonly platform: NodeJS.Platform }) => {
   const { pid, platform } = options;
@@ -138,26 +230,39 @@ const processStartIdentityProbe = (options: { readonly pid: number; readonly pla
  */
 export const processStartIdentityProbeForTesting = processStartIdentityProbe;
 
-const processStartIdentityFromSystemCommand = (pid: number): Effect.Effect<O.Option<string>> =>
+const processStartIdentityFromSystemCommand = (pid: number, source: "ps" | "win"): Effect.Effect<O.Option<string>> =>
   Effect.try(() => {
-    const probe = processStartIdentityProbe({ pid, platform: process.platform });
+    const command = processStartIdentityProbe({ pid, platform: source === "win" ? "win32" : "linux" }).command;
     const result = Bun.spawnSync({
-      cmd: probe.command,
+      cmd: command,
       env: { ...Bun.env, LANG: "C", LC_ALL: "C" },
       stderr: "ignore",
       stdout: "pipe",
     });
     const output = Str.trim(result.stdout.toString());
-    return result.success && Str.isNonEmpty(output) ? O.some(`${probe.prefix}:${output}`) : O.none<string>();
+    return result.success && Str.isNonEmpty(output) ? O.some(`${source}:${output}`) : O.none<string>();
   }).pipe(Effect.orElseSucceed(O.none<string>));
 
+const probeRecordedProcessIdentity = (
+  pid: number,
+  recordedIdentity: string
+): Effect.Effect<O.Option<string>, never, FileSystem.FileSystem> => {
+  const source = processIdentitySource(normalizeRecordedProcessIdentity(recordedIdentity));
+  return ProcessIdentitySource.$match(source, {
+    proc: () => procProcessStartIdentity(pid),
+    ps: () => processStartIdentityFromSystemCommand(pid, "ps"),
+    win: () => processStartIdentityFromSystemCommand(pid, "win"),
+  });
+};
+
 /**
- * Read a portable process-start identity used to fence PID reuse.
+ * Read a source-fenced process start identity.
  *
  * **Details**
  *
- * Linux procfs is the fast path. Other hosts use the platform process
- * inspector and prefix the representation so observers use the same source.
+ * A recorded identity selects the probe for its own source. Without one,
+ * procfs is preferred and the platform inspector is the fallback. A probe
+ * never substitutes an observation from a different source.
  *
  * **Example** (Read the current portable identity)
  *
@@ -171,72 +276,56 @@ const processStartIdentityFromSystemCommand = (pid: number): Effect.Effect<O.Opt
  * ```
  *
  * @param pid - Process whose start identity is requested.
- * @returns A procfs or platform-inspector identity when available.
- * @category utilities
+ * @param recordedIdentity - Existing identity whose source must be reused.
+ * @returns A source-prefixed start identity when the selected probe succeeds.
+ * @category liveness
  * @since 0.0.0
  */
 export const processStartIdentityForPid = Effect.fnUntraced(function* (
-  pid: number
+  pid: number,
+  recordedIdentity: O.Option<string> = O.none()
 ): Effect.fn.Return<O.Option<string>, never, FileSystem.FileSystem> {
-  const procStart = yield* processStartTimeForPid(pid);
-  return O.isSome(procStart) ? procStart : yield* processStartIdentityFromSystemCommand(pid);
+  if (O.isSome(recordedIdentity)) {
+    return yield* probeRecordedProcessIdentity(pid, recordedIdentity.value);
+  }
+  const procStart = yield* procProcessStartIdentity(pid);
+  return O.isSome(procStart)
+    ? procStart
+    : yield* processStartIdentityFromSystemCommand(pid, process.platform === "win32" ? "win" : "ps");
 });
 
-/**
- * Result of inspecting a PID plus its recorded process start time.
- *
- * **Example** (Recognize a live owner)
- *
- * ```ts
- * import { ProcessIdentityStatus } from "@beep/repo-cli/test/RepoRun"
- *
- * console.log(ProcessIdentityStatus.is.alive("alive")) // true
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export const ProcessIdentityStatus = LiteralKit(["alive", "dead", "unknown"]).pipe(
-  $I.annoteSchema("ProcessIdentityStatus", {
-    description: "Whether a recorded process identity is live, dead, or temporarily unverifiable.",
-  })
-);
-
-/**
- * Type represented by {@link ProcessIdentityStatus}.
- *
- * @category models
- * @since 0.0.0
- */
-export type ProcessIdentityStatus = typeof ProcessIdentityStatus.Type;
-
 const processIdentityStatusWithStart = Effect.fnUntraced(function* <Requirements>(
-  owner: {
-    readonly pid: number;
-    readonly procStart: string;
-  },
+  owner: ProcessIdentityOwner,
   currentStart: Effect.Effect<O.Option<string>, never, Requirements>
 ): Effect.fn.Return<ProcessIdentityStatus, never, Requirements> {
-  const alive = yield* isProcessPidAlive(owner.pid);
-  if (!alive) {
+  if (!(yield* isProcessPidAlive(owner.pid))) {
     return ProcessIdentityStatus.Enum.dead;
   }
   if (Str.isEmpty(owner.procStart)) {
     return ProcessIdentityStatus.Enum.alive;
   }
+  const recorded = normalizeRecordedProcessIdentity(owner.procStart);
   return O.match(yield* currentStart, {
     onNone: () => ProcessIdentityStatus.Enum.unknown,
-    onSome: (start) => (start === owner.procStart ? ProcessIdentityStatus.Enum.alive : ProcessIdentityStatus.Enum.dead),
+    onSome: (current) => {
+      const normalizedCurrent = normalizeRecordedProcessIdentity(current);
+      const sameSource = Str.Equivalence(processIdentitySource(recorded), processIdentitySource(normalizedCurrent));
+      return sameSource
+        ? Str.Equivalence(normalizedCurrent, recorded)
+          ? ProcessIdentityStatus.Enum.alive
+          : ProcessIdentityStatus.Enum.dead
+        : ProcessIdentityStatus.Enum.unknown;
+    },
   });
 });
 
 /**
- * Inspect a process identity using both its PID and recorded start time.
+ * Inspect a process identity using its PID, recorded start, and recorded source.
  *
  * **Details**
  *
- * A live PID with an unreadable current start time is `unknown`, distinct
- * from a missing PID or mismatched start time that proves the owner `dead`.
+ * Only a missing PID or a same-source start mismatch proves death. Failed and
+ * cross-source probes are inconclusive and therefore return `unknown`.
  *
  * **Example** (Inspect the current process)
  *
@@ -248,29 +337,22 @@ const processIdentityStatusWithStart = Effect.fnUntraced(function* <Requirements
  * console.log(Effect.isEffect(status)) // true
  * ```
  *
- * @param owner - PID and process start time recorded by an owner.
+ * @param owner - PID and process start identity recorded by an owner.
  * @returns The observed process-identity status.
- * @category utilities
+ * @category liveness
  * @since 0.0.0
  */
-export const processIdentityStatus = Effect.fnUntraced(function* (owner: {
-  readonly pid: number;
-  readonly procStart: string;
-}): Effect.fn.Return<ProcessIdentityStatus, never, FileSystem.FileSystem> {
-  const currentStart =
-    Str.startsWith("ps:")(owner.procStart) || Str.startsWith("win:")(owner.procStart)
-      ? processStartIdentityFromSystemCommand(owner.pid)
-      : processStartTimeForPid(owner.pid);
+export const processIdentityStatus = Effect.fnUntraced(function* (
+  owner: ProcessIdentityOwner
+): Effect.fn.Return<ProcessIdentityStatus, never, FileSystem.FileSystem> {
+  const currentStart = Str.isEmpty(owner.procStart)
+    ? Effect.succeed(O.none<string>())
+    : processStartIdentityForPid(owner.pid, O.some(owner.procStart));
   return yield* processIdentityStatusWithStart(owner, currentStart);
 });
 
 /**
- * Check a process identity using both its PID and recorded start time.
- *
- * **Details**
- *
- * A start-time mismatch proves PID reuse. An unreadable current identity is
- * conservatively retained. Empty legacy start times keep PID-only behavior.
+ * Check whether a recorded process identity may still own its PID.
  *
  * **Example** (Check a recorded process identity)
  *
@@ -282,52 +364,19 @@ export const processIdentityStatus = Effect.fnUntraced(function* (owner: {
  * console.log(Effect.isEffect(alive)) // true
  * ```
  *
- * @param owner - PID and process start time recorded by an owner.
- * @returns Whether the same process identity is still alive.
- * @category utilities
+ * @param owner - PID and process start identity recorded by an owner.
+ * @returns Whether the identity is alive or remains inconclusive.
+ * @category liveness
  * @since 0.0.0
  */
-export const isProcessIdentityAlive = Effect.fnUntraced(function* (owner: {
-  readonly pid: number;
-  readonly procStart: string;
-}): Effect.fn.Return<boolean, never, FileSystem.FileSystem> {
+export const isProcessIdentityAlive = Effect.fnUntraced(function* (
+  owner: ProcessIdentityOwner
+): Effect.fn.Return<boolean, never, FileSystem.FileSystem> {
   return !ProcessIdentityStatus.is.dead(yield* processIdentityStatus(owner));
 });
 
 /**
- * Check process-identity behavior with a supplied current start time.
- *
- * **Example** (Model an unreadable current identity)
- *
- * ```ts
- * import { isProcessIdentityAliveWithStartForTesting } from "@beep/repo-cli/test/RepoRun"
- * import { Effect } from "effect"
- * import * as O from "effect/Option"
- *
- * const alive = Effect.runSync(
- *   isProcessIdentityAliveWithStartForTesting({ pid: process.pid, procStart: "recorded-start" }, O.none())
- * )
- * console.log(alive) // true
- * ```
- *
- * @param owner - PID and recorded process start time to check.
- * @param currentStart - Simulated current process start time.
- * @returns Whether the supplied identity still owns the live PID.
- * @category testing
- * @since 0.0.0
- */
-export const isProcessIdentityAliveWithStartForTesting = Effect.fnUntraced(function* (
-  owner: {
-    readonly pid: number;
-    readonly procStart: string;
-  },
-  currentStart: O.Option<string>
-): Effect.fn.Return<boolean> {
-  return !ProcessIdentityStatus.is.dead(yield* processIdentityStatusWithStart(owner, Effect.succeed(currentStart)));
-});
-
-/**
- * Inspect process-identity status with a supplied current start time.
+ * Inspect process-identity status with a supplied current identity.
  *
  * **Example** (Model an unreadable current identity)
  *
@@ -337,23 +386,55 @@ export const isProcessIdentityAliveWithStartForTesting = Effect.fnUntraced(funct
  * import * as O from "effect/Option"
  *
  * const status = Effect.runSync(
- *   processIdentityStatusWithStartForTesting({ pid: process.pid, procStart: "recorded-start" }, O.none())
+ *   processIdentityStatusWithStartForTesting(
+ *     { pid: process.pid, procStart: "proc:recorded-start" },
+ *     O.none()
+ *   )
  * )
  * console.log(status) // "unknown"
  * ```
  *
- * @param owner - PID and recorded process start time to inspect.
- * @param currentStart - Simulated current process start time.
+ * @param owner - PID and recorded process start identity to inspect.
+ * @param currentStart - Simulated current source-prefixed process identity.
  * @returns The simulated process-identity status.
  * @category testing
  * @since 0.0.0
  */
 export const processIdentityStatusWithStartForTesting = Effect.fnUntraced(function* (
-  owner: {
-    readonly pid: number;
-    readonly procStart: string;
-  },
+  owner: ProcessIdentityOwner,
   currentStart: O.Option<string>
 ): Effect.fn.Return<ProcessIdentityStatus> {
   return yield* processIdentityStatusWithStart(owner, Effect.succeed(currentStart));
+});
+
+/**
+ * Check process-identity liveness with a supplied current identity.
+ *
+ * **Example** (Retain an inconclusive identity)
+ *
+ * ```ts
+ * import { isProcessIdentityAliveWithStartForTesting } from "@beep/repo-cli/test/RepoRun"
+ * import { Effect } from "effect"
+ * import * as O from "effect/Option"
+ *
+ * const alive = Effect.runSync(
+ *   isProcessIdentityAliveWithStartForTesting(
+ *     { pid: process.pid, procStart: "proc:recorded-start" },
+ *     O.none()
+ *   )
+ * )
+ * console.log(alive) // true
+ * ```
+ *
+ * @param owner - PID and recorded process start identity to inspect.
+ * @param currentStart - Simulated current source-prefixed process identity.
+ * @returns Whether the supplied identity remains live or inconclusive.
+ * @category testing
+ * @since 0.0.0
+ */
+export const isProcessIdentityAliveWithStartForTesting = Effect.fnUntraced(function* (
+  owner: ProcessIdentityOwner,
+  currentStart: O.Option<string>
+): Effect.fn.Return<boolean> {
+  return !ProcessIdentityStatus.is.dead(yield* processIdentityStatusWithStart(owner, Effect.succeed(currentStart)));
 });

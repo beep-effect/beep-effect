@@ -139,6 +139,24 @@ bun run beep yeet publish --push-only --reuse-verified
 bun run beep yeet monitor
 ```
 
+`yeet monitor` records the current agent locally and re-asserts the registry-backed
+provenance footer once before polling. This restores a missing or drifted footer
+without treating the PR body's public JSON twin as trusted state.
+
+- Resume the newest publishing agent recorded for a pull request:
+
+```bash
+bun run beep yeet resume 950
+```
+
+Pass `--list` to inspect every local agent, `--agent <n>` to select a newest-first
+entry, `--print` to inspect the local harness command, and `--force` only when a
+matching live Claude session should be forked deliberately. `--print` exposes
+workstation-local paths and session identifiers in the terminal; never paste its
+output into GitHub, a PR body, or another public surface. A workstation without a
+matching registry row or Claude `pr-link` transcript exits 4 and prints the native
+`claude --from-pr <n>` recovery hint.
+
 - Keep monitoring across pushes until the PR merges or closes, instead of
   re-arming a fresh monitor after every fix wave:
 

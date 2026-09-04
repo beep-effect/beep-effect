@@ -33,6 +33,7 @@ const textEncoder = new TextEncoder();
  * @param targetPath - Published journal path replaced by the atomic rename.
  * @param content - Complete replacement text written to the staging sibling.
  * @param label - Human-readable journal label used in typed error messages.
+ * @param beforePublish - Fence checked after staging and immediately before the rename.
  * @returns An effect that completes after the file rename and directory sync attempt.
  * @category utilities
  * @since 0.0.0
@@ -40,7 +41,8 @@ const textEncoder = new TextEncoder();
 export const publishJournalTextAtomically = Effect.fn("JournalFile.publishTextAtomically")(function* (
   targetPath: string,
   content: string,
-  label: string
+  label: string,
+  beforePublish: Effect.Effect<void, QualitySchedulerError, FileSystem.FileSystem | Path.Path> = Effect.void
 ): Effect.fn.Return<void, QualitySchedulerError, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -54,6 +56,7 @@ export const publishJournalTextAtomically = Effect.fn("JournalFile.publishTextAt
           yield* file.sync;
         })
       ).pipe(Effect.mapError(QualitySchedulerError.new(`Failed to stage ${label} "${targetPath}".`)));
+      yield* beforePublish;
       yield* fs
         .rename(stagingPath, targetPath)
         .pipe(Effect.mapError(QualitySchedulerError.new(`Failed to publish ${label} "${targetPath}".`)));

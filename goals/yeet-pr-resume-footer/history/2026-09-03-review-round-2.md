@@ -1,0 +1,124 @@
+# 2026-09-03 — PR #975 hosted review round (Greptile, Codex Cloud, CI)
+
+PR #975 opened via `yeet publish --start-pr-early --monitor --pr`. The footer
+dogfooded itself on the first push: workspace, branch, one agent row, the
+`bun run beep yeet resume 975` fence, and the v2 twin; `yeet resume 975 --list`
+resolved the session from the registry and plain `yeet resume 975` refused to
+fork the live desktop session (window name and pid printed).
+
+## Greptile (score 1/5, three P1 threads)
+
+| Thread | Ruling |
+| --- | --- |
+| Tracked research exposes local metadata (`research/2026-09-03-exploration.md`) | Valid. The exploration and panel docs carried the projects path, the clone inventory, and a session label. Scrubbed to `<projects-root>` / `<clone>-<xx>`; the public footer never carried any of it. |
+| PR URLs lose repository identity (`Resume.ts`) | Valid. `PrRef` now keeps the URL's repository and drives the lookup with it; bare numbers keep the checkout repository. |
+| Footer stamp overwrites concurrent edits (`ProvenanceFooter.ts`) | Valid. Re-read immediately before the write, splice against the fresh body, skip identical footers, read back once and warn on a non-footer mismatch. GitHub has no conditional body update. |
+
+## Codex Cloud (six P2 threads; no leak finding against the footer)
+
+Stamp step never recorded in the verdict; `--agent=0` treated as omitted;
+`monitor --watch` / `--until-merged` bypassed the stamp; Codex model should
+come from `turn_context`; `--state-root` flag unwired; URL repository (same as
+Greptile). All accepted and fixed in the follow-up commit.
+
+## CI attribution
+
+| Check | Attribution | Action |
+| --- | --- | --- |
+| Vercel (3) | rate limited, same on the last three merged PRs | exempt by the mergeability rule |
+| Heavy / Check | introduced: `yeet-pr-provenance-boundary.test.ts` passed a bare literal where the schema wants an `Option` (`hostHarness`) | fixed; `bun run beep quality test-tsgo` is the local twin |
+| Heavy / Coverage Regression | introduced: `Yeet.command.ts` and `PullRequest.ts` floors broken by untested new paths; inherited: `@beep/box-provisioning` missing from the baseline (added on main by #947/#960) | tests restore the floors; the missing row was merged with a scoped `coverage --filter=@beep/box-provisioning --write-baseline` (first attempt hit the no-location TS2589 build flake, retry passed) |
+| Fallow Advisory Envelopes | introduced: 4 complexity hotspots (`detectPrProvenanceFromPaths` 22/36, `makeRecord` 20/18, `Resume.run` 12/14, `detect` 8/9) and one duplicated registry lookup filter | refactor lane |
+
+## Lane gotchas recorded
+
+- `bunx --bun vitest` (forks pool) hangs on this workstation; repo lanes use
+  node `bunx vitest`. Codex briefs must say `--pool=threads`.
+- Stale dependency dists make `package-verify` fail in untouched files; rebuild
+  the closure with `bunx turbo run build --filter="@beep/repo-cli^..."`.
+
+## Round 3 (Greptile on `a82e32c4cd`)
+
+| Thread | Ruling |
+| --- | --- |
+| Repository casing splits registry partitions (`detectPrRepository` kept origin casing, `PrRef` lowercased URLs) | Valid; fixed in `11bc482030` with a mixed-case-origin regression test. |
+| Scrubbed metadata remains in the PR's earlier commits | Not fixable by editing: force-push is denied and GitHub keeps a PR's commits viewable after close or squash-merge. Main only receives the squash-merged tree. Left open for the owner to decide whether a clean-ancestry replacement PR is worth a fresh review cycle. |
+
+Divergence with `main` was resolved by merging `origin/main` through a
+temporary sync branch into the PR branch (no rewrite), then pushing. The local
+proof's `pre-push:nix` red was environment-only (no `nix` on the detached
+publish PATH; hosted Nix Shell passes) and is acknowledged as such.
+
+## Round 4 (Greptile 4/5 on `d83c4799ad`; hosted coverage ratchet)
+
+- Body-race residual: the stamp now yields to concurrent editors with a
+  bounded reconcile (three rounds); if contention persists the newest foreign
+  body is written back verbatim and the footer self-heals on the next monitor.
+  Invariant: a foreign edit is never left overwritten.
+- Coverage: the four new modules had no baseline identity; tests raised them
+  (`Resume.ts` statements 75 -> 89.7, `ProvenanceFooter.ts` 86 -> 93,
+  `PrSessionRegistry.ts` branches 66.7 -> 95.2, `Resume.schemas.ts` to 100) and
+  `Yeet.command.ts` lines back to 96.72 over the 96.19 floor; rows recorded with
+  the scoped `coverage --filter=@beep/repo-cli --write-baseline`.
+- Inherited: main's own Coverage Regression lane is red on the missing
+  `@beep/box-provisioning` row; this branch carries the row.
+- Hosted runners check out a detached HEAD, so the command-wiring dispatch
+  test tolerates the PR-branch-only guards.
+
+## Round 5 (hosted coverage on `3cd1f3f273`; main red since #990)
+
+Attribution of the `Heavy / Coverage Regression` red, from the hosted logs:
+
+| Row | Class | Evidence |
+| --- | --- | --- |
+| `Quality/Quality.command.ts` (4 metrics) | Inherited from `main` | `main` is red on the same four floors on every push since #990 (`3254833bac`, `cde3be8f10`, `a00b102b19`); `751da1fc18` was green. #990 regenerated the baseline locally and raised this untouched file's row from 35.62/35.52/19.66/26.59 to 40.61/40.43/31.67/32.39; hosted measures 39.6/39.41/29.62/31.03 on every run. Restoring the pre-#990 row (this branch) heals `main`'s push lane after merge, but the pull-request lane runs `--affected --base origin/main` and `readComparisonBaseline` keeps the base branch's floors authoritative for surviving files, so the row edit cannot clear this PR: the lane needs hosted coverage of the file raised back over the minted floors. |
+| `test-utils/SqlTest.ts` (4 metrics) | Environment-only | `SqlTest.pglite.test.ts` ran `8 tests \| 7 skipped` in 48.7 s (Docker/Testcontainers unavailable on that runner; the 45 s availability probe timed out) versus `8 tests \| 5 skipped` in 21 s on every `main` run, where the two Testcontainers tests execute. The row is in scope only because the terse-effect fix touched `ConformanceLedger.evidence.ts`. |
+| `repo-run/QualityScheduler.ts` (4 metrics, <0.7 pp) | Inherited from `main` (same class) | #990's regen also raised this untouched row (91.66 -> 92.85 lines, 86.18 -> 88.67 functions); the PR lane measures 92.63/88.05 on every run, above the pre-#990 floor and below the minted one. |
+
+Verdict: base floors win on PR lanes, so both inherited rows need hosted coverage raised on this branch; the `SqlTest.ts` row reruns the lane.
+
+Oracle: `bunx vitest run --coverage --coverage.include=<file>` over the whole repo-cli suite with the lane's pinned environment (`CI=true GITHUB_ACTIONS=true VITEST_COVERAGE_RATCHET=1`, Turbo quad blank, `TERM_PROGRAM` unset) reproduces the hosted rows to the decimal (39.41/29.63/31.03 and 92.39/86.88/88.05). Fix: `test/quality-command-dispatch.test.ts` (shared byte-for-byte with PR #998's Codex lane, which hit the same row) lifts `Quality.command.ts` to 41.98/32.51/36.21, and `test/quality-scheduler-degraded-inputs.test.ts` (meminfo parser fallbacks, empty admission entries) lifts `QualityScheduler.ts` to 95.0/87.5/93.71, both measured by unioning each test's standalone hit map with the full-suite map.
+
+## Round 6 (Greptile P1 on `e0d4dbb5e6`)
+
+Thread: "Reconciliation overwrites intervening edits". Valid. On rounds after
+the first, `findForeignEdit` anchored its search on the stamp's own edit time,
+so an edit that landed between one history read and the next repair write was
+older than that anchor, never re-spliced, and then reported as preserved
+because the verification compared against the snapshot the repair had spliced
+from. Fix: track every body the stamp wrote or spliced from and treat any other
+body at or after the baseline as foreign, with an inclusive baseline because
+GitHub records edit times at second resolution. Two regression tests cover the
+slipped-in edit and the same-second edit; the full-suite oracle keeps the
+`ProvenanceFooter.ts` row at its floor (80.39 branches, 10 uncovered arms).
+
+Residual red after round 6: only `test-utils/SqlTest.ts`, whose floor needs the
+PGLite Testcontainers image; the availability probe timed out at 45 s on four
+consecutive pull-request runs while PR #989's lane built it in 17 s earlier the
+same day. The probe budget is raised to 120 s and its failure cause is logged
+(test-only change in `SqlTest.pglite.test.ts`); the real fix is pre-baking or
+mirroring the image so a cold runner never pulls from Docker Hub.
+
+## Round 7 (merged head `3aeb10fcb9`)
+
+Merged `origin/main` (#978 journal facts; clean auto-merge on `Handler.ts`,
+`Planner.ts`, `yeet.test.ts`). Hosted: Coverage Regression green on
+`2322fb0606` (the probe built the image in 38 s), every lane green on the merge
+except `Test Unit (unit-a)`: `@beep/agents-client`
+`keeps failed prompts non-sendable while receipt evidence is uncertain` timed
+out at 30 s (the event-driven wait never saw the terminal turn), after passing
+five hosted runs, then passed on a same-head rerun. Main did not touch
+`packages/agents/client`. The second Codex lane
+(`52-codex-reconciliation-hang-brief.md` → `53-codex-reconciliation-hang-report.md`)
+could not reproduce the stall in 30 stressed runs (four CPU hogs; each
+scenario measures ~1.4 s: nine 150 ms receipt reads, two timeline reads, then
+the unreconciled append, all before the fn result) and refuted the product
+hypotheses by trace: the timeline refresh resumes even when the refreshed
+timeline is structurally equal, the subscription wakes on the terminal append,
+each kind uses a fresh registry, and the append precedes the fn result. What
+survived is the test's failure boundary: three real-clock scenarios shared one
+30 s Vitest timeout with an unbounded, unlabeled inner wait. The test now runs
+the three kinds as separate cases, keeps the equal-timeline refresh as a
+regression condition, and bounds the unreconciled wait at 10 s with a
+status-named failure, so the next hosted stall names the kind and the await.
+No product code changed.

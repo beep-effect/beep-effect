@@ -29,6 +29,22 @@ const findSubcommand = (name: string) =>
   );
 
 describe("yeet merge-loop command wiring", () => {
+  it.effect("dispatches the top-level publish and repair planners", () =>
+    Effect.forEach(
+      [
+        ["--plan"],
+        ["--plan", "--state-root", "/tmp/yeet-command-wiring-state"],
+        ["monitor", "--plan", "--state-root", "/tmp/yeet-command-wiring-state"],
+        ["repair", "--plan"],
+        ["pre-push-hook", "--plan"],
+      ],
+      // Hosted runners check out a detached HEAD, where publish/monitor refuse with a
+      // PR-branch-only guard after dispatch; this test proves dispatch, not the guard.
+      (args) => runYeetCommand(args).pipe(Effect.catchTag("YeetCommandError", () => Effect.void)),
+      { discard: true }
+    ).pipe(provideScopedLayer(commandTestLayer))
+  );
+
   it.each(["sweep", "merge", "reply"])("registers the %s subcommand", (name) => {
     expect(subcommandNames).toContain(name);
   });
@@ -41,7 +57,7 @@ describe("yeet merge-loop command wiring", () => {
 
   it("keeps the pre-existing subcommands registered", () => {
     expect(subcommandNames).toEqual(
-      expect.arrayContaining(["verify", "repair", "publish", "monitor", "closeout", "status"])
+      expect.arrayContaining(["verify", "repair", "publish", "monitor", "closeout", "status", "resume"])
     );
   });
 });
