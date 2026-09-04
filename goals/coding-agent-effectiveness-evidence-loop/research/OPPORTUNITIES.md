@@ -647,3 +647,61 @@ What would have prevented it: admit the repo-wide test type-check through the
 machine scheduler, or cap its Go/compiler parallelism from the same live memory
 envelope. A nominally cheap gate should not compound an over-capacity host and
 turn a deterministic source check into a runtime crash.
+
+## 2026-09-03 — registry availability made a clean audit fail twice
+
+Lived while publishing PR #992. The local pre-push audit and the hosted Repo
+Sanity job each waited about five minutes before the npm advisory bulk endpoint
+returned HTTP 503. Neither failure reported a vulnerability, and an exact local
+retry completed with no vulnerabilities across 2,332 packages. The transient
+transport failure therefore consumed both the local proof and an exact-head
+required check without producing dependency evidence.
+
+What would have prevented it: classify advisory-service transport failures
+separately from discovered vulnerabilities and apply a bounded backoff inside
+the audit lane. A dependency gate should distinguish an unavailable registry
+from an unsafe dependency graph.
+
+## 2026-09-03 — fixed scheduler sleep failed only under hosted load
+
+Lived while closing PR #992 after the complete local `@beep/repo-cli` test run
+passed 3,093 tests. The hosted package run later failed the scheduler assertion
+`expected 0 to be greater than 0`: a test slept for 100 milliseconds and then
+assumed an asynchronous ticket rewrite had completed. Under hosted load the
+rewrite had not happened yet, even though the production path remained live.
+The test now polls the observable ticket condition with the existing bounded
+Effect schedule instead of treating elapsed wall time as completion evidence.
+
+What would have prevented it: use condition-based, bounded synchronization for
+every filesystem or fiber handoff test. Fixed sleeps should pace retries, not
+serve as proof that another Effect has reached a particular state.
+
+## 2026-09-03 — provenance stamping requested an unsupported PR field
+
+Lived while publishing PR #992 through Yeet. The push succeeded, but the
+provenance footer step was skipped after `gh pr view` rejected `lastEditedAt`
+as an unknown JSON field. The PR remained usable, but the canonical publisher
+could not perform its own footer projection on the installed GitHub CLI.
+
+What would have prevented it: constrain the query to fields supported by the
+minimum declared GitHub CLI version, or feature-detect optional fields before
+requesting them. Provenance stamping should degrade on missing metadata, not on
+an invalid all-or-nothing query.
+
+## 2026-09-03 — full lint policy exceeded one ESLint shard's heap
+
+Lived while proving PR #992's inherited terse-Effect repair with the exact
+hosted `ci lane lint-policy` command. Twenty-five policy steps passed, including
+the complete terse scan, before the `packages/tooling` deprecated-API ESLint
+shard reached Node's roughly 8 GiB heap ceiling and stopped with `JavaScript
+heap out of memory`. No lint diagnostic preceded the crash. Another checkout
+held a five-token merged-preview lease, but this lint lane was not admitted
+through the scheduler and launched its own four-way shard fan-out. Retrying the
+wrapper with a larger heap still left its ESLint child at the 8 GiB ceiling;
+running that exact failed shard directly with a confirmed 16 GiB heap passed
+without a diagnostic.
+
+What would have prevented it: admit the full lint lane through the shared
+resource envelope and size both shard concurrency and per-process heap from
+that lease. A repository policy scan should report a source finding or a typed
+resource-exhaustion result, not conflate a V8 heap crash with failed lint.
