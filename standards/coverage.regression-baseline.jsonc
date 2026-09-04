@@ -37657,6 +37657,81 @@
           }
         }
       }
+    },
+    "@beep/freshbooks": {
+      "path": "packages/drivers/freshbooks",
+      "lines": 81.97,
+      "statements": 81.6,
+      "branches": 61.53,
+      "functions": 72.41,
+      "uncovered": {
+        "lines": 31,
+        "statements": 32,
+        "branches": 10,
+        "functions": 16
+      },
+      "files": {
+        "packages/drivers/freshbooks/src/Freshbooks.errors.ts": {
+          "lines": 73.33,
+          "statements": 68.75,
+          "branches": 30,
+          "functions": 60,
+          "uncovered": {
+            "lines": 4,
+            "statements": 5,
+            "branches": 7,
+            "functions": 2
+          }
+        },
+        "packages/drivers/freshbooks/src/Freshbooks.models.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/freshbooks/src/Freshbooks.service.ts": {
+          "lines": 78.82,
+          "statements": 78.82,
+          "branches": 100,
+          "functions": 76,
+          "uncovered": {
+            "lines": 18,
+            "statements": 18,
+            "branches": 0,
+            "functions": 6
+          }
+        },
+        "packages/drivers/freshbooks/src/Freshbooks.token.ts": {
+          "lines": 84.21,
+          "statements": 84.48,
+          "branches": 70,
+          "functions": 70.37,
+          "uncovered": {
+            "lines": 9,
+            "statements": 9,
+            "branches": 3,
+            "functions": 8
+          }
+        },
+        "packages/drivers/freshbooks/src/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        }
+      }
     }
   }
 }
