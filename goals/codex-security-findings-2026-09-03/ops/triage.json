@@ -8,7 +8,7 @@
     "capturedCount": 12,
     "capturedAt": "2026-09-03",
     "captureMethod": "signed-in-csv-export",
-    "note": "All 12 findings were confirmed at the packet's initial HEAD and remediated in seven shared-root lanes. Repository and hosted proof remain pending."
+    "note": "All 12 findings were confirmed at the packet's initial HEAD, remediated by PR #949 in seven shared-root lanes, passed repository and hosted review proof, and were exact-ID closed as Already fixed. Final evidence is recorded in ops/closures.json."
   },
   "lanes": {
     "L1-filesystem-safety": {

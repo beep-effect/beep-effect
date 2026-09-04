@@ -14,19 +14,20 @@ import {
 import { ParagraphBlock, TextInline } from "@beep/agents-domain/values/AssistantContent";
 import { ChatActionError } from "@beep/agents-use-cases/public";
 import { decodeSafeDocumentUnsafe } from "@beep/md";
-import { Document, P, Text } from "@beep/md/Md.model";
+import { Document, P as MdP, Text } from "@beep/md/Md.model";
 import { NonNegativeInt } from "@beep/schema";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { ThreadTimeline, TimelineMessageItem, TimelineTurn } from "@beep/workspace-use-cases/aggregates/Thread";
 import { describe, expect, it } from "@effect/vitest";
-import { Deferred, Duration, Effect, Layer, Match, Schedule, Stream } from "effect";
+import { Deferred, Duration, Effect, Layer, Match, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import { AsyncResult, Atom, AtomRegistry, Reactivity } from "effect/unstable/reactivity";
+import type * as P from "effect/Predicate";
 
 const threadId = WorkspaceIdentity.ThreadId.make(1);
 const safeDocument = (value: string) =>
-  decodeSafeDocumentUnsafe(Document.make({ children: [P.make({ children: [Text.make({ value })] })] }));
+  decodeSafeDocumentUnsafe(Document.make({ children: [MdP.make({ children: [Text.make({ value })] })] }));
 const content = safeDocument("Keep this prompt");
 const newerContent = safeDocument("Keep this newer draft");
 const assistantBlock = ParagraphBlock.make({
@@ -78,9 +79,24 @@ const registryWithClient = (client: ChatClient["Service"]) =>
   AtomRegistry.make({
     initialValues: [[ChatClient.runtime.layer, Layer.mergeAll(Layer.succeed(ChatClient, client), Reactivity.layer)]],
   });
-const reconciliationSchedule = Schedule.spaced(Duration.millis(10)).pipe(
-  Schedule.upTo({ duration: Duration.seconds(3), times: 300 })
-);
+const waitForAtom = Effect.fnUntraced(function* <A>(
+  registry: AtomRegistry.AtomRegistry,
+  atom: Atom.Atom<A>,
+  predicate: P.Predicate<A>
+) {
+  yield* Effect.callback<void>((resume) => {
+    if (predicate(registry.get(atom))) {
+      resume(Effect.void);
+      return;
+    }
+    const cancel = registry.subscribe(atom, (value) => {
+      if (!predicate(value)) return;
+      cancel();
+      resume(Effect.void);
+    });
+    return Effect.sync(cancel);
+  });
+});
 
 describe("assistant turn reconciliation", { concurrent: false }, () => {
   it.live(
@@ -133,9 +149,7 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
       // user row: total-count growth must not be accepted as reconciliation.
       timeline = userOnlyTimeline;
       registry.set(runTurnAtom, Atom.Interrupt);
-      yield* Effect.suspend(() =>
-        O.isNone(registry.get(streamingTurnAtom)) ? Effect.void : Effect.fail("streaming turn is still reconciling")
-      ).pipe(Effect.retry(reconciliationSchedule));
+      yield* waitForAtom(registry, streamingTurnAtom, O.isNone);
 
       expect(registry.get(streamingTurnAtom)).toStrictEqual(O.none());
       expect(registry.get(turnActiveAtom)).toBe(false);
@@ -177,9 +191,7 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
       registry.set(runTurnAtom, SendTurnRequest.make({ threadId, content }));
       yield* Deferred.await(streamStarted);
       registry.set(runTurnAtom, Atom.Interrupt);
-      yield* Effect.suspend(() =>
-        O.isNone(registry.get(streamingTurnAtom)) ? Effect.void : Effect.fail("streaming turn is still reconciling")
-      ).pipe(Effect.retry(reconciliationSchedule));
+      yield* waitForAtom(registry, streamingTurnAtom, O.isNone);
 
       expect(registry.get(streamingTurnAtom)).toStrictEqual(O.none());
       expect(registry.get(draftAtom)).toStrictEqual(O.none());
@@ -229,12 +241,8 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
 
         yield* AtomRegistry.getResult(registry, timelineAtom);
         registry.set(runTurnAtom, SendTurnRequest.make({ threadId, content }));
+        yield* waitForAtom(registry, unreconciledAtom, A.isReadonlyArrayNonEmpty);
         yield* AtomRegistry.getResult(registry, runTurnAtom, { suspendOnWaiting: true }).pipe(Effect.exit);
-        yield* Effect.suspend(() =>
-          A.isReadonlyArrayNonEmpty(registry.get(unreconciledAtom))
-            ? Effect.void
-            : Effect.fail("failed turn is still reconciling")
-        ).pipe(Effect.retry(reconciliationSchedule));
 
         expect(registry.get(draftAtom)).toStrictEqual(O.none());
         expect(registry.get(draftRevisionAtom)).toBe(0);
@@ -297,9 +305,7 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
         registry.set(runTurnAtom, SendTurnRequest.make({ threadId, content }));
         yield* Deferred.await(streamStarted);
         registry.set(runTurnAtom, Atom.Interrupt);
-        yield* Effect.suspend(() =>
-          O.isNone(registry.get(streamingTurnAtom)) ? Effect.void : Effect.fail("streaming turn is still reconciling")
-        ).pipe(Effect.retry(reconciliationSchedule));
+        yield* waitForAtom(registry, streamingTurnAtom, O.isNone);
 
         expect(registry.get(streamingTurnAtom)).toStrictEqual(O.none());
         expect(registry.get(draftAtom)).toStrictEqual(O.none());
