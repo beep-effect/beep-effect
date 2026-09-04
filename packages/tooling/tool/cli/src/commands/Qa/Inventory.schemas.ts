@@ -292,7 +292,7 @@ export class QaEvidenceRef extends S.Class<QaEvidenceRef>($I`QaEvidenceRef`)(
  * ```ts
  * import { QaJudgeRef } from "@beep/repo-cli/commands/Qa/Inventory.schemas"
  *
- * const judge = QaJudgeRef.make({ effort: "high", model: "gpt-5.6-sol" })
+ * const judge = QaJudgeRef.make({ effort: "high", model: "gpt-daybreak-blue-latest" })
  * console.log(judge.model)
  * ```
  *
@@ -459,7 +459,7 @@ const RequiredCountCoherenceCheck = S.makeFilter(
  *
  * const inventory = QaInventory.make({
  *   findings: [],
- *   judge: QaJudgeRef.make({ effort: "high", model: "gpt-5.6-sol" }),
+ *   judge: QaJudgeRef.make({ effort: "high", model: "gpt-daybreak-blue-latest" }),
  *   requiredCount: 0,
  *   round: 2,
  *   schemaVersion: "qa-inventory/v1",
@@ -547,7 +547,7 @@ export const decodeQaInventory: {
  *
  * const inventory = QaInventory.make({
  *   findings: [],
- *   judge: QaJudgeRef.make({ effort: "high", model: "gpt-5.6-sol" }),
+ *   judge: QaJudgeRef.make({ effort: "high", model: "gpt-daybreak-blue-latest" }),
  *   requiredCount: 0,
  *   round: 1,
  *   schemaVersion: "qa-inventory/v1",
