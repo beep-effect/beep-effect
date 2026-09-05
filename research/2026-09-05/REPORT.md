@@ -1,6 +1,6 @@
 # REPORT — 2026-09-05
 
-Window 2026-09-03 08:49 → 2026-09-05 08:20 America/Chicago (~47h31m). Status: **partial** (X search `client-not-enrolled` on every axis, x=0; no Sol/Luna). 17 claims. Collision rate 0.529 against prior digests (nine intentional refute URL re-cites: ODP, iManage/TR, Everlaw-CoCounsel, Effect #7446, Effect #7265, drizzle #6162, Instant sunset, SEP-2640, MCP #3306; novel-URL collision 0). selfReject false. Refutation quota: 10 standing claims challenged (8 HOLD; #7265 HOLD+MOVED; SEP-2640 MOVE+HOLD Accepted-not-Final; Jazz #2361 MOVED closed-obsolete→#2118; none broken). Saturday: no weekly consolidation, no tombstone reaper. Leave prior tombstones as-is.
+Window 2026-09-03 08:49 → 2026-09-05 08:20 America/Chicago (~47h31m). Status: **partial** (X search `client-not-enrolled` on every axis, x=0; no Sol/Luna). 17 claims. Collision rate 0.529 against prior digests (nine intentional refute URL re-cites: ODP, iManage/TR, Everlaw-CoCounsel, Effect #7446, Effect #7265, drizzle #6162, Instant sunset, SEP-2640, MCP #3306; novel-URL collision 0). selfReject false. Refutation quota: 10 standing claims challenged (7 HOLD; 2 HOLD+MOVED (#7265, SEP-2640 Accepted-not-Final); 1 MOVED (Jazz #2361 closed-obsolete→#2118); none broken). Saturday: no weekly consolidation, no tombstone reaper. Leave prior tombstones as-is.
 
 The 2026-09-03 packet (#980) merged 2026-09-03 ~1:27 PM CT. No open research PR at preflight.
 

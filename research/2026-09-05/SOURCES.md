@@ -41,7 +41,7 @@ Users of Everlaw and CoCounsel Legal will be able to access Everlaw matters and 
 - URL: https://github.com/Effect-TS/effect/pull/7446
 - Kind: github / axis: effect
 ```
-PR #7446 state=open; merged_at=null; updated_at=2026-09-05T10:00:05Z. Body lists effect@4.0.0-rc.113. npm dist-tags.rs=4.0.0-rc.112; rc.113 version-not-found.
+PR #7446 state=open; merged_at=null; updated_at=2026-09-05T10:00:05Z. Body lists effect@4.0.0-rc.113. npm dist-tags.rc=4.0.0-rc.112; rc.113 version-not-found.
 ```
 
 ## f-effect-02 -- Effect MCP #7265 still OPEN after 2026-09-04 adapter commits; HOLD+MOVED

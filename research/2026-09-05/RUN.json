@@ -13,7 +13,7 @@
   },
   "claimsEmitted": 17,
   "collisionRate": 0.529,
-  "collisionNote": "9/17=.529 URL collisions are intentional refute re-cites (ODP, iManage/TR, Everlaw-CoCounsel, #7446, #7265, drizzle #6162, Instant sunset, SEP-2640, MCP #3306). Novel-URL collision rate 0. selfReject false. Jazz #2361 closed unmerged is MOVED (path to #2118), not a URL collision with prior packet claim body.",
+  "collisionNote": "9/17=.529 URL collisions are intentional refute re-cites (ODP, iManage/TR, Everlaw-CoCounsel, #7446, #7265, drizzle #6162, Instant sunset, SEP-2640, MCP #3306). Novel-URL collision rate 0. SPEC 40% self-reject gate is evaluated on novel-URL collision, not refute re-cites. selfReject false. Jazz #2361 closed unmerged is MOVED (path to #2118), not a URL collision with prior packet claim body.",
   "selfReject": false,
   "sourcesSeen": {
     "web": 6,

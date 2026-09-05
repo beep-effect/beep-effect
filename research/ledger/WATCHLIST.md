@@ -33,7 +33,7 @@ Routine-proposed. Human admits. Add-with-evidence only.
 | w-effect-mcp-adapter | Effect MCP 2026-07-28 adapter | #7265 still OPEN (updated 2026-09-04): v2026-07-28 adapter, lifecycle, MRTR, subscriptions, JSON tool outputs; unpublished pending rc.113; HOLD+MOVED | Effect#7265 | keep |
 | w-skillscan | agent-skill-security-scanner | offline fail-closed static scanner; SkillShift shows scanners can miss policy steering; Cisco skill-scanner CEL shadow layer is adjacent rising edge | daffnjk/agent-skill-security-scanner; cisco-ai-defense/skill-scanner#210 | keep |
 | w-agent-plugins-coevo | Agent Plugins co-evolution | empirical Claude marketplace study; HookPry extends plugin/hook supply-chain surface (lifecycle-hook updates) | arXiv 2608.28497, 2609.03884 | keep |
-| w-public-law-mcp | Public-law jurisdiction MCP | Sweden Lifos pair + Iceland PoC (Sep 4) + ArthurLegal + prawmi; foil for gov-legal-mcp | iceland-context-mcp-poc; arthurlegal-mcp; prawmi-mcp | keep |
+| w-public-law-mcp | Public-law jurisdiction MCP | Sweden Lifos pair + claimed Iceland PoC (Sep 4); foil for gov-legal-mcp. ArthurLegal/prawmi remain REPORT appendix-only, not packet truth | iceland-context-mcp-poc | keep |
 | w-skillshift | SkillShift / Skill Policy Integrity | covert utility-preserving skill steering; scanner misses; HookPry + skill-scanner CEL continue the gap | arXiv 2609.02564 | keep |
 | w-acle-effect-closure | ACLE-MCP + effect closure | invocation-time leases + EffectBound; SEP-3004 tamper-evident audit records adjacent (still OPEN) | arXiv 2609.02690, 2609.02866; mcp#3004 | keep |
 | w-repo-to-skill | DisCo Repo-To-Skill / AREX-Skill | author-reported verified skill library; no in-window follow-on | arXiv 2609.02749 | keep |
