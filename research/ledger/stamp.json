@@ -1,11 +1,11 @@
 {
-  "lastSuccessfulRun": "2026-09-03T08:49:00-05:00",
-  "lastSuccessfulPacket": "research/2026-09-03",
-  "lastSuccessfulPr": 980,
-  "lastAttemptedRun": "2026-09-03T08:49:00-05:00",
+  "lastSuccessfulRun": "2026-09-05T08:20:00-05:00",
+  "lastSuccessfulPacket": "research/2026-09-05",
+  "lastSuccessfulPr": 0,
+  "lastAttemptedRun": "2026-09-05T08:20:00-05:00",
   "lastAttemptedStatus": "partial",
-  "lastAttemptedPacket": "research/2026-09-03",
-  "note": "Advances stamp after human-merged #942 (2026-08-31). This run is partial (X still client-not-enrolled; no Sol/Luna). lastSuccessfulPr is #980. Human admit is still required. Thursday: no tombstone reaper. Do not claim this packet merged.",
+  "lastAttemptedPacket": "research/2026-09-05",
+  "note": "DRAFT stamp to advance AFTER human merge of research/2026-09-05. Do not claim this packet merged. lastSuccessfulPr remains 0 pending until the human-admitted PR number is known. This run is partial (X still client-not-enrolled; no Sol/Luna). Saturday: no tombstone reaper. Prior stamp was research/2026-09-03 / PR #980.",
   "excludedUnmergedPackets": [
     {
       "date": "2026-08-27",
