@@ -320,7 +320,7 @@
     "tar": "catalog:",
     "uuid": "^11.1.1"
   },
-  "packageManager": "bun@1.4.1",
+  "packageManager": "bun@1.4.2",
   "patchedDependencies": {
     "knip@6.27.0": "patches/knip@6.27.0.patch",
     "sharp@0.35.0": "patches/sharp@0.35.0.patch",
