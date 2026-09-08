@@ -18,7 +18,7 @@ describe("Age", () => {
     "accepts whole years at both inclusive boundaries and round-trips them",
     Effect.fnUntraced(function* () {
       for (const value of [1, 42, 150]) {
-        const age = yield* S.decodeUnknownEffect(Age)(value);
+        const age = yield* S.decodeEffect(Age)(value);
         expect(age).toBe(value);
         expect(yield* S.encodeEffect(Age)(age)).toBe(value);
       }

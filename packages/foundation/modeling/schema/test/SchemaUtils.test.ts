@@ -22,9 +22,9 @@ describe("optionalKeyWithDefault", () => {
   it.effect(
     "defaults absent keys while decoding present encoded values",
     Effect.fnUntraced(function* () {
-      expect(yield* S.decodeUnknownEffect(Settings)({})).toEqual({ retries: 3 });
-      expect(yield* S.decodeUnknownEffect(Settings)({ retries: "0" })).toEqual({ retries: 0 });
-      expect(Exit.isFailure(yield* Effect.exit(S.decodeUnknownEffect(Settings)({ retries: "invalid" })))).toBe(true);
+      expect(yield* S.decodeEffect(Settings)({})).toEqual({ retries: 3 });
+      expect(yield* S.decodeEffect(Settings)({ retries: "0" })).toEqual({ retries: 0 });
+      expect(Exit.isFailure(yield* Effect.exit(S.decodeEffect(Settings)({ retries: "invalid" })))).toBe(true);
     })
   );
 
