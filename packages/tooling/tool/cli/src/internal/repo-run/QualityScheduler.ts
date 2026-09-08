@@ -43,6 +43,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import {
+  AdmissionEvictionEmission,
   AdmissionJournalAdmitted,
   AdmissionJournalLeaseEvicted,
   AdmissionJournalReleased,
@@ -58,6 +59,7 @@ import {
 import { appendSchedulerAttemptTerminated } from "./AttemptTerminationJournal.ts";
 import { isProcessIdentityAlive, processStartIdentityForPid } from "./ProcessIdentity.ts";
 import {
+  AdmissionClaimSinkState,
   AdmissionConfig,
   AdmissionCoordinationProtocol,
   AdmissionLeaseReapClaim,
@@ -77,7 +79,6 @@ import { enterRunScope, readRunScopeTelemetry, runScopeUnitName, stopRunScopeFor
 import { admissionRootFor, perUserRuntimeRoot } from "./RuntimeRoot.ts";
 import type { UUID } from "@beep/schema/String";
 import type { ChildProcessSpawner } from "effect/unstable/process";
-import type { AdmissionEvictionEmission } from "./AdmissionJournal.ts";
 
 const $I = $RepoCliId.create("internal/repo-run/QualityScheduler");
 
@@ -136,8 +137,54 @@ export class AdmissionAttemptTerminationJournal extends Context.Service<
   AdmissionAttemptTerminationJournalShape
 >()($I`AdmissionAttemptTerminationJournal`) {}
 
+/**
+ * Service contract for idempotent, protocol-gated admission eviction events.
+ *
+ * A `true` result acknowledges that the eviction event was admitted or was
+ * already present. A `false` result leaves the durable reap claim pending
+ * because the mixed-checkout protocol still disables eviction emission.
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export interface AdmissionEvictionJournalShape {
+  /** Publish or acknowledge one eviction event when the admission protocol permits it. */
+  readonly appendOnce: (
+    root: string,
+    event: AdmissionJournalLeaseEvicted | AdmissionJournalTicketEvicted
+  ) => Effect.Effect<boolean, QualitySchedulerError, FileSystem.FileSystem | Path.Path>;
+}
+
+/**
+ * Protocol-gated admission-eviction sink used by reap-claim recovery.
+ *
+ * **Example** (Provide an acknowledging test sink)
+ *
+ * ```ts
+ * import { AdmissionEvictionJournal } from "@beep/repo-cli/test/RepoRun"
+ * import { Effect, Layer } from "effect"
+ *
+ * const layer = Layer.succeed(
+ *   AdmissionEvictionJournal,
+ *   AdmissionEvictionJournal.of({ appendOnce: () => Effect.succeed(true) })
+ * )
+ * console.log(Layer.isLayer(layer)) // true
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export class AdmissionEvictionJournal extends Context.Service<
+  AdmissionEvictionJournal,
+  AdmissionEvictionJournalShape
+>()($I`AdmissionEvictionJournal`) {}
+
 const defaultAttemptTerminationJournal = AdmissionAttemptTerminationJournal.of({
   appendOnce: appendAbnormalAttemptEnd,
+});
+
+const defaultAdmissionEvictionJournal = AdmissionEvictionJournal.of({
+  appendOnce: appendAdmissionEvictionJournalEvent,
 });
 
 const journalAbnormalAttemptEnd = Effect.fn("QualityScheduler.journalAbnormalAttemptEnd")(function* (
@@ -627,7 +674,10 @@ const readReapClaims = Effect.fnUntraced(function* (
     .pipe(Effect.mapError(QualitySchedulerError.new(`Failed to list admission claims in ${directories.claims}.`)));
   return A.getSomes(
     yield* Effect.forEach(
-      A.filter(names, Str.endsWith(".reap.json")),
+      A.filter(
+        names,
+        (name) => Str.endsWith(".reap.json")(name) || Str.endsWith(".reap.pending-protocol-off.json")(name)
+      ),
       Effect.fnUntraced(function* (name: string) {
         const claimPath = path.join(directories.claims, name);
         const text = yield* fs.readFileString(claimPath).pipe(Effect.option);
@@ -645,14 +695,28 @@ const readReapClaims = Effect.fnUntraced(function* (
   );
 });
 
+const REAP_CLAIM_SUFFIX = ".reap.json";
+const PROTOCOL_DEFERRED_REAP_CLAIM_SUFFIX = ".reap.pending-protocol-off.json";
+
+const protocolDeferredReapClaimPath = Str.replace(/\.reap\.json$/u, PROTOCOL_DEFERRED_REAP_CLAIM_SUFFIX);
+
+const reapClaimLockPath = (claimPath: string): string =>
+  `${Str.replace(/\.reap\.pending-protocol-off\.json$/u, REAP_CLAIM_SUFFIX)(claimPath)}.lock`;
+
 const reapClaimPath = (path: Path.Path, directories: AdmissionDirectories, claim: AdmissionReapClaim): string => {
   const digest = createHash("sha256").update(`${claim._tag}:${claim.nonce}:${claim.sourcePath}`).digest("hex");
-  return path.join(directories.claims, `${digest}.reap.json`);
+  const suffix = AdmissionClaimSinkState.is["pending-protocol-off"](claim.admissionJournal)
+    ? PROTOCOL_DEFERRED_REAP_CLAIM_SUFFIX
+    : REAP_CLAIM_SUFFIX;
+  return path.join(directories.claims, `${digest}${suffix}`);
 };
 
 const updateReapClaim = (
   claim: AdmissionReapClaim,
-  update: { readonly admissionJournal?: "complete"; readonly attemptJournal?: "complete" }
+  update: {
+    readonly admissionJournal?: AdmissionClaimSinkState;
+    readonly attemptJournal?: AdmissionClaimSinkState;
+  }
 ): AdmissionReapClaim =>
   AdmissionReapClaim.match(claim, {
     lease: (current) => AdmissionLeaseReapClaim.make({ ...current, ...update }),
@@ -707,13 +771,90 @@ const persistReapClaim = Effect.fnUntraced(function* (
   );
 });
 
+const moveReapClaimBehindProtocolFence = Effect.fnUntraced(function* (
+  claimPath: string
+): Effect.fn.Return<string, QualitySchedulerError, FileSystem.FileSystem> {
+  const fs = yield* FileSystem.FileSystem;
+  const deferredPath = protocolDeferredReapClaimPath(claimPath);
+  if (Str.Equivalence(claimPath, deferredPath)) {
+    return claimPath;
+  }
+  yield* fs
+    .rename(claimPath, deferredPath)
+    .pipe(Effect.mapError(QualitySchedulerError.new(`Failed to defer admission reap claim ${claimPath}.`)));
+  return deferredPath;
+});
+
+const markReapClaimProtocolDeferred = Effect.fnUntraced(function* (
+  claimPath: string,
+  claim: AdmissionReapClaim
+): Effect.fn.Return<readonly [string, AdmissionReapClaim], QualitySchedulerError, FileSystem.FileSystem> {
+  const deferredPath = yield* moveReapClaimBehindProtocolFence(claimPath);
+  const deferred = updateReapClaim(claim, { admissionJournal: "pending-protocol-off" });
+  yield* persistReapClaim(deferredPath, deferred);
+  return [deferredPath, deferred];
+});
+
+const shieldReapClaimFromLegacyReaders = Effect.fnUntraced(function* (
+  root: string,
+  claimPath: string,
+  claim: AdmissionReapClaim
+): Effect.fn.Return<readonly [string, AdmissionReapClaim], QualitySchedulerError, FileSystem.FileSystem | Path.Path> {
+  if (
+    AdmissionClaimSinkState.is.complete(claim.admissionJournal) ||
+    AdmissionClaimSinkState.is["pending-protocol-off"](claim.admissionJournal)
+  ) {
+    return [claimPath, claim];
+  }
+  return AdmissionEvictionEmission.is.off((yield* readAdmissionProtocol(root)).eviction)
+    ? yield* markReapClaimProtocolDeferred(claimPath, claim)
+    : [claimPath, claim];
+});
+
+const reapClaimSinksComplete = (claim: AdmissionReapClaim): boolean =>
+  AdmissionClaimSinkState.is.complete(claim.attemptJournal) &&
+  AdmissionClaimSinkState.is.complete(claim.admissionJournal);
+
+const processAttemptJournalSink = Effect.fnUntraced(function* (
+  claimPath: string,
+  claim: AdmissionReapClaim,
+  journal: AdmissionAttemptTerminationJournalShape
+): Effect.fn.Return<AdmissionReapClaim, QualitySchedulerError, FileSystem.FileSystem | Path.Path> {
+  if (AdmissionClaimSinkState.is.complete(claim.attemptJournal)) {
+    return claim;
+  }
+  yield* journalAbnormalAttemptEnd(journal, ownerForReapClaim(claim), reasonForReapClaim(claim));
+  const acknowledged = updateReapClaim(claim, { attemptJournal: "complete" });
+  yield* persistReapClaim(claimPath, acknowledged);
+  return acknowledged;
+});
+
+const processAdmissionJournalSink = Effect.fnUntraced(function* (
+  directories: AdmissionDirectories,
+  claimPath: string,
+  claim: AdmissionReapClaim,
+  journal: AdmissionEvictionJournalShape
+): Effect.fn.Return<O.Option<AdmissionReapClaim>, QualitySchedulerError, FileSystem.FileSystem | Path.Path> {
+  if (AdmissionClaimSinkState.is.complete(claim.admissionJournal)) {
+    return O.some(claim);
+  }
+  const written = yield* journal.appendOnce(directories.root, admissionEventForReapClaim(claim));
+  if (!written) {
+    yield* markReapClaimProtocolDeferred(claimPath, claim);
+    return O.none();
+  }
+  const acknowledged = updateReapClaim(claim, { admissionJournal: "complete" });
+  yield* persistReapClaim(claimPath, acknowledged);
+  return O.some(acknowledged);
+});
+
 const processReapClaim = Effect.fnUntraced(function* (
   directories: AdmissionDirectories,
   claimPath: string,
   observedClaim: AdmissionReapClaim
 ): Effect.fn.Return<void, QualitySchedulerError, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
-  const lockPath = `${claimPath}.lock`;
+  const lockPath = reapClaimLockPath(claimPath);
   const lockToken = `${process.pid}:${randomUUID()}`;
   if (!(yield* acquireJournalFileLock(lockPath, lockToken))) {
     const claimStillPending = yield* fs.exists(claimPath).pipe(Effect.orElseSucceed(constant(true)));
@@ -738,29 +879,41 @@ const processReapClaim = Effect.fnUntraced(function* (
           message: `Admission reap claim ${claimPath} changed lifecycle identity while awaiting its lock.`,
         });
       }
+      const [pendingClaimPath, pendingClaim] = yield* shieldReapClaimFromLegacyReaders(
+        directories.root,
+        claimPath,
+        claim
+      );
       yield* fs
-        .remove(claim.sourcePath, { force: true })
+        .remove(pendingClaim.sourcePath, { force: true })
         .pipe(
-          Effect.mapError(QualitySchedulerError.new(`Failed to remove claimed admission state ${claim.sourcePath}.`))
+          Effect.mapError(
+            QualitySchedulerError.new(`Failed to remove claimed admission state ${pendingClaim.sourcePath}.`)
+          )
         );
       const attemptJournal = O.getOrElse(
         yield* Effect.serviceOption(AdmissionAttemptTerminationJournal),
         constant(defaultAttemptTerminationJournal)
       );
-      let pending = claim;
-      if (pending.attemptJournal === "pending") {
-        yield* journalAbnormalAttemptEnd(attemptJournal, ownerForReapClaim(pending), reasonForReapClaim(pending));
-        pending = updateReapClaim(pending, { attemptJournal: "complete" });
-        yield* persistReapClaim(claimPath, pending);
-      }
-      if (pending.admissionJournal === "pending") {
-        yield* appendAdmissionEvictionJournalEvent(directories.root, admissionEventForReapClaim(pending));
-        pending = updateReapClaim(pending, { admissionJournal: "complete" });
-        yield* persistReapClaim(claimPath, pending);
+      const admissionJournal = O.getOrElse(
+        yield* Effect.serviceOption(AdmissionEvictionJournal),
+        constant(defaultAdmissionEvictionJournal)
+      );
+      const attemptPending = yield* processAttemptJournalSink(pendingClaimPath, pendingClaim, attemptJournal);
+      const admissionPending = yield* processAdmissionJournalSink(
+        directories,
+        pendingClaimPath,
+        attemptPending,
+        admissionJournal
+      );
+      if (O.isNone(admissionPending) || !reapClaimSinksComplete(admissionPending.value)) {
+        return;
       }
       yield* fs
-        .remove(claimPath, { force: true })
-        .pipe(Effect.mapError(QualitySchedulerError.new(`Failed to acknowledge admission reap claim ${claimPath}.`)));
+        .remove(pendingClaimPath, { force: true })
+        .pipe(
+          Effect.mapError(QualitySchedulerError.new(`Failed to acknowledge admission reap claim ${pendingClaimPath}.`))
+        );
     }),
     releaseJournalFileLock(lockPath, lockToken)
   );
@@ -771,10 +924,13 @@ const createReapClaim = Effect.fnUntraced(function* (
   claim: AdmissionReapClaim
 ): Effect.fn.Return<void, QualitySchedulerError, FileSystem.FileSystem | Path.Path> {
   const path = yield* Path.Path;
-  const claimPath = reapClaimPath(path, directories, claim);
+  const pending = AdmissionEvictionEmission.is.off((yield* readAdmissionProtocol(directories.root)).eviction)
+    ? updateReapClaim(claim, { admissionJournal: "pending-protocol-off" })
+    : claim;
+  const claimPath = reapClaimPath(path, directories, pending);
   yield* tryCreateExclusive(
     claimPath,
-    `${yield* encodeReapClaim(claim).pipe(
+    `${yield* encodeReapClaim(pending).pipe(
       Effect.mapError(QualitySchedulerError.new(`Failed to encode admission reap claim ${claimPath}.`))
     )}\n`
   );
@@ -1305,6 +1461,25 @@ const admissionEscalation = (waitedMillis: number, alreadyEscalated: number): O.
 
 const escalationLevelFor = (waitedMillis: number): number =>
   waitedMillis >= 600_000 ? 2 : waitedMillis >= 120_000 ? 1 : 0;
+
+/**
+ * Deterministic scheduler helpers exposed to the source test kit.
+ *
+ * **Example** (Resolve a two-minute escalation)
+ *
+ * ```ts
+ * import { qualitySchedulerForTesting } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(qualitySchedulerForTesting.escalationLevel(120_000)) // 1
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const qualitySchedulerForTesting = {
+  escalationLevel: escalationLevelFor,
+  parseMeminfoFieldGib,
+};
 
 const refreshHeartbeat = Effect.fnUntraced(function* (
   entryPath: string,

@@ -27,6 +27,11 @@ export {
   FallowQualityCiMode,
   FallowQualityFeatureFamily,
   FallowQualityPromotionStatus,
+  GateOrderLaneClass,
+  GateOrderSeed,
+  GateOrderSeedRow,
+  GatePrecisionClass,
+  GateRedSchedulingDecision,
   GITHUB_CHECK_RUN_REPORT_PREFIX,
   GithubCheckFailurePolicy,
   GithubCheckLaneRun,
@@ -77,6 +82,7 @@ export {
 export * from "../commands/Quality/internal/TurboConfigProof.ts";
 export {
   renderAdmissionSnapshotLinesForTesting,
+  renderResidueReportLinesForTesting,
   renderTmpfsReportLinesForTesting,
 } from "../commands/Quality/Quality.command.ts";
 export * from "../internal/process/index.ts";

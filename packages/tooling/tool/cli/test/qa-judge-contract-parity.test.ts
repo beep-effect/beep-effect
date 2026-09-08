@@ -196,7 +196,7 @@ describe("commands/Qa cited-artifact typed gate parity", () => {
               title: "Other missing evidence",
             },
           ],
-          judge: QaJudgeRef.make({ effort: "high", model: "gpt-5.6-sol" }),
+          judge: QaJudgeRef.make({ effort: "high", model: "gpt-daybreak-blue-latest" }),
           requiredCount: 1,
           round: 1,
           schemaVersion: "qa-inventory/v1",
@@ -400,7 +400,7 @@ describe("commands/Qa complete judge contract parity", () => {
       };
       const inventory = {
         findings: [finding],
-        judge: { effort: "high", model: "gpt-5.6-sol" },
+        judge: { effort: "high", model: "gpt-daybreak-blue-latest" },
         requiredCount: 1,
         round: 4,
         schemaVersion: "qa-inventory/v1",
@@ -458,7 +458,7 @@ describe("commands/Qa complete judge contract parity", () => {
       });
       const candidate = yield* UnknownFromJsonString.encodeEffect({
         findings: [finding("R4-01", "P0"), finding("R4-02", "P1"), finding("R4-03", "P2")],
-        judge: { effort: "high", model: "gpt-5.6-sol" },
+        judge: { effort: "high", model: "gpt-daybreak-blue-latest" },
         requiredCount: 2,
         round: 4,
         schemaVersion: "qa-inventory/v1",

@@ -651,7 +651,7 @@ describe("commands/Qa JudgeCheck citation collection", () => {
         title: "smear",
       },
     ],
-    judge: QaJudgeRef.make({ effort: "high", model: "gpt-5.6-sol" }),
+    judge: QaJudgeRef.make({ effort: "high", model: "gpt-daybreak-blue-latest" }),
     requiredCount: 1,
     round: 1,
     schemaVersion: "qa-inventory/v1",
@@ -677,7 +677,7 @@ describe("commands/Qa JudgeCheck citation collection", () => {
           title: "ghost lags",
         },
       ],
-      judge: QaJudgeRef.make({ effort: "high", model: "gpt-5.6-sol" }),
+      judge: QaJudgeRef.make({ effort: "high", model: "gpt-daybreak-blue-latest" }),
       requiredCount: 1,
       round: 2,
       schemaVersion: "qa-inventory/v1",
@@ -707,7 +707,7 @@ describe("commands/Qa judge output parsing", () => {
   const fence = "`".repeat(3);
   const inventoryBody = {
     findings: [],
-    judge: { effort: "high", model: "gpt-5.6-sol" },
+    judge: { effort: "high", model: "gpt-daybreak-blue-latest" },
     requiredCount: 0,
     round: 3,
     schemaVersion: "qa-inventory/v1",

@@ -336,6 +336,12 @@
         ]
       },
       {
+        "name": "@beep/freshbooks",
+        "patterns": [
+          "packages/drivers/freshbooks/src/**"
+        ]
+      },
+      {
         "name": "@beep/gov-legal-mcp",
         "patterns": [
           "packages/drivers/gov-legal-mcp/src/**"
@@ -1916,6 +1922,23 @@
         ],
         "allowTypeOnly": [
           "@beep/firecrawl",
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/test-utils",
+          "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/freshbooks",
+        "allow": [
+          "@beep/freshbooks",
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/test-utils",
+          "@beep/utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/freshbooks",
           "@beep/identity",
           "@beep/schema",
           "@beep/test-utils",

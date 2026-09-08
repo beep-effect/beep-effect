@@ -37,7 +37,7 @@ import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
 
-const judge = QaJudgeRef.make({ effort: "high", model: "gpt-5.6-sol" });
+const judge = QaJudgeRef.make({ effort: "high", model: "gpt-daybreak-blue-latest" });
 
 const finding = (id: string, severity: "P0" | "P1" | "P2", path: string, eventIds: ReadonlyArray<number>) => ({
   evidence: [{ eventIds, kind: "strip", path }],
@@ -51,7 +51,7 @@ const finding = (id: string, severity: "P0" | "P1" | "P2", path: string, eventId
 
 const inventoryInput = (findings: ReadonlyArray<unknown>, requiredCount: number) => ({
   findings,
-  judge: { effort: "high", model: "gpt-5.6-sol" },
+  judge: { effort: "high", model: "gpt-daybreak-blue-latest" },
   requiredCount,
   round: 4,
   schemaVersion: "qa-inventory/v1",

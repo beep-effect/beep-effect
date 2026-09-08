@@ -102,7 +102,7 @@ export const isCrossCheckClean = (check: EvidenceCrossCheck): boolean =>
  *
  * const inventory = QaInventory.make({
  *   findings: [],
- *   judge: QaJudgeRef.make({ effort: "high", model: "gpt-5.6-sol" }),
+ *   judge: QaJudgeRef.make({ effort: "high", model: "gpt-daybreak-blue-latest" }),
  *   requiredCount: 0,
  *   round: 1,
  *   schemaVersion: "qa-inventory/v1",
@@ -134,7 +134,7 @@ export const citedPaths = (inventory: QaInventory): ReadonlyArray<string> =>
  *
  * const inventory = QaInventory.make({
  *   findings: [],
- *   judge: QaJudgeRef.make({ effort: "high", model: "gpt-5.6-sol" }),
+ *   judge: QaJudgeRef.make({ effort: "high", model: "gpt-daybreak-blue-latest" }),
  *   requiredCount: 0,
  *   round: 1,
  *   schemaVersion: "qa-inventory/v1",
@@ -166,7 +166,7 @@ export const citedEventIds = (inventory: QaInventory): ReadonlyArray<number> =>
  *
  * const inventory = QaInventory.make({
  *   findings: [],
- *   judge: QaJudgeRef.make({ effort: "high", model: "gpt-5.6-sol" }),
+ *   judge: QaJudgeRef.make({ effort: "high", model: "gpt-daybreak-blue-latest" }),
  *   requiredCount: 0,
  *   round: 1,
  *   schemaVersion: "qa-inventory/v1",
@@ -344,7 +344,7 @@ export const renderCrossCheckFailure: {
  * })
  * const inventory = QaInventory.make({
  *   findings: [],
- *   judge: QaJudgeRef.make({ effort: "high", model: "gpt-5.6-sol" }),
+ *   judge: QaJudgeRef.make({ effort: "high", model: "gpt-daybreak-blue-latest" }),
  *   requiredCount: 0,
  *   round: 1,
  *   schemaVersion: "qa-inventory/v1",
@@ -438,7 +438,7 @@ const requireInventoryRoundImpl = Effect.fn("QaJudgeCheck.requireInventoryRound"
  *
  * const inventory = QaInventory.make({
  *   findings: [],
- *   judge: QaJudgeRef.make({ effort: "high", model: "gpt-5.6-sol" }),
+ *   judge: QaJudgeRef.make({ effort: "high", model: "gpt-daybreak-blue-latest" }),
  *   requiredCount: 0,
  *   round: 1,
  *   schemaVersion: "qa-inventory/v1",

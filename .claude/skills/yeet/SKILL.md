@@ -526,10 +526,14 @@ turbo work, so they are cheap to run mid-loop.
   `verify --tier review-fix` remains the cheaper loop lane while a full proof
   is active (one token, never the origin lock); `--tier cheap-gates` takes
   neither admission nor the lock.
-- The cheap tier always collects every lane failure. The later full proof
-  collects all sibling failures in its active wave, then stops before the next
-  wave under the default fail-fast policy. `--collect-all` tells the full proof
-  to continue across later waves too. Fix every reported lane before retrying.
+- The cheap tier always collects every lane failure. The later full proof uses
+  its versioned economics seed to run short gates before expensive gates. Under
+  the default fail-fast policy, a precise red stops launching subsequent lanes;
+  imprecise reds remain diagnostic and do not stop the plan. Unlaunched lanes
+  are recorded as `not-run-early-stop`, and already-running work is never
+  cancelled. `--no-fail-fast` (or the compatibility spelling `--collect-all`)
+  requests the complete diagnostic picture. Fix every reported lane before
+  retrying.
 - Failure packets are written for proof/commit/publish/monitor step failures,
   publish-intent refusals (untracked/unstaged/partially staged paths), and
   stale-base refusals. Intent refusals print a summarized path list on stderr;
