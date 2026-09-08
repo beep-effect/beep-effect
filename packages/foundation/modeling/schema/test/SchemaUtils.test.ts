@@ -3,6 +3,7 @@ import { $SchemaId } from "@beep/identity/packages";
 import * as Encoders from "@beep/schema/SchemaUtils/encoders";
 import * as SchemaUtils from "@beep/schema/SchemaUtils/index";
 import { optional } from "@beep/schema/SchemaUtils/optional";
+import { optionalKeyWithDefault } from "@beep/schema/SchemaUtils/optionalKeyWithDefaults";
 import { pluck } from "@beep/schema/SchemaUtils/pluck";
 import { split } from "@beep/schema/SchemaUtils/split";
 import { toEquivalence } from "@beep/schema/SchemaUtils/toEquivalence";
@@ -14,6 +15,27 @@ import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
+
+describe("optionalKeyWithDefault", () => {
+  const Settings = S.Struct({ retries: optionalKeyWithDefault(S.FiniteFromString, 3) });
+
+  it.effect(
+    "defaults absent keys while decoding present encoded values",
+    Effect.fnUntraced(function* () {
+      expect(yield* S.decodeUnknownEffect(Settings)({})).toEqual({ retries: 3 });
+      expect(yield* S.decodeUnknownEffect(Settings)({ retries: "0" })).toEqual({ retries: 0 });
+      expect(Exit.isFailure(yield* Effect.exit(S.decodeUnknownEffect(Settings)({ retries: "invalid" })))).toBe(true);
+    })
+  );
+
+  it.effect(
+    "encodes decoded values and requires the decoded key",
+    Effect.fnUntraced(function* () {
+      expect(yield* S.encodeEffect(Settings)({ retries: 3 })).toEqual({ retries: "3" });
+      expect(Exit.isFailure(yield* Effect.exit(S.encodeUnknownEffect(Settings)({})))).toBe(true);
+    })
+  );
+});
 
 describe("pluck", () => {
   it("decodes a one-property struct into the selected field value", () => {
