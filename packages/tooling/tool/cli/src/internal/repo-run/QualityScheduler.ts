@@ -209,6 +209,7 @@ const encodePromotionTransition = S.encodeUnknownEffect(S.fromJsonString(Admissi
 
 const GIB = 1024 * 1024 * 1024;
 const MEMINFO_PATH = "/proc/meminfo";
+const recoveryRecordSettlementWindow = Duration.millis(25);
 const textEncoder = new TextEncoder();
 
 /**
@@ -815,6 +816,17 @@ const reapClaimSinksComplete = (claim: AdmissionReapClaim): boolean =>
   AdmissionClaimSinkState.is.complete(claim.attemptJournal) &&
   AdmissionClaimSinkState.is.complete(claim.admissionJournal);
 
+const recoveryRecordRemainsAfterSettlement = Effect.fnUntraced(function* (
+  recoveryPath: string
+): Effect.fn.Return<boolean, never, FileSystem.FileSystem> {
+  const fs = yield* FileSystem.FileSystem;
+  if (!(yield* fs.exists(recoveryPath).pipe(Effect.orElseSucceed(constant(true))))) {
+    return false;
+  }
+  yield* Effect.sleep(recoveryRecordSettlementWindow);
+  return yield* fs.exists(recoveryPath).pipe(Effect.orElseSucceed(constant(true)));
+});
+
 const processAttemptJournalSink = Effect.fnUntraced(function* (
   claimPath: string,
   claim: AdmissionReapClaim,
@@ -857,7 +869,7 @@ const processReapClaim = Effect.fnUntraced(function* (
   const lockPath = reapClaimLockPath(claimPath);
   const lockToken = `${process.pid}:${randomUUID()}`;
   if (!(yield* acquireJournalFileLock(lockPath, lockToken))) {
-    const claimStillPending = yield* fs.exists(claimPath).pipe(Effect.orElseSucceed(constant(true)));
+    const claimStillPending = yield* recoveryRecordRemainsAfterSettlement(claimPath);
     if (claimStillPending) {
       return yield* QualitySchedulerError.make({
         message: `Admission reap claim ${claimPath} stayed busy; its outputs remain pending.`,
@@ -1135,7 +1147,7 @@ const processPromotionTransition = Effect.fnUntraced(function* (
   const lockPath = `${transitionPath}.lock`;
   const lockToken = `${process.pid}:${randomUUID()}`;
   if (!(yield* acquireJournalFileLock(lockPath, lockToken))) {
-    const transitionPending = yield* fs.exists(transitionPath).pipe(Effect.orElseSucceed(constant(true)));
+    const transitionPending = yield* recoveryRecordRemainsAfterSettlement(transitionPath);
     if (transitionPending) {
       return yield* QualitySchedulerError.make({
         message: `Admission promotion ${transitionPath} stayed busy; recovery remains pending.`,

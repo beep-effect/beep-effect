@@ -3,6 +3,7 @@ import { $SchemaId } from "@beep/identity/packages";
 import * as Encoders from "@beep/schema/SchemaUtils/encoders";
 import * as SchemaUtils from "@beep/schema/SchemaUtils/index";
 import { optional } from "@beep/schema/SchemaUtils/optional";
+import { optionalKeyWithDefault } from "@beep/schema/SchemaUtils/optionalKeyWithDefaults";
 import { pluck } from "@beep/schema/SchemaUtils/pluck";
 import { split } from "@beep/schema/SchemaUtils/split";
 import { toEquivalence } from "@beep/schema/SchemaUtils/toEquivalence";
@@ -16,6 +17,10 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
 const isNonEmptyString = S.is(S.NonEmptyString);
+const OptionalKeySettings = S.Struct({ retries: optionalKeyWithDefault(S.FiniteFromString, 3) });
+const decodeOptionalKeySettings = S.decodeEffect(OptionalKeySettings);
+const encodeOptionalKeySettings = S.encodeEffect(OptionalKeySettings);
+const encodeUnknownOptionalKeySettings = S.encodeUnknownEffect(OptionalKeySettings);
 const OptionalPatch = S.Struct({ file: optional(S.String) });
 const decodeOptionalPatch = S.decodeUnknownEffect(OptionalPatch);
 const encodeOptionalPatch = S.encodeEffect(OptionalPatch);
@@ -42,6 +47,25 @@ const RequiredVersionNode = S.Struct({
 });
 const decodeRequiredVersionNodeSync = S.decodeSync(RequiredVersionNode);
 const decodeUnknownRequiredVersionNodeSync = S.decodeUnknownSync(RequiredVersionNode);
+
+describe("optionalKeyWithDefault", () => {
+  it.effect(
+    "defaults absent keys while decoding present encoded values",
+    Effect.fnUntraced(function* () {
+      expect(yield* decodeOptionalKeySettings({})).toEqual({ retries: 3 });
+      expect(yield* decodeOptionalKeySettings({ retries: "0" })).toEqual({ retries: 0 });
+      expect(Exit.isFailure(yield* Effect.exit(decodeOptionalKeySettings({ retries: "invalid" })))).toBe(true);
+    })
+  );
+
+  it.effect(
+    "encodes decoded values and requires the decoded key",
+    Effect.fnUntraced(function* () {
+      expect(yield* encodeOptionalKeySettings({ retries: 3 })).toEqual({ retries: "3" });
+      expect(Exit.isFailure(yield* Effect.exit(encodeUnknownOptionalKeySettings({})))).toBe(true);
+    })
+  );
+});
 
 describe("pluck", () => {
   it("decodes a one-property struct into the selected field value", () => {

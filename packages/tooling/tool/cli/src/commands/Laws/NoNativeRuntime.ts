@@ -23,7 +23,8 @@ import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { Node, Project } from "ts-morph";
+import { Node } from "ts-morph";
+import { createRepoTsMorphProject } from "../../internal/tsmorph/index.ts";
 import { isEcosystemMemberSourcePath, isExcludedLawScanPath } from "./internal/LawScan.ts";
 import { NoNativeRuntimeRulesExecutionError } from "./Laws.errors.ts";
 import type {
@@ -583,12 +584,10 @@ export const runNoNativeRuntimeRules = Effect.fn("runNoNativeRuntimeRules")(func
   const isExcludedFile = (filePath: string): boolean =>
     isEcosystemMemberSourcePath(filePath) || isExcludedLawScanPath(options.excludePaths, filePath);
 
-  const project = new Project({
+  const project = createRepoTsMorphProject({
     tsConfigFilePath: path.join(cwd, "tsconfig.json"),
-    skipAddingFilesFromTsConfig: true,
+    sourceFileGlobs: options.includePaths ?? SOURCE_FILE_GLOBS,
   });
-
-  project.addSourceFilesAtPaths(options.includePaths ?? SOURCE_FILE_GLOBS);
 
   let sourceFiles = A.empty<ScannedSourceFile>();
 

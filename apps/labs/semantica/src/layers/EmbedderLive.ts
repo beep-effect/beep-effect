@@ -1,4 +1,5 @@
 import { Sha256Hex } from "@beep/schema";
+import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Crypto, Effect, Equal, Layer, Match, Order, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -17,9 +18,9 @@ import type { EmbeddingInput } from "@/schema/Projection";
 
 const decodeEmbeddingVectorType = S.decodeEffect(S.toType(EmbeddingVector));
 
-const EmbeddingVectorJson = S.fromJsonString(EmbeddingVector);
-const decodeEmbeddingVectorJson = S.decodeEffect(EmbeddingVectorJson);
-const encodeEmbeddingVectorJson = S.encodeEffect(EmbeddingVectorJson);
+const EmbeddingVectorJson = S.fromJsonString(EmbeddingVector).pipe(
+  SchemaUtils.withCodecStatics(["encodeEffect", "decodeEffect"])
+);
 const modelEquivalence = S.toEquivalence(ModelIdentity);
 const vectorOrder = Order.mapInput(Order.String, (vector: EmbeddingVector) => vector.chunk);
 const degradedOrder = Order.mapInput(Order.String, (degraded: DegradedEmbedding) => degraded.chunk);
@@ -30,7 +31,11 @@ const EMBEDDING_INPUT_ARTIFACT_HASH = Sha256Hex.make(
 
 type CacheResolution =
   | { readonly _tag: "Hit"; readonly vector: EmbeddingVector }
-  | { readonly _tag: "Miss"; readonly input: EmbeddingInput; readonly key: ProviderCacheKey }
+  | {
+      readonly _tag: "Miss";
+      readonly input: EmbeddingInput;
+      readonly key: ProviderCacheKey;
+    }
   | { readonly _tag: "Degraded"; readonly degraded: DegradedEmbedding };
 type CacheMiss = Extract<CacheResolution, { readonly _tag: "Miss" }>;
 type GeneratedEmbedding = Result.Result<EmbeddingVector, DegradedEmbedding>;
@@ -40,7 +45,13 @@ const degraded = (
   model: ModelIdentity,
   reason: DegradedEmbedding["reason"],
   detail: string
-): DegradedEmbedding => DegradedEmbedding.make({ chunk: input.chunk, detail, model, reason });
+): DegradedEmbedding =>
+  DegradedEmbedding.make({
+    chunk: input.chunk,
+    detail,
+    model,
+    reason,
+  });
 
 const makeKey = (input: EmbeddingInput, model: ModelIdentity): ProviderCacheKey =>
   ProviderCacheKey.make({
@@ -64,9 +75,14 @@ const cachedVector = Effect.fn("Embedder.cachedVector")(function* (
           degraded: degraded(input, model, "cache-corrupt", "The embedding cache entry could not be read safely."),
         }),
       onSuccess: O.match({
-        onNone: () => Effect.succeed<CacheResolution>({ _tag: "Miss", input, key }),
+        onNone: () =>
+          Effect.succeed<CacheResolution>({
+            _tag: "Miss",
+            input,
+            key,
+          }),
         onSome: (entry) =>
-          decodeEmbeddingVectorJson(entry.response).pipe(
+          EmbeddingVectorJson.decodeEffect(entry.response).pipe(
             Effect.match({
               onFailure: () =>
                 ({
@@ -103,7 +119,7 @@ const storeVector = Effect.fn("Embedder.storeVector")(function* (
   vector: EmbeddingVector,
   cache: ProviderCache["Service"]
 ): Effect.fn.Return<Result.Result<EmbeddingVector, DegradedEmbedding>, never, Crypto.Crypto> {
-  const response = yield* encodeEmbeddingVectorJson(vector).pipe(Effect.orDie);
+  const response = yield* EmbeddingVectorJson.encodeEffect(vector).pipe(Effect.orDie);
   const cacheKey = yield* contentDigest(ProviderCacheKey)(key).pipe(Effect.orDie);
   return yield* cache
     .store(
@@ -164,7 +180,13 @@ const providerBatch = Effect.fn("Embedder.providerBatch")(function* (
             Result.fail(degraded(input, model, "response-invalid", "The embedding provider returned an empty vector."))
           ),
         onNonEmpty: (values) =>
-          decodeEmbeddingVectorType(EmbeddingVector.make({ chunk: input.chunk, model, values })).pipe(
+          decodeEmbeddingVectorType(
+            EmbeddingVector.make({
+              chunk: input.chunk,
+              model,
+              values,
+            })
+          ).pipe(
             Effect.match({
               onFailure: () =>
                 Result.fail(

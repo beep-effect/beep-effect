@@ -20,8 +20,6 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import type { ProviderInstanceRepositoryShape, ProviderProbeShape } from "@beep/agents-use-cases/server";
 
-const decodeUnknownDomainProviderInstanceSync = S.decodeUnknownSync(Domain.ProviderInstance);
-
 const id = Agents.ProviderInstanceId.make(1);
 const missingId = Agents.ProviderInstanceId.make(99);
 const probedAt = DateTime.makeUnsafe("2026-07-12T00:00:00.000Z");
@@ -29,7 +27,7 @@ const isProviderInstanceNotFound = S.is(ProviderInstanceNotFound);
 const isProviderUnauthenticated = S.is(ProviderUnauthenticated);
 
 const makeInstance = (kind: Domain.ProviderKind = "claude"): Domain.ProviderInstance =>
-  decodeUnknownDomainProviderInstanceSync({
+  Domain.ProviderInstance.decodeUnknownSync({
     ...productEntityFixtureInput("AgentsProviderInstance", 1),
     binaryPath: kind === "claude" ? "/usr/bin/claude" : "/usr/bin/codex",
     envVars: {},

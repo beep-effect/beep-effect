@@ -1,7 +1,8 @@
 import { NoNativeRuntimeRulesOptions, runNoNativeRuntimeRules } from "@beep/repo-cli/test/Laws";
+import { makeSchemaFirstProject } from "@beep/repo-cli/test/Lint";
 import { A } from "@beep/utils";
 import { expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { Effect, FileSystem, Path } from "effect";
 import {
   NodeTestLayer,
   withTempWorkingDirectory,
@@ -26,6 +27,41 @@ const expectStrictNativeError = (
 };
 
 it.layer(NodeTestLayer)("native runtime laws", (it) => {
+  it.effect(
+    "scans source files without reading inaccessible excluded docs directories",
+    Effect.fnUntraced(function* () {
+      yield* withTempWorkingDirectory(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          yield* writeProjectFile(
+            "tsconfig.base.json",
+            '{ "compilerOptions": { "strict": true, "paths": { "@demo/*": ["./packages/demo/*"] } } }'
+          );
+          yield* writeProjectFile("tsconfig.json", '{ "extends": "./tsconfig.base.json", "include": ["**/*.ts"] }');
+          yield* writeProjectFile("packages/demo/index.ts", "export const value = new Date();\n");
+          yield* writeProjectFile("packages/demo/docs/examples/example.ts", "export const value = new Date();\n");
+          yield* Effect.acquireRelease(fs.chmod("packages/demo/docs/examples", 0o000), () =>
+            fs.chmod("packages/demo/docs/examples", 0o755).pipe(Effect.orDie)
+          );
+
+          const project = yield* makeSchemaFirstProject();
+          expect(project.getCompilerOptions().strict).toBe(true);
+          expect(project.getCompilerOptions().paths).toEqual({ "@demo/*": ["./packages/demo/*"] });
+          expect(
+            A.map(project.getSourceFiles(), (source) => path.relative(process.cwd(), source.getFilePath()))
+          ).toEqual(["packages/demo/index.ts"]);
+
+          const summary = yield* runNoNativeRuntimeRules(NoNativeRuntimeRulesOptions.make({ strictCheck: true }));
+          expect(summary.scannedFiles).toBe(1);
+          expect(summary.warningCount).toBe(1);
+          expect(summary.strictFailure).toBe(true);
+          expect(summary.affectedFiles).toEqual(["packages/demo/index.ts"]);
+        })
+      );
+    })
+  );
+
   it.effect(
     "exempts ecosystem members in full and explicit include scans",
     Effect.fnUntraced(function* () {

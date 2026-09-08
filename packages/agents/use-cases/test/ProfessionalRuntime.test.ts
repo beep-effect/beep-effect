@@ -25,11 +25,6 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import type { PromotionGateRequest } from "@beep/shared-use-cases/PromotionGate";
 
-const encodeCandidateOutputSetResult = S.encodeResult(CandidateOutputSet);
-const encodeRuntimeActivityResult = S.encodeResult(RuntimeActivity);
-const encodeRuntimeCandidateClaimResult = S.encodeResult(RuntimeCandidateClaim);
-const encodeRuntimeEvidenceRefResult = S.encodeResult(RuntimeEvidenceRef);
-
 const lawFixture: RuntimeFixtureInput = {
   body: A.join(
     [
@@ -101,7 +96,7 @@ describe("@beep/agents-use-cases", { concurrent: false }, () => {
       expect(outputSet.claims).toHaveLength(3);
       expect(outputSet.contextPacket.scope.workspaceId).toBe("workspace-law-fixture");
 
-      const encoded = Result.getOrThrow(encodeCandidateOutputSetResult(outputSet));
+      const encoded = Result.getOrThrow(CandidateOutputSet.encodeResult(outputSet));
       expect(encoded.scenarioId).toBe("law-patent-intake");
       expect(encoded.contextPacket.schemaVersion).toBe("runtime-data-loop.expected.context-packet.v1");
       expect(encoded.contextPacket.generatedAt).toBe("2026-05-01T14:13:30Z");
@@ -134,15 +129,15 @@ describe("@beep/agents-use-cases", { concurrent: false }, () => {
       principalId: "principal-agent-runtime-fixture",
     });
 
-    expect(Result.getOrThrow(encodeRuntimeEvidenceRefResult(evidence))).toStrictEqual({
+    expect(Result.getOrThrow(RuntimeEvidenceRef.encodeResult(evidence))).toStrictEqual({
       artifactId: "email-001",
     });
-    expect(Result.getOrThrow(encodeRuntimeEvidenceRefResult(spannedEvidence))).toStrictEqual({
+    expect(Result.getOrThrow(RuntimeEvidenceRef.encodeResult(spannedEvidence))).toStrictEqual({
       artifactId: "email-001",
       spanId: "email-001-s2",
       spanIds: ["email-001-s2", "email-001-s3"],
     });
-    expect(Result.getOrThrow(encodeRuntimeCandidateClaimResult(claim))).toMatchObject({
+    expect(Result.getOrThrow(RuntimeCandidateClaim.encodeResult(claim))).toMatchObject({
       claimId: "claim-001",
       eventDate: "2026-06-12",
       evidence: [
@@ -153,7 +148,7 @@ describe("@beep/agents-use-cases", { concurrent: false }, () => {
         },
       ],
     });
-    expect(Result.getOrThrow(encodeRuntimeActivityResult(activity))).toStrictEqual({
+    expect(Result.getOrThrow(RuntimeActivity.encodeResult(activity))).toStrictEqual({
       activityId: "activity-001",
       activityType: "artifact_ingested",
       artifactId: "email-001",

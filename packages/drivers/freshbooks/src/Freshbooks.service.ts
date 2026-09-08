@@ -38,6 +38,8 @@ import type {
 } from "./Freshbooks.models.ts";
 import type { FreshbooksAuthShape } from "./Freshbooks.token.ts";
 
+const decodeFreshbooksBaseUrl = S.decodeEffect(FreshbooksBaseUrl);
+
 const $I = $FreshbooksId.create("Freshbooks.service");
 
 /**
@@ -120,8 +122,8 @@ export class ResolvedFreshbooksConfig extends S.Class<ResolvedFreshbooksConfig>(
  */
 export const resolveConfig = Effect.fn("Freshbooks.resolveConfig")(
   function* (input: FreshbooksConfigInput) {
-    const apiUrl = yield* S.decodeEffect(FreshbooksBaseUrl)(input.apiUrl);
-    const authUrl = yield* S.decodeEffect(FreshbooksBaseUrl)(input.authUrl);
+    const apiUrl = yield* decodeFreshbooksBaseUrl(input.apiUrl);
+    const authUrl = yield* decodeFreshbooksBaseUrl(input.authUrl);
 
     return ResolvedFreshbooksConfig.make({
       clientId: input.clientId,

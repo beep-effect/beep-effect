@@ -32,7 +32,7 @@ services:
       - "${DB_PG_PORT:-5432}:${DB_PG_PORT:-5432}"
 
   grafana:
-    image: grafana/otel-lgtm:0.32.0
+    image: grafana/otel-lgtm:0.32.1
     container_name: grafana
     restart: unless-stopped
     ports:

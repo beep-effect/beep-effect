@@ -7,9 +7,9 @@
 
 import { GroundedExtraction } from "@beep/langextract/Extraction";
 import { locateGroundedExtractions } from "@beep/langextract/VerifiedSpan";
-import { PosInt } from "@beep/schema";
-import { Effect } from "effect";
+import { PosInt } from "@beep/schema/Int";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
 import { ExtractedField, MissingField, makeNormalizedFixture } from "@/domain/Bundle";

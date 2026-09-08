@@ -46,6 +46,8 @@ const encodeAssistantContentResult = S.encodeResult(AssistantContent);
 const encodeSkillResult = S.encodeResult(Skill);
 const encodeSkillFrontmatterResult = S.encodeResult(SkillFrontmatter);
 const encodeAgentModeSync = S.encodeSync(AgentMode);
+const TaggedAgent = Agent.toTagged();
+const decodeUnknownTaggedAgentResult = S.decodeUnknownResult(TaggedAgent);
 
 const AgentModeArbitrary = S.toArbitrary(AgentMode)(fc);
 
@@ -98,12 +100,14 @@ describe("@beep/agents-domain", () => {
     };
     const decoded = decodeUnknownAgentSync(encoded);
     const constructed = Agent.make(decoded);
+    const tagged = Result.getOrThrow(decodeUnknownTaggedAgentResult(encoded));
 
     expect(decoded).toBeInstanceOf(Agent);
     expect(constructed).toBeInstanceOf(Agent);
     expect(constructed.entityType).toBe("AgentsAgent");
     expect(constructed.mode).toBe("deterministic_fixture");
     expect(constructed.skillFixtureKey).toBe("skill.review");
+    expect(TaggedAgent.guards.deterministic_fixture(tagged)).toBe(true);
     expect(Result.getOrThrow(encodeAgentResult(decoded))).toStrictEqual(encoded);
   });
 

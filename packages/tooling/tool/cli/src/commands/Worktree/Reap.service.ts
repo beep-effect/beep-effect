@@ -34,6 +34,8 @@ import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { WorktreeReapSkipReason } from "./Reap.schemas.ts";
 import type { FleetLivenessVerdict, FleetProbeReading, WorktreeListEntry } from "./Worktree.schemas.ts";
 
+const isFinite = S.is(S.Finite);
+
 const $I = $RepoCliId.create("commands/Worktree/Reap.service");
 
 type ProbeCapture = {
@@ -297,14 +299,14 @@ export const probeWorktreeLiveness: ReapLivenessProber = Effect.fnUntraced(funct
 
 const livenessSkipReason = (verdict: FleetLivenessVerdict): O.Option<WorktreeReapSkipReason> =>
   Match.value(verdict.status).pipe(
-    Match.when("dormant", () => O.none<WorktreeReapSkipReason>()),
+    Match.when("dormant", O.none<WorktreeReapSkipReason>),
     Match.when("live", () => O.some<WorktreeReapSkipReason>("live-session")),
     Match.orElse(() => O.some<WorktreeReapSkipReason>("liveness-unknown"))
   );
 
 const classSkipReason = (reapClass: WorktreeReapClass): O.Option<WorktreeReapSkipReason> =>
   WorktreeReapClass.$match(reapClass, {
-    "merged-pr": () => O.none<WorktreeReapSkipReason>(),
+    "merged-pr": O.none<WorktreeReapSkipReason>,
     "open-pr": () => O.some<WorktreeReapSkipReason>("open-pr"),
     "no-pr": () => O.some<WorktreeReapSkipReason>("no-pr"),
     unknown: () => O.some<WorktreeReapSkipReason>("gh-probe-failed"),
@@ -425,10 +427,11 @@ const assessCandidate = Effect.fn("WorktreeReap.assessCandidate")(function* (
   }
   const evidence = yield* probeEvidence(ctx, entry, branch.value);
   if (evidence._tag === "skipped") {
-    const prFields = O.match(evidence.pr, {
-      onNone: () => ({}),
-      onSome: (pr) => ({ reapClass: pr.reapClass, prNumber: pr.prNumber }),
-    });
+    const prFields = pipe(
+      evidence.pr,
+      O.map((pr) => ({ reapClass: pr.reapClass, prNumber: pr.prNumber })),
+      O.getOrElse(() => ({}))
+    );
     return {
       candidate: WorktreeReapCandidate.make({ ...base, ...prFields, skipReason: O.some(evidence.skip.reason) }),
       warnings: [evidence.skip.warning],
@@ -645,7 +648,7 @@ export const runWorktreeReap = Effect.fn("WorktreeReap.runWorktreeReap")(functio
     (entry) => !Str.Equivalence(path.resolve(entry.path), path.resolve(currentRoot))
   );
   const idleThresholdHours = options.idleHours ?? 48;
-  if (!S.is(S.Finite)(idleThresholdHours) || idleThresholdHours < 0) {
+  if (!isFinite(idleThresholdHours) || idleThresholdHours < 0) {
     return yield* WorktreeCommandError.make({ message: "--idle-hours must be a non-negative finite number." });
   }
   const clockNow = yield* Clock.currentTimeMillis;

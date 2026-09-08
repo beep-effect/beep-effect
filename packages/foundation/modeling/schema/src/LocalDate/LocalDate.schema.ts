@@ -699,7 +699,8 @@ export const LocalDateFromString = S.String.pipe(
     description: "LocalDateFromString - Schema that transforms ISO date strings (YYYY-MM-DD) to LocalDate",
     documentation:
       "This schema can be used directly in API URL params, request bodies, and database columns\nto automatically parse date strings into LocalDate instances.",
-  })
+  }),
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 /**

@@ -219,7 +219,7 @@ layer(VersionSyncTestLayer)("VersionSync Effect Catalog", (it) => {
         yield* fs.writeFileString(
           path.join(vercelDir, "vercel.json"),
           `${encodeJson({
-            installCommand: "cd ../.. && npx --yes bun@1.3.14 install --frozen-lockfile",
+            installCommand: 'cd ../.. && npx --yes "bun@1.3.14" install --frozen-lockfile',
             buildCommand: "cd ../.. && npx --yes bun@1.3.14 run --cwd apps/oip-web build:pwa",
           })}\n`
         );
@@ -321,6 +321,47 @@ layer(VersionSyncTestLayer)("VersionSync Effect Catalog", (it) => {
 
   describe("updateVercelBunVersion", () => {
     it.effect(
+      "updates the canonical Bun version without rewriting derived deployment commands",
+      Effect.fn(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const tmpDir = yield* fs.makeTempDirectoryScoped();
+        const vercelDir = path.join(tmpDir, "apps", "oip-web");
+        const vercelJsonPath = path.join(vercelDir, "vercel.json");
+        const document = `${encodeJson({
+          installCommand: 'cd ../.. && npx --yes "bun@$(cat .bun-version)" install --frozen-lockfile',
+          buildCommand: 'cd ../.. && npx --yes "bun@$(cat .bun-version)" run --cwd apps/oip-web build:pwa',
+        })}\n`;
+
+        yield* fs.makeDirectory(vercelDir, { recursive: true });
+        yield* fs.writeFileString(path.join(tmpDir, ".bun-version"), "1.3.14\n");
+        yield* fs.writeFileString(
+          path.join(tmpDir, "package.json"),
+          `${encodeJson({ packageManager: "bun@1.4.0" })}\n`
+        );
+        yield* fs.writeFileString(vercelJsonPath, document);
+
+        const report = buildBunReport(yield* resolveBunVersions(tmpDir, true));
+        expect(A.map(report.items, (item) => item.file)).toEqual([".bun-version"]);
+        const updater = yield* UpdateApplierService;
+        expect(
+          yield* updater.apply(
+            tmpDir,
+            VersionSyncResolution.make({
+              report: VersionSyncReport.make({ categories: [report], hasDrift: true }),
+              nodeLocations: [],
+            })
+          )
+        ).toBe(1);
+        expect(yield* fs.readFileString(path.join(tmpDir, ".bun-version"))).toBe("1.4.0\n");
+        expect(buildBunReport(yield* resolveBunVersions(tmpDir, true)).status).toBe("ok");
+        expect(yield* updateVercelBunVersion(vercelJsonPath, "installCommand", "1.4.0")).toBe(false);
+        expect(yield* updateVercelBunVersion(vercelJsonPath, "buildCommand", "1.4.0")).toBe(false);
+        expect(yield* fs.readFileString(vercelJsonPath)).toBe(document);
+      })
+    );
+
+    it.effect(
       "updates install and build command pins while preserving the surrounding Vercel document",
       Effect.fn(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -332,7 +373,7 @@ layer(VersionSyncTestLayer)("VersionSync Effect Catalog", (it) => {
           vercelJsonPath,
           `${encodeJson({
             $schema: "https://openapi.vercel.sh/vercel.json",
-            installCommand: "cd ../.. && npx --yes bun@1.3.14 install --frozen-lockfile",
+            installCommand: 'cd ../.. && npx --yes "bun@1.3.14" install --frozen-lockfile',
             buildCommand: "cd ../.. && npx --yes bun@1.3.14 run --cwd apps/oip-web build:pwa",
           })}\n`
         );
@@ -342,7 +383,7 @@ layer(VersionSyncTestLayer)("VersionSync Effect Catalog", (it) => {
         expect(yield* updateVercelBunVersion(vercelJsonPath, "buildCommand", "1.4.0")).toBe(false);
 
         const updated = (yield* decodeUnknownJson(yield* fs.readFileString(vercelJsonPath))) as Record<string, unknown>;
-        expect(updated.installCommand).toBe("cd ../.. && npx --yes bun@1.4.0 install --frozen-lockfile");
+        expect(updated.installCommand).toBe('cd ../.. && npx --yes "bun@1.4.0" install --frozen-lockfile');
         expect(updated.buildCommand).toBe("cd ../.. && npx --yes bun@1.4.0 run --cwd apps/oip-web build:pwa");
         expect(updated.$schema).toBe("https://openapi.vercel.sh/vercel.json");
 

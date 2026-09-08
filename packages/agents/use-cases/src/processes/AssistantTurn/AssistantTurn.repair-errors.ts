@@ -38,4 +38,6 @@ export class BlockRepairFailed extends S.TaggedError<BlockRepairFailed>($I`Block
   static readonly new = (message: string) => BlockRepairFailed.make({ message });
 
   static readonly failEffect = flow(this.new, Effect.fail);
+
+  static readonly is = S.is(BlockRepairFailed);
 }

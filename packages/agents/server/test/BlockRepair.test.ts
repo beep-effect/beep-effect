@@ -5,10 +5,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Cause, Effect, Exit } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
-import * as S from "effect/Schema";
 import { Response } from "effect/unstable/ai";
-
-const isBlockRepairFailed = S.is(BlockRepairFailed);
 
 const invalidParagraph = IssueReport.make({
   index: 0,
@@ -124,7 +121,7 @@ describe("BlockRepair", () => {
         const error = Cause.findErrorOption(exit.cause);
         expect(O.isSome(error)).toBe(true);
         if (O.isSome(error)) {
-          expect(isBlockRepairFailed(error.value)).toBe(true);
+          expect(BlockRepairFailed.is(error.value)).toBe(true);
         }
       }
     })
