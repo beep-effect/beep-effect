@@ -1,8 +1,10 @@
 ---
 "@beep/oip-web": patch
+"@beep/todox": patch
 "@beep/repo-configs": patch
 ---
 
-Use Bun 1.4.2 for OIP web deployment installs and builds, and align the shared
-Next.js configuration schema with the updated Next.js Web Vitals metrics by
-rejecting the removed FID metric while continuing to accept INP.
+Read the Bun runtime for OIP and Todox deployment installs and builds from the
+canonical `.bun-version` file so future upgrades cannot leave deployment pins
+behind. Align the shared Next.js configuration schema with the updated Next.js
+Web Vitals metrics by rejecting the removed FID metric while accepting INP.
