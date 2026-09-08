@@ -1,27 +1,3 @@
-import { decodeAdmissionPolicyParams } from "@beep/ciops/projection/AboxPolicy";
-import { CiOpsProjection, CiOpsProjectionLive } from "@beep/ciops/projection/CiOpsProjection";
-import { admissionWeightFor, projectSchedule } from "@beep/ciops/projection/Engine";
-import {
-  decodeAdmissionJournal,
-  InferredLeaseEviction,
-  ReplayEventOutcome,
-  ReplayEventVerdict,
-  ReplayReport,
-  renderReplayEvidence,
-  replayAdmissionJournal,
-  requireReplayMatch,
-} from "@beep/ciops/projection/Replay";
-import {
-  emptyTokenLedger,
-  PendingRequest,
-  PlanEpisodeInput,
-  PolicyDecodeError,
-  ProjectionInput,
-  ScheduleProposal,
-  ScheduleScope,
-  TokenLedgerState,
-} from "@beep/ciops/projection/Schemas";
-import { emitScheduleAbox } from "@beep/ciops/projection/Turtle";
 import { NonNegativeInt, PosInt } from "@beep/schema";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
@@ -35,8 +11,32 @@ import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
-import type { CiOpsProjectionShape } from "@beep/ciops/projection/CiOpsProjection";
-import type { AdmissionPolicyParams, AdmissionWorkKind } from "@beep/ciops/projection/Schemas";
+import { decodeAdmissionPolicyParams } from "@/projection/AboxPolicy";
+import { CiOpsProjection, CiOpsProjectionLive } from "@/projection/CiOpsProjection";
+import { admissionWeightFor, projectSchedule } from "@/projection/Engine";
+import {
+  decodeAdmissionJournal,
+  InferredLeaseEviction,
+  ReplayEventOutcome,
+  ReplayEventVerdict,
+  ReplayReport,
+  renderReplayEvidence,
+  replayAdmissionJournal,
+  requireReplayMatch,
+} from "@/projection/Replay";
+import {
+  emptyTokenLedger,
+  PendingRequest,
+  PlanEpisodeInput,
+  PolicyDecodeError,
+  ProjectionInput,
+  ScheduleProposal,
+  ScheduleScope,
+  TokenLedgerState,
+} from "@/projection/Schemas";
+import { emitScheduleAbox } from "@/projection/Turtle";
+import type { CiOpsProjectionShape } from "@/projection/CiOpsProjection";
+import type { AdmissionPolicyParams, AdmissionWorkKind } from "@/projection/Schemas";
 
 const aboxPath = "../../../explorations/beep-ci-operational-ontology/ontology/extraction/s6/graphs/abox.ttl";
 const journalPath =

@@ -1,15 +1,15 @@
 import { createHash } from "node:crypto";
-import { decodeAdmissionPolicyParams } from "@beep/ciops/projection/AboxPolicy";
+import { BunRuntime } from "@effect/platform-bun";
+import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
+import { Effect, FileSystem, Layer } from "effect";
+import { decodeAdmissionPolicyParams } from "@/projection/AboxPolicy";
 import {
   decodeAdmissionJournal,
   renderReplayEvidence,
   replayAdmissionJournal,
   requireReplayMatch,
-} from "@beep/ciops/projection/Replay";
-import { PolicyDecodeError } from "@beep/ciops/projection/Schemas";
-import { BunRuntime } from "@effect/platform-bun";
-import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
-import { Effect, FileSystem, Layer } from "effect";
+} from "@/projection/Replay";
+import { PolicyDecodeError } from "@/projection/Schemas";
 
 const aboxPath = "../../../explorations/beep-ci-operational-ontology/ontology/extraction/s6/graphs/abox.ttl";
 const journalPath =

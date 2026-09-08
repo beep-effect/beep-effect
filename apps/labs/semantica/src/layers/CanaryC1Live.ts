@@ -1,4 +1,5 @@
 import { NonNegativeInt, PosInt, Sha256Hex } from "@beep/schema";
+import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Clock, Console, Crypto, Effect, Equal, FileSystem, HashSet, Layer, Number as N, Order, Path } from "effect";
 import * as A from "effect/Array";
 import { flow } from "effect/Function";
@@ -38,7 +39,9 @@ import type * as EmbeddingModel from "effect/unstable/ai/EmbeddingModel";
 import type { ChunkId, DocumentId } from "@/schema/Ids";
 import type { EmbeddingVector } from "@/schema/Projection";
 
-const GProjectionExpectationJson = S.fromJsonString(GProjectionExpectation);
+const GProjectionExpectationJson = S.fromJsonString(GProjectionExpectation).pipe(
+  SchemaUtils.withCodecStatics(["encodeEffect", "decodeEffect"])
+);
 const C1EvalReportJson = S.fromJsonString(C1EvalReport, { space: 2 });
 const C1EvalTelemetryJson = S.fromJsonString(C1EvalTelemetry, { space: 2 });
 const modelEquivalence = S.toEquivalence(ModelIdentity);
@@ -210,7 +213,7 @@ const quadDelta = (before: ReadonlyArray<string>, after: ReadonlyArray<string>):
 };
 
 const makeCanaryC1 = Effect.fn("CanaryC1.make")(function* <E>(
-  embeddingProvider: Layer.Layer<EmbeddingModel.EmbeddingModel | EmbeddingModel.Dimensions, E, never>
+  embeddingProvider: Layer.Layer<EmbeddingModel.EmbeddingModel | EmbeddingModel.Dimensions, E>
 ) {
   const activeEmbeddingIdentity = yield* ActiveEmbeddingIdentity;
   const c0 = yield* CanaryC0;
@@ -227,7 +230,7 @@ const makeCanaryC1 = Effect.fn("CanaryC1.make")(function* <E>(
     const base = yield* c0.runWithSnapshot(CanaryOptions.make({ ...options, out: O.none() }));
     const expectationPath = path.join(config.goldDirectory, "g-projection.json");
     const expectation = yield* fs.readFileString(expectationPath).pipe(
-      Effect.flatMap(S.decodeEffect(GProjectionExpectationJson)),
+      Effect.flatMap(GProjectionExpectationJson.decodeEffect),
       Effect.mapError(() =>
         failed("expectation-unavailable", "The committed G-projection expectation could not be decoded.")
       )
@@ -442,5 +445,5 @@ const makeCanaryC1 = Effect.fn("CanaryC1.make")(function* <E>(
  * @since 0.0.0
  */
 export const CanaryC1Live = <E>(
-  embeddingProvider: Layer.Layer<EmbeddingModel.EmbeddingModel | EmbeddingModel.Dimensions, E, never>
+  embeddingProvider: Layer.Layer<EmbeddingModel.EmbeddingModel | EmbeddingModel.Dimensions, E>
 ) => Layer.effect(CanaryC1, makeCanaryC1(embeddingProvider));

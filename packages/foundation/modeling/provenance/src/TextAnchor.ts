@@ -200,6 +200,8 @@ export class TextAnchor extends S.Class<TextAnchor>($I`TextAnchor`)(
   static readonly isInternallyConsistent = (
     anchor: Pick<typeof TextAnchor.Encoded, "startChar" | "endChar" | "quote">
   ): boolean => hasConsistentTextAnchorWidth(anchor);
+
+  static readonly decodeEffect = S.decodeEffect(TextAnchor);
 }
 
 /**

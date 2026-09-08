@@ -25,7 +25,7 @@ const roundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, value: Schem
 
 describe("@beep/agents-server schema parity", () => {
   it("keeps touched encoded shapes stable", () => {
-    expect(Result.getOrThrow(S.encodeResult(ScanState)(initialScanState))).toStrictEqual({
+    expect(Result.getOrThrow(ScanState.encodeResult(initialScanState))).toStrictEqual({
       current: "",
       depth: 0,
       escaped: false,
@@ -38,14 +38,14 @@ describe("@beep/agents-server schema parity", () => {
       raw: '{"type":"paragraph"}',
       report: "children is missing",
     });
-    expect(Result.getOrThrow(S.encodeResult(IssueReport)(issue))).toStrictEqual({
+    expect(Result.getOrThrow(IssueReport.encodeResult(issue))).toStrictEqual({
       index: 0,
       raw: '{"type":"paragraph"}',
       report: "children is missing",
     });
 
     expect(
-      Result.getOrThrow(S.encodeResult(PatchOpSummary)(ReplacePatchOpSummary.make({ path: "/children/0/text" })))
+      Result.getOrThrow(PatchOpSummary.encodeResult(ReplacePatchOpSummary.make({ path: "/children/0/text" })))
     ).toStrictEqual({
       path: "/children/0/text",
       op: "replace",

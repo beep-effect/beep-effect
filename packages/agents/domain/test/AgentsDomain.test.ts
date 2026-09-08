@@ -83,12 +83,15 @@ describe("@beep/agents-domain", () => {
     };
     const decoded = S.decodeUnknownSync(Agent)(encoded);
     const constructed = Agent.make(decoded);
+    const TaggedAgent = Agent.toTagged();
+    const tagged = Result.getOrThrow(S.decodeUnknownResult(TaggedAgent)(encoded));
 
     expect(decoded).toBeInstanceOf(Agent);
     expect(constructed).toBeInstanceOf(Agent);
     expect(constructed.entityType).toBe("AgentsAgent");
     expect(constructed.mode).toBe("deterministic_fixture");
     expect(constructed.skillFixtureKey).toBe("skill.review");
+    expect(TaggedAgent.guards.deterministic_fixture(tagged)).toBe(true);
     expect(Result.getOrThrow(S.encodeResult(Agent)(decoded))).toStrictEqual(encoded);
   });
 

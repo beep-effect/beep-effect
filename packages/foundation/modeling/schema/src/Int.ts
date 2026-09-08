@@ -8,6 +8,7 @@
 import { $SchemaId } from "@beep/identity";
 import * as S from "effect/Schema";
 import { isNegative, isNonPositive, isPositive, isPostgresSerialInt } from "./Number.ts";
+import * as SchemaUtils from "./SchemaUtils/index.ts";
 
 const $I = $SchemaId.create("Int");
 
@@ -74,18 +75,19 @@ export type Int = typeof Int.Type;
  * @category validation
  * @since 0.0.0
  */
-export const PosInt = Int.pipe(S.brand("PosInt"))
-  .check(
+export const PosInt = Int.pipe(
+  S.check(
     isPositive.annotate({
       message: "Expected a positive integer",
       description: "A positive integer",
     })
-  )
-  .pipe(
-    $I.annoteSchema("PosInt", {
-      description: "A positive integer",
-    })
-  );
+  ),
+  S.brand("PosInt"),
+  $I.annoteSchema("PosInt", {
+    description: "A positive integer",
+  }),
+  SchemaUtils.withCodecStatics(["decodeEffect"])
+);
 
 /**
  * Type for {@link PosInt}.
@@ -121,13 +123,13 @@ export type PosInt = typeof PosInt.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const PostgresSerialInt = Int.pipe(S.brand("PostgresSerialInt"))
-  .check(isPostgresSerialInt)
-  .pipe(
-    $I.annoteSchema("PostgresSerialInt", {
-      description: "A positive integer in the PostgreSQL serial int4 range.",
-    })
-  );
+export const PostgresSerialInt = Int.pipe(
+  S.check(isPostgresSerialInt),
+  S.brand("PostgresSerialInt"),
+  $I.annoteSchema("PostgresSerialInt", {
+    description: "A positive integer in the PostgreSQL serial int4 range.",
+  })
+);
 
 /**
  * Type for {@link PostgresSerialInt}.
@@ -163,18 +165,18 @@ export type PostgresSerialInt = typeof PostgresSerialInt.Type;
  * @category validation
  * @since 0.0.0
  */
-export const NegInt = Int.pipe(S.brand("NegInt"))
-  .check(
+export const NegInt = Int.pipe(
+  S.check(
     isNegative.annotate({
       message: "Expected a negative integer",
       description: "A negative integer",
     })
-  )
-  .pipe(
-    $I.annoteSchema("NegInt", {
-      description: "A negative integer",
-    })
-  );
+  ),
+  S.brand("NegInt"),
+  $I.annoteSchema("NegInt", {
+    description: "A negative integer",
+  })
+);
 
 /**
  * Type for {@link NegInt}.
@@ -210,18 +212,18 @@ export type NegInt = typeof NegInt.Type;
  * @category validation
  * @since 0.0.0
  */
-export const NonPositiveInt = Int.pipe(S.brand("NonPositiveInt"))
-  .check(
+export const NonPositiveInt = Int.pipe(
+  S.check(
     isNonPositive.annotate({
       message: "Expected a non-positive integer",
       description: "A non-positive integer",
     })
-  )
-  .pipe(
-    $I.annoteSchema("NonPositiveInt", {
-      description: "A non-positive integer",
-    })
-  );
+  ),
+  S.brand("NonPositiveInt"),
+  $I.annoteSchema("NonPositiveInt", {
+    description: "A non-positive integer",
+  })
+);
 
 /**
  * Type for {@link NonPositiveInt}.

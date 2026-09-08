@@ -132,9 +132,6 @@ const config: ViteUserConfig = {
     passWithNoTests: vitestCoverageRunActive,
     exclude: ["**/.context/**", "**/node_modules/**"],
     setupFiles: [new URL("./vitest.setup.ts", import.meta.url).pathname],
-    fakeTimers: {
-      toFake: undefined,
-    },
     sequence: {
       concurrent: true,
     },

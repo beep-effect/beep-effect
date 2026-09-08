@@ -696,7 +696,7 @@ export const PROVIDER_RECORDING_DOCUMENT_ID = EntityId.make("lejeune-provider-sm
 /** Canonical compact codec used when hashing a sanitized candidate list. @category codecs @since 0.0.0 */
 export const ProviderCandidateListFromJsonString = S.fromJsonString(
   S.Tuple([ProviderCandidate, ProviderCandidate, ProviderCandidate])
-);
+).pipe(SchemaUtils.withCodecStatics(["encodeEffect"]));
 
 const ProviderRecordingFields = S.Struct({
   candidates: S.Tuple([ProviderCandidate, ProviderCandidate, ProviderCandidate]),
@@ -775,7 +775,9 @@ export class FrozenProviderRecording extends S.Class<FrozenProviderRecording>($I
   $I.annote("FrozenProviderRecording", {
     description: "The exact ordered, sanitized live-provider result committed for deterministic offline replay v1.",
   })
-) {}
+) {
+  static readonly decodeEffect = S.decodeEffect(FrozenProviderRecording);
+}
 
 /**
  * Stable committed query results from all three local projection engines.
@@ -842,7 +844,9 @@ export class ProjectionSnapshot extends S.Class<ProjectionSnapshot>($I`Projectio
   $I.annote("ProjectionSnapshot", {
     description: "Stable PGlite, DuckDB, and bounded Oxigraph query outputs for the committed golden run.",
   })
-) {}
+) {
+  static readonly decodeUnknownEffect = S.decodeUnknownEffect(ProjectionSnapshot);
+}
 
 /**
  * Immutable replay bundle assembled from normalized fixtures and cited results.
@@ -1440,7 +1444,9 @@ export const makePublishedReplayAggregate = (input: unknown) =>
  * @category codecs
  * @since 0.0.0
  */
-export const ImmutableDemoBundleFromJsonString = S.fromJsonString(ImmutableDemoBundle, { space: 2 });
+export const ImmutableDemoBundleFromJsonString = S.fromJsonString(ImmutableDemoBundle, { space: 2 }).pipe(
+  SchemaUtils.withCodecStatics(["encodeEffect"])
+);
 
 /**
  * JSON codec used to persist the mutable ledger without native JSON helpers.

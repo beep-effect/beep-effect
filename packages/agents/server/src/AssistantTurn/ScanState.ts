@@ -58,7 +58,9 @@ export class ScanState extends S.Class<ScanState>($I`ScanState`)(
   $I.annote("ScanState", {
     description: "The carry state of the incremental block extractor between chunks.",
   })
-) {}
+) {
+  static readonly encodeResult = S.encodeResult(ScanState);
+}
 
 /**
  * Schema-backed input for one incremental scanner transition.

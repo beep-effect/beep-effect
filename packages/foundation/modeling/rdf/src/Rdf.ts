@@ -409,6 +409,8 @@ export class NamedNode extends S.Class<NamedNode>($I`NamedNode`)(
   static readonly decodeUnknownResult = S.decodeUnknownResult(this);
 
   static readonly decodeEffect = S.decodeEffect(NamedNode);
+
+  static readonly is = S.is(NamedNode);
 }
 
 /**
@@ -490,6 +492,8 @@ export class Literal extends S.Class<Literal>($I`Literal`)(
   })
 ) {
   static readonly decodeUnknownResult = S.decodeUnknownResult(this);
+
+  static readonly is = S.is(Literal);
 }
 
 /**
@@ -822,7 +826,9 @@ export class Dataset extends S.Class<Dataset>($I`Dataset`)(
     description: "Dataset wrapper for RDF quads.",
     semanticSchemaMetadata: datasetMetadata,
   })
-) {}
+) {
+  static readonly is = S.is(Dataset);
+}
 
 /**
  * Prefix-to-namespace binding for RDF compaction and expansion.

@@ -754,7 +754,7 @@ export const runRuntimeFixture = Effect.fn("RuntimeFixture.run")((input: Runtime
       return fixtureRunnerForScenario(input.email.scenarioId)(input);
     },
     catch: (error) =>
-      S.is(ProfessionalRuntimeValidationError)(error)
+      ProfessionalRuntimeValidationError.is(error)
         ? error
         : ProfessionalRuntimeValidationError.make({ message: String(error) }),
   })

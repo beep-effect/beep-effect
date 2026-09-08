@@ -1,6 +1,7 @@
 import { $SemanticaId } from "@beep/identity/packages";
 import { TextAnchor } from "@beep/provenance";
 import { LiteralKit, NonNegativeInt } from "@beep/schema";
+import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { Console, Effect, FileSystem, Number as N, Order, Path, Result, Struct, Tuple } from "effect";
 import * as A from "effect/Array";
@@ -73,17 +74,17 @@ const StructureProposalJson = S.fromJsonString(
   S.Struct({
     labels: S.Array(StructureProposalLabel),
   })
-);
+).pipe(SchemaUtils.withCodecStatics(["decodeEffect"]));
 const EntityProposalJson = S.fromJsonString(
   S.Struct({
     labels: S.Array(EntityProposalLabel),
   })
-);
+).pipe(SchemaUtils.withCodecStatics(["decodeEffect"]));
 const RelationProposalJson = S.fromJsonString(
   S.Struct({
     labels: S.Array(RelationProposalLabel),
   })
-);
+).pipe(SchemaUtils.withCodecStatics(["decodeEffect"]));
 
 type ProposedLabel =
   | (typeof StructureProposalJson.Type)["labels"][number]
@@ -194,7 +195,7 @@ const selectJobs = Effect.fn("Gold.selectJobs")(function* (subsets: GoldSubset, 
     return jobsForSubset(subsets, options.subset.value);
   }
   if (O.isSome(options.paper)) {
-    const paperId = yield* S.decodeEffect(CorpusPaperId)(options.paper.value).pipe(
+    const paperId = yield* CorpusPaperId.decodeEffect(options.paper.value).pipe(
       Effect.mapError(() => unavailable("invalid-selection", "The requested paper id is not a valid W1 corpus id."))
     );
     const selected = A.getSomes(
@@ -220,14 +221,14 @@ const decodeProposal = Effect.fn("Gold.decodeProposal")(function* (
   const decodeError = () =>
     unavailable("model-output-invalid", `The gold proposer response did not match the ${subset} JSON label contract.`);
   if (subset === "entity") {
-    const decoded = yield* S.decodeEffect(EntityProposalJson)(response).pipe(Effect.mapError(decodeError));
+    const decoded = yield* EntityProposalJson.decodeEffect(response).pipe(Effect.mapError(decodeError));
     return decoded.labels;
   }
   if (subset === "relation") {
-    const decoded = yield* S.decodeEffect(RelationProposalJson)(response).pipe(Effect.mapError(decodeError));
+    const decoded = yield* RelationProposalJson.decodeEffect(response).pipe(Effect.mapError(decodeError));
     return decoded.labels;
   }
-  const decoded = yield* S.decodeEffect(StructureProposalJson)(response).pipe(Effect.mapError(decodeError));
+  const decoded = yield* StructureProposalJson.decodeEffect(response).pipe(Effect.mapError(decodeError));
   return decoded.labels;
 });
 
@@ -251,9 +252,9 @@ const writeJsonAtomic = Effect.fn("Gold.writeJsonAtomic")(function* (target: str
   );
 });
 
-const GoldFileJson = S.fromJsonString(GoldFile, { space: 2 });
-const GoldFileEncodedJson = S.fromJsonString(GoldFileEncoded);
-const GoldRefJson = S.fromJsonString(GoldRef, { space: 2 });
+const GoldFileJson = S.fromJsonString(GoldFile, { space: 2 }).pipe(SchemaUtils.withCodecStatics(["encodeEffect"]));
+const GoldFileEncodedJson = S.fromJsonString(GoldFileEncoded).pipe(SchemaUtils.withCodecStatics(["decodeEffect"]));
+const GoldRefJson = S.fromJsonString(GoldRef, { space: 2 }).pipe(SchemaUtils.withCodecStatics(["encodeEffect"]));
 
 /**
  * Shared ordering and equivalence semantics for encoded gold artifacts.
@@ -286,7 +287,7 @@ const readWrittenGold = Effect.fn("Gold.readWrittenGold")(function* (directory: 
       Effect.flatMap((exists) =>
         exists
           ? fs.readFileString(filePath).pipe(
-              Effect.flatMap(S.decodeEffect(GoldFileEncodedJson)),
+              Effect.flatMap(GoldFileEncodedJson.decodeEffect),
               Effect.flatMap((file) =>
                 Str.Equivalence(file.paperId, job.paperId) && Str.Equivalence(file.subset, job.subset)
                   ? Effect.succeed(Tuple.make(job, O.some(file)))
@@ -320,7 +321,7 @@ const entityLabelsFor = Effect.fn("Gold.entityLabelsFor")(function* (
 ) {
   const inventory = yield* readWrittenGold(directory, [GoldJob.make({ paperId, subset: "entity" })]);
   const files = yield* Effect.forEach(inventory.files, (file) =>
-    S.decodeEffect(GoldFile)(file).pipe(
+    GoldFile.decodeEffect(file).pipe(
       Effect.provideService(CurrentGoldDocumentText, text),
       Effect.mapError(() =>
         unavailable("digest-failed", "An entity gold label digest does not match its canonical document slice.")
@@ -642,7 +643,7 @@ const proposeJob = Effect.fn("Gold.proposeJob")(function* (
         return O.none();
       }
       const [startChar, endChar, quote] = resolved.value;
-      const anchor = yield* S.decodeEffect(TextAnchor)({
+      const anchor = yield* TextAnchor.decodeEffect({
         endChar,
         quote,
         startChar,
@@ -688,7 +689,7 @@ const proposeJob = Effect.fn("Gold.proposeJob")(function* (
       unavailable("model-output-invalid", "Verified labels did not produce a schema-valid GoldFile.")
     )
   );
-  const json = yield* S.encodeEffect(GoldFileJson)(file).pipe(
+  const json = yield* GoldFileJson.encodeEffect(file).pipe(
     Effect.mapError(() => unavailable("encoding-failed", "A GoldFile could not be encoded."))
   );
   yield* writeJsonAtomic(goldFilePath(path, outputDirectory, job), json);
@@ -762,7 +763,7 @@ export const proposeGold = Effect.fn("Gold.propose")(function* (
   const accepted = A.reduce(proposed, 0, (count, item) => count + item.accepted);
   const total = A.reduce(proposed, 0, (count, item) => count + item.total);
   const proposer = yield* ActiveModelIdentity;
-  const encodedProposer = yield* S.encodeEffect(ModelIdentity)(proposer).pipe(Effect.orDie);
+  const encodedProposer = yield* ModelIdentity.encodeEffect(proposer).pipe(Effect.orDie);
   const inventory = yield* readWrittenGold(options.outputDirectory, expectedJobs);
   if (
     A.some(inventory.files, (file) => !GoldArtifactSemantics.modelIdentityEquivalence(file.proposer, encodedProposer))
@@ -796,7 +797,7 @@ export const proposeGold = Effect.fn("Gold.propose")(function* (
         subsets,
         version: "gold/v1",
       });
-      const referenceJson = yield* S.encodeEffect(GoldRefJson)(reference).pipe(
+      const referenceJson = yield* GoldRefJson.encodeEffect(reference).pipe(
         Effect.mapError(() => unavailable("encoding-failed", "The GoldRef could not be encoded."))
       );
       yield* writeJsonAtomic(path.join(options.outputDirectory, "gold.json"), referenceJson);

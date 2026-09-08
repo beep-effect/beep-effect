@@ -117,7 +117,11 @@ const newestOption = (left: O.Option<number>, right: O.Option<number>): O.Option
   O.match(left, {
     onNone: () => right,
     onSome: (leftValue) =>
-      O.match(right, { onNone: () => left, onSome: (rightValue) => O.some(N.max(leftValue, rightValue)) }),
+      pipe(
+        right,
+        O.map((rightValue) => N.max(leftValue, rightValue)),
+        O.orElse(() => left)
+      ),
   });
 
 const combineCensus = (left: Census, right: Census): Census => ({

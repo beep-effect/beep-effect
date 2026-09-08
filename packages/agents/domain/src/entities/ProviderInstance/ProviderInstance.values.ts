@@ -290,7 +290,8 @@ export const EnvVars = TokenSafeEnvVarRecord.pipe(
   S.decodeTo(S.Record(EnvVarName, S.NonEmptyString), SchemaTransformation.passthrough()),
   $I.annoteSchema("EnvVars", {
     description: "Extra child-process environment injected when spawning the provider CLI, token-safe names only.",
-  })
+  }),
+  SchemaUtils.withCodecStatics(["decodeEffect"])
 );
 
 /**
@@ -390,7 +391,9 @@ export class AuthenticatedSnapshot extends S.Class<AuthenticatedSnapshot>($I`Aut
   $I.annote("AuthenticatedSnapshot", {
     description: "Auth-snapshot variant for a logged-in provider CLI.",
   })
-) {}
+) {
+  static readonly is = S.is(AuthenticatedSnapshot);
+}
 
 /**
  * Auth-snapshot variant for a provider CLI that responded but is logged out.

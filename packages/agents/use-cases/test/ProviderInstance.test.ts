@@ -27,7 +27,7 @@ const isProviderInstanceNotFound = S.is(ProviderInstanceNotFound);
 const isProviderUnauthenticated = S.is(ProviderUnauthenticated);
 
 const makeInstance = (kind: Domain.ProviderKind = "claude"): Domain.ProviderInstance =>
-  S.decodeUnknownSync(Domain.ProviderInstance)({
+  Domain.ProviderInstance.decodeUnknownSync({
     ...productEntityFixtureInput("AgentsProviderInstance", 1),
     binaryPath: kind === "claude" ? "/usr/bin/claude" : "/usr/bin/codex",
     envVars: {},

@@ -2,6 +2,7 @@ import { $SemanticaId } from "@beep/identity/packages";
 import { AlignmentSource, alignCandidates } from "@beep/langextract/Alignment";
 import { parseModelOutput } from "@beep/langextract/Extraction";
 import { NonNegativeInt, Sha256Hex } from "@beep/schema";
+import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Console, Effect, FileSystem, HashSet, Number as N, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -105,9 +106,15 @@ class RelationPreviewReport extends S.Class<RelationPreviewReport>($I`RelationPr
   })
 ) {}
 
-const PreviewManifestJson = S.fromJsonString(RelationPreviewManifest);
-const ProviderCacheEntryJson = S.fromJsonString(ProviderCacheEntry);
-const PreviewReportJson = S.fromJsonString(RelationPreviewReport, { space: 2 });
+const PreviewManifestJson = S.fromJsonString(RelationPreviewManifest).pipe(
+  SchemaUtils.withCodecStatics(["decodeEffect", "encodeEffect"])
+);
+const ProviderCacheEntryJson = S.fromJsonString(ProviderCacheEntry).pipe(
+  SchemaUtils.withCodecStatics(["encodeEffect", "decodeEffect"])
+);
+const PreviewReportJson = S.fromJsonString(RelationPreviewReport, { space: 2 }).pipe(
+  SchemaUtils.withCodecStatics(["encodeEffect"])
+);
 
 const failed = (reason: RelationPreviewFailed["reason"], message: string): RelationPreviewFailed =>
   RelationPreviewFailed.make({ message, reason });
@@ -152,7 +159,7 @@ const loadCanonicalPaper = Effect.fn("RelationPreview.loadCanonicalPaper")(funct
 const readPreviewManifest = Effect.fn("RelationPreview.readManifest")(function* (filePath: string) {
   const fs = yield* FileSystem.FileSystem;
   return yield* fs.readFileString(filePath).pipe(
-    Effect.flatMap(S.decodeEffect(PreviewManifestJson)),
+    Effect.flatMap(PreviewManifestJson.decodeEffect),
     Effect.mapError(() => failed("manifest-invalid", "The E5 preview manifest could not be read or decoded."))
   );
 });
@@ -165,7 +172,7 @@ const readCacheEntry = Effect.fn("RelationPreview.readCacheEntry")(function* (ca
   const source = yield* fs
     .readFileString(filePath)
     .pipe(Effect.mapError(() => failed("cache-unavailable", "A required E5 provider-cache entry is unavailable.")));
-  const entry = yield* S.decodeEffect(ProviderCacheEntryJson)(source).pipe(
+  const entry = yield* ProviderCacheEntryJson.decodeEffect(source).pipe(
     Effect.mapError(() => failed("cache-invalid", "A required E5 provider-cache entry failed integrity decoding."))
   );
   if (!Str.Equivalence(entry.cacheKey, cacheKey)) {
@@ -254,7 +261,7 @@ export const runRelationPreview = Effect.fn("RelationPreview.run")(function* (op
     passed: true,
     schemaVersion: "semantica-relation-preview-report/v1",
   });
-  const json = yield* S.encodeEffect(PreviewReportJson)(report).pipe(Effect.orDie);
+  const json = yield* PreviewReportJson.encodeEffect(report).pipe(Effect.orDie);
   yield* Console.log(json);
   return report;
 });

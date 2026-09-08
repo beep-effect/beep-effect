@@ -20,7 +20,7 @@ const handlers = HttpApiBuilder.group(Api, "ciops", (group) =>
  * **Example** (Inspect the application layer)
  *
  * ```ts
- * import { ApiLive } from "@beep/ciops/src/runtime/Layer"
+ * import { ApiLive } from "@/runtime/Layer"
  * import { Layer } from "effect"
  *
  * console.log(Layer.isLayer(ApiLive)) // true
