@@ -28,6 +28,7 @@ describe("NextConfig", () => {
         experimental: {
           cssChunking: true,
           mcpServer: true,
+          webVitalsAttribution: ["INP"],
         },
       } satisfies NextConfigFromNext;
 
@@ -37,6 +38,7 @@ describe("NextConfig", () => {
       expect(decoded.headers).toBe(headers);
       expect(headersCalled).toBe(false);
       expect(decoded.experimental?.mcpServer).toBe(true);
+      expect(decoded.experimental?.webVitalsAttribution).toEqual(["INP"]);
     })
   );
 
@@ -77,9 +79,17 @@ describe("NextConfig", () => {
           },
         })
       );
+      const invalidWebVitalsAttribution = yield* Effect.exit(
+        decodeNextConfig({
+          experimental: {
+            webVitalsAttribution: ["FID"],
+          },
+        })
+      );
 
       expect(Exit.isFailure(invalidCrossOrigin)).toBe(true);
       expect(Exit.isFailure(invalidStaleTimes)).toBe(true);
+      expect(Exit.isFailure(invalidWebVitalsAttribution)).toBe(true);
     })
   );
 
