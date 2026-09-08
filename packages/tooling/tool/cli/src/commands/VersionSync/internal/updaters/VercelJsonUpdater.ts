@@ -52,7 +52,7 @@ export const updateVercelBunVersion: {
       Match.when("buildCommand", () => document.buildCommand),
       Match.exhaustive
     );
-    const updatedCommand = Str.replace(/\bbun@[^\s]+/g, `bun@${version}`)(command);
+    const updatedCommand = Str.replace(/\bbun@[^\s"'$`]+/g, `bun@${version}`)(command);
     const updated = applyJsoncModification({ content: original, path: [field], value: updatedCommand });
 
     if (updated === original) {

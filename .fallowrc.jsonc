@@ -59,6 +59,10 @@
     "apps/storybook/.storybook/main.ts",
     "apps/storybook/.storybook/manager.ts",
     "apps/storybook/.storybook/preview.tsx",
+    // The Storybook test runner selects this config with --config, and Vitest
+    // loads its setup file through a file URL rather than a static import.
+    "apps/storybook/vitest.storybook.config.ts",
+    "apps/storybook/vitest.storybook.setup.ts",
     // Story files are tool-loaded roots: the Storybook host discovers them via
     // the stories glob in apps/storybook/.storybook/main.ts.
     "packages/foundation/ui-system/*/stories/**/*.stories.tsx",
