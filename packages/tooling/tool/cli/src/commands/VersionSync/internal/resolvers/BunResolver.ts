@@ -112,6 +112,18 @@ const extractPackageManagerVersion = Str.replace(/^bun@/, "");
  * Shell substitutions read the canonical version at execution time and are not
  * independent pins. Quotes delimit literal pins without becoming part of them.
  *
+ * **Example** (Distinguish literal and derived runtime versions)
+ *
+ * ```ts
+ * import { extractCommandBunVersion } from "@beep/repo-cli/commands/VersionSync/internal/resolvers/BunResolver"
+ * import * as O from "effect/Option"
+ *
+ * const pinned = extractCommandBunVersion('npx --yes "bun@1.4.2" install')
+ * const derived = extractCommandBunVersion('npx --yes "bun@$(cat .bun-version)" install')
+ * console.log(O.getOrElse(pinned, () => "unpinned")) // "1.4.2"
+ * console.log(O.isNone(derived)) // true
+ * ```
+ *
  * @param command - Shell command that may contain a `bun@<version>` invocation.
  * @returns The explicit Bun version when present.
  * @category utilities
