@@ -22,7 +22,7 @@
     "dev:tauri": "tauri dev",
     "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
     "beep:build": "vite build",
-    "beep:check": "tsgo -p tsconfig.check.json && tsgo -p tsconfig.scripts.json --noEmit && bun run codegen:check",
+    "beep:check": "tsgo -p tsconfig.check.json && tsc -p tsconfig.json --noEmit && tsgo -p tsconfig.scripts.json --noEmit && bun run codegen:check",
     "beep:lint": "biome check package.json postcss.config.mjs tsconfig.json vite.config.ts vitest.config.ts vitest.coverage.config.ts vitest.integration.config.ts index.html public src server scripts test src-tauri/tauri.conf.json src-tauri/capabilities/default.json",
     "beep:lint:fix": "biome check package.json postcss.config.mjs tsconfig.json vite.config.ts vitest.config.ts vitest.coverage.config.ts vitest.integration.config.ts index.html public src server scripts test src-tauri/tauri.conf.json src-tauri/capabilities/default.json --write",
     "beep:test": "bunx --bun vitest run --exclude=test/integration/**",

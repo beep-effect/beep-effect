@@ -69,4 +69,6 @@ export class ProviderInstance extends ProductEntity.Entity<ProviderInstance>()(A
     description:
       "Persisted provider CLI instance holding binary, HOME, and env configuration plus the latest auth-probe snapshot; never provider tokens.",
   })
-) {}
+) {
+  static readonly decodeUnknownSync = S.decodeUnknownSync(ProviderInstance);
+}

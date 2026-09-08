@@ -28,7 +28,15 @@ import { buildProjectionSnapshot, ProjectionInput } from "@/runtime/Projections"
 import { buildNormalizedFixtures } from "@/workflows/Normalize";
 import { verifyFrozenProviderRecording } from "@/workflows/ProviderRecording";
 import { evaluateRules } from "@/workflows/Rules";
+import type { DuckDb } from "@beep/duckdb";
+import type { VerifiedSpanError } from "@beep/langextract/VerifiedSpan";
+import type { SparqlQueryService } from "@beep/semantic-web";
+import type * as Crypto from "effect/Crypto";
+import type { SqlClient } from "effect/unstable/sql/SqlClient";
 import type { ProviderRecording, RetentionAuthorization } from "@/domain/Bundle";
+import type { FixtureError } from "@/fixtures/Sources";
+import type { ProjectionError } from "@/runtime/Projections";
+import type { ProviderRecordingIntegrityError } from "@/workflows/ProviderRecording";
 
 const $I = $LejeuneBoltWorkbenchId.create("workflows/Replay");
 
@@ -66,7 +74,7 @@ class ReplayError extends S.TaggedError<ReplayError>($I`ReplayError`)(
 ) {}
 
 const hashBundle = Effect.fnUntraced(function* (bundle: ImmutableDemoBundle) {
-  const encoded = yield* S.encodeEffect(ImmutableDemoBundleFromJsonString)(bundle).pipe(
+  const encoded = yield* ImmutableDemoBundleFromJsonString.encodeEffect(bundle).pipe(
     Effect.mapError((cause) =>
       ReplayError.make({
         cause,
@@ -77,7 +85,11 @@ const hashBundle = Effect.fnUntraced(function* (bundle: ImmutableDemoBundle) {
   );
   return yield* Sha256HexFromBytes.decodeEffect(strToU8(encoded)).pipe(
     Effect.mapError((cause) =>
-      ReplayError.make({ cause, message: "The immutable demo bundle could not be hashed.", operation: "hash-bundle" })
+      ReplayError.make({
+        cause,
+        message: "The immutable demo bundle could not be hashed.",
+        operation: "hash-bundle",
+      })
     )
   );
 });
@@ -105,7 +117,11 @@ const hashBundle = Effect.fnUntraced(function* (bundle: ImmutableDemoBundle) {
 export const replayOffline = Effect.fn("lejeune.replay.offline")(function* (
   providerRecording: ProviderRecording,
   retentionAuthorization: O.Option<RetentionAuthorization> = O.none()
-) {
+): Effect.fn.Return<
+  ReplayBuild,
+  FixtureError | ProjectionError | ProviderRecordingIntegrityError | ReplayError | VerifiedSpanError,
+  Crypto.Crypto | DuckDb | SparqlQueryService | SqlClient
+> {
   const frozenProviderRecording = yield* verifyFrozenProviderRecording(
     providerRecording,
     PROVIDER_RECORDING_SOURCE_TEXT

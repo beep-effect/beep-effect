@@ -52,6 +52,9 @@ const TsconfigPaths = S.Struct({
     paths: S.Record(S.String, S.Array(S.String)),
   }),
 });
+const TsconfigIncludes = S.Struct({
+  include: S.Array(S.String),
+});
 const StoriesTsconfig = S.Struct({
   include: S.Array(S.String),
   compilerOptions: S.Struct({
@@ -134,6 +137,7 @@ const EcosystemTestTsconfig = S.Struct({
 const decodeRootPackage = S.decodeUnknownSync(RootPackage);
 const decodeTsconfigReferences = S.decodeUnknownSync(TsconfigReferences);
 const decodeTsconfigPaths = S.decodeUnknownSync(TsconfigPaths);
+const decodeTsconfigIncludes = S.decodeUnknownSync(TsconfigIncludes);
 const decodeStoriesTsconfig = S.decodeUnknownSync(StoriesTsconfig);
 const decodeStoriesDirectoryTsconfig = S.decodeUnknownSync(StoriesDirectoryTsconfig);
 const decodeTypeScriptPluginsConfig = S.decodeUnknownEffect(TypeScriptPluginsConfig);
@@ -217,7 +221,7 @@ const ExpectedNextjsAppScripts = {
   dev: "portless marketing-web.beep next dev --turbopack",
   "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
   "beep:build": "next build --turbopack",
-  "beep:check": "tsgo -p tsconfig.check.json",
+  "beep:check": "tsgo -p tsconfig.check.json && tsc -p tsconfig.json --noEmit",
   "beep:lint": "biome check .",
   "beep:lint:fix": "biome check . --write",
   "beep:test": "bunx --bun vitest run",
@@ -236,7 +240,7 @@ const ExpectedTauriAppScripts = {
   "dev:tauri": "tauri dev",
   "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
   "beep:build": "vite build",
-  "beep:check": "tsgo -p tsconfig.check.json",
+  "beep:check": "tsgo -p tsconfig.check.json && tsc -p tsconfig.json --noEmit",
   "beep:lint": "biome check .",
   "beep:lint:fix": "biome check . --write",
   "beep:test": "bunx --bun vitest run",
@@ -730,6 +734,9 @@ describe("create-package", { concurrent: false }, () => {
 
             const appTsconfigDocument = yield* readJsoncFile(path.join(packageDir, "tsconfig.json"));
             const appTsconfig = decodeTsconfigPaths(appTsconfigDocument);
+            expect(decodeTsconfigIncludes(appTsconfigDocument).include).toContain(
+              "../../vitest.aliases.generated.json"
+            );
             const appPlugins = yield* decodeTypeScriptPluginsConfig(appTsconfigDocument);
             expect(appTsconfig.compilerOptions.paths).toMatchObject({
               "@/*": ["./src/*"],
@@ -804,7 +811,11 @@ describe("create-package", { concurrent: false }, () => {
             // The webview must load the same portless route the `dev` script serves.
             expect(tauriConf).toContain(`"devUrl": "http://desktop-shell.beep.localhost:1355"`);
 
-            const appTsconfig = decodeTsconfigPaths(yield* readJsoncFile(path.join(packageDir, "tsconfig.json")));
+            const appTsconfigDocument = yield* readJsoncFile(path.join(packageDir, "tsconfig.json"));
+            const appTsconfig = decodeTsconfigPaths(appTsconfigDocument);
+            expect(decodeTsconfigIncludes(appTsconfigDocument).include).toContain(
+              "../../vitest.aliases.generated.json"
+            );
             expect(appTsconfig.compilerOptions.paths).toMatchObject({
               "@/*": ["./src/*"],
             });
@@ -858,6 +869,9 @@ describe("create-package", { concurrent: false }, () => {
                 yield* readJsonFile(path.join(packageDir, "package.json"))
               );
 
+              expect(generatedPackage.scripts["beep:check"]).toBe(
+                "tsgo -p tsconfig.check.json && tsc -p tsconfig.json --noEmit"
+              );
               expect(generatedPackage.scripts.dev).toBe(
                 "portless vite-shell.beep sh -c 'vite --host 127.0.0.1 --port \"${PORT:-5173}\" --strictPort'"
               );
@@ -880,10 +894,45 @@ describe("create-package", { concurrent: false }, () => {
               const globalsCss = yield* fs.readFileString(path.join(packageDir, "src", "styles", "globals.css"));
               expect(globalsCss).toContain(":root");
               const appTsconfig = yield* readJsoncFile(path.join(packageDir, "tsconfig.json"));
+              expect(decodeTsconfigIncludes(appTsconfig).include).toContain("../../vitest.aliases.generated.json");
               expect(appTsconfig.compilerOptions.rootDir).toBe("../..");
 
               yield* expectIdentityRegistration({ fs, path, rootDir }, "vite-shell", "ViteShell");
             })
+        )
+      ),
+    CreatePackageTestTimeoutMs
+  );
+
+  it(
+    "creates service apps with canonical composite checks and JSON dependencies",
+    () =>
+      Effect.runPromise(
+        withBootstrappedRootConfig(IdentityOnlyRootConfig, ({ path, rootDir }) =>
+          Effect.gen(function* () {
+            yield* bootstrapIdentityWorkspace(rootDir);
+
+            yield* runCreatePackageCommand([
+              "api-service",
+              "--type",
+              "app",
+              "--app-kind",
+              "service",
+              "--description",
+              "An HTTP service app",
+            ]);
+
+            const packageDir = path.join(rootDir, "apps", "api-service");
+            const generatedPackage = decodeGeneratedPackageManifest(
+              yield* readJsonFile(path.join(packageDir, "package.json"))
+            );
+            expect(generatedPackage.scripts["beep:check"]).toBe(
+              "tsgo -p tsconfig.check.json && tsc -p tsconfig.json --noEmit"
+            );
+
+            const appTsconfig = yield* readJsoncFile(path.join(packageDir, "tsconfig.json"));
+            expect(decodeTsconfigIncludes(appTsconfig).include).toContain("../../vitest.aliases.generated.json");
+          })
         )
       ),
     CreatePackageTestTimeoutMs

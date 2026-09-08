@@ -12,6 +12,7 @@ import { generateAnthropicToolJson } from "@beep/anthropic";
 import { $AgentsServerId } from "@beep/identity/packages";
 import { redactString } from "@beep/observability";
 import { isNonNegative } from "@beep/schema/Number";
+import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Effect, JsonPatch, Metric } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -107,7 +108,9 @@ export class IssueReport extends S.Class<IssueReport>($I`IssueReport`)(
   $I.annote("IssueReport", {
     description: "Validation issue report for one streamed assistant-block slice.",
   })
-) {}
+) {
+  static readonly encodeResult = S.encodeResult(IssueReport);
+}
 
 class RepairItem extends S.Class<RepairItem>($I`RepairItem`)(
   {
@@ -425,10 +428,15 @@ export class ReplacePatchOpSummary extends PatchOpSummaryBase.extend<ReplacePatc
  * @since 0.0.0
  */
 export const PatchOpSummary = S.Union([AddPatchOpSummary, RemovePatchOpSummary, ReplacePatchOpSummary]).pipe(
-  S.toTaggedUnion("op"),
   $I.annoteSchema("PatchOpSummary", {
     description: "A single JSON Patch operation.",
-  })
+  }),
+  SchemaUtils.withCodecStatics(["encodeResult"]),
+  (schema) =>
+    schema.pipe(
+      S.toTaggedUnion("op"),
+      SchemaUtils.withStatics(() => ({ encodeResult: schema.encodeResult }))
+    )
 );
 
 /**
@@ -463,16 +471,21 @@ class PatchSummarization extends S.Class<PatchSummarization>($I`PatchSummarizati
     description:
       "Summarize a JSON patch into non-sensitive structural metadata: the operation count and, per operation, the op kind plus a redacted/truncated JSON Pointer. The `value` field of add/replace operations carries repaired assistant content and is intentionally never logged.",
   })
-) {}
+) {
+  static readonly decodeSync = S.decodeSync(PatchSummarization);
+}
 
 // Summarize a JSON patch into non-sensitive structural metadata: the operation
 // count and, per operation, the op kind plus a redacted/truncated JSON Pointer.
 // The `value` field of add/replace operations carries repaired assistant content
 // and is intentionally never logged.
 const summarizePatch = (patch: JsonPatch.JsonPatch): PatchSummarization =>
-  S.decodeSync(PatchSummarization)({
+  PatchSummarization.decodeSync({
     operations: A.length(patch),
-    ops: A.map(patch, (operation) => ({ op: operation.op, path: redactString(operation.path, PATCH_PATH_LIMIT) })),
+    ops: A.map(patch, (operation) => ({
+      op: operation.op,
+      path: redactString(operation.path, PATCH_PATH_LIMIT),
+    })),
   });
 
 const trackRepairOutcome = (outcome: "call_failed" | "dropped" | "repaired", count: number): Effect.Effect<void> =>
@@ -607,7 +620,12 @@ const runRepairAttempts = Effect.fn("runRepairAttempts")(function* (
   attempt: number
 ): Effect.fn.Return<RepairAttemptState, BlockRepairFailed> {
   if (attempt > REPAIR_ATTEMPTS || A.isReadonlyArrayEmpty(pending)) {
-    return RepairAttemptState.make({ inputTokens, outputTokens, pending, repaired });
+    return RepairAttemptState.make({
+      inputTokens,
+      outputTokens,
+      pending,
+      repaired,
+    });
   }
 
   const [fixed, usage] = yield* attemptRepairs(callRepair, pending, attempt).pipe(
@@ -670,7 +688,11 @@ const runRepairAttempts = Effect.fn("runRepairAttempts")(function* (
 export const makeRepairInvalidBlocks = (callRepair: BlockRepairCall = defaultRepairCall): RepairInvalidBlocks =>
   Effect.fn("agents.assistant_turn.block_repair")(function* (failures) {
     if (A.isReadonlyArrayEmpty(failures)) {
-      return RepairInvalidBlocksResult.make({ blocks: A.empty<IndexedBlock>(), inputTokens: 0, outputTokens: 0 });
+      return RepairInvalidBlocksResult.make({
+        blocks: A.empty<IndexedBlock>(),
+        inputTokens: 0,
+        outputTokens: 0,
+      });
     }
 
     const result = yield* runRepairAttempts(callRepair, failures, A.empty<IndexedBlock>(), 0, 0, 1);

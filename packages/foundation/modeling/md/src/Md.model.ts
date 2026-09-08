@@ -3465,6 +3465,8 @@ export class Document extends S.TaggedClass<Document>($I`Document`)(
 
   static readonly toHtml = (document: Document): HtmlModel.Fragment =>
     HtmlModel.Fragment.make({ children: Block.toHtmlAll(document.children) });
+
+  static readonly encodeResult = S.encodeResult(Document);
 }
 
 /**

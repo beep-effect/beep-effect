@@ -1,7 +1,13 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "../../../tsconfig.base.json",
-  "include": ["src", "test", "vitest.config.ts", "../../../vitest.shared.ts"],
+  "include": [
+    "src",
+    "test",
+    "vitest.config.ts",
+    "../../../vitest.shared.ts",
+    "../../../vitest.aliases.generated.json"
+  ],
   "compilerOptions": {
     "lib": ["esnext"],
     "types": ["node"],

@@ -994,6 +994,9 @@ const tryAcquireJournalLock = Effect.fnUntraced(function* (
   return acquired;
 });
 
+const pauseBeforeLockRetry = (attempt: number, retryAttempts: number): Effect.Effect<void, never, never> =>
+  attempt + 1 < retryAttempts ? Effect.sleep(Duration.millis(LOCK_RETRY_DELAY_MILLIS)) : Effect.void;
+
 /**
  * Acquire an owned-generation lock for a serialized journal rewrite.
  *
@@ -1028,7 +1031,7 @@ export const acquireJournalFileLock = Effect.fnUntraced(function* (
     if (yield* tryAcquireJournalLock(lockPath, token)) {
       return true;
     }
-    yield* Effect.sleep(Duration.millis(LOCK_RETRY_DELAY_MILLIS));
+    yield* pauseBeforeLockRetry(attempt, retryAttempts);
   }
   return false;
 });
@@ -1174,9 +1177,6 @@ const runFencedOperation = Effect.fnUntraced(function* <Success, Requirements>(
   const lockToken = yield* acquireFencedGeneration(lockPath, busyMessage);
   return yield* Effect.ensuring(operation(lockToken), releaseJournalFileLock(lockPath, lockToken)).pipe(Effect.result);
 });
-
-const pauseBeforeLockRetry = (attempt: number, retryAttempts: number): Effect.Effect<void, never, never> =>
-  attempt + 1 < retryAttempts ? Effect.sleep(Duration.millis(LOCK_RETRY_DELAY_MILLIS)) : Effect.void;
 
 /**
  * Run one journal operation under a fenced lock generation with bounded replay.

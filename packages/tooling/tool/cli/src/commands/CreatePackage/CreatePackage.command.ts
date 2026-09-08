@@ -1769,7 +1769,7 @@ const appBaseScripts = (dev: string, build: string, lab: boolean) => ({
   dev,
   "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
   "beep:build": build,
-  "beep:check": "tsgo -p tsconfig.check.json",
+  "beep:check": "tsgo -p tsconfig.check.json && tsc -p tsconfig.json --noEmit",
   "beep:lint": "biome check .",
   "beep:lint:fix": "biome check . --write",
   "beep:test": "bunx --bun vitest run",

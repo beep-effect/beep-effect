@@ -31,8 +31,26 @@ const ProviderRecordingIntegrityIssue = LiteralKit([
   "source-grounding",
 ]);
 
-/** Typed failure raised when a persisted provider recording cannot be trusted for offline replay. @category errors @since 0.0.0 */
-class ProviderRecordingIntegrityError extends S.TaggedError<ProviderRecordingIntegrityError>(
+/**
+ * Identifies the violated integrity invariant that makes a sanitized provider recording unsafe for offline replay.
+ *
+ * **Example** (Describe a digest mismatch)
+ *
+ * ```ts
+ * import { ProviderRecordingIntegrityError } from "@/workflows/ProviderRecording"
+ *
+ * const error = ProviderRecordingIntegrityError.make({
+ *   issue: "candidate-digest",
+ *   message: "The provider candidate digest does not match the committed recording.",
+ * })
+ *
+ * console.log(error.issue) // candidate-digest
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class ProviderRecordingIntegrityError extends S.TaggedError<ProviderRecordingIntegrityError>(
   $I`ProviderRecordingIntegrityError`
 )(
   "ProviderRecordingIntegrityError",
@@ -63,7 +81,29 @@ const providerCandidateMatchesContract = (candidate: ProviderCandidate): boolean
   Str.Equivalence(candidate.text, expectedProviderCandidateText(candidate.label));
 
 /**
- * Verify the canonical candidate digest and source grounding of a committed provider recording.
+ * Recomputes a sanitized recording's digest and confirms that every authorized candidate is grounded in source text.
+ *
+ * **Example** (Verify the committed candidate labels)
+ *
+ * ```ts
+ * import * as BunCrypto from "@effect/platform-bun/BunCrypto"
+ * import { Effect } from "effect"
+ * import * as A from "effect/Array"
+ * import * as S from "effect/Schema"
+ * import { PROVIDER_RECORDING_SOURCE_TEXT, ProviderRecording } from "@/domain/Bundle"
+ * import providerRecordingFixture from "@/fixtures/provider-recording.json"
+ * import { verifyProviderRecording } from "@/workflows/ProviderRecording"
+ *
+ * const labels = await Effect.runPromise(
+ *   Effect.gen(function* () {
+ *     const recording = yield* S.decodeUnknownEffect(ProviderRecording)(providerRecordingFixture)
+ *     const verified = yield* verifyProviderRecording(recording, PROVIDER_RECORDING_SOURCE_TEXT)
+ *     return A.map(verified.candidates, (candidate) => candidate.label)
+ *   }).pipe(Effect.provide(BunCrypto.layer))
+ * )
+ *
+ * console.log(labels) // ["project", "delivery_date", "finish"]
+ * ```
  *
  * @category validation
  * @since 0.0.0
@@ -72,7 +112,7 @@ export const verifyProviderRecording = Effect.fn("lejeune.provider.verify_record
   recording: ProviderRecording,
   sourceText: string
 ) {
-  const candidateJson = yield* S.encodeEffect(ProviderCandidateListFromJsonString)(recording.candidates).pipe(
+  const candidateJson = yield* ProviderCandidateListFromJsonString.encodeEffect(recording.candidates).pipe(
     Effect.mapError((cause) =>
       providerIntegrityError(
         "candidate-encoding",
@@ -118,14 +158,27 @@ export const verifyProviderRecording = Effect.fn("lejeune.provider.verify_record
 });
 
 /**
- * Verify and refine a generic sanitized result to the exact committed offline replay artifact.
+ * Refines a valid sanitized recording to the single provider artifact authorized for deterministic offline replay.
  *
- * **Example** (Inspect the verifier)
+ * **Example** (Verify the frozen recording timestamp)
  *
  * ```ts
+ * import * as BunCrypto from "@effect/platform-bun/BunCrypto"
+ * import { Effect } from "effect"
+ * import * as S from "effect/Schema"
+ * import { PROVIDER_RECORDING_SOURCE_TEXT, ProviderRecording } from "@/domain/Bundle"
+ * import providerRecordingFixture from "@/fixtures/provider-recording.json"
  * import { verifyFrozenProviderRecording } from "@/workflows/ProviderRecording"
  *
- * console.log(typeof verifyFrozenProviderRecording === "function") // true
+ * const recordedAt = await Effect.runPromise(
+ *   Effect.gen(function* () {
+ *     const recording = yield* S.decodeUnknownEffect(ProviderRecording)(providerRecordingFixture)
+ *     const frozen = yield* verifyFrozenProviderRecording(recording, PROVIDER_RECORDING_SOURCE_TEXT)
+ *     return frozen.recordedAt
+ *   }).pipe(Effect.provide(BunCrypto.layer))
+ * )
+ *
+ * console.log(recordedAt) // 2026-08-27T12:25:18.044Z
  * ```
  *
  * @category validation
@@ -142,7 +195,7 @@ export const verifyFrozenProviderRecording = Effect.fn("lejeune.provider.verify_
       "The frozen provider recording must be grounded in the exact canonical RFQ A source document."
     );
   }
-  return yield* S.decodeEffect(FrozenProviderRecording)(verified).pipe(
+  return yield* FrozenProviderRecording.decodeEffect(verified).pipe(
     Effect.mapError((cause) =>
       providerIntegrityError(
         "frozen-contract",

@@ -1225,6 +1225,7 @@ describe("quality-scheduler", () => {
           const observedToken = `${DEAD_PID}:timed-out-adopter-generation`;
           const firstAdopted = yield* Deferred.make<void>();
           const resumeFirst = yield* Deferred.make<void>();
+          const takeoverReachedLock = yield* Deferred.make<void>();
           yield* fs.makeDirectory(tempRoot.root, { recursive: true, mode: 0o700 });
           yield* fs.writeFileString(lockPath, observedToken);
           const pausedFileSystem = FileSystem.FileSystem.of({
@@ -1237,35 +1238,44 @@ describe("quality-scheduler", () => {
               }
             }),
           });
+          const takeoverFileSystem = FileSystem.FileSystem.of({
+            ...fs,
+            rename: Effect.fn("FileSystem.FileSystem.rename")(function* (oldPath, newPath) {
+              yield* fs.rename(oldPath, newPath);
+              if (Str.Equivalence(oldPath, lockPath) && Str.includes(".tombstone-")(newPath)) {
+                yield* Deferred.succeed(takeoverReachedLock, undefined);
+              }
+            }),
+          });
           const first = yield* Effect.forkChild(
             acquireJournalFileLock(lockPath, `${process.pid}:first-adopter`, 1).pipe(
               Effect.provideService(FileSystem.FileSystem, pausedFileSystem)
             )
           );
-          yield* Deferred.await(firstAdopted);
-          yield* TestClock.adjust("31001 millis");
+          yield* Effect.gen(function* () {
+            yield* Deferred.await(firstAdopted);
+            yield* TestClock.adjust("31001 millis");
 
-          const takeover = yield* Effect.forkChild(
-            acquireJournalFileLock(lockPath, `${process.pid}:takeover-adopter`, 1)
-          );
-          for (let attempt = 0; attempt < 100 && (yield* fs.exists(lockPath)); attempt++) {
-            yield* Effect.yieldNow;
-          }
-          expect(yield* fs.exists(lockPath)).toBe(false);
+            const takeover = yield* Effect.forkChild(
+              acquireJournalFileLock(lockPath, `${process.pid}:takeover-adopter`, 1).pipe(
+                Effect.provideService(FileSystem.FileSystem, takeoverFileSystem)
+              )
+            );
+            yield* Deferred.await(takeoverReachedLock);
+            expect(yield* fs.exists(lockPath)).toBe(false);
 
-          const replacementToken = `${process.pid}:replacement-after-takeover`;
-          expect(yield* acquireJournalFileLock(lockPath, replacementToken, 1)).toBe(true);
-          yield* Deferred.succeed(resumeFirst, undefined);
-          yield* Effect.yieldNow;
-          yield* TestClock.adjust("25 millis");
+            const replacementToken = `${process.pid}:replacement-after-takeover`;
+            expect(yield* acquireJournalFileLock(lockPath, replacementToken, 1)).toBe(true);
+            yield* Deferred.succeed(resumeFirst, undefined);
 
-          expect(yield* Fiber.join(first)).toBe(false);
-          expect(yield* Fiber.join(takeover)).toBe(false);
-          const replacement = yield* fs.readFileString(lockPath).pipe(Effect.flatMap(decodeJournalLockGeneration));
-          expect(replacement.ownerToken).toBe(replacementToken);
-          expect(A.join(A.map(yield* TestConsole.errorLines, String), "\n")).toContain("reap claim lost");
-          expect(A.filter(yield* fs.readDirectory(tempRoot.root), Str.includes(".reap-"))).toHaveLength(0);
-          yield* releaseAdmissionJournalLockForTesting(lockPath, replacementToken);
+            expect(yield* Fiber.join(first)).toBe(false);
+            expect(yield* Fiber.join(takeover)).toBe(false);
+            const replacement = yield* fs.readFileString(lockPath).pipe(Effect.flatMap(decodeJournalLockGeneration));
+            expect(replacement.ownerToken).toBe(replacementToken);
+            expect(A.join(A.map(yield* TestConsole.errorLines, String), "\n")).toContain("reap claim lost");
+            expect(A.filter(yield* fs.readDirectory(tempRoot.root), Str.includes(".reap-"))).toHaveLength(0);
+            yield* releaseAdmissionJournalLockForTesting(lockPath, replacementToken);
+          }).pipe(Effect.ensuring(Deferred.succeed(resumeFirst, undefined)));
         })
       );
     })
@@ -3066,6 +3076,35 @@ describe("quality-scheduler", () => {
         );
       })
     ));
+
+  it.effect("observes promotion settlement after lock contention before reporting it busy", () =>
+    Effect.gen(function* () {
+      const gibRef = yield* Ref.make(50);
+      yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          yield* admissionStatus(fastConfig);
+          const promotion = yield* writePromotionFixture(tempRoot, {
+            keepLease: true,
+            keepTicket: true,
+            nonce: "settling-promotion",
+            phase: "lease-published",
+          });
+          const promotionLockPath = `${promotion.promotionPath}.lock`;
+          const promotionLockToken = `${process.pid}:settling-promotion-lock`;
+          expect(yield* acquireJournalFileLock(promotionLockPath, promotionLockToken, 1)).toBe(true);
+
+          const recovery = yield* Effect.forkChild(reapAdmissionState({ apply: true }));
+          yield* TestClock.adjust(Duration.millis(175));
+          expect(recovery.pollUnsafe()).toBeUndefined();
+          yield* fs.remove(promotion.promotionPath, { force: true });
+          yield* releaseAdmissionJournalLockForTesting(promotionLockPath, promotionLockToken);
+          yield* TestClock.adjust(Duration.millis(25));
+          yield* Fiber.join(recovery);
+        })
+      );
+    })
+  );
 
   it("leaves recovery records retryable when their locked reread is unavailable", () =>
     Effect.runPromise(

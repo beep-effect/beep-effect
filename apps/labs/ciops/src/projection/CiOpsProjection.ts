@@ -51,7 +51,7 @@ export interface CiOpsProjectionShape {
  * **Example** (Reference the live service layer)
  *
  * ```ts
- * import { CiOpsProjection, CiOpsProjectionLive } from "@beep/ciops/src/projection/CiOpsProjection"
+ * import { CiOpsProjection, CiOpsProjectionLive } from "@/projection/CiOpsProjection"
  * import { Layer } from "effect"
  *
  * console.log(CiOpsProjection.key.length > 0) // true
@@ -111,7 +111,7 @@ const makeCiOpsProjection = Effect.fnUntraced(function* (): Effect.fn.Return<CiO
  * **Example** (Provide the projection service)
  *
  * ```ts
- * import { CiOpsProjection, CiOpsProjectionLive } from "@beep/ciops/src/projection/CiOpsProjection"
+ * import { CiOpsProjection, CiOpsProjectionLive } from "@/projection/CiOpsProjection"
  * import { Effect } from "effect"
  *
  * const current = Effect.flatMap(CiOpsProjection, (service) => service.currentProposal)
