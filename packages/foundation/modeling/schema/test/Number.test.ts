@@ -1,5 +1,6 @@
 import { Age } from "@beep/schema/Age";
 import { NonNegativeInt } from "@beep/schema/Number";
+import { assertSchemaArbitraryDecodesToSelf } from "@beep/test-utils";
 import { describe, expect, expectTypeOf, it } from "@effect/vitest";
 import { Effect, Exit } from "effect";
 import * as S from "effect/Schema";
@@ -9,6 +10,10 @@ const decodeNonNegativeInt = S.decodeUnknownEffect(NonNegativeInt);
 const exit = <A, E>(effect: Effect.Effect<A, E>) => Effect.runPromise(Effect.exit(effect));
 
 describe("Age", () => {
+  it("derives valid ages that decode without changing their value", () => {
+    assertSchemaArbitraryDecodesToSelf(Age);
+  });
+
   it.effect(
     "accepts whole years at both inclusive boundaries and round-trips them",
     Effect.fnUntraced(function* () {
