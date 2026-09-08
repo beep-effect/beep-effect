@@ -40,6 +40,7 @@
 "@beep/ffmpeg": patch
 "@beep/file-processing": patch
 "@beep/firecrawl": patch
+"@beep/freshbooks": patch
 "@beep/gov-legal-mcp": patch
 "@beep/govinfo": patch
 "@beep/html": patch

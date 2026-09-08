@@ -6,7 +6,7 @@
     "title": "Inline Schema Compiler Hard Error",
     "status": "active",
     "created": "2026-08-30",
-    "updated": "2026-09-03",
+    "updated": "2026-09-08",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/inline-schema-compile-hard-error",

@@ -1,8 +1,8 @@
 {
   "schemaVersion": "inline-schema-compile-census/v1",
   "measuredTree": {
-    "commit": "fe293d37ea0f5083472ac925304feacba9917f34",
-    "committedAt": "2026-09-03T23:37:09-05:00"
+    "commit": "b6723e0d43862b70e30e84a2f8e98584f2acf01c",
+    "committedAt": "2026-09-08T16:49:56-05:00"
   },
   "predecessor": {
     "commit": "01d400f0323cfa25cddacdbef4f602e114ff6a17",

@@ -55,6 +55,14 @@ P2 Verify — in progress.
   deprecated-API ESLint sharding fix identified by the first publish attempt;
   full lint-policy passes on the merged head. Exact-head Yeet verification
   remains in progress.
+- The 2026-09-08 current-main reconciliation found 67 newly introduced
+  compiler calls across 15 files and seven ownership families. Fifty-three
+  were mechanically safe and 14 required dependency-aware manual placement;
+  all were hoisted before merge commit `b6723e0d43`, whose committed-tree
+  census is zero. Full package verification is green for `@beep/semantica`,
+  `@beep/freshbooks`, and `@beep/repo-cli`; focused tests plus quick package
+  verification are green for the four affected test-only owners. Exact-head
+  Yeet publication and monitoring remain the active completion gate.
 
 ## Notes
 

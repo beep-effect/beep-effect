@@ -331,3 +331,32 @@
   merged-preview work with enough memory or independently sharded lint passes.
   Route direct heavy-lane replays through the same admission scheduler so
   overlapping repository proofs cannot starve their worker deadlines.
+
+## 2026-09-08 — Dependency fan-out obscured the affected package result
+
+- **Work:** Verify the post-main `@beep/semantica` compiler hoist through its
+  canonical package gate.
+- **Evidence:** The first verifier stopped in the unchanged `@beep/xai`
+  dependency with a locationless `TS2589` before reaching Semantica's own
+  audit. An immediate exact XAI build passed, and the canonical Semantica
+  verifier then passed its audit and docgen lanes. The environment-only P0 row
+  was acknowledged only after both results were captured.
+- **Prevention:** Preserve the failing dependency and phase as structured
+  package-verifier output, and automatically retry a locationless dependency
+  diagnostic after one exact dependency build before attributing it to the
+  affected owner.
+
+## 2026-09-08 — A newly published advisory invalidated the full proof late
+
+- **Work:** Complete the exact-head Yeet verification after every source,
+  policy, documentation, build, package, test, and coverage lane had passed.
+- **Evidence:** The 34-minute collect-all run finished with only
+  `pre-push:security` red because OSV began reporting
+  `GHSA-vwc7-r8mq-g2x9` for transitive `adm-zip` 0.6.0. The branch lockfile is
+  byte-identical to current main, npm still reports 0.6.0 as latest, and the
+  advisory provides no fixed release. The P0 row was acknowledged as
+  environment-only after that attribution.
+- **Prevention:** Refresh vulnerability data in a short admitted preflight
+  immediately before expensive full proof, and surface newly published,
+  no-fixed-release advisories early enough to perform the repository's
+  time-bounded exception review before the collect-all run.
