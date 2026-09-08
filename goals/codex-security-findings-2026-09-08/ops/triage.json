@@ -1,0 +1,305 @@
+{
+  "meta": {
+    "schemaVersion": "codex-triage/v1",
+    "repository": "kriegcloud/beep-effect",
+    "findingsView": "repo-scoped, status=new",
+    "branch": "codex/security-findings-2026-09-08",
+    "expectedCount": 9,
+    "capturedCount": 9,
+    "capturedAt": "2026-09-08",
+    "captureMethod": "signed-in-csv-export",
+    "note": "All nine current findings confirmed against origin/main be8995e66a and remediated on the consolidated branch. Focused proof and two package audits pass; CLI package and repository proof are in progress. Codex closure remains pending merge."
+  },
+  "lanes": {
+    "L1-permissions": {
+      "status": "implemented",
+      "findings": ["CSF-001"]
+    },
+    "L2-filesystem": {
+      "status": "implemented",
+      "findings": ["CSF-002", "CSF-005", "CSF-006", "CSF-009"]
+    },
+    "L3-config": {
+      "status": "implemented",
+      "findings": ["CSF-003"]
+    },
+    "L4-oauth": {
+      "status": "implemented",
+      "findings": ["CSF-004"]
+    },
+    "L6-hygiene": {
+      "status": "implemented",
+      "findings": ["CSF-007"]
+    },
+    "L5-process": {
+      "status": "implemented",
+      "findings": ["CSF-008"]
+    }
+  },
+  "findings": [
+    {
+      "id": "CSF-001",
+      "codexId": "5903ea0d4b988191ba721f27272e4630",
+      "title": "Unscoped stash-drop grant can destroy other agents' work",
+      "severity": "Low",
+      "codexStatus": "New",
+      "commit": "39aa4149b7ab794dfa9431441593dec419307541",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "The shared allow policy permitted arbitrary stash deletion, which can remove work owned by another task."
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          ".claude/settings.json",
+          "packages/tooling/library/ai-sync/src/validation.ts",
+          "packages/tooling/library/ai-sync/test/ai-sync.test.ts",
+          "standards/git-worktrees.md"
+        ],
+        "verificationCommands": [
+          "bun run beep quality package-verify @beep/ai-sync"
+        ],
+        "summary": "Remove stash-drop from approved grants and require its deny rule; document the existing Yeet-owned cleanup route."
+      },
+      "ownerArea": "Agent command permissions",
+      "verdict": "confirmed-vulnerable",
+      "lane": "L1-permissions"
+    },
+    {
+      "id": "CSF-002",
+      "codexId": "c861107a1d90819189ce579ceb623428",
+      "title": "Run mirror exposes local AI session metadata",
+      "severity": "Low",
+      "codexStatus": "New",
+      "commit": "ce4a938d960ba94a996e17433db9330bcafc0ee1",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "The run mirror wrote private session metadata with default filesystem permissions; the existing atomic helper also relied on permissive temporary-file defaults."
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "packages/tooling/tool/cli/src/commands/Yeet/internal/ProvenanceFooter.ts",
+          "packages/tooling/tool/cli/src/internal/cli/FsGuards.ts",
+          "packages/tooling/tool/cli/test/yeet-provenance-footer.test.ts"
+        ],
+        "verificationCommands": [
+          "bunx --bun vitest run test/yeet-provenance-footer.test.ts"
+        ],
+        "summary": "Use the contained atomic writer and restrict its empty temporary file to mode 0600 before writing. Create private run directories and reject symlink targets."
+      },
+      "ownerArea": "Private provenance persistence",
+      "verdict": "confirmed-vulnerable",
+      "lane": "L2-filesystem"
+    },
+    {
+      "id": "CSF-003",
+      "codexId": "3d3beb1bfafc8191a47127db174583da",
+      "title": "Valid sectioned 1Password references are rejected",
+      "severity": "Informational",
+      "codexStatus": "New",
+      "commit": "8ef3213cbf3b19f8c02ce978f02cadb962412753",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "The setup script accepted only three reference components even though sectioned references have four."
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "scripts/enable-turbo-remote-reads.sh",
+          "packages/tooling/tool/cli/test/setup-effect-ref.test.ts"
+        ],
+        "verificationCommands": [
+          "bunx --bun vitest run test/setup-effect-ref.test.ts"
+        ],
+        "summary": "Accept three or four nonempty components while rejecting line breaks. Exercise the real script with a sectioned synthetic reference."
+      },
+      "ownerArea": "Remote-cache secret reference setup",
+      "verdict": "confirmed-vulnerable",
+      "lane": "L3-config"
+    },
+    {
+      "id": "CSF-004",
+      "codexId": "49c0e4f6133c8191b82ea5761ee7ac16",
+      "title": "Cancellation can permanently strand OAuth refresh credentials",
+      "severity": "Informational",
+      "codexStatus": "New",
+      "commit": "e87f1382c482e654822f6eeeed5a7efad44058d3",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "Caller interruption could arrive after the remote server consumed the old refresh token but before the replacement was stored."
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "packages/drivers/freshbooks/src/Freshbooks.token.ts",
+          "packages/drivers/freshbooks/test/Freshbooks.token.test.ts"
+        ],
+        "verificationCommands": [
+          "bun run beep quality package-verify @beep/freshbooks"
+        ],
+        "summary": "Keep the token exchange and persistence uninterruptible inside the existing semaphore. Queued permit acquisition remains cancellable."
+      },
+      "ownerArea": "FreshBooks token rotation",
+      "verdict": "confirmed-vulnerable",
+      "lane": "L4-oauth"
+    },
+    {
+      "id": "CSF-005",
+      "codexId": "6f691d6083348191827f0299697d5e13",
+      "title": "Newline worktree paths can make reap delete an unregistered repo",
+      "severity": "Informational",
+      "codexStatus": "New",
+      "commit": "73c38916a50c454f4ffaa031a74a39904591ce2e",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "Line-delimited Git porcelain could treat a newline in a real worktree path as an additional registered target. Removal trusted the parsed path."
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
+          "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
+          "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts",
+          "packages/tooling/tool/cli/src/commands/Worktree/Reap.service.ts",
+          "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
+          "packages/tooling/tool/cli/test/worktree-command.test.ts",
+          "packages/tooling/tool/cli/test/worktree-reap.test.ts"
+        ],
+        "verificationCommands": [
+          "bunx --bun vitest run test/worktree-command.test.ts test/worktree-reap.test.ts test/worktree-fleet.test.ts test/worktree-fleet-scan.test.ts"
+        ],
+        "summary": "Request NUL-delimited porcelain everywhere, reject control-bearing paths, and require an exact managed-root registration and matching Git common directory immediately before mutation."
+      },
+      "ownerArea": "Worktree registration and deletion",
+      "verdict": "confirmed-vulnerable",
+      "lane": "L2-filesystem"
+    },
+    {
+      "id": "CSF-006",
+      "codexId": "98b558beb4008191a6023074991ed56e",
+      "title": "Symlinked residue roots allow deletion outside the home directory",
+      "severity": "Informational",
+      "codexStatus": "New",
+      "commit": "4b37837a222b80b1ab2db87411648960c5878e73",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "Cleanup trusted configured class roots without checking their canonical location under the home directory. A symlink could redirect deletion outside that boundary."
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.ts",
+          "packages/tooling/tool/cli/test/residue-reap.test.ts"
+        ],
+        "verificationCommands": [
+          "bunx --bun vitest run test/residue-reap.test.ts"
+        ],
+        "summary": "Capture the canonical home boundary before discovery and enforce it again at apply time. Preserve external files behind symlinked session, worktree, and cache roots, including a root repointed after discovery."
+      },
+      "ownerArea": "Home residue cleanup",
+      "verdict": "confirmed-vulnerable",
+      "lane": "L2-filesystem"
+    },
+    {
+      "id": "CSF-007",
+      "codexId": "c87342aea8948191899d6b53b3ca1d8e",
+      "title": "Home-path hygiene check rejects ordinary branch names",
+      "severity": "Informational",
+      "codexStatus": "New",
+      "commit": "d6f92d521fc6e067ef4834277b72cb74a37f7385",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "A substring match for the current home path rejected ordinary branch names containing the same path fragment."
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "goals/time-to-certainty/research/scripts/economics.py",
+          "goals/time-to-certainty/research/scripts/test_economics.py",
+          "goals/time-to-certainty/research/economics.json"
+        ],
+        "verificationCommands": [
+          "python3 -m unittest discover -s goals/time-to-certainty/research/scripts -p test_economics.py"
+        ],
+        "summary": "Use the same path-boundary matcher for validation and redaction. Verify normal branch names and actual home paths in plain and compressed evidence."
+      },
+      "ownerArea": "Public evidence path hygiene",
+      "verdict": "confirmed-vulnerable",
+      "lane": "L6-hygiene"
+    },
+    {
+      "id": "CSF-008",
+      "codexId": "d4377d755bd08191a28114af44a54589",
+      "title": "Old clients reap live state written by the new client",
+      "severity": "Informational",
+      "codexStatus": "New",
+      "commit": "00655a974e1234876bf8b30f7823f57b91259b36",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "New Linux records used a proc prefix that older checkout readers compared directly to raw start ticks, falsely classifying live owners as dead."
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "packages/tooling/tool/cli/src/internal/repo-run/ProcessIdentity.ts",
+          "packages/tooling/tool/cli/test/process-identity.test.ts",
+          "packages/tooling/tool/cli/test/quality-scheduler.test.ts"
+        ],
+        "verificationCommands": [
+          "bunx --bun vitest run test/process-identity.test.ts test/quality-scheduler.test.ts"
+        ],
+        "summary": "Write raw Linux start ticks for new records and retain support for both raw and prefixed records when checking owners."
+      },
+      "ownerArea": "Process identity compatibility",
+      "verdict": "confirmed-vulnerable",
+      "lane": "L5-process"
+    },
+    {
+      "id": "CSF-009",
+      "codexId": "e8dd30d69e44819198846c9b8043d066",
+      "title": "Raw worktree names escape the archive residue root",
+      "severity": "Informational",
+      "codexStatus": "New",
+      "commit": "f07667ec77849b83d04dd4f3572f0d3ef2073832",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "Removal names accepted traversal and separators, and the archive planner appended the raw name to its residue directory."
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
+          "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
+          "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts",
+          "packages/tooling/tool/cli/test/worktree-command.test.ts"
+        ],
+        "verificationCommands": [
+          "bunx --bun vitest run test/worktree-command.test.ts"
+        ],
+        "summary": "Validate single-component removal names, enforce the managed worktree target, sanitize archive path components, and verify the final destination remains under the configured residue root."
+      },
+      "ownerArea": "Worktree archive containment",
+      "verdict": "confirmed-vulnerable",
+      "lane": "L2-filesystem"
+    }
+  ]
+}

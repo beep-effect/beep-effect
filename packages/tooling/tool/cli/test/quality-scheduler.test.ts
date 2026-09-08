@@ -1580,7 +1580,8 @@ describe("quality-scheduler", () => {
             const procGeneration = yield* fs
               .readFileString(procLockPath)
               .pipe(Effect.flatMap(decodeJournalLockGeneration));
-            expect(Str.startsWith("proc:")(procGeneration.procStart)).toBe(true);
+            expect(procGeneration.procStart).toBe(O.getOrThrow(yield* processStartIdentityForPid(process.pid)));
+            expect(Str.isNonEmpty(procGeneration.procStart) && !Str.includes(":")(procGeneration.procStart)).toBe(true);
             expect(
               yield* acquireJournalFileLock(procLockPath, `${process.pid}:system-contender`, 1).pipe(
                 Effect.provideService(FileSystem.FileSystem, withoutProcfs)

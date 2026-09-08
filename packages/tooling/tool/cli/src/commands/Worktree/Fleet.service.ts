@@ -540,7 +540,7 @@ const discoverClones = Effect.fn("Fleet.discoverClones")(function* (
 const cloneStubs = Effect.fn("Fleet.cloneStubs")(function* (
   clone: string
 ): Effect.fn.Return<ReadonlyArray<CheckoutStub>, never, FleetMirrorServiceRequirements> {
-  const porcelain = gitStdout(yield* runGitProbe(clone, ["worktree", "list", "--porcelain"]));
+  const porcelain = gitStdout(yield* runGitProbe(clone, ["worktree", "list", "--porcelain", "-z"]));
   if (O.isNone(porcelain)) {
     const unlisted: CheckoutStub = { path: clone, kind: "clone", entry: null };
     return [unlisted];

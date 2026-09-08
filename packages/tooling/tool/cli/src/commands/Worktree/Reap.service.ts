@@ -633,7 +633,7 @@ export const runWorktreeReap = Effect.fn("WorktreeReap.runWorktreeReap")(functio
   );
   const porcelain = yield* runWorktreeGitCapture(
     currentRoot,
-    ["worktree", "list", "--porcelain"],
+    ["worktree", "list", "--porcelain", "-z"],
     "Failed to list registered git worktrees."
   );
   const entries = parseWorktreePorcelain(porcelain);

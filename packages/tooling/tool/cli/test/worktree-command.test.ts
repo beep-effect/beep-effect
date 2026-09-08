@@ -239,6 +239,15 @@ describe("worktree argument builders", () => {
       expect(unsafeNamePlan.archiveRef).toBe("refs/archive/worktrees/feature-x/20260902-123456");
       expect(reservedSuffixPlan.archiveRef).toBe("refs/archive/worktrees/Feature_9.lock-worktree/20260902-123456");
       expect(emptySanitizedPlan.archiveRef).toBe("refs/archive/worktrees/worktree/20260902-123456");
+      const traversalPlan = worktreeArchivePlan(
+        path,
+        "/cache",
+        "beep-effect",
+        WorktreeRepositoryHash.make("0123456789ab"),
+        "../../../../outside",
+        "20260902-123456"
+      );
+      expect(traversalPlan.residueRoot).toBe("/cache/beep-effect-0123456789ab/outside-20260902-123456");
       expect(worktreeResidueReason(true, false)).toBe("dirty");
       expect(worktreeResidueReason(false, true)).toBe("unpushed-commits");
       expect(worktreeResidueReason(true, true)).toBe("dirty+unpushed");
@@ -278,6 +287,21 @@ describe("worktree argument builders", () => {
 });
 
 describe("parseWorktreePorcelain", () => {
+  it("rejects ambiguous line listings and control characters in NUL-delimited paths", () => {
+    const hostile = "worktree /repo-worktrees/real\nworktree /unrelated\0HEAD abc123\0branch refs/heads/feature\0\0";
+    expect(parseWorktreePorcelain(hostile)).toEqual([]);
+    expect(parseWorktreePorcelain("worktree /repo\nHEAD abc123\n")).toEqual([]);
+    expect(parseWorktreePorcelain(`worktree /repo\0HEAD abc123\0\0${hostile}`)).toHaveLength(1);
+  });
+
+  it("rejects traversal and control characters in removal names", () => {
+    const accepts = S.is(WorktreeRemovalRequest.fields.name);
+    for (const name of ["../outside", "/outside", "..", ".", "a/b", "a\\b", "a\nb", "a\rb", "a\0b"]) {
+      expect(accepts(name)).toBe(false);
+    }
+    expect(accepts("feature-x")).toBe(true);
+  });
+
   it("parses a branch entry, a detached+locked entry, and a prunable entry", () => {
     const entries = parseWorktreePorcelain(
       [
@@ -295,7 +319,7 @@ describe("parseWorktreePorcelain", () => {
         "detached",
         "prunable gitdir file points to non-existent location",
         "",
-      ].join("\n")
+      ].join("\0")
     );
 
     expect(entries).toHaveLength(3);
@@ -618,6 +642,39 @@ describe("worktree git operations", () => {
           message: "--delete-branch requires --archive so branch deletion cannot discard unreachable commits.",
         });
         expect(yield* fs.exists(targetPath)).toBe(true);
+      })
+    )
+  );
+
+  it.effect("preserves an unregistered repository under the managed root", () =>
+    withScratchRepo((repoRoot) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const service = yield* WorktreeRemovalService;
+        const context = yield* resolveWorktreeContext(repoRoot);
+        const targetPath = path.join(context.worktreesRoot, "bystander");
+        yield* fs.makeDirectory(targetPath, { recursive: true });
+        yield* initScratchRepo(targetPath);
+        const sentinel = path.join(targetPath, "keep.txt");
+        yield* fs.writeFileString(sentinel, "unrelated work\n");
+        const error = yield* service
+          .remove(
+            WorktreeRemovalRequest.make({
+              name: NonEmptyTrimmedStr.make("bystander"),
+              targetPath,
+              mainCheckout: context.mainCheckout,
+              branch: O.some("main"),
+              archive: true,
+              deleteBranch: false,
+              expectedHead: O.none(),
+            })
+          )
+          .pipe(Effect.flip);
+        expect(error).toMatchObject({ _tag: "WorktreeCommandError" });
+        expect(error.message).toContain("exact registered worktree");
+        expect(yield* fs.readFileString(sentinel)).toBe("unrelated work\n");
+        expect(yield* runGitText(targetPath, ["rev-parse", "--is-inside-work-tree"])).toBe("true");
       })
     )
   );

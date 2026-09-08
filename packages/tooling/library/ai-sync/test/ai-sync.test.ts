@@ -54,6 +54,7 @@ const requiredClaudeRepoDenyPermissions: ReadonlyArray<string> = [
   "Bash(git push --force-with-lease:*)",
   "Bash(git push --mirror:*)",
   "Bash(git stash clear:*)",
+  "Bash(git stash drop:*)",
   "Bash(git stash pop:*)",
   "Bash(git worktree remove --force:*)",
   "Bash(bun run beep worktree remove --force:*)",
@@ -473,6 +474,7 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/ai-sync", (it) => {
               "Bash(command codex exec:*)",
               "Bash(bash:*)",
               "Bash(timeout:*)",
+              "Bash(git stash drop:*)",
             ],
             Effect.fn(function* (permission) {
               yield* writeText(
@@ -561,7 +563,7 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/ai-sync", (it) => {
   );
 
   it.effect(
-    "keeps checked-in Claude grants inside the exact 50-value allow domain",
+    "keeps checked-in Claude grants inside the exact 49-value allow domain",
     Effect.fn(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -570,16 +572,17 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/ai-sync", (it) => {
       const settings = yield* S.decodeEffect(
         S.fromJsonString(
           S.Struct({
-            permissions: S.Struct({ allow: S.Array(S.String) }),
+            permissions: S.Struct({ allow: S.Array(S.String), deny: S.Array(S.String) }),
           })
         )
       )(settingsText);
 
-      assert.lengthOf(settings.permissions.allow, 50);
+      assert.lengthOf(settings.permissions.allow, 49);
       assert.include(settings.permissions.allow, "Bash(git worktree prune:*)");
       assert.include(settings.permissions.allow, "Bash(bun run beep yeet sweep:*)");
       assert.notInclude(settings.permissions.allow, "Bash(git worktree remove:*)");
-      assert.include(settings.permissions.allow, "Bash(git stash drop:*)");
+      assert.notInclude(settings.permissions.allow, "Bash(git stash drop:*)");
+      assert.include(settings.permissions.deny, "Bash(git stash drop:*)");
       assert.include(settings.permissions.allow, "Bash(git update-ref refs/archive/:*)");
       assert.notInclude(settings.permissions.allow, "Bash(git update-ref:*)");
       assert.notInclude(settings.permissions.allow, "Bash(git push --delete:*)");

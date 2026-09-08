@@ -515,6 +515,7 @@ const directoryCandidate = Effect.fnUntraced(function* (
 
 const topLevelDirectoryCandidates = Effect.fnUntraced(function* (
   root: string,
+  homeBoundary: string,
   reapClass: "codex-worktrees" | "beep-cache-disposable",
   nowMillis: number,
   thresholdDays: number,
@@ -530,6 +531,9 @@ const topLevelDirectoryCandidates = Effect.fnUntraced(function* (
   const exists = yield* fs.exists(root).pipe(Effect.orElseSucceed(() => false));
   if (!exists) {
     return A.empty();
+  }
+  if (O.isNone(yield* canonicalDirectory(homeBoundary, root))) {
+    return [candidate(root, root, reapClass, "skip", { skipReason: "path-changed" })];
   }
   const listing = yield* Effect.result(fs.readDirectory(root));
   if (Result.isFailure(listing)) {
@@ -702,7 +706,8 @@ type ResolvedApplyTarget = {
 };
 
 const resolveApplyTarget = Effect.fnUntraced(function* (
-  assessed: ResidueReapCandidate
+  assessed: ResidueReapCandidate,
+  homeBoundary: string
 ): Effect.fn.Return<O.Option<ResolvedApplyTarget>, never, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -716,6 +721,12 @@ const resolveApplyTarget = Effect.fnUntraced(function* (
   const root = yield* fs.realPath(assessed.root).pipe(Effect.option);
   const target = yield* fs.realPath(assessed.path).pipe(Effect.option);
   if (O.isNone(root) || O.isNone(target) || !pathIsStrictlyWithin(path, root.value, target.value)) {
+    return O.none();
+  }
+  if (
+    !ResidueReapClass.is["turbo-cache"](assessed.reapClass) &&
+    !pathIsStrictlyWithin(path, homeBoundary, root.value)
+  ) {
     return O.none();
   }
   // The inode behind the resolved path is what the removal is later bound to, so an
@@ -749,6 +760,7 @@ const removeResolvedCandidate = Effect.fnUntraced(function* (
 
 const applyCandidate = Effect.fnUntraced(function* (
   assessed: ResidueReapCandidate,
+  homeBoundary: string,
   nowMillis: number,
   maxAgeDays: number,
   turboMaxAgeDays: number,
@@ -763,7 +775,7 @@ const applyCandidate = Effect.fnUntraced(function* (
   // removal below run on the resolved one.
   const reported = (candidate: ResidueReapCandidate): ResidueReapCandidate =>
     ResidueReapCandidate.make({ ...candidate, root: assessed.root, path: assessed.path });
-  const resolved = yield* resolveApplyTarget(assessed);
+  const resolved = yield* resolveApplyTarget(assessed, homeBoundary);
   if (O.isNone(resolved)) {
     return {
       candidate: ResidueReapCandidate.make({ ...assessed, action: "skip", skipReason: "path-changed" }),
@@ -881,12 +893,24 @@ export const runResidueReap = Effect.fn("ResidueReap.runResidueReap")(function* 
   const cwdProbe = O.getOrElse(O.fromUndefinedOr(options.probeLiveCwd), () => procCwdProbe);
   const codexRoot = path.join(homeRoot, ".codex");
   const beepCacheRoot = path.join(homeRoot, ".cache", "beep");
+  const fs = yield* FileSystem.FileSystem;
+  const homeBoundary = yield* fs.realPath(homeRoot);
 
   const sessions = includes("codex-sessions")
     ? (yield* Effect.reduce(
         [path.join(codexRoot, "sessions"), path.join(codexRoot, "archived_sessions")],
         (): SessionScan => ({ candidates: A.empty(), remaining: entryCap }),
         Effect.fnUntraced(function* (scan: SessionScan, root: string) {
+          if (!(yield* fs.exists(root))) return scan;
+          if (O.isNone(yield* canonicalDirectory(homeBoundary, root))) {
+            return {
+              candidates: A.append(
+                scan.candidates,
+                candidate(root, root, "codex-sessions", "skip", { skipReason: "path-changed" })
+              ),
+              remaining: scan.remaining,
+            };
+          }
           const nested = yield* discoverSessionTree(root, root, nowMillis, maxAgeDays, scan.remaining);
           return { candidates: A.appendAll(scan.candidates, nested.candidates), remaining: nested.remaining };
         })
@@ -895,6 +919,7 @@ export const runResidueReap = Effect.fn("ResidueReap.runResidueReap")(function* 
   const worktrees = includes("codex-worktrees")
     ? yield* topLevelDirectoryCandidates(
         path.join(codexRoot, "worktrees"),
+        homeBoundary,
         "codex-worktrees",
         nowMillis,
         maxAgeDays,
@@ -908,6 +933,7 @@ export const runResidueReap = Effect.fn("ResidueReap.runResidueReap")(function* 
   const beepCache = includes("beep-cache-disposable")
     ? yield* topLevelDirectoryCandidates(
         beepCacheRoot,
+        homeBoundary,
         "beep-cache-disposable",
         nowMillis,
         maxAgeDays,
@@ -920,7 +946,7 @@ export const runResidueReap = Effect.fn("ResidueReap.runResidueReap")(function* 
   const outcomes = apply
     ? yield* Effect.forEach(
         discovered,
-        (entry) => applyCandidate(entry, nowMillis, maxAgeDays, turboMaxAgeDays, entryCap, cwdProbe),
+        (entry) => applyCandidate(entry, homeBoundary, nowMillis, maxAgeDays, turboMaxAgeDays, entryCap, cwdProbe),
         { concurrency: 1 }
       )
     : A.map(

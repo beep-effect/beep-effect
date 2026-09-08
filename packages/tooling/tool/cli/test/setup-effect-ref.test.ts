@@ -178,7 +178,7 @@ describe("setup-effect-ref", () => {
                 PATH: ambientPath,
                 TURBO_API: "https://replacement.example.test",
                 TURBO_TEAM: "replacement-team",
-                TURBO_TOKEN_REF: "op://new-vault/new-item/password",
+                TURBO_TOKEN_REF: "op://new-vault/new-item/cache/password",
                 TURBO_TOKEN_REPLACE: "1",
               },
               stdin: "ignore",
@@ -200,7 +200,7 @@ describe("setup-effect-ref", () => {
         expect(result.exitCode, result.stderr).toBe(0);
         expect(result.stdout).toContain("replaced TURBO_TOKEN (prior: reference old-vault/old-item)");
         const configured = yield* fs.readFileString(path.join(repoRoot, ".env"));
-        expect(configured).toContain("TURBO_TOKEN=op://new-vault/new-item/password");
+        expect(configured).toContain("TURBO_TOKEN=op://new-vault/new-item/cache/password");
         expect(configured).toContain("TURBO_API=https://existing.example.test");
         expect(configured).toContain("TURBO_TEAM=existing-team");
       })
@@ -312,7 +312,7 @@ describe("setup-effect-ref", () => {
 
         expect(result.exitCode).toBe(1);
         expect(result.stderr).toContain(
-          "TURBO_TOKEN_REF must be a 1Password reference (op://vault/item/field), never a token value"
+          "TURBO_TOKEN_REF must be a 1Password reference (op://vault/item/[section/]field), never a token value"
         );
         expect(yield* fs.readFileString(envPath)).toBe(original);
       })

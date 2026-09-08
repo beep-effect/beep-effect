@@ -69,7 +69,7 @@ const withScratchRepo = <Value, Failure, Requirements>(
       const tempRoot = yield* fs.makeTempDirectory({ prefix: "worktree-reap-test-" });
       const repoRoot = path.join(tempRoot, "repo");
       const originRoot = path.join(tempRoot, "origin.git");
-      const worktreesRoot = path.join(tempRoot, "worktrees");
+      const worktreesRoot = path.join(tempRoot, "repo-worktrees");
       yield* Effect.forEach(
         [repoRoot, originRoot, worktreesRoot],
         Effect.fn("WorktreeReapTest.makeFixtureDirectory")(function* (directory) {

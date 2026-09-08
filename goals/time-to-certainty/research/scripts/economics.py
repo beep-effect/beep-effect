@@ -228,9 +228,14 @@ def portable_path(path: Path) -> str:
     return relative.as_posix()
 
 
+def absolute_home_path_pattern() -> re.Pattern[str]:
+    home = re.escape(str(Path.home().resolve()))
+    return re.compile(r"(?<![A-Za-z0-9_./-])" + home + r"(?=$|[/\\\"'\s:),;\]}])")
+
+
 def redact(value: Any) -> Any:
     if isinstance(value, str):
-        value = value.replace(str(Path.home().resolve()), "~")
+        value = absolute_home_path_pattern().sub("~", value)
         value = re.sub(r"(https?://)[^/@\s]+:[^/@\s]+@", r"\1", value)
         return re.sub(
             r"(?i)([?&](?:access_?token|api_?key|auth|key|secret|signature|token)=)[^&\s]+",
@@ -2260,10 +2265,10 @@ def build_report(
 
 
 def validate_public_hygiene(paths: list[Path]) -> None:
-    forbidden = str(Path.home().resolve()).encode("utf-8")
+    forbidden = absolute_home_path_pattern()
     for path in paths:
         data = gzip.decompress(path.read_bytes()) if path.suffix == ".gz" else path.read_bytes()
-        if forbidden in data:
+        if forbidden.search(data.decode("utf-8")):
             raise SystemExit(f"absolute home path leaked into {portable_path(path)}")
         if path != SCRIPT and re.search(
             rb"(?i)(?:authorization:\s*bearer|github_pat_|gh[pousr]_[A-Za-z0-9])", data

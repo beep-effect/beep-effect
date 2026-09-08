@@ -47,7 +47,7 @@ const WORKTREE_PREFIX = "worktree ";
  */
 export class WorktreeListEntry extends S.Class<WorktreeListEntry>($I`WorktreeListEntry`)(
   {
-    path: S.String,
+    path: S.NonEmptyString.check(S.isPattern(/^[^\x00-\x1f\x7f]+$/u)),
     head: S.NullOr(S.String),
     branch: S.NullOr(S.String),
     detached: S.Boolean,
@@ -303,8 +303,8 @@ export class WorktreeArchivePlan extends S.Class<WorktreeArchivePlan>($I`Worktre
  */
 export class WorktreeRemovalRequest extends S.Class<WorktreeRemovalRequest>($I`WorktreeRemovalRequest`)(
   {
-    name: NonEmptyTrimmedStr,
-    targetPath: S.String,
+    name: NonEmptyTrimmedStr.check(S.isPattern(/^(?!\.{1,2}$)[^/\\\x00-\x1f\x7f]+$/u)),
+    targetPath: S.NonEmptyString.check(S.isPattern(/^[^\x00-\x1f\x7f]+$/u)),
     mainCheckout: S.String,
     branch: S.OptionFromNullOr(S.String),
     archive: S.Boolean,
@@ -430,24 +430,37 @@ const blockEntry = (block: PorcelainBlock): WorktreeListEntry => {
 };
 
 /**
- * Parse `git worktree list --porcelain` output into structured entries.
+ * Parse `git worktree list --porcelain -z` output into structured entries.
+ *
+ * **Details**
+ *
+ * NUL delimiters preserve record boundaries even when a Git path contains a
+ * newline. Paths containing control characters are excluded from managed
+ * worktree operations. Non-NUL listings are rejected as ambiguous.
  *
  * **Example** (Parse a single-worktree listing)
  *
  * ```ts
  * import { parseWorktreePorcelain } from "@beep/repo-cli/commands/Worktree"
  *
- * const entries = parseWorktreePorcelain("worktree /repo\nHEAD abc123\nbranch refs/heads/main\n")
+ * const entries = parseWorktreePorcelain("worktree /repo\0HEAD abc123\0branch refs/heads/main\0\0")
  * console.log(entries.length)
  * ```
  *
- * @param porcelain - Raw stdout from `git worktree list --porcelain`.
+ * @param porcelain - Raw stdout from `git worktree list --porcelain -z`.
  * @returns One entry per worktree block, in listing order.
  * @category parsing
  * @since 0.0.0
  */
 export const parseWorktreePorcelain = (porcelain: string): ReadonlyArray<WorktreeListEntry> =>
-  A.map(porcelainBlocks(Str.split(Str.trimEnd(porcelain), "\n")), blockEntry);
+  Str.includes("\0")(porcelain)
+    ? A.map(
+        A.filter(porcelainBlocks(Str.split(porcelain, "\0")), (block) =>
+          S.is(WorktreeListEntry.fields.path)(block.path)
+        ),
+        blockEntry
+      )
+    : A.empty();
 
 /**
  * Number of seconds within which measured activity classifies a checkout as
