@@ -224,6 +224,7 @@ export const CI_LANE_PARTITIONS: ReadonlyArray<CiLanePartition> = [
       "@beep/shacl",
       "@beep/schema",
       "@beep/professional-desktop",
+      "@beep/freshbooks",
     ],
   }),
   CiLanePartition.make({
@@ -377,6 +378,7 @@ export const CI_LANE_PARTITIONS: ReadonlyArray<CiLanePartition> = [
       "@beep/todox",
       "@beep/ontology-config",
       "@beep/storybook",
+      "@beep/freshbooks",
     ],
   }),
   CiLanePartition.make({

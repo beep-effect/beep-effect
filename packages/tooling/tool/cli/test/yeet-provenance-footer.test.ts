@@ -22,15 +22,17 @@ import {
 } from "@beep/repo-cli/test/Yeet";
 import { provideScopedLayer } from "@beep/test-utils";
 import { assert, describe, expect, it } from "@effect/vitest";
-import { ConfigProvider, Console, Effect, FileSystem, Layer, Ref, Result } from "effect";
+import { ConfigProvider, Console, Effect, FileSystem, Layer, pipe, Ref, Result } from "effect";
 import * as A from "effect/Array";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { makeRecord, PlatformLayer, repository } from "./yeet-pr-fixtures.ts";
 import type { YeetExecutedStep } from "@beep/repo-cli/test/Yeet";
 
 const footer = renderPrProvenance(toPublicPrProvenance([makeRecord()], O.some(42), true));
-const GhBody = S.Struct({ body: S.String, createdAt: S.String, lastEditedAt: S.NullOr(S.String) });
+const GhBody = S.Struct({ body: S.String, updatedAt: S.String });
 const GhBodyEdit = S.Struct({ editedAt: S.String, editor: S.NullOr(S.Struct({ login: S.String })), diff: S.String });
 const GhBodyEditsDocument = S.Struct({
   data: S.Struct({
@@ -38,10 +40,39 @@ const GhBodyEditsDocument = S.Struct({
   }),
 });
 type GhBodyEdit = typeof GhBodyEdit.Type;
-const createdAt = "2026-09-03T12:00:00Z";
 const editedAt = "2026-09-03T12:01:00Z";
-const encodeGhBody = (body: string, lastEditedAt: string | null = editedAt): string =>
-  Result.getOrThrow(S.encodeUnknownResult(S.fromJsonString(GhBody))({ body, createdAt, lastEditedAt }));
+// The `gh pr view --json` fields gh 2.99 exposes that the stamp may ask for.
+// A field outside this set is exactly what shipped the `lastEditedAt` skip, so
+// the fake refuses it the way gh does instead of returning a snapshot anyway.
+const GhPrViewJsonFields = HashSet.make("body", "createdAt", "updatedAt", "number", "title", "url", "state");
+const unsupportedGhPrViewField = (args: ReadonlyArray<string>): O.Option<string> =>
+  pipe(
+    A.findFirstIndex(args, (arg) => arg === "--json"),
+    O.flatMap((index) => A.get(args, index + 1)),
+    O.flatMap((fields) => A.findFirst(Str.split(fields, ","), (field) => !HashSet.has(GhPrViewJsonFields, field)))
+  );
+interface GhCaptureResult {
+  readonly exitCode: number;
+  readonly output: string;
+  readonly truncated: boolean;
+}
+const ghUnknownJsonField = (field: string): GhCaptureResult => ({
+  exitCode: 1,
+  output: `Unknown JSON field: "${field}"\nAvailable fields:\n  body\n  createdAt\n  updatedAt`,
+  truncated: false,
+});
+// Answers a `gh pr view --json …` call the way gh does: refuse an unsupported
+// field before serving the snapshot the fake would otherwise return.
+const ghPrView = <E, R>(
+  args: ReadonlyArray<string>,
+  snapshot: Effect.Effect<GhCaptureResult, E, R>
+): Effect.Effect<GhCaptureResult, E, R> =>
+  O.match(unsupportedGhPrViewField(args), {
+    onNone: () => snapshot,
+    onSome: (field) => Effect.succeed(ghUnknownJsonField(field)),
+  });
+const encodeGhBody = (body: string, updatedAt: string = editedAt): string =>
+  Result.getOrThrow(S.encodeUnknownResult(S.fromJsonString(GhBody))({ body, updatedAt }));
 const encodeGhBodyEdits = (nodes: ReadonlyArray<GhBodyEdit>): string =>
   Result.getOrThrow(
     S.encodeUnknownResult(S.fromJsonString(GhBodyEditsDocument))({
@@ -101,7 +132,7 @@ const makeGhRunner = Effect.fn("test.makeGhRunner")(function* (
       editor: { login: "yeet" },
     },
   ],
-  freshLastEditedAt: string | null = editedAt
+  freshUpdatedAt: string = editedAt
 ) {
   const views = yield* Ref.make(0);
   const writes = yield* Ref.make(0);
@@ -115,9 +146,14 @@ const makeGhRunner = Effect.fn("test.makeGhRunner")(function* (
     _env: Record<string, string | undefined> | undefined = undefined
   ) {
     if (args[1] === "view") {
-      const view = yield* Ref.getAndUpdate(views, (count) => count + 1);
-      const current = view === 0 ? initialBody : view === 1 ? freshBody : afterWrite(yield* Ref.get(written));
-      return { exitCode: 0, output: encodeGhBody(current, freshLastEditedAt), truncated: false };
+      return yield* ghPrView(
+        args,
+        Effect.gen(function* () {
+          const view = yield* Ref.getAndUpdate(views, (count) => count + 1);
+          const current = view === 0 ? initialBody : view === 1 ? freshBody : afterWrite(yield* Ref.get(written));
+          return { exitCode: 0, output: encodeGhBody(current, freshUpdatedAt), truncated: false };
+        })
+      );
     }
     if (args[1] === "graphql") {
       const read = yield* Ref.getAndUpdate(historyReads, (count) => count + 1);
@@ -142,7 +178,7 @@ const runStamp = Effect.fn("test.runStamp")(function* (
   freshBody: string,
   afterWrite?: (body: string) => string,
   editHistory?: (writtenBodies: ReadonlyArray<string>, read: number) => ReadonlyArray<GhBodyEdit>,
-  freshLastEditedAt?: string | null
+  freshUpdatedAt?: string
 ) {
   const fs = yield* FileSystem.FileSystem;
   const root = yield* fs.makeTempDirectory();
@@ -152,7 +188,7 @@ const runStamp = Effect.fn("test.runStamp")(function* (
     Effect.provideService(ConfigProvider.ConfigProvider, provider)
   );
   yield* registry.append(makeRecord());
-  const runner = yield* makeGhRunner(fs, initialBody, freshBody, afterWrite, editHistory, freshLastEditedAt);
+  const runner = yield* makeGhRunner(fs, initialBody, freshBody, afterWrite, editHistory, freshUpdatedAt);
   yield* ensureProvenanceFooter(context(root), repository, 42, runner.capture).pipe(
     Effect.provideService(ConfigProvider.ConfigProvider, provider)
   );
@@ -179,7 +215,12 @@ const makePublishGhRunner = Effect.fn("test.makePublishGhRunner")(function* (fs:
       yield* Ref.set(createBody, yield* fs.readFileString(bodyPath).pipe(Effect.orDie));
       return { exitCode: 0, output: "https://github.com/beep-effect/beep-effect/pull/42", truncated: false };
     }
-    if (args[1] === "view") return { exitCode: 0, output: encodeGhBody(yield* Ref.get(body)), truncated: false };
+    if (args[1] === "view") {
+      return yield* ghPrView(
+        args,
+        Effect.map(Ref.get(body), (current) => ({ exitCode: 0, output: encodeGhBody(current), truncated: false }))
+      );
+    }
     if (args[1] === "graphql") {
       return {
         exitCode: 0,
@@ -201,6 +242,14 @@ const makePublishGhRunner = Effect.fn("test.makePublishGhRunner")(function* (fs:
 });
 
 describe("Yeet provenance footer splice", () => {
+  it("refuses gh pr view fields the CLI does not expose, as gh does", () => {
+    expect(unsupportedGhPrViewField(["pr", "view", "42", "--json", "body,createdAt,lastEditedAt"])).toStrictEqual(
+      O.some("lastEditedAt")
+    );
+    expect(unsupportedGhPrViewField(["pr", "view", "42", "--json", "body,updatedAt"])).toStrictEqual(O.none());
+    expect(unsupportedGhPrViewField(["pr", "view", "42", "--json", "body"])).toStrictEqual(O.none());
+  });
+
   it("is idempotent for current markers", () => {
     const once = splicePrProvenanceFooter("Body", footer);
     expect(splicePrProvenanceFooter(once, footer)).toBe(once);
@@ -502,7 +551,7 @@ describe("Yeet provenance footer splice", () => {
     }).pipe(provideScopedLayer(PlatformLayer))
   );
 
-  it.effect("uses createdAt as the baseline when lastEditedAt is null", () =>
+  it.effect("ignores an edit older than the snapshot's updatedAt whose body the snapshot already carries", () =>
     Effect.gen(function* () {
       let warnings = A.empty<unknown>();
       const currentConsole = yield* Console.Console;
@@ -512,12 +561,50 @@ describe("Yeet provenance footer splice", () => {
           warnings = A.appendAll(warnings, args);
         },
       };
-      const result = yield* runStamp("Original body", "Original body", undefined, undefined, null).pipe(
-        Effect.provideService(Console.Console, warningConsole)
-      );
+      const result = yield* runStamp(
+        "Original body",
+        "Original body",
+        undefined,
+        (bodies) => [
+          { diff: "Original body", editedAt: "2026-09-03T12:00:30Z", editor: { login: "alice" } },
+          { diff: O.getOrElse(A.head(bodies), () => ""), editedAt: "2026-09-03T12:03:00Z", editor: { login: "yeet" } },
+        ],
+        "2026-09-03T12:01:00Z"
+      ).pipe(Effect.provideService(Console.Console, warningConsole));
       expect(result.writes).toBe(1);
       expect(result.historyReads).toBe(1);
       expect(warnings).toHaveLength(0);
+    }).pipe(provideScopedLayer(PlatformLayer))
+  );
+
+  it.effect("re-splices an edit stamped in the same second as the snapshot's updatedAt", () =>
+    Effect.gen(function* () {
+      const result = yield* runStamp(
+        "Original body",
+        "Original body",
+        undefined,
+        (bodies, read) => {
+          const firstWrite = O.getOrElse(A.head(bodies), () => "");
+          const history: ReadonlyArray<GhBodyEdit> = [
+            { diff: "Edited in the snapshot's second", editedAt: "2026-09-03T12:01:00Z", editor: { login: "bob" } },
+            { diff: firstWrite, editedAt: "2026-09-03T12:03:00Z", editor: { login: "yeet" } },
+          ];
+          return read === 0
+            ? history
+            : [
+                ...history,
+                {
+                  diff: O.getOrElse(A.get(bodies, 1), () => ""),
+                  editedAt: "2026-09-03T12:04:00Z",
+                  editor: { login: "yeet" },
+                },
+              ];
+        },
+        "2026-09-03T12:01:00Z"
+      );
+      expect(result.writes).toBe(2);
+      expect(result.body).toContain("Edited in the snapshot's second");
+      expect(result.body).toContain("<!-- yeet-provenance:start -->");
     }).pipe(provideScopedLayer(PlatformLayer))
   );
 

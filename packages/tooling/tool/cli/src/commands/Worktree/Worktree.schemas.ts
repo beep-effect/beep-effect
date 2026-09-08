@@ -264,6 +264,21 @@ export class WorktreeArchivePlan extends S.Class<WorktreeArchivePlan>($I`Worktre
 /**
  * Fully resolved request accepted by the worktree-removal service.
  *
+ * **Details**
+ *
+ * `expectedHead` pins the authority under which the removal was decided: when
+ * present, the service re-reads the checkout HEAD at removal time and refuses
+ * the entire removal — no worktree removal, no branch deletion — if it no
+ * longer equals this object id. Archive mode fences the checkout with an
+ * atomic rename before capturing residue, so the archive is complete with
+ * respect to everything that arrived before the fence, refuses while any
+ * same-uid process still holds the fenced copy by cwd or open descriptor (a
+ * writer the archive could not see), and the branch ref
+ * itself always falls to an atomic `git update-ref -d` compare-and-swap on
+ * the archived head — an advance at any point up to the final ref update
+ * fails the deletion instead of orphaning commits; directory removal never
+ * touches the shared object store.
+ *
  * **Example** (Request archive retirement)
  *
  * ```ts
@@ -278,6 +293,7 @@ export class WorktreeArchivePlan extends S.Class<WorktreeArchivePlan>($I`Worktre
  *   branch: O.some("feat/feature-x"),
  *   archive: true,
  *   deleteBranch: false,
+ *   expectedHead: O.none(),
  * })
  * console.log(request.archive) // true
  * ```
@@ -293,9 +309,11 @@ export class WorktreeRemovalRequest extends S.Class<WorktreeRemovalRequest>($I`W
     branch: S.OptionFromNullOr(S.String),
     archive: S.Boolean,
     deleteBranch: S.Boolean,
+    expectedHead: S.OptionFromNullOr(GitObjectId),
   },
   $I.annote("WorktreeRemovalRequest", {
-    description: "Resolved worktree removal request passed from the CLI boundary to the removal service.",
+    description:
+      "Resolved worktree removal request, optionally pinned to the HEAD object id its authority was decided under.",
   })
 ) {}
 

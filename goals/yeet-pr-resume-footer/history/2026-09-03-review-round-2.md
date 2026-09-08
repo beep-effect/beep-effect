@@ -98,3 +98,27 @@ consecutive pull-request runs while PR #989's lane built it in 17 s earlier the
 same day. The probe budget is raised to 120 s and its failure cause is logged
 (test-only change in `SqlTest.pglite.test.ts`); the real fix is pre-baking or
 mirroring the image so a cold runner never pulls from Docker Hub.
+
+## Round 7 (merged head `3aeb10fcb9`)
+
+Merged `origin/main` (#978 journal facts; clean auto-merge on `Handler.ts`,
+`Planner.ts`, `yeet.test.ts`). Hosted: Coverage Regression green on
+`2322fb0606` (the probe built the image in 38 s), every lane green on the merge
+except `Test Unit (unit-a)`: `@beep/agents-client`
+`keeps failed prompts non-sendable while receipt evidence is uncertain` timed
+out at 30 s (the event-driven wait never saw the terminal turn), after passing
+five hosted runs, then passed on a same-head rerun. Main did not touch
+`packages/agents/client`. The second Codex lane
+(`52-codex-reconciliation-hang-brief.md` → `53-codex-reconciliation-hang-report.md`)
+could not reproduce the stall in 30 stressed runs (four CPU hogs; each
+scenario measures ~1.4 s: nine 150 ms receipt reads, two timeline reads, then
+the unreconciled append, all before the fn result) and refuted the product
+hypotheses by trace: the timeline refresh resumes even when the refreshed
+timeline is structurally equal, the subscription wakes on the terminal append,
+each kind uses a fresh registry, and the append precedes the fn result. What
+survived is the test's failure boundary: three real-clock scenarios shared one
+30 s Vitest timeout with an unbounded, unlabeled inner wait. The test now runs
+the three kinds as separate cases, keeps the equal-timeline refresh as a
+regression condition, and bounds the unreconciled wait at 10 s with a
+status-named failure, so the next hosted stall names the kind and the await.
+No product code changed.

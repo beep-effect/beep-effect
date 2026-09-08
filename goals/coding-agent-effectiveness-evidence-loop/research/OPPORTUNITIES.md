@@ -518,3 +518,197 @@ waiting, including the awaited resource or operation, and apply a bounded
 timeout that fails with diagnostic context. A scoped documentation command
 that has finished planning, or a hook checking one named file, should not be
 indistinguishable from a dead wait when its host is unhealthy.
+
+## 2026-09-03 — service-account archive drill cannot attribute plaintext-hash drift
+
+Lived while exercising the newly available service-account lane for one
+bounded AI-metrics pass. The agent shim and both current secret references
+resolved successfully, and the archive drill decrypted the selected object,
+but the content-free integrity gate stopped on `AI metrics archive decrypt
+drill failed plaintext hash verification.` No secret value or decrypted
+content was printed, the pass was not retried, and its temporary reference
+file was removed. This separates a healthy credential lane from an unresolved
+archive-integrity failure, but the current error does not identify whether the
+stored hash, archive lineage, or hashing implementation drifted.
+One local control using the already installed mode-0600 AI-metrics environment
+failed at the same plaintext-hash gate, so the failure is not attributable to
+the new service-account route or the supplied references.
+
+What would have prevented it: make the drill emit a content-free diagnostic
+record containing the archive object's schema/algorithm version, writer
+revision, stored-hash version, and computed-hash version, with distinct typed
+outcomes for authentication, authenticated decryption, and plaintext-hash
+comparison. A credential-backed integrity proof should make the failing edge
+attributable without requiring a second secret-resolving run.
+
+## 2026-09-03 — package coverage consumes a stale ignored goals index
+
+Lived while reproducing PR coverage with
+`bun run coverage -- --filter=@beep/repo-cli --summarize` after merging current
+`main`. The 12-minute package run failed one otherwise unrelated goals test
+because the ignored local `goals/INDEX.md` still described 172 packets while
+the merged manifests generated 175. Regenerating the projection with
+`bun run beep goals index --write` made the exact 24-test file pass. The
+coverage ratchet never ran, so the failure provided no evidence about the
+reported coverage regression.
+
+What would have prevented it: have the package coverage preflight regenerate
+ignored derived inputs whose manifests changed, or make the test construct its
+expected local projection inside its isolated fixture. A package-filtered
+coverage run should not spend its full suite budget before discovering that an
+untracked workspace cache predates the tested commit.
+
+## 2026-09-03 — full-run coverage floors exceeded package-lane observations
+
+Lived while repairing PR #992 after both the hosted affected lane and two clean
+`bun run coverage -- --filter=@beep/repo-cli` runs agreed that
+`Quality.command.ts` and `QualityScheduler.ts` were below floors written by the
+preceding repo-wide baseline refresh. The source delta in `Quality.command.ts`
+belonged to merged PR #989, while `QualityScheduler.ts` had not changed since
+PR #964. The gate's scoped writer merged the reproducible package-lane results
+without lowering any other package. That documented repair still failed on the
+hosted PR: when `TURBO_SCM_BASE` is present, the comparison reloads every
+surviving file floor from the base ref, so a same-PR baseline adjustment is
+ignored for the files it is meant to repair. The only immediately admissible
+repair was adding tests until the isolated lane exceeded the inherited floors.
+
+What would have prevented it: require each package row in a repo-wide baseline
+refresh to be measured with the same isolated package command used by affected
+CI, or attach a provenance field that names the measurement scope. A floor
+observed only through incidental cross-package execution is not reproducible in
+the lane that enforces it. The remediation should also distinguish a base-pinned
+PR lane from a baseline-authoring lane instead of recommending an adjustment
+that the current PR comparison cannot consume.
+
+## 2026-09-03 — test-utils coverage depended on a local Docker daemon
+
+Lived while closing PR #992 after the hosted coverage lane measured
+`SqlTest.ts` at 53.76% lines and 34.1% functions against 66.3% and 46.51%
+floors. The package had no source diff, and an ordinary filtered local run
+reproduced the floors exactly. Repeating the package under the hosted Node 24
+environment with Docker forced unavailable reproduced the regression: five
+coverage-mode SQLite cases were intentionally skipped, the external database
+was unconfigured, and seven container/external cases skipped. The committed
+floor therefore depended on successful workstation Testcontainers execution.
+A deterministic transport double plus a Docker-free in-process hook test
+restored every floor with the daemon unavailable; the baseline was not lowered.
+
+What would have prevented it: require baseline writers to run with optional
+database and container transports explicitly disabled, or record those
+capabilities in the baseline provenance and reject non-portable raises. A
+package coverage floor must be attainable in the hosted lane without inheriting
+the baseline author's local infrastructure.
+
+## 2026-09-03 — publish rejected committed work beside an unrelated draft
+
+Lived while publishing the verified PR #992 repair. The branch was three
+commits ahead of its remote, every intended change was committed, and the only
+working-tree entry was the packet's preserved untracked P2 draft. `bun run beep
+yeet publish` stopped before push with `yeet publish requires reviewed staged
+changes or a clean local commit ahead of the publish remote/base.` Its verdict
+confirmed the exact ahead commit and a fresh, overlap-free base but classified
+the unrelated untracked file as making the committed publish path unclean. A
+direct non-force push was required to preserve the draft without staging,
+moving, deleting, or locally ignoring it.
+
+What would have prevented it: define committed publish cleanliness over the
+tracked index and committed range, while separately reporting untracked paths
+that do not overlap the published diff. An unrelated future-phase draft should
+not force operators to perturb the worktree or bypass the canonical publisher.
+
+## 2026-09-03 — package verification ran the expensive audit before cheap lint
+
+Lived while resolving PR #992's only merge conflict and running
+`bun run beep quality package-verify @beep/repo-cli`. The verifier completed
+3,093 TypeScript tests, 53 Python tests, dependency builds, and docgen in more
+than six minutes before failing on one Biome-organize-imports finding in the
+conflict-resolved test file. The safe import sort took one formatter pass, and
+the documented quick follow-up then proved lint and type-check in 15 seconds;
+none of the expensive audit results had failed.
+
+What would have prevented it: make package verification run its deterministic
+cheap lint and type-check preflight before dependency builds, full test suites,
+Python environments, or docgen. A merge-conflict import-order defect should be
+reported in seconds, before the verifier spends the package's longest proof
+budget.
+
+## 2026-09-03 — the repo-wide test type-check bypassed an over-capacity scheduler
+
+Lived while running PR #992's collected cheap gates before publish. The
+scheduler reported four tokens of current capacity and eight tokens already
+held by two admitted proofs, but `bun run beep quality test-tsgo` bypassed
+admission and started another repo-wide compiler sweep. After nine quiet
+minutes it failed in an unrelated package with the Go runtime invariant
+`fatal error: bad sweepgen in refill`, not a TypeScript diagnostic. The other
+13 collected gates passed, and the changed packages' focused type-checks had
+already passed.
+
+What would have prevented it: admit the repo-wide test type-check through the
+machine scheduler, or cap its Go/compiler parallelism from the same live memory
+envelope. A nominally cheap gate should not compound an over-capacity host and
+turn a deterministic source check into a runtime crash.
+
+## 2026-09-03 — registry availability made a clean audit fail twice
+
+Lived while publishing PR #992. The local pre-push audit and the hosted Repo
+Sanity job each waited about five minutes before the npm advisory bulk endpoint
+returned HTTP 503. Neither failure reported a vulnerability, and an exact local
+retry completed with no vulnerabilities across 2,332 packages. The transient
+transport failure therefore consumed both the local proof and an exact-head
+required check without producing dependency evidence.
+
+What would have prevented it: classify advisory-service transport failures
+separately from discovered vulnerabilities and apply a bounded backoff inside
+the audit lane. A dependency gate should distinguish an unavailable registry
+from an unsafe dependency graph.
+
+## 2026-09-03 — fixed scheduler sleep failed only under hosted load
+
+Lived while closing PR #992 after the complete local `@beep/repo-cli` test run
+passed 3,093 tests. The hosted package run later failed the scheduler assertion
+`expected 0 to be greater than 0`: a test slept for 100 milliseconds and then
+assumed an asynchronous ticket rewrite had completed. Under hosted load the
+rewrite had not happened yet, even though the production path remained live.
+The test now polls the observable ticket condition with the existing bounded
+Effect schedule instead of treating elapsed wall time as completion evidence.
+
+What would have prevented it: use condition-based, bounded synchronization for
+every filesystem or fiber handoff test. Fixed sleeps should pace retries, not
+serve as proof that another Effect has reached a particular state.
+
+## 2026-09-03 — provenance stamping requested an unsupported PR field
+
+Lived while publishing PR #992 through Yeet. The push succeeded, but the
+provenance footer step was skipped after `gh pr view` rejected `lastEditedAt`
+as an unknown JSON field. The PR remained usable, but the canonical publisher
+could not perform its own footer projection on the installed GitHub CLI.
+
+What would have prevented it: constrain the query to fields supported by the
+minimum declared GitHub CLI version, or feature-detect optional fields before
+requesting them. Provenance stamping should degrade on missing metadata, not on
+an invalid all-or-nothing query.
+
+## 2026-09-03 — full lint policy exceeded one ESLint shard's heap
+
+Lived while proving PR #992's inherited terse-Effect repair with the exact
+hosted `ci lane lint-policy` command. Twenty-five policy steps passed, including
+the complete terse scan, before the `packages/tooling` deprecated-API ESLint
+shard reached Node's roughly 8 GiB heap ceiling and stopped with `JavaScript
+heap out of memory`. No lint diagnostic preceded the crash. Another checkout
+held a five-token merged-preview lease, but this lint lane was not admitted
+through the scheduler and launched its own four-way shard fan-out. Retrying the
+wrapper with a larger heap still left its ESLint child at the 8 GiB ceiling;
+running that exact failed shard directly with a confirmed 16 GiB heap passed
+without a diagnostic. The exact hosted head then reproduced the same
+`packages/tooling` heap failure, making the resource defect a merge blocker
+rather than a workstation-only limitation. The immediate repair split that
+root into its four existing first-level tooling families so no ESLint process
+has to construct the entire tooling program at once.
+
+What would have prevented it: shard by bounded program size before enforcing
+the lane. A follow-up PR should admit the full lint lane through the shared
+resource envelope, size both shard concurrency and per-process heap from that
+lease, expose a validated concurrency control instead of hard-coding four
+workers, and avoid overriding a caller-supplied larger heap for child ESLint
+processes. A repository policy scan should report a source finding or a typed
+resource-exhaustion result, not conflate a V8 heap crash with failed lint.

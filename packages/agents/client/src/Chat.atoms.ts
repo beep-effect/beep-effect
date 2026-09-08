@@ -20,7 +20,8 @@ import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { A, O, P, Str } from "@beep/utils";
-import { Cause, Clock, Duration, Effect, Match, Metric, Random, Stream } from "effect";
+import { Cause, Clock, Config, Duration, Effect, Match, Metric, Random, Stream } from "effect";
+import { constant } from "effect/Function";
 import * as S from "effect/Schema";
 import { KeyValueStore } from "effect/unstable/persistence";
 import { AsyncResult, Atom, AtomRegistry, AtomRpc, Reactivity } from "effect/unstable/reactivity";
@@ -809,6 +810,13 @@ export type TurnRequest = typeof TurnRequest.Type;
 // only an explicit `not_persisted` receipt may restore a sendable draft.
 const TURN_RECEIPT_POLL_ATTEMPTS = 8;
 const TURN_RECEIPT_POLL_INTERVAL = Duration.millis(150);
+// The interval is real wall-clock time between receipt reads. Tests set
+// `BEEP_TURN_RECEIPT_POLL_INTERVAL` to a few millis so a starved CI runner
+// cannot stretch eight polls past their timeout; production keeps the default.
+const turnReceiptPollInterval = Config.duration("BEEP_TURN_RECEIPT_POLL_INTERVAL").pipe(
+  Config.withDefault(TURN_RECEIPT_POLL_INTERVAL),
+  Effect.orElseSucceed(constant(TURN_RECEIPT_POLL_INTERVAL))
+);
 const isUncertainTurnRequestStatus = (status: O.Option<TurnRequestStatus>): boolean =>
   O.isNone(status) || O.exists(status, (value) => value === "pending" || value === "accepted" || value === "unknown");
 const terminalAssistantBlock = (text: "(failed)" | "(stopped)"): AssistantBlock =>
@@ -936,15 +944,17 @@ export const runTurnAtom = ChatClient.runtime.fn<TurnRequest>()(
     let blocks: ReadonlyArray<AssistantBlock> = [];
     ctx.set(turnErrorAtom, O.none());
     ctx.set(streamingTurnAtom, O.some(makeStreamingTurn(blocks)));
-    const pollTurnRequestStatus = client("GetTurnRequestStatus", { requestId }).pipe(
-      Effect.option,
-      Effect.delay(TURN_RECEIPT_POLL_INTERVAL),
-      Effect.repeat({
-        times: TURN_RECEIPT_POLL_ATTEMPTS,
-        until: O.exists(
-          (status) => status === "persisted" || status === "user_persisted" || status === "not_persisted"
-        ),
-      })
+    const pollTurnRequestStatus = Effect.flatMap(turnReceiptPollInterval, (interval) =>
+      client("GetTurnRequestStatus", { requestId }).pipe(
+        Effect.option,
+        Effect.delay(interval),
+        Effect.repeat({
+          times: TURN_RECEIPT_POLL_ATTEMPTS,
+          until: O.exists(
+            (status) => status === "persisted" || status === "user_persisted" || status === "not_persisted"
+          ),
+        })
+      )
     );
     const timelineAtom = threadTimelineAtoms(turn.threadId);
     // Reactivity invalidation notifies query atoms, but a function atom can read

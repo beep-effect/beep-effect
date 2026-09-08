@@ -2124,7 +2124,9 @@
       "@beep/schema/Version": [
         "./packages/foundation/modeling/schema/src/Version.ts"
       ],
-      "@beep/ui/Version": ["./packages/foundation/ui-system/ui/src/Version.ts"]
+      "@beep/ui/Version": ["./packages/foundation/ui-system/ui/src/Version.ts"],
+      "@beep/freshbooks": ["./packages/drivers/freshbooks/src/index.ts"],
+      "@beep/freshbooks/*": ["./packages/drivers/freshbooks/src/*"]
     }
   }
 }

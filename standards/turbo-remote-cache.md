@@ -170,6 +170,42 @@ ProofLedger records that value with input source `turbo-task-hash`. The result
 artifact is execution evidence, not an alternate digest, and the run id is not
 an input digest.
 
+## Pre-push wave ordering
+
+Yeet's full pre-push proof orders the current lane set from the schema-backed
+`DEFAULT_GATE_ORDER_SEED` in
+`packages/tooling/tool/cli/src/commands/Yeet/internal/WaveOrder.ts`. The seed is
+versioned as `gate-order/v1`; each row carries a P50 cost estimate, first-red
+probability, precision class, and JSON pointers plus explanatory basis text
+for its source in `goals/time-to-certainty/research/economics.json`. Aggregate
+or related-lane proxies are named explicitly where A1 predates A5's durable
+inner-lane timing report.
+
+Seeded lanes first partition into `policy-preflight` and `heavy`, with each
+row carrying the SPEC B3 basis for that classification. Within a partition,
+lanes sort by P50 cost ascending, first-red probability descending, precision
+(`precise` before `imprecise`), then declaration order. That puts every
+policy/preflight gate ahead of build, test, and documentation work and leaves
+Coverage Regression at the expensive tail. A lane absent from the seed is never guessed: all
+unseeded lanes append after the seeded plan in their original declaration
+order. Their precision defaults conservatively to stoppable until a seed row
+explicitly classifies them. Wave labels are retained for reporting without
+regrouping the plan into the former fixed wave order.
+
+The default policy stops launching lanes after the first failed `precise` gate.
+Every unlaunched lane is persisted to the A5 inner-lane report as
+`not-run-early-stop`; the GitHub-check and Yeet summaries name the first red and
+the skipped count. The failed lane records `stop-after-red` for both precise
+and unclassified estimates; an explicitly `imprecise` red records
+`continue-after-imprecise-red` and does not stop scheduling.
+Already-running work is allowed to finish and is recorded normally; the
+current local executor is sequential and performs no cancellation.
+
+Pass `--no-fail-fast` to `beep yeet` or `beep quality github-checks pre-push`
+when a complete diagnostic picture is worth the extra runner time. The flag is
+off by default and selects the same collect-all scheduling policy as the
+existing `--collect-all` compatibility spelling.
+
 ## Rules
 
 - Never put the trusted write token on a workstation. A read token that leaks

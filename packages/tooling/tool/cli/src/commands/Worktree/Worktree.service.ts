@@ -1,10 +1,15 @@
 /**
  * Preservation-first removal service for managed Git worktrees.
  *
- * Archive mode makes the target commit reachable through a create-only ref,
- * writes tracked and untracked residue outside the checkout, and only then
- * allows the required Git removal. Plain removal keeps its existing refusal
- * when the target has uncommitted changes.
+ * Archive mode atomically renames the checkout aside first, so nothing new can
+ * land under the original path, refuses while any same-uid process still holds
+ * the fenced copy by cwd or open descriptor, then captures the fenced copy: the
+ * target commit becomes reachable through a create-only ref, tracked and
+ * untracked residue is written outside the checkout, and only then is the
+ * fenced copy deleted and its branch ref removed by compare-and-swap on the
+ * archived head.
+ * Plain removal keeps its existing refusal when the target has uncommitted
+ * changes.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -15,28 +20,31 @@ import { NonNegativeInt, Sha256HexFromBytes } from "@beep/schema";
 import { GitObjectId } from "@beep/schema/Conformance";
 import { ISOStr } from "@beep/schema/Timestamp";
 import { A, O, Str } from "@beep/utils";
-import { Config, Context, DateTime, Effect, FileSystem, Layer, Match, Path, pipe } from "effect";
+import { Config, Context, DateTime, Effect, FileSystem, Layer, Match, Path, pipe, Result } from "effect";
 import * as Bool from "effect/Boolean";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import {
   collectUntrackedPaths,
+  ProcessAttachmentKind,
   resolveGitCommit,
   runGitOutput,
   runGitRawOutput,
+  scanProcessAttachments,
 } from "../../internal/repo-run/index.ts";
 import { WorktreeCommandError, WorktreeDirtyError, WorktreePreservationError } from "./Worktree.errors.ts";
 import {
   WorktreeArchivePlan,
   WorktreeRemovalReceipt,
+  WorktreeRemovalRequest,
   WorktreeRepositoryHash,
   WorktreeResidueManifest,
   WorktreeResidueReason,
 } from "./Worktree.schemas.ts";
 import type { Crypto } from "effect";
 import type { ChildProcessSpawner } from "effect/unstable/process";
-import type { GitCommandErrorAdapter } from "../../internal/repo-run/index.ts";
-import type { WorktreeRemovalRequest, WorktreeResidueReason as WorktreeResidueReasonType } from "./Worktree.schemas.ts";
+import type { GitCommandErrorAdapter, ProcessAttachment } from "../../internal/repo-run/index.ts";
+import type { WorktreeResidueReason as WorktreeResidueReasonType } from "./Worktree.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Worktree/Worktree.service");
 
@@ -143,23 +151,37 @@ export const worktreeArchiveRefArgs: {
 );
 
 /**
- * Build branch deletion arguments with option parsing terminated.
+ * Build an atomic compare-and-swap branch-deletion argument list.
  *
- * **Example** (Delete an archived branch)
+ * **Details**
+ *
+ * `git update-ref -d <ref> <expected>` deletes the ref only while it still
+ * equals the expected object id, under git's own ref locking. A branch that
+ * advanced after its removal was authorized therefore fails the deletion
+ * atomically instead of having its new commits orphaned — the non-atomic
+ * `git branch -D` cannot make that guarantee.
+ *
+ * **Example** (Delete an archived branch at its archived head)
  *
  * ```ts
  * import { worktreeBranchDeleteArgs } from "@beep/repo-cli/commands/Worktree"
  *
- * console.log(worktreeBranchDeleteArgs("feat/feature-x"))
- * // ["branch", "-D", "--", "feat/feature-x"]
+ * console.log(worktreeBranchDeleteArgs("feat/feature-x", "1ed08f66df016a18c6d7d56bd97aa778912cb37b")[1]) // "-d"
  * ```
  *
  * @param branch - Local branch to delete after archive removal.
- * @returns `git branch -D` arguments with an option terminator.
+ * @param head - Object id the branch must still point at for the deletion to apply.
+ * @returns `git update-ref -d` compare-and-swap arguments.
  * @category utilities
  * @since 0.0.0
  */
-export const worktreeBranchDeleteArgs = (branch: string): ReadonlyArray<string> => ["branch", "-D", "--", branch];
+export const worktreeBranchDeleteArgs: {
+  (head: string): (branch: string) => ReadonlyArray<string>;
+  (branch: string, head: string): ReadonlyArray<string>;
+} = dual(
+  2,
+  (branch: string, head: string): ReadonlyArray<string> => ["update-ref", "-d", `refs/heads/${branch}`, head]
+);
 
 /**
  * Build the deterministic archive-ref and filesystem layout for a retirement.
@@ -813,7 +835,8 @@ const pruneWorktreeMetadata = Effect.fn("WorktreeRemovalService.pruneWorktreeMet
 });
 
 const deleteArchivedBranch = Effect.fn("WorktreeRemovalService.deleteArchivedBranch")(function* (
-  request: WorktreeRemovalRequest
+  request: WorktreeRemovalRequest,
+  head: GitObjectId
 ): Effect.fn.Return<boolean, WorktreeCommandError, ChildProcessSpawner.ChildProcessSpawner> {
   const branch = O.filter(request.branch, () => request.deleteBranch);
   return yield* O.match(branch, {
@@ -821,10 +844,22 @@ const deleteArchivedBranch = Effect.fn("WorktreeRemovalService.deleteArchivedBra
     onSome: (branchName) =>
       runWorktreeGitCapture(
         request.mainCheckout,
-        worktreeBranchDeleteArgs(branchName),
-        `Failed to delete archived branch ${branchName}.`
+        worktreeBranchDeleteArgs(branchName, head),
+        `Failed to delete archived branch ${branchName}: it no longer points at the archived head ${head}.`
       ).pipe(Effect.as(true)),
   });
+});
+
+const assertAuthorizedHead = Effect.fnUntraced(function* (
+  request: WorktreeRemovalRequest,
+  head: string
+): Effect.fn.Return<void, WorktreeCommandError, never> {
+  const expected = request.expectedHead;
+  if (O.isSome(expected) && !Str.Equivalence(head, expected.value)) {
+    return yield* WorktreeCommandError.make({
+      message: `Refusing to remove ${request.targetPath}: HEAD ${head} is not the authorized ${expected.value}; the checkout changed after its removal was decided.`,
+    });
+  }
 });
 
 const removeLegacyWorktree = Effect.fn("WorktreeRemovalService.removeLegacyWorktree")(function* (
@@ -834,6 +869,14 @@ const removeLegacyWorktree = Effect.fn("WorktreeRemovalService.removeLegacyWorkt
   WorktreeCommandError | WorktreeDirtyError,
   ChildProcessSpawner.ChildProcessSpawner
 > {
+  if (O.isSome(request.expectedHead)) {
+    const head = yield* resolveGitCommit(
+      request.targetPath,
+      "HEAD",
+      commandErrorAdapter(`Failed to resolve HEAD for ${request.targetPath}.`)
+    );
+    yield* assertAuthorizedHead(request, Str.trim(head));
+  }
   const changes = yield* inspectRemovalChanges(
     request.targetPath,
     commandErrorAdapter(`Failed to inspect ${request.targetPath}.`)
@@ -847,6 +890,62 @@ const removeLegacyWorktree = Effect.fn("WorktreeRemovalService.removeLegacyWorkt
   });
 });
 
+const MAX_REPORTED_HOLDERS = 8;
+
+const describeAttachedProcesses = (attachments: A.NonEmptyReadonlyArray<ProcessAttachment>): string => {
+  const holders = A.dedupeWith(attachments, (left, right) => left.pid === right.pid);
+  const shown = A.take(holders, MAX_REPORTED_HOLDERS);
+  const listed = A.join(
+    A.map(shown, (holder) => `pid ${holder.pid} via ${holder.kind}`),
+    ", "
+  );
+  const hidden = A.length(holders) - A.length(shown);
+  return hidden > 0 ? `${listed} and ${hidden} more` : listed;
+};
+
+const assertQuiescentFence = Effect.fnUntraced(function* (
+  request: WorktreeRemovalRequest,
+  fencedPath: string
+): Effect.fn.Return<void, WorktreeCommandError, FileSystem.FileSystem> {
+  const scan = yield* scanProcessAttachments({ directory: fencedPath, kinds: ProcessAttachmentKind.Options });
+  if (O.isNone(scan)) {
+    return yield* WorktreeCommandError.make({
+      message: `Refusing to retire ${request.targetPath}: the processes attached to it could not be enumerated, so the archive cannot be proven complete.`,
+    });
+  }
+  if (A.isReadonlyArrayNonEmpty(scan.value)) {
+    return yield* WorktreeCommandError.make({
+      message: `Refusing to retire ${request.targetPath}: ${describeAttachedProcesses(scan.value)} still hold it, and any write they make after the archive is captured would be deleted with the fenced copy.`,
+    });
+  }
+});
+
+const fencedArchivePlan = Effect.fn("WorktreeRemovalService.fencedArchivePlan")(function* (
+  request: WorktreeRemovalRequest,
+  fenced: WorktreeRemovalRequest
+): Effect.fn.Return<
+  readonly [WorktreeResidueReasonType, O.Option<WorktreeResidueManifest>, GitObjectId],
+  WorktreeCommandError | WorktreePreservationError,
+  WorktreeRemovalServiceRequirements
+> {
+  // The fence froze the writer set: nothing reaches the retiring tree by path any
+  // more, so the processes attached to it now — by cwd or an open descriptor — are
+  // exactly the ones able to write after the residue below is captured. The archive
+  // is complete only if that set is empty, so any holder refuses the retirement (the
+  // caller renames the checkout back) instead of racing its writes to the deletion.
+  yield* assertQuiescentFence(request, fenced.targetPath);
+  const changes = yield* inspectRemovalChanges(
+    fenced.targetPath,
+    preservationErrorAdapter("inspect-residue", `Failed to inspect ${fenced.targetPath}.`, fenced.targetPath)
+  );
+  const head = yield* inspectArchiveHead(fenced);
+  // Authority is re-tied to the state actually being archived: the fenced HEAD must
+  // still be the object id the caller's decision was made under.
+  yield* assertAuthorizedHead(request, head);
+  const [reason, manifest] = yield* planArchiveRemoval(fenced, head, A.isReadonlyArrayNonEmpty(changes));
+  return [reason, manifest, head] as const;
+});
+
 const removeArchivedWorktree = Effect.fn("WorktreeRemovalService.removeArchivedWorktree")(function* (
   request: WorktreeRemovalRequest
 ): Effect.fn.Return<
@@ -854,16 +953,71 @@ const removeArchivedWorktree = Effect.fn("WorktreeRemovalService.removeArchivedW
   WorktreeCommandError | WorktreePreservationError,
   WorktreeRemovalServiceRequirements
 > {
+  const fs = yield* FileSystem.FileSystem;
   yield* assertNoDirtySubmodules(request);
-  const changes = yield* inspectRemovalChanges(
-    request.targetPath,
-    preservationErrorAdapter("inspect-residue", `Failed to inspect ${request.targetPath}.`, request.targetPath)
+  const preFenceHead = yield* inspectArchiveHead(request);
+  // Fail fast before mutating anything when the checkout already advanced past the
+  // caller's authority; the binding check runs again inside the fence below.
+  yield* assertAuthorizedHead(request, preFenceHead);
+  // Validate the residue root against the ORIGINAL path before fencing: the fenced
+  // copy carries a different name, so the containment refusal below would no longer
+  // recognize a root configured inside the retiring worktree.
+  yield* residueBaseRoot(request.targetPath);
+  // ATOMIC FENCE: rename the checkout aside before capturing anything. After this
+  // instant no new file can appear under the original path, while writers holding the
+  // directory as cwd or via open descriptors follow the inode into the fenced copy.
+  // The fenced copy is captured only once no such holder remains (below), and its
+  // quiescence is re-verified after capture before the destructive removal.
+  const stamp = DateTime.toEpochMillis(yield* DateTime.now);
+  const retirePath = `${request.targetPath}.retiring-${stamp}`;
+  yield* fs
+    .rename(request.targetPath, retirePath)
+    .pipe(
+      Effect.mapError((cause) =>
+        WorktreeCommandError.make({ message: `Failed to fence ${request.targetPath} for retirement: ${cause.message}` })
+      )
+    );
+  const fenced = WorktreeRemovalRequest.make({ ...request, targetPath: retirePath });
+  const planned = yield* Effect.result(fencedArchivePlan(request, fenced));
+  if (Result.isFailure(planned)) {
+    // A refusal inside the fence restores the checkout exactly where it was; a failed
+    // restore must name the fenced path loudly so nothing is presumed lost.
+    yield* fs.rename(retirePath, request.targetPath).pipe(
+      Effect.mapError(() =>
+        WorktreeCommandError.make({
+          message: `Retirement of ${request.targetPath} failed AND the checkout could not be restored; it remains intact at ${retirePath}.`,
+        })
+      )
+    );
+    return yield* planned.failure;
+  }
+  const [reason, manifest, head] = planned.success;
+  // Re-verify quiescence after capture and before the destructive remove. A scan is a
+  // one-time observation, so a same-uid process could have attached to the fenced copy
+  // during the capture phase (git status, patch, file copy) — the longest part of the
+  // window. If one did, its later writes are not in the archive, so the fenced copy is
+  // PRESERVED (named) instead of deleted, turning a would-be silent loss into a
+  // recoverable directory. Only the tiny gap between this scan and the remove itself
+  // stays open, which no one-time check on a POSIX tree can close.
+  const reQuiescent = yield* Effect.result(assertQuiescentFence(request, retirePath));
+  if (Result.isFailure(reQuiescent)) {
+    yield* pruneWorktreeMetadata(request.mainCheckout);
+    return yield* WorktreeCommandError.make({
+      message: `Archived ${request.targetPath}, but a process attached to it during capture; the fenced copy is preserved at ${retirePath} rather than deleted so no late write is lost.`,
+    });
+  }
+  yield* fs.remove(retirePath, { recursive: true }).pipe(
+    Effect.mapError(() =>
+      WorktreeCommandError.make({
+        message: `Archived ${request.targetPath} but could not delete the fenced copy; it remains at ${retirePath}.`,
+      })
+    )
   );
-  const head = yield* inspectArchiveHead(request);
-  const [reason, manifest] = yield* planArchiveRemoval(request, head, A.isReadonlyArrayNonEmpty(changes));
-  yield* removeWorktree(request, O.isSome(manifest));
   yield* pruneWorktreeMetadata(request.mainCheckout);
-  const branchDeleted = yield* deleteArchivedBranch(request);
+  // New commits can never be orphaned by any of the above: directory removal leaves
+  // the shared object store intact, and the branch ref falls only to this
+  // compare-and-swap on the archived head.
+  const branchDeleted = yield* deleteArchivedBranch(request, head);
   return makeRemovalReceipt(request, reason, manifest, branchDeleted);
 });
 

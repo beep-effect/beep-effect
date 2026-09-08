@@ -163,6 +163,11 @@ const collectAllFlag = Flag.boolean("collect-all").pipe(
   Flag.withDescription("Run every local preflight wave after failures instead of stopping before later waves")
 );
 
+const noFailFastFlag = Flag.boolean("no-fail-fast").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Keep launching local gates after a precise red to collect the full diagnostic picture")
+);
+
 const amendFlag = Flag.boolean("amend").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Amend the current local commit during publish")
@@ -374,6 +379,7 @@ const sharedFlags = {
   collectAll: collectAllFlag,
   head: headFlag,
   json: jsonFlag,
+  noFailFast: noFailFastFlag,
   packetDir: packetDirFlag,
   plan: planFlag,
   tier: tierFlag,
@@ -469,6 +475,7 @@ class SharedOptions extends S.Class<SharedOptions>($I`SharedOptions`)(
     json: S.Boolean,
     merged: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
     monitor: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
+    noFailFast: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
     noEdit: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
     packetDir: S.String,
     plan: S.Boolean,
@@ -504,7 +511,7 @@ const runYeetMode = (mode: YeetRunMode, options: SharedOptionsInput & { readonly
       amend: sharedOptions.amend,
       bots: sharedOptions.bots,
       ciParity: sharedOptions.ciParity,
-      collectAll: sharedOptions.collectAll,
+      collectAll: sharedOptions.collectAll || sharedOptions.noFailFast,
       fast: sharedOptions.fast,
       merged: sharedOptions.merged,
       message: options.message ?? "",

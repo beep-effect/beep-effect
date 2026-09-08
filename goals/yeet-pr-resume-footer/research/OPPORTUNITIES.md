@@ -38,3 +38,11 @@
    22:15Z to 00:10Z hit the 45 s probe budget on four different instances; the probe now has a
    120 s budget and logs its failure cause (`SqlTest.pglite.test.ts`), so the next skip note
    names the reason instead of "unavailable or redundant".
+8. **A `gh --json` field that does not exist shipped through green CI.** Doing: the first
+   `yeet monitor` after #975 merged. Evidence: `[yeet] provenance footer stamp skipped:
+   YeetCommandError: Unknown JSON field: "lastEditedAt"`; `gh pr view --json` (gh 2.99) lists
+   `createdAt` and `updatedAt` only, and every stamp since the reconcile round had been
+   skipping non-fatally. The fake gh runner in the tests encoded whatever fields the code asked
+   for. Prevention: validate every `gh <command> --json` field list against `gh <command>
+   --json` (no argument prints the supported fields) in a test or a doctest, and make one live
+   stamp part of closeout; fixed by PR #1004 (`updatedAt` as the inclusive baseline).
