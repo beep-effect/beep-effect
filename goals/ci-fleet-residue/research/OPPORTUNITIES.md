@@ -2,6 +2,53 @@
 
 Record receipts at the moment friction happens; redact for the public repo.
 
+## 2026-09-09 — Legacy IAM policies blocked cost remediation
+
+- What: retiring the reviewed old keys and refreshing the stale runner image.
+- Evidence: `kms:ScheduleKeyDeletion` was denied on the first old EKS key;
+  six policies name only `terraform-user` as administrator. The separate old
+  FluentBit key permits current account administration and entered a 30-day
+  pending-deletion period. The current CI key was excluded.
+- Bake evidence: `RunInstances` was rejected before creation by the unrelated
+  `FreedomFramework-CI` policy's explicit `LimitEC2Size` deny, which permits
+  only `t2.micro` for the current operator login.
+- Prevention: capture the required operator identity and exact launch-policy
+  preflight in the bake runbook. Keep the rejection distinct from a broken
+  image or a capacity shortage; do not create credentials or weaken fleet
+  roles to route around a denial.
+
+## 2026-09-09 — Cost audit found stale images and incomplete cleanup evidence
+
+- What: the operator requested an account cost audit after the permanent
+  On-Demand migration. August Cost Explorer usage was $522.10, including
+  $454.78 in EC2 compute. Historical $100 budget and Spot instructions no
+  longer describe the current purchase model or workload.
+- Evidence: all 20 sampled successful heavy jobs used the full setup path,
+  with a 74-second median setup. `bun run beep runners bake --check --json`
+  confirmed mismatches in the live image's Bun version, archive digest and
+  lockfile digest. The image contains Bun 1.4.0; current jobs require 1.4.2.
+  This is freshness drift, with no evidence required of artifact corruption.
+- Paid skip evidence: Doctest job 102413512462 in run 34335406225 allocated
+  an EC2 runner for 14 seconds, skipped setup and verification, and ran only
+  the skip step. Moving eligibility ahead of allocation needs a canary:
+  sampled hosted queues show that a new planning dependency can delay useful
+  heavy work even while reducing EC2 minutes.
+- Audit friction: empty RDS instance inventories missed a retained 2021
+  final snapshot that explains the recurring backup charge. Logs created in
+  2022 included two groups with August 2026 ingestion. Reconcile billed usage
+  types with service-specific backup/version inventories and last activity;
+  creation dates and empty compute lists are insufficient deletion evidence.
+- Observability limitation: Compute Optimizer requires 30 cumulative hours
+  of metrics per EC2 instance. One-job runners require measurements grouped
+  by lane and runner configuration; opting into recommendations alone does
+  not provide rightsizing proof for this fleet.
+- Prevention and decisions: the operator chose a $500 soft guardrail with
+  current reliability and speed preserved, approved standard cost visibility,
+  and confirmed VaultCtx retirement. The owning audit and implementation plan
+  is `docs/runbooks/aws-cost-operations.md`. Exact data candidates and cloud
+  execution receipts remain private. The approved pre-cutoff workload cleanup
+  was executed; the runbook separates completed actions from blocked KMS work.
+
 ## 2026-09-09 — Spot reclamation and broken termination credential access
 
 - What: recent PR verification lanes repeatedly lost their EC2 runners. AWS

@@ -5,6 +5,8 @@
  * @since 0.0.0
  */
 
+import * as pulumi from "@pulumi/pulumi";
+import { AccountCostControls, loadAccountCostControlsConfig } from "../AccountCostControls.ts";
 import { CiFleetController, loadCiFleetControllerConfig } from "../CiFleetController.ts";
 import { CiRunnersStack, loadCiRunnersStackArgs } from "../CiRunners.ts";
 import { CiTurboCache, loadCiTurboCacheConfig } from "../CiTurboCache.ts";
@@ -18,6 +20,19 @@ const controller = new CiFleetController("ci-fleet-controller", {
   workerSecurityGroupId: stack.workerSecurityGroupId,
 });
 const turboCache = new CiTurboCache("ci-turbo-cache", { config: loadCiTurboCacheConfig() });
+const costControls = new AccountCostControls(
+  "account-cost-controls",
+  loadAccountCostControlsConfig(),
+  new pulumi.Config("accountCostControls").requireSecretObject<unknown>("notificationEmailAddresses")
+);
+
+/**
+ * Managed account budget identifier without subscriber information.
+ *
+ * @category resources
+ * @since 0.0.0
+ */
+export const accountBudgetId = costControls.budgetId;
 
 /**
  * Dedicated fleet VPC identifier.
