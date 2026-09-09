@@ -320,6 +320,24 @@ const parseTestLaneSelection = (args: ReadonlyArray<string>): TestLaneSelectionS
   };
 };
 
+/**
+ * Resolve which unit/integration lanes a root `test` invocation selects.
+ * Exposed for focused unit tests.
+ *
+ * **Example** (Both lanes run when neither flag is passed)
+ *
+ * ```ts
+ * import { parseTestLaneSelectionForTesting } from "@beep/repo-cli/commands/Quality/Tasks"
+ *
+ * console.log(parseTestLaneSelectionForTesting(["--concurrency=2"]))
+ * // { unit: true, integration: true, args: ["--concurrency=2"] }
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const parseTestLaneSelectionForTesting = parseTestLaneSelection;
+
 const parseRootAuditSelection = (args: ReadonlyArray<string>): RootAuditSelectionState =>
   A.match(stripPassthroughDelimiter(args), {
     onEmpty: () => ({

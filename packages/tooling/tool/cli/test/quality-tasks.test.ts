@@ -18,6 +18,7 @@ import {
   collectCoverageChangedFilesForTesting,
   collectGithubCheckLaneWavesForTesting,
   collectQualityTaskLaneRunsForTesting,
+  parseTestLaneSelectionForTesting,
   runQualityTaskGithubCheckLaneWaves,
   runQualityTaskStreamingLaneGroup,
 } from "@beep/repo-cli/commands/Quality/Tasks";
@@ -6172,5 +6173,25 @@ describe("unwrapped turbo steps drop an unusable remote cache posture", () => {
     expect(rewritten.flakeQuarantine).toBe("ts2589-no-location");
     expect(rewritten.captureTimeoutMillis).toBe(900_000);
     expect(rewritten.label).toBe(step.label);
+  });
+});
+
+describe("parseTestLaneSelection", () => {
+  it("selects the flagged lanes and keeps the remaining arguments in order", () => {
+    const both = parseTestLaneSelectionForTesting(["--", "--unit", "--concurrency=2", "--integration", "--summarize"]);
+    expect(both).toStrictEqual({ unit: true, integration: true, args: ["--concurrency=2", "--summarize"] });
+    const unitOnly = parseTestLaneSelectionForTesting(["--unit"]);
+    expect(unitOnly).toStrictEqual({ unit: true, integration: false, args: [] });
+    const integrationOnly = parseTestLaneSelectionForTesting(["--integration", "--affected"]);
+    expect(integrationOnly).toStrictEqual({ unit: false, integration: true, args: ["--affected"] });
+  });
+
+  it("runs both lanes when no lane flag is present", () => {
+    expect(parseTestLaneSelectionForTesting([])).toStrictEqual({ unit: true, integration: true, args: [] });
+    expect(parseTestLaneSelectionForTesting(["--concurrency=2"])).toStrictEqual({
+      unit: true,
+      integration: true,
+      args: ["--concurrency=2"],
+    });
   });
 });

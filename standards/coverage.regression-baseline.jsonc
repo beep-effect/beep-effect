@@ -23872,8 +23872,8 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Laws/NoNativeRuntime.ts": {
-          "lines": 86.55,
-          "statements": 86.63,
+          "lines": 86.63,
+          "statements": 86.7,
           "branches": 72.09,
           "functions": 89.36,
           "uncovered": {
@@ -24019,7 +24019,7 @@
           "lines": 91.93,
           "statements": 91.2,
           "branches": 76.66,
-          "functions": 82.35,
+          "functions": 82.66,
           "uncovered": {
             "lines": 10,
             "statements": 11,
@@ -24571,7 +24571,7 @@
           "lines": 83.11,
           "statements": 83.57,
           "branches": 75.13,
-          "functions": 84.59,
+          "functions": 85.23,
           "uncovered": {
             "lines": 155,
             "statements": 158,
@@ -25816,10 +25816,10 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Worktree/Reap.service.ts": {
-          "lines": 90.47,
-          "statements": 90.22,
+          "lines": 90.53,
+          "statements": 90.28,
           "branches": 85.54,
-          "functions": 86,
+          "functions": 86.53,
           "uncovered": {
             "lines": 16,
             "statements": 17,
@@ -26335,7 +26335,7 @@
           "lines": 97.72,
           "statements": 96.42,
           "branches": 80.39,
-          "functions": 96.96,
+          "functions": 97.05,
           "uncovered": {
             "lines": 3,
             "statements": 5,
