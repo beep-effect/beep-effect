@@ -66,6 +66,9 @@ completed local and package proofs do not close that remaining gate.
   [structured canonical receipts](./research/package-verification-supplemental.json).
   The receipt test decodes both report formats and checks all 108 owners,
   matching heads, and complete successful audit/docgen steps.
+  Its expected owners come from the independent
+  [implementation-diff inventory](./research/implementation-owner-inventory.json),
+  captured from all files in merged PRs #1019, #1022, and #1028.
   Fresh HTML regeneration has no tracked diff; the lint-rule suite passes all
   66 tests.
 - [PR #1019](https://github.com/beep-effect/beep-effect/pull/1019) shipped the

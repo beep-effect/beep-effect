@@ -39,7 +39,8 @@
     "research/SOURCES.md",
     "research/closeout-evidence.md",
     "research/package-verification.json",
-    "research/package-verification-supplemental.json"
+    "research/package-verification-supplemental.json",
+    "research/implementation-owner-inventory.json"
   ],
   "agentLaunchers": [
     {

@@ -90,9 +90,20 @@ and the length of captured output are sanitized; result status, source head,
 step names, exit codes, and durations retain the executed values.
 
 `bun test goals/inline-schema-compile-hard-error/research/scripts/package-verification.test.ts`
-passes 241 assertions covering the primary counts and link, the canonical
-supplemental reports, matching heads, full audit/docgen execution, and the
-combined 108-owner inventory with no duplicates or missing owners.
+checks the primary counts and link, the canonical supplemental reports,
+matching heads, full audit/docgen execution, and the combined owner inventory
+with no duplicates or missing owners. Its expected owners come from
+`implementation-owner-inventory.json`, not the opening census or receipts.
+
+That independent inventory was captured from all paginated GitHub file lists
+for merged PRs #1019, #1022, and #1028: 599, 6, and 11 files respectively,
+matching each PR's reported `changed_files` count. Each file was assigned to
+the nearest workspace manifest declared by root `package.json` at that PR's
+recorded head. The artifact retains those head and merge SHAs, workspace
+roots, every owned file, and every path outside a workspace. The resulting
+union contains 108 owners. The test checks complete file accounting and
+compares the receipt union with these independently captured owners, so an
+owner missing from both the census and receipts is no longer invisible.
 
 The first v2 matrix stopped after seven passing owners when `@beep/ai-sync`
 rejected unrelated, pre-existing Graft permissions in the dirty local agent

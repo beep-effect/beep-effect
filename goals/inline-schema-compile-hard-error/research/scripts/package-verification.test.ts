@@ -5,8 +5,8 @@ import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
-import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
 const $I = $RepoCliId.create("goals/inline-schema-compile-hard-error/PackageVerificationEvidence");
 
@@ -31,19 +31,46 @@ const Matrix = S.Struct({
   summary: MatrixSummary,
   results: S.Array(MatrixResult),
 }).annotate($I.annote("Matrix", { description: "Primary matrix and its explicitly linked supplemental receipts." }));
-const Census = S.Struct({ byOwnerFamily: S.Record(S.String, S.Finite) }).annotate(
-  $I.annote("Census", { description: "Opening package-owner inventory used by the original matrix." })
+const ImplementationOwner = S.Struct({
+  packageName: S.NonEmptyString,
+  workspaceRoot: S.NonEmptyString,
+  files: S.Array(S.NonEmptyString),
+}).annotate(
+  $I.annote("ImplementationOwner", { description: "Workspace owner and changed files from an implementation PR." })
+);
+const ImplementationPullRequest = S.Struct({
+  number: S.Finite,
+  headSha: S.NonEmptyString,
+  mergeSha: S.NonEmptyString,
+  changedFileCount: S.Finite,
+  owners: S.Array(ImplementationOwner),
+  unownedPaths: S.Array(S.NonEmptyString),
+}).annotate(
+  $I.annote("ImplementationPullRequest", {
+    description: "Complete paginated file inventory for a merged implementation PR.",
+  })
+);
+const ImplementationInventory = S.Struct({
+  schemaVersion: S.Literal("inline-schema-implementation-owners/v1"),
+  pullRequests: S.Array(ImplementationPullRequest),
+  packageNames: S.Array(S.NonEmptyString),
+}).annotate(
+  $I.annote("ImplementationInventory", {
+    description: "Affected owners derived independently from the shipped implementation diffs.",
+  })
 );
 const decodeMatrix = S.decodeUnknownEffect(S.fromJsonString(Matrix));
-const decodeCensus = S.decodeUnknownEffect(S.fromJsonString(Census));
+const decodeImplementationInventory = S.decodeUnknownEffect(S.fromJsonString(ImplementationInventory));
 const decodeSupplemental = S.decodeUnknownEffect(S.fromJsonString(S.toCodecJson(S.Array(PackageVerifyReport))));
 
 test("primary and linked canonical receipts cover all 108 affected owners on the same head", async () => {
   const matrix = await Effect.runPromise(
     decodeMatrix(await Bun.file(new URL("../package-verification.json", import.meta.url)).text())
   );
-  const census = await Effect.runPromise(
-    decodeCensus(await Bun.file(new URL("../opening-census.json", import.meta.url)).text())
+  const inventory = await Effect.runPromise(
+    decodeImplementationInventory(
+      await Bun.file(new URL("../implementation-owner-inventory.json", import.meta.url)).text()
+    )
   );
   expect(matrix.supplementalReceipts).toEqual(["package-verification-supplemental.json"]);
   const supplemental = await Effect.runPromise(
@@ -73,13 +100,22 @@ test("primary and linked canonical receipts cover all 108 affected owners on the
     }
   }
   const owners = A.map([...matrix.results, ...supplemental], (result) => result.packageName);
-  const expected = A.dedupe([
-    ...R.keys(census.byOwnerFamily),
-    "@beep/lint-rules",
-    "@beep/effect-drizzle",
-    "@beep/freshbooks",
-  ]);
+  expect(A.map(inventory.pullRequests, (pr) => pr.number)).toEqual([1019, 1022, 1028]);
+  for (const pr of inventory.pullRequests) {
+    const paths = [...A.flatMap(pr.owners, (owner) => owner.files), ...pr.unownedPaths];
+    expect(A.length(paths)).toBe(pr.changedFileCount);
+    expect(A.length(A.dedupe(paths))).toBe(pr.changedFileCount);
+    for (const owner of pr.owners) {
+      expect(A.isReadonlyArrayNonEmpty(owner.files)).toBe(true);
+      expect(A.every(owner.files, Str.startsWith(`${owner.workspaceRoot}/`))).toBe(true);
+    }
+  }
+  const expected = A.sort(
+    A.dedupe(A.flatMap(inventory.pullRequests, (pr) => A.map(pr.owners, (owner) => owner.packageName))),
+    Order.String
+  );
+  expect(inventory.packageNames).toEqual(expected);
   expect(A.length(owners)).toBe(108);
   expect(A.length(A.dedupe(owners))).toBe(108);
-  expect(A.sort(owners, Order.String)).toEqual(A.sort(expected, Order.String));
+  expect(A.sort(owners, Order.String)).toEqual(expected);
 });

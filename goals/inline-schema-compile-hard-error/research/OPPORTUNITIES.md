@@ -451,6 +451,9 @@
   discoverable from the matrix JSON. Fresh structured reports now reuse the
   canonical `PackageVerifyReport` JSON codec and are explicitly linked from
   the primary receipt; a test checks the complete 108-owner union.
+  A subsequent review caught the test deriving expected owners from the same
+  census again. The independent inventory now retains every changed file and
+  its workspace owner from the three merged PRs' complete file lists.
 - **Prevention:** Union census owners with owners of the final implementation
   diff, including later reconciliation and quality repairs. Record that owner
   inventory with the proof identity and report uncovered owners before running.
