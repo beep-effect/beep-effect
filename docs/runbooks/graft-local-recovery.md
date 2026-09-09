@@ -57,6 +57,8 @@ graft_repair_backup=$(mktemp -d "${XDG_CACHE_HOME:-$HOME/.cache}/beep/graft-repa
 cp -p .claude/settings.json "$graft_repair_backup/settings.json"
 cp -p .claude/helpers/graft-hooks.cjs "$graft_repair_backup/graft-hooks.cjs"
 cp -p .claude/helpers/graft-statusline.cjs "$graft_repair_backup/graft-statusline.cjs"
+git diff --binary --cached -- .claude/settings.json .claude/helpers/graft-hooks.cjs .claude/helpers/graft-statusline.cjs > "$graft_repair_backup/staged.patch"
+git diff --binary -- .claude/settings.json .claude/helpers/graft-hooks.cjs .claude/helpers/graft-statusline.cjs > "$graft_repair_backup/unstaged.patch"
 ```
 
 Inspect both the staged and unstaged changes. If the shims contain only
@@ -70,9 +72,9 @@ git show HEAD:.claude/helpers/graft-statusline.cjs
 git restore --source=HEAD --worktree -- .claude/helpers/graft-hooks.cjs .claude/helpers/graft-statusline.cjs
 ```
 
-If either shim has intentional changes, reconcile it manually. Do not overwrite
-that work or change the index. The restore command above leaves staged content
-unchanged, so staged drift must also be reviewed before a later commit.
+If either shim has intentional changes, reconcile it manually. Preserve those
+hunks and their staged or unstaged state. The restore command above leaves the
+index unchanged; the staged repair below is a separate required step.
 
 Edit `.claude/settings.json` selectively:
 
@@ -92,6 +94,39 @@ bunx biome format --write .claude/settings.json
 git diff HEAD -- .claude/settings.json .claude/helpers/graft-hooks.cjs .claude/helpers/graft-statusline.cjs
 git diff --check
 ```
+
+## Remove confirmed drift from the index
+
+Tests exercise the working files. A clean `git diff HEAD` can therefore hide
+initializer drift that remains staged and would return in the next commit.
+Inspect the index separately for all three affected files:
+
+```sh
+git diff --cached -- .claude/settings.json .claude/helpers/graft-hooks.cjs .claude/helpers/graft-statusline.cjs
+```
+
+If these staged changes contain only confirmed initializer drift, restore their
+index entries from `HEAD`. This leaves the repaired working files untouched:
+
+```sh
+git restore --source=HEAD --staged -- .claude/settings.json .claude/helpers/graft-hooks.cjs .claude/helpers/graft-statusline.cjs
+git diff --cached --exit-code -- .claude/settings.json .claude/helpers/graft-hooks.cjs .claude/helpers/graft-statusline.cjs
+```
+
+The final command must exit successfully with no diff for this drift-only case.
+If intentional changes are also staged, use patch selection to remove only the
+confirmed drift hunks:
+
+```sh
+git restore --source=HEAD --staged --patch -- .claude/settings.json .claude/helpers/graft-hooks.cjs .claude/helpers/graft-statusline.cjs
+git diff --cached -- .claude/settings.json .claude/helpers/graft-hooks.cjs .claude/helpers/graft-statusline.cjs
+git diff --cached --check
+```
+
+Every remaining staged hunk must be an intentional change. If a hunk mixes both
+kinds of change, split or edit that hunk instead of discarding the intentional
+part. Keep the saved patches until both the working files and the index have
+been reviewed.
 
 ## Verify the repair
 
