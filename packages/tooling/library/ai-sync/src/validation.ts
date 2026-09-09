@@ -139,11 +139,11 @@ const ApprovedClaudeRepoBashPermission = LiteralKit([
   "Bash(graft map:*)",
   "Bash(graft blast:*)",
   "Bash(graft check:*)",
-  "Bash(graft build:*)",
+  "Bash(graft build)",
 ]).pipe(
   $I.annoteSchema("ApprovedClaudeRepoBashPermission", {
     description:
-      "Exact 57-value Bash grant domain approved for this repository, including named read-only GitHub queries, intentional Yeet publication commands, archive refs under refs/archive/, and Yeet sweep; worktree removal only through the Beep CLI, plus the read-only Graft code-graph query subcommands (never `graft init`, `uninstall`, or `upgrade`, which rewrite tracked agent configuration).",
+      "Exact 57-value Bash grant domain approved for this repository, including named read-only GitHub queries, intentional Yeet publication commands, archive refs under refs/archive/, and Yeet sweep; worktree removal only through the Beep CLI, plus the read-only Graft code-graph query subcommands and the exact structural `graft build` (never `--deep`, which spends model quota, nor `init`/`uninstall`/`upgrade`, which rewrite tracked agent wiring and are denied outright).",
   })
 );
 
@@ -168,10 +168,13 @@ const RequiredClaudeRepoDenyPermission = LiteralKit([
   "Edit(**/.github/workflows/**)",
   "Edit(**/docs/_internal/**)",
   "Edit(**/.claude/settings.json)",
+  "Bash(graft init:*)",
+  "Bash(graft uninstall:*)",
+  "Bash(graft upgrade:*)",
 ]).pipe(
   $I.annoteSchema("RequiredClaudeRepoDenyPermission", {
     description:
-      "Exact 18-value Claude deny domain required to block history rewrites, forced worktree removal, working-tree destruction, direct stash deletion and popping, admin merges, repository deletion, and protected-file edits.",
+      "Exact 21-value Claude deny domain required to block history rewrites, forced worktree removal, working-tree destruction, direct stash deletion and popping, admin merges, repository deletion, protected-file edits, and the Graft lifecycle commands that rewrite tracked agent wiring.",
   })
 );
 
