@@ -2574,6 +2574,82 @@ export const runTestTsgoChecks = Effect.fn("QualityScriptCommands.runTestTsgoChe
   yield* runTestTsgoChecksAt(repoRoot, extraArgs);
 });
 
+const reportTestTsgoFailure = (repoRoot: string, failure: TestTsgoPackageResult) => {
+  const packageName = tsgoTestPackageLabel(repoRoot, failure.group.packageDir);
+  const configName = pipe(failure.group.tsconfigPath, Str.replace(`${failure.group.packageDir}/`, ""));
+  return Console.error(`[quality:test-tsgo] ${packageName} failed with ${configName}`).pipe(
+    Effect.andThen(Str.isNonEmpty(failure.output) ? Console.error(failure.output) : Effect.void)
+  );
+};
+
+// Render diagnostics and per-package failures; true when the lane must exit red.
+const reportTestTsgoResults = Effect.fn("QualityScriptCommands.reportTestTsgoResults")(function* (
+  repoRoot: string,
+  results: ReadonlyArray<TestTsgoPackageResult>
+): Effect.fn.Return<boolean> {
+  const failures = A.filter(results, (result) => result.exitCode !== 0);
+  const effectDiagnosticLines = collectEffectTsgoDiagnosticLines(results);
+
+  if (A.isReadonlyArrayNonEmpty(effectDiagnosticLines)) {
+    yield* Console.error(
+      `[quality:test-tsgo] found ${A.length(effectDiagnosticLines)} Effect diagnostic(s) in test files`
+    );
+    yield* Console.error(A.join(effectDiagnosticLines, "\n"));
+  }
+
+  yield* Effect.forEach(failures, (failure) => reportTestTsgoFailure(repoRoot, failure), { discard: true });
+
+  return A.isReadonlyArrayNonEmpty(effectDiagnosticLines) || A.isReadonlyArrayNonEmpty(failures);
+});
+
+// Discover test files, drop packages whose own check script already covers them,
+// and demand the package-owned Turbo task for the rest. None when nothing is left to run.
+const resolveTestTsgoPackageGroups = Effect.fn("QualityScriptCommands.resolveTestTsgoPackageGroups")(function* (
+  repoRoot: string
+): Effect.fn.Return<
+  O.Option<ReadonlyArray<TestTsgoPackageGroup>>,
+  QualityScriptCommandError,
+  QualityScriptEnvironment
+> {
+  const path = yield* Path.Path;
+  const discoveredFiles = yield* Effect.forEach(
+    testSearchRoots,
+    (root) => collectTestTsgoFilesUnder(path.join(repoRoot, root)),
+    { concurrency: 1 }
+  ).pipe(Effect.map(A.flatten));
+
+  if (A.isReadonlyArrayEmpty(discoveredFiles)) {
+    yield* Console.log("[quality:test-tsgo] no test files found");
+    return O.none();
+  }
+
+  const { covered, uncovered } = yield* partitionTestTsgoPackageGroupsByCoverage(
+    yield* collectTestTsgoPackageGroups(repoRoot, discoveredFiles)
+  );
+
+  if (A.isReadonlyArrayNonEmpty(covered)) {
+    yield* Console.log(
+      `[quality:test-tsgo] skipped ${A.length(covered)} package(s) already covered by their check script`
+    );
+  }
+
+  if (A.isReadonlyArrayEmpty(uncovered)) {
+    yield* Console.log("[quality:test-tsgo] every package's check script already typechecks its test files");
+    return O.none();
+  }
+
+  const missingTaskMessage = missingTestTsgoTaskMessageForTesting(uncovered);
+
+  if (O.isSome(missingTaskMessage)) {
+    return yield* QualityScriptCommandError.make({
+      message: missingTaskMessage.value,
+      exitCode: 1,
+    });
+  }
+
+  return O.some(uncovered);
+});
+
 /**
  * Run the repo-wide test-file tsgo lane against an explicit repository root.
  *
@@ -2606,79 +2682,23 @@ export const runTestTsgoChecksAt = Effect.fn("QualityScriptCommands.runTestTsgoC
 ): Effect.fn.Return<void, QualityScriptCommandError, QualityScriptEnvironment> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const discoveredFiles = yield* Effect.forEach(
-    testSearchRoots,
-    (root) => collectTestTsgoFilesUnder(path.join(repoRoot, root)),
-    { concurrency: 1 }
-  ).pipe(Effect.map(A.flatten));
+  const resolved = yield* resolveTestTsgoPackageGroups(repoRoot);
 
-  if (A.isReadonlyArrayEmpty(discoveredFiles)) {
-    yield* Console.log("[quality:test-tsgo] no test files found");
+  if (O.isNone(resolved)) {
     return;
   }
 
+  const packageGroups = resolved.value;
   const tempDir = path.join(repoRoot, "node_modules", ".tmp", "tsgo-test-checks");
-  const normalizedExtraArgs = normalizeExtraArgs(extraArgs);
-  const { covered, uncovered: packageGroups } = yield* partitionTestTsgoPackageGroupsByCoverage(
-    yield* collectTestTsgoPackageGroups(repoRoot, discoveredFiles)
-  );
-
-  if (A.isReadonlyArrayNonEmpty(covered)) {
-    yield* Console.log(
-      `[quality:test-tsgo] skipped ${A.length(covered)} package(s) already covered by their check script`
-    );
-  }
-
-  if (A.isReadonlyArrayEmpty(packageGroups)) {
-    yield* Console.log("[quality:test-tsgo] every package's check script already typechecks its test files");
-    return;
-  }
-
-  const missingTaskMessage = missingTestTsgoTaskMessageForTesting(packageGroups);
-
-  if (O.isSome(missingTaskMessage)) {
-    return yield* QualityScriptCommandError.make({
-      message: missingTaskMessage.value,
-      exitCode: 1,
-    });
-  }
-
   const checkedFileCount = A.length(A.flatMap(packageGroups, (group) => group.files));
   yield* Console.log(
     `[quality:test-tsgo] checking ${checkedFileCount} file(s) across ${A.length(packageGroups)} package(s)`
   );
-  const results = yield* runTestTsgoTurboTasks(repoRoot, packageGroups, normalizedExtraArgs).pipe(
-    Effect.ensuring(
-      fs
-        .remove(tempDir, {
-          recursive: true,
-          force: true,
-        })
-        .pipe(Effect.ignore)
-    )
+  const results = yield* runTestTsgoTurboTasks(repoRoot, packageGroups, normalizeExtraArgs(extraArgs)).pipe(
+    Effect.ensuring(fs.remove(tempDir, { recursive: true, force: true }).pipe(Effect.ignore))
   );
-  const failures = A.filter(results, (result) => result.exitCode !== 0);
-  const effectDiagnosticLines = collectEffectTsgoDiagnosticLines(results);
 
-  if (A.isReadonlyArrayNonEmpty(effectDiagnosticLines)) {
-    yield* Console.error(
-      `[quality:test-tsgo] found ${A.length(effectDiagnosticLines)} Effect diagnostic(s) in test files`
-    );
-    yield* Console.error(A.join(effectDiagnosticLines, "\n"));
-  }
-
-  if (A.isReadonlyArrayNonEmpty(failures)) {
-    for (const failure of failures) {
-      const packageName = tsgoTestPackageLabel(repoRoot, failure.group.packageDir);
-      const configName = pipe(failure.group.tsconfigPath, Str.replace(`${failure.group.packageDir}/`, ""));
-      yield* Console.error(`[quality:test-tsgo] ${packageName} failed with ${configName}`);
-      if (Str.isNonEmpty(failure.output)) {
-        yield* Console.error(failure.output);
-      }
-    }
-  }
-
-  if (A.isReadonlyArrayNonEmpty(effectDiagnosticLines) || A.isReadonlyArrayNonEmpty(failures)) {
+  if (yield* reportTestTsgoResults(repoRoot, results)) {
     return yield* withExitCode(
       "quality:test-tsgo",
       path.join(repoRoot, "node_modules", ".bin", "tsgo"),
