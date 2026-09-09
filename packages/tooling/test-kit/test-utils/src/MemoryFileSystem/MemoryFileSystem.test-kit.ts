@@ -162,6 +162,9 @@ const SafeSize = S.Int.check(S.isGreaterThanOrEqualTo(0)).annotate(
 );
 type SafeSize = typeof SafeSize.Type;
 const isSafeSize = S.is(SafeSize);
+const isInt = S.is(S.Int);
+const isFinite = S.is(S.Finite);
+const isNonEmptyString = S.is(S.NonEmptyString);
 
 const EntryName = S.NonEmptyString.check(
   S.makeFilter((value) => value !== "." && value !== ".." && !Str.includes("/")(value) && !HasNullByte.is(value), {
@@ -998,7 +1001,7 @@ const link = (volume: Volume) =>
     const method = "link";
     return yield* volume.mutate(
       Effect.fnUntraced(function* (state) {
-        const source = yield* resolve(state, fromPath, { method }).pipe(
+        const source = yield* resolve(state, fromPath, { method, followFinalSymbolicLink: false }).pipe(
           Effect.mapError((error) => withSystemErrorPath(error, method, fromPath))
         );
         const destination = yield* resolveParent(state, toPath, method);
@@ -1024,6 +1027,7 @@ const symlink = (volume: Volume) =>
         if (HasNullByte.is(target)) {
           return yield* argumentError(method, "target must not contain a null byte");
         }
+        if (!isNonEmptyString(target)) return yield* notFound(method, target);
         const [createdState, inode] = yield* createSymbolicLink(state, target);
         const nextState = yield* linkInode(createdState, parent.inode, parent.name, inode, method).pipe(
           Effect.mapError((error) => withSystemErrorPath(error, method, path))
@@ -1233,6 +1237,7 @@ const cloneInode: (
     setInode(state, {
       ...entry,
       mode: source.mode,
+      atime: preserveTimestamps && isFileInode(source) ? source.atime : entry.atime,
       mtime: preserveTimestamps ? source.mtime : entry.mtime,
     });
   return yield* InodeEntry.match(source, {
@@ -1838,14 +1843,6 @@ const closeDescriptorUnlocked = (state: State, fd: FileDescriptor): State => {
   return reclaimInode(nextState, nextEntry);
 };
 
-// NOTE: Closing is idempotent so a scope finalizer cannot decrement an inode's
-// open-reference count more than once.
-const closeDescriptor = Effect.fnUntraced(function* (volume: Volume, fd: FileDescriptor) {
-  return yield* volume.mutate((state) =>
-    Effect.succeed(transitionResult(closeDescriptorUnlocked(state, fd), undefined))
-  );
-});
-
 const fileInfo = (entry: InodeEntry): FileSystem.File.Info => ({
   type: entry._tag,
   mtime: entry.mtime.pipe(DateTime.toDateUtc, O.some),
@@ -1932,7 +1929,7 @@ const writeDescriptorUnlocked = Effect.fnUntraced(function* (
     return yield* descriptorError(fd, method, "Invalid file position");
   }
   const length = position + buffer.length;
-  if (!S.is(S.Int)(length)) {
+  if (!isInt(length)) {
     return yield* descriptorError(fd, method, "File is too large");
   }
   const now = yield* DateTime.now;
@@ -1990,10 +1987,24 @@ class MemoryFile implements FileSystem.File {
   readonly [FileSystem.FileTypeId]: typeof FileSystem.FileTypeId = FileSystem.FileTypeId;
   readonly fd: FileDescriptor;
   private readonly volume: Volume;
+  private closedPosition: FileSystem.Size = FileSystem.Size(0);
 
   constructor(volume: Volume, fd: FileDescriptor) {
     this.volume = volume;
     this.fd = fd;
+  }
+
+  // rc.112 seek is infallible and retains a handle-local cursor after close.
+  // Snapshot under the same permit as descriptor removal, without retaining the
+  // descriptor/inode. Repeated close cannot reset that cursor or decrement twice.
+  get close(): Effect.Effect<void> {
+    return this.volume.mutate((state) =>
+      Effect.sync(() => {
+        const descriptor = HashMap.get(state.descriptors, this.fd);
+        if (O.isSome(descriptor)) this.closedPosition = descriptor.value.position;
+        return transitionResult(closeDescriptorUnlocked(state, this.fd), undefined);
+      })
+    );
   }
 
   get stat(): Effect.Effect<FileSystem.File.Info, PlatformError> {
@@ -2010,10 +2021,14 @@ class MemoryFile implements FileSystem.File {
     return this.volume.mutate((state) =>
       Effect.sync(() => {
         const descriptorOption = HashMap.get(state.descriptors, this.fd);
-        if (O.isNone(descriptorOption)) return transitionResult(state, FileSystem.Size(0));
-        const descriptor = descriptorOption.value;
+        const currentPosition = O.isSome(descriptorOption) ? descriptorOption.value.position : this.closedPosition;
         const size = FileSystem.Size(offset);
-        const position = from === "start" ? size : FileSystem.Size(descriptor.position + size);
+        const position = from === "start" ? size : FileSystem.Size(currentPosition + size);
+        if (O.isNone(descriptorOption)) {
+          this.closedPosition = position;
+          return transitionResult(state, position);
+        }
+        const descriptor = descriptorOption.value;
         return transitionResult(
           {
             ...state,
@@ -2088,8 +2103,9 @@ class MemoryFile implements FileSystem.File {
 }
 
 const open = (volume: Volume) => (path: string, options?: OpenOptions) =>
-  Effect.acquireRelease(openDescriptor(volume, path, options), (fd) => closeDescriptor(volume, fd)).pipe(
-    Effect.map((fd) => new MemoryFile(volume, fd))
+  Effect.acquireRelease(
+    Effect.map(openDescriptor(volume, path, options), (fd) => new MemoryFile(volume, fd)),
+    (file) => file.close
   );
 
 // =============================================================================
@@ -2321,7 +2337,7 @@ const chown = (volume: Volume) =>
 
 const dateTimeInput = Effect.fnUntraced(function* (method: string, name: string, value: Date | number) {
   const milliseconds = P.isNumber(value) ? value * 1000 : value.getTime();
-  if (!S.is(S.Finite)(milliseconds)) {
+  if (!isFinite(milliseconds)) {
     return yield* argumentError(method, `${name} must be a valid Date or epoch-seconds number`);
   }
   const parsed = DateTime.make(milliseconds);
@@ -2450,7 +2466,10 @@ const makeTempFileWithMethod = Effect.fnUntraced(function* (
         nextState = createdState;
         nextState = yield* linkInode(nextState, directory.inode, name, inode, method);
         const path = childPath(directory.path, name);
-        return transitionResult(nextState, path, [{ _tag: "Create", path }]);
+        return transitionResult(nextState, path, [
+          { _tag: "Create", path: directory.path },
+          { _tag: "Create", path },
+        ]);
       },
       Effect.mapError((error) => withOperationError(error, method, options?.directory ?? TEMP_DIR))
     )

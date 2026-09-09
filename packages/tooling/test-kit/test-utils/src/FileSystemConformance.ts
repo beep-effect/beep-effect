@@ -375,13 +375,16 @@ export const testLayer: {
       }).pipe(Effect.scoped, Effect.provide(layer))
     );
 
-    it.effect("copy with overwrite false preserves an existing destination", () =>
+    it.effect("copy with overwrite false creates a destination and preserves an existing destination", () =>
       Effect.gen(function* () {
         const fs = yield* Fs.FileSystem;
         const root = yield* temporaryDirectory;
         const source = `${root}/source.txt`;
         const destination = `${root}/destination.txt`;
         yield* fs.writeFileString(source, "source");
+        assert.strictEqual(yield* fs.exists(destination), false);
+        yield* fs.copy(source, destination, { overwrite: false });
+        assert.strictEqual(yield* fs.readFileString(destination), "source");
         yield* fs.writeFileString(destination, "destination");
 
         const result = yield* Effect.result(fs.copy(source, destination, { overwrite: false }));

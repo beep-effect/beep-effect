@@ -3,9 +3,12 @@ import { describe, it } from "@effect/vitest";
 import { assertFalse, assertSome, assertTrue, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
 import { Effect } from "effect";
 import * as A from "effect/Array";
+import * as Fiber from "effect/Fiber";
 import * as Fs from "effect/FileSystem";
 import * as O from "effect/Option";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
+import * as Tuple from "effect/Tuple";
 import type * as PlatformError from "effect/PlatformError";
 
 const assertPositionError = (error: PlatformError.PlatformError, method: string, fd: number): void => {
@@ -19,7 +22,7 @@ const assertPositionError = (error: PlatformError.PlatformError, method: string,
 
 // These two cases prove sharing across test-body scopes. Sequence is local to
 // this suite; all other tests remain independent of this deliberately shared file.
-describe.sequential("ordered sharing characterization", () => {
+describe("ordered sharing characterization", { concurrent: false }, () => {
   it.layer(Subject.layer)("same layer block", (it) => {
     it.effect(
       "01 writes a marker in one test body",
@@ -326,6 +329,186 @@ it.layer(Subject.layer)("public core characterization", (it) => {
       deepStrictEqual(yield* fs.readDirectory(root), ["item0.txt", "item255.txt"]);
       strictEqual(yield* fs.readFileString(`${root}/item0.txt`), "zero");
       strictEqual(yield* fs.readFileString(`${root}/item255.txt`), "last");
+    })
+  );
+
+  it.effect(
+    "13 closed seek retains its cursor without reviving the descriptor",
+    Effect.fnUntraced(function* () {
+      const fs = yield* Subject.make;
+      const path = yield* fs.makeTempFileScoped();
+      const file = yield* Effect.scoped(
+        Effect.gen(function* () {
+          const file = yield* fs.open(path, { flag: "w+" });
+          yield* file.writeAll(new TextEncoder().encode("abcdef"));
+          strictEqual(yield* file.seek(1, "start"), Fs.Size(1));
+          strictEqual(yield* file.read(new Uint8Array(2)), Fs.Size(2));
+          return file;
+        })
+      );
+
+      // rc.112 seek is infallible even after release; relative seek starts at
+      // the final IO cursor, while descriptor operations must still fail.
+      strictEqual(yield* file.seek(0, "current"), Fs.Size(3));
+      strictEqual(yield* file.seek(2, "current"), Fs.Size(5));
+      strictEqual(yield* file.seek(7, "start"), Fs.Size(7));
+      strictEqual(yield* file.seek(-4, "current"), Fs.Size(3));
+      strictEqual(yield* file.seek(-1, "start"), Fs.Size(-1));
+
+      const reopened = yield* fs.open(path, { flag: "r+" });
+      const output = new Uint8Array([99]);
+      for (const [method, error] of [
+        Tuple.make("stat", yield* Effect.flip(file.stat)),
+        Tuple.make("sync", yield* Effect.flip(file.sync)),
+        Tuple.make("read", yield* Effect.flip(file.read(output))),
+        Tuple.make("readAlloc", yield* Effect.flip(file.readAlloc(1))),
+        Tuple.make("truncate", yield* Effect.flip(file.truncate(0))),
+        Tuple.make("write", yield* Effect.flip(file.write(new Uint8Array([65])))),
+        Tuple.make("writeAll", yield* Effect.flip(file.writeAll(new Uint8Array([65])))),
+      ]) {
+        strictEqual(error._tag, "PlatformError");
+        assertTrue(error.reason._tag === "BadResource");
+        strictEqual(error.reason.module, "FileSystem");
+        strictEqual(error.reason.method, method);
+        strictEqual(error.reason.pathOrDescriptor, 3);
+        strictEqual(error.reason.description, "File descriptor is closed");
+      }
+      deepStrictEqual(A.fromIterable(output), [99]);
+      strictEqual(yield* file.seek(0, "current"), Fs.Size(-1));
+      strictEqual(yield* reopened.seek(0, "current"), Fs.Size(0));
+      strictEqual(yield* reopened.read(new Uint8Array(1)), Fs.Size(1));
+      strictEqual(yield* fs.readFileString(path), "abcdef");
+    })
+  );
+
+  it.effect(
+    "14 copy preserves regular file atime and mtime only when requested",
+    Effect.fnUntraced(function* () {
+      const fs = yield* Fs.FileSystem;
+      const root = yield* fs.makeTempDirectoryScoped();
+      yield* fs.makeDirectory(`${root}/source`);
+      yield* fs.writeFileString(`${root}/source/file`, "content");
+      yield* fs.utimes(`${root}/source/file`, 1234, 5678);
+      const original = yield* fs.stat(`${root}/source/file`);
+      yield* fs.copy(`${root}/source`, `${root}/preserved`, { preserveTimestamps: true });
+      const preserved = yield* fs.stat(`${root}/preserved/file`);
+      deepStrictEqual(preserved.atime, original.atime);
+      deepStrictEqual(preserved.mtime, original.mtime);
+      yield* fs.copy(`${root}/source/file`, `${root}/ordinary`);
+      const ordinary = yield* fs.stat(`${root}/ordinary`);
+      assertSome(
+        O.map(ordinary.atime, (date) => date.getTime()),
+        0
+      );
+      assertSome(
+        O.map(ordinary.mtime, (date) => date.getTime()),
+        0
+      );
+      strictEqual(yield* fs.readFileString(`${root}/preserved/file`), "content");
+      strictEqual(yield* fs.readFileString(`${root}/ordinary`), "content");
+    })
+  );
+
+  it.effect(
+    "15 hard links preserve final symlink identity including dangling targets",
+    Effect.fnUntraced(function* () {
+      const fs = yield* Fs.FileSystem;
+      const root = yield* fs.makeTempDirectoryScoped();
+      yield* fs.writeFileString(`${root}/target`, "original");
+      yield* fs.symlink("target", `${root}/link`);
+      yield* fs.link(`${root}/link`, `${root}/alias`);
+      strictEqual(yield* fs.readLink(`${root}/alias`), "target");
+      assertSome((yield* fs.stat(`${root}/target`)).nlink, 1);
+      yield* fs.remove(`${root}/link`);
+      yield* fs.remove(`${root}/target`);
+      yield* fs.writeFileString(`${root}/target`, "replacement");
+      strictEqual(yield* fs.readLink(`${root}/alias`), "target");
+      strictEqual(yield* fs.readFileString(`${root}/alias`), "replacement");
+
+      yield* fs.symlink("later", `${root}/dangling`);
+      yield* fs.link(`${root}/dangling`, `${root}/dangling-alias`);
+      strictEqual(yield* fs.readLink(`${root}/dangling-alias`), "later");
+      yield* fs.remove(`${root}/dangling`);
+      yield* fs.writeFileString(`${root}/later`, "resolved later");
+      strictEqual(yield* fs.readFileString(`${root}/dangling-alias`), "resolved later");
+    })
+  );
+
+  it.effect(
+    "16 empty symlink target fails before creating an entry or allocating an inode",
+    Effect.fnUntraced(function* () {
+      const fs = yield* Subject.make;
+      const control = yield* Subject.make;
+      const error = yield* Effect.flip(fs.symlink("", "/tmp/empty"));
+      strictEqual(error._tag, "PlatformError");
+      assertTrue(error.reason._tag === "NotFound");
+      strictEqual(error.reason.module, "FileSystem");
+      strictEqual(error.reason.method, "symlink");
+      strictEqual(error.reason.pathOrDescriptor, "");
+      deepStrictEqual(yield* fs.readDirectory("/tmp"), []);
+      assertFalse(yield* fs.exists("/tmp/empty"));
+      yield* fs.writeFileString("/tmp/next", "next");
+      yield* control.writeFileString("/tmp/next", "next");
+      deepStrictEqual((yield* fs.stat("/tmp/next")).ino, (yield* control.stat("/tmp/next")).ino);
+      strictEqual(yield* fs.readFileString("/tmp/next"), "next");
+    })
+  );
+
+  it.effect(
+    "17 watch registration retains the pinned stat lookup error method",
+    Effect.fnUntraced(function* () {
+      const fs = yield* Fs.FileSystem;
+      const root = yield* fs.makeTempDirectoryScoped();
+      const path = `${root}/missing`;
+      const error = yield* Effect.flip(Stream.runDrain(fs.watch(path)));
+      strictEqual(error._tag, "PlatformError");
+      assertTrue(error.reason._tag === "NotFound");
+      strictEqual(error.reason.module, "FileSystem");
+      strictEqual(error.reason.method, "stat");
+      strictEqual(error.reason.pathOrDescriptor, path);
+      deepStrictEqual(yield* fs.readDirectory(root), []);
+    })
+  );
+
+  it.effect(
+    "18 temporary files publish their directory before their file with scoped cleanup",
+    Effect.fnUntraced(function* () {
+      const fs = yield* Fs.FileSystem;
+      for (const makeTempFile of [fs.makeTempFile, fs.makeTempFileScoped]) {
+        yield* Effect.scoped(
+          Effect.gen(function* () {
+            const root = yield* fs.makeTempDirectoryScoped();
+            const sentinel = `${root}/sentinel`;
+            // Memory registration is synchronous before these child fibers suspend.
+            // The sentinel terminates both streams even if a creation event is missing.
+            const direct = yield* fs.watch(root).pipe(
+              Stream.takeUntil((event) => event.path === sentinel),
+              Stream.runCollect,
+              Effect.forkChild({ startImmediately: true })
+            );
+            const recursive = yield* fs.watch(root, { recursive: true }).pipe(
+              Stream.takeUntil((event) => event.path === sentinel),
+              Stream.runCollect,
+              Effect.forkChild({ startImmediately: true })
+            );
+            const file = yield* makeTempFile({ directory: root, prefix: "child-" });
+            const separator = yield* Effect.fromOption(Str.lastIndexOf("/")(file));
+            const directory = Str.slice(0, separator)(file);
+            yield* fs.writeFileString(sentinel, "done");
+            deepStrictEqual(A.fromIterable(yield* Fiber.join(direct)), [
+              { _tag: "Create", path: directory },
+              { _tag: "Create", path: sentinel },
+            ]);
+            deepStrictEqual(A.fromIterable(yield* Fiber.join(recursive)), [
+              { _tag: "Create", path: directory },
+              { _tag: "Create", path: file },
+              { _tag: "Create", path: sentinel },
+            ]);
+            strictEqual((yield* fs.stat(directory)).type, "Directory");
+            strictEqual(yield* fs.readFileString(file), "");
+          })
+        );
+      }
     })
   );
 });
