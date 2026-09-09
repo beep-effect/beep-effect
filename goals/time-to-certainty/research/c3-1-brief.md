@@ -271,3 +271,29 @@ the lane-written code; fix all of them without changing behaviour or any `packag
    ratchet, and `vitest run` (fork pool is fine from the package directory now; use
    `--pool=threads` only if forks fail) on every touched test file. Record real outputs.
    Append `### Stage E3 — files` and stop. No git writes, no manifests, no inbox acks.
+
+## Amendment 2026-09-09 (8) — Stage E4: runtime-agnostic tests and a structure-only fingerprint
+
+1. **Tests must load on Node and on Bun.** The hosted Coverage Regression lane runs
+   `bunx vitest run --coverage` on Node (the package `coverage` script), while `beep:test` runs on
+   Bun; `test/lint-workers.test.ts` and `test/package-scripts.policy.test.ts` fail to load on Node
+   with `Cannot find package 'bun' imported from @effect/platform-bun/dist/BunRedis.js`. Replace
+   `BunServices` (`@effect/platform-bun`) with `NodeServices` from `@effect/platform-node` (the
+   suite's precedent, `test/ci-runner-security.test.ts`), and replace `Bun.spawn`/`Bun.env` in the
+   worker smoke tests with the Effect process API the CLI already uses (`runCaptured` /
+   `ChildProcessSpawner` through the test kit) and `process.env`. No test may reference the
+   `Bun` global. Prove it by running, from the package directory, BOTH
+   `bunx --bun --no-install vitest run <the three package-scripts and lint-workers tests>` and
+   `bunx --no-install vitest run <same files>` (Node), and record both outputs.
+2. **The committed fingerprint holds declared inputs only.** `standards/policy-tools.fingerprint.json`
+   keeps `schemaVersion` and the computed `inputs` (the closure's globs and the root tool configs)
+   and drops the concrete `files` list and the `digest`; `--check` fails only when the declared
+   inputs differ from the recomputed closure (a new workspace dependency or config). Rationale:
+   hosted lints `refs/pull/N/merge`, so any committed content digest is stale whenever main moves
+   the closure (it happened three times on #1029); C3.2 computes the digest at task time from
+   these inputs (table D15 revisited). Update the generator, the `--check`, the JSDoc, and the
+   fingerprint tests; regenerate the file; `--check` must be green.
+3. Verify with biome, the tsgo check project, `bunx oxlint --quiet --disable-nested-config`,
+   `bun run beep quality fallow audit --check --quiet` and `… fallow health --check --quiet`,
+   `bun run beep lint policy-fingerprint --check`, and the jsdoc ratchet; append
+   `### Stage E4 — files` and stop. No git writes, no manifests, no inbox acks.

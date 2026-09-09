@@ -7,7 +7,6 @@
 
 /// <reference path="../../../madge.d.ts" />
 
-import { createHash } from "node:crypto";
 import { $RepoCliId } from "@beep/identity/packages";
 import { FsUtils, findRepoRoot, jsonStringifyPretty, resolveWorkspaceDirs } from "@beep/repo-utils";
 import { isExcludedTypeScriptSourcePath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
@@ -869,7 +868,7 @@ const rootConfigs = [
 ];
 
 /**
- * Generated checker input declaration and deterministic content digest.
+ * Generated checker input declaration; content hashes are computed at task time.
  * **Example** (Recognize a missing fingerprint)
  * ```ts
  * import { PolicyToolsFingerprint } from "@beep/repo-cli/test/PackageScripts"
@@ -884,13 +883,23 @@ export class PolicyToolsFingerprint extends S.Class<PolicyToolsFingerprint>($I`P
   {
     schemaVersion: S.Literal("policy-tools-fingerprint/v1"),
     inputs: S.Array(S.String),
-    files: S.Array(S.String),
-    digest: S.String,
   },
   $I.annote("PolicyToolsFingerprint", {
-    description: "Checker workspace dependency closure and root configuration fingerprint.",
+    description: "Declared checker workspace dependency closure and root configuration inputs.",
   })
 ) {}
+
+const decodeFingerprint = S.decodeEffect(S.fromJsonString(PolicyToolsFingerprint));
+const fingerprintEquivalent = S.toEquivalence(PolicyToolsFingerprint);
+const fingerprintIsCurrent = Effect.fnUntraced(function* (file: string, expected: PolicyToolsFingerprint) {
+  const fs = yield* FileSystem.FileSystem;
+  if (!(yield* fs.exists(file))) return false;
+  const text = yield* fs.readFileString(file);
+  return yield* decodeFingerprint(text).pipe(
+    Effect.map((actual) => fingerprintEquivalent(actual, expected)),
+    Effect.catchTag("SchemaError", () => Effect.succeed(false))
+  );
+});
 
 const decodeDependencies = S.decodeEffect(
   S.fromJsonString(S.Struct({ dependencies: S.optionalKey(S.Record(S.String, S.String)) }))
@@ -924,7 +933,7 @@ const fingerprintPatterns = Effect.fnUntraced(function* (repoRoot: string) {
 });
 
 /**
- * Hashes the CLI's transitive workspace dependency sources and root checker configs.
+ * Declares the CLI's transitive workspace source globs and root checker configs.
  * **Example** (Prepare a fingerprint computation)
  * ```ts
  * import { policyToolsFingerprint } from "@beep/repo-cli/test/PackageScripts"
@@ -937,23 +946,11 @@ const fingerprintPatterns = Effect.fnUntraced(function* (repoRoot: string) {
  */
 export const policyToolsFingerprint = Effect.fn("policyToolsFingerprint")(
   function* (repoRoot: string) {
-    const fs = yield* FileSystem.FileSystem;
-    const path = yield* Path.Path;
-    const fsUtils = yield* FsUtils;
     const patterns = yield* fingerprintPatterns(repoRoot);
     const inputs = A.sort([...patterns, ...rootConfigs, "**/package.json", fingerprintPath], Order.String);
-    const sources = yield* fsUtils.globFiles(patterns, { cwd: repoRoot, ignore: ["**/node_modules/**"] });
-    const files = A.sort([...sources, ...rootConfigs], Order.String);
-    const digest = createHash("sha256");
-    for (const file of files) {
-      const bytes = yield* fs.readFile(path.join(repoRoot, file));
-      digest.update(file).update("\0").update(bytes).update("\0");
-    }
     return PolicyToolsFingerprint.make({
       schemaVersion: "policy-tools-fingerprint/v1",
       inputs,
-      files,
-      digest: digest.digest("hex"),
     });
   },
   Effect.mapError((cause) => PackageScriptsPolicyError.make({ message: "Cannot compute policy fingerprint", cause }))
@@ -1010,7 +1007,7 @@ export const lintPackageScriptsCommand = Command.make(
 ).pipe(Command.withDescription("Check or repair canonical workspace scripts"));
 
 /**
- * Fails on stale checker fingerprints or writes the current declaration.
+ * Fails on changed declared checker inputs or writes the current declaration.
  * **Example** (Inspect the fingerprint gate name)
  * ```ts
  * import { lintPolicyFingerprintCommand } from "@beep/repo-cli/test/PackageScripts"
@@ -1035,14 +1032,14 @@ export const lintPolicyFingerprintCommand = Command.make(
       yield* fs.writeFileString(file, expected);
       yield* Console.log("policy-fingerprint: written");
     } else {
-      if (!(yield* fs.exists(file)) || (yield* fs.readFileString(file)) !== expected)
+      if (!(yield* fingerprintIsCurrent(file, fingerprint)))
         return yield* failWithReportedExit(
           "Policy fingerprint is stale; run bun run beep lint policy-fingerprint --write."
         );
       yield* Console.log("policy-fingerprint: current");
     }
   })
-).pipe(Command.withDescription("Check or generate checker implementation fingerprint"));
+).pipe(Command.withDescription("Check or generate declared checker inputs"));
 
 const lintSubcommands = [
   lintPackageScriptsCommand,

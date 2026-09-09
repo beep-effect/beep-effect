@@ -1,7 +1,8 @@
 import { lintCommand } from "@beep/repo-cli/commands/Lint";
+import { StepExec } from "@beep/repo-cli/test/PackageScripts";
 import { FsUtils, FsUtilsLive, findRepoRoot, jsonStringifyPretty, TSMorphServiceLive } from "@beep/repo-utils";
 import { provideScopedLayer } from "@beep/test-utils";
-import { BunServices } from "@effect/platform-bun";
+import { NodeServices } from "@effect/platform-node";
 import { it } from "@effect/vitest";
 import { ConfigProvider, Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
@@ -9,7 +10,6 @@ import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import { Command } from "effect/unstable/cli";
 import { beforeEach, describe, expect, vi } from "vitest";
-import type { StepExec } from "@beep/repo-cli/test/PackageScripts";
 
 const selection = vi.hoisted(() => ({ root: "" }));
 vi.mock("@beep/repo-utils", (importOriginal) =>
@@ -22,7 +22,7 @@ const execution = vi.hoisted(() => vi.fn<typeof StepExec.runToExit>());
 vi.mock("../src/internal/process/StepExec.ts", (importOriginal) =>
   importOriginal<typeof StepExec>().then((original) => ({ ...original, runToExit: execution }))
 );
-const platform = Layer.mergeAll(FsUtilsLive, TSMorphServiceLive).pipe(Layer.provideMerge(BunServices.layer));
+const platform = Layer.mergeAll(FsUtilsLive, TSMorphServiceLive).pipe(Layer.provideMerge(NodeServices.layer));
 const providePlatform = provideScopedLayer(platform);
 const runCommand = Command.runWith(lintCommand, { version: "0.0.0" });
 const run = (args: ReadonlyArray<string>, env: Record<string, string> = {}) =>
@@ -47,7 +47,42 @@ const packageFiles = Effect.fnUntraced(function* (directory: string) {
 });
 beforeEach(() => execution.mockReset().mockImplementation(() => Effect.succeed(0)));
 
-describe("thin lint workers", { concurrent: false }, () => {
+describe.sequential("thin lint workers", () => {
+  it.effect(
+    "checks declared fingerprint inputs independently of formatting and source contents",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "fingerprint-gate-" });
+      yield* fs.makeDirectory(`${root}/packages/cli/src`, { recursive: true });
+      yield* fs.makeDirectory(`${root}/packages/helper/src`, { recursive: true });
+      yield* fs.makeDirectory(`${root}/standards`);
+      yield* fs.writeFileString(`${root}/package.json`, '{"name":"fixture","workspaces":["packages/*"]}');
+      yield* fs.writeFileString(`${root}/packages/cli/package.json`, '{"name":"@beep/repo-cli"}');
+      yield* fs.writeFileString(`${root}/packages/helper/package.json`, '{"name":"@beep/helper"}');
+      selection.root = root;
+      try {
+        expect(yield* run(["policy-fingerprint", "--check"]).pipe(Effect.isFailure)).toBe(true);
+        yield* run(["policy-fingerprint", "--write"]);
+        const file = `${root}/standards/policy-tools.fingerprint.json`;
+        const declaration = yield* fs.readFileString(file);
+        yield* fs.writeFileString(file, `  ${declaration}  `);
+        yield* fs.writeFileString(`${root}/packages/cli/src/index.ts`, "changed source");
+        yield* fs.writeFileString(`${root}/eslint.config.mjs`, "changed config");
+        yield* run(["policy-fingerprint", "--check"]);
+        yield* fs.writeFileString(
+          `${root}/packages/cli/package.json`,
+          '{"name":"@beep/repo-cli","dependencies":{"@beep/helper":"workspace:*"}}'
+        );
+        expect(yield* run(["policy-fingerprint", "--check"]).pipe(Effect.isFailure)).toBe(true);
+        yield* run(["policy-fingerprint", "--write"]);
+        yield* run(["policy-fingerprint", "--check"]);
+        yield* fs.writeFileString(file, "invalid json");
+        expect(yield* run(["policy-fingerprint", "--check"]).pipe(Effect.isFailure)).toBe(true);
+      } finally {
+        selection.root = "";
+      }
+    }, providePlatform)
+  );
   it.effect(
     "runs package deprecated APIs from the root without a cache and with the default heap cap",
     Effect.fnUntraced(function* () {
@@ -259,7 +294,7 @@ describe("thin lint workers", { concurrent: false }, () => {
   );
 });
 
-describe("executed lint workers", { concurrent: false }, () => {
+describe.sequential("executed lint workers", () => {
   for (const worker of ["laws", "jsdoc", "deprecated-apis"]) {
     it.effect(
       `executes ${worker} against a fixture package surface`,
@@ -272,27 +307,21 @@ describe("executed lint workers", { concurrent: false }, () => {
           prefix: "lint-worker-fixture-",
         });
         yield* fs.writeFileString(`${fixture}/index.ts`, "export {};\n");
-        const child = Bun.spawn(
-          ["bun", "run", `${root}/${prefix}/src/bin.ts`, "--", "lint", worker, "--package", "."],
-          {
-            cwd: fixture,
-            env: R.filter(
-              Bun.env,
-              (_, key) => !A.contains(["VITEST", "VITEST_MODE", "VITEST_POOL_ID", "VITEST_WORKER_ID"], key)
-            ),
-            stdin: "ignore",
-            stdout: "pipe",
-            stderr: "pipe",
-          }
-        );
-        const [code, stdout, stderr] = yield* Effect.promise(() =>
-          Promise.all([child.exited, new Response(child.stdout).text(), new Response(child.stderr).text()])
-        );
-        expect(code, `${stdout}\n${stderr}`).toBe(0);
+        const { exitCode, output } = yield* StepExec.runCaptured({
+          command: "bun",
+          args: ["run", `${root}/${prefix}/src/bin.ts`, "--", "lint", worker, "--package", "."],
+          cwd: fixture,
+          env: R.filter(
+            process.env,
+            (_, key) => !A.contains(["VITEST", "VITEST_MODE", "VITEST_POOL_ID", "VITEST_WORKER_ID"], key)
+          ),
+          extendEnv: false,
+        });
+        expect(exitCode, output).toBe(0);
         if (worker === "laws") {
-          expect(stdout).not.toContain("skipping four laws");
-          expect(stdout).toContain("scanned_files=1");
-          expect(stdout).toContain("package-test-imports");
+          expect(output).not.toContain("skipping four laws");
+          expect(output).toContain("scanned_files=1");
+          expect(output).toContain("package-test-imports");
         }
       }, providePlatform),
       60000

@@ -1017,3 +1017,118 @@ checks, signed commits, and PR closeout remain outside this E3 launch.
 
 No implementation files were deleted. Authorized residue and ignored receipts
 are omitted from the commit-input list as required. Stage E3 stops here.
+
+## 2026-09-09 — Stage E4 runtime portability and declared-input fingerprint
+
+Read the complete brief through Amendment 8 and the existing results. Stage E4
+only: replaced BunServices with NodeServices in both test files. Worker smoke
+tests now use the existing test kit's StepExec.runCaptured with process.env,
+filtered Vitest variables, and extendEnv: false. No Bun global remains in either
+file. The actual CLI subprocess still runs on Bun, as required by its entrypoint;
+the tests themselves load and execute on both Node and Bun. Explicit sequential
+worker suites protect the shared repository-root mock from concurrent tests.
+
+PolicyToolsFingerprint now contains only schemaVersion and inputs. The generator
+retains dependency-closure discovery and the existing declared root inputs, and
+no longer enumerates source files or computes a content digest. The check decodes
+the declaration and compares schema-derived values instead of serialized bytes.
+Missing, malformed, or changed declarations fail; harmless formatting and source
+or config content changes pass. Updated JSDoc describes declared inputs. The
+regenerated artifact has exactly two keys, 42 inputs, and 1,775 bytes.
+
+Regression coverage proves transitive dependency discovery, exclusion of unrelated
+workspace sources, stability across source edits/additions and config edits,
+changed inputs after a new dependency, whitespace-independent CLI checks, missing
+and malformed declaration failures, and successful write/check convergence.
+
+### Stage E4 — real runtime outputs
+
+All test commands ran from packages/tooling/tool/cli. The same three files were
+selected in each command: test/package-scripts.schemas.test.ts,
+test/package-scripts.policy.test.ts, and test/lint-workers.test.ts.
+
+`bunx --bun --no-install vitest run test/package-scripts.schemas.test.ts
+test/package-scripts.policy.test.ts test/lint-workers.test.ts --pool=threads`
+— **exit 0**:
+
+```text
+ Test Files  3 passed (3)
+      Tests  28 passed (28)
+   Duration  32.74s (transform 2.54s, setup 462ms, import 7.40s, tests 24.72s, environment 0ms)
+```
+
+The initial requested Bun default-pool invocation printed only the Vitest startup
+line and was interrupted (exit 130). The passing run above uses the fallback
+allowed by Amendment 7. It includes actual execution of all three lint workers.
+
+`bunx --no-install vitest run test/package-scripts.schemas.test.ts
+test/package-scripts.policy.test.ts test/lint-workers.test.ts` (Node)
+— **exit 0**:
+
+```text
+ Test Files  3 passed (3)
+      Tests  28 passed (28)
+   Duration  43.19s (transform 2.99s, setup 719ms, import 13.71s, tests 28.53s, environment 0ms)
+```
+
+An additional Node run with --pool=threads also passed all 28 tests in three
+files, exit 0, duration 42.01s. Earlier runs failed on an introduced missing
+fixture name and concurrent root-mock access (4 failed, 24 passed); both were
+corrected before the final runs above. These failures were not classified as
+environment-only.
+
+### Stage E4 — verification outputs
+
+- `bunx --no-install biome check` over the three touched TypeScript files and
+  standards/policy-tools.fingerprint.json: **exit 0**,
+  `Checked 4 files in 1182ms. No fixes applied.`
+- `bunx --bun --no-install tsgo -p packages/tooling/tool/cli/tsconfig.check.json
+  --pretty false`: **exit 0**, no diagnostics.
+- Supplementary focused test typecheck using the existing disposable Stage E3
+  config, `bunx --bun --no-install tsgo -p /tmp/c3-e3-tests.tsconfig.json
+  --pretty false`: **exit 0**, no diagnostics. This includes exactly the three
+  tests and retains the earlier documented synthetic test compiler posture; it
+  does not claim aggregate test-tsgo acceptance.
+- `bunx oxlint --quiet --disable-nested-config`: **exit 0**, no diagnostics.
+- `bun run beep quality fallow audit --check --quiet`: **exit 0**, status ok,
+  introduced=0, inheritedAdjacent=2; both findings have blocking=false.
+  **Zero blocking findings.**
+- `bun run beep quality fallow health --check --quiet`: **exit 0**,
+  `"status":"ok","exitStatus":0,"report":{"findingCount":0,"findings":[]}`.
+- `bun run beep lint policy-fingerprint --write`: **exit 0**,
+  `policy-fingerprint: written`.
+- `bun run beep lint policy-fingerprint --check`: **exit 0**,
+  `policy-fingerprint: current`.
+- `bun run beep quality jsdoc-ratchet --inventory standards/jsdoc-documentation.inventory.jsonc`:
+  **exit 0**, real output:
+
+```text
+[jsdoc-ratchet] ok: tracked=21 increased=0 current_totals=32
+[jsdoc-ratchet] zero-legacy (non-generated) ok: findings=0
+```
+
+The supplementary jsdoc-inventory refresh printed only its command banner for
+several minutes and was interrupted (exit 130). It wrote no inventory artifacts;
+the ratchet result above is against the existing tracked inventory, not a refreshed
+inventory. This limitation is recorded in the packet opportunity ledger.
+Canonical package verification and hosted proof remain with the orchestrator
+under Amendment 2. No aggregate acceptance is claimed here.
+
+Ephemeral logs: /tmp/c3-e4-{bun-final,node-final,node-threads-final,biome,tsgo,
+tests-tsgo,oxlint,fallow-audit,fallow-health,fingerprint-write,fingerprint-check,
+jsdoc-ratchet,jsdoc-inventory}.log. The durable results are copied above.
+
+### Stage E4 — files
+
+- packages/tooling/tool/cli/src/commands/Lint/Lint.command.ts
+- packages/tooling/tool/cli/test/lint-workers.test.ts
+- packages/tooling/tool/cli/test/package-scripts.policy.test.ts
+- standards/policy-tools.fingerprint.json
+- goals/time-to-certainty/research/OPPORTUNITIES.md
+- goals/time-to-certainty/research/c3-1-implementation.md
+
+No implementation files were deleted. Removed graft residue and preserved the
+tracked .ignore. Temporary test fixtures were scoped and cleaned. Existing
+changes to .claude helpers/settings and the brief were preserved. No package.json
+edits, Git write commands, inbox acknowledgments, push, publish, or merge were
+performed. Stage E4 stops here.

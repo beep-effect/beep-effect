@@ -7,7 +7,7 @@ import {
 } from "@beep/repo-cli/test/PackageScripts";
 import { FsUtilsLive, jsonStringifyPretty } from "@beep/repo-utils";
 import { provideScopedLayer } from "@beep/test-utils";
-import { BunServices } from "@effect/platform-bun";
+import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
@@ -20,7 +20,7 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as fc from "effect/testing/FastCheck";
 
-const platform = FsUtilsLive.pipe(Layer.provideMerge(BunServices.layer));
+const platform = FsUtilsLive.pipe(Layer.provideMerge(NodeServices.layer));
 const codecs = R.fromEntries(
   A.map(["app", "infra", "library", "lab", "tool"] as const, (kind) => {
     const codec = scriptsBlockFromRecord(kind);
@@ -260,7 +260,7 @@ describe("package scripts policy", () => {
       })
     )
   );
-  it.effect("fingerprints transitive dependency sources and root configs with fresh closure discovery", () =>
+  it.effect("declares inputs independently of source contents with fresh dependency closure discovery", () =>
     run(
       Effect.gen(function* () {
         const files: Record<string, unknown> = {
@@ -291,14 +291,24 @@ describe("package scripts policy", () => {
         const first = yield* policyToolsFingerprint(root);
         expect(first.inputs).toContain("packages/nested/src/**");
         expect(first.inputs).not.toContain("packages/unrelated/src/**");
-        expect((yield* policyToolsFingerprint(root)).digest).toBe(first.digest);
+        expect(yield* policyToolsFingerprint(root)).toEqual(first);
         yield* fs.writeFileString(`${root}/packages/unrelated/src/index.ts`, "unrelated edit");
-        expect((yield* policyToolsFingerprint(root)).digest).toBe(first.digest);
+        expect(yield* policyToolsFingerprint(root)).toEqual(first);
         yield* fs.writeFileString(`${root}/packages/nested/src/index.ts`, "nested edit");
         const second = yield* policyToolsFingerprint(root);
-        expect(second.digest).not.toBe(first.digest);
+        expect(second).toEqual(first);
         yield* fs.writeFileString(`${root}/eslint.config.mjs`, "config edit");
-        expect((yield* policyToolsFingerprint(root)).digest).not.toBe(second.digest);
+        expect(yield* policyToolsFingerprint(root)).toEqual(first);
+        yield* fs.writeFileString(`${root}/packages/nested/src/new.ts`, "new source");
+        expect(yield* policyToolsFingerprint(root)).toEqual(first);
+        expect(R.keys(first)).toEqual(["schemaVersion", "inputs"]);
+        yield* fs.writeFileString(
+          `${root}/packages/nested/package.json`,
+          '{"name":"@beep/nested","dependencies":{"@beep/unrelated":"workspace:*"}}'
+        );
+        const expanded = yield* policyToolsFingerprint(root);
+        expect(expanded.inputs).toContain("packages/unrelated/src/**");
+        expect(expanded.inputs).not.toEqual(first.inputs);
       })
     )
   );

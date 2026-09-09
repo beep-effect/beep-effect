@@ -503,3 +503,19 @@ The default Vitest fork run printed its startup banner but executed no tests for
   digest (a `cache: false` root task writing an untracked artifact that policy tasks depend on,
   or declaring the computed closure globs directly as task inputs). C3.2 must settle this before
   any policy task keys on the file (table D15, revisit).
+
+## 2026-09-09 — C3.1 E4 Vitest fork startup stalls
+
+The required Bun Vitest run of package-scripts.schemas, package-scripts.policy,
+and lint-workers in the CLI package printed only `RUN v4.1.11` and did not
+execute tests before interruption (exit 130). Retrying with the brief-approved
+`--pool=threads` fallback. A bounded fork startup timeout with an explicit
+worker diagnostic would prevent this silent wait. Node proof is tracked
+separately in the Stage E4 results.
+
+E4 follow-up: the supplementary `bun run beep quality jsdoc-inventory`
+printed only its command banner for several minutes and was interrupted
+(exit 130); it produced no refreshed artifacts. The required
+`jsdoc-ratchet --inventory standards/jsdoc-documentation.inventory.jsonc`
+passed against the tracked inventory. Per-package progress and bounded
+subprocess diagnostics would make inventory stalls attributable.
