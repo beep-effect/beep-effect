@@ -1,0 +1,61 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "@chore/deps-update-09-05-26",
+  "committed": false,
+  "createdAt": "2026-09-08T21:06:11.654Z",
+  "failurePolicy": "fail-fast",
+  "head": "9329ec920162cc4626b2148e3077184255b89cc8",
+  "lanes": [
+    {
+      "id": "monitor:01-pr-context",
+      "label": "monitor:pr-context",
+      "phase": "monitor",
+      "status": "passed",
+      "durationMs": 435.282685,
+      "peakRssKb": 58672,
+      "exitCode": 0,
+      "tier": "full",
+      "inputDigest": null
+    },
+    {
+      "id": "monitor:02-pr-checks-watch",
+      "label": "monitor:pr-checks:watch",
+      "phase": "monitor",
+      "status": "passed",
+      "durationMs": 879.824864,
+      "peakRssKb": 58760,
+      "exitCode": 0,
+      "tier": "full",
+      "inputDigest": null
+    }
+  ],
+  "message": "yeet monitor succeeded.",
+  "mode": "monitor",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "chore_deps-update-09-05-26-64c41f08b79f",
+  "attemptId": "7f745261-e584-4446-adf4-34be72c70714",
+  "resolvedHeadSha": "9329ec920162cc4626b2148e3077184255b89cc8",
+  "diffFingerprint": "96a296d224f285c67bee93c30f8a309157f0daa35dc5b87e410b78630a09cfc7",
+  "proofTier": "full",
+  "startedAt": "2026-09-08T21:06:03.434Z",
+  "endedAt": "2026-09-08T21:06:11.654Z",
+  "elapsedMs": 8221,
+  "indexPath": "<fleet>/beep-effect/.beep/yeet/quality-issue-index.json",
+  "mergeReady": {
+    "ready": true,
+    "criteria": {
+      "prOpen": true,
+      "notDraft": true,
+      "closeoutRun": true,
+      "requiredChecksGreen": true,
+      "threadsResolved": true,
+      "mergeable": true,
+      "mergeStateAcceptable": true,
+      "reviewDecisionAcceptable": true,
+      "greptileScore": "5/5"
+    }
+  }
+}

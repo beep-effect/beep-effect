@@ -1,0 +1,32 @@
+{
+  "schemaVersion": "yeet-verdict/v1",
+  "base": "origin/main",
+  "branch": "feat/crispening-p0-enforce",
+  "committed": false,
+  "createdAt": "2026-07-06T01:35:26.239Z",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "monitor:01-pr-context",
+      "label": "monitor:pr-context",
+      "phase": "monitor",
+      "status": "passed",
+      "exitCode": 0
+    },
+    {
+      "id": "monitor:02-pr-checks-watch",
+      "label": "monitor:pr-checks:watch",
+      "phase": "monitor",
+      "status": "failed",
+      "exitCode": 1,
+      "repairCommand": "Rerun `bun run beep quality github-checks nix` and inspect the Nix error."
+    }
+  ],
+  "message": "yeet monitor failed.",
+  "mode": "monitor",
+  "outcome": "failure",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "feat_crispening-p0-enforce-8ea0dd620de5",
+  "indexPath": "<fleet>/beep-effect2/.beep/yeet/quality-issue-index.json"
+}

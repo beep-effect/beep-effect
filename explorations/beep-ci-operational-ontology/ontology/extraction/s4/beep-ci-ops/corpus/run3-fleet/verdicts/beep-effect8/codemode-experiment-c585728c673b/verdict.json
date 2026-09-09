@@ -1,0 +1,49 @@
+{
+  "schemaVersion": "yeet-verdict/v1",
+  "base": "origin/main",
+  "branch": "codemode-experiment",
+  "committed": false,
+  "createdAt": "2026-07-27T04:24:42.667Z",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "advisory:01-fallow-feedback",
+      "label": "fallow-advisory-feedback",
+      "phase": "feedback",
+      "status": "passed",
+      "durationMs": 1722.934519,
+      "exitCode": 0
+    },
+    {
+      "id": "commit:01-git-commit",
+      "label": "commit:git:commit",
+      "phase": "commit",
+      "status": "not-run"
+    },
+    {
+      "id": "full:01-pre-push",
+      "label": "full:pre-push",
+      "phase": "full",
+      "status": "not-run"
+    },
+    {
+      "id": "publish:00-head-install-preflight",
+      "label": "publish:head-install-preflight",
+      "phase": "publish",
+      "status": "not-run"
+    },
+    {
+      "id": "publish:01-git-push",
+      "label": "publish:git:push",
+      "phase": "publish",
+      "status": "not-run"
+    }
+  ],
+  "message": "yeet publish refuses a stale base: files changed on this branch were also changed on origin/main since the merge-base, so the PR would conflict or silently regress them.\n127 path(s) across 8 top-level entries: .changeset, .cspell, apps, infra, packages, scratchpad, standards, tsconfig.json\n  - .changeset/jsonschema-node-model.md\n  - .changeset/safe-objects-travel.md\n  - .cspell/custom-words.txt\n  - apps/professional-desktop/server/IpcStdoutGuard.prelude.ts\n  - apps/professional-desktop/server/IpcStdoutGuard.ts\n  - apps/professional-desktop/server/OntologyMcpTransport.ts\n  - apps/professional-desktop/server/RpcSessionAuth.ts\n  - apps/professional-desktop/server/main.ts\n  - infra/docgen.json\n  - packages/agents/client/docgen.json\n  - (+117 more; full list in the failure packet)\nRemedy: git fetch origin && git rebase origin/main, re-run bun run beep yeet verify, then publish again. Pass --allow-stale-base to proceed anyway.",
+  "mode": "publish",
+  "outcome": "failure",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "codemode-experiment-c585728c673b",
+  "indexPath": "<fleet>/beep-effect8/.beep/yeet/quality-issue-index.json"
+}

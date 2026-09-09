@@ -1,0 +1,81 @@
+{
+  "schemaVersion": "yeet-verdict/v1",
+  "base": "origin/main",
+  "branch": "coding-agent-effectiveness-evidence-loop",
+  "committed": true,
+  "createdAt": "2026-08-01T02:33:45.040Z",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "advisory:01-fallow-feedback",
+      "label": "fallow-advisory-feedback",
+      "phase": "feedback",
+      "status": "passed",
+      "durationMs": 3154.428636,
+      "exitCode": 0
+    },
+    {
+      "id": "commit:01-git-commit",
+      "label": "commit:git:commit",
+      "phase": "commit",
+      "status": "passed",
+      "durationMs": 3650.450265,
+      "exitCode": 0
+    },
+    {
+      "id": "full:01-pre-push",
+      "label": "full:pre-push",
+      "phase": "full",
+      "status": "passed",
+      "durationMs": 1050605.133332,
+      "exitCode": 0
+    },
+    {
+      "id": "publish:00-head-install-preflight",
+      "label": "publish:head-install-preflight",
+      "phase": "publish",
+      "status": "not-run"
+    },
+    {
+      "id": "publish:01-git-push",
+      "label": "publish:git:push",
+      "phase": "publish",
+      "status": "not-run"
+    },
+    {
+      "id": "publish:02-pr-create",
+      "label": "publish:pr-create",
+      "phase": "publish",
+      "status": "not-run"
+    },
+    {
+      "id": "monitor:01-pr-context",
+      "label": "monitor:pr-context",
+      "phase": "monitor",
+      "status": "not-run"
+    },
+    {
+      "id": "monitor:02-pr-checks-watch",
+      "label": "monitor:pr-checks:watch",
+      "phase": "monitor",
+      "status": "not-run"
+    }
+  ],
+  "message": "yeet publish stopped because the full proof changed files after the local commit. Regenerate them, then amend or reset the commit that has not yet been pushed before retrying.\n6 path(s) across 1 top-level entry: goals\n  - goals/knowledge-surface-automation/GOAL.md\n  - goals/knowledge-surface-automation/PLAN.md\n  - goals/knowledge-surface-automation/README.md\n  - goals/knowledge-surface-automation/SPEC.md\n  - goals/knowledge-surface-automation/ops/manifest.json\n  - goals/knowledge-surface-automation/research/SOURCES.md\nRemedy: Inspect the proof-written files; regenerate or commit them as a follow-up, then retry the publish.",
+  "mode": "publish",
+  "outcome": "failure",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "coding-agent-effectiveness-evidence-loop-0b12cb9b250e",
+  "indexPath": "<fleet>/beep-effect/.beep/yeet/quality-issue-index.json",
+  "baseFreshness": {
+    "behindCount": 1,
+    "mergeBase": "c21fb7bb6a5a93fa3e4e917b872f169a8e7ef0a4",
+    "overlappingPaths": []
+  },
+  "stash": {
+    "createdAt": "2026-08-01T02:16:10.352Z",
+    "marker": "yeet-staged-only/coding-agent-effectiveness-evidence-loop-0b12cb9b250e/2026-08-01T02:16:10.352Z",
+    "stashSha": "b6b26e97c99e55005e09044bff780e177bdce33d"
+  }
+}

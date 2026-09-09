@@ -1,0 +1,84 @@
+{
+  "identity_key": "<fleet>/beep-effect13",
+  "scannedAt": "2026-09-09T02:27:10.125Z",
+  "snapshot_path": "<fleet>/beep-effect13",
+  "within_fleet_root": true,
+  "origin_url": "git@github.com:beep-effect/beep-effect.git",
+  "kind": "clone",
+  "branch": "codex/inline-schema-review-followups",
+  "branch_sha12": "bf0f1e73b0f4",
+  "head": "9ac60da26b09a2ada78c65ac31d645c9ab324bc4",
+  "git_dir": "<fleet>/beep-effect13/.git",
+  "git_common_dir": "<fleet>/beep-effect13/.git",
+  "git_common_dir_role": "checkout-binding fact; not a proof cache",
+  "runs_dir_listing": [
+    "chore_allow-git-cleanup-776c61f5a823",
+    "chore_semantic-web-dead-surface-fc44ed4da9fe",
+    "chore_semantic-web-dead-surface-followup-cbbd6eec7f02",
+    "codex_inline-schema-compile-hard-error-4b004da7be80",
+    "codex_inline-schema-review-followups-bf0f1e73b0f4",
+    "codex_oppold-corpus-salvage-restoration-9774293bda30",
+    "docs_semantica-lab-graduate-42807c5191a5",
+    "docs_semantica-lab-packet-0bd2e00ae0f8",
+    "docs_semantica-lab-r1-r3-a175d14735e2",
+    "docs_semantica-lab-shape-406f4f813fc2",
+    "docs_semantica-lab-tracker-mining-ec186e28ff48",
+    "feat_judge-rubric-lint-and-json-salvage-ed514deaaa7f",
+    "feat_oppold-corpus-salvage-restoration-41854bb27664"
+  ],
+  "runs_directory_status": "present",
+  "binding_probe_at": "2026-09-09T02:27:16.242Z",
+  "git_probes": {
+    "origin": {
+      "command": "git remote get-url origin",
+      "status": "present",
+      "exit_code": 0
+    },
+    "git_dir": {
+      "command": "git rev-parse --absolute-git-dir",
+      "status": "present",
+      "exit_code": 0
+    },
+    "git_common_dir": {
+      "command": "git rev-parse --path-format=absolute --git-common-dir",
+      "status": "present",
+      "exit_code": 0
+    },
+    "head": {
+      "command": "git rev-parse HEAD",
+      "status": "present",
+      "exit_code": 0
+    },
+    "branch": {
+      "command": "git branch --show-current",
+      "status": "present",
+      "exit_code": 0
+    }
+  },
+  "binding_probe_status": "present",
+  "binding_probe_matches_snapshot": true,
+  "probe_head": "9ac60da26b09a2ada78c65ac31d645c9ab324bc4",
+  "probe_branch": "codex/inline-schema-review-followups",
+  "binding_temporality": "snapshot branch/head at scannedAt; supplementary git/cache probes during capture interval",
+  "turbo_local_cache_path": "<fleet>/beep-effect13/.turbo/cache",
+  "turbo_local_cache_present": true,
+  "turbo_local_cache_entries": 20469,
+  "turbo_local_cache_entries_basis": "immediate directory entries; not deduplicated task hashes",
+  "turbo_remote_cache_configured": false,
+  "turbo_remote_cache_env_present": {
+    "TURBO_TOKEN": true,
+    "TURBO_TEAM": true,
+    "TURBO_API": true
+  },
+  "turbo_remote_cache_env_scope": "generator process; repeated per binding, not per-checkout configuration",
+  "turbo_remote_cache_signature_configured": false,
+  "turbo_configuration_status": "present",
+  "turbo_configuration_sha256": "32a4cf3d89cc2553c80ba68727fb2262e77a6d371ce93a7271b077a76bb42590",
+  "turbo_configuration_source": {
+    "file": "<fleet>/beep-effect13/turbo.json",
+    "line": 1
+  },
+  "turbo_configuration_observed_at": "2026-09-09T02:27:16.242Z",
+  "turbo_local_cache_complete_within": "one immediate directory listing during the binding probe",
+  "proof_cache_caveat": "necessary, not sufficient for CQ-015 evidence transfer: task-hash granularity still required"
+}

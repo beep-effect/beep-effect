@@ -1,0 +1,70 @@
+{
+  "identity_key": "<fleet>/beep-effect7-write-wall",
+  "scannedAt": "2026-09-09T02:27:10.125Z",
+  "snapshot_path": "<fleet>/beep-effect7-write-wall",
+  "within_fleet_root": true,
+  "origin_url": "git@github.com:beep-effect/beep-effect.git",
+  "kind": "linked-worktree",
+  "branch": "feat/mcp-write-wall",
+  "branch_sha12": "ce2d2956fd85",
+  "head": "abcb60fc2b6423ddba1cfcbcd6fd9edac1f93149",
+  "git_dir": "<fleet>/beep-effect7/.git/worktrees/beep-effect7-write-wall",
+  "git_common_dir": "<fleet>/beep-effect7/.git",
+  "git_common_dir_role": "checkout-binding fact; not a proof cache",
+  "runs_dir_listing": [],
+  "runs_directory_status": "absent",
+  "binding_probe_at": "2026-09-09T02:27:17.053Z",
+  "git_probes": {
+    "origin": {
+      "command": "git remote get-url origin",
+      "status": "present",
+      "exit_code": 0
+    },
+    "git_dir": {
+      "command": "git rev-parse --absolute-git-dir",
+      "status": "present",
+      "exit_code": 0
+    },
+    "git_common_dir": {
+      "command": "git rev-parse --path-format=absolute --git-common-dir",
+      "status": "present",
+      "exit_code": 0
+    },
+    "head": {
+      "command": "git rev-parse HEAD",
+      "status": "present",
+      "exit_code": 0
+    },
+    "branch": {
+      "command": "git branch --show-current",
+      "status": "present",
+      "exit_code": 0
+    }
+  },
+  "binding_probe_status": "present",
+  "binding_probe_matches_snapshot": true,
+  "probe_head": "abcb60fc2b6423ddba1cfcbcd6fd9edac1f93149",
+  "probe_branch": "feat/mcp-write-wall",
+  "binding_temporality": "snapshot branch/head at scannedAt; supplementary git/cache probes during capture interval",
+  "turbo_local_cache_path": "<fleet>/beep-effect7-write-wall/.turbo/cache",
+  "turbo_local_cache_present": false,
+  "turbo_local_cache_entries": 0,
+  "turbo_local_cache_entries_basis": "immediate directory entries; not deduplicated task hashes",
+  "turbo_remote_cache_configured": false,
+  "turbo_remote_cache_env_present": {
+    "TURBO_TOKEN": true,
+    "TURBO_TEAM": true,
+    "TURBO_API": true
+  },
+  "turbo_remote_cache_env_scope": "generator process; repeated per binding, not per-checkout configuration",
+  "turbo_remote_cache_signature_configured": false,
+  "turbo_configuration_status": "present",
+  "turbo_configuration_sha256": "99541ddffe680ead872b5b8773e1ee2e934a5a67465ea41fede42539403a5dae",
+  "turbo_configuration_source": {
+    "file": "<fleet>/beep-effect7-write-wall/turbo.json",
+    "line": 1
+  },
+  "turbo_configuration_observed_at": "2026-09-09T02:27:17.053Z",
+  "turbo_local_cache_complete_within": "one immediate directory listing during the binding probe",
+  "proof_cache_caveat": "necessary, not sufficient for CQ-015 evidence transfer: task-hash granularity still required"
+}

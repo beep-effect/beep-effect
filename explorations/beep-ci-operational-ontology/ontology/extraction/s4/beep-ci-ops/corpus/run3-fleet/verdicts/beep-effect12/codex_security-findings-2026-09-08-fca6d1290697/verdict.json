@@ -1,0 +1,118 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "codex/security-findings-2026-09-08",
+  "committed": false,
+  "createdAt": "2026-09-09T02:24:03.950Z",
+  "failurePolicy": "fail-fast",
+  "head": "87749f9b7d76c9b64fcfc06b800c7edc01a4e632",
+  "lanes": [
+    {
+      "id": "advisory:01-fallow-feedback",
+      "label": "fallow-advisory-feedback",
+      "phase": "feedback",
+      "status": "passed",
+      "durationMs": 2201.678272,
+      "peakRssKb": 487140,
+      "exitCode": 0,
+      "tier": "full",
+      "inputDigest": null
+    },
+    {
+      "id": "commit:01-git-commit",
+      "label": "commit:git:commit",
+      "phase": "commit",
+      "status": "not-run",
+      "tier": "full",
+      "inputDigest": null
+    },
+    {
+      "id": "publish:00-head-install-preflight",
+      "label": "publish:head-install-preflight",
+      "phase": "early-publish",
+      "status": "not-run",
+      "tier": "full",
+      "inputDigest": null
+    },
+    {
+      "id": "publish:01-git-push",
+      "label": "early-publish:git:push",
+      "phase": "early-publish",
+      "status": "not-run",
+      "tier": "full",
+      "inputDigest": null
+    },
+    {
+      "id": "publish:02-pr-create",
+      "label": "publish:pr-create",
+      "phase": "early-publish",
+      "status": "not-run",
+      "tier": "full",
+      "inputDigest": null
+    },
+    {
+      "id": "publish:03-pr-provenance-stamp",
+      "label": "publish:pr-provenance-stamp",
+      "phase": "early-publish",
+      "status": "not-run",
+      "tier": "full",
+      "inputDigest": null
+    },
+    {
+      "id": "full:00-cheap-gates",
+      "label": "full:cheap-gates",
+      "phase": "full",
+      "status": "not-run",
+      "tier": "full",
+      "inputDigest": null
+    },
+    {
+      "id": "full:01-pre-push",
+      "label": "full:pre-push",
+      "phase": "full",
+      "status": "not-run",
+      "tier": "full",
+      "inputDigest": null
+    },
+    {
+      "id": "full:02-ci-parity",
+      "label": "full:ci-parity",
+      "phase": "full",
+      "status": "not-run",
+      "tier": "full",
+      "inputDigest": null
+    },
+    {
+      "id": "monitor:01-pr-context",
+      "label": "monitor:pr-context",
+      "phase": "monitor",
+      "status": "not-run",
+      "tier": "full",
+      "inputDigest": null
+    },
+    {
+      "id": "monitor:02-pr-checks-watch",
+      "label": "monitor:pr-checks:watch",
+      "phase": "monitor",
+      "status": "not-run",
+      "tier": "full",
+      "inputDigest": null
+    }
+  ],
+  "message": "yeet publish refuses a stale base: files changed on this branch were also changed on origin/main since the merge-base, so the PR would conflict or silently regress them.\n3 path(s) across 2 top-level entries: .claude, packages\n  - .claude/settings.json\n  - packages/tooling/library/ai-sync/src/validation.ts\n  - packages/tooling/library/ai-sync/test/ai-sync.test.ts\nRemedy: git fetch origin && git merge origin/main, resolve conflicts, re-run bun run beep yeet verify, then publish again. Pass --allow-stale-base to proceed anyway.",
+  "mode": "publish",
+  "outcome": "failure",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "codex_security-findings-2026-09-08-fca6d1290697",
+  "attemptId": "51680a1b-93fc-4709-86aa-4012d20ba47f",
+  "resolvedHeadSha": "87749f9b7d76c9b64fcfc06b800c7edc01a4e632",
+  "diffFingerprint": "818936825e0dae0fd5c581f064bd62ef13bbd859dea99accc50699b941096bb8",
+  "proofTier": "full",
+  "startedAt": "2026-09-09T02:24:01.461Z",
+  "endedAt": "2026-09-09T02:24:03.950Z",
+  "elapsedMs": 2491,
+  "indexPath": "<fleet>/beep-effect12/.beep/yeet/quality-issue-index.json",
+  "failedStepId": "commit:01-git-commit",
+  "failureKind": "handler-error"
+}

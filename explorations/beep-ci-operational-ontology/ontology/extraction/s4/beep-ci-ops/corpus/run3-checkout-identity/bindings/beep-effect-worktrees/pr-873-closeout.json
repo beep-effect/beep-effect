@@ -1,0 +1,72 @@
+{
+  "identity_key": "<fleet>/beep-effect-worktrees/pr-873-closeout",
+  "scannedAt": "2026-09-09T02:27:10.125Z",
+  "snapshot_path": "<fleet>/beep-effect-worktrees/pr-873-closeout",
+  "within_fleet_root": true,
+  "origin_url": "git@github.com:beep-effect/beep-effect.git",
+  "kind": "linked-worktree",
+  "branch": "closeout/pr-873",
+  "branch_sha12": "88b6b093abb0",
+  "head": "d20dc26eb7d6b995a4ef5cbd82341288374a84cd",
+  "git_dir": "<fleet>/beep-effect13/.git/worktrees/beep-effect-pr873-closeout",
+  "git_common_dir": "<fleet>/beep-effect13/.git",
+  "git_common_dir_role": "checkout-binding fact; not a proof cache",
+  "runs_dir_listing": [
+    "closeout_pr-873-88b6b093abb0"
+  ],
+  "runs_directory_status": "present",
+  "binding_probe_at": "2026-09-09T02:27:16.053Z",
+  "git_probes": {
+    "origin": {
+      "command": "git remote get-url origin",
+      "status": "present",
+      "exit_code": 0
+    },
+    "git_dir": {
+      "command": "git rev-parse --absolute-git-dir",
+      "status": "present",
+      "exit_code": 0
+    },
+    "git_common_dir": {
+      "command": "git rev-parse --path-format=absolute --git-common-dir",
+      "status": "present",
+      "exit_code": 0
+    },
+    "head": {
+      "command": "git rev-parse HEAD",
+      "status": "present",
+      "exit_code": 0
+    },
+    "branch": {
+      "command": "git branch --show-current",
+      "status": "present",
+      "exit_code": 0
+    }
+  },
+  "binding_probe_status": "present",
+  "binding_probe_matches_snapshot": true,
+  "probe_head": "d20dc26eb7d6b995a4ef5cbd82341288374a84cd",
+  "probe_branch": "closeout/pr-873",
+  "binding_temporality": "snapshot branch/head at scannedAt; supplementary git/cache probes during capture interval",
+  "turbo_local_cache_path": "<fleet>/beep-effect-worktrees/pr-873-closeout/.turbo/cache",
+  "turbo_local_cache_present": false,
+  "turbo_local_cache_entries": 0,
+  "turbo_local_cache_entries_basis": "immediate directory entries; not deduplicated task hashes",
+  "turbo_remote_cache_configured": false,
+  "turbo_remote_cache_env_present": {
+    "TURBO_TOKEN": true,
+    "TURBO_TEAM": true,
+    "TURBO_API": true
+  },
+  "turbo_remote_cache_env_scope": "generator process; repeated per binding, not per-checkout configuration",
+  "turbo_remote_cache_signature_configured": false,
+  "turbo_configuration_status": "present",
+  "turbo_configuration_sha256": "32c72b617f47224776c7fc7d8b9877b8ce6090e94dad91b49728fb2f6cc4f84f",
+  "turbo_configuration_source": {
+    "file": "<fleet>/beep-effect-worktrees/pr-873-closeout/turbo.json",
+    "line": 1
+  },
+  "turbo_configuration_observed_at": "2026-09-09T02:27:16.053Z",
+  "turbo_local_cache_complete_within": "one immediate directory listing during the binding probe",
+  "proof_cache_caveat": "necessary, not sufficient for CQ-015 evidence transfer: task-hash granularity still required"
+}

@@ -1,0 +1,124 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "ttc/c3-package-tasks-grill",
+  "committed": false,
+  "createdAt": "2026-09-09T01:27:59.254Z",
+  "failurePolicy": "fail-fast",
+  "head": "d073b1556424a07d004c9bdc1eebd27509320dfe",
+  "lanes": [
+    {
+      "id": "advisory:01-fallow-feedback",
+      "label": "fallow-advisory-feedback",
+      "phase": "feedback",
+      "status": "passed",
+      "durationMs": 1693.450111,
+      "peakRssKb": 502292,
+      "exitCode": 0,
+      "tier": "full",
+      "inputDigest": null
+    },
+    {
+      "id": "publish:00-head-install-preflight",
+      "label": "publish:head-install-preflight",
+      "phase": "publish",
+      "status": "passed",
+      "durationMs": 10854.27083,
+      "exitCode": 0,
+      "tier": "full",
+      "inputDigest": null
+    },
+    {
+      "id": "publish:01-git-push",
+      "label": "publish:git:push",
+      "phase": "publish",
+      "status": "passed",
+      "durationMs": 2034.73188,
+      "peakRssKb": 52368,
+      "exitCode": 0,
+      "tier": "full",
+      "inputDigest": null
+    },
+    {
+      "id": "publish:02-pr-create",
+      "label": "publish:pr-create",
+      "phase": "publish",
+      "status": "passed",
+      "exitCode": 0,
+      "tier": "full",
+      "inputDigest": null
+    },
+    {
+      "id": "publish:03-pr-provenance-stamp",
+      "label": "publish:pr-provenance-stamp",
+      "phase": "publish",
+      "status": "passed",
+      "exitCode": 0,
+      "tier": "full",
+      "inputDigest": null
+    },
+    {
+      "id": "monitor:01-pr-context",
+      "label": "monitor:pr-context",
+      "phase": "monitor",
+      "status": "passed",
+      "durationMs": 449.490044,
+      "peakRssKb": 56688,
+      "exitCode": 0,
+      "tier": "full",
+      "inputDigest": null
+    },
+    {
+      "id": "monitor:02-pr-checks-watch",
+      "label": "monitor:pr-checks:watch",
+      "phase": "monitor",
+      "status": "passed",
+      "durationMs": 940699.821806,
+      "peakRssKb": 59172,
+      "exitCode": 0,
+      "tier": "full",
+      "inputDigest": null
+    },
+    {
+      "id": "commit:01-git-commit",
+      "label": "commit:git:commit",
+      "phase": "commit",
+      "status": "not-run",
+      "tier": "full",
+      "inputDigest": null
+    }
+  ],
+  "message": "yeet publish succeeded.",
+  "mode": "publish",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": true,
+  "runId": "ttc_c3-package-tasks-grill-259d9ebe8ea8",
+  "attemptId": "7ec7bc4c-f8fd-47b7-afa5-c790b7216185",
+  "resolvedHeadSha": "d073b1556424a07d004c9bdc1eebd27509320dfe",
+  "diffFingerprint": "96a296d224f285c67bee93c30f8a309157f0daa35dc5b87e410b78630a09cfc7",
+  "proofTier": "full",
+  "startedAt": "2026-09-09T01:11:53.149Z",
+  "endedAt": "2026-09-09T01:27:59.254Z",
+  "elapsedMs": 966106,
+  "indexPath": "<fleet>/beep-effect-worktrees/ttc-c3-grill/.beep/yeet/quality-issue-index.json",
+  "baseFreshness": {
+    "behindCount": 0,
+    "mergeBase": "52fcc8d1353db9481ef9edb6cc9619500f95568d",
+    "overlappingPaths": []
+  },
+  "mergeReady": {
+    "ready": false,
+    "failing": "closeout-run",
+    "criteria": {
+      "prOpen": true,
+      "notDraft": true,
+      "closeoutRun": false,
+      "requiredChecksGreen": true,
+      "threadsResolved": true,
+      "mergeable": true,
+      "mergeStateAcceptable": true,
+      "reviewDecisionAcceptable": true
+    }
+  }
+}
