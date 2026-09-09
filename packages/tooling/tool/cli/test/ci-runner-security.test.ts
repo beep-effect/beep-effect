@@ -3,7 +3,7 @@ import { provideScopedLayer } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, FileSystem, Order, Path, pipe } from "effect";
+import { Config, Effect, FileSystem, Order, Path, pipe } from "effect";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -258,6 +258,140 @@ const assertTurboJobSetup = (jobs: WorkflowJobs, jobId: string, appSecrets: bool
 };
 
 describe("CI runner security", () => {
+  it.effect(
+    "preserves the requested PR lane when an older checkout has no resource helper",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const ambientPath = yield* Config.string("PATH");
+      const repoRoot = yield* findRepoRoot();
+      const tempRoot = yield* fs.makeTempDirectoryScoped();
+      const workflow = parsedDocument(yield* fs.readFileString(path.join(repoRoot, ".github/workflows/heavy.yml")));
+      const run = pipe(
+        stepRun(jobSteps(workflowJobs(workflow), "verify"), "Run verification lane"),
+        Str.replaceAll("${{ matrix.id }}", "check"),
+        Str.replaceAll("${{ steps.lane-gate.outputs.doctest_mode }}", "full")
+      );
+      const fakeBun = path.join(tempRoot, "bun");
+      yield* fs.writeFileString(fakeBun, '#!/usr/bin/env bash\nprintf "<%s>\\n" "$@"\nexit 7\n');
+      yield* fs.chmod(fakeBun, 0o755);
+      const result = Bun.spawnSync(["bash", "-c", run], {
+        cwd: tempRoot,
+        env: {
+          ...process.env,
+          PATH: `${tempRoot}:${ambientPath}`,
+          GITHUB_EVENT_NAME: "pull_request",
+          GITHUB_BASE_REF: "main",
+        },
+        stderr: "pipe",
+        stdout: "pipe",
+      });
+      assert.strictEqual(result.exitCode, 7);
+      assert.include(result.stdout.toString(), "Runner resource helper unavailable");
+      assert.include(
+        result.stdout.toString(),
+        "<run>\n<beep>\n<ci>\n<lane>\n<check>\n<--affected>\n<--base>\n<origin/main>\n<--summarize>\n"
+      );
+    }, provideScopedLayer(NodeServices.layer))
+  );
+
+  it.effect(
+    "preserves lane failure while emitting resource evidence without command arguments",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const repoRoot = yield* findRepoRoot();
+      const tempRoot = yield* fs.makeTempDirectoryScoped();
+      const summaryPath = path.join(tempRoot, "summary.md");
+      const result = Bun.spawnSync(
+        [
+          "bash",
+          path.join(repoRoot, "scripts/ci-runner-resources.sh"),
+          "check",
+          "bash",
+          "-c",
+          "exit 7",
+          "private-argument",
+        ],
+        {
+          env: { ...process.env, RUNNER_TEMP: tempRoot, GITHUB_STEP_SUMMARY: summaryPath },
+          stderr: "pipe",
+          stdout: "pipe",
+        }
+      );
+      assert.strictEqual(result.exitCode, 7);
+      const summary = yield* fs.readFileString(summaryPath);
+      assert.include(summary, "| Lane exit status | 7 |");
+      assert.include(summary, "Sampled used-memory peak GiB");
+      assert.notInclude(summary, "private-argument");
+      assert.notInclude(result.stdout.toString(), "private-argument");
+    }, provideScopedLayer(NodeServices.layer))
+  );
+
+  it.effect(
+    "executes the lane when resource output storage is unavailable",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const repoRoot = yield* findRepoRoot();
+      const tempRoot = yield* fs.makeTempDirectoryScoped();
+      const blockedPath = path.join(tempRoot, "not-a-directory");
+      yield* fs.writeFileString(blockedPath, "occupied");
+      const result = Bun.spawnSync(
+        ["bash", path.join(repoRoot, "scripts/ci-runner-resources.sh"), "check", "bash", "-c", "exit 9"],
+        { env: { ...process.env, RUNNER_TEMP: blockedPath }, stderr: "pipe", stdout: "pipe" }
+      );
+      assert.strictEqual(result.exitCode, 9);
+      assert.include(result.stderr.toString(), "resource measurement unavailable");
+    }, provideScopedLayer(NodeServices.layer))
+  );
+
+  it.effect(
+    "discards resource evidence when sample or summary files become unwritable",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const repoRoot = yield* findRepoRoot();
+      for (const filename of ["check.tsv", "check.md"]) {
+        const tempRoot = yield* fs.makeTempDirectoryScoped();
+        const result = Bun.spawnSync(
+          [
+            "bash",
+            path.join(repoRoot, "scripts/ci-runner-resources.sh"),
+            "check",
+            "bash",
+            "-c",
+            'target="$RUNNER_TEMP/beep-runner-resources/$1"; rm "$target"; mkdir "$target"; exit 7',
+            "fixture",
+            filename,
+          ],
+          { env: { ...process.env, RUNNER_TEMP: tempRoot }, stderr: "pipe", stdout: "pipe" }
+        );
+        assert.strictEqual(result.exitCode, 7);
+        assert.include(result.stderr.toString(), "resource measurement unavailable");
+        assert.notInclude(result.stdout.toString(), "### Runner resources:");
+      }
+    }, provideScopedLayer(NodeServices.layer))
+  );
+
+  it.effect(
+    "executes the lane when its sample file cannot be created",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const repoRoot = yield* findRepoRoot();
+      const tempRoot = yield* fs.makeTempDirectoryScoped();
+      yield* fs.makeDirectory(path.join(tempRoot, "beep-runner-resources", "check.tsv"), { recursive: true });
+      const result = Bun.spawnSync(
+        ["bash", path.join(repoRoot, "scripts/ci-runner-resources.sh"), "check", "bash", "-c", "exit 9"],
+        { env: { ...process.env, RUNNER_TEMP: tempRoot }, stderr: "pipe", stdout: "pipe" }
+      );
+      assert.strictEqual(result.exitCode, 9);
+      assert.include(result.stderr.toString(), "resource measurement unavailable");
+      assert.notInclude(result.stdout.toString(), "### Runner resources:");
+    }, provideScopedLayer(NodeServices.layer))
+  );
+
   it.effect(
     "classifies goals-only pull requests without suppressing mixed or push runs",
     Effect.fnUntraced(function* () {

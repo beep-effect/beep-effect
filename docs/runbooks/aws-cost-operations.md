@@ -541,3 +541,133 @@ Refresh the tracked receipt through the existing bake path with
 saved Pulumi plan with the operator present. Then run the live
 `bun run beep runners bake --check --region us-east-1` in addition to the
 AWS-free manifest check. A matching intended manifest never proves deployment.
+
+
+## September 9 runner efficiency follow-up
+
+The Build-routing repair is verified on PR #1066. Its
+[Heavy / Build job](https://github.com/beep-effect/beep-effect/actions/runs/34392200611/job/102603399324)
+ran on an EC2 worker and passed after PR #1064 moved the lane into the approved
+reusable workflow. Its verification step ran for 25 seconds, after 19 seconds
+of setup. Old workflow runs retain their original job definitions; the queued
+Build on PR #1062 is not evidence that the repaired route still fails.
+
+A read-only sample of the latest 50 Check workflow runs captured 303 completed
+EC2 jobs from runs created between 15:00:52 and 19:38:31 UTC. There were 231
+successful, 36 failed and 36 cancelled job attempts. This is a same-day
+operational sample, not a representative month or a matched performance trial.
+Across those attempts, Coverage used 942.8 job-minutes and Lint Policy used
+430.6, compared with 266.2 for Check. Those lanes are the first sizing targets.
+
+Successful setup steps in the pre-activation window had a 76-second median
+across 147 observations. The post-activation window had a 21-second median
+across 115 observations. Source changes, selected tasks and cache state differ,
+so these medians describe the sample without attributing the entire difference
+to the image. Sixty-two jobs could be joined to the retained EC2 inventory;
+all used the new image on `r6i.2xlarge`.
+
+Do not convert job wall time into an AWS invoice. Checkout/setup, boot and queue
+residence, shutdown lag, failed attempts, EBS and public IPv4 also matter.
+Workers usually terminate themselves through guest shutdown, which does not
+produce a `TerminateInstances` CloudTrail API event. Only five sampled jobs
+had a complete launch/API-termination pair; their observed post-job lag was
+1–5 seconds. Missing termination timestamps stay unknown rather than becoming
+zero idle time. Compare cost per successful completion only when the measured
+lifetime coverage and workload equivalence are stated.
+
+### Skipped-lane routing decision
+
+Seventeen completed jobs skipped verification, using 506 seconds of job time,
+plus their unmeasured boot/assignment time. Avoiding those launches remains a
+valid savings opportunity, but adding a planner as a prerequisite is held.
+Reusing the existing PR Size Label job does not eliminate the queue penalty:
+it completed 7–361 seconds after run creation in the no-op sample, and up to
+359 seconds after an EC2 job had already started. An existing job still adds
+latency when it becomes a new dependency.
+
+Keep direct heavy-lane admission until a canary preserves required contexts,
+trusted main workflow definitions, conservative diff handling and useful-lane
+completion times. Do not infer eligibility from mutable PR labels or truncate
+a changed-files API response to make routing appear faster.
+
+### Resource evidence and sizing acceptance
+
+`scripts/ci-runner-resources.sh` wraps each executed heavy lane and appends its
+resource summary to the existing job log and GitHub step summary. It samples
+host memory every five seconds, records elapsed time, CPU busy percentage and
+swap-page deltas, and preserves the lane exit status. It neither enables paid
+CloudWatch metrics nor records command arguments, environment variables or
+process command lines. Its host-wide peak can miss short bursts; it is not an
+exact child-process peak or sufficient evidence to downsize on its own.
+Older PR checkouts may not contain the helper even though they call the updated
+reusable workflow from `main`. In that case the workflow emits a notice and
+runs the same requested lane directly, preserving its arguments and exit status.
+
+Compare the same pinned source and lane shape on isolated workers with the
+same image, storage, CPU count and cache posture. Keep production On-Demand,
+its cap and memory choices until successful canaries establish a safe smaller
+configuration. The initial comparison is `r6i.2xlarge` versus `m6i.2xlarge`:
+both have eight vCPUs, with 64 versus 32 GiB memory. September 9 AWS Price List
+quotes in us-east-1 are $0.504 and $0.384 per hour respectively. The 23.8%
+hourly reduction is a candidate saving, not a measured monthly saving.
+
+The isolated comparison uses source `e8b92a61c3`, the activated lean image,
+eight vCPUs, 100 GiB gp3 volumes and local-only Turbo caching. Check starts
+without a local task cache; subsequent lanes share the preceding lanes' local
+outputs. This is a matched sequential suite, not the fresh-worker cache state
+of every hosted job. Compare corresponding lanes, and report cache hits with
+their results. The additional `r6a.2xlarge` candidate retains 64 GiB and has a
+$0.4536 hourly quote, 10% below the baseline's rate.
+
+The first full Check comparison passed 246 of 246 tasks with no cache hits on
+both `r6i.2xlarge` and `m6i.2xlarge`, taking 528.85 and 534.58 seconds. Full Lint
+Policy also passed on both, taking 517.36 and 528.63 seconds. Its sampled host
+memory peaked at 28.44 and 27.22 GiB respectively, leaving only 3.59 GiB
+available on the smaller worker. That result does not justify moving the
+entire pool to 32 GiB under the reliability-first decision.
+
+Full Docgen also passed on both, taking 810.69 and 837.98 seconds with the
+configured concurrency of six. Its sampled peak was 27.06 GiB on the baseline
+and 29.93 GiB on the smaller worker, leaving only 0.89 GiB available there.
+This further rules out adopting 32 GiB for the entire pool on these results.
+
+The 64 GiB `r6a.2xlarge` trial passed Check in 542.97 seconds, Lint Policy in
+535.69 seconds and Build in 53.87 seconds. The corresponding baseline times
+were 528.85, 517.36 and 53.42 seconds. Its hourly rate is lower, but Check and
+Lint Policy were 2.7% and 3.5% slower in this single trial. These observations
+do not establish a performance-neutral replacement. Keep the existing
+64 GiB On-Demand production choices and cap; collect repeated representative
+results before proposing a family change or a separate pool for smaller lanes.
+
+The initial full Coverage trials on the baseline and 32 GiB candidate finished
+in 25m35s and 25m55s with a failing SQL-helper coverage floor. The isolated user
+lacked Docker socket access, so container tests were skipped. Those are failed
+diagnostic runs, not successful cost-per-completion benchmarks. Repair the
+test user's Docker access, start a fresh user process and rerun the affected
+package without cache reuse; preserve the original failures and coverage floors.
+The experiment's final validation and temporary-resource cleanup receipts are
+recorded with [PR #1071](https://github.com/beep-effect/beep-effect/pull/1071).
+
+The [code-focused memory burndown opportunity](../../goals/ci-fleet-residue/research/OPPORTUNITIES.md#2026-09-09--burn-down-ci-check-memory-in-code-before-reducing-runner-ram)
+starts with profiling Lint Policy and Docgen implementations. It requires unchanged
+checks, diagnostics and completion-time acceptance, with repeated before/after
+measurements. Reducing concurrency or adding swap alone does not complete it.
+
+### Billing and recommendation readiness
+
+A fresh read confirms the $500 budget and all six activated allocation tags.
+The budget reports $144.666 month-to-date and a $337.113 monthly forecast.
+These are provisional AWS values from September 9; they do not establish the
+post-rollout steady-state cost. The queried forecast returned the September
+1–October 1 monthly period, so do not add month-to-date spend to that figure.
+Cost Explorer currently includes only partial September 9 usage. AWS documents
+that [Cost Explorer refreshes at least daily and some data arrives later](https://docs.aws.amazon.com/cost-management/latest/userguide/ce-what-is.html).
+
+Compute Optimizer and Cost Optimization Hub are Active, with empty EC2 and
+consolidated recommendation lists at this read. There are no CWAgent metrics.
+[Compute Optimizer requires at least 30 hours of EC2 metrics in 14 days](https://docs.aws.amazon.com/compute-optimizer/latest/ug/requirements.html),
+which an individual ephemeral job worker never accumulates. Use the lane
+measurements for runner sizing; account recommendations still help with
+eligible persistent resources. [Hub recommendation import can take 24 hours](https://docs.aws.amazon.com/cost-management/latest/userguide/coh-getting-started.html).
+An empty list is not an optimality certificate. Paid extended history and
+purchase commitments remain disabled.
