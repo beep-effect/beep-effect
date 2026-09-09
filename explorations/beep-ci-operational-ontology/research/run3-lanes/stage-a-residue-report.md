@@ -194,7 +194,7 @@ ordinary/corrupt/restored verification and independent residue scans.
    The existing Stage B allowlist-drift receipt was not duplicated.
 4. The sibling-worktree fleet-root fix preserves the intended fleet scope. The
    ordinary verifier still makes no Git probes, live-source reads, or salt calls.
-5. Post-commit proof will use a detached checkout under this lane's ignored
+5. Post-commit proof used a detached checkout under this lane's ignored
    `.beep/stage-a-residue/`, with the trusted lane's Python interpreter. No full
    checkout goes under `/tmp`; no mise trust state changes.
 
@@ -203,3 +203,35 @@ brief's requested commit message. A documentation follow-up records the actual
 implementation SHA, detached committed-head verification, tracked payload/path
 counts, and post-commit `bun run beep knowledge refs --check` result. Fable owns
 review and publication. This lane never pushes or opens a PR.
+
+## Committed-head verification
+
+Implementation commit: `7fd350b4796222ae1bd7d4d6699238cb6fc384ff`.
+
+```text
+fix(explorations): refresh the Stage A fleet pin under the amended generator
+```
+
+Explicit-path staging committed 142 files. The index contained every manifest
+payload and exactly one manifest. Biome, gitleaks, typos, and commitlint hooks
+passed; Biome made no changes. The commit body records Ruling 22 and both full
+generator digests, with every body line shorter than 100 characters.
+
+A detached worktree at that exact commit under this lane's ignored `.beep/`
+verified the generator with the trusted lane's Python interpreter. Ordinary
+verification exited **0**, without a refresh flag, live capture, or mise trust
+change. The detached checkout was clean and was removed after the check.
+
+| Tracked payloads | Manifest payloads | All tracked files | Missing | Extra |
+| ---: | ---: | ---: | ---: | ---: |
+| 1914 | 1914 | 1915 | 0 | 0 |
+
+The detached path set and whole-tree SHA-256 exactly match the final capture
+above. `bun run beep knowledge refs --check` passed at the implementation commit
+with **zero live gated observations**.
+
+This documentation follow-up records the completed committed-head proof.
+Final HEAD receives the same detached verification and post-commit knowledge
+reference check before handoff. It changes no generator or pin bytes. The final
+handoff identifies this documentation commit separately. No push or PR creation
+occurred.
