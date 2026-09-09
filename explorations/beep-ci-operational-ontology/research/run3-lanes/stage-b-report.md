@@ -1,6 +1,7 @@
 # Run-3 Stage B implementation report
 
-Date: 2026-09-08 (America/Chicago; capture instants below are UTC).
+Capture date: 2026-09-08. Handoff date: 2026-09-09 (America/Chicago).
+Capture instants below are UTC.
 
 The standalone `etl_run3b_fleet_corpus.py` implements the organic loss-population
 capture and the READY-gated synthetic import. The roots pin and verify independently.
@@ -261,8 +262,65 @@ or `extraction/s5/`, `s6/`, `s7/`. `DECISIONS.md` and `ATLAS.md` are unchanged.
 
 ## Detached-worktree and committed-file proof
 
-Pending the implementation commit. This section will record verification from
-the detached committed tree and exact tracked path-set comparisons before handoff.
+The detached worktree was created from implementation commit
+`d5970819fe4f125cc3a2764a49119c53e9e87f53` with:
+
+```sh
+git worktree add --quiet --detach .beep/stage-b-verify-worktrees/d5970819fe4f HEAD
+```
+
+The trusted lane's offline PyYAML process stayed alive while `sys.executable`
+ran the committed generator with the detached worktree as its working directory.
+No command relied on the fresh worktree's untrusted `mise.toml`, and no trust
+setting changed. The generator ran in ordinary verify mode, without an export
+path or refresh flag. Exit code: **0**.
+
+```json
+{
+  "fleet": {
+    "bytes_emitted": 15598637,
+    "events": 7186,
+    "files_emitted": 719,
+    "payload_bytes": 14345706,
+    "payload_files": 718,
+    "status": "verified"
+  },
+  "synthetic": {
+    "bytes_emitted": 40762,
+    "events": 10,
+    "files_emitted": 9,
+    "payload_bytes": 6575,
+    "payload_files": 8,
+    "status": "verified"
+  },
+  "verification": "PASS"
+}
+```
+
+| Pin | Tracked payloads | Manifest payloads | All tracked files | Missing | Extra |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| run3b-fleet | 718 | 718 | 719 | 0 | 0 |
+| run3b-synthetic | 8 | 8 | 9 | 0 | 0 |
+
+The exact path sets match, not only their counts. Every committed pin byte
+matches the final lane capture, including both manifests; the whole-tree hashes
+match those recorded above. The detached worktree was clean and was removed
+with `git worktree remove` after verification. No capture ran there.
+
+HEAD-based knowledge and Markdown proof at the implementation commit:
+
+- `bun run beep knowledge refs --check`: exit 0; zero live gated observations.
+- `bun run beep knowledge semantic-delta`: exit 0; zero introduced findings,
+  zero resolved findings, 491 unchanged inherited findings.
+- `bun run beep laws effect-imports --mode markdown --check`: exit 0, dry-run;
+  921 files and 310 fences scanned. Its 13 suggested files and two parser warnings
+  are inherited and outside the changed paths. No suggested rewrites were applied.
+- Commit hooks: Biome, gitleaks, typos, and commitlint passed. Biome applied no
+  changes to the pinned bytes.
+
+The report-only follow-up changes no generator or corpus bytes. Ordinary
+verification and the HEAD-based knowledge gates are rerun at final HEAD before
+the lane hands off.
 
 ## Deviations and remaining questions
 
@@ -287,7 +345,14 @@ Run 3 proper remains with the steward after PR-1 and PR-2 publication.
 ## Commits and handoff
 
 Source/citation commit: `ff1cf545ef2c4a43806dc50323259f300218e573`.
-Implementation commit and HEAD-based lint proof will be recorded before handoff.
+Implementation commit: `d5970819fe4f125cc3a2764a49119c53e9e87f53`.
+
+```text
+feat(explorations): pin the run-3 Stage B corpora (loss population + synthetic scenario)
+```
+
+This report's committed-tree evidence is finalized in a documentation follow-up.
+The final handoff identifies that report commit separately.
 Paths are staged explicitly; `.claude/settings.json` and the parallel
 `synthetic-fixture-report.md` remain outside this lane's commits.
 No push, PR creation, or merge is performed. Fable owns publication.
