@@ -246,3 +246,28 @@ exploration first (doctrine and rankings are already ratified); a single Codex s
 stay `cache: false`; the schema module lives under the repo CLI's internal modules; the per-shard
 eslint cache is dropped when the package task lands (one caching engine) and may return with a
 receipt; aggregate steps that read per-package results stay CLI steps after the Turbo run.
+
+## 2026-09-09 — C3 design gate ratified, round 7 (steward: Benjamin, by merge of #1018)
+
+Inputs: `research/c3-lane-task-table.md` revision 4 (one adversarial Codex review, two Greptile
+P1s and thirteen Codex/Greptile PR threads folded, Greptile 5/5), `research/c3-turbo-facts.md`
+with the live-probe amendment, `research/c3-sublane-inputs.md`.
+
+**Ruling 26 — the design gate stands as merged.** Decisions D1–D16 of the table are ratified as
+written under the table's own rule (veto by editing the entry; silence ratifies). The recorded
+defaults of its open questions apply until edited here: Q1 `coverage` stays package-owned; Q2
+`doctest` is stamped only on the workspaces that own `import.meta.vitest` sources; Q3 git, tree,
+ref, time and network lanes are non-reusable; Q4 policy runs in ordered invocations with local
+fail-fast after the cheap gates; Q6 effect-imports code mode stays a root task until it has
+promoted families; Q7 the policy-tool fingerprint covers the repo CLI's computed workspace
+dependency closure.
+
+**Ruling 27 — ruling 19's mechanism is amended (Q5).** With `affectedUsingTaskInputs` on, root
+tasks join the local `--affected` plan through their own declared inputs (probes P3–P7). "Root
+tasks always run unfiltered" now applies to the hosted full-scope run and to the non-reusable
+group of D2, which needs its own unfiltered invocation; it is no longer a general mechanism.
+Rejected: keeping two invocations for every root task (an unverified premise, now contradicted
+by evidence).
+
+**Execution:** PR 1 (C3.1) runs on a Codex lane at medium effort from
+`research/c3-1-brief.md`; the orchestrator publishes and answers review; Benjamin merges.

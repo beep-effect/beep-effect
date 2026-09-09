@@ -16,10 +16,19 @@ Status: `in-progress`
 
 The implementation and review corrections merged in PRs #1019 and #1022.
 `research/closeout-evidence.md` records the full passing local proof and hosted
-checks on the same implementation tree. Both PRs were manually merged before
-the packet closed. PR #1028 now contains the package-proof runner repair and
-reflection; the lifecycle update will land in that same PR after the fresh
-package matrix and terminal publication/monitor result are available.
+checks on the same implementation tree. PR #1028 shipped the package-proof
+runner repair and reflection, but also merged before local verification and
+packet closeout finished. The clean v2 matrix passed all 106 owners, and two
+supplemental package verifications cover the remaining audited owners. The
+full local proof passed all 34 reported lanes. All nine review threads across
+the three PRs are resolved, and the receipts are pushed in `abd5416aa2`.
+The operator approved final closeout PR #1038 on 2026-09-09 after #1028 merged
+before closeout. Publication of evidence commit `59bba09125` passed all 67
+reported lanes, including all 23 local CI-parity stages. The final packet
+update belongs in #1038, which must remain open through the terminal monitor
+gate on its final head. No verification requirement is waived.
+P2 remains in progress while the canonical repository and hosted acceptance
+item is open, even though the implementation's local and package proofs passed.
 
 ## P0 — Research
 
@@ -66,4 +75,5 @@ git diff --check -- goals/inline-schema-compile-hard-error
 bun run beep goals doctor
 bun run beep goals index --write
 bun run beep goals index --check
+bun test goals/inline-schema-compile-hard-error/research/scripts/package-verification.test.ts
 ```

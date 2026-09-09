@@ -99,9 +99,10 @@ describe("ProcessIdentity", () => {
   it.effect("reads proc identities and uses the recorded source without substitution", () =>
     Effect.gen(function* () {
       expect(O.getOrThrow(yield* withProcStat(PROC_STAT, processStartTimeForPid(process.pid)))).toBe("8241991");
-      expect(O.getOrThrow(yield* withProcStat(PROC_STAT, processStartIdentityForPid(process.pid)))).toBe(
-        "proc:8241991"
-      );
+      expect(O.getOrThrow(yield* withProcStat(PROC_STAT, processStartIdentityForPid(process.pid)))).toBe("8241991");
+      expect(
+        O.getOrThrow(yield* withProcStat(PROC_STAT, processStartIdentityForPid(process.pid, O.some("proc:8241991"))))
+      ).toBe("proc:8241991");
       expect(
         O.isNone(yield* withProcStat("", processStartIdentityForPid(process.pid, O.some("proc:recorded-start"))))
       ).toBe(true);

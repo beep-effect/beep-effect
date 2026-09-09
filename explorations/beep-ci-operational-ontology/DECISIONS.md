@@ -1,5 +1,11 @@
 # Decisions
 
+> Routing update (2026-09-08): new token-heavy Codex work uses `gpt-6-astra`
+> with `xhigh` reasoning, per [root agent guidance](../../AGENTS.md#token-heavy-codex-work).
+> This supersedes earlier model/effort choices below for future work. Completed
+> runs retain their recorded provenance; lightweight and Grok routes retain
+> their intended roles.
+
 <!--
 Stage 2. The grilling log. One entry per resolved branch-closing question,
 newest last. Unresolved questions live in ops/manifest.json `openQuestions`
@@ -952,3 +958,94 @@ Rejected: rewriting arm 3 mid-run (a Must-CQ semantic edit) and ratifying
 unemitted vocabulary. Docket consistency item (no ruling needed): CQ-019's
 `required_properties` and the traceability matrix must be aligned with the arm
 predicates its query text actually uses — three artifacts currently disagree.
+
+## 2026-09-08 — Stage B capture grill (five rulings, steward: Benjamin)
+
+Grilled after all three run-3 PRs merged (#1024 emission v2, #1025 v3 journal
+events, #1027 Stage A pins; main `20ad99a87f`) and the protocol v2 marker was
+published on the workstation with eviction on (steward step, executed from the
+s5 checkout via `beep quality scheduler protocol --enable-evictions`; the first
+enabled reap pass replayed six deferred claims — four dead leases, two dead
+tickets — into v3 eviction rows). Live census at the grill: canonical journal
+222 rows (199 v1, 1 v2, 22 v3: 10 enqueued, 3 withdrawn, 3 released, 4
+lease-evicted, 2 ticket-evicted); seven checkouts past the v3 merge; proof
+ledger absent in every checkout. All five resolved to the recommended arm;
+frontier closed in two rounds.
+
+**Ruling 17 — proof-ledger issuance rows re-park to run 4.** Ruling 8 named
+proof-ledger materialization as Stage B's second clock on the assumption that
+post-merge yeet traffic would write it. It will not: the `ProofLedger` service
+(PR #954) has no lane writer — time-to-certainty `PLAN.md` C2 records "not yet
+wired into any lane", and wiring is that packet's C4 shadow-mode milestone
+behind C3.1–C3.6. Stage B therefore pins loss-population contention, the
+replayed organic evictions, and the fixture scenario; issuance-custody flags
+(rat-047..052) that need `ProofProvenance` rows re-park with named evidence
+(the C2 plan line plus the fleet census), and the ones dischargeable from
+attempts and embedded verdicts proceed on the Stage A pin. Rejected: seeding a
+synthetic ledger through the service (schema shape without issuance behaviour;
+ungrounded for the seats) and holding Stage B for C4 (weeks out while the
+200-admission ring erases the loss population — Ruling 8's own rationale).
+
+**Ruling 18 — Stage B is a new sibling generator.** The Stage A generator
+self-pins its sha256 into `run3-fleet/MANIFEST.yaml` and verify mode fails
+when the script changes, so a stage flag would break the Stage A pin exactly
+as Ruling 3 forbade for run 2. `etl_run3b_fleet_corpus.py` pins `run3b-fleet/`:
+the admission roots with v3 schemas cited as deployed (Stage A cites v3
+prospectively), the protocol marker, live queue/lease/claim state (reap claims
+are the loss-population custody chain and enter scope; lock files never do),
+and fleet attempts as the `attemptId` join target for evictions. Verdicts and
+checkout identity stay on the Stage A pin. Patterns copied, nothing imported;
+both run-3 generators and the run-2 generator stay byte-frozen. Rejected: a
+shared ETL library (Ruling 3's byte-identical-envelope burden now applies to
+two more pins) and amending Stage A in place under `--refresh` (rewrites a
+merged corpus).
+
+**Ruling 19 — the fixture producer is a repo-cli spec with an export switch.**
+Ruling 10's scenario runs under `provideRuntimeRootForTesting` in
+`packages/tooling/tool/cli/test`: contenders enqueue against a one-slot
+capacity, one waiting contender is interrupted (withdrawn), a dead-owner lease
+and a dead-owner ticket are reaped with protocol v2 on (lease-evicted plus
+ticket-evicted v3), and the holder releases. The spec always asserts the row
+set as a regression test; when `BEEP_CIOPS_SYNTHETIC_ROOT` is set it also
+copies the resulting admission root and the fixture checkouts' attempt journals
+out, and the Stage B generator ingests that export via `--synthetic-root` into
+`run3b-synthetic/` with `provenance: synthetic` on every row and the spec's
+sha256 recorded. Rejected: a ciops lab script (the lab has no repo-cli
+dependency and `./internal/*` exports are null; a new package edge needs
+architecture routing) and hand-authored rows (not produced by the real writer,
+so not scheduler behaviour).
+
+**Ruling 20 — reap now, brief now, pin at lane end.** The six deferred claims
+were drained by an explicit `scheduler reap --apply` from the s5 checkout
+(dead-owner state only) rather than by waiting for organic traffic, so the
+eviction rows exist before the lane starts; the generator captures live at the
+end of the lane's work so intervening yeet traffic rides along, and the steward
+may `--refresh` before run 3 if the loss population is still thin. Rejected:
+organic drain (a pre-#978 stale worktree running yeet first would emit v2 rows
+for the same nonces) and waiting days for traffic before briefing.
+
+**Ruling 21 — two PRs, spec first, never stacked.** PR-1 carries the spec
+alone on `feat/ciops-synthetic-admission-fixture` (small, fully reviewed, the
+heavy hosted lanes prove it). PR-2 on `ontology-run3-stage-b` from main carries
+the generator, both `run3b-*` pins, these rulings, and the session handoff; it
+records the spec's file sha256 and merges after PR-1 so the cited path exists
+on main. Rejected: one bundled PR (Greptile goes blind past 500 files, leaving
+the spec to the Codex connector alone) and stacked PRs (required checks skip
+until the base merges).
+
+## 2026-09-09 — ratified-pin repair ruling (one ruling, steward: Benjamin)
+
+Raised when the reconciliation lane for the Ruling 22 follow-up applied the newer
+residue diagnostics to the untouched run-2 fleet pin on `main`: 29 files carry the
+hostname digest and `uid-<n>` tokens inside quoted proof-lock directory names. The
+run-2 generator never scanned those classes, so its own verifier passes.
+
+**Ruling 23 — ratified pins are repaired in place, never refreshed.** Auditor run 2
+ratified against `run2-fleet/`, so Ruling 22's refresh path does not apply. Residue
+found later in a ratified pin is repaired byte-for-byte under the repair mechanics
+PR #1032 introduced (`--source-ref` replay, generator-provenance check), recorded as
+a `security_resanitization` entry naming the classes and this ruling, with capture
+history, custody references, every unaffected byte, and the ratification chain
+untouched. It lands as its own PR after #1040. Rejected: folding it into #1040
+(mixes a ratified repair with un-ratified refreshes in an already large PR) and
+accepting the class as ratified residue (contradicts the public-repo law).

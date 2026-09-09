@@ -1910,7 +1910,8 @@ describe("quality-scheduler", () => {
             const procGeneration = yield* fs
               .readFileString(procLockPath)
               .pipe(Effect.flatMap(decodeJournalLockGeneration));
-            expect(Str.startsWith("proc:")(procGeneration.procStart)).toBe(true);
+            expect(procGeneration.procStart).toBe(O.getOrThrow(yield* processStartIdentityForPid(process.pid)));
+            expect(Str.isNonEmpty(procGeneration.procStart) && !Str.includes(":")(procGeneration.procStart)).toBe(true);
             expect(
               yield* acquireJournalFileLock(procLockPath, `${process.pid}:system-contender`, 1).pipe(
                 Effect.provideService(FileSystem.FileSystem, withoutProcfs)
@@ -2773,11 +2774,17 @@ describe("quality-scheduler", () => {
           Effect.gen(function* () {
             const fs = yield* FileSystem.FileSystem;
             const blocking = yield* writeFakeLease(tempRoot, { weightTokens: 6, originKey: "origin-other" });
+            // Deliberately start after the former fixed wait to exercise synchronization.
             const fiber = yield* Effect.forkChild(
-              withQualityAdmission(request(), noAdmissionOriginGate, Effect.succeed("ran"), fastConfig)
+              withQualityAdmission(request(), noAdmissionOriginGate, Effect.succeed("ran"), fastConfig).pipe(
+                Effect.delay("200 millis")
+              )
             );
-            yield* Effect.sleep("120 millis");
-            expect(A.length(yield* listDirectory(tempRoot.queue))).toBe(1);
+            const queued = yield* Effect.repeat(listDirectory(tempRoot.queue), {
+              until: A.isReadonlyArrayNonEmpty,
+              schedule: Schedule.spaced(Duration.millis(10)),
+            }).pipe(Effect.timeout(Duration.seconds(5)));
+            expect(queued).toHaveLength(1);
             expect(fiber.pollUnsafe()).toBeUndefined();
             yield* fs.remove(blocking, { force: true });
             expect(yield* Fiber.join(fiber)).toBe("ran");
@@ -2921,16 +2928,20 @@ describe("quality-scheduler", () => {
               )
             );
 
-            yield* Effect.sleep("100 millis");
+            // Loaded runners can enqueue and stamp the contender later than a fixed
+            // sleep allows, so poll for the ticket and then for its origin stamp.
+            const currentName = yield* Effect.repeat(
+              listDirectory(tempRoot.queue).pipe(Effect.map(A.findFirst((name) => !Str.startsWith("legacy-")(name)))),
+              { until: O.isSome, schedule: Schedule.spaced(Duration.millis(10)) }
+            ).pipe(Effect.timeout(Duration.seconds(5)), Effect.map(O.getOrThrow));
+            const currentTicket = yield* Effect.repeat(
+              fs.readFileString(path.join(tempRoot.queue, currentName)).pipe(Effect.flatMap(decodeTicket)),
+              {
+                until: (ticket) => ticket.blockedOnOriginAtMillis > 0,
+                schedule: Schedule.spaced(Duration.millis(10)),
+              }
+            ).pipe(Effect.timeout(Duration.seconds(5)));
             expect(current.pollUnsafe()).toBeUndefined();
-            const currentName = pipe(
-              yield* listDirectory(tempRoot.queue),
-              A.findFirst((name) => !Str.startsWith("legacy-")(name)),
-              O.getOrThrow
-            );
-            const currentTicket = yield* fs
-              .readFileString(path.join(tempRoot.queue, currentName))
-              .pipe(Effect.flatMap(decodeTicket));
             expect(currentTicket.coordinationProtocol).toBe("scheduler-origin-concurrency/v1");
             expect(currentTicket.blockedOnOriginAtMillis).toBeGreaterThan(0);
 
@@ -2958,8 +2969,10 @@ describe("quality-scheduler", () => {
               )
             );
 
-            yield* Effect.sleep("80 millis");
-            const currentName = pipe(yield* listDirectory(tempRoot.queue), A.head, O.getOrThrow);
+            const currentName = yield* Effect.repeat(listDirectory(tempRoot.queue).pipe(Effect.map(A.head)), {
+              until: O.isSome,
+              schedule: Schedule.spaced(Duration.millis(10)),
+            }).pipe(Effect.timeout(Duration.seconds(5)), Effect.map(O.getOrThrow));
             const currentPath = path.join(tempRoot.queue, currentName);
             const firstCurrent = yield* fs.readFileString(currentPath).pipe(Effect.flatMap(decodeTicket));
             expect(firstCurrent.coordinationProtocol).toBe("scheduler-origin-concurrency/v1");
@@ -3165,10 +3178,13 @@ describe("quality-scheduler", () => {
                 noAdmissionOriginGate,
                 Effect.succeed("ran"),
                 fastConfig
-              )
+              ).pipe(Effect.delay("200 millis"))
             );
-            yield* Effect.sleep("80 millis");
-            expect(A.length(yield* listDirectory(tempRoot.queue))).toBe(1);
+            const queued = yield* Effect.repeat(listDirectory(tempRoot.queue), {
+              until: A.isReadonlyArrayNonEmpty,
+              schedule: Schedule.spaced(Duration.millis(10)),
+            }).pipe(Effect.timeout(Duration.seconds(5)));
+            expect(queued).toHaveLength(1);
             yield* Fiber.interrupt(fiber);
             expect(A.length(yield* listDirectory(tempRoot.queue))).toBe(0);
             const events = yield* readJournalEvents(tempRoot.root);
@@ -3266,6 +3282,38 @@ describe("quality-scheduler", () => {
           })
         );
       })
+    ));
+
+  it("scheduler reap dispatched without --apply prints the dry-run report and mutates nothing", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+          Effect.gen(function* () {
+            const path = yield* Path.Path;
+            const deadTicket = yield* writeFakeTicket(tempRoot, {
+              pid: DEAD_PID,
+              procStart: "dead-flagless-owner",
+              nonce: "dead-flagless-ticket",
+              originKey: "dead-flagless-origin",
+            });
+            const before = yield* listDirectory(tempRoot.queue);
+            expect(before).toStrictEqual([path.basename(deadTicket)]);
+
+            // Regression: the boolean flag once had no default, so the flagless
+            // invocation failed with "Missing required flag: --apply" and the
+            // documented dry-run path was unreachable from the CLI.
+            const exit = yield* Effect.exit(runQualityCommand(["scheduler", "reap"]));
+            expect(exit._tag, String(exit)).toBe("Success");
+
+            const output = A.join(A.map(yield* TestConsole.logLines, String), "\n");
+            expect(output).toContain("dry run — would reap:");
+            expect(output).toContain(deadTicket);
+            expect(output).not.toContain("reaped dead admission state:");
+            expect(yield* listDirectory(tempRoot.queue)).toStrictEqual([path.basename(deadTicket)]);
+          })
+        );
+      }).pipe(provideScopedLayer(TestConsole.layer), provideScopedLayer(SchedulerCommandLayer))
     ));
 
   it("atomically claims dead leases and tickets before journaling each death once", () =>

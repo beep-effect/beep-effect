@@ -1,0 +1,29 @@
+{
+  "ownerRef": "83c0e7d2e520",
+  "schemaVersion": "yeet-admission-lease/v1",
+  "attemptId": "04be8449-a694-43c6-968f-f66fe48af963",
+  "resolvedHeadSha": "cd55220834e09ec4dbf595809145b009d4cc1a35",
+  "diffFingerprint": "ae7c57f755f7d8515daa1caf8b0afd83e12fb6bc74945883c0aabc9952114253",
+  "proofTier": "full",
+  "envProfile": "local",
+  "stage": "pre-push",
+  "kind": "merged-preview",
+  "weightTokens": 5,
+  "priority": "publish",
+  "originKey": "4cc31eeb4dec",
+  "checkoutRoot": "<fleet>/beep-effect-worktrees/astra-xhigh-agent-routing",
+  "branch": "chore/astra-xhigh-agent-routing",
+  "coordinationProtocol": "scheduler-origin-concurrency/v1",
+  "command": "bun run beep quality github-checks cheap-gates --collect-all && bun run beep quality github-checks pre-push && bun run beep ci local --affected --base origin/main",
+  "startedAt": "2026-09-09T04:38:09.458Z",
+  "admittedAtMillis": 1788928689458,
+  "heartbeatAtMillis": 1788929180754,
+  "enqueuedAtMillis": 1788928093119,
+  "nonce": "0b77e72c-9635-404f-8d2d-06c2dbb123db",
+  "hotPaths": [],
+  "runScope": {
+    "unitName": "agent-run-0b77e72c-9635-404f-8d2d-06c2dbb123db.scope",
+    "support": "unsupported",
+    "attachedAt": "2026-09-09T04:38:09.478Z"
+  }
+}

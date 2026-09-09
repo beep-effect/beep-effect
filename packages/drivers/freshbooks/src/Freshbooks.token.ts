@@ -344,6 +344,9 @@ export const makeFreshbooksAuth = Effect.fn("Freshbooks.makeAuth")(function* (
 ): Effect.fn.Return<FreshbooksAuthShape, never> {
   const permit = yield* Semaphore.make(1);
 
+  // Once the single-use credential is sent, caller cancellation must wait for
+  // the response and its durable replacement. Permit acquisition stays
+  // interruptible, so cancelled queued callers never start an exchange.
   const rotate = Effect.fn("Freshbooks.rotate")(function* (grant: Record<string, string>) {
     const now = yield* Clock.currentTimeMillis;
     const response = yield* callTokenEndpoint(client, config, grant);
@@ -361,7 +364,7 @@ export const makeFreshbooksAuth = Effect.fn("Freshbooks.makeAuth")(function* (
         )
       );
     return stored;
-  });
+  }, Effect.uninterruptible);
 
   // Refresh-if-stale, used by `accessToken`: re-reads the store inside the
   // critical section so queued fibers observe a token another owner already

@@ -44,7 +44,15 @@ def _repo_root() -> Path:
 
 REPO_ROOT = _repo_root()
 FLEET_ROOT = REPO_ROOT.parent
-PID_IN_TEXT = re.compile(r"\b(pid)[ =:]?[0-9]+")
+# String leaves may contain JSON serialized through several escaping layers.
+PID_IN_TEXT = re.compile(
+    r"""(?P<prefix>\bpid(?P<key_quote>\\*["'])?(?:\s|\\+[nrt])*(?:[=:](?:\s|\\+[nrt])*)?(?P<value_quote>\\*["'])?)[0-9]+""",
+    re.IGNORECASE,
+)
+PROCESS_METADATA_IN_TEXT = re.compile(
+    r"""\b(?:attached[_-]*pid|owner[_-]*proc[_-]*start)(?:\\*["'])?(?:\s|\\+[nrt])*[:=]""",
+    re.IGNORECASE,
+)
 TIMESTAMP_KEY = re.compile(r"(?:^ts$|AtMillis$|At$|TimestampMillis$|Timestamp$)")
 PROPERTY_KEY = re.compile(r"[A-Za-z0-9_]+")
 PROPERTY_RECORD_COMMENT = re.compile(r"# record (0|[1-9][0-9]*)")
@@ -161,6 +169,12 @@ def host_prefixes() -> list[tuple[str, str]]:
     return sorted(roots.items(), key=lambda item: -len(item[0]))
 
 
+def redact_pid_match(match: re.Match[str]) -> str:
+    """Preserve JSON punctuation and escaping while removing only PID digits."""
+    replacement = "null" if match["key_quote"] and not match["value_quote"] else "<redacted>"
+    return match["prefix"] + replacement
+
+
 def redact_string(value: str) -> str:
     value = re.sub(r"/proc/\d+(?=/|$)", "<proc>/<process>", value)
     value = re.sub(r"(user(?:-runtime-dir)?@)\d+(\.service)", r"\1<uid>\2", value)
@@ -173,12 +187,12 @@ def redact_string(value: str) -> str:
     value = value.replace(sha256(hostname.encode())[:12], "<host>")
     value = value.replace(hostname, "<host>")
     value = re.sub(r"beep-admit-uid-\d+", "beep-admit-uid-<uid>", value)
-    return PID_IN_TEXT.sub("pid <redacted>", value)
+    return PID_IN_TEXT.sub(redact_pid_match, value)
 
 
 def process_member(key: str) -> bool:
     return key.replace("_", "").replace("-", "").lower() in {
-        "pid", "ppid", "ownerpid", "parentpid", "processid", "procstart",
+        "attachedpid", "ownerprocstart", "pid", "ppid", "ownerpid", "parentpid", "processid", "procstart",
         "procstarttime", "processstart", "processstarttime", "processstartticks",
     }
 
@@ -429,6 +443,8 @@ def scan_output_bytes(files: list[tuple[str, bytes]]) -> None:
             fail("residue scan failed: host path, hostname, or hostname digest")
         if re.search(rb"(?:user(?:-runtime-dir)?@\d+\.service|user-\d+\.slice|beep-admit-uid-\d+)", combined):
             fail("residue scan failed: user identity in runtime or unit name")
+        if PROCESS_METADATA_IN_TEXT.search(combined.decode("utf-8")):
+            fail("residue scan failed: schema process metadata")
         if PID_IN_TEXT.search(combined.decode("utf-8")):
             fail("residue scan failed: free-text process identifier")
         if b"ghp_" in combined or b"github_pat_" in combined:

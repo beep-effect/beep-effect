@@ -62,7 +62,7 @@ Higher sources outrank lower sources when they conflict.
 - [x] Repository lint reports zero `beep(no-inline-schema-compile)` findings.
 - [x] The lint rule is configured as an error after zero is reached.
 - [x] Focused rule tests cover inline rejection and module-scope acceptance.
-- [ ] Every affected workspace package completes its required package verify.
+- [x] Every affected workspace package completes its required package verify.
 - [x] Generated sources are regenerated from their updated owners without
       unexplained drift.
 - [ ] Canonical repository and hosted verification are green.
@@ -76,6 +76,7 @@ Higher sources outrank lower sources when they conflict.
 | Rule tests | Focused policy-pack lint-rule tests | Green |
 | Repository lint | Canonical lint/Yeet lane | Zero findings, error severity enabled |
 | Packages | `bun run beep quality package-verify <package>` | Green for every touched package |
+| Package evidence inventory | `bun test goals/inline-schema-compile-hard-error/research/scripts/package-verification.test.ts` | Primary and linked supplemental receipts cover all 108 affected owners on the pinned head |
 | Packet launcher | `test "$(wc -m < goals/inline-schema-compile-hard-error/GOAL.md)" -le 4000` | Passes |
 | Goal fleet | `bun run beep goals doctor` and index check | Green |
 | Hosted closure | `bun run beep yeet monitor` | `merge-ready: yes` |
@@ -94,4 +95,4 @@ Higher sources outrank lower sources when they conflict.
 
 | Exception | Scope | Owner | Rationale | Removal condition |
 | --- | --- | --- | --- | --- |
-| None | N/A | N/A | N/A | N/A |
+| Final closeout follows the implementation PR | Packet publication only; PR #1038 | Operator, approved 2026-09-09 | PR #1028 merged before final verification and lifecycle closeout. The operator authorized a final closeout PR; no implementation or verification requirement is waived. | Final packet update is included in #1038 and its final head reaches Yeet `merge-ready: yes`. |

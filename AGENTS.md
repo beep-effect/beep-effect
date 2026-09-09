@@ -5,6 +5,26 @@ Canonical rules for all coding agents. Claude Code loads this via the
 directly. Laws only — architecture lives in `standards/ARCHITECTURE.md`,
 workflows in skills.
 
+## Token-heavy Codex work
+
+Use `gpt-6-astra` with extra high reasoning (`xhigh`) for all token-heavy
+Codex work, including implementation, exploration, review, and distillation.
+Pin both the model and reasoning effort when launching that work:
+
+- Native subagents: `model: "gpt-6-astra"`, `reasoning_effort: "xhigh"`.
+- Codex CLI: `--model gpt-6-astra -c 'model_reasoning_effort="xhigh"'`.
+- Codex plugin/companion: `--model gpt-6-astra --effort xhigh`.
+- Proxy Workflow children: `model: "gpt-6-astra(xhigh)"`.
+
+Preserve the configured lightweight and Grok web research routes for their
+intended work. Do not set `CLAUDE_CODE_SUBAGENT_MODEL` in proxy wrappers;
+it overrides explicit Workflow child models.
+
+This operator instruction (2026-09-08) supersedes earlier model and effort
+guidance for new token-heavy Codex work. Historical reports, captured user
+requests, completed-run provenance, and model-parsing fixtures retain the
+models and effort levels they actually recorded.
+
 ## 1Password
 
 - Agents resolve `op` from `PATH`, never the system binary by absolute path.
@@ -61,6 +81,8 @@ workflows in skills.
 
 ## Quality Operator
 
+- Every workspace manifest's scripts block is generated: run
+  `bun run beep lint package-scripts --write` instead of hand-editing task-facing keys.
 - Yeet is the canonical repo-quality path: `bun run beep yeet repair`,
   `... verify`, `... publish --message "..."`, `... monitor`. Keep those
   commands green.

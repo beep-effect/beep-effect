@@ -1,0 +1,23 @@
+{
+  "ownerRef": "bca5736a6f2c",
+  "schemaVersion": "yeet-admission-lease/v1",
+  "kind": "full-proof",
+  "weightTokens": 3,
+  "priority": "verify",
+  "originKey": "4cc31eeb4dec",
+  "checkoutRoot": "<fleet>/beep-effect-worktrees/inline-schema-package-proof-v2",
+  "branch": "",
+  "coordinationProtocol": "scheduler-origin-concurrency/v1",
+  "command": "bun goals/inline-schema-compile-hard-error/research/scripts/verify-packages.ts",
+  "startedAt": "2026-09-09T04:10:10.734Z",
+  "admittedAtMillis": 1788927010734,
+  "heartbeatAtMillis": 1788929179312,
+  "enqueuedAtMillis": 1788926689378,
+  "nonce": "9f2a6538-9bf5-4615-ae15-1585c13a02a4",
+  "hotPaths": [],
+  "runScope": {
+    "unitName": "agent-run-9f2a6538-9bf5-4615-ae15-1585c13a02a4.scope",
+    "support": "unsupported",
+    "attachedAt": "2026-09-09T04:10:10.748Z"
+  }
+}

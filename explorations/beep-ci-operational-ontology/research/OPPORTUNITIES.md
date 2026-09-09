@@ -1,5 +1,38 @@
 # Research friction receipts
 
+## 2026-09-09: run-2 replay authority and structural UID keys diverged
+
+- **Work:** completing PR #1041 Additional findings X2–X4 after the G1/G2 commit.
+- **Evidence:** the run-2 regressions now scan complete serialized records; preserved
+  `uid-123` fixture keys fail with `residue scan failed: numeric UID token`, including
+  during staged replay. CSF replay also selects `repair=True` unconditionally, while
+  its receipt omits the Ruling 23 authority. The first report command lacks `--finding`.
+- **Prevention:** exercise the complete staged verifier for preserved keys and test
+  CSF and Ruling 23 replay separately, including rule descriptions and receipt fields.
+  Validate documented commands against the required CLI arguments.
+- **Test isolation:** after the generator edit, the existing CLI smoke test invoked
+  ordinary repair on the working pin and appended a zero-change receipt. The final
+  manifest is regenerated from committed HEAD with only its generator binding changed,
+  after proving all payloads unchanged. The smoke test now forbids staging and requires
+  `verified unchanged`, so a stale binding fails without rewriting the pin.
+
+## 2026-09-09: run-2 review fixes require a generator binding update
+
+- **Work:** addressing PR #1041 G1 and G2 in the run-2 repair lane.
+- **Evidence:** foreign-host fixtures reproduce the missed proof-lock digest; explicit
+  source replay reaches staging again for an already repaired pin. The verifier also
+  requires `generator_sha256` to match the exact generator bytes, so the G1 code fix
+  requires a manifest update even when the payloads need no further redaction.
+- **Cost:** the lane must separately prove payload equality, regenerate the generator
+  binding and rule description, and verify the staged manifest while retaining every
+  security receipt.
+- **Prevention:** test foreign-host replay and whole-tree idempotence together. Keep
+  generator-binding updates distinct from new security repairs in the receipt workflow.
+  The first full regression run also exposed a provenance distinction in #1037's
+  committed replay test: the first replay from an older source needs a new receipt even
+  when the current payloads match. Duplicate detection must compare the source-manifest
+  digest as well as the finding and classes; repeating that same replay is unchanged.
+
 ## 2026-09-03: admission eviction facts replace inferred deaths
 - V2 now journals claimed lease evictions and CI-ops folds them as releases; the next ontology run consumes the fact instead of inferring it.
 
@@ -233,3 +266,111 @@
   while the owning `uv` process remains alive (its temporary environment is removed
   when that process exits).
   A committed-byte check needs no new tool installation or machine trust change.
+
+## 2026-09-08: `scheduler reap` describes a dry-run it cannot run
+
+- **Work:** draining six `pending-protocol-off` reap claims after publishing the
+  protocol v2 marker (Stage B grill, Ruling 20).
+- **Evidence:** `bun run beep quality scheduler reap` prints a description that
+  says "dry-run by default" and a flag help text of "default: dry-run report",
+  then exits 1 with `Missing required flag: --apply`. Only the mutating form runs.
+- **Cost:** one failed invocation and a blind apply; the operator could not
+  preview which dead leases and tickets would replay into eviction rows before
+  mutating the machine-wide admission root.
+- **Prevention:** give the boolean flag an explicit `false` default so the
+  dry-run report is the real default, or drop the dry-run wording from both
+  descriptions; a regression test invoking the command without the flag would
+  have caught the drift (`reapAdmissionState({ apply: false })` already exists).
+
+## 2026-09-08: Stage B checkout had graft wiring without its graph
+
+- **Work:** retrieving the required generator and scheduler context before implementation.
+- **Evidence:** `graft map` exited 1 with `no graph — run graft build first`.
+- **Prevention:** provision the regenerable graph with a newly prepared lane, or
+  check its presence in the lane handoff. Rebuilt locally before code retrieval.
+
+## 2026-09-08: Stage B synthetic checkout labels omitted the withdrawn contender
+
+- **Work:** matching the Stage B consumer to the PR-1 producer before the live pin.
+- **Evidence:** the producer's `checkoutB` is a separate `contender-b` root and its
+  expected chain is enqueued then withdrawn. The consumer brief names only the
+  three checkouts with exported attempt directories.
+- **Prevention:** distinguish checkout roots observed in journal rows from
+  exported attempt directories in the handoff contract. The consumer preserves
+  a fourth `contender-b` token without inventing an attempt directory.
+
+## 2026-09-08: packet validation requires more than the generator's Python environment
+
+- **Work:** running the packet validator after Stage B implementation.
+- **Evidence:** the generator's PyYAML-only environment exited with
+  `ModuleNotFoundError: No module named 'rdflib'` before validation started.
+- **Prevention:** document the packet validator's dependency set separately from
+  the standalone generators. Retried with its declared script dependencies.
+
+## 2026-09-08: copied manifest inventory exemption was broader than one file
+
+- **Work:** checking Stage B's whole-tree verifier before committing its first capture.
+- **Evidence:** the copied inventory predicate excluded every file named
+  `MANIFEST.yaml`, so an unlisted nested manifest could evade the file-set check.
+- **Prevention:** exempt only the root manifest's exact path. Added a regression
+  for an extra nested manifest. The Stage B generator changes and its fleet pin
+  is refreshed after tests; the frozen generators remain untouched.
+
+## 2026-09-08: a negative credential fixture tripped the commit scanner
+
+- **Work:** committing the Stage B generator, tests, and pins.
+- **Evidence:** pre-commit gitleaks rejected `test_run3b_generator.py` under
+  `generic-api-key`; the match was the invented assignment in a residue-rejection
+  test, not captured machine material.
+- **Prevention:** construct the negative assignment at test runtime. The scanner
+  remains enabled; the generator and pinned payloads do not change.
+
+
+## 2026-09-09: run-2 residue scan lagged the later generators
+
+- **Work:** applying Ruling 23 to the ratified run-2 fleet pin.
+- **Evidence:** the existing verifier accepts retained proof-lock names containing
+  a hostname digest and numeric UID tokens. Its scan covers paths and PIDs but
+  neither of these classes; the brief identifies 29 affected files.
+- **Prevention:** add positive and negative regression cases for each new residue
+  class to older retained-pin scanners, with an explicit repair path that preserves
+  capture history and the prior security receipt.
+- **Handoff drift:** this lane's DECISIONS.md contains Ruling 23 but lacks the
+  Ruling 22 section. Read the amended section from Git commit `05a8f2ed48` without
+  changing the decision file. PR #1032's history-aware repair entry point is
+  `goals/codex-security-findings-2026-09-08/research/scripts/resanitize-corpora.py`,
+  rather than a generator CLI flag. Lane briefs should name that entry point and
+  the exact decision revision.
+- **Setup:** `graft map` reported `no graph`; a scoped Python graph build restored
+  source retrieval. Provision the regenerable graph when preparing a lane.
+
+
+## 2026-09-09: detached proof shells attempted global mise registration
+
+- **Work:** verifying the run-2 pin in a detached worktree inside the authorized lane.
+- **Evidence:** shell startup reported `mise WARN tracking config` with
+  `Read-only file system` while trying to register the new checkout under
+  `~/.local/state/mise/tracked-configs`. The corpus verifier still passed.
+- **Prevention:** let managed proof runners skip optional global checkout
+  registration when the Python environment is already available. Non-login shell
+  execution still emitted the warning; both the verifier and all nine tests passed.
+
+## 2026-09-09: reconciliation fetch hit a local SSH configuration error
+
+- **Work:** fetching main before merging PR #1037 into the run-2 repair branch.
+- **Evidence:** `git fetch origin main` failed with `Bad owner or permissions` for
+  `/etc/ssh/ssh_config.d/20-systemd-ssh-proxy.conf`. A read-only HTTPS fetch of the
+  same public repository succeeded and refreshed `origin/main` to `22063e7b6d`.
+- **Prevention:** check the workstation SSH configuration ownership before fleet
+  dispatch. Public read-only fetches can use HTTPS without changing remote settings.
+
+## 2026-09-09: CSF-013 regression fixtures require a writable global cache
+
+- **Work:** running both unchanged generator test suites from PR #1037 during
+  run-2 reconciliation.
+- **Evidence:** 36 tests passed; two history-replay fixtures failed before setup
+  with `Read-only file system` when creating temporary repositories in
+  `~/.cache/beep`. This lane permits fixture writes inside its own worktree.
+- **Prevention:** give test fixtures an explicit scratch-directory override.
+  The reconciliation runner redirects only those temporary-directory allocations
+  into `.beep/run2-residue-repair`; test files and generator behavior stay intact.

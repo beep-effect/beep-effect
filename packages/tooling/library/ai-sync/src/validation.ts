@@ -117,7 +117,6 @@ const ApprovedClaudeRepoBashPermission = LiteralKit([
   "Bash(git stash push:*)",
   "Bash(git stash show:*)",
   "Bash(git stash list:*)",
-  "Bash(git stash drop:*)",
   "Bash(git update-ref refs/archive/:*)",
   "Bash(bun run beep yeet sweep:*)",
   "Bash(bun run beep yeet repair:*)",
@@ -144,7 +143,7 @@ const ApprovedClaudeRepoBashPermission = LiteralKit([
 ]).pipe(
   $I.annoteSchema("ApprovedClaudeRepoBashPermission", {
     description:
-      "Exact 58-value Bash grant domain approved for this repository, including named read-only GitHub queries, intentional Yeet publication commands, and stale-lane cleanup (stash drop, archive refs under refs/archive/, and Yeet sweep; worktree removal only through the Beep CLI), plus the read-only Graft code-graph query subcommands (never `graft init`, `uninstall`, or `upgrade`, which rewrite tracked agent configuration).",
+      "Exact 57-value Bash grant domain approved for this repository, including named read-only GitHub queries, intentional Yeet publication commands, archive refs under refs/archive/, and Yeet sweep; worktree removal only through the Beep CLI, plus the read-only Graft code-graph query subcommands (never `graft init`, `uninstall`, or `upgrade`, which rewrite tracked agent configuration).",
   })
 );
 
@@ -156,6 +155,7 @@ const RequiredClaudeRepoDenyPermission = LiteralKit([
   "Bash(git push --force-with-lease:*)",
   "Bash(git push --mirror:*)",
   "Bash(git stash clear:*)",
+  "Bash(git stash drop:*)",
   "Bash(git stash pop:*)",
   "Bash(git worktree remove --force:*)",
   "Bash(bun run beep worktree remove --force:*)",
@@ -171,7 +171,7 @@ const RequiredClaudeRepoDenyPermission = LiteralKit([
 ]).pipe(
   $I.annoteSchema("RequiredClaudeRepoDenyPermission", {
     description:
-      "Exact 17-value Claude deny domain required to block history rewrites, forced worktree removal, working-tree destruction, stash clearing and popping, admin merges, repository deletion, and protected-file edits.",
+      "Exact 18-value Claude deny domain required to block history rewrites, forced worktree removal, working-tree destruction, direct stash deletion and popping, admin merges, repository deletion, and protected-file edits.",
   })
 );
 
@@ -413,8 +413,8 @@ export const validateRepoConfig = Effect.fn("AiSync.validateRepoConfig")(functio
  * workspace-write network access and grant no additional writable roots.
  * Claude must explicitly set `permissions.defaultMode` to
  * `default`, and every Bash allow entry must belong to the repository's exact
- * 46-value grant domain. Its deny rules must exactly cover the repository's
- * 19-value destructive-operation domain without out-of-policy additions. Named
+ * approved grant domain. Its deny rules must exactly cover the repository's
+ * destructive-operation domain without out-of-policy additions. Named
  * read-only GitHub queries and intentional Yeet publication commands remain
  * approved members of the allow domain; direct Git pushes require approval.
  *

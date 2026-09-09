@@ -21,6 +21,25 @@ the "bush" (`A_LETTER_FROM_THE_OTHER_SIDE_OF_THE_LOOP.md`).
 
 ## Next Open Question
 
+Ruling 23 repairs the ratified run-2 fleet pin in place: 29 raw files now use
+`<host>` and `uid-<uid>` placeholders, with capture history and the original
+security receipt preserved. Reconciliation with PR #1037 retains both CSF-013
+updates and appends the Ruling 23 receipt after them. PR #1041 review fixes make replay
+host-independent and idempotent, bind the extra transformations to Ruling 23, and align
+UID scanning with preserved structural JSON keys. All payloads and security receipts
+remain unchanged by these review fixes. The implementation and evidence are in the
+[run-2 repair report](./research/run3-lanes/run2-residue-repair-report.md).
+Fable owns review and publication after #1040; run 3 remains the next ontology step.
+
+CSF-012 in [PR #1032](https://github.com/beep-effect/beep-effect/pull/1032)
+corrects PID redaction in the saved run-2 and run-3 corpus pins. The security
+repair preserves captured history and prior-manifest digests; it does not
+recapture sources or rerun ontology ratification. Stage B is now pinned; the next
+step is run 3 proper, as described below.
+
+Routing for future token-heavy Codex work is settled: `gpt-6-astra` with
+`xhigh` reasoning ([decision update](./DECISIONS.md)). The next step remains:
+
 **§4b NORMALIZATION GATE IS COMPLETE AND RATIFIED** (2026-08-29; PR #889). The
 `ontology-foundational-auditor` skill ran as written over the S4 harvest: 1,112
 observations, 692 hypotheses, 235 analysis pairs + 235 blinded pairs, 232 proposals,
@@ -58,15 +77,16 @@ question now asks for the SeatRequest sequence under its governing
 `AdmissionProjectionSpecification`, with the step's literal `hasScopeTag` (a distinct
 data property — the no-punning ruling keeps `hasScope` an object property), and the S6
 predicate registry regenerated to track it.
-**NEXT: land the Stage A pin PR, then satisfy Stage B.**
+**NEXT: publish Stage B after the synthetic fixture PR, then run 3 proper.**
 Stage A PINNED 2026-09-08 in `run3-fleet/` and `run3-checkout-identity/`:
 existing admission journals, fleet attempts/verdicts, live granted/queued work,
 and one timestamped checkout inventory. The fleet pin covers 89 checkouts; the
 inventory binds 107 after the review-fix refresh, including registered worktrees outside the required run-file
 globs. The failure-signature occurrence rider is present; cache-plan execution
-resolution and proof-ledger issuance rows are absent. Stage B remains gated on
-the v3 journal PR, organic traffic, and proof-ledger materialization. S7 emission
-v2 remains parallel instrumentation for the ordering cluster; S8 stays deferred.
+resolution and proof-ledger issuance rows are absent. Stage B is now pinned in
+`run3b-fleet/` and `run3b-synthetic/`; proof-ledger issuance rows are re-parked to
+run 4 under Ruling 17. S7 emission v2 supplies the ordering-cluster evidence;
+S8 stays deferred. Stage B proof is in [the report](./research/run3-lanes/stage-b-report.md).
 The review-fix lane has replaced both pins with encoded output paths, stricter
 receipt checks, and runtime redaction; Fable owns publication and PR replies.
 Current proof is in [the review-fix report](./research/run3-lanes/stage-a-review-fixes-report.md).
@@ -141,6 +161,33 @@ graduation. Full plan with locked decisions: [`DECISIONS.md`](./DECISIONS.md).
 
 ## Trail
 
+- 2026-09-09: completed PR #1041 G1/G2 and Additional findings X1–X4 locally.
+  Run-2 has 14 passing regressions; all 38 unchanged #1037 tests pass. The additional
+  fixes change only the generator digest in the corpus manifest, retaining every
+  payload and security receipt. See [the repair report](./research/run3-lanes/run2-residue-repair-report.md).
+  Fable owns publication.
+
+- 2026-09-09: Ruling 23 repairs hostname-digest and UID residue in the ratified
+  run-2 fleet pin through committed-source replay. Exactly 29 raw files and the
+  manifest change; all 794 projections remain identical after regeneration.
+  Capture history, custody references, and the CSF-012 receipt are preserved.
+  See [the repair report](./research/run3-lanes/run2-residue-repair-report.md).
+
+- 2026-09-09: CSF-012 fixes quoted and escaped PID redaction in all four corpus
+  generators, including Stage B added by #1034. A staged repair sanitizes 35 raw
+  files and verifies all five pins; 35 generator tests pass. Current proofs are
+  recorded in the Stage A and Stage B reports. The operator
+  authorized follow-up PR #1032 after #1026 merged with eleven findings, including
+  the necessary security correction to otherwise immutable run-2 payloads.
+
+- 2026-09-08: Stage B pinned with one new standalone generator and independent
+  `run3b-fleet/` and `run3b-synthetic/` roots. The fleet covers 93 checkouts,
+  235 admission rows, 354 attempt journals, one protocol marker, and two live
+  state files: 718 payloads, 719 files total. The synthetic pin has seven
+  admission rows and two termination journals: eight payloads, nine files total.
+  Its four nonce chains match the producer export. Proof-ledger issuance rows
+  are RE-PARKED to run 4 (Ruling 17); next is run 3 proper after publication.
+  See [the Stage B report](./research/run3-lanes/stage-b-report.md).
 - 2026-09-08: PR #1027 Stage A review fixes: encoded checkout path components,
   recomputed receipt observations, runtime-prefix redaction, and refreshed report
   hashes. Both pins were re-captured once: 89 fleet checkouts, 189 admission rows,
@@ -445,3 +492,11 @@ graduation. Full plan with locked decisions: [`DECISIONS.md`](./DECISIONS.md).
   `pros/`→`prose/`), proposal grilled via /grill-with-docs (2 rounds, 8 decisions locked,
   all on recommended arms), pipeline v2 recorded, S0 first-cut baseline computed from this
   checkout's verdicts. Stopped at: fleet-wide baseline + S2/S3 launch.
+- 2026-09-08: recorded the operator's Astra/xhigh routing update in DECISIONS,
+  this resume surface, and manifest timestamps where needed; retained the existing
+  stage, lifecycle, open questions, and historical execution provenance.
+
+- 2026-09-09: merged main after #1037 into the run-2 repair branch, preserved its
+  process-metadata checks and both CSF-013 receipts, and replayed Ruling 23 from
+  the committed main pin. Only 29 raw files plus the manifest differ from main;
+  see the reconciliation section of the run-2 repair report. Fable owns publication.
