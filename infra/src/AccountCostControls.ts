@@ -59,6 +59,8 @@ export class AccountCostControlsConfig extends S.Class<AccountCostControlsConfig
 const NotificationEmails = S.NonEmptyArray(EmailString).pipe(
   $I.annoteSchema("NotificationEmails", { description: "Existing budget recipients supplied through secret config." })
 );
+const decodeNotificationEmails = S.decodeUnknownResult(NotificationEmails);
+const decodeAccountCostControlsConfig = S.decodeResult(AccountCostControlsConfig);
 
 /**
  * Load nonsecret operational settings at the Pulumi configuration boundary.
@@ -77,7 +79,7 @@ const NotificationEmails = S.NonEmptyArray(EmailString).pipe(
 export const loadAccountCostControlsConfig = (): AccountCostControlsConfig => {
   const config = new pulumi.Config("accountCostControls");
   return Result.getOrThrowWith(
-    S.decodeResult(AccountCostControlsConfig)({
+    decodeAccountCostControlsConfig({
       expectedAccountId: config.require("expectedAccountId"),
       monthlyBudgetUsd: config.getNumber("monthlyBudgetUsd"),
       anomalyImpactUsd: config.getNumber("anomalyImpactUsd"),
@@ -141,7 +143,7 @@ export class AccountCostControls extends pulumi.ComponentResource {
       notificationEmails.apply((input) =>
         A.dedupe(
           Result.getOrThrowWith(
-            S.decodeUnknownResult(NotificationEmails)(input),
+            decodeNotificationEmails(input),
             () => new pulumi.RunError("Invalid accountCostControls notification recipients; values are redacted")
           )
         )

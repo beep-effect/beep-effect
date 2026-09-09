@@ -374,3 +374,17 @@ Record receipts at the moment friction happens; redact for the public repo.
   Direct AWS reads confirm the $500 budget, four existing-recipient alerts, six
   Active tags, standard account-only enrollments, and a confirmed daily $10
   anomaly subscription. The fleet remains On-Demand with cap 14.
+
+### Account-only Cost Optimization Hub enrollment produced a perpetual diff
+
+- **Doing:** refreshed no-change proof after the approved cost-control apply.
+- **Evidence:** AWS reported the current account Active but returned null for
+  `includeMemberAccounts`; Pulumi repeatedly proposed adding false. Omitting the
+  argument did not help because the provider supplied its false default.
+- **Disposition:** omitting the argument and ignoring only its changes both
+  left a proposed update after refresh. The scoped reconciliation made no AWS
+  changes. Neither ineffective workaround is retained. Keep explicit false and
+  verify actual enrollment separately; 213 other resources show no changes.
+  Revisit on a provider fix; do not loop applies to clear this readback mismatch.
+- **Source:** [provider enrollment contract](https://www.pulumi.com/registry/packages/aws/api-docs/costoptimizationhub/enrollmentstatus/)
+  documents that this argument does not support drift detection.

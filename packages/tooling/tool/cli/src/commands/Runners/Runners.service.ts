@@ -798,6 +798,7 @@ const IntendedRunnerPin = S.Struct({
 }).pipe(
   $I.annoteSchema("IntendedRunnerPin", { description: "Production controller image pin read without AWS access." })
 );
+const decodeIntendedRunnerPin = S.decodeUnknownEffect(IntendedRunnerPin);
 
 const checkBakeManifest = Effect.fn("Runners.checkManifest")(function* (manifestPath: string) {
   const inputs = yield* loadLocalInputs();
@@ -816,7 +817,7 @@ const checkBakeManifest = Effect.fn("Runners.checkManifest")(function* (manifest
     try: (): unknown => YAML.parse(rawConfig),
     catch: () => runnersError("Invalid production runner YAML configuration."),
   });
-  const config = yield* S.decodeUnknownEffect(IntendedRunnerPin)(parsedConfig).pipe(
+  const config = yield* decodeIntendedRunnerPin(parsedConfig).pipe(
     RunnersCommandError.mapError("Production configuration has no controller image pin.")
   );
   if (!Str.Equivalence(manifest.amiId, config.config["ciFleetController:amiId"])) {

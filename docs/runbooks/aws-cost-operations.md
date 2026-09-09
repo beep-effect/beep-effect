@@ -179,6 +179,17 @@ keys, initially `Project`, `App`, `ManagedBy`, `beep-ci`, `ghr:environment` and
 disabled and verify that no paid preferences were already active. Delayed
 recommendations or tag visibility are reported as pending evidence.
 
+Cost Optimization Hub's member-account argument does not support drift
+detection in the provider. This account returns null for it after account-only
+enrollment. A refreshed preview therefore still proposes one Hub update after
+the successful apply; all 213 other resources are unchanged. Omitting the
+argument and narrowly ignoring its changes did not produce a clean refreshed
+preview, so neither workaround is retained. Keep the explicit account-only
+request and verify the actual enrolled-account list during each attended
+rollout. This is a documented provider reconciliation limit, not proof of
+changed enrollment or a clean no-change preview. Revisit it when the provider
+supports this readback; do not repeatedly apply merely to clear the preview.
+
 For image freshness, reuse the freshness fields of the existing `BakeReport`
 as a tracked intended-image receipt. `infra/ci-runners/runner-image.json` was
 initialized from the current AMI's AWS tags on September 9. It records Bun 1.4.0
