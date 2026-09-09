@@ -1825,8 +1825,10 @@ const VITE_APP_DEV_DEPENDENCIES = {
 // One app kind's package.json manifest builder. Named so the four builders
 // share a single declared type: without it their differing object-literal
 // return types form a union that `appManifestBuilderFor` cannot widen under
-// `exactOptionalPropertyTypes` (docgen's tsc rejects it even though tsgo
-// accepts it), and the failure moves whenever a dependency table changes.
+// `exactOptionalPropertyTypes`. Both programs run the same patched compiler
+// (`.bin/tsc` is `tsgo`); the docgen examples project rejects the union under
+// its own generated tsconfig while `tsconfig.check.json` accepts it, and the
+// failure moves whenever a dependency table changes.
 type AppManifestBuilder = (ctx: AppManifestContext) => unknown;
 
 // package.json manifest for a Next.js app workspace.

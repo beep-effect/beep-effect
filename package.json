@@ -355,6 +355,7 @@
     "changeset:status": "bun run beep quality changeset-status",
     "changeset:status:since-main": "bun run beep quality changeset-status --since origin/main",
     "check": "beep-cli check",
+    "check:configs": "tsgo -p tsconfig.configs.json --noEmit --pretty false",
     "codegen": "bunx turbo run codegen",
     "codegen:barrel": "bun run beep codegen barrel",
     "codex:quality-review-fix-loop": "bun run beep codex quality-review-fix-loop",

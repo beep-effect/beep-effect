@@ -1,4 +1,3 @@
-import path from "node:path";
 import { defineConfig, mergeConfig } from "vitest/config";
 import shared, { fcDeepSweepActive, vitestCoverageRunActive } from "../../../../vitest.shared.ts";
 
@@ -8,7 +7,7 @@ export default mergeConfig(
     test: {
       exclude: ["test/fixtures/**"],
       fileParallelism: false,
-      globalSetup: [path.join(import.meta.dirname, "test/global-cleanup.ts")],
+      globalSetup: [new URL("./test/global-cleanup.ts", import.meta.url).pathname],
       sequence: {
         concurrent: false,
       },
