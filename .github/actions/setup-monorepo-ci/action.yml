@@ -265,7 +265,23 @@ runs:
       run: |
         install_started_at="$(date +%s)"
         echo "BEEP_SETUP_INSTALL_STARTED_AT=$install_started_at" >> "$GITHUB_ENV"
-        bun install --frozen-lockfile
+        # Trusted lifecycle scripts fetch prebuilt binaries over the network: keytar's
+        # prebuild-install has timed out on hosted runners ("prebuild-install warn
+        # install Request timed out") and then fallen back to a node-gyp build that
+        # needs libsecret, failing the lane before any repo code ran. bun re-runs a
+        # failed script on the next install, so retry before failing the lane.
+        install_attempts=3
+        for attempt in $(seq 1 "$install_attempts"); do
+          if bun install --frozen-lockfile; then
+            break
+          fi
+          if [[ "$attempt" -eq "$install_attempts" ]]; then
+            echo "::error::bun install --frozen-lockfile failed after ${install_attempts} attempts"
+            exit 1
+          fi
+          echo "::warning::bun install --frozen-lockfile failed (attempt ${attempt}/${install_attempts}); retrying in $((attempt * 15))s"
+          sleep $((attempt * 15))
+        done
         install_finished_at="$(date +%s)"
         echo "BEEP_SETUP_INSTALL_SECONDS=$((install_finished_at - install_started_at))" >> "$GITHUB_ENV"
 

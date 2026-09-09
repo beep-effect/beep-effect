@@ -532,6 +532,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          # The image's third-party apt sources (Google Chrome, Microsoft) fail apt-get
+          # update with "Hash Sum mismatch" / "403 Forbidden" for minutes at a time;
+          # keep only the Ubuntu archive, which is where these packages come from.
+          scripts/ci-prune-apt-sources.sh
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             libwebkit2gtk-4.1-dev \
