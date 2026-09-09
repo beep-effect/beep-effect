@@ -16,15 +16,15 @@ auth values, email addresses, and raw local paths.
 
 | ID | Severity | Status | Title | Owner area |
 | --- | --- | --- | --- | --- |
-| [CSF-001](./CSF-001.md) | Low | captured | Unscoped stash\-drop grant can destroy other agents' work | _pending P2_ |
-| [CSF-002](./CSF-002.md) | Low | captured | Run mirror exposes local AI session metadata | _pending P2_ |
-| [CSF-003](./CSF-003.md) | Informational | captured | Valid sectioned 1Password references are rejected | _pending P2_ |
-| [CSF-004](./CSF-004.md) | Informational | captured | Cancellation can permanently strand OAuth refresh credentials | _pending P2_ |
-| [CSF-005](./CSF-005.md) | Informational | captured | Newline worktree paths can make reap delete an unregistered repo | _pending P2_ |
-| [CSF-006](./CSF-006.md) | Informational | captured | Symlinked residue roots allow deletion outside the home directory | _pending P2_ |
-| [CSF-007](./CSF-007.md) | Informational | captured | Home\-path hygiene check rejects ordinary branch names | _pending P2_ |
-| [CSF-008](./CSF-008.md) | Informational | captured | Old clients reap live state written by the new client | _pending P2_ |
-| [CSF-009](./CSF-009.md) | Informational | captured | Raw worktree names escape the archive residue root | _pending P2_ |
+| [CSF-001](./CSF-001.md) | Low | implemented | Unscoped stash\-drop grant can destroy other agents' work | Agent command permissions |
+| [CSF-002](./CSF-002.md) | Low | implemented | Run mirror exposes local AI session metadata | Private provenance persistence |
+| [CSF-003](./CSF-003.md) | Informational | implemented | Valid sectioned 1Password references are rejected | Remote-cache secret reference setup |
+| [CSF-004](./CSF-004.md) | Informational | implemented | Cancellation can permanently strand OAuth refresh credentials | FreshBooks token rotation |
+| [CSF-005](./CSF-005.md) | Informational | implemented | Newline worktree paths can make reap delete an unregistered repo | Worktree registration and deletion |
+| [CSF-006](./CSF-006.md) | Informational | implemented | Symlinked residue roots allow deletion outside the home directory | Home residue cleanup |
+| [CSF-007](./CSF-007.md) | Informational | implemented | Home\-path hygiene check rejects ordinary branch names | Public evidence path hygiene |
+| [CSF-008](./CSF-008.md) | Informational | implemented | Old clients reap live state written by the new client | Process identity compatibility |
+| [CSF-009](./CSF-009.md) | Informational | implemented | Raw worktree names escape the archive residue root | Worktree archive containment |
 
 ## Closeout Mapping
 

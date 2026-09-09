@@ -405,8 +405,8 @@ export const validateRepoConfig = Effect.fn("AiSync.validateRepoConfig")(functio
  * workspace-write network access and grant no additional writable roots.
  * Claude must explicitly set `permissions.defaultMode` to
  * `default`, and every Bash allow entry must belong to the repository's exact
- * 46-value grant domain. Its deny rules must exactly cover the repository's
- * 19-value destructive-operation domain without out-of-policy additions. Named
+ * approved grant domain. Its deny rules must exactly cover the repository's
+ * destructive-operation domain without out-of-policy additions. Named
  * read-only GitHub queries and intentional Yeet publication commands remain
  * approved members of the allow domain; direct Git pushes require approval.
  *

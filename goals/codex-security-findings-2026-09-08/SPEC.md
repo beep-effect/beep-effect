@@ -79,14 +79,17 @@ exact captured findings until no packet-applicable finding remains open.
 | Hosted proof | Yeet monitor and review closeout | Green and mergeable |
 | Final closure | signed-in Chrome findings view | Zero packet-open |
 
-## Stop Conditions
+## Execution boundaries
 
 - The signed-in CSV export cannot be produced from the findings page.
 - Tracked evidence contains a secret, signed URL, auth value, email address, or
   raw local path.
-- A fix requires a product or architecture decision outside this packet.
 - A proposed security control would rely on a platform-specific fail-open path.
-- The same blocking condition repeats after reasonable investigation.
+
+The operator authorized all work necessary to resolve current findings in one
+PR. Resolve implementation and environment issues within that intent; stale
+archived-packet scope and approval gates do not constrain this batch. Refresh
+the current findings before publication and include any additions in this PR.
 
 ## Exception Ledger
 
