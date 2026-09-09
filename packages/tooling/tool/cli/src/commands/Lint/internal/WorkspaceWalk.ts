@@ -5,16 +5,17 @@
  * The package test-typecheck lint and the check-overlay lint enumerate the
  * same workspace trees (`apps`, `infra`, `packages`) and must prune the same
  * build and vendor directories, or the two gates would judge different file
- * sets. The filesystem probes, the pruned child listing, and the depth-first
- * collector live here once so each lint states only what a directory owns.
+ * sets. The pruned child listing and the depth-first collector live here once
+ * so each lint states only what a directory owns; the filesystem probes they
+ * share come from `internal/quality/TestTypecheckCoverage`.
  *
  * @packageDocumentation
  * @since 0.0.0
  */
 
-import { A, O, pipe, thunkFalse } from "@beep/utils";
+import { A, pipe } from "@beep/utils";
 import { Effect, FileSystem, HashSet, Path } from "effect";
-import { dual } from "effect/Function";
+import { isDirectoryPath } from "../../../internal/quality/TestTypecheckCoverage.ts";
 
 /**
  * Directory names no workspace walk descends into.
@@ -65,100 +66,6 @@ export const ignoredDirectoryNames: HashSet.HashSet<string> = HashSet.fromIterab
  * @since 0.0.0
  */
 export const testFixtureSegment = "/test/fixtures/";
-
-/**
- * Whether `filePath` exists, treating an unreadable path as absent.
- *
- * **Example** (Probe a path)
- *
- * ```ts
- * import { exists } from "@beep/repo-cli/commands/Lint/internal/WorkspaceWalk"
- * import * as Effect from "effect/Effect"
- * import * as FileSystem from "effect/FileSystem"
- *
- * const program = Effect.flatMap(FileSystem.FileSystem, (fs) => exists(fs, "/repo/package.json"))
- * console.log(Effect.isEffect(program)) // true
- * ```
- *
- * @param fs - File system service to probe with.
- * @param filePath - Absolute path to test.
- * @returns `true` only when the path is present and readable.
- * @category utils
- * @since 0.0.0
- */
-export const exists: {
-  (filePath: string): (fs: FileSystem.FileSystem) => Effect.Effect<boolean>;
-  (fs: FileSystem.FileSystem, filePath: string): Effect.Effect<boolean>;
-} = dual(
-  2,
-  (fs: FileSystem.FileSystem, filePath: string): Effect.Effect<boolean> =>
-    fs.exists(filePath).pipe(Effect.orElseSucceed(thunkFalse))
-);
-
-/**
- * Classify a path as `File`, `Directory`, or none when it is missing or
- * unreadable.
- *
- * **Details**
- * Every tree walk classifies through this so none repeats the stat-and-unwrap
- * dance, and a vanished entry mid-walk reads as absent rather than failing.
- *
- * **Example** (Classify a path)
- *
- * ```ts
- * import { pathTypeOf } from "@beep/repo-cli/commands/Lint/internal/WorkspaceWalk"
- * import * as Effect from "effect/Effect"
- * import * as FileSystem from "effect/FileSystem"
- *
- * const program = Effect.flatMap(FileSystem.FileSystem, (fs) => pathTypeOf(fs, "/repo/packages"))
- * console.log(Effect.isEffect(program)) // true
- * ```
- *
- * @param fs - File system service to stat with.
- * @param currentPath - Absolute path to classify.
- * @returns The entry type, or none when the path cannot be stat'ed.
- * @category utils
- * @since 0.0.0
- */
-export const pathTypeOf: {
-  (currentPath: string): (fs: FileSystem.FileSystem) => Effect.Effect<O.Option<FileSystem.File.Type>>;
-  (fs: FileSystem.FileSystem, currentPath: string): Effect.Effect<O.Option<FileSystem.File.Type>>;
-} = dual(
-  2,
-  (fs: FileSystem.FileSystem, currentPath: string): Effect.Effect<O.Option<FileSystem.File.Type>> =>
-    fs.stat(currentPath).pipe(Effect.option, Effect.map(O.map((info) => info.type)))
-);
-
-/**
- * Whether `currentPath` is a readable directory.
- *
- * **Example** (Probe a directory)
- *
- * ```ts
- * import { isDirectoryPath } from "@beep/repo-cli/commands/Lint/internal/WorkspaceWalk"
- * import * as Effect from "effect/Effect"
- * import * as FileSystem from "effect/FileSystem"
- *
- * const program = Effect.flatMap(FileSystem.FileSystem, (fs) => isDirectoryPath(fs, "/repo/packages"))
- * console.log(Effect.isEffect(program)) // true
- * ```
- *
- * @param fs - File system service to stat with.
- * @param currentPath - Absolute path to test.
- * @returns `true` only for a directory the walk may enter.
- * @category utils
- * @since 0.0.0
- */
-export const isDirectoryPath: {
-  (currentPath: string): (fs: FileSystem.FileSystem) => Effect.Effect<boolean>;
-  (fs: FileSystem.FileSystem, currentPath: string): Effect.Effect<boolean>;
-} = dual(
-  2,
-  (fs: FileSystem.FileSystem, currentPath: string): Effect.Effect<boolean> =>
-    pathTypeOf(fs, currentPath).pipe(
-      Effect.map(O.match({ onNone: thunkFalse, onSome: (type) => type === "Directory" }))
-    )
-);
 
 /**
  * Child paths of a directory worth descending into.

@@ -33,7 +33,8 @@ import * as S from "effect/Schema";
 import { Command } from "effect/unstable/cli";
 import { renderTruncatedLines } from "../../internal/artifacts/index.ts";
 import { CliReportedExit } from "../../internal/cli/ExitCodeError.ts";
-import { collectOwnedPaths, exists, testFixtureSegment } from "./internal/WorkspaceWalk.ts";
+import { pathExists } from "../../internal/quality/TestTypecheckCoverage.ts";
+import { collectOwnedPaths, testFixtureSegment } from "./internal/WorkspaceWalk.ts";
 import { TsconfigOverlayReadError } from "./Lint.errors.ts";
 
 const $I = $RepoCliId.create("commands/Lint/TsconfigOverlay");
@@ -242,7 +243,7 @@ const overlayOwnedIn = Effect.fn("TsconfigOverlay.overlayOwnedIn")(function* (
   const path = yield* Path.Path;
   const overlayPath = normalizePath(path.resolve(directory, overlayFileName));
 
-  return Str.includes(testFixtureSegment)(`${overlayPath}/`) || !(yield* exists(fs, overlayPath))
+  return Str.includes(testFixtureSegment)(`${overlayPath}/`) || !(yield* pathExists(fs, overlayPath))
     ? A.empty<string>()
     : A.of(overlayPath);
 });
