@@ -26,6 +26,7 @@
     "package-test-typecheck": "beep-cli quality test-tsgo-package",
     "test": "bun run beep:test",
     "test:property": "bun run beep:test",
+    "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run beep:policy && bun run beep:docgen && bun run beep:lint",
     "beep:build": "tsc -p tsconfig.json && bun run babel",
     "beep:check": "tsgo -p tsconfig.json --noEmit",
     "beep:docgen": "bunx --bun --no-install docgen",
