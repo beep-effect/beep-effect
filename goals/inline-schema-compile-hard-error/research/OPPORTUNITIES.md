@@ -360,3 +360,25 @@
   immediately before expensive full proof, and surface newly published,
   no-fixed-release advisories early enough to perform the repository's
   time-bounded exception review before the collect-all run.
+
+## 2026-09-08 — Long-running commands lacked progress diagnostics and proof reuse
+
+- **Work:** Run the canonical repair and publication proof for the
+  repository-wide compiler-hoist campaign.
+- **Evidence:** `quality test-tsgo` announced 1,019 files across 139 packages
+  and then emitted no progress diagnostic for 493 seconds. Confirming that it
+  was still running required an external process check. JSDoc inventory was
+  similarly silent for 264 seconds, while deprecated-API lint buffered its 28
+  shard identities until its 182-second completion. A later
+  `quality package-verify @beep/repo-cli` emitted no phase or progress output
+  during its 366-second audit, then printed only its final audit and Docgen
+  summary. The immutable merge preview also reran repo-cli's same 162-file,
+  3,153-test surface in the unit and property lanes for 352 and 402 seconds,
+  respectively, despite equivalent proof earlier in that same preview.
+  Coverage then ran its distinct instrumented proof for 416 seconds.
+- **Prevention:** Give repo-cli and other shared scripts and commands a bounded
+  progress contract: structured phase, current-unit, completed, remaining,
+  elapsed, and last-completed events plus concise interactive heartbeats. Key
+  successful proofs by command, environment, dependency graph, and workspace
+  digests; reuse exact matches across nested aggregates, and report the key
+  dimension that requires a rerun when reuse is unsafe.

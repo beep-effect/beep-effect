@@ -1665,6 +1665,36 @@ describe("quality task adapter", () => {
   );
 
   it.effect(
+    "invalidates a lane proof when an inherited ambient input changes",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: "lane-proof-ambient-env-" });
+      const markerPath = path.join(tempRoot, ".beep", "ambient-marker.txt");
+      yield* initializeLaneProofRepository(tempRoot);
+
+      const lane = laneProofTestLane(
+        tempRoot,
+        "proof:ambient-env",
+        "preflight",
+        "echo run >> .beep/ambient-marker.txt"
+      );
+      const run = collectGithubCheckLaneWavesForTesting(
+        "proof-ambient-env",
+        [GithubCheckLaneWaveSpec.make({ wave: "preflight", lanes: [lane] })],
+        "fail-fast",
+        "active"
+      );
+      const atSeed = (seed: string) => withEnvVarEffect("BEEP_FC_SEED", seed, run);
+
+      expect(A.map((yield* atSeed("101")).report.lanes, (result) => result.status)).toEqual(["passed"]);
+      expect(A.map((yield* atSeed("101")).report.lanes, (result) => result.status)).toEqual(["reused"]);
+      expect(A.map((yield* atSeed("202")).report.lanes, (result) => result.status)).toEqual(["passed"]);
+      expect(yield* fs.readFileString(markerPath)).toBe("run\nrun\n");
+    }, provideScopedLayer(PlatformLayer))
+  );
+
+  it.effect(
     "runs the lane when the configured proof base cannot be resolved",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;

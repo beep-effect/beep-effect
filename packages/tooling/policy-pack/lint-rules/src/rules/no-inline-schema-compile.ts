@@ -9,6 +9,7 @@
 import { thunkFalse } from "@beep/utils/thunk";
 import { defineRule } from "@oxlint/plugins";
 import { HashSet, MutableHashSet } from "effect";
+import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Str from "effect/String";
@@ -144,23 +145,45 @@ export default defineRule({
         )
       );
 
+    const isStaticSchemaExpression = (node: MaybeNode): boolean => {
+      const expression = unwrapExpression(node);
+      if (O.isNone(expression)) return false;
+
+      switch (expression.value.type) {
+        case "Identifier":
+        case "MemberExpression":
+          return isStaticSchemaReference(expression.value);
+        case "Literal":
+          return true;
+        case "ArrayExpression":
+          return A.every(
+            expression.value.elements,
+            (element) =>
+              element === null ||
+              isStaticSchemaExpression(element.type === "SpreadElement" ? element.argument : element)
+          );
+        case "ObjectExpression":
+          return A.every(expression.value.properties, (property) => {
+            if (property.type === "SpreadElement") return isStaticSchemaExpression(property.argument);
+            if (property.computed && !isStaticSchemaExpression(property.key)) return false;
+            return property.kind === "init" && !property.method && isStaticSchemaExpression(property.value);
+          });
+        case "TemplateLiteral":
+          return A.isReadonlyArrayEmpty(expression.value.expressions);
+        case "CallExpression":
+          return O.match(asSchemaMethodCall(expression.value), {
+            onNone: thunkFalse,
+            onSome: ({ args }) => A.every(args, isStaticSchemaExpression),
+          });
+        default:
+          return false;
+      }
+    };
+
     const isNestedStaticSchemaCall = (node: MaybeNode): boolean =>
       O.match(asSchemaMethodCall(node), {
         onNone: thunkFalse,
-        onSome: ({ args }) => {
-          const [firstArg] = args;
-          if (firstArg === undefined) return true;
-          const firstExpression = unwrapExpression(firstArg);
-          if (
-            O.exists(
-              firstExpression,
-              (expression) => expression.type !== "Identifier" && expression.type !== "MemberExpression"
-            )
-          ) {
-            return O.isNone(asSchemaMethodCall(firstArg)) || isNestedStaticSchemaCall(firstArg);
-          }
-          return isStaticSchemaReference(firstArg);
-        },
+        onSome: ({ args }) => A.every(args, isStaticSchemaExpression),
       });
 
     // High when the first argument is itself a nested static schema call (literal + compiler both

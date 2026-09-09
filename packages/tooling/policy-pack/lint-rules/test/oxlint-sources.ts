@@ -242,6 +242,15 @@ export const OXLINT_SOURCES: { readonly [K in OxlintRule]: OxlintRuleSources } =
           `export const h4 = (input: unknown): void => S.asserts(Model, input);`
         ),
       },
+      // Static schema fields nested in an object literal remain hoistable.
+      {
+        count: 1,
+        source: lines(
+          `import * as S from "effect/Schema";`,
+          `const Model = S.Struct({});`,
+          `export const h5 = () => S.decodeSync(S.Struct({ value: Model }))({});`
+        ),
+      },
     ],
     valid: [
       // Module-scope compiler call is allowed (the whole point of the rule).
@@ -283,6 +292,15 @@ export const OXLINT_SOURCES: { readonly [K in OxlintRule]: OxlintRuleSources } =
         source: lines(
           `import * as S from "effect/Schema";`,
           `export const decodeSection = (input: { schema: S.Top }) => S.decodeSync(input.schema);`
+        ),
+      },
+      // Runtime schema parameters nested in object literals cannot be hoisted.
+      {
+        count: 0,
+        source: lines(
+          `import * as S from "effect/Schema";`,
+          `export const decodeField = (fieldSchema: S.Top) =>`,
+          `  S.decodeSync(S.Struct({ value: fieldSchema }));`
         ),
       },
     ],
