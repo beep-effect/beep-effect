@@ -73,7 +73,11 @@ export const fcDeepSweepActive = Number.isInteger(parsedFcNumRuns) && parsedFcNu
 // already ran in the unit lane at the default run count; replaying it at
 // 400-1000 runs with rotating seeds cannot change its outcome. The scan is a
 // cheap synchronous walk of `test/` under the vitest root (the package cwd).
-const propertyTestMarker = /\bfast-check\b|\bit\.prop\b/;
+// `effect/testing` re-exports fast-check as `FastCheck` (358 test files import it that way;
+// only 6 import `fast-check` directly), so the marker matches the namespace, the bare package,
+// `it.prop`, and the `fc.<combinator>` call shapes rather than the import specifier alone.
+const propertyTestMarker =
+  /\bFastCheck\b|\bfast-check\b|\bit\.prop\b|\bfc\.(?:property|asyncProperty|assert|sample|check)\b/;
 const testFilePattern = /\.test\.tsx?$/;
 const scanSkippedDirectories: ReadonlyArray<string> = ["node_modules", ".context", "fixtures"];
 const listTestFiles = (directory: string): ReadonlyArray<string> => {
