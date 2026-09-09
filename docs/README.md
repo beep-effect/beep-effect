@@ -13,6 +13,9 @@ Tracked, authored documentation for the beep-effect monorepo.
 | `docs/generated/` | **no** (gitignored) | Docgen aggregate output. Produced by `bun run docgen` / `bun run docs:aggregate`; safe to delete, regenerable. |
 | `docs/_internal/` | **no** (gitignored) | Private working notes. This repository is public — never commit anything under `_internal/`. |
 
+Operational guidance includes [recovering from local Graft configuration
+drift](runbooks/graft-local-recovery.md).
+
 ## Rules
 
 - Authored documents live here and are committed like code.
