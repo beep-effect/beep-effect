@@ -408,3 +408,14 @@
 - **Prevention:** Track every implementation PR in packet closeout and inspect
   its discussions, including merged predecessors, before claiming that all
   review comments have been addressed.
+
+## 2026-09-08 — GraphQL quota stopped publication after a successful push
+
+- **Work:** Publish the documentation closeout with Yeet's early PR path.
+- **Evidence:** Commit and push succeeded, but `gh pr create` failed with
+  `GraphQL: API rate limit already exceeded`. Yeet restored the unrelated
+  staged-only residue and exited before local proof or hosted monitoring. A
+  direct REST request could still list the branch's pull requests.
+- **Prevention:** Treat a pushed branch as a durable publication checkpoint.
+  Report the failing API bucket and reset time, and offer a REST PR-creation
+  fallback while retaining the required local proof and review gates.
