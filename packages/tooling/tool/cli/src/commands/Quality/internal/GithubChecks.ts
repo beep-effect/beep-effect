@@ -561,9 +561,9 @@ export const githubCheckPrePushExternalLanes = (repoRoot: string): ReadonlyArray
  *
  * **Details**
  *
- * The cheap tier is sixteen-odd sub-second gates that each pay a `bun run
- * beep` boot, so it runs four abreast; wave order still decides which red is
- * reported first. Pre-push lanes are heavy Turbo runs that already saturate
+ * The cheap tier is sixteen-odd sub-second gates that each pay a
+ * `bun run beep` boot, so it runs four abreast; wave order still decides
+ * which red is reported first. Pre-push lanes are heavy Turbo runs that already saturate
  * the machine, so that tier stays serial (quality-lane audit 2026-09-09, D9).
  *
  * **Example** (Read the cheap tier's width)

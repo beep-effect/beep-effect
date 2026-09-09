@@ -23,26 +23,24 @@ import type { ChildProcessSpawner } from "effect/unstable/process";
 
 const $I = $RepoCliId.create("commands/Quality/CheckCensus");
 
-/**
- * Default JSON report path, relative to the repository root.
- *
- * @category configuration
- * @since 0.0.0
- */
-export const DEFAULT_CHECK_CENSUS_OUTPUT_PATH = ".beep/quality/check-census.json";
+// Default JSON report path, relative to the repository root.
+const DEFAULT_CHECK_CENSUS_OUTPUT_PATH = ".beep/quality/check-census.json";
 
-/**
- * Bound on concurrent package measurements; each one spawns two full tsgo
- * programs, so the census stays under the 16GB hosted-runner posture.
- *
- * @category configuration
- * @since 0.0.0
- */
-export const CHECK_CENSUS_CONCURRENCY = 4;
+// Bound on concurrent package measurements; each one spawns two full tsgo
+// programs, so the census stays under the 16GB hosted-runner posture.
+const CHECK_CENSUS_CONCURRENCY = 4;
 
 /**
  * Temporary overlay written into a package while its reference-keeping
  * program is measured; removed once the measurement finishes.
+ *
+ * **Example** (Recognise the census overlay in a package listing)
+ *
+ * ```ts
+ * import { CHECK_CENSUS_OVERLAY_FILE_NAME } from "@beep/repo-cli/commands/Quality/CheckCensus"
+ *
+ * console.log(CHECK_CENSUS_OVERLAY_FILE_NAME) // "tsconfig.__census.json"
+ * ```
  *
  * @category configuration
  * @since 0.0.0

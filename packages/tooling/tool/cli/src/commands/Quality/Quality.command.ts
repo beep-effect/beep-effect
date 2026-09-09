@@ -2665,7 +2665,7 @@ const resolveTestTsgoPackageGroups = Effect.fn("QualityScriptCommands.resolveTes
  *
  * ```ts
  * import { runTestTsgoChecksAt } from "@beep/repo-cli/commands/Quality/Quality.command"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * console.log(Effect.isEffect(runTestTsgoChecksAt("/repo", undefined))) // true
  * ```
