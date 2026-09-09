@@ -365,3 +365,34 @@
   including generic UID and process-bearing state/preview filenames, and retain
   the independent scan as an acceptance check. Discard this interim pin and
   refresh with a new salt after the regression passes.
+
+## 2026-09-09: parallel residue fixes collided at the same pins
+
+- **Work:** reconciling the run-3 residue follow-up with security PR #1032.
+- **Evidence:** merging main produced conflicts in both amended fleet generators,
+  three refreshed manifests, Stage B attempt payloads, the shared tests, and packet
+  bookkeeping. #1032 repaired old captures in place while the two residue lanes
+  refreshed the same pin families under stronger member and path rules.
+- **Cost:** both redaction changes and test suites require an explicit union,
+  followed by three fresh captures and complete integrity and provenance proof.
+- **Prevention:** assign one owner per pin family per day, or add a repository-level
+  residue gate that runs the built-in corpus scanners in CI before publication.
+- **Environment:** SSH fetch failed with `Bad owner or permissions` for the system
+  SSH proxy configuration. A command-scoped HTTPS fetch succeeded without changing
+  SSH configuration or repository remotes.
+
+## 2026-09-09: the combined residue rules rejected custody metadata and stale lineage
+
+- **Work:** running both inherited committed repair-history regressions after the merge.
+- **Evidence:** both failed with `residue scan failed: free-text process identifier`:
+  the widened pattern interpreted a YAML custody `pid` count as identity text.
+  After relabeling that census bucket `pid_pair`, Stage A failed with
+  `generator lineage differs: generator_lineage`; the repair retained the old
+  amended digest and serialized the leading lineage block twice.
+- **Fix:** retain custody precedence and arithmetic with an unambiguous count label;
+  validate source lineage and emit one updated lineage block during security repair.
+  Both committed-history regressions now pass, including source replay and
+  unchanged original security receipts. Fixture repositories live under ignored
+  `.beep/corpus-test-repos/` so tests remain inside the authorized worktree.
+- **Prevention:** run the full union of capture and historical repair regressions
+  whenever a redaction pattern or manifest schema changes.

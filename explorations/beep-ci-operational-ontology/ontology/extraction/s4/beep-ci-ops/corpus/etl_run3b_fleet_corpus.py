@@ -65,9 +65,17 @@ PROPERTY_KEY = re.compile(r"[A-Za-z0-9_]+")
 PROPERTY_RECORD_COMMENT = re.compile(r"# record (0|[1-9][0-9]*)")
 PATH_LEFT_BOUNDARY = r"(?<![A-Za-z0-9_.~/-])"
 PATH_RIGHT_BOUNDARY = r"(?=/|$|[\s\"'=,:;)\]])"
-# Normalized non-identity exceptions require a deployed source citation here.
-PROCESS_MEMBER_ALLOWLIST: frozenset[str] = frozenset()
-OWNER_VARIANTS = ("pid", "ownerpid", "attachedpid", "other")
+# Execution step identifiers, not process identities:
+# packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:592 (failedStepId)
+# packages/tooling/tool/cli/src/commands/Yeet/internal/ProofState.ts:51 (stepId)
+# packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts:407 (stepId)
+# Other execution joins do not match the process rule and need no exception:
+# Verdict.ts:580-581 and AttemptJournal.ts:50-51 (runId, attemptId),
+# Verdict.ts:152 (lane id), RepoRun.models.ts:185 (taskId), :309/:344 (wave/step id).
+# All three Yeet files above live in packages/tooling/tool/cli/src/commands/Yeet/internal/.
+PROCESS_MEMBER_ALLOWLIST: frozenset[str] = frozenset({"failedstepid", "stepid"})
+# Census labels are counts, not PID values; keep them outside free-text PID syntax.
+OWNER_VARIANTS = ("pid_pair", "ownerpid", "attachedpid", "other")
 JSON_VALUE_BYTES = (
     rb'(?:"(?:\\.|[^"\\])*"|-?(?:0|[1-9]\d*)(?:\.\d+)?'
     rb'(?:[eE][+-]?\d+)?|true|false|null)'
@@ -243,7 +251,7 @@ def redact(value: JsonValue, salt: bytes | None, counts: collections.Counter,
     if identities and salt is not None:
         if "ownerRef" in value:
             fail("source ownerRef collides with capture custody surrogate")
-        variant = next((key for key in OWNER_VARIANTS[:-1] if key in identities), "other")
+        variant = next((key for key in ("pid", "ownerpid", "attachedpid") if key in identities), "other")
         if variant == "other":
             # Unpaired start identities and future variants still get object-local custody.
             if any(child is not None and type(child) not in (str, int) for child in identities.values()):
@@ -263,7 +271,7 @@ def redact(value: JsonValue, salt: bytes | None, counts: collections.Counter,
         # captureSalt is the hexadecimal representation of 32 random bytes.
         result["ownerRef"] = sha256(f"{owner}:{start}:{salt.hex()}".encode())[:12]
         counts["owner_refs"] += 1
-        counts["owner_refs_variant_" + variant] += 1
+        counts["owner_refs_variant_" + ("pid_pair" if variant == "pid" else variant)] += 1
         if start == "<absent>":
             counts["owner_refs_without_proc_start"] += 1
     for key, child in value.items():

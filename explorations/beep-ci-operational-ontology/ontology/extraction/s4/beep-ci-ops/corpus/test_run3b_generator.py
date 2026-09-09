@@ -106,7 +106,7 @@ class RedactionTests(unittest.TestCase):
         actual = rows[0]
         self.assertEqual(actual["ownerRef"], actual["attempt"]["ownerRef"])
         self.assertEqual(actual["runScope"]["ownerRef"], etl.sha256(f"1234:<absent>:{salt.hex()}".encode())[:12])
-        self.assertEqual(receipt["owner_refs_by_variant"], {"pid": 1, "ownerpid": 1, "attachedpid": 1, "other": 0})
+        self.assertEqual(receipt["owner_refs_by_variant"], {"pid_pair": 1, "ownerpid": 1, "attachedpid": 1, "other": 0})
         self.assertEqual(receipt["redaction_counts"]["owner_refs_without_proc_start"], 1)
         etl.scan_output_bytes([("lease.json", etl.encode_json(actual)),
                                ("lease.properties", etl.encode_properties_projection(rows))])
@@ -143,7 +143,42 @@ class RedactionTests(unittest.TestCase):
                 self.assertTrue(etl.process_member(key), (file, key))
             observed.update(identities)
         self.assertTrue({"attachedPid", "ownerPid", "ownerProcStart", "pid", "procStart"} <= observed)
-        self.assertFalse(etl.PROCESS_MEMBER_ALLOWLIST)
+        self.assertEqual(etl.PROCESS_MEMBER_ALLOWLIST, {"failedstepid", "stepid"})
+
+    def test_deployed_execution_join_keys_survive_redaction_and_projection(self):
+        # Enumerate the deployed verdict/attempt, retained journal, and execution schemas.
+        files = (etl.YEET + "Verdict.ts", etl.YEET + "AttemptJournal.ts",
+                 etl.YEET + "ProofState.ts", etl.REPO_RUN + "AttemptTerminationJournal.ts",
+                 etl.REPO_RUN + "RepoRun.models.ts")
+        observed = set()
+        for file in files:
+            fields = re.findall(r"^\s*([A-Za-z_][A-Za-z0-9_]*)\s*:\s*(?:S\.|UUID)",
+                                (etl.REPO_ROOT / file).read_text(), re.MULTILINE)
+            observed.update(key for key in fields if etl.normalized_member(key).endswith("id"))
+        identities = {"ownerPid", "pid"}
+        joins = observed - identities
+        self.assertEqual(joins, {"attemptId", "runId", "failedStepId", "stepId", "taskId", "id"})
+        for key in joins:
+            self.assertFalse(etl.process_member(key), key)
+        for key in identities:
+            self.assertTrue(etl.process_member(key), key)
+        for key in ("STEP_ID", "failed-step-id"):
+            self.assertFalse(etl.process_member(key), key)
+        verdict = {"runId": "fixture-run", "attemptId": "fixture-attempt",
+                   "failedStepId": "full:check", "failureKind": "step-exit"}
+        payload = {"schemaVersion": etl.ATTEMPT_SCHEMA, "_tag": "attempt-finished",
+                   "attemptId": "fixture-attempt", "stepId": "full:check", "taskId": "fixture#check",
+                   "id": "full:check",
+                   "verdict": verdict}
+        rows, receipt = etl.transform_source(etl.encode_ndjson([payload]), "attempts", b"a" * 32)
+        self.assertEqual(rows, [payload])
+        self.assertEqual(sum(receipt["owner_refs_by_variant"].values()), 0)
+        pairs = etl.eligible_property_pairs(rows[0])
+        self.assertIn(("failureKind", "step-exit"), pairs)
+        for key in joins:
+            self.assertIn((key, payload.get(key, verdict.get(key))), pairs)
+        etl.scan_output_bytes([("attempts.ndjson", etl.encode_ndjson(rows)),
+                               ("attempts.properties", etl.projected_bytes(rows, "organic"))])
 
     def test_process_residue_uses_keys_in_both_formats(self):
         keys = ("attachedPid", "ownerPid", "ownerProcStart", "pid", "ppid", "processId",
@@ -324,7 +359,7 @@ class PinContractTests(unittest.TestCase):
         repair = importlib.util.module_from_spec(spec)
         with patch.object(sys, "dont_write_bytecode", True):
             spec.loader.exec_module(repair)
-        cache = Path.home() / ".cache/beep"
+        cache = etl.REPO_ROOT / ".beep/corpus-test-repos"
         cache.mkdir(parents=True, exist_ok=True)
         with tempfile.TemporaryDirectory(dir=cache) as name:
             repo = Path(name)

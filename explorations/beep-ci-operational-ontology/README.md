@@ -67,10 +67,10 @@ question now asks for the SeatRequest sequence under its governing
 `AdmissionProjectionSpecification`, with the step's literal `hasScopeTag` (a distinct
 data property — the no-punning ruling keeps `hasScope` an object property), and the S6
 predicate registry regenerated to track it.
-**NEXT: publish the Stage B follow-up after the synthetic fixture PR, then run 3 proper.**
+**NEXT: Fable reviews and publishes the reconciled residue follow-up, then run 3 proper.**
 Stage A PINNED 2026-09-08 in `run3-fleet/` and `run3-checkout-identity/`:
 existing admission journals, fleet attempts/verdicts, live granted/queued work,
-and one timestamped checkout inventory. The Ruling 22 fleet refresh covers 95 checkouts; the
+and one timestamped checkout inventory. The reconciled Ruling 22 fleet refresh covers 94 checkouts; the
 inventory binds 107 after the review-fix refresh, including registered worktrees outside the required run-file
 globs. The failure-signature occurrence rider is present; cache-plan execution
 resolution and proof-ledger issuance rows are absent. Stage B is now pinned in
@@ -79,7 +79,9 @@ run 4 under Ruling 17. S7 emission v2 supplies the ordering-cluster evidence;
 S8 stays deferred. Stage B proof is in [the report](./research/run3-lanes/stage-b-report.md).
 The review-fix lane has replaced both pins with encoded output paths, stricter
 receipt checks, and runtime redaction; Fable owns publication and PR replies.
-Current fleet proof is in [the residue remediation report](./research/run3-lanes/stage-a-residue-report.md).
+Current fleet and synthetic proof is in
+[the reconciliation report](./research/run3-lanes/reconcile-1032-report.md).
+The producer spec is tree-resident after #1033; #1032 is merged into the follow-up.
 Checkout-identity proof remains in [the prior review-fix report](./research/run3-lanes/stage-a-review-fixes-report.md).
 Historical capture details and the original lane handoff are in
 [the Stage A report](./research/run3-lanes/stage-a-report.md); the orchestrator
@@ -151,6 +153,15 @@ loop-closer) → S8 OWL 2 RL + SHACL formalization, rules compilation → S9 dog
 graduation. Full plan with locked decisions: [`DECISIONS.md`](./DECISIONS.md).
 
 ## Trail
+
+- 2026-09-09: Reconciled the residue follow-up with #1032 through a merge commit.
+  Both redaction fixes and test suites survive; source-cited Stage B step-ID
+  exceptions restore the failure joins. Fresh Stage A: 1914 payloads / 1915 files,
+  7869 events; Stage B fleet: 734 / 735, 7279 events; synthetic: 8 / 9, 10 events.
+  Both organic captures cover 94 checkouts with 289 admission rows. All five pins
+  verify; 58 generator tests, packet validation, and the CQ suite pass. Three
+  refreshed pins pass corruption/restore and empty residue scans. Fable owns
+  review/publication. See [the reconciliation report](./research/run3-lanes/reconcile-1032-report.md).
 
 - 2026-09-09: Stage A fleet residue remediated under Ruling 22. Mirrored Stage B's
   normalized process-member custody and bounded host-root scans, with source-cited

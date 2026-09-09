@@ -1,0 +1,43 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "codex/security-corpus-process-metadata",
+  "committed": false,
+  "createdAt": "2026-09-09T06:23:15.338Z",
+  "failurePolicy": "fail-fast",
+  "head": "1bd449f36084b6194b58f25120d7dd0d6ffa7de2",
+  "lanes": [
+    {
+      "id": "closeout:01-pr-context",
+      "label": "closeout:pr-context",
+      "phase": "monitor",
+      "status": "not-run",
+      "tier": "full",
+      "inputDigest": null
+    },
+    {
+      "id": "closeout:02-review-gates",
+      "label": "closeout:review-gates",
+      "phase": "monitor",
+      "status": "not-run",
+      "tier": "full",
+      "inputDigest": null
+    }
+  ],
+  "message": "yeet PR closeout failed with 5 issue(s).",
+  "mode": "closeout",
+  "outcome": "failure",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "codex_security-corpus-process-metadata-44c5e00b442f",
+  "attemptId": "e0bad34b-e199-46f0-9fec-d0b9a9f954fe",
+  "resolvedHeadSha": "1bd449f36084b6194b58f25120d7dd0d6ffa7de2",
+  "diffFingerprint": "96a296d224f285c67bee93c30f8a309157f0daa35dc5b87e410b78630a09cfc7",
+  "proofTier": "full",
+  "startedAt": "2026-09-09T06:23:08.605Z",
+  "endedAt": "2026-09-09T06:23:15.338Z",
+  "elapsedMs": 6733,
+  "indexPath": "<fleet>/beep-effect12/.beep/yeet/quality-issue-index.json",
+  "failedStepId": "closeout:01-pr-context",
+  "failureKind": "handler-error"
+}

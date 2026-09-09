@@ -279,3 +279,48 @@ proof. It changes no generator or pin bytes. Ordinary detached verification and
 knowledge references are rerun at final HEAD before handoff; the final handoff
 identifies the documentation commit separately. No push or PR creation occurred.
 The three pre-existing Graft wiring edits remain outside both commits.
+
+## Reconciliation with #1032 (2026-09-09)
+
+Merged main at `6b4720f1fb` with merge commit `5e02f8c04b2448fe4ff49bab4e898841b481c0e5`.
+Both quoted/escaped PID redaction and the prior member/custody/path rules survive.
+The combined suite passes 58 tests; all five pins verify with their own generators.
+The three refreshed pins pass exact corruption/restore proof and empty residue scans.
+Stage B now preserves source-cited step identifiers and both termination joins.
+The manifest census uses `pid_pair` so a numeric count cannot resemble PID text.
+
+| Pin | Payloads | All files | Events | Payload bytes | All bytes |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| `run3b-fleet` | 734 | 735 | 7279 | 14434276 | 15750040 |
+| `run3b-synthetic` | 8 | 9 | 10 | 6575 | 42272 |
+
+| Pin | Whole-tree SHA-256, including manifest |
+| --- | --- |
+| `run3b-fleet` | `61b7876a421beee0a8a8b5b666e3639e9376b55bed1886ddce53c098e1b5598e` |
+| `run3b-synthetic` | `de37d475e20490a03ed6f59f9ad549562992fb65c569c8a1987e171d4e3a8ef5` |
+
+`run3b-fleet` generator SHA-256: `fceff631402bd828f12c199543c29d90ae1c1cec78be824982d684a0579b9bcb`.
+Capture: `2026-09-09T06:27:03.151Z` through `2026-09-09T06:27:12.950Z`.
+
+`run3b-synthetic` generator SHA-256: `fceff631402bd828f12c199543c29d90ae1c1cec78be824982d684a0579b9bcb`.
+Capture: `2026-09-09T06:28:00.131Z` through `2026-09-09T06:28:00.282Z`.
+
+Fresh capture calls `finish_manifest` in `etl_run3_fleet_corpus.py:600`
+and `etl_run3b_fleet_corpus.py:613`. It emits SHA-256 receipts, the payload-only
+`integrity` scope, three PASS entries in `verification`, and fixed-point byte
+`totals`. It does **not** emit `security_resanitization`: that block describes
+an in-place, non-recapture repair, and is added by
+`goals/codex-security-findings-2026-09-08/research/scripts/resanitize-corpora.py:138`.
+Copying it into a fresh capture would misstate provenance. Run-2 and identity
+retain main's repair blocks unchanged. Stage A retains its validated Ruling 22
+`generator_lineage`; both Stage B populations share the new generator self-pin.
+The prior and current generator/manifest digests below retain the refresh history.
+
+The refreshed fleet restores **1753 same-object `failedStepId`/`failureKind`
+pairs**, with 1753 property pairs. The pre-reconciliation branch pin had zero;
+main had 1746 before this live refresh. Synthetic has zero such verdict pairs.
+
+All final counts supersede the historical capture counts above. Both organic
+captures cover 94 checkouts. The full digest lineage, manifest decision, source
+citations, inherited run-2 diagnostic limit, and committed-head proof are in
+[the reconciliation report](./reconcile-1032-report.md). DECISIONS.md was not edited.

@@ -1,5 +1,5 @@
 {
-  "ownerRef": "2787bb01bd5f",
+  "ownerRef": "781176f2b059",
   "schemaVersion": "yeet-admission-lease/v1",
   "attemptId": "343decc2-a5eb-470e-8208-19cef796d930",
   "resolvedHeadSha": "88c4036de4817cd179d2e0d65af29e885eca9eb3",
@@ -17,12 +17,12 @@
   "command": "bun run beep quality github-checks cheap-gates --collect-all && bun run beep quality github-checks pre-push && bun run beep ci local --affected --base origin/main",
   "startedAt": "2026-09-09T05:32:31.255Z",
   "admittedAtMillis": 1788931951255,
-  "heartbeatAtMillis": 1788934163056,
+  "heartbeatAtMillis": 1788935276234,
   "enqueuedAtMillis": 1788931014183,
   "nonce": "c1587c1f-765e-4e85-a3a9-47978a750adf",
   "hotPaths": [],
   "runScope": {
-    "ownerRef": "fcea45727499",
+    "ownerRef": "62117334ecdb",
     "unitName": "agent-run-c1587c1f-765e-4e85-a3a9-47978a750adf.scope",
     "support": "active",
     "attachedAt": "2026-09-09T05:32:31.289Z"

@@ -235,3 +235,44 @@ Final HEAD receives the same detached verification and post-commit knowledge
 reference check before handoff. It changes no generator or pin bytes. The final
 handoff identifies this documentation commit separately. No push or PR creation
 occurred.
+
+## Reconciliation with #1032 (2026-09-09)
+
+Merged main at `6b4720f1fb` with merge commit `5e02f8c04b2448fe4ff49bab4e898841b481c0e5`.
+Both quoted/escaped PID redaction and the prior member/custody/path rules survive.
+The combined suite passes 58 tests; all five pins verify with their own generators.
+The three refreshed pins pass exact corruption/restore proof and empty residue scans.
+Stage B now preserves source-cited step identifiers and both termination joins.
+The manifest census uses `pid_pair` so a numeric count cannot resemble PID text.
+
+| Pin | Payloads | All files | Events | Payload bytes | All bytes |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| `run3-fleet` | 1914 | 1915 | 7869 | 15954039 | 18743097 |
+
+| Pin | Whole-tree SHA-256, including manifest |
+| --- | --- |
+| `run3-fleet` | `9a5a9fbfc0d926334523f065ba0c9a28f5565bf22d08597e33c908e40a5da1c7` |
+
+`run3-fleet` generator SHA-256: `55caab8d26e55e00854737b476388bbb189d393a8855da3d86fa1a7eb82b0228`.
+Capture: `2026-09-09T06:27:59.082Z` through `2026-09-09T06:28:10.478Z`.
+
+Fresh capture calls `finish_manifest` in `etl_run3_fleet_corpus.py:600`
+and `etl_run3b_fleet_corpus.py:613`. It emits SHA-256 receipts, the payload-only
+`integrity` scope, three PASS entries in `verification`, and fixed-point byte
+`totals`. It does **not** emit `security_resanitization`: that block describes
+an in-place, non-recapture repair, and is added by
+`goals/codex-security-findings-2026-09-08/research/scripts/resanitize-corpora.py:138`.
+Copying it into a fresh capture would misstate provenance. Run-2 and identity
+retain main's repair blocks unchanged. Stage A retains its validated Ruling 22
+`generator_lineage`; both Stage B populations share the new generator self-pin.
+The prior and current generator/manifest digests below retain the refresh history.
+
+The failure rider now has **1899 structured occurrences**: 1863 same-object
+`failedStepId`/`failureKind` pairs plus 36 other classified occurrences. The
+prior 1898 was 1862 plus 36; the new capture adds one pair. All 1863 property
+projections retain the key. The cache-plan rider remains absent.
+
+All final counts supersede the historical capture counts above. Both organic
+captures cover 94 checkouts. The full digest lineage, manifest decision, source
+citations, inherited run-2 diagnostic limit, and committed-head proof are in
+[the reconciliation report](./reconcile-1032-report.md). DECISIONS.md was not edited.

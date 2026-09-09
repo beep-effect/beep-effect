@@ -62,7 +62,7 @@ class RedactionTests(unittest.TestCase):
         actual = rows[0]
         self.assertEqual(actual["ownerRef"], actual["attempt"]["ownerRef"])
         self.assertEqual(actual["runScope"]["ownerRef"], fleet.sha256(f"1234:<absent>:{salt.hex()}".encode())[:12])
-        self.assertEqual(receipt["owner_refs_by_variant"], {"pid": 1, "ownerpid": 1, "attachedpid": 1, "other": 0})
+        self.assertEqual(receipt["owner_refs_by_variant"], {"pid_pair": 1, "ownerpid": 1, "attachedpid": 1, "other": 0})
         self.assertEqual(receipt["redaction_counts"]["owner_refs_without_proc_start"], 1)
         fleet.scan_output_bytes([("lease.json", fleet.encode_json(actual)),
                                ("lease.properties", fleet.encode_properties_projection(rows))])
@@ -461,7 +461,7 @@ class SyntheticReceiptTests(unittest.TestCase):
         # Goal packet snapshots reject hidden-directory and binary residue.
         with patch.object(sys, "dont_write_bytecode", True):
             spec.loader.exec_module(repair)
-        cache = Path.home() / ".cache/beep"
+        cache = fleet.REPO_ROOT / ".beep/corpus-test-repos"
         cache.mkdir(parents=True, exist_ok=True)
         with tempfile.TemporaryDirectory(dir=cache) as name:
             repo = Path(name)
@@ -489,7 +489,13 @@ class SyntheticReceiptTests(unittest.TestCase):
                 git("add", ".")
                 git("commit", "-qm", "fixture: update generator")
                 repair.repair(fleet.__name__)
-                first = fleet.yaml.safe_load((pin / fleet.MANIFEST_NAME).read_bytes())["security_resanitization"]
+                repaired = (pin / fleet.MANIFEST_NAME).read_bytes()
+                self.assertEqual(repaired.count(b"generator_lineage:\n"), 1)
+                self.assertIsNone(re.search(rb'attachedPid|ownerProcStart|ownerPid|"pid"', repaired))
+                repaired_manifest = fleet.yaml.safe_load(repaired)
+                self.assertEqual(repaired_manifest["generator_lineage"]["amended_sha256"],
+                                 fleet.sha256(generator.read_bytes()))
+                first = repaired_manifest["security_resanitization"]
                 self.assertEqual(first["source_manifest_sha256"], fleet.sha256(original))
                 self.assertEqual(first["changed_raw_payloads"], 1)
                 row = fleet.decode_ndjson((pin / "admission/fixture/journal.ndjson").read_bytes(), "fixture")[0]
