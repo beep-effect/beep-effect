@@ -12,7 +12,7 @@
     "sources": ["research/SOURCES.md"],
     "links": {
       "goals": [],
-      "docs": [],
+      "docs": ["AGENTS.md"],
       "supersededBy": null
     },
     "created": "2026-08-27",

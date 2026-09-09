@@ -26,6 +26,9 @@ matrix (2026-08-01 reconciliation grill; phase-2 grill 2026-08-04).
 
 ## Next Open Question
 
+Routing for future token-heavy Codex work is settled: `gpt-6-astra` with
+`xhigh` reasoning ([decision update](./DECISIONS.md)). The next step remains:
+
 None — the packet graduated. Execution continues in the goal packet:
 
 ```text
@@ -91,3 +94,6 @@ each returns through its own align question, not by reopening this packet.
   concurrent-citations quantifier fixture, declared-never-inferred version
   currency. Greptile's absent-packages claim rebutted (`law-practice/tables`
   + `server` exist on disk).
+- 2026-09-08: recorded the operator's Astra/xhigh routing update in DECISIONS,
+  the manifest source links, and this resume surface; retained the existing
+  stage, lifecycle, open questions, and historical execution provenance.

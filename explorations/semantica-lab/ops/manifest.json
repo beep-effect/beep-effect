@@ -15,10 +15,10 @@
         "goals/semantica-storage-inversion",
         "goals/semantica-reasoning-spike"
       ],
-      "docs": [],
+      "docs": ["AGENTS.md"],
       "supersededBy": null
     },
     "created": "2026-08-24",
-    "updated": "2026-09-03"
+    "updated": "2026-09-08"
   }
 }

@@ -21,6 +21,9 @@ the "bush" (`A_LETTER_FROM_THE_OTHER_SIDE_OF_THE_LOOP.md`).
 
 ## Next Open Question
 
+Routing for future token-heavy Codex work is settled: `gpt-6-astra` with
+`xhigh` reasoning ([decision update](./DECISIONS.md)). The next step remains:
+
 **§4b NORMALIZATION GATE IS COMPLETE AND RATIFIED** (2026-08-29; PR #889). The
 `ontology-foundational-auditor` skill ran as written over the S4 harvest: 1,112
 observations, 692 hypotheses, 235 analysis pairs + 235 blinded pairs, 232 proposals,
@@ -445,3 +448,6 @@ graduation. Full plan with locked decisions: [`DECISIONS.md`](./DECISIONS.md).
   `pros/`→`prose/`), proposal grilled via /grill-with-docs (2 rounds, 8 decisions locked,
   all on recommended arms), pipeline v2 recorded, S0 first-cut baseline computed from this
   checkout's verdicts. Stopped at: fleet-wide baseline + S2/S3 launch.
+- 2026-09-08: recorded the operator's Astra/xhigh routing update in DECISIONS,
+  the manifest source links, and this resume surface; retained the existing
+  stage, lifecycle, open questions, and historical execution provenance.
