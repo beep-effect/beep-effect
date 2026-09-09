@@ -8,7 +8,7 @@
 import { Effect, Order, pipe } from "effect";
 import * as A from "effect/Array";
 import * as Str from "effect/String";
-import { TurtleDocument } from "./Schemas.ts";
+import { ScheduleScope, TurtleDocument } from "./Schemas.ts";
 import type { PendingRequest, ScheduleProposal } from "./Schemas.ts";
 
 const prefixes = [
@@ -17,6 +17,9 @@ const prefixes = [
   "@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .",
   "@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .",
 ];
+
+// Instrumentation contract identity; vocabulary ratification remains run-3 work.
+const emissionContractVersion = "s7-emission/v2";
 
 const turtleLiteral = (value: string): string =>
   `"${pipe(
@@ -54,6 +57,16 @@ const requestTriples =
 
 const serializeProposal = (proposal: ScheduleProposal): TurtleDocument => {
   const proposalNode = `ciops-prov:${pnLocalSlug(proposal.proposalId)}`;
+  const episodeNode = `ciops-prov:episode-${pnLocalSlug(proposal.episodeId)}`;
+  // Each component encodes '-' itself, so the tuple separators are injective.
+  // Scope comes from the admission engine's LiteralKit even for an empty queue.
+  const specificationNode = `ciops-prov:specification-${A.join(
+    A.map(
+      [emissionContractVersion, proposal.policyDigest, proposal.journalPrefixDigest, ScheduleScope.Enum.admission],
+      pnLocalSlug
+    ),
+    "-"
+  )}`;
   const admittedRequests = A.map(proposal.steps, (step) => step.request);
   const requests = A.appendAll(admittedRequests, proposal.deferredTail);
   const ratifiedTriples = pipe(
@@ -61,19 +74,34 @@ const serializeProposal = (proposal: ScheduleProposal): TurtleDocument => {
     A.sort(Order.String)
   );
   const provisionalTriples = pipe(
-    A.append(
-      A.flatMap(proposal.steps, (step, index) => {
+    [
+      ...A.flatMap(proposal.steps, (step, index) => {
         const stepSubject = `${proposalNode}-step-${step.stepIndex}`;
         return [
           `${proposalNode} ciops-prov:hasStep ${stepSubject} .`,
-          `${stepSubject} ciops-prov:hasScope ${turtleLiteral(step.scope)} .`,
+          `${stepSubject} ciops-prov:hasScopeTag ${turtleLiteral(step.scope)}^^xsd:string .`,
           `${stepSubject} ciops-prov:schedulesSeatRequest ${proposalNode}-request-${index} .`,
           `${stepSubject} ciops-prov:stepIndex "${step.stepIndex}"^^xsd:integer .`,
           `${stepSubject} rdf:type ciops-prov:ScheduleStep .`,
         ];
       }),
-      `ciops-prov:scheduler ciops-prov:hasCurrentProposal ${proposalNode} .`
-    ),
+      ...A.map(
+        requests,
+        (request, index) =>
+          `${proposalNode}-request-${index} ciops-prov:scheduledUnitRef ${turtleLiteral(request.nonce)}^^xsd:string .`
+      ),
+      ...A.map(
+        proposal.deferredTail,
+        (_request, index) =>
+          `${proposalNode} ciops-prov:defersSeatRequest ${proposalNode}-request-${A.length(admittedRequests) + index} .`
+      ),
+      `${episodeNode} rdf:type ciops-prov:VerificationEpisode .`,
+      `${episodeNode} ciops-prov:hasCurrentProposal ${proposalNode} .`,
+      `${proposalNode} ciops-prov:hasProjectionSpecification ${specificationNode} .`,
+      `${specificationNode} rdf:type ciops-prov:AdmissionProjectionSpecification .`,
+      `${specificationNode} ciops-prov:policyDigest ${turtleLiteral(proposal.policyDigest)}^^xsd:string .`,
+      `${specificationNode} ciops-prov:journalPrefixDigest ${turtleLiteral(proposal.journalPrefixDigest)}^^xsd:string .`,
+    ],
     A.sort(Order.String)
   );
   const content = A.join(
@@ -99,11 +127,14 @@ const serializeProposal = (proposal: ScheduleProposal): TurtleDocument => {
  * **Details**
  *
  * The output is valid Turtle. Ratified node classes and properties use
- * `ciops:`; the provisional `ScheduleStep` class and ordering edges follow
+ * `ciops:`; provisional episode, specification, step, and ordering facts follow
  * under the S6-census provisional comment header, prefix-separated as
  * `ciops-prov:`. Every proposal mints a distinct node id from its
- * `proposalId`, so `hasCurrentProposal` genuinely re-points across loads,
- * and each section is lexically sorted for byte determinism.
+ * `proposalId`. The caller's `episodeId` anchors `hasCurrentProposal`;
+ * consumers replace the current document when that episode's proposal changes.
+ * The specification identity encodes version, policy digest, journal-prefix
+ * digest, and admission scope as an injective tuple. Each section is sorted
+ * lexically for byte determinism, including empty and fully deferred proposals.
  *
  * **Example** (Emit an empty proposal)
  *
@@ -114,6 +145,7 @@ const serializeProposal = (proposal: ScheduleProposal): TurtleDocument => {
  * import { Effect } from "effect"
  *
  * const proposal = ScheduleProposal.make({
+ *   episodeId: "verification-1",
  *   proposalId: "schedule-policy-prefix-1000",
  *   projectionInstantMillis: NonNegativeInt.make(1000),
  *   steps: [],
