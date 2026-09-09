@@ -103,3 +103,8 @@
   Python bytecode inside the packet. The canonical refresh then rejected the
   `__pycache__` path. Disable bytecode writing for this test import so executing
   a repair regression leaves the packet eligible for its normal safety scan.
+
+- Stage B repair-history coverage requested in PR #1032 exposed a real
+  projection false positive: a redacted PID null inside message text was
+  rejected as a raw identity member. Include an edited message in each
+  population's repair fixture, and validate its actual projection bytes.

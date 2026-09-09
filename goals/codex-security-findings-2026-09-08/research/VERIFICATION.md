@@ -139,3 +139,13 @@ all 34 combined tests pass. Its organic pin was repaired through its own full
 population verifier and projection writer; synthetic payloads are unchanged.
 All five pins verify unchanged on a second repair run. Stage B's report now
 records current integrity proofs and labels original capture evidence historical.
+
+
+Stage B repair-history review follow-up adds both fleet and synthetic cases to
+a committed-history regression. It verifies old-pin repair after a committed
+generator change, independent roots, exact-source replay, idempotence, original
+repair receipts, and population-specific projections. The new test reproduced
+a projection false positive for an embedded redacted PID null; only text
+projections admit that safe representation. Raw identity members and remaining
+numeric PID values still fail. The complete 35-test suite and both updated
+Stage B pin verifiers pass, with no further raw payload changes.

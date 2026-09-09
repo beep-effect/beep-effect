@@ -455,7 +455,11 @@ def scan_output_bytes(files: list[tuple[str, bytes]]) -> None:
             fail("residue scan failed: user identity in runtime or unit name")
         if re.search(rb"(?:merged-preview-\d+|-\d+\.(?:lease|ticket)\.json)", combined):
             fail("residue scan failed: process identity in state or preview filename")
-        if re.search(rb'"(?:pid|ppid|ownerPid|parentPid|processId|procStart|procStartTime)"\s*:', combined):
+        # Projections retain string leaves verbatim, including embedded JSON
+        # whose PID digits were replaced by null. Raw JSON members still fail.
+        member_bytes = (re.sub(rb'"pid"\s*:\s*null\b', b"", combined)
+                        if _label.endswith(".properties") else combined)
+        if re.search(rb'"(?:pid|ppid|ownerPid|parentPid|processId|procStart|procStartTime)"\s*:', member_bytes):
             fail("residue scan failed: process identity member")
         if PID_IN_TEXT.search(combined.decode("utf-8")):
             fail("residue scan failed: free-text process identifier")

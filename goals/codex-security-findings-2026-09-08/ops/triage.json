@@ -402,7 +402,7 @@
           "uv run --offline --with pyyaml python -m unittest discover -s explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus -p 'test_run3*.py'",
           "uv run --offline --with pyyaml python goals/codex-security-findings-2026-09-08/research/scripts/resanitize-corpora.py"
         ],
-        "summary": "All four standalone generators preserve embedded JSON while redacting quoted and multiply escaped PID values. The staged repair sanitizes 35 saved raw files across five pins, preserves capture and population metadata, and retains the initial repair receipt with subsequent updates. All 34 tests and all five pin verifiers pass."
+        "summary": "All four standalone generators preserve embedded JSON while redacting quoted and multiply escaped PID values. The staged repair sanitizes 35 saved raw files across five pins, preserves capture and population metadata, and retains the initial repair receipt with subsequent updates. All 35 tests and all five pin verifiers pass."
       },
       "ownerArea": "Public corpus process identity redaction",
       "verdict": "confirmed-vulnerable",
