@@ -14,7 +14,7 @@ const renderChartTooltip = (formatter?: () => React.ReactNode) =>
       children: createElement(ChartTooltipContent, {
         active: true,
         hideLabel: true,
-        payload: [{ name: "desktop", value: 123, payload: { desktop: 123 } }],
+        payload: [{ graphicalItemId: "desktop", name: "desktop", value: 123, payload: { desktop: 123 } }],
         ...(formatter === undefined ? {} : { formatter }),
       }),
     })

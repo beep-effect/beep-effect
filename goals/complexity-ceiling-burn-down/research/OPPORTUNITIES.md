@@ -648,3 +648,12 @@ Hosted Lint Policy separately exposed line-sensitive schema inventory drift:
 the new validator regression moved an existing advisory from line 14 to 19.
 The canonical schema-first writer refreshes that location while retaining the
 same advisory; review-test additions need this inventory check before push.
+
+### Test fixture omitted a required Recharts payload field (2026-09-08)
+
+The hosted Check lane passed all 246 package tasks, then its separate test
+compiler rejected the new tooltip fixture: `graphicalItemId` is required by
+Recharts' payload type. Runtime assertions and the normal package check had
+passed because those checks did not compile this test surface. The fixture now
+supplies the series identity. Test-only changes need the package test-typecheck
+alongside their runtime assertions before publication.
