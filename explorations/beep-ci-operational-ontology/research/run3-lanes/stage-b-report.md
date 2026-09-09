@@ -6,7 +6,7 @@ After Stage B landed in PR #1034, CSF-012 validation found the same quoted-PID
 bypass in its fourth generator. The existing repair now handles the organic and
 synthetic pins independently, preserving their population-specific projections.
 It sanitizes 11 organic raw files (13 PID occurrences); synthetic payloads are
-unchanged. Both full pin verifiers pass, all 36 combined generator tests pass,
+unchanged. Both full pin verifiers pass, all 38 combined generator tests pass,
 and a second repair verifies all five pins unchanged. Capture metadata, nonce
 chains, custody references, and loss-population counts are preserved.
 
@@ -28,7 +28,8 @@ each framed by an eight-byte big-endian length, including the manifest.
 Current generator SHA-256: `3a2c28b5fa064e19ee5c9cde687b5e48995b8a89cfa3ca589e6825cee88a6b9c`.
 
 The current five-pin repair can be replayed from pre-security source commit
-`86990e28f9` with `resanitize-corpora.py --source-ref 86990e28f9`.
+`86990e28f9` with `resanitize-corpora.py --source-ref 86990e28f9 --finding CSF-013`.
+Finding attribution is required; the current replay applies all current redactors.
 
 CSF-013 adds schema process-member removal and a fail-closed byte guard to all
 four generators. The subsequent repair removes 178 fields from 26 Stage A raw

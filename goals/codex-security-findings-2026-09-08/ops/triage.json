@@ -400,7 +400,7 @@
         ],
         "verificationCommands": [
           "uv run --offline --with pyyaml python -m unittest discover -s explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus -p 'test_run3*.py'",
-          "uv run --offline --with pyyaml python goals/codex-security-findings-2026-09-08/research/scripts/resanitize-corpora.py"
+          "uv run --offline --with pyyaml python goals/codex-security-findings-2026-09-08/research/scripts/resanitize-corpora.py --finding CSF-012"
         ],
         "summary": "All four standalone generators preserve embedded JSON while redacting quoted and multiply escaped PID values. The staged repair sanitizes 35 saved raw files across five pins, preserves capture and population metadata, and retains the initial repair receipt with subsequent updates. All 35 tests and all five pin verifiers pass."
       },
@@ -440,7 +440,7 @@
           "uv run --offline --with pyyaml python -m unittest discover -s explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus -p 'test_run3*.py'",
           "uv run --offline --with pyyaml python goals/codex-security-findings-2026-09-08/research/scripts/resanitize-corpora.py --finding CSF-013"
         ],
-        "summary": "All four generators recursively drop both schema process fields and reject their normalized spellings in raw and projected output. A focused regression preserves failedStepId and other non-process data. Repair removed 398 members across 58 raw files and regenerated projections and all five manifests, retaining original CSF-012 receipts with appended CSF-013 updates. All 36 tests and all five pin verifiers pass; a repeat repair is unchanged."
+        "summary": "All four generators recursively drop both schema process fields and reject their normalized spellings in raw and projected output. A focused regression preserves failedStepId and other non-process data. Repair removed 398 members across 58 raw files and regenerated projections and all five manifests, retaining original CSF-012 receipts with appended CSF-013 updates. All 38 tests and all five pin verifiers pass; a repeat repair is unchanged."
       },
       "ownerArea": "Public corpus process identity redaction",
       "verdict": "confirmed-vulnerable",

@@ -778,6 +778,19 @@ def discover_live_capture() -> list[EmittedFile]:
     return sorted(emitted, key=lambda entry: entry.path)
 
 
+def reject_process_members(value: JsonValue) -> None:
+    """Reject structural process fields without interpreting embedded message text."""
+
+    if isinstance(value, dict):
+        for key, child in value.items():
+            if process_member(key):
+                fail("residue scan failed: process identity member")
+            reject_process_members(child)
+    elif isinstance(value, list):
+        for child in value:
+            reject_process_members(child)
+
+
 def scan_output_bytes(files: list[tuple[str, bytes]]) -> None:
     """Hard-fail public-output host-path and secret byte patterns."""
 
@@ -786,6 +799,14 @@ def scan_output_bytes(files: list[tuple[str, bytes]]) -> None:
             fail("residue scan failed: schema process metadata")
         if PID_IN_TEXT.search(path + "\n" + data.decode("utf-8")):
             fail("residue scan failed: free-text process identifier")
+        if path.endswith(".json"):
+            reject_process_members(decode_json(data, path))
+        elif path.endswith(".ndjson"):
+            reject_process_members(decode_ndjson(data, path))
+        elif path.endswith(".properties"):
+            for stanza in decode_properties_projection(data, path):
+                if any(process_member(key) for key, _ in stanza):
+                    fail("residue scan failed: process identity member")
         if b"/home/" in data:
             fail(f"host-path scan failed for {path}: forbidden /home/ bytes")
         if b"/tmp/" in data:

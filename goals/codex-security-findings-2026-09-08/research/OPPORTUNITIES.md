@@ -122,3 +122,9 @@
 - #1032 merged while CSF-013 evidence was being finalized. The tested fix moved
   to a new branch based on the merge commit. Early pushes reduce this window,
   but a final findings refresh must still precede declaring the goal complete.
+
+- PR #1037 review found that the legacy generator's full process-member removal
+  exceeded its byte gate, and replay silently defaulted to the older finding.
+  Decode raw records and projection keys against the complete field domain;
+  require explicit finding attribution before repair. Regression tests now cover
+  null-valued and escaped keys, safe message text, and distinct history receipts.

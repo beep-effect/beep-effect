@@ -1,6 +1,6 @@
 """Repair captured corpus redaction without recapturing live sources.
 
-Run with ``uv run --offline --with pyyaml python <this-script>``.
+Run with ``uv run --offline --with pyyaml python <this-script> --finding CSF-013``.
 Each generator verifies the staged result before promotion. Original capture
 metadata and source counts remain intact; the prior manifest digest records
 the security-only transformation. An already repaired pin is verified unchanged.
@@ -68,7 +68,7 @@ def load_generator(name: str):
 
 
 def repair(name: str, source_ref: str | None = None, population: str | None = None,
-           finding: str = "CSF-012") -> None:
+           *, finding: str) -> None:
     module = load_generator(name)
     root = module.OUTPUT_ROOT if population is None else module.OUTPUT_ROOTS[population]
 
@@ -185,10 +185,10 @@ def repair(name: str, source_ref: str | None = None, population: str | None = No
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source-ref", help="Replay a committed source pin, preserving its capture provenance")
-    parser.add_argument("--finding", choices=("CSF-012", "CSF-013"), default="CSF-012",
+    parser.add_argument("--finding", choices=("CSF-012", "CSF-013"), required=True,
                         help="Finding responsible for this repair receipt")
     args = parser.parse_args()
     for generator in ("etl_fleet_corpus", "etl_run3_fleet_corpus", "etl_run3_checkout_identity"):
         repair(generator, args.source_ref, finding=args.finding)
     for population in ("fleet", "synthetic"):
-        repair("etl_run3b_fleet_corpus", args.source_ref, population, args.finding)
+        repair("etl_run3b_fleet_corpus", args.source_ref, population, finding=args.finding)

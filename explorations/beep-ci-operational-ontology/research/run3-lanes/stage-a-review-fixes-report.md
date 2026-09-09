@@ -10,7 +10,9 @@ integrity evidence. The following values supersede them for the repaired pins.
 The repair was replayed from committed source `247d22465bdf5b0bb97388bc22c66c01f8eb54d2`
 with the then-three-pin `resanitize-corpora.py --source-ref <commit>`.
 The current five-pin script can replay pre-security source `86990e28f9`, which
-also contains both Stage B pins. It preserved embedded JSON,
+also contains both Stage B pins. Current replay requires `--finding CSF-013`;
+the unqualified command above records the historical three-pin invocation.
+The repair preserved embedded JSON,
 capture instants, event counts, owner references, and the original manifest
 digests. No live source was recaptured and no ontology ratification was rerun.
 Both fleet pins retain the original count of 12 repaired raw files; the identity
@@ -23,13 +25,13 @@ each manifest. Each generator's full pin verifier passes.
 
 | Pin | Whole-tree SHA-256 | Files | Records | Bytes |
 | --- | --- | ---: | ---: | ---: |
-| run2-fleet | `ac03578e1ae02c528c57c48f555930a947ffca2dec6602b934e06fe99fd67772` | 1589 | 6213 | 13317107 |
+| run2-fleet | `3fa45dd08b7f7306f740d1e6eed6669a4cfe18931269c0aa08fbb3ee70e39925` | 1589 | 6213 | 13317275 |
 | run3-fleet | `8651c07b48fb28ef61888f061ba0b2c2f4947822bfad28359bb80bbf78a57bd9` | 1873 | 7641 | 18253155 |
 | run3-checkout-identity | `88bec9ddde3f4984bf2be774b62dc6edd7214b4700f98087ab8229048b268387` | 217 | 108 | 894958 |
 
 Current generator SHA-256 pins:
 
-- run2-fleet: `70cb4fbfcda4ec1a2ed226cc8a2ad1f9d08595da5f643b68984fb185007bd87b`.
+- run2-fleet: `d1f1d0dad1561e167bd169ce75c51928848262515f5124f0c95dcee9a6c882af`.
 - run3-fleet: `1764671686951ef9001f0788399be557d35cc5da6a2542099ce5a72bf605b782`.
 - run3-checkout-identity: `322bddb51a8e923157eacec946f3bc430542f4687fc7851750922e07f581772e`.
 

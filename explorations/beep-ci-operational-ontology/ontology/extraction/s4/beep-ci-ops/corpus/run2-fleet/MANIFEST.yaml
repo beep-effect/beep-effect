@@ -2,7 +2,7 @@
 # Public run-2 fleet capture; all source descriptors are portable.
 schema_version: beep-ci-ops-fleet-corpus/v1
 generated_by: etl_fleet_corpus.py
-generator_sha256: 70cb4fbfcda4ec1a2ed226cc8a2ad1f9d08595da5f643b68984fb185007bd87b
+generator_sha256: d1f1d0dad1561e167bd169ce75c51928848262515f5124f0c95dcee9a6c882af
 capture_instant: '2026-09-03T02:27:19.384Z'
 capture_instant_basis: maximum timestamp observed in the captured records
 ordering:
@@ -12122,7 +12122,7 @@ totals:
   files_emitted: 1589
   events: 6213
   payload_bytes: 12679246
-  bytes_emitted: 13317107
+  bytes_emitted: 13317275
 security_resanitization:
   finding: CSF-012
   source_manifest_sha256: be2144da427e7f9671d386713fb4a34e52246bb8702b586e9de4eb3b74880dc3
@@ -12132,5 +12132,9 @@ security_resanitization:
   updates:
   - finding: CSF-013
     source_manifest_sha256: ad14e0ee438e4863be14809185be474e59f478d072c42e2bf5b3b1730de20433
+    changed_raw_payloads: 0
+    live_recapture: false
+  - finding: CSF-013
+    source_manifest_sha256: a4fe8370fdd6972cfdcf5c6c4959346be4fca002da6c1a3ac34cbf8a4452a66b
     changed_raw_payloads: 0
     live_recapture: false

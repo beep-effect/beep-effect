@@ -176,3 +176,20 @@ validation report zero blocking findings.
 The cumulative capture includes thirteen unique IDs. Twelve have merged and
 been closed; CSF-013 still requires full proof, publication, hosted acceptance,
 merge, and exact-ID closure. The packet remains active.
+
+## PR #1037 review fixes
+
+The legacy output gate now decodes raw JSON/NDJSON and projection keys against
+its complete process-member predicate. Tests reject null-valued members, nested
+records, escaped JSON key names, and projected variants while retaining safe
+embedded PID-null messages and unrelated event identifiers.
+
+The repair CLI requires `--finding`; omission exits before any repair. Existing
+committed-history tests now supply explicit attribution and verify preservation
+of the initial CSF-012 receipt alongside CSF-013 updates and source replay.
+Current replay commands document the required argument.
+
+All 38 combined generator tests pass. The legacy pin was regenerated with zero
+additional raw changes and its full verifier passes; the other four pins verify
+unchanged. Current integrity tables were refreshed. Canonical capture dry-run
+still reports zero planned files and zero tracked-document rejections.
