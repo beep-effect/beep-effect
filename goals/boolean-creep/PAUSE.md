@@ -1,7 +1,10 @@
 # Campaign paused — 2026-09-09
 
 Benjamin requested a pause and a PR to save the current work. Campaign execution
-is paused; resume only on his instruction. The packet lifecycle remains `active`
+is paused; resume only on his instruction. He subsequently authorized taking
+PR #1069 to a mergeable state while retaining draft status. That authorization
+covers quality and review fixes for this PR; the census and implementation
+campaign remain paused. The packet lifecycle remains `active`
 because its acceptance criteria are unfinished. This draft save PR does not
 ratify GATE 2 or authorize implementation.
 
@@ -26,9 +29,10 @@ ratify GATE 2 or authorize implementation.
 - All three source-audit agents stopped and released their source holds. They
   report no remaining process, service, model lane, or tool handle. The separate
   controller fixture audit confirms all 33 retained service invocations stopped.
-- Four pre-existing committed prototypes under `scratchpad/yeet-effect/` remain
-  on this branch. They are outside the campaign corpus and are preserved by the
-  save PR. The later ratification PR still requires packet-only scope.
+- Four pre-existing prototypes under `scratchpad/yeet-effect/` are now preserved
+  as exact text archives, with a byte/hash manifest. They reference a missing
+  domain module and include duplicate drafts; finishing that port remains
+  separate work. The later ratification PR still requires packet-only scope.
 
 The working estimate remains approximately **30% of the whole campaign**. This
 is an effort estimate, not a count of completed acceptance criteria; source
@@ -39,9 +43,10 @@ implementation, landing and final exact-main convergence remain ahead.
 The [publication proof](./data/pause-publication-proof.json) passed the frozen
 install, 13 cheap gates and 21 pre-push lanes, then failed the fresh JSDoc ratchet
 on the four pre-existing scratchpad prototypes. Nine later lanes were not run.
-The save draft preserves those files unchanged and discloses the failure. It has
-no green full-proof or merge-ready claim; repair the findings before readiness.
-This handoff update follows the tested commit and has commit checks only.
+That historical save preserved the prototypes unchanged and disclosed the
+failure. Subsequent authorized PR-readiness work preserves their exact contents
+as unfinished text archives. The failed proof receipt remains historical evidence;
+readiness requires a fresh full proof and hosted checks on the revised head.
 
 ## Open decisions and paused audits
 

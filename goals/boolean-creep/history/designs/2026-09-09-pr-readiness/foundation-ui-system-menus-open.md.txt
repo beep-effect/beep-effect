@@ -95,7 +95,7 @@ whether a newer owner prevented the shared option from clearing.
   no state-shape edit: Enter-to-send deliberately verifies the rendered DOM
   through `isTypeaheadMenuVisible`, rather than trusting
   `menusOpenAtom`; preserve that stale-report fallback.
-- `packages/foundation/ui-system/editor/package.json:50` — no edit: the existing `@beep/editor/chat/atoms` package subpath maps directly to the canonical owner; adding `TypeaheadMenu` to `atoms.ts` makes it package-alias accessible without a barrel change.
+- `packages/foundation/ui-system/editor/package.json:50` — no edit: the existing `./chat/atoms` export maps directly to the canonical owner; adding `TypeaheadMenu` to `atoms.ts` makes it package-alias accessible without a barrel change.
 
 # Guard-deletion accounting
 

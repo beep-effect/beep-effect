@@ -1224,3 +1224,44 @@ the full publication run would have exposed this debt without the five-minute
 inventory wait. The [proof receipt](../data/pause-publication-proof.json) records
 the exact tested head and counts. The user requested preservation and pause;
 the prototypes remain unchanged and the draft discloses the unresolved failure.
+
+
+## 2026-09-09 — Draft readiness exposed a package-subpath false positive
+
+PR #1069's `Heavy / Lint Policy` failed at `knowledge:semantic-delta` with one
+introduced `broken-tracked-path`: the menus design quoted a relative package
+export key, which the checker interpreted relative to the design document.
+Writing the full `@beep/editor/chat/atoms` package subpath makes the reference
+unambiguous. Original design bytes are archived and the correction receipt
+records both hashes. The other 491 findings were unchanged baseline findings;
+they are outside this repair. Package-export keys need a distinct parser context
+or explicit alias form in prose to avoid this ambiguity.
+
+## 2026-09-09 — Greptile declined the saved evidence packet on file count
+
+PR #1069 has 1,434 changed files. Greptile returned `500 file limit` without a
+review, while the checked-in `greptile.json` already specifies 1,200. Most of the
+packet is retained census and correction evidence, and the campaign remains
+paused. This is a missing review, not a zero-finding result. Readiness work must
+obtain an actual review or report the remaining provider limitation; it must not
+claim that an unavailable reviewer approved the packet.
+
+
+## 2026-09-09 — Executable-looking scratchpad saves lacked their domain module
+
+The JSDoc repair exposed that the four saved Yeet port prototypes are incomplete:
+HookKernel and InboxState import a Domain module absent from the checkout, while
+WatcherKernel duplicates Processes. No indexed source imports the folder. The
+readiness pass preserves every original byte as text drafts with a hash manifest,
+rather than completing an unrelated port inside the campaign save PR. Saving
+unfinished sketches with an explicit draft format and dependency manifest would
+have prevented the mismatch between executable filenames and incomplete content.
+
+
+## 2026-09-09 — Semantic delta validates committed archives, not dirty edits
+
+The focused `knowledge semantic-delta` rerun still reported the original menu
+subpath after its working-tree edit. The command compares merge-base and HEAD
+archives, so that was the expected result for the unchanged committed head.
+Commit the reviewed correction before using this command as acceptance evidence;
+a dirty-file preview mode or an explicit HEAD-only notice would shorten this loop.
