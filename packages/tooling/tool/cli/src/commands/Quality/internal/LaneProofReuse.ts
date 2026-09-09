@@ -122,7 +122,8 @@ const laneCommandHash = (lane: GithubCheckLaneSpec): string =>
   );
 
 const environmentProfileHash = (lane: GithubCheckLaneSpec): string => {
-  const inheritedEnvironment = turboEnvExtendsAmbient(lane.step.command, lane.step.args) ? Bun.env : {};
+  const inheritedEnvironment =
+    lane.step.useLocalEnv === true || turboEnvExtendsAmbient(lane.step.command, lane.step.args) ? Bun.env : {};
   return hashText(
     stableRecordText({
       platform: process.platform,

@@ -251,6 +251,15 @@ export const OXLINT_SOURCES: { readonly [K in OxlintRule]: OxlintRuleSources } =
           `export const h5 = () => S.decodeSync(S.Struct({ value: Model }))({});`
         ),
       },
+      // Static schema entries nested in an array literal remain hoistable.
+      {
+        count: 1,
+        source: lines(
+          `import * as S from "effect/Schema";`,
+          `const Model = S.Struct({});`,
+          `export const h6 = () => S.decodeSync(S.Tuple([Model]))([]);`
+        ),
+      },
     ],
     valid: [
       // Module-scope compiler call is allowed (the whole point of the rule).
@@ -301,6 +310,15 @@ export const OXLINT_SOURCES: { readonly [K in OxlintRule]: OxlintRuleSources } =
           `import * as S from "effect/Schema";`,
           `export const decodeField = (fieldSchema: S.Top) =>`,
           `  S.decodeSync(S.Struct({ value: fieldSchema }));`
+        ),
+      },
+      // Runtime schema parameters nested in array literals cannot be hoisted.
+      {
+        count: 0,
+        source: lines(
+          `import * as S from "effect/Schema";`,
+          `export const decodeTuple = (fieldSchema: S.Top) =>`,
+          `  S.decodeSync(S.Tuple([fieldSchema]));`
         ),
       },
     ],

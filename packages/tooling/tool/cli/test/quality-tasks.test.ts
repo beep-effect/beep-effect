@@ -1695,6 +1695,43 @@ describe("quality task adapter", () => {
   );
 
   it.effect(
+    "includes ambient inputs for local-env lanes with an isolated spawn",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: "lane-proof-local-env-" });
+      yield* initializeLaneProofRepository(tempRoot);
+
+      const lane = GithubCheckLaneSpec.make({
+        id: "proof:local-env",
+        stage: "repo-quality",
+        wave: "preflight",
+        blockedBy: [],
+        step: QualityTaskStep.make({
+          label: "proof:local-env",
+          command: "op",
+          args: ["run", "--", "bunx", "turbo", "run", "check"],
+          cwd: tempRoot,
+          useLocalEnv: true,
+        }),
+      });
+      const hashAtSeed = (seed: string) =>
+        withEnvVarEffect("BEEP_FC_SEED", seed, prepareLaneProofSession([lane], "active")).pipe(
+          Effect.map((session) =>
+            pipe(
+              session,
+              O.flatMap((session) => A.head(session.identities)),
+              O.map((identity) => identity.envProfileHash),
+              O.getOrThrow
+            )
+          )
+        );
+
+      expect(yield* hashAtSeed("101")).toBe(yield* hashAtSeed("101"));
+      expect(yield* hashAtSeed("101")).not.toBe(yield* hashAtSeed("202"));
+    }, provideScopedLayer(PlatformLayer))
+  );
+
+  it.effect(
     "runs the lane when the configured proof base cannot be resolved",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
