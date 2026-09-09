@@ -1,4 +1,5 @@
 import { VERSION } from "@beep/ui";
+import { ChartContainer, ChartTooltipContent } from "@beep/ui/components/chart";
 import { Input } from "@beep/ui/components/input";
 import { Textarea } from "@beep/ui/components/textarea";
 import { cn } from "@beep/ui/lib/utils";
@@ -6,7 +7,38 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
+const renderChartTooltip = (formatter?: () => React.ReactNode) =>
+  renderToStaticMarkup(
+    createElement(ChartContainer, {
+      config: { desktop: { label: "Desktop" } },
+      children: createElement(ChartTooltipContent, {
+        active: true,
+        hideLabel: true,
+        payload: [{ graphicalItemId: "desktop", name: "desktop", value: 123, payload: { desktop: 123 } }],
+        ...(formatter === undefined ? {} : { formatter }),
+      }),
+    })
+  );
+
 describe("@beep/ui", () => {
+  it("uses the default tooltip item only when no formatter is supplied", () => {
+    const markup = renderChartTooltip();
+    expect(markup).toContain("Desktop");
+    expect(markup).toContain(">123</span>");
+  });
+
+  it.each([null, undefined])("preserves a formatter result of %s to suppress the tooltip item", (formatted) => {
+    const markup = renderChartTooltip(() => formatted);
+    expect(markup).not.toContain("Desktop");
+    expect(markup).not.toContain(">123</span>");
+  });
+
+  it("preserves a zero-valued formatter result", () => {
+    const markup = renderChartTooltip(() => 0);
+    expect(markup).toContain(">0</div>");
+    expect(markup).not.toContain("Desktop");
+  });
+
   it("exports the package version constant", () => {
     expect(VERSION).toBe("0.0.0");
   });

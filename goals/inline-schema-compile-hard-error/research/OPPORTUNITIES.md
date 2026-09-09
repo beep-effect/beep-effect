@@ -360,3 +360,74 @@
   immediately before expensive full proof, and surface newly published,
   no-fixed-release advisories early enough to perform the repository's
   time-bounded exception review before the collect-all run.
+
+## 2026-09-08 — Long-running commands lacked progress diagnostics and proof reuse
+
+- **Work:** Run the canonical repair and publication proof for the
+  repository-wide compiler-hoist campaign.
+- **Evidence:** `quality test-tsgo` announced 1,019 files across 139 packages
+  and then emitted no progress diagnostic for 493 seconds. Confirming that it
+  was still running required an external process check. JSDoc inventory was
+  similarly silent for 264 seconds in the earlier run and 362 seconds in a
+  later publication proof, while deprecated-API lint buffered its 28 shard
+  identities until its 182-second completion. That publication preview first
+  passed the same 1,019-file `quality test-tsgo` command in its cheap gates in
+  435 seconds, then reran it under a different pre-push lane id for 642 seconds
+  despite the unchanged preview. A later
+  `quality package-verify @beep/repo-cli` emitted no phase or progress output
+  during its 366-second audit, then printed only its final audit and Docgen
+  summary. The immutable merge preview also reran repo-cli's same 162-file,
+  3,153-test surface in the unit and property lanes for 352 and 402 seconds,
+  respectively, despite equivalent proof earlier in that same preview.
+  Coverage then ran its distinct instrumented proof for 416 seconds.
+- **Prevention:** Give repo-cli and other shared scripts and commands a bounded
+  progress contract: structured phase, current-unit, completed, remaining,
+  elapsed, and last-completed events plus concise interactive heartbeats. Key
+  successful proofs by command, environment, dependency graph, and workspace
+  digests; reuse exact matches across nested aggregates, and report the key
+  dimension that requires a rerun when reuse is unsafe.
+
+## 2026-09-08 — Desktop continuation changed the effective permission profile
+
+- **Work:** Finish the local merged-preview proof and packet closeout after
+  PR #1022 merged.
+- **Evidence:** A continuation reported `managed` / `workspace-write` with
+  `.git` read-only despite the previously unrestricted session. The repository
+  stop rule blocked three automatic continuations until the operator restored
+  Full access. The existing verifier remained live and later passed.
+- **Prevention:** Preserve the effective permission profile across background
+  continuation and model changes. Show any mismatch before tools resume, and
+  pause automatic goal retries while user action is required.
+
+## 2026-09-08 — Merged follow-up fixes left predecessor review threads open
+
+- **Work:** Audit comments before closing the compiler-hoist packet.
+- **Evidence:** All three PR #1022 threads were resolved, but the two original
+  PR #1019 threads remained open after their fixes merged in #1022. The
+  cross-PR sweep found them; Yeet posted the fix references and resolved both.
+- **Prevention:** Track every implementation PR in packet closeout and inspect
+  its discussions, including merged predecessors, before claiming that all
+  review comments have been addressed.
+
+## 2026-09-08 — GraphQL quota stopped publication after a successful push
+
+- **Work:** Publish the documentation closeout with Yeet's early PR path.
+- **Evidence:** Commit and push succeeded, but `gh pr create` failed with
+  `GraphQL: API rate limit already exceeded`. Yeet restored the unrelated
+  staged-only residue and exited before local proof or hosted monitoring. A
+  direct REST request could still list the branch's pull requests.
+- **Prevention:** Treat a pushed branch as a durable publication checkpoint.
+  Report the failing API bucket and reset time, and offer a REST PR-creation
+  fallback while retaining the required local proof and review gates.
+
+## 2026-09-08 — Package-matrix resume ignored committed changes
+
+- **Work:** Audit the package receipts during PR #1028 closeout review.
+- **Evidence:** The historical report names commit `45b422a58e`, but its digest
+  is the empty-input SHA-256. The runner hashed only dirty differences and
+  ignored committed tree identity, so a clean checkout after a merge could
+  resume stale results. That receipt is no longer treated as final-tree proof.
+- **Prevention:** Include the committed tree, verifier bytes, owner inventory,
+  and uncommitted inputs in the receipt identity; pin the recorded head for
+  the run and refuse to relabel results if it changes. Test resume behavior
+  across two clean commits, then rerun the full owner matrix.

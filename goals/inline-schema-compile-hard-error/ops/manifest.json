@@ -35,7 +35,7 @@
     "goals/inline-schema-compile-hard-error/research/SOURCES.md",
     "goals/schema-utils-selective-codec-statics/research/closing-census.json"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": ["research/SOURCES.md", "research/closeout-evidence.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -63,17 +63,20 @@
     {
       "id": "P2",
       "name": "Verify",
-      "status": "in-progress"
+      "status": "in-progress",
+      "evidence": "The shipped implementation passes full local Yeet verification. PR #1028 review found that the historical package matrix omitted committed code from its digest; the repaired runner must produce a fresh 106-owner receipt before closure."
     },
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "in-progress",
+      "evidence": "PRs #1019 and #1022 merged and their five review threads are resolved. PR #1028 remains under review; P3 requires its terminal merge-ready: yes result."
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "in-progress",
+      "evidence": "The validated reflection is present. README.md, PLAN.md, and this manifest remain active until the corrected package evidence and terminal monitor gate are satisfied; final state updates stay in PR #1028 with the proof-runner repair."
     }
   ],
   "verificationCommands": [

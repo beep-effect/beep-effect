@@ -18,6 +18,7 @@ import { VAULT_DIRS } from "./Vault.ts";
 import type { ResearchRepoCardOptions } from "../Research.schemas.ts";
 import type { ResearchCommandServiceRequirements } from "../Research.service.ts";
 import type { CardPersistRow } from "./CatalogOps.ts";
+import type { ClonedRepoInfo, StarredRepo } from "./RepoCards.ts";
 
 const decodeRepoCardSummary = S.decodeUnknownEffect(ResearchRepoCardSummary);
 
@@ -27,6 +28,60 @@ interface RepoCardCollection {
   reposScanned: number;
   starsScanned: number;
 }
+
+const cloneCardOf = (info: ClonedRepoInfo, capturedAt: string): Pick<CardPersistRow, "body" | "frontmatter"> => {
+  const title = `${info.slugOwner}/${info.slugRepo}`;
+  const frontmatter = KnowledgeCardFrontmatter.make({
+    capturedAt,
+    id: `kb-repo-${info.slugOwner}--${info.slugRepo}`,
+    related: [],
+    sourceType: "repo",
+    status: "triaged",
+    tags: ["cloned"],
+    title,
+    via: "repo-card",
+    ...(O.isNone(info.remoteUrl) ? {} : { url: info.remoteUrl.value }),
+  });
+  const body = [
+    `# ${title}`,
+    "",
+    `- Local clone: \`${info.localPath}\``,
+    `- Remote: ${O.getOrElse(info.remoteUrl, () => "(none)")}`,
+    `- License file: ${info.hasLicense ? "yes" : "no"}`,
+    `- Last commit: ${O.getOrElse(info.lastCommitIso, () => "(unknown)")}`,
+    "",
+    "## README excerpt",
+    "",
+    O.getOrElse(info.readmeExcerpt, () => "_No README found._"),
+  ].join("\n");
+  return { body, frontmatter };
+};
+
+const starCardOf = (star: StarredRepo, capturedAt: string): Pick<CardPersistRow, "body" | "frontmatter"> => {
+  const [owner, repo] = slugPartsOf(O.some(star.html_url), star.full_name.replaceAll("/", "--"));
+  const topics = star.topics ?? [];
+  const frontmatter = KnowledgeCardFrontmatter.make({
+    capturedAt,
+    id: `kb-repo-${owner}--${repo}`,
+    related: [],
+    sourceType: "repo",
+    status: "inbox",
+    tags: ["starred"],
+    title: star.full_name,
+    url: star.html_url,
+    via: "repo-card",
+  });
+  const body = [
+    `# ${star.full_name}`,
+    "",
+    `- Remote: ${star.html_url}`,
+    `- Language: ${star.language ?? "(unknown)"}`,
+    A.length(topics) > 0 ? `- Topics: ${A.join(topics, ", ")}` : "- Topics: (none)",
+    "",
+    star.description ?? "_No description._",
+  ].join("\n");
+  return { body, frontmatter };
+};
 
 const collectCloneCards = Effect.fnUntraced(function* (
   options: ResearchRepoCardOptions,
@@ -49,31 +104,7 @@ const collectCloneCards = Effect.fnUntraced(function* (
       collection.cardsSkipped += 1;
       continue;
     }
-    const title = `${info.slugOwner}/${info.slugRepo}`;
-    const frontmatter = KnowledgeCardFrontmatter.make({
-      capturedAt,
-      id: `kb-repo-${info.slugOwner}--${info.slugRepo}`,
-      related: [],
-      sourceType: "repo",
-      status: "triaged",
-      tags: ["cloned"],
-      title,
-      via: "repo-card",
-      ...(O.isNone(info.remoteUrl) ? {} : { url: info.remoteUrl.value }),
-    });
-    const body = [
-      `# ${title}`,
-      "",
-      `- Local clone: \`${info.localPath}\``,
-      `- Remote: ${O.getOrElse(info.remoteUrl, () => "(none)")}`,
-      `- License file: ${info.hasLicense ? "yes" : "no"}`,
-      `- Last commit: ${O.getOrElse(info.lastCommitIso, () => "(unknown)")}`,
-      "",
-      "## README excerpt",
-      "",
-      O.getOrElse(info.readmeExcerpt, () => "_No README found._"),
-    ].join("\n");
-    collection.cards.push({ body, frontmatter, relativePath });
+    collection.cards.push({ ...cloneCardOf(info, capturedAt), relativePath });
   }
 });
 
@@ -93,28 +124,7 @@ const collectStarCards = Effect.fnUntraced(function* (
       collection.cardsSkipped += 1;
       continue;
     }
-    const topics = star.topics ?? [];
-    const frontmatter = KnowledgeCardFrontmatter.make({
-      capturedAt,
-      id: `kb-repo-${owner}--${repo}`,
-      related: [],
-      sourceType: "repo",
-      status: "inbox",
-      tags: ["starred"],
-      title: star.full_name,
-      url: star.html_url,
-      via: "repo-card",
-    });
-    const body = [
-      `# ${star.full_name}`,
-      "",
-      `- Remote: ${star.html_url}`,
-      `- Language: ${star.language ?? "(unknown)"}`,
-      A.length(topics) > 0 ? `- Topics: ${A.join(topics, ", ")}` : "- Topics: (none)",
-      "",
-      star.description ?? "_No description._",
-    ].join("\n");
-    collection.cards.push({ body, frontmatter, relativePath });
+    collection.cards.push({ ...starCardOf(star, capturedAt), relativePath });
   }
 });
 

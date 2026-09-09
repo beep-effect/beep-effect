@@ -1,0 +1,47 @@
+{
+  "schemaVersion": "yeet-verdict/v1",
+  "base": "origin/main",
+  "branch": "feat/ontology-agent-surface-p1-toolkit",
+  "committed": false,
+  "createdAt": "2026-07-11T15:34:13.147Z",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "advisory:01-fallow-feedback",
+      "label": "fallow-advisory-feedback",
+      "phase": "feedback",
+      "status": "passed",
+      "exitCode": 0
+    },
+    {
+      "id": "commit:01-git-commit",
+      "label": "commit:git:commit",
+      "phase": "commit",
+      "status": "not-run"
+    },
+    {
+      "id": "full:01-pre-push",
+      "label": "full:pre-push",
+      "phase": "full",
+      "status": "not-run"
+    },
+    {
+      "id": "publish:01-git-push",
+      "label": "publish:git:push",
+      "phase": "publish",
+      "status": "not-run"
+    }
+  ],
+  "message": "yeet publish requires reviewed staged changes. Stage the intended files before running yeet.",
+  "mode": "publish",
+  "outcome": "failure",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "feat_ontology-agent-surface-p1-toolkit-78c9a07cd3c4",
+  "indexPath": "<fleet>/beep-effect8/.beep/yeet/quality-issue-index.json",
+  "baseFreshness": {
+    "behindCount": 2,
+    "mergeBase": "9adcddbb4470cb70830042ff2766a2ff5a85ec6a",
+    "overlappingPaths": []
+  }
+}

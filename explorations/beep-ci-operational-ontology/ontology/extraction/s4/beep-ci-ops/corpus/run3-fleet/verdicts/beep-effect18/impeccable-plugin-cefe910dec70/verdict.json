@@ -1,0 +1,42 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "impeccable-plugin",
+  "committed": false,
+  "createdAt": "2026-08-30T19:14:21.347Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "publish:00-head-install-preflight",
+      "label": "publish:head-install-preflight",
+      "phase": "publish",
+      "status": "not-run"
+    },
+    {
+      "id": "publish:01-git-push",
+      "label": "publish:git:push",
+      "phase": "publish",
+      "status": "not-run"
+    },
+    {
+      "id": "publish:02-pr-create",
+      "label": "publish:pr-create",
+      "phase": "publish",
+      "status": "not-run"
+    }
+  ],
+  "message": "yeet publish --reuse-verified found stale proof state:\n  - commit 8675818cd9fa14666d047ca53cf9ff4af8364602 != aa6c8505e99578c85826e705bf2bd5c1722949a7\nRun `bun run beep yeet verify` against the exact current worktree before retrying.",
+  "mode": "publish",
+  "outcome": "failure",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "impeccable-plugin-cefe910dec70",
+  "attemptId": "9607bd53-2c41-4149-8186-1a003298b5ab",
+  "startedAt": "2026-08-30T19:14:21.254Z",
+  "endedAt": "2026-08-30T19:14:21.347Z",
+  "elapsedMs": 93,
+  "indexPath": "<fleet>/beep-effect18/.beep/yeet/quality-issue-index.json",
+  "failedStepId": "publish:00-head-install-preflight",
+  "failureKind": "handler-error"
+}

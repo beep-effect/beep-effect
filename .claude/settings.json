@@ -50,7 +50,15 @@
       "Bash(bun run beep laws:*)",
       "Bash(rm -rf .beep/fallow)",
       "Bash(bunx commitlint:*)",
-      "Bash(bun install:*)"
+      "Bash(bun install:*)",
+      "Bash(graft ask:*)",
+      "Bash(graft grep:*)",
+      "Bash(graft skeleton:*)",
+      "Bash(graft callers:*)",
+      "Bash(graft map:*)",
+      "Bash(graft blast:*)",
+      "Bash(graft check:*)",
+      "Bash(graft build:*)"
     ],
     "deny": [
       "Bash(git push --force:*)",
@@ -134,6 +142,26 @@
             "command": "BEEP_HOOK_PULSE_NOTIFIER_REV=desktop-ntfy-1 $CLAUDE_PROJECT_DIR/.claude/hooks/hook-pulse.sh"
           }
         ]
+      },
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/helpers/graft-hooks.cjs\" post-edit",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Bash|mcp__graft__|Read|Grep|Glob",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/helpers/graft-hooks.cjs\" tool-savings",
+            "timeout": 8
+          }
+        ]
       }
     ],
     "PostToolUseFailure": [
@@ -170,6 +198,15 @@
             "statusMessage": "Reading Yeet inbox"
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/helpers/graft-hooks.cjs\" prompt",
+            "timeout": 15
+          }
+        ]
       }
     ],
     "SessionStart": [
@@ -188,6 +225,15 @@
             "statusMessage": "Reading Yeet inbox"
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/helpers/graft-hooks.cjs\" session-start",
+            "timeout": 8
+          }
+        ]
       }
     ],
     "Stop": [
@@ -202,6 +248,15 @@
             "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/yeet-inbox.sh claude",
             "timeout": 2,
             "statusMessage": "Checking Yeet inbox"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/helpers/graft-hooks.cjs\" stop",
+            "timeout": 8
           }
         ]
       }
@@ -230,5 +285,13 @@
       }
     }
   },
-  "autoMemoryDirectory": "~/.claude/memory/beep-effect"
+  "autoMemoryDirectory": "~/.claude/memory/beep-effect",
+  "statusLine": {
+    "type": "command",
+    "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/helpers/graft-statusline.cjs\""
+  },
+  "subagentStatusLine": {
+    "type": "command",
+    "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/helpers/graft-statusline.cjs\""
+  }
 }

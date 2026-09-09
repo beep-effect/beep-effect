@@ -15,7 +15,7 @@ import * as S from "effect/Schema";
 import { Node, Project, SyntaxKind } from "ts-morph";
 import { isEcosystemMemberSourcePath, isExcludedLawScanPath } from "./internal/LawScan.ts";
 import { TerseEffectRulesPersistenceError } from "./Laws.errors.ts";
-import type { ArrowFunction, CallExpression, FunctionDeclaration, ObjectLiteralExpression } from "ts-morph";
+import type { ArrowFunction, CallExpression, FunctionDeclaration, ObjectLiteralExpression, SourceFile } from "ts-morph";
 
 const $I = $RepoCliId.create("commands/Laws/TerseEffect");
 
@@ -119,6 +119,17 @@ const THUNK_HELPER_NAMES = [
 ] as const;
 
 type ThunkHelperName = (typeof THUNK_HELPER_NAMES)[number];
+
+const LITERAL_THUNK_HELPER_MATCHERS: ReadonlyArray<
+  readonly [predicate: P.Predicate<Node>, helperName: ThunkHelperName]
+> = [
+  [(expression) => Node.isIdentifier(expression) && expression.getText() === "undefined", "thunkUndefined"],
+  [(expression) => Node.isStringLiteral(expression) && expression.getLiteralText() === "", "thunkEmptyStr"],
+  [(expression) => expression.getKind() === SyntaxKind.NullKeyword, "thunkNull"],
+  [(expression) => expression.getKind() === SyntaxKind.TrueKeyword, "thunkTrue"],
+  [(expression) => expression.getKind() === SyntaxKind.FalseKeyword, "thunkFalse"],
+  [(expression) => Node.isNumericLiteral(expression) && expression.getText() === "0", "thunk0"],
+];
 
 const OPTION_MATCH_HANDLER_NAMES = ["onNone", "onSome"] as const;
 
@@ -270,33 +281,12 @@ const getImportedThunkHelperAliases = (sourceFile: import("ts-morph").SourceFile
   return aliases;
 };
 
-const getLiteralThunkHelperName = (expression: import("ts-morph").Node): O.Option<ThunkHelperName> => {
-  if (Node.isIdentifier(expression) && expression.getText() === "undefined") {
-    return O.some("thunkUndefined");
-  }
-
-  if (Node.isStringLiteral(expression) && expression.getLiteralText() === "") {
-    return O.some("thunkEmptyStr");
-  }
-
-  if (expression.getKind() === SyntaxKind.NullKeyword) {
-    return O.some("thunkNull");
-  }
-
-  if (expression.getKind() === SyntaxKind.TrueKeyword) {
-    return O.some("thunkTrue");
-  }
-
-  if (expression.getKind() === SyntaxKind.FalseKeyword) {
-    return O.some("thunkFalse");
-  }
-
-  if (Node.isNumericLiteral(expression) && expression.getText() === "0") {
-    return O.some("thunk0");
-  }
-
-  return O.none();
-};
+const getLiteralThunkHelperName = (expression: import("ts-morph").Node): O.Option<ThunkHelperName> =>
+  pipe(
+    LITERAL_THUNK_HELPER_MATCHERS,
+    A.findFirst(([predicate]) => predicate(expression)),
+    O.map(([, helperName]) => helperName)
+  );
 
 const getThunkHelperReplacement = (
   arrowFunction: ArrowFunction,
@@ -577,6 +567,109 @@ const isExplicitDualOverloadCandidate = (functionDeclaration: FunctionDeclaratio
   );
 };
 
+type TerseFindingKind =
+  | "helper-ref"
+  | "thunk-helper"
+  | "flow-candidate"
+  | "option-object-compaction"
+  | "conditional-optional-object-spread"
+  | "nested-option-match"
+  | "nested-bool-match"
+  | "dual-overload";
+
+type DetectedTerseFinding = {
+  readonly kind: TerseFindingKind;
+  readonly text: string;
+  readonly rewritable: boolean;
+};
+
+type TerseFileScan = {
+  readonly sourceFilePath: string;
+  readonly findings: ReadonlyArray<DetectedTerseFinding>;
+};
+
+const detectedFinding = (
+  sourceFile: SourceFile,
+  sourceFilePath: string,
+  kind: TerseFindingKind,
+  node: Node,
+  rewritable = false
+): DetectedTerseFinding => ({ kind, text: findingText(sourceFile, sourceFilePath, kind, node), rewritable });
+
+const scanArrowFunction = (
+  arrowFunction: ArrowFunction,
+  sourceFile: SourceFile,
+  sourceFilePath: string,
+  thunkHelperAliases: HashMap.HashMap<string, string>,
+  write: boolean
+): O.Option<DetectedTerseFinding> => {
+  const helperReplacement = getArrowReplacement(arrowFunction);
+  if (O.isSome(helperReplacement)) {
+    const finding = detectedFinding(sourceFile, sourceFilePath, "helper-ref", arrowFunction, true);
+    if (write) arrowFunction.replaceWithText(helperReplacement.value);
+    return O.some(finding);
+  }
+  const thunkReplacement = getThunkHelperReplacement(arrowFunction, thunkHelperAliases);
+  if (O.isSome(thunkReplacement)) {
+    const finding = detectedFinding(sourceFile, sourceFilePath, "thunk-helper", arrowFunction, true);
+    if (write) arrowFunction.replaceWithText(thunkReplacement.value);
+    return O.some(finding);
+  }
+  return isFlowCandidate(arrowFunction)
+    ? O.some(detectedFinding(sourceFile, sourceFilePath, "flow-candidate", arrowFunction))
+    : O.none();
+};
+
+const scanCallExpression = (
+  callExpression: CallExpression,
+  sourceFile: SourceFile,
+  sourceFilePath: string
+): ReadonlyArray<DetectedTerseFinding> => {
+  const findings = A.empty<DetectedTerseFinding>();
+  if (isOptionObjectCompactionCandidate(callExpression)) {
+    A.appendInPlace(findings, detectedFinding(sourceFile, sourceFilePath, "option-object-compaction", callExpression));
+  }
+  if (isNestedOptionMatchCandidate(callExpression)) {
+    A.appendInPlace(findings, detectedFinding(sourceFile, sourceFilePath, "nested-option-match", callExpression));
+  }
+  if (isNestedBoolMatchCandidate(callExpression)) {
+    A.appendInPlace(findings, detectedFinding(sourceFile, sourceFilePath, "nested-bool-match", callExpression));
+  }
+  return findings;
+};
+
+const scanTerseEffectSourceFile = (sourceFile: SourceFile, sourceFilePath: string, write: boolean): TerseFileScan => {
+  const thunkHelperAliases = getImportedThunkHelperAliases(sourceFile);
+  const arrows = A.sort(
+    sourceFile.getDescendantsOfKind(SyntaxKind.ArrowFunction),
+    Order.mapInput(Order.Number, (arrowFunction: ArrowFunction) => -arrowFunction.getStart())
+  );
+  const arrowFindings = pipe(
+    arrows,
+    A.map((arrow) => scanArrowFunction(arrow, sourceFile, sourceFilePath, thunkHelperAliases, write)),
+    A.getSomes
+  );
+  const callFindings = pipe(
+    sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression),
+    A.flatMap((call) => scanCallExpression(call, sourceFile, sourceFilePath))
+  );
+  const spreadFindings = pipe(
+    sourceFile.getDescendantsOfKind(SyntaxKind.SpreadAssignment),
+    A.filter(isConditionalOptionalObjectSpreadCandidate),
+    A.map((spread) => detectedFinding(sourceFile, sourceFilePath, "conditional-optional-object-spread", spread))
+  );
+  const dualFindings = pipe(
+    sourceFile.getFunctions(),
+    A.filter(isExplicitDualOverloadCandidate),
+    A.map((declaration) => detectedFinding(sourceFile, sourceFilePath, "dual-overload", declaration))
+  );
+  if (write && A.some(arrowFindings, (finding) => finding.rewritable)) sourceFile.organizeImports();
+  return { sourceFilePath, findings: [...arrowFindings, ...callFindings, ...spreadFindings, ...dualFindings] };
+};
+
+const countFindingKind = (findings: ReadonlyArray<DetectedTerseFinding>, kind: TerseFindingKind): number =>
+  A.filter(findings, (finding) => finding.kind === kind).length;
+
 /**
  * Run terse Effect style migration/check logic.
  *
@@ -605,171 +698,39 @@ export const runTerseEffectRules = Effect.fn(function* (options: TerseEffectRule
   project.addSourceFilesAtPaths(A.fromIterable(options.includePaths ?? SOURCE_FILE_GLOBS));
 
   const sourceFiles = A.filter(project.getSourceFiles(), (sourceFile) => !isExcludedFile(sourceFile.getFilePath()));
-
-  let helpersSimplified = 0;
-  let thunkHelpersSimplified = 0;
-  let flowCandidatesDetected = 0;
-  let optionObjectCompactionCandidatesDetected = 0;
-  let conditionalOptionalObjectSpreadCandidatesDetected = 0;
-  let nestedOptionMatchCandidatesDetected = 0;
-  let nestedBoolMatchCandidatesDetected = 0;
-  let dualOverloadCandidatesDetected = 0;
-  let touchedFiles = 0;
-  let changedFiles = A.empty<string>();
-  let blockingFiles = A.empty<string>();
-  let informationalFiles = A.empty<string>();
-  let rewritableFiles = A.empty<string>();
-  let blockingFindings = A.empty<string>();
-  let informationalFindings = A.empty<string>();
-  let rewritableFindings = A.empty<string>();
-
-  for (const sourceFile of sourceFiles) {
-    const sourceFilePath = toPosixPath(path.relative(process.cwd(), sourceFile.getFilePath()));
-    let fileTouched = false;
-    let fileMutated = false;
-    let fileHasBlockingCandidate = false;
-    const fileHasInformationalCandidate = false;
-    let fileHasRewritableCandidate = false;
-    let fileBlockingFindings = A.empty<string>();
-    const fileInformationalFindings = A.empty<string>();
-    let fileRewritableFindings = A.empty<string>();
-    const thunkHelperAliases = getImportedThunkHelperAliases(sourceFile);
-    const arrowFunctions = A.sort(
-      sourceFile.getDescendantsOfKind(SyntaxKind.ArrowFunction),
-      Order.mapInput(Order.Number, (arrowFunction: ArrowFunction) => -arrowFunction.getStart())
-    );
-
-    for (const arrowFunction of arrowFunctions) {
-      if (
-        pipe(
-          getArrowReplacement(arrowFunction),
-          O.map((replacement) => {
-            const finding = findingText(sourceFile, sourceFilePath, "helper-ref", arrowFunction);
-            if (options.write) {
-              arrowFunction.replaceWithText(replacement);
-              fileMutated = true;
-            }
-            helpersSimplified += 1;
-            fileTouched = true;
-            fileHasBlockingCandidate = true;
-            fileHasRewritableCandidate = true;
-            fileBlockingFindings = A.append(fileBlockingFindings, finding);
-            fileRewritableFindings = A.append(fileRewritableFindings, finding);
-          }),
-          O.isSome
-        )
-      ) {
-        continue;
-      }
-
-      if (
-        pipe(
-          getThunkHelperReplacement(arrowFunction, thunkHelperAliases),
-          O.map((replacement) => {
-            const finding = findingText(sourceFile, sourceFilePath, "thunk-helper", arrowFunction);
-            if (options.write) {
-              arrowFunction.replaceWithText(replacement);
-              fileMutated = true;
-            }
-            thunkHelpersSimplified += 1;
-            fileTouched = true;
-            fileHasBlockingCandidate = true;
-            fileHasRewritableCandidate = true;
-            fileBlockingFindings = A.append(fileBlockingFindings, finding);
-            fileRewritableFindings = A.append(fileRewritableFindings, finding);
-          }),
-          O.isSome
-        )
-      ) {
-        continue;
-      }
-
-      if (isFlowCandidate(arrowFunction)) {
-        const finding = findingText(sourceFile, sourceFilePath, "flow-candidate", arrowFunction);
-        flowCandidatesDetected += 1;
-        fileTouched = true;
-        fileHasBlockingCandidate = true;
-        fileBlockingFindings = A.append(fileBlockingFindings, finding);
-      }
-    }
-
-    for (const callExpression of sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression)) {
-      if (isOptionObjectCompactionCandidate(callExpression)) {
-        optionObjectCompactionCandidatesDetected += 1;
-        fileTouched = true;
-        fileHasBlockingCandidate = true;
-        fileBlockingFindings = A.append(
-          fileBlockingFindings,
-          findingText(sourceFile, sourceFilePath, "option-object-compaction", callExpression)
-        );
-      }
-
-      if (isNestedOptionMatchCandidate(callExpression)) {
-        nestedOptionMatchCandidatesDetected += 1;
-        fileTouched = true;
-        fileHasBlockingCandidate = true;
-        fileBlockingFindings = A.append(
-          fileBlockingFindings,
-          findingText(sourceFile, sourceFilePath, "nested-option-match", callExpression)
-        );
-      }
-
-      if (isNestedBoolMatchCandidate(callExpression)) {
-        nestedBoolMatchCandidatesDetected += 1;
-        fileTouched = true;
-        fileHasBlockingCandidate = true;
-        fileBlockingFindings = A.append(
-          fileBlockingFindings,
-          findingText(sourceFile, sourceFilePath, "nested-bool-match", callExpression)
-        );
-      }
-    }
-
-    for (const spreadAssignment of sourceFile.getDescendantsOfKind(SyntaxKind.SpreadAssignment)) {
-      if (isConditionalOptionalObjectSpreadCandidate(spreadAssignment)) {
-        conditionalOptionalObjectSpreadCandidatesDetected += 1;
-        fileTouched = true;
-        fileHasBlockingCandidate = true;
-        fileBlockingFindings = A.append(
-          fileBlockingFindings,
-          findingText(sourceFile, sourceFilePath, "conditional-optional-object-spread", spreadAssignment)
-        );
-      }
-    }
-
-    for (const functionDeclaration of sourceFile.getFunctions()) {
-      if (isExplicitDualOverloadCandidate(functionDeclaration)) {
-        dualOverloadCandidatesDetected += 1;
-        fileTouched = true;
-        fileHasBlockingCandidate = true;
-        fileBlockingFindings = A.append(
-          fileBlockingFindings,
-          findingText(sourceFile, sourceFilePath, "dual-overload", functionDeclaration)
-        );
-      }
-    }
-
-    if (fileMutated) {
-      sourceFile.organizeImports();
-    }
-
-    if (fileTouched) {
-      touchedFiles += 1;
-      changedFiles = A.append(changedFiles, sourceFilePath);
-      if (fileHasBlockingCandidate) {
-        blockingFiles = A.append(blockingFiles, sourceFilePath);
-        blockingFindings = A.appendAll(blockingFindings, fileBlockingFindings);
-      }
-      if (fileHasInformationalCandidate) {
-        informationalFiles = A.append(informationalFiles, sourceFilePath);
-        informationalFindings = A.appendAll(informationalFindings, fileInformationalFindings);
-      }
-      if (fileHasRewritableCandidate) {
-        rewritableFiles = A.append(rewritableFiles, sourceFilePath);
-        rewritableFindings = A.appendAll(rewritableFindings, fileRewritableFindings);
-      }
-    }
-  }
+  const scans = A.map(sourceFiles, (sourceFile) =>
+    scanTerseEffectSourceFile(
+      sourceFile,
+      toPosixPath(path.relative(process.cwd(), sourceFile.getFilePath())),
+      options.write
+    )
+  );
+  const touchedScans = A.filter(scans, (scan) => scan.findings.length > 0);
+  const findings = A.flatMap(scans, (scan) => scan.findings);
+  const rewritableScans = A.filter(scans, (scan) => A.some(scan.findings, (finding) => finding.rewritable));
+  const helpersSimplified = countFindingKind(findings, "helper-ref");
+  const thunkHelpersSimplified = countFindingKind(findings, "thunk-helper");
+  const flowCandidatesDetected = countFindingKind(findings, "flow-candidate");
+  const optionObjectCompactionCandidatesDetected = countFindingKind(findings, "option-object-compaction");
+  const conditionalOptionalObjectSpreadCandidatesDetected = countFindingKind(
+    findings,
+    "conditional-optional-object-spread"
+  );
+  const nestedOptionMatchCandidatesDetected = countFindingKind(findings, "nested-option-match");
+  const nestedBoolMatchCandidatesDetected = countFindingKind(findings, "nested-bool-match");
+  const dualOverloadCandidatesDetected = countFindingKind(findings, "dual-overload");
+  const touchedFiles = touchedScans.length;
+  const changedFiles = A.map(touchedScans, (scan) => scan.sourceFilePath);
+  const blockingFiles = changedFiles;
+  const informationalFiles = A.empty<string>();
+  const rewritableFiles = A.map(rewritableScans, (scan) => scan.sourceFilePath);
+  const blockingFindings = A.map(findings, (finding) => finding.text);
+  const informationalFindings = A.empty<string>();
+  const rewritableFindings = pipe(
+    findings,
+    A.filter((finding) => finding.rewritable),
+    A.map((finding) => finding.text)
+  );
 
   if (options.write) {
     yield* Effect.tryPromise({
@@ -781,16 +742,7 @@ export const runTerseEffectRules = Effect.fn(function* (options: TerseEffectRule
     });
   }
 
-  const strictFailure =
-    options.strictCheck &&
-    (helpersSimplified > 0 ||
-      thunkHelpersSimplified > 0 ||
-      flowCandidatesDetected > 0 ||
-      optionObjectCompactionCandidatesDetected > 0 ||
-      conditionalOptionalObjectSpreadCandidatesDetected > 0 ||
-      nestedOptionMatchCandidatesDetected > 0 ||
-      nestedBoolMatchCandidatesDetected > 0 ||
-      dualOverloadCandidatesDetected > 0);
+  const strictFailure = options.strictCheck && findings.length > 0;
 
   return TerseEffectRulesSummary.make({
     touchedFiles,

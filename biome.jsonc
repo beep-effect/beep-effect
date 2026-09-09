@@ -27,6 +27,12 @@
       // GitHub Copilot; keep upstream bundles outside authored repo formatting.
       "!.claude/skills/impeccable",
       "!.github/skills/impeccable",
+      // Graft-owned generated wiring (shims, skill, Grok/OpenCode config) is
+      // rewritten by `graft init` on upgrade; keep it outside repo formatting.
+      "!.claude/helpers",
+      "!.claude/skills/graft",
+      "!.grok",
+      "!opencode.json",
       "!specs",
       "!**/.tsup",
       "!**/.turbo",
@@ -60,6 +66,8 @@
       // (PR #865 reformatted the adapter and broke its engine check).
       "!explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters",
       "!explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/runs",
+      "!explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3-fleet",
+      "!explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3-checkout-identity",
       "!**/modeling/html/data"
     ]
   },

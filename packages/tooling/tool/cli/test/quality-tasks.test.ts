@@ -91,6 +91,7 @@ import {
   QualityTaskLaneRun,
   QualityTaskLaneRunReport,
   QualityTaskStep,
+  qualityCommandPrimitiveHelpersForTesting,
   qualityProfileConfigForTesting,
   readCoverageComparisonBaselineForTesting,
   renderCoverageFailuresForTesting,
@@ -208,7 +209,7 @@ const qualityLaneArgs = (lanes: ReadonlyArray<GithubCheckLaneSpec>, laneId: stri
     O.getOrThrowWith(() => new Error(`missing quality lane ${laneId}`))
   );
 const runGit = Effect.fn("QualityTasksTest.runGit")(function* (repoRoot: string, args: ReadonlyArray<string>) {
-  const handle = yield* ChildProcess.make("git", [...args], {
+  const handle = yield* ChildProcess.make("git", ["-c", "commit.gpgSign=false", ...args], {
     cwd: repoRoot,
     stdin: "ignore",
     stdout: "ignore",
@@ -518,7 +519,7 @@ const cheapGatesTestLayer = (spawned: Array<string>, failedCommands: ReadonlyArr
   Layer.mergeAll(FileSystemLayer, TestConsole.layer, cheapGatesSpawnerLayer(spawned, failedCommands));
 
 type FallowFeatureMatrixRowTuple = readonly [
-  featureFamily: "audit" | "dead-code" | "health",
+  featureFamily: GithubChecksFallowFeatureMatrix["features"][number]["featureFamily"],
   ciMode: "advisory-artifact" | "blocking-check",
   promotionStatus: "advisory" | "research" | "candidate-blocking" | "blocking",
 ];
@@ -536,6 +537,7 @@ const expectUnpromotedWiredFallowLanes = (matrix: GithubChecksFallowFeatureMatri
   expect(githubCheckPromotedFallowLaneDiagnosticsForTesting("/repo", "pre-push", matrix)).toEqual([
     "unpromoted Fallow GitHub check lane is wired: fallow:audit",
     "unpromoted Fallow GitHub check lane is wired: fallow:dead-code",
+    "unpromoted Fallow GitHub check lane is wired: fallow:health",
   ]);
 };
 
@@ -768,6 +770,22 @@ describe("quality task adapter", () => {
     ).toBe(false);
   });
 
+  it("covers the primitive quality-command adapters without spawning commands", () => {
+    const helpers = qualityCommandPrimitiveHelpersForTesting;
+
+    expect(helpers.normalizeExtraArgs(undefined)).toEqual([]);
+    expect(helpers.normalizeExtraArgs("--watch")).toEqual(["--watch"]);
+    expect(helpers.normalizeExtraArgs(new Set<unknown>(["--run", 1]))).toEqual(["--run"]);
+    expect(helpers.normalizeExtraArgs(42)).toEqual([]);
+    expect(helpers.withExitCode("quality:test", "bun", ["run", "test"], 2)).toMatchObject({
+      command: "bun run test",
+      exitCode: 2,
+      message: "quality:test failed with exit code 2.",
+    });
+    expect(Effect.isEffect(helpers.runBun("/repo", "quality:test", ["test"]))).toBe(true);
+    expect(Effect.isEffect(helpers.runBunWithEnv("/repo", "quality:test", ["test"], { CI: "true" }))).toBe(true);
+  });
+
   it("adds surface-only docgen check when requested", () => {
     const steps = devQualityStepsForTesting("/repo", {
       base: "main",
@@ -837,6 +855,7 @@ describe("quality task adapter", () => {
       "cheap-gates:knip",
       "fallow:audit",
       "fallow:dead-code",
+      "fallow:health",
     ]);
     expect(A.every(lanes, (lane) => lane.wave === "preflight")).toBe(true);
     expect(A.map(githubCheckLanePlan.githubCheckLaneWaves(lanes), (wave) => wave.wave)).toEqual(["preflight"]);
@@ -1604,6 +1623,10 @@ describe("quality task adapter", () => {
       });
       yield* persistLaneProofs(emptySession, []);
       yield* withEnvVarEffect("BEEP_YEET_LANE_PROOF_MODE", undefined, persistLaneProofs(emptySession, [[lane, 1]]));
+      yield* persistLaneProofs(emptySession, [
+        [lane, 1],
+        [laneProofTestLane(path.join(tempRoot, "other"), "proof:other", "preflight", "process.exit(0)"), 1],
+      ]);
     }, provideScopedLayer(PlatformLayer))
   );
 
@@ -1661,6 +1684,109 @@ describe("quality task adapter", () => {
       expect(A.map((yield* atRuns("100")).report.lanes, (result) => result.status)).toEqual(["reused"]);
       expect(A.map((yield* atRuns("400")).report.lanes, (result) => result.status)).toEqual(["passed"]);
       expect(yield* fs.readFileString(markerPath)).toBe("run\nrun\n");
+    }, provideScopedLayer(PlatformLayer))
+  );
+
+  it.effect(
+    "invalidates a lane proof when an inherited ambient input changes",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: "lane-proof-ambient-env-" });
+      const markerPath = path.join(tempRoot, ".beep", "ambient-marker.txt");
+      yield* initializeLaneProofRepository(tempRoot);
+
+      const lane = laneProofTestLane(
+        tempRoot,
+        "proof:ambient-env",
+        "preflight",
+        "echo run >> .beep/ambient-marker.txt"
+      );
+      const run = collectGithubCheckLaneWavesForTesting(
+        "proof-ambient-env",
+        [GithubCheckLaneWaveSpec.make({ wave: "preflight", lanes: [lane] })],
+        "fail-fast",
+        "active"
+      );
+      const withGoldenMode = (mode: string) => withEnvVarEffect("REGEN_GOLDENS", mode, run);
+
+      expect(A.map((yield* withGoldenMode("0")).report.lanes, (result) => result.status)).toEqual(["passed"]);
+      expect(A.map((yield* withGoldenMode("0")).report.lanes, (result) => result.status)).toEqual(["reused"]);
+      expect(A.map((yield* withGoldenMode("1")).report.lanes, (result) => result.status)).toEqual(["passed"]);
+      expect(yield* fs.readFileString(markerPath)).toBe("run\nrun\n");
+    }, provideScopedLayer(PlatformLayer))
+  );
+
+  it.effect(
+    "includes the complete ambient environment for local-env lanes with an isolated spawn",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: "lane-proof-local-env-" });
+      yield* initializeLaneProofRepository(tempRoot);
+
+      const lane = GithubCheckLaneSpec.make({
+        id: "proof:local-env",
+        stage: "repo-quality",
+        wave: "preflight",
+        blockedBy: [],
+        step: QualityTaskStep.make({
+          label: "proof:local-env",
+          command: "op",
+          args: ["run", "--", "bunx", "turbo", "run", "check"],
+          cwd: tempRoot,
+          useLocalEnv: true,
+        }),
+      });
+      const hashAtConcurrency = (concurrency: string) =>
+        withEnvVarEffect("BEEP_QUALITY_CHECK_CONCURRENCY", concurrency, prepareLaneProofSession([lane], "active")).pipe(
+          Effect.map((session) =>
+            pipe(
+              session,
+              O.flatMap((session) => A.head(session.identities)),
+              O.map((identity) => identity.envProfileHash),
+              O.getOrThrow
+            )
+          )
+        );
+
+      expect(yield* hashAtConcurrency("2")).toBe(yield* hashAtConcurrency("2"));
+      expect(yield* hashAtConcurrency("2")).not.toBe(yield* hashAtConcurrency("3"));
+    }, provideScopedLayer(PlatformLayer))
+  );
+
+  it.effect(
+    "omits ambient inputs from proof identity when the lane spawn is isolated",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: "lane-proof-isolated-env-" });
+      yield* initializeLaneProofRepository(tempRoot);
+
+      const lane = GithubCheckLaneSpec.make({
+        id: "proof:isolated-env",
+        stage: "repo-quality",
+        wave: "preflight",
+        blockedBy: [],
+        step: QualityTaskStep.make({
+          label: "proof:isolated-env",
+          command: "op",
+          args: ["run", "--", "bunx", "turbo", "run", "check"],
+          cwd: tempRoot,
+          env: { PATH: "/usr/bin" },
+        }),
+      });
+      const hashAtGoldenMode = (mode: string) =>
+        withEnvVarEffect("REGEN_GOLDENS", mode, prepareLaneProofSession([lane], "active")).pipe(
+          Effect.map((session) =>
+            pipe(
+              session,
+              O.flatMap((session) => A.head(session.identities)),
+              O.map((identity) => identity.envProfileHash),
+              O.getOrThrow
+            )
+          )
+        );
+
+      expect(yield* hashAtGoldenMode("0")).toBe(yield* hashAtGoldenMode("1"));
     }, provideScopedLayer(PlatformLayer))
   );
 
@@ -2049,13 +2175,18 @@ describe("quality task adapter", () => {
     );
   });
 
-  it("accepts the current packet state with audit and dead-code as promoted pre-push lanes", () => {
+  it("accepts the current packet state with audit, dead-code, and health as promoted pre-push lanes", () => {
     const matrix = fallowFeatureMatrix([
       ["audit", "blocking-check", "blocking"],
       ["dead-code", "blocking-check", "blocking"],
+      ["health", "blocking-check", "blocking"],
     ]);
 
-    expect(promotedFallowGithubCheckLaneIdsForTesting(matrix)).toEqual(["fallow:audit", "fallow:dead-code"]);
+    expect(promotedFallowGithubCheckLaneIdsForTesting(matrix)).toEqual([
+      "fallow:audit",
+      "fallow:dead-code",
+      "fallow:health",
+    ]);
     expect(githubCheckPromotedFallowLaneDiagnosticsForTesting("/repo", "pre-push", matrix)).toEqual([]);
   });
 
@@ -2218,21 +2349,22 @@ describe("quality task adapter", () => {
           })
         );
         const labels = A.map(plan, (step) => step.label);
-        expect(A.take(labels, 2)).toEqual(["ci:fallow:audit", "ci:fallow:dead-code"]);
-        expect(labels).toContain("ci:fallow:envelope-check:dead-code");
+        expect(A.take(labels, 3)).toEqual(["ci:fallow:audit", "ci:fallow:dead-code", "ci:fallow:health"]);
+        expect(labels).toContain("ci:fallow:envelope-check:health");
       }).pipe(provideScopedLayer(FileSystemLayer))
     ));
 
   it("rejects a promoted Fallow matrix row that is not wired into pre-push", () => {
-    // dead-code is wired; health is promoted but not wired → missing health diagnostic
+    // The promoted boundaries lane is intentionally absent from the static pre-push lane set.
     const matrix = fallowFeatureMatrix([
       ["audit", "blocking-check", "blocking"],
       ["dead-code", "blocking-check", "blocking"],
       ["health", "blocking-check", "blocking"],
+      ["boundaries", "blocking-check", "blocking"],
     ]);
 
     expect(githubCheckPromotedFallowLaneDiagnosticsForTesting("/repo", "pre-push", matrix)).toEqual([
-      "missing promoted Fallow GitHub check lane fallow:health",
+      "missing promoted Fallow GitHub check lane fallow:boundaries",
     ]);
   });
 
@@ -2246,7 +2378,7 @@ describe("quality task adapter", () => {
   });
 
   it("treats candidate-blocking Fallow rows as promotion contract inputs", () => {
-    // health=candidate-blocking counts as promoted; dead-code wired but research → both diagnostics fire
+    // health=candidate-blocking counts as promoted; audit and dead-code stay wired but unpromoted.
     const matrix = fallowFeatureMatrix([
       ["health", "advisory-artifact", "candidate-blocking"],
       ["audit", "advisory-artifact", "research"],
@@ -2254,7 +2386,6 @@ describe("quality task adapter", () => {
     ]);
     expect(promotedFallowGithubCheckLaneIdsForTesting(matrix)).toEqual(["fallow:health"]);
     expect(githubCheckPromotedFallowLaneDiagnosticsForTesting("/repo", "pre-push", matrix)).toEqual([
-      "missing promoted Fallow GitHub check lane fallow:health",
       "unpromoted Fallow GitHub check lane is wired: fallow:audit",
       "unpromoted Fallow GitHub check lane is wired: fallow:dead-code",
     ]);
@@ -2969,6 +3100,37 @@ describe("quality task adapter", () => {
     }, provideScopedLayer(PlatformLayer))
   );
 
+  it.effect(
+    "resolves exact explicit baseline filters into verifier-equivalent shard owners",
+    Effect.fnUntraced(function* () {
+      const repoRoot = yield* findRepoRoot();
+      const options = yield* validateCoverageTaskArgsForTesting(repoRoot, [
+        "--write-baseline",
+        "--filter=@beep/repo-cli",
+        "--filter",
+        "@beep/ui",
+        "--filter=@beep/repo-cli",
+      ]);
+
+      expect(options.expectedPackageNames).toEqual(["@beep/repo-cli", "@beep/ui"]);
+    }, provideScopedLayer(PlatformLayer))
+  );
+
+  it.effect(
+    "rejects scoped baseline selectors that are not exact coverage owners",
+    Effect.fnUntraced(function* () {
+      const repoRoot = yield* findRepoRoot();
+      const exit = yield* Effect.exit(
+        validateCoverageTaskArgsForTesting(repoRoot, ["--write-baseline", "--filter=...@beep/repo-cli"])
+      );
+
+      assert.isTrue(Exit.isFailure(exit));
+      if (Exit.isFailure(exit)) {
+        assert.include(Cause.pretty(exit.cause), "must name exact workspace packages that define coverage");
+      }
+    }, provideScopedLayer(PlatformLayer))
+  );
+
   it("compares coverage snapshots with fail-on-drop and warning-only new package semantics", () => {
     const result = compareCoverageRegressionSnapshotsForTesting(
       coverageRegressionBaseline,
@@ -3284,7 +3446,7 @@ describe("quality task adapter", () => {
     })
   );
 
-  it.effect.skipIf(Bun.env.VITEST_COVERAGE_REPORT_ONLY === "1")(
+  it.effect(
     "keeps every committed coverage package on schema v2 with file provenance",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
@@ -3855,6 +4017,19 @@ describe("quality task adapter", () => {
       expect(A.take(steps[0]?.args ?? [], 3)).toEqual(["turbo", "run", "coverage"]);
       expect(steps[0]?.args).toEqual(expect.arrayContaining(["--filter=@beep/a", "--filter=@beep/b"]));
       expect(steps[0]?.args).not.toContain("--only");
+    });
+
+    it("uses verifier-equivalent shards for narrow baseline writes", () => {
+      const steps = coverageSelectedStepsForTesting("/repo", ["@beep/a", "@beep/b"], [], {
+        hosted: false,
+        writeBaseline: true,
+      });
+
+      expect(A.map(steps, (step) => step.label)).toEqual(["coverage:prebuild", "coverage:shard-1", "coverage:shard-2"]);
+      for (const step of A.drop(steps, 1)) {
+        expect(step.args).toContain("--maxWorkers=1");
+        expect(step.env).toMatchObject({ VITEST_COVERAGE_REPORT_ONLY: "1" });
+      }
     });
 
     // CI=true here only fixes the prebuild's Turbo cache posture (turboRunArgs

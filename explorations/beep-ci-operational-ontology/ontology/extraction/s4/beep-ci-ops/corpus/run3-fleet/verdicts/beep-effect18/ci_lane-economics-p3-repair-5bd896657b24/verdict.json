@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "ci/lane-economics-p3-repair",
+  "committed": false,
+  "createdAt": "2026-09-03T19:25:07.559Z",
+  "failurePolicy": "fail-fast",
+  "head": "b7b638bc416a94ec8701f50876bc0089532ca713",
+  "lanes": [
+    {
+      "id": "closeout:01-pr-context",
+      "label": "closeout:pr-context",
+      "phase": "monitor",
+      "status": "not-run",
+      "tier": "full",
+      "inputDigest": null
+    },
+    {
+      "id": "closeout:02-review-gates",
+      "label": "closeout:review-gates",
+      "phase": "monitor",
+      "status": "not-run",
+      "tier": "full",
+      "inputDigest": null
+    }
+  ],
+  "message": "yeet closeout succeeded.",
+  "mode": "closeout",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "ci_lane-economics-p3-repair-5bd896657b24",
+  "attemptId": "cac98b48-c194-4064-a19b-fe34108621eb",
+  "resolvedHeadSha": "b7b638bc416a94ec8701f50876bc0089532ca713",
+  "diffFingerprint": "96a296d224f285c67bee93c30f8a309157f0daa35dc5b87e410b78630a09cfc7",
+  "proofTier": "full",
+  "startedAt": "2026-09-03T19:25:01.599Z",
+  "endedAt": "2026-09-03T19:25:07.559Z",
+  "elapsedMs": 5960,
+  "indexPath": "<fleet>/beep-effect18/.beep/yeet/quality-issue-index.json"
+}

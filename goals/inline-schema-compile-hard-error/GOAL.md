@@ -46,9 +46,9 @@ Workflow:
 Acceptance:
 
 - [ ] The complete `SPEC.md` contract is satisfied.
-- [ ] The lint rule reports zero warnings at repository scope.
-- [ ] The rule is configured as an error and its focused tests are green.
-- [ ] Generated sources remain reproducible from updated generators.
+- [x] The lint rule reports zero warnings at repository scope.
+- [x] The rule is configured as an error and its focused tests are green.
+- [x] Generated sources remain reproducible from updated generators.
 - [ ] Required local and hosted checks are green.
 
 Verification:

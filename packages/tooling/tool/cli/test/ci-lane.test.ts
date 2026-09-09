@@ -1144,7 +1144,7 @@ describe("ciLaneStepsForTesting", () => {
     );
     expect(A.length(validated)).toBe(14);
     const lastLabel = lastOf(validated).label;
-    expect(lastLabel).toBe("ci:fallow:envelope-check:dead-code");
+    expect(lastLabel).toBe("ci:fallow:envelope-check:health");
   });
 
   it("builds the property lane with the 400-run floor, fixed seed, and cache-partitioning env", () => {
@@ -1483,6 +1483,7 @@ const fallowCommands = A.empty<string>();
 const fallowReports: ReadonlyArray<readonly [string, string]> = [
   [".beep/fallow/audit.check.json", "{}"],
   [".beep/fallow/dead-code.check.json", "{}"],
+  [".beep/fallow/health.check.json", "{}"],
 ];
 
 layer(doctestCiLayer([], fallowReports, fallowCommands))("Fallow CI lane execution", (it) => {
@@ -1493,9 +1494,9 @@ layer(doctestCiLayer([], fallowReports, fallowCommands))("Fallow CI lane executi
       expect(fallowCommands).toHaveLength(14);
       expect(fallowCommands[0]).toContain("beep quality fallow audit --check");
       expect(fallowCommands[1]).toContain("beep quality fallow dead-code --check");
-      expect(fallowCommands[2]).toContain("beep quality fallow health --advisory");
-      expect(fallowCommands[12]).toContain("fallow envelope-check .beep/fallow/audit.check.json");
-      expect(fallowCommands[13]).toContain("fallow envelope-check .beep/fallow/dead-code.check.json");
+      expect(fallowCommands[2]).toContain("beep quality fallow health --check");
+      expect(fallowCommands[11]).toContain("fallow envelope-check .beep/fallow/audit.check.json");
+      expect(fallowCommands[13]).toContain("fallow envelope-check .beep/fallow/health.check.json");
     })
   );
 });
