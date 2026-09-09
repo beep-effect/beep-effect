@@ -59,6 +59,10 @@ const decodeWorkflowJobs = S.decodeUnknownSync(WorkflowJobs);
 
 const workflowJobs = (document: Document): WorkflowJobs => decodeWorkflowJobs(document.toJS().jobs);
 
+// The heavy verify job's matrix lanes; each dispatches one `beep ci lane`.
+const heavyMatrixLanes = (document: Document): ReadonlyArray<Readonly<Record<string, unknown>>> =>
+  document.toJS().jobs.verify.strategy.matrix.include;
+
 const jobSteps = (jobs: WorkflowJobs, jobId: string): ReadonlyArray<WorkflowStep> =>
   O.getOrThrowWith(
     O.flatMap(R.get(jobs, jobId), (job) => O.fromUndefinedOr(job.steps)),
@@ -212,7 +216,6 @@ const turboJobTable = (documents: {
     [check, "test-unit-shard", true],
     [check, "property-laws", true],
     [check, "fallow-advisory", false],
-    [check, "build", true],
     [workflowJobs(documents.heavyWorkflow), "verify", true],
     [workflowJobs(documents.storybook), "storybook", false],
   ];
@@ -537,28 +540,37 @@ describe("CI runner security", () => {
   );
 
   it.effect(
-    "saves the Turbo cache only from the Build job on push",
+    "saves the Turbo cache only on push, with Build dispatched from heavy.yml",
     Effect.fnUntraced(function* () {
       const policy = yield* readCredentialPolicySources();
-      const { workflow, workflowText } = policy;
+      const { workflow, heavyWorkflow, heavyWorkflowText } = policy;
 
-      // Pull requests never publish a cache entry; Build saves only on push.
+      // Pull requests never publish a cache entry: every Turbo job restores
+      // only, and the post-lane fallback save is push-gated.
       for (const [jobs, jobId] of turboJobTable(policy)) {
-        if (jobId === "build") continue;
         assert.strictEqual(setupMonorepoInputs(jobs, jobId)["cache-write"], "false", jobId);
       }
+      const heavyJobs = workflowJobs(heavyWorkflow);
+      assert.include(
+        stepByName(jobSteps(heavyJobs, "verify"), "Save post-lane Turbo fallback").if,
+        "github.event_name == 'push'"
+      );
       // Quality-lane audit D12: Build runs on pull requests (affected-scoped,
       // remote-cache read) and keeps the write environment for pushes only.
-      assert.isUndefined(workflow.getIn(["jobs", "build", "if"]));
+      // It dispatches from heavy.yml: the beep-ec2-heavy runner group admits
+      // heavy.yml@main on pull requests, never a job declared in check.yml.
+      assert.isUndefined(workflow.getIn(["jobs", "build"]));
       assert.strictEqual(
-        workflow.getIn(["jobs", "build", "environment"]),
+        heavyWorkflow.getIn(["jobs", "verify", "environment"]),
         "${{ github.event_name == 'push' && 'turbo-cache-write' || null }}"
       );
-      assert.strictEqual(
-        setupMonorepoInputs(workflowJobs(workflow), "build")["cache-write"],
-        "${{ github.event_name == 'push' && 'true' || 'false' }}"
+      const buildLane = O.getOrThrowWith(
+        A.findFirst(heavyMatrixLanes(heavyWorkflow), (lane) => lane.id === "build"),
+        () => new Error("heavy.yml declares no build lane.")
       );
-      assert.include(workflowText, 'bun run beep ci lane build "${shape_args[@]}"');
+      assert.strictEqual(buildLane.name, "Build");
+      assert.strictEqual(buildLane.uses_turbo, "true");
+      assert.include(heavyWorkflowText, "check|test-integration|coverage|build)");
     }, provideScopedLayer(NodeServices.layer))
   );
 

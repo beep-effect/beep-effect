@@ -2,6 +2,87 @@
 
 Record receipts at the moment friction happens; redact for the public repo.
 
+## 2026-09-09 — A branch-dispatched probe passed routing but could not get a runner
+
+- What: validating the newly activated image with Fleet Lane Probe before
+  merging PR #1062.
+- Evidence: run `34385300906` was dispatched from the PR branch. The webhook
+  accepted its queued-job event and the dispatcher confirmed the build-queue
+  handoff. It remained queued while new-image workers handled other jobs.
+  The runner group's allowed workflow definitions are restricted to `main`,
+  including `fleet-lane-probe.yml@refs/heads/main`.
+- Attribution: the operator chose an ineligible workflow ref. Capacity was
+  also occupied, but queue acceptance and busy workers did not prove that this
+  particular workflow could be assigned. The image rollout was not the cause.
+- Response: cancel the unassigned probe. Validate PR code through its required
+  Heavy / Check job, which calls the approved `heavy.yml@main` reusable
+  workflow, and correlate its runner with the new EC2 image. Keep the runner
+  group restriction intact; dispatch Fleet Lane Probe from `main` after merge.
+- Prevention: check the allowed workflow refs before dispatching a probe.
+  Treat controller routing and GitHub runner-group eligibility as separate
+  checks so an ineligible job does not keep requesting capacity.
+
+## 2026-09-09 — An unused Chrome package feed blocked Storybook twice
+
+- What: final hosted proof for the lean runner-image PR #1062.
+- Evidence: Storybook run `34383237868`, attempts 1 and 2, failed at
+  `Install Playwright Chromium` before the build. APT reported `Hash Sum
+  mismatch` for Google's `chrome-stable/deb` package index. A bounded retry
+  reproduced the same expected and received digest mismatch.
+- Attribution: an external feed on the GitHub-hosted Ubuntu image, separate
+  from the EC2 image change. Playwright installs its own browser; its system
+  dependency installation does not need Google's Chrome package feed.
+- Repair: remove only Chrome feed definitions from the disposable runner
+  before the existing `playwright install --with-deps chromium` command.
+  Keep dependency installation and package integrity verification enabled.
+  GitHub's own [image installer](https://github.com/actions/runner-images/blob/main/images/ubuntu/scripts/build/install-google-chrome.sh)
+  already removes the older Chrome list name; cover current Chrome-prefixed
+  `.list` and `.sources` definitions in this workflow as well.
+- Prevention: scope job package sources to the dependencies the job needs,
+  and require a successful hosted rerun before closing the incident.
+- Hosted proof: run `34384268437` on `30d176e0fd` passed both Playwright
+  installation and the Storybook lane with the repair in place.
+
+## 2026-09-09 — A fresh image passed integrity but regressed setup time
+
+- What: comparing the existing image with a fresh Bun 1.4.2 image before
+  changing the production pin. Both probes used the same pushed revision,
+  `r6i.2xlarge`, root-volume settings and isolated setup procedure.
+- Evidence: the existing image missed the baked fast path and completed setup
+  in 18 seconds, including a 9-second frozen install. The new image passed the
+  exact setup integrity detector but took 228 seconds, including a 6-second
+  install. The successful integrity result alone did not establish a speedup.
+- Response: keep the production pin unchanged and instrument cache hashing,
+  extraction and Node setup separately before choosing the repair. AWS console
+  reads also returned older captures after newer ones; retain completed evidence
+  instead of letting a stale response erase an observed peak or result.
+- Isolation: a second fresh guest measured 163 seconds hashing the 1.35 GB
+  cache archive, 27 seconds extracting it and 2 seconds setting up Node. The
+  archive expands to 4.60 GB; the subsequent frozen install took 6 seconds.
+  The repair removes this archive from future bakes and skips its restore,
+  while retaining Bun's release digest, installed-binary digest, root ownership,
+  version and lockfile checks. Every job still runs a fresh frozen install.
+- Repair probe: the exact modified setup detector passed on another fresh
+  instance, with a fast-path hit, 20-second setup and 9-second frozen install.
+  This isolated result removes the archive regression; a production workflow
+  probe is still required to measure hosted setup and completion time.
+- Lean-image proof: the replacement bake omits the archive and reduces full
+  snapshot data from 8.024 GiB to 2.350 GiB. Its fresh guest passed setup in
+  11 seconds, including a 9-second frozen install, and Check passed 246/246
+  tasks in 541 seconds. This uses pushed source `b9b6faa5a2`, including the
+  newer Check overlay repair; the earlier source's 739-second Check is not a
+  controlled image-only timing comparison. Peak sampled VM memory was
+  11.61 GiB. The guest was terminated after capturing its terminal success.
+- Rollout boundary: the refreshed saved image-only Pulumi plan has one SSM
+  update, 83 unchanged resources and no replacements or deletions. It excludes
+  the known enrollment-provider discrepancy. The operator approved the apply,
+  which completed at 17:49 UTC with exactly those changes. Direct AWS reads
+  confirmed the new image at SSM version 8 and matching live image keys.
+  Hosted acceptance uses the PR's approved Heavy / Check workflow; the
+  separate receipt above explains the cancelled branch-dispatched probe.
+- Prevention: require timed canaries as well as freshness and integrity checks
+  before promoting an image intended to reduce setup cost.
+
 ## 2026-09-09 — Spot retry estimates must use billed usage
 
 - What: comparing Spot, autoscaled On-Demand EC2 and EKS after the operator
@@ -49,6 +130,12 @@ Record receipts at the moment friction happens; redact for the public repo.
 - Bake evidence: `RunInstances` was rejected before creation by the unrelated
   `FreedomFramework-CI` policy's explicit `LimitEC2Size` deny, which permits
   only `t2.micro` for the current operator login.
+- Bake access repair: after the operator approved continuation, the September 9
+  16:08 UTC operation detached only that obsolete policy from the operator
+  user. The policy remains available for rollback, its other attachment remains,
+  and every other operator policy attachment was verified unchanged. A fresh
+  `r6i.2xlarge` bake then launched successfully; image validation and activation
+  remain separate steps.
 - Prevention: capture the required operator identity and exact launch-policy
   preflight in the bake runbook. Keep the rejection distinct from a broken
   image or a capacity shortage; do not create credentials or weaken fleet

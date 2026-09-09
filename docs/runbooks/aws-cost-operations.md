@@ -191,10 +191,10 @@ changed enrollment or a clean no-change preview. Revisit it when the provider
 supports this readback; do not repeatedly apply merely to clear the preview.
 
 For image freshness, reuse the freshness fields of the existing `BakeReport`
-as a tracked intended-image receipt. `infra/ci-runners/runner-image.json` was
-initialized from the current AMI's AWS tags on September 9. It records Bun 1.4.0
-and correctly reports stale against the checkout; it does not claim a new bake.
-The reader also accepts the complete report written by a future successful bake. The existing runner check compares that receipt with Bun,
+as a tracked intended-image receipt. `infra/ci-runners/runner-image.json` now
+records the September 9 Bun 1.4.2 bake and its intended production pin. It
+supersedes the initial receipt copied from the stale Bun 1.4.0 image's tags.
+The existing runner check compares that receipt with Bun,
 archive and lockfile keys plus the intended Pulumi AMI pin without AWS access.
 Emit an advisory warning in the existing hosted Repo Sanity job, outside the
 heavy dependency chain. This warns about intended-image drift; the live AWS
@@ -203,6 +203,34 @@ image and report but does not activate it. Activation follows the existing YAML
 AMI pin, attended Pulumi apply, controller SSM parameter and runner module.
 Coalesce lockfile churn and measure bake payback rather than rebuilding for
 every edit.
+
+The September 9 refresh canary found that a fresh image's dependency-cache
+archive made setup slower: 228 seconds versus 18 seconds for the existing
+image's isolated fallback. A diagnostic guest spent 163 seconds hashing the
+1.35 GB archive and 27 seconds extracting it, while a fresh frozen install
+took 9 seconds on the baseline guest. Future bakes therefore omit dependency
+archives. The setup fast path validates the baked Bun toolchain and clears
+inherited dependency caches; each job performs its own frozen install. Bun's
+release digest, installed-binary digest, root ownership, version and lockfile
+checks remain required. Intended-image freshness alone is not a performance
+receipt.
+
+The modified setup path first passed on a fresh instance in 20 seconds, including
+a 9-second frozen install, versus the isolated baseline's 18 seconds. Baking
+without the archive then reduced the candidate's full snapshot data from
+8.024 GiB to 2.350 GiB. The resulting image passed the same setup detector in
+11 seconds, including a 9-second install, and confirmed that no dependency
+archive exists. Its full Check lane passed all 246 tasks in 541 seconds.
+
+These results remove the measured archive regression. They do not establish a
+hosted speedup: GitHub cache/action overhead and a complete production workflow
+remain part of the attended activation check. The final canary uses source
+`b9b6faa5a2`, which includes the newer Check overlay fix from PR #1058. Its
+541-second Check cannot be attributed to the image by comparison with the
+739-second baseline on `a2030c8bd9`. The matched original candidate passed in
+753 seconds on that earlier source. The final canary's peak VM-memory sample
+was 11.61 GiB, sampled every 15 seconds; this is not sufficient evidence to
+downsize every heavy lane.
 
 Repair the retired teardown script so it cannot terminate builders or current
 controller workers. Supersede historical Spot and $100 ceiling instructions at
@@ -339,10 +367,35 @@ minutes per successful lane, accounting for interruption waivers, setup,
 retries and idle cleanup, alongside queue and completion times. Spot remains
 the likely lower compute bill at the observed prices. The current decision
 remains On-Demand because the operator prioritizes reliability and speed.
-The next experiments are a fresh baked AMI and lane-specific resource
-measurement. A hybrid Spot pool or EKS migration needs a separate measured
+The lean AMI refresh is deployed; lane-specific resource measurement is next.
+A hybrid Spot pool or EKS migration needs a separate measured
 case that meets those same acceptance conditions; neither is deployed by
 this cost-control PR.
+
+### If Docker runner or application images are introduced
+
+The current fleet boots EC2 AMIs and runs verification directly on the host.
+For a future Docker/ECR implementation, consult the
+[Turborepo Docker guide](https://turborepo.dev/docs/guides/tools/docker)
+before designing the build. For an application image, evaluate
+`turbo prune <workspace-name> --docker` to retain the target workspace's
+dependency closure and prune its lockfile. Install from the generated package
+manifests and lockfile before copying `out/full` source, so source-only edits
+can reuse the dependency layer. Use a multi-stage build and exclude local
+`node_modules` from the build context.
+
+Application pruning does not establish the contents of a general CI runner
+image. A runner must support every lane assigned to it; validate any proposed
+pruned workspace against the lane's actual commands and required repository
+files. Adapt the guide's examples to this repo's pinned Bun/Turbo versions and
+frozen lockfile installation. Benchmark image build, pull, setup and successful
+lane costs against the deployed AMI before changing the fleet.
+
+For remote-cache credentials, use
+[Docker BuildKit secret mounts](https://docs.docker.com/build/building/secrets/)
+with runtime-resolved `op://` references. The guide's `TURBO_TOKEN` build-argument
+example does not meet this repo's secret-handling rules; never store a token in
+Dockerfile `ARG`/`ENV`, image layers or committed configuration.
 
 ## September 9 execution receipts
 
@@ -404,11 +457,61 @@ asset distribution is preserved under the cutoff and has no base certificate
 charge. The five current CI/OIP buckets, current runner images and snapshots,
 current CI key, account identities and AWS-managed keys are preserved.
 
-The stale image refresh exposed an unrelated old IAM policy on the current
-operator login: `FreedomFramework-CI` denies `RunInstances` for every size except
-`t2.micro`. AWS rejected the launch before creating a worker. The policy is not
-owned by the CI stack; any access repair requires the operator's explicit
-decision. Do not weaken a fleet role or attempt the bake on an undersized VM.
+The stale image refresh exposed an unrelated old IAM policy on the operator
+login: `FreedomFramework-CI` denies `RunInstances` for every size except
+`t2.micro`. AWS rejected the original launch before creating a worker. After
+the operator approved continuation, the September 9 16:08 UTC repair detached
+only that policy from the operator user. The policy and its other attachment
+remain, and every other operator attachment was verified unchanged. Reattaching
+the retained policy restores the previous access configuration. No fleet role
+was changed. A subsequent `r6i.2xlarge` bake launched successfully.
+
+The image refresh follows a separate validation and activation sequence:
+
+1. Bake from a pushed source revision using the existing command. Preserve the
+   current production image as the rollback target and capture an encrypted
+   production checkpoint before changing the pin.
+2. Launch bounded probes from the current and candidate images on identical
+   `r6i.2xlarge` instances with the production root-volume settings. Both use
+   the same source revision, pinned Node archive, frozen Bun install and
+   `bun run beep ci lane check --summarize`. Run the setup action's actual
+   integrity detector: the current image must report a miss and the candidate
+   must report a hit. Capture setup time, lane result and sampled VM memory.
+3. Keep these probes isolated from GitHub runner registration and both GitHub
+   and remote Turbo caches. Their setup measurements compare the image paths;
+   they do not establish hosted queue time or account-wide savings. Each guest
+   has a 40-minute shutdown backstop and a bounded verification command.
+   Stop the guest, capture its terminal console marker, then terminate it and
+   verify termination. Console output can lag shutdown and regress to an older
+   capture; retain the most complete result and bound the capture wait. The
+   September 9 final probe allowed 20 minutes after stop before cleanup.
+4. Review the intended manifest, AMI pin and refreshed Pulumi preview. Apply
+   the saved plan only with the operator present. Prove the live SSM pin and
+   verify a newly launched production worker. Before merge, use the PR's
+   required Heavy / Check job: `check.yml` calls the approved reusable
+   `heavy.yml@main` definition while checking out the PR source. Correlate its
+   GitHub runner name with the EC2 image ID, then require a baked fast-path hit
+   and successful verification. Retain the old image for rollback.
+5. Fleet Lane Probe must be dispatched from `main`. The runner group restricts
+   allowed workflow definitions to that ref. A feature-branch dispatch can
+   reach the controller queue yet remain ineligible for assignment; do not
+   mistake that for a launch failure or relax the group restriction. Use this
+   probe after merge to verify deployed main, and inspect the group's allowed
+   workflow refs before choosing another dispatch ref.
+
+The September 9 replacement image is `ami-07af50c345b5ba065`, baked from pushed
+source `b9b6faa5a2`; the rollback image is `ami-0738c1b69711969bc`. The isolated
+probe passed and its guest and both builders were verified terminated. The
+refreshed full preview contains only the intended SSM image update and the
+previously documented Cost Optimization Hub provider discrepancy. The saved
+image-only plan targets `ci-fleet-controller-runner-ami`: one update, 83 unchanged
+resources, no replacements or deletions. It excludes the unrelated enrollment
+update. The operator-approved apply completed at 17:49 UTC with exactly those
+changes. A direct AWS read confirmed the new image at SSM version 8; the live
+image check confirmed matching Bun, release-archive and lockfile keys. Save
+the hosted job's image identity, setup result and successful Check receipt in
+the rollout PR before declaring the activation validated. A matching manifest
+alone does not establish that production uses the new image.
 
 ## Current stack ownership and bounded operations
 
