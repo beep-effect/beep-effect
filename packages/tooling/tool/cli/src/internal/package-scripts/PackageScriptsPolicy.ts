@@ -115,9 +115,7 @@ const seedImplementation = (
 ) => {
   if (rule.binding._tag !== "indirection" || HashMap.has(impls, rule.binding.impl)) return impls;
   const binding = rule.binding;
-  const fallback = binding.ifPresent
-    ? O.none<(typeof implScriptDefaults)[number]>()
-    : A.findFirst(implScriptDefaults, (row) => row.kind === kind && row.name === binding.impl);
+  const fallback = A.findFirst(implScriptDefaults, (row) => row.kind === kind && row.name === binding.impl);
   const previous = HashMap.get(actual.tasks, rule.name).pipe(O.filter((text) => text !== value));
   const implementation = previous.pipe(O.orElse(() => O.map(fallback, (row) => row.value)));
   if (O.isSome(implementation)) impls = HashMap.set(impls, binding.impl, implementation.value);
