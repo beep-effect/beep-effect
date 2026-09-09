@@ -62,8 +62,8 @@ as it goes. No other file may be touched; no git commands. Structure, in order:
 telemetry:
   lane: s4-<unit-slug>
   runner: "codex exec"                   # or "grok -p"
-  model: gpt-6-astra                     # explicit; passed via -m (never left to config default)
-  reasoning_effort: xhigh                # root AGENTS.md; Grok also uses xhigh
+  model: gpt-5.6-sol                     # explicit; passed via -m (never left to config default)
+  reasoning_effort: max                  # initiative directive 2026-08-27 (grok: xhigh)
   prompt_version: s4-lane-contract-v1
   corpus_commit: <40-hex or 12-hex>      # the pinned tree (>= debbbb51f7); REQUIRED
   started: <ISO8601>
@@ -238,7 +238,7 @@ to the operator with the lane's stream tail.
 
 ## 7. Runner pinning
 
-- codex lanes: `codex exec -s workspace-write --skip-git-repo-check --cd <repo> --model gpt-6-astra -c 'model_reasoning_effort="xhigh"' "<prompt>"` — model EXPLICIT (round-2 seat F: an unstated model makes the telemetry header unverifiable), `xhigh` per root `AGENTS.md` (operator update 2026-09-08).
+- codex lanes: `codex exec -s workspace-write --skip-git-repo-check --cd <repo> -m gpt-5.6-sol -c model_reasoning_effort=max "<prompt>"` — model EXPLICIT (round-2 seat F: an unstated model makes the telemetry header unverifiable), max per the initiative effort directive (DECISIONS 2026-08-27).
 - grok lanes (if used for archaeology-flavored units): `grok -p "<prompt>" --reasoning-effort xhigh --output-format streaming-json --no-auto-update --max-turns 50`.
 - The lane prompt embeds: this contract §3–§4 verbatim, the unit's source list, the
   frozen-input digests, the full lane map (disjoint ownership), and the AgentO prompt

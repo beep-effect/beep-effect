@@ -43,7 +43,7 @@ Two resolutions:
 2. **Session workaround (agent, no human needed):** render the bundle to a
    file (`oracle --render -p ... --file ... > <scratchpad>/oracle-bundle.md`)
    and dispatch a `codex:codex-rescue` task with
-   `--model gpt-6-astra --effort xhigh` that reads the bundle file, follows
+   `--model gpt-6-astra --effort medium` that reads the bundle file, follows
    the instructions inside it, and writes the review to one deliverable
    file. Same ChatGPT-Pro-backed model pool, fully
    automated; loses only the ChatGPT-UI Pro extended-thinking mode.

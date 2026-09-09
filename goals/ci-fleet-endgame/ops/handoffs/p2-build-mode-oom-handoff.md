@@ -1,6 +1,6 @@
 # Handoff: get build-mode typecheck safely under a 32 GB worker
 
-Owner: fresh agent session (Codex `gpt-6-astra` with `xhigh`, or Claude),
+Owner: fresh agent session (Codex `gpt-6-astra` with `medium`, or Claude),
 in its own worktree/branch.
 Do NOT work in the worktrees named `ci-cache`, `findings-batch`, `tsperf-census`,
 `endgame`, or `shadow-labels` — they carry in-flight PRs.

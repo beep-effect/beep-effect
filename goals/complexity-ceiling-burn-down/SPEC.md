@@ -1,7 +1,7 @@
 # Complexity Ceiling Burn-Down Spec
 
-> Future reuse (2026-09-08): new token-heavy Codex work uses `gpt-6-astra`
-> with `xhigh` reasoning, per [root agent guidance](../../AGENTS.md#token-heavy-codex-work).
+> Future reuse (2026-09-09): new token-heavy Codex work uses `gpt-6-astra`
+> with `medium` reasoning, per [root agent guidance](../../AGENTS.md#token-heavy-codex-work).
 > This completed packet retains its original execution details below as
 > historical provenance; the routing update applies only to future work.
 

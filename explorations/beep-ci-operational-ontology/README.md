@@ -44,7 +44,7 @@ recapture sources or rerun ontology ratification. Stage B is now pinned; the nex
 step is run 3 proper, as described below.
 
 Routing for future token-heavy Codex work is settled: `gpt-6-astra` with
-`xhigh` reasoning ([decision update](./DECISIONS.md)). The next step remains:
+`medium` reasoning ([decision update](./DECISIONS.md)). The next step remains:
 
 **§4b NORMALIZATION GATE IS COMPLETE AND RATIFIED** (2026-08-29; PR #889). The
 `ontology-foundational-auditor` skill ran as written over the S4 harvest: 1,112
@@ -533,6 +533,9 @@ graduation. Full plan with locked decisions: [`DECISIONS.md`](./DECISIONS.md).
 - 2026-09-08: recorded the operator's Astra/xhigh routing update in DECISIONS,
   this resume surface, and manifest timestamps where needed; retained the existing
   stage, lifecycle, open questions, and historical execution provenance.
+- 2026-09-09: lowered the Astra default reasoning effort from `xhigh` to `medium`
+  in DECISIONS, this resume surface, and manifest timestamps; historical execution
+  provenance retained.
 
 - 2026-09-09: PR #1040 round-2 fixes and three final captures completed locally;
   custody counts now bind to payload variants, citations resolve in the current
