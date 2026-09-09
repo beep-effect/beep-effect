@@ -76,7 +76,7 @@
       "id": "P4",
       "name": "Close",
       "status": "in-progress",
-      "evidence": "The validated reflection is present, and the corrected package evidence is pushed. README.md, PLAN.md, and this manifest remain active until the receipts land and the terminal monitor gate is satisfied. The final PR path awaits operator direction after #1028 merged before closeout."
+      "evidence": "The September 8 reflection and September 9 follow-up record the implementation lessons and completed proofs. The corrected package evidence is pushed. README.md, PLAN.md, and this manifest remain active until the receipts land and the terminal monitor gate is satisfied. The final PR path awaits operator direction after #1028 merged before closeout."
     }
   ],
   "verificationCommands": [

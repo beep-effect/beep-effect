@@ -82,6 +82,9 @@ The final PR path awaits operator direction after PR #1028 merged before closeou
   [package-evidence reply](https://github.com/beep-effect/beep-effect/pull/1028#discussion_r3964829818)
   links the pushed receipts. The lifecycle remains active until publication
   and terminal monitoring satisfy the remaining gates.
+- The [September 9 reflection](./history/reflections/2026-09-09-codex.md)
+  supplements the earlier account with the completed proofs, the full owner
+  inventory, and the remaining publication gate.
 
 ## Notes
 
