@@ -984,12 +984,14 @@ describe("quality task adapter", () => {
       "repo-sanity:versions",
       "repo-sanity:syncpack",
       "repo-sanity:sherif",
+      "repo-sanity:config-typecheck",
       "repo-sanity:bun-audit",
     ]);
     expect(A.every(lanes, (lane) => lane.stage === "repo-sanity")).toBe(true);
     expect(lanes[0]?.step.args).toEqual(["run", "beep", "quality", "changeset-graph"]);
     expect(lanes[2]?.step.args).toEqual(["run", "beep", "quality", "fallow", "boundaries", "config-check", "--check"]);
-    expect(lanes[6]?.step.args).toEqual(["run", "beep", "quality", "bun-audit"]);
+    expect(lanes[6]?.step.args).toEqual(["run", "check:configs"]);
+    expect(lanes[7]?.step.args).toEqual(["run", "beep", "quality", "bun-audit"]);
   });
 
   it("maps pre-push external gates after repo diagnostics", () => {

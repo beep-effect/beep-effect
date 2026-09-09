@@ -6,19 +6,12 @@
       "path": "tsconfig.packages.json"
     }
   ],
-  "include": [
-    "**/vitest.*.ts",
-    // All vitest config files across all packages
-    "./apps/**/test/**/*.ts",
-    "./apps/**/test/**/*.tsx",
-    "./apps/**/test/**/*.json",
-    "./packages/**/test/**/*.ts",
-    "./packages/**/test/**/*.tsx",
-    "./packages/**/test/**/*.json",
-    "./syncpack.config.ts",
-    "./*.ts",
-    "./*.json"
-  ],
+  // Nothing runs this file as a program: it is the alias carrier the
+  // tsconfig.stories.json projects extend, and tsconfig-sync regenerates its
+  // paths. Config-file sources (vitest.*.ts, root *.ts) are typechecked by
+  // tsconfig.configs.json (repo-sanity:config-typecheck); test/ trees belong
+  // to each package's own check projects.
+  "include": ["./*.json"],
   "exclude": [
     "**/node_modules/**",
     "**/dist/**",

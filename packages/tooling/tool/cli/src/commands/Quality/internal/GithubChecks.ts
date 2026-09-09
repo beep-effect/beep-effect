@@ -414,6 +414,14 @@ export const githubCheckRepoSanityLanes = (repoRoot: string): ReadonlyArray<Gith
     "preflight",
     bunxLane(repoRoot, "repo-sanity:sherif", ["sherif@1.10.0", "-r", "non-existent-packages"])
   ),
+  // Root tsconfig.configs.json: every vitest.*.ts plus the root config files
+  // (syncpack, commitlint), which no package project reaches (D16 blind spot).
+  githubCheckLane(
+    "repo-sanity:config-typecheck",
+    "repo-sanity",
+    "preflight",
+    bunRunLane(repoRoot, "repo-sanity:config-typecheck", ["check:configs"])
+  ),
   githubCheckLane(
     "repo-sanity:bun-audit",
     "repo-sanity",

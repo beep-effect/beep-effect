@@ -792,6 +792,7 @@ describe("yeet planner", () => {
       "repo-sanity:versions",
       "repo-sanity:syncpack",
       "repo-sanity:sherif",
+      "repo-sanity:config-typecheck",
       "quality:build",
       "quality:desktop-ipc",
       "quality:jsdoc-ratchet",
