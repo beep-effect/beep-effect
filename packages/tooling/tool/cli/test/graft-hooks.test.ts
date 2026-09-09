@@ -1,6 +1,6 @@
 import { fileURLToPath } from "node:url";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@effect/vitest";
+import { expect, layer } from "@effect/vitest";
 import { Effect, FileSystem, Path, Stream } from "effect";
 import * as A from "effect/Array";
 import { ChildProcess } from "effect/unstable/process";
@@ -67,7 +67,7 @@ const runNode = Effect.fn("GraftHooksTest.runNode")(function* (
   return stdout;
 });
 
-describe("Graft hook installation trust", () => {
+layer(NodeServices.layer)("Graft hook installation trust", (it) => {
   it.effect("uses Windows ACL evidence to permit trusted npm shims and reject unsafe or unavailable evidence", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
@@ -137,7 +137,7 @@ describe("Graft hook installation trust", () => {
           ])
         ).toBe("rejected\nrejected\n");
       }
-    }).pipe(Effect.scoped, Effect.provide(NodeServices.layer))
+    })
   );
 
   it.effect("runs both shims from the trusted PATH installation and forwards the hook event", () =>
@@ -149,7 +149,7 @@ describe("Graft hook installation trust", () => {
       expect(yield* runNode(fixture.project, fixture.bin, [`${helpers}graft-statusline.cjs`])).toBe(
         "trusted:statusline\n"
       );
-    }).pipe(Effect.scoped, Effect.provide(NodeServices.layer))
+    })
   );
 
   it.effect("does not execute project fallback modules when Graft is absent from PATH", () =>
@@ -158,7 +158,7 @@ describe("Graft hook installation trust", () => {
       for (const shim of ["graft-hooks.cjs", "graft-statusline.cjs"]) {
         expect(yield* runNode(fixture.project, fixture.project, [`${helpers}${shim}`])).toBe("");
       }
-    }).pipe(Effect.scoped, Effect.provide(NodeServices.layer))
+    })
   );
 
   it.effect("rejects writable installation ancestors and module links outside the package", () =>
@@ -179,7 +179,7 @@ describe("Graft hook installation trust", () => {
       for (const shim of ["graft-hooks.cjs", "graft-statusline.cjs"]) {
         expect(yield* runNode(fixture.project, fixture.bin, [`${helpers}${shim}`])).toBe("");
       }
-    }).pipe(Effect.scoped, Effect.provide(NodeServices.layer))
+    })
   );
 
   it.effect("rejects a foreign-owned installation even when its package metadata claims a newer version", () =>
@@ -211,6 +211,6 @@ describe("Graft hook installation trust", () => {
       expect(
         yield* runNode(fixture.project, fixture.bin, ["-e", program, fixture.pkg, `${helpers}graft-loader.cjs`])
       ).toBe("null\nnull\n");
-    }).pipe(Effect.scoped, Effect.provide(NodeServices.layer))
+    })
   );
 });

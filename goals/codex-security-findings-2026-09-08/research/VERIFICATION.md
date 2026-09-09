@@ -75,3 +75,11 @@ The eleven-finding CLI package audit passed in 356.7 seconds and docgen in
 with focused contract fixtures; no native Windows runtime was available.
 The capture refresher now changes only the count in source prose, preserving
 an existing full-snapshot description without duplication.
+
+Hosted Check identified five introduced `strictEffectProvide` diagnostics in
+the Graft tests. Platform services now compose once at the `@effect/vitest`
+suite boundary. All five runtime tests pass; `quality test-tsgo-package` reports
+exit zero with no diagnostics for the complete CLI test package. Quick package
+verification passes (lint 2.6 seconds, check 9.5 seconds). The superseded local
+publication proof was interrupted after the same test-file failure; it does
+not count as acceptance.

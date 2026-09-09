@@ -40,3 +40,9 @@
   REST confirmed the head and accepted the review reply. An exhausted GraphQL
   lookup should preserve the known PR identity and report a retryable monitor
   delay instead of attempting to create another PR.
+
+- PR #1026 Heavy / Check reported five `TS377032` diagnostics in the new Graft
+  tests. Runtime tests and the package source check passed, but neither runs the
+  repository's test-file Effect diagnostics. Compose `NodeServices.layer` at
+  the `@effect/vitest` suite boundary and run `quality test-tsgo-package` for
+  test changes before publication. Keep the diagnostic enabled.
