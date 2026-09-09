@@ -224,6 +224,37 @@ layer(testLayer)("Graft cache sync", (it) => {
   );
 
   it.effect(
+    "fails with GraftCacheSourceError when a source artifact directory cannot be listed",
+    Effect.fn(function* () {
+      const { fs, source, target, path } = yield* fixture();
+      const graph = path.join(source, "graft", ".graph");
+      yield* fs.chmod(graph, 0o000);
+      const sync = yield* GraftCacheSync;
+      const failure = yield* Effect.flip(sync.plan(source, [target])).pipe(
+        Effect.ensuring(Effect.orDie(fs.chmod(graph, 0o755)))
+      );
+      expect(failure._tag).toBe("GraftCacheSourceError");
+      expect(Str.includes(graph)(failure.path)).toBe(true);
+    })
+  );
+
+  it.effect(
+    "refuses every artifact of a target whose graft directory cannot be listed",
+    Effect.fn(function* () {
+      const { fs, source, target, path } = yield* fixture();
+      const graft = path.join(target, "graft");
+      yield* fs.makeDirectory(graft);
+      yield* fs.chmod(graft, 0o000);
+      const sync = yield* GraftCacheSync;
+      // The first artifact records the listing failure; the rest replay it.
+      const plan = yield* sync.plan(source, [target]).pipe(Effect.ensuring(Effect.orDie(fs.chmod(graft, 0o755))));
+      expect(plan.entries).toHaveLength(artifacts.length);
+      expect(A.every(plan.entries, (entry) => entry.action === "refuse")).toBe(true);
+      expect(A.every(plan.entries, (entry) => Str.includes(graft)(entry.reason ?? ""))).toBe(true);
+    })
+  );
+
+  it.effect(
     "deduplicates a canonical target and its symlink alias without changing entry order",
     Effect.fn(function* () {
       const { fs, source, target, path, directory } = yield* fixture();
