@@ -642,6 +642,7 @@ const rootConfigs = [
  * import * as S from "effect/Schema"
  * console.log(S.is(PolicyToolsFingerprint)(undefined)) // false
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -665,6 +666,7 @@ export class PolicyToolsFingerprint extends S.Class<PolicyToolsFingerprint>($I`P
  * import { Effect } from "effect"
  * console.log(Effect.isEffect(policyToolsFingerprint("/repo"))) // true
  * ```
+ *
  * @category workflows
  * @since 0.0.0
  */
@@ -726,6 +728,7 @@ const gateFlags = {
  * import { lintPackageScriptsCommand } from "@beep/repo-cli/test/PackageScripts"
  * console.log(lintPackageScriptsCommand.name) // package-scripts
  * ```
+ *
  * @category cli-commands
  * @since 0.0.0
  */
@@ -760,6 +763,7 @@ export const lintPackageScriptsCommand = Command.make(
  * import { lintPolicyFingerprintCommand } from "@beep/repo-cli/test/PackageScripts"
  * console.log(lintPolicyFingerprintCommand.name) // policy-fingerprint
  * ```
+ *
  * @category cli-commands
  * @since 0.0.0
  */
