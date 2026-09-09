@@ -106,8 +106,8 @@
   "ignorePatterns": [
     // The GitHub Copilot Impeccable tree mirrors the analyzed Claude Code source.
     ".github/skills/impeccable/**",
-    // Graft-owned hook/statusline shims written by `graft init` (rewritten on
-    // upgrade); Claude Code runs them by path from .claude/settings.json.
+    // Claude Code launches these by path from .claude/settings.json (the two
+    // graft shims and the repo-owned loader); no import graph reaches them.
     ".claude/helpers/**",
     // Browser QA operators copy this documented harness template beside the app
     // under test; it is a distributed resource, not workspace-owned source.
@@ -324,7 +324,7 @@
   "duplicates": {
     // Vendored Impeccable scripts keep their upstream shape; dependency graph
     // analysis above must not opt that vendor tree into authored-code cloning.
-    // The two graft shims are generated from one template and differ by a line.
+    // The two graft shims are one-line delegations to the repo-owned loader.
     "ignore": [".claude/skills/impeccable/**", ".claude/helpers/**"]
   },
   "health": {
@@ -340,7 +340,8 @@
     "maxUnitSize": 60,
     // Preserve the vendor tree's prior exclusion from authored-code complexity
     // while its module graph remains visible to dead-code dependency analysis.
-    // Graft's generated shims are not authored code either.
+    // The graft shims are generated; the loader's platform trust checks are
+    // security-boundary code kept whole rather than split for a ceiling.
     "ignore": [".claude/skills/impeccable/**", ".claude/helpers/**"],
     "thresholdOverrides": [
       {

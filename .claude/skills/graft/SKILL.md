@@ -148,3 +148,15 @@ When the graft MCP server is connected, these are exposed as tools too:
 `graft_find_code`, `graft_find_all`, `graft_file_api`, `graft_trace_calls` (with
 `direction` / `depth`), `graft_repo_map`, `graft_check_freshness`. Use whichever surface is
 available; the guidance is identical.
+
+## Repo notes (beep-effect)
+
+- Edges are name-resolved from tree-sitter, not from the TypeScript compiler.
+  A cross-file caller of an ambiguous name is dropped rather than guessed, so
+  `graft callers` can undercount; for refactors, confirm with `graft grep`
+  and the `@beep/*` barrels before editing.
+- `graft build` (exact, no flags) is the only allowed refresh. `graft init`,
+  `uninstall`, and `upgrade` are denied because they rewrite tracked wiring;
+  `graft build --deep` is operator-run because it spends model quota.
+- Ordinary `rg` excludes the cards (`.rgignore`); use `graft grep`, or
+  `rg --no-ignore graft/` when you want card text.
