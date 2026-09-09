@@ -3,6 +3,7 @@ import { qualityCommand, renderAdmissionSnapshotLinesForTesting } from "@beep/re
 import {
   AdmissionAttemptTerminationJournal,
   AdmissionConfig,
+  AdmissionEvictionEmission,
   AdmissionEvictionJournal,
   AdmissionJournalAdmitted,
   AdmissionJournalEnqueued,
@@ -24,6 +25,7 @@ import {
   acquireJournalFileLock,
   admissionCapacityTokensFor,
   admissionJournalPath,
+  admissionProtocolPath,
   admissionProtocolStatus,
   admissionStatus,
   admissionTokenWeight,
@@ -106,6 +108,12 @@ const decodeLegacyAdmissionJournalEvent = S.decodeUnknownEffect(
       AdmissionJournalLeaseEvicted,
       AdmissionJournalTicketEvicted,
     ])
+  )
+);
+// Historical wire boundary: the pre-v3 gate accepts protocol v1 only.
+const decodeLegacyAdmissionProtocol = S.decodeUnknownOption(
+  S.fromJsonString(
+    S.Struct({ schemaVersion: S.Literal("yeet-admission-protocol/v1"), eviction: AdmissionEvictionEmission })
   )
 );
 
@@ -1209,6 +1217,64 @@ describe("quality-scheduler", () => {
         );
       })
     ));
+
+  it.each([0, 200])("bounds queue-only churn while preserving %i admitted rows and opaque bytes", (admittedCount) =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            yield* admissionStatus(fastConfig);
+            const admissions = A.take(A.makeBy(200, journalAdmitted), admittedCount);
+            expect(admissions).toHaveLength(admittedCount);
+            const queuedPair = (index: number) => {
+              const ticket = orderingTicket({ nonce: `churn-${index}`, enqueuedAtMillis: index });
+              return [
+                AdmissionJournalEnqueued.make({
+                  ...ticket,
+                  schemaVersion: "yeet-admission-journal/v3",
+                  _tag: "admission-enqueued",
+                }),
+                AdmissionJournalWithdrawn.make({
+                  ...ticket,
+                  schemaVersion: "yeet-admission-journal/v3",
+                  _tag: "admission-withdrawn",
+                  withdrawnAtMillis: index + 1,
+                }),
+              ];
+            };
+            const seeded = yield* Effect.forEach([...admissions, ...A.flatMap(A.range(0, 1299), queuedPair)], (event) =>
+              encodeUnknownAdmissionJournalEventJson(event)
+            );
+            const opaque = ' \t{"schemaVersion":"future","opaque":"preserve  bytes"}  ';
+            const journalPath = yield* admissionJournalPath(tempRoot.root);
+            yield* fs.writeFileString(journalPath, `${opaque}\n${A.join(seeded, "\n")}\n`);
+            // Seed the oversized history cheaply, then exercise repeated real locked appends.
+            for (const event of A.flatMap(A.range(1300, 1302), queuedPair)) {
+              yield* appendAdmissionJournalEvent(tempRoot.root, event);
+              const lines = pipe(yield* fs.readFileString(journalPath), Str.split("\n"), A.filter(Str.isNonEmpty));
+              expect(A.head(lines)).toStrictEqual(O.some(opaque));
+              expect(lines).toHaveLength(2401);
+              const decoded = yield* Effect.forEach(A.drop(lines, 1), (line) => decodeAdmissionJournalEvent(line));
+              expect(A.filter(decoded, AdmissionJournalEvent.guards["admission-admitted"])).toStrictEqual(admissions);
+              expect(A.last(decoded)).toStrictEqual(O.some(event));
+            }
+            const expectedTail = yield* Effect.forEach(
+              A.takeRight(A.flatMap(A.range(0, 1302), queuedPair), 2400 - admittedCount),
+              (event) => encodeUnknownAdmissionJournalEventJson(event)
+            );
+            const admittedLines = yield* Effect.forEach(admissions, (event) =>
+              encodeUnknownAdmissionJournalEventJson(event)
+            );
+            expect(yield* fs.readFileString(journalPath)).toBe(
+              `${A.join([opaque, ...admittedLines, ...expectedTail], "\n")}\n`
+            );
+          })
+        );
+      })
+    )
+  );
 
   it("preserves an unknown protocol row byte-for-byte through a v1 append", () =>
     Effect.runPromise(
@@ -2401,6 +2467,106 @@ describe("quality-scheduler", () => {
         );
       })
     ));
+
+  it("requires protocol v2 before emitting v3 evictions", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            yield* admissionStatus(fastConfig);
+            const protocolPath = yield* admissionProtocolPath(tempRoot.root);
+            yield* fs.writeFileString(protocolPath, '{"schemaVersion":"yeet-admission-protocol/v1","eviction":"on"}\n');
+            expect((yield* admissionProtocolStatus()).eviction).toBe("off");
+            const event = O.getOrThrow(
+              A.findFirst(journalV3Events(), AdmissionJournalEvent.guards["admission-lease-evicted"])
+            );
+            expect(yield* appendAdmissionEvictionJournalEvent(tempRoot.root, event)).toBe(false);
+            expect(yield* readJournalEvents(tempRoot.root)).toHaveLength(0);
+            expect((yield* setAdmissionEvictionProtocol("on")).schemaVersion).toBe("yeet-admission-protocol/v2");
+            expect(yield* appendAdmissionEvictionJournalEvent(tempRoot.root, event)).toBe(true);
+            expect(yield* readJournalEvents(tempRoot.root)).toStrictEqual([event]);
+          })
+        );
+      })
+    ));
+
+  it.each(["lease", "ticket"])(
+    "fences pre-v3 %s recovery after receipt append but before claim acknowledgment",
+    (kind) =>
+      Effect.runPromise(
+        Effect.gen(function* () {
+          const gibRef = yield* Ref.make(50);
+          yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+            Effect.gen(function* () {
+              const fs = yield* FileSystem.FileSystem;
+              yield* admissionStatus(fastConfig);
+              const path = yield* Path.Path;
+              const binDirectory = path.join(path.dirname(path.dirname(tempRoot.root)), "bin");
+              yield* fs.makeDirectory(binDirectory, { recursive: true });
+              yield* writeExecutable(path.join(binDirectory, "systemctl"), "#!/bin/sh\nexit 0\n");
+              const reap = withPrependedPath(binDirectory, reapAdmissionState({ apply: true }));
+              const fixture = { pid: DEAD_PID, nonce: `crashed-${kind}`, originKey: `crashed-${kind}` };
+              if (kind === "lease") {
+                yield* writeFakeLease(tempRoot, fixture);
+              } else {
+                yield* writeFakeTicket(tempRoot, fixture);
+              }
+              yield* setAdmissionEvictionProtocol("on");
+              const crashingSink = AdmissionEvictionJournal.of({
+                appendOnce: Effect.fnUntraced(function* (root, event) {
+                  yield* appendAdmissionEvictionJournalEvent(root, event);
+                  return yield* QualitySchedulerError.make({ message: "simulated crash before claim acknowledgment" });
+                }),
+              });
+              yield* reap.pipe(Effect.provideService(AdmissionEvictionJournal, crashingSink), Effect.flip);
+              expect((yield* readOnlyReapClaim(tempRoot)).claim.admissionJournal).toBe("pending");
+              const journalPath = yield* admissionJournalPath(tempRoot.root);
+              const original = yield* fs.readFileString(journalPath);
+              expect(yield* readJournalEvents(tempRoot.root)).toHaveLength(1);
+              expect(O.isNone(yield* decodeLegacyAdmissionJournalEvent(Str.trim(original)).pipe(Effect.option))).toBe(
+                true
+              );
+              const legacyWrites = yield* Ref.make(0);
+              const legacySink = AdmissionEvictionJournal.of({
+                appendOnce: Effect.fnUntraced(function* (root, event) {
+                  // Model the pre-v3 sink: its old marker decoder fails closed before
+                  // the old event reader can miss the already-written v3 identity.
+                  const marker = yield* fs.readFileString(yield* admissionProtocolPath(root)).pipe(Effect.option);
+                  const protocol = O.flatMap(marker, decodeLegacyAdmissionProtocol);
+                  if (!O.exists(protocol, (value) => AdmissionEvictionEmission.is.on(value.eviction))) {
+                    return false;
+                  }
+                  yield* Ref.update(legacyWrites, (count) => count + 1);
+                  const legacyEvent =
+                    event._tag === "admission-lease-evicted"
+                      ? AdmissionJournalLeaseEvicted.make({ ...event, schemaVersion: "yeet-admission-journal/v2" })
+                      : AdmissionJournalTicketEvicted.make({ ...event, schemaVersion: "yeet-admission-journal/v2" });
+                  return yield* appendAdmissionEvictionJournalEvent(root, legacyEvent).pipe(
+                    Effect.provideService(
+                      AdmissionJournalReader,
+                      AdmissionJournalReader.of({
+                        decode: Effect.fn("AdmissionJournalReader.decode")((line) =>
+                          decodeLegacyAdmissionJournalEvent(line)
+                        ),
+                      })
+                    )
+                  );
+                }),
+              });
+              yield* reap.pipe(Effect.provideService(AdmissionEvictionJournal, legacySink));
+              expect(yield* Ref.get(legacyWrites)).toBe(0);
+              expect((yield* readOnlyReapClaim(tempRoot)).claim.admissionJournal).toBe("pending-protocol-off");
+              expect(yield* fs.readFileString(journalPath)).toBe(original);
+              yield* reap;
+              expect(yield* listDirectory(tempRoot.claims)).toHaveLength(0);
+              expect(yield* fs.readFileString(journalPath)).toBe(original);
+            })
+          );
+        })
+      )
+  );
 
   it("executes every scheduler CLI mutation and reporting route", () =>
     Effect.runPromise(

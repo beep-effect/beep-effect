@@ -507,7 +507,7 @@ export const admissionProtocolStatus = Effect.fn("QualityScheduler.admissionProt
  * console.log(typeof setAdmissionEvictionProtocol) // "function"
  * ```
  *
- * @param eviction - Desired v2 eviction-event emission state.
+ * @param eviction - Desired v3 eviction-event emission state under the protocol v2 fence.
  * @returns The protocol marker that was published.
  * @category utilities
  * @since 0.0.0

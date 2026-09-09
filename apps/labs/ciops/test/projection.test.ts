@@ -314,6 +314,42 @@ describe("@beep/ciops S7 projection", () => {
     }).pipe(provideScopedLayer(BunFileSystem.layer))
   );
 
+  it.effect("replays every v3 variant with legacy rows and counts ledger-neutral queue events in source indexes", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const policy = yield* readPolicy();
+      const source = yield* fs.readFileString("test/fixtures/admission-journal-v3-mixed.ndjson");
+      const events = yield* decodeAdmissionJournal(source);
+      const report = yield* replayAdmissionJournal(policy, events, "fixture-policy", "mixed-journal").pipe(
+        Effect.flatMap(requireReplayMatch)
+      );
+
+      expect(A.map(events, (event) => `${event.schemaVersion}:${event._tag}`)).toStrictEqual([
+        "yeet-admission-journal/v3:admission-enqueued",
+        "yeet-admission-journal/v1:admission-admitted",
+        "yeet-admission-journal/v3:admission-withdrawn",
+        "yeet-admission-journal/v2:admission-ticket-evicted",
+        "yeet-admission-journal/v1:admission-admitted",
+        "yeet-admission-journal/v3:admission-released",
+        "yeet-admission-journal/v3:admission-lease-evicted",
+        "yeet-admission-journal/v1:admission-admitted",
+        "yeet-admission-journal/v2:admission-lease-evicted",
+        "yeet-admission-journal/v3:admission-enqueued",
+        "yeet-admission-journal/v1:admission-admitted",
+        "yeet-admission-journal/v1:admission-released",
+        "yeet-admission-journal/v3:admission-ticket-evicted",
+      ]);
+      expect(report.eventCount).toBe(13);
+      expect(report.admittedCount).toBe(4);
+      expect(report.releasedCount).toBe(4);
+      expect(report.evictions).toHaveLength(0);
+      expect(A.map(report.verdicts, (verdict) => verdict.eventIndex)).toStrictEqual([1, 4, 7, 10]);
+      expect(A.map(report.verdicts, (verdict) => verdict.activeTokenTotal)).toStrictEqual([0, 5, 0, 0]);
+      expect(report.passed).toBe(true);
+      expect(report.mismatches).toHaveLength(0);
+    }).pipe(provideScopedLayer(BunFileSystem.layer))
+  );
+
   it.effect("renders byte-identical evidence from a typed replay report", () =>
     Effect.gen(function* () {
       const outcome: ReplayEventOutcome = "pass";

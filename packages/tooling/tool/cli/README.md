@@ -586,8 +586,16 @@ ended. A successful lifecycle joins enqueue, admission, and release by `nonce`;
 an abandoned wait joins enqueue and withdrawal. Sub-envelope origin-gate-only
 work creates no ticket or lease and emits no admission transitions.
 
-Evictions keep the existing protocol gate. A disabled gate leaves the durable
-reap claim pending; an enabled retry emits or acknowledges one eviction row.
+V3 evictions require `protocol.json` with `schemaVersion:
+"yeet-admission-protocol/v2"` and `eviction: "on"`. The scheduler protocol
+command publishes this new marker under the same fenced journal lock. Missing,
+unreadable, undecodable, and protocol-v1 markers disable v3 eviction emission.
+Pre-v3 workers cannot decode protocol v2 and therefore leave a durable reap
+claim pending, even if the v3 writer crashed after appending its receipt but
+before acknowledging the claim. A v3-aware retry recognizes that receipt and
+completes the claim without duplicating it. Rollout requires publishing the v2
+marker before v3 evictions can begin; do not downgrade it while v3 claims remain
+recoverable. Older ordinary appenders continue preserving opaque v3 rows.
 The v3 lease eviction copies the last heartbeat from the lease saved in that
 claim, so delayed recovery retains the original observation. `evictedAtMillis`
 is the claim instant, not an asserted process death time.
@@ -599,10 +607,15 @@ share `_tag` values, so the journal exposes schema-derived guards covering both
 versions of each tag. Scheduler status and reap decisions use ticket, lease,
 promotion, and claim files; journal decoding does not determine admission.
 
-Journal writes remain best effort, and known rows remain bounded by the newest
-200 admissions. Lock contention, write failures, ring trimming, and mixed-version
-traffic can therefore leave incomplete observed chains. This instrumentation
-does not make the journal a complete audit log.
+Journal writes remain best effort. The existing newest-200-admission boundary
+still applies; a second cap retains at most 2,400 known rows (200 admissions ×
+3 enqueue/admit/release rows × 4). The admitted ring has reserved slots; remaining
+slots keep the newest other known rows inside that boundary. Thus queue-only
+churn is bounded even without admissions, and it cannot displace the admitted
+ring. Opaque rows are exempt from both limits and retain their bytes and source
+order. Lock contention, write failures, retention, and mixed-version traffic can
+leave incomplete observed chains. This is not a complete audit log or a bound
+on bytes contributed by unknown rows or older writers.
 
 ### `yeet`
 

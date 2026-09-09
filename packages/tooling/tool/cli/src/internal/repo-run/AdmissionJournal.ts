@@ -17,22 +17,11 @@ import { createHash, randomUUID } from "node:crypto";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { UUID } from "@beep/schema/String";
-import {
-  Clock,
-  Console,
-  Context,
-  Duration,
-  Effect,
-  Encoding,
-  FileSystem,
-  Number as N,
-  Order,
-  Path,
-  pipe,
-} from "effect";
+import { Clock, Console, Context, Duration, Effect, Encoding, FileSystem, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import { constant, dual, flow } from "effect/Function";
+import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -58,6 +47,14 @@ const JOURNAL_FILE_NAME = "journal.ndjson";
 const PROTOCOL_FILE_NAME = "protocol.json";
 const LOCK_FILE_NAME = "journal.lock";
 const RETAINED_ADMISSIONS = 200;
+/**
+ * Bound decoded history even when queue churn produces no admissions.
+ *
+ * 200 admissions × 3 lifecycle rows (enqueue, admit, release) × 4 = 2,400.
+ * Reserve the admitted ring first, then spend the remaining slots on the newest
+ * known rows. Opaque rows do not consume this budget and remain byte-identical.
+ */
+const RETAINED_KNOWN_ROWS = RETAINED_ADMISSIONS * 3 * 4;
 const LOCK_RETRY_ATTEMPTS = 8;
 const LOCK_RETRY_DELAY_MILLIS = 25;
 const LOCKED_OPERATION_RETRY_ATTEMPTS = 5;
@@ -98,13 +95,19 @@ export type AdmissionEvictionEmission = typeof AdmissionEvictionEmission.Type;
 /**
  * Versioned mixed-checkout protocol marker stored in the admission root.
  *
+ * **Details**
+ *
+ * Protocol v2 authorizes v3 eviction rows. Pre-v3 workers only decode protocol
+ * v1, so they fail closed and defer recovery instead of duplicating a v3 receipt
+ * they cannot recognize after an interrupted claim acknowledgment.
+ *
  * **Example** (Construct the disabled protocol)
  *
  * ```ts
  * import { AdmissionProtocol } from "@beep/repo-cli/test/RepoRun"
  *
  * const protocol = AdmissionProtocol.make({
- *   schemaVersion: "yeet-admission-protocol/v1",
+ *   schemaVersion: "yeet-admission-protocol/v2",
  *   eviction: "off",
  * })
  * console.log(protocol.eviction) // "off"
@@ -115,7 +118,7 @@ export type AdmissionEvictionEmission = typeof AdmissionEvictionEmission.Type;
  */
 export class AdmissionProtocol extends S.Class<AdmissionProtocol>($I`AdmissionProtocol`)(
   {
-    schemaVersion: S.Literal("yeet-admission-protocol/v1"),
+    schemaVersion: S.Literal("yeet-admission-protocol/v2"),
     eviction: AdmissionEvictionEmission,
   },
   $I.annote("AdmissionProtocol", {
@@ -124,7 +127,7 @@ export class AdmissionProtocol extends S.Class<AdmissionProtocol>($I`AdmissionPr
 ) {}
 
 const disabledAdmissionProtocol = AdmissionProtocol.make({
-  schemaVersion: "yeet-admission-protocol/v1",
+  schemaVersion: "yeet-admission-protocol/v2",
   eviction: AdmissionEvictionEmission.Enum.off,
 });
 const decodeAdmissionProtocol = S.decodeUnknownOption(S.fromJsonString(AdmissionProtocol));
@@ -540,6 +543,15 @@ export class AdmissionJournalTicketEvictedV3 extends AdmissionJournalCheckoutIde
   })
 ) {}
 
+const admissionJournalEventGuards = {
+  "admission-admitted": S.is(AdmissionJournalAdmitted),
+  "admission-released": S.is(S.Union([AdmissionJournalReleased, AdmissionJournalReleasedV3])),
+  "admission-lease-evicted": S.is(S.Union([AdmissionJournalLeaseEvicted, AdmissionJournalLeaseEvictedV3])),
+  "admission-ticket-evicted": S.is(S.Union([AdmissionJournalTicketEvicted, AdmissionJournalTicketEvictedV3])),
+  "admission-enqueued": S.is(AdmissionJournalEnqueued),
+  "admission-withdrawn": S.is(AdmissionJournalWithdrawn),
+};
+
 /**
  * Schema-decoded transition stored in the machine-wide admission journal.
  *
@@ -571,14 +583,7 @@ export const AdmissionJournalEvent = S.Union([
   // Versions share event tags. toTaggedUnion rejects duplicate discriminants;
   // derive each guard from all supported schemas for that tag instead.
   SchemaUtils.withStatics(() => ({
-    guards: {
-      "admission-admitted": S.is(AdmissionJournalAdmitted),
-      "admission-released": S.is(S.Union([AdmissionJournalReleased, AdmissionJournalReleasedV3])),
-      "admission-lease-evicted": S.is(S.Union([AdmissionJournalLeaseEvicted, AdmissionJournalLeaseEvictedV3])),
-      "admission-ticket-evicted": S.is(S.Union([AdmissionJournalTicketEvicted, AdmissionJournalTicketEvictedV3])),
-      "admission-enqueued": S.is(AdmissionJournalEnqueued),
-      "admission-withdrawn": S.is(AdmissionJournalWithdrawn),
-    },
+    guards: admissionJournalEventGuards,
   }))
 );
 
@@ -720,7 +725,8 @@ export const admissionProtocolPath = Effect.fn("AdmissionJournal.protocolPath")(
  * **Details**
  *
  * A missing, unreadable, or undecodable marker means the mixed-checkout
- * preservation rollout is not proven, so eviction rows remain disabled.
+ * v3 recovery fence is not proven, so eviction rows remain disabled. A protocol
+ * v1 marker is likewise disabled even when its eviction field is on.
  *
  * **Example** (Read a protocol marker)
  *
@@ -1477,7 +1483,7 @@ export const writeAdmissionProtocol = Effect.fn("AdmissionJournal.writeProtocol"
   eviction: AdmissionEvictionEmission
 ): Effect.fn.Return<AdmissionProtocol, QualitySchedulerError, FileSystem.FileSystem | Path.Path> {
   const { lockPath, protocolPath } = yield* prepareAdmissionJournalPaths(root);
-  const protocol = AdmissionProtocol.make({ schemaVersion: "yeet-admission-protocol/v1", eviction });
+  const protocol = AdmissionProtocol.make({ schemaVersion: "yeet-admission-protocol/v2", eviction });
   const content = yield* encodeAdmissionProtocol(protocol).pipe(
     Effect.mapError(QualitySchedulerError.new("Failed to encode the admission protocol marker."))
   );
@@ -1592,7 +1598,29 @@ const rewriteJournalLocked = Effect.fnUntraced(function* (
     A.length(admittedIndexes) <= RETAINED_ADMISSIONS
       ? 0
       : pipe(admittedIndexes, A.takeRight(RETAINED_ADMISSIONS), A.head, O.getOrElse(constant(0)));
-  const retainedRecords = A.filter(records, (record, index) => index >= firstRetainedIndex || O.isNone(record.event));
+  const remainingSlots = RETAINED_KNOWN_ROWS - N.min(A.length(admittedIndexes), RETAINED_ADMISSIONS);
+  const otherKnownIndexes = pipe(
+    A.map(records, (record, index) =>
+      index >= firstRetainedIndex &&
+      O.exists(record.event, (known) => !AdmissionJournalEvent.guards["admission-admitted"](known))
+        ? O.some(index)
+        : O.none()
+    ),
+    A.getSomes
+  );
+  const firstOtherRetainedIndex = pipe(
+    otherKnownIndexes,
+    A.takeRight(remainingSlots),
+    A.head,
+    O.getOrElse(constant(A.length(records)))
+  );
+  const retainedRecords = A.filter(
+    records,
+    (record, index) =>
+      O.isNone(record.event) ||
+      (index >= firstRetainedIndex &&
+        (AdmissionJournalEvent.guards["admission-admitted"](record.event.value) || index >= firstOtherRetainedIndex))
+  );
   yield* publishJournalAtomic(
     journalPath,
     lockPath,
@@ -1615,7 +1643,8 @@ const rewriteJournalLocked = Effect.fnUntraced(function* (
  * displaced during publication reacquires a fresh generation and
  * reruns the whole read-and-publish operation through a bounded retry. The
  * rewrite preserves undecodable records, ring-trims known rows to the
- * newest admitted transitions, and publishes atomically via temp-file
+ * newest 200 admitted transitions and caps total known history at 2,400 rows,
+ * reserving those admissions before keeping other recent rows. It publishes via temp-file
  * rename. A lock that stays busy fails the append with a typed error;
  * scheduler correctness never depends on this operation, so callers treat
  * that failure as a best-effort diagnostic write. Unknown journal rows remain
