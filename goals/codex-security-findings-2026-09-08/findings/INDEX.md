@@ -9,6 +9,7 @@ auth values, email addresses, and raw local paths.
 
 | Severity | Count |
 | --- | ---: |
+| Medium | 1 |
 | Low | 3 |
 | Informational | 8 |
 
@@ -27,6 +28,7 @@ auth values, email addresses, and raw local paths.
 | [CSF-009](./CSF-009.md) | Informational | implemented | Raw worktree names escape the archive residue root | Worktree archive containment |
 | [CSF-010](./CSF-010.md) | Informational | implemented | Lane\-proof cache ignores inherited environment changes | Local verification proof reuse |
 | [CSF-011](./CSF-011.md) | Low | implemented | Hard\-coded user path enables cross\-account module hijacking | Graft hook installation trust |
+| [CSF-012](./CSF-012.md) | Medium | implemented | Quoted JSON bypasses process\-ID corpus redaction | Public corpus process identity redaction |
 
 ## Closeout Mapping
 
@@ -35,5 +37,5 @@ auth values, email addresses, and raw local paths.
 - Accepted risk / `Won't fix` is unavailable.
 
 <!-- codex-findings-refresh:start -->
-Refresh capture: all 11 records are validated and implemented. Updated full proof and PR closeout are in progress.
+Eleven findings merged in PR #1026. CSF-012 is implemented for the operator-authorized follow-up PR; proof, publication, and exact-ID closure remain in progress.
 <!-- codex-findings-refresh:end -->

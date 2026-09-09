@@ -3,12 +3,12 @@
     "schemaVersion": "codex-triage/v1",
     "repository": "kriegcloud/beep-effect",
     "findingsView": "repo-scoped, status=new",
-    "branch": "codex/security-findings-2026-09-08",
-    "expectedCount": 11,
-    "capturedCount": 11,
+    "branch": "codex/security-corpus-redaction",
+    "expectedCount": 12,
+    "capturedCount": 12,
     "capturedAt": "2026-09-08",
     "captureMethod": "signed-in-csv-export",
-    "note": "All eleven findings are validated, implemented, and published in PR #1026. codexStatus records capture-time state. Exact captured IDs are closed only after merge; final verification and closure evidence is recorded on PR #1026."
+    "note": "Eleven findings merged in PR #1026. CSF-012 is implemented for the operator-authorized follow-up PR; proof, publication, and exact-ID closure remain in progress. codexStatus records capture-time state."
   },
   "lanes": {
     "L1-permissions": {
@@ -42,6 +42,10 @@
     "L8-hook-loading": {
       "status": "implemented",
       "findings": ["CSF-011"]
+    },
+    "L9-corpus-redaction": {
+      "status": "implemented",
+      "findings": ["CSF-012"]
     }
   },
   "findings": [
@@ -365,6 +369,41 @@
       "ownerArea": "Graft hook installation trust",
       "verdict": "confirmed-vulnerable",
       "lane": "L8-hook-loading"
+    },
+    {
+      "id": "CSF-012",
+      "codexId": "e525f4ad4e5c81919f86da335e5db7c8",
+      "title": "Quoted JSON bypasses process-ID corpus redaction",
+      "severity": "Medium",
+      "codexStatus": "New",
+      "commit": "20ad99a87fccad63856f6fcb117d80fd270bf19f",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "The shared PID pattern in all three corpus generators missed quoted JSON keys and escaped whitespace. Synthetic regressions reproduced the bypass, and both fleet pins contained twelve affected raw payloads."
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/etl_fleet_corpus.py",
+          "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/etl_run3_fleet_corpus.py",
+          "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/etl_run3_checkout_identity.py",
+          "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/test_run3_generators.py",
+          "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run2-fleet/",
+          "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3-fleet/",
+          "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3-checkout-identity/",
+          "goals/codex-security-findings-2026-09-08/research/scripts/resanitize-corpora.py"
+        ],
+        "verificationCommands": [
+          "uv run --offline --with pyyaml python -m unittest discover -s explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus -p test_run3_generators.py",
+          "uv run --offline --with pyyaml python goals/codex-security-findings-2026-09-08/research/scripts/resanitize-corpora.py"
+        ],
+        "summary": "Recognize quoted and multiply escaped PID syntax, enforce the same residue check in the older generator, and sanitize saved payloads through a staged integrity-verified repair. Preserve capture metadata, event counts, and custody references; record source manifest digests."
+      },
+      "ownerArea": "Public corpus process identity redaction",
+      "verdict": "confirmed-vulnerable",
+      "lane": "L9-corpus-redaction"
     }
   ]
 }

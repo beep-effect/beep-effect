@@ -21,6 +21,11 @@ the "bush" (`A_LETTER_FROM_THE_OTHER_SIDE_OF_THE_LOOP.md`).
 
 ## Next Open Question
 
+CSF-012 in PR #1026 corrects PID redaction in the saved run-2 and run-3 corpus
+pins. The security repair preserves the captured history and adds prior-manifest
+digests; it does not recapture sources or rerun ontology ratification. Stage B
+still follows the gates below.
+
 **§4b NORMALIZATION GATE IS COMPLETE AND RATIFIED** (2026-08-29; PR #889). The
 `ontology-foundational-auditor` skill ran as written over the S4 harvest: 1,112
 observations, 692 hypotheses, 235 analysis pairs + 235 blinded pairs, 232 proposals,
@@ -140,6 +145,12 @@ loop-closer) → S8 OWL 2 RL + SHACL formalization, rules compilation → S9 dog
 graduation. Full plan with locked decisions: [`DECISIONS.md`](./DECISIONS.md).
 
 ## Trail
+
+- 2026-09-09: CSF-012 fixes quoted and escaped PID redaction in all three corpus
+  generators. A staged repair sanitizes 24 raw files, regenerates integrity
+  receipts, and passes every pin verifier; 16 generator tests pass. The operator
+  authorized resolving all current findings in PR #1026, including the necessary
+  security correction to otherwise immutable run-2 payloads.
 
 - 2026-09-08: PR #1027 Stage A review fixes: encoded checkout path components,
   recomputed receipt observations, runtime-prefix redaction, and refreshed report

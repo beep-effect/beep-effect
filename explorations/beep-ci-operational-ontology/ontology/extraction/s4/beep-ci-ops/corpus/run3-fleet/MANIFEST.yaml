@@ -2,7 +2,7 @@
 # Public run-3 Stage A capture; source descriptors are portable.
 schema_version: beep-ci-ops-run3-fleet-corpus/v1
 generated_by: etl_run3_fleet_corpus.py
-generator_sha256: 7d711673d80791ce2aa1c9a1d1d8da6e1ff1867a55962806355fdf44ffd378e3
+generator_sha256: e184d5dbb1e9b9eb5b668feadf2ae751ad25398d5ce6a8fc43d6f021a7088e3e
 corpus_commit: c00126704caf8496b3633df7581e8967a164c9bd
 capture_instant: '2026-09-09T03:13:20.428Z'
 capture_finished_at: '2026-09-09T03:13:27.254Z'
@@ -38883,8 +38883,8 @@ files:
   history_outside_window: unknown
   checkout: beep-effect10
   run_id: docs_patent-drafting-episode-ledger-research-6054027069ca
-  bytes: 31372
-  sha256: 1a8829197f1b8bf97293e55017c73a4e76b2e25164b82ccca57971b188316b85
+  bytes: 31374
+  sha256: c738d278e6816b99083dcfdd1753e083ff58469ab709cf77a4fafc09575e7344
 - path: attempts/beep-effect10/docs_patent-drafting-episode-ledger-research-6054027069ca/attempts.properties
   kind: properties_projection
   source: *id042
@@ -39444,8 +39444,8 @@ files:
   history_outside_window: unknown
   checkout: beep-effect11
   run_id: explore_graphnosis-prior-art-5fbd9d8a03eb
-  bytes: 58430
-  sha256: cf1af0955d52ed5b92d95cf932b7f2b539d1944fa4bf4ea698fc1679310e4980
+  bytes: 58431
+  sha256: 3cc6ed14c7dcb8c4a93b17a31c33e9908df18b99370a26425243419e3e7d5756
 - path: attempts/beep-effect11/explore_graphnosis-prior-art-5fbd9d8a03eb/attempts.properties
   kind: properties_projection
   source: *id059
@@ -42183,8 +42183,8 @@ files:
   history_outside_window: unknown
   checkout: beep-effect18
   run_id: effect-ontology-experiment-1eaf69629f6a
-  bytes: 21454
-  sha256: c4a8796ee59fc47e05c52ca3d8f2e092cd10263f28c5459a33299112edb6abe6
+  bytes: 21455
+  sha256: 568071cdb1306c8280ce3f97fd69d05a66351cf62f5603efe8fdda8d97baf21d
 - path: attempts/beep-effect18/effect-ontology-experiment-1eaf69629f6a/attempts.properties
   kind: properties_projection
   source: *id142
@@ -42249,8 +42249,8 @@ files:
   history_outside_window: unknown
   checkout: beep-effect18
   run_id: feat_legal-position-relator-runtime-2-025b48124715
-  bytes: 24185
-  sha256: a63a231ca8aae2f07708c612fa91cb097cbe5e56bbfa9dce0f3a9f142c510761
+  bytes: 24188
+  sha256: ead15d6b0361ea7298df8abef9a5cb53ad5ea15b445ce74a9a1d39587e3aec4e
 - path: attempts/beep-effect18/feat_legal-position-relator-runtime-2-025b48124715/attempts.properties
   kind: properties_projection
   source: *id144
@@ -42480,8 +42480,8 @@ files:
   history_outside_window: unknown
   checkout: beep-effect18
   run_id: slop_08-17-26-460ff78dd198
-  bytes: 20099
-  sha256: 534704734a2f24b275199a311011d05af5863d3b00aabd99bd255dcc85adee5f
+  bytes: 20100
+  sha256: e02d10335f4cdb434b7ff474e9c5f80491afd466944ed8adb031bdd73d19ac7c
 - path: attempts/beep-effect18/slop_08-17-26-460ff78dd198/attempts.properties
   kind: properties_projection
   source: *id151
@@ -42810,8 +42810,8 @@ files:
   history_outside_window: unknown
   checkout: beep-effect19
   run_id: docs_explore-document-structure-ontologies-8a9250011581
-  bytes: 51265
-  sha256: e91e9221e8453e9452aea36f0204a438e60ab0064fe7ab9e0db7249badb7c43d
+  bytes: 51266
+  sha256: 53ee3fd9a95901efd2f3c7ac4ed69346b5464b741a4e6a0dc56ee41db779f426
 - path: attempts/beep-effect19/docs_explore-document-structure-ontologies-8a9250011581/attempts.properties
   kind: properties_projection
   source: *id161
@@ -43668,8 +43668,8 @@ files:
   history_outside_window: unknown
   checkout: beep-effect2
   run_id: feat_evidence-loop-p0-wrapup-fd00f1e280b4
-  bytes: 34103
-  sha256: f319840ce20f85f588089b30f688dbe4dbd7956679459f20b7f89cea80b7ecf0
+  bytes: 34105
+  sha256: 95e19045524a3941bf77be33cc9e4f0efd3aada165992e81cbf49ebceb7be7b7
 - path: attempts/beep-effect2/feat_evidence-loop-p0-wrapup-fd00f1e280b4/attempts.properties
   kind: properties_projection
   source: *id187
@@ -43932,8 +43932,8 @@ files:
   history_outside_window: unknown
   checkout: beep-effect2
   run_id: housekeeping_platform-hygiene-320741819753
-  bytes: 84225
-  sha256: 00b7dcd8f7dfff4f9c9150cb3345e59cbc72057e2ce5ba24fe69af3b80b210ab
+  bytes: 84227
+  sha256: 7dc562207179d441e5b1a86628f0ff68473c19afe49c3ec16cc8bb70a54fc34e
 - path: attempts/beep-effect2/housekeeping_platform-hygiene-320741819753/attempts.properties
   kind: properties_projection
   source: *id195
@@ -46803,8 +46803,8 @@ files:
   history_outside_window: unknown
   checkout: beep-effect6
   run_id: docs_lab-apps-lifecycle-p1-status-flip-4a10049b7eb4
-  bytes: 19290
-  sha256: a0986eaf9aa4ea70ca4f81649d9c0463fa4b2ffb158acf30966336643ca98be1
+  bytes: 19291
+  sha256: 618a2e188f47603da9b718279ad41511f5696ce1df123207edbbcafd40d0e7fd
 - path: attempts/beep-effect6/docs_lab-apps-lifecycle-p1-status-flip-4a10049b7eb4/attempts.properties
   kind: properties_projection
   source: *id282
@@ -47133,8 +47133,8 @@ files:
   history_outside_window: unknown
   checkout: beep-effect6
   run_id: fix_changeset-gate-revival-6421eaa9ac61
-  bytes: 17512
-  sha256: 68dfe2d6465db260e5d4b62403c89c2790ad5abd289c5678077302f4cba15f72
+  bytes: 17513
+  sha256: 6a93b1d213bf31fff88880fd0f3f03d503d1dc6ff43e910c79b048bd5a1b47bf
 - path: attempts/beep-effect6/fix_changeset-gate-revival-6421eaa9ac61/attempts.properties
   kind: properties_projection
   source: *id292
@@ -48684,8 +48684,8 @@ files:
   history_outside_window: unknown
   checkout: beep-effect8
   run_id: feat_knowledge-hermetic-clone-lane-835bf6c069ce
-  bytes: 18409
-  sha256: c7144ee0563ae238559989b55fb78fc6e314a6c5345ecee9b9957ff1d4d8543c
+  bytes: 18411
+  sha256: dc8a0c9db531c3fda7e50891616c72f54dc4ac3c7065e34d7fea8da35cb1b0e3
 - path: attempts/beep-effect8/feat_knowledge-hermetic-clone-lane-835bf6c069ce/attempts.properties
   kind: properties_projection
   source: *id339
@@ -57495,8 +57495,8 @@ files:
   history_outside_window: unknown
   checkout: beep-effect2
   run_id: feat_crispening-p2-foundation-close-8f30c40e43c1
-  bytes: 1219
-  sha256: d254241b5769f9d6b328f70f2ddfe4f40b298bebc866d2b246963309db2c0e92
+  bytes: 1226
+  sha256: 1fb26f6acad2a29e5ec9fadf3458a78e7e64d051564e7383598e2752bba00c6f
 - path: verdicts/beep-effect2/feat_crispening-p2-foundation-close-8f30c40e43c1/verdict.properties
   kind: properties_projection
   source: *id606
@@ -68414,5 +68414,10 @@ totals:
   payload_files: 1872
   files_emitted: 1873
   events: 7641
-  payload_bytes: 15623070
-  bytes_emitted: 18263016
+  payload_bytes: 15623094
+  bytes_emitted: 18263226
+security_resanitization:
+  finding: CSF-012
+  source_manifest_sha256: 91d9cdcc717f440ed3a442688b7f1a0915ccb009dc090e9b0b2a6b444e44f3f9
+  changed_raw_payloads: 12
+  live_recapture: false

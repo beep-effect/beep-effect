@@ -2,7 +2,7 @@
 # Public run-3 Stage A capture; source descriptors are portable.
 schema_version: beep-ci-ops-checkout-identity/v1
 generated_by: etl_run3_checkout_identity.py
-generator_sha256: bc3dbfb84ab802f8a25b8e3b7532856b00729ec76671c001934f4265c1705d39
+generator_sha256: a57fddb0fb8af1e6e57bf8a965b5ff962e64ce78c1f5eed83305729f92bd54a9
 corpus_commit: c00126704caf8496b3633df7581e8967a164c9bd
 capture_instant: '2026-09-09T03:13:49.440Z'
 capture_instant_basis: FleetSnapshot.scannedAt
@@ -4775,4 +4775,9 @@ totals:
   files_emitted: 217
   events: 108
   payload_bytes: 694899
-  bytes_emitted: 894499
+  bytes_emitted: 894684
+security_resanitization:
+  finding: CSF-012
+  source_manifest_sha256: 2792b7e4d3d7e9763a1a8c6e93040dd2d2e2b4951bba94025099f2a196c39a29
+  changed_raw_payloads: 0
+  live_recapture: false

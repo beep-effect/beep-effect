@@ -29,9 +29,26 @@ def load(name):
 
 fleet = load("etl_run3_fleet_corpus")
 identity = load("etl_run3_checkout_identity")
+legacy = load("etl_fleet_corpus")
 
 
 class RedactionTests(unittest.TestCase):
+    def test_quoted_process_ids_are_redacted_and_rejected_at_every_json_depth(self):
+        for module in (fleet, identity, legacy):
+            for message in ('pid:1234567', '{"pid":1234567}', '{"PID" : "1234567"}',
+                            '{"pid"\n:\t1234567}', 'pid = 1234567'):
+                for depth in range(4):
+                    with self.subTest(module=module.__name__, depth=depth, message=message):
+                        result = module.redact_string(message)
+                        self.assertNotIn("1234567", result)
+                        module.scan_output_bytes([("fixture", result.encode())])
+                        with self.assertRaises(SystemExit) as exc:
+                            module.scan_output_bytes([("fixture", message.encode())])
+                        self.assertNotIn("1234567", str(exc.exception))
+                        message = json.dumps({"message": message})
+            unchanged = 'rapid1234567, runId=1234567, elapsedMs=1234567'
+            self.assertEqual(module.redact_string(unchanged), unchanged)
+
     def test_runtime_proc_shared_memory_and_user_unit_rewrites(self):
         for module in (fleet, identity):
             runtime = str(Path(os.sep) / "run/user" / str(os.geteuid()))

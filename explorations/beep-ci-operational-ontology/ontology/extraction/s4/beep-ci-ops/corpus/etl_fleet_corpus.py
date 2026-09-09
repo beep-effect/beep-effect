@@ -87,7 +87,8 @@ MANIFEST_SCHEMA = "beep-ci-ops-fleet-corpus/v1"
 DROP_ADMISSION_FIELDS = ("pid", "procStart")
 PROJECTION_KIND = "properties_projection"
 
-PID_IN_TEXT = re.compile(r"\b(pid)[ =:]?[0-9]+")
+# String leaves may contain JSON serialized through several escaping layers.
+PID_IN_TEXT = re.compile(r'\bpid(?:\\*")?(?:\s|\\+[nrt])*[=:]?(?:\s|\\+[nrt])*(?:\\*")?[0-9]+', re.IGNORECASE)
 TIMESTAMP_KEY = re.compile(r"(?:^ts$|AtMillis$|At$|TimestampMillis$|Timestamp$)")
 PROPERTY_KEY = re.compile(r"[A-Za-z0-9_]+")
 PROPERTY_RECORD_COMMENT = re.compile(r"# record (0|[1-9][0-9]*)")
@@ -751,6 +752,8 @@ def scan_output_bytes(files: list[tuple[str, bytes]]) -> None:
     """Hard-fail public-output host-path and secret byte patterns."""
 
     for path, data in files:
+        if PID_IN_TEXT.search(path + "\n" + data.decode("utf-8")):
+            fail("residue scan failed: free-text process identifier")
         if b"/home/" in data:
             fail(f"host-path scan failed for {path}: forbidden /home/ bytes")
         if b"/tmp/" in data:

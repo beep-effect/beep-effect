@@ -69,3 +69,10 @@
   Both fleet suites pass (42 tests); branches 78.98%, lines 90.42%, and statements
   88.57% exceed the unchanged floors. Include coverage for each new recovery
   branch when validating a security boundary.
+
+- A fresh findings export during PR #1026 closeout added CSF-012 from newly
+  merged corpus tooling. The three standalone generators shared a PID pattern
+  that missed quoted keys and escaped whitespace; both fleet pins retained
+  affected message values. Exercise serialization depth at public-output
+  boundaries, and keep the reject scan aligned with the redactor. Repairing the
+  saved bytes with provenance receipts avoids unrelated live recapture drift.
