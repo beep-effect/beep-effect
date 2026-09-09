@@ -472,6 +472,11 @@ jobs:
         run: |
           set -euo pipefail
           should_run=true
+          # desktop_rust_relevant (scripts/ci-change-profile.sh) gates the
+          # cargo steps: only src-tauri or this workflow's changes pay for
+          # the Rust toolchain on pull requests; pushes always compile.
+          eval "$(scripts/ci-change-profile.sh "origin/${GITHUB_BASE_REF:-main}")"
+          rust_should_run="$desktop_rust_relevant"
 
           if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
             base_ref="origin/${GITHUB_BASE_REF:-main}"
@@ -485,12 +490,33 @@ jobs:
           fi
 
           echo "should_run=$should_run" >> "$GITHUB_OUTPUT"
+          echo "rust_should_run=$rust_should_run" >> "$GITHUB_OUTPUT"
+
+      # Tauri v2 Linux prerequisites (webkit2gtk 4.1, gtk, rsvg, appindicator)
+      # for the cargo steps; build.rs also compiles the WebKit web extension
+      # against webkit2gtk-web-extension-4.1.
+      - name: Install Tauri Linux system dependencies
+        if: steps.lane-gate.outputs.should_run == 'true' && steps.lane-gate.outputs.rust_should_run == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libwebkit2gtk-4.1-dev \
+            libgtk-3-dev \
+            librsvg2-dev \
+            libayatana-appindicator3-dev \
+            libssl-dev \
+            build-essential \
+            pkg-config
 
       - name: Setup Rust toolchain
-        if: steps.lane-gate.outputs.should_run == 'true'
+        if: steps.lane-gate.outputs.should_run == 'true' && steps.lane-gate.outputs.rust_should_run == 'true'
         uses: actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659 # v1.17.0
         with:
           toolchain: stable
+          components: clippy
+          # Caches ~/.cargo and src-tauri/target keyed on Cargo.lock.
           cache: true
           cache-workspaces: apps/professional-desktop/src-tauri
 
@@ -501,9 +527,23 @@ jobs:
           cache-turbo: "false"
           cache-write: "false"
 
+      # Builds the Bun sidecar first; tauri-build's build.rs requires the
+      # externalBin binary to exist, so the cargo steps run after this proof.
       - name: Run desktop IPC stdio proof
         if: steps.lane-gate.outputs.should_run == 'true'
         run: bun run beep ci lane desktop-ipc
+
+      # Quality-lane audit D15: the crate was never compiled on PR or push
+      # (only release-desktop.yml built it at tag time).
+      - name: Check Rust crate
+        if: steps.lane-gate.outputs.should_run == 'true' && steps.lane-gate.outputs.rust_should_run == 'true'
+        working-directory: apps/professional-desktop/src-tauri
+        run: cargo check --locked
+
+      - name: Lint Rust crate
+        if: steps.lane-gate.outputs.should_run == 'true' && steps.lane-gate.outputs.rust_should_run == 'true'
+        working-directory: apps/professional-desktop/src-tauri
+        run: cargo clippy --locked -- -D warnings
 
       - name: Skip lane
         if: steps.lane-gate.outputs.should_run != 'true'

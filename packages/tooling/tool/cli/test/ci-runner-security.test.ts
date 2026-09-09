@@ -3,7 +3,7 @@ import { provideScopedLayer } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, FileSystem, Order, Path } from "effect";
+import { Effect, FileSystem, Order, Path, pipe } from "effect";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -77,6 +77,45 @@ const parseGithubEnv = (text: string): Readonly<Record<string, string>> => {
   return R.fromEntries(entries);
 };
 
+const parseProfileOutput = (text: string): Readonly<Record<string, string>> =>
+  pipe(
+    Str.split(text, "\n"),
+    A.map(Str.trim),
+    A.filter(Str.isNonEmpty),
+    A.map((line) => {
+      const separator = Str.indexOf("=")(line);
+      return O.match(separator, {
+        onNone: () => [line, ""] as const,
+        onSome: (index) => [Str.slice(0, index)(line), Str.slice(index + 1)(line)] as const,
+      });
+    }),
+    R.fromEntries
+  );
+
+const gitIn =
+  (cwd: string) =>
+  (args: ReadonlyArray<string>): string => {
+    const result = Bun.spawnSync(["git", ...args], { cwd, stderr: "pipe", stdout: "pipe" });
+    assert.strictEqual(result.exitCode, 0, result.stderr.toString());
+    return Str.trim(result.stdout.toString());
+  };
+
+const changeProfile = (
+  scriptPath: string,
+  cwd: string,
+  eventName: string,
+  outputPath = ""
+): Readonly<Record<string, string>> => {
+  const result = Bun.spawnSync([scriptPath, "origin/main"], {
+    cwd,
+    env: { ...process.env, GITHUB_EVENT_NAME: eventName, GITHUB_OUTPUT: outputPath },
+    stderr: "pipe",
+    stdout: "pipe",
+  });
+  assert.strictEqual(result.exitCode, 0, result.stderr.toString());
+  return parseProfileOutput(result.stdout.toString());
+};
+
 describe("CI runner security", () => {
   it.effect(
     "classifies goals-only pull requests without suppressing mixed or push runs",
@@ -87,25 +126,9 @@ describe("CI runner security", () => {
       const tempRoot = yield* fs.makeTempDirectoryScoped();
       const scriptPath = path.join(repoRoot, "scripts/ci-change-profile.sh");
 
-      const git = (args: ReadonlyArray<string>): string => {
-        const result = Bun.spawnSync(["git", ...args], {
-          cwd: tempRoot,
-          stderr: "pipe",
-          stdout: "pipe",
-        });
-        assert.strictEqual(result.exitCode, 0, result.stderr.toString());
-        return Str.trim(result.stdout.toString());
-      };
-      const profile = (eventName: string, outputPath = ""): string => {
-        const result = Bun.spawnSync([scriptPath, "origin/main"], {
-          cwd: tempRoot,
-          env: { ...process.env, GITHUB_EVENT_NAME: eventName, GITHUB_OUTPUT: outputPath },
-          stderr: "pipe",
-          stdout: "pipe",
-        });
-        assert.strictEqual(result.exitCode, 0, result.stderr.toString());
-        return Str.trim(result.stdout.toString());
-      };
+      const git = gitIn(tempRoot);
+      const profile = (eventName: string, outputPath = ""): Readonly<Record<string, string>> =>
+        changeProfile(scriptPath, tempRoot, eventName, outputPath);
 
       git(["init"]);
       git(["config", "user.email", "ci-profile@example.test"]);
@@ -120,15 +143,15 @@ describe("CI runner security", () => {
       git(["add", "."]);
       git(["commit", "-m", "goals-only"]);
       const outputPath = path.join(tempRoot, "profile-output.txt");
-      assert.strictEqual(profile("pull_request", outputPath), "goals_only=true");
-      assert.strictEqual(Str.trim(yield* fs.readFileString(outputPath)), "goals_only=true");
+      assert.strictEqual(profile("pull_request", outputPath).goals_only, "true");
+      assert.strictEqual(parseProfileOutput(yield* fs.readFileString(outputPath)).goals_only, "true");
       yield* fs.remove(outputPath);
 
       yield* fs.makeDirectory(path.join(tempRoot, "goals", "example", "ops"));
       yield* fs.writeFileString(path.join(tempRoot, "goals", "example", "ops", "manifest.json"), "{}\n");
       git(["add", "."]);
       git(["commit", "-m", "goal metadata"]);
-      assert.strictEqual(profile("pull_request"), "goals_only=true");
+      assert.strictEqual(profile("pull_request").goals_only, "true");
       const metadataHead = git(["rev-parse", "HEAD"]);
 
       for (const directory of ["docs", "designs", "history", "research"] as const) {
@@ -140,7 +163,7 @@ describe("CI runner security", () => {
         );
         git(["add", "."]);
         git(["commit", "-m", `nested ${directory} markdown fixture`]);
-        assert.strictEqual(profile("pull_request"), "goals_only=false");
+        assert.strictEqual(profile("pull_request").goals_only, "false");
       }
 
       git(["reset", "--hard", metadataHead]);
@@ -152,20 +175,93 @@ describe("CI runner security", () => {
       );
       git(["add", "."]);
       git(["commit", "-m", "goal markdown fixture"]);
-      assert.strictEqual(profile("pull_request"), "goals_only=false");
+      assert.strictEqual(profile("pull_request").goals_only, "false");
 
       yield* fs.makeDirectory(path.join(tempRoot, "goals", "example", "scripts"));
       yield* fs.writeFileString(path.join(tempRoot, "goals", "example", "scripts", "verify.sh"), "exit 0\n");
       git(["add", "."]);
       git(["commit", "-m", "goal executable"]);
-      assert.strictEqual(profile("pull_request"), "goals_only=false");
+      assert.strictEqual(profile("pull_request").goals_only, "false");
 
       yield* fs.makeDirectory(path.join(tempRoot, "src"));
       yield* fs.writeFileString(path.join(tempRoot, "src", "index.ts"), "export {}\n");
       git(["add", "."]);
       git(["commit", "-m", "mixed"]);
-      assert.strictEqual(profile("pull_request"), "goals_only=false");
-      assert.strictEqual(profile("push"), "goals_only=false");
+      assert.strictEqual(profile("pull_request").goals_only, "false");
+      assert.strictEqual(profile("push").goals_only, "false");
+    }, provideScopedLayer(NodeServices.layer))
+  );
+
+  // Quality-lane audit D15: the src-tauri crate is compiled (cargo check +
+  // clippy -D warnings) inside desktop-ipc only when the crate, the workflow,
+  // or the gate itself changed on a pull request; pushes always compile.
+  it.effect(
+    "gates the desktop-ipc cargo steps on src-tauri changes",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const repoRoot = yield* findRepoRoot();
+      const tempRoot = yield* fs.makeTempDirectoryScoped();
+      const scriptPath = path.join(repoRoot, "scripts/ci-change-profile.sh");
+      const workflowText = yield* fs.readFileString(path.join(repoRoot, ".github/workflows/check.yml"));
+      const workflow = parseDocument(workflowText);
+      const git = gitIn(tempRoot);
+      const profile = (eventName: string) => changeProfile(scriptPath, tempRoot, eventName);
+      const writeAndCommit = Effect.fnUntraced(function* (relativePath: string, content: string, message: string) {
+        yield* fs.makeDirectory(path.dirname(path.join(tempRoot, relativePath)), { recursive: true });
+        yield* fs.writeFileString(path.join(tempRoot, relativePath), content);
+        git(["add", "."]);
+        git(["commit", "-m", message]);
+      });
+
+      git(["init"]);
+      git(["config", "user.email", "ci-profile@example.test"]);
+      git(["config", "user.name", "CI Profile Test"]);
+      yield* writeAndCommit("README.md", "# baseline\n", "baseline");
+      git(["update-ref", "refs/remotes/origin/main", git(["rev-parse", "HEAD"])]);
+      const baseline = git(["rev-parse", "HEAD"]);
+
+      yield* writeAndCommit("docs/notes.md", "# docs only\n", "docs only");
+      assert.strictEqual(profile("pull_request").desktop_rust_relevant, "false");
+      assert.strictEqual(profile("push").desktop_rust_relevant, "true");
+
+      git(["reset", "--hard", baseline]);
+      yield* writeAndCommit("apps/professional-desktop/src-tauri/src/lib.rs", "pub fn main() {}\n", "crate change");
+      assert.strictEqual(profile("pull_request").desktop_rust_relevant, "true");
+
+      git(["reset", "--hard", baseline]);
+      yield* writeAndCommit(".github/workflows/check.yml", "name: Check\n", "workflow change");
+      assert.strictEqual(profile("pull_request").desktop_rust_relevant, "true");
+
+      git(["reset", "--hard", baseline]);
+      yield* writeAndCommit("apps/professional-desktop/src/index.ts", "export {}\n", "desktop frontend change");
+      assert.strictEqual(profile("pull_request").desktop_rust_relevant, "false");
+
+      const steps = jobSteps(workflowJobs(workflow), "professional-desktop-ipc-stdio");
+      const rustGate =
+        "steps.lane-gate.outputs.should_run == 'true' && steps.lane-gate.outputs.rust_should_run == 'true'";
+      for (const name of [
+        "Install Tauri Linux system dependencies",
+        "Setup Rust toolchain",
+        "Check Rust crate",
+        "Lint Rust crate",
+      ]) {
+        assert.strictEqual(stepByName(steps, name).if, rustGate, name);
+      }
+      assert.strictEqual(stepByName(steps, "Setup Rust toolchain").with?.components, "clippy");
+      assert.strictEqual(
+        stepByName(steps, "Setup Rust toolchain").with?.["cache-workspaces"],
+        "apps/professional-desktop/src-tauri"
+      );
+      assert.include(workflowText, 'eval "$(scripts/ci-change-profile.sh');
+      assert.include(workflowText, 'rust_should_run="$desktop_rust_relevant"');
+      assert.include(workflowText, "run: cargo check --locked");
+      assert.include(workflowText, "run: cargo clippy --locked -- -D warnings");
+      assert.include(workflowText, "working-directory: apps/professional-desktop/src-tauri");
+      // tauri-build needs the sidecar binary, so the cargo steps follow the
+      // IPC proof that builds it.
+      assert.isBelow(stepIndexByName(steps, "Run desktop IPC stdio proof"), stepIndexByName(steps, "Check Rust crate"));
+      assert.isBelow(stepIndexByName(steps, "Check Rust crate"), stepIndexByName(steps, "Lint Rust crate"));
     }, provideScopedLayer(NodeServices.layer))
   );
 

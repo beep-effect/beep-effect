@@ -469,7 +469,8 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
     laneClass: "workflow-gated",
     replay: "exact",
     flags: [],
-    notes: "Path filter and Rust toolchain setup stay in the workflow.",
+    notes:
+      "Path filter, Rust toolchain setup, and the src-tauri cargo check + clippy steps (gated on desktop_rust_relevant from scripts/ci-change-profile.sh) stay in the workflow; the lane body builds the sidecar and runs the IPC proof.",
   }),
   CiLaneDescriptor.make({
     id: "fallow",
