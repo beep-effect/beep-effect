@@ -1,125 +1,49 @@
-# Family design — CLI mode flags
+# CLI mode flags — current family disposition and compatibility record
 
-## 2026-09-03 drift refresh
+This family has **no active implementation cohort after the paired Runners and Tsconfig census corrections described below are integrated**. Preserve this file as the current family disposition, not as instructions to refactor every command with mode flags. The former shared extension and blanket migration instructions are withdrawn.
 
-Rechecked the historical family records against current `main`. The seven live
-records still have their original mode guards/chains, and the shared
-`RunMode.ts` target remains reusable. Withdrawn parameter-only records and
-retired source shapes are no longer family consumers. Post-design changes in
-Docgen, Runners tests, and Skills shifted line anchors or added orthogonal
-behavior. The live mode taxonomies remain unchanged. Current anchors for the
-affected sections are:
+This replacement is bound to the R31 inventory SHA-256 `1739679baffd27a2416adb0853b411992fbfd3a1dc19623d5bf1bb0e67f243d4`, root HEAD `4509872869eb87071250c67717769260f850bcf5`, and root main `d68f1a11dd41579660a6c72f3d3e060d6b61352d`. The future-main check includes `a2030c8bd9124d1f0de8ae03a1eebbf5f1fa621f`; Tsconfig and RunMode source bytes are identical at those source heads. Runners' manifest extension and Atlas' new evidence-before-exit behavior are preserved. Native P2 provenance is the actual `gpt-6-astra` / `xhigh` launch.
 
-- Docgen local: options at `Local.ts:141-150`, implication guard and output
-  selection at `Local.ts:1364-1380`, CLI adapter at
-  `Docgen.command.ts:531-541`, direct test fixture at `docgen.test.ts:1068`.
-- Skills: existing literal at `Skills.command.ts:41`, resolver at lines
-  879-893, application options at lines 908-912, CLI adapter at lines 988-990.
-- Explore Atlas: flags at `Explore/Atlas.ts:739-746`, conflict and
-  write/check/print dispatch at lines 766-795. It reuses the same
-  `PrintWriteCheckMode` as Goals and Fallow.
+## Exact cohort and integration condition
 
-These anchors supersede older line numbers in the affected subsections. The
-family design still preserves CLI spellings at the parser boundary and
-collapses them once before application code. No implementation is authorized
-until GATE 2 passes.
+At the frozen input inventory, two listed records are still qualified: `runners-bake-cli-mode` and `tsconfig-sync-mode-flags`. The former family prose says seven live records but contains six links, of which four point to absent designs. Only those two qualified files link back to this family. The proposed current cohort becomes zero when both same-ID D1 corrections and design retirements are integrated atomically with this family replacement. This document does not itself change the inventory.
 
-## Shared family design
+| Historical entry or prose reference | Current disposition |
+| --- | --- |
+| `runners-bake-cli-mode` | Frozen input is reviewed; the separately prepared current-main audit reclassifies the complete raw request as D1. Preserve its public resolver, both call forms, request payloads, diagnostics, and command/test seams. Archive the superseded design with that correction. |
+| `tsconfig-sync-mode-flags` | Frozen input is reviewed; the accompanying exact-ID audit reclassifies the complete three-Boolean request tuple as D1: all eight inputs are legal, with documented priority. Archive the superseded design with that correction. |
+| `docgen-local-json-requires-plan` | Already D1 in the frozen inventory; its design is absent. The public planner/run request retains all four pairs, including the intended bare-JSON diagnostic. It is not a family migration consumer. |
+| `fallow-boundaries-mode` | Withdrawn from the live inventory and designs. The recorded Flag descriptors and anonymous handler parameters do not create an eligible paired Boolean data owner. |
+| `sync-data-to-ts-run-mode` | Withdrawn from the live inventory and designs. Flag descriptors and flag parameters are excluded; execution already carries a resolved literal. |
+| `explore-atlas-mode` | Withdrawn from the live inventory and designs. Current Atlas still contains Flag descriptors and an anonymous handler, without a newly eligible named paired owner. Its command name does not qualify it. |
+| Historical Skills/Goals mentions | They do not establish additional family members. Skills' parameter/descriptor owner was withdrawn; Goals' earlier parameter-only owner was withdrawn, and its later actual raw request was adjudicated D1. No new owner is created by this document. |
 
-The seven live records are internal command-adapter shapes. The public CLI spellings remain stable: callers may continue to use `--plan`, `--check`, `--write`, `--dry-run`, `--json`, `--all`, and `--changed-files` exactly as today. Boolean values may exist only as the immediate output of Effect's CLI parser. Each command adapter must collapse them once into a schema-owned literal before calling application code; no application options type may carry sibling mode booleans.
+The historical scope decisions are recorded in [the R28 first-owner audit](../data/design-refresh-2026-09-09-r28-cli-first-owners.md), [the R28 last-owner audit](../data/design-refresh-2026-09-09-r28-cli-last-owners.md), [the retained-owner gap audit](../data/design-refresh-2026-09-09-r28-cli-retained-qualified-gap-audit.md), and [the Skills scope correction](../data/design-refresh-2026-09-09-r28-laws-skills-impact.md). The new [Tsconfig disposition](../data/pre-r32-current-cli-family-tsconfig-disposition.md) and separately prepared [Runners disposition](../data/pre-r32-main702-runners-mode-disposition.md) must be installed with their row/design corrections before this replacement becomes canonical. There are no links to absent per-instance design files.
 
-The live shared implementation is
-`packages/tooling/tool/cli/src/internal/cli/RunMode.ts:26-203`.
-`resolveRunMode` already supports both data-first and data-last invocation via
-`dual(2, ...)`; preserve both forms exactly. Generalize that same export only
-as far as the command families require. Do not replace it with a data-first
-function plus alias: that would silently remove the shipped curried form.
-`resolveBakeMode` is a never-shipped public export with no repository consumer
-outside its owning command/tests; remove that export in the atomic Runners
-migration rather than creating a deprecation alias. The family extension is:
+## Campaign boundary
 
-```ts
-import { $RepoCliId } from "@beep/identity/packages"
-import { LiteralKit } from "@beep/schema"
-import { A, O, P, pipe } from "@beep/utils"
-import { Effect } from "effect"
-import { dual } from "effect/Function"
+A successful dispatch projection can have fewer outputs than the raw request has legal inputs. That does not establish a cardinality gap in the request carrier. Supported combined-flag priority and intentional request diagnostics must be counted in the owner contract. A Flag descriptor is parser configuration, and an anonymous function parameter remains excluded by SPEC; neither becomes an eligible record because its command has several operating modes.
 
-const $I = $RepoCliId.create("internal/cli/RunMode")
+The previous rule that Boolean values may exist only at immediate parser output, and that every application options type must lose sibling mode Booleans, exceeded this campaign's evidence gate. That rule is withdrawn. No anonymous flag parameter, excluded descriptor owner, D1 request, or unrelated CLI consumer is assigned a source migration by this family file. Any future qualified case needs its own actual eligible owner, complete legal-input evidence, schema-valid row, full design, and independent review.
 
-const RunModeKit = LiteralKit(["check", "write", "dry-run"])
-const WriteCheckRunModeKit = LiteralKit(RunModeKit.pickOptions(["check", "write"]))
-const PrintWriteCheckModeKit = LiteralKit(["print", "write", "check"])
+## Existing RunMode API and consumers
 
-export const WriteCheckRunMode = WriteCheckRunModeKit.pipe(
-  $I.annoteSchema("WriteCheckRunMode", {
-    description: "Generated-file execution mode that either verifies or writes the projection.",
-  })
-)
-export type WriteCheckRunMode = typeof WriteCheckRunMode.Type
-export const WriteCheckRunModeIs = WriteCheckRunModeKit.is
+`packages/tooling/tool/cli/src/internal/cli/RunMode.ts:26–205` already owns the `check | write | dry-run` LiteralKit domain and derived helpers. Retain its current domain and `RunModeOptions`, `RunModeMatch`, `RunModeThunk`, `RunModeEnum`, and `RunModeIs` surfaces. No `sync` or `print` member is introduced by this disposition, and no generic widening or new exclusive resolver is requested.
 
-export const PrintWriteCheckMode = PrintWriteCheckModeKit.pipe(
-  $I.annoteSchema("PrintWriteCheckMode", {
-    description: "Command mode that prints, writes, or verifies a generated projection.",
-  })
-)
-export type PrintWriteCheckMode = typeof PrintWriteCheckMode.Type
-export const PrintWriteCheckModeMatch = PrintWriteCheckModeKit.$match
+`resolveRunMode` at lines 163–178 is typed to that current domain and supports both `resolveRunMode(candidates, fallback)` and `resolveRunMode(fallback)(candidates)` through `dual(2, ...)`. It chooses the first enabled candidate and otherwise the fallback. `runModeFlagsConflict` at lines 202–205 also has data-first and data-last forms. Preserve both APIs without replacement aliases.
 
-export const resolveRunMode: {
-  <Mode>(candidates: ReadonlyArray<readonly [enabled: boolean, mode: Mode]>, fallback: Mode): Mode
-  <Mode>(fallback: Mode): (candidates: ReadonlyArray<readonly [enabled: boolean, mode: Mode]>) => Mode
-} = dual(
-  2,
-  <Mode>(candidates: ReadonlyArray<readonly [enabled: boolean, mode: Mode]>, fallback: Mode): Mode =>
-    pipe(
-      candidates,
-      A.map(([enabled, mode]) => pipe(enabled, O.liftPredicate(P.isTruthy), O.as(mode))),
-      O.firstSomeOf,
-      O.getOrElse(() => fallback)
-    )
-)
+Known runtime callers are VersionSync's local resolver (`VersionSync.command.ts:24–31`) and SyncDataToTs' local resolver (`SyncDataToTs.command.ts:72–83`). VersionSync uses compound conditions; SyncDataToTs retains its own typed combined-input error before invoking the shared resolver. The corresponding schemas reuse the shared mode literal. `src/test/Cli.test-kit.ts:15` reexports the kit, and `cli-kits.test.ts:65–118` covers literal decoding, precedence, compound conditions, and both invocation forms. The package blocks direct `./internal/*` exports and exposes the local `./test/*` seam; existing doc examples do not justify reopening that boundary.
 
-export const resolveExclusiveRunModeFromFlags = <Mode, E, R>(
-  first: readonly [enabled: boolean, mode: Mode],
-  second: readonly [enabled: boolean, mode: Mode],
-  fallback: Mode,
-  onConflict: Effect.Effect<never, E, R>
-): Effect.Effect<Mode, E, R> =>
-  runModeFlagsConflict(first[0], second[0])
-    ? onConflict
-    : Effect.succeed(resolveRunMode([first, second], fallback))
-```
+Tsconfig currently has its own `sync | check | dry-run` domain and already constructs `TsconfigSyncRunOptions` with a resolved mode. Its request tuple has eight legal inputs, despite producing three mode literals. Replacing its public precedence predicates with a generic helper could be separate cleanup, but it is not an admitted Boolean-creep migration. Runners' `resolveBakeMode` is an exported and directly tested dual API; the previous never-shipped/no-consumer claim and resolver-removal instruction are withdrawn.
 
-`runModeFlagsConflict` remains the single compatibility-boundary check for two
-legacy boolean switches. The new honest literal type deletes each command's
-duplicate coherence guard; the shared adapter check is not domain state and
-must not escape the CLI layer. `resolveRunMode` remains precedence-based for
-`tsconfig-sync`, whose current behavior deliberately accepts combined flags
-and selects `check`, then `dry-run`, then `sync`.
+## Preserve current command behavior
 
-Effect v4 validation: the required `.repos/effect` checkout is present and was
-checked at `packages/effect/src/unstable/cli/Flag.ts:156-182,1001-1020` and
-`Param.ts:545-579`. `Flag.choice(name, options)` parses one valued flag directly
-to a literal, while `Flag.orElse` composes alternative parsers rather than
-collapsing two independently accepted legacy boolean spellings. Replacing the
-existing spellings with `--mode <literal>` would be a breaking CLI change and
-is not part of this campaign.
+Preserve existing CLI spellings, independent defaults, precedence, full optional payloads, exported APIs, and command-specific failure ordering. This file does not replace switches with a new `--mode` syntax or route diagnostic requests through a narrower operation schema.
 
-Landing order: extend `RunMode.ts` and `cli-kits.test.ts` in the same batch,
-proving both invocation forms, then migrate command adapters atomically. Remove
-the `resolveBakeMode` barrel export and its public-export test imports in that
-same batch; keep the command-specific conflict error at the Runners adapter
-before constructing its literal mode.
+Runners retains the conflict-before-manifest ordering, `--manifest` requires `--check` diagnostic, both live and intended manifest paths, output-before-stale-error order, and distinct stale diagnostics from its separate current-main audit. Its freshness/report owner remains separate.
 
-## Per-instance review surfaces
+At main `a2030c8`, Atlas prints underivable-input or drift evidence before the silent `CliReportedExit` sentinel. Its check helper documents that behavior at `Explore/Atlas.ts:760–796`; the tests at `explore-atlas.test.ts:313–401` cover it. The `write`/`check` descriptors and anonymous callback at `Atlas.ts:798–840` remain out of the recorded owner net. Preserve the combined-flag diagnostic, existing print/write/check branches, and the new evidence ordering. The upstream change does not revive `explore-atlas-mode` or create a family migration.
 
-The shared design is consumed by seven exact one-per-inventory review files:
+## Verification and review status
 
-- [runners-bake-cli-mode](./runners-bake-cli-mode.md)
-- [docgen-local-json-requires-plan](./docgen-local-json-requires-plan.md)
-- [tsconfig-sync-mode-flags](./tsconfig-sync-mode-flags.md)
-- [fallow-boundaries-mode](./fallow-boundaries-mode.md)
-- [sync-data-to-ts-run-mode](./sync-data-to-ts-run-mode.md)
-- [explore-atlas-mode](./explore-atlas-mode.md)
+The native P2 audit preserves complete original family and per-instance bytes, the exact input inventory, source/test/dependency/Effect snapshots, source-ref comparisons, and machine-readable membership. It validates the proposed D1 row and a private inventory projection. No product tests or implementation run as part of this document correction, and no independent P3 credit is claimed. Parent integration must archive the original active designs and apply both same-ID corrections together with this replacement; a partial integration must not claim the proposed zero-member cohort is already canonical.

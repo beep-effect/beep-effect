@@ -1,0 +1,31 @@
+{
+  "recordedAt": "2026-09-09T16:16:35.880410+00:00",
+  "checkpoint": "40849660801c03bcdc7e6c78dbd7695866002a5d",
+  "head": "c0c1b680ad782d5b6150d14285fa4c0a771382e5",
+  "main": "a2030c8bd9124d1f0de8ae03a1eebbf5f1fa621f",
+  "mergeConflicts": false,
+  "packetFiles": 1439,
+  "packetByteDrift": [],
+  "workingTreeClean": true,
+  "postMergeVersionSync": "passed",
+  "dependenciesChanged": false,
+  "schemaVersion": "boolean-creep-source-forward/v1",
+  "previousSourceHead": "4509872869eb87071250c67717769260f850bcf5",
+  "previousMain": "d68f1a11dd41579660a6c72f3d3e060d6b61352d",
+  "preservationScope": "All 1439 packet files immediately before and after the merge, before the separate source-forward design installation.",
+  "inventoryAfterMergeSha256": "a2b2b502c89d2a08cc75df079024352135f9ab0eefff388fb8196e9215cc5475",
+  "sourceChangesSincePreviousMain": [
+    "packages/tooling/tool/cli/src/commands/Explore/Atlas.ts",
+    "packages/tooling/tool/cli/src/commands/Quality/CheckCensus.ts",
+    "packages/tooling/tool/cli/src/commands/Runners/Runners.command.ts",
+    "packages/tooling/tool/cli/src/commands/Runners/Runners.schemas.ts",
+    "packages/tooling/tool/cli/src/commands/Runners/Runners.service.ts",
+    "packages/tooling/tool/cli/src/commands/Runners/index.ts"
+  ],
+  "rootSourceEqualsMergedMain": true,
+  "laterPacketInstallation": "post-r31-main-a203-parent-integration.json",
+  "dryRoundCredit": false,
+  "reviewCredit": false,
+  "censusDiffPathspecs": [":(glob)packages/**/src/**", ":(glob)apps/**/src/**"],
+  "pathspecCorrection": "The initial directory-ending patterns yielded an empty path list. Explicit recursive file globs recover the six known changed census files; source equality is rechecked with the same non-vacuous globs."
+}

@@ -49,20 +49,49 @@ and compatibility laws remain binding.
 
 ## Latest Evidence
 
-The scanner prerequisite is now published as [PR #1059](https://github.com/beep-effect/beep-effect/pull/1059) on commit `04cc73e733758e39a4e15ec294f86ef74ecc66c5`, over main `702e815971a4030806cdbd9e8f6aa9260d0d3b62`. Its [full verification](./data/scanner-prerequisite-main702-proof.json) passed all 35 reported steps, including the 134-package coverage ratchet. Canonical publication reused that exact proof; explicit branch selection resolved the earlier PR-creation failure. The PR is open and its hosted review/check monitor is running. No hosted-green or merged claim is made.
+The scanner prerequisite [PR #1059](https://github.com/beep-effect/beep-effect/pull/1059)
+is merged as `be5b589aa013c8350a4fad5cdfe36a6f6188db1f`. Its [local full proof](./data/scanner-prerequisite-main702-proof.json)
+passed all 35 reported steps and the 134-package coverage ratchet on the exact
+published head. The canonical monitor observed required checks green before
+merge; the final review-thread inspection found no threads. The recorded two
+Vercel failures are provider rate limits. The monitor is terminal and the merged
+scanner configuration is now available to the packet's eventual publication.
 
-The canonical inventory contains **751 records: 147 qualified and 604 disqualified**
-(D1 387 / D2 217). The qualified set is **115 Tier 1 and 32 Tier 2**; statuses are 23
+The canonical inventory contains **751 records: 145 qualified and 606 disqualified**
+(D1 389 / D2 217). The qualified set is **113 Tier 1 and 32 Tier 2**; statuses are 21
 historically `reviewed`, 124 `designed`, and 0 `confirmed`. All await replacement
 independent review. Four additional owners remain in an [explicit unresolved hold](./data/r31-law-owner-holds.json).
 
-Current source HEAD is `4509872869eb87071250c67717769260f850bcf5`, after
-merging main `d68f1a11dd41579660a6c72f3d3e060d6b61352d` forward. Commit
-`578b25de24f325a7240ed5321d708531c6d55536` preserves the finalized Round 30
-packet. The merge preserved all 1,346 packet files byte for byte, and the
-frozen dependency install passed. The [source-forward receipt](./data/pre-r31-main-d68-source-forward.json)
-records 16 changed census files and two additions, bringing the next complete
-corpus to 3,051 files across 27 lanes. Package/app source matches merged main.
+The branch now includes main `284294ee24177f13f6d3a763c5d987206d351c51`,
+brought forward in commit `131603144e0b361422bd77167c64d9ff192759b2`. The
+[latest merge receipt](./data/post-r31-main284-source-forward.json) preserves all
+1,448 then-present packet files and records five new Graft command source files
+plus the Root command registration. The CLI manifest adds only the Graft export;
+existing exports and dependency declarations are unchanged. These new files need
+coverage in the next census; Round 31's admitted source remains historical.
+
+The earlier Round 31 checkpoint is `40849660801c03bcdc7e6c78dbd7695866002a5d`.
+Its [main-a203 merge](./data/post-r31-main-a203-source-forward.json) preserved all
+1,439 packet files and brought in six changed census files. The later
+[scanner merge](./data/post-r31-scanner-merged-source-forward.json) preserved all
+1,447 then-present packet files and added no census source change. Its sole
+conflict was resolved to the exact verified main configuration after proving
+equality of all 46 rule/path/line allowlist entries. The commit/merge hooks passed.
+
+The [current-source installation](./data/post-r31-main-a203-parent-integration.json)
+reclassifies the Runners and Tsconfig raw request owners as D1, archives their
+qualified designs, and replaces the CLI family document with its complete
+zero-cohort disposition. Supported combined flags and diagnostics remain part
+of the public request contract. The full Runners freshness design retains its
+128/27 Tier 2 qualification, with both current producers and its unresolved
+encoded-input proof obligation documented. The EBS source locator is refreshed;
+the TypeScript-overlay wire row is unchanged. These are packet corrections,
+with no source implementation, replacement independent review, or dry credit.
+
+The earlier Round 31 launch used main `d68f1a11dd41579660a6c72f3d3e060d6b61352d`
+and source HEAD `4509872869eb87071250c67717769260f850bcf5`. Its
+[source-forward receipt](./data/pre-r31-main-d68-source-forward.json) and all
+frozen inputs remain historical evidence for the 3,051-file, 27-lane round.
 
 The [pre-round installation](./data/pre-r31-main-d68-parent-integration.json)
 refreshes twelve complete design documents and retains one audited design
@@ -140,7 +169,7 @@ bind the actual 738-record seed, all 146 designs, all 3,051 included files,
 dependencies, source, runner and completed wet predecessor. This grants no
 completion, dry or independent-review credit. Two current-source dry rounds
 remain required. The [remote-main advance](./data/r31-remote-main-advance.json)
-records newer upstream source while R31 retains its admitted inputs. Two complete private runner audits are ready against that newer source: the freshness design is retained with an explicit encoded-input P3 obligation, while the raw request-mode owner is proposed for D1 reclassification. Integration follows final reconciliation and source forward. The Statutes at Large range/end audit supplies the installed complete 4/3 design under its existing ID. Three citation provenance contracts and the constitutional preamble-presence rule remain explicitly unsettled; the two precise user questions are pending. These are P2 proposals, with no implementation or current independent-review credit.
+records newer upstream source while R31 retains its admitted inputs. The complete runner and CLI-family audits have now been installed against merged main a203: freshness retains its explicit encoded-input P3 obligation, and the Runners/Tsconfig request owners are D1. The installation preserves all earlier source-bound audit bytes. The Statutes at Large range/end audit supplies the installed complete 4/3 design under its existing ID. Three citation provenance contracts and the constitutional preamble-presence rule remain explicitly unsettled; the two precise user questions are pending. These are P2 proposals, with no implementation or current independent-review credit.
 
 The [scanner prerequisite proof](./data/scanner-prerequisite-main-bed30-proof.json)
 records the failed publication and its source/base attribution. The old-source

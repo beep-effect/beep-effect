@@ -1,78 +1,137 @@
 # Instance
 
-- id: `runners-bake-freshness`
-- exact source SHA: `3330f9881a50c96d3f2ec0fcad76f0f7a09027e4`
-- corpus source SHA: `52fcc8d1353db9481ef9edb6cc9619500f95568d`
-- file:line: `packages/tooling/tool/cli/src/commands/Runners/Runners.schemas.ts:304`
-- symbol: `BakeCheckReport`
-- members: `lockfileMatches`, `bunArchiveMatches`, `bunVersionMatches`, `fresh`, `actualLockfileSha256`, `actualBunArchiveSha256`, `actualBunVersion`
-- evidence: E4 at `packages/tooling/tool/cli/src/commands/Runners/Runners.service.ts:757-785` — each match bit is `Option.exists(actual, equalsExpected)`, and `fresh` is their conjunction.
+- ID: `runners-bake-freshness`.
+- Target source: isolated HEAD `04cc73e733758e39a4e15ec294f86ef74ecc66c5`, over main `702e815971a4030806cdbd9e8f6aa9260d0d3b62`. All Runners implementation, fixtures, and consumers audited here are exact main-702 bytes. HEAD differs from main only in `.gitleaks.toml` and `quality-scheduler-degraded-inputs.test.ts`.
+- Frozen packet source: HEAD `4509872869eb87071250c67717769260f850bcf5`, main `d68f1a11dd41579660a6c72f3d3e060d6b61352d`; R31 remains live. This is preparation for a later parent installation, not a source/main/census update.
+- Owner: `packages/tooling/tool/cli/src/commands/Runners/Runners.schemas.ts:334`, `BakeCheckReport`.
+- Members: `lockfileMatches`, `bunArchiveMatches`, `bunVersionMatches`, `fresh`, `actualLockfileSha256`, `actualBunArchiveSha256`, `actualBunVersion`.
+- Disposition: retain qualified E4, stored, wire, tagged-union, Tier 2, 128/27. Preserve historical `reviewed` metadata without claiming replacement P3 approval. The proposed row changes only location, evidence text/location, and notes.
+- Actual native P2 routing: `gpt-6-astra` / `xhigh`, as confirmed by parent launch and continuation records. No delegation, reset, fallback, implementation, or package tests.
+- This is a complete replacement of the canonical design. Its exact original bytes and row are in `before/`; `citation-map.json`, `source-forward.diff`, and `consumer-bindings.json` supply the old/new source and complete direct-reader audit. Canonical historical citations are preserved as history, not asserted current.
 
 # Current shape
 
-`BakeCheckReport` stores three expected runner-image inputs, three optional actual AMI-tag values, three match booleans, and an overall `fresh` boolean. `checkBake` is the sole production writer. It decodes the two SHA tags, reads the Bun-version tag, compares each actual with its expected value, then writes `fresh` as the conjunction.
+The report at `Runners.schemas.ts:334-351` carries `amiId`, three expected values, three optional actual values, three independent comparison booleans, and their overall conjunction. The SHA payloads use `Sha256Hex`; version payloads use `S.NonEmptyString`. `BakeCheckReportJson` at line 367 is the public JSON codec over that same schema. No cross-field coherence filter exists in the present class.
 
-Each probe therefore has three meaningful outcomes: missing actual, present mismatch, or present match. A match requires both actual presence and equality with the expected payload. The overall flag adds no independent information. The three probes remain independent, so one tag may match while another is missing or stale.
+Main 702 extracts the old writer into `compareBakeInputs` at `Runners.service.ts:762-795`. That function decodes the two raw SHA tag values to Options at 763-766, retains the Bun-version tag at 767, compares using schema SHA equivalence and `Str.Equivalence` at 768-780, and constructs the full report at 781-794. `fresh` is exactly the three match bits' conjunction at 792. Thus the result is a real multiple-Boolean owner with E4 implications: a match requires present equal actual data, and overall freshness requires all three matches. This is repository-owned output, not an external driver mirror.
 
-The report is a public repo-CLI schema exported with `BakeCheckReportJson`. `runners bake --check --json` encodes it, the human renderer reads lockfile/Bun-version/overall status, and the command exits unsuccessfully when the overall result is stale. No repository caller decodes `BakeCheckReportJson`; its documented use is command output.
+There are now two production paths into that one writer:
+
+1. `checkBake` at 749-760 loads local inputs, reads the regional SSM image pin, describes that live image, selects the first image and its first matching tag for each key, and calls the comparator. No image or missing Tags becomes an empty tag collection. `tagValue` at 742-747 preserves first-match ordering, including duplicate keys.
+2. `checkBakeManifest` at 803-831 loads the same local inputs, reads and decodes the intended image manifest, reads and validates the production Pulumi pin, rejects a mismatched AMI ID, synthesizes the same three AWS tag records, and calls the same comparator. This path never consults AWS. `BakeManifestJson` at `Runners.schemas.ts:199-226` picks exactly `amiId`, `lockfileSha256`, `bunArchiveSha256`, and `bunVersion` from the existing `BakeReport` fields. Both the minimal observed manifest and a complete bake report are accepted; complete report metadata is ignored by this picked boundary. All manifest actual probes are present, so only the eight match/mismatch combinations are produced here.
+
+The service interface now exposes both `check` and `checkManifest` at `Runners.service.ts:191-192`; the context-preserving provider is at 874-888. `Runners.command.ts:122-144` selects one of those methods, prints either the report JSON or human text, then returns success or a stale typed error. Human rendering at 59-68 reports the AMI, lockfile, Bun version, and overall freshness; it deliberately has no Bun archive line. The archive still controls overall status.
+
+`BakeCheckReportJson` documentation at `Runners.schemas.ts:354-367` promises the `bake --check --json` codec. The public class example at 304-329 constructs a coherent all-match report. The source/fixture/public-contract search in `consumer-search.txt` finds no report JSON decoder call, no supported incoherent fixture, and no consumer requiring arbitrary contradictory flags. This is evidence about known contracts, not proof that every structurally accepted input is semantically supported or safely rejectable. The codec's actual wider input acceptance is preserved as a concrete finding below.
 
 # Cardinality gap
 
-At the census abstraction, four booleans plus three actual-presence bits expose 128 combinations. Exactly 27 are coherent: each of the three probes independently selects missing, mismatch, or match, and overall freshness is true only when all three match.
+Keep the census abstraction: four Boolean bits and three actual-presence bits expose `2^7 = 128` combinations; 27 have coherent witnesses. The actual payload values distinguish equality within the presence abstraction and must be retained.
 
-For each probe:
+| Actual observation | Match bit | Coherent probe | Target payload |
+| --- | --- | --- | --- |
+| Absent | false | missing | expected |
+| Present, unequal | false | mismatch | expected and actual |
+| Present, equal | true | match | one equal value |
+| Absent | true | incoherent | rejected at coherent boundary |
+| Present, equal | false | incoherent | rejected at coherent boundary |
+| Present, unequal | true | incoherent | rejected at coherent boundary |
 
-| actual | match | state |
-| --- | --- | --- |
-| absent | false | missing |
-| present and unequal to expected | false | mismatch |
-| present and equal to expected | true | match |
+Three independent probes give `3^3 = 27` coherent reports. Exactly the all-match row has `fresh: true`; the remaining 26 have false. The live-tag path can witness all 27; the new manifest path supplies the eight all-present rows, including the one all-match row. Neither the target union nor a new manifest axis changes the census denominator or legal count. The AMI ID and all scalar payload domains are held parametrically; no finite count pretends to enumerate their string values.
 
-Absent/true is impossible, and present values must agree with the named match state. Crossing the three probe states gives 27 rows. Only match/match/match encodes `fresh: true`; the other 26 encode false.
+The old design's “101 incoherent combinations” statement needs precision: 101 is the number of impossible binary presence/flag patterns, not the number of rejected concrete payload classes. Refining each actual into absent/equal/unequal gives `3^3 × 2^4 = 432` equality-aware strata, of which 27 are coherent and 405 contradictory. For example, an equal actual plus false match can fall inside a binary pattern that has a different, unequal coherent witness. `finite-table.json` enumerates all 432 strata and the 27 coherent projections without claiming to execute Effect or the eventual implementation.
 
 # Target schema
 
-Define a private parameterized schema constructor for one `BakeProbeResult` with three cases:
+Retain one private parameterized probe-schema constructor in the existing `Runners.schemas.ts` role. Reuse `LiteralKit(["missing", "mismatch", "match"])` for the case domain and its tagged-union construction; reuse `Sha256Hex`, `S.NonEmptyString`, `S.toType`, `S.toEquivalence`, annotated `S.makeFilter` where the cross-field inequality requires it, and schema-derived case guards. Live source search found no existing `BakeProbeResult` or equivalent comparator-result helper to reuse. The shared LiteralKit constructor and JSON codec already cover their respective needs.
 
-- `missing { expected }`;
-- `mismatch { expected, actual }`;
-- `match { value }`.
+The payload-carrying cases are `missing { expected }`, `mismatch { expected, actual }`, and `match { value }`. The mismatch case must check that expected and actual are unequal using the supplied value-schema equivalence. Merely naming the case “mismatch” while allowing equal payloads would recreate the lie inside the proposed union. The match case owns one value and therefore cannot contain two unequal values. Instantiate a single digest probe schema for both SHA probes, and a version probe schema over `S.NonEmptyString`. Do not tighten the version to the service's local semantic-version schema: a nonempty malformed observed version is presently a legitimate stale observation.
 
-Instantiate it with `Sha256Hex` for lockfile and Bun archive and `S.NonEmptyString` for Bun version. The match case owns one value because expected and actual are proven equal; the legacy encoder duplicates it into both old fields. Define the decoded `BakeCheckReport` with `amiId`, `lockfile`, `bunArchive`, and `bunVersion` probe results. Derive overall freshness by checking whether all three cases are `match`; do not store a fourth decoded field.
+Use an annotated private `S.Class` for the honest decoded report containing only `amiId`, `lockfile`, `bunArchive`, and `bunVersion`. It has no stored match bits, separate optional actuals, or overall status. Its pure `isFresh` getter uses the three schema-derived match guards; command/tests use this derived getter, while `fresh` remains only a legacy encoded key. Service classification constructs the probe once from the expected value and actual Option; no mutable state or request-mode state is introduced.
 
-Keep a private legacy encoded schema with the exact existing seven cluster keys and neighboring fields. Connect it to the honest decoded report with one named full-report transformation. Decoding validates actual presence, actual-versus-expected equality, each match bit, and the overall conjunction. Encoding projects the three cases back to the old expected/actual/match fields and derives `fresh`. Reuse `Sha256Hex`, `JsonStringCodec`, existing schema helpers, and schema-derived case guards; do not enumerate 27 combination literals or create three copy-pasted union definitions.
+Use one private legacy boundary struct containing **all eleven existing fields**, in existing schema order and with their existing schemas and `OptionFromOptionalKey` codecs. The private struct is only the encoded input/output contract, never a returned service/domain model or a public fallback alias. Export the same public `BakeCheckReport` name as a whole-report transformation schema from that legacy struct into the private decoded class; export the same-name schema-derived Type alias. This keeps the public schema's encoded side flat as well as keeping `BakeCheckReportJson = JsonStringCodec(BakeCheckReport)` flat. Do not make only the JSON helper compatible while silently changing the encoded side of `BakeCheckReport` itself.
+
+This composition changes the runtime public value from a class constructor to a class-backed transformation schema. The repository search finds no `new BakeCheckReport`, subclass, or `instanceof` consumer. Known callers use `.make`, schema encoding, and the inferred Type. Those constructors migrate atomically to the honest fields. Verify constructor statics and the class-backed schema Type against installed Effect before implementation lands; never add a compatibility export that leaves a second public Boolean owner.
+
+One named full-report transformation checks the old decoded Options, payload equalities, match flags, and overall flag at its boundary. If coherent, it constructs the three probe cases and retains `amiId`. Its encoder reconstructs all legacy fields from the cases, with `None` for missing actuals, `Some(actual)` for mismatches, `Some(value)` for matches, and a derived conjunction for `fresh`. Use `S.decodeTo` with installed `SchemaTransformation.transformOrFail` and `SchemaIssue` failures for the fallible decode; encode is a total Effect projection for valid honest reports. Derive checks/guards from named schemas rather than duplicating hand-written type predicates. Keep the raw string schema and transformation at the boundary; do not round-trip through JSON in the service.
+
+Placement stays within `Runners.schemas.ts`; comparison of AWS observations stays in `Runners.service.ts`; rendering and effects stay in `Runners.command.ts`. Existing command-role standards at `standards/architecture/07-non-slice-families.md:337-357` support these locations. A shared utility package or a new helper role is not justified by this one command. No new public probe kind, variant, legacy struct, or helper carrier is added to the curated barrel. The existing two public report names retain responsibility for the model and wire codec.
+
+Dependency bindings are explicit. The target manifest pins Effect `4.0.0-rc.112` (`package.json:162`). Installed `Schema.ts` provides `toType` at 2642, `decodeTo` at 5585-5605, `toTaggedUnion` at 6318, `makeFilter` at 6659, `OptionFromOptionalKey` at 9883, and class constructor/make behavior at 14435-14469. Installed `SchemaTransformation.ts:286-295` provides `transformOrFail`. The advisory shared reference currently uses `transformEffect` at line 332 and is not the installed API. Both exact source snapshots are frozen; this design requires no dependency or lockfile change.
 
 # Migration inventory
 
-- `packages/tooling/tool/cli/src/commands/Runners/Runners.schemas.ts:1-20` — reuse existing schema imports and add only the transformation helper required by the local codec.
-- `Runners.schemas.ts:279-321` — replace the flat public decoded class with the three typed probe results while preserving `amiId`, documentation, and the public `BakeCheckReport` name.
-- `Runners.schemas.ts:323-337` — retain `BakeCheckReportJson = JsonStringCodec(BakeCheckReport)` over the transformed schema so command JSON remains unchanged.
-- `packages/tooling/tool/cli/src/commands/Runners/Runners.service.ts:739-760` — retain first-image tag selection, exact tag keys, invalid-SHA-to-missing behavior, and string payloads.
-- `Runners.service.ts:761-785` — construct each probe case from its expected and actual values and remove all four Boolean locals/properties. Preserve `Sha256Hex` and string equivalence semantics.
-- `packages/tooling/tool/cli/src/commands/Runners/Runners.command.ts:59-68` — render lockfile and Bun-version freshness from their cases and derive the exact overall yes/no text. Continue omitting a separate Bun-archive line.
-- `Runners.command.ts:82-88,118-131` — retain the JSON encoder/error mapping and derive command success from all three match cases.
-- `packages/tooling/tool/cli/src/commands/Runners/Runners.service.ts:183-191` and `commands/Runners/index.ts:30-40` — keep the service result and public barrel routed through the same `BakeCheckReport` owner.
-- `packages/tooling/tool/cli/test/runners-bake.test.ts:69-107` — migrate the coherent fresh/stale service fixtures to probe cases without changing their encoded values.
-- `runners-bake.test.ts:263-301,339-415` — preserve mode conflict, human/JSON check output, stale exit, and live scripted-service freshness behavior; add full schema compatibility tables.
+All paths in the first two columns below are relative to `packages/tooling/tool/cli/`; the before column names exact d68 source anchors, not the older stale citations inside the canonical design.
 
-Targeted repository and barrel searches found no additional writer, reader, or decoder of the report or its seven correlated fields.
+| Before d68 | Target main 702 | Required migration or preservation |
+| --- | --- | --- |
+| `src/commands/Runners/Runners.schemas.ts:304-321` | `:334-351` | Replace decoded Boolean/Option carrier with class-backed probe report and full-report compatibility schema; preserve eleven encoded fields and public name. Update example/annotations to cover both live and intended comparisons. |
+| `Runners.schemas.ts:337` | `:367` | Keep JsonStringCodec over the public transformation schema; migrate its inferred decoded Type. |
+| Absent | `Runners.schemas.ts:199-226` | Preserve picked manifest codec, acceptance of full/minimal manifest, scalar constraints, and public `BakeManifestJson`. This is an input contract, not the report output. |
+| `src/commands/Runners/Runners.service.ts:739-760` | `:742-760` | Keep first image, first matching tag, tag keys, AWS argv/region/pin and parse-error behavior; call the shared comparator as today. |
+| `Runners.service.ts:762-785` | `:762-795` | Migrate the extracted comparator once. Keep raw SHA-to-Option decoding, version payload, and exact scalar comparison semantics; return the three probe results instead of duplicated Boolean locals/fields. |
+| Absent | `Runners.service.ts:803-831` | Keep local-input load, manifest read/decode, YAML read/parse/schema decode, pin comparison, synthesized tags, and comparator call in that order. Do not bypass validations by directly fabricating a new report from manifest fields. |
+| `Runners.service.ts:187-192` | `:189-194` | Both `check` and `checkManifest` return the honest Type under the same public report name. |
+| `Runners.service.ts:830` | `:874-888` | Keep platform context capture and check/checkManifest provider bindings; no new requirements, layer, AWS effect, or scheduling change. |
+| `src/commands/Runners/Runners.command.ts:59-68` | same | Replace three Boolean-member reads with probe/derived freshness reads. Preserve the exact four human lines and their order. |
+| `Runners.command.ts:82-88,118-135` | `:82-88,122-144` | Keep JSON error mapping and service selection; derive the stale decision from honest probes. Print before failing; retain distinct intended/live stale messages. |
+| `Runners.command.ts:172` | `:183` | Keep the public testing seam; migrate the injected service report Type and fixtures only. |
+| `src/commands/Runners/index.ts:35-36` | same, manifest at 38 | Preserve explicit `BakeCheckReport`/`BakeCheckReportJson` exports and the newly added manifest export; no extra public carrier names. |
+| `test/runners-bake.test.ts:94-108,185-192` | `:95-109,187-195` | Migrate both coherent fixture states and both check-service stubs; retain full payload values and stale version `1.3.13`. |
+| Existing schema tests | `test/runners-bake.test.ts:197-239` | Add actual report codec compatibility coverage. Existing arbitrary round-trip is for `BakeReport`, not `BakeCheckReport`; do not misreport it as coverage of this transformation. |
+| Absent | `test/runners-bake.test.ts:241-339` | Retain manifest service/command cases; migrate `.fresh` assertions to derived freshness and preserve exact messages/console output. |
+| Existing command/live cases | `test/runners-bake.test.ts:372-403,442-518` | Migrate coherent constructor/read assertions; keep mode diagnostics, output ordering, region and AWS argv evidence. |
+
+`consumer-bindings.json` binds every direct textual report/member/CLI-reference hit to an exact full-file snapshot. Root `src/index.ts:328` exports only `runnersCommand`; the explicit package export is `package.json:51` (published counterpart at 121), so no root model export must be added. Existing command API exposure is preserved.
+
+Outside the package, `.github/workflows/check.yml:247-252` invokes the manifest check and consumes its success/failure as a warning. `infra/ci-runners/runner-image.json` is a minimal manifest input, not persisted `BakeCheckReport` output. The runbook `docs/runbooks/aws-cost-operations.md:435-441` instructs operators to check both intended and live images and explicitly denies that matching intended provenance proves deployment. No changes to these consumers are needed, but their behavior constrains the refactor. The retained design-refresh audit documents are historical references only; they are copied unchanged under `before/canonical` and must not be rewritten to manufacture current review credit.
+
+The companion `runners-bake-cli-mode` audit proposes D1 reclassification of the raw diagnostic request. This freshness migration has **no command-mode union prerequisite**. Preserve `resolveBakeMode`'s two forms, raw flags, manifest-requires-check validation, public facade/testing seam, and all diagnostic ordering. That owner has no guard-deletion credit to share with this report design.
 
 # Guard-deletion accounting
 
-Delete the three `*Matches` locals, the stored `fresh` conjunction, all seven correlated decoded fields, the renderer's three Boolean reads/ternaries, and the command's direct `result.fresh` guard. The three probe unions become the sole coherence owners; one derived all-match check supplies display and exit behavior. Keep tag presence/decoding and equality comparisons inside the constructors because they classify real external observations rather than recreating returned Boolean aliases.
+| Site | Actual removal | Required logic retained |
+| --- | --- | --- |
+| `Runners.service.ts:769-792` | Three parallel `*Matches` locals and their stored report assignments; one stored overall conjunction; seven correlated decoded members disappear from the service report. | Three observation classifications still need absence and scalar equality decisions. They construct case data once. This is not a claim to remove comparisons. |
+| `Runners.command.ts:63-65` | Three Boolean-field reads and their dependence on a separately stored truth; literal/case-derived display replaces them. | Three display selections remain. No claim of three runtime branches deleted. |
+| `Runners.command.ts:131` | The guard trusting an independently assignable `result.fresh` member. | A derived all-match success/stale decision remains and includes the archive probe. |
+| Report construction and mismatch case | Comment-only/evidentiary coherence becomes schema-owned; match cannot disagree with its one payload, mismatch enforces inequality, missing cannot carry an actual. | Full legacy decode needs validation of redundant boundary flags; that is boundary validation, not zero-cost deletion. |
+
+The net deletion is the returned parallel aliases and the stored aggregate, together with readers' ability to trust contradictory aliases. It is not a net reduction of every conditional in the package: new strict boundary checks are necessary for the proposed honest decoded model. Keep the AWS SHA decoder, missing-image fallback, tag selection, pin validation, manifest mode guard, and every error/order check. None belongs to this instance's deletion credit.
 
 # Encoded-side impact
 
-Tier 2 exact compatibility codec. For all 27 coherent reports, compare the new codec's canonical encoded object and JSON string with the old codec's output. Preserve field names and order, `OptionFromOptionalKey` omission, SHA/string bytes, `amiId`, all expected values, all actual values, three match booleans, and `fresh`.
+The compatibility boundary is the complete eleven-field legacy report, retained behind the public `BakeCheckReport` schema and `BakeCheckReportJson`. Preserve `amiId`; all expected and actual scalar bytes; `lockfileMatches`, `bunArchiveMatches`, `bunVersionMatches`, and `fresh`; declared key order; and optional-key omission. Missing actuals are omitted, never emitted as null or runtime Option objects. In a match, the one internal value projects to both old expected and actual keys. A mismatch retains two different payloads without trimming, case folding, coercion, or loss. The fresh/stale JSON output and command status remain the same for all supported producer rows.
 
-The old structural schema could parse 101 incoherent combinations, but no writer, fixture, documentation, or decoder consumer gives those payloads contractual meaning. The new full-report decoder rejects an absent/true probe, a match bit that contradicts actual equality, or a `fresh` bit that contradicts the three matches. It must not silently normalize such input. The public documented all-match example and both test fixtures remain exact compatibility rows.
+The 27 modeled golden rows prove the algebraic projection preserves values, omission, and modeled compact serialization; they include non-semver observed version text as a stale nonempty payload. They are not a substitute for byte comparison using the real old/new Effect codecs. At implementation, freeze the old schema/codec in test scope and compare its actual canonical string against the new codec on every row and schema-derived payload examples. Preserve the installed parser's default unknown-key behavior (`SchemaAST.ts:443-484`); no new excess-property rejection or defaults are introduced. Arbitrary input whitespace/property order was never preserved by parse/re-encode and is not promised as original-byte identity.
+
+**Concrete accepted-input finding:** The current schema validates only field types. Four minimal, structurally valid but contradictory JSON objects are saved in `structural-counterexamples.json`. Source inspection establishes that no coherence check rejects them; this is a static source conclusion, not a runtime test result. `JsonStringCodec.decode` and `decodeOption` at `internal/schema/JsonCodec.ts:79-85` inherit that permissiveness. A strict full-report transformation would reject them with `SchemaError`/`None`. Therefore, “all old accepted JSON inputs remain accepted” would be false.
+
+The proposed decoder boundary accepts the semantically coherent report domain: a flag agrees with actual presence and equality, and overall agrees with all three match flags. All known production constructors, both service fixtures, the public example, and output consumers support this domain. The absence of a decode consumer alone does not justify narrowing; structural permissiveness alone does not prove contradictory tuples represent meaningful supported reports. Their status as unsupported inputs is an **explicit P3 compatibility proof obligation**. This P2 proposal does not grant that decision or claim a replacement zero-finding review. If independent review identifies a supported incoherent input, this strict decoder cannot be applied unchanged; repair the boundary and demonstrate compatibility before implementation. Do not normalize away a counterexample, invent a legacy sidecar arm or public Boolean alias, or silently change inventory cardinality to make this issue disappear.
+
+Malformed structural inputs retain their distinct behavior. Bad JSON, missing required fields/flags, null actual values, invalid SHA payloads in report JSON, and empty version strings are schema errors. Extra keys continue to follow the installed schema default. By contrast, malformed SHA **AWS tag text** is converted to missing by the service's existing Option decoder. A present nonempty observed version need not be semver and must remain a mismatch payload. An empty AWS version passes `AwsTag.Value: S.String` at `Runners.schemas.ts:448-453` but currently fails report construction against `NonEmptyString`; do not change it into a valid missing/stale report during this refactor. Constructor defects and typed AWS/manifest schema errors are not interchangeable.
+
+The new manifest boundary stays independent: missing or malformed manifest keys fail before any report; absent/unreadable/invalid production pin or a different AMI ID also fails before report output. Full BakeReport metadata is intentionally ignored by the manifest picker. A valid but mismatching key produces a stale report and must print before the intended stale error. No manifest result proves live deployment.
 
 # Test impact
 
-Generate the 27 coherent probe combinations with valid synthetic digests and version strings. For every row, prove decoded cases, exact old/new canonical encoding, optional-key omission, match bits, and derived overall freshness. Add rejection tests for each incoherence class: missing actual with true match, equal actual with false match, unequal actual with true match, and contradictory overall freshness. Ensure schema-derived arbitraries generate all 27 case combinations rather than only all-equal fixture shapes.
+No product/package tests were run or edited for this source-only P2 task. Existing fixtures and tests were inspected and frozen; their presence is not a passing test claim. Implementation must add meaningful coverage in the existing `runners-bake.test.ts` through `@beep/repo-cli/commands/Runners`, not relative source imports.
 
-Retain command tests for exact human output, JSON output, stale typed error and exit, first-image/no-image behavior, malformed SHA tags becoming missing, a stale version payload, AWS parsing errors, and successful live service check. No browser QA applies.
+1. Exercise all 27 coherent combinations with the actual old/new codecs; compare exact canonical strings, full decoded payloads, all old field values, omission, and overall success. Test mismatch construction rejects equality. Use schema-derived arbitraries for scalar payloads plus an explicit complete case-product table; arbitrary sampling alone does not guarantee 27 combinations.
+2. Cover all four coherence-failure classes with the saved structural counterexamples. Record old acceptance versus proposed rejection explicitly. These tests document the P3-approved boundary only after the accepted-legitimate-input question is resolved; they cannot themselves ratify narrowing.
+3. Preserve malformed JSON and field-type rejection, default excess-key behavior, optional-key omission, nonempty arbitrary observed versions, and two distinct SHA payloads. Confirm both `BakeCheckReport` schema encoding and `BakeCheckReportJson` encoding preserve the flat wire form. Verify the public schema's constructor surface and Type after class-backed transformation composition.
+4. Extend the scripted live-service fixture to cover no image, absent Tags, one missing tag, malformed SHA to missing, valid unequal SHA, duplicate tags/first-image selection, stale nonempty version, empty version constructor failure, and AWS parse/error propagation. The current live fixture at 442-518 principally proves all-match/region behavior, not this complete edge matrix.
+5. Preserve manifest tests at 241-339 for full/minimal inputs, each stale key, mismatched pin, empty object, no AWS calls, manifest mode routing, and exact stale console/error output. Add malformed JSON, missing/invalid manifest SHA, non-semver nonempty version, YAML read/parse/missing-pin failures, and both human/JSON stale output ordering as needed to protect the changed result seam. Do not alter unrelated BakeReport writer tests.
+6. Keep all live/intended command combinations: fresh succeeds; stale prints exactly once then fails; JSON uses the same eleven-field encoding before failure; encoding failure preserves the existing typed encoder error without emitting a stale error first. The human output remains four lines without a Bun archive line, even when only the archive is stale.
+
+After implementation and independent approval, run the focused Runners tests and full `bun run beep quality package-verify @beep/repo-cli`, then the Tier 2 Yeet path required by the campaign. This private design validation grants none of those execution results and requires no browser QA.
 
 # Risk and sequencing
 
-Tier 2 wire-schema refactor. Land schema, transformation, service writer, renderer, barrel, and tests atomically. The main risks are erasing mismatch payloads, treating malformed SHA text as a mismatch instead of the existing missing result, changing key order or optional omission, trusting redundant legacy booleans over the values, or narrowing generated tests to the single production all-match row. The full 27-row compatibility matrix is the release gate.
+The declaration moved by 30 lines, but this is not a citation-only rebind: a second producer, new manifest input contract, new provider method, output-error distinction, and substantive fixtures were added. Replace the design and preserve its original bytes. Do not update the R31 census inputs while live; the parent owns later exact-source integration after forward merge, reconciliation and drift checks.
+
+The implementation remains one Tier 2 report migration: private probes and class-backed full-report codec, comparator, both service method Types, render/status readers, public facade and fixtures move atomically. The raw BakeCliOptions diagnostic owner is D1 in the companion proposal and supplies no prerequisite refactor. No new dependency, generated file, architecture role, or public legacy/probe alias is planned.
+
+The highest risk is overstating encoded-input compatibility. Known legitimate producer outputs have a precise viable projection, but the wider structural acceptance and strict rejection remain explicit independent-review evidence. Other risks are accepting equal mismatch payloads, narrowing observed version strings, erasing actual/expected mismatch values, changing `None` omission, changing class-backed constructor behavior, adding an archive display line, conflating intended/live results, or reordering output and failure. The test plan above targets those boundaries directly.
+
+Bindings in `MANIFEST.json` cover original row/design, packet inputs, source/main identities, complete affected source/test/barrel files, input manifests, dependency/lock bytes, installed Effect APIs and advisory reference snapshots. The advisory reference can move concurrently; its exact snapshots are evidence, not a requirement to mutate or upgrade the target. A final drift report separates protected source/packet changes from advisory movement. Historical `reviewed` status is preserved only as metadata. This is a complete P2 proposal with a candid unresolved P3 compatibility proof obligation, not approval to implement or a current-main census/review receipt.

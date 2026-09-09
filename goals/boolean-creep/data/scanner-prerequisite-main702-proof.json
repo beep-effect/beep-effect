@@ -27,7 +27,7 @@
   },
   "fullProofComplete": true,
   "hostedProofComplete": false,
-  "merged": false,
+  "merged": true,
   "publication": {
     "status": "success",
     "pushed": true,
@@ -35,10 +35,12 @@
     "pr": 1059,
     "url": "https://github.com/beep-effect/beep-effect/pull/1059",
     "title": "fix(quality): preserve boolean-creep evidence in secret scans",
-    "state": "OPEN",
+    "state": "MERGED",
     "readyForReview": true,
     "method": "Canonical publish --push-only --reuse-verified, followed by gh pr create with explicit repository/head after the prior automatic creation failure.",
-    "monitor": "bun run beep yeet monitor --watch"
+    "monitor": "bun run beep yeet monitor --watch",
+    "mergedAt": "2026-09-09T16:17:59Z",
+    "mergeCommit": "be5b589aa013c8350a4fad5cdfe36a6f6188db1f"
   },
   "hostedObservation": {
     "recordedAt": "2026-09-09T15:50:21.593251+00:00",
@@ -59,5 +61,36 @@
     ],
     "attribution": "Vercel deployments fail only because of provider rate limiting; exact allowed exception in AGENTS.md. Required checks and independent review remain pending. No source repair or workflow rerun is indicated by these statuses.",
     "continuation": "Use canonical monitor --watch without until-event so the same known provider reds do not repeatedly end the watch immediately."
-  }
+  },
+  "hostedRequiredChecksGreen": true,
+  "monitorTerminal": {
+    "exitCode": 1,
+    "finishedAt": "2026-09-09T16:18:13.618823+00:00",
+    "reason": "pr-merged",
+    "requiredChecksGreenAt": "2026-09-09T16:16:39.913Z",
+    "failingStatuses": 2,
+    "attribution": "Both remaining failure statuses are the previously verified Vercel deployment rate limits allowed by AGENTS.md. The watch ended because the PR merged.",
+    "restartRequired": false
+  },
+  "mergedReviewObservation": {
+    "recordedAt": "2026-09-09T16:22:32.186851+00:00",
+    "state": "MERGED",
+    "mergedAt": "2026-09-09T16:17:59Z",
+    "mergeCommit": "be5b589aa013c8350a4fad5cdfe36a6f6188db1f",
+    "reviewThreads": 0,
+    "unresolvedCurrentThreads": []
+  },
+  "hostedLatestRollup": {
+    "recordedAt": "2026-09-09T16:26:35.398439+00:00",
+    "counts": {
+      "SUCCESS": 33,
+      "QUEUED": 1,
+      "FAILURE": 2,
+      "SKIPPED": 1
+    },
+    "queued": ["Build"],
+    "allHostedChecksComplete": false,
+    "note": "Required-green is established by the canonical watch. The rollup records optional jobs independently and makes no independent-review approval claim."
+  },
+  "rootSourceForward": "goals/boolean-creep/data/post-r31-scanner-merged-source-forward.json"
 }

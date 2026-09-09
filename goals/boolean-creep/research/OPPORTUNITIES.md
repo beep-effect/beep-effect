@@ -1075,3 +1075,47 @@ PhoenixSyncResult were already rejected on the same source bytes in R30. Require
 an explicit list of actual Boolean members on the whole owner before evaluating
 payload-presence or enum correlations. Reusing the prior rejected-owner ledger
 would prevent these repeated proposals without reducing source coverage.
+
+
+## 2026-09-09 — CLI family retained obsolete membership and qualification instructions
+
+During the current CLI-family audit, `designs/family-cli-mode-flags.md` claimed
+seven live records but linked six, including four absent per-instance designs.
+Only Runners and Tsconfig remained qualified in the frozen inventory. Tsconfig's
+own design stated that all eight raw tuples are accepted, while its row still
+claimed 8/3 by counting the resolver's three outputs. The documented precedence
+predicates preserve combined requests, so the raw owner is D1.
+
+The paired census correction and complete family replacement are recorded in
+`data/post-r31-main-a203-parent-integration.json`; the full Tsconfig evidence is
+in `data/pre-r32-current-cli-family-tsconfig-disposition.md`. Original family and
+per-instance bytes remain in `history/designs/2026-09-09-post-r31-main-a203/`.
+A family membership and link check alongside per-instance design coverage would
+have exposed the stale cohort when its earlier members were withdrawn. Owner
+cardinality review must count supported raw requests, including deliberate
+priority and diagnostics, before comparing them with resolved operation modes.
+
+
+## 2026-09-09 — Scanner prerequisite conflicted with its older branch-local configuration
+
+Merging the landed scanner prerequisite produced a content conflict in
+`.gitleaks.toml`: the campaign branch retained the older targeted top-level
+allowlists, while PR #1059 installed portable per-rule entries. The resolution
+compared all 46 rule/path/line combinations and the unchanged configuration
+prefix, then used the exact verified main blob. No evidence allowance changed.
+`data/post-r31-scanner-merged-source-forward.json` preserves the resolution and
+confirms all 1,447 packet files survived byte for byte. Comparing both branch
+sides of configuration paths before the merge would have exposed this expected
+syntax conflict even though the uncommitted packet paths did not overlap main.
+
+
+## 2026-09-09 — Directory-ending Git pathspec produced an empty source-change receipt
+
+The main-284 source-forward check expected five added source files and one Root
+edit, but its count assertion failed. The quoted patterns `packages/**/src` and
+`apps/**/src` did not select their descendant files in `git diff`. Using explicit
+`:(glob)packages/**/src/**` and `:(glob)apps/**/src/**` returned the six known changes.
+The earlier main-a203 receipt's source list was corrected with those same globs,
+and source equality was rechecked. Original receipt bytes remain in the private
+source-forward bundle. A known changed-file count or positive-control path must
+accompany a filtered diff before an empty result can support an equality claim.
