@@ -353,7 +353,9 @@ export const resolveWorktreeContext = Effect.fn("Worktree.resolveWorktreeContext
     ["worktree", "list", "--porcelain", "-z"],
     "Failed to list git worktrees."
   );
-  const entries = parseWorktreePorcelain(porcelain);
+  const entries = yield* parseWorktreePorcelain(porcelain).pipe(
+    Effect.mapError(WorktreeCommandError.new("Git worktree listing must use NUL delimiters."))
+  );
   const mainCheckout = O.match(A.head(entries), {
     onNone: () => currentRoot,
     onSome: (entry) => entry.path,

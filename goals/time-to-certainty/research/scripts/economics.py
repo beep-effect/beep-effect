@@ -2268,7 +2268,11 @@ def validate_public_hygiene(paths: list[Path]) -> None:
     forbidden = absolute_home_path_pattern()
     for path in paths:
         data = gzip.decompress(path.read_bytes()) if path.suffix == ".gz" else path.read_bytes()
-        if forbidden.search(data.decode("utf-8")):
+        try:
+            text = data.decode("utf-8")
+        except UnicodeDecodeError:
+            raise SystemExit(f"invalid UTF-8 evidence in {portable_path(path)}") from None
+        if forbidden.search(text):
             raise SystemExit(f"absolute home path leaked into {portable_path(path)}")
         if path != SCRIPT and re.search(
             rb"(?i)(?:authorization:\s*bearer|github_pat_|gh[pousr]_[A-Za-z0-9])", data

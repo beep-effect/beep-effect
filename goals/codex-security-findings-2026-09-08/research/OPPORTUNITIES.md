@@ -20,3 +20,7 @@
   documents; retain all private-content checks on Markdown. Writer, CSV, and
   sensitivity regressions passed, and canonical refresh then preserved the
   original nine records and appended CSF-010.
+- Hosted Docgen rejected inherited `FreshbooksDecode` metadata because its
+  category was `decoders`. Package docgen had passed, but the hosted scoped
+  entry point also checks canonical categories. Use `decoding`; validate the
+  same `docgen:local -- --base origin/main --head HEAD` entry point as CI.

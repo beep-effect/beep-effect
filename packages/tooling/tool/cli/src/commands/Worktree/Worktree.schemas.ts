@@ -16,6 +16,7 @@ import { LiteralKit, NonEmptyTrimmedStr } from "@beep/schema";
 import { GitObjectId } from "@beep/schema/Conformance";
 import { ISOStr } from "@beep/schema/Timestamp";
 import { A, Str } from "@beep/utils";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 
 const $I = $RepoCliId.create("commands/Worktree/Worktree.schemas");
@@ -430,6 +431,12 @@ const blockEntry = (block: PorcelainBlock): WorktreeListEntry => {
 };
 
 const isWorktreeListPath = S.is(WorktreeListEntry.fields.path);
+const WorktreePorcelainInput = S.Union([S.Literal(""), S.String.check(S.isPattern(/\0/u))]).pipe(
+  $I.annoteSchema("WorktreePorcelainInput", {
+    description: "Empty output or a NUL-delimited Git worktree listing; nonempty line-delimited output is ambiguous.",
+  })
+);
+const decodeWorktreePorcelainInput = S.decodeUnknownEffect(WorktreePorcelainInput);
 
 /**
  * Parse `git worktree list --porcelain -z` output into structured entries.
@@ -444,23 +451,24 @@ const isWorktreeListPath = S.is(WorktreeListEntry.fields.path);
  *
  * ```ts
  * import { parseWorktreePorcelain } from "@beep/repo-cli/commands/Worktree"
+ * import { Effect } from "effect"
  *
- * const entries = parseWorktreePorcelain("worktree /repo\0HEAD abc123\0branch refs/heads/main\0\0")
+ * const entries = await Effect.runPromise(parseWorktreePorcelain("worktree /repo\0HEAD abc123\0branch refs/heads/main\0\0"))
  * console.log(entries.length)
  * ```
  *
  * @param porcelain - Raw stdout from `git worktree list --porcelain -z`.
- * @returns One entry per worktree block, in listing order.
+ * @returns An effect yielding one entry per worktree block, or a schema failure for ambiguous input.
  * @category parsing
  * @since 0.0.0
  */
-export const parseWorktreePorcelain = (porcelain: string): ReadonlyArray<WorktreeListEntry> =>
-  Str.includes("\0")(porcelain)
-    ? A.map(
-        A.filter(porcelainBlocks(Str.split(porcelain, "\0")), (block) => isWorktreeListPath(block.path)),
-        blockEntry
-      )
-    : A.empty();
+export const parseWorktreePorcelain = Effect.fn("Worktree.parseWorktreePorcelain")(function* (porcelain: string) {
+  const input = yield* decodeWorktreePorcelainInput(porcelain);
+  return A.map(
+    A.filter(porcelainBlocks(Str.split(input, "\0")), (block) => isWorktreeListPath(block.path)),
+    blockEntry
+  );
+});
 
 /**
  * Number of seconds within which measured activity classifies a checkout as

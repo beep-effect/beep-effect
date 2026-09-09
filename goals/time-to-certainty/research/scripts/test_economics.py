@@ -401,6 +401,16 @@ class CorpusValidationTest(unittest.TestCase):
 
 
 class PublicHygieneTest(unittest.TestCase):
+    def test_non_utf8_evidence_has_a_clear_hygiene_failure(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            for suffix in (".json", ".json.gz"):
+                with self.subTest(suffix=suffix):
+                    file = Path(directory) / ("journal" + suffix)
+                    payload = b"invalid: \xff"
+                    file.write_bytes(gzip.compress(payload) if suffix.endswith(".gz") else payload)
+                    with self.assertRaisesRegex(SystemExit, "invalid UTF-8 evidence in .*journal"):
+                        economics.validate_public_hygiene([file])
+
     def test_branch_names_survive_validation_and_redaction(self) -> None:
         with tempfile.TemporaryDirectory() as directory, mock.patch.object(Path, "home", return_value=Path("/root")):
             branch = "fix/root-build-failure-20260724"

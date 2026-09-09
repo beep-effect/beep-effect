@@ -723,7 +723,8 @@ const validateRemovalRequest = Effect.fn("WorktreeRemovalService.validateRemoval
     ["worktree", "list", "--porcelain", "-z"],
     "Could not revalidate worktree registration."
   );
-  if (!A.some(parseWorktreePorcelain(listed), (entry) => path.resolve(entry.path) === target)) {
+  const entries = yield* parseWorktreePorcelain(listed).pipe(Effect.mapError(invalid));
+  if (!A.some(entries, (entry) => path.resolve(entry.path) === target)) {
     return yield* invalid();
   }
   const canonicalRoot = yield* fs.realPath(managedRoot).pipe(Effect.mapError(invalid));

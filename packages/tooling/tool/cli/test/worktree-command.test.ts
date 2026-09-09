@@ -288,12 +288,17 @@ describe("worktree argument builders", () => {
 });
 
 describe("parseWorktreePorcelain", () => {
-  it("rejects ambiguous line listings and control characters in NUL-delimited paths", () => {
-    const hostile = "worktree /repo-worktrees/real\nworktree /unrelated\0HEAD abc123\0branch refs/heads/feature\0\0";
-    expect(parseWorktreePorcelain(hostile)).toEqual([]);
-    expect(parseWorktreePorcelain("worktree /repo\nHEAD abc123\n")).toEqual([]);
-    expect(parseWorktreePorcelain(`worktree /repo\0HEAD abc123\0\0${hostile}`)).toHaveLength(1);
-  });
+  it.effect("rejects ambiguous line listings and control characters in NUL-delimited paths", () =>
+    Effect.gen(function* () {
+      const hostile = "worktree /repo-worktrees/real\nworktree /unrelated\0HEAD abc123\0branch refs/heads/feature\0\0";
+      expect(yield* parseWorktreePorcelain(hostile)).toEqual([]);
+      expect(yield* parseWorktreePorcelain("worktree /repo\nHEAD abc123\n").pipe(Effect.flip)).toMatchObject({
+        _tag: "SchemaError",
+      });
+      expect(yield* parseWorktreePorcelain("")).toEqual([]);
+      expect(yield* parseWorktreePorcelain(`worktree /repo\0HEAD abc123\0\0${hostile}`)).toHaveLength(1);
+    })
+  );
 
   it("rejects traversal and control characters in removal names", () => {
     for (const name of ["../outside", "/outside", "..", ".", "a/b", "a\\b", "a\nb", "a\rb", "a\0b"]) {
@@ -302,31 +307,33 @@ describe("parseWorktreePorcelain", () => {
     expect(isWorktreeRemovalName("feature-x")).toBe(true);
   });
 
-  it("parses a branch entry, a detached+locked entry, and a prunable entry", () => {
-    const entries = parseWorktreePorcelain(
-      [
-        "worktree /repo",
-        "HEAD 1111111111111111111111111111111111111111",
-        "branch refs/heads/main",
-        "",
-        "worktree /repo-worktrees/pinned",
-        "HEAD 2222222222222222222222222222222222222222",
-        "detached",
-        "locked pinned for a while",
-        "",
-        "worktree /tmp/stale",
-        "HEAD 3333333333333333333333333333333333333333",
-        "detached",
-        "prunable gitdir file points to non-existent location",
-        "",
-      ].join("\0")
-    );
+  it.effect("parses a branch entry, a detached+locked entry, and a prunable entry", () =>
+    Effect.gen(function* () {
+      const entries = yield* parseWorktreePorcelain(
+        [
+          "worktree /repo",
+          "HEAD 1111111111111111111111111111111111111111",
+          "branch refs/heads/main",
+          "",
+          "worktree /repo-worktrees/pinned",
+          "HEAD 2222222222222222222222222222222222222222",
+          "detached",
+          "locked pinned for a while",
+          "",
+          "worktree /tmp/stale",
+          "HEAD 3333333333333333333333333333333333333333",
+          "detached",
+          "prunable gitdir file points to non-existent location",
+          "",
+        ].join("\0")
+      );
 
-    expect(entries).toHaveLength(3);
-    expect(entries[0]).toMatchObject({ path: "/repo", branch: "main", detached: false, locked: false });
-    expect(entries[1]).toMatchObject({ path: "/repo-worktrees/pinned", branch: null, detached: true, locked: true });
-    expect(entries[2]).toMatchObject({ path: "/tmp/stale", detached: true, prunable: true });
-  });
+      expect(entries).toHaveLength(3);
+      expect(entries[0]).toMatchObject({ path: "/repo", branch: "main", detached: false, locked: false });
+      expect(entries[1]).toMatchObject({ path: "/repo-worktrees/pinned", branch: null, detached: true, locked: true });
+      expect(entries[2]).toMatchObject({ path: "/tmp/stale", detached: true, prunable: true });
+    })
+  );
 });
 
 describe("WorktreeResidueManifest", () => {

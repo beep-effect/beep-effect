@@ -545,8 +545,14 @@ const cloneStubs = Effect.fn("Fleet.cloneStubs")(function* (
     const unlisted: CheckoutStub = { path: clone, kind: "clone", entry: null };
     return [unlisted];
   }
+  const entries = yield* Effect.result(parseWorktreePorcelain(porcelain.value));
+  if (Result.isFailure(entries)) {
+    yield* Effect.logWarning("Git worktree listing must use NUL delimiters; retaining the clone as unlisted.");
+    const unlisted: CheckoutStub = { path: clone, kind: "clone", entry: null };
+    return [unlisted];
+  }
   return A.map(
-    parseWorktreePorcelain(porcelain.value),
+    entries.success,
     (entry, index): CheckoutStub => ({
       path: entry.path,
       kind: index === 0 ? "clone" : "linked-worktree",

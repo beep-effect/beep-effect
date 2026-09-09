@@ -27,3 +27,15 @@ Main integration: merged the Graft agent configuration from `b8eb96213c`.
 The permission domain retains all eight scoped Graft commands and denies
 arbitrary stash deletion (57 approved grants). Updated AI Sync package
 verification passed: audit 9.5 seconds and docgen 2.9 seconds.
+
+PR #1026 review follow-up:
+
+- Corrected the inherited FreshBooks decoder category after the hosted Docgen
+  failure. Package verification passed (audit 13.2 seconds, docgen 3.8 seconds),
+  followed by the scoped CI Docgen command.
+- Worktree parsing now returns a typed schema failure for nonempty non-NUL
+  input. Command and removal callers report it as a worktree error; the tolerant
+  fleet scanner warns and retains an unlisted clone. The command and reap suites
+  passed all 49 tests; the fleet suites passed 41 more tests.
+- Non-UTF-8 plain and gzip evidence now produces a path-specific hygiene error.
+  All 16 economics tests passed; only the reproduction-script receipt changed.
