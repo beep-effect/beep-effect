@@ -382,3 +382,80 @@ The `.codegraph/` gitignore entry is retained defensively while stale
 machine-local indexes exist. This supersedes the 2026-08-06 role assignment
 above and the operational detail in `07-shared-memory-adoption.md`, which is
 retained as history, not instruction.
+
+---
+
+## 2026-09-08: Graft Wired as the Deterministic Code-Graph Cache (Claude Code, Codex, Grok)
+
+**Context:** The 2026-08-29 entry removed basic-memory and codegraph and ruled
+that any successor "starts as a fresh exploration with its own decision here
+first." On 2026-09-08 the operator asked for Graft (`@nanonets/graft`, MIT,
+0.16.0) to be installed and wired into Claude Code, Codex, and Grok. Graft is
+a structural code graph, not a memory system: `graft build` runs tree-sitter
+over the tracked tree with no model and no key, writes one markdown wiring
+card per source file plus a per-symbol call graph into a git-ignored cache
+directory, and every query re-syncs that graph against the working tree
+before answering. The 2026-04-15 "Deterministic-First" entry already names
+this class of AST-derived facts (certainty 1.0) as the layer that escapes the
+No-Escape Theorem.
+
+**Decision (operator, 2026-09-08):** Graft is the sanctioned code-structure
+query path for coding agents in this repository. It is a local, regenerable
+cache like `node_modules` — each checkout runs `graft build`, or the agent
+hooks do — and it is **not** a memory layer. File memory remains the memory
+layer exactly as the 2026-08-29 entry states. The LLM "deep" tier
+(`graft build --deep`: concept nodes and per-symbol summaries) is not
+enabled; nothing wired here calls a model or needs a key.
+
+**Mechanics:** `graft init --agents claude agents grok` wrote the tracked
+wiring: the Claude Code skill, hook and statusline shims, hook and allowlist
+blocks in `.claude/settings.json`, the `graft` server in `.mcp.json`, the
+fenced Graft section in `AGENTS.md`, the Grok skill and MCP config under
+`.grok/`, `opencode.json`, and `.ignore` (which re-admits the git-ignored
+cards to ripgrep). It also wrote machine-local Codex wiring outside the repo
+(a `[mcp_servers.graft]` entry and a hooks file under the Codex home). The
+generated shims, skill files, and Grok/OpenCode config are graft-owned and
+rewritten on upgrade, so they are excluded from Biome, ESLint, Knip, and
+Fallow rather than hand-formatted or refactored; the git-ignored card tree
+is excluded from typos because `.ignore` re-admits it to ignore-aware tools. Two of graft's settings values were corrected after review:
+Claude Code hook `timeout` is in seconds (graft writes milliseconds, so its
+values were divided by 1000), and its `npx graft` / `graft-dev` /
+`node dist/cli.js` allowlist entries were dropped (`npx graft` would resolve
+the unrelated unscoped npm package; the other two are for developing graft
+itself). Only the read-only query subcommands are allowed (`graft ask`,
+`grep`, `skeleton`, `callers`, `map`, `blast`, `check`, and `build`);
+`graft init`, `uninstall`, and `upgrade` rewrite tracked agent configuration
+and keep their permission prompt. A re-run of `graft init` restores the
+upstream values, so re-apply both corrections after any upgrade; the
+`@beep/ai-sync` repo safety policy pins the exact allow domain and fails the
+check lane if the broad `Bash(graft:*)` grant comes back.
+
+**Prerequisite on every machine:** the `graft` executable must be on the PATH
+of the agent process, because the MCP registrations launch the bare command.
+Install it with `npm install -g @nanonets/graft` (0.16.0 is the version this
+wiring was generated and tested with). On this workstation the global install
+lives under the interactive shell's nvm prefix, so a user-local `bin` symlink
+exposes it to desktop-launched sessions. The committed shims also carry the
+initializing machine's absolute install path as their first lookup candidate;
+on any other machine that candidate misses and the shim falls through to the
+repo `node_modules`, the running node's global prefix, and `npm root -g`,
+taking the highest installed version it finds.
+
+**Boundaries and watch items:**
+
+- The 2026-08-29 failure shape was per-conversation stdio MCP frontends with
+  no reaping path. Graft's MCP server has the same launch shape: one
+  `graft mcp` process per session that requests it. In Claude Code the server
+  is gated by the project MCP approval list; in Codex it is registered
+  machine-wide. If frontends accumulate, remove the `graft` server entries by
+  hand from `.mcp.json`, `.grok/config.toml`, `opencode.json`, and the Codex
+  config (`graft init --no-mcp` only skips registration for non-Claude hosts
+  and never removes an entry; `graft uninstall` is the full inverse of
+  `graft init`) and keep the CLI-and-skill path, which is the primary
+  integration.
+- Anonymous usage telemetry is on by default (buckets and fixed labels only,
+  per its published contract); `graft telemetry disable` or `DO_NOT_TRACK=1`
+  turns it off.
+- Review after four weeks of use: does the graph replace grep-storms in
+  practice, and do the hooks' per-prompt injections earn their tokens? If
+  not, `graft uninstall` is the inverse of `graft init`.
