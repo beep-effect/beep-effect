@@ -2,19 +2,21 @@
 # Public run-3 Stage B capture; source descriptors are portable.
 schema_version: beep-ci-ops-run3b-synthetic-corpus/v1
 generated_by: etl_run3b_fleet_corpus.py
-generator_sha256: 3a2c28b5fa064e19ee5c9cde687b5e48995b8a89cfa3ca589e6825cee88a6b9c
-corpus_commit: ff1cf545ef2c4a43806dc50323259f300218e573
-capture_instant: '2026-09-09T04:55:51.186Z'
-capture_finished_at: '2026-09-09T04:55:51.253Z'
+generator_sha256: 2a0ee1d6ce901fdd9cefd6f584e0b50f42b30fffb594b4ee0684e517e3e4247f
+corpus_commit: a9035c364e045a8d30a353aeb5ec1972552b72b4
+corpus_tree: eb477727a62303c67126c3c05dd910e720150182
+corpus_base: b2b530174239488495879318e87985b891f75111
+capture_instant: '2026-09-09T08:20:47.088Z'
+capture_finished_at: '2026-09-09T08:20:47.168Z'
 stage: B
 provenance: synthetic
 capture_instant_basis: capture start; files read once over the recorded interval, not an atomic fleet
   snapshot
 producer:
   path: packages/tooling/tool/cli/test/quality-scheduler-synthetic-scenario.test.ts
-  sha256: d411cc141e357283df105ec19ad491c1fbba19a17e8e64b44edb99de3fce8cac
-scenario_sha256: b6a1aaaf41f30c9569f2a62d2f605d78184394bae03105aff428f4b9fbbb229f
-scenario_captured_at: '2026-09-09T04:54:25.357Z'
+  sha256: 0ee8d157ffce4a113ab1b2acc4e1c598a098f491c67850fd6071009dd9c5f983
+scenario_sha256: e6d73f1aba551198a31d29a69cb87e6bf91f14e03cce7eeaff70cb2d16b531c3
+scenario_captured_at: '2026-09-09T05:26:26.754Z'
 scenario_steps:
 - Publish protocol v2 with eviction on under the runtime-root test override.
 - Admit contender A with an attemptId, checkout root, and branch into the only slot; hold its lease.
@@ -32,13 +34,13 @@ expected:
     admission-released: 1
   chains:
   - label: contender-a
-    nonce: 99cba5c3-890d-43f9-aa5a-11f47b9695e9
+    nonce: 9e91a4e8-cf97-44b4-9b5c-da780e47720e
     tags:
     - admission-enqueued
     - admission-admitted
     - admission-released
   - label: contender-b
-    nonce: d1cc3304-e21a-4bb4-bfc9-6c6a2652dc83
+    nonce: d269a27c-6d0e-4613-8ad3-6adaa4353712
     tags:
     - admission-enqueued
     - admission-withdrawn
@@ -62,13 +64,39 @@ ready:
   status: present
   complete_within: producer writes READY last after assertions and export copies
   world: closed
+termination_join:
+  dead-lease:
+    journal_path: attempts/dead-lease/feat_synthetic-dead-lease-f004a5320ab9/attempts.ndjson
+    attemptId: b4e72342-45a5-4a1b-95db-5ab4ef30a93f
+    attemptId_match: true
+    reason: lease-eviction
+  dead-ticket:
+    journal_path: attempts/dead-ticket/feat_synthetic-dead-ticket-7e2dab5a5a8b/attempts.ndjson
+    attemptId: a2fdba81-945f-4f44-8d93-6f71f706d5cd
+    attemptId_match: true
+    reason: queued-submitter-death
 custody:
   rule: ownerRef = sha12(f"{pid}:{procStart}:{captureSalt}")
+  member_rule: 'identifier tokens: exact pid/ppid, camel Pid boundary, separated pid, start tokens and
+    legacy processId'
+  variant_source: ownerRefVariant
+  pair_precedence:
+  - pid/procstart
+  - ownerpid/ownerprocstart
+  - attachedpid/<absent>
+  other_identity_rule: weak variant uses sorted normalized identity-member JSON as the owner component;
+    its first nonempty start member is the start, else <absent>
+  owner_refs_by_variant:
+    pid_pair: 7
+    ownerpid: 0
+    attachedpid: 0
+    weak: 0
   capture_salt_representation: hexadecimal encoding of 32 random bytes
   salt_policy: per-capture, unrecorded, unlinkable across captures
-  missing_procStart_rule: pid:<absent>:salt; weaker key tallied separately
+  missing_procStart_rule: owner:<absent>:salt; missing, null and empty starts tallied as weaker keys
   missing_procStart_caveat: weak references cannot join full references by ownerRef; nonce remains available
-  nested_payloads: each object containing pid receives its own ownerRef before pid/procStart removal
+  nested_payloads: each object containing a process identity receives its own ownerRef before member removal;
+    precedence is local to that object
 admission_roots:
 - label: synthetic
   status: present
@@ -80,7 +108,7 @@ admission_roots:
     world: closed
     status: present
     complete_within: one read of the named source during this capture; retained window only
-    observed_at: '2026-09-09T04:55:51.249Z'
+    observed_at: '2026-09-09T08:20:47.161Z'
     history_outside_window: unknown
     observed_rows: 7
     retained_rows: 7
@@ -95,10 +123,15 @@ admission_roots:
     excluded_undecodable: 0
     excluded_by_reason: {}
     redaction_counts:
-      dropped_pid: 7
-      dropped_procStart: 4
+      dropped_member_pid_count: 7
+      dropped_member_procstart_count: 4
       owner_refs: 7
-      owner_refs_without_proc_start: 3
+      owner_refs_without_start: 3
+    owner_refs_by_variant:
+      pid_pair: 7
+      ownerpid: 0
+      attachedpid: 0
+      weak: 0
     events:
     - schemaVersion: yeet-admission-journal/v1
       _tag: admission-admitted
@@ -134,7 +167,7 @@ admission_roots:
     world: closed
     status: present
     complete_within: one read of the named source during this capture; retained window only
-    observed_at: '2026-09-09T04:55:51.252Z'
+    observed_at: '2026-09-09T08:20:47.166Z'
     history_outside_window: unknown
     observed_rows: 1
     retained_rows: 1
@@ -143,6 +176,11 @@ admission_roots:
     excluded_undecodable: 0
     excluded_by_reason: {}
     redaction_counts: {}
+    owner_refs_by_variant:
+      pid_pair: 0
+      ownerpid: 0
+      attachedpid: 0
+      weak: 0
     events:
     - schemaVersion: yeet-admission-protocol/v2
       _tag: <absent>
@@ -153,7 +191,7 @@ admission_roots:
     world: closed
     status: present
     complete_within: one read of the named source during this capture; retained window only
-    observed_at: '2026-09-09T04:55:51.252Z'
+    observed_at: '2026-09-09T08:20:47.166Z'
     history_outside_window: unknown
     files_observed: 0
     captured_files: 0
@@ -165,7 +203,7 @@ admission_roots:
     world: closed
     status: present
     complete_within: one read of the named source during this capture; retained window only
-    observed_at: '2026-09-09T04:55:51.252Z'
+    observed_at: '2026-09-09T08:20:47.166Z'
     history_outside_window: unknown
     files_observed: 0
     captured_files: 0
@@ -177,7 +215,7 @@ admission_roots:
     world: closed
     status: present
     complete_within: one read of the named source during this capture; retained window only
-    observed_at: '2026-09-09T04:55:51.252Z'
+    observed_at: '2026-09-09T08:20:47.166Z'
     history_outside_window: unknown
     files_observed: 0
     captured_files: 0
@@ -189,7 +227,7 @@ admission_roots:
     world: closed
     status: present
     complete_within: one read of the named source during this capture; retained window only
-    observed_at: '2026-09-09T04:55:51.252Z'
+    observed_at: '2026-09-09T08:20:47.166Z'
     history_outside_window: unknown
     files_observed: 0
     captured_files: 0
@@ -209,7 +247,7 @@ checkouts:
     world: closed
     status: absent
     complete_within: one read of the named source during this capture; retained window only
-    observed_at: '2026-09-09T04:55:51.252Z'
+    observed_at: '2026-09-09T08:20:47.166Z'
     history_outside_window: unknown
 - checkout: dead-lease
   kind: synthetic
@@ -224,7 +262,7 @@ checkouts:
     world: closed
     status: absent
     complete_within: one read of the named source during this capture; retained window only
-    observed_at: '2026-09-09T04:55:51.253Z'
+    observed_at: '2026-09-09T08:20:47.167Z'
     history_outside_window: unknown
 - checkout: dead-ticket
   kind: synthetic
@@ -239,7 +277,7 @@ checkouts:
     world: closed
     status: absent
     complete_within: one read of the named source during this capture; retained window only
-    observed_at: '2026-09-09T04:55:51.253Z'
+    observed_at: '2026-09-09T08:20:47.167Z'
     history_outside_window: unknown
 checkout_counts:
   synthetic: 3
@@ -249,7 +287,7 @@ sources:
   world: closed
   status: present
   complete_within: one read of the named source during this capture; retained window only
-  observed_at: '2026-09-09T04:55:51.252Z'
+  observed_at: '2026-09-09T08:20:47.166Z'
   history_outside_window: unknown
   observed_rows: 1
   retained_rows: 1
@@ -258,6 +296,11 @@ sources:
   excluded_undecodable: 0
   excluded_by_reason: {}
   redaction_counts: {}
+  owner_refs_by_variant:
+    pid_pair: 0
+    ownerpid: 0
+    attachedpid: 0
+    weak: 0
   events:
   - schemaVersion: yeet-attempt-journal/v1
     _tag: attempt-terminated
@@ -275,7 +318,7 @@ sources:
   world: closed
   status: present
   complete_within: one read of the named source during this capture; retained window only
-  observed_at: '2026-09-09T04:55:51.253Z'
+  observed_at: '2026-09-09T08:20:47.167Z'
   history_outside_window: unknown
   observed_rows: 1
   retained_rows: 1
@@ -284,6 +327,11 @@ sources:
   excluded_undecodable: 0
   excluded_by_reason: {}
   redaction_counts: {}
+  owner_refs_by_variant:
+    pid_pair: 0
+    ownerpid: 0
+    attachedpid: 0
+    weak: 0
   events:
   - schemaVersion: yeet-attempt-journal/v1
     _tag: attempt-terminated
@@ -483,7 +531,7 @@ loss_population:
       rows: 1
   chains:
   - root: synthetic
-    nonce: 99cba5c3-890d-43f9-aa5a-11f47b9695e9
+    nonce: 9e91a4e8-cf97-44b4-9b5c-da780e47720e
     classification: win
     tags:
     - admission-enqueued
@@ -496,7 +544,7 @@ loss_population:
       - 1
       - 6
   - root: synthetic
-    nonce: d1cc3304-e21a-4bb4-bfc9-6c6a2652dc83
+    nonce: d269a27c-6d0e-4613-8ad3-6adaa4353712
     classification: withdrawn
     tags:
     - admission-enqueued
@@ -514,7 +562,7 @@ loss_population:
     source:
       file: admission/synthetic/journal.ndjson
       record_indexes:
-      - 4
+      - 5
   - root: synthetic
     nonce: synthetic-dead-ticket
     classification: ticket-evicted
@@ -523,7 +571,7 @@ loss_population:
     source:
       file: admission/synthetic/journal.ndjson
       record_indexes:
-      - 5
+      - 4
   chain_counts:
     win: 1
     withdrawn: 1
@@ -550,7 +598,7 @@ proof_ledger:
     file: goals/time-to-certainty/PLAN.md
     line: 84
     needle: not yet wired into any lane
-    sha256: c7ec81c39a4c2a5c9f3179f9d4c3da14a7edb580e52259e005f72b6171d7579f
+    sha256: 526fe736ebad36526866d02536d9ab2c500616eca08e2c936f88eeb5d7b233af
   checkouts_with_ledger: 0
   expected_count: 0
   observation_basis: file existence only; no ledger contents read or emitted
@@ -693,9 +741,9 @@ join_keys:
       missing matches do not prove absence
     source:
       file: explorations/beep-ci-operational-ontology/DECISIONS.md
-      line: 983
+      line: 989
       needle: '**Ruling 18'
-      sha256: acbe2c02d52f3d61af5376fdc5144ea8cd4488a92573d0fdb41bd2d0b18e3b7d
+      sha256: 66934864e9d867af0218337d0ecd34dd1780cca75efcc8fde9d4661cc865a8cf
 live_state_filename_policy: capture-local ordinals; payload sourcePath retains nonce and lease/ticket
   suffix with process component redacted
 excluded_sources:
@@ -715,12 +763,15 @@ projection_rules:
 - null, empty strings and CR/LF values omitted; duplicate pairs and scalar array leaves retained
 - events count raw JSON records once; projections do not double-count events
 redaction_rules:
-- 'All families: longest matching fleet, home, session-tmp, system-tmp, runtime, proc and shm prefixes
-  rewritten'
+- 'All families: longest host-root match at start, after a character outside ASCII alphanumeric, underscore,
+  dot, tilde, slash and hyphen, or after a slash preceded by slash or colon; relative path continuations
+  survive'
+- URI authority pre-pass preserves scheme and authority, with a slash before the host-root token
 - fleet root is <fleet>; home is <home>; temp roots are <session-tmp> and <tmp>; runtime is <runtime>;
   proc is <proc>; shared memory is <shm>
 - Per-user systemd unit identifiers become <uid>; proc process-directory identifiers become <process>
-- Process identity members dropped recursively; free-text pid numbers replaced
+- Process identity members dropped recursively; complete serialized process scalar values replaced
+- JSON keys and values consume escaped character pairs; nested string serialization retains its depth
 - Structural keys and non-process numbers, booleans, nulls retain their decoded values
 - Lock files and proof-locks are excluded; hostname and sha12(hostname) in string values become <host>;
   residue fails capture
@@ -731,31 +782,31 @@ files:
     file: <synthetic-admission>/journal.ndjson
     line: 1
   event_count: 7
-  min_timestamp_observed: '2026-09-09T04:54:25.273Z'
-  max_timestamp_observed: '2026-09-09T04:54:25.346Z'
+  min_timestamp_observed: '2026-09-09T05:26:26.665Z'
+  max_timestamp_observed: '2026-09-09T05:26:26.743Z'
   world: closed
   status: present
   complete_within: one read of the named source during this capture; retained window only
-  observed_at: '2026-09-09T04:55:51.249Z'
+  observed_at: '2026-09-09T08:20:47.161Z'
   history_outside_window: unknown
   provenance: synthetic
-  bytes: 2843
-  sha256: 2601a7b37ecfc721435d447eff358c5d3c9b4bc069680a1192e9de343cda5250
+  bytes: 3046
+  sha256: efce811a8e811a13ab9f45b7e9ad823edee6be3510098ea433ab2242b6ac210b
 - path: admission/synthetic/journal.properties
   kind: properties_projection
   source: *id001
   event_count: 7
-  min_timestamp_observed: '2026-09-09T04:54:25.273Z'
-  max_timestamp_observed: '2026-09-09T04:54:25.346Z'
+  min_timestamp_observed: '2026-09-09T05:26:26.665Z'
+  max_timestamp_observed: '2026-09-09T05:26:26.743Z'
   world: closed
   status: present
   complete_within: one read of the named source during this capture; retained window only
-  observed_at: '2026-09-09T04:55:51.249Z'
+  observed_at: '2026-09-09T08:20:47.161Z'
   history_outside_window: unknown
   provenance: synthetic
   derived_from: admission/synthetic/journal.ndjson
-  bytes: 2632
-  sha256: 85f63f51437befbdacafac04469bec8239410760aa85bcac6353428ded86ed69
+  bytes: 2807
+  sha256: a96cbe660da7c30d0954ee3fd556bb9a233ccfcd75ab0a15260ae93f0e6121e2
 - path: admission/synthetic/protocol.json
   kind: protocol
   source: &id002
@@ -767,7 +818,7 @@ files:
   world: closed
   status: present
   complete_within: one read of the named source during this capture; retained window only
-  observed_at: '2026-09-09T04:55:51.252Z'
+  observed_at: '2026-09-09T08:20:47.166Z'
   history_outside_window: unknown
   provenance: synthetic
   bytes: 101
@@ -781,7 +832,7 @@ files:
   world: closed
   status: present
   complete_within: one read of the named source during this capture; retained window only
-  observed_at: '2026-09-09T04:55:51.252Z'
+  observed_at: '2026-09-09T08:20:47.166Z'
   history_outside_window: unknown
   provenance: synthetic
   derived_from: admission/synthetic/protocol.json
@@ -793,70 +844,70 @@ files:
     file: <synthetic-checkout:dead-lease>/.beep/yeet/runs/feat_synthetic-dead-lease-f004a5320ab9/attempts.ndjson
     line: 1
   event_count: 1
-  min_timestamp_observed: '2026-09-09T04:54:25.330Z'
-  max_timestamp_observed: '2026-09-09T04:54:25.330Z'
+  min_timestamp_observed: '2026-09-09T05:26:26.737Z'
+  max_timestamp_observed: '2026-09-09T05:26:26.737Z'
   world: closed
   status: present
   complete_within: one read of the named source during this capture; retained window only
-  observed_at: '2026-09-09T04:55:51.252Z'
+  observed_at: '2026-09-09T08:20:47.166Z'
   history_outside_window: unknown
   provenance: synthetic
   checkout: dead-lease
   run_id: feat_synthetic-dead-lease-f004a5320ab9
   bytes: 214
-  sha256: 05b837ec9ee63a098fdeb88e703d1bf36cb42f428a9376cbb8583b16f2359562
+  sha256: 15ab3eae199baebe38916614e138331172d80675d700d5d75442dd4b81a7f746
 - path: attempts/dead-lease/feat_synthetic-dead-lease-f004a5320ab9/attempts.properties
   kind: properties_projection
   source: *id003
   event_count: 1
-  min_timestamp_observed: '2026-09-09T04:54:25.330Z'
-  max_timestamp_observed: '2026-09-09T04:54:25.330Z'
+  min_timestamp_observed: '2026-09-09T05:26:26.737Z'
+  max_timestamp_observed: '2026-09-09T05:26:26.737Z'
   world: closed
   status: present
   complete_within: one read of the named source during this capture; retained window only
-  observed_at: '2026-09-09T04:55:51.252Z'
+  observed_at: '2026-09-09T08:20:47.166Z'
   history_outside_window: unknown
   provenance: synthetic
   checkout: dead-lease
   run_id: feat_synthetic-dead-lease-f004a5320ab9
   derived_from: attempts/dead-lease/feat_synthetic-dead-lease-f004a5320ab9/attempts.ndjson
   bytes: 223
-  sha256: cd90447797938c9d2e547f946cd75f8aeb87cf787b44f23a6f55cb9d5e118e9e
+  sha256: 251ca94b4d9c162605ce802869c81395bbd53576a333258bb69ab967bc48339d
 - path: attempts/dead-ticket/feat_synthetic-dead-ticket-7e2dab5a5a8b/attempts.ndjson
   kind: attempts
   source: &id004
     file: <synthetic-checkout:dead-ticket>/.beep/yeet/runs/feat_synthetic-dead-ticket-7e2dab5a5a8b/attempts.ndjson
     line: 1
   event_count: 1
-  min_timestamp_observed: '2026-09-09T04:54:25.337Z'
-  max_timestamp_observed: '2026-09-09T04:54:25.337Z'
+  min_timestamp_observed: '2026-09-09T05:26:26.731Z'
+  max_timestamp_observed: '2026-09-09T05:26:26.731Z'
   world: closed
   status: present
   complete_within: one read of the named source during this capture; retained window only
-  observed_at: '2026-09-09T04:55:51.253Z'
+  observed_at: '2026-09-09T08:20:47.167Z'
   history_outside_window: unknown
   provenance: synthetic
   checkout: dead-ticket
   run_id: feat_synthetic-dead-ticket-7e2dab5a5a8b
   bytes: 222
-  sha256: f918ce92fc084e65da262dc5f2bc1f61ffeb7af9b181e2f2ddaa69171c137d37
+  sha256: f2f50906f2a0b191b96c80c485d2d5be8714e4f7d19cf708e1e42ec29920843f
 - path: attempts/dead-ticket/feat_synthetic-dead-ticket-7e2dab5a5a8b/attempts.properties
   kind: properties_projection
   source: *id004
   event_count: 1
-  min_timestamp_observed: '2026-09-09T04:54:25.337Z'
-  max_timestamp_observed: '2026-09-09T04:54:25.337Z'
+  min_timestamp_observed: '2026-09-09T05:26:26.731Z'
+  max_timestamp_observed: '2026-09-09T05:26:26.731Z'
   world: closed
   status: present
   complete_within: one read of the named source during this capture; retained window only
-  observed_at: '2026-09-09T04:55:51.253Z'
+  observed_at: '2026-09-09T08:20:47.167Z'
   history_outside_window: unknown
   provenance: synthetic
   checkout: dead-ticket
   run_id: feat_synthetic-dead-ticket-7e2dab5a5a8b
   derived_from: attempts/dead-ticket/feat_synthetic-dead-ticket-7e2dab5a5a8b/attempts.ndjson
   bytes: 231
-  sha256: f343c628ea42a6b07e411617abb62b77cf889e8e700e0d4f9d21f90c1818f8c7
+  sha256: eb3c2d8db33f4475cb304e7bc9201050f3eaf3955e353a1ab57ab43e141f8938
 integrity:
   algorithm: sha256
   digest_scope: all payload files; manifest excluded from its own digest
@@ -868,19 +919,5 @@ totals:
   payload_files: 8
   files_emitted: 9
   events: 10
-  payload_bytes: 6575
-  bytes_emitted: 41294
-security_resanitization:
-  finding: CSF-012
-  source_manifest_sha256: f2848655daf251fa77f1d32046ec15f0684977531d5dd69593b1cc55571d99b3
-  changed_raw_payloads: 0
-  live_recapture: false
-  updates:
-  - finding: CSF-012
-    source_manifest_sha256: c2568ec5be2bb4545cc7803de4838ed920c175a3b9cdc5b85377f2d8dca73bcb
-    changed_raw_payloads: 0
-    live_recapture: false
-  - finding: CSF-013
-    source_manifest_sha256: 070003b1b4f07cf7249174f1315f91bd3569072ef6750d9cfa8c80eea71f1813
-    changed_raw_payloads: 0
-    live_recapture: false
+  payload_bytes: 6953
+  bytes_emitted: 43001

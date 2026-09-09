@@ -12,6 +12,7 @@ import importlib.util
 import io
 import json
 import os
+import re
 import socket
 import subprocess
 import sys
@@ -60,7 +61,7 @@ def fixture_export(root):
              "lease": {"schemaVersion": "yeet-admission-lease/v1", "nonce": "lease", "pid": 4242,
                        "procStart": "start-fixture", "checkoutRoot": str(checkout_roots["dead-lease"]),
                        "heartbeatAtMillis": 2400, "hotPaths": [str(root / "hot")],
-                       "runScope": {"unitName": f"user-{os.getuid()}.slice"}}}
+                       "runScope": {"unitName": f"user-{os.getuid()}.slice", "attachedPid": 4242}}}
     (admission / "claims/claim.reap.json").write_bytes(etl.encode_json(claim))
     (admission / "claims/claim.reap.json.lock.stage-fixture").write_text("must never be read")
     (admission / "queue/ignored.lock").write_text("must never be read")
@@ -90,6 +91,338 @@ def tree_bytes(root):
 
 
 class RedactionTests(unittest.TestCase):
+    def test_identifier_tokens_preserve_ordinary_words_and_cover_process_names(self):
+        safe = {key: 1234 for key in ("rapid", "cupid", "lipid", "RAPID", "Cupid", "stepId", "failedStepId", "STEPID")}
+        private = {key: 5678 for key in ("pid", "ppid", "ownerPid", "attachedPid", "legacyLockOwnerPid", "claudePid", "ownerProcStart", "xPid", "y_pid", "z-pid")}
+        for key in safe:
+            self.assertFalse(etl.process_member(key), key)
+        for key in private:
+            self.assertTrue(etl.process_member(key), key)
+        result = etl.redact({**safe, **private}, b"a" * 32, collections.Counter())
+        self.assertEqual({key: result[key] for key in safe}, safe)
+        self.assertFalse(set(private) & set(result))
+        etl.scan_output_bytes([("safe.json", etl.encode_json(result)),
+                                  ("safe.properties", etl.encode_properties_projection([result]))])
+        # Uppercase acronym forms normalize like their camelCase twins, so each gets its own object.
+        for key in ("ownerPID", "attachedPID", "ownerPROCSTART", "OWNER_PID"):
+            self.assertTrue(etl.process_member(key), key)
+            single = etl.redact({key: 5678, "rapid": 42}, b"a" * 32, collections.Counter())
+            self.assertNotIn(key, single)
+            self.assertEqual(single["rapid"], 42)
+            # The same projection and residue checks as the other private variants.
+            etl.scan_output_bytes([(f"{key}.json", etl.encode_json(single)),
+                                      (f"{key}.properties", etl.encode_properties_projection([single]))])
+            with self.assertRaises(SystemExit):
+                etl.scan_output_bytes([(f"{key}-raw.json", etl.encode_json({key: 5678, "rapid": 42}))])
+            # Serialized text: the value is wholly replaced, the JSON stays valid, the raw form is rejected.
+            serialized = json.dumps({key: 5678, "rapid": 42})
+            redacted = etl.redact_string(serialized)
+            decoded = json.loads(redacted)
+            self.assertEqual(decoded["rapid"], 42)
+            self.assertNotEqual(decoded.get(key), 5678)
+            with self.assertRaises(SystemExit):
+                etl.scan_output_bytes([(f"{key}-text.txt", serialized.encode())])
+
+    def test_serialized_escaped_process_values_are_wholly_replaced(self):
+        values = ('a"secret', 'secret\\', 'secret\\\\',
+                  json.dumps({"detail": 'nested"secret', "tail": "secret\\"}), '')
+        for key in ("ownerPid", "attachedPid", "ownerProcStart", "pid"):
+            for value in values:
+                for depth in range(4):
+                    message = json.dumps({key: value, "failedStepId": "check", "rapid": 42})
+                    for _ in range(depth):
+                        message = json.dumps({"message": message})
+                    with self.subTest(key=key, value=value, depth=depth):
+                        with self.assertRaises(SystemExit):
+                            etl.scan_output_bytes([("raw.json", etl.encode_json({"message": message}))])
+                        redacted = etl.redact_string(message)
+                        self.assertEqual(etl.redact_string(redacted), redacted)
+                        etl.scan_output_bytes([("safe.json", etl.encode_json({"message": redacted})),
+                                                  ("safe.properties", etl.encode_properties_projection([{"message": redacted}]))])
+                        decoded = redacted
+                        for _ in range(depth):
+                            decoded = json.loads(decoded)["message"]
+                        self.assertEqual(json.loads(decoded), {key: "<redacted>", "failedStepId": "check", "rapid": 42})
+
+    def test_free_text_quoted_process_values_are_wholly_replaced(self):
+        for message in (r'ownerPid="a\"secret"', r'pid "secret\\"', r"ownerPid='a\'secret'"):
+            with self.subTest(message=message):
+                with self.assertRaises(SystemExit):
+                    etl.scan_output_bytes([("raw", etl.encode_json({"message": message}))])
+                redacted = etl.redact_string(message)
+                self.assertNotIn("secret", redacted)
+                self.assertEqual(etl.redact_string(redacted), redacted)
+                etl.scan_output_bytes([("safe", etl.encode_json({"message": redacted}))])
+
+    def test_serialized_escaped_keys_are_consumed_as_whole_strings(self):
+        for depth in range(4):
+            message = r'{"owner\u0050id":"a\"secret","note\"ownerPid":"keep","tail\\":"keep"}'
+            for _ in range(depth):
+                message = json.dumps({"message": message})
+            with self.subTest(depth=depth):
+                with self.assertRaises(SystemExit):
+                    etl.scan_output_bytes([("raw.json", etl.encode_json({"message": message}))])
+                redacted = etl.redact_string(message)
+                self.assertEqual(etl.redact_string(redacted), redacted)
+                etl.scan_output_bytes([("safe.json", etl.encode_json({"message": redacted}))])
+                decoded = redacted
+                for _ in range(depth):
+                    decoded = json.loads(decoded)["message"]
+                self.assertEqual(json.loads(decoded), {"ownerPid": "<redacted>", 'note"ownerPid': "keep", "tail\\": "keep"})
+
+    def test_serialized_process_variants_are_redacted_at_every_escape_depth(self):
+        private = {"ownerPid": 1234, "ownerProcStart": "start-fixture", "attachedPid": 5678,
+                   "legacyLockOwnerPid": "9012", "claudePid": 3456, "ppid": 6789,
+                   "futureProcessStartTicks": "ticks-fixture", "rapid": 42, "failedStepId": "check"}
+        for depth in range(4):
+            message = json.dumps(private)
+            for _ in range(depth):
+                message = json.dumps({"message": message})
+            with self.assertRaises(SystemExit):
+                etl.scan_output_bytes([("raw.json", etl.encode_json({"message": message}))])
+            redacted = etl.redact_string(message)
+            self.assertEqual(etl.redact_string(redacted), redacted)
+            etl.scan_output_bytes([("redacted.json", etl.encode_json({"message": redacted})),
+                                      ("redacted.properties", etl.encode_properties_projection([{"message": redacted}]))])
+            decoded = redacted
+            for _ in range(depth):
+                decoded = json.loads(decoded)["message"]
+            decoded = json.loads(decoded)
+            self.assertEqual(decoded, {key: value if key in ("rapid", "failedStepId") else
+                                      "<redacted>" if isinstance(value, str) else None
+                                      for key, value in private.items()})
+        for key in private:
+            if key in ("rapid", "failedStepId"):
+                continue
+            message = "{'" + key + "': 'start-fixture'}"
+            self.assertNotIn("start-fixture", etl.redact_string(message))
+            bare = key + "=start-fixture"
+            self.assertNotIn("start-fixture", etl.redact_string(bare))
+            with self.assertRaises(SystemExit):
+                etl.scan_output_bytes([("fixture", bare.encode())])
+
+    def test_custody_variants_are_bound_to_payload_bytes(self):
+        row = {"pid": 123, "procStart": "start", "nested": {"ownerPid": 456, "ownerProcStart": "start"},
+               "scope": {"attachedPid": 789}, "future": {"claudePid": 321}}
+        redacted = etl.redact(row, b"a" * 32, collections.Counter())
+        variants = etl.owner_ref_census(redacted)
+        self.assertEqual(dict(variants), dict.fromkeys(etl.OWNER_VARIANTS, 1))
+        receipt = {"owner_refs_by_variant": dict(variants), "redaction_counts": {"owner_refs": 4}}
+        etl.verify_owner_census(receipt, [redacted], False)
+        receipt["owner_refs_by_variant"].update(pid_pair=0, ownerpid=2)
+        with self.assertRaisesRegex(SystemExit, "variant accounting differs from pinned bytes"):
+            etl.verify_owner_census(receipt, [redacted], False)
+        del redacted["ownerRefVariant"]
+        with self.assertRaisesRegex(SystemExit, "missing or invalid"):
+            etl.owner_ref_census(redacted)
+
+    def test_current_tree_citations_survive_missing_capture_commit(self):
+        file = etl.REPO_RUN + "AdmissionJournal.ts"
+        citation = etl.source_cite(file, 'export class AdmissionProtocol extends')
+        manifest = {"corpus_commit": "0" * 40, "source": citation}
+        with patch.object(etl.subprocess, "run", side_effect=AssertionError("historical git read")):
+            etl.verify_source_citations(manifest)
+            for changed in ({"line": 0}, {"line": citation["line"] + 1},
+                            {"file": "missing-fixture.ts"}, {"needle": "missing fixture anchor"}):
+                with self.assertRaises(SystemExit):
+                    etl.verify_source_citations({"source": {**citation, **changed}})
+
+    def test_fleet_root_covers_clone_and_sibling_worktree_layouts(self):
+        root = Path("/workspace/projects")
+        self.assertEqual(etl.fleet_root(root / "beep-effect8"), root)
+        self.assertEqual(etl.fleet_root(root / "beep-effect8-worktrees/stage-b-review-fixes"), root)
+
+    def test_process_variants_mint_local_custody_before_removal(self):
+        salt = b"a" * 32
+        payload = {"schemaVersion": "yeet-admission-lease/v1", "pid": 4242, "procStart": "lease-start",
+                   "ownerPid": 9, "ownerProcStart": "lower-precedence",
+                   "runScope": {"attachedPid": 1234},
+                   "attempt": {"ownerPid": 4242, "ownerProcStart": "lease-start", "attachedPid": 9}}
+        rows, receipt = etl.transform_source(etl.encode_json(payload), "live", salt, False)
+        actual = rows[0]
+        self.assertEqual(actual["ownerRef"], actual["attempt"]["ownerRef"])
+        self.assertEqual(actual["runScope"]["ownerRef"], etl.sha256(f"1234:<absent>:{salt.hex()}".encode())[:12])
+        self.assertEqual(receipt["owner_refs_by_variant"], {"pid_pair": 1, "ownerpid": 1, "attachedpid": 1, "weak": 0})
+        self.assertEqual(receipt["redaction_counts"]["owner_refs_without_start"], 1)
+        etl.scan_output_bytes([("lease.json", etl.encode_json(actual)),
+                               ("lease.properties", etl.encode_properties_projection(rows))])
+        attempt = {"schemaVersion": etl.ATTEMPT_SCHEMA, "_tag": "attempt-started", "attemptId": "fixture",
+                   "ownerPid": 4242, "ownerProcStart": 9876}
+        rows, receipt = etl.transform_source(etl.encode_ndjson([attempt]), "attempts", salt)
+        self.assertEqual(rows[0]["ownerRef"], etl.sha256(f"4242:9876:{salt.hex()}".encode())[:12])
+        self.assertEqual(receipt["owner_refs_by_variant"]["ownerpid"], 1)
+
+    def test_normalized_variants_and_unpaired_identities_have_custody(self):
+        for payload in ({"OWNER_PID": 1234, "owner-proc-start": "start"}, {"ownerProcStart": "start"},
+                        {"parentPid": 1234}, {"futureProcessStartTicks": 42}, {"processId": 1234}):
+            with self.subTest(keys=list(payload)):
+                actual = etl.redact(payload, b"a" * 32, collections.Counter())
+                self.assertEqual(list(actual), ["ownerRef", "ownerRefVariant"])
+                self.assertEqual(etl.eligible_property_pairs(payload), [])
+        for missing in (None, ""):
+            counts = collections.Counter()
+            etl.redact({"ownerPid": 1234, "ownerProcStart": missing}, b"a" * 32, counts)
+            self.assertEqual(counts["owner_refs_without_start"], 1)
+        with self.assertRaisesRegex(SystemExit, "ambiguous"):
+            etl.redact({"ownerPid": 1, "owner_pid": 2}, b"a" * 32, collections.Counter())
+
+    def test_deployed_process_schema_members_are_covered(self):
+        files = (etl.REPO_RUN + "RunScope.schemas.ts", etl.YEET + "AttemptJournal.ts",
+                 etl.REPO_RUN + "AttemptTerminationJournal.ts", etl.REPO_RUN + "QualityScheduler.schemas.ts",
+                 etl.REPO_RUN + "AdmissionJournal.ts")
+        observed = set()
+        for file in files:
+            fields = re.findall(r"^\s*([A-Za-z_][A-Za-z0-9_]*)\s*:\s*S\.", (etl.REPO_ROOT / file).read_text(), re.MULTILINE)
+            identities = {key for key in fields if re.search(r"pid|procstart|processstart", key, re.IGNORECASE)}
+            self.assertTrue(identities, file)
+            for key in identities:
+                self.assertTrue(etl.process_member(key), (file, key))
+            observed.update(identities)
+        self.assertTrue({"attachedPid", "ownerPid", "ownerProcStart", "pid", "procStart"} <= observed)
+        self.assertRegex((etl.REPO_ROOT / etl.YEET / "Provenance.ts").read_text(), r"claudePid: S\.")
+        self.assertIn("const legacyLockOwnerPid =", (etl.REPO_ROOT / etl.REPO_RUN / "AdmissionJournal.ts").read_text())
+
+    def test_deployed_execution_join_keys_survive_redaction_and_projection(self):
+        # Enumerate the deployed verdict/attempt, retained journal, and execution schemas.
+        files = (etl.YEET + "Verdict.ts", etl.YEET + "AttemptJournal.ts",
+                 etl.YEET + "ProofState.ts", etl.REPO_RUN + "AttemptTerminationJournal.ts",
+                 etl.REPO_RUN + "RepoRun.models.ts")
+        observed = set()
+        for file in files:
+            fields = re.findall(r"^\s*([A-Za-z_][A-Za-z0-9_]*)\s*:\s*(?:S\.|UUID)",
+                                (etl.REPO_ROOT / file).read_text(), re.MULTILINE)
+            observed.update(key for key in fields if etl.normalized_member(key).endswith("id"))
+        identities = {"ownerPid", "pid"}
+        joins = observed - identities
+        self.assertEqual(joins, {"attemptId", "runId", "failedStepId", "stepId", "taskId", "id"})
+        for key in joins:
+            self.assertFalse(etl.process_member(key), key)
+        for key in identities:
+            self.assertTrue(etl.process_member(key), key)
+        for key in ("STEP_ID", "failed-step-id"):
+            self.assertFalse(etl.process_member(key), key)
+        verdict = {"runId": "fixture-run", "attemptId": "fixture-attempt",
+                   "failedStepId": "full:check", "failureKind": "step-exit"}
+        payload = {"schemaVersion": etl.ATTEMPT_SCHEMA, "_tag": "attempt-finished",
+                   "attemptId": "fixture-attempt", "stepId": "full:check", "taskId": "fixture#check",
+                   "id": "full:check",
+                   "verdict": verdict}
+        rows, receipt = etl.transform_source(etl.encode_ndjson([payload]), "attempts", b"a" * 32)
+        self.assertEqual(rows, [payload])
+        self.assertEqual(sum(receipt["owner_refs_by_variant"].values()), 0)
+        pairs = etl.eligible_property_pairs(rows[0])
+        self.assertIn(("failureKind", "step-exit"), pairs)
+        for key in joins:
+            self.assertIn((key, payload.get(key, verdict.get(key))), pairs)
+        etl.scan_output_bytes([("attempts.ndjson", etl.encode_ndjson(rows)),
+                               ("attempts.properties", etl.projected_bytes(rows, "organic"))])
+
+    def test_process_residue_uses_keys_in_both_formats(self):
+        keys = ("attachedPid", "ownerPid", "ownerProcStart", "pid", "ppid", "processId",
+                "OWNER_PID", "attached-pid", "owner_proc_start", "futureProcessStartTicks")
+        for key in keys:
+            for data in (etl.encode_json({key: "identity"}), f"{key}=identity\n".encode()):
+                with self.subTest(key=key, data=data):
+                    with self.assertRaisesRegex(SystemExit, "process identity member"):
+                        etl.scan_output_bytes([("fixture", data)])
+        with self.assertRaisesRegex(SystemExit, "process identity member"):
+            etl.scan_output_bytes([("escaped.json", b'{"owner\\u0050id":42}')])
+        benign = {"description": 'rapid cupid lipid attachedPid ownerProcStart ownerPid word',
+                  "words": ["pid", "ownerPid", "ownerProcStart"], "rapidly": "safe"}
+        self.assertEqual(etl.redact(benign, b"a" * 32, collections.Counter()), benign)
+        etl.scan_output_bytes([("safe.json", etl.encode_json(benign)),
+                               ("safe.properties", etl.encode_properties_projection([benign]))])
+        self.assertIn(("words", "ownerPid"), etl.eligible_property_pairs(benign))
+
+    def test_host_paths_require_left_boundaries_in_rewrite_and_scan(self):
+        with patch.object(etl, "FLEET_ROOT", Path("/workspace")):
+            for root, token in (("/workspace", "<fleet>"), ("/home", "<home>"), ("/tmp", "<tmp>"),
+                                ("/proc", "<proc>"), ("/dev/shm", "<shm>")):
+                for prefix in ("packages", "packages/", "word_", "word.", "~", "-", "A", "0", "/"):
+                    relative = prefix + root + "/use-cases/x.test.ts"
+                    self.assertEqual(etl.redact_string(relative), relative)
+                    etl.scan_output_bytes([(relative, relative.encode())])
+                for prefix in ("", " ", '"', "=", "(", ":", "//", ":/", "file://", "file:/"):
+                    for suffix in ("", "/beep-effect/x"):
+                        absolute = prefix + root + suffix
+                        expected = prefix + ("/" if prefix == "file://" else "") + token + suffix
+                        self.assertEqual(etl.redact_string(absolute), expected)
+                        with self.assertRaisesRegex(SystemExit, "host path"):
+                            etl.scan_output_bytes([("fixture", absolute.encode())])
+                self.assertEqual(etl.redact_string(root + "-other/x"), root + "-other/x")
+                etl.scan_output_bytes([("fixture", (root + "-other/x").encode())])
+            for relative in ("packages/run/user/123/state", "packages/proc/123/status", "packages/~/.beep/runtime/state"):
+                self.assertEqual(etl.redact_string(relative), relative)
+                etl.scan_output_bytes([("fixture", relative.encode())])
+            aliases = {"/workspace/fixture": "<synthetic-checkout:contender-a>"}
+            self.assertEqual(etl.redact_string("packages/workspace/fixture/x", aliases), "packages/workspace/fixture/x")
+
+    def test_uri_authorities_bound_host_roots_in_rewrite_and_scan(self):
+        with patch.object(Path, "home", return_value=Path("/home/alice")), \
+                patch.object(etl, "FLEET_ROOT", Path("/workspace")):
+            for scheme in ("file", "sftp", "git+ssh", "x.y-z0", "FILE"):
+                for authority in ("", "localhost", "host:2222", "[::1]:2222"):
+                    for path, expected in (("/home/alice/x", "<home>/x"),
+                                           ("/home/x", "<home>/x"),
+                                           ("/tmp/x", "<tmp>/x"),
+                                           ("/proc/123/s", "<proc>/<process>/s"),
+                                           ("/run/user/123/state", "<runtime>/state"),
+                                           ("/dev/shm/x", "<shm>/x"),
+                                           ("/workspace/project/x", "<fleet>/project/x")):
+                        raw = f"{scheme}://{authority}{path}"
+                        redacted = f"{scheme}://{authority}/{expected}"
+                        with self.subTest(raw=raw):
+                            self.assertEqual(etl.redact_string(raw), redacted)
+                            self.assertEqual(etl.redact_string(redacted), redacted)
+                            for label, data in (("fixture", raw.encode()), (raw, b""),
+                                                ("fixture.json", etl.encode_json({"uri": raw}))):
+                                with self.assertRaisesRegex(SystemExit, "host path"):
+                                    etl.scan_output_bytes([(label, data)])
+                            etl.scan_output_bytes([(redacted, redacted.encode())])
+
+    def test_uri_authorities_preserve_non_root_paths_and_stop_at_delimiters(self):
+        for value in ("packages/home/x", "https://example.com/homepage/x",
+                      "file://host/packages/home/x", "file://host/tmp-other/x",
+                      "file://host\npackages/home/x", "file://host packages/home/x",
+                      "file://host'packages/home/x", 'file://host"packages/home/x'):
+            with self.subTest(value=value):
+                self.assertEqual(etl.redact_string(value), value)
+                etl.scan_output_bytes([("fixture", value.encode())])
+        raw = 'file://localhost/tmp/x "sftp://host/proc/123/s"'
+        expected = 'file://localhost/<tmp>/x "sftp://host/<proc>/<process>/s"'
+        self.assertEqual(etl.redact_string(raw), expected)
+        etl.scan_output_bytes([("fixture", expected.encode())])
+
+    def test_file_uri_host_roots_preserve_scheme_and_reject_raw_residue(self):
+        # Model Alice's home explicitly so the fixture is independent of the test host.
+        with patch.object(Path, "home", return_value=Path("/home/alice")), \
+                patch.object(etl, "FLEET_ROOT", Path("/workspace")):
+            for raw, expected in (("file:///home/alice/x", "file:///<home>/x"),
+                                  ("file:///proc/123/status", "file:///<proc>/<process>/status"),
+                                  ("file:///workspace/project/x", "file:///<fleet>/project/x"),
+                                  ("file:///tmp/x", "file:///<tmp>/x"),
+                                  ("file:///dev/shm/x", "file:///<shm>/x"),
+                                  ("file:///run/user/123/state", "file:///<runtime>/state")):
+                with self.subTest(raw=raw):
+                    self.assertEqual(etl.redact_string(raw), expected)
+                    self.assertEqual(etl.redact_string(expected), expected)
+                    for label, data in (("fixture", raw.encode()), (raw, b"")):
+                        with self.assertRaisesRegex(SystemExit, "host path"):
+                            etl.scan_output_bytes([(label, data)])
+                    etl.scan_output_bytes([(expected, expected.encode())])
+            aliases = {"/workspace/fixture": "<synthetic-checkout:contender-a>"}
+            self.assertEqual(etl.redact_string("file:///workspace/fixture/x", aliases),
+                             "file:///<synthetic-checkout:contender-a>/x")
+
+    def test_uri_authority_redaction_keeps_synthetic_alias_precedence(self):
+        with patch.object(etl, "FLEET_ROOT", Path("/workspace")):
+            aliases = {"/workspace/fixture": "<synthetic-checkout:contender-a>"}
+            raw = "file://localhost/workspace/fixture/x"
+            expected = "file://localhost/<synthetic-checkout:contender-a>/x"
+            self.assertEqual(etl.redact_string(raw, aliases), expected)
+            self.assertEqual(etl.redact_string(expected, aliases), expected)
+            etl.scan_output_bytes([(expected, expected.encode())])
+
     def test_nested_claim_custody_and_per_capture_salt(self):
         payload = {"schemaVersion": "yeet-admission-reap-claim/v1", "_tag": "lease", "nonce": "owner",
                    "sourcePath": str(Path(tempfile.gettempdir()) / "owner-4242.lease.json"),
@@ -101,7 +434,7 @@ class RedactionTests(unittest.TestCase):
         self.assertEqual(actual["lease"]["ownerRef"], etl.sha256(f"4242:start:{(b'a' * 32).hex()}".encode())[:12])
         self.assertNotEqual(actual["lease"]["ownerRef"], actual["ticket"]["ownerRef"])
         self.assertEqual(receipt["redaction_counts"]["owner_refs"], 3)
-        self.assertEqual(receipt["redaction_counts"]["owner_refs_without_proc_start"], 1)
+        self.assertEqual(receipt["redaction_counts"]["owner_refs_without_start"], 1)
         self.assertEqual(actual["ticket"]["n"], 5)
         self.assertIs(actual["ticket"]["flag"], False)
         self.assertIsNone(actual["ticket"]["null"])
@@ -208,7 +541,7 @@ class PinContractTests(unittest.TestCase):
         self.patches.enter_context(patch.object(etl, "source_facts", return_value={}))
         self.patches.enter_context(patch.object(etl, "known_losses", return_value=[]))
         self.patches.enter_context(patch.object(etl, "join_keys", return_value={}))
-        self.patches.enter_context(patch.object(etl, "source_cite", return_value={"file": "fixture.md", "line": 1, "needle": "fixture", "sha256": "a" * 64}))
+        self.patches.enter_context(patch.object(etl, "source_cite", return_value=etl.source_cite(etl.REPO_RUN + "AdmissionJournal.ts", "export class AdmissionProtocol extends")))
         self.patches.enter_context(patch.object(etl, "git", return_value="a" * 40))
 
     def run_main(self, *args):
@@ -230,7 +563,7 @@ class PinContractTests(unittest.TestCase):
         repair = importlib.util.module_from_spec(spec)
         with patch.object(sys, "dont_write_bytecode", True):
             spec.loader.exec_module(repair)
-        cache = Path.home() / ".cache/beep"
+        cache = etl.REPO_ROOT / ".beep/corpus-test-repos"
         cache.mkdir(parents=True, exist_ok=True)
         with tempfile.TemporaryDirectory(dir=cache) as name:
             repo = Path(name)
@@ -260,6 +593,25 @@ class PinContractTests(unittest.TestCase):
                     payloads = {raw.path: etl.encode_ndjson(rows),
                                 etl.projection_path(raw.path): etl.projected_bytes(rows, metadata["provenance"])}
                     emitted = [dataclasses.replace(e, data=payloads.get(e.path, e.data)) for e in emitted]
+                    def remove_variants(value):
+                        if isinstance(value, dict):
+                            value.pop("ownerRefVariant", None)
+                            for child in value.values():
+                                remove_variants(child)
+                        elif isinstance(value, list):
+                            for child in value:
+                                remove_variants(child)
+                    old_payloads = {}
+                    for entry in emitted:
+                        if entry.receipt["kind"] == etl.PROJECTION_KIND:
+                            continue
+                        old_rows = etl.decode_ndjson(entry.data, entry.path) if entry.path.endswith(".ndjson") else [etl.decode_json(entry.data, entry.path)]
+                        remove_variants(old_rows)
+                        old_payloads[entry.path] = etl.encode_ndjson(old_rows) if entry.path.endswith(".ndjson") else etl.encode_json(old_rows[0])
+                        old_payloads[etl.projection_path(entry.path)] = etl.projected_bytes(old_rows, metadata["provenance"])
+                    emitted = [dataclasses.replace(entry, data=old_payloads[entry.path]) for entry in emitted]
+                    metadata["custody"].pop("variant_source")
+                    metadata["admission_roots"][0]["journal"].pop("owner_refs_by_variant")
                     manifest = etl.finish_manifest(metadata, emitted, population)
                     for e in emitted:
                         destination = root / e.path
@@ -289,6 +641,8 @@ class PinContractTests(unittest.TestCase):
                     manifest = yaml.safe_load((root / etl.MANIFEST_NAME).read_bytes())
                     self.assertEqual(manifest["security_resanitization"]["source_manifest_sha256"], originals[population])
                     self.assertEqual(manifest["security_resanitization"]["changed_raw_payloads"], 1)
+                    self.assertTrue(manifest["custody"]["census_migration"]["legacy"])
+                    self.assertTrue(manifest["security_resanitization"]["custody_census_migration"]["legacy"])
                     self.assertEqual(manifest["provenance"], "organic" if population == "fleet" else "synthetic")
                     projection = (root / etl.projection_path(messages[population])).read_bytes()
                     self.assertEqual(projection, etl.projected_bytes(rows, manifest["provenance"]))
@@ -299,6 +653,89 @@ class PinContractTests(unittest.TestCase):
         with self.assertRaisesRegex(SystemExit, "READY"):
             etl.capture("synthetic", self.export)
         self.assertFalse(self.outputs["synthetic"].exists())
+
+    def test_synthetic_requires_each_termination_journal(self):
+        for label in ("dead-lease", "dead-ticket"):
+            journal = next((self.export / "checkouts" / label).rglob("attempts.ndjson"))
+            original = journal.read_bytes()
+            try:
+                journal.unlink()
+                with self.assertRaisesRegex(SystemExit, "exactly one attempts.ndjson"):
+                    etl.capture("synthetic", self.export)
+            finally:
+                journal.write_bytes(original)
+
+    def test_synthetic_rejects_duplicate_journals_and_termination_rows(self):
+        journal = next((self.export / "checkouts/dead-lease").rglob("attempts.ndjson"))
+        duplicate = journal.parent.with_name("duplicate") / journal.name
+        duplicate.parent.mkdir()
+        duplicate.write_bytes(journal.read_bytes())
+        with self.assertRaisesRegex(SystemExit, "exactly one attempts.ndjson"):
+            etl.capture("synthetic", self.export)
+        duplicate.unlink()
+        journal.write_bytes(journal.read_bytes() * 2)
+        with self.assertRaisesRegex(SystemExit, "exactly one attempt-terminated row"):
+            etl.capture("synthetic", self.export)
+
+    def test_synthetic_rejects_missing_row_mismatched_attempt_and_reason(self):
+        for label in ("dead-lease", "dead-ticket"):
+            journal = next((self.export / "checkouts" / label).rglob("attempts.ndjson"))
+            original = journal.read_bytes()
+            row = etl.decode_ndjson(original, "fixture")[0]
+            for changed, error in (([], "exactly one attempt-terminated row"),
+                                   ([{**row, "attemptId": "wrong"}], "attemptId differs"),
+                                   ([{**row, "reason": "wrong"}], "reason differs")):
+                try:
+                    journal.write_bytes(etl.encode_ndjson(changed))
+                    with self.assertRaisesRegex(SystemExit, error):
+                        etl.capture("synthetic", self.export)
+                finally:
+                    journal.write_bytes(original)
+
+    def test_termination_join_receipt_is_recomputed_at_replay(self):
+        emitted, metadata = etl.capture("synthetic", self.export)
+        joins = metadata["termination_join"]
+        for label, reason in (("dead-lease", "lease-eviction"), ("dead-ticket", "queued-submitter-death")):
+            self.assertEqual(joins[label], {"journal_path": f"attempts/{label}/main-fixture/attempts.ndjson",
+                "attemptId": "lease-attempt" if label == "dead-lease" else "ticket-attempt",
+                "attemptId_match": True, "reason": reason})
+        metadata["termination_join"]["dead-lease"]["reason"] = "invented"
+        # Recompute byte totals and hashes to isolate the receipt binding check.
+        with self.assertRaisesRegex(SystemExit, "synthetic termination join"):
+            etl.write_staged_capture(emitted, etl.finish_manifest(metadata, emitted, "synthetic"), self.outputs["synthetic"], "synthetic")
+
+    def test_termination_join_replay_rejects_coherent_missing_payload(self):
+        emitted, metadata = etl.capture("synthetic", self.export)
+        removed = "attempts/dead-ticket/main-fixture/attempts.ndjson"
+        emitted = [payload for payload in emitted if payload.path not in (removed, etl.projection_path(removed))]
+        metadata["sources"] = [receipt for receipt in metadata["sources"] if receipt.get("path") != removed]
+        next(checkout for checkout in metadata["checkouts"] if checkout["checkout"] == "dead-ticket")["attempt_files"] = 0
+        with self.assertRaisesRegex(SystemExit, "exactly one attempts.ndjson"):
+            etl.write_staged_capture(emitted, etl.finish_manifest(metadata, emitted, "synthetic"), self.outputs["synthetic"], "synthetic")
+
+    def test_contender_a_accepts_absent_journal_but_rejects_nonempty(self):
+        journal = next((self.export / "checkouts/contender-a").rglob("attempts.ndjson"))
+        journal.unlink()
+        etl.capture("synthetic", self.export)
+        journal.write_bytes(next((self.export / "checkouts/dead-lease").rglob("attempts.ndjson")).read_bytes())
+        with self.assertRaisesRegex(SystemExit, "contender-a attempts receipt must be empty"):
+            etl.capture("synthetic", self.export)
+
+    def test_malformed_synthetic_contender_journal_refuses_pin(self):
+        journal = next((self.export / "checkouts/contender-a").rglob("attempts.ndjson"))
+        journal.write_text("{bad json\n")
+        with self.assertRaisesRegex(SystemExit, "synthetic source has undecodable rows"):
+            self.run_main("--synthetic-root", self.export)
+        self.assertFalse(self.outputs["synthetic"].exists())
+
+    def test_coherent_variant_receipt_and_aggregate_rewrite_is_rejected(self):
+        emitted, metadata = etl.capture("synthetic", self.export)
+        for census in (metadata["admission_roots"][0]["journal"]["owner_refs_by_variant"],
+                       metadata["custody"]["owner_refs_by_variant"]):
+            census["pid_pair"] -= 1
+            census["ownerpid"] += 1
+        with self.assertRaisesRegex(SystemExit, "variant accounting differs from pinned bytes"):
+            etl.write_staged_capture(emitted, etl.finish_manifest(metadata, emitted, "synthetic"), self.outputs["synthetic"], "synthetic")
 
     def test_expected_mismatch_refuses_pin(self):
         scenario = copy.deepcopy(self.scenario)
