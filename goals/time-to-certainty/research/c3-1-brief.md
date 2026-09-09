@@ -147,3 +147,27 @@ No push, no publish, no merge, no edits outside the files this brief names plus 
 pin them; no new dependencies; no `Set`/`Map`/`node:http`; no Effect v3 APIs; Yeet inbox rows
 are acknowledged only with attributed forms; stop and write the blocker into the results file if
 a stage cannot be completed as specified rather than improvising a different design.
+
+## Amendment 2026-09-09 — commit contract (sandbox signing)
+
+The lane's sandbox cannot reach the station's 1Password SSH signing agent, so the lane makes
+**no git write commands at all** (no `git add`, `git commit`, `git stash`, `git checkout --`).
+Instead, at the end of each stage it appends to the results file a `### Stage <X> — files`
+section listing every path it created, changed, or deleted (one per line, repo-relative), then
+continues with the next stage. The orchestrator stages those paths and creates the signed
+per-stage commits. The graft code-graph tool is disabled for the lane; if `graft/` or `.ignore`
+residue reappears, delete it and never list it. Verification commands of the brief still run
+inside the lane (they need no git writes); `docgen:local` may use the local cache only.
+
+## Amendment 2026-09-09 (2) — verification split (sandbox cannot spawn Node)
+
+The lane's sandbox denies Node child processes (`spawnSync … EPERM` inside the tsgo shim), so
+the canonical package verification (`beep quality package-verify`, `docgen:local`, Turbo runs)
+is the orchestrator's job after each stage, outside the sandbox. Inside the lane, verify each
+stage with the Bun-runtime checks only: `bunx --no-install biome check --write <files>`,
+`bunx --bun --no-install tsgo -p packages/tooling/tool/cli/tsconfig.check.json --pretty false`
+(and `tsconfig.test.json` for tests), and `bunx --bun --no-install vitest run <test files>
+--pool=threads` from the package directory. Record those results and the file list per stage,
+then continue to the next stage without waiting; do not acknowledge Yeet inbox rows for
+sandbox-only failures (the orchestrator attributes them). Stage A is accepted by the
+orchestrator's own run of the canonical verification.

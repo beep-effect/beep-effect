@@ -293,4 +293,73 @@ session/machine ids, quote only the minimal identifying error text.
   edit into an unrelated PR or a second PR that must also clear admission.
 - **Would have prevented it:** a scheduled OSV rescan of `main` (nightly research routine or a
   cron lane) that opens the exception PR itself when a no-fix advisory lands, so branch PRs meet a
-  green base instead of discovering the advisory first.
+green base instead of discovering the advisory first.
+
+## 2026-09-08 — C3.1 implementation session cannot write worktree Git metadata
+
+- **Doing:** checking the brief's mandatory stage commit capability before Stage A.
+- **Evidence:** `git add goals/time-to-certainty/research/c3-1-implementation.md`
+  exited 128 with `Unable to create '<worktree-git-dir>/index.lock': Read-only file system`.
+  The worktree is writable but its Git metadata is in the sibling checkout outside
+  the session's writable roots; approval policy is `never`.
+- **Would have prevented it:** launch the implementation lane from a verified
+  Full-access parent, or provision writable access to the worktree's actual Git
+  metadata as well as its files before assigning mandatory commit checkpoints.
+
+### 2026-09-08 — C3.1 resume blocked by typo scan of tool residue
+
+- Action: explicitly staged the C3.1 results file and attempted the required
+  resume commit after Git metadata write access was repaired.
+- Evidence: staging succeeded; pre-commit `typos` exited 2 on `adjascent` at
+  `graft/scratchpad/glob/internal/minimatch.md:26`. Gitleaks passed. The generated
+  residue was not staged, but the typo hook scanned it anyway.
+- Prevention: exclude generated `graft/` residue from the typo hook's input
+  selection. No hook bypass or residue edit was attempted; Stage A is pending.
+
+## 2026-09-08 — C3.1 resume blocked by unavailable Git signing socket
+
+- **Doing:** committing the required resume checkpoint after repairing Git
+  metadata access and removing generated tool residue.
+- **Evidence:** gitleaks, typos, and commitlint passed; Git exited 128 with
+  `1Password: Could not connect to socket` and `failed to write commit object`.
+  The configured SSH signer is `op-ssh-sign`. One `op-doctor` run exited 6,
+  reporting sandbox-blocked probes and an unavailable user bus.
+- **Would have prevented it:** verify that the implementation session can reach
+  the configured Git signing agent before assigning mandatory commit stages,
+  alongside writable worktree metadata and clean hook inputs.
+
+## 2026-09-08 — C3.1 Stage A compiler launch denied
+
+While checking the new scripts schemas, `bunx --no-install tsgo -p
+ tsconfig.check.json --pretty false` from the CLI workspace exited 1 in the
+existing tsgo shim: `spawnSync <node-executable> EPERM` while requesting
+`@effect/tsgo/dist/effect-tsgo.cjs get-exe-path`. This is an environment launch
+failure before compiler diagnostics, not evidence about the new schemas.
+A lane preflight exercising the actual compiler subprocess would have exposed
+this independently of the earlier Git/signing fixes. The initial focused Vitest
+command used the root cwd and found no tests; corrected to the package cwd.
+
+### Stage A validation follow-up
+
+The Bun-runtime diagnostic (`bunx --bun --no-install tsgo`) reached the compiler
+and exposed two introduced errors: a chained pipe and an unavailable HashSet
+helper. Both are fixed; the focused compiler check passes. The focused default
+Vitest fork pool then failed before test execution with
+`Timeout waiting for worker to respond`; its thread-pool diagnostic passes all
+four new schema tests. Full package verification is being rerun after the fixes.
+The first audit failure is acknowledged with an attributed one-hour waiver while
+that verification runs; signing the corrective work remains the orchestrator's
+responsibility. The waiver is not a passing audit or an environment-only
+reclassification of the original compiler errors.
+
+### Canonical command confirms the environment blocker
+
+After the introduced compiler errors were fixed, the exact required command
+`CI=true TMPDIR=/tmp bun run beep quality package-verify @beep/repo-cli`
+passed the package build and docgen, then failed in `beep:check` before compiler
+startup: `spawnSync <node-executable> EPERM` while resolving
+`effect-tsgo get-exe-path`. Audit failed in 6.7 seconds; docgen passed in 18.5
+seconds. The latest audit outcome is environment-only, superseding the temporary
+waiver for the earlier, corrected source diagnostics. Fix the sandbox's Node
+child-process capability, then rerun the canonical audit without replacing it
+with the successful Bun-runtime diagnostic. The brief's hard stop applies.
