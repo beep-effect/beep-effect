@@ -61,6 +61,8 @@ type CiLaneEnvironment = FileSystem.FileSystem | FsUtils | Path.Path | ChildProc
 
 const JSDOC_CI_INVENTORY_JSON_PATH = ".beep/ci/jsdoc-documentation.inventory.jsonc";
 const JSDOC_CI_INVENTORY_MARKDOWN_PATH = ".beep/ci/jsdoc-documentation.inventory.md";
+const STORYBOOK_TURBO_SELECT_FILTER = "--filter=@beep/storybook";
+const STORYBOOK_STATIC_INDEX_PATH = "apps/storybook/storybook-static/index.html";
 const normalizeSlashes = (value: string): string => Str.replace(/\\/g, "/")(value);
 
 /**
@@ -205,6 +207,7 @@ export const CI_LANE_ID_VALUES = [
   "sast",
   "secrets",
   "security",
+  "storybook",
   "test-integration",
   "test-unit",
 ] as const;
@@ -591,6 +594,22 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
     flags: ["--summarize"],
     notes:
       "Path-gated in the workflow to direct apps/labs/** changes on PRs; push and local replays run the full labs glob. Zero labs => zero tasks (green).",
+  }),
+  // Quality-lane audit D13: Storybook used to build and browser-test on every
+  // PR with no gate, no descriptor, and no local replay (584 s per PR). The
+  // lane body now lives here; storybook.yml carries the change-profile gate
+  // (storybook_relevant from scripts/ci-change-profile.sh), the Playwright
+  // browser cache, and the artifact upload. Non-required: never add
+  // "Storybook" to ruleset 10240248 without a stable green history.
+  CiLaneDescriptor.make({
+    id: "storybook",
+    contextName: "Storybook",
+    required: false,
+    laneClass: "workflow-gated",
+    replay: "exact",
+    flags: [...TURBO_SHAPE_FLAGS],
+    notes:
+      "Builds and browser-tests @beep/storybook through one positive Turbo filter (never --affected: Turbo unions filters). --affected --base drives the CLI-side change-profile gate instead, so local and PR replays skip when no Storybook input changed. Requires Playwright Chromium (bunx playwright install chromium).",
   }),
 ];
 
@@ -1483,6 +1502,33 @@ export const ciLaneStepsForTesting: {
       sast: () => [bunRunStep(repoRoot, "ci:sast", ["beep", "quality", "github-checks", "sast"])],
       secrets: () => [bunRunStep(repoRoot, "ci:secrets", ["beep", "quality", "github-checks", "secrets"])],
       security: () => [bunRunStep(repoRoot, "ci:security", ["beep", "quality", "github-checks", "security"])],
+      // Quality-lane audit D13: one positively-filtered build, the browser test
+      // run, then the static-artifact proof storybook.yml uploads. Deliberately
+      // no --affected on the Turbo argv (filter union hazard, same as labs);
+      // the affected shape gates the whole lane in runCiStepLane instead.
+      storybook: () => [
+        QualityTaskStep.make({
+          label: "ci:storybook:build",
+          command: "bunx",
+          args: directTurboArgs(
+            ["storybook:build"],
+            [STORYBOOK_TURBO_SELECT_FILTER, ...(options.summarize ? ["--summarize"] : A.empty<string>())]
+          ),
+          cwd: repoRoot,
+        }),
+        QualityTaskStep.make({
+          label: "ci:storybook:test",
+          command: "bunx",
+          args: directTurboArgs(["test:storybook"], [STORYBOOK_TURBO_SELECT_FILTER]),
+          cwd: repoRoot,
+        }),
+        QualityTaskStep.make({
+          label: "ci:storybook:artifact",
+          command: "test",
+          args: ["-f", STORYBOOK_STATIC_INDEX_PATH],
+          cwd: repoRoot,
+        }),
+      ],
       "test-integration": () => [turboRootLaneStep(repoRoot, "test-integration", "test", ["--integration"], options)],
       "test-unit": () => [
         turboRootLaneStep(repoRoot, "test-unit", "test", ["--unit", HOSTED_16GB_TURBO_CONCURRENCY_ARG], options),
@@ -1611,29 +1657,119 @@ export const docgenLaneModeForChangedPaths = (changedPaths: ReadonlyArray<string
       ? "affected"
       : "none";
 
+/**
+ * POSIX ERE (and JavaScript-compatible) pattern for Storybook lane inputs.
+ *
+ * **Details**
+ *
+ * This is the single definition of the Storybook change profile: the app,
+ * the ui-system packages and graph-3d driver whose stories it mounts, any
+ * story file or `stories/` directory, the Storybook configs, the workflow,
+ * gate, and lane bodies, and the root dependency graph. The CLI gate uses it
+ * through {@link isStorybookLaneInput}; `scripts/ci-change-profile.sh` embeds
+ * the identical literal for the pre-install workflow gate, and a unit test
+ * pins the two together.
+ *
+ * **Example** (Inspect the profile)
+ *
+ * ```ts
+ * import { STORYBOOK_LANE_INPUT_PATTERN } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(new RegExp(STORYBOOK_LANE_INPUT_PATTERN, "u").test("apps/storybook/package.json")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const STORYBOOK_LANE_INPUT_PATTERN =
+  "^(apps/storybook/|packages/foundation/ui-system/|packages/drivers/graph-3d/|\\.github/workflows/storybook\\.yml$|scripts/ci-change-profile\\.sh$|packages/tooling/tool/cli/src/commands/Ci/CiLane\\.ts$|(bun\\.lock|package\\.json|turbo\\.json)$)|(^|/)(stories/|\\.storybook/)|\\.stories\\.tsx$|vitest\\.storybook\\.(config|setup)\\.ts$";
+
+const storybookLaneInput = new RegExp(STORYBOOK_LANE_INPUT_PATTERN, "u");
+
+/**
+ * Whether one changed repository path is a Storybook lane input.
+ *
+ * **Example** (Classify changed paths)
+ *
+ * ```ts
+ * import { isStorybookLaneInput } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(isStorybookLaneInput("packages/foundation/ui-system/ui/stories/button.stories.tsx")) // true
+ * console.log(isStorybookLaneInput("docs/README.md")) // false
+ * ```
+ *
+ * @param file - Normalized repository-relative path.
+ * @returns `true` when the Storybook lane must run for this change.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const isStorybookLaneInput = (file: string): boolean => O.isSome(Str.match(storybookLaneInput)(file));
+
+/**
+ * Whether a base-to-head change set touches any Storybook lane input.
+ *
+ * **Example** (Gate the Storybook lane)
+ *
+ * ```ts
+ * import { storybookLaneInputsChanged } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(storybookLaneInputsChanged(["docs/README.md", "bun.lock"])) // true
+ * console.log(storybookLaneInputsChanged(["docs/README.md"])) // false
+ * ```
+ *
+ * @param changedPaths - Normalized base-to-head repository paths.
+ * @returns `true` when at least one path is a Storybook lane input.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const storybookLaneInputsChanged = (changedPaths: ReadonlyArray<string>): boolean =>
+  A.some(changedPaths, isStorybookLaneInput);
+
 const normalizedOutputPaths = (output: string): ReadonlyArray<string> =>
   pipe(Str.split(/\r?\n/u)(output), A.map(normalizeSlashes), A.filter(Str.isNonEmpty), A.dedupe, A.sort(Order.String));
+
+const changedPathsBetween = Effect.fn("CiLane.changedPathsBetween")(function* (
+  repoRoot: string,
+  base: string,
+  head: string,
+  purpose: string
+): Effect.fn.Return<ReadonlyArray<string>, CiCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+  const result = yield* runCaptured({
+    command: "git",
+    args: ["diff", "--name-only", `${base}...${head}`],
+    cwd: repoRoot,
+    source: "stdout",
+  }).pipe(CiCommandError.mapError(`Failed to resolve ${purpose}.`));
+  if (result.exitCode !== 0) {
+    return yield* CiCommandError.make({
+      message: `git diff for ${purpose} failed with exit code ${result.exitCode}.`,
+    });
+  }
+  return normalizedOutputPaths(result.output);
+});
 
 const resolveAutoDocgenLaneMode = Effect.fn("CiLane.resolveAutoDocgenLaneMode")(function* (
   repoRoot: string,
   base: string,
   head: string
 ): Effect.fn.Return<DocgenLaneMode, CiCommandError, ChildProcessSpawner.ChildProcessSpawner> {
-  const result = yield* runCaptured({
-    command: "git",
-    args: ["diff", "--name-only", `${base}...${head}`],
-    cwd: repoRoot,
-    source: "stdout",
-  }).pipe(CiCommandError.mapError("Failed to resolve automatic Docgen scope."));
-  if (result.exitCode !== 0) {
-    return yield* CiCommandError.make({
-      message: `git diff for automatic Docgen scope failed with exit code ${result.exitCode}.`,
-    });
-  }
-  const changedPaths = normalizedOutputPaths(result.output);
+  const changedPaths = yield* changedPathsBetween(repoRoot, base, head, "automatic Docgen scope");
   const mode = docgenLaneModeForChangedPaths(changedPaths);
   yield* Console.log(`[ci] docgen: auto-selected ${mode} from ${A.length(changedPaths)} changed path(s)`);
   return mode;
+});
+
+const resolveStorybookLaneRelevance = Effect.fn("CiLane.resolveStorybookLaneRelevance")(function* (
+  repoRoot: string,
+  base: string,
+  head: string
+): Effect.fn.Return<boolean, CiCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+  const changedPaths = yield* changedPathsBetween(repoRoot, base, head, "the Storybook change profile");
+  const relevant = storybookLaneInputsChanged(changedPaths);
+  yield* Console.log(
+    `[ci] storybook: ${relevant ? "Storybook inputs changed" : "no Storybook input changed"} across ${A.length(changedPaths)} changed path(s) (${base}...${head})`
+  );
+  return relevant;
 });
 
 const runCiStepLane = Effect.fn("CiLane.runCiStepLane")(function* (
@@ -1648,6 +1784,16 @@ const runCiStepLane = Effect.fn("CiLane.runCiStepLane")(function* (
           mode: yield* resolveAutoDocgenLaneMode(repoRoot, options.base, options.head),
         })
       : options;
+  // The Storybook lane's affected shape is a change-profile gate, mirroring
+  // the storybook.yml lane-gate so a local replay skips the same PRs.
+  if (
+    laneId === "storybook" &&
+    options.affected &&
+    !(yield* resolveStorybookLaneRelevance(repoRoot, options.base, options.head))
+  ) {
+    yield* Console.log("[ci] storybook: no Storybook input changed for this change set (skipped)");
+    return;
+  }
   const steps = ciLaneStepsForTesting(repoRoot, laneId, resolvedOptions);
   if (A.isReadonlyArrayEmpty(steps)) {
     yield* Console.log(`[ci] ${laneId}: no steps for this configuration (skipped)`);
@@ -2314,6 +2460,7 @@ const CI_LOCAL_DEFAULT_LANES: ReadonlyArray<CiLaneId> = [
   "test-unit",
   "ecosystem",
   "labs",
+  "storybook",
   "test-integration",
   "property",
   "docgen",
@@ -2324,7 +2471,7 @@ const CI_LOCAL_DEFAULT_LANES: ReadonlyArray<CiLaneId> = [
   "nix",
 ];
 
-const CI_LOCAL_FAST_SKIPS: ReadonlyArray<CiLaneId> = ["coverage", "test-integration", "nix"];
+const CI_LOCAL_FAST_SKIPS: ReadonlyArray<CiLaneId> = ["coverage", "storybook", "test-integration", "nix"];
 
 type CiLocalOptions = {
   readonly affected: boolean;
@@ -2432,6 +2579,9 @@ const ciLocalLaneFlags = (laneId: CiLaneId, plan: CiLocalStepPlan): ReadonlyArra
     sast: A.empty<string>,
     secrets: A.empty<string>,
     security: A.empty<string>,
+    // The affected shape is the CLI-side change-profile gate, not a Turbo
+    // selector (see the storybook lane body).
+    storybook: () => turboShapeFlags,
     "test-integration": () => turboShapeFlags,
     "test-unit": () => turboShapeFlags,
   });

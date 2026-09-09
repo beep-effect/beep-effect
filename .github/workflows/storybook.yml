@@ -14,21 +14,51 @@ permissions:
   contents: read
 
 jobs:
-  build-and-test:
-    name: Build And Test
+  storybook:
+    # Quality-lane audit D13: the lane body lives in the beep CLI
+    # (`beep ci lane storybook`) so it replays locally; this workflow carries
+    # the change-profile gate, the Playwright browser cache, and the artifact
+    # upload. Non-required: never add "Storybook" to ruleset 10240248 without
+    # a stable green history.
+    name: Storybook
     runs-on: ubuntu-24.04
     timeout-minutes: 60
+    environment: ${{ github.event_name == 'push' && 'turbo-cache-write' || null }}
+    permissions:
+      contents: read
     steps:
       - name: Checkout repository
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
-          fetch-depth: 100
+          fetch-depth: 0
+          filter: blob:none
           persist-credentials: false
+
+      - name: Fetch pull request base
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
+
+      - name: Determine lane execution
+        id: lane-gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          should_run=true
+          # storybook_relevant (scripts/ci-change-profile.sh) is the same
+          # profile the CLI lane applies under --affected; pushes always run.
+          eval "$(scripts/ci-change-profile.sh "origin/${GITHUB_BASE_REF:-main}")"
+          if [[ "$goals_only" == "true" || "$storybook_relevant" != "true" ]]; then
+            should_run=false
+          fi
+          echo "should_run=$should_run" >> "$GITHUB_OUTPUT"
 
       # Storybook build + Playwright Chromium + a large monorepo checkout can
       # exhaust the runner's disk ("No space left on device"); the composite
       # action's free-disk cleanup runs before the install.
       - name: Setup monorepo CI
+        if: steps.lane-gate.outputs.should_run == 'true'
         uses: ./.github/actions/setup-monorepo-ci
         with:
           cache-turbo: "true"
@@ -39,21 +69,69 @@ jobs:
           turbo-team: ${{ vars.TURBO_TEAM }}
           repository-secrets: ${{ toJSON(secrets) }}
 
+      # Every event restores the browser cache; only trusted pushes save it, so
+      # a pull request cannot seed the entry main restores. The install step is
+      # a no-op download on a hit and still provisions the OS dependencies.
+      - name: Restore Playwright Chromium cache
+        if: steps.lane-gate.outputs.should_run == 'true'
+        id: playwright-cache-restore
+        continue-on-error: true
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+          restore-keys: |
+            playwright-chromium-${{ runner.os }}-
+
       - name: Install Playwright Chromium
+        if: steps.lane-gate.outputs.should_run == 'true'
         run: bunx playwright install --with-deps chromium
 
-      - name: Build Storybook
-        run: bunx turbo run storybook:build --filter=@beep/storybook --summarize
+      - name: Save Playwright Chromium cache
+        if: steps.lane-gate.outputs.should_run == 'true' && github.event_name == 'push' && steps.playwright-cache-restore.outputs.cache-hit != 'true'
+        continue-on-error: true
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ runner.os }}-${{ hashFiles('bun.lock') }}
 
-      - name: Run Storybook browser tests
-        run: bunx turbo run test:storybook --filter=@beep/storybook
+      - name: Run Storybook lane
+        if: steps.lane-gate.outputs.should_run == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Same process-group reaping as check.yml: orphaned lane
+          # grandchildren must not wedge the job after the lane exits.
+          run_lane() {
+            setsid bun run beep "$@" < /dev/null &
+            local pgid=$!
+            local status=0
+            wait "$pgid" || status=$?
+            kill -TERM -- "-$pgid" 2>/dev/null || true
+            sleep 2
+            kill -KILL -- "-$pgid" 2>/dev/null || true
+            return "$status"
+          }
 
-      - name: Prove static artifact
-        run: test -f apps/storybook/storybook-static/index.html
+          shape_args=()
+          if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+            shape_args+=(--affected --base "origin/${GITHUB_BASE_REF:-main}")
+          fi
+          shape_args+=(--summarize)
+          run_lane ci lane storybook "${shape_args[@]}"
+
+      - name: Append Turbo summary
+        if: steps.lane-gate.outputs.should_run == 'true' && always()
+        run: bun run beep ci append-turbo-summary
 
       - name: Upload Storybook static artifact
+        if: steps.lane-gate.outputs.should_run == 'true'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: storybook-static
           path: apps/storybook/storybook-static
           if-no-files-found: error
+
+      - name: Skip lane
+        if: steps.lane-gate.outputs.should_run != 'true'
+        run: echo "Skipping Storybook for this change set."

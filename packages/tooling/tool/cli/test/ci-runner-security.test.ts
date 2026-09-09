@@ -265,6 +265,90 @@ describe("CI runner security", () => {
     }, provideScopedLayer(NodeServices.layer))
   );
 
+  // Quality-lane audit D13: Storybook is gated on its change profile before
+  // the install, restores the Playwright browser cache on every event, and
+  // saves it only on trusted pushes.
+  it.effect(
+    "gates the Storybook lane on its change profile and keeps the browser cache push-saved",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const repoRoot = yield* findRepoRoot();
+      const tempRoot = yield* fs.makeTempDirectoryScoped();
+      const scriptPath = path.join(repoRoot, "scripts/ci-change-profile.sh");
+      const workflowText = yield* fs.readFileString(path.join(repoRoot, ".github/workflows/storybook.yml"));
+      const workflow = parseDocument(workflowText);
+      const git = gitIn(tempRoot);
+      const profile = (eventName: string) => changeProfile(scriptPath, tempRoot, eventName);
+      const writeAndCommit = Effect.fnUntraced(function* (relativePath: string, content: string, message: string) {
+        yield* fs.makeDirectory(path.dirname(path.join(tempRoot, relativePath)), { recursive: true });
+        yield* fs.writeFileString(path.join(tempRoot, relativePath), content);
+        git(["add", "."]);
+        git(["commit", "-m", message]);
+      });
+
+      git(["init"]);
+      git(["config", "user.email", "ci-profile@example.test"]);
+      git(["config", "user.name", "CI Profile Test"]);
+      yield* writeAndCommit("README.md", "# baseline\n", "baseline");
+      git(["update-ref", "refs/remotes/origin/main", git(["rev-parse", "HEAD"])]);
+      const baseline = git(["rev-parse", "HEAD"]);
+
+      yield* writeAndCommit("docs/notes.md", "# docs only\n", "docs only");
+      assert.strictEqual(profile("pull_request").storybook_relevant, "false");
+      assert.strictEqual(profile("push").storybook_relevant, "true");
+
+      git(["reset", "--hard", baseline]);
+      yield* writeAndCommit(
+        "packages/foundation/ui-system/ui/stories/button.stories.tsx",
+        "export default {};\n",
+        "story change"
+      );
+      assert.strictEqual(profile("pull_request").storybook_relevant, "true");
+
+      git(["reset", "--hard", baseline]);
+      yield* writeAndCommit("packages/foundation/schema/src/index.ts", "export {};\n", "schema change");
+      assert.strictEqual(profile("pull_request").storybook_relevant, "false");
+
+      git(["reset", "--hard", baseline]);
+      yield* writeAndCommit("turbo.json", "{}\n", "turbo change");
+      assert.strictEqual(profile("pull_request").storybook_relevant, "true");
+
+      assert.lengthOf(workflow.errors, 0);
+      const steps = jobSteps(workflowJobs(workflow), "storybook");
+      const gate = "steps.lane-gate.outputs.should_run == 'true'";
+      for (const name of [
+        "Setup monorepo CI",
+        "Restore Playwright Chromium cache",
+        "Install Playwright Chromium",
+        "Run Storybook lane",
+        "Upload Storybook static artifact",
+      ]) {
+        assert.strictEqual(stepByName(steps, name).if, gate, name);
+      }
+      assert.include(workflowText, 'if [[ "$goals_only" == "true" || "$storybook_relevant" != "true" ]]');
+      const restore = stepByName(steps, "Restore Playwright Chromium cache");
+      const save = stepByName(steps, "Save Playwright Chromium cache");
+      assert.strictEqual(restore.with?.path, "~/.cache/ms-playwright");
+      assert.strictEqual(restore.with?.key, "playwright-chromium-${{ runner.os }}-${{ hashFiles('bun.lock') }}");
+      assert.include(save.if, "github.event_name == 'push'");
+      assert.strictEqual(save.with?.key, restore.with?.key);
+      assert.isBelow(
+        stepIndexByName(steps, "Install Playwright Chromium"),
+        stepIndexByName(steps, "Save Playwright Chromium cache")
+      );
+      assert.isBelow(
+        stepIndexByName(steps, "Save Playwright Chromium cache"),
+        stepIndexByName(steps, "Run Storybook lane")
+      );
+      assert.strictEqual(workflow.getIn(["jobs", "storybook", "name"]), "Storybook");
+      assert.strictEqual(
+        workflow.getIn(["jobs", "storybook", "environment"]),
+        "${{ github.event_name == 'push' && 'turbo-cache-write' || null }}"
+      );
+    }, provideScopedLayer(NodeServices.layer))
+  );
+
   it.effect(
     "keeps the legacy non-ephemeral burst launcher retired",
     Effect.fnUntraced(function* () {
@@ -329,7 +413,7 @@ describe("CI runner security", () => {
         [workflowJobs(workflow), "fallow-advisory", false],
         [workflowJobs(workflow), "build", true],
         [workflowJobs(heavyWorkflow), "verify", true],
-        [workflowJobs(storybook), "build-and-test", false],
+        [workflowJobs(storybook), "storybook", false],
       ];
       for (const [jobs, jobId, appSecrets] of turboJobs) {
         const setup = setupMonorepoStep(jobs, jobId);

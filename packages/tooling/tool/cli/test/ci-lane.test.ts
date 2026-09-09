@@ -11,8 +11,11 @@ import {
   ciLocalStepsForTesting,
   docgenLaneModeForChangedPaths,
   doctestStepForTesting,
+  isStorybookLaneInput,
   proveCiLanePartition,
   runCiLane,
+  STORYBOOK_LANE_INPUT_PATTERN,
+  storybookLaneInputsChanged,
 } from "@beep/repo-cli/commands/Ci";
 import {
   isLabsWorkspaceDir,
@@ -324,7 +327,7 @@ describe("CI lane descriptors", () => {
   it("enumerates every check.yml lane exactly once", () => {
     const ids = A.map(CI_LANE_DESCRIPTORS, (descriptor) => descriptor.id);
     expect(A.length(A.dedupe(ids))).toBe(A.length(ids));
-    expect(A.length(CI_LANE_DESCRIPTORS)).toBe(25);
+    expect(A.length(CI_LANE_DESCRIPTORS)).toBe(26);
   });
 
   it("covers every runnable lane id", () => {
@@ -368,6 +371,17 @@ describe("CI lane descriptors", () => {
     expect(descriptor.contextName).toBe("Labs");
     expect(descriptor.required).toBe(false);
     expect(descriptor.laneClass).toBe("workflow-gated");
+  });
+
+  // Quality-lane audit D13: the Storybook context is visible, gated, and
+  // non-required until it has a stable green history.
+  it("keeps the storybook lane visible, workflow-gated, and non-required", () => {
+    const descriptor = O.getOrThrow(A.findFirst(CI_LANE_DESCRIPTORS, (candidate) => candidate.id === "storybook"));
+    expect(descriptor.contextName).toBe("Storybook");
+    expect(descriptor.required).toBe(false);
+    expect(descriptor.laneClass).toBe("workflow-gated");
+    expect(descriptor.replay).toBe("exact");
+    expect([...descriptor.flags]).toEqual(["--affected", "--base", "--summarize"]);
   });
 
   it("marks the CI-only residue as unreplayable", () => {
@@ -1201,6 +1215,100 @@ describe("ciLaneStepsForTesting", () => {
     expect([...summarized.args]).toEqual(["run", "build", "--", "--summarize"]);
   });
 
+  // Quality-lane audit D13: one positively-filtered storybook build, the
+  // browser run, then the artifact proof. --affected never reaches Turbo
+  // (filter union hazard); it drives the CLI-side change-profile gate.
+  it("builds the storybook lane as filtered turbo runs plus the artifact proof", () => {
+    const steps = ciLaneStepsForTesting(REPO_ROOT, "storybook", baseOptions);
+    expect(A.map(steps, (step) => step.label)).toEqual([
+      "ci:storybook:build",
+      "ci:storybook:test",
+      "ci:storybook:artifact",
+    ]);
+    const [build, test, artifact] = steps;
+    expect(build?.command).toBe("bunx");
+    expect([...(build?.args ?? [])]).toEqual([
+      "turbo",
+      "run",
+      "storybook:build",
+      ...expectedTurboCacheArgs(["--filter=@beep/storybook"]),
+      "--filter=@beep/storybook",
+    ]);
+    expect([...(test?.args ?? [])]).toEqual([
+      "turbo",
+      "run",
+      "test:storybook",
+      ...expectedTurboCacheArgs(["--filter=@beep/storybook"]),
+      "--filter=@beep/storybook",
+    ]);
+    expect(artifact?.command).toBe("test");
+    expect([...(artifact?.args ?? [])]).toEqual(["-f", "apps/storybook/storybook-static/index.html"]);
+
+    const prShaped = ciLaneStepsForTesting(REPO_ROOT, "storybook", prShapeOptions);
+    const prBuild = firstOf(prShaped);
+    expect([...prBuild.args]).toEqual([
+      "turbo",
+      "run",
+      "storybook:build",
+      ...expectedTurboCacheArgs(["--filter=@beep/storybook", "--summarize"]),
+      "--filter=@beep/storybook",
+      "--summarize",
+    ]);
+    for (const step of prShaped) {
+      expect(step.args).not.toContain("--affected");
+      expect(step.env).toBeUndefined();
+    }
+  });
+
+  it("classifies storybook lane inputs from one pattern shared with the workflow gate", () => {
+    for (const relevant of [
+      "apps/storybook/package.json",
+      "apps/storybook/.storybook/main.ts",
+      "apps/storybook/vitest.storybook.config.ts",
+      "packages/foundation/ui-system/ui/src/button.tsx",
+      "packages/foundation/ui-system/dock-react/stories/dock.stories.tsx",
+      "packages/drivers/graph-3d/stories/graph.stories.tsx",
+      "packages/drivers/graph-3d/src/index.ts",
+      "apps/web/src/hero.stories.tsx",
+      "packages/example/stories/index.ts",
+      ".github/workflows/storybook.yml",
+      "scripts/ci-change-profile.sh",
+      "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
+      "bun.lock",
+      "package.json",
+      "turbo.json",
+    ]) {
+      expect(isStorybookLaneInput(relevant), relevant).toBe(true);
+    }
+    for (const inert of [
+      "docs/README.md",
+      "packages/foundation/schema/src/index.ts",
+      "packages/example/package.json",
+      "apps/web/src/hero.tsx",
+      "goals/example/GOAL.md",
+    ]) {
+      expect(isStorybookLaneInput(inert), inert).toBe(false);
+    }
+    expect(storybookLaneInputsChanged(["docs/README.md", "bun.lock"])).toBe(true);
+    expect(storybookLaneInputsChanged(["docs/README.md"])).toBe(false);
+    expect(storybookLaneInputsChanged([])).toBe(false);
+  });
+
+  it.effect("pins the workflow gate's storybook pattern to the CLI literal", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const repoRoot = yield* findRepoRoot();
+      const script = yield* fs.readFileString(path.join(repoRoot, "scripts/ci-change-profile.sh"));
+      const workflow = yield* fs.readFileString(path.join(repoRoot, ".github/workflows/storybook.yml"));
+      expect(script).toContain(`storybook_pattern='${STORYBOOK_LANE_INPUT_PATTERN}'`);
+      expect(script).toContain("storybook_relevant=");
+      expect(workflow).toContain('eval "$(scripts/ci-change-profile.sh');
+      expect(workflow).toContain('"$storybook_relevant" != "true"');
+      expect(workflow).toContain('run_lane ci lane storybook "${shape_args[@]}"');
+    }).pipe(Effect.provide(NodeServices.layer))
+  );
+
   // Quality-lane audit D12: pull requests build affected-scoped with the same
   // TURBO_SCM_BASE shape the check lane uses; pushes stay unscoped.
   it("builds the PR-shape build lane with TURBO_SCM_BASE", () => {
@@ -1234,6 +1342,24 @@ describe("ciLocalStepsForTesting", () => {
     const affectedPlan = CiLocalStepPlan.make({ ...branchPlan, affected: true });
     const step = firstOf(ciLocalStepsForTesting(REPO_ROOT, ["labs"], affectedPlan));
     expect([...step.args]).toEqual(["run", "beep", "ci", "lane", "labs"]);
+  });
+
+  it("forwards the affected shape to the storybook lane as its change-profile gate", () => {
+    const affectedPlan = CiLocalStepPlan.make({ ...branchPlan, affected: true });
+    const gated = firstOf(ciLocalStepsForTesting(REPO_ROOT, ["storybook"], affectedPlan));
+    expect([...gated.args]).toEqual([
+      "run",
+      "beep",
+      "ci",
+      "lane",
+      "storybook",
+      "--affected",
+      "--base",
+      "origin/main",
+      "--summarize",
+    ]);
+    const full = firstOf(ciLocalStepsForTesting(REPO_ROOT, ["storybook"], branchPlan));
+    expect([...full.args]).toEqual(["run", "beep", "ci", "lane", "storybook", "--summarize"]);
   });
 
   it("keeps --summarize on turbo-backed lanes even without the affected shape", () => {

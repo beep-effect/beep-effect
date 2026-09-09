@@ -803,6 +803,7 @@ describe("yeet planner", () => {
       "quality:check",
       "quality:check:tsgo-smoke",
       "quality:test-unit",
+      "quality:storybook",
       "quality:coverage",
       "fallow:health",
     ]);

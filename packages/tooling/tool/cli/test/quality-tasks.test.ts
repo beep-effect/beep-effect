@@ -820,6 +820,7 @@ describe("quality task adapter", () => {
       "quality:desktop-ipc",
       "quality:test-unit",
       "quality:test-integration",
+      "quality:storybook",
     ]);
     expect(A.every(lanes, (lane) => lane.stage === "repo-quality")).toBe(true);
     expect(A.every(lanes, (lane) => lane.blockedBy.length === 0)).toBe(true);
@@ -903,6 +904,7 @@ describe("quality task adapter", () => {
     expect(qualityLaneArgs(lanes, "quality:commitlint")).toEqual(hostedArgs("commitlint"));
     expect(qualityLaneArgs(lanes, "quality:desktop-ipc")).toEqual(hostedArgs("desktop-ipc"));
     expect(qualityLaneArgs(lanes, "quality:docgen")).toEqual(hostedArgs("docgen"));
+    expect(qualityLaneArgs(lanes, "quality:storybook")).toEqual(hostedArgs("storybook"));
 
     expect(qualityLaneArgs(lanes, "quality:check")).toEqual([
       "run",

@@ -329,6 +329,11 @@ export const githubCheckQualityLanes = (repoRoot: string): ReadonlyArray<GithubC
     "test",
     ciLaneStep(repoRoot, "quality:test-integration", "test-integration")
   ),
+  // Quality-lane audit D13: additive, non-required hosted context. The
+  // pre-push plan passes the affected shape, which the lane turns into its
+  // change-profile gate, so a branch without Storybook inputs pays one git
+  // diff instead of the 584 s build + browser run.
+  githubCheckLane("quality:storybook", "repo-quality", "test", ciLaneStep(repoRoot, "quality:storybook", "storybook")),
 ];
 
 /**
