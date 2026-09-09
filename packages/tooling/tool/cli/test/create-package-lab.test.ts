@@ -76,6 +76,15 @@ const LabCheckTsconfig = S.Struct({
     rootDir: S.String,
   }),
 });
+// `references` is optional on the canonical file: a lab with no workspace
+// dependencies never gains the key, and its overlay must then carry `[]`.
+const TsconfigOptionalReferences = S.Struct({
+  references: S.Struct({ path: S.String }).pipe(S.Array, S.optionalKey),
+  compilerOptions: S.Record(S.String, S.Unknown),
+});
+const decodeTsconfigOptionalReferences = S.decodeUnknownSync(TsconfigOptionalReferences);
+const referencePathsOf = (tsconfig: typeof TsconfigOptionalReferences.Type): ReadonlyArray<string> =>
+  A.map(tsconfig.references ?? [], (entry) => entry.path);
 const encodeLabCheckTsconfigSync = S.encodeSync(LabCheckTsconfig);
 const decodeRootPackage = S.decodeUnknownSync(RootPackage);
 const decodeGeneratedPackageManifest = S.decodeUnknownSync(GeneratedPackageManifest);
@@ -458,6 +467,17 @@ describe("create-package --lab", { concurrent: false }, () => {
             );
             expect(labCheckTsconfig.extends).toBe("./tsconfig.json");
             expect(labCheckTsconfig.compilerOptions.noEmit).toBe(true);
+            // The overlay mirrors the canonical references exactly and adds no
+            // module overrides (quality-lane audit D3).
+            const canonicalLabTsconfig = decodeTsconfigOptionalReferences(
+              yield* readJsoncFile(path.join(packageDir, "tsconfig.json"))
+            );
+            const labOverlay = decodeTsconfigOptionalReferences(
+              yield* readJsoncFile(path.join(packageDir, "tsconfig.check.json"))
+            );
+            expect(referencePathsOf(labOverlay)).toEqual(referencePathsOf(canonicalLabTsconfig));
+            expect(labOverlay.compilerOptions).not.toHaveProperty("module");
+            expect(labOverlay.compilerOptions).not.toHaveProperty("moduleResolution");
             expect(yield* fs.exists(path.join(packageDir, "docgen.json"))).toBe(false);
             const nextConfig = yield* fs.readFileString(path.join(packageDir, "next.config.ts"));
             expect(nextConfig).toContain("defineBeepNextConfig");

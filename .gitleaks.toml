@@ -47,3 +47,135 @@ targetRules = ["sourcegraph-access-token"]
 paths = [
   '''^(?:/repo/)?explorations/packet-system-redesign/research/grok/raw/2-agent-plan-gates\.jsonl$''',
 ]
+
+# Immutable Boolean-creep evidence: independently reproduced SHA-256 values
+# and one ordinary-prose match. Require exact path AND complete known line.
+# Per-rule syntax also supports the pinned CI scanner (Gitleaks 8.24.3).
+# These three entries extend default rules without replacing their detectors.
+
+[[rules]]
+id = "generic-api-key"
+
+[[rules.allowlists]]
+description = "Verified immutable Boolean-creep digest false positives; exact path and line only."
+condition = "AND"
+regexTarget = "line"
+paths = ['''^(?:/repo/)?goals/boolean-creep/data/r28-agent-app-integration\.json$''']
+regexes = [
+  '''^\n?[\t ]*"r3-apps-desktop-shell-rpc-access": "cf7f92ffc986a815e5d415b86729eb1c6ac32182b72b10aa37a1a4e00c4cfd4e"$''',
+]
+
+[[rules.allowlists]]
+description = "Verified immutable Boolean-creep prose false positives; exact path and line only."
+condition = "AND"
+regexTarget = "line"
+paths = ['''^(?:/repo/)?goals/boolean-creep/history/designs/2026-09-09-r28-cli-l-q/effect-import-rules-summary-operation\.md$''']
+regexes = [
+  '''^\n?[\t ]*leaking the decoded key into public JSON, moving/defaulting neighboring keys,$''',
+]
+
+[[rules.allowlists]]
+description = "Verified immutable Boolean-creep digest false positives; exact path and line only."
+condition = "AND"
+regexTarget = "line"
+paths = ['''^(?:/repo/)?goals/boolean-creep/data/sweeps/refresh-2026-09-09-r27-main-663904/boolean-state-coverage-map\.json$''']
+regexes = [
+  '''^\n?[\t ]*"packages/drivers/freshbooks/src/Freshbooks\.token\.ts": "6363802e5bea74a988b198055d319aa302e1292731f5cded01bd64489874f489",$''',
+]
+
+[[rules.allowlists]]
+description = "Verified immutable Boolean-creep digest false positives; exact path and line only."
+condition = "AND"
+regexTarget = "line"
+paths = ['''^(?:/repo/)?goals/boolean-creep/data/r28-cli-last-integration\.json$''']
+regexes = [
+  '''^\n?[\t ]*"r3-tooling-tsconfig-sync-alias-key-guards": "69f085776beb461ba7d6de36249681c16e41af3a9fc2fb7168d34ae105903b3e",$''',
+]
+
+[[rules.allowlists]]
+description = "Verified immutable Boolean-creep digest false positives; exact path and line only."
+condition = "AND"
+regexTarget = "line"
+paths = ['''^(?:/repo/)?goals/boolean-creep/data/sweeps/refresh-2026-09-09-r27-main-663904/round-verdict\.json$''']
+regexes = [
+  '''^\n?[\t ]*"r3-apps-desktop-shell-rpc-access": "cf7f92ffc986a815e5d415b86729eb1c6ac32182b72b10aa37a1a4e00c4cfd4e",$''',
+]
+
+[[rules.allowlists]]
+description = "Verified immutable Boolean-creep digest false positives; exact path and line only."
+condition = "AND"
+regexTarget = "line"
+paths = ['''^(?:/repo/)?goals/boolean-creep/data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/round-verdict\.json$''']
+regexes = [
+  '''^\n?[\t ]*"apps/oip-web/src/app/api/contact/ContactHttpApiRoute\.ts": "0fe7b3b126abdff817b69a8ad28f987b8ba4c1a6261a6b24f0deb71e6526580d",$''',
+  '''^\n?[\t ]*"packages/architecture-lab/config/src/secrets\.ts": "0086960bc43fe5ce52c1be4fa0f32185de33213bba94c1be6de3f7ae011fb98f",$''',
+  '''^\n?[\t ]*"packages/drivers/gov-legal-mcp/src/SourceAuth\.ts": "a99707b6a6ba3cd6a41f61aa31aa3c45086709d20b835301551288cc52be0bd1",$''',
+  '''^\n?[\t ]*"packages/drivers/govinfo/src/domain/contracts/Api\.ts": "5ffb632860d896b837f8606e394d2c94a70e8f37403a8175d961770d074894b8",$''',
+  '''^\n?[\t ]*"packages/drivers/m365/src/M365\.auth\.ts": "ecfba801428020cf715220fa748cafef8bf49d3c026f7ab09d69c39742003355",$''',
+  '''^\n?[\t ]*"packages/drivers/onepassword-cli/src/OnePasswordCli\.errors\.ts": "0c41ab842cc812e09eafcf015c2a7bbc6a48e7a44b471ba8f90dbc1bec58b6da",$''',
+  '''^\n?[\t ]*"packages/drivers/onepassword-cli/src/OnePasswordCli\.models\.ts": "31ccd6e6d1c9d35801429c614f80c45294f426308c73aef13ffa4b57ea8f267f",$''',
+  '''^\n?[\t ]*"packages/drivers/onepassword-cli/src/OnePasswordCli\.service\.ts": "1be07e9bed0debba7d0a06c5f3b4b1df0d8b0387425dfecbc149d0ade225fcce",$''',
+  '''^\n?[\t ]*"packages/drivers/pacer/src/CsoAuth\.models\.ts": "90cb90b6039656f2f99d1f260230f460f707ec8d69fdb731378b3cfbc54071f5",$''',
+  '''^\n?[\t ]*"packages/drivers/pacer/src/Pacer\.tokens\.ts": "b1582d1024293ff73029f4719514455f40ef678f3ebde803b96473e4378273f0",$''',
+  '''^\n?[\t ]*"packages/drivers/pacer/src/PacerAuth\.service\.ts": "57b1e8da716877674d92737f938b59daec0fbff03aaa5bc0c9e1d1bea6b3ba26",$''',
+  '''^\n?[\t ]*"packages/drivers/pacer/src/Pcl\.api\.ts": "88331475d15eee3ee090e7ce95429868ae02c556ac25be58becaec7c8088130c",$''',
+  '''^\n?[\t ]*"packages/drivers/uspto-mcp/src/UsptoSourceAuth\.ts": "84694db63adec455134fb0d02acf6a13835bf4abd33ca74a179ec20238cc59c2",$''',
+  '''^\n?[\t ]*"packages/drivers/wink/src/WinkTokenization\.service\.ts": "2c195810c476d049bbcbcd922ad2a269f3e7545e8ba735a86eec726eed230b5f",$''',
+  '''^\n?[\t ]*"packages/epistemic/config/src/secrets\.ts": "faa15f52d9828c743d73679584dad120bcaf1129410374b9df47462e1cbaef15",$''',
+  '''^\n?[\t ]*"packages/epistemic/domain/src/values/EpistemicFixtureKey/EpistemicFixtureKey\.model\.ts": "23c625e609d9ace993dcdd94a2b6607ca36be231bad6871ff2649d31171adc36",$''',
+  '''^\n?[\t ]*"packages/foundation/capability/mcp-kit/src/ApiKeyRequired\.ts": "663687cee63aeb105cbea8e8aa7f0f3c2a5a9598ffe5c213f4a64d17ccb69711",$''',
+  '''^\n?[\t ]*"packages/foundation/capability/mcp-kit/src/SourceAuth\.ts": "182692c90d83061575c4055b0313a1bfe30526f34ab445ca2871408ac6ff847d",$''',
+  '''^\n?[\t ]*"packages/foundation/capability/nlp-processing/src/Core/Tokenization\.ts": "c86e3fbc857d4b3d893ea7b3baa5dc28cfabd7152d3013ae943b688e665a0da8",$''',
+  '''^\n?[\t ]*"packages/foundation/capability/nlp-processing/src/Tools/Tokenize\.ts": "69a994ac336a8dc4aa38f60b904ebb19df63a636137e2324e7820d560b58b76c",$''',
+  '''^\n?[\t ]*"packages/foundation/capability/observability/src/server/HttpApiTelemetry\.ts": "650c686782ffb0e6e46f3b483dfde598b1f23bc79e0a7a3e430c06c9f8a6b432",$''',
+  '''^\n?[\t ]*"packages/foundation/modeling/nlp/src/Core/Token\.ts": "d7de63315dab330e3e994f647cf1de228e4acb7f4052b61e1238f3c40eac7e2d",$''',
+  '''^\n?[\t ]*"packages/foundation/modeling/schema/src/SchemaUtils/optionalKeyWithDefaults\.ts": "2177e7c190ec4f116d3e8694fab8e8b301bb4300b7b4a17c8ab85578cf9cec31",$''',
+  '''^\n?[\t ]*"packages/foundation/modeling/schema/src/SchemaUtils/withKeyDefaults\.ts": "6e2246a3facb44a9f1b59f7f235044fe0f43bae06a71940e280a8bf7773fa7fd",$''',
+  '''^\n?[\t ]*"packages/foundation/ui-system/brand/src/Brand\.tokens\.ts": "6ce6cdb5129ec9278646984aba049cd40d5e5372ee16a01cc2ae65be51aa8f66",$''',
+  '''^\n?[\t ]*"packages/ontology/config/src/secrets\.ts": "2a08dd7125c4f6f14712e77eba91cdbe3c15e14d17ce4fe39a9ef022f9918ff9",$''',
+  '''^\n?[\t ]*"packages/shared/domain/src/values/OnePasswordReference/OnePasswordReference\.model\.ts": "c155e15b5b43edef0dc5f1c18e42d5f430d89e7aa86dbf315aefd31b5aaf0e24",$''',
+  '''^\n?[\t ]*"packages/tooling/library/qa-capture/src/Collector\.api\.ts": "9ce5c8c2cf5c11cb641b5ab84f44976374a280faffb408e9c3c5dfd057e72e6c",$''',
+  '''^\n?[\t ]*"packages/tooling/library/repo-utils/src/JSDoc/models/tag-values/AccessModifierTagValues\.ts": "a039fdfee448d6624594df1a47a869302045c9055d6dc0107ad1d23fd09ac374",$''',
+  '''^\n?[\t ]*"packages/tooling/policy-pack/repo-configs/src/eslint/DeprecatedApisESLintConfig\.ts": "fcb1c9da8e1edf60642bc64fd7c763e449dcaf62ebd0f2b50fb38c693af45eb3",$''',
+  '''^\n?[\t ]*"packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-service-src-Api\.ts\.hbs": "f487d1ce880c61d286db24868109d5f38335dff0fb439df3e1b9ff56f9490ff7",$''',
+  '''^\n?[\t ]*"packages/drivers/freshbooks/src/Freshbooks\.token\.ts": "6363802e5bea74a988b198055d319aa302e1292731f5cded01bd64489874f489",$''',
+]
+
+[[rules]]
+id = "freshbooks-access-token"
+
+[[rules.allowlists]]
+description = "Verified immutable Boolean-creep digest false positives; exact path and line only."
+condition = "AND"
+regexTarget = "line"
+paths = ['''^(?:/repo/)?goals/boolean-creep/data/sweeps/refresh-2026-09-09-r27-main-663904/boolean-state-coverage-map\.json$''']
+regexes = [
+  '''^\n?[\t ]*"packages/drivers/freshbooks/src/Freshbooks\.token\.ts": "6363802e5bea74a988b198055d319aa302e1292731f5cded01bd64489874f489",$''',
+]
+
+[[rules.allowlists]]
+description = "Verified immutable Boolean-creep digest false positives; exact path and line only."
+condition = "AND"
+regexTarget = "line"
+paths = ['''^(?:/repo/)?goals/boolean-creep/data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/round-verdict\.json$''']
+regexes = [
+  '''^\n?[\t ]*"packages/drivers/freshbooks/src/Freshbooks\.config\.ts": "a985a7ec81854168f276254acbf924ca0f3f81cadfd094455e680c82eacc05c8",$''',
+  '''^\n?[\t ]*"packages/drivers/freshbooks/src/Freshbooks\.errors\.ts": "6b606019bd1d4e3d87b2a6fd84abb3f0c8ef534c848c5866a90e2ef227ce5944",$''',
+  '''^\n?[\t ]*"packages/drivers/freshbooks/src/Freshbooks\.models\.ts": "27fe2aed538150b6a86f0a00aabb41c2ba0fa31a75ec150e04c2edd13e83e805",$''',
+  '''^\n?[\t ]*"packages/drivers/freshbooks/src/Freshbooks\.service\.ts": "6c4cfe3eed551448a200f301dd5d6ac0966924767251f80da048a4e49dc9ee35",$''',
+  '''^\n?[\t ]*"packages/drivers/freshbooks/src/Freshbooks\.token\.ts": "6363802e5bea74a988b198055d319aa302e1292731f5cded01bd64489874f489",$''',
+]
+
+[[rules]]
+id = "discord-api-token"
+
+[[rules.allowlists]]
+description = "Verified immutable Boolean-creep digest false positives; exact path and line only."
+condition = "AND"
+regexTarget = "line"
+paths = ['''^(?:/repo/)?goals/boolean-creep/data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/round-verdict\.json$''']
+regexes = [
+  '''^\n?[\t ]*"packages/drivers/discord/src/Discord\.errors\.ts": "a01ba3c19320b682033bbebe2280d508f5e480124a9e6e9991dd5ab756f68761",$''',
+  '''^\n?[\t ]*"packages/drivers/discord/src/Discord\.models\.ts": "3131149b01b4da6ab27da9c58ff652bd7d10fa4a30159d4b827e593fc2e138b1",$''',
+  '''^\n?[\t ]*"packages/drivers/discord/src/Discord\.service\.ts": "4e1dfbe789379f7bc7c80e4911a8c4f56f4fcc3bb282f2235f538da620cd6388",$''',
+]

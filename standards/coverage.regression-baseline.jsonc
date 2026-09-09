@@ -23607,6 +23607,66 @@
             "functions": 0
           }
         },
+        "packages/tooling/tool/cli/src/commands/Graft/Graft.command.ts": {
+          "lines": 96.66,
+          "statements": 93.93,
+          "branches": 91.66,
+          "functions": 90.9,
+          "uncovered": {
+            "lines": 1,
+            "statements": 2,
+            "branches": 1,
+            "functions": 1
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Graft/Graft.errors.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Graft/Graft.schemas.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Graft/Graft.service.ts": {
+          "lines": 98.48,
+          "statements": 97.85,
+          "branches": 96.22,
+          "functions": 97.22,
+          "uncovered": {
+            "lines": 2,
+            "statements": 3,
+            "branches": 2,
+            "functions": 1
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Graft/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/tooling/tool/cli/src/commands/Image/Image.command.ts": {
           "lines": 100,
           "statements": 96.77,

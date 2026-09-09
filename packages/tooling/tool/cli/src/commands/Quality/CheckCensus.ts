@@ -9,12 +9,13 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
 import { resolveWorkspacePackages } from "@beep/repo-utils/Workspaces";
-import { A, Str } from "@beep/utils";
+import { A, Str, thunkFalse } from "@beep/utils";
 import { Console, DateTime, Duration, Effect, FileSystem, HashMap, HashSet, Order, Path, pipe } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { Command, Flag } from "effect/unstable/cli";
 import { parse as parseJsonc } from "jsonc-parser";
+import { renderTruncatedLines } from "../../internal/artifacts/index.ts";
 import { printLines } from "../../internal/cli/Printer.ts";
 import { runCaptured } from "../../internal/process/index.ts";
 import { QualityScriptCommandError } from "./Quality.errors.ts";
@@ -29,6 +30,13 @@ const DEFAULT_CHECK_CENSUS_OUTPUT_PATH = ".beep/quality/check-census.json";
 // Bound on concurrent package measurements; each one spawns two full tsgo
 // programs, so the census stays under the 16GB hosted-runner posture.
 const CHECK_CENSUS_CONCURRENCY = 4;
+
+// The base config emits declarations to `${configDir}/dist`; a referenced
+// project that sets no `outDir` of its own lands there.
+const DEFAULT_DECLARATION_OUT_DIR = "dist";
+const DECLARATION_INDEX_FILE = "index.d.ts";
+const BUILD_REMEDIATION = "bun run build";
+const renderedMissingOutputLimit = 40;
 
 /**
  * Temporary overlay written into a package while its reference-keeping
@@ -239,6 +247,37 @@ export class CheckCensusOptions extends S.Class<CheckCensusOptions>($I`CheckCens
   })
 ) {}
 
+/**
+ * A referenced project whose declaration output is absent, so a
+ * reference-keeping program would report TS6305 noise instead of evidence.
+ *
+ * **Example** (Describe a missing output)
+ *
+ * ```ts
+ * import { CheckCensusMissingOutput } from "@beep/repo-cli/commands/Quality/CheckCensus"
+ *
+ * const missing = CheckCensusMissingOutput.make({
+ *   package: "@beep/n3",
+ *   reference: "../../foundation/modeling/schema/tsconfig.json",
+ *   declarationFile: "packages/foundation/modeling/schema/dist/index.d.ts",
+ * })
+ * console.log(missing.declarationFile.endsWith("index.d.ts")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CheckCensusMissingOutput extends S.Class<CheckCensusMissingOutput>($I`CheckCensusMissingOutput`)(
+  {
+    package: S.String,
+    reference: S.String,
+    declarationFile: S.String,
+  },
+  $I.annote("CheckCensusMissingOutput", {
+    description: "A project referenced by a census package whose declaration index (outDir/index.d.ts) does not exist.",
+  })
+) {}
+
 const TsconfigReference = S.Struct({ path: S.String }).annotate(
   $I.annote("TsconfigReference", { description: "One project reference entry of a package tsconfig.json." })
 );
@@ -364,6 +403,141 @@ const readTsconfigReferences = Effect.fn("CheckCensus.readTsconfigReferences")(f
   return decoded.references ?? A.empty();
 });
 
+const TsconfigOutDir = S.Struct({
+  compilerOptions: S.Struct({ outDir: S.optionalKey(S.String) }).pipe(S.optionalKey),
+}).annotate(
+  $I.annote("TsconfigOutDir", {
+    description: "The `compilerOptions.outDir` read from a referenced project's tsconfig.",
+  })
+);
+const decodeTsconfigOutDir = S.decodeUnknownEffect(TsconfigOutDir);
+
+// A reference names a tsconfig file or a directory holding tsconfig.json.
+const referencedTsconfigPath = Effect.fn("CheckCensus.referencedTsconfigPath")(function* (
+  packageDir: string,
+  reference: string
+): Effect.fn.Return<string, never, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const resolved = path.resolve(packageDir, reference);
+  const stat = yield* fs.stat(resolved).pipe(Effect.option);
+
+  return O.isSome(stat) && stat.value.type === "Directory" ? path.join(resolved, "tsconfig.json") : resolved;
+});
+
+// The declaration index a reference-keeping program resolves the referenced
+// project through: `<outDir>/index.d.ts` next to its tsconfig.
+const referencedDeclarationIndex = Effect.fn("CheckCensus.referencedDeclarationIndex")(function* (
+  tsconfigPath: string
+): Effect.fn.Return<string, QualityScriptCommandError, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const text = yield* fs
+    .readFileString(tsconfigPath)
+    .pipe(QualityScriptCommandError.mapError(`Failed to read referenced project ${tsconfigPath}.`));
+  const decoded = yield* decodeTsconfigOutDir(parseJsonc(text)).pipe(
+    QualityScriptCommandError.mapError(`Failed to decode compilerOptions.outDir from ${tsconfigPath}.`)
+  );
+  const outDir = decoded.compilerOptions?.outDir ?? DEFAULT_DECLARATION_OUT_DIR;
+
+  return path.resolve(path.dirname(tsconfigPath), outDir, DECLARATION_INDEX_FILE);
+});
+
+const missingReferenceOutputs = Effect.fn("CheckCensus.missingReferenceOutputs")(function* (
+  repoRoot: string,
+  pkg: CheckCensusPackage
+): Effect.fn.Return<
+  ReadonlyArray<CheckCensusMissingOutput>,
+  QualityScriptCommandError,
+  FileSystem.FileSystem | Path.Path
+> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const references = yield* readTsconfigReferences(pkg.dir);
+
+  return yield* Effect.forEach(
+    references,
+    Effect.fnUntraced(function* (reference) {
+      const tsconfigPath = yield* referencedTsconfigPath(pkg.dir, reference.path);
+      const declarationFile = yield* referencedDeclarationIndex(tsconfigPath);
+      const exists = yield* fs.exists(declarationFile).pipe(Effect.orElseSucceed(thunkFalse));
+
+      return exists
+        ? A.empty<CheckCensusMissingOutput>()
+        : A.of(
+            CheckCensusMissingOutput.make({
+              package: pkg.name,
+              reference: reference.path,
+              declarationFile: path.relative(repoRoot, declarationFile),
+            })
+          );
+    }),
+    { concurrency: 1 }
+  ).pipe(Effect.map(A.flatten));
+});
+
+const renderMissingOutput = (missing: CheckCensusMissingOutput): string =>
+  `  - ${missing.package}: ${missing.reference} -> ${missing.declarationFile}`;
+
+/**
+ * Fail unless every project the selected packages reference has its
+ * declaration index (`<outDir>/index.d.ts`) on disk.
+ *
+ * **Details**
+ *
+ * The reference-keeping overlay resolves upstream packages through their
+ * built declarations, exactly as `turbo run check` does after `^build`. On
+ * an unbuilt tree tsgo reports TS6305 for every missing output, so a census
+ * measured there counts noise, not the diagnostic delta the switch is gated
+ * on. The check is filesystem-only and runs before any compiler spawns.
+ *
+ * **Example** (Guard a census run)
+ *
+ * ```ts
+ * import { assertCheckCensusTreeBuilt, CheckCensusOptions } from "@beep/repo-cli/commands/Quality/CheckCensus"
+ * import * as Effect from "effect/Effect"
+ *
+ * const program = assertCheckCensusTreeBuilt(
+ *   CheckCensusOptions.make({
+ *     repoRoot: "/repo",
+ *     tsgoPath: "/repo/node_modules/.bin/tsgo",
+ *     packages: [{ name: "@beep/n3", dir: "/repo/packages/drivers/n3" }],
+ *   })
+ * )
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @param options - The census selection whose references are verified.
+ * @returns Succeeds on a built tree; fails naming every package and missing declaration index otherwise.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const assertCheckCensusTreeBuilt = Effect.fn("CheckCensus.assertTreeBuilt")(function* (
+  options: CheckCensusOptions
+): Effect.fn.Return<void, QualityScriptCommandError, FileSystem.FileSystem | Path.Path> {
+  const missing = yield* Effect.forEach(options.packages, (pkg) => missingReferenceOutputs(options.repoRoot, pkg), {
+    concurrency: options.concurrency,
+  }).pipe(Effect.map(A.flatten));
+
+  if (A.isReadonlyArrayNonEmpty(missing)) {
+    const packages = pipe(
+      missing,
+      A.map((entry) => entry.package),
+      A.dedupe
+    );
+    return yield* QualityScriptCommandError.make({
+      message: A.join(
+        [
+          `check-census needs a built tree: ${A.length(missing)} referenced project(s) across ${A.length(packages)} package(s) have no declaration output.`,
+          ...renderTruncatedLines({ items: missing, render: renderMissingOutput, limit: renderedMissingOutputLimit }),
+          `Run \`${BUILD_REMEDIATION}\` (or \`bunx turbo run build --filter=<package>^...\` for one package's upstream) and re-run the census.`,
+        ],
+        "\n"
+      ),
+    });
+  }
+});
+
 // The committed check overlay may narrow or widen the program (effect-drizzle
 // includes `scripts` its tsconfig.json does not), so the synthesized overlay
 // copies that selection and isolates the reference strategy it measures.
@@ -412,6 +586,7 @@ const withReferenceKeepingOverlay = Effect.fnUntraced(function* <A, E, R>(
       incremental: false,
       declaration: false,
       declarationMap: false,
+      emitDeclarationOnly: false,
       noEmit: true,
       rootDir: path.relative(packageDir, repoRoot),
     },
@@ -462,13 +637,18 @@ const censusPackage = Effect.fn("CheckCensus.censusPackage")(function* (
  *
  * **Details**
  *
- * Per package this runs `tsgo -p tsconfig.check.json --listFilesOnly` and
- * `--extendedDiagnostics --pretty false`, lists `tsconfig.json` for the build
- * overlap column, then writes a temporary `tsconfig.__census.json` (extends
- * `./tsconfig.json`, keeps its `references`, disables composite/incremental/
- * declaration output, `noEmit`, `rootDir` at the repository root), runs the
- * same two commands against it, and removes it. The census is evidence, not
- * a gate: diagnostics are counted, never raised.
+ * The run first proves the tree is built ({@link assertCheckCensusTreeBuilt}):
+ * every project the selected packages reference must have its declaration
+ * index on disk, or the census fails naming the packages and the
+ * `bun run build` remediation before any compiler spawns. Per package it
+ * then runs `tsgo -p tsconfig.check.json --listFilesOnly` and
+ * `--extendedDiagnostics --pretty false`, lists `tsconfig.json` for the
+ * build overlap column, then writes a temporary `tsconfig.__census.json`
+ * (extends `./tsconfig.json`,
+ * keeps its `references`, disables composite/incremental/declaration output,
+ * `noEmit`, `rootDir` at the repository root), runs the same two commands
+ * against it, and removes it. The census is evidence, not a gate:
+ * diagnostics are counted, never raised.
  *
  * **Example** (Census one package)
  *
@@ -492,6 +672,7 @@ const censusPackage = Effect.fn("CheckCensus.censusPackage")(function* (
 export const runCheckCensus = Effect.fn("CheckCensus.run")(function* (
   options: CheckCensusOptions
 ): Effect.fn.Return<CheckCensusReport, QualityScriptCommandError, CensusEnvironment> {
+  yield* assertCheckCensusTreeBuilt(options);
   const generatedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
   const rows = yield* Effect.forEach(options.packages, (pkg) => censusPackage(options, pkg), {
     concurrency: options.concurrency,
@@ -569,8 +750,8 @@ const hasCheckOverlay = Effect.fn("CheckCensus.hasCheckOverlay")(function* (
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const [overlay, build] = yield* Effect.all([
-    fs.exists(path.join(dir, "tsconfig.check.json")).pipe(Effect.orElseSucceed(() => false)),
-    fs.exists(path.join(dir, "tsconfig.json")).pipe(Effect.orElseSucceed(() => false)),
+    fs.exists(path.join(dir, "tsconfig.check.json")).pipe(Effect.orElseSucceed(thunkFalse)),
+    fs.exists(path.join(dir, "tsconfig.json")).pipe(Effect.orElseSucceed(thunkFalse)),
   ]);
 
   return overlay && build;
@@ -653,7 +834,8 @@ const runCheckCensusCli = Effect.fn("CheckCensus.cli")(function* (
 /**
  * `beep quality check-census`: measure every check overlay against a
  * reference-keeping overlay and write the report (evidence for the PR-2
- * overlay switch; exit 0 unless the census itself fails).
+ * overlay switch; exit 0 unless the census itself fails). Requires a built
+ * tree: every referenced project's declaration output must exist.
  *
  * **Example** (Register the subcommand)
  *
@@ -680,5 +862,7 @@ export const checkCensusCommand = Command.make(
   },
   ({ filter, outputJson }) => runCheckCensusCli(outputJson, filter)
 ).pipe(
-  Command.withDescription("Measure check overlays against a reference-keeping overlay (program size, upstream, wall)")
+  Command.withDescription(
+    "Measure check overlays against a reference-keeping overlay (program size, upstream, wall); needs a built tree"
+  )
 );

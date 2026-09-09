@@ -1,15 +1,41 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "./tsconfig.json",
-  "references": [],
+  "references": [
+    {
+      "path": "../../../packages/drivers/ecfr/tsconfig.json"
+    },
+    {
+      "path": "../../../packages/drivers/govinfo/tsconfig.json"
+    },
+    {
+      "path": "../../../packages/drivers/pacer/tsconfig.json"
+    },
+    {
+      "path": "../../../packages/foundation/modeling/identity/tsconfig.json"
+    },
+    {
+      "path": "../../../packages/foundation/modeling/schema/tsconfig.json"
+    },
+    {
+      "path": "../../../packages/foundation/modeling/utils/tsconfig.json"
+    },
+    {
+      "path": "../../../packages/tooling/library/codegen-kit/tsconfig.json"
+    },
+    {
+      "path": "../../../packages/tooling/library/qa-capture/tsconfig.json"
+    },
+    {
+      "path": "../../../packages/tooling/test-kit/test-utils/tsconfig.json"
+    }
+  ],
   "compilerOptions": {
     "composite": false,
     "declaration": false,
     "declarationMap": false,
     "incremental": false,
     "noEmit": true,
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
     "rootDir": "../../../."
   }
 }

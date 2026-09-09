@@ -48,6 +48,15 @@ const TsconfigReferences = S.Struct({
 const PackageScripts = S.Struct({
   scripts: S.Record(S.String, S.String),
 });
+// A package tsconfig or its check overlay: `references` is optional because a
+// package with no workspace dependencies never gains the key.
+const TsconfigOptionalReferences = S.Struct({
+  references: S.Struct({ path: S.String }).pipe(S.Array, S.optionalKey),
+  compilerOptions: S.Record(S.String, S.Unknown),
+});
+const decodeTsconfigOptionalReferences = S.decodeUnknownSync(TsconfigOptionalReferences);
+const referencePathsOf = (tsconfig: typeof TsconfigOptionalReferences.Type): ReadonlyArray<string> =>
+  A.map(tsconfig.references ?? [], (entry) => entry.path);
 const TsconfigPaths = S.Struct({
   compilerOptions: S.Struct({
     paths: S.Record(S.String, S.Array(S.String)),
@@ -730,6 +739,20 @@ describe("create-package", { concurrent: false }, () => {
               "packages/foundation/modeling/identity",
             ]);
 
+            // The post-scaffold sync leaves the check overlay carrying exactly
+            // the canonical references (quality-lane audit D3), with no module
+            // overrides of its own.
+            const packageDir = path.join(rootDir, "packages", "example-domain");
+            const canonicalTsconfig = decodeTsconfigOptionalReferences(
+              yield* readJsoncFile(path.join(packageDir, "tsconfig.json"))
+            );
+            const checkOverlay = decodeTsconfigOptionalReferences(
+              yield* readJsoncFile(path.join(packageDir, "tsconfig.check.json"))
+            );
+            expect(referencePathsOf(checkOverlay)).toEqual(referencePathsOf(canonicalTsconfig));
+            expect(checkOverlay.compilerOptions).not.toHaveProperty("module");
+            expect(checkOverlay.compilerOptions).not.toHaveProperty("moduleResolution");
+
             const syncpackConfig = yield* fs.readFileString(path.join(rootDir, "syncpack.config.ts"));
             expect(syncpackConfig).toContain(`"packages/example-domain/package.json"`);
 
@@ -1045,6 +1068,20 @@ describe("create-package", { concurrent: false }, () => {
 
             const appTsconfig = yield* readJsoncFile(path.join(packageDir, "tsconfig.json"));
             expect(decodeTsconfigIncludes(appTsconfig).include).toContain("../../vitest.aliases.generated.json");
+
+            // The service app depends on @beep/identity, so the post-scaffold
+            // sync gives tsconfig.json one reference and the check overlay must
+            // carry the same one (quality-lane audit D3).
+            const canonicalTsconfig = decodeTsconfigOptionalReferences(appTsconfig);
+            const checkOverlay = decodeTsconfigOptionalReferences(
+              yield* readJsoncFile(path.join(packageDir, "tsconfig.check.json"))
+            );
+            expect(referencePathsOf(canonicalTsconfig)).toEqual([
+              "../../packages/foundation/modeling/identity/tsconfig.json",
+            ]);
+            expect(referencePathsOf(checkOverlay)).toEqual(referencePathsOf(canonicalTsconfig));
+            expect(checkOverlay.compilerOptions).not.toHaveProperty("module");
+            expect(checkOverlay.compilerOptions).not.toHaveProperty("moduleResolution");
           })
         )
       ),

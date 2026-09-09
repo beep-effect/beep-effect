@@ -1,5 +1,5 @@
 /**
- * tsconfig-sync command - synchronize workspace tsconfig references and root aliases.
+ * tsconfig-sync command - synchronize workspace tsconfig references, check-overlay references, and root aliases.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -102,6 +102,6 @@ export const tsconfigSyncCommand = Command.make(
   })
 ).pipe(
   Command.withDescription(
-    "Synchronize repo-managed config files including root tsconfig references, aliases, syncpack, and package docgen"
+    "Synchronize repo-managed config files including root tsconfig references, aliases, syncpack, package tsconfig.check.json references, and package docgen"
   )
 );
