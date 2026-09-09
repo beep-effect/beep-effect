@@ -45,11 +45,11 @@ Workflow:
 
 Acceptance:
 
-- [x] The complete `SPEC.md` contract is satisfied.
+- [ ] The complete `SPEC.md` contract is satisfied.
 - [x] The lint rule reports zero warnings at repository scope.
 - [x] The rule is configured as an error and its focused tests are green.
 - [x] Generated sources remain reproducible from updated generators.
-- [x] Required local and hosted checks are green.
+- [ ] Required local and hosted checks are green.
 
 Verification:
 

@@ -419,3 +419,15 @@
 - **Prevention:** Treat a pushed branch as a durable publication checkpoint.
   Report the failing API bucket and reset time, and offer a REST PR-creation
   fallback while retaining the required local proof and review gates.
+
+## 2026-09-08 — Package-matrix resume ignored committed changes
+
+- **Work:** Audit the package receipts during PR #1028 closeout review.
+- **Evidence:** The historical report names commit `45b422a58e`, but its digest
+  is the empty-input SHA-256. The runner hashed only dirty differences and
+  ignored committed tree identity, so a clean checkout after a merge could
+  resume stale results. That receipt is no longer treated as final-tree proof.
+- **Prevention:** Include the committed tree, verifier bytes, owner inventory,
+  and uncommitted inputs in the receipt identity; pin the recorded head for
+  the run and refuse to relabel results if it changes. Test resume behavior
+  across two clean commits, then rerun the full owner matrix.

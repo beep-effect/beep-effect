@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `completed-retained`
+Lifecycle: `active`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -33,8 +33,10 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P4 Close: complete. The implementation and review fixes are merged; this
-documentation follow-up retains the evidence and reflection.
+P2 verification, P3 review, and P4 closeout are in progress. The implementation
+fixes are merged; this follow-up repairs the package-proof receipt identity and
+retains the reflection. Closure requires fresh package receipts and a terminal
+Yeet monitor result.
 
 ## Latest Evidence
 
@@ -47,7 +49,10 @@ documentation follow-up retains the evidence and reflection.
   2026-09-08. The refreshed
   [`residual census`](./research/residual-census.json) reports zero findings on
   the merged implementation, and `beep/no-inline-schema-compile` is an error.
-- The [`106-owner matrix`](./research/package-verification.json) is green.
+- The [`106-owner matrix`](./research/package-verification.json) records a
+  historical passing run. Its old digest omitted committed code, so that
+  artifact is not accepted as final-tree package evidence. A fresh matrix with
+  a committed-tree fingerprint is required before closure.
   Later reconciliation passed full package verification for `@beep/semantica`,
   `@beep/freshbooks`, and `@beep/repo-cli`, plus focused tests and quick package
   verification for the four test-only owners. Fresh HTML regeneration has no
@@ -61,9 +66,9 @@ documentation follow-up retains the evidence and reflection.
   share Git tree `6a9533d44b007cb26959789f22d7fa7768dc7615`. Hosted checks are
   green. [`research/closeout-evidence.md`](./research/closeout-evidence.md)
   records the commits, commands, results, and review links.
-- The [closeout reflection](./history/reflections/2026-09-08-codex.md) and
-  synchronized lifecycle update are retained in this documentation follow-up.
-  Its publication and review checks remain the final live completion gate.
+- The [closeout reflection](./history/reflections/2026-09-08-codex.md) is retained
+  with the proof-runner repair. The lifecycle will close in this PR after its
+  publication and review checks reach the required terminal result.
 
 ## Notes
 

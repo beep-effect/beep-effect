@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `complete`
+Status: `in-progress`
 
 ## Phases
 
@@ -10,15 +10,16 @@ Status: `complete`
 | --- | --- | --- | --- |
 | P0 Research | complete | Reproduce and classify the 2,931-finding opening baseline. | Every finding has an ownership family and migration shape; drift is explained. |
 | P1 Implement | complete | Hoist compilers family by family and update generators before outputs. | All governed findings are removed without semantic changes. |
-| P2 Verify | complete | Promote the rule to error and run local proof. | Rule tests, affected package checks, docgen, and canonical verification are green. |
-| P3 Yeet: PR to mergeable | complete | Publish through Yeet and close checks and review threads. | `bun run beep yeet monitor` reports `merge-ready: yes`. |
-| P4 Close | complete | Write the reflection and flip packet state. | Packet status and evidence are synchronized; reflection validates. |
+| P2 Verify | in-progress | Promote the rule to error and run local proof. | Rule tests, affected package checks, docgen, and canonical verification are green. |
+| P3 Yeet: PR to mergeable | in-progress | Publish through Yeet and close checks and review threads. | `bun run beep yeet monitor` reports `merge-ready: yes`. |
+| P4 Close | in-progress | Write the reflection and flip packet state. | Packet status and evidence are synchronized; reflection validates. |
 
 The implementation and review corrections merged in PRs #1019 and #1022.
 `research/closeout-evidence.md` records the full passing local proof and hosted
-checks on the same implementation tree. Both PRs merged before the packet
-closed, so the reflection and lifecycle update travel together in a
-documentation follow-up, which retains the final publication/monitor gate.
+checks on the same implementation tree. Both PRs were manually merged before
+the packet closed. PR #1028 now contains the package-proof runner repair and
+reflection; the lifecycle update will land in that same PR after the fresh
+package matrix and terminal publication/monitor result are available.
 
 ## P0 — Research
 

@@ -21,14 +21,20 @@ covers the shipped implementation exactly.
 | --- | --- | --- |
 | Account for the opening baseline | `opening-census.json` and `opening-census.md` reproduce 2,931, explain +156 drift, and classify all 3,087 findings | Complete |
 | Remove governed compiler calls | Fresh `research/scripts/census.ts` run on the merged implementation; `residual-census.json` | Zero findings and zero unresolved generated owners |
-| Enable the hard error | `.oxlintrc.jsonc` sets `beep/no-inline-schema-compile` to `error`; full lint-policy passes | Complete |
+| Enable the hard error | `.oxlintrc.json` sets `beep/no-inline-schema-compile` to `error`; full lint-policy passes | Complete |
 | Preserve static and runtime-dependent forms | 66 policy-pack tests, including nested objects, arrays, spreads, computed keys, and unary operands | Green |
-| Verify affected package owners | `package-verification.json` contains 106/106 passing canonical receipts; later mainline reconciliation is recorded in README and OPPORTUNITIES | Green |
+| Verify affected package owners | The historical 106/106 report predates the shipped tree and has an invalid resume identity; a fresh run with the corrected committed-tree fingerprint is required | Pending |
 | Keep generated output reproducible | Fresh `bun run --cwd packages/foundation/modeling/html generate:check`; full codegen lane | No tracked generated diff |
 | Complete local repository proof | `bun run beep yeet verify --merged`, proof tier `full`, outcome `success`, exit 0 | All 33 reported lanes passed in 2,614,527 ms |
 | Complete hosted implementation checks | [PR #1022 Check run](https://github.com/beep-effect/beep-effect/actions/runs/34303197901) and the PR's status rollup | Required checks green; no failing rollup entry |
 | Address review comments | Two original PR #1019 threads and all three PR #1022 threads | Replies posted; all resolved |
 | Capture friction and lessons | `OPPORTUNITIES.md` and `history/reflections/2026-09-08-codex.md` | Retained with the packet |
+
+The historical package report is stamped at `45b422a58e75324c30d7d4e60e5ef0b91be35bab`.
+Its original digest only included uncommitted differences and therefore did
+not establish committed code identity. PR #1028 repairs that defect and keeps
+P2 open until a fresh matrix finishes. The implementation's aggregate Yeet
+success below does not substitute for that required package receipt.
 
 The local full proof includes codegen, build, test-TSGo, lint, lint-policy,
 Docgen, integration tests, unit tests, coverage, security, secrets, SAST, Nix,
@@ -52,9 +58,10 @@ lowered, and the subsequent hosted Coverage Regression check passed.
 
 Both implementation PRs merged before packet closeout. The watcher recorded
 all required checks green, then ended with `reason: pr-merged` and `failing: 0`.
-The reflection and lifecycle updates therefore travel together in a separate
-documentation PR. That PR still requires its own Yeet publication and monitor
-result; the implementation proof above does not claim those later checks ran.
+PR #1028 now carries the proof-runner repair and reflection together. The
+lifecycle remains active until fresh package evidence and a terminal
+`merge-ready: yes` result exist; the final lifecycle update will stay in that
+PR with the remaining implementation work.
 
 The packet's reflection validator reports zero blocking and advisory findings.
 Goal doctor reports zero blocking findings. It retains a non-fatal
