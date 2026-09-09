@@ -25,7 +25,7 @@ Compact `/goal` launcher. The packet files are the contract — read first:
   frontend.
 - **Codex** drafts non-visual plumbing (worker 3D layout, projection schema,
   bridge/toggle atoms) via `codex-companion.mjs task --background --write
-  --model gpt-5.6-sol --effort medium` — ONE output file per job; Fable reviews
+  --model gpt-6-astra --effort xhigh` — ONE output file per job; Fable reviews
   before commit. Preserves the weekly Fable quota (codex = separate quota, can't
   browse). See the user's codex-companion memory for the full path/poll flow.
 - `research/` is frozen, reference-only. NEVER copy or closely paraphrase code

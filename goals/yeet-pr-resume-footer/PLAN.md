@@ -33,7 +33,7 @@ Before marking the packet closed:
 
 ## Execution Notes
 
-- Fable orchestrates and publishes; Codex (Sol, medium effort) implements from
+- Fable orchestrates and publishes; Codex (`gpt-6-astra`, `xhigh` reasoning) implements from
   the spec in this checkout on `feat/yeet-pr-resume-footer`; a Codex review
   pass precedes publish.
 - Preserve unrelated worktree changes.

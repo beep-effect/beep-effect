@@ -49,7 +49,7 @@ deliberately left for a dedicated packet.
 
 - **Fable 5 (main)** drives: packet ledgers, `bun.lock` dedupe, browser closure
   (via codex Chrome), Yeet, merge, final verification.
-- **Codex GPT-5.6 Sol (medium)** does the token-heavy work: per-lane validation
+- **Codex `gpt-6-astra` (`xhigh`)** does the token-heavy work: per-lane validation
   and remediation on disjoint paths, returning changed files + verification.
 
 ## Notes

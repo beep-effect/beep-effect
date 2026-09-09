@@ -54,7 +54,7 @@ Higher sources outrank lower sources when they conflict.
 - Search live source and package barrels before adding helpers. A shared helper
   is allowed only for a repeated maintained-code class and only in the
   doctrine-correct home (package-local first, then tooling/driver/foundation).
-- Token-heavy validation and remediation run on codex GPT-5.6 Sol at medium
+- Token-heavy validation and remediation run on codex `gpt-6-astra` at `xhigh`
   reasoning, one agent per disjoint lane. Sub-agents return changed files +
   verification and never write shared ledgers, `bun.lock`, or the dashboard.
 - Fable (main agent) owns `ops/triage.json`, `findings/INDEX.md`, `bun.lock`

@@ -43,12 +43,14 @@ can click-merge in the morning.
    issue mailbox as a small envelope comment, numbered JSONL parts carrying
    byte counts and SHA-256 digests, and a completion marker. Private records
    stay in a content-addressed local store.
-4. **Verification (blinded, local):** Sol/Luna through the local proxy receive
+4. **Verification (blinded, local):** Astra/Luna through the local proxy receive
    normalized records without the hosted model's identity or recommendation,
    verify source evidence and checkout-dependent claims, and return typed
    verdicts. A packet cannot be `success` without this stage; missing
    capabilities or inconclusive evidence remain `partial`. The stage also
-   attempts to refute N standing claims selected from the digest.
+   attempts to refute N standing claims selected from the digest. Use
+   `gpt-6-astra` with `xhigh` for token-heavy verification; retain Luna
+   for lightweight work, following root `AGENTS.md`.
 5. **Publisher (deterministic, local):** verify the handoff, preflight `gh`
    under least-privileged 1Password environment injection, write the packet
    and single-writer ledger updates in the dedicated clone, open the PR
@@ -89,7 +91,7 @@ date. The local user timer will be persistent across machine downtime.
   on-demand state are operator-visible open questions; on-demand spend stays
   off in the interim.
 - Local CLIProxyAPI verification consumes a separate xAI/API proxy pool, while
-  blinded Sol/Luna verification consumes the OpenAI pool. Those local pools do
+  blinded Astra/Luna verification consumes the OpenAI pool. Those local pools do
   not reveal or replenish the Cursor-side Bot grant.
 - Local proxy invocations use a scrubbed environment; parent-environment
   leakage remains a hard failure rather than a reason to expose a credential.

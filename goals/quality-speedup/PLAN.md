@@ -16,7 +16,7 @@ Status: `complete`
 
 ## Execution notes
 
-- Heavy fan-out runs as `codex exec` background jobs (GPT-5.6 Sol, medium
+- Heavy fan-out runs as `codex exec` background jobs (`gpt-6-astra`, `xhigh`
   reasoning) writing drafts to the session scratchpad and data TSVs to
   `research/data/`; Fable integrates and verifies. Claude subagents are not
   used for bulk work (quota routing doctrine).

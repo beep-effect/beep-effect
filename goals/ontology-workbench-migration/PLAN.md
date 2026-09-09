@@ -16,7 +16,7 @@ Status: `active`
 
 ## Execution model (locked decision 8)
 
-- codex (gpt-5.6-sol, medium effort) drafts M1 capability code and M2's
+- codex (`gpt-6-astra`, `xhigh` reasoning) drafts M1 capability code and M2's
   mechanical extraction via codex-companion background lanes; one write-lane
   at a time.
 - Fable plans, reviews all drafts, and hand-builds M3's user-facing UI

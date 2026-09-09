@@ -37,7 +37,7 @@ Scope:
 Model economy (operator requirement): the operator's weekly Fable 5 limit is
 scarce. Fable/Opus sessions plan, design, and review ONLY. Route all
 token-heavy lanes (reference scans, law drafting research, bulk analysis) to
-codex via the codex plugin with `--model gpt-5.6-sol --effort medium`, one
+codex via the codex plugin with `--model gpt-6-astra --effort xhigh`, one
 artifact per agent.
 
 Workflow:

@@ -72,8 +72,8 @@ repository that has since changed.
   at wave boundaries, in the same PR as the wave's refactors.
 - Generated-ish or vendored-port code follows the `Html.model.ts` precedent:
   `ignorePatterns` with a provenance comment, not per-function overrides.
-- Execution routing (user directive 2026-07-30): Codex agents implement
-  (GPT-5.6 Sol, xhigh); Fable orchestrates and reviews. Refactor worked
+- Execution routing (user directive updated 2026-09-08): Codex agents implement
+  (`gpt-6-astra`, `xhigh`); Fable orchestrates and reviews. Refactor worked
   examples: `goals/standards-remediation/ops/reports/{DA-2,SF-2}`.
 - Effect-first repo laws apply to every refactor (no helper-wall extraction,
   `Effect.fn`/`Effect.fnUntraced` for generator returns, match over chains).

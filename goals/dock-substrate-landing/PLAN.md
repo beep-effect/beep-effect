@@ -1,6 +1,6 @@
 # PLAN — Dock Substrate Landing
 
-Execution model (durable owner directive): codex `gpt-5.6-sol` medium
+Execution model (durable owner directive): codex `gpt-6-astra` with `xhigh`
 reasoning writes the token-heavy M1/M2 lanes in isolated worktrees via
 codex-companion background tasks with XML operator prompts; Fable designs,
 reviews, and writes the M3 frontend. One write lane at a time. Every

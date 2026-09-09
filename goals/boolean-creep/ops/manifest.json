@@ -60,7 +60,7 @@
     },
     {
       "id": "P2",
-      "name": "Design (codex Sol medium)",
+      "name": "Design (Codex; current routing in AGENTS.md)",
       "status": "pending",
       "exit": "One reviewed design per confirmed instance under designs/, zero orchestrator findings; Benjamin ratifies (GATE 2)."
     },

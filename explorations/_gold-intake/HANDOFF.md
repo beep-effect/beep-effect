@@ -20,7 +20,7 @@ machine-readable source of truth.
 ## Mission
 
 Convert the gold into this repo's fuzzy front end so there's a deep, grounded, adversarially-reviewed backlog
-of execute-ready work for GPT-5.6 / Fable. **Reconciliation-first** — nothing is lost, nothing is duplicated.
+of execute-ready work for `gpt-6-astra` (`xhigh` for token-heavy work) / Fable. **Reconciliation-first** — nothing is lost, nothing is duplicated.
 
 ## Hard constraint — do NOT duplicate existing work
 

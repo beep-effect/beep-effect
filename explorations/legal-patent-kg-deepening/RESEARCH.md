@@ -16,10 +16,11 @@ A cold session resumes from the first incomplete step.
    screenshots), classify each unique source into the four track themes.
    Output: `research/00-catalog.md` + machine rows (gold-intake nugget
    schema).
-2. **Mining waves (codex)** — `codex exec` (Sol, `--effort medium`) per-source
-   distillates for every unique paper into `research/mined/`; `links.md`
-   URLs fetched (firecrawl lane) and distilled the same way; FOPNet thread
-   first. Repos: one medium triage pass, then xhigh deep-mines on survivors.
+2. **Mining waves (Codex)** — per-source distillates for every unique paper
+   into `research/mined/`, using `codex exec --model gpt-6-astra`
+   with `-c 'model_reasoning_effort="xhigh"'`. Fetch `links.md` URLs through
+   the firecrawl lane and distill them the same way; FOPNet thread first.
+   Repos: one lightweight triage pass, then Astra/xhigh deep-mines on survivors.
 3. **Deep-research tracks (sequential, one at a time)** — Workflow harness
    per track over the distillates, adversarial verify + synthesis:
    1. Legal core ontology + Hohfeldian formalization → `research/10-track-legal-core.md`

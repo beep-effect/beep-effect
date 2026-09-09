@@ -24,9 +24,9 @@ via PR #413 (`03285268f9`). See `history/2026-07-14-closeout.md`.
 ## Execution Notes
 
 - Browser capture and closure route through codex's Chrome extension (delegated
-  via a `codex:codex-rescue` agent, model `gpt-5.6-sol`, medium reasoning), not
+  via a `codex:codex-rescue` agent, model `gpt-6-astra`, `xhigh` reasoning), not
   Claude `claude-in-chrome`.
-- Remediation runs one codex `gpt-5.6-sol`/medium agent per lane on disjoint
+- Remediation runs one codex `gpt-6-astra`/`xhigh` agent per lane on disjoint
   paths; each returns changed files + verification. Fable integrates, owns all
   shared ledgers, and runs the `bun.lock` dedupe last to avoid conflicts.
 - Use live source/barrel search and repo doctrine before creating any helper.

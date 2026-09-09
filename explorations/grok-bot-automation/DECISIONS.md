@@ -1,5 +1,11 @@
 # Decisions
 
+> Routing update (2026-09-08): new token-heavy Codex work uses `gpt-6-astra`
+> with `xhigh` reasoning, per [root agent guidance](../../AGENTS.md#token-heavy-codex-work).
+> This supersedes earlier model/effort choices below for future work. Completed
+> runs retain their recorded provenance; lightweight and Grok routes retain
+> their intended roles.
+
 ## 2026-09-03 — Vehicle
 
 **Question:** Is bot automation another phase of `beep-mode`, or a separate

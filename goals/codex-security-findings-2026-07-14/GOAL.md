@@ -34,7 +34,7 @@ Locked decisions (grill 2026-07-14):
 - Post-merge closure via codex Chrome; accept scanner auto-close; match exact ID allowlist.
 
 Division of labor: Fable drives ledgers, `bun.lock`, browser, Yeet, merge. Codex
-GPT-5.6 Sol (medium) does per-lane validation + remediation on disjoint paths.
+`gpt-6-astra` (`xhigh`) does per-lane validation + remediation on disjoint paths.
 
 Lanes: RL-001 CSF-001 (agents + ai-provider-cli); RL-002 CSF-003, CSF-005
 (documents server + doc-text + desktop runtime); RL-003 CSF-004, CSF-006 (ontology
@@ -44,7 +44,7 @@ docs, lockfile). CSF-004 and CSF-006 share a lane (same Session.validation.ts fi
 Workflow:
 
 1. Confirm each finding reproduces at HEAD; record `remediate` in `ops/triage.json`.
-2. Spawn one codex gpt-5.6-sol/medium agent per lane on disjoint paths; fix per the
+2. Spawn one codex `gpt-6-astra`/`xhigh` agent per lane on disjoint paths; fix per the
    suggested remediation; add one regression test per code finding.
 3. Fable integrates changed files, runs the `bun.lock` dedupe last, records changed
    files + targeted proof per finding.

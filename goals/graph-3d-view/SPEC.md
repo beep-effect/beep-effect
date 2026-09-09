@@ -64,7 +64,7 @@ Higher sources outrank lower sources when they conflict.
 - **Routing (binding, see `GOAL.md`).** All design, review, and user-facing
   frontend/renderer/UX code is the main agent's (Fable). Non-visual plumbing
   (worker 3D layout, projection schema, bridge/toggle atoms) is drafted by codex
-  `gpt-5.6-sol --effort medium --write` jobs (one output file per job) and
+  `gpt-6-astra --effort xhigh --write` jobs (one output file per job) and
   reviewed by Fable before commit. `research/` is frozen — no new web research;
   never copy bundle/AGPL code.
 - **Doctrine.** Slice `ui` must not import drivers; `client` imports only
