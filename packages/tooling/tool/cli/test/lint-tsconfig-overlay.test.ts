@@ -42,6 +42,25 @@ const CANONICAL_WITH_REFERENCE = `{
 }
 `;
 
+const CANONICAL_WITH_TWO_REFERENCES = `{
+  "extends": "../../../tsconfig.base.json",
+  "include": ["src"],
+  "compilerOptions": { "outDir": "dist", "rootDir": "src" },
+  "references": [{ "path": "../dep/tsconfig.json" }, { "path": "../other/tsconfig.json" }]
+}
+`;
+
+// The same two references, permuted: order is part of the contract.
+const REVERSED_OVERLAY = `{
+  "extends": "./tsconfig.json",
+  "references": [{ "path": "../other/tsconfig.json" }, { "path": "../dep/tsconfig.json" }],
+  "compilerOptions": {
+    "composite": false,
+    "noEmit": true
+  }
+}
+`;
+
 // The post-switch shape: the overlay repeats the canonical reference verbatim.
 const MIRRORED_OVERLAY = `{
   "$schema": "https://json.schemastore.org/tsconfig",
@@ -149,7 +168,9 @@ describe("tsconfig-overlay lint command", { concurrent: false }, () => {
             expect(errorText).toContain(
               "  - packages/drivers/widened/tsconfig.check.json compilerOptions.moduleResolution"
             );
-            expect(errorText).toContain("  - packages/drivers/widened/tsconfig.check.json compilerOptions.strict");
+            expect(errorText).toContain(
+              "  - packages/drivers/widened/tsconfig.check.json compilerOptions.strict: outside the overlay allowlist"
+            );
             expect(errorText).toContain("  - packages/drivers/widened/tsconfig.check.json compilerOptions.types");
             expect(errorText).not.toContain("tsconfig.check.json $schema");
             expect(errorText).toContain("move anything else into the package's tsconfig.json");
@@ -189,6 +210,7 @@ describe("tsconfig-overlay lint command", { concurrent: false }, () => {
             expect(errorText).toContain(
               "  - packages/drivers/extra/tsconfig.check.json references: expected the 0 reference(s) of tsconfig.json, found 1 (missing 0, extra 1)"
             );
+            expect(errorText).toContain("must equal those of its owner tsconfig");
             expect(errorText).toContain("regenerate with: bun run beep tsconfig-sync --write");
             expect(errorText).not.toContain("move anything else into the package's tsconfig.json");
           })
@@ -263,6 +285,31 @@ describe("tsconfig-overlay lint command", { concurrent: false }, () => {
             expect(A.length(violations)).toBe(1);
             expect(drift._tag === "Some" ? drift.value.detail : undefined).toBe(
               "expected the 2 reference(s) of tsconfig.build.json, found 1 (missing 1, extra 0)"
+            );
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    15_000
+  );
+
+  it(
+    "reports the same references in a different order as reordered drift",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            const path = yield* Path.Path;
+            // tsconfig-sync writes both lists in one canonical order, so a
+            // permutation is drift with nothing missing and nothing extra.
+            yield* writeCanonical("packages/drivers/shuffled", CANONICAL_WITH_TWO_REFERENCES);
+            yield* writeOverlay("packages/drivers/shuffled", REVERSED_OVERLAY);
+
+            const violations = yield* collectTsconfigOverlayViolations(path.resolve(process.cwd()));
+            const drift = A.findFirst(violations, (violation) => violation.scope === "references");
+
+            expect(A.length(violations)).toBe(1);
+            expect(drift._tag === "Some" ? drift.value.detail : undefined).toBe(
+              "expected the 2 reference(s) of tsconfig.json, found 2 (missing 0, extra 0, reordered)"
             );
           })
         ).pipe(provideScopedLayer(testLayer))

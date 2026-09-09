@@ -52,6 +52,7 @@ const canonicalFileName = "tsconfig.json";
 // tsconfig-sync writes references into tsconfig.build.json when a package has
 // one (its owner project), so the overlay must mirror the same file.
 const buildOwnerFileName = "tsconfig.build.json";
+const allowlistDetail = "outside the overlay allowlist";
 const checkCommand = "bun run beep lint tsconfig-overlay";
 const syncCommand = "bun run beep tsconfig-sync --write";
 // Mirrors the package test-typecheck lint's search roots so every overlay a
@@ -211,7 +212,7 @@ export type TsconfigOverlayViolationScope = typeof TsconfigOverlayViolationScope
 /**
  * One finding against a `tsconfig.check.json` overlay: a key set outside the
  * allowlist, or (scope `references`) a reference list that drifts from the
- * canonical `tsconfig.json`, with `detail` describing the drift.
+ * owner tsconfig's, with `detail` explaining the finding.
  *
  * **Example** (Construct a violation)
  *
@@ -221,7 +222,8 @@ export type TsconfigOverlayViolationScope = typeof TsconfigOverlayViolationScope
  * const violation = TsconfigOverlayViolation.make({
  *   file: "packages/drivers/example/tsconfig.check.json",
  *   scope: "compilerOptions",
- *   key: "types"
+ *   key: "types",
+ *   detail: "outside the overlay allowlist"
  * })
  * console.log(violation.key) // "types"
  * ```
@@ -234,11 +236,11 @@ export class TsconfigOverlayViolation extends S.Class<TsconfigOverlayViolation>(
     file: S.String,
     scope: TsconfigOverlayViolationScope,
     key: S.String,
-    detail: S.optionalKey(S.String),
+    detail: S.String,
   },
   $I.annote("TsconfigOverlayViolation", {
     description:
-      "A key a tsconfig.check.json overlay sets outside the allowlist, or its references drifting from tsconfig.json.",
+      "A key a tsconfig.check.json overlay sets outside the allowlist, or its references drifting from its owner tsconfig.",
   })
 ) {}
 
@@ -292,7 +294,7 @@ const violationsOf = (
   const documentViolations = pipe(
     R.keys(document),
     A.filter((key) => !isAllowedDocumentKey(key)),
-    A.map((key) => TsconfigOverlayViolation.make({ file, scope: "document", key }))
+    A.map((key) => TsconfigOverlayViolation.make({ file, scope: "document", key, detail: allowlistDetail }))
   );
   const compilerOptionViolations = pipe(
     R.get(document, "compilerOptions"),
@@ -300,7 +302,7 @@ const violationsOf = (
     O.map(R.keys),
     O.getOrElse(A.empty<string>),
     A.filter((key) => !isAllowedCompilerOptionKey(key)),
-    A.map((key) => TsconfigOverlayViolation.make({ file, scope: "compilerOptions", key }))
+    A.map((key) => TsconfigOverlayViolation.make({ file, scope: "compilerOptions", key, detail: allowlistDetail }))
   );
   return A.appendAll(documentViolations, compilerOptionViolations);
 };
@@ -432,15 +434,19 @@ export const collectTsconfigOverlayViolations = Effect.fn("TsconfigOverlay.colle
   }
 );
 
-const renderViolation = (violation: TsconfigOverlayViolation): string =>
-  TsconfigOverlayViolationScope.$match(violation.scope, {
-    document: () => `  - ${violation.file} ${violation.key}`,
-    compilerOptions: () => `  - ${violation.file} compilerOptions.${violation.key}`,
-    references: () => `  - ${violation.file} references: ${violation.detail ?? "drift from tsconfig.json"}`,
+// Every line reads `<file> <location>: <detail>`; the location names the
+// offending key at its scope.
+const renderViolation = (violation: TsconfigOverlayViolation): string => {
+  const location = TsconfigOverlayViolationScope.$match(violation.scope, {
+    document: () => violation.key,
+    compilerOptions: () => `compilerOptions.${violation.key}`,
+    references: () => "references",
   });
+  return `  - ${violation.file} ${location}: ${violation.detail}`;
+};
 
 const allowlistHint = `[tsconfig-overlay] an overlay may set only ${A.join(TsconfigOverlayDocumentKey.Options, ", ")} and compilerOptions { ${A.join(TsconfigOverlayCompilerOptionKey.Options, ", ")} }; move anything else into the package's tsconfig.json so build and check inherit it together`;
-const referencesHint = `[tsconfig-overlay] an overlay's references must equal its tsconfig.json references verbatim (extends does not inherit them); regenerate with: ${syncCommand}`;
+const referencesHint = `[tsconfig-overlay] an overlay's references must equal those of its owner tsconfig (tsconfig.build.json when present, else tsconfig.json) verbatim (extends does not inherit them); regenerate with: ${syncCommand}`;
 const isReferencesViolation = (violation: TsconfigOverlayViolation): boolean =>
   TsconfigOverlayViolationScope.is.references(violation.scope);
 
