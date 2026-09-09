@@ -6,6 +6,7 @@ metadata and source counts remain intact; the prior manifest digest records
 the security-only transformation. An already repaired pin is verified unchanged.
 Use ``--source-ref <commit>`` to replay an older committed pin into the current
 output tree. This reads only Git objects, never the original live capture sources.
+Use ``--run2-only --finding "Ruling 23"`` for the ratified run-2 repair only.
 """
 from __future__ import annotations
 
@@ -110,7 +111,7 @@ def repair(name: str, source_ref: str | None = None, population: str | None = No
         data = payloads[path]
         rows = module.decode_ndjson(data, path) if path.endswith(".ndjson") else [module.decode_json(data, path)]
         if name == "etl_fleet_corpus":
-            sanitized = [module.redact_string_values(row) for row in rows]
+            sanitized = [module.redact_string_values(row, repair=finding == "Ruling 23") for row in rows]
         else:
             sanitized = [module.redact(row, None, collections.Counter(), True) for row in rows]
         if module.same_json(rows, sanitized):
@@ -137,16 +138,32 @@ def repair(name: str, source_ref: str | None = None, population: str | None = No
         rules[:] = [rule.replace("recursively transform string values only:",
                                 "recursively drop process identity members, then transform strings:") for rule in rules]
         rules.append(module.PROCESS_REDACTION_RULE)
+        if finding == "Ruling 23":
+            rules.extend(rule for rule in module.REPAIR_REDACTION_RULES if rule not in rules)
     repair_record = {
         "finding": finding, "source_manifest_sha256": module.sha256(original),
         "changed_raw_payloads": changed, "live_recapture": False,
     }
+    if name == "etl_fleet_corpus" and finding == "Ruling 23":
+        repair_record.update(ruling="Ruling 23", residue_classes=["sha12(hostname)", "uid-[0-9]+"])
+    if source_ref:
+        previous_manifest = yaml.safe_load(previous_output)
+        history = previous_manifest.get("security_resanitization", {})
+        latest = (history.get("updates") or [history])[-1]
+        if (previous_manifest.get("generator_sha256") == generator_digest
+                and latest.get("finding") == finding
+                and latest.get("source_manifest_sha256") == repair_record["source_manifest_sha256"]
+                and latest.get("residue_classes", []) == repair_record.get("residue_classes", [])
+                and all((root / path).is_file() and (root / path).read_bytes() == data
+                        for path, data in payloads.items())):
+            verify(root)
+            print(f"{root.name}: verified unchanged")
+            return
+        repair_record["superseded_manifest_sha256"] = module.sha256(previous_output)
     if "security_resanitization" in manifest:
         manifest["security_resanitization"].setdefault("updates", []).append(repair_record)
     else:
         manifest["security_resanitization"] = repair_record
-    if source_ref:
-        manifest["security_resanitization"]["superseded_manifest_sha256"] = module.sha256(previous_output)
     manifest["totals"]["payload_bytes"] = sum(map(len, payloads.values()))
     prefix = original.split(b"schema_version:", 1)[0]
     for _ in range(12):
@@ -185,10 +202,15 @@ def repair(name: str, source_ref: str | None = None, population: str | None = No
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source-ref", help="Replay a committed source pin, preserving its capture provenance")
-    parser.add_argument("--finding", choices=("CSF-012", "CSF-013"), required=True,
-                        help="Finding responsible for this repair receipt")
+    parser.add_argument("--run2-only", action="store_true", help="Repair only the ratified run-2 fleet pin")
+    parser.add_argument("--finding", choices=("CSF-012", "CSF-013", "Ruling 23"), required=True,
+                        help="Finding or steward ruling responsible for this repair receipt")
     args = parser.parse_args()
-    for generator in ("etl_fleet_corpus", "etl_run3_fleet_corpus", "etl_run3_checkout_identity"):
-        repair(generator, args.source_ref, finding=args.finding)
-    for population in ("fleet", "synthetic"):
-        repair("etl_run3b_fleet_corpus", args.source_ref, population, finding=args.finding)
+    if args.finding == "Ruling 23" and not args.run2_only:
+        parser.error("Ruling 23 requires --run2-only")
+    repair("etl_fleet_corpus", args.source_ref, finding=args.finding)
+    if not args.run2_only:
+        for generator in ("etl_run3_fleet_corpus", "etl_run3_checkout_identity"):
+            repair(generator, args.source_ref, finding=args.finding)
+        for population in ("fleet", "synthetic"):
+            repair("etl_run3b_fleet_corpus", args.source_ref, population, finding=args.finding)
