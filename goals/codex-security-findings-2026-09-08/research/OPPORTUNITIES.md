@@ -86,3 +86,10 @@
   identical data; the unrelated settings bytes matched their pre-run hash.
   Format intended JSON before staging so the saved overlay contains only
   unrelated work. The recovery stash remains available.
+
+- PR #1032 review found that replacing an entire PID match damaged embedded JSON,
+  HEAD-only generator lookup prevented replay after commit, and a repeat repair
+  overwrote its original provenance. Parse every serialization layer in redaction
+  tests, exercise repair from a synthetic committed history, and retain the initial
+  receipt with append-only update records. Replaying the original committed pins
+  restored the message structure without live recapture.

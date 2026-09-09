@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `active`. Eleven findings merged in PR #1026; CSF-012 is implemented for the authorized follow-up PR. Full proof, hosted acceptance, merge, and external closure remain required. Final evidence is recorded on PR #1026.
+Status: `active`. Eleven findings merged in PR #1026; CSF-012 is implemented for the authorized follow-up PR. Full proof, hosted acceptance, merge, and external closure remain required. Evidence for the first eleven findings is recorded on PR #1026; CSF-012 proof and closure are recorded on PR #1032.
 
 ## Phases
 
@@ -17,7 +17,7 @@ Status: `active`. Eleven findings merged in PR #1026; CSF-012 is implemented for
 | P6 publish | complete | Publish one intentional PR through Yeet. | Exact branch head pushed and PR opened. |
 | P7 monitor | in-progress | Close hosted checks and actionable reviews. | PR green and mergeable. |
 | P8 merge-and-close | pending | Merge and close captured findings. | PR merged; all 12 IDs resolved. |
-| P9 close | in-progress | Record evidence, reflection, and lifecycle. | Reflection lands in PR #1026; actual merge and exact-ID closure evidence is retained on that PR. |
+| P9 close | in-progress | Record evidence, reflection, and lifecycle. | Reflection accompanies the fixes; merge and exact-ID closure evidence is retained on #1026 and follow-up #1032. |
 
 ## Execution Rules
 

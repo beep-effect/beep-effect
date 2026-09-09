@@ -89,12 +89,13 @@ PROJECTION_KIND = "properties_projection"
 
 # String leaves may contain JSON serialized through several escaping layers.
 PID_IN_TEXT = re.compile(
-    r"""\bpid(?:\\*["'])?(?:\s|\\+[nrt])*(?:[=:](?:\s|\\+[nrt])*)?(?:\\*["'])?[0-9]+""",
+    r"""(?P<prefix>\bpid(?P<key_quote>\\*["'])?(?:\s|\\+[nrt])*(?:[=:](?:\s|\\+[nrt])*)?(?P<value_quote>\\*["'])?)[0-9]+""",
     re.IGNORECASE,
 )
 PID_REDACTION_RULE = (
     "In string values, replace case-insensitive PID matches, including single or double "
-    "quotes and repeated JSON escapes, with pid <redacted>. Pattern: " + PID_IN_TEXT.pattern
+    "quotes and repeated JSON escapes. Preserve delimiters; replace numeric JSON values "
+    "with null and quoted or free-text values with <redacted>. Pattern: " + PID_IN_TEXT.pattern
 )
 TIMESTAMP_KEY = re.compile(r"(?:^ts$|AtMillis$|At$|TimestampMillis$|Timestamp$)")
 PROPERTY_KEY = re.compile(r"[A-Za-z0-9_]+")
@@ -222,13 +223,19 @@ def same_json(left: JsonValue, right: JsonValue) -> bool:
     return left == right
 
 
+def redact_pid_match(match: re.Match[str]) -> str:
+    """Preserve JSON punctuation and escaping while removing only PID digits."""
+    replacement = "null" if match["key_quote"] and not match["value_quote"] else "<redacted>"
+    return match["prefix"] + replacement
+
+
 def redact_string(value: str) -> str:
     """Apply the ordered fleet path and free-text PID rules to one value."""
 
     redacted = value.replace(FLEET_PATH_PREFIX, "<fleet>/")
     redacted = redacted.replace(HOME_PATH_PREFIX, "<home>")
     redacted = redacted.replace(SYSTEM_TEMP_PATH_PREFIX, "<tmp>/")
-    return PID_IN_TEXT.sub("pid <redacted>", redacted)
+    return PID_IN_TEXT.sub(redact_pid_match, redacted)
 
 
 def redact_string_values(value: JsonValue) -> JsonValue:

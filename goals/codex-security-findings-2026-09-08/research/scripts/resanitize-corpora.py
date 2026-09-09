@@ -4,15 +4,20 @@ Run with ``uv run --offline --with pyyaml python <this-script>``.
 Each generator verifies the staged result before promotion. Original capture
 metadata and source counts remain intact; the prior manifest digest records
 the security-only transformation. An already repaired pin is verified unchanged.
+Use ``--source-ref <commit>`` to replay an older committed pin into the current
+output tree. This reads only Git objects, never the original live capture sources.
 """
 from __future__ import annotations
 
 import collections
+import argparse
 import importlib.util
+import io
 import os
 import shutil
 import subprocess
 import sys
+import tarfile
 import tempfile
 from pathlib import Path
 
@@ -22,36 +27,70 @@ ROOT = Path(__file__).resolve().parents[4]
 CORPUS = ROOT / "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus"
 
 
-def repair(name: str) -> None:
+def verify_generator_provenance(module, expected: str) -> None:
+    """Find the exact source generator bytes in reachable commit history."""
+    path = module.SCRIPT.relative_to(ROOT).as_posix()
+    revisions = subprocess.run(
+        ["git", "rev-list", "HEAD", "--", path], cwd=ROOT,
+        capture_output=True, text=True, check=True,
+    ).stdout.splitlines()
+    for revision in revisions:
+        result = subprocess.run(["git", "show", revision + ":" + path], cwd=ROOT,
+                                capture_output=True, check=True)
+        if module.sha256(result.stdout) == expected:
+            return
+    raise SystemExit("refusing a pin whose generator has no matching committed provenance")
+
+
+def read_committed_pin(root: Path, source_ref: str) -> dict[str, bytes]:
+    revision = subprocess.run(["git", "rev-parse", "--verify", "--end-of-options", source_ref + "^{commit}"],
+                              cwd=ROOT, capture_output=True, text=True, check=True).stdout.strip()
+    prefix = root.relative_to(ROOT).as_posix() + "/"
+    archive = subprocess.run(["git", "archive", revision, "--", prefix], cwd=ROOT,
+                             capture_output=True, check=True).stdout
+    result = {}
+    with tarfile.open(fileobj=io.BytesIO(archive)) as tree:
+        for entry in tree:
+            if entry.isdir():
+                continue
+            if not entry.isfile() or not entry.name.startswith(prefix):
+                raise SystemExit("refusing a non-file committed corpus entry")
+            result[entry.name[len(prefix):]] = tree.extractfile(entry).read()
+    return result
+
+
+def load_generator(name: str):
     spec = importlib.util.spec_from_file_location(name, CORPUS / (name + ".py"))
     module = importlib.util.module_from_spec(spec)
     sys.modules[name] = module
     spec.loader.exec_module(module)
+    return module
+
+
+def repair(name: str, source_ref: str | None = None) -> None:
+    module = load_generator(name)
     root = module.OUTPUT_ROOT
     if root.is_symlink() or not root.is_dir() or any(p.is_symlink() for p in root.rglob("*")):
         raise SystemExit("refusing a missing or symlinked corpus")
-    original = (root / module.MANIFEST_NAME).read_bytes()
+    previous_output = (root / module.MANIFEST_NAME).read_bytes()
+    source = (read_committed_pin(root, source_ref) if source_ref else
+              {p.relative_to(root).as_posix(): p.read_bytes() for p in root.rglob("*") if p.is_file()})
+    original = source.pop(module.MANIFEST_NAME)
     manifest = yaml.safe_load(original)
     generator_digest = module.sha256(module.SCRIPT.read_bytes())
-    if manifest["generator_sha256"] == generator_digest:
+    if not source_ref and manifest["generator_sha256"] == generator_digest:
         module.verify_output_tree(root)
         print(f"{root.name}: verified unchanged")
         return
-    prior_generator = subprocess.run(
-        ["git", "show", "HEAD:" + module.SCRIPT.relative_to(ROOT).as_posix()],
-        cwd=ROOT, capture_output=True, check=True,
-    ).stdout
-    if manifest["generator_sha256"] != module.sha256(prior_generator):
-        raise SystemExit("refusing a pin whose generator differs from committed provenance")
+    verify_generator_provenance(module, manifest["generator_sha256"])
     receipts = manifest["files"]
     paths = [module.safe_relative_path(r["path"]).as_posix() for r in receipts]
-    actual = sorted(p.relative_to(root).as_posix() for p in root.rglob("*")
-                    if p.is_file() and p.name != module.MANIFEST_NAME)
+    actual = sorted(source)
     if paths != sorted(set(paths)) or paths != actual:
         raise SystemExit("refusing an inconsistent source inventory")
     payloads = {}
     for receipt in receipts:
-        data = (root / receipt["path"]).read_bytes()
+        data = source[receipt["path"]]
         if module.sha256(data) != receipt["sha256"] or len(data) != receipt["bytes"]:
             raise SystemExit("refusing a source payload with mismatched integrity")
         payloads[receipt["path"]] = data
@@ -78,14 +117,20 @@ def repair(name: str) -> None:
     manifest["generator_sha256"] = generator_digest
     if name == "etl_fleet_corpus":
         rules = manifest["redaction_rules"]
-        pid_rules = [i for i, rule in enumerate(rules) if "pid <redacted>" in rule]
+        pid_rules = [i for i, rule in enumerate(rules) if "pid <redacted>" in rule or "case-insensitive PID" in rule]
         if len(pid_rules) != 1:
             raise SystemExit("refusing ambiguous PID redaction provenance")
         rules[pid_rules[0]] = module.PID_REDACTION_RULE
-    manifest["security_resanitization"] = {
+    repair_record = {
         "finding": "CSF-012", "source_manifest_sha256": module.sha256(original),
         "changed_raw_payloads": changed, "live_recapture": False,
     }
+    if "security_resanitization" in manifest:
+        manifest["security_resanitization"].setdefault("updates", []).append(repair_record)
+    else:
+        manifest["security_resanitization"] = repair_record
+    if source_ref:
+        manifest["security_resanitization"]["superseded_manifest_sha256"] = module.sha256(previous_output)
     manifest["totals"]["payload_bytes"] = sum(map(len, payloads.values()))
     prefix = original.split(b"schema_version:", 1)[0]
     for _ in range(12):
@@ -122,5 +167,8 @@ def repair(name: str) -> None:
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--source-ref", help="Replay a committed source pin, preserving its capture provenance")
+    args = parser.parse_args()
     for generator in ("etl_fleet_corpus", "etl_run3_fleet_corpus", "etl_run3_checkout_identity"):
-        repair(generator)
+        repair(generator, args.source_ref)

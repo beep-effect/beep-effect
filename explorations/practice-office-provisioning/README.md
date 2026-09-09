@@ -19,6 +19,9 @@ The corpus chain restores the past; this packet gives the practice a present.
 
 ## Next Open Question
 
+Routing for future token-heavy Codex work is settled: `gpt-6-astra` with
+`xhigh` reasoning ([decision update](./DECISIONS.md)). The next step remains:
+
 None — the packet graduated 2026-08-30. Four promised-now goals own the
 work (`goals/practice-box-provisioning`, `goals/practice-m365-contacts`,
 `goals/practice-mail-backfill`, `goals/freshbooks-driver`); the five VERIFY
@@ -93,3 +96,6 @@ points in [`MAP.md`](./MAP.md) (`practice-sign-invoice-flow`,
   carrying the exploration's source ledger and back-linked decisions.
   Status flipped to `graduated`; the five VERIFY items moved into the
   owning goals' P0 phases.
+- 2026-09-08: recorded the operator's Astra/xhigh routing update in DECISIONS,
+  this resume surface, and manifest timestamps where needed; retained the existing
+  stage, lifecycle, open questions, and historical execution provenance.

@@ -110,3 +110,22 @@ will be recorded against PR #1026. Capture-time Codex statuses are preserved.
 After main integration, the ignored exploration Atlas was stale. Canonical
 `beep explore atlas --write` restored it and `--check` passes; no tracked
 exploration file changed. The superseded local proof is not acceptance evidence.
+
+
+PR #1032 review and main integration:
+
+- Integrated main's Astra xhigh routing while retaining the security correction.
+  Exploration attribution now identifies follow-up PR #1032.
+- Reproduced embedded JSON corruption with a failing parse regression. All three
+  redactors now preserve punctuation and escaping, using null for numeric JSON
+  PID values and <redacted> inside quoted values.
+- Replayed all pins from committed pre-repair source `247d22465bdf` through the
+  repair script. Both fleet pins changed 12 raw files; identity changed zero.
+  All three staged verifiers passed, and an ordinary rerun verified unchanged.
+- The script resolves the source generator digest from Git history. A synthetic
+  committed repository exercises repair after the generator update is committed,
+  exact-source replay, idempotence, rejection of unknown provenance, and retaining
+  the first repair record when a later revision changes no payloads.
+- The Stage A report now labels earlier proofs as historical and records current
+  whole-tree hashes, generator digests, counts, and byte totals. Full Yeet proof,
+  hosted acceptance, merge, and CSF-012 closure remain pending.

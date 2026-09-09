@@ -21,10 +21,13 @@ the "bush" (`A_LETTER_FROM_THE_OTHER_SIDE_OF_THE_LOOP.md`).
 
 ## Next Open Question
 
-CSF-012 in PR #1026 corrects PID redaction in the saved run-2 and run-3 corpus
-pins. The security repair preserves the captured history and adds prior-manifest
-digests; it does not recapture sources or rerun ontology ratification. Stage B
-still follows the gates below.
+CSF-012 in [PR #1032](https://github.com/beep-effect/beep-effect/pull/1032)
+corrects PID redaction in the saved run-2 and run-3 corpus pins. The security
+repair preserves captured history and prior-manifest digests; it does not
+recapture sources or rerun ontology ratification. Stage B follows the gates below.
+
+Routing for future token-heavy Codex work is settled: `gpt-6-astra` with
+`xhigh` reasoning ([decision update](./DECISIONS.md)). The next step remains:
 
 **§4b NORMALIZATION GATE IS COMPLETE AND RATIFIED** (2026-08-29; PR #889). The
 `ontology-foundational-auditor` skill ran as written over the S4 harvest: 1,112
@@ -148,9 +151,9 @@ graduation. Full plan with locked decisions: [`DECISIONS.md`](./DECISIONS.md).
 
 - 2026-09-09: CSF-012 fixes quoted and escaped PID redaction in all three corpus
   generators. A staged repair sanitizes 24 raw files, regenerates integrity
-  receipts, and passes every pin verifier; 18 generator tests pass. The operator
-  authorized resolving all current findings in PR #1026, including the necessary
-  security correction to otherwise immutable run-2 payloads.
+  receipts, and passes every pin verifier; 20 generator tests pass. The operator
+  authorized follow-up PR #1032 after #1026 merged with eleven findings, including
+  the necessary security correction to otherwise immutable run-2 payloads.
 
 - 2026-09-08: PR #1027 Stage A review fixes: encoded checkout path components,
   recomputed receipt observations, runtime-prefix redaction, and refreshed report
@@ -456,3 +459,6 @@ graduation. Full plan with locked decisions: [`DECISIONS.md`](./DECISIONS.md).
   `pros/`→`prose/`), proposal grilled via /grill-with-docs (2 rounds, 8 decisions locked,
   all on recommended arms), pipeline v2 recorded, S0 first-cut baseline computed from this
   checkout's verdicts. Stopped at: fleet-wide baseline + S2/S3 launch.
+- 2026-09-08: recorded the operator's Astra/xhigh routing update in DECISIONS,
+  this resume surface, and manifest timestamps where needed; retained the existing
+  stage, lifecycle, open questions, and historical execution provenance.
