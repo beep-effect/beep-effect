@@ -618,3 +618,8 @@ subprocess diagnostics would make inventory stalls attributable.
   [Heavy / Docgen](https://github.com/beep-effect/beep-effect/actions/runs/34332600371/job/102408052217).
   The probe worker then terminated normally. Full deployment details and reproduction
   commands are in `docs/runbooks/ci-runner-reliability.md`.
+- Publication friction: `changeset-status --since origin/main` evaluates the committed
+  range. The pre-deployment dirty-tree check reported no product workspace, while the
+  first published range correctly required an `@beep/infra` release note. Add the
+  infrastructure changeset before publication; a dirty-tree zero count is not proof
+  that the committed change is exempt from the release-note rule.
