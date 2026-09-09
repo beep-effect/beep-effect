@@ -16,7 +16,7 @@
         "goals/slice-topology-audit",
         "goals/canonical-proof-reconciliation"
       ],
-      "docs": ["AGENTS.md"],
+      "docs": [],
       "supersededBy": null
     },
     "created": "2026-08-29",

@@ -97,5 +97,5 @@ points in [`MAP.md`](./MAP.md) (`practice-sign-invoice-flow`,
   Status flipped to `graduated`; the five VERIFY items moved into the
   owning goals' P0 phases.
 - 2026-09-08: recorded the operator's Astra/xhigh routing update in DECISIONS,
-  the manifest source links, and this resume surface; retained the existing
+  this resume surface, and manifest timestamps where needed; retained the existing
   stage, lifecycle, open questions, and historical execution provenance.

@@ -13,7 +13,7 @@
         "goals/harness-hygiene-mechanical",
         "goals/coding-agent-effectiveness-evidence-loop"
       ],
-      "docs": ["AGENTS.md"],
+      "docs": [],
       "supersededBy": null
     },
     "created": "2026-07-14",

@@ -449,5 +449,5 @@ graduation. Full plan with locked decisions: [`DECISIONS.md`](./DECISIONS.md).
   all on recommended arms), pipeline v2 recorded, S0 first-cut baseline computed from this
   checkout's verdicts. Stopped at: fleet-wide baseline + S2/S3 launch.
 - 2026-09-08: recorded the operator's Astra/xhigh routing update in DECISIONS,
-  the manifest source links, and this resume surface; retained the existing
+  this resume surface, and manifest timestamps where needed; retained the existing
   stage, lifecycle, open questions, and historical execution provenance.

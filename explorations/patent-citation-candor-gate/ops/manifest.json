@@ -9,7 +9,7 @@
     "sources": ["research/SOURCES.md"],
     "links": {
       "goals": ["goals/patent-citation-candor-gate"],
-      "docs": ["AGENTS.md"],
+      "docs": [],
       "supersededBy": null
     },
     "created": "2026-08-04",

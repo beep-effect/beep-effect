@@ -95,5 +95,5 @@ each returns through its own align question, not by reopening this packet.
   currency. Greptile's absent-packages claim rebutted (`law-practice/tables`
   + `server` exist on disk).
 - 2026-09-08: recorded the operator's Astra/xhigh routing update in DECISIONS,
-  the manifest source links, and this resume surface; retained the existing
+  this resume surface, and manifest timestamps where needed; retained the existing
   stage, lifecycle, open questions, and historical execution provenance.

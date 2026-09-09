@@ -19,7 +19,7 @@
         "goals/practice-mail-backfill",
         "goals/freshbooks-driver"
       ],
-      "docs": ["AGENTS.md"],
+      "docs": [],
       "supersededBy": null
     },
     "created": "2026-08-30",

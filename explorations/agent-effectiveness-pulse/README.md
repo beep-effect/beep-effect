@@ -75,5 +75,5 @@ Forwarder durability still rides `ai-metrics-stack` P7f.
   grill checkpoints, codex-medium subagent economy). Next: pipeline revival,
   then pulse mining.
 - 2026-09-08: recorded the operator's Astra/xhigh routing update in DECISIONS,
-  the manifest source links, and this resume surface; retained the existing
+  this resume surface, and manifest timestamps where needed; retained the existing
   stage, lifecycle, open questions, and historical execution provenance.

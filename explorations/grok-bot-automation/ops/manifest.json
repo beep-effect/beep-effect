@@ -19,7 +19,6 @@
     "links": {
       "goals": ["goals/nightly-research-routine"],
       "docs": [
-        "AGENTS.md",
         "standards/architecture/DECISIONS.md",
         "standards/architecture/07-non-slice-families.md"
       ],

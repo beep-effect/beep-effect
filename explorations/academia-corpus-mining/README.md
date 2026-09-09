@@ -169,5 +169,5 @@ triage completed 2026-08-17 — all 14 proposals dispatched.
   the machine-local `academia-2026-07` corpus home (public repo — no copyrighted
   PDFs/full texts committed here).
 - 2026-09-08: recorded the operator's Astra/xhigh routing update in DECISIONS,
-  the manifest source links, and this resume surface; retained the existing
+  this resume surface, and manifest timestamps where needed; retained the existing
   stage, lifecycle, open questions, and historical execution provenance.

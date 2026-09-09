@@ -46,5 +46,5 @@ then decompose (`MAP.md`) into a future `beep-mode` goal with three phased PRs.
   vehicle, principle layout, name, and Cursor plugin fate (six decisions).
   Codex distillation of pstack in flight for round 3.
 - 2026-09-08: recorded the operator's Astra/xhigh routing update in DECISIONS,
-  the manifest source links, and this resume surface; retained the existing
+  this resume surface, and manifest timestamps where needed; retained the existing
   stage, lifecycle, open questions, and historical execution provenance.

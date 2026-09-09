@@ -45,5 +45,5 @@ tooling fixes inside the first bot PR rather than notes.
   name to `EvidenceLadderState` and adds `research/OPPORTUNITIES.md` with four
   friction receipts from the research and publish session.
 - 2026-09-08: recorded the operator's Astra/xhigh routing update in DECISIONS,
-  the manifest source links, and this resume surface; retained the existing
+  this resume surface, and manifest timestamps where needed; retained the existing
   stage, lifecycle, open questions, and historical execution provenance.

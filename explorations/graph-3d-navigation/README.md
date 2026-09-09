@@ -50,5 +50,5 @@ that goal's P0 design gate with the research evidence attached.
   contract, locked interview decisions); SOURCES.md license discipline seeded;
   artifact fetch wave (F1–F5) + codex research lanes launched.
 - 2026-09-08: recorded the operator's Astra/xhigh routing update in DECISIONS,
-  the manifest source links, and this resume surface; retained the existing
+  this resume surface, and manifest timestamps where needed; retained the existing
   stage, lifecycle, open questions, and historical execution provenance.

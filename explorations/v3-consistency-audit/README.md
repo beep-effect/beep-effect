@@ -150,5 +150,5 @@ this packet at `decompose` when their gates fire.
   `main` fast-forwarded `3435c24f94` → `2c0c8eb046` (no slice packages
   touched; census valid). Stopped before graduation by decision.
 - 2026-09-08: recorded the operator's Astra/xhigh routing update in DECISIONS,
-  the manifest source links, and this resume surface; retained the existing
+  this resume surface, and manifest timestamps where needed; retained the existing
   stage, lifecycle, open questions, and historical execution provenance.

@@ -267,5 +267,5 @@ owns *decisions and research* (D2).
   successful P2; pause flip in the P1 PR; erasure journaled across stores with a mid-erasure
   crash test). Greptile 5/5, zero issues.
 - 2026-09-08: recorded the operator's Astra/xhigh routing update in DECISIONS,
-  the manifest source links, and this resume surface; retained the existing
+  this resume surface, and manifest timestamps where needed; retained the existing
   stage, lifecycle, open questions, and historical execution provenance.
