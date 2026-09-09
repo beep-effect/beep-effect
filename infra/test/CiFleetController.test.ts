@@ -265,10 +265,8 @@ describe("@beep/infra CiFleetController", () => {
       ]) {
         const policyName = `ci-fleet-controller-test-${functionName}-app-decrypt`;
         expect(MutableHashMap.get(rolePolicyRoles, policyName)).toEqual(O.some(`${functionName}-role`));
-        const document = MutableHashMap.get(policyDocuments, policyName);
-        assert.isTrue(O.isSome(document));
-        if (O.isSome(document)) {
-          expect(decodePolicyDocument(document.value)).toEqual(
+        expect(pipe(MutableHashMap.get(policyDocuments, policyName), O.map(decodePolicyDocument))).toEqual(
+          O.some(
             Result.succeed({
               Version: "2012-10-17",
               Statement: [
@@ -289,8 +287,8 @@ describe("@beep/infra CiFleetController", () => {
                 },
               ],
             })
-          );
-        }
+          )
+        );
       }
       expect(capturedMetadataOptions.value).toEqual({
         http_endpoint: "enabled",
