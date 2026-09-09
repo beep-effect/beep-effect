@@ -196,7 +196,7 @@ jobs:
           # session and reap the entire process group once the lane process
           # finishes, success and failure alike.
           run_lane() {
-            setsid bun run beep "$@" < /dev/null &
+            setsid bash scripts/ci-runner-resources.sh "${{ matrix.id }}" bun run beep "$@" < /dev/null &
             local pgid=$!
             local status=0
             wait "$pgid" || status=$?

@@ -2,6 +2,40 @@
 
 Record receipts at the moment friction happens; redact for the public repo.
 
+## 2026-09-09 — Canary user data was encoded twice
+
+- What: the first pair of isolated sizing canaries stopped without running
+  their verification suite or producing console receipts.
+- Evidence: decoding `describe-instance-attribute --attribute userData` once
+  yielded another base64 string, rather than the expected `#!/usr/bin/env bash`.
+  The launcher had pre-encoded the JSON user-data field before the CLI encoded it.
+- Attribution: experiment harness failure; no conclusion about either instance
+  size or the production image follows from these attempts.
+- Repair: terminate only the two tagged test instances, pass the script through
+  `--user-data file://...`, and verify the decoded remote attribute against the
+  local script immediately after launch. Retain their bounded cost in the
+  experiment receipt instead of omitting failed attempts.
+
+## 2026-09-09 — Standard rightsizing recommendations cannot size ephemeral workers
+
+- What: the approved second cost pass checked recommendation readiness before
+  selecting smaller runner canaries.
+- Evidence: Compute Optimizer and Cost Optimization Hub are Active; their EC2
+  and consolidated recommendation lists are empty. The `CWAgent` namespace has
+  no metrics. AWS requires at least 30 hours of metrics in 14 days for an EC2
+  instance recommendation; individual job workers terminate far earlier.
+- Consequence: waiting for enrollment alone will not provide useful per-lane
+  sizing evidence. Daily billing is also provisional and currently predates
+  much of the same-day rollout.
+- Response: compare identical pinned workloads on isolated On-Demand workers,
+  preserving CPU count while testing memory capacity; collect memory, CPU,
+  elapsed time and exact outcomes. Add inexpensive job-level measurements to
+  the existing workflow rather than enabling paid extended metrics.
+- Prevention: document the ephemeral-instance eligibility limitation alongside
+  account visibility. Do not interpret an empty recommendation list as proof
+  that the fleet is already optimal.
+- Reference: [Compute Optimizer resource requirements](https://docs.aws.amazon.com/compute-optimizer/latest/ug/requirements.html).
+
 ## 2026-09-09 — A branch-dispatched probe passed routing but could not get a runner
 
 - What: validating the newly activated image with Fleet Lane Probe before
