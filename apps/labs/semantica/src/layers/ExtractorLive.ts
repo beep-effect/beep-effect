@@ -57,6 +57,8 @@ import type {
 import type { CanonicalText, Chunk } from "@/schema/Text";
 import type { CanonicalizerShape } from "@/services/Canonicalizer";
 
+const decodeUnknownRelationExtractionCandidateResult = S.decodeUnknownResult(RelationExtractionCandidate);
+
 const utf8Encoder = new TextEncoder();
 
 const RELATION_CONTRACT_SCHEMA = "semantica-relation-evidence/v1";
@@ -404,7 +406,7 @@ const locateRelationEvidence = (extraction: GroundedExtraction): Result.Result<L
 const decodeRelationCandidate = (
   extraction: GroundedExtraction
 ): Result.Result<RelationExtractionCandidate, S.SchemaError> =>
-  S.decodeUnknownResult(RelationExtractionCandidate)({
+  decodeUnknownRelationExtractionCandidateResult({
     evidenceQuote: extraction.text,
     object: O.getOrUndefined(extractionAttribute(extraction, "object")),
     predicate: O.getOrUndefined(extractionAttribute(extraction, "predicate")),

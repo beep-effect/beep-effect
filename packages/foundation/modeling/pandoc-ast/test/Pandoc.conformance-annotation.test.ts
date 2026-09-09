@@ -7,11 +7,13 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
+const isConformanceAnnotation = S.is(Conformance.Annotation);
+
 describe("@beep/pandoc-ast conformance annotations", () => {
   it("collects the Pandoc JSON profile from the exhaustive result schema", () => {
     const annotation = PandocConformanceResult.pipe(Conformance.collectConformanceAnnotations, A.head, O.getOrThrow);
 
-    expect(S.is(Conformance.Annotation)(annotation)).toBe(true);
+    expect(isConformanceAnnotation(annotation)).toBe(true);
     expect(A.map(annotation.profiles, ({ id }) => id)).toEqual(["pandoc-json-1.23.1"]);
     expect(A.map(annotation.sources, ({ id }) => id)).toEqual([
       "pandoc-types-1.23.1-definition",

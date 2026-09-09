@@ -17,6 +17,9 @@ import * as HttpServerResponse from "effect/unstable/http/HttpServerResponse";
 import { HttpApiEndpoint, HttpApiGroup, HttpApiSchema } from "effect/unstable/httpapi";
 import { describe, expect, it } from "vitest";
 
+const decodeUnknownHttpStatusCodeOption = S.decodeUnknownOption(HttpStatusCode);
+const encodeHttpStatusCodeOption = S.encodeOption(HttpStatusCode);
+
 describe("HttpApiTelemetry", () => {
   it("preserves the schema package's canonical HTTP status export", () => {
     expect(HttpStatusCode).toBe(CanonicalHttpStatusCode);
@@ -32,7 +35,7 @@ describe("HttpApiTelemetry", () => {
   it("round-trips schema-derived HTTP status codes", () => {
     fc.assert(
       fc.property(S.toArbitrary(HttpStatusCode)(fc), (status) => {
-        const decoded = O.flatMap(S.encodeOption(HttpStatusCode)(status), S.decodeUnknownOption(HttpStatusCode));
+        const decoded = O.flatMap(encodeHttpStatusCodeOption(status), decodeUnknownHttpStatusCodeOption);
         expect(O.exists(decoded, (value) => Equal.equals(value, status))).toBe(true);
       }),
       fcRuns(50)

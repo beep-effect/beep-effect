@@ -22,6 +22,8 @@ import { OntologyEventEntry } from "../Domain/Schema/EventSchema.ts";
 import { BackgroundJob } from "../Domain/Schema/JobSchema.ts";
 import type { EventEntry } from "./EventBus.ts";
 import { EventBusService } from "./EventBus.ts";
+const encodeBackgroundJobJson = S.encodeEffect(S.fromJsonString(BackgroundJob));
+const encodeOntologyEventEntryJson = S.encodeEffect(S.fromJsonString(OntologyEventEntry));
 
 const $I = $ScratchpadId.create("effect-ontology/Service/PubSubClient");
 
@@ -31,6 +33,7 @@ const DeadLetterMessage = S.Struct({
   attempts: NonNegativeInt,
   failedAt: S.DateTimeUtcFromString,
 });
+const encodeUnknownDeadLetterMessageJson = S.encodeUnknownEffect(S.fromJsonString(DeadLetterMessage));
 
 // =============================================================================
 // Types
@@ -342,7 +345,7 @@ export const PubSubClientLive = Layer.effect(
 
     const publishEvent: PubSubClientMethods["publishEvent"] = Effect.fn("publishEvent")(function* (event) {
       const timestamp = DateTime.formatIso(yield* DateTime.now);
-      const encoded = yield* S.encodeEffect(S.fromJsonString(OntologyEventEntry))(event).pipe(
+      const encoded = yield* encodeOntologyEventEntryJson(event).pipe(
         Effect.mapError((cause) =>
           PubSubError.make({
             method: "publishEvent",
@@ -362,7 +365,7 @@ export const PubSubClientLive = Layer.effect(
 
     const publishJob: PubSubClientMethods["publishJob"] = Effect.fn("publishJob")(function* (job) {
       const timestamp = DateTime.formatIso(yield* DateTime.now);
-      const encoded = yield* S.encodeEffect(S.fromJsonString(BackgroundJob))(job).pipe(
+      const encoded = yield* encodeBackgroundJobJson(job).pipe(
         Effect.mapError((cause) =>
           PubSubError.make({
             method: "publishJob",
@@ -382,7 +385,7 @@ export const PubSubClientLive = Layer.effect(
     const publishToDeadLetter: PubSubClientMethods["publishToDeadLetter"] = Effect.fn("publishToDeadLetter")(
       function* (originalMessage, error, attempts) {
         const failedAt = DateTime.formatIso(yield* DateTime.now);
-        const encoded = yield* S.encodeUnknownEffect(S.fromJsonString(DeadLetterMessage))({
+        const encoded = yield* encodeUnknownDeadLetterMessageJson({
           originalMessage,
           error,
           attempts,

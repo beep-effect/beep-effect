@@ -27,3 +27,8 @@ reason = "image-size ICNS-parser infinite-loop DoS affecting <=2.0.2; 2.0.2 IS t
 id = "GHSA-5p2g-fcmc-qvqq"
 ignoreUntil = 2026-09-15T00:00:00Z
 reason = "image-size JXL/HEIF-parser infinite-loop DoS affecting <=2.0.2; same package, same exposure, and same no-fixed-release status as GHSA-w3rx-r6r6-pgpr above. Revisit when image-size publishes a release above 2.0.2."
+
+[[IgnoredVulns]]
+id = "GHSA-vwc7-r8mq-g2x9"
+ignoreUntil = 2026-09-15T00:00:00Z
+reason = "adm-zip symlink-following overwrite affecting 0.5.9 through 0.6.0; 0.6.0 is the npm latest and the advisory names no fixed release (verified against the registry 2026-09-08). The sole current path is onnxruntime-node 1.29.0's install script: it downloads NuGet packages over HTTPS, creates a timestamp-named directory under the OS temp directory, and extracts only manifest-selected entries there before copying them into its package binary directory. Exploitation requires a local attacker to predict and pre-create a symlink in that temporary extraction destination while overwrite mode is enabled; CI is single-tenant, and an attacker with the same workstation account already has equivalent file-write authority. Newly published advisory, not introduced by the current PR (the lockfile is byte-identical to current main). Revisit when adm-zip publishes a release above 0.6.0 or onnxruntime-node removes the vulnerable path."

@@ -11,6 +11,8 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
 
+const isPromotionBlockReason2 = S.is(PromotionBlockReason);
+
 describe("PromotionGate", () => {
   it.effect("carries only an opaque subject across the contract", () =>
     Effect.gen(function* () {
@@ -32,13 +34,11 @@ describe("PromotionGate", () => {
   );
 
   it("rejects prose, whitespace, uppercase, and unbounded refusal reasons", () => {
-    const isPromotionBlockReason = S.is(PromotionBlockReason);
-
-    expect(isPromotionBlockReason("vertical-policy-blocked")).toBe(true);
-    expect(isPromotionBlockReason("raw internal failure: password=secret")).toBe(false);
-    expect(isPromotionBlockReason(" vertical-policy-blocked ")).toBe(false);
-    expect(isPromotionBlockReason("VerticalPolicyBlocked")).toBe(false);
-    expect(isPromotionBlockReason(`blocked-${"x".repeat(80)}`)).toBe(false);
+    expect(isPromotionBlockReason2("vertical-policy-blocked")).toBe(true);
+    expect(isPromotionBlockReason2("raw internal failure: password=secret")).toBe(false);
+    expect(isPromotionBlockReason2(" vertical-policy-blocked ")).toBe(false);
+    expect(isPromotionBlockReason2("VerticalPolicyBlocked")).toBe(false);
+    expect(isPromotionBlockReason2(`blocked-${"x".repeat(80)}`)).toBe(false);
   });
 
   it("round-trips the shared boundary schemas", () => {

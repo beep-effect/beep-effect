@@ -21,6 +21,8 @@ import * as Ontology from "../../../Domain/Error/Ontology.ts";
 import * as Rdf from "../../../Domain/Error/Rdf.ts";
 import * as Shacl from "../../../Domain/Error/Shacl.ts";
 import * as Workflow from "../../../Domain/Error/Workflow.ts";
+const decodeBaseBaseError = S.decodeEffect(Base.BaseError);
+const decodeURLStr = S.decodeEffect(URLStr);
 
 const publicSchemas: ReadonlyArray<S.Constraint> = [
   Base.ErrorMessage,
@@ -127,7 +129,7 @@ describe("effect-ontology domain errors", () => {
     "normalizes omitted metadata and applies safe schema defaults",
     Effect.fnUntraced(function* () {
       const base = Base.BaseError.make({ message: "Unexpected failure." });
-      const nullCause = yield* S.decodeEffect(Base.BaseError)({
+      const nullCause = yield* decodeBaseBaseError({
         _tag: "BaseError",
         message: "Nullish failure metadata.",
         cause: null,
@@ -140,7 +142,7 @@ describe("effect-ontology domain errors", () => {
       const suspended = Workflow.WorkflowSuspendedError.make({
         message: "Paused.",
       });
-      const imageUrl = yield* S.decodeEffect(URLStr)("https://example.com/image.png");
+      const imageUrl = yield* decodeURLStr("https://example.com/image.png");
       const timeout = Image.ImageTimeoutError.make({
         url: imageUrl,
         timeoutMs: Base.Milliseconds.make(250),

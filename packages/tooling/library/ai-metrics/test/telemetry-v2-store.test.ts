@@ -19,6 +19,10 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import type { TelemetryV2StoreShape } from "@beep/repo-ai-metrics";
 
+const decodeFlightRecordWriteEvent = S.decodeEffect(FlightRecordWriteEvent);
+const decodeSessionLeaseReconciliation = S.decodeEffect(SessionLeaseReconciliation);
+const decodeSessionLeaseTransition = S.decodeEffect(SessionLeaseTransition);
+
 const fixtureDir = NodeURL.fileURLToPath(new URL("./fixtures/telemetry-v2/", import.meta.url));
 const fixturePath = (name: string): string => `${fixtureDir}${name}`;
 const otherHash = "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
@@ -179,7 +183,7 @@ layer(NodeServices.layer)("telemetry-v2 store", (it) => {
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
-          const invalidEvent = yield* S.decodeEffect(FlightRecordWriteEvent)({
+          const invalidEvent = yield* decodeFlightRecordWriteEvent({
             status: "invalid",
             candidateDigest: otherHash,
             violations: ["schema-invalid"],
@@ -204,7 +208,7 @@ layer(NodeServices.layer)("telemetry-v2 store", (it) => {
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
-          const transition = yield* S.decodeEffect(SessionLeaseTransition)({
+          const transition = yield* decodeSessionLeaseTransition({
             status: "quarantined",
             sessionId: otherHash,
             eventDigest: otherHash,
@@ -212,7 +216,7 @@ layer(NodeServices.layer)("telemetry-v2 store", (it) => {
             evidenceTier: "unknown",
             oipTaint: "unknown",
           });
-          const reconciliation = yield* S.decodeEffect(SessionLeaseReconciliation)({
+          const reconciliation = yield* decodeSessionLeaseReconciliation({
             status: "deferred",
             sessionId: otherHash,
             leaseDigest: otherHash,

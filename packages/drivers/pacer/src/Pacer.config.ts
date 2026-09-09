@@ -231,6 +231,7 @@ export class PacerConfigLoadOptions extends S.Class<PacerConfigLoadOptions>($I`P
     description: "Options used when loading PACER config from an Effect ConfigProvider.",
   })
 ) {}
+const decodePacerConfigLoadOptions = S.decodeEffect(PacerConfigLoadOptions);
 
 /**
  * Constructor input for {@link PacerConfigLoadOptions}.
@@ -274,7 +275,7 @@ export type PacerConfigLoadOptionsInput = typeof PacerConfigLoadOptions.Encoded;
  */
 export const loadPacerConfig = Effect.fn("Pacer.loadPacerConfig")((rawOptions: PacerConfigLoadOptionsInput) =>
   Effect.gen(function* () {
-    const options = yield* S.decodeEffect(PacerConfigLoadOptions)(rawOptions).pipe(
+    const options = yield* decodePacerConfigLoadOptions(rawOptions).pipe(
       Effect.mapError((cause) => PacerConfigError.make_(unknownCauseMessage(cause)))
     );
     const loginId = yield* Config.redacted(PACER_ENV.username);

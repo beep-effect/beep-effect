@@ -32,6 +32,11 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 
+const decodeUnknownFFmpegErrorFromUnknownOptionsSync = S.decodeUnknownSync(FFmpegErrorFromUnknownOptions);
+const encodeFFmpegErrorFromUnknownOptionsSync = S.encodeSync(FFmpegErrorFromUnknownOptions);
+const encodeFFmpegProgressEventSync = S.encodeSync(FFmpegProgressEvent);
+const encodeVideoProbeSync = S.encodeSync(VideoProbe);
+
 type FFmpegEventValue = FFmpegEvent;
 
 const provideScopedLayer =
@@ -156,14 +161,16 @@ describe("@beep/ffmpeg", () => {
     assertRoundTrip(FFmpegEvent);
     assertRoundTrip(ExtractFramesManifest);
     assertRoundTrip(FFmpegErrorContext);
-
-    const encodeErrorOptions = S.encodeSync(FFmpegErrorFromUnknownOptions);
-    const decodeErrorOptions = S.decodeUnknownSync(FFmpegErrorFromUnknownOptions);
     fc.assert(
       fc.property(
         S.toArbitrary(FFmpegErrorFromUnknownOptions)(fc).filter((options) => O.isNone(options.cause)),
         (options) => {
-          expect(Equal.equals(decodeErrorOptions(encodeErrorOptions(options)), options)).toBe(true);
+          expect(
+            Equal.equals(
+              decodeUnknownFFmpegErrorFromUnknownOptionsSync(encodeFFmpegErrorFromUnknownOptionsSync(options)),
+              options
+            )
+          ).toBe(true);
         }
       ),
       fcRuns(25)
@@ -172,7 +179,7 @@ describe("@beep/ffmpeg", () => {
 
   it("keeps Option-modeled optional metadata encoded as omitted keys", () => {
     expect(
-      S.encodeSync(VideoProbe)(
+      encodeVideoProbeSync(
         VideoProbe.make({
           videoPath: "./clip.mp4",
           durationSeconds: O.some(2),
@@ -191,12 +198,12 @@ describe("@beep/ffmpeg", () => {
       width: 1920,
     });
 
-    expect(S.encodeSync(VideoProbe)(VideoProbe.make({ videoPath: "./clip.mp4" }))).toEqual({
+    expect(encodeVideoProbeSync(VideoProbe.make({ videoPath: "./clip.mp4" }))).toEqual({
       videoPath: "./clip.mp4",
     });
 
     expect(
-      S.encodeSync(FFmpegProgressEvent)(
+      encodeFFmpegProgressEventSync(
         FFmpegProgressEvent.make({
           frameCount: 1,
           kind: "progress",
@@ -216,7 +223,7 @@ describe("@beep/ffmpeg", () => {
     });
 
     expect(
-      S.encodeSync(FFmpegProgressEvent)(
+      encodeFFmpegProgressEventSync(
         FFmpegProgressEvent.make({
           frameCount: 1,
           kind: "progress",

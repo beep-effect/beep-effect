@@ -34,6 +34,8 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 
+const decodeUnknownYeetCheckFailedRow = S.decodeUnknownEffect(YeetCheckFailedRow);
+
 const AT = "2026-08-17T00:00:00Z";
 const LATER = "2026-08-17T00:00:10Z";
 
@@ -363,7 +365,7 @@ describe("dispatchYeetCheckFailure", () => {
         const optionalCheck = YeetWatchCheck.make({ ...failingCheck, required: false });
         yield* dispatchYeetCheckFailure(root, snapshotWithFailure(optionalCheck), optionalCheck, AT);
 
-        const entry = yield* S.decodeUnknownEffect(YeetCheckFailedRow)((yield* readInboxRows(root))[0]);
+        const entry = yield* decodeUnknownYeetCheckFailedRow((yield* readInboxRows(root))[0]);
         expect(entry.severity).toBe("P1");
       })
     ).pipe(provideScopedLayer(Layer.mergeAll(TestConsole.layer, PlatformLayer)))
@@ -376,7 +378,7 @@ describe("dispatchYeetCheckFailure", () => {
 
         const rows = yield* readInboxRows(root);
         expect(A.length(rows)).toBe(1);
-        const entry = yield* S.decodeUnknownEffect(YeetCheckFailedRow)(rows[0]);
+        const entry = yield* decodeUnknownYeetCheckFailedRow(rows[0]);
         expect(entry.checkout).toBe(root);
         expect(entry.capsule.lane).toBe("Check / Coverage");
         expect(entry.capsule.link).toBe("https://github.com/beep/beep/actions/runs/1/job/2");

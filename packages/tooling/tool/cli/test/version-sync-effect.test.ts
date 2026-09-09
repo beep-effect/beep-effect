@@ -25,6 +25,11 @@ import * as S from "effect/Schema";
 const encodeJson = UnknownFromJsonString.encodeUnknownSync;
 
 import { FastCheck as fc } from "effect/testing";
+
+const decodeUnknownJson = S.decodeEffect(S.fromJsonString(S.Unknown));
+const decodeBunVersionStateSync = S.decodeSync(BunVersionState);
+const encodeBunVersionStateSync = S.encodeSync(BunVersionState);
+
 import { FetchHttpClient } from "effect/unstable/http";
 
 const VersionSyncTestLayer = Layer.mergeAll(NodeServices.layer, FetchHttpClient.layer, UpdateApplierServiceLive);
@@ -187,13 +192,11 @@ layer(VersionSyncTestLayer)("VersionSync Effect Catalog", (it) => {
 
   describe("buildBunReport", () => {
     it("round-trips schema-derived Bun version states", () => {
-      const encode = S.encodeSync(BunVersionState);
-      const decode = S.decodeSync(BunVersionState);
       const equivalent = S.toEquivalence(BunVersionState);
 
       fc.assert(
         fc.property(S.toArbitrary(BunVersionState)(fc), (state) => {
-          expect(equivalent(decode(encode(state)), state)).toBe(true);
+          expect(equivalent(decodeBunVersionStateSync(encodeBunVersionStateSync(state)), state)).toBe(true);
         })
       );
     });
@@ -379,9 +382,7 @@ layer(VersionSyncTestLayer)("VersionSync Effect Catalog", (it) => {
         expect(yield* updateVercelBunVersion(vercelJsonPath, "buildCommand", "1.4.0")).toBe(true);
         expect(yield* updateVercelBunVersion(vercelJsonPath, "buildCommand", "1.4.0")).toBe(false);
 
-        const updated = (yield* S.decodeEffect(S.fromJsonString(S.Unknown))(
-          yield* fs.readFileString(vercelJsonPath)
-        )) as Record<string, unknown>;
+        const updated = (yield* decodeUnknownJson(yield* fs.readFileString(vercelJsonPath))) as Record<string, unknown>;
         expect(updated.installCommand).toBe('cd ../.. && npx --yes "bun@1.4.0" install --frozen-lockfile');
         expect(updated.buildCommand).toBe("cd ../.. && npx --yes bun@1.4.0 run --cwd apps/oip-web build:pwa");
         expect(updated.$schema).toBe("https://openapi.vercel.sh/vercel.json");
@@ -433,7 +434,7 @@ layer(VersionSyncTestLayer)("VersionSync Effect Catalog", (it) => {
 
         expect(applied).toBe(3);
         expect(yield* fs.readFileString(path.join(tmpDir, ".bun-linux-x64.sha256"))).toBe("new-digest\n");
-        const updatedVercel = (yield* S.decodeEffect(S.fromJsonString(S.Unknown))(
+        const updatedVercel = (yield* decodeUnknownJson(
           yield* fs.readFileString(path.join(vercelDir, "vercel.json"))
         )) as Record<string, unknown>;
         expect(updatedVercel.installCommand).toBe("npx --yes bun@1.4.0 install --frozen-lockfile");

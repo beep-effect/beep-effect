@@ -22,6 +22,8 @@ import { FastCheck as fc } from "effect/testing";
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
 
+const decodeUsptoConfigInputResult = S.decodeResult(UsptoConfigInput);
+
 const applicationEnvelope = JSON.stringify({
   count: 1,
   patentFileWrapperDataBag: [
@@ -225,7 +227,7 @@ describe("Uspto identifier normalization", () => {
 describe("Uspto schema parity", () => {
   it("keeps encoded schema wire shapes byte-identical", () => {
     const config = Result.getOrThrow(
-      S.decodeResult(UsptoConfigInput)({ apiKey: "test-key", apiUrl: "https://api.uspto.gov///" })
+      decodeUsptoConfigInputResult({ apiKey: "test-key", apiUrl: "https://api.uspto.gov///" })
     );
     const metadata = decode(UsptoApplicationMetadata, {
       applicationNumberText: "16138242",
@@ -255,7 +257,7 @@ describe("Uspto schema parity", () => {
       apiKey: "test-key",
       apiUrl: "https://api.uspto.gov",
     });
-    expect(Result.isFailure(S.decodeResult(UsptoConfigInput)({ apiUrl: "//" }))).toBe(true);
+    expect(Result.isFailure(decodeUsptoConfigInputResult({ apiUrl: "//" }))).toBe(true);
     expect(encode(UsptoApplicationMetadata, metadata)).toEqual({
       applicationNumberText: "16138242",
       firstApplicantName: "Precision Widgets LLC",

@@ -15,11 +15,15 @@ import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeClaimProjectionOutputSchemaSync = S.decodeSync(ClaimProjection.outputSchema);
+const decodeUnknownCandidateClaimSync = S.decodeUnknownSync(CandidateClaim);
+const encodeClaimProjectionOutputSchemaSync = S.encodeSync(ClaimProjection.outputSchema);
+
 const ClaimProjectionAuthorityArbitrary = S.toArbitrary(ClaimProjection.inputSchema)(fc);
 const sameClaimProjectionView = S.toEquivalence(ClaimProjectionView);
 
 const makeCandidate = (id: number, fixtureKey: string, lifecycle: string): CandidateClaim =>
-  S.decodeUnknownSync(CandidateClaim)({
+  decodeUnknownCandidateClaimSync({
     ...productEntityFixtureInput("EpistemicCandidateClaim", id),
     fixtureKey,
     lifecycle,
@@ -124,7 +128,7 @@ describe("@beep/epistemic-use-cases", () => {
 
     const view1 = projectClaims(authority);
     const view2 = projectClaims(authority);
-    const encoded = S.encodeSync(ClaimProjection.outputSchema)(view1);
+    const encoded = encodeClaimProjectionOutputSchemaSync(view1);
 
     expect(view1.total).toBe(3);
     expect(view1.counts.candidate).toBe(1);
@@ -148,8 +152,8 @@ describe("@beep/epistemic-use-cases", () => {
     fc.assert(
       fc.property(ClaimProjectionAuthorityArbitrary, (authority) => {
         const view = projectClaims(authority);
-        const encoded = S.encodeSync(ClaimProjection.outputSchema)(view);
-        const decoded = S.decodeSync(ClaimProjection.outputSchema)(encoded);
+        const encoded = encodeClaimProjectionOutputSchemaSync(view);
+        const decoded = decodeClaimProjectionOutputSchemaSync(encoded);
 
         expect(encoded.total).toBe(A.length(authority));
         for (const state of ClaimLifecycle.Options) {

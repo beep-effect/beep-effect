@@ -276,6 +276,14 @@ const ModelCountSqlRow = S.Struct({
   })
 );
 
+const decodeUnknownEmbeddingSqlRowArray = S.decodeUnknownEffect(S.Array(EmbeddingSqlRow));
+const decodeUnknownEmbeddingVectorSqlRowArray = S.decodeUnknownEffect(S.Array(EmbeddingVectorSqlRow));
+const decodeUnknownSimilaritySqlRowArray = S.decodeUnknownEffect(S.Array(SimilaritySqlRow));
+const decodeUnknownHybridSearchSqlRowArray = S.decodeUnknownEffect(S.Array(HybridSearchSqlRow));
+const decodeUnknownTextSearchSqlRowArray = S.decodeUnknownEffect(S.Array(TextSearchSqlRow));
+const decodeUnknownEmbeddingTypeCountSqlRowArray = S.decodeUnknownEffect(S.Array(EmbeddingTypeCountSqlRow));
+const decodeUnknownModelCountSqlRowArray = S.decodeUnknownEffect(S.Array(ModelCountSqlRow));
+
 const ExistsSqlRow = S.Struct({ exists: S.Boolean }).pipe(
   $I.annoteSchema("ExistsSqlRow", {
     description: "Decoded SQL EXISTS projection.",
@@ -288,22 +296,17 @@ const OneExistsSqlRow = S.Tuple([ExistsSqlRow]).pipe(SchemaUtils.withCodecStatic
 
 const normalizeDecodedRows = normalizeDrizzleError("decodeRows");
 const normalizeExecution = normalizeDrizzleError("execute");
-const decodeEmbeddingSqlRows = (rows: unknown) =>
-  normalizeDecodedRows(S.decodeUnknownEffect(S.Array(EmbeddingSqlRow))(rows));
+const decodeEmbeddingSqlRows = (rows: unknown) => normalizeDecodedRows(decodeUnknownEmbeddingSqlRowArray(rows));
 const decodeOneEmbeddingSqlRow = (rows: unknown) => normalizeDecodedRows(OneEmbeddingSqlRow.decodeUnknownEffect(rows));
 const decodeEmbeddingVectorSqlRows = (rows: unknown) =>
-  normalizeDecodedRows(S.decodeUnknownEffect(S.Array(EmbeddingVectorSqlRow))(rows));
-const decodeSimilaritySqlRows = (rows: unknown) =>
-  normalizeDecodedRows(S.decodeUnknownEffect(S.Array(SimilaritySqlRow))(rows));
-const decodeHybridSearchSqlRows = (rows: unknown) =>
-  normalizeDecodedRows(S.decodeUnknownEffect(S.Array(HybridSearchSqlRow))(rows));
-const decodeTextSearchSqlRows = (rows: unknown) =>
-  normalizeDecodedRows(S.decodeUnknownEffect(S.Array(TextSearchSqlRow))(rows));
+  normalizeDecodedRows(decodeUnknownEmbeddingVectorSqlRowArray(rows));
+const decodeSimilaritySqlRows = (rows: unknown) => normalizeDecodedRows(decodeUnknownSimilaritySqlRowArray(rows));
+const decodeHybridSearchSqlRows = (rows: unknown) => normalizeDecodedRows(decodeUnknownHybridSearchSqlRowArray(rows));
+const decodeTextSearchSqlRows = (rows: unknown) => normalizeDecodedRows(decodeUnknownTextSearchSqlRowArray(rows));
 const decodeOneCountSqlRow = (rows: unknown) => normalizeDecodedRows(OneCountSqlRow.decodeUnknownEffect(rows));
 const decodeEmbeddingTypeCountSqlRows = (rows: unknown) =>
-  normalizeDecodedRows(S.decodeUnknownEffect(S.Array(EmbeddingTypeCountSqlRow))(rows));
-const decodeModelCountSqlRows = (rows: unknown) =>
-  normalizeDecodedRows(S.decodeUnknownEffect(S.Array(ModelCountSqlRow))(rows));
+  normalizeDecodedRows(decodeUnknownEmbeddingTypeCountSqlRowArray(rows));
+const decodeModelCountSqlRows = (rows: unknown) => normalizeDecodedRows(decodeUnknownModelCountSqlRowArray(rows));
 const decodeOneExistsSqlRow = (rows: unknown) => normalizeDecodedRows(OneExistsSqlRow.decodeUnknownEffect(rows));
 
 // =============================================================================

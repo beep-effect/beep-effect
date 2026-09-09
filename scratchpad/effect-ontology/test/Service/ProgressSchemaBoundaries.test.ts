@@ -8,6 +8,8 @@ import { BackpressureConfig } from "../../Contract/ProgressStreaming.ts";
 import { ExtractionRunId } from "../../Domain/Identity.ts";
 import { makeBackpressureHandler, makeProgressBuilder } from "../../Service/ProgressStreaming.ts";
 import { EntityResolutionConfig } from "../../Workflow/EntityResolution.ts";
+const decodeUnknownBackpressureConfigResult = S.decodeUnknownResult(BackpressureConfig);
+const decodeUnknownEntityResolutionConfigResult = S.decodeUnknownResult(EntityResolutionConfig);
 
 describe("progress and workflow schema boundaries", () => {
   it.effect(
@@ -27,14 +29,11 @@ describe("progress and workflow schema boundaries", () => {
   );
 
   it("rejects invalid backpressure and entity-resolution thresholds", () => {
-    const decodeBackpressure = S.decodeUnknownResult(BackpressureConfig);
-    const decodeResolution = S.decodeUnknownResult(EntityResolutionConfig);
-
-    assert.isTrue(Result.isFailure(decodeBackpressure({ maxQueueSize: 0 })));
-    assert.isTrue(Result.isFailure(decodeBackpressure({ warningThreshold: 1.1 })));
-    assert.isTrue(Result.isFailure(decodeBackpressure({ detailedEventSampleRate: -0.1 })));
-    assert.isTrue(Result.isFailure(decodeResolution({ mentionSimilarityThreshold: 1.1 })));
-    assert.isTrue(Result.isFailure(decodeResolution({ typeOverlapRatio: -0.1 })));
+    assert.isTrue(Result.isFailure(decodeUnknownBackpressureConfigResult({ maxQueueSize: 0 })));
+    assert.isTrue(Result.isFailure(decodeUnknownBackpressureConfigResult({ warningThreshold: 1.1 })));
+    assert.isTrue(Result.isFailure(decodeUnknownBackpressureConfigResult({ detailedEventSampleRate: -0.1 })));
+    assert.isTrue(Result.isFailure(decodeUnknownEntityResolutionConfigResult({ mentionSimilarityThreshold: 1.1 })));
+    assert.isTrue(Result.isFailure(decodeUnknownEntityResolutionConfigResult({ typeOverlapRatio: -0.1 })));
   });
 
   it.effect(

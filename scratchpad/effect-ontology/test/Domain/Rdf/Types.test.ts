@@ -4,8 +4,13 @@ import { describe, expect, it } from "@effect/vitest";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import { Triple } from "../../../Domain/Rdf/Types.ts";
+const isSafePnLocal = S.is(SafePnLocal);
 
 const { BlankNode, Literal, makeBlankNode, makeLiteral, makeNamedNode, NamedNode, Quad } = CanonicalRdf;
+const isBlankNode = S.is(BlankNode);
+const isLiteral = S.is(Literal);
+const isNamedNode = S.is(NamedNode);
+const isQuad = S.is(Quad);
 
 describe("effect-ontology RDF types", () => {
   it("derives arbitraries whose values satisfy local adapter schemas", () => {
@@ -26,10 +31,10 @@ describe("effect-ontology RDF types", () => {
     const blankNode = makeBlankNode("alice");
     const literal = makeLiteral("Alice", "https://www.w3.org/2001/XMLSchema#string");
 
-    expect(S.is(NamedNode)(namedNode)).toBe(true);
-    expect(S.is(BlankNode)(blankNode)).toBe(true);
+    expect(isNamedNode(namedNode)).toBe(true);
+    expect(isBlankNode(blankNode)).toBe(true);
     expect(blankNode).toEqual({ termType: "BlankNode", value: "alice" });
-    expect(S.is(Literal)(literal)).toBe(true);
+    expect(isLiteral(literal)).toBe(true);
   });
 
   it("round-trips graph-free triples through canonical default-graph quads", () => {
@@ -41,7 +46,7 @@ describe("effect-ontology RDF types", () => {
     const quad = triple.toQuad();
     const recovered = Triple.fromQuad(quad);
 
-    expect(S.is(Quad)(quad)).toBe(true);
+    expect(isQuad(quad)).toBe(true);
     expect(quad.graph.termType).toBe("DefaultGraph");
     expect(recovered.subject).toEqual(triple.subject);
     expect(recovered.predicate).toEqual(triple.predicate);
@@ -49,8 +54,8 @@ describe("effect-ontology RDF types", () => {
   });
 
   it("uses canonical safe Turtle local names without a competing brand", () => {
-    expect(S.is(SafePnLocal)("prefLabel")).toBe(true);
-    expect(S.is(SafePnLocal)("contains/slash")).toBe(false);
-    expect(S.is(SafePnLocal)("contains space")).toBe(false);
+    expect(isSafePnLocal("prefLabel")).toBe(true);
+    expect(isSafePnLocal("contains/slash")).toBe(false);
+    expect(isSafePnLocal("contains space")).toBe(false);
   });
 });

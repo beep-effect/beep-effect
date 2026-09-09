@@ -15,6 +15,9 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import { expectTypeOf } from "vitest";
 
+const decodeUnknownCurieFromIriOption = S.decodeUnknownOption(CurieFromIri);
+const encodeCurieFromIriOption = S.encodeOption(CurieFromIri);
+
 const decodeCurie = S.decodeUnknownEffect(CurieFromIri);
 const encodeIri = S.encodeUnknownEffect(CurieFromIri);
 
@@ -70,7 +73,7 @@ describe("CURIE codec", () => {
   it("round-trips generated CoreVocab IRIs through the schema codec", () => {
     fc.assert(
       fc.property(S.toArbitrary(CurieFromIri)(fc), (iri) => {
-        const decoded = O.flatMap(S.encodeOption(CurieFromIri)(iri), S.decodeUnknownOption(CurieFromIri));
+        const decoded = O.flatMap(encodeCurieFromIriOption(iri), decodeUnknownCurieFromIriOption);
 
         expect(O.exists(decoded, (value) => Equal.equals(value, iri))).toBe(true);
       })

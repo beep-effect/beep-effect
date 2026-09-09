@@ -23,6 +23,10 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import type { ChalkInstance, ColorSupportLevel as ColorSupportLevelType } from "@beep/chalk";
 
+const decodeUnknownChalkConstructorOptionsSync = S.decodeUnknownSync(ChalkConstructorOptions);
+const decodeUnknownChalkOptionsSync = S.decodeUnknownSync(ChalkOptions);
+const isColorSupportLevel = S.is(ColorSupportLevel);
+
 const withLevel = (instance: ChalkInstance, level: ColorSupportLevelType, run: () => void): void => {
   const previousLevel = instance.level;
 
@@ -158,14 +162,11 @@ describe("@beep/chalk", () => {
   });
 
   it("backs public option models with Effect schemas", () => {
-    const decodeConstructorOptions = S.decodeUnknownSync(ChalkConstructorOptions);
-    const decodeStrictOptions = S.decodeUnknownSync(ChalkOptions);
-
-    expect(decodeConstructorOptions({ level: 3 }).level).toBe(3);
-    expect(decodeStrictOptions({ level: 3 }).level).toBe(3);
-    expect(S.is(ColorSupportLevel)(2)).toBe(true);
-    expect(S.is(ColorSupportLevel)(4)).toBe(false);
-    expect(() => decodeConstructorOptions({ level: 4 })).toThrow(/integer from 0 to 3/);
+    expect(decodeUnknownChalkConstructorOptionsSync({ level: 3 }).level).toBe(3);
+    expect(decodeUnknownChalkOptionsSync({ level: 3 }).level).toBe(3);
+    expect(isColorSupportLevel(2)).toBe(true);
+    expect(isColorSupportLevel(4)).toBe(false);
+    expect(() => decodeUnknownChalkConstructorOptionsSync({ level: 4 })).toThrow(/integer from 0 to 3/);
   });
 
   it("round-trips schema-derived values through their encoded shapes", () => {

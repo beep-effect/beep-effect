@@ -68,6 +68,8 @@ export class SkillMarkdownProjection extends S.Class<SkillMarkdownProjection>($I
     description: "Versioned SKILL.md projection metadata containing the complete typed skill contract.",
   })
 ) {}
+const decodeUnknownSkillMarkdownProjectionResult = S.decodeUnknownResult(SkillMarkdownProjection);
+const encodeUnknownSkillMarkdownProjectionResult = S.encodeUnknownResult(SkillMarkdownProjection);
 
 /**
  * Closed reasons for denying a committed SKILL.md artifact.
@@ -368,7 +370,7 @@ export const projectSkillDocument = (contract: SkillContract): Result.Result<Doc
     projection: "skill-contract/skill-md/v1",
   });
 
-  return S.encodeUnknownResult(SkillMarkdownProjection)(projection).pipe(
+  return encodeUnknownSkillMarkdownProjectionResult(projection).pipe(
     Result.map((frontmatter) => Md.make(projectionBlocks(contract), { frontmatter }))
   );
 };
@@ -455,7 +457,7 @@ export const decodeSkillFrontmatter = (
 
   const frontmatter = Str.slice(0, closeIndex.value)(afterOpen);
   return UnknownFromJsonString.decodeUnknownResult(frontmatter).pipe(
-    Result.flatMap(S.decodeUnknownResult(SkillMarkdownProjection)),
+    Result.flatMap(decodeUnknownSkillMarkdownProjectionResult),
     Result.mapError((error) =>
       frontmatterDenied("frontmatter-decode-failed", `The leading frontmatter failed schema decode: ${error.message}`)
     )

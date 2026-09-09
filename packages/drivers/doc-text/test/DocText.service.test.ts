@@ -23,6 +23,8 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import { PDFDocument, StandardFonts } from "pdf-lib";
 
+const decodePosixPath = S.decodeEffect(PosixPath);
+
 const encode = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: Codec["Type"]): Codec["Encoded"] =>
   Result.getOrThrow(S.encodeResult(schema)(value));
 
@@ -80,7 +82,7 @@ const makeOperation = Effect.fn("DocTextTest.makeOperation")(function* (
   bytes: Uint8Array,
   maxMaterializedBytes?: number
 ) {
-  const relativePath = yield* S.decodeEffect(PosixPath)(`fixture.${extension}`);
+  const relativePath = yield* decodePosixPath(`fixture.${extension}`);
 
   return ExtractFileOperation.make({
     format,

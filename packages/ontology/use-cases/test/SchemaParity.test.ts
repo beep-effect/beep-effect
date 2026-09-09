@@ -30,6 +30,17 @@ import { Equal, Option as O, Result } from "effect";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeParseTurtleResultResult = S.decodeResult(ParseTurtleResult);
+const decodeSerializeTurtleRequestResult = S.decodeResult(SerializeTurtleRequest);
+const decodeTurtleCodecErrorResult = S.decodeResult(TurtleCodecError);
+const decodeWorkerResultResult = S.decodeResult(WorkerResult);
+const encodeOpenOntologyFileCommandResult = S.encodeResult(OpenOntologyFileCommand);
+const encodeParseTurtleResultResult = S.encodeResult(ParseTurtleResult);
+const encodeSerializeTurtleRequestResult = S.encodeResult(SerializeTurtleRequest);
+const encodeTurtleCodecErrorResult = S.encodeResult(TurtleCodecError);
+const encodeWorkerCommandResult = S.encodeResult(WorkerCommand);
+const encodeWorkerResultResult = S.encodeResult(WorkerResult);
+
 const sessionId = Result.getOrThrow(S.decodeResult(SessionId)("session-1"));
 const fixturePath = Result.getOrThrow(S.decodeResult(OntologyFilePath)("fixtures/demo.ttl"));
 const quad = makeQuad(
@@ -81,7 +92,7 @@ describe("@beep/ontology-use-cases schema parity", () => {
   it("preserves command and worker protocol encoded wire shapes", () => {
     expect(
       Result.getOrThrow(
-        S.encodeResult(OpenOntologyFileCommand)(
+        encodeOpenOntologyFileCommandResult(
           OpenOntologyFileCommand.make({
             sessionId,
             path: fixturePath,
@@ -95,7 +106,7 @@ describe("@beep/ontology-use-cases schema parity", () => {
 
     expect(
       Result.getOrThrow(
-        S.encodeResult(WorkerCommand)(
+        encodeWorkerCommandResult(
           WorkerCommand.make({
             kind: "parseTurtle",
             request: ParseTurtleRequest.make({
@@ -135,18 +146,18 @@ describe("@beep/ontology-use-cases schema parity", () => {
     const parsed = ParseTurtleResult.make({ dataset });
 
     expect(
-      Result.getOrThrow(S.decodeResult(TurtleCodecError)(Result.getOrThrow(S.encodeResult(TurtleCodecError)(error))))
+      Result.getOrThrow(decodeTurtleCodecErrorResult(Result.getOrThrow(encodeTurtleCodecErrorResult(error))))
     ).toEqual(error);
     expect(
       Result.getOrThrow(
-        S.decodeResult(SerializeTurtleRequest)(Result.getOrThrow(S.encodeResult(SerializeTurtleRequest)(command)))
+        decodeSerializeTurtleRequestResult(Result.getOrThrow(encodeSerializeTurtleRequestResult(command)))
       )
     ).toEqual(command);
     expect(
-      Result.getOrThrow(S.decodeResult(ParseTurtleResult)(Result.getOrThrow(S.encodeResult(ParseTurtleResult)(parsed))))
+      Result.getOrThrow(decodeParseTurtleResultResult(Result.getOrThrow(encodeParseTurtleResultResult(parsed))))
     ).toEqual(parsed);
-    expect(
-      Result.getOrThrow(S.decodeResult(WorkerResult)(Result.getOrThrow(S.encodeResult(WorkerResult)(result))))
-    ).toEqual(result);
+    expect(Result.getOrThrow(decodeWorkerResultResult(Result.getOrThrow(encodeWorkerResultResult(result))))).toEqual(
+      result
+    );
   });
 });

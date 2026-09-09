@@ -37,6 +37,8 @@ import type { FileProcessingEngineShape } from "@beep/file-processing/Service";
 import type { FileFormatFamily } from "@beep/file-processing/Strategy";
 import type { TikaError } from "./Tika.errors.ts";
 
+const decodeTikaServerEngineConfig = S.decodeEffect(TikaServerEngineConfig);
+
 const versionPath = "/version";
 const rmetaPath = "/rmeta/text";
 const defaultMediaType = "application/octet-stream";
@@ -127,7 +129,7 @@ const configFromEnvironment: Effect.Effect<TikaServerEngineConfig, TikaError> = 
   const maxOutputBytes = yield* Config.int(BEEP_TIKA_MAX_OUTPUT_BYTES_ENV).pipe(Config.option);
   const timeoutMillis = yield* Config.int(BEEP_TIKA_TIMEOUT_MILLIS_ENV).pipe(Config.option);
 
-  return yield* S.decodeEffect(TikaServerEngineConfig)({
+  return yield* decodeTikaServerEngineConfig({
     baseUrl,
     ...O.getSomesStruct({ maxOutputBytes, timeoutMillis }),
   });

@@ -126,6 +126,28 @@ import type { MediaType as MediaTypeValue } from "@/schema/MediaType";
 import type { ProviderFamily as ProviderFamilyValue, TaskType as TaskTypeValue } from "@/schema/Model";
 import type { EventBody as EventBodyValue } from "@/schema/Provenance";
 import type { RequestKind as RequestKindValue } from "@/schema/ProviderCache";
+
+const decodeGoldFile = S.decodeEffect(GoldFile);
+const decodeEvalRunTelemetrySync = S.decodeSync(EvalRunTelemetry);
+const encodeGoldFileResult = S.encodeResult(GoldFile);
+const encodeProvenanceEventSync = S.encodeSync(ProvenanceEvent);
+const isChunk = S.is(Chunk);
+const isClaimBody = S.is(ClaimBody);
+const isConflictWitness = S.is(ConflictWitness);
+const isDegradedKind = S.is(DegradedKind);
+const isEvalRun = S.is(EvalRun);
+const isEvalSelection = S.is(EvalSelection);
+const isEvidenceBatch = S.is(EvidenceBatch);
+const isEvidenceClaim = S.is(EvidenceClaim);
+const isFixtureDeclaration = S.is(FixtureDeclaration);
+const isGoldRef = S.is(GoldRef);
+const isGoldSubset = S.is(GoldSubset);
+const isMetricName = S.is(MetricName);
+const isMetricScore = S.is(MetricScore);
+const isProvenanceEvent = S.is(ProvenanceEvent);
+const isProviderCacheEntry = S.is(ProviderCacheEntry);
+const isSourceDocument = S.is(SourceDocument);
+
 import type { CanonicalText, ChunkKind as ChunkKindValue, ParseOutcome as ParseOutcomeValue } from "@/schema/Text";
 
 const provideScopedLayer =
@@ -143,9 +165,9 @@ const roundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, value: Schem
 };
 
 const roundTripGoldFile = (value: GoldFileValue): void => {
-  const encoded = Result.getOrThrow(S.encodeResult(GoldFile)(value));
+  const encoded = Result.getOrThrow(encodeGoldFileResult(value));
   const decoded = Effect.runSync(
-    S.decodeEffect(GoldFile)(encoded).pipe(Effect.provideService(CurrentGoldDocumentText, "Effect data"))
+    decodeGoldFile(encoded).pipe(Effect.provideService(CurrentGoldDocumentText, "Effect data"))
   );
 
   expect(S.toEquivalence(S.toType(GoldFile))(decoded, value)).toBe(true);
@@ -487,9 +509,10 @@ const EvalReportBodySchema = S.Struct({
   metrics: S.NonEmptyArray(MetricScore),
   unexpectedDegraded: NonNegativeInt,
 });
+const encodeEvalReportBodySchemaResult = S.encodeResult(EvalReportBodySchema);
 
 const withReportDigest = (body: typeof EvalReportBodySchema.Type) => ({
-  ...Result.getOrThrow(S.encodeResult(EvalReportBodySchema)(body)),
+  ...Result.getOrThrow(encodeEvalReportBodySchemaResult(body)),
   reportDigest: Result.getOrThrow(contentDigestSync(EvalReportBodySchema)(body)),
 });
 
@@ -580,7 +603,7 @@ describe("C0 schema exports", () => {
         S.toArbitrary(DocumentId)(fc),
         S.toArbitrary(DegradedKind)(fc),
         S.toArbitrary(MetricName)(fc),
-        (id, kind, metric) => isDocumentId(id) && S.is(DegradedKind)(kind) && S.is(MetricName)(metric)
+        (id, kind, metric) => isDocumentId(id) && isDegradedKind(kind) && isMetricName(metric)
       ),
       { numRuns: 25 }
     );
@@ -645,7 +668,7 @@ describe("C0 schema round trips", () => {
     roundTrip(DocumentOutcome, documentOutcome);
     roundTrip(EvalReport, evalReport);
 
-    const telemetry = S.decodeSync(EvalRunTelemetry)({
+    const telemetry = decodeEvalRunTelemetrySync({
       schemaVersion: "eval-telemetry/v1",
       reportDigest: evalReport.reportDigest,
       runId: evalRun.id,
@@ -718,9 +741,9 @@ describe("C0 schema round trips", () => {
       subset: "relation",
       version: "gold/v1",
     });
-    const encodedStructure = Result.getOrThrow(S.encodeResult(GoldFile)(structure));
-    const encodedEntity = Result.getOrThrow(S.encodeResult(GoldFile)(entity));
-    const encodedRelation = Result.getOrThrow(S.encodeResult(GoldFile)(relation));
+    const encodedStructure = Result.getOrThrow(encodeGoldFileResult(structure));
+    const encodedEntity = Result.getOrThrow(encodeGoldFileResult(entity));
+    const encodedRelation = Result.getOrThrow(encodeGoldFileResult(relation));
 
     expect(encodedStructure.labels[0]).not.toHaveProperty("quote");
     expect(encodedStructure.labels[0]).toHaveProperty("quoteSha256");
@@ -735,7 +758,7 @@ describe("C0 schema round trips", () => {
     expect(encodedRelation.labels[0]).toHaveProperty("subjectSha256");
 
     const hydrated = Effect.runSync(
-      S.decodeEffect(GoldFile)(encodedRelation).pipe(Effect.provideService(CurrentGoldDocumentText, text))
+      decodeGoldFile(encodedRelation).pipe(Effect.provideService(CurrentGoldDocumentText, text))
     );
     expect(hydrated).toEqual(relation);
   });
@@ -844,12 +867,12 @@ describe("C0 schema round trips", () => {
 
 describe("document and text refinements", () => {
   it("accepts matching byte identities and rejects a different sha256", () => {
-    expect(S.is(SourceDocument)(sourceDocument)).toBe(true);
+    expect(isSourceDocument(sourceDocument)).toBe(true);
     expect(rejects(SourceDocument, { ...sourceDocument, sha256: sha("0") })).toBe(true);
   });
 
   it("accepts coherent fixture declarations and rejects mismatched degraded-kind presence", () => {
-    expect(S.is(FixtureDeclaration)(parsingFixtureDeclaration)).toBe(true);
+    expect(isFixtureDeclaration(parsingFixtureDeclaration)).toBe(true);
     expect(
       rejects(FixtureDeclaration, {
         expectation: "parses",
@@ -859,7 +882,7 @@ describe("document and text refinements", () => {
   });
 
   it("builds and verifies chunk content ids from the canonical encoded preimage", () => {
-    expect(S.is(Chunk)(chunk)).toBe(true);
+    expect(isChunk(chunk)).toBe(true);
     expect(Result.isSuccess(chunkIdPreimage(chunk))).toBe(true);
     expect(Result.getOrThrow(makeChunkId(chunk))).toBe(chunk.id);
     expect(rejects(Chunk, { ...chunk, id: sha("0") })).toBe(true);
@@ -874,7 +897,7 @@ describe("document and text refinements", () => {
   });
 
   it("accepts each claim-body width and rejects each inconsistent width", () => {
-    expect([entityBody, relationBody, structureBody].every(S.is(ClaimBody))).toBe(true);
+    expect([entityBody, relationBody, structureBody].every(isClaimBody)).toBe(true);
     expect(
       [
         { ...entityBody, endChar: 5 },
@@ -908,7 +931,7 @@ describe("digest and provider-cache refinements", () => {
     ));
 
   it("accepts both cache digests and rejects either mismatched digest", () => {
-    expect(S.is(ProviderCacheEntry)(providerEntry)).toBe(true);
+    expect(isProviderCacheEntry(providerEntry)).toBe(true);
     expect(rejects(ProviderCacheEntry, { ...providerEntry, cacheKey: sha("0") })).toBe(true);
     expect(rejects(ProviderCacheEntry, { ...providerEntry, responseDigest: sha("0") })).toBe(true);
   });
@@ -916,7 +939,7 @@ describe("digest and provider-cache refinements", () => {
 
 describe("evidence refinements", () => {
   it("builds and verifies claim ids from schema-encoded body and model preimages", () => {
-    expect(S.is(EvidenceClaim)(evidenceClaim)).toBe(true);
+    expect(isEvidenceClaim(evidenceClaim)).toBe(true);
     expect(Result.isSuccess(claimIdPreimage(evidenceClaim))).toBe(true);
     expect(Result.getOrThrow(makeClaimId(evidenceClaim))).toBe(evidenceClaim.id);
     expect(rejects(EvidenceClaim, { ...evidenceClaim, id: sha("0") })).toBe(true);
@@ -927,7 +950,7 @@ describe("evidence refinements", () => {
   });
 
   it("builds and verifies batch ids from the ordered input preimage", () => {
-    expect(S.is(EvidenceBatch)(evidenceBatch)).toBe(true);
+    expect(isEvidenceBatch(evidenceBatch)).toBe(true);
     expect(Result.isSuccess(batchIdPreimage(evidenceBatch))).toBe(true);
     expect(Result.getOrThrow(makeBatchId(evidenceBatch))).toBe(evidenceBatch.id);
     expect(rejects(EvidenceBatch, { ...evidenceBatch, id: sha("0") })).toBe(true);
@@ -949,7 +972,7 @@ describe("evidence refinements", () => {
       chunk: unlistedChunkId,
     });
 
-    expect(S.is(EvidenceBatch)(evidenceBatch)).toBe(true);
+    expect(isEvidenceBatch(evidenceBatch)).toBe(true);
     expect(rejects(EvidenceBatch, { ...evidenceBatch, claims: [unlistedClaim] })).toBe(true);
     expect(
       rejects(EvidenceBatch, {
@@ -986,7 +1009,7 @@ describe("evidence refinements", () => {
     );
     const unresolvedRelation = EvidenceClaim.make({ ...relationClaim, id: unresolvedId, body: unresolvedBody });
 
-    expect(S.is(EvidenceBatch)(relationBatch)).toBe(true);
+    expect(isEvidenceBatch(relationBatch)).toBe(true);
     expect(
       rejects(EvidenceBatch, {
         ...relationBatch,
@@ -1018,13 +1041,13 @@ describe("evidence refinements", () => {
       lossy: ["structure-not-supported", "relations-not-supported"],
     });
 
-    expect(S.is(EvidenceBatch)(patternBatch)).toBe(true);
+    expect(isEvidenceBatch(patternBatch)).toBe(true);
     expect(rejects(EvidenceBatch, { ...patternBatch, lossy: ["relations-not-supported"] })).toBe(true);
     expect(rejects(EvidenceBatch, { ...evidenceBatch, lossy: ["relations-not-supported"] })).toBe(true);
   });
 
   it("accepts coherent unique claims and rejects duplicate ids or mismatched batch fields", () => {
-    expect(S.is(EvidenceBatch)(evidenceBatch)).toBe(true);
+    expect(isEvidenceBatch(evidenceBatch)).toBe(true);
     expect(rejects(EvidenceBatch, { ...evidenceBatch, claims: [evidenceClaim, evidenceClaim] })).toBe(true);
     expect(
       rejects(EvidenceBatch, {
@@ -1047,7 +1070,7 @@ describe("evidence refinements", () => {
   });
 
   it("requires conflict witnesses to use distinct ordered endpoints and their canonical digest", () => {
-    expect(S.is(ConflictWitness)(conflictWitness)).toBe(true);
+    expect(isConflictWitness(conflictWitness)).toBe(true);
     expect(
       rejects(ConflictWitness, {
         id: canonicalDigest({ left: claimId, right: claimId, basis: conflictBasis }),
@@ -1079,16 +1102,16 @@ describe("provenance refinements", () => {
   });
 
   it("accepts the timestamp-free hash-chain id and rejects a wrong id", () => {
-    expect(S.is(ProvenanceEvent)(event)).toBe(true);
+    expect(isProvenanceEvent(event)).toBe(true);
     expect(rejects(ProvenanceEvent, { ...event, id: acquired })).toBe(true);
     roundTrip(ProvenanceEvent, event);
-    expect(Object.hasOwn(S.encodeSync(ProvenanceEvent)(event), "timestamp")).toBe(false);
+    expect(Object.hasOwn(encodeProvenanceEventSync(event), "timestamp")).toBe(false);
   });
 });
 
 describe("gold refinements", () => {
   it("accepts exact 10/5/3 subsets and rejects smaller or larger protocol selections", () => {
-    expect(S.is(GoldSubset)(goldSubset)).toBe(true);
+    expect(isGoldSubset(goldSubset)).toBe(true);
     expect(
       rejects(GoldSubset, {
         structure: A.dropRight(goldPapers, 1),
@@ -1126,7 +1149,7 @@ describe("gold refinements", () => {
   });
 
   it("accepts gold-proposal identities and rejects extraction identities in refs and files", () => {
-    expect(S.is(GoldRef)(goldRef)).toBe(true);
+    expect(isGoldRef(goldRef)).toBe(true);
     expect(rejects(GoldRef, { ...goldRef, proposer: hostedModel })).toBe(true);
     expect(
       rejects(GoldFileEncoded, {
@@ -1195,7 +1218,7 @@ describe("evaluation refinements", () => {
   };
 
   it("accepts unique run selections and rejects duplicate W1 or F1 identities", () => {
-    expect(S.is(EvalSelection)(runBody.selection)).toBe(true);
+    expect(isEvalSelection(runBody.selection)).toBe(true);
     expect(
       rejects(EvalSelection, {
         w1: [paper1, paper1],
@@ -1211,7 +1234,7 @@ describe("evaluation refinements", () => {
   });
 
   it("accepts independent extraction and gold providers and rejects every EvalRun invariant", () => {
-    expect(S.is(EvalRun)(evalRun)).toBe(true);
+    expect(isEvalRun(evalRun)).toBe(true);
     const sameFamilyProposer = ModelIdentity.make({ ...proposerModel, provider: "anthropic" });
     const sameFamilyGold = GoldRef.make({ ...goldRef, proposer: sameFamilyProposer });
     expect(rejects(EvalRun, runWith({ gold: sameFamilyGold }))).toBe(true);
@@ -1228,7 +1251,7 @@ describe("evaluation refinements", () => {
   });
 
   it("requires support for scored metrics and allows zero support for unsupported relation metrics", () => {
-    expect(S.is(MetricScore)(A.getUnsafe(metricScores, 0))).toBe(true);
+    expect(isMetricScore(A.getUnsafe(metricScores, 0))).toBe(true);
     expect(
       rejects(MetricScore, {
         name: "entity-span-f1",
@@ -1421,6 +1444,6 @@ describe("evaluation refinements", () => {
 describe("F1 degraded-kind subset", () => {
   it("decodes every fixture degraded kind through the shared C0 DegradedKind", () => {
     expect(FixtureDegradedKind.Options).toEqual(["invalid-utf8", "truncated", "extraction-failed"]);
-    expect(A.every(FixtureDegradedKind.Options, S.is(DegradedKind))).toBe(true);
+    expect(A.every(FixtureDegradedKind.Options, isDegradedKind)).toBe(true);
   });
 });

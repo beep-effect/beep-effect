@@ -16,6 +16,8 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeUnknownDomainSyncConflictSyncConflictSync = S.decodeUnknownSync(DomainSyncConflict.SyncConflict);
+
 const SyncConflictArbitrary = S.toArbitrary(DomainSyncConflict.SyncConflict)(fc);
 const SyncConflictEquivalence = S.toEquivalence(DomainSyncConflict.SyncConflict);
 
@@ -79,7 +81,7 @@ describe("SyncConflict table", () => {
   });
 
   it("round-trips SyncConflict rows through the converters", () => {
-    const syncConflict = S.decodeUnknownSync(DomainSyncConflict.SyncConflict)(mappedDriftRow);
+    const syncConflict = decodeUnknownDomainSyncConflictSyncConflictSync(mappedDriftRow);
     const insert = toSyncConflictInsert(syncConflict);
 
     expect("id" in insert).toBe(false);

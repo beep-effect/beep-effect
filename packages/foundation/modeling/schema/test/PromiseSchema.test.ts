@@ -2,12 +2,15 @@ import { isPromise, PromiseSchema } from "@beep/schema/PromiseSchema";
 import { describe, expect, it } from "@effect/vitest";
 import * as S from "effect/Schema";
 
+const decodePromiseSchemaSync = S.decodeSync(PromiseSchema);
+const decodeUnknownPromiseSchemaSync = S.decodeUnknownSync(PromiseSchema);
+
 describe("PromiseSchema", () => {
   it("accepts native Promise instances", () => {
     const value = globalThis.Promise.resolve(1);
 
     expect(isPromise(value)).toBe(true);
-    expect(S.decodeSync(PromiseSchema)(value)).toBe(value);
+    expect(decodePromiseSchemaSync(value)).toBe(value);
   });
 
   it("accepts Promise subclasses", () => {
@@ -16,7 +19,7 @@ describe("PromiseSchema", () => {
     const value = DerivedPromise.resolve(1);
 
     expect(isPromise(value)).toBe(true);
-    expect(S.decodeSync(PromiseSchema)(value)).toBe(value);
+    expect(decodePromiseSchemaSync(value)).toBe(value);
   });
 
   it("rejects promise-like objects that are not native promises", () => {
@@ -28,14 +31,14 @@ describe("PromiseSchema", () => {
     };
 
     expect(isPromise(thenable)).toBe(false);
-    expect(() => S.decodeUnknownSync(PromiseSchema)(thenable)).toThrow(
+    expect(() => decodeUnknownPromiseSchemaSync(thenable)).toThrow(
       /Expected @beep\/schema\/PromiseSchema\/PromiseSchema/
     );
   });
 
   it("rejects non-promise values", () => {
     expect(isPromise("nope")).toBe(false);
-    expect(() => S.decodeUnknownSync(PromiseSchema)("nope")).toThrow(
+    expect(() => decodeUnknownPromiseSchemaSync("nope")).toThrow(
       /Expected @beep\/schema\/PromiseSchema\/PromiseSchema/
     );
   });

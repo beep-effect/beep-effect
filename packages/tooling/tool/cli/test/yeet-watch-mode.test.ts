@@ -29,6 +29,8 @@ import * as TestConsole from "effect/testing/TestConsole";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import type { YeetCheckFailedRow } from "@beep/repo-cli/test/Yeet";
 
+const decodeUnknownYeetWatchEventJson = S.decodeUnknownEffect(S.fromJsonString(YeetWatchEvent));
+
 const contextFor = (repoRoot: string): RepoRunContext =>
   RepoRunContext.make({
     base: "origin/main",
@@ -475,8 +477,6 @@ describe("collectYeetWatchSnapshot", () => {
 });
 
 describe("runYeetWatchStream", () => {
-  const decodeLine = S.decodeUnknownEffect(S.fromJsonString(YeetWatchEvent));
-
   // it.live: the loop sleeps between polls, and under the TestClock a real
   // sleep parks forever (A7's receipt). Zero interval keeps it instant.
   it.live("streams started, transitions, and ended rows as decodable NDJSON", () =>
@@ -488,7 +488,7 @@ describe("runYeetWatchStream", () => {
         expect(ended.failing).toBe(1);
 
         const lines = A.map(yield* TestConsole.logLines, String);
-        const events = yield* Effect.forEach(lines, (line) => decodeLine(line));
+        const events = yield* Effect.forEach(lines, (line) => decodeUnknownYeetWatchEventJson(line));
         expect(A.map(events, (event) => event.kind)).toEqual(["watch-started", "check-transition", "watch-ended"]);
         const transition = events[1] as Extract<YeetWatchEvent, { readonly kind: "check-transition" }>;
         expect(transition.from).toBe("pending");
@@ -524,7 +524,7 @@ describe("runYeetWatchStream", () => {
         expect(ended.reason).toBe("poll-error");
         expect(ended.failing).toBe(0);
         const lines = A.map(yield* TestConsole.logLines, String);
-        const events = yield* Effect.forEach(lines, (line) => decodeLine(line));
+        const events = yield* Effect.forEach(lines, (line) => decodeUnknownYeetWatchEventJson(line));
         expect(A.map(events, (event) => event.kind)).toEqual(["watch-started", "watch-ended"]);
         const errors = A.map(yield* TestConsole.errorLines, String);
         expect(A.some(errors, (line) => Str.includes("watch poll failed")(line))).toBe(true);
@@ -1108,8 +1108,6 @@ describe("registration patience", () => {
 });
 
 describe("comment rows and --until-event", () => {
-  const decodeLine = S.decodeUnknownEffect(S.fromJsonString(YeetWatchEvent));
-
   const issueCommentsJson = (comments: ReadonlyArray<{ readonly id: number; readonly createdAt: string }>) =>
     JSON.stringify(
       A.map(comments, (comment) => ({
@@ -1131,7 +1129,7 @@ describe("comment rows and --until-event", () => {
         expect(ended.reason).toBe("pr-merged");
         expect(ended.failing).toBe(0);
         const lines = A.map(yield* TestConsole.logLines, String);
-        const events = yield* Effect.forEach(lines, (line) => decodeLine(line));
+        const events = yield* Effect.forEach(lines, (line) => decodeUnknownYeetWatchEventJson(line));
         expect(A.map(events, (event) => event.kind)).toEqual(["watch-started", "watch-ended"]);
       })
     ).pipe(
@@ -1164,7 +1162,7 @@ describe("comment rows and --until-event", () => {
         expect(yeetWatchExitFailure(ended)).toBe(true);
 
         const lines = A.map(yield* TestConsole.logLines, String);
-        const events = yield* Effect.forEach(lines, (line) => decodeLine(line));
+        const events = yield* Effect.forEach(lines, (line) => decodeUnknownYeetWatchEventJson(line));
         expect(A.map(events, (event) => event.kind)).toEqual(["watch-started", "check-transition", "watch-ended"]);
         // The capsule is durable before the exit row is emitted.
         expect(A.length(yield* readInboxRows(root))).toBe(1);
@@ -1213,7 +1211,7 @@ describe("comment rows and --until-event", () => {
         expect(ended.reason).toBe("event");
         expect(ended.failing).toBe(1);
         const lines = A.map(yield* TestConsole.logLines, String);
-        const events = yield* Effect.forEach(lines, (line) => decodeLine(line));
+        const events = yield* Effect.forEach(lines, (line) => decodeUnknownYeetWatchEventJson(line));
         expect(A.map(events, (event) => event.kind)).toEqual(["watch-started", "watch-ended"]);
         expect(A.length(yield* readInboxRows(root))).toBe(1);
       })
@@ -1278,7 +1276,7 @@ describe("comment rows and --until-event", () => {
         expect(yeetWatchExitFailure(ended)).toBe(false);
 
         const lines = A.map(yield* TestConsole.logLines, String);
-        const events = yield* Effect.forEach(lines, (line) => decodeLine(line));
+        const events = yield* Effect.forEach(lines, (line) => decodeUnknownYeetWatchEventJson(line));
         expect(A.map(events, (event) => event.kind)).toEqual([
           "watch-started",
           "comment-posted",
@@ -1349,7 +1347,7 @@ describe("comment rows and --until-event", () => {
         expect(ended.reason).toBe("all-terminal");
         expect(ended.failing).toBe(0);
         const lines = A.map(yield* TestConsole.logLines, String);
-        const events = yield* Effect.forEach(lines, (line) => decodeLine(line));
+        const events = yield* Effect.forEach(lines, (line) => decodeUnknownYeetWatchEventJson(line));
         expect(A.map(events, (event) => event.kind)).toEqual([
           "watch-started",
           "comment-posted",

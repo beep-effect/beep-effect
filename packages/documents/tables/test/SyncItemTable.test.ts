@@ -17,6 +17,8 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeUnknownDomainSyncItemSyncItemSync = S.decodeUnknownSync(DomainSyncItem.SyncItem);
+
 const SyncItemArbitrary = S.toArbitrary(DomainSyncItem.SyncItem)(fc);
 const SyncItemEquivalence = S.toEquivalence(DomainSyncItem.SyncItem);
 
@@ -92,7 +94,7 @@ describe("SyncItem table", () => {
   });
 
   it("round-trips SyncItem rows through the converters", () => {
-    const syncItem = S.decodeUnknownSync(DomainSyncItem.SyncItem)(fileRow);
+    const syncItem = decodeUnknownDomainSyncItemSyncItemSync(fileRow);
     const insert = toSyncItemInsert(syncItem);
 
     expect("id" in insert).toBe(false);

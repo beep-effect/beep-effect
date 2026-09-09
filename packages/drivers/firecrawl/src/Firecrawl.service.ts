@@ -22,6 +22,9 @@ import type {
   FirecrawlMethodName,
 } from "./Firecrawl.errors.ts";
 
+const decodeFirecrawlConfigInput = S.decodeEffect(FirecrawlConfigInput);
+const encodeFirecrawlConfigInput = S.encodeEffect(FirecrawlConfigInput);
+
 const $I = $FirecrawlId.create("Firecrawl.service");
 
 type FirecrawlSdkWatcherEventName = M.FirecrawlWatcherEventType;
@@ -450,8 +453,8 @@ const makeWatcherStream = (
   );
 
 const resolveConfig = Effect.fn("Firecrawl.resolveConfig")(function* (input: FirecrawlConfigInput) {
-  const config = yield* S.encodeEffect(FirecrawlConfigInput)(input).pipe(
-    Effect.flatMap(S.decodeEffect(FirecrawlConfigInput)),
+  const config = yield* encodeFirecrawlConfigInput(input).pipe(
+    Effect.flatMap(decodeFirecrawlConfigInput),
     Effect.mapError((cause) =>
       FirecrawlError.fromReason("config", {
         cause,

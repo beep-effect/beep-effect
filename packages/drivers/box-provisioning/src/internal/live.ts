@@ -15,6 +15,8 @@ import {
 } from "../BoxProvisioningObserved.ts";
 import { canonicalObservedWebhook } from "./canonical.ts";
 
+const isBUserCollaborations = S.is(B.UserCollaborations);
+
 const markerPageLimit = 1000;
 
 export type MarkerPage<A> = {
@@ -98,7 +100,7 @@ const collaborationPrincipal = (collaboration: B.Collaboration): O.Option<Collab
     O.fromNullishOr(collaboration.accessibleBy),
     O.flatMap((accessibleBy): O.Option<CollaborationPrincipal> => {
       const principalProviderId = pipe(O.fromNullishOr(accessibleBy.id), O.map(BoxProviderId.make));
-      if (S.is(B.UserCollaborations)(accessibleBy)) {
+      if (isBUserCollaborations(accessibleBy)) {
         return pipe(
           O.fromNullishOr(accessibleBy.login),
           O.orElse(() => O.fromNullishOr(accessibleBy.id)),
@@ -202,9 +204,10 @@ const RawWebhook = S.Struct({
   address: HttpsUrl,
   triggers: S.Array(S.NonEmptyString),
 });
+const decodeUnknownRawWebhook = S.decodeUnknownEffect(RawWebhook);
 
 export const toObservedWebhook = (webhook: unknown): Effect.Effect<BoxObservedWebhook, BoxProvisioningInvariantError> =>
-  S.decodeUnknownEffect(RawWebhook)(webhook).pipe(
+  decodeUnknownRawWebhook(webhook).pipe(
     Effect.map((decoded) =>
       canonicalObservedWebhook(
         BoxObservedWebhook.make({

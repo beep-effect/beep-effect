@@ -46,6 +46,12 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import type { LegalPositionRecordRepositoryShape } from "@beep/law-practice-use-cases/LegalPositionRecord";
 
+const decodeUnknownActFrame = S.decodeUnknownEffect(ActFrame);
+const decodeUnknownCorrectionDelta = S.decodeUnknownEffect(CorrectionDelta);
+const decodeUnknownLegalOppositionCandidate = S.decodeUnknownEffect(LegalOppositionCandidate);
+const decodeUnknownLegalPositionRelator = S.decodeUnknownEffect(LegalPositionRelator);
+const decodeUnknownPowerExercise = S.decodeUnknownEffect(PowerExercise);
+
 const ACT = "enter the demised premises";
 const NORM = { designation: "cl. 4.1" };
 const systemPrincipal = { component: "Runtime", kind: "System" };
@@ -82,7 +88,7 @@ const transition = (label: string, kind: string) => ({
 });
 
 const relatorFixture = (id: number, org = 1) =>
-  S.decodeUnknownEffect(LegalPositionRelator)({
+  decodeUnknownLegalPositionRelator({
     ...productEntityFixtureInput(LawPractice.LegalPositionRelatorId.entityType, id),
     orgId: org,
     assertingInterpreter: { kind: "User", userId: 1 },
@@ -96,7 +102,7 @@ const relatorFixture = (id: number, org = 1) =>
   });
 
 const frameFixture = (id: number, org = 1) =>
-  S.decodeUnknownEffect(ActFrame)({
+  decodeUnknownActFrame({
     ...productEntityFixtureInput(LawPractice.ActFrameId.entityType, id),
     orgId: org,
     act: { description: "assign the lease", polarity: "act" },
@@ -117,7 +123,7 @@ const frameFixture = (id: number, org = 1) =>
   });
 
 const exerciseFixture = (id: number, frame: number, org = 1) =>
-  S.decodeUnknownEffect(PowerExercise)({
+  decodeUnknownPowerExercise({
     ...productEntityFixtureInput(LawPractice.PowerExerciseId.entityType, id),
     orgId: org,
     attemptedAt: 1_700_000_000_000 + id,
@@ -138,7 +144,7 @@ const exerciseFixture = (id: number, frame: number, org = 1) =>
   });
 
 const correctionFixture = (id: number, frame: number, org = 1) =>
-  S.decodeUnknownEffect(CorrectionDelta)({
+  decodeUnknownCorrectionDelta({
     ...productEntityFixtureInput(LawPractice.CorrectionDeltaId.entityType, id),
     orgId: org,
     candidateRouting: "contradiction-candidate-input",
@@ -157,7 +163,7 @@ const correctionFixture = (id: number, frame: number, org = 1) =>
   });
 
 const candidateFixture = (id: number, relators: ReadonlyArray<number>, org = 1) =>
-  S.decodeUnknownEffect(LegalOppositionCandidate)({
+  decodeUnknownLegalOppositionCandidate({
     ...productEntityFixtureInput(LawPractice.LegalOppositionCandidateId.entityType, id),
     orgId: org,
     candidate: { act: ACT, overlappingScope: scopeInput, relators },

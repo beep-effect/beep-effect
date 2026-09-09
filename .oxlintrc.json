@@ -42,6 +42,6 @@
     "beep/no-manual-effect-runtime-in-tests": "warn",
     "beep/namespace-node-imports": "warn",
     "beep/no-global-process-runtime": "warn",
-    "beep/no-inline-schema-compile": "warn"
+    "beep/no-inline-schema-compile": "error"
   }
 }

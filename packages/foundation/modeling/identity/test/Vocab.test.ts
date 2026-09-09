@@ -7,6 +7,10 @@ import { FastCheck as fc } from "effect/testing";
 import { expectTypeOf } from "vitest";
 import type { Curie, Expand, Predicate } from "@beep/identity";
 
+const decodeVocabRegistryOption = S.decodeOption(VocabRegistry);
+const decodeUnknownVocabRegistryOption = S.decodeUnknownOption(VocabRegistry);
+const encodeVocabRegistryOption = S.encodeOption(VocabRegistry);
+
 type CoreCurie = Curie<typeof CoreVocab>;
 type CorePredicate = Predicate<typeof CoreVocab>;
 
@@ -79,7 +83,7 @@ describe("CoreVocab runtime invariants", () => {
   it("round-trips generated vocabulary registries through their encoded shape", () => {
     fc.assert(
       fc.property(S.toArbitrary(VocabRegistry)(fc), (registry) => {
-        const decoded = O.flatMap(S.encodeOption(VocabRegistry)(registry), S.decodeUnknownOption(VocabRegistry));
+        const decoded = O.flatMap(encodeVocabRegistryOption(registry), decodeUnknownVocabRegistryOption);
 
         expect(O.exists(decoded, (value) => Equal.equals(value, registry))).toBe(true);
       })
@@ -87,6 +91,6 @@ describe("CoreVocab runtime invariants", () => {
   });
 
   it("accepts CoreVocab through the runtime registry schema", () => {
-    expect(O.isSome(S.decodeOption(VocabRegistry)(CoreVocab))).toBe(true);
+    expect(O.isSome(decodeVocabRegistryOption(CoreVocab))).toBe(true);
   });
 });

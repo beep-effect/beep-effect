@@ -24,6 +24,8 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import { Tool } from "effect/unstable/ai";
 
+const decodeTierGateAuditRecordSync = S.decodeSync(TierGateAuditRecord);
+
 const writeTool = Tool.make("delete_document", { success: S.String }).annotate(Tool.Destructive, true);
 const readTool = Tool.make("search_documents", { success: S.String })
   .annotate(Tool.Readonly, true)
@@ -238,7 +240,7 @@ describe("tier-gate schema parity laws", () => {
 
     assert.deepStrictEqual(audit.toolCallId, O.none());
     assert.throws(() =>
-      S.decodeSync(TierGateAuditRecord)({
+      decodeTierGateAuditRecordSync({
         tool: "search_documents",
         outcome: "approved",
         reason: "Tool is read-only and non-destructive; no approval required.",

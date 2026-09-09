@@ -24,7 +24,24 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import type { GateEvaluator } from "@beep/skill-contract";
 
+const decodeGateDeclaration = S.decodeEffect(GateDeclaration);
+const decodeGateDeclarationResult = S.decodeResult(GateDeclaration);
+const decodeUnknownGateRegistry = S.decodeUnknownEffect(GateRegistry);
+const encodeUnknownGateDeclaration = S.encodeUnknownEffect(GateDeclaration);
+const encodeUnknownGateDeclarationResult = S.encodeUnknownResult(GateDeclaration);
+const isGateId = S.is(GateId);
+
 const ConsumerGateId = makeGateId(LiteralKit(["artifact-exists", "event-exists"]));
+const isConsumerGateId = S.is(ConsumerGateId);
+const SloppyGateId = makeGateId(LiteralKit([""]));
+const isSloppyGateId = S.is(SloppyGateId);
+const TimestampAuditDetail = S.Struct({ paths: S.Array(S.String) });
+const TimestampAudit = GateAuditRecord("TimestampAudit", "allowed", TimestampAuditDetail);
+const decodeUnknownTimestampAudit = S.decodeUnknownEffect(TimestampAudit);
+const AllowedArtifactDetail = S.Struct({ checkedPaths: S.Array(S.String) });
+const DeniedArtifactDetail = S.Struct({ missingPaths: S.NonEmptyArray(S.String) });
+const ArtifactExistsVerdict = GateVerdict("ArtifactExistsVerdict", AllowedArtifactDetail, DeniedArtifactDetail);
+const decodeUnknownArtifactExistsVerdict = S.decodeUnknownEffect(ArtifactExistsVerdict);
 const predicateType = EvidencePredicateType.make("https://beep.dev/evidence/artifact-exists/v1");
 const declaration = GateDeclaration.make({
   applicability: AlwaysGateApplicability.make({}),
@@ -37,16 +54,15 @@ const declaration = GateDeclaration.make({
 describe("@beep/skill-contract Gate", () => {
   it("brands the wire id while retaining a consumer-local literal domain and distinct identity", () => {
     const OtherGateId = makeGateId(LiteralKit(["other-gate"]));
-    expect(S.is(GateId)("artifact-exists")).toBe(true);
-    expect(S.is(ConsumerGateId)("artifact-exists")).toBe(true);
-    expect(S.is(ConsumerGateId)("unknown-gate")).toBe(false);
-    expect(S.is(GateId)("")).toBe(false);
+    expect(isGateId("artifact-exists")).toBe(true);
+    expect(isConsumerGateId("artifact-exists")).toBe(true);
+    expect(isConsumerGateId("unknown-gate")).toBe(false);
+    expect(isGateId("")).toBe(false);
     expect(S.resolveAnnotations(ConsumerGateId)?.identifier).not.toBe(S.resolveAnnotations(OtherGateId)?.identifier);
   });
 
   it("keeps the base nonempty validation even when a consumer domain declares an empty literal", () => {
-    const Sloppy = makeGateId(LiteralKit([""]));
-    expect(S.is(Sloppy)("")).toBe(false);
+    expect(isSloppyGateId("")).toBe(false);
   });
 
   it("models unconditional and referenced conditional applicability without invalid combinations", () => {
@@ -67,8 +83,8 @@ describe("@beep/skill-contract Gate", () => {
 
   it.effect("round-trips a gate declaration through its schema", () =>
     Effect.gen(function* () {
-      const encoded = yield* S.encodeUnknownEffect(GateDeclaration)(declaration);
-      const decoded = yield* S.decodeEffect(GateDeclaration)(encoded);
+      const encoded = yield* encodeUnknownGateDeclaration(declaration);
+      const decoded = yield* decodeGateDeclaration(encoded);
 
       expect(S.toEquivalence(GateDeclaration)(decoded, declaration)).toBe(true);
     })
@@ -76,12 +92,10 @@ describe("@beep/skill-contract Gate", () => {
 
   it.effect("rejects duplicate registry ids and malformed audit timestamps at decode", () =>
     Effect.gen(function* () {
-      const encodedDeclaration = yield* S.encodeUnknownEffect(GateDeclaration)(declaration);
+      const encodedDeclaration = yield* encodeUnknownGateDeclaration(declaration);
       const duplicateRegistryInput: unknown = {
         declarations: [encodedDeclaration, encodedDeclaration],
       };
-      const Detail = S.Struct({ paths: S.Array(S.String) });
-      const Audit = GateAuditRecord("TimestampAudit", "allowed", Detail);
       const malformedTimestampInput: unknown = {
         detail: { paths: [] },
         evaluator: "qa",
@@ -90,8 +104,8 @@ describe("@beep/skill-contract Gate", () => {
         outcome: "allowed",
         reason: "Checked.",
       };
-      const duplicateRegistry = yield* S.decodeUnknownEffect(GateRegistry)(duplicateRegistryInput).pipe(Effect.flip);
-      const malformedTimestamp = yield* S.decodeUnknownEffect(Audit)(malformedTimestampInput).pipe(Effect.flip);
+      const duplicateRegistry = yield* decodeUnknownGateRegistry(duplicateRegistryInput).pipe(Effect.flip);
+      const malformedTimestamp = yield* decodeUnknownTimestampAudit(malformedTimestampInput).pipe(Effect.flip);
 
       expect(duplicateRegistry.message).toContain("unique gate ids");
       expect(malformedTimestamp.message).toContain('["occurredAt"]');
@@ -100,12 +114,9 @@ describe("@beep/skill-contract Gate", () => {
 
   it.effect("keeps allowed and denied outcomes as coherent audited values", () =>
     Effect.gen(function* () {
-      const AllowedDetail = S.Struct({ checkedPaths: S.Array(S.String) });
-      const DeniedDetail = S.Struct({ missingPaths: S.NonEmptyArray(S.String) });
-      const Verdict = GateVerdict("ArtifactExistsVerdict", AllowedDetail, DeniedDetail);
       const gateId = ConsumerGateId.make("artifact-exists");
       const occurredAt = ISOStr.make("2026-08-24T00:00:00.000Z");
-      const allowed = Verdict.cases.allowed.make({
+      const allowed = ArtifactExistsVerdict.cases.allowed.make({
         audit: {
           detail: { checkedPaths: ["frames/drag.png"] },
           evaluator: "qa",
@@ -115,7 +126,7 @@ describe("@beep/skill-contract Gate", () => {
           reason: "The artifact exists.",
         },
       });
-      const denied = Verdict.cases.denied.make({
+      const denied = ArtifactExistsVerdict.cases.denied.make({
         audit: {
           detail: { missingPaths: ["frames/ghost.png"] },
           evaluator: "qa",
@@ -125,15 +136,17 @@ describe("@beep/skill-contract Gate", () => {
           reason: "The artifact is missing.",
         },
       });
-      const evaluate: GateEvaluator<void, typeof Verdict.Type> = () => Effect.succeed(denied);
+      const evaluate: GateEvaluator<void, typeof ArtifactExistsVerdict.Type> = () => Effect.succeed(denied);
       const result = yield* evaluate();
       const mismatchedOutcome: unknown = {
         ...denied,
         audit: { ...denied.audit, outcome: "allowed" },
       };
-      const mismatch = yield* S.decodeUnknownEffect(Verdict)(mismatchedOutcome).pipe(Effect.flip);
+      const mismatch = yield* decodeUnknownArtifactExistsVerdict(mismatchedOutcome).pipe(Effect.flip);
 
-      expect(Verdict.match(allowed, { allowed: ({ audit }) => audit.outcome, denied: () => "denied" })).toBe("allowed");
+      expect(
+        ArtifactExistsVerdict.match(allowed, { allowed: ({ audit }) => audit.outcome, denied: () => "denied" })
+      ).toBe("allowed");
       expect(result.verdict).toBe("denied");
       expect(mismatch.message).toContain("denied");
     })
@@ -142,8 +155,8 @@ describe("@beep/skill-contract Gate", () => {
   it("round-trips schema-derived arbitrary gate declarations", () =>
     fc.assert(
       fc.property(S.toArbitrary(GateDeclaration)(fc), (candidate) => {
-        const encoded = Result.getOrThrow(S.encodeUnknownResult(GateDeclaration)(candidate));
-        const decoded = Result.getOrThrow(S.decodeResult(GateDeclaration)(encoded));
+        const encoded = Result.getOrThrow(encodeUnknownGateDeclarationResult(candidate));
+        const decoded = Result.getOrThrow(decodeGateDeclarationResult(encoded));
 
         expect(S.toEquivalence(GateDeclaration)(decoded, candidate)).toBe(true);
       }),

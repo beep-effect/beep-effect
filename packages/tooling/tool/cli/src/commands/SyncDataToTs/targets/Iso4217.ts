@@ -98,6 +98,7 @@ class Iso4217Document extends S.Class<Iso4217Document>($I`Iso4217Document`)(
     description: "Decoded XML document for the official SIX ISO 4217 List One feed.",
   })
 ) {}
+const decodeUnknownIso4217Document = S.decodeUnknownEffect(Iso4217Document);
 
 class Iso4217CurrencyEntry extends S.Class<Iso4217CurrencyEntry>($I`Iso4217CurrencyEntry`)(
   {
@@ -330,7 +331,7 @@ export const CurrencyCodeDataCodeNamePairs = ${formatTsLiteral(codeNamePairs(val
 const normalizeIso4217Document = Effect.fn("SyncDataToTs.Iso4217.normalizeIso4217Document")(function* (
   document: unknown
 ) {
-  const decoded = yield* S.decodeUnknownEffect(Iso4217Document)(document).pipe(
+  const decoded = yield* decodeUnknownIso4217Document(document).pipe(
     SyncDataToTsError.mapError("Failed to decode the official ISO 4217 XML payload", targetId)
   );
 

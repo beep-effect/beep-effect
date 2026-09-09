@@ -14,6 +14,9 @@ import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeBackendBackendNotSupported = S.decodeEffect(Backend.BackendNotSupported);
+const encodeBackendBackendNotSupported = S.encodeEffect(Backend.BackendNotSupported);
+
 const assertSchemaRoundTrip = <Schema extends S.Codec<unknown, unknown, never, never>>(schema: Schema) => {
   const arbitrary = S.toArbitrary(schema)(fc);
   const decode = S.decodeUnknownSync(schema);
@@ -126,8 +129,8 @@ describe("Tagged errors are schema-decodable", () => {
     "BackendNotSupported round-trips through encode/decode",
     Effect.fnUntraced(function* () {
       const err = Backend.notSupported("wink", "posTag");
-      const encoded = yield* S.encodeEffect(Backend.BackendNotSupported)(err);
-      const decoded = yield* S.decodeEffect(Backend.BackendNotSupported)(encoded);
+      const encoded = yield* encodeBackendBackendNotSupported(err);
+      const decoded = yield* decodeBackendBackendNotSupported(encoded);
       expect(decoded.backend).toBe("wink");
       expect(decoded.operation).toBe("posTag");
     })

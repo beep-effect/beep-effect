@@ -37,6 +37,10 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { CandorRecordRepositoryShape } from "@beep/law-practice-use-cases/CandorRecord";
 
+const decodeUnknownCandorDisposition = S.decodeUnknownEffect(CandorDisposition);
+const decodeUnknownIdsSubmissionFact = S.decodeUnknownEffect(IdsSubmissionFact);
+const decodeUnknownPatentCitationEvent = S.decodeUnknownEffect(PatentCitationEvent);
+
 // The two filings are deliberately different representations, not just
 // different numbers: scoping a read to one of them also proves the port's rule
 // that nothing matches across representations.
@@ -88,7 +92,7 @@ const groundingOf = (source: Source) => ({
 });
 
 const eventFixture = (id: number, citingApplication: CitingApplicationIdentity.Encoded, source: Source, org = 1) =>
-  S.decodeUnknownEffect(PatentCitationEvent)({
+  decodeUnknownPatentCitationEvent({
     ...productEntityFixtureInput(LawPractice.PatentCitationEventId.entityType, id),
     orgId: org,
     actor: "Applicant",
@@ -109,7 +113,7 @@ const dispositionFixture = (
   source: Source,
   org = 1
 ) =>
-  S.decodeUnknownEffect(CandorDisposition)({
+  decodeUnknownCandorDisposition({
     ...productEntityFixtureInput(LawPractice.CandorDispositionId.entityType, id),
     orgId: org,
     citingApplication,
@@ -122,7 +126,7 @@ const dispositionFixture = (
   });
 
 const submissionFactFixture = (id: number, citingApplication: CitingApplicationIdentity.Encoded, org = 1) =>
-  S.decodeUnknownEffect(IdsSubmissionFact)({
+  decodeUnknownIdsSubmissionFact({
     ...productEntityFixtureInput(LawPractice.IdsSubmissionFactId.entityType, id),
     orgId: org,
     candidateWindow: {

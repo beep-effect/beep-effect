@@ -113,6 +113,7 @@ const ConflictCounts = S.Struct({ total: NonNegativeInt, pending: NonNegativeInt
     description: "Unpaginated total and pending conflict counts for one query scope.",
   })
 );
+const decodeConflictCounts = S.decodeEffect(ConflictCounts);
 
 const CountRow = S.Struct({ count: NonNegativeInt });
 
@@ -393,7 +394,7 @@ export class ConflictRepository extends Context.Service<ConflictRepository, Conf
           ],
           { concurrency: "unbounded" }
         );
-        return yield* S.decodeEffect(ConflictCounts)({ total: total.count, pending: pending.count }).pipe(
+        return yield* decodeConflictCounts({ total: total.count, pending: pending.count }).pipe(
           Effect.mapError((cause) => DrizzleError.fromUnknown("decodeRows", cause))
         );
       });

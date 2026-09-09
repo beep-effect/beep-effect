@@ -41,6 +41,50 @@ describe("oxlint rules", () => {
     expect(reports).toHaveLength(1);
   });
 
+  it("classifies static and runtime schema compiler inputs in-process", () => {
+    const reports: Array<unknown> = [];
+    const rule = plugin.rules["no-inline-schema-compile"];
+    if (!("createOnce" in rule)) {
+      throw new Error("Expected the inline schema compile rule to use createOnce");
+    }
+    const visitors = rule.createOnce({
+      cwd: process.cwd(),
+      filename: "fixture.ts",
+      report: (finding: unknown) => reports.push(finding),
+    } as never);
+    const identifier = (name: string) => ({ name, type: "Identifier" });
+    const member = (object: unknown, property: string) => ({
+      computed: false,
+      object,
+      optional: false,
+      property: identifier(property),
+      type: "MemberExpression",
+    });
+    const call = (callee: unknown, args: ReadonlyArray<unknown>) => ({
+      arguments: args,
+      callee,
+      optional: false,
+      type: "CallExpression",
+    });
+    const schemaCall = (method: string, args: ReadonlyArray<unknown>) => call(member(identifier("S"), method), args);
+
+    visitors.before!();
+    visitors.ImportDeclaration!({
+      importKind: "value",
+      source: { type: "Literal", value: "effect/Schema" },
+      specifiers: [{ local: identifier("S"), type: "ImportNamespaceSpecifier" }],
+      type: "ImportDeclaration",
+    } as never);
+    visitors.FunctionDeclaration!({} as never);
+    visitors.CallExpression!(schemaCall("decodeSync", [schemaCall("Array", [identifier("Model")])]) as never);
+    visitors.CallExpression!(schemaCall("decodeSync", [member(identifier("Models"), "User")]) as never);
+    visitors.CallExpression!(schemaCall("decodeSync", [schemaCall("Array", [identifier("rowSchema")])]) as never);
+    visitors.CallExpression!(schemaCall("decodeSync", [member(identifier("input"), "schema")]) as never);
+    visitors["FunctionDeclaration:exit"]!({} as never);
+
+    expect(reports).toHaveLength(2);
+  });
+
   for (const rule of OXLINT_RULES) {
     const { invalid, valid } = OXLINT_SOURCES[rule];
 

@@ -35,6 +35,9 @@ import {
 } from "../Errors.ts";
 import * as HookContext from "./Context.ts";
 import { HookEnvelope } from "./Envelope.ts";
+const decodeUnknownHookEnvelope = S.decodeUnknownEffect(HookEnvelope);
+const isHookControlledExit = S.is(HookControlledExit);
+const isHookInputDecodeError = S.is(HookInputDecodeError);
 
 const $I = $ScratchpadId.create("claudecode/Hook/Runner");
 
@@ -293,7 +296,7 @@ const runHookFromParsed = Effect.fn("Hook.runHookFromParsed")(function* <In exte
   parsed: unknown
 ): Effect.fn.Return<void, RunnerError, Stdio.Stdio | HandlerRequirements<R>> {
   yield* Effect.logDebug("decoding hook input").pipe(Effect.annotateLogs({ expectedEvent: hook.event }));
-  const envelope = yield* S.decodeUnknownEffect(HookEnvelope)(parsed).pipe(
+  const envelope = yield* decodeUnknownHookEnvelope(parsed).pipe(
     Effect.mapError((cause) =>
       HookInputDecodeError.make({
         cause,
@@ -411,7 +414,7 @@ export const runDispatchProgram = Effect.fn("Hook.runDispatchProgram")(function*
   const parsed = yield* UnknownFromJsonString.decodeEffect(raw).pipe(
     Effect.mapError((cause) => HookInputDecodeError.make({ cause, phase: "json" }))
   );
-  const envelope = yield* S.decodeUnknownEffect(HookEnvelope)(parsed).pipe(
+  const envelope = yield* decodeUnknownHookEnvelope(parsed).pipe(
     Effect.mapError((cause) =>
       HookInputDecodeError.make({
         cause,
@@ -474,11 +477,11 @@ export const hookTeardown: {
     return;
   }
   const squashed = Cause.squash(exit.cause);
-  if (S.is(HookControlledExit)(squashed)) {
+  if (isHookControlledExit(squashed)) {
     onExit(squashed.code);
     return;
   }
-  if (S.is(HookInputDecodeError)(squashed)) {
+  if (isHookInputDecodeError(squashed)) {
     onExit(2);
     return;
   }

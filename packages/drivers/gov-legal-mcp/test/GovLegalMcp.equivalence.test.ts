@@ -10,6 +10,14 @@ import { flow } from "effect";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeGovinfoSearchFailureSync = S.decodeSync(GovinfoSearchFailure);
+const decodeToolNameNormalizationErrorSync = S.decodeSync(ToolNameNormalizationError);
+const decodeToolNameRegistrationErrorFieldsExpectedWireNameSync = S.decodeSync(
+  ToolNameRegistrationError.fields.expectedWireName
+);
+const encodeGovinfoSearchFailureSync = S.encodeSync(GovinfoSearchFailure);
+const encodeToolNameNormalizationErrorSync = S.encodeSync(ToolNameNormalizationError);
+
 const sameGovinfoSearchFailure = S.toEquivalence(GovinfoSearchFailure);
 const sameNormalizationError = S.toEquivalence(ToolNameNormalizationError);
 const sameRegistrationError = S.toEquivalence(ToolNameRegistrationError);
@@ -52,19 +60,19 @@ describe("gov-legal-mcp declared-field equivalence", () => {
     const candidate = ToolNameCandidate.make({ operationId: "search", source: "govinfo" });
     const a = ToolNameRegistrationError.make({
       candidate,
-      expectedWireName: S.decodeSync(ToolNameRegistrationError.fields.expectedWireName)("govinfo_search"),
+      expectedWireName: decodeToolNameRegistrationErrorFieldsExpectedWireNameSync("govinfo_search"),
       message: "declaration missing from production report",
       reason: "missing_candidate",
     });
     const b = ToolNameRegistrationError.make({
       candidate,
-      expectedWireName: S.decodeSync(ToolNameRegistrationError.fields.expectedWireName)("govinfo_search"),
+      expectedWireName: decodeToolNameRegistrationErrorFieldsExpectedWireNameSync("govinfo_search"),
       message: "declaration missing from production report",
       reason: "missing_candidate",
     });
     const c = ToolNameRegistrationError.make({
       candidate,
-      expectedWireName: S.decodeSync(ToolNameRegistrationError.fields.expectedWireName)("govinfo_search"),
+      expectedWireName: decodeToolNameRegistrationErrorFieldsExpectedWireNameSync("govinfo_search"),
       message: "declaration missing from production report",
       reason: "wire_name_drift",
     });
@@ -74,10 +82,10 @@ describe("gov-legal-mcp declared-field equivalence", () => {
   });
 
   it("round-trips schema-derived error values under the declared comparator", () => {
-    const roundTripSearchFailure = flow(S.encodeSync(GovinfoSearchFailure), S.decodeSync(GovinfoSearchFailure));
+    const roundTripSearchFailure = flow(encodeGovinfoSearchFailureSync, decodeGovinfoSearchFailureSync);
     const roundTripNormalizationError = flow(
-      S.encodeSync(ToolNameNormalizationError),
-      S.decodeSync(ToolNameNormalizationError)
+      encodeToolNameNormalizationErrorSync,
+      decodeToolNameNormalizationErrorSync
     );
 
     fc.assert(

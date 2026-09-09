@@ -38,6 +38,8 @@ import type { Scope } from "effect";
 import type * as Crypto from "effect/Crypto";
 import type { LibpffError } from "./Libpff.errors.ts";
 
+const decodePosixPath = S.decodeEffect(PosixPath);
+
 const $I = $LibpffId.create("Libpff.pffexport");
 
 const defaultPffexportPath = "pffexport";
@@ -1222,7 +1224,7 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
       .pipe(Effect.mapError(() => makeLibpffError("process", { cause: "export item read failed" })));
 
   const decodeChildPath = (value: string): Effect.Effect<O.Option<PosixPath>> =>
-    S.decodeEffect(PosixPath)(value).pipe(Effect.option);
+    decodePosixPath(value).pipe(Effect.option);
 
   const deriveChildId = (operation: ExportArchiveOperation, relativePath: string) =>
     deriveArtifactId([operation.source.id, relativePath]).pipe(

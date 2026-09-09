@@ -17,6 +17,12 @@ import * as Str from "effect/String";
 import { FastCheck as fc } from "effect/testing";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 
+const decodeTmpfsReapReportJson = S.decodeEffect(S.fromJsonString(TmpfsReapReport));
+const decodeTmpfsReapReport = S.decodeEffect(TmpfsReapReport);
+const decodeTmpfsReapReportJsonSync = S.decodeSync(S.fromJsonString(TmpfsReapReport));
+const encodeTmpfsReapReportJson = S.encodeEffect(S.fromJsonString(TmpfsReapReport));
+const encodeTmpfsReapReportJsonSync = S.encodeSync(S.fromJsonString(TmpfsReapReport));
+
 const FIXTURE_NOW_MILLIS = 2_000_000_000_000;
 const noProcessCommandLines = () => Effect.succeed(A.empty<string>());
 const fixtureTimestamp = (hoursAgo: number): string =>
@@ -1147,13 +1153,13 @@ describe("tmpfs reap", () => {
         );
         yield* runCommand("touch", ["-d", fixtureTimestamp(3), candidatePath], root);
         const report = yield* runTmpfsReap({ cacheRoot, nowMillis: FIXTURE_NOW_MILLIS, tmpRoot });
-        const encoded = yield* S.encodeEffect(S.fromJsonString(TmpfsReapReport))(report);
-        const decoded = yield* S.decodeEffect(S.fromJsonString(TmpfsReapReport))(encoded);
+        const encoded = yield* encodeTmpfsReapReportJson(report);
+        const decoded = yield* decodeTmpfsReapReportJson(encoded);
         expect(decoded).toEqual(report);
         expect(decoded.schemaVersion).toBe("tmpfs-reap/v1");
         expect(candidateByPath(decoded, candidatePath).root).toBe(tmpRoot);
 
-        const legacy = yield* S.decodeEffect(TmpfsReapReport)({
+        const legacy = yield* decodeTmpfsReapReport({
           schemaVersion: "tmpfs-reap/v1",
           scannedAt: "2026-08-29T12:00:00.000Z",
           tmpRoot: "/tmp",
@@ -1567,14 +1573,14 @@ describe("tmpfs reap", () => {
     const ReportArbitrary = S.toArbitrary(TmpfsReapReport)(fc);
     fc.assert(
       fc.property(ReportArbitrary, (report) => {
-        const encoded = S.encodeSync(S.fromJsonString(TmpfsReapReport))(report);
-        const decoded = S.decodeSync(S.fromJsonString(TmpfsReapReport))(encoded);
+        const encoded = encodeTmpfsReapReportJsonSync(report);
+        const decoded = decodeTmpfsReapReportJsonSync(encoded);
         expect(decoded.schemaVersion).toBe(report.schemaVersion);
         expect(decoded.tmpRoot).toBe(report.tmpRoot);
         expect(A.length(decoded.candidates)).toBe(A.length(report.candidates));
         // JSON drops the sign of -0, so the codec law is encode-stability
         // rather than Object.is identity on numeric fields.
-        expect(S.encodeSync(S.fromJsonString(TmpfsReapReport))(decoded)).toBe(encoded);
+        expect(encodeTmpfsReapReportJsonSync(decoded)).toBe(encoded);
       }),
       fcRuns(32)
     );

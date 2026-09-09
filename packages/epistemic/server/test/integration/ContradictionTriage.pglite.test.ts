@@ -74,6 +74,8 @@ import { TestClock } from "effect/testing";
 import type { EdgeVersion } from "@beep/epistemic-domain/entities/EdgeVersion";
 import type { EvidenceRow } from "@beep/epistemic-tables/entities/Evidence";
 
+const encodeUnknownEvidenceVerificationResult = S.encodeUnknownResult(EvidenceVerification);
+
 const migrationsFolder = fileURLToPath(new URL("../../../../_internal/db-admin/drizzle", import.meta.url));
 const { shouldRunPgliteIntegration } = makePgliteIntegrationGate();
 const makeMigrationCapableLayer = () =>
@@ -826,7 +828,7 @@ if (!shouldRunPgliteIntegration) {
           // Simulate a legacy/corrupt row that bypassed the guarded converter:
           // detail reads must still refuse to associate this unrelated anchor.
           const encodedUnrelated = yield* Effect.fromResult(
-            S.encodeUnknownResult(EvidenceVerification)(unrelatedVerification)
+            encodeUnknownEvidenceVerificationResult(unrelatedVerification)
           );
           const { id: _id, ...uncheckedUnrelatedInsert } = encodedUnrelated;
           yield* db.insert(DbSchema.evidenceVerification).values(uncheckedUnrelatedInsert);

@@ -7,6 +7,10 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodePhaseProfileOption = S.decodeOption(PhaseProfile);
+const decodeUnknownPhaseProfileOption = S.decodeUnknownOption(PhaseProfile);
+const encodePhaseProfileOption = S.encodeOption(PhaseProfile);
+
 class CapturedAnnotations extends Context.Service<CapturedAnnotations, Array<Record<string, unknown>>>()(
   "@beep/observability/test/PhaseProfiler.test/CapturedAnnotations"
 ) {}
@@ -27,7 +31,7 @@ describe("PhaseProfiler", () => {
   it("round-trips schema-derived phase profiles", () => {
     fc.assert(
       fc.property(S.toArbitrary(PhaseProfile)(fc), (profile) => {
-        const decoded = O.flatMap(S.encodeOption(PhaseProfile)(profile), S.decodeUnknownOption(PhaseProfile));
+        const decoded = O.flatMap(encodePhaseProfileOption(profile), decodeUnknownPhaseProfileOption);
         expect(O.exists(decoded, (value) => Equal.equals(value, profile))).toBe(true);
       }),
       fcRuns(50)
@@ -37,7 +41,7 @@ describe("PhaseProfiler", () => {
   it("rejects empty phase labels", () => {
     expect(
       O.isNone(
-        S.decodeOption(PhaseProfile)({
+        decodePhaseProfileOption({
           phase: "",
           outcome: "completed",
           durationMs: NonNegativeInt.make(1),

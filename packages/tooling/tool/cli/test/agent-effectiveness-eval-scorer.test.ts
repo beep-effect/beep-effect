@@ -15,6 +15,8 @@ import { Effect, FileSystem, Layer, Path, pipe } from "effect";
 import * as S from "effect/Schema";
 import type { AgentEffectivenessEvalViolation } from "@beep/repo-cli/test/AgentEffectiveness";
 
+const decodeUnknownSkillOptTaskManifestJson = S.decodeUnknownEffect(S.fromJsonString(SkillOptTaskManifest));
+
 const TestLayer = NodeServices.layer;
 const decodeTaskManifest = S.decodeUnknownEffect(SkillOptTaskManifest);
 
@@ -138,9 +140,7 @@ describe("agent-effectiveness eval scorer", () => {
     provideTestLayer(
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
-        const task = yield* fs
-          .readFileString(taskPath)
-          .pipe(Effect.flatMap(S.decodeUnknownEffect(S.fromJsonString(SkillOptTaskManifest))));
+        const task = yield* fs.readFileString(taskPath).pipe(Effect.flatMap(decodeUnknownSkillOptTaskManifestJson));
         const firstCompletion = yield* evaluateSkillOptCompletion(task, fixtureRoot);
         const secondCompletion = yield* evaluateSkillOptCompletion(task, fixtureRoot);
         const firstReport = buildAgentEffectivenessEvalScoreReport(task, firstCompletion, emptyLaw);
