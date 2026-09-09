@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -33,36 +33,37 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P2 Verify — in progress.
+P4 Close: complete. The implementation and review fixes are merged; this
+documentation follow-up retains the evidence and reflection.
 
 ## Latest Evidence
 
-- The predecessor's 2,931 findings reproduce exactly; current opening `HEAD`
-  contained 3,087 findings across 566 files and 105 ownership families, with
-  the +156 drift fully attributed.
-- The generator owner was updated first, 3,087 findings reconcile to zero, and
-  `research/residual-census.json` records the empty repository-wide result on
-  the current implementation head. After `origin/main` advanced, its 20 new
-  repo-cli findings across seven files were classified and hoisted before the
-  census was refreshed to zero again.
-- `beep/no-inline-schema-compile` is configured as an error. Focused policy,
-  assertion, and manually migrated package tests are green. The 106-package
-  owner matrix is green, and the post-merge `@beep/repo-cli` family was
-  reverified after its newly introduced compilers were hoisted: package audit
-  and docgen both pass, as does its test-TSGo package check. The isolated
-  1,000-file repository test-TSGo gate and `@beep/html` generated-output check
-  are green. A later mainline merge retained the zero census and brought in the
-  deprecated-API ESLint sharding fix identified by the first publish attempt;
-  full lint-policy passes on the merged head. Exact-head Yeet verification
-  remains in progress.
-- The 2026-09-08 current-main reconciliation found 67 newly introduced
-  compiler calls across 15 files and seven ownership families. Fifty-three
-  were mechanically safe and 14 required dependency-aware manual placement;
-  all were hoisted before merge commit `b6723e0d43`, whose committed-tree
-  census is zero. Full package verification is green for `@beep/semantica`,
-  `@beep/freshbooks`, and `@beep/repo-cli`; focused tests plus quick package
-  verification are green for the four affected test-only owners. Exact-head
-  Yeet publication and monitoring remain the active completion gate.
+- The predecessor's 2,931 findings reproduce exactly. The opening tree had
+  3,087 findings across 566 files and 105 ownership families; all +156 drift is
+  attributed in [`research/opening-census.md`](./research/opening-census.md).
+- The generator owner was updated first. All 3,087 opening findings reconcile
+  to zero. Later mainline additions were also hoisted, including 20 repo-cli
+  findings and the 67-call reconciliation across seven ownership families on
+  2026-09-08. The refreshed
+  [`residual census`](./research/residual-census.json) reports zero findings on
+  the merged implementation, and `beep/no-inline-schema-compile` is an error.
+- The [`106-owner matrix`](./research/package-verification.json) is green.
+  Later reconciliation passed full package verification for `@beep/semantica`,
+  `@beep/freshbooks`, and `@beep/repo-cli`, plus focused tests and quick package
+  verification for the four test-only owners. Fresh HTML regeneration has no
+  tracked diff; the final lint-rule suite passes all 66 tests.
+- [PR #1019](https://github.com/beep-effect/beep-effect/pull/1019) shipped the
+  migration. [PR #1022](https://github.com/beep-effect/beep-effect/pull/1022)
+  shipped recursive schema-literal classification and complete environment
+  proof hashing. All five review threads across those PRs are resolved.
+- Full `bun run beep yeet verify --merged` passed all 33 reported lanes in
+  43 minutes 35 seconds. The PR #1022 head, local preview, and squash merge
+  share Git tree `6a9533d44b007cb26959789f22d7fa7768dc7615`. Hosted checks are
+  green. [`research/closeout-evidence.md`](./research/closeout-evidence.md)
+  records the commits, commands, results, and review links.
+- The [closeout reflection](./history/reflections/2026-09-08-codex.md) and
+  synchronized lifecycle update are retained in this documentation follow-up.
+  Its publication and review checks remain the final live completion gate.
 
 ## Notes
 

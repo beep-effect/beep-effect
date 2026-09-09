@@ -58,15 +58,15 @@ Higher sources outrank lower sources when they conflict.
 
 ## Acceptance Criteria
 
-- [ ] A reproducible inventory accounts for the full opening baseline.
-- [ ] Repository lint reports zero `beep(no-inline-schema-compile)` findings.
-- [ ] The lint rule is configured as an error after zero is reached.
-- [ ] Focused rule tests cover inline rejection and module-scope acceptance.
-- [ ] Every affected workspace package completes its required package verify.
-- [ ] Generated sources are regenerated from their updated owners without
+- [x] A reproducible inventory accounts for the full opening baseline.
+- [x] Repository lint reports zero `beep(no-inline-schema-compile)` findings.
+- [x] The lint rule is configured as an error after zero is reached.
+- [x] Focused rule tests cover inline rejection and module-scope acceptance.
+- [x] Every affected workspace package completes its required package verify.
+- [x] Generated sources are regenerated from their updated owners without
       unexplained drift.
-- [ ] Canonical repository and hosted verification are green.
-- [ ] No unrelated refactors or formatting churn.
+- [x] Canonical repository and hosted verification are green.
+- [x] No unrelated refactors or formatting churn.
 
 ## Verification Matrix
 

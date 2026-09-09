@@ -386,3 +386,25 @@
   successful proofs by command, environment, dependency graph, and workspace
   digests; reuse exact matches across nested aggregates, and report the key
   dimension that requires a rerun when reuse is unsafe.
+
+## 2026-09-08 — Desktop continuation changed the effective permission profile
+
+- **Work:** Finish the local merged-preview proof and packet closeout after
+  PR #1022 merged.
+- **Evidence:** A continuation reported `managed` / `workspace-write` with
+  `.git` read-only despite the previously unrestricted session. The repository
+  stop rule blocked three automatic continuations until the operator restored
+  Full access. The existing verifier remained live and later passed.
+- **Prevention:** Preserve the effective permission profile across background
+  continuation and model changes. Show any mismatch before tools resume, and
+  pause automatic goal retries while user action is required.
+
+## 2026-09-08 — Merged follow-up fixes left predecessor review threads open
+
+- **Work:** Audit comments before closing the compiler-hoist packet.
+- **Evidence:** All three PR #1022 threads were resolved, but the two original
+  PR #1019 threads remained open after their fixes merged in #1022. The
+  cross-PR sweep found them; Yeet posted the fix references and resolved both.
+- **Prevention:** Track every implementation PR in packet closeout and inspect
+  its discussions, including merged predecessors, before claiming that all
+  review comments have been addressed.
