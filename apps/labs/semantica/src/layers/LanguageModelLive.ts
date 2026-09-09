@@ -552,7 +552,7 @@ export const XAiGoldLanguageModelLive = (options: {
 export const AnthropicExtractionLanguageModelLive = (artifactHash: ModelIdentity["artifactHash"]) =>
   Layer.unwrap(
     Effect.gen(function* () {
-      const model = yield* Config.nonEmptyString(ANTHROPIC_MODEL_ENV).pipe(Config.withDefault(ANTHROPIC_DEFAULT_MODEL));
+      const model = yield* Config.NonEmptyString(ANTHROPIC_MODEL_ENV).pipe(Config.withDefault(ANTHROPIC_DEFAULT_MODEL));
       const identity = Layer.effect(ActiveModelIdentity, AnthropicExtractionModelIdentity({ artifactHash, model }));
       const languageModel = CachingLanguageModelLive(AnthropicLanguageModelLive).pipe(Layer.provide(identity));
       return Layer.merge(languageModel, identity);

@@ -27,7 +27,7 @@ import type { ExecutionDecisionRecord, ExecutionOutcomeRecord } from "@beep/epis
 import type * as Scope from "effect/Scope";
 export const token = Redacted.make("ontology-mcp-http-test-token");
 export const allowedOrigin = "http://professional-desktop.beep.localhost:1355";
-const socketTransportConfig = Config.boolean("BEEP_TEST_ONTOLOGY_MCP_SOCKET").pipe(Config.withDefault(false));
+const socketTransportConfig = Config.Boolean("BEEP_TEST_ONTOLOGY_MCP_SOCKET").pipe(Config.withDefault(false));
 // unary by contract: `options` stays reachable through `S.decodeUnknownEffect(OntologyFilePath)`;
 // a dual is undecidable here because `input` is `unknown`.
 export const decodeOntologyFilePath: (input: unknown) => Effect.Effect<OntologyFilePath, S.SchemaError> =

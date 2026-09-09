@@ -38,21 +38,21 @@ const decodeUnknownLinkStatus = S.decodeUnknownEffect(LinkStatus);
 // Fetch Command - Preview URL content without storage
 // =============================================================================
 
-const fetchUrl = Argument.string("url").pipe(Argument.withDescription("URL to fetch content from"));
+const fetchUrl = Argument.String("url").pipe(Argument.withDescription("URL to fetch content from"));
 
-const showMetadataOption = Flag.boolean("metadata").pipe(
+const showMetadataOption = Flag.Boolean("metadata").pipe(
   Flag.withAlias("m"),
   Flag.withDefault(false),
   Flag.withDescription("Show Jina metadata (title, siteName, etc.)")
 );
 
-const enrichOption = Flag.boolean("enrich").pipe(
+const enrichOption = Flag.Boolean("enrich").pipe(
   Flag.withAlias("e"),
   Flag.withDefault(false),
   Flag.withDescription("Run AI enrichment to extract structured metadata")
 );
 
-const truncateOption = Flag.integer("truncate").pipe(
+const truncateOption = Flag.Int("truncate").pipe(
   Flag.withAlias("t"),
   Flag.optional,
   Flag.withDescription("Truncate content to N characters (default: show all)")
@@ -171,14 +171,14 @@ export const fetchCommand = Command.make(
 // Ingest Link Command - Fetch and store URL content
 // =============================================================================
 
-const ingestUrlArg = Argument.string("url").pipe(Argument.withDescription("URL to ingest"));
+const ingestUrlArg = Argument.String("url").pipe(Argument.withDescription("URL to ingest"));
 
-const skipEnrichOption = Flag.boolean("skip-enrich").pipe(
+const skipEnrichOption = Flag.Boolean("skip-enrich").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Skip AI enrichment (just fetch and store)")
 );
 
-const sourceTypeOption = Flag.choice("source-type", [
+const sourceTypeOption = Flag.Literals("source-type", [
   "news",
   "blog",
   "press_release",
@@ -187,12 +187,12 @@ const sourceTypeOption = Flag.choice("source-type", [
   "unknown",
 ]).pipe(Flag.optional, Flag.withDescription("Override source type classification"));
 
-const noDuplicateOption = Flag.boolean("allow-duplicates").pipe(
+const noDuplicateOption = Flag.Boolean("allow-duplicates").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Allow re-ingesting duplicate content")
 );
 
-const ontologyIdOption = Flag.string("ontology").pipe(
+const ontologyIdOption = Flag.String("ontology").pipe(
   Flag.withAlias("o"),
   Flag.withDescription("Ontology ID for scoping (e.g., 'seattle')")
 );
@@ -271,12 +271,12 @@ export const ingestLinkCommand = Command.make(
 // Documents Command - List ingested documents
 // =============================================================================
 
-const statusFilterOption = Flag.choice("status", ["pending", "enriched", "processed", "failed"]).pipe(
+const statusFilterOption = Flag.Literals("status", ["pending", "enriched", "processed", "failed"]).pipe(
   Flag.optional,
   Flag.withDescription("Filter by status")
 );
 
-const sourceTypeFilterOption = Flag.choice("type", [
+const sourceTypeFilterOption = Flag.Literals("type", [
   "news",
   "blog",
   "press_release",
@@ -285,15 +285,15 @@ const sourceTypeFilterOption = Flag.choice("type", [
   "unknown",
 ]).pipe(Flag.optional, Flag.withDescription("Filter by source type"));
 
-const limitOption = Flag.integer("limit").pipe(
+const limitOption = Flag.Int("limit").pipe(
   Flag.withAlias("l"),
   Flag.withDefault(20),
   Flag.withDescription("Maximum results to show")
 );
 
-const offsetOption = Flag.integer("offset").pipe(Flag.withDefault(0), Flag.withDescription("Skip N results"));
+const offsetOption = Flag.Int("offset").pipe(Flag.withDefault(0), Flag.withDescription("Skip N results"));
 
-const jsonOutputOption = Flag.boolean("json").pipe(Flag.withDefault(false), Flag.withDescription("Output as JSON"));
+const jsonOutputOption = Flag.Boolean("json").pipe(Flag.withDefault(false), Flag.withDescription("Output as JSON"));
 
 const documentsHandler = Effect.fn("documentsHandler")(function* (
   status: O.Option<string>,
@@ -386,9 +386,9 @@ export const documentsCommand = Command.make(
 // Ingest Batch Command - Bulk ingest from file
 // =============================================================================
 
-const urlsFileArg = Argument.file("file").pipe(Argument.withDescription("File containing URLs (one per line)"));
+const urlsFileArg = Argument.File("file").pipe(Argument.withDescription("File containing URLs (one per line)"));
 
-const concurrencyOption = Flag.integer("concurrency").pipe(
+const concurrencyOption = Flag.Int("concurrency").pipe(
   Flag.withAlias("c"),
   Flag.withDefault(5),
   Flag.withDescription("Number of concurrent fetches")

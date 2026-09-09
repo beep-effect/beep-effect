@@ -315,7 +315,7 @@ const makeLooseJsonObject = <Fields extends S.Struct.Fields>(fields: Fields, nam
 
   return encoded.pipe(
     S.decodeTo(decoded, {
-      decode: SchemaGetter.transformOrFail((input, options) =>
+      decode: SchemaGetter.transformEffect((input, options) =>
         isLooseJsonRecord(input)
           ? Effect.zipWith(
               decodeStrict(pickKnownKeys(input), options).pipe(Effect.mapError((error) => error.issue)),
@@ -329,7 +329,7 @@ const makeLooseJsonObject = <Fields extends S.Struct.Fields>(fields: Fields, nam
               Effect.map((decodedValue) => mergeLooseJsonObject(emptyJsonRecord, decodedValue))
             )
       ),
-      encode: SchemaGetter.transformOrFail((input, options) =>
+      encode: SchemaGetter.transformEffect((input, options) =>
         Effect.zipWith(
           encodeStrict(pickKnownKeys(input) as typeof strict.Type, options).pipe(
             Effect.mapError((error) => error.issue)
@@ -355,7 +355,7 @@ const makeCaseInsensitiveLiteralSchema = <const Values extends A.NonEmptyReadonl
 
   return S.String.pipe(
     S.decodeTo(CanonicalValue, {
-      decode: SchemaGetter.transformOrFail((value) => {
+      decode: SchemaGetter.transformEffect((value) => {
         const normalizedValue = pipe(value, Str.toLowerCase);
 
         return pipe(

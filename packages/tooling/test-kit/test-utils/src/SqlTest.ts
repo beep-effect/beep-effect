@@ -1561,7 +1561,7 @@ export const PgExternalTestDriver: SqlTestDriver<
 const resolvePgliteExternalConfig = Effect.fn("SqlTest.resolvePgliteExternalConfig")(function* (
   config: PgExternalTestDriverConfigInput
 ) {
-  const envConnectionUri = yield* Config.string("BEEP_TEST_DATABASE_URL").pipe(
+  const envConnectionUri = yield* Config.String("BEEP_TEST_DATABASE_URL").pipe(
     Config.option,
     Effect.orElseSucceed(O.none<string>)
   );
@@ -1586,7 +1586,7 @@ const shouldUseExternalPgliteLayer = (mode: PgliteSqlTestLayerMode, config: PgEx
 const shouldUseTestcontainersPgliteLayer = (mode: PgliteSqlTestLayerMode): boolean =>
   PgliteSqlTestLayerMode.$match(mode, {
     auto: () =>
-      O.getOrUndefined(Effect.runSync(Config.option(Config.string("BEEP_TEST_DATABASE_DRIVER")))) ===
+      O.getOrUndefined(Effect.runSync(Config.option(Config.String("BEEP_TEST_DATABASE_DRIVER")))) ===
       "pglite-testcontainers",
     external: () => false,
     "in-process": () => false,
@@ -1649,8 +1649,8 @@ export const makePgliteIntegrationGate = (env?: PgliteIntegrationGateEnv) => {
   // is exactly right). Tests pass `env` explicitly to exercise each branch
   // without mutating the process environment.
   const resolved = env ?? {
-    databaseDriver: O.getOrUndefined(Effect.runSync(Config.option(Config.string("BEEP_TEST_DATABASE_DRIVER")))),
-    databaseUrl: O.getOrUndefined(Effect.runSync(Config.option(Config.string("BEEP_TEST_DATABASE_URL")))),
+    databaseDriver: O.getOrUndefined(Effect.runSync(Config.option(Config.String("BEEP_TEST_DATABASE_DRIVER")))),
+    databaseUrl: O.getOrUndefined(Effect.runSync(Config.option(Config.String("BEEP_TEST_DATABASE_URL")))),
   };
   const sharedConnectionUri = pipe(resolved.databaseUrl, O.fromNullishOr, O.filter(Str.isNonEmpty));
   const shouldUseTestcontainers = resolved.databaseDriver === "pglite-testcontainers";

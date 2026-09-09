@@ -333,9 +333,9 @@ class PubSubCreateError extends S.TaggedError<PubSubCreateError>($I`PubSubCreate
  * @since 0.0.0
  */
 export const EventBroadcastConfig = Config.all({
-  projectId: Config.string("PUBSUB_PROJECT_ID").pipe(Config.withDefault("")),
-  eventsTopicId: Config.string("PUBSUB_EVENTS_TOPIC").pipe(Config.withDefault("ontology-events")),
-  eventsSubscriptionId: Config.string("PUBSUB_EVENTS_SUBSCRIPTION").pipe(
+  projectId: Config.String("PUBSUB_PROJECT_ID").pipe(Config.withDefault("")),
+  eventsTopicId: Config.String("PUBSUB_EVENTS_TOPIC").pipe(Config.withDefault("ontology-events")),
+  eventsSubscriptionId: Config.String("PUBSUB_EVENTS_SUBSCRIPTION").pipe(
     Config.withDefault("ontology-events-broadcast")
   ),
 });

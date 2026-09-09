@@ -258,12 +258,12 @@ const buildBarrelContent = (packageName: string, modules: ReadonlyArray<string>)
 const barrelCommand = Command.make(
   "barrel",
   {
-    packageDir: Flag.string("package").pipe(
+    packageDir: Flag.String("package").pipe(
       Flag.withAlias("p"),
       Flag.withDescription("Package directory to generate barrel exports for"),
       Flag.withDefault(".")
     ),
-    dryRun: Flag.boolean("dry-run").pipe(
+    dryRun: Flag.Boolean("dry-run").pipe(
       Flag.withDefault(false),
       Flag.withDescription("Preview changes without writing files")
     ),

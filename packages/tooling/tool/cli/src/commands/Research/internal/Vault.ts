@@ -75,10 +75,10 @@ export const resolveVaultRoot = Effect.fn("ResearchVault.resolveVaultRoot")(func
 ): Effect.fn.Return<string, ResearchCommandError, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const fromEnv = (yield* Effect.orDie(Config.string(VAULT_ENV_VAR).pipe(Config.option))).pipe(
+  const fromEnv = (yield* Effect.orDie(Config.String(VAULT_ENV_VAR).pipe(Config.option))).pipe(
     O.filter(Str.isNonEmpty)
   );
-  const home = (yield* Effect.orDie(Config.string("HOME").pipe(Config.option))).pipe(O.filter(Str.isNonEmpty));
+  const home = (yield* Effect.orDie(Config.String("HOME").pipe(Config.option))).pipe(O.filter(Str.isNonEmpty));
   const vaultRoot = vaultFlag.pipe(
     O.orElse(() => fromEnv),
     O.orElse(() => O.map(home, (dir) => path.join(dir, DEFAULT_VAULT_RELATIVE)))

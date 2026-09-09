@@ -749,8 +749,8 @@ const isSha256Hex = S.is(Sha256Hex);
  * @category utilities
  * @since 0.0.0
  */
-export const hookPulseHashSalt: Config.Config<O.Option<string>> = Config.string("BEEP_HOOK_PULSE_HASH_SALT").pipe(
-  Config.orElse(() => Config.string("BEEP_AI_METRICS_HASH_SALT")),
+export const hookPulseHashSalt: Config.Config<O.Option<string>> = Config.String("BEEP_HOOK_PULSE_HASH_SALT").pipe(
+  Config.orElse(() => Config.String("BEEP_AI_METRICS_HASH_SALT")),
   Config.option
 );
 
@@ -1031,7 +1031,7 @@ const HookPulseLegacyV1Record = S.Struct({
 export const HookPulseV1FromLegacyRecord = HookPulseLegacyV1Record.pipe(
   S.decodeTo(
     HookPulseV1,
-    SchemaTransformation.transformOrFail<typeof HookPulseV1.Encoded, typeof HookPulseLegacyV1Record.Type>({
+    SchemaTransformation.transformEffect<typeof HookPulseV1.Encoded, typeof HookPulseLegacyV1Record.Type>({
       decode: (input) =>
         hookPulsePrivateReferences({
           cwd: input.cwd,
@@ -1124,7 +1124,7 @@ export const HookPulseV1FromLegacyRecord = HookPulseLegacyV1Record.pipe(
 export const HookPulseV1FromRawEvent = HookPulseRawEventInput.pipe(
   S.decodeTo(
     HookPulseV1,
-    SchemaTransformation.transformOrFail<typeof HookPulseV1.Encoded, HookPulseRawEventInput>({
+    SchemaTransformation.transformEffect<typeof HookPulseV1.Encoded, HookPulseRawEventInput>({
       decode: (input) =>
         hookPulsePrivateReferences({
           cwd: input.event.cwd,

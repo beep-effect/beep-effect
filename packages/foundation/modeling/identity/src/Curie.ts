@@ -187,7 +187,7 @@ const CoreIriSchema = S.declare<CoreIri>(isCoreIri, {
 });
 
 const makeCurieTransformation = <const V extends VocabShape>(vocab: V) =>
-  SchemaTransformation.transformOrFail({
+  SchemaTransformation.transformEffect({
     decode: (curie: string) =>
       pipe(
         expandOption(curie, vocab),
@@ -200,7 +200,7 @@ const makeCurieTransformation = <const V extends VocabShape>(vocab: V) =>
       ),
   });
 
-const CoreCurieTransformation = SchemaTransformation.transformOrFail({
+const CoreCurieTransformation = SchemaTransformation.transformEffect({
   decode: (curie: CoreCurie) =>
     pipe(
       expandOption(curie, CoreVocab),

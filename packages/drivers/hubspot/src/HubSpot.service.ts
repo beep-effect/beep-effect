@@ -614,10 +614,10 @@ export class HubSpot extends Context.Service<HubSpot, HubSpotShape>()($I`HubSpot
   static readonly layer: Layer.Layer<HubSpot, HubSpotError> = Layer.effect(
     HubSpot,
     Effect.gen(function* () {
-      const accountId = yield* Config.string("HUBSPOT_ACCOUNT_ID").pipe(Config.option);
-      const accessToken = yield* Config.redacted("HUBSPOT_SERVICE_KEY").pipe(Config.option);
-      const crmApiUrl = yield* Config.string("HUBSPOT_CRM_API_URL").pipe(Config.option);
-      const formsApiUrl = yield* Config.string("HUBSPOT_FORMS_API_URL").pipe(Config.option);
+      const accountId = yield* Config.String("HUBSPOT_ACCOUNT_ID").pipe(Config.option);
+      const accessToken = yield* Config.Redacted("HUBSPOT_SERVICE_KEY").pipe(Config.option);
+      const crmApiUrl = yield* Config.String("HUBSPOT_CRM_API_URL").pipe(Config.option);
+      const formsApiUrl = yield* Config.String("HUBSPOT_FORMS_API_URL").pipe(Config.option);
       const client = yield* HttpClient.HttpClient;
       const resolved = yield* resolveConfig(
         HubSpotConfigInput.make({

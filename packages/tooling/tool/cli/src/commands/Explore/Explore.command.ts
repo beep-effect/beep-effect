@@ -18,7 +18,7 @@ import { PacketEventStoreLive } from "../Goals/PacketCore/PacketEventStore.ts";
 import { exploreAtlasCommand } from "./Atlas.ts";
 import { runExploreCheck } from "./Check.ts";
 
-const checkFlag = Flag.boolean("check").pipe(
+const checkFlag = Flag.Boolean("check").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Fold every packet event stream and report forks, integrity issues, and stale traces (advisory)")
 );

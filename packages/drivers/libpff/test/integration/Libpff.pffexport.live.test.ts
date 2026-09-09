@@ -27,7 +27,7 @@ const BEEP_TEST_LIBPFF_PST_ENV = "BEEP_TEST_LIBPFF_PST";
 // Operators can point this at any real PST — the documented public sample is
 // Apache Tika's testPST.pst, pinned by commit URL and sha256 in the package
 // README; no PST binary is committed to this public repository.
-const livePstPath = Config.string(BEEP_TEST_LIBPFF_PST_ENV).pipe(Config.option, Effect.map(O.filter(Str.isNonEmpty)));
+const livePstPath = Config.String(BEEP_TEST_LIBPFF_PST_ENV).pipe(Config.option, Effect.map(O.filter(Str.isNonEmpty)));
 
 const provideLive = provideScopedLayer(NodeServices.layer);
 

@@ -642,7 +642,7 @@ const runDeprecatedApiLint = Effect.fn("runDeprecatedApiLint")(function* () {
   yield* Console.log("[lint:deprecated-apis] OK: no deprecated vendor API usage found.");
 });
 
-const lintPackageFlag = Flag.string("package").pipe(Flag.optional);
+const lintPackageFlag = Flag.String("package").pipe(Flag.optional);
 
 const resolveLintPackage = Effect.fn("Lint.resolvePackage")(function* (root: string, directory: string) {
   const path = yield* Path.Path;
@@ -660,7 +660,7 @@ const runEslintWorker = Effect.fn("Lint.eslintWorker")(function* (
 ) {
   if (A.isReadonlyArrayEmpty(targets)) return;
   const path = yield* Path.Path;
-  const nodeOptions = yield* Config.string("NODE_OPTIONS").pipe(Config.withDefault(""));
+  const nodeOptions = yield* Config.String("NODE_OPTIONS").pipe(Config.withDefault(""));
   // Workers lint a whole package with type information; @beep/repo-cli exhausts a 4 GiB heap,
   // so the default matches the shard heap instead of a smaller worker-only budget.
   const heapOptions = /--max[-_]old[-_]space[-_]size(?:=|\s+)/.test(nodeOptions)
@@ -687,7 +687,7 @@ const lintJsdocCommand = Command.make(
   "jsdoc",
   {
     package: lintPackageFlag,
-    rootOnly: Flag.boolean("root-only").pipe(Flag.withDefault(false)),
+    rootOnly: Flag.Boolean("root-only").pipe(Flag.withDefault(false)),
   },
   Effect.fn("Lint.jsdoc")(function* ({ package: directory, rootOnly }) {
     if (O.isSome(directory) === rootOnly) {
@@ -716,7 +716,7 @@ const lintJsdocCommand = Command.make(
 const lintLawsCommand = Command.make(
   "laws",
   {
-    package: Flag.string("package"),
+    package: Flag.String("package"),
   },
   Effect.fn("Lint.laws")(function* ({ package: directory }) {
     const root = yield* findRepoRoot();
@@ -819,7 +819,7 @@ const lintDeprecatedApisCommand = Command.make(
 const lintPolicyCommand = Command.make(
   "policy",
   {
-    full: Flag.boolean("full").pipe(Flag.withDefault(false), Flag.withDescription("Run the full policy sweep locally")),
+    full: Flag.Boolean("full").pipe(Flag.withDefault(false), Flag.withDescription("Run the full policy sweep locally")),
   },
   ({ full }) => runRootLintPolicyTask(full)
 ).pipe(Command.withDescription("Run repo-wide lint policy checks"));
@@ -962,8 +962,8 @@ export const policyToolsFingerprint = Effect.fn("policyToolsFingerprint")(
 const encodeScriptsReport = S.encodeEffect(PackageScriptsReportFromWire);
 
 const gateFlags = {
-  check: Flag.boolean("check").pipe(Flag.withDefault(false)),
-  write: Flag.boolean("write").pipe(Flag.withDefault(false)),
+  check: Flag.Boolean("check").pipe(Flag.withDefault(false)),
+  write: Flag.Boolean("write").pipe(Flag.withDefault(false)),
 };
 
 const printScriptsReport = Effect.fnUntraced(function* (
@@ -996,7 +996,7 @@ export const lintPackageScriptsCommand = Command.make(
   "package-scripts",
   {
     ...gateFlags,
-    json: Flag.boolean("json").pipe(Flag.withDefault(false)),
+    json: Flag.Boolean("json").pipe(Flag.withDefault(false)),
   },
   Effect.fn("lintPackageScripts")(function* ({ check, write, json }) {
     if (check && write) return yield* failWithReportedExit("Choose --check or --write, not both.");

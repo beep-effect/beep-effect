@@ -1274,7 +1274,7 @@ const decodeSha256HexFromBytesEffect = S.decodeUnknownEffect(Sha256HexFromBytes)
  */
 export const ContentHashFromBytes = S.Uint8Array.pipe(
   S.decodeTo(ContentHash, {
-    decode: SchemaGetter.transformOrFail<ContentHash, Uint8Array, Crypto.Crypto>((value) =>
+    decode: SchemaGetter.transformEffect<ContentHash, Uint8Array, Crypto.Crypto>((value) =>
       decodeSha256HexFromBytesEffect(value).pipe(
         Effect.flatMap(ContentHash.decodeEffect),
         Effect.mapError((error) => error.issue)
@@ -1310,7 +1310,7 @@ const textEncoder = new TextEncoder();
  */
 export const ContentHashFromSourceText = SourceText.pipe(
   S.decodeTo(ContentHash, {
-    decode: SchemaGetter.transformOrFail<ContentHash, SourceText, Crypto.Crypto>((value) =>
+    decode: SchemaGetter.transformEffect<ContentHash, SourceText, Crypto.Crypto>((value) =>
       ContentHashFromBytes.decodeEffect(textEncoder.encode(value)).pipe(Effect.mapError((error) => error.issue))
     ),
     encode: SchemaGetter.forbidden(

@@ -669,11 +669,11 @@ const runCheckCensusCli = Effect.fn("CheckCensus.cli")(function* (
 export const checkCensusCommand = Command.make(
   "check-census",
   {
-    outputJson: Flag.string("output-json").pipe(
+    outputJson: Flag.String("output-json").pipe(
       Flag.withDefault(DEFAULT_CHECK_CENSUS_OUTPUT_PATH),
       Flag.withDescription("JSON report path, relative to the repository root")
     ),
-    filter: Flag.string("filter").pipe(
+    filter: Flag.String("filter").pipe(
       Flag.withDescription("Only census packages whose name contains this text"),
       Flag.optional
     ),

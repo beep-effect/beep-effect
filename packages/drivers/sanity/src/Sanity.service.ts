@@ -408,11 +408,11 @@ export class Sanity extends Context.Service<Sanity, SanityShape>()($I`Sanity`) {
   static readonly layer: Layer.Layer<Sanity, SanityError> = Layer.effect(
     Sanity,
     Effect.gen(function* () {
-      const projectId = yield* Config.string("SANITY_PROJECT_ID").pipe(Config.option);
-      const dataset = yield* Config.string("SANITY_DATASET").pipe(Config.option);
-      const apiVersion = yield* Config.string("SANITY_API_VERSION").pipe(Config.option);
-      const apiToken = yield* Config.redacted("SANITY_API_TOKEN").pipe(Config.option);
-      const apiHost = yield* Config.string("SANITY_API_HOST").pipe(Config.option);
+      const projectId = yield* Config.String("SANITY_PROJECT_ID").pipe(Config.option);
+      const dataset = yield* Config.String("SANITY_DATASET").pipe(Config.option);
+      const apiVersion = yield* Config.String("SANITY_API_VERSION").pipe(Config.option);
+      const apiToken = yield* Config.Redacted("SANITY_API_TOKEN").pipe(Config.option);
+      const apiHost = yield* Config.String("SANITY_API_HOST").pipe(Config.option);
 
       const client = yield* HttpClient.HttpClient;
       const resolved = yield* resolveConfig(

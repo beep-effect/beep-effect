@@ -47,30 +47,30 @@ const $I = $ScratchpadId.create("effect-ontology/Cli/Commands/Extract");
 
 const ontologyArg = Args.file("ontology").pipe(Args.withDescription("Path to ontology file (Turtle)"));
 
-const textOption = Flag.string("text").pipe(
+const textOption = Flag.String("text").pipe(
   Flag.withAlias("t"),
   Flag.optional,
   Flag.withDescription("Inline text to extract from")
 );
 
-const fileOption = Flag.file("file").pipe(
+const fileOption = Flag.File("file").pipe(
   Flag.withAlias("f"),
   Flag.optional,
   Flag.withDescription("Path to file containing text to extract")
 );
 
-const noExternalVocabsOption = Flag.boolean("no-external-vocabs").pipe(
+const noExternalVocabsOption = Flag.Boolean("no-external-vocabs").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Skip loading external vocabularies (PROV-O, ORG, FOAF)")
 );
 
-const formatOption = Flag.choice("format", ["json", "turtle"]).pipe(
+const formatOption = Flag.Literals("format", ["json", "turtle"]).pipe(
   Flag.withAlias("o"),
   Flag.withDefault("json"),
   Flag.withDescription("Output format: json (default) or turtle")
 );
 
-const concurrencyOption = Flag.integer("concurrency").pipe(
+const concurrencyOption = Flag.Int("concurrency").pipe(
   Flag.withAlias("c"),
   Flag.withDefault(4),
   Flag.withDescription("Extraction concurrency (default: 4)")

@@ -869,7 +869,7 @@ export const runResidueReap = Effect.fn("ResidueReap.runResidueReap")(function* 
   // An empty or relative HOME must fail closed here: resolving it would silently make
   // the current working directory the cleanup root.
   const homeRoot = path.resolve(
-    yield* decodeResidueReapHomeRoot(O.isSome(configuredHome) ? configuredHome.value : yield* Config.string("HOME"))
+    yield* decodeResidueReapHomeRoot(O.isSome(configuredHome) ? configuredHome.value : yield* Config.String("HOME"))
   );
   const repoRoot = path.resolve(O.getOrElse(O.fromUndefinedOr(options.repoRoot), () => ""));
   const resolvedRepoRoot =

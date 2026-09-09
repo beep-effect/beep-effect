@@ -154,7 +154,7 @@ const withAdmissionTempRoot = Effect.fn("SyntheticAdmission.withTempRoot")(
   ) {
     const fs = yield* FileSystem.FileSystem;
     const runtimeDir = yield* fs.makeTempDirectoryScoped();
-    const exportTarget = O.filter(yield* Config.option(Config.string("BEEP_CIOPS_SYNTHETIC_ROOT")), Str.isNonEmpty);
+    const exportTarget = O.filter(yield* Config.option(Config.String("BEEP_CIOPS_SYNTHETIC_ROOT")), Str.isNonEmpty);
     return yield* use(runtimeDir, exportTarget).pipe(
       provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
       provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" }))),

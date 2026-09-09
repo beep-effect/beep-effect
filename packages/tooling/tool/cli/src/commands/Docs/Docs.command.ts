@@ -198,7 +198,7 @@ const docsPoliciesCommand = Command.make(
 const docsFindCommand = Command.make(
   "find",
   {
-    topic: Argument.string("topic").pipe(Argument.withDescription("Keyword to match against docs content")),
+    topic: Argument.String("topic").pipe(Argument.withDescription("Keyword to match against docs content")),
   },
   Effect.fn(function* ({ topic }) {
     const normalizedTopic = pipe(topic, Str.trim, Str.toLowerCase);

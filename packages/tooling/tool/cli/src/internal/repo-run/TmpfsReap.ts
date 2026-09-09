@@ -1059,21 +1059,21 @@ export const resolveBeepCacheRoot = Effect.fn("TmpfsReap.resolveBeepCacheRoot")(
   if (O.isSome(explicit)) {
     return pathService.resolve(explicit.value);
   }
-  const configured = yield* Config.option(Config.string("XDG_CACHE_HOME"));
+  const configured = yield* Config.option(Config.String("XDG_CACHE_HOME"));
   const cacheRoot = O.filter(configured, Str.isNonEmpty);
   if (O.isSome(cacheRoot)) {
     return pathService.resolve(cacheRoot.value);
   }
-  const home = O.filter(yield* Config.option(Config.string("HOME")), Str.isNonEmpty);
+  const home = O.filter(yield* Config.option(Config.String("HOME")), Str.isNonEmpty);
   if (O.isSome(home)) {
     return pathService.join(pathService.resolve(home.value), ".cache");
   }
-  const tmpFallback = yield* Config.string("TMPDIR").pipe(Config.withDefault("/tmp"));
+  const tmpFallback = yield* Config.String("TMPDIR").pipe(Config.withDefault("/tmp"));
   return pathService.resolve(tmpFallback);
 });
 
 const configuredPath = (name: string) =>
-  Config.option(Config.string(name)).pipe(
+  Config.option(Config.String(name)).pipe(
     Effect.orElseSucceed(() => O.none()),
     Effect.map(O.filter(Str.isNonEmpty))
   );

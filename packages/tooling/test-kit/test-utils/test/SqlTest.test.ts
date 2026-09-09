@@ -138,7 +138,7 @@ const provideScopedLayer =
     Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
 
 const isBunRuntime = process.versions.bun !== undefined;
-const isCoverageRatchetRun = O.contains(Effect.runSync(Config.option(Config.string("VITEST_COVERAGE_RATCHET"))), "1");
+const isCoverageRatchetRun = O.contains(Effect.runSync(Config.option(Config.String("VITEST_COVERAGE_RATCHET"))), "1");
 const localSqliteIt = it.effect.skipIf(isCoverageRatchetRun && !isBunRuntime);
 const nodeRuntimeIt = it.skipIf(isBunRuntime);
 const nodeRuntimeEffectIt = it.effect.skipIf(isBunRuntime);

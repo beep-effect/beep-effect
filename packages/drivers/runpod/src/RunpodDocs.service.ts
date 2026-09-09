@@ -336,7 +336,7 @@ const makeRunpodDocsFromConfig = Effect.fn("RunpodDocs.makeRunpodDocsFromConfig"
 });
 
 const makeRunpodDocsFromEnvironment = Effect.fn("RunpodDocs.makeRunpodDocsFromEnvironment")(function* () {
-  const indexUrl = yield* Config.string("RUNPOD_DOCS_INDEX_URL").pipe(Config.withDefault(RUNPOD_DOCS_INDEX_URL));
+  const indexUrl = yield* Config.String("RUNPOD_DOCS_INDEX_URL").pipe(Config.withDefault(RUNPOD_DOCS_INDEX_URL));
   return yield* makeRunpodDocsFromConfig(
     resolveConfig(
       RunpodDocsConfigInput.make({

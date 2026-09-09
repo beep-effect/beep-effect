@@ -68,7 +68,7 @@ const LexicalListItemValue = PosInt.pipe(
 
 const YouTubeVideoIdFromLegacyInput = S.String.pipe(
   S.decodeTo(Md.YouTubeVideoId, {
-    decode: SchemaGetter.transformOrFail((value) =>
+    decode: SchemaGetter.transformEffect((value) =>
       decodeYouTubeVideoId(legacyYouTubeVideoId(value)).pipe(Effect.mapError((error) => error.issue))
     ),
     encode: SchemaGetter.transform((value) => value),

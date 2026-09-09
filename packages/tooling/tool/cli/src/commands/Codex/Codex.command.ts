@@ -80,7 +80,7 @@ export const runCodexQualityReviewFixLoop = Effect.fn("Codex.runCodexQualityRevi
 const qualityReviewFixLoopCommand = Command.make(
   "quality-review-fix-loop",
   {
-    summary: Argument.string("summary").pipe(Argument.variadic),
+    summary: Argument.String("summary").pipe(Argument.variadic),
   },
   ({ summary }) => runCodexQualityReviewFixLoop(summary as ReadonlyArray<string>)
 ).pipe(Command.withDescription("Run Codex with the repo quality-review-fix-loop skill"));

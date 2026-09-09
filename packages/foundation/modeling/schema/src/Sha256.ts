@@ -116,7 +116,7 @@ export type Sha256Hex = typeof Sha256Hex.Type;
  */
 export const Sha256HexFromBytes = S.Uint8Array.pipe(
   S.decodeTo(Sha256Hex, {
-    decode: SchemaGetter.transformOrFail(computeSha256Hex),
+    decode: SchemaGetter.transformEffect(computeSha256Hex),
     encode: SchemaGetter.forbidden(() => "Encoding Sha256Hex back to original bytes is not supported"),
   }),
   SchemaUtils.withStatics((schema) => ({

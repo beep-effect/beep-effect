@@ -135,7 +135,7 @@ const makeGraphTransform = <Node extends S.Top, Edge extends S.Top>(
     return GraphEncoded(options.node, options.edge).pipe(
       S.decodeTo(
         target,
-        SchemaTransformation.transformOrFail({
+        SchemaTransformation.transformEffect({
           decode: (encoded) => rebuildMutableGraph(encoded, { expectedType }),
           encode: (graph, parseOptions) =>
             SchemaParser.decodeUnknownEffect(decodedGraph)(toRawGraphEncoded(graph), parseOptions),
@@ -158,7 +158,7 @@ const makeGraphTransform = <Node extends S.Top, Edge extends S.Top>(
   return GraphEncoded(options.node, options.edge).pipe(
     S.decodeTo(
       target,
-      SchemaTransformation.transformOrFail({
+      SchemaTransformation.transformEffect({
         decode: (encoded) => rebuildImmutableGraph(encoded, { expectedType }),
         encode: (graph, parseOptions) =>
           SchemaParser.decodeUnknownEffect(decodedGraph)(toRawGraphEncoded(graph), parseOptions),

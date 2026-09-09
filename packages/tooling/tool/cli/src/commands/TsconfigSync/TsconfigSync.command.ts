@@ -49,23 +49,23 @@ const resolveMode = (check: boolean, dryRun: boolean, write: boolean): TsconfigS
 export const tsconfigSyncCommand = Command.make(
   "tsconfig-sync",
   {
-    check: Flag.boolean("check").pipe(
+    check: Flag.Boolean("check").pipe(
       Flag.withDefault(false),
       Flag.withDescription("Validate drift without writing files (non-zero exit on drift)")
     ),
-    dryRun: Flag.boolean("dry-run").pipe(
+    dryRun: Flag.Boolean("dry-run").pipe(
       Flag.withDefault(false),
       Flag.withDescription("Preview file changes without writing files")
     ),
-    write: Flag.boolean("write").pipe(
+    write: Flag.Boolean("write").pipe(
       Flag.withDefault(false),
       Flag.withDescription("Apply file changes (default behavior)")
     ),
-    filter: Flag.string("filter").pipe(
+    filter: Flag.String("filter").pipe(
       Flag.withDescription("Limit package reference sync to a workspace package name or workspace-relative path"),
       Flag.optional
     ),
-    verbose: Flag.boolean("verbose").pipe(
+    verbose: Flag.Boolean("verbose").pipe(
       Flag.withDefault(false),
       Flag.withAlias("v"),
       Flag.withDescription("Include per-package detail output")

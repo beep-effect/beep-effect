@@ -92,7 +92,7 @@ const notionRequest = Effect.fn("NotionPull.notionRequest")(function* (
   body: O.Option<Record<string, unknown>>
 ): Effect.fn.Return<unknown, ResearchCommandError, HttpClient.HttpClient> {
   const client = yield* HttpClient.HttpClient;
-  const apiKey = yield* Config.redacted("NOTION_API_KEY").pipe(
+  const apiKey = yield* Config.Redacted("NOTION_API_KEY").pipe(
     ResearchCommandError.mapError("NOTION_API_KEY is not set; export it or inject it via op run.")
   );
   const request = O.match(body, {

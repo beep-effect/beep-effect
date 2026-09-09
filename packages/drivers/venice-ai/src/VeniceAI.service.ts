@@ -2086,7 +2086,7 @@ export class VeniceAI extends Context.Service<VeniceAI, VeniceAIShape>()($I`Veni
   static readonly layer: Layer.Layer<VeniceAI, VeniceAIError> = Layer.effect(
     VeniceAI,
     Effect.gen(function* () {
-      const apiKey = yield* Config.redacted("AI_VENICE_API_KEY");
+      const apiKey = yield* Config.Redacted("AI_VENICE_API_KEY");
       const client = yield* HttpClient.HttpClient;
       return VeniceAI.of(makeService(client, resolveConfig(VeniceAIConfigInput.make({}), apiKey)));
     }).pipe(Effect.mapError(VeniceAIError.config))

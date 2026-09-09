@@ -74,7 +74,7 @@ const parsePositiveInteger = (raw: string): O.Option<number> => {
 // Effect's default ConfigProvider snapshots the environment at process
 // boot — exactly the lane semantics (CI exports BEEP_FC_NUM_RUNS before
 // vitest starts). Runtime mutation is deliberately NOT observed.
-const fcNumRunsConfig = Config.option(Config.string("BEEP_FC_NUM_RUNS"));
+const fcNumRunsConfig = Config.option(Config.String("BEEP_FC_NUM_RUNS"));
 
 /**
  * Read the `BEEP_FC_NUM_RUNS` environment floor.

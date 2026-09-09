@@ -165,7 +165,7 @@ const normalizedPatentFixture = Md.make([
 const testLayer = NodeServices.layer;
 const provideTestLayer = provideScopedLayer(testLayer);
 const realCorpusEnabled = O.getOrElse(
-  Effect.runSync(Config.option(Config.boolean("BEEP_TEST_OPPOLD_CORPUS"))),
+  Effect.runSync(Config.option(Config.Boolean("BEEP_TEST_OPPOLD_CORPUS"))),
   () => false
 );
 
@@ -984,7 +984,7 @@ describe("practice KG projections", () => {
   it.effect.skipIf(!realCorpusEnabled)(
     "reconciles the workstation corpus only when explicitly enabled",
     Effect.fnUntraced(function* () {
-      const corpusRoot = yield* Config.string("BEEP_TEST_OPPOLD_CORPUS_ROOT");
+      const corpusRoot = yield* Config.String("BEEP_TEST_OPPOLD_CORPUS_ROOT");
       const fs = yield* FileSystem.FileSystem;
       const bundleOut = yield* fs.makeTempDirectoryScoped({ prefix: "oppold-corpus-graph-" });
       const summary = yield* runBuild(

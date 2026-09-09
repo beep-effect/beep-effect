@@ -412,23 +412,23 @@ export const runCodexFindingsIngest = Effect.fn("CodexFindings.runIngest")(funct
   yield* printCodexFindingsIngestResult(options, prepared.plan, writeResult);
 });
 
-const fromFlag = Flag.string("from").pipe(
+const fromFlag = Flag.String("from").pipe(
   Flag.withDescription("Path to the CSV downloaded from the signed-in findings view")
 );
-const slugFlag = Flag.string("slug").pipe(Flag.optional, Flag.withDescription("Override the generated packet slug"));
-const dateFlag = Flag.string("date").pipe(
+const slugFlag = Flag.String("slug").pipe(Flag.optional, Flag.withDescription("Override the generated packet slug"));
+const dateFlag = Flag.String("date").pipe(
   Flag.optional,
   Flag.withDescription("Capture date (YYYY-MM-DD) when the export filename does not carry one")
 );
-const branchFlag = Flag.string("branch").pipe(
+const branchFlag = Flag.String("branch").pipe(
   Flag.optional,
   Flag.withDescription("Override the remediation branch the packet declares")
 );
-const expectedCountFlag = Flag.integer("expected-count").pipe(
+const expectedCountFlag = Flag.Int("expected-count").pipe(
   Flag.optional,
   Flag.withDescription("Finding total the dashboard reported, used to fail closed on a partial export")
 );
-const refreshFlag = Flag.boolean("refresh").pipe(
+const refreshFlag = Flag.Boolean("refresh").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Append unseen findings to an existing packet while preserving prior triage and CSF prose")
 );

@@ -158,7 +158,7 @@ export const dailyImpl = Effect.fn("Research.dailyImpl")(function* (
     );
   }
 
-  const cogneeUrl = yield* Effect.orDie(Config.string("COGNEE_API_URL").pipe(Config.option));
+  const cogneeUrl = yield* Effect.orDie(Config.String("COGNEE_API_URL").pipe(Config.option));
   if (O.isNone(cogneeUrl)) {
     skipped.push("cognify (COGNEE_API_URL unset)");
   } else {
