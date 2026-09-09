@@ -2,7 +2,7 @@
 # Public run-2 fleet capture; all source descriptors are portable.
 schema_version: beep-ci-ops-fleet-corpus/v1
 generated_by: etl_fleet_corpus.py
-generator_sha256: 962759f2ee171b171a23f5ca0c048f43c0c0586d0446e51adb3ae3f007851229
+generator_sha256: 70cb4fbfcda4ec1a2ed226cc8a2ad1f9d08595da5f643b68984fb185007bd87b
 capture_instant: '2026-09-03T02:27:19.384Z'
 capture_instant_basis: maximum timestamp observed in the captured records
 ordering:
@@ -13,13 +13,15 @@ ordering:
 redaction_rules:
 - For every admission event, remove the top-level JSON members named pid and procStart; retain every other
   decoded key and value exactly.
-- 'For attempt and verdict records, recursively transform string values only: replace the fleet-project
-  host prefix with <fleet>/, then any remaining operator-home prefix with <home>, then the system temporary-directory
-  prefix with <tmp>/.'
+- 'For attempt and verdict records, recursively drop process identity members, then transform strings:
+  replace the fleet-project host prefix with <fleet>/, then any remaining operator-home prefix with <home>,
+  then the system temporary-directory prefix with <tmp>/.'
 - 'In string values, replace case-insensitive PID matches, including single or double quotes and repeated
   JSON escapes. Preserve delimiters; replace numeric JSON values with null and quoted or free-text values
   with <redacted>. Pattern: (?P<prefix>\bpid(?P<key_quote>\\*["''])?(?:\s|\\+[nrt])*(?:[=:](?:\s|\\+[nrt])*)?(?P<value_quote>\\*["''])?)[0-9]+'
-- Never transform structural keys, booleans, nulls, or numeric values.
+- For attempt and verdict records, drop process identity members, including attachedPid and ownerProcStart,
+  case-insensitively with underscore or hyphen separators ignored. Preserve all other keys, booleans,
+  nulls, and numeric values.
 projection_rules:
 - Each redacted raw payload has one sibling .properties projection derived from exactly the JSON records
   persisted in that raw file; the raw file remains the fidelity record.
@@ -12120,10 +12122,15 @@ totals:
   files_emitted: 1589
   events: 6213
   payload_bytes: 12679246
-  bytes_emitted: 13316735
+  bytes_emitted: 13317107
 security_resanitization:
   finding: CSF-012
   source_manifest_sha256: be2144da427e7f9671d386713fb4a34e52246bb8702b586e9de4eb3b74880dc3
   changed_raw_payloads: 12
   live_recapture: false
   superseded_manifest_sha256: 3683a1657a44e0c2e018a68daef57d18fdd2c73d2b86b09bdf57d4b510c5b3b3
+  updates:
+  - finding: CSF-013
+    source_manifest_sha256: ad14e0ee438e4863be14809185be474e59f478d072c42e2bf5b3b1730de20433
+    changed_raw_payloads: 0
+    live_recapture: false

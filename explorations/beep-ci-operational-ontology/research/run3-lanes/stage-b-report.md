@@ -1,12 +1,12 @@
 # Run-3 Stage B implementation report
 
-## Current security repair proof — PR #1032
+## Current security repair proof — CSF-012 and CSF-013
 
 After Stage B landed in PR #1034, CSF-012 validation found the same quoted-PID
 bypass in its fourth generator. The existing repair now handles the organic and
 synthetic pins independently, preserving their population-specific projections.
 It sanitizes 11 organic raw files (13 PID occurrences); synthetic payloads are
-unchanged. Both full pin verifiers pass, all 35 combined generator tests pass,
+unchanged. Both full pin verifiers pass, all 36 combined generator tests pass,
 and a second repair verifies all five pins unchanged. Capture metadata, nonce
 chains, custody references, and loss-population counts are preserved.
 
@@ -22,13 +22,21 @@ each framed by an eight-byte big-endian length, including the manifest.
 
 | Pin | Whole-tree SHA-256 | Files | Records | Bytes |
 | --- | --- | ---: | ---: | ---: |
-| run3b-fleet | `153464075e4293d5a8970b6d704121a399374dceb2bbe83dbf9c5d02dd78a793` | 719 | 7186 | 15598967 |
-| run3b-synthetic | `606afb04beaeb576d683004778812672ea6b119b407084c0f1478b899c3d8b39` | 9 | 10 | 41126 |
+| run3b-fleet | `602bc3f234371033b2265705bef06cb118946224ada52c57513b6d272e0f6774` | 719 | 7186 | 15586514 |
+| run3b-synthetic | `fb1193da55a0bf6220e47183300bc3bd0125452ab075feb4dae40965345e69c2` | 9 | 10 | 41294 |
 
-Current generator SHA-256: `d2bb12561e53c5eba6aa3e931593f0b13a8c9db0d4fa887659bc923a5cdcd74a`.
+Current generator SHA-256: `3a2c28b5fa064e19ee5c9cde687b5e48995b8a89cfa3ca589e6825cee88a6b9c`.
 
 The current five-pin repair can be replayed from pre-security source commit
 `86990e28f9` with `resanitize-corpora.py --source-ref 86990e28f9`.
+
+CSF-013 adds schema process-member removal and a fail-closed byte guard to all
+four generators. The subsequent repair removes 178 fields from 26 Stage A raw
+files and 220 fields from 32 Stage B raw files. Their projections are regenerated;
+all other raw populations remain unchanged. Original CSF-012 receipts retain
+their initial counts and append the new finding's updates. All five full pin
+verifiers pass, and a repeat repair is unchanged. The tables above describe
+these current repaired bytes; the original capture reports below are historical.
 
 ## Historical Stage B capture report — before CSF-012
 

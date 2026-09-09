@@ -3,12 +3,12 @@
     "schemaVersion": "codex-triage/v1",
     "repository": "kriegcloud/beep-effect",
     "findingsView": "repo-scoped, status=new",
-    "branch": "codex/security-corpus-redaction",
-    "expectedCount": 12,
-    "capturedCount": 12,
+    "branch": "codex/security-corpus-process-metadata",
+    "expectedCount": 13,
+    "capturedCount": 13,
     "capturedAt": "2026-09-08",
     "captureMethod": "signed-in-csv-export",
-    "note": "Eleven findings merged in PR #1026. CSF-012 is implemented for the operator-authorized follow-up PR; proof, publication, and exact-ID closure remain in progress. codexStatus records capture-time state."
+    "note": "Twelve findings merged in PRs #1026 and #1032 and were closed as Already fixed. CSF-013 is implemented for the remaining follow-up; full proof, hosted acceptance, merge, and exact-ID closure remain pending. Severity and codexStatus retain historical capture values; captures span September 8-9."
   },
   "lanes": {
     "L1-permissions": {
@@ -45,7 +45,7 @@
     },
     "L9-corpus-redaction": {
       "status": "implemented",
-      "findings": ["CSF-012"]
+      "findings": ["CSF-012", "CSF-013"]
     }
   },
   "findings": [
@@ -403,6 +403,44 @@
           "uv run --offline --with pyyaml python goals/codex-security-findings-2026-09-08/research/scripts/resanitize-corpora.py"
         ],
         "summary": "All four standalone generators preserve embedded JSON while redacting quoted and multiply escaped PID values. The staged repair sanitizes 35 saved raw files across five pins, preserves capture and population metadata, and retains the initial repair receipt with subsequent updates. All 35 tests and all five pin verifiers pass."
+      },
+      "ownerArea": "Public corpus process identity redaction",
+      "verdict": "confirmed-vulnerable",
+      "lane": "L9-corpus-redaction"
+    },
+    {
+      "id": "CSF-013",
+      "codexId": "200befcd89048191b24d8f64114b58e9",
+      "title": "Process identifiers survive public corpus redaction",
+      "severity": "Low",
+      "codexStatus": "New",
+      "commit": "86990e28f9ac4960ded80172b388eac58989ca7b",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "The normalized process-member list omitted attachedPid and ownerProcStart used by RunScopeRecord and AttemptTerminationJournal. Stage A retained 178 ownerProcStart members; Stage B retained 218 ownerProcStart and two attachedPid members. Both recursive redaction and byte residue scanning missed these schema fields."
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/etl_fleet_corpus.py",
+          "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/etl_run3_fleet_corpus.py",
+          "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/etl_run3_checkout_identity.py",
+          "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/test_run3_generators.py",
+          "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run2-fleet/",
+          "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3-fleet/",
+          "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3-checkout-identity/",
+          "goals/codex-security-findings-2026-09-08/research/scripts/resanitize-corpora.py",
+          "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/etl_run3b_fleet_corpus.py",
+          "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3b-fleet/",
+          "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3b-synthetic/"
+        ],
+        "verificationCommands": [
+          "uv run --offline --with pyyaml python -m unittest discover -s explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus -p 'test_run3*.py'",
+          "uv run --offline --with pyyaml python goals/codex-security-findings-2026-09-08/research/scripts/resanitize-corpora.py --finding CSF-013"
+        ],
+        "summary": "All four generators recursively drop both schema process fields and reject their normalized spellings in raw and projected output. A focused regression preserves failedStepId and other non-process data. Repair removed 398 members across 58 raw files and regenerated projections and all five manifests, retaining original CSF-012 receipts with appended CSF-013 updates. All 36 tests and all five pin verifiers pass; a repeat repair is unchanged."
       },
       "ownerArea": "Public corpus process identity redaction",
       "verdict": "confirmed-vulnerable",

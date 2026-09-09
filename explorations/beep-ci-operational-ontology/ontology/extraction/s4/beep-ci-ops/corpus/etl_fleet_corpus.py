@@ -97,6 +97,15 @@ PID_REDACTION_RULE = (
     "quotes and repeated JSON escapes. Preserve delimiters; replace numeric JSON values "
     "with null and quoted or free-text values with <redacted>. Pattern: " + PID_IN_TEXT.pattern
 )
+PROCESS_REDACTION_RULE = (
+    "For attempt and verdict records, drop process identity members, including attachedPid "
+    "and ownerProcStart, case-insensitively with underscore or hyphen separators ignored. "
+    "Preserve all other keys, booleans, nulls, and numeric values."
+)
+PROCESS_METADATA_IN_TEXT = re.compile(
+    r"""\b(?:attached[_-]*pid|owner[_-]*proc[_-]*start)(?:\\*["'])?(?:\s|\\+[nrt])*[:=]""",
+    re.IGNORECASE,
+)
 TIMESTAMP_KEY = re.compile(r"(?:^ts$|AtMillis$|At$|TimestampMillis$|Timestamp$)")
 PROPERTY_KEY = re.compile(r"[A-Za-z0-9_]+")
 PROPERTY_RECORD_COMMENT = re.compile(r"# record (0|[1-9][0-9]*)")
@@ -238,15 +247,22 @@ def redact_string(value: str) -> str:
     return PID_IN_TEXT.sub(redact_pid_match, redacted)
 
 
+def process_member(key: str) -> bool:
+    return key.replace("_", "").replace("-", "").lower() in {
+        "attachedpid", "ownerprocstart", "pid", "ppid", "ownerpid", "parentpid", "processid", "procstart",
+        "procstarttime", "processstart", "processstarttime", "processstartticks",
+    }
+
+
 def redact_string_values(value: JsonValue) -> JsonValue:
-    """Recursively redact string values while retaining all keys and numbers."""
+    """Drop process identity members and redact strings, preserving other scalars."""
 
     if isinstance(value, str):
         return redact_string(value)
     if isinstance(value, list):
         return [redact_string_values(item) for item in value]
     if isinstance(value, dict):
-        return {key: redact_string_values(item) for key, item in value.items()}
+        return {key: redact_string_values(item) for key, item in value.items() if not process_member(key)}
     return value
 
 
@@ -766,6 +782,8 @@ def scan_output_bytes(files: list[tuple[str, bytes]]) -> None:
     """Hard-fail public-output host-path and secret byte patterns."""
 
     for path, data in files:
+        if PROCESS_METADATA_IN_TEXT.search(path + "\n" + data.decode("utf-8")):
+            fail("residue scan failed: schema process metadata")
         if PID_IN_TEXT.search(path + "\n" + data.decode("utf-8")):
             fail("residue scan failed: free-text process identifier")
         if b"/home/" in data:
@@ -870,13 +888,13 @@ def build_manifest(emitted: list[EmittedFile]) -> bytes:
                 "procStart; retain every other decoded key and value exactly."
             ),
             (
-                "For attempt and verdict records, recursively transform string values only: "
+                "For attempt and verdict records, recursively drop process identity members, then transform strings: "
                 "replace the fleet-project host prefix with <fleet>/, then any remaining "
                 "operator-home prefix with <home>, then the system temporary-directory prefix "
                 "with <tmp>/."
             ),
             PID_REDACTION_RULE,
-            "Never transform structural keys, booleans, nulls, or numeric values.",
+            PROCESS_REDACTION_RULE,
         ],
         "projection_rules": [
             (
@@ -1023,6 +1041,8 @@ def verify_output_tree(root: Path) -> VerificationSummary:
         fail("generator digest differs from the pinned manifest; use --refresh deliberately")
     if PID_REDACTION_RULE not in manifest.get("redaction_rules", []):
         fail("manifest PID redaction rule differs from the generator")
+    if PROCESS_REDACTION_RULE not in manifest.get("redaction_rules", []):
+        fail("manifest process redaction rule differs from the generator")
     if re.search(rb"/(?:home|tmp)(?:/|\b)", manifest_bytes):
         fail(f"{MANIFEST_NAME} contains a non-portable home or temporary path")
     if re.search(rb"(?:^|[ \t:'\"])/(?!/)", manifest_bytes, flags=re.MULTILINE):

@@ -34,6 +34,25 @@ stage_b = load("etl_run3b_fleet_corpus")
 
 
 class RedactionTests(unittest.TestCase):
+    def test_schema_process_metadata_is_removed_and_rejected_in_every_family(self):
+        private = {"attachedPid": 271828, "ownerProcStart": "start-fixture",
+                   "attached_pid": 271828, "OWNER-PROC-START": "start-fixture"}
+        row = {"runScope": private, "attempts": [private], "failedStepId": "compile",
+               "ownerRef": "custody-fixture", "count": 3}
+        expected = {**row, "runScope": {}, "attempts": [{}]}
+        for module in (fleet, identity, legacy, stage_b):
+            result = (module.redact_string_values(row) if module is legacy else
+                      module.redact(row, None, collections.Counter(), True))
+            self.assertEqual(result, expected, module.__name__)
+            module.scan_output_bytes([("fixture.json", module.encode_json(result))])
+            for key, value in private.items():
+                for name, data in (("fixture.json", module.encode_json({key: value})),
+                                   ("fixture.properties", f"{key}={value}\n".encode())):
+                    with self.subTest(module=module.__name__, key=key, name=name):
+                        with self.assertRaises(SystemExit) as exc:
+                            module.scan_output_bytes([(name, data)])
+                        self.assertNotIn(str(value), str(exc.exception))
+
     def test_embedded_json_remains_parseable_after_redaction(self):
         for module in (fleet, identity, legacy, stage_b):
             for pid in (1234567, "1234567"):

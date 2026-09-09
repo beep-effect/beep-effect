@@ -1,4 +1,4 @@
-"""Repair captured corpus bytes for CSF-012 without recapturing live sources.
+"""Repair captured corpus redaction without recapturing live sources.
 
 Run with ``uv run --offline --with pyyaml python <this-script>``.
 Each generator verifies the staged result before promotion. Original capture
@@ -67,7 +67,8 @@ def load_generator(name: str):
     return module
 
 
-def repair(name: str, source_ref: str | None = None, population: str | None = None) -> None:
+def repair(name: str, source_ref: str | None = None, population: str | None = None,
+           finding: str = "CSF-012") -> None:
     module = load_generator(name)
     root = module.OUTPUT_ROOT if population is None else module.OUTPUT_ROOTS[population]
 
@@ -129,8 +130,15 @@ def repair(name: str, source_ref: str | None = None, population: str | None = No
         if len(pid_rules) != 1:
             raise SystemExit("refusing ambiguous PID redaction provenance")
         rules[pid_rules[0]] = module.PID_REDACTION_RULE
+        rules[:] = [rule for rule in rules if rule not in (
+            "Never transform structural keys, booleans, nulls, or numeric values.",
+            module.PROCESS_REDACTION_RULE,
+        )]
+        rules[:] = [rule.replace("recursively transform string values only:",
+                                "recursively drop process identity members, then transform strings:") for rule in rules]
+        rules.append(module.PROCESS_REDACTION_RULE)
     repair_record = {
-        "finding": "CSF-012", "source_manifest_sha256": module.sha256(original),
+        "finding": finding, "source_manifest_sha256": module.sha256(original),
         "changed_raw_payloads": changed, "live_recapture": False,
     }
     if "security_resanitization" in manifest:
@@ -177,8 +185,10 @@ def repair(name: str, source_ref: str | None = None, population: str | None = No
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source-ref", help="Replay a committed source pin, preserving its capture provenance")
+    parser.add_argument("--finding", choices=("CSF-012", "CSF-013"), default="CSF-012",
+                        help="Finding responsible for this repair receipt")
     args = parser.parse_args()
     for generator in ("etl_fleet_corpus", "etl_run3_fleet_corpus", "etl_run3_checkout_identity"):
-        repair(generator, args.source_ref)
+        repair(generator, args.source_ref, finding=args.finding)
     for population in ("fleet", "synthetic"):
-        repair("etl_run3b_fleet_corpus", args.source_ref, population)
+        repair("etl_run3b_fleet_corpus", args.source_ref, population, args.finding)

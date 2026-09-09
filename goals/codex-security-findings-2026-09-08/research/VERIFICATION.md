@@ -149,3 +149,30 @@ a projection false positive for an embedded redacted PID null; only text
 projections admit that safe representation. Raw identity members and remaining
 numeric PID values still fail. The complete 35-test suite and both updated
 Stage B pin verifiers pass, with no further raw payload changes.
+
+## CSF-013 schema process metadata and CSF-012 merged receipt
+
+PR #1032 merged as `6b4720f1fbe2e93799aad81ed43243e22d3e9d20` on
+September 9 at 06:09:16 UTC. Its exact head was
+`a365cef182c13b540f77f95e1e96db6f419305f5`. GitHub checks, including Coverage
+Regression, Check, Docgen, and Greptile Review, passed. The two Vercel statuses
+were deployment rate limits. Full local proof had been queued and interrupted
+for concrete fixes; it is not claimed as completed. The exact CSF-012 ID was
+closed as Already fixed after verifying the merge, finding URL, and title.
+
+CSF-013 reproduces omitted schema members: 178 in Stage A and 220 in Stage B.
+All four redactors now remove the normalized fields and independently reject
+residue in raw and projected bytes. The regression preserves unrelated IDs.
+All 36 combined generator tests pass. Repair with `--finding CSF-013` changed
+26 Stage A and 32 Stage B raw files, regenerated projections, and verified all
+five pins. A second repair reports all five unchanged. Each initial CSF-012
+receipt is retained; the new repair is an appended update, without live capture.
+
+An independent decoded scan of all 2,201 raw files found zero remaining
+attachedPid or ownerProcStart members. Canonical capture dry-run reports zero
+planned files and zero tracked-document rejections. Goals doctor and reflection
+validation report zero blocking findings.
+
+The cumulative capture includes thirteen unique IDs. Twelve have merged and
+been closed; CSF-013 still requires full proof, publication, hosted acceptance,
+merge, and exact-ID closure. The packet remains active.

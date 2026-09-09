@@ -1,7 +1,8 @@
 # Codex Security Findings Index (2026-09-08)
 
 Captured from the authenticated Codex Cloud Security view for
-`kriegcloud/beep-effect` on 2026-09-08 through the signed-in CSV export.
+`kriegcloud/beep-effect` across September 8-9 through signed-in CSV exports.
+Counts and severities describe the cumulative historical capture.
 Full reports remain ignored under `raw/`; tracked records omit signed URLs,
 auth values, email addresses, and raw local paths.
 
@@ -10,7 +11,7 @@ auth values, email addresses, and raw local paths.
 | Severity | Count |
 | --- | ---: |
 | Medium | 1 |
-| Low | 3 |
+| Low | 4 |
 | Informational | 8 |
 
 ## Findings
@@ -29,6 +30,7 @@ auth values, email addresses, and raw local paths.
 | [CSF-010](./CSF-010.md) | Informational | implemented | Lane\-proof cache ignores inherited environment changes | Local verification proof reuse |
 | [CSF-011](./CSF-011.md) | Low | implemented | Hard\-coded user path enables cross\-account module hijacking | Graft hook installation trust |
 | [CSF-012](./CSF-012.md) | Medium | implemented | Quoted JSON bypasses process\-ID corpus redaction | Public corpus process identity redaction |
+| [CSF-013](./CSF-013.md) | Low | implemented | Process identifiers survive public corpus redaction | Public corpus process identity redaction |
 
 ## Closeout Mapping
 
@@ -37,5 +39,5 @@ auth values, email addresses, and raw local paths.
 - Accepted risk / `Won't fix` is unavailable.
 
 <!-- codex-findings-refresh:start -->
-Eleven findings merged in PR #1026. CSF-012 is implemented for the operator-authorized follow-up PR; proof, publication, and exact-ID closure remain in progress.
+All 13 findings are validated and assigned. Twelve are merged and closed; CSF-013 awaits final proof, publication, merge, and closure.
 <!-- codex-findings-refresh:end -->
