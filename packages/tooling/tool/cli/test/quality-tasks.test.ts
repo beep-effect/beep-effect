@@ -48,6 +48,7 @@ import {
   coverageScopedBaselineWriteCommand,
   coverageScopeWeightSeconds,
   coverageSelectedStepsForTesting,
+  coverageStepForTesting,
   detectQualityProfileForTesting,
   devQualityStepsForTesting,
   FallowReportFinding,
@@ -290,6 +291,11 @@ const withTempRepo = <A, E, R>(use: Effect.Effect<A, E, R>) =>
       return yield* use;
     })
   ).pipe(provideScopedLayer(PlatformLayer));
+
+// The single coverage invocation for a `bun run coverage <argv>` shape; root
+// coverage itself plans at run time, so this is the unit the runtime composes.
+const coverageStepOf = (argv: ReadonlyArray<string>): QualityTaskStep =>
+  coverageStepForTesting("/repo", getInvocation(["coverage", ...argv]).args ?? A.empty<string>());
 
 const getInvocation = (argv: ReadonlyArray<string>): QualityTaskInvocation => {
   const invocation = parseQualityTaskInvocation(argv);
@@ -2852,6 +2858,13 @@ describe("quality task adapter", () => {
     });
   });
 
+  // quality-lane audit 2026-09-09 (E1): the test and coverage runners plan at
+  // run time, so no static root plan may claim to describe them.
+  it("leaves test and coverage without a static root plan", () => {
+    expect(rootQualityStepsForTesting("/repo", getInvocation(["test", "--integration"]))).toEqual([]);
+    expect(rootQualityStepsForTesting("/repo", getInvocation(["coverage"]))).toEqual([]);
+  });
+
   it("skips repo-level tsgo diagnostics only for explicit package filters", () => {
     const steps = rootQualityStepsForTesting("/repo", getInvocation(["check", "--filter=@beep/schema"]));
 
@@ -3125,9 +3138,9 @@ describe("quality task adapter", () => {
     expect(steps[0]?.env).not.toHaveProperty("VITEST_COVERAGE_REPORT_ONLY");
   });
 
-  it("runs root coverage as the ratchet gate by default", () => {
+  it("builds the coverage invocation as the ratchet gate by default", () => {
     const steps = withEnvVar("BEEP_FC_SEED", undefined, () =>
-      withEnvVar("NODE_OPTIONS", undefined, () => rootQualityStepsForTesting("/repo", getInvocation(["coverage"])))
+      withEnvVar("NODE_OPTIONS", undefined, () => [coverageStepOf([])])
     );
 
     expect(steps).toHaveLength(1);
@@ -3156,9 +3169,7 @@ describe("quality task adapter", () => {
     const steps = withEnvVar("TURBO_API", "https://cache.example.test", () =>
       withEnvVar("TURBO_TOKEN", "op://fixture-vault/turbo/token", () =>
         withEnvVar("TURBO_TEAM", "team_fixture", () =>
-          withEnvVar("TURBO_CACHE", "local:rw,remote:r", () =>
-            rootQualityStepsForTesting("/repo", getInvocation(["coverage"]))
-          )
+          withEnvVar("TURBO_CACHE", "local:rw,remote:r", () => [coverageStepOf([])])
         )
       )
     );
@@ -3182,7 +3193,7 @@ describe("quality task adapter", () => {
     // (this checkout may be configured for remote reads), coverage invocations
     // carry no remote posture while the caller-owned passthrough survives.
     const ambientPlanArgs = expectedTurboCacheArgs([]);
-    const coverage = rootQualityStepsForTesting("/repo", getInvocation(["coverage"]));
+    const coverage = [coverageStepOf([])];
     const fullSteps = coverageFullStepsForTesting("/repo", ["@beep/schema"], []);
     const callerOwned = coverageFullStepsForTesting("/repo", ["@beep/schema"], ["--remote-only"]);
 
@@ -3198,9 +3209,7 @@ describe("quality task adapter", () => {
 
   it("preserves existing Node options when disabling experimental Web Storage for coverage", () => {
     const steps = withEnvVar("BEEP_FC_SEED", undefined, () =>
-      withEnvVar("NODE_OPTIONS", "--max-old-space-size=4096", () =>
-        rootQualityStepsForTesting("/repo", getInvocation(["coverage"]))
-      )
+      withEnvVar("NODE_OPTIONS", "--max-old-space-size=4096", () => [coverageStepOf([])])
     );
 
     expect(steps[0]?.env).toMatchObject({
@@ -3211,7 +3220,7 @@ describe("quality task adapter", () => {
 
   it("honors an explicit fast-check seed for exploratory coverage runs", () => {
     const steps = withEnvVar("NODE_OPTIONS", undefined, () =>
-      withEnvVar("BEEP_FC_SEED", "8675309", () => rootQualityStepsForTesting("/repo", getInvocation(["coverage"])))
+      withEnvVar("BEEP_FC_SEED", "8675309", () => [coverageStepOf([])])
     );
 
     expect(steps[0]?.env).toMatchObject({
@@ -3222,12 +3231,9 @@ describe("quality task adapter", () => {
 
   it("keeps report-only coverage reserved for baseline regeneration and strips writer controls", () => {
     const steps = withEnvVar("BEEP_FC_SEED", undefined, () =>
-      withEnvVar("NODE_OPTIONS", undefined, () =>
-        rootQualityStepsForTesting(
-          "/repo",
-          getInvocation(["coverage", "--", "--write-baseline", "--replace-all", "--concurrency=1", "--force"])
-        )
-      )
+      withEnvVar("NODE_OPTIONS", undefined, () => [
+        coverageStepOf(["--", "--write-baseline", "--replace-all", "--concurrency=1", "--force"]),
+      ])
     );
 
     expect(steps).toHaveLength(1);
@@ -5479,25 +5485,6 @@ describe("quality task adapter", () => {
     });
   });
 
-  it("plans the bounded parallel integration pass before the serial SQL pass", () => {
-    const steps = rootQualityStepsForTesting("/repo", getInvocation(["test", "--integration", "--summarize"]));
-
-    expect(A.map(steps, (step) => step.label)).toEqual(["test:integration:parallel", "test:integration:serial"]);
-    expect(steps[0]?.args).toContain("test:integration:parallel");
-    expect(steps[0]?.args).toContain("--summarize");
-    expect(steps[1]?.args).toEqual(expectedTurboArgs("test:integration:serial", ["--concurrency=1", "--summarize"]));
-  });
-
-  it("drops caller concurrency flags from the serial SQL pass instead of duplicating turbo's", () => {
-    const steps = rootQualityStepsForTesting(
-      "/repo",
-      getInvocation(["test", "--integration", "--concurrency=1", "--summarize"])
-    );
-
-    expect(steps[1]?.args).toEqual(expectedTurboArgs("test:integration:serial", ["--concurrency=1", "--summarize"]));
-    expect(A.filter([...(steps[1]?.args ?? [])], (arg) => arg.startsWith("--concurrency"))).toHaveLength(1);
-  });
-
   it("requires explicit test SQL URLs over generic application defaults", () => {
     expect(
       sqlIntegrationConnectionUriFromEnvForTesting({
@@ -6028,21 +6015,14 @@ describe("labs turbo exclusion", () => {
     }
   });
 
-  it("ends lint, unit, integration, and scoped coverage argvs with the labs exclude", () => {
+  it("ends lint and scoped coverage argvs with the labs exclude", () => {
     expectEndsWithLabsExclude(
       rootQualityStepsForTesting("/repo", getInvocation(["lint", "--affected", "--summarize"]))[0]
     );
     expectEndsWithLabsExclude(rootQualityStepsForTesting("/repo", getInvocation(["lint"]))[0]);
 
-    expectEndsWithLabsExclude(rootQualityStepsForTesting("/repo", getInvocation(["test", "--unit"]))[0]);
-
-    const integration = rootQualityStepsForTesting("/repo", getInvocation(["test", "--integration"]));
-    expect(A.map(integration, (step) => step.label)).toEqual(["test:integration:parallel", "test:integration:serial"]);
-    expectEndsWithLabsExclude(integration[0]);
-    expectEndsWithLabsExclude(integration[1]);
-
     const coverage = withEnvVar("BEEP_FC_SEED", undefined, () =>
-      withEnvVar("NODE_OPTIONS", undefined, () => rootQualityStepsForTesting("/repo", getInvocation(["coverage"])))
+      withEnvVar("NODE_OPTIONS", undefined, () => [coverageStepOf([])])
     );
     expectEndsWithLabsExclude(coverage[0]);
   });
@@ -6056,9 +6036,7 @@ describe("labs turbo exclusion", () => {
 
   it("keeps the labs exclude ahead of the coverage vitest passthrough and inside every shard", () => {
     const baseline = withEnvVar("BEEP_FC_SEED", undefined, () =>
-      withEnvVar("NODE_OPTIONS", undefined, () =>
-        rootQualityStepsForTesting("/repo", getInvocation(["coverage", "--", "--write-baseline", "--concurrency=1"]))
-      )
+      withEnvVar("NODE_OPTIONS", undefined, () => [coverageStepOf(["--", "--write-baseline", "--concurrency=1"])])
     );
     const baselineArgs = argsOf(baseline[0]);
     const filterIndex = argIndexOf(baselineArgs, LABS_EXCLUDE_FILTER);

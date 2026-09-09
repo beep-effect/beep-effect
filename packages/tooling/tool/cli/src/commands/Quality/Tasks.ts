@@ -2467,43 +2467,6 @@ const rootCheckSteps = (repoRoot: string, args: ReadonlyArray<string>) => [
   }),
 ];
 
-const rootUnitTestSteps = (repoRoot: string, lanes: TestLaneSelectionState) => {
-  const testArgs = boundedRootTurboArgs(lanes.args);
-
-  return optionalQualityTaskStep({
-    enabled: lanes.unit,
-    step: () => turboStep(repoRoot, "test:unit", ["test"], testArgs),
-  });
-};
-
-const rootTestSteps = (repoRoot: string, args: ReadonlyArray<string>) => {
-  const lanes = parseTestLaneSelection(args);
-
-  return [
-    ...rootUnitTestSteps(repoRoot, lanes),
-    ...optionalQualityTaskStep({
-      enabled: lanes.integration,
-      step: () =>
-        turboStep(
-          repoRoot,
-          "test:integration:parallel",
-          ["test:integration:parallel"],
-          boundedRootTurboArgs(lanes.args)
-        ),
-    }),
-    ...optionalQualityTaskStep({
-      enabled: lanes.integration,
-      step: () =>
-        turboStep(
-          repoRoot,
-          "test:integration:serial",
-          ["test:integration:serial"],
-          ["--concurrency=1", ...withoutTurboConcurrencyArgs(lanes.args)]
-        ),
-    }),
-  ];
-};
-
 const isLawSourcePath = (filePath: string): boolean =>
   (Str.startsWith("apps/")(filePath) || Str.startsWith("packages/")(filePath) || Str.startsWith("infra/")(filePath)) &&
   (Str.endsWith(".ts")(filePath) || Str.endsWith(".tsx")(filePath));
@@ -2725,7 +2688,14 @@ const rootLintPolicySteps = (
   return rootRepoLintPolicySteps(repoRoot);
 };
 
-const rootLintSteps = (repoRoot: string, args: ReadonlyArray<string>, fix: boolean) => {
+// The one root lint plan: the aggregate Turbo lint (or lint:fix) followed by
+// the policy siblings when the invocation is repo-wide. `runRootLintTask` runs
+// exactly this list, so the plan the tests inspect is the plan the CLI runs.
+const rootLintSteps = (
+  repoRoot: string,
+  args: ReadonlyArray<string>,
+  fix: boolean
+): readonly [QualityTaskStep, ...ReadonlyArray<QualityTaskStep>] => {
   const lintArgs = boundedRootTurboArgs(fix ? stripLintFixAggregateArgs(args) : args);
   return [
     fix ? turboStep(repoRoot, "lint:fix", ["lint:fix"], lintArgs) : turboStep(repoRoot, "lint", ["lint"], lintArgs),
@@ -2750,16 +2720,13 @@ const runRootLintTask = Effect.fn("QualityTasks.runRootLintTask")(function* (
     return;
   }
 
-  const lintArgs = boundedRootTurboArgs(strippedLintArgs);
-  const lintStep = fix
-    ? turboStep(repoRoot, "lint:fix", ["lint:fix"], lintArgs)
-    : turboStep(repoRoot, "lint", ["lint"], lintArgs);
-  if (fix || !shouldRunLintRepoWideSteps(lintArgs)) {
-    yield* runStep(lintStep);
+  const steps = rootLintSteps(repoRoot, args, fix);
+  if (A.length(steps) === 1) {
+    yield* runStep(A.headNonEmpty(steps));
     return;
   }
 
-  yield* runStepGroup("lint", [lintStep, ...rootRepoLintPolicySteps(repoRoot)], ROOT_LINT_STEP_CONCURRENCY);
+  yield* runStepGroup("lint", steps, ROOT_LINT_STEP_CONCURRENCY);
 });
 
 const rootAuditSteps = (repoRoot: string, args: ReadonlyArray<string>) => {
@@ -2782,10 +2749,6 @@ const rootAuditSteps = (repoRoot: string, args: ReadonlyArray<string>) => {
   return [repoCliStep(repoRoot, `audit:${scriptMode}`, ["quality", "github-checks", ...scriptArgs])];
 };
 
-const rootCoverageSteps = (repoRoot: string, args: ReadonlyArray<string>) => [
-  coverageStep(repoRoot, parseCoverageTaskOptions(args)),
-];
-
 const invocationArgs = (invocation: QualityTaskInvocation): ReadonlyArray<string> =>
   invocation.args ?? A.empty<string>();
 const invocationFix = (invocation: QualityTaskInvocation): boolean => invocation.fix ?? false;
@@ -2795,16 +2758,25 @@ const rootStepsFor = (repoRoot: string, invocation: QualityTaskInvocation): Read
     Match.type<QualityTaskName>().pipe(
       Match.when("build", () => rootBuildSteps(repoRoot, invocationArgs(current))),
       Match.when("check", () => rootCheckSteps(repoRoot, invocationArgs(current))),
-      Match.when("test", () => rootTestSteps(repoRoot, invocationArgs(current))),
       Match.when("lint", () => rootLintSteps(repoRoot, invocationArgs(current), invocationFix(current))),
       Match.when("audit", () => rootAuditSteps(repoRoot, invocationArgs(current))),
-      Match.when("coverage", () => rootCoverageSteps(repoRoot, invocationArgs(current))),
+      // `test` and `coverage` have no static plan: `runRootTask` hands them to
+      // runners that resolve lane selection, the SQL container resource, and
+      // the coverage scope at run time. The shadow builders that used to sit
+      // here described a plan the CLI never ran (quality-lane audit
+      // 2026-09-09, E1).
+      Match.whenOr("test", "coverage", A.empty<QualityTaskStep>),
       Match.exhaustive
     )(current.task)
   );
 
 /**
  * Build root quality task subprocess steps. Exposed for focused unit tests.
+ *
+ * **Details**
+ *
+ * Only `build`, `check`, `lint`, and `audit` have a static plan; `test` and
+ * `coverage` return no steps because their runners plan at run time.
  *
  * **Example** (Run a quality task)
  *
@@ -2974,6 +2946,41 @@ export const coverageSelectedStepsForTesting: {
       },
       usesShardedCoverageExecutor(options.hosted, options.writeBaseline)
     )
+);
+
+/**
+ * Build the single Turbo coverage invocation for one set of caller args.
+ *
+ * **Details**
+ *
+ * This is the step the selected coverage path runs when the selection fits one
+ * Turbo run; wide selections and the full lane shard instead (see
+ * {@link coverageSelectedStepsForTesting}). It is not a root plan — root
+ * `bun run coverage` resolves its scope at run time — but the env posture
+ * (`CI=true`, scrubbed remote-cache credentials, Node options, fast-check
+ * seed) is decided here for every coverage child, so it is testable alone.
+ *
+ * **Example** (Inspect the ratchet step)
+ *
+ * ```ts
+ * import { coverageStepForTesting } from "@beep/repo-cli/test/Quality"
+ *
+ * console.log(coverageStepForTesting("/repo", []).label) // "coverage:ratchet"
+ * ```
+ *
+ * @param repoRoot - Repository root directory.
+ * @param args - Caller-visible coverage args, `--` passthrough included.
+ * @returns The ratchet or baseline-write coverage step.
+ * @category testing
+ * @since 0.0.0
+ */
+export const coverageStepForTesting: {
+  (repoRoot: string, args: ReadonlyArray<string>): QualityTaskStep;
+  (args: ReadonlyArray<string>): (repoRoot: string) => QualityTaskStep;
+} = dual(
+  2,
+  (repoRoot: string, args: ReadonlyArray<string>): QualityTaskStep =>
+    coverageStep(repoRoot, parseCoverageTaskOptions(args))
 );
 
 /**
