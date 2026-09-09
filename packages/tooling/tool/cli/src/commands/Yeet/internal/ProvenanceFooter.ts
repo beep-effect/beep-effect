@@ -10,12 +10,13 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { Cause, Console, DateTime, Effect, Exit, Order, pipe } from "effect";
+import { Cause, Console, DateTime, Effect, Exit, FileSystem, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { writeContainedFileString } from "../../../internal/cli/FsGuards.ts";
 import { runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { runArtifactPathForContext, runIdForContext } from "./ArtifactPaths.ts";
@@ -32,7 +33,6 @@ import {
 } from "./Provenance.ts";
 import { makePrSessionRegistryLive } from "./PrSessionRegistry.ts";
 import type { DomainError } from "@beep/repo-utils";
-import type { FileSystem, Path } from "effect";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { PrNumber, PrProvenanceRole } from "./Provenance.ts";
@@ -535,8 +535,11 @@ export const recordCurrentPrSession = Effect.fn("ProvenanceFooter.recordCurrentS
       repository,
       registry.append(record),
       Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
         const mirror = yield* runArtifactPathForContext(context, "provenance.json");
-        yield* writeTextFile(mirror, yield* encodeRecord(record));
+        yield* fs.makeDirectory(path.dirname(mirror), { recursive: true, mode: 0o700 });
+        yield* writeContainedFileString(path.dirname(mirror), mirror, yield* encodeRecord(record));
       })
     );
   }).pipe(

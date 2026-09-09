@@ -3,11 +3,14 @@ import {
   FreshbooksConfigInput,
   FreshbooksStoredToken,
   FreshbooksTokenStore,
+  makeFreshbooksAuth,
   makeFreshbooksAuthLayer,
+  resolveConfig,
 } from "@beep/freshbooks";
 import { A } from "@beep/utils";
 import { describe, expect, layer } from "@effect/vitest";
-import { Cause, Context, Effect, Layer, Redacted, Ref } from "effect";
+import { Cause, Context, Deferred, Effect, Fiber, Layer, Redacted, Ref } from "effect";
+import * as O from "effect/Option";
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
 import type { FreshbooksError } from "@beep/freshbooks";
@@ -117,6 +120,56 @@ const AuthLayer = (
   );
 
 describe("@beep/freshbooks token rotation", () => {
+  layer(AuthLayer(expiredToken))((it) => {
+    it.effect("persists a consumed refresh token before honoring caller cancellation", () =>
+      Effect.gen(function* () {
+        const server = yield* TokenServer;
+        const store = yield* FreshbooksTokenStore;
+        const exchangeStarted = yield* Deferred.make<void>();
+        const responseReady = yield* Deferred.make<void>();
+        const persistenceStarted = yield* Deferred.make<void>();
+        const persistenceReady = yield* Deferred.make<void>();
+        const client = HttpClient.make((request) =>
+          Effect.gen(function* () {
+            const response = yield* server.handle(request);
+            if ((yield* server.refreshCount) === 1) {
+              yield* Deferred.succeed(exchangeStarted, undefined);
+              yield* Deferred.await(responseReady);
+            }
+            return HttpClientResponse.fromWeb(request, response);
+          })
+        );
+        const auth = yield* makeFreshbooksAuth(client, yield* resolveConfig(config), {
+          read: store.read,
+          write: Effect.fn("InterruptedRotationTest.write")(function* (token) {
+            yield* Deferred.succeed(persistenceStarted, undefined);
+            yield* Deferred.await(persistenceReady);
+            yield* store.write(token);
+          }),
+        });
+        return yield* Effect.gen(function* () {
+          const rotating = yield* auth.refresh.pipe(Effect.forkChild);
+          yield* Deferred.await(exchangeStarted);
+          const cancellation = yield* Fiber.interrupt(rotating).pipe(Effect.forkChild);
+          yield* Effect.yieldNow;
+          yield* Deferred.succeed(responseReady, undefined);
+          yield* Deferred.await(persistenceStarted);
+          expect(Redacted.value(O.getOrThrow(yield* store.read).refreshToken)).toBe("refresh-0");
+          yield* Deferred.succeed(persistenceReady, undefined);
+          yield* Fiber.join(cancellation);
+          expect(Redacted.value(O.getOrThrow(yield* store.read).refreshToken)).toBe(yield* server.currentRefresh);
+          expect(Redacted.value(yield* auth.refresh)).toBe("access-2");
+        }).pipe(
+          Effect.ensuring(
+            Effect.all([Deferred.succeed(responseReady, undefined), Deferred.succeed(persistenceReady, undefined)], {
+              discard: true,
+            })
+          )
+        );
+      })
+    );
+  });
+
   layer(AuthLayer(expiredToken))((it) => {
     it.effect(
       "serializes concurrent refreshes to a single owner (one network refresh)",

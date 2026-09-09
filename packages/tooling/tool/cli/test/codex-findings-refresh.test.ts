@@ -262,6 +262,9 @@ describe("codex findings preservation-safe refresh", () => {
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const { alphaText, firstTriageEntry, qualityReviewText, rawGitignoreText } = yield* bootstrapAuthoredPacket();
+        const sourcesPath = `goals/${SLUG}/research/SOURCES.md`;
+        const sourceProse = Str.replace("2-record", "2-record full-snapshot")(yield* fs.readFileString(sourcesPath));
+        yield* fs.writeFileString(sourcesPath, sourceProse);
         const { source, plan, documents } = yield* refreshPlan();
 
         const outcome = yield* refreshCodexFindingsPacket({
@@ -278,6 +281,7 @@ describe("codex findings preservation-safe refresh", () => {
         assert.strictEqual(yield* fs.readFileString(`goals/${SLUG}/findings/CSF-001.md`), alphaText);
         assert.strictEqual(yield* fs.readFileString(`goals/${SLUG}/research/QUALITY_REVIEW.md`), qualityReviewText);
         assert.strictEqual(yield* fs.readFileString(`goals/${SLUG}/raw/.gitignore`), rawGitignoreText);
+        assert.strictEqual(yield* fs.readFileString(sourcesPath), Str.replace("2-record", "4-record")(sourceProse));
         assert.match(yield* fs.readFileString(`goals/${SLUG}/README.md`), /AUTHORED PACKET NOTE MUST SURVIVE/u);
 
         const refreshed = yield* loadCodexRefreshLedgerSource({ repoRoot: process.cwd(), slug: SLUG });

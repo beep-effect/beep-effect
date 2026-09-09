@@ -12,7 +12,6 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import { NonEmptyTrimmedStr } from "@beep/schema/String";
 import * as A from "@beep/utils/Array";
 import * as O from "@beep/utils/Option";
 import * as Str from "@beep/utils/Str";
@@ -42,7 +41,7 @@ import type { WorktreeDirtyError, WorktreePreservationError } from "./Worktree.e
 import type { WorktreeRemovalReceipt } from "./Worktree.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Worktree/Worktree.command");
-const decodeWorktreeName = S.decodeUnknownEffect(NonEmptyTrimmedStr);
+const decodeWorktreeName = S.decodeUnknownEffect(WorktreeRemovalRequest.fields.name);
 
 /**
  * Local-only files copied from the main checkout into a fresh worktree.
@@ -351,10 +350,12 @@ export const resolveWorktreeContext = Effect.fn("Worktree.resolveWorktreeContext
   );
   const porcelain = yield* runWorktreeGitCapture(
     currentRoot,
-    ["worktree", "list", "--porcelain"],
+    ["worktree", "list", "--porcelain", "-z"],
     "Failed to list git worktrees."
   );
-  const entries = parseWorktreePorcelain(porcelain);
+  const entries = yield* parseWorktreePorcelain(porcelain).pipe(
+    Effect.mapError(WorktreeCommandError.new("Git worktree listing must use NUL delimiters."))
+  );
   const mainCheckout = O.match(A.head(entries), {
     onNone: () => currentRoot,
     onSome: (entry) => entry.path,
@@ -813,7 +814,9 @@ const runWorktreeRemove = Effect.fn("Worktree.runWorktreeRemove")(function* (opt
   const removalService = yield* WorktreeRemovalService;
   const context = yield* resolveWorktreeContext();
   const name = yield* decodeWorktreeName(options.name).pipe(
-    Effect.mapError(WorktreeCommandError.new("Worktree name must be non-empty and contain no surrounding whitespace."))
+    Effect.mapError(
+      WorktreeCommandError.new("Worktree name must be one non-empty path component without control characters.")
+    )
   );
   const targetPath = path.join(context.worktreesRoot, name);
   const exists = yield* fs.exists(targetPath).pipe(Effect.orElseSucceed(() => false));
@@ -824,6 +827,12 @@ const runWorktreeRemove = Effect.fn("Worktree.runWorktreeRemove")(function* (opt
     });
   }
   const removed = A.findFirst(context.entries, (entry) => entry.path === targetPath);
+  if (O.isNone(removed)) {
+    return yield* WorktreeCommandError.make({
+      message: "Removal target is not a registered managed worktree.",
+      path: targetPath,
+    });
+  }
   const branch = O.flatMap(removed, (entry) => O.fromNullishOr(entry.branch));
   const receipt = yield* removalService.remove(
     WorktreeRemovalRequest.make({

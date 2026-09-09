@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import contextlib
+import gzip
 import importlib.util
 import io
 import json
@@ -397,6 +398,60 @@ class CorpusValidationTest(unittest.TestCase):
         markdown = economics.render_economics(report)
         self.assertEqual(report["corpusValidation"], "drifted")
         self.assertIn("NON-RATIFIED CORPUS DRIFT", markdown)
+
+
+class PublicHygieneTest(unittest.TestCase):
+    def test_non_utf8_evidence_has_a_clear_hygiene_failure(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            for suffix in (".json", ".json.gz"):
+                with self.subTest(suffix=suffix):
+                    file = Path(directory) / ("journal" + suffix)
+                    payload = b"invalid: \xff"
+                    file.write_bytes(gzip.compress(payload) if suffix.endswith(".gz") else payload)
+                    with self.assertRaisesRegex(SystemExit, "invalid UTF-8 evidence in .*journal"):
+                        economics.validate_public_hygiene([file])
+
+    def test_branch_names_survive_validation_and_redaction(self) -> None:
+        with tempfile.TemporaryDirectory() as directory, mock.patch.object(Path, "home", return_value=Path("/root")):
+            branch = "fix/root-build-failure-20260724"
+            for suffix in (".json", ".json.gz"):
+                file = Path(directory) / ("journal" + suffix)
+                payload = json.dumps({"branch": branch}).encode()
+                file.write_bytes(gzip.compress(payload) if suffix.endswith(".gz") else payload)
+                economics.validate_public_hygiene([file])
+            self.assertEqual(economics.redact(branch), branch)
+
+    def test_absolute_home_paths_are_still_rejected_and_redacted(self) -> None:
+        with tempfile.TemporaryDirectory() as directory, mock.patch.object(Path, "home", return_value=Path("/root")):
+            file = Path(directory) / "journal.json"
+            for value in ("/root", "/root/private", "stored at /root/private", "(/root/private)"):
+                with self.subTest(value=value):
+                    file.write_text(json.dumps({"path": value}))
+                    with self.assertRaises(SystemExit):
+                        economics.validate_public_hygiene([file])
+                    self.assertNotIn("/root", economics.redact(value))
+
+    def test_file_urls_are_rejected_and_redacted_without_changing_branch_names(self) -> None:
+        with tempfile.TemporaryDirectory() as directory, mock.patch.object(Path, "home", return_value=Path("/root")):
+            for value in (
+                "file:///root/private.ts",
+                "file://localhost/root/private.ts",
+                "FILE:///root/private.ts",
+                "file:///root?source=local",
+                "file:///root#file",
+                "file://localhost/root?source=local#file",
+                "/root?source=local",
+                "/root#file",
+            ):
+                for suffix in (".json", ".json.gz"):
+                    with self.subTest(value=value, suffix=suffix):
+                        file = Path(directory) / ("journal" + suffix)
+                        payload = json.dumps({"path": value}).encode()
+                        file.write_bytes(gzip.compress(payload) if suffix.endswith(".gz") else payload)
+                        with self.assertRaises(SystemExit):
+                            economics.validate_public_hygiene([file])
+                        self.assertNotIn("/root", economics.redact(value))
+            self.assertEqual(economics.redact("fix/root-build-failure"), "fix/root-build-failure")
 
 
 if __name__ == "__main__":

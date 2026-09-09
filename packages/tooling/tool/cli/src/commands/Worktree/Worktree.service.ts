@@ -34,6 +34,7 @@ import {
 } from "../../internal/repo-run/index.ts";
 import { WorktreeCommandError, WorktreeDirtyError, WorktreePreservationError } from "./Worktree.errors.ts";
 import {
+  parseWorktreePorcelain,
   WorktreeArchivePlan,
   WorktreeRemovalReceipt,
   WorktreeRemovalRequest,
@@ -59,6 +60,7 @@ const GitCountFromString = S.FiniteFromString.pipe(
 );
 
 const decodeGitCount = S.decodeUnknownEffect(GitCountFromString);
+const isWorktreeRemovalName = S.is(WorktreeRemovalRequest.fields.name);
 const decodeGitObjectId = S.decodeUnknownEffect(GitObjectId);
 const decodeIsoString = S.decodeUnknownEffect(ISOStr);
 const decodeSha256HexFromBytes = S.decodeUnknownEffect(Sha256HexFromBytes);
@@ -251,7 +253,7 @@ export const worktreeArchivePlan: {
     );
     const nonEmptyName = Str.isEmpty(sanitizedName) ? "worktree" : sanitizedName;
     const refName = Str.endsWith(".lock")(nonEmptyName) ? `${nonEmptyName}-worktree` : nonEmptyName;
-    const residueRoot = path.join(residueBaseRoot, `${repoBasename}-${repositoryHash}`, `${name}-${stamp}`);
+    const residueRoot = path.join(residueBaseRoot, `${repoBasename}-${repositoryHash}`, `${refName}-${stamp}`);
     return WorktreeArchivePlan.make({
       archiveRef: `refs/archive/worktrees/${refName}/${stamp}`,
       residueRoot,
@@ -617,6 +619,13 @@ const preserveResidue = Effect.fn("WorktreeRemovalService.preserveResidue")(func
     request.name,
     archiveStamp(now)
   );
+  if (!isContainedRelativePath(path, baseRoot, plan.residueRoot)) {
+    return yield* WorktreePreservationError.new(
+      "prepare-residue",
+      "Refused an archive destination outside the configured residue root.",
+      { path: plan.residueRoot }
+    );
+  }
 
   yield* runPreservationCommand(
     request.mainCheckout,
@@ -685,12 +694,55 @@ const preserveResidue = Effect.fn("WorktreeRemovalService.preserveResidue")(func
 
 const validateRemovalRequest = Effect.fn("WorktreeRemovalService.validateRemovalRequest")(function* (
   request: WorktreeRemovalRequest
-): Effect.fn.Return<void, WorktreeCommandError> {
+): Effect.fn.Return<
+  void,
+  WorktreeCommandError,
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> {
   if (!request.archive && request.deleteBranch) {
     return yield* WorktreeCommandError.make({
       message: "--delete-branch requires --archive so branch deletion cannot discard unreachable commits.",
       path: request.targetPath,
     });
+  }
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const target = path.resolve(request.targetPath);
+  const managedRoot = path.join(path.dirname(request.mainCheckout), `${path.basename(request.mainCheckout)}-worktrees`);
+  const invalid = () =>
+    WorktreeCommandError.make({
+      message:
+        "Removal target must be an exact registered worktree beneath the managed root with the same Git common directory.",
+      path: request.targetPath,
+    });
+  if (!isWorktreeRemovalName(request.name) || target !== path.resolve(managedRoot, request.name)) {
+    return yield* invalid();
+  }
+  const listed = yield* runWorktreeGitCapture(
+    request.mainCheckout,
+    ["worktree", "list", "--porcelain", "-z"],
+    "Could not revalidate worktree registration."
+  );
+  const entries = yield* parseWorktreePorcelain(listed).pipe(Effect.mapError(invalid));
+  if (!A.some(entries, (entry) => path.resolve(entry.path) === target)) {
+    return yield* invalid();
+  }
+  const canonicalRoot = yield* fs.realPath(managedRoot).pipe(Effect.mapError(invalid));
+  const canonicalTarget = yield* fs.realPath(target).pipe(Effect.mapError(invalid));
+  if (canonicalTarget !== path.join(canonicalRoot, request.name)) {
+    return yield* invalid();
+  }
+  const commonArgs = ["rev-parse", "--path-format=absolute", "--git-common-dir"];
+  const expectedCommon = yield* runWorktreeGitCapture(
+    request.mainCheckout,
+    commonArgs,
+    "Could not resolve the owning Git directory."
+  );
+  const targetCommon = yield* runWorktreeGitCapture(target, commonArgs, "Could not resolve the target Git directory.");
+  const expectedReal = yield* fs.realPath(Str.trim(expectedCommon)).pipe(Effect.mapError(invalid));
+  const targetReal = yield* fs.realPath(Str.trim(targetCommon)).pipe(Effect.mapError(invalid));
+  if (expectedReal !== targetReal) {
+    return yield* invalid();
   }
 });
 
@@ -820,7 +872,12 @@ const planArchiveRemoval = Effect.fn("WorktreeRemovalService.planArchiveRemoval"
 const removeWorktree = Effect.fn("WorktreeRemovalService.removeWorktree")(function* (
   request: WorktreeRemovalRequest,
   allowDirtyRemoval: boolean
-): Effect.fn.Return<void, WorktreeCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  void,
+  WorktreeCommandError,
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> {
+  yield* validateRemovalRequest(request);
   yield* runWorktreeGitCapture(
     request.mainCheckout,
     worktreeRemoveArgs(request.targetPath, allowDirtyRemoval),
@@ -867,7 +924,7 @@ const removeLegacyWorktree = Effect.fn("WorktreeRemovalService.removeLegacyWorkt
 ): Effect.fn.Return<
   WorktreeRemovalReceipt,
   WorktreeCommandError | WorktreeDirtyError,
-  ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   if (O.isSome(request.expectedHead)) {
     const head = yield* resolveGitCommit(
@@ -970,6 +1027,7 @@ const removeArchivedWorktree = Effect.fn("WorktreeRemovalService.removeArchivedW
   // quiescence is re-verified after capture before the destructive removal.
   const stamp = DateTime.toEpochMillis(yield* DateTime.now);
   const retirePath = `${request.targetPath}.retiring-${stamp}`;
+  yield* validateRemovalRequest(request);
   yield* fs
     .rename(request.targetPath, retirePath)
     .pipe(

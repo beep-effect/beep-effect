@@ -1688,6 +1688,53 @@ describe("quality task adapter", () => {
   );
 
   it.effect(
+    "invalidates ordinary lane proofs when inherited execution settings change",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      yield* Effect.forEach(
+        [
+          { name: "BEEP_FC_NUM_RUNS", before: "100", after: "400" },
+          { name: "GITHUB_ACTIONS", before: "false", after: "true" },
+          { name: "TURBO_FORCE", before: "false", after: "true" },
+        ],
+        Effect.fnUntraced(function* ({ name, before, after }) {
+          const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: "lane-proof-ambient-" });
+          yield* initializeLaneProofRepository(tempRoot);
+          const lane = GithubCheckLaneSpec.make({
+            id: "quality:test-unit",
+            stage: "repo-quality",
+            wave: "heavy",
+            blockedBy: [],
+            step: QualityTaskStep.make({
+              label: "ambient execution settings",
+              command: "bun",
+              args: ["-e", `require("node:fs").appendFileSync(".beep/ambient-marker.txt", Bun.env.${name} + "\\n")`],
+              cwd: tempRoot,
+            }),
+          });
+          const run = collectGithubCheckLaneWavesForTesting(
+            "proof-ambient",
+            [GithubCheckLaneWaveSpec.make({ wave: "heavy", lanes: [lane] })],
+            "fail-fast",
+            "active"
+          );
+          const initial = yield* withEnvVarEffect(name, before, run);
+          const repeated = yield* withEnvVarEffect(name, before, run);
+          const changed = yield* withEnvVarEffect(name, after, run);
+          expect(A.map(initial.report.lanes, (result) => result.status)).toEqual(["passed"]);
+          expect(A.map(repeated.report.lanes, (result) => result.status)).toEqual(["reused"]);
+          expect(A.map(changed.report.lanes, (result) => result.status)).toEqual(["passed"]);
+          expect(yield* fs.readFileString(path.join(tempRoot, ".beep", "ambient-marker.txt"))).toBe(
+            `${before}\n${after}\n`
+          );
+        }),
+        { concurrency: 1, discard: true }
+      );
+    }, provideScopedLayer(PlatformLayer))
+  );
+
+  it.effect(
     "invalidates a lane proof when an inherited ambient input changes",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;

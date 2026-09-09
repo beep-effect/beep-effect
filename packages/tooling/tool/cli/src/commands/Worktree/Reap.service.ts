@@ -635,10 +635,12 @@ export const runWorktreeReap = Effect.fn("WorktreeReap.runWorktreeReap")(functio
   );
   const porcelain = yield* runWorktreeGitCapture(
     currentRoot,
-    ["worktree", "list", "--porcelain"],
+    ["worktree", "list", "--porcelain", "-z"],
     "Failed to list registered git worktrees."
   );
-  const entries = parseWorktreePorcelain(porcelain);
+  const entries = yield* parseWorktreePorcelain(porcelain).pipe(
+    Effect.mapError(WorktreeCommandError.new("Git worktree listing must use NUL delimiters."))
+  );
   const mainCheckout = O.getOrElse(
     O.map(A.head(entries), (entry) => entry.path),
     () => currentRoot

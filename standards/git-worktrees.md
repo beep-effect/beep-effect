@@ -347,9 +347,9 @@ For an existing duplicate clone:
 When several agents (or an agent team) write into the **same** worktree
 concurrently, the working directory and index are shared mutable state. Rules:
 
-- **Cleanup is not gated, but it is scoped.** Agents may `git stash drop` a stash entry they
-  own (confirm the entry by its `git stash list` message first; never drop a marked Yeet
-  stash or another lane's entry), retire a worktree through `bun run beep worktree
+- **Cleanup must preserve shared state.** Direct `git stash drop` remains denied because
+  its permission pattern cannot verify stash ownership. Yeet owns restoration and cleanup
+  of its marked stashes. Agents may retire a worktree through `bun run beep worktree
   remove` (raw `git worktree remove` is not auto-approved because a trailing `--force`
   would slip past the prefix denial), delete a local branch, create
   archive refs under `refs/archive/`, and retire merged branches with `bun run beep yeet

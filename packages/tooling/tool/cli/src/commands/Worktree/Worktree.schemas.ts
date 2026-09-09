@@ -16,6 +16,7 @@ import { LiteralKit, NonEmptyTrimmedStr } from "@beep/schema";
 import { GitObjectId } from "@beep/schema/Conformance";
 import { ISOStr } from "@beep/schema/Timestamp";
 import { A, Str } from "@beep/utils";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 
 const $I = $RepoCliId.create("commands/Worktree/Worktree.schemas");
@@ -47,7 +48,7 @@ const WORKTREE_PREFIX = "worktree ";
  */
 export class WorktreeListEntry extends S.Class<WorktreeListEntry>($I`WorktreeListEntry`)(
   {
-    path: S.String,
+    path: S.NonEmptyString.check(S.isPattern(/^[^\x00-\x1f\x7f]+$/u)),
     head: S.NullOr(S.String),
     branch: S.NullOr(S.String),
     detached: S.Boolean,
@@ -303,8 +304,8 @@ export class WorktreeArchivePlan extends S.Class<WorktreeArchivePlan>($I`Worktre
  */
 export class WorktreeRemovalRequest extends S.Class<WorktreeRemovalRequest>($I`WorktreeRemovalRequest`)(
   {
-    name: NonEmptyTrimmedStr,
-    targetPath: S.String,
+    name: NonEmptyTrimmedStr.check(S.isPattern(/^(?!\.{1,2}$)[^/\\\x00-\x1f\x7f]+$/u)),
+    targetPath: S.NonEmptyString.check(S.isPattern(/^[^\x00-\x1f\x7f]+$/u)),
     mainCheckout: S.String,
     branch: S.OptionFromNullOr(S.String),
     archive: S.Boolean,
@@ -429,25 +430,45 @@ const blockEntry = (block: PorcelainBlock): WorktreeListEntry => {
   return accumulatorEntry(accumulator);
 };
 
+const isWorktreeListPath = S.is(WorktreeListEntry.fields.path);
+const WorktreePorcelainInput = S.Union([S.Literal(""), S.String.check(S.isPattern(/\0/u))]).pipe(
+  $I.annoteSchema("WorktreePorcelainInput", {
+    description: "Empty output or a NUL-delimited Git worktree listing; nonempty line-delimited output is ambiguous.",
+  })
+);
+const decodeWorktreePorcelainInput = S.decodeUnknownEffect(WorktreePorcelainInput);
+
 /**
- * Parse `git worktree list --porcelain` output into structured entries.
+ * Parse `git worktree list --porcelain -z` output into structured entries.
+ *
+ * **Details**
+ *
+ * NUL delimiters preserve record boundaries even when a Git path contains a
+ * newline. Paths containing control characters are excluded from managed
+ * worktree operations. Non-NUL listings are rejected as ambiguous.
  *
  * **Example** (Parse a single-worktree listing)
  *
  * ```ts
  * import { parseWorktreePorcelain } from "@beep/repo-cli/commands/Worktree"
+ * import * as Effect from "effect/Effect"
  *
- * const entries = parseWorktreePorcelain("worktree /repo\nHEAD abc123\nbranch refs/heads/main\n")
+ * const entries = await Effect.runPromise(parseWorktreePorcelain("worktree /repo\0HEAD abc123\0branch refs/heads/main\0\0"))
  * console.log(entries.length)
  * ```
  *
- * @param porcelain - Raw stdout from `git worktree list --porcelain`.
- * @returns One entry per worktree block, in listing order.
+ * @param porcelain - Raw stdout from `git worktree list --porcelain -z`.
+ * @returns An effect yielding one entry per worktree block, or a schema failure for ambiguous input.
  * @category parsing
  * @since 0.0.0
  */
-export const parseWorktreePorcelain = (porcelain: string): ReadonlyArray<WorktreeListEntry> =>
-  A.map(porcelainBlocks(Str.split(Str.trimEnd(porcelain), "\n")), blockEntry);
+export const parseWorktreePorcelain = Effect.fn("Worktree.parseWorktreePorcelain")(function* (porcelain: string) {
+  const input = yield* decodeWorktreePorcelainInput(porcelain);
+  return A.map(
+    A.filter(porcelainBlocks(Str.split(input, "\0")), (block) => isWorktreeListPath(block.path)),
+    blockEntry
+  );
+});
 
 /**
  * Number of seconds within which measured activity classifies a checkout as

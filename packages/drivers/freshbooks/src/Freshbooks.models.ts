@@ -560,7 +560,7 @@ const paymentListBody = AccountingResult(S.Struct({ payments: S.Array(Freshbooks
  * `response.result` (or bare `response`) shell before the service reshapes it
  * into a domain value or {@link FreshbooksPage}.
  *
- * @category decoders
+ * @category decoding
  * @since 0.0.0
  */
 export const FreshbooksDecode = {

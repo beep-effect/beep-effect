@@ -11,6 +11,7 @@ import {
   persistPrSessionRecord,
   RepoPlanStep,
   RepoRunContext,
+  recordCurrentPrSession,
   recordMonitoredPrSession,
   recordPrProvenanceStampLane,
   renderPrProvenance,
@@ -22,7 +23,7 @@ import {
 } from "@beep/repo-cli/test/Yeet";
 import { provideScopedLayer } from "@beep/test-utils";
 import { assert, describe, expect, it } from "@effect/vitest";
-import { ConfigProvider, Console, Effect, FileSystem, Layer, pipe, Ref, Result } from "effect";
+import { ConfigProvider, Console, Effect, FileSystem, Layer, Path, pipe, Ref, Result } from "effect";
 import * as A from "effect/Array";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
@@ -715,6 +716,36 @@ describe("Yeet provenance footer splice", () => {
       );
       expect(yield* registry.lookup(repository, 42)).toHaveLength(1);
       expect(yield* Ref.get(runner.writes)).toBe(1);
+    }).pipe(provideScopedLayer(Layer.mergeAll(PlatformLayer, layerPrSessionRegistryMemory)))
+  );
+
+  it.effect("keeps new and replaced run mirrors private and refuses symlink targets", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped();
+      yield* configureRepo(root);
+      const registry = yield* PrSessionRegistry;
+      const provider = ConfigProvider.fromEnv({ env: { HOME: root, PWD: root } });
+      const record = recordCurrentPrSession(context(root), 42, O.none(), "monitored", registry).pipe(
+        Effect.provideService(ConfigProvider.ConfigProvider, provider)
+      );
+      yield* record;
+      const runs = path.join(root, ".beep", "yeet", "runs");
+      const run = O.getOrThrow(A.head(yield* fs.readDirectory(runs)));
+      const mirror = path.join(runs, run, "provenance.json");
+      expect((yield* fs.stat(mirror)).mode & 0o777).toBe(0o600);
+      expect((yield* fs.stat(path.dirname(mirror))).mode & 0o777).toBe(0o700);
+      yield* fs.chmod(mirror, 0o644);
+      yield* record;
+      expect((yield* fs.stat(mirror)).mode & 0o777).toBe(0o600);
+      const external = path.join(root, "external.txt");
+      yield* fs.writeFileString(external, "unrelated work\n");
+      yield* fs.remove(mirror);
+      yield* fs.symlink(external, mirror);
+      yield* record;
+      expect(yield* fs.readFileString(external)).toBe("unrelated work\n");
+      expect(yield* fs.readLink(mirror)).toBe(external);
     }).pipe(provideScopedLayer(Layer.mergeAll(PlatformLayer, layerPrSessionRegistryMemory)))
   );
 

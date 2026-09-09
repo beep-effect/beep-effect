@@ -554,7 +554,7 @@ const mergePlan = (
 };
 
 const mergeSources = (text: string, priorCount: number, capturedCount: number): string =>
-  Str.replaceAll(`supplied the ${priorCount}-record`, `supplied the ${capturedCount}-record full-snapshot`)(text);
+  Str.replaceAll(`supplied the ${priorCount}-record`, `supplied the ${capturedCount}-record`)(text);
 
 const dispositionCountsOf = (findings: ReadonlyArray<{ readonly disposition: CodexDisposition }>) => ({
   remediate: A.length(A.filter(findings, (finding) => finding.disposition === "remediate")),
