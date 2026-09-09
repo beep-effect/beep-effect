@@ -171,3 +171,32 @@ stage with the Bun-runtime checks only: `bunx --no-install biome check --write <
 then continue to the next stage without waiting; do not acknowledge Yeet inbox rows for
 sandbox-only failures (the orchestrator attributes them). Stage A is accepted by the
 orchestrator's own run of the canonical verification.
+
+## Amendment 2026-09-09 (3) — routing scope and one stage per launch
+
+- **Routing files are in scope.** New `beep lint` subcommands must also be registered in the
+  `LINT_POLICY_SUBCOMMANDS` allowlist in `packages/tooling/tool/cli/src/internal/cli/LintRouting.ts`
+  (consumed by `src/bin-main.ts` and `commands/Quality/Quality.schemas.ts`, which need no edit
+  unless a test pins them) and pinned in `test/lint-subcommand-allowlist.test.ts`. Stage B adds
+  `package-scripts` and `policy-fingerprint`; Stage D adds `jsdoc` and `laws`. Any other file
+  that a stage's entrypoint genuinely requires (a barrel, a routing table, a test that pins the
+  old shape) is in scope too: name it in the stage's file list with one line of reason instead
+  of stopping. Stop only for design conflicts, not for file-scope questions.
+- **Restore the Stage B aggregate wiring** the previous attempt backed out: the two gates join
+  `rootRepoLintPolicySteps` in `Quality/Tasks.ts` as CLI steps and `beep:preflight` runs their
+  `--write` forms before the checks. Generate `standards/policy-tools.fingerprint.json` with
+  `bun run beep lint policy-fingerprint --write` once the routing is fixed and list it.
+- **One stage per launch.** Each launch finishes exactly the stage named in its prompt (its
+  files list, its Bun-runtime checks, its results note) and then stops; the orchestrator runs
+  the canonical verification and makes the signed commit between stages.
+
+## Amendment 2026-09-09 (4) — converting a direct value to the indirection keeps package truth
+
+When `--write` converts a task-facing key from a direct value to its indirection (today's
+`docgen: bunx --bun --no-install docgen` → `docgen: bun run beep:docgen`), the implementation
+key is seeded with the manifest's **existing** value (`beep:docgen := old docgen text`), not
+the kind default, unless the existing value already is the indirection. For 129 manifests the
+two coincide; for `packages/tooling/tool/docgen` (`bun run src/bin.ts`) the difference is the
+package's truth (D3, D4). The kind default is used only when no prior value exists (a genuinely
+missing key). Add a literal test for the docgen-tool case in Stage C or E, whichever touches
+the writer first.

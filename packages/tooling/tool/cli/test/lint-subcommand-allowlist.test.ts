@@ -130,6 +130,11 @@ describe("commands/Lint fast-path allowlist binding", () => {
     expect(sortedNames(LintPolicySubcommand.literals)).toEqual(sortedNames(registered));
   });
 
+  it("routes the package scripts and fingerprint gates through the lint command tree", () => {
+    expect(LintPolicySubcommand.literals).toContain("package-scripts");
+    expect(LintPolicySubcommand.literals).toContain("policy-fingerprint");
+  });
+
   it.effect(
     "lists every registered subcommand in the lint help index",
     Effect.fnUntraced(function* () {

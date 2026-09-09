@@ -363,3 +363,46 @@ seconds. The latest audit outcome is environment-only, superseding the temporary
 waiver for the earlier, corrected source diagnostics. Fix the sandbox's Node
 child-process capability, then rerun the canonical audit without replacing it
 with the successful Bun-runtime diagnostic. The brief's hard stop applies.
+
+### C3.1 Stage B — prescribed test project is absent
+
+The amended test command `bunx --bun --no-install tsgo -p
+packages/tooling/tool/cli/tsconfig.test.json --pretty false` exits with
+`TS5058: The specified path does not exist`. The CLI workspace has no committed
+`tsconfig.test.json`; the orchestrator's canonical verification owns synthetic
+test-project generation. The lane records this limitation and runs the source
+project plus the required thread-pool tests. A brief that names the existing test
+project or an approved synthetic-project command would prevent this friction.
+
+The initial residue cleanup command was rejected because `rm -f` style commands
+are disallowed. Removed only the explicitly authorized `graft/` residue through
+Python filesystem operations instead; no Git or inbox mutation was involved.
+
+### C3.1 Stage B — omitted entrypoint routing file blocks the gate
+
+The first live invocation `bun run beep lint package-scripts --check --json`
+entered the root aggregate, emitting `lint: running 29 step(s)` and forwarding
+`package-scripts --check --json` to Turbo's `lint` task. Inspection found the
+separate `LINT_POLICY_SUBCOMMANDS` allowlist in
+`packages/tooling/tool/cli/src/internal/cli/LintRouting.ts`; neither new gate is
+listed there. Adding the gates only to `lintSubcommands` is insufficient, and
+registering them in `rootRepoLintPolicySteps` produces recursive aggregate calls.
+The fingerprint invocation took the same wrong path and was interrupted. Removed
+only this lane's aggregate and preflight additions to leave that route safe.
+
+The brief's hard file-scope rule does not name `LintRouting.ts`. The implementation
+lane therefore stops at Stage B rather than modifying that file or bypassing the
+entrypoint. Include the routing allowlist in the brief and require an entrypoint
+routing regression test before resuming. Stage D's new `jsdoc` and `laws` names
+need the same allowlist update. No inbox rows were staged or acknowledged.
+
+### C3.1 Stage B completion — Bun test-project limitation persists
+
+The Amendment 3 completion run again found that
+`bunx --bun --no-install tsgo -p packages/tooling/tool/cli/tsconfig.test.json --pretty false`
+exits 1 with `TS5058: The specified path does not exist`. The source project
+passes, and the required Bun thread-pool tests execute successfully. The brief
+should name an existing test project or an approved generation command; no
+replacement config or inbox acknowledgment was created. The cleanup command
+also encountered the existing `rm -f` restriction; bounded Python filesystem
+operations removed the authorized residue successfully.

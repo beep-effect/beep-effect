@@ -188,3 +188,217 @@ Then continue Stage B, C, D, E and the final verification section in order.
 None of Stages B–E, the fleet rewrite, the two new gates, or final batch
 verification has run. No push, publish, merge, staging, commit, stash, or checkout
 was attempted in this resume.
+
+## 2026-09-09 — Stage B resume under both amendments
+
+Stage A is accepted by the orchestrator's canonical package verification, as
+stated in the resume instruction. Its earlier unaccepted/blocker entries above
+are historical. Read the complete brief, both amendments, binding design sections,
+rulings 19–27, census/doctest notes, schema and Effect skills, repository laws,
+and the named implementation precedents. No Git write commands were issued.
+Removed the reappeared `graft/` residue; `.ignore` is absent.
+
+### Stage B — implementation status: incomplete, blocked by file scope
+
+Implemented the schema-backed derivation evidence, typed policy error, and
+`Context.Service` contract with `kindOf`, `rules`, `expected`, `diff`, `check`,
+and `write`. Reused root-workspace discovery and its path containment checks.
+The census uses the existing doctest source selector and reports unowned marked
+sources and bypassing configs. `expected` receives a single-manifest projection
+of the census because its ratified signature has no manifest-path parameter.
+Repairs preserve existing implementation values and extras, normalize strict
+bindings, remove placeholders, and report missing package-owned generator text
+without inventing a replacement.
+
+Added the two gate command definitions to `Lint.command.ts` and its
+`lintSubcommands`, plus a schema-backed fingerprint generator. The generator
+follows workspace `dependencies` transitively from `@beep/repo-cli`, hashes source
+file paths/bytes and the nine named root configs, and embeds its input declaration
+and concrete file list. Five new contract tests cover literal script bindings,
+app/infra docgen retention, optional parallel tasks, preservation of implementation
+values/extras, missing implementations, negative drift, idempotent filesystem
+writes, exempt manifests, fixture/declaration exclusion, bypass/unowned-source
+conflicts, deleted generator scripts, and fingerprint dependency/config freshness.
+
+### Blocker — the entrypoint requires an unlisted routing-file edit
+
+`packages/tooling/tool/cli/src/internal/cli/LintRouting.ts` defines a separate
+`LINT_POLICY_SUBCOMMANDS` allowlist. Both `src/bin-main.ts` and
+`commands/Quality/Quality.schemas.ts` consume it. The list contains neither
+`package-scripts` nor `policy-fingerprint`; registering these only in
+`Lint.command.ts` does not make the requested commands reachable.
+
+Observed command:
+
+```text
+bun run beep lint package-scripts --check --json
+[beep-cli] lint: running 29 step(s) with concurrency 3
+[beep-cli] lint: bunx turbo run lint ... package-scripts --check --json ...
+```
+
+The command entered the existing root quality aggregate instead of the new gate.
+With the proposed Stage B aggregate registrations present, each gate also routed
+back into that aggregate. The attempt ultimately failed on a child-process spawn;
+its output is not a scripts-gate verdict. The fingerprint `--write` attempt took
+the same wrong route and was interrupted (exit 130). It did not generate
+`standards/policy-tools.fingerprint.json`.
+
+The brief explicitly says **"no edits outside the files this brief names plus the
+tests that pin them"** and **"stop and write the blocker into the results file if
+a stage cannot be completed as specified rather than improvising a different
+design."** `internal/cli/LintRouting.ts` is not named. Stopped at Stage B under
+that rule. The required resumption change is to include that routing file in the
+lane's allowed scope, add both gate names, and pin entrypoint routing with a test.
+Stage D's `jsdoc` and `laws` subcommands will need the same routing registration.
+
+Removed only this lane's tentative `rootRepoLintPolicySteps`, root gate-script,
+and `beep:preflight` additions to prevent recursive execution while blocked.
+`Quality/Tasks.ts` and root `package.json` have no remaining diff. Kept the service,
+command definitions, and passing contract tests for review. No alternate dispatch
+path, routing mutation, or whole-fleet write was used to bypass the blocker.
+
+### Stage B — verification results
+
+- Final `bunx --no-install biome check --write` over the five changed/new
+  TypeScript files: **passed**, five files checked.
+- Final `bunx --bun --no-install tsgo -p
+  packages/tooling/tool/cli/tsconfig.check.json --pretty false`: **passed**, exit 0.
+  Earlier introduced Effect diagnostics were fixed before this final pass.
+- `bunx --bun --no-install tsgo -p
+  packages/tooling/tool/cli/tsconfig.test.json --pretty false`: **not runnable**,
+  exit 1, `TS5058: The specified path does not exist`. The CLI package has no
+  such test project. No configuration was fabricated to replace it.
+- Final package-cwd `bunx --bun --no-install vitest run
+  test/package-scripts.schemas.test.ts test/package-scripts.policy.test.ts
+  --pool=threads`: **passed**, two files, nine tests; 6.49 seconds.
+- `git diff --check`: **passed** before this append; checked again afterward.
+- No canonical package verification, docgen, or deliberate Turbo verification
+  was run. Those remain the orchestrator's responsibility under Amendment 2.
+  The two misrouted gate attempts unintentionally entered the aggregate; they
+  provide no acceptance evidence and were not followed by inbox acknowledgments.
+- The committed-range size check reports **22 files changed, 1875 insertions,
+  336 deletions**. This is below 500 files but excludes the uncommitted Stage B
+  draft and is not final fleet acceptance.
+
+### Stage B — files
+
+- packages/tooling/tool/cli/src/internal/package-scripts/PackageScriptsPolicy.ts
+- packages/tooling/tool/cli/src/internal/package-scripts/index.ts
+- packages/tooling/tool/cli/src/commands/Lint/Lint.command.ts
+- packages/tooling/tool/cli/src/test/PackageScripts.test-kit.ts
+- packages/tooling/tool/cli/test/package-scripts.policy.test.ts
+- goals/time-to-certainty/research/OPPORTUNITIES.md
+- goals/time-to-certainty/research/c3-1-implementation.md
+
+No implementation files were deleted. Residue is intentionally omitted from the
+stage file list as required by the amendment.
+
+### Stages C, D, E and final verification — not started
+
+The strict stage order and Stage B scope blocker prevent starting the later
+stages. Writers, thin workers, `vitest.shared.ts`, codegen routing, fleet manifests,
+`AGENTS.md`, and `turbo.json` remain unchanged. There is no fleet rewrite count or
+fresh fingerprint artifact to report. The final scripts/fingerprint gates and
+filtered policy proof remain pending. Canonical CLI/package batch verification
+and docgen remain delegated to the orchestrator by Amendment 2.
+
+No staging, commits, stash, checkout, push, publish, merge, inbox staging, or inbox
+acknowledgment was performed in this resume.
+
+## 2026-09-09 — Stage B completed under Amendment 3
+
+Read the full brief including all three amendments and the existing results.
+The earlier file-scope blocker is superseded by Amendment 3. Continued from the
+uncommitted service, gate commands, test kit, and policy tests on disk.
+
+Registered `package-scripts` and `policy-fingerprint` in the dependency-free
+`LINT_POLICY_SUBCOMMANDS` allowlist and pinned both names in the routing test.
+Restored both `--check` CLI steps in `rootRepoLintPolicySteps` and their `--write`
+forms in `beep:preflight`, after schema-first generation and before checks.
+Updated the two literal aggregate-step lists and asserted both gate argv arrays.
+Generated `standards/policy-tools.fingerprint.json`: 42 declared inputs and
+1,308 concrete files. No Turbo task registration was added.
+
+### Stage B — real gate outputs
+
+`bun run beep lint policy-fingerprint --write` exited **0**:
+
+```text
+$ bun run packages/tooling/tool/cli/src/bin.ts -- lint policy-fingerprint --write
+policy-fingerprint: written
+```
+
+`bun run beep lint package-scripts --check --json` exited **1** with a real
+`package-scripts-report/v1` report using `package-scripts-rules/v1`:
+
+| Report measurement | Count |
+| --- | ---: |
+| Manifests inspected | 142 |
+| Manifests with drift | 140 |
+| Total drift rows | 769 |
+| missing-impl | 162 |
+| missing-task | 445 |
+| placeholder | 26 |
+| unexpected-task | 1 |
+| wrong-binding | 135 |
+| derivation-conflict | 0 |
+| Written manifests | 0 |
+
+The report's `written` field was `[]`; the process ended with
+`error: script "beep" exited with code 1`. These are counts parsed from the
+actual JSON, not a projected fleet rewrite. Full invocation output is retained
+locally in `/tmp/c3-1-stage-b-package-scripts.log` (ephemeral); fingerprint write
+output is in `/tmp/c3-1-stage-b-fingerprint-write.log` (ephemeral).
+This fleet drift is expected before Stage E and is not a routing or subprocess
+failure. No package-scripts `--write` or preflight aggregate was executed.
+
+`bun run beep lint policy-fingerprint --check` exited **0** and printed
+`policy-fingerprint: current` after all source edits and formatting.
+
+### Stage B — Bun-runtime verification
+
+- `bunx --no-install biome check --write` over the nine Stage B TypeScript
+  files below plus root `package.json`: **passed**, 10 files, no fixes applied.
+- `bunx --bun --no-install tsgo -p packages/tooling/tool/cli/tsconfig.check.json
+  --pretty false`: **passed**, exit 0.
+- `bunx --bun --no-install tsgo -p packages/tooling/tool/cli/tsconfig.test.json
+  --pretty false`: **unavailable**, exit 1, `TS5058: The specified path does
+  not exist`. This remains the previously recorded missing-project limitation;
+  no synthetic configuration was fabricated.
+- Package-cwd `bunx --bun --no-install vitest run
+  test/package-scripts.schemas.test.ts test/package-scripts.policy.test.ts
+  test/lint-subcommand-allowlist.test.ts --pool=threads`: **passed**, three
+  files, 13 tests, 7.29 seconds.
+- Package-cwd `bunx --bun --no-install vitest run test/quality-tasks.test.ts
+  --pool=threads -t 'plans repo-wide root lint|passes changed TypeScript files|keeps whole-tree'`:
+  **passed**, three selected tests, 188 skipped, 4.10 seconds. This is focused
+  aggregate planning proof, not a full quality-tasks suite run.
+- `git diff --check`: **passed**; residue absence checked at final handoff.
+
+Canonical package verification and docgen remain the orchestrator's responsibility
+under Amendment 2. Stage B implementation and available Bun checks are complete;
+the absent test typecheck project is explicitly not claimed as passing.
+
+### Stage B — files
+
+Complete Stage B handoff, including the retained draft and this launch's changes:
+
+- packages/tooling/tool/cli/src/internal/package-scripts/PackageScriptsPolicy.ts
+- packages/tooling/tool/cli/src/internal/package-scripts/index.ts
+- packages/tooling/tool/cli/src/commands/Lint/Lint.command.ts
+- packages/tooling/tool/cli/src/test/PackageScripts.test-kit.ts
+- packages/tooling/tool/cli/test/package-scripts.policy.test.ts
+- packages/tooling/tool/cli/src/internal/cli/LintRouting.ts — required entrypoint allowlist registration.
+- packages/tooling/tool/cli/test/lint-subcommand-allowlist.test.ts — pins gate routing and command-tree parity.
+- packages/tooling/tool/cli/src/commands/Quality/Tasks.ts
+- packages/tooling/tool/cli/test/quality-tasks.test.ts — updates literal aggregate lists and pins gate argv.
+- package.json
+- standards/policy-tools.fingerprint.json
+- goals/time-to-certainty/research/OPPORTUNITIES.md
+- goals/time-to-certainty/research/c3-1-implementation.md
+
+No implementation paths were deleted. The existing orchestrator amendment in
+`c3-1-brief.md` was not edited by this launch and is not a Stage B code input.
+Removed the authorized tool residue; omitted it from the file list as instructed.
+No Git write commands, inbox acknowledgments, push, publish, or merge were run.
+Stopped after Stage B. Stages C, D, and E remain unstarted.

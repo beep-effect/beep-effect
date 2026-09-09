@@ -7,16 +7,26 @@
 
 /// <reference path="../../../madge.d.ts" />
 
+import { createHash } from "node:crypto";
 import { $RepoCliId } from "@beep/identity/packages";
+import { FsUtils, findRepoRoot, jsonStringifyPretty, resolveWorkspaceDirs } from "@beep/repo-utils";
 import { isExcludedTypeScriptSourcePath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
 import { normalizePath } from "@beep/schema";
 import { A, Str, thunkEmptyStr } from "@beep/utils";
 import { Console, Effect, FileSystem, HashSet, Inspectable, MutableHashSet, Order, Path, pipe } from "effect";
+import * as HashMap from "effect/HashMap";
+import * as O from "effect/Option";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { Command, Flag } from "effect/unstable/cli";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { LABS_WORKSPACE_ROOT } from "../../internal/cli/Labs/index.ts";
 import { printLines } from "../../internal/cli/Printer.ts";
+import { PackageScriptsReportFromWire } from "../../internal/package-scripts/PackageScripts.schemas.ts";
+import {
+  PackageScriptsPolicy,
+  PackageScriptsPolicyError,
+} from "../../internal/package-scripts/PackageScriptsPolicy.ts";
 import { runToExit } from "../../internal/process/StepExec.ts";
 import { runGoalsDoctor } from "../Goals/Doctor.ts";
 import { runRootLintPolicyTask } from "../Quality/index.ts";
@@ -611,7 +621,175 @@ const lintToolingSchemaFirstCommand = Command.make("tooling-schema-first", {}, r
   Command.withDescription("Check packages/tooling/tool/cli source for schema-first conventions")
 );
 
+const fingerprintPath = "standards/policy-tools.fingerprint.json";
+const rootConfigs = [
+  "eslint.config.mjs",
+  "tsdoc.json",
+  ".oxlintrc.json",
+  "_typos.toml",
+  "knip.jsonc",
+  ".fallowrc.jsonc",
+  "biome.jsonc",
+  "tsconfig.base.json",
+  "tsconfig.json",
+];
+
+/**
+ * Generated checker input declaration and deterministic content digest.
+ * **Example** (Recognize a missing fingerprint)
+ * ```ts
+ * import { PolicyToolsFingerprint } from "@beep/repo-cli/test/PackageScripts"
+ * import * as S from "effect/Schema"
+ * console.log(S.is(PolicyToolsFingerprint)(undefined)) // false
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export class PolicyToolsFingerprint extends S.Class<PolicyToolsFingerprint>($I`PolicyToolsFingerprint`)(
+  {
+    schemaVersion: S.Literal("policy-tools-fingerprint/v1"),
+    inputs: S.Array(S.String),
+    files: S.Array(S.String),
+    digest: S.String,
+  },
+  $I.annote("PolicyToolsFingerprint", {
+    description: "Checker workspace dependency closure and root configuration fingerprint.",
+  })
+) {}
+
+/**
+ * Hashes the CLI's transitive workspace dependency sources and root checker configs.
+ * **Example** (Prepare a fingerprint computation)
+ * ```ts
+ * import { policyToolsFingerprint } from "@beep/repo-cli/test/PackageScripts"
+ * import { Effect } from "effect"
+ * console.log(Effect.isEffect(policyToolsFingerprint("/repo"))) // true
+ * ```
+ * @category workflows
+ * @since 0.0.0
+ */
+export const policyToolsFingerprint = Effect.fn("policyToolsFingerprint")(
+  function* (repoRoot: string) {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const fsUtils = yield* FsUtils;
+    const workspaces = yield* resolveWorkspaceDirs(repoRoot);
+    let visited = HashSet.empty<string>();
+    const pending = ["@beep/repo-cli"];
+    const patterns: Array<string> = [];
+    while (A.isReadonlyArrayNonEmpty(pending)) {
+      const name = pending.pop();
+      if (name === undefined || HashSet.has(visited, name)) continue;
+      visited = HashSet.add(visited, name);
+      const dir = HashMap.get(workspaces, name);
+      if (O.isNone(dir)) {
+        if (name === "@beep/repo-cli")
+          return yield* PackageScriptsPolicyError.make({ message: "CLI workspace is missing", cause: name });
+        continue;
+      }
+      patterns.push(`${path.relative(repoRoot, dir.value)}/src/**`);
+      const text = yield* fs.readFileString(path.join(dir.value, "package.json"));
+      const manifest = yield* S.decodeEffect(
+        S.fromJsonString(S.Struct({ dependencies: S.optionalKey(S.Record(S.String, S.String)) }))
+      )(text);
+      for (const dependency of R.keys(manifest.dependencies ?? {})) {
+        if (HashMap.has(workspaces, dependency)) pending.push(dependency);
+      }
+    }
+    const inputs = A.sort([...patterns, ...rootConfigs, "**/package.json", fingerprintPath], Order.String);
+    const sources = yield* fsUtils.globFiles(patterns, { cwd: repoRoot, ignore: ["**/node_modules/**"] });
+    const files = A.sort([...sources, ...rootConfigs], Order.String);
+    const digest = createHash("sha256");
+    for (const file of files) {
+      const bytes = yield* fs.readFile(path.join(repoRoot, file));
+      digest.update(file).update("\0").update(bytes).update("\0");
+    }
+    return PolicyToolsFingerprint.make({
+      schemaVersion: "policy-tools-fingerprint/v1",
+      inputs,
+      files,
+      digest: digest.digest("hex"),
+    });
+  },
+  Effect.mapError((cause) => PackageScriptsPolicyError.make({ message: "Cannot compute policy fingerprint", cause }))
+);
+
+const gateFlags = {
+  check: Flag.boolean("check").pipe(Flag.withDefault(false)),
+  write: Flag.boolean("write").pipe(Flag.withDefault(false)),
+};
+
+/**
+ * Checks or repairs the strict package scripts block.
+ * **Example** (Inspect the gate name)
+ * ```ts
+ * import { lintPackageScriptsCommand } from "@beep/repo-cli/test/PackageScripts"
+ * console.log(lintPackageScriptsCommand.name) // package-scripts
+ * ```
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export const lintPackageScriptsCommand = Command.make(
+  "package-scripts",
+  {
+    ...gateFlags,
+    json: Flag.boolean("json").pipe(Flag.withDefault(false)),
+  },
+  Effect.fn("lintPackageScripts")(function* ({ check, write, json }) {
+    if (check && write) return yield* failWithReportedExit("Choose --check or --write, not both.");
+    const root = yield* findRepoRoot();
+    const policy = yield* PackageScriptsPolicy.make(root);
+    const report = yield* write ? policy.write(root) : policy.check(root);
+    const wire = yield* S.encodeEffect(PackageScriptsReportFromWire)(report);
+    yield* Console.log(
+      json
+        ? yield* jsonStringifyPretty(wire)
+        : `package-scripts: ${report.manifests} manifests, ${HashMap.size(report.drift)} drifting, ${HashSet.size(report.written)} written`
+    );
+    if (!json)
+      for (const [manifest, rows] of report.drift)
+        for (const row of rows) yield* Console.log(`${manifest}: ${row.name}: ${row._tag}`);
+    if (HashMap.size(report.drift) > 0) return yield* failWithReportedExit("Package scripts policy drift.");
+  })
+).pipe(Command.withDescription("Check or repair canonical workspace scripts"));
+
+/**
+ * Fails on stale checker fingerprints or writes the current declaration.
+ * **Example** (Inspect the fingerprint gate name)
+ * ```ts
+ * import { lintPolicyFingerprintCommand } from "@beep/repo-cli/test/PackageScripts"
+ * console.log(lintPolicyFingerprintCommand.name) // policy-fingerprint
+ * ```
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export const lintPolicyFingerprintCommand = Command.make(
+  "policy-fingerprint",
+  gateFlags,
+  Effect.fn("lintPolicyFingerprint")(function* ({ check, write }) {
+    if (check && write) return yield* failWithReportedExit("Choose --check or --write, not both.");
+    const root = yield* findRepoRoot();
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const file = path.join(root, fingerprintPath);
+    const fingerprint = yield* policyToolsFingerprint(root);
+    const expected = `${yield* jsonStringifyPretty(fingerprint)}\n`;
+    if (write) {
+      yield* fs.writeFileString(file, expected);
+      yield* Console.log("policy-fingerprint: written");
+    } else {
+      if (!(yield* fs.exists(file)) || (yield* fs.readFileString(file)) !== expected)
+        return yield* failWithReportedExit(
+          "Policy fingerprint is stale; run bun run beep lint policy-fingerprint --write."
+        );
+      yield* Console.log("policy-fingerprint: current");
+    }
+  })
+).pipe(Command.withDescription("Check or generate checker implementation fingerprint"));
+
 const lintSubcommands = [
+  lintPackageScriptsCommand,
+  lintPolicyFingerprintCommand,
   lintCircularCommand,
   lintDeprecatedApisCommand,
   lintEcosystemPolarityCommand,
