@@ -49,7 +49,7 @@ can click-merge in the morning.
    verdicts. A packet cannot be `success` without this stage; missing
    capabilities or inconclusive evidence remain `partial`. The stage also
    attempts to refute N standing claims selected from the digest. Use
-   `gpt-6-astra` with `xhigh` for token-heavy verification; retain Luna
+   `gpt-6-astra` with `medium` for token-heavy verification; retain Luna
    for lightweight work, following root `AGENTS.md`.
 5. **Publisher (deterministic, local):** verify the handoff, preflight `gh`
    under least-privileged 1Password environment injection, write the packet

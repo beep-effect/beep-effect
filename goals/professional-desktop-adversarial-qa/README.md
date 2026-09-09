@@ -4,7 +4,7 @@ Lifecycle: active
 
 Campaign charter. Autonomous adversarial review-and-fix loop over the entire
 `apps/professional-desktop` frontend surface. Codex `gpt-6-astra` (effort
-`xhigh`) agents review with browser + screenshot evidence; Claude (session
+`medium`) agents review with browser + screenshot evidence; Claude (session
 lead) fixes every confirmed finding itself. Loop exits after **2 consecutive
 full rounds with zero unwaived findings**.
 
@@ -63,7 +63,7 @@ Plan of record: `~/.claude/plans/i-want-you-to-peaceful-aurora.md`.
 - Codex browser backend: the in-app browser is unavailable under `codex exec`;
   reviewers use `chrome:control-chrome` (Codex Chrome extension) in the user's
   Chrome, restricted to tabs they create. Invocation:
-  `codex exec --model gpt-6-astra -c 'model_reasoning_effort="xhigh"' "<prompt>"`.
+  `codex exec --model gpt-6-astra -c 'model_reasoning_effort="medium"' "<prompt>"`.
   Screenshots save fine from that sandbox.
 - Box QA folder: `beep-qa-professional-desktop-2026-07` (Box folder id
   399002097087), auto-created by the mirror-root resolver on first probe.

@@ -7,21 +7,22 @@ workflows in skills.
 
 ## Token-heavy Codex work
 
-Use `gpt-6-astra` with extra high reasoning (`xhigh`) for all token-heavy
+Use `gpt-6-astra` with `medium` reasoning by default for all token-heavy
 Codex work, including implementation, exploration, review, and distillation.
 Pin both the model and reasoning effort when launching that work:
 
-- Native subagents: `model: "gpt-6-astra"`, `reasoning_effort: "xhigh"`.
-- Codex CLI: `--model gpt-6-astra -c 'model_reasoning_effort="xhigh"'`.
-- Codex plugin/companion: `--model gpt-6-astra --effort xhigh`.
-- Proxy Workflow children: `model: "gpt-6-astra(xhigh)"`.
+- Native subagents: `model: "gpt-6-astra"`, `reasoning_effort: "medium"`.
+- Codex CLI: `--model gpt-6-astra -c 'model_reasoning_effort="medium"'`.
+- Codex plugin/companion: `--model gpt-6-astra --effort medium`.
+- Proxy Workflow children: `model: "gpt-6-astra(medium)"`.
 
 Preserve the configured lightweight and Grok web research routes for their
 intended work. Do not set `CLAUDE_CODE_SUBAGENT_MODEL` in proxy wrappers;
 it overrides explicit Workflow child models.
 
-This operator instruction (2026-09-08) supersedes earlier model and effort
-guidance for new token-heavy Codex work. Historical reports, captured user
+This operator instruction (2026-09-09) lowers the 2026-09-08 `xhigh` default
+to `medium` and supersedes earlier model and effort guidance for new
+token-heavy Codex work. Historical reports, captured user
 requests, completed-run provenance, and model-parsing fixtures retain the
 models and effort levels they actually recorded.
 
