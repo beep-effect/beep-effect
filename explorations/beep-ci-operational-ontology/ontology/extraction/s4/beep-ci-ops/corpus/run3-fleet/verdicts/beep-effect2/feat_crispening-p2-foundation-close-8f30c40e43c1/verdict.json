@@ -20,7 +20,7 @@
       "status": "not-run"
     }
   ],
-  "message": "Another Yeet full proof appears active at <fleet>/beep-effect2/.beep/yeet/quality-lock. Owner pid <redacted> started 2026-07-06T21:36:36.082Z.\n{\"schemaVersion\":\"yeet-proof-lock/v1\",\"branch\":\"feat/crispening-p2-foundation-close\",\"command\":\"bun run beep quality github-checks pre-push\",\"pid\":3,\"proofTier\":\"full\",\"startedAt\":\"2026-07-06T21:36:36.082Z\"}\n\nRun review-fix lanes or remove the stale lock after confirming no full proof is running.",
+  "message": "Another Yeet full proof appears active at <fleet>/beep-effect2/.beep/yeet/quality-lock. Owner pid <redacted> started 2026-07-06T21:36:36.082Z.\n{\"schemaVersion\":\"yeet-proof-lock/v1\",\"branch\":\"feat/crispening-p2-foundation-close\",\"command\":\"bun run beep quality github-checks pre-push\",\"pid\":null,\"proofTier\":\"full\",\"startedAt\":\"2026-07-06T21:36:36.082Z\"}\n\nRun review-fix lanes or remove the stale lock after confirming no full proof is running.",
   "mode": "verify",
   "outcome": "failure",
   "packetPaths": [],

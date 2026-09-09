@@ -3,12 +3,12 @@
     "schemaVersion": "codex-triage/v1",
     "repository": "kriegcloud/beep-effect",
     "findingsView": "repo-scoped, status=new",
-    "branch": "codex/security-findings-2026-09-08",
-    "expectedCount": 11,
-    "capturedCount": 11,
+    "branch": "codex/security-corpus-redaction",
+    "expectedCount": 12,
+    "capturedCount": 12,
     "capturedAt": "2026-09-08",
     "captureMethod": "signed-in-csv-export",
-    "note": "All eleven findings are validated, implemented, and published in PR #1026. codexStatus records capture-time state. Exact captured IDs are closed only after merge; final verification and closure evidence is recorded on PR #1026."
+    "note": "Eleven findings merged in PR #1026. CSF-012 is implemented for the operator-authorized follow-up PR; proof, publication, and exact-ID closure remain in progress. codexStatus records capture-time state."
   },
   "lanes": {
     "L1-permissions": {
@@ -42,6 +42,10 @@
     "L8-hook-loading": {
       "status": "implemented",
       "findings": ["CSF-011"]
+    },
+    "L9-corpus-redaction": {
+      "status": "implemented",
+      "findings": ["CSF-012"]
     }
   },
   "findings": [
@@ -365,6 +369,44 @@
       "ownerArea": "Graft hook installation trust",
       "verdict": "confirmed-vulnerable",
       "lane": "L8-hook-loading"
+    },
+    {
+      "id": "CSF-012",
+      "codexId": "e525f4ad4e5c81919f86da335e5db7c8",
+      "title": "Quoted JSON bypasses process-ID corpus redaction",
+      "severity": "Medium",
+      "codexStatus": "New",
+      "commit": "20ad99a87fccad63856f6fcb117d80fd270bf19f",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "The shared PID pattern missed quoted JSON keys and escaped whitespace in the original three generators. Both fleet pins contained twelve affected raw payloads. After PR #1034 merged, its fourth generator reproduced 28 quoted-PID failures and its organic pin contained eleven affected raw files."
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/etl_fleet_corpus.py",
+          "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/etl_run3_fleet_corpus.py",
+          "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/etl_run3_checkout_identity.py",
+          "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/test_run3_generators.py",
+          "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run2-fleet/",
+          "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3-fleet/",
+          "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3-checkout-identity/",
+          "goals/codex-security-findings-2026-09-08/research/scripts/resanitize-corpora.py",
+          "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/etl_run3b_fleet_corpus.py",
+          "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3b-fleet/",
+          "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3b-synthetic/"
+        ],
+        "verificationCommands": [
+          "uv run --offline --with pyyaml python -m unittest discover -s explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus -p 'test_run3*.py'",
+          "uv run --offline --with pyyaml python goals/codex-security-findings-2026-09-08/research/scripts/resanitize-corpora.py"
+        ],
+        "summary": "All four standalone generators preserve embedded JSON while redacting quoted and multiply escaped PID values. The staged repair sanitizes 35 saved raw files across five pins, preserves capture and population metadata, and retains the initial repair receipt with subsequent updates. All 35 tests and all five pin verifiers pass."
+      },
+      "ownerArea": "Public corpus process identity redaction",
+      "verdict": "confirmed-vulnerable",
+      "lane": "L9-corpus-redaction"
     }
   ]
 }
