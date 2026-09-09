@@ -313,7 +313,9 @@
     "js-yaml": "5.2.2",
     "minimatch": "10.2.5",
     "nanoid": "^3.3.18",
-    "onnxruntime-node@1.29.0>adm-zip": "npm:fflate@0.8.3",
+    "onnxruntime-node@1.29.0": {
+      "adm-zip": "npm:fflate@0.8.3"
+    },
     "pdfjs-dist": "catalog:",
     "postcss": "^8.5.23",
     "protobufjs": "^7.6.6",
