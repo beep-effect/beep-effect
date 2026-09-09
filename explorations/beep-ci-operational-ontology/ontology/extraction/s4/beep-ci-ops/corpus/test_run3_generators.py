@@ -54,6 +54,19 @@ class RedactionTests(unittest.TestCase):
             single = fleet.redact({key: 5678, "rapid": 42}, b"a" * 32, collections.Counter())
             self.assertNotIn(key, single)
             self.assertEqual(single["rapid"], 42)
+            # The same projection and residue checks as the other private variants.
+            fleet.scan_output_bytes([(f"{key}.json", fleet.encode_json(single)),
+                                      (f"{key}.properties", fleet.encode_properties_projection([single]))])
+            with self.assertRaises(SystemExit):
+                fleet.scan_output_bytes([(f"{key}-raw.json", fleet.encode_json({key: 5678, "rapid": 42}))])
+            # Serialized text: the value is wholly replaced, the JSON stays valid, the raw form is rejected.
+            serialized = json.dumps({key: 5678, "rapid": 42})
+            redacted = fleet.redact_string(serialized)
+            decoded = json.loads(redacted)
+            self.assertEqual(decoded["rapid"], 42)
+            self.assertNotEqual(decoded.get(key), 5678)
+            with self.assertRaises(SystemExit):
+                fleet.scan_output_bytes([(f"{key}-text.txt", serialized.encode())])
 
     def test_serialized_escaped_process_values_are_wholly_replaced(self):
         values = ('a"secret', 'secret\\', 'secret\\\\',
