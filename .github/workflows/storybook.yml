@@ -89,7 +89,15 @@ jobs:
 
       - name: Install Playwright Chromium
         if: steps.lane-gate.outputs.should_run == 'true'
-        run: bunx playwright install --with-deps chromium
+        shell: bash
+        run: |
+          set -euo pipefail
+          # --with-deps runs apt-get update, which the image's preinstalled Google Chrome apt
+          # source (google-chrome.sources) fails with "dl.google.com/linux/chrome-stable/deb
+          # ... Hash Sum mismatch" while Google republishes its index; Playwright ships its
+          # own Chromium, so the source is dropped first.
+          sudo rm -f /etc/apt/sources.list.d/google-chrome.sources /etc/apt/sources.list.d/google-chrome.list
+          bunx playwright install --with-deps chromium
 
       - name: Save Playwright Chromium cache
         if: steps.lane-gate.outputs.should_run == 'true' && github.event_name == 'push' && steps.playwright-cache-restore.outputs.cache-hit != 'true'
