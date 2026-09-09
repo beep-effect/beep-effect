@@ -290,7 +290,9 @@ class SyntheticReceiptTests(unittest.TestCase):
         script = fleet.REPO_ROOT / "goals/codex-security-findings-2026-09-08/research/scripts/resanitize-corpora.py"
         spec = importlib.util.spec_from_file_location("repair_corpora", script)
         repair = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(repair)
+        # Goal packet snapshots reject hidden-directory and binary residue.
+        with patch.object(sys, "dont_write_bytecode", True):
+            spec.loader.exec_module(repair)
         cache = Path.home() / ".cache/beep"
         cache.mkdir(parents=True, exist_ok=True)
         with tempfile.TemporaryDirectory(dir=cache) as name:

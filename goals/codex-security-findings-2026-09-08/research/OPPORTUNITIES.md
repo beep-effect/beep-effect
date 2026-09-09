@@ -98,3 +98,8 @@
   introducing another copy of the same vulnerable redactor and 11 affected raw
   files. Refresh GitHub mergeability immediately before reporting it cleared,
   and include newly merged copies when validating a shared security boundary.
+
+- The committed-history regression imported the packet repair script and left
+  Python bytecode inside the packet. The canonical refresh then rejected the
+  `__pycache__` path. Disable bytecode writing for this test import so executing
+  a repair regression leaves the packet eligible for its normal safety scan.
