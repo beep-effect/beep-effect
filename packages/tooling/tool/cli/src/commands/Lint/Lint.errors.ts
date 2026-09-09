@@ -175,3 +175,47 @@ export class SchemaFirstInventoryReadError extends S.TaggedError<SchemaFirstInve
     SchemaFirstInventoryReadError.new(messageWithCause(message, cause))
   );
 }
+
+/**
+ * Failure raised when a `tsconfig.check.json` overlay cannot be read or parsed
+ * as a JSONC object.
+ *
+ * **Example** (Create overlay read error from cause)
+ *
+ * ```ts
+ * import { TsconfigOverlayReadError } from "@beep/repo-cli/commands/Lint/Lint.errors"
+ *
+ * const error = TsconfigOverlayReadError.new(
+ *   new Error("ENOENT"),
+ *   "Failed to read packages/drivers/example/tsconfig.check.json."
+ * )
+ * console.log(error.message)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class TsconfigOverlayReadError extends S.TaggedError<TsconfigOverlayReadError>($I`TsconfigOverlayReadError`)(
+  "TsconfigOverlayReadError",
+  {
+    message: S.String,
+  },
+  $I.annoteError<TsconfigOverlayReadError>("TsconfigOverlayReadError", {
+    description: "Raised when a tsconfig.check.json overlay cannot be read or parsed as a JSONC object.",
+  })
+) {
+  /**
+   * Construct an overlay read error from an underlying cause and an action message.
+   *
+   * @param cause - Underlying filesystem, JSONC, or schema failure to render into the message.
+   * @param message - Action that failed, such as `Failed to read <overlay path>.`.
+   * @returns The tagged error carrying the action message with the rendered cause appended.
+   * @category constructors
+   */
+  static readonly new = (cause: unknown, message: string): TsconfigOverlayReadError =>
+    TsconfigOverlayReadError.make({ message: messageWithCause(message, cause) });
+
+  static readonly mapError = Err.mapCauseError<TsconfigOverlayReadError, [message: string]>((cause, message) =>
+    TsconfigOverlayReadError.new(cause, message)
+  );
+}

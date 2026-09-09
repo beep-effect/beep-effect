@@ -1987,6 +1987,16 @@ interface LocalEffectPluginResolution {
   readonly plugin: O.Option<Readonly<Record<string, unknown>>>;
 }
 
+// A sibling `extends` (`./tsconfig.json`) hands the family profile down to an
+// overlay such as tsconfig.check.json, so only the chain root has to restate
+// it. `beep lint tsconfig-overlay` forbids `plugins` in overlays for that reason.
+const extendsSiblingTsconfig = (config: unknown): boolean =>
+  pipe(
+    findTsconfigExtends(config),
+    O.map(A.some((extended) => Str.startsWith("./")(extended) && isTsconfigFileName(Str.slice(2)(extended)))),
+    O.getOrElse(thunkFalse)
+  );
+
 const localEffectPluginResolution = (file: string, config: unknown): LocalEffectPluginResolution => {
   const localPluginsProperty = pipe(
     unknownRecordProperty(config, "compilerOptions"),
@@ -1994,9 +2004,10 @@ const localEffectPluginResolution = (file: string, config: unknown): LocalEffect
   );
   if (O.isNone(localPluginsProperty)) {
     return {
-      diagnostics: isDirectEffectDrizzleTsconfig(file)
-        ? A.of(`Effect Drizzle tsconfig ${file} is missing its explicit @effect/language-service profile`)
-        : A.empty(),
+      diagnostics:
+        isDirectEffectDrizzleTsconfig(file) && !extendsSiblingTsconfig(config)
+          ? A.of(`Effect Drizzle tsconfig ${file} is missing its explicit @effect/language-service profile`)
+          : A.empty(),
       plugin: O.none(),
     };
   }
