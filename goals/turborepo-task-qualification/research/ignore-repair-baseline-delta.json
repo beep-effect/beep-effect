@@ -27,7 +27,9 @@
         "env": [],
         "passThroughEnv": [],
         "outputs": [],
-        "dependsOn": ["^lint"],
+        "dependsOn": [
+          "^lint"
+        ],
         "persistent": false,
         "interactive": false,
         "interruptible": false,
@@ -55,7 +57,9 @@
         "env": [],
         "passThroughEnv": [],
         "outputs": [],
-        "dependsOn": ["^lint"],
+        "dependsOn": [
+          "^lint"
+        ],
         "persistent": false,
         "interactive": false,
         "interruptible": false,
@@ -83,7 +87,9 @@
         "env": [],
         "passThroughEnv": [],
         "outputs": [],
-        "dependsOn": ["^lint"],
+        "dependsOn": [
+          "^lint"
+        ],
         "persistent": false,
         "interactive": false,
         "interruptible": false,
@@ -107,7 +113,9 @@
         "env": [],
         "passThroughEnv": [],
         "outputs": [],
-        "dependsOn": ["^lint"],
+        "dependsOn": [
+          "^lint"
+        ],
         "persistent": false,
         "interactive": false,
         "interruptible": false,

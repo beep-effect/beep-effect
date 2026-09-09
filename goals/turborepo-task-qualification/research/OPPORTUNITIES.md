@@ -384,3 +384,10 @@ does not accept a timeout option, and recursive generators need explicit
 return channels. The preflight repairs use the installed Effect APIs and
 add capture-boundary tests. Checking the package before expanding the
 executor would have caught these integration errors earlier.
+
+The commit hook's Biome write step reformatted 18 qualification JSON files,
+including receipts referenced by SHA-256. The intended hook exclusion did
+not protect them. Restore the pre-hook blobs using their recorded hashes and
+existing Git objects, and disable formatting only for this packet's JSON
+evidence and its two governed registry files. Verify byte preservation under
+the real formatter and hook before recording the follow-up commit.

@@ -8,7 +8,10 @@
       "sha256": "f1dc3434710ee3116a576216e0ae2db8b576f3804b6dd04dccc997fe0cd5c210"
     }
   },
-  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint"
+  ],
   "profile": "local-linux-x64-bun1.4.2",
   "epoch": "qualification-v2"
 }

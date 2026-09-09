@@ -52,1486 +52,4572 @@
     "configuration": 1
   },
   "changed": {
-    "@beep/acp#audit": ["commandDigest"],
-    "@beep/acp#build": ["commandDigest"],
-    "@beep/acp#check": ["commandDigest"],
-    "@beep/acp#codegen": ["commandDigest"],
-    "@beep/acp#coverage": ["commandDigest"],
-    "@beep/acp#docgen": ["command", "commandDigest"],
-    "@beep/acp#lint": ["commandDigest"],
-    "@beep/acp#lint:fix": ["commandDigest"],
-    "@beep/acp#package-test-typecheck": ["commandDigest"],
-    "@beep/acp#test": ["commandDigest"],
-    "@beep/acp#test:integration": ["commandDigest"],
-    "@beep/acp#test:integration:parallel": ["commandDigest"],
-    "@beep/acp#test:property": ["commandDigest"],
-    "@beep/agents-client#audit": ["commandDigest"],
-    "@beep/agents-client#build": ["commandDigest"],
-    "@beep/agents-client#check": ["commandDigest"],
-    "@beep/agents-client#coverage": ["commandDigest"],
-    "@beep/agents-client#docgen": ["command", "commandDigest"],
-    "@beep/agents-client#lint": ["commandDigest"],
-    "@beep/agents-client#lint:fix": ["commandDigest"],
-    "@beep/agents-client#package-test-typecheck": ["commandDigest"],
-    "@beep/agents-client#test": ["commandDigest"],
-    "@beep/agents-client#test:integration": ["commandDigest"],
-    "@beep/agents-client#test:property": ["commandDigest"],
-    "@beep/agents-domain#audit": ["commandDigest"],
-    "@beep/agents-domain#build": ["commandDigest"],
-    "@beep/agents-domain#check": ["commandDigest"],
-    "@beep/agents-domain#coverage": ["commandDigest"],
-    "@beep/agents-domain#docgen": ["command", "commandDigest"],
-    "@beep/agents-domain#lint": ["commandDigest"],
-    "@beep/agents-domain#lint:fix": ["commandDigest"],
-    "@beep/agents-domain#package-test-typecheck": ["commandDigest"],
-    "@beep/agents-domain#test": ["commandDigest"],
-    "@beep/agents-domain#test:property": ["commandDigest"],
-    "@beep/agents-server#audit": ["commandDigest"],
-    "@beep/agents-server#build": ["commandDigest"],
-    "@beep/agents-server#check": ["commandDigest"],
-    "@beep/agents-server#coverage": ["commandDigest"],
-    "@beep/agents-server#docgen": ["command", "commandDigest"],
-    "@beep/agents-server#lint": ["commandDigest"],
-    "@beep/agents-server#lint:fix": ["commandDigest"],
-    "@beep/agents-server#package-test-typecheck": ["commandDigest"],
-    "@beep/agents-server#test": ["commandDigest"],
-    "@beep/agents-server#test:integration": ["commandDigest"],
-    "@beep/agents-server#test:property": ["commandDigest"],
-    "@beep/agents-tables#audit": ["commandDigest"],
-    "@beep/agents-tables#build": ["commandDigest"],
-    "@beep/agents-tables#check": ["commandDigest"],
-    "@beep/agents-tables#coverage": ["commandDigest"],
-    "@beep/agents-tables#docgen": ["command", "commandDigest"],
-    "@beep/agents-tables#lint": ["commandDigest"],
-    "@beep/agents-tables#lint:fix": ["commandDigest"],
-    "@beep/agents-tables#package-test-typecheck": ["commandDigest"],
-    "@beep/agents-tables#test": ["commandDigest"],
-    "@beep/agents-tables#test:integration": ["commandDigest"],
-    "@beep/agents-use-cases#audit": ["commandDigest"],
-    "@beep/agents-use-cases#build": ["commandDigest"],
-    "@beep/agents-use-cases#check": ["commandDigest"],
-    "@beep/agents-use-cases#coverage": ["commandDigest"],
-    "@beep/agents-use-cases#docgen": ["command", "commandDigest"],
-    "@beep/agents-use-cases#lint": ["commandDigest"],
-    "@beep/agents-use-cases#lint:fix": ["commandDigest"],
-    "@beep/agents-use-cases#package-test-typecheck": ["commandDigest"],
-    "@beep/agents-use-cases#test": ["commandDigest"],
-    "@beep/agents-use-cases#test:property": ["commandDigest"],
-    "@beep/ai-provider-cli#audit": ["commandDigest"],
-    "@beep/ai-provider-cli#build": ["commandDigest"],
-    "@beep/ai-provider-cli#check": ["commandDigest"],
-    "@beep/ai-provider-cli#coverage": ["commandDigest"],
-    "@beep/ai-provider-cli#docgen": ["command", "commandDigest"],
-    "@beep/ai-provider-cli#lint": ["commandDigest"],
-    "@beep/ai-provider-cli#lint:fix": ["commandDigest"],
-    "@beep/ai-provider-cli#package-test-typecheck": ["commandDigest"],
-    "@beep/ai-provider-cli#test": ["commandDigest"],
-    "@beep/ai-provider-cli#test:integration": ["commandDigest"],
-    "@beep/ai-provider-cli#test:property": ["commandDigest"],
-    "@beep/ai-sync#audit": ["commandDigest"],
-    "@beep/ai-sync#build": ["commandDigest"],
-    "@beep/ai-sync#check": ["commandDigest"],
-    "@beep/ai-sync#coverage": ["commandDigest"],
-    "@beep/ai-sync#docgen": ["command", "commandDigest"],
-    "@beep/ai-sync#lint": ["commandDigest"],
-    "@beep/ai-sync#lint:fix": ["commandDigest"],
-    "@beep/ai-sync#package-test-typecheck": ["commandDigest"],
-    "@beep/ai-sync#test": ["commandDigest"],
-    "@beep/ai-sync#test:integration": ["commandDigest"],
-    "@beep/ai-sync#test:property": ["commandDigest"],
-    "@beep/anthropic#audit": ["commandDigest"],
-    "@beep/anthropic#build": ["commandDigest"],
-    "@beep/anthropic#check": ["commandDigest"],
-    "@beep/anthropic#coverage": ["commandDigest"],
-    "@beep/anthropic#docgen": ["command", "commandDigest"],
-    "@beep/anthropic#lint": ["commandDigest"],
-    "@beep/anthropic#lint:fix": ["commandDigest"],
-    "@beep/anthropic#package-test-typecheck": ["commandDigest"],
-    "@beep/anthropic#test": ["commandDigest"],
-    "@beep/anthropic#test:property": ["commandDigest"],
-    "@beep/api-docs#audit": ["commandDigest"],
-    "@beep/api-docs#build": ["commandDigest"],
-    "@beep/api-docs#check": ["commandDigest"],
-    "@beep/api-docs#dev": ["commandDigest"],
-    "@beep/api-docs#lint": ["commandDigest"],
-    "@beep/api-docs#lint:fix": ["commandDigest"],
-    "@beep/api-docs#package-test-typecheck": ["commandDigest"],
-    "@beep/api-docs#test": ["commandDigest"],
-    "@beep/api-transport#audit": ["commandDigest"],
-    "@beep/api-transport#build": ["commandDigest"],
-    "@beep/api-transport#check": ["commandDigest"],
-    "@beep/api-transport#coverage": ["commandDigest"],
-    "@beep/api-transport#docgen": ["command", "commandDigest"],
-    "@beep/api-transport#lint": ["commandDigest"],
-    "@beep/api-transport#lint:fix": ["commandDigest"],
-    "@beep/api-transport#package-test-typecheck": ["commandDigest"],
-    "@beep/api-transport#test": ["commandDigest"],
-    "@beep/api-transport#test:integration": ["commandDigest"],
-    "@beep/api-transport#test:property": ["commandDigest"],
-    "@beep/architecture-lab-client#audit": ["commandDigest"],
-    "@beep/architecture-lab-client#build": ["commandDigest"],
-    "@beep/architecture-lab-client#check": ["commandDigest"],
-    "@beep/architecture-lab-client#coverage": ["commandDigest"],
-    "@beep/architecture-lab-client#docgen": ["command", "commandDigest"],
-    "@beep/architecture-lab-client#lint": ["commandDigest"],
-    "@beep/architecture-lab-client#lint:fix": ["commandDigest"],
-    "@beep/architecture-lab-client#package-test-typecheck": ["commandDigest"],
-    "@beep/architecture-lab-client#test": ["commandDigest"],
-    "@beep/architecture-lab-client#test:integration": ["commandDigest"],
-    "@beep/architecture-lab-config#audit": ["commandDigest"],
-    "@beep/architecture-lab-config#build": ["commandDigest"],
-    "@beep/architecture-lab-config#check": ["commandDigest"],
-    "@beep/architecture-lab-config#coverage": ["commandDigest"],
-    "@beep/architecture-lab-config#docgen": ["command", "commandDigest"],
-    "@beep/architecture-lab-config#lint": ["commandDigest"],
-    "@beep/architecture-lab-config#lint:fix": ["commandDigest"],
-    "@beep/architecture-lab-config#package-test-typecheck": ["commandDigest"],
-    "@beep/architecture-lab-config#test": ["commandDigest"],
-    "@beep/architecture-lab-config#test:integration": ["commandDigest"],
-    "@beep/architecture-lab-config#test:property": ["commandDigest"],
-    "@beep/architecture-lab-domain#audit": ["commandDigest"],
-    "@beep/architecture-lab-domain#build": ["commandDigest"],
-    "@beep/architecture-lab-domain#check": ["commandDigest"],
-    "@beep/architecture-lab-domain#coverage": ["commandDigest"],
-    "@beep/architecture-lab-domain#docgen": ["command", "commandDigest"],
-    "@beep/architecture-lab-domain#lint": ["commandDigest"],
-    "@beep/architecture-lab-domain#lint:fix": ["commandDigest"],
-    "@beep/architecture-lab-domain#package-test-typecheck": ["commandDigest"],
-    "@beep/architecture-lab-domain#test": ["commandDigest"],
-    "@beep/architecture-lab-domain#test:integration": ["commandDigest"],
-    "@beep/architecture-lab-domain#test:property": ["commandDigest"],
-    "@beep/architecture-lab-proof#audit": ["commandDigest"],
-    "@beep/architecture-lab-proof#build": ["commandDigest"],
-    "@beep/architecture-lab-proof#check": ["commandDigest"],
-    "@beep/architecture-lab-proof#coverage": ["commandDigest"],
-    "@beep/architecture-lab-proof#docgen": ["command", "commandDigest"],
-    "@beep/architecture-lab-proof#lint": ["commandDigest"],
-    "@beep/architecture-lab-proof#lint:fix": ["commandDigest"],
-    "@beep/architecture-lab-proof#package-test-typecheck": ["commandDigest"],
-    "@beep/architecture-lab-proof#test": ["commandDigest"],
-    "@beep/architecture-lab-proof#test:integration": ["commandDigest"],
-    "@beep/architecture-lab-proof#test:property": ["commandDigest"],
-    "@beep/architecture-lab-server#audit": ["commandDigest"],
-    "@beep/architecture-lab-server#build": ["commandDigest"],
-    "@beep/architecture-lab-server#check": ["commandDigest"],
-    "@beep/architecture-lab-server#coverage": ["commandDigest"],
-    "@beep/architecture-lab-server#docgen": ["command", "commandDigest"],
-    "@beep/architecture-lab-server#lint": ["commandDigest"],
-    "@beep/architecture-lab-server#lint:fix": ["commandDigest"],
-    "@beep/architecture-lab-server#package-test-typecheck": ["commandDigest"],
-    "@beep/architecture-lab-server#test": ["commandDigest"],
-    "@beep/architecture-lab-server#test:integration": ["commandDigest"],
+    "@beep/acp#audit": [
+      "commandDigest"
+    ],
+    "@beep/acp#build": [
+      "commandDigest"
+    ],
+    "@beep/acp#check": [
+      "commandDigest"
+    ],
+    "@beep/acp#codegen": [
+      "commandDigest"
+    ],
+    "@beep/acp#coverage": [
+      "commandDigest"
+    ],
+    "@beep/acp#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/acp#lint": [
+      "commandDigest"
+    ],
+    "@beep/acp#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/acp#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/acp#test": [
+      "commandDigest"
+    ],
+    "@beep/acp#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/acp#test:integration:parallel": [
+      "commandDigest"
+    ],
+    "@beep/acp#test:property": [
+      "commandDigest"
+    ],
+    "@beep/agents-client#audit": [
+      "commandDigest"
+    ],
+    "@beep/agents-client#build": [
+      "commandDigest"
+    ],
+    "@beep/agents-client#check": [
+      "commandDigest"
+    ],
+    "@beep/agents-client#coverage": [
+      "commandDigest"
+    ],
+    "@beep/agents-client#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/agents-client#lint": [
+      "commandDigest"
+    ],
+    "@beep/agents-client#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/agents-client#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/agents-client#test": [
+      "commandDigest"
+    ],
+    "@beep/agents-client#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/agents-client#test:property": [
+      "commandDigest"
+    ],
+    "@beep/agents-domain#audit": [
+      "commandDigest"
+    ],
+    "@beep/agents-domain#build": [
+      "commandDigest"
+    ],
+    "@beep/agents-domain#check": [
+      "commandDigest"
+    ],
+    "@beep/agents-domain#coverage": [
+      "commandDigest"
+    ],
+    "@beep/agents-domain#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/agents-domain#lint": [
+      "commandDigest"
+    ],
+    "@beep/agents-domain#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/agents-domain#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/agents-domain#test": [
+      "commandDigest"
+    ],
+    "@beep/agents-domain#test:property": [
+      "commandDigest"
+    ],
+    "@beep/agents-server#audit": [
+      "commandDigest"
+    ],
+    "@beep/agents-server#build": [
+      "commandDigest"
+    ],
+    "@beep/agents-server#check": [
+      "commandDigest"
+    ],
+    "@beep/agents-server#coverage": [
+      "commandDigest"
+    ],
+    "@beep/agents-server#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/agents-server#lint": [
+      "commandDigest"
+    ],
+    "@beep/agents-server#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/agents-server#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/agents-server#test": [
+      "commandDigest"
+    ],
+    "@beep/agents-server#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/agents-server#test:property": [
+      "commandDigest"
+    ],
+    "@beep/agents-tables#audit": [
+      "commandDigest"
+    ],
+    "@beep/agents-tables#build": [
+      "commandDigest"
+    ],
+    "@beep/agents-tables#check": [
+      "commandDigest"
+    ],
+    "@beep/agents-tables#coverage": [
+      "commandDigest"
+    ],
+    "@beep/agents-tables#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/agents-tables#lint": [
+      "commandDigest"
+    ],
+    "@beep/agents-tables#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/agents-tables#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/agents-tables#test": [
+      "commandDigest"
+    ],
+    "@beep/agents-tables#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/agents-use-cases#audit": [
+      "commandDigest"
+    ],
+    "@beep/agents-use-cases#build": [
+      "commandDigest"
+    ],
+    "@beep/agents-use-cases#check": [
+      "commandDigest"
+    ],
+    "@beep/agents-use-cases#coverage": [
+      "commandDigest"
+    ],
+    "@beep/agents-use-cases#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/agents-use-cases#lint": [
+      "commandDigest"
+    ],
+    "@beep/agents-use-cases#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/agents-use-cases#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/agents-use-cases#test": [
+      "commandDigest"
+    ],
+    "@beep/agents-use-cases#test:property": [
+      "commandDigest"
+    ],
+    "@beep/ai-provider-cli#audit": [
+      "commandDigest"
+    ],
+    "@beep/ai-provider-cli#build": [
+      "commandDigest"
+    ],
+    "@beep/ai-provider-cli#check": [
+      "commandDigest"
+    ],
+    "@beep/ai-provider-cli#coverage": [
+      "commandDigest"
+    ],
+    "@beep/ai-provider-cli#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/ai-provider-cli#lint": [
+      "commandDigest"
+    ],
+    "@beep/ai-provider-cli#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/ai-provider-cli#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/ai-provider-cli#test": [
+      "commandDigest"
+    ],
+    "@beep/ai-provider-cli#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/ai-provider-cli#test:property": [
+      "commandDigest"
+    ],
+    "@beep/ai-sync#audit": [
+      "commandDigest"
+    ],
+    "@beep/ai-sync#build": [
+      "commandDigest"
+    ],
+    "@beep/ai-sync#check": [
+      "commandDigest"
+    ],
+    "@beep/ai-sync#coverage": [
+      "commandDigest"
+    ],
+    "@beep/ai-sync#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/ai-sync#lint": [
+      "commandDigest"
+    ],
+    "@beep/ai-sync#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/ai-sync#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/ai-sync#test": [
+      "commandDigest"
+    ],
+    "@beep/ai-sync#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/ai-sync#test:property": [
+      "commandDigest"
+    ],
+    "@beep/anthropic#audit": [
+      "commandDigest"
+    ],
+    "@beep/anthropic#build": [
+      "commandDigest"
+    ],
+    "@beep/anthropic#check": [
+      "commandDigest"
+    ],
+    "@beep/anthropic#coverage": [
+      "commandDigest"
+    ],
+    "@beep/anthropic#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/anthropic#lint": [
+      "commandDigest"
+    ],
+    "@beep/anthropic#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/anthropic#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/anthropic#test": [
+      "commandDigest"
+    ],
+    "@beep/anthropic#test:property": [
+      "commandDigest"
+    ],
+    "@beep/api-docs#audit": [
+      "commandDigest"
+    ],
+    "@beep/api-docs#build": [
+      "commandDigest"
+    ],
+    "@beep/api-docs#check": [
+      "commandDigest"
+    ],
+    "@beep/api-docs#dev": [
+      "commandDigest"
+    ],
+    "@beep/api-docs#lint": [
+      "commandDigest"
+    ],
+    "@beep/api-docs#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/api-docs#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/api-docs#test": [
+      "commandDigest"
+    ],
+    "@beep/api-transport#audit": [
+      "commandDigest"
+    ],
+    "@beep/api-transport#build": [
+      "commandDigest"
+    ],
+    "@beep/api-transport#check": [
+      "commandDigest"
+    ],
+    "@beep/api-transport#coverage": [
+      "commandDigest"
+    ],
+    "@beep/api-transport#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/api-transport#lint": [
+      "commandDigest"
+    ],
+    "@beep/api-transport#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/api-transport#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/api-transport#test": [
+      "commandDigest"
+    ],
+    "@beep/api-transport#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/api-transport#test:property": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-client#audit": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-client#build": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-client#check": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-client#coverage": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-client#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-client#lint": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-client#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-client#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-client#test": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-client#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-config#audit": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-config#build": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-config#check": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-config#coverage": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-config#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-config#lint": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-config#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-config#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-config#test": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-config#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-config#test:property": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-domain#audit": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-domain#build": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-domain#check": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-domain#coverage": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-domain#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-domain#lint": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-domain#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-domain#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-domain#test": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-domain#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-domain#test:property": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-proof#audit": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-proof#build": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-proof#check": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-proof#coverage": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-proof#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-proof#lint": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-proof#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-proof#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-proof#test": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-proof#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-proof#test:property": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-server#audit": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-server#build": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-server#check": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-server#coverage": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-server#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-server#lint": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-server#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-server#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-server#test": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-server#test:integration": [
+      "commandDigest"
+    ],
     "@beep/architecture-lab-server#test:integration:parallel": [
       "commandDigest"
     ],
-    "@beep/architecture-lab-server#test:property": ["commandDigest"],
-    "@beep/architecture-lab-tables#audit": ["commandDigest"],
-    "@beep/architecture-lab-tables#build": ["commandDigest"],
-    "@beep/architecture-lab-tables#check": ["commandDigest"],
-    "@beep/architecture-lab-tables#coverage": ["commandDigest"],
-    "@beep/architecture-lab-tables#docgen": ["command", "commandDigest"],
-    "@beep/architecture-lab-tables#lint": ["commandDigest"],
-    "@beep/architecture-lab-tables#lint:fix": ["commandDigest"],
-    "@beep/architecture-lab-tables#package-test-typecheck": ["commandDigest"],
-    "@beep/architecture-lab-tables#test": ["commandDigest"],
-    "@beep/architecture-lab-tables#test:integration": ["commandDigest"],
-    "@beep/architecture-lab-tables#test:property": ["commandDigest"],
-    "@beep/architecture-lab-ui#audit": ["commandDigest"],
-    "@beep/architecture-lab-ui#build": ["commandDigest"],
-    "@beep/architecture-lab-ui#check": ["commandDigest"],
-    "@beep/architecture-lab-ui#coverage": ["commandDigest"],
-    "@beep/architecture-lab-ui#docgen": ["command", "commandDigest"],
-    "@beep/architecture-lab-ui#lint": ["commandDigest"],
-    "@beep/architecture-lab-ui#lint:fix": ["commandDigest"],
-    "@beep/architecture-lab-ui#package-test-typecheck": ["commandDigest"],
-    "@beep/architecture-lab-ui#test": ["commandDigest"],
-    "@beep/architecture-lab-ui#test:integration": ["commandDigest"],
-    "@beep/architecture-lab-ui#test:property": ["commandDigest"],
-    "@beep/architecture-lab-use-cases#audit": ["commandDigest"],
-    "@beep/architecture-lab-use-cases#build": ["commandDigest"],
-    "@beep/architecture-lab-use-cases#check": ["commandDigest"],
-    "@beep/architecture-lab-use-cases#coverage": ["commandDigest"],
-    "@beep/architecture-lab-use-cases#docgen": ["command", "commandDigest"],
-    "@beep/architecture-lab-use-cases#lint": ["commandDigest"],
-    "@beep/architecture-lab-use-cases#lint:fix": ["commandDigest"],
+    "@beep/architecture-lab-server#test:property": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-tables#audit": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-tables#build": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-tables#check": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-tables#coverage": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-tables#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-tables#lint": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-tables#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-tables#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-tables#test": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-tables#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-tables#test:property": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-ui#audit": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-ui#build": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-ui#check": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-ui#coverage": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-ui#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-ui#lint": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-ui#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-ui#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-ui#test": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-ui#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-ui#test:property": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-use-cases#audit": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-use-cases#build": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-use-cases#check": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-use-cases#coverage": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-use-cases#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-use-cases#lint": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-use-cases#lint:fix": [
+      "commandDigest"
+    ],
     "@beep/architecture-lab-use-cases#package-test-typecheck": [
       "commandDigest"
     ],
-    "@beep/architecture-lab-use-cases#test": ["commandDigest"],
-    "@beep/architecture-lab-use-cases#test:integration": ["commandDigest"],
-    "@beep/architecture-lab-use-cases#test:property": ["commandDigest"],
-    "@beep/box#audit": ["commandDigest"],
-    "@beep/box#build": ["commandDigest"],
-    "@beep/box#check": ["commandDigest"],
-    "@beep/box#codegen": ["commandDigest"],
-    "@beep/box#coverage": ["commandDigest"],
-    "@beep/box#docgen": ["command", "commandDigest"],
-    "@beep/box#lint": ["commandDigest"],
-    "@beep/box#lint:fix": ["commandDigest"],
-    "@beep/box#package-test-typecheck": ["commandDigest"],
-    "@beep/box#test": ["commandDigest"],
-    "@beep/box#test:integration": ["commandDigest"],
-    "@beep/box#test:integration:parallel": ["commandDigest"],
-    "@beep/box#test:property": ["commandDigest"],
-    "@beep/box-provisioning#audit": ["commandDigest"],
-    "@beep/box-provisioning#build": ["commandDigest"],
-    "@beep/box-provisioning#check": ["commandDigest"],
-    "@beep/box-provisioning#coverage": ["commandDigest"],
-    "@beep/box-provisioning#docgen": ["commandDigest"],
-    "@beep/box-provisioning#lint": ["commandDigest"],
-    "@beep/box-provisioning#lint:fix": ["commandDigest"],
-    "@beep/box-provisioning#package-test-typecheck": ["commandDigest"],
-    "@beep/box-provisioning#test": ["commandDigest"],
-    "@beep/box-provisioning#test:integration": ["commandDigest"],
-    "@beep/brand#audit": ["commandDigest"],
-    "@beep/brand#build": ["commandDigest"],
-    "@beep/brand#check": ["commandDigest"],
-    "@beep/brand#coverage": ["commandDigest"],
-    "@beep/brand#docgen": ["command", "commandDigest"],
-    "@beep/brand#lint": ["commandDigest"],
-    "@beep/brand#lint:fix": ["commandDigest"],
-    "@beep/brand#package-test-typecheck": ["commandDigest"],
-    "@beep/brand#test": ["commandDigest"],
-    "@beep/brand#test:integration": ["commandDigest"],
-    "@beep/chalk#audit": ["commandDigest"],
-    "@beep/chalk#build": ["commandDigest"],
-    "@beep/chalk#check": ["commandDigest"],
-    "@beep/chalk#coverage": ["commandDigest"],
-    "@beep/chalk#docgen": ["command", "commandDigest"],
-    "@beep/chalk#lint": ["commandDigest"],
-    "@beep/chalk#lint:fix": ["commandDigest"],
-    "@beep/chalk#package-test-typecheck": ["commandDigest"],
-    "@beep/chalk#test": ["commandDigest"],
-    "@beep/chalk#test:property": ["commandDigest"],
-    "@beep/ciops#audit": ["commandDigest"],
-    "@beep/ciops#build": ["commandDigest"],
-    "@beep/ciops#check": ["commandDigest"],
-    "@beep/ciops#dev": ["commandDigest"],
-    "@beep/ciops#lint": ["commandDigest"],
-    "@beep/ciops#lint:fix": ["commandDigest"],
-    "@beep/ciops#package-test-typecheck": ["commandDigest"],
-    "@beep/ciops#test": ["commandDigest"],
-    "@beep/codegen-kit#audit": ["commandDigest"],
-    "@beep/codegen-kit#build": ["commandDigest"],
-    "@beep/codegen-kit#check": ["commandDigest"],
-    "@beep/codegen-kit#coverage": ["commandDigest"],
-    "@beep/codegen-kit#docgen": ["command", "commandDigest"],
-    "@beep/codegen-kit#lint": ["commandDigest"],
-    "@beep/codegen-kit#lint:fix": ["commandDigest"],
-    "@beep/codegen-kit#package-test-typecheck": ["commandDigest"],
-    "@beep/codegen-kit#test": ["commandDigest"],
-    "@beep/codegen-kit#test:integration": ["commandDigest"],
-    "@beep/colors#audit": ["commandDigest"],
-    "@beep/colors#build": ["commandDigest"],
-    "@beep/colors#check": ["commandDigest"],
-    "@beep/colors#coverage": ["commandDigest"],
-    "@beep/colors#docgen": ["command", "commandDigest"],
-    "@beep/colors#lint": ["commandDigest"],
-    "@beep/colors#lint:fix": ["commandDigest"],
-    "@beep/colors#package-test-typecheck": ["commandDigest"],
-    "@beep/colors#test": ["commandDigest"],
-    "@beep/colors#test:property": ["commandDigest"],
-    "@beep/cosmos#audit": ["commandDigest"],
-    "@beep/cosmos#build": ["commandDigest"],
-    "@beep/cosmos#check": ["commandDigest"],
-    "@beep/cosmos#coverage": ["commandDigest"],
-    "@beep/cosmos#docgen": ["command", "commandDigest"],
-    "@beep/cosmos#lint": ["commandDigest"],
-    "@beep/cosmos#lint:fix": ["commandDigest"],
-    "@beep/cosmos#package-test-typecheck": ["commandDigest"],
-    "@beep/cosmos#test": ["commandDigest"],
-    "@beep/cosmos#test:property": ["commandDigest"],
-    "@beep/data#audit": ["commandDigest"],
-    "@beep/data#build": ["commandDigest"],
-    "@beep/data#check": ["commandDigest"],
-    "@beep/data#coverage": ["commandDigest"],
-    "@beep/data#docgen": ["command", "commandDigest"],
-    "@beep/data#lint": ["commandDigest"],
-    "@beep/data#lint:fix": ["commandDigest"],
-    "@beep/data#package-test-typecheck": ["commandDigest"],
-    "@beep/data#test": ["commandDigest"],
-    "@beep/db-admin#audit": ["commandDigest"],
-    "@beep/db-admin#build": ["commandDigest"],
-    "@beep/db-admin#check": ["commandDigest"],
-    "@beep/db-admin#coverage": ["commandDigest"],
-    "@beep/db-admin#docgen": ["command", "commandDigest"],
-    "@beep/db-admin#lint": ["commandDigest"],
-    "@beep/db-admin#lint:fix": ["commandDigest"],
-    "@beep/db-admin#package-test-typecheck": ["commandDigest"],
-    "@beep/db-admin#test": ["commandDigest"],
-    "@beep/db-admin#test:integration": ["commandDigest"],
-    "@beep/db-admin#test:integration:parallel": ["commandDigest"],
-    "@beep/db-admin#test:property": ["commandDigest"],
-    "@beep/discord#audit": ["commandDigest"],
-    "@beep/discord#build": ["commandDigest"],
-    "@beep/discord#check": ["commandDigest"],
-    "@beep/discord#coverage": ["commandDigest"],
-    "@beep/discord#docgen": ["command", "commandDigest"],
-    "@beep/discord#lint": ["commandDigest"],
-    "@beep/discord#lint:fix": ["commandDigest"],
-    "@beep/discord#package-test-typecheck": ["commandDigest"],
-    "@beep/discord#test": ["commandDigest"],
-    "@beep/discord#test:integration": ["commandDigest"],
-    "@beep/discord#test:property": ["commandDigest"],
-    "@beep/doc-text#audit": ["commandDigest"],
-    "@beep/doc-text#build": ["commandDigest"],
-    "@beep/doc-text#check": ["commandDigest"],
-    "@beep/doc-text#coverage": ["commandDigest"],
-    "@beep/doc-text#docgen": ["command", "commandDigest"],
-    "@beep/doc-text#lint": ["commandDigest"],
-    "@beep/doc-text#lint:fix": ["commandDigest"],
-    "@beep/doc-text#package-test-typecheck": ["commandDigest"],
-    "@beep/doc-text#test": ["commandDigest"],
-    "@beep/doc-text#test:integration": ["commandDigest"],
-    "@beep/doc-text#test:property": ["commandDigest"],
-    "@beep/dock#audit": ["commandDigest"],
-    "@beep/dock#build": ["commandDigest"],
-    "@beep/dock#check": ["commandDigest"],
-    "@beep/dock#coverage": ["commandDigest"],
-    "@beep/dock#docgen": ["command", "commandDigest"],
-    "@beep/dock#lint": ["commandDigest"],
-    "@beep/dock#lint:fix": ["commandDigest"],
-    "@beep/dock#package-test-typecheck": ["commandDigest"],
-    "@beep/dock#test": ["commandDigest"],
-    "@beep/dock#test:integration": ["commandDigest"],
-    "@beep/dock-react#audit": ["commandDigest"],
-    "@beep/dock-react#build": ["commandDigest"],
-    "@beep/dock-react#check": ["commandDigest"],
-    "@beep/dock-react#coverage": ["commandDigest"],
-    "@beep/dock-react#docgen": ["command", "commandDigest"],
-    "@beep/dock-react#lint": ["commandDigest"],
-    "@beep/dock-react#lint:fix": ["commandDigest"],
-    "@beep/dock-react#package-test-typecheck": ["commandDigest"],
-    "@beep/dock-react#test": ["commandDigest"],
-    "@beep/dock-react#test:integration": ["commandDigest"],
-    "@beep/documents-domain#audit": ["commandDigest"],
-    "@beep/documents-domain#build": ["commandDigest"],
-    "@beep/documents-domain#check": ["commandDigest"],
-    "@beep/documents-domain#coverage": ["commandDigest"],
-    "@beep/documents-domain#docgen": ["command", "commandDigest"],
-    "@beep/documents-domain#lint": ["commandDigest"],
-    "@beep/documents-domain#lint:fix": ["commandDigest"],
-    "@beep/documents-domain#package-test-typecheck": ["commandDigest"],
-    "@beep/documents-domain#test": ["commandDigest"],
-    "@beep/documents-domain#test:integration": ["commandDigest"],
-    "@beep/documents-server#audit": ["commandDigest"],
-    "@beep/documents-server#build": ["commandDigest"],
-    "@beep/documents-server#check": ["commandDigest"],
-    "@beep/documents-server#coverage": ["commandDigest"],
-    "@beep/documents-server#docgen": ["command", "commandDigest"],
-    "@beep/documents-server#lint": ["commandDigest"],
-    "@beep/documents-server#lint:fix": ["commandDigest"],
-    "@beep/documents-server#package-test-typecheck": ["commandDigest"],
-    "@beep/documents-server#test": ["commandDigest"],
-    "@beep/documents-server#test:integration": ["commandDigest"],
-    "@beep/documents-server#test:integration:parallel": ["commandDigest"],
-    "@beep/documents-tables#audit": ["commandDigest"],
-    "@beep/documents-tables#build": ["commandDigest"],
-    "@beep/documents-tables#check": ["commandDigest"],
-    "@beep/documents-tables#coverage": ["commandDigest"],
-    "@beep/documents-tables#docgen": ["command", "commandDigest"],
-    "@beep/documents-tables#lint": ["commandDigest"],
-    "@beep/documents-tables#lint:fix": ["commandDigest"],
-    "@beep/documents-tables#package-test-typecheck": ["commandDigest"],
-    "@beep/documents-tables#test": ["commandDigest"],
-    "@beep/documents-tables#test:integration": ["commandDigest"],
-    "@beep/documents-tables#test:property": ["commandDigest"],
-    "@beep/documents-use-cases#audit": ["commandDigest"],
-    "@beep/documents-use-cases#build": ["commandDigest"],
-    "@beep/documents-use-cases#check": ["commandDigest"],
-    "@beep/documents-use-cases#coverage": ["commandDigest"],
-    "@beep/documents-use-cases#docgen": ["command", "commandDigest"],
-    "@beep/documents-use-cases#lint": ["commandDigest"],
-    "@beep/documents-use-cases#lint:fix": ["commandDigest"],
-    "@beep/documents-use-cases#package-test-typecheck": ["commandDigest"],
-    "@beep/documents-use-cases#test": ["commandDigest"],
-    "@beep/documents-use-cases#test:integration": ["commandDigest"],
-    "@beep/drizzle#audit": ["commandDigest"],
-    "@beep/drizzle#build": ["commandDigest"],
-    "@beep/drizzle#check": ["commandDigest"],
-    "@beep/drizzle#coverage": ["commandDigest"],
-    "@beep/drizzle#docgen": ["command", "commandDigest"],
-    "@beep/drizzle#lint": ["commandDigest"],
-    "@beep/drizzle#lint:fix": ["commandDigest"],
-    "@beep/drizzle#package-test-typecheck": ["commandDigest"],
-    "@beep/drizzle#test": ["commandDigest"],
-    "@beep/drizzle#test:integration": ["commandDigest"],
-    "@beep/drizzle#test:integration:serial": ["commandDigest"],
-    "@beep/drizzle#test:property": ["commandDigest"],
-    "@beep/duckdb#audit": ["commandDigest"],
-    "@beep/duckdb#build": ["commandDigest"],
-    "@beep/duckdb#check": ["commandDigest"],
-    "@beep/duckdb#coverage": ["commandDigest"],
-    "@beep/duckdb#docgen": ["command", "commandDigest"],
-    "@beep/duckdb#lint": ["commandDigest"],
-    "@beep/duckdb#lint:fix": ["commandDigest"],
-    "@beep/duckdb#package-test-typecheck": ["commandDigest"],
-    "@beep/duckdb#test": ["commandDigest"],
-    "@beep/duckdb#test:property": ["commandDigest"],
-    "@beep/ecfr#audit": ["commandDigest"],
-    "@beep/ecfr#build": ["commandDigest"],
-    "@beep/ecfr#check": ["commandDigest"],
-    "@beep/ecfr#codegen": ["commandDigest"],
-    "@beep/ecfr#coverage": ["commandDigest"],
-    "@beep/ecfr#docgen": ["command", "commandDigest"],
-    "@beep/ecfr#lint": ["commandDigest"],
-    "@beep/ecfr#lint:fix": ["commandDigest"],
-    "@beep/ecfr#package-test-typecheck": ["commandDigest"],
-    "@beep/ecfr#test": ["commandDigest"],
-    "@beep/ecfr#test:integration": ["commandDigest"],
-    "@beep/ecfr#test:property": ["commandDigest"],
-    "@beep/editor#audit": ["commandDigest"],
-    "@beep/editor#build": ["commandDigest"],
-    "@beep/editor#check": ["commandDigest"],
-    "@beep/editor#coverage": ["commandDigest"],
-    "@beep/editor#docgen": ["command", "commandDigest"],
-    "@beep/editor#lint": ["commandDigest"],
-    "@beep/editor#lint:fix": ["commandDigest"],
-    "@beep/editor#package-test-typecheck": ["commandDigest"],
-    "@beep/editor#test": ["commandDigest"],
-    "@beep/editor#test:integration": ["commandDigest"],
-    "@beep/editor#test:property": ["commandDigest"],
-    "@beep/effect-drizzle#audit": ["commandDigest"],
-    "@beep/effect-drizzle#build": ["commandDigest"],
-    "@beep/effect-drizzle#check": ["commandDigest"],
-    "@beep/effect-drizzle#coverage": ["commandDigest"],
-    "@beep/effect-drizzle#docgen": ["command", "commandDigest"],
-    "@beep/effect-drizzle#lint": ["commandDigest"],
-    "@beep/effect-drizzle#package-test-typecheck": ["commandDigest"],
-    "@beep/effect-drizzle#test": ["commandDigest"],
-    "@beep/effect-drizzle#test:integration": ["commandDigest"],
-    "@beep/effect-drizzle#test:integration:parallel": ["commandDigest"],
-    "@beep/epistemic-client#audit": ["commandDigest"],
-    "@beep/epistemic-client#build": ["commandDigest"],
-    "@beep/epistemic-client#check": ["commandDigest"],
-    "@beep/epistemic-client#coverage": ["commandDigest"],
-    "@beep/epistemic-client#docgen": ["command", "commandDigest"],
-    "@beep/epistemic-client#lint": ["commandDigest"],
-    "@beep/epistemic-client#lint:fix": ["commandDigest"],
-    "@beep/epistemic-client#package-test-typecheck": ["commandDigest"],
-    "@beep/epistemic-client#test": ["commandDigest"],
-    "@beep/epistemic-client#test:integration": ["commandDigest"],
-    "@beep/epistemic-config#audit": ["commandDigest"],
-    "@beep/epistemic-config#build": ["commandDigest"],
-    "@beep/epistemic-config#check": ["commandDigest"],
-    "@beep/epistemic-config#coverage": ["commandDigest"],
-    "@beep/epistemic-config#docgen": ["command", "commandDigest"],
-    "@beep/epistemic-config#lint": ["commandDigest"],
-    "@beep/epistemic-config#lint:fix": ["commandDigest"],
-    "@beep/epistemic-config#package-test-typecheck": ["commandDigest"],
-    "@beep/epistemic-config#test": ["commandDigest"],
-    "@beep/epistemic-config#test:integration": ["commandDigest"],
-    "@beep/epistemic-domain#audit": ["commandDigest"],
-    "@beep/epistemic-domain#build": ["commandDigest"],
-    "@beep/epistemic-domain#check": ["commandDigest"],
-    "@beep/epistemic-domain#coverage": ["commandDigest"],
-    "@beep/epistemic-domain#docgen": ["command", "commandDigest"],
-    "@beep/epistemic-domain#lint": ["commandDigest"],
-    "@beep/epistemic-domain#lint:fix": ["commandDigest"],
-    "@beep/epistemic-domain#package-test-typecheck": ["commandDigest"],
-    "@beep/epistemic-domain#test": ["commandDigest"],
-    "@beep/epistemic-domain#test:property": ["commandDigest"],
-    "@beep/epistemic-server#audit": ["commandDigest"],
-    "@beep/epistemic-server#build": ["commandDigest"],
-    "@beep/epistemic-server#check": ["commandDigest"],
-    "@beep/epistemic-server#coverage": ["commandDigest"],
-    "@beep/epistemic-server#docgen": ["command", "commandDigest"],
-    "@beep/epistemic-server#lint": ["commandDigest"],
-    "@beep/epistemic-server#lint:fix": ["commandDigest"],
-    "@beep/epistemic-server#package-test-typecheck": ["commandDigest"],
-    "@beep/epistemic-server#test": ["commandDigest"],
-    "@beep/epistemic-server#test:integration": ["commandDigest"],
-    "@beep/epistemic-server#test:integration:parallel": ["commandDigest"],
-    "@beep/epistemic-tables#audit": ["commandDigest"],
-    "@beep/epistemic-tables#build": ["commandDigest"],
-    "@beep/epistemic-tables#check": ["commandDigest"],
-    "@beep/epistemic-tables#coverage": ["commandDigest"],
-    "@beep/epistemic-tables#docgen": ["command", "commandDigest"],
-    "@beep/epistemic-tables#lint": ["commandDigest"],
-    "@beep/epistemic-tables#lint:fix": ["commandDigest"],
-    "@beep/epistemic-tables#package-test-typecheck": ["commandDigest"],
-    "@beep/epistemic-tables#test": ["commandDigest"],
-    "@beep/epistemic-tables#test:integration": ["commandDigest"],
-    "@beep/epistemic-tables#test:property": ["commandDigest"],
-    "@beep/epistemic-ui#audit": ["commandDigest"],
-    "@beep/epistemic-ui#build": ["commandDigest"],
-    "@beep/epistemic-ui#check": ["commandDigest"],
-    "@beep/epistemic-ui#coverage": ["commandDigest"],
-    "@beep/epistemic-ui#docgen": ["command", "commandDigest"],
-    "@beep/epistemic-ui#lint": ["commandDigest"],
-    "@beep/epistemic-ui#lint:fix": ["commandDigest"],
-    "@beep/epistemic-ui#package-test-typecheck": ["commandDigest"],
-    "@beep/epistemic-ui#test": ["commandDigest"],
-    "@beep/epistemic-ui#test:integration": ["commandDigest"],
-    "@beep/epistemic-use-cases#audit": ["commandDigest"],
-    "@beep/epistemic-use-cases#build": ["commandDigest"],
-    "@beep/epistemic-use-cases#check": ["commandDigest"],
-    "@beep/epistemic-use-cases#coverage": ["commandDigest"],
-    "@beep/epistemic-use-cases#docgen": ["command", "commandDigest"],
-    "@beep/epistemic-use-cases#lint": ["commandDigest"],
-    "@beep/epistemic-use-cases#lint:fix": ["commandDigest"],
-    "@beep/epistemic-use-cases#package-test-typecheck": ["commandDigest"],
-    "@beep/epistemic-use-cases#test": ["commandDigest"],
-    "@beep/epistemic-use-cases#test:property": ["commandDigest"],
-    "@beep/exiftool#audit": ["commandDigest"],
-    "@beep/exiftool#build": ["commandDigest"],
-    "@beep/exiftool#check": ["commandDigest"],
-    "@beep/exiftool#coverage": ["commandDigest"],
-    "@beep/exiftool#docgen": ["command", "commandDigest"],
-    "@beep/exiftool#lint": ["commandDigest"],
-    "@beep/exiftool#lint:fix": ["commandDigest"],
-    "@beep/exiftool#package-test-typecheck": ["commandDigest"],
-    "@beep/exiftool#test": ["commandDigest"],
-    "@beep/exiftool#test:integration": ["commandDigest"],
-    "@beep/exiftool#test:integration:parallel": ["commandDigest"],
-    "@beep/face-detection#audit": ["commandDigest"],
-    "@beep/face-detection#build": ["commandDigest"],
-    "@beep/face-detection#check": ["commandDigest"],
-    "@beep/face-detection#coverage": ["commandDigest"],
-    "@beep/face-detection#docgen": ["command", "commandDigest"],
-    "@beep/face-detection#lint": ["commandDigest"],
-    "@beep/face-detection#lint:fix": ["commandDigest"],
-    "@beep/face-detection#package-test-typecheck": ["commandDigest"],
-    "@beep/face-detection#test": ["commandDigest"],
-    "@beep/face-detection#test:integration": ["commandDigest"],
-    "@beep/face-detection#test:property": ["commandDigest"],
-    "@beep/fc-runs#audit": ["commandDigest"],
-    "@beep/fc-runs#build": ["commandDigest"],
-    "@beep/fc-runs#check": ["commandDigest"],
-    "@beep/fc-runs#coverage": ["commandDigest"],
-    "@beep/fc-runs#docgen": ["command", "commandDigest"],
-    "@beep/fc-runs#lint": ["commandDigest"],
-    "@beep/fc-runs#lint:fix": ["commandDigest"],
-    "@beep/fc-runs#package-test-typecheck": ["commandDigest"],
-    "@beep/fc-runs#test": ["commandDigest"],
-    "@beep/fc-runs#test:integration": ["commandDigest"],
-    "@beep/ffmpeg#audit": ["commandDigest"],
-    "@beep/ffmpeg#build": ["commandDigest"],
-    "@beep/ffmpeg#check": ["commandDigest"],
-    "@beep/ffmpeg#coverage": ["commandDigest"],
-    "@beep/ffmpeg#docgen": ["command", "commandDigest"],
-    "@beep/ffmpeg#lint": ["commandDigest"],
-    "@beep/ffmpeg#lint:fix": ["commandDigest"],
-    "@beep/ffmpeg#package-test-typecheck": ["commandDigest"],
-    "@beep/ffmpeg#test": ["commandDigest"],
-    "@beep/ffmpeg#test:integration": ["commandDigest"],
-    "@beep/ffmpeg#test:integration:parallel": ["commandDigest"],
-    "@beep/ffmpeg#test:property": ["commandDigest"],
-    "@beep/file-processing#audit": ["commandDigest"],
-    "@beep/file-processing#build": ["commandDigest"],
-    "@beep/file-processing#check": ["commandDigest"],
-    "@beep/file-processing#coverage": ["commandDigest"],
-    "@beep/file-processing#docgen": ["command", "commandDigest"],
-    "@beep/file-processing#lint": ["commandDigest"],
-    "@beep/file-processing#lint:fix": ["commandDigest"],
-    "@beep/file-processing#package-test-typecheck": ["commandDigest"],
-    "@beep/file-processing#test": ["commandDigest"],
-    "@beep/file-processing#test:integration": ["commandDigest"],
-    "@beep/file-processing#test:property": ["commandDigest"],
-    "@beep/firecrawl#audit": ["commandDigest"],
-    "@beep/firecrawl#build": ["commandDigest"],
-    "@beep/firecrawl#check": ["commandDigest"],
-    "@beep/firecrawl#coverage": ["commandDigest"],
-    "@beep/firecrawl#docgen": ["command", "commandDigest"],
-    "@beep/firecrawl#lint": ["commandDigest"],
-    "@beep/firecrawl#lint:fix": ["commandDigest"],
-    "@beep/firecrawl#package-test-typecheck": ["commandDigest"],
-    "@beep/firecrawl#test": ["commandDigest"],
-    "@beep/firecrawl#test:integration": ["commandDigest"],
-    "@beep/firecrawl#test:integration:parallel": ["commandDigest"],
-    "@beep/firecrawl#test:property": ["commandDigest"],
-    "@beep/freshbooks#audit": ["commandDigest"],
-    "@beep/freshbooks#build": ["commandDigest"],
-    "@beep/freshbooks#check": ["commandDigest"],
-    "@beep/freshbooks#coverage": ["commandDigest"],
-    "@beep/freshbooks#docgen": ["commandDigest"],
-    "@beep/freshbooks#lint": ["commandDigest"],
-    "@beep/freshbooks#lint:fix": ["commandDigest"],
-    "@beep/freshbooks#package-test-typecheck": ["commandDigest"],
-    "@beep/freshbooks#test": ["commandDigest"],
-    "@beep/freshbooks#test:integration": ["commandDigest"],
-    "@beep/gov-legal-mcp#audit": ["commandDigest"],
-    "@beep/gov-legal-mcp#build": ["commandDigest"],
-    "@beep/gov-legal-mcp#check": ["commandDigest"],
-    "@beep/gov-legal-mcp#codegen": ["commandDigest"],
-    "@beep/gov-legal-mcp#coverage": ["commandDigest"],
-    "@beep/gov-legal-mcp#docgen": ["command", "commandDigest"],
-    "@beep/gov-legal-mcp#lint": ["commandDigest"],
-    "@beep/gov-legal-mcp#lint:fix": ["commandDigest"],
-    "@beep/gov-legal-mcp#package-test-typecheck": ["commandDigest"],
-    "@beep/gov-legal-mcp#test": ["commandDigest"],
-    "@beep/gov-legal-mcp#test:integration": ["commandDigest"],
-    "@beep/govinfo#audit": ["commandDigest"],
-    "@beep/govinfo#build": ["commandDigest"],
-    "@beep/govinfo#check": ["commandDigest"],
-    "@beep/govinfo#codegen": ["commandDigest"],
-    "@beep/govinfo#coverage": ["commandDigest"],
-    "@beep/govinfo#docgen": ["command", "commandDigest"],
-    "@beep/govinfo#lint": ["commandDigest"],
-    "@beep/govinfo#lint:fix": ["commandDigest"],
-    "@beep/govinfo#package-test-typecheck": ["commandDigest"],
-    "@beep/govinfo#test": ["commandDigest"],
-    "@beep/govinfo#test:integration": ["commandDigest"],
-    "@beep/govinfo#test:property": ["commandDigest"],
-    "@beep/graph-3d#audit": ["commandDigest"],
-    "@beep/graph-3d#build": ["commandDigest"],
-    "@beep/graph-3d#check": ["commandDigest"],
-    "@beep/graph-3d#coverage": ["commandDigest"],
-    "@beep/graph-3d#docgen": ["command", "commandDigest"],
-    "@beep/graph-3d#lint": ["commandDigest"],
-    "@beep/graph-3d#lint:fix": ["commandDigest"],
-    "@beep/graph-3d#package-test-typecheck": ["commandDigest"],
-    "@beep/graph-3d#test": ["commandDigest"],
-    "@beep/graph-3d#test:property": ["commandDigest"],
-    "@beep/html#audit": ["commandDigest"],
-    "@beep/html#build": ["commandDigest"],
-    "@beep/html#check": ["commandDigest"],
-    "@beep/html#coverage": ["commandDigest"],
-    "@beep/html#docgen": ["command", "commandDigest"],
-    "@beep/html#lint": ["commandDigest"],
-    "@beep/html#lint:fix": ["commandDigest"],
-    "@beep/html#package-test-typecheck": ["commandDigest"],
-    "@beep/html#test": ["commandDigest"],
-    "@beep/html#test:integration": ["commandDigest"],
-    "@beep/html#test:property": ["commandDigest"],
-    "@beep/hubspot#audit": ["commandDigest"],
-    "@beep/hubspot#build": ["commandDigest"],
-    "@beep/hubspot#check": ["commandDigest"],
-    "@beep/hubspot#coverage": ["commandDigest"],
-    "@beep/hubspot#docgen": ["command", "commandDigest"],
-    "@beep/hubspot#lint": ["commandDigest"],
-    "@beep/hubspot#lint:fix": ["commandDigest"],
-    "@beep/hubspot#package-test-typecheck": ["commandDigest"],
-    "@beep/hubspot#test": ["commandDigest"],
-    "@beep/hubspot#test:integration": ["commandDigest"],
-    "@beep/hubspot#test:property": ["commandDigest"],
-    "@beep/identity#audit": ["commandDigest"],
-    "@beep/identity#build": ["commandDigest"],
-    "@beep/identity#check": ["commandDigest"],
-    "@beep/identity#codegen": ["command", "commandDigest"],
-    "@beep/identity#coverage": ["commandDigest"],
-    "@beep/identity#docgen": ["command", "commandDigest"],
-    "@beep/identity#lint": ["command", "commandDigest"],
-    "@beep/identity#lint:fix": ["commandDigest"],
-    "@beep/identity#package-test-typecheck": ["commandDigest"],
-    "@beep/identity#test": ["commandDigest"],
-    "@beep/identity#test:property": ["commandDigest"],
-    "@beep/infra#audit": ["commandDigest"],
-    "@beep/infra#build": ["commandDigest"],
-    "@beep/infra#check": ["commandDigest"],
-    "@beep/infra#coverage": ["commandDigest"],
-    "@beep/infra#docgen": ["command", "commandDigest"],
-    "@beep/infra#lint": ["commandDigest"],
-    "@beep/infra#lint:fix": ["commandDigest"],
-    "@beep/infra#package-test-typecheck": ["commandDigest"],
-    "@beep/infra#test": ["commandDigest"],
-    "@beep/langextract#audit": ["commandDigest"],
-    "@beep/langextract#build": ["commandDigest"],
-    "@beep/langextract#check": ["commandDigest"],
-    "@beep/langextract#coverage": ["commandDigest"],
-    "@beep/langextract#docgen": ["command", "commandDigest"],
-    "@beep/langextract#lint": ["commandDigest"],
-    "@beep/langextract#lint:fix": ["commandDigest"],
-    "@beep/langextract#package-test-typecheck": ["commandDigest"],
-    "@beep/langextract#test": ["commandDigest"],
-    "@beep/langextract#test:property": ["commandDigest"],
-    "@beep/law-practice-domain#audit": ["commandDigest"],
-    "@beep/law-practice-domain#build": ["commandDigest"],
-    "@beep/law-practice-domain#check": ["commandDigest"],
-    "@beep/law-practice-domain#coverage": ["commandDigest"],
-    "@beep/law-practice-domain#docgen": ["command", "commandDigest"],
-    "@beep/law-practice-domain#lint": ["commandDigest"],
-    "@beep/law-practice-domain#lint:fix": ["commandDigest"],
-    "@beep/law-practice-domain#package-test-typecheck": ["commandDigest"],
-    "@beep/law-practice-domain#test": ["commandDigest"],
-    "@beep/law-practice-domain#test:property": ["commandDigest"],
-    "@beep/law-practice-server#audit": ["commandDigest"],
-    "@beep/law-practice-server#build": ["commandDigest"],
-    "@beep/law-practice-server#check": ["commandDigest"],
-    "@beep/law-practice-server#coverage": ["commandDigest"],
-    "@beep/law-practice-server#docgen": ["command", "commandDigest"],
-    "@beep/law-practice-server#lint": ["commandDigest"],
-    "@beep/law-practice-server#lint:fix": ["commandDigest"],
-    "@beep/law-practice-server#package-test-typecheck": ["commandDigest"],
-    "@beep/law-practice-server#test": ["commandDigest"],
-    "@beep/law-practice-tables#audit": ["commandDigest"],
-    "@beep/law-practice-tables#build": ["commandDigest"],
-    "@beep/law-practice-tables#check": ["commandDigest"],
-    "@beep/law-practice-tables#coverage": ["commandDigest"],
-    "@beep/law-practice-tables#docgen": ["command", "commandDigest"],
-    "@beep/law-practice-tables#lint": ["commandDigest"],
-    "@beep/law-practice-tables#lint:fix": ["commandDigest"],
-    "@beep/law-practice-tables#package-test-typecheck": ["commandDigest"],
-    "@beep/law-practice-tables#test": ["commandDigest"],
-    "@beep/law-practice-tables#test:integration": ["commandDigest"],
-    "@beep/law-practice-use-cases#audit": ["commandDigest"],
-    "@beep/law-practice-use-cases#build": ["commandDigest"],
-    "@beep/law-practice-use-cases#check": ["commandDigest"],
-    "@beep/law-practice-use-cases#coverage": ["commandDigest"],
-    "@beep/law-practice-use-cases#docgen": ["command", "commandDigest"],
-    "@beep/law-practice-use-cases#lint": ["commandDigest"],
-    "@beep/law-practice-use-cases#lint:fix": ["commandDigest"],
-    "@beep/law-practice-use-cases#package-test-typecheck": ["commandDigest"],
-    "@beep/law-practice-use-cases#test": ["commandDigest"],
-    "@beep/law-practice-use-cases#test:property": ["commandDigest"],
-    "@beep/lejeune-bolt-workbench#audit": ["commandDigest"],
-    "@beep/lejeune-bolt-workbench#build": ["commandDigest"],
-    "@beep/lejeune-bolt-workbench#check": ["commandDigest"],
-    "@beep/lejeune-bolt-workbench#dev": ["commandDigest"],
-    "@beep/lejeune-bolt-workbench#lint": ["commandDigest"],
-    "@beep/lejeune-bolt-workbench#lint:fix": ["commandDigest"],
-    "@beep/lejeune-bolt-workbench#package-test-typecheck": ["commandDigest"],
-    "@beep/lejeune-bolt-workbench#test": ["commandDigest"],
-    "@beep/lexical-schema#audit": ["commandDigest"],
-    "@beep/lexical-schema#build": ["commandDigest"],
-    "@beep/lexical-schema#check": ["commandDigest"],
-    "@beep/lexical-schema#coverage": ["commandDigest"],
-    "@beep/lexical-schema#docgen": ["command", "commandDigest"],
-    "@beep/lexical-schema#lint": ["commandDigest"],
-    "@beep/lexical-schema#lint:fix": ["commandDigest"],
-    "@beep/lexical-schema#package-test-typecheck": ["commandDigest"],
-    "@beep/lexical-schema#test": ["commandDigest"],
-    "@beep/lexical-schema#test:integration": ["commandDigest"],
-    "@beep/lexical-schema#test:property": ["commandDigest"],
-    "@beep/libpff#audit": ["commandDigest"],
-    "@beep/libpff#build": ["commandDigest"],
-    "@beep/libpff#check": ["commandDigest"],
-    "@beep/libpff#coverage": ["commandDigest"],
-    "@beep/libpff#docgen": ["command", "commandDigest"],
-    "@beep/libpff#lint": ["commandDigest"],
-    "@beep/libpff#lint:fix": ["commandDigest"],
-    "@beep/libpff#package-test-typecheck": ["commandDigest"],
-    "@beep/libpff#test": ["commandDigest"],
-    "@beep/libpff#test:integration": ["commandDigest"],
-    "@beep/libpff#test:integration:parallel": ["commandDigest"],
-    "@beep/libpff#test:property": ["commandDigest"],
-    "@beep/lint-rules#audit": ["commandDigest"],
-    "@beep/lint-rules#build": ["commandDigest"],
-    "@beep/lint-rules#check": ["commandDigest"],
-    "@beep/lint-rules#coverage": ["commandDigest"],
-    "@beep/lint-rules#lint": ["commandDigest"],
-    "@beep/lint-rules#lint:fix": ["commandDigest"],
-    "@beep/lint-rules#package-test-typecheck": ["commandDigest"],
-    "@beep/lint-rules#test": ["commandDigest"],
-    "@beep/lint-rules#test:property": ["commandDigest"],
-    "@beep/m365#audit": ["commandDigest"],
-    "@beep/m365#build": ["commandDigest"],
-    "@beep/m365#check": ["commandDigest"],
-    "@beep/m365#coverage": ["commandDigest"],
-    "@beep/m365#docgen": ["command", "commandDigest"],
-    "@beep/m365#lint": ["commandDigest"],
-    "@beep/m365#lint:fix": ["commandDigest"],
-    "@beep/m365#package-test-typecheck": ["commandDigest"],
-    "@beep/m365#test": ["commandDigest"],
-    "@beep/m365#test:integration": ["commandDigest"],
-    "@beep/m365#test:integration:parallel": ["commandDigest"],
-    "@beep/m365#test:property": ["commandDigest"],
-    "@beep/m365-mcp#audit": ["commandDigest"],
-    "@beep/m365-mcp#build": ["commandDigest"],
-    "@beep/m365-mcp#check": ["commandDigest"],
-    "@beep/m365-mcp#coverage": ["commandDigest"],
-    "@beep/m365-mcp#docgen": ["command", "commandDigest"],
-    "@beep/m365-mcp#lint": ["commandDigest"],
-    "@beep/m365-mcp#lint:fix": ["commandDigest"],
-    "@beep/m365-mcp#package-test-typecheck": ["commandDigest"],
-    "@beep/m365-mcp#test": ["commandDigest"],
-    "@beep/m365-mcp#test:integration": ["commandDigest"],
-    "@beep/m365-mcp#test:property": ["commandDigest"],
-    "@beep/mcp-kit#audit": ["commandDigest"],
-    "@beep/mcp-kit#build": ["commandDigest"],
-    "@beep/mcp-kit#check": ["commandDigest"],
-    "@beep/mcp-kit#coverage": ["commandDigest"],
-    "@beep/mcp-kit#docgen": ["command", "commandDigest"],
-    "@beep/mcp-kit#lint": ["commandDigest"],
-    "@beep/mcp-kit#lint:fix": ["commandDigest"],
-    "@beep/mcp-kit#package-test-typecheck": ["commandDigest"],
-    "@beep/mcp-kit#test": ["commandDigest"],
-    "@beep/mcp-kit#test:integration": ["commandDigest"],
-    "@beep/mcp-kit#test:property": ["commandDigest"],
-    "@beep/md#build": ["command", "commandDigest"],
-    "@beep/md#check": ["command", "commandDigest"],
-    "@beep/md#coverage": ["commandDigest"],
-    "@beep/md#docgen": ["command", "commandDigest"],
-    "@beep/md#lint": ["command", "commandDigest"],
-    "@beep/md#lint:fix": ["command", "commandDigest"],
-    "@beep/md#package-test-typecheck": ["commandDigest"],
-    "@beep/md#test": ["command", "commandDigest"],
-    "@beep/md#test:property": ["command", "commandDigest"],
-    "@beep/n3#audit": ["commandDigest"],
-    "@beep/n3#build": ["commandDigest"],
-    "@beep/n3#check": ["commandDigest"],
-    "@beep/n3#coverage": ["commandDigest"],
-    "@beep/n3#docgen": ["command", "commandDigest"],
-    "@beep/n3#lint": ["commandDigest"],
-    "@beep/n3#lint:fix": ["commandDigest"],
-    "@beep/n3#package-test-typecheck": ["commandDigest"],
-    "@beep/n3#test": ["commandDigest"],
-    "@beep/n3#test:property": ["commandDigest"],
-    "@beep/nlp#audit": ["commandDigest"],
-    "@beep/nlp#build": ["commandDigest"],
-    "@beep/nlp#check": ["commandDigest"],
-    "@beep/nlp#coverage": ["commandDigest"],
-    "@beep/nlp#docgen": ["command", "commandDigest"],
-    "@beep/nlp#lint": ["commandDigest"],
-    "@beep/nlp#lint:fix": ["commandDigest"],
-    "@beep/nlp#package-test-typecheck": ["commandDigest"],
-    "@beep/nlp#test": ["commandDigest"],
-    "@beep/nlp#test:property": ["commandDigest"],
-    "@beep/nlp-mcp#audit": ["commandDigest"],
-    "@beep/nlp-mcp#build": ["commandDigest"],
-    "@beep/nlp-mcp#check": ["commandDigest"],
-    "@beep/nlp-mcp#coverage": ["commandDigest"],
-    "@beep/nlp-mcp#docgen": ["command", "commandDigest"],
-    "@beep/nlp-mcp#lint": ["commandDigest"],
-    "@beep/nlp-mcp#lint:fix": ["commandDigest"],
-    "@beep/nlp-mcp#package-test-typecheck": ["commandDigest"],
-    "@beep/nlp-mcp#test": ["commandDigest"],
-    "@beep/nlp-mcp#test:integration": ["commandDigest"],
-    "@beep/nlp-mcp#test:integration:parallel": ["commandDigest"],
-    "@beep/nlp-mcp#test:property": ["commandDigest"],
-    "@beep/nlp-processing#audit": ["commandDigest"],
-    "@beep/nlp-processing#build": ["commandDigest"],
-    "@beep/nlp-processing#check": ["commandDigest"],
-    "@beep/nlp-processing#coverage": ["commandDigest"],
-    "@beep/nlp-processing#docgen": ["command", "commandDigest"],
-    "@beep/nlp-processing#lint": ["commandDigest"],
-    "@beep/nlp-processing#lint:fix": ["commandDigest"],
-    "@beep/nlp-processing#package-test-typecheck": ["commandDigest"],
-    "@beep/nlp-processing#test": ["commandDigest"],
-    "@beep/nlp-processing#test:property": ["commandDigest"],
-    "@beep/obs#audit": ["commandDigest"],
-    "@beep/obs#build": ["commandDigest"],
-    "@beep/obs#check": ["commandDigest"],
-    "@beep/obs#coverage": ["commandDigest"],
-    "@beep/obs#docgen": ["command", "commandDigest"],
-    "@beep/obs#lint": ["commandDigest"],
-    "@beep/obs#lint:fix": ["commandDigest"],
-    "@beep/obs#package-test-typecheck": ["commandDigest"],
-    "@beep/obs#test": ["commandDigest"],
-    "@beep/obs#test:integration": ["commandDigest"],
-    "@beep/obs#test:integration:parallel": ["commandDigest"],
-    "@beep/observability#audit": ["commandDigest"],
-    "@beep/observability#build": ["commandDigest"],
-    "@beep/observability#check": ["commandDigest"],
-    "@beep/observability#coverage": ["commandDigest"],
-    "@beep/observability#docgen": ["command", "commandDigest"],
-    "@beep/observability#lint": ["commandDigest"],
-    "@beep/observability#lint:fix": ["commandDigest"],
-    "@beep/observability#package-test-typecheck": ["commandDigest"],
-    "@beep/observability#test": ["commandDigest"],
-    "@beep/observability#test:property": ["commandDigest"],
-    "@beep/oip-web#audit": ["commandDigest"],
-    "@beep/oip-web#build": ["commandDigest"],
-    "@beep/oip-web#check": ["commandDigest"],
-    "@beep/oip-web#coverage": ["commandDigest"],
-    "@beep/oip-web#dev": ["commandDigest"],
-    "@beep/oip-web#lint": ["commandDigest"],
-    "@beep/oip-web#lint:fix": ["commandDigest"],
-    "@beep/oip-web#package-test-typecheck": ["commandDigest"],
-    "@beep/oip-web#test": ["commandDigest"],
-    "@beep/oip-web#test:property": ["commandDigest"],
-    "@beep/onepassword-cli#audit": ["commandDigest"],
-    "@beep/onepassword-cli#build": ["commandDigest"],
-    "@beep/onepassword-cli#check": ["commandDigest"],
-    "@beep/onepassword-cli#coverage": ["commandDigest"],
-    "@beep/onepassword-cli#docgen": ["command", "commandDigest"],
-    "@beep/onepassword-cli#lint": ["commandDigest"],
-    "@beep/onepassword-cli#lint:fix": ["commandDigest"],
-    "@beep/onepassword-cli#package-test-typecheck": ["commandDigest"],
-    "@beep/onepassword-cli#test": ["commandDigest"],
-    "@beep/onepassword-cli#test:integration": ["commandDigest"],
-    "@beep/onepassword-cli#test:property": ["commandDigest"],
-    "@beep/ontology#audit": ["commandDigest"],
-    "@beep/ontology#build": ["commandDigest"],
-    "@beep/ontology#check": ["commandDigest"],
-    "@beep/ontology#coverage": ["commandDigest"],
-    "@beep/ontology#docgen": ["command", "commandDigest"],
-    "@beep/ontology#lint": ["commandDigest"],
-    "@beep/ontology#lint:fix": ["commandDigest"],
-    "@beep/ontology#package-test-typecheck": ["commandDigest"],
-    "@beep/ontology#test": ["commandDigest"],
-    "@beep/ontology#test:integration": ["commandDigest"],
-    "@beep/ontology#test:property": ["commandDigest"],
-    "@beep/ontology-client#audit": ["commandDigest"],
-    "@beep/ontology-client#build": ["commandDigest"],
-    "@beep/ontology-client#check": ["commandDigest"],
-    "@beep/ontology-client#coverage": ["commandDigest"],
-    "@beep/ontology-client#docgen": ["command", "commandDigest"],
-    "@beep/ontology-client#lint": ["commandDigest"],
-    "@beep/ontology-client#lint:fix": ["commandDigest"],
-    "@beep/ontology-client#package-test-typecheck": ["commandDigest"],
-    "@beep/ontology-client#test": ["commandDigest"],
-    "@beep/ontology-client#test:integration": ["commandDigest"],
-    "@beep/ontology-config#audit": ["commandDigest"],
-    "@beep/ontology-config#build": ["commandDigest"],
-    "@beep/ontology-config#check": ["commandDigest"],
-    "@beep/ontology-config#coverage": ["commandDigest"],
-    "@beep/ontology-config#docgen": ["command", "commandDigest"],
-    "@beep/ontology-config#lint": ["commandDigest"],
-    "@beep/ontology-config#lint:fix": ["commandDigest"],
-    "@beep/ontology-config#package-test-typecheck": ["commandDigest"],
-    "@beep/ontology-config#test": ["commandDigest"],
-    "@beep/ontology-config#test:integration": ["commandDigest"],
-    "@beep/ontology-domain#audit": ["commandDigest"],
-    "@beep/ontology-domain#build": ["commandDigest"],
-    "@beep/ontology-domain#check": ["commandDigest"],
-    "@beep/ontology-domain#coverage": ["commandDigest"],
-    "@beep/ontology-domain#docgen": ["command", "commandDigest"],
-    "@beep/ontology-domain#lint": ["commandDigest"],
-    "@beep/ontology-domain#lint:fix": ["commandDigest"],
-    "@beep/ontology-domain#package-test-typecheck": ["commandDigest"],
-    "@beep/ontology-domain#test": ["commandDigest"],
-    "@beep/ontology-domain#test:integration": ["commandDigest"],
-    "@beep/ontology-domain#test:property": ["commandDigest"],
-    "@beep/ontology-server#audit": ["commandDigest"],
-    "@beep/ontology-server#build": ["commandDigest"],
-    "@beep/ontology-server#check": ["commandDigest"],
-    "@beep/ontology-server#coverage": ["commandDigest"],
-    "@beep/ontology-server#docgen": ["command", "commandDigest"],
-    "@beep/ontology-server#lint": ["commandDigest"],
-    "@beep/ontology-server#lint:fix": ["commandDigest"],
-    "@beep/ontology-server#package-test-typecheck": ["commandDigest"],
-    "@beep/ontology-server#test": ["commandDigest"],
-    "@beep/ontology-server#test:integration": ["commandDigest"],
-    "@beep/ontology-server#test:property": ["commandDigest"],
-    "@beep/ontology-ui#audit": ["commandDigest"],
-    "@beep/ontology-ui#build": ["commandDigest"],
-    "@beep/ontology-ui#check": ["commandDigest"],
-    "@beep/ontology-ui#coverage": ["commandDigest"],
-    "@beep/ontology-ui#docgen": ["command", "commandDigest"],
-    "@beep/ontology-ui#lint": ["commandDigest"],
-    "@beep/ontology-ui#lint:fix": ["commandDigest"],
-    "@beep/ontology-ui#package-test-typecheck": ["commandDigest"],
-    "@beep/ontology-ui#test": ["commandDigest"],
-    "@beep/ontology-ui#test:integration": ["commandDigest"],
-    "@beep/ontology-use-cases#audit": ["commandDigest"],
-    "@beep/ontology-use-cases#build": ["commandDigest"],
-    "@beep/ontology-use-cases#check": ["commandDigest"],
-    "@beep/ontology-use-cases#coverage": ["commandDigest"],
-    "@beep/ontology-use-cases#docgen": ["command", "commandDigest"],
-    "@beep/ontology-use-cases#lint": ["commandDigest"],
-    "@beep/ontology-use-cases#lint:fix": ["commandDigest"],
-    "@beep/ontology-use-cases#package-test-typecheck": ["commandDigest"],
-    "@beep/ontology-use-cases#test": ["commandDigest"],
-    "@beep/ontology-use-cases#test:integration": ["commandDigest"],
-    "@beep/ontology-use-cases#test:property": ["commandDigest"],
-    "@beep/openai#audit": ["commandDigest"],
-    "@beep/openai#build": ["commandDigest"],
-    "@beep/openai#check": ["commandDigest"],
-    "@beep/openai#coverage": ["commandDigest"],
-    "@beep/openai#docgen": ["command", "commandDigest"],
-    "@beep/openai#lint": ["commandDigest"],
-    "@beep/openai#lint:fix": ["commandDigest"],
-    "@beep/openai#package-test-typecheck": ["commandDigest"],
-    "@beep/openai#test": ["commandDigest"],
-    "@beep/openai#test:integration": ["commandDigest"],
-    "@beep/openai-compat#audit": ["commandDigest"],
-    "@beep/openai-compat#build": ["commandDigest"],
-    "@beep/openai-compat#check": ["commandDigest"],
-    "@beep/openai-compat#coverage": ["commandDigest"],
-    "@beep/openai-compat#docgen": ["command", "commandDigest"],
-    "@beep/openai-compat#lint": ["commandDigest"],
-    "@beep/openai-compat#lint:fix": ["commandDigest"],
-    "@beep/openai-compat#package-test-typecheck": ["commandDigest"],
-    "@beep/openai-compat#test": ["commandDigest"],
-    "@beep/openai-compat#test:integration": ["commandDigest"],
-    "@beep/openai-compat#test:property": ["commandDigest"],
-    "@beep/openclaw#audit": ["commandDigest"],
-    "@beep/openclaw#build": ["commandDigest"],
-    "@beep/openclaw#check": ["commandDigest"],
-    "@beep/openclaw#coverage": ["commandDigest"],
-    "@beep/openclaw#docgen": ["command", "commandDigest"],
-    "@beep/openclaw#lint": ["commandDigest"],
-    "@beep/openclaw#lint:fix": ["commandDigest"],
-    "@beep/openclaw#package-test-typecheck": ["commandDigest"],
-    "@beep/openclaw#test": ["commandDigest"],
-    "@beep/openclaw#test:integration": ["commandDigest"],
-    "@beep/openclaw#test:integration:parallel": ["commandDigest"],
-    "@beep/oxigraph#audit": ["commandDigest"],
-    "@beep/oxigraph#build": ["commandDigest"],
-    "@beep/oxigraph#check": ["commandDigest"],
-    "@beep/oxigraph#coverage": ["commandDigest"],
-    "@beep/oxigraph#docgen": ["command", "commandDigest"],
-    "@beep/oxigraph#lint": ["commandDigest"],
-    "@beep/oxigraph#lint:fix": ["commandDigest"],
-    "@beep/oxigraph#package-test-typecheck": ["commandDigest"],
-    "@beep/oxigraph#test": ["commandDigest"],
-    "@beep/oxigraph#test:property": ["commandDigest"],
-    "@beep/pacer#audit": ["commandDigest"],
-    "@beep/pacer#build": ["commandDigest"],
-    "@beep/pacer#check": ["commandDigest"],
-    "@beep/pacer#coverage": ["commandDigest"],
-    "@beep/pacer#docgen": ["command", "commandDigest"],
-    "@beep/pacer#lint": ["commandDigest"],
-    "@beep/pacer#lint:fix": ["commandDigest"],
-    "@beep/pacer#package-test-typecheck": ["commandDigest"],
-    "@beep/pacer#test": ["commandDigest"],
-    "@beep/pacer#test:integration": ["commandDigest"],
-    "@beep/pacer#test:property": ["commandDigest"],
-    "@beep/pandoc-ast#audit": ["commandDigest"],
-    "@beep/pandoc-ast#build": ["commandDigest"],
-    "@beep/pandoc-ast#check": ["commandDigest"],
-    "@beep/pandoc-ast#coverage": ["commandDigest"],
-    "@beep/pandoc-ast#docgen": ["command", "commandDigest"],
-    "@beep/pandoc-ast#lint": ["commandDigest"],
-    "@beep/pandoc-ast#lint:fix": ["commandDigest"],
-    "@beep/pandoc-ast#package-test-typecheck": ["commandDigest"],
-    "@beep/pandoc-ast#test": ["commandDigest"],
-    "@beep/pandoc-ast#test:integration": ["commandDigest"],
-    "@beep/pandoc-ast#test:integration:parallel": ["commandDigest"],
-    "@beep/pandoc-ast#test:property": ["commandDigest"],
-    "@beep/pglite#audit": ["commandDigest"],
-    "@beep/pglite#build": ["commandDigest"],
-    "@beep/pglite#check": ["commandDigest"],
-    "@beep/pglite#coverage": ["commandDigest"],
-    "@beep/pglite#docgen": ["command", "commandDigest"],
-    "@beep/pglite#lint": ["commandDigest"],
-    "@beep/pglite#lint:fix": ["commandDigest"],
-    "@beep/pglite#package-test-typecheck": ["commandDigest"],
-    "@beep/pglite#test": ["commandDigest"],
-    "@beep/pglite#test:integration": ["commandDigest"],
-    "@beep/pglite#test:integration:parallel": ["commandDigest"],
-    "@beep/pglite#test:property": ["commandDigest"],
-    "@beep/phoenix#audit": ["commandDigest"],
-    "@beep/phoenix#build": ["commandDigest"],
-    "@beep/phoenix#check": ["commandDigest"],
-    "@beep/phoenix#coverage": ["commandDigest"],
-    "@beep/phoenix#docgen": ["command", "commandDigest"],
-    "@beep/phoenix#lint": ["commandDigest"],
-    "@beep/phoenix#lint:fix": ["commandDigest"],
-    "@beep/phoenix#package-test-typecheck": ["commandDigest"],
-    "@beep/phoenix#test": ["commandDigest"],
-    "@beep/phoenix#test:integration": ["commandDigest"],
-    "@beep/phoenix#test:property": ["commandDigest"],
-    "@beep/postgres#audit": ["commandDigest"],
-    "@beep/postgres#build": ["commandDigest"],
-    "@beep/postgres#check": ["commandDigest"],
-    "@beep/postgres#coverage": ["commandDigest"],
-    "@beep/postgres#docgen": ["command", "commandDigest"],
-    "@beep/postgres#lint": ["commandDigest"],
-    "@beep/postgres#lint:fix": ["commandDigest"],
-    "@beep/postgres#package-test-typecheck": ["commandDigest"],
-    "@beep/postgres#test": ["commandDigest"],
-    "@beep/postgres#test:integration": ["commandDigest"],
-    "@beep/postgres#test:integration:serial": ["commandDigest"],
-    "@beep/postgres#test:property": ["commandDigest"],
-    "@beep/practice-kg-mcp#audit": ["commandDigest"],
-    "@beep/practice-kg-mcp#build": ["commandDigest"],
-    "@beep/practice-kg-mcp#check": ["commandDigest"],
-    "@beep/practice-kg-mcp#coverage": ["commandDigest"],
-    "@beep/practice-kg-mcp#docgen": ["command", "commandDigest"],
-    "@beep/practice-kg-mcp#lint": ["commandDigest"],
-    "@beep/practice-kg-mcp#lint:fix": ["commandDigest"],
-    "@beep/practice-kg-mcp#package-test-typecheck": ["commandDigest"],
-    "@beep/practice-kg-mcp#test": ["commandDigest"],
-    "@beep/pretext#audit": ["commandDigest"],
-    "@beep/pretext#build": ["commandDigest"],
-    "@beep/pretext#check": ["commandDigest"],
-    "@beep/pretext#coverage": ["commandDigest"],
-    "@beep/pretext#docgen": ["command", "commandDigest"],
-    "@beep/pretext#lint": ["commandDigest"],
-    "@beep/pretext#lint:fix": ["commandDigest"],
-    "@beep/pretext#package-test-typecheck": ["commandDigest"],
-    "@beep/pretext#test": ["commandDigest"],
-    "@beep/pretext#test:integration": ["commandDigest"],
-    "@beep/professional-desktop#audit": ["commandDigest"],
-    "@beep/professional-desktop#build": ["commandDigest"],
-    "@beep/professional-desktop#check": ["commandDigest"],
-    "@beep/professional-desktop#codegen": ["commandDigest"],
-    "@beep/professional-desktop#coverage": ["commandDigest"],
-    "@beep/professional-desktop#dev": ["commandDigest"],
-    "@beep/professional-desktop#docgen": ["command", "commandDigest"],
-    "@beep/professional-desktop#lint": ["commandDigest"],
-    "@beep/professional-desktop#lint:fix": ["commandDigest"],
-    "@beep/professional-desktop#package-test-typecheck": ["commandDigest"],
-    "@beep/professional-desktop#test": ["commandDigest"],
-    "@beep/professional-desktop#test:integration": ["commandDigest"],
-    "@beep/professional-desktop#test:integration:parallel": ["commandDigest"],
-    "@beep/professional-desktop#test:property": ["commandDigest"],
-    "@beep/provenance#audit": ["commandDigest"],
-    "@beep/provenance#build": ["commandDigest"],
-    "@beep/provenance#check": ["commandDigest"],
-    "@beep/provenance#coverage": ["commandDigest"],
-    "@beep/provenance#docgen": ["command", "commandDigest"],
-    "@beep/provenance#lint": ["commandDigest"],
-    "@beep/provenance#lint:fix": ["commandDigest"],
-    "@beep/provenance#package-test-typecheck": ["commandDigest"],
-    "@beep/provenance#test": ["commandDigest"],
-    "@beep/provenance#test:property": ["commandDigest"],
-    "@beep/qa-capture#audit": ["commandDigest"],
-    "@beep/qa-capture#build": ["commandDigest"],
-    "@beep/qa-capture#check": ["commandDigest"],
-    "@beep/qa-capture#coverage": ["commandDigest"],
-    "@beep/qa-capture#docgen": ["command", "commandDigest"],
-    "@beep/qa-capture#lint": ["commandDigest"],
-    "@beep/qa-capture#lint:fix": ["commandDigest"],
-    "@beep/qa-capture#package-test-typecheck": ["commandDigest"],
-    "@beep/qa-capture#test": ["commandDigest"],
-    "@beep/qa-capture#test:integration": ["commandDigest"],
-    "@beep/qa-capture#test:integration:parallel": ["commandDigest"],
-    "@beep/rdf#audit": ["commandDigest"],
-    "@beep/rdf#build": ["commandDigest"],
-    "@beep/rdf#check": ["commandDigest"],
-    "@beep/rdf#coverage": ["commandDigest"],
-    "@beep/rdf#docgen": ["command", "commandDigest"],
-    "@beep/rdf#lint": ["commandDigest"],
-    "@beep/rdf#lint:fix": ["commandDigest"],
-    "@beep/rdf#package-test-typecheck": ["commandDigest"],
-    "@beep/rdf#test": ["commandDigest"],
-    "@beep/rdf#test:property": ["commandDigest"],
-    "@beep/rdf-canonize#audit": ["commandDigest"],
-    "@beep/rdf-canonize#build": ["commandDigest"],
-    "@beep/rdf-canonize#check": ["commandDigest"],
-    "@beep/rdf-canonize#coverage": ["commandDigest"],
-    "@beep/rdf-canonize#docgen": ["command", "commandDigest"],
-    "@beep/rdf-canonize#lint": ["commandDigest"],
-    "@beep/rdf-canonize#lint:fix": ["commandDigest"],
-    "@beep/rdf-canonize#package-test-typecheck": ["commandDigest"],
-    "@beep/rdf-canonize#test": ["commandDigest"],
-    "@beep/rdf-canonize#test:property": ["commandDigest"],
-    "@beep/repo-ai-metrics#audit": ["commandDigest"],
-    "@beep/repo-ai-metrics#build": ["commandDigest"],
-    "@beep/repo-ai-metrics#check": ["commandDigest"],
-    "@beep/repo-ai-metrics#coverage": ["commandDigest"],
-    "@beep/repo-ai-metrics#docgen": ["command", "commandDigest"],
-    "@beep/repo-ai-metrics#lint": ["commandDigest"],
-    "@beep/repo-ai-metrics#lint:fix": ["commandDigest"],
-    "@beep/repo-ai-metrics#package-test-typecheck": ["commandDigest"],
-    "@beep/repo-ai-metrics#test": ["commandDigest"],
-    "@beep/repo-ai-metrics#test:property": ["commandDigest"],
-    "@beep/repo-cli#audit": ["commandDigest"],
-    "@beep/repo-cli#build": ["commandDigest"],
-    "@beep/repo-cli#check": ["commandDigest"],
-    "@beep/repo-cli#coverage": ["commandDigest"],
-    "@beep/repo-cli#docgen": ["command", "commandDigest"],
-    "@beep/repo-cli#lint": ["commandDigest"],
-    "@beep/repo-cli#lint:fix": ["commandDigest"],
-    "@beep/repo-cli#package-test-typecheck": ["commandDigest"],
-    "@beep/repo-cli#test": ["commandDigest"],
-    "@beep/repo-cli#test:property": ["commandDigest"],
-    "@beep/repo-configs#audit": ["commandDigest"],
-    "@beep/repo-configs#build": ["commandDigest"],
-    "@beep/repo-configs#check": ["commandDigest"],
-    "@beep/repo-configs#codegen": ["commandDigest"],
-    "@beep/repo-configs#coverage": ["commandDigest"],
-    "@beep/repo-configs#docgen": ["command", "commandDigest"],
-    "@beep/repo-configs#lint": ["commandDigest"],
-    "@beep/repo-configs#lint:fix": ["commandDigest"],
-    "@beep/repo-configs#package-test-typecheck": ["commandDigest"],
-    "@beep/repo-configs#test": ["commandDigest"],
-    "@beep/repo-configs#test:property": ["commandDigest"],
-    "@beep/repo-docgen#audit": ["commandDigest"],
-    "@beep/repo-docgen#build": ["commandDigest"],
-    "@beep/repo-docgen#check": ["commandDigest"],
-    "@beep/repo-docgen#coverage": ["commandDigest"],
-    "@beep/repo-docgen#docgen": ["command", "commandDigest"],
-    "@beep/repo-docgen#lint": ["commandDigest"],
-    "@beep/repo-docgen#lint:fix": ["commandDigest"],
-    "@beep/repo-docgen#package-test-typecheck": ["commandDigest"],
-    "@beep/repo-docgen#test": ["commandDigest"],
-    "@beep/repo-docgen#test:property": ["commandDigest"],
-    "@beep/repo-utils#audit": ["commandDigest"],
-    "@beep/repo-utils#build": ["commandDigest"],
-    "@beep/repo-utils#check": ["commandDigest"],
-    "@beep/repo-utils#coverage": ["commandDigest"],
-    "@beep/repo-utils#docgen": ["command", "commandDigest"],
-    "@beep/repo-utils#lint": ["commandDigest"],
-    "@beep/repo-utils#lint:fix": ["commandDigest"],
-    "@beep/repo-utils#package-test-typecheck": ["commandDigest"],
-    "@beep/repo-utils#test": ["commandDigest"],
-    "@beep/repo-utils#test:property": ["commandDigest"],
-    "@beep/runpod#audit": ["commandDigest"],
-    "@beep/runpod#build": ["commandDigest"],
-    "@beep/runpod#check": ["commandDigest"],
-    "@beep/runpod#coverage": ["commandDigest"],
-    "@beep/runpod#docgen": ["command", "commandDigest"],
-    "@beep/runpod#lint": ["commandDigest"],
-    "@beep/runpod#lint:fix": ["commandDigest"],
-    "@beep/runpod#package-test-typecheck": ["commandDigest"],
-    "@beep/runpod#test": ["commandDigest"],
-    "@beep/runpod#test:integration": ["commandDigest"],
-    "@beep/runpod#test:integration:parallel": ["commandDigest"],
-    "@beep/runpod#test:property": ["commandDigest"],
-    "@beep/sanity#audit": ["commandDigest"],
-    "@beep/sanity#build": ["commandDigest"],
-    "@beep/sanity#check": ["commandDigest"],
-    "@beep/sanity#coverage": ["commandDigest"],
-    "@beep/sanity#docgen": ["command", "commandDigest"],
-    "@beep/sanity#lint": ["commandDigest"],
-    "@beep/sanity#lint:fix": ["commandDigest"],
-    "@beep/sanity#package-test-typecheck": ["commandDigest"],
-    "@beep/sanity#test": ["commandDigest"],
-    "@beep/sanity#test:integration": ["commandDigest"],
-    "@beep/sanity#test:property": ["commandDigest"],
-    "@beep/schema#audit": ["commandDigest"],
-    "@beep/schema#build": ["commandDigest"],
-    "@beep/schema#check": ["commandDigest"],
-    "@beep/schema#coverage": ["commandDigest"],
-    "@beep/schema#docgen": ["command", "commandDigest"],
-    "@beep/schema#lint": ["commandDigest"],
-    "@beep/schema#lint:fix": ["commandDigest"],
-    "@beep/schema#package-test-typecheck": ["commandDigest"],
-    "@beep/schema#test": ["commandDigest"],
-    "@beep/schema#test:property": ["commandDigest"],
-    "@beep/semantic-web#audit": ["commandDigest"],
-    "@beep/semantic-web#build": ["commandDigest"],
-    "@beep/semantic-web#check": ["commandDigest"],
-    "@beep/semantic-web#coverage": ["commandDigest"],
-    "@beep/semantic-web#docgen": ["command", "commandDigest"],
-    "@beep/semantic-web#lint": ["commandDigest"],
-    "@beep/semantic-web#lint:fix": ["commandDigest"],
-    "@beep/semantic-web#package-test-typecheck": ["commandDigest"],
-    "@beep/semantic-web#test": ["commandDigest"],
-    "@beep/semantic-web#test:property": ["commandDigest"],
-    "@beep/semantica#audit": ["commandDigest"],
-    "@beep/semantica#build": ["commandDigest"],
-    "@beep/semantica#check": ["commandDigest"],
-    "@beep/semantica#dev": ["commandDigest"],
-    "@beep/semantica#lint": ["commandDigest"],
-    "@beep/semantica#lint:fix": ["commandDigest"],
-    "@beep/semantica#package-test-typecheck": ["commandDigest"],
-    "@beep/semantica#test": ["commandDigest"],
-    "@beep/shacl#audit": ["commandDigest"],
-    "@beep/shacl#build": ["commandDigest"],
-    "@beep/shacl#check": ["commandDigest"],
-    "@beep/shacl#coverage": ["commandDigest"],
-    "@beep/shacl#docgen": ["command", "commandDigest"],
-    "@beep/shacl#lint": ["commandDigest"],
-    "@beep/shacl#lint:fix": ["commandDigest"],
-    "@beep/shacl#package-test-typecheck": ["commandDigest"],
-    "@beep/shacl#test": ["commandDigest"],
-    "@beep/shacl#test:property": ["commandDigest"],
-    "@beep/shared-domain#audit": ["commandDigest"],
-    "@beep/shared-domain#build": ["commandDigest"],
-    "@beep/shared-domain#check": ["commandDigest"],
-    "@beep/shared-domain#coverage": ["commandDigest"],
-    "@beep/shared-domain#docgen": ["command", "commandDigest"],
-    "@beep/shared-domain#lint": ["commandDigest"],
-    "@beep/shared-domain#lint:fix": ["commandDigest"],
-    "@beep/shared-domain#package-test-typecheck": ["commandDigest"],
-    "@beep/shared-domain#test": ["commandDigest"],
-    "@beep/shared-domain#test:property": ["commandDigest"],
-    "@beep/shared-tables#audit": ["commandDigest"],
-    "@beep/shared-tables#build": ["commandDigest"],
-    "@beep/shared-tables#check": ["commandDigest"],
-    "@beep/shared-tables#coverage": ["commandDigest"],
-    "@beep/shared-tables#docgen": ["command", "commandDigest"],
-    "@beep/shared-tables#lint": ["commandDigest"],
-    "@beep/shared-tables#lint:fix": ["commandDigest"],
-    "@beep/shared-tables#package-test-typecheck": ["commandDigest"],
-    "@beep/shared-tables#test": ["commandDigest"],
-    "@beep/shared-use-cases#audit": ["commandDigest"],
-    "@beep/shared-use-cases#build": ["commandDigest"],
-    "@beep/shared-use-cases#check": ["commandDigest"],
-    "@beep/shared-use-cases#coverage": ["commandDigest"],
-    "@beep/shared-use-cases#docgen": ["command", "commandDigest"],
-    "@beep/shared-use-cases#lint": ["commandDigest"],
-    "@beep/shared-use-cases#lint:fix": ["commandDigest"],
-    "@beep/shared-use-cases#package-test-typecheck": ["commandDigest"],
-    "@beep/shared-use-cases#test": ["commandDigest"],
-    "@beep/shared-use-cases#test:integration": ["commandDigest"],
-    "@beep/shared-use-cases#test:integration:parallel": ["commandDigest"],
-    "@beep/skill-contract#audit": ["commandDigest"],
-    "@beep/skill-contract#build": ["commandDigest"],
-    "@beep/skill-contract#check": ["commandDigest"],
-    "@beep/skill-contract#coverage": ["commandDigest"],
-    "@beep/skill-contract#docgen": ["command", "commandDigest"],
-    "@beep/skill-contract#lint": ["commandDigest"],
-    "@beep/skill-contract#lint:fix": ["commandDigest"],
-    "@beep/skill-contract#package-test-typecheck": ["commandDigest"],
-    "@beep/skill-contract#test": ["commandDigest"],
-    "@beep/skill-contract#test:integration": ["commandDigest"],
-    "@beep/storybook#audit": ["commandDigest"],
-    "@beep/storybook#build": ["commandDigest"],
-    "@beep/storybook#check": ["commandDigest"],
-    "@beep/storybook#lint": ["commandDigest"],
-    "@beep/storybook#lint:fix": ["commandDigest"],
-    "@beep/storybook#package-test-typecheck": ["commandDigest"],
-    "@beep/storybook#storybook": ["commandDigest", "configuration"],
-    "@beep/storybook#storybook:build": ["commandDigest"],
-    "@beep/storybook#storybook:start": ["commandDigest"],
-    "@beep/storybook#test": ["commandDigest"],
-    "@beep/storybook#test:storybook": ["commandDigest"],
-    "@beep/tailscale#audit": ["commandDigest"],
-    "@beep/tailscale#build": ["commandDigest"],
-    "@beep/tailscale#check": ["commandDigest"],
-    "@beep/tailscale#coverage": ["commandDigest"],
-    "@beep/tailscale#docgen": ["command", "commandDigest"],
-    "@beep/tailscale#lint": ["commandDigest"],
-    "@beep/tailscale#lint:fix": ["commandDigest"],
-    "@beep/tailscale#package-test-typecheck": ["commandDigest"],
-    "@beep/tailscale#test": ["commandDigest"],
-    "@beep/tailscale#test:integration": ["commandDigest"],
-    "@beep/test-utils#audit": ["commandDigest"],
-    "@beep/test-utils#build": ["commandDigest"],
-    "@beep/test-utils#check": ["commandDigest"],
-    "@beep/test-utils#coverage": ["commandDigest"],
-    "@beep/test-utils#docgen": ["command", "commandDigest"],
-    "@beep/test-utils#lint": ["commandDigest"],
-    "@beep/test-utils#lint:fix": ["commandDigest"],
-    "@beep/test-utils#package-test-typecheck": ["commandDigest"],
-    "@beep/test-utils#test": ["commandDigest"],
-    "@beep/test-utils#test:integration": ["commandDigest"],
-    "@beep/test-utils#test:integration:serial": ["commandDigest"],
-    "@beep/test-utils#test:property": ["commandDigest"],
-    "@beep/tika#audit": ["commandDigest"],
-    "@beep/tika#build": ["commandDigest"],
-    "@beep/tika#check": ["commandDigest"],
-    "@beep/tika#coverage": ["commandDigest"],
-    "@beep/tika#docgen": ["command", "commandDigest"],
-    "@beep/tika#lint": ["commandDigest"],
-    "@beep/tika#lint:fix": ["commandDigest"],
-    "@beep/tika#package-test-typecheck": ["commandDigest"],
-    "@beep/tika#test": ["commandDigest"],
-    "@beep/tika#test:integration": ["commandDigest"],
-    "@beep/tika#test:integration:parallel": ["commandDigest"],
-    "@beep/tika#test:property": ["commandDigest"],
-    "@beep/todox#audit": ["commandDigest"],
-    "@beep/todox#build": ["commandDigest"],
-    "@beep/todox#check": ["commandDigest"],
-    "@beep/todox#coverage": ["commandDigest"],
-    "@beep/todox#dev": ["commandDigest"],
-    "@beep/todox#lint": ["commandDigest"],
-    "@beep/todox#lint:fix": ["commandDigest"],
-    "@beep/todox#package-test-typecheck": ["commandDigest"],
-    "@beep/todox#test": ["commandDigest"],
-    "@beep/trustgraph-workbench#audit": ["commandDigest"],
-    "@beep/trustgraph-workbench#build": ["commandDigest"],
-    "@beep/trustgraph-workbench#check": ["commandDigest"],
-    "@beep/trustgraph-workbench#dev": ["commandDigest"],
-    "@beep/trustgraph-workbench#lint": ["commandDigest"],
-    "@beep/trustgraph-workbench#lint:fix": ["commandDigest"],
-    "@beep/trustgraph-workbench#package-test-typecheck": ["commandDigest"],
-    "@beep/trustgraph-workbench#test": ["commandDigest"],
-    "@beep/types#audit": ["commandDigest"],
-    "@beep/types#build": ["commandDigest"],
-    "@beep/types#check": ["commandDigest"],
-    "@beep/types#coverage": ["commandDigest"],
-    "@beep/types#docgen": ["command", "commandDigest"],
-    "@beep/types#lint": ["commandDigest"],
-    "@beep/types#lint:fix": ["commandDigest"],
-    "@beep/types#package-test-typecheck": ["commandDigest"],
-    "@beep/types#test": ["commandDigest"],
-    "@beep/ui#audit": ["commandDigest"],
-    "@beep/ui#build": ["commandDigest"],
-    "@beep/ui#check": ["commandDigest"],
-    "@beep/ui#coverage": ["commandDigest"],
-    "@beep/ui#docgen": ["command", "commandDigest"],
-    "@beep/ui#lint": ["commandDigest"],
-    "@beep/ui#lint:fix": ["commandDigest"],
-    "@beep/ui#package-test-typecheck": ["commandDigest"],
-    "@beep/ui#test": ["commandDigest"],
-    "@beep/ui#test:property": ["commandDigest"],
-    "@beep/uspto#audit": ["commandDigest"],
-    "@beep/uspto#build": ["commandDigest"],
-    "@beep/uspto#check": ["commandDigest"],
-    "@beep/uspto#coverage": ["commandDigest"],
-    "@beep/uspto#docgen": ["command", "commandDigest"],
-    "@beep/uspto#lint": ["commandDigest"],
-    "@beep/uspto#lint:fix": ["commandDigest"],
-    "@beep/uspto#package-test-typecheck": ["commandDigest"],
-    "@beep/uspto#test": ["commandDigest"],
-    "@beep/uspto#test:integration": ["commandDigest"],
-    "@beep/uspto#test:property": ["commandDigest"],
-    "@beep/uspto-mcp#audit": ["commandDigest"],
-    "@beep/uspto-mcp#build": ["commandDigest"],
-    "@beep/uspto-mcp#check": ["commandDigest"],
-    "@beep/uspto-mcp#coverage": ["commandDigest"],
-    "@beep/uspto-mcp#docgen": ["command", "commandDigest"],
-    "@beep/uspto-mcp#lint": ["commandDigest"],
-    "@beep/uspto-mcp#lint:fix": ["commandDigest"],
-    "@beep/uspto-mcp#package-test-typecheck": ["commandDigest"],
-    "@beep/uspto-mcp#test": ["commandDigest"],
-    "@beep/uspto-mcp#test:integration": ["commandDigest"],
-    "@beep/uspto-mcp#test:property": ["commandDigest"],
-    "@beep/utils#audit": ["commandDigest"],
-    "@beep/utils#build": ["commandDigest"],
-    "@beep/utils#check": ["commandDigest"],
-    "@beep/utils#coverage": ["commandDigest"],
-    "@beep/utils#docgen": ["command", "commandDigest"],
-    "@beep/utils#lint": ["commandDigest"],
-    "@beep/utils#lint:fix": ["commandDigest"],
-    "@beep/utils#package-test-typecheck": ["commandDigest"],
-    "@beep/utils#test": ["commandDigest"],
-    "@beep/utils#test:property": ["commandDigest"],
-    "@beep/venice-ai#audit": ["commandDigest"],
-    "@beep/venice-ai#build": ["commandDigest"],
-    "@beep/venice-ai#check": ["commandDigest"],
-    "@beep/venice-ai#coverage": ["commandDigest"],
-    "@beep/venice-ai#docgen": ["command", "commandDigest"],
-    "@beep/venice-ai#lint": ["commandDigest"],
-    "@beep/venice-ai#lint:fix": ["commandDigest"],
-    "@beep/venice-ai#package-test-typecheck": ["commandDigest"],
-    "@beep/venice-ai#test": ["commandDigest"],
-    "@beep/venice-ai#test:integration": ["commandDigest"],
-    "@beep/venice-ai#test:integration:parallel": ["commandDigest"],
-    "@beep/venice-ai#test:property": ["commandDigest"],
-    "@beep/wink#audit": ["commandDigest"],
-    "@beep/wink#build": ["commandDigest"],
-    "@beep/wink#check": ["commandDigest"],
-    "@beep/wink#coverage": ["commandDigest"],
-    "@beep/wink#docgen": ["command", "commandDigest"],
-    "@beep/wink#lint": ["commandDigest"],
-    "@beep/wink#lint:fix": ["commandDigest"],
-    "@beep/wink#package-test-typecheck": ["commandDigest"],
-    "@beep/wink#test": ["commandDigest"],
-    "@beep/wink#test:integration": ["commandDigest"],
-    "@beep/wink#test:property": ["commandDigest"],
-    "@beep/workspace-domain#audit": ["commandDigest"],
-    "@beep/workspace-domain#build": ["commandDigest"],
-    "@beep/workspace-domain#check": ["commandDigest"],
-    "@beep/workspace-domain#coverage": ["commandDigest"],
-    "@beep/workspace-domain#docgen": ["command", "commandDigest"],
-    "@beep/workspace-domain#lint": ["commandDigest"],
-    "@beep/workspace-domain#lint:fix": ["commandDigest"],
-    "@beep/workspace-domain#package-test-typecheck": ["commandDigest"],
-    "@beep/workspace-domain#test": ["commandDigest"],
-    "@beep/workspace-domain#test:property": ["commandDigest"],
-    "@beep/workspace-server#audit": ["commandDigest"],
-    "@beep/workspace-server#build": ["commandDigest"],
-    "@beep/workspace-server#check": ["commandDigest"],
-    "@beep/workspace-server#coverage": ["commandDigest"],
-    "@beep/workspace-server#docgen": ["command", "commandDigest"],
-    "@beep/workspace-server#lint": ["commandDigest"],
-    "@beep/workspace-server#lint:fix": ["commandDigest"],
-    "@beep/workspace-server#package-test-typecheck": ["commandDigest"],
-    "@beep/workspace-server#test": ["commandDigest"],
-    "@beep/workspace-server#test:integration": ["commandDigest"],
-    "@beep/workspace-server#test:integration:parallel": ["commandDigest"],
-    "@beep/workspace-server#test:property": ["commandDigest"],
-    "@beep/workspace-tables#audit": ["commandDigest"],
-    "@beep/workspace-tables#build": ["commandDigest"],
-    "@beep/workspace-tables#check": ["commandDigest"],
-    "@beep/workspace-tables#coverage": ["commandDigest"],
-    "@beep/workspace-tables#docgen": ["command", "commandDigest"],
-    "@beep/workspace-tables#lint": ["commandDigest"],
-    "@beep/workspace-tables#lint:fix": ["commandDigest"],
-    "@beep/workspace-tables#package-test-typecheck": ["commandDigest"],
-    "@beep/workspace-tables#test": ["commandDigest"],
-    "@beep/workspace-tables#test:integration": ["commandDigest"],
-    "@beep/workspace-tables#test:property": ["commandDigest"],
-    "@beep/workspace-use-cases#audit": ["commandDigest"],
-    "@beep/workspace-use-cases#build": ["commandDigest"],
-    "@beep/workspace-use-cases#check": ["commandDigest"],
-    "@beep/workspace-use-cases#coverage": ["commandDigest"],
-    "@beep/workspace-use-cases#docgen": ["command", "commandDigest"],
-    "@beep/workspace-use-cases#lint": ["commandDigest"],
-    "@beep/workspace-use-cases#lint:fix": ["commandDigest"],
-    "@beep/workspace-use-cases#package-test-typecheck": ["commandDigest"],
-    "@beep/workspace-use-cases#test": ["commandDigest"],
-    "@beep/workspace-use-cases#test:integration": ["commandDigest"],
-    "@beep/workspace-use-cases#test:property": ["commandDigest"],
-    "@beep/xai#audit": ["commandDigest"],
-    "@beep/xai#build": ["commandDigest"],
-    "@beep/xai#check": ["commandDigest"],
-    "@beep/xai#coverage": ["commandDigest"],
-    "@beep/xai#docgen": ["command", "commandDigest"],
-    "@beep/xai#lint": ["commandDigest"],
-    "@beep/xai#lint:fix": ["commandDigest"],
-    "@beep/xai#package-test-typecheck": ["commandDigest"],
-    "@beep/xai#test": ["commandDigest"],
-    "@beep/xai#test:integration": ["commandDigest"],
-    "@beep/xai#test:property": ["commandDigest"]
+    "@beep/architecture-lab-use-cases#test": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-use-cases#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/architecture-lab-use-cases#test:property": [
+      "commandDigest"
+    ],
+    "@beep/box#audit": [
+      "commandDigest"
+    ],
+    "@beep/box#build": [
+      "commandDigest"
+    ],
+    "@beep/box#check": [
+      "commandDigest"
+    ],
+    "@beep/box#codegen": [
+      "commandDigest"
+    ],
+    "@beep/box#coverage": [
+      "commandDigest"
+    ],
+    "@beep/box#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/box#lint": [
+      "commandDigest"
+    ],
+    "@beep/box#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/box#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/box#test": [
+      "commandDigest"
+    ],
+    "@beep/box#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/box#test:integration:parallel": [
+      "commandDigest"
+    ],
+    "@beep/box#test:property": [
+      "commandDigest"
+    ],
+    "@beep/box-provisioning#audit": [
+      "commandDigest"
+    ],
+    "@beep/box-provisioning#build": [
+      "commandDigest"
+    ],
+    "@beep/box-provisioning#check": [
+      "commandDigest"
+    ],
+    "@beep/box-provisioning#coverage": [
+      "commandDigest"
+    ],
+    "@beep/box-provisioning#docgen": [
+      "commandDigest"
+    ],
+    "@beep/box-provisioning#lint": [
+      "commandDigest"
+    ],
+    "@beep/box-provisioning#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/box-provisioning#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/box-provisioning#test": [
+      "commandDigest"
+    ],
+    "@beep/box-provisioning#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/brand#audit": [
+      "commandDigest"
+    ],
+    "@beep/brand#build": [
+      "commandDigest"
+    ],
+    "@beep/brand#check": [
+      "commandDigest"
+    ],
+    "@beep/brand#coverage": [
+      "commandDigest"
+    ],
+    "@beep/brand#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/brand#lint": [
+      "commandDigest"
+    ],
+    "@beep/brand#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/brand#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/brand#test": [
+      "commandDigest"
+    ],
+    "@beep/brand#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/chalk#audit": [
+      "commandDigest"
+    ],
+    "@beep/chalk#build": [
+      "commandDigest"
+    ],
+    "@beep/chalk#check": [
+      "commandDigest"
+    ],
+    "@beep/chalk#coverage": [
+      "commandDigest"
+    ],
+    "@beep/chalk#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/chalk#lint": [
+      "commandDigest"
+    ],
+    "@beep/chalk#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/chalk#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/chalk#test": [
+      "commandDigest"
+    ],
+    "@beep/chalk#test:property": [
+      "commandDigest"
+    ],
+    "@beep/ciops#audit": [
+      "commandDigest"
+    ],
+    "@beep/ciops#build": [
+      "commandDigest"
+    ],
+    "@beep/ciops#check": [
+      "commandDigest"
+    ],
+    "@beep/ciops#dev": [
+      "commandDigest"
+    ],
+    "@beep/ciops#lint": [
+      "commandDigest"
+    ],
+    "@beep/ciops#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/ciops#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/ciops#test": [
+      "commandDigest"
+    ],
+    "@beep/codegen-kit#audit": [
+      "commandDigest"
+    ],
+    "@beep/codegen-kit#build": [
+      "commandDigest"
+    ],
+    "@beep/codegen-kit#check": [
+      "commandDigest"
+    ],
+    "@beep/codegen-kit#coverage": [
+      "commandDigest"
+    ],
+    "@beep/codegen-kit#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/codegen-kit#lint": [
+      "commandDigest"
+    ],
+    "@beep/codegen-kit#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/codegen-kit#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/codegen-kit#test": [
+      "commandDigest"
+    ],
+    "@beep/codegen-kit#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/colors#audit": [
+      "commandDigest"
+    ],
+    "@beep/colors#build": [
+      "commandDigest"
+    ],
+    "@beep/colors#check": [
+      "commandDigest"
+    ],
+    "@beep/colors#coverage": [
+      "commandDigest"
+    ],
+    "@beep/colors#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/colors#lint": [
+      "commandDigest"
+    ],
+    "@beep/colors#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/colors#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/colors#test": [
+      "commandDigest"
+    ],
+    "@beep/colors#test:property": [
+      "commandDigest"
+    ],
+    "@beep/cosmos#audit": [
+      "commandDigest"
+    ],
+    "@beep/cosmos#build": [
+      "commandDigest"
+    ],
+    "@beep/cosmos#check": [
+      "commandDigest"
+    ],
+    "@beep/cosmos#coverage": [
+      "commandDigest"
+    ],
+    "@beep/cosmos#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/cosmos#lint": [
+      "commandDigest"
+    ],
+    "@beep/cosmos#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/cosmos#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/cosmos#test": [
+      "commandDigest"
+    ],
+    "@beep/cosmos#test:property": [
+      "commandDigest"
+    ],
+    "@beep/data#audit": [
+      "commandDigest"
+    ],
+    "@beep/data#build": [
+      "commandDigest"
+    ],
+    "@beep/data#check": [
+      "commandDigest"
+    ],
+    "@beep/data#coverage": [
+      "commandDigest"
+    ],
+    "@beep/data#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/data#lint": [
+      "commandDigest"
+    ],
+    "@beep/data#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/data#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/data#test": [
+      "commandDigest"
+    ],
+    "@beep/db-admin#audit": [
+      "commandDigest"
+    ],
+    "@beep/db-admin#build": [
+      "commandDigest"
+    ],
+    "@beep/db-admin#check": [
+      "commandDigest"
+    ],
+    "@beep/db-admin#coverage": [
+      "commandDigest"
+    ],
+    "@beep/db-admin#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/db-admin#lint": [
+      "commandDigest"
+    ],
+    "@beep/db-admin#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/db-admin#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/db-admin#test": [
+      "commandDigest"
+    ],
+    "@beep/db-admin#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/db-admin#test:integration:parallel": [
+      "commandDigest"
+    ],
+    "@beep/db-admin#test:property": [
+      "commandDigest"
+    ],
+    "@beep/discord#audit": [
+      "commandDigest"
+    ],
+    "@beep/discord#build": [
+      "commandDigest"
+    ],
+    "@beep/discord#check": [
+      "commandDigest"
+    ],
+    "@beep/discord#coverage": [
+      "commandDigest"
+    ],
+    "@beep/discord#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/discord#lint": [
+      "commandDigest"
+    ],
+    "@beep/discord#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/discord#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/discord#test": [
+      "commandDigest"
+    ],
+    "@beep/discord#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/discord#test:property": [
+      "commandDigest"
+    ],
+    "@beep/doc-text#audit": [
+      "commandDigest"
+    ],
+    "@beep/doc-text#build": [
+      "commandDigest"
+    ],
+    "@beep/doc-text#check": [
+      "commandDigest"
+    ],
+    "@beep/doc-text#coverage": [
+      "commandDigest"
+    ],
+    "@beep/doc-text#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/doc-text#lint": [
+      "commandDigest"
+    ],
+    "@beep/doc-text#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/doc-text#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/doc-text#test": [
+      "commandDigest"
+    ],
+    "@beep/doc-text#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/doc-text#test:property": [
+      "commandDigest"
+    ],
+    "@beep/dock#audit": [
+      "commandDigest"
+    ],
+    "@beep/dock#build": [
+      "commandDigest"
+    ],
+    "@beep/dock#check": [
+      "commandDigest"
+    ],
+    "@beep/dock#coverage": [
+      "commandDigest"
+    ],
+    "@beep/dock#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/dock#lint": [
+      "commandDigest"
+    ],
+    "@beep/dock#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/dock#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/dock#test": [
+      "commandDigest"
+    ],
+    "@beep/dock#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/dock-react#audit": [
+      "commandDigest"
+    ],
+    "@beep/dock-react#build": [
+      "commandDigest"
+    ],
+    "@beep/dock-react#check": [
+      "commandDigest"
+    ],
+    "@beep/dock-react#coverage": [
+      "commandDigest"
+    ],
+    "@beep/dock-react#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/dock-react#lint": [
+      "commandDigest"
+    ],
+    "@beep/dock-react#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/dock-react#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/dock-react#test": [
+      "commandDigest"
+    ],
+    "@beep/dock-react#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/documents-domain#audit": [
+      "commandDigest"
+    ],
+    "@beep/documents-domain#build": [
+      "commandDigest"
+    ],
+    "@beep/documents-domain#check": [
+      "commandDigest"
+    ],
+    "@beep/documents-domain#coverage": [
+      "commandDigest"
+    ],
+    "@beep/documents-domain#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/documents-domain#lint": [
+      "commandDigest"
+    ],
+    "@beep/documents-domain#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/documents-domain#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/documents-domain#test": [
+      "commandDigest"
+    ],
+    "@beep/documents-domain#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/documents-server#audit": [
+      "commandDigest"
+    ],
+    "@beep/documents-server#build": [
+      "commandDigest"
+    ],
+    "@beep/documents-server#check": [
+      "commandDigest"
+    ],
+    "@beep/documents-server#coverage": [
+      "commandDigest"
+    ],
+    "@beep/documents-server#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/documents-server#lint": [
+      "commandDigest"
+    ],
+    "@beep/documents-server#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/documents-server#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/documents-server#test": [
+      "commandDigest"
+    ],
+    "@beep/documents-server#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/documents-server#test:integration:parallel": [
+      "commandDigest"
+    ],
+    "@beep/documents-tables#audit": [
+      "commandDigest"
+    ],
+    "@beep/documents-tables#build": [
+      "commandDigest"
+    ],
+    "@beep/documents-tables#check": [
+      "commandDigest"
+    ],
+    "@beep/documents-tables#coverage": [
+      "commandDigest"
+    ],
+    "@beep/documents-tables#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/documents-tables#lint": [
+      "commandDigest"
+    ],
+    "@beep/documents-tables#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/documents-tables#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/documents-tables#test": [
+      "commandDigest"
+    ],
+    "@beep/documents-tables#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/documents-tables#test:property": [
+      "commandDigest"
+    ],
+    "@beep/documents-use-cases#audit": [
+      "commandDigest"
+    ],
+    "@beep/documents-use-cases#build": [
+      "commandDigest"
+    ],
+    "@beep/documents-use-cases#check": [
+      "commandDigest"
+    ],
+    "@beep/documents-use-cases#coverage": [
+      "commandDigest"
+    ],
+    "@beep/documents-use-cases#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/documents-use-cases#lint": [
+      "commandDigest"
+    ],
+    "@beep/documents-use-cases#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/documents-use-cases#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/documents-use-cases#test": [
+      "commandDigest"
+    ],
+    "@beep/documents-use-cases#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/drizzle#audit": [
+      "commandDigest"
+    ],
+    "@beep/drizzle#build": [
+      "commandDigest"
+    ],
+    "@beep/drizzle#check": [
+      "commandDigest"
+    ],
+    "@beep/drizzle#coverage": [
+      "commandDigest"
+    ],
+    "@beep/drizzle#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/drizzle#lint": [
+      "commandDigest"
+    ],
+    "@beep/drizzle#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/drizzle#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/drizzle#test": [
+      "commandDigest"
+    ],
+    "@beep/drizzle#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/drizzle#test:integration:serial": [
+      "commandDigest"
+    ],
+    "@beep/drizzle#test:property": [
+      "commandDigest"
+    ],
+    "@beep/duckdb#audit": [
+      "commandDigest"
+    ],
+    "@beep/duckdb#build": [
+      "commandDigest"
+    ],
+    "@beep/duckdb#check": [
+      "commandDigest"
+    ],
+    "@beep/duckdb#coverage": [
+      "commandDigest"
+    ],
+    "@beep/duckdb#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/duckdb#lint": [
+      "commandDigest"
+    ],
+    "@beep/duckdb#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/duckdb#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/duckdb#test": [
+      "commandDigest"
+    ],
+    "@beep/duckdb#test:property": [
+      "commandDigest"
+    ],
+    "@beep/ecfr#audit": [
+      "commandDigest"
+    ],
+    "@beep/ecfr#build": [
+      "commandDigest"
+    ],
+    "@beep/ecfr#check": [
+      "commandDigest"
+    ],
+    "@beep/ecfr#codegen": [
+      "commandDigest"
+    ],
+    "@beep/ecfr#coverage": [
+      "commandDigest"
+    ],
+    "@beep/ecfr#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/ecfr#lint": [
+      "commandDigest"
+    ],
+    "@beep/ecfr#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/ecfr#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/ecfr#test": [
+      "commandDigest"
+    ],
+    "@beep/ecfr#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/ecfr#test:property": [
+      "commandDigest"
+    ],
+    "@beep/editor#audit": [
+      "commandDigest"
+    ],
+    "@beep/editor#build": [
+      "commandDigest"
+    ],
+    "@beep/editor#check": [
+      "commandDigest"
+    ],
+    "@beep/editor#coverage": [
+      "commandDigest"
+    ],
+    "@beep/editor#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/editor#lint": [
+      "commandDigest"
+    ],
+    "@beep/editor#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/editor#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/editor#test": [
+      "commandDigest"
+    ],
+    "@beep/editor#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/editor#test:property": [
+      "commandDigest"
+    ],
+    "@beep/effect-drizzle#audit": [
+      "commandDigest"
+    ],
+    "@beep/effect-drizzle#build": [
+      "commandDigest"
+    ],
+    "@beep/effect-drizzle#check": [
+      "commandDigest"
+    ],
+    "@beep/effect-drizzle#coverage": [
+      "commandDigest"
+    ],
+    "@beep/effect-drizzle#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/effect-drizzle#lint": [
+      "commandDigest"
+    ],
+    "@beep/effect-drizzle#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/effect-drizzle#test": [
+      "commandDigest"
+    ],
+    "@beep/effect-drizzle#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/effect-drizzle#test:integration:parallel": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-client#audit": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-client#build": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-client#check": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-client#coverage": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-client#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/epistemic-client#lint": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-client#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-client#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-client#test": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-client#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-config#audit": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-config#build": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-config#check": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-config#coverage": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-config#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/epistemic-config#lint": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-config#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-config#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-config#test": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-config#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-domain#audit": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-domain#build": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-domain#check": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-domain#coverage": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-domain#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/epistemic-domain#lint": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-domain#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-domain#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-domain#test": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-domain#test:property": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-server#audit": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-server#build": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-server#check": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-server#coverage": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-server#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/epistemic-server#lint": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-server#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-server#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-server#test": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-server#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-server#test:integration:parallel": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-tables#audit": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-tables#build": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-tables#check": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-tables#coverage": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-tables#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/epistemic-tables#lint": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-tables#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-tables#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-tables#test": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-tables#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-tables#test:property": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-ui#audit": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-ui#build": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-ui#check": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-ui#coverage": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-ui#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/epistemic-ui#lint": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-ui#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-ui#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-ui#test": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-ui#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-use-cases#audit": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-use-cases#build": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-use-cases#check": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-use-cases#coverage": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-use-cases#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/epistemic-use-cases#lint": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-use-cases#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-use-cases#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-use-cases#test": [
+      "commandDigest"
+    ],
+    "@beep/epistemic-use-cases#test:property": [
+      "commandDigest"
+    ],
+    "@beep/exiftool#audit": [
+      "commandDigest"
+    ],
+    "@beep/exiftool#build": [
+      "commandDigest"
+    ],
+    "@beep/exiftool#check": [
+      "commandDigest"
+    ],
+    "@beep/exiftool#coverage": [
+      "commandDigest"
+    ],
+    "@beep/exiftool#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/exiftool#lint": [
+      "commandDigest"
+    ],
+    "@beep/exiftool#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/exiftool#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/exiftool#test": [
+      "commandDigest"
+    ],
+    "@beep/exiftool#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/exiftool#test:integration:parallel": [
+      "commandDigest"
+    ],
+    "@beep/face-detection#audit": [
+      "commandDigest"
+    ],
+    "@beep/face-detection#build": [
+      "commandDigest"
+    ],
+    "@beep/face-detection#check": [
+      "commandDigest"
+    ],
+    "@beep/face-detection#coverage": [
+      "commandDigest"
+    ],
+    "@beep/face-detection#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/face-detection#lint": [
+      "commandDigest"
+    ],
+    "@beep/face-detection#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/face-detection#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/face-detection#test": [
+      "commandDigest"
+    ],
+    "@beep/face-detection#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/face-detection#test:property": [
+      "commandDigest"
+    ],
+    "@beep/fc-runs#audit": [
+      "commandDigest"
+    ],
+    "@beep/fc-runs#build": [
+      "commandDigest"
+    ],
+    "@beep/fc-runs#check": [
+      "commandDigest"
+    ],
+    "@beep/fc-runs#coverage": [
+      "commandDigest"
+    ],
+    "@beep/fc-runs#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/fc-runs#lint": [
+      "commandDigest"
+    ],
+    "@beep/fc-runs#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/fc-runs#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/fc-runs#test": [
+      "commandDigest"
+    ],
+    "@beep/fc-runs#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/ffmpeg#audit": [
+      "commandDigest"
+    ],
+    "@beep/ffmpeg#build": [
+      "commandDigest"
+    ],
+    "@beep/ffmpeg#check": [
+      "commandDigest"
+    ],
+    "@beep/ffmpeg#coverage": [
+      "commandDigest"
+    ],
+    "@beep/ffmpeg#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/ffmpeg#lint": [
+      "commandDigest"
+    ],
+    "@beep/ffmpeg#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/ffmpeg#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/ffmpeg#test": [
+      "commandDigest"
+    ],
+    "@beep/ffmpeg#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/ffmpeg#test:integration:parallel": [
+      "commandDigest"
+    ],
+    "@beep/ffmpeg#test:property": [
+      "commandDigest"
+    ],
+    "@beep/file-processing#audit": [
+      "commandDigest"
+    ],
+    "@beep/file-processing#build": [
+      "commandDigest"
+    ],
+    "@beep/file-processing#check": [
+      "commandDigest"
+    ],
+    "@beep/file-processing#coverage": [
+      "commandDigest"
+    ],
+    "@beep/file-processing#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/file-processing#lint": [
+      "commandDigest"
+    ],
+    "@beep/file-processing#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/file-processing#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/file-processing#test": [
+      "commandDigest"
+    ],
+    "@beep/file-processing#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/file-processing#test:property": [
+      "commandDigest"
+    ],
+    "@beep/firecrawl#audit": [
+      "commandDigest"
+    ],
+    "@beep/firecrawl#build": [
+      "commandDigest"
+    ],
+    "@beep/firecrawl#check": [
+      "commandDigest"
+    ],
+    "@beep/firecrawl#coverage": [
+      "commandDigest"
+    ],
+    "@beep/firecrawl#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/firecrawl#lint": [
+      "commandDigest"
+    ],
+    "@beep/firecrawl#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/firecrawl#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/firecrawl#test": [
+      "commandDigest"
+    ],
+    "@beep/firecrawl#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/firecrawl#test:integration:parallel": [
+      "commandDigest"
+    ],
+    "@beep/firecrawl#test:property": [
+      "commandDigest"
+    ],
+    "@beep/freshbooks#audit": [
+      "commandDigest"
+    ],
+    "@beep/freshbooks#build": [
+      "commandDigest"
+    ],
+    "@beep/freshbooks#check": [
+      "commandDigest"
+    ],
+    "@beep/freshbooks#coverage": [
+      "commandDigest"
+    ],
+    "@beep/freshbooks#docgen": [
+      "commandDigest"
+    ],
+    "@beep/freshbooks#lint": [
+      "commandDigest"
+    ],
+    "@beep/freshbooks#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/freshbooks#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/freshbooks#test": [
+      "commandDigest"
+    ],
+    "@beep/freshbooks#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/gov-legal-mcp#audit": [
+      "commandDigest"
+    ],
+    "@beep/gov-legal-mcp#build": [
+      "commandDigest"
+    ],
+    "@beep/gov-legal-mcp#check": [
+      "commandDigest"
+    ],
+    "@beep/gov-legal-mcp#codegen": [
+      "commandDigest"
+    ],
+    "@beep/gov-legal-mcp#coverage": [
+      "commandDigest"
+    ],
+    "@beep/gov-legal-mcp#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/gov-legal-mcp#lint": [
+      "commandDigest"
+    ],
+    "@beep/gov-legal-mcp#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/gov-legal-mcp#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/gov-legal-mcp#test": [
+      "commandDigest"
+    ],
+    "@beep/gov-legal-mcp#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/govinfo#audit": [
+      "commandDigest"
+    ],
+    "@beep/govinfo#build": [
+      "commandDigest"
+    ],
+    "@beep/govinfo#check": [
+      "commandDigest"
+    ],
+    "@beep/govinfo#codegen": [
+      "commandDigest"
+    ],
+    "@beep/govinfo#coverage": [
+      "commandDigest"
+    ],
+    "@beep/govinfo#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/govinfo#lint": [
+      "commandDigest"
+    ],
+    "@beep/govinfo#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/govinfo#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/govinfo#test": [
+      "commandDigest"
+    ],
+    "@beep/govinfo#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/govinfo#test:property": [
+      "commandDigest"
+    ],
+    "@beep/graph-3d#audit": [
+      "commandDigest"
+    ],
+    "@beep/graph-3d#build": [
+      "commandDigest"
+    ],
+    "@beep/graph-3d#check": [
+      "commandDigest"
+    ],
+    "@beep/graph-3d#coverage": [
+      "commandDigest"
+    ],
+    "@beep/graph-3d#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/graph-3d#lint": [
+      "commandDigest"
+    ],
+    "@beep/graph-3d#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/graph-3d#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/graph-3d#test": [
+      "commandDigest"
+    ],
+    "@beep/graph-3d#test:property": [
+      "commandDigest"
+    ],
+    "@beep/html#audit": [
+      "commandDigest"
+    ],
+    "@beep/html#build": [
+      "commandDigest"
+    ],
+    "@beep/html#check": [
+      "commandDigest"
+    ],
+    "@beep/html#coverage": [
+      "commandDigest"
+    ],
+    "@beep/html#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/html#lint": [
+      "commandDigest"
+    ],
+    "@beep/html#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/html#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/html#test": [
+      "commandDigest"
+    ],
+    "@beep/html#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/html#test:property": [
+      "commandDigest"
+    ],
+    "@beep/hubspot#audit": [
+      "commandDigest"
+    ],
+    "@beep/hubspot#build": [
+      "commandDigest"
+    ],
+    "@beep/hubspot#check": [
+      "commandDigest"
+    ],
+    "@beep/hubspot#coverage": [
+      "commandDigest"
+    ],
+    "@beep/hubspot#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/hubspot#lint": [
+      "commandDigest"
+    ],
+    "@beep/hubspot#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/hubspot#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/hubspot#test": [
+      "commandDigest"
+    ],
+    "@beep/hubspot#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/hubspot#test:property": [
+      "commandDigest"
+    ],
+    "@beep/identity#audit": [
+      "commandDigest"
+    ],
+    "@beep/identity#build": [
+      "commandDigest"
+    ],
+    "@beep/identity#check": [
+      "commandDigest"
+    ],
+    "@beep/identity#codegen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/identity#coverage": [
+      "commandDigest"
+    ],
+    "@beep/identity#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/identity#lint": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/identity#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/identity#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/identity#test": [
+      "commandDigest"
+    ],
+    "@beep/identity#test:property": [
+      "commandDigest"
+    ],
+    "@beep/infra#audit": [
+      "commandDigest"
+    ],
+    "@beep/infra#build": [
+      "commandDigest"
+    ],
+    "@beep/infra#check": [
+      "commandDigest"
+    ],
+    "@beep/infra#coverage": [
+      "commandDigest"
+    ],
+    "@beep/infra#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/infra#lint": [
+      "commandDigest"
+    ],
+    "@beep/infra#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/infra#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/infra#test": [
+      "commandDigest"
+    ],
+    "@beep/langextract#audit": [
+      "commandDigest"
+    ],
+    "@beep/langextract#build": [
+      "commandDigest"
+    ],
+    "@beep/langextract#check": [
+      "commandDigest"
+    ],
+    "@beep/langextract#coverage": [
+      "commandDigest"
+    ],
+    "@beep/langextract#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/langextract#lint": [
+      "commandDigest"
+    ],
+    "@beep/langextract#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/langextract#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/langextract#test": [
+      "commandDigest"
+    ],
+    "@beep/langextract#test:property": [
+      "commandDigest"
+    ],
+    "@beep/law-practice-domain#audit": [
+      "commandDigest"
+    ],
+    "@beep/law-practice-domain#build": [
+      "commandDigest"
+    ],
+    "@beep/law-practice-domain#check": [
+      "commandDigest"
+    ],
+    "@beep/law-practice-domain#coverage": [
+      "commandDigest"
+    ],
+    "@beep/law-practice-domain#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/law-practice-domain#lint": [
+      "commandDigest"
+    ],
+    "@beep/law-practice-domain#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/law-practice-domain#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/law-practice-domain#test": [
+      "commandDigest"
+    ],
+    "@beep/law-practice-domain#test:property": [
+      "commandDigest"
+    ],
+    "@beep/law-practice-server#audit": [
+      "commandDigest"
+    ],
+    "@beep/law-practice-server#build": [
+      "commandDigest"
+    ],
+    "@beep/law-practice-server#check": [
+      "commandDigest"
+    ],
+    "@beep/law-practice-server#coverage": [
+      "commandDigest"
+    ],
+    "@beep/law-practice-server#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/law-practice-server#lint": [
+      "commandDigest"
+    ],
+    "@beep/law-practice-server#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/law-practice-server#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/law-practice-server#test": [
+      "commandDigest"
+    ],
+    "@beep/law-practice-tables#audit": [
+      "commandDigest"
+    ],
+    "@beep/law-practice-tables#build": [
+      "commandDigest"
+    ],
+    "@beep/law-practice-tables#check": [
+      "commandDigest"
+    ],
+    "@beep/law-practice-tables#coverage": [
+      "commandDigest"
+    ],
+    "@beep/law-practice-tables#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/law-practice-tables#lint": [
+      "commandDigest"
+    ],
+    "@beep/law-practice-tables#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/law-practice-tables#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/law-practice-tables#test": [
+      "commandDigest"
+    ],
+    "@beep/law-practice-tables#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/law-practice-use-cases#audit": [
+      "commandDigest"
+    ],
+    "@beep/law-practice-use-cases#build": [
+      "commandDigest"
+    ],
+    "@beep/law-practice-use-cases#check": [
+      "commandDigest"
+    ],
+    "@beep/law-practice-use-cases#coverage": [
+      "commandDigest"
+    ],
+    "@beep/law-practice-use-cases#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/law-practice-use-cases#lint": [
+      "commandDigest"
+    ],
+    "@beep/law-practice-use-cases#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/law-practice-use-cases#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/law-practice-use-cases#test": [
+      "commandDigest"
+    ],
+    "@beep/law-practice-use-cases#test:property": [
+      "commandDigest"
+    ],
+    "@beep/lejeune-bolt-workbench#audit": [
+      "commandDigest"
+    ],
+    "@beep/lejeune-bolt-workbench#build": [
+      "commandDigest"
+    ],
+    "@beep/lejeune-bolt-workbench#check": [
+      "commandDigest"
+    ],
+    "@beep/lejeune-bolt-workbench#dev": [
+      "commandDigest"
+    ],
+    "@beep/lejeune-bolt-workbench#lint": [
+      "commandDigest"
+    ],
+    "@beep/lejeune-bolt-workbench#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/lejeune-bolt-workbench#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/lejeune-bolt-workbench#test": [
+      "commandDigest"
+    ],
+    "@beep/lexical-schema#audit": [
+      "commandDigest"
+    ],
+    "@beep/lexical-schema#build": [
+      "commandDigest"
+    ],
+    "@beep/lexical-schema#check": [
+      "commandDigest"
+    ],
+    "@beep/lexical-schema#coverage": [
+      "commandDigest"
+    ],
+    "@beep/lexical-schema#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/lexical-schema#lint": [
+      "commandDigest"
+    ],
+    "@beep/lexical-schema#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/lexical-schema#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/lexical-schema#test": [
+      "commandDigest"
+    ],
+    "@beep/lexical-schema#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/lexical-schema#test:property": [
+      "commandDigest"
+    ],
+    "@beep/libpff#audit": [
+      "commandDigest"
+    ],
+    "@beep/libpff#build": [
+      "commandDigest"
+    ],
+    "@beep/libpff#check": [
+      "commandDigest"
+    ],
+    "@beep/libpff#coverage": [
+      "commandDigest"
+    ],
+    "@beep/libpff#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/libpff#lint": [
+      "commandDigest"
+    ],
+    "@beep/libpff#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/libpff#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/libpff#test": [
+      "commandDigest"
+    ],
+    "@beep/libpff#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/libpff#test:integration:parallel": [
+      "commandDigest"
+    ],
+    "@beep/libpff#test:property": [
+      "commandDigest"
+    ],
+    "@beep/lint-rules#audit": [
+      "commandDigest"
+    ],
+    "@beep/lint-rules#build": [
+      "commandDigest"
+    ],
+    "@beep/lint-rules#check": [
+      "commandDigest"
+    ],
+    "@beep/lint-rules#coverage": [
+      "commandDigest"
+    ],
+    "@beep/lint-rules#lint": [
+      "commandDigest"
+    ],
+    "@beep/lint-rules#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/lint-rules#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/lint-rules#test": [
+      "commandDigest"
+    ],
+    "@beep/lint-rules#test:property": [
+      "commandDigest"
+    ],
+    "@beep/m365#audit": [
+      "commandDigest"
+    ],
+    "@beep/m365#build": [
+      "commandDigest"
+    ],
+    "@beep/m365#check": [
+      "commandDigest"
+    ],
+    "@beep/m365#coverage": [
+      "commandDigest"
+    ],
+    "@beep/m365#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/m365#lint": [
+      "commandDigest"
+    ],
+    "@beep/m365#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/m365#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/m365#test": [
+      "commandDigest"
+    ],
+    "@beep/m365#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/m365#test:integration:parallel": [
+      "commandDigest"
+    ],
+    "@beep/m365#test:property": [
+      "commandDigest"
+    ],
+    "@beep/m365-mcp#audit": [
+      "commandDigest"
+    ],
+    "@beep/m365-mcp#build": [
+      "commandDigest"
+    ],
+    "@beep/m365-mcp#check": [
+      "commandDigest"
+    ],
+    "@beep/m365-mcp#coverage": [
+      "commandDigest"
+    ],
+    "@beep/m365-mcp#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/m365-mcp#lint": [
+      "commandDigest"
+    ],
+    "@beep/m365-mcp#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/m365-mcp#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/m365-mcp#test": [
+      "commandDigest"
+    ],
+    "@beep/m365-mcp#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/m365-mcp#test:property": [
+      "commandDigest"
+    ],
+    "@beep/mcp-kit#audit": [
+      "commandDigest"
+    ],
+    "@beep/mcp-kit#build": [
+      "commandDigest"
+    ],
+    "@beep/mcp-kit#check": [
+      "commandDigest"
+    ],
+    "@beep/mcp-kit#coverage": [
+      "commandDigest"
+    ],
+    "@beep/mcp-kit#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/mcp-kit#lint": [
+      "commandDigest"
+    ],
+    "@beep/mcp-kit#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/mcp-kit#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/mcp-kit#test": [
+      "commandDigest"
+    ],
+    "@beep/mcp-kit#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/mcp-kit#test:property": [
+      "commandDigest"
+    ],
+    "@beep/md#build": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/md#check": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/md#coverage": [
+      "commandDigest"
+    ],
+    "@beep/md#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/md#lint": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/md#lint:fix": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/md#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/md#test": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/md#test:property": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/n3#audit": [
+      "commandDigest"
+    ],
+    "@beep/n3#build": [
+      "commandDigest"
+    ],
+    "@beep/n3#check": [
+      "commandDigest"
+    ],
+    "@beep/n3#coverage": [
+      "commandDigest"
+    ],
+    "@beep/n3#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/n3#lint": [
+      "commandDigest"
+    ],
+    "@beep/n3#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/n3#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/n3#test": [
+      "commandDigest"
+    ],
+    "@beep/n3#test:property": [
+      "commandDigest"
+    ],
+    "@beep/nlp#audit": [
+      "commandDigest"
+    ],
+    "@beep/nlp#build": [
+      "commandDigest"
+    ],
+    "@beep/nlp#check": [
+      "commandDigest"
+    ],
+    "@beep/nlp#coverage": [
+      "commandDigest"
+    ],
+    "@beep/nlp#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/nlp#lint": [
+      "commandDigest"
+    ],
+    "@beep/nlp#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/nlp#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/nlp#test": [
+      "commandDigest"
+    ],
+    "@beep/nlp#test:property": [
+      "commandDigest"
+    ],
+    "@beep/nlp-mcp#audit": [
+      "commandDigest"
+    ],
+    "@beep/nlp-mcp#build": [
+      "commandDigest"
+    ],
+    "@beep/nlp-mcp#check": [
+      "commandDigest"
+    ],
+    "@beep/nlp-mcp#coverage": [
+      "commandDigest"
+    ],
+    "@beep/nlp-mcp#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/nlp-mcp#lint": [
+      "commandDigest"
+    ],
+    "@beep/nlp-mcp#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/nlp-mcp#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/nlp-mcp#test": [
+      "commandDigest"
+    ],
+    "@beep/nlp-mcp#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/nlp-mcp#test:integration:parallel": [
+      "commandDigest"
+    ],
+    "@beep/nlp-mcp#test:property": [
+      "commandDigest"
+    ],
+    "@beep/nlp-processing#audit": [
+      "commandDigest"
+    ],
+    "@beep/nlp-processing#build": [
+      "commandDigest"
+    ],
+    "@beep/nlp-processing#check": [
+      "commandDigest"
+    ],
+    "@beep/nlp-processing#coverage": [
+      "commandDigest"
+    ],
+    "@beep/nlp-processing#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/nlp-processing#lint": [
+      "commandDigest"
+    ],
+    "@beep/nlp-processing#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/nlp-processing#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/nlp-processing#test": [
+      "commandDigest"
+    ],
+    "@beep/nlp-processing#test:property": [
+      "commandDigest"
+    ],
+    "@beep/obs#audit": [
+      "commandDigest"
+    ],
+    "@beep/obs#build": [
+      "commandDigest"
+    ],
+    "@beep/obs#check": [
+      "commandDigest"
+    ],
+    "@beep/obs#coverage": [
+      "commandDigest"
+    ],
+    "@beep/obs#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/obs#lint": [
+      "commandDigest"
+    ],
+    "@beep/obs#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/obs#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/obs#test": [
+      "commandDigest"
+    ],
+    "@beep/obs#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/obs#test:integration:parallel": [
+      "commandDigest"
+    ],
+    "@beep/observability#audit": [
+      "commandDigest"
+    ],
+    "@beep/observability#build": [
+      "commandDigest"
+    ],
+    "@beep/observability#check": [
+      "commandDigest"
+    ],
+    "@beep/observability#coverage": [
+      "commandDigest"
+    ],
+    "@beep/observability#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/observability#lint": [
+      "commandDigest"
+    ],
+    "@beep/observability#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/observability#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/observability#test": [
+      "commandDigest"
+    ],
+    "@beep/observability#test:property": [
+      "commandDigest"
+    ],
+    "@beep/oip-web#audit": [
+      "commandDigest"
+    ],
+    "@beep/oip-web#build": [
+      "commandDigest"
+    ],
+    "@beep/oip-web#check": [
+      "commandDigest"
+    ],
+    "@beep/oip-web#coverage": [
+      "commandDigest"
+    ],
+    "@beep/oip-web#dev": [
+      "commandDigest"
+    ],
+    "@beep/oip-web#lint": [
+      "commandDigest"
+    ],
+    "@beep/oip-web#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/oip-web#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/oip-web#test": [
+      "commandDigest"
+    ],
+    "@beep/oip-web#test:property": [
+      "commandDigest"
+    ],
+    "@beep/onepassword-cli#audit": [
+      "commandDigest"
+    ],
+    "@beep/onepassword-cli#build": [
+      "commandDigest"
+    ],
+    "@beep/onepassword-cli#check": [
+      "commandDigest"
+    ],
+    "@beep/onepassword-cli#coverage": [
+      "commandDigest"
+    ],
+    "@beep/onepassword-cli#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/onepassword-cli#lint": [
+      "commandDigest"
+    ],
+    "@beep/onepassword-cli#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/onepassword-cli#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/onepassword-cli#test": [
+      "commandDigest"
+    ],
+    "@beep/onepassword-cli#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/onepassword-cli#test:property": [
+      "commandDigest"
+    ],
+    "@beep/ontology#audit": [
+      "commandDigest"
+    ],
+    "@beep/ontology#build": [
+      "commandDigest"
+    ],
+    "@beep/ontology#check": [
+      "commandDigest"
+    ],
+    "@beep/ontology#coverage": [
+      "commandDigest"
+    ],
+    "@beep/ontology#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/ontology#lint": [
+      "commandDigest"
+    ],
+    "@beep/ontology#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/ontology#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/ontology#test": [
+      "commandDigest"
+    ],
+    "@beep/ontology#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/ontology#test:property": [
+      "commandDigest"
+    ],
+    "@beep/ontology-client#audit": [
+      "commandDigest"
+    ],
+    "@beep/ontology-client#build": [
+      "commandDigest"
+    ],
+    "@beep/ontology-client#check": [
+      "commandDigest"
+    ],
+    "@beep/ontology-client#coverage": [
+      "commandDigest"
+    ],
+    "@beep/ontology-client#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/ontology-client#lint": [
+      "commandDigest"
+    ],
+    "@beep/ontology-client#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/ontology-client#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/ontology-client#test": [
+      "commandDigest"
+    ],
+    "@beep/ontology-client#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/ontology-config#audit": [
+      "commandDigest"
+    ],
+    "@beep/ontology-config#build": [
+      "commandDigest"
+    ],
+    "@beep/ontology-config#check": [
+      "commandDigest"
+    ],
+    "@beep/ontology-config#coverage": [
+      "commandDigest"
+    ],
+    "@beep/ontology-config#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/ontology-config#lint": [
+      "commandDigest"
+    ],
+    "@beep/ontology-config#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/ontology-config#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/ontology-config#test": [
+      "commandDigest"
+    ],
+    "@beep/ontology-config#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/ontology-domain#audit": [
+      "commandDigest"
+    ],
+    "@beep/ontology-domain#build": [
+      "commandDigest"
+    ],
+    "@beep/ontology-domain#check": [
+      "commandDigest"
+    ],
+    "@beep/ontology-domain#coverage": [
+      "commandDigest"
+    ],
+    "@beep/ontology-domain#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/ontology-domain#lint": [
+      "commandDigest"
+    ],
+    "@beep/ontology-domain#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/ontology-domain#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/ontology-domain#test": [
+      "commandDigest"
+    ],
+    "@beep/ontology-domain#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/ontology-domain#test:property": [
+      "commandDigest"
+    ],
+    "@beep/ontology-server#audit": [
+      "commandDigest"
+    ],
+    "@beep/ontology-server#build": [
+      "commandDigest"
+    ],
+    "@beep/ontology-server#check": [
+      "commandDigest"
+    ],
+    "@beep/ontology-server#coverage": [
+      "commandDigest"
+    ],
+    "@beep/ontology-server#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/ontology-server#lint": [
+      "commandDigest"
+    ],
+    "@beep/ontology-server#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/ontology-server#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/ontology-server#test": [
+      "commandDigest"
+    ],
+    "@beep/ontology-server#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/ontology-server#test:property": [
+      "commandDigest"
+    ],
+    "@beep/ontology-ui#audit": [
+      "commandDigest"
+    ],
+    "@beep/ontology-ui#build": [
+      "commandDigest"
+    ],
+    "@beep/ontology-ui#check": [
+      "commandDigest"
+    ],
+    "@beep/ontology-ui#coverage": [
+      "commandDigest"
+    ],
+    "@beep/ontology-ui#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/ontology-ui#lint": [
+      "commandDigest"
+    ],
+    "@beep/ontology-ui#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/ontology-ui#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/ontology-ui#test": [
+      "commandDigest"
+    ],
+    "@beep/ontology-ui#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/ontology-use-cases#audit": [
+      "commandDigest"
+    ],
+    "@beep/ontology-use-cases#build": [
+      "commandDigest"
+    ],
+    "@beep/ontology-use-cases#check": [
+      "commandDigest"
+    ],
+    "@beep/ontology-use-cases#coverage": [
+      "commandDigest"
+    ],
+    "@beep/ontology-use-cases#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/ontology-use-cases#lint": [
+      "commandDigest"
+    ],
+    "@beep/ontology-use-cases#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/ontology-use-cases#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/ontology-use-cases#test": [
+      "commandDigest"
+    ],
+    "@beep/ontology-use-cases#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/ontology-use-cases#test:property": [
+      "commandDigest"
+    ],
+    "@beep/openai#audit": [
+      "commandDigest"
+    ],
+    "@beep/openai#build": [
+      "commandDigest"
+    ],
+    "@beep/openai#check": [
+      "commandDigest"
+    ],
+    "@beep/openai#coverage": [
+      "commandDigest"
+    ],
+    "@beep/openai#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/openai#lint": [
+      "commandDigest"
+    ],
+    "@beep/openai#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/openai#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/openai#test": [
+      "commandDigest"
+    ],
+    "@beep/openai#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/openai-compat#audit": [
+      "commandDigest"
+    ],
+    "@beep/openai-compat#build": [
+      "commandDigest"
+    ],
+    "@beep/openai-compat#check": [
+      "commandDigest"
+    ],
+    "@beep/openai-compat#coverage": [
+      "commandDigest"
+    ],
+    "@beep/openai-compat#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/openai-compat#lint": [
+      "commandDigest"
+    ],
+    "@beep/openai-compat#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/openai-compat#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/openai-compat#test": [
+      "commandDigest"
+    ],
+    "@beep/openai-compat#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/openai-compat#test:property": [
+      "commandDigest"
+    ],
+    "@beep/openclaw#audit": [
+      "commandDigest"
+    ],
+    "@beep/openclaw#build": [
+      "commandDigest"
+    ],
+    "@beep/openclaw#check": [
+      "commandDigest"
+    ],
+    "@beep/openclaw#coverage": [
+      "commandDigest"
+    ],
+    "@beep/openclaw#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/openclaw#lint": [
+      "commandDigest"
+    ],
+    "@beep/openclaw#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/openclaw#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/openclaw#test": [
+      "commandDigest"
+    ],
+    "@beep/openclaw#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/openclaw#test:integration:parallel": [
+      "commandDigest"
+    ],
+    "@beep/oxigraph#audit": [
+      "commandDigest"
+    ],
+    "@beep/oxigraph#build": [
+      "commandDigest"
+    ],
+    "@beep/oxigraph#check": [
+      "commandDigest"
+    ],
+    "@beep/oxigraph#coverage": [
+      "commandDigest"
+    ],
+    "@beep/oxigraph#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/oxigraph#lint": [
+      "commandDigest"
+    ],
+    "@beep/oxigraph#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/oxigraph#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/oxigraph#test": [
+      "commandDigest"
+    ],
+    "@beep/oxigraph#test:property": [
+      "commandDigest"
+    ],
+    "@beep/pacer#audit": [
+      "commandDigest"
+    ],
+    "@beep/pacer#build": [
+      "commandDigest"
+    ],
+    "@beep/pacer#check": [
+      "commandDigest"
+    ],
+    "@beep/pacer#coverage": [
+      "commandDigest"
+    ],
+    "@beep/pacer#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/pacer#lint": [
+      "commandDigest"
+    ],
+    "@beep/pacer#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/pacer#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/pacer#test": [
+      "commandDigest"
+    ],
+    "@beep/pacer#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/pacer#test:property": [
+      "commandDigest"
+    ],
+    "@beep/pandoc-ast#audit": [
+      "commandDigest"
+    ],
+    "@beep/pandoc-ast#build": [
+      "commandDigest"
+    ],
+    "@beep/pandoc-ast#check": [
+      "commandDigest"
+    ],
+    "@beep/pandoc-ast#coverage": [
+      "commandDigest"
+    ],
+    "@beep/pandoc-ast#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/pandoc-ast#lint": [
+      "commandDigest"
+    ],
+    "@beep/pandoc-ast#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/pandoc-ast#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/pandoc-ast#test": [
+      "commandDigest"
+    ],
+    "@beep/pandoc-ast#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/pandoc-ast#test:integration:parallel": [
+      "commandDigest"
+    ],
+    "@beep/pandoc-ast#test:property": [
+      "commandDigest"
+    ],
+    "@beep/pglite#audit": [
+      "commandDigest"
+    ],
+    "@beep/pglite#build": [
+      "commandDigest"
+    ],
+    "@beep/pglite#check": [
+      "commandDigest"
+    ],
+    "@beep/pglite#coverage": [
+      "commandDigest"
+    ],
+    "@beep/pglite#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/pglite#lint": [
+      "commandDigest"
+    ],
+    "@beep/pglite#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/pglite#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/pglite#test": [
+      "commandDigest"
+    ],
+    "@beep/pglite#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/pglite#test:integration:parallel": [
+      "commandDigest"
+    ],
+    "@beep/pglite#test:property": [
+      "commandDigest"
+    ],
+    "@beep/phoenix#audit": [
+      "commandDigest"
+    ],
+    "@beep/phoenix#build": [
+      "commandDigest"
+    ],
+    "@beep/phoenix#check": [
+      "commandDigest"
+    ],
+    "@beep/phoenix#coverage": [
+      "commandDigest"
+    ],
+    "@beep/phoenix#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/phoenix#lint": [
+      "commandDigest"
+    ],
+    "@beep/phoenix#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/phoenix#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/phoenix#test": [
+      "commandDigest"
+    ],
+    "@beep/phoenix#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/phoenix#test:property": [
+      "commandDigest"
+    ],
+    "@beep/postgres#audit": [
+      "commandDigest"
+    ],
+    "@beep/postgres#build": [
+      "commandDigest"
+    ],
+    "@beep/postgres#check": [
+      "commandDigest"
+    ],
+    "@beep/postgres#coverage": [
+      "commandDigest"
+    ],
+    "@beep/postgres#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/postgres#lint": [
+      "commandDigest"
+    ],
+    "@beep/postgres#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/postgres#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/postgres#test": [
+      "commandDigest"
+    ],
+    "@beep/postgres#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/postgres#test:integration:serial": [
+      "commandDigest"
+    ],
+    "@beep/postgres#test:property": [
+      "commandDigest"
+    ],
+    "@beep/practice-kg-mcp#audit": [
+      "commandDigest"
+    ],
+    "@beep/practice-kg-mcp#build": [
+      "commandDigest"
+    ],
+    "@beep/practice-kg-mcp#check": [
+      "commandDigest"
+    ],
+    "@beep/practice-kg-mcp#coverage": [
+      "commandDigest"
+    ],
+    "@beep/practice-kg-mcp#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/practice-kg-mcp#lint": [
+      "commandDigest"
+    ],
+    "@beep/practice-kg-mcp#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/practice-kg-mcp#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/practice-kg-mcp#test": [
+      "commandDigest"
+    ],
+    "@beep/pretext#audit": [
+      "commandDigest"
+    ],
+    "@beep/pretext#build": [
+      "commandDigest"
+    ],
+    "@beep/pretext#check": [
+      "commandDigest"
+    ],
+    "@beep/pretext#coverage": [
+      "commandDigest"
+    ],
+    "@beep/pretext#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/pretext#lint": [
+      "commandDigest"
+    ],
+    "@beep/pretext#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/pretext#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/pretext#test": [
+      "commandDigest"
+    ],
+    "@beep/pretext#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/professional-desktop#audit": [
+      "commandDigest"
+    ],
+    "@beep/professional-desktop#build": [
+      "commandDigest"
+    ],
+    "@beep/professional-desktop#check": [
+      "commandDigest"
+    ],
+    "@beep/professional-desktop#codegen": [
+      "commandDigest"
+    ],
+    "@beep/professional-desktop#coverage": [
+      "commandDigest"
+    ],
+    "@beep/professional-desktop#dev": [
+      "commandDigest"
+    ],
+    "@beep/professional-desktop#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/professional-desktop#lint": [
+      "commandDigest"
+    ],
+    "@beep/professional-desktop#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/professional-desktop#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/professional-desktop#test": [
+      "commandDigest"
+    ],
+    "@beep/professional-desktop#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/professional-desktop#test:integration:parallel": [
+      "commandDigest"
+    ],
+    "@beep/professional-desktop#test:property": [
+      "commandDigest"
+    ],
+    "@beep/provenance#audit": [
+      "commandDigest"
+    ],
+    "@beep/provenance#build": [
+      "commandDigest"
+    ],
+    "@beep/provenance#check": [
+      "commandDigest"
+    ],
+    "@beep/provenance#coverage": [
+      "commandDigest"
+    ],
+    "@beep/provenance#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/provenance#lint": [
+      "commandDigest"
+    ],
+    "@beep/provenance#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/provenance#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/provenance#test": [
+      "commandDigest"
+    ],
+    "@beep/provenance#test:property": [
+      "commandDigest"
+    ],
+    "@beep/qa-capture#audit": [
+      "commandDigest"
+    ],
+    "@beep/qa-capture#build": [
+      "commandDigest"
+    ],
+    "@beep/qa-capture#check": [
+      "commandDigest"
+    ],
+    "@beep/qa-capture#coverage": [
+      "commandDigest"
+    ],
+    "@beep/qa-capture#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/qa-capture#lint": [
+      "commandDigest"
+    ],
+    "@beep/qa-capture#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/qa-capture#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/qa-capture#test": [
+      "commandDigest"
+    ],
+    "@beep/qa-capture#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/qa-capture#test:integration:parallel": [
+      "commandDigest"
+    ],
+    "@beep/rdf#audit": [
+      "commandDigest"
+    ],
+    "@beep/rdf#build": [
+      "commandDigest"
+    ],
+    "@beep/rdf#check": [
+      "commandDigest"
+    ],
+    "@beep/rdf#coverage": [
+      "commandDigest"
+    ],
+    "@beep/rdf#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/rdf#lint": [
+      "commandDigest"
+    ],
+    "@beep/rdf#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/rdf#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/rdf#test": [
+      "commandDigest"
+    ],
+    "@beep/rdf#test:property": [
+      "commandDigest"
+    ],
+    "@beep/rdf-canonize#audit": [
+      "commandDigest"
+    ],
+    "@beep/rdf-canonize#build": [
+      "commandDigest"
+    ],
+    "@beep/rdf-canonize#check": [
+      "commandDigest"
+    ],
+    "@beep/rdf-canonize#coverage": [
+      "commandDigest"
+    ],
+    "@beep/rdf-canonize#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/rdf-canonize#lint": [
+      "commandDigest"
+    ],
+    "@beep/rdf-canonize#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/rdf-canonize#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/rdf-canonize#test": [
+      "commandDigest"
+    ],
+    "@beep/rdf-canonize#test:property": [
+      "commandDigest"
+    ],
+    "@beep/repo-ai-metrics#audit": [
+      "commandDigest"
+    ],
+    "@beep/repo-ai-metrics#build": [
+      "commandDigest"
+    ],
+    "@beep/repo-ai-metrics#check": [
+      "commandDigest"
+    ],
+    "@beep/repo-ai-metrics#coverage": [
+      "commandDigest"
+    ],
+    "@beep/repo-ai-metrics#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/repo-ai-metrics#lint": [
+      "commandDigest"
+    ],
+    "@beep/repo-ai-metrics#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/repo-ai-metrics#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/repo-ai-metrics#test": [
+      "commandDigest"
+    ],
+    "@beep/repo-ai-metrics#test:property": [
+      "commandDigest"
+    ],
+    "@beep/repo-cli#audit": [
+      "commandDigest"
+    ],
+    "@beep/repo-cli#build": [
+      "commandDigest"
+    ],
+    "@beep/repo-cli#check": [
+      "commandDigest"
+    ],
+    "@beep/repo-cli#coverage": [
+      "commandDigest"
+    ],
+    "@beep/repo-cli#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/repo-cli#lint": [
+      "commandDigest"
+    ],
+    "@beep/repo-cli#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/repo-cli#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/repo-cli#test": [
+      "commandDigest"
+    ],
+    "@beep/repo-cli#test:property": [
+      "commandDigest"
+    ],
+    "@beep/repo-configs#audit": [
+      "commandDigest"
+    ],
+    "@beep/repo-configs#build": [
+      "commandDigest"
+    ],
+    "@beep/repo-configs#check": [
+      "commandDigest"
+    ],
+    "@beep/repo-configs#codegen": [
+      "commandDigest"
+    ],
+    "@beep/repo-configs#coverage": [
+      "commandDigest"
+    ],
+    "@beep/repo-configs#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/repo-configs#lint": [
+      "commandDigest"
+    ],
+    "@beep/repo-configs#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/repo-configs#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/repo-configs#test": [
+      "commandDigest"
+    ],
+    "@beep/repo-configs#test:property": [
+      "commandDigest"
+    ],
+    "@beep/repo-docgen#audit": [
+      "commandDigest"
+    ],
+    "@beep/repo-docgen#build": [
+      "commandDigest"
+    ],
+    "@beep/repo-docgen#check": [
+      "commandDigest"
+    ],
+    "@beep/repo-docgen#coverage": [
+      "commandDigest"
+    ],
+    "@beep/repo-docgen#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/repo-docgen#lint": [
+      "commandDigest"
+    ],
+    "@beep/repo-docgen#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/repo-docgen#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/repo-docgen#test": [
+      "commandDigest"
+    ],
+    "@beep/repo-docgen#test:property": [
+      "commandDigest"
+    ],
+    "@beep/repo-utils#audit": [
+      "commandDigest"
+    ],
+    "@beep/repo-utils#build": [
+      "commandDigest"
+    ],
+    "@beep/repo-utils#check": [
+      "commandDigest"
+    ],
+    "@beep/repo-utils#coverage": [
+      "commandDigest"
+    ],
+    "@beep/repo-utils#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/repo-utils#lint": [
+      "commandDigest"
+    ],
+    "@beep/repo-utils#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/repo-utils#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/repo-utils#test": [
+      "commandDigest"
+    ],
+    "@beep/repo-utils#test:property": [
+      "commandDigest"
+    ],
+    "@beep/runpod#audit": [
+      "commandDigest"
+    ],
+    "@beep/runpod#build": [
+      "commandDigest"
+    ],
+    "@beep/runpod#check": [
+      "commandDigest"
+    ],
+    "@beep/runpod#coverage": [
+      "commandDigest"
+    ],
+    "@beep/runpod#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/runpod#lint": [
+      "commandDigest"
+    ],
+    "@beep/runpod#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/runpod#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/runpod#test": [
+      "commandDigest"
+    ],
+    "@beep/runpod#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/runpod#test:integration:parallel": [
+      "commandDigest"
+    ],
+    "@beep/runpod#test:property": [
+      "commandDigest"
+    ],
+    "@beep/sanity#audit": [
+      "commandDigest"
+    ],
+    "@beep/sanity#build": [
+      "commandDigest"
+    ],
+    "@beep/sanity#check": [
+      "commandDigest"
+    ],
+    "@beep/sanity#coverage": [
+      "commandDigest"
+    ],
+    "@beep/sanity#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/sanity#lint": [
+      "commandDigest"
+    ],
+    "@beep/sanity#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/sanity#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/sanity#test": [
+      "commandDigest"
+    ],
+    "@beep/sanity#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/sanity#test:property": [
+      "commandDigest"
+    ],
+    "@beep/schema#audit": [
+      "commandDigest"
+    ],
+    "@beep/schema#build": [
+      "commandDigest"
+    ],
+    "@beep/schema#check": [
+      "commandDigest"
+    ],
+    "@beep/schema#coverage": [
+      "commandDigest"
+    ],
+    "@beep/schema#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/schema#lint": [
+      "commandDigest"
+    ],
+    "@beep/schema#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/schema#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/schema#test": [
+      "commandDigest"
+    ],
+    "@beep/schema#test:property": [
+      "commandDigest"
+    ],
+    "@beep/semantic-web#audit": [
+      "commandDigest"
+    ],
+    "@beep/semantic-web#build": [
+      "commandDigest"
+    ],
+    "@beep/semantic-web#check": [
+      "commandDigest"
+    ],
+    "@beep/semantic-web#coverage": [
+      "commandDigest"
+    ],
+    "@beep/semantic-web#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/semantic-web#lint": [
+      "commandDigest"
+    ],
+    "@beep/semantic-web#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/semantic-web#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/semantic-web#test": [
+      "commandDigest"
+    ],
+    "@beep/semantic-web#test:property": [
+      "commandDigest"
+    ],
+    "@beep/semantica#audit": [
+      "commandDigest"
+    ],
+    "@beep/semantica#build": [
+      "commandDigest"
+    ],
+    "@beep/semantica#check": [
+      "commandDigest"
+    ],
+    "@beep/semantica#dev": [
+      "commandDigest"
+    ],
+    "@beep/semantica#lint": [
+      "commandDigest"
+    ],
+    "@beep/semantica#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/semantica#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/semantica#test": [
+      "commandDigest"
+    ],
+    "@beep/shacl#audit": [
+      "commandDigest"
+    ],
+    "@beep/shacl#build": [
+      "commandDigest"
+    ],
+    "@beep/shacl#check": [
+      "commandDigest"
+    ],
+    "@beep/shacl#coverage": [
+      "commandDigest"
+    ],
+    "@beep/shacl#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/shacl#lint": [
+      "commandDigest"
+    ],
+    "@beep/shacl#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/shacl#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/shacl#test": [
+      "commandDigest"
+    ],
+    "@beep/shacl#test:property": [
+      "commandDigest"
+    ],
+    "@beep/shared-domain#audit": [
+      "commandDigest"
+    ],
+    "@beep/shared-domain#build": [
+      "commandDigest"
+    ],
+    "@beep/shared-domain#check": [
+      "commandDigest"
+    ],
+    "@beep/shared-domain#coverage": [
+      "commandDigest"
+    ],
+    "@beep/shared-domain#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/shared-domain#lint": [
+      "commandDigest"
+    ],
+    "@beep/shared-domain#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/shared-domain#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/shared-domain#test": [
+      "commandDigest"
+    ],
+    "@beep/shared-domain#test:property": [
+      "commandDigest"
+    ],
+    "@beep/shared-tables#audit": [
+      "commandDigest"
+    ],
+    "@beep/shared-tables#build": [
+      "commandDigest"
+    ],
+    "@beep/shared-tables#check": [
+      "commandDigest"
+    ],
+    "@beep/shared-tables#coverage": [
+      "commandDigest"
+    ],
+    "@beep/shared-tables#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/shared-tables#lint": [
+      "commandDigest"
+    ],
+    "@beep/shared-tables#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/shared-tables#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/shared-tables#test": [
+      "commandDigest"
+    ],
+    "@beep/shared-use-cases#audit": [
+      "commandDigest"
+    ],
+    "@beep/shared-use-cases#build": [
+      "commandDigest"
+    ],
+    "@beep/shared-use-cases#check": [
+      "commandDigest"
+    ],
+    "@beep/shared-use-cases#coverage": [
+      "commandDigest"
+    ],
+    "@beep/shared-use-cases#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/shared-use-cases#lint": [
+      "commandDigest"
+    ],
+    "@beep/shared-use-cases#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/shared-use-cases#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/shared-use-cases#test": [
+      "commandDigest"
+    ],
+    "@beep/shared-use-cases#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/shared-use-cases#test:integration:parallel": [
+      "commandDigest"
+    ],
+    "@beep/skill-contract#audit": [
+      "commandDigest"
+    ],
+    "@beep/skill-contract#build": [
+      "commandDigest"
+    ],
+    "@beep/skill-contract#check": [
+      "commandDigest"
+    ],
+    "@beep/skill-contract#coverage": [
+      "commandDigest"
+    ],
+    "@beep/skill-contract#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/skill-contract#lint": [
+      "commandDigest"
+    ],
+    "@beep/skill-contract#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/skill-contract#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/skill-contract#test": [
+      "commandDigest"
+    ],
+    "@beep/skill-contract#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/storybook#audit": [
+      "commandDigest"
+    ],
+    "@beep/storybook#build": [
+      "commandDigest"
+    ],
+    "@beep/storybook#check": [
+      "commandDigest"
+    ],
+    "@beep/storybook#lint": [
+      "commandDigest"
+    ],
+    "@beep/storybook#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/storybook#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/storybook#storybook": [
+      "commandDigest",
+      "configuration"
+    ],
+    "@beep/storybook#storybook:build": [
+      "commandDigest"
+    ],
+    "@beep/storybook#storybook:start": [
+      "commandDigest"
+    ],
+    "@beep/storybook#test": [
+      "commandDigest"
+    ],
+    "@beep/storybook#test:storybook": [
+      "commandDigest"
+    ],
+    "@beep/tailscale#audit": [
+      "commandDigest"
+    ],
+    "@beep/tailscale#build": [
+      "commandDigest"
+    ],
+    "@beep/tailscale#check": [
+      "commandDigest"
+    ],
+    "@beep/tailscale#coverage": [
+      "commandDigest"
+    ],
+    "@beep/tailscale#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/tailscale#lint": [
+      "commandDigest"
+    ],
+    "@beep/tailscale#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/tailscale#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/tailscale#test": [
+      "commandDigest"
+    ],
+    "@beep/tailscale#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/test-utils#audit": [
+      "commandDigest"
+    ],
+    "@beep/test-utils#build": [
+      "commandDigest"
+    ],
+    "@beep/test-utils#check": [
+      "commandDigest"
+    ],
+    "@beep/test-utils#coverage": [
+      "commandDigest"
+    ],
+    "@beep/test-utils#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/test-utils#lint": [
+      "commandDigest"
+    ],
+    "@beep/test-utils#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/test-utils#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/test-utils#test": [
+      "commandDigest"
+    ],
+    "@beep/test-utils#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/test-utils#test:integration:serial": [
+      "commandDigest"
+    ],
+    "@beep/test-utils#test:property": [
+      "commandDigest"
+    ],
+    "@beep/tika#audit": [
+      "commandDigest"
+    ],
+    "@beep/tika#build": [
+      "commandDigest"
+    ],
+    "@beep/tika#check": [
+      "commandDigest"
+    ],
+    "@beep/tika#coverage": [
+      "commandDigest"
+    ],
+    "@beep/tika#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/tika#lint": [
+      "commandDigest"
+    ],
+    "@beep/tika#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/tika#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/tika#test": [
+      "commandDigest"
+    ],
+    "@beep/tika#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/tika#test:integration:parallel": [
+      "commandDigest"
+    ],
+    "@beep/tika#test:property": [
+      "commandDigest"
+    ],
+    "@beep/todox#audit": [
+      "commandDigest"
+    ],
+    "@beep/todox#build": [
+      "commandDigest"
+    ],
+    "@beep/todox#check": [
+      "commandDigest"
+    ],
+    "@beep/todox#coverage": [
+      "commandDigest"
+    ],
+    "@beep/todox#dev": [
+      "commandDigest"
+    ],
+    "@beep/todox#lint": [
+      "commandDigest"
+    ],
+    "@beep/todox#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/todox#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/todox#test": [
+      "commandDigest"
+    ],
+    "@beep/trustgraph-workbench#audit": [
+      "commandDigest"
+    ],
+    "@beep/trustgraph-workbench#build": [
+      "commandDigest"
+    ],
+    "@beep/trustgraph-workbench#check": [
+      "commandDigest"
+    ],
+    "@beep/trustgraph-workbench#dev": [
+      "commandDigest"
+    ],
+    "@beep/trustgraph-workbench#lint": [
+      "commandDigest"
+    ],
+    "@beep/trustgraph-workbench#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/trustgraph-workbench#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/trustgraph-workbench#test": [
+      "commandDigest"
+    ],
+    "@beep/types#audit": [
+      "commandDigest"
+    ],
+    "@beep/types#build": [
+      "commandDigest"
+    ],
+    "@beep/types#check": [
+      "commandDigest"
+    ],
+    "@beep/types#coverage": [
+      "commandDigest"
+    ],
+    "@beep/types#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/types#lint": [
+      "commandDigest"
+    ],
+    "@beep/types#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/types#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/types#test": [
+      "commandDigest"
+    ],
+    "@beep/ui#audit": [
+      "commandDigest"
+    ],
+    "@beep/ui#build": [
+      "commandDigest"
+    ],
+    "@beep/ui#check": [
+      "commandDigest"
+    ],
+    "@beep/ui#coverage": [
+      "commandDigest"
+    ],
+    "@beep/ui#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/ui#lint": [
+      "commandDigest"
+    ],
+    "@beep/ui#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/ui#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/ui#test": [
+      "commandDigest"
+    ],
+    "@beep/ui#test:property": [
+      "commandDigest"
+    ],
+    "@beep/uspto#audit": [
+      "commandDigest"
+    ],
+    "@beep/uspto#build": [
+      "commandDigest"
+    ],
+    "@beep/uspto#check": [
+      "commandDigest"
+    ],
+    "@beep/uspto#coverage": [
+      "commandDigest"
+    ],
+    "@beep/uspto#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/uspto#lint": [
+      "commandDigest"
+    ],
+    "@beep/uspto#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/uspto#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/uspto#test": [
+      "commandDigest"
+    ],
+    "@beep/uspto#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/uspto#test:property": [
+      "commandDigest"
+    ],
+    "@beep/uspto-mcp#audit": [
+      "commandDigest"
+    ],
+    "@beep/uspto-mcp#build": [
+      "commandDigest"
+    ],
+    "@beep/uspto-mcp#check": [
+      "commandDigest"
+    ],
+    "@beep/uspto-mcp#coverage": [
+      "commandDigest"
+    ],
+    "@beep/uspto-mcp#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/uspto-mcp#lint": [
+      "commandDigest"
+    ],
+    "@beep/uspto-mcp#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/uspto-mcp#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/uspto-mcp#test": [
+      "commandDigest"
+    ],
+    "@beep/uspto-mcp#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/uspto-mcp#test:property": [
+      "commandDigest"
+    ],
+    "@beep/utils#audit": [
+      "commandDigest"
+    ],
+    "@beep/utils#build": [
+      "commandDigest"
+    ],
+    "@beep/utils#check": [
+      "commandDigest"
+    ],
+    "@beep/utils#coverage": [
+      "commandDigest"
+    ],
+    "@beep/utils#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/utils#lint": [
+      "commandDigest"
+    ],
+    "@beep/utils#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/utils#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/utils#test": [
+      "commandDigest"
+    ],
+    "@beep/utils#test:property": [
+      "commandDigest"
+    ],
+    "@beep/venice-ai#audit": [
+      "commandDigest"
+    ],
+    "@beep/venice-ai#build": [
+      "commandDigest"
+    ],
+    "@beep/venice-ai#check": [
+      "commandDigest"
+    ],
+    "@beep/venice-ai#coverage": [
+      "commandDigest"
+    ],
+    "@beep/venice-ai#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/venice-ai#lint": [
+      "commandDigest"
+    ],
+    "@beep/venice-ai#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/venice-ai#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/venice-ai#test": [
+      "commandDigest"
+    ],
+    "@beep/venice-ai#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/venice-ai#test:integration:parallel": [
+      "commandDigest"
+    ],
+    "@beep/venice-ai#test:property": [
+      "commandDigest"
+    ],
+    "@beep/wink#audit": [
+      "commandDigest"
+    ],
+    "@beep/wink#build": [
+      "commandDigest"
+    ],
+    "@beep/wink#check": [
+      "commandDigest"
+    ],
+    "@beep/wink#coverage": [
+      "commandDigest"
+    ],
+    "@beep/wink#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/wink#lint": [
+      "commandDigest"
+    ],
+    "@beep/wink#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/wink#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/wink#test": [
+      "commandDigest"
+    ],
+    "@beep/wink#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/wink#test:property": [
+      "commandDigest"
+    ],
+    "@beep/workspace-domain#audit": [
+      "commandDigest"
+    ],
+    "@beep/workspace-domain#build": [
+      "commandDigest"
+    ],
+    "@beep/workspace-domain#check": [
+      "commandDigest"
+    ],
+    "@beep/workspace-domain#coverage": [
+      "commandDigest"
+    ],
+    "@beep/workspace-domain#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/workspace-domain#lint": [
+      "commandDigest"
+    ],
+    "@beep/workspace-domain#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/workspace-domain#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/workspace-domain#test": [
+      "commandDigest"
+    ],
+    "@beep/workspace-domain#test:property": [
+      "commandDigest"
+    ],
+    "@beep/workspace-server#audit": [
+      "commandDigest"
+    ],
+    "@beep/workspace-server#build": [
+      "commandDigest"
+    ],
+    "@beep/workspace-server#check": [
+      "commandDigest"
+    ],
+    "@beep/workspace-server#coverage": [
+      "commandDigest"
+    ],
+    "@beep/workspace-server#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/workspace-server#lint": [
+      "commandDigest"
+    ],
+    "@beep/workspace-server#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/workspace-server#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/workspace-server#test": [
+      "commandDigest"
+    ],
+    "@beep/workspace-server#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/workspace-server#test:integration:parallel": [
+      "commandDigest"
+    ],
+    "@beep/workspace-server#test:property": [
+      "commandDigest"
+    ],
+    "@beep/workspace-tables#audit": [
+      "commandDigest"
+    ],
+    "@beep/workspace-tables#build": [
+      "commandDigest"
+    ],
+    "@beep/workspace-tables#check": [
+      "commandDigest"
+    ],
+    "@beep/workspace-tables#coverage": [
+      "commandDigest"
+    ],
+    "@beep/workspace-tables#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/workspace-tables#lint": [
+      "commandDigest"
+    ],
+    "@beep/workspace-tables#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/workspace-tables#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/workspace-tables#test": [
+      "commandDigest"
+    ],
+    "@beep/workspace-tables#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/workspace-tables#test:property": [
+      "commandDigest"
+    ],
+    "@beep/workspace-use-cases#audit": [
+      "commandDigest"
+    ],
+    "@beep/workspace-use-cases#build": [
+      "commandDigest"
+    ],
+    "@beep/workspace-use-cases#check": [
+      "commandDigest"
+    ],
+    "@beep/workspace-use-cases#coverage": [
+      "commandDigest"
+    ],
+    "@beep/workspace-use-cases#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/workspace-use-cases#lint": [
+      "commandDigest"
+    ],
+    "@beep/workspace-use-cases#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/workspace-use-cases#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/workspace-use-cases#test": [
+      "commandDigest"
+    ],
+    "@beep/workspace-use-cases#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/workspace-use-cases#test:property": [
+      "commandDigest"
+    ],
+    "@beep/xai#audit": [
+      "commandDigest"
+    ],
+    "@beep/xai#build": [
+      "commandDigest"
+    ],
+    "@beep/xai#check": [
+      "commandDigest"
+    ],
+    "@beep/xai#coverage": [
+      "commandDigest"
+    ],
+    "@beep/xai#docgen": [
+      "command",
+      "commandDigest"
+    ],
+    "@beep/xai#lint": [
+      "commandDigest"
+    ],
+    "@beep/xai#lint:fix": [
+      "commandDigest"
+    ],
+    "@beep/xai#package-test-typecheck": [
+      "commandDigest"
+    ],
+    "@beep/xai#test": [
+      "commandDigest"
+    ],
+    "@beep/xai#test:integration": [
+      "commandDigest"
+    ],
+    "@beep/xai#test:property": [
+      "commandDigest"
+    ]
   },
   "onlyManifestsDifferentFromMergedMain": [
     {
