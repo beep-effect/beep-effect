@@ -52,6 +52,8 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import type { ConformantHtml, SafeHtml, SafeHtmlAst } from "@beep/html";
 
+const isHtmlDocument = S.is(HtmlDocument);
+
 const text = Text.fromValue;
 const comment = Comment.fromValue;
 const hasRule = (root: Parameters<typeof inspectConformance>[0], rule: string): boolean =>
@@ -97,7 +99,7 @@ describe("@beep/html conformance branch matrix", () => {
       doctype: O.some(Doctype.html()),
       children: [comment("before root"), html],
     });
-    expect(S.is(HtmlDocument)(canonical)).toBe(true);
+    expect(isHtmlDocument(canonical)).toBe(true);
     expect(inspectConformance(canonical)).toStrictEqual([]);
 
     const doctypes = [

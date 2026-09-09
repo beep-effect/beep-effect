@@ -42,6 +42,11 @@ import { HttpClient, HttpClientError, HttpClientResponse } from "effect/unstable
 import { create as createTar } from "tar";
 import type { SyncDataTarget } from "@beep/repo-cli/test/SyncDataToTs";
 
+const decodeSyncDataTargetResult = S.decodeEffect(SyncDataTargetResult);
+const encodeSyncDataTargetResult = S.encodeEffect(SyncDataTargetResult);
+const isSyncDataTargetMetadata = S.is(SyncDataTargetMetadata);
+const isSyncDataTargetResult = S.is(SyncDataTargetResult);
+
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
   <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
@@ -344,22 +349,22 @@ describe("sync-data-to-ts", { concurrent: false }, () => {
       targetId: "test-csv",
     });
 
-    expect(S.is(SyncDataTargetMetadata)(metadata)).toBe(true);
+    expect(isSyncDataTargetMetadata(metadata)).toBe(true);
     expect(metadata.id).toBe(csvTarget.id);
-    expect(S.is(SyncDataTargetResult)(result)).toBe(true);
+    expect(isSyncDataTargetResult(result)).toBe(true);
   });
 
   it("round-trips a non-empty result from the real target producer", () =>
     Effect.runPromise(
       Effect.gen(function* () {
         const result = yield* syncTargetForTesting(process.cwd(), "dry-run", csvTarget);
-        const encoded = yield* S.encodeEffect(SyncDataTargetResult)(result);
-        const decoded = yield* S.decodeEffect(SyncDataTargetResult)(encoded);
+        const encoded = yield* encodeSyncDataTargetResult(result);
+        const decoded = yield* decodeSyncDataTargetResult(encoded);
 
         expect(result.fileResults).toHaveLength(2);
         expect(result.canonicalPatch.length).toBeGreaterThan(0);
-        expect(S.is(SyncDataTargetResult)(result)).toBe(true);
-        expect(S.is(SyncDataTargetResult)(decoded)).toBe(true);
+        expect(isSyncDataTargetResult(result)).toBe(true);
+        expect(isSyncDataTargetResult(decoded)).toBe(true);
         expect(decoded.targetId).toBe(csvTarget.id);
       }).pipe(provideCsvFixtureClient, withTempRepoCommand)
     ));

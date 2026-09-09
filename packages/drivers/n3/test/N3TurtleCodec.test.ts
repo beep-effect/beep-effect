@@ -9,6 +9,8 @@ import { Writer } from "n3";
 import { vi } from "vitest";
 import type * as N3 from "n3";
 
+const decodePrefixMap = S.decodeEffect(PrefixMap);
+
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
   <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
@@ -71,7 +73,7 @@ describe("N3TurtleCodec", () => {
         makeQuad(statement, makeNamedNode("https://example.test/confidence"), makeLiteral("0.8", XSD_DOUBLE.value)),
       ]);
       const codec = yield* N3TurtleCodec;
-      const prefixes = yield* S.decodeEffect(PrefixMap)({ rdf: RDF_NAMESPACE });
+      const prefixes = yield* decodePrefixMap({ rdf: RDF_NAMESPACE });
       const serialized = yield* codec.serialize(N3SerializeTurtleRequest.make({ dataset, prefixes }));
 
       expect(serialized.source).toContain("rdf:Statement");

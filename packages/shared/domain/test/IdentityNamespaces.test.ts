@@ -10,6 +10,8 @@ import { FastCheck as fc } from "effect/testing";
 import { hasFunctionStatic, invokeStatic } from "./StaticProbes.ts";
 import type * as EntityId from "@beep/shared-domain/entity/EntityId";
 
+const decodeUnknownIdentityAnyIdentityComposer = S.decodeUnknownEffect(Identity.AnyIdentityComposer);
+
 type IdentitySpec = {
   readonly brand: string;
   readonly description: string;
@@ -449,11 +451,9 @@ describe("P3 identity namespaces", () => {
     "validates runtime identity composers",
     Effect.fnUntraced(function* () {
       const { $IdentityComposerExampleId } = make("identity-composer-example");
-      const decode = S.decodeUnknownEffect(Identity.AnyIdentityComposer);
-
-      const rootComposer = yield* decode($SharedDomainId);
-      const nestedComposer = yield* decode($SharedDomainId.create("identity"));
-      const customComposer = yield* decode($IdentityComposerExampleId);
+      const rootComposer = yield* decodeUnknownIdentityAnyIdentityComposer($SharedDomainId);
+      const nestedComposer = yield* decodeUnknownIdentityAnyIdentityComposer($SharedDomainId.create("identity"));
+      const customComposer = yield* decodeUnknownIdentityAnyIdentityComposer($IdentityComposerExampleId);
 
       expect(rootComposer.make("Probe")).toBe("@beep/shared-domain/Probe");
       expect(nestedComposer.string()).toBe("@beep/shared-domain/identity");
@@ -464,7 +464,6 @@ describe("P3 identity namespaces", () => {
   it.effect(
     "rejects invalid identity composer lookalikes",
     Effect.fnUntraced(function* () {
-      const decode = S.decodeUnknownEffect(Identity.AnyIdentityComposer);
       const wrongProbeResult = Object.assign(() => "@beep/fake/IdentityComposerProbe", {
         identifier: "@beep/fake",
         value: "@beep/fake",
@@ -479,9 +478,9 @@ describe("P3 identity namespaces", () => {
         symbol: () => Symbol.for("@beep/fake"),
       });
 
-      yield* expectFailure(decode({ identifier: "@beep/fake" }));
-      yield* expectFailure(decode(() => "@beep/fake/IdentityComposerProbe"));
-      yield* expectFailure(decode(wrongProbeResult));
+      yield* expectFailure(decodeUnknownIdentityAnyIdentityComposer({ identifier: "@beep/fake" }));
+      yield* expectFailure(decodeUnknownIdentityAnyIdentityComposer(() => "@beep/fake/IdentityComposerProbe"));
+      yield* expectFailure(decodeUnknownIdentityAnyIdentityComposer(wrongProbeResult));
     })
   );
 });

@@ -18,13 +18,15 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const isAiMetricsInstallPlanStep = S.is(AiMetricsInstallPlanStep);
+
 const decodeInstallPlanStep = S.decodeUnknownEffect(AiMetricsInstallPlanStep);
 const decodeInstallDoctorCheck = S.decodeUnknownEffect(AiMetricsInstallDoctorCheck);
 const decodeInstallPlanJson = S.decodeUnknownEffect(S.fromJsonString(AiMetricsInstallPlan));
 
 describe("@beep/repo-ai-metrics install contracts", () => {
   it("generates plan steps accepted by their domain schema", () =>
-    fc.assert(fc.property(S.toArbitrary(AiMetricsInstallPlanStep)(fc), S.is(AiMetricsInstallPlanStep)), fcRuns(25)));
+    fc.assert(fc.property(S.toArbitrary(AiMetricsInstallPlanStep)(fc), isAiMetricsInstallPlanStep), fcRuns(25)));
 
   it.effect("applies plan-step and doctor metadata defaults during construction and decoding", () =>
     Effect.gen(function* () {

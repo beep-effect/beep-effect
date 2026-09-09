@@ -19,6 +19,8 @@ import * as A from "effect/Array";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 
+const decodeUnknownClaimProjectionViewSync = S.decodeUnknownSync(ClaimProjectionView);
+
 const $I = $EpistemicUseCasesId.create("ClaimProjection/ClaimProjection");
 
 /**
@@ -97,7 +99,7 @@ export const projectClaims: ClaimProjection = ClaimProjection.implementSync((aut
   const counts = R.fromEntries(A.map(ClaimLifecycle.Options, (state) => [state, countOf(state)] as const));
 
   // decode brands the folded counts/total into NonNegativeInt from known-good plain numbers.
-  return S.decodeUnknownSync(ClaimProjectionView)({
+  return decodeUnknownClaimProjectionViewSync({
     total: A.length(authority),
     counts,
     admittedKeys,

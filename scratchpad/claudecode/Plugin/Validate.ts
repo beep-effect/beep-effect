@@ -21,6 +21,8 @@ import { HooksSection } from "../Settings/HooksSection.ts";
 import type { PluginAgentEntry, PluginCommandEntry, PluginDefinition, PluginOutputStyleEntry } from "./Define.ts";
 import { isMarkdownFilePath, isSkillFilePath, pathSpecs } from "./Layout.ts";
 import { LoadedPlugin, load, PluginScan, scan } from "./Load.ts";
+const decodeUnknownMcpJsonFileOption = S.decodeUnknownOption(McpJsonFile);
+const isHooksSection = S.is(HooksSection);
 
 const $I = $ScratchpadId.create("claudecode/Plugin/Validate");
 
@@ -298,11 +300,11 @@ const matchesSkillSpec = (entryPath: string, spec: O.Option<string | ReadonlyArr
 };
 
 const inlineHooksFromManifest = (definition: PluginDefinition | LoadedPlugin): O.Option<HooksSection> =>
-  O.filter(definition.manifest.hooks, S.is(HooksSection));
+  O.filter(definition.manifest.hooks, isHooksSection);
 
 const inlineMcpFromManifest = (definition: PluginDefinition | LoadedPlugin): O.Option<McpJsonFile> =>
   O.flatMap(definition.manifest.mcpServers, (mcpServers) =>
-    P.isString(mcpServers) || A.isArray(mcpServers) ? O.none() : S.decodeUnknownOption(McpJsonFile)({ mcpServers })
+    P.isString(mcpServers) || A.isArray(mcpServers) ? O.none() : decodeUnknownMcpJsonFileOption({ mcpServers })
   );
 
 const validateFlatEntries = (options: {

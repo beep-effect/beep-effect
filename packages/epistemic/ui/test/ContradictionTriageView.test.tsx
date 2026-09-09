@@ -22,6 +22,14 @@ import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ContradictionTriageViewProps } from "@beep/epistemic-ui";
+
+const decodeUnknownContradictionTriageContradictionListPayloadResult = S.decodeUnknownResult(
+  ContradictionTriage.ContradictionListPayload
+);
+const encodeContradictionTriageContradictionListPayloadResult = S.encodeResult(
+  ContradictionTriage.ContradictionListPayload
+);
+
 import type { Root } from "react-dom/client";
 
 declare global {
@@ -406,14 +414,12 @@ describe("ContradictionTriageView", { concurrent: false }, () => {
   let root: Root;
 
   it("round-trips schema-derived queue queries", () => {
-    const encode = S.encodeResult(ContradictionTriage.ContradictionListPayload);
-    const decode = S.decodeUnknownResult(ContradictionTriage.ContradictionListPayload);
     const equivalent = S.toEquivalence(ContradictionTriage.ContradictionListPayload);
 
     fc.assert(
       fc.property(S.toArbitrary(ContradictionTriage.ContradictionListPayload)(fc), (query) => {
-        const encoded = Result.getOrThrow(encode(query));
-        const decoded = Result.getOrThrow(decode(encoded));
+        const encoded = Result.getOrThrow(encodeContradictionTriageContradictionListPayloadResult(query));
+        const decoded = Result.getOrThrow(decodeUnknownContradictionTriageContradictionListPayloadResult(encoded));
 
         return equivalent(decoded, query);
       }),

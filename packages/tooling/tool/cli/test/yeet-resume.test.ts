@@ -30,6 +30,8 @@ const TestLayer = Layer.mergeAll(
   TestConsole.layer,
   Layer.succeed(MemoryStats, MemoryStats.of({ availableGib: Effect.succeed(50), totalGib: Effect.succeed(128) }))
 );
+const decodePrRefResult = S.decodeResult(PrRef);
+const encodePrRefResult = S.encodeResult(PrRef);
 const runYeetCommand = Command.runWith(yeetCommand, { version: "0.0.0" });
 const configureRepo = (cwd: string) =>
   Effect.sync(() => {
@@ -41,7 +43,7 @@ const configureRepo = (cwd: string) =>
     });
     if (!init.success || !remote.success) assert.fail("fixture git repository setup failed");
   });
-const decodeRef = (value: string): PrRef => Result.getOrThrow(S.decodeResult(PrRef)(value));
+const decodeRef = (value: string): PrRef => Result.getOrThrow(decodePrRefResult(value));
 const options = (overrides: Partial<ResumeOptions> = {}) =>
   ResumeOptions.make({
     ref: decodeRef("42"),
@@ -89,14 +91,14 @@ describe("yeet resume", () => {
   );
 
   it("encodes both number and URL pull-request references", () => {
-    expect(Result.getOrThrow(S.encodeResult(PrRef)(decodeRef("42")))).toBe("42");
-    expect(
-      Result.getOrThrow(S.encodeResult(PrRef)(decodeRef("https://github.com/Beep-Effect/Beep-Effect/pull/43")))
-    ).toBe("https://github.com/beep-effect/beep-effect/pull/43");
+    expect(Result.getOrThrow(encodePrRefResult(decodeRef("42")))).toBe("42");
+    expect(Result.getOrThrow(encodePrRefResult(decodeRef("https://github.com/Beep-Effect/Beep-Effect/pull/43")))).toBe(
+      "https://github.com/beep-effect/beep-effect/pull/43"
+    );
   });
 
   it("rejects a pull-request URL whose host is not github.com", () => {
-    expect(Result.isFailure(S.decodeResult(PrRef)("https://gitlab.com/beep-effect/beep-effect/pull/42"))).toBe(true);
+    expect(Result.isFailure(decodePrRefResult("https://gitlab.com/beep-effect/beep-effect/pull/42"))).toBe(true);
   });
 
   it.effect("rejects zero and negative --agent selections", () =>
@@ -527,7 +529,7 @@ describe("yeet resume", () => {
   it("round-trips arbitrary PR references through the PrRef codec", () => {
     const arbitrary = S.toArbitrary(PrRef)(fc);
     const sameRef = S.toEquivalence(PrRef);
-    const encode = (ref: PrRef): string => Result.getOrThrow(S.encodeResult(PrRef)(ref));
+    const encode = (ref: PrRef): string => Result.getOrThrow(encodePrRefResult(ref));
     // Decoding normalizes URL owner/name casing, so the codec is idempotent after
     // one pass rather than an identity on arbitrary input.
     fc.assert(

@@ -1,0 +1,239 @@
+{
+  "write": true,
+  "files": 25,
+  "filesChanged": 3,
+  "findings": 18,
+  "rewritten": 18,
+  "compilerConstants": 13,
+  "reusedConstants": 0,
+  "orderingRepairs": 0,
+  "manualCount": 0,
+  "fileResults": [
+    {
+      "filename": "packages/agents/use-cases/test/AssistantTurn.test.ts",
+      "findings": 0,
+      "rewritten": 0,
+      "compilerConstants": 0,
+      "reusedConstants": 0,
+      "orderingRepairs": 0,
+      "manual": []
+    },
+    {
+      "filename": "packages/drivers/uspto-mcp/test/Server.test.ts",
+      "findings": 0,
+      "rewritten": 0,
+      "compilerConstants": 0,
+      "reusedConstants": 0,
+      "orderingRepairs": 0,
+      "manual": []
+    },
+    {
+      "filename": "packages/foundation/capability/langextract/test/Alignment.test.ts",
+      "findings": 0,
+      "rewritten": 0,
+      "compilerConstants": 0,
+      "reusedConstants": 0,
+      "orderingRepairs": 0,
+      "manual": []
+    },
+    {
+      "filename": "packages/foundation/modeling/html/test/Html.conformance-hardening.test.ts",
+      "findings": 0,
+      "rewritten": 0,
+      "compilerConstants": 0,
+      "reusedConstants": 0,
+      "orderingRepairs": 0,
+      "manual": []
+    },
+    {
+      "filename": "packages/foundation/modeling/html/test/Html.microsyntax.test.ts",
+      "findings": 0,
+      "rewritten": 0,
+      "compilerConstants": 0,
+      "reusedConstants": 0,
+      "orderingRepairs": 0,
+      "manual": []
+    },
+    {
+      "filename": "packages/foundation/modeling/schema/test/Address.test.ts",
+      "findings": 0,
+      "rewritten": 0,
+      "compilerConstants": 0,
+      "reusedConstants": 0,
+      "orderingRepairs": 0,
+      "manual": []
+    },
+    {
+      "filename": "packages/foundation/modeling/schema/test/FileName.test.ts",
+      "findings": 0,
+      "rewritten": 0,
+      "compilerConstants": 0,
+      "reusedConstants": 0,
+      "orderingRepairs": 0,
+      "manual": []
+    },
+    {
+      "filename": "packages/foundation/modeling/schema/test/FilePath.test.ts",
+      "findings": 0,
+      "rewritten": 0,
+      "compilerConstants": 0,
+      "reusedConstants": 0,
+      "orderingRepairs": 0,
+      "manual": []
+    },
+    {
+      "filename": "packages/foundation/modeling/schema/test/Glob.test.ts",
+      "findings": 0,
+      "rewritten": 0,
+      "compilerConstants": 0,
+      "reusedConstants": 0,
+      "orderingRepairs": 0,
+      "manual": []
+    },
+    {
+      "filename": "packages/foundation/modeling/schema/test/Int.test.ts",
+      "findings": 0,
+      "rewritten": 0,
+      "compilerConstants": 0,
+      "reusedConstants": 0,
+      "orderingRepairs": 0,
+      "manual": []
+    },
+    {
+      "filename": "packages/foundation/modeling/schema/test/LiteralKit.test.ts",
+      "findings": 0,
+      "rewritten": 0,
+      "compilerConstants": 0,
+      "reusedConstants": 0,
+      "orderingRepairs": 0,
+      "manual": []
+    },
+    {
+      "filename": "packages/foundation/modeling/schema/test/LocalDate.test.ts",
+      "findings": 4,
+      "rewritten": 4,
+      "compilerConstants": 3,
+      "reusedConstants": 0,
+      "orderingRepairs": 0,
+      "manual": []
+    },
+    {
+      "filename": "packages/foundation/modeling/schema/test/MappedLiteralKit.test.ts",
+      "findings": 8,
+      "rewritten": 8,
+      "compilerConstants": 5,
+      "reusedConstants": 0,
+      "orderingRepairs": 0,
+      "manual": []
+    },
+    {
+      "filename": "packages/foundation/modeling/schema/test/Options.test.ts",
+      "findings": 0,
+      "rewritten": 0,
+      "compilerConstants": 0,
+      "reusedConstants": 0,
+      "orderingRepairs": 0,
+      "manual": []
+    },
+    {
+      "filename": "packages/foundation/modeling/schema/test/SchemaUtils.test.ts",
+      "findings": 6,
+      "rewritten": 6,
+      "compilerConstants": 5,
+      "reusedConstants": 0,
+      "orderingRepairs": 0,
+      "manual": []
+    },
+    {
+      "filename": "packages/foundation/modeling/schema/test/Slug.test.ts",
+      "findings": 0,
+      "rewritten": 0,
+      "compilerConstants": 0,
+      "reusedConstants": 0,
+      "orderingRepairs": 0,
+      "manual": []
+    },
+    {
+      "filename": "packages/foundation/modeling/schema/test/TxnHash.test.ts",
+      "findings": 0,
+      "rewritten": 0,
+      "compilerConstants": 0,
+      "reusedConstants": 0,
+      "orderingRepairs": 0,
+      "manual": []
+    },
+    {
+      "filename": "packages/foundation/modeling/skill-contract/test/EvidenceLadder.test.ts",
+      "findings": 0,
+      "rewritten": 0,
+      "compilerConstants": 0,
+      "reusedConstants": 0,
+      "orderingRepairs": 0,
+      "manual": []
+    },
+    {
+      "filename": "packages/foundation/modeling/skill-contract/test/Gate.test.ts",
+      "findings": 0,
+      "rewritten": 0,
+      "compilerConstants": 0,
+      "reusedConstants": 0,
+      "orderingRepairs": 0,
+      "manual": []
+    },
+    {
+      "filename": "packages/foundation/modeling/utils/src/Array.ts",
+      "findings": 0,
+      "rewritten": 0,
+      "compilerConstants": 0,
+      "reusedConstants": 0,
+      "orderingRepairs": 0,
+      "manual": []
+    },
+    {
+      "filename": "packages/law-practice/tables/test/LegalPositionConverters.test.ts",
+      "findings": 0,
+      "rewritten": 0,
+      "compilerConstants": 0,
+      "reusedConstants": 0,
+      "orderingRepairs": 0,
+      "manual": []
+    },
+    {
+      "filename": "packages/shared/domain/test/LocalDate.test.ts",
+      "findings": 0,
+      "rewritten": 0,
+      "compilerConstants": 0,
+      "reusedConstants": 0,
+      "orderingRepairs": 0,
+      "manual": []
+    },
+    {
+      "filename": "packages/tooling/library/repo-utils/src/JSDoc/models/JSDocTagDefinition.model.ts",
+      "findings": 0,
+      "rewritten": 0,
+      "compilerConstants": 0,
+      "reusedConstants": 0,
+      "orderingRepairs": 0,
+      "manual": []
+    },
+    {
+      "filename": "scratchpad/effect-ontology/Service/Ticket.ts",
+      "findings": 0,
+      "rewritten": 0,
+      "compilerConstants": 0,
+      "reusedConstants": 0,
+      "orderingRepairs": 0,
+      "manual": []
+    },
+    {
+      "filename": "scratchpad/effect-ontology/test/Service/ConflictRepository.test.ts",
+      "findings": 0,
+      "rewritten": 0,
+      "compilerConstants": 0,
+      "reusedConstants": 0,
+      "orderingRepairs": 0,
+      "manual": []
+    }
+  ],
+  "manual": []
+}

@@ -154,22 +154,25 @@ export class FontMetricsSnapshotV1 extends S.Class<FontMetricsSnapshotV1>($I`Fon
 ) {
   static readonly is = S.is(FontMetricsSnapshotV1);
   static readonly fromUnknown = (input: unknown): FontMetricsSnapshotV1 =>
-    S.decodeUnknownResult(FontMetricsSnapshotV1)(input).pipe(
+    decodeUnknownFontMetricsSnapshotV1Result(input).pipe(
       Result.getOrThrowWith((error) => PretextSnapshotCodecError.make({ operation: "decode", message: error.message }))
     );
   static readonly decodeOption: (input: unknown) => O.Option<FontMetricsSnapshotV1> =
     S.decodeUnknownOption(FontMetricsSnapshotV1);
   static readonly decode = (input: unknown): Effect.Effect<FontMetricsSnapshotV1, PretextSnapshotCodecError> =>
-    S.decodeUnknownEffect(FontMetricsSnapshotV1)(input).pipe(
+    decodeUnknownFontMetricsSnapshotV1(input).pipe(
       Effect.mapError((error) => PretextSnapshotCodecError.make({ operation: "decode", message: error.message }))
     );
   static readonly encode = (
     value: FontMetricsSnapshotV1
   ): Effect.Effect<typeof FontMetricsSnapshotV1.Encoded, PretextSnapshotCodecError> =>
-    S.encodeEffect(FontMetricsSnapshotV1)(value).pipe(
+    encodeFontMetricsSnapshotV1(value).pipe(
       Effect.mapError((error) => PretextSnapshotCodecError.make({ operation: "encode", message: error.message }))
     );
 }
+const decodeUnknownFontMetricsSnapshotV1 = S.decodeUnknownEffect(FontMetricsSnapshotV1);
+const decodeUnknownFontMetricsSnapshotV1Result = S.decodeUnknownResult(FontMetricsSnapshotV1);
+const encodeFontMetricsSnapshotV1 = S.encodeEffect(FontMetricsSnapshotV1);
 
 /**
  * Encoded (wire) type for {@link FontMetricsSnapshotV1}.

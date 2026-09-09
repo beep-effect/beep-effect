@@ -215,6 +215,33 @@ export const OXLINT_SOURCES: { readonly [K in OxlintRule]: OxlintRuleSources } =
           `export const h = () => S.decodeSync(Model)({});`
         ),
       },
+      // Nested schema construction rooted in a static schema is also compiled inline.
+      {
+        count: 1,
+        source: lines(
+          `import * as S from "effect/Schema";`,
+          `const Model = S.Struct({});`,
+          `export const h2 = () => S.decodeSync(S.Array(Model))([]);`
+        ),
+      },
+      // A static schema namespace member is a hoistable compiler dependency.
+      {
+        count: 1,
+        source: lines(
+          `import * as S from "effect/Schema";`,
+          `import * as Models from "./models";`,
+          `export const h3 = () => S.decodeSync(Models.User)({});`
+        ),
+      },
+      // Uncurried assertion adapters compile the schema on every invocation too.
+      {
+        count: 1,
+        source: lines(
+          `import * as S from "effect/Schema";`,
+          `const Model = S.Struct({});`,
+          `export const h4 = (input: unknown): void => S.asserts(Model, input);`
+        ),
+      },
     ],
     valid: [
       // Module-scope compiler call is allowed (the whole point of the rule).
@@ -232,6 +259,30 @@ export const OXLINT_SOURCES: { readonly [K in OxlintRule]: OxlintRuleSources } =
         source: lines(
           `import { Schema } from "./local-schema";`,
           `export const j = () => Schema.decodeSync(Whatever)({});`
+        ),
+      },
+      // Runtime schema parameters cannot be compiled at module scope.
+      {
+        count: 0,
+        source: lines(
+          `import * as S from "effect/Schema";`,
+          `export const decodeRows = (rowSchema: S.Top) => S.decodeSync(S.Array(rowSchema));`
+        ),
+      },
+      // A nested wrapper around a runtime schema parameter remains dynamic.
+      {
+        count: 0,
+        source: lines(
+          `import * as S from "effect/Schema";`,
+          `export const encodedGuard = (shape: S.Top) => S.is(S.toEncoded(shape));`
+        ),
+      },
+      // Member expressions rooted in runtime values are dynamic schema parameters.
+      {
+        count: 0,
+        source: lines(
+          `import * as S from "effect/Schema";`,
+          `export const decodeSection = (input: { schema: S.Top }) => S.decodeSync(input.schema);`
         ),
       },
     ],

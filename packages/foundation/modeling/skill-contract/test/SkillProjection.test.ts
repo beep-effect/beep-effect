@@ -26,6 +26,8 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeUnknownSkillArtifactVerdict = S.decodeUnknownEffect(SkillArtifactVerdict);
+
 const rungType = (name: string) => EvidencePredicateType.make(`https://beep.dev/evidence/${name}/v1`);
 const contract = SkillContract.make({
   evidenceSubject: EvidenceSubject.make({
@@ -169,21 +171,26 @@ describe("@beep/skill-contract SkillProjection", () => {
       const passedRender = { check: "rerender-byte-equality", detail: "ok", outcome: "passed" };
       const passedFrontmatter = { check: "frontmatter-contract-equality", detail: "ok", outcome: "passed" };
       const failedRender = { check: "rerender-byte-equality", detail: "differs", outcome: "failed" };
-      const decode = S.decodeUnknownEffect(SkillArtifactVerdict);
-
-      const contradictory = yield* decode({ checks: [failedRender, passedFrontmatter], verdict: "allowed" }).pipe(
+      const contradictory = yield* decodeUnknownSkillArtifactVerdict({
+        checks: [failedRender, passedFrontmatter],
+        verdict: "allowed",
+      }).pipe(Effect.flip);
+      const incomplete = yield* decodeUnknownSkillArtifactVerdict({ checks: [passedRender], verdict: "allowed" }).pipe(
         Effect.flip
       );
-      const incomplete = yield* decode({ checks: [passedRender], verdict: "allowed" }).pipe(Effect.flip);
-      const swapped = yield* decode({ checks: [passedFrontmatter, passedRender], verdict: "allowed" }).pipe(
-        Effect.flip
-      );
-      const deniedWithoutFailure = yield* decode({
+      const swapped = yield* decodeUnknownSkillArtifactVerdict({
+        checks: [passedFrontmatter, passedRender],
+        verdict: "allowed",
+      }).pipe(Effect.flip);
+      const deniedWithoutFailure = yield* decodeUnknownSkillArtifactVerdict({
         checks: [passedRender, passedFrontmatter],
         reasons: ["rerender-mismatch"],
         verdict: "denied",
       }).pipe(Effect.flip);
-      const complete = yield* decode({ checks: [passedRender, passedFrontmatter], verdict: "allowed" });
+      const complete = yield* decodeUnknownSkillArtifactVerdict({
+        checks: [passedRender, passedFrontmatter],
+        verdict: "allowed",
+      });
 
       expect(contradictory.message).toContain("passed rerender-byte-equality");
       expect(incomplete.message).toContain('["checks"]');

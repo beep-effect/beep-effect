@@ -19,6 +19,10 @@ import {
   OntologyVersion,
 } from "../../Domain/Identity.ts";
 import { IdempotencyKey as UtilityIdempotencyKey } from "../../Utils/IdempotencyKey.ts";
+const decodeGcsBucket = S.decodeEffect(GcsBucket);
+const decodeGcsObject = S.decodeEffect(GcsObject);
+const decodeGcsBucketResult = S.decodeResult(GcsBucket);
+const decodeGcsObjectResult = S.decodeResult(GcsObject);
 
 const emptySha256 = ContentHash.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
 
@@ -73,8 +77,8 @@ describe("effect-ontology identity schemas", () => {
   it.effect(
     "constructs and resolves canonical GCS URIs without duplicating existing URIs",
     Effect.fnUntraced(function* () {
-      const bucket = yield* S.decodeEffect(GcsBucket)("beep-ontology-state");
-      const objectPath = yield* S.decodeEffect(GcsObject)("snapshots/ontology-v1.ttl");
+      const bucket = yield* decodeGcsBucket("beep-ontology-state");
+      const objectPath = yield* decodeGcsObject("snapshots/ontology-v1.ttl");
       const uri = GcsUri.fromParts(bucket, objectPath);
 
       expect(uri).toBe("gs://beep-ontology-state/snapshots/ontology-v1.ttl");
@@ -84,9 +88,9 @@ describe("effect-ontology identity schemas", () => {
   );
 
   it("rejects insecure, ambiguous, reserved, and non-canonical locations", () => {
-    expect(Result.isFailure(S.decodeResult(GcsBucket)("192.168.5.4"))).toBe(true);
-    expect(Result.isFailure(S.decodeResult(GcsBucket)("goog-ontology-state"))).toBe(true);
-    expect(Result.isFailure(S.decodeResult(GcsObject)("/snapshots/data.ttl"))).toBe(true);
-    expect(Result.isFailure(S.decodeResult(GcsObject)("snapshots//data.ttl"))).toBe(true);
+    expect(Result.isFailure(decodeGcsBucketResult("192.168.5.4"))).toBe(true);
+    expect(Result.isFailure(decodeGcsBucketResult("goog-ontology-state"))).toBe(true);
+    expect(Result.isFailure(decodeGcsObjectResult("/snapshots/data.ttl"))).toBe(true);
+    expect(Result.isFailure(decodeGcsObjectResult("snapshots//data.ttl"))).toBe(true);
   });
 });

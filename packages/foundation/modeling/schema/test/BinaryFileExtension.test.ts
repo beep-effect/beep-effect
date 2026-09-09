@@ -7,15 +7,15 @@ import {
 import { describe, expect, it } from "@effect/vitest";
 import * as S from "effect/Schema";
 
-describe("BinaryFileExtension", () => {
-  const decode = S.decodeUnknownSync(BinaryFileExtension);
+const decodeUnknownBinaryFileExtensionSync = S.decodeUnknownSync(BinaryFileExtension);
 
+describe("BinaryFileExtension", () => {
   it("accepts dotted binary file extensions", () => {
-    expect(decode(".png")).toBe(".png");
+    expect(decodeUnknownBinaryFileExtensionSync(".png")).toBe(".png");
   });
 
   it("rejects undotted values", () => {
-    expect(() => decode("png")).toThrow();
+    expect(() => decodeUnknownBinaryFileExtensionSync("png")).toThrow();
   });
 
   it("derives a schema-backed guard", () => {

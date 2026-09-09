@@ -2,50 +2,59 @@ import { Slug } from "@beep/schema/Slug";
 import { describe, expect, it } from "@effect/vitest";
 import * as S from "effect/Schema";
 
-describe("Slug", () => {
-  const decode = S.decodeUnknownSync(Slug);
+const decodeUnknownSlugSync = S.decodeUnknownSync(Slug);
+const isSlug2 = S.is(Slug);
+const SlugPayload = S.Struct({ slug: Slug });
+const decodeSlugPayloadSync = S.decodeSync(SlugPayload);
 
+describe("Slug", () => {
   it("accepts lowercase kebab-case slugs", () => {
-    expect(decode("a")).toBe("a");
-    expect(decode("my-post")).toBe("my-post");
-    expect(decode("post-2")).toBe("post-2");
-    expect(decode("abc-123-def")).toBe("abc-123-def");
+    expect(decodeUnknownSlugSync("a")).toBe("a");
+    expect(decodeUnknownSlugSync("my-post")).toBe("my-post");
+    expect(decodeUnknownSlugSync("post-2")).toBe("post-2");
+    expect(decodeUnknownSlugSync("abc-123-def")).toBe("abc-123-def");
   });
 
   it("rejects empty input", () => {
-    expect(() => decode("")).toThrow();
+    expect(() => decodeUnknownSlugSync("")).toThrow();
   });
 
   it("rejects characters outside lowercase ascii letters, digits, and hyphens", () => {
-    expect(() => decode("My-Post")).toThrow("Slug must use lowercase ASCII letters, digits, and hyphens only");
-    expect(() => decode("my_post")).toThrow("Slug must use lowercase ASCII letters, digits, and hyphens only");
-    expect(() => decode("my post")).toThrow("Slug must use lowercase ASCII letters, digits, and hyphens only");
-    expect(() => decode("blog/post")).toThrow("Slug must use lowercase ASCII letters, digits, and hyphens only");
-    expect(() => decode("post!")).toThrow("Slug must use lowercase ASCII letters, digits, and hyphens only");
-    expect(() => decode("café")).toThrow("Slug must use lowercase ASCII letters, digits, and hyphens only");
+    expect(() => decodeUnknownSlugSync("My-Post")).toThrow(
+      "Slug must use lowercase ASCII letters, digits, and hyphens only"
+    );
+    expect(() => decodeUnknownSlugSync("my_post")).toThrow(
+      "Slug must use lowercase ASCII letters, digits, and hyphens only"
+    );
+    expect(() => decodeUnknownSlugSync("my post")).toThrow(
+      "Slug must use lowercase ASCII letters, digits, and hyphens only"
+    );
+    expect(() => decodeUnknownSlugSync("blog/post")).toThrow(
+      "Slug must use lowercase ASCII letters, digits, and hyphens only"
+    );
+    expect(() => decodeUnknownSlugSync("post!")).toThrow(
+      "Slug must use lowercase ASCII letters, digits, and hyphens only"
+    );
+    expect(() => decodeUnknownSlugSync("café")).toThrow(
+      "Slug must use lowercase ASCII letters, digits, and hyphens only"
+    );
   });
 
   it("rejects leading and trailing hyphens", () => {
-    expect(() => decode("-post")).toThrow("Slug must not start with a hyphen");
-    expect(() => decode("post-")).toThrow("Slug must not end with a hyphen");
+    expect(() => decodeUnknownSlugSync("-post")).toThrow("Slug must not start with a hyphen");
+    expect(() => decodeUnknownSlugSync("post-")).toThrow("Slug must not end with a hyphen");
   });
 
   it("rejects repeated hyphens", () => {
-    expect(() => decode("my--post")).toThrow("Slug must not contain repeated hyphens");
+    expect(() => decodeUnknownSlugSync("my--post")).toThrow("Slug must not contain repeated hyphens");
   });
 
   it("supports guard-style schema checks", () => {
-    const isSlug = S.is(Slug);
-
-    expect(isSlug("my-post")).toBe(true);
-    expect(isSlug("my_post")).toBe(false);
+    expect(isSlug2("my-post")).toBe(true);
+    expect(isSlug2("my_post")).toBe(false);
   });
 
   it("reports nested field failures at the slug key", () => {
-    const Payload = S.Struct({
-      slug: Slug,
-    });
-
-    expect(() => S.decodeSync(Payload)({ slug: "my_post" })).toThrow(`at ["slug"]`);
+    expect(() => decodeSlugPayloadSync({ slug: "my_post" })).toThrow(`at ["slug"]`);
   });
 });

@@ -36,6 +36,8 @@ import {
   RunOutputPath,
   StoragePathSegment,
 } from "../../Domain/PathLayout.ts";
+const decodeRunChunkPathResult = S.decodeResult(RunChunkPath);
+const decodeUnknownRunOutputPathResult = S.decodeUnknownResult(RunOutputPath);
 
 const storagePathSchemas: ReadonlyArray<S.Constraint> = [
   StoragePathSegment,
@@ -106,11 +108,11 @@ describe("effect-ontology storage path layout", () => {
 
   it("rejects traversal, non-canonical indices, and unregistered outputs", () => {
     expect(StoragePathSegment.is("../escape")).toBe(false);
-    expect(Result.isFailure(S.decodeResult(RunChunkPath)("runs/doc-deadbeefcafe/input/chunks/chunk-01.txt"))).toBe(
+    expect(Result.isFailure(decodeRunChunkPathResult("runs/doc-deadbeefcafe/input/chunks/chunk-01.txt"))).toBe(
       true
     );
     expect(
-      Result.isFailure(S.decodeUnknownResult(RunOutputPath)("runs/doc-deadbeefcafe/outputs/custom-output.json"))
+      Result.isFailure(decodeUnknownRunOutputPathResult("runs/doc-deadbeefcafe/outputs/custom-output.json"))
     ).toBe(true);
   });
 

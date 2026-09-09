@@ -11,6 +11,10 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import { ShaclValidationReport, ValidationPolicy } from "../../../Domain/Schema/Shacl.ts";
+const decodeShaclValidationReport = S.decodeEffect(ShaclValidationReport);
+const decodeValidationPolicy = S.decodeEffect(ValidationPolicy);
+const decodeShaclValidationReportResult = S.decodeResult(ShaclValidationReport);
+const encodeShaclValidationResult = S.encodeEffect(ShaclValidationResult);
 
 const path = Rdf.makeNamedNode("https://schema.org/name");
 const sourceConstraintComponent = Rdf.makeNamedNode("https://www.w3.org/ns/shacl#MinCountConstraintComponent");
@@ -54,17 +58,17 @@ describe("effect-ontology SHACL schemas", () => {
   it.effect(
     "wraps the canonical SHACL result with experiment execution metadata",
     Effect.fnUntraced(function* () {
-      const emptyReport = S.decodeResult(ShaclValidationReport)({
+      const emptyReport = decodeShaclValidationReportResult({
         validation: { conforms: true, violations: [], truncated: false },
         validatedAt: "2026-07-25T12:00:00.000Z",
         dataGraphTripleCount: 42,
         shapesGraphTripleCount: 8,
         durationMs: 12.5,
       });
-      const validation = yield* S.encodeEffect(ShaclValidationResult)(
+      const validation = yield* encodeShaclValidationResult(
         ShaclValidationResult.make({ conforms: false, violations: [violation], truncated: false })
       );
-      const reportWithResult = yield* S.decodeEffect(ShaclValidationReport)({
+      const reportWithResult = yield* decodeShaclValidationReport({
         validation,
         validatedAt: "2026-07-25T12:00:00.000Z",
         dataGraphTripleCount: 42,
@@ -81,9 +85,9 @@ describe("effect-ontology SHACL schemas", () => {
   it.effect(
     "applies schema defaults and keeps workflow policy separate from report conformance",
     Effect.fnUntraced(function* () {
-      const defaults = yield* S.decodeEffect(ValidationPolicy)({});
-      const strict = yield* S.decodeEffect(ValidationPolicy)({ failOnWarning: true });
-      const logOnly = yield* S.decodeEffect(ValidationPolicy)({
+      const defaults = yield* decodeValidationPolicy({});
+      const strict = yield* decodeValidationPolicy({ failOnWarning: true });
+      const logOnly = yield* decodeValidationPolicy({
         failOnViolation: true,
         failOnWarning: true,
         logOnly: true,

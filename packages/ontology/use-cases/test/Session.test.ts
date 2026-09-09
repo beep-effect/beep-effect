@@ -63,6 +63,10 @@ import { Effect, Equal, Layer, Result } from "effect";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeOntologyGraphProjectionOptionsResult = S.decodeResult(OntologyGraphProjectionOptions);
+const decodePrefixMapSync = S.decodeSync(PrefixMap);
+const encodeOntologyGraphProjectionOptionsResult = S.encodeResult(OntologyGraphProjectionOptions);
+
 const sessionId = S.decodeSync(SessionId)("session-1");
 const fixturePath = S.decodeSync(OntologyFilePath)("fixtures/demo.ttl");
 const SHACL_NAMESPACE = "http://www.w3.org/ns/shacl#" as const;
@@ -87,8 +91,8 @@ describe("Session use-cases", () => {
     Effect.fnUntraced(function* () {
       fc.assert(
         fc.property(S.toArbitrary(OntologyGraphProjectionOptions)(fc), (options) => {
-          const encoded = Result.getOrThrow(S.encodeResult(OntologyGraphProjectionOptions)(options));
-          const decoded = Result.getOrThrow(S.decodeResult(OntologyGraphProjectionOptions)(encoded));
+          const encoded = Result.getOrThrow(encodeOntologyGraphProjectionOptionsResult(options));
+          const decoded = Result.getOrThrow(decodeOntologyGraphProjectionOptionsResult(encoded));
 
           expect(Equal.equals(decoded, options)).toBe(true);
         }),
@@ -149,7 +153,7 @@ describe("Session use-cases", () => {
           Effect.succeed(
             ParseTurtleResult.make({
               dataset,
-              prefixes: S.decodeSync(PrefixMap)({
+              prefixes: decodePrefixMapSync({
                 ex: "https://example.test/",
               }),
             })
@@ -312,7 +316,7 @@ describe("Session use-cases", () => {
           Effect.succeed(
             ParseTurtleResult.make({
               dataset: openedDataset,
-              prefixes: S.decodeSync(PrefixMap)({
+              prefixes: decodePrefixMapSync({
                 pizza: "https://example.org/pizza#",
               }),
             })

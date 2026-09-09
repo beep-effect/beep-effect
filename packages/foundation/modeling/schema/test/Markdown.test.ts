@@ -7,6 +7,10 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeMarkdown2 = S.decodeEffect(Markdown);
+const decodeUnknownMarkdown = S.decodeUnknownEffect(Markdown);
+const decodeUnknownMarkdownSync = S.decodeUnknownSync(Markdown);
+
 const replaceGlobalBunMarkdownHtml = (html: unknown) =>
   Effect.sync(() => {
     const bunRuntime = Reflect.get(globalThis, "Bun");
@@ -39,20 +43,16 @@ describe("Markdown", () => {
   it.effect(
     "brands Markdown text accepted by the active parser",
     Effect.fnUntraced(function* () {
-      const decodeMarkdown = S.decodeUnknownEffect(Markdown);
-
-      expect(yield* decodeMarkdown("# Hello")).toBe("# Hello");
-      expect(yield* decodeMarkdown("plain text")).toBe("plain text");
-      expect(yield* decodeMarkdown("")).toBe("");
+      expect(yield* decodeUnknownMarkdown("# Hello")).toBe("# Hello");
+      expect(yield* decodeUnknownMarkdown("plain text")).toBe("plain text");
+      expect(yield* decodeUnknownMarkdown("")).toBe("");
     })
   );
 
   it("derives accepted Markdown examples from the source schema", () => {
-    const decodeMarkdown = S.decodeUnknownSync(Markdown);
-
     fc.assert(
       fc.property(markdownArbitrary, (document) => {
-        expect(decodeMarkdown(document)).toBe(document);
+        expect(decodeUnknownMarkdownSync(document)).toBe(document);
       }),
       fcRuns(25)
     );
@@ -75,7 +75,7 @@ describe("Markdown", () => {
     Effect.fnUntraced(function* () {
       const result = yield* Effect.acquireUseRelease(
         replaceGlobalBunMarkdownHtml(() => 1),
-        () => Effect.exit(S.decodeEffect(Markdown)("# Hello")),
+        () => Effect.exit(decodeMarkdown2("# Hello")),
         restoreGlobalBunMarkdownHtml
       );
 

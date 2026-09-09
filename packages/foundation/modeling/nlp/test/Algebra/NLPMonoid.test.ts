@@ -21,6 +21,13 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import type { BagOfWords } from "@beep/nlp/Algebra/NLPMonoid";
 
+const decodeNLPDependencyEdge = S.decodeEffect(NLP.DependencyEdge);
+const decodeNLPDocumentStatistics = S.decodeEffect(NLP.DocumentStatistics);
+const decodeNLPTextAnalysis = S.decodeEffect(NLP.TextAnalysis);
+const encodeNLPDependencyEdge = S.encodeEffect(NLP.DependencyEdge);
+const encodeNLPDocumentStatistics = S.encodeEffect(NLP.DocumentStatistics);
+const encodeNLPTextAnalysis = S.encodeEffect(NLP.TextAnalysis);
+
 const mutableHashMapEquals = <K, V>(
   a: MutableHashMap.MutableHashMap<K, V>,
   b: MutableHashMap.MutableHashMap<K, V>
@@ -120,8 +127,8 @@ describe("Document Monoids", () => {
     it("round-trips schema-derived document statistics values", () => {
       fc.assert(
         fc.property(S.toArbitrary(NLP.DocumentStatistics)(fc), (stats) => {
-          const encoded = Effect.runSync(S.encodeEffect(NLP.DocumentStatistics)(stats));
-          const decoded = Effect.runSync(S.decodeEffect(NLP.DocumentStatistics)(encoded));
+          const encoded = Effect.runSync(encodeNLPDocumentStatistics(stats));
+          const decoded = Effect.runSync(decodeNLPDocumentStatistics(encoded));
 
           expect(statsEquals(decoded, stats)).toBe(true);
         })
@@ -137,8 +144,8 @@ describe("Linguistic Monoids", () => {
 
     fc.assert(
       fc.property(S.toArbitrary(NLP.DependencyEdge)(fc), (edge) => {
-        const encoded = Effect.runSync(S.encodeEffect(NLP.DependencyEdge)(edge));
-        const decoded = Effect.runSync(S.decodeEffect(NLP.DependencyEdge)(encoded));
+        const encoded = Effect.runSync(encodeNLPDependencyEdge(edge));
+        const decoded = Effect.runSync(decodeNLPDependencyEdge(encoded));
 
         expect(edgeEquals(decoded, edge)).toBe(true);
       })
@@ -159,8 +166,8 @@ describe("TextAnalysis", () => {
 
     fc.assert(
       fc.property(S.toArbitrary(NLP.TextAnalysis)(fc), (analysis) => {
-        const encoded = Effect.runSync(S.encodeEffect(NLP.TextAnalysis)(analysis));
-        const decoded = Effect.runSync(S.decodeEffect(NLP.TextAnalysis)(encoded));
+        const encoded = Effect.runSync(encodeNLPTextAnalysis(analysis));
+        const decoded = Effect.runSync(decodeNLPTextAnalysis(encoded));
 
         expect(analysisEquals(decoded, analysis)).toBe(true);
       })

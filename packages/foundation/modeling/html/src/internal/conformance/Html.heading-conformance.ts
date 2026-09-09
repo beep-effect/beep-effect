@@ -67,6 +67,7 @@ export const HtmlComputedHeadingLevel = LiteralKit([1, 2, 3, 4, 5, 6, 7, 8, 9]).
  * @since 0.0.0
  */
 export type HtmlComputedHeadingLevel = typeof HtmlComputedHeadingLevel.Type;
+const decodeUnknownHtmlComputedHeadingLevelResult = S.decodeUnknownResult(HtmlComputedHeadingLevel);
 
 const HtmlHeadingTag = LiteralKit(["h1", "h2", "h3", "h4", "h5", "h6"]);
 /**
@@ -216,7 +217,7 @@ const collectHeadingOutline = (
   const own = isHtmlHeadingTag(tag)
     ? pipe(
         N.min(declaredHeadingLevel(tag) + effectiveOffset, 9),
-        S.decodeUnknownResult(HtmlComputedHeadingLevel),
+        decodeUnknownHtmlComputedHeadingLevelResult,
         Result.match({
           // A schema-valid root and HeadingOffset guard make this branch unreachable;
           // retaining it keeps outline inspection total for defensive foreign calls.

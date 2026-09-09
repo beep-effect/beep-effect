@@ -5,6 +5,9 @@ import * as S from "effect/Schema";
 import { TestClock } from "effect/testing";
 import * as CodeMode from "../../codemode/Codemode.service.ts";
 import * as OpenAPI from "../../codemode/openapi/index.ts";
+const isCodeModeInvalidExecutionLimits = S.is(CodeMode.InvalidExecutionLimits);
+const isOpenAPIFromSpecResult = S.is(OpenAPI.FromSpecResult);
+const isOpenAPIInvalidOpenApiOptions = S.is(OpenAPI.InvalidOpenApiOptions);
 
 describe("CodeMode runtime", () => {
   it.effect(
@@ -484,7 +487,7 @@ describe("CodeMode runtime", () => {
     Effect.fnUntraced(function* () {
       const error = yield* CodeMode.resolveExecutionLimits({ timeoutMs: 0 }).pipe(Effect.flip);
 
-      assert.strictEqual(S.is(CodeMode.InvalidExecutionLimits)(error), true);
+      assert.strictEqual(isCodeModeInvalidExecutionLimits(error), true);
       assert.strictEqual(error._tag, "InvalidExecutionLimits");
     })
   );
@@ -533,7 +536,7 @@ describe("OpenAPI adapter", () => {
 
       expect(R.keys(result.toolkit.tools)).toEqual(A.make("getUser"));
       expect(result.skipped).toEqual(A.empty());
-      assert.strictEqual(S.is(OpenAPI.FromSpecResult)(result), true);
+      assert.strictEqual(isOpenAPIFromSpecResult(result), true);
       const getUser = O.getOrThrow(R.get(result.toolkit.tools, "getUser"));
       assert.strictEqual(S.is(getUser.successSchema)({ id: "user-1" }), true);
       assert.strictEqual(S.is(getUser.successSchema)({ id: 1 }), false);
@@ -545,7 +548,7 @@ describe("OpenAPI adapter", () => {
     Effect.fnUntraced(function* () {
       const error = yield* OpenAPI.fromSpec({ spec: null }).pipe(Effect.flip);
 
-      assert.strictEqual(S.is(OpenAPI.InvalidOpenApiOptions)(error), true);
+      assert.strictEqual(isOpenAPIInvalidOpenApiOptions(error), true);
       assert.strictEqual(error._tag, "InvalidOpenApiOptions");
     })
   );

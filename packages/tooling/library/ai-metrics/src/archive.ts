@@ -14,6 +14,8 @@ import { AiMetricsTranscriptSource } from "./models.ts";
 import { hashPrivateIdentifier, hashPublicTextSha256 } from "./privacy.ts";
 import type * as O from "@beep/utils/Option";
 
+const decodeUint8ArrayFromBase64 = S.decodeEffect(S.Uint8ArrayFromBase64);
+
 const $I = $RepoAiMetricsId.create("archive");
 const AES_GCM_KEY_BYTES = 32;
 const AES_GCM_NONCE_BYTES = 12;
@@ -300,7 +302,7 @@ const archiveFailure = (message: string, cause: unknown): AiMetricsArchiveError 
 
 const decodeRawArchiveKey = (rawArchiveKey: AiMetricsRawArchiveKey): Effect.Effect<Uint8Array, AiMetricsArchiveError> =>
   decodeAes256KeyBase64(Str.trim(Redacted.value(rawArchiveKey))).pipe(
-    Effect.flatMap(S.decodeEffect(S.Uint8ArrayFromBase64)),
+    Effect.flatMap(decodeUint8ArrayFromBase64),
     Effect.mapError((cause) =>
       archiveFailure("Raw archive key must be valid base64 and decode to exactly 32 bytes.", cause)
     )

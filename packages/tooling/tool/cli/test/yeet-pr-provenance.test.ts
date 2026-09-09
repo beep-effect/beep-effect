@@ -18,20 +18,21 @@ import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import { makeRecord, PlatformLayer } from "./yeet-pr-fixtures.ts";
 
+const isPrProvenanceLabel = S.is(PrProvenanceLabel);
+const isPrProvenanceModel = S.is(PrProvenanceModel);
+
 describe("Yeet PR provenance v2", () => {
   it("enforces the public label allowlist", () => {
-    const isLabel = S.is(PrProvenanceLabel);
-    expect(isLabel("SHIP_VELOCITY")).toBe(true);
-    expect(isLabel("beep-effect10-69")).toBe(true);
-    expect(isLabel("550e8400-e29b-41d4-a716-446655440000")).toBe(false);
-    expect(isLabel("abcdef0123456789")).toBe(false);
-    expect(isLabel("../escape")).toBe(false);
+    expect(isPrProvenanceLabel("SHIP_VELOCITY")).toBe(true);
+    expect(isPrProvenanceLabel("beep-effect10-69")).toBe(true);
+    expect(isPrProvenanceLabel("550e8400-e29b-41d4-a716-446655440000")).toBe(false);
+    expect(isPrProvenanceLabel("abcdef0123456789")).toBe(false);
+    expect(isPrProvenanceLabel("../escape")).toBe(false);
   });
 
   it("rejects UUID and long-hex model slugs", () => {
-    const isModel = S.is(PrProvenanceModel);
-    expect(isModel("550e8400-e29b-41d4-a716-446655440000")).toBe(false);
-    expect(isModel("0123456789abcdef")).toBe(false);
+    expect(isPrProvenanceModel("550e8400-e29b-41d4-a716-446655440000")).toBe(false);
+    expect(isPrProvenanceModel("0123456789abcdef")).toBe(false);
   });
 
   it.effect("does not classify companion variables as Codex", () =>

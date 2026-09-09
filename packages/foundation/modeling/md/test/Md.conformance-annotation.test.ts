@@ -14,11 +14,13 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
+const isConformanceAnnotation = S.is(Conformance.Annotation);
+
 describe("@beep/md conformance annotations", () => {
   it("collects the CommonMark profile from its strict document schema", () => {
     const annotation = CommonMarkDocument.pipe(Conformance.collectConformanceAnnotations, A.head, O.getOrThrow);
 
-    expect(S.is(Conformance.Annotation)(annotation)).toBe(true);
+    expect(isConformanceAnnotation(annotation)).toBe(true);
     expect(A.map(annotation.profiles, ({ id }) => id)).toEqual(["commonmark-0.31.2"]);
     expect(A.map(annotation.sources, ({ id }) => id)).toEqual(CommonMarkSpecificationProfile.sourceIds);
     expect(A.map(annotation.invariants, ({ id }) => id)).toEqual(CommonMarkSpecificationProfile.invariantIds);
@@ -27,7 +29,7 @@ describe("@beep/md conformance annotations", () => {
   it("collects the GFM profile from its strict document schema", () => {
     const annotation = GfmDocument.pipe(Conformance.collectConformanceAnnotations, A.head, O.getOrThrow);
 
-    expect(S.is(Conformance.Annotation)(annotation)).toBe(true);
+    expect(isConformanceAnnotation(annotation)).toBe(true);
     expect(A.map(annotation.profiles, ({ id }) => id)).toEqual(["gfm-0.29.0.gfm.13"]);
     expect(A.map(annotation.sources, ({ id }) => id)).toEqual(GfmSpecificationProfile.sourceIds);
     expect(A.map(annotation.invariants, ({ id }) => id)).toEqual(GfmSpecificationProfile.invariantIds);
@@ -36,7 +38,7 @@ describe("@beep/md conformance annotations", () => {
   it("collects the Beep extension profile from the strict Markdown document schema", () => {
     const annotation = BeepMarkdownDocument.pipe(Conformance.collectConformanceAnnotations, A.head, O.getOrThrow);
 
-    expect(S.is(Conformance.Annotation)(annotation)).toBe(true);
+    expect(isConformanceAnnotation(annotation)).toBe(true);
     expect(A.map(annotation.profiles, ({ id }) => id)).toEqual(["beep-md-extensions-v1"]);
     expect(A.map(annotation.sources, ({ id }) => id)).toEqual(BeepMarkdownSpecificationProfile.sourceIds);
     expect(A.map(annotation.invariants, ({ id }) => id)).toEqual(BeepMarkdownSpecificationProfile.invariantIds);

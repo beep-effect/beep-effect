@@ -36,6 +36,8 @@ import type { Quad } from "@beep/rdf/Rdf";
 import type { CanonicalizationServiceShape } from "@beep/semantic-web/services/canonicalization";
 import type { CanonizeGraph, CanonizeObject, CanonizeQuad, CanonizeSubject } from "rdf-canonize";
 
+const decodeSha256Hex = S.decodeEffect(Sha256Hex);
+
 const SemanticCanonicalizationMaxWorkFactor = 1;
 const SemanticCanonicalizationTimeout = Duration.seconds(1);
 const SemanticCanonicalizationTimeoutMs = Duration.toMillis(SemanticCanonicalizationTimeout);
@@ -67,7 +69,7 @@ const hashCanonicalText = Effect.fn("SemanticWeb.hashCanonicalText")(function* (
       }),
   });
 
-  return yield* S.decodeEffect(Sha256Hex)(hex).pipe(
+  return yield* decodeSha256Hex(hex).pipe(
     Effect.mapError(() =>
       CanonicalizationError.make({
         reason: "fingerprintFailure",

@@ -25,6 +25,19 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeMessageRoleSync = S.decodeSync(MessageRole);
+const decodeUnknownEmailArtifactSync = S.decodeUnknownSync(EmailArtifact);
+const decodeUnknownMessageSync = S.decodeUnknownSync(Message);
+const decodeUnknownThreadSync = S.decodeUnknownSync(Thread);
+const decodeUnknownTurnSync = S.decodeUnknownSync(Turn);
+const decodeUnknownTurnItemsSync = S.decodeUnknownSync(TurnItems);
+const decodeUnknownWorkspaceEntitySync = S.decodeUnknownSync(WorkspaceEntity);
+const decodeUnknownWorkspaceVaultRootPathSync = S.decodeUnknownSync(WorkspaceVaultRootPath);
+const encodeEmailArtifactSync = S.encodeSync(EmailArtifact);
+const encodeMessageRoleSync = S.encodeSync(MessageRole);
+const encodeTurnSync = S.encodeSync(Turn);
+const encodeWorkspaceEntitySync = S.encodeSync(WorkspaceEntity);
+
 const systemPrincipal = { kind: "System", component: "Runtime" } as const;
 const MessageRoleArbitrary = S.toArbitrary(MessageRole)(fc);
 const publicIdFor = (entityType: string, id: number) =>
@@ -85,8 +98,8 @@ describe("@beep/workspace-domain", () => {
   it("round-trips schema-derived message roles", () =>
     fc.assert(
       fc.property(MessageRoleArbitrary, (role) => {
-        const decoded = S.decodeSync(MessageRole)(role);
-        const encoded = S.encodeSync(MessageRole)(decoded);
+        const decoded = decodeMessageRoleSync(role);
+        const encoded = encodeMessageRoleSync(decoded);
 
         expect(encoded).toBe(role);
         expect(["system", "user", "assistant", "agent", "tool"].includes(decoded)).toBe(true);
@@ -109,7 +122,7 @@ describe("@beep/workspace-domain", () => {
   });
 
   it("decodes and constructs a Workspace row", () => {
-    const decoded = S.decodeUnknownSync(WorkspaceEntity)({
+    const decoded = decodeUnknownWorkspaceEntitySync({
       ...baseEntityInput("WorkspaceWorkspace", 2),
       fixtureKey: "workspace.acme",
       name: "Acme Workspace",
@@ -127,24 +140,20 @@ describe("@beep/workspace-domain", () => {
   });
 
   it("rejects relative, tilde, and blank workspace vault roots", () => {
-    const decode = S.decodeUnknownSync(WorkspaceVaultRootPath);
-
-    expect(() => decode("vault")).toThrow();
-    expect(() => decode("C:relative-vault")).toThrow();
-    expect(() => decode("~/Vault")).toThrow();
-    expect(() => decode(" ")).toThrow();
-    expect(decode("C:\\Vault")).toBe("C:\\Vault");
+    expect(() => decodeUnknownWorkspaceVaultRootPathSync("vault")).toThrow();
+    expect(() => decodeUnknownWorkspaceVaultRootPathSync("C:relative-vault")).toThrow();
+    expect(() => decodeUnknownWorkspaceVaultRootPathSync("~/Vault")).toThrow();
+    expect(() => decodeUnknownWorkspaceVaultRootPathSync(" ")).toThrow();
+    expect(decodeUnknownWorkspaceVaultRootPathSync("C:\\Vault")).toBe("C:\\Vault");
   });
 
   it("normalizes trailing separators on workspace vault roots but still rejects bare roots", () => {
-    const decode = S.decodeUnknownSync(WorkspaceVaultRootPath);
-
-    expect(decode("/home/user/vault1/")).toBe("/home/user/vault1");
-    expect(decode("/home/user/vault1///")).toBe("/home/user/vault1");
-    expect(decode("C:\\Vault\\")).toBe("C:\\Vault");
-    expect(decode("\\\\server\\share\\vault\\")).toBe("\\\\server\\share\\vault");
-    expect(() => decode("/")).toThrow();
-    expect(() => decode("C:\\")).toThrow();
+    expect(decodeUnknownWorkspaceVaultRootPathSync("/home/user/vault1/")).toBe("/home/user/vault1");
+    expect(decodeUnknownWorkspaceVaultRootPathSync("/home/user/vault1///")).toBe("/home/user/vault1");
+    expect(decodeUnknownWorkspaceVaultRootPathSync("C:\\Vault\\")).toBe("C:\\Vault");
+    expect(decodeUnknownWorkspaceVaultRootPathSync("\\\\server\\share\\vault\\")).toBe("\\\\server\\share\\vault");
+    expect(() => decodeUnknownWorkspaceVaultRootPathSync("/")).toThrow();
+    expect(() => decodeUnknownWorkspaceVaultRootPathSync("C:\\")).toThrow();
   });
 
   it("preserves crispened workspace and email wire shapes", () => {
@@ -168,10 +177,8 @@ describe("@beep/workspace-domain", () => {
       to: [{ address: "agent@example.com" }],
     };
 
-    expect(S.encodeSync(WorkspaceEntity)(S.decodeUnknownSync(WorkspaceEntity)(workspaceWire))).toStrictEqual(
-      workspaceWire
-    );
-    expect(S.encodeSync(EmailArtifact)(S.decodeUnknownSync(EmailArtifact)(emailWire))).toStrictEqual(emailWire);
+    expect(encodeWorkspaceEntitySync(decodeUnknownWorkspaceEntitySync(workspaceWire))).toStrictEqual(workspaceWire);
+    expect(encodeEmailArtifactSync(decodeUnknownEmailArtifactSync(emailWire))).toStrictEqual(emailWire);
   });
 
   it("wires Thread, Turn, and Message to workspace identities", () => {
@@ -188,26 +195,26 @@ describe("@beep/workspace-domain", () => {
       _tag: "document",
       children: [{ _tag: "p", children: [{ _tag: "text", value: "Hello thread" }] }],
     };
-    const thread = S.decodeUnknownSync(Thread)({
+    const thread = decodeUnknownThreadSync({
       ...baseEntityInput("WorkspaceThread", 10),
       title: "Matter intake",
       workspaceId: 2,
     });
-    const message = S.decodeUnknownSync(Message)({
+    const message = decodeUnknownMessageSync({
       ...baseEntityInput("WorkspaceMessage", 11),
       content: messageContent,
       role: "assistant",
       threadId: 10,
       turnId: 12,
     });
-    const rootTurn = S.decodeUnknownSync(Turn)({
+    const rootTurn = decodeUnknownTurnSync({
       ...baseEntityInput("WorkspaceTurn", 12),
       items: [{ itemType: "message", messageId: 11 }],
       parentTurnId: null,
       threadId: 10,
       turnIndex: 0,
     });
-    const branchTurn = S.decodeUnknownSync(Turn)({
+    const branchTurn = decodeUnknownTurnSync({
       ...baseEntityInput("WorkspaceTurn", 13),
       items: [{ itemType: "message", messageId: 11 }],
       parentTurnId: 12,
@@ -233,13 +240,13 @@ describe("@beep/workspace-domain", () => {
       threadId: 10,
       turnIndex: 0,
     };
-    const decoded = S.decodeUnknownSync(Turn)(turnWire);
+    const decoded = decodeUnknownTurnSync(turnWire);
     const { parentTurnId: _parentTurnId, ...turnInput } = decoded;
     const constructed = Turn.make(turnInput);
 
     expect(constructed.parentTurnId).toEqual(O.none());
-    expect(S.encodeSync(Turn)(constructed)).toStrictEqual(turnWire);
-    expect(() => S.decodeUnknownSync(TurnItems)([])).toThrow();
+    expect(encodeTurnSync(constructed)).toStrictEqual(turnWire);
+    expect(() => decodeUnknownTurnItemsSync([])).toThrow();
   });
 
   it("round-trips schema-derived exported workspace domain schemas", () => {

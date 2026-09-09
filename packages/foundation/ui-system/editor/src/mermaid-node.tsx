@@ -33,7 +33,7 @@ const $I = $EditorId.create("mermaid-node");
 const schemaIssueToError = (cause: S.SchemaError | S.SchemaError["issue"]): S.SchemaError =>
   cause instanceof S.SchemaError ? cause : new S.SchemaError(cause);
 
-const decodeSerializedMermaidNode = (input: unknown) => S.decodeUnknownResult(SerializedMermaidNode)(input);
+const decodeSerializedMermaidNode = (input: unknown) => decodeUnknownSerializedMermaidNodeResult(input);
 
 /**
  * Serialized shape of {@link MermaidNode}. Viewer-internal: the wire profile
@@ -67,6 +67,7 @@ export class SerializedMermaidNode extends S.Class<SerializedMermaidNode>($I`Ser
     description: "Viewer-internal serialized Mermaid decorator node.",
   })
 ) {}
+const decodeUnknownSerializedMermaidNodeResult = S.decodeUnknownResult(SerializedMermaidNode);
 
 /**
  * Block-level Lexical decorator node that renders a Mermaid diagram.

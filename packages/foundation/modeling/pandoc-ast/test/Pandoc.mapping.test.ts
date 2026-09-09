@@ -22,6 +22,10 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeUnknownMdYouTube = S.decodeUnknownEffect(Md.YouTube);
+const encodePandocCompatibilityReportSync = S.encodeSync(PandocCompatibilityReport);
+const encodePandocMappingIssueSync = S.encodeSync(PandocMappingIssue);
+
 const JsonPathArbitrary = S.toArbitrary(JsonPath)(fc);
 const JsonPathSegmentArbitrary = S.toArbitrary(JsonPathSegment)(fc);
 const MdDocumentArbitrary = S.toArbitrary(Md.Document)(fc);
@@ -389,11 +393,11 @@ describe("Pandoc.mapping", () => {
         expect(issue.pointer).toBe(JsonPath.toPointer(path));
         expect(issue.pointer).toBe(jsonPointerFromPath(path));
         expect(issue.severity).toBe("unsupported");
-        expect(S.encodeSync(PandocMappingIssue)(issue)).not.toHaveProperty("pointer");
+        expect(encodePandocMappingIssueSync(issue)).not.toHaveProperty("pointer");
 
         const report = PandocCompatibilityReport.fromIssues([issue]);
         expect(report.profile).toBe("gap");
-        expect(S.encodeSync(PandocCompatibilityReport)(report)).not.toHaveProperty("profile");
+        expect(encodePandocCompatibilityReportSync(report)).not.toHaveProperty("profile");
       }),
       fcRuns(50)
     ));
@@ -587,15 +591,13 @@ describe("Pandoc.mapping", () => {
         // `encodeURIComponent` throw a `URIError`) and reserved characters are
         // refused at the `@beep/md` schema boundary through the typed
         // `SchemaError` channel, so they can never reach `documentToPandoc`.
-        const decodeYouTube = S.decodeUnknownEffect(Md.YouTube);
-
         for (const hostileVideoId of ["\ud800", "a b&c", "../../etc/passwd", "tooShort"]) {
-          const exit = yield* Effect.exit(decodeYouTube({ _tag: "youtube", videoId: hostileVideoId }));
+          const exit = yield* Effect.exit(decodeUnknownMdYouTube({ _tag: "youtube", videoId: hostileVideoId }));
           expect(Exit.isFailure(exit)).toBe(true);
         }
 
         // The bare 11-character form still decodes successfully.
-        const safe = yield* decodeYouTube({ _tag: "youtube", videoId: "M7lc1UVf-VE" });
+        const safe = yield* decodeUnknownMdYouTube({ _tag: "youtube", videoId: "M7lc1UVf-VE" });
         expect(safe.videoId).toBe("M7lc1UVf-VE");
       })
     ));

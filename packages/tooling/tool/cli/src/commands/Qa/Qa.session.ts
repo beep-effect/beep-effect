@@ -24,6 +24,8 @@ import type { RoundLayout } from "@beep/qa-capture";
 import type { R } from "@beep/utils";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 
+const decodeRoundNumber = S.decodeEffect(RoundNumber);
+
 const $I = $RepoCliId.create("commands/Qa/Qa.session");
 
 /**
@@ -348,9 +350,7 @@ const roundOrDiscovered = (
   O.match(round, {
     onNone,
     onSome: (value) =>
-      S.decodeEffect(RoundNumber)(value).pipe(
-        QaCommandError.mapError(`qa --round ${value} is not a positive round number.`)
-      ),
+      decodeRoundNumber(value).pipe(QaCommandError.mapError(`qa --round ${value} is not a positive round number.`)),
   });
 
 /**
@@ -681,6 +681,8 @@ const RecordHint = S.Struct({
 });
 
 const RecordHintJson = S.fromJsonString(RecordHint);
+const encodeRecordHintJson = S.encodeEffect(RecordHintJson);
+const decodeUnknownRecordHintJson = S.decodeUnknownEffect(RecordHintJson);
 
 /**
  * Read the harness recording-start hint, when the round produced one.
@@ -702,7 +704,7 @@ export const readRecordStartHint = Effect.fn("QaSession.readRecordStartHint")(fu
 ): Effect.fn.Return<O.Option<number>, never, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
   return yield* fs.readFileString(hintPath).pipe(
-    Effect.flatMap(S.decodeUnknownEffect(RecordHintJson)),
+    Effect.flatMap(decodeUnknownRecordHintJson),
     Effect.map((hint) => O.some(hint.recordStartHintEpochMs)),
     Effect.orElseSucceed(O.none<number>)
   );
@@ -729,7 +731,7 @@ export const writeRecordStartHint = Effect.fn("QaSession.writeRecordStartHint")(
   epochMs: number
 ): Effect.fn.Return<void, QaCommandError, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
-  const json = yield* S.encodeEffect(RecordHintJson)({ recordStartHintEpochMs: epochMs }).pipe(
+  const json = yield* encodeRecordHintJson({ recordStartHintEpochMs: epochMs }).pipe(
     QaCommandError.mapError("qa could not encode the recording-start hint.")
   );
   yield* fs

@@ -54,6 +54,19 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeAnchorSync = S.decodeSync(Anchor);
+const decodeForeignElementSync = S.decodeSync(ForeignElement);
+const decodeSafeImageUrlAttributeSync = S.decodeSync(SafeImageUrlAttribute);
+const decodeSafeUrlAttributeSync = S.decodeSync(SafeUrlAttribute);
+const encodeSafeImageUrlAttributeSync = S.encodeSync(SafeImageUrlAttribute);
+const encodeSafeUrlAttributeSync = S.encodeSync(SafeUrlAttribute);
+const isConformantHtml = S.is(ConformantHtml);
+const isHtmlCommentData = S.is(HtmlCommentData);
+const isSafeHtml = S.is(SafeHtml);
+const isSafeHtmlAst = S.is(SafeHtmlAst);
+const isSafeImageUrlAttribute = S.is(SafeImageUrlAttribute);
+const isSafeUrlAttribute = S.is(SafeUrlAttribute);
+
 const SafeImageUrlAttributeArbitrary = S.toArbitrary(SafeImageUrlAttribute)(fc);
 const SafeUrlAttributeArbitrary = S.toArbitrary(SafeUrlAttribute)(fc);
 const text = (value: string): Text => Text.make({ value });
@@ -162,8 +175,8 @@ describe("@beep/html safe policy", () => {
   it("keeps schema-derived safe URL attributes at their codec fixed points", () =>
     fc.assert(
       fc.property(SafeUrlAttributeArbitrary, SafeImageUrlAttributeArbitrary, (href, src) => {
-        expect(S.decodeSync(SafeUrlAttribute)(S.encodeSync(SafeUrlAttribute)(href))).toBe(href);
-        expect(S.decodeSync(SafeImageUrlAttribute)(S.encodeSync(SafeImageUrlAttribute)(src))).toBe(src);
+        expect(decodeSafeUrlAttributeSync(encodeSafeUrlAttributeSync(href))).toBe(href);
+        expect(decodeSafeImageUrlAttributeSync(encodeSafeImageUrlAttributeSync(src))).toBe(src);
       }),
       fcRuns(100)
     ));
@@ -199,10 +212,10 @@ describe("@beep/html safe policy", () => {
       ).toBe(true);
     }
 
-    expect(S.is(SafeUrlAttribute)("tel:+15551212")).toBe(true);
-    expect(S.is(SafeUrlAttribute)("http://example.com")).toBe(false);
-    expect(S.is(SafeImageUrlAttribute)("https://example.com/logo.png")).toBe(true);
-    expect(S.is(SafeImageUrlAttribute)("mailto:user@example.com")).toBe(false);
+    expect(isSafeUrlAttribute("tel:+15551212")).toBe(true);
+    expect(isSafeUrlAttribute("http://example.com")).toBe(false);
+    expect(isSafeImageUrlAttribute("https://example.com/logo.png")).toBe(true);
+    expect(isSafeImageUrlAttribute("mailto:user@example.com")).toBe(false);
   });
 
   it("admits only self targets or protected blank targets", () => {
@@ -253,7 +266,7 @@ describe("@beep/html safe policy", () => {
     ).toBe('<a href="https://example.com" rel="noopener noreferrer" target="_BLANK">link</a>');
 
     for (const separator of [" ", "\t", "\n", "\f", "\r"]) {
-      const decoded = S.decodeSync(Anchor)({
+      const decoded = decodeAnchorSync({
         _tag: "a",
         children: [{ _tag: "#text", value: "link" }],
         href: "https://example.com",
@@ -263,7 +276,7 @@ describe("@beep/html safe policy", () => {
       expect(Exit.isSuccess(safeExit(fragment(decoded)))).toBe(true);
     }
     for (const separator of ["\u00a0", "\u2003", "\u202f"]) {
-      const decoded = S.decodeSync(Anchor)({
+      const decoded = decodeAnchorSync({
         _tag: "a",
         children: [{ _tag: "#text", value: "link" }],
         href: "https://example.com",
@@ -415,7 +428,7 @@ describe("@beep/html canonical serialization", () => {
       '<svg href="javascript:alert(1)" onload="alert(&quot;x&quot;)" style="fill:red" xlink:href="data:image/svg+xml?a=1&amp;b=2"></svg>'
     );
     expect(() =>
-      S.decodeSync(ForeignElement)({
+      decodeForeignElementSync({
         _tag: "#foreign",
         namespace: "svg",
         name: 'svg onload="x"',
@@ -428,8 +441,8 @@ describe("@beep/html canonical serialization", () => {
     expect(Exit.isFailure(Effect.runSyncExit(serialize(text("\u0000"))))).toBe(true);
     expect(Exit.isFailure(Effect.runSyncExit(serialize(text("\uD800"))))).toBe(true);
     expect(Exit.isFailure(Effect.runSyncExit(serialize(Div.make({ id: O.some("\u0000"), children: [] }))))).toBe(true);
-    expect(S.is(HtmlCommentData)("safe note")).toBe(true);
-    expect(S.is(HtmlCommentData)("-->")).toBe(false);
+    expect(isHtmlCommentData("safe note")).toBe(true);
+    expect(isHtmlCommentData("-->")).toBe(false);
     expect(() => Comment.make({ value: "<!--" })).toThrow();
     expect(Exit.isFailure(Effect.runSyncExit(serialize(Script.make({ content: "</script><img src=x>" }))))).toBe(true);
   });
@@ -476,9 +489,9 @@ describe("@beep/html proof provenance", () => {
     const safeAst = Effect.runSync(enforceSafeHtml(conformant));
     const safeHtml = Effect.runSync(serializeSafe(safeAst));
 
-    expect(S.is(ConformantHtml)(conformant)).toBe(true);
-    expect(S.is(SafeHtmlAst)(safeAst)).toBe(true);
-    expect(S.is(SafeHtml)(safeHtml)).toBe(true);
+    expect(isConformantHtml(conformant)).toBe(true);
+    expect(isSafeHtmlAst(safeAst)).toBe(true);
+    expect(isSafeHtml(safeHtml)).toBe(true);
     expect(ConformantHtml.is(conformant)).toBe(true);
     expect(SafeHtmlAst.is(safeAst)).toBe(true);
     expect(SafeHtml.is(safeHtml)).toBe(true);

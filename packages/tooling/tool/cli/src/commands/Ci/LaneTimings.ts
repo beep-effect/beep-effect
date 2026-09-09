@@ -2204,10 +2204,12 @@ const renderWindowRowTsv = (row: CiLaneTimingWindowRow): string =>
 export const renderCiLaneTimingWindowTsv = (report: CiLaneTimingWindowReport): string =>
   A.join([A.join(WINDOW_TSV_COLUMNS, "\t"), ...A.map(report.rows, renderWindowRowTsv)], "\n");
 
+const decodeCiLaneTimingWindowOptionsInput = S.decodeUnknownEffect(CiLaneTimingWindowOptions);
+
 const decodeCiLaneTimingWindowOptions = Effect.fn("Ci.decodeCiLaneTimingWindowOptions")(function* (
   input: unknown
 ): Effect.fn.Return<CiLaneTimingWindowOptions, CiCommandError> {
-  const options = yield* S.decodeUnknownEffect(CiLaneTimingWindowOptions)(input).pipe(
+  const options = yield* decodeCiLaneTimingWindowOptionsInput(input).pipe(
     CiCommandError.mapError("--window requires valid --since and --until UTC timestamps.")
   );
   if (DateTime.toEpochMillis(options.since) >= DateTime.toEpochMillis(options.until)) {

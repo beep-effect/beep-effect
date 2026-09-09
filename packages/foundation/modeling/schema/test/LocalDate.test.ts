@@ -29,14 +29,33 @@ import * as DateTime from "effect/DateTime";
 import * as S from "effect/Schema";
 import { FastCheck as fc, TestClock } from "effect/testing";
 
+const decodeLocalDate = S.decodeEffect(LocalDate);
+const decodeLocalDateFromString = S.decodeEffect(LocalDateFromString);
+const decodeLocalDateSync = S.decodeSync(LocalDate);
+const decodeUnknownLocalDate = S.decodeUnknownEffect(LocalDate);
+const encodeLocalDate = S.encodeEffect(LocalDate);
+const encodeLocalDateFromString = S.encodeEffect(LocalDateFromString);
+const encodeLocalDateSync = S.encodeSync(LocalDate);
+
 const LocalDateArbitrary = S.toArbitrary(LocalDate)(fc);
+const TestParams = S.Struct({
+  startDate: LocalDateFromString,
+  endDate: LocalDateFromString,
+});
+const decodeTestParams = S.decodeEffect(TestParams);
+const encodeTestParams = S.encodeEffect(TestParams);
+const OptionalDateParams = S.Struct({
+  requiredDate: LocalDateFromString,
+  optionalDate: S.optionalKey(LocalDateFromString),
+});
+const decodeOptionalDateParams = S.decodeEffect(OptionalDateParams);
 
 describe("LocalDate", () => {
   describe("validation", () => {
     it.effect(
       "accepts valid dates",
       Effect.fnUntraced(function* () {
-        const decode = S.decodeUnknownEffect(LocalDate);
+        const decode = decodeUnknownLocalDate;
 
         const date = yield* decode({ year: 2024, month: 6, day: 15 });
         expect(date.year).toBe(2024);
@@ -48,7 +67,7 @@ describe("LocalDate", () => {
     it.effect(
       "accepts edge case dates",
       Effect.fnUntraced(function* () {
-        const decode = S.decodeUnknownEffect(LocalDate);
+        const decode = decodeUnknownLocalDate;
 
         const jan1 = yield* decode({ year: 2024, month: 1, day: 1 });
         expect(jan1.month).toBe(1);
@@ -63,7 +82,7 @@ describe("LocalDate", () => {
     it.effect(
       "accepts dates from previous years (historical data entry)",
       Effect.fnUntraced(function* () {
-        const decode = S.decodeUnknownEffect(LocalDate);
+        const decode = decodeUnknownLocalDate;
 
         // 2024 - previous year relative to current date (2026)
         const pastDate2024 = yield* decode({ year: 2024, month: 1, day: 15 });
@@ -82,7 +101,7 @@ describe("LocalDate", () => {
     it.effect(
       "accepts dates far in the past (year 2000, 1900)",
       Effect.fnUntraced(function* () {
-        const decode = S.decodeUnknownEffect(LocalDate);
+        const decode = decodeUnknownLocalDate;
 
         // Y2K date
         const y2k = yield* decode({ year: 2000, month: 1, day: 1 });
@@ -105,7 +124,7 @@ describe("LocalDate", () => {
     it.effect(
       "rejects invalid month",
       Effect.fnUntraced(function* () {
-        const decode = S.decodeUnknownEffect(LocalDate);
+        const decode = decodeUnknownLocalDate;
 
         const result0 = yield* Effect.exit(decode({ year: 2024, month: 0, day: 15 }));
         expect(Exit.isFailure(result0)).toBe(true);
@@ -118,7 +137,7 @@ describe("LocalDate", () => {
     it.effect(
       "rejects invalid day",
       Effect.fnUntraced(function* () {
-        const decode = S.decodeUnknownEffect(LocalDate);
+        const decode = decodeUnknownLocalDate;
 
         const result0 = yield* Effect.exit(decode({ year: 2024, month: 6, day: 0 }));
         expect(Exit.isFailure(result0)).toBe(true);
@@ -131,7 +150,7 @@ describe("LocalDate", () => {
     it.effect(
       "rejects invalid year",
       Effect.fnUntraced(function* () {
-        const decode = S.decodeUnknownEffect(LocalDate);
+        const decode = decodeUnknownLocalDate;
 
         const result0 = yield* Effect.exit(decode({ year: 0, month: 6, day: 15 }));
         expect(Exit.isFailure(result0)).toBe(true);
@@ -551,8 +570,8 @@ describe("LocalDate", () => {
     it("round-trips schema-derived LocalDate values through the schema codec", () =>
       fc.assert(
         fc.property(LocalDateArbitrary, (date) => {
-          const encoded = S.encodeSync(LocalDate)(date);
-          const decoded = S.decodeSync(LocalDate)(encoded);
+          const encoded = encodeLocalDateSync(date);
+          const decoded = decodeLocalDateSync(encoded);
 
           expect(decoded).toBeInstanceOf(LocalDate);
           expect(equals(decoded, date)).toBe(true);
@@ -564,8 +583,8 @@ describe("LocalDate", () => {
       "encodes and decodes LocalDate",
       Effect.fnUntraced(function* () {
         const original = LocalDate.make({ year: 2024, month: 6, day: 15 });
-        const encoded = yield* S.encodeEffect(LocalDate)(original);
-        const decoded = yield* S.decodeEffect(LocalDate)(encoded);
+        const encoded = yield* encodeLocalDate(original);
+        const decoded = yield* decodeLocalDate(encoded);
 
         expect(decoded.year).toBe(original.year);
         expect(decoded.month).toBe(original.month);
@@ -579,7 +598,7 @@ describe("LocalDate", () => {
       it.effect(
         "parses valid ISO date strings",
         Effect.fnUntraced(function* () {
-          const date = yield* S.decodeEffect(LocalDateFromString)("2024-06-15");
+          const date = yield* decodeLocalDateFromString("2024-06-15");
           expect(date.year).toBe(2024);
           expect(date.month).toBe(6);
           expect(date.day).toBe(15);
@@ -590,13 +609,13 @@ describe("LocalDate", () => {
         "parses edge case dates",
         Effect.fnUntraced(function* () {
           // First day of year
-          const jan1 = yield* S.decodeEffect(LocalDateFromString)("2024-01-01");
+          const jan1 = yield* decodeLocalDateFromString("2024-01-01");
           expect(jan1.year).toBe(2024);
           expect(jan1.month).toBe(1);
           expect(jan1.day).toBe(1);
 
           // Last day of year
-          const dec31 = yield* S.decodeEffect(LocalDateFromString)("2024-12-31");
+          const dec31 = yield* decodeLocalDateFromString("2024-12-31");
           expect(dec31.year).toBe(2024);
           expect(dec31.month).toBe(12);
           expect(dec31.day).toBe(31);
@@ -607,25 +626,25 @@ describe("LocalDate", () => {
         "parses past dates from previous years (historical data entry)",
         Effect.fnUntraced(function* () {
           // 2024 - 2 years ago relative to current date (2026)
-          const date2024 = yield* S.decodeEffect(LocalDateFromString)("2024-01-15");
+          const date2024 = yield* decodeLocalDateFromString("2024-01-15");
           expect(date2024.year).toBe(2024);
           expect(date2024.month).toBe(1);
           expect(date2024.day).toBe(15);
 
           // 2020 - 6 years ago
-          const date2020 = yield* S.decodeEffect(LocalDateFromString)("2020-06-30");
+          const date2020 = yield* decodeLocalDateFromString("2020-06-30");
           expect(date2020.year).toBe(2020);
           expect(date2020.month).toBe(6);
           expect(date2020.day).toBe(30);
 
           // Y2K date (2000)
-          const y2k = yield* S.decodeEffect(LocalDateFromString)("2000-01-01");
+          const y2k = yield* decodeLocalDateFromString("2000-01-01");
           expect(y2k.year).toBe(2000);
           expect(y2k.month).toBe(1);
           expect(y2k.day).toBe(1);
 
           // Very old date (1900)
-          const date1900 = yield* S.decodeEffect(LocalDateFromString)("1900-12-31");
+          const date1900 = yield* decodeLocalDateFromString("1900-12-31");
           expect(date1900.year).toBe(1900);
           expect(date1900.month).toBe(12);
           expect(date1900.day).toBe(31);
@@ -635,7 +654,7 @@ describe("LocalDate", () => {
       it.effect(
         "parses leap year February 29",
         Effect.fnUntraced(function* () {
-          const feb29 = yield* S.decodeEffect(LocalDateFromString)("2024-02-29");
+          const feb29 = yield* decodeLocalDateFromString("2024-02-29");
           expect(feb29.year).toBe(2024);
           expect(feb29.month).toBe(2);
           expect(feb29.day).toBe(29);
@@ -645,7 +664,7 @@ describe("LocalDate", () => {
       it.effect(
         "rejects invalid format - wrong separator",
         Effect.fnUntraced(function* () {
-          const result = yield* Effect.exit(S.decodeEffect(LocalDateFromString)("2024/06/15"));
+          const result = yield* Effect.exit(decodeLocalDateFromString("2024/06/15"));
           expect(Exit.isFailure(result)).toBe(true);
         })
       );
@@ -653,7 +672,7 @@ describe("LocalDate", () => {
       it.effect(
         "rejects invalid format - US format",
         Effect.fnUntraced(function* () {
-          const result = yield* Effect.exit(S.decodeEffect(LocalDateFromString)("06-15-2024"));
+          const result = yield* Effect.exit(decodeLocalDateFromString("06-15-2024"));
           expect(Exit.isFailure(result)).toBe(true);
         })
       );
@@ -661,7 +680,7 @@ describe("LocalDate", () => {
       it.effect(
         "rejects invalid format - no separators",
         Effect.fnUntraced(function* () {
-          const result = yield* Effect.exit(S.decodeEffect(LocalDateFromString)("20240615"));
+          const result = yield* Effect.exit(decodeLocalDateFromString("20240615"));
           expect(Exit.isFailure(result)).toBe(true);
         })
       );
@@ -669,7 +688,7 @@ describe("LocalDate", () => {
       it.effect(
         "rejects invalid format - random string",
         Effect.fnUntraced(function* () {
-          const result = yield* Effect.exit(S.decodeEffect(LocalDateFromString)("invalid"));
+          const result = yield* Effect.exit(decodeLocalDateFromString("invalid"));
           expect(Exit.isFailure(result)).toBe(true);
         })
       );
@@ -677,7 +696,7 @@ describe("LocalDate", () => {
       it.effect(
         "rejects invalid format - empty string",
         Effect.fnUntraced(function* () {
-          const result = yield* Effect.exit(S.decodeEffect(LocalDateFromString)(""));
+          const result = yield* Effect.exit(decodeLocalDateFromString(""));
           expect(Exit.isFailure(result)).toBe(true);
         })
       );
@@ -685,7 +704,7 @@ describe("LocalDate", () => {
       it.effect(
         "rejects invalid month - 0",
         Effect.fnUntraced(function* () {
-          const result = yield* Effect.exit(S.decodeEffect(LocalDateFromString)("2024-00-15"));
+          const result = yield* Effect.exit(decodeLocalDateFromString("2024-00-15"));
           expect(Exit.isFailure(result)).toBe(true);
         })
       );
@@ -693,7 +712,7 @@ describe("LocalDate", () => {
       it.effect(
         "rejects year 0000",
         Effect.fnUntraced(function* () {
-          const result = yield* Effect.exit(S.decodeEffect(LocalDateFromString)("0000-01-15"));
+          const result = yield* Effect.exit(decodeLocalDateFromString("0000-01-15"));
           expect(Exit.isFailure(result)).toBe(true);
         })
       );
@@ -701,7 +720,7 @@ describe("LocalDate", () => {
       it.effect(
         "rejects invalid month - 13",
         Effect.fnUntraced(function* () {
-          const result = yield* Effect.exit(S.decodeEffect(LocalDateFromString)("2024-13-15"));
+          const result = yield* Effect.exit(decodeLocalDateFromString("2024-13-15"));
           expect(Exit.isFailure(result)).toBe(true);
         })
       );
@@ -709,7 +728,7 @@ describe("LocalDate", () => {
       it.effect(
         "rejects invalid day - 0",
         Effect.fnUntraced(function* () {
-          const result = yield* Effect.exit(S.decodeEffect(LocalDateFromString)("2024-06-00"));
+          const result = yield* Effect.exit(decodeLocalDateFromString("2024-06-00"));
           expect(Exit.isFailure(result)).toBe(true);
         })
       );
@@ -717,7 +736,7 @@ describe("LocalDate", () => {
       it.effect(
         "rejects invalid day - 32 for month with 31 days",
         Effect.fnUntraced(function* () {
-          const result = yield* Effect.exit(S.decodeEffect(LocalDateFromString)("2024-07-32"));
+          const result = yield* Effect.exit(decodeLocalDateFromString("2024-07-32"));
           expect(Exit.isFailure(result)).toBe(true);
         })
       );
@@ -725,7 +744,7 @@ describe("LocalDate", () => {
       it.effect(
         "rejects invalid day - 31 for month with 30 days",
         Effect.fnUntraced(function* () {
-          const result = yield* Effect.exit(S.decodeEffect(LocalDateFromString)("2024-06-31"));
+          const result = yield* Effect.exit(decodeLocalDateFromString("2024-06-31"));
           expect(Exit.isFailure(result)).toBe(true);
         })
       );
@@ -733,7 +752,7 @@ describe("LocalDate", () => {
       it.effect(
         "rejects February 29 in non-leap year",
         Effect.fnUntraced(function* () {
-          const result = yield* Effect.exit(S.decodeEffect(LocalDateFromString)("2023-02-29"));
+          const result = yield* Effect.exit(decodeLocalDateFromString("2023-02-29"));
           expect(Exit.isFailure(result)).toBe(true);
         })
       );
@@ -741,7 +760,7 @@ describe("LocalDate", () => {
       it.effect(
         "rejects February 30",
         Effect.fnUntraced(function* () {
-          const result = yield* Effect.exit(S.decodeEffect(LocalDateFromString)("2024-02-30"));
+          const result = yield* Effect.exit(decodeLocalDateFromString("2024-02-30"));
           expect(Exit.isFailure(result)).toBe(true);
         })
       );
@@ -752,7 +771,7 @@ describe("LocalDate", () => {
         "encodes LocalDate to ISO string",
         Effect.fnUntraced(function* () {
           const date = LocalDate.make({ year: 2024, month: 6, day: 15 });
-          const encoded = yield* S.encodeEffect(LocalDateFromString)(date);
+          const encoded = yield* encodeLocalDateFromString(date);
           expect(encoded).toBe("2024-06-15");
         })
       );
@@ -761,11 +780,11 @@ describe("LocalDate", () => {
         "pads year, month, and day correctly",
         Effect.fnUntraced(function* () {
           const date1 = LocalDate.make({ year: 999, month: 1, day: 1 });
-          const encoded1 = yield* S.encodeEffect(LocalDateFromString)(date1);
+          const encoded1 = yield* encodeLocalDateFromString(date1);
           expect(encoded1).toBe("0999-01-01");
 
           const date2 = LocalDate.make({ year: 99, month: 2, day: 5 });
-          const encoded2 = yield* S.encodeEffect(LocalDateFromString)(date2);
+          const encoded2 = yield* encodeLocalDateFromString(date2);
           expect(encoded2).toBe("0099-02-05");
         })
       );
@@ -776,8 +795,8 @@ describe("LocalDate", () => {
         "decode then encode returns original string",
         Effect.fnUntraced(function* () {
           const original = "2024-06-15";
-          const decoded = yield* S.decodeEffect(LocalDateFromString)(original);
-          const encoded = yield* S.encodeEffect(LocalDateFromString)(decoded);
+          const decoded = yield* decodeLocalDateFromString(original);
+          const encoded = yield* encodeLocalDateFromString(decoded);
           expect(encoded).toBe(original);
         })
       );
@@ -786,23 +805,18 @@ describe("LocalDate", () => {
         "encode then decode returns equal LocalDate",
         Effect.fnUntraced(function* () {
           const original = LocalDate.make({ year: 2024, month: 6, day: 15 });
-          const encoded = yield* S.encodeEffect(LocalDateFromString)(original);
-          const decoded = yield* S.decodeEffect(LocalDateFromString)(encoded);
+          const encoded = yield* encodeLocalDateFromString(original);
+          const decoded = yield* decodeLocalDateFromString(encoded);
           expect(Equal.equals(original, decoded)).toBe(true);
         })
       );
     });
 
     describe("use in S.Struct", () => {
-      const TestParams = S.Struct({
-        startDate: LocalDateFromString,
-        endDate: LocalDateFromString,
-      });
-
       it.effect(
         "decodes struct with date string fields",
         Effect.fnUntraced(function* () {
-          const params = yield* S.decodeEffect(TestParams)({
+          const params = yield* decodeTestParams({
             startDate: "2024-01-01",
             endDate: "2024-12-31",
           });
@@ -819,7 +833,7 @@ describe("LocalDate", () => {
             startDate: LocalDate.make({ year: 2024, month: 1, day: 1 }),
             endDate: LocalDate.make({ year: 2024, month: 12, day: 31 }),
           };
-          const encoded = yield* S.encodeEffect(TestParams)(params);
+          const encoded = yield* encodeTestParams(params);
           expect(encoded.startDate).toBe("2024-01-01");
           expect(encoded.endDate).toBe("2024-12-31");
         })
@@ -827,15 +841,10 @@ describe("LocalDate", () => {
     });
 
     describe("use with S.optional", () => {
-      const OptionalDateParams = S.Struct({
-        requiredDate: LocalDateFromString,
-        optionalDate: S.optionalKey(LocalDateFromString),
-      });
-
       it.effect(
         "decodes with optional date present",
         Effect.fnUntraced(function* () {
-          const params = yield* S.decodeEffect(OptionalDateParams)({
+          const params = yield* decodeOptionalDateParams({
             requiredDate: "2024-06-15",
             optionalDate: "2024-12-31",
           });
@@ -847,7 +856,7 @@ describe("LocalDate", () => {
       it.effect(
         "decodes with optional date absent",
         Effect.fnUntraced(function* () {
-          const params = yield* S.decodeEffect(OptionalDateParams)({
+          const params = yield* decodeOptionalDateParams({
             requiredDate: "2024-06-15",
           });
           expect(params.requiredDate.month).toBe(6);

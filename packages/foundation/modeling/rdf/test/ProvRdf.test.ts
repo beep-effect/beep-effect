@@ -33,6 +33,12 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import type { Literal } from "@beep/rdf/Rdf";
 
+const decodeProvBundleResult = S.decodeResult(ProvBundle);
+const isAgent = S.is(Agent);
+const isAssociation = S.is(Association);
+const isGeneration = S.is(Generation);
+const isUsage = S.is(Usage);
+
 const RoundTripEntitySeed = S.Struct({
   index: NonNegativeInt,
   value: S.String,
@@ -234,9 +240,9 @@ describe("ProvRdf", () => {
       const reencoded = yield* Effect.fromResult(provBundleToDataset(decoded));
 
       expect(areDatasetsEquivalent(dataset, reencoded)).toBe(true);
-      expect(A.some(decoded.records, S.is(Agent))).toBe(true);
-      expect(A.some(decoded.records, S.is(Generation))).toBe(true);
-      expect(A.some(decoded.records, S.is(Association))).toBe(true);
+      expect(A.some(decoded.records, isAgent)).toBe(true);
+      expect(A.some(decoded.records, isGeneration)).toBe(true);
+      expect(A.some(decoded.records, isAssociation)).toBe(true);
     })
   );
 
@@ -244,7 +250,7 @@ describe("ProvRdf", () => {
     "rejects extension records instead of dropping them",
     Effect.fnUntraced(function* () {
       const bundle = yield* Effect.fromResult(
-        S.decodeResult(ProvBundle)({ records: [{ provType: "Plan", id: "plan:unsupported" }] })
+        decodeProvBundleResult({ records: [{ provType: "Plan", id: "plan:unsupported" }] })
       );
       const result = provBundleToDataset(bundle);
 
@@ -501,7 +507,7 @@ describe("ProvRdf", () => {
       const decoded = yield* Effect.fromResult(datasetToProvBundle(dataset));
 
       expect(decoded.records).toHaveLength(1);
-      expect(A.some(decoded.records, S.is(Usage))).toBe(true);
+      expect(A.some(decoded.records, isUsage)).toBe(true);
     })
   );
 });

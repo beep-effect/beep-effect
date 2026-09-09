@@ -339,6 +339,7 @@ export const TypeScriptFilePath = S.Union([TypeScriptImplementationFilePath, Typ
  * @since 0.0.0
  */
 export type TypeScriptFilePath = typeof TypeScriptFilePath.Type;
+const decodeTypeScriptFilePathSync = S.decodeSync(TypeScriptFilePath);
 
 /**
  * Symbol-safe implementation file path schema.
@@ -1713,7 +1714,7 @@ class TsMorphScopeEntrypointFile extends S.Class<TsMorphScopeEntrypointFile>($I`
   })
 ) {
   static readonly new = (filePath: string) =>
-    TsMorphScopeEntrypointFile.make({ filePath: S.decodeSync(TypeScriptFilePath)(filePath) });
+    TsMorphScopeEntrypointFile.make({ filePath: decodeTypeScriptFilePathSync(filePath) });
 }
 
 /**

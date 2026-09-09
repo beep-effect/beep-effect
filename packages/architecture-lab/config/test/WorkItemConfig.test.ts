@@ -16,6 +16,15 @@ import { Effect, Equal, Layer } from "effect";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeUnknownWorkItemConfigValueSync = S.decodeUnknownSync(WorkItemConfigValue);
+const decodeUnknownWorkItemPublicConfigSync = S.decodeUnknownSync(WorkItemPublicConfig);
+const decodeUnknownWorkItemSecretConfigSync = S.decodeUnknownSync(WorkItemSecretConfig);
+const decodeUnknownWorkItemServerConfigSync = S.decodeUnknownSync(WorkItemServerConfig);
+const encodeWorkItemConfigValueSync = S.encodeSync(WorkItemConfigValue);
+const encodeWorkItemPublicConfigSync = S.encodeSync(WorkItemPublicConfig);
+const encodeWorkItemSecretConfigSync = S.encodeSync(WorkItemSecretConfig);
+const encodeWorkItemServerConfigSync = S.encodeSync(WorkItemServerConfig);
+
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
   <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
@@ -32,18 +41,18 @@ describe("WorkItem configuration", () => {
   );
 
   it("keeps default encoded configuration shape byte-identical", () => {
-    expect(S.encodeSync(WorkItemPublicConfig)(defaultWorkItemPublicConfig)).toEqual({
+    expect(encodeWorkItemPublicConfigSync(defaultWorkItemPublicConfig)).toEqual({
       assignmentEnabled: true,
       reopenCompletedEnabled: true,
     });
-    expect(S.encodeSync(WorkItemServerConfig)(defaultWorkItemServerConfig)).toEqual({
+    expect(encodeWorkItemServerConfigSync(defaultWorkItemServerConfig)).toEqual({
       migrationSchemaName: "architecture_lab",
       repositoryName: "architecture-lab-work-items",
     });
-    expect(S.encodeSync(WorkItemSecretConfig)(defaultWorkItemSecretConfig)).toEqual({
+    expect(encodeWorkItemSecretConfigSync(defaultWorkItemSecretConfig)).toEqual({
       connectionName: "architecture-lab-proof",
     });
-    expect(S.encodeSync(WorkItemConfigValue)(testWorkItemConfig)).toEqual({
+    expect(encodeWorkItemConfigValueSync(testWorkItemConfig)).toEqual({
       publicConfig: {
         assignmentEnabled: true,
         reopenCompletedEnabled: true,
@@ -59,15 +68,6 @@ describe("WorkItem configuration", () => {
   });
 
   it("round-trips schema-derived WorkItem config values", () => {
-    const encodePublicConfig = S.encodeSync(WorkItemPublicConfig);
-    const decodePublicConfig = S.decodeUnknownSync(WorkItemPublicConfig);
-    const encodeServerConfig = S.encodeSync(WorkItemServerConfig);
-    const decodeServerConfig = S.decodeUnknownSync(WorkItemServerConfig);
-    const encodeSecretConfig = S.encodeSync(WorkItemSecretConfig);
-    const decodeSecretConfig = S.decodeUnknownSync(WorkItemSecretConfig);
-    const encodeConfigValue = S.encodeSync(WorkItemConfigValue);
-    const decodeConfigValue = S.decodeUnknownSync(WorkItemConfigValue);
-
     fc.assert(
       fc.property(
         S.toArbitrary(WorkItemPublicConfig)(fc),
@@ -75,10 +75,19 @@ describe("WorkItem configuration", () => {
         S.toArbitrary(WorkItemSecretConfig)(fc),
         S.toArbitrary(WorkItemConfigValue)(fc),
         (publicConfig, serverConfig, secretConfig, configValue) =>
-          Equal.equals(decodePublicConfig(encodePublicConfig(publicConfig)), publicConfig) &&
-          Equal.equals(decodeServerConfig(encodeServerConfig(serverConfig)), serverConfig) &&
-          Equal.equals(decodeSecretConfig(encodeSecretConfig(secretConfig)), secretConfig) &&
-          Equal.equals(decodeConfigValue(encodeConfigValue(configValue)), configValue)
+          Equal.equals(
+            decodeUnknownWorkItemPublicConfigSync(encodeWorkItemPublicConfigSync(publicConfig)),
+            publicConfig
+          ) &&
+          Equal.equals(
+            decodeUnknownWorkItemServerConfigSync(encodeWorkItemServerConfigSync(serverConfig)),
+            serverConfig
+          ) &&
+          Equal.equals(
+            decodeUnknownWorkItemSecretConfigSync(encodeWorkItemSecretConfigSync(secretConfig)),
+            secretConfig
+          ) &&
+          Equal.equals(decodeUnknownWorkItemConfigValueSync(encodeWorkItemConfigValueSync(configValue)), configValue)
       ),
       fcRuns(25)
     );

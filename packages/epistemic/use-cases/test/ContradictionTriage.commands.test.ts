@@ -7,6 +7,8 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { FastCheck as fc } from "effect/testing";
 
+const encodeSubmitContradictionCandidateResult = S.encodeResult(SubmitContradictionCandidate);
+
 const decodeDecision = S.decodeUnknownResult(ContradictionReviewDecision);
 const decodeSubmission = S.decodeUnknownResult(SubmitContradictionCandidate);
 const supersedeDecisionInput = (reason: string) => ({
@@ -18,12 +20,11 @@ const supersedeDecisionInput = (reason: string) => ({
 
 describe("Contradiction review commands", () => {
   it("round-trips schema-derived candidate submissions", () => {
-    const encode = S.encodeResult(SubmitContradictionCandidate);
     const equivalent = S.toEquivalence(SubmitContradictionCandidate);
 
     fc.assert(
       fc.property(S.toArbitrary(SubmitContradictionCandidate)(fc), (submission) => {
-        const encoded = Result.getOrThrow(encode(submission));
+        const encoded = Result.getOrThrow(encodeSubmitContradictionCandidateResult(submission));
         const decoded = Result.getOrThrow(decodeSubmission(encoded));
 
         return equivalent(decoded, submission);
@@ -34,7 +35,7 @@ describe("Contradiction review commands", () => {
 
   it("rejects empty or reversed candidate validity intervals", () => {
     const [submission] = fc.sample(S.toArbitrary(SubmitContradictionCandidate)(fc), { numRuns: 1, seed: 520 });
-    const encoded = Result.getOrThrow(S.encodeResult(SubmitContradictionCandidate)(submission));
+    const encoded = Result.getOrThrow(encodeSubmitContradictionCandidateResult(submission));
 
     expect(Result.isFailure(decodeSubmission({ ...encoded, validFrom: 1_000, validTo: 1_000 }))).toBe(true);
     expect(Result.isFailure(decodeSubmission({ ...encoded, validFrom: 1_000, validTo: 999 }))).toBe(true);

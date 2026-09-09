@@ -26,6 +26,8 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { YeetCheckTransition, YeetHeadChanged } from "@beep/repo-cli/test/Yeet";
 
+const decodeUnknownYeetWatchEventJson = S.decodeUnknownEffect(S.fromJsonString(YeetWatchEvent));
+
 const AT = "2026-08-17T00:00:00Z";
 
 const snapshot = (overrides: Partial<Parameters<typeof YeetWatchSnapshot.make>[0]> = {}): YeetWatchSnapshot =>
@@ -233,15 +235,13 @@ describe("countYeetWatchFailures", () => {
 });
 
 describe("renderYeetWatchEventLine", () => {
-  const decodeLine = S.decodeUnknownEffect(S.fromJsonString(YeetWatchEvent));
-
   it.effect("renders one single-line JSON document that round-trips through the schema", () =>
     Effect.gen(function* () {
       const started = YeetWatchStarted.make({ at: AT, checks: 3, headSha: "aaa111" });
       const line = yield* renderYeetWatchEventLine(started);
 
       expect(Str.includes("\n")(line)).toBe(false);
-      const decoded = yield* decodeLine(line);
+      const decoded = yield* decodeUnknownYeetWatchEventJson(line);
       expect(decoded.kind).toBe("watch-started");
       expect(decoded.schemaVersion).toBe(YEET_WATCH_SCHEMA_VERSION);
     })
@@ -251,7 +251,7 @@ describe("renderYeetWatchEventLine", () => {
     Effect.gen(function* () {
       const ended = YeetWatchEnded.make({ at: AT, failing: 1, headSha: "aaa111", reason: "all-terminal" });
       const line = yield* renderYeetWatchEventLine(ended);
-      const decoded = yield* decodeLine(line);
+      const decoded = yield* decodeUnknownYeetWatchEventJson(line);
 
       expect(decoded.kind).toBe("watch-ended");
       expect(decoded.schemaVersion).toBe(YEET_WATCH_SCHEMA_VERSION);
@@ -261,7 +261,7 @@ describe("renderYeetWatchEventLine", () => {
   it.effect("round-trips the event end reason", () =>
     Effect.gen(function* () {
       const ended = YeetWatchEnded.make({ at: AT, failing: 0, headSha: "aaa111", reason: "event" });
-      const decoded = yield* decodeLine(yield* renderYeetWatchEventLine(ended));
+      const decoded = yield* decodeUnknownYeetWatchEventJson(yield* renderYeetWatchEventLine(ended));
 
       expect(decoded.kind === "watch-ended" ? decoded.reason : null).toBe("event");
     })
@@ -269,8 +269,6 @@ describe("renderYeetWatchEventLine", () => {
 });
 
 describe("yeetWatchCommentEvent", () => {
-  const decodeLine = S.decodeUnknownEffect(S.fromJsonString(YeetWatchEvent));
-
   const reviewComment = YeetMonitorReviewComment.make({
     author: "greptile-apps[bot]",
     body: "Please  preserve  the polling interval.",
@@ -329,7 +327,7 @@ describe("yeetWatchCommentEvent", () => {
 
   it.effect("renders a comment row that round-trips through the stream schema", () =>
     Effect.gen(function* () {
-      const decoded = yield* decodeLine(
+      const decoded = yield* decodeUnknownYeetWatchEventJson(
         yield* renderYeetWatchEventLine(yeetWatchCommentEvent(reviewComment, AT, "aaa111"))
       );
 

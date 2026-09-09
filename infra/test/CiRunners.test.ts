@@ -20,6 +20,9 @@ import * as S from "effect/Schema";
 import { describe, expect, it } from "vitest";
 import { expectSchemaRoundTrip } from "./schemaParity.ts";
 
+const decodeCiRunnersNetworkConfig = S.decodeEffect(CiRunnersNetworkConfig);
+const encodeUnknownCiRunnersNetworkConfig = S.encodeUnknownEffect(CiRunnersNetworkConfig);
+
 describe("@beep/infra CiRunners", () => {
   it("applies groundwork defaults", () => {
     const args = makeCiRunnersStackArgsFromConfigValues();
@@ -142,8 +145,8 @@ describe("@beep/infra CiRunners", () => {
     });
     const equivalent = S.toEquivalence(CiRunnersNetworkConfig);
 
-    const encoded = Effect.runSync(S.encodeUnknownEffect(CiRunnersNetworkConfig)(network));
-    const decoded = Effect.runSync(S.decodeEffect(CiRunnersNetworkConfig)(encoded));
+    const encoded = Effect.runSync(encodeUnknownCiRunnersNetworkConfig(network));
+    const decoded = Effect.runSync(decodeCiRunnersNetworkConfig(encoded));
 
     expect(equivalent(decoded, network)).toBe(true);
   });

@@ -18,6 +18,9 @@ import type { Redacted as RedactedType } from "effect";
 import type * as HttpClientError from "effect/unstable/http/HttpClientError";
 import type * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
 
+const decodeHubSpotAccountId = S.decodeEffect(HubSpotAccountId);
+const decodeHubSpotBaseUrl = S.decodeEffect(HubSpotBaseUrl);
+
 const $I = $HubspotId.create("HubSpot.service");
 
 const hubSpotEmailPattern =
@@ -373,15 +376,13 @@ const resolveConfig = Effect.fn("HubSpot.resolveConfig")(function* (
     O.match({
       onNone: HubSpotError.failEffectFromReasonThunk("config"),
       onSome: (value) =>
-        S.decodeEffect(HubSpotAccountId)(value).pipe(
-          Effect.mapError((cause) => HubSpotError.fromReason("config", { cause }))
-        ),
+        decodeHubSpotAccountId(value).pipe(Effect.mapError((cause) => HubSpotError.fromReason("config", { cause }))),
     })
   );
-  const crmApiUrl = yield* S.decodeEffect(HubSpotBaseUrl)(input.crmApiUrl).pipe(
+  const crmApiUrl = yield* decodeHubSpotBaseUrl(input.crmApiUrl).pipe(
     Effect.mapError((cause) => HubSpotError.fromReason("config", { cause }))
   );
-  const formsApiUrl = yield* S.decodeEffect(HubSpotBaseUrl)(input.formsApiUrl).pipe(
+  const formsApiUrl = yield* decodeHubSpotBaseUrl(input.formsApiUrl).pipe(
     Effect.mapError((cause) => HubSpotError.fromReason("config", { cause }))
   );
 

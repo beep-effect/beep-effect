@@ -42,12 +42,14 @@ import * as S from "effect/Schema";
 import { CauseClassification, summarizeCause } from "./CauseDiagnostics.ts";
 import type { CauseSummary } from "./CauseDiagnostics.ts";
 
+const decodeNonNegativeIntResult = S.decodeResult(NonNegativeInt);
+
 const $I = $ObservabilityId.create("CauseRedaction");
 
 const schemaIssueToError = (cause: S.SchemaError | S.SchemaError["issue"]): S.SchemaError =>
   cause instanceof S.SchemaError ? cause : new S.SchemaError(cause);
 const decodeNonNegativeInt = (input: number): NonNegativeInt =>
-  Result.getOrThrowWith(S.decodeResult(NonNegativeInt)(input), schemaIssueToError);
+  Result.getOrThrowWith(decodeNonNegativeIntResult(input), schemaIssueToError);
 
 /**
  * Placeholder substituted for any redacted secret-shaped token or home path.

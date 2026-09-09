@@ -18,6 +18,8 @@ import { runWorktreeReap } from "./Reap.service.ts";
 import { WorktreeCommandError } from "./Worktree.errors.ts";
 import { WorktreeRemovalServiceLive } from "./Worktree.service.ts";
 
+const encodeUnknownWorktreeReapReport = S.encodeUnknownEffect(WorktreeReapReport);
+
 const candidateLine = (candidate: WorktreeReapReport["candidates"][number]): string => {
   const branch = O.getOrElse(candidate.branch, () => "(detached)");
   const pr = O.match(candidate.prNumber, {
@@ -117,7 +119,7 @@ export const worktreeReapCommand = Command.make(
       Effect.flatMap(
         Effect.fn("WorktreeReap.renderReport")(function* (report) {
           if (json) {
-            const encoded = yield* S.encodeUnknownEffect(WorktreeReapReport)(report);
+            const encoded = yield* encodeUnknownWorktreeReapReport(report);
             yield* printCommandJson(encoded).pipe(
               Effect.mapError(WorktreeCommandError.new("Failed to print the worktree-reap report as JSON."))
             );
