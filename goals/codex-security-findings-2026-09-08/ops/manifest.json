@@ -5,22 +5,22 @@
     "title": "Codex Security Findings (2026-09-08)",
     "status": "active",
     "created": "2026-09-08",
-    "updated": "2026-09-08",
+    "updated": "2026-09-09",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/codex-security-findings-2026-09-08",
   "lifecycle": "active",
-  "mission": "Remediate and close the 12 Codex Cloud security findings captured on 2026-09-08.",
+  "mission": "Remediate and close the 13 Codex Cloud security findings captured across September 8-9, 2026.",
   "executionCapable": true,
   "reflectionRequired": true,
   "completionGate": {
     "operator": "yeet",
     "requiresPullRequest": true,
     "requiresMergeable": true,
-    "statement": "Not achieved until the work ships as a Yeet-driven mergeable PR, is merged, and the exact 12 Codex findings are resolved with zero packet-applicable open findings.",
+    "statement": "Not achieved until the work ships as a Yeet-driven mergeable PR, is merged, and the exact 13 Codex findings are resolved with zero packet-applicable open findings.",
     "grandfathered": false
   },
-  "branch": "codex/security-corpus-redaction",
+  "branch": "codex/security-corpus-process-metadata",
   "currentSourceOfTruth": [
     "AGENTS.md",
     "CLAUDE.md",
@@ -50,22 +50,22 @@
     "rawCaptureTracked": false
   },
   "catalog": {
-    "expectedCount": 12,
-    "capturedCount": 12,
+    "expectedCount": 13,
+    "capturedCount": 13,
     "severityCountsKnown": true,
     "severityCounts": {
       "Medium": 1,
-      "Low": 3,
+      "Low": 4,
       "Informational": 8
     },
     "dispositionCounts": {
-      "remediate": 12,
+      "remediate": 13,
       "already-fixed": 0,
       "false-positive": 0,
       "out-of-scope": 0,
       "untriaged": 0
     },
-    "note": "Eleven findings merged in PR #1026. CSF-012 is implemented for the operator-authorized follow-up PR; proof, publication, and exact-ID closure remain in progress. codexStatus records capture-time state."
+    "note": "Twelve findings merged in PRs #1026 and #1032 and were closed as Already fixed. CSF-013 is implemented for the remaining follow-up; full proof, hosted acceptance, merge, and exact-ID closure remain pending. Severity and codexStatus retain historical capture values; captures span September 8-9."
   },
   "closeoutPolicy": {
     "fixed": "Already fixed",
@@ -121,7 +121,7 @@
     {
       "id": "P6",
       "name": "Publish",
-      "status": "complete"
+      "status": "in-progress"
     },
     {
       "id": "P7",
@@ -131,7 +131,7 @@
     {
       "id": "P8",
       "name": "Merge and close findings",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P9",
@@ -143,7 +143,7 @@
     "test \"$(wc -m < goals/codex-security-findings-2026-09-08/GOAL.md)\" -le 4000",
     "jq . goals/codex-security-findings-2026-09-08/ops/manifest.json",
     "jq . goals/codex-security-findings-2026-09-08/ops/triage.json",
-    "test \"$(find goals/codex-security-findings-2026-09-08/findings -maxdepth 1 -name 'CSF-*.md' | wc -l | tr -d ' ')\" = 12",
+    "test \"$(find goals/codex-security-findings-2026-09-08/findings -maxdepth 1 -name 'CSF-*.md' | wc -l | tr -d ' ')\" = 13",
     "git diff --check -- goals/codex-security-findings-2026-09-08",
     "jq -r '.findings[].commit' goals/codex-security-findings-2026-09-08/ops/triage.json | while read -r c; do git merge-base --is-ancestor \"$c\" HEAD || echo \"not-an-ancestor: $c\"; done",
     "bun run beep lint reflection-artifacts"

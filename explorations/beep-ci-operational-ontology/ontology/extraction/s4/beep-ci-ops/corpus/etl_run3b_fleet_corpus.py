@@ -52,6 +52,10 @@ PID_IN_TEXT = re.compile(
     r"""(?P<prefix>\bpid(?P<key_quote>\\*["'])?(?:\s|\\+[nrt])*(?:[=:](?:\s|\\+[nrt])*)?(?P<value_quote>\\*["'])?)[0-9]+""",
     re.IGNORECASE,
 )
+PROCESS_METADATA_IN_TEXT = re.compile(
+    r"""\b(?:attached[_-]*pid|owner[_-]*proc[_-]*start)(?:\\*["'])?(?:\s|\\+[nrt])*[:=]""",
+    re.IGNORECASE,
+)
 TIMESTAMP_KEY = re.compile(r"(?:^ts$|AtMillis$|At$|TimestampMillis$|Timestamp$)")
 PROPERTY_KEY = re.compile(r"[A-Za-z0-9_]+")
 PROPERTY_RECORD_COMMENT = re.compile(r"# record (0|[1-9][0-9]*)")
@@ -197,7 +201,7 @@ def redact_string(value: str, aliases: dict[str, str] | None = None) -> str:
 
 def process_member(key: str) -> bool:
     return key.replace("_", "").replace("-", "").lower() in {
-        "pid", "ppid", "ownerpid", "parentpid", "processid", "procstart",
+        "attachedpid", "ownerprocstart", "pid", "ppid", "ownerpid", "parentpid", "processid", "procstart",
         "procstarttime", "processstart", "processstarttime", "processstartticks",
     }
 
@@ -461,6 +465,8 @@ def scan_output_bytes(files: list[tuple[str, bytes]]) -> None:
                         if _label.endswith(".properties") else combined)
         if re.search(rb'"(?:pid|ppid|ownerPid|parentPid|processId|procStart|procStartTime)"\s*:', member_bytes):
             fail("residue scan failed: process identity member")
+        if PROCESS_METADATA_IN_TEXT.search(combined.decode("utf-8")):
+            fail("residue scan failed: schema process metadata")
         if PID_IN_TEXT.search(combined.decode("utf-8")):
             fail("residue scan failed: free-text process identifier")
         if b"ghp_" in combined or b"github_pat_" in combined:

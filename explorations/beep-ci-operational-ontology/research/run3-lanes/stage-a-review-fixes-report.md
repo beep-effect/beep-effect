@@ -1,6 +1,6 @@
 # Run-3 Stage A PR review-fix report
 
-## Current security repair proof — PR #1032
+## Current security repair proof — CSF-012 and CSF-013
 
 CSF-012 changed the generators and repaired saved message values after the
 Stage A review below. The historical report, hashes, byte totals, and unchanged
@@ -10,7 +10,9 @@ integrity evidence. The following values supersede them for the repaired pins.
 The repair was replayed from committed source `247d22465bdf5b0bb97388bc22c66c01f8eb54d2`
 with the then-three-pin `resanitize-corpora.py --source-ref <commit>`.
 The current five-pin script can replay pre-security source `86990e28f9`, which
-also contains both Stage B pins. It preserved embedded JSON,
+also contains both Stage B pins. Current replay requires `--finding CSF-013`;
+the unqualified command above records the historical three-pin invocation.
+The repair preserved embedded JSON,
 capture instants, event counts, owner references, and the original manifest
 digests. No live source was recaptured and no ontology ratification was rerun.
 Both fleet pins retain the original count of 12 repaired raw files; the identity
@@ -23,15 +25,23 @@ each manifest. Each generator's full pin verifier passes.
 
 | Pin | Whole-tree SHA-256 | Files | Records | Bytes |
 | --- | --- | ---: | ---: | ---: |
-| run2-fleet | `dc2558688389236e5a7974bd1badc359a6772980f5a141a0905622073cfcf995` | 1589 | 6213 | 13316735 |
-| run3-fleet | `3a20640a2df3da8e50760d5d511ed2d03a9dcea26c74750fbc5b23c201080d96` | 1873 | 7641 | 18263265 |
-| run3-checkout-identity | `cfd02834094938cad232cd0d6400650c2c8f547ea68606ca065bb2d102dcbd8e` | 217 | 108 | 894779 |
+| run2-fleet | `3fa45dd08b7f7306f740d1e6eed6669a4cfe18931269c0aa08fbb3ee70e39925` | 1589 | 6213 | 13317275 |
+| run3-fleet | `8651c07b48fb28ef61888f061ba0b2c2f4947822bfad28359bb80bbf78a57bd9` | 1873 | 7641 | 18253155 |
+| run3-checkout-identity | `88bec9ddde3f4984bf2be774b62dc6edd7214b4700f98087ab8229048b268387` | 217 | 108 | 894958 |
 
 Current generator SHA-256 pins:
 
-- run2-fleet: `962759f2ee171b171a23f5ca0c048f43c0c0586d0446e51adb3ae3f007851229`.
-- run3-fleet: `06f61533f1c0cc9e5aa8a61a1729df620a3f833950361d869724b5787ba1ac17`.
-- run3-checkout-identity: `ae9db0102c4cbc4b39862872a099edc88d2874202641b6d3ffb27aef77010854`.
+- run2-fleet: `d1f1d0dad1561e167bd169ce75c51928848262515f5124f0c95dcee9a6c882af`.
+- run3-fleet: `1764671686951ef9001f0788399be557d35cc5da6a2542099ce5a72bf605b782`.
+- run3-checkout-identity: `322bddb51a8e923157eacec946f3bc430542f4687fc7851750922e07f581772e`.
+
+CSF-013 adds schema process-member removal and a fail-closed byte guard to all
+four generators. The subsequent repair removes 178 fields from 26 Stage A raw
+files and 220 fields from 32 Stage B raw files. Their projections are regenerated;
+all other raw populations remain unchanged. Original CSF-012 receipts retain
+their initial counts and append the new finding's updates. All five full pin
+verifiers pass, and a repeat repair is unchanged. The tables above describe
+these current repaired bytes; the original capture reports below are historical.
 
 ## Historical Stage A report — before CSF-012
 

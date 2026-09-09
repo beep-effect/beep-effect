@@ -112,3 +112,19 @@
 - A broad report-row replacement updated both the current hash table and a
   historical inventory table. Scope replacements to the named table and check
   column counts so refreshed integrity evidence does not corrupt older proofs.
+
+- During #1032 closeout, the native open-findings export added CSF-013 but also
+  changed an earlier finding's severity. Canonical refresh rejects rewritten
+  historical metadata. A mechanical union retained the original twelve rows and
+  appended the unseen native row before canonical ingestion; source hashes and
+  the historical-versus-live distinction are recorded in `SOURCES.md`. A native
+  all-status export or explicit cumulative-refresh support would avoid this step.
+- #1032 merged while CSF-013 evidence was being finalized. The tested fix moved
+  to a new branch based on the merge commit. Early pushes reduce this window,
+  but a final findings refresh must still precede declaring the goal complete.
+
+- PR #1037 review found that the legacy generator's full process-member removal
+  exceeded its byte gate, and replay silently defaulted to the older finding.
+  Decode raw records and projection keys against the complete field domain;
+  require explicit finding attribution before repair. Regression tests now cover
+  null-valued and escaped keys, safe message text, and distinct history receipts.
