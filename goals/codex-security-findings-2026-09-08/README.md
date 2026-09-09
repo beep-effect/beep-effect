@@ -33,8 +33,8 @@ leave no packet-applicable finding open.
 ## Current Phase
 
 `P5 repo-proof` - all nine findings are validated and implemented. Focused
-regressions pass. FreshBooks and AI Sync package verification passed; the CLI
-package and repository-wide proof are in progress.
+regressions and full FreshBooks, AI Sync, and CLI package verification pass.
+Repository-wide Yeet proof is next.
 
 The operator's September 8 instruction authorizes all work necessary to resolve
 the current findings in one PR. Earlier archived-packet scope and approval gates

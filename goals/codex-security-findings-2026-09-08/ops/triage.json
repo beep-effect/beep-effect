@@ -8,7 +8,7 @@
     "capturedCount": 9,
     "capturedAt": "2026-09-08",
     "captureMethod": "signed-in-csv-export",
-    "note": "All nine current findings confirmed against origin/main be8995e66a and remediated on the consolidated branch. Focused proof and two package audits pass; CLI package and repository proof are in progress. Codex closure remains pending merge."
+    "note": "All nine findings confirmed and remediated. Focused regressions and full verification of FreshBooks, AI Sync, and repo-cli pass. Repository-wide Yeet proof and post-merge Codex closure remain pending."
   },
   "lanes": {
     "L1-permissions": {
