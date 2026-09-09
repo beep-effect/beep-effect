@@ -34,3 +34,24 @@ to `research/run3-lanes/run2-residue-repair-report.md`.
 
 Commit: `fix(explorations): make the run-2 residue repair host-independent and idempotent`,
 body lines under 100 characters.
+
+## Additional findings (Codex review, 2026-09-09 07:4xZ) — all HELD
+
+- **X1** duplicates G1 (repair-host digest); the structural-form fix above answers both.
+- **X2 (`resanitize-corpora.py` ~114): gate the Ruling 23 transformations on their finding.**
+  The unconditional `repair=True` makes a CSF-012/CSF-013 source replay that includes the
+  run-2 pin also apply the hostname/uid substitutions while the receipt names only the CSF
+  finding and omits `ruling` and `residue_classes`. Apply those transformations only when
+  `finding == "Ruling 23"`, or record the additional authority and residue classes whenever
+  they run; test both replay kinds.
+- **X3 (`etl_fleet_corpus.py` ~815): align the UID scanner with preserved structural keys.**
+  `redact_string_values(..., repair=True)` deliberately preserves a structural JSON key such
+  as `uid-123`, but the raw-text scan still matches the serialized key and aborts staged
+  verification; the safe-lookalike test scans only the message value and so misses the
+  contradiction. Decide one rule: either scan decoded string LEAVES (values) rather than the
+  whole serialized text, or transform/reject such keys consistently before the scan. Test the
+  contradiction directly (a preserved structural key must not abort verification).
+- **X4 (`run2-residue-repair-report.md` ~114): the primary reproduction command omits
+  `--finding`** and exits in argparse; add `--finding "Ruling 23"` so the documented replay runs.
+
+If the stopped lane left uncommitted edits in the tree, review them first and build on them.
