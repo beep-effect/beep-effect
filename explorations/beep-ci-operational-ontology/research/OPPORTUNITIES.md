@@ -116,3 +116,120 @@
   make the corpus byte scan fail on both operator-home and system-temp anchors;
   keep a regression case where the process temp root differs from the system
   temp root.
+
+## 2026-09-03: local jsdoc lane cannot see hosted-only ratchet reds
+
+- **Work:** clearing the JSDoc Ratchet red that main inherited alongside the
+  run-3 design PR (#981), fixed in PR #985.
+- **Evidence:** the hosted `ci:jsdoc-ratchet` job regenerates the documentation
+  inventory (~8 min) before ratcheting against
+  `standards/jsdoc-totals.regression-baseline.jsonc`, while the local
+  cheap-gates jsdoc lane only validates the already-committed inventory. A
+  doctest in `packages/foundation/modeling/md/src/Md.safe.ts` importing the
+  `@beep/schema` package root shipped green through every local gate and full
+  local proof, then turned main red hosted-only (`no-root-package-import`
+  3771 > 3770). Hosted inventory caching made the red flip-flop across PR
+  heads, which delayed attribution.
+- **Cost:** a main-wide required-check red inherited by every open PR, one
+  dedicated remediation PR (#985), and a diagnosis pass that first had to rule
+  out the flake classes because the local lane could not reproduce the failure.
+- **Prevention:** teach the local cheap-gates jsdoc lane (or a `--regenerate`
+  opt-in on the local checker) to regenerate the inventory for files touched by
+  the diff, so a doctest root-import surfaces before push instead of
+  hosted-only; alternatively have the hosted lane bypass its inventory cache
+  when the ratchet counter moves.
+
+## 2026-09-08: Stage A brief predates journal retention and recovery changes
+
+- **Work:** re-deriving source citations before implementing the run-3 corpus generators.
+- **Evidence:** `AttemptJournal.ts` now lives under `commands/Yeet/internal/`;
+  `AdmissionJournal.ts` retains 200 admitted transitions, not 200 total rows;
+  `QualityScheduler.ts` now persists reap claims and acknowledges both journal sinks.
+  The brief's old line numbers and claim-race description no longer describe the
+  current implementation exactly.
+- **Cost:** the capture needs source-qualified loss receipts rather than copying
+  the design brief's historical claims as current facts.
+- **Prevention:** bind a capture brief to a source commit and distinguish nominal
+  row limits from the writer's actual retention unit. Preserve historical loss
+  classes with an explicit current-source assessment.
+
+## 2026-09-08: managed Stage A lane cannot write the default uv cache
+
+- **Work:** first offline runs of both Stage A corpus generators.
+- **Evidence:** `uv run --offline --with pyyaml python <generator>` failed before
+  Python started: `Could not acquire lock`, `Read-only file system` in
+  `~/.cache/uv`.
+- **Prevention:** provide a writable lane-local uv cache populated from the
+  installed cache when launching a managed implementation lane. Keep the
+  original cache unchanged and dependencies offline.
+
+## 2026-09-08: fleet inventory includes registered worktrees outside fleetRoot
+
+- **Work:** binding every row returned by `bun run beep worktree fleet --json`.
+- **Evidence:** the command returned seven linked worktrees outside the fleet
+  directory, including Codex-managed worktrees and a legacy system-temp checkout.
+  The required filesystem globs for run artifacts do not reach these rows.
+- **Prevention:** document the distinction between same-origin registered
+  worktree discovery and filesystem-glob discovery. Keep the external rows with
+  portable capture-local labels, and report absent cross-corpus joins explicitly.
+
+## 2026-09-08: Stage A commit blocked by read-only worktree Git metadata
+
+- **Work:** staging the first Stage A generator by explicit path for the requested
+  local commit on `ontology-run3-stage-a`.
+- **Evidence:** `git add -- <corpus>/etl_run3_fleet_corpus.py` exited 128:
+  `Unable to create .../index.lock: Read-only file system`. The worktree's Git
+  metadata is outside this managed session's writable roots.
+- **Cost:** the lane can write and verify both corpus pins but cannot stage or
+  commit them. HEAD-only knowledge checks cannot cover the new untracked files.
+- **Prevention:** launch the implementation lane with verified write access to
+  its worktree Git metadata when a local commit is a required deliverable.
+  Finish the local commit from that authorized lane; do not bypass the boundary.
+
+## 2026-09-08: preview checkout names carry process identity outside JSON members
+
+- **Work:** final privacy review of the checkout-identity pin.
+- **Evidence:** `commands/Yeet/internal/MergedPreview.ts` constructs its directory
+  name from `process.pid`. Dropping JSON process members and scanning only the
+  literal `pid` prefix does not remove that directory-name identifier.
+- **Prevention:** alias preview process-directory names consistently across the
+  snapshot, binding keys, and Git-directory linkage. Add a residue rejection and
+  a fixture with two similarly prefixed identifiers to prevent alias collisions.
+
+## 2026-09-08: pre-commit Biome reformatted pinned corpus payloads
+
+- **Work:** committing the run-3 Stage A pins (`run3-fleet/`, `run3-checkout-identity/`).
+- **Evidence:** the lefthook `biome` pre-commit hook (`biome check --write … {staged_files}`,
+  `stage_fixed: true`) rewrote 37 staged JSON payloads inside the pins, so the very next
+  verify-mode run of both generators failed with
+  `SHA-256 or byte-count mismatch: verdicts/…/verdict.json`. The run-2 pin never hit this
+  only because its payloads happened to already match Biome's output.
+- **Cost:** a discarded commit, a second full capture of both corpora (new salt, new
+  instants), and an amend before the PR could open.
+- **Prevention:** applied — the pin directories are now excluded in `biome.jsonc`
+  `files.includes` beside the existing `adapters` and `runs` exclusions. Generators that
+  pin fidelity bytes should register their output directory there in the same PR that
+  creates it, and a verify-mode rerun belongs between commit and push.
+
+## 2026-09-08: nested ignored directories swallowed Stage A payloads
+
+- **Work:** verifying the PR #1027 checkout-identity pin against the committed tree.
+- **Evidence:** its manifest lists 220 payloads, but `git ls-files` contains only
+  190 payloads plus the manifest. All 30 omissions use nested `.claude/` or
+  `.beep/` label segments; staging the pin directory silently skipped them.
+- **Cost:** working-tree verification passed while a fresh checkout lacked files
+  required by the manifest. The capture must be replaced after fixing path emission.
+- **Prevention:** encode checkout labels into single output path components in
+  both generators, compare tracked inventories with manifests, and run ordinary
+  verification from a detached worktree of the actual committed HEAD.
+
+## 2026-09-08: detached verification hits mise directory trust before Python
+
+- **Work:** running both corpus verifiers in the disposable committed-HEAD worktree.
+- **Evidence:** the `uv` shim exited before starting Python because the new
+  worktree's `mise.toml` was `not trusted`. The committed corpus had not been read.
+- **Prevention:** resolve the existing offline Python environment in the trusted
+  lane first, then use its interpreter for the detached-worktree verification
+  while the owning `uv` process remains alive (its temporary environment is removed
+  when that process exits).
+  A committed-byte check needs no new tool installation or machine trust change.

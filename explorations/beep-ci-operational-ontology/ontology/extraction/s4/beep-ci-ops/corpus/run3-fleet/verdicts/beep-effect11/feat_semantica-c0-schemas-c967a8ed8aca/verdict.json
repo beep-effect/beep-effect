@@ -1,0 +1,99 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "feat/semantica-c0-schemas",
+  "committed": false,
+  "createdAt": "2026-08-26T05:51:06.955Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "advisory:01-fallow-feedback",
+      "label": "fallow-advisory-feedback",
+      "phase": "feedback",
+      "status": "passed",
+      "durationMs": 1683.892275,
+      "exitCode": 0
+    },
+    {
+      "id": "publish:00-head-install-preflight",
+      "label": "publish:head-install-preflight",
+      "phase": "publish",
+      "status": "passed",
+      "durationMs": 3845.099285,
+      "exitCode": 0
+    },
+    {
+      "id": "full:01-pre-push",
+      "label": "full:pre-push",
+      "phase": "full",
+      "status": "passed",
+      "durationMs": 1575167.41721,
+      "exitCode": 0
+    },
+    {
+      "id": "publish:01-git-push",
+      "label": "publish:git:push",
+      "phase": "publish",
+      "status": "passed",
+      "durationMs": 1382.858644,
+      "exitCode": 0
+    },
+    {
+      "id": "publish:02-pr-create",
+      "label": "publish:pr-create",
+      "phase": "publish",
+      "status": "passed",
+      "exitCode": 0
+    },
+    {
+      "id": "monitor:01-pr-context",
+      "label": "monitor:pr-context",
+      "phase": "monitor",
+      "status": "passed",
+      "durationMs": 366.275793,
+      "exitCode": 0
+    },
+    {
+      "id": "monitor:02-pr-checks-watch",
+      "label": "monitor:pr-checks:watch",
+      "phase": "monitor",
+      "status": "passed",
+      "durationMs": 774.348677,
+      "exitCode": 0
+    },
+    {
+      "id": "commit:01-git-commit",
+      "label": "commit:git:commit",
+      "phase": "commit",
+      "status": "not-run"
+    }
+  ],
+  "message": "Yeet merge readiness requires zero unresolved review threads; found 17: PRRT_kwDOPbO_N86cVm7f (apps/labs/semantica/src/schema/Ids.ts), PRRT_kwDOPbO_N86cVm7i (apps/labs/semantica/src/schema/Evidence.ts), PRRT_kwDOPbO_N86cVnX7 (apps/labs/semantica/src/schema/Gold.ts), PRRT_kwDOPbO_N86cVnYA (apps/labs/semantica/src/schema/Evidence.ts), PRRT_kwDOPbO_N86cVnYD (apps/labs/semantica/src/schema/Evidence.ts), PRRT_kwDOPbO_N86cVnYF (apps/labs/semantica/src/schema/Eval.ts), PRRT_kwDOPbO_N86cVnYI (apps/labs/semantica/src/schema/Eval.ts), PRRT_kwDOPbO_N86cVpJD (apps/labs/semantica/src/schema/Gold.ts), PRRT_kwDOPbO_N86cVpJH (apps/labs/semantica/src/schema/Evidence.ts), PRRT_kwDOPbO_N86cVpJO (apps/labs/semantica/src/schema/Evidence.ts), PRRT_kwDOPbO_N86cVpJR (apps/labs/semantica/src/schema/Text.ts), PRRT_kwDOPbO_N86cVpJU (apps/labs/semantica/src/schema/Evidence.ts), PRRT_kwDOPbO_N86cVpJX (apps/labs/semantica/src/schema/Eval.ts), PRRT_kwDOPbO_N86cVpJa (apps/labs/semantica/src/schema/Eval.ts), PRRT_kwDOPbO_N86cVpJb (apps/labs/semantica/src/schema/Eval.ts), PRRT_kwDOPbO_N86cVpJd (apps/labs/semantica/src/schema/Evidence.ts), PRRT_kwDOPbO_N86cVpJi (apps/labs/semantica/src/schema/Evidence.ts)",
+  "mode": "publish",
+  "outcome": "failure",
+  "packetPaths": [],
+  "pushed": true,
+  "runId": "feat_semantica-c0-schemas-c967a8ed8aca",
+  "attemptId": "2d971ec5-a77b-46cd-ad2d-b5c9a056a190",
+  "startedAt": "2026-08-26T05:24:41.186Z",
+  "endedAt": "2026-08-26T05:51:06.955Z",
+  "elapsedMs": 1585769,
+  "indexPath": "<fleet>/beep-effect11/.beep/yeet/quality-issue-index.json",
+  "baseFreshness": {
+    "behindCount": 1,
+    "mergeBase": "7e4b7d8c326268e0e26b5447daff2f077538d3a2",
+    "overlappingPaths": []
+  },
+  "failedStepId": "commit:01-git-commit",
+  "failureKind": "handler-error",
+  "mergeReady": {
+    "ready": false,
+    "failing": "closeout-run",
+    "criteria": {
+      "closeoutRun": false,
+      "checksGreen": false,
+      "threadsResolved": false
+    }
+  }
+}

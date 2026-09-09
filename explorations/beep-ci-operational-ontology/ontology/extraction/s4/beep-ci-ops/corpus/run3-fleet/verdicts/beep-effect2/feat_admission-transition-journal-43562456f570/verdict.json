@@ -1,0 +1,62 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "feat/admission-transition-journal",
+  "committed": false,
+  "createdAt": "2026-08-29T09:32:55.371Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "advisory:01-fallow-feedback",
+      "label": "fallow-advisory-feedback",
+      "phase": "feedback",
+      "status": "passed",
+      "durationMs": 1964.332323,
+      "exitCode": 0
+    },
+    {
+      "id": "commit:01-git-commit",
+      "label": "commit:git:commit",
+      "phase": "commit",
+      "status": "not-run"
+    },
+    {
+      "id": "full:00-cheap-gates",
+      "label": "full:cheap-gates",
+      "phase": "full",
+      "status": "not-run"
+    },
+    {
+      "id": "full:01-pre-push",
+      "label": "full:pre-push",
+      "phase": "full",
+      "status": "not-run"
+    },
+    {
+      "id": "publish:00-head-install-preflight",
+      "label": "publish:head-install-preflight",
+      "phase": "publish",
+      "status": "not-run"
+    },
+    {
+      "id": "publish:01-git-push",
+      "label": "publish:git:push",
+      "phase": "publish",
+      "status": "not-run"
+    }
+  ],
+  "message": "yeet publish refuses a stale base: files changed on this branch were also changed on origin/main since the merge-base, so the PR would conflict or silently regress them.\n7 path(s) across 3 top-level entries: .changeset, .claude, packages\n  - .changeset/admission-transition-journal.md\n  - .claude/skills/yeet/SKILL.md\n  - packages/tooling/tool/cli/src/internal/repo-run/AdmissionJournal.ts\n  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts\n  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts\n  - packages/tooling/tool/cli/src/internal/repo-run/index.ts\n  - packages/tooling/tool/cli/test/quality-scheduler.test.ts\nRemedy: git fetch origin && git merge origin/main, resolve conflicts, re-run bun run beep yeet verify, then publish again. Pass --allow-stale-base to proceed anyway.",
+  "mode": "publish",
+  "outcome": "failure",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "feat_admission-transition-journal-43562456f570",
+  "attemptId": "42151ccb-d867-491f-9105-0a0e87f5633d",
+  "startedAt": "2026-08-29T09:32:53.384Z",
+  "endedAt": "2026-08-29T09:32:55.371Z",
+  "elapsedMs": 1987,
+  "indexPath": "<fleet>/beep-effect2/.beep/yeet/quality-issue-index.json",
+  "failedStepId": "commit:01-git-commit",
+  "failureKind": "handler-error"
+}

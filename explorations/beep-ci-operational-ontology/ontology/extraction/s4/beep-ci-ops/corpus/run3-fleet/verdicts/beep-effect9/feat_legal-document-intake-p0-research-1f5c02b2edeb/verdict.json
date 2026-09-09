@@ -1,0 +1,48 @@
+{
+  "schemaVersion": "yeet-verdict/v1",
+  "base": "origin/main",
+  "branch": "feat/legal-document-intake-p0-research",
+  "committed": false,
+  "createdAt": "2026-07-11T06:39:16.858Z",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "advisory:01-fallow-feedback",
+      "label": "fallow-advisory-feedback",
+      "phase": "feedback",
+      "status": "passed",
+      "exitCode": 0
+    },
+    {
+      "id": "commit:01-git-commit",
+      "label": "commit:git:commit:amend",
+      "phase": "commit",
+      "status": "not-run"
+    },
+    {
+      "id": "full:01-pre-push",
+      "label": "full:pre-push",
+      "phase": "full",
+      "status": "not-run"
+    },
+    {
+      "id": "publish:01-git-push",
+      "label": "publish:git:push",
+      "phase": "publish",
+      "status": "not-run"
+    },
+    {
+      "id": "publish:02-pr-create",
+      "label": "publish:pr-create",
+      "phase": "publish",
+      "status": "not-run"
+    }
+  ],
+  "message": "yeet publish refuses a stale base: files changed on this branch were also changed on origin/main since the merge-base, so the PR would conflict or silently regress them.\n19 path(s) across 2 top-level entries: explorations, goals\n  - explorations/ATLAS.md\n  - goals/box-driver/README.md\n  - goals/ip-law-knowledge-graph/research/kg-storage-resolution.md\n  - goals/legal-document-intake/GOAL.md\n  - goals/legal-document-intake/PLAN.md\n  - goals/legal-document-intake/README.md\n  - goals/legal-document-intake/SPEC.md\n  - goals/legal-document-intake/history/.gitkeep\n  - goals/legal-document-intake/history/reflections/.gitkeep\n  - goals/legal-document-intake/history/reflections/_TEMPLATE.md\n  - (+9 more; full list in the failure packet)\nRemedy: git fetch origin && git rebase origin/main, re-run bun run beep yeet verify, then publish again. Pass --allow-stale-base to proceed anyway.",
+  "mode": "publish",
+  "outcome": "failure",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "feat_legal-document-intake-p0-research-1f5c02b2edeb",
+  "indexPath": "<fleet>/beep-effect9/.beep/yeet/quality-issue-index.json"
+}

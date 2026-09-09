@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "codex/per-module-imports-p4-closeout",
+  "committed": false,
+  "createdAt": "2026-09-03T21:08:30.437Z",
+  "failurePolicy": "fail-fast",
+  "head": "075dc6df7aa6eae664c4054394e9ee6064389459",
+  "lanes": [
+    {
+      "id": "closeout:01-pr-context",
+      "label": "closeout:pr-context",
+      "phase": "monitor",
+      "status": "not-run",
+      "tier": "full",
+      "inputDigest": null
+    },
+    {
+      "id": "closeout:02-review-gates",
+      "label": "closeout:review-gates",
+      "phase": "monitor",
+      "status": "not-run",
+      "tier": "full",
+      "inputDigest": null
+    }
+  ],
+  "message": "yeet closeout succeeded.",
+  "mode": "closeout",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "codex_per-module-imports-p4-closeout-0f5c2c98c876",
+  "attemptId": "f08c8113-e2a2-4fd9-a51c-341beb816567",
+  "resolvedHeadSha": "075dc6df7aa6eae664c4054394e9ee6064389459",
+  "diffFingerprint": "96a296d224f285c67bee93c30f8a309157f0daa35dc5b87e410b78630a09cfc7",
+  "proofTier": "full",
+  "startedAt": "2026-09-03T21:08:24.075Z",
+  "endedAt": "2026-09-03T21:08:30.437Z",
+  "elapsedMs": 6362,
+  "indexPath": "<fleet>/beep-effect5/.beep/yeet/quality-issue-index.json"
+}

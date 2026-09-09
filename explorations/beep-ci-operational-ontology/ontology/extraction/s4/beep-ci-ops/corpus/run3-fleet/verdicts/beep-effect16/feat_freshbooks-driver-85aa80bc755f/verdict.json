@@ -1,0 +1,49 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "feat/freshbooks-driver",
+  "committed": false,
+  "createdAt": "2026-09-03T18:10:01.045Z",
+  "failurePolicy": "fail-fast",
+  "head": "201c2e8cbdf4749b68cce5c0edc652460b660845",
+  "lanes": [
+    {
+      "id": "advisory:01-fallow-feedback",
+      "label": "fallow-advisory-feedback",
+      "phase": "feedback",
+      "status": "passed",
+      "durationMs": 1979.473113,
+      "peakRssKb": 537712,
+      "exitCode": 0,
+      "tier": "cheap-gates",
+      "inputDigest": null
+    },
+    {
+      "id": "full:00-cheap-gates",
+      "label": "full:cheap-gates",
+      "phase": "full",
+      "status": "failed",
+      "durationMs": 441758.869607,
+      "exitCode": 1,
+      "repairCommand": "Run `bun run config-sync`, then rerun `bun run beep yeet verify --tier cheap-gates`.",
+      "tier": "cheap-gates",
+      "inputDigest": null
+    }
+  ],
+  "message": "yeet verification proof failed.",
+  "mode": "verify",
+  "outcome": "failure",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "feat_freshbooks-driver-85aa80bc755f",
+  "attemptId": "5ad12361-e9f4-4fdb-aa35-907ab48948ac",
+  "resolvedHeadSha": "201c2e8cbdf4749b68cce5c0edc652460b660845",
+  "diffFingerprint": "39be866b7259926d56c8b7aca4ce6eac43ddcb1f4d33ea02e0dd60f682c97be1",
+  "proofTier": "cheap-gates",
+  "startedAt": "2026-09-03T18:02:36.948Z",
+  "endedAt": "2026-09-03T18:10:01.045Z",
+  "elapsedMs": 444097,
+  "indexPath": "<fleet>/beep-effect16/.beep/yeet/quality-issue-index.json",
+  "failedStepId": "full:00-cheap-gates",
+  "failureKind": "step-exit"
+}

@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "docs/codex-findings-2026-09-03-closeout",
+  "committed": false,
+  "createdAt": "2026-09-04T01:27:57.478Z",
+  "failurePolicy": "fail-fast",
+  "head": "ebb4c72be29e51b2760fda7aa6592322098c367c",
+  "lanes": [
+    {
+      "id": "closeout:01-pr-context",
+      "label": "closeout:pr-context",
+      "phase": "monitor",
+      "status": "not-run",
+      "tier": "full",
+      "inputDigest": null
+    },
+    {
+      "id": "closeout:02-review-gates",
+      "label": "closeout:review-gates",
+      "phase": "monitor",
+      "status": "not-run",
+      "tier": "full",
+      "inputDigest": null
+    }
+  ],
+  "message": "yeet closeout succeeded.",
+  "mode": "closeout",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "docs_codex-findings-2026-09-03-closeout-396712bde2cb",
+  "attemptId": "f2768072-bab8-4eb8-9ea1-44305e461036",
+  "resolvedHeadSha": "ebb4c72be29e51b2760fda7aa6592322098c367c",
+  "diffFingerprint": "96a296d224f285c67bee93c30f8a309157f0daa35dc5b87e410b78630a09cfc7",
+  "proofTier": "full",
+  "startedAt": "2026-09-04T01:27:51.556Z",
+  "endedAt": "2026-09-04T01:27:57.478Z",
+  "elapsedMs": 5923,
+  "indexPath": "<fleet>/beep-effect3/.beep/yeet/quality-issue-index.json"
+}
