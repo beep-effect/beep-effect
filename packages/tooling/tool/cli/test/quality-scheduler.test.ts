@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { qualityCommand, renderAdmissionSnapshotLinesForTesting } from "@beep/repo-cli/test/Quality";
 import {
   AdmissionAttemptTerminationJournal,
@@ -59,6 +59,7 @@ import {
   tryCreateExclusiveForTesting,
   validatePrivateCoordinationDirectory,
   withQualityAdmission,
+  writeFileAtomicForTesting,
   YeetAdmissionLease,
   YeetAdmissionTicket,
 } from "@beep/repo-cli/test/RepoRun";
@@ -85,6 +86,7 @@ import {
   Fiber,
   FileSystem,
   Layer,
+  Order,
   Path,
   pipe,
   Ref,
@@ -706,6 +708,39 @@ const fileSystemWithLostJournalReapClaim = Effect.fnUntraced(function* (fs: File
   return { adopterReads, fileSystem };
 });
 
+// A FileSystem whose overridden operation parks forever after signalling
+// `reached`, so a test can interrupt a writer at a precise point inside the
+// stage-and-publish pair.
+const stalledFileSystem = Effect.fnUntraced(function* (
+  fs: FileSystem.FileSystem,
+  override: (stall: Effect.Effect<never>) => Partial<FileSystem.FileSystem>
+) {
+  const reached = yield* Deferred.make<void>();
+  const stall = Deferred.succeed(reached, undefined).pipe(Effect.andThen(Effect.never));
+  return { reached, fileSystem: FileSystem.FileSystem.of({ ...fs, ...override(stall) }) };
+});
+
+const fileWithStalledWriteAll = (file: FileSystem.File, stall: Effect.Effect<never>): FileSystem.File => ({
+  [FileSystem.FileTypeId]: FileSystem.FileTypeId,
+  stat: file.stat,
+  seek: (offset, from) => file.seek(offset, from),
+  sync: file.sync,
+  read: (buffer) => file.read(buffer),
+  readAlloc: (size) => file.readAlloc(size),
+  truncate: (length) => file.truncate(length),
+  write: (buffer) => file.write(buffer),
+  writeAll: () => stall,
+});
+
+// Parks the writer after `open` has created the staging sibling on disk.
+const fileSystemStallingStagedWrite = (fs: FileSystem.FileSystem) =>
+  stalledFileSystem(fs, (stall) => ({
+    open: Effect.fn("QualitySchedulerTest.open")(function* (target, options) {
+      const file = yield* fs.open(target, options);
+      return Str.includes(".tmp-")(target) ? fileWithStalledWriteAll(file, stall) : file;
+    }),
+  }));
+
 describe("quality-scheduler", () => {
   it.effect("reads the live memory inputs used by the scheduler capacity model", () =>
     Effect.gen(function* () {
@@ -727,6 +762,92 @@ describe("quality-scheduler", () => {
       expect(yield* fs.readFileString(filePath)).toBe("original");
       expect(A.some(yield* fs.readDirectory(directory), Str.includes(".tmp-"))).toBe(false);
     }).pipe(provideScopedLayer(NodeFileSystem.layer))
+  );
+
+  it.effect("removes the staged temporary when an atomic write is interrupted mid-write", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "quality-scheduler-atomic-write-interrupt-" });
+      const filePath = `${directory}/state.json`;
+      const { reached, fileSystem } = yield* fileSystemStallingStagedWrite(fs);
+      const writer = yield* writeFileAtomicForTesting(filePath, "{}\n").pipe(
+        Effect.provideService(FileSystem.FileSystem, fileSystem),
+        Effect.forkChild
+      );
+      yield* Deferred.await(reached);
+      // The writer is parked with its staging sibling already on disk.
+      expect(A.some(yield* fs.readDirectory(directory), Str.includes(".tmp-"))).toBe(true);
+
+      yield* Fiber.interrupt(writer);
+
+      expect(yield* fs.readDirectory(directory)).toStrictEqual([]);
+    }).pipe(provideScopedLayer(NodeFileSystem.layer))
+  );
+
+  it.effect("removes the staged temporary when an atomic write is interrupted before publication", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "quality-scheduler-atomic-publish-interrupt-" });
+      const filePath = `${directory}/state.json`;
+      const { reached, fileSystem } = yield* stalledFileSystem(fs, (stall) => ({ rename: () => stall }));
+      const writer = yield* writeFileAtomicForTesting(filePath, "{}\n").pipe(
+        Effect.provideService(FileSystem.FileSystem, fileSystem),
+        Effect.forkChild
+      );
+      yield* Deferred.await(reached);
+      // The stage completed; the writer is parked on the rename itself.
+      expect(A.some(yield* fs.readDirectory(directory), Str.includes(".tmp-"))).toBe(true);
+
+      yield* Fiber.interrupt(writer);
+
+      expect(yield* fs.readDirectory(directory)).toStrictEqual([]);
+    }).pipe(provideScopedLayer(NodeFileSystem.layer))
+  );
+
+  it.effect("removes the staged temporary when exclusive publication is interrupted before linking", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "quality-scheduler-exclusive-interrupt-" });
+      const filePath = `${directory}/existing`;
+      yield* fs.writeFileString(filePath, "original");
+      const { reached, fileSystem } = yield* stalledFileSystem(fs, (stall) => ({ link: () => stall }));
+      const writer = yield* tryCreateExclusiveForTesting(filePath, "replacement").pipe(
+        Effect.provideService(FileSystem.FileSystem, fileSystem),
+        Effect.forkChild
+      );
+      yield* Deferred.await(reached);
+      expect(A.some(yield* fs.readDirectory(directory), Str.includes(".tmp-"))).toBe(true);
+
+      yield* Fiber.interrupt(writer);
+
+      expect(yield* fs.readDirectory(directory)).toStrictEqual(["existing"]);
+      expect(yield* fs.readFileString(filePath)).toBe("original");
+    }).pipe(provideScopedLayer(NodeFileSystem.layer))
+  );
+
+  it.effect("reports a staging temporary that survives its cleanup instead of hiding the refusal", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "quality-scheduler-staging-cleanup-refused-" });
+      const filePath = `${directory}/existing`;
+      yield* fs.writeFileString(filePath, "original");
+      // A genuine platform failure from the same layer stands in for a removal
+      // the operating system refuses.
+      const refusal = yield* fs.readFileString(`${directory}/missing`).pipe(Effect.flip);
+      const fileSystem = FileSystem.FileSystem.of({
+        ...fs,
+        remove: Effect.fn("FileSystem.FileSystem.remove")(() => Effect.fail(refusal)),
+      });
+
+      const created = yield* tryCreateExclusiveForTesting(filePath, "replacement").pipe(
+        Effect.provideService(FileSystem.FileSystem, fileSystem)
+      );
+
+      expect(created).toBe(false);
+      expect(yield* fs.readFileString(filePath)).toBe("original");
+      const errors = A.map(yield* TestConsole.errorLines, String);
+      expect(A.some(errors, Str.includes("failed to remove admission staging file"))).toBe(true);
+    }).pipe(provideScopedLayer(TestConsole.layer), provideScopedLayer(NodeFileSystem.layer))
   );
 
   it.effect("accepts an owner-agnostic private directory and rejects an unsafe mode", () =>
@@ -2750,6 +2871,59 @@ describe("quality-scheduler", () => {
       })
     ));
 
+  it("reap removes staging siblings of dead or pid-reused writers and keeps live ones", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            yield* Effect.forEach([tempRoot.leases, tempRoot.queue], (directory) =>
+              fs.makeDirectory(directory, { recursive: true, mode: 0o700 })
+            );
+            const ownIdentity = O.getOrElse(yield* processStartIdentityForPid(process.pid), () => "");
+            expect(ownIdentity).not.toBe("");
+            // Legacy names carry only the writer pid; identity-bearing names
+            // add the hex-encoded process start so a reused pid cannot shield
+            // an orphan the way it cannot shield a dead lease.
+            const staleLegacy = path.join(
+              tempRoot.leases,
+              `nonce-${DEAD_PID}.lease.json.tmp-${DEAD_PID}-${randomUUID()}`
+            );
+            const liveLegacy = path.join(
+              tempRoot.queue,
+              `nonce-${process.pid}.ticket.json.tmp-${process.pid}-${randomUUID()}`
+            );
+            const reusedPid = path.join(
+              tempRoot.leases,
+              `nonce-${process.pid}.lease.json.tmp-${process.pid}-${Encoding.encodeHex("proc:1")}-${randomUUID()}`
+            );
+            const current = path.join(
+              tempRoot.queue,
+              `nonce-${process.pid}.ticket.json.tmp-${process.pid}-${Encoding.encodeHex(ownIdentity)}-${randomUUID()}`
+            );
+            yield* Effect.forEach([staleLegacy, liveLegacy, reusedPid, current], (file) =>
+              fs.writeFileString(file, "")
+            );
+
+            // The dry run previews exactly the staging files apply removes.
+            const dryRun = yield* reapAdmissionState({ apply: false });
+            expect(A.sort(dryRun.dead, Order.String)).toStrictEqual(A.sort([staleLegacy, reusedPid], Order.String));
+            expect(yield* fs.exists(staleLegacy)).toBe(true);
+            expect(yield* fs.exists(reusedPid)).toBe(true);
+
+            const applied = yield* reapAdmissionState({ apply: true });
+            expect(A.sort(applied.dead, Order.String)).toStrictEqual(A.sort([staleLegacy, reusedPid], Order.String));
+            expect(yield* fs.exists(staleLegacy)).toBe(false);
+            expect(yield* fs.exists(reusedPid)).toBe(false);
+            expect(yield* fs.exists(liveLegacy)).toBe(true);
+            expect(yield* fs.exists(current)).toBe(true);
+          })
+        );
+      })
+    ));
+
   it("property: admission journal events round-trip through the NDJSON codec", () => {
     const EventArbitrary = S.toArbitrary(AdmissionJournalEvent)(fc);
     fc.assert(
@@ -3316,119 +3490,160 @@ describe("quality-scheduler", () => {
       }).pipe(provideScopedLayer(TestConsole.layer), provideScopedLayer(SchedulerCommandLayer))
     ));
 
-  it("atomically claims dead leases and tickets before journaling each death once", () =>
-    Effect.runPromise(
-      Effect.gen(function* () {
-        const gibRef = yield* Ref.make(50);
-        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
-          Effect.gen(function* () {
-            const fs = yield* FileSystem.FileSystem;
-            const path = yield* Path.Path;
-            const checkoutRoot = path.join(path.dirname(path.dirname(tempRoot.root)), "checkout");
-            const leaseAttemptId = yield* decodeUUID("550e8400-e29b-41d4-a716-446655440021");
-            const ticketAttemptId = yield* decodeUUID("550e8400-e29b-41d4-a716-446655440022");
-            yield* fs.makeDirectory(checkoutRoot, { recursive: true });
-            yield* writeFakeLease(tempRoot, {
-              pid: DEAD_PID,
-              nonce: "",
-              checkoutRoot,
-              branch: "feat/dead-lease",
-              heartbeatAtMillis: 12345,
-              attemptId: O.some(leaseAttemptId),
-              resolvedHeadSha: O.some("0123456789abcdef0123456789abcdef01234567"),
-              diffFingerprint: O.some("abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcd"),
-              proofTier: O.some("full"),
-              envProfile: O.some("local"),
-              stage: O.some("pre-push"),
-            });
-            yield* writeFakeTicket(tempRoot, {
-              pid: DEAD_PID,
-              nonce: "dead-ticket",
-              checkoutRoot,
-              branch: "feat/dead-ticket",
-              attemptId: O.some(ticketAttemptId),
-              resolvedHeadSha: O.some("fedcba9876543210fedcba9876543210fedcba98"),
-              diffFingerprint: O.some("1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"),
-              proofTier: O.some("review-fix"),
-              envProfile: O.some("hosted"),
-              stage: O.some("hosted"),
-            });
+  it.live("atomically claims dead leases and tickets before journaling each death once", () =>
+    Effect.gen(function* () {
+      const gibRef = yield* Ref.make(50);
+      yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const checkoutRoot = path.join(path.dirname(path.dirname(tempRoot.root)), "checkout");
+          const leaseAttemptId = yield* decodeUUID("550e8400-e29b-41d4-a716-446655440021");
+          const ticketAttemptId = yield* decodeUUID("550e8400-e29b-41d4-a716-446655440022");
+          yield* fs.makeDirectory(checkoutRoot, { recursive: true });
+          yield* writeFakeLease(tempRoot, {
+            pid: DEAD_PID,
+            nonce: "",
+            checkoutRoot,
+            branch: "feat/dead-lease",
+            heartbeatAtMillis: 12345,
+            attemptId: O.some(leaseAttemptId),
+            resolvedHeadSha: O.some("0123456789abcdef0123456789abcdef01234567"),
+            diffFingerprint: O.some("abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcd"),
+            proofTier: O.some("full"),
+            envProfile: O.some("local"),
+            stage: O.some("pre-push"),
+          });
+          yield* writeFakeTicket(tempRoot, {
+            pid: DEAD_PID,
+            nonce: "dead-ticket",
+            checkoutRoot,
+            branch: "feat/dead-ticket",
+            attemptId: O.some(ticketAttemptId),
+            resolvedHeadSha: O.some("fedcba9876543210fedcba9876543210fedcba98"),
+            diffFingerprint: O.some("1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"),
+            proofTier: O.some("review-fix"),
+            envProfile: O.some("hosted"),
+            stage: O.some("hosted"),
+          });
 
-            yield* setAdmissionEvictionProtocol("on");
+          yield* setAdmissionEvictionProtocol("on");
 
-            yield* Effect.all([reapAdmissionState({ apply: true }), reapAdmissionState({ apply: true })], {
-              concurrency: "unbounded",
-            });
+          const sinkEntered = yield* Deferred.make<void>();
+          const finishSinks = yield* Deferred.make<void>();
+          const claimObserved = yield* Deferred.make<void>();
+          const claimChecks = yield* Ref.make(0);
+          const heldJournal = AdmissionEvictionJournal.of({
+            appendOnce: Effect.fnUntraced(function* (root, event) {
+              yield* Deferred.succeed(sinkEntered, undefined);
+              yield* Deferred.await(finishSinks);
+              return yield* appendAdmissionEvictionJournalEvent(root, event);
+            }),
+          });
+          const observingFileSystem = FileSystem.FileSystem.of({
+            ...fs,
+            exists: Effect.fnUntraced(function* (target) {
+              const exists = yield* fs.exists(target);
+              if (
+                exists &&
+                Str.Equivalence(path.dirname(target), tempRoot.claims) &&
+                Str.endsWith(".reap.json")(target)
+              ) {
+                if ((yield* Ref.updateAndGet(claimChecks, (count) => count + 1)) >= 3) {
+                  yield* Deferred.succeed(claimObserved, undefined);
+                }
+              }
+              return exists;
+            }),
+          });
+          const owner = yield* Effect.forkChild(
+            reapAdmissionState({ apply: true }).pipe(Effect.provideService(AdmissionEvictionJournal, heldJournal))
+          );
+          yield* Deferred.await(sinkEntered);
+          const observer = yield* Effect.forkChild(
+            reapAdmissionState({ apply: true }).pipe(Effect.provideService(FileSystem.FileSystem, observingFileSystem))
+          );
 
-            const admissionEvents = yield* readJournalEvents(tempRoot.root);
-            expect(A.filter(admissionEvents, AdmissionJournalEvent.guards["admission-lease-evicted"])).toHaveLength(1);
-            expect(A.filter(admissionEvents, AdmissionJournalEvent.guards["admission-ticket-evicted"])).toHaveLength(1);
-            expect(
-              pipe(admissionEvents, A.findFirst(AdmissionJournalEvent.guards["admission-lease-evicted"]), O.getOrThrow)
-            ).toMatchObject({
-              schemaVersion: "yeet-admission-journal/v3",
-              checkoutRoot,
-              branch: "feat/dead-lease",
-              lastHeartbeatAtMillis: 12345,
-            });
-            expect(
-              pipe(admissionEvents, A.findFirst(AdmissionJournalEvent.guards["admission-ticket-evicted"]), O.getOrThrow)
-            ).toMatchObject({
-              schemaVersion: "yeet-admission-journal/v3",
-              checkoutRoot,
-              branch: "feat/dead-ticket",
-            });
-            const attemptEvents = yield* Effect.forEach(
-              [
-                ["feat/dead-lease", "lease-eviction"],
-                ["feat/dead-ticket", "queued-submitter-death"],
-              ] as const,
-              ([branch, reason]) =>
-                Effect.gen(function* () {
-                  const context = RepoRunContext.make({
-                    repoRoot: checkoutRoot,
-                    cwd: checkoutRoot,
-                    base: "origin/main",
-                    head: "HEAD",
-                    branch,
-                    packetDir: ".beep/yeet",
-                    originalArgv: [],
-                    turbo: TurboPlanSnapshot.make({
-                      graphHealthStatus: "ok",
-                      graphHealthWarnings: [],
-                      tasks: [],
-                    }),
-                  });
-                  const text = yield* fs.readFileString(yield* attemptJournalPath(context));
-                  const rows = yield* Effect.forEach(pipe(text, Str.split("\n"), A.filter(Str.isNonEmpty)), (line) =>
-                    decodeYeetAttemptJournalEvent(line)
-                  );
-                  expect(rows).toHaveLength(1);
-                  expect(rows[0]).toMatchObject({ _tag: "attempt-terminated", reason });
-                  return rows[0];
-                })
-            );
-            expect(attemptEvents).toHaveLength(2);
-            expect(attemptEvents[0]).toMatchObject({
-              resolvedHeadSha: O.some("0123456789abcdef0123456789abcdef01234567"),
-              diffFingerprint: O.some("abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcd"),
-              proofTier: O.some("full"),
-              envProfile: O.some("local"),
-              stage: O.some("pre-push"),
-            });
-            expect(attemptEvents[1]).toMatchObject({
-              resolvedHeadSha: O.some("fedcba9876543210fedcba9876543210fedcba98"),
-              diffFingerprint: O.some("1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"),
-              proofTier: O.some("review-fix"),
-              envProfile: O.some("hosted"),
-              stage: O.some("hosted"),
-            });
-            expect(yield* listDirectory(tempRoot.leases)).toHaveLength(0);
-            expect(yield* listDirectory(tempRoot.queue)).toHaveLength(0);
-          })
-        );
-      })
-    ));
+          // Keep the owner in its sink well past the old 25 ms single-sleep window (one second),
+          // The second reaper must observe the claim repeatedly without taking it over.
+          yield* Deferred.await(claimObserved).pipe(Effect.timeout(Duration.seconds(5)));
+          yield* Effect.sleep(Duration.seconds(1));
+          expect(yield* Ref.get(claimChecks)).toBeGreaterThan(2);
+          expect(observer.pollUnsafe()).toBeUndefined();
+          yield* Deferred.succeed(finishSinks, undefined);
+          yield* Fiber.join(owner);
+          yield* Fiber.join(observer);
+
+          const admissionEvents = yield* readJournalEvents(tempRoot.root);
+          expect(A.filter(admissionEvents, AdmissionJournalEvent.guards["admission-lease-evicted"])).toHaveLength(1);
+          expect(A.filter(admissionEvents, AdmissionJournalEvent.guards["admission-ticket-evicted"])).toHaveLength(1);
+          expect(
+            pipe(admissionEvents, A.findFirst(AdmissionJournalEvent.guards["admission-lease-evicted"]), O.getOrThrow)
+          ).toMatchObject({
+            schemaVersion: "yeet-admission-journal/v3",
+            checkoutRoot,
+            branch: "feat/dead-lease",
+            lastHeartbeatAtMillis: 12345,
+          });
+          expect(
+            pipe(admissionEvents, A.findFirst(AdmissionJournalEvent.guards["admission-ticket-evicted"]), O.getOrThrow)
+          ).toMatchObject({
+            schemaVersion: "yeet-admission-journal/v3",
+            checkoutRoot,
+            branch: "feat/dead-ticket",
+          });
+          const attemptEvents = yield* Effect.forEach(
+            [
+              ["feat/dead-lease", "lease-eviction"],
+              ["feat/dead-ticket", "queued-submitter-death"],
+            ] as const,
+            ([branch, reason]) =>
+              Effect.gen(function* () {
+                const context = RepoRunContext.make({
+                  repoRoot: checkoutRoot,
+                  cwd: checkoutRoot,
+                  base: "origin/main",
+                  head: "HEAD",
+                  branch,
+                  packetDir: ".beep/yeet",
+                  originalArgv: [],
+                  turbo: TurboPlanSnapshot.make({
+                    graphHealthStatus: "ok",
+                    graphHealthWarnings: [],
+                    tasks: [],
+                  }),
+                });
+                const text = yield* fs.readFileString(yield* attemptJournalPath(context));
+                const rows = yield* Effect.forEach(pipe(text, Str.split("\n"), A.filter(Str.isNonEmpty)), (line) =>
+                  decodeYeetAttemptJournalEvent(line)
+                );
+                expect(rows).toHaveLength(1);
+                expect(rows[0]).toMatchObject({ _tag: "attempt-terminated", reason });
+                return rows[0];
+              })
+          );
+          expect(attemptEvents).toHaveLength(2);
+          expect(attemptEvents[0]).toMatchObject({
+            resolvedHeadSha: O.some("0123456789abcdef0123456789abcdef01234567"),
+            diffFingerprint: O.some("abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcd"),
+            proofTier: O.some("full"),
+            envProfile: O.some("local"),
+            stage: O.some("pre-push"),
+          });
+          expect(attemptEvents[1]).toMatchObject({
+            resolvedHeadSha: O.some("fedcba9876543210fedcba9876543210fedcba98"),
+            diffFingerprint: O.some("1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"),
+            proofTier: O.some("review-fix"),
+            envProfile: O.some("hosted"),
+            stage: O.some("hosted"),
+          });
+          expect(yield* listDirectory(tempRoot.leases)).toHaveLength(0);
+          expect(yield* listDirectory(tempRoot.queue)).toHaveLength(0);
+          expect(yield* listDirectory(tempRoot.claims)).toHaveLength(0);
+        })
+      );
+    })
+  );
 
   it("acknowledges completed reap claims and quarantines malformed recovery records", () =>
     Effect.runPromise(

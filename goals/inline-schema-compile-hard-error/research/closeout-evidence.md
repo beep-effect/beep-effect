@@ -285,3 +285,67 @@ in 2,569 ms, scanning both successor commits with no leaks. A fresh GitHub
 read confirmed #1042 remained open as a draft on `6bd41dd036`, and its watcher
 was restarted. The full proof still requires a successful retry; neither the
 single-lane recovery nor the passing review gate replaces it.
+
+### PR #1042 merged while final proof was running
+
+The operator marked #1042 ready for review on 2026-09-09. That transition
+triggered the Codex review at 08:55:02 UTC. The default canonical
+`bun run beep yeet monitor --summary` subsequently printed
+`merge-ready: yes (greptile 5/5)` on `bba3d0aa8bc09ec16aeef56a9d341c34df57f4bf`:
+all 18 required hosted checks passed and there were no unresolved threads
+at that observation. The monitor process returned 1 because its GitHub
+watch step also included the two permitted Vercel deployment rate limits.
+This readiness snapshot did not complete the separate local-proof or
+packet-state requirements.
+
+Codex then posted [the same-PR packet-closeout finding](https://github.com/beep-effect/beep-effect/pull/1042#discussion_r3966538923)
+at 09:00:29 UTC. GitHub merged #1042 at 09:01:20 UTC as
+`2d82cd3da49d9b86519f767afe0a4e19b9d9d5da`, with the same reviewed head.
+The remote feature branch was deleted. The finding remains actionable;
+the required packet-state update can no longer land in #1042.
+
+The running publication had passed all 15 preflight gates and all 30
+pre-push lanes, then entered its 23-stage CI-parity battery on clean preview
+`6d62d85e73311cca2f6aa3cd235fd7fb10227140`, tree
+`b504b80a42198730bf8cdf5ba907590bb76a22ac`. Its parents are mainline
+`4f13d83e13d61275a57004050ffc62a90d86c014` and reviewed head
+`bba3d0aa8bc09ec16aeef56a9d341c34df57f4bf`. That battery was still running
+when the PR merged. The early-publication plan had no further push or
+PR-creation step. No successor was created by that run. These incident notes
+are later, uncommitted root-checkout changes and are not included in that
+pinned preview or claimed as proven by it.
+
+All 23 CI-parity stages subsequently passed, with the final Nix stage ending
+at 09:10:57 UTC. The publication itself ended at 09:11:05 UTC with exit 1,
+after 3,460,481 ms. I had written these two incident-note files into the root
+checkout during the pinned preview run. The post-proof dirty-tree guard
+correctly rejected those later edits before terminal monitoring. They were
+agent-authored notes, not generator output. This is a failed publication
+with passing verifier lanes, not a green aggregate command or proof of the
+new notes. The verdict labels the handler failure at the next monitor step
+and retains pre-commit head `6bd41dd036`; the actual execution identity is
+established by the installation, pushed head, and pinned preview above.
+The unrelated settings overlay was restored with its expected checksum.
+
+The lifecycle remained active after that merge. The earlier #1042 exception
+did not authorize another PR or waive any verification or review gate.
+
+### Authorized lifecycle-closeout successor
+
+On 2026-09-09 the operator explicitly authorized one successor containing the
+final packet-state update before publication, with merging held until final
+verification and reviews complete. Branch
+`codex/inline-schema-lifecycle-closeout` starts from mainline `85cc86d1f3`,
+which includes #1042. This changeset carries completed-retained lifecycle,
+non-executable routing, completed phases, acceptance records, and the updated
+reflection together. It supplies the missing change requested by #1042's P1;
+that thread is resolved only after the pushed correction can be linked.
+
+The candidate's completed states describe what its accepted merge will land.
+They are not a receipt for an unrun command. Final-head canonical verification,
+hosted checks, review resolution, and terminal Yeet `merge-ready: yes` remain
+required before merge. The PR and Yeet run artifacts record those results
+against the actual published head; the earlier identities above remain
+unchanged. The publication checkout stays frozen through the terminal command
+result, including incident-note files. No implementation or proof-runner
+source changes are included in this successor.

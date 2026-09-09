@@ -63,8 +63,8 @@ DECISIONS.md only.
    rulings onto the six reshaped terms; the `dependsOn` naming collision;
    then the residual classes/properties one by one. Rulings scribe into DECISIONS.md; DISPOSITIONS.yaml carries the
    machine rows.
-3. Seats (one round): assembly lanes per kind cluster (codex `gpt-6-astra`, `xhigh`) build
-   TAXONOMY.yaml over the accepted set; an independent adversary (codex `gpt-6-astra`, `xhigh`)
+3. Seats (one round): assembly lanes per kind cluster (codex Sol max) build
+   TAXONOMY.yaml over the accepted set; an independent adversary (codex max)
    attacks the lattice OntoClean-style; a blinded alternative (grok xhigh)
    builds its own lattice; divergences return to the steward.
 4. Facts: bulk-class rows derived from subject dispositions; orphans and

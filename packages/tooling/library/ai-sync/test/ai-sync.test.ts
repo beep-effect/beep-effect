@@ -87,6 +87,9 @@ const requiredClaudeRepoDenyPermissions: ReadonlyArray<string> = [
   "Edit(**/.github/workflows/**)",
   "Edit(**/docs/_internal/**)",
   "Edit(**/.claude/settings.json)",
+  "Bash(graft init:*)",
+  "Bash(graft uninstall:*)",
+  "Bash(graft upgrade:*)",
 ];
 const repoSafeClaudePermissions = {
   allow: ["Bash(gh pr view:*)"],
@@ -591,7 +594,7 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/ai-sync", (it) => {
       assert.include(settings.permissions.allow, "Bash(graft map:*)");
       assert.include(settings.permissions.allow, "Bash(graft blast:*)");
       assert.include(settings.permissions.allow, "Bash(graft check:*)");
-      assert.include(settings.permissions.allow, "Bash(graft build:*)");
+      assert.include(settings.permissions.allow, "Bash(graft build)");
       assert.notInclude(settings.permissions.allow, "Bash(graft:*)");
       assert.include(settings.permissions.allow, "Bash(git worktree prune:*)");
       assert.include(settings.permissions.allow, "Bash(bun run beep yeet sweep:*)");
