@@ -118,3 +118,18 @@ export {
  * @since 0.0.0
  */
 export * from "./SchemaTopology.ts";
+/**
+ * Check-overlay allowlist lint utilities.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export {
+  collectTsconfigOverlayViolations,
+  lintTsconfigOverlayCommand,
+  runTsconfigOverlayLint,
+  TsconfigOverlayCompilerOptionKey,
+  TsconfigOverlayDocumentKey,
+  TsconfigOverlayViolation,
+  TsconfigOverlayViolationScope,
+} from "./TsconfigOverlay.ts";

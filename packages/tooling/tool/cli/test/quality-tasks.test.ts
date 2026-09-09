@@ -830,10 +830,21 @@ describe("quality task adapter", () => {
       "quality:desktop-ipc",
       "quality:test-unit",
       "quality:test-integration",
+      "quality:storybook",
     ]);
     expect(A.every(lanes, (lane) => lane.stage === "repo-quality")).toBe(true);
     expect(A.every(lanes, (lane) => lane.blockedBy.length === 0)).toBe(true);
-    expect(qualityLaneArgs(lanes, "quality:build")).toEqual(["run", "beep", "ci", "lane", "build"]);
+    expect(qualityLaneArgs(lanes, "quality:build")).toEqual([
+      "run",
+      "beep",
+      "ci",
+      "lane",
+      "build",
+      "--affected",
+      "--base",
+      "origin/main",
+      "--summarize",
+    ]);
     expect(qualityLaneArgs(lanes, "quality:knip")).toEqual(["run", "beep", "quality", "knip"]);
     expect(qualityLaneArgs(lanes, "quality:jsdoc-ratchet")).toEqual(["run", "beep", "ci", "lane", "jsdoc-ratchet"]);
     // The repo-wide tsgo extras ride inside `quality:check` (root `bun run check`
@@ -931,6 +942,7 @@ describe("quality task adapter", () => {
     expect(qualityLaneArgs(lanes, "quality:commitlint")).toEqual(hostedArgs("commitlint"));
     expect(qualityLaneArgs(lanes, "quality:desktop-ipc")).toEqual(hostedArgs("desktop-ipc"));
     expect(qualityLaneArgs(lanes, "quality:docgen")).toEqual(hostedArgs("docgen"));
+    expect(qualityLaneArgs(lanes, "quality:storybook")).toEqual(hostedArgs("storybook"));
 
     expect(qualityLaneArgs(lanes, "quality:check")).toEqual([
       "run",
@@ -1022,12 +1034,14 @@ describe("quality task adapter", () => {
       "repo-sanity:versions",
       "repo-sanity:syncpack",
       "repo-sanity:sherif",
+      "repo-sanity:config-typecheck",
       "repo-sanity:bun-audit",
     ]);
     expect(A.every(lanes, (lane) => lane.stage === "repo-sanity")).toBe(true);
     expect(lanes[0]?.step.args).toEqual(["run", "beep", "quality", "changeset-graph"]);
     expect(lanes[2]?.step.args).toEqual(["run", "beep", "quality", "fallow", "boundaries", "config-check", "--check"]);
-    expect(lanes[6]?.step.args).toEqual(["run", "beep", "quality", "bun-audit"]);
+    expect(lanes[6]?.step.args).toEqual(["run", "check:configs"]);
+    expect(lanes[7]?.step.args).toEqual(["run", "beep", "quality", "bun-audit"]);
   });
 
   it("maps pre-push external gates after repo diagnostics", () => {
@@ -2924,6 +2938,7 @@ describe("quality task adapter", () => {
       "lint:effect-imports",
       "lint:effect-imports-markdown",
       "lint:package-test-typecheck",
+      "lint:tsconfig-overlay",
       "lint:tsgo-rules",
       "lint:oxlint",
       "lint:ecosystem-polarity",
@@ -2962,6 +2977,7 @@ describe("quality task adapter", () => {
       "lint:effect-imports",
       "lint:effect-imports-markdown",
       "lint:package-test-typecheck",
+      "lint:tsconfig-overlay",
       "lint:tsgo-rules",
       "lint:oxlint",
       "lint:ecosystem-polarity",

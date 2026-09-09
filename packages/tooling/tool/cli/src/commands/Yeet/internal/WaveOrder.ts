@@ -182,6 +182,7 @@ export const DEFAULT_GATE_ORDER_SEED = GateOrderSeed.make({
     repoSanityRow("repo-sanity:versions", 0),
     repoSanityRow("repo-sanity:syncpack", 0),
     repoSanityRow("repo-sanity:sherif", 0),
+    repoSanityRow("repo-sanity:config-typecheck", 0),
     repoSanityRow("repo-sanity:bun-audit", 13 / 832, O.some(17)),
     seedRow(
       "quality:build",
@@ -226,6 +227,18 @@ export const DEFAULT_GATE_ORDER_SEED = GateOrderSeed.make({
     hostedRow("quality:desktop-ipc", 69, 15, 0),
     hostedRow("quality:test-unit", 495, 3, 0),
     hostedRow("quality:test-integration", 137, 4, 0),
+    seedRow(
+      "quality:storybook",
+      584,
+      "/hosted/laneRows",
+      "Storybook build-and-test wall time on main run 34323229096 (quality-lane audit 2026-09-09); A1 recorded no row for this non-required context.",
+      0,
+      O.none(),
+      "precise",
+      PRECISE_BASIS,
+      "heavy",
+      HEAVY_BASIS
+    ),
     seedRow(
       "fallow:audit",
       1.863,

@@ -18,6 +18,96 @@ inputs:
     description: Setup Node.js runtime when workflow steps require it.
     required: false
     default: "true"
+  free-disk:
+    description: >-
+      Reclaim disk on ephemeral hosted Linux images before installing: removes
+      the preinstalled GHC, Android, Boost, and .NET stacks and prunes Docker.
+      Owned beep- runners always keep their filesystem.
+    required: false
+    default: "false"
+  free-disk-min-gib:
+    description: >-
+      With free-disk, skip the cleanup when at least this many GiB are already
+      free on /. Empty always cleans.
+    required: false
+    default: ""
+  turbo-remote-cache:
+    description: >-
+      Export the Turbo remote-cache credential tuple (TURBO_API, TURBO_TEAM,
+      TURBO_TOKEN, TURBO_CACHE) plus TURBO_LOG_ORDER=stream into the job
+      environment. Trusted main pushes receive read-write access through
+      TURBO_TOKEN; same-repository pull requests receive read-only access
+      through TURBO_READ_TOKEN; forks and every other event stay local-only.
+      Policy lives in scripts/ci-job-env.mjs.
+    required: false
+    default: "false"
+  app-secrets:
+    description: >-
+      Export the application secret block (DATABASE_URL, AUTH_SECRET, ...) on
+      trusted main pushes; every other event exports empty values so Turbo's
+      hashed environment stays stable. Names live in scripts/ci-job-env.mjs.
+    required: false
+    default: "false"
+  turbo-api:
+    description: Pass vars.TURBO_API from the calling job.
+    required: false
+    default: ""
+  turbo-team:
+    description: Pass vars.TURBO_TEAM from the calling job.
+    required: false
+    default: ""
+  # Composite actions cannot read the secrets context, so the calling job
+  # passes each secret the policy needs by name. The names below are the
+  # whole allowlist of scripts/ci-job-env.mjs: a `with:` block is echoed in
+  # the step's log header (values masked, names intact), so passing the
+  # whole secrets context serialized as JSON instead would print the
+  # repository's full secret inventory on every job and hand every secret to
+  # a process running the pull request's code. The script never prints a
+  # value.
+  turbo-token:
+    description: >-
+      Pass secrets.TURBO_TOKEN (read-write remote cache) from the calling job.
+      Exported only on trusted pushes.
+    required: false
+    default: ""
+  turbo-read-token:
+    description: >-
+      Pass secrets.TURBO_READ_TOKEN (read-only remote cache) from the calling
+      job. Exported only on same-repository pull requests.
+    required: false
+    default: ""
+  database-url:
+    description: Pass secrets.DATABASE_URL from a job that sets app-secrets.
+    required: false
+    default: ""
+  database-url-unpooled:
+    description: Pass secrets.DATABASE_URL_UNPOOLED from a job that sets app-secrets.
+    required: false
+    default: ""
+  email-resend-api-key:
+    description: Pass secrets.EMAIL_RESEND_API_KEY from a job that sets app-secrets.
+    required: false
+    default: ""
+  auth-secret:
+    description: Pass secrets.AUTH_SECRET from a job that sets app-secrets.
+    required: false
+    default: ""
+  better-auth-secret:
+    description: Pass secrets.BETTER_AUTH_SECRET from a job that sets app-secrets.
+    required: false
+    default: ""
+  better-auth-url:
+    description: Pass secrets.BETTER_AUTH_URL from a job that sets app-secrets.
+    required: false
+    default: ""
+  security-trusted-origins:
+    description: Pass secrets.SECURITY_TRUSTED_ORIGINS from a job that sets app-secrets.
+    required: false
+    default: ""
+  liveblocks-secret-key:
+    description: Pass secrets.LIVEBLOCKS_SECRET_KEY from a job that sets app-secrets.
+    required: false
+    default: ""
 
 runs:
   using: composite
@@ -26,6 +116,38 @@ runs:
       shell: bash
       run: |
         echo "BEEP_SETUP_STARTED_AT=$(date +%s)" >> "$GITHUB_ENV"
+
+    - name: Free runner disk
+      # Destructive image cleanup runs on ephemeral hosted images (GitHub-
+      # hosted and lookalikes); owned/workstation runners (beep- prefix)
+      # keep their filesystem. Runs before any install so the large
+      # preinstalled stacks never compete with the monorepo toolchain.
+      if: ${{ inputs.free-disk == 'true' && runner.os == 'Linux' && !startsWith(runner.name, 'beep-') }}
+      shell: bash
+      env:
+        FREE_DISK_MIN_GIB: ${{ inputs.free-disk-min-gib }}
+      run: |
+        set -euo pipefail
+        if [[ -n "$FREE_DISK_MIN_GIB" ]]; then
+          available_gib="$(df --output=avail -B1G / | tail -n 1 | tr -d '[:space:]')"
+          echo "Root free space before cleanup: ${available_gib} GiB"
+          if (( available_gib >= FREE_DISK_MIN_GIB )); then
+            echo "At least ${FREE_DISK_MIN_GIB} GiB is available; skipping runner image cleanup."
+            exit 0
+          fi
+        fi
+        echo "Disk before cleanup:"
+        df -h /
+        sudo rm -rf \
+          /opt/ghc \
+          /usr/local/.ghcup \
+          /usr/local/lib/android \
+          /usr/local/share/boost \
+          /usr/share/dotnet
+        sudo apt-get clean
+        docker system prune --all --force --volumes || true
+        echo "Disk after cleanup:"
+        df -h /
 
     - name: Detect baked runner
       id: baked
@@ -101,6 +223,32 @@ runs:
       with:
         node-version-file: .nvmrc
 
+    # One definition of the credential policy for every Turbo-backed job.
+    # Runs after the Bun setup (the script needs a runtime) and before the
+    # Turbo restore below, which keys its local fallback on the exported
+    # TURBO_TOKEN / TURBO_TEAM. Only trusted main pushes ever see the write
+    # token or the application secrets.
+    - name: Export job environment
+      if: ${{ inputs.turbo-remote-cache == 'true' || inputs.app-secrets == 'true' }}
+      shell: bash
+      env:
+        BEEP_CI_TURBO_REMOTE_CACHE: ${{ inputs.turbo-remote-cache }}
+        BEEP_CI_APP_SECRETS: ${{ inputs.app-secrets }}
+        BEEP_CI_TURBO_API: ${{ inputs.turbo-api }}
+        BEEP_CI_TURBO_TEAM: ${{ inputs.turbo-team }}
+        BEEP_CI_SECRET_TURBO_TOKEN: ${{ inputs.turbo-token }}
+        BEEP_CI_SECRET_TURBO_READ_TOKEN: ${{ inputs.turbo-read-token }}
+        BEEP_CI_SECRET_DATABASE_URL: ${{ inputs.database-url }}
+        BEEP_CI_SECRET_DATABASE_URL_UNPOOLED: ${{ inputs.database-url-unpooled }}
+        BEEP_CI_SECRET_EMAIL_RESEND_API_KEY: ${{ inputs.email-resend-api-key }}
+        BEEP_CI_SECRET_AUTH_SECRET: ${{ inputs.auth-secret }}
+        BEEP_CI_SECRET_BETTER_AUTH_SECRET: ${{ inputs.better-auth-secret }}
+        BEEP_CI_SECRET_BETTER_AUTH_URL: ${{ inputs.better-auth-url }}
+        BEEP_CI_SECRET_SECURITY_TRUSTED_ORIGINS: ${{ inputs.security-trusted-origins }}
+        BEEP_CI_SECRET_LIVEBLOCKS_SECRET_KEY: ${{ inputs.liveblocks-secret-key }}
+        BEEP_CI_HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}
+      run: bun scripts/ci-job-env.mjs
+
     - name: Restore Bun dependencies cache
       if: ${{ steps.baked.outputs.hit != 'true' }}
       id: bun-cache-restore
@@ -164,6 +312,7 @@ runs:
         turbo_cache_hit="${{ steps.turbo-cache-restore.outputs.cache-hit }}"
         bun_cache_hit="${bun_cache_hit:-unknown}"
         turbo_cache_hit="${turbo_cache_hit:-skipped}"
+        turbo_remote_mode="${BEEP_CI_TURBO_REMOTE_MODE:-not requested}"
         bun_cache_size="$(du -sh ~/.bun/install/cache 2>/dev/null | awk '{ print $1 }' || true)"
         turbo_cache_size="$(du -sh .turbo/cache 2>/dev/null | awk '{ print $1 }' || true)"
         bun_cache_size="${bun_cache_size:-missing}"
@@ -190,5 +339,6 @@ runs:
           echo "| Turbo cache key | \`turbo-${{ runner.os }}-${{ github.job }}${{ inputs.turbo-cache-key-suffix }}-${{ hashFiles('turbo.json', 'package.json', 'bun.lock') }}\` |"
           echo "| Turbo cache hit | \`${turbo_cache_hit}\` |"
           echo "| Turbo cache size | \`${turbo_cache_size}\` |"
+          echo "| Turbo remote cache | \`${turbo_remote_mode}\` |"
           echo "| Cache write enabled | \`${{ inputs.cache-write }}\` |"
         } >> "${GITHUB_STEP_SUMMARY:-/dev/stdout}"

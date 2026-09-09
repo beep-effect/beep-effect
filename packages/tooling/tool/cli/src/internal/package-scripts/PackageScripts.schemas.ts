@@ -1250,7 +1250,7 @@ export const implScriptDefaults: ReadonlyArray<ImplScriptDefault> = [
   ImplScriptDefault.make({
     kind: "app",
     name: "beep:check",
-    value: "tsgo -p tsconfig.check.json && tsc -p tsconfig.json --noEmit",
+    value: "tsgo -p tsconfig.check.json",
   }),
   ImplScriptDefault.make({ kind: "app", name: "beep:lint", value: "biome check ." }),
   ImplScriptDefault.make({ kind: "app", name: "beep:lint:fix", value: "biome check . --write" }),
@@ -1271,7 +1271,7 @@ export const implScriptDefaults: ReadonlyArray<ImplScriptDefault> = [
   ImplScriptDefault.make({
     kind: "lab",
     name: "beep:check",
-    value: "tsgo -p tsconfig.check.json && tsc -p tsconfig.json --noEmit",
+    value: "tsgo -p tsconfig.check.json",
   }),
   ImplScriptDefault.make({ kind: "lab", name: "beep:lint", value: "biome check ." }),
   ImplScriptDefault.make({ kind: "lab", name: "beep:lint:fix", value: "biome check . --write" }),
