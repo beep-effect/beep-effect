@@ -17,6 +17,8 @@ const testLayer = Layer.mergeAll(FsUtilsLive, TSMorphServiceLive, TestConsole.la
   Layer.provideMerge(NodeServices.layer)
 );
 
+// A reference-free package: its tsconfig.json has no references, so the
+// overlay's `[]` is exact.
 const CLEAN_OVERLAY = `{
   "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "./tsconfig.json",
@@ -27,15 +29,52 @@ const CLEAN_OVERLAY = `{
     "declarationMap": false,
     "incremental": false,
     "noEmit": true,
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
     "rootDir": "../../.."
   }
 }
 `;
 
+const CANONICAL_WITH_REFERENCE = `{
+  "extends": "../../../tsconfig.base.json",
+  "include": ["src"],
+  "compilerOptions": { "outDir": "dist", "rootDir": "src" },
+  "references": [{ "path": "../dep/tsconfig.json" }]
+}
+`;
+
+// The post-switch shape: the overlay repeats the canonical reference verbatim.
+const MIRRORED_OVERLAY = `{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "./tsconfig.json",
+  "references": [
+    {
+      "path": "../dep/tsconfig.json"
+    }
+  ],
+  "compilerOptions": {
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "incremental": false,
+    "noEmit": true,
+    "rootDir": "../../.."
+  }
+}
+`;
+
+// An overlay that never carried the key at all reads as no references.
+const KEYLESS_OVERLAY = `{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "composite": false,
+    "noEmit": true
+  }
+}
+`;
+
 // JSONC on purpose: comments and a trailing comma must parse, and the widening
-// keys must be reported at both scopes.
+// keys must be reported at both scopes. `module` / `moduleResolution` left the
+// allowlist with the reference-keeping switch (quality-lane audit D3).
 const WIDENING_OVERLAY = `{
   // editor metadata is tolerated, the rest is not
   "$schema": "https://json.schemastore.org/tsconfig",
@@ -45,28 +84,37 @@ const WIDENING_OVERLAY = `{
   "compilerOptions": {
     "composite": false,
     "noEmit": true,
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
     "types": ["node", "bun"],
     "strict": false,
   },
 }
 `;
 
-const writeOverlay = Effect.fn(function* (relativeDirectory: string, content: string) {
+const writePackageFile = Effect.fn(function* (relativeDirectory: string, fileName: string, content: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const directory = path.resolve(process.cwd(), relativeDirectory);
   yield* fs.makeDirectory(directory, { recursive: true });
-  yield* fs.writeFileString(path.join(directory, "tsconfig.check.json"), content);
+  yield* fs.writeFileString(path.join(directory, fileName), content);
 });
+
+const writeOverlay = (relativeDirectory: string, content: string) =>
+  writePackageFile(relativeDirectory, "tsconfig.check.json", content);
+const writeCanonical = (relativeDirectory: string, content: string) =>
+  writePackageFile(relativeDirectory, "tsconfig.json", content);
 
 describe("tsconfig-overlay lint command", { concurrent: false }, () => {
   it(
-    "passes when every overlay stays inside the allowlist",
+    "passes when every overlay stays inside the allowlist and mirrors its tsconfig.json references",
     () =>
       Effect.runPromise(
         withTempWorkingDirectory(
           Effect.gen(function* () {
-            yield* writeOverlay("packages/drivers/example", CLEAN_OVERLAY);
+            yield* writeCanonical("packages/drivers/example", CANONICAL_WITH_REFERENCE);
+            yield* writeOverlay("packages/drivers/example", MIRRORED_OVERLAY);
+            // No tsconfig.json beside it: a reference-free overlay is exact.
             yield* writeOverlay("apps/example", CLEAN_OVERLAY);
             // Build output and fixtures are never overlays to judge.
             yield* writeOverlay("packages/drivers/example/node_modules/dep", WIDENING_OVERLAY);
@@ -95,14 +143,54 @@ describe("tsconfig-overlay lint command", { concurrent: false }, () => {
 
             expectReportedExit(exit);
             const errorText = A.join(A.filter(yield* TestConsole.errorLines, P.isString), "\n");
-            expect(errorText).toContain(
-              "[tsconfig-overlay] violation: 3 key(s) across 1 overlay(s) fall outside the allowlist"
-            );
+            expect(errorText).toContain("[tsconfig-overlay] violation: 5 finding(s) across 1 overlay(s)");
             expect(errorText).toContain("  - packages/drivers/widened/tsconfig.check.json files");
+            expect(errorText).toContain("  - packages/drivers/widened/tsconfig.check.json compilerOptions.module");
+            expect(errorText).toContain(
+              "  - packages/drivers/widened/tsconfig.check.json compilerOptions.moduleResolution"
+            );
             expect(errorText).toContain("  - packages/drivers/widened/tsconfig.check.json compilerOptions.strict");
             expect(errorText).toContain("  - packages/drivers/widened/tsconfig.check.json compilerOptions.types");
             expect(errorText).not.toContain("tsconfig.check.json $schema");
             expect(errorText).toContain("move anything else into the package's tsconfig.json");
+            expect(errorText).not.toContain("bun run beep tsconfig-sync --write");
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    15_000
+  );
+
+  it(
+    "fails when an overlay's references drift from its tsconfig.json",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            // The pre-switch shape: canonical references, overlay `[]`.
+            yield* writeCanonical("packages/drivers/lagging", CANONICAL_WITH_REFERENCE);
+            yield* writeOverlay("packages/drivers/lagging", CLEAN_OVERLAY);
+            // No `references` key at all reads as an empty list.
+            yield* writeCanonical("packages/drivers/keyless", CANONICAL_WITH_REFERENCE);
+            yield* writeOverlay("packages/drivers/keyless", KEYLESS_OVERLAY);
+            // An extra reference the canonical file never declared.
+            yield* writeOverlay("packages/drivers/extra", MIRRORED_OVERLAY);
+
+            const exit = yield* Effect.exit(runLintCommand(["tsconfig-overlay"]));
+
+            expectReportedExit(exit);
+            const errorText = A.join(A.filter(yield* TestConsole.errorLines, P.isString), "\n");
+            expect(errorText).toContain("[tsconfig-overlay] violation: 3 finding(s) across 3 overlay(s)");
+            expect(errorText).toContain(
+              "  - packages/drivers/lagging/tsconfig.check.json references: expected the 1 reference(s) of tsconfig.json, found 0 (missing 1, extra 0)"
+            );
+            expect(errorText).toContain(
+              "  - packages/drivers/keyless/tsconfig.check.json references: expected the 1 reference(s) of tsconfig.json, found 0 (missing 1, extra 0)"
+            );
+            expect(errorText).toContain(
+              "  - packages/drivers/extra/tsconfig.check.json references: expected the 0 reference(s) of tsconfig.json, found 1 (missing 0, extra 1)"
+            );
+            expect(errorText).toContain("regenerate with: bun run beep tsconfig-sync --write");
+            expect(errorText).not.toContain("move anything else into the package's tsconfig.json");
           })
         ).pipe(provideScopedLayer(testLayer))
       ),
@@ -116,6 +204,7 @@ describe("tsconfig-overlay lint command", { concurrent: false }, () => {
         withTempWorkingDirectory(
           Effect.gen(function* () {
             const path = yield* Path.Path;
+            yield* writeCanonical("packages/drivers/zeta", CANONICAL_WITH_REFERENCE);
             yield* writeOverlay("packages/drivers/zeta", WIDENING_OVERLAY);
             yield* writeOverlay("apps/alpha", WIDENING_OVERLAY);
 
@@ -123,13 +212,22 @@ describe("tsconfig-overlay lint command", { concurrent: false }, () => {
 
             expect(A.map(violations, (violation) => [violation.file, violation.scope, violation.key] as const)).toEqual(
               [
+                ["apps/alpha/tsconfig.check.json", "compilerOptions", "module"],
+                ["apps/alpha/tsconfig.check.json", "compilerOptions", "moduleResolution"],
                 ["apps/alpha/tsconfig.check.json", "compilerOptions", "strict"],
                 ["apps/alpha/tsconfig.check.json", "compilerOptions", "types"],
                 ["apps/alpha/tsconfig.check.json", "document", "files"],
+                ["packages/drivers/zeta/tsconfig.check.json", "compilerOptions", "module"],
+                ["packages/drivers/zeta/tsconfig.check.json", "compilerOptions", "moduleResolution"],
                 ["packages/drivers/zeta/tsconfig.check.json", "compilerOptions", "strict"],
                 ["packages/drivers/zeta/tsconfig.check.json", "compilerOptions", "types"],
                 ["packages/drivers/zeta/tsconfig.check.json", "document", "files"],
+                ["packages/drivers/zeta/tsconfig.check.json", "references", "references"],
               ]
+            );
+            const drift = A.findFirst(violations, (violation) => violation.scope === "references");
+            expect(drift._tag === "Some" ? drift.value.detail : undefined).toBe(
+              "expected the 1 reference(s) of tsconfig.json, found 0 (missing 1, extra 0)"
             );
           })
         ).pipe(provideScopedLayer(testLayer))
