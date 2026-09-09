@@ -409,4 +409,16 @@ layer(testLayer)("Graft cache sync", (it) => {
       expect(yield* sync.discoverSiblings(source)).toEqual([target]);
     })
   );
+
+  it.effect(
+    "prints usage for the bare graft and cache commands",
+    Effect.fn(function* () {
+      const root = yield* runCommand([]);
+      const cache = yield* runCommand(["cache"]);
+      expect(Result.isSuccess(root.result)).toBe(true);
+      expect(Result.isSuccess(cache.result)).toBe(true);
+      expect(A.some(root.output, (line) => Str.includes("cache sync")(String(line)))).toBe(true);
+      expect(A.some(cache.output, (line) => Str.includes("--siblings")(String(line)))).toBe(true);
+    })
+  );
 });
