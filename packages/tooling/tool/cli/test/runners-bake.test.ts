@@ -260,10 +260,12 @@ describe("runner image manifest checks", () => {
               Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner),
               Layer.succeed(FileSystem.FileSystem, {
                 ...fs,
-                readFileString: (file, ...options) =>
-                  Str.endsWith("infra/ci-runners/Pulumi.production.yaml")(file)
-                    ? Effect.succeed("config:\n  ciFleetController:amiId: ami-0123456789abcdef0\n")
-                    : fs.readFileString(file, ...options),
+                readFileString: Effect.fn("RunnerBakeTest.readFileString")(
+                  (...[file, options]: Parameters<typeof fs.readFileString>) =>
+                    Str.endsWith("infra/ci-runners/Pulumi.production.yaml")(file)
+                      ? Effect.succeed("config:\n  ciFleetController:amiId: ami-0123456789abcdef0\n")
+                      : fs.readFileString(file, options)
+                ),
               }),
               NodePath.layer,
               NodeCrypto.layer

@@ -108,9 +108,19 @@ export const loadAccountCostControlsConfig = (): AccountCostControlsConfig => {
  * @since 0.0.0
  */
 export class AccountCostControls extends pulumi.ComponentResource {
-  /** Budget identity without subscriber information. */
+  /**
+   * Identifies the managed budget without exposing subscriber information.
+   *
+   * @category resources
+   * @since 0.0.0
+   */
   readonly budgetId: pulumi.Output<string>;
-  /** The account's single service-dimension anomaly monitor. */
+  /**
+   * Identifies the account's service-dimension anomaly monitor.
+   *
+   * @category resources
+   * @since 0.0.0
+   */
   readonly anomalyMonitorArn: pulumi.Output<string>;
 
   constructor(
