@@ -1604,6 +1604,10 @@ describe("quality task adapter", () => {
       });
       yield* persistLaneProofs(emptySession, []);
       yield* withEnvVarEffect("BEEP_YEET_LANE_PROOF_MODE", undefined, persistLaneProofs(emptySession, [[lane, 1]]));
+      yield* persistLaneProofs(emptySession, [
+        [lane, 1],
+        [laneProofTestLane(path.join(tempRoot, "other"), "proof:other", "preflight", "process.exit(0)"), 1],
+      ]);
     }, provideScopedLayer(PlatformLayer))
   );
 
@@ -1728,6 +1732,42 @@ describe("quality task adapter", () => {
 
       expect(yield* hashAtConcurrency("2")).toBe(yield* hashAtConcurrency("2"));
       expect(yield* hashAtConcurrency("2")).not.toBe(yield* hashAtConcurrency("3"));
+    }, provideScopedLayer(PlatformLayer))
+  );
+
+  it.effect(
+    "omits ambient inputs from proof identity when the lane spawn is isolated",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: "lane-proof-isolated-env-" });
+      yield* initializeLaneProofRepository(tempRoot);
+
+      const lane = GithubCheckLaneSpec.make({
+        id: "proof:isolated-env",
+        stage: "repo-quality",
+        wave: "preflight",
+        blockedBy: [],
+        step: QualityTaskStep.make({
+          label: "proof:isolated-env",
+          command: "op",
+          args: ["run", "--", "bunx", "turbo", "run", "check"],
+          cwd: tempRoot,
+          env: { PATH: "/usr/bin" },
+        }),
+      });
+      const hashAtGoldenMode = (mode: string) =>
+        withEnvVarEffect("REGEN_GOLDENS", mode, prepareLaneProofSession([lane], "active")).pipe(
+          Effect.map((session) =>
+            pipe(
+              session,
+              O.flatMap((session) => A.head(session.identities)),
+              O.map((identity) => identity.envProfileHash),
+              O.getOrThrow
+            )
+          )
+        );
+
+      expect(yield* hashAtGoldenMode("0")).toBe(yield* hashAtGoldenMode("1"));
     }, provideScopedLayer(PlatformLayer))
   );
 
