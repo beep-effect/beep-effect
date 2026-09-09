@@ -16,6 +16,8 @@
     ".": "./src/index.ts",
     "./ConformanceLedger": "./src/ConformanceLedger/index.ts",
     "./ConformanceLedger/*": null,
+    "./MemoryFileSystem": "./src/MemoryFileSystem/index.ts",
+    "./MemoryFileSystem/*": null,
     "./*": "./src/*.ts",
     "./internal/*": null
   },
@@ -65,12 +67,12 @@
     "@effect/sql-pglite": "catalog:",
     "@effect/sql-sqlite-bun": "catalog:",
     "@effect/sql-sqlite-node": "catalog:",
+    "@effect/vitest": "catalog:",
     "effect": "catalog:",
     "pg": "^8.20.0",
     "testcontainers": "catalog:"
   },
   "devDependencies": {
-    "@effect/vitest": "catalog:",
     "@types/bun": "catalog:",
     "@types/node": "catalog:",
     "@types/pg": "^8.20.0"
@@ -84,6 +86,8 @@
       ".": "./dist/index.ts",
       "./ConformanceLedger": "./dist/ConformanceLedger/index.js",
       "./ConformanceLedger/*": null,
+      "./MemoryFileSystem": "./dist/MemoryFileSystem/index.js",
+      "./MemoryFileSystem/*": null,
       "./*": "./dist/*.js",
       "./internal/*": null
     }

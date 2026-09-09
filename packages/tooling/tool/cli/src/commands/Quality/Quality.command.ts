@@ -376,6 +376,48 @@ const effectTsgoReadmeParser = new XMLParser({
 export const isEffectDiagnosticsDirectiveForTesting = (line: string): boolean =>
   effectDiagnosticsDirectivePattern.test(line);
 
+/**
+ * Decide whether Quality rejects a directive at its normalized repository-relative path.
+ *
+ * **Details**
+ *
+ * The D14 conformance exception permits only the exact file-local strictEffectProvide
+ * skip-file directive in the shared FileSystemConformance registration module, where
+ * each test provides the filesystem layer under test. All other recognized directives
+ * remain rejected. Paths and directive lines are compared exactly, without trimming.
+ * The production collector uses this same predicate after normalizing its paths.
+ *
+ * **Example** (Keep the conformance exception local)
+ *
+ * ```ts import.meta.vitest name="Keep the conformance exception local"
+ * import { isRejectedEffectDiagnosticsDirectiveForTesting } from "@beep/repo-cli/commands/Quality/Quality.command"
+ * import { pipe } from "effect/Function"
+ *
+ * const line = "// @effect-diagnostics strictEffectProvide:skip-file"
+ * const conformancePath = "packages/tooling/test-kit/test-utils/src/FileSystemConformance.ts"
+ * isRejectedEffectDiagnosticsDirectiveForTesting(line, conformancePath) // => false
+ * pipe(line, isRejectedEffectDiagnosticsDirectiveForTesting("packages/example/src/main.ts")) // => true
+ * ```
+ *
+ * @param line - Complete source line, without its line separator.
+ * @param normalizedRepoRelativePath - Repository-relative path with forward slashes, as normalized by the collector.
+ * @returns Whether the collector must report this line as a forbidden directive.
+ * @category testing
+ * @since 0.0.0
+ */
+export const isRejectedEffectDiagnosticsDirectiveForTesting: {
+  (normalizedRepoRelativePath: string): (line: string) => boolean;
+  (line: string, normalizedRepoRelativePath: string): boolean;
+} = dual(
+  2,
+  (line: string, normalizedRepoRelativePath: string): boolean =>
+    isEffectDiagnosticsDirectiveForTesting(line) &&
+    !(
+      normalizedRepoRelativePath === "packages/tooling/test-kit/test-utils/src/FileSystemConformance.ts" &&
+      line === `// ${effectDiagnosticsDirectivePrefix} strictEffectProvide:skip-file`
+    )
+);
+
 class EffectTsgoRuleCell extends S.Class<EffectTsgoRuleCell>($I`EffectTsgoRuleCell`)(
   {
     code: S.String,
@@ -2323,11 +2365,12 @@ const collectDisabledEffectDiagnosticDirectives = Effect.fn(
       const text = yield* fs
         .readFileString(filePath)
         .pipe(QualityScriptCommandError.mapError(`Failed to read ${filePath}.`));
+      const relativePath = normalizePath(path.relative(repoRoot, filePath));
       return pipe(
         Str.split(text, "\n"),
         A.flatMap((line, index) =>
-          effectDiagnosticsDirectivePattern.test(line)
-            ? A.of(`${normalizePath(path.relative(repoRoot, filePath))}:${index + 1}`)
+          isRejectedEffectDiagnosticsDirectiveForTesting(line, relativePath)
+            ? A.of(`${relativePath}:${index + 1}`)
             : A.empty<string>()
         )
       );
