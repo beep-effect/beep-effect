@@ -115,6 +115,8 @@ gate below; checked implementation items do not establish merge readiness.
 - [x] Publish through the user-authorized `yeet publish --fast --monitor`
       workflow. The 2026-09-08 instruction replaces the full local proof wait
       with hosted checks; focused results are not represented as full proof.
+      If fast mode still queues before pushing, push the reviewed commit
+      directly and continue Yeet monitoring under the same instruction.
 - [ ] Hosted checks, blocking health, and review closeout pass on that commit;
       Yeet reports `merge-ready: yes`.
 - [ ] The same PR records the final manifest status and closeout reflection.

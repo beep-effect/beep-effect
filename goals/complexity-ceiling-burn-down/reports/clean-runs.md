@@ -10,13 +10,14 @@ allowance decreases from 135 to 77, and the obsolete CRAP allowance is removed.
 
 The writer exits 1 while saving because the unbaselined report still contains
 findings in the frozen band. The acceptance command is the baseline comparison;
-three consecutive comparisons of the final candidate bytes exit 0:
+the commit hook normalizes the final newline. Three consecutive comparisons
+of the published `e08f77cdcb` bytes, including that newline, exit 0:
 
 | Run | UTC timestamp | Exit | Baseline SHA-256 |
 | ---: | --- | ---: | --- |
-| 1 | 2026-09-09T03:03:06.205041+00:00 | 0 | `7b35d81a5e403d1a038c569ce7b31cc0da4d00339839ddbf8ce9574d2d295048` |
-| 2 | 2026-09-09T03:03:08.944659+00:00 | 0 | `7b35d81a5e403d1a038c569ce7b31cc0da4d00339839ddbf8ce9574d2d295048` |
-| 3 | 2026-09-09T03:03:11.647914+00:00 | 0 | `7b35d81a5e403d1a038c569ce7b31cc0da4d00339839ddbf8ce9574d2d295048` |
+| 1 | 2026-09-09T03:09:22.237304+00:00 | 0 | `eaa5745b9b883c187c63daeef12853e74e2b7fc44e92b4112802178758802f97` |
+| 2 | 2026-09-09T03:09:24.896784+00:00 | 0 | `eaa5745b9b883c187c63daeef12853e74e2b7fc44e92b4112802178758802f97` |
+| 3 | 2026-09-09T03:09:27.693591+00:00 | 0 | `eaa5745b9b883c187c63daeef12853e74e2b7fc44e92b4112802178758802f97` |
 
 Fallow 3.23.0 analyzed 4,444 files and 68,615 functions. All 185 entries match,
 with zero stale entries, moved entries, or regressions. The unbaselined scan

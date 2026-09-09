@@ -25,7 +25,9 @@ remain deferred with evidence in the inventory.
 [PR #1021](https://github.com/beep-effect/beep-effect/pull/1021) carries the
 campaign. The user requested immediate publication of ready fixes and, on
 2026-09-08, explicitly skipped the full local proof queue. Publication uses
-`bun run beep yeet publish --fast --monitor`. Hosted checks, Greptile 5/5 with
+`bun run beep yeet publish --fast --monitor`; if its pre-push admission still
+queues, push the reviewed commit directly and continue Yeet monitoring.
+Hosted checks, Greptile 5/5 with
 zero issues, and no unresolved review threads must prove the final published
 head before lifecycle closure. P2, P3, and final P4 reconciliation remain open.
 

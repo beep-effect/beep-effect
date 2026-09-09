@@ -675,3 +675,15 @@ reduced the baseline from 189 to 185 entries, the tooltip line allowance fell
 from 135 to 77, and its CRAP allowance was removed. The writer saved successfully
 but exited 1 for retained unbaselined findings; all three subsequent baseline
 comparisons exited 0. Record the writer and comparator outcomes separately.
+
+Fast mode subsequently committed the final ratchet update but waited for
+`full-proof(3)` admission before reaching push. The owned queued attempt was
+interrupted, the reviewed commit was pushed directly, and Yeet hosted monitoring
+continued. The user's no-queue publication instruction requires a path that
+cannot wait for proof admission before push, even when dependency-sensitive
+preflight is selected. No other agent's lease or process was changed.
+
+The commit hook also added the canonical baseline's final newline, changing
+its byte digest without changing any finding. Three fresh checks of published
+`e08f77cdcb` now back the recorded digest. Capture exact baseline bytes after
+formatter hooks before labeling a digest as published-commit evidence.
