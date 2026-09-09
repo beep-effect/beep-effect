@@ -310,6 +310,52 @@ describe("CI runner security", () => {
   );
 
   it.effect(
+    "discards resource evidence when sample or summary files become unwritable",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const repoRoot = yield* findRepoRoot();
+      for (const filename of ["check.tsv", "check.md"]) {
+        const tempRoot = yield* fs.makeTempDirectoryScoped();
+        const result = Bun.spawnSync(
+          [
+            "bash",
+            path.join(repoRoot, "scripts/ci-runner-resources.sh"),
+            "check",
+            "bash",
+            "-c",
+            'target="$RUNNER_TEMP/beep-runner-resources/$1"; rm "$target"; mkdir "$target"; exit 7',
+            "fixture",
+            filename,
+          ],
+          { env: { ...process.env, RUNNER_TEMP: tempRoot }, stderr: "pipe", stdout: "pipe" }
+        );
+        assert.strictEqual(result.exitCode, 7);
+        assert.include(result.stderr.toString(), "resource measurement unavailable");
+        assert.notInclude(result.stdout.toString(), "### Runner resources:");
+      }
+    }, provideScopedLayer(NodeServices.layer))
+  );
+
+  it.effect(
+    "executes the lane when its sample file cannot be created",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const repoRoot = yield* findRepoRoot();
+      const tempRoot = yield* fs.makeTempDirectoryScoped();
+      yield* fs.makeDirectory(path.join(tempRoot, "beep-runner-resources", "check.tsv"), { recursive: true });
+      const result = Bun.spawnSync(
+        ["bash", path.join(repoRoot, "scripts/ci-runner-resources.sh"), "check", "bash", "-c", "exit 9"],
+        { env: { ...process.env, RUNNER_TEMP: tempRoot }, stderr: "pipe", stdout: "pipe" }
+      );
+      assert.strictEqual(result.exitCode, 9);
+      assert.include(result.stderr.toString(), "resource measurement unavailable");
+      assert.notInclude(result.stdout.toString(), "### Runner resources:");
+    }, provideScopedLayer(NodeServices.layer))
+  );
+
+  it.effect(
     "classifies goals-only pull requests without suppressing mixed or push runs",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;

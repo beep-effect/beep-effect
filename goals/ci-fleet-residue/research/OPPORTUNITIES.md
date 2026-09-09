@@ -15,6 +15,10 @@ Record receipts at the moment friction happens; redact for the public repo.
   `--user-data file://...`, and verify the decoded remote attribute against the
   local script immediately after launch. Retain their bounded cost in the
   experiment receipt instead of omitting failed attempts.
+- A second setup failure used `typos` when the verified release archive stores
+  `./typos`. Correct the exact member name. Empty console responses required
+  a temporary SSM-channel-only diagnostics role on the isolated test workers;
+  capture local logs and remove that role/profile with the canaries.
 
 ## 2026-09-09 — Standard rightsizing recommendations cannot size ephemeral workers
 
