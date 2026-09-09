@@ -1130,3 +1130,47 @@ one later sentence claiming 146 current designs. The current summaries now agree
 with the canonical inventory; historical round counts remain unchanged. Checking
 every explicitly current count alongside the inventory and design validators
 would have caught this partial documentation update before the prior commit.
+
+
+## 2026-09-09 — New Graft command had no census partition
+
+The read-only review snapshot failed in the frozen census pre-plan with
+`AssertionError: ('packages/tooling/tool/cli/src/commands/Graft/index.ts', [])`.
+The inherited command-area list predates Graft. The five new files need explicit
+ownership in the D–K command lane; the existing exact-one-owner assertion caught
+the gap before launch. Adding a source directory requires a partition check as
+well as a source audit. The pre-plan also confirmed that the changed Handlebars
+template is an included census input; all 61 historical non-TypeScript inputs
+remain in scope. Its initial source-forward description was corrected, with
+the original receipt preserved privately.
+
+
+## 2026-09-09 — Template design contradicted the current escaping contract
+
+The source-forward CreatePackage audit found that
+`designs/create-package-template-type-flags.md` instructed the migration to retain
+HTML escaping, while the actual TemplateService renderer compiles with
+`noEscape: true`. The replacement design preserves unescaped interpolation and
+full string payloads. Comparing each output-preservation claim with the real
+renderer boundary would have caught the mismatch before a future implementation.
+
+
+## 2026-09-09 — Advisory Effect reference moved during bounded source audit
+
+The CheckCensus ending check observed movement in the separate advisory Effect
+`SCHEMA.md` and `Schema.ts` inputs while protected repository and installed
+dependency bytes remained stable. Both advisory snapshots are retained in the
+private audit evidence. Earlier sealed audits keep their original bindings;
+their results must be distinguished from a current advisory-reference check.
+Formal review admission needs an immutable advisory snapshot as well as the
+repository and installed dependency snapshots.
+
+
+## 2026-09-09 — Transient observation pair was omitted without a scope rule
+
+The CheckCensus audit proved all four observations for the local
+`hasCheckOverlay` pair but initially omitted a D1 row because the values were
+transient and no scanner row existed. Neither fact is a packet exclusion;
+the excluded function parameters are a different surface. The frozen evidence
+supports a small D1 supplement, with no qualification or design. Apply the
+scanner net before the evidence gate, and require a binding rule for exclusions.

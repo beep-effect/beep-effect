@@ -1,0 +1,150 @@
+{
+  "kind": "boolean-creep-native-source-forward-integration/v1",
+  "recordedAt": "2026-09-09T17:24:11.337025+00:00",
+  "sourceSha": "a942d7dab3a962963912247d4699b7986bcb9c03",
+  "originMainSha": "e7b7d03e61bd5cddd74e89bb03ae10dbe06e067b",
+  "inventoryBeforeSha256": "fc4a37c261318d37cc276315d7014c61410277c7802b38806b72ae3a9437fc13",
+  "inventoryAfterSha256": "ed743923428ac9b8d8973a48dcf5f8011526881d64436a0779658a4159f42426",
+  "replacedIds": [
+    "tsconfig-workspace-descriptor-presence",
+    "tsconfig-sync-mode-flags",
+    "tsconfig-workspace-owner-presence",
+    "r30-cli-commands-l-q-check-census-overlay-compiler-options"
+  ],
+  "addedIds": [
+    "r32-cli-create-package-check-overlay-compiler-options",
+    "check-census-package-config-presence"
+  ],
+  "unchangedExistingRowsByteIdentical": 747,
+  "qualifiedRowsByteIdentical": 145,
+  "counts": {
+    "records": 753,
+    "qualified": 145,
+    "disqualified": 608,
+    "disqualifiers": {
+      "D2": 218,
+      "D1": 390
+    },
+    "tiers": {
+      "1": 113,
+      "2": 32
+    },
+    "statuses": {
+      "reviewed": 21,
+      "designed": 124,
+      "disqualified": 608
+    }
+  },
+  "designAndFamilyUpdates": [
+    {
+      "file": "goals/boolean-creep/designs/create-package-template-type-flags.md",
+      "beforeSha256": "baf275f2aad7320c46bad3f51d11b1cc26f8f987d6bfe7a5768f38bd055ed380",
+      "proposalSha256": "7d29f38242357bbce99f5ea3702490eefbbec2d87d6eb49731ab3e01b667193a",
+      "installedSha256": "7d29f38242357bbce99f5ea3702490eefbbec2d87d6eb49731ab3e01b667193a"
+    },
+    {
+      "file": "goals/boolean-creep/designs/create-package-scaffold-shape.md",
+      "beforeSha256": "04b01062d829c711425218e06fdc0478bf04ddad71e3c7ce3463098b3b809983",
+      "proposalSha256": "225ce45977d19ef020506f0765ca2254ad6959c6d1b19f6ba55f13b80b7eece7",
+      "installedSha256": "225ce45977d19ef020506f0765ca2254ad6959c6d1b19f6ba55f13b80b7eece7"
+    },
+    {
+      "file": "goals/boolean-creep/designs/create-package-retired-name-reconciliation.md",
+      "beforeSha256": "ed7549e3aa67fc08a7a9fddabf35c5d1cb977fb21aacdbd20073fada3faca48f",
+      "proposalSha256": "eaee3e31ab13efc82d6cb16f1844e3c8bd94ce93ee219158eb5abf4fab179274",
+      "installedSha256": "eaee3e31ab13efc82d6cb16f1844e3c8bd94ce93ee219158eb5abf4fab179274"
+    },
+    {
+      "file": "goals/boolean-creep/designs/family-cli-mode-flags.md",
+      "beforeSha256": "0be23c7aa53d24695a34f351a07b7237cb6d3011872ec5f1fc66db51b36ad4e5",
+      "proposalSha256": "4321e9e01ebeb2c67dd57ddcc7adb96e40840fae03a4528401d292dc58f5e88b",
+      "installedSha256": "4321e9e01ebeb2c67dd57ddcc7adb96e40840fae03a4528401d292dc58f5e88b"
+    }
+  ],
+  "installedDispositions": [
+    "goals/boolean-creep/data/pre-r32-main-e7b-tsconfig-owner-disposition.md",
+    "goals/boolean-creep/data/pre-r32-main-e7b-overlay-shell-disposition.md",
+    "goals/boolean-creep/data/pre-r32-main-e7b-check-census-disposition.md",
+    "goals/boolean-creep/data/pre-r32-main-e7b-check-census-local-pair-disposition.md"
+  ],
+  "nativeBundles": [
+    {
+      "bundle": "pre-r32-main-e7b-tsconfig-owner-audit",
+      "manifestSha256": "fc53a91cab616c1597a7fd12d96da76232f2509867445f46c929e5f9c37b801b",
+      "checkedInputs": 69,
+      "protectedInputsUnchanged": true,
+      "advisoryChanges": [
+        {
+          "file": ".repos/effect/packages/effect/src/Schema.ts",
+          "originalSha256": "7a6bebd5481bfc79c11e482b0185cabf31c7bce1c6dfa3fd3ce466d32d1f17a8",
+          "currentSha256": "11e7c9f8fd2938df11c2eb9e7420f0b3edfb5caf8fc782defae18166f928c19c",
+          "advisoryOnly": true
+        },
+        {
+          "file": ".repos/effect/packages/effect/SCHEMA.md",
+          "originalSha256": "6e0e28aedf132590294220d2c0e92098ac1ba434c9a9354085bb0f3164559341",
+          "currentSha256": "a81508bc2999bc6ca9c041896879950b87a007f6d9d2fc270d5d9f88da38ee16",
+          "advisoryOnly": true
+        }
+      ]
+    },
+    {
+      "bundle": "pre-r32-main-e7b-overlay-shell-owner-audit",
+      "manifestSha256": "db6d9c3ccd7f3ae2a3052726e3d25ee5d0e9574c5a44f2c020569f82b7f520ec",
+      "checkedInputs": 49,
+      "protectedInputsUnchanged": true,
+      "advisoryChanges": [
+        {
+          "file": ".repos/effect/packages/effect/src/Schema.ts",
+          "originalSha256": "7a6bebd5481bfc79c11e482b0185cabf31c7bce1c6dfa3fd3ce466d32d1f17a8",
+          "currentSha256": "11e7c9f8fd2938df11c2eb9e7420f0b3edfb5caf8fc782defae18166f928c19c",
+          "advisoryOnly": true
+        }
+      ]
+    },
+    {
+      "bundle": "pre-r32-main-e7b-check-census-owner-audit",
+      "manifestSha256": "d706b2c51085a1bb6139666d5a99006cff1e1c312c313bf0933a17a9bbe701cd",
+      "checkedInputs": 53,
+      "protectedInputsUnchanged": true,
+      "advisoryChanges": [
+        {
+          "file": ".repos/effect/packages/effect/SCHEMA.md",
+          "originalSha256": "6e0e28aedf132590294220d2c0e92098ac1ba434c9a9354085bb0f3164559341",
+          "currentSha256": "a81508bc2999bc6ca9c041896879950b87a007f6d9d2fc270d5d9f88da38ee16",
+          "advisoryOnly": true
+        },
+        {
+          "file": ".repos/effect/packages/effect/src/Schema.ts",
+          "originalSha256": "7a6bebd5481bfc79c11e482b0185cabf31c7bce1c6dfa3fd3ce466d32d1f17a8",
+          "currentSha256": "11e7c9f8fd2938df11c2eb9e7420f0b3edfb5caf8fc782defae18166f928c19c",
+          "advisoryOnly": true
+        }
+      ]
+    },
+    {
+      "bundle": "pre-r32-main-e7b-check-census-local-pair",
+      "manifestSha256": "fd906ebd9dc491f1559c605cdc6b84da455c14b6fd11ecf7d1880238c50bdc9c",
+      "artifactsVerified": 13
+    }
+  ],
+  "advisoryMovement": {
+    "detected": true,
+    "originalHead": "c8349ede1a2add807e9ec9c37612b3a39bf284f8",
+    "endingHead": "53909a9bf14b29725a08dcccde02bee8e95a6b14",
+    "installedDependenciesUnchanged": true,
+    "checkCensusUsedSpansByteIdentical": true,
+    "allHistoricalAdvisoryBindingsRemainHistorical": true
+  },
+  "newQualified": 0,
+  "qualifiedStatusChanges": 0,
+  "sourceEdits": 0,
+  "guardDeletionCredit": 0,
+  "productTestsRun": false,
+  "dryRoundCredit": false,
+  "independentP3Approval": false,
+  "openSemanticHolds": 4,
+  "p3InputV2SnapshotCurrentAfterIntegration": false,
+  "censusLaunched": false,
+  "canonicalWritten": true
+}

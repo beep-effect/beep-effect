@@ -51,6 +51,16 @@ launcher, runtime/advisory-reference bindings and capability proof, final input
 binding and canonical validator transition remain pending.
 Historical Grok helpers and receipts retain their original provenance.
 
+The [current input preparation](./data/p3-fable-input-v2-preparation.json) corrects
+the missing Graft partition before the existing exact-one-owner checks. Its
+3,056-file pre-plan covers 27 lanes, preserves all 61 non-TypeScript inputs, and
+adds only the five Graft files since R31. The successful snapshot binds 6,381
+files and assigns 145 qualifications to 35 proposed review lanes. Ten test
+methods pass; the three snapshot methods also pass after classifier-drift
+coverage was added. This new private version leaves the historical launcher
+unchanged. The future R32 launcher must incorporate the correction explicitly;
+neither a census nor a Fable review has been admitted or launched.
+
 The 2026-09-03 ratification audit revoked the old zero-findings claim. All 46
 original opportunities still existed and none had been implemented, but three
 were wrongly classified as internal and several designs had incomplete reader,
@@ -58,16 +68,28 @@ compatibility, or sequencing inventories. The historical baseline is now 40
 Tier 1 and 6 Tier 2 records before new admissions.
 
 P2R rebuilt the current-corpus inventory and continues its residue census and design
-refresh. The live inventory is **751 records: 145 qualified and 606 disqualified** (D1
-389 / D2 217), with **113 Tier 1 and 32 Tier 2**. Statuses are 21 historically
+refresh. The live inventory is **753 records: 145 qualified and 608 disqualified** (D1
+390 / D2 218), with **113 Tier 1 and 32 Tier 2**. Statuses are 21 historically
 `reviewed`, 124 `designed`, and 0 `applied`; all need replacement P3 review.
 
 The branch includes main `e7b7d03e61bd5cddd74e89bb03ae10dbe06e067b`
 through merge `854cc9a8862d8a3b63f7deb68c1f2bdcbdbaf5ac`. The
 [merge receipt](./data/post-r31-main-e7b-source-forward.json) confirms all 1,450
 then-present packet files survived unchanged. The declaration-based check-overlay
-change modifies seven census TypeScript files and one supporting template;
-their owner/design impact audit is pending. No dependencies or lockfiles changed.
+change modifies eight census inputs: seven TypeScript files and one template.
+Their [owner/design update](./data/pre-r32-main-e7b-parent-integration.json) is
+installed: four same-ID disqualified records refreshed, one template D2 and one
+independent local-pair D1 added, three CreatePackage designs refreshed, and the
+zero-cohort CLI family rebound. All 145 qualified rows and 747 existing rows
+remain byte-identical. Original rows and designs are archived. The initial local
+pair omission is explicitly superseded by its D1 supplement. No dependencies or
+lockfiles changed; no implementation, dry-round or P3 credit is claimed.
+
+The input-v2 snapshot above predates this installation and remains a historical
+preparation observation. Final review admission requires a fresh inventory/design
+snapshot. Advisory Effect files advanced during the audit; both versions are
+retained, installed dependency bytes remain unchanged, and the two advisory
+spans used by CheckCensus remain byte-identical.
 
 The [bounded Graft audit](./data/post-r31-main284-graft-audit.json) is complete:
 17 declarations and 15 other surfaces introduce no eligible owner. It preserves

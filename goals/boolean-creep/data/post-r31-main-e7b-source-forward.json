@@ -31,7 +31,7 @@
   ],
   "addedCensusFiles": [],
   "packageAppSourceEqualsMergedMain": true,
-  "impact": "Check overlays now resolve upstream packages through declarations; native owner and design impact audits pending for seven changed TypeScript files. The changed Handlebars template is supporting input, not a census file.",
+  "impact": "Check overlays now resolve upstream packages through declarations. Native owner and design audits cover all eight changed census inputs: seven TypeScript files and one included Handlebars template. The census includes authored non-TypeScript inputs.",
   "noDependencyOrLockfileChanges": true,
   "privateBeforeBinding": {
     "sha256": "d0bcc30a9ec5d6f90a118f03cea9270b4866729b8aa667ad3432b4d1b20fb32f",
@@ -44,5 +44,15 @@
   "censusCredit": false,
   "dryRoundCredit": false,
   "independentP3Credit": false,
-  "implementationCredit": false
+  "implementationCredit": false,
+  "changedCensusFiles": [
+    "packages/tooling/tool/cli/src/commands/Architecture/internal/PackageShell.ts",
+    "packages/tooling/tool/cli/src/commands/CreatePackage/templates/tsconfig.check.json.hbs",
+    "packages/tooling/tool/cli/src/commands/Lint/TsconfigOverlay.ts",
+    "packages/tooling/tool/cli/src/commands/Quality/CheckCensus.ts",
+    "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.command.ts",
+    "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.plan.ts",
+    "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
+    "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.service.ts"
+  ]
 }

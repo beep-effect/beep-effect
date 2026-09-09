@@ -57,17 +57,19 @@ merge; the final review-thread inspection found no threads. The recorded two
 Vercel failures are provider rate limits. The monitor is terminal and the merged
 scanner configuration is now available to the packet's eventual publication.
 
-The canonical inventory contains **751 records: 145 qualified and 606 disqualified**
-(D1 389 / D2 217). The qualified set is **113 Tier 1 and 32 Tier 2**; statuses are 21
+The canonical inventory contains **753 records: 145 qualified and 608 disqualified**
+(D1 390 / D2 218). The qualified set is **113 Tier 1 and 32 Tier 2**; statuses are 21
 historically `reviewed`, 124 `designed`, and 0 `applied`. All await replacement
 independent review. Four additional owners remain in an [explicit unresolved hold](./data/r31-law-owner-holds.json).
 
 The branch includes main `e7b7d03e61bd5cddd74e89bb03ae10dbe06e067b`
 through merge `854cc9a8862d8a3b63f7deb68c1f2bdcbdbaf5ac`. The
 [merge receipt](./data/post-r31-main-e7b-source-forward.json) confirms all 1,450
-then-present packet files survived unchanged. Seven changed TypeScript source
-files and one supporting template need a bounded owner/design impact audit.
-No dependencies or lockfiles changed. The [Graft audit](./data/post-r31-main284-graft-audit.json)
+then-present packet files survived unchanged. The [completed owner/design update](./data/pre-r32-main-e7b-parent-integration.json)
+covers all eight changed census inputs. It refreshes four existing disqualified
+records, adds one D1 and one D2, and refreshes three CreatePackage designs and
+the zero-cohort CLI family. All 145 qualified rows remain byte-identical, with
+original rows and designs archived. No dependencies or lockfiles changed. The [Graft audit](./data/post-r31-main284-graft-audit.json)
 is complete and adds no eligible owner; it grants no replacement census or dry credit.
 
 The [review process preparation](./data/p3-fable-process-preparation.json) passes

@@ -1,8 +1,8 @@
 # create-package-template-type-flags
 
-Native P2 source/design refresh before R32, bound to merged source HEAD
-`a942d7dab3a962963912247d4699b7986bcb9c03` / main
-`e7b7d03e61bd5cddd74e89bb03ae10dbe06e067b`. This preserves status `designed`
+Native P2 source/design refresh before R31, bound to merged source HEAD
+`4509872869eb87071250c67717769260f850bcf5` / main
+`d68f1a11dd41579660a6c72f3d3e060d6b61352d`. This preserves status `designed`
 and cardinality 1658880/31. Tier 1: ordered Tier1E tooling batches with serial shared-file edits.
 Independent P3 review and implementation acceptance remain pending.
 
@@ -86,25 +86,9 @@ a TemplateContext codec and then change which diagnostic appears first.
 
 # Migration inventory
 
-The current output baseline is main `e7b7d03e61`. The complete command source,
-all three owner declarations, validation gates, constructors, script helpers,
-and retired-name registry implementation are byte-identical to the prior d68
-source binding. The 284-to-e7b merge changes the authored included
-`templates/tsconfig.check.json.hbs:1-13`: it retains its five compiler switches
-and full `rootRelative` payload while removing the `module`/`moduleResolution`
-overrides. Do not restore those overrides while changing a selector or context.
-
-Preserve rendering through TemplateRenderRequest at command 1508-1513 and the
-post-scaffold `syncTsconfigAtRoot` call at 1597-1601, after file generation,
-formatting and registration and before retirement clearing/lockfile work. The
-final overlay mirrors its owner project's references exactly; a missing owner
-reference key denotes an empty reference list. This generated output contract
-is distinct from the internal Boolean owner. New ordinary-package, service-app
-and lab assertions at `test/create-package.test.ts:735-747,1065-1077` and
-`test/create-package-lab.test.ts:453-463` prove that reference equality and both
-module-override absences must survive this refactor. Keep order, full path
-strings, optional-key behavior and unchanged command diagnostics. This upstream
-behavior earns no Boolean-guard deletion or implementation credit.
+The current pre-R31 output baseline is main d68. The command's bed30-to-d68
+change only expands a compiler comment at `CreatePackage.command.ts:1828-1831`;
+all three owner declarations, validation gates and constructors are unchanged.
 The shared defaults at
 `src/internal/package-scripts/PackageScripts.schemas.ts:1250-1254,1271-1275`
 now give app and lab `beep:check` exactly `tsgo -p tsconfig.check.json`.
@@ -114,7 +98,7 @@ redundant `tsc -p tsconfig.json --noEmit` suffix. Preserve the separate stories
 check override and `tsc -p tsconfig.stories.json --noEmit` implementation at
 `CreatePackage.command.ts:1938-1943`, every arbitrary helper payload, and the
 CLI's narrower admission rules. Current script and manifest fixtures at
-`test/create-package.test.ts:245,267,320,1005,1060,1111` and the policy fixture at
+`test/create-package.test.ts:236,258,311,982,1037,1074` and the policy fixture at
 `test/package-scripts.policy.test.ts:127` assert this upstream output baseline.
 Their preservation earns no Boolean-guard deletion or implementation credit.
 
@@ -152,9 +136,7 @@ writers and raw/public helper inputs are not TemplateContext Boolean deletions.
   spread duplicated legacy flags back into the rendering context. Keep
   TemplateService's unrelated generic context contract120–135 and other callers.
 - Handlebars environment188–197: add a local literal-equality helper, retaining
-  existing casing helpers and the current `noEscape: true` interpolation at
-  TemplateService.ts234. Do not introduce HTML escaping or change full strings.
-  For external custom contexts this
+  existing casing helpers and HTML escaping. For external custom contexts this
   is an additive helper; only the package's own selection-aware templates use
   it. Derive one view classification from selection when necessary; do not
   register helpers named after each former Boolean.
@@ -210,9 +192,9 @@ such evidence. No incoming codec is invented for a nonexistent live boundary.
 
 # Test impact
 
-Keep current `create-package.test.ts:283-341` direct script-helper contract
-fixtures, tool creation at 661-690, exact app script expectations at 852/915
-and runtime-proof overrides at 1106-1115. These supplement the full31-selection
+Keep current `create-package.test.ts:274-332` direct script-helper contract
+fixtures, tool creation at 652-681, exact app script expectations at 829/892
+and runtime-proof overrides at 1069-1078. These supplement the full31-selection
 rendering matrix without admitting public helper parameters as another owner.
 Current canonical script output, including lint tasks and absence of placeholder
 codegen, is the compatibility baseline for generated-byte comparisons.

@@ -1,8 +1,8 @@
 # create-package-scaffold-shape
 
-Native P2 source/design refresh before R32, bound to merged source HEAD
-`a942d7dab3a962963912247d4699b7986bcb9c03` / main
-`e7b7d03e61bd5cddd74e89bb03ae10dbe06e067b`. This preserves status `designed`
+Native P2 source/design refresh before R31, bound to merged source HEAD
+`4509872869eb87071250c67717769260f850bcf5` / main
+`d68f1a11dd41579660a6c72f3d3e060d6b61352d`. This preserves status `designed`
 and cardinality 24/11. Tier 1: ordered Tier1E tooling batches with serial shared-file edits.
 Independent P3 review and implementation acceptance remain pending.
 
@@ -103,25 +103,9 @@ do not rebuild the old three correlated fields as a compatibility object.
 
 ## Migration inventory
 
-The current output baseline is main `e7b7d03e61`. The complete command source,
-all three owner declarations, validation gates, constructors, script helpers,
-and retired-name registry implementation are byte-identical to the prior d68
-source binding. The 284-to-e7b merge changes the authored included
-`templates/tsconfig.check.json.hbs:1-13`: it retains its five compiler switches
-and full `rootRelative` payload while removing the `module`/`moduleResolution`
-overrides. Do not restore those overrides while changing a selector or context.
-
-Preserve rendering through TemplateRenderRequest at command 1508-1513 and the
-post-scaffold `syncTsconfigAtRoot` call at 1597-1601, after file generation,
-formatting and registration and before retirement clearing/lockfile work. The
-final overlay mirrors its owner project's references exactly; a missing owner
-reference key denotes an empty reference list. This generated output contract
-is distinct from the internal Boolean owner. New ordinary-package, service-app
-and lab assertions at `test/create-package.test.ts:735-747,1065-1077` and
-`test/create-package-lab.test.ts:453-463` prove that reference equality and both
-module-override absences must survive this refactor. Keep order, full path
-strings, optional-key behavior and unchanged command diagnostics. This upstream
-behavior earns no Boolean-guard deletion or implementation credit.
+The current pre-R31 output baseline is main d68. The command's bed30-to-d68
+change only expands a compiler comment at `CreatePackage.command.ts:1828-1831`;
+all three owner declarations, validation gates and constructors are unchanged.
 The shared defaults at
 `src/internal/package-scripts/PackageScripts.schemas.ts:1250-1254,1271-1275`
 now give app and lab `beep:check` exactly `tsgo -p tsconfig.check.json`.
@@ -131,7 +115,7 @@ redundant `tsc -p tsconfig.json --noEmit` suffix. Preserve the separate stories
 check override and `tsc -p tsconfig.stories.json --noEmit` implementation at
 `CreatePackage.command.ts:1938-1943`, every arbitrary helper payload, and the
 CLI's narrower admission rules. Current script and manifest fixtures at
-`test/create-package.test.ts:245,267,320,1005,1060,1111` and the policy fixture at
+`test/create-package.test.ts:236,258,311,982,1037,1074` and the policy fixture at
 `test/package-scripts.policy.test.ts:127` assert this upstream output baseline.
 Their preservation earns no Boolean-guard deletion or implementation credit.
 
@@ -213,7 +197,7 @@ and repeated runtime reconstruction across all actual shape readers.
 
 ## Encoded-side impact
 
-Generated-output equivalence is against current main `e7b7d03e61`, including its
+Generated-output equivalence is against current main `d68f1a11`, including its
 canonical lint task scripts and removed codegen placeholders. Do not restore
 pre-merge script tables. Keep tool-specific omission of the optional public
 integration task, lab omissions, runtime-proof app-kind script semantics and
@@ -242,20 +226,20 @@ through the existing separate inputs; those are not discarded by the mode.
 ## Test impact
 
 Retain the new direct exported-helper fixtures at
-`create-package.test.ts:283-341`: library/ecosystem and tool output, stories,
+`create-package.test.ts:274-332`: library/ecosystem and tool output, stories,
 Next.js/Tauri/service apps and labs use complete equality assertions. Keep
-`create-package.test.ts:661-690` tool creation and its platform-node dependency,
-the exact app manifest comparisons at 852/915, and runtime-proof's app-kind
-script overrides at 1106-1115. Extend direct helper coverage, if a shared writer
+`create-package.test.ts:652-681` tool creation and its platform-node dependency,
+the exact app manifest comparisons at 829/892, and runtime-proof's app-kind
+script overrides at 1069-1078. Extend direct helper coverage, if a shared writer
 is touched, to all currently accepted nonlab kinds with both stories values
 and arbitrary full string arguments; these are wider than the private eleven
 ScaffoldShape cases and must not be filtered through that schema.
 
 The existing CLI fixtures cover all eleven legal modes: ordinary package
-at `create-package.test.ts:692-756`; stories package and dry-run at
-1191-1256; Next.js, Tauri, Vite and service normal variants at 830-1081;
-runtime-proof at 1084-1132; four corresponding lab fixtures at
-`create-package-lab.test.ts:410-419,499-508,553-562,627-636` with their
+at `create-package.test.ts:683-733`; stories package and dry-run at
+1154-1219; Next.js, Tauri, Vite and service normal variants at 807-1044;
+runtime-proof at 1047-1095; four corresponding lab fixtures at
+`create-package-lab.test.ts:401-410,479-488,533-542,607-616` with their
 subsequent output assertions. Keep their complete manifest/file/config
 assertions and the existing lab no-ceremony, identity and root-workspace
 behavior.
