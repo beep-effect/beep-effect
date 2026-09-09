@@ -46,3 +46,10 @@
   repository's test-file Effect diagnostics. Compose `NodeServices.layer` at
   the `@effect/vitest` suite boundary and run `quality test-tsgo-package` for
   test changes before publication. Keep the diagnostic enabled.
+
+- The same PR's CLI unit and coverage jobs failed on inherited scheduler tests
+  that inspected queue state after fixed 120 ms and 80 ms sleeps. Both failures
+  reproduced with a deliberately delayed contender. Wait for an observable
+  ticket with a bounded deadline before asserting admission or interruption.
+  Main advanced across the scheduler tests during this repair; merge its
+  journal changes before publishing the synchronized tests.

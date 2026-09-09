@@ -83,3 +83,17 @@ exit zero with no diagnostics for the complete CLI test package. Quick package
 verification passes (lint 2.6 seconds, check 9.5 seconds). The superseded local
 publication proof was interrupted after the same test-file failure; it does
 not count as acceptance.
+
+The CLI unit and coverage jobs on `949b1642f2` each failed one inherited
+scheduler test: queue readiness was assumed after an 80 ms or 120 ms sleep.
+Both failures reproduced with a deliberately delayed contender. The tests now
+wait for a real queue ticket with a five-second deadline, retaining the delayed
+start and all admission, interruption, and journal assertions. The two cases
+pass with coverage enabled; the complete scheduler and Graft suites pass all
+130 tests. CLI test type checking again reports zero diagnostics, and quick
+package verification passes (lint 2.7 seconds, check 8.6 seconds).
+
+Integrated main through `20ad99a87f` because its scheduler journal changes
+overlapped these tests. Git merged both scheduler and quality-task test files
+without conflicts. The frozen-lockfile install passes, and the unrelated local
+agent settings overlay is byte-identical after integration.

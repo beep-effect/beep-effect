@@ -2774,11 +2774,17 @@ describe("quality-scheduler", () => {
           Effect.gen(function* () {
             const fs = yield* FileSystem.FileSystem;
             const blocking = yield* writeFakeLease(tempRoot, { weightTokens: 6, originKey: "origin-other" });
+            // Deliberately start after the former fixed wait to exercise synchronization.
             const fiber = yield* Effect.forkChild(
-              withQualityAdmission(request(), noAdmissionOriginGate, Effect.succeed("ran"), fastConfig)
+              withQualityAdmission(request(), noAdmissionOriginGate, Effect.succeed("ran"), fastConfig).pipe(
+                Effect.delay("200 millis")
+              )
             );
-            yield* Effect.sleep("120 millis");
-            expect(A.length(yield* listDirectory(tempRoot.queue))).toBe(1);
+            const queued = yield* Effect.repeat(listDirectory(tempRoot.queue), {
+              until: A.isReadonlyArrayNonEmpty,
+              schedule: Schedule.spaced(Duration.millis(10)),
+            }).pipe(Effect.timeout(Duration.seconds(5)));
+            expect(queued).toHaveLength(1);
             expect(fiber.pollUnsafe()).toBeUndefined();
             yield* fs.remove(blocking, { force: true });
             expect(yield* Fiber.join(fiber)).toBe("ran");
@@ -3166,10 +3172,13 @@ describe("quality-scheduler", () => {
                 noAdmissionOriginGate,
                 Effect.succeed("ran"),
                 fastConfig
-              )
+              ).pipe(Effect.delay("200 millis"))
             );
-            yield* Effect.sleep("80 millis");
-            expect(A.length(yield* listDirectory(tempRoot.queue))).toBe(1);
+            const queued = yield* Effect.repeat(listDirectory(tempRoot.queue), {
+              until: A.isReadonlyArrayNonEmpty,
+              schedule: Schedule.spaced(Duration.millis(10)),
+            }).pipe(Effect.timeout(Duration.seconds(5)));
+            expect(queued).toHaveLength(1);
             yield* Fiber.interrupt(fiber);
             expect(A.length(yield* listDirectory(tempRoot.queue))).toBe(0);
             const events = yield* readJournalEvents(tempRoot.root);
