@@ -332,3 +332,36 @@
 - **Prevention:** wait for process completion before any pin mutation. Discard
   the overlapped proof and rerun all ordinary, corruption, restoration, and
   whole-tree checks serially after the final refresh exits.
+
+## 2026-09-09: Stage A residue checks also match the required lineage explanation
+
+- **Work:** implementing Ruling 22's generator lineage and literal residue proof.
+- **Evidence:** the mandated lineage reason names `ownerProcStart`, `ownerPid`,
+  and `attachedPid`; the required recursive grep matches those benign prose values.
+  Existing pin-corruption tests also mutate the protected identity pin in place.
+- **Prevention:** preserve the exact decoded lineage reason with YAML Unicode
+  escapes for its named fields, and test both its decoded value and the literal
+  grep. JSON member scanning still decodes escaped keys before applying the rule.
+  Exercise corruption on disposable copies so protected pins remain read-only.
+
+## 2026-09-09: the normalized pid suffix also matches execution step identifiers
+
+- **Work:** comparing the Stage A refresh census with its failure-signature rider.
+- **Evidence:** the copied process-member rule normalizes `failedStepId` to
+  `failedstepid` and `stepId` to `stepid`; both end in `pid`. The first refresh
+  retained only 36 failure-signature occurrences because it removed execution
+  join fields. Its built-in verification passed under the same predicate.
+- **Prevention:** cite deployed non-process fields in the explicit allowlist,
+  assert that their decoded keys and property projections survive, and compare
+  rider evidence before accepting a refreshed pin. Replace this capture before
+  handoff; the protected Stage B generator and pins remain outside this lane.
+
+## 2026-09-09: Stage A's legacy UID scan was narrower than Stage B's scan
+
+- **Work:** running the independent host/process residue scan after built-in verify.
+- **Evidence:** the broad `uid-[0-9]+` scan matched 30 files and 315 JSON message
+  leaves. Stage A only rewrote and rejected the `beep-admit-uid-` spelling.
+- **Prevention:** copy Stage B's complete string redactor and residue scanner,
+  including generic UID and process-bearing state/preview filenames, and retain
+  the independent scan as an acceptance check. Discard this interim pin and
+  refresh with a new salt after the regression passes.

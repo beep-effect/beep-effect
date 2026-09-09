@@ -10,6 +10,8 @@ import importlib.util
 import io
 import json
 import os
+import re
+import shutil
 import socket
 import subprocess
 import sys
@@ -32,6 +34,127 @@ identity = load("etl_run3_checkout_identity")
 
 
 class RedactionTests(unittest.TestCase):
+    def test_generic_uid_and_state_filename_residue_matches_stage_b(self):
+        for raw, expected in (("runtime uid-4242", "runtime uid-<uid>"),
+                              ("merged-preview-4242", "merged-preview-<process>"),
+                              ("nonce-4242.lease.json", "nonce-<process>.lease.json"),
+                              ("nonce-4242.ticket.json", "nonce-<process>.ticket.json")):
+            self.assertEqual(fleet.redact_string(raw), expected)
+            for label, data in (("fixture", raw.encode()), (raw, b"")):
+                with self.assertRaisesRegex(SystemExit, "identity"):
+                    fleet.scan_output_bytes([(label, data)])
+            fleet.scan_output_bytes([(expected, expected.encode())])
+
+    def test_fleet_root_covers_clone_and_sibling_worktree_layouts(self):
+        root = Path("/workspace/projects")
+        self.assertEqual(fleet.fleet_root(root / "beep-effect8"), root)
+        self.assertEqual(fleet.fleet_root(root / "beep-effect8-worktrees/stage-b-review-fixes"), root)
+
+    def test_process_variants_mint_local_custody_before_removal(self):
+        salt = b"a" * 32
+        payload = {"schemaVersion": "yeet-admission-lease/v1", "pid": 4242, "procStart": "lease-start",
+                   "ownerPid": 9, "ownerProcStart": "lower-precedence",
+                   "runScope": {"attachedPid": 1234},
+                   "attempt": {"ownerPid": 4242, "ownerProcStart": "lease-start", "attachedPid": 9}}
+        rows, receipt = fleet.transform_source(fleet.encode_json(payload), "live", salt, False)
+        actual = rows[0]
+        self.assertEqual(actual["ownerRef"], actual["attempt"]["ownerRef"])
+        self.assertEqual(actual["runScope"]["ownerRef"], fleet.sha256(f"1234:<absent>:{salt.hex()}".encode())[:12])
+        self.assertEqual(receipt["owner_refs_by_variant"], {"pid": 1, "ownerpid": 1, "attachedpid": 1, "other": 0})
+        self.assertEqual(receipt["redaction_counts"]["owner_refs_without_proc_start"], 1)
+        fleet.scan_output_bytes([("lease.json", fleet.encode_json(actual)),
+                               ("lease.properties", fleet.encode_properties_projection(rows))])
+        attempt = {"schemaVersion": fleet.ATTEMPT_SCHEMA, "_tag": "attempt-started", "attemptId": "fixture",
+                   "ownerPid": 4242, "ownerProcStart": 9876}
+        rows, receipt = fleet.transform_source(fleet.encode_ndjson([attempt]), "attempts", salt)
+        self.assertEqual(rows[0]["ownerRef"], fleet.sha256(f"4242:9876:{salt.hex()}".encode())[:12])
+        self.assertEqual(receipt["owner_refs_by_variant"]["ownerpid"], 1)
+
+    def test_normalized_variants_and_unpaired_identities_have_custody(self):
+        for payload in ({"OWNER_PID": 1234, "owner-proc-start": "start"}, {"ownerProcStart": "start"},
+                        {"parentPid": 1234}, {"futureProcessStartTicks": 42}, {"processId": 1234}):
+            with self.subTest(keys=list(payload)):
+                actual = fleet.redact(payload, b"a" * 32, collections.Counter())
+                self.assertEqual(list(actual), ["ownerRef"])
+                self.assertEqual(fleet.eligible_property_pairs(payload), [])
+        for missing in (None, ""):
+            counts = collections.Counter()
+            fleet.redact({"ownerPid": 1234, "ownerProcStart": missing}, b"a" * 32, counts)
+            self.assertEqual(counts["owner_refs_without_proc_start"], 1)
+        with self.assertRaisesRegex(SystemExit, "ambiguous"):
+            fleet.redact({"ownerPid": 1, "owner_pid": 2}, b"a" * 32, collections.Counter())
+
+    def test_deployed_process_schema_members_are_covered(self):
+        files = (fleet.REPO_RUN + "RunScope.schemas.ts", fleet.YEET + "AttemptJournal.ts",
+                 fleet.REPO_RUN + "AttemptTerminationJournal.ts", fleet.REPO_RUN + "QualityScheduler.schemas.ts",
+                 fleet.REPO_RUN + "AdmissionJournal.ts")
+        observed = set()
+        for file in files:
+            fields = re.findall(r"^\s*([A-Za-z_][A-Za-z0-9_]*)\s*:\s*S\.", (fleet.REPO_ROOT / file).read_text(), re.MULTILINE)
+            identities = {key for key in fields if re.search(r"pid|procstart|processstart", key, re.IGNORECASE)}
+            self.assertTrue(identities, file)
+            for key in identities:
+                self.assertTrue(fleet.process_member(key), (file, key))
+            observed.update(identities)
+        self.assertTrue({"attachedPid", "ownerPid", "ownerProcStart", "pid", "procStart"} <= observed)
+        self.assertEqual(fleet.PROCESS_MEMBER_ALLOWLIST, {"failedstepid", "stepid"})
+
+    def test_execution_step_identifiers_preserve_failure_rider_and_projections(self):
+        for file, key in (("Verdict.ts", "failedStepId"), ("ProofState.ts", "stepId")):
+            source = (fleet.REPO_ROOT / fleet.YEET / file).read_text()
+            self.assertRegex(source, rf"\b{key}: S\.")
+        payload = {"schemaVersion": fleet.ATTEMPT_SCHEMA, "_tag": "attempt-finished",
+                   "stepId": "full:check", "verdict": {"failedStepId": "full:check", "failureKind": "step-exit"}}
+        rows, receipt = fleet.transform_source(fleet.encode_ndjson([payload]), "attempts", b"a" * 32)
+        self.assertEqual(rows, [payload])
+        self.assertEqual(sum(receipt["owner_refs_by_variant"].values()), 0)
+        pairs = fleet.eligible_property_pairs(rows[0])
+        self.assertIn(("stepId", "full:check"), pairs)
+        self.assertIn(("failedStepId", "full:check"), pairs)
+        evidence = fleet.rider_evidence({"attempts/fixture/run/attempts.ndjson": rows})
+        self.assertEqual(evidence["pa-failure-signature"]["structured_occurrences"], 1)
+        fleet.scan_output_bytes([("attempts.ndjson", fleet.encode_ndjson(rows)),
+                                 ("attempts.properties", fleet.encode_properties_projection(rows))])
+        for key in ("STEP_ID", "failed-step-id"):
+            self.assertFalse(fleet.process_member(key))
+
+    def test_process_residue_uses_keys_in_both_formats(self):
+        keys = ("attachedPid", "ownerPid", "ownerProcStart", "pid", "ppid", "processId",
+                "OWNER_PID", "attached-pid", "owner_proc_start", "futureProcessStartTicks")
+        for key in keys:
+            for data in (fleet.encode_json({key: "identity"}), f"{key}=identity\n".encode()):
+                with self.subTest(key=key, data=data):
+                    with self.assertRaisesRegex(SystemExit, "process identity member"):
+                        fleet.scan_output_bytes([("fixture", data)])
+        with self.assertRaisesRegex(SystemExit, "process identity member"):
+            fleet.scan_output_bytes([("escaped.json", b'{"owner\\u0050id":42}')])
+        benign = {"description": 'rapid cupid lipid attachedPid ownerProcStart "ownerPid": word',
+                  "words": ["pid", "ownerPid", "ownerProcStart"], "rapidly": "safe"}
+        self.assertEqual(fleet.redact(benign, b"a" * 32, collections.Counter()), benign)
+        fleet.scan_output_bytes([("safe.json", fleet.encode_json(benign)),
+                               ("safe.properties", fleet.encode_properties_projection([benign]))])
+        self.assertIn(("words", "ownerPid"), fleet.eligible_property_pairs(benign))
+
+    def test_host_paths_require_left_boundaries_in_rewrite_and_scan(self):
+        with patch.object(fleet, "FLEET_ROOT", Path("/workspace")):
+            for root, token in (("/workspace", "<fleet>"), ("/home", "<home>"), ("/tmp", "<tmp>"),
+                                ("/proc", "<proc>"), ("/dev/shm", "<shm>")):
+                for prefix in ("packages", "word_", "word.", "~", "-", "A", "0", "/"):
+                    relative = prefix + root + "/use-cases/x.test.ts"
+                    self.assertEqual(fleet.redact_string(relative), relative)
+                    fleet.scan_output_bytes([(relative, relative.encode())])
+                for prefix in ("", " ", '"', "=", "(", ":"):
+                    for suffix in ("", "/beep-effect/x"):
+                        absolute = prefix + root + suffix
+                        self.assertEqual(fleet.redact_string(absolute), prefix + token + suffix)
+                        with self.assertRaisesRegex(SystemExit, "host path"):
+                            fleet.scan_output_bytes([("fixture", absolute.encode())])
+                self.assertEqual(fleet.redact_string(root + "-other/x"), root + "-other/x")
+                fleet.scan_output_bytes([("fixture", (root + "-other/x").encode())])
+            for relative in ("packages/run/user/123/state", "packages/proc/123/status", "packages/~/.beep/runtime/state"):
+                self.assertEqual(fleet.redact_string(relative), relative)
+                fleet.scan_output_bytes([("fixture", relative.encode())])
+
     def test_runtime_proc_shared_memory_and_user_unit_rewrites(self):
         for module in (fleet, identity):
             runtime = str(Path(os.sep) / "run/user" / str(os.geteuid()))
@@ -104,7 +227,8 @@ class RedactionTests(unittest.TestCase):
                 self.assertEqual(result["branch"], "feat/tmpfs-reap")
                 self.assertEqual(result["checkoutRoot"], "<fleet>/beep-effect-fixture")
                 self.assertEqual(result["home"], "<home>/data")
-                self.assertEqual(result["nested"], {})
+                self.assertEqual(result["nested"], {"ownerRef": fleet.sha256(
+                    f"789:<absent>:{(b'a' * 32).hex()}".encode())[:12]} if module is fleet else {})
                 self.assertIs(result["b"], True)
                 self.assertIs(result["null"], None)
                 self.assertIs(type(result["n"]), int)
@@ -186,6 +310,49 @@ class IdentityTests(unittest.TestCase):
 
 
 class SyntheticReceiptTests(unittest.TestCase):
+    def test_lineage_preserves_reason_and_literal_residue_proof(self):
+        with tempfile.TemporaryDirectory() as name:
+            root = Path(name)
+            original = self.fixture(fleet, root)
+            manifest = fleet.yaml.safe_load(original)
+            self.assertEqual(manifest["generator_lineage"], {
+                "frozen_sha256": "7d711673d80791ce2aa1c9a1d1d8da6e1ff1867a55962806355fdf44ffd378e3",
+                "amended_sha256": fleet.sha256(fleet.SCRIPT.read_bytes()), "ruling": 22,
+                "reason": "process-identity variants (ownerProcStart, ownerPid, attachedPid) survived the name allowlist"})
+            self.assertIsNone(re.search(rb'attachedPid|ownerProcStart|ownerPid|"pid"', original))
+            self.assertEqual(self.verify_cli(fleet, root).returncode, 0)
+            for old, new in ((b"ruling: 22", b"ruling: 21"),
+                             (b"frozen_sha256: 7", b"frozen_sha256: 8"),
+                             (b"  amended_sha256: ", b"  amended_sha255: "),
+                             (b"survived the name allowlist", b"survived the name blocklist")):
+                with self.subTest(field=old):
+                    self.assertIn(old, original)
+                    try:
+                        (root / fleet.MANIFEST_NAME).write_bytes(original.replace(old, new, 1))
+                        result = self.verify_cli(fleet, root)
+                        self.assertNotEqual(result.returncode, 0)
+                        self.assertIn("generator lineage", result.stderr)
+                    finally:
+                        (root / fleet.MANIFEST_NAME).write_bytes(original)
+            self.assertEqual(self.verify_cli(fleet, root).returncode, 0)
+
+    def test_variant_receipts_and_aggregate_reject_corruption(self):
+        with tempfile.TemporaryDirectory() as name:
+            root = Path(name)
+            original = self.fixture(fleet, root)
+            for index in (0, 1):
+                pieces = original.split(b"ownerpid: 0")
+                self.assertEqual(len(pieces), 3)
+                mutated = b"ownerpid: 0".join(pieces[:index + 1]) + b"ownerpid: 1" + b"ownerpid: 0".join(pieces[index + 1:])
+                try:
+                    (root / fleet.MANIFEST_NAME).write_bytes(mutated)
+                    result = self.verify_cli(fleet, root)
+                    self.assertNotEqual(result.returncode, 0)
+                    self.assertIn("variant", result.stderr)
+                finally:
+                    (root / fleet.MANIFEST_NAME).write_bytes(original)
+            self.assertEqual(self.verify_cli(fleet, root).returncode, 0)
+
     def fixture(self, module, root):
         scanned = "2026-01-01T00:00:00.000Z"
         if module is fleet:
@@ -198,6 +365,7 @@ class SyntheticReceiptTests(unittest.TestCase):
             metadata = {"capture_instant": scanned, "admission_roots": [{"label": "fixture",
                 "journal": {"path": path, **module.complete(source, scanned), **census}, "live": []}],
                 "sources": [], "checkouts": [], "checkout_counts": {},
+                "custody": {"owner_refs_by_variant": dict(census["owner_refs_by_variant"])},
                 "rider_evidence": module.rider_evidence({path: rows}),
                 "proof_ledger": {"checkouts_with_ledger": 0}}
         else:
@@ -301,15 +469,18 @@ class PinnedContractTests(unittest.TestCase):
 
     def test_pin_corruption_fails_then_original_bytes_verify(self):
         for module in (fleet, identity):
-            target = next(p for p in module.OUTPUT_ROOT.rglob("*.properties"))
-            original = target.read_bytes()
-            try:
-                target.write_bytes(original + b"corrupted=fixture\n")
-                with self.assertRaises(SystemExit):
-                    module.verify_output_tree(module.OUTPUT_ROOT)
-            finally:
-                target.write_bytes(original)
-            module.verify_output_tree(module.OUTPUT_ROOT)
+            with tempfile.TemporaryDirectory() as name:
+                root = Path(name) / "pin"
+                shutil.copytree(module.OUTPUT_ROOT, root)
+                target = next(root.rglob("*.properties"))
+                original = target.read_bytes()
+                try:
+                    target.write_bytes(original + b"corrupted=fixture\n")
+                    with self.assertRaises(SystemExit):
+                        module.verify_output_tree(root)
+                finally:
+                    target.write_bytes(original)
+                module.verify_output_tree(root)
 
 
 if __name__ == "__main__":

@@ -64,7 +64,7 @@ predicate registry regenerated to track it.
 **NEXT: publish the Stage B follow-up after the synthetic fixture PR, then run 3 proper.**
 Stage A PINNED 2026-09-08 in `run3-fleet/` and `run3-checkout-identity/`:
 existing admission journals, fleet attempts/verdicts, live granted/queued work,
-and one timestamped checkout inventory. The fleet pin covers 89 checkouts; the
+and one timestamped checkout inventory. The Ruling 22 fleet refresh covers 95 checkouts; the
 inventory binds 107 after the review-fix refresh, including registered worktrees outside the required run-file
 globs. The failure-signature occurrence rider is present; cache-plan execution
 resolution and proof-ledger issuance rows are absent. Stage B is now pinned in
@@ -73,7 +73,8 @@ run 4 under Ruling 17. S7 emission v2 supplies the ordering-cluster evidence;
 S8 stays deferred. Stage B proof is in [the report](./research/run3-lanes/stage-b-report.md).
 The review-fix lane has replaced both pins with encoded output paths, stricter
 receipt checks, and runtime redaction; Fable owns publication and PR replies.
-Current proof is in [the review-fix report](./research/run3-lanes/stage-a-review-fixes-report.md).
+Current fleet proof is in [the residue remediation report](./research/run3-lanes/stage-a-residue-report.md).
+Checkout-identity proof remains in [the prior review-fix report](./research/run3-lanes/stage-a-review-fixes-report.md).
 Historical capture details and the original lane handoff are in
 [the Stage A report](./research/run3-lanes/stage-a-report.md); the orchestrator
 committed and published the pin (the implementation lane's sandbox could not
@@ -144,6 +145,14 @@ loop-closer) → S8 OWL 2 RL + SHACL formalization, rules compilation → S9 dog
 graduation. Full plan with locked decisions: [`DECISIONS.md`](./DECISIONS.md).
 
 ## Trail
+
+- 2026-09-09: Stage A fleet residue remediated under Ruling 22. Mirrored Stage B's
+  normalized process-member custody and bounded host-root scans, with source-cited
+  step-ID exceptions preserving the failure rider. Refreshed 95 checkouts,
+  287 admission rows, 1914 payloads / 1915 files; all residue scans pass.
+  Checkout identity and both Stage B pins remain unchanged. Fable owns publication
+  of the combined follow-up; run 3 proper remains next.
+  See [the residue report](./research/run3-lanes/stage-a-residue-report.md).
 
 - 2026-09-09: Stage B review fixes after merged PR #1034: normalized process-identity
   redaction and custody variants, bounded host-root matching, and verified synthetic
