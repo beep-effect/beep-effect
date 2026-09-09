@@ -601,5 +601,38 @@ Fable and the steward.
 
 ### Committed-head verification
 
-Post-commit detached-tree and knowledge-reference evidence is recorded below after
-running those checks at the implementation commit.
+Implementation commit: `e014152c4b62a6547b86f43127d753b696c25291`.
+
+```text
+fix(explorations): redact process-identity variants and harden the Stage B pins
+```
+
+The brief, generator, tests, both pins, report, and packet bookkeeping are in that
+commit. Biome, gitleaks, typos, and commitlint hooks passed; Biome changed no files.
+
+A detached worktree was created from that exact commit under the lane's ignored
+`.beep/stage-b-review-fixes/` directory. The trusted lane's offline PyYAML process
+remained alive while `sys.executable` ran the committed generator in the detached
+checkout. No refresh flag, synthetic-root path, live capture, or mise trust change
+was used. Ordinary verification exited **0** for both pins.
+
+| Pin | Tracked payloads | Manifest payloads | All tracked files | Missing | Extra |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| fleet | 732 | 732 | 733 | 0 | 0 |
+| synthetic | 8 | 8 | 9 | 0 | 0 |
+
+Exact path sets and whole-tree digests match the final capture hashes above.
+The detached worktree was clean and was removed after verification.
+
+- `bun run beep knowledge refs --check`: exit 0; zero live gated observations.
+- `bun run beep knowledge semantic-delta`: exit 0; zero introduced findings,
+  zero resolved findings, 491 unchanged inherited findings.
+- `bun run beep laws effect-imports --mode markdown --check`: exit 0, dry-run;
+  925 files and 310 fences scanned. The 13 suggested files and two parser warnings
+  are inherited and outside this lane's changed paths. No rewrites were applied.
+
+This documentation follow-up records the implementation SHA and its post-commit
+proof. It changes no generator or pin bytes. Ordinary detached verification and
+knowledge references are rerun at final HEAD before handoff; the final handoff
+identifies the documentation commit separately. No push or PR creation occurred.
+The three pre-existing Graft wiring edits remain outside both commits.
