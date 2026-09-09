@@ -558,6 +558,52 @@ bun run beep quality jsdoc-inventory
 bun run beep quality changeset-graph
 ```
 
+#### Admission transition journal
+
+The scheduler writes `<admission-root>/journal.ndjson` under a fenced journal
+lock. The event union accepts `yeet-admission-journal/v1`,
+`yeet-admission-journal/v2`, and `yeet-admission-journal/v3` in the same file.
+Each row has `_tag`, `schemaVersion`, `nonce`, `pid`, and an optional
+`attemptId` (an `Option` after decoding).
+
+| Event | Version | Other fields |
+| --- | --- | --- |
+| `admission-admitted` | v1 | `procStart`, `kind`, `weightTokens`, `priority`, `originKey`, `enqueuedAtMillis`, `admittedAtMillis` |
+| `admission-released` | v1 | `releasedAtMillis`, optional `memoryPeakBytes` |
+| `admission-lease-evicted` | v2 | `evictedAtMillis`, `reason: owner-dead-or-reused` |
+| `admission-ticket-evicted` | v2 | `evictedAtMillis`, `reason: queued-submitter-death` |
+| `admission-enqueued` | v3 | `procStart`, `kind`, `weightTokens`, `priority`, `originKey`, `checkoutRoot`, `branch`, `enqueuedAtMillis` |
+| `admission-withdrawn` | v3 | `procStart`, `kind`, `priority`, `originKey`, `checkoutRoot`, `branch`, `enqueuedAtMillis`, `withdrawnAtMillis` |
+| `admission-released` | v3 | All v1 release fields plus `checkoutRoot`, `branch` |
+| `admission-lease-evicted` | v3 | All v2 lease eviction fields plus `checkoutRoot`, `branch`, `lastHeartbeatAtMillis` |
+| `admission-ticket-evicted` | v3 | All v2 ticket eviction fields plus `checkoutRoot`, `branch` |
+
+Current writers emit enqueue after ticket publication, admission during durable
+promotion, and release during admitted-work cleanup. A ticket finalizer emits
+withdrawal only when it removes a queued ticket without a published lease.
+Withdrawal has no reason field: the finalizer does not classify why the wait
+ended. A successful lifecycle joins enqueue, admission, and release by `nonce`;
+an abandoned wait joins enqueue and withdrawal. Sub-envelope origin-gate-only
+work creates no ticket or lease and emits no admission transitions.
+
+Evictions keep the existing protocol gate. A disabled gate leaves the durable
+reap claim pending; an enabled retry emits or acknowledges one eviction row.
+The v3 lease eviction copies the last heartbeat from the lease saved in that
+claim, so delayed recovery retains the original observation. `evictedAtMillis`
+is the claim instant, not an asserted process death time.
+
+Preservation-era v1/v2 readers treat v3 rows as opaque: locked rewrites keep
+their original bytes and relative source order, including across ring trimming.
+The new reader decodes every supported version. Versioned releases and evictions
+share `_tag` values, so the journal exposes schema-derived guards covering both
+versions of each tag. Scheduler status and reap decisions use ticket, lease,
+promotion, and claim files; journal decoding does not determine admission.
+
+Journal writes remain best effort, and known rows remain bounded by the newest
+200 admissions. Lock contention, write failures, ring trimming, and mixed-version
+traffic can therefore leave incomplete observed chains. This instrumentation
+does not make the journal a complete audit log.
+
 ### `yeet`
 
 Run the canonical End-to-End Green operator path: deterministic repair, full
