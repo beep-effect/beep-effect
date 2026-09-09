@@ -11,19 +11,19 @@ import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { configStringOption } from "../../internal/cli/EnvConfig.ts";
 import { readContainedFileBytesNoFollow, writeContainedFileString } from "../../internal/cli/FsGuards.ts";
 import { OutputBound, runCaptured } from "../../internal/process/index.ts";
 import { AdmissionRequest } from "../../internal/repo-run/QualityScheduler.schemas.ts";
 import { noAdmissionOriginGate, withQualityAdmission } from "../../internal/repo-run/QualityScheduler.ts";
 import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 import {
+  CacheFixtureRuntime,
   CacheSyntheticCheck,
   CacheSyntheticNonExecution,
   CacheSyntheticReceipt,
   CacheSyntheticRun,
 } from "./Cache.experiment.schemas.ts";
-import { CacheCommandError, CacheExecutablePin } from "./Cache.schemas.ts";
+import { CacheCommandError } from "./Cache.schemas.ts";
 import type { CacheCaptureViolation, CacheSyntheticRequest } from "./Cache.experiment.schemas.ts";
 
 // Fixed adversarial data, never an operator credential.
@@ -41,6 +41,7 @@ set -eu
 mkdir -p out
 printf '%s\\n' "$QUALIFY_INPUT" > out/value.txt
 cat input.txt >> out/value.txt
+bun --version >> out/value.txt
 printf 'qualification fixture\\n'
 if test -f unsafe.txt; then cat unsafe.txt; fi
 if test -f path.txt; then pwd; fi
@@ -61,7 +62,7 @@ const fixtureFiles = {
   "bun.lock":
     '{"lockfileVersion":2,"configVersion":1,"workspaces":{"":{"name":"qualification-root"},"packages/fixture":{"name":"@qualification/fixture","version":"0.0.0"}},"packages":{}}\n',
   "turbo.json":
-    '{"tasks":{"qualify":{"inputs":["$TURBO_DEFAULT$"],"env":["QUALIFY_INPUT"],"passThroughEnv":["QUALIFY_ORCHESTRATION"],"outputs":["out/**"]}}}\n',
+    '{"globalDependencies":["bun.lock","package.json"],"tasks":{"qualify":{"inputs":["$TURBO_DEFAULT$"],"env":["QUALIFY_INPUT","QUALIFY_BUN_SHA256"],"passThroughEnv":["QUALIFY_ORCHESTRATION"],"outputs":["out/**"]}}}\n',
   "packages/fixture/package.json":
     '{"name":"@qualification/fixture","version":"0.0.0","scripts":{"qualify":"sh fixture.sh"}}\n',
   "packages/fixture/fixture.sh": wrapper,
@@ -140,6 +141,7 @@ export const equivalentCacheFixtureRuns: {
     right.exitCode === 0 &&
     A.isReadonlyArrayEmpty(left.violations) &&
     A.isReadonlyArrayEmpty(right.violations) &&
+    left.bunSha256 === right.bunSha256 &&
     left.taskHash === right.taskHash &&
     left.outputSha256 === right.outputSha256 &&
     left.logSha256 === right.logSha256
@@ -167,29 +169,26 @@ const runSynthetic = Effect.fn("CacheExperiment.synthetic")(
       return yield* CacheCommandError.new("The synthetic sandbox currently requires Linux x64.");
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-    const searchPath = yield* configStringOption("PATH").pipe(
-      Effect.flatMap(Effect.fromOption(() => CacheCommandError.new("Fixture tool discovery requires PATH.")))
-    );
-    const located = yield* runCaptured({
-      command: "bun",
-      args: ["-p", "process.execPath"],
-      cwd: root,
-      extendEnv: false,
-      env: { PATH: searchPath },
-      source: "stdout",
-      timeout: Duration.seconds(10),
-      bound: OutputBound.make({ maxChars: 4096, truncatedNotice: "[overflow]" }),
+    const resolveRuntime = Effect.fn("CacheExperiment.resolveRuntime")(function* (runtime: CacheFixtureRuntime) {
+      const executable = yield* fs.realPath(runtime.executable);
+      if ((yield* hashExecutable(executable)) !== runtime.pin.sha256)
+        return yield* CacheCommandError.new("The requested Bun binary does not match its exact pin.");
+      return CacheFixtureRuntime.make({ ...runtime, executable });
     });
-    if (located.exitCode !== 0 || located.truncated)
-      return yield* CacheCommandError.new("Cannot resolve the fixture Bun executable.");
-    const bunPath = yield* fs.realPath(Str.trim(located.output));
+    const bun = yield* resolveRuntime(request.bun);
+    const alternateBun = yield* resolveRuntime(request.alternateBun);
+    if (bun.pin.sha256 === alternateBun.pin.sha256 || bun.pin.version === alternateBun.pin.version)
+      return yield* CacheCommandError.new("Runtime perturbation requires two distinct Bun versions and binaries.");
     const turboPath = yield* fs.realPath(request.executable);
     const clientDigest = yield* hashExecutable(turboPath);
     if (clientDigest !== request.client.sha256)
       return yield* CacheCommandError.new("The requested Turbo binary does not match its exact pin.");
     if ((request.channel === "canary") !== Str.includes("-canary.")(request.client.version))
       return yield* CacheCommandError.new("The exact Turbo version does not match the selected client channel.");
-    const bunDigest = yield* hashExecutable(bunPath);
+    const files = {
+      ...fixtureFiles,
+      "package.json": Str.replace("bun@1.4.1", `bun@${bun.pin.version}`)(fixtureFiles["package.json"]),
+    };
     yield* writeContainedFileString(root, ".beep/cache/experiments/owner", "Cache-owned disposable local fixtures.\n");
     const parent = path.join(root, ".beep/cache/experiments");
     const experiment = yield* fs.makeTempDirectoryScoped({ directory: parent, prefix: "synthetic-" });
@@ -212,7 +211,8 @@ const runSynthetic = Effect.fn("CacheExperiment.synthetic")(
       guest: string,
       args: ReadonlyArray<string>,
       semantic = "semantic-a",
-      orchestration = "orchestration-a"
+      orchestration = "orchestration-a",
+      runtime: CacheFixtureRuntime = bun
     ) {
       return yield* runCaptured({
         command: "/usr/bin/bwrap",
@@ -238,7 +238,7 @@ const runSynthetic = Effect.fn("CacheExperiment.synthetic")(
           "--dir",
           "/tools",
           "--ro-bind",
-          bunPath,
+          runtime.executable,
           "/tools/bun",
           "--ro-bind",
           turboPath,
@@ -252,7 +252,12 @@ const runSynthetic = Effect.fn("CacheExperiment.synthetic")(
           ...args,
         ],
         cwd: root,
-        env: { ...env, QUALIFY_INPUT: semantic, QUALIFY_ORCHESTRATION: orchestration },
+        env: {
+          ...env,
+          QUALIFY_INPUT: semantic,
+          QUALIFY_ORCHESTRATION: orchestration,
+          QUALIFY_BUN_SHA256: runtime.pin.sha256,
+        },
         extendEnv: false,
         source: "all",
         timeout: Duration.seconds(30),
@@ -262,7 +267,7 @@ const runSynthetic = Effect.fn("CacheExperiment.synthetic")(
     const prepare = Effect.fn("CacheExperiment.prepare")(function* (name: string) {
       const fixture = path.join(experiment, name);
       yield* fs.makeDirectory(fixture);
-      for (const [relative, contents] of R.toEntries(fixtureFiles)) {
+      for (const [relative, contents] of R.toEntries(files)) {
         yield* writeContainedFileString(fixture, relative, contents);
       }
       return fixture;
@@ -270,22 +275,32 @@ const runSynthetic = Effect.fn("CacheExperiment.synthetic")(
     const firstRoot = yield* prepare("fresh-a");
     const secondRoot = yield* prepare("fresh-b");
     const turboVersion = yield* sandbox(firstRoot, "/fixture", ["/tools/turbo", "--version"]);
-    const bunVersion = yield* sandbox(firstRoot, "/fixture", ["/tools/bun", "--version"]);
     if (
       turboVersion.exitCode !== 0 ||
       turboVersion.truncated ||
       Str.trim(turboVersion.output) !== request.client.version
     )
       return yield* CacheCommandError.new("Sandbox client version differs from its exact pin or sandbox setup failed.");
-    if (bunVersion.exitCode !== 0 || bunVersion.truncated || Str.trim(bunVersion.output) !== "1.4.1")
-      return yield* CacheCommandError.new("The synthetic fixture requires observed Bun 1.4.1.");
+    for (const runtime of [bun, alternateBun]) {
+      const version = yield* sandbox(
+        firstRoot,
+        "/fixture",
+        ["/tools/bun", "--version"],
+        "semantic-a",
+        "orchestration-a",
+        runtime
+      );
+      if (version.exitCode !== 0 || version.truncated || Str.trim(version.output) !== runtime.pin.version)
+        return yield* CacheCommandError.new("The observed sandbox Bun version differs from its exact pin.");
+    }
 
     const invoke = Effect.fn("CacheExperiment.invoke")(function* (
       fixture: string,
       guest: string,
       cache: "local:" | "local:rw",
       semantic = "semantic-a",
-      orchestration = "orchestration-a"
+      orchestration = "orchestration-a",
+      runtime: CacheFixtureRuntime = bun
     ) {
       yield* fs.remove(path.join(fixture, ".turbo/runs"), { recursive: true, force: true });
       yield* fs.remove(path.join(fixture, taskDirectory, "out"), { recursive: true, force: true });
@@ -306,7 +321,8 @@ const runSynthetic = Effect.fn("CacheExperiment.synthetic")(
           "--log-prefix=none",
         ],
         semantic,
-        orchestration
+        orchestration,
+        runtime
       );
       const summaries = yield* fs.readDirectory(path.join(fixture, ".turbo/runs"));
       if (A.length(summaries) !== 1)
@@ -321,9 +337,10 @@ const runSynthetic = Effect.fn("CacheExperiment.synthetic")(
       id: string,
       cache: "local:" | "local:rw",
       semantic = "semantic-a",
-      orchestration = "orchestration-a"
+      orchestration = "orchestration-a",
+      runtime: CacheFixtureRuntime = bun
     ) {
-      const { captured, summary } = yield* invoke(fixture, guest, cache, semantic, orchestration);
+      const { captured, summary } = yield* invoke(fixture, guest, cache, semantic, orchestration, runtime);
       if (A.length(summary.tasks) !== 1)
         return yield* CacheCommandError.new("The synthetic fixture must execute exactly one task.");
       const task = O.getOrThrow(A.head(summary.tasks));
@@ -382,6 +399,7 @@ const runSynthetic = Effect.fn("CacheExperiment.synthetic")(
       return CacheSyntheticRun.make({
         id,
         root: path.basename(fixture),
+        bunSha256: runtime.pin.sha256,
         taskHash: task.hash,
         origin: task.cache.status === "HIT" ? "local-hit" : "fresh",
         exitCode: captured.exitCode,
@@ -495,6 +513,124 @@ const runSynthetic = Effect.fn("CacheExperiment.synthetic")(
         childConfig.origin === "fresh" &&
         childConfig.taskHash !== rootConfig.taskHash
     );
+    // Each metadata perturbation starts from its own baseline and local cache.
+    // These bytes are declared global inputs; the fixture does not pretend that
+    // an unused lockfile or package-manager declaration always changes Turbo's key.
+    for (const [name, relative, contents] of [
+      ["lockfile", "bun.lock", `${files["bun.lock"]}\n`],
+      [
+        "package-manager",
+        "package.json",
+        Str.replace(`bun@${bun.pin.version}`, `bun@${alternateBun.pin.version}`)(files["package.json"]),
+      ],
+    ]) {
+      const fixture = yield* prepare(name);
+      const before = yield* execute(fixture, "/fixture", `${name}-before`, "local:rw");
+      yield* writeContainedFileString(fixture, relative, contents);
+      const after = yield* execute(fixture, "/fixture", `${name}-after`, "local:rw");
+      runs.push(before, after);
+      record(
+        `${name}-invalidation`,
+        before.origin === "fresh" &&
+          after.origin === "fresh" &&
+          equivalentCacheFixtureRuns(before, before) &&
+          equivalentCacheFixtureRuns(after, after) &&
+          before.taskHash !== after.taskHash &&
+          before.outputSha256 === after.outputSha256 &&
+          before.logSha256 === after.logSha256
+      );
+    }
+    const runtimeRoot = yield* prepare("runtime");
+    const runtimeBefore = yield* execute(runtimeRoot, "/fixture", "runtime-before", "local:rw");
+    const runtimeAfter = yield* execute(
+      runtimeRoot,
+      "/fixture",
+      "runtime-after",
+      "local:rw",
+      "semantic-a",
+      "orchestration-a",
+      alternateBun
+    );
+    runs.push(runtimeBefore, runtimeAfter);
+    record(
+      "actual-runtime-invalidation",
+      runtimeBefore.origin === "fresh" &&
+        runtimeAfter.origin === "fresh" &&
+        equivalentCacheFixtureRuns(runtimeBefore, runtimeBefore) &&
+        equivalentCacheFixtureRuns(runtimeAfter, runtimeAfter) &&
+        runtimeBefore.bunSha256 !== runtimeAfter.bunSha256 &&
+        runtimeBefore.taskHash !== runtimeAfter.taskHash &&
+        runtimeBefore.outputSha256 !== runtimeAfter.outputSha256 &&
+        runtimeBefore.logSha256 === runtimeAfter.logSha256
+    );
+
+    // Normal cache-disabled execution is the authority for each local decision.
+    // Producer and replay are additional observations, never the authority itself.
+    const shadow = Effect.fn("CacheExperiment.localShadow")(function* (
+      name: string,
+      mutations: Readonly<Record<string, string>> = {},
+      semantic = "semantic-a",
+      orchestration = "orchestration-a",
+      runtime: CacheFixtureRuntime = bun
+    ) {
+      const fixture = yield* prepare(`shadow-${name}`);
+      for (const [relative, contents] of R.toEntries(mutations))
+        yield* writeContainedFileString(fixture, relative, contents);
+      const fresh = yield* execute(
+        fixture,
+        "/fixture",
+        `shadow-${name}-authority`,
+        "local:",
+        semantic,
+        orchestration,
+        runtime
+      );
+      const producer = yield* execute(
+        fixture,
+        "/fixture",
+        `shadow-${name}-producer`,
+        "local:rw",
+        semantic,
+        orchestration,
+        runtime
+      );
+      const hit = yield* execute(
+        fixture,
+        "/fixture",
+        `shadow-${name}-replay`,
+        "local:rw",
+        semantic,
+        orchestration,
+        runtime
+      );
+      runs.push(fresh, producer, hit);
+      record(
+        `local-shadow-${name}`,
+        fresh.origin === "fresh" &&
+          producer.origin === "fresh" &&
+          hit.origin === "local-hit" &&
+          equivalentCacheFixtureRuns(fresh, producer) &&
+          equivalentCacheFixtureRuns(fresh, hit)
+      );
+    });
+    yield* shadow("baseline");
+    yield* shadow("semantic-env", {}, "semantic-b");
+    yield* shadow("empty-semantic-env", {}, "");
+    yield* shadow("empty-input", { [`${taskDirectory}/input.txt`]: "" });
+    yield* shadow("unicode-input", { [`${taskDirectory}/input.txt`]: "café λ\n" });
+    yield* shadow("root-config", {
+      "turbo.json": Str.replace('"out/**"', '"out/**","root-extra/**"')(files["turbo.json"]),
+    });
+    yield* shadow("child-config", {
+      [`${taskDirectory}/turbo.json`]:
+        '{"extends":["//"],"tasks":{"qualify":{"outputs":["out/**","child-extra/**"]}}}\n',
+    });
+    yield* shadow("lockfile", { "bun.lock": `${files["bun.lock"]}\n` });
+    yield* shadow("package-manager", {
+      "package.json": Str.replace(`bun@${bun.pin.version}`, `bun@${alternateBun.pin.version}`)(files["package.json"]),
+    });
+    yield* shadow("orchestration", {}, "semantic-a", "orchestration-b");
+    yield* shadow("alternate-runtime", {}, "semantic-a", "orchestration-a", alternateBun);
     const concurrentRoots = yield* Effect.all([prepare("concurrent-a"), prepare("concurrent-b")], { concurrency: 2 });
     const concurrent = yield* Effect.forEach(
       concurrentRoots,
@@ -563,13 +699,16 @@ const runSynthetic = Effect.fn("CacheExperiment.synthetic")(
     );
     const stillPinned = yield* hashExecutable(turboPath);
     if (stillPinned !== clientDigest) return yield* CacheCommandError.new("The client changed during the experiment.");
-    if ((yield* hashExecutable(bunPath)) !== bunDigest)
-      return yield* CacheCommandError.new("The Bun runtime changed during the experiment.");
-    const fixtureText = yield* JsonStringCodec(S.Record(S.String, S.String)).encode(fixtureFiles);
+    for (const runtime of [bun, alternateBun]) {
+      if ((yield* hashExecutable(runtime.executable)) !== runtime.pin.sha256)
+        return yield* CacheCommandError.new("A Bun runtime changed during the experiment.");
+    }
+    const fixtureText = yield* JsonStringCodec(S.Record(S.String, S.String)).encode(files);
     return CacheSyntheticReceipt.make({
       channel: request.channel,
       client: request.client,
-      bun: CacheExecutablePin.make({ version: "1.4.1", sha256: bunDigest }),
+      bun: bun.pin,
+      alternateBun: alternateBun.pin,
       fixtureSha256: yield* hashText(fixtureText),
       runs: yield* S.decodeUnknownEffect(S.NonEmptyArray(CacheSyntheticRun))(runs),
       nonExecutions: [nonExecution],

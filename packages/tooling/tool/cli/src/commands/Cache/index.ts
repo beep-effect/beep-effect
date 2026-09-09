@@ -29,6 +29,7 @@ export {
 export { attachCacheEntrypointReview } from "./Cache.entrypoints.ts";
 export {
   CacheCaptureViolation,
+  CacheFixtureRuntime,
   CacheLocalOrigin,
   CacheSyntheticCheck,
   CacheSyntheticNonExecution,
@@ -37,6 +38,15 @@ export {
   CacheSyntheticRun,
 } from "./Cache.experiment.schemas.ts";
 export { runCacheSyntheticExperiment } from "./Cache.experiment.ts";
+export {
+  CachePilotLogInput,
+  CachePilotOutcome,
+  CachePilotReceipt,
+  CachePilotRequest,
+  CachePilotRun,
+  CachePilotTask,
+} from "./Cache.pilot.schemas.ts";
+export { runCachePilotExperiment } from "./Cache.pilot.ts";
 /**
  * Public cache command schemas and errors.
  *

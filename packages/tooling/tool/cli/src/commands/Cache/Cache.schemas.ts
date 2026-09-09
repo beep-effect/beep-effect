@@ -449,7 +449,7 @@ export class CacheExecutablePin extends S.Class<CacheExecutablePin>($I`CacheExec
 ) {}
 
 /**
- * Actual tools and platform for the first supported qualification profile.
+ * Actual tools and platform for the explicitly supported qualification profiles.
  *
  * **Example** (Reject an unsupported profile)
  *
@@ -464,7 +464,7 @@ export class CacheExecutablePin extends S.Class<CacheExecutablePin>($I`CacheExec
  */
 export class CacheToolchainSnapshot extends S.Class<CacheToolchainSnapshot>($I`CacheToolchainSnapshot`)(
   {
-    profile: S.Literal("local-linux-x64-bun1.4.1"),
+    profile: LiteralKit(["local-linux-x64-bun1.4.1", "local-linux-x64-bun1.4.2"]),
     kernel: S.NonEmptyString,
     libc: S.NonEmptyString,
     bun: CacheExecutablePin,

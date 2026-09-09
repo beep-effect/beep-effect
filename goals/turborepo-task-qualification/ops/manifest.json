@@ -105,7 +105,41 @@
     "research/yeet-plans-current.json",
     "research/yeet-plans-hosted-current.json",
     "research/command-groups-current.json",
-    "research/quiet-lint-activation-preview.json"
+    "research/quiet-lint-activation-preview.json",
+    "research/post-merge-baseline-delta.json",
+    "research/post-merge-baseline-review.md",
+    "research/post-merge-baseline-request.json",
+    "research/post-merge-exclusion-request.json",
+    "research/command-groups-post-merge.json",
+    "research/entrypoint-plans-hosted-post-merge.json",
+    "research/entrypoint-plans-post-merge.json",
+    "research/post-merge-checkpoint.json",
+    "research/post-merge-entrypoint-request.json",
+    "research/post-merge-entrypoint-review.md",
+    "research/post-merge-registry-pins.json",
+    "research/synthetic-local-v3-canary.json",
+    "research/synthetic-local-v3-pin-negatives.json",
+    "research/synthetic-local-v3-stable.json",
+    "research/synthetic-local-v3-verification.md",
+    "research/workflow-sources-post-merge.json",
+    "research/yeet-plans-hosted-post-merge.json",
+    "research/yeet-plans-post-merge.json",
+    "research/activation/identity-turbo.disabled.v3.json",
+    "research/activation/identity-turbo.enabled.v3.json",
+    "research/command-groups-ignore-repair.json",
+    "research/ignore-invalidation-findings.json",
+    "research/ignore-repair-activation-preview.json",
+    "research/ignore-repair-activation-request.json",
+    "research/ignore-repair-baseline-delta.json",
+    "research/ignore-repair-baseline-request.json",
+    "research/ignore-repair-baseline-review.md",
+    "research/ignore-repair-checkpoint.json",
+    "research/ignore-repair-entrypoint-request.json",
+    "research/ignore-repair-entrypoint-review.md",
+    "research/ignore-repair-local-verification.json",
+    "research/ignore-repair-verification.md",
+    "research/merged-activation-preview.json",
+    "research/types-lint-exclusion-request.json"
   ],
   "agentLaunchers": [
     {
@@ -167,5 +201,5 @@
     "Unresolved numeric deployment budget or ungranted external scope requires a concrete decision before mutation.",
     "Do not overwrite another owner's artifacts or weaken hosted proof."
   ],
-  "statusNote": "P0/P1/P2 active. Exact-stable native activation projection passed. A v2 synthetic runner adds three fresh/fresh pairs, fresh orchestration invariance, execution metadata checks and distinct absent-script observations. The current CLI package audit/docgen and schema-first checks pass; exact stable/canary runtime remains queued. Four planner snapshots and the complete ten-document workflow source snapshot regenerate byte-identically. Census integration, remaining workflow boundaries, real pilot/shadow/signed integration and Yeet closeout remain. The quiet-lint full rerun is queued. Identity remains excluded with its original lint script and cache disabled. Sibling task launch awaits the operator answer."
+  "statusNote": "P0/P1/P2 active. Real identity and types lint each reproduced false-success local hits after a root-ignore rule was removed, on both exact clients. Identity adds root/ancestor ignore inputs and remains disabled. Types lint is disabled and explicitly excluded at ledger revision three; all previous history is preserved. Four combined ignore-path cases pass 24 observations and 32 checks with types fresh; the separate types exclusion control passes six observations and eight checks. Full identity/types package audit and docgen pass. Census remains 142 workspaces, 2,840 graph nodes and 1,480 executable nodes; 275 source bindings and six complete documents verify. Audit has zero findings and 928 unassessed cached computations. Current fingerprint/activation preview are refreshed. Durable real-pilot execution, complete read/write and comparison/shadow evidence, signed sibling integration, adoption handoff and Yeet closeout remain required."
 }

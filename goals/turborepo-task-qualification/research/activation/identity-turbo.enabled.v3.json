@@ -3,7 +3,7 @@
   "extends": ["//"],
   "tasks": {
     "lint": {
-      "cache": false,
+      "cache": true,
       "inputs": [
         "$TURBO_EXTENDS$",
         "$TURBO_ROOT$/.gitignore",

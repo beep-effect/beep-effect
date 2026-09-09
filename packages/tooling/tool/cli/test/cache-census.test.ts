@@ -65,7 +65,7 @@ const toolchain = CacheToolchainSnapshot.make({
   profile: "local-linux-x64-bun1.4.1",
   kernel: "Linux fixture",
   libc: "glibc fixture",
-  bun: tool,
+  bun: CacheExecutablePin.make({ ...tool, version: "1.4.1" }),
   node: tool,
   turbo: tool,
   biome: tool,
@@ -281,6 +281,31 @@ describe("executable cache census", () => {
 
 describe("computation configuration fingerprint", () => {
   it.effect(
+    "isolates Bun profiles and rejects a relabeled runtime",
+    Effect.fnUntraced(function* () {
+      const census = yield* fingerprintFixture();
+      const updatedKey = CacheQualificationKey.make({ ...key, profile: "local-linux-x64-bun1.4.2" });
+      const updated = CacheToolchainSnapshot.make({
+        ...toolchain,
+        profile: "local-linux-x64-bun1.4.2",
+        bun: CacheExecutablePin.make({ version: "1.4.2", sha256: changedDigest }),
+      });
+      const before = yield* fingerprintCacheComputation(key, census, toolchain);
+      const after = yield* fingerprintCacheComputation(updatedKey, census, updated);
+      expect(after.configurationDigest).toBe(before.configurationDigest);
+      expect(after.toolchainDigest).not.toBe(before.toolchainDigest);
+      expect(yield* fingerprintCacheComputation(key, census, updated).pipe(Effect.isFailure)).toBe(true);
+      expect(
+        yield* fingerprintCacheComputation(
+          updatedKey,
+          census,
+          CacheToolchainSnapshot.make({ ...updated, bun: toolchain.bun })
+        ).pipe(Effect.isFailure)
+      ).toBe(true);
+    }, provideCrypto)
+  );
+
+  it.effect(
     "retains graph-only dependencies and ignores discovery order and ordinary input values",
     Effect.fnUntraced(function* () {
       const census = yield* fingerprintFixture();
@@ -333,7 +358,7 @@ describe("computation configuration fingerprint", () => {
         census,
         CacheToolchainSnapshot.make({
           ...toolchain,
-          bun: CacheExecutablePin.make({ ...tool, sha256: changedDigest }),
+          bun: CacheExecutablePin.make({ ...toolchain.bun, sha256: changedDigest }),
         })
       );
       expect(runtime.configurationDigest).toBe(first.configurationDigest);

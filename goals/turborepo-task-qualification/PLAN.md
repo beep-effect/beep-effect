@@ -299,3 +299,96 @@ complying with the imported task-wrapper policy. The canonical package-script
 check reports 142 manifests, zero drift and zero writes. This integration
 requires a fresh capture/exit matrix; earlier repair receipts do not establish
 equivalence for the new wrapper or Bun version.
+
+## Bun 1.4.2 baseline and synthetic runner: 2026-09-09
+
+The installed Mise Bun 1.4.2 runtime completes a frozen-lockfile installation.
+The refreshed census preserves 142 workspaces and 2,840 graph nodes; main's
+script convergence changes the executable population to 1,480. The
+[reviewed delta](./research/post-merge-baseline-review.md) attributes the
+changed scripts, three added and 26 removed executable nodes, and the sole
+uncached Storybook configuration change. The canonical writer now records
+`local-linux-x64-bun1.4.2` / `qualification-v2`. Ledger revision two keeps the
+original exclusion/history and separately excludes the new tuple. Cache
+activation remains disabled.
+
+Synthetic receipt version three binds explicit primary and alternate Bun
+binaries instead of discovering an ambient runtime. Both version and content
+pins are checked; the fixture includes the verified runtime digest as a
+semantic environment input and observes the actual Bun version in its output.
+Lockfile and package-manager bytes are explicit global fixture inputs. The
+runner adds independent perturbations and ten varied local shadow decisions,
+each with cache-disabled execution as authority, followed by a local producer
+and replay. These local observations grant no signed-remote or real-pilot
+qualification. Both exact clients now pass 60 observations and 30 checks.
+Each includes ten decisions under Bun 1.4.2 and one separately counted
+alternate-runtime decision. The first expansion supplied only nine primary
+decisions; an empty-environment case supplies the tenth in both final reruns.
+
+The live fingerprint now compares the observed Bun version to `.bun-version`
+and derives the named profile from that observed version. Both 1.4.1 and 1.4.2
+profiles remain readable, but profile/runtime relabeling is rejected. The
+merged runtime produces a current fingerprint; an old ambient Bun 1.4.1
+process fails before writing one. Twenty-five focused tests, typecheck,
+formatting and schema-first pass. The final full CLI package gate passes
+audit in 383.2 seconds and docgen in 17.3 seconds.
+
+The [current entrypoint attachment](./research/post-merge-entrypoint-review.md)
+binds 274 source files, six complete snapshots and one authored review. Its
+live census accepts every hash and preserves complete parsed documents,
+including all 28 workflow jobs and 164 step definitions. The six unresolved
+source/runtime obligations remain explicit. The
+[consolidated checkpoint](./research/post-merge-checkpoint.json) binds these
+results and the seven changed CLI source/test files.
+
+Next: implement the durable real-pilot matrix for the merged wrapper and
+runtime, including fresh comparisons, semantic perturbations, read/write and
+capture evidence, activation invariance and ten representative shadow
+decisions. Signed replay still requires accepted conformance/trust artifacts.
+Deeper interpreter coverage, adoption handoff and final Yeet proof remain
+required; no tuple is qualified or activated by this checkpoint.
+
+## Real-wrapper ignore-input repair: 2026-09-09
+
+The real merged wrapper passes selected-log comparisons on both clients:
+disabled execution, producer and replay retain the same 53 bytes. Native
+summaries attribute the activation hash change to the changed child Turbo
+file, which is an input. That exploratory capture method still needs a
+durable implementation and adversarial stream-boundary tests.
+
+The recorded trace exposed an unbound semantic input. Biome reads the root
+`.gitignore`, but the original task/global input maps omitted it. Both clients
+returned successful local hits after removing an ignore rule that revealed a
+tracked syntax error; fresh execution failed at the same hash. The independent
+types dependency control reproduced the same false success.
+
+Identity now retains inherited inputs and adds root and ancestor ignore files.
+Its cache remains disabled. Types lint gains a cache-disabled child config
+and an explicit excluded entry at revision three; earlier entries and history
+are preserved. `@beep/types` joins `@beep/identity`, `@beep/repo-configs` and
+`@beep/repo-cli` in this goal's owned workspace verification list.
+
+All four ignore-path cases pass against the combined repaired identity/fresh
+types graph: 24 observations and 32 checks across both exact clients. The
+separate types exclusion control passes six observations and eight checks.
+These failure controls do not count as successful shadow decisions. Full
+identity and types package audit/docgen pass. The canonical audit reports
+zero findings and 928 inherited cached computations as unassessed.
+
+The [verification report](./research/ignore-repair-verification.md) records the
+failure, repair, source review and remaining limits. The refreshed census
+attachment verifies 275 source bindings and six complete documents; all six
+review/runtime obligations remain explicit. The current fingerprint and
+read-only activation preview bind both changed task definitions.
+
+Continue with the durable real-pilot executor and complete comparison/shadow
+matrix using these repaired inputs and the fresh types dependency. Native
+trace interpretation must cover the remaining semantic reads and writes.
+Signed sibling integration, adoption handoff and final Yeet acceptance remain
+required. The goal stays active and both affected tasks remain excluded.
+
+The next commit also preserves the initial real-pilot executor, its request
+and receipt models, and strict selected-task log extraction. It is exported
+for further integration; CLI wiring and native execution validation remain
+pending. Earlier source-binding receipts predate these new source files and
+must be refreshed before they are used to qualify the current implementation.

@@ -312,3 +312,75 @@ the order of the two independently added final Yeet gates in the merged test
 expectation; the implementation already retained both gates. The expectation
 now follows the observed planner order. Pre-commit hooks passed, but the
 first merge message used unsupported type `merge`; the retry uses `chore`.
+
+## 2026-09-09: runtime discovery must not inherit a stale shell pin
+
+After main advanced `.bun-version` to 1.4.2, `bun --version` still reported
+1.4.1 while `mise which bun` resolved the already-installed 1.4.2 runtime.
+`mise exec bun@1.4.2 -- bun install --frozen-lockfile` completed successfully.
+Qualification commands now use that explicit runtime. Synthetic requests
+bind each Bun executable, observed version and SHA-256; runtime changes are
+tested with two actual installed binaries. An ambient PATH lookup cannot
+silently choose the experiment runtime. Fresh/fresh and replay comparisons
+also reject differing runtime digests even when other captured bytes agree.
+
+The existing fingerprint collector still constructed the old 1.4.1 profile,
+so the first current-runtime request failed its profile check. The collector
+now reads the repository pin, compares it with the observed runtime and
+derives the supported profile. A negative invocation confirms that the stale
+shell runtime fails without writing a fingerprint. A profile derived from the
+observed runtime would have prevented the stale hardcoded identity.
+
+The first v3 experiment expansion passed all assertions but contained only
+nine shadow authorities under the primary runtime; the alternate runtime
+could not supply the tenth primary-profile decision. An empty semantic
+environment scenario now supplies a distinct tenth primary case. Both exact
+clients reran the complete matrix. Counting qualifying comparisons by the
+actual runtime digest before launch would have caught the coverage gap.
+
+## 2026-09-09: merged-wrapper activation needs input-map attribution
+
+The first admitted merged-wrapper probe passed all six real task executions
+and both local replay checks. Selected-task captures matched between disabled
+execution, producer and replay on both exact clients. Its two hash-invariance
+assertions failed when the child configuration changed from cache-disabled to
+enabled. The probe retained only each native summary digest, so the next
+attribution pass must also retain bounded original summary bytes to identify
+the changed hash inputs. No activation-invariance or qualification claim
+follows from the successful log comparison alone.
+
+The attribution rerun retained all six original summaries. For both clients,
+only the child `turbo.json` input blob changed across activation; global inputs
+were equal. Enabled producer and replay had equal input maps and hashes. The
+selected capture and replay logs were all 53 bytes with the same digest.
+The failed assertion was too broad: the child configuration is an ordinary
+file input, so changing its cache flag changes the task hash. Activation
+comparison must bind that approved input delta and compare semantic outputs
+and captures; it must not weaken ordinary same-configuration hash comparisons.
+
+The architecture role command also rejected `pilot` as an unsupported role.
+The command targets canonical slice roles, while Cache is an existing CLI
+command concept. No role file was generated. Keep any extraction within
+Cache's existing ownership and check the tool-family topology before adding
+its earned experiment roles.
+
+The trace-led ignore-file probe then established an actual invalidation
+failure. Identity and types both returned successful local hits after removing
+a root ignore rule that revealed a tracked syntax error; fresh execution
+failed at the same hash on both clients. Binding semantic reads before relying
+on configuration declarations would have caught the omitted `.gitignore`.
+Identity now adds root/ancestor ignore inputs, types lint reuse is disabled
+and explicitly excluded, and all four repaired ignore-path controls pass.
+
+The final audit invocation initially used the sibling commands' `--output`
+flag. Audit supports `--json` instead and rejected the flag before running.
+The corrected invocation captures JSON stdout separately from diagnostic
+stderr and passes. Reading the audit's own command contract would avoid
+assuming that the output flags are shared across the command group.
+
+The requested commit preflight found compiler errors in the newly started
+pilot executor: `Array.filterMap` expects `Result`, separate-stream capture
+does not accept a timeout option, and recursive generators need explicit
+return channels. The preflight repairs use the installed Effect APIs and
+add capture-boundary tests. Checking the package before expanding the
+executor would have caught these integration errors earlier.

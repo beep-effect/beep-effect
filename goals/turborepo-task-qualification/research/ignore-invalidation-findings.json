@@ -1,0 +1,640 @@
+{
+  "schemaVersion": "cache-ignore-invalidation-findings/v1",
+  "authority": "Observed local cache false successes and a bounded input-policy repair check. No signed-remote or full-pilot qualification.",
+  "trigger": "A tracked syntax error is ignored by the root .gitignore during the producer, then the ignore rule is removed without changing the source file.",
+  "observations": [
+    {
+      "case": "identity-before-repair",
+      "computation": "@beep/identity#lint",
+      "sourceRevision": "bab96e90fce6ad6a9cd3d2d9153c8a9e6aa48628",
+      "bun": {
+        "version": "1.4.2",
+        "sha256": "a83d263767d839e4d2649ca8e35d07159c7afc99afdc96d731ced29e056dda0c"
+      },
+      "biome": {
+        "version": "Version: 2.5.6",
+        "sha256": "3cc9a0c3fa26ac26a89e8a3b203c010c9ae88e36f69a2679e79981f267ce9d57"
+      },
+      "originalReceipt": {
+        "path": ".beep/qualification-local-preflight/ignore-invalidation-6lzyx3y0/receipt.json",
+        "sha256": "86df090da8132e7b18a9e95f34ae73471b73b48f556287ad8628f778391529f6"
+      },
+      "sourceRestored": true,
+      "channels": [
+        {
+          "channel": "stable",
+          "client": {
+            "version": "2.10.12",
+            "sha256": "cfca1bde77f1216d4dcc8964e567eed9d47be224c848e8001edc9a1a07839dde",
+            "namespace": "qualification-local-stable-bun142-v3"
+          },
+          "outcomes": [
+            {
+              "mode": "enabled-producer",
+              "graphExitCode": 0,
+              "taskExitCode": 0,
+              "taskHash": "be2fb4a1a914864f",
+              "cache": {
+                "local": false,
+                "remote": false,
+                "status": "MISS",
+                "timeSaved": 0
+              },
+              "taskLog": {
+                "bytes": 53,
+                "sha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657"
+              },
+              "nativeSummary": {
+                "path": ".beep/qualification-local-preflight/ignore-invalidation-6lzyx3y0/stable-enabled-producer.summary.json",
+                "sha256": "92ac0fea536462858e5d21028fbeb9097a7b587f9c286650315e6260b4019d24"
+              },
+              "trace": {
+                "bytes": 62877993,
+                "sha256": "85c0f2453341ddfac5148f2f6c225a62d796478fc871ec388863e7202a15a7d4",
+                "interpretation": "unreviewed private trace; no complete read/write or syscall verdict"
+              },
+              "rootIgnoreTaskInputs": {},
+              "rootIgnoreGlobalInputs": {}
+            },
+            {
+              "mode": "enabled-replay",
+              "graphExitCode": 0,
+              "taskExitCode": 0,
+              "taskHash": "be2fb4a1a914864f",
+              "cache": {
+                "local": true,
+                "remote": false,
+                "status": "HIT",
+                "source": "LOCAL",
+                "timeSaved": 1681,
+                "sha": "bab96e90fce6ad6a9cd3d2d9153c8a9e6aa48628",
+                "dirtyHash": "f79a5603cb14775443f06ba5274eb0d9d98fac6f323111ceca8f7abe4d33cada"
+              },
+              "taskLog": {
+                "bytes": 53,
+                "sha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657"
+              },
+              "nativeSummary": {
+                "path": ".beep/qualification-local-preflight/ignore-invalidation-6lzyx3y0/stable-enabled-replay.summary.json",
+                "sha256": "842f93f8b63998ac343bd39f06963e17a27c5b80f9a9c444f1912e26ea61687f"
+              },
+              "trace": {
+                "bytes": 15615942,
+                "sha256": "b478191cc5ab7beaef039c20ecb1bd631aed262aa1a9e1b7a38d91e0a755e1e3",
+                "interpretation": "unreviewed private trace; no complete read/write or syscall verdict"
+              },
+              "rootIgnoreTaskInputs": {},
+              "rootIgnoreGlobalInputs": {}
+            },
+            {
+              "mode": "fresh-negative",
+              "graphExitCode": 1,
+              "taskExitCode": 1,
+              "taskHash": "be2fb4a1a914864f",
+              "cache": {
+                "local": false,
+                "remote": false,
+                "status": "MISS",
+                "timeSaved": 0
+              },
+              "taskLog": null,
+              "nativeSummary": {
+                "path": ".beep/qualification-local-preflight/ignore-invalidation-6lzyx3y0/stable-fresh-negative.summary.json",
+                "sha256": "c415564f7399f7ba08de4e5a08f0ede06a4090015a79e29bb2b3b8379a38d444"
+              },
+              "trace": {
+                "bytes": 62939724,
+                "sha256": "c09a45079b057026d05df863eb523be1ecde2acede6b58e60c2a0569b2d8e4eb",
+                "interpretation": "unreviewed private trace; no complete read/write or syscall verdict"
+              },
+              "rootIgnoreTaskInputs": {},
+              "rootIgnoreGlobalInputs": {}
+            }
+          ],
+          "staleSuccessReproduced": true,
+          "repairPreventsStaleSuccess": false
+        },
+        {
+          "channel": "canary",
+          "client": {
+            "version": "2.10.13-canary.1",
+            "sha256": "86aa80b5c86c8b6d07061626a6f8562385c3aed1270794dac53c6beaec856223",
+            "namespace": "qualification-local-canary-bun142-v3"
+          },
+          "outcomes": [
+            {
+              "mode": "enabled-producer",
+              "graphExitCode": 0,
+              "taskExitCode": 0,
+              "taskHash": "be2fb4a1a914864f",
+              "cache": {
+                "local": false,
+                "remote": false,
+                "status": "MISS",
+                "timeSaved": 0
+              },
+              "taskLog": {
+                "bytes": 53,
+                "sha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657"
+              },
+              "nativeSummary": {
+                "path": ".beep/qualification-local-preflight/ignore-invalidation-6lzyx3y0/canary-enabled-producer.summary.json",
+                "sha256": "5de456488c081a37894e8bbab45e20de9401e2b67214171c078fb4c601221733"
+              },
+              "trace": {
+                "bytes": 62915660,
+                "sha256": "dc95754cffb2dad7e08a85c75e65d013710c9e93853d37ec4c05be260c387121",
+                "interpretation": "unreviewed private trace; no complete read/write or syscall verdict"
+              },
+              "rootIgnoreTaskInputs": {},
+              "rootIgnoreGlobalInputs": {}
+            },
+            {
+              "mode": "enabled-replay",
+              "graphExitCode": 0,
+              "taskExitCode": 0,
+              "taskHash": "be2fb4a1a914864f",
+              "cache": {
+                "local": true,
+                "remote": false,
+                "status": "HIT",
+                "source": "LOCAL",
+                "timeSaved": 1611,
+                "sha": "bab96e90fce6ad6a9cd3d2d9153c8a9e6aa48628",
+                "dirtyHash": "f79a5603cb14775443f06ba5274eb0d9d98fac6f323111ceca8f7abe4d33cada"
+              },
+              "taskLog": {
+                "bytes": 53,
+                "sha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657"
+              },
+              "nativeSummary": {
+                "path": ".beep/qualification-local-preflight/ignore-invalidation-6lzyx3y0/canary-enabled-replay.summary.json",
+                "sha256": "751fafa991f9b918ba0cd95a8e22170467c6a5fcdacbdca1bebd9ddd813699e3"
+              },
+              "trace": {
+                "bytes": 15615104,
+                "sha256": "7ae0853102d0585c33ed644d5c2e253fc7a6e4022ed39caa37e944d04cbea46b",
+                "interpretation": "unreviewed private trace; no complete read/write or syscall verdict"
+              },
+              "rootIgnoreTaskInputs": {},
+              "rootIgnoreGlobalInputs": {}
+            },
+            {
+              "mode": "fresh-negative",
+              "graphExitCode": 1,
+              "taskExitCode": 1,
+              "taskHash": "be2fb4a1a914864f",
+              "cache": {
+                "local": false,
+                "remote": false,
+                "status": "MISS",
+                "timeSaved": 0
+              },
+              "taskLog": null,
+              "nativeSummary": {
+                "path": ".beep/qualification-local-preflight/ignore-invalidation-6lzyx3y0/canary-fresh-negative.summary.json",
+                "sha256": "5797c882cb4b6ef69547f296d909cf938587857c2de8dc573565183124dfe181"
+              },
+              "trace": {
+                "bytes": 62908759,
+                "sha256": "9760d16f72494a57fbd56338c66f34f7753d7669cb0024b9418a603fada94403",
+                "interpretation": "unreviewed private trace; no complete read/write or syscall verdict"
+              },
+              "rootIgnoreTaskInputs": {},
+              "rootIgnoreGlobalInputs": {}
+            }
+          ],
+          "staleSuccessReproduced": true,
+          "repairPreventsStaleSuccess": false
+        }
+      ]
+    },
+    {
+      "case": "types-before-quarantine",
+      "computation": "@beep/types#lint",
+      "sourceRevision": "bab96e90fce6ad6a9cd3d2d9153c8a9e6aa48628",
+      "bun": {
+        "version": "1.4.2",
+        "sha256": "a83d263767d839e4d2649ca8e35d07159c7afc99afdc96d731ced29e056dda0c"
+      },
+      "biome": {
+        "version": "Version: 2.5.6",
+        "sha256": "3cc9a0c3fa26ac26a89e8a3b203c010c9ae88e36f69a2679e79981f267ce9d57"
+      },
+      "originalReceipt": {
+        "path": ".beep/qualification-local-preflight/types-ignore-invalidation-9t8jz16f/receipt.json",
+        "sha256": "643dd97ec6c0fc21e66463a59a6ca243310b415b107665ad6d3ea0e8069f0b71"
+      },
+      "sourceRestored": true,
+      "channels": [
+        {
+          "channel": "stable",
+          "client": {
+            "version": "2.10.12",
+            "sha256": "cfca1bde77f1216d4dcc8964e567eed9d47be224c848e8001edc9a1a07839dde",
+            "namespace": "qualification-local-stable-bun142-v3"
+          },
+          "outcomes": [
+            {
+              "mode": "enabled-producer",
+              "graphExitCode": 0,
+              "taskExitCode": 0,
+              "taskHash": "bd7d2e313e73c26c",
+              "cache": {
+                "local": false,
+                "remote": false,
+                "status": "MISS",
+                "timeSaved": 0
+              },
+              "taskLog": {
+                "bytes": 82,
+                "sha256": "7a07d7736a8efc128dd50edadc6cdaef45e2e7f072d538abcb9147a6ff944c0b"
+              },
+              "nativeSummary": {
+                "path": ".beep/qualification-local-preflight/types-ignore-invalidation-9t8jz16f/stable-enabled-producer.summary.json",
+                "sha256": "7c604ef31b7e8f35750184eb9451797dce1c33aa8b87cc6bacba0427deef27b5"
+              },
+              "trace": {
+                "bytes": 39165547,
+                "sha256": "6fb79f2f6ab80251423fc88dee8f73ca6549e4fc1dc64e716284a4c11848e903",
+                "interpretation": "unreviewed private trace; no complete read/write or syscall verdict"
+              },
+              "rootIgnoreTaskInputs": {},
+              "rootIgnoreGlobalInputs": {}
+            },
+            {
+              "mode": "enabled-replay",
+              "graphExitCode": 0,
+              "taskExitCode": 0,
+              "taskHash": "bd7d2e313e73c26c",
+              "cache": {
+                "local": true,
+                "remote": false,
+                "status": "HIT",
+                "source": "LOCAL",
+                "timeSaved": 1609,
+                "sha": "bab96e90fce6ad6a9cd3d2d9153c8a9e6aa48628",
+                "dirtyHash": "c21e53ef7bf617d14faafac6f9ffca3aa8b94b7affff89e03bdfea0351b285d6"
+              },
+              "taskLog": {
+                "bytes": 82,
+                "sha256": "7a07d7736a8efc128dd50edadc6cdaef45e2e7f072d538abcb9147a6ff944c0b"
+              },
+              "nativeSummary": {
+                "path": ".beep/qualification-local-preflight/types-ignore-invalidation-9t8jz16f/stable-enabled-replay.summary.json",
+                "sha256": "c1ace5c87603be26a6c98e7bc6e66fcc19f7df6210466761a30e8e81591938f0"
+              },
+              "trace": {
+                "bytes": 15609576,
+                "sha256": "b45f54f4cf16f12a3ed78b29e01021d432895facc52e7eb1d25bf2fbfe258000",
+                "interpretation": "unreviewed private trace; no complete read/write or syscall verdict"
+              },
+              "rootIgnoreTaskInputs": {},
+              "rootIgnoreGlobalInputs": {}
+            },
+            {
+              "mode": "fresh-negative",
+              "graphExitCode": 1,
+              "taskExitCode": 1,
+              "taskHash": "bd7d2e313e73c26c",
+              "cache": {
+                "local": false,
+                "remote": false,
+                "status": "MISS",
+                "timeSaved": 0
+              },
+              "taskLog": null,
+              "nativeSummary": {
+                "path": ".beep/qualification-local-preflight/types-ignore-invalidation-9t8jz16f/stable-fresh-negative.summary.json",
+                "sha256": "3cc0ae7c6a89c3328e9ac0e34e28aa3399c07878335b4c8fdc83a531b73fda71"
+              },
+              "trace": {
+                "bytes": 39219295,
+                "sha256": "7007379fa976f658ad4b797340177dde485b00657018178b9edf5e43cf5d8ed1",
+                "interpretation": "unreviewed private trace; no complete read/write or syscall verdict"
+              },
+              "rootIgnoreTaskInputs": {},
+              "rootIgnoreGlobalInputs": {}
+            }
+          ],
+          "staleSuccessReproduced": true,
+          "repairPreventsStaleSuccess": false
+        },
+        {
+          "channel": "canary",
+          "client": {
+            "version": "2.10.13-canary.1",
+            "sha256": "86aa80b5c86c8b6d07061626a6f8562385c3aed1270794dac53c6beaec856223",
+            "namespace": "qualification-local-canary-bun142-v3"
+          },
+          "outcomes": [
+            {
+              "mode": "enabled-producer",
+              "graphExitCode": 0,
+              "taskExitCode": 0,
+              "taskHash": "bd7d2e313e73c26c",
+              "cache": {
+                "local": false,
+                "remote": false,
+                "status": "MISS",
+                "timeSaved": 0
+              },
+              "taskLog": {
+                "bytes": 82,
+                "sha256": "85bab14617067b23e926e4a18cfad4424185b768c9d30d2cba6f5aa17f3aca55"
+              },
+              "nativeSummary": {
+                "path": ".beep/qualification-local-preflight/types-ignore-invalidation-9t8jz16f/canary-enabled-producer.summary.json",
+                "sha256": "0ab23a6b1a81297620bd35a2b55f02c45de245ff9855088df6dd270ab2d21c3f"
+              },
+              "trace": {
+                "bytes": 39209260,
+                "sha256": "d807c6d4460c20aae30ab022c33d08241ec9316ca500ae812d07770347dc1298",
+                "interpretation": "unreviewed private trace; no complete read/write or syscall verdict"
+              },
+              "rootIgnoreTaskInputs": {},
+              "rootIgnoreGlobalInputs": {}
+            },
+            {
+              "mode": "enabled-replay",
+              "graphExitCode": 0,
+              "taskExitCode": 0,
+              "taskHash": "bd7d2e313e73c26c",
+              "cache": {
+                "local": true,
+                "remote": false,
+                "status": "HIT",
+                "source": "LOCAL",
+                "timeSaved": 1794,
+                "sha": "bab96e90fce6ad6a9cd3d2d9153c8a9e6aa48628",
+                "dirtyHash": "c21e53ef7bf617d14faafac6f9ffca3aa8b94b7affff89e03bdfea0351b285d6"
+              },
+              "taskLog": {
+                "bytes": 82,
+                "sha256": "85bab14617067b23e926e4a18cfad4424185b768c9d30d2cba6f5aa17f3aca55"
+              },
+              "nativeSummary": {
+                "path": ".beep/qualification-local-preflight/types-ignore-invalidation-9t8jz16f/canary-enabled-replay.summary.json",
+                "sha256": "b2970d638f52425b568a6a6dfe2c0302f9f1ccffd57b97ff4871f6dac6f6d4a0"
+              },
+              "trace": {
+                "bytes": 15614436,
+                "sha256": "55c380271dcf09d9db798b8a78af6e8147545b9a766feb70ec24037349e6e26e",
+                "interpretation": "unreviewed private trace; no complete read/write or syscall verdict"
+              },
+              "rootIgnoreTaskInputs": {},
+              "rootIgnoreGlobalInputs": {}
+            },
+            {
+              "mode": "fresh-negative",
+              "graphExitCode": 1,
+              "taskExitCode": 1,
+              "taskHash": "bd7d2e313e73c26c",
+              "cache": {
+                "local": false,
+                "remote": false,
+                "status": "MISS",
+                "timeSaved": 0
+              },
+              "taskLog": null,
+              "nativeSummary": {
+                "path": ".beep/qualification-local-preflight/types-ignore-invalidation-9t8jz16f/canary-fresh-negative.summary.json",
+                "sha256": "0ef330d9684aed5ae27b1c8d8d3be3ad790237da62e963dd1792d379c7a0e0e0"
+              },
+              "trace": {
+                "bytes": 39190952,
+                "sha256": "2c31e236816177d266cbdd21bc7bb7f212796bd4d816fdb6a4638cfce1913c92",
+                "interpretation": "unreviewed private trace; no complete read/write or syscall verdict"
+              },
+              "rootIgnoreTaskInputs": {},
+              "rootIgnoreGlobalInputs": {}
+            }
+          ],
+          "staleSuccessReproduced": true,
+          "repairPreventsStaleSuccess": false
+        }
+      ]
+    },
+    {
+      "case": "identity-input-repair",
+      "computation": "@beep/identity#lint",
+      "sourceRevision": "bab96e90fce6ad6a9cd3d2d9153c8a9e6aa48628",
+      "bun": {
+        "version": "1.4.2",
+        "sha256": "a83d263767d839e4d2649ca8e35d07159c7afc99afdc96d731ced29e056dda0c"
+      },
+      "biome": {
+        "version": "Version: 2.5.6",
+        "sha256": "3cc9a0c3fa26ac26a89e8a3b203c010c9ae88e36f69a2679e79981f267ce9d57"
+      },
+      "originalReceipt": {
+        "path": ".beep/qualification-local-preflight/repaired-ignore-invalidation-mpxeor7l/receipt.json",
+        "sha256": "47d8210189e952c95e80f3a6cc6e76eeef0dbcc72d04495ec605b132de2a0d6b"
+      },
+      "sourceRestored": true,
+      "channels": [
+        {
+          "channel": "stable",
+          "client": {
+            "version": "2.10.12",
+            "sha256": "cfca1bde77f1216d4dcc8964e567eed9d47be224c848e8001edc9a1a07839dde",
+            "namespace": "qualification-local-stable-bun142-v3"
+          },
+          "outcomes": [
+            {
+              "mode": "enabled-producer",
+              "graphExitCode": 0,
+              "taskExitCode": 0,
+              "taskHash": "69488b3ba9ec2ecc",
+              "cache": {
+                "local": false,
+                "remote": false,
+                "status": "MISS",
+                "timeSaved": 0
+              },
+              "taskLog": {
+                "bytes": 53,
+                "sha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657"
+              },
+              "nativeSummary": {
+                "path": ".beep/qualification-local-preflight/repaired-ignore-invalidation-mpxeor7l/stable-enabled-producer.summary.json",
+                "sha256": "2c5b4dc5c9811649c72c7e3d9fc58eb4f339bf7fbe2d1b9af24e715c30743247"
+              },
+              "trace": {
+                "bytes": 62886346,
+                "sha256": "b9351cdf7176a3449f4a0a63f551a8138bec08650d049f3afb8ba0fbba342491",
+                "interpretation": "unreviewed private trace; no complete read/write or syscall verdict"
+              },
+              "rootIgnoreTaskInputs": {
+                "../../../../.gitignore": "eae4a567e5768fd7358f7434904cafea5c4ae2a8"
+              },
+              "rootIgnoreGlobalInputs": {}
+            },
+            {
+              "mode": "enabled-replay",
+              "graphExitCode": 1,
+              "taskExitCode": 1,
+              "taskHash": "38cadacf716f6a70",
+              "cache": {
+                "local": false,
+                "remote": false,
+                "status": "MISS",
+                "timeSaved": 0
+              },
+              "taskLog": {
+                "bytes": 138,
+                "sha256": "376d8fd73fce8c4404fa85bb984bac6c18d4a49720648991de6a6f828a28cc72"
+              },
+              "nativeSummary": {
+                "path": ".beep/qualification-local-preflight/repaired-ignore-invalidation-mpxeor7l/stable-enabled-replay.summary.json",
+                "sha256": "023ada06e9fbb04280678203a572f4347cd4b52ae5da4e57d6027f490f71eca5"
+              },
+              "trace": {
+                "bytes": 39251207,
+                "sha256": "c6d61d382aa98c593db7dfc133f7b88c190cb93218b298b4ae50e5379df0435e",
+                "interpretation": "unreviewed private trace; no complete read/write or syscall verdict"
+              },
+              "rootIgnoreTaskInputs": {
+                "../../../../.gitignore": "187c5ce99ae82685427912e295e26d6e17087ba2"
+              },
+              "rootIgnoreGlobalInputs": {}
+            },
+            {
+              "mode": "fresh-negative",
+              "graphExitCode": 1,
+              "taskExitCode": 1,
+              "taskHash": "38cadacf716f6a70",
+              "cache": {
+                "local": false,
+                "remote": false,
+                "status": "MISS",
+                "timeSaved": 0
+              },
+              "taskLog": null,
+              "nativeSummary": {
+                "path": ".beep/qualification-local-preflight/repaired-ignore-invalidation-mpxeor7l/stable-fresh-negative.summary.json",
+                "sha256": "3e70239562f32807ac88d8b2a94cbae4ca8b3965350f6aaab63a0907ae2ea9c1"
+              },
+              "trace": {
+                "bytes": 62945714,
+                "sha256": "df7058507119f13e1afa1dfcc00aec8e47a61b3c8770286133b8365959bf414d",
+                "interpretation": "unreviewed private trace; no complete read/write or syscall verdict"
+              },
+              "rootIgnoreTaskInputs": {
+                "../../../../.gitignore": "187c5ce99ae82685427912e295e26d6e17087ba2"
+              },
+              "rootIgnoreGlobalInputs": {}
+            }
+          ],
+          "staleSuccessReproduced": false,
+          "repairPreventsStaleSuccess": true
+        },
+        {
+          "channel": "canary",
+          "client": {
+            "version": "2.10.13-canary.1",
+            "sha256": "86aa80b5c86c8b6d07061626a6f8562385c3aed1270794dac53c6beaec856223",
+            "namespace": "qualification-local-canary-bun142-v3"
+          },
+          "outcomes": [
+            {
+              "mode": "enabled-producer",
+              "graphExitCode": 0,
+              "taskExitCode": 0,
+              "taskHash": "69488b3ba9ec2ecc",
+              "cache": {
+                "local": false,
+                "remote": false,
+                "status": "MISS",
+                "timeSaved": 0
+              },
+              "taskLog": {
+                "bytes": 53,
+                "sha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657"
+              },
+              "nativeSummary": {
+                "path": ".beep/qualification-local-preflight/repaired-ignore-invalidation-mpxeor7l/canary-enabled-producer.summary.json",
+                "sha256": "c6fe7552086318a65aaf0b3914ed5bd466e4c3d1d7211bfd81908e3fe4118076"
+              },
+              "trace": {
+                "bytes": 62881847,
+                "sha256": "8f7890a58e127f4f5babf59c845faadfa3c03276806409b4ff2dcbd30bf923fc",
+                "interpretation": "unreviewed private trace; no complete read/write or syscall verdict"
+              },
+              "rootIgnoreTaskInputs": {
+                "../../../../.gitignore": "eae4a567e5768fd7358f7434904cafea5c4ae2a8"
+              },
+              "rootIgnoreGlobalInputs": {}
+            },
+            {
+              "mode": "enabled-replay",
+              "graphExitCode": 1,
+              "taskExitCode": 1,
+              "taskHash": "38cadacf716f6a70",
+              "cache": {
+                "local": false,
+                "remote": false,
+                "status": "MISS",
+                "timeSaved": 0
+              },
+              "taskLog": {
+                "bytes": 138,
+                "sha256": "376d8fd73fce8c4404fa85bb984bac6c18d4a49720648991de6a6f828a28cc72"
+              },
+              "nativeSummary": {
+                "path": ".beep/qualification-local-preflight/repaired-ignore-invalidation-mpxeor7l/canary-enabled-replay.summary.json",
+                "sha256": "e7d2a7522021183dfef46a9594ef02f4a284b1425c701e57b5c241076d106450"
+              },
+              "trace": {
+                "bytes": 39324688,
+                "sha256": "0efced144ce3989a76c289bdf1716db02ce07599c9440c8334dfa456be6e03ff",
+                "interpretation": "unreviewed private trace; no complete read/write or syscall verdict"
+              },
+              "rootIgnoreTaskInputs": {
+                "../../../../.gitignore": "187c5ce99ae82685427912e295e26d6e17087ba2"
+              },
+              "rootIgnoreGlobalInputs": {}
+            },
+            {
+              "mode": "fresh-negative",
+              "graphExitCode": 1,
+              "taskExitCode": 1,
+              "taskHash": "38cadacf716f6a70",
+              "cache": {
+                "local": false,
+                "remote": false,
+                "status": "MISS",
+                "timeSaved": 0
+              },
+              "taskLog": null,
+              "nativeSummary": {
+                "path": ".beep/qualification-local-preflight/repaired-ignore-invalidation-mpxeor7l/canary-fresh-negative.summary.json",
+                "sha256": "d76572f11e41ad31b4b19178c9bc42d0a9f8aff9c131aa671cd8c03713effd2f"
+              },
+              "trace": {
+                "bytes": 62927497,
+                "sha256": "6246b7f66143518f8b83e666e387e9ed54dfbd9c51dd4debe91e3f66b89cb776",
+                "interpretation": "unreviewed private trace; no complete read/write or syscall verdict"
+              },
+              "rootIgnoreTaskInputs": {
+                "../../../../.gitignore": "187c5ce99ae82685427912e295e26d6e17087ba2"
+              },
+              "rootIgnoreGlobalInputs": {}
+            }
+          ],
+          "staleSuccessReproduced": false,
+          "repairPreventsStaleSuccess": true
+        }
+      ]
+    }
+  ],
+  "proposedIdentityConfiguration": {
+    "path": "goals/turborepo-task-qualification/research/activation/identity-turbo.disabled.v3.json",
+    "sha256": "c14fce6e3c15f727902d3fd3cc838038b594ba5d920ce4bcfb54ed2f63ccf039"
+  },
+  "proposedEnabledExperimentConfiguration": {
+    "path": "goals/turborepo-task-qualification/research/activation/identity-turbo.enabled.v3.json",
+    "sha256": "85f2dbcf4617aa0097a20be395fc47b2006cab7c4bd4e167a9e80c766d498289"
+  },
+  "disposition": "Keep identity excluded with its cache disabled; apply its independently tested input repair. Disable and exclude the types lint dependency until its own qualification evidence exists."
+}

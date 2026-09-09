@@ -36,6 +36,52 @@ is client reference material, not a server candidate.
 
 ## Current implementation evidence
 
+- [Root-ignore repair](./ignore-repair-verification.md),
+  [native failure receipts](./ignore-invalidation-findings.json) and
+  [combined controls](./ignore-repair-local-verification.json): both clients
+  reproduced false-success hits for identity and types lint. The repaired
+  identity inputs pass all four ancestor ignore-file cases with types kept
+  fresh. The dependency is explicitly excluded at ledger revision three.
+- [Repair baseline review](./ignore-repair-baseline-review.md),
+  [projection delta](./ignore-repair-baseline-delta.json) and
+  [current entrypoint review](./ignore-repair-entrypoint-review.md): only two
+  task definitions change; the population remains 1,480 executable nodes.
+  The live attachment verifies 275 source bindings and six complete documents.
+- [Repaired activation preview](./ignore-repair-activation-preview.json):
+  current disabled-source fingerprint and an isolated proposed flag change.
+  It performs no activation. The preceding main-integration fingerprints and
+  attachments below are historical after this input repair and exclusion.
+- [Repair checkpoint](./ignore-repair-checkpoint.json): current configuration
+  hashes, revision-three ledger, native evidence references, package gates
+  and the complete verified census attachment.
+
+- [Main integration checkpoint](./post-merge-checkpoint.json): the Bun 1.4.2
+  baseline, seven changed CLI source/test files, current fingerprint, passing
+  full CLI package gate and verified local synthetic comparisons.
+- [Merged baseline review](./post-merge-baseline-review.md) and
+  [population delta](./post-merge-baseline-delta.json): 142 workspaces, 2,840
+  graph nodes and 1,480 executable nodes. The new profile/epoch remains
+  excluded; prior ledger history is preserved and identity caching is disabled.
+- [Synthetic runner v3](./synthetic-local-v3-verification.md),
+  [stable receipt](./synthetic-local-v3-stable.json) and
+  [canary receipt](./synthetic-local-v3-canary.json): 60 observations and 30
+  passing checks per exact client, including ten primary-profile local shadow
+  decisions. Four [pin-negative checks](./synthetic-local-v3-pin-negatives.json)
+  reject forged runtime/client identities without producing receipts.
+- [Refreshed entrypoint review](./post-merge-entrypoint-review.md) and
+  [attachment request](./post-merge-entrypoint-request.json): 274 current
+  source bindings and six complete documents pass the live census boundary.
+  These remain source evidence; all six unresolved obligations are retained.
+- [Exact package metadata](./post-merge-registry-pins.json): refreshed public
+  registry integrity and shasum values for Turbo 2.10.12, Turbo
+  2.10.13-canary.1 and Bun 1.4.2. Executable pins are recorded separately.
+
+## Earlier implementation evidence
+
+These checkpoints retain their original source/runtime bindings. The main
+merge changed the Bun pin, scripts and population; use the current evidence
+above for those facts. Earlier successful experiments remain historical.
+
 - [Census entrypoint integration](./entrypoint-census-integration.md) and
   [checkpoint](./entrypoint-census-checkpoint.json): live attachment of six
   complete source documents, bound to the current census population; current

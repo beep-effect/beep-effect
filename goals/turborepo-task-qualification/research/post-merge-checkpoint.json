@@ -1,0 +1,217 @@
+{
+  "schemaVersion": "cache-post-merge-checkpoint/v1",
+  "authority": "Bun 1.4.2 baseline, source-only entrypoint attachments and synthetic local execution. No real-pilot, signed-remote or hosted qualification.",
+  "mergeCommit": "bab96e90fce6ad6a9cd3d2d9153c8a9e6aa48628",
+  "sources": [
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.experiment.schemas.ts",
+      "sha256": "6229e8edc50d5144a19f2ff60c335ceef94b73d1d522837fd6b9a981d469e2d0"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.experiment.ts",
+      "sha256": "f0a2b464b9721602adf6a6cd9ce27a3c7044ca28e40eebbfbfacdcccec2f000e"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.fingerprint.ts",
+      "sha256": "1083e13c2536e0bb29bbc0ddffe8adb6c41d5cc71a395b78c8cf62c0dd2d4f33"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.schemas.ts",
+      "sha256": "a8de0f32da536a9f66519a346ce7a5ec1e3c9298737e72bed10fee66e6e898ab"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
+      "sha256": "5c45db34a03467bf028acdcf6ec213ac59d2acad8e353a33e794e305176be5af"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/cache-census.test.ts",
+      "sha256": "fc828c3170893c6291c00608b99fc49a843676328e4ef6ef5e4005e182372b95"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/cache-experiment.test.ts",
+      "sha256": "474374337fd960db958f680dc4a76cc71405600b7acb9a88223169925d8dc4b7"
+    }
+  ],
+  "baseline": {
+    "reference": {
+      "path": "standards/cache-qualification-baseline.json",
+      "sha256": "ee99d491df76285551045824d07920b4f96df4ed401dc83252fc46c000314341"
+    },
+    "ledger": {
+      "path": "standards/cache-qualification.json",
+      "sha256": "12c67704b5c8df1d4dfc0794862fa9074297e198866a0b85c1ea9b9d9bb01b47"
+    },
+    "profile": "local-linux-x64-bun1.4.2",
+    "epoch": "qualification-v2",
+    "revision": 2,
+    "priorEntriesAndHistoryPreserved": true,
+    "identityCacheEnabled": false,
+    "audit": {
+      "path": ".beep/qualification-local-preflight/post-merge-cache-audit.json",
+      "sha256": "5a7b3b53c5a89bbf439e8014c269bcba1b71e9e17dd90954ec5c326a77826d4e"
+    },
+    "auditFindings": 0,
+    "unassessedCachedComputations": 929
+  },
+  "fingerprint": {
+    "reference": {
+      "path": ".beep/qualification-local-preflight/post-merge-fingerprint.json",
+      "sha256": "3e55405f0d32532b0fcb6008ab6d37a455ff1a9ee7d7af4b05f36a1eee0a60b9"
+    },
+    "key": {
+      "computation": "@beep/identity#lint",
+      "layer": "turbo-task-result",
+      "profile": "local-linux-x64-bun1.4.2",
+      "epoch": "qualification-v2"
+    },
+    "configurationDigest": "dca5e9b23ade5315207f75c3c435c2290484613d132170f0646d2eb4343a0db1",
+    "toolchainDigest": "737b57fd796b2768072d8d01bdf9bbaef4669a1541b3caac9bee0faa53e4e682",
+    "staleShellRuntimeRejected": true,
+    "staleShellRejection": {
+      "path": ".beep/qualification-local-preflight/post-merge-fingerprint-mismatch.log",
+      "sha256": "4446e04221a7326977687ab517f09f91bb80347ae98d52561eaeec0afcb2548b"
+    },
+    "staleShellReceiptAbsent": true
+  },
+  "entrypointCensus": {
+    "reference": {
+      "path": ".beep/qualification-local-preflight/census-post-merge-attached.json",
+      "sha256": "c24950441989e5a7b2cd90c0423b68efcfa4d7c083ba3b0c6db9df25fd315e29"
+    },
+    "request": {
+      "path": "goals/turborepo-task-qualification/research/post-merge-entrypoint-request.json",
+      "sha256": "2cb1e473f5327cac118b7ded38c676f018525dc8405c3c65677652350394d66d"
+    },
+    "workspaces": 142,
+    "graphNodes": 2840,
+    "executableNodes": 1480,
+    "verifiedSourceBindings": 274,
+    "completeDocumentsPreserved": 6,
+    "authoredReviews": 1,
+    "unresolved": [
+      "Candidate semantic reads, writes, captures and signed/shadow comparisons remain required.",
+      "Classify nested workspace and root command semantics.",
+      "Entrypoint attachments establish source identity only; candidate runtime evidence remains required.",
+      "Hosted expanded workflows, remote action sources and required statuses retain their existing proof owners.",
+      "Review dynamic CI/Quality/Yeet entrypoint branches and their external verdicts.",
+      "Source planner scenarios do not exhaust dynamic interpreter decisions or prove their runtime outcomes."
+    ],
+    "authority": "source-review-only"
+  },
+  "syntheticLocal": [
+    {
+      "channel": "stable",
+      "receipt": {
+        "path": "goals/turborepo-task-qualification/research/synthetic-local-v3-stable.json",
+        "sha256": "1455ddaa698575ceccf5d9ddc8dacc8df61c459e5e1a19bbaa7fe3e6aa566275"
+      },
+      "client": {
+        "version": "2.10.12",
+        "sha256": "cfca1bde77f1216d4dcc8964e567eed9d47be224c848e8001edc9a1a07839dde",
+        "namespace": "qualification-local-stable-bun142-v3"
+      },
+      "bun": {
+        "version": "1.4.2",
+        "sha256": "a83d263767d839e4d2649ca8e35d07159c7afc99afdc96d731ced29e056dda0c"
+      },
+      "alternateBun": {
+        "version": "1.4.1",
+        "sha256": "69293d3be4f0d6d624ca8581af4574435fa39209ab67e89eb03912866f3e14cb"
+      },
+      "observations": 60,
+      "checks": 30,
+      "allChecksPassed": true,
+      "primaryProfileLocalShadowDecisions": 10,
+      "alternateRuntimeLocalShadowDecisions": 1,
+      "unexplainedShadowDivergences": 0,
+      "absentScriptObservations": 1
+    },
+    {
+      "channel": "canary",
+      "receipt": {
+        "path": "goals/turborepo-task-qualification/research/synthetic-local-v3-canary.json",
+        "sha256": "b2b61dc9cf5c958dd649c69380932b8e6c46f717139d92f7e1b3b0d42b1a9e63"
+      },
+      "client": {
+        "version": "2.10.13-canary.1",
+        "sha256": "86aa80b5c86c8b6d07061626a6f8562385c3aed1270794dac53c6beaec856223",
+        "namespace": "qualification-local-canary-bun142-v3"
+      },
+      "bun": {
+        "version": "1.4.2",
+        "sha256": "a83d263767d839e4d2649ca8e35d07159c7afc99afdc96d731ced29e056dda0c"
+      },
+      "alternateBun": {
+        "version": "1.4.1",
+        "sha256": "69293d3be4f0d6d624ca8581af4574435fa39209ab67e89eb03912866f3e14cb"
+      },
+      "observations": 60,
+      "checks": 30,
+      "allChecksPassed": true,
+      "primaryProfileLocalShadowDecisions": 10,
+      "alternateRuntimeLocalShadowDecisions": 1,
+      "unexplainedShadowDivergences": 0,
+      "absentScriptObservations": 1
+    }
+  ],
+  "runtimePinNegatives": {
+    "path": "goals/turborepo-task-qualification/research/synthetic-local-v3-pin-negatives.json",
+    "sha256": "9023a761eb6d1c5132b450a042f50324f75297c3062431e2c4a60fb3fe13def8"
+  },
+  "verification": {
+    "frozenInstall": {
+      "passed": true,
+      "path": ".beep/qualification-local-preflight/post-merge-install.log",
+      "sha256": "a0b478128d70e96b7012a89d0663b76d8622f5198f6573916f887cb95b55e097"
+    },
+    "focusedTests": {
+      "passed": true,
+      "tests": 25,
+      "path": ".beep/qualification-local-preflight/post-merge-profile-tests.log",
+      "sha256": "231238fcf25745ad8df5087a82c8f766bef9bc7a25981db4b11e195415b03337"
+    },
+    "typeCheck": {
+      "passed": true,
+      "path": ".beep/qualification-local-preflight/post-merge-profile-check.log",
+      "sha256": "974993c2ca103531cde55bf67ea81306d30d277f87728341ae73bbd23332d687"
+    },
+    "format": {
+      "passed": true,
+      "path": ".beep/qualification-local-preflight/post-merge-final-format.log",
+      "sha256": "562a0733989ffc708f5031d5187a8863826603c070a18d017626a370a1b05762"
+    },
+    "schemaFirst": {
+      "passed": true,
+      "advisories": 0,
+      "path": ".beep/qualification-local-preflight/post-merge-final-schema-first.log",
+      "sha256": "92cdfc88b77af58c49edb6143b3ba44e5a03a38ff30e124dd2d3811d646819b3"
+    },
+    "packageVerify": {
+      "passed": true,
+      "package": "@beep/repo-cli",
+      "auditSeconds": 383.2,
+      "docgenSeconds": 17.3,
+      "path": ".beep/qualification-local-preflight/post-merge-final-package-verify.log",
+      "sha256": "ae5d947183c457ad9eaacf68f2c26c3ac06ed51893c00c93872b98fe2071b91d"
+    },
+    "goalsDoctor": {
+      "passed": true,
+      "newBlockingFindings": 0,
+      "inheritedAdvisories": 4,
+      "path": ".beep/qualification-local-preflight/post-merge-goals-doctor.log",
+      "sha256": "83248b4d9820dbab6331d52fd946a2ab0945205cedc7c9f0ef6e9c18d8ee50a1"
+    },
+    "exploreCheck": {
+      "passed": true,
+      "path": ".beep/qualification-local-preflight/post-merge-explore-check.log",
+      "sha256": "a8e9e6963f045eb177b93c100bda803766fed5126e65ec44b4f750b95f828741"
+    },
+    "reflectionArtifacts": {
+      "passed": true,
+      "blockingFindings": 0,
+      "advisoryFindings": 0,
+      "path": ".beep/qualification-local-preflight/post-merge-reflection-artifacts.log",
+      "sha256": "dc58e3cf99fff163aa6e100a032a40ab464ea55b3fdd24cbbdcb42f25a1daa90"
+    }
+  }
+}

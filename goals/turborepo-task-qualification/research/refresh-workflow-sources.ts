@@ -1,4 +1,5 @@
 // Preserve complete parsed source documents; never execute workflow expressions or steps.
+import { CacheEvidenceReference } from "@beep/repo-configs/cache";
 import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { decodeYamlTextAs } from "@beep/schema/Yaml";
 import { NodeCrypto } from "@effect/platform-node";
@@ -41,7 +42,10 @@ const encoded = await Effect.runPromise(
     files,
   })
 );
-await Bun.write("goals/turborepo-task-qualification/research/workflow-sources.json", `${encoded}\n`);
+const output = await Effect.runPromise(
+  S.decodeUnknownEffect(CacheEvidenceReference.fields.path)(Bun.argv[2] ?? "workflow-sources.json")
+);
+await Bun.write(`goals/turborepo-task-qualification/research/${output}`, `${encoded}\n`);
 await Effect.runPromise(
   Console.log(`Captured ${files.length} complete local workflow/action documents without executing them.`)
 );

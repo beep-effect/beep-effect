@@ -1,0 +1,140 @@
+{
+  "schemaVersion": "cache-ignore-repair-checkpoint/v1",
+  "authority": "Current local input repair and explicit dependency exclusion; no real-pilot or signed-remote qualification.",
+  "sourceRevision": "bab96e90fce6ad6a9cd3d2d9153c8a9e6aa48628",
+  "configurationSources": [
+    {
+      "path": "packages/foundation/modeling/identity/turbo.json",
+      "sha256": "c14fce6e3c15f727902d3fd3cc838038b594ba5d920ce4bcfb54ed2f63ccf039"
+    },
+    {
+      "path": "packages/foundation/primitive/types/turbo.json",
+      "sha256": "20aa945348385b7947c2ee01f1a23d3ee4f73ebc517842861a55bcb750d8051e"
+    }
+  ],
+  "baseline": {
+    "path": "standards/cache-qualification-baseline.json",
+    "sha256": "a6266cf219ab0175a5d672f19c4aa582d2f141b41b99f06121e79b910344139d"
+  },
+  "ledger": {
+    "reference": {
+      "path": "standards/cache-qualification.json",
+      "sha256": "06a4ce7d4ca481d5dd93dacfdb4dff16108ca5683f67c4a68af173ff07fd05ac"
+    },
+    "revision": 3,
+    "entries": 3,
+    "priorEntriesAndHistoryPreserved": true,
+    "currentProfileExcludedComputations": [
+      "@beep/identity#lint",
+      "@beep/types#lint"
+    ]
+  },
+  "fingerprint": {
+    "reference": {
+      "path": ".beep/qualification-local-preflight/ignore-repair-fingerprint.json",
+      "sha256": "f644332d01174cb39fec10b5c7812226d6a66ff57b943cc4d4a58a25a6bca43b"
+    },
+    "key": {
+      "computation": "@beep/identity#lint",
+      "layer": "turbo-task-result",
+      "profile": "local-linux-x64-bun1.4.2",
+      "epoch": "qualification-v2"
+    },
+    "configurationDigest": "486c215d583ab736150b53af1f2c51d8c7635eeea11d8f5a8a2fb177995b9400",
+    "toolchainDigest": "737b57fd796b2768072d8d01bdf9bbaef4669a1541b3caac9bee0faa53e4e682"
+  },
+  "activationPreview": {
+    "path": "goals/turborepo-task-qualification/research/ignore-repair-activation-preview.json",
+    "sha256": "dceaa1d341a5f1416aaf320eb2785e59ae4a6c069feea16add0c9f43c48b27fc"
+  },
+  "sourceAttachment": {
+    "reference": {
+      "path": ".beep/qualification-local-preflight/census-ignore-repair-attached.json",
+      "sha256": "4e906cbfe7674bd95a8686496c3f0fe776b67c43dcbfebc38d6ff3f7df241b59"
+    },
+    "request": {
+      "path": "goals/turborepo-task-qualification/research/ignore-repair-entrypoint-request.json",
+      "sha256": "a7d34ce6cb63dcaf351c94090e647c373d4fb2b4b383841cb99cd26e9a930f61"
+    },
+    "verifiedBindings": 275,
+    "completeDocumentsPreserved": 6,
+    "unresolved": [
+      "Candidate semantic reads, writes, captures and signed/shadow comparisons remain required.",
+      "Classify nested workspace and root command semantics.",
+      "Entrypoint attachments establish source identity only; candidate runtime evidence remains required.",
+      "Hosted expanded workflows, remote action sources and required statuses retain their existing proof owners.",
+      "Review dynamic CI/Quality/Yeet entrypoint branches and their external verdicts.",
+      "Source planner scenarios do not exhaust dynamic interpreter decisions or prove their runtime outcomes."
+    ],
+    "workspaces": 142,
+    "graphNodes": 2840,
+    "executableNodes": 1480,
+    "onlyCommandGroupCensusReferenceChanged": true
+  },
+  "runtimeEvidence": [
+    {
+      "path": "goals/turborepo-task-qualification/research/ignore-invalidation-findings.json",
+      "sha256": "8e440c7db5dd77bb9ca63aa7c6d7a7cb897de89b876cda5324e763d440899296"
+    },
+    {
+      "path": "goals/turborepo-task-qualification/research/ignore-repair-local-verification.json",
+      "sha256": "e97c8c15d141497c087d5fa68f1734336a39c59a943775cc3557e931aae2f60d"
+    }
+  ],
+  "ownedPilotWorktreesRestored": true,
+  "verification": {
+    "identity": {
+      "passed": true,
+      "auditSeconds": 5.6,
+      "docgenSeconds": 2.4,
+      "path": ".beep/qualification-local-preflight/ignore-repair-identity-package-verify.log",
+      "sha256": "86c22ee7c14bccd86a581e2956d30e54132293758ae25a5661e2ead459d4091d"
+    },
+    "types": {
+      "passed": true,
+      "auditSeconds": 4.4,
+      "docgenSeconds": 1.4,
+      "path": ".beep/qualification-local-preflight/ignore-repair-types-package-verify.log",
+      "sha256": "edd18039f233d339a04ac578e5e56a9fe5fba8bccd2904c547da5b8a39e09482"
+    },
+    "cacheAudit": {
+      "passed": true,
+      "findings": 0,
+      "unassessedCachedComputations": 928,
+      "path": ".beep/qualification-local-preflight/ignore-repair-cache-audit.json",
+      "sha256": "5966fc5b6fdbd83e369a2ce5f71da3c292cd98aeef4f8d3078376342ef9acfb4"
+    },
+    "recipeFormatting": {
+      "passed": true,
+      "path": ".beep/qualification-local-preflight/ignore-repair-recipe-check.log",
+      "sha256": "9827c9c2a003961ec4f91befcd43c369df1af388ae21eb9a70b0b254b3fe2519"
+    },
+    "goalsDoctor": {
+      "passed": true,
+      "newBlockingFindings": 0,
+      "inheritedAdvisories": 4,
+      "path": ".beep/qualification-local-preflight/ignore-repair-goals-doctor.log",
+      "sha256": "83248b4d9820dbab6331d52fd946a2ab0945205cedc7c9f0ef6e9c18d8ee50a1"
+    },
+    "exploreCheck": {
+      "passed": true,
+      "findings": 0,
+      "path": ".beep/qualification-local-preflight/ignore-repair-explore-check.log",
+      "sha256": "a8e9e6963f045eb177b93c100bda803766fed5126e65ec44b4f750b95f828741"
+    },
+    "reflectionArtifacts": {
+      "passed": true,
+      "blockingFindings": 0,
+      "advisoryFindings": 0,
+      "path": ".beep/qualification-local-preflight/ignore-repair-reflection-artifacts.log",
+      "sha256": "dc58e3cf99fff163aa6e100a032a40ab464ea55b3fdd24cbbdcb42f25a1daa90"
+    }
+  },
+  "remaining": [
+    "Durable real-pilot executor and adversarial task-capture boundary",
+    "Complete current-profile fresh comparisons, semantic cases and ten successful shadow decisions per client",
+    "Complete native read/write interpretation",
+    "Accepted signed conformance/trust receipts and direct real-pilot remote comparisons",
+    "Adoption handoff and final Yeet/hosted acceptance"
+  ]
+}

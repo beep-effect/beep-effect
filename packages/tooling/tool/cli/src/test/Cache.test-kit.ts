@@ -14,3 +14,4 @@ export {
   fingerprintCacheComputation,
   projectCacheActivation,
 } from "../commands/Cache/Cache.fingerprint.ts";
+export { extractCachePilotLog } from "../commands/Cache/Cache.pilot.capture.ts";

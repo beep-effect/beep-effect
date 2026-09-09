@@ -1,0 +1,20 @@
+[
+  {
+    "name": "turbo",
+    "version": "2.10.12",
+    "integrity": "sha512-AswgMPnpOoaVZHrrSBejETzEbuIA69OVGwfkHwfrY0A23VjWXBANzgq9+OymWOHAIArB7D1+1z498WY8fGg1Jw==",
+    "shasum": "22f552bd88182d58365960a02e5f45e628fb965b"
+  },
+  {
+    "name": "turbo",
+    "version": "2.10.13-canary.1",
+    "integrity": "sha512-mDQuAWMQeeSj/muAEEkT26qslRY8carRkWdKqZytBGYAKNtsnxibKXjCGQHgG3+aIKmz4jiG+uoEPHFgBiqDhw==",
+    "shasum": "05bf5ba15d881077d94ba24173d3c61ba9433958"
+  },
+  {
+    "name": "bun",
+    "version": "1.4.2",
+    "integrity": "sha512-TrSXo6HJfIEaczpb3kjX82I2pL47vK1QUNmHRCUdz9IzaOwa9lzOXSWwu2l18YHE3sNfGRapVLd4nNm+22vVVA==",
+    "shasum": "79e72a583198bc3cdabe569c8aa83d9f014d6f3d"
+  }
+]

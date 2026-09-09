@@ -5,7 +5,7 @@
  */
 
 import { CacheTaskConfiguration } from "@beep/repo-configs/cache";
-import { Sha256HexFromBytes } from "@beep/schema";
+import { NonNegativeInt, Sha256HexFromBytes } from "@beep/schema";
 import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { Duration, Effect, FileSystem, Order, Path } from "effect";
 import * as A from "effect/Array";
@@ -14,7 +14,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { configStringOption } from "../../internal/cli/EnvConfig.ts";
-import { hashFileSha256 } from "../../internal/cli/FsGuards.ts";
+import { hashFileSha256, readContainedFileBytesNoFollow } from "../../internal/cli/FsGuards.ts";
 import { OutputBound, runCaptured } from "../../internal/process/index.ts";
 import { resolveCacheTurboBinary } from "./Cache.census.ts";
 import {
@@ -71,7 +71,7 @@ const toDefinition = (node: CacheCensusNode): CacheCensusDefinition =>
   });
 
 /**
- * Observe the first supported runtime profile without invoking package-manager installation fallbacks.
+ * Observe an explicitly supported runtime matching the repository's bounded Bun pin.
  *
  * **Example** (Plan toolchain observation)
  *
@@ -97,10 +97,17 @@ export const collectCacheToolchain = Effect.fn("CacheFingerprint.toolchain")(fun
   const biomePath = path.join(root, "node_modules/@biomejs/cli-linux-x64/biome");
   if (!(yield* fs.exists(biomePath))) return yield* CacheCommandError.new("The glibc Biome binary is not installed.");
   const bun = yield* fingerprintExecutable(root, bunPath);
-  if (bun.version !== "1.4.1")
-    return yield* CacheCommandError.new("The named qualification profile requires Bun 1.4.1.");
+  const declared = yield* readContainedFileBytesNoFollow(root, ".bun-version", NonNegativeInt.make(128));
+  const declaration = yield* declared.contents.pipe(
+    Effect.fromOption(() => CacheCommandError.new("A regular bounded .bun-version file is required."))
+  );
+  if (bun.version !== Str.trim(new TextDecoder().decode(declaration)))
+    return yield* CacheCommandError.new("The observed Bun runtime differs from the repository .bun-version pin.");
+  const profile = yield* S.decodeUnknownEffect(CacheToolchainSnapshot.fields.profile)(
+    `local-linux-x64-bun${bun.version}`
+  );
   const sources = yield* Effect.forEach(
-    [".bun-version", ".nvmrc", "bun.lock", "node_modules/turbo/bin/turbo", "node_modules/@biomejs/biome/bin/biome"],
+    [".nvmrc", "bun.lock", "node_modules/turbo/bin/turbo", "node_modules/@biomejs/biome/bin/biome"],
     Effect.fn("CacheFingerprint.toolSource")(function* (relative) {
       return CacheCensusSource.make({
         path: relative,
@@ -111,14 +118,17 @@ export const collectCacheToolchain = Effect.fn("CacheFingerprint.toolchain")(fun
     })
   );
   return CacheToolchainSnapshot.make({
-    profile: "local-linux-x64-bun1.4.1",
+    profile,
     kernel,
     libc,
     bun,
     node: yield* fingerprintExecutable(root, nodePath),
     turbo: yield* fingerprintExecutable(root, turboPath),
     biome: yield* fingerprintExecutable(root, biomePath),
-    sources,
+    sources: [
+      CacheCensusSource.make({ path: ".bun-version", sha256: yield* S.decodeEffect(Sha256HexFromBytes)(declaration) }),
+      ...sources,
+    ],
   });
 }, CacheCommandError.mapError("Cannot fingerprint the qualification runtime."));
 
@@ -154,6 +164,8 @@ export const fingerprintCacheComputation = Effect.fn("CacheFingerprint.computati
 ) {
   if (key.profile !== toolchain.profile)
     return yield* CacheCommandError.new("Computation and observed toolchain use different profiles.");
+  if (toolchain.profile !== `local-linux-x64-bun${toolchain.bun.version}`)
+    return yield* CacheCommandError.new("The observed Bun version differs from its named profile.");
   const target = yield* A.findFirst(census.nodes, (node) => node.id === key.computation && O.isSome(node.command)).pipe(
     Effect.fromOption(() => CacheCommandError.new("A missing or graph-only computation has no executable fingerprint."))
   );

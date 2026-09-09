@@ -1,6 +1,6 @@
 {
   "schemaVersion": "cache-qualification-store/v1",
-  "revision": 1,
+  "revision": 3,
   "entries": [
     {
       "key": {
@@ -17,6 +17,44 @@
           "basis": {
             "path": "goals/turborepo-task-qualification/research/unsafe-lint-review.md",
             "sha256": "a085a59542f447f3c5042378a30bcde786b9ca430384b7a16e1f31fa79a4ea98"
+          }
+        }
+      }
+    },
+    {
+      "key": {
+        "computation": "@beep/identity#lint",
+        "layer": "turbo-task-result",
+        "profile": "local-linux-x64-bun1.4.2",
+        "epoch": "qualification-v2"
+      },
+      "status": {
+        "state": "excluded",
+        "review": {
+          "reviewer": "goal-executor",
+          "reason": "Attribute operator-authorized main integration and exclude the pilot until Bun 1.4.2 and generated-wrapper evidence passes.",
+          "basis": {
+            "path": "goals/turborepo-task-qualification/research/post-merge-baseline-review.md",
+            "sha256": "7f19efb015534113a6d7ffe216fbb31bdcf2ef79060d9edb9c828bbe184132f9"
+          }
+        }
+      }
+    },
+    {
+      "key": {
+        "computation": "@beep/types#lint",
+        "layer": "turbo-task-result",
+        "profile": "local-linux-x64-bun1.4.2",
+        "epoch": "qualification-v2"
+      },
+      "status": {
+        "state": "excluded",
+        "review": {
+          "reviewer": "goal-executor",
+          "reason": "Repair the observed identity root-ignore hash omission and exclude the independently reproduced unsafe types lint dependency. No cache activation.",
+          "basis": {
+            "path": "goals/turborepo-task-qualification/research/ignore-repair-baseline-review.md",
+            "sha256": "f1dc3434710ee3116a576216e0ae2db8b576f3804b6dd04dccc997fe0cd5c210"
           }
         }
       }
@@ -40,6 +78,50 @@
             "basis": {
               "path": "goals/turborepo-task-qualification/research/unsafe-lint-review.md",
               "sha256": "a085a59542f447f3c5042378a30bcde786b9ca430384b7a16e1f31fa79a4ea98"
+            }
+          }
+        }
+      }
+    },
+    {
+      "revision": 2,
+      "entry": {
+        "key": {
+          "computation": "@beep/identity#lint",
+          "layer": "turbo-task-result",
+          "profile": "local-linux-x64-bun1.4.2",
+          "epoch": "qualification-v2"
+        },
+        "status": {
+          "state": "excluded",
+          "review": {
+            "reviewer": "goal-executor",
+            "reason": "Attribute operator-authorized main integration and exclude the pilot until Bun 1.4.2 and generated-wrapper evidence passes.",
+            "basis": {
+              "path": "goals/turborepo-task-qualification/research/post-merge-baseline-review.md",
+              "sha256": "7f19efb015534113a6d7ffe216fbb31bdcf2ef79060d9edb9c828bbe184132f9"
+            }
+          }
+        }
+      }
+    },
+    {
+      "revision": 3,
+      "entry": {
+        "key": {
+          "computation": "@beep/types#lint",
+          "layer": "turbo-task-result",
+          "profile": "local-linux-x64-bun1.4.2",
+          "epoch": "qualification-v2"
+        },
+        "status": {
+          "state": "excluded",
+          "review": {
+            "reviewer": "goal-executor",
+            "reason": "Repair the observed identity root-ignore hash omission and exclude the independently reproduced unsafe types lint dependency. No cache activation.",
+            "basis": {
+              "path": "goals/turborepo-task-qualification/research/ignore-repair-baseline-review.md",
+              "sha256": "f1dc3434710ee3116a576216e0ae2db8b576f3804b6dd04dccc997fe0cd5c210"
             }
           }
         }

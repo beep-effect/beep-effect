@@ -12,6 +12,24 @@ import { CacheExecutablePin } from "./Cache.schemas.ts";
 const $I = $RepoCliId.create("commands/Cache/Cache.experiment.schemas");
 
 /**
+ * Native Bun binary and its independently observed version/content pin.
+ *
+ * **Example** (Inspect the runtime identity)
+ *
+ * ```ts
+ * import { CacheFixtureRuntime } from "@beep/repo-cli/commands/Cache"
+ * console.assert("pin" in CacheFixtureRuntime.fields)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CacheFixtureRuntime extends S.Class<CacheFixtureRuntime>($I`CacheFixtureRuntime`)(
+  { executable: S.NonEmptyString, pin: CacheExecutablePin },
+  $I.annote("CacheFixtureRuntime", { description: "Explicit native runtime used by a disposable fixture." })
+) {}
+
+/**
  * Exact native client selected for a disposable local experiment.
  *
  * **Example** (Inspect the request fields)
@@ -25,7 +43,13 @@ const $I = $RepoCliId.create("commands/Cache/Cache.experiment.schemas");
  * @since 0.0.0
  */
 export class CacheSyntheticRequest extends S.Class<CacheSyntheticRequest>($I`CacheSyntheticRequest`)(
-  { channel: CacheClientChannel, client: CacheClientPin, executable: S.NonEmptyString },
+  {
+    channel: CacheClientChannel,
+    client: CacheClientPin,
+    executable: S.NonEmptyString,
+    bun: CacheFixtureRuntime,
+    alternateBun: CacheFixtureRuntime,
+  },
   $I.annote("CacheSyntheticRequest", {
     description: "Pinned native Turbo client for a network-isolated local fixture.",
   })
@@ -94,6 +118,7 @@ export class CacheSyntheticRun extends S.Class<CacheSyntheticRun>($I`CacheSynthe
   {
     id: S.NonEmptyString,
     root: S.NonEmptyString,
+    bunSha256: Sha256Hex,
     taskHash: S.String.check(S.isPattern(/^[a-f0-9]{16}$/)),
     origin: CacheLocalOrigin,
     exitCode: S.Int,
@@ -176,10 +201,11 @@ export class CacheSyntheticNonExecution extends S.Class<CacheSyntheticNonExecuti
  */
 export class CacheSyntheticReceipt extends S.Class<CacheSyntheticReceipt>($I`CacheSyntheticReceipt`)(
   {
-    schema: S.tag("cache-synthetic-local/v2"),
+    schema: S.tag("cache-synthetic-local/v3"),
     channel: CacheClientChannel,
     client: CacheClientPin,
     bun: CacheExecutablePin,
+    alternateBun: CacheExecutablePin,
     fixtureSha256: Sha256Hex,
     runs: S.NonEmptyArray(CacheSyntheticRun),
     nonExecutions: S.Array(CacheSyntheticNonExecution),
