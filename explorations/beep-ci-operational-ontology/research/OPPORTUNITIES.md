@@ -222,3 +222,14 @@
 - **Prevention:** encode checkout labels into single output path components in
   both generators, compare tracked inventories with manifests, and run ordinary
   verification from a detached worktree of the actual committed HEAD.
+
+## 2026-09-08: detached verification hits mise directory trust before Python
+
+- **Work:** running both corpus verifiers in the disposable committed-HEAD worktree.
+- **Evidence:** the `uv` shim exited before starting Python because the new
+  worktree's `mise.toml` was `not trusted`. The committed corpus had not been read.
+- **Prevention:** resolve the existing offline Python environment in the trusted
+  lane first, then use its interpreter for the detached-worktree verification
+  while the owning `uv` process remains alive (its temporary environment is removed
+  when that process exits).
+  A committed-byte check needs no new tool installation or machine trust change.

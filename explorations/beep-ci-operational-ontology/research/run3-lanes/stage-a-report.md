@@ -253,7 +253,7 @@ were recomputed for the final review-fix capture. Sort relative POSIX file names
 then feed each UTF-8 name and its file contents (including `MANIFEST.yaml`) into
 SHA-256, each preceded by its length as an 8-byte big-endian unsigned integer:
 
-- `run3-fleet`: `cdb45ade19a3bfa54a8b56859400a1344298e20eddedcec4511b0ecf61972096`.
+- `run3-fleet`: `c9b8a20bf095bf1e47a5629ae8b02c34ef6c6138650fdda63120c9e17438385b`.
 - `run3-checkout-identity`: `aa7c3ced17667a01c7ebc34f708e092e6288aa341f081abf7a98a9f6f7e8f477`.
 
 - Generator regression suite: **11 tests pass**, including v1/v2/v3 rows,
