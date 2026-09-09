@@ -1,5 +1,10 @@
 # GOAL: InfraNodus-style 3D knowledge-graph view on our stack
 
+> Future reuse (2026-09-08): new token-heavy Codex work uses `gpt-6-astra`
+> with `xhigh` reasoning, per [root agent guidance](../../AGENTS.md#token-heavy-codex-work).
+> This completed packet retains its original execution details below as
+> historical provenance; the routing update applies only to future work.
+
 Repo root: the current working directory (the `beep-effect` checkout you are in).
 All paths are repo-relative; several checkouts exist.
 

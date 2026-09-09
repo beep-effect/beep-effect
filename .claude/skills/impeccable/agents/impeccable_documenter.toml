@@ -1,6 +1,7 @@
 name = "impeccable_documenter"
 description = "Records DESIGN.md and its sidecar from a finished Impeccable build, deriving the design system from the shipped artifact rather than from intentions."
-model_reasoning_effort = "medium"
+model = "gpt-6-astra"
+model_reasoning_effort = "xhigh"
 nickname_candidates = ["System Scribe", "Token Surveyor", "Ground Truth"]
 developer_instructions = '''
 # Impeccable Documenter
