@@ -51,7 +51,8 @@
     "@effect/platform-bun": "catalog:",
     "@effect/vitest": "catalog:",
     "@types/node": "catalog:",
-    "@types/react": "catalog:"
+    "@types/react": "catalog:",
+    "bun-types": "catalog:"
   },
   "exports": {
     "./package.json": "./package.json",

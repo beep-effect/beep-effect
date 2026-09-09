@@ -433,6 +433,7 @@
         "@effect/vitest": "catalog:",
         "@types/bun": "catalog:",
         "@types/node": "catalog:",
+        "bun-types": "catalog:",
         "effect": "catalog:",
         "typescript": "catalog:",
         "vitest": "catalog:",
@@ -480,6 +481,7 @@
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
+        "bun-types": "catalog:",
       },
     },
     "packages/agents/domain": {
@@ -497,6 +499,7 @@
         "@effect/platform-node": "catalog:",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
+        "bun-types": "catalog:",
       },
     },
     "packages/agents/server": {
@@ -522,6 +525,7 @@
         "@effect/platform-bun": "catalog:",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
+        "bun-types": "catalog:",
       },
     },
     "packages/agents/tables": {
@@ -557,6 +561,7 @@
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
+        "bun-types": "catalog:",
       },
     },
     "packages/architecture-lab/client": {
@@ -738,6 +743,7 @@
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
+        "bun-types": "catalog:",
       },
     },
     "packages/documents/use-cases": {
@@ -1380,6 +1386,7 @@
         "@effect/platform-node": "catalog:",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
+        "bun-types": "catalog:",
       },
     },
     "packages/drivers/pretext": {
@@ -1668,6 +1675,7 @@
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
+        "bun-types": "catalog:",
         "drizzle-orm": "catalog:",
       },
     },
@@ -1881,6 +1889,7 @@
         "@effect/vitest": "catalog:",
         "@types/bun": "catalog:",
         "@types/node": "catalog:",
+        "bun-types": "catalog:",
       },
     },
     "packages/foundation/capability/observability": {
@@ -1907,6 +1916,7 @@
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
+        "bun-types": "catalog:",
       },
     },
     "packages/foundation/capability/semantic-web": {
@@ -1996,6 +2006,7 @@
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
+        "bun-types": "catalog:",
         "micromark": "catalog:",
       },
     },
@@ -2013,6 +2024,7 @@
         "@effect/vitest": "catalog:",
         "@types/bun": "catalog:",
         "@types/node": "catalog:",
+        "bun-types": "catalog:",
       },
     },
     "packages/foundation/modeling/ontology": {
@@ -2107,6 +2119,7 @@
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
         "@types/react": "catalog:",
+        "bun-types": "catalog:",
       },
     },
     "packages/foundation/modeling/skill-contract": {
@@ -2140,6 +2153,7 @@
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
         "@types/picomatch": "catalog:",
+        "bun-types": "catalog:",
         "type-fest": "catalog:",
       },
     },
@@ -2368,6 +2382,7 @@
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
+        "bun-types": "catalog:",
       },
     },
     "packages/law-practice/server": {
@@ -2404,6 +2419,7 @@
         "@effect/vitest": "catalog:",
         "@electric-sql/pglite": "catalog:",
         "@types/node": "catalog:",
+        "bun-types": "catalog:",
       },
     },
     "packages/law-practice/tables": {
@@ -2442,6 +2458,7 @@
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
+        "bun-types": "catalog:",
       },
     },
     "packages/ontology/client": {
@@ -2493,6 +2510,7 @@
       "devDependencies": {
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
+        "bun-types": "catalog:",
       },
     },
     "packages/ontology/server": {
@@ -2517,6 +2535,7 @@
         "@effect/platform-node": "catalog:",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
+        "bun-types": "catalog:",
       },
     },
     "packages/ontology/ui": {
@@ -2563,6 +2582,7 @@
         "@effect/platform-node": "catalog:",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
+        "bun-types": "catalog:",
         "esbuild": "catalog:",
       },
     },
@@ -2581,6 +2601,7 @@
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
+        "bun-types": "catalog:",
       },
     },
     "packages/shared/tables": {
@@ -2596,6 +2617,7 @@
         "@beep/utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
+        "bun-types": "catalog:",
       },
     },
     "packages/shared/use-cases": {
@@ -2637,6 +2659,7 @@
         "@effect/platform-node": "catalog:",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
+        "bun-types": "catalog:",
       },
     },
     "packages/tooling/library/ai-sync": {
@@ -2711,6 +2734,7 @@
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
+        "bun-types": "catalog:",
       },
     },
     "packages/tooling/policy-pack/lint-rules": {
@@ -2795,6 +2819,7 @@
         "@types/bun": "catalog:",
         "@types/node": "catalog:",
         "@types/pg": "^8.20.0",
+        "bun-types": "catalog:",
       },
     },
     "packages/tooling/tool/cli": {
@@ -2895,6 +2920,7 @@
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
+        "bun-types": "catalog:",
         "drizzle-orm": "catalog:",
       },
     },
@@ -2923,6 +2949,7 @@
         "@effect/vitest": "catalog:",
         "@electric-sql/pglite": "catalog:",
         "@types/node": "catalog:",
+        "bun-types": "catalog:",
         "docx": "catalog:",
       },
     },
@@ -2939,6 +2966,7 @@
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
+        "bun-types": "catalog:",
       },
     },
     "packages/workspace/use-cases": {
@@ -2956,6 +2984,7 @@
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
+        "bun-types": "catalog:",
       },
     },
     "scratchpad": {

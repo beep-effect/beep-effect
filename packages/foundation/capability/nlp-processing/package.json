@@ -93,7 +93,8 @@
     "@beep/test-utils": "workspace:^",
     "@effect/vitest": "catalog:",
     "@types/bun": "catalog:",
-    "@types/node": "catalog:"
+    "@types/node": "catalog:",
+    "bun-types": "catalog:"
   },
   "beep": {
     "family": "foundation",

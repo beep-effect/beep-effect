@@ -11,6 +11,6 @@
     "noEmit": true,
     "rootDir": "..",
     "sourceMap": false,
-    "types": ["node", "bun"]
+    "types": ["node", "bun-types"]
   }
 }

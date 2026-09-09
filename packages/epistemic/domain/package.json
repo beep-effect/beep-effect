@@ -87,6 +87,7 @@
     "@beep/test-utils": "workspace:^",
     "@effect/vitest": "catalog:",
     "@types/node": "catalog:",
+    "bun-types": "catalog:",
     "drizzle-orm": "catalog:"
   }
 }

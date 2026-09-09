@@ -49,6 +49,7 @@
     "@effect/vitest": "catalog:",
     "@types/node": "catalog:",
     "@types/picomatch": "catalog:",
+    "bun-types": "catalog:",
     "type-fest": "catalog:"
   },
   "exports": {

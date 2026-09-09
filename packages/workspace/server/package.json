@@ -92,6 +92,7 @@
     "@effect/vitest": "catalog:",
     "@electric-sql/pglite": "catalog:",
     "@types/node": "catalog:",
+    "bun-types": "catalog:",
     "docx": "catalog:"
   }
 }
