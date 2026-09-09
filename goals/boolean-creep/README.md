@@ -49,37 +49,38 @@ and compatibility laws remain binding.
 
 ## Latest Evidence
 
-The canonical inventory contains **698 records: 141 qualified and 557 disqualified**
-(D1 375 / D2 182). The qualified set is **111 Tier 1 and 30 Tier 2**; statuses are 23
-historically `reviewed`, 118 `designed`, and 0 `confirmed`. All await replacement
+The canonical inventory contains **738 records: 146 qualified and 592 disqualified**
+(D1 382 / D2 210). The qualified set is **115 Tier 1 and 31 Tier 2**; statuses are 23
+historically `reviewed`, 123 `designed`, and 0 `confirmed`. All await replacement
 independent review.
 
-Current source HEAD is `1c07c15495aaa42f521b887b01e943e68804606c`, after
-merging main `3657f8f97f7135c53c3c0b9fa99aa19093c3e5ee` forward. The
-[source-forward receipt](./data/r29-post-primary-main-forward.json) accounts
-for three changed census files and the Biome configuration change. The merge
-preserved 1,223 packet files byte for byte; three packet routing files received
-only their expected upstream updates. Commit
-`ac426bee8bf006ef342022dffe728b1ed5e551d0` records the preceding packet work.
-Round 29 launched earlier at `115b761d533684c5abf4ab9de83d970243c79dfc` over
-main `5fc065daff16300b8435eca3f32d55564664f57c`; its concurrent settings commit
-and raw source failure remain historical evidence. Package/app source and
-selected dependency inputs now match merged main. The [17-design installation](./data/pre-r29-main-5fc065-parent-integration.json)
-applies the reviewed main-impact corrections, preserves exact originals, and
-records 34 row replacements, one excluded-parameter withdrawal and one distinct
-D1 request owner. Inventory counts and landing tiers are unchanged. Its source
-rebind verifies 53 unchanged files and explicitly accounts for the scheduler
-test fixture changed by the latest main commit. The separate
-[scheduler installation](./data/pre-r29-main-5fc065-scheduler-integration.json)
-updates both affected designs and rows while preserving the new polling and
-concurrency behavior. All 19 design updates are installed; both packet validators
-pass.
+Current source HEAD is `e7b1e907726421c7d2a2e1cdd140280df47f2353`, after
+merging main `bed30c6adf3beed7de8538209fbdc84d26a3b8ce` forward. Commit
+`8804a1b7d9fc65c07ea5db063b6d119e818e583b` preserves the finalized Round 29
+packet. The merge preserved all 1,252 packet files byte for byte, and the
+frozen dependency install passed. The [source-forward receipt](./data/pre-r30-main-bed30-source-forward.json)
+records 17 changed census files and five additions, bringing the next complete
+corpus to 3,049 files across 27 lanes. Package/app source matches merged main.
+
+The [pre-round installation](./data/pre-r30-main-bed30-parent-integration.json)
+refreshes four complete Quality designs and their rows, plus 18 disqualified
+source locators. The other 676 rows retain their exact bytes; all statuses,
+qualifications, state counts and tiers are unchanged. It preserves concurrent
+quality execution with serial journal/proof writes, the exported test-selection
+result, the broader raw coverage helper, and identical same-scan JSDoc mirrors.
+Exact originals are archived and both full packet validators pass. These are
+P2 corrections; independent P3 and implementation remain pending.
+
+Round 29 launched at `115b761d533684c5abf4ab9de83d970243c79dfc` over main
+`5fc065daff16300b8435eca3f32d55564664f57c`. Its intermediate main-forward
+corrections, raw settings-commit source failure and finalization bindings remain
+immutable historical evidence. The current installation does not rewrite them.
 
 [Round 29](./data/sweeps/refresh-2026-09-09-r29-main-5fc065/lane-map.json)
 finished all 27 primary lanes over 3,044 source files. Every lane command
 and report validator passed; native reconciliation is finalized below.
 The [launch admission](./data/sweeps/refresh-2026-09-09-r29-main-5fc065/launch-admission.json)
-binds the current 674-record inventory, every included file, all 139 designs,
+binds the launch-time 674-record inventory, every included file, all 139 designs,
 dependencies, runner, formatter and completed preceding verdict. The
 [created-input check](./data/sweeps/refresh-2026-09-09-r29-main-5fc065/launch-created-inputs.json)
 confirms the actual seed and lane map match those inputs. These launch checks
@@ -116,17 +117,36 @@ All raw reports remain unchanged. The [final R29 verdict](./data/sweeps/refresh-
 closes reconciliation as source-invalid and wet, with three new qualifications,
 one qualified withdrawal and zero dry credit. Both packet validators pass.
 
-Fresh tracking main has advanced to
-`c12c6ae651a3facc3f6e6a5190fd84670ef8a014`, adding the canonical memory
-filesystem and package test-typecheck coverage. The installed corrections
-retain their verified 1c07/3657 source pin. A forward merge and source-impact
-audit precede the next census or formal verification.
+[Round 30](./data/sweeps/refresh-2026-09-09-r30-main-bed30c/lane-map.json)
+completed all 27 lanes across 3,049 source files without source drift. Its [launch admission](./data/sweeps/refresh-2026-09-09-r30-main-bed30c/launch-admission.json)
+and [created-input verification](./data/sweeps/refresh-2026-09-09-r30-main-bed30c/launch-created-inputs.json)
+bind the installed 698-record inventory, all 141 designs, source files,
+dependencies and runner. The private runner pins every rendered prompt to the
+admitted source and refuses HEAD/pointer drift. It accepts Round 29 as a
+finalized source-invalid predecessor without granting completion or dry credit.
+The [final round verdict](./data/sweeps/refresh-2026-09-09-r30-main-bed30c/round-verdict.json)
+records complete native reconciliation: all 27 footers, 698 seed dispositions
+and 50 raw occurrences. The [parent integration](./data/r30-parent-integration.json)
+adds five designed qualifications and 35 census exclusions, corrects seven
+existing anchors/kinds, and preserves original inventory and design bytes.
+Both packet validators pass for 738 records and 146 designs. This round is wet
+and earns no dry or independent-review credit. Main advanced
+to `d68f1a11dd41579660a6c72f3d3e060d6b61352d` after execution. That update must
+be merged and revalidated before the next census or review. Two current-source
+dry rounds remain required.
 
-The scanner prerequisite passed all 34 full Yeet verification lanes on main
-`de84d4218e935d1dae6519a9d537ba9468b18eff`. Its isolated branch then advanced
-to `3657f8f97f7135c53c3c0b9fa99aa19093c3e5ee`, preserving the reviewed
-one-file patch byte for byte. Canonical Yeet publication is now proving that
-updated source before pushing. No hosted or merge completion is claimed.
+The [scanner prerequisite proof](./data/scanner-prerequisite-main-bed30-proof.json)
+records the failed publication and its source/base attribution. The old-source
+preview met its original coverage floors but was compared with later main floors.
+No push or PR creation occurred in that attempt. The isolated branch merged main
+bed30 at `a7e15be843bd0142aff7a9903302b73394f7b156`; the reviewed .gitleaks.toml
+patch was then its only diff from main. The frozen install passed, but canonical
+full Yeet verification failed three inherited QualityScheduler.ts coverage floors
+with source and baseline both on bed30. All other lanes passed. A public
+admissionStatus regression test now passes all five focused-suite tests and full
+package verification (audit and docgen). Scheduler source and coverage floors
+remain unchanged. Canonical Yeet publication with full proof and PR creation is
+running. No current full, hosted or merge completion is claimed.
 
 The preceding R28 source was `93217d998f851e2e93d9864e2b5315552eaa58a7`, after merging
 main `d1b4d769fbaffddd55717f3b1ba461897dd545c5` forward. The packages/apps
@@ -207,7 +227,7 @@ qualified callable withdrawals. It receives no dry credit. Its immutable
 941-record snapshot contains 162 qualified cases; the later Tika callable
 withdrawal produced the 940-record immutable seed for round 27.
 
-All 141 current qualified cases have design documents. Inventory and design
+All 146 current qualified cases have design documents. Inventory and design
 coverage validate structurally. Modeling, chart-layout, graph-worker retry,
 transcript, Hero playback and receipt occupancy corrections are integrated.
 The L–Q integration adds resolved coverage/test lanes and corrects raw requests.

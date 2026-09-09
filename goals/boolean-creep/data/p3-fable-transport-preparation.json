@@ -1,0 +1,20 @@
+{
+  "kind": "fable-review-transport-preparation",
+  "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+  "decision": "Fable independent P3 remains required by DECISIONS.md.",
+  "privateBundleManifestSha256": "0427ef8e01dfda504c8aef755cbdf4221e0e7de73418574b7103fc69a7aefa00",
+  "requestedModel": "claude-fable-5-1[1m]",
+  "requestedEffort": "high",
+  "observedCliVersion": "2.1.266",
+  "transportTestMethods": 5,
+  "negativeMutationSubcases": 23,
+  "validatorFixtureCases": 6,
+  "syntheticTestsPassed": true,
+  "canonicalReviewToolsChanged": false,
+  "actualModelInvocation": false,
+  "formalIndependentReview": false,
+  "dryGateSatisfied": false,
+  "fullControllerAndAdmissionPending": true,
+  "reviewerValue": "claude-cli-fable",
+  "evidenceLimit": "This proves the prepared parser and validator on synthetic events only. No design has received replacement P3 approval."
+}

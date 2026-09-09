@@ -945,3 +945,62 @@ incoming routing substitutions instead proved all other bytes preserved across
 includes `biome.jsonc`, whose Graft exclusions changed on main; package manifests
 and lock bytes stayed unchanged. Inspect the manifest's actual categories and
 compare merge deltas without discarding intentional branch content.
+
+### Locator installation confused classification with its explanatory note
+
+The pre-R30 parent installation stopped before canonical writes with
+`AssertionError: ('ci-lane-run-options', 'disqualifier')`. The prepared D rows
+retain their D1/D2 classes but prefix the nested explanatory note with its
+historical source pin; one extracted cleanup owner has a newly verified note.
+The guard incorrectly required that entire object to remain byte-identical.
+Compare the class separately, verify the exact approved note transformation,
+and keep all other classification fields unchanged. Preserve the failed private
+preparation before retrying the corrected guard.
+
+### Moving coverage baseline invalidated an otherwise fixed merge preview
+
+The scanner prerequisite's full publication measured merge preview `fead5181b23b`
+against source main `3657f8f97f71`, but coverage comparison used the later
+`bed30c6adf3b` floors. It reported 17 regressions across five CLI files; every
+measured value met the corresponding original-source floor. For example,
+Quality.command.ts line coverage was 48.69 against an original floor of 40.67,
+but the failed comparison demanded the new 56.3 floor. The scanner patch changes
+only .gitleaks.toml. Preserve the failed proof, merge current main forward, and
+rerun the full proof. Freeze the comparison baseline with the admitted source
+to prevent a later ref update from changing acceptance during a long run.
+
+### Current-source verification exposed an inherited scheduler coverage gap
+
+After merging bed30 into the scanner prerequisite, `bun run beep yeet verify`
+still failed coverage for unchanged QualityScheduler.ts: functions 97.20 below
+97.46, lines 98.65 below 98.75, and statements 98.38 below 98.47. Source and
+comparison baseline now share bed30; this is separate from the earlier moving
+baseline failure. All other lanes passed. The verdict's security-repair hint
+did not match the authoritative coverage failure. Preserve the failed coverage
+and add a public admissionStatus regression test for unsafe directory permissions
+in the isolated prerequisite worktree, then run package and full verification.
+Keep coverage floors unchanged. Precise child-lane failure attribution and a
+behavior test for this existing error boundary would have prevented the delay.
+
+### Census proposals counted payloads and separate option bags as Boolean peers
+
+R30 apps and observability reports proposed four qualifications whose actual
+carriers each contain only one Boolean plus an Option payload or required literal
+field. Examples are VaultChooseRow.disabled/status and the JSONL scan's
+excludedByMaxFileBytes/file. A three-state tuple or implication does not waive
+the entry net of two actual Boolean members. Two other D2 proposals grouped
+separate one-flag configuration calls across a module. Parent source review
+rejected all six before canonical writes and corrected an earlier private D2
+recommendation for JsonlChunkParseResult, also a one-Boolean carrier. Preserve
+the raw reports and the superseded private recommendation. Future prompts should
+separate entry-net proof from payload/cardinality analysis and require the actual
+shared value carrier before recording a candidate.
+
+### Landing list lagged behind reconciled inventory
+
+During R30 closeout, comparing PLAN.md's landing IDs with the 738-record
+inventory found the withdrawn Codegen parameter owner still listed and eight
+current qualifications absent, including three from R29. The landing list now
+contains all 146 qualified IDs exactly once, with 115 Tier 1 and 31 Tier 2
+placements. An inventory-derived parity check during each reconciliation would
+prevent the packet's implementation order from lagging behind its canonical state.

@@ -21,8 +21,7 @@ The values are local Booleans, not callable predicates or anonymous input flags.
 Readers at1719–1737 log a hit and return the existing reused outcome only for
 active reuse. Miss and shadow hit execute the command at1740–1757. The pair is
 not returned, encoded, or stored. The new outcome object at1702–1709 contains
-separate run-result fields; the R30 GithubCheckLaneOutcome design owns their
-migration, outside this pair's guard accounting.
+independent run-result fields; it is outside this pair's guard accounting.
 
 ## Cardinality gap
 
@@ -75,7 +74,7 @@ compatibility object with the two flags.
 | `Quality.schemas.ts`, existing schema import in `Tasks.ts` | Define/import the one annotated kit and derived type; document its intentionally exported schema surface. Existing required `GithubCheckLaneSpec.tier` at1108–1118 and tier kit at896–909 stay exact. |
 | `Tasks.ts:1716–1737` | Replace the local pair and hit/reuse readers. Reused still returns the same `GithubCheckLaneOutcome`: original lane/session, `Some(QualityTaskLaneRun.make(...))`, status reused, inputDigest None, empty failures, reused true, stopAfterRed false. |
 | `Tasks.ts:1740–1758` | Miss/shadow keep the current log, per-lane collector with concurrency1 and `ignoreQualityTaskLaneRun`, optional first run, full failures, reused false and precise-red stop predicate. No journal write moves into this concurrent lane body. |
-| `Tasks.ts:1656–1666,1760–1779` | Preserve observer default versus ignored observer; keep successful-only proof persistence, optional duration fallback0, complete session payload, and caught warning. Outcome flags are outside this cluster; the R30 GithubCheckLaneOutcome design owns their migration. Preserve all optional fields. |
+| `Tasks.ts:1656–1666,1760–1779` | Preserve observer default versus ignored observer; keep successful-only proof persistence, optional duration fallback0, complete session payload, and caught warning. No change to new outcome flags or optional fields is authorized by this cluster. |
 | `Tasks.ts:1794–1833` | The only runtime caller executes chunks concurrently, then folds outcomes in declaration order. Preserve `Math.max(1, concurrency)` chunking, serial chunks, active ID accumulation, serial journal append, failure order, stop accumulation and serial proof persistence. Already-started chunk members finish; precise fail-fast reds stop the next chunk. Stopped chunks append skipped records without preparing sessions. |
 | `Tasks.ts:1835–1851,1888–1963` | Preserve skipped/reused/failed/passed precedence, inter-wave stopping, complete lane/run reports, first-red and skipped counts. |
 | `Tasks.ts:2059–2074,3428` | Preserve public runner concurrency default1 and the test collector signature `(label,waves,policy,mode?,concurrency=1)`. Do not exchange the optional mode and concurrency arguments. |
@@ -102,14 +101,13 @@ policy-fingerprint at `Tasks.ts:2600–2601`, remains unchanged by this design.
 Delete two parallel local Boolean values at1717–1718 and the reconstructed
 implication. Replace the reusable gate/log ternary at1719–1720 with exhaustive
 miss/shadow-hit/reused handling; preserve exact hit logs. Replace the active
-branch at1722 with the derived reused case, preserving its returned payloads
-and behavior; the R30 companion owns the outcome representation. Miss/shadow still enter the shared execution path, without cloning it.
+branch at1722 with the derived reused case, keeping its unchanged returned
+outcome. Miss/shadow still enter the shared execution path, without cloning it.
 
 No coherence filter or normalizer currently exists, so none is credited as
-removed. The outcome's `reused` branch at1820 and persistence guard at1763
-are outside R27 deletion accounting. The R30 companion migrates their
-representation while preserving completed-work attribution and proof safety.
-Keep stop state, precise-red scheduling,
+removed. The new outcome's `reused` branch at1820 and persistence guard at1763
+must remain: they distinguish actual completed/reused work after concurrency,
+not the redundant pre-run pair. Keep stop state, precise-red scheduling,
 optional-run checks, failure policy and all ledger safety checks. The dispatch
 must not bring back two equivalent sibling flags under different names.
 

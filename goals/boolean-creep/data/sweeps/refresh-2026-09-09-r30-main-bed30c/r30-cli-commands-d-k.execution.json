@@ -1,0 +1,22 @@
+{
+  "lane": "r30-cli-commands-d-k",
+  "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "e879b891d3e08fe351b878cb89c7ff0a09e311042e4b97ba1b2aea0ddfe5229c",
+  "started": "2026-09-09T13:35:58.860918+00:00",
+  "finished": "2026-09-09T13:48:40.357244+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 22,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-cli-commands-d-k.jsonl`\n\nCounts: **0 confirmed**, **22 disqualified** (19 D2 FileSystem/Bun/sharp object-literals, 3 D1 repo StepExec `extendEnv`/`trim` captures). Validator: `inventory OK: 22 records, 22 unique ids`.\n\nCoverage: every assigned root was inspected (DeletePackage, Docgen, Docs, Explore, Fallow, Files, Goals, Image, Knowledge). Unchanged canonical seeds were not rewritten.\n\nSeed drift (not rewritten): `docgen-config-document-toggles` still owns `[enableSearch, enforceDescriptions, enforceExamples, enforceVersion]`; first Boolean is line 115, canonical citation remains 123 inside the same class. Command-handle seeds still re-anchor to the constructed request objects at the cited handler lines.\n\nOut of net (not recorded): `fallow boundaries` and `explore atlas` `--write`/`--check` (Command.make Flag descriptors + anonymous handler aliases); `goals adopt`/`bootstrap` `plan`/`json` passed through as handler `options`; Knowledge `runRefs` handler flags. Image overwrite-only schemas have a single Boolean each.\n\nNo unresolved source question.\n\n\ud83c\udf31 graft saved ~111,079 tokens this turn (5 calls)",
+  "transcriptSha256": "b4bd38cd9a4e308a9374dc252bb6b7ade375dc064c5fd52591e8904f0a29508b",
+  "runnerSha256": "a4d7f7629866b91b6d007f21235d50d699b49dd3a39d3b60864a91f799bbb355",
+  "seedSha256": "5e0eaffd2584e0d81b780622111bd71862691b4ecd1cdd4038c6e634e5a7da4d",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 22 records, 22 unique ids\n"
+}

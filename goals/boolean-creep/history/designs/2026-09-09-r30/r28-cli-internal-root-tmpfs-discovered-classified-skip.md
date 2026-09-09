@@ -6,7 +6,7 @@ Native P2 design refresh before R29, bound to merged source HEAD
 and cardinality 312/13. Tier 1: ordered Tier1E tooling batches with serial shared-file edits.
 Independent P3 review and implementation acceptance remain pending.
 
-Owner `DiscoveredCandidate` at `packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts:66`,
+Owner `DiscoveredCandidate` at `packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts:65`,
 with members `reapClass`, `classified`, `shapeSkipReason`, `parentRepo`.
 Storage/exposure: stored/internal; target: tagged-union.
 

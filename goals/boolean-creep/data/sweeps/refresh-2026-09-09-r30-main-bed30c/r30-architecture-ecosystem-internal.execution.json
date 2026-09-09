@@ -1,0 +1,22 @@
+{
+  "lane": "r30-architecture-ecosystem-internal",
+  "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "e879b891d3e08fe351b878cb89c7ff0a09e311042e4b97ba1b2aea0ddfe5229c",
+  "started": "2026-09-09T13:01:34.136048+00:00",
+  "finished": "2026-09-09T13:10:57.076220+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-architecture-ecosystem-internal.jsonl`\n\nConfirmed: 0. Disqualified: 0. Validator: `inventory OK: 0 records`.\n\nEvery assigned root was covered (`architecture-lab` client/config/domain/server/tables/ui/use-cases, `effect-drizzle`, `_internal/db-admin`). No new or changed \u22652-boolean clusters. Seeds revalidated in place and left unreposted: `WorkItemPublicConfig` and `readWorkItemConfig.envFlags` still independent D1 feature flags; `Meta` `[hasDefault, primaryKey, unique, version]` still independently patched/applied; `SpecDefinition.timestamp` `[ident, withTimezone]` still coupled at the designed canonical record. No seed drift and no unresolved source question.\n\nOut-of-net (not recorded): single booleans `IndexIntent.unique`, `Edge.optional`, `Classified.nullable`; one-boolean drizzle option objects (`withTimezone`, `autoIncrement`); extras predicates and timestamp/autoIncrement function parameters.",
+  "transcriptSha256": "61c817216c3283aebe76bc84b7041905590a71f734ed52d5cdf0dfc4cb1fda3b",
+  "runnerSha256": "a4d7f7629866b91b6d007f21235d50d699b49dd3a39d3b60864a91f799bbb355",
+  "seedSha256": "5e0eaffd2584e0d81b780622111bd71862691b4ecd1cdd4038c6e634e5a7da4d",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

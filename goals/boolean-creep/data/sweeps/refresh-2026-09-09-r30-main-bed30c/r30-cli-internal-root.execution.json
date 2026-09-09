@@ -1,0 +1,22 @@
+{
+  "lane": "r30-cli-internal-root",
+  "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "e879b891d3e08fe351b878cb89c7ff0a09e311042e4b97ba1b2aea0ddfe5229c",
+  "started": "2026-09-09T13:30:31.391204+00:00",
+  "finished": "2026-09-09T13:40:26.342887+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 1,
+  "qualifiedCandidates": 1,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-cli-internal-root.jsonl`\n\nCounts: 1 confirmed, 0 disqualified. Validator: `inventory OK: 1 records, 1 unique ids`.\n\nCoverage: every assigned root was covered (`bin-main.ts`, `bin.ts`, `index.ts`, and `packages/tooling/tool/cli/src/internal`).\n\nSeed drift: `DiscoveredCandidate` first Boolean moved 65 \u2192 66 (`idleSinceMillis` now occupies 65). Other 18 seeds still exist with the claimed members and the same classification.\n\nOut of net (not recorded): `assertExclusiveModeFlags` `{write,check}` remains a function-parameter type (withdrawn); `Flag.boolean` handles; standalone predicates; single-Boolean models; `RegistrationTarget.private` / `DependentHit.direct` / `LabTargetFacts.localOnly` / `QualityTaskStep.useLocalEnv` are not co-carried Boolean clusters; GitExec capture bags instantiate the already-recorded `RunCapturedStreamsOptions` / `RunCapturedOptions` types.\n\nNo unresolved source question.",
+  "transcriptSha256": "ce0ea4095c4126a5385b87ddae8b0c66ab12744a41dd89932c78c9c1bccc7758",
+  "runnerSha256": "a4d7f7629866b91b6d007f21235d50d699b49dd3a39d3b60864a91f799bbb355",
+  "seedSha256": "5e0eaffd2584e0d81b780622111bd71862691b4ecd1cdd4038c6e634e5a7da4d",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 1 records, 1 unique ids\n"
+}
