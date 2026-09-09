@@ -515,7 +515,7 @@ const stateFromManifestAdoption = (manifest: ExplorationManifestEntry): Explorat
  *
  * ```ts
  * import { buildExplorationProjection } from "@beep/repo-cli/commands/Explore"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * console.log(Effect.isEffect(buildExplorationProjection("."))) // true
  * ```
@@ -636,7 +636,7 @@ export const buildExplorationProjection = Effect.fn("Explore.buildExplorationPro
  *
  * ```ts
  * import { buildExplorationAtlasContent } from "@beep/repo-cli/commands/Explore"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * console.log(Effect.isEffect(buildExplorationAtlasContent("."))) // true
  * ```
@@ -731,7 +731,7 @@ const refuseDrift = Effect.fn("Explore.refuseDrift")(function* (drift: ReadonlyA
  *
  * ```ts
  * import { writeExplorationAtlas } from "@beep/repo-cli/commands/Explore"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * console.log(Effect.isEffect(writeExplorationAtlas())) // true
  * ```
@@ -774,7 +774,7 @@ export const writeExplorationAtlas = Effect.fn("Explore.writeExplorationAtlas")(
  *
  * ```ts
  * import { checkExplorationAtlas } from "@beep/repo-cli/commands/Explore"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * console.log(Effect.isEffect(checkExplorationAtlas("."))) // true
  * ```
