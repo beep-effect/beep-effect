@@ -1,7 +1,7 @@
 import * as F from "@beep/firecrawl";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it, layer } from "@effect/vitest";
-import { Cause, Effect, Equal, Exit, Stream } from "effect";
+import { Cause, Effect, Exit, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -177,16 +177,17 @@ const makeFakeClient = (overrides: Partial<F.FirecrawlSdkClient> = {}): F.Firecr
   return { ...defaults, ...overrides };
 };
 
-const assertRoundTrip = <SchemaT extends S.ConstraintCodec<unknown, unknown, never, never>>(schema: SchemaT): void => {
+const assertRoundTrip = <SchemaT extends S.Codec<unknown, unknown>>(schema: SchemaT): void => {
   const decode = S.decodeUnknownSync(schema);
   const encode = S.encodeSync(schema);
+  const equivalent = S.toEquivalence(schema);
 
   expect(
     Effect.runSync(
       Arbitrary.checkEffect(
         Arbitrary.all([Arbitrary.schema(schema)]),
         ([value]) => {
-          expect(Equal.equals(decode(encode(value)), value)).toBe(true);
+          expect(equivalent(decode(encode(value)), value)).toBe(true);
 
           return true;
         },

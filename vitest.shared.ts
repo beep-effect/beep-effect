@@ -75,11 +75,13 @@ export const fcDeepSweepActive = Number.isInteger(parsedFcNumRuns) && parsedFcNu
 // cheap synchronous walk of `test/` under the vitest root (the package cwd).
 // The snapshot's native Arbitrary model replaced the fast-check bridge: property
 // files now import `effect/unstable/arbitrary/Arbitrary` and call `it.prop`,
-// `it.effect.prop`, `Arbitrary.checkEffect`, or `Arbitrary.sampleEffect`. The
-// legacy FastCheck/fc shapes stay matched so an unmigrated straggler is still
+// `it.effect.prop`, `Arbitrary.checkEffect`, or `Arbitrary.sampleEffect`.
+// The shared assertion helper also runs native properties without a direct Arbitrary
+// import at the call site, so helper-only files must remain in the deep sweep.
+// The legacy FastCheck/fc shapes stay matched so an unmigrated straggler is still
 // swept rather than silently dropped from the deep lane.
 const propertyTestMarker =
-  /\bFastCheck\b|\bfast-check\b|\bit\.prop\b|\bit\.effect\.prop\b|\bArbitrary\.(?:checkEffect|sampleEffect|schema)\b|\bunstable\/arbitrary\/Arbitrary\b|\bfc\.(?:property|asyncProperty|assert|sample|check)\b/;
+  /\bFastCheck\b|\bfast-check\b|\bit\.prop\b|\bit\.effect\.prop\b|\bassertSchemaArbitraryDecodesToSelf\b|\bArbitrary\.(?:checkEffect|sampleEffect|schema)\b|\bunstable\/arbitrary\/Arbitrary\b|\bfc\.(?:property|asyncProperty|assert|sample|check)\b/;
 const testFilePattern = /\.test\.tsx?$/;
 const scanSkippedDirectories: ReadonlyArray<string> = ["node_modules", ".context", "fixtures"];
 const listTestFiles = (directory: string): ReadonlyArray<string> => {

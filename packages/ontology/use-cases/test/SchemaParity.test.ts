@@ -26,7 +26,7 @@ import { makeDataset, makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf/Rdf
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Equal, Option as O, Result } from "effect";
+import { Option as O, Result } from "effect";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
@@ -51,9 +51,7 @@ const quad = makeQuad(
 );
 const dataset = makeDataset([quad]);
 
-const schemaRoundTripCases: ReadonlyArray<
-  readonly [string, S.Top & S.ConstraintDecoder<unknown> & S.ConstraintEncoder<unknown>]
-> = [
+const schemaRoundTripCases: ReadonlyArray<readonly [string, S.Codec<unknown, unknown>]> = [
   ["OpenOntologyFileCommand", OpenOntologyFileCommand],
   ["OpenOntologyDocumentResult", OpenOntologyDocumentResult],
   ["SaveOntologyDocumentResult", SaveOntologyDocumentResult],
@@ -82,10 +80,7 @@ const deepDiscardBudgets: Partial<Record<string, number>> = {
   ApplyOntologyBatchResult: 50_000,
 };
 
-const assertRoundTrips = <Schema extends S.Top & S.ConstraintDecoder<unknown> & S.ConstraintEncoder<unknown>>(
-  schema: Schema,
-  discardsPerRun: number
-): void => {
+const assertRoundTrips = <Schema extends S.Codec<unknown, unknown>>(schema: Schema, discardsPerRun: number): void => {
   expect(
     Effect.runSync(
       Arbitrary.checkEffect(
@@ -93,7 +88,7 @@ const assertRoundTrips = <Schema extends S.Top & S.ConstraintDecoder<unknown> & 
         ([value]) => {
           const encoded = Result.getOrThrow(S.encodeResult(schema)(value));
           const decoded = Result.getOrThrow(S.decodeUnknownResult(schema)(encoded));
-          expect(Equal.equals(decoded, value)).toBe(true);
+          expect(S.toEquivalence(schema)(decoded, value)).toBe(true);
 
           return true;
         },

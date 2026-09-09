@@ -14,7 +14,7 @@ import { fcRuns } from "@beep/test-utils";
 import { DuckDBInstance } from "@duckdb/node-api";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Equal, Exit, Fiber, FileSystem, Layer, Path, Stream } from "effect";
+import { Effect, Exit, Fiber, FileSystem, Layer, Path, Stream } from "effect";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as O from "effect/Option";
@@ -111,6 +111,7 @@ const assertSchemaArbitraryRoundTrips = <Schema extends S.Codec<unknown>>(
 ): void => {
   const encode = S.encodeEffect(schema);
   const decode = S.decodeUnknownEffect(schema);
+  const equivalent = S.toEquivalence(schema);
 
   expect(
     Effect.runSync(
@@ -119,7 +120,7 @@ const assertSchemaArbitraryRoundTrips = <Schema extends S.Codec<unknown>>(
         ([value]) => {
           const encoded = Effect.runSync(encode(value));
           const decoded = Effect.runSync(decode(encoded));
-          return Equal.equals(decoded, value);
+          return equivalent(decoded, value);
         },
         fcRuns(options?.runs ?? 20)
       )

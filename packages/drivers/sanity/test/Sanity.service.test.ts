@@ -14,7 +14,6 @@ import { A } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { describe, expect, it, layer } from "@effect/vitest";
 import { Cause, Context, Effect, Exit, Layer, Redacted, Ref, Result } from "effect";
-import * as Equal from "effect/Equal";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import * as HttpClient from "effect/unstable/http/HttpClient";
@@ -82,7 +81,7 @@ const expectRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema: Codec,
   const encoded = encode(schema, value);
   const decoded = decode(schema, encoded);
 
-  expect(Equal.equals(decoded, value)).toBe(true);
+  expect(S.toEquivalence(schema)(decoded, value)).toBe(true);
   expect(encode(schema, decoded)).toEqual(encoded);
 };
 

@@ -11,6 +11,7 @@ import {
   HookPulseNotificationType,
   HookPulseSchemaVersion,
   HookPulseV1,
+  HookPulseV1Arbitrary,
   HookPulseV1FromRawEvent,
   HookPulseWaitReason,
   hashPrivateIdentifier,
@@ -609,7 +610,7 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
     expect(
       Effect.runSync(
         Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(HookPulseV1)]),
+          Arbitrary.all([HookPulseV1Arbitrary]),
           ([value]) => {
             const line = encodeHookPulseRow(value);
 
