@@ -1,15 +1,15 @@
 {
-  "ownerRef": "6b94949ecc57",
+  "ownerRef": "7efbc25b38f6",
   "schemaVersion": "yeet-admission-ticket/v1",
   "kind": "review-fix",
   "weightTokens": 1,
   "priority": "verify",
   "originKey": "",
   "checkoutRoot": "<fleet>/beep-effect2",
-  "branch": "codex/turborepo-task-qualification",
+  "branch": "",
   "coordinationProtocol": "scheduler-origin-concurrency/v1",
-  "enqueuedAtMillis": 1788933918227,
-  "heartbeatAtMillis": 1788935278064,
+  "enqueuedAtMillis": 1788936219426,
+  "heartbeatAtMillis": 1788937353361,
   "blockedOnOriginAtMillis": 0,
-  "nonce": "9f4f9f02-acd7-48b6-bef3-428e3d12645f"
+  "nonce": "3ba4ff80-3157-4f07-a7fa-d147d59e8359"
 }

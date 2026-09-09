@@ -1,0 +1,49 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "codex/inline-schema-final-evidence",
+  "committed": false,
+  "createdAt": "2026-09-09T06:40:01.577Z",
+  "failurePolicy": "fail-fast",
+  "head": "59bba09125b8e57648052bc29227df6e93d34c87",
+  "lanes": [
+    {
+      "id": "monitor:01-pr-context",
+      "label": "monitor:pr-context",
+      "phase": "monitor",
+      "status": "passed",
+      "durationMs": 406.558955,
+      "peakRssKb": 58924,
+      "exitCode": 0,
+      "tier": "full",
+      "inputDigest": null
+    },
+    {
+      "id": "monitor:02-pr-checks-watch",
+      "label": "monitor:pr-checks:watch",
+      "phase": "monitor",
+      "status": "failed",
+      "durationMs": 744.396615,
+      "exitCode": 1,
+      "repairCommand": "Run `bun run docgen:local` for edit loops or `bun run docgen` for the full proof.",
+      "tier": "full",
+      "inputDigest": null
+    }
+  ],
+  "message": "yeet monitor failed.",
+  "mode": "monitor",
+  "outcome": "failure",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "codex_inline-schema-final-evidence-c4b83ff69b1e",
+  "attemptId": "0c1a84f8-f6ce-473e-9657-a1ca6c7b0611",
+  "resolvedHeadSha": "59bba09125b8e57648052bc29227df6e93d34c87",
+  "diffFingerprint": "45f77923a609cb47a8241b68eb59ecbe940ad8abcc2e647ff564e13b4b22884d",
+  "proofTier": "full",
+  "startedAt": "2026-09-09T06:39:54.423Z",
+  "endedAt": "2026-09-09T06:40:01.577Z",
+  "elapsedMs": 7154,
+  "indexPath": "<fleet>/beep-effect13/.beep/yeet/quality-issue-index.json",
+  "failedStepId": "monitor:02-pr-checks-watch",
+  "failureKind": "step-exit"
+}

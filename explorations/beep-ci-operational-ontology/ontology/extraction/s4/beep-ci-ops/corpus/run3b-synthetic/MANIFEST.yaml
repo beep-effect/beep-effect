@@ -2,10 +2,10 @@
 # Public run-3 Stage B capture; source descriptors are portable.
 schema_version: beep-ci-ops-run3b-synthetic-corpus/v1
 generated_by: etl_run3b_fleet_corpus.py
-generator_sha256: fceff631402bd828f12c199543c29d90ae1c1cec78be824982d684a0579b9bcb
-corpus_commit: 5e02f8c04b2448fe4ff49bab4e898841b481c0e5
-capture_instant: '2026-09-09T06:28:00.131Z'
-capture_finished_at: '2026-09-09T06:28:00.282Z'
+generator_sha256: 1d0646bd2203fff7d54357abae95cfd3896c5ad10a68af86c1fa770c775f8972
+corpus_commit: 515dfc41e6938f5340b053b545cee5bf8beb536b
+capture_instant: '2026-09-09T07:05:05.987Z'
+capture_finished_at: '2026-09-09T07:05:06.068Z'
 stage: B
 provenance: synthetic
 capture_instant_basis: capture start; files read once over the recorded interval, not an atomic fleet
@@ -89,7 +89,7 @@ custody:
   owner_refs_by_variant:
     pid_pair: 7
     ownerpid: 0
-    attachedpid: 0
+    attached_identity: 0
     other: 0
   capture_salt_representation: hexadecimal encoding of 32 random bytes
   salt_policy: per-capture, unrecorded, unlinkable across captures
@@ -108,7 +108,7 @@ admission_roots:
     world: closed
     status: present
     complete_within: one read of the named source during this capture; retained window only
-    observed_at: '2026-09-09T06:28:00.278Z'
+    observed_at: '2026-09-09T07:05:06.064Z'
     history_outside_window: unknown
     observed_rows: 7
     retained_rows: 7
@@ -130,7 +130,7 @@ admission_roots:
     owner_refs_by_variant:
       pid_pair: 7
       ownerpid: 0
-      attachedpid: 0
+      attached_identity: 0
       other: 0
     events:
     - schemaVersion: yeet-admission-journal/v1
@@ -167,7 +167,7 @@ admission_roots:
     world: closed
     status: present
     complete_within: one read of the named source during this capture; retained window only
-    observed_at: '2026-09-09T06:28:00.281Z'
+    observed_at: '2026-09-09T07:05:06.067Z'
     history_outside_window: unknown
     observed_rows: 1
     retained_rows: 1
@@ -179,7 +179,7 @@ admission_roots:
     owner_refs_by_variant:
       pid_pair: 0
       ownerpid: 0
-      attachedpid: 0
+      attached_identity: 0
       other: 0
     events:
     - schemaVersion: yeet-admission-protocol/v2
@@ -191,7 +191,7 @@ admission_roots:
     world: closed
     status: present
     complete_within: one read of the named source during this capture; retained window only
-    observed_at: '2026-09-09T06:28:00.281Z'
+    observed_at: '2026-09-09T07:05:06.067Z'
     history_outside_window: unknown
     files_observed: 0
     captured_files: 0
@@ -203,7 +203,7 @@ admission_roots:
     world: closed
     status: present
     complete_within: one read of the named source during this capture; retained window only
-    observed_at: '2026-09-09T06:28:00.281Z'
+    observed_at: '2026-09-09T07:05:06.067Z'
     history_outside_window: unknown
     files_observed: 0
     captured_files: 0
@@ -215,7 +215,7 @@ admission_roots:
     world: closed
     status: present
     complete_within: one read of the named source during this capture; retained window only
-    observed_at: '2026-09-09T06:28:00.281Z'
+    observed_at: '2026-09-09T07:05:06.067Z'
     history_outside_window: unknown
     files_observed: 0
     captured_files: 0
@@ -227,7 +227,7 @@ admission_roots:
     world: closed
     status: present
     complete_within: one read of the named source during this capture; retained window only
-    observed_at: '2026-09-09T06:28:00.281Z'
+    observed_at: '2026-09-09T07:05:06.067Z'
     history_outside_window: unknown
     files_observed: 0
     captured_files: 0
@@ -247,7 +247,7 @@ checkouts:
     world: closed
     status: absent
     complete_within: one read of the named source during this capture; retained window only
-    observed_at: '2026-09-09T06:28:00.281Z'
+    observed_at: '2026-09-09T07:05:06.067Z'
     history_outside_window: unknown
 - checkout: dead-lease
   kind: synthetic
@@ -262,7 +262,7 @@ checkouts:
     world: closed
     status: absent
     complete_within: one read of the named source during this capture; retained window only
-    observed_at: '2026-09-09T06:28:00.281Z'
+    observed_at: '2026-09-09T07:05:06.067Z'
     history_outside_window: unknown
 - checkout: dead-ticket
   kind: synthetic
@@ -277,7 +277,7 @@ checkouts:
     world: closed
     status: absent
     complete_within: one read of the named source during this capture; retained window only
-    observed_at: '2026-09-09T06:28:00.282Z'
+    observed_at: '2026-09-09T07:05:06.068Z'
     history_outside_window: unknown
 checkout_counts:
   synthetic: 3
@@ -287,7 +287,7 @@ sources:
   world: closed
   status: present
   complete_within: one read of the named source during this capture; retained window only
-  observed_at: '2026-09-09T06:28:00.281Z'
+  observed_at: '2026-09-09T07:05:06.067Z'
   history_outside_window: unknown
   observed_rows: 1
   retained_rows: 1
@@ -299,7 +299,7 @@ sources:
   owner_refs_by_variant:
     pid_pair: 0
     ownerpid: 0
-    attachedpid: 0
+    attached_identity: 0
     other: 0
   events:
   - schemaVersion: yeet-attempt-journal/v1
@@ -318,7 +318,7 @@ sources:
   world: closed
   status: present
   complete_within: one read of the named source during this capture; retained window only
-  observed_at: '2026-09-09T06:28:00.281Z'
+  observed_at: '2026-09-09T07:05:06.067Z'
   history_outside_window: unknown
   observed_rows: 1
   retained_rows: 1
@@ -330,7 +330,7 @@ sources:
   owner_refs_by_variant:
     pid_pair: 0
     ownerpid: 0
-    attachedpid: 0
+    attached_identity: 0
     other: 0
   events:
   - schemaVersion: yeet-attempt-journal/v1
@@ -763,8 +763,9 @@ projection_rules:
 - null, empty strings and CR/LF values omitted; duplicate pairs and scalar array leaves retained
 - events count raw JSON records once; projections do not double-count events
 redaction_rules:
-- 'All families: longest host-root match at start or after a character outside ASCII alphanumeric, underscore,
-  dot, tilde, slash and hyphen; relative path continuations survive'
+- 'All families: longest host-root match at start, after a character outside ASCII alphanumeric, underscore,
+  dot, tilde, slash and hyphen, or after a slash preceded by slash or colon; relative path continuations
+  survive'
 - fleet root is <fleet>; home is <home>; temp roots are <session-tmp> and <tmp>; runtime is <runtime>;
   proc is <proc>; shared memory is <shm>
 - Per-user systemd unit identifiers become <uid>; proc process-directory identifiers become <process>
@@ -784,11 +785,11 @@ files:
   world: closed
   status: present
   complete_within: one read of the named source during this capture; retained window only
-  observed_at: '2026-09-09T06:28:00.278Z'
+  observed_at: '2026-09-09T07:05:06.064Z'
   history_outside_window: unknown
   provenance: synthetic
   bytes: 2843
-  sha256: 3ec85e90c7c8a87617393aa9549736c2d25cd6d9bce92cfb00e94594002d75a8
+  sha256: af2549523660aacc19352853ee9bfbb7dcc901b91b53bc93d85ede23d78db328
 - path: admission/synthetic/journal.properties
   kind: properties_projection
   source: *id001
@@ -798,12 +799,12 @@ files:
   world: closed
   status: present
   complete_within: one read of the named source during this capture; retained window only
-  observed_at: '2026-09-09T06:28:00.278Z'
+  observed_at: '2026-09-09T07:05:06.064Z'
   history_outside_window: unknown
   provenance: synthetic
   derived_from: admission/synthetic/journal.ndjson
   bytes: 2632
-  sha256: 54d6857ae6f1600f8e8e35f3e8a9d03bc0944233188a7cbf74ca1491df45a2eb
+  sha256: db703ff72ac676f5ba25ff544c5d33194f53492b637c8843336d79d6afa5f9b3
 - path: admission/synthetic/protocol.json
   kind: protocol
   source: &id002
@@ -815,7 +816,7 @@ files:
   world: closed
   status: present
   complete_within: one read of the named source during this capture; retained window only
-  observed_at: '2026-09-09T06:28:00.281Z'
+  observed_at: '2026-09-09T07:05:06.067Z'
   history_outside_window: unknown
   provenance: synthetic
   bytes: 101
@@ -829,7 +830,7 @@ files:
   world: closed
   status: present
   complete_within: one read of the named source during this capture; retained window only
-  observed_at: '2026-09-09T06:28:00.281Z'
+  observed_at: '2026-09-09T07:05:06.067Z'
   history_outside_window: unknown
   provenance: synthetic
   derived_from: admission/synthetic/protocol.json
@@ -846,7 +847,7 @@ files:
   world: closed
   status: present
   complete_within: one read of the named source during this capture; retained window only
-  observed_at: '2026-09-09T06:28:00.281Z'
+  observed_at: '2026-09-09T07:05:06.067Z'
   history_outside_window: unknown
   provenance: synthetic
   checkout: dead-lease
@@ -862,7 +863,7 @@ files:
   world: closed
   status: present
   complete_within: one read of the named source during this capture; retained window only
-  observed_at: '2026-09-09T06:28:00.281Z'
+  observed_at: '2026-09-09T07:05:06.067Z'
   history_outside_window: unknown
   provenance: synthetic
   checkout: dead-lease
@@ -881,7 +882,7 @@ files:
   world: closed
   status: present
   complete_within: one read of the named source during this capture; retained window only
-  observed_at: '2026-09-09T06:28:00.281Z'
+  observed_at: '2026-09-09T07:05:06.067Z'
   history_outside_window: unknown
   provenance: synthetic
   checkout: dead-ticket
@@ -897,7 +898,7 @@ files:
   world: closed
   status: present
   complete_within: one read of the named source during this capture; retained window only
-  observed_at: '2026-09-09T06:28:00.281Z'
+  observed_at: '2026-09-09T07:05:06.067Z'
   history_outside_window: unknown
   provenance: synthetic
   checkout: dead-ticket
@@ -917,4 +918,4 @@ totals:
   files_emitted: 9
   events: 10
   payload_bytes: 6575
-  bytes_emitted: 42272
+  bytes_emitted: 42347

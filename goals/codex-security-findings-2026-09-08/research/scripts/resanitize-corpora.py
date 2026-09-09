@@ -13,6 +13,7 @@ import collections
 import argparse
 import importlib.util
 import io
+import json
 import os
 import shutil
 import subprocess
@@ -91,6 +92,11 @@ def repair(name: str, source_ref: str | None = None, population: str | None = No
         print(f"{root.name}: verified unchanged")
         return
     verify_generator_provenance(module, manifest["generator_sha256"])
+    if name == "etl_run3_fleet_corpus" and "generator_lineage" in manifest:
+        module.verify_fields(manifest, {"generator_lineage": {
+            "frozen_sha256": module.FROZEN_GENERATOR_SHA256,
+            "amended_sha256": manifest["generator_sha256"],
+            "ruling": 22, "reason": module.LINEAGE_REASON}}, "source generator lineage")
     receipts = manifest["files"]
     paths = [module.safe_relative_path(r["path"]).as_posix() for r in receipts]
     actual = sorted(source)
@@ -149,6 +155,15 @@ def repair(name: str, source_ref: str | None = None, population: str | None = No
         manifest["security_resanitization"]["superseded_manifest_sha256"] = module.sha256(previous_output)
     manifest["totals"]["payload_bytes"] = sum(map(len, payloads.values()))
     prefix = original.split(b"schema_version:", 1)[0]
+    if name == "etl_run3_fleet_corpus" and "generator_lineage" in manifest:
+        # Stage A emits lineage before schema_version. Replace that block once,
+        # preserving the frozen origin and the escaped, source-validated reason.
+        lineage = manifest.pop("generator_lineage")
+        reason = json.dumps(lineage["reason"]).replace("P", r"\u0050")
+        prefix = prefix.split(b"generator_lineage:\n", 1)[0] + (
+            f"generator_lineage:\n  frozen_sha256: {lineage['frozen_sha256']}\n"
+            f"  amended_sha256: {generator_digest}\n  ruling: 22\n  reason: {reason}\n"
+        ).encode()
     for _ in range(12):
         encoded = prefix + yaml.safe_dump(manifest, sort_keys=False, allow_unicode=True, width=100).encode()
         total = manifest["totals"]["payload_bytes"] + len(encoded)

@@ -283,3 +283,32 @@ detached verification, tracked-inventory/hash checks, committed-provenance
 checks, and post-commit knowledge reference check before handoff. The final
 handoff identifies that documentation commit separately. No push or PR creation
 occurred; Fable retains review and publication ownership.
+
+## File-URI boundary (Greptile P1, 2026-09-09)
+
+Step 0 commit `bbfe7c50fa42e570490e6baeac6e5716978202d2` changes both
+generators and both suites. URI authority separators now bound host roots in
+redaction and scanning; schemes and relative path continuations are preserved.
+All 60 pre-merge tests passed. The incomplete Stage A manifest replay was
+preserved locally and restored before this code-only commit.
+
+The combined reconciliation brief supersedes the earlier repair/replay order:
+all three pins were refreshed after merging #1037. The current generator and
+manifest digests, capture intervals, and historical security receipts are in
+[the #1037 report](./reconcile-1037-report.md). No URI-only change was attributed
+to CSF-012 or CSF-013.
+
+## Reconciliation with #1037 and file-URI boundary (2026-09-09)
+
+Merge commit `515dfc41e6938f5340b053b545cee5bf8beb536b` brings in main
+`22063e7b6d`. Both rule sets and all 63 parent-union tests survive. Main owns
+the run-2 and identity generators/pins and the security goal subtree. The
+three refreshed pins pass ordinary verification and exact corruption/restore
+cycles; packet validation and all CQ tests pass. DECISIONS.md is unchanged.
+
+The fresh organic captures contain 1864 Stage A and 1754 Stage B failure pairs,
+one more each than this report's prior captures. Raw/property counts agree,
+and the new report records the live-source deltas. Final handoff is pending
+the missing Ruling 23, acceptance of those deltas, and permission to retain the
+small lineage fix in the main-owned repair script. Re-pin commit, committed-
+head detached verification, and the post-commit knowledge check remain due.

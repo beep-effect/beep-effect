@@ -1,0 +1,21 @@
+{
+  "ownerRef": "4bf13f449639",
+  "schemaVersion": "yeet-admission-ticket/v1",
+  "attemptId": "82d6b71c-c9e4-418e-8df8-26ae5089ef0a",
+  "resolvedHeadSha": "ace139cf4e162ecda8c88bea3bc0478478329553",
+  "diffFingerprint": "b1ad884f342f0c0ba210fc3cb04088a48ef266210ad69724c350e0bb58ffc72e",
+  "proofTier": "full",
+  "envProfile": "local",
+  "stage": "pre-push",
+  "kind": "full-proof",
+  "weightTokens": 3,
+  "priority": "verify",
+  "originKey": "4cc31eeb4dec",
+  "checkoutRoot": "<fleet>/beep-effect2-worktrees/effect-vitest-filesystem",
+  "branch": "codex/effect-vitest-filesystem",
+  "coordinationProtocol": "scheduler-origin-concurrency/v1",
+  "enqueuedAtMillis": 1788937013279,
+  "heartbeatAtMillis": 1788937439581,
+  "blockedOnOriginAtMillis": 0,
+  "nonce": "ba47b027-3287-422c-8854-a6d94886c0e2"
+}

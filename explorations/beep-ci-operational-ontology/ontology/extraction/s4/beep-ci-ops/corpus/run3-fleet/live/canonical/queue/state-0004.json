@@ -1,0 +1,21 @@
+{
+  "ownerRef": "da2fa98e8f4c",
+  "schemaVersion": "yeet-admission-ticket/v1",
+  "attemptId": "540f16f1-a997-4ac1-8a6e-c9495ed45aa6",
+  "resolvedHeadSha": "ace139cf4e162ecda8c88bea3bc0478478329553",
+  "diffFingerprint": "2d243a2d427cbf2fdc5be3cdd1bbc7998e113ccf67e03e35856ff3976f46e9d7",
+  "proofTier": "full",
+  "envProfile": "local",
+  "stage": "pre-push",
+  "kind": "merged-preview",
+  "weightTokens": 5,
+  "priority": "publish",
+  "originKey": "4cc31eeb4dec",
+  "checkoutRoot": "<fleet>/beep-effect5/.claude/worktrees/vigilant-khorana-0c8658",
+  "branch": "claude/sweet-tereshkova-3b261b",
+  "coordinationProtocol": "scheduler-origin-concurrency/v1",
+  "enqueuedAtMillis": 1788936055706,
+  "heartbeatAtMillis": 1788937357159,
+  "blockedOnOriginAtMillis": 0,
+  "nonce": "e16dcb46-baf9-4ff3-8dc6-d935ccbd3159"
+}

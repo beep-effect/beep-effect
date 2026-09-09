@@ -428,3 +428,21 @@
   to main while also requiring the lineage regression to survive.
 - **Prevention:** include the refreshed manifest format in security repair
   compatibility tests and separate process metadata names from count labels.
+
+## 2026-09-09: live recapture cannot guarantee historical rider totals
+
+- **Work:** refreshing all three run-3 pins under the merged CSF-013 generators.
+- **Evidence:** Stage A failure pairs changed from 1863 to 1864 and Stage B
+  from 1753 to 1754. One new attempt in the inline-schema evidence branch is
+  present in both captures; Stage A also records its latest failed verdict and
+  a replaced latest verdict in the security-corpus branch. Synthetic stays zero.
+  The brief requires both fresh live capture and unchanged historical totals.
+- **Handling:** retain the observed rows and record per-path deltas; ask the
+  operator to settle the literal count requirement. No source rows are removed
+  to manufacture the old totals.
+- **Prevention:** specify preservation as raw/projection pair equality plus
+  explained source deltas when a capture intentionally samples new live state.
+- **Capture sequencing:** the Stage B fleet-only refresh promoted its verified
+  output, then rejected the stale synthetic manifest's old census label. The
+  following synthetic refresh verified fleet and pinned synthetic successfully.
+  No intermediate mixed-generation result is used as final proof.

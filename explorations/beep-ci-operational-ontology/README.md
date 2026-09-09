@@ -21,6 +21,13 @@ the "bush" (`A_LETTER_FROM_THE_OTHER_SIDE_OF_THE_LOOP.md`).
 
 ## Next Open Question
 
+Reconciliation with #1037 is pending the missing Ruling 23, the narrow Stage A
+lineage exception in the main-owned repair script, and acceptance of documented
+live-capture failure-pair deltas. Step 0 and the merge are committed; three fresh
+pins pass ordinary verification and corruption/restore checks. The re-pin commit
+and committed-head handoff are still due. See
+[the current reconciliation report](./research/run3-lanes/reconcile-1037-report.md).
+
 CSF-012 in [PR #1032](https://github.com/beep-effect/beep-effect/pull/1032)
 corrects PID redaction in the saved run-2 and run-3 corpus pins. The security
 repair preserves captured history and prior-manifest digests; it does not
@@ -67,10 +74,10 @@ question now asks for the SeatRequest sequence under its governing
 `AdmissionProjectionSpecification`, with the step's literal `hasScopeTag` (a distinct
 data property — the no-punning ruling keeps `hasScope` an object property), and the S6
 predicate registry regenerated to track it.
-**NEXT: Fable reviews and publishes the reconciled residue follow-up, then run 3 proper.**
+**NEXT: settle the #1037 reconciliation gates, finish its committed-head proof, then Fable reviews and publishes before run 3 proper.**
 Stage A PINNED 2026-09-08 in `run3-fleet/` and `run3-checkout-identity/`:
 existing admission journals, fleet attempts/verdicts, live granted/queued work,
-and one timestamped checkout inventory. The reconciled Ruling 22 fleet refresh covers 94 checkouts; the
+and one timestamped checkout inventory. The latest reconciled Ruling 22 fleet refresh covers 95 checkouts; the
 inventory binds 107 after the review-fix refresh, including registered worktrees outside the required run-file
 globs. The failure-signature occurrence rider is present; cache-plan execution
 resolution and proof-ledger issuance rows are absent. Stage B is now pinned in
@@ -80,8 +87,8 @@ S8 stays deferred. Stage B proof is in [the report](./research/run3-lanes/stage-
 The review-fix lane has replaced both pins with encoded output paths, stricter
 receipt checks, and runtime redaction; Fable owns publication and PR replies.
 Current fleet and synthetic proof is in
-[the reconciliation report](./research/run3-lanes/reconcile-1032-report.md).
-The producer spec is tree-resident after #1033; #1032 is merged into the follow-up.
+[the #1037 reconciliation report](./research/run3-lanes/reconcile-1037-report.md).
+The producer spec is tree-resident after #1033; #1032 and #1037 are merged into the follow-up.
 Checkout-identity proof remains in [the prior review-fix report](./research/run3-lanes/stage-a-review-fixes-report.md).
 Historical capture details and the original lane handoff are in
 [the Stage A report](./research/run3-lanes/stage-a-report.md); the orchestrator
@@ -154,6 +161,12 @@ graduation. Full plan with locked decisions: [`DECISIONS.md`](./DECISIONS.md).
 
 ## Trail
 
+- 2026-09-09: Committed the URI boundary fix and merged #1037. All three live
+  refreshes pass pin verification, exact corruption restoration, and residue
+  scans; packet validation and the CQ suite pass. Final re-pin handoff awaits
+  the missing Ruling 23, the lineage-script exception, and acceptance of live
+  failure-pair deltas (Stage A 1864; Stage B 1754). See
+  [the #1037 report](./research/run3-lanes/reconcile-1037-report.md).
 - 2026-09-09: Reconciled the residue follow-up with #1032 through a merge commit.
   Both redaction fixes and test suites survive; source-cited Stage B step-ID
   exceptions restore the failure joins. Fresh Stage A: 1914 payloads / 1915 files,
