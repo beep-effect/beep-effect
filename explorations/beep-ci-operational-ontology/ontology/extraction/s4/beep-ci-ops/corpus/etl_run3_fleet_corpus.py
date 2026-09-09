@@ -22,6 +22,7 @@ import subprocess
 import tempfile
 from pathlib import Path, PurePosixPath
 from typing import Any, NoReturn, TypeAlias
+from urllib.parse import quote
 
 import yaml
 
@@ -152,10 +153,18 @@ def host_prefixes() -> list[tuple[str, str]]:
     if session != str(Path(os.sep) / "tmp"):
         roots[session] = "<session-tmp>"
     roots[str(FLEET_ROOT)] = "<fleet>"
+    roots[str(Path(os.sep) / "run/user" / str(os.geteuid()))] = "<runtime>"
+    if os.environ.get("XDG_RUNTIME_DIR"):
+        roots[str(Path(os.environ["XDG_RUNTIME_DIR"]))] = "<runtime>"
+    roots[str(Path(os.sep) / "proc")] = "<proc>"
+    roots[str(Path(os.sep) / "dev/shm")] = "<shm>"
     return sorted(roots.items(), key=lambda item: -len(item[0]))
 
 
 def redact_string(value: str) -> str:
+    value = re.sub(r"/proc/\d+(?=/|$)", "<proc>/<process>", value)
+    value = re.sub(r"(user(?:-runtime-dir)?@)\d+(\.service)", r"\1<uid>\2", value)
+    value = re.sub(r"user-\d+\.slice", "user-<uid>.slice", value)
     for prefix, replacement in host_prefixes():
         value = value.replace(prefix + "/", replacement + "/")
         # Also replace a bare root, including roots embedded in command arguments.
@@ -398,17 +407,28 @@ def validate_component(value: str, label: str) -> None:
         fail(f"control character in {label} path component")
 
 
+def checkout_component(label: str) -> str:
+    """Encode a label injectively as one component; retain the label in receipts."""
+    safe_relative_path(label)
+    component = quote(label, safe="")
+    validate_component(component, "checkout")
+    return component
+
+
 def scan_output_bytes(files: list[tuple[str, bytes]]) -> None:
     """Fail closed without printing matched private bytes (including path names)."""
     hostname = socket.gethostname().encode()
     forbidden = [(prefix + "/").encode() for prefix, _ in host_prefixes()]
-    forbidden += [b"/home/", b"/tmp/", hostname, sha256(hostname)[:12].encode()]
+    forbidden += [b"/home/", b"/tmp/", b"/run/user/", b"/proc/", b"/dev/shm/",
+                  hostname, sha256(hostname)[:12].encode()]
     for _label, data in files:
         combined = _label.encode() + b"\n" + data
         bare_root = any(re.search(re.escape(prefix.encode()) + rb"(?=$|[\s\"'=:,;)\]])", combined)
                         for prefix, _ in host_prefixes())
         if bare_root or any(prefix and prefix in combined for prefix in forbidden):
             fail("residue scan failed: host path, hostname, or hostname digest")
+        if re.search(rb"(?:user(?:-runtime-dir)?@\d+\.service|user-\d+\.slice|beep-admit-uid-\d+)", combined):
+            fail("residue scan failed: user identity in runtime or unit name")
         if PID_IN_TEXT.search(combined.decode("utf-8")):
             fail("residue scan failed: free-text process identifier")
         if b"ghp_" in combined or b"github_pat_" in combined:
@@ -488,6 +508,19 @@ class Payload:
     receipt: dict[str, Any]
 
 
+def record_observations(records: list[JsonValue]) -> dict[str, Any]:
+    """Derive the receipt census from decoded bytes in capture and verification."""
+    bounds = timestamp_bounds([t for row in records for t in collect_timestamps(row, "record")])
+    return {"event_count": len(records), "min_timestamp_observed": bounds[0],
+            "max_timestamp_observed": bounds[1]}
+
+
+def verify_fields(actual: dict[str, Any], expected: dict[str, Any], label: str) -> None:
+    for key, value in expected.items():
+        if key not in actual or actual[key] != value:
+            fail(f"{label} differs: {key}")
+
+
 def payload_pair(path: str, records: list[JsonValue], kind: str, source: str,
                  observed_at: str, **metadata: Any) -> list[Payload]:
     safe_relative_path(path)
@@ -495,11 +528,8 @@ def payload_pair(path: str, records: list[JsonValue], kind: str, source: str,
     decoded = decode_ndjson(data, "redacted") if path.endswith(".ndjson") else [decode_json(data, "redacted")]
     if not same_json(decoded, records):
         fail("redaction round-trip changed decoded data")
-    times = [t for row in records for t in collect_timestamps(row, "record")]
-    bounds = timestamp_bounds(times)
     receipt = {"path": path, "kind": kind, "source": {"file": source, "line": 1},
-               "event_count": len(records), "min_timestamp_observed": bounds[0],
-               "max_timestamp_observed": bounds[1], **complete(source, observed_at), **metadata}
+                **record_observations(records), **complete(source, observed_at), **metadata}
     # Keep per-file source cites separate from the closed-world descriptor.
     receipt["source"] = {"file": source, "line": 1}
     projection = projection_path(path)
@@ -515,6 +545,7 @@ def finish_manifest(metadata: dict[str, Any], emitted: list[Payload]) -> bytes:
     manifest = {"schema_version": MANIFEST_SCHEMA, "generated_by": SCRIPT.name,
                 "generator_sha256": sha256(SCRIPT.read_bytes()),
                 "corpus_commit": git(REPO_ROOT, "rev-parse", "HEAD"), **metadata,
+                "checkout_path_encoding": "UTF-8 percent-encoded single component; checkout labels remain verbatim in receipts",
                 "projection_rules": [
                     "config_key_value channel: one .properties sibling for every raw payload",
                     "# record <zero-based-index>; eligible leaf_key=value in source traversal order",
@@ -522,8 +553,9 @@ def finish_manifest(metadata: dict[str, Any], emitted: list[Payload]) -> bytes:
                     "null, empty strings and CR/LF values omitted; duplicate pairs and scalar array leaves retained",
                     "events count raw JSON records once; projections do not double-count events"],
                 "redaction_rules": [
-                    "All families: longest matching fleet, home, session-tmp, system-tmp prefixes rewritten",
-                    "fleet root is <fleet>; home is <home>; temp roots are <session-tmp> and <tmp>",
+                    "All families: longest matching fleet, home, session-tmp, system-tmp, runtime, proc and shm prefixes rewritten",
+                    "fleet root is <fleet>; home is <home>; temp roots are <session-tmp> and <tmp>; runtime is <runtime>; proc is <proc>; shared memory is <shm>",
+                    "Per-user systemd unit identifiers become <uid>; proc process-directory identifiers become <process>",
                     "Process identity members dropped recursively; free-text pid numbers replaced",
                     "Structural keys and non-process numbers, booleans, nulls retain their decoded values",
                     "Lock files and proof-locks are excluded; hostname and sha12(hostname) in string values become <host>; residue fails capture"],
@@ -585,16 +617,21 @@ def verify_output_tree(root: Path) -> dict[str, Any]:
                 fail("persisted raw payload is not redaction-idempotent")
             if receipt["kind"] == "admission" and row.get("schemaVersion") not in ADMISSION_SCHEMAS:
                 fail("unsupported pinned admission schema")
-        if len(rows) != receipt["event_count"]:
-            fail("raw event count differs")
+        verify_fields(receipt, record_observations(rows), "raw receipt observations")
         raw[path] = rows
         events += len(rows)
     if len(projections) != len(raw):
         fail("one projection per raw payload is required")
+    receipt_by_path = {receipt["path"]: receipt for receipt in receipts}
     for path, rows in raw.items():
         projection = projections.get(projection_path(path))
         if projection is None or projection[0].get("derived_from") != path:
             fail("projection linkage differs")
+        expected_receipt = {**receipt_by_path[path], "path": projection_path(path),
+                            "kind": PROJECTION_KIND, "derived_from": path,
+                            "bytes": len(projection[1]), "sha256": sha256(projection[1])}
+        if projection[0] != expected_receipt:
+            fail("projection receipt differs from raw receipt")
         if projection[1] != encode_properties_projection(rows) or projection[0]["event_count"] != len(rows):
             fail("projection completeness, order or values differ")
     expected = {"payload_files": len(paths), "files_emitted": len(paths) + 1, "events": events,
@@ -834,7 +871,7 @@ def capture() -> tuple[list[Payload], dict[str, Any]]:
                     if not candidates:
                         source_receipts.append(complete(descriptor, instant(), "absent"))
                         continue
-                    dest = f"{family}/{label}/{run.name}/{targetname}"
+                    dest = f"{family}/{checkout_component(label)}/{run.name}/{targetname}"
                     receipt = collect(candidates[0], dest, filekind,
                                       f"<fleet>/{label}/.beep/yeet/runs/{run.name}/{candidates[0].name}",
                                       filekind == "attempts", checkout=label, run_id=run.name)
@@ -857,7 +894,7 @@ def capture() -> tuple[list[Payload], dict[str, Any]]:
         descriptor = f"<fleet>/{label}/.beep/yeet/proof-ledger.ndjson"
         if ledger.is_file():
             ledger_count += 1
-            source_receipts.append(collect(ledger, f"ledger/{label}/proof-ledger.ndjson", "ledger", descriptor, checkout=label))
+            source_receipts.append(collect(ledger, f"ledger/{checkout_component(label)}/proof-ledger.ndjson", "ledger", descriptor, checkout=label))
         else:
             source_receipts.append(complete(descriptor, instant(), "absent"))
         checkouts.append(row)
@@ -921,25 +958,106 @@ def capture() -> tuple[list[Payload], dict[str, Any]]:
 
 
 def verify_census(manifest: dict[str, Any], raw: dict[str, list[JsonValue]]) -> None:
+    files = {r["path"]: r for r in manifest["files"] if r["kind"] != PROJECTION_KIND}
+    checked = set()
+
+    def check_source(receipt: dict[str, Any]) -> None:
+        path = receipt.get("path")
+        rows = raw.get(path, [])
+        if path is not None:
+            if path not in raw or path in checked or receipt["status"] != "present":
+                fail("source payload linkage differs")
+            checked.add(path)
+            verify_fields(files[path], {**complete(receipt["source"], receipt["observed_at"]),
+                          "source": {"file": receipt["source"], "line": 1}}, "source receipt linkage")
+        if "retained_rows" not in receipt:
+            return  # Absent or vanished sources have no decoded-byte census.
+        verify_fields(receipt, {"retained_rows": len(rows), "events": event_census(rows)}, "source census")
+        excluded = receipt["excluded_undecodable"]
+        if (excluded != sum(receipt.get("excluded_by_reason", {}).values())
+                or receipt["observed_rows"] != len(rows) + excluded):
+            fail("source exclusion accounting differs")
+        lines = receipt.get("retained_source_lines", [])
+        if (len(lines) != len(rows) or any(type(n) is not int or n < 1 for n in lines)
+                or lines != sorted(set(lines))):
+            fail("retained source line accounting differs")
+        def owner_count(value: JsonValue) -> int:
+            if isinstance(value, dict):
+                return int("ownerRef" in value) + sum(owner_count(v) for v in value.values())
+            if isinstance(value, list):
+                return sum(owner_count(v) for v in value)
+            return 0
+        counts = receipt.get("redaction_counts", {})
+        if counts.get("owner_refs", 0) != owner_count(rows):
+            fail("owner reference census differs")
+        if not 0 <= counts.get("owner_refs_without_proc_start", 0) <= counts.get("owner_refs", 0):
+            fail("weaker owner reference accounting differs")
+        ring = receipt.get("ring_window")
+        if ring is not None:
+            verify_fields(ring, {"observed_rows": receipt["observed_rows"]}, "ring row census")
+            if path and files[path]["kind"] == "admission":
+                admitted = sum(r.get("_tag") == "admission-admitted" for r in rows)
+                verify_fields(ring, {"writer_cap": 200, "nominal_row_cap_in_brief": 200,
+                              "observed_admitted": admitted, "at_writer_cap": admitted >= 200}, "admission ring census")
+            elif path and files[path]["kind"] == "attempts":
+                terminal = {r["attemptId"] for r in rows if r.get("_tag") in {"attempt-finished", "attempt-terminated"}
+                            and isinstance(r.get("attemptId"), str)}
+                verify_fields(ring, {"writer_cap": 50, "nominal_row_cap_in_brief": 50,
+                              "observed_terminal_attempts": len(terminal), "at_writer_cap": len(terminal) >= 50,
+                              "compaction_receipts": sum(r.get("_tag") == "journal-compacted" for r in rows)}, "attempt ring census")
+
     for root in manifest["admission_roots"]:
         receipt = root["journal"]
-        rows = raw.get(receipt.get("path"), [])
-        if receipt["retained_rows"] != len(rows) or receipt["events"] != event_census(rows):
-            fail("admission census differs from pinned rows")
+        check_source(receipt)
+        if "path" in receipt:
+            verify_fields(files[receipt["path"]], {"kind": "admission",
+                          "path": f"admission/{root['label']}/journal.ndjson"}, "admission path")
+        for live in root["live"]:
+            for receipt in live["sources"]:
+                check_source(receipt)
+                if "path" in receipt:
+                    verify_fields(files[receipt["path"]], {"kind": "live"}, "live kind")
+            verify_fields(live, {"files_observed": len(live["sources"]),
+                          "captured_files": sum(r["status"] == "present" for r in live["sources"])}, "live census")
     for receipt in manifest["sources"]:
-        if receipt["status"] == "present":
-            rows = raw[receipt["path"]]
-            if receipt["retained_rows"] != len(rows) or receipt["events"] != event_census(rows):
-                fail("source census differs from pinned rows")
+        check_source(receipt)
+    if checked != set(raw):
+        fail("source census does not cover every raw payload exactly once")
     if manifest["rider_evidence"] != rider_evidence(raw):
         fail("rider evidence census differs from pinned rows")
-    for checkout in manifest["checkouts"]:
+    checkouts = manifest["checkouts"]
+    labels = [c["checkout"] for c in checkouts]
+    if labels != sorted(set(labels)):
+        fail("checkout labels duplicated or unordered")
+    if manifest["checkout_counts"] != dict(collections.Counter(c["kind"] for c in checkouts)):
+        fail("checkout kind census differs")
+    for checkout in checkouts:
+        component = checkout_component(checkout["checkout"])
+        listing = checkout["runs_dir_listing"]
+        if listing != sorted(set(listing)):
+            fail("run directory listing duplicated or unordered")
         for field, family, filename in (("attempt_files", "attempts", "attempts.ndjson"),
                                         ("verdict_files", "verdicts", "verdict.json")):
-            observed = sum(f"{family}/{checkout['checkout']}/{run}/{filename}" in raw
-                           for run in checkout["runs_dir_listing"])
+            observed = sum(f"{family}/{component}/{run}/{filename}" in raw for run in listing)
             if checkout[field] != observed:
                 fail("checkout file census differs")
+    by_label = {c["checkout"]: c for c in checkouts}
+    for path, receipt in files.items():
+        if receipt["kind"] in {"attempts", "verdict", "ledger"}:
+            label = receipt["checkout"]
+            if label not in by_label:
+                fail("file checkout missing from census")
+            component = checkout_component(label)
+            if receipt["kind"] == "ledger":
+                expected_path = f"ledger/{component}/proof-ledger.ndjson"
+            else:
+                run = receipt["run_id"]
+                if run not in by_label[label]["runs_dir_listing"]:
+                    fail("file run missing from census")
+                family, name = ("attempts", "attempts.ndjson") if receipt["kind"] == "attempts" else ("verdicts", "verdict.json")
+                expected_path = f"{family}/{component}/{run}/{name}"
+            if path != expected_path:
+                fail("checkout file path differs from label")
     if manifest["proof_ledger"]["checkouts_with_ledger"] != sum(path.startswith("ledger/") for path in raw):
         fail("ledger census differs")
 

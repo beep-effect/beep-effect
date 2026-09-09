@@ -1,6 +1,6 @@
 {
   "identity_key": "<fleet>/beep-effect4",
-  "scannedAt": "2026-09-09T02:27:10.125Z",
+  "scannedAt": "2026-09-09T03:13:49.440Z",
   "snapshot_path": "<fleet>/beep-effect4",
   "within_fleet_root": true,
   "origin_url": "git@github.com:beep-effect/beep-effect.git",
@@ -13,7 +13,7 @@
   "git_common_dir_role": "checkout-binding fact; not a proof cache",
   "runs_dir_listing": [],
   "runs_directory_status": "absent",
-  "binding_probe_at": "2026-09-09T02:27:16.732Z",
+  "binding_probe_at": "2026-09-09T03:13:53.033Z",
   "git_probes": {
     "origin": {
       "command": "git remote get-url origin",
@@ -64,7 +64,7 @@
     "file": "<fleet>/beep-effect4/turbo.json",
     "line": 1
   },
-  "turbo_configuration_observed_at": "2026-09-09T02:27:16.732Z",
+  "turbo_configuration_observed_at": "2026-09-09T03:13:53.033Z",
   "turbo_local_cache_complete_within": "one immediate directory listing during the binding probe",
   "proof_cache_caveat": "necessary, not sufficient for CQ-015 evidence transfer: task-hash granularity still required"
 }

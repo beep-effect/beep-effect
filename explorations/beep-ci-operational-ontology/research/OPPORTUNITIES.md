@@ -210,3 +210,15 @@
   `files.includes` beside the existing `adapters` and `runs` exclusions. Generators that
   pin fidelity bytes should register their output directory there in the same PR that
   creates it, and a verify-mode rerun belongs between commit and push.
+
+## 2026-09-08: nested ignored directories swallowed Stage A payloads
+
+- **Work:** verifying the PR #1027 checkout-identity pin against the committed tree.
+- **Evidence:** its manifest lists 220 payloads, but `git ls-files` contains only
+  190 payloads plus the manifest. All 30 omissions use nested `.claude/` or
+  `.beep/` label segments; staging the pin directory silently skipped them.
+- **Cost:** working-tree verification passed while a fresh checkout lacked files
+  required by the manifest. The capture must be replaced after fixing path emission.
+- **Prevention:** encode checkout labels into single output path components in
+  both generators, compare tracked inventories with manifests, and run ordinary
+  verification from a detached worktree of the actual committed HEAD.

@@ -62,12 +62,15 @@ predicate registry regenerated to track it.
 Stage A PINNED 2026-09-08 in `run3-fleet/` and `run3-checkout-identity/`:
 existing admission journals, fleet attempts/verdicts, live granted/queued work,
 and one timestamped checkout inventory. The fleet pin covers 89 checkouts; the
-inventory binds 109, including registered worktrees outside the required run-file
+inventory binds 107 after the review-fix refresh, including registered worktrees outside the required run-file
 globs. The failure-signature occurrence rider is present; cache-plan execution
 resolution and proof-ledger issuance rows are absent. Stage B remains gated on
 the v3 journal PR, organic traffic, and proof-ledger materialization. S7 emission
 v2 remains parallel instrumentation for the ordering cluster; S8 stays deferred.
-Counts, scope differences, verification, and the lane handoff are in
+The review-fix lane has replaced both pins with encoded output paths, stricter
+receipt checks, and runtime redaction; Fable owns publication and PR replies.
+Current proof is in [the review-fix report](./research/run3-lanes/stage-a-review-fixes-report.md).
+Historical capture details and the original lane handoff are in
 [the Stage A report](./research/run3-lanes/stage-a-report.md); the orchestrator
 committed and published the pin (the implementation lane's sandbox could not
 write the linked worktree's Git metadata — receipt in `research/OPPORTUNITIES.md`).
@@ -138,6 +141,12 @@ graduation. Full plan with locked decisions: [`DECISIONS.md`](./DECISIONS.md).
 
 ## Trail
 
+- 2026-09-08: PR #1027 Stage A review fixes: encoded checkout path components,
+  recomputed receipt observations, runtime-prefix redaction, and refreshed report
+  hashes. Both pins were re-captured once: 89 fleet checkouts, 189 admission rows,
+  and 107 identity bindings. Detached committed-tree verification is the added
+  publication check; the friction receipt records the 30 gitignored omissions.
+  Handoff: `research/run3-lanes/stage-a-review-fixes-report.md`.
 - 2026-09-08: Stage A pinned with two new standalone generators. `run3-fleet/`
   has 89 checkouts and 177 admission rows across attempts, verdicts, and live state
   files; `run3-checkout-identity/` has 109 timestamped bindings plus the fleet snapshot

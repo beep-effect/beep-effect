@@ -1,13 +1,13 @@
 {
   "identity_key": "<fleet>/beep-effect8-s5",
-  "scannedAt": "2026-09-09T02:27:10.125Z",
+  "scannedAt": "2026-09-09T03:13:49.440Z",
   "snapshot_path": "<fleet>/beep-effect8-s5",
   "within_fleet_root": true,
   "origin_url": "git@github.com:beep-effect/beep-effect.git",
   "kind": "linked-worktree",
   "branch": "ontology-run3-stage-a",
   "branch_sha12": "3e71e7310ab3",
-  "head": "099be0671297a63e226b9a61915652fed71f5619",
+  "head": "c00126704caf8496b3633df7581e8967a164c9bd",
   "git_dir": "<fleet>/beep-effect8/.git/worktrees/beep-effect8-s5",
   "git_common_dir": "<fleet>/beep-effect8/.git",
   "git_common_dir_role": "checkout-binding fact; not a proof cache",
@@ -17,6 +17,7 @@
     "ontology-cq020-amendment-f73f7b6af4b2",
     "ontology-run2-prep-82fcd07d084d",
     "ontology-run3-design-15b69f476ca0",
+    "ontology-run3-stage-a-3e71e7310ab3",
     "ontology-s5-dispositions-36a8e632d484",
     "ontology-s5-final-b151ecf3704c",
     "ontology-s5-gate-archived-rats-a3ee401aced7",
@@ -25,7 +26,7 @@
     "skill-v14-archive-shelter-e7ab9d960412"
   ],
   "runs_directory_status": "present",
-  "binding_probe_at": "2026-09-09T02:27:17.103Z",
+  "binding_probe_at": "2026-09-09T03:13:53.414Z",
   "git_probes": {
     "origin": {
       "command": "git remote get-url origin",
@@ -55,7 +56,7 @@
   },
   "binding_probe_status": "present",
   "binding_probe_matches_snapshot": true,
-  "probe_head": "099be0671297a63e226b9a61915652fed71f5619",
+  "probe_head": "c00126704caf8496b3633df7581e8967a164c9bd",
   "probe_branch": "ontology-run3-stage-a",
   "binding_temporality": "snapshot branch/head at scannedAt; supplementary git/cache probes during capture interval",
   "turbo_local_cache_path": "<fleet>/beep-effect8-s5/.turbo/cache",
@@ -76,7 +77,7 @@
     "file": "<fleet>/beep-effect8-s5/turbo.json",
     "line": 1
   },
-  "turbo_configuration_observed_at": "2026-09-09T02:27:17.104Z",
+  "turbo_configuration_observed_at": "2026-09-09T03:13:53.414Z",
   "turbo_local_cache_complete_within": "one immediate directory listing during the binding probe",
   "proof_cache_caveat": "necessary, not sufficient for CQ-015 evidence transfer: task-hash granularity still required"
 }

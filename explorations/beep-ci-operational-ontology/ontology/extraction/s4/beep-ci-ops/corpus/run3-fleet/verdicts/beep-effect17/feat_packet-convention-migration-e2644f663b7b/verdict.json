@@ -32,7 +32,7 @@
       "status": "not-run"
     }
   ],
-  "message": "Another Yeet full proof for this repository is active. Owner checkout <fleet>/beep-effect6 on feat/patent-document-schema, pid <redacted>, started 2026-08-27T10:22:56.891Z.\nThe machine-local coordinator prevents sibling checkouts from overlapping Docker, Bun-cache, and Turbo work. Wait for it to finish, run the cheap/review-fix tier, or remove /run/user/1000/beep-yeet-proof-locks-<host>-uid-1000/4cc31eeb4dec.lock only after confirming its owner is gone.",
+  "message": "Another Yeet full proof for this repository is active. Owner checkout <fleet>/beep-effect6 on feat/patent-document-schema, pid <redacted>, started 2026-08-27T10:22:56.891Z.\nThe machine-local coordinator prevents sibling checkouts from overlapping Docker, Bun-cache, and Turbo work. Wait for it to finish, run the cheap/review-fix tier, or remove <runtime>/beep-yeet-proof-locks-<host>-uid-1000/4cc31eeb4dec.lock only after confirming its owner is gone.",
   "mode": "verify",
   "outcome": "failure",
   "packetPaths": [],

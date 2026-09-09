@@ -1,13 +1,13 @@
 {
   "identity_key": "<fleet>/beep-effect12",
-  "scannedAt": "2026-09-09T02:27:10.125Z",
+  "scannedAt": "2026-09-09T03:13:49.440Z",
   "snapshot_path": "<fleet>/beep-effect12",
   "within_fleet_root": true,
   "origin_url": "git@github.com:beep-effect/beep-effect.git",
   "kind": "clone",
   "branch": "codex/security-findings-2026-09-08",
   "branch_sha12": "fca6d1290697",
-  "head": "18e0702e7dc690f2e31c86f5081b2e87dfb0af81",
+  "head": "8bbea97487e760394f16b9d59902f4b66501ac68",
   "git_dir": "<fleet>/beep-effect12/.git",
   "git_common_dir": "<fleet>/beep-effect12/.git",
   "git_common_dir_role": "checkout-binding fact; not a proof cache",
@@ -26,7 +26,7 @@
     "goals_candor-gate-followups-closeout-08bfb2151c0b"
   ],
   "runs_directory_status": "present",
-  "binding_probe_at": "2026-09-09T02:27:16.208Z",
+  "binding_probe_at": "2026-09-09T03:13:52.498Z",
   "git_probes": {
     "origin": {
       "command": "git remote get-url origin",
@@ -56,12 +56,12 @@
   },
   "binding_probe_status": "present",
   "binding_probe_matches_snapshot": true,
-  "probe_head": "18e0702e7dc690f2e31c86f5081b2e87dfb0af81",
+  "probe_head": "8bbea97487e760394f16b9d59902f4b66501ac68",
   "probe_branch": "codex/security-findings-2026-09-08",
   "binding_temporality": "snapshot branch/head at scannedAt; supplementary git/cache probes during capture interval",
   "turbo_local_cache_path": "<fleet>/beep-effect12/.turbo/cache",
   "turbo_local_cache_present": true,
-  "turbo_local_cache_entries": 8736,
+  "turbo_local_cache_entries": 9060,
   "turbo_local_cache_entries_basis": "immediate directory entries; not deduplicated task hashes",
   "turbo_remote_cache_configured": false,
   "turbo_remote_cache_env_present": {
@@ -77,7 +77,7 @@
     "file": "<fleet>/beep-effect12/turbo.json",
     "line": 1
   },
-  "turbo_configuration_observed_at": "2026-09-09T02:27:16.208Z",
+  "turbo_configuration_observed_at": "2026-09-09T03:13:52.498Z",
   "turbo_local_cache_complete_within": "one immediate directory listing during the binding probe",
   "proof_cache_caveat": "necessary, not sufficient for CQ-015 evidence transfer: task-hash granularity still required"
 }

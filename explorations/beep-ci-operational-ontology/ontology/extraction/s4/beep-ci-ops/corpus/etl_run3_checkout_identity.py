@@ -22,6 +22,7 @@ import subprocess
 import tempfile
 from pathlib import Path, PurePosixPath
 from typing import Any, NoReturn, TypeAlias
+from urllib.parse import quote
 
 import yaml
 
@@ -152,10 +153,18 @@ def host_prefixes() -> list[tuple[str, str]]:
     if session != str(Path(os.sep) / "tmp"):
         roots[session] = "<session-tmp>"
     roots[str(FLEET_ROOT)] = "<fleet>"
+    roots[str(Path(os.sep) / "run/user" / str(os.geteuid()))] = "<runtime>"
+    if os.environ.get("XDG_RUNTIME_DIR"):
+        roots[str(Path(os.environ["XDG_RUNTIME_DIR"]))] = "<runtime>"
+    roots[str(Path(os.sep) / "proc")] = "<proc>"
+    roots[str(Path(os.sep) / "dev/shm")] = "<shm>"
     return sorted(roots.items(), key=lambda item: -len(item[0]))
 
 
 def redact_string(value: str) -> str:
+    value = re.sub(r"/proc/\d+(?=/|$)", "<proc>/<process>", value)
+    value = re.sub(r"(user(?:-runtime-dir)?@)\d+(\.service)", r"\1<uid>\2", value)
+    value = re.sub(r"user-\d+\.slice", "user-<uid>.slice", value)
     for prefix, replacement in host_prefixes():
         value = value.replace(prefix + "/", replacement + "/")
         # Also replace a bare root, including roots embedded in command arguments.
@@ -402,11 +411,20 @@ def validate_component(value: str, label: str) -> None:
         fail(f"control character in {label} path component")
 
 
+def checkout_component(label: str) -> str:
+    """Encode a label injectively as one component; retain the label in receipts."""
+    safe_relative_path(label)
+    component = quote(label, safe="")
+    validate_component(component, "checkout")
+    return component
+
+
 def scan_output_bytes(files: list[tuple[str, bytes]]) -> None:
     """Fail closed without printing matched private bytes (including path names)."""
     hostname = socket.gethostname().encode()
     forbidden = [(prefix + "/").encode() for prefix, _ in host_prefixes()]
-    forbidden += [b"/home/", b"/tmp/", hostname, sha256(hostname)[:12].encode()]
+    forbidden += [b"/home/", b"/tmp/", b"/run/user/", b"/proc/", b"/dev/shm/",
+                  hostname, sha256(hostname)[:12].encode()]
     for _label, data in files:
         combined = _label.encode() + b"\n" + data
         bare_root = any(re.search(re.escape(prefix.encode()) + rb"(?=$|[\s\"'=:,;)\]])", combined)
@@ -415,6 +433,8 @@ def scan_output_bytes(files: list[tuple[str, bytes]]) -> None:
             fail("residue scan failed: host path, hostname, or hostname digest")
         if re.search(rb"merged-preview-\d+", combined):
             fail("residue scan failed: process identity in preview directory name")
+        if re.search(rb"(?:user(?:-runtime-dir)?@\d+\.service|user-\d+\.slice|beep-admit-uid-\d+)", combined):
+            fail("residue scan failed: user identity in runtime or unit name")
         if PID_IN_TEXT.search(combined.decode("utf-8")):
             fail("residue scan failed: free-text process identifier")
         if b"ghp_" in combined or b"github_pat_" in combined:
@@ -494,6 +514,19 @@ class Payload:
     receipt: dict[str, Any]
 
 
+def record_observations(records: list[JsonValue]) -> dict[str, Any]:
+    """Derive the receipt census from decoded bytes in capture and verification."""
+    bounds = timestamp_bounds([t for row in records for t in collect_timestamps(row, "record")])
+    return {"event_count": len(records), "min_timestamp_observed": bounds[0],
+            "max_timestamp_observed": bounds[1]}
+
+
+def verify_fields(actual: dict[str, Any], expected: dict[str, Any], label: str) -> None:
+    for key, value in expected.items():
+        if key not in actual or actual[key] != value:
+            fail(f"{label} differs: {key}")
+
+
 def payload_pair(path: str, records: list[JsonValue], kind: str, source: str,
                  observed_at: str, **metadata: Any) -> list[Payload]:
     safe_relative_path(path)
@@ -501,11 +534,8 @@ def payload_pair(path: str, records: list[JsonValue], kind: str, source: str,
     decoded = decode_ndjson(data, "redacted") if path.endswith(".ndjson") else [decode_json(data, "redacted")]
     if not same_json(decoded, records):
         fail("redaction round-trip changed decoded data")
-    times = [t for row in records for t in collect_timestamps(row, "record")]
-    bounds = timestamp_bounds(times)
     receipt = {"path": path, "kind": kind, "source": {"file": source, "line": 1},
-               "event_count": len(records), "min_timestamp_observed": bounds[0],
-               "max_timestamp_observed": bounds[1], **complete(source, observed_at), **metadata}
+                **record_observations(records), **complete(source, observed_at), **metadata}
     # Keep per-file source cites separate from the closed-world descriptor.
     receipt["source"] = {"file": source, "line": 1}
     projection = projection_path(path)
@@ -521,6 +551,7 @@ def finish_manifest(metadata: dict[str, Any], emitted: list[Payload]) -> bytes:
     manifest = {"schema_version": MANIFEST_SCHEMA, "generated_by": SCRIPT.name,
                 "generator_sha256": sha256(SCRIPT.read_bytes()),
                 "corpus_commit": git(REPO_ROOT, "rev-parse", "HEAD"), **metadata,
+                "checkout_path_encoding": "UTF-8 percent-encoded single component; checkout labels remain verbatim in receipts",
                 "projection_rules": [
                     "config_key_value channel: one .properties sibling for every raw payload",
                     "# record <zero-based-index>; eligible leaf_key=value in source traversal order",
@@ -528,8 +559,9 @@ def finish_manifest(metadata: dict[str, Any], emitted: list[Payload]) -> bytes:
                     "null, empty strings and CR/LF values omitted; duplicate pairs and scalar array leaves retained",
                     "events count raw JSON records once; projections do not double-count events"],
                 "redaction_rules": [
-                    "All families: longest matching fleet, home, session-tmp, system-tmp prefixes rewritten",
-                    "fleet root is <fleet>; home is <home>; temp roots are <session-tmp> and <tmp>",
+                    "All families: longest matching fleet, home, session-tmp, system-tmp, runtime, proc and shm prefixes rewritten",
+                    "fleet root is <fleet>; home is <home>; temp roots are <session-tmp> and <tmp>; runtime is <runtime>; proc is <proc>; shared memory is <shm>",
+                    "Per-user systemd unit identifiers become <uid>; proc process-directory identifiers become <process>",
                     "Process identity members dropped recursively; free-text pid numbers replaced",
                     "Structural keys and non-process numbers, booleans, nulls retain their decoded values",
                     "Lock files and proof-locks are excluded; hostname and sha12(hostname) in string values become <host>; residue fails capture"],
@@ -591,16 +623,21 @@ def verify_output_tree(root: Path) -> dict[str, Any]:
                 fail("persisted raw payload is not redaction-idempotent")
             if receipt["kind"] == "admission" and row.get("schemaVersion") not in ADMISSION_SCHEMAS:
                 fail("unsupported pinned admission schema")
-        if len(rows) != receipt["event_count"]:
-            fail("raw event count differs")
+        verify_fields(receipt, record_observations(rows), "raw receipt observations")
         raw[path] = rows
         events += len(rows)
     if len(projections) != len(raw):
         fail("one projection per raw payload is required")
+    receipt_by_path = {receipt["path"]: receipt for receipt in receipts}
     for path, rows in raw.items():
         projection = projections.get(projection_path(path))
         if projection is None or projection[0].get("derived_from") != path:
             fail("projection linkage differs")
+        expected_receipt = {**receipt_by_path[path], "path": projection_path(path),
+                            "kind": PROJECTION_KIND, "derived_from": path,
+                            "bytes": len(projection[1]), "sha256": sha256(projection[1])}
+        if projection[0] != expected_receipt:
+            fail("projection receipt differs from raw receipt")
         if projection[1] != encode_properties_projection(rows) or projection[0]["event_count"] != len(rows):
             fail("projection completeness, order or values differ")
     expected = {"payload_files": len(paths), "files_emitted": len(paths) + 1, "events": events,
@@ -816,7 +853,7 @@ def capture() -> tuple[list[Payload], dict[str, Any]]:
             **cache_mount(checkout, label, env_presence),
         }
         binding = redact(rewrite_preview_paths(binding, aliases), None, counts, True)
-        path = f"bindings/{label}.json"
+        path = f"bindings/{checkout_component(label)}.json"
         emitted.extend(payload_pair(path, [binding], "checkout-binding", f"<fleet>/{label}", observed_at, checkout=label))
         bindings.append({"checkout": label, "identity_key": binding["identity_key"], "kind": row["kind"],
                          "path": path, **complete(f"<fleet>/{label}", observed_at),
@@ -864,30 +901,71 @@ def capture() -> tuple[list[Payload], dict[str, Any]]:
 
 def verify_census(manifest: dict[str, Any], raw: dict[str, list[JsonValue]]) -> None:
     snapshot = raw["fleet-snapshot.json"][0]
-    if manifest["capture_instant"] != snapshot["scannedAt"]:
-        fail("capture instant differs from snapshot scannedAt")
-    if manifest["snapshot_source"]["snapshot_sha256"] != sha256(encode_json(snapshot)):
-        fail("snapshot receipt digest differs")
+    scanned = snapshot["scannedAt"]
+    verify_fields(manifest, {"capture_instant": scanned,
+                  "capture_instant_basis": "FleetSnapshot.scannedAt"}, "capture instant basis")
+    expected_source = {**complete("bun run beep worktree fleet --json", scanned),
+                       "coverage": snapshot["coverage"], "snapshot_sha256": sha256(encode_json(snapshot))}
+    if manifest["snapshot_source"] != expected_source:
+        fail("snapshot receipt differs from pinned snapshot")
     expected = {row["path"]: row for row in snapshot["checkouts"]}
     bindings = manifest["bindings"]
-    if len(bindings) != len(expected) or len(raw) != len(bindings) + 1:
+    if (len(expected) != len(snapshot["checkouts"]) or len(bindings) != len(expected)
+            or len(raw) != len(bindings) + 1):
         fail("binding census differs from snapshot")
+    if snapshot["coverage"]["checkoutsDiscovered"] != len(expected):
+        fail("snapshot checkout coverage differs")
     if manifest["checkout_counts"] != dict(collections.Counter(row["kind"] for row in expected.values())):
         fail("checkout kind census differs")
+    files = {r["path"]: r for r in manifest["files"] if r["kind"] != PROJECTION_KIND}
+    verify_fields(files["fleet-snapshot.json"], {"kind": "fleet-snapshot", "observed_at": scanned,
+                  "source": {"file": "bun run beep worktree fleet --json", "line": 1}}, "snapshot file receipt")
+    seen = set()
     for receipt in bindings:
         binding = raw[receipt["path"]][0]
-        key = receipt["identity_key"]
         snapshot_path = binding["snapshot_path"]
-        if snapshot_path not in expected or binding["identity_key"] != key or binding["scannedAt"] != snapshot["scannedAt"]:
+        if snapshot_path not in expected or snapshot_path in seen or binding["scannedAt"] != scanned:
             fail("binding identity or instant differs")
+        seen.add(snapshot_path)
+        match = re.fullmatch(r"<(fleet|home|tmp|session-tmp)>/(.+)", snapshot_path)
+        if match is None:
+            fail("binding snapshot path has no portable root")
+        root, suffix = match.groups()
+        root_labels = {"home": "operator-home", "tmp": "system-temp", "session-tmp": "session-temp"}
+        label = suffix if root == "fleet" else f"external/{root_labels[root]}/{suffix}"
+        key = f"<fleet>/{label}"
+        path = f"bindings/{checkout_component(label)}.json"
+        verify_fields(binding, {"identity_key": key, "within_fleet_root": root == "fleet"}, "binding identity")
         for field in ("kind", "branch", "head"):
             if binding[field] != expected[snapshot_path][field]:
                 fail("binding differs from snapshot")
         branch = binding["branch"]
         if binding["branch_sha12"] != (sha256(branch.encode())[:12] if branch is not None else None):
             fail("branch digest differs")
+        probes = binding["git_probes"]
+        for probe in probes.values():
+            if probe["status"] != ("present" if probe["exit_code"] == 0 else "unavailable"):
+                fail("git probe status differs from exit code")
+        status = "present" if all(p["status"] == "present" for p in probes.values()) else "degraded"
+        matches = (binding["probe_head"] == binding["head"] and binding["probe_branch"] == branch) \
+            if probes["head"]["status"] == probes["branch"]["status"] == "present" else None
+        verify_fields(binding, {"binding_probe_status": status,
+                      "binding_probe_matches_snapshot": matches}, "binding probe derivation")
+        observed = binding["binding_probe_at"]
+        expected_receipt = {"checkout": label, "identity_key": key, "kind": binding["kind"], "path": path,
+                            **complete(key, observed), "binding_probe_matches_snapshot": matches,
+                            "binding_probe_status": status}
+        if receipt != expected_receipt:
+            fail("binding receipt differs from pinned binding")
+        verify_fields(files[path], {"kind": "checkout-binding", "checkout": label, "observed_at": observed,
+                      "source": {"file": key, "line": 1}}, "binding file receipt")
+        listing = binding["runs_dir_listing"]
+        if listing != sorted(set(listing)):
+            fail("binding runs duplicated or unordered")
         if binding["turbo_remote_cache_env_present"] != manifest["cache_mounts"]["turbo_remote_cache_env_present"]:
             fail("process environment presence differs across bindings")
+    if seen != set(expected):
+        fail("binding census does not cover every snapshot row")
 
 
 if __name__ == "__main__":

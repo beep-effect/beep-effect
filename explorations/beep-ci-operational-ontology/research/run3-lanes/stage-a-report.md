@@ -1,12 +1,18 @@
 # Run-3 Stage A implementation report
 
-> **Refresh note (orchestrator, 2026-09-08):** the pins below were re-captured once with
-> `--refresh` before publication because the lefthook Biome pre-commit hook had rewritten
-> 37 pinned JSON payloads (receipt in `research/OPPORTUNITIES.md`; the pin directories are
-> now excluded in `biome.jsonc`). Generator digests are unchanged; capture instants, the
-> custody salt, and counts moved: `run3-fleet` capture `2026-09-09T02:26:47.140Z`, 89 checkouts, 177
-> admission rows; `run3-checkout-identity` capture `2026-09-09T02:27:10.125Z`, 109 bindings. The manifest
-> excerpts and tallies in the lane's sections describe the first capture.
+> **Refresh note (review-fix lane, 2026-09-08):** both corpora were re-captured once
+> with `--refresh` after the PR #1027 generator fixes (path encoding, receipt verification,
+> and runtime redaction). The final fleet capture starts `2026-09-09T03:13:20.428Z`
+> and finishes `2026-09-09T03:13:27.254Z`: 89 checkouts, 189 admission rows,
+> 1,873 files, 7,641 source records. The final identity snapshot is
+> `2026-09-09T03:13:49.440Z`; probes finish `2026-09-09T03:13:53.495Z`:
+> 107 bindings plus the snapshot, 217 files, 108 source records. Both generator SHA-256
+> pins changed, and the fleet capture minted a new unrecorded custody salt. The manifest
+> excerpts, corpus-count tables, and original lane verification narrative below describe
+> the **first implementation capture**, not these replacement pins. The whole-tree hashes
+> in Verification now describe the **final review-fix capture**. Current per-family counts,
+> committed-tree proof, and fix SHA are in
+> [the review-fix report](./stage-a-review-fixes-report.md).
 
 Date: 2026-09-08 (America/Chicago; capture instants below are UTC).
 
@@ -18,7 +24,8 @@ operator doctrine. The report separates working-tree proof from HEAD-only lint.
 
 ## Pinned manifests
 
-First 40 lines of each generated manifest, pasted verbatim.
+First 40 lines of each generated manifest from the first implementation capture,
+pasted verbatim as historical evidence; see the Refresh note for the current pins.
 
 ### run3-fleet/MANIFEST.yaml
 
@@ -241,11 +248,13 @@ was used. The documented generator dependency remains stdlib plus PyYAML.
 
 Exit codes above come from actual CLI invocations. A `.properties` payload
 was deliberately corrupted, the CLI refused it, and a `finally` block restored
-the exact original bytes before successful verification. The whole-tree hashes
-include every relative file name and file content with 8-byte length framing:
+the exact original bytes before successful verification. The whole-tree hashes below
+were recomputed for the final review-fix capture. Sort relative POSIX file names,
+then feed each UTF-8 name and its file contents (including `MANIFEST.yaml`) into
+SHA-256, each preceded by its length as an 8-byte big-endian unsigned integer:
 
-- `run3-fleet`: `9d5e7066345ae7493f34326150a446e913034019b600be67e1507dd8fdeefc4f`.
-- `run3-checkout-identity`: `da2ae761b997598b94631da3efdf092026f14834b53a845773e25e4f5cd4c139`.
+- `run3-fleet`: `cdb45ade19a3bfa54a8b56859400a1344298e20eddedcec4511b0ecf61972096`.
+- `run3-checkout-identity`: `aa7c3ced17667a01c7ebc34f708e092e6288aa341f081abf7a98a9f6f7e8f477`.
 
 - Generator regression suite: **11 tests pass**, including v1/v2/v3 rows,
   weaker custody, new-salt unlinkability, malformed exclusions, nested process

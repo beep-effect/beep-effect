@@ -11,6 +11,7 @@ import io
 import json
 import os
 import socket
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -31,6 +32,36 @@ identity = load("etl_run3_checkout_identity")
 
 
 class RedactionTests(unittest.TestCase):
+    def test_runtime_proc_shared_memory_and_user_unit_rewrites(self):
+        for module in (fleet, identity):
+            runtime = str(Path(os.sep) / "run/user" / str(os.geteuid()))
+            custom = str(Path.home() / "runtime-fixture")
+            with patch.dict(os.environ, {"XDG_RUNTIME_DIR": custom}):
+                leaves = [runtime + "/beep-yeet-proof-locks-fixture", custom + "/state",
+                          "/proc/123/status", "/dev/shm/state",
+                          f"user@{os.geteuid()}.service", f"user-{os.geteuid()}.slice",
+                          f"user-runtime-dir@{os.geteuid()}.service"]
+                for family in ("admission", "attempts", "verdict", "ledger", "live", "binding"):
+                    value = {"family": family, "nested": {"messages": leaves}}
+                    result = module.redact(value, None, collections.Counter())
+                    self.assertEqual(result["nested"]["messages"], [
+                        "<runtime>/beep-yeet-proof-locks-fixture", "<runtime>/state",
+                        "<proc>/<process>/status", "<shm>/state", "user@<uid>.service",
+                        "user-<uid>.slice", "user-runtime-dir@<uid>.service"])
+                    module.scan_output_bytes([("fixture", module.encode_json(result))])
+                for leaf in leaves + ["/run/user/"]:
+                    with self.assertRaises(SystemExit):
+                        module.scan_output_bytes([("fixture", leaf.encode())])
+
+    def test_checkout_encoding_is_single_component_and_collision_free(self):
+        labels = ["beep-effect/.claude/worktrees/name", "beep-effect/.beep/yeet/name",
+                  "beep-effect__name", "beep-effect/name", "beep-effect%2Fname"]
+        for module in (fleet, identity):
+            encoded = [module.checkout_component(label) for label in labels]
+            self.assertEqual(len(set(encoded)), len(labels))
+            self.assertTrue(all("/" not in name for name in encoded))
+            self.assertEqual(encoded[0], "beep-effect%2F.claude%2Fworktrees%2Fname")
+
     def test_versions_exclusions_order_and_weak_custody(self):
         rows = [
             {"schemaVersion": f"yeet-admission-journal/v{v}", "_tag": "event",
@@ -152,6 +183,107 @@ class IdentityTests(unittest.TestCase):
             self.assertFalse(result["turbo_remote_cache_configured"])
             self.assertTrue(result["turbo_remote_cache_signature_configured"])
             self.assertEqual(result["turbo_remote_cache_env_present"], presence)
+
+
+class SyntheticReceiptTests(unittest.TestCase):
+    def fixture(self, module, root):
+        scanned = "2026-01-01T00:00:00.000Z"
+        if module is fleet:
+            path = "admission/fixture/journal.ndjson"
+            source = "<fixture-admission>/journal.ndjson"
+            rows, census = fleet.transform_source(fleet.encode_ndjson([
+                {"schemaVersion": "yeet-admission-journal/v1", "_tag": "admission-admitted",
+                 "admittedAtMillis": 1767225600000, "pid": 123}]), "admission", b"a" * 32)
+            emitted = module.payload_pair(path, rows, "admission", source, scanned)
+            metadata = {"capture_instant": scanned, "admission_roots": [{"label": "fixture",
+                "journal": {"path": path, **module.complete(source, scanned), **census}, "live": []}],
+                "sources": [], "checkouts": [], "checkout_counts": {},
+                "rider_evidence": module.rider_evidence({path: rows}),
+                "proof_ledger": {"checkouts_with_ledger": 0}}
+        else:
+            label = "fixture/.claude/worktrees/name"
+            key = "<fleet>/" + label
+            path = f"bindings/{module.checkout_component(label)}.json"
+            row = {"path": key, "kind": "linked-worktree", "branch": "fixture", "head": "a" * 40}
+            snapshot = {"scannedAt": scanned, "checkouts": [row], "coverage": {"checkoutsDiscovered": 1}}
+            probes = {name: {"status": "present", "exit_code": 0} for name in ("head", "branch")}
+            binding = {"scannedAt": scanned, "identity_key": key, "snapshot_path": key,
+                "within_fleet_root": True, "kind": row["kind"], "branch": row["branch"], "head": row["head"],
+                "branch_sha12": module.sha256(b"fixture")[:12], "git_probes": probes,
+                "probe_head": row["head"], "probe_branch": row["branch"], "binding_probe_status": "present",
+                "binding_probe_matches_snapshot": True, "binding_probe_at": scanned,
+                "runs_dir_listing": [], "turbo_remote_cache_env_present": {}}
+            emitted = module.payload_pair("fleet-snapshot.json", [snapshot], "fleet-snapshot",
+                                          "bun run beep worktree fleet --json", scanned)
+            emitted += module.payload_pair(path, [binding], "checkout-binding", key, scanned, checkout=label)
+            metadata = {"capture_instant": scanned, "capture_instant_basis": "FleetSnapshot.scannedAt",
+                "snapshot_source": {**module.complete("bun run beep worktree fleet --json", scanned),
+                    "coverage": snapshot["coverage"], "snapshot_sha256": module.sha256(emitted[0].data)},
+                "checkout_counts": {"linked-worktree": 1}, "cache_mounts": {"turbo_remote_cache_env_present": {}},
+                "bindings": [{"checkout": label, "identity_key": key, "kind": row["kind"], "path": path,
+                    **module.complete(key, scanned), "binding_probe_matches_snapshot": True,
+                    "binding_probe_status": "present"}]}
+        with patch.object(module, "git", return_value="a" * 40):
+            manifest = module.finish_manifest(metadata, emitted)
+        for payload in emitted:
+            target = root / payload.path
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(payload.data)
+        (root / module.MANIFEST_NAME).write_bytes(manifest)
+        return manifest
+
+    def verify_cli(self, module, root):
+        runner = ("import importlib,sys; from pathlib import Path; "
+                  "sys.path.insert(0,str(Path(sys.argv[1]).parent)); "
+                  "m=importlib.import_module(Path(sys.argv[1]).stem); "
+                  "m.OUTPUT_ROOT=Path(sys.argv[2]); sys.argv=[sys.argv[1]]; m.main()")
+        return subprocess.run([sys.executable, "-c", runner, str(module.SCRIPT), str(root)],
+                              capture_output=True, text=True, timeout=30)
+
+    def test_same_length_receipt_timestamp_mutation_fails_cli_then_restores(self):
+        for module in (fleet, identity):
+            with tempfile.TemporaryDirectory() as name:
+                root = Path(name)
+                original = self.fixture(module, root)
+                self.assertEqual(self.verify_cli(module, root).returncode, 0)
+                for field in (b"min_timestamp_observed", b"max_timestamp_observed"):
+                    old = field + b": '2026-01-01T00:00:00.000Z'"
+                    new = field + b": '2026-01-01T00:00:00.001Z'"
+                    # Check raw and projection receipts independently.
+                    for index in (0, 1):
+                        pieces = original.split(old)
+                        self.assertGreaterEqual(len(pieces), 3)
+                        mutated = old.join(pieces[:index + 1]) + new + old.join(pieces[index + 1:])
+                        self.assertEqual(len(mutated), len(original))
+                        target = root / module.MANIFEST_NAME
+                        try:
+                            target.write_bytes(mutated)
+                            result = self.verify_cli(module, root)
+                            self.assertNotEqual(result.returncode, 0)
+                            self.assertIn("receipt", result.stderr)
+                        finally:
+                            target.write_bytes(original)
+                        self.assertEqual(self.verify_cli(module, root).returncode, 0)
+
+    def test_identity_manifest_derived_fields_reject_same_length_edits(self):
+        mutations = [(b"capture_instant_basis: FleetSnapshot.scannedAt", b"capture_instant_basis: FleetSnapshot.startedAt"),
+                     (b"checkoutsDiscovered: 1", b"checkoutsDiscovered: 2"),
+                     (b"binding_probe_status: present", b"binding_probe_status: missing"),
+                     (b"kind: linked-worktree", b"kind: invalid-fixture")]
+        with tempfile.TemporaryDirectory() as name:
+            root = Path(name)
+            original = self.fixture(identity, root)
+            for old, new in mutations:
+                with self.subTest(field=old):
+                    self.assertIn(old, original)
+                    mutated = original.replace(old, new, 1)
+                    self.assertEqual(len(mutated), len(original))
+                    try:
+                        (root / identity.MANIFEST_NAME).write_bytes(mutated)
+                        self.assertNotEqual(self.verify_cli(identity, root).returncode, 0)
+                    finally:
+                        (root / identity.MANIFEST_NAME).write_bytes(original)
+                    self.assertEqual(self.verify_cli(identity, root).returncode, 0)
 
 
 class PinnedContractTests(unittest.TestCase):

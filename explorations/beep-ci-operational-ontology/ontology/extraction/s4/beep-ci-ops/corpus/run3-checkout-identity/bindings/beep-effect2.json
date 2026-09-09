@@ -1,6 +1,6 @@
 {
   "identity_key": "<fleet>/beep-effect2",
-  "scannedAt": "2026-09-09T02:27:10.125Z",
+  "scannedAt": "2026-09-09T03:13:49.440Z",
   "snapshot_path": "<fleet>/beep-effect2",
   "within_fleet_root": true,
   "origin_url": "git@github.com:beep-effect/beep-effect.git",
@@ -84,7 +84,7 @@
     "slop_7-11-26-658cdedbc576"
   ],
   "runs_directory_status": "present",
-  "binding_probe_at": "2026-09-09T02:27:16.460Z",
+  "binding_probe_at": "2026-09-09T03:13:52.750Z",
   "git_probes": {
     "origin": {
       "command": "git remote get-url origin",
@@ -119,7 +119,7 @@
   "binding_temporality": "snapshot branch/head at scannedAt; supplementary git/cache probes during capture interval",
   "turbo_local_cache_path": "<fleet>/beep-effect2/.turbo/cache",
   "turbo_local_cache_present": true,
-  "turbo_local_cache_entries": 52752,
+  "turbo_local_cache_entries": 52851,
   "turbo_local_cache_entries_basis": "immediate directory entries; not deduplicated task hashes",
   "turbo_remote_cache_configured": false,
   "turbo_remote_cache_env_present": {
@@ -135,7 +135,7 @@
     "file": "<fleet>/beep-effect2/turbo.json",
     "line": 1
   },
-  "turbo_configuration_observed_at": "2026-09-09T02:27:16.460Z",
+  "turbo_configuration_observed_at": "2026-09-09T03:13:52.750Z",
   "turbo_local_cache_complete_within": "one immediate directory listing during the binding probe",
   "proof_cache_caveat": "necessary, not sufficient for CQ-015 evidence transfer: task-hash granularity still required"
 }
