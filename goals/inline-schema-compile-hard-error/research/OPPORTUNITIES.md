@@ -566,3 +566,40 @@
   avoid discarding completed work, provided head, tree, environment, and
   proof-scope identities still match; a passing retry of one lane must never
   be reported as a completed aggregate proof.
+
+## 2026-09-09 - Review-ready transition did not enforce packet closeout
+
+- **Work:** Finish local verification and the packet-state update in #1042
+  while allowing its automated Codex review to run.
+- **Evidence:** The operator marked the draft ready for review, triggering
+  Codex at 08:55 UTC. The current-head monitor printed `merge-ready: yes`
+  while local CI parity was still running; its process returned 1 for the
+  two permitted Vercel rate limits. Codex posted a P1 same-PR packet-closeout
+  finding at 09:00:29 UTC. GitHub merged #1042 at 09:01:20 UTC, before the
+  full proof or final packet update finished. The PR description explicitly
+  requested a merge hold, and GitHub auto-merge was not enabled at the last
+  pre-merge check. The remote feature branch was subsequently deleted.
+- **Prevention:** Make outstanding local proof, packet-state updates, and
+  in-flight agent reviews visible to the actual merge gate. Distinguish
+  ready-for-review from cleared-for-merge, and coordinate one merge owner.
+  A final closeout PR should contain the packet-state update before it is
+  published so an early merge cannot strand that update in a successor.
+  Normalize permitted check exceptions consistently between the readiness
+  summary and the monitor's process exit status.
+
+## 2026-09-09 - Incident notes tripped the post-proof dirty-tree guard
+
+- **Work:** Record the premature #1042 merge while its immutable CI preview
+  was still running.
+- **Evidence:** I appended the incident to the root checkout's
+  `OPPORTUNITIES.md` and `closeout-evidence.md`. The pinned preview remained
+  clean and all 23 CI stages passed, but the publication correctly exited 1
+  because those root files changed after the early push. Its message called
+  them proof-written files, while `failedStepId` named the next monitor step
+  that had not run. The files were agent-authored incident notes, not output
+  from any proof command. The failure must not be relabeled as success.
+- **Prevention:** Keep the entire publication checkout immutable, not only
+  the CI preview. Provide a pending friction-capture surface outside that
+  checkout and fold it into the next candidate before verification. Give
+  post-proof mutation guards their own failure identity and preserve passing
+  lane receipts separately from the unsuccessful publication outcome.
