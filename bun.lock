@@ -2768,12 +2768,12 @@
         "@effect/sql-pglite": "catalog:",
         "@effect/sql-sqlite-bun": "catalog:",
         "@effect/sql-sqlite-node": "catalog:",
+        "@effect/vitest": "catalog:",
         "effect": "catalog:",
         "pg": "^8.20.0",
         "testcontainers": "catalog:",
       },
       "devDependencies": {
-        "@effect/vitest": "catalog:",
         "@types/bun": "catalog:",
         "@types/node": "catalog:",
         "@types/pg": "^8.20.0",
@@ -3016,6 +3016,7 @@
     },
   },
   "patchedDependencies": {
+    "@effect/platform-node-shared@4.0.0-rc.112": "patches/@effect%2Fplatform-node-shared@4.0.0-rc.112.patch",
     "onnxruntime-node@1.29.0": "patches/onnxruntime-node@1.29.0.patch",
   },
   "overrides": {

@@ -129,7 +129,7 @@ it.layer(MemoryFileSystem.layer)("FileSystem (memory-specific)", (it) => {
         assert.strictEqual(yield* fs.readFileString("/destination.txt"), "content")
       }))
 
-    it.effect("should report the destination path when copy overwrite is disabled",
+    it.effect("should report the source path when copy overwrite is disabled",
       Effect.fnUntraced(function*() {
         const fs = yield* FileSystem.FileSystem
         yield* fs.writeFileString("/copy-source.txt", "source")
@@ -143,7 +143,7 @@ it.layer(MemoryFileSystem.layer)("FileSystem (memory-specific)", (it) => {
         if (Result.isFailure(result)) {
           assert.strictEqual(result.failure.reason._tag, "AlreadyExists")
           if (result.failure.reason._tag === "AlreadyExists") {
-            assert.strictEqual(result.failure.reason.pathOrDescriptor, "/copy-destination.txt")
+            assert.strictEqual(result.failure.reason.pathOrDescriptor, "/copy-source.txt")
           }
         }
         assert.strictEqual(yield* fs.readFileString("/copy-destination.txt"), "destination")

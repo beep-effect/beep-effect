@@ -34330,15 +34330,15 @@
     },
     "@beep/test-utils": {
       "path": "packages/tooling/test-kit/test-utils",
-      "lines": 78.88,
-      "statements": 79.37,
-      "branches": 71.95,
-      "functions": 66.98,
+      "lines": 96.19,
+      "statements": 95.51,
+      "branches": 93.16,
+      "functions": 91.04,
       "uncovered": {
-        "lines": 95,
-        "statements": 99,
-        "branches": 23,
-        "functions": 70
+        "lines": 71,
+        "statements": 91,
+        "branches": 45,
+        "functions": 54
       },
       "files": {
         "packages/tooling/test-kit/test-utils/src/ConformanceLedger/ConformanceLedger.evidence.ts": {
@@ -34413,7 +34413,43 @@
             "functions": 0
           }
         },
+        "packages/tooling/test-kit/test-utils/src/FileSystemConformance.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 80,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 1,
+            "functions": 0
+          }
+        },
         "packages/tooling/test-kit/test-utils/src/Layer.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/test-kit/test-utils/src/MemoryFileSystem/MemoryFileSystem.test-kit.ts": {
+          "lines": 98.87,
+          "statements": 97.66,
+          "branches": 94.57,
+          "functions": 97.85,
+          "uncovered": {
+            "lines": 13,
+            "statements": 30,
+            "branches": 31,
+            "functions": 7
+          }
+        },
+        "packages/tooling/test-kit/test-utils/src/MemoryFileSystem/index.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -34438,15 +34474,15 @@
           }
         },
         "packages/tooling/test-kit/test-utils/src/SqlTest.ts": {
-          "lines": 66.3,
-          "statements": 65.73,
-          "branches": 58.49,
-          "functions": 46.51,
+          "lines": 79.56,
+          "statements": 79.02,
+          "branches": 77.35,
+          "functions": 64.34,
           "uncovered": {
-            "lines": 94,
-            "statements": 98,
-            "branches": 22,
-            "functions": 69
+            "lines": 57,
+            "statements": 60,
+            "branches": 12,
+            "functions": 46
           }
         },
         "packages/tooling/test-kit/test-utils/src/SystemTemp.ts": {
