@@ -1,5 +1,10 @@
 # Quality Speedup Plan
 
+> Future reuse (2026-09-08): new token-heavy Codex work uses `gpt-6-astra`
+> with `xhigh` reasoning, per [root agent guidance](../../AGENTS.md#token-heavy-codex-work).
+> This completed packet retains its original execution details below as
+> historical provenance; the routing update applies only to future work.
+
 ## Status
 
 Status: `complete`
@@ -16,7 +21,7 @@ Status: `complete`
 
 ## Execution notes
 
-- Heavy fan-out runs as `codex exec` background jobs (`gpt-6-astra`, `xhigh`
+- Heavy fan-out runs as `codex exec` background jobs (GPT-5.6 Sol, medium
   reasoning) writing drafts to the session scratchpad and data TSVs to
   `research/data/`; Fable integrates and verifies. Claude subagents are not
   used for bulk work (quota routing doctrine).

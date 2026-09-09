@@ -1,5 +1,10 @@
 # Codex Security Findings (2026-07-14)
 
+> Future reuse (2026-09-08): new token-heavy Codex work uses `gpt-6-astra`
+> with `xhigh` reasoning, per [root agent guidance](../../AGENTS.md#token-heavy-codex-work).
+> This completed packet retains its original execution details below as
+> historical provenance; the routing update applies only to future work.
+
 ## Status
 
 Lifecycle: `completed-retained`
@@ -49,7 +54,7 @@ deliberately left for a dedicated packet.
 
 - **Fable 5 (main)** drives: packet ledgers, `bun.lock` dedupe, browser closure
   (via codex Chrome), Yeet, merge, final verification.
-- **Codex `gpt-6-astra` (`xhigh`)** does the token-heavy work: per-lane validation
+- **Codex GPT-5.6 Sol (medium)** does the token-heavy work: per-lane validation
   and remediation on disjoint paths, returning changed files + verification.
 
 ## Notes

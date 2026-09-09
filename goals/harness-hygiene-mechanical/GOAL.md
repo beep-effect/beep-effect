@@ -1,5 +1,10 @@
 # GOAL: mechanical harness hygiene — dead skills, cache prefix, three laws
 
+> Future reuse (2026-09-08): new token-heavy Codex work uses `gpt-6-astra`
+> with `xhigh` reasoning, per [root agent guidance](../../AGENTS.md#token-heavy-codex-work).
+> This completed packet retains its original execution details below as
+> historical provenance; the routing update applies only to future work.
+
 Repo root: the current working directory — the `beep-effect` checkout you are
 running in. Do not assume an absolute path; several checkouts exist. All paths
 below are repo-relative.
@@ -37,7 +42,7 @@ Scope:
 Model economy (operator requirement): the operator's weekly Fable 5 limit is
 scarce. Fable/Opus sessions plan, design, and review ONLY. Route all
 token-heavy lanes (reference scans, law drafting research, bulk analysis) to
-codex via the codex plugin with `--model gpt-6-astra --effort xhigh`, one
+codex via the codex plugin with `--model gpt-5.6-sol --effort medium`, one
 artifact per agent.
 
 Workflow:

@@ -86,8 +86,8 @@
     ]
   },
   "lanePolicy": {
-    "validationModel": "codex gpt-6-astra xhigh confirms each finding reproduces at HEAD",
-    "remediationModel": "one codex gpt-6-astra xhigh agent per disjoint lane",
+    "validationModel": "codex gpt-5.6-sol medium confirms each finding reproduces at HEAD",
+    "remediationModel": "one codex gpt-5.6-sol medium agent per disjoint lane",
     "validationWrites": "sub-agents return structured verdicts; main agent writes ledgers",
     "remediationWrites": "workers edit only assigned disjoint paths; main agent owns bun.lock and integration",
     "record": "ops/triage.json#/lanes"

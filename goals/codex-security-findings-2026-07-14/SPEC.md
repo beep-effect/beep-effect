@@ -1,5 +1,10 @@
 # Codex Security Findings (2026-07-14) Spec
 
+> Future reuse (2026-09-08): new token-heavy Codex work uses `gpt-6-astra`
+> with `xhigh` reasoning, per [root agent guidance](../../AGENTS.md#token-heavy-codex-work).
+> This completed packet retains its original execution details below as
+> historical provenance; the routing update applies only to future work.
+
 ## Objective
 
 Remediate every open Codex Cloud security finding visible at
@@ -54,7 +59,7 @@ Higher sources outrank lower sources when they conflict.
 - Search live source and package barrels before adding helpers. A shared helper
   is allowed only for a repeated maintained-code class and only in the
   doctrine-correct home (package-local first, then tooling/driver/foundation).
-- Token-heavy validation and remediation run on codex `gpt-6-astra` at `xhigh`
+- Token-heavy validation and remediation run on codex GPT-5.6 Sol at medium
   reasoning, one agent per disjoint lane. Sub-agents return changed files +
   verification and never write shared ledgers, `bun.lock`, or the dashboard.
 - Fable (main agent) owns `ops/triage.json`, `findings/INDEX.md`, `bun.lock`

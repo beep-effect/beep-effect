@@ -1,5 +1,10 @@
 # Codex Security Findings (2026-07-14) Plan
 
+> Future reuse (2026-09-08): new token-heavy Codex work uses `gpt-6-astra`
+> with `xhigh` reasoning, per [root agent guidance](../../AGENTS.md#token-heavy-codex-work).
+> This completed packet retains its original execution details below as
+> historical provenance; the routing update applies only to future work.
+
 ## Status
 
 Status: `completed-retained`. All phases P0-P9 complete: 9 findings remediated
@@ -24,9 +29,9 @@ via PR #413 (`03285268f9`). See `history/2026-07-14-closeout.md`.
 ## Execution Notes
 
 - Browser capture and closure route through codex's Chrome extension (delegated
-  via a `codex:codex-rescue` agent, model `gpt-6-astra`, `xhigh` reasoning), not
+  via a `codex:codex-rescue` agent, model `gpt-5.6-sol`, medium reasoning), not
   Claude `claude-in-chrome`.
-- Remediation runs one codex `gpt-6-astra`/`xhigh` agent per lane on disjoint
+- Remediation runs one codex `gpt-5.6-sol`/medium agent per lane on disjoint
   paths; each returns changed files + verification. Fable integrates, owns all
   shared ledgers, and runs the `bun.lock` dedupe last to avoid conflicts.
 - Use live source/barrel search and repo doctrine before creating any helper.

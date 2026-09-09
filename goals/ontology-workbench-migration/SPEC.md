@@ -1,5 +1,10 @@
 # SPEC — Ontology Workbench Migration
 
+> Future reuse (2026-09-08): new token-heavy Codex work uses `gpt-6-astra`
+> with `xhigh` reasoning, per [root agent guidance](../../AGENTS.md#token-heavy-codex-work).
+> This completed packet retains its original execution details below as
+> historical provenance; the routing update applies only to future work.
+
 Normative contract for the first step-4 surface migration of the workspace
 substrate: the Ontology workbench monolith
 (`packages/ontology/ui/src/aggregates/Session/Session.workbench.tsx`, ~1160
@@ -48,7 +53,7 @@ authority for what this packet absorbs vs leaves).
    menus, `LayoutPriority`, snap-to-collapse) stays out of scope.
 7. **Milestones**: four, capability-first, one branch/PR each off fresh
    `origin/main` through yeet.
-8. **Execution**: codex (`gpt-6-astra`, `xhigh` reasoning) drafts M1 capability code and M2's
+8. **Execution**: codex (gpt-5.6-sol) drafts M1 capability code and M2's
    mechanical extraction; Fable plans, reviews everything, and hand-builds
    M3's user-facing UI; M4 reruns the browser QA loop (codex vision +
    hands-on Chrome) with Fable fixing, and graduates the loop into a repo
@@ -152,7 +157,7 @@ Evidence plan:
 
 ## M4 — QA-to-green + close (branch `chore/ontology-migration-qa`)
 
-- Browser QA loop (playwright capture harness → codex `gpt-6-astra` with `xhigh` reasoning
+- Browser QA loop (playwright capture harness → codex gpt-5.6-sol high-effort
   vision inventory → Fable fix rounds → hands-on Chrome verification).
   Required scenario coverage: rail-menu open/focus for all nine panels;
   closed-by-default tools; tab overflow in a narrowed group; all four drop

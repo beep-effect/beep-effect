@@ -1,5 +1,10 @@
 # Graph 3D View Spec
 
+> Future reuse (2026-09-08): new token-heavy Codex work uses `gpt-6-astra`
+> with `xhigh` reasoning, per [root agent guidance](../../AGENTS.md#token-heavy-codex-work).
+> This completed packet retains its original execution details below as
+> historical provenance; the routing update applies only to future work.
+
 ## Objective
 
 Ship a React 3D knowledge-graph renderer reproducing the InfraNodus visual
@@ -64,7 +69,7 @@ Higher sources outrank lower sources when they conflict.
 - **Routing (binding, see `GOAL.md`).** All design, review, and user-facing
   frontend/renderer/UX code is the main agent's (Fable). Non-visual plumbing
   (worker 3D layout, projection schema, bridge/toggle atoms) is drafted by codex
-  `gpt-6-astra --effort xhigh --write` jobs (one output file per job) and
+  `gpt-5.6-sol --effort medium --write` jobs (one output file per job) and
   reviewed by Fable before commit. `research/` is frozen — no new web research;
   never copy bundle/AGPL code.
 - **Doctrine.** Slice `ui` must not import drivers; `client` imports only

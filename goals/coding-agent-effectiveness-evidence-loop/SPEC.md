@@ -142,7 +142,7 @@ Schema-level laws for P2 models, gate-level checks in P4. All five adopted
   restart; never copy-then-delete, never leave dual live stores.
 - Model allocation (updated by operator instruction 2026-09-08):
   Fable sessions plan, design, and review; token-heavy execution lanes run
-  on codex `gpt-6-astra` at `--effort xhigh`, following root `AGENTS.md`.
+  on codex `gpt-6-astra` with `xhigh` reasoning, following root `AGENTS.md`.
 
 ## Acceptance Criteria
 

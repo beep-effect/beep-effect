@@ -1,5 +1,10 @@
 # Harness Hygiene Mechanical Spec
 
+> Future reuse (2026-09-08): new token-heavy Codex work uses `gpt-6-astra`
+> with `xhigh` reasoning, per [root agent guidance](../../AGENTS.md#token-heavy-codex-work).
+> This completed packet retains its original execution details below as
+> historical provenance; the routing update applies only to future work.
+
 ## Objective
 
 The agent-facing instruction surface sheds confirmed dead weight and gains
@@ -59,7 +64,7 @@ Higher sources outrank lower sources when they conflict.
 - Evicted prose must land in an owned surface, not be deleted (memory
   architecture decision log stays authoritative).
 - Model economy: Fable 5/Opus plan, design, and review only; all token-heavy
-  execution lanes run on codex `gpt-6-astra` at `--effort xhigh` (operator's
+  execution lanes run on codex `gpt-5.6-sol` at `--effort medium` (operator's
   weekly Fable 5 limit is the scarce resource — pulse DECISIONS 2026-07-14
   "subagent-economy").
 - Exploration provenance: `explorations/agent-effectiveness-pulse`

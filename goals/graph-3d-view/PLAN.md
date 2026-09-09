@@ -1,5 +1,10 @@
 # Graph 3D View Plan
 
+> Future reuse (2026-09-08): new token-heavy Codex work uses `gpt-6-astra`
+> with `xhigh` reasoning, per [root agent guidance](../../AGENTS.md#token-heavy-codex-work).
+> This completed packet retains its original execution details below as
+> historical provenance; the routing update applies only to future work.
+
 ## Status
 
 Status: `completed-retained` (all phases completed 2026-07-16)
@@ -16,7 +21,7 @@ Status: `completed-retained` (all phases completed 2026-07-16)
 ## Task routing (Actor per task)
 
 Routing law in `GOAL.md`: Fable = design + review + all frontend/renderer/UX;
-codex `gpt-6-astra --effort xhigh --write` = non-visual plumbing (one output
+codex `gpt-5.6-sol --effort medium --write` = non-visual plumbing (one output
 file per job), reviewed by Fable.
 
 ### P0 — Design gate
