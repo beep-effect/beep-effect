@@ -440,9 +440,11 @@ installation behind that executable on the agent's absolute PATH entries. On
 Unix, the canonical executable, metadata, entry module, and their ancestors
 must be owned by the current effective user or root and protected against
 group/world writes (root-owned sticky directories are allowed). The package
-identity and expected entry layout must match. Foreign, missing, or unsupported
-installations leave the optional hooks inactive. No initializing-user path,
-project fallback, or version ranking participates in selection. Regeneration
+identity and expected entry layout must match. Windows npm shims are checked
+through the system PowerShell `Get-Acl` API: numeric owner and access-rule SIDs
+must establish current-user or system control without untrusted mutation rights.
+Missing or inconclusive ACL evidence leaves the hooks inactive. No initializing-user
+path, project fallback, or version ranking participates in selection. Regeneration
 must preserve these loaders; their regression tests live in the CLI package.
 
 **Boundaries and watch items:**

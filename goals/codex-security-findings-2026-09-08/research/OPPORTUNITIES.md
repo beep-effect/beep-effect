@@ -34,3 +34,9 @@
   wiring. The generated shims carried an initializing-user path and selected
   installations by version. Keep a repo-owned trusted loader and regression
   tests so integration regeneration cannot silently restore cross-account imports.
+
+- GitHub GraphQL exhausted its shared quota after an early push succeeded.
+  Yeet then failed its PR lookup although PR #1026 already contained the commit.
+  REST confirmed the head and accepted the review reply. An exhausted GraphQL
+  lookup should preserve the known PR identity and report a retryable monitor
+  delay instead of attempting to create another PR.

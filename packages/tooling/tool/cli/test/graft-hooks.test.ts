@@ -68,6 +68,78 @@ const runNode = Effect.fn("GraftHooksTest.runNode")(function* (
 });
 
 describe("Graft hook installation trust", () => {
+  it.effect("uses Windows ACL evidence to permit trusted npm shims and reject unsafe or unavailable evidence", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const fixture = yield* makeFixture();
+      const windowsPackage = path.join(fixture.bin, "node_modules", "@nanonets", "graft");
+      yield* fs.makeDirectory(path.dirname(windowsPackage), { recursive: true });
+      yield* fs.rename(fixture.pkg, windowsPackage);
+      yield* fs.writeFileString(path.join(fixture.bin, "graft.cmd"), "@echo off\r\n");
+      const program = A.join(
+        [
+          'Object.defineProperty(process, "platform", { value: "win32" });',
+          "process.env.SystemRoot = process.argv[1];",
+          "const mode = process.argv[3];",
+          'const cp = require("node:child_process");',
+          "cp.execFileSync = (command, args, options) => {",
+          '  if (mode === "unavailable") throw new Error("ACL probe unavailable");',
+          '  if (!command.endsWith("powershell.exe") || !args.includes("-EncodedCommand")) throw new Error("unexpected probe");',
+          "  const paths = JSON.parse(options.input);",
+          '  const user = "S-1-5-21-100-200-300-1001";',
+          '  const foreign = "S-1-5-21-100-200-300-1002";',
+          "  const rows = paths.map((path) => ({ path, owner: user, rules: [] }));",
+          '  if (mode === "foreign") rows[0].owner = foreign;',
+          '  if (mode === "writable") rows[0].rules = [{ sid: foreign, allow: true, inheritOnly: false, rights: 2 }];',
+          '  if (mode === "denied") rows[0].rules = [{ sid: foreign, allow: false, inheritOnly: false, rights: 2 }];',
+          '  if (mode === "inherit-only") rows[0].rules = [{ sid: foreign, allow: true, inheritOnly: true, rights: 2 }];',
+          '  if (mode === "sibling-create") rows[paths.indexOf(process.argv[1])].rules = [{ sid: foreign, allow: true, inheritOnly: false, rights: 4 }];',
+          '  if (mode === "ancestor-replace") rows[paths.indexOf(process.argv[1])].rules = [{ sid: foreign, allow: true, inheritOnly: false, rights: 64 }];',
+          '  if (mode === "missing") rows.pop();',
+          '  if (mode === "duplicate") rows[1] = rows[0];',
+          '  if (mode === "malformed") return "not JSON";',
+          "  return JSON.stringify({ user, rows });",
+          "};",
+          "const loader = require(process.argv[2]);",
+          'console.log(loader.resolveEntry("hooks.js") ? "trusted" : "rejected");',
+          'console.log(loader.resolveEntry("statusline.js") ? "trusted" : "rejected");',
+        ],
+        "\n"
+      );
+      for (const mode of ["trusted", "denied", "inherit-only", "sibling-create"]) {
+        expect(
+          yield* runNode(fixture.project, fixture.bin, [
+            "-e",
+            program,
+            fixture.root,
+            `${helpers}graft-loader.cjs`,
+            mode,
+          ])
+        ).toBe("trusted\ntrusted\n");
+      }
+      for (const mode of [
+        "foreign",
+        "writable",
+        "unavailable",
+        "ancestor-replace",
+        "missing",
+        "duplicate",
+        "malformed",
+      ]) {
+        expect(
+          yield* runNode(fixture.project, fixture.bin, [
+            "-e",
+            program,
+            fixture.root,
+            `${helpers}graft-loader.cjs`,
+            mode,
+          ])
+        ).toBe("rejected\nrejected\n");
+      }
+    }).pipe(Effect.scoped, Effect.provide(NodeServices.layer))
+  );
+
   it.effect("runs both shims from the trusted PATH installation and forwards the hook event", () =>
     Effect.gen(function* () {
       const fixture = yield* makeFixture();

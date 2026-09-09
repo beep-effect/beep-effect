@@ -69,3 +69,9 @@ escaping module paths. Updated package and repository proof are still required.
 
 The file-URL regression also covers home roots followed directly by query and
 fragment delimiters, for plain and gzip evidence. All 17 economics tests pass.
+
+The eleven-finding CLI package audit passed in 356.7 seconds and docgen in
+18.1 seconds. Review then added Windows ACL validation to the Graft loader,
+with focused contract fixtures; no native Windows runtime was available.
+The capture refresher now changes only the count in source prose, preserving
+an existing full-snapshot description without duplication.
