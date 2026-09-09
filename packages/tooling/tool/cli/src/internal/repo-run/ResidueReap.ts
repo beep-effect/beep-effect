@@ -710,7 +710,7 @@ type ResolvedApplyTarget = {
 
 const resolveApplyTarget = Effect.fnUntraced(function* (
   assessed: ResidueReapCandidate,
-  homeBoundary: string
+  outerBoundary: O.Option<string>
 ): Effect.fn.Return<O.Option<ResolvedApplyTarget>, never, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -726,10 +726,7 @@ const resolveApplyTarget = Effect.fnUntraced(function* (
   if (O.isNone(root) || O.isNone(target) || !pathIsStrictlyWithin(path, root.value, target.value)) {
     return O.none();
   }
-  if (
-    !ResidueReapClass.is["turbo-cache"](assessed.reapClass) &&
-    !pathIsStrictlyWithin(path, homeBoundary, root.value)
-  ) {
+  if (O.isNone(outerBoundary) || !pathIsStrictlyWithin(path, outerBoundary.value, root.value)) {
     return O.none();
   }
   // The inode behind the resolved path is what the removal is later bound to, so an
@@ -763,7 +760,7 @@ const removeResolvedCandidate = Effect.fnUntraced(function* (
 
 const applyCandidate = Effect.fnUntraced(function* (
   assessed: ResidueReapCandidate,
-  homeBoundary: string,
+  outerBoundary: O.Option<string>,
   nowMillis: number,
   maxAgeDays: number,
   turboMaxAgeDays: number,
@@ -778,7 +775,7 @@ const applyCandidate = Effect.fnUntraced(function* (
   // removal below run on the resolved one.
   const reported = (candidate: ResidueReapCandidate): ResidueReapCandidate =>
     ResidueReapCandidate.make({ ...candidate, root: assessed.root, path: assessed.path });
-  const resolved = yield* resolveApplyTarget(assessed, homeBoundary);
+  const resolved = yield* resolveApplyTarget(assessed, outerBoundary);
   if (O.isNone(resolved)) {
     return {
       candidate: ResidueReapCandidate.make({ ...assessed, action: "skip", skipReason: "path-changed" }),
@@ -896,6 +893,7 @@ export const runResidueReap = Effect.fn("ResidueReap.runResidueReap")(function* 
   const beepCacheRoot = path.join(homeRoot, ".cache", "beep");
   const fs = yield* FileSystem.FileSystem;
   const homeBoundary = yield* fs.realPath(homeRoot);
+  const repoBoundary = yield* fs.realPath(resolvedRepoRoot).pipe(Effect.option);
 
   const sessions = includes("codex-sessions")
     ? (yield* Effect.reduce(
@@ -947,7 +945,16 @@ export const runResidueReap = Effect.fn("ResidueReap.runResidueReap")(function* 
   const outcomes = apply
     ? yield* Effect.forEach(
         discovered,
-        (entry) => applyCandidate(entry, homeBoundary, nowMillis, maxAgeDays, turboMaxAgeDays, entryCap, cwdProbe),
+        (entry) =>
+          applyCandidate(
+            entry,
+            ResidueReapClass.is["turbo-cache"](entry.reapClass) ? repoBoundary : O.some(homeBoundary),
+            nowMillis,
+            maxAgeDays,
+            turboMaxAgeDays,
+            entryCap,
+            cwdProbe
+          ),
         { concurrency: 1 }
       )
     : A.map(

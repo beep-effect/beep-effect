@@ -431,6 +431,19 @@ class PublicHygieneTest(unittest.TestCase):
                         economics.validate_public_hygiene([file])
                     self.assertNotIn("/root", economics.redact(value))
 
+    def test_file_urls_are_rejected_and_redacted_without_changing_branch_names(self) -> None:
+        with tempfile.TemporaryDirectory() as directory, mock.patch.object(Path, "home", return_value=Path("/root")):
+            for value in ("file:///root/private.ts", "file://localhost/root/private.ts", "FILE:///root/private.ts"):
+                for suffix in (".json", ".json.gz"):
+                    with self.subTest(value=value, suffix=suffix):
+                        file = Path(directory) / ("journal" + suffix)
+                        payload = json.dumps({"path": value}).encode()
+                        file.write_bytes(gzip.compress(payload) if suffix.endswith(".gz") else payload)
+                        with self.assertRaises(SystemExit):
+                            economics.validate_public_hygiene([file])
+                        self.assertNotIn("/root", economics.redact(value))
+            self.assertEqual(economics.redact("fix/root-build-failure"), "fix/root-build-failure")
+
 
 if __name__ == "__main__":
     unittest.main()

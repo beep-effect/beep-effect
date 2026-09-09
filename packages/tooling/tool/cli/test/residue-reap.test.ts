@@ -459,6 +459,45 @@ describe("residue reap", () => {
     ).pipe(provideScopedLayer(NodeServices.layer))
   );
 
+  it.effect("rechecks the repository boundary when the Turbo cache root is repointed after discovery", () =>
+    withTempDirectory((root) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const fixture = yield* makeFixture(root);
+        const entry = path.join(fixture.turboCacheRoot, "old-directory");
+        const moved = path.join(root, "moved-cache");
+        const external = path.join(root, "external-cache");
+        const payload = path.join(external, "old-directory", "keep.txt");
+        yield* fs.makeDirectory(entry);
+        yield* fs.writeFileString(path.join(entry, "payload.txt"), "original cache\n");
+        yield* fs.makeDirectory(path.dirname(payload), { recursive: true });
+        yield* fs.writeFileString(payload, "unrelated work\n");
+        yield* touchTreeDaysAgo(root, entry, 60);
+        yield* touchTreeDaysAgo(root, external, 60);
+        const swappingProbe = Effect.fn("turboRootSwappingProbe")(function* (target: string) {
+          if (Str.Equivalence(target, entry) && !(yield* fs.exists(moved))) {
+            yield* fs.rename(fixture.turboCacheRoot, moved);
+            yield* fs.symlink(external, fixture.turboCacheRoot);
+          }
+          return O.some(false);
+        }, Effect.orDie);
+        const report = yield* runResidueReap({
+          apply: true,
+          classes: ["turbo-cache"],
+          homeRoot: fixture.homeRoot,
+          repoRoot: fixture.repoRoot,
+          nowMillis: FIXTURE_NOW_MILLIS,
+          probeLiveCwd: swappingProbe,
+        });
+        expect(report.reapedCount).toBe(0);
+        expect(candidateByPath(report, entry).skipReason).toBe("path-changed");
+        expect(yield* fs.readFileString(payload)).toBe("unrelated work\n");
+        expect(yield* fs.readFileString(path.join(moved, "old-directory", "payload.txt"))).toBe("original cache\n");
+      })
+    ).pipe(provideScopedLayer(NodeServices.layer))
+  );
+
   it.effect("skips a candidate whose path became a symlink after classification", () =>
     withTempDirectory((root) =>
       Effect.gen(function* () {

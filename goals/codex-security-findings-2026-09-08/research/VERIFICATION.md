@@ -49,3 +49,15 @@ The first publication proof stopped at the JSDoc ratchet because a new parser
 example imported Effect from the root package. The example now imports
 `effect/Effect`; the baseline is unchanged. Hosted coverage also identified
 worktree command and service coverage regressions; targeted tests are pending.
+
+Additional PR review regressions were reproduced before their fixes. File-URL
+home paths are now rejected and redacted; the economics suite passes 17 tests.
+Turbo cleanup retains the canonical repository boundary through apply-time
+resolution; all 16 residue-reap tests pass, including a post-discovery cache
+symlink swap that preserves external data.
+
+The 54 worktree command and reap tests pass with focused coverage. Command
+coverage is 75.64% lines, 74.03% statements, and 68.96% branches; service coverage
+is 91.41% lines, 91.20% statements, and 87.87% branches. All six previously
+regressed metrics exceed their unchanged committed floors. The complete hosted
+coverage job remains required.

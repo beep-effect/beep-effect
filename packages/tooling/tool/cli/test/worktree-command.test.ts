@@ -599,6 +599,177 @@ describe("worktree output rendering", () => {
 });
 
 describe("worktree git operations", () => {
+  it.effect("rejects unsafe, missing, and unregistered removal arguments through the command", () =>
+    withScratchRepo((repoRoot) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const context = yield* resolveWorktreeContext(repoRoot);
+        const bystander = path.join(context.worktreesRoot, "bystander");
+        yield* fs.makeDirectory(bystander, { recursive: true });
+        const sentinel = path.join(bystander, "keep.txt");
+        yield* fs.writeFileString(sentinel, "unrelated work\n");
+        const previousCwd = process.cwd;
+        yield* Effect.acquireUseRelease(
+          Effect.sync(() => {
+            process.cwd = () => repoRoot;
+          }),
+          () =>
+            Effect.forEach(
+              [
+                { name: "../bystander", message: "Worktree name must be one non-empty path component" },
+                { name: "missing", message: "No worktree found" },
+                { name: "bystander", message: "Removal target is not a registered managed worktree" },
+              ],
+              Effect.fnUntraced(function* ({ name, message }) {
+                const before = A.length(yield* TestConsole.errorLines);
+                yield* Command.runWith(worktreeCommand, { version: "0.0.0" })(["remove", name]).pipe(Effect.flip);
+                expect(A.join(A.filter(A.drop(yield* TestConsole.errorLines, before), P.isString), "\n")).toContain(
+                  message
+                );
+                expect(yield* fs.readFileString(sentinel)).toBe("unrelated work\n");
+              }),
+              { concurrency: 1, discard: true }
+            ),
+          () =>
+            Effect.sync(() => {
+              process.cwd = previousCwd;
+            })
+        );
+      })
+    )
+  );
+
+  it.effect("removes a registered detached worktree through the command and preserves a dirty one", () =>
+    withScratchRepo((repoRoot) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const context = yield* resolveWorktreeContext(repoRoot);
+        const detached = path.join(context.worktreesRoot, "detached");
+        yield* runGit(repoRoot, ["worktree", "add", "--detach", detached, "HEAD"]);
+        const dirty = yield* addWorktree(context, "dirty-command", defaultWorktreeBranch("dirty-command"));
+        const sentinel = path.join(dirty, "keep.txt");
+        yield* fs.writeFileString(sentinel, "uncommitted work\n");
+        const previousCwd = process.cwd;
+        yield* Effect.acquireUseRelease(
+          Effect.sync(() => {
+            process.cwd = () => repoRoot;
+          }),
+          () =>
+            Effect.gen(function* () {
+              yield* Command.runWith(worktreeCommand, { version: "0.0.0" })(["remove", "detached"]);
+              expect(yield* fs.exists(detached)).toBe(false);
+              const before = A.length(yield* TestConsole.errorLines);
+              yield* Command.runWith(worktreeCommand, { version: "0.0.0" })(["remove", "dirty-command"]).pipe(
+                Effect.flip
+              );
+              expect(A.join(A.filter(A.drop(yield* TestConsole.errorLines, before), P.isString), "\n")).toContain(
+                "pass --archive"
+              );
+              expect(yield* fs.readFileString(sentinel)).toBe("uncommitted work\n");
+            }),
+          () =>
+            Effect.sync(() => {
+              process.cwd = previousCwd;
+            })
+        );
+      })
+    )
+  );
+
+  it.effect("preserves a registered worktree when its requested name does not match the target", () =>
+    withScratchRepo((repoRoot) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const service = yield* WorktreeRemovalService;
+        const context = yield* resolveWorktreeContext(repoRoot);
+        const targetPath = yield* addWorktree(context, "registered", defaultWorktreeBranch("registered"));
+        const error = yield* service
+          .remove(
+            WorktreeRemovalRequest.make({
+              name: NonEmptyTrimmedStr.make("different"),
+              targetPath,
+              mainCheckout: context.mainCheckout,
+              branch: O.some(defaultWorktreeBranch("registered")),
+              archive: false,
+              deleteBranch: false,
+              expectedHead: O.none(),
+            })
+          )
+          .pipe(Effect.flip);
+        expect(error).toMatchObject({ _tag: "WorktreeCommandError" });
+        expect(error.message).toContain("exact registered worktree");
+        expect(yield* fs.exists(targetPath)).toBe(true);
+      })
+    )
+  );
+
+  it.effect("preserves data when a registered worktree path is replaced by an external symlink", () =>
+    withScratchRepo((repoRoot) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const service = yield* WorktreeRemovalService;
+        const context = yield* resolveWorktreeContext(repoRoot);
+        const targetPath = yield* addWorktree(context, "repointed", defaultWorktreeBranch("repointed"));
+        const external = path.join(path.dirname(repoRoot), "external-worktree");
+        yield* fs.rename(targetPath, external);
+        yield* fs.symlink(external, targetPath);
+        const error = yield* service
+          .remove(
+            WorktreeRemovalRequest.make({
+              name: NonEmptyTrimmedStr.make("repointed"),
+              targetPath,
+              mainCheckout: context.mainCheckout,
+              branch: O.some(defaultWorktreeBranch("repointed")),
+              archive: true,
+              deleteBranch: false,
+              expectedHead: O.none(),
+            })
+          )
+          .pipe(Effect.flip);
+        expect(error).toMatchObject({ _tag: "WorktreeCommandError" });
+        expect(error.message).toContain("exact registered worktree");
+        expect(yield* fs.readFileString(path.join(external, "README.md"))).toBe("# scratch\n");
+        expect(yield* fs.readLink(targetPath)).toBe(external);
+      })
+    )
+  );
+
+  it.effect("preserves a registered path whose Git common directory was redirected to another repository", () =>
+    withScratchRepo((repoRoot) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const service = yield* WorktreeRemovalService;
+        const context = yield* resolveWorktreeContext(repoRoot);
+        const targetPath = yield* addWorktree(context, "foreign-git", defaultWorktreeBranch("foreign-git"));
+        const external = path.join(path.dirname(repoRoot), "other-repository");
+        yield* fs.makeDirectory(external);
+        yield* initScratchRepo(external);
+        yield* fs.writeFileString(path.join(targetPath, ".git"), `gitdir: ${path.join(external, ".git")}\n`);
+        const error = yield* service
+          .remove(
+            WorktreeRemovalRequest.make({
+              name: NonEmptyTrimmedStr.make("foreign-git"),
+              targetPath,
+              mainCheckout: context.mainCheckout,
+              branch: O.some(defaultWorktreeBranch("foreign-git")),
+              archive: true,
+              deleteBranch: false,
+              expectedHead: O.none(),
+            })
+          )
+          .pipe(Effect.flip);
+        expect(error).toMatchObject({ _tag: "WorktreeCommandError" });
+        expect(error.message).toContain("exact registered worktree");
+        expect(yield* fs.readFileString(path.join(targetPath, "README.md"))).toBe("# scratch\n");
+        expect(yield* runGitText(external, ["rev-parse", "--is-inside-work-tree"])).toBe("true");
+      })
+    )
+  );
+
   it.effect("adapts Git spawn failures and non-zero exits", () =>
     withScratchRepo((repoRoot) =>
       Effect.gen(function* () {

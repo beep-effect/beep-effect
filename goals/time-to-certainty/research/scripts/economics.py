@@ -230,12 +230,16 @@ def portable_path(path: Path) -> str:
 
 def absolute_home_path_pattern() -> re.Pattern[str]:
     home = re.escape(str(Path.home().resolve()))
-    return re.compile(r"(?<![A-Za-z0-9_./-])" + home + r"(?=$|[/\\\"'\s:),;\]}])")
+    return re.compile(
+        r"(?<![A-Za-z0-9_./-])(?P<file_url>(?i:file://)[^/\s\"'<>]*)?"
+        + home
+        + r"(?=$|[/\\\"'\s:),;\]}])"
+    )
 
 
 def redact(value: Any) -> Any:
     if isinstance(value, str):
-        value = absolute_home_path_pattern().sub("~", value)
+        value = absolute_home_path_pattern().sub(r"\g<file_url>~", value)
         value = re.sub(r"(https?://)[^/@\s]+:[^/@\s]+@", r"\1", value)
         return re.sub(
             r"(?i)([?&](?:access_?token|api_?key|auth|key|secret|signature|token)=)[^&\s]+",
