@@ -233,3 +233,18 @@
   while the owning `uv` process remains alive (its temporary environment is removed
   when that process exits).
   A committed-byte check needs no new tool installation or machine trust change.
+
+## 2026-09-08: `scheduler reap` describes a dry-run it cannot run
+
+- **Work:** draining six `pending-protocol-off` reap claims after publishing the
+  protocol v2 marker (Stage B grill, Ruling 20).
+- **Evidence:** `bun run beep quality scheduler reap` prints a description that
+  says "dry-run by default" and a flag help text of "default: dry-run report",
+  then exits 1 with `Missing required flag: --apply`. Only the mutating form runs.
+- **Cost:** one failed invocation and a blind apply; the operator could not
+  preview which dead leases and tickets would replay into eviction rows before
+  mutating the machine-wide admission root.
+- **Prevention:** give the boolean flag an explicit `false` default so the
+  dry-run report is the real default, or drop the dry-run wording from both
+  descriptions; a regression test invoking the command without the flag would
+  have caught the drift (`reapAdmissionState({ apply: false })` already exists).
