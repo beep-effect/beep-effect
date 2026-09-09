@@ -57,6 +57,7 @@ import {
 import { WaveOrder } from "../Yeet/internal/WaveOrder.ts";
 import { runChangesetGraphCheck } from "./ChangesetGraph.ts";
 import { changesetStatusCommand } from "./ChangesetStatus.ts";
+import { checkCensusCommand } from "./CheckCensus.ts";
 import { qualityFallowCommand } from "./FallowQuality.command.ts";
 import {
   githubCheckChangesetStatusLane,
@@ -2924,11 +2925,21 @@ export const runJSDocInventory = Effect.fn("QualityScriptCommands.runJSDocInvent
     O.fromUndefinedOr,
     O.map((outputPath) => path.resolve(repoRoot, outputPath))
   );
+  const ciOutputJsonPath = pipe(
+    options.ciOutputJsonPath,
+    O.fromUndefinedOr,
+    O.map((outputPath) => path.resolve(repoRoot, outputPath))
+  );
+  const ciOutputMarkdownPath = pipe(
+    options.ciOutputMarkdownPath,
+    O.fromUndefinedOr,
+    O.map((outputPath) => path.resolve(repoRoot, outputPath))
+  );
 
   const result = yield* writeJSDocDocumentationInventory({
     ...options,
     rootDir: repoRoot,
-    ...OptionUtils.getSomesStruct({ outputJsonPath, outputMarkdownPath }),
+    ...OptionUtils.getSomesStruct({ outputJsonPath, outputMarkdownPath, ciOutputJsonPath, ciOutputMarkdownPath }),
   }).pipe(
     QualityScriptCommandError.mapError("Failed to generate JSDoc documentation inventory.", {
       command: "bun run beep quality jsdoc-inventory",
@@ -2938,6 +2949,9 @@ export const runJSDocInventory = Effect.fn("QualityScriptCommands.runJSDocInvent
 
   yield* Console.log(`wrote ${repoRelative(result.outputJsonPath, repoRoot, path)}`);
   yield* Console.log(`wrote ${repoRelative(result.outputMarkdownPath, repoRoot, path)}`);
+  yield* Effect.forEach(A.getSomes([ciOutputJsonPath, ciOutputMarkdownPath]), (mirrorPath) =>
+    Console.log(`wrote ${repoRelative(mirrorPath, repoRoot, path)} (mirror)`)
+  );
   yield* Console.log(
     `packages=${result.totals.packages} openPackages=${result.totals.packagesNeedingRemediation} openExports=${result.totals.openExports} openModules=${result.totals.openModules} rootPolicyOpen=${result.totals.rootPolicyOpen}`
   );
@@ -3107,12 +3121,25 @@ const jsdocInventoryCommand = Command.make(
       Flag.withDescription("Markdown inventory output path; defaults to the tracked standards artifact"),
       Flag.optional
     ),
+    ciOutputJson: Flag.string("ci-output-json").pipe(
+      Flag.withDescription("Extra JSONC path written from the same scan (the .beep/ci/ copy the ratchet lane reads)"),
+      Flag.optional
+    ),
+    ciOutputMarkdown: Flag.string("ci-output-markdown").pipe(
+      Flag.withDescription("Extra Markdown path written from the same scan"),
+      Flag.optional
+    ),
   },
-  ({ outputJson, outputMarkdown }) =>
+  ({ ciOutputJson, ciOutputMarkdown, outputJson, outputMarkdown }) =>
     runQualityProgram(
       runJSDocInventory(
         JSDocDocumentationInventoryOptions.make({
-          ...OptionUtils.getSomesStruct({ outputJsonPath: outputJson, outputMarkdownPath: outputMarkdown }),
+          ...OptionUtils.getSomesStruct({
+            outputJsonPath: outputJson,
+            outputMarkdownPath: outputMarkdown,
+            ciOutputJsonPath: ciOutputJson,
+            ciOutputMarkdownPath: ciOutputMarkdown,
+          }),
         })
       )
     )
@@ -3799,6 +3826,7 @@ export const qualityCommand = Command.make("quality", {}, () =>
     "- bun run beep quality bun-audit",
     "- bun run beep quality test-tsgo",
     "- bun run beep quality tsgo-smoke",
+    "- bun run beep quality check-census [--filter <name>] [--output-json <path>]",
     "- bun run beep quality tsgo-rules",
     "- bun run beep quality jsdoc-module-tags",
     "- bun run beep quality jsdoc-inventory",
@@ -3826,6 +3854,7 @@ export const qualityCommand = Command.make("quality", {}, () =>
     testTsgoCommand,
     testTsgoPackageCommand,
     tsgoSmokeCommand,
+    checkCensusCommand,
     tsgoRulesCommand,
     jsdocModuleTagsCommand,
     jsdocInventoryCommand,

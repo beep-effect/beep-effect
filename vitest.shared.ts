@@ -1,3 +1,9 @@
+// The include list must exist before vitest boots, and Effect's Node FileSystem
+// is async, so this config-time scan uses the synchronous Node builtins.
+// @effect-diagnostics-next-line nodeBuiltinImport:off -- synchronous config-time scan; no Effect runtime exists yet.
+import { readdirSync, readFileSync } from "node:fs";
+// @effect-diagnostics-next-line nodeBuiltinImport:off -- synchronous config-time scan; no Effect runtime exists yet.
+import { join, relative, sep } from "node:path";
 import { A, P, Str, Struct } from "@beep/utils";
 import * as Doctest from "@effect/doctest/Plugin";
 import { Config, Effect, pipe } from "effect";
@@ -59,6 +65,45 @@ const parsedFcNumRuns = pipe(
   O.getOrElse(() => 0)
 );
 export const fcDeepSweepActive = Number.isInteger(parsedFcNumRuns) && parsedFcNumRuns > 0;
+
+// Quality-lane audit A1 (D10): the deep sweep only changes the behaviour of
+// files that draw from fast-check, so under an active floor the include list
+// is resolved at config time to the test files that import `fast-check` or
+// use `it.prop` (the same predicate the audit census used). Everything else
+// already ran in the unit lane at the default run count; replaying it at
+// 400-1000 runs with rotating seeds cannot change its outcome. The scan is a
+// cheap synchronous walk of `test/` under the vitest root (the package cwd).
+const propertyTestMarker = /\bfast-check\b|\bit\.prop\b/;
+const testFilePattern = /\.test\.tsx?$/;
+const scanSkippedDirectories: ReadonlyArray<string> = ["node_modules", ".context", "fixtures"];
+const listTestFiles = (directory: string): ReadonlyArray<string> => {
+  try {
+    return pipe(
+      readdirSync(directory, { withFileTypes: true }),
+      A.flatMap(
+        (entry): ReadonlyArray<string> =>
+          entry.isDirectory()
+            ? A.contains(scanSkippedDirectories, entry.name)
+              ? []
+              : listTestFiles(join(directory, entry.name))
+            : testFilePattern.test(entry.name)
+              ? [join(directory, entry.name)]
+              : []
+      )
+    );
+  } catch {
+    return [];
+  }
+};
+const toPosixRelative = (root: string, file: string): string => relative(root, file).split(sep).join("/");
+export const propertyTestInclude = (packageRoot: string): ReadonlyArray<string> =>
+  pipe(
+    listTestFiles(join(packageRoot, "test")),
+    A.filter((file) => propertyTestMarker.test(readFileSync(file, "utf8"))),
+    A.map((file) => toPosixRelative(packageRoot, file)),
+    A.sort(Order.String)
+  );
+const propertySweepInclude = fcDeepSweepActive ? propertyTestInclude(process.cwd()) : [];
 // Fixed global coverage floors are retired (quality-gate-ratchets, 2026-07-06):
 // the committed per-package baseline compare (standards/coverage.regression-baseline.jsonc,
 // fail-on-drop) is the sole coverage judge. Package-local floors (e.g.
@@ -130,7 +175,9 @@ const config: ViteUserConfig = {
     hookTimeout: vitestCoverageRunActive || fcDeepSweepActive ? 300_000 : 10_000,
     // Baseline generation/regeneration must tolerate test-less packages;
     // the ratchet compare, not vitest, decides coverage outcomes.
-    passWithNoTests: !vitestDoctestActive && vitestCoverageRunActive,
+    // The property sweep's content-based include may be empty for a package
+    // whose manifest still carries `test:property`; that is a no-op, not a red.
+    passWithNoTests: !vitestDoctestActive && (vitestCoverageRunActive || fcDeepSweepActive),
     exclude: [
       "**/.context/**",
       "**/node_modules/**",
@@ -140,7 +187,7 @@ const config: ViteUserConfig = {
     sequence: {
       concurrent: !vitestDoctestActive,
     },
-    include: vitestDoctestActive ? [] : ["test/**/*.test.{ts,tsx}"],
+    include: vitestDoctestActive ? [] : fcDeepSweepActive ? [...propertySweepInclude] : ["test/**/*.test.{ts,tsx}"],
     includeSource: vitestDoctestActive ? ["src/**/*.{ts,tsx}"] : [],
     coverage: {
       provider: coverageProvider,

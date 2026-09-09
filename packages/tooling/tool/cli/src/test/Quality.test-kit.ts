@@ -19,6 +19,7 @@ export {
   runChangesetStatus,
   uncoveredWorkspacePackageNames,
 } from "@beep/repo-cli/commands/Quality/ChangesetStatus";
+export * from "@beep/repo-cli/commands/Quality/CheckCensus";
 export * from "@beep/repo-cli/commands/Quality/Quality.command";
 export * from "@beep/repo-cli/commands/Quality/Quality.render";
 export {

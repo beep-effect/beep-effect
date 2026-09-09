@@ -95,7 +95,6 @@
     },
     "lint": {
       "cache": true,
-      "dependsOn": ["^lint"],
       "inputs": [
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/biome.jsonc",
@@ -107,7 +106,6 @@
     },
     "lint:fix": {
       "cache": false,
-      "dependsOn": ["^lint:fix"],
       "inputs": [
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/biome.jsonc",
@@ -121,12 +119,10 @@
       "outputs": []
     },
     "test": {
+      "dependsOn": ["^transit"],
       "passThroughEnv": [
         "GITHUB_STEP_SUMMARY",
-        "BEEP_CREATE_PACKAGE_BUN_ARGS_FILE",
-        "BEEP_NODE_BIN",
-        "BEEP_YEET_ADMISSION_LEASE_ID",
-        "BEEP_YEET_ADMISSION_WORKLOAD_PATH"
+        "BEEP_CREATE_PACKAGE_BUN_ARGS_FILE"
       ],
       "inputs": [
         "$TURBO_DEFAULT$",
@@ -153,6 +149,7 @@
       "outputs": [".turbo/package-test-typecheck-result.json"]
     },
     "test:property": {
+      "dependsOn": ["^transit"],
       "env": ["BEEP_FC_NUM_RUNS", "BEEP_FC_SEED"],
       "inputs": [
         "$TURBO_DEFAULT$",
@@ -258,8 +255,7 @@
         "LIVEBLOCKS_*",
         "RESEND_*",
         "BEEP_TEST_*",
-        "BEEP_TIKA_*",
-        "CI"
+        "BEEP_TIKA_*"
       ],
       "outputs": [
         "dist/**",
@@ -317,8 +313,8 @@
       "dependsOn": ["storybook:build"]
     },
     "test:storybook": {
-      "cache": false,
       "dependsOn": ["^build"],
+      "outputs": [],
       "inputs": [
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/apps/storybook/.storybook/**",
