@@ -282,3 +282,15 @@ session/machine ids, quote only the minimal identifying error text.
 - **Would have prevented it:** a `beep quality turbo-config-proof` fixture that stages a task
   definition on a throwaway commit and reports selection per edited file, so nobody re-derives
   the hygiene rule by hand.
+
+## 2026-09-08 — Docs-only PR went red on a newly widened OSV advisory
+
+- **Doing:** publishing PR #1018 (design gate, five Markdown files, no lockfile change).
+- **Evidence:** the required `Security` lane failed on `GHSA-vwc7-r8mq-g2x9` (adm-zip 0.6.0 via
+  onnxruntime-node, no fixed release) while the three most recent `main` runs had passed the same
+  lane on the same lockfile; the advisory's affected range had widened since. The remedy is the
+  precedent `osv-scanner.toml` exception with a reason and expiry, which forces a security-policy
+  edit into an unrelated PR or a second PR that must also clear admission.
+- **Would have prevented it:** a scheduled OSV rescan of `main` (nightly research routine or a
+  cron lane) that opens the exception PR itself when a no-fix advisory lands, so branch PRs meet a
+  green base instead of discovering the advisory first.

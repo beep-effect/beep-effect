@@ -1,7 +1,8 @@
 # C3 lane-to-task table — design gate
 
-Status: REVISION 2, 2026-09-08, after one adversarial Codex review
-(`research/c3-lane-task-table.review.md`, disposition appended there). Awaiting Benjamin. No
+Status: REVISION 3, 2026-09-08, after one adversarial Codex review
+(`research/c3-lane-task-table.review.md`, disposition appended there) and two Greptile P1s on
+PR #1018 (D15 scope, Fallow advisory sublanes). Awaiting Benjamin. No
 implementation starts before this table is ratified. Owner: Fable orchestrator. Rulings in
 force: 5, 6, 10, 19–25 (`research/decisions.md`). Evidence: `research/c3-turbo-facts.md` (Grok,
 15 Turbo 2.10 facts against the docs, plus the live-probe amendment), `research/c3-sublane-inputs.md`
@@ -193,7 +194,8 @@ Consequences:
   `lint:jsdoc:root`, `lint:native-runtime:roots`, `lint:typos`, `lint:package-scripts`,
   `goals:doctor`, `goals:index-check`, `lint:reflection-artifacts`, `lint:roadmap-refs`,
   `lint:judge-rubric`, `jsdoc:inventory:check`, `fallow:audit:check`, `fallow:dead-code:check`,
-  `knip:check`. Existing root scripts keep their text where the meaning is unchanged
+  `fallow:health:advisory`, `fallow:boundaries:advisory`, `fallow:flags:advisory`,
+  `fallow:security:advisory`, `fallow:fix-preview:advisory`, `knip:check` (26 new). Existing root scripts keep their text where the meaning is unchanged
   (`lint:oxlint`, `changeset:status`, `config-sync:check`, `topo-sort`).
 - **D10 Ordered invocations, one shared plan.** `beep lint policy` and the hosted Lint Policy
   lane run one plan definition in three invocations, in this order: (1) cheap precise gates
@@ -229,16 +231,19 @@ Consequences:
   `cache: false`. Generators that write tracked files: plain scripts or `cache: false`.
 - **D15 Policy-tool fingerprint (new).** The checker implementations are inputs of every
   policy task. Instead of guessing each task's import closure, one generated file
-  `standards/policy-tools.fingerprint.json` (content hash over `packages/tooling/tool/cli/src/**`,
-  `packages/tooling/library/repo-utils/src/**`, `packages/tooling/policy-pack/*/src/**`, and the
-  root tool configs the checkers read) is declared as a `$TURBO_ROOT$` input of every
-  package policy task and a plain input of every root policy task. A cheap root gate
+  `standards/policy-tools.fingerprint.json` is declared as a `$TURBO_ROOT$` input of every
+  package policy task and a plain input of every root policy task. Its scope is computed, not
+  hand-listed: the `src/**` trees of `@beep/repo-cli` and every workspace package in its
+  transitive `dependencies` closure (today that closure includes `@beep/repo-utils`,
+  `@beep/utils`, `@beep/schema`, `@beep/identity`, the policy-pack packages, and whatever the
+  manifests name next), plus the root tool configs the checkers read. The generator walks the
+  manifests, so a new CLI dependency joins the fingerprint without an edit. A cheap root gate
   `//#lint:policy-fingerprint` (inputs: those trees plus the file) fails when it is stale;
-  `beep:preflight` regenerates it. A checker edit therefore reruns policy tasks exactly once,
-  and build/check/test caches stay untouched. Foundation packages the CLI imports are not in
-  the fingerprint by default (Q7); node_modules dependencies are already in
-  `hashOfExternalDependencies`. This matches ruling 4's epoch salt ("policy-pack version") with
-  a computed version instead of a hand bump.
+  `beep:preflight` regenerates it. A checker or checker-dependency edit therefore reruns
+  policy tasks exactly once, and build/check/test caches stay untouched; node_modules
+  dependencies are already in `hashOfExternalDependencies`. This matches ruling 4's epoch salt
+  ("policy-pack version") with a computed version instead of a hand bump. Until the
+  fingerprint gate lands (PR 1), no policy task claims reuse.
 - **D16 One fleet-wide manifest touch.** Because every manifest rewrite busts every task's
   cache, the fleet is rewritten once, in PR 1, with all four new keys. PR 1 therefore also
   ships thin, runnable workers: `lint deprecated-apis --package` and `lint jsdoc --package`
@@ -304,7 +309,7 @@ false`, unfiltered, ledger `undeclared`.
 | `ci:knip` (`beep quality knip`) | ★ `knip:check` (`knip` stays `knip-bun`) | `bun run beep quality knip` | `knip.jsonc`, `**/package.json`, `bun.lock`, `**/tsconfig*.json`, `.gitignore`, `**/.gitignore`, `apps/**`, `packages/**`, `infra/**`, `scripts/**`, root tool configs, `standards/knip.regression-baseline.jsonc`, `!**/node_modules/**`, `!**/dist/**`, `!**/.turbo/**` (explanatory) | D2 (gitignore semantics incl. `.git/info/exclude`) | F, C(knip), G(`:300`, `cheap-gates:knip`), W(`quality:knip`) | 80 s |
 | `ci:fallow:audit` | ★ `fallow:audit:check` | `bun run beep quality fallow audit --check --base "$BEEP_PROOF_BASE" --out .beep/fallow/audit.check.json --quiet` | `.fallowrc.jsonc`, `**/package.json`, `**/tsconfig*.json`, `apps/**`, `packages/**`, `infra/**`, `scripts/**`, `.claude/skills/**`, `.fallow/plugins/**`, `standards/fallow.pilot.inventory.jsonc` (explanatory) | D2; `env: ["BEEP_PROOF_BASE"]` (the worker's `--base` argument, forwarded by the wrapper as today); `outputs: [".beep/fallow/audit.check.json", ".beep/fallow/raw/audit.check.*"]` | C(fallow), G(`:485`), W(`fallow:audit`), Y | most frequent actionable red (47) |
 | `ci:fallow:dead-code` | ★ `fallow:dead-code:check` | `… fallow dead-code --check --base "$BEEP_PROOF_BASE" --out .beep/fallow/dead-code.check.json --quiet` | as audit (no baseline file: hosted does not pass it) | D2; `outputs: [".beep/fallow/dead-code.check.json", ".beep/fallow/raw/dead-code.check.*"]` | C, G(`:491`), W(`fallow:dead-code`), Y | |
-| `ci:fallow:health|boundaries|flags|security|fix-preview` (advisory) | stay `bun run` steps under the workflow-gated fallow lane | | | explicit exception to ruling 19 (advisory envelopes, workflow-gated) | C, `check.yml:767–806` | |
+| `ci:fallow:health`, `ci:fallow:boundaries`, `ci:fallow:flags`, `ci:fallow:security`, `ci:fallow:fix-preview` (advisory) | ★ `fallow:<lane>:advisory` (five root tasks) | `… fallow <lane> --advisory --base "$BEEP_PROOF_BASE" --out .beep/fallow/<lane>.advisory.json --quiet` | as audit | D2; `env: ["BEEP_PROOF_BASE"]`; `outputs: [".beep/fallow/<lane>.advisory.json", ".beep/fallow/raw/<lane>.advisory.*"]`; advisory exit semantics unchanged (the wrapper never fails the lane on advisory findings); the workflow gate and the post-run envelope checks (`check.yml:767–806`, `CiLane.ts:1235,1557`) stay | C, `check.yml:767–806` | advisory lane |
 | `ci:jsdoc-ratchet:inventory` | ★ `jsdoc:inventory:check` | `bun run beep quality jsdoc-inventory --output-json .beep/ci/jsdoc-documentation.inventory.jsonc --output-markdown .beep/ci/jsdoc-documentation.inventory.md` | `**/docgen.json`, `**/package.json`, `{packages,apps,infra}/**/*.{ts,tsx}` (any `docgen.srcDir`), `tsdoc.json` (explanatory) | D2 (`git ls-files`, timestamps); `outputs: [".beep/ci/jsdoc-documentation.inventory.*"]` | C(jsdoc-ratchet), F (write variant `jsdoc:inventory` stays a script), W, G(`cheap-gates:jsdoc-ratchet`) | ratchet lane |
 | `ci:jsdoc-ratchet:ratchet` compare | **cli** after the run | `beep quality jsdoc-ratchet --inventory .beep/ci/… --baseline standards/jsdoc-totals.regression-baseline.jsonc` | consumes a fresh successful inventory only | | C | |
 | `lint:package-test-typecheck` | **cli** (D12) | `beep lint package-test-typecheck` | | | P, F | 6 s |
@@ -565,7 +570,7 @@ Invocations (D10):
 | local `beep lint policy` | (1) `turbo run <cheap gates> --affected --continue=dependencies-successful --summarize`, stop on a precise red; (2) `turbo run lint:jsdoc lint:laws //#lint:schema-first --affected …` and, unfiltered, `turbo run <D2 group> …`; (3) `turbo run lint:deprecated-apis --affected --concurrency=<N> …`; then CLI aggregates |
 | `--full`, hosted Lint Policy | the same three without `--affected`, all executed, nonzero exit retained |
 | hosted Doctest | `turbo run doctest --summarize` |
-| hosted Knip / Fallow / JSDoc Ratchet | `turbo run //#knip:check --summarize`; `turbo run //#fallow:audit:check //#fallow:dead-code:check --summarize` then envelope checks; `turbo run //#jsdoc:inventory:check --summarize` then the compare |
+| hosted Knip / Fallow / JSDoc Ratchet | `turbo run //#knip:check --summarize`; `turbo run //#fallow:audit:check //#fallow:dead-code:check //#fallow:health:advisory //#fallow:boundaries:advisory //#fallow:flags:advisory //#fallow:security:advisory //#fallow:fix-preview:advisory --summarize` then envelope checks; `turbo run //#jsdoc:inventory:check --summarize` then the compare |
 | `beep:preflight` | the `--write` generators (`tsconfig-sync`, `fallow:boundaries:write`, `jsdoc:inventory`, `schema-first --write`, `package-scripts --write`, `policy-fingerprint --write`), then the local plan |
 
 The remote-cache secret session wraps the runs as `turboStep` does today (`turboRunArgs`);
@@ -689,8 +694,10 @@ answer every thread with `bun run beep yeet reply`. Never merge. Friction receip
 - **R5 One fleet-wide cold run** from the PR 1 manifest touch (D16), measured per 7.1.4.
 - **R6 Root task selection widening.** `WT` root tasks are selected on any matching change
   locally; the honest cost of truthful inputs.
-- **R7 Fingerprint scope.** Foundation packages the CLI imports are outside the fingerprint
-  (Q7); a checker behaviour change that lives in `@beep/utils` would not rerun policy tasks.
+- **R7 Fingerprint scope.** The fingerprint follows the CLI's workspace dependency closure
+  (D15); a checker behaviour change in a non-workspace dependency is covered by
+  `hashOfExternalDependencies`. Residual: a checker that shells out to a tool outside both
+  (a binary walker) is covered by its walk fixture (7.1.2), not by the fingerprint.
 
 ## 8. Scope and open questions
 
@@ -710,5 +717,6 @@ cache-key change without first-cold-lane measurement; a second scheduler or lock
 - **Q5 (F1)** Amend ruling 19's text to record the verified mechanism (root tasks join
   `--affected` by inputs; only the D2 group needs an unfiltered invocation)?
 - **Q6 (A1)** Keep effect-imports code mode out of `lint:laws` until it has promoted families?
-- **Q7 (D15)** Fingerprint the CLI, repo-utils and policy-pack only, or also the foundation
-  packages the CLI imports (`@beep/utils`, `@beep/schema`, `@beep/identity`)?
+- **Q7 (D15)** Resolved in revision 3: the fingerprint covers the CLI's computed workspace
+  dependency closure. Veto if the wider rerun set (a `@beep/utils` edit reruns every policy
+  task once) is not acceptable.
