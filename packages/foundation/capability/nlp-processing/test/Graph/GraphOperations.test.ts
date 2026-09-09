@@ -20,6 +20,11 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeResultStoreStoredResult = S.decodeEffect(ResultStore.StoredResult);
+const encodeResultStoreStoredResult = S.encodeEffect(ResultStore.StoredResult);
+const isResultStoreAnyOperationResult = S.is(ResultStore.AnyOperationResult);
+const isResultStoreStoredResult = S.is(ResultStore.StoredResult);
+
 const finiteNonNegativeMillis = (duration: Duration.Duration): Duration.Duration => {
   const millis = Duration.toMillis(duration);
   return Number.isFinite(millis) ? Duration.millis(Math.min(Math.abs(Math.trunc(millis)), 86_400_000)) : Duration.zero;
@@ -188,11 +193,11 @@ describe("ResultStore", () => {
         result,
         timestamp: result.timestamp,
       });
-      const encoded = yield* S.encodeEffect(ResultStore.StoredResult)(stored);
-      const decoded = yield* S.decodeEffect(ResultStore.StoredResult)(encoded);
+      const encoded = yield* encodeResultStoreStoredResult(stored);
+      const decoded = yield* decodeResultStoreStoredResult(encoded);
 
-      expect(S.is(ResultStore.StoredResult)(decoded)).toBe(true);
-      expect(S.is(ResultStore.AnyOperationResult)(decoded.result)).toBe(true);
+      expect(isResultStoreStoredResult(decoded)).toBe(true);
+      expect(isResultStoreAnyOperationResult(decoded.result)).toBe(true);
       expect(decoded.result.executionId).toBe(result.executionId);
     })
   );

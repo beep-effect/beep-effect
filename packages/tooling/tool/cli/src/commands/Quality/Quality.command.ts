@@ -124,6 +124,10 @@ import type {
 } from "./Quality.schemas.ts";
 import type { QualityTaskConfigurationError, QualityTaskFailed, QualityTaskGroupFailed } from "./Tasks.ts";
 
+const encodeUnknownResidueReapReport = S.encodeUnknownEffect(ResidueReapReport);
+
+const encodeUnknownTmpfsReapReport = S.encodeUnknownEffect(TmpfsReapReport);
+
 /**
  * Public quality script command error export.
  *
@@ -3534,7 +3538,7 @@ const tmpfsReapCommand = Command.make(
   Effect.fn(function* ({ apply, json }) {
     const report = yield* runTmpfsReap({ apply });
     if (json) {
-      const encoded = yield* S.encodeUnknownEffect(TmpfsReapReport)(report);
+      const encoded = yield* encodeUnknownTmpfsReapReport(report);
       yield* printLines([yield* jsonStringifyPretty(encoded)]);
       return;
     }
@@ -3641,7 +3645,7 @@ const residueReapCommand = Command.make(
   Effect.fn(function* ({ apply, classes, json, maxAgeDays, turboMaxAgeDays }) {
     const report = yield* runResidueReap({ apply, classes, maxAgeDays, turboMaxAgeDays });
     if (json) {
-      const encoded = yield* S.encodeUnknownEffect(ResidueReapReport)(report);
+      const encoded = yield* encodeUnknownResidueReapReport(report);
       yield* printLines([yield* jsonStringifyPretty(encoded)]);
       return;
     }

@@ -13,6 +13,9 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import { describe, expect, it } from "vitest";
 
+const decodeUnknownTrackDurationOptionsOption = S.decodeUnknownOption(TrackDurationOptions);
+const encodeTrackDurationOptionsOption = S.encodeOption(TrackDurationOptions);
+
 describe("Metric", () => {
   it("normalizes status codes to their class labels", () => {
     expect(statusClass(204)).toBe("2xx");
@@ -33,10 +36,7 @@ describe("Metric", () => {
   it("round-trips schema-derived track duration options", () => {
     fc.assert(
       fc.property(S.toArbitrary(TrackDurationOptions)(fc), (options) => {
-        const decoded = O.flatMap(
-          S.encodeOption(TrackDurationOptions)(options),
-          S.decodeUnknownOption(TrackDurationOptions)
-        );
+        const decoded = O.flatMap(encodeTrackDurationOptionsOption(options), decodeUnknownTrackDurationOptionsOption);
         expect(O.exists(decoded, (value) => Equal.equals(value, options))).toBe(true);
       }),
       fcRuns(50)

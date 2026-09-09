@@ -44,6 +44,13 @@ import {
   TomlTableHeader,
   TomlTrivia,
 } from "./TomlNode.ts";
+const isTomlArray = Schema.is(TomlArray);
+const isTomlArrayTableHeader = Schema.is(TomlArrayTableHeader);
+const isTomlInlineTable = Schema.is(TomlInlineTable);
+const isTomlKeyValue = Schema.is(TomlKeyValue);
+const isTomlString = Schema.is(TomlString);
+const isTomlTableHeader = Schema.is(TomlTableHeader);
+const isTomlTrivia = Schema.is(TomlTrivia);
 
 const $I = $ScratchpadId.create("toml/TomlFormat");
 
@@ -207,19 +214,19 @@ interface TaggedEdit {
 
 /** Multi-line string value spans — the bytes formatting must never touch. */
 const collectMultilineSpans = (node: TomlValueNode, out: Array<readonly [number, number]>): void => {
-  if (Schema.is(TomlString)(node)) {
+  if (isTomlString(node)) {
     if (node.style === "multiline-basic" || node.style === "multiline-literal") {
       out.push([node.offset, node.offset + node.length]);
     }
     return;
   }
-  if (Schema.is(TomlArray)(node)) {
+  if (isTomlArray(node)) {
     for (const item of node.items) {
       collectMultilineSpans(item, out);
     }
     return;
   }
-  if (Schema.is(TomlInlineTable)(node)) {
+  if (isTomlInlineTable(node)) {
     for (const entry of node.entries) {
       collectMultilineSpans(entry.value, out);
     }
@@ -370,7 +377,7 @@ const normalizeNewlines = (
 const headerContentEnd = (source: string, expr: TomlTableHeader | TomlArrayTableHeader): number => {
   const lastKey = expr.keyPath[expr.keyPath.length - 1];
   const bracket = scanWs(source, lastKey.offset + lastKey.length, expr.offset + expr.length);
-  return bracket + (Schema.is(TomlArrayTableHeader)(expr) ? 2 : 1);
+  return bracket + (isTomlArrayTableHeader(expr) ? 2 : 1);
 };
 
 /** All six format rules over the expression list; `[]` on malformed input (never corrupt it). */
@@ -385,9 +392,9 @@ const computeFormatEdits = (source: string, options: TomlFormattingOptions | und
   const target = options?.newline;
   for (const expr of expressions) {
     let protectedSpans: ReadonlyArray<readonly [number, number]> = [];
-    if (Schema.is(TomlTrivia)(expr)) {
+    if (isTomlTrivia(expr)) {
       formatTrivia(source, emit, expr);
-    } else if (Schema.is(TomlKeyValue)(expr)) {
+    } else if (isTomlKeyValue(expr)) {
       formatLeading(source, emit, expr);
       const lastKey = expr.keyPath[expr.keyPath.length - 1];
       const keyEnd = lastKey.offset + lastKey.length;
@@ -484,9 +491,9 @@ const buildSemanticIndex = (
 ): { readonly root: ResTable; readonly sections: ReadonlyArray<Section> } => {
   const sections: Array<Section> = [{ header: undefined, insertAfter: undefined }];
   for (const expr of expressions) {
-    if (Schema.is(TomlTableHeader)(expr) || Schema.is(TomlArrayTableHeader)(expr)) {
+    if (isTomlTableHeader(expr) || isTomlArrayTableHeader(expr)) {
       sections.push({ header: expr, insertAfter: expr.offset + expr.length });
-    } else if (!Schema.is(TomlTrivia)(expr)) {
+    } else if (!isTomlTrivia(expr)) {
       sections[sections.length - 1].insertAfter = expr.offset + expr.length;
     }
   }
@@ -611,7 +618,7 @@ type Cursor =
 
 /** Wrap a CST value as a cursor; inline tables open as an entry scope (dotted keys included). */
 const cstCursor = (node: TomlValueNode, del: DeleteTarget): Cursor =>
-  Schema.is(TomlInlineTable)(node)
+  isTomlInlineTable(node)
     ? { t: "inline", table: node, candidates: node.entries.map((entry, index) => ({ entry, index })), depth: 0 }
     : { t: "cst", node, del };
 
@@ -667,7 +674,7 @@ const step = (cur: Cursor, segment: TomlSegment): Cursor => {
     return { t: "inline", table: cur.table, candidates: matches, depth: cur.depth + 1 };
   }
   const node = cur.node;
-  if (Schema.is(TomlArray)(node)) {
+  if (isTomlArray(node)) {
     const idx = requireIndex(segment, "an array", node.offset, node.length);
     if (idx >= node.items.length) {
       return failResolve("DottedKeyConflict", `array index ${idx} is out of bounds`, node.offset, node.length);
@@ -809,7 +816,7 @@ const terminal = (cur: Cursor, segment: TomlSegment, value: unknown, ctx: Modify
     return [{ offset: full.entry.value.offset, length: full.entry.value.length, newText: renderInlineValue(value) }];
   }
   const node = cur.node;
-  if (Schema.is(TomlArray)(node)) {
+  if (isTomlArray(node)) {
     const idx = requireIndex(segment, "an array", node.offset, node.length);
     if (value === undefined) {
       if (idx >= node.items.length) {

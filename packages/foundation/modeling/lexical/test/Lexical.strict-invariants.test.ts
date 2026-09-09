@@ -3,6 +3,8 @@ import { describe, expect, it } from "@effect/vitest";
 import { Result } from "effect";
 import * as S from "effect/Schema";
 
+const decodeUnknownSerializedEditorStateResult = S.decodeUnknownResult(SerializedEditorState);
+
 const element = {
   version: 1,
   direction: null,
@@ -34,7 +36,7 @@ const state = (child: unknown) => ({
   },
 });
 
-const decode = (input: unknown) => S.decodeUnknownResult(SerializedEditorState)(input);
+const decode = (input: unknown) => decodeUnknownSerializedEditorStateResult(input);
 
 describe("Lexical strict semantic invariants", () => {
   it("requires canonical TabNode state", () => {

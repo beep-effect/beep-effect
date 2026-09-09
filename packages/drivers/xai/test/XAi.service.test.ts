@@ -39,6 +39,13 @@ import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
 import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
 import type { XAiEndpointDescriptor, XAiHttpEndpointMethodName } from "@beep/xai";
 
+const decodeXAiHttpBaseUrlResult = S.decodeResult(XAiHttpBaseUrl);
+const decodeXAiHttpStatusCodeResult = S.decodeResult(XAiHttpStatusCode);
+const decodeXAiLanguageModelXAiModelNameResult = S.decodeResult(XAiLanguageModel.XAiModelName);
+const decodeXAiWebSocketBaseUrlResult = S.decodeResult(XAiWebSocketBaseUrl);
+const decodeXAiWebSocketEventResult = S.decodeResult(XAiWebSocketEvent);
+const isXAiEndpoint = S.is(XAiEndpoint);
+
 type XAiHttpEndpointDescriptor = XAiEndpointDescriptor & {
   readonly methodName: XAiHttpEndpointMethodName;
   readonly response: Exclude<XAiEndpointDescriptor["response"], "websocket">;
@@ -366,11 +373,11 @@ describe("@beep/xai", () => {
     expect(encode(XAiLanguageModel.XAiLanguageModelOptions, languageModelOptions)).toEqual({
       model: "grok-3",
     });
-    expect(Result.isFailure(S.decodeResult(XAiHttpBaseUrl)("not a url"))).toBe(true);
-    expect(Result.isFailure(S.decodeResult(XAiWebSocketBaseUrl)("https://api.x.ai"))).toBe(true);
-    expect(Result.isFailure(S.decodeResult(XAiHttpStatusCode)(99))).toBe(true);
-    expect(Result.isFailure(S.decodeResult(XAiWebSocketEvent)({ code: 999, kind: "close" }))).toBe(true);
-    expect(Result.isFailure(S.decodeResult(XAiLanguageModel.XAiModelName)(""))).toBe(true);
+    expect(Result.isFailure(decodeXAiHttpBaseUrlResult("not a url"))).toBe(true);
+    expect(Result.isFailure(decodeXAiWebSocketBaseUrlResult("https://api.x.ai"))).toBe(true);
+    expect(Result.isFailure(decodeXAiHttpStatusCodeResult(99))).toBe(true);
+    expect(Result.isFailure(decodeXAiWebSocketEventResult({ code: 999, kind: "close" }))).toBe(true);
+    expect(Result.isFailure(decodeXAiLanguageModelXAiModelNameResult(""))).toBe(true);
   });
 
   it("round-trips crispened xAI schemas through their encoded form", () => {
@@ -437,7 +444,7 @@ describe("@beep/xai", () => {
         expect(endpointMethodNames()).toEqual(sortStrings(XAI_ENDPOINT_METHOD_NAMES));
 
         for (const descriptor of XAI_ENDPOINTS) {
-          expect(S.is(XAiEndpoint)(descriptor)).toBe(true);
+          expect(isXAiEndpoint(descriptor)).toBe(true);
         }
 
         const xai = yield* XAi;

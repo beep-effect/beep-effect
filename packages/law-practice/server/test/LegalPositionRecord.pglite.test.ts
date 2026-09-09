@@ -56,6 +56,12 @@ import * as S from "effect/Schema";
 import * as SqlClient from "effect/unstable/sql/SqlClient";
 import type { LegalPositionRecordRepositoryShape } from "@beep/law-practice-use-cases/LegalPositionRecord";
 
+const decodeUnknownActFrame = S.decodeUnknownEffect(ActFrame);
+const decodeUnknownCorrectionDelta = S.decodeUnknownEffect(CorrectionDelta);
+const decodeUnknownLegalOppositionCandidate = S.decodeUnknownEffect(LegalOppositionCandidate);
+const decodeUnknownLegalPositionRelator = S.decodeUnknownEffect(LegalPositionRelator);
+const decodeUnknownPowerExercise = S.decodeUnknownEffect(PowerExercise);
+
 const { shouldRunPgliteIntegration, pgliteIntegrationTimeoutMillis: PgliteIntegrationTimeout } =
   makePgliteIntegrationGate();
 const migrationsFolder = fileURLToPath(new URL("../../../_internal/db-admin/drizzle", import.meta.url));
@@ -118,7 +124,7 @@ const transition = (label: string, kind: string) => ({
 });
 
 const frameFixture = (seed: number, org: number) =>
-  S.decodeUnknownEffect(ActFrame)({
+  decodeUnknownActFrame({
     ...productEntityFixtureInput(LawPractice.ActFrameId.entityType, seed),
     orgId: org,
     act: { description: "assign the lease", polarity: "act" },
@@ -139,7 +145,7 @@ const frameFixture = (seed: number, org: number) =>
   });
 
 const exerciseFixture = (seed: number, frame: number, org: number) =>
-  S.decodeUnknownEffect(PowerExercise)({
+  decodeUnknownPowerExercise({
     ...productEntityFixtureInput(LawPractice.PowerExerciseId.entityType, seed),
     orgId: org,
     attemptedAt: 1_700_000_000_000 + seed,
@@ -160,7 +166,7 @@ const exerciseFixture = (seed: number, frame: number, org: number) =>
   });
 
 const correctionFixture = (seed: number, frame: number, org: number) =>
-  S.decodeUnknownEffect(CorrectionDelta)({
+  decodeUnknownCorrectionDelta({
     ...productEntityFixtureInput(LawPractice.CorrectionDeltaId.entityType, seed),
     orgId: org,
     candidateRouting: "contradiction-candidate-input",
@@ -179,7 +185,7 @@ const correctionFixture = (seed: number, frame: number, org: number) =>
   });
 
 const relatorFixture = (seed: number, positionKind: string, polarity: string, exercise: number, org: number) =>
-  S.decodeUnknownEffect(LegalPositionRelator)({
+  decodeUnknownLegalPositionRelator({
     ...productEntityFixtureInput(LawPractice.LegalPositionRelatorId.entityType, seed),
     orgId: org,
     assertingInterpreter: { kind: "User", userId: 1 },
@@ -193,7 +199,7 @@ const relatorFixture = (seed: number, positionKind: string, polarity: string, ex
   });
 
 const candidateFixture = (seed: number, relators: ReadonlyArray<number>, org: number) =>
-  S.decodeUnknownEffect(LegalOppositionCandidate)({
+  decodeUnknownLegalOppositionCandidate({
     ...productEntityFixtureInput(LawPractice.LegalOppositionCandidateId.entityType, seed),
     orgId: org,
     candidate: { act: ACT, overlappingScope: scopeInput, relators },

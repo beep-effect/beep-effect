@@ -42,6 +42,13 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
+
+const decodeOpenClawHostedProviderConfigResult = S.decodeResult(OpenClawHostedProviderConfig);
+const encodeUnknownOpenClawBackupConfig = S.encodeUnknownEffect(OpenClawBackupConfig);
+const encodeUnknownOpenClawWorkstationPaths = S.encodeUnknownEffect(OpenClawWorkstationPaths);
+const isOpenClawBackupShipScriptInput = S.is(OpenClawBackupShipScriptInput);
+const isOpenClawGenerationIdentityScriptInput = S.is(OpenClawGenerationIdentityScriptInput);
+
 import {
   openClawLegalSoulMarkdown,
   openClawProofSkillMarkdown,
@@ -177,10 +184,10 @@ describe("@beep/infra OpenClaw", () => {
       providerId: "hosted",
     };
 
-    expect(Result.isSuccess(S.decodeResult(OpenClawHostedProviderConfig)(provider))).toBe(true);
+    expect(Result.isSuccess(decodeOpenClawHostedProviderConfigResult(provider))).toBe(true);
     expect(
       Result.isFailure(
-        S.decodeResult(OpenClawHostedProviderConfig)({
+        decodeOpenClawHostedProviderConfigResult({
           ...provider,
           baseUrl: "http://hosted.example.test/v1",
         })
@@ -348,10 +355,10 @@ describe("@beep/infra OpenClaw", () => {
 
   it("encodes OpenClaw config classes with unchanged optional-key wire shapes", () => {
     const encodedPaths = Effect.runSync(
-      S.encodeUnknownEffect(OpenClawWorkstationPaths)(OpenClawWorkstationPaths.make({ unitName: "beep.service" }))
+      encodeUnknownOpenClawWorkstationPaths(OpenClawWorkstationPaths.make({ unitName: "beep.service" }))
     );
     const encodedBackup = Effect.runSync(
-      S.encodeUnknownEffect(OpenClawBackupConfig)(
+      encodeUnknownOpenClawBackupConfig(
         OpenClawBackupConfig.make({ passphraseSecretRef: "op://beep-openclaw/backup/passphrase" })
       )
     );
@@ -390,8 +397,8 @@ describe("@beep/infra OpenClaw", () => {
     });
     const backupInput = OpenClawBackupShipScriptInput.make({ backup, generation: defaultGeneration });
 
-    expect(S.is(OpenClawGenerationIdentityScriptInput)(generationIdentityInput)).toBe(true);
-    expect(S.is(OpenClawBackupShipScriptInput)(backupInput)).toBe(true);
+    expect(isOpenClawGenerationIdentityScriptInput(generationIdentityInput)).toBe(true);
+    expect(isOpenClawBackupShipScriptInput(backupInput)).toBe(true);
   });
 
   it.layer(NodeServices.layer)(

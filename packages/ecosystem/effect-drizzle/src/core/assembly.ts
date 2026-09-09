@@ -110,6 +110,10 @@ export interface RelationModels {
  */
 export type AssemblyFailure = (message: string, sourceTable: string, fieldName: string, targetTable: string) => never;
 
+type RelationsConfigFactory<Tables extends Schema> = (
+  helpers: RelationsBuilder<Tables>
+) => RelationsBuilderConfig<Tables>;
+
 /**
  * Reject duplicate physical table names before dialect projection.
  * @internal
@@ -229,14 +233,14 @@ export const makeRelationsConfig: {
     edges: ReadonlyArray<Edge>,
     junctions: ReadonlyArray<Junction>,
     fail: AssemblyFailure
-  ): (models: RelationModels) => (helpers: RelationsBuilder<Tables>) => RelationsBuilderConfig<Tables>;
+  ): (models: RelationModels) => RelationsConfigFactory<Tables>;
   <Tables extends Schema>(
     models: RelationModels,
     tables: Tables,
     edges: ReadonlyArray<Edge>,
     junctions: ReadonlyArray<Junction>,
     fail: AssemblyFailure
-  ): (helpers: RelationsBuilder<Tables>) => RelationsBuilderConfig<Tables>;
+  ): RelationsConfigFactory<Tables>;
 } = /* @__PURE__ */ dual(
   5,
   <Tables extends Schema>(
@@ -245,7 +249,7 @@ export const makeRelationsConfig: {
     edges: ReadonlyArray<Edge>,
     junctions: ReadonlyArray<Junction>,
     fail: AssemblyFailure
-  ): ((helpers: RelationsBuilder<Tables>) => RelationsBuilderConfig<Tables>) =>
+  ): RelationsConfigFactory<Tables> =>
     (helpers) => {
       const direct = reduce(edges, empty<string, Record<string, AnyRelation>>(), (config, edge) => {
         const source = helpers[edge.sourceKey];

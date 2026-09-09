@@ -22,6 +22,9 @@ import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
 import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
 import type * as HttpClientError from "effect/unstable/http/HttpClientError";
 
+const decodeSanityErrorResult = S.decodeResult(SanityError);
+const decodeSanityQueryResponseResult = S.decodeResult(SanityQueryResponse);
+
 type CapturedRequest = {
   readonly bodyText: O.Option<string>;
   readonly headers: Readonly<Record<string, string>>;
@@ -194,10 +197,10 @@ describe("@beep/sanity", () => {
       status: 500,
       url: "https://api.sanity.io/v2025-05-14/data/query/production",
     });
-    expect(Result.isFailure(S.decodeResult(SanityQueryResponse)({ ms: -1, result: null }))).toBe(true);
+    expect(Result.isFailure(decodeSanityQueryResponseResult({ ms: -1, result: null }))).toBe(true);
     expect(
       Result.isFailure(
-        S.decodeResult(SanityError)({
+        decodeSanityErrorResult({
           _tag: "SanityError",
           reason: "response status",
           status: 99,

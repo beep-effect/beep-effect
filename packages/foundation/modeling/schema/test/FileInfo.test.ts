@@ -7,17 +7,21 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
-describe("FileInfoType", () => {
-  const decode = S.decodeUnknownSync(FileInfoType);
+const decodeFileInfoSync = S.decodeSync(FileInfo);
+const decodeUnknownFileInfoSync = S.decodeUnknownSync(FileInfo);
+const decodeUnknownFileInfoTypeSync = S.decodeUnknownSync(FileInfoType);
+const encodeFileInfoSync = S.encodeSync(FileInfo);
+const isFileInfo2 = S.is(FileInfo);
 
+describe("FileInfoType", () => {
   it("accepts supported file-system entry kinds", () => {
     for (const kind of FileInfoType.Options) {
-      expect(decode(kind)).toBe(kind);
+      expect(decodeUnknownFileInfoTypeSync(kind)).toBe(kind);
     }
   });
 
   it("rejects unsupported entry kinds", () => {
-    expect(() => decode("Device")).toThrow();
+    expect(() => decodeUnknownFileInfoTypeSync("Device")).toThrow();
   });
 });
 
@@ -44,7 +48,7 @@ describe("FileInfo", () => {
   });
 
   it("decodes another supported case and applies the same defaults", () => {
-    const info = S.decodeSync(FileInfo)({
+    const info = decodeFileInfoSync({
       type: "Directory",
       dev: 2,
       mode: 0o755,
@@ -58,7 +62,7 @@ describe("FileInfo", () => {
 
   it("decodes provided optional stat fields to Some", () => {
     const mtime = DateTime.toDateUtc(DateTime.makeUnsafe(1_700_000_000_000));
-    const info = S.decodeSync(FileInfo)({
+    const info = decodeFileInfoSync({
       type: "File",
       dev: 1,
       mode: 0o644,
@@ -74,15 +78,15 @@ describe("FileInfo", () => {
 
   it("round-trips through encode and decode", () => {
     const info = FileInfo.cases.SymbolicLink.make({ dev: 3, mode: 0o777, size: FileSystem.Size(8n) });
-    const encoded = S.encodeSync(FileInfo)(info);
-    const decoded = S.decodeSync(FileInfo)(encoded);
+    const encoded = encodeFileInfoSync(info);
+    const decoded = decodeFileInfoSync(encoded);
 
     expect(decoded).toEqual(info);
   });
 
   it("rejects unsupported types", () => {
     expect(() =>
-      S.decodeUnknownSync(FileInfo)({
+      decodeUnknownFileInfoSync({
         type: "Device",
         dev: 1,
         mode: 0o600,
@@ -93,12 +97,10 @@ describe("FileInfo", () => {
 
   it("round-trips schema-derived arbitrary values", () => {
     const arbitrary = S.toArbitrary(FileInfo)(fc);
-    const isFileInfo = S.is(FileInfo);
-
     fc.assert(
       fc.property(arbitrary, (info) => {
-        expect(isFileInfo(info)).toBe(true);
-        expect(S.decodeSync(FileInfo)(S.encodeSync(FileInfo)(info))).toEqual(info);
+        expect(isFileInfo2(info)).toBe(true);
+        expect(decodeFileInfoSync(encodeFileInfoSync(info))).toEqual(info);
       }),
       fcRuns(50)
     );

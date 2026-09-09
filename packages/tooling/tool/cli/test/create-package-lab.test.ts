@@ -29,6 +29,9 @@ import { Command } from "effect/unstable/cli";
 import * as jsonc from "jsonc-parser";
 import { describe, expect, it } from "vitest";
 
+const decodeUnknownLabManifestFromJsonStringSync = S.decodeUnknownSync(LabManifestFromJsonString);
+const encodeLabManifestFromJsonStringSync = S.encodeSync(LabManifestFromJsonString);
+
 const CommandPlatformLayer = Layer.mergeAll(NodeServices.layer);
 const CommandTestLayer = Layer.mergeAll(
   CommandPlatformLayer,
@@ -63,6 +66,7 @@ const AppTsconfig = S.Struct({
     rootDir: S.String,
   }),
 });
+const encodeAppTsconfigSync = S.encodeSync(AppTsconfig);
 const LabCheckTsconfig = S.Struct({
   extends: S.String,
   references: S.Array(S.Unknown),
@@ -72,6 +76,7 @@ const LabCheckTsconfig = S.Struct({
     rootDir: S.String,
   }),
 });
+const encodeLabCheckTsconfigSync = S.encodeSync(LabCheckTsconfig);
 const decodeRootPackage = S.decodeUnknownSync(RootPackage);
 const decodeGeneratedPackageManifest = S.decodeUnknownSync(GeneratedPackageManifest);
 const decodeAppTsconfig = S.decodeUnknownSync(AppTsconfig);
@@ -348,16 +353,14 @@ describe("create-package --lab", { concurrent: false }, () => {
   it("property: lab tsconfig schemas round-trip derived values", () => {
     fc.assert(
       fc.property(LabTsconfigArbitrary, LabCheckTsconfigArbitrary, (labTsconfig, labCheckTsconfig) => {
-        expect(decodeAppTsconfig(S.encodeSync(AppTsconfig)(labTsconfig))).toEqual(labTsconfig);
-        expect(decodeLabCheckTsconfig(S.encodeSync(LabCheckTsconfig)(labCheckTsconfig))).toEqual(labCheckTsconfig);
+        expect(decodeAppTsconfig(encodeAppTsconfigSync(labTsconfig))).toEqual(labTsconfig);
+        expect(decodeLabCheckTsconfig(encodeLabCheckTsconfigSync(labCheckTsconfig))).toEqual(labCheckTsconfig);
       }),
       fcRuns(16)
     );
   });
 
   it("property: lab manifests round-trip the lab.manifest.json codec from valid encoded dates", () => {
-    const decodeManifest = S.decodeUnknownSync(LabManifestFromJsonString);
-    const encodeManifest = S.encodeSync(LabManifestFromJsonString);
     const manifestEquivalence = S.toEquivalence(LabManifest);
     const isoDate = fc
       .tuple(fc.integer({ min: 1970, max: 2100 }), fc.integer({ min: 1, max: 12 }), fc.integer({ min: 1, max: 28 }))
@@ -375,8 +378,13 @@ describe("create-package --lab", { concurrent: false }, () => {
     fc.assert(
       fc.property(encodedManifest, (encoded) => {
         const json = JSON.stringify(encoded, null, 2);
-        const decoded = decodeManifest(json);
-        expect(manifestEquivalence(decodeManifest(encodeManifest(decoded)), decoded)).toBe(true);
+        const decoded = decodeUnknownLabManifestFromJsonStringSync(json);
+        expect(
+          manifestEquivalence(
+            decodeUnknownLabManifestFromJsonStringSync(encodeLabManifestFromJsonStringSync(decoded)),
+            decoded
+          )
+        ).toBe(true);
       }),
       fcRuns(16)
     );

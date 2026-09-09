@@ -15,6 +15,8 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
+const decodeLocalDateFromStringOption = S.decodeOption(LocalDateFromString);
+
 const $I = $LejeuneBoltWorkbenchId.create("domain/Ontology");
 
 /**
@@ -49,7 +51,7 @@ export const EntityId = S.NonEmptyString.check(
 /** Runtime type decoded by {@link EntityId}. @category models @since 0.0.0 */
 export type EntityId = typeof EntityId.Type;
 
-const ValidIsoDateCheck = S.makeFilter((value: string) => O.isSome(S.decodeOption(LocalDateFromString)(value)), {
+const ValidIsoDateCheck = S.makeFilter((value: string) => O.isSome(decodeLocalDateFromStringOption(value)), {
   identifier: $I`ValidIsoDateCheck`,
   title: "Valid ISO Calendar Date",
   description: "Checks that an ISO date names a real calendar day.",

@@ -2692,7 +2692,7 @@ export const ${name} = taggedUnion<${types}, ${encodeds}>(
  * @packageDocumentation \\@beep/html/Html.model
  * @since 0.0.0
  */
-import { $HtmlId } from "@beep/identity";
+import { $HtmlId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 
@@ -4070,8 +4070,9 @@ const elementMetaSource: Readonly<Record<HtmlTag, S.Codec.Encoded<typeof HtmlEle
 ${metaEntries}
 };
 
+const decodeElementMetaResult = S.decodeResult(HtmlElementMeta);
 const decodeElementMeta = (value: S.Codec.Encoded<typeof HtmlElementMeta>): HtmlElementMeta =>
-  Result.getOrThrow(S.decodeResult(HtmlElementMeta)(value));
+  Result.getOrThrow(decodeElementMetaResult(value));
 
 /**
  * Metadata for every generated HTML element, keyed by tag name.

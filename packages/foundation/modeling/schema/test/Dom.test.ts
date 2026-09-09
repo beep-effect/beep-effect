@@ -8,6 +8,13 @@ import { describe, expect, it } from "@effect/vitest";
 import { DateTime } from "effect";
 import * as S from "effect/Schema";
 
+const isDOMCssProperties = S.is(DOMCssProperties);
+const isDOMDragEvent = S.is(DOMDragEvent);
+const isDOMEvent = S.is(DOMEvent);
+const isDOMHtmlElement = S.is(DOMHtmlElement);
+const isDOMMouseEvent = S.is(DOMMouseEvent);
+const isDOMReactNode = S.is(DOMReactNode);
+
 class TestHTMLElement {}
 class TestDragEvent {}
 class TestMouseEvent {}
@@ -27,19 +34,19 @@ describe("DOM element and event guards", () => {
 
     expect(isHTMLElement(element)).toBe(true);
     expect(isHTMLElement({})).toBe(false);
-    expect(S.is(DOMHtmlElement)(element)).toBe(true);
+    expect(isDOMHtmlElement(element)).toBe(true);
 
     expect(isDragEvent(dragEvent)).toBe(true);
     expect(isDragEvent(event)).toBe(false);
-    expect(S.is(DOMDragEvent)(dragEvent)).toBe(true);
+    expect(isDOMDragEvent(dragEvent)).toBe(true);
 
-    expect(S.is(DOMEvent)(event)).toBe(true);
-    expect(S.is(DOMMouseEvent)(mouseEvent)).toBe(true);
+    expect(isDOMEvent(event)).toBe(true);
+    expect(isDOMMouseEvent(mouseEvent)).toBe(true);
   });
 
   it("accepts plain CSS properties and rejects other values", () => {
     expect(isCSSProperties({ color: "red", opacity: 0.5 })).toBe(true);
-    expect(S.is(DOMCssProperties)({ display: "grid" })).toBe(true);
+    expect(isDOMCssProperties({ display: "grid" })).toBe(true);
 
     expect(isCSSProperties(null)).toBe(false);
     expect(isCSSProperties("color: red")).toBe(false);
@@ -57,7 +64,7 @@ describe("DOM element and event guards", () => {
     expect(isReactNode(["text", Symbol("not-a-node")])).toBe(false);
     expect(isReactNode({ $$typeof: Symbol.for("react.portal") })).toBe(true);
     expect(isReactNode(Symbol("not-a-node"))).toBe(false);
-    expect(S.is(DOMReactNode)(["child"])).toBe(true);
+    expect(isDOMReactNode(["child"])).toBe(true);
   });
 
   it("recognizes callback, legacy string, nullable, and object refs", () => {

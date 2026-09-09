@@ -2,6 +2,8 @@ import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { makeEntityRuleSet, makeMentionRuleSet, makeRelationRuleSet, RuleSet } from "../../Prompt/RuleSet.ts";
+const decodeRuleSet = S.decodeEffect(RuleSet);
+const encodeRuleSet = S.encodeEffect(RuleSet);
 
 const summarizeStage: (ruleSet: RuleSet) => string = RuleSet.match({
   mention: () => "mention rules",
@@ -24,8 +26,8 @@ describe("RuleSet", () => {
       expect(summarizeStage(entity)).toBe("entity rules");
       expect(summarizeStage(relation)).toBe("relation rules");
 
-      const encoded = yield* S.encodeEffect(RuleSet)(relation);
-      const decoded = yield* S.decodeEffect(RuleSet)(encoded);
+      const encoded = yield* encodeRuleSet(relation);
+      const decoded = yield* decodeRuleSet(encoded);
 
       expect(RuleSet.guards.relation(decoded)).toBe(true);
       expect(decoded.allRules).toEqual(relation.allRules);

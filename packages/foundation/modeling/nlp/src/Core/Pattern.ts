@@ -118,6 +118,7 @@ export const UniversalPOSTag = UniversalPOSTagKit.pipe(
  * @since 0.0.0
  */
 export type UniversalPOSTag = typeof UniversalPOSTag.Type;
+const isUniversalPOSTag = S.is(UniversalPOSTag);
 
 /**
  * Named-entity labels accepted by wink-backed entity pattern matching.
@@ -157,12 +158,11 @@ export const NamedEntityType = NamedEntityTypeKit.pipe(
  * @since 0.0.0
  */
 export type NamedEntityType = typeof NamedEntityType.Type;
+const isNamedEntityType = S.is(NamedEntityType);
 
 const DisambiguatedLiteralPatternOptionChoice = S.makeFilter(
   (values: ReadonlyArray<string>) =>
-    A.some(values, (value) =>
-      P.every([Str.isNonEmpty, P.not(S.is(UniversalPOSTag)), P.not(S.is(NamedEntityType))])(value)
-    ),
+    A.some(values, (value) => P.every([Str.isNonEmpty, P.not(isUniversalPOSTag), P.not(isNamedEntityType)])(value)),
   {
     description: "Literal pattern options must include at least one non-reserved literal choice.",
     identifier: $I`DisambiguatedLiteralPatternOptionChoice`,
@@ -324,6 +324,9 @@ export class POSPatternElement extends S.TaggedClass<POSPatternElement>($I`POSPa
     description: "Pattern element matching POS tag alternatives.",
   })
 ) {}
+const decodeUnknownPOSPatternElementResult = S.decodeUnknownResult(POSPatternElement);
+const encodePOSPatternElementResult = S.encodeResult(POSPatternElement);
+const isPOSPatternElement = S.is(POSPatternElement);
 
 /**
  * Tagged pattern element that matches named-entity alternatives.
@@ -349,6 +352,9 @@ export class EntityPatternElement extends S.TaggedClass<EntityPatternElement>($I
     description: "Pattern element matching entity-type alternatives.",
   })
 ) {}
+const decodeUnknownEntityPatternElementResult = S.decodeUnknownResult(EntityPatternElement);
+const encodeEntityPatternElementResult = S.encodeResult(EntityPatternElement);
+const isEntityPatternElement = S.is(EntityPatternElement);
 
 /**
  * Tagged pattern element that matches literal token text alternatives.
@@ -374,6 +380,9 @@ export class LiteralPatternElement extends S.TaggedClass<LiteralPatternElement>(
     description: "Pattern element matching literal-text alternatives.",
   })
 ) {}
+const decodeUnknownLiteralPatternElementResult = S.decodeUnknownResult(LiteralPatternElement);
+const encodeLiteralPatternElementResult = S.encodeResult(LiteralPatternElement);
+const isLiteralPatternElement = S.is(LiteralPatternElement);
 
 /**
  * Schema union for every pattern element variant supported by this package.
@@ -552,10 +561,10 @@ export class Pattern extends S.TaggedClass<Pattern>($I`Pattern`)(
   static readonly POS = POSPatternElement.pipe(
     SchemaUtils.withStatics(() => ({
       decode: (input: unknown) =>
-        Result.getOrThrowWith(S.decodeUnknownResult(POSPatternElement)(input), schemaIssueToError),
+        Result.getOrThrowWith(decodeUnknownPOSPatternElementResult(input), schemaIssueToError),
       encode: (input: POSPatternElement) =>
-        Result.getOrThrowWith(S.encodeResult(POSPatternElement)(input), schemaIssueToError),
-      is: S.is(POSPatternElement),
+        Result.getOrThrowWith(encodePOSPatternElementResult(input), schemaIssueToError),
+      is: isPOSPatternElement,
       toBracketString: (value: POSPatternOption): string => renderBracketString(value),
     }))
   );
@@ -566,10 +575,10 @@ export class Pattern extends S.TaggedClass<Pattern>($I`Pattern`)(
   static readonly Entity = EntityPatternElement.pipe(
     SchemaUtils.withStatics(() => ({
       decode: (input: unknown) =>
-        Result.getOrThrowWith(S.decodeUnknownResult(EntityPatternElement)(input), schemaIssueToError),
+        Result.getOrThrowWith(decodeUnknownEntityPatternElementResult(input), schemaIssueToError),
       encode: (input: EntityPatternElement) =>
-        Result.getOrThrowWith(S.encodeResult(EntityPatternElement)(input), schemaIssueToError),
-      is: S.is(EntityPatternElement),
+        Result.getOrThrowWith(encodeEntityPatternElementResult(input), schemaIssueToError),
+      is: isEntityPatternElement,
       toBracketString: (value: EntityPatternOption): string => renderBracketString(value),
     }))
   );
@@ -580,10 +589,10 @@ export class Pattern extends S.TaggedClass<Pattern>($I`Pattern`)(
   static readonly Literal = LiteralPatternElement.pipe(
     SchemaUtils.withStatics(() => ({
       decode: (input: unknown) =>
-        Result.getOrThrowWith(S.decodeUnknownResult(LiteralPatternElement)(input), schemaIssueToError),
+        Result.getOrThrowWith(decodeUnknownLiteralPatternElementResult(input), schemaIssueToError),
       encode: (input: LiteralPatternElement) =>
-        Result.getOrThrowWith(S.encodeResult(LiteralPatternElement)(input), schemaIssueToError),
-      is: S.is(LiteralPatternElement),
+        Result.getOrThrowWith(encodeLiteralPatternElementResult(input), schemaIssueToError),
+      is: isLiteralPatternElement,
       toBracketString: (value: LiteralPatternOption): string => renderBracketString(value),
     }))
   );
@@ -599,7 +608,7 @@ export class Pattern extends S.TaggedClass<Pattern>($I`Pattern`)(
     (pattern: Pattern) => S.Codec.Encoded<typeof Pattern>
   >(
     (args) => args.length >= 1,
-    (pattern) => Result.getOrThrowWith(S.encodeResult(Pattern)(pattern), schemaIssueToError)
+    (pattern) => Result.getOrThrowWith(encodePatternResult(pattern), schemaIssueToError)
   );
 
   /**
@@ -613,7 +622,7 @@ export class Pattern extends S.TaggedClass<Pattern>($I`Pattern`)(
     (input: S.Codec.Encoded<typeof Pattern>) => Pattern
   >(
     (args) => args.length >= 1,
-    (input) => Result.getOrThrowWith(S.decodeResult(Pattern)(input), schemaIssueToError)
+    (input) => Result.getOrThrowWith(decodePatternResult(input), schemaIssueToError)
   );
 
   /**
@@ -621,3 +630,5 @@ export class Pattern extends S.TaggedClass<Pattern>($I`Pattern`)(
    */
   static readonly is = S.is(Pattern);
 }
+const decodePatternResult = S.decodeResult(Pattern);
+const encodePatternResult = S.encodeResult(Pattern);

@@ -23,6 +23,18 @@ import {
   RetentionAuthorizationFromJsonString,
 } from "@/domain/Bundle";
 import { IsoDate, IsoTimestamp } from "@/domain/Ontology";
+
+const decodeGoldenReplayReceiptFromJsonString = S.decodeEffect(GoldenReplayReceiptFromJsonString);
+const decodeMutableRetentionMetadataFromJsonString = S.decodeEffect(MutableRetentionMetadataFromJsonString);
+const decodeProjectionStoreMetadataFromJsonString = S.decodeEffect(ProjectionStoreMetadataFromJsonString);
+const decodeUnknownMutableRetentionMetadataResult = S.decodeUnknownResult(MutableRetentionMetadata);
+const decodeUnknownMutableReviewLedgerResult = S.decodeUnknownResult(MutableReviewLedger);
+const encodeGoldenReplayReceiptFromJsonString = S.encodeEffect(GoldenReplayReceiptFromJsonString);
+const encodeProjectionStoreMetadataFromJsonString = S.encodeEffect(ProjectionStoreMetadataFromJsonString);
+const encodeRetentionAuthorizationFromJsonString = S.encodeEffect(RetentionAuthorizationFromJsonString);
+const encodeMutableRetentionMetadataResult = S.encodeResult(MutableRetentionMetadata);
+const encodeMutableReviewLedgerResult = S.encodeResult(MutableReviewLedger);
+
 import {
   BundleBuildInput,
   buildBundle,
@@ -41,14 +53,12 @@ const inputFor = (
 
 describe("LeJeune transactional bundle builder", () => {
   it("round-trips schema-derived mutable retention metadata", () => {
-    const encode = S.encodeResult(MutableRetentionMetadata);
-    const decode = S.decodeUnknownResult(MutableRetentionMetadata);
     const equivalent = S.toEquivalence(MutableRetentionMetadata);
 
     fc.assert(
       fc.property(S.toArbitrary(MutableRetentionMetadata)(fc), (value) =>
-        encode(value).pipe(
-          Result.flatMap(decode),
+        encodeMutableRetentionMetadataResult(value).pipe(
+          Result.flatMap(decodeUnknownMutableRetentionMetadataResult),
           Result.match({
             onFailure: () => false,
             onSuccess: (decoded) => equivalent(decoded, value),
@@ -60,14 +70,12 @@ describe("LeJeune transactional bundle builder", () => {
   });
 
   it("round-trips the schema-derived exact-empty review ledger", () => {
-    const encode = S.encodeResult(MutableReviewLedger);
-    const decode = S.decodeUnknownResult(MutableReviewLedger);
     const equivalent = S.toEquivalence(MutableReviewLedger);
 
     fc.assert(
       fc.property(S.toArbitrary(MutableReviewLedger)(fc), (value) =>
-        encode(value).pipe(
-          Result.flatMap(decode),
+        encodeMutableReviewLedgerResult(value).pipe(
+          Result.flatMap(decodeUnknownMutableReviewLedgerResult),
           Result.match({
             onFailure: () => false,
             onSuccess: (decoded) => equivalent(decoded, value),
@@ -275,14 +283,10 @@ describe("LeJeune transactional bundle builder", () => {
       );
       expect(yield* fs.exists(path.join(firstBundleRoot, "corpus.duckdb"))).toBe(true);
       expect(yield* fs.exists(path.join(firstBundleRoot, "app-review.pglite"))).toBe(true);
-      const projectionMetadata = yield* S.decodeEffect(ProjectionStoreMetadataFromJsonString)(
-        firstProjectionMetadataText
-      );
+      const projectionMetadata = yield* decodeProjectionStoreMetadataFromJsonString(firstProjectionMetadataText);
       expect(projectionMetadata.bundleIdentity).toBe(firstReceipt.bundleIdentity);
       expect(projectionMetadata.bundleVersion).toBe("lejeune-demo-bundle/v1");
-      const retentionMetadata = yield* S.decodeEffect(MutableRetentionMetadataFromJsonString)(
-        firstRetentionMetadataText
-      );
+      const retentionMetadata = yield* decodeMutableRetentionMetadataFromJsonString(firstRetentionMetadataText);
       expect(retentionMetadata.disposition).toBe("delete-or-promote");
       expect(retentionMetadata.dispositionDate).toBe("2026-09-30");
       expect(O.isNone(retentionMetadata.retentionAuthorization)).toBe(true);
@@ -298,12 +302,12 @@ describe("LeJeune transactional bundle builder", () => {
       const aggregate = yield* verifyPublicationReadback(validReadback);
       expect(aggregate.bundleIdentity).toBe(firstReceipt.bundleIdentity);
 
-      const receipt = yield* S.decodeEffect(GoldenReplayReceiptFromJsonString)(firstReceiptText);
+      const receipt = yield* decodeGoldenReplayReceiptFromJsonString(firstReceiptText);
       const wrongIdentity = Sha256Hex.make("0000000000000000000000000000000000000000000000000000000000000000");
-      const wrongReceiptText = yield* S.encodeEffect(GoldenReplayReceiptFromJsonString)(
+      const wrongReceiptText = yield* encodeGoldenReplayReceiptFromJsonString(
         GoldenReplayReceipt.make({ ...receipt, bundleIdentity: wrongIdentity })
       );
-      const wrongProjectionMetadataText = yield* S.encodeEffect(ProjectionStoreMetadataFromJsonString)(
+      const wrongProjectionMetadataText = yield* encodeProjectionStoreMetadataFromJsonString(
         ProjectionStoreMetadata.make({ ...projectionMetadata, bundleIdentity: wrongIdentity })
       );
       const nonEmptyLedgerText = Str.replace(
@@ -391,7 +395,7 @@ describe("LeJeune transactional bundle builder", () => {
         newDispositionDate: IsoDate.make("2026-10-31"),
         owner: "LeJeune demo operator",
       });
-      const authorizationJson = yield* S.encodeEffect(RetentionAuthorizationFromJsonString)(authorization);
+      const authorizationJson = yield* encodeRetentionAuthorizationFromJsonString(authorization);
       yield* fs.writeFileString(authorizationPath, `${authorizationJson}\n`);
       yield* TestClock.setTime(DateTime.makeUnsafe("2026-10-01T00:00:00.000Z").epochMilliseconds);
 
@@ -408,7 +412,7 @@ describe("LeJeune transactional bundle builder", () => {
       expect(yield* fs.exists(path.join(mutableRoot, "review-ledger.json"))).toBe(true);
       const retentionMetadata = yield* fs
         .readFileString(path.join(mutableRoot, "retention-metadata.json"))
-        .pipe(Effect.flatMap(S.decodeEffect(MutableRetentionMetadataFromJsonString)));
+        .pipe(Effect.flatMap(decodeMutableRetentionMetadataFromJsonString));
       expect(retentionMetadata.disposition).toBe("delete-or-promote");
       expect(retentionMetadata.dispositionDate).toBe("2026-10-31");
       expect(retentionMetadata.schemaVersion).toBe("lejeune-retention-metadata/v1");
@@ -444,7 +448,7 @@ describe("LeJeune transactional bundle builder", () => {
         newDispositionDate: IsoDate.make("2026-10-31"),
         owner: "LeJeune demo operator",
       });
-      const authorizationJson = yield* S.encodeEffect(RetentionAuthorizationFromJsonString)(authorization);
+      const authorizationJson = yield* encodeRetentionAuthorizationFromJsonString(authorization);
       yield* fs.writeFileString(authorizationPath, `${authorizationJson}\n`);
       yield* TestClock.setTime(DateTime.makeUnsafe("2026-10-31T00:00:00.000Z").epochMilliseconds);
 

@@ -30,6 +30,9 @@ import { DocumentId, ProvenanceEventId } from "@/schema/Ids";
 import { ParseOutcome } from "@/schema/Text";
 import { Canonicalizer } from "@/services/Canonicalizer";
 import { Chunker } from "@/services/Chunker";
+
+const decodeRelationExtractionCandidateResult = S.decodeResult(RelationExtractionCandidate);
+
 import { HostedExtractor, PatternExtractor } from "@/services/Extractor";
 
 const documentId = DocumentId.make("1".repeat(64));
@@ -163,7 +166,7 @@ describe("C0 hosted extractor", () => {
     ]);
     expect(
       Result.isSuccess(
-        S.decodeResult(RelationExtractionCandidate)({
+        decodeRelationExtractionCandidateResult({
           evidenceQuote: "Ada trained Engine.",
           object: "Engine",
           predicate: "trained",

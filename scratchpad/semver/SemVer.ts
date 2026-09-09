@@ -965,7 +965,7 @@ export class SemVer extends Schema.Class<SemVer>($I`SemVer`)(
    * @since 0.0.0
    */
   [Equal.symbol](that: unknown): boolean {
-    if (!Schema.is(SemVer)(that)) return false;
+    if (!isSemVer(that)) return false;
     return (
       this.major === that.major &&
       this.minor === that.minor &&
@@ -1030,6 +1030,8 @@ export class SemVer extends Schema.Class<SemVer>($I`SemVer`)(
     return this.toString();
   }
 }
+
+const isSemVer = Schema.is(SemVer);
 
 /**
  * Grouped bump operations returned by the {@link SemVer.bump} accessor.

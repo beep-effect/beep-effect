@@ -13,6 +13,14 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import type { SessionLeaseReconciliation, SessionLeaseTransition } from "@beep/repo-ai-metrics";
 
+const decodeSessionLeaseExpiryCandidateResult = S.decodeResult(SessionLeaseExpiryCandidate);
+const decodeSessionLeaseSync = S.decodeSync(SessionLease);
+const decodeSessionLeaseEventSync = S.decodeSync(SessionLeaseEvent);
+const encodeSessionLeaseSync = S.encodeSync(SessionLease);
+const encodeSessionLeaseEventSync = S.encodeSync(SessionLeaseEvent);
+const encodeSessionLeaseExpiryCandidateSync = S.encodeSync(SessionLeaseExpiryCandidate);
+const encodeSessionLeaseReconciliationEvidenceSync = S.encodeSync(SessionLeaseReconciliationEvidence);
+
 const hashA = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 const hashB = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
 const hashC = "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc";
@@ -74,7 +82,7 @@ const openWaitEvent = decodeEvent({
 const candidateFrom = (lease: SessionLease, leaseDigest = hashF) =>
   decodeCandidate({
     schemaVersion: "telemetry-v2/session-lease-expiry-candidate/v1",
-    lease: S.encodeSync(SessionLease)(lease),
+    lease: encodeSessionLeaseSync(lease),
     leaseDigest,
     evaluatedAt: "2026-09-03T12:11:00.000Z",
     ttlMs: 600_000,
@@ -98,8 +106,8 @@ describe("telemetry-v2 session leases", () => {
   it("round-trips schema-generated leases and liveness events", () => {
     fc.assert(
       fc.property(S.toArbitrary(SessionLease)(fc), S.toArbitrary(SessionLeaseEvent)(fc), (lease, event) => {
-        const roundTrippedLease = S.decodeSync(SessionLease)(S.encodeSync(SessionLease)(lease));
-        const roundTrippedEvent = S.decodeSync(SessionLeaseEvent)(S.encodeSync(SessionLeaseEvent)(event));
+        const roundTrippedLease = decodeSessionLeaseSync(encodeSessionLeaseSync(lease));
+        const roundTrippedEvent = decodeSessionLeaseEventSync(encodeSessionLeaseEventSync(event));
         expect(leaseEquivalent(lease, roundTrippedLease)).toBe(true);
         expect(eventEquivalent(event, roundTrippedEvent)).toBe(true);
       }),
@@ -224,12 +232,12 @@ describe("telemetry-v2 session leases", () => {
     const lease = activeLease(transitionSessionLease(O.some(startedLease()), activityEvent()));
     const candidate = candidateFrom(lease);
     const invalid = {
-      ...S.encodeSync(SessionLeaseExpiryCandidate)(candidate),
+      ...encodeSessionLeaseExpiryCandidateSync(candidate),
       idleMs: 599_999,
     };
 
     expect(candidate.idleMs).toBe(600_000);
-    expect(S.decodeResult(SessionLeaseExpiryCandidate)(invalid)._tag).toBe("Failure");
+    expect(decodeSessionLeaseExpiryCandidateResult(invalid)._tag).toBe("Failure");
   });
 
   it("defers tombstones for a missing or renewed live lease", () => {
@@ -263,7 +271,7 @@ describe("telemetry-v2 session leases", () => {
     const leaseOpen = activeLease(transitionSessionLease(O.some(startedLease()), openWaitEvent));
     const leaseOpenCandidate = decodeCandidate({
       schemaVersion: "telemetry-v2/session-lease-expiry-candidate/v1",
-      lease: S.encodeSync(SessionLease)(leaseOpen),
+      lease: encodeSessionLeaseSync(leaseOpen),
       leaseDigest: hashF,
       evaluatedAt: "2026-09-03T12:12:00.000Z",
       ttlMs: 600_000,
@@ -297,8 +305,8 @@ describe("telemetry-v2 session leases", () => {
     const candidate = candidateFrom(lease);
     const result = reconcileExpiredSessionLease(candidate, O.some(candidate.leaseDigest), reconciliationEvidence());
     const encoded = JSON.stringify({
-      candidate: S.encodeSync(SessionLeaseExpiryCandidate)(candidate),
-      result: S.encodeSync(SessionLeaseReconciliationEvidence)(reconciliationEvidence()),
+      candidate: encodeSessionLeaseExpiryCandidateSync(candidate),
+      result: encodeSessionLeaseReconciliationEvidenceSync(reconciliationEvidence()),
       reconciliation: result,
     });
 

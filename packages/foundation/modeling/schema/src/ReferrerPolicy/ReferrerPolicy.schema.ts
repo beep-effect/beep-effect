@@ -69,6 +69,7 @@ export const ReferrerPolicyValue = ReferrerPolicyValueBase.pipe(
  * @since 0.0.0
  */
 export type ReferrerPolicyValue = typeof ReferrerPolicyValue.Type;
+const isReferrerPolicyValue = S.is(ReferrerPolicyValue);
 
 /**
  * Schema for fallback lists of `Referrer-Policy` values.
@@ -189,7 +190,7 @@ const formatReferrerPolicyValue = Effect.fn("ReferrerPolicy.formatReferrerPolicy
     });
   }
 
-  if (A.every(values, S.is(ReferrerPolicyValue))) {
+  if (A.every(values, isReferrerPolicyValue)) {
     return A.join(values, ", ");
   }
 

@@ -28,6 +28,7 @@ const FixtureTool = Tool.make("fixture_tool", {
 class ExpectedFixtureFailure extends S.TaggedError<ExpectedFixtureFailure>()("ExpectedFixtureFailure", {
   message: S.String,
 }) {}
+const decodeUnknownExpectedFixtureFailure = S.decodeUnknownEffect(ExpectedFixtureFailure);
 
 const ExpectedFailureTool = Tool.make("expected_failure_tool", {
   failure: ExpectedFixtureFailure,
@@ -168,7 +169,7 @@ describe("sanitizedToolkit", () => {
       Effect.fnUntraced(function* () {
         const server = yield* McpServer.McpServer;
         const result = yield* server.callTool({ name: "expected_failure_tool", arguments: {} });
-        const failure = yield* S.decodeUnknownEffect(ExpectedFixtureFailure)(result.structuredContent);
+        const failure = yield* decodeUnknownExpectedFixtureFailure(result.structuredContent);
 
         assert.isTrue(result.isError);
         assert.strictEqual(failure._tag, "ExpectedFixtureFailure");

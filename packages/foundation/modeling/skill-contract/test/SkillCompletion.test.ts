@@ -46,6 +46,14 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeSkillCompletionReceipt = S.decodeEffect(SkillCompletionReceipt);
+const decodeCompletionInvariantReasonResult = S.decodeResult(CompletionInvariantReason);
+const decodeUnknownSkillCompletion = S.decodeUnknownEffect(SkillCompletion);
+const encodeUnknownSkillCompletionReceipt = S.encodeUnknownEffect(SkillCompletionReceipt);
+const encodeUnknownCompletionInvariantReasonResult = S.encodeUnknownResult(CompletionInvariantReason);
+const isLiveVerified = S.is(LiveVerified);
+const isSkillCompletion = S.is(SkillCompletion);
+
 const QaGateId = makeGateId(LiteralKit(["blocking-gate", "advisory-gate", "conditional-gate", "extra-gate"]));
 const digest = EvidenceDigest.make({
   sha256: Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"),
@@ -202,16 +210,16 @@ describe("@beep/skill-contract SkillCompletion", () => {
         return;
       }
 
-      const encoded = yield* S.encodeUnknownEffect(SkillCompletionReceipt)(receipt.value);
-      const decodedReceipt = yield* S.decodeEffect(SkillCompletionReceipt)(encoded);
-      const opaqueDecodeFailure = yield* S.decodeUnknownEffect(SkillCompletion)(encoded).pipe(Effect.flip);
+      const encoded = yield* encodeUnknownSkillCompletionReceipt(receipt.value);
+      const decodedReceipt = yield* decodeSkillCompletionReceipt(encoded);
+      const opaqueDecodeFailure = yield* decodeUnknownSkillCompletion(encoded).pipe(Effect.flip);
       const receiptIsNotProof: SkillCompletionReceipt extends SkillCompletion ? false : true = true;
 
       expect(S.toEquivalence(SkillCompletionReceipt)(decodedReceipt, receipt.value)).toBe(true);
-      expect(S.is(SkillCompletion)(decodedReceipt)).toBe(false);
+      expect(isSkillCompletion(decodedReceipt)).toBe(false);
       expect(receiptIsNotProof).toBe(true);
       expect(opaqueDecodeFailure.message).toContain("SkillCompletion");
-      expect(S.is(LiveVerified)({ terminal: "LiveVerified", completion: decodedReceipt })).toBe(false);
+      expect(isLiveVerified({ terminal: "LiveVerified", completion: decodedReceipt })).toBe(false);
       expect(
         CompletionEvaluation.match(evaluation, {
           allowed: ({ completion }) => LiveVerified.make({ completion }).terminal,
@@ -369,8 +377,8 @@ describe("@beep/skill-contract SkillCompletion", () => {
   it("round-trips schema-derived arbitrary completion invariant reasons", () =>
     fc.assert(
       fc.property(S.toArbitrary(CompletionInvariantReason)(fc), (candidate) => {
-        const encoded = Result.getOrThrow(S.encodeUnknownResult(CompletionInvariantReason)(candidate));
-        const decoded = Result.getOrThrow(S.decodeResult(CompletionInvariantReason)(encoded));
+        const encoded = Result.getOrThrow(encodeUnknownCompletionInvariantReasonResult(candidate));
+        const decoded = Result.getOrThrow(decodeCompletionInvariantReasonResult(encoded));
 
         expect(S.toEquivalence(CompletionInvariantReason)(decoded, candidate)).toBe(true);
       }),

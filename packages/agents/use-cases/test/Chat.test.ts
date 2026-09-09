@@ -6,6 +6,8 @@ import { Result } from "effect";
 import * as S from "effect/Schema";
 import * as RpcSchema from "effect/unstable/rpc/RpcSchema";
 
+const decodeSendMessageRpcPayloadSchemaResult = S.decodeResult(SendMessageRpc.payloadSchema);
+
 const tags = [
   "ListThreads",
   "CreateThread",
@@ -53,13 +55,11 @@ describe("@beep/agents-use-cases Chat", () => {
         children: [P.make({ children: [Text.make({ value: "NUL\u0000text" })] })],
       }),
     ];
-
-    const decodeSendMessageRpcPayload = S.decodeResult(SendMessageRpc.payloadSchema);
     for (const content of hostileDocuments) {
       const encodedContent = Result.getOrThrow(Document.encodeResult(content));
       expect(
         Result.isFailure(
-          decodeSendMessageRpcPayload({
+          decodeSendMessageRpcPayloadSchemaResult({
             threadId: WorkspaceIdentity.ThreadId.make(1),
             content: encodedContent,
             requestId: "hostile-remote-payload",

@@ -6,6 +6,8 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { EmbeddingService } from "../../Service/Embedding.ts";
 import { NlpIndexError, NlpService } from "../../Service/Nlp.ts";
+const decodeUnknownFinite = S.decodeUnknownEffect(S.Finite);
+const isNlpIndexError = S.is(NlpIndexError);
 
 const EmbeddingServiceTest = Layer.succeed(
   EmbeddingService,
@@ -29,14 +31,14 @@ describe("NlpService canonical Wink adapter", () => {
   it.effect(
     "models index failures with the canonical schema and defect cause",
     Effect.fnUntraced(function* () {
-      const cause = yield* S.decodeUnknownEffect(S.Finite)("query unavailable").pipe(Effect.flip);
+      const cause = yield* decodeUnknownFinite("query unavailable").pipe(Effect.flip);
       const error = NlpIndexError.make({
         indexKind: "bm25",
         message: "Canonical Wink corpus query failed",
         cause: O.some(cause),
       });
 
-      assert.isTrue(S.is(NlpIndexError)(error));
+      assert.isTrue(isNlpIndexError(error));
       assert.deepEqual(error.cause, O.some(cause));
     })
   );

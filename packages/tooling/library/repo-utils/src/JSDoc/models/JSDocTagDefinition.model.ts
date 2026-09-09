@@ -8,6 +8,7 @@
 import { Fibered } from "@beep/identity/Fibered";
 import { $RepoUtilsId } from "@beep/identity/packages";
 import { ArrayOfStrings } from "@beep/schema";
+import { compileAssertion } from "@beep/utils/Schema";
 import { Effect, SchemaGetter } from "effect";
 import { dual } from "effect/Function";
 import * as R from "effect/Record";
@@ -223,11 +224,8 @@ export declare namespace JSDocTagDefinition {
  * @category models
  * @since 0.0.0
  */
-export const assertJsDoc: <const Def extends JSDocTagDefinition.Encoded>(input: Def) => asserts input is Def = (
-  input
-) => {
-  S.asserts(S.toEncoded(JSDocTagDefinition), input);
-};
+export const assertJsDoc: <const Def extends JSDocTagDefinition.Encoded>(input: Def) => asserts input is Def =
+  compileAssertion(S.toEncoded(JSDocTagDefinition));
 
 /**
  * Builds a JSDoc tag definition schema for a concrete tag payload.

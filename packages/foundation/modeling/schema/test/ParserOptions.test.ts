@@ -3,6 +3,8 @@ import { describe, expect, it } from "@effect/vitest";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
+const decodeParserOptionsSync = S.decodeSync(ParserOptions);
+
 describe("ParserOptions", () => {
   it("decodes defaults that match the original parser options behavior", () => {
     const options = ParserOptions.new();
@@ -54,7 +56,7 @@ describe("ParserOptions", () => {
   });
 
   it("still supports direct schema decoding from unknown input", () => {
-    const options = S.decodeSync(ParserOptions)({
+    const options = decodeParserOptionsSync({
       delimiter: ";",
       headers: true,
       quote: null,

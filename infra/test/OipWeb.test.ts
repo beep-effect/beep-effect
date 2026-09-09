@@ -13,6 +13,9 @@ import * as S from "effect/Schema";
 import { describe, expect, it } from "vitest";
 import { expectSchemaRoundTrip } from "./schemaParity.ts";
 
+const encodeUnknownOipDnsConfig = S.encodeUnknownEffect(OipDnsConfig);
+const encodeUnknownOipVercelProjectConfig = S.encodeUnknownEffect(OipVercelProjectConfig);
+
 describe("@beep/infra OipWeb", () => {
   it("applies production-safe defaults for OIP web infrastructure", () => {
     const args = makeOipWebStackArgsFromConfigValues();
@@ -121,7 +124,7 @@ describe("@beep/infra OipWeb", () => {
 
   it("encodes OIP provider configs with unchanged optional-key wire shapes", () => {
     const encodedDns = Effect.runSync(
-      S.encodeUnknownEffect(OipDnsConfig)(
+      encodeUnknownOipDnsConfig(
         OipDnsConfig.make({
           cloudflareZoneId: O.some("zone_123"),
           productionDnsRecordImportId: O.some("zone_123/apex_record"),
@@ -129,7 +132,7 @@ describe("@beep/infra OipWeb", () => {
       )
     );
     const encodedVercel = Effect.runSync(
-      S.encodeUnknownEffect(OipVercelProjectConfig)(
+      encodeUnknownOipVercelProjectConfig(
         OipVercelProjectConfig.make({
           hubSpotAccountId: O.some("12345"),
           teamId: O.some("team_123"),

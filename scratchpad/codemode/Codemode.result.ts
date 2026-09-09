@@ -294,6 +294,7 @@ const ResultCodec = ResultWire.pipe(
     }),
   })
 );
+const encodeResultCodec = S.encodeEffect(ResultCodec);
 
 /**
  * Public wire schema for a CodeMode execution result.
@@ -368,4 +369,4 @@ export type Result = typeof Result.Type;
  * @since 0.0.0
  */
 export const encodeResultModel = (result: ResultModel): Effect.Effect<Result> =>
-  S.encodeEffect(ResultCodec)(result).pipe(Effect.orDie);
+  encodeResultCodec(result).pipe(Effect.orDie);

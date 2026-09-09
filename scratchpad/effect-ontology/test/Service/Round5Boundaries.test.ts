@@ -10,6 +10,9 @@ import { EventId as CoreEventId } from "../../Domain/Model/CoreOntology.ts";
 import { EventId as KnowledgeEventId } from "../../Domain/Schema/KnowledgeModel.ts";
 import { getRunIdFromText } from "../../Service/ExtractionRun.ts";
 import { createExtractionStarted, makeProgressBuilder } from "../../Service/ProgressStreaming.ts";
+const decodePosIntResult = S.decodeResult(PosInt);
+const isISOStr = S.is(ISOStr);
+const isUUID = S.is(UUID);
 
 describe("Round 5 canonical boundaries", () => {
   it.effect(
@@ -22,14 +25,14 @@ describe("Round 5 canonical boundaries", () => {
         estimatedAvgChunkSize: PosInt.make(10),
       });
 
-      assert.isTrue(S.is(UUID)(event.eventId));
-      assert.isTrue(S.is(ISOStr)(event.timestamp));
+      assert.isTrue(isUUID(event.eventId));
+      assert.isTrue(isISOStr(event.timestamp));
       assert.strictEqual(event.runId, runId);
     })
   );
 
   it("rejects invalid progress counts before the service boundary", () => {
-    assert.isTrue(Result.isFailure(S.decodeResult(PosInt)(0)));
+    assert.isTrue(Result.isFailure(decodePosIntResult(0)));
   });
 
   it("constructs deterministic extraction IDs through the canonical owner", () => {

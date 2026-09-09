@@ -4,6 +4,7 @@ import { Option as O, pipe } from "effect";
 import * as S from "effect/Schema";
 
 class BeepStatusError extends S.TaggedError<BeepStatusError>()("BeepStatusError", StatusCauseFields) {}
+const isBeepStatusError = S.is(BeepStatusError);
 
 describe("StatusCauseError", () => {
   it("reuses the shared field schema for tagged errors", () => {
@@ -30,7 +31,7 @@ describe("StatusCauseError", () => {
     const error = toBeepStatusError({ message: "boom", status: 500, cause: new Error("kapow") });
 
     expect(error).toBeInstanceOf(BeepStatusError);
-    expect(S.is(BeepStatusError)(error)).toBe(true);
+    expect(isBeepStatusError(error)).toBe(true);
     expect(error.status).toBe(500);
     expect(O.isSome(error.cause)).toBe(true);
   });
@@ -40,7 +41,7 @@ describe("StatusCauseError", () => {
     const error = toBeepStatusError({ message: "boom", status: 500 })(new Error("kapow"));
 
     expect(error).toBeInstanceOf(BeepStatusError);
-    expect(S.is(BeepStatusError)(error)).toBe(true);
+    expect(isBeepStatusError(error)).toBe(true);
     expect(error.status).toBe(500);
     expect(O.isSome(error.cause)).toBe(true);
   });
@@ -49,7 +50,7 @@ describe("StatusCauseError", () => {
     const error = makeStatusCauseError(BeepStatusError, { message: "boom", status: 500 })(new Error("kapow"));
 
     expect(error).toBeInstanceOf(BeepStatusError);
-    expect(S.is(BeepStatusError)(error)).toBe(true);
+    expect(isBeepStatusError(error)).toBe(true);
     expect(error.status).toBe(500);
     expect(O.isSome(error.cause)).toBe(true);
   });
@@ -58,7 +59,7 @@ describe("StatusCauseError", () => {
     const error = pipe(BeepStatusError, makeStatusCauseError({ message: "boom", status: 500 }))(new Error("kapow"));
 
     expect(error).toBeInstanceOf(BeepStatusError);
-    expect(S.is(BeepStatusError)(error)).toBe(true);
+    expect(isBeepStatusError(error)).toBe(true);
     expect(error.status).toBe(500);
     expect(O.isSome(error.cause)).toBe(true);
   });
@@ -68,7 +69,7 @@ describe("StatusCauseError", () => {
     const error = toBeepStatusError({ message: "boom", status: 500, cause: undefined });
 
     expect(error).toBeInstanceOf(BeepStatusError);
-    expect(S.is(BeepStatusError)(error)).toBe(true);
+    expect(isBeepStatusError(error)).toBe(true);
     expect(error.status).toBe(500);
     expect(O.isNone(error.cause)).toBe(true);
   });

@@ -32,6 +32,19 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeLibrarianInputResult = S.decodeResult(LibrarianInput);
+const decodeUnknownFilingSegmentOption = S.decodeUnknownOption(FilingSegment);
+const encodeFilingSegmentOption = S.encodeOption(FilingSegment);
+const isTaxonomyManifestParseError = S.is(TaxonomyManifestParseError);
+const isTaxonomyManifestReadError = S.is(TaxonomyManifestReadError);
+const isVendorAlignmentTargetNotFound = S.is(VendorAlignmentTargetNotFound);
+const isVendorSliceAlignmentNotAdmitted = S.is(VendorSliceAlignmentNotAdmitted);
+const isVendorSliceConceptMismatch = S.is(VendorSliceConceptMismatch);
+const isVendorSliceParseError = S.is(VendorSliceParseError);
+const isVendorSlicePathEscape = S.is(VendorSlicePathEscape);
+const isVendorSliceReadError = S.is(VendorSliceReadError);
+const isVendorSliceUnvetted = S.is(VendorSliceUnvetted);
+
 const manifestPath = "test/fixtures/vendor-manifest.jsonl";
 const vendorRoot = "test/fixtures";
 const slicePath = "test/fixtures/fixture-slice.jsonld";
@@ -167,7 +180,7 @@ layer(TaxonomyLoader.layer)("semantic foundation", (it) => {
       );
       const error = yield* loadWith((path) => Effect.succeed(path === manifestPath ? entry : slice)).pipe(Effect.flip);
 
-      expect(S.is(VendorSliceConceptMismatch)(error)).toBe(true);
+      expect(isVendorSliceConceptMismatch(error)).toBe(true);
     })
   );
 
@@ -192,7 +205,7 @@ layer(TaxonomyLoader.layer)("semantic foundation", (it) => {
         Effect.flip
       );
 
-      expect(S.is(VendorSliceParseError)(error)).toBe(true);
+      expect(isVendorSliceParseError(error)).toBe(true);
     })
   );
 
@@ -223,7 +236,7 @@ layer(TaxonomyLoader.layer)("semantic foundation", (it) => {
       );
       const error = yield* loadWith((path) => Effect.succeed(path === manifestPath ? entry : slice)).pipe(Effect.flip);
 
-      expect(S.is(VendorAlignmentTargetNotFound)(error)).toBe(true);
+      expect(isVendorAlignmentTargetNotFound(error)).toBe(true);
     })
   );
 
@@ -233,7 +246,7 @@ layer(TaxonomyLoader.layer)("semantic foundation", (it) => {
       const manifest = `{"format":"jsonld","id":"folio-email-communication","loadKind":"concept-alignment"}`;
       const error = yield* loadWith(() => Effect.succeed(manifest)).pipe(Effect.flip);
 
-      expect(S.is(TaxonomyManifestParseError)(error)).toBe(true);
+      expect(isTaxonomyManifestParseError(error)).toBe(true);
     })
   );
 
@@ -243,7 +256,7 @@ layer(TaxonomyLoader.layer)("semantic foundation", (it) => {
       const manifest = `{"conceptIri":"${folioEmailCommunicationIri}","fetchUrl":"${folioEmailCommunicationSourceIri}","format":"jsonld","id":"folio-email-communication","loadKind":"concept-alignment","loadStatus":"VETTED","localConceptIri":"${emailMessageIri}","mappingKind":"closeMatch","namespaceIri":"https://folio.openlegalstandard.org/","path":"folio-email-communication.jsonld","verified":false}`;
       const error = yield* loadWith(() => Effect.succeed(manifest)).pipe(Effect.flip);
 
-      expect(S.is(TaxonomyManifestParseError)(error)).toBe(true);
+      expect(isTaxonomyManifestParseError(error)).toBe(true);
     })
   );
 
@@ -259,7 +272,7 @@ layer(TaxonomyLoader.layer)("semantic foundation", (it) => {
         loadWith(() => Effect.succeed(manifest)).pipe(Effect.flip)
       );
 
-      expect(A.every(errors, S.is(TaxonomyManifestParseError))).toBe(true);
+      expect(A.every(errors, isTaxonomyManifestParseError)).toBe(true);
     })
   );
 
@@ -304,7 +317,7 @@ layer(TaxonomyLoader.layer)("semantic foundation", (it) => {
         Effect.flip
       );
 
-      expect(S.is(VendorSliceAlignmentNotAdmitted)(error)).toBe(true);
+      expect(isVendorSliceAlignmentNotAdmitted(error)).toBe(true);
     })
   );
 
@@ -312,7 +325,7 @@ layer(TaxonomyLoader.layer)("semantic foundation", (it) => {
     "fails closed for a missing manifest",
     Effect.fnUntraced(function* () {
       const error = yield* loadWith(FileSystem.makeNoop({}).readFileString).pipe(Effect.flip);
-      expect(S.is(TaxonomyManifestReadError)(error)).toBe(true);
+      expect(isTaxonomyManifestReadError(error)).toBe(true);
     })
   );
 
@@ -320,7 +333,7 @@ layer(TaxonomyLoader.layer)("semantic foundation", (it) => {
     "fails closed for an unparsable manifest",
     Effect.fnUntraced(function* () {
       const error = yield* loadWith(() => Effect.succeed("not-json")).pipe(Effect.flip);
-      expect(S.is(TaxonomyManifestParseError)(error)).toBe(true);
+      expect(isTaxonomyManifestParseError(error)).toBe(true);
     })
   );
 
@@ -329,7 +342,7 @@ layer(TaxonomyLoader.layer)("semantic foundation", (it) => {
     Effect.fnUntraced(function* () {
       const manifest = `{"format":"jsonld","id":"escape","loadStatus":"VETTED","path":"../secrets.jsonld","verified":true}`;
       const error = yield* loadWith(() => Effect.succeed(manifest)).pipe(Effect.flip);
-      expect(S.is(TaxonomyManifestParseError)(error)).toBe(true);
+      expect(isTaxonomyManifestParseError(error)).toBe(true);
     })
   );
 
@@ -346,7 +359,7 @@ layer(TaxonomyLoader.layer)("semantic foundation", (it) => {
         })
       );
       const error = yield* loadWith(() => Effect.succeed(manifest)).pipe(Effect.flip);
-      expect(S.is(VendorSliceUnvetted)(error)).toBe(true);
+      expect(isVendorSliceUnvetted(error)).toBe(true);
     })
   );
 
@@ -369,7 +382,7 @@ layer(TaxonomyLoader.layer)("semantic foundation", (it) => {
           Match.orElse(() => missing.readFileString(path))
         )
       ).pipe(Effect.flip);
-      expect(S.is(VendorSliceReadError)(error)).toBe(true);
+      expect(isVendorSliceReadError(error)).toBe(true);
     })
   );
 
@@ -391,7 +404,7 @@ layer(TaxonomyLoader.layer)("semantic foundation", (it) => {
           Match.orElse(() => Effect.succeed("not-json"))
         )
       ).pipe(Effect.flip);
-      expect(S.is(VendorSliceParseError)(error)).toBe(true);
+      expect(isVendorSliceParseError(error)).toBe(true);
     })
   );
 
@@ -428,7 +441,7 @@ layer(TaxonomyLoader.layer)("semantic foundation", (it) => {
       yield* fs.writeFileString(manifest, entry);
 
       const error = yield* loader.load(manifest, root).pipe(Effect.flip);
-      expect(S.is(VendorSlicePathEscape)(error)).toBe(true);
+      expect(isVendorSlicePathEscape(error)).toBe(true);
     }, provideScopedLayer(BunFileSystem.layer))
   );
 
@@ -576,7 +589,7 @@ layer(TaxonomyLoader.layer)("semantic foundation", (it) => {
     Effect.sync(() =>
       fc.assert(
         fc.property(S.toArbitrary(FilingSegment)(fc), (segment) => {
-          const decoded = O.flatMap(S.encodeOption(FilingSegment)(segment), S.decodeUnknownOption(FilingSegment));
+          const decoded = O.flatMap(encodeFilingSegmentOption(segment), decodeUnknownFilingSegmentOption);
           expect(O.exists(decoded, (value) => value === segment)).toBe(true);
           expect(isFilingSegment(segment)).toBe(true);
         })
@@ -588,7 +601,7 @@ layer(TaxonomyLoader.layer)("semantic foundation", (it) => {
     "rejects traversal segments in librarian input at decode time",
     Effect.fnUntraced(function* () {
       const decoded = yield* Effect.sync(() =>
-        S.decodeResult(LibrarianInput)({
+        decodeLibrarianInputResult({
           client: "acme",
           conceptIri: "https://ns.beep.sh/ontology/semantic-foundation/concept/email-message",
           documentClass: "received",

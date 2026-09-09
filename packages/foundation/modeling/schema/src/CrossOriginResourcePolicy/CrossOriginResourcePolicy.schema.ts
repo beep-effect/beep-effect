@@ -59,6 +59,7 @@ export const CorpValue = CorpValueBase.pipe(
  * @since 0.0.0
  */
 export type CorpValue = typeof CorpValue.Type;
+const isCorpValue = S.is(CorpValue);
 
 const CrossOriginResourcePolicyOptionBase = LiteralKit([false, ...CorpValueBase.Options]);
 
@@ -175,7 +176,7 @@ export const CrossOriginResourcePolicyHeader = S.Union([CrossOriginResourcePolic
         return O.none<string>();
       }
 
-      if (S.is(CorpValue)(option)) {
+      if (isCorpValue(option)) {
         return O.some(option);
       }
 

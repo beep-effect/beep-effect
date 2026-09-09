@@ -18,6 +18,9 @@ import * as S from "effect/Schema";
 import type { SemanticSchemaMetadata } from "@beep/rdf/SemanticSchemaMetadata";
 import type { Annotation } from "@beep/schema/Conformance";
 
+const decodeUnknownSemanticSchemaSpecificationResult = S.decodeUnknownResult(SemanticSchemaSpecification);
+const encodeSemanticSchemaSpecificationResult = S.encodeResult(SemanticSchemaSpecification);
+
 const semanticMetadata = {
   kind: "identifier",
   canonicalName: "RootIdentifier",
@@ -277,8 +280,8 @@ describe("semantic schema conformance", () => {
     expect(specifications[1]?.license).toEqual(O.none());
 
     const roundTrip = pipe(
-      S.encodeResult(SemanticSchemaSpecification)(specifications[0]!),
-      Result.flatMap(S.decodeUnknownResult(SemanticSchemaSpecification))
+      encodeSemanticSchemaSpecificationResult(specifications[0]!),
+      Result.flatMap(decodeUnknownSemanticSchemaSpecificationResult)
     );
     expect(roundTrip).toEqual(Result.succeed(specifications[0]!));
   });

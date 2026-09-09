@@ -65,6 +65,67 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeCitingApplicationIdentityOption = S.decodeOption(CitingApplicationIdentity);
+const decodeCitationSync = S.decodeSync(Citation);
+const decodeCitationBaseSync = S.decodeSync(CitationBase);
+const decodeContextOptionsSync = S.decodeSync(ContextOptions);
+const decodeDurableLocatorOptionsSync = S.decodeSync(DurableLocatorOptions);
+const decodeFullCaseCitationSync = S.decodeSync(FullCaseCitation);
+const decodeIdCitationSync = S.decodeSync(IdCitation);
+const decodeNeutralCitationSync = S.decodeSync(NeutralCitation);
+const decodeParentheticalSync = S.decodeSync(Parenthetical);
+const decodePinciteInfoSync = S.decodeSync(PinciteInfo);
+const decodeRegulationCitationSync = S.decodeSync(RegulationCitation);
+const decodeResolutionResultSync = S.decodeSync(ResolutionResult);
+const decodeShortFormCaseCitationSync = S.decodeSync(ShortFormCaseCitation);
+const decodeStatuteCitationSync = S.decodeSync(StatuteCitation);
+const decodeStatutesAtLargeCitationSync = S.decodeSync(StatutesAtLargeCitation);
+const decodeSupraCitationSync = S.decodeSync(SupraCitation);
+const decodeUnknownCitingApplicationIdentityOption = S.decodeUnknownOption(CitingApplicationIdentity);
+const decodeUnknownCitationSync = S.decodeUnknownSync(Citation);
+const decodeUnknownClaimSync = S.decodeUnknownSync(Claim);
+const decodeUnknownDistinctionSync = S.decodeUnknownSync(Distinction);
+const decodeUnknownLegalClientSync = S.decodeUnknownSync(LegalClient);
+const decodeUnknownLegalContactSync = S.decodeUnknownSync(LegalContact);
+const decodeUnknownMatterSync = S.decodeUnknownSync(Matter);
+const decodeUnknownOfficeActionSync = S.decodeUnknownSync(OfficeAction);
+const decodeUnknownPatentAssetSync = S.decodeUnknownSync(PatentAsset);
+const decodeUnknownPriorArtReferenceSync = S.decodeUnknownSync(PriorArtReference);
+const decodeUnknownRejectionSync = S.decodeUnknownSync(Rejection);
+const encodeCitationSync = S.encodeSync(Citation);
+const encodeCitationBaseSync = S.encodeSync(CitationBase);
+const encodeClaimSync = S.encodeSync(Claim);
+const encodeContextOptionsSync = S.encodeSync(ContextOptions);
+const encodeDistinctionSync = S.encodeSync(Distinction);
+const encodeDurableLocatorOptionsSync = S.encodeSync(DurableLocatorOptions);
+const encodeFullCaseCitationSync = S.encodeSync(FullCaseCitation);
+const encodeIdCitationSync = S.encodeSync(IdCitation);
+const encodeLegalClientSync = S.encodeSync(LegalClient);
+const encodeLegalContactSync = S.encodeSync(LegalContact);
+const encodeMatterSync = S.encodeSync(Matter);
+const encodeNeutralCitationSync = S.encodeSync(NeutralCitation);
+const encodeOfficeActionSync = S.encodeSync(OfficeAction);
+const encodeParentheticalSync = S.encodeSync(Parenthetical);
+const encodePatentAssetSync = S.encodeSync(PatentAsset);
+const encodePinciteInfoSync = S.encodeSync(PinciteInfo);
+const encodePriorArtReferenceSync = S.encodeSync(PriorArtReference);
+const encodeRegulationCitationSync = S.encodeSync(RegulationCitation);
+const encodeRejectionSync = S.encodeSync(Rejection);
+const encodeResolutionResultSync = S.encodeSync(ResolutionResult);
+const encodeShortFormCaseCitationSync = S.encodeSync(ShortFormCaseCitation);
+const encodeStatuteCitationSync = S.encodeSync(StatuteCitation);
+const encodeStatutesAtLargeCitationSync = S.encodeSync(StatutesAtLargeCitation);
+const encodeSupraCitationSync = S.encodeSync(SupraCitation);
+const isApplicationNumber = S.is(ApplicationNumber);
+const isClaimNumber = S.is(ClaimNumber);
+const isKindCode = S.is(KindCode);
+const isLawPracticeFixtureKey = S.is(LawPracticeFixtureKey);
+const isLawPracticeText = S.is(LawPracticeText);
+const isOfficeCode = S.is(OfficeCode);
+const isPatentDocumentTriplet = S.is(PatentDocumentTriplet);
+const isPatentNumber = S.is(PatentNumber);
+const isWipoSt13OfficeCode = S.is(WipoSt13OfficeCode);
+
 const assertSchemaEncodedRoundTrips = <Schema extends S.Codec<unknown>>(schema: Schema, numRuns = 10): void => {
   const arbitrary = S.toArbitrary(schema)(fc);
   const decode = S.decodeUnknownSync(schema);
@@ -146,45 +207,45 @@ describe("@beep/law-practice-domain", () => {
   });
 
   it("validates law-practice entity field schemas", () => {
-    expect(S.is(LawPracticeFixtureKey)("claim.1")).toBe(true);
-    expect(S.is(LawPracticeFixtureKey)("")).toBe(false);
-    expect(S.is(LawPracticeText)("A widget comprising a hinge.")).toBe(true);
-    expect(S.is(LawPracticeText)("")).toBe(false);
-    expect(S.is(ClaimNumber)(1)).toBe(true);
-    expect(S.is(ClaimNumber)(0)).toBe(false);
+    expect(isLawPracticeFixtureKey("claim.1")).toBe(true);
+    expect(isLawPracticeFixtureKey("")).toBe(false);
+    expect(isLawPracticeText("A widget comprising a hinge.")).toBe(true);
+    expect(isLawPracticeText("")).toBe(false);
+    expect(isClaimNumber(1)).toBe(true);
+    expect(isClaimNumber(0)).toBe(false);
   });
 
   it("validates WIPO patent application and publication identifiers", () => {
-    expect(S.is(ApplicationNumber)("102014000345678")).toBe(true);
-    expect(S.is(ApplicationNumber)("112015012345679")).toBe(true);
-    expect(S.is(ApplicationNumber)("912014000345678")).toBe(true);
-    expect(S.is(ApplicationNumber)("102014AB0345678")).toBe(true);
-    expect(S.is(ApplicationNumber)("202016000004321")).toBe(false);
-    expect(S.is(ApplicationNumber)("XX 10 2014 345678")).toBe(false);
+    expect(isApplicationNumber("102014000345678")).toBe(true);
+    expect(isApplicationNumber("112015012345679")).toBe(true);
+    expect(isApplicationNumber("912014000345678")).toBe(true);
+    expect(isApplicationNumber("102014AB0345678")).toBe(true);
+    expect(isApplicationNumber("202016000004321")).toBe(false);
+    expect(isApplicationNumber("XX 10 2014 345678")).toBe(false);
 
-    expect(S.is(PatentNumber)("1234567890123")).toBe(true);
-    expect(S.is(PatentNumber)("12345678901234")).toBe(false);
-    expect(S.is(PatentNumber)("US1234567B2")).toBe(false);
+    expect(isPatentNumber("1234567890123")).toBe(true);
+    expect(isPatentNumber("12345678901234")).toBe(false);
+    expect(isPatentNumber("US1234567B2")).toBe(false);
 
-    expect(S.is(PatentDocumentTriplet)("US 7,654,321 B2")).toBe(true);
-    expect(S.is(PatentDocumentTriplet)("EP 4,181,262 A1")).toBe(true);
-    expect(S.is(PatentDocumentTriplet)("US 7654321 B2")).toBe(false);
-    expect(S.is(PatentDocumentTriplet)("AA 7,654,321 B2")).toBe(false);
-    expect(S.is(PatentDocumentTriplet)("US 7,654,321 A0")).toBe(false);
+    expect(isPatentDocumentTriplet("US 7,654,321 B2")).toBe(true);
+    expect(isPatentDocumentTriplet("EP 4,181,262 A1")).toBe(true);
+    expect(isPatentDocumentTriplet("US 7654321 B2")).toBe(false);
+    expect(isPatentDocumentTriplet("AA 7,654,321 B2")).toBe(false);
+    expect(isPatentDocumentTriplet("US 7,654,321 A0")).toBe(false);
 
     expect(OfficeCode.is.US("US")).toBe(true);
     expect(OfficeCode.is.EP("EP")).toBe(true);
     expect(OfficeCode.is.XX("XX")).toBe(true);
-    expect(S.is(OfficeCode)("AA")).toBe(false);
-    expect(S.is(WipoSt13OfficeCode)("EP")).toBe(true);
-    expect(S.is(WipoSt13OfficeCode)("US")).toBe(false);
-    expect(S.is(WipoSt13OfficeCode)("XX")).toBe(false);
+    expect(isOfficeCode("AA")).toBe(false);
+    expect(isWipoSt13OfficeCode("EP")).toBe(true);
+    expect(isWipoSt13OfficeCode("US")).toBe(false);
+    expect(isWipoSt13OfficeCode("XX")).toBe(false);
     expect(WipoSt13OfficeCode.is.EP("EP")).toBe(true);
     expect("US" in WipoSt13OfficeCode.is).toBe(false);
     expect("XX" in WipoSt13OfficeCode.is).toBe(false);
     expect(
       O.isSome(
-        S.decodeOption(CitingApplicationIdentity)({
+        decodeCitingApplicationIdentityOption({
           applicationNumber: "102014000345678",
           kind: "WipoSt13",
           officeCode: "EP",
@@ -193,7 +254,7 @@ describe("@beep/law-practice-domain", () => {
     ).toBe(true);
     expect(
       O.isNone(
-        S.decodeUnknownOption(CitingApplicationIdentity)({
+        decodeUnknownCitingApplicationIdentityOption({
           applicationNumber: "102018000138242",
           kind: "WipoSt13",
           officeCode: "US",
@@ -202,7 +263,7 @@ describe("@beep/law-practice-domain", () => {
     ).toBe(true);
     expect(
       O.isNone(
-        S.decodeUnknownOption(CitingApplicationIdentity)({
+        decodeUnknownCitingApplicationIdentityOption({
           applicationNumber: "102014000345678",
           kind: "WipoSt13",
         })
@@ -212,13 +273,13 @@ describe("@beep/law-practice-domain", () => {
     expect(KindCode.is.A("A")).toBe(true);
     expect(KindCode.is.A1("A1")).toBe(true);
     expect(KindCode.is.B9("B9")).toBe(true);
-    expect(S.is(KindCode)("A0")).toBe(false);
+    expect(isKindCode("A0")).toBe(false);
   });
 
   it("covers patent identifiers with schema-derived arbitraries", () => {
     fc.assert(
       fc.property(S.toArbitrary(PatentNumber)(fc), (patentNumber) => {
-        expect(S.is(PatentNumber)(patentNumber)).toBe(true);
+        expect(isPatentNumber(patentNumber)).toBe(true);
       }),
       fcRuns(25)
     );
@@ -289,7 +350,7 @@ describe("@beep/law-practice-domain", () => {
       legalClientFixtureKey: "legal-client.acme",
       matterType: "patent_application",
     };
-    const decoded = S.decodeUnknownSync(Matter)(input);
+    const decoded = decodeUnknownMatterSync(input);
     const constructed = Matter.make(decoded);
 
     expect(decoded).toBeInstanceOf(Matter);
@@ -297,7 +358,7 @@ describe("@beep/law-practice-domain", () => {
     expect(constructed.entityType).toBe("LawPracticeMatter");
     expect(constructed.matterType).toBe("patent_application");
     expect(constructed.legalClientFixtureKey).toBe("legal-client.acme");
-    expect(S.encodeSync(Matter)(decoded)).toStrictEqual(input);
+    expect(encodeMatterSync(decoded)).toStrictEqual(input);
   });
 
   it("decodes an OfficeAction row", () => {
@@ -308,12 +369,12 @@ describe("@beep/law-practice-domain", () => {
       matterFixtureKey: "matter.patent",
       patentAssetFixtureKey: "patent-asset.widget",
     };
-    const decoded = S.decodeUnknownSync(OfficeAction)(input);
+    const decoded = decodeUnknownOfficeActionSync(input);
 
     expect(decoded).toBeInstanceOf(OfficeAction);
     expect(decoded.entityType).toBe("LawPracticeOfficeAction");
     expect(decoded.matterFixtureKey).toBe("matter.patent");
-    expect(S.encodeSync(OfficeAction)(decoded)).toStrictEqual(input);
+    expect(encodeOfficeActionSync(decoded)).toStrictEqual(input);
   });
 
   it("decodes a Claim row", () => {
@@ -325,12 +386,12 @@ describe("@beep/law-practice-domain", () => {
       patentAssetFixtureKey: "patent-asset.widget",
       text: "A widget comprising a hinge.",
     };
-    const decoded = S.decodeUnknownSync(Claim)(input);
+    const decoded = decodeUnknownClaimSync(input);
 
     expect(decoded).toBeInstanceOf(Claim);
     expect(decoded.claimNumber).toBe(1);
     expect(decoded.independent).toBe(true);
-    expect(S.encodeSync(Claim)(decoded)).toStrictEqual(input);
+    expect(encodeClaimSync(decoded)).toStrictEqual(input);
   });
 
   it("decodes a PriorArtReference row", () => {
@@ -341,11 +402,11 @@ describe("@beep/law-practice-domain", () => {
       officeActionFixtureKey: "office-action.first",
       title: "Foldable Widget",
     };
-    const decoded = S.decodeUnknownSync(PriorArtReference)(input);
+    const decoded = decodeUnknownPriorArtReferenceSync(input);
 
     expect(decoded).toBeInstanceOf(PriorArtReference);
     expect(decoded.documentNumber).toBe("US 9,999,999 B2");
-    expect(S.encodeSync(PriorArtReference)(decoded)).toStrictEqual(input);
+    expect(encodePriorArtReferenceSync(decoded)).toStrictEqual(input);
   });
 
   it("decodes a Rejection row with a §102 anticipation ground", () => {
@@ -356,11 +417,11 @@ describe("@beep/law-practice-domain", () => {
       ground: { referenceFixtureKey: "prior-art.smith", statute: "102" },
       officeActionFixtureKey: "office-action.first",
     };
-    const decoded = S.decodeUnknownSync(Rejection)(input);
+    const decoded = decodeUnknownRejectionSync(input);
 
     expect(decoded).toBeInstanceOf(Rejection);
     expect(decoded.ground.statute).toBe("102");
-    expect(S.encodeSync(Rejection)(decoded)).toStrictEqual(input);
+    expect(encodeRejectionSync(decoded)).toStrictEqual(input);
   });
 
   it("decodes a Distinction row anchored to the source text", () => {
@@ -373,12 +434,12 @@ describe("@beep/law-practice-domain", () => {
       lifecycleState: "candidate",
       rejectionFixtureKey: "rejection-one-zero-two",
     };
-    const decoded = S.decodeUnknownSync(Distinction)(input);
+    const decoded = decodeUnknownDistinctionSync(input);
 
     expect(decoded).toBeInstanceOf(Distinction);
     expect(decoded.lifecycleState).toBe("candidate");
     expect(decoded.anchor.quote).toBe("a claimed fact");
-    expect(S.encodeSync(Distinction)(decoded)).toStrictEqual(input);
+    expect(encodeDistinctionSync(decoded)).toStrictEqual(input);
   });
 
   it("keeps untouched entity wire fixtures byte-identical after decode", () => {
@@ -403,15 +464,9 @@ describe("@beep/law-practice-domain", () => {
       title: "Hinged lid assembly",
     };
 
-    expect(S.encodeSync(LegalClient)(S.decodeUnknownSync(LegalClient)(legalClientInput))).toStrictEqual(
-      legalClientInput
-    );
-    expect(S.encodeSync(LegalContact)(S.decodeUnknownSync(LegalContact)(legalContactInput))).toStrictEqual(
-      legalContactInput
-    );
-    expect(S.encodeSync(PatentAsset)(S.decodeUnknownSync(PatentAsset)(patentAssetInput))).toStrictEqual(
-      patentAssetInput
-    );
+    expect(encodeLegalClientSync(decodeUnknownLegalClientSync(legalClientInput))).toStrictEqual(legalClientInput);
+    expect(encodeLegalContactSync(decodeUnknownLegalContactSync(legalContactInput))).toStrictEqual(legalContactInput);
+    expect(encodePatentAssetSync(decodeUnknownPatentAssetSync(patentAssetInput))).toStrictEqual(patentAssetInput);
   });
 
   it("constructs citation values with schema-owned definitive defaults", () => {
@@ -472,64 +527,64 @@ describe("@beep/law-practice-domain", () => {
 
   it("decodes sparse citation values and materializes definitive defaults when encoded", () => {
     const baseWire = citationBaseWire("citation");
-    const base = S.decodeSync(CitationBase)(baseWire);
-    const fullCase = S.decodeSync(FullCaseCitation)({
+    const base = decodeCitationBaseSync(baseWire);
+    const fullCase = decodeFullCaseCitationSync({
       ...baseWire,
       type: "case",
       volume: 410,
       reporter: "U.S.",
     });
-    const id = S.decodeSync(IdCitation)({ ...baseWire, type: "id" });
-    const supra = S.decodeSync(SupraCitation)({ ...baseWire, type: "supra" });
-    const shortForm = S.decodeSync(ShortFormCaseCitation)({
+    const id = decodeIdCitationSync({ ...baseWire, type: "id" });
+    const supra = decodeSupraCitationSync({ ...baseWire, type: "supra" });
+    const shortForm = decodeShortFormCaseCitationSync({
       ...baseWire,
       type: "shortFormCase",
       volume: 410,
       reporter: "U.S.",
     });
-    const neutral = S.decodeSync(NeutralCitation)({
+    const neutral = decodeNeutralCitationSync({
       ...baseWire,
       type: "neutral",
       year: 2023,
       documentNumber: "128749",
     });
-    const statute = S.decodeSync(StatuteCitation)({ ...baseWire, type: "statute" });
-    const regulation = S.decodeSync(RegulationCitation)({ ...baseWire, type: "regulation" });
-    const statutesAtLarge = S.decodeSync(StatutesAtLargeCitation)({
+    const statute = decodeStatuteCitationSync({ ...baseWire, type: "statute" });
+    const regulation = decodeRegulationCitationSync({ ...baseWire, type: "regulation" });
+    const statutesAtLarge = decodeStatutesAtLargeCitationSync({
       ...baseWire,
       type: "statutesAtLarge",
       volume: 100,
       page: 3743,
     });
-    const parenthetical = S.decodeSync(Parenthetical)({ text: "holding", type: "holding" });
-    const pincite = S.decodeSync(PinciteInfo)({ isRange: false, raw: "570" });
-    const resolution = S.decodeSync(ResolutionResult)({ confidence: 1 });
-    const context = S.decodeSync(ContextOptions)({});
-    const locator = S.decodeSync(DurableLocatorOptions)({});
+    const parenthetical = decodeParentheticalSync({ text: "holding", type: "holding" });
+    const pincite = decodePinciteInfoSync({ isRange: false, raw: "570" });
+    const resolution = decodeResolutionResultSync({ confidence: 1 });
+    const context = decodeContextOptionsSync({});
+    const locator = decodeDurableLocatorOptionsSync({});
 
-    expect(S.encodeSync(CitationBase)(base).warnings).toStrictEqual([]);
-    expect(S.encodeSync(FullCaseCitation)(fullCase)).toMatchObject({
+    expect(encodeCitationBaseSync(base).warnings).toStrictEqual([]);
+    expect(encodeFullCaseCitationSync(fullCase)).toMatchObject({
       unpublished: false,
       hasBlankPage: false,
       parentheticals: [],
       subsequentHistoryEntries: [],
       justices: [],
     });
-    expect(S.encodeSync(IdCitation)(id).pinciteInherited).toBe(false);
-    expect(S.encodeSync(SupraCitation)(supra).pinciteInherited).toBe(false);
-    expect(S.encodeSync(ShortFormCaseCitation)(shortForm).pinciteInherited).toBe(false);
-    expect(S.encodeSync(NeutralCitation)(neutral).unpublished).toBe(false);
-    expect(S.encodeSync(StatuteCitation)(statute).hasEtSeq).toBe(false);
-    expect(S.encodeSync(RegulationCitation)(regulation).hasEtSeq).toBe(false);
-    expect(S.encodeSync(StatutesAtLargeCitation)(statutesAtLarge).pinciteIsRange).toBe(false);
-    expect(S.encodeSync(Parenthetical)(parenthetical).citations).toStrictEqual([]);
-    expect(S.encodeSync(PinciteInfo)(pincite)).toMatchObject({
+    expect(encodeIdCitationSync(id).pinciteInherited).toBe(false);
+    expect(encodeSupraCitationSync(supra).pinciteInherited).toBe(false);
+    expect(encodeShortFormCaseCitationSync(shortForm).pinciteInherited).toBe(false);
+    expect(encodeNeutralCitationSync(neutral).unpublished).toBe(false);
+    expect(encodeStatuteCitationSync(statute).hasEtSeq).toBe(false);
+    expect(encodeRegulationCitationSync(regulation).hasEtSeq).toBe(false);
+    expect(encodeStatutesAtLargeCitationSync(statutesAtLarge).pinciteIsRange).toBe(false);
+    expect(encodeParentheticalSync(parenthetical).citations).toStrictEqual([]);
+    expect(encodePinciteInfoSync(pincite)).toMatchObject({
       starPage: false,
       additionalPincites: [],
     });
-    expect(S.encodeSync(ResolutionResult)(resolution).warnings).toStrictEqual([]);
-    expect(S.encodeSync(ContextOptions)(context).type).toBe("sentence");
-    expect(S.encodeSync(DurableLocatorOptions)(locator)).toMatchObject({
+    expect(encodeResolutionResultSync(resolution).warnings).toStrictEqual([]);
+    expect(encodeContextOptionsSync(context).type).toBe("sentence");
+    expect(encodeDurableLocatorOptionsSync(locator)).toMatchObject({
       space: "original",
       fullSpan: false,
       contextLength: 32,
@@ -718,7 +773,7 @@ describe("@beep/law-practice-domain", () => {
       ],
     };
 
-    const decoded = S.decodeUnknownSync(Citation)(wire);
+    const decoded = decodeUnknownCitationSync(wire);
     expect(decoded.type).toBe("case");
     if (decoded.type !== "case") return;
 
@@ -736,6 +791,6 @@ describe("@beep/law-practice-domain", () => {
 
     // encode -> decode is identity across the S.suspend recursion knot
     const equivalent = S.toEquivalence(Citation);
-    expect(equivalent(S.decodeSync(Citation)(S.encodeSync(Citation)(decoded)), decoded)).toBe(true);
+    expect(equivalent(decodeCitationSync(encodeCitationSync(decoded)), decoded)).toBe(true);
   });
 });

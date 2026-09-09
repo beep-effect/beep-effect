@@ -14,6 +14,25 @@ import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeGraphSchemaDependencyNode = S.decodeEffect(GraphSchema.DependencyNode);
+const decodeGraphSchemaEntityNode = S.decodeEffect(GraphSchema.EntityNode);
+const decodeGraphSchemaLemmaNode = S.decodeEffect(GraphSchema.LemmaNode);
+const decodeGraphSchemaNLPAnalysis = S.decodeEffect(GraphSchema.NLPAnalysis);
+const decodeGraphSchemaPOSNode = S.decodeEffect(GraphSchema.POSNode);
+const decodeGraphSchemaRelationNode = S.decodeEffect(GraphSchema.RelationNode);
+const decodeGraphSchemaTextEdge = S.decodeEffect(GraphSchema.TextEdge);
+const decodeGraphSchemaTextNode = S.decodeEffect(GraphSchema.TextNode);
+const decodeUnknownGraphSchemaTextEdge = S.decodeUnknownEffect(GraphSchema.TextEdge);
+const decodeUnknownGraphSchemaTextNode = S.decodeUnknownEffect(GraphSchema.TextNode);
+const encodeGraphSchemaDependencyNode = S.encodeEffect(GraphSchema.DependencyNode);
+const encodeGraphSchemaEntityNode = S.encodeEffect(GraphSchema.EntityNode);
+const encodeGraphSchemaLemmaNode = S.encodeEffect(GraphSchema.LemmaNode);
+const encodeGraphSchemaNLPAnalysis = S.encodeEffect(GraphSchema.NLPAnalysis);
+const encodeGraphSchemaPOSNode = S.encodeEffect(GraphSchema.POSNode);
+const encodeGraphSchemaRelationNode = S.encodeEffect(GraphSchema.RelationNode);
+const encodeGraphSchemaTextEdge = S.encodeEffect(GraphSchema.TextEdge);
+const encodeGraphSchemaTextNode = S.encodeEffect(GraphSchema.TextNode);
+
 const TextNodeArbitrary = S.toArbitrary(GraphSchema.TextNode)(fc);
 const TextEdgeArbitrary = S.toArbitrary(GraphSchema.TextEdge)(fc);
 const EntityNodeArbitrary = S.toArbitrary(GraphSchema.EntityNode)(fc);
@@ -27,15 +46,15 @@ describe("TextNode", () => {
   it.effect(
     "decodes a valid node and round-trips",
     Effect.fnUntraced(function* () {
-      const decoded = yield* S.decodeEffect(GraphSchema.TextNode)({
+      const decoded = yield* decodeGraphSchemaTextNode({
         text: "Hello world.",
         type: "sentence",
         timestamp: 0,
       });
       expect(decoded.text).toBe("Hello world.");
       expect(decoded.type).toBe("sentence");
-      const encoded = yield* S.encodeEffect(GraphSchema.TextNode)(decoded);
-      const redecoded = yield* S.decodeEffect(GraphSchema.TextNode)(encoded);
+      const encoded = yield* encodeGraphSchemaTextNode(decoded);
+      const redecoded = yield* decodeGraphSchemaTextNode(encoded);
       expect(redecoded.text).toBe(decoded.text);
     })
   );
@@ -43,9 +62,7 @@ describe("TextNode", () => {
   it.effect(
     "rejects an unknown node type",
     Effect.fnUntraced(function* () {
-      const result = yield* Effect.exit(
-        S.decodeUnknownEffect(GraphSchema.TextNode)({ text: "x", type: "bogus", timestamp: 0 })
-      );
+      const result = yield* Effect.exit(decodeUnknownGraphSchemaTextNode({ text: "x", type: "bogus", timestamp: 0 }));
       expect(result._tag).toBe("Failure");
     })
   );
@@ -64,25 +81,23 @@ describe("Schema-derived graph payloads", () => {
         RelationNodeArbitrary,
         NLPAnalysisArbitrary,
         (textNode, textEdge, entityNode, posNode, lemmaNode, dependencyNode, relationNode, analysis) => {
-          const encodedTextNode = Effect.runSync(S.encodeEffect(GraphSchema.TextNode)(textNode));
-          const encodedTextEdge = Effect.runSync(S.encodeEffect(GraphSchema.TextEdge)(textEdge));
-          const encodedEntityNode = Effect.runSync(S.encodeEffect(GraphSchema.EntityNode)(entityNode));
-          const encodedPOSNode = Effect.runSync(S.encodeEffect(GraphSchema.POSNode)(posNode));
-          const encodedLemmaNode = Effect.runSync(S.encodeEffect(GraphSchema.LemmaNode)(lemmaNode));
-          const encodedDependencyNode = Effect.runSync(S.encodeEffect(GraphSchema.DependencyNode)(dependencyNode));
-          const encodedRelationNode = Effect.runSync(S.encodeEffect(GraphSchema.RelationNode)(relationNode));
-          const encodedAnalysis = Effect.runSync(S.encodeEffect(GraphSchema.NLPAnalysis)(analysis));
+          const encodedTextNode = Effect.runSync(encodeGraphSchemaTextNode(textNode));
+          const encodedTextEdge = Effect.runSync(encodeGraphSchemaTextEdge(textEdge));
+          const encodedEntityNode = Effect.runSync(encodeGraphSchemaEntityNode(entityNode));
+          const encodedPOSNode = Effect.runSync(encodeGraphSchemaPOSNode(posNode));
+          const encodedLemmaNode = Effect.runSync(encodeGraphSchemaLemmaNode(lemmaNode));
+          const encodedDependencyNode = Effect.runSync(encodeGraphSchemaDependencyNode(dependencyNode));
+          const encodedRelationNode = Effect.runSync(encodeGraphSchemaRelationNode(relationNode));
+          const encodedAnalysis = Effect.runSync(encodeGraphSchemaNLPAnalysis(analysis));
 
-          expect(Effect.runSync(S.decodeEffect(GraphSchema.TextNode)(encodedTextNode))).toEqual(textNode);
-          expect(Effect.runSync(S.decodeEffect(GraphSchema.TextEdge)(encodedTextEdge))).toEqual(textEdge);
-          expect(Effect.runSync(S.decodeEffect(GraphSchema.EntityNode)(encodedEntityNode))).toEqual(entityNode);
-          expect(Effect.runSync(S.decodeEffect(GraphSchema.POSNode)(encodedPOSNode))).toEqual(posNode);
-          expect(Effect.runSync(S.decodeEffect(GraphSchema.LemmaNode)(encodedLemmaNode))).toEqual(lemmaNode);
-          expect(Effect.runSync(S.decodeEffect(GraphSchema.DependencyNode)(encodedDependencyNode))).toEqual(
-            dependencyNode
-          );
-          expect(Effect.runSync(S.decodeEffect(GraphSchema.RelationNode)(encodedRelationNode))).toEqual(relationNode);
-          expect(Effect.runSync(S.decodeEffect(GraphSchema.NLPAnalysis)(encodedAnalysis))).toEqual(analysis);
+          expect(Effect.runSync(decodeGraphSchemaTextNode(encodedTextNode))).toEqual(textNode);
+          expect(Effect.runSync(decodeGraphSchemaTextEdge(encodedTextEdge))).toEqual(textEdge);
+          expect(Effect.runSync(decodeGraphSchemaEntityNode(encodedEntityNode))).toEqual(entityNode);
+          expect(Effect.runSync(decodeGraphSchemaPOSNode(encodedPOSNode))).toEqual(posNode);
+          expect(Effect.runSync(decodeGraphSchemaLemmaNode(encodedLemmaNode))).toEqual(lemmaNode);
+          expect(Effect.runSync(decodeGraphSchemaDependencyNode(encodedDependencyNode))).toEqual(dependencyNode);
+          expect(Effect.runSync(decodeGraphSchemaRelationNode(encodedRelationNode))).toEqual(relationNode);
+          expect(Effect.runSync(decodeGraphSchemaNLPAnalysis(encodedAnalysis))).toEqual(analysis);
         }
       ),
       fcRuns(50)
@@ -106,7 +121,7 @@ describe("TextEdge", () => {
         "relates-to",
       ] as const;
       for (const relation of relations) {
-        const decoded = yield* S.decodeEffect(GraphSchema.TextEdge)({ relation });
+        const decoded = yield* decodeGraphSchemaTextEdge({ relation });
         expect(decoded.relation).toBe(relation);
       }
     })
@@ -115,7 +130,7 @@ describe("TextEdge", () => {
   it.effect(
     "rejects an unknown relation",
     Effect.fnUntraced(function* () {
-      const result = yield* Effect.exit(S.decodeUnknownEffect(GraphSchema.TextEdge)({ relation: "nope" }));
+      const result = yield* Effect.exit(decodeUnknownGraphSchemaTextEdge({ relation: "nope" }));
       expect(result._tag).toBe("Failure");
     })
   );
@@ -125,7 +140,7 @@ describe("Annotation nodes round-trip", () => {
   it.effect(
     "EntityNode preserves span and type",
     Effect.fnUntraced(function* () {
-      const decoded = yield* S.decodeEffect(GraphSchema.EntityNode)({
+      const decoded = yield* decodeGraphSchemaEntityNode({
         text: "Apple Inc.",
         entityType: "ORG",
         span: { start: 0, end: 10 },
@@ -133,8 +148,8 @@ describe("Annotation nodes round-trip", () => {
       });
       expect(decoded.entityType).toBe("ORG");
       expect(decoded.span).toEqual({ start: 0, end: 10 });
-      const encoded = yield* S.encodeEffect(GraphSchema.EntityNode)(decoded);
-      const redecoded = yield* S.decodeEffect(GraphSchema.EntityNode)(encoded);
+      const encoded = yield* encodeGraphSchemaEntityNode(decoded);
+      const redecoded = yield* decodeGraphSchemaEntityNode(encoded);
       expect(redecoded.text).toBe("Apple Inc.");
     })
   );
@@ -142,14 +157,14 @@ describe("Annotation nodes round-trip", () => {
   it.effect(
     "POSNode and LemmaNode decode",
     Effect.fnUntraced(function* () {
-      const pos = yield* S.decodeEffect(GraphSchema.POSNode)({
+      const pos = yield* decodeGraphSchemaPOSNode({
         text: "runs",
         tag: "VBZ",
         position: 1,
         timestamp: 0,
       });
       expect(pos.tag).toBe("VBZ");
-      const lemma = yield* S.decodeEffect(GraphSchema.LemmaNode)({
+      const lemma = yield* decodeGraphSchemaLemmaNode({
         token: "running",
         lemma: "run",
         position: 0,
@@ -162,7 +177,7 @@ describe("Annotation nodes round-trip", () => {
   it.effect(
     "DependencyNode and RelationNode decode",
     Effect.fnUntraced(function* () {
-      const dep = yield* S.decodeEffect(GraphSchema.DependencyNode)({
+      const dep = yield* decodeGraphSchemaDependencyNode({
         relation: "nsubj",
         head: { text: "runs", position: 2 },
         dependent: { text: "dog", position: 1 },
@@ -170,7 +185,7 @@ describe("Annotation nodes round-trip", () => {
         timestamp: 0,
       });
       expect(dep.relation).toBe("nsubj");
-      const rel = yield* S.decodeEffect(GraphSchema.RelationNode)({
+      const rel = yield* decodeGraphSchemaRelationNode({
         relationType: "FOUNDED_BY",
         subject: { text: "Apple Inc.", entityType: "ORG", span: { start: 0, end: 10 } },
         object: { text: "Steve Jobs", entityType: "PERSON", span: { start: 14, end: 24 } },
@@ -185,7 +200,7 @@ describe("NLPAnalysis", () => {
   it.effect(
     "decodes a summary",
     Effect.fnUntraced(function* () {
-      const decoded = yield* S.decodeEffect(GraphSchema.NLPAnalysis)({
+      const decoded = yield* decodeGraphSchemaNLPAnalysis({
         text: "Hi there. Bye.",
         sentences: ["Hi there.", "Bye."],
         tokens: ["Hi", "there", ".", "Bye", "."],

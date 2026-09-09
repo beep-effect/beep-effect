@@ -5,6 +5,13 @@ import * as S from "effect/Schema";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
+const decodeUnknownContradictionTriageEvidenceSourceHighlightResult = S.decodeUnknownResult(
+  ContradictionTriage.EvidenceSourceHighlight
+);
+const decodeUnknownContradictionTriageEvidenceSourcePageFieldsPageResult = S.decodeUnknownResult(
+  ContradictionTriage.EvidenceSourcePage.fields.page
+);
+
 const digest = "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 const source = {
   extractor: { name: "utf8", version: "1" },
@@ -19,7 +26,7 @@ const source = {
 describe("EvidenceSourcePanel", () => {
   it("renders immutable source metadata and the exact verified anchor", () => {
     const page = Result.getOrThrow(
-      S.decodeUnknownResult(ContradictionTriage.EvidenceSourcePage.fields.page)({
+      decodeUnknownContradictionTriageEvidenceSourcePageFieldsPageResult({
         endOffset: 29,
         hasNextPage: false,
         hasPreviousPage: false,
@@ -33,7 +40,7 @@ describe("EvidenceSourcePanel", () => {
       })
     );
     const highlight = Result.getOrThrow(
-      S.decodeUnknownResult(ContradictionTriage.EvidenceSourceHighlight)({
+      decodeUnknownContradictionTriageEvidenceSourceHighlightResult({
         endChar: 13,
         source,
         startChar: 4,

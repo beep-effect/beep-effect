@@ -27,6 +27,11 @@ import {
 } from "./AiProviderCli.models.ts";
 import { expandTildePath } from "./AiProviderCliHome.service.ts";
 
+const decodeUnknownAiProviderCliClaudeSubscriptionLabelResult = S.decodeUnknownResult(
+  AiProviderCliClaudeSubscriptionLabel
+);
+const isAiProviderCliTokenSource = S.is(AiProviderCliTokenSource);
+
 const $I = $AiProviderCliId.create("AiProviderCli.service");
 
 /**
@@ -170,7 +175,7 @@ const decodeClaudeAuthStatus = S.decodeUnknownEffect(S.fromJsonString(AiProvider
 
 const claudeSubscriptionLabelFor = (subscriptionType: string): string =>
   Result.getOrElse(
-    S.decodeUnknownResult(AiProviderCliClaudeSubscriptionLabel)(subscriptionType),
+    decodeUnknownAiProviderCliClaudeSubscriptionLabelResult(subscriptionType),
     () =>
       // Unknown tiers keep a stable generic label instead of failing the probe.
       "Claude Subscription"
@@ -193,7 +198,7 @@ const claudeSnapshot = (result: AiProviderCliProcessResult): Effect.Effect<AiPro
         provider: "claude",
         status: payload.loggedIn ? "authenticated" : "not-authenticated",
         subscriptionLabel: O.map(payload.subscriptionType, claudeSubscriptionLabelFor),
-        tokenSource: O.filter(payload.authMethod, S.is(AiProviderCliTokenSource)),
+        tokenSource: O.filter(payload.authMethod, isAiProviderCliTokenSource),
       })
     ),
     // Malformed stdout degrades to the exit-code-only probe; raw output never leaks.

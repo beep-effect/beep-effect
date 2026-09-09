@@ -394,6 +394,7 @@ const CallbackArrayMethodOptions = [
 ] as const;
 const CallbackArrayMethod = LiteralKit(arrayMethods.pickOptions(CallbackArrayMethodOptions));
 const DirectArrayMethod = LiteralKit(arrayMethods.omitOptions(CallbackArrayMethodOptions));
+const isDirectArrayMethod = S.is(DirectArrayMethod);
 type DirectArrayStatic = Exclude<ArrayStatic, "from">;
 
 const invokeStringMethod = (value: string, name: StringMethod, args: Array<unknown>, node: AstNode): unknown => {
@@ -1220,7 +1221,7 @@ const invokeArrayMethod = <R>(
     if (!P.isNumber(value)) throw InterpreterRuntimeError.new(`Array.${name} expects ${label} to be a number.`, node);
     return value;
   };
-  if (S.is(DirectArrayMethod)(name)) {
+  if (isDirectArrayMethod(name)) {
     const join = (): Effect.Effect<string> => {
       const separator = args.length === 0 ? undefined : args[0];
       if (args.length > 1 || (!P.isUndefined(separator) && !P.isString(separator))) {

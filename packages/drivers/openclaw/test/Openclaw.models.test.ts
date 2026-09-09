@@ -48,6 +48,22 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeOpenclawAgentTurnJsonResult = S.decodeResult(S.fromJsonString(OpenclawAgentTurn));
+const decodeOpenclawChannelAccountStatusJsonResult = S.decodeResult(S.fromJsonString(OpenclawChannelAccountStatus));
+const decodeOpenclawChannelHealthJsonResult = S.decodeResult(S.fromJsonString(OpenclawChannelHealth));
+const decodeOpenclawSecretsReloadOutputJsonResult = S.decodeResult(S.fromJsonString(OpenclawSecretsReloadOutput));
+const decodeOpenclawSkillInventoryJsonResult = S.decodeResult(S.fromJsonString(OpenclawSkillInventory));
+const decodeOpenclawTelegramSendResultJsonResult = S.decodeResult(S.fromJsonString(OpenclawTelegramSendResult));
+const encodeOpenclawCommandExitErrorResult = S.encodeResult(OpenclawCommandExitError);
+const encodeOpenclawConfigValidationResult = S.encodeResult(OpenclawConfigValidation);
+const encodeOpenclawDoctorReportResult = S.encodeResult(OpenclawDoctorReport);
+const encodeOpenclawGatewayHealthResult = S.encodeResult(OpenclawGatewayHealth);
+const encodeOpenclawHttpProbeResult = S.encodeResult(OpenclawHttpProbe);
+const encodeOpenclawSchemaPlaceholderFindingResult = S.encodeResult(OpenclawSchemaPlaceholderFinding);
+const encodeOpenclawSecretsReloadResult = S.encodeResult(OpenclawSecretsReload);
+const isOpenclawCliError = S.is(OpenclawCliError);
+const isOpenclawCompatibilitySet = S.is(OpenclawCompatibilitySet);
+
 const ExitCodeArbitrary = S.toArbitrary(OpenclawExitCode)(fc);
 const DiagnosticTextArbitrary = S.toArbitrary(OpenclawDiagnosticText)(fc);
 const ProcessRequestArbitrary = S.toArbitrary(OpenclawProcessRequest)(fc);
@@ -100,9 +116,7 @@ describe("@beep/openclaw models", () => {
   });
 
   it("decodes the exact observed secrets reload success JSON", () => {
-    const output = Result.getOrThrow(
-      S.decodeResult(S.fromJsonString(OpenclawSecretsReloadOutput))('{ "ok": true, "warningCount": 0 }')
-    );
+    const output = Result.getOrThrow(decodeOpenclawSecretsReloadOutputJsonResult('{ "ok": true, "warningCount": 0 }'));
 
     expect(output.ok).toBe(true);
     expect(output.warningCount).toBe(0);
@@ -113,7 +127,7 @@ describe("@beep/openclaw models", () => {
       '{"accountId":"default","enabled":true,"configured":true,"running":true,"lastStartAt":1753600000000,' +
       '"lastStopAt":null,"lastError":null,"connected":true,"restartPending":false,"reconnectAttempts":0,' +
       '"tokenSource":"config","tokenStatus":"available","mode":"polling","probe":{"ok":true}}';
-    const account = Result.getOrThrow(S.decodeResult(S.fromJsonString(OpenclawChannelAccountStatus))(accountJson));
+    const account = Result.getOrThrow(decodeOpenclawChannelAccountStatusJsonResult(accountJson));
 
     expect(account.accountId).toBe("default");
     expect(account.enabled).toBe(true);
@@ -128,7 +142,7 @@ describe("@beep/openclaw models", () => {
 
   it("tolerantly decodes channel health subsets of the gateway health document", () => {
     const channel = Result.getOrThrow(
-      S.decodeResult(S.fromJsonString(OpenclawChannelHealth))(
+      decodeOpenclawChannelHealthJsonResult(
         '{"running":true,"connected":true,"restartPending":false,"tokenSource":"config","tokenStatus":"available"}'
       )
     );
@@ -142,7 +156,7 @@ describe("@beep/openclaw models", () => {
 
   it("tolerantly decodes agent turn projections with unmodeled keys", () => {
     const turn = Result.getOrThrow(
-      S.decodeResult(S.fromJsonString(OpenclawAgentTurn))(
+      decodeOpenclawAgentTurnJsonResult(
         '{"status":"ok","runId":"run-1753","stopReason":"stop","aborted":false,"text":"PONG",' +
           '"provider":"ollama","model":"gemma3:4b","executionTrace":{"runner":"embedded"}}'
       )
@@ -159,14 +173,14 @@ describe("@beep/openclaw models", () => {
 
   it("decodes sanitized pinned skill-list and Telegram-send shapes", () => {
     const inventory = Result.getOrThrow(
-      S.decodeResult(S.fromJsonString(OpenclawSkillInventory))(
+      decodeOpenclawSkillInventoryJsonResult(
         '{"workspaceDir":"/etc/beep/openclaw/current/workspace","skills":[' +
           '{"name":"beep-proof-ping","description":"Return one fixed synthetic sentinel for the P3 declarative-skill proof.",' +
           '"eligible":true,"source":"openclaw-workspace"}]}'
       )
     );
     const send = Result.getOrThrow(
-      S.decodeResult(S.fromJsonString(OpenclawTelegramSendResult))(
+      decodeOpenclawTelegramSendResultJsonResult(
         '{"action":"send","channel":"telegram","dryRun":false,"handledBy":"plugin",' +
           '"messageId":"synthetic-message-id","payload":{"ok":true,"messageId":"synthetic-message-id"}}'
       )
@@ -221,7 +235,7 @@ describe("@beep/openclaw models", () => {
       exitCode: 1,
     });
 
-    expect(Result.getOrThrow(S.encodeResult(OpenclawGatewayHealth)(health))).toEqual({
+    expect(Result.getOrThrow(encodeOpenclawGatewayHealthResult(health))).toEqual({
       channels: {
         telegram: {
           connected: true,
@@ -235,29 +249,29 @@ describe("@beep/openclaw models", () => {
       pluginErrorCount: 0,
       pluginsLoaded: ["telegram", "ollama"],
     });
-    expect(Result.getOrThrow(S.encodeResult(OpenclawHttpProbe)(probe))).toEqual({
+    expect(Result.getOrThrow(encodeOpenclawHttpProbeResult(probe))).toEqual({
       endpoint: "http://127.0.0.1:19031/health",
       httpStatus: 200,
       status: "healthy",
     });
-    expect(Result.getOrThrow(S.encodeResult(OpenclawSchemaPlaceholderFinding)(finding))).toEqual({
+    expect(Result.getOrThrow(encodeOpenclawSchemaPlaceholderFindingResult(finding))).toEqual({
       reason: "placeholder",
       surface: "channels.telegram",
     });
-    expect(Result.getOrThrow(S.encodeResult(OpenclawDoctorReport)(doctor))).toEqual({
+    expect(Result.getOrThrow(encodeOpenclawDoctorReportResult(doctor))).toEqual({
       exitCode: 1,
       findings: "Doctor config writes are disabled",
     });
-    expect(Result.getOrThrow(S.encodeResult(OpenclawConfigValidation)(validation))).toEqual({
+    expect(Result.getOrThrow(encodeOpenclawConfigValidationResult(validation))).toEqual({
       _tag: "Invalid",
       diagnostics: "Unknown top-level key: unexpected",
       exitCode: 1,
     });
-    expect(Result.getOrThrow(S.encodeResult(OpenclawSecretsReload)(reloaded))).toEqual({
+    expect(Result.getOrThrow(encodeOpenclawSecretsReloadResult(reloaded))).toEqual({
       _tag: "Reloaded",
       warningCount: 0,
     });
-    expect(Result.getOrThrow(S.encodeResult(OpenclawSecretsReload)(degraded))).toEqual({
+    expect(Result.getOrThrow(encodeOpenclawSecretsReloadResult(degraded))).toEqual({
       _tag: "Degraded",
       diagnostics: "secrets.reload failed",
       exitCode: 1,
@@ -313,18 +327,16 @@ describe("@beep/openclaw models", () => {
       stdoutLength: 17,
       subcommand: "secrets reload",
     });
-    const isCliError = S.is(OpenclawCliError);
-
     expect(spawn.message).toBe("Failed to spawn openclaw config validate.");
     expect(exit.message).toBe("openclaw config validate exited with code 1.");
     expect(timeout.message).toBe("systemctl is-active timed out after 30000ms.");
     expect(parse.message).toBe("Failed to decode openclaw secrets reload output.");
-    expect(isCliError(spawn)).toBe(true);
-    expect(isCliError(exit)).toBe(true);
-    expect(isCliError(timeout)).toBe(true);
-    expect(isCliError(parse)).toBe(true);
+    expect(isOpenclawCliError(spawn)).toBe(true);
+    expect(isOpenclawCliError(exit)).toBe(true);
+    expect(isOpenclawCliError(timeout)).toBe(true);
+    expect(isOpenclawCliError(parse)).toBe(true);
 
-    const encodedExit = Result.getOrThrow(S.encodeResult(OpenclawCommandExitError)(exit));
+    const encodedExit = Result.getOrThrow(encodeOpenclawCommandExitErrorResult(exit));
     expect(Object.keys(encodedExit).sort()).toEqual([
       "_tag",
       "diagnostics",
@@ -345,7 +357,7 @@ describe("@beep/openclaw models", () => {
     );
     expect(OPENCLAW_COMPATIBILITY_SET.nodeVersion).toBe("24.16.0");
     expect(OPENCLAW_COMPATIBILITY_SET.adapterVersion).toBe(1);
-    expect(S.is(OpenclawCompatibilitySet)(OPENCLAW_COMPATIBILITY_SET)).toBe(true);
+    expect(isOpenclawCompatibilitySet(OPENCLAW_COMPATIBILITY_SET)).toBe(true);
 
     expect(Duration.toSeconds(OPENCLAW_VALIDATE_TIMEOUT)).toBe(45);
     expect(Duration.toMillis(OPENCLAW_HTTP_PROBE_TIMEOUT)).toBe(2_500);

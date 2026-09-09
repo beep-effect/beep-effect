@@ -30,6 +30,8 @@ import { LegalPositionRelatorAdmissionError } from "./LegalPositionRelatorPolicy
 import { LegalPositionRelatorPolicy, LegalPositionRelatorPolicyShape } from "./LegalPositionRelatorPolicy.ports.ts";
 import { LegalOppositionCandidateInput, LegalPositionRelatorView } from "./LegalPositionRelatorPolicy.values.ts";
 
+const decodeUnknownLegalPositionRelator = S.decodeUnknownEffect(LegalPositionRelator);
+
 /**
  * Read a stored relation's two position fields back as the pair the
  * derivations are defined over. They are stored apart because only a separate
@@ -180,7 +182,7 @@ const candidateFor = (
 export const makeLegalPositionRelatorPolicy = (): LegalPositionRelatorPolicyShape =>
   LegalPositionRelatorPolicyShape.make({
     admit: Effect.fn("LegalPositionRelatorPolicy.admit")(function* (record: unknown) {
-      return yield* S.decodeUnknownEffect(LegalPositionRelator)(record).pipe(
+      return yield* decodeUnknownLegalPositionRelator(record).pipe(
         Effect.mapError(LegalPositionRelatorAdmissionError.fromSchemaError)
       );
     }),

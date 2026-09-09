@@ -12,6 +12,7 @@ import {
   recordProviderAttempt,
   recordProviderUsage,
 } from "../../Telemetry/ExtractionTelemetry.ts";
+const decodeProviderTokenUsageOption = S.decodeOption(ProviderTokenUsage);
 
 describe("ExtractionTelemetry", () => {
   it.effect(
@@ -89,7 +90,7 @@ describe("ExtractionTelemetry", () => {
     "rejects partial usage whose missing count exceeds its attempt count",
     Effect.fnUntraced(function* () {
       yield* Effect.sync(() => {
-        const decoded = S.decodeOption(ProviderTokenUsage)({
+        const decoded = decodeProviderTokenUsageOption({
           _tag: "Partial",
           inputTokens: 1,
           outputTokens: 0,

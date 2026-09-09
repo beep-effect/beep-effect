@@ -8,6 +8,10 @@ import { FastCheck as fc } from "effect/testing";
 import { Response } from "effect/unstable/ai";
 
 const JsonAnthropicToolJsonResponse = S.fromJsonString(AnthropicToolJsonResponse);
+const decodeJsonAnthropicToolJsonResponse = S.decodeEffect(JsonAnthropicToolJsonResponse);
+const decodeJsonAnthropicToolJsonResponseOption = S.decodeOption(JsonAnthropicToolJsonResponse);
+const encodeJsonAnthropicToolJsonResponse = S.encodeEffect(JsonAnthropicToolJsonResponse);
+const encodeJsonAnthropicToolJsonResponseOption = S.encodeOption(JsonAnthropicToolJsonResponse);
 const AnthropicToolJsonResponseArbitrary = S.toArbitrary(AnthropicToolJsonResponse)(fc);
 
 describe("Anthropic repair helpers", () => {
@@ -48,9 +52,9 @@ describe("Anthropic repair helpers", () => {
       expect(result.usage.inputTokens.total).toBe(7);
       expect(result.usage.outputTokens.total).toBe(3);
 
-      const encoded = yield* S.encodeEffect(JsonAnthropicToolJsonResponse)(result);
-      const decoded = yield* S.decodeEffect(JsonAnthropicToolJsonResponse)(encoded);
-      expect(yield* S.encodeEffect(JsonAnthropicToolJsonResponse)(decoded)).toBe(encoded);
+      const encoded = yield* encodeJsonAnthropicToolJsonResponse(result);
+      const decoded = yield* decodeJsonAnthropicToolJsonResponse(encoded);
+      expect(yield* encodeJsonAnthropicToolJsonResponse(decoded)).toBe(encoded);
     })
   );
 
@@ -70,12 +74,9 @@ describe("Anthropic repair helpers", () => {
     Effect.sync(() =>
       fc.assert(
         fc.property(AnthropicToolJsonResponseArbitrary, (response) => {
-          const encoded = S.encodeOption(JsonAnthropicToolJsonResponse)(response);
+          const encoded = encodeJsonAnthropicToolJsonResponseOption(response);
           const reencoded = O.flatMap(encoded, (json) =>
-            O.flatMap(
-              S.decodeOption(JsonAnthropicToolJsonResponse)(json),
-              S.encodeOption(JsonAnthropicToolJsonResponse)
-            )
+            O.flatMap(decodeJsonAnthropicToolJsonResponseOption(json), encodeJsonAnthropicToolJsonResponseOption)
           );
 
           expect(O.isSome(encoded)).toBe(true);

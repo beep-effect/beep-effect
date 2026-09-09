@@ -80,6 +80,8 @@ import type {
   DocgenQualityWorkerEvalRunner,
 } from "@beep/repo-cli/test/Docgen";
 
+const encodeDocgenQualityWorkerEvalReportJsonSync = S.encodeSync(S.fromJsonString(DocgenQualityWorkerEvalReport));
+
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
   <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
@@ -4780,11 +4782,12 @@ export const ValidExport = packageDocAnchor;
 describe("DocgenQualityWorkerEvalReport schema", () => {
   it("every schema-derived report round-trips through its JSON codec", () => {
     const arbitrary = S.toArbitrary(DocgenQualityWorkerEvalReport)(fc);
-    const encodeReportJson = S.encodeSync(S.fromJsonString(DocgenQualityWorkerEvalReport));
     const sameReport = S.toEquivalence(DocgenQualityWorkerEvalReport);
 
     fc.assert(
-      fc.property(arbitrary, (report) => sameReport(report, decodeWorkerEvalReportJson(encodeReportJson(report)))),
+      fc.property(arbitrary, (report) =>
+        sameReport(report, decodeWorkerEvalReportJson(encodeDocgenQualityWorkerEvalReportJsonSync(report)))
+      ),
       fcRuns(16)
     );
   });

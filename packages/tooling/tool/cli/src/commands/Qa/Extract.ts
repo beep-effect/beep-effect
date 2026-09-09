@@ -67,6 +67,8 @@ import type {
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { QaExtractOptions } from "./Qa.schemas.ts";
 
+const decodeRoundNumber = S.decodeEffect(RoundNumber);
+
 const $I = $RepoCliId.create("commands/Qa/Extract");
 
 const BYTES_PER_MIB = 1024 * 1024;
@@ -74,7 +76,10 @@ const NORMALIZED_VIDEO_NAME = "normalized.mp4";
 const EXTRACTION_PLAN_FILE = "extraction-plan.json";
 const ARTIFACT_BUDGET_FILE = "artifact-budget.json";
 const ArtifactBudgetJson = S.fromJsonString(ArtifactBudget);
+const decodeUnknownArtifactBudgetJson = S.decodeUnknownEffect(ArtifactBudgetJson);
+const encodeArtifactBudgetJson = S.encodeEffect(ArtifactBudgetJson);
 const ToolVersionsJson = S.fromJsonString(S.Record(S.String, S.String));
+const encodeToolVersionsJson = S.encodeEffect(ToolVersionsJson);
 
 const isWritableByExiftool = S.is(ExiftoolWritableExtension);
 const isBeaconEvent = S.is(BeaconEvent);
@@ -207,7 +212,7 @@ export const writeArtifactBudget = Effect.fn("QaExtract.writeArtifactBudget")(fu
   budget: ArtifactBudget
 ): Effect.fn.Return<void, QaCommandError, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
-  const json = yield* S.encodeEffect(ArtifactBudgetJson)(budget).pipe(
+  const json = yield* encodeArtifactBudgetJson(budget).pipe(
     QaCommandError.mapError("qa could not encode the round artifact budget.")
   );
   yield* fs.writeFileString(budgetPath, json).pipe(QaCommandError.mapError(`qa could not write ${budgetPath}.`));
@@ -234,11 +239,7 @@ export const readArtifactBudget = Effect.fn("QaExtract.readArtifactBudget")(func
   const fs = yield* FileSystem.FileSystem;
   return yield* fs
     .readFileString(budgetPath)
-    .pipe(
-      Effect.flatMap(S.decodeUnknownEffect(ArtifactBudgetJson)),
-      Effect.asSome,
-      Effect.orElseSucceed(O.none<ArtifactBudget>)
-    );
+    .pipe(Effect.flatMap(decodeUnknownArtifactBudgetJson), Effect.asSome, Effect.orElseSucceed(O.none<ArtifactBudget>));
 });
 
 /**
@@ -289,7 +290,7 @@ const layoutOfSessionDir = Effect.fnUntraced(function* (
         })
       ),
     onSome: (value) =>
-      S.decodeEffect(RoundNumber)(value).pipe(
+      decodeRoundNumber(value).pipe(
         QaCommandError.mapError(`qa --session directory "${resolved}" has an invalid round number.`)
       ),
   });
@@ -565,7 +566,7 @@ const embedProvenance = Effect.fn("QaExtract.embedProvenance")(function* (
     const stampedPath = `${filePath}.provenance.${extension}`;
     const toolVersionsText = yield* O.match(provenance.toolVersions, {
       onNone: () => Effect.succeed("unknown"),
-      onSome: (versions) => S.encodeEffect(ToolVersionsJson)(versions).pipe(Effect.orElseSucceed(() => "unknown")),
+      onSome: (versions) => encodeToolVersionsJson(versions).pipe(Effect.orElseSucceed(() => "unknown")),
     });
     return yield* ffmpeg
       .writeContainerMetadata(

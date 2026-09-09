@@ -20,6 +20,11 @@ import { Effect, Result } from "effect";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeSkillContract = S.decodeEffect(SkillContract);
+const decodeSchemaReferenceResult = S.decodeResult(SchemaReference);
+const encodeUnknownSkillContract = S.encodeUnknownEffect(SkillContract);
+const encodeUnknownSchemaReferenceResult = S.encodeUnknownResult(SchemaReference);
+
 const rungType = (name: string) => EvidencePredicateType.make(`https://beep.dev/evidence/${name}/v1`);
 const evidenceSubject = EvidenceSubject.make({
   digest: EvidenceDigest.make({
@@ -52,8 +57,8 @@ const contract = SkillContract.make({
 describe("@beep/skill-contract SkillContract", () => {
   it.effect("round-trips the aggregate while persisting only schema references", () =>
     Effect.gen(function* () {
-      const encoded = yield* S.encodeUnknownEffect(SkillContract)(contract);
-      const decoded = yield* S.decodeEffect(SkillContract)(encoded);
+      const encoded = yield* encodeUnknownSkillContract(contract);
+      const decoded = yield* decodeSkillContract(encoded);
 
       expect(S.toEquivalence(SkillContract)(decoded, contract)).toBe(true);
       expect(encoded.evidenceSubject).toEqual({
@@ -69,8 +74,8 @@ describe("@beep/skill-contract SkillContract", () => {
   it("round-trips schema-derived arbitrary schema references", () =>
     fc.assert(
       fc.property(S.toArbitrary(SchemaReference)(fc), (candidate) => {
-        const encoded = Result.getOrThrow(S.encodeUnknownResult(SchemaReference)(candidate));
-        const decoded = Result.getOrThrow(S.decodeResult(SchemaReference)(encoded));
+        const encoded = Result.getOrThrow(encodeUnknownSchemaReferenceResult(candidate));
+        const decoded = Result.getOrThrow(decodeSchemaReferenceResult(encoded));
 
         expect(S.toEquivalence(SchemaReference)(decoded, candidate)).toBe(true);
       }),

@@ -16,6 +16,8 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeUnknownDomainSyncOperationSyncOperationSync = S.decodeUnknownSync(DomainSyncOperation.SyncOperation);
+
 const SyncOperationArbitrary = S.toArbitrary(DomainSyncOperation.SyncOperation)(fc);
 const SyncOperationEquivalence = S.toEquivalence(DomainSyncOperation.SyncOperation);
 
@@ -84,7 +86,7 @@ describe("SyncOperation table", () => {
   });
 
   it("round-trips SyncOperation rows through the converters", () => {
-    const syncOperation = S.decodeUnknownSync(DomainSyncOperation.SyncOperation)(uploadRow);
+    const syncOperation = decodeUnknownDomainSyncOperationSyncOperationSync(uploadRow);
     const insert = toSyncOperationInsert(syncOperation);
 
     expect("id" in insert).toBe(false);

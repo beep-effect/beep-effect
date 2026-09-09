@@ -47,6 +47,7 @@ class CldrGithubRelease extends S.Class<CldrGithubRelease>($I`CldrGithubRelease`
     description: "Latest GitHub release metadata for unicode-org/cldr-json.",
   })
 ) {}
+const decodeUnknownCldrGithubRelease = S.decodeUnknownEffect(CldrGithubRelease);
 
 class CldrVersion extends S.Class<CldrVersion>($I`CldrVersion`)(
   {
@@ -90,6 +91,7 @@ class CldrTerritoryContainmentDocument extends S.Class<CldrTerritoryContainmentD
     description: "Decoded CLDR territory containment JSON document.",
   })
 ) {}
+const decodeUnknownCldrTerritoryContainmentDocument = S.decodeUnknownEffect(CldrTerritoryContainmentDocument);
 
 class CldrTerritoryInfoSupplemental extends S.Class<CldrTerritoryInfoSupplemental>($I`CldrTerritoryInfoSupplemental`)(
   {
@@ -109,6 +111,7 @@ class CldrTerritoryInfoDocument extends S.Class<CldrTerritoryInfoDocument>($I`Cl
     description: "Decoded CLDR territory info JSON document.",
   })
 ) {}
+const decodeUnknownCldrTerritoryInfoDocument = S.decodeUnknownEffect(CldrTerritoryInfoDocument);
 
 class CldrLocaleTerritoryNames extends S.Class<CldrLocaleTerritoryNames>($I`CldrLocaleTerritoryNames`)(
   {
@@ -145,6 +148,7 @@ class CldrTerritoryNamesDocument extends S.Class<CldrTerritoryNamesDocument>($I`
     description: "Decoded CLDR English territory names JSON document.",
   })
 ) {}
+const decodeUnknownCldrTerritoryNamesDocument = S.decodeUnknownEffect(CldrTerritoryNamesDocument);
 
 class CldrTerritoryEntry extends S.Class<CldrTerritoryEntry>($I`CldrTerritoryEntry`)(
   {
@@ -184,22 +188,22 @@ const cldrRawUrl = (tag: string, path: string): string =>
   `https://raw.githubusercontent.com/unicode-org/cldr-json/${tag}/${path}`;
 
 const decodeCldrRelease = (value: unknown) =>
-  S.decodeUnknownEffect(CldrGithubRelease)(value).pipe(
+  decodeUnknownCldrGithubRelease(value).pipe(
     SyncDataToTsError.mapError("Failed to decode latest CLDR JSON GitHub release metadata", targetId)
   );
 
 const decodeContainment = (value: unknown) =>
-  S.decodeUnknownEffect(CldrTerritoryContainmentDocument)(value).pipe(
+  decodeUnknownCldrTerritoryContainmentDocument(value).pipe(
     SyncDataToTsError.mapError("Failed to decode CLDR territory containment JSON", targetId)
   );
 
 const decodeInfo = (value: unknown) =>
-  S.decodeUnknownEffect(CldrTerritoryInfoDocument)(value).pipe(
+  decodeUnknownCldrTerritoryInfoDocument(value).pipe(
     SyncDataToTsError.mapError("Failed to decode CLDR territory info JSON", targetId)
   );
 
 const decodeNames = (value: unknown) =>
-  S.decodeUnknownEffect(CldrTerritoryNamesDocument)(value).pipe(
+  decodeUnknownCldrTerritoryNamesDocument(value).pipe(
     SyncDataToTsError.mapError("Failed to decode CLDR English territory names JSON", targetId)
   );
 

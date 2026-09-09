@@ -23,6 +23,10 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeBBoxCcgConfig = S.decodeEffect(B.BoxCcgConfig);
+const decodeBEventEventTypeField = S.decodeEffect(B.EventEventTypeField);
+const decodeBBoxGetZipDownloadContentPayloadOption = S.decodeOption(B.BoxGetZipDownloadContentPayload);
+
 type FakeUploadRequestBody = {
   readonly attributes: {
     readonly name: string;
@@ -269,7 +273,7 @@ describe("@beep/box", () => {
   it.effect(
     "accepts future Box enum values generated as open unions",
     Effect.fnUntraced(function* () {
-      const eventType = yield* S.decodeEffect(B.EventEventTypeField)("FUTURE_BOX_EVENT");
+      const eventType = yield* decodeBEventEventTypeField("FUTURE_BOX_EVENT");
 
       expect(eventType).toBe("FUTURE_BOX_EVENT");
     })
@@ -309,7 +313,7 @@ describe("@beep/box", () => {
     expectRoundTrip(B.BoxGetZipDownloadContentPayload, zipPayload);
     expect(
       O.isNone(
-        S.decodeOption(B.BoxGetZipDownloadContentPayload)({
+        decodeBBoxGetZipDownloadContentPayloadOption({
           downloadUrl: "http://example.com/content",
         })
       )
@@ -488,7 +492,7 @@ describe("@beep/box", () => {
     "rejects CCG config without an enterprise or user subject",
     Effect.fnUntraced(function* () {
       const exit = yield* Effect.exit(
-        S.decodeEffect(B.BoxCcgConfig)({
+        decodeBBoxCcgConfig({
           clientId: "client-id",
           clientSecret: Redacted.make("client-secret"),
         })
@@ -502,7 +506,7 @@ describe("@beep/box", () => {
     "rejects ambiguous CCG config with both enterprise and user subjects",
     Effect.fnUntraced(function* () {
       const exit = yield* Effect.exit(
-        S.decodeEffect(B.BoxCcgConfig)({
+        decodeBBoxCcgConfig({
           clientId: "client-id",
           clientSecret: Redacted.make("client-secret"),
           enterpriseId: "enterprise-id",

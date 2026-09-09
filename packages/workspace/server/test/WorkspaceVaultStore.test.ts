@@ -10,6 +10,9 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeWorkspaceSetWorkspaceVaultInput = S.decodeEffect(Workspace.SetWorkspaceVaultInput);
+const decodeWorkspaceIdentityWorkspaceId = S.decodeEffect(WorkspaceIdentity.WorkspaceId);
+
 const WorkspaceVaultStoreTestLayer = WorkspaceVaultStoreInMemoryLayer.pipe(
   Layer.provideMerge(BunFileSystem.layer),
   Layer.provideMerge(BunPath.layer)
@@ -42,13 +45,13 @@ describe("@beep/workspace-server WorkspaceVaultStore", () => {
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
       const store = yield* Workspace.WorkspaceVaultStore;
-      const workspaceId = yield* S.decodeEffect(WorkspaceIdentity.WorkspaceId)(1);
+      const workspaceId = yield* decodeWorkspaceIdentityWorkspaceId(1);
       const vaultRootPath = yield* fs.makeTempDirectoryScoped({ prefix: "beep-workspace-vault-" });
 
       const before = yield* store.getVaultConfig(workspaceId);
       expect(O.isNone(before.vaultRootPath)).toBe(true);
 
-      const input = yield* S.decodeEffect(Workspace.SetWorkspaceVaultInput)({
+      const input = yield* decodeWorkspaceSetWorkspaceVaultInput({
         vaultRootPath,
         workspaceId: 1,
       });
@@ -66,11 +69,11 @@ describe("@beep/workspace-server WorkspaceVaultStore", () => {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const store = yield* Workspace.WorkspaceVaultStore;
-      const workspaceId = yield* S.decodeEffect(WorkspaceIdentity.WorkspaceId)(1);
+      const workspaceId = yield* decodeWorkspaceIdentityWorkspaceId(1);
       const parent = yield* fs.makeTempDirectoryScoped({ prefix: "beep-workspace-vault-parent-" });
       const missingVaultRootPath = path.join(parent, "missing-vault");
 
-      const input = yield* S.decodeEffect(Workspace.SetWorkspaceVaultInput)({
+      const input = yield* decodeWorkspaceSetWorkspaceVaultInput({
         vaultRootPath: missingVaultRootPath,
         workspaceId: 1,
       });

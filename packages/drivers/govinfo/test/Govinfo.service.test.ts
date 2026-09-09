@@ -32,6 +32,18 @@ import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
 import * as RateLimiter from "effect/unstable/persistence/RateLimiter";
 import type * as HttpClientError from "effect/unstable/http/HttpClientError";
 
+const decodeCollectionContainerSync = S.decodeSync(CollectionContainer);
+const decodeCollectionSummarySync = S.decodeSync(CollectionSummary);
+const decodeGranuleContainerSync = S.decodeSync(GranuleContainer);
+const decodeGranuleMetadataSync = S.decodeSync(GranuleMetadata);
+const decodePackageInfoSync = S.decodeSync(PackageInfo);
+const decodeSearchSuccessSync = S.decodeSync(Search.Success);
+const decodeSearchResultSync = S.decodeSync(SearchResult);
+const decodeSortSync = S.decodeSync(Sort);
+const decodeSummaryItemSync = S.decodeSync(SummaryItem);
+const decodeUnknownSearchPayloadSync = S.decodeUnknownSync(Search.Payload);
+const decodeUnknownSearchBodySync = S.decodeUnknownSync(SearchBody);
+
 const $TestI = $GovinfoId.create("Govinfo.service.test");
 
 type CapturedRequest = {
@@ -222,28 +234,26 @@ describe("@beep/govinfo", () => {
       reason: "response status",
       status: 429,
     });
-    expect(encode(Sort, S.decodeSync(Sort)({ field: "publishdate", sortOrder: "DESC" }))).toEqual({
+    expect(encode(Sort, decodeSortSync({ field: "publishdate", sortOrder: "DESC" }))).toEqual({
       field: "publishdate",
       sortOrder: "DESC",
     });
-    expect(encode(SearchBody, S.decodeUnknownSync(SearchBody)(searchBodyEncoded))).toEqual(searchBodyEncoded);
-    expect(encode(Search.Payload, S.decodeUnknownSync(Search.Payload)(searchBodyEncoded))).toEqual(searchBodyEncoded);
-    expect(encode(SearchResult, S.decodeSync(SearchResult)(searchResultEncoded))).toEqual(searchResultEncoded);
-    expect(encode(Search.Success, S.decodeSync(Search.Success)({ count: 1, offsetMark: "next", results: [] }))).toEqual(
-      { count: 1, offsetMark: "next", results: [] }
-    );
-    expect(encode(GranuleMetadata, S.decodeSync(GranuleMetadata)(granuleMetadataEncoded))).toEqual(
-      granuleMetadataEncoded
-    );
-    expect(encode(PackageInfo, S.decodeSync(PackageInfo)(packageInfoEncoded))).toEqual(packageInfoEncoded);
-    expect(encode(SummaryItem, S.decodeSync(SummaryItem)(summaryItemEncoded))).toEqual(summaryItemEncoded);
-    expect(encode(CollectionSummary, S.decodeSync(CollectionSummary)([summaryItemEncoded]))).toEqual([
-      summaryItemEncoded,
-    ]);
+    expect(encode(SearchBody, decodeUnknownSearchBodySync(searchBodyEncoded))).toEqual(searchBodyEncoded);
+    expect(encode(Search.Payload, decodeUnknownSearchPayloadSync(searchBodyEncoded))).toEqual(searchBodyEncoded);
+    expect(encode(SearchResult, decodeSearchResultSync(searchResultEncoded))).toEqual(searchResultEncoded);
+    expect(encode(Search.Success, decodeSearchSuccessSync({ count: 1, offsetMark: "next", results: [] }))).toEqual({
+      count: 1,
+      offsetMark: "next",
+      results: [],
+    });
+    expect(encode(GranuleMetadata, decodeGranuleMetadataSync(granuleMetadataEncoded))).toEqual(granuleMetadataEncoded);
+    expect(encode(PackageInfo, decodePackageInfoSync(packageInfoEncoded))).toEqual(packageInfoEncoded);
+    expect(encode(SummaryItem, decodeSummaryItemSync(summaryItemEncoded))).toEqual(summaryItemEncoded);
+    expect(encode(CollectionSummary, decodeCollectionSummarySync([summaryItemEncoded]))).toEqual([summaryItemEncoded]);
     expect(
       encode(
         GranuleContainer,
-        S.decodeSync(GranuleContainer)({
+        decodeGranuleContainerSync({
           count: BigInt(1),
           granules: [granuleMetadataEncoded],
           message: "",
@@ -265,7 +275,7 @@ describe("@beep/govinfo", () => {
     expect(
       encode(
         CollectionContainer,
-        S.decodeSync(CollectionContainer)({
+        decodeCollectionContainerSync({
           count: 1,
           message: "",
           nextPage: "https://api.govinfo.gov/collections/CREC/2024-01-01T00:00:00Z?offsetMark=next&pageSize=10",
