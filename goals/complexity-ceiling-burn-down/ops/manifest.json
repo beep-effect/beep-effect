@@ -10,7 +10,7 @@
   },
   "packetPath": "goals/complexity-ceiling-burn-down",
   "lifecycle": "active",
-  "statusNote": "P0 and P1 are complete; P2 is open again for current-main proof. Integration with main at 52fcc8d135 passed Oxlint, the affected epistemic package handoff, and three fresh health checks with zero unwaived functions above cognitive 15, 189 matched baseline entries, and 207 reasoned suppressions. Earlier full proof passed at 2026-09-09T00:21:12Z. Publication then exposed a semantic-delta command-reference limitation, repaired by documenting the equivalent CI security lane. Fresh committed-candidate full proof, P3 hosted merge-readiness, and P4 final closeout remain open.",
+  "statusNote": "P0 and P1 are complete; P2 full proof, P3 hosted merge-readiness, and P4 closeout remain open. The user requested early PR publication during verification. Main at 663904610c replaces the vulnerable ONNX ZIP dependency and removes the temporary exception. The pre-scan guard now passes three installed-replacement regressions. Earlier full proof passed at 2026-09-09T00:21:12Z; the subsequent clean-commit run passed all 15 initial gates and build before the deliberate workflow switch. Fresh local and hosted proof must cover the combined committed candidate.",
   "mission": "Clear the refreshed cognitive->15 tail (49 fns), promote the fallow health lane to a blocking baseline ratchet, and hold the maxCognitive=8 gate credible.",
   "executionCapable": true,
   "reflectionRequired": true,

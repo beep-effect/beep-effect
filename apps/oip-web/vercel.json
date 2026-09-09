@@ -1,5 +1,5 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "installCommand": "cd ../.. && rm -rf node_modules && npx --yes \"bun@$(cat .bun-version)\" install --frozen-lockfile",
-  "buildCommand": "cd ../.. && npx --yes \"bun@$(cat .bun-version)\" run --cwd apps/oip-web build:pwa"
+  "installCommand": "cd ../.. && rm -rf node_modules && npx --yes --prefix \"$(mktemp -d)\" \"bun@$(cat .bun-version)\" install --frozen-lockfile",
+  "buildCommand": "cd ../.. && npx --yes --prefix \"$(mktemp -d)\" \"bun@$(cat .bun-version)\" run --cwd apps/oip-web build:pwa"
 }

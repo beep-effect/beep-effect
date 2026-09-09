@@ -136,6 +136,15 @@ describe("TikaServerEngineConfig", () => {
       fcRuns(25)
     ));
 
+  it("generates valid Tika Server configs for the nightly regression seed", () =>
+    fc.assert(
+      fc.property(S.toArbitrary(TikaServerEngineConfig)(fc), (config) => {
+        expectRoundTrip(TikaServerEngineConfig, config);
+      }),
+      // Issue #1014: the old host generator could emit invalid punycode labels.
+      { ...fcRuns(1_000), seed: 1_754_546_950 }
+    ));
+
   it("strips trailing slashes from the base URL", () => {
     expect(decode(TikaServerEngineConfig, { baseUrl: "http://localhost:9998/" }).baseUrl).toBe(TIKA_SERVER_URL);
     expect(decode(TikaServerEngineConfig, { baseUrl: "http://localhost:9998///" }).baseUrl).toBe(TIKA_SERVER_URL);

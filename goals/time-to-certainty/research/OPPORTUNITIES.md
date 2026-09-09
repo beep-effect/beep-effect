@@ -258,3 +258,39 @@ session/machine ids, quote only the minimal identifying error text.
   block.
 - **Would have prevented it:** configure a repository-safe SSH allowed-signers file, or make the
   verification command distinguish an untrusted/unverifiable signature from an absent signature.
+
+## 2026-09-08 — Untrusted `mise.toml` hid the repo CLI in the main checkout
+
+- **Doing:** acknowledging Yeet inbox rows in the main checkout at the start of the C3 design
+  session.
+- **Evidence:** `zsh -ic 'bun run beep yeet inbox list'` failed with `mise ERROR Config files in
+  ~/YeeBois/projects/beep-effect3/mise.toml are not trusted` after the dependency refresh (#1016)
+  rewrote `.bun-version`, which `mise.toml` reads through `read_file`; the sibling worktree with an
+  older trust record kept working. The detour cost one blocked command and a fallback to the
+  absolute `bun` binary.
+- **Would have prevented it:** a `.bun-version` bump that re-runs `mise trust` in the same
+  install step (postinstall or the deps-refresh recipe), or a `beep quality profile` line that
+  reports mise trust state before the first CLI call.
+
+## 2026-09-08 — `--affected` probe polluted by uncommitted root config edits
+
+- **Doing:** measuring how Turbo selects `//#` root tasks under `--affected` for the C3 design.
+- **Evidence:** the first three probe rounds selected all 255 tasks regardless of the edit under
+  test because the probe's own `package.json` and `turbo.json` edits were uncommitted global
+  inputs (Turbo selects every task on a global-input change). A temporary commit followed by
+  `git reset --hard` isolated the signal on the fourth round.
+- **Would have prevented it:** a `beep quality turbo-config-proof` fixture that stages a task
+  definition on a throwaway commit and reports selection per edited file, so nobody re-derives
+  the hygiene rule by hand.
+
+## 2026-09-08 — Docs-only PR went red on a newly widened OSV advisory
+
+- **Doing:** publishing PR #1018 (design gate, five Markdown files, no lockfile change).
+- **Evidence:** the required `Security` lane failed on `GHSA-vwc7-r8mq-g2x9` (adm-zip 0.6.0 via
+  onnxruntime-node, no fixed release) while the three most recent `main` runs had passed the same
+  lane on the same lockfile; the advisory's affected range had widened since. The remedy is the
+  precedent `osv-scanner.toml` exception with a reason and expiry, which forces a security-policy
+  edit into an unrelated PR or a second PR that must also clear admission.
+- **Would have prevented it:** a scheduled OSV rescan of `main` (nightly research routine or a
+  cron lane) that opens the exception PR itself when a no-fix advisory lands, so branch PRs meet a
+  green base instead of discovering the advisory first.

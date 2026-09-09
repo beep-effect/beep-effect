@@ -1,6 +1,6 @@
 // Regression proof for the temporary-directory mitigation associated with
 // GHSA-vwc7-r8mq-g2x9. Downloads are in-memory fixtures; extraction uses the
-// installed ONNX installer and its real adm-zip dependency.
+// installed ONNX installer and its real fflate replacement dependency.
 import assert from "node:assert/strict";
 import { EventEmitter } from "node:events";
 import * as fs from "node:fs";
@@ -15,14 +15,13 @@ const require = createRequire(path.join(process.cwd(), "package.json"));
 const packagePath = require.resolve("onnxruntime-node/package.json");
 const installerPath = path.join(path.dirname(packagePath), "script/install-utils.js");
 const installerRequire = createRequire(installerPath);
-const AdmZip = installerRequire("adm-zip");
+const { zipSync } = installerRequire("adm-zip");
 const source = fs.readFileSync(installerPath, "utf8");
 const timestamp = 1700000000000;
 const payload = "fixture native binary";
 
 function fixtureResponses(missingEntry) {
-  const zip = new AdmZip();
-  zip.addFile(missingEntry ? "other.bin" : "native.bin", Buffer.from(payload));
+  const zip = zipSync({ [missingEntry ? "other.bin" : "native.bin"]: Buffer.from(payload) });
   return new Map([
     [
       "https://fixture.invalid/index.json",
@@ -31,7 +30,7 @@ function fixtureResponses(missingEntry) {
       }),
     ],
     ["https://fixture.invalid/packages/fixture/index.json", JSON.stringify({ versions: ["1.0.0"] })],
-    ["https://fixture.invalid/packages/fixture/1.0.0/fixture.1.0.0.nupkg", zip.toBuffer()],
+    ["https://fixture.invalid/packages/fixture/1.0.0/fixture.1.0.0.nupkg", Buffer.from(zip)],
   ]);
 }
 
@@ -114,20 +113,27 @@ async function withExtractionFixture(missingEntry, verify) {
   }
 }
 
-function assertPrivateCleanup(created, legacy) {
-  assert.equal(created.length, 1, "Installer must allocate one fresh temporary directory");
-  assert.notEqual(created[0].directory, legacy);
-  assert.equal(created[0].mode, 0o700, "Extraction workspace must be private");
-  assert.equal(fs.existsSync(created[0].directory), false, "Installer must clean its own workspace");
+function assertPrivateCleanup(created, legacy, expectedCount) {
+  assert.equal(created.length, expectedCount, "Installer must allocate fresh private directories");
+  for (const { directory, mode } of created) {
+    assert.notEqual(directory, legacy);
+    assert.equal(mode, 0o700, "Installer workspace must be private");
+    assert.equal(fs.existsSync(directory), false, "Installer must clean its own workspace");
+  }
   assert.equal(fs.existsSync(legacy), true, "Installer must leave pre-existing paths alone");
 }
+
+test("installer resolves the pinned replacement ZIP dependency", () => {
+  assert.equal(installerRequire("adm-zip/package.json").name, "fflate");
+  assert.equal(installerRequire("adm-zip/package.json").version, "0.8.3");
+});
 
 test("installer ignores a precreated destination symlink and installs the selected entry", async () => {
   await withExtractionFixture(false, async ({ run, victim, destination, legacy, created }) => {
     await run();
     assert.equal(fs.readFileSync(victim, "utf8"), "protected");
     assert.equal(fs.readFileSync(destination, "utf8"), payload);
-    assertPrivateCleanup(created, legacy);
+    assertPrivateCleanup(created, legacy, 2);
   });
 });
 
@@ -136,6 +142,6 @@ test("installer cleans its private workspace when the requested archive entry is
     await assert.rejects(run(), /Failed to find native.bin in NuGet package/);
     assert.equal(fs.readFileSync(victim, "utf8"), "protected");
     assert.equal(fs.existsSync(destination), false);
-    assertPrivateCleanup(created, legacy);
+    assertPrivateCleanup(created, legacy, 1);
   });
 });

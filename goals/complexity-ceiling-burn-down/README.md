@@ -39,7 +39,7 @@ Use this command for execution-capable sessions:
 ## Current Phase
 
 P0 research and P1 implementation are complete. P2 full verification is open
-again after integrating current main at `52fcc8d135`; P3 publication and P4
+again after integrating current main at `663904610c`; P3 publication and P4
 final closeout remain open until the exact pull request head is proven
 merge-ready. All 49 functions in the refreshed P0 inventory have
 executed verdicts:
@@ -56,6 +56,13 @@ moved entries. The strict branch-local Fallow audit passed on the current
 candidate with zero introduced findings.
 
 ## Latest Evidence
+
+The user requested early PR publication while full verification continues.
+The clean-commit run on `3def70707c` passed all 15 initial gates, security,
+SAST, build, and desktop IPC before it was deliberately interrupted to switch
+to that workflow. A publication freshness check found main at `663904610c`;
+its ONNX replacement supersedes the campaign's original advisory exception.
+The combined candidate still needs full local and hosted proof.
 
 The integration with main at `52fcc8d135` passed repository Oxlint and three
 fresh health checks at **2026-09-09T01:04:34Z**, **01:04:37Z**, and
@@ -88,9 +95,11 @@ hygiene remains 207 total with no missing reasons or stale entries. Three
 consecutive health runs and their unchanged baseline digest are recorded in
 `reports/clean-runs.md`.
 
-The approved ONNX installer patch passes its regression tests and the security
-gate. Its advisory-specific exception expires September 15. Local and hosted
-security require the mitigation proof before OSV. The root regression script
+Main at `663904610c` replaces ONNX's vulnerable ZIP dependency with fflate
+and private download and destination staging directories. The temporary
+advisory exception is removed. The pre-scan guard now verifies the installed
+replacement, symlink isolation, private permissions, and cleanup in three
+passing tests. Local and hosted security require this proof before OSV. The root regression script
 has an explicit catalog dependency; Knip reports zero introduced findings.
 A focused SAST replay of all four staged JavaScript/TypeScript files ran 128
 rules with zero findings. The later publication scan included the committed

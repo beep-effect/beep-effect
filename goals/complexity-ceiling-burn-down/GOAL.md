@@ -37,7 +37,8 @@ Scope:
   features beyond the two P0 evaluations; skills plugin; hooks.
 - Also authorized on 2026-09-08: a pinned ONNX installer patch for private
   extraction directories, regression proof, and an expiring exception for
-  `GHSA-vwc7-r8mq-g2x9`, enforced by a pre-scan mitigation check.
+  `GHSA-vwc7-r8mq-g2x9`, enforced by a pre-scan mitigation check. The later
+  main fix removes the vulnerable dependency and supersedes the exception.
 
 Workflow:
 

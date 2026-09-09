@@ -559,3 +559,17 @@ checks. Refreshing the base immediately before publication exposed this
 integration requirement; a clean textual merge alone would not have established
 compliance with the newly enforced rule. The current-main candidate needs a
 fresh aggregate proof, while the earlier successful run remains dated evidence.
+
+### Concurrent mitigation landed during full verification (2026-09-08)
+
+The user requested early PR publication to expose queued work to other agents.
+The running verifier was deliberately interrupted after all 15 initial gates,
+security, SAST, build, and desktop IPC passed. The publication freshness check
+then found main at `663904610c`, with an overlapping ONNX installer replacement
+already landed in PR #1017. Its scoped fflate override removes vulnerable
+adm-zip and the temporary exception. The merge retained that upstream fix,
+removed a duplicate patch registration introduced by automatic merging, and
+adapted the campaign's pre-scan regression guard to the installed replacement
+and its two private directories. Frozen installation and all three guard tests
+pass. Opening the PR before a long aggregate would have made this overlap
+visible earlier; the new early-publication workflow follows that preference.

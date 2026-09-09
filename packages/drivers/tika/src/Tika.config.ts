@@ -69,7 +69,8 @@ const TikaServerBaseUrl = URLStr.pipe(
       fc
         .tuple(
           fc.constantFrom("http", "https"),
-          fc.stringMatching(/^[a-z][a-z0-9-]{0,15}(?:\.[a-z][a-z0-9-]{0,15}){0,2}$/),
+          // The domain generator excludes malformed punycode labels (`xn--`).
+          fc.oneof(fc.constant("localhost"), fc.domain()),
           fc.oneof(
             fc.constant(""),
             fc.integer({ min: 1, max: 65_535 }).map((port) => `:${port}`)

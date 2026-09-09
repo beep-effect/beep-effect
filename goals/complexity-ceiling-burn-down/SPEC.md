@@ -52,7 +52,7 @@ repository that has since changed.
   (lane promotion, PR2 of the campaign).
 - This packet's own files.
 - The explicitly approved security follow-up: the pinned ONNX installer patch,
-  root package manifest and lockfile registration, advisory exception, and a
+  root package manifest and lockfile registration, and a
   regression check run by the security lane before OSV.
 
 ## Constraints
@@ -100,8 +100,9 @@ repository that has since changed.
 - [x] The approved ONNX installer mitigation is applied through a pinned Bun
       patch. Regression tests prove destination-symlink isolation, private
       permissions, successful extraction, and cleanup on failure. The security
-      lane runs this proof before applying the single-advisory exception, which
-      expires on 2026-09-15 unless independently reviewed again.
+      lane runs this proof before OSV. Main at `663904610c` replaces the
+      vulnerable ZIP dependency with fflate, so the temporary advisory
+      exception is no longer needed or retained.
 
 ## Verification Matrix
 

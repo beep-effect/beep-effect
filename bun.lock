@@ -1,5 +1,5 @@
 {
-  "lockfileVersion": 2,
+  "lockfileVersion": 3,
   "configVersion": 1,
   "workspaces": {
     "": {
@@ -973,8 +973,10 @@
       },
       "devDependencies": {
         "@beep/test-utils": "workspace:^",
+        "@effect/platform-node": "catalog:",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
+        "fflate": "catalog:",
       },
     },
     "packages/drivers/ffmpeg": {
@@ -3036,6 +3038,9 @@
     "js-yaml": "5.2.2",
     "minimatch": "10.2.5",
     "nanoid": "^3.3.18",
+    "onnxruntime-node@1.29.0": {
+      "adm-zip": "npm:fflate@0.8.3",
+    },
     "pdfjs-dist": "catalog:",
     "postcss": "^8.5.23",
     "protobufjs": "^7.6.6",
@@ -5749,7 +5754,7 @@
 
     "acorn-walk": ["acorn-walk@8.3.5", "", { "dependencies": { "acorn": "^8.11.0" } }, "sha512-HEHNfbars9v4pgpW6SO1KSPkfoS0xVOM/9UzkJltjlsHZmJasxg8aXkuZa7SMf8vKGIBhpUsPluQSqhJFCqebw=="],
 
-    "adm-zip": ["adm-zip@0.6.0", "", {}, "sha512-XleryMhbuksdKtofnWZ9Sk+4CUTbms4Mb/EU32SZwToAyZ5RgVos/ki8n+yr0LWHOGKuakbXTuuYNHLQjhddgg=="],
+    "adm-zip": ["fflate@0.8.3", "", {}, "sha512-tbZNuJrLwGUp3zshBtdy4W+ORxZuIh8a5ilyIEQDC5rY1f3U20JMry0Ll3WBzU58EZKsEuJFXhb5gwv8CsPvgA=="],
 
     "agent-base": ["agent-base@7.1.4", "", {}, "sha512-MnA+YT8fwfJPgBx3m60MNqakm30XOkyIoH1y6huTQvC0PwZG7ki8NacLBcrPbNoo8vEZy7Jpuk7+jMO+CUovTQ=="],
 
