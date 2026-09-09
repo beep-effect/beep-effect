@@ -2576,6 +2576,9 @@ const rootRepoLintPolicySteps = (repoRoot: string, files?: ReadonlyArray<string>
         "--check",
       ]),
       repoCliStep(repoRoot, "lint:package-test-typecheck", ["lint", "package-test-typecheck"]),
+      // Structural replacement for the apps' former second compiler pass (D5): every
+      // tsconfig.check.json may only turn emit machinery off, never widen the program.
+      repoCliStep(repoRoot, "lint:tsconfig-overlay", ["lint", "tsconfig-overlay"]),
       repoCliStep(repoRoot, "lint:tsgo-rules", ["quality", "tsgo-rules"]),
       // Gate on mandatory (error) oxlint rules; --quiet suppresses the large advisory (warn)
       // backlog so the policy lane stays readable. `bun run lint:oxlint` stays verbose.
@@ -2669,7 +2672,7 @@ const runRootLintPolicyTaskInternal = Effect.fn("QualityTasks.runRootLintPolicyT
 
   yield* Console.log(`[beep-cli] lint:policy: scope=${runFull ? "full" : `changed (${changedFileCount} files)`}`);
   yield* Console.log(
-    "[beep-cli] lint:policy: full-state checks: allowlist, tsgo-rules, identity-registry, judge-rubric, package-test-typecheck, reflection-artifacts, roadmap-refs, goals, schema-first, deprecated-apis, jsdoc, jsdoc-module-tags, docgen, circular, typos, oxlint"
+    "[beep-cli] lint:policy: full-state checks: allowlist, tsgo-rules, identity-registry, judge-rubric, package-test-typecheck, tsconfig-overlay, reflection-artifacts, roadmap-refs, goals, schema-first, deprecated-apis, jsdoc, jsdoc-module-tags, docgen, circular, typos, oxlint"
   );
   yield* runStepGroup("lint:policy", rootRepoLintPolicySteps(repoRoot, files), LINT_POLICY_STEP_CONCURRENCY);
 });

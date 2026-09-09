@@ -83,6 +83,9 @@
     "eslint.config.mjs",
     "scripts/changeset-changelog.cjs",
     "packages/tooling/tool/cli/test/global-cleanup.ts",
+    // setup-monorepo-ci runs the hosted job-environment policy by path
+    // (`run: bun scripts/ci-job-env.mjs`); no import graph reaches it.
+    "scripts/ci-job-env.mjs",
     // Vendored Impeccable detector CLI: invoked through the root package script
     // and editor integrations, with parser dependencies resolved from the root.
     ".claude/skills/impeccable/scripts/detector/cli/main.mjs",
