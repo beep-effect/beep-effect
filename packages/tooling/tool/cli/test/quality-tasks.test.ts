@@ -2795,6 +2795,8 @@ describe("quality task adapter", () => {
       "lint:reflection-artifacts",
       "lint:roadmap-refs",
       "lint:judge-rubric",
+      "lint:package-scripts",
+      "lint:policy-fingerprint",
       "lint:typos",
     ]);
     expect(steps[0]?.args).toEqual(expectedRootTurboArgs("lint", []));
@@ -2831,8 +2833,16 @@ describe("quality task adapter", () => {
       "lint:reflection-artifacts",
       "lint:roadmap-refs",
       "lint:judge-rubric",
+      "lint:package-scripts",
+      "lint:policy-fingerprint",
       "lint:typos",
     ]);
+    expect(steps.find((step) => step.label === "lint:package-scripts")?.args).toEqual(
+      repoCliEntryArgs("lint", "package-scripts", "--check")
+    );
+    expect(steps.find((step) => step.label === "lint:policy-fingerprint")?.args).toEqual(
+      repoCliEntryArgs("lint", "policy-fingerprint", "--check")
+    );
     expect(steps.find((step) => step.label === "lint:jsdoc")?.args).toEqual(["eslint", ".", "--max-warnings=0"]);
     expect(steps.find((step) => step.label === "lint:terse-effect")?.args).toContain("--advisory");
     expect(steps.find((step) => step.label === "lint:native-runtime")?.args).toEqual(

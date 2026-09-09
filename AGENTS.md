@@ -81,6 +81,8 @@ models and effort levels they actually recorded.
 
 ## Quality Operator
 
+- Every workspace manifest's scripts block is generated: run
+  `bun run beep lint package-scripts --write` instead of hand-editing task-facing keys.
 - Yeet is the canonical repo-quality path: `bun run beep yeet repair`,
   `... verify`, `... publish --message "..."`, `... monitor`. Keep those
   commands green.

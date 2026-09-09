@@ -1063,3 +1063,19 @@ refreshed corpora under the merged generators, and manifests record generator
 lineage rather than a single frozen digest from here on. Rejected: a corrected sibling pin
 beside the leaking one (leaves the residue in the tree) and accepting the fields as a
 known quasi-identifier class (contradicts Ruling 11).
+## 2026-09-09 — ratified-pin repair ruling (one ruling, steward: Benjamin)
+
+Raised when the reconciliation lane for the Ruling 22 follow-up applied the newer
+residue diagnostics to the untouched run-2 fleet pin on `main`: 29 files carry the
+hostname digest and `uid-<n>` tokens inside quoted proof-lock directory names. The
+run-2 generator never scanned those classes, so its own verifier passes.
+
+**Ruling 23 — ratified pins are repaired in place, never refreshed.** Auditor run 2
+ratified against `run2-fleet/`, so Ruling 22's refresh path does not apply. Residue
+found later in a ratified pin is repaired byte-for-byte under the repair mechanics
+PR #1032 introduced (`--source-ref` replay, generator-provenance check), recorded as
+a `security_resanitization` entry naming the classes and this ruling, with capture
+history, custody references, every unaffected byte, and the ratification chain
+untouched. It lands as its own PR after #1040. Rejected: folding it into #1040
+(mixes a ratified repair with un-ratified refreshes in an already large PR) and
+accepting the class as ratified residue (contradicts the public-repo law).
