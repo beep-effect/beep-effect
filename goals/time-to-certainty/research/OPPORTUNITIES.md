@@ -573,8 +573,6 @@ subprocess diagnostics would make inventory stalls attributable.
   "new files without baseline rows" as its own line regardless of package totals, and the brief's
   acceptance list naming the baseline write for any stage that adds source files.
 
-  green base instead of discovering the advisory first.
-
 ## 2026-09-09 — Two heavy lanes died mid-step on separate runners at the same second
 
 - **Doing:** babysitting PR #1029's sixth hosted round (head cb8236d37f).
