@@ -65,7 +65,7 @@ workload. Measure the new fleet before revisiting the guardrail.
 
 | Priority | Finding | Proposed repair | Savings basis and performance boundary |
 | --- | --- | --- | --- |
-| 1 | Seven 2022 customer KMS keys remain enabled after their EKS workloads disappeared. Each has four rotations and zero grants. | Retire the exact approved keys using a 30-day pending-deletion period. One is scheduled; six require the existing Terraform administrator. | Approximately $21/month total at current pricing: $3/month scheduled and $18/month blocked. Preserve the active CI key. The operator accepted disposal of pre-cutoff historical data. |
+| 1 | Seven 2022 customer KMS keys remained enabled after their EKS workloads disappeared. Each had four rotations and zero grants. | All seven approved keys are now pending deletion with a 30-day window, ending October 9. The six restricted keys were scheduled through the existing Terraform administrator. | Approximately $21/month in key-storage charges cease while pending deletion. The active CI key remains Enabled. The operator accepted disposal of pre-cutoff historical data. |
 | 1 | Heavy workflow assigns an EC2 runner before deciding a lane should skip. | Prototype trusted eligibility before allocation and run a bounded canary. Keep it disabled if hosted planning delays useful lanes; there is no existing pre-allocation planner to reuse. | A real Doctest job used an EC2 worker solely to skip. Boot time is additional. Measure saved launches and latency of eligible lanes. |
 | 1 | All 20 sampled successful heavy jobs missed the baked setup fast path. Setup median was 74 seconds, range 72–110. | The CLI confirms mismatched Bun version, archive digest and lockfile digest. Refresh through the existing bake path, add a durable drift signal, and prove the fast path with a candidate canary. | Runtime saving remains unquantified until a matched comparison. Keep lockfile, Bun and archive-integrity checks. |
 | 1 | Budget and cost attribution do not reflect the current fleet. Compute Optimizer enrollment is Failed; Cost Optimization Hub is unenrolled; no anomaly monitor exists; available allocation tags are inactive. | Import the existing budget into a separate account-controls component in the existing infra package, preserve its recipient and cost types, then apply the $500 alerts, account-only standard enrollment, ownership tags and anomaly detection. | Visibility prevents unobserved drift. No Savings Plan purchase, paid extended metrics or automatic rightsizing is proposed. |
@@ -280,9 +280,63 @@ termination lag. Compare matched workloads; daily totals alone confound demand
 with efficiency. A lower bill with failed or slower verification does not meet
 the operator's performance decision.
 
+## Purchase model and runner platform comparison
+
+Spot and autoscaling are independent choices. The existing controller already
+scales ephemeral EC2 workers with demand; an EC2 Auto Scaling group could use
+either Spot or On-Demand capacity. EC2 Auto Scaling itself adds no service
+fee, although its instances and supporting resources remain billable.
+See [EC2 Auto Scaling pricing](https://aws.amazon.com/ec2/autoscaling/pricing/).
+
+AWS Price List and EC2 Spot history reads on September 9 confirm Linux
+`r6i.2xlarge` has 8 vCPUs and 64 GiB, with On-Demand pricing of $0.504/hour.
+At 13:00 UTC, Spot prices in the fleet's two configured availability zones
+were $0.2463/hour and $0.2073/hour: about 51–59% below On-Demand. These are
+point-in-time prices, not a monthly quote or an interruption forecast.
+
+For an illustrative 1,227 worker-hours, holding instance shape and hours
+constant and using those observed prices:
+
+| Platform and purchase choice | Illustrative compute and control-plane cost |
+| --- | --- |
+| Autoscaled EC2, On-Demand | About $618. |
+| Autoscaled EC2, Spot | About $254–302 before additional retry hours. |
+| EKS with On-Demand EC2 workers | About $691 before other cluster costs. |
+| EKS with Spot EC2 workers | About $327–375 before retries and other cluster costs. |
+
+This is a comparison scenario, not the August invoice or a forecast. Worker
+hours may change after moving to pods. EBS, network, controller/listener
+capacity, image storage and operational overhead are excluded. EKS standard
+support costs $0.10/cluster-hour, about $73 in a 730-hour month, in addition
+to workers. That fee alone requires saving about 145 `r6i.2xlarge` hours per
+month to break even against EC2. Extended support raises the cluster fee to
+$0.60/hour. See [EKS pricing](https://aws.amazon.com/eks/pricing/).
+
+An ECR image supplies the runner filesystem; it does not supply compute.
+GitHub's Actions Runner Controller can create ephemeral runner pods from
+container images. Pods on reclaimed Spot nodes still lose their running
+work; pod recreation is not a checkpoint of an in-progress verification
+command. Packing smaller lanes onto shared nodes can save capacity only
+after measured CPU, memory, disk and concurrency requirements establish safe
+allocations. Include Kubernetes overhead and a continuously available
+controller/listener in that comparison. See
+[Actions Runner Controller](https://docs.github.com/en/actions/concepts/runners/actions-runner-controller)
+and [Spot interruption notices](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-instance-termination-notices.html).
+
+The recorded interruption incidents establish a reliability problem, not
+proof that Spot's total bill exceeded On-Demand. Compare all billed attempt
+minutes per successful lane, including interrupted work, setup, retries and
+idle cleanup, alongside queue and completion times. The current decision
+remains On-Demand because the operator prioritizes reliability and speed.
+The next experiments are a fresh baked AMI and lane-specific resource
+measurement. A hybrid Spot pool or EKS migration needs a separate measured
+case that meets those same acceptance conditions; neither is deployed by
+this cost-control PR.
+
 ## September 9 execution receipts
 
-AWS accepted the following approved retirements between 11:48 and 11:58 UTC.
+AWS accepted the initial approved retirements between 11:48 and 11:58 UTC,
+then the remaining six KMS schedules between 13:15:46 and 13:15:55 UTC.
 The private metadata inventory and action journal retain exact identities,
 versions, timestamps and API results; no object contents were exported.
 
@@ -297,8 +351,7 @@ versions, timestamps and API results; no object contents were exported.
 | Two old Terraform lock tables | Deleted; subsequent table inventory is empty. | No observed charge to claim. |
 | Four obsolete EBS snapshots | Deleted after verifying no owned AMI references or sharing. | All August snapshot charges were $0.91, including current images; do not assign the whole amount to cleanup. |
 | One 2021 manual RDS final snapshot | Deleted. | Historical backup charge about $0.11/month. |
-| One 2022 customer KMS key | Pending deletion, 30 days, scheduled completion October 9. | About $3/month storage charges cease while pending deletion. |
-| Six 2022 customer KMS keys | Blocked; their resource policies designate `terraform-user` as sole administrator. | About $18/month remains an opportunity, not realized savings. |
+| Seven 2022 customer KMS keys | All verified PendingDeletion, with 30-day windows ending October 9. The six restricted keys used the existing `terraform-user` identity through operator-supplied secret references. | About $21/month in key-storage charges cease while pending deletion. Together with WAF, fixed-cost reductions are approximately $29/month; later billing will establish actual savings. |
 
 The approved cost-control rollout completed at approximately 12:46 UTC. Direct
 AWS reads verified the following after the successful saved-plan apply:
@@ -317,9 +370,23 @@ AWS reads verified the following after the successful saved-plan apply:
 - The live scale-up Lambda retains On-Demand capacity, cap 14 and the same
   instance-type list, with `lowest-price` allocation. No worker was replaced.
 
-An encrypted post-apply stack export passed the normal integrity check. The
-six old KMS keys and fresh runner-image bake remain separate access blockers;
-neither is included in the completed cost-control rollout.
+An encrypted post-apply stack export passed the normal integrity check. Fresh
+KMS preflight verified the six restricted keys' customer ownership, 2022
+creation dates, zero grants and unchanged aliases before scheduling deletion.
+The active CI key remains Enabled. This completed the approved old-key cleanup;
+the fresh runner-image bake retains its separate launch-permission blocker.
+
+The reported runner pickup incident was also checked against live GitHub and
+AWS state. All 273 scale-up retry warnings in the captured 40-minute window
+correlated with the existing 14-runner limit. After capacity freed, all six
+heavy lanes in run 34354910245 acquired newly launched workers. Check, Test
+Integration, Doctest and Docgen passed; Coverage Regression and Lint Policy
+were still running at the initial recovery observation. The controller was
+Active with successful updates and preserved the On-Demand settings. This
+evidence identifies capacity waiting; it does not justify increasing the cap
+or changing purchase type. Inspect organization-level runner registration,
+queued jobs, current EC2 workers and scale-up reasons together: the repository
+runner endpoint alone omits this organization-owned pool.
 
 All four hosted zones remain. The 2026 certificate formerly used by the retired
 asset distribution is preserved under the cutoff and has no base certificate

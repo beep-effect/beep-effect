@@ -1,4 +1,4 @@
-import { AccountCostControls, AccountCostControlsConfig } from "@beep/infra";
+import { AccountCostControls, AccountCostControlsConfig, loadAccountCostControlsConfig } from "@beep/infra";
 import { describe, expect, it } from "@effect/vitest";
 import * as pulumi from "@pulumi/pulumi";
 import { Effect, MutableHashMap, Result } from "effect";
@@ -6,10 +6,11 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as S from "effect/Schema";
+import { vi } from "vitest";
 
 const decode = S.decodeUnknownResult(AccountCostControlsConfig);
 
-describe("@beep/infra AccountCostControls", () => {
+describe.sequential("@beep/infra AccountCostControls", () => {
   it("defaults to the approved soft guardrail and rejects unsafe thresholds", () => {
     const config = Result.getOrThrow(decode({ expectedAccountId: "123456789012" }));
     expect(config.monthlyBudgetUsd).toBe(500);
@@ -20,6 +21,63 @@ describe("@beep/infra AccountCostControls", () => {
     }
     expect(Result.isFailure(decode({ expectedAccountId: "wrong-account" }))).toBe(true);
   });
+
+  it.effect("loads Pulumi settings and rejects invalid account or spending values", () =>
+    Effect.acquireUseRelease(
+      Effect.sync(pulumi.runtime.allConfig),
+      () =>
+        Effect.sync(() => {
+          pulumi.runtime.setAllConfig({ "accountCostControls:expectedAccountId": "123456789012" });
+          expect(loadAccountCostControlsConfig()).toMatchObject({ monthlyBudgetUsd: 500, anomalyImpactUsd: 10 });
+          pulumi.runtime.setConfig("accountCostControls:monthlyBudgetUsd", "650");
+          pulumi.runtime.setConfig("accountCostControls:anomalyImpactUsd", "12");
+          expect(loadAccountCostControlsConfig()).toMatchObject({ monthlyBudgetUsd: 650, anomalyImpactUsd: 12 });
+          pulumi.runtime.setConfig("accountCostControls:monthlyBudgetUsd", "0");
+          expect(loadAccountCostControlsConfig).toThrowError(
+            "Invalid accountCostControls account or spending threshold configuration"
+          );
+          pulumi.runtime.setConfig("accountCostControls:monthlyBudgetUsd", "500");
+          pulumi.runtime.setConfig("accountCostControls:expectedAccountId", "wrong-account");
+          expect(loadAccountCostControlsConfig).toThrowError(
+            "Invalid accountCostControls account or spending threshold configuration"
+          );
+        }),
+      (config) => Effect.sync(() => pulumi.runtime.setAllConfig(config))
+    )
+  );
+
+  it.effect("redacts malformed recipient values at the Pulumi output boundary", () =>
+    Effect.acquireUseRelease(
+      Effect.tryPromise(() =>
+        pulumi.runtime.setMocks(
+          { call: () => ({}), newResource: (args) => ({ id: `${args.name}-id`, state: args.inputs }) },
+          "beep-effect",
+          "test"
+        )
+      ),
+      () =>
+        Effect.sync(() => {
+          const invalid = ["private-recipient-value"];
+          const input: pulumi.OutputInstance<unknown> = pulumi.output<unknown>(invalid);
+          // Deliver the boundary callback synchronously so its diagnostic can
+          // be asserted before Pulumi fans an output failure into resources.
+          const apply = vi.spyOn(input, "apply").mockImplementation((callback) => pulumi.output(callback(invalid)));
+          try {
+            expect(
+              () =>
+                new AccountCostControls(
+                  "invalid-cost",
+                  Result.getOrThrow(decode({ expectedAccountId: "123456789012" })),
+                  input
+                )
+            ).toThrowError(/^Invalid accountCostControls notification recipients; values are redacted$/u);
+          } finally {
+            apply.mockRestore();
+          }
+        }),
+      () => Effect.tryPromise(() => pulumi.runtime.disconnect())
+    )
+  );
 
   it.effect(
     "limits resources to account visibility and preserves the existing budget semantics",

@@ -321,6 +321,21 @@ describe("runner image manifest checks", () => {
       );
     })
   );
+
+  it.effect("reports a stale intended manifest without querying the live AMI", () =>
+    Effect.gen(function* () {
+      const error = yield* Effect.flip(
+        runBakeCommandForTesting(
+          { ...bakeOptions(), check: true, manifest: O.some("image.json") },
+          { ...stubService(false), check: () => Effect.die("manifest mode must not query the live image") }
+        )
+      );
+      expect(error.message).toBe("runners bake --check: intended AMI manifest is stale.");
+      expect(yield* TestConsole.logLines).toStrictEqual([
+        "AMI: ami-0123456789abcdef0\nlockfile: stale\nbun version: stale\nfresh: no",
+      ]);
+    }).pipe(provideScopedLayer(TestConsole.layer))
+  );
 });
 
 describe("runner bake report writer", () => {

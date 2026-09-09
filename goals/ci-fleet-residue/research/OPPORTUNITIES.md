@@ -2,6 +2,22 @@
 
 Record receipts at the moment friction happens; redact for the public repo.
 
+## 2026-09-09 — Full coverage exposed untested cost-control boundaries
+
+- What: the final local proof passed build, lint, checks and unit tests, then
+  rejected uncovered configuration/error paths in the new account-controls
+  module and a lower branch percentage in the runner command.
+- Repair: exercise Pulumi config loading, reject invalid account/threshold
+  values, verify recipient diagnostics redact their input, and assert the
+  stale intended-manifest error without querying the live image. The focused
+  account module now measures 100% lines/statements/functions; the runner
+  command measures 89.28% branches against its previous 86.36% floor.
+- Test isolation: the shared Vitest configuration enables concurrent tests,
+  while Pulumi config and mocks use a shared runtime. Mark this fixture suite
+  sequential so one case cannot replace another case's mock monitor.
+- Prevention: cover real configuration and failure boundaries before the full
+  proof; retain the existing regression baseline instead of lowering it.
+
 ## 2026-09-09 — Legacy IAM policies blocked cost remediation
 
 - What: retiring the reviewed old keys and refreshing the stale runner image.
@@ -9,6 +25,11 @@ Record receipts at the moment friction happens; redact for the public repo.
   six policies name only `terraform-user` as administrator. The separate old
   FluentBit key permits current account administration and entered a 30-day
   pending-deletion period. The current CI key was excluded.
+- Resolution: the operator supplied secret references for the existing
+  `terraform-user`. STS verified that exact identity; fresh metadata confirmed
+  the six approved keys' creation dates, zero grants and matching aliases.
+  All six entered PendingDeletion at 13:15 UTC, with 30-day windows ending
+  October 9. The current CI key remains Enabled. No IAM policy was weakened.
 - Bake evidence: `RunInstances` was rejected before creation by the unrelated
   `FreedomFramework-CI` policy's explicit `LimitEC2Size` deny, which permits
   only `t2.micro` for the current operator login.
@@ -47,7 +68,24 @@ Record receipts at the moment friction happens; redact for the public repo.
   and confirmed VaultCtx retirement. The owning audit and implementation plan
   is `docs/runbooks/aws-cost-operations.md`. Exact data candidates and cloud
   execution receipts remain private. The approved pre-cutoff workload cleanup
-  was executed; the runbook separates completed actions from blocked KMS work.
+  was executed, including all seven old-key deletion schedules; the runbook
+  separates completed actions from the blocked runner-image bake.
+
+## 2026-09-09 — Runner queue delay resembled a fleet outage
+
+- What: the operator reported that jobs appeared not to pick up runners after
+  the cost-control rollout.
+- Evidence: all 273 scale-up retry warnings in the captured 40-minute window
+  correlated with `maximum number of runners reached` at the unchanged cap of
+  14. Fresh workers subsequently accepted all six heavy lanes in run
+  34354910245; Check, Test Integration, Doctest and Docgen passed while the
+  remaining two continued. Scale-up was Active with a successful update.
+- Prevention: check the organization runner API, queued job timestamps, live
+  EC2 inventory and Lambda retry reasons together before changing capacity.
+  The repository runner endpoint does not list this organization-owned pool.
+  Capacity waiting and zero-idle boot time are distinct from missing runner
+  registration or failed instance launches. Preserve the reliability decision
+  and require measured queue/runtime evidence before changing the cap.
 
 ## 2026-09-09 — Spot reclamation and broken termination credential access
 
