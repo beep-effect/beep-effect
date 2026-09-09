@@ -406,3 +406,15 @@ should name an existing test project or an approved generation command; no
 replacement config or inbox acknowledgment was created. The cleanup command
 also encountered the existing `rm -f` restriction; bounded Python filesystem
 operations removed the authorized residue successfully.
+
+### C3.1 Stage C — thread-pool command fixtures cannot change cwd
+
+The required package-cwd Bun Vitest run with `--pool=threads` executed 71 tests:
+50 passed and 21 failed. All 21 failures occur in existing create/delete command
+fixtures before command execution: `process.chdir() is not supported in workers`.
+The architecture and scripts-policy files passed. This is a fixture/runtime
+incompatibility, not a scripts assertion failure. The lane retains the required
+thread-pool invocation and adds direct writer assertions that do not change cwd;
+the orchestrator must run the command fixtures under its canonical worker pool.
+A verification contract that accounts for cwd-changing command fixtures would
+prevent this limitation. No inbox acknowledgment or runtime workaround was used.

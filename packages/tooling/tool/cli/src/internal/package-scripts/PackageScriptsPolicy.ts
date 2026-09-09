@@ -123,10 +123,14 @@ const expectedBlock: PackageScriptsPolicyShape["expected"] = (kind, actual, evid
         ? rule.binding.command
         : `bun run ${rule.binding.ifPresent ? "--if-present " : ""}${rule.binding.impl}`;
     tasks = HashMap.set(tasks, rule.name, value);
-    if (rule.binding._tag === "indirection" && !rule.binding.ifPresent && !HashMap.has(impls, rule.binding.impl)) {
+    if (rule.binding._tag === "indirection" && !HashMap.has(impls, rule.binding.impl)) {
       const binding = rule.binding;
-      const fallback = A.findFirst(implScriptDefaults, (row) => row.kind === kind && row.name === binding.impl);
-      if (O.isSome(fallback)) impls = HashMap.set(impls, fallback.value.name, fallback.value.value);
+      const fallback = binding.ifPresent
+        ? O.none<(typeof implScriptDefaults)[number]>()
+        : A.findFirst(implScriptDefaults, (row) => row.kind === kind && row.name === binding.impl);
+      const previous = HashMap.get(actual.tasks, rule.name).pipe(O.filter((text) => text !== value));
+      const implementation = previous.pipe(O.orElse(() => O.map(fallback, (row) => row.value)));
+      if (O.isSome(implementation)) impls = HashMap.set(impls, binding.impl, implementation.value);
     }
   }
   const codegen = HashMap.get(tasks, "codegen");

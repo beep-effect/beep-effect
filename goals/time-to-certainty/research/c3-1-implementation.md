@@ -402,3 +402,97 @@ No implementation paths were deleted. The existing orchestrator amendment in
 Removed the authorized tool residue; omitted it from the file list as instructed.
 No Git write commands, inbox acknowledgments, push, publish, or merge were run.
 Stopped after Stage B. Stages C, D, and E remain unstarted.
+
+## 2026-09-08 — Stage C implementation complete; command-fixture verification limited
+
+Read the full brief, including all four amendments, and the prior implementation
+results. Stages A and B are accepted and committed per this launch's instruction.
+This launch implements Stage C only.
+
+CreatePackage and Architecture now use `scaffoldPackageScripts` from the schema
+module for task bindings and per-kind implementation defaults. The helper selects
+required and explicitly requested optional tasks, excludes absent/derived tasks,
+and retains default implementations referenced by the audit chain (including tool
+integration tests whose public task is absent). Caller-owned coverage, Babel,
+test/stories typecheck helpers, package policy paths, and app build/dev commands
+remain explicit. Docgen uses the canonical indirection and executable default.
+Architecture now shares the library audit/default block and no longer adds its
+extra parallel integration alias. Apps and labs no longer stamp codegen placeholders;
+labs omit docgen, coverage, and lint:jsdoc. Runtime-proof scaffolds use app rules
+and defaults while retaining their package-shaped files and optional docgen task.
+
+DeletePackage has no manifest scripts renderer in this checkout. Its existing
+baseline-writer table now invokes `bun run beep lint package-scripts --write`,
+which consumes the schema rules/defaults through PackageScriptsPolicy for remaining
+workspaces. Its test pins the entire writer command sequence literally. This is
+an indirect policy consumer, not a new manifest renderer in the deletion command.
+
+Confirmed `packages/drivers/gov-legal-mcp` is a real generator: `codegen` invokes
+`bun run generate`, which invokes `scripts/generate.ts`. That script writes
+`src/_generated/tool-name-collision-report.json` and `src/_generated/version.ts`.
+Added it as the ninth CodegenGeneratorPackage member. A filesystem policy test
+pins preservation of `bun run generate` and independently detects a deleted
+codegen key as missing-task.
+
+Implemented Amendment 4 in the policy projection used by `--write`: a missing
+implementation receives the prior direct task value before considering the kind
+default. Existing implementations remain untouched. A literal filesystem test for
+`packages/tooling/tool/docgen` verifies `docgen: bun run beep:docgen` with
+`beep:docgen: bun run src/bin.ts`, stable bytes on the next write, and no second
+write. It also pins direct audit conversion. Missing task values and an existing
+canonical indirection still use the kind default when the implementation is absent.
+
+### Stage C — Bun-runtime verification
+
+- `bunx --no-install biome check --write` over the nine touched TypeScript files:
+  **passed**. Introduced formatting/import issues were corrected.
+- `bunx --bun --no-install tsgo -p packages/tooling/tool/cli/tsconfig.check.json
+  --pretty false`: **passed**, exit 0. Introduced import-name and Effect compiler
+  diagnostics were fixed before the final run.
+- `bunx --bun --no-install tsgo -p packages/tooling/tool/cli/tsconfig.test.json
+  --pretty false`: **unavailable**, exit 1, `TS5058: The specified path does not
+  exist`. This is the previously recorded missing-project limitation.
+- From `packages/tooling/tool/cli`, `bunx --bun --no-install vitest run
+  test/create-package.test.ts test/architecture-operation-plan.test.ts
+  test/delete-package.test.ts test/package-scripts.policy.test.ts
+  test/package-scripts.schemas.test.ts --pool=threads`: **56 passed, 21 failed**,
+  77 tests across five files, 11.81 seconds. Architecture, policy, and schema files
+  passed in full. All remaining failures are the existing create/delete command
+  fixtures calling `process.chdir()`, which threads reject before command execution.
+  There are no remaining script assertion failures. Full output is retained locally
+  at `/tmp/c3-1-stage-c-vitest.log` (ephemeral).
+- Added literal tests of the actual CreatePackage script renderers, exposed through
+  the documented internal `CreatePackageScripts` surface, so library, tool,
+  ecosystem, application, lab, and stories script construction is exercised without
+  changing cwd. These two tests pass in the full thread-pool run above.
+- Focused package-cwd `bunx --bun --no-install vitest run
+  test/create-package.test.ts test/delete-package.test.ts --pool=threads
+  -t 'create-package script writers|delete-package baseline'`: **passed**, eight
+  tests, 41 skipped, 4.06 seconds. This is focused proof, not a full suite pass.
+- `git diff --check`: **passed**. Removed authorized residue and checked its absence.
+
+Stage C source implementation is complete, but the full command-fixture run is
+**not green**. The thread-pool limitation is recorded in the packet opportunity
+ledger. Canonical package verification, docgen, and the cwd-changing command tests
+remain the orchestrator's responsibility under Amendment 2; no alternate worker
+pool, synthetic test configuration, or inbox acknowledgment was used here. The
+policy fingerprint was not regenerated during this Stage C-only launch and will
+need refresh after source changes before final gate acceptance.
+
+### Stage C — files
+
+- packages/tooling/tool/cli/src/internal/package-scripts/PackageScripts.schemas.ts
+- packages/tooling/tool/cli/src/internal/package-scripts/PackageScriptsPolicy.ts
+- packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts
+- packages/tooling/tool/cli/src/commands/Architecture/OperationPlanPackageJson.ts
+- packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.command.ts
+- packages/tooling/tool/cli/test/create-package.test.ts
+- packages/tooling/tool/cli/test/architecture-operation-plan.test.ts
+- packages/tooling/tool/cli/test/delete-package.test.ts
+- packages/tooling/tool/cli/test/package-scripts.policy.test.ts
+- goals/time-to-certainty/research/OPPORTUNITIES.md
+- goals/time-to-certainty/research/c3-1-implementation.md
+
+No implementation files were deleted. Residue is omitted from the list as required.
+No Git write commands, inbox acknowledgments, push, publish, or merge were run.
+Stopped after Stage C; Stages D and E and the fleet rewrite remain unstarted.

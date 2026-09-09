@@ -443,6 +443,10 @@ const BASELINE_WRITER_STEPS: ReadonlyArray<BaselineWriterStep> = [
     args: ["run", "beep", "lint", "package-test-typecheck", "--write-baseline"],
   }),
   BaselineWriterStep.make({ label: "schema catalog", args: ["run", "beep", "lint", "schema-catalog", "--write"] }),
+  BaselineWriterStep.make({
+    label: "package scripts",
+    args: ["run", "beep", "lint", "package-scripts", "--write"],
+  }),
   BaselineWriterStep.make({ label: "Knip baseline", args: ["run", "beep", "quality", "knip", "--write-baseline"] }),
 ];
 

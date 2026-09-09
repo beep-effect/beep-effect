@@ -11,6 +11,7 @@ import { Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
+import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -160,6 +161,75 @@ describe("package scripts policy", () => {
           name: "doctest",
           reason: "Marked sources use a vitest config that bypasses vitest.shared.ts",
         });
+      })
+    )
+  );
+  it.effect("seeds the docgen tool implementation from its direct script and preserves it on repeat writes", () =>
+    run(
+      Effect.gen(function* () {
+        const root = yield* fixture({
+          "package.json": { name: "root", workspaces: ["packages/tooling/tool/*"] },
+          "packages/tooling/tool/docgen/package.json": {
+            name: "@beep/docgen",
+            scripts: { coverage: "owned coverage", docgen: "bun run src/bin.ts", audit: "bun run custom-audit" },
+          },
+        });
+        const fs = yield* FileSystem.FileSystem;
+        const policy = yield* PackageScriptsPolicy.make(root);
+        const report = yield* policy.write(root);
+        expect(HashMap.size(report.drift)).toBe(0);
+        const file = `${root}/packages/tooling/tool/docgen/package.json`;
+        const first = yield* fs.readFileString(file);
+        const manifest = yield* S.decodeEffect(S.fromJsonString(S.Struct({ scripts: S.Record(S.String, S.String) })))(
+          first
+        );
+        expect(manifest.scripts.docgen).toBe("bun run beep:docgen");
+        expect(manifest.scripts["beep:docgen"]).toBe("bun run src/bin.ts");
+        expect(manifest.scripts.audit).toBe("bun run --if-present beep:audit");
+        expect(manifest.scripts["beep:audit"]).toBe("bun run custom-audit");
+        expect(HashSet.size((yield* policy.write(root)).written)).toBe(0);
+        expect(yield* fs.readFileString(file)).toBe(first);
+        for (const scripts of [{}, { docgen: "bun run beep:docgen" }]) {
+          const codec = scriptsBlockFromRecord("tool");
+          const actual = yield* S.decodeEffect(codec)(scripts);
+          const expected = yield* S.encodeEffect(codec)(policy.expected("tool", actual, noEvidence));
+          expect(expected["beep:docgen"]).toBe("bunx --bun --no-install docgen");
+        }
+      })
+    )
+  );
+  it.effect("recognizes gov-legal-mcp as a generator independently of script presence", () =>
+    run(
+      Effect.gen(function* () {
+        const root = yield* fixture({
+          "package.json": { name: "root", workspaces: ["packages/drivers/*"] },
+          "packages/drivers/gov-legal-mcp/package.json": {
+            name: "@beep/gov-legal-mcp",
+            scripts: {
+              coverage: "owned coverage",
+              codegen: "bun run generate",
+              generate: "bun run scripts/generate.ts",
+            },
+          },
+        });
+        const fs = yield* FileSystem.FileSystem;
+        const policy = yield* PackageScriptsPolicy.make(root);
+        const report = yield* policy.write(root);
+        expect(HashMap.size(report.drift)).toBe(0);
+        const file = `${root}/packages/drivers/gov-legal-mcp/package.json`;
+        const manifest = yield* S.decodeEffect(S.fromJsonString(S.Struct({ scripts: S.Record(S.String, S.String) })))(
+          yield* fs.readFileString(file)
+        );
+        expect(manifest.scripts.codegen).toBe("bun run generate");
+        expect(manifest.scripts.generate).toBe("bun run scripts/generate.ts");
+        yield* fs.writeFileString(
+          file,
+          yield* jsonStringifyPretty({ name: "@beep/gov-legal-mcp", scripts: R.remove(manifest.scripts, "codegen") })
+        );
+        const missing = yield* policy.check(root);
+        expect(HashMap.get(missing.drift, "packages/drivers/gov-legal-mcp/package.json")).toEqual(
+          O.some([{ _tag: "missing-task", name: "codegen" }])
+        );
       })
     )
   );

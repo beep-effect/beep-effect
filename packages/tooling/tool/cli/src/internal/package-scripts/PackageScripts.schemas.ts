@@ -6,12 +6,15 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
+import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
+import * as Str from "effect/String";
 
 const $I = $RepoCliId.create("internal/package-scripts/PackageScripts.schemas");
 /**
@@ -468,6 +471,7 @@ export const CodegenGeneratorPackage = LiteralKit([
   "apps/professional-desktop",
   "packages/drivers/runpod",
   "packages/drivers/govinfo",
+  "packages/drivers/gov-legal-mcp",
   "packages/drivers/ecfr",
   "packages/drivers/box",
   "packages/drivers/acp",
@@ -1297,3 +1301,57 @@ export const implScriptDefaults: ReadonlyArray<ImplScriptDefault> = [
   }),
   ImplScriptDefault.make({ kind: "infra", name: "beep:doctest", value: "BEEP_VITEST_DOCTEST=1 bunx --bun vitest run" }),
 ];
+
+/**
+ * Construct required scaffold bindings and explicitly selected optional tasks from the rule table.
+ *
+ * **Details**
+ * Includes defaults behind enabled indirections, including the optional audit implementation.
+ * Package-owned tasks and extra scripts remain the caller's responsibility. Derived tasks
+ * require filesystem evidence and are left to the policy writer.
+ *
+ * **Example** (Construct a library scaffold block)
+ *
+ * ```ts
+ * import { scaffoldPackageScripts } from "@beep/repo-cli/test/PackageScripts"
+ * const scripts = scaffoldPackageScripts("library", ["test:integration"])
+ * console.log(scripts.docgen) // "bun run beep:docgen"
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export const scaffoldPackageScripts: {
+  (kind: PackageKind, optionalTasks: ReadonlyArray<TaskScriptName>): ScriptsRecord;
+  (optionalTasks: ReadonlyArray<TaskScriptName>): (kind: PackageKind) => ScriptsRecord;
+} = dual(2, (kind: PackageKind, optionalTasks: ReadonlyArray<TaskScriptName>): ScriptsRecord => {
+  let scripts = HashMap.empty<string, string>();
+  for (const rule of taskScriptRules) {
+    if (rule.kind !== kind) continue;
+    const enabled =
+      rule.presence._tag === "required" || (rule.presence._tag === "optional" && A.contains(optionalTasks, rule.name));
+    if (!enabled || rule.binding._tag === "owned") continue;
+    const binding = rule.binding;
+    if (binding._tag === "cli") {
+      scripts = HashMap.set(scripts, rule.name, binding.command);
+      continue;
+    }
+    scripts = HashMap.set(scripts, rule.name, `bun run ${binding.ifPresent ? "--if-present " : ""}${binding.impl}`);
+    const implementation = A.findFirst(implScriptDefaults, (row) => row.kind === kind && row.name === binding.impl);
+    if (O.isSome(implementation)) scripts = HashMap.set(scripts, binding.impl, implementation.value.value);
+  }
+  // An audit may call an implementation even when its public task is absent (tool integration tests).
+  for (const implementation of implScriptDefaults) {
+    if (implementation.kind !== kind || HashMap.has(scripts, implementation.name)) continue;
+    if (
+      scripts.pipe(
+        HashMap.values,
+        A.fromIterable,
+        A.some((value) => A.contains(Str.split(value, " && "), `bun run ${implementation.name}`))
+      )
+    ) {
+      scripts = HashMap.set(scripts, implementation.name, implementation.value);
+    }
+  }
+  return R.fromEntries(A.sortWith(HashMap.toEntries(scripts), ([key]) => key, Order.String));
+});
