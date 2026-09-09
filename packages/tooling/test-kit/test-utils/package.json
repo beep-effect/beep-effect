@@ -74,8 +74,7 @@
     "@effect/vitest": "catalog:",
     "@types/bun": "catalog:",
     "@types/node": "catalog:",
-    "@types/pg": "^8.20.0",
-    "bun-types": "catalog:"
+    "@types/pg": "^8.20.0"
   },
   "private": true,
   "publishConfig": {

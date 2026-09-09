@@ -58,7 +58,6 @@
     "@effect/vitest": "catalog:",
     "@types/bun": "catalog:",
     "@types/node": "catalog:",
-    "bun-types": "catalog:",
     "effect": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"

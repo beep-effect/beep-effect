@@ -433,7 +433,6 @@
         "@effect/vitest": "catalog:",
         "@types/bun": "catalog:",
         "@types/node": "catalog:",
-        "bun-types": "catalog:",
         "effect": "catalog:",
         "typescript": "catalog:",
         "vitest": "catalog:",
@@ -1889,7 +1888,6 @@
         "@effect/vitest": "catalog:",
         "@types/bun": "catalog:",
         "@types/node": "catalog:",
-        "bun-types": "catalog:",
       },
     },
     "packages/foundation/capability/observability": {
@@ -2024,7 +2022,6 @@
         "@effect/vitest": "catalog:",
         "@types/bun": "catalog:",
         "@types/node": "catalog:",
-        "bun-types": "catalog:",
       },
     },
     "packages/foundation/modeling/ontology": {
@@ -2819,7 +2816,6 @@
         "@types/bun": "catalog:",
         "@types/node": "catalog:",
         "@types/pg": "^8.20.0",
-        "bun-types": "catalog:",
       },
     },
     "packages/tooling/tool/cli": {
