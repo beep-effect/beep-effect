@@ -100,7 +100,7 @@ const listTestFiles = (directory: string): ReadonlyArray<string> => {
   }
 };
 const toPosixRelative = (root: string, file: string): string => relative(root, file).split(sep).join("/");
-export const propertyTestInclude = (packageRoot: string): ReadonlyArray<string> =>
+const propertyTestInclude = (packageRoot: string): ReadonlyArray<string> =>
   pipe(
     listTestFiles(join(packageRoot, "test")),
     A.filter((file) => propertyTestMarker.test(readFileSync(file, "utf8"))),
