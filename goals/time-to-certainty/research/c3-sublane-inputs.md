@@ -577,7 +577,7 @@ The source directive walk and recursive tsconfigs are actual additional reads; e
 
 > Orchestrator note (table revision 4): this section documents the existing root script
 > `fallow:boundaries:check` (`bun run beep fallow boundaries --check`). The hosted repo-sanity
-> member is a different command, `bun run beep fallow boundaries config-check --check`
+> member is a different command, `bun run beep quality fallow boundaries config-check --check`
 > (`packages/tooling/tool/cli/src/commands/Quality/internal/GithubChecks.ts:397`), and the C3 task
 > for it is `//#fallow:boundaries:config-check` in `c3-lane-task-table.md`; the root script stays a
 > plain local script.
