@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `completed-retained` (takes effect when PR #1026 merges)
+Lifecycle: `active`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -42,8 +42,9 @@ and reflection land with the fixes. Full local proof and hosted checks remain
 merge gates; the exact eleven Codex IDs are closed after the merge is confirmed.
 The PR records the final check results, merge commit, and external closure receipt.
 
-This branch proposes the retained lifecycle for the merged packet. It does not
-claim that pre-merge checks or post-merge UI closure have already happened.
+The machine-readable lifecycle remains active until the completion gate is
+satisfied. The operator requires one remediation PR; post-merge external closure
+evidence is retained on that PR rather than requiring another publication.
 
 The operator's September 8 instruction authorizes all work necessary to resolve
 the current findings in one PR. Earlier archived-packet scope and approval gates

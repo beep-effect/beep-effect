@@ -98,11 +98,15 @@ overlapped these tests. Git merged both scheduler and quality-task test files
 without conflicts. The frozen-lockfile install passes, and the unrelated local
 agent settings overlay is byte-identical after integration.
 
-The final packet proposes its retained lifecycle on merge of PR #1026 and
-includes the closeout reflection. Packet identity, severity, implementation,
-launcher-size, and whitespace checks pass. Reflection lint reports zero
-blocking findings and zero advisories. Goals doctor reports zero new or
-inherited blocking findings; its expected pre-merge completion advisory is
-not waived. Local proof, hosted acceptance, the merge commit, and the exact-ID
-external closure receipt will be recorded against PR #1026. Capture-time Codex
-statuses are preserved rather than changed before the UI action occurs.
+The final packet includes the closeout reflection. Packet identity, severity,
+implementation, launcher-size, and whitespace checks pass. Reflection lint
+reports zero blocking findings and zero advisories. Goals doctor reports zero
+new or inherited blocking findings. Review correctly identified that a proposed
+retained lifecycle is interpreted as immediately complete by machine readers;
+the canonical status remains active until the completion gate is satisfied.
+Local proof, hosted acceptance, the merge commit, and exact-ID external closure
+will be recorded against PR #1026. Capture-time Codex statuses are preserved.
+
+After main integration, the ignored exploration Atlas was stale. Canonical
+`beep explore atlas --write` restored it and `--check` passes; no tracked
+exploration file changed. The superseded local proof is not acceptance evidence.

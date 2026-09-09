@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `completed-retained` on merge of PR #1026. All eleven findings are implemented and published. The rows below record the pre-merge state; final proof and external closure evidence are recorded on the PR.
+Status: `active`. All eleven findings are implemented and published. Full proof, hosted acceptance, merge, and external closure remain required. Final evidence is recorded on PR #1026.
 
 ## Phases
 
@@ -17,7 +17,7 @@ Status: `completed-retained` on merge of PR #1026. All eleven findings are imple
 | P6 publish | complete | Publish one intentional PR through Yeet. | Exact branch head pushed and PR opened. |
 | P7 monitor | in-progress | Close hosted checks and actionable reviews. | PR green and mergeable. |
 | P8 merge-and-close | pending | Merge and close captured findings. | PR merged; all 11 IDs resolved. |
-| P9 close | complete | Record evidence, reflection, and lifecycle. | Retained lifecycle and reflection are proposed in this same PR; external closure remains P8. |
+| P9 close | in-progress | Record evidence, reflection, and lifecycle. | Reflection lands in PR #1026; actual merge and exact-ID closure evidence is retained on that PR. |
 
 ## Execution Rules
 

@@ -53,3 +53,11 @@
   ticket with a bounded deadline before asserting admission or interruption.
   Main advanced across the scheduler tests during this repair; merge its
   journal changes before publishing the synchronized tests.
+
+- A prose-qualified `completed-retained` value still tells machine readers the
+  goal is finished. Keep the canonical state active while proof or external
+  closure is pending. The operator's one-PR instruction takes precedence over
+  a bookkeeping workflow that would otherwise require another publication.
+- Main integration left the ignored exploration Atlas stale. Regenerate both
+  goal and exploration projections before starting a full proof after a merge;
+  the atlas check then passes without a tracked-file change.

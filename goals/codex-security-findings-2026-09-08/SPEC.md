@@ -65,8 +65,8 @@ exact captured findings until no packet-applicable finding remains open.
       shows zero packet-applicable open findings.
 
 These boxes record pre-merge evidence. Final local and hosted proof, the merge,
-and the exact-ID closure receipt are recorded on PR #1026. The retained lifecycle
-is proposed in that same PR and becomes effective on merge.
+and the exact-ID closure receipt are recorded on PR #1026. The canonical lifecycle
+remains active while any part of the completion gate is pending.
 
 ## Verification Matrix
 
@@ -99,4 +99,4 @@ the current findings before publication and include any additions in this PR.
 
 | Exception | Scope | Owner | Rationale | Removal condition |
 | --- | --- | --- | --- | --- |
-| None | N/A | N/A | N/A | N/A |
+| Post-merge receipt location | Packet bookkeeping only | Operator instruction | Resolve all findings in one PR; retain external closure evidence on PR #1026 without a second publication. Local and hosted proof, review, merge, and exact-ID closure remain required. | Actual completion gate satisfied |

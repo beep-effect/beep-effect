@@ -3,13 +3,13 @@
   "initiative": {
     "id": "codex-security-findings-2026-09-08",
     "title": "Codex Security Findings (2026-09-08)",
-    "status": "completed-retained",
+    "status": "active",
     "created": "2026-09-08",
     "updated": "2026-09-08",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/codex-security-findings-2026-09-08",
-  "lifecycle": "completed-retained",
+  "lifecycle": "active",
   "mission": "Remediate and close the 11 Codex Cloud security findings captured on 2026-09-08.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -64,7 +64,7 @@
       "out-of-scope": 0,
       "untriaged": 0
     },
-    "note": "All eleven findings are implemented and published in PR #1026. This PR proposes the retained lifecycle on merge. Full local proof and current-head hosted checks must pass before merge; exact-ID Codex closure follows merge. Final external evidence is recorded on PR #1026."
+    "note": "All eleven findings are implemented and published in PR #1026. The packet remains active until full proof, hosted checks, merge, and exact-ID Codex closure complete. Final external evidence is recorded on PR #1026, consistent with the operator instruction to resolve the findings in one PR."
   },
   "closeoutPolicy": {
     "fixed": "Already fixed",
@@ -135,7 +135,7 @@
     {
       "id": "P9",
       "name": "Close",
-      "status": "complete"
+      "status": "in-progress"
     }
   ],
   "verificationCommands": [
