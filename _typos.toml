@@ -84,6 +84,9 @@ metalness = "metalness"
 
 [files]
 extend-exclude = [
+  # graft per-file wiring cards mirror every source file (including excluded
+  # trees such as scratchpad/); graft .ignore re-admits them to ignore-aware tools.
+  "graft/**",
   # Vendored upstream API documents drivers generate from (OpenAPI / JSON Schema);
   # kept byte-faithful to upstream, so their spelling is not ours to fix.
   "packages/drivers/*/openapi.json",

@@ -313,6 +313,9 @@ const releaseFromLedger = Effect.fnUntraced(function* (
  * is included until its grant transition commits; every other candidate uses
  * the binding strict `t < admittedAtMillis` boundary. Releases remove the
  * exact active charge paired by nonce.
+ * Each grant verification is a bounded episode identified by
+ * `replay-${journalDigest}-${eventIndex}` (zero-based source event index).
+ * Replaying the same pinned journal preserves that occurrence identity.
  *
  * **Example** (Replay an empty event stream)
  *
@@ -425,6 +428,7 @@ export const replayAdmissionJournal = Effect.fn("Replay.replayAdmissionJournal")
     const pending = pendingAtAdmission(admittedEvents, admitted);
     const proposal = yield* projectSchedule(
       ProjectionInput.make({
+        episodeId: `replay-${journalDigest}-${eventIndex}`,
         policy,
         pending,
         ledger,

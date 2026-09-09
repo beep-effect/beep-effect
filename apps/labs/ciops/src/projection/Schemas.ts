@@ -325,6 +325,7 @@ export class ScheduleStep extends S.Class<ScheduleStep>($I`ScheduleStep`)(
  * import { NonNegativeInt } from "@beep/schema"
  *
  * const proposal = ScheduleProposal.make({
+ *   episodeId: "verification-1",
  *   proposalId: "schedule-policy-prefix-1000",
  *   projectionInstantMillis: NonNegativeInt.make(1000),
  *   steps: [],
@@ -340,6 +341,7 @@ export class ScheduleStep extends S.Class<ScheduleStep>($I`ScheduleStep`)(
  */
 export class ScheduleProposal extends S.Class<ScheduleProposal>($I`ScheduleProposal`)(
   {
+    episodeId: S.NonEmptyString,
     proposalId: S.NonEmptyString,
     projectionInstantMillis: NonNegativeInt,
     steps: S.Array(ScheduleStep),
@@ -355,6 +357,13 @@ export class ScheduleProposal extends S.Class<ScheduleProposal>($I`SchedulePropo
 /**
  * Complete explicit input to the clock-free projection core.
  *
+ * **Details**
+ *
+ * `episodeId` identifies a bounded verification occurrence supplied by the
+ * caller. Keep it across revisions of that occurrence's proposal; allocate a
+ * different id for a different occurrence. Replay uses its pinned journal
+ * digest and the zero-based grant event index, never a scheduler singleton.
+ *
  * **Example** (Construct projection input)
  *
  * ```ts
@@ -364,6 +373,7 @@ export class ScheduleProposal extends S.Class<ScheduleProposal>($I`SchedulePropo
  * import * as HashSet from "effect/HashSet"
  *
  * const input = ProjectionInput.make({
+ *   episodeId: "verification-1",
  *   policy: AdmissionPolicyParams.make({
  *     capacityMaxTokens: PosInt.make(10),
  *     slotSizeGib: PosInt.make(5),
@@ -398,6 +408,7 @@ export class ScheduleProposal extends S.Class<ScheduleProposal>($I`SchedulePropo
  */
 export class ProjectionInput extends S.Class<ProjectionInput>($I`ProjectionInput`)(
   {
+    episodeId: S.NonEmptyString,
     policy: AdmissionPolicyParams,
     pending: S.Array(PendingRequest),
     ledger: TokenLedgerState,
@@ -406,7 +417,7 @@ export class ProjectionInput extends S.Class<ProjectionInput>($I`ProjectionInput
     journalPrefixDigest: S.NonEmptyString,
   },
   $I.annote("ProjectionInput", {
-    description: "Policy, pending requests, token state, instant, and provenance digests supplied to projection.",
+    description: "Verification occurrence, policy, pending requests, token state, instant, and provenance digests.",
   })
 ) {}
 
