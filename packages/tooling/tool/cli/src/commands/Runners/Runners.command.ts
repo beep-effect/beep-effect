@@ -102,11 +102,15 @@ type BakeCliOptions = {
   readonly instanceType: string;
   readonly tags: O.Option<Record<string, string>>;
   readonly report: O.Option<string>;
+  readonly manifest: O.Option<string>;
 };
 
 const runBakeCommand = Effect.fn("Runners.runBakeCommand")(function* (options: BakeCliOptions) {
   const service = yield* RunnersService;
   const mode = yield* resolveBakeMode(options.plan, options.check);
+  if (O.isSome(options.manifest) && mode !== "check") {
+    return yield* RunnersCommandError.make({ message: "runners bake: --manifest requires --check." });
+  }
   return yield* Match.value(mode).pipe(
     Match.when("plan", () =>
       service.plan.pipe(
@@ -116,20 +120,27 @@ const runBakeCommand = Effect.fn("Runners.runBakeCommand")(function* (options: B
       )
     ),
     Match.when("check", () =>
-      service
-        .check(options.region)
-        .pipe(
-          Effect.flatMap((result) =>
-            pipe(
-              options.json ? printEncoded(result, BakeCheckReportJson.encode) : Console.log(renderCheck(result)),
-              Effect.andThen(
-                result.fresh
-                  ? Effect.void
-                  : Effect.fail(RunnersCommandError.make({ message: "runners bake --check: live AMI is stale." }))
-              )
+      O.match(options.manifest, {
+        onNone: () => service.check(options.region),
+        onSome: service.checkManifest,
+      }).pipe(
+        Effect.flatMap((result) =>
+          pipe(
+            options.json ? printEncoded(result, BakeCheckReportJson.encode) : Console.log(renderCheck(result)),
+            Effect.andThen(
+              result.fresh
+                ? Effect.void
+                : Effect.fail(
+                    RunnersCommandError.make({
+                      message: O.isSome(options.manifest)
+                        ? "runners bake --check: intended AMI manifest is stale."
+                        : "runners bake --check: live AMI is stale.",
+                    })
+                  )
             )
           )
         )
+      )
     ),
     Match.when(
       "bake",
@@ -205,6 +216,10 @@ const bakeCommand = Command.make(
     report: Flag.path("report", { pathType: "file" }).pipe(
       Flag.optional,
       Flag.withDescription("Bake report output path")
+    ),
+    manifest: Flag.path("manifest", { pathType: "file" }).pipe(
+      Flag.optional,
+      Flag.withDescription("With --check, compare a bake report and the production pin without calling AWS")
     ),
   },
   (options) =>
