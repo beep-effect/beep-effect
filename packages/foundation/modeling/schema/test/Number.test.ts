@@ -6,6 +6,10 @@ import { Effect, Exit } from "effect";
 import * as S from "effect/Schema";
 import type { Int } from "@beep/schema/Int";
 
+const decodeAge = S.decodeEffect(Age);
+const decodeUnknownAge = S.decodeUnknownEffect(Age);
+const encodeAge = S.encodeEffect(Age);
+
 const decodeNonNegativeInt = S.decodeUnknownEffect(NonNegativeInt);
 const exit = <A, E>(effect: Effect.Effect<A, E>) => Effect.runPromise(Effect.exit(effect));
 
@@ -18,9 +22,9 @@ describe("Age", () => {
     "accepts whole years at both inclusive boundaries and round-trips them",
     Effect.fnUntraced(function* () {
       for (const value of [1, 42, 150]) {
-        const age = yield* S.decodeEffect(Age)(value);
+        const age = yield* decodeAge(value);
         expect(age).toBe(value);
-        expect(yield* S.encodeEffect(Age)(age)).toBe(value);
+        expect(yield* encodeAge(age)).toBe(value);
       }
     })
   );
@@ -29,7 +33,7 @@ describe("Age", () => {
     "rejects out-of-range, fractional, and non-numeric ages",
     Effect.fnUntraced(function* () {
       for (const value of [-1, 0, 151, 1.5, "42"]) {
-        expect(Exit.isFailure(yield* Effect.exit(S.decodeUnknownEffect(Age)(value)))).toBe(true);
+        expect(Exit.isFailure(yield* Effect.exit(decodeUnknownAge(value)))).toBe(true);
       }
     })
   );

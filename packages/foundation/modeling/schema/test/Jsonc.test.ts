@@ -4,6 +4,9 @@ import { describe, expect, it } from "@effect/vitest";
 import { Cause, Effect, Exit } from "effect";
 import * as S from "effect/Schema";
 
+const decodeJsoncTextToUnknown = S.decodeEffect(JsoncTextToUnknown);
+const encodeJsoncTextToUnknown = S.encodeEffect(JsoncTextToUnknown);
+
 const $I = $SchemaId.create("jsonc_test");
 
 class JsoncPerson extends S.Class<JsoncPerson>($I`JsoncPerson`)(
@@ -35,7 +38,7 @@ describe("Jsonc", () => {
   it.effect(
     "maps invalid JSONC into SchemaIssue.InvalidValue",
     Effect.fnUntraced(function* () {
-      const result = yield* Effect.exit(S.decodeEffect(JsoncTextToUnknown)(`{ "name": }`));
+      const result = yield* Effect.exit(decodeJsoncTextToUnknown(`{ "name": }`));
 
       expect(Exit.isFailure(result)).toBe(true);
       if (Exit.isFailure(result)) {
@@ -51,7 +54,7 @@ describe("Jsonc", () => {
     "fails to encode unknown values back into JSONC text",
     Effect.fnUntraced(function* () {
       const result = yield* Effect.exit(
-        S.encodeEffect(JsoncTextToUnknown)({
+        encodeJsoncTextToUnknown({
           name: "Ada",
         })
       );

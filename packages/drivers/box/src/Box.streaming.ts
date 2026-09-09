@@ -21,6 +21,8 @@ import { BOX_SDK_VERSION } from "./internal/Box.constants.ts";
 import { acquireSdkCallController, decodeWith, logDriverFailure } from "./internal/Box.runtime.ts";
 import type { BoxMethodName } from "./_generated/Box.models.gen.ts";
 
+const decodeUnknownMEventResult = S.decodeUnknownResult(M.Event);
+
 const $I = $BoxId.create("Box.streaming");
 
 const BoxByteEffectStream = S.declare<Stream.Stream<Uint8Array, BoxError, never>>(
@@ -975,7 +977,7 @@ const eventStreamFromSdkValue = (method: BoxMethodName, value: unknown): Stream.
             return;
           }
 
-          const result = S.decodeUnknownResult(M.Event)(payload);
+          const result = decodeUnknownMEventResult(payload);
           if (Result.isSuccess(result)) {
             Queue.offerUnsafe(queue, result.success);
             return;

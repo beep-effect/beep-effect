@@ -27,6 +27,9 @@ import { normalizeError } from "./Interpreter.errors.ts";
 import { DiagnosticKind, InterpreterRuntimeError, ProgramNode, tryInterpreter } from "./Interpreter.model.ts";
 import { PromiseRuntime } from "./Interpreter.promises.ts";
 import { Interpreter } from "./Interpreter.runtime.ts";
+const decodeUnknownDataValue = S.decodeUnknownEffect(DataValue);
+const decodeUnknownProgramNode = S.decodeUnknownEffect(ProgramNode);
+const encodeUnknownDiagnosticModelResult = S.encodeUnknownResult(DiagnosticModel);
 
 /**
  * Parses TypeScript, evaluates it in a confined interpreter, copies the result
@@ -125,7 +128,7 @@ export const executeWithLimits = <ToolkitType extends Toolkit.Toolkit<any>>(
           const copied = yield* Effect.fromResult(
             tryInterpreter(() => copyOut(copyIn(value, "Execution result"), "nullify"))
           );
-          const result = yield* S.decodeUnknownEffect(DataValue)(copied).pipe(
+          const result = yield* decodeUnknownDataValue(copied).pipe(
             Effect.mapError((cause) =>
               InterpreterRuntimeError.new(
                 `Execution result is not a data value: ${cause.message}`,
@@ -269,7 +272,7 @@ const parseProgram = (code: string): Effect.Effect<ProgramNode, InterpreterRunti
           DiagnosticKind.Enum.ParseError
         ),
     });
-    return yield* S.decodeUnknownEffect(ProgramNode)(parsed).pipe(
+    return yield* decodeUnknownProgramNode(parsed).pipe(
       Effect.mapError((cause) =>
         InterpreterRuntimeError.new(
           `Failed to decode script as a Program node: ${cause.message}`,
@@ -308,7 +311,7 @@ const boundLogs = (logs: ReadonlyArray<string>, maxBytes: number) => {
 
 const boundFailureDiagnostic = (diagnostic: DiagnosticModel, maxOutputBytes: number) => {
   const serialized = pipe(
-    S.encodeUnknownResult(DiagnosticModel)(diagnostic),
+    encodeUnknownDiagnosticModelResult(diagnostic),
     Rs.flatMap(UnknownFromJsonString.encodeUnknownResult),
     Rs.getOrElse(() => "null")
   );
@@ -347,7 +350,7 @@ const boundOutput = (result: ResultModel, maxOutputBytes: number): ResultModel =
       let warningBytes = 0;
       for (const warning of warnings) {
         const warningJson = pipe(
-          S.encodeUnknownResult(DiagnosticModel)(warning),
+          encodeUnknownDiagnosticModelResult(warning),
           Rs.flatMap(UnknownFromJsonString.encodeUnknownResult),
           Rs.getOrElse(() => "null")
         );

@@ -27,15 +27,19 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import { desiredFixture, observedAfterApplyFixture, observedFixture, postApplyAdoptionsFixture } from "./fixtures.ts";
 
+const decodeBoxDesiredStateOption = S.decodeOption(BoxDesiredState);
+const decodeUnknownBoxObservedFolderSync = S.decodeUnknownSync(BoxObservedFolder);
+const encodeBoxProvisioningPlanJson = S.encodeEffect(S.fromJsonString(BoxProvisioningPlan));
+const encodeBoxDesiredStateSync = S.encodeSync(BoxDesiredState);
+const encodeBoxObservedFolderSync = S.encodeSync(BoxObservedFolder);
+
 describe("@beep/box-provisioning planner", () => {
   it("round-trips schema-derived observed folders", () => {
-    const decode = S.decodeUnknownSync(BoxObservedFolder);
-    const encode = S.encodeSync(BoxObservedFolder);
     const equivalent = S.toEquivalence(BoxObservedFolder);
 
     fc.assert(
       fc.property(S.toArbitrary(BoxObservedFolder)(fc), (folder) => {
-        expect(equivalent(decode(encode(folder)), folder)).toBe(true);
+        expect(equivalent(decodeUnknownBoxObservedFolderSync(encodeBoxObservedFolderSync(folder)), folder)).toBe(true);
       }),
       fcRuns(10)
     );
@@ -46,7 +50,7 @@ describe("@beep/box-provisioning planner", () => {
     Effect.fnUntraced(function* () {
       const first = yield* planBoxProvisioning(desiredFixture, observedFixture);
       const second = yield* planBoxProvisioning(desiredFixture, observedFixture);
-      const text = yield* S.encodeEffect(S.fromJsonString(BoxProvisioningPlan))(first);
+      const text = yield* encodeBoxProvisioningPlanJson(first);
 
       expect(Equal.equals(first, second)).toBe(true);
       expect(first.planDigest).toBe(second.planDigest);
@@ -169,7 +173,7 @@ describe("@beep/box-provisioning planner", () => {
   );
 
   it("rejects cycles before inventory or planning", () => {
-    const decoded = S.decodeOption(BoxDesiredState)({
+    const decoded = decodeBoxDesiredStateOption({
       version: "box-provisioning/v1",
       adoptions: { version: "box-provisioning-adoptions/v1", entries: [] },
       sourceRevision: BoxSourceRevision.make("intent-cycle"),
@@ -196,7 +200,7 @@ describe("@beep/box-provisioning planner", () => {
   });
 
   it("rejects duplicate provider natural keys before inventory or planning", () => {
-    const encoded = S.encodeSync(BoxDesiredState)(desiredFixture);
+    const encoded = encodeBoxDesiredStateSync(desiredFixture);
     const folders = O.getOrElse(O.fromUndefinedOr(encoded.folders), A.empty);
     const collaborations = O.getOrElse(O.fromUndefinedOr(encoded.collaborations), A.empty);
     const webhooks = O.getOrElse(O.fromUndefinedOr(encoded.webhooks), A.empty);
@@ -213,20 +217,16 @@ describe("@beep/box-provisioning planner", () => {
       logicalKey: "webhook.duplicate",
     };
 
-    expect(O.isNone(S.decodeOption(BoxDesiredState)({ ...encoded, folders: [...folders, duplicateFolder] }))).toBe(
-      true
-    );
+    expect(O.isNone(decodeBoxDesiredStateOption({ ...encoded, folders: [...folders, duplicateFolder] }))).toBe(true);
     expect(
       O.isNone(
-        S.decodeOption(BoxDesiredState)({
+        decodeBoxDesiredStateOption({
           ...encoded,
           collaborations: [...collaborations, duplicateCollaboration],
         })
       )
     ).toBe(true);
-    expect(O.isNone(S.decodeOption(BoxDesiredState)({ ...encoded, webhooks: [...webhooks, duplicateWebhook] }))).toBe(
-      true
-    );
+    expect(O.isNone(decodeBoxDesiredStateOption({ ...encoded, webhooks: [...webhooks, duplicateWebhook] }))).toBe(true);
   });
 
   it.effect(

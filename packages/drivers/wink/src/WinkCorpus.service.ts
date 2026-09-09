@@ -25,6 +25,8 @@ import { observeWinkWorkflow, textLengthAttribute } from "./WinkObservability.ts
 import { WinkSimilarity } from "./WinkSimilarity.service.ts";
 import type { BM25VectorizerInstance } from "./internal/bm25.ts";
 
+const decodeUnknownWinkStringArrayOption = S.decodeUnknownOption(WinkStringArray);
+
 const $I = $WinkId.create("Wink/WinkCorpusManager");
 
 class CreateCorpusBM25Config extends S.Class<CreateCorpusBM25Config>($I`CreateCorpusBM25Config`)(
@@ -225,6 +227,7 @@ const WinkNumberArray = S.Array(S.Finite).pipe(
     description: "Array of finite numeric values returned by wink vectorizer accessors.",
   })
 );
+const decodeUnknownWinkNumberArrayOption = S.decodeUnknownOption(WinkNumberArray);
 const TermScorePair = S.Tuple([S.String, S.Finite]).pipe(
   $I.annoteSchema("TermScorePair", {
     description: "Term and finite score pair returned by wink vectorizer accessors.",
@@ -235,6 +238,7 @@ const TermScorePairs = S.Array(TermScorePair).pipe(
     description: "Array of term and score pairs returned by wink vectorizer accessors.",
   })
 );
+const decodeUnknownTermScorePairsOption = S.decodeUnknownOption(TermScorePairs);
 
 const makeCorpusSessionState = (corpusId: string, config: BM25Config, nowMs: number): CorpusSessionState => ({
   compiled: O.none(),
@@ -252,7 +256,7 @@ const decodeStringArray = (
   context: string,
   corpusId: string
 ): Effect.Effect<ReadonlyArray<string>, CorpusManagerError> =>
-  Effect.fromOption(S.decodeUnknownOption(WinkStringArray)(value), () =>
+  Effect.fromOption(decodeUnknownWinkStringArrayOption(value), () =>
     CorpusManagerError.fromMessage(`Invalid ${context}: expected string[]`, corpusId)
   );
 
@@ -261,7 +265,7 @@ const decodeNumberArray = (
   context: string,
   corpusId: string
 ): Effect.Effect<ReadonlyArray<number>, CorpusManagerError> =>
-  Effect.fromOption(S.decodeUnknownOption(WinkNumberArray)(value), () =>
+  Effect.fromOption(decodeUnknownWinkNumberArrayOption(value), () =>
     CorpusManagerError.fromMessage(`Invalid ${context}: expected number[]`, corpusId)
   );
 
@@ -270,7 +274,7 @@ const decodeTermScorePairs = (
   context: string,
   corpusId: string
 ): Effect.Effect<ReadonlyArray<readonly [string, number]>, CorpusManagerError> =>
-  Effect.fromOption(S.decodeUnknownOption(TermScorePairs)(value), () =>
+  Effect.fromOption(decodeUnknownTermScorePairsOption(value), () =>
     CorpusManagerError.fromMessage(`Invalid ${context}: expected [string, number][]`, corpusId)
   );
 

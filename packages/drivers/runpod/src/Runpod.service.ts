@@ -142,6 +142,7 @@ export class RunpodRawRequest extends S.Class<RunpodRawRequest>($I`RunpodRawRequ
     description: "Raw Runpod HTTP request escape hatch for endpoints ahead of the checked-in OpenAPI document.",
   })
 ) {}
+const decodeRunpodRawRequest = S.decodeEffect(RunpodRawRequest);
 
 /**
  * Raw Runpod HTTP response returned by {@link Runpod.raw}.
@@ -710,7 +711,7 @@ const executeRawRequest = Effect.fn("Runpod.raw")(function* (
   rawRequest: RunpodRawRequest
 ) {
   const decodedRequest = yield* pipe(
-    S.decodeEffect(RunpodRawRequest)(rawRequest),
+    decodeRunpodRawRequest(rawRequest),
     Effect.mapError((cause) =>
       RunpodError.raw({
         cause,

@@ -23,6 +23,8 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { TurboCacheValueSource } from "@beep/repo-cli/test/SharedInternals";
 
+const decodeTurboCachePlanSync = S.decodeSync(TurboCachePlan);
+
 const REMOTE_READ_MODE = TurboCacheMode.Enum.LocalWriteRemoteRead;
 const LOCAL_ONLY_ARG = `--cache=${TurboCacheMode.Enum.LocalOnly}`;
 const REMOTE_READ_ARG = `--cache=${REMOTE_READ_MODE}`;
@@ -120,7 +122,7 @@ describe("turbo cache plan resolution", () => {
 
   it("prefers the CI verdict over an explicit cache argument", () => {
     expect(resolveTurboCachePlan(completeEnvironment, { args: ["--force"], ci: true })).toEqual(
-      S.decodeSync(TurboCachePlan)({ _tag: "caller-controlled", reason: "ci" })
+      decodeTurboCachePlanSync({ _tag: "caller-controlled", reason: "ci" })
     );
   });
 });

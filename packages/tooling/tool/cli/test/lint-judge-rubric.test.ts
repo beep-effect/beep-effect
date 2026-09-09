@@ -17,6 +17,8 @@ import * as TestConsole from "effect/testing/TestConsole";
 import { Command } from "effect/unstable/cli";
 import { expectReportedExit } from "./support/CommandTest.ts";
 
+const decodeUnknownJudgeRubricDrift = S.decodeUnknownEffect(JudgeRubricDrift);
+
 const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 const runLintJudgeRubricCommand = Command.runWith(lintJudgeRubricCommand, { version: "0.0.0" });
 
@@ -72,7 +74,7 @@ describe("commands/Lint JudgeRubric lens drift", () => {
   it.effect("rejects unknown values in the missing-lens domain", () =>
     Effect.gen(function* () {
       const exit = yield* Effect.exit(
-        S.decodeUnknownEffect(JudgeRubricDrift)({ missingFromPrompt: ["made-up-lens"], unknownInPrompt: [] })
+        decodeUnknownJudgeRubricDrift({ missingFromPrompt: ["made-up-lens"], unknownInPrompt: [] })
       );
       expect(Exit.isFailure(exit)).toBe(true);
     })

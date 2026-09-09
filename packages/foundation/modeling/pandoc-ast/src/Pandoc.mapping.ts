@@ -42,6 +42,9 @@ import { PandocCompatibilityReport, PandocMappingIssue } from "./Pandoc.report.t
 import type { PandocBlock, PandocInline } from "./Pandoc.model.ts";
 import type { JsonPath, PandocMappingDirection, PandocMappingSeverity } from "./Pandoc.report.ts";
 
+const encodeMdDocument = S.encodeEffect(Md.Document);
+const encodePandocDocument = S.encodeEffect(PandocDocument);
+
 const $I = $PandocAstId.create("Pandoc.mapping");
 
 /**
@@ -1454,7 +1457,7 @@ export declare namespace DocumentToPandocResult {
 export const pandocToDocument = (
   pandoc: PandocDocument.Type
 ): Effect.Effect<PandocToDocumentResult, PandocMappingError> =>
-  S.encodeEffect(PandocDocument)(pandoc).pipe(
+  encodePandocDocument(pandoc).pipe(
     Effect.as(pandoc),
     Effect.flatMap((decoded) =>
       Effect.map(
@@ -1503,7 +1506,7 @@ export const pandocToDocument = (
 export const documentToPandoc = (
   document: Md.Document.Type
 ): Effect.Effect<DocumentToPandocResult, PandocMappingError> =>
-  S.encodeEffect(Md.Document)(document).pipe(
+  encodeMdDocument(document).pipe(
     Effect.as(document),
     Effect.flatMap((decoded) =>
       Effect.map(

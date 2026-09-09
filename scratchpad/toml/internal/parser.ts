@@ -54,6 +54,10 @@ import {
   scanWhitespace,
   skipBom,
 } from "./scanner.ts";
+const isTomlLocalDate = S.is(TomlLocalDate);
+const isTomlLocalDateTime = S.is(TomlLocalDateTime);
+const isTomlLocalTime = S.is(TomlLocalTime);
+const isTomlOffsetDateTime = S.is(TomlOffsetDateTime);
 
 const LF = 0x0a;
 const CR = 0x0d;
@@ -295,10 +299,10 @@ const scalarNode = (source: string, pos: number): Parsed<TomlValueNode> => {
     return { node, end: token.end };
   }
   if (
-    S.is(TomlOffsetDateTime)(scalar) ||
-    S.is(TomlLocalDateTime)(scalar) ||
-    S.is(TomlLocalDate)(scalar) ||
-    S.is(TomlLocalTime)(scalar)
+    isTomlOffsetDateTime(scalar) ||
+    isTomlLocalDateTime(scalar) ||
+    isTomlLocalDate(scalar) ||
+    isTomlLocalTime(scalar)
   ) {
     return { node: TomlDateTimeLiteral.make({ value: scalar, offset: pos, length }), end: token.end };
   }

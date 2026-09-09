@@ -31,6 +31,8 @@ import type { TurnRequestStatus } from "@beep/agents-use-cases/public";
 import type { Layer } from "effect";
 import type { RpcClient, RpcClientError } from "effect/unstable/rpc";
 
+const isChatActionError = S.is(ChatActionError);
+
 const $I = $AgentsClientId.create("Chat.atoms");
 
 type WorkspaceId = WorkspaceIdentity.WorkspaceId;
@@ -559,7 +561,7 @@ const messageFromUnknownError = (error: unknown): string => {
 };
 
 const toTurnError = (error: unknown): ChatActionError =>
-  S.is(ChatActionError)(error) ? error : ChatActionError.new(messageFromUnknownError(error));
+  isChatActionError(error) ? error : ChatActionError.new(messageFromUnknownError(error));
 
 /**
  * When set, the composer is editing an existing turn's message.

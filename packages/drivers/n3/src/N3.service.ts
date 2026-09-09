@@ -15,6 +15,8 @@ import { DataFactory, Parser, Writer } from "n3";
 import { N3TurtleCodecError } from "./N3.errors.ts";
 import type * as N3 from "n3";
 
+const decodeRdfPrefixMap = S.decodeEffect(Rdf.PrefixMap);
+
 const $I = $N3Id.create("N3.service");
 
 const emptyPrefixMap = (): Rdf.PrefixMap => ({});
@@ -287,7 +289,7 @@ const parseTurtle = Effect.fn("N3.parseTurtle")(function* (request: N3ParseTurtl
     catch: parseFailure,
   });
   const decoded = yield* Effect.forEach(quads, fromN3Quad);
-  const decodedPrefixes = yield* S.decodeEffect(Rdf.PrefixMap)(prefixes).pipe(Effect.mapError(parseFailure));
+  const decodedPrefixes = yield* decodeRdfPrefixMap(prefixes).pipe(Effect.mapError(parseFailure));
 
   return N3ParseTurtleResult.make({
     dataset: Rdf.makeDataset(decoded),

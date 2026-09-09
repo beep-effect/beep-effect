@@ -35,6 +35,8 @@ import { FastCheck as fc } from "effect/testing";
 import * as TestConsole from "effect/testing/TestConsole";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 
+const decodeBakeConfig = S.decodeEffect(BakeConfig);
+
 const digest = Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
 const bunArchiveDigest = Sha256Hex.make("951ee2aee855f08595aeec6225226a298d3fea83a3dcd6465c09cbccdf7e848f");
 const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
@@ -192,7 +194,7 @@ const runWithStubService = (fresh: boolean, options: ReturnType<typeof bakeOptio
 describe("runner bake schemas", () => {
   it.effect("round-trips configuration defaults and plan JSON", () =>
     Effect.gen(function* () {
-      const config = yield* S.decodeEffect(BakeConfig)({
+      const config = yield* decodeBakeConfig({
         region: "us-east-1",
         subnetId: "subnet-0123456789abcdef0",
         securityGroupId: "sg-0123456789abcdef0",

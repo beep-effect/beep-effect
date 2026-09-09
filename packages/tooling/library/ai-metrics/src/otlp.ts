@@ -85,6 +85,7 @@ export const AiMetricsOtlpAttributeKey = LiteralKit([
  * @since 0.0.0
  */
 export type AiMetricsOtlpAttributeKey = typeof AiMetricsOtlpAttributeKey.Type;
+const isAiMetricsOtlpAttributeKey = S.is(AiMetricsOtlpAttributeKey);
 
 /**
  * OTLP attribute keys approved for export, preserved as the package's public readonly list.
@@ -412,9 +413,7 @@ const toolNameFor = (row: AiMetricsOtlpTurnExportRow): O.Option<string> =>
 
 const allowlistedAttributes: (
   attributes: Record<string, AiMetricsOtlpAttributeValue>
-) => Record<string, AiMetricsOtlpAttributeValue> = flow(
-  R.filter((_value, key) => S.is(AiMetricsOtlpAttributeKey)(key))
-);
+) => Record<string, AiMetricsOtlpAttributeValue> = flow(R.filter((_value, key) => isAiMetricsOtlpAttributeKey(key)));
 
 const llmEventNameFragments = [
   "assistant",

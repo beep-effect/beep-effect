@@ -28,6 +28,11 @@ import { FastCheck as fc, TestClock } from "effect/testing";
 import { ChildProcess } from "effect/unstable/process";
 import type { SequenceBreakNotificationStage } from "@beep/repo-ai-metrics";
 
+const decodeUnknownSequenceBreakDampingV1Result = S.decodeUnknownResult(SequenceBreakDampingV1);
+const decodeUnknownSequenceBreakNotificationV1Result = S.decodeUnknownResult(SequenceBreakNotificationV1);
+const encodeSequenceBreakDampingV1Result = S.encodeResult(SequenceBreakDampingV1);
+const encodeSequenceBreakNotificationV1Result = S.encodeResult(SequenceBreakNotificationV1);
+
 const repoRoot = NodeURL.fileURLToPath(new URL("../../../../../", import.meta.url));
 const notifierPath = `${repoRoot}.claude/hooks/sequence-break-notifier.sh`;
 const writerPath = `${repoRoot}.claude/hooks/hook-pulse.sh`;
@@ -360,11 +365,7 @@ layer(NodeServices.layer)("sequence-break notification contracts", (it) => {
   });
 
   it("round-trips schema-derived notification and damping states", () => {
-    const encodeNotification = S.encodeResult(SequenceBreakNotificationV1);
-    const decodeNotification = S.decodeUnknownResult(SequenceBreakNotificationV1);
     const notificationEquivalent = S.toEquivalence(SequenceBreakNotificationV1);
-    const encodeDamping = S.encodeResult(SequenceBreakDampingV1);
-    const decodeDamping = S.decodeUnknownResult(SequenceBreakDampingV1);
     const dampingEquivalent = S.toEquivalence(SequenceBreakDampingV1);
 
     fc.assert(
@@ -373,9 +374,13 @@ layer(NodeServices.layer)("sequence-break notification contracts", (it) => {
         S.toArbitrary(SequenceBreakDampingV1)(fc),
         (notification, damping) => {
           const decodedNotification = Result.getOrThrow(
-            decodeNotification(Result.getOrThrow(encodeNotification(notification)))
+            decodeUnknownSequenceBreakNotificationV1Result(
+              Result.getOrThrow(encodeSequenceBreakNotificationV1Result(notification))
+            )
           );
-          const decodedDamping = Result.getOrThrow(decodeDamping(Result.getOrThrow(encodeDamping(damping))));
+          const decodedDamping = Result.getOrThrow(
+            decodeUnknownSequenceBreakDampingV1Result(Result.getOrThrow(encodeSequenceBreakDampingV1Result(damping)))
+          );
 
           expect(notificationEquivalent(decodedNotification, notification)).toBe(true);
           expect(dampingEquivalent(decodedDamping, damping)).toBe(true);

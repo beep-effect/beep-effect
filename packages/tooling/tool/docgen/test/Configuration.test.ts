@@ -8,6 +8,8 @@ import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
 
+const isDomainDocgenError = S.is(Domain.DocgenError);
+
 const encodeJson = UnknownFromJsonString.encodeUnknownSync;
 
 const makeLoadArgs = (): Parameters<typeof Configuration.load>[0] => ({
@@ -163,7 +165,7 @@ describe("Configuration", () => {
       "raises a typed error when docgen.json is invalid",
       Effect.fnUntraced(function* () {
         const error = yield* Configuration.load(makeLoadArgs()).pipe(Effect.flip);
-        expect(S.is(Domain.DocgenError)(error)).toBe(true);
+        expect(isDomainDocgenError(error)).toBe(true);
         expect(Str.includes("[Configuration.readJsoncFile] Failed to decode")(error.message)).toBe(true);
         expect(Str.includes("projectHomepage")(error.message)).toBe(true);
       })

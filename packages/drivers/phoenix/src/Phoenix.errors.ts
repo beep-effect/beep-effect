@@ -65,6 +65,7 @@ export const PhoenixOperation = LiteralKit([
  * @since 0.0.0
  */
 export type PhoenixOperation = typeof PhoenixOperation.Type;
+const isPhoenixOperation = S.is(PhoenixOperation);
 
 /**
  * Technical error reasons emitted by the Phoenix driver.
@@ -201,7 +202,7 @@ export class PhoenixError extends S.TaggedError<PhoenixError>($I`PhoenixError`)(
       options?: PhoenixErrorOptions | { readonly cause?: unknown }
     ): (operation: PhoenixOperation) => PhoenixError;
   } = dual(
-    (args) => args.length >= 2 && S.is(PhoenixOperation)(args[0]),
+    (args) => args.length >= 2 && isPhoenixOperation(args[0]),
     (
       operation: PhoenixOperation,
       reason: PhoenixErrorReason,

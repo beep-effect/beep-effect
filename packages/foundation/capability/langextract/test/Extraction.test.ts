@@ -17,6 +17,12 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeExtractionCandidate = S.decodeEffect(ExtractionCandidate);
+const decodeGroundedExtraction = S.decodeEffect(GroundedExtraction);
+const decodeLangExtractRequest = S.decodeEffect(LangExtractRequest);
+const decodeUnknownGroundedExtraction = S.decodeUnknownEffect(GroundedExtraction);
+const decodeUnknownLangExtractRequest = S.decodeUnknownEffect(LangExtractRequest);
+
 const ExtractionCandidates = S.Array(ExtractionCandidate);
 const ExtractionCandidatesArbitrary = S.toArbitrary(ExtractionCandidates)(fc);
 const ExtractionCandidatesEquivalence = S.toEquivalence(ExtractionCandidates);
@@ -115,13 +121,13 @@ describe("parseModelOutput", () => {
   it.effect(
     "rejects aligned extraction payloads without complete source evidence",
     Effect.fnUntraced(function* () {
-      const missingSpan = yield* S.decodeUnknownEffect(GroundedExtraction)({
+      const missingSpan = yield* decodeUnknownGroundedExtraction({
         alignmentStatus: "match_exact",
         label: "person",
         matchedText: "Ada Lovelace",
         text: "Ada Lovelace",
       }).pipe(Effect.flip);
-      const missingMatchedText = yield* S.decodeUnknownEffect(GroundedExtraction)({
+      const missingMatchedText = yield* decodeUnknownGroundedExtraction({
         alignmentStatus: "match_exact",
         label: "person",
         span: Contract.Span.make({ end: NonNegativeInt.make(12), start: NonNegativeInt.make(0) }),
@@ -137,7 +143,7 @@ describe("parseModelOutput", () => {
     "reuses candidate bounds for grounded extraction fields",
     Effect.fnUntraced(function* () {
       const oversizedText = Str.repeat(MAX_CANDIDATE_TEXT_LENGTH + 1)("x");
-      const error = yield* S.decodeEffect(GroundedExtraction)({
+      const error = yield* decodeGroundedExtraction({
         alignmentStatus: "unaligned",
         label: "person",
         text: oversizedText,
@@ -150,7 +156,7 @@ describe("parseModelOutput", () => {
   it.effect(
     "rejects whitespace-only candidate evidence without normalizing source text",
     Effect.fnUntraced(function* () {
-      const error = yield* S.decodeEffect(ExtractionCandidate)({
+      const error = yield* decodeExtractionCandidate({
         label: "person",
         text: "   \n",
       }).pipe(Effect.flip);
@@ -184,7 +190,7 @@ describe("parseModelOutput", () => {
   it.effect(
     "requires at least one extraction target",
     Effect.fnUntraced(function* () {
-      const error = yield* S.decodeUnknownEffect(LangExtractRequest)({
+      const error = yield* decodeUnknownLangExtractRequest({
         documentId: DocumentId.make("doc-1"),
         targets: [],
         text: "Alice founded Acme.",
@@ -192,7 +198,7 @@ describe("parseModelOutput", () => {
 
       expect(error).toBeDefined();
 
-      const request = yield* S.decodeEffect(LangExtractRequest)({
+      const request = yield* decodeLangExtractRequest({
         documentId: DocumentId.make("doc-1"),
         targets: [{ kind: "entity", name: "person" }],
         text: "Alice founded Acme.",

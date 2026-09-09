@@ -72,6 +72,10 @@ import { ComboboxAriaPlugin, MentionPlugin, SlashPlugin } from "./typeahead.tsx"
 import type { SerializedEditorState } from "@beep/lexical-schema";
 import type { LexicalEditor } from "lexical";
 import type { JSX, ReactNode } from "react";
+
+const decodeSlashItemsOption = S.decodeOption(SlashItems);
+const encodeEditorStateFromJsonSync = S.encodeSync(EditorStateFromJson);
+
 import type { AttachmentPort, MentionSource, SendPort, SlashItem } from "./config.ts";
 
 const DEFAULT_ARIA_LABEL = "Message composer";
@@ -581,7 +585,7 @@ export function ChatComposer(props: ChatComposerProps): JSX.Element {
   const resolvedMaxAttachmentBytes = mountConfig?.maxAttachmentBytes ?? DEFAULT_MAX_ATTACHMENT_BYTES;
   const resolvedOnAttach = mountConfig?.onAttach;
   const resolvedOnSend = mountConfig?.onSend;
-  const resolvedSlashItems = O.getOrElse(S.decodeOption(SlashItems)(slashItems), () => defaultChatSlashItems);
+  const resolvedSlashItems = O.getOrElse(decodeSlashItemsOption(slashItems), () => defaultChatSlashItems);
   const runtimeInitialState = O.flatMap(O.fromUndefinedOr(initialState), (state) =>
     Result.getSuccess(decodeEditorStateForRuntimeResult(state))
   );
@@ -598,7 +602,7 @@ export function ChatComposer(props: ChatComposerProps): JSX.Element {
         theme: editorTheme,
         nodes: [...editorNodes],
         ...O.getSomesStruct({
-          editorState: O.map(runtimeInitialState, S.encodeSync(EditorStateFromJson)),
+          editorState: O.map(runtimeInitialState, encodeEditorStateFromJsonSync),
         }),
         onError: (error) => logEditorError(error),
       }}

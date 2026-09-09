@@ -5,6 +5,8 @@ import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as S from "effect/Schema";
 import { ExpandedTerm, expandQueryWithOntology, QueryExpansionOptions } from "../../Utils/Retrieval.ts";
+const decodeQueryExpansionOptions = S.decodeEffect(QueryExpansionOptions);
+const isExpandedTerm = S.is(ExpandedTerm);
 
 const summarizeSource: (term: ExpandedTerm) => string = ExpandedTerm.match({
   original: () => "query",
@@ -27,7 +29,7 @@ describe("Retrieval", () => {
       assert.strictEqual(policy.synonymWeight, UnitInterval.make(0.8));
       assert.strictEqual(policy.hierarchyWeight, UnitInterval.make(0.5));
 
-      const error = yield* S.decodeEffect(QueryExpansionOptions)({ synonymWeight: 1.1 }).pipe(Effect.flip);
+      const error = yield* decodeQueryExpansionOptions({ synonymWeight: 1.1 }).pipe(Effect.flip);
       assert.include(error.message, "1");
     })
   );
@@ -84,7 +86,7 @@ describe("Retrieval", () => {
           A.map(terms, (term) => term.source),
           ["original", "altLabel", "broader", "narrower"]
         );
-        assert.isTrue(A.every(terms, S.is(ExpandedTerm)));
+        assert.isTrue(A.every(terms, isExpandedTerm));
       });
     })
   );

@@ -23,6 +23,15 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeBudgetDuration = S.decodeEffect(BudgetDuration);
+const decodeFailureReceipt = S.decodeEffect(FailureReceipt);
+const decodeRecoveryPolicyResult = S.decodeResult(RecoveryPolicy);
+const decodeUnknownFailureReceiptPredicate = S.decodeUnknownEffect(FailureReceiptPredicate);
+const decodeUnknownRecoveryAttemptReceipt = S.decodeUnknownEffect(RecoveryAttemptReceipt);
+const encodeUnknownFailureReceipt = S.encodeUnknownEffect(FailureReceipt);
+const encodeUnknownFailureReceiptPredicate = S.encodeUnknownEffect(FailureReceiptPredicate);
+const encodeUnknownRecoveryPolicyResult = S.encodeUnknownResult(RecoveryPolicy);
+
 const subject = EvidenceSubject.make({
   digest: EvidenceDigest.make({
     sha256: Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"),
@@ -67,8 +76,8 @@ describe("@beep/skill-contract Recovery", () => {
         predicateType: FailurePredicateType,
         subject: [subject],
       });
-      const encoded = yield* S.encodeUnknownEffect(FailureReceipt)(receipt);
-      const decoded = yield* S.decodeEffect(FailureReceipt)(encoded);
+      const encoded = yield* encodeUnknownFailureReceipt(receipt);
+      const decoded = yield* decodeFailureReceipt(encoded);
 
       expect(S.toEquivalence(FailureReceipt)(decoded, receipt)).toBe(true);
       expect(decoded.predicateType).toBe(FailurePredicateType);
@@ -77,8 +86,8 @@ describe("@beep/skill-contract Recovery", () => {
 
   it.effect("rejects negative and infinite budget durations and malformed attempt timestamps", () =>
     Effect.gen(function* () {
-      const negative = yield* S.decodeEffect(BudgetDuration)(-1).pipe(Effect.flip);
-      const infinite = yield* S.decodeEffect(BudgetDuration)(Number.POSITIVE_INFINITY).pipe(Effect.flip);
+      const negative = yield* decodeBudgetDuration(-1).pipe(Effect.flip);
+      const infinite = yield* decodeBudgetDuration(Number.POSITIVE_INFINITY).pipe(Effect.flip);
       const malformedAttemptInput: unknown = {
         attempt: 1,
         endedAt: "not-a-time",
@@ -87,9 +96,7 @@ describe("@beep/skill-contract Recovery", () => {
         outcome: "failed",
         startedAt: "also-not-a-time",
       };
-      const malformedAttempt = yield* S.decodeUnknownEffect(RecoveryAttemptReceipt)(malformedAttemptInput).pipe(
-        Effect.flip
-      );
+      const malformedAttempt = yield* decodeUnknownRecoveryAttemptReceipt(malformedAttemptInput).pipe(Effect.flip);
 
       expect(negative.message).toContain("non-negative");
       expect(infinite.message).toContain("non-negative");
@@ -99,7 +106,7 @@ describe("@beep/skill-contract Recovery", () => {
 
   it.effect("rejects history, counter, timing, and budget contradictions", () =>
     Effect.gen(function* () {
-      const encoded = yield* S.encodeUnknownEffect(FailureReceiptPredicate)(failure);
+      const encoded = yield* encodeUnknownFailureReceiptPredicate(failure);
       const firstAttempt = encoded.attempts[0];
       const secondAttempt = encoded.attempts[1];
       const duplicateInput: unknown = { ...encoded, attempts: [firstAttempt, firstAttempt] };
@@ -127,30 +134,18 @@ describe("@beep/skill-contract Recovery", () => {
         attempts: [firstAttempt, { ...secondAttempt, startedAt: "2026-08-24T00:00:00.500Z" }],
       };
 
-      const duplicate = yield* S.decodeUnknownEffect(FailureReceiptPredicate)(duplicateInput).pipe(Effect.flip);
-      const unordered = yield* S.decodeUnknownEffect(FailureReceiptPredicate)(unorderedInput).pipe(Effect.flip);
-      const ordinalOverflow = yield* S.decodeUnknownEffect(FailureReceiptPredicate)(ordinalOverflowInput).pipe(
-        Effect.flip
-      );
-      const countOverflow = yield* S.decodeUnknownEffect(FailureReceiptPredicate)(countOverflowInput).pipe(Effect.flip);
-      const operationOverflow = yield* S.decodeUnknownEffect(FailureReceiptPredicate)(operationOverflowInput).pipe(
-        Effect.flip
-      );
-      const timeOverflow = yield* S.decodeUnknownEffect(FailureReceiptPredicate)(timeOverflowInput).pipe(Effect.flip);
-      const countUnderrun = yield* S.decodeUnknownEffect(FailureReceiptPredicate)(countUnderrunInput).pipe(Effect.flip);
-      const operationUnderrun = yield* S.decodeUnknownEffect(FailureReceiptPredicate)(operationUnderrunInput).pipe(
-        Effect.flip
-      );
-      const elapsedMismatch = yield* S.decodeUnknownEffect(FailureReceiptPredicate)(elapsedMismatchInput).pipe(
-        Effect.flip
-      );
-      const perAttemptTimeout = yield* S.decodeUnknownEffect(FailureReceiptPredicate)(perAttemptTimeoutInput).pipe(
-        Effect.flip
-      );
-      const reversedAttempt = yield* S.decodeUnknownEffect(FailureReceiptPredicate)(reversedAttemptInput).pipe(
-        Effect.flip
-      );
-      const overlappingAttempts = yield* S.decodeUnknownEffect(FailureReceiptPredicate)(overlappingAttemptsInput).pipe(
+      const duplicate = yield* decodeUnknownFailureReceiptPredicate(duplicateInput).pipe(Effect.flip);
+      const unordered = yield* decodeUnknownFailureReceiptPredicate(unorderedInput).pipe(Effect.flip);
+      const ordinalOverflow = yield* decodeUnknownFailureReceiptPredicate(ordinalOverflowInput).pipe(Effect.flip);
+      const countOverflow = yield* decodeUnknownFailureReceiptPredicate(countOverflowInput).pipe(Effect.flip);
+      const operationOverflow = yield* decodeUnknownFailureReceiptPredicate(operationOverflowInput).pipe(Effect.flip);
+      const timeOverflow = yield* decodeUnknownFailureReceiptPredicate(timeOverflowInput).pipe(Effect.flip);
+      const countUnderrun = yield* decodeUnknownFailureReceiptPredicate(countUnderrunInput).pipe(Effect.flip);
+      const operationUnderrun = yield* decodeUnknownFailureReceiptPredicate(operationUnderrunInput).pipe(Effect.flip);
+      const elapsedMismatch = yield* decodeUnknownFailureReceiptPredicate(elapsedMismatchInput).pipe(Effect.flip);
+      const perAttemptTimeout = yield* decodeUnknownFailureReceiptPredicate(perAttemptTimeoutInput).pipe(Effect.flip);
+      const reversedAttempt = yield* decodeUnknownFailureReceiptPredicate(reversedAttemptInput).pipe(Effect.flip);
+      const overlappingAttempts = yield* decodeUnknownFailureReceiptPredicate(overlappingAttemptsInput).pipe(
         Effect.flip
       );
 
@@ -171,7 +166,7 @@ describe("@beep/skill-contract Recovery", () => {
 
   it.effect("rejects exhaustion reasons that contradict the consumed budget", () =>
     Effect.gen(function* () {
-      const encoded = yield* S.encodeUnknownEffect(FailureReceiptPredicate)(failure);
+      const encoded = yield* encodeUnknownFailureReceiptPredicate(failure);
       const attemptInput: unknown = {
         ...encoded,
         budget: { ...encoded.budget, maxAttempts: 3 },
@@ -188,9 +183,9 @@ describe("@beep/skill-contract Recovery", () => {
         terminalReason: "time-budget-exhausted",
       };
 
-      const attemptFailure = yield* S.decodeUnknownEffect(FailureReceiptPredicate)(attemptInput).pipe(Effect.flip);
-      const operationFailure = yield* S.decodeUnknownEffect(FailureReceiptPredicate)(operationInput).pipe(Effect.flip);
-      const timeFailure = yield* S.decodeUnknownEffect(FailureReceiptPredicate)(timeInput).pipe(Effect.flip);
+      const attemptFailure = yield* decodeUnknownFailureReceiptPredicate(attemptInput).pipe(Effect.flip);
+      const operationFailure = yield* decodeUnknownFailureReceiptPredicate(operationInput).pipe(Effect.flip);
+      const timeFailure = yield* decodeUnknownFailureReceiptPredicate(timeInput).pipe(Effect.flip);
 
       expect(attemptFailure.message).toContain("terminal reason");
       expect(operationFailure.message).toContain("terminal reason");
@@ -200,7 +195,7 @@ describe("@beep/skill-contract Recovery", () => {
 
   it.effect("allows non-budget terminal reasons below the limits, including cancellation before an attempt", () =>
     Effect.gen(function* () {
-      const encoded = yield* S.encodeUnknownEffect(FailureReceiptPredicate)(failure);
+      const encoded = yield* encodeUnknownFailureReceiptPredicate(failure);
       const relaxedBudget = { ...encoded.budget, maxAttempts: 3, maxOperations: 4, totalTimeout: 3_000 };
       const nonRetryableInput: unknown = {
         ...encoded,
@@ -215,8 +210,8 @@ describe("@beep/skill-contract Recovery", () => {
         terminalReason: "cancelled",
       };
 
-      const nonRetryable = yield* S.decodeUnknownEffect(FailureReceiptPredicate)(nonRetryableInput);
-      const cancelled = yield* S.decodeUnknownEffect(FailureReceiptPredicate)(cancelledInput);
+      const nonRetryable = yield* decodeUnknownFailureReceiptPredicate(nonRetryableInput);
+      const cancelled = yield* decodeUnknownFailureReceiptPredicate(cancelledInput);
 
       expect(nonRetryable.terminalReason).toBe("non-retryable-failure");
       expect(cancelled.attempts).toEqual([]);
@@ -234,8 +229,8 @@ describe("@beep/skill-contract Recovery", () => {
   it("round-trips schema-derived arbitrary recovery policies", () =>
     fc.assert(
       fc.property(S.toArbitrary(RecoveryPolicy)(fc), (candidate) => {
-        const encoded = Result.getOrThrow(S.encodeUnknownResult(RecoveryPolicy)(candidate));
-        const decoded = Result.getOrThrow(S.decodeResult(RecoveryPolicy)(encoded));
+        const encoded = Result.getOrThrow(encodeUnknownRecoveryPolicyResult(candidate));
+        const decoded = Result.getOrThrow(decodeRecoveryPolicyResult(encoded));
 
         expect(S.toEquivalence(RecoveryPolicy)(decoded, candidate)).toBe(true);
       }),

@@ -61,6 +61,20 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import { Project } from "ts-morph";
 
+const decodeContentHashFromSourceText = S.decodeEffect(ContentHashFromSourceText);
+const decodeFilePathToTsConfigFilePathSync = S.decodeSync(FilePathToTsConfigFilePath);
+const decodeFilePathToTypeScriptDeclarationFilePathSync = S.decodeSync(FilePathToTypeScriptDeclarationFilePath);
+const decodeFilePathToTypeScriptFilePathSync = S.decodeSync(FilePathToTypeScriptFilePath);
+const decodeFilePathToTypeScriptImplementationFilePathSync = S.decodeSync(FilePathToTypeScriptImplementationFilePath);
+const decodeProjectIdentityPartsSync = S.decodeSync(ProjectIdentityParts);
+const decodeSymbolIdentityPartsSync = S.decodeSync(SymbolIdentityParts);
+const decodeSymbolKindToCategorySync = S.decodeSync(SymbolKindToCategory);
+const decodeTypeScriptImplementationFilePathToSymbolFilePathSync = S.decodeSync(
+  TypeScriptImplementationFilePathToSymbolFilePath
+);
+const encodeProjectIdentityPartsSync = S.encodeSync(ProjectIdentityParts);
+const encodeSymbolIdentityPartsSync = S.encodeSync(SymbolIdentityParts);
+
 const decodeRepoRootPath = S.decodeUnknownSync(RepoRootPath);
 const decodeWorkspaceDirectoryPath = S.decodeUnknownSync(WorkspaceDirectoryPath);
 const decodeTsConfigFilePath = S.decodeUnknownSync(TsConfigFilePath);
@@ -170,20 +184,20 @@ describe("TSMorph model taxonomy", () => {
 
   describe("pure transformations", () => {
     it("refines generic file paths into stricter TypeScript path schemas", () => {
-      expect(S.decodeSync(FilePathToTsConfigFilePath)("packages/tooling/library/repo-utils/tsconfig.json")).toBe(
+      expect(decodeFilePathToTsConfigFilePathSync("packages/tooling/library/repo-utils/tsconfig.json")).toBe(
         "packages/tooling/library/repo-utils/tsconfig.json"
       );
-      expect(S.decodeSync(FilePathToTypeScriptImplementationFilePath)("src/main.ts")).toBe("src/main.ts");
-      expect(S.decodeSync(FilePathToTypeScriptDeclarationFilePath)("src/types.d.ts")).toBe("src/types.d.ts");
-      expect(S.decodeSync(FilePathToTypeScriptFilePath)("src/types.d.ts")).toBe("src/types.d.ts");
-      expect(S.decodeSync(TypeScriptImplementationFilePathToSymbolFilePath)("src/main.ts")).toBe("src/main.ts");
+      expect(decodeFilePathToTypeScriptImplementationFilePathSync("src/main.ts")).toBe("src/main.ts");
+      expect(decodeFilePathToTypeScriptDeclarationFilePathSync("src/types.d.ts")).toBe("src/types.d.ts");
+      expect(decodeFilePathToTypeScriptFilePathSync("src/types.d.ts")).toBe("src/types.d.ts");
+      expect(decodeTypeScriptImplementationFilePathToSymbolFilePathSync("src/main.ts")).toBe("src/main.ts");
     });
 
     it("maps exact symbol kinds to coarse categories", () => {
       expect(symbolCategoryFromKind("FunctionDeclaration")).toBe(SymbolCategory.Enum.function);
       expect(symbolCategoryFromKind("Constructor")).toBe(SymbolCategory.Enum.member);
       expect(symbolCategoryFromKind("EnumDeclaration")).toBe(SymbolCategory.Enum.type);
-      expect(S.decodeSync(SymbolKindToCategory)("MethodDeclaration")).toBe("member");
+      expect(decodeSymbolKindToCategorySync("MethodDeclaration")).toBe("member");
       expect(decodeSymbolCategory("member")).toBe("member");
     });
 
@@ -224,8 +238,8 @@ describe("TSMorph model taxonomy", () => {
     it("round-trips schema-derived project identity parts through the encoded wire shape", () => {
       fc.assert(
         fc.property(S.toArbitrary(ProjectIdentityParts)(fc), (value) => {
-          const encoded = S.encodeSync(ProjectIdentityParts)(value);
-          const decoded = S.decodeSync(ProjectIdentityParts)(encoded);
+          const encoded = encodeProjectIdentityPartsSync(value);
+          const decoded = decodeProjectIdentityPartsSync(encoded);
 
           expect(decoded).toEqual(value);
           expect(decodeProjectScopeId(makeProjectScopeId(decoded))).toBe(makeProjectScopeId(decoded));
@@ -237,8 +251,8 @@ describe("TSMorph model taxonomy", () => {
     it("round-trips schema-derived symbol identity parts through the encoded wire shape", () => {
       fc.assert(
         fc.property(S.toArbitrary(SymbolIdentityParts)(fc), (value) => {
-          const encoded = S.encodeSync(SymbolIdentityParts)(value);
-          const decoded = S.decodeSync(SymbolIdentityParts)(encoded);
+          const encoded = encodeSymbolIdentityPartsSync(value);
+          const decoded = decodeSymbolIdentityPartsSync(encoded);
 
           expect(decoded).toEqual(value);
           expect(decodeSymbolId(makeSymbolId(decoded))).toBe(makeSymbolId(decoded));
@@ -251,7 +265,7 @@ describe("TSMorph model taxonomy", () => {
   describe("effectful transformations", () => {
     it.effect("derives content hashes from source text", () =>
       Effect.gen(function* () {
-        const hash = yield* S.decodeEffect(ContentHashFromSourceText)("export const a = 1;\n");
+        const hash = yield* decodeContentHashFromSourceText("export const a = 1;\n");
         expect(hash).toMatch(/^[0-9a-f]{64}$/);
       }).pipe(provideScopedLayer(platformLayer))
     );

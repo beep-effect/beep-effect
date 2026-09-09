@@ -20,6 +20,8 @@ import * as Stop from "../../../../claudecode/Hook/Events/Stop.ts";
 import * as SubagentStop from "../../../../claudecode/Hook/Events/SubagentStop.ts";
 import * as UserPromptSubmit from "../../../../claudecode/Hook/Events/UserPromptSubmit.ts";
 import * as Testing from "../../../../claudecode/Testing.ts";
+const decodeUnknownSessionStartInput = S.decodeUnknownEffect(SessionStart.Input);
+const decodeUnknownNotificationInputSync = S.decodeUnknownSync(Notification.Input);
 
 // ---------------------------------------------------------------------------
 // Shared envelope
@@ -131,7 +133,7 @@ describe("Hook.Notification", () => {
 
   it("rejects an unknown notification_type", () => {
     expect(() =>
-      S.decodeUnknownSync(Notification.Input)({
+      decodeUnknownNotificationInputSync({
         ...envelope,
         hook_event_name: "Notification",
         message: "hi",
@@ -223,7 +225,7 @@ describe("Hook.SessionStart", () => {
   it.effect("rejects an unknown source", () =>
     Effect.gen(function* () {
       const error = yield* Effect.flip(
-        S.decodeUnknownEffect(SessionStart.Input)({
+        decodeUnknownSessionStartInput({
           session_id: "x",
           transcript_path: "/tmp/t",
           cwd: "/tmp",

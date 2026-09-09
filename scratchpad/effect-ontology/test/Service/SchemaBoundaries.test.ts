@@ -9,14 +9,21 @@ import { EntityId } from "../../Domain/Model/shared.ts";
 import { ClassificationError } from "../../Service/DocumentClassifier.ts";
 import { CachedExtractionResult } from "../../Service/ExtractionCache.ts";
 import { ExplanationContext } from "../../Service/ViolationExplainer.ts";
+const decodeCachedExtractionResult = S.decodeEffect(CachedExtractionResult);
+const decodeEntityId = S.decodeEffect(EntityId);
+const decodeIRI = S.decodeEffect(IRI);
+const decodeUnknownCachedExtractionResultOption = S.decodeUnknownOption(CachedExtractionResult);
+const decodeUnknownExplanationContextOption = S.decodeUnknownOption(ExplanationContext);
+const encodeCachedExtractionResult = S.encodeEffect(CachedExtractionResult);
+const isRelation = S.is(Relation);
 
 describe("canonical service schema boundaries", () => {
   it.effect(
     "round-trips canonical extraction entities and relations",
     Effect.fnUntraced(function* () {
-      const ada = yield* S.decodeEffect(EntityId)("ada_lovelace");
-      const personIri = yield* S.decodeEffect(IRI)("https://schema.org/Person");
-      const nameIri = yield* S.decodeEffect(IRI)("https://schema.org/name");
+      const ada = yield* decodeEntityId("ada_lovelace");
+      const personIri = yield* decodeIRI("https://schema.org/Person");
+      const nameIri = yield* decodeIRI("https://schema.org/name");
       const entity = Entity.make({
         id: ada,
         mention: "Ada Lovelace",
@@ -38,14 +45,14 @@ describe("canonical service schema boundaries", () => {
         },
       };
 
-      const encoded = yield* S.encodeEffect(CachedExtractionResult)(cached);
-      const decoded = yield* S.decodeEffect(CachedExtractionResult)(encoded);
+      const encoded = yield* encodeCachedExtractionResult(cached);
+      const decoded = yield* decodeCachedExtractionResult(encoded);
 
       assert.isTrue(A.head(decoded.entities).pipe(O.getOrNull, Entity.is));
-      assert.isTrue(A.head(decoded.relations).pipe(O.getOrNull, S.is(Relation)));
+      assert.isTrue(A.head(decoded.relations).pipe(O.getOrNull, isRelation));
       assert.isTrue(
         O.isNone(
-          S.decodeUnknownOption(CachedExtractionResult)({
+          decodeUnknownCachedExtractionResultOption({
             entities: [{ arbitrary: "payload" }],
             relations: [],
             metadata: cached.metadata,
@@ -67,7 +74,7 @@ describe("canonical service schema boundaries", () => {
     assert.isTrue(O.isSome(error.cause));
     assert.isTrue(
       O.isNone(
-        S.decodeUnknownOption(ExplanationContext)({
+        decodeUnknownExplanationContextOption({
           dataStore: { arbitrary: "payload" },
         })
       )

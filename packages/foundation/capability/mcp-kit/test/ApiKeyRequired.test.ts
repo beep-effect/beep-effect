@@ -51,7 +51,9 @@ const softSourceLayer = sanitizedToolkit(SoftToolkit).pipe(Layer.provide(SoftToo
 
 // The credential read happens per tool call (inside the handler), not while
 // this layer builds, so the fixture ConfigProvider can be a sibling: by the
+
 // time an `it.effect` body calls `callTool`, the merged layer output
+
 // (including the overridden `ConfigProvider`) is already its ambient context.
 const buildLayer = (env: Record<string, string>) =>
   Layer.mergeAll(
@@ -62,7 +64,9 @@ const buildLayer = (env: Record<string, string>) =>
   );
 
 const ApiKeyRequiredFailureFromJson = S.fromJsonString(ApiKeyRequiredFailure);
+const decodeApiKeyRequiredFailureFromJson = S.decodeEffect(ApiKeyRequiredFailureFromJson);
 const StringFromJson = S.fromJsonString(S.String);
+const decodeStringFromJson = S.decodeEffect(StringFromJson);
 
 const assertSchemaRoundTrip = <Schema extends S.Codec<unknown, unknown, never, never>>(schema: Schema) => {
   const arbitrary = S.toArbitrary(schema)(fc);
@@ -91,9 +95,7 @@ describe("api_key_required envelope", () => {
 
         const [first] = result.content;
         assert.strictEqual(first?.type, "text");
-        const envelope = yield* S.decodeEffect(ApiKeyRequiredFailureFromJson)(
-          (first as { readonly text: string }).text
-        );
+        const envelope = yield* decodeApiKeyRequiredFailureFromJson((first as { readonly text: string }).text);
 
         assert.strictEqual(envelope.error, "api_key_required");
         assert.strictEqual(envelope.tool, "soft_source_tool");
@@ -112,7 +114,7 @@ describe("api_key_required envelope", () => {
         assert.isFalse(result.isError);
         const [first] = result.content;
         assert.strictEqual(first?.type, "text");
-        const decoded = yield* S.decodeEffect(StringFromJson)((first as { readonly text: string }).text);
+        const decoded = yield* decodeStringFromJson((first as { readonly text: string }).text);
         assert.strictEqual(decoded, "ok");
       })
     );

@@ -46,6 +46,8 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 
+const decodeUnknownSafeMetadataKeySync = S.decodeUnknownSync(SafeMetadataKey);
+
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
   <A2, E, R>(effect: Effect.Effect<A2, E, R>): Effect.Effect<A2, E | E2, RIn | Exclude<R, ROut>> =>
@@ -198,12 +200,11 @@ describe("@beep/ffmpeg capture", () => {
   });
 
   it("rejects unsafe metadata keys", () => {
-    const decodeKey = S.decodeUnknownSync(SafeMetadataKey);
-    expect(decodeKey("BEEP_QA_SESSION_ID")).toBe("BEEP_QA_SESSION_ID");
-    expect(() => decodeKey("BEEP QA")).toThrow();
-    expect(() => decodeKey("BEEP=QA")).toThrow();
-    expect(() => decodeKey("1BEEP")).toThrow();
-    expect(() => decodeKey("")).toThrow();
+    expect(decodeUnknownSafeMetadataKeySync("BEEP_QA_SESSION_ID")).toBe("BEEP_QA_SESSION_ID");
+    expect(() => decodeUnknownSafeMetadataKeySync("BEEP QA")).toThrow();
+    expect(() => decodeUnknownSafeMetadataKeySync("BEEP=QA")).toThrow();
+    expect(() => decodeUnknownSafeMetadataKeySync("1BEEP")).toThrow();
+    expect(() => decodeUnknownSafeMetadataKeySync("")).toThrow();
   });
 
   it("builds single-frame timestamp extraction arguments", () => {

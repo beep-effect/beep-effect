@@ -4,6 +4,9 @@ import { describe, expect, it } from "@effect/vitest";
 import { Cause, Effect, Exit } from "effect";
 import * as S from "effect/Schema";
 
+const decodeJsonlTextToUnknown = S.decodeEffect(JsonlTextToUnknown);
+const encodeJsonlTextToUnknown = S.encodeEffect(JsonlTextToUnknown);
+
 const $I = $SchemaId.create("jsonl_test");
 
 class JsonlPerson extends S.Class<JsonlPerson>($I`JsonlPerson`)(
@@ -35,7 +38,7 @@ describe("Jsonl", () => {
     "rejects malformed trailing lines instead of returning a parsed prefix",
     Effect.fnUntraced(function* () {
       const result = yield* Effect.exit(
-        S.decodeEffect(JsonlTextToUnknown)(`{"name":"Ada","age":36}
+        decodeJsonlTextToUnknown(`{"name":"Ada","age":36}
 {invalid}
 `)
       );
@@ -54,7 +57,7 @@ describe("Jsonl", () => {
     "fails to encode unknown values back into JSONL text",
     Effect.fnUntraced(function* () {
       const result = yield* Effect.exit(
-        S.encodeEffect(JsonlTextToUnknown)([
+        encodeJsonlTextToUnknown([
           {
             name: "Ada",
           },

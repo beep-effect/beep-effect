@@ -17,6 +17,11 @@ import * as Str from "effect/String";
 import { FastCheck as fc } from "effect/testing";
 import { desiredFixture } from "./fixtures.ts";
 
+const decodeBoxDesiredState2 = S.decodeEffect(BoxDesiredState);
+const decodeBoxDesiredStateOption = S.decodeOption(BoxDesiredState);
+const decodeBoxFolderNameOption = S.decodeOption(BoxFolderName);
+const encodeBoxDesiredState = S.encodeEffect(BoxDesiredState);
+
 const assertCodecRoundTrip = <A, I>(schema: S.Codec<A, I>): void => {
   const equivalent = S.toEquivalence(schema);
   const encode = S.encodeSync(schema);
@@ -29,7 +34,6 @@ const assertCodecRoundTrip = <A, I>(schema: S.Codec<A, I>): void => {
 
 describe("@beep/box-provisioning intent", () => {
   it("rejects folder names forbidden by Box and accepts the documented bounds", () => {
-    const decode = S.decodeOption(BoxFolderName);
     const invalidNames = [
       "",
       "Trailing ",
@@ -41,9 +45,9 @@ describe("@beep/box-provisioning intent", () => {
       Str.repeat(256)("x"),
     ];
 
-    expect(A.every(invalidNames, (name) => O.isNone(decode(name)))).toBe(true);
-    expect(O.isSome(decode(" Leading"))).toBe(true);
-    expect(O.isSome(decode(Str.repeat(255)("x")))).toBe(true);
+    expect(A.every(invalidNames, (name) => O.isNone(decodeBoxFolderNameOption(name)))).toBe(true);
+    expect(O.isSome(decodeBoxFolderNameOption(" Leading"))).toBe(true);
+    expect(O.isSome(decodeBoxFolderNameOption(Str.repeat(255)("x")))).toBe(true);
   });
 
   it("compares sibling names case-insensitively after trimming trailing whitespace", () => {
@@ -54,19 +58,19 @@ describe("@beep/box-provisioning intent", () => {
   it.effect(
     "rejects case-equivalent desired siblings under the same parent",
     Effect.fnUntraced(function* () {
-      const encoded = yield* S.encodeEffect(BoxDesiredState)(desiredFixture);
+      const encoded = yield* encodeBoxDesiredState(desiredFixture);
       const folders = O.getOrElse(O.fromUndefinedOr(encoded.folders), A.empty);
       const first = O.getOrThrow(A.head(folders));
       const duplicate = { ...first, logicalKey: "folder.case-duplicate", name: "fixture WORKSPACE" };
 
-      expect(O.isNone(S.decodeOption(BoxDesiredState)({ ...encoded, folders: [...folders, duplicate] }))).toBe(true);
+      expect(O.isNone(decodeBoxDesiredStateOption({ ...encoded, folders: [...folders, duplicate] }))).toBe(true);
     })
   );
   it.effect(
     "decodes a desired state without an adoptions key as an empty allowlist",
     Effect.fnUntraced(function* () {
-      const { adoptions: _adoptions, ...withoutAdoptions } = yield* S.encodeEffect(BoxDesiredState)(desiredFixture);
-      const decoded = yield* S.decodeEffect(BoxDesiredState)(withoutAdoptions);
+      const { adoptions: _adoptions, ...withoutAdoptions } = yield* encodeBoxDesiredState(desiredFixture);
+      const decoded = yield* decodeBoxDesiredState2(withoutAdoptions);
 
       expect(A.isReadonlyArrayEmpty(decoded.adoptions.entries)).toBe(true);
     })
@@ -74,7 +78,7 @@ describe("@beep/box-provisioning intent", () => {
   it.effect(
     "rejects a malformed pinned provider id as a typed desired-state schema error",
     Effect.fnUntraced(function* () {
-      const encoded = yield* S.encodeEffect(BoxDesiredState)(desiredFixture);
+      const encoded = yield* encodeBoxDesiredState(desiredFixture);
       const malformed = { ...encoded, rootFolderId: "not a provider id!" };
       const decoded = yield* Effect.option(decodeBoxDesiredState(malformed));
       const error = yield* decodeBoxDesiredState(malformed).pipe(Effect.flip);

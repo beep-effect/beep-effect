@@ -50,6 +50,12 @@ import { HookEnvelope } from "./Hook/Envelope.ts";
 import type * as Events from "./Hook/Events/index.ts";
 import { type HookDefinition, runHookProgram } from "./Hook/Runner.ts";
 import * as Plugin from "./Plugin.ts";
+const isHookControlledExit = S.is(HookControlledExit);
+const isHookHandlerError = S.is(HookHandlerError);
+const isHookInputDecodeError = S.is(HookInputDecodeError);
+const isHookOutputEncodeError = S.is(HookOutputEncodeError);
+const isHookStdinReadError = S.is(HookStdinReadError);
+const isHookStdoutWriteError = S.is(HookStdoutWriteError);
 
 const $I = $ScratchpadId.create("claudecode/Testing");
 
@@ -197,22 +203,22 @@ const interruptClassification: ErrorClassification = {
 };
 
 const classifyFailure = (squashed: unknown): ErrorClassification => {
-  if (S.is(HookInputDecodeError)(squashed)) {
+  if (isHookInputDecodeError(squashed)) {
     return { exitCode: 2, errorTag: "HookInputDecodeError" };
   }
-  if (S.is(HookStdinReadError)(squashed)) {
+  if (isHookStdinReadError(squashed)) {
     return { exitCode: 1, errorTag: "HookStdinReadError" };
   }
-  if (S.is(HookHandlerError)(squashed)) {
+  if (isHookHandlerError(squashed)) {
     return { exitCode: 1, errorTag: "HookHandlerError" };
   }
-  if (S.is(HookOutputEncodeError)(squashed)) {
+  if (isHookOutputEncodeError(squashed)) {
     return { exitCode: 1, errorTag: "HookOutputEncodeError" };
   }
-  if (S.is(HookStdoutWriteError)(squashed)) {
+  if (isHookStdoutWriteError(squashed)) {
     return { exitCode: 1, errorTag: "HookStdoutWriteError" };
   }
-  if (S.is(HookControlledExit)(squashed)) {
+  if (isHookControlledExit(squashed)) {
     return {
       exitCode: squashed.code,
       errorTag: "HookControlledExit",

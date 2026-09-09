@@ -18,6 +18,8 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
+const decodeThread = S.decodeEffect(Thread);
+
 const migrationsFolder = fileURLToPath(new URL("../../../../_internal/db-admin/drizzle", import.meta.url));
 const { shouldRunPgliteIntegration, pgliteIntegrationTimeoutMillis } = makePgliteIntegrationGate();
 
@@ -174,7 +176,7 @@ if (!shouldRunPgliteIntegration) {
           const db = yield* makeDrizzle();
           const store = yield* makeDrizzleThreadStore();
           const workspaceId = yield* decodeWorkspaceId(4);
-          const legacy = yield* S.decodeEffect(Thread)({
+          const legacy = yield* decodeThread({
             createdAt: 1,
             createdByPrincipal: { component: "Runtime", kind: "System" },
             entityType: "WorkspaceThread",

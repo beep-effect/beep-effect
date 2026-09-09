@@ -11,6 +11,12 @@ import { Effect, FileSystem, Layer, Path, Result } from "effect";
 import * as S from "effect/Schema";
 import { describe, expect, it } from "vitest";
 
+const decodeUnknownStructInlineSchemaResult = S.decodeUnknownResult(
+  S.Struct({
+    token: S.Literal("expected-token"),
+  })
+);
+
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
   <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
@@ -47,11 +53,7 @@ const writeRepoFile = Effect.fn("AllowlistCheckTest.writeRepoFile")(function* (
 
 describe("allowlist-check", () => {
   it("formats schema diagnostics with path labels and optional redaction", () => {
-    const result = S.decodeUnknownResult(
-      S.Struct({
-        token: S.Literal("expected-token"),
-      })
-    )({ token: "sk-test-secret" });
+    const result = decodeUnknownStructInlineSchemaResult({ token: "sk-test-secret" });
 
     expect(Result.isFailure(result)).toBe(true);
 

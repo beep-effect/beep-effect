@@ -48,6 +48,9 @@ import * as SchemaIssue from "effect/SchemaIssue";
 import * as Str from "effect/String";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeUnknownCanonicalContradictionBeliefPairResult = S.decodeUnknownResult(CanonicalContradictionBeliefPair);
+const encodeCanonicalContradictionBeliefPairResult = S.encodeResult(CanonicalContradictionBeliefPair);
+
 const left = BeliefVersionRef.make({
   edgeVersionId: Epistemic.EdgeVersionId.make(1),
   logicalKey: LogicalEdgeKey.make(Str.repeat(64)("a")),
@@ -255,13 +258,15 @@ const expectSchemaMakeToFail = (run: () => unknown, messagePart: string): void =
 
 describe("Contradiction candidate row converters", () => {
   it("round-trips schema-derived canonical belief pairs used by candidate JSONB rows", () => {
-    const encode = S.encodeResult(CanonicalContradictionBeliefPair);
-    const decode = S.decodeUnknownResult(CanonicalContradictionBeliefPair);
     const equivalent = S.toEquivalence(CanonicalContradictionBeliefPair);
 
     fc.assert(
       fc.property(S.toArbitrary(CanonicalContradictionBeliefPair)(fc), (arbitraryPair) => {
-        const decoded = encode(arbitraryPair).pipe(Result.getOrThrow, decode, Result.getOrThrow);
+        const decoded = encodeCanonicalContradictionBeliefPairResult(arbitraryPair).pipe(
+          Result.getOrThrow,
+          decodeUnknownCanonicalContradictionBeliefPairResult,
+          Result.getOrThrow
+        );
         expect(equivalent(decoded, arbitraryPair)).toBe(true);
       }),
       fcRuns(25)

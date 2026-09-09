@@ -14,6 +14,8 @@ import { dual } from "effect/Function";
 import type { JsonSchema } from "effect/JsonSchema";
 import * as S from "effect/Schema";
 import * as Tool from "effect/unstable/ai/Tool";
+const decodeUnknownJSONSchemaDocumentResult = S.decodeUnknownResult(JSONSchema.Document);
+const encodeUnknownJSONSchemaNodeCodecResult = S.encodeUnknownResult(JSONSchema.NodeCodec);
 
 const $I = $ScratchpadId.create("codemode/Codemode.tool-schema");
 
@@ -190,7 +192,7 @@ const hasUnresolvedRef = (
 
 const isEmptyNode = (node: Node): boolean =>
   pipe(
-    S.encodeUnknownResult(JSONSchema.NodeCodec)(node),
+    encodeUnknownJSONSchemaNodeCodecResult(node),
     Result.match({
       onFailure: thunkFalse,
       onSuccess: R.isEmptyReadonlyRecord,
@@ -451,7 +453,7 @@ export const toTypeScript: {
         try: () => S.toJsonSchemaDocument(decoded === true ? S.toType(schema) : schema),
         catch: (cause) => cause,
       }),
-      Result.flatMap(S.decodeUnknownResult(JSONSchema.Document)),
+      Result.flatMap(decodeUnknownJSONSchemaDocumentResult),
       Result.match({
         onFailure: () => "unknown",
         onSuccess: (document) =>

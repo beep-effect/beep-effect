@@ -61,6 +61,19 @@ import {
   syncManifest,
 } from "./Layout.ts";
 import { PluginManifest } from "./Manifest.ts";
+const decodeHooksSectionOption = S.decodeOption(HooksSection);
+const decodeMcpJsonFileOption = S.decodeOption(McpJsonFile);
+const decodeCommandFrontmatterSync = S.decodeSync(CommandFrontmatter);
+const decodeOutputStyleFrontmatterSync = S.decodeSync(OutputStyleFrontmatter);
+const decodePluginManifestSync = S.decodeSync(PluginManifest);
+const decodeSkillFrontmatterSync = S.decodeSync(SkillFrontmatter);
+const decodeSubagentFrontmatterSync = S.decodeSync(SubagentFrontmatter);
+const decodeUnknownMcpJsonFileOption = S.decodeUnknownOption(McpJsonFile);
+const encodeHooksSection = S.encodeEffect(HooksSection);
+const encodePluginManifest = S.encodeEffect(PluginManifest);
+const isHooksSection = S.is(HooksSection);
+const isMcpJsonFile = S.is(McpJsonFile);
+const isPluginManifest = S.is(PluginManifest);
 
 const $I = $ScratchpadId.create("claudecode/Plugin/Define");
 
@@ -329,7 +342,7 @@ export const command = (config: PluginCommandConfig): PluginCommandEntry => {
   return PluginCommandEntry.make({
     name,
     ...O.getSomesStruct({ path: O.fromUndefinedOr(path) }),
-    frontmatter: S.decodeSync(CommandFrontmatter)(frontmatter),
+    frontmatter: decodeCommandFrontmatterSync(frontmatter),
     body,
   });
 };
@@ -358,7 +371,7 @@ export const agent = (config: PluginAgentConfig): PluginAgentEntry => {
   return PluginAgentEntry.make({
     name,
     ...O.getSomesStruct({ path: O.fromUndefinedOr(path) }),
-    frontmatter: S.decodeSync(SubagentFrontmatter)({
+    frontmatter: decodeSubagentFrontmatterSync({
       name,
       ...frontmatter,
     }),
@@ -386,7 +399,7 @@ export const skill = (config: PluginSkillConfig): PluginSkillEntry => {
   return PluginSkillEntry.make({
     name,
     ...O.getSomesStruct({ path: O.fromUndefinedOr(path) }),
-    frontmatter: S.decodeSync(SkillFrontmatter)({
+    frontmatter: decodeSkillFrontmatterSync({
       name,
       ...frontmatter,
     }),
@@ -414,7 +427,7 @@ export const outputStyle = (config: PluginOutputStyleConfig): PluginOutputStyleE
   return PluginOutputStyleEntry.make({
     name,
     ...O.getSomesStruct({ path: O.fromUndefinedOr(path) }),
-    frontmatter: S.decodeSync(OutputStyleFrontmatter)({
+    frontmatter: decodeOutputStyleFrontmatterSync({
       name,
       ...frontmatter,
     }),
@@ -425,16 +438,16 @@ export const outputStyle = (config: PluginOutputStyleConfig): PluginOutputStyleE
 const normalizeHooksConfig = (hooksConfig: HooksSection | HooksSectionEncoded | undefined): O.Option<HooksSection> =>
   hooksConfig === undefined
     ? O.none()
-    : S.is(HooksSection)(hooksConfig)
+    : isHooksSection(hooksConfig)
       ? O.some(hooksConfig)
-      : S.decodeOption(HooksSection)(hooksConfig);
+      : decodeHooksSectionOption(hooksConfig);
 
 const normalizeMcpConfig = (mcpConfig: McpJsonFile | McpJsonFile.Encoded | undefined): O.Option<McpJsonFile> =>
   mcpConfig === undefined
     ? O.none()
-    : S.is(McpJsonFile)(mcpConfig)
+    : isMcpJsonFile(mcpConfig)
       ? O.some(mcpConfig)
-      : S.decodeOption(McpJsonFile)(mcpConfig);
+      : decodeMcpJsonFileOption(mcpConfig);
 
 const validateNamedFrontmatter = (entryName: string, frontmatterName: O.Option<string>, kind: string): void => {
   O.map(frontmatterName, (name) => {
@@ -592,7 +605,7 @@ const resolveConfigRelativePath = (options: {
  */
 export const define = (config: PluginConfig): PluginDefinition =>
   PluginDefinition.make({
-    manifest: S.is(PluginManifest)(config.manifest) ? config.manifest : S.decodeSync(PluginManifest)(config.manifest),
+    manifest: isPluginManifest(config.manifest) ? config.manifest : decodePluginManifestSync(config.manifest),
     commands: config.commands ?? [],
     agents: A.map(config.agents ?? [], normalizeAgentEntry),
     skills: A.map(config.skills ?? [], normalizeSkillEntry),
@@ -829,7 +842,7 @@ const manifestForWrite = (manifest: PluginManifest): PluginManifest =>
       if (P.isString(mcpServers) || A.isArray(mcpServers)) {
         return manifest;
       }
-      return S.decodeUnknownOption(McpJsonFile)({ mcpServers }).pipe(
+      return decodeUnknownMcpJsonFileOption({ mcpServers }).pipe(
         O.map((file) =>
           PluginManifest.make({
             ...manifest,
@@ -903,7 +916,7 @@ export const write: {
       // .claude-plugin/plugin.json
       const claudePluginDir = path.join(destDir, ".claude-plugin");
       const manifestPath = path.join(claudePluginDir, "plugin.json");
-      const encodedManifest = yield* S.encodeEffect(PluginManifest)(emittedManifest).pipe(
+      const encodedManifest = yield* encodePluginManifest(emittedManifest).pipe(
         Effect.mapError((cause) => PluginWriteError.make({ path: manifestPath, cause }))
       );
       yield* makeDir(claudePluginDir);
@@ -940,7 +953,7 @@ export const write: {
         });
         if (O.isSome(hooksPath)) {
           const outputPath = path.join(destDir, hooksPath.value);
-          const encodedHooks = yield* S.encodeEffect(HooksSection)(definition.hooksConfig.value).pipe(
+          const encodedHooks = yield* encodeHooksSection(definition.hooksConfig.value).pipe(
             Effect.mapError((cause) => PluginWriteError.make({ path: outputPath, cause }))
           );
           yield* writeFile(outputPath, toJsonFileContent({ hooks: encodedHooks }));

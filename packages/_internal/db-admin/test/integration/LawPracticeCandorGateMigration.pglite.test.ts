@@ -24,6 +24,14 @@ import { FastCheck as fc } from "effect/testing";
 import * as SqlClient from "effect/unstable/sql/SqlClient";
 import * as SqlError from "effect/unstable/sql/SqlError";
 
+const decodeUnknownCandorDisposition = S.decodeUnknownEffect(CandorDisposition);
+const decodeUnknownIdsSubmissionFact = S.decodeUnknownEffect(IdsSubmissionFact);
+const decodeUnknownPatentCitationEvent = S.decodeUnknownEffect(PatentCitationEvent);
+const decodeUnknownStructInlineSchema = S.decodeUnknownEffect(
+  S.Struct({ code: S.Literal("23514"), constraint: S.String })
+);
+const isPatentCitationEvent = S.is(PatentCitationEvent);
+
 const { shouldRunPgliteIntegration } = makePgliteIntegrationGate();
 const migrationsFolder = fileURLToPath(new URL("../../drizzle", import.meta.url));
 
@@ -137,7 +145,7 @@ const submissionFactInput = {
 
 describe("law-practice candor migration schema laws", () => {
   it("generates valid patent citation events", () => {
-    fc.assert(fc.property(S.toArbitrary(PatentCitationEvent)(fc), S.is(PatentCitationEvent)), fcRuns(25));
+    fc.assert(fc.property(S.toArbitrary(PatentCitationEvent)(fc), isPatentCitationEvent), fcRuns(25));
   });
 });
 
@@ -190,9 +198,9 @@ const migrateAndRecord = Effect.fnUntraced(function* () {
     )
   ).toEqual(expectedTriggerNames);
 
-  const event = yield* S.decodeUnknownEffect(PatentCitationEvent)(eventInput);
-  const disposition = yield* S.decodeUnknownEffect(CandorDisposition)(dispositionInput);
-  const submissionFact = yield* S.decodeUnknownEffect(IdsSubmissionFact)(submissionFactInput);
+  const event = yield* decodeUnknownPatentCitationEvent(eventInput);
+  const disposition = yield* decodeUnknownCandorDisposition(dispositionInput);
+  const submissionFact = yield* decodeUnknownIdsSubmissionFact(submissionFactInput);
 
   // The converters return `Result` because encoding is fallible; converting them
   // keeps a schema failure in the error channel instead of inserting defaults.
@@ -300,9 +308,7 @@ if (!shouldRunPgliteIntegration) {
 
             expect(violation).toBeInstanceOf(SqlError.SqlError);
             expect(violation.reason).toBeInstanceOf(SqlError.ConstraintError);
-            const cause = yield* S.decodeUnknownEffect(S.Struct({ code: S.Literal("23514"), constraint: S.String }))(
-              violation.reason.cause
-            );
+            const cause = yield* decodeUnknownStructInlineSchema(violation.reason.cause);
             expect(cause.constraint).toBe(constraintName);
             expect(inspect(violation.reason.cause, { depth: 10 })).toContain(constraintName);
           }),

@@ -4,36 +4,54 @@ import { describe, expect, it } from "@effect/vitest";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeColorDarkenSync = S.decodeSync(Color.Darken);
+const decodeColorGenerateAlphaScaleSync = S.decodeSync(Color.GenerateAlphaScale);
+const decodeColorGenerateNeutralScaleSync = S.decodeSync(Color.GenerateNeutralScale);
+const decodeColorGenerateScaleSync = S.decodeSync(Color.GenerateScale);
+const decodeColorHexToRgbSync = S.decodeSync(Color.HexToRgb);
+const decodeColorLightenSync = S.decodeSync(Color.Lighten);
+const decodeColorMixColorsSync = S.decodeSync(Color.MixColors);
+const decodeColorNormalizeHexColorSync = S.decodeSync(Color.NormalizeHexColor);
+const decodeColorOklchToHexSync = S.decodeSync(Color.OklchToHex);
+const decodeColorOklchToRgbSync = S.decodeSync(Color.OklchToRgb);
+const decodeColorRgbToHexSync = S.decodeSync(Color.RgbToHex);
+const decodeColorRgbToOklchSync = S.decodeSync(Color.RgbToOklch);
+const decodeColorWithAlphaSync = S.decodeSync(Color.WithAlpha);
+const decodeUnknownColorColorAmountSync = S.decodeUnknownSync(Color.ColorAmount);
+const decodeUnknownColorHexToRgbSync = S.decodeUnknownSync(Color.HexToRgb);
+const decodeUnknownColorRgbToHexSync = S.decodeUnknownSync(Color.RgbToHex);
+const encodeColorColorAmountSync = S.encodeSync(Color.ColorAmount);
+
 describe("Color", () => {
   it("normalizes shorthand and canonical hex inputs", () => {
-    expect(S.decodeSync(Color.NormalizeHexColor)("#abc")).toBe("#aabbcc");
-    expect(S.decodeSync(Color.NormalizeHexColor)("#AABBCC")).toBe("#aabbcc");
+    expect(decodeColorNormalizeHexColorSync("#abc")).toBe("#aabbcc");
+    expect(decodeColorNormalizeHexColorSync("#AABBCC")).toBe("#aabbcc");
   });
 
   it("round-trips RGB and OKLCH conversion branches", () => {
-    const black = S.decodeSync(Color.HexToRgb)("#000");
-    const white = S.decodeSync(Color.HexToRgb)("#fff");
+    const black = decodeColorHexToRgbSync("#000");
+    const white = decodeColorHexToRgbSync("#fff");
 
     expect(black).toMatchObject({ r: 0, g: 0, b: 0 });
     expect(white).toMatchObject({ r: 1, g: 1, b: 1 });
-    expect(S.decodeSync(Color.RgbToHex)({ r: -1, g: 0.5, b: 2 })).toBe("#0080ff");
+    expect(decodeColorRgbToHexSync({ r: -1, g: 0.5, b: 2 })).toBe("#0080ff");
 
-    const blueOklch = S.decodeSync(Color.RgbToOklch)({ r: 0, g: 0, b: 1 });
-    const redOklch = S.decodeSync(Color.RgbToOklch)({ r: 1, g: 0, b: 0 });
+    const blueOklch = decodeColorRgbToOklchSync({ r: 0, g: 0, b: 1 });
+    const redOklch = decodeColorRgbToOklchSync({ r: 1, g: 0, b: 0 });
 
     expect(blueOklch.h).toBeGreaterThan(0);
     expect(redOklch.h).toBeGreaterThan(0);
-    expect(S.decodeSync(Color.OklchToHex)(blueOklch)).toBe("#0000ff");
-    expect(S.decodeSync(Color.OklchToRgb)({ l: 0.001, c: 0, h: 0 }).r).toBeGreaterThanOrEqual(0);
+    expect(decodeColorOklchToHexSync(blueOklch)).toBe("#0000ff");
+    expect(decodeColorOklchToRgbSync({ l: 0.001, c: 0, h: 0 }).r).toBeGreaterThanOrEqual(0);
   });
 
   it("generates scales and color helper outputs for both light and dark modes", () => {
-    const darkScale = S.decodeSync(Color.GenerateScale)({ seed: "#3b82f6", isDark: true });
-    const lightScale = S.decodeSync(Color.GenerateScale)({ seed: "#3b82f6", isDark: false });
-    const darkNeutral = S.decodeSync(Color.GenerateNeutralScale)({ seed: "#3b82f6", isDark: true });
-    const lightNeutral = S.decodeSync(Color.GenerateNeutralScale)({ seed: "#3b82f6", isDark: false });
-    const darkAlpha = S.decodeSync(Color.GenerateAlphaScale)({ scale: darkScale, isDark: true });
-    const lightAlpha = S.decodeSync(Color.GenerateAlphaScale)({ scale: lightScale, isDark: false });
+    const darkScale = decodeColorGenerateScaleSync({ seed: "#3b82f6", isDark: true });
+    const lightScale = decodeColorGenerateScaleSync({ seed: "#3b82f6", isDark: false });
+    const darkNeutral = decodeColorGenerateNeutralScaleSync({ seed: "#3b82f6", isDark: true });
+    const lightNeutral = decodeColorGenerateNeutralScaleSync({ seed: "#3b82f6", isDark: false });
+    const darkAlpha = decodeColorGenerateAlphaScaleSync({ scale: darkScale, isDark: true });
+    const lightAlpha = decodeColorGenerateAlphaScaleSync({ scale: lightScale, isDark: false });
 
     expect(darkScale).toHaveLength(12);
     expect(lightScale).toHaveLength(12);
@@ -41,22 +59,19 @@ describe("Color", () => {
     expect(lightNeutral).toHaveLength(12);
     expect(darkAlpha).toHaveLength(12);
     expect(lightAlpha).toHaveLength(12);
-    expect(S.decodeSync(Color.MixColors)({ color1: "#000", color2: "#fff", amount: 0.5 })).toMatch(/^#[0-9a-f]{6}$/);
-    expect(S.decodeSync(Color.Lighten)({ color: "#000", amount: 1 })).toBe("#ffffff");
-    expect(S.decodeSync(Color.Darken)({ color: "#fff", amount: 1 })).toBe("#000000");
-    expect(S.decodeSync(Color.WithAlpha)({ color: "#336699", alpha: 0.25 })).toBe("rgba(51, 102, 153, 0.25)");
+    expect(decodeColorMixColorsSync({ color1: "#000", color2: "#fff", amount: 0.5 })).toMatch(/^#[0-9a-f]{6}$/);
+    expect(decodeColorLightenSync({ color: "#000", amount: 1 })).toBe("#ffffff");
+    expect(decodeColorDarkenSync({ color: "#fff", amount: 1 })).toBe("#000000");
+    expect(decodeColorWithAlphaSync({ color: "#336699", alpha: 0.25 })).toBe("rgba(51, 102, 153, 0.25)");
   });
 
   it("canonical hex colors round-trip losslessly through RGB", () => {
     const hexArbitrary = S.toArbitrary(Color.HexColor)(fc);
-    const decodeRgb = S.decodeUnknownSync(Color.HexToRgb);
-    const encodeHex = S.decodeUnknownSync(Color.RgbToHex);
-
     fc.assert(
       fc.property(hexArbitrary, (hex) => {
         expect(hex).toMatch(/^#[0-9a-f]{6}$/);
-        const rgb = decodeRgb(hex);
-        expect(encodeHex({ r: rgb.r, g: rgb.g, b: rgb.b })).toBe(hex);
+        const rgb = decodeUnknownColorHexToRgbSync(hex);
+        expect(decodeUnknownColorRgbToHexSync({ r: rgb.r, g: rgb.g, b: rgb.b })).toBe(hex);
       }),
       fcRuns(50)
     );
@@ -64,14 +79,11 @@ describe("Color", () => {
 
   it("derives only bounded color amounts from the source schema", () => {
     const amountArbitrary = S.toArbitrary(Color.ColorAmount)(fc);
-    const encode = S.encodeSync(Color.ColorAmount);
-    const decode = S.decodeUnknownSync(Color.ColorAmount);
-
     fc.assert(
       fc.property(amountArbitrary, (amount) => {
         expect(amount).toBeGreaterThanOrEqual(0);
         expect(amount).toBeLessThanOrEqual(1);
-        expect(decode(encode(amount))).toBe(amount);
+        expect(decodeUnknownColorColorAmountSync(encodeColorColorAmountSync(amount))).toBe(amount);
       }),
       fcRuns(25)
     );

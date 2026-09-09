@@ -97,6 +97,7 @@ export const TomlTextToUnknown = S.String.pipe(
  * @since 0.0.0
  */
 export type TomlTextToUnknown = typeof TomlTextToUnknown.Type;
+const decodeUnknownTomlTextToUnknown = S.decodeUnknownEffect(TomlTextToUnknown);
 
 /**
  * Builds a decoder that parses TOML text and then decodes the result through a
@@ -123,7 +124,6 @@ export type TomlTextToUnknown = typeof TomlTextToUnknown.Type;
  * @since 0.0.0
  */
 export const decodeTomlTextAs = <Schema extends S.Top>(schema: Schema) => {
-  const decodeTomlUnknownText = S.decodeUnknownEffect(TomlTextToUnknown);
   const decodeTargetSchema = S.decodeUnknownEffect(schema);
-  return flow(decodeTomlUnknownText, Effect.flatMap(decodeTargetSchema));
+  return flow(decodeUnknownTomlTextToUnknown, Effect.flatMap(decodeTargetSchema));
 };

@@ -69,8 +69,9 @@ export class SerializedCodeBlockNode extends S.Class<SerializedCodeBlockNode>($I
     description: "Viewer-internal serialized code-block decorator node.",
   })
 ) {}
+const decodeUnknownSerializedCodeBlockNodeResult = S.decodeUnknownResult(SerializedCodeBlockNode);
 
-const decodeSerializedCodeBlockNode = (input: unknown) => S.decodeUnknownResult(SerializedCodeBlockNode)(input);
+const decodeSerializedCodeBlockNode = (input: unknown) => decodeUnknownSerializedCodeBlockNodeResult(input);
 
 /**
  * Block-level Lexical decorator node that renders a readable, copyable code block.

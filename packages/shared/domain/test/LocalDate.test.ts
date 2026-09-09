@@ -35,8 +35,23 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc, TestClock } from "effect/testing";
 
+const decodeModel = S.decodeEffect(Model);
+const decodeLocalDateFromStringSync = S.decodeSync(LocalDateFromString);
+const decodeModelSync = S.decodeSync(Model);
+const decodeUnknownLocalDateFromString = S.decodeUnknownEffect(LocalDateFromString);
+const encodeLocalDateFromString = S.encodeEffect(LocalDateFromString);
+const encodeModel = S.encodeEffect(Model);
+const encodeLocalDateFromStringSync = S.encodeSync(LocalDateFromString);
+const encodeModelSync = S.encodeSync(Model);
+
 const juneFifteenth = () => make({ year: 2024, month: 6, day: 15 });
 const ModelArbitrary = S.toArbitrary(Model)(fc);
+const Params = S.Struct({
+  startDate: LocalDateFromString,
+  endDate: LocalDateFromString,
+});
+const decodeParams = S.decodeEffect(Params);
+const encodeParams = S.encodeEffect(Params);
 
 const expectFailure = Effect.fn("expectFailure")(function* <A, E>(effect: Effect.Effect<A, E, never>) {
   const exit = yield* Effect.exit(effect);
@@ -73,8 +88,8 @@ describe("LocalDate.Model", () => {
   it.effect(
     "decodes and encodes the schema class",
     Effect.fnUntraced(function* () {
-      const decoded = yield* S.decodeEffect(Model)({ year: 2024, month: 6, day: 15 });
-      const encoded = yield* S.encodeEffect(Model)(decoded);
+      const decoded = yield* decodeModel({ year: 2024, month: 6, day: 15 });
+      const encoded = yield* encodeModel(decoded);
 
       assert.strictEqual(decoded.toISOString(), "2024-06-15");
       assert.deepEqual(encoded, { year: 2024, month: 6, day: 15 });
@@ -84,10 +99,10 @@ describe("LocalDate.Model", () => {
   it("round-trips schema-derived values through the class and string codecs", () =>
     fc.assert(
       fc.property(ModelArbitrary, (date) => {
-        const encoded = S.encodeSync(Model)(date);
-        const decoded = S.decodeSync(Model)(encoded);
-        const encodedString = S.encodeSync(LocalDateFromString)(date);
-        const decodedString = S.decodeSync(LocalDateFromString)(encodedString);
+        const encoded = encodeModelSync(date);
+        const decoded = decodeModelSync(encoded);
+        const encodedString = encodeLocalDateFromStringSync(date);
+        const decodedString = decodeLocalDateFromStringSync(encodedString);
 
         assert.instanceOf(decoded, Model);
         assert.strictEqual(equals(decoded, date), true);
@@ -98,7 +113,7 @@ describe("LocalDate.Model", () => {
     ));
 
   it.effect("rejects impossible calendar dates at the schema boundary", () =>
-    expectFailure(S.decodeEffect(Model)({ year: 2024, month: 2, day: 30 }))
+    expectFailure(decodeModel({ year: 2024, month: 2, day: 30 }))
   );
 });
 
@@ -250,15 +265,12 @@ describe("date arithmetic", () => {
 });
 
 describe("LocalDateFromString", () => {
-  const decode = S.decodeUnknownEffect(LocalDateFromString);
-  const encode = S.encodeEffect(LocalDateFromString);
-
   it.effect(
     "decodes and encodes ISO local-date strings",
     Effect.fnUntraced(function* () {
-      const date = yield* decode("2024-06-15");
-      const encoded = yield* encode(date);
-      const padded = yield* encode(make({ year: 99, month: 2, day: 5 }));
+      const date = yield* decodeUnknownLocalDateFromString("2024-06-15");
+      const encoded = yield* encodeLocalDateFromString(date);
+      const padded = yield* encodeLocalDateFromString(make({ year: 99, month: 2, day: 5 }));
 
       assert.instanceOf(date, Model);
       assert.strictEqual(date.toISOString(), "2024-06-15");
@@ -270,33 +282,28 @@ describe("LocalDateFromString", () => {
   it.effect(
     "rejects malformed and impossible ISO local-date strings",
     Effect.fnUntraced(function* () {
-      yield* expectFailure(decode("2024/06/15"));
-      yield* expectFailure(decode("invalid"));
-      yield* expectFailure(decode(""));
-      yield* expectFailure(decode("0000-01-01"));
-      yield* expectFailure(decode("2024-00-15"));
-      yield* expectFailure(decode("2024-13-15"));
-      yield* expectFailure(decode("2024-06-00"));
-      yield* expectFailure(decode("2024-07-32"));
-      yield* expectFailure(decode("2024-06-31"));
-      yield* expectFailure(decode("2023-02-29"));
-      yield* expectFailure(decode("2024-02-30"));
+      yield* expectFailure(decodeUnknownLocalDateFromString("2024/06/15"));
+      yield* expectFailure(decodeUnknownLocalDateFromString("invalid"));
+      yield* expectFailure(decodeUnknownLocalDateFromString(""));
+      yield* expectFailure(decodeUnknownLocalDateFromString("0000-01-01"));
+      yield* expectFailure(decodeUnknownLocalDateFromString("2024-00-15"));
+      yield* expectFailure(decodeUnknownLocalDateFromString("2024-13-15"));
+      yield* expectFailure(decodeUnknownLocalDateFromString("2024-06-00"));
+      yield* expectFailure(decodeUnknownLocalDateFromString("2024-07-32"));
+      yield* expectFailure(decodeUnknownLocalDateFromString("2024-06-31"));
+      yield* expectFailure(decodeUnknownLocalDateFromString("2023-02-29"));
+      yield* expectFailure(decodeUnknownLocalDateFromString("2024-02-30"));
     })
   );
 
   it.effect(
     "round-trips through structs with encoded date fields",
     Effect.fnUntraced(function* () {
-      const Params = S.Struct({
-        startDate: LocalDateFromString,
-        endDate: LocalDateFromString,
-      });
-
-      const decoded = yield* S.decodeEffect(Params)({
+      const decoded = yield* decodeParams({
         startDate: "2024-01-01",
         endDate: "2024-12-31",
       });
-      const encoded = yield* S.encodeEffect(Params)(decoded);
+      const encoded = yield* encodeParams(decoded);
 
       assert.strictEqual(decoded.startDate.toISOString(), "2024-01-01");
       assert.strictEqual(decoded.endDate.toISOString(), "2024-12-31");

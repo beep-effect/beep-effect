@@ -49,6 +49,12 @@ import {
   verifyT7Preservation,
 } from "./Corpus.service.ts";
 
+const decodeRestorationLegacyWordOptions = S.decodeEffect(RestorationLegacyWordOptions);
+const decodeRestorationMailOptions = S.decodeEffect(RestorationMailOptions);
+const decodeRestorationPreserveOptions = S.decodeEffect(RestorationPreserveOptions);
+const decodeRestorationRecycleOptions = S.decodeEffect(RestorationRecycleOptions);
+const decodeRestorationVerifyOptions = S.decodeEffect(RestorationVerifyOptions);
+
 /** @since 0.0.0 */
 const corpusRootFlag = Flag.directory("corpus-root", { mustExist: true }).pipe(
   Flag.withFallbackConfig(Config.string("BEEP_OPPOLD_CORPUS_ROOT")),
@@ -478,7 +484,7 @@ const corpusRestorationPreserveCommand = Command.make(
     runLabel,
     sourceRoot,
   }) {
-    const options = yield* S.decodeEffect(RestorationPreserveOptions)({
+    const options = yield* decodeRestorationPreserveOptions({
       absentRecycleTreePath: absentRecycleTree,
       capacityCeilingBytes,
       chunkSizeBytes,
@@ -511,7 +517,7 @@ const corpusRestorationVerifyCommand = Command.make(
     runLabel: restorationRunLabelFlag,
   },
   Effect.fn(function* ({ corpusRoot, runLabel }) {
-    const options = yield* S.decodeEffect(RestorationVerifyOptions)({ corpusRoot, runLabel }).pipe(
+    const options = yield* decodeRestorationVerifyOptions({ corpusRoot, runLabel }).pipe(
       CorpusCommandError.mapError("Invalid restoration verification options.")
     );
     yield* verifyRestorationArchive(options).pipe(Effect.asVoid);
@@ -528,7 +534,7 @@ const corpusRestorationAcceptanceCommand = Command.make(
     runLabel: restorationRunLabelFlag,
   },
   Effect.fn(function* ({ corpusRoot, runLabel }) {
-    const options = yield* S.decodeEffect(RestorationVerifyOptions)({ corpusRoot, runLabel }).pipe(
+    const options = yield* decodeRestorationVerifyOptions({ corpusRoot, runLabel }).pipe(
       CorpusCommandError.mapError("Invalid restoration acceptance options.")
     );
     yield* reconcileRestorationAcceptance(options).pipe(Effect.asVoid);
@@ -568,7 +574,7 @@ const corpusRestorationMailCommand = Command.make(
     scope,
     tikaJar,
   }) {
-    const options = yield* S.decodeEffect(RestorationMailOptions)({
+    const options = yield* decodeRestorationMailOptions({
       bwrapPath: bwrap,
       corpusRoot,
       expectedStoreCount: expectedStores,
@@ -607,7 +613,7 @@ const corpusRestorationRecycleCommand = Command.make(
     maxTotalOutputBytes,
     runLabel,
   }) {
-    const options = yield* S.decodeEffect(RestorationRecycleOptions)({
+    const options = yield* decodeRestorationRecycleOptions({
       corpusRoot,
       expectedMissingContentCount: expectedMissingContent,
       expectedSurfaceCount: expectedSurfaces,
@@ -658,7 +664,7 @@ const corpusRestorationLegacyWordCommand = Command.make(
     runLabel,
     tikaJar,
   }) {
-    const options = yield* S.decodeEffect(RestorationLegacyWordOptions)({
+    const options = yield* decodeRestorationLegacyWordOptions({
       bwrapPath: bwrap,
       comparePath: compare,
       converterPath: converter,

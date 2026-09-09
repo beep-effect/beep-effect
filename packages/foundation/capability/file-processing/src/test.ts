@@ -28,6 +28,11 @@ import type {
 import type { FileProcessingEngineShape } from "@beep/file-processing/Service";
 import type * as Crypto from "effect/Crypto";
 
+const decodeArtifactId = S.decodeEffect(ArtifactId);
+const decodeContentDigest = S.decodeEffect(ContentDigest);
+const decodeOperationId = S.decodeEffect(OperationId);
+const decodePosixPath = S.decodeEffect(PosixPath);
+
 /**
  * Synthetic engine descriptor used by tests and proof fixtures.
  *
@@ -79,9 +84,9 @@ export const decodeTestOperationIdentifiers = Effect.fn("FileProcessingTest.deco
     { readonly artifactId: ArtifactId; readonly digest: ContentDigest; readonly operationId: OperationId },
     S.SchemaError
   > {
-    const artifactId = yield* S.decodeEffect(ArtifactId)(`artifact:${testIdentifierHex}`);
-    const digest = yield* S.decodeEffect(ContentDigest)(`sha256:${testIdentifierHex}`);
-    const operationId = yield* S.decodeEffect(OperationId)(`operation:${testIdentifierHex}`);
+    const artifactId = yield* decodeArtifactId(`artifact:${testIdentifierHex}`);
+    const digest = yield* decodeContentDigest(`sha256:${testIdentifierHex}`);
+    const operationId = yield* decodeOperationId(`operation:${testIdentifierHex}`);
     return { artifactId, digest, operationId };
   }
 );
@@ -91,7 +96,7 @@ const decodeTestArtifactPath = (
   path: string,
   operation: ExportArchiveOperation
 ): Effect.Effect<PosixPath, FileProcessingOperationError> =>
-  S.decodeEffect(PosixPath)(path).pipe(
+  decodePosixPath(path).pipe(
     Effect.mapError(() =>
       FileProcessingOperationError.fromReason("archive-export-failed", {
         artifactId: operation.source.id,

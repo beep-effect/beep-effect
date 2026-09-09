@@ -6,11 +6,14 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
-describe("DurationInput", () => {
-  const decode = S.decodeUnknownSync(Duration.Input);
+const decodeUnknownDurationFromInputSync = S.decodeUnknownSync(Duration.FromInput);
+const decodeUnknownDurationInputSync = S.decodeUnknownSync(Duration.Input);
+const encodeDurationFromInputSync = S.encodeSync(Duration.FromInput);
+const isDurationSchema = S.is(Duration.Schema);
 
+describe("DurationInput", () => {
   it("accepts additive duration objects with populated fields", () => {
-    const decoded = decode({
+    const decoded = decodeUnknownDurationInputSync({
       minutes: 1,
       seconds: 30,
     });
@@ -20,50 +23,46 @@ describe("DurationInput", () => {
   });
 
   it("rejects empty duration objects", () => {
-    expect(() => decode({})).toThrow("Duration object must include at least one populated unit field.");
+    expect(() => decodeUnknownDurationInputSync({})).toThrow(
+      "Duration object must include at least one populated unit field."
+    );
   });
 });
 
 describe("Duration namespace module", () => {
   it("exposes concise role names for the canonical concept import", () => {
-    const decodeInput = S.decodeUnknownSync(Duration.Input);
-    const decodeDuration = S.decodeUnknownSync(Duration.FromInput);
-
-    const input = decodeInput({ seconds: 2 });
+    const input = decodeUnknownDurationInputSync({ seconds: 2 });
 
     expect(input).toEqual(Duration.Object.make({ seconds: 2 }));
-    expect(D.toMillis(decodeDuration(input))).toBe(2_000);
+    expect(D.toMillis(decodeUnknownDurationFromInputSync(input))).toBe(2_000);
   });
 });
 
 describe("DurationFromInput", () => {
-  const decode = S.decodeUnknownSync(Duration.FromInput);
-  const encode = S.encodeSync(Duration.FromInput);
-
   it("passes through existing Duration values", () => {
     const input = D.seconds(2);
 
-    expect(decode(input)).toBe(input);
+    expect(decodeUnknownDurationFromInputSync(input)).toBe(input);
   });
 
   it("decodes non-negative integers as milliseconds", () => {
-    expect(D.toMillis(decode(1_500))).toBe(1_500);
+    expect(D.toMillis(decodeUnknownDurationFromInputSync(1_500))).toBe(1_500);
   });
 
   it("decodes non-negative bigints as nanoseconds", () => {
-    expect(O.getOrUndefined(D.toNanos(decode(1_500_000n)))).toBe(1_500_000n);
+    expect(O.getOrUndefined(D.toNanos(decodeUnknownDurationFromInputSync(1_500_000n)))).toBe(1_500_000n);
   });
 
   it("decodes hrtime tuples into high-resolution durations", () => {
-    expect(O.getOrUndefined(D.toNanos(decode([2, 3])))).toBe(2_000_000_003n);
+    expect(O.getOrUndefined(D.toNanos(decodeUnknownDurationFromInputSync([2, 3])))).toBe(2_000_000_003n);
   });
 
   it("decodes duration strings", () => {
-    expect(D.toMillis(decode("3 minutes"))).toBe(180_000);
+    expect(D.toMillis(decodeUnknownDurationFromInputSync("3 minutes"))).toBe(180_000);
   });
 
   it("decodes additive duration objects", () => {
-    const decoded = decode(
+    const decoded = decodeUnknownDurationFromInputSync(
       Duration.Object.make({
         minutes: 1,
         seconds: 30,
@@ -76,21 +75,21 @@ describe("DurationFromInput", () => {
   });
 
   it("preserves DurationInput validation failures", () => {
-    expect(() => decode({})).toThrow("Duration object must include at least one populated unit field.");
+    expect(() => decodeUnknownDurationFromInputSync({})).toThrow(
+      "Duration object must include at least one populated unit field."
+    );
   });
 
   it("forbids encoding normalized Duration values back to the source boundary", () => {
-    expect(() => encode(D.seconds(1))).toThrow(
+    expect(() => encodeDurationFromInputSync(D.seconds(1))).toThrow(
       "Encoding DurationFromInput results back to the original duration input is not supported"
     );
   });
 
   it("derives Duration values from the schema arbitrary that re-validate as durations", () => {
     const arbitrary = S.toArbitrary(Duration.FromInput)(fc);
-    const isDuration = S.is(Duration.Schema);
-
     fc.assert(
-      fc.property(arbitrary, (value) => D.isDuration(value) && isDuration(value)),
+      fc.property(arbitrary, (value) => D.isDuration(value) && isDurationSchema(value)),
       fcRuns(50)
     );
   });

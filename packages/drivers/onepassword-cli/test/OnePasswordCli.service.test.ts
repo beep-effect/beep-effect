@@ -19,6 +19,23 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeOnePasswordCliAccountResult = S.decodeResult(OnePasswordCliAccount);
+const decodeOnePasswordCliDiagnosticTextResult = S.decodeResult(OnePasswordCliDiagnosticText);
+const decodeOnePasswordCliErrorResult = S.decodeResult(OnePasswordCliError);
+const decodeOnePasswordCliErrorOptionsResult = S.decodeResult(OnePasswordCliErrorOptions);
+const decodeOnePasswordCliExitCodeResult = S.decodeResult(OnePasswordCliExitCode);
+const decodeOnePasswordCliProcessResultResult = S.decodeResult(OnePasswordCliProcessResult);
+const decodeOnePasswordReferenceProbeResult = S.decodeResult(OnePasswordReferenceProbe);
+const decodeOnePasswordReferenceProbeStatusResult = S.decodeResult(OnePasswordReferenceProbeStatus);
+const encodeOnePasswordCliAccountResult = S.encodeResult(OnePasswordCliAccount);
+const encodeOnePasswordCliDiagnosticTextResult = S.encodeResult(OnePasswordCliDiagnosticText);
+const encodeOnePasswordCliErrorResult = S.encodeResult(OnePasswordCliError);
+const encodeOnePasswordCliErrorOptionsResult = S.encodeResult(OnePasswordCliErrorOptions);
+const encodeOnePasswordCliExitCodeResult = S.encodeResult(OnePasswordCliExitCode);
+const encodeOnePasswordCliProcessResultResult = S.encodeResult(OnePasswordCliProcessResult);
+const encodeOnePasswordReferenceProbeResult = S.encodeResult(OnePasswordReferenceProbe);
+const encodeOnePasswordReferenceProbeStatusResult = S.encodeResult(OnePasswordReferenceProbeStatus);
+
 const ProbeStatusArbitrary = S.toArbitrary(OnePasswordReferenceProbeStatus)(fc);
 const ExitCodeArbitrary = S.toArbitrary(OnePasswordCliExitCode)(fc);
 const DiagnosticTextArbitrary = S.toArbitrary(OnePasswordCliDiagnosticText)(fc);
@@ -88,20 +105,20 @@ describe("@beep/onepassword-cli", () => {
       status: "resolved",
     });
 
-    expect(Result.getOrThrow(S.encodeResult(OnePasswordCliAccount)(account))).toEqual({
+    expect(Result.getOrThrow(encodeOnePasswordCliAccountResult(account))).toEqual({
       account: "example.1password.com",
       signedIn: true,
     });
-    expect(Result.getOrThrow(S.encodeResult(OnePasswordCliAccount)(signedOutAccount))).toEqual({
+    expect(Result.getOrThrow(encodeOnePasswordCliAccountResult(signedOutAccount))).toEqual({
       signedIn: false,
     });
-    expect(Result.getOrThrow(S.encodeResult(OnePasswordCliErrorOptions)(errorOptions))).toEqual({
+    expect(Result.getOrThrow(encodeOnePasswordCliErrorOptionsResult(errorOptions))).toEqual({
       command: "op",
       exitCode: 1,
       stderr: "secret not found",
       stdout: "",
     });
-    expect(Result.getOrThrow(S.encodeResult(OnePasswordCliError)(error))).toEqual({
+    expect(Result.getOrThrow(encodeOnePasswordCliErrorResult(error))).toEqual({
       _tag: "OnePasswordCliError",
       command: "op",
       exitCode: 1,
@@ -110,19 +127,17 @@ describe("@beep/onepassword-cli", () => {
       stderr: "secret not found",
       stdout: "",
     });
-    expect(Result.getOrThrow(S.encodeResult(OnePasswordCliProcessResult)(processResult))).toEqual({
+    expect(Result.getOrThrow(encodeOnePasswordCliProcessResultResult(processResult))).toEqual({
       exitCode: 0,
       stderr: " raw stderr\n",
       stdout: " raw stdout\n",
     });
-    expect(Result.getOrThrow(S.encodeResult(OnePasswordReferenceProbe)(probe))).toEqual({
+    expect(Result.getOrThrow(encodeOnePasswordReferenceProbeResult(probe))).toEqual({
       byteLength: 19,
       reference: "op://Private/Discord Bot/token",
       status: "resolved",
     });
-    expect(Result.getOrThrow(S.decodeResult(OnePasswordCliDiagnosticText)(" secret not found\n"))).toBe(
-      "secret not found"
-    );
+    expect(Result.getOrThrow(decodeOnePasswordCliDiagnosticTextResult(" secret not found\n"))).toBe("secret not found");
   });
 
   it("round-trips schema-derived 1Password CLI payloads", () =>
@@ -139,30 +154,28 @@ describe("@beep/onepassword-cli", () => {
         (status, exitCode, diagnosticText, processResult, account, probe, errorOptions, error) => {
           expect(
             Result.getOrThrow(
-              S.decodeResult(OnePasswordReferenceProbeStatus)(
-                Result.getOrThrow(S.encodeResult(OnePasswordReferenceProbeStatus)(status))
+              decodeOnePasswordReferenceProbeStatusResult(
+                Result.getOrThrow(encodeOnePasswordReferenceProbeStatusResult(status))
               )
             )
           ).toBe(status);
           expect(
             Result.getOrThrow(
-              S.decodeResult(OnePasswordCliExitCode)(
-                Result.getOrThrow(S.encodeResult(OnePasswordCliExitCode)(exitCode))
-              )
+              decodeOnePasswordCliExitCodeResult(Result.getOrThrow(encodeOnePasswordCliExitCodeResult(exitCode)))
             )
           ).toBe(exitCode);
           expect(
             Result.getOrThrow(
-              S.decodeResult(OnePasswordCliDiagnosticText)(
-                Result.getOrThrow(S.encodeResult(OnePasswordCliDiagnosticText)(diagnosticText))
+              decodeOnePasswordCliDiagnosticTextResult(
+                Result.getOrThrow(encodeOnePasswordCliDiagnosticTextResult(diagnosticText))
               )
             )
           ).toBe(diagnosticText);
           expect(
             sameProcessResult(
               Result.getOrThrow(
-                S.decodeResult(OnePasswordCliProcessResult)(
-                  Result.getOrThrow(S.encodeResult(OnePasswordCliProcessResult)(processResult))
+                decodeOnePasswordCliProcessResultResult(
+                  Result.getOrThrow(encodeOnePasswordCliProcessResultResult(processResult))
                 )
               ),
               processResult
@@ -171,7 +184,7 @@ describe("@beep/onepassword-cli", () => {
           expect(
             sameAccount(
               Result.getOrThrow(
-                S.decodeResult(OnePasswordCliAccount)(Result.getOrThrow(S.encodeResult(OnePasswordCliAccount)(account)))
+                decodeOnePasswordCliAccountResult(Result.getOrThrow(encodeOnePasswordCliAccountResult(account)))
               ),
               account
             )
@@ -179,9 +192,7 @@ describe("@beep/onepassword-cli", () => {
           expect(
             sameReferenceProbe(
               Result.getOrThrow(
-                S.decodeResult(OnePasswordReferenceProbe)(
-                  Result.getOrThrow(S.encodeResult(OnePasswordReferenceProbe)(probe))
-                )
+                decodeOnePasswordReferenceProbeResult(Result.getOrThrow(encodeOnePasswordReferenceProbeResult(probe)))
               ),
               probe
             )
@@ -189,8 +200,8 @@ describe("@beep/onepassword-cli", () => {
           expect(
             sameErrorOptions(
               Result.getOrThrow(
-                S.decodeResult(OnePasswordCliErrorOptions)(
-                  Result.getOrThrow(S.encodeResult(OnePasswordCliErrorOptions)(errorOptions))
+                decodeOnePasswordCliErrorOptionsResult(
+                  Result.getOrThrow(encodeOnePasswordCliErrorOptionsResult(errorOptions))
                 )
               ),
               errorOptions
@@ -199,7 +210,7 @@ describe("@beep/onepassword-cli", () => {
           expect(
             sameError(
               Result.getOrThrow(
-                S.decodeResult(OnePasswordCliError)(Result.getOrThrow(S.encodeResult(OnePasswordCliError)(error)))
+                decodeOnePasswordCliErrorResult(Result.getOrThrow(encodeOnePasswordCliErrorResult(error)))
               ),
               error
             )

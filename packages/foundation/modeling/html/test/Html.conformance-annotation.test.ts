@@ -8,11 +8,13 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
+const isConformanceAnnotation = S.is(Conformance.Annotation);
+
 describe("@beep/html conformance annotations", () => {
   it("collects the WHATWG profile from the conformant HTML proof schema", () => {
     const annotation = ConformantHtml.pipe(Conformance.collectConformanceAnnotations, A.head, O.getOrThrow);
 
-    expect(S.is(Conformance.Annotation)(annotation)).toBe(true);
+    expect(isConformanceAnnotation(annotation)).toBe(true);
     expect(A.map(annotation.profiles, ({ id }) => id)).toEqual([
       "html-whatwg-living-2026-08-30",
       "html-current-vendored-2026-06-15",
@@ -63,7 +65,7 @@ describe("@beep/html conformance annotations", () => {
   it("collects the package safe-output policy from the SafeHtmlAst proof schema", () => {
     const annotation = SafeHtmlAst.pipe(Conformance.collectConformanceAnnotations, A.head, O.getOrThrow);
 
-    expect(S.is(Conformance.Annotation)(annotation)).toBe(true);
+    expect(isConformanceAnnotation(annotation)).toBe(true);
     expect(A.map(annotation.profiles, ({ id }) => id)).toEqual(["html-safe-output-policy-e6e88af6"]);
     expect(A.map(annotation.sources, ({ id }) => id)).toEqual(["html-safe-policy-source-current-local"]);
     expect(A.map(annotation.invariants, ({ id }) => id)).toEqual([

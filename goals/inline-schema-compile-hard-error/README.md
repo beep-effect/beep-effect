@@ -33,17 +33,36 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — not started.
+P2 Verify — in progress.
 
 ## Latest Evidence
 
-- The predecessor census closed with 2,931 remaining
-  `beep(no-inline-schema-compile)` findings, down from its 2,935 opening
-  baseline.
-- The predecessor left no warning on a touched line and removed its named
-  `ProvRdf.ts` inline compiler.
-- The packet was compiled from the repository's `standard-delivery` bootstrap
-  archetype on 2026-08-30 with no conflicts.
+- The predecessor's 2,931 findings reproduce exactly; current opening `HEAD`
+  contained 3,087 findings across 566 files and 105 ownership families, with
+  the +156 drift fully attributed.
+- The generator owner was updated first, 3,087 findings reconcile to zero, and
+  `research/residual-census.json` records the empty repository-wide result on
+  the current implementation head. After `origin/main` advanced, its 20 new
+  repo-cli findings across seven files were classified and hoisted before the
+  census was refreshed to zero again.
+- `beep/no-inline-schema-compile` is configured as an error. Focused policy,
+  assertion, and manually migrated package tests are green. The 106-package
+  owner matrix is green, and the post-merge `@beep/repo-cli` family was
+  reverified after its newly introduced compilers were hoisted: package audit
+  and docgen both pass, as does its test-TSGo package check. The isolated
+  1,000-file repository test-TSGo gate and `@beep/html` generated-output check
+  are green. A later mainline merge retained the zero census and brought in the
+  deprecated-API ESLint sharding fix identified by the first publish attempt;
+  full lint-policy passes on the merged head. Exact-head Yeet verification
+  remains in progress.
+- The 2026-09-08 current-main reconciliation found 67 newly introduced
+  compiler calls across 15 files and seven ownership families. Fifty-three
+  were mechanically safe and 14 required dependency-aware manual placement;
+  all were hoisted before merge commit `b6723e0d43`, whose committed-tree
+  census is zero. Full package verification is green for `@beep/semantica`,
+  `@beep/freshbooks`, and `@beep/repo-cli`; focused tests plus quick package
+  verification are green for the four affected test-only owners. Exact-head
+  Yeet publication and monitoring remain the active completion gate.
 
 ## Notes
 

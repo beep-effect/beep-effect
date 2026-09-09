@@ -57,6 +57,12 @@ import type {
   RestorationRecycleOptions,
 } from "./Restoration.schemas.ts";
 
+const decodeArtifactId = S.decodeEffect(ArtifactId);
+const decodeContentDigest = S.decodeEffect(ContentDigest);
+const decodeOperationId = S.decodeEffect(OperationId);
+const decodePosixPath = S.decodeEffect(PosixPath);
+const isString = S.is(S.String);
+
 type TransformationRequirements =
   | Crypto.Crypto
   | FileSystem.FileSystem
@@ -664,7 +670,7 @@ const classifyMailError = (error: unknown): "codepage" | "corrupt" | "engine-fai
     }
     return classifyMailFailure(error.message);
   }
-  return classifyMailFailure(S.is(S.String)(error) ? error : "Unknown mail engine failure.");
+  return classifyMailFailure(isString(error) ? error : "Unknown mail engine failure.");
 };
 
 const signatureExtension = (bytes: Uint8Array): O.Option<string> => {
@@ -1164,19 +1170,19 @@ const exportPstArchive = Effect.fn("CorpusRestoration.exportPstArchive")(functio
   CorpusCommandError | FileProcessingOperationError,
   TransformationRequirements
 > {
-  const artifactId = yield* S.decodeEffect(ArtifactId)(`artifact:${attempt.pass.sha256}`).pipe(
+  const artifactId = yield* decodeArtifactId(`artifact:${attempt.pass.sha256}`).pipe(
     CorpusCommandError.mapError("Failed binding the PST source artifact identity.")
   );
-  const digest = yield* S.decodeEffect(ContentDigest)(`sha256:${attempt.pass.sha256}`).pipe(
+  const digest = yield* decodeContentDigest(`sha256:${attempt.pass.sha256}`).pipe(
     CorpusCommandError.mapError("Failed binding the PST source digest.")
   );
-  const operationId = yield* S.decodeEffect(OperationId)(`operation:${attempt.pass.sha256}`).pipe(
+  const operationId = yield* decodeOperationId(`operation:${attempt.pass.sha256}`).pipe(
     CorpusCommandError.mapError("Failed binding the PST operation identity.")
   );
-  const locatorValue = yield* S.decodeEffect(PosixPath)(attempt.candidate.sourcePath).pipe(
+  const locatorValue = yield* decodePosixPath(attempt.candidate.sourcePath).pipe(
     CorpusCommandError.mapError("Failed binding the PST source path.")
   );
-  const relativePath = yield* S.decodeEffect(PosixPath)("mail-store.pst").pipe(
+  const relativePath = yield* decodePosixPath("mail-store.pst").pipe(
     CorpusCommandError.mapError("Failed binding the PST logical relative path.")
   );
   const source = SourceArtifact.make({

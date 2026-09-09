@@ -21,6 +21,9 @@ import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const isHookPulseEvidenceTier = S.is(HookPulseEvidenceTier);
+const isHookPulseWaitReason = S.is(HookPulseWaitReason);
+
 const fixtureDir = NodeURL.fileURLToPath(new URL("./fixtures/telemetry-v2/", import.meta.url));
 const fixturePath = (name: string): string => `${fixtureDir}${name}`;
 
@@ -252,7 +255,7 @@ layer(NodeServices.layer)("telemetry-v2 contracts", (it) => {
       WaitReason.Enum.none,
       WaitReason.Enum.unknown,
     ]);
-    expect(S.is(HookPulseEvidenceTier)(EvidenceTier.Enum.reconstructed)).toBe(false);
-    expect(S.is(HookPulseWaitReason)(WaitReason.Enum.scheduler)).toBe(false);
+    expect(isHookPulseEvidenceTier(EvidenceTier.Enum.reconstructed)).toBe(false);
+    expect(isHookPulseWaitReason(WaitReason.Enum.scheduler)).toBe(false);
   });
 });

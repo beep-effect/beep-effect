@@ -37,6 +37,9 @@ import {
   writeResearchRepoCards,
 } from "./Research.service.ts";
 
+const decodeUnknownResearchDailyOptions = S.decodeUnknownEffect(ResearchDailyOptions);
+const decodeUnknownResearchHistorySiftOptions = S.decodeUnknownEffect(ResearchHistorySiftOptions);
+
 /** @since 0.0.0 */
 const vaultFlag = Flag.directory("vault", { mustExist: true }).pipe(
   Flag.withDescription("Knowledge vault root; defaults to BEEP_KNOWLEDGE_VAULT or ~/YeeBois/knowledge"),
@@ -100,7 +103,7 @@ const researchHistorySiftCommand = Command.make(
   },
   Effect.fn(function* ({ browser, sinceDays, vault }) {
     const vaultRoot = yield* resolveVaultRoot(vault);
-    const options = yield* S.decodeUnknownEffect(ResearchHistorySiftOptions)({ browser, sinceDays, vaultRoot }).pipe(
+    const options = yield* decodeUnknownResearchHistorySiftOptions({ browser, sinceDays, vaultRoot }).pipe(
       ResearchCommandError.mapError(`Invalid history-sift options (browser "${browser}", since-days ${sinceDays}).`)
     );
     yield* siftResearchHistory(options).pipe(Effect.asVoid);
@@ -259,7 +262,7 @@ const researchDailyCommand = Command.make(
   },
   Effect.fn(function* ({ browser, commit, page, sinceDays, vault }) {
     const vaultRoot = yield* resolveVaultRoot(vault);
-    const options = yield* S.decodeUnknownEffect(ResearchDailyOptions)({
+    const options = yield* decodeUnknownResearchDailyOptions({
       browser,
       commit,
       sinceDays,

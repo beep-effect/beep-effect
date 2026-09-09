@@ -88,6 +88,7 @@ export const ForceHttpsRedirectEnabled = S.Tuple([S.Literal(true), ForceHttpsRed
  * @since 0.0.0
  */
 export type ForceHttpsRedirectEnabled = typeof ForceHttpsRedirectEnabled.Type;
+const decodeForceHttpsRedirectEnabled = S.decodeEffect(ForceHttpsRedirectEnabled);
 
 /**
  * Schema for enabled or disabled `Strict-Transport-Security` options.
@@ -221,7 +222,7 @@ export const ForceHttpsRedirectHeader = S.Union([ForceHttpsRedirectOption, S.Und
         return O.none<string>();
       }
 
-      const enabled = yield* S.decodeEffect(ForceHttpsRedirectEnabled)(option).pipe(
+      const enabled = yield* decodeForceHttpsRedirectEnabled(option).pipe(
         Effect.mapError((cause) =>
           ForceHttpsRedirectError.make({
             message: cause.message,

@@ -35,6 +35,8 @@ import { FastCheck as fc } from "effect/testing";
 import { desiredFixture, observedAfterApplyFixture, observedFixture, postApplyAdoptionsFixture } from "./fixtures.ts";
 import type { BoxBlockedAction } from "@beep/box-provisioning";
 
+const encodeBoxDesiredState = S.encodeEffect(BoxDesiredState);
+
 const desiredInput = S.encodeSync(BoxDesiredState)(desiredFixture);
 
 const assertCodecRoundTrip = <A, I>(schema: S.Codec<A, I>): void => {
@@ -135,7 +137,7 @@ describe("@beep/box-provisioning orchestration", () => {
       });
       const reviewedPlan = yield* planBoxProvisioning(desired, emptyObserved);
       const reviewedPlanJson = yield* encodeBoxProvisioningPlan(reviewedPlan);
-      const desiredJson = yield* S.encodeEffect(BoxDesiredState)(desired);
+      const desiredJson = yield* encodeBoxDesiredState(desired);
       const observeCount = yield* Ref.make(0);
       const dependencies = Layer.mergeAll(
         Layer.succeed(
@@ -249,7 +251,7 @@ describe("@beep/box-provisioning orchestration", () => {
     "rejects a policy blocker before invoking the mutation service",
     Effect.fnUntraced(function* () {
       const desired = BoxDesiredState.make({ ...desiredFixture, adoptions: BoxAdoptions.make({ entries: [] }) });
-      const input = yield* S.encodeEffect(BoxDesiredState)(desired);
+      const input = yield* encodeBoxDesiredState(desired);
       const plan = yield* planBoxProvisioning(desired, observedFixture);
       const planJson = yield* encodeBoxProvisioningPlan(plan);
       const applyCalls = yield* Ref.make(0);
@@ -279,7 +281,7 @@ describe("@beep/box-provisioning orchestration", () => {
       const plan = yield* planBoxProvisioning(desired, observed);
       const blocked = A.filter(plan.actions, (action): action is BoxBlockedAction => P.isTagged(action, "Blocked"));
       const planJson = yield* encodeBoxProvisioningPlan(plan);
-      const input = yield* S.encodeEffect(BoxDesiredState)(desired);
+      const input = yield* encodeBoxDesiredState(desired);
       const applyCalls = yield* Ref.make(0);
       const dependencies = makeDependencies(plan, plan, applyCalls);
 

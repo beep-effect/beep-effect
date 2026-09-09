@@ -16,6 +16,9 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeTSConfigFieldsCompilerOptionsSync = S.decodeSync(TSConfig.fields.compilerOptions);
+const encodeTSConfigFieldsCompilerOptionsSync = S.encodeSync(TSConfig.fields.compilerOptions);
+
 const renderSchemaFailure = (exit: Exit.Exit<unknown, S.SchemaError>): string =>
   Exit.isFailure(exit) ? Cause.pretty(exit.cause) : "";
 const TSConfigCompilerOptionsArbitrary = S.toArbitrary(TSConfig.fields.compilerOptions)(fc);
@@ -34,8 +37,8 @@ describe("TSConfig schema", () => {
     it("round-trips schema-derived compiler options through the encoded wire shape", () => {
       fc.assert(
         fc.property(TSConfigCompilerOptionsArbitrary.filter(O.isSome), (value) => {
-          const encoded = S.encodeSync(TSConfig.fields.compilerOptions)(value);
-          const decoded = S.decodeSync(TSConfig.fields.compilerOptions)(encoded);
+          const encoded = encodeTSConfigFieldsCompilerOptionsSync(value);
+          const decoded = decodeTSConfigFieldsCompilerOptionsSync(encoded);
 
           expect(decoded).toEqual(value);
         }),

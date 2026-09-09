@@ -65,6 +65,15 @@ import * as Str from "effect/String";
 import { FastCheck as fc } from "effect/testing";
 import type { EvidencePredicateType, GateDeclaration } from "@beep/skill-contract";
 
+const decodeGateRegistry = S.decodeEffect(GateRegistry);
+const decodeSha256HexFromBytes = S.decodeEffect(Sha256HexFromBytes);
+const decodeSkillContract = S.decodeEffect(SkillContract);
+const decodeCitedEventIdExistsInputResult = S.decodeResult(CitedEventIdExistsInput);
+const decodeUnknownEvidenceCrossCheckCleanVerdict = S.decodeUnknownEffect(EvidenceCrossCheckCleanVerdict);
+const encodeUnknownSkillContract = S.encodeUnknownEffect(SkillContract);
+const encodeUnknownCitedEventIdExistsInputResult = S.encodeUnknownResult(CitedEventIdExistsInput);
+const isNonEmptyString = S.is(S.NonEmptyString);
+
 const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 
 const withTempDir = <A, E, R>(use: (dir: string) => Effect.Effect<A, E, R>) =>
@@ -301,7 +310,7 @@ describe("commands/Qa complete judge contract parity", () => {
 
   it.effect("binds the contract evidence subject to the SHA-256 of its own identity", () =>
     Effect.gen(function* () {
-      const digest = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(QaJudgeContractSubject.name));
+      const digest = yield* decodeSha256HexFromBytes(new TextEncoder().encode(QaJudgeContractSubject.name));
 
       expect(QaJudgeContractSubject.name).toBe(`${QaJudgeContract.id}@${QaJudgeContract.version}`);
       expect(QaJudgeContract.evidenceSubject).toBe(QaJudgeContractSubject);
@@ -431,8 +440,8 @@ describe("commands/Qa complete judge contract parity", () => {
         });
       expect(O.map(deniedDetail(malformed), (detail) => detail.failure)).toEqual(O.some("malformed-json"));
       expect(O.map(deniedDetail(wrongCount), (detail) => detail.failure)).toEqual(O.some("inventory-schema-rejected"));
-      expect(O.exists(deniedDetail(malformed), (detail) => S.is(S.NonEmptyString)(detail.issue))).toBe(true);
-      expect(O.exists(deniedDetail(wrongCount), (detail) => S.is(S.NonEmptyString)(detail.issue))).toBe(true);
+      expect(O.exists(deniedDetail(malformed), (detail) => isNonEmptyString(detail.issue))).toBe(true);
+      expect(O.exists(deniedDetail(wrongCount), (detail) => isNonEmptyString(detail.issue))).toBe(true);
     })
   );
 
@@ -469,9 +478,9 @@ describe("commands/Qa complete judge contract parity", () => {
 
   it.effect("round-trips the contract and rejects duplicate QA gate ids at external decode", () =>
     Effect.gen(function* () {
-      const encoded = yield* S.encodeUnknownEffect(SkillContract)(QaJudgeContract);
-      const decoded = yield* S.decodeEffect(SkillContract)(encoded);
-      const duplicate = yield* S.decodeEffect(GateRegistry)({
+      const encoded = yield* encodeUnknownSkillContract(QaJudgeContract);
+      const decoded = yield* decodeSkillContract(encoded);
+      const duplicate = yield* decodeGateRegistry({
         declarations: [CitedArtifactExistsGate, CitedArtifactExistsGate],
       }).pipe(Effect.flip);
 
@@ -483,8 +492,8 @@ describe("commands/Qa complete judge contract parity", () => {
   it("round-trips schema-derived event gate inputs", () =>
     fc.assert(
       fc.property(S.toArbitrary(CitedEventIdExistsInput)(fc), (candidate) => {
-        const encoded = Result.getOrThrow(S.encodeUnknownResult(CitedEventIdExistsInput)(candidate));
-        const decoded = Result.getOrThrow(S.decodeResult(CitedEventIdExistsInput)(encoded));
+        const encoded = Result.getOrThrow(encodeUnknownCitedEventIdExistsInputResult(candidate));
+        const decoded = Result.getOrThrow(decodeCitedEventIdExistsInputResult(encoded));
 
         expect(S.toEquivalence(CitedEventIdExistsInput)(decoded, candidate)).toBe(true);
       }),
@@ -590,7 +599,7 @@ describe("commands/Qa aggregate cross-check settlement", () => {
         const aggregate = yield* evaluateEvidenceCrossCheckClean(
           EvidenceCrossCheckCleanInput.make({ artifactVerdict, eventIdVerdict })
         );
-        const nothingMissing = yield* S.decodeUnknownEffect(EvidenceCrossCheckCleanVerdict)({
+        const nothingMissing = yield* decodeUnknownEvidenceCrossCheckCleanVerdict({
           audit: { ...aggregate.audit, detail: { missingEventIds: [], missingPaths: [] } },
           verdict: "denied",
         }).pipe(Effect.flip);

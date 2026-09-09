@@ -13,6 +13,10 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import { afterEach, vi } from "vitest";
 
+const decodeCanonicalizeDatasetRequestSync = S.decodeSync(CanonicalizeDatasetRequest);
+const encodeDataset = S.encodeEffect(Dataset);
+const encodeCanonicalizeDatasetRequestSync = S.encodeSync(CanonicalizeDatasetRequest);
+
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
   <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
@@ -67,7 +71,7 @@ const expectSemanticBudgetFailure = (error: Error) => {
         return yield* service.canonicalize(
           decodeUnknownSync(CanonicalizeDatasetRequest)({
             algorithm: "rdfc-1.0",
-            dataset: yield* S.encodeEffect(Dataset)(dataset),
+            dataset: yield* encodeDataset(dataset),
           })
         );
       })
@@ -103,7 +107,7 @@ describe("Canonicalization security hardening", { concurrent: false }, () => {
               return yield* service.canonicalize(
                 decodeUnknownSync(CanonicalizeDatasetRequest)({
                   algorithm: "rdfc-1.0",
-                  dataset: yield* S.encodeEffect(Dataset)(dataset),
+                  dataset: yield* encodeDataset(dataset),
                 })
               );
             })
@@ -155,7 +159,7 @@ describe("Canonicalization security hardening", { concurrent: false }, () => {
             return yield* service.canonicalize(
               decodeUnknownSync(CanonicalizeDatasetRequest)({
                 algorithm: "lexical-sort-v1",
-                dataset: yield* S.encodeEffect(Dataset)(dataset),
+                dataset: yield* encodeDataset(dataset),
               })
             );
           })
@@ -188,9 +192,6 @@ describe("Canonicalization security hardening", { concurrent: false }, () => {
   it("derives canonicalization requests from the source schema and proves an encode/decode round-trip", {
     timeout: 30000,
   }, () => {
-    const encode = S.encodeSync(CanonicalizeDatasetRequest);
-    const decode = S.decodeSync(CanonicalizeDatasetRequest);
-
     // Bound the generated RDF dataset to a small collection so deriving + encoding/decoding
     // stays fast and reliable. The round-trip law holds regardless of dataset size.
     const arbitrary = S.toArbitrary(CanonicalizeDatasetRequest)(fc).map((request) =>
@@ -202,9 +203,9 @@ describe("Canonicalization security hardening", { concurrent: false }, () => {
 
     fc.assert(
       fc.property(arbitrary, (request) => {
-        const encoded = encode(request);
+        const encoded = encodeCanonicalizeDatasetRequestSync(request);
 
-        expect(encode(decode(encoded))).toEqual(encoded);
+        expect(encodeCanonicalizeDatasetRequestSync(decodeCanonicalizeDatasetRequestSync(encoded))).toEqual(encoded);
       }),
       fcRuns(5)
     );

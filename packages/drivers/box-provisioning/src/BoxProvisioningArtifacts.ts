@@ -12,6 +12,13 @@ import { BoxDesiredState } from "./BoxProvisioningIntent.ts";
 import { BoxProvisioningPlan } from "./BoxProvisioningPlan.ts";
 import { BoxApplyJournalEntry, BoxApplyReceipt } from "./BoxProvisioningReceipt.ts";
 
+const decodeUnknownBoxDesiredState = S.decodeUnknownEffect(BoxDesiredState);
+const decodeUnknownBoxApplyReceiptJson = S.decodeUnknownEffect(S.fromJsonString(BoxApplyReceipt));
+const decodeUnknownBoxProvisioningPlanJson = S.decodeUnknownEffect(S.fromJsonString(BoxProvisioningPlan));
+const encodeBoxApplyJournalEntryJson = S.encodeEffect(S.fromJsonString(BoxApplyJournalEntry));
+const encodeBoxApplyReceiptJson = S.encodeEffect(S.fromJsonString(BoxApplyReceipt));
+const encodeBoxProvisioningPlanJson = S.encodeEffect(S.fromJsonString(BoxProvisioningPlan));
+
 const schemaError = (stage: BoxProvisioningSchemaError["stage"]) => BoxProvisioningSchemaError.make({ stage });
 
 /**
@@ -29,7 +36,7 @@ const schemaError = (stage: BoxProvisioningSchemaError["stage"]) => BoxProvision
  * @since 0.0.0
  */
 export const decodeBoxDesiredState = (value: unknown) =>
-  S.decodeUnknownEffect(BoxDesiredState)(value).pipe(Effect.mapError(() => schemaError("desired-state")));
+  decodeUnknownBoxDesiredState(value).pipe(Effect.mapError(() => schemaError("desired-state")));
 
 /**
  * Encode a redacted provisioning plan as schema-validated JSON.
@@ -46,7 +53,7 @@ export const decodeBoxDesiredState = (value: unknown) =>
  * @since 0.0.0
  */
 export const encodeBoxProvisioningPlan = (plan: BoxProvisioningPlan) =>
-  S.encodeEffect(S.fromJsonString(BoxProvisioningPlan))(plan).pipe(Effect.mapError(() => schemaError("plan")));
+  encodeBoxProvisioningPlanJson(plan).pipe(Effect.mapError(() => schemaError("plan")));
 
 /**
  * Decode schema-validated reviewed plan JSON.
@@ -63,7 +70,7 @@ export const encodeBoxProvisioningPlan = (plan: BoxProvisioningPlan) =>
  * @since 0.0.0
  */
 export const decodeBoxProvisioningPlan = (text: unknown) =>
-  S.decodeUnknownEffect(S.fromJsonString(BoxProvisioningPlan))(text).pipe(Effect.mapError(() => schemaError("plan")));
+  decodeUnknownBoxProvisioningPlanJson(text).pipe(Effect.mapError(() => schemaError("plan")));
 
 /**
  * Encode a redacted apply receipt as schema-validated JSON.
@@ -80,7 +87,7 @@ export const decodeBoxProvisioningPlan = (text: unknown) =>
  * @since 0.0.0
  */
 export const encodeBoxApplyReceipt = (receipt: BoxApplyReceipt) =>
-  S.encodeEffect(S.fromJsonString(BoxApplyReceipt))(receipt).pipe(Effect.mapError(() => schemaError("receipt")));
+  encodeBoxApplyReceiptJson(receipt).pipe(Effect.mapError(() => schemaError("receipt")));
 
 /**
  * Decode schema-validated apply-receipt JSON.
@@ -97,7 +104,7 @@ export const encodeBoxApplyReceipt = (receipt: BoxApplyReceipt) =>
  * @since 0.0.0
  */
 export const decodeBoxApplyReceipt = (text: unknown) =>
-  S.decodeUnknownEffect(S.fromJsonString(BoxApplyReceipt))(text).pipe(Effect.mapError(() => schemaError("receipt")));
+  decodeUnknownBoxApplyReceiptJson(text).pipe(Effect.mapError(() => schemaError("receipt")));
 
 /**
  * Encode one sanitized apply-journal entry as a single JSON value.
@@ -114,4 +121,4 @@ export const decodeBoxApplyReceipt = (text: unknown) =>
  * @since 0.0.0
  */
 export const encodeBoxApplyJournalEntry = (entry: BoxApplyJournalEntry) =>
-  S.encodeEffect(S.fromJsonString(BoxApplyJournalEntry))(entry).pipe(Effect.mapError(() => schemaError("journal")));
+  encodeBoxApplyJournalEntryJson(entry).pipe(Effect.mapError(() => schemaError("journal")));
