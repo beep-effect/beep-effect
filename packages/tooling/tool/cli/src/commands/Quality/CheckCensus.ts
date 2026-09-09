@@ -586,6 +586,7 @@ const withReferenceKeepingOverlay = Effect.fnUntraced(function* <A, E, R>(
       incremental: false,
       declaration: false,
       declarationMap: false,
+      emitDeclarationOnly: false,
       noEmit: true,
       rootDir: path.relative(packageDir, repoRoot),
     },
