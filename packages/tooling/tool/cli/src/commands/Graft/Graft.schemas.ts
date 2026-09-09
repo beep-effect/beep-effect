@@ -163,7 +163,7 @@ export class GraftCacheSyncPlan extends S.Class<GraftCacheSyncPlan>($I`GraftCach
  *
  * ```ts import.meta.vitest name="Construct an empty receipt"
  * import { GraftCacheSyncPlan, GraftCacheSyncReport } from "@beep/repo-cli/commands/Graft"
- * import { NonNegativeInt } from "@beep/schema"
+ * import { NonNegativeInt } from "@beep/schema/Number"
  * const zero = NonNegativeInt.make(0)
  * const report = GraftCacheSyncReport.make({
  *   plan: GraftCacheSyncPlan.make({ source: "/clones/a", entries: [] }),

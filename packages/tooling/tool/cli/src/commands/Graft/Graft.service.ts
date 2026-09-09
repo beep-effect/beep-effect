@@ -68,7 +68,7 @@ export interface GraftCacheSyncShape {
  *
  * ```ts import.meta.vitest name="Prepare a read-only plan"
  * import { GraftCacheSync } from "@beep/repo-cli/commands/Graft"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * const program = GraftCacheSync.use((sync) => sync.plan("/clones/a", ["/clones/b"]))
  * Effect.isEffect(program) // => true
  * ```
@@ -365,7 +365,7 @@ const makeGraftCacheSync = Effect.fn("GraftCacheSync.make")(function* () {
  *
  * ```ts import.meta.vitest name="Provide the cache sync implementation"
  * import { GraftCacheSync, GraftCacheSyncLive } from "@beep/repo-cli/commands/Graft"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * const program = GraftCacheSync.use((sync) => sync.plan("/clones/a", []))
  *   .pipe(Effect.provide(GraftCacheSyncLive))
  * Effect.isEffect(program) // => true
