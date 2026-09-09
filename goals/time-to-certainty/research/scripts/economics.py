@@ -233,7 +233,7 @@ def absolute_home_path_pattern() -> re.Pattern[str]:
     return re.compile(
         r"(?<![A-Za-z0-9_./-])(?P<file_url>(?i:file://)[^/\s\"'<>]*)?"
         + home
-        + r"(?=$|[/\\\"'\s:),;\]}])"
+        + r"(?=$|[/\\\"'\s:),;\]}?#])"
     )
 
 

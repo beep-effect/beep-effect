@@ -66,3 +66,6 @@ The final live refresh added CSF-011 (three Low and eight Informational total).
 Canonical CSV refresh preserved the ten prior IDs. Four Graft hook tests pass
 for trusted loading and rejection of unavailable, foreign-owned, writable, or
 escaping module paths. Updated package and repository proof are still required.
+
+The file-URL regression also covers home roots followed directly by query and
+fragment delimiters, for plain and gzip evidence. All 17 economics tests pass.

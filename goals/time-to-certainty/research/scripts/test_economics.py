@@ -433,7 +433,16 @@ class PublicHygieneTest(unittest.TestCase):
 
     def test_file_urls_are_rejected_and_redacted_without_changing_branch_names(self) -> None:
         with tempfile.TemporaryDirectory() as directory, mock.patch.object(Path, "home", return_value=Path("/root")):
-            for value in ("file:///root/private.ts", "file://localhost/root/private.ts", "FILE:///root/private.ts"):
+            for value in (
+                "file:///root/private.ts",
+                "file://localhost/root/private.ts",
+                "FILE:///root/private.ts",
+                "file:///root?source=local",
+                "file:///root#file",
+                "file://localhost/root?source=local#file",
+                "/root?source=local",
+                "/root#file",
+            ):
                 for suffix in (".json", ".json.gz"):
                     with self.subTest(value=value, suffix=suffix):
                         file = Path(directory) / ("journal" + suffix)
