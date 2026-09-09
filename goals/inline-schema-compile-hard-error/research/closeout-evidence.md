@@ -36,7 +36,7 @@ the package sources are unchanged, but the complete merge tree differs.
 | Keep generated output reproducible | Fresh `bun run --cwd packages/foundation/modeling/html generate:check`; full codegen lane | No tracked generated diff |
 | Complete local repository proof | PR #1028 preview: `bun run beep yeet verify --merged`, full tier, outcome success, process exit 0, 34 reported lanes passed in 2,222,351 ms | Green on the pinned follow-up tree; package matrix remains separately required |
 | Complete hosted implementation checks | [PR #1022 Check run](https://github.com/beep-effect/beep-effect/actions/runs/34303197901) and the PR's status rollup | Required checks green; no failing rollup entry |
-| Address review comments | Two original PR #1019 threads and all three PR #1022 threads | Replies posted; all resolved |
+| Address review comments | Two PR #1019 threads, three PR #1022 threads, and four PR #1028 threads | Replies posted; all nine resolved, confirmed on GitHub on 2026-09-09 |
 | Capture friction and lessons | `OPPORTUNITIES.md` and `history/reflections/2026-09-08-codex.md` | Retained with the packet |
 
 The historical package report is stamped at `45b422a58e75324c30d7d4e60e5ef0b91be35bab`.
@@ -100,6 +100,13 @@ lowered, and the subsequent hosted Coverage Regression check passed.
 - [Explicit local environment](https://github.com/beep-effect/beep-effect/pull/1022#discussion_r3963927989): account for `useLocalEnv` as well as ambient extension; resolved.
 - [Unary schema literals](https://github.com/beep-effect/beep-effect/pull/1022#discussion_r3963944769): accept static signed literals for hoist detection while retaining runtime-dependent factories; resolved.
 - [Ambient values outside the allowlist](https://github.com/beep-effect/beep-effect/pull/1022#discussion_r3963964963): hash all inherited values into a digest; resolved.
+- [Tracked lint configuration path](https://github.com/beep-effect/beep-effect/pull/1028#discussion_r3964376328): corrected the audit to reference `.oxlintrc.json`; resolved.
+- [Same-PR packet closeout](https://github.com/beep-effect/beep-effect/pull/1028#discussion_r3964376332): proof-runner repair and reflection shipped together in #1028; thread resolved. The subsequent external merge prevented the final lifecycle flip in that PR, so the publication exception still awaits operator direction.
+- [Premature P3 completion](https://github.com/beep-effect/beep-effect/pull/1028#discussion_r3964376341): restored active lifecycle and incomplete closeout gates; resolved. P3 remains open until the actual terminal monitor result exists.
+- [Fresh committed-tree package receipt](https://github.com/beep-effect/beep-effect/pull/1028#discussion_r3964829818): pushed the completed v2 matrix and supplemental owner evidence in `abd5416aa2`, posted the proof links, and resolved the thread.
+
+A complete GitHub review-thread query on 2026-09-09 returned all nine threads
+as resolved, with no additional pages for any of the three PRs.
 
 ## Publication sequence
 
@@ -108,6 +115,10 @@ all required checks green, then ended with `reason: pr-merged` and `failing: 0`.
 PR #1028 carried the proof-runner repair and reflection together. Package
 evidence is now complete; the lifecycle remains active while publication and
 the terminal `merge-ready: yes` result are outstanding.
+
+The final receipts are committed and pushed in `abd5416aa2` on
+`codex/inline-schema-final-evidence`. No further PR has been opened while the
+operator's choice about final publication remains pending.
 
 PR #1028 was also merged externally before the local matrix completed and
 before the requested terminal monitor result was recorded. All required

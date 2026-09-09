@@ -33,11 +33,12 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P2 verification is complete; P3 review and P4 closeout are in progress. The
+P2 verification is complete; P3 publication and P4 closeout are in progress. The
 implementation and package-proof identity repair are merged. The new full
-local proof and all package verification passed. Closure still requires
-publication of the final receipts and a terminal Yeet monitor verdict. The
-final publication path awaits operator direction after PR #1028 merged before closeout.
+local proof and all package verification passed. All nine review threads are
+resolved, and the final receipts are pushed in `abd5416aa2`. Closure still
+requires landing those receipts and recording a terminal Yeet monitor verdict.
+The final PR path awaits operator direction after PR #1028 merged before closeout.
 
 ## Latest Evidence
 
@@ -76,10 +77,11 @@ final publication path awaits operator direction after PR #1028 merged before cl
 - [PR #1028](https://github.com/beep-effect/beep-effect/pull/1028) shipped the
   proof-runner repair and retained the
   [reflection](./history/reflections/2026-09-08-codex.md). Its required hosted
-  checks passed, but it merged before local verification finished. Three of
-  its four review threads are resolved; the package-evidence thread remains
-  open. The lifecycle remains active until final evidence and publication
-  satisfy the remaining gates.
+  checks passed, but it merged before local verification finished. All four
+  review threads are resolved; the final
+  [package-evidence reply](https://github.com/beep-effect/beep-effect/pull/1028#discussion_r3964829818)
+  links the pushed receipts. The lifecycle remains active until publication
+  and terminal monitoring satisfy the remaining gates.
 
 ## Notes
 

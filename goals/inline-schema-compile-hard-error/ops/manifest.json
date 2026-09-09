@@ -70,13 +70,13 @@
       "id": "P3",
       "name": "Yeet: PR to mergeable",
       "status": "in-progress",
-      "evidence": "PRs #1019, #1022, and #1028 merged. The first two PRs' five review threads are resolved; three of #1028's four threads are resolved and its package-evidence thread remains open. The required terminal merge-ready: yes result remains unrecorded."
+      "evidence": "PRs #1019, #1022, and #1028 merged. All nine review threads are replied to and resolved, confirmed on GitHub on 2026-09-09. The final #1028 package-evidence reply links receipts pushed in abd5416aa2. The required terminal merge-ready: yes result remains unrecorded."
     },
     {
       "id": "P4",
       "name": "Close",
       "status": "in-progress",
-      "evidence": "The validated reflection is present. README.md, PLAN.md, and this manifest remain active until corrected package evidence and the terminal monitor gate are satisfied. The final publication path awaits operator direction after #1028 merged before closeout."
+      "evidence": "The validated reflection is present, and the corrected package evidence is pushed. README.md, PLAN.md, and this manifest remain active until the receipts land and the terminal monitor gate is satisfied. The final PR path awaits operator direction after #1028 merged before closeout."
     }
   ],
   "verificationCommands": [

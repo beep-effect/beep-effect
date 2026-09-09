@@ -20,8 +20,10 @@ checks on the same implementation tree. PR #1028 shipped the package-proof
 runner repair and reflection, but also merged before local verification and
 packet closeout finished. The clean v2 matrix passed all 106 owners, and two
 supplemental package verifications cover the remaining audited owners. The
-full local proof passed all 34 reported lanes. The final publication path
-awaits operator direction. The package and terminal monitor gates remain unchanged.
+full local proof passed all 34 reported lanes. All nine review threads across
+the three PRs are resolved, and the receipts are pushed in `abd5416aa2`.
+The final PR path awaits operator direction. The package and terminal monitor
+gates remain unchanged.
 
 ## P0 — Research
 
