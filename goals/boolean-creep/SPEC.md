@@ -81,7 +81,7 @@ new status in the live inventory.
   orchestrator verifies 100% of qualified entries against their cited evidence.
 - **GATE 1 — Benjamin ratifies the confirmed inventory (and skims the
   disqualified census) before any design work launches.**
-- **P2 design** — one codex job (`gpt-6-astra`, `xhigh` reasoning) per confirmed
+- **P2 design** — one codex job (`gpt-6-astra`, `medium` reasoning) per confirmed
   instance, batched by package/app, writing `designs/<id>.md`: current shape,
   cardinality gap, target schema (schema-first-development doctrine: LiteralKit
   for literal domains, class schemas, derived `S.is` guards), migration of

@@ -731,9 +731,9 @@ type CiFleetControllerArgs = {
  * job whose runner died between launch and pickup (spot reclaim, boot
  * failure) — without it such a job waits on GitHub's six-hour queue timeout,
  * because nothing else re-delivers it. A capacity reclaim mid-job still fails
- * that job and only a workflow re-run recovers it; the fleet runs on-demand
- * for the bring-up window after cutover-night reclaim sweeps, with spot (a
- * ~3x cost saving) as the intended steady state. `runners_maximum_count` bounds
+ * that job and only a workflow re-run recovers it. The heavy pool uses
+ * on-demand capacity permanently after repeated interruption sweeps exceeded
+ * the fleet's reliability tripwire. `runners_maximum_count` bounds
  * concurrent instances only — jobs beyond the cap retry from SQS as capacity
  * frees rather than being dropped. `enable_job_queued_check` stays false: its
  * not-queued branch consumes the scale-up message with no retry, so GitHub
@@ -920,13 +920,11 @@ export class CiFleetController extends pulumi.ComponentResource {
           },
         },
         instance_allocation_strategy: "price-capacity-optimized",
-        // P1 spot revert (2026-08-16): the measured on-demand week was calm —
-        // 20/528 re-runs since 2026-08-11, all attributed to lane-wedge
-        // reruns, one glob-timeout flake, and supersede cancels; zero
-        // capacity-class. Tripwire stays armed: >2 interruption re-runs/week
-        // sends the longest lanes back to on-demand
-        // (goals/ci-fleet-residue/research/p1-spot-revert-baseline.md).
-        instance_target_capacity_type: "spot",
+        // Permanent heavy-pool posture: the 2026-09-09 interruption sweep
+        // exceeded the >2 interruption-reruns/week tripwire. Launch-time
+        // on-demand failover cannot recover a runner reclaimed mid-job.
+        // Keep the existing cap and ephemeral teardown to bound spending.
+        instance_target_capacity_type: "on-demand",
         instance_termination_watcher: {
           enable: true,
           enable_runner_deregistration: true,
@@ -996,6 +994,46 @@ export class CiFleetController extends pulumi.ComponentResource {
       },
       { dependsOn: [runnerAmiParameter], parent: this, provider }
     );
+
+    // Upstream v7.10.1 grants these roles ssm:GetParameter but does not pass
+    // kms_key_arn into the termination-watcher module. Own only the missing
+    // grant on the KMS key; leave its roles and policies under module control.
+    // External inline/attached policies can block the module's role deletion.
+    // Include the immutable IAM role ID in each grant name so a same-name role
+    // replacement creates fresh grants instead of inheriting stale state.
+    // The notification function also handles ordinary instance termination,
+    // so these credentials remain necessary for the on-demand fleet.
+    for (const functionName of [
+      "beep-ci-spot-termination-notification",
+      "beep-ci-spot-termination-handler",
+      "beep-ci-deregister-retry",
+    ]) {
+      const watcher = aws.lambda.getFunctionOutput(
+        { functionName, region: args.region },
+        { dependsOn: [controller], parent: this }
+      );
+      const role = aws.iam.getRoleOutput(
+        { name: watcher.role.apply(Str.replace(/^.*\//, "")) },
+        { dependsOn: [controller], parent: this }
+      );
+      for (const { purpose, parameterArn } of [
+        { purpose: "id", parameterArn: args.config.githubAppIdSsmParameterArn },
+        { purpose: "key", parameterArn: args.config.githubAppKeyBase64SsmParameterArn },
+      ]) {
+        new aws.kms.Grant(
+          `${name}-${functionName}-app-${purpose}-decrypt`,
+          {
+            name: pulumi.interpolate`${functionName}-${role.uniqueId}-${purpose}`,
+            region: args.region,
+            keyId: args.config.githubAppKmsKeyArn,
+            granteePrincipal: watcher.role,
+            operations: ["Decrypt"],
+            constraints: [{ encryptionContextEquals: { PARAMETER_ARN: parameterArn } }],
+          },
+          { parent: this }
+        );
+      }
+    }
 
     this.ssmParameters = controller.ssm_parameters;
     this.webhook = controller.webhook;

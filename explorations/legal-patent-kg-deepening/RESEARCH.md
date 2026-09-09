@@ -1,7 +1,7 @@
 # Research
 
-> Future reuse (2026-09-08): new token-heavy Codex work follows the
-> [Astra/xhigh routing update](./DECISIONS.md). The graduated campaign
+> Future reuse (2026-09-09): new token-heavy Codex work follows the
+> [Astra/medium routing update](./DECISIONS.md). The graduated campaign
 > operating plan below retains its original model choices as historical provenance.
 
 <!--

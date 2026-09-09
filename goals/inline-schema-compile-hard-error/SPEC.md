@@ -65,8 +65,14 @@ Higher sources outrank lower sources when they conflict.
 - [x] Every affected workspace package completes its required package verify.
 - [x] Generated sources are regenerated from their updated owners without
       unexplained drift.
-- [ ] Canonical repository and hosted verification are green.
+- [x] Canonical repository and hosted verification are green.
 - [x] No unrelated refactors or formatting churn.
+
+These acceptance records refer to the completed implementation and its pinned
+verification evidence. This packet-only closeout candidate must independently
+pass final-head local and hosted verification and terminal Yeet monitoring
+before merge. The lifecycle update is included before publication so that the
+accepted PR lands the completed packet without another metadata-only follow-up.
 
 ## Verification Matrix
 
@@ -96,4 +102,5 @@ Higher sources outrank lower sources when they conflict.
 | Exception | Scope | Owner | Rationale | Removal condition |
 | --- | --- | --- | --- | --- |
 | Final closeout follows the implementation PR | Packet publication only; PR #1038 | Operator, approved 2026-09-09 | PR #1028 merged before final verification and lifecycle closeout. The operator authorized a final closeout PR; no implementation or verification requirement was waived. | Superseded by the successor-draft exception after #1038 also merged before closeout. |
-| Successor draft carries final closeout | Packet publication only; draft PR #1042, branch `codex/inline-schema-packet-closeout` | Operator, approved 2026-09-09 | PR #1038 merged while its final-head local proof was queued. The operator authorized a successor draft PR, retained as a draft through local proof and the packet update. No implementation or verification requirement is waived. | The successor contains the final packet update, its final head passes verification and reaches Yeet `merge-ready: yes`, and it is marked ready for the operator to merge. |
+| Successor draft carries final closeout | Packet publication only; PR #1042, branch `codex/inline-schema-packet-closeout` | Operator, approved 2026-09-09 | PR #1038 merged while its final-head local proof was queued. The operator authorized a successor draft PR and later marked it ready for review. No implementation or verification requirement was waived. | Unfulfilled at merge: #1042 merged at 09:01:20 UTC on 2026-09-09 before the final packet update. Superseded by the explicitly approved lifecycle-closeout successor below. |
+| Lifecycle update precedes successor publication | Packet publication only; branch `codex/inline-schema-lifecycle-closeout` | Operator, approved 2026-09-09 after #1042 merged | The operator authorized one successor containing the completed packet-state update before publication, with merging held until final verification and reviews complete. This corrects #1042's packet-closeout P1 without waiving any implementation, verification, or review requirement. | The successor contains the synchronized completed-retained lifecycle, completed phase states, and validated reflection; its final head passes local and hosted verification, all review comments are addressed, and Yeet reports `merge-ready: yes`. |

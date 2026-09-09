@@ -465,3 +465,47 @@ must preserve these loaders; their regression tests live in the CLI package.
 - Review after four weeks of use: does the graph replace grep-storms in
   practice, and do the hooks' per-prompt injections earn their tokens? If
   not, `graft uninstall` is the inverse of `graft init`.
+
+---
+
+## 2026-09-09: Graft Posture Hardened After Adversarial Review
+
+**Context:** Two independent adversarial reviews (a Codex lane and a Grok
+lane) of the 2026-09-08 wiring converged on the same defects, and one was
+observed live: Graft's session upkeep rewrites this repository's tracked
+wiring whenever the wiring stamp in its git-ignored cache is missing or
+names another version, which is every fresh checkout and every upgrade.
+Its default rewrite options also touch the machine-wide Codex config. Two
+sibling checkouts already carried that drift. The per-prompt hook was capped
+at a four-second child by a millisecond/second mismatch inside graft, the
+per-tool-call savings hook spawned a node process on every Read, Grep, Glob,
+and Bash, the `subagentStatusLine` entry did not speak the documented
+protocol, and `Bash(graft build:*)` also approved `--deep`.
+
+**Decision (operator, 2026-09-09):** the CLI plus skill is the integration.
+
+- The repo-owned loader writes the wiring stamp for the running version
+  before any Graft entry point runs, so upkeep is a no-op by construction.
+- No Graft MCP server anywhere: removed from `.mcp.json`, the Grok and
+  OpenCode configs (files deleted), and the machine-wide Codex config; the
+  Codex hooks were removed with it. Codex keeps the `AGENTS.md` section and
+  the CLI. Grok keeps its skill file.
+- Claude Code keeps SessionStart, post-edit, and Stop hooks and the
+  statusline. The UserPromptSubmit and tool-savings hooks and the
+  `subagentStatusLine` entry are gone.
+- Grants: the seven query subcommands plus the exact `graft build`. Denied
+  outright: `graft init`, `graft uninstall`, `graft upgrade`. The ai-sync
+  policy pins both domains.
+- `.rgignore` keeps the cards out of ordinary ripgrep; graft's `.ignore` stays
+  tracked so builds do not churn it.
+- Biome and ESLint now lint the repo-owned loader; only the two generated
+  shims and the skill files stay excluded.
+- Telemetry is disabled on the workstation. The install is pinned under the
+  user-local prefix, off the nvm tree, with the synthesis checkpoint patch
+  re-applied; the previous entry's "nothing wired here calls a model" is
+  superseded: the meaning tier is built operator-side through the local proxy.
+
+**Watch items carried forward:** graft's `-j` does not reach the concept
+pass (fixed at eight workers); the prompt-hook unit bug and the missing
+synthesis checkpoint belong upstream; re-check the stamp guard against any
+new graft version before upgrading.

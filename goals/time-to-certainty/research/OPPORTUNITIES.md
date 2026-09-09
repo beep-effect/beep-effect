@@ -582,10 +582,62 @@ subprocess diagnostics would make inventory stalls attributable.
   Nothing in the head explains a simultaneous stop, and the same lanes were green on the previous
   head except for a baseline-row finding fixed in this push. The merge button refused on the
   required checks, so the remedy was a fresh push (main merged forward) rather than a code change.
-- **Would have prevented it:** the runner-fleet janitor or lifetime policy leaving a visible marker
-  (a job annotation or a `[beep-ci] runner reclaimed` log line) so an operator can attribute a
-  step-less failure without reading two job payloads, plus `yeet monitor` classing
-  "completed/failure with no failed step" as environment-only automatically.
+- **Root cause (later the same night, second occurrence on #1046 at 08:38Z):** the fleet runs
+  spot capacity (`instance_target_capacity_type: "spot"`, price-capacity-optimized) with on-demand
+  failover only for launch-time capacity errors, so a mid-run reclaim wave takes every affected
+  runner at once and the two longest lanes are the ones exposed.
+- **Would have prevented it:** an on-demand pool for the long heavy lanes or the runner module's
+  job re-queue on spot interruption, a visible `runner reclaimed` marker on the job, and
+  `yeet monitor` classing "completed/failure with no failed step" as environment-only.
+
+### AWS investigation and permanent mitigation
+
+- The live AWS Spot request records confirm both PR #1029 workers were reclaimed at
+  **07:24:29 UTC**, about 11.5 minutes before GitHub recorded their failures. PR #1046's
+  matched runners also report `instance-terminated-no-capacity`. The apparent 18–23 minute
+  limit therefore includes runner-loss detection delay; it is not a lane timeout.
+- A retained fleet snapshot contained 30 capacity interruptions across three instance types
+  and both configured availability zones. Additional matched failures included Lint Policy
+  and very early Check execution. A 16-minute cutoff would not protect all observed losses.
+- The pinned module's `job_retry` input checks jobs that are still queued. It rescues launch
+  or pickup failures, not an in-progress job whose runner has disappeared. No mid-job resume
+  guarantee is supplied by enabling that existing input, which was already enabled.
+- The operator requested a permanent fix. The smallest implemented infrastructure change
+  moves the existing heavy pool to On-Demand while preserving the 14-runner cap, labels,
+  network, identity boundary, and ephemeral teardown. A second pool would preserve Spot
+  discounts for short lanes but also preserve their demonstrated interruption exposure.
+- The same investigation found the upstream v7.10.1 termination watcher missing its
+  customer-managed KMS decrypt grant: 164 credential-access failures in one hour. The
+  initial deployment added three narrow inline policies. PR review caught a future
+  role-deletion hazard from attaching policies outside the upstream role owner's graph.
+  The final source uses six key-owned KMS grants, scoped to Decrypt and each exact App
+  parameter context. Names include immutable role IDs so same-name replacements renew
+  access. Explicit controller-region lookups also fix ambient-region drift. These grants
+  permit direct decryption of matching ciphertext; they cannot require `kms:ViaService`.
+- Production apply completed with three policy additions, two controller updates, and no
+  deletions. A subsequent preview reported 198 unchanged resources. Live CloudTrail reads
+  prove decryption now succeeds; 12 IAM simulations prove intended access and negative
+  cases. Fresh On-Demand workers completed the standard
+  [fleet probe](https://github.com/beep-effect/beep-effect/actions/runs/34333728712) and
+  [Heavy / Docgen](https://github.com/beep-effect/beep-effect/actions/runs/34332600371/job/102408052217).
+  The probe worker then terminated normally. Full deployment details and reproduction
+  commands are in `docs/runbooks/ci-runner-reliability.md`.
+- Review migration completed in attended stages: six KMS grants created, their scopes
+  checked, five minutes allowed for propagation, then three initial policies removed
+  at 09:56:32 UTC. Final preview: 201 unchanged. At 09:57:25 UTC, CloudTrail recorded
+  successful SSM reads and KMS decrypts for both App parameters after policy removal;
+  natural cleanup reached GitHub. IAM simulation does not account for KMS grants.
+  Both this investigation and the newly landed reap-claim settlement receipt are
+  preserved in the merged ledger.
+- Publication friction: `changeset-status --since origin/main` evaluates the committed
+  range. The pre-deployment dirty-tree check reported no product workspace, while the
+  first published range correctly required an `@beep/infra` release note. Add the
+  infrastructure changeset before publication; a dirty-tree zero count is not proof
+  that the committed change is exempt from the release-note rule.
+- Merge publication friction: Yeet's stale-base check runs before its commit step, so
+  a resolved but uncommitted merge still appears behind `origin/main`. Complete the
+  reviewed merge commit first, then resume normal Yeet publication; do not bypass
+  freshness checks or force-push a rebase.
 
 ## 2026-09-09 — The reap-claim settlement window was a 25 ms sleep
 

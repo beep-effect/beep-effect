@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -13,7 +13,7 @@ Eliminate the remaining inline Schema compiler calls and promote
 
 ## Launch
 
-Use this command for execution-capable sessions:
+Retained launcher for provenance; this completed packet is not an execution queue:
 
 ```text
 /goal follow the instructions in goals/inline-schema-compile-hard-error/GOAL.md
@@ -25,7 +25,7 @@ Use this command for execution-capable sessions:
 
 1. [`GOAL.md`](./GOAL.md) - compact `/goal` launcher.
 2. [`SPEC.md`](./SPEC.md) - normative source of truth.
-3. [`PLAN.md`](./PLAN.md) - active execution plan.
+3. [`PLAN.md`](./PLAN.md) - completed execution plan.
 4. [`ops/manifest.json`](./ops/manifest.json) - machine-readable routing.
 5. [`research/SOURCES.md`](./research/SOURCES.md) - opening evidence and
    provenance.
@@ -33,21 +33,22 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P2 verification, P3 publication, and P4 closeout are in progress. The
-implementation and package-proof identity repair are merged. The full proof
-on opening evidence head `59bba09125` and all 108 package-owner verifications
-passed. All thirteen review threads across the four PRs are resolved.
-The operator-approved [closeout PR #1038](https://github.com/beep-effect/beep-effect/pull/1038)
-merged at 07:19 UTC on 2026-09-09 with all 18 required hosted checks passed.
-Its final head `3324595a3b` was still queued for local proof; that owned run
-was stopped cleanly after the merge. The final packet update and terminal
-Yeet monitor verdict remain outstanding. The operator approved a successor
-draft closeout PR on 2026-09-09. [PR #1042](https://github.com/beep-effect/beep-effect/pull/1042)
-is open as a draft on branch `codex/inline-schema-packet-closeout`, based on
-the #1038 squash merge. It will remain draft through local proof and the
-final packet update.
-P2 stays open with the canonical repository and hosted acceptance item; the
-completed local and package proofs do not close that remaining gate.
+This closeout changeset completes P0 through P4 and retains the packet as
+implementation and verification history. The compiler migration, hard-error
+promotion, review corrections, and all 108 package-owner verifications are
+complete. The final lifecycle update and validated reflection are included
+together, resolving the missing packet-state change identified in
+[PR #1042's P1](https://github.com/beep-effect/beep-effect/pull/1042#discussion_r3966538923).
+
+The operator authorized this successor on 2026-09-09 after #1042 merged
+before its packet update. It is published from
+`codex/inline-schema-lifecycle-closeout`. The completed-retained state is the
+state this PR will land, not a claim that its own publication has already
+passed. Merging remains held until its final head passes canonical local and
+hosted verification, all review comments are addressed, and Yeet reports
+`merge-ready: yes`. Final-head receipts and thread resolutions belong to that
+PR and Yeet's run artifacts; the historical receipts below keep their original
+identities. The agent will not merge the PR.
 
 ## Latest Evidence
 
@@ -96,8 +97,8 @@ completed local and package proofs do not close that remaining gate.
   checks passed, but it merged before local verification finished. All four
   review threads are resolved; the final
   [package-evidence reply](https://github.com/beep-effect/beep-effect/pull/1028#discussion_r3964829818)
-  links the pushed receipts. The lifecycle remains active until publication
-  and terminal monitoring satisfy the remaining gates.
+  links the pushed receipts. The packet remained active after that merge
+  because publication and terminal monitoring were still outstanding.
 - The [September 9 reflection](./history/reflections/2026-09-09-codex.md)
   supplements the earlier account with the completed proofs, the full owner
   inventory, and the remaining publication gate.
@@ -106,6 +107,13 @@ completed local and package proofs do not close that remaining gate.
   proof state and lane receipts pin its correct identity despite the verdict
   header retaining the invocation's starting SHA. The closeout audit records
   the tested merge preview and the receipt-consistency limitation.
+- PR #1042 merged with head `bba3d0aa8b` before its packet-state update. All 23
+  CI-parity stages later passed on preview `6d62d85e73`, but the outer publish
+  exited 1 after detecting the agent's new incident notes. The
+  [closeout audit](./research/closeout-evidence.md) separates the passing
+  checker evidence from the failed publication and the packet-closeout P1.
+  This successor includes the missing lifecycle and phase-state correction
+  before publication; it does not relabel the failed run as successful.
 
 ## Notes
 
