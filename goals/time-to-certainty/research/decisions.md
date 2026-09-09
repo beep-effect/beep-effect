@@ -271,3 +271,26 @@ by evidence).
 
 **Execution:** PR 1 (C3.1) runs on a Codex lane at medium effort from
 `research/c3-1-brief.md`; the orchestrator publishes and answers review; Benjamin merges.
+
+## 2026-09-09 — Lane identity, round 8 (one ruling, steward: Benjamin, quality-lane audit PLAN D4)
+
+Inputs: quality-lane audit 2026-09-09 (`REPORT-local.md` finding D1: one command carried three or
+four lane ids — `check:tsgo:rules` / `lint:tsgo-rules` / `cheap-gates:tsgo-rules` / log prefix
+`[check:tsgo-rules]` — while the lane-proof ledger, `IssueClassification.knownSubLaneHints`, and the
+WaveOrder seed all key on the id), PLAN decision D4, PR "Lane orchestration, turbo graph, and lane
+identity" (feat/quality-lanes-pr1).
+
+**Ruling 28 — one lane id per command; tier is metadata; label is the log prefix.** A GitHub-check
+lane id names the command it runs and nothing else, uses `:` as its only separator, and equals the
+lane's step label, so the `[beep-cli] <label>` log prefix, the lane-proof ledger key, the
+remediation-hint needle, and the wave-order seed key are one string. The scheduling tier is a
+`tier` field on `GithubCheckLaneSpec` (`cheap-gates` | `pre-push`), never an id prefix: the same
+command keeps one id in both tiers, which is what lets ruling 1's reuse match across tiers when
+the tree is unchanged. A cheap-gates lane that repeats a lint-policy step carries that step's id.
+Enforced by a test over every registered lane (label equals id; no two ids run one command).
+This supersedes the C3 lane table's legend sentence (`research/c3-lane-task-table.md`, line 284,
+"lane ids consumed by `IssueClassification.ts` and WaveOrder keep their names"): task ids are still
+recorded beside lane ids, but the lane ids themselves converge on the command name. Rejected:
+keeping tier-prefixed ids and de-duplicating in the ledger by command digest alone (the hints and
+the seed would still fork on spelling). Consequence accepted: ProofLedger and GateStaleness entries
+keyed on the old spellings are non-reusable for exactly one run after the rename.
