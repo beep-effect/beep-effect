@@ -161,10 +161,16 @@ CI-stack deletion. Import the existing budget at its final parent/provider
 address before changing its amount; an import must first match existing cloud
 values. Suppress generated import code and keep subscriber outputs secret.
 
-The initial Pulumi preview contains 13 logical creates and two updates, with
-no replacements or deletions. A separate budget-adoption preview imports the
-existing budget and component and registers one provider; 201 existing resources
-are unchanged. These previews do not mean the controls have been applied.
+Adopt new component parents before importing their child providers. The first
+bulk adoption passed preview but wrote an invalid checkpoint when Pulumi
+registered the provider before its new parent. The pre-operation encrypted
+export restored the checkpoint; separate component and provider/budget imports
+then succeeded. Keep generated import files and state exports private.
+
+The attended September 9 apply completed after adoption: ten account-control
+creates and three updates, with 201 existing resources unchanged and no
+replacements or deletions. The nested runner-module update changed only the
+scale-up Lambda's allocation-strategy setting to `lowest-price`.
 
 Use one daily anomaly email subscription with a $10 absolute-impact
 threshold and the existing budget recipient. Activate only available useful
@@ -282,6 +288,27 @@ versions, timestamps and API results; no object contents were exported.
 | One 2021 manual RDS final snapshot | Deleted. | Historical backup charge about $0.11/month. |
 | One 2022 customer KMS key | Pending deletion, 30 days, scheduled completion October 9. | About $3/month storage charges cease while pending deletion. |
 | Six 2022 customer KMS keys | Blocked; their resource policies designate `terraform-user` as sole administrator. | About $18/month remains an opportunity, not realized savings. |
+
+The approved cost-control rollout completed at approximately 12:46 UTC. Direct
+AWS reads verified the following after the successful saved-plan apply:
+
+- The existing monthly budget is $500, with actual percentage thresholds at
+  50/80/100 and a forecast threshold at 100. All four notifications retain the
+  same existing recipient; cost semantics are preserved.
+- All six selected cost-allocation tags are Active.
+- Compute Optimizer is Active with no member accounts enrolled and no paid
+  EC2 recommendation preferences. Cost Optimization Hub is Active for this
+  account only. Recommendations and billing attribution still need collection
+  time; enrollment itself is not a savings receipt.
+- One service-dimension anomaly monitor and one daily subscription exist. The
+  threshold is absolute impact greater than or equal to $10; its existing email
+  recipient is CONFIRMED.
+- The live scale-up Lambda retains On-Demand capacity, cap 14 and the same
+  instance-type list, with `lowest-price` allocation. No worker was replaced.
+
+An encrypted post-apply stack export passed the normal integrity check. The
+six old KMS keys and fresh runner-image bake remain separate access blockers;
+neither is included in the completed cost-control rollout.
 
 All four hosted zones remain. The 2026 certificate formerly used by the retired
 asset distribution is preserved under the cutoff and has no base certificate

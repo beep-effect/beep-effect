@@ -354,3 +354,23 @@ Record receipts at the moment friction happens; redact for the public repo.
 - Prevention: anchor the closeout parser to the "Confidence Score:"
   heading, never a bare N/5 match, and re-fetch on updated_at rather than
   trusting a prior parse of an in-place-edited comment.
+
+### Budget adoption exposed a parent/provider import ordering failure
+
+- **Doing:** attended adoption of the existing budget after an approved preview.
+- **Evidence:** the bulk import registered the dedicated provider before its new
+  component parent; Pulumi reported `child resource ... refers to missing parent`
+  while saving the checkpoint. Only provider state was created; no AWS workload
+  changed. A private encrypted export was captured before the operation.
+- **Remediation:** compare and restore that checkpoint, register the component
+  first, then import its provider and existing budget before previewing updates.
+- **Prevention:** adoption runbooks must separate new component registration from
+  child-provider imports and verify a recoverable state export before mutation.
+
+- **Verified recovery:** restored the pre-operation checkpoint, imported the
+  component first, then its provider and budget. The approved saved-plan update
+  completed with ten creates, three updates, 201 unchanged, and no replacements
+  or deletions. A normal encrypted export passed integrity checking afterward.
+  Direct AWS reads confirm the $500 budget, four existing-recipient alerts, six
+  Active tags, standard account-only enrollments, and a confirmed daily $10
+  anomaly subscription. The fleet remains On-Demand with cap 14.
