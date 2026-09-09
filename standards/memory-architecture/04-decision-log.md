@@ -422,8 +422,13 @@ Claude Code hook `timeout` is in seconds (graft writes milliseconds, so its
 values were divided by 1000), and its `npx graft` / `graft-dev` /
 `node dist/cli.js` allowlist entries were dropped (`npx graft` would resolve
 the unrelated unscoped npm package; the other two are for developing graft
-itself). Only `Bash(graft:*)` is allowed. A re-run of `graft init` restores
-the upstream values, so re-apply both corrections after any upgrade.
+itself). Only the read-only query subcommands are allowed (`graft ask`,
+`grep`, `skeleton`, `callers`, `map`, `blast`, `check`, and `build`);
+`graft init`, `uninstall`, and `upgrade` rewrite tracked agent configuration
+and keep their permission prompt. A re-run of `graft init` restores the
+upstream values, so re-apply both corrections after any upgrade; the
+`@beep/ai-sync` repo safety policy pins the exact allow domain and fails the
+check lane if the broad `Bash(graft:*)` grant comes back.
 
 **Prerequisite on every machine:** the `graft` executable must be on the PATH
 of the agent process, because the MCP registrations launch the bare command.
