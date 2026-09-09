@@ -243,13 +243,23 @@ describe("CI runner security", () => {
         assert.strictEqual(setup.with?.["repository-secrets"], "${{ toJSON(secrets) }}", jobId);
         assert.strictEqual(setup.with?.["app-secrets"], appSecrets ? "true" : undefined, jobId);
       }
-      // Pull requests never publish a cache entry; only the push-only Build job saves.
+      // Pull requests never publish a cache entry; Build saves only on push.
       for (const [jobs, jobId] of turboJobs) {
         if (jobId === "build") continue;
         assert.strictEqual(setupMonorepoStep(jobs, jobId).with?.["cache-write"], "false", jobId);
       }
-      assert.strictEqual(workflow.getIn(["jobs", "build", "if"]), "github.event_name == 'push'");
-      assert.strictEqual(setupMonorepoStep(workflowJobs(workflow), "build").with?.["cache-write"], "true");
+      // Quality-lane audit D12: Build runs on pull requests (affected-scoped,
+      // remote-cache read) and keeps the write environment for pushes only.
+      assert.isUndefined(workflow.getIn(["jobs", "build", "if"]));
+      assert.strictEqual(
+        workflow.getIn(["jobs", "build", "environment"]),
+        "${{ github.event_name == 'push' && 'turbo-cache-write' || null }}"
+      );
+      assert.strictEqual(
+        setupMonorepoStep(workflowJobs(workflow), "build").with?.["cache-write"],
+        "${{ github.event_name == 'push' && 'true' || 'false' }}"
+      );
+      assert.include(workflowText, 'bun run beep ci lane build "${shape_args[@]}"');
 
       assert.include(workflowText, 'eval "$(scripts/ci-change-profile.sh');
       assert.include(workflowText, 'if [[ "$goals_only" == "true" ]]');

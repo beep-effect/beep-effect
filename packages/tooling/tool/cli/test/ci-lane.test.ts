@@ -1193,11 +1193,21 @@ describe("ciLaneStepsForTesting", () => {
   it("keeps the build lane's --summarize flag-driven", () => {
     const plain = firstOf(ciLaneStepsForTesting(REPO_ROOT, "build", baseOptions));
     expect([...plain.args]).toEqual(["run", "build"]);
+    expect(plain.env).toBeUndefined();
 
     const summarized = firstOf(
       ciLaneStepsForTesting(REPO_ROOT, "build", CiLaneRunOptions.make({ ...baseOptions, summarize: true }))
     );
     expect([...summarized.args]).toEqual(["run", "build", "--", "--summarize"]);
+  });
+
+  // Quality-lane audit D12: pull requests build affected-scoped with the same
+  // TURBO_SCM_BASE shape the check lane uses; pushes stay unscoped.
+  it("builds the PR-shape build lane with TURBO_SCM_BASE", () => {
+    const step = firstOf(ciLaneStepsForTesting(REPO_ROOT, "build", prShapeOptions));
+    expect(step.label).toBe("ci:build");
+    expect([...step.args]).toEqual(["run", "build", "--", "--affected", "--summarize"]);
+    expect(step.env).toEqual({ TURBO_SCM_BASE: "origin/main" });
   });
 });
 

@@ -823,7 +823,17 @@ describe("quality task adapter", () => {
     ]);
     expect(A.every(lanes, (lane) => lane.stage === "repo-quality")).toBe(true);
     expect(A.every(lanes, (lane) => lane.blockedBy.length === 0)).toBe(true);
-    expect(qualityLaneArgs(lanes, "quality:build")).toEqual(["run", "beep", "ci", "lane", "build"]);
+    expect(qualityLaneArgs(lanes, "quality:build")).toEqual([
+      "run",
+      "beep",
+      "ci",
+      "lane",
+      "build",
+      "--affected",
+      "--base",
+      "origin/main",
+      "--summarize",
+    ]);
     expect(qualityLaneArgs(lanes, "quality:knip")).toEqual(["run", "beep", "quality", "knip"]);
     expect(qualityLaneArgs(lanes, "quality:jsdoc-ratchet")).toEqual(["run", "beep", "ci", "lane", "jsdoc-ratchet"]);
     // Affected-scoped `beep ci lane check` drops the repo-wide tsgo extras root

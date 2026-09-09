@@ -731,11 +731,14 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
   build:
+    # Quality-lane audit D12: pull requests prove the tsc emit + babel build
+    # affected-scoped with remote-cache READ, so a tsc-vs-tsgo or babel
+    # failure surfaces before merge instead of as a main red. Trusted main
+    # pushes keep the unscoped run and stay the only cache writer.
     name: Build
-    if: github.event_name == 'push'
     runs-on: beep-ec2-heavy
     timeout-minutes: 40
-    environment: turbo-cache-write
+    environment: ${{ github.event_name == 'push' && 'turbo-cache-write' || null }}
     permissions:
       contents: read
     steps:
@@ -746,11 +749,31 @@ jobs:
           filter: blob:none
           persist-credentials: false
 
+      - name: Fetch pull request base
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
+
+      - name: Determine lane execution
+        id: lane-gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          should_run=true
+          eval "$(scripts/ci-change-profile.sh "origin/${GITHUB_BASE_REF:-main}")"
+          if [[ "$goals_only" == "true" ]]; then
+            should_run=false
+          fi
+          echo "should_run=$should_run" >> "$GITHUB_OUTPUT"
+
       - name: Setup monorepo CI
+        if: steps.lane-gate.outputs.should_run == 'true'
         uses: ./.github/actions/setup-monorepo-ci
         with:
           cache-turbo: "true"
-          cache-write: "true"
+          # Only trusted main pushes publish cache entries; pull requests read.
+          cache-write: ${{ github.event_name == 'push' && 'true' || 'false' }}
           turbo-remote-cache: "true"
           app-secrets: "true"
           turbo-api: ${{ vars.TURBO_API }}
@@ -758,11 +781,24 @@ jobs:
           repository-secrets: ${{ toJSON(secrets) }}
 
       - name: Run build checks
-        run: bun run beep ci lane build --summarize
+        if: steps.lane-gate.outputs.should_run == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          shape_args=()
+          if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+            shape_args+=(--affected --base "origin/${GITHUB_BASE_REF:-main}")
+          fi
+          shape_args+=(--summarize)
+          bun run beep ci lane build "${shape_args[@]}"
 
       - name: Append Turbo summary
-        if: always()
+        if: steps.lane-gate.outputs.should_run == 'true' && always()
         run: bun run beep ci append-turbo-summary
+
+      - name: Skip lane
+        if: steps.lane-gate.outputs.should_run != 'true'
+        run: echo "Skipping Build for this change set."
 
   commitlint:
     name: Commitlint

@@ -498,14 +498,18 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
     flags: [],
     notes: "Runs jsdoc-inventory before jsdoc-ratchet, matching hosted CI's sequence.",
   }),
+  // Quality-lane audit D12: Build runs on pull requests affected-scoped with
+  // remote-cache read; trusted main pushes run unscoped and are the only
+  // cache writer. Still non-required until it has a stable green history.
   CiLaneDescriptor.make({
     id: "build",
     contextName: "Build",
     required: false,
     laneClass: "cli-runnable",
     replay: "exact",
-    flags: ["--summarize"],
-    notes: "Push-only in hosted CI.",
+    flags: [...TURBO_SHAPE_FLAGS],
+    notes:
+      "Pull-request runs are affected-scoped (--affected --base) with remote-cache read; push runs are unscoped and write the cache.",
   }),
   CiLaneDescriptor.make({
     id: "commitlint",
@@ -1308,9 +1312,7 @@ export const ciLaneStepsForTesting: {
   3,
   (repoRoot: string, laneId: CiLaneId, options: CiLaneRunOptions): ReadonlyArray<QualityTaskStep> =>
     CiLaneId.$match(laneId, {
-      build: () => [
-        rootScriptStep(repoRoot, "ci:build", "build", options.summarize ? ["--summarize"] : A.empty<string>()),
-      ],
+      build: () => [turboRootLaneStep(repoRoot, "build", "build", A.empty<string>(), options)],
       // D2 admission profile: a solo proof uses measured-safe c3; any active
       // sibling lease lowers it to c2. Hosted CI has no local admission lease
       // and therefore takes the conservative c2 default.
@@ -2408,7 +2410,7 @@ const ciLocalLaneFlags = (laneId: CiLaneId, plan: CiLocalStepPlan): ReadonlyArra
   const turboShapeFlags = [...affectedFlags, "--summarize"];
 
   return CiLaneId.$match(laneId, {
-    build: A.empty<string>,
+    build: () => turboShapeFlags,
     check: () => turboShapeFlags,
     codegen: A.empty<string>,
     commitlint: () => ["--from", plan.base],
