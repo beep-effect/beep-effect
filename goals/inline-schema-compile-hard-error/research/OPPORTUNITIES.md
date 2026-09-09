@@ -498,3 +498,71 @@
   proof head and merged-preview identity. Keep the final verdict, reusable
   proof state, and pushed-head receipt consistent, with a regression test for
   publish commands that create a commit before proving it.
+
+## 2026-09-09 - Early PR merged before local proof and packet closeout
+
+- **Work:** Publish the PR #1038 review fixes promptly while keeping the full
+  local proof and final packet update in that PR.
+- **Evidence:** GitHub merged head `3324595a3b` at 07:19:00 UTC, five seconds
+  after the final required hosted check passed. All four review threads were
+  resolved and Greptile scored 5/5. The local publication was still waiting
+  for admission and had started no heavy proof lanes. `yeet status --remote`
+  then reported `merge-ready: no, blocked on pr-open`. The owned queued run
+  was interrupted cleanly with exit 130, and Yeet restored the unrelated
+  settings overlay with its original checksum. This is not final-head local
+  proof. The final lifecycle update can no longer land in #1038.
+- **Prevention:** Keep early closeout PRs in draft until the local proof and
+  packet-state update are ready for final verification. Expose local proof
+  and packet readiness to merge operators; hosted green alone does not prove
+  either. Once merged, request an explicit successor-PR exception instead of
+  silently relabeling the old proof or opening another PR.
+
+## 2026-09-09 - Early publication lacks draft creation
+
+- **Work:** Open the operator-approved successor as a draft and keep it draft
+  through local proof and the final packet update.
+- **Evidence:** `bun run beep yeet publish --help` describes `--pr` as creating
+  a ready, non-draft PR. There is no draft flag, and `--start-pr-early` requires
+  `--pr`. For #1042, Yeet committed the packet and passed the clean-HEAD
+  installation, then a manual early push and `gh pr create --draft` started
+  remote checks while the same full proof continued. This preserved draft
+  status but required separate publication bookkeeping.
+- **Prevention:** Carry an explicit draft flag through Yeet's PR creation
+  path, including early publication, without changing the local proof or
+  hosted acceptance requirements.
+
+## 2026-09-09 - Atlas check failed without its diagnostic
+
+- **Work:** Run the first full publication proof for draft PR #1042 after
+  moving onto the latest mainline.
+- **Evidence:** `bun run beep explore atlas --check` exited 1 without the
+  underlying reason; adding `--log-level debug` did not expose it. Calling
+  the existing read-only projection API reported zero derivation issues and
+  exactly one drift path, ignored `explorations/ATLAS.md`. The canonical
+  `--write` regenerated that projection without changing tracked files, and
+  the exact check then passed. The collected wave continued through a
+  461,906 ms TSGo test check after the atlas failure.
+- **Prevention:** Print the typed failure's diagnostic before returning its
+  nonzero exit status, including through aggregate runners. Distinguish local
+  ignored-projection drift from tracked README or source drift, and expose
+  cheap projection failures before long checks. Preserve that distinction in
+  the repair command instead of making operators invoke internal read APIs.
+
+## 2026-09-09 - Network failure produced unrelated repair and PR-state hints
+
+- **Work:** Complete the full publication proof and watch draft PR #1042 on
+  commit `6bd41dd036`.
+- **Evidence:** All 15 cheap gates and the security lane passed. The secrets
+  lane then failed at `git fetch origin main:refs/remotes/origin/main --quiet`
+  with `Could not resolve hostname github.com: Temporary failure in name
+  resolution`, exit 128. The verdict instead suggested inspecting an OSV
+  finding and rerunning security. At the same time, the watcher reported that
+  an open PR was required. Subsequent reads confirmed #1042 remained open as
+  a draft, and the exact fetch and canonical secrets lane passed after DNS
+  recovered. The full proof failed; 26 remaining pre-push lanes did not run.
+- **Prevention:** Attribute repair hints to the actual failing step and
+  preserve its diagnostic. Distinguish failed remote lookups from confirmed
+  absent or closed PRs. A bounded retry for transient network failures could
+  avoid discarding completed work, provided head, tree, environment, and
+  proof-scope identities still match; a passing retry of one lane must never
+  be reported as a completed aggregate proof.
