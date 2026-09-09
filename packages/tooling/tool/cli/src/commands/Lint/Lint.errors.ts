@@ -216,6 +216,24 @@ export class TsconfigOverlayReadError extends S.TaggedError<TsconfigOverlayReadE
   static readonly new = (cause: unknown, message: string): TsconfigOverlayReadError =>
     TsconfigOverlayReadError.make({ message: messageWithCause(message, cause) });
 
+  /**
+   * Wrap a raw failure in a {@link TsconfigOverlayReadError} carrying the given message.
+   *
+   * **Example** (Attribute a read failure to its overlay)
+   *
+   * ```ts
+   * import { TsconfigOverlayReadError } from "@beep/repo-cli/commands/Lint/Lint.errors"
+   * import * as Effect from "effect/Effect"
+   *
+   * const wrapped = Effect.fail("ENOENT").pipe(
+   *   TsconfigOverlayReadError.mapError("Failed to read packages/example/tsconfig.check.json.")
+   * )
+   * console.log(Effect.isEffect(wrapped)) // true
+   * ```
+   *
+   * @category constructors
+   * @since 0.0.0
+   */
   static readonly mapError = Err.mapCauseError<TsconfigOverlayReadError, [message: string]>((cause, message) =>
     TsconfigOverlayReadError.new(cause, message)
   );
