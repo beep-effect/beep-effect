@@ -16,7 +16,6 @@ import * as PlatformError from "effect/PlatformError";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as fc from "effect/testing/FastCheck";
 import { Command } from "effect/unstable/cli";
 
 const artifacts = [".cache/summaries.json", "INDEX.md", "effects.md", "services.md", ".graph/wiring.json"];
@@ -87,12 +86,10 @@ const assertReportRoundTrip = Effect.fn("GraftCacheSyncTest.assertReportRoundTri
   expect(decoded).toEqual(report);
 });
 
-propertyTest("round-trips arbitrary reports without losing plan entries, reasons, or counters", () =>
-  fc.assert(
-    fc.asyncProperty(S.toArbitrary(GraftCacheSyncReport)(fc), (report) =>
-      Effect.runPromise(assertReportRoundTrip(report))
-    )
-  )
+propertyTest.effect.prop(
+  "round-trips arbitrary reports without losing plan entries, reasons, or counters",
+  [GraftCacheSyncReport],
+  ([report]) => Effect.map(assertReportRoundTrip(report), () => true)
 );
 
 layer(testLayer)("Graft cache sync", (it) => {
