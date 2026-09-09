@@ -11,12 +11,16 @@ import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import { QualityTaskStep } from "../../../internal/process/index.ts";
 import { CiLocalStepPlan, ciLaneDispatchStep } from "../../Ci/CiLane.ts";
-import { GithubCheckLaneSpec, GithubCheckLaneWave, GithubCheckLaneWaveSpec } from "../Quality.schemas.ts";
+import {
+  GithubCheckLaneSpec,
+  GithubCheckLaneTier,
+  GithubCheckLaneWave,
+  GithubCheckLaneWaveSpec,
+} from "../Quality.schemas.ts";
 import type { CiLaneId } from "../../Ci/CiLane.ts";
 import type {
   FallowQualityFeatureFamily,
   GithubCheckLaneStage,
-  GithubCheckLaneTier,
   GithubCheckLaneWave as GithubCheckLaneWaveType,
   GithubCheckMode,
   GithubChecksFallowFeatureMatrix,
@@ -551,6 +555,32 @@ export const githubCheckPrePushExternalLanes = (repoRoot: string): ReadonlyArray
   ),
   githubCheckLane("quality:nix", "pre-push", "environment", "preflight", ciLaneStep(repoRoot, "quality:nix", "nix")),
 ];
+
+/**
+ * Lanes one local proof tier runs at once.
+ *
+ * **Details**
+ *
+ * The cheap tier is sixteen-odd sub-second gates that each pay a `bun run
+ * beep` boot, so it runs four abreast; wave order still decides which red is
+ * reported first. Pre-push lanes are heavy Turbo runs that already saturate
+ * the machine, so that tier stays serial (quality-lane audit 2026-09-09, D9).
+ *
+ * **Example** (Read the cheap tier's width)
+ *
+ * ```ts
+ * import { githubCheckTierConcurrency } from "@beep/repo-cli/test/Quality"
+ *
+ * console.log(githubCheckTierConcurrency("cheap-gates")) // 4
+ * ```
+ *
+ * @param tier - Local proof tier.
+ * @returns Lane concurrency for one wave of that tier.
+ * @category configuration
+ * @since 0.0.0
+ */
+export const githubCheckTierConcurrency = (tier: GithubCheckLaneTier): number =>
+  GithubCheckLaneTier.$match(tier, { "cheap-gates": () => 4, "pre-push": () => 1 });
 
 const fallowGithubCheckLaneId = (featureFamily: FallowQualityFeatureFamily): string => `fallow:${featureFamily}`;
 

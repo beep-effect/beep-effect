@@ -70,6 +70,7 @@ import {
   githubCheckQualityLanesForTesting as githubCheckQualityLanesForTestingImpl,
   githubCheckRepoSanityLanes,
   githubCheckRepoSanityLanesForTesting as githubCheckRepoSanityLanesForTestingImpl,
+  githubCheckTierConcurrency,
   promotedFallowGithubCheckLaneIdsForTesting as promotedFallowGithubCheckLaneIdsForTestingImpl,
 } from "./internal/GithubChecks.ts";
 import {
@@ -622,9 +623,10 @@ const runFixedStep = (repoRoot: string, label: string, command: string, args: Re
 const runGithubCheckLaneGroup = (
   label: string,
   lanes: ReadonlyArray<GithubCheckLaneSpec>,
-  failurePolicy: GithubCheckFailurePolicyType
+  failurePolicy: GithubCheckFailurePolicyType,
+  concurrency = githubCheckTierConcurrency("pre-push")
 ): Effect.Effect<void, QualityTaskConfigurationError | QualityTaskGroupFailed, QualityScriptEnvironment> =>
-  runQualityTaskGithubCheckLaneWaves(label, githubCheckLaneWaves(lanes), failurePolicy);
+  runQualityTaskGithubCheckLaneWaves(label, githubCheckLaneWaves(lanes), failurePolicy, concurrency);
 
 const runEvidenceOrderedGithubCheckLaneGroup = Effect.fn(
   "QualityScriptCommands.runEvidenceOrderedGithubCheckLaneGroup"
@@ -863,7 +865,8 @@ const runCheapGates = Effect.fn("QualityScriptCommands.runCheapGates")(function*
   yield* runGithubCheckLaneGroup(
     "github-checks:cheap-gates",
     [...changesetStatusLanes, ...githubCheckCheapGateLanes(repoRoot)],
-    "collect-all"
+    "collect-all",
+    githubCheckTierConcurrency("cheap-gates")
   );
 });
 

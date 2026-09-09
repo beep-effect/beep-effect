@@ -70,6 +70,7 @@ import {
   githubCheckPromotedFallowLaneDiagnosticsForTesting,
   githubCheckQualityLanesForTesting,
   githubCheckRepoSanityLanesForTesting,
+  githubCheckTierConcurrency,
   KnipFinding,
   LaneProofSession,
   lintFixChangedStepForTesting,
@@ -891,6 +892,9 @@ describe("quality task adapter", () => {
     expect(A.filter(HM.toEntries(idsByCommand), ([, ids]) => A.length(ids) > 1)).toEqual([]);
     expect(A.every(cheapGateLanes, (lane) => lane.tier === "cheap-gates")).toBe(true);
     expect(A.every(prePushLanes, (lane) => lane.tier === "pre-push")).toBe(true);
+    // D9: the cheap tier runs four abreast; heavy pre-push lanes stay serial.
+    expect(githubCheckTierConcurrency("cheap-gates")).toBe(4);
+    expect(githubCheckTierConcurrency("pre-push")).toBe(1);
     // The same command keeps its id across tiers, so the lane-proof ledger can match it.
     expect(
       A.map(
@@ -2146,6 +2150,100 @@ describe("quality task adapter", () => {
             "lint:effect-imports",
           ]);
           expect(A.map(report.lanes, (lane) => lane.status)).toEqual(["failed", "failed"]);
+        }),
+        provideScopedLayer(PlatformLayer)
+      )
+    ));
+
+  // D9: the cheap tier runs lanes abreast, but the first red, the run report,
+  // and the journal artifact all keep wave order whatever the completion order.
+  it("keeps wave-order attribution and journaling when cheap gates run concurrently", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const tempDir = yield* fs.makeTempDirectory();
+        const artifactPath = path.join(tempDir, "cheap-gates.ndjson");
+        const laneIds = ["goals:index-check", "lint:schema-first", "lint:allowlist", "goals:doctor"];
+        const result = yield* withEnvVarEffect(
+          QUALITY_TASK_LANE_RUN_ARTIFACT_PATH_ENV,
+          artifactPath,
+          collectGithubCheckLaneWavesForTesting(
+            "cheap-gates",
+            [
+              GithubCheckLaneWaveSpec.make({
+                wave: "preflight",
+                lanes: [
+                  // The first-declared red finishes last; a later red and a
+                  // later green finish first.
+                  githubCheckTestLane("goals:index-check", "preflight", "setTimeout(() => process.exit(2), 400)"),
+                  githubCheckTestLane("lint:schema-first", "preflight", "setTimeout(() => process.exit(0), 200)"),
+                  githubCheckTestLane("lint:allowlist", "preflight", "process.exit(3)"),
+                  githubCheckTestLane("goals:doctor", "preflight", "process.exit(0)"),
+                ],
+              }),
+            ],
+            "collect-all",
+            undefined,
+            githubCheckTierConcurrency("cheap-gates")
+          )
+        );
+        const runOf = (id: string) => O.getOrThrow(A.findFirst(result.laneReport.lanes, (lane) => lane.id === id));
+
+        expect(A.map(result.failures, (failure) => failure.label)).toEqual(["goals:index-check", "lint:allowlist"]);
+        expect(result.report.firstRed).toStrictEqual(O.some("goals:index-check"));
+        expect(result.report.skippedAfterRed).toBe(0);
+        expect(A.map(result.report.lanes, (lane) => [lane.id, lane.status])).toEqual([
+          ["goals:index-check", "failed"],
+          ["lint:schema-first", "passed"],
+          ["lint:allowlist", "failed"],
+          ["goals:doctor", "passed"],
+        ]);
+        expect(A.map(result.laneReport.lanes, (lane) => lane.id)).toEqual(laneIds);
+        // Proof that the lanes overlapped: the instant red started before the slow red ended.
+        expect(O.getOrThrow(runOf("lint:allowlist").startedAt) < O.getOrThrow(runOf("goals:index-check").endedAt)).toBe(
+          true
+        );
+        const journaled = yield* Effect.forEach(
+          pipe(yield* fs.readFileString(artifactPath), Str.split("\n"), A.filter(Str.isNonEmpty)),
+          decodeQualityTaskLaneRunReportJson
+        );
+        expect(A.flatMap(journaled, (report) => A.map(report.lanes, (lane) => lane.id))).toEqual(laneIds);
+        yield* fs.remove(tempDir, { recursive: true, force: true });
+      }).pipe(provideScopedLayer(PlatformLayer))
+    ));
+
+  it("stops fail-fast scheduling at the next chunk boundary when lanes run abreast", () =>
+    Effect.runPromise(
+      collectGithubCheckLaneWavesForTesting(
+        "pre-push",
+        [
+          GithubCheckLaneWaveSpec.make({
+            wave: "preflight",
+            lanes: [
+              githubCheckTestLane("quality:secrets", "preflight", "process.exit(1)"),
+              githubCheckTestLane("quality:security", "preflight", "process.exit(0)"),
+              githubCheckTestLane("quality:sast", "preflight", "process.exit(0)"),
+              githubCheckTestLane("quality:nix", "preflight", "process.exit(0)"),
+              githubCheckTestLane("quality:commitlint", "preflight", "process.exit(0)"),
+            ],
+          }),
+        ],
+        "fail-fast",
+        undefined,
+        2
+      ).pipe(
+        Effect.map(({ failures, report }) => {
+          expect(A.map(failures, (failure) => failure.label)).toEqual(["quality:secrets"]);
+          expect(report.firstRed).toStrictEqual(O.some("quality:secrets"));
+          expect(A.map(report.lanes, (lane) => lane.status)).toEqual([
+            "failed",
+            "passed",
+            "not-run-early-stop",
+            "not-run-early-stop",
+            "not-run-early-stop",
+          ]);
+          expect(report.skippedAfterRed).toBe(3);
         }),
         provideScopedLayer(PlatformLayer)
       )

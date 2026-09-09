@@ -1635,10 +1635,17 @@ const redSchedulingDecision = (
       }),
   });
 
+type QualityTaskLaneRunObserver = (
+  laneRun: QualityTaskLaneRun
+) => Effect.Effect<void, QualityTaskConfigurationError, FileSystem.FileSystem | Path.Path>;
+
+const ignoreQualityTaskLaneRun: QualityTaskLaneRunObserver = () => Effect.void;
+
 const collectQualityTaskLaneRuns = Effect.fn("QualityTasks.collectQualityTaskLaneRuns")(function* (
   label: string,
   lanes: ReadonlyArray<QualityTaskLaneInput>,
-  concurrency = 1
+  concurrency = 1,
+  onLaneRun: QualityTaskLaneRunObserver = appendQualityTaskLaneRun
 ) {
   const outcomes = yield* collectStreamingStepOutcomes(
     label,
@@ -1650,9 +1657,7 @@ const collectQualityTaskLaneRuns = Effect.fn("QualityTasks.collectQualityTaskLan
         O.match({
           onNone: () => Effect.void,
           onSome: ([id, , inputDigest, decision]) =>
-            appendQualityTaskLaneRun(
-              qualityTaskLaneRunFromOutcome(id, inputDigest, outcome, O.fromUndefinedOr(decision))
-            ),
+            onLaneRun(qualityTaskLaneRunFromOutcome(id, inputDigest, outcome, O.fromUndefinedOr(decision))),
         })
       )
   );
@@ -1671,11 +1676,108 @@ const collectQualityTaskLaneRuns = Effect.fn("QualityTasks.collectQualityTaskLan
   };
 });
 
-// fallow-ignore-next-line complexity -- each lane must complete its proof lookup, run, failure capture, and receipt write in order
+type GithubCheckWaveLane = GithubCheckLaneWaveSpec["lanes"][number];
+
+// What one lane contributed to its wave. The journal append and the proof
+// persist are left to the wave runner so lanes that ran concurrently are
+// still recorded in wave order and never write the proof ledger at once.
+type GithubCheckLaneOutcome = {
+  readonly lane: GithubCheckWaveLane;
+  readonly session: O.Option<LaneProofSession>;
+  readonly laneRun: O.Option<QualityTaskLaneRun>;
+  readonly failures: ReadonlyArray<QualityTaskFailed>;
+  readonly reused: boolean;
+  readonly stopAfterRed: boolean;
+};
+
+const runGithubCheckLane = Effect.fn("QualityTasks.runGithubCheckLane")(function* (
+  label: string,
+  lane: GithubCheckWaveLane,
+  laneProofMode?: LaneProofSession["mode"]
+) {
+  const session = yield* prepareLaneProofSession([lane], laneProofMode);
+  const reusable = O.exists(session, (prepared) => hasReusableLaneProof(prepared, lane.id));
+  const activeReuse = reusable && O.exists(session, (prepared) => prepared.mode === "active");
+  if (reusable) {
+    yield* Console.log(`[lane-proof] ${activeReuse ? "reusing" : "shadow hit for"} exact lane proof: ${lane.id}`);
+  }
+  if (activeReuse) {
+    return {
+      lane,
+      session,
+      laneRun: O.some(
+        QualityTaskLaneRun.make({
+          id: lane.id,
+          label: lane.step.label,
+          status: "reused",
+          inputDigest: O.none(),
+        })
+      ),
+      failures: A.empty<QualityTaskFailed>(),
+      reused: true,
+      stopAfterRed: false,
+    } satisfies GithubCheckLaneOutcome;
+  }
+
+  yield* Console.log(`[beep-cli] ${label}: running lane ${lane.id}`);
+  const result = yield* collectQualityTaskLaneRuns(
+    `${label}:${lane.id}`,
+    [[lane.id, lane.step, O.none(), redSchedulingDecision(lane.orderEstimate)]],
+    1,
+    ignoreQualityTaskLaneRun
+  );
+  const laneRun = A.head(result.report.lanes);
+  return {
+    lane,
+    session,
+    laneRun,
+    failures: result.failures,
+    reused: false,
+    stopAfterRed:
+      A.isReadonlyArrayNonEmpty(result.failures) &&
+      O.exists(laneRun, (run) => O.exists(run.redSchedulingDecision, GateRedSchedulingDecision.is["stop-after-red"])),
+  } satisfies GithubCheckLaneOutcome;
+});
+
+const persistGithubCheckLaneProof = Effect.fn("QualityTasks.persistGithubCheckLaneProof")(function* (
+  outcome: GithubCheckLaneOutcome
+) {
+  if (outcome.reused || A.isReadonlyArrayNonEmpty(outcome.failures)) {
+    return;
+  }
+  const durationMs = pipe(
+    outcome.laneRun,
+    O.flatMap((laneRun) => laneRun.durationMs),
+    O.getOrElse(() => 0)
+  );
+  yield* O.match(outcome.session, {
+    onNone: () => Effect.void,
+    onSome: (prepared) =>
+      persistLaneProofs(prepared, [[outcome.lane, durationMs]]).pipe(
+        Effect.catch((error) =>
+          Console.error(`[lane-proof] could not persist lane proof: ${Inspectable.toStringUnknown(error)}`)
+        )
+      ),
+  });
+});
+
+/**
+ * Run one wave's lanes in chunks of `concurrency`, journaling in wave order.
+ *
+ * **Details**
+ *
+ * Lanes inside a chunk run concurrently; chunks run in sequence so a
+ * fail-fast red stops scheduling at the next chunk boundary. Results are
+ * folded in declaration order whatever the completion order, which keeps the
+ * first red, the journal artifact, and the proof-ledger writes identical to
+ * the serial runner when `concurrency` is 1 and deterministic above it.
+ */
+// fallow-ignore-next-line complexity -- each chunk must fold reuse, journal, red, and proof state in order
 const runGithubCheckWave = Effect.fn("QualityTasks.runGithubCheckWave")(function* (
   label: string,
   wave: GithubCheckLaneWaveSpec,
   failurePolicy: GithubCheckFailurePolicy,
+  concurrency: number,
   laneProofMode?: LaneProofSession["mode"]
 ) {
   let activeReusableIds = A.empty<string>();
@@ -1683,64 +1785,30 @@ const runGithubCheckWave = Effect.fn("QualityTasks.runGithubCheckWave")(function
   let laneRuns = A.empty<QualityTaskLaneRun>();
   let skippedLaneIds = A.empty<string>();
   let stoppedAfterRed = false;
-  for (const lane of wave.lanes) {
+  const failFast = GithubCheckFailurePolicy.is["fail-fast"](failurePolicy);
+  for (const chunk of A.chunksOf(wave.lanes, Math.max(1, concurrency))) {
     if (stoppedAfterRed) {
-      skippedLaneIds = A.append(skippedLaneIds, lane.id);
-      laneRuns = A.append(laneRuns, yield* appendSkippedQualityTaskLaneRun(lane));
+      for (const lane of chunk) {
+        skippedLaneIds = A.append(skippedLaneIds, lane.id);
+        laneRuns = A.append(laneRuns, yield* appendSkippedQualityTaskLaneRun(lane));
+      }
       continue;
     }
 
-    const session = yield* prepareLaneProofSession([lane], laneProofMode);
-    const reusable = O.exists(session, (prepared) => hasReusableLaneProof(prepared, lane.id));
-    const activeReuse = reusable && O.exists(session, (prepared) => prepared.mode === "active");
-    if (reusable) {
-      yield* Console.log(`[lane-proof] ${activeReuse ? "reusing" : "shadow hit for"} exact lane proof: ${lane.id}`);
-    }
-    if (activeReuse) {
-      activeReusableIds = A.append(activeReusableIds, lane.id);
-      const laneRun = QualityTaskLaneRun.make({
-        id: lane.id,
-        label: lane.step.label,
-        status: "reused",
-        inputDigest: O.none(),
-      });
-      yield* appendQualityTaskLaneRun(laneRun);
-      laneRuns = A.append(laneRuns, laneRun);
-      continue;
-    }
-
-    yield* Console.log(`[beep-cli] ${label}: running lane ${lane.id}`);
-    const result = yield* collectQualityTaskLaneRuns(
-      `${label}:${lane.id}`,
-      [[lane.id, lane.step, O.none(), redSchedulingDecision(lane.orderEstimate)]],
-      1
-    );
-    const run = A.head(result.report.lanes);
-    if (O.isSome(run)) {
-      laneRuns = A.append(laneRuns, run.value);
-    }
-    if (A.isReadonlyArrayNonEmpty(result.failures)) {
-      failures = A.appendAll(failures, result.failures);
-      stoppedAfterRed =
-        GithubCheckFailurePolicy.is["fail-fast"](failurePolicy) &&
-        O.exists(run, (laneRun) =>
-          O.exists(laneRun.redSchedulingDecision, GateRedSchedulingDecision.is["stop-after-red"])
-        );
-    } else {
-      const durationMs = pipe(
-        run,
-        O.flatMap((laneRun) => laneRun.durationMs),
-        O.getOrElse(() => 0)
-      );
-      yield* O.match(session, {
-        onNone: () => Effect.void,
-        onSome: (prepared) =>
-          persistLaneProofs(prepared, [[lane, durationMs]]).pipe(
-            Effect.catch((error) =>
-              Console.error(`[lane-proof] could not persist lane proof: ${Inspectable.toStringUnknown(error)}`)
-            )
-          ),
-      });
+    const outcomes = yield* Effect.forEach(chunk, (lane) => runGithubCheckLane(label, lane, laneProofMode), {
+      concurrency,
+    });
+    for (const outcome of outcomes) {
+      if (outcome.reused) {
+        activeReusableIds = A.append(activeReusableIds, outcome.lane.id);
+      }
+      if (O.isSome(outcome.laneRun)) {
+        yield* appendQualityTaskLaneRun(outcome.laneRun.value);
+        laneRuns = A.append(laneRuns, outcome.laneRun.value);
+      }
+      failures = A.appendAll(failures, outcome.failures);
+      stoppedAfterRed = stoppedAfterRed || (failFast && outcome.stopAfterRed);
+      yield* persistGithubCheckLaneProof(outcome);
     }
   }
   return { activeReusableIds, failures, laneRuns, skippedLaneIds, stoppedAfterRed };
@@ -1793,6 +1861,8 @@ const runStreamingStepGroup = Effect.fn("QualityTasks.runStreamingStepGroup")(fu
  * @param label - Group label rendered in CLI output.
  * @param waves - Static lane waves in execution order.
  * @param failurePolicy - Whether a precise red stops subsequent scheduling.
+ * @param laneProofMode - Lane-proof ledger mode override for tests.
+ * @param concurrency - Lanes run at once inside one wave; 1 keeps the serial pre-push runner.
  * @returns The schema-backed run report and all failures observed in executed waves.
  * @category execution
  * @since 0.0.0
@@ -1801,7 +1871,8 @@ const collectGithubCheckLaneWaves = Effect.fn("QualityTasks.collectGithubCheckLa
   label: string,
   waves: ReadonlyArray<GithubCheckLaneWaveSpec>,
   failurePolicy: GithubCheckFailurePolicy,
-  laneProofMode?: LaneProofSession["mode"]
+  laneProofMode?: LaneProofSession["mode"],
+  concurrency = 1
 ) {
   let failures = A.empty<QualityTaskFailed>();
   let laneRuns = A.empty<GithubCheckLaneRun>();
@@ -1829,7 +1900,7 @@ const collectGithubCheckLaneWaves = Effect.fn("QualityTasks.collectGithubCheckLa
       laneRuns: waveLaneRuns,
       skippedLaneIds,
       stoppedAfterRed,
-    } = yield* runGithubCheckWave(`${label}:${wave.wave}`, wave, failurePolicy, laneProofMode);
+    } = yield* runGithubCheckWave(`${label}:${wave.wave}`, wave, failurePolicy, concurrency, laneProofMode);
     const failedLabels = A.map(waveFailures, (failure) => failure.label);
     laneRuns = A.appendAll(
       laneRuns,
@@ -1963,15 +2034,17 @@ const emitQualityTaskLaneRunReport = Effect.fn("QualityTasks.emitLaneRunReport")
  * @param label - Group label rendered in CLI output.
  * @param waves - Static lane waves in execution order.
  * @param failurePolicy - Whether a precise red stops subsequent scheduling.
+ * @param concurrency - Lanes run at once inside one wave (D9: 4 for the cheap tier, 1 for pre-push).
  * @category execution
  * @since 0.0.0
  */
 export const runQualityTaskGithubCheckLaneWaves = Effect.fn("QualityTasks.runGithubCheckLaneWaves")(function* (
   label: string,
   waves: ReadonlyArray<GithubCheckLaneWaveSpec>,
-  failurePolicy: GithubCheckFailurePolicy
+  failurePolicy: GithubCheckFailurePolicy,
+  concurrency = 1
 ) {
-  const result = yield* collectGithubCheckLaneWaves(label, waves, failurePolicy);
+  const result = yield* collectGithubCheckLaneWaves(label, waves, failurePolicy, undefined, concurrency);
   const reportJson = yield* githubCheckRunReportJson
     .encode(result.report)
     .pipe(QualityTaskConfigurationError.mapError("Failed to encode the GitHub-check wave report."));
