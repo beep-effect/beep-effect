@@ -276,7 +276,11 @@ schema-first, goals checks, Knip, Fallow, changeset status, and the JSDoc
 ratchet against the committed inventory. It reports every failure before any
 build, lint, check, test, or docgen lane starts. `yeet repair` applies its
 deterministic fixers, runs the same collected tier, and stops before heavy
-feedback if a cheap gate still fails.
+feedback if a cheap gate still fails. The fixers end by regenerating the
+git-ignored local projections (`goals/INDEX.md`, `explorations/ATLAS.md`, and
+the generated README status regions), so a stale copy left behind by a pull
+never fails `goals:index-check` or `explore:atlas-check`; hosted lanes never
+carry those ignored files, so that red was always local-only.
 
 The full proof then dispatches the *hosted lane bodies themselves* — `beep ci lane`
 `check`, bare `lint`, `lint-policy`, bare `test-unit`, and `test-integration`,
