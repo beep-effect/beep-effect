@@ -196,7 +196,15 @@ jobs:
           # session and reap the entire process group once the lane process
           # finishes, success and failure alike.
           run_lane() {
-            setsid bun run beep "$@" < /dev/null &
+            local -a lane_command=(bun run beep "$@")
+            # The reusable workflow runs from main, but older PR checkouts
+            # may not contain the optional measurement helper yet.
+            if [[ -f scripts/ci-runner-resources.sh ]]; then
+              lane_command=(bash scripts/ci-runner-resources.sh "${{ matrix.id }}" "${lane_command[@]}")
+            else
+              echo '::notice::Runner resource helper unavailable in this checkout; running the requested lane.'
+            fi
+            setsid "${lane_command[@]}" < /dev/null &
             local pgid=$!
             local status=0
             wait "$pgid" || status=$?
