@@ -191,32 +191,68 @@ The meaning tier (`graft build --deep`) adds the concept map and the per-symbol
 summary and crux. It spends model quota through the local proxy, so it is an
 operator batch job, never something an agent runs. It has three model-backed
 passes: per-file summaries (one request per file, content-hash cached, cheap
-to repeat), concept synthesis (142 sequential batches on this repo; effort
-barely changes their duration because the time goes to writing nodes), and the
-per-symbol crux pass (one batched request per file, checkpointed every 15 s).
-Run it as two systemd user services so a closed terminal cannot kill it and
-the proxy token stays in an environment file rather than on a command line:
-phase A at medium effort until the crux pass starts (the synthesis quality is
-what every later query ranks on), then phase B at low effort to completion
-(synthesis replays from cache; the crux pass is mechanical).
+to repeat), concept synthesis (143 sequential batches on this repo; the time
+goes to writing nodes, so effort barely changes it), and the per-symbol crux
+pass (one batched request per file, checkpointed every 15 s). Run each pass
+as a systemd user service so a closed terminal cannot kill it and the proxy
+token stays in an environment file rather than on a command line. The first
+full build of this repo (2026-09-09) measured:
+
+| Pass | Model | Concurrency | Measured |
+| --- | --- | --- | --- |
+| Summaries + synthesis | `gpt-6-astra(high)` then `grok-4.6` | sequential batches | 105 to 125 s per batch at high effort, about 150 s on grok; 7 of 143 grok batches came back empty and were refilled by a retry |
+| Crux pass | `grok-4.6` (default effort) | `-j 8` | 10 files/min, 23 s mean request latency |
+| Crux pass | `grok-4.6(low)` | `-j 8` | 25 files/min, 10 s mean latency |
+| Crux pass | `grok-4.6(low)` | `-j 16` | 40 to 80 files/min, no rate limiting across 15,000 requests |
+
+Whole run: 5,216 files, 39,115 symbols, 143 synthesis batches, about 10 h of
+wall clock including two restarts and one full crux re-pass; the final crux
+pass over 4,138 files took 80 min. Coverage ended at 98% (38,520 symbols);
+the remainder is one 800 KB generated file whose single request cannot finish
+inside the proxy's 5 min limit.
 
 ```sh
-install -m 600 /dev/null "${XDG_CACHE_HOME:-$HOME/.cache}/beep/graft-deep-medium.env"
+install -m 600 /dev/null "${XDG_CACHE_HOME:-$HOME/.cache}/beep/graft-deep-grok-low.env"
 # GRAFT_PROVIDER=openai, GRAFT_BASE_URL=http://127.0.0.1:8317/v1, GRAFT_API_KEY=<proxy client token>,
-# GRAFT_MODEL=gpt-6-astra(medium), GRAFT_LLM_RETRIES=12, DO_NOT_TRACK=1; same file with (low) for phase B
-systemd-run --user --unit graft-deep-A --working-directory="$PWD" --collect \
-  -p EnvironmentFile="${XDG_CACHE_HOME:-$HOME/.cache}/beep/graft-deep-medium.env" \
+# GRAFT_MODEL=grok-4.6(low), GRAFT_LLM_RETRIES=12, GRAFT_CRUX_EMPTY_RETRIES=2, DO_NOT_TRACK=1
+systemd-run --user --unit graft-deep --working-directory="$PWD" --collect \
+  -p EnvironmentFile="${XDG_CACHE_HOME:-$HOME/.cache}/beep/graft-deep-grok-low.env" \
   -p StandardOutput=append:"$HOME/data-home/graft-cache/deep-build.log" -p StandardError=inherit \
-  graft build --deep -j 4
-# when the log shows `summarizing 1/…`: systemctl --user stop graft-deep-A, then the same
-# command as graft-deep-B with the (low) environment file; it runs to completion
+  graft build --deep -j 16
 ```
 
-Leave `--allow-partial` off so an incomplete meaning tier fails loudly; rerun
-the same command to retry only the failed files. `-j` reaches the crux pass
-only; the concept pass runs eight summaries in parallel regardless. The
-synthesis checkpoint patch described below must be present before phase A, or
-a provider error discards every finished batch.
+Rules learned from that run:
+
+- The proxy's `model(effort)` suffix works for grok as well as astra; the
+  registry lists `low|medium|high|xhigh` for grok-4.6 and an unsuffixed
+  request reasons at roughly the xhigh rate. Use `(low)` for the crux pass;
+  it is mechanical and the tool call is what matters.
+- grok-4.6 returns the whole target row (`id | kind | lines Lx-Ly`) as the
+  entry id instead of the id verbatim, which drops every symbol of the file
+  and reports `no usable symbol summaries [empty-parsed, finish_reason=null]`.
+  The first crux pass ended at 31% coverage because of it. The installed
+  `dist/ai/crux.js` carries a local patch that keeps the segment before the
+  separator (352 of 352 fixture ids match after it, 84 before) plus a bounded
+  retry for prose answers; `dist/context/build.js` retries an empty synthesis
+  batch and checkpoints after every batch. Astra honors the id contract
+  without the patch. All of these die on `graft upgrade`.
+- Never restart the crux pass to tune it. A file is skipped on resume only
+  when every symbol in it is already ready; one omitted symbol keeps the whole
+  file dirty, so a restart re-requests most finished files (909 reported, 239
+  skipped). Read the end-of-run `computed / cached / pending` line instead and
+  run `graft build --deep` again, which touches only dirty files.
+- Leave `--allow-partial` off so an incomplete meaning tier fails loudly. `-j`
+  reaches the crux pass only; the concept pass runs sequentially regardless.
+- Diagnose a bad pass on a copy, not the real graph: copy a failing directory
+  into a throwaway repo, `git init`, `graft build`, then `graft build --deep`
+  with `GRAFT_DUMP_DIR=<dir>` set (local patch in `dist/ai/llm/openai.js`)
+  and read `responses.jsonl` for what the model actually returned.
+- After seeding, `graft check` in a clone at a different commit reports
+  `STALE` with the changed files listed. That is the concept layer's snapshot
+  digest disagreeing with the tree, not a broken graph; queries keep working
+  with the old summaries as hints. Refresh by running `graft build --deep` in
+  one clone (it re-summarizes only changed files and re-synthesizes only the
+  batches they belong to) and seeding again.
 
 ## After a Graft upgrade
 
