@@ -60,10 +60,8 @@ const decodeWorkflowJobs = S.decodeUnknownSync(WorkflowJobs);
 const workflowJobs = (document: Document): WorkflowJobs => decodeWorkflowJobs(document.toJS().jobs);
 
 // The heavy verify job's matrix lanes; each dispatches one `beep ci lane`.
-const HeavyMatrixLane = S.Struct({ id: S.String, name: S.String, uses_turbo: S.String });
-const decodeHeavyMatrixLanes = S.decodeUnknownSync(S.Array(HeavyMatrixLane));
-const heavyMatrixLanes = (document: Document): ReadonlyArray<typeof HeavyMatrixLane.Type> =>
-  decodeHeavyMatrixLanes(document.toJS().jobs.verify.strategy.matrix.include);
+const heavyMatrixLanes = (document: Document): ReadonlyArray<Readonly<Record<string, unknown>>> =>
+  document.toJS().jobs.verify.strategy.matrix.include;
 
 const jobSteps = (jobs: WorkflowJobs, jobId: string): ReadonlyArray<WorkflowStep> =>
   O.getOrThrowWith(
