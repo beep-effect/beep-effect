@@ -511,10 +511,13 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
   }),
   // Quality-lane audit D12: Build runs on pull requests affected-scoped with
   // remote-cache read; trusted main pushes run unscoped and are the only
-  // cache writer. Still non-required until it has a stable green history.
+  // cache writer. It dispatches from heavy.yml (the beep-ec2-heavy runner
+  // group admits heavy.yml@main on pull requests, not check.yml jobs), so its
+  // hosted context carries the Heavy prefix. Still non-required until it has
+  // a stable green history.
   CiLaneDescriptor.make({
     id: "build",
-    contextName: "Build",
+    contextName: "Heavy / Build",
     required: false,
     laneClass: "cli-runnable",
     replay: "exact",
