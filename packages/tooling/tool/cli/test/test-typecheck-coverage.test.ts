@@ -1,5 +1,6 @@
 import { runTestTsgoChecksAt, testTsgoPlanningForTesting } from "@beep/repo-cli/test/Quality";
 import { checkScriptTestTypecheckCoverage } from "@beep/repo-cli/test/SharedInternals";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { provideScopedLayer } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeChildProcessSpawner } from "@effect/platform-node";
@@ -17,6 +18,7 @@ const PlatformLayer = Layer.mergeAll(
 );
 
 const isString = (value: unknown): value is string => typeof value === "string";
+const encodeJson = UnknownFromJsonString.encodeUnknownSync;
 
 // A package whose `check` script delegates to a project that includes `test`
 // (the shape `beep create-package` scaffolds) next to one whose project only
@@ -44,11 +46,11 @@ const writeFixturePackage = Effect.fn("TestTypecheckCoverageTest.writeFixturePac
   yield* fs.makeDirectory(path.join(packageDir, "test"), { recursive: true });
   yield* fs.writeFileString(
     path.join(packageDir, "package.json"),
-    `${JSON.stringify({ name: `@fixture/${name}`, scripts }, null, 2)}\n`
+    `${encodeJson({ name: `@fixture/${name}`, scripts })}\n`
   );
   yield* fs.writeFileString(
     path.join(packageDir, "tsconfig.check.json"),
-    `${JSON.stringify({ compilerOptions: {}, include }, null, 2)}\n`
+    `${encodeJson({ compilerOptions: {}, include })}\n`
   );
   yield* fs.writeFileString(path.join(packageDir, "src", "index.ts"), "export const value = 1;\n");
   yield* fs.writeFileString(path.join(packageDir, "test", "index.test.ts"), "export const expected = 1;\n");

@@ -2212,7 +2212,7 @@ describe("quality task adapter", () => {
         );
         const journaled = yield* Effect.forEach(
           pipe(yield* fs.readFileString(artifactPath), Str.split("\n"), A.filter(Str.isNonEmpty)),
-          decodeQualityTaskLaneRunReportJson
+          (line) => decodeQualityTaskLaneRunReportJson(line)
         );
         expect(A.flatMap(journaled, (report) => A.map(report.lanes, (lane) => lane.id))).toEqual(laneIds);
         yield* fs.remove(tempDir, { recursive: true, force: true });
