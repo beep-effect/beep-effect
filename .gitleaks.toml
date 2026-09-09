@@ -49,12 +49,15 @@ paths = [
 ]
 
 # Immutable Boolean-creep evidence: independently reproduced SHA-256 values
-# and one ordinary-prose match. Require exact path AND complete known line;
-# preserve scanning for other values and survive commit/squash hash changes.
+# and one ordinary-prose match. Require exact path AND complete known line.
+# Per-rule syntax also supports the pinned CI scanner (Gitleaks 8.24.3).
+# These three entries extend default rules without replacing their detectors.
 
-[[allowlists]]
+[[rules]]
+id = "generic-api-key"
+
+[[rules.allowlists]]
 description = "Verified immutable Boolean-creep digest false positives; exact path and line only."
-targetRules = ["generic-api-key"]
 condition = "AND"
 regexTarget = "line"
 paths = ['''^(?:/repo/)?goals/boolean-creep/data/r28-agent-app-integration\.json$''']
@@ -62,9 +65,8 @@ regexes = [
   '''^\n?[\t ]*"r3-apps-desktop-shell-rpc-access": "cf7f92ffc986a815e5d415b86729eb1c6ac32182b72b10aa37a1a4e00c4cfd4e"$''',
 ]
 
-[[allowlists]]
+[[rules.allowlists]]
 description = "Verified immutable Boolean-creep prose false positives; exact path and line only."
-targetRules = ["generic-api-key"]
 condition = "AND"
 regexTarget = "line"
 paths = ['''^(?:/repo/)?goals/boolean-creep/history/designs/2026-09-09-r28-cli-l-q/effect-import-rules-summary-operation\.md$''']
@@ -72,9 +74,8 @@ regexes = [
   '''^\n?[\t ]*leaking the decoded key into public JSON, moving/defaulting neighboring keys,$''',
 ]
 
-[[allowlists]]
+[[rules.allowlists]]
 description = "Verified immutable Boolean-creep digest false positives; exact path and line only."
-targetRules = ["freshbooks-access-token", "generic-api-key"]
 condition = "AND"
 regexTarget = "line"
 paths = ['''^(?:/repo/)?goals/boolean-creep/data/sweeps/refresh-2026-09-09-r27-main-663904/boolean-state-coverage-map\.json$''']
@@ -82,9 +83,8 @@ regexes = [
   '''^\n?[\t ]*"packages/drivers/freshbooks/src/Freshbooks\.token\.ts": "6363802e5bea74a988b198055d319aa302e1292731f5cded01bd64489874f489",$''',
 ]
 
-[[allowlists]]
+[[rules.allowlists]]
 description = "Verified immutable Boolean-creep digest false positives; exact path and line only."
-targetRules = ["generic-api-key"]
 condition = "AND"
 regexTarget = "line"
 paths = ['''^(?:/repo/)?goals/boolean-creep/data/r28-cli-last-integration\.json$''']
@@ -92,9 +92,8 @@ regexes = [
   '''^\n?[\t ]*"r3-tooling-tsconfig-sync-alias-key-guards": "69f085776beb461ba7d6de36249681c16e41af3a9fc2fb7168d34ae105903b3e",$''',
 ]
 
-[[allowlists]]
+[[rules.allowlists]]
 description = "Verified immutable Boolean-creep digest false positives; exact path and line only."
-targetRules = ["generic-api-key"]
 condition = "AND"
 regexTarget = "line"
 paths = ['''^(?:/repo/)?goals/boolean-creep/data/sweeps/refresh-2026-09-09-r27-main-663904/round-verdict\.json$''']
@@ -102,23 +101,8 @@ regexes = [
   '''^\n?[\t ]*"r3-apps-desktop-shell-rpc-access": "cf7f92ffc986a815e5d415b86729eb1c6ac32182b72b10aa37a1a4e00c4cfd4e",$''',
 ]
 
-[[allowlists]]
+[[rules.allowlists]]
 description = "Verified immutable Boolean-creep digest false positives; exact path and line only."
-targetRules = ["freshbooks-access-token"]
-condition = "AND"
-regexTarget = "line"
-paths = ['''^(?:/repo/)?goals/boolean-creep/data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/round-verdict\.json$''']
-regexes = [
-  '''^\n?[\t ]*"packages/drivers/freshbooks/src/Freshbooks\.config\.ts": "a985a7ec81854168f276254acbf924ca0f3f81cadfd094455e680c82eacc05c8",$''',
-  '''^\n?[\t ]*"packages/drivers/freshbooks/src/Freshbooks\.errors\.ts": "6b606019bd1d4e3d87b2a6fd84abb3f0c8ef534c848c5866a90e2ef227ce5944",$''',
-  '''^\n?[\t ]*"packages/drivers/freshbooks/src/Freshbooks\.models\.ts": "27fe2aed538150b6a86f0a00aabb41c2ba0fa31a75ec150e04c2edd13e83e805",$''',
-  '''^\n?[\t ]*"packages/drivers/freshbooks/src/Freshbooks\.service\.ts": "6c4cfe3eed551448a200f301dd5d6ac0966924767251f80da048a4e49dc9ee35",$''',
-  '''^\n?[\t ]*"packages/drivers/freshbooks/src/Freshbooks\.token\.ts": "6363802e5bea74a988b198055d319aa302e1292731f5cded01bd64489874f489",$''',
-]
-
-[[allowlists]]
-description = "Verified immutable Boolean-creep digest false positives; exact path and line only."
-targetRules = ["generic-api-key"]
 condition = "AND"
 regexTarget = "line"
 paths = ['''^(?:/repo/)?goals/boolean-creep/data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/round-verdict\.json$''']
@@ -157,9 +141,36 @@ regexes = [
   '''^\n?[\t ]*"packages/drivers/freshbooks/src/Freshbooks\.token\.ts": "6363802e5bea74a988b198055d319aa302e1292731f5cded01bd64489874f489",$''',
 ]
 
-[[allowlists]]
+[[rules]]
+id = "freshbooks-access-token"
+
+[[rules.allowlists]]
 description = "Verified immutable Boolean-creep digest false positives; exact path and line only."
-targetRules = ["discord-api-token"]
+condition = "AND"
+regexTarget = "line"
+paths = ['''^(?:/repo/)?goals/boolean-creep/data/sweeps/refresh-2026-09-09-r27-main-663904/boolean-state-coverage-map\.json$''']
+regexes = [
+  '''^\n?[\t ]*"packages/drivers/freshbooks/src/Freshbooks\.token\.ts": "6363802e5bea74a988b198055d319aa302e1292731f5cded01bd64489874f489",$''',
+]
+
+[[rules.allowlists]]
+description = "Verified immutable Boolean-creep digest false positives; exact path and line only."
+condition = "AND"
+regexTarget = "line"
+paths = ['''^(?:/repo/)?goals/boolean-creep/data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/round-verdict\.json$''']
+regexes = [
+  '''^\n?[\t ]*"packages/drivers/freshbooks/src/Freshbooks\.config\.ts": "a985a7ec81854168f276254acbf924ca0f3f81cadfd094455e680c82eacc05c8",$''',
+  '''^\n?[\t ]*"packages/drivers/freshbooks/src/Freshbooks\.errors\.ts": "6b606019bd1d4e3d87b2a6fd84abb3f0c8ef534c848c5866a90e2ef227ce5944",$''',
+  '''^\n?[\t ]*"packages/drivers/freshbooks/src/Freshbooks\.models\.ts": "27fe2aed538150b6a86f0a00aabb41c2ba0fa31a75ec150e04c2edd13e83e805",$''',
+  '''^\n?[\t ]*"packages/drivers/freshbooks/src/Freshbooks\.service\.ts": "6c4cfe3eed551448a200f301dd5d6ac0966924767251f80da048a4e49dc9ee35",$''',
+  '''^\n?[\t ]*"packages/drivers/freshbooks/src/Freshbooks\.token\.ts": "6363802e5bea74a988b198055d319aa302e1292731f5cded01bd64489874f489",$''',
+]
+
+[[rules]]
+id = "discord-api-token"
+
+[[rules.allowlists]]
+description = "Verified immutable Boolean-creep digest false positives; exact path and line only."
 condition = "AND"
 regexTarget = "line"
 paths = ['''^(?:/repo/)?goals/boolean-creep/data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/round-verdict\.json$''']

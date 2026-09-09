@@ -3,6 +3,7 @@ import {
   MemoryStats,
   MemoryStatsLive,
   provideRuntimeRootForTesting,
+  QualitySchedulerError,
   RuntimeRootChoice,
 } from "@beep/repo-cli/test/RepoRun";
 import { provideScopedLayer } from "@beep/test-utils";
@@ -86,6 +87,26 @@ const FixedMemoryStatsLayer = Layer.succeed(
 const RunScopesOffLayer = ConfigProvider.layer(ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" }));
 
 describe("quality scheduler admission entries", () => {
+  it.effect("rejects an existing admission directory with unsafe permissions", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const runtimeDir = yield* fs.makeTempDirectoryScoped({ prefix: "quality-scheduler-unsafe-directory-" });
+      const admitRoot = path.join(runtimeDir, "beep", "admit");
+      yield* fs.makeDirectory(admitRoot, { recursive: true });
+      yield* fs.chmod(admitRoot, 0o755);
+
+      const failure = yield* admissionStatus().pipe(
+        provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
+        Effect.flip
+      );
+
+      expect(failure).toBeInstanceOf(QualitySchedulerError);
+      expect(failure.message).toBe(`Admission directory ${admitRoot} has mode 755; expected 0700. Refusing to use it.`);
+      expect((yield* fs.stat(admitRoot)).mode & 0o777).toBe(0o755);
+    }).pipe(provideScopedLayer(Layer.mergeAll(PlatformLayer, FixedMemoryStatsLayer, RunScopesOffLayer)), Effect.scoped)
+  );
+
   it.effect("skips empty lease and ticket files instead of quarantining them", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
