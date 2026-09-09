@@ -2,7 +2,7 @@
 # Public run-2 fleet capture; all source descriptors are portable.
 schema_version: beep-ci-ops-fleet-corpus/v1
 generated_by: etl_fleet_corpus.py
-generator_sha256: 5f1b8ccc04aba2d52506ebcf0eeac6da9fa9242752d747af7ab54de98f522ab1
+generator_sha256: 42666faada44d5d67ddf232473f5f4ed011623ec59152b83721489f8151be625
 capture_instant: '2026-09-03T02:27:19.384Z'
 capture_instant_basis: maximum timestamp observed in the captured records
 ordering:
@@ -22,8 +22,9 @@ redaction_rules:
 - For attempt and verdict records, drop process identity members, including attachedPid and ownerProcStart,
   case-insensitively with underscore or hyphen separators ignored. Preserve all other keys, booleans,
   nulls, and numeric values.
-- 'Ruling 23 repair only: replace sha12(hostname) in string values with <host>; compute the hostname digest
-  at runtime and never record it.'
+- 'Ruling 23 repair only: replace any 12-hex sha12(hostname) in proof-lock directory names with <host>,
+  including foreign hosts. Also replace the runtime hostname digest in string values; never record it.
+  Pattern: (\bbeep-yeet-proof-locks-)[0-9a-fA-F]{12}(?=-uid-(?:[0-9]+|<uid>))'
 - 'Ruling 23 repair only: replace numeric UID tokens in string values with uid-<uid>. Pattern: \buid-[0-9]+'
 projection_rules:
 - Each redacted raw payload has one sibling .properties projection derived from exactly the JSON records
@@ -12125,7 +12126,7 @@ totals:
   files_emitted: 1589
   events: 6213
   payload_bytes: 12677681
-  bytes_emitted: 13316312
+  bytes_emitted: 13316455
 security_resanitization:
   finding: CSF-012
   source_manifest_sha256: be2144da427e7f9671d386713fb4a34e52246bb8702b586e9de4eb3b74880dc3

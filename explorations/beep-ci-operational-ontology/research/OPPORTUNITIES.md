@@ -1,5 +1,22 @@
 # Research friction receipts
 
+## 2026-09-09: run-2 review fixes require a generator binding update
+
+- **Work:** addressing PR #1041 G1 and G2 in the run-2 repair lane.
+- **Evidence:** foreign-host fixtures reproduce the missed proof-lock digest; explicit
+  source replay reaches staging again for an already repaired pin. The verifier also
+  requires `generator_sha256` to match the exact generator bytes, so the G1 code fix
+  requires a manifest update even when the payloads need no further redaction.
+- **Cost:** the lane must separately prove payload equality, regenerate the generator
+  binding and rule description, and verify the staged manifest while retaining every
+  security receipt.
+- **Prevention:** test foreign-host replay and whole-tree idempotence together. Keep
+  generator-binding updates distinct from new security repairs in the receipt workflow.
+  The first full regression run also exposed a provenance distinction in #1037's
+  committed replay test: the first replay from an older source needs a new receipt even
+  when the current payloads match. Duplicate detection must compare the source-manifest
+  digest as well as the finding and classes; repeating that same replay is unchanged.
+
 ## 2026-09-03: admission eviction facts replace inferred deaths
 - V2 now journals claimed lease evictions and CI-ops folds them as releases; the next ontology run consumes the fact instead of inferring it.
 

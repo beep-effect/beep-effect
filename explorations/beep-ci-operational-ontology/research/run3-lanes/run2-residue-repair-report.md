@@ -277,3 +277,84 @@ reconciled receipt above. The optional mise registration warnings described in t
 original report recurred; every proof command exited 0. The lane repeats the
 knowledge-reference and detached checks at final HEAD after this report update,
 then removes the disposable checkout. No push or PR creation is part of this handoff.
+
+## Review fixes (Greptile)
+
+Date: 2026-09-09. Review base: `7239046a4d`. Both held findings are fixed.
+
+G1: the repair recognizes any 12-hex hostname digest in a proof-lock directory
+name, including uppercase hex and a previously redacted UID. It replaces the digest
+with `<host>` and numeric UID tokens with `uid-<uid>`. The scanner rejects either
+raw component in filenames and contents, regardless of the replay host. Runtime
+hostname-digest checks remain an additional guard. Ordinary redaction semantics
+are unchanged. Two new tests cover foreign hosts through five JSON serialization
+depths, partial redaction, non-echoing rejection, and safe lookalikes.
+
+G2: explicit source replay compares all repaired payload bytes with the destination
+before staging. It verifies unchanged when the latest security receipt has the same
+finding, residue classes, and source-manifest digest, and the destination already
+pins the current generator. No receipt or file is rewritten. Source integrity and
+generator provenance still run before this check; the complete destination verifier
+runs before returning. An extra destination file fails verification.
+
+The first #1037 regression run exposed a necessary provenance distinction: its first
+explicit replay uses an older source than the preceding ordinary repair. Comparing
+the source-manifest digest preserves that new receipt. The corrected implementation
+passes all 38 unmodified #1037 tests. The strengthened run-2 replay test also checks
+whole-tree byte equality, an unchanged receipt list, no staging, damaged payload
+recovery, missing residue classes, different finding attribution, and a new generator.
+
+G1 requires no further payload redaction. All 1,588 payloads, including the 29 files
+repaired earlier and all 794 projections, are byte-identical to the review base.
+No new security receipt was added. The history remains CSF-012, two CSF-013 updates,
+and one Ruling 23 update, with every field unchanged.
+
+The manifest changes because ordinary verification binds the exact generator bytes.
+After checking the prior generator's committed provenance and every payload receipt,
+the lane verified that repair-mode redaction would change no decoded payload. It
+then used `dump_manifest_with_totals` to regenerate only the generator digest, the
+hostname rule description, and the emitted-byte total. A disposable copy of the full
+pin passed `verify_output_tree` with that manifest before promotion. An independent
+comparison against the review base confirms those are the only three changed manifest
+fields. This updates the generator binding without replaying a repair or recapturing.
+
+The pin still has 1,589 files and 6,213 events. Its capture instant remains
+`2026-09-03T02:27:19.384Z`. The manifest grew by 143 bytes, bringing the complete pin
+to 13,316,455 bytes. The earlier main-to-pin audit still finds exactly 313 hostname
+and 313 UID replacements in the original 29 raw files; all custody and capture
+metadata remain intact.
+
+| Check | Review-fix result |
+| --- | --- |
+| Run-2 tests | 12 PASS, including the original 10 with stronger replay assertions |
+| PR #1037 tests | 38 PASS with the unchanged fixture-directory override above |
+| Staged manifest and ordinary run-2 verification | PASS |
+| Documented explicit source replay | `verified unchanged`; all 1,589 files byte-identical |
+| Independent corpus and manifest audit | PASS; manifest alone differs from the review base |
+| Structural proof-lock, hostname digest, UID, home path, raw PID scans | 0 for every class |
+| Schema process metadata, decoded process members, escaped process keys | 0 for every class |
+| Packet validator | 0 blockers, 0 warns; 26 CQs and 25 SPARQL files |
+| CQ suite | 0 failures across 25 seed tests and 20 fixtures |
+| Protected-file audit | 2,870 files unchanged, including decisions and run-3/run-3b artifacts |
+| Whitespace check | `git diff --check` PASS |
+| Post-commit knowledge references | PASS; exit 0 and 0 live gated observations |
+| Detached committed-HEAD verifier and run-2 tests | PASS; verifier and 12 tests, clean tracked tree |
+| Commit hooks | Gitleaks, typos, and commitlint PASS; Biome and JSDoc have no applicable files |
+
+| Receipt | SHA-256 |
+| --- | --- |
+| Review-fixed generator | `42666faada44d5d67ddf232473f5f4ed011623ec59152b83721489f8151be625` |
+| Review-base manifest | `7f68bcf9a48ffa0e20b5614cd9309c397d09fbf1e82eda9be60a4fadd224c002` |
+| Review-fixed manifest | `8ef17f3b15c6ccbfaf5a3642ebebb6192d302c5de4f3e14d77c6748d93a47318` |
+| Review-fixed whole tree | `6af82056021a52dacc200a269ef973f10c89b7eae04c3563cfa69d8e6b5ef8b8` |
+
+The ordinary verifier, run-2 tests, packet validator, CQ suite, and source replay use
+the commands already recorded above. The explicit replay check captures every file
+before and after the documented command and asserts exact byte equality, including
+the manifest. After the implementation commit, `bun run beep knowledge refs --check`
+passed with zero live gated observations. A detached worktree at that commit passed
+the ordinary verifier and all 12 run-2 tests with no tracked changes. The optional
+mise registration warnings described earlier recurred; the proof commands exited 0.
+The lane repeats these commit-dependent checks at the final amended HEAD after this
+report update, then removes its disposable checkout. No push or PR operation is part
+of this handoff.

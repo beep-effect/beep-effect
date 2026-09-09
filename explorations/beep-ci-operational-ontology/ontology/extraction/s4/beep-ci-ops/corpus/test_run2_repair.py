@@ -57,10 +57,41 @@ class RepairRedactionTests(unittest.TestCase):
             self.assertEqual(fleet.redact_string_values(value, repair=True), expected)
             fleet.scan_output_bytes([("fixture.json", fleet.encode_json(expected))])
 
+    def test_foreign_proof_lock_hosts_are_repaired_at_every_json_depth(self):
+        with patch.object(socket, "gethostname", return_value="fixture-host"):
+            foreign = fleet.sha256(b"foreign-fixture-host")[:12]
+            for digest in (foreign, foreign.upper()):
+                for uid in ("12345", "<uid>"):
+                    original = f"beep-yeet-proof-locks-{digest}-uid-{uid}/lock"
+                    expected = "beep-yeet-proof-locks-<host>-uid-<uid>/lock"
+                    for depth in range(5):
+                        with self.subTest(uppercase=digest.isupper(), uid=uid, depth=depth):
+                            self.assertEqual(fleet.redact_string_values(original), original)
+                            self.assertEqual(fleet.redact_string_values(original, repair=True), expected)
+                            fleet.scan_output_bytes([("fixture", expected.encode())])
+                        original = json.dumps({"message": original})
+                        expected = json.dumps({"message": expected})
+
+    def test_foreign_proof_lock_residue_fails_in_paths_and_contents_without_echo(self):
+        with patch.object(socket, "gethostname", return_value="fixture-host"):
+            foreign = fleet.sha256(b"foreign-fixture-host")[:12]
+            for digest, uid in ((foreign, "12345"), (foreign.upper(), "<uid>"), ("<host>", "12345")):
+                private = f"beep-yeet-proof-locks-{digest}-uid-{uid}"
+                for path, data in (("fixture", private.encode()), (private, b"safe")):
+                    with self.subTest(redacted_host=digest == "<host>", redacted_uid=uid == "<uid>"):
+                        with self.assertRaisesRegex(SystemExit, "residue scan failed") as exc:
+                            fleet.scan_output_bytes([(path, data)])
+                        self.assertNotIn(private, str(exc.exception))
+                        self.assertNotIn(foreign, str(exc.exception))
+
     def test_safe_lookalikes_keys_and_scalar_types_are_preserved(self):
         with patch.object(socket, "gethostname", return_value="fixture-host"):
             value = {"uid-123": [None, True, False, 123, 1.5],
-                     "message": "guid-123 uid-<uid> uid-abc <host> abcdef012345 runId=123"}
+                     "message": "guid-123 uid-<uid> uid-abc <host> abcdef012345 runId=123 "
+                                "beep-yeet-proof-locks-abcdef01234-uid-<uid> "
+                                "beep-yeet-proof-locks-abcdef0123456-uid-<uid> "
+                                "beep-yeet-proof-locks-abcdef012345-cache "
+                                "beep-yeet-proof-locks-<host>-uid-<uid>"}
             self.assertEqual(fleet.redact_string_values(value, repair=True), value)
             fleet.scan_output_bytes([("fixture", value["message"].encode())])
 
@@ -130,7 +161,7 @@ class CommittedRepairTests(unittest.TestCase):
                  patch.object(socket, "gethostname", return_value="fixture-host"), \
                  patch.object(fleet, "discover_live_capture", side_effect=AssertionError("no live capture")), \
                  contextlib.redirect_stdout(io.StringIO()):
-                private = f"beep-yeet-proof-locks-{fleet.sha256(b'fixture-host')[:12]}-uid-12345"
+                private = f"beep-yeet-proof-locks-{fleet.sha256(b'foreign-fixture-host')[:12]}-uid-12345"
                 row = {"schemaVersion": fleet.ADMISSION_SCHEMA, "admittedAtMillis": 1767225600000,
                        "ownerRef": "custody-fixture", "message": private}
                 path = "admission/fixture/journal.ndjson"
@@ -198,12 +229,56 @@ class CommittedRepairTests(unittest.TestCase):
                 fleet.verify_output_tree(pin)
                 repair.repair("etl_fleet_corpus", finding="Ruling 23")
                 self.assertEqual(snapshot(), repaired)
-                repair.repair("etl_fleet_corpus", source_ref, finding="Ruling 23")
+                with contextlib.redirect_stdout(io.StringIO()) as output, \
+                     patch.object(tempfile, "mkdtemp", side_effect=AssertionError("no staging on replay")):
+                    repair.repair("etl_fleet_corpus", source_ref, finding="Ruling 23")
+                self.assertIn("run2-fleet: verified unchanged", output.getvalue())
+                self.assertEqual(snapshot(), repaired)
                 replay = fleet.yaml.safe_load(manifest_path.read_bytes())
+                self.assertEqual(replay["security_resanitization"], history)
                 self.assertEqual({key: replay["security_resanitization"][key] for key in first}, first)
                 self.assertEqual(replay["security_resanitization"]["updates"][0], second)
                 self.assertEqual(replay["security_resanitization"]["updates"][1]["source_manifest_sha256"],
                                  fleet.sha256(original_bytes))
+                fleet.verify_output_tree(pin)
+
+                # Matching receipts cannot hide changed payload bytes or extra files.
+                (pin / path).write_bytes(b"corrupted again\n")
+                repair.repair("etl_fleet_corpus", source_ref, finding="Ruling 23")
+                self.assertEqual((pin / path).read_bytes(), repaired[path])
+                extra = pin / "unexpected.txt"
+                extra.write_text("safe fixture\n")
+                with self.assertRaisesRegex(SystemExit, "file set differs"):
+                    repair.repair("etl_fleet_corpus", source_ref, finding="Ruling 23")
+                extra.unlink()
+
+                # An incomplete class receipt must still be repaired, even with equal payloads.
+                replay["security_resanitization"]["updates"][-1]["residue_classes"] = ["sha12(hostname)"]
+                manifest_path.write_bytes(fleet.dump_manifest_with_totals(
+                    replay, replay["totals"]["payload_bytes"]))
+                repair.repair("etl_fleet_corpus", source_ref, finding="Ruling 23")
+                classes = fleet.yaml.safe_load(manifest_path.read_bytes())["security_resanitization"]
+                self.assertEqual(classes["updates"][-1]["residue_classes"], ["sha12(hostname)", "uid-[0-9]+"])
+
+                # A distinct finding retains CSF-013's attributed source-replay behavior.
+                previous_manifest = manifest_path.read_bytes()
+                repair.repair("etl_fleet_corpus", source_ref, finding="CSF-013")
+                attributed = snapshot()
+                csf_history = fleet.yaml.safe_load(attributed[fleet.MANIFEST_NAME])["security_resanitization"]
+                self.assertEqual(csf_history["updates"][0], second)
+                self.assertEqual(csf_history["updates"][-1]["finding"], "CSF-013")
+                self.assertEqual(csf_history["updates"][-1]["superseded_manifest_sha256"],
+                                 fleet.sha256(previous_manifest))
+                repair.repair("etl_fleet_corpus", source_ref, finding="CSF-013")
+                self.assertEqual(snapshot(), attributed)
+
+                # A new generator still needs its binding and an attributed repair receipt.
+                generator.write_text("# another updated generator fixture\n")
+                repair.repair("etl_fleet_corpus", source_ref, finding="CSF-013")
+                regenerated = fleet.yaml.safe_load(manifest_path.read_bytes())
+                self.assertEqual(regenerated["generator_sha256"], fleet.sha256(generator.read_bytes()))
+                self.assertEqual(regenerated["security_resanitization"]["updates"][-1]["superseded_manifest_sha256"],
+                                 fleet.sha256(attributed[fleet.MANIFEST_NAME]))
                 fleet.verify_output_tree(pin)
 
     def test_ordinary_verify_never_recaptures_or_rewrites(self):

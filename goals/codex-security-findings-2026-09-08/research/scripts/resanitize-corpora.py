@@ -146,6 +146,18 @@ def repair(name: str, source_ref: str | None = None, population: str | None = No
     if name == "etl_fleet_corpus" and finding == "Ruling 23":
         repair_record.update(ruling="Ruling 23", residue_classes=["sha12(hostname)", "uid-[0-9]+"])
     if source_ref:
+        previous_manifest = yaml.safe_load(previous_output)
+        history = previous_manifest.get("security_resanitization", {})
+        latest = (history.get("updates") or [history])[-1]
+        if (previous_manifest.get("generator_sha256") == generator_digest
+                and latest.get("finding") == finding
+                and latest.get("source_manifest_sha256") == repair_record["source_manifest_sha256"]
+                and latest.get("residue_classes", []) == repair_record.get("residue_classes", [])
+                and all((root / path).is_file() and (root / path).read_bytes() == data
+                        for path, data in payloads.items())):
+            verify(root)
+            print(f"{root.name}: verified unchanged")
+            return
         repair_record["superseded_manifest_sha256"] = module.sha256(previous_output)
     if "security_resanitization" in manifest:
         manifest["security_resanitization"].setdefault("updates", []).append(repair_record)

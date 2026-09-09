@@ -99,9 +99,13 @@ PID_REDACTION_RULE = (
     "with null and quoted or free-text values with <redacted>. Pattern: " + PID_IN_TEXT.pattern
 )
 UID_IN_TEXT = re.compile(r"\buid-[0-9]+")
+PROOF_LOCK_HOST_IN_TEXT = re.compile(
+    r"(\bbeep-yeet-proof-locks-)[0-9a-fA-F]{12}(?=-uid-(?:[0-9]+|<uid>))"
+)
 REPAIR_REDACTION_RULES = (
-    "Ruling 23 repair only: replace sha12(hostname) in string values with <host>; "
-    "compute the hostname digest at runtime and never record it.",
+    "Ruling 23 repair only: replace any 12-hex sha12(hostname) in proof-lock directory "
+    "names with <host>, including foreign hosts. Also replace the runtime hostname digest "
+    "in string values; never record it. Pattern: " + PROOF_LOCK_HOST_IN_TEXT.pattern,
     "Ruling 23 repair only: replace numeric UID tokens in string values with uid-<uid>. "
     "Pattern: " + UID_IN_TEXT.pattern,
 )
@@ -268,6 +272,7 @@ def redact_string_values(value: JsonValue, *, repair: bool = False) -> JsonValue
     if isinstance(value, str):
         redacted = redact_string(value)
         if repair:
+            redacted = PROOF_LOCK_HOST_IN_TEXT.sub(r"\1<host>", redacted)
             redacted = redacted.replace(sha256(socket.gethostname().encode())[:12], "<host>")
             redacted = UID_IN_TEXT.sub("uid-<uid>", redacted)
         return redacted
@@ -809,7 +814,7 @@ def scan_output_bytes(files: list[tuple[str, bytes]]) -> None:
 
     for path, data in files:
         text = path + "\n" + data.decode("utf-8")
-        if sha256(socket.gethostname().encode())[:12] in text:
+        if PROOF_LOCK_HOST_IN_TEXT.search(text) or sha256(socket.gethostname().encode())[:12] in text:
             fail("residue scan failed: hostname digest")
         if UID_IN_TEXT.search(text):
             fail("residue scan failed: numeric UID token")
