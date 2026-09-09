@@ -51,6 +51,9 @@ const fixture = Effect.fn("GraftCacheSyncTest.fixture")(function* () {
   return { fs, path, directory, source, target };
 });
 
+const decodePlanJson = S.decodeUnknownEffect(S.fromJsonString(GraftCacheSyncPlan));
+const decodeReportJson = S.decodeUnknownEffect(S.fromJsonString(GraftCacheSyncReport));
+
 const testLayer = GraftCacheSyncLive.pipe(Layer.provideMerge(NodeServices.layer));
 
 const runCommand = Effect.fn("GraftCacheSyncTest.runCommand")(function* (args: ReadonlyArray<string>) {
@@ -350,13 +353,13 @@ layer(testLayer)("Graft cache sync", (it) => {
       ]);
       expect(Result.isSuccess(preview.result)).toBe(true);
       expect(preview.output).toHaveLength(1);
-      const plan = yield* S.decodeUnknownEffect(S.fromJsonString(GraftCacheSyncPlan))(preview.output[0]);
+      const plan = yield* decodePlanJson(preview.output[0]);
       expect(plan.entries).toHaveLength(10);
       expect(yield* fs.exists(path.join(target, "graft"))).toBe(false);
       expect(yield* fs.exists(path.join(other, "graft"))).toBe(false);
       const applied = yield* runCommand(["cache", "sync", "--from", source, "--siblings", "--json"]);
       expect(Result.isSuccess(applied.result)).toBe(true);
-      expect((yield* S.decodeUnknownEffect(S.fromJsonString(GraftCacheSyncReport))(applied.output[0])).copied).toBe(10);
+      expect((yield* decodeReportJson(applied.output[0])).copied).toBe(10);
     })
   );
 
@@ -371,7 +374,7 @@ layer(testLayer)("Graft cache sync", (it) => {
       yield* fs.remove(path.join(target, ".git"));
       const refused = yield* runCommand(["cache", "sync", "--from", source, "--to", target, "--json"]);
       expect(Result.isFailure(refused.result)).toBe(true);
-      const refusedPlan = yield* S.decodeUnknownEffect(S.fromJsonString(GraftCacheSyncPlan))(refused.output[0]);
+      const refusedPlan = yield* decodePlanJson(refused.output[0]);
       expect(A.length(A.filter(refusedPlan.entries, (entry) => entry.action === "refuse"))).toBe(5);
       expect(yield* fs.exists(path.join(target, "graft"))).toBe(false);
     })
