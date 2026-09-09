@@ -13,7 +13,7 @@ import { FsUtils, findRepoRoot, jsonStringifyPretty, resolveWorkspaceDirs } from
 import { isExcludedTypeScriptSourcePath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
 import { normalizePath } from "@beep/schema";
 import { A, Str, thunkEmptyStr } from "@beep/utils";
-import { Console, Effect, FileSystem, HashSet, Inspectable, MutableHashSet, Order, Path, pipe } from "effect";
+import { Config, Console, Effect, FileSystem, HashSet, Inspectable, MutableHashSet, Order, Path, pipe } from "effect";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
@@ -536,6 +536,104 @@ const runDeprecatedApiLint = Effect.fn("runDeprecatedApiLint")(function* () {
   yield* Console.log("[lint:deprecated-apis] OK: no deprecated vendor API usage found.");
 });
 
+const lintPackageFlag = Flag.string("package").pipe(Flag.optional);
+
+const resolveLintPackage = Effect.fn("Lint.resolvePackage")(function* (root: string, directory: string) {
+  const path = yield* Path.Path;
+  const absolute = path.resolve(directory);
+  if (!isContainedLintPath(path, root, absolute)) {
+    return yield* failWithReportedExit("Lint package directory must stay inside the repository.");
+  }
+  return normalizePath(path.relative(root, absolute)) || ".";
+});
+
+const runEslintWorker = Effect.fn("Lint.eslintWorker")(function* (
+  root: string,
+  profile: string,
+  targets: ReadonlyArray<string>
+) {
+  if (A.isReadonlyArrayEmpty(targets)) return;
+  const path = yield* Path.Path;
+  const nodeOptions = yield* Config.string("NODE_OPTIONS").pipe(Config.withDefault(""));
+  const heapOptions = /--max[-_]old[-_]space[-_]size(?:=|\s+)/.test(nodeOptions)
+    ? nodeOptions
+    : `${nodeOptions} --max-old-space-size=4096`;
+  const exitCode = yield* runToExit({
+    command: path.join(root, DEPRECATED_API_LINT_ESLINT_BIN),
+    args: [
+      "--config",
+      path.join(root, "eslint.config.mjs"),
+      ...(profile === "docs" ? ["--max-warnings=0", "--no-warn-ignored"] : []),
+      ...targets,
+    ],
+    cwd: root,
+    env: { BEEP_ESLINT_PROFILE: profile, NODE_OPTIONS: Str.trim(heapOptions) },
+    extendEnv: true,
+    stdio: "inherit",
+  });
+  if (exitCode !== 0)
+    return yield* failWithReportedExit(`lint ${profile}: failed with exit code ${exitCode}.`, exitCode);
+});
+
+const lintJsdocCommand = Command.make(
+  "jsdoc",
+  {
+    package: lintPackageFlag,
+    rootOnly: Flag.boolean("root-only").pipe(Flag.withDefault(false)),
+  },
+  Effect.fn("Lint.jsdoc")(function* ({ package: directory, rootOnly }) {
+    if (O.isSome(directory) === rootOnly) {
+      return yield* failWithReportedExit("Choose exactly one of --package or --root-only.");
+    }
+    const root = yield* findRepoRoot();
+    if (O.isSome(directory)) {
+      return yield* runEslintWorker(root, "docs", [yield* resolveLintPackage(root, directory.value)]);
+    }
+    const fsUtils = yield* FsUtils;
+    const path = yield* Path.Path;
+    const workspaces = yield* resolveWorkspaceDirs(root);
+    const files = yield* fsUtils.globFiles(["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/**/*.ts"], {
+      cwd: root,
+      ignore: [
+        "apps/labs/**",
+        "**/node_modules/**",
+        "**/.context/**",
+        ...A.map(A.fromIterable(HashMap.values(workspaces)), (dir) => `${normalizePath(path.relative(root, dir))}/**`),
+      ],
+    });
+    yield* runEslintWorker(root, "docs", A.sort(files, Order.String));
+  })
+).pipe(Command.withDescription("Check package or non-workspace documentation with the docs ESLint profile"));
+
+const lintLawsCommand = Command.make(
+  "laws",
+  {
+    package: Flag.string("package"),
+  },
+  Effect.fn("Lint.laws")(function* ({ package: directory }) {
+    const root = yield* findRepoRoot();
+    const path = yield* Path.Path;
+    const prefix = yield* resolveLintPackage(root, directory);
+    const commands = [
+      ["laws", "terse-effect", "--check", "--advisory", "--include-prefix", prefix],
+      ["laws", "native-runtime", "--check", "--include-prefix", prefix],
+      ["laws", "frozen-grant-set", "--check", "--include-prefix", prefix],
+      ["laws", "effect-fn", "--check", "--include-prefix", prefix],
+      ["lint", "package-test-imports", "--include-root", prefix],
+    ];
+    for (const args of commands) {
+      const exitCode = yield* runToExit({
+        command: "bun",
+        args: ["run", path.join(root, "packages/tooling/tool/cli/src/bin.ts"), "--", ...args],
+        cwd: root,
+        extendEnv: true,
+        stdio: "inherit",
+      });
+      if (exitCode !== 0) return yield* failWithReportedExit(`lint laws: ${A.join(args, " ")} failed.`, exitCode);
+    }
+  })
+).pipe(Command.withDescription("Run the package-scoped law checks"));
+
 /**
  * Lint command for circular dependency checks.
  *
@@ -564,9 +662,15 @@ const lintCircularCommand = Command.make("circular", {}, runLintCircular).pipe(
  * @category utilities
  * @since 0.0.0
  */
-const lintDeprecatedApisCommand = Command.make("deprecated-apis", {}, runDeprecatedApiLint).pipe(
-  Command.withDescription("Check TypeScript sources for deprecated third-party API usage")
-);
+const lintDeprecatedApisCommand = Command.make(
+  "deprecated-apis",
+  { package: lintPackageFlag },
+  Effect.fn("Lint.deprecatedApis")(function* ({ package: directory }) {
+    if (O.isNone(directory)) return yield* runDeprecatedApiLint();
+    const root = yield* findRepoRoot();
+    yield* runEslintWorker(root, "deprecated-apis", [yield* resolveLintPackage(root, directory.value)]);
+  })
+).pipe(Command.withDescription("Check TypeScript sources for deprecated third-party API usage"));
 
 /**
  * Lint command for repo-wide root policy checks.
@@ -796,6 +900,8 @@ const lintSubcommands = [
   lintPolicyFingerprintCommand,
   lintCircularCommand,
   lintDeprecatedApisCommand,
+  lintJsdocCommand,
+  lintLawsCommand,
   lintEcosystemPolarityCommand,
   lintGoalPacketsCommand,
   lintIdentityRegistryCommand,

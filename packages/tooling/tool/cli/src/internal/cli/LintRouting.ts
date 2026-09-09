@@ -16,6 +16,8 @@ const LINT_POLICY_SUBCOMMANDS = subcommands(
   "goal-packets",
   "identity-registry",
   "judge-rubric",
+  "jsdoc",
+  "laws",
   "package-scripts",
   "package-test-imports",
   "package-test-typecheck",

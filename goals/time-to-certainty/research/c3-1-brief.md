@@ -200,3 +200,12 @@ two coincide; for `packages/tooling/tool/docgen` (`bun run src/bin.ts`) the diff
 package's truth (D3, D4). The kind default is used only when no prior value exists (a genuinely
 missing key). Add a literal test for the docgen-tool case in Stage C or E, whichever touches
 the writer first.
+
+## Amendment 2026-09-09 (5) — `lint laws --package` and non-`packages/` workspaces
+
+`lint package-test-imports --include-root` accepts roots under `packages/` only (its scan domain
+is `packages/**/test/**`). The `laws --package <dir>` worker therefore runs package-test-imports
+only when `<dir>` is under `packages/`; for apps, labs and infra it runs the four laws alone and
+says so in its output. That preserves today's coverage exactly (the root policy step never
+scanned app or infra tests). Add a worker test for an `apps/` directory. This lands at the start
+of Stage E, before the fleet `--write`, so every stamped `lint:laws` script is runnable.

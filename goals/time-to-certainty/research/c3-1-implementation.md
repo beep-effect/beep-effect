@@ -496,3 +496,100 @@ need refresh after source changes before final gate acceptance.
 No implementation files were deleted. Residue is omitted from the list as required.
 No Git write commands, inbox acknowledgments, push, publish, or merge were run.
 Stopped after Stage C; Stages D and E and the fleet rewrite remain unstarted.
+
+## 2026-09-08 — Stage D implementation and Bun-runtime verification
+
+Read the full brief, all four amendments, and the previous implementation results.
+Stages A, B, and C are accepted and committed per this launch's instruction.
+This launch completes Stage D only.
+
+Added the `--package` branch to `lint deprecated-apis`. It resolves the caller's
+package directory against the repository root, invokes the root-installed ESLint
+with the absolute root config path, selects the deprecated-apis profile, and uses
+no ESLint cache. The worker preserves existing NODE_OPTIONS, retains an explicit
+heap cap, and appends `--max-old-space-size=4096` when no cap is supplied. The
+no-argument branch still calls the existing 28-shard, four-concurrent, cached
+implementation with its existing 8 GiB setting.
+
+Added `lint jsdoc --package <dir> | --root-only`, enforcing exactly one selector.
+It selects the docs profile and `--max-warnings=0`. Root-only discovery uses the
+docs profile's eligible TypeScript path families, subtracts declared workspace
+directories and `apps/labs/**`, and skips execution for an empty selection.
+`--no-warn-ignored` lets ESLint apply its existing config exclusions to explicitly
+selected files without converting ignored-file notices into warning failures.
+Package paths are normalized to repository-relative paths and child processes run
+from the repository root, preserving config-relative matching.
+
+Added `lint laws --package <dir>` with serial, fail-fast subprocesses for
+terse-effect (`--check --advisory`), native-runtime, frozen-grant-set, and effect-fn
+(`--check`), all with `--include-prefix`. The fifth subprocess is
+package-test-imports with its existing `--include-root` selector. Both new commands
+are registered in the dependency-free routing allowlist and pinned by the routing
+test. No root quality task or hosted lane wiring changed.
+
+Added the exported `vitestDoctestActive` flag and the shared-config branch:
+doctest plugin, empty ordinary include, package-local TS/TSX includeSource,
+fixture/declaration exclusions, nonconcurrent test sequence, 30-second test
+timeout, and `passWithNoTests: false` even when coverage is active. Ordinary mode
+retains its existing include, concurrency, and coverage no-tests behavior.
+The fixture gains the two canonical scripts and a default config that re-exports
+the shared config. Its tsconfig includes that new config while retaining the
+existing fixture root-config path. Neither root `vitest.docs.ts` nor the fixture's
+existing `vitest.docs.ts` was edited.
+
+### Stage D — verification results
+
+- Final `bunx --no-install biome check --write` over the nine touched TypeScript
+  and fixture JSON files: **passed**, nine files, no fixes applied.
+- Final `bunx --bun --no-install tsgo -p
+  packages/tooling/tool/cli/tsconfig.check.json --pretty false`: **passed**, exit 0.
+- `bunx --bun --no-install tsgo -p
+  packages/tooling/tool/cli/tsconfig.test.json --pretty false`: **unavailable**,
+  exit 1, `TS5058: The specified path does not exist`. This is the inherited
+  missing-project limitation, not a passing test typecheck.
+- From `packages/tooling/tool/cli`, `bunx --bun --no-install vitest run
+  test/lint-workers.test.ts test/lint-subcommand-allowlist.test.ts
+  test/doctest-lane.test.ts --pool=threads`: **passed**, three files, 14 tests,
+  7.52 seconds. Worker tests cover argv/env, explicit/default heap caps,
+  workspace/lab exclusion with a filesystem fixture, empty selection, invalid
+  selector combinations, and failure propagation. The doctest tests execute the
+  package script with `BEEP_VITEST_DOCTEST=1`, retain the existing root-config
+  fixture run, and inspect ordinary/doctest config behavior with coverage active.
+  Both execution fixtures report two passed assertions. Initial test failures
+  were corrected before this final pass.
+- `bun run beep lint policy-fingerprint --write`: **passed**, exit 0,
+  `policy-fingerprint: written`, after source edits.
+- `bun run beep lint policy-fingerprint --check`: **passed**, exit 0,
+  `policy-fingerprint: current`.
+- `git diff --check`: **passed**; checked again after this append.
+
+Canonical package verification, docgen, and any existing cwd-changing command
+fixtures remain the orchestrator's responsibility under Amendment 2. No alternate
+pool, synthetic test project, or inbox acknowledgment was used.
+
+An inherited scanner limitation is recorded in the opportunity ledger:
+package-test-imports currently rejects `--include-root` outside `packages/`.
+Stage D forwards the required selector unchanged; the passing worker contract
+tests do not establish app/lab/infra fleet acceptance. That scanner restriction
+must be accounted for before running the fleet's law scripts. No scanner
+semantics or Stage E manifests were changed in this launch.
+
+### Stage D — files
+
+- packages/tooling/tool/cli/src/commands/Lint/Lint.command.ts
+- packages/tooling/tool/cli/src/internal/cli/LintRouting.ts
+- packages/tooling/tool/cli/test/lint-subcommand-allowlist.test.ts
+- packages/tooling/tool/cli/test/lint-workers.test.ts — new worker argv/env and selection tests.
+- packages/tooling/tool/cli/test/doctest-lane.test.ts
+- packages/tooling/tool/cli/test/fixtures/doctest-lane/package/package.json
+- packages/tooling/tool/cli/test/fixtures/doctest-lane/package/vitest.config.ts — required default config for the package script to inherit the shared branch.
+- packages/tooling/tool/cli/test/fixtures/doctest-lane/package/tsconfig.json — includes the new default config.
+- vitest.shared.ts
+- standards/policy-tools.fingerprint.json
+- goals/time-to-certainty/research/OPPORTUNITIES.md
+- goals/time-to-certainty/research/c3-1-implementation.md
+
+No implementation files were deleted. Removed authorized graft residue and
+verified `.ignore` is absent; residue is intentionally omitted from the file list.
+No Git write commands, inbox acknowledgments, push, publish, or merge were run.
+Stopped after Stage D. Stage E and final fleet acceptance remain unstarted.

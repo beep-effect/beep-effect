@@ -1,4 +1,5 @@
 import { A, P, Str, Struct } from "@beep/utils";
+import * as Doctest from "@effect/doctest/Plugin";
 import { Config, Effect, pipe } from "effect";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
@@ -38,6 +39,20 @@ const configStringEqualsSync = (name: string, expected: string): boolean =>
     configStringOptionSync(name),
     O.exists((value) => value === expected)
   );
+/**
+ * Enables package-local in-source documentation tests.
+ *
+ * **Example** (Honor doctest mode in a package override)
+ *
+ * ```ts
+ * import { vitestDoctestActive } from "./vitest.shared.ts"
+ * console.log(vitestDoctestActive)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const vitestDoctestActive = configStringEqualsSync("BEEP_VITEST_DOCTEST", "1");
 export const vitestCoverageReportOnly = configStringEqualsSync("VITEST_COVERAGE_REPORT_ONLY", "1");
 // Env flags do not survive every spawn chain (root script -> turbo ->
 // package script -> vitest); the vitest process's own argv is authoritative.
@@ -91,7 +106,7 @@ const rootTsconfigAliases = A.flatMap(
 );
 
 const config: ViteUserConfig = {
-  plugins: [resolveUniformTypeScriptSourceSpecifiers()],
+  plugins: [resolveUniformTypeScriptSourceSpecifiers(), ...(vitestDoctestActive ? [Doctest.plugin()] : [])],
   oxc: {
     // The repository's Node 24 and Bun runtimes both execute top-level await.
     // Keeping Vitest's transform at ESNext avoids Oxc lowering/parsing warnings
@@ -125,17 +140,22 @@ const config: ViteUserConfig = {
     // Deep property sweeps (BEEP_FC_NUM_RUNS raises fast-check run counts
     // 8-20x for the property lane and nightly sweep) scale test wall time
     // the same way instrumentation does; give them the same generous cap.
-    testTimeout: vitestCoverageRunActive || fcDeepSweepActive ? 300_000 : 30_000,
+    testTimeout: vitestDoctestActive ? 30_000 : vitestCoverageRunActive || fcDeepSweepActive ? 300_000 : 30_000,
     hookTimeout: vitestCoverageRunActive || fcDeepSweepActive ? 300_000 : 10_000,
     // Baseline generation/regeneration must tolerate test-less packages;
     // the ratchet compare, not vitest, decides coverage outcomes.
-    passWithNoTests: vitestCoverageRunActive,
-    exclude: ["**/.context/**", "**/node_modules/**"],
+    passWithNoTests: !vitestDoctestActive && vitestCoverageRunActive,
+    exclude: [
+      "**/.context/**",
+      "**/node_modules/**",
+      ...(vitestDoctestActive ? ["**/test/fixtures/**", "**/*.d.ts"] : []),
+    ],
     setupFiles: [new URL("./vitest.setup.ts", import.meta.url).pathname],
     sequence: {
-      concurrent: true,
+      concurrent: !vitestDoctestActive,
     },
-    include: ["test/**/*.test.{ts,tsx}"],
+    include: vitestDoctestActive ? [] : ["test/**/*.test.{ts,tsx}"],
+    includeSource: vitestDoctestActive ? ["src/**/*.{ts,tsx}"] : [],
     coverage: {
       provider: coverageProvider,
       include: ["src/**/*.{ts,tsx}"],

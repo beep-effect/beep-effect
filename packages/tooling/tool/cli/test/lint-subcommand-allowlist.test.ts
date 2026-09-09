@@ -131,6 +131,8 @@ describe("commands/Lint fast-path allowlist binding", () => {
   });
 
   it("routes the package scripts and fingerprint gates through the lint command tree", () => {
+    expect(LintPolicySubcommand.literals).toContain("jsdoc");
+    expect(LintPolicySubcommand.literals).toContain("laws");
     expect(LintPolicySubcommand.literals).toContain("package-scripts");
     expect(LintPolicySubcommand.literals).toContain("policy-fingerprint");
   });

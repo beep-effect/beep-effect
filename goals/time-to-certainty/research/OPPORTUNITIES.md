@@ -418,3 +418,19 @@ thread-pool invocation and adds direct writer assertions that do not change cwd;
 the orchestrator must run the command fixtures under its canonical worker pool.
 A verification contract that accounts for cwd-changing command fixtures would
 prevent this limitation. No inbox acknowledgment or runtime workaround was used.
+
+### C3.1 Stage D — existing verification and law-scope limits
+
+The requested test typecheck command again exits 1 with
+`TS5058: The specified path does not exist` for the CLI's `tsconfig.test.json`.
+The source check project exists; no synthetic project or inbox acknowledgment
+was created. The brief should name the supported test typecheck project.
+
+Inspection of `commands/Lint/PackageTestImports.ts` also confirms that the
+existing `--include-root` checker rejects roots outside `packages/` with
+`--include-root must stay under packages/`. Stage D's thin worker forwards the
+ratified selector unchanged. The future app/lab/infra fleet invocation needs this
+scope restriction resolved by the scanner work; the worker argv tests alone do
+not prove those existing scanner paths can accept the fleet. Recording this
+inherited limitation before the Stage E rewrite prevents mistaking package-only
+worker proof for fleet acceptance.
