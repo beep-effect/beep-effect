@@ -27,7 +27,12 @@
  */
 export const infraProjectName = "beep-effect";
 
-/** Account cost visibility and protected budget ownership. */
+/**
+ * Account cost visibility and protected budget ownership.
+ *
+ * @category resources
+ * @since 0.0.0
+ */
 export * from "./AccountCostControls.ts";
 /**
  * AI metrics Pulumi orchestration exports.

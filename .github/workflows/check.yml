@@ -204,13 +204,6 @@ jobs:
           [[ "$configured" == *"scripts/regenerate-merge-driver.sh"* ]]
           [[ "$(git check-attr merge -- tsconfig.json)" == "tsconfig.json: merge: regenerate" ]]
 
-      - name: Warn when the intended runner image is stale
-        if: matrix.id == 'repo-sanity' && steps.lane-gate.outputs.should_run == 'true'
-        run: |
-          if ! bun run beep runners bake --check --manifest infra/ci-runners/runner-image.json; then
-            echo "::warning::Runner image provenance is stale or invalid. See docs/runbooks/aws-cost-operations.md before the next attended image refresh."
-          fi
-
       - name: Run verification lane
         if: steps.lane-gate.outputs.should_run == 'true'
         run: |
@@ -288,6 +281,13 @@ jobs:
       - name: Skip lane
         if: steps.lane-gate.outputs.should_run != 'true'
         run: echo "Skipping ${{ matrix.name }} for this change set."
+
+      - name: Warn when the intended runner image is stale
+        if: always() && matrix.id == 'repo-sanity' && steps.lane-gate.outputs.should_run == 'true'
+        run: |
+          if ! bun run beep runners bake --check --manifest infra/ci-runners/runner-image.json; then
+            echo "::warning::Runner image provenance is stale or invalid. See docs/runbooks/aws-cost-operations.md before the next attended image refresh."
+          fi
 
   lint-shard:
     name: Lint (${{ matrix.partition }})
