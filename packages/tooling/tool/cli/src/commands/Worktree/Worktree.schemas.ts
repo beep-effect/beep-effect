@@ -451,7 +451,7 @@ const decodeWorktreePorcelainInput = S.decodeUnknownEffect(WorktreePorcelainInpu
  *
  * ```ts
  * import { parseWorktreePorcelain } from "@beep/repo-cli/commands/Worktree"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const entries = await Effect.runPromise(parseWorktreePorcelain("worktree /repo\0HEAD abc123\0branch refs/heads/main\0\0"))
  * console.log(entries.length)
