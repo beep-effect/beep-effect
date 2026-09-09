@@ -40,13 +40,21 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, normalizePath } from "@beep/schema";
 import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
-import { A, O, pipe, R, Str, thunkFalse } from "@beep/utils";
-import { Console, Effect, FileSystem, flow, HashSet, MutableHashSet, Order, Path } from "effect";
+import { A, O, pipe, R, Str } from "@beep/utils";
+import { Console, Effect, FileSystem, flow, MutableHashSet, Order, Path } from "effect";
 import * as S from "effect/Schema";
 import { Command, Flag } from "effect/unstable/cli";
 import { formatJsonc, readArtifact, renderTruncatedLines, writeArtifact } from "../../internal/artifacts/index.ts";
 import { CliReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { diffMembership, enforceRatchet } from "../../internal/ratchet/index.ts";
+import {
+  collectOwnedPaths,
+  exists,
+  isDirectoryPath,
+  pathTypeOf,
+  testFixtureSegment,
+  walkableChildPaths,
+} from "./internal/WorkspaceWalk.ts";
 import { TestTypecheckBaselineError } from "./Lint.errors.ts";
 
 const $I = $RepoCliId.create("commands/Lint/PackageTestTypecheck");
@@ -54,12 +62,10 @@ const $I = $RepoCliId.create("commands/Lint/PackageTestTypecheck");
 const defaultBaselinePath = "standards/test-typecheck.blindspot-baseline.jsonc";
 const regenerationCommand = "bun run beep lint package-test-typecheck --write-baseline";
 const checkCommand = "bun run beep lint package-test-typecheck";
-// Mirrors the repo-wide `beep quality test-tsgo` lane's search roots and ignore
-// sets so both gates agree on what counts as a package test source.
+// Mirrors the repo-wide `beep quality test-tsgo` lane's search roots; the
+// ignore set every Lint walk shares lives in ./internal/WorkspaceWalk.ts.
 const packageSearchRoots = ["apps", "infra", "packages"] as const;
-const ignoredDirectoryNames = HashSet.fromIterable(["node_modules", "dist", "dist-test", "coverage", "tmp", ".turbo"]);
 const testDirectoryName = "test";
-const testFixtureSegment = "/test/fixtures/";
 const testSourcePattern = /\.(?:cts|mts|ts|tsx)$/u;
 const wildcardPattern = /[*?]/u;
 const recursiveGlobSegment = "**";
@@ -257,35 +263,8 @@ const blindSpotOrder = sameBlindSpotPackage;
 const samePackage = (left: TestTypecheckBlindSpot, right: TestTypecheckBlindSpot): boolean =>
   left.package === right.package;
 
-const exists = (fs: FileSystem.FileSystem, filePath: string): Effect.Effect<boolean> =>
-  fs.exists(filePath).pipe(Effect.orElseSucceed(thunkFalse));
-
 const readOptionalText = (fs: FileSystem.FileSystem, filePath: string): Effect.Effect<O.Option<string>> =>
   fs.readFileString(filePath).pipe(Effect.asSome, Effect.orElseSucceed(O.none<string>));
-
-// `File`, `Directory`, or none when the path is missing or unreadable. Both
-// tree walks classify through this so neither repeats the stat-and-unwrap dance.
-const pathTypeOf = (fs: FileSystem.FileSystem, currentPath: string) =>
-  fs.stat(currentPath).pipe(Effect.option, Effect.map(O.map((info) => info.type)));
-
-const isDirectoryPath = (fs: FileSystem.FileSystem, currentPath: string): Effect.Effect<boolean> =>
-  pathTypeOf(fs, currentPath).pipe(Effect.map(O.match({ onNone: thunkFalse, onSome: (type) => type === "Directory" })));
-
-// Child paths worth descending into: build and vendor directory names are
-// pruned here so every walk in this lint agrees on traversal scope.
-const walkableChildPaths = Effect.fn("PackageTestTypecheck.walkableChildPaths")(function* (
-  currentPath: string
-): Effect.fn.Return<ReadonlyArray<string>, never, FileSystem.FileSystem | Path.Path> {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const entries = yield* fs.readDirectory(currentPath).pipe(Effect.orElseSucceed(A.empty<string>));
-
-  return pipe(
-    entries,
-    A.filter((entry) => !HashSet.has(ignoredDirectoryNames, entry)),
-    A.map((entry) => path.join(currentPath, entry))
-  );
-});
 
 const capturedGroups = (pattern: RegExp, text: string): ReadonlyArray<string> =>
   pipe(
@@ -590,29 +569,21 @@ const uncoveredTestSources = Effect.fn("PackageTestTypecheck.uncoveredTestSource
   return remaining;
 });
 
-const collectPackageDirectories = Effect.fn("PackageTestTypecheck.collectPackageDirectories")(function* (
-  searchRoot: string
+// A directory owns itself when it carries a package manifest.
+const packageDirectoryOwnedIn = Effect.fn("PackageTestTypecheck.packageDirectoryOwnedIn")(function* (
+  directory: string
 ): Effect.fn.Return<ReadonlyArray<string>, never, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
+  const hasManifest = yield* exists(fs, path.join(directory, "package.json"));
 
-  const walk = Effect.fn("PackageTestTypecheck.collectPackageDirectories.walk")(function* (
-    currentPath: string
-  ): Effect.fn.Return<ReadonlyArray<string>, never, FileSystem.FileSystem | Path.Path> {
-    if (!(yield* isDirectoryPath(fs, currentPath))) {
-      return A.empty<string>();
-    }
-
-    const hasManifest = yield* exists(fs, path.join(currentPath, "package.json"));
-    const own = hasManifest ? A.of(normalizePath(path.resolve(currentPath))) : A.empty<string>();
-    const children = yield* walkableChildPaths(currentPath);
-    const nested = yield* Effect.forEach(children, walk, { concurrency: 1 });
-
-    return A.appendAll(own, A.flatten(nested));
-  });
-
-  return yield* walk(searchRoot);
+  return hasManifest ? A.of(normalizePath(path.resolve(directory))) : A.empty<string>();
 });
+
+const collectPackageDirectories = (
+  searchRoot: string
+): Effect.Effect<ReadonlyArray<string>, never, FileSystem.FileSystem | Path.Path> =>
+  collectOwnedPaths(searchRoot, packageDirectoryOwnedIn);
 
 // Every TypeScript source under a package's test tree, absolute and sorted.
 // This is the exact file set coverage is judged against, so the walk's ignore

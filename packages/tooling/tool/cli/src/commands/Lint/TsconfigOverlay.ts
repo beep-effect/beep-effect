@@ -1,13 +1,14 @@
 /**
- * Check-overlay allowlist lint.
+ * Check-overlay allowlist lint: a workspace `tsconfig.check.json` may only
+ * turn build concerns off, never widen the program it typechecks.
  *
- * Every workspace `tsconfig.check.json` is an overlay over the package's
- * canonical `tsconfig.json`: it exists so `tsgo -p tsconfig.check.json` can
- * typecheck the same program without emitting or consuming project
- * references. The overlay must therefore only turn build concerns off; the
- * moment it widens the program (`types`, `lib`, `paths`, `plugins`, `strict`,
- * ...) the check lane and the build lane typecheck different programs and a
- * green `check` stops proving the package compiles.
+ * **Details**
+ * Every overlay extends the package's canonical `tsconfig.json` so
+ * `tsgo -p tsconfig.check.json` can typecheck the same program without
+ * emitting or consuming project references. The moment it widens the program
+ * (`types`, `lib`, `paths`, `plugins`, `strict`, ...) the check lane and the
+ * build lane typecheck different programs and a green `check` stops proving
+ * the package compiles.
  *
  * Apps used to guard that equivalence by running a second compiler pass over
  * `tsconfig.json` on every check. `.bin/tsc` is the same patched Effect
@@ -26,23 +27,22 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, normalizePath } from "@beep/schema";
 import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
-import { A, O, pipe, R, Str, thunkFalse } from "@beep/utils";
-import { Console, Effect, FileSystem, HashSet, Order, Path } from "effect";
+import { A, O, pipe, R, Str } from "@beep/utils";
+import { Console, Effect, FileSystem, Order, Path } from "effect";
 import * as S from "effect/Schema";
 import { Command } from "effect/unstable/cli";
 import { renderTruncatedLines } from "../../internal/artifacts/index.ts";
 import { CliReportedExit } from "../../internal/cli/ExitCodeError.ts";
+import { collectOwnedPaths, exists, testFixtureSegment } from "./internal/WorkspaceWalk.ts";
 import { TsconfigOverlayReadError } from "./Lint.errors.ts";
 
 const $I = $RepoCliId.create("commands/Lint/TsconfigOverlay");
 
 const overlayFileName = "tsconfig.check.json";
 const checkCommand = "bun run beep lint tsconfig-overlay";
-// Mirrors the package test-typecheck lint's search roots and ignore set so
-// every overlay a package owns is judged, and nothing under a build output is.
+// Mirrors the package test-typecheck lint's search roots so every overlay a
+// package owns is judged; the shared WorkspaceWalk prunes build outputs.
 const overlaySearchRoots = ["apps", "infra", "packages"] as const;
-const ignoredDirectoryNames = HashSet.fromIterable(["node_modules", "dist", "dist-test", "coverage", "tmp", ".turbo"]);
-const testFixtureSegment = "/test/fixtures/";
 const renderedViolationLimit = 40;
 
 /**
@@ -234,44 +234,24 @@ const violationOrder: Order.Order<TsconfigOverlayViolation> = Order.Struct({
   key: Order.String,
 });
 
-const exists = (fs: FileSystem.FileSystem, filePath: string): Effect.Effect<boolean> =>
-  fs.exists(filePath).pipe(Effect.orElseSucceed(thunkFalse));
-
-const isDirectoryPath = (fs: FileSystem.FileSystem, currentPath: string): Effect.Effect<boolean> =>
-  fs
-    .stat(currentPath)
-    .pipe(Effect.option, Effect.map(O.match({ onNone: thunkFalse, onSome: (info) => info.type === "Directory" })));
-
-// Every overlay file under one search root, absolute and in directory order.
-const collectOverlayFiles = Effect.fn("TsconfigOverlay.collectOverlayFiles")(function* (
-  searchRoot: string
+// A directory owns its overlay when one exists outside a fixture tree.
+const overlayOwnedIn = Effect.fn("TsconfigOverlay.overlayOwnedIn")(function* (
+  directory: string
 ): Effect.fn.Return<ReadonlyArray<string>, never, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
+  const overlayPath = normalizePath(path.resolve(directory, overlayFileName));
 
-  const walk = Effect.fn("TsconfigOverlay.collectOverlayFiles.walk")(function* (
-    currentPath: string
-  ): Effect.fn.Return<ReadonlyArray<string>, never, FileSystem.FileSystem | Path.Path> {
-    if (!(yield* isDirectoryPath(fs, currentPath))) {
-      return A.empty<string>();
-    }
-    const overlayPath = normalizePath(path.resolve(currentPath, overlayFileName));
-    const own =
-      Str.includes(testFixtureSegment)(`${overlayPath}/`) || !(yield* exists(fs, overlayPath))
-        ? A.empty<string>()
-        : A.of(overlayPath);
-    const entries = yield* fs.readDirectory(currentPath).pipe(Effect.orElseSucceed(A.empty<string>));
-    const children = pipe(
-      entries,
-      A.filter((entry) => !HashSet.has(ignoredDirectoryNames, entry)),
-      A.map((entry) => path.join(currentPath, entry))
-    );
-    const nested = yield* Effect.forEach(children, walk, { concurrency: 1 });
-    return A.appendAll(own, A.flatten(nested));
-  });
-
-  return yield* walk(searchRoot);
+  return Str.includes(testFixtureSegment)(`${overlayPath}/`) || !(yield* exists(fs, overlayPath))
+    ? A.empty<string>()
+    : A.of(overlayPath);
 });
+
+// Every overlay file under one search root, absolute and in directory order.
+const collectOverlayFiles = (
+  searchRoot: string
+): Effect.Effect<ReadonlyArray<string>, never, FileSystem.FileSystem | Path.Path> =>
+  collectOwnedPaths(searchRoot, overlayOwnedIn);
 
 const violationsOf = (
   file: string,
@@ -306,7 +286,7 @@ const violationsOf = (
  *
  * ```ts
  * import { collectTsconfigOverlayViolations } from "@beep/repo-cli/commands/Lint/TsconfigOverlay"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const program = collectTsconfigOverlayViolations("/repo")
  * console.log(Effect.isEffect(program)) // true
@@ -371,7 +351,7 @@ const allowlistHint = `[tsconfig-overlay] an overlay may set only ${A.join(Tscon
  *
  * ```ts
  * import { runTsconfigOverlayLint } from "@beep/repo-cli/commands/Lint/TsconfigOverlay"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const program = runTsconfigOverlayLint()
  * console.log(Effect.isEffect(program)) // true
