@@ -18,6 +18,10 @@ inputs:
     description: Setup Node.js runtime when workflow steps require it.
     required: false
     default: "true"
+  node-version:
+    description: Optional Node.js version override; empty uses .nvmrc.
+    required: false
+    default: ""
   free-disk:
     description: >-
       Reclaim disk on ephemeral hosted Linux images before installing: removes
@@ -211,7 +215,8 @@ runs:
       if: ${{ inputs.use-node == 'true' }}
       uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
       with:
-        node-version-file: .nvmrc
+        node-version: ${{ inputs.node-version }}
+        node-version-file: ${{ inputs.node-version == '' && '.nvmrc' || '' }}
 
     # One definition of the credential policy for every Turbo-backed job.
     # Runs after the Bun setup (the script needs a runtime) and before the
