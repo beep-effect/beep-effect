@@ -413,6 +413,8 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
     laneClass: "cli-runnable",
     replay: "exact",
     flags: [...TURBO_SHAPE_FLAGS, "--partition", "--dry-run", "--force"],
+    notes:
+      "Runs the unit suites under Bun. Coverage replays them under Node; the dual execution is the deliberate runtime-parity proof (quality-lane audit 2026-09-09, D11), not a duplicate to fold.",
   }),
   CiLaneDescriptor.make({
     id: "test-integration",
@@ -429,6 +431,8 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
     laneClass: "cli-runnable",
     replay: "exact",
     flags: [...TURBO_SHAPE_FLAGS],
+    notes:
+      "Runs under Node because Bun has no istanbul coverage. Test Unit runs the same suites under Bun; packages have passed one runtime and failed the other, so the dual execution is the deliberate runtime-parity proof (D11).",
   }),
   CiLaneDescriptor.make({
     id: "docgen",
@@ -501,8 +505,9 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
     required: false,
     laneClass: "cli-runnable",
     replay: "exact",
-    flags: [],
-    notes: "Runs jsdoc-inventory before jsdoc-ratchet, matching hosted CI's sequence.",
+    flags: ["--inventory"],
+    notes:
+      "Runs jsdoc-inventory before jsdoc-ratchet, matching hosted CI's sequence, unless --inventory <path> supplies a prebuilt inventory (then only the ratchet runs).",
   }),
   // Quality-lane audit D12: Build runs on pull requests affected-scoped with
   // remote-cache read; trusted main pushes run unscoped and are the only
@@ -660,6 +665,7 @@ export class CiLaneRunOptions extends S.Class<CiLaneRunOptions>($I`CiLaneRunOpti
     seed: S.optionalKey(S.String),
     filter: S.optionalKey(S.String),
     partition: S.optionalKey(CiLanePartitionId),
+    inventory: S.optionalKey(S.String),
     dryRun: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
     force: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
   },
@@ -739,6 +745,9 @@ const bunRunStep = (repoRoot: string, label: string, args: ReadonlyArray<string>
     args: ["run", ...args],
     cwd: repoRoot,
   });
+
+const jsdocRatchetStep = (repoRoot: string, inventoryPath: string): QualityTaskStep =>
+  bunRunStep(repoRoot, "ci:jsdoc-ratchet:ratchet", ["beep", "quality", "jsdoc-ratchet", "--inventory", inventoryPath]);
 
 // Lint and Test Unit still run on hosted 16GB ubuntu-24.04 runners (check.yml),
 // not the 32GB beep-ec2-heavy fleet, so they keep the 16GB-survival turbo cap
@@ -1401,24 +1410,29 @@ export const ciLaneStepsForTesting: {
         }),
       ],
       fallow: () => fallowRunPhaseSteps(repoRoot, options),
-      "jsdoc-ratchet": () => [
-        bunRunStep(repoRoot, "ci:jsdoc-ratchet:inventory", [
-          "beep",
-          "quality",
-          "jsdoc-inventory",
-          "--output-json",
-          JSDOC_CI_INVENTORY_JSON_PATH,
-          "--output-markdown",
-          JSDOC_CI_INVENTORY_MARKDOWN_PATH,
-        ]),
-        bunRunStep(repoRoot, "ci:jsdoc-ratchet:ratchet", [
-          "beep",
-          "quality",
-          "jsdoc-ratchet",
-          "--inventory",
-          JSDOC_CI_INVENTORY_JSON_PATH,
-        ]),
-      ],
+      // Hosted CI regenerates the inventory into .beep/ci/ and ratchets it. A
+      // caller that already ran the scan (root beep:preflight writes both the
+      // committed artifact and the CI mirror from one `jsdoc-inventory`) passes
+      // `--inventory <path>` and only the ratchet runs (quality-lane audit A3).
+      "jsdoc-ratchet": () =>
+        pipe(
+          O.fromUndefinedOr(options.inventory),
+          O.match({
+            onNone: () => [
+              bunRunStep(repoRoot, "ci:jsdoc-ratchet:inventory", [
+                "beep",
+                "quality",
+                "jsdoc-inventory",
+                "--output-json",
+                JSDOC_CI_INVENTORY_JSON_PATH,
+                "--output-markdown",
+                JSDOC_CI_INVENTORY_MARKDOWN_PATH,
+              ]),
+              jsdocRatchetStep(repoRoot, JSDOC_CI_INVENTORY_JSON_PATH),
+            ],
+            onSome: (inventoryPath) => [jsdocRatchetStep(repoRoot, inventoryPath)],
+          })
+        ),
       knip: () => [bunRunStep(repoRoot, "ci:knip", ["beep", "quality", "knip"])],
       // lab-apps-lifecycle P2 (ratified row 10): one bundled turbo invocation
       // over the labs glob. Deliberately no --affected — turbo unions filter
@@ -2353,6 +2367,10 @@ export const ciLaneCommand = Command.make(
       Flag.withDefault(false),
       Flag.withDescription("Print the machine-readable lane inventory and exit")
     ),
+    inventory: Flag.string("inventory").pipe(
+      Flag.withDescription("jsdoc-ratchet: ratchet this pre-built inventory instead of regenerating it"),
+      Flag.optional
+    ),
     lane: Argument.choice("lane", CI_LANE_ID_VALUES).pipe(
       Argument.withDescription("CI lane id to run"),
       Argument.optional
@@ -2367,6 +2385,7 @@ export const ciLaneCommand = Command.make(
     force,
     from,
     head,
+    inventory,
     lane,
     last,
     list,
@@ -2384,7 +2403,7 @@ export const ciLaneCommand = Command.make(
       head,
       summarize,
       mode,
-      ...O.getSomesStruct({ filter, from, partition }),
+      ...O.getSomesStruct({ filter, from, inventory, partition }),
       to,
       last,
       changesetStatus,

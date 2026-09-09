@@ -1012,6 +1012,23 @@ describe("ciLaneStepsForTesting", () => {
     ]);
   });
 
+  it("ratchets a pre-built inventory without regenerating it when --inventory is given", () => {
+    const steps = ciLaneStepsForTesting(
+      REPO_ROOT,
+      "jsdoc-ratchet",
+      CiLaneRunOptions.make({ ...baseOptions, inventory: "standards/jsdoc-documentation.inventory.jsonc" })
+    );
+    expect(A.map(steps, (step) => step.label)).toEqual(["ci:jsdoc-ratchet:ratchet"]);
+    expect(steps[0]?.args).toEqual([
+      "run",
+      "beep",
+      "quality",
+      "jsdoc-ratchet",
+      "--inventory",
+      "standards/jsdoc-documentation.inventory.jsonc",
+    ]);
+  });
+
   it("builds the codegen drift lane from stable driver checks followed by the desktop bundle check", () => {
     const steps = ciLaneStepsForTesting(REPO_ROOT, "codegen", baseOptions);
     expect(A.map(steps, (step) => ({ label: step.label, command: step.command, args: [...step.args] }))).toEqual([

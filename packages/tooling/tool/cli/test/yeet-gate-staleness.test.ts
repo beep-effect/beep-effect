@@ -205,6 +205,22 @@ describe("gate staleness reporting", () => {
       "bun run beep lint package-test-typecheck --write-baseline",
       "bun run beep goals doctor --write-baseline",
       "bun run beep quality jsdoc-inventory",
+      "bun run fallow:health:baseline:write",
+      "bun run beep lint schema-first --write",
+    ]);
+    // Quality-lane audit 2026-09-09 (C3): the two regenerable artifacts gates read
+    // but the catalogue did not judge, each paired with the gate that reads it. The
+    // hand-maintained effect-laws allowlist has no regenerator, so mtime cannot judge it.
+    expect(
+      A.map(
+        A.filter(YEET_GATE_ARTIFACT_DESCRIPTORS, (entry) =>
+          A.contains(["fallow-health", "schema-first-inventory"], entry.gateId)
+        ),
+        (entry) => [entry.artifactPath, entry.kind]
+      )
+    ).toStrictEqual([
+      ["standards/fallow.health.regression-baseline.jsonc", "baseline"],
+      ["standards/schema-first.inventory.jsonc", "inventory"],
     ]);
   });
 });

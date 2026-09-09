@@ -2,7 +2,7 @@
 
 Order is by evidence-returned-per-unit-of-work. No calendar estimates. Every item lands as a
 focused PR through Yeet unless the operator bundles a phase. Packet phase flips ride the same PR as
-their implementation truth. Heavy lanes run on Codex (`gpt-6-astra`, `xhigh` reasoning); web research on Grok; the
+their implementation truth. Heavy lanes run on Codex (`gpt-6-astra`, `medium` reasoning); web research on Grok; the
 orchestrator owns schemas, contracts, and judgment.
 
 ## P0 — Measure and ratify — COMPLETE 2026-09-03

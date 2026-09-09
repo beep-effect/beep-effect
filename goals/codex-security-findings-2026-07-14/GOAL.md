@@ -1,6 +1,6 @@
 # Codex Security Findings (2026-07-14)
 
-> Future reuse (2026-09-08): use `gpt-6-astra` with `xhigh` for token-heavy work;
+> Future reuse (2026-09-09): use `gpt-6-astra` with `medium` for token-heavy work;
 > see [routing policy](../../AGENTS.md#token-heavy-codex-work).
 > Historical details follow.
 

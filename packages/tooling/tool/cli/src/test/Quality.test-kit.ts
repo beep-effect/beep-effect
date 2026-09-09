@@ -19,6 +19,7 @@ export {
   runChangesetStatus,
   uncoveredWorkspacePackageNames,
 } from "@beep/repo-cli/commands/Quality/ChangesetStatus";
+export * from "@beep/repo-cli/commands/Quality/CheckCensus";
 export * from "@beep/repo-cli/commands/Quality/Quality.command";
 export * from "@beep/repo-cli/commands/Quality/Quality.render";
 export {
@@ -64,6 +65,7 @@ export {
   githubCheckChangesetStatusLane,
   githubCheckCheapGateLanes,
   githubCheckLanePlan,
+  githubCheckTierConcurrency,
 } from "../commands/Quality/internal/GithubChecks.ts";
 export * from "../commands/Quality/internal/JSDocDocumentationInventory.ts";
 export * from "../commands/Quality/internal/JSDocMigrate.schemas.ts";
