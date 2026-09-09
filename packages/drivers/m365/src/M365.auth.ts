@@ -4,7 +4,8 @@
  * Implements OAuth2 authorization-code + PKCE as a public client via
  * `@azure/msal-node` with silent refresh, optionally persisting the MSAL token
  * cache encrypted via `@azure/msal-node-extensions` when `tokenCachePath` is
- * configured (DPAPI / Keychain / libsecret).
+ * configured (DPAPI / Keychain / libsecret). That extension is an optional peer
+ * dependency the host installs; see `vendor.d.ts` for the typed surface.
  * Interactive redirect capture is injected by the host; the driver never owns a
  * loopback HTTP server.
  *
