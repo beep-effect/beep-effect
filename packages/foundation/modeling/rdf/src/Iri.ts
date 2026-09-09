@@ -791,6 +791,9 @@ const makeTrimmedSyntaxChecks = (
       title: `${title} Trimmed`,
       description: `${description} without leading or trailing whitespace.`,
       message: `${title} values must not contain leading or trailing whitespace`,
+      // The syntax check supplies a constructive IRI pattern. The generic trimmed
+      // pattern would also be sampled, then mostly rejected by the syntax check.
+      arbitraryConstraint: {},
     }),
     S.makeFilter(predicate, {
       identifier: $I.create(identifier).make("SyntaxCheck"),

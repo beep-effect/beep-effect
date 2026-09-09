@@ -21,7 +21,7 @@ import {
 } from "@beep/face-detection";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Equal, Layer, Result } from "effect";
+import { Effect, Layer, Result } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
@@ -74,7 +74,7 @@ const expectCodecIdentity = <Schema extends S.Codec<unknown, unknown>>(schema: S
   const encoded = Result.getOrThrow(S.encodeResult(schema)(value));
   const decoded = Result.getOrThrow(S.decodeUnknownResult(schema)(encoded));
 
-  expect(Equal.equals(decoded, value)).toBe(true);
+  expect(S.toEquivalence(schema)(decoded, value)).toBe(true);
 };
 
 const fakeLayer = Layer.succeed(

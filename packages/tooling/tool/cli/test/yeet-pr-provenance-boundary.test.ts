@@ -1,7 +1,7 @@
 import { renderPrProvenance, toPublicPrProvenance } from "@beep/repo-cli/test/Yeet";
 import { fcRuns } from "@beep/test-utils";
 import * as O from "@beep/utils/Option";
-import { assert, describe, it } from "@effect/vitest";
+import { assert, describe, expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";

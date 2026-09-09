@@ -13,8 +13,7 @@ describe("schema test helpers", () => {
   );
 
   it("fails when a generated type value cannot decode through the codec", () => {
-    // @effect-diagnostics-next-line schemaNumber:off -- the transformed codec is the deliberate failure input
-    expect(() => assertSchemaArbitraryDecodesToSelf(S.NumberFromString, { runs: 1, seed: 42 })).toThrow();
+    expect(() => assertSchemaArbitraryDecodesToSelf(S.FiniteFromString, { runs: 1, seed: 42 })).toThrow();
   });
 
   it("asserts that schema-derived arbitrary values decode to themselves", () => {

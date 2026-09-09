@@ -181,8 +181,8 @@ describe("Services and Surface", () => {
             },
             fcRuns(5)
           )
-        )._tag
-      ).toBe("Passed")
+        )
+      ).toMatchObject({ _tag: "Passed" })
   );
 
   it.effect(

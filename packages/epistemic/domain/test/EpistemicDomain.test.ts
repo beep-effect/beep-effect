@@ -79,6 +79,8 @@ const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(
   ).toBe("Passed");
 };
 
+const isConfidence = S.is(Confidence);
+
 describe("@beep/epistemic-domain", () => {
   it("exports value schemas from the package identity", () => {
     expect(ClaimLifecycle.is.candidate("candidate")).toBe(true);
@@ -86,7 +88,7 @@ describe("@beep/epistemic-domain", () => {
 
   it("derives valid Confidence samples", () => {
     expect(
-      Effect.runSync(Arbitrary.sampleEffect(Arbitrary.schema(Confidence), { count: 25 })).every(S.is(Confidence))
+      Effect.runSync(Arbitrary.sampleEffect(Arbitrary.schema(Confidence), { count: 25 })).every(isConfidence)
     ).toBe(true);
   });
 

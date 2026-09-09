@@ -6,6 +6,7 @@
  */
 
 import { $SchemaId } from "@beep/identity/packages";
+import { SchemaTransformation } from "effect";
 import * as S from "effect/Schema";
 
 const $I = $SchemaId.create("Float");
@@ -28,13 +29,30 @@ const FloatChecks = S.makeFilter(isProtobufFloatValue, {
   message: "Expected a protobuf float value in the binary32 range or an IEEE-754 special value",
 });
 
-// Protobuf intentionally includes NaN and infinities.
-// @effect-diagnostics-next-line schemaNumber:off
-const ProtobufNumber = S.Number.annotate({
-  description: "A JavaScript number, including IEEE-754 special values accepted by protobuf.",
-  identifier: $I`ProtobufNumber`,
-  title: "Protobuf Number",
-});
+const isJsNumber = (value: unknown): value is number => typeof value === "number";
+
+const ProtobufNumberGenerationSource = S.Union([S.Finite, S.Literals(["NaN", "Infinity", "-Infinity"])]);
+
+// Protobuf intentionally includes NaN and infinities, so the base domain is an
+// opaque number declaration with a constructive generation link rather than the
+// finite-only Schema number surface.
+const ProtobufNumber = S.declare(isJsNumber)
+  .annotate({
+    toCodecArbitrary: () =>
+      S.link<number>()(
+        ProtobufNumberGenerationSource,
+        SchemaTransformation.transform({
+          decode: (value): number => (isJsNumber(value) ? value : globalThis.Number(value)),
+          encode: (value): number | "NaN" | "Infinity" | "-Infinity" =>
+            globalThis.Number.isFinite(value) ? value : (globalThis.String(value) as "NaN" | "Infinity" | "-Infinity"),
+        })
+      ),
+  })
+  .annotate({
+    description: "A JavaScript number, including IEEE-754 special values accepted by protobuf.",
+    identifier: $I`ProtobufNumber`,
+    title: "Protobuf Number",
+  });
 
 /**
  * Branded schema for protobuf `float` values.

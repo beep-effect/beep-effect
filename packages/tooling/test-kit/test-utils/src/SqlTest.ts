@@ -1181,6 +1181,10 @@ const buildPgExternalLayer: (
           connectTimeout: Duration.millis(config.connectTimeoutMs),
           ssl: config.ssl,
           acquireForStream: false,
+          // The harness swaps search_path and re-runs identical DDL/queries over
+          // one session; the default named-statement cache then collides with
+          // "prepared statement already exists" across harness phases.
+          prepare: false,
         }).pipe(
           Effect.retry(PgConnectRetryPolicy),
           Effect.provideService(Reactivity.Reactivity, reactivity),
