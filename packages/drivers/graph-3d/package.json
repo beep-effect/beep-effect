@@ -27,13 +27,14 @@
     "test:property": "bun run beep:test",
     "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
     "beep:build": "tsc -p tsconfig.json && bun run babel",
-    "beep:check": "tsgo -p tsconfig.check.json",
+    "beep:check": "tsgo -p tsconfig.check.json && bun run beep:check:tests",
     "beep:docgen": "bunx --bun --no-install docgen",
     "beep:lint": "biome check .",
     "beep:lint:fix": "biome check . --write",
     "beep:test": "bunx --bun vitest run --passWithNoTests",
     "babel": "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
-    "test:browser": "vitest run --config vitest.browser.config.ts"
+    "test:browser": "vitest run --config vitest.browser.config.ts",
+    "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit"
   },
   "exports": {
     ".": "./src/index.ts",
@@ -76,6 +77,7 @@
     "@types/three": "catalog:",
     "@vitest/browser": "catalog:",
     "@vitest/browser-playwright": "catalog:",
+    "bun-types": "catalog:",
     "storybook": "catalog:",
     "vitest": "catalog:"
   },
