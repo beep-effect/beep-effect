@@ -413,3 +413,18 @@ conditional spread hid the required nonempty result array from TypeScript.
 Preserve the default's literal type and place the unconditional result entries
 first. Run the package check after each schema/control increment so these
 errors surface before the commit boundary.
+
+Merging `main` at `bed30c6adf` conflicted in the identity scripts, the cache
+gate registration and two planner tests. Main's lane constructor also gained
+a required tier argument in an otherwise automatically merged cache-gate
+registration. Resolve both sides' behavior, migrate the cache gate to the
+command-based `quality:cache-policy` id and explicit tiers, and check the
+planner tests plus TypeScript. A textual conflict check alone would miss the
+constructor change outside the conflict markers.
+
+The integrated `bun run beep quality cache-policy` reports 700 blocking
+`configuration-drift` findings and a `turbo.json` source-review notice after
+the incoming lint/test graph changes. The old baseline is preserved and the
+gate remains enforced. A baseline review and source-binding refresh must
+accompany future qualification after a main integration; a clean Git merge
+and passing package tests do not establish cache-policy acceptance.

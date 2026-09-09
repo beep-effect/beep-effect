@@ -777,13 +777,14 @@ describe("yeet planner", () => {
     expect(A.flatMap(findStep(plan.steps, "full:pre-push").waves ?? [], (wave) => wave.laneIds)).toEqual([
       "fallow:audit",
       "fallow:dead-code",
-      "pre-push:security",
-      "pre-push:secrets",
+      "fallow:health",
+      "quality:security",
+      "quality:secrets",
       "quality:commitlint",
       "quality:knip",
-      "pre-push:sast",
+      "quality:sast",
       "quality:changeset-status",
-      "pre-push:nix",
+      "quality:nix",
       "quality:codegen",
       "repo-sanity:fallow-boundaries-config",
       "repo-sanity:bun-audit",
@@ -795,22 +796,20 @@ describe("yeet planner", () => {
       "quality:build",
       "quality:desktop-ipc",
       "quality:jsdoc-ratchet",
-      "quality:check:tsgo-tests",
+      "quality:doctest",
       "quality:docgen",
       "quality:test-integration",
       "quality:lint",
       "quality:lint-policy",
       "quality:check",
-      "quality:check:tsgo-smoke",
       "quality:test-unit",
       "quality:coverage",
-      "repo-sanity:cache-policy",
-      "fallow:health",
+      "quality:cache-policy",
     ]);
     expect(findStep(plan.steps, "full:cheap-gates").waves).toEqual([
       expect.objectContaining({
         id: "preflight",
-        laneIds: expect.arrayContaining(["cheap-gates:config-sync", "cheap-gates:effect-imports"]),
+        laneIds: expect.arrayContaining(["repo-sanity:tsconfig-sync", "lint:effect-imports"]),
       }),
     ]);
   });
@@ -2019,7 +2018,7 @@ describe("yeet quality issue index", () => {
   });
 
   it("routes cheap-gate failures to the focused repair command", () => {
-    const remediation = knownSubLaneRemediationFromOutput("[beep-cli] cheap-gates:effect-imports: failed in 1200ms");
+    const remediation = knownSubLaneRemediationFromOutput("[beep-cli] lint:effect-imports: failed in 1200ms");
 
     expect(O.getOrThrow(remediation)).toContain("bun run beep laws effect-imports --write");
     expect(O.getOrThrow(remediation)).toContain("cheap-gates tier");

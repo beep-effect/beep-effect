@@ -430,3 +430,26 @@ validation. The v1 receipts and source bindings above remain historical
 evidence for the earlier observer; they do not validate this extension.
 The operator requested a local commit of the current changes followed by a
 merge of the latest `main`. Continue native validation after that integration.
+
+The integration includes `main` at `bed30c6adf`. Its quality lanes now carry
+an explicit tier; the preserved cache gate uses `quality:cache-policy` in
+both the cheap-gates and pre-push tiers. Identity retains its quiet lint and
+verbose diagnostic scripts alongside the new test-typechecking script.
+Root lint no longer depends on dependency lint, and the lockfile and root
+configuration have changed. Refresh activation previews, executable census,
+entrypoint bindings and isolated worktree inputs before continuing native
+qualification; earlier receipts do not prove the integrated configuration.
+
+The integrated `beep quality cache-policy` gate fails closed with 700
+`configuration-drift` findings and one `turbo.json` source-review notice;
+922 inherited cached computations remain unassessed. Every blocking finding
+is attributed to configuration drift against the pre-merge reviewed baseline.
+The local commit/main integration does not waive that policy gate. Review the
+incoming graph changes and record a fresh baseline through the Cache command
+before claiming policy acceptance or resuming qualification experiments.
+
+Integration validation passes CLI typechecking, 371 focused planner/capture
+tests, schema-first, goal doctor and version synchronization. Full package
+verification passes for CLI (395.0-second audit, 17.6-second docgen) and
+identity (4.7-second audit, 2.4-second docgen). These package results do not
+replace the failing cache-policy gate or the remaining full Yeet proof.

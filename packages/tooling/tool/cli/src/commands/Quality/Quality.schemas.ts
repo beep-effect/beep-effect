@@ -872,6 +872,43 @@ export const GithubCheckLaneWave = LiteralKit(["preflight", "heavy", "test", "do
 export type GithubCheckLaneWave = typeof GithubCheckLaneWave.Type;
 
 /**
+ * Local proof tier that schedules a GitHub-check lane.
+ *
+ * **Details**
+ *
+ * A lane id names the command it runs and nothing else (TTC ruling 28), so the
+ * tier a lane runs under is carried here as metadata rather than as an id
+ * prefix. The same lane spec can therefore appear in both tiers under one id,
+ * which is what lets the lane-proof ledger, remediation hints, and the wave
+ * seed key on a single name.
+ *
+ * **Example** (Identify the cheap tier)
+ *
+ * ```ts
+ * import { GithubCheckLaneTier } from "@beep/repo-cli/commands/Quality"
+ *
+ * console.log(GithubCheckLaneTier.is["cheap-gates"]("cheap-gates")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const GithubCheckLaneTier = LiteralKit(["cheap-gates", "pre-push"]).annotate(
+  $I.annote("GithubCheckLaneTier", {
+    description: "Local proof tier that schedules a GitHub-check lane.",
+  })
+);
+
+/**
+ * Decoded local proof tier for a GitHub-check lane.
+ *
+ * @see {@link GithubCheckLaneTier} for the runtime schema and literal helpers.
+ * @category models
+ * @since 0.0.0
+ */
+export type GithubCheckLaneTier = typeof GithubCheckLaneTier.Type;
+
+/**
  * Confidence class controlling whether one red may stop a local proof wave.
  *
  * **Example** (Identify a precise gate)
@@ -1056,10 +1093,11 @@ const OptionalGateOrderSeedRow = GateOrderSeedRow.pipe(S.OptionFromOptionalKey, 
  *
  * const lane = GithubCheckLaneSpec.make({
  *   id: "quality:build",
+ *   tier: "pre-push",
  *   stage: "repo-quality",
  *   wave: "heavy",
  *   blockedBy: [],
- *   step: QualityTaskStep.make({ label: "build", command: "bun", args: ["run", "build"], cwd: "/repo" })
+ *   step: QualityTaskStep.make({ label: "quality:build", command: "bun", args: ["run", "build"], cwd: "/repo" })
  * })
  * console.log(lane.id)
  * ```
@@ -1070,6 +1108,7 @@ const OptionalGateOrderSeedRow = GateOrderSeedRow.pipe(S.OptionFromOptionalKey, 
 export class GithubCheckLaneSpec extends S.Class<GithubCheckLaneSpec>($I`GithubCheckLaneSpec`)(
   {
     id: S.String,
+    tier: GithubCheckLaneTier,
     stage: GithubCheckLaneStage,
     wave: GithubCheckLaneWave,
     blockedBy: S.Array(S.String),

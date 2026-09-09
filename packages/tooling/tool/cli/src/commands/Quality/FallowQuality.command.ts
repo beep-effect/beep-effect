@@ -853,6 +853,12 @@ const resolveReportPath = Effect.fn("FallowQuality.resolveReportPath")(function*
   };
 });
 
+// The dead-code gate already blocks on any finding against a zero baseline; the
+// committed regression baseline (written by root `fallow:dead-code:baseline:write`)
+// is read here so the artifact a writer maintains is also the artifact the gate
+// judges, instead of an output nothing consumes (quality-lane audit E4).
+const FALLOW_DEAD_CODE_REGRESSION_BASELINE_PATH = "standards/fallow.dead-code.regression-baseline.jsonc";
+
 const fallowArgs = (feature: FallowFeature, base: string, quiet: boolean): ReadonlyArray<string> => {
   const quietArgs = quiet ? ["--quiet"] : [];
 
@@ -883,6 +889,8 @@ const fallowArgs = (feature: FallowFeature, base: string, quiet: boolean): Reado
       "json",
       ...quietArgs,
       "--summary",
+      "--regression-baseline",
+      FALLOW_DEAD_CODE_REGRESSION_BASELINE_PATH,
     ],
     health: () => [
       "run",

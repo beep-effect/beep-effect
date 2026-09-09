@@ -203,6 +203,34 @@ describe("quality artifact generators", () => {
       )
     ));
 
+  it("mirrors the JSDoc inventory into the CI output paths from the same scan", () =>
+    Effect.runPromise(
+      withFixtureRepo(
+        Effect.fnUntraced(function* (repoRoot) {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const outputJsonPath = path.join(repoRoot, "standards", "jsdoc.inventory.jsonc");
+          const outputMarkdownPath = path.join(repoRoot, "standards", "jsdoc.inventory.md");
+          const ciOutputJsonPath = path.join(repoRoot, ".beep", "ci", "jsdoc.inventory.jsonc");
+          const ciOutputMarkdownPath = path.join(repoRoot, ".beep", "ci", "jsdoc.inventory.md");
+
+          const result = yield* writeJSDocDocumentationInventory({
+            rootDir: repoRoot,
+            outputJsonPath,
+            outputMarkdownPath,
+            ciOutputJsonPath,
+            ciOutputMarkdownPath,
+            generatedAt: fixedGeneratedAt,
+          });
+
+          expect(result.outputJsonPath).toBe(outputJsonPath);
+          expect(result.outputMarkdownPath).toBe(outputMarkdownPath);
+          expect(yield* fs.readFileString(ciOutputJsonPath)).toBe(yield* fs.readFileString(outputJsonPath));
+          expect(yield* fs.readFileString(ciOutputMarkdownPath)).toBe(yield* fs.readFileString(outputMarkdownPath));
+        })
+      )
+    ));
+
   it("excludes lab workspaces from the JSDoc inventory while both writers still emit", () =>
     Effect.runPromise(
       withLabsFixtureRepo(

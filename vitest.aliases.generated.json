@@ -1946,5 +1946,8 @@
   ],
   "@beep/ui/Version": ["./packages/foundation/ui-system/ui/src/Version.ts"],
   "@beep/freshbooks": ["./packages/drivers/freshbooks/src/index.ts"],
-  "@beep/freshbooks/*": ["./packages/drivers/freshbooks/src/*"]
+  "@beep/freshbooks/*": ["./packages/drivers/freshbooks/src/*"],
+  "@beep/test-utils/MemoryFileSystem": [
+    "./packages/tooling/test-kit/test-utils/src/MemoryFileSystem/index.ts"
+  ]
 }
