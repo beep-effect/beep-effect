@@ -38,6 +38,17 @@ jobs:
             timeout_minutes: 80
             uses_turbo: "true"
             install_typos: "false"
+          - id: docgen
+            name: Docgen
+            timeout_minutes: 60
+            uses_turbo: "false"
+            install_typos: "false"
+            docgen_concurrency: 6
+          - id: doctest
+            name: Doctest
+            timeout_minutes: 60
+            uses_turbo: "false"
+            install_typos: "false"
           # Quality-lane audit D12: pull requests prove the tsc emit + babel
           # build affected-scoped with remote-cache read; trusted main pushes
           # run unscoped and stay the only cache writer. The lane lives here
@@ -50,17 +61,6 @@ jobs:
             name: Build
             timeout_minutes: 40
             uses_turbo: "true"
-            install_typos: "false"
-          - id: docgen
-            name: Docgen
-            timeout_minutes: 60
-            uses_turbo: "false"
-            install_typos: "false"
-            docgen_concurrency: 6
-          - id: doctest
-            name: Doctest
-            timeout_minutes: 60
-            uses_turbo: "false"
             install_typos: "false"
     env:
       BEEP_DOCGEN_CONCURRENCY: ${{ matrix.docgen_concurrency || 3 }}
