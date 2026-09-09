@@ -3,13 +3,13 @@
   "initiative": {
     "id": "codex-security-findings-2026-09-08",
     "title": "Codex Security Findings (2026-09-08)",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-09-08",
     "updated": "2026-09-08",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/codex-security-findings-2026-09-08",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Remediate and close the 11 Codex Cloud security findings captured on 2026-09-08.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -64,7 +64,7 @@
       "out-of-scope": 0,
       "untriaged": 0
     },
-    "note": "All eleven findings are validated and implemented. Focused regressions pass. PR #1026 contains the prior fixes; updated package and full repository proof, final publication, merge, and exact-ID closure remain required."
+    "note": "All eleven findings are implemented and published in PR #1026. This PR proposes the retained lifecycle on merge. Full local proof and current-head hosted checks must pass before merge; exact-ID Codex closure follows merge. Final external evidence is recorded on PR #1026."
   },
   "closeoutPolicy": {
     "fixed": "Already fixed",
@@ -120,7 +120,7 @@
     {
       "id": "P6",
       "name": "Publish",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P7",
@@ -135,7 +135,7 @@
     {
       "id": "P9",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [

@@ -30,7 +30,7 @@ Scope:
 Rules:
 
 <!-- codex-findings-refresh:start -->
-Refresh capture: all 11 records are validated and implemented. Updated full proof and PR closeout are in progress.
+All 11 records are implemented in PR #1026. Final proof, merge, and exact-ID closure follow the documented gates.
 <!-- codex-findings-refresh:end -->
 
 1. Default every item to `remediate`; use `already-fixed` or `false-positive`

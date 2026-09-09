@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained` (takes effect when PR #1026 merges)
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -33,12 +33,17 @@ leave no packet-applicable finding open.
 ## Current Phase
 
 <!-- codex-findings-refresh:start -->
-Refresh capture: all 11 records are validated and implemented. Updated full proof and PR closeout are in progress.
+All 11 records are implemented in PR #1026. Final proof, merge, and exact-ID closure follow the documented gates.
 <!-- codex-findings-refresh:end -->
 
-`P5 repo-proof` - all eleven findings are validated and implemented. Focused
-regressions and full FreshBooks, AI Sync, and CLI package verification pass.
-Repository-wide Yeet publication proof is in progress.
+All eleven findings and every actionable review comment are addressed in
+[PR #1026](https://github.com/beep-effect/beep-effect/pull/1026). The final packet
+and reflection land with the fixes. Full local proof and hosted checks remain
+merge gates; the exact eleven Codex IDs are closed after the merge is confirmed.
+The PR records the final check results, merge commit, and external closure receipt.
+
+This branch proposes the retained lifecycle for the merged packet. It does not
+claim that pre-merge checks or post-merge UI closure have already happened.
 
 The operator's September 8 instruction authorizes all work necessary to resolve
 the current findings in one PR. Earlier archived-packet scope and approval gates

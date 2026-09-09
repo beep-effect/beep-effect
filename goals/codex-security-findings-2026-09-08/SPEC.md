@@ -50,19 +50,23 @@ exact captured findings until no packet-applicable finding remains open.
 
 ## Acceptance Criteria
 
-- [ ] All 11 findings have sanitized tracked CSF records with Codex ID, severity,
+- [x] All 11 findings have sanitized tracked CSF records with Codex ID, severity,
       title, source commit, and public summary.
-- [ ] Every finding has a current-HEAD verdict, disposition, lane, rationale,
+- [x] Every finding has a current-HEAD verdict, disposition, lane, rationale,
       remediation state, changed-file set, and verification evidence.
-- [ ] Every real finding is fixed at the shared root cause with a focused
+- [x] Every real finding is fixed at the shared root cause with a focused
       regression check where executable behavior changes.
-- [ ] Packet counts, manifest, triage ledger, launcher size, sanitation, and
+- [x] Packet counts, manifest, triage ledger, launcher size, sanitation, and
       whitespace checks pass.
 - [ ] Yeet repair and verify are green on the complete remediation scope.
 - [ ] The branch is published, hosted checks and reviews are closed, and the PR
       is mergeable and merged.
 - [ ] All 11 captured Codex findings are resolved after merge and the live view
       shows zero packet-applicable open findings.
+
+These boxes record pre-merge evidence. Final local and hosted proof, the merge,
+and the exact-ID closure receipt are recorded on PR #1026. The retained lifecycle
+is proposed in that same PR and becomes effective on merge.
 
 ## Verification Matrix
 

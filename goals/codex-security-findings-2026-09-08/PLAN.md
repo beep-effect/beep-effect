@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `active`. All eleven findings are validated and implemented. Package and repository proof are in progress.
+Status: `completed-retained` on merge of PR #1026. All eleven findings are implemented and published. The rows below record the pre-merge state; final proof and external closure evidence are recorded on the PR.
 
 ## Phases
 
@@ -14,10 +14,10 @@ Status: `active`. All eleven findings are validated and implemented. Package and
 | P3 lane-partition | complete | Assign findings to root-cause lanes. | The hook loader is assigned to L8; prior lanes remain intact. |
 | P4 remediate | complete | Fix all real findings with focused checks. | Changed files and passing targeted proof recorded per finding. |
 | P5 repo-proof | in-progress | Run packet validation and Yeet repair/verify. | No packet drift; local proof green. |
-| P6 publish | in-progress | Publish one intentional PR through Yeet. | Exact branch head pushed and PR opened. |
+| P6 publish | complete | Publish one intentional PR through Yeet. | Exact branch head pushed and PR opened. |
 | P7 monitor | in-progress | Close hosted checks and actionable reviews. | PR green and mergeable. |
 | P8 merge-and-close | pending | Merge and close captured findings. | PR merged; all 11 IDs resolved. |
-| P9 close | pending | Record evidence, reflection, and lifecycle. | Packet set to `completed-retained` in the same closeout PR state. |
+| P9 close | complete | Record evidence, reflection, and lifecycle. | Retained lifecycle and reflection are proposed in this same PR; external closure remains P8. |
 
 ## Execution Rules
 
