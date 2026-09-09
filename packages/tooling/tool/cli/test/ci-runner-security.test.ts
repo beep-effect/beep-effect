@@ -3,7 +3,7 @@ import { provideScopedLayer } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, FileSystem, Order, Path, pipe } from "effect";
+import { Config, Effect, FileSystem, Order, Path, pipe } from "effect";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -263,6 +263,7 @@ describe("CI runner security", () => {
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
+      const ambientPath = yield* Config.string("PATH");
       const repoRoot = yield* findRepoRoot();
       const tempRoot = yield* fs.makeTempDirectoryScoped();
       const workflow = parsedDocument(yield* fs.readFileString(path.join(repoRoot, ".github/workflows/heavy.yml")));
@@ -278,7 +279,7 @@ describe("CI runner security", () => {
         cwd: tempRoot,
         env: {
           ...process.env,
-          PATH: `${tempRoot}:${process.env.PATH ?? ""}`,
+          PATH: `${tempRoot}:${ambientPath}`,
           GITHUB_EVENT_NAME: "pull_request",
           GITHUB_BASE_REF: "main",
         },

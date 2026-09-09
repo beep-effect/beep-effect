@@ -17,6 +17,11 @@ Record receipts at the moment friction happens; redact for the public repo.
   full Check arguments reach the command and that the workflow returns 7.
 - Prevention: test reusable-workflow changes against a caller checkout that
   predates newly introduced repository helpers, as well as the current branch.
+- Validation gap: the runtime fixture and quick package proof passed, but
+  hosted Check caught `TS377077` (`processEnvInEffect`) for the new test's
+  direct `process.env.PATH` read. Use the existing `Config.string("PATH")`
+  pattern and run `bun run beep quality test-tsgo` for new Effect test code;
+  runtime execution alone does not enforce the test project's Effect diagnostics.
 
 ## 2026-09-09 — Burn down CI check memory in code before reducing runner RAM
 
