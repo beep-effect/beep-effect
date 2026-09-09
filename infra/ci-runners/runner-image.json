@@ -1,6 +1,11 @@
 {
-  "amiId": "ami-0738c1b69711969bc",
-  "lockfileSha256": "f81ab29fdea01d653e3eb1025f8dae629f3768b658aae22b04aaa94c445fb372",
-  "bunArchiveSha256": "2d03fb5fb83ac8b567aca0a281b2ce1a1a19d488f56c2968d88c3f25e92fe452",
-  "bunVersion": "1.4.0"
+  "amiId": "ami-07af50c345b5ba065",
+  "lockfileSha256": "769ec9946aeb49d5e581acac05677086d2627b03bab8b3a119a5210cc50e8f25",
+  "bunArchiveSha256": "36368faef7527875d5ffa52e53cd48021741f2a83eb6208a8dd64068d422a913",
+  "bunVersion": "1.4.2",
+  "baseAmiId": "ami-081b0a6eac00b4f53",
+  "priorPin": "ami-0738c1b69711969bc",
+  "pulumiPinCommand": "cd infra/ci-runners && pulumi config set ciFleetController:amiId ami-07af50c345b5ba065 --stack production",
+  "startedAt": "2026-09-09T16:56:57.668Z",
+  "completedAt": "2026-09-09T17:07:00.035Z"
 }

@@ -1,5 +1,12 @@
 # P0 design brief — `beep runners bake` (lockfile-keyed baked AMI)
 
+> September 9, 2026 supersession: the warm dependency-store recommendation below
+> is historical. A timed fresh-instance probe spent 163 seconds hashing its
+> archive and 27 seconds extracting it, while a fresh frozen install took
+> 9 seconds. Current bakes retain the verified Bun toolchain and omit the
+> dependency archive. Follow the measured image validation and attended rollout
+> procedure in [AWS cost operations](../../../docs/runbooks/aws-cost-operations.md).
+
 Status: design grounded in the live rails (2026-08-13). Implementation not
 started. Ships as its own scoped PR; the deploy that flips the fleet to the
 baked image is operator-gated (pulumi recipe + live probes).
