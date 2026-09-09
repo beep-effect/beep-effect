@@ -109,6 +109,10 @@ const inputFor = (
     journalPrefixDigest: "journal-prefix-digest",
   });
 
+// Hoisted: the compiled decoders are built once per module, not per test call.
+const decodeProjectionInput = S.decodeEffect(ProjectionInput);
+const decodeUnknownProjectionInput = S.decodeUnknownEffect(ProjectionInput);
+
 describe("@beep/ciops S7 projection", () => {
   it.effect("strictly decodes every ratified S6 policy parameter from Turtle bytes", () =>
     Effect.gen(function* () {
@@ -498,10 +502,10 @@ describe("@beep/ciops S7 projection", () => {
     Effect.gen(function* () {
       const policy = yield* readPolicy();
       const input = inputFor(policy, []);
-      const empty = yield* S.decodeEffect(ProjectionInput)({ ...input, episodeId: "" }).pipe(Effect.result);
+      const empty = yield* decodeProjectionInput({ ...input, episodeId: "" }).pipe(Effect.result);
       expect(empty._tag).toBe("Failure");
       const { episodeId: _episodeId, ...missingEpisode } = input;
-      const missing = yield* S.decodeUnknownEffect(ProjectionInput)(missingEpisode).pipe(Effect.result);
+      const missing = yield* decodeUnknownProjectionInput(missingEpisode).pipe(Effect.result);
       expect(missing._tag).toBe("Failure");
     }).pipe(provideScopedLayer(BunFileSystem.layer))
   );
