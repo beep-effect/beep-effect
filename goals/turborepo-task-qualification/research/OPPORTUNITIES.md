@@ -391,3 +391,25 @@ not protect them. Restore the pre-hook blobs using their recorded hashes and
 existing Git objects, and disable formatting only for this packet's JSON
 evidence and its two governed registry files. Verify byte preservation under
 the real formatter and hook before recording the follow-up commit.
+
+The durable pilot's first native run failed before task execution: Bubblewrap
+cannot apply `--remount-ro` to a directory that is not a mount point. The
+overlay builder had used `--dir` for synthetic ancestors. Use a separate
+tmpfs mount for each synthetic ancestor, then remount those parents read-only
+while retaining the explicitly writable child mounts. A native version probe
+caught this boundary error that TypeScript and capture parsing tests could not.
+
+The first refusal harness wrapped the CLI in `bun run beep` and killed that
+wrapper after 90 seconds without preserving a verdict. No request process
+remained when checked. The direct, explicitly pinned CLI entrypoint returned
+the intended wrong-executable-pin error. The remaining probes use that
+entrypoint, put the same Bun installation first on PATH, stream diagnostics
+to private logs and leave admission waits outside an arbitrary outer timeout.
+The timed-out attempt is not counted as a successful negative case.
+
+The next commit preflight caught two type errors in the authored v2 controls:
+the constructor default widened its literal to `string`, and a leading
+conditional spread hid the required nonempty result array from TypeScript.
+Preserve the default's literal type and place the unconditional result entries
+first. Run the package check after each schema/control increment so these
+errors surface before the commit boundary.

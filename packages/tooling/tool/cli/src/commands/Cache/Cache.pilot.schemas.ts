@@ -12,6 +12,7 @@ import {
 } from "@beep/repo-configs/cache";
 import { LiteralKit, NonNegativeInt, Sha256Hex } from "@beep/schema";
 import { GitObjectId } from "@beep/schema/Conformance";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { CacheLocalOrigin, CacheSyntheticCheck, CacheSyntheticRun } from "./Cache.experiment.schemas.ts";
 import { CacheExecutablePin } from "./Cache.schemas.ts";
@@ -39,6 +40,10 @@ export class CachePilotRequest extends S.Class<CachePilotRequest>($I`CachePilotR
     biomeExecutable: S.NonEmptyString,
     worktrees: S.Tuple([S.NonEmptyString, S.NonEmptyString]),
     activation: CacheEvidenceReference,
+    selection: LiteralKit(["full", "controls"]).pipe(
+      S.withDecodingDefaultKey(Effect.succeed<"full">("full")),
+      S.withConstructorDefault(Effect.succeed<"full">("full"))
+    ),
   },
   $I.annote("CachePilotRequest", {
     description:
@@ -167,6 +172,97 @@ export class CachePilotRun extends S.Class<CachePilotRun>($I`CachePilotRun`)(
 ) {}
 
 /**
+ * Bind a local shadow decision to its authoritative execution and replay pair.
+ *
+ * **Example** (Inspect the authoritative run reference)
+ *
+ * ```ts
+ * import { CachePilotShadow } from "@beep/repo-cli/commands/Cache"
+ * console.assert("authoritative" in CachePilotShadow.fields)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CachePilotShadow extends S.Class<CachePilotShadow>($I`CachePilotShadow`)(
+  {
+    id: S.NonEmptyString,
+    authoritative: S.NonEmptyString,
+    producer: S.NonEmptyString,
+    replay: S.NonEmptyString,
+    environmentNames: S.Array(S.NonEmptyString),
+    expectedInputHash: LiteralKit(["stable", "changed"]),
+    inputHashExpectationMet: S.Boolean,
+    equivalent: S.Boolean,
+  },
+  $I.annote("CachePilotShadow", {
+    description:
+      "A local cross-worktree replay compared against fresh authority with an explicit perturbation expectation.",
+  })
+) {}
+
+/**
+ * Compare a seeded local cache against a changed configuration or manifest.
+ *
+ * **Example** (Inspect the perturbation evidence)
+ *
+ * ```ts
+ * import { CachePilotMutation } from "@beep/repo-cli/commands/Cache"
+ * console.assert("changedPath" in CachePilotMutation.fields)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CachePilotMutation extends S.Class<CachePilotMutation>($I`CachePilotMutation`)(
+  {
+    id: S.NonEmptyString,
+    changedPath: CacheEvidenceReference.fields.path,
+    beforeSha256: Sha256Hex,
+    afterSha256: S.OptionFromOptionalKey(Sha256Hex),
+    baseline: S.NonEmptyString,
+    changed: S.NonEmptyString,
+    replay: S.NonEmptyString,
+    expectedBaselineExit: S.Int,
+    expectedChangedExit: S.Int,
+    passed: S.Boolean,
+  },
+  $I.annote("CachePilotMutation", {
+    description:
+      "Exact changed file bytes, native run references and expected verdicts for one local invalidation control.",
+  })
+) {}
+
+/**
+ * Attribute a native setup refusal or absent selected script without counting an execution.
+ *
+ * **Example** (Inspect the absence boundary)
+ *
+ * ```ts
+ * import { CachePilotNonExecution } from "@beep/repo-cli/commands/Cache"
+ * console.assert("selectedExecutionObserved" in CachePilotNonExecution.fields)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CachePilotNonExecution extends S.Class<CachePilotNonExecution>($I`CachePilotNonExecution`)(
+  {
+    id: S.NonEmptyString,
+    reason: LiteralKit(["missing-root-config", "malformed-root-config", "malformed-child-config", "absent-script"]),
+    exitCode: S.Int,
+    stdoutSha256: Sha256Hex,
+    stderrSha256: Sha256Hex,
+    summaryPresent: S.Boolean,
+    selectedExecutionObserved: S.Boolean,
+    passed: S.Boolean,
+  },
+  $I.annote("CachePilotNonExecution", {
+    description: "Bounded native evidence for a setup refusal or a configured task whose package script is absent.",
+  })
+) {}
+
+/**
  * Local real-pilot results with no signed-remote or promotion authority.
  *
  * **Example** (Inspect the explicit authority limit)
@@ -181,7 +277,7 @@ export class CachePilotRun extends S.Class<CachePilotRun>($I`CachePilotRun`)(
  */
 export class CachePilotReceipt extends S.Class<CachePilotReceipt>($I`CachePilotReceipt`)(
   {
-    schemaVersion: S.Literal("cache-pilot-local/v1"),
+    schemaVersion: S.Literal("cache-pilot-local/v2"),
     authority: S.Literal("local-observation-only"),
     key: CacheQualificationKey,
     sourceRevision: GitObjectId,
@@ -194,6 +290,10 @@ export class CachePilotReceipt extends S.Class<CachePilotReceipt>($I`CachePilotR
     toolchainDigest: Sha256Hex,
     runs: S.Array(CachePilotRun),
     checks: S.Array(CacheSyntheticCheck),
+    shadowDecisions: S.Array(CachePilotShadow),
+    selection: CachePilotRequest.fields.selection,
+    mutations: S.Array(CachePilotMutation),
+    nonExecutions: S.Array(CachePilotNonExecution),
     remaining: S.NonEmptyArray(S.NonEmptyString),
   },
   $I.annote("CachePilotReceipt", {

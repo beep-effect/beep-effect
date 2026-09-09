@@ -315,3 +315,22 @@ records each important reconciliation.
 
 These are graduated-goal deliverables, not omissions to conceal with static
 confidence.
+# Native local pilot checkpoint: 2026-09-09
+
+- [Native verification report](./pilot-local-verification.md) and
+  [checkpoint](./pilot-local-checkpoint.json): current local scope, exact
+  references, package gates and explicit remaining requirements.
+- [Stable observations](./pilot-local-stable.json) and
+  [canary observations](./pilot-local-canary.json): 43 observations, 28 passing
+  checks and ten local shadow decisions per exact client; no remote authority.
+- [Invocation refusal controls](./pilot-pin-negatives.json): eight intended
+  failures, each with no output receipt.
+- [Current entrypoint review](./pilot-entrypoint-review.md) and
+  [request](./pilot-entrypoint-request.json): 285 source bindings and six full
+  documents, with source-only authority and unresolved runtime obligations.
+- Fresh projections: [CI/Quality local](./entrypoint-plans-pilot.json),
+  [CI/Quality hosted](./entrypoint-plans-hosted-pilot.json),
+  [Yeet local](./yeet-plans-pilot.json),
+  [Yeet hosted](./yeet-plans-hosted-pilot.json),
+  [workflow/action sources](./workflow-sources-pilot.json) and
+  [command groups](./command-groups-pilot.json).

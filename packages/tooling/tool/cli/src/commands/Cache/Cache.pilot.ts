@@ -5,8 +5,9 @@
  */
 import { $RepoCliId } from "@beep/identity/packages";
 import { CacheTaskConfiguration } from "@beep/repo-configs/cache";
-import { NonNegativeInt, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { GitObjectId } from "@beep/schema/Conformance";
+import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { Duration, Effect, FileSystem, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -26,9 +27,12 @@ import { inspectCacheFixtureCapture } from "./Cache.experiment.ts";
 import { extractCachePilotLog } from "./Cache.pilot.capture.ts";
 import {
   CachePilotLogInput,
+  CachePilotMutation,
+  CachePilotNonExecution,
   CachePilotOutcome,
   CachePilotReceipt,
   CachePilotRun,
+  CachePilotShadow,
   CachePilotTask,
 } from "./Cache.pilot.schemas.ts";
 import { CacheActivationPreview, CacheActivationRequest, CacheCommandError } from "./Cache.schemas.ts";
@@ -79,9 +83,24 @@ class PilotRoot extends S.Class<PilotRoot>($I`PilotRoot`)(
     types: S.NonEmptyString,
     before: S.String,
     after: S.String,
+    rootFiles: S.Record(S.String, S.String),
+    omitted: S.Array(S.NonEmptyString),
+    omitChild: S.Boolean,
   },
   $I.annote("PilotRoot", {
     description: "Owned disposable package overlays backed by a read-only registered worktree.",
+  })
+) {}
+class PilotShadowScenario extends S.Class<PilotShadowScenario>($I`PilotShadowScenario`)(
+  {
+    id: S.NonEmptyString,
+    sourceChange: LiteralKit(["none", "source-comment", "added-source", "readme"]),
+    env: S.Record(S.String, S.String),
+    guest: S.NonEmptyString,
+    expectedInputHash: CachePilotShadow.fields.expectedInputHash,
+  },
+  $I.annote("PilotShadowScenario", {
+    description: "A fixed local perturbation with a declared task-hash expectation and separate fresh authority.",
   })
 ) {}
 
@@ -246,10 +265,35 @@ const runPilot = Effect.fn("CachePilot.run")(
         return yield* CacheCommandError.new("Pilot source uses unsupported Git metadata placement.");
       const gitFile = path.join(directory, "gitfile");
       yield* writeContainedFileString(directory, "gitfile", `gitdir: /git/worktrees/${path.basename(gitDirectory)}\n`);
-      return PilotRoot.make({ label, source, directory, identity, types, gitFile, before, after });
+      return PilotRoot.make({
+        label,
+        source,
+        directory,
+        identity,
+        types,
+        gitFile,
+        before,
+        after,
+        rootFiles: {},
+        omitted: [],
+        omitChild: false,
+      });
+    });
+    const overlayRootFile = Effect.fn("CachePilot.overlayRootFile")(function* (
+      fixture: PilotRoot,
+      relative: string,
+      text: string
+    ) {
+      const target = `overrides/${relative}`;
+      yield* writeContainedFileString(fixture.directory, target, text);
+      return PilotRoot.make({
+        ...fixture,
+        rootFiles: R.set(fixture.rootFiles, relative, path.join(fixture.directory, target)),
+      });
     });
     const mountSource = Effect.fn("CachePilot.mountSource")(function* (fixture: PilotRoot, guest: string) {
       const replacements: Readonly<Record<string, string>> = {
+        ...fixture.rootFiles,
         ".git": fixture.gitFile,
         ".turbo": path.join(fixture.directory, "run"),
         [identityDirectory]: fixture.identity,
@@ -260,12 +304,13 @@ const runPilot = Effect.fn("CachePilot.run")(
       const visit = Effect.fn("CachePilot.mountVisit")(function* (
         relative: string
       ): Effect.fn.Return<void, PlatformError.PlatformError> {
+        if (A.contains(fixture.omitted, relative)) return;
         const destination = path.join(guest, relative);
         const replacement = R.get(replacements, relative);
         if (O.isSome(replacement)) {
           mounts.push(relative === ".turbo" ? "--bind" : "--ro-bind", replacement.value, destination);
         } else if (relative === "" || A.some(R.keys(replacements), (key) => Str.startsWith(`${relative}/`)(key))) {
-          mounts.push("--dir", destination);
+          mounts.push("--tmpfs", destination);
           parents.push(destination);
           const existing = yield* fs.readDirectory(path.join(fixture.source, relative));
           const added = pipe(
@@ -378,7 +423,7 @@ const runPilot = Effect.fn("CachePilot.run")(
     ]) {
       const observed = yield* invoke(firstRoot, "/fixture", [`/tools/${executable}`, "--version"]);
       if (observed.exitCode !== 0 || observed.truncated || Str.trim(observed.stdout) !== expected)
-        return yield* CacheCommandError.new("Observed sandbox tool version differs from its reviewed pin.");
+        return yield* CacheCommandError.new(`Sandbox ${executable} version check failed (exit ${observed.exitCode}).`);
     }
     for (const fixture of roots) {
       const dry = yield* invoke(fixture, "/fixture", [
@@ -434,7 +479,8 @@ const runPilot = Effect.fn("CachePilot.run")(
     ) {
       for (const name of ["run", "identity-log", "types-log"])
         yield* fs.remove(path.join(fixture.directory, name), { recursive: true, force: true });
-      yield* writeContainedFileString(fixture.identity, "turbo.json", enabled ? fixture.after : fixture.before);
+      if (fixture.omitChild) yield* fs.remove(path.join(fixture.identity, "turbo.json"), { force: true });
+      else yield* writeContainedFileString(fixture.identity, "turbo.json", enabled ? fixture.after : fixture.before);
       const beforeTrees = yield* Effect.all([snapshot(fixture.identity), snapshot(fixture.types)], { concurrency: 2 });
       const captured = yield* invoke(
         fixture,
@@ -538,6 +584,9 @@ const runPilot = Effect.fn("CachePilot.run")(
     });
     const runs: Array<CachePilotRun> = [];
     const checks: Array<CacheSyntheticCheck> = [];
+    const shadowDecisions: Array<CachePilotShadow> = [];
+    const mutations: Array<CachePilotMutation> = [];
+    const nonExecutions: Array<CachePilotNonExecution> = [];
     const compare = (left: CachePilotRun, right: CachePilotRun, hashes: boolean) =>
       CachePilotOutcome.isAnyOf(["Executed"])(left.outcome) &&
       CachePilotOutcome.isAnyOf(["Executed"])(right.outcome) &&
@@ -547,49 +596,391 @@ const runPilot = Effect.fn("CachePilot.run")(
       right.sourceTreeUnchanged &&
       left.outcome.logSha256 === right.outcome.logSha256 &&
       (!hashes || left.outcome.selected.taskHash === right.outcome.selected.taskHash);
-    for (let pair = 0; pair < 3; pair++) {
-      const paired = yield* Effect.forEach(
-        roots,
-        (fixture) => execute(fixture, `fresh-${pair}-${fixture.label}`, false, false),
-        { concurrency: 1 }
-      );
-      runs.push(...paired);
+    if (request.selection === "full") {
+      for (let pair = 0; pair < 3; pair++) {
+        const paired = yield* Effect.forEach(
+          roots,
+          (fixture) => execute(fixture, `fresh-${pair}-${fixture.label}`, false, false),
+          { concurrency: 1 }
+        );
+        runs.push(...paired);
+        checks.push(
+          CacheSyntheticCheck.make({ name: `fresh-pair-${pair}`, passed: compare(paired[0], paired[1], true) })
+        );
+      }
+      const producer = yield* execute(firstRoot, "activation-producer", true, true);
+      const replay = yield* execute(firstRoot, "activation-replay", true, true);
+      runs.push(producer, replay);
       checks.push(
-        CacheSyntheticCheck.make({ name: `fresh-pair-${pair}`, passed: compare(paired[0], paired[1], true) })
+        CacheSyntheticCheck.make({ name: "activation-capture-equivalence", passed: compare(runs[0], producer, false) })
       );
+      checks.push(
+        CacheSyntheticCheck.make({
+          name: "local-replay",
+          passed:
+            compare(producer, replay, true) &&
+            CachePilotOutcome.isAnyOf(["Executed"])(replay.outcome) &&
+            replay.outcome.selected.origin === "local-hit",
+        })
+      );
+      const concurrent = yield* Effect.forEach(
+        roots,
+        (fixture) => execute(fixture, `concurrent-${fixture.label}`, false, false),
+        { concurrency: 2 }
+      );
+      runs.push(...concurrent);
+      checks.push(
+        CacheSyntheticCheck.make({
+          name: "concurrent-fresh-equivalence",
+          passed: compare(concurrent[0], concurrent[1], true),
+        })
+      );
+      const otherRoot = yield* execute(firstRoot, "alternate-absolute-root", false, false, "/fixture-other");
+      runs.push(otherRoot);
+      checks.push(
+        CacheSyntheticCheck.make({ name: "absolute-root-equivalence", passed: compare(runs[0], otherRoot, true) })
+      );
+      if (A.some(checks, (check) => !check.passed))
+        return yield* CacheCommandError.new("Initial real-pilot comparisons diverged; local reuse has stopped.");
+      const baseline = runs[0];
+      const unchanged = PilotShadowScenario.make({
+        id: "baseline",
+        sourceChange: "none",
+        env: {},
+        guest: "/fixture",
+        expectedInputHash: "stable",
+      });
+      const scenarios = [
+        unchanged,
+        PilotShadowScenario.make({
+          ...unchanged,
+          id: "source-comment",
+          sourceChange: "source-comment",
+          expectedInputHash: "changed",
+        }),
+        PilotShadowScenario.make({
+          ...unchanged,
+          id: "added-source",
+          sourceChange: "added-source",
+          expectedInputHash: "changed",
+        }),
+        PilotShadowScenario.make({ ...unchanged, id: "readme", sourceChange: "readme", expectedInputHash: "changed" }),
+        PilotShadowScenario.make({
+          ...unchanged,
+          id: "declared-env",
+          env: { BEEP_ESLINT_PROFILE: "qualification" },
+          expectedInputHash: "changed",
+        }),
+        PilotShadowScenario.make({
+          ...unchanged,
+          id: "declared-env-empty",
+          env: { BEEP_ESLINT_PROFILE: "" },
+          expectedInputHash: "changed",
+        }),
+        PilotShadowScenario.make({
+          ...unchanged,
+          id: "orchestration-env",
+          env: { BEEP_AGENT_SESSION_ID: "qualification-canary-metadata" },
+        }),
+        PilotShadowScenario.make({ ...unchanged, id: "locale", env: { LANG: "C.UTF-8", LC_ALL: "C.UTF-8" } }),
+        PilotShadowScenario.make({ ...unchanged, id: "timezone", env: { TZ: "Pacific/Honolulu" } }),
+        PilotShadowScenario.make({ ...unchanged, id: "absolute-root", guest: "/fixture-other" }),
+      ];
+      for (const scenario of scenarios) {
+        const writer = yield* prepare(sourceRoots[0], "root-a", `shadow-${scenario.id}-a`);
+        const reader = yield* prepare(sourceRoots[1], "root-b", `shadow-${scenario.id}-b`);
+        for (const fixture of [writer, reader]) {
+          if (scenario.sourceChange === "source-comment") {
+            const original = yield* readBytes(fixture.identity, "src/index.ts").pipe(Effect.flatMap(decodeText));
+            yield* writeContainedFileString(
+              fixture.identity,
+              "src/index.ts",
+              `${original}\n// Qualification shadow input.\n`
+            );
+          } else if (scenario.sourceChange === "added-source") {
+            yield* writeContainedFileString(
+              fixture.identity,
+              "src/qualification-shadow.ts",
+              'export const qualificationShadow = "fixture";\n'
+            );
+          } else if (scenario.sourceChange === "readme") {
+            const original = yield* readBytes(fixture.identity, "README.md").pipe(Effect.flatMap(decodeText));
+            yield* writeContainedFileString(
+              fixture.identity,
+              "README.md",
+              `${original}\nQualification shadow input.\n`
+            );
+          }
+        }
+        const authoritative = yield* execute(
+          writer,
+          `shadow-${scenario.id}-authoritative`,
+          false,
+          false,
+          scenario.guest,
+          scenario.env
+        );
+        const produced = yield* execute(
+          writer,
+          `shadow-${scenario.id}-producer`,
+          true,
+          true,
+          scenario.guest,
+          scenario.env
+        );
+        yield* fs.copy(path.join(writer.directory, "cache"), path.join(reader.directory, "cache"));
+        const replayed = yield* execute(reader, `shadow-${scenario.id}-replay`, true, true, "/fixture", scenario.env);
+        runs.push(authoritative, produced, replayed);
+        const equivalent =
+          compare(authoritative, produced, false) &&
+          compare(produced, replayed, true) &&
+          CachePilotOutcome.isAnyOf(["Executed"])(replayed.outcome) &&
+          replayed.outcome.selected.origin === "local-hit";
+        const sameInputHash =
+          CachePilotOutcome.isAnyOf(["Executed"])(baseline.outcome) &&
+          CachePilotOutcome.isAnyOf(["Executed"])(authoritative.outcome) &&
+          baseline.outcome.selected.taskHash === authoritative.outcome.selected.taskHash;
+        const inputHashExpectationMet = scenario.expectedInputHash === "stable" ? sameInputHash : !sameInputHash;
+        shadowDecisions.push(
+          CachePilotShadow.make({
+            id: scenario.id,
+            authoritative: authoritative.id,
+            producer: produced.id,
+            replay: replayed.id,
+            environmentNames: A.sort(R.keys(scenario.env), Order.String),
+            expectedInputHash: scenario.expectedInputHash,
+            inputHashExpectationMet,
+            equivalent,
+          })
+        );
+        checks.push(CacheSyntheticCheck.make({ name: `shadow-${scenario.id}`, passed: equivalent }));
+        checks.push(CacheSyntheticCheck.make({ name: `input-${scenario.id}`, passed: inputHashExpectationMet }));
+        if (!equivalent || !inputHashExpectationMet)
+          return yield* CacheCommandError.new(`Real pilot shadow ${scenario.id} diverged; local reuse has stopped.`);
+      }
+      const failedFixture = yield* prepare(sourceRoots[0], "root-a", "failed-source");
+      yield* writeContainedFileString(failedFixture.identity, "src/index.ts", "export const = ;\n");
+      const firstFailure = yield* execute(failedFixture, "invalid-source-first", true, true);
+      const secondFailure = yield* execute(failedFixture, "invalid-source-repeat", true, true);
+      runs.push(firstFailure, secondFailure);
+      const failureNotReused = A.every(
+        [firstFailure, secondFailure],
+        (run) =>
+          run.graphExitCode !== 0 &&
+          CachePilotOutcome.isAnyOf(["Executed"])(run.outcome) &&
+          run.outcome.selected.exitCode !== 0 &&
+          run.outcome.selected.origin === "fresh"
+      );
+      checks.push(CacheSyntheticCheck.make({ name: "failed-source-not-reused", passed: failureNotReused }));
     }
-    const producer = yield* execute(firstRoot, "activation-producer", true, true);
-    const replay = yield* execute(firstRoot, "activation-replay", true, true);
-    runs.push(producer, replay);
-    checks.push(
-      CacheSyntheticCheck.make({ name: "activation-capture-equivalence", passed: compare(runs[0], producer, false) })
-    );
-    checks.push(
-      CacheSyntheticCheck.make({
-        name: "local-replay",
-        passed:
-          compare(producer, replay, true) &&
-          CachePilotOutcome.isAnyOf(["Executed"])(replay.outcome) &&
-          replay.outcome.selected.origin === "local-hit",
-      })
-    );
-    const concurrent = yield* Effect.forEach(
-      roots,
-      (fixture) => execute(fixture, `concurrent-${fixture.label}`, false, false),
-      { concurrency: 2 }
-    );
-    runs.push(...concurrent);
-    checks.push(
-      CacheSyntheticCheck.make({
-        name: "concurrent-fresh-equivalence",
-        passed: compare(concurrent[0], concurrent[1], true),
-      })
-    );
-    const otherRoot = yield* execute(firstRoot, "alternate-absolute-root", false, false, "/fixture-other");
-    runs.push(otherRoot);
-    checks.push(
-      CacheSyntheticCheck.make({ name: "absolute-root-equivalence", passed: compare(runs[0], otherRoot, true) })
-    );
+    const mutationIds = LiteralKit([
+      "root-task-config",
+      "child-task-config",
+      "missing-child-config",
+      "root-lint-config",
+      "lockfile",
+      "package-manager",
+      "generated-alias",
+    ]);
+    for (const id of mutationIds.Options) {
+      const fixture = yield* prepare(sourceRoots[0], "root-a", `mutation-${id}`);
+      const expectedBaselineExit = id === "root-lint-config" ? 1 : 0;
+      if (id === "root-lint-config")
+        yield* writeContainedFileString(fixture.identity, "src/index.ts", "export const = ;\n");
+      const env = { QUALIFICATION_CONFIG_INPUT: "changed", QUALIFICATION_CHILD_INPUT: "changed" };
+      const seeded = yield* execute(fixture, `${id}-baseline`, true, true, "/fixture", env);
+      let changedFixture = fixture;
+      let changedPath = "turbo.json";
+      let original = yield* readBytes(fixture.source, changedPath).pipe(Effect.flatMap(decodeText));
+      let changedText = original;
+      if (id === "root-task-config") {
+        const config = yield* decodeJsoncTextAs(S.JsonObject)(original);
+        const global = yield* S.decodeUnknownEffect(S.JsonObject)(config.global);
+        const declared = yield* S.decodeUnknownEffect(S.Array(S.String))(global.env);
+        changedText = yield* JsonStringCodec(S.JsonObject).encode(
+          R.set(config, "global", R.set(global, "env", A.append(declared, "QUALIFICATION_CONFIG_INPUT")))
+        );
+      } else if (id === "child-task-config" || id === "missing-child-config") {
+        changedPath = `${identityDirectory}/turbo.json`;
+        original = fixture.after;
+        if (id === "missing-child-config") changedFixture = PilotRoot.make({ ...fixture, omitChild: true });
+        else {
+          const change = Effect.fn("CachePilot.changeChild")(function* (text: string) {
+            const config = yield* decodeJsoncTextAs(S.JsonObject)(text);
+            const tasks = yield* S.decodeUnknownEffect(S.JsonObject)(config.tasks);
+            const lint = yield* S.decodeUnknownEffect(S.JsonObject)(tasks.lint);
+            return yield* JsonStringCodec(S.JsonObject).encode(
+              R.set(config, "tasks", R.set(tasks, "lint", R.set(lint, "env", ["QUALIFICATION_CHILD_INPUT"])))
+            );
+          });
+          changedText = yield* change(fixture.after);
+          changedFixture = PilotRoot.make({ ...fixture, before: yield* change(fixture.before), after: changedText });
+        }
+      } else {
+        changedPath =
+          id === "root-lint-config"
+            ? "biome.jsonc"
+            : id === "lockfile"
+              ? "bun.lock"
+              : id === "package-manager"
+                ? "package.json"
+                : "tsconfig.json";
+        original = yield* readBytes(fixture.source, changedPath).pipe(Effect.flatMap(decodeText));
+        const config = yield* decodeJsoncTextAs(S.JsonObject)(original);
+        if (id === "root-lint-config") {
+          const files = yield* S.decodeUnknownEffect(S.JsonObject)(config.files);
+          const includes = yield* S.decodeUnknownEffect(S.Array(S.String))(files.includes);
+          changedText = yield* JsonStringCodec(S.JsonObject).encode(
+            R.set(config, "files", R.set(files, "includes", A.append(includes, "!**/src/index.ts")))
+          );
+        } else if (id === "lockfile") {
+          const packages = yield* S.decodeUnknownEffect(S.JsonObject)(config.packages);
+          const dependency = yield* S.decodeUnknownEffect(S.NonEmptyArray(S.Json))(packages.effect);
+          const descriptor = yield* S.decodeUnknownEffect(S.NonEmptyString)(dependency[0]);
+          changedText = yield* JsonStringCodec(S.JsonObject).encode(
+            R.set(
+              config,
+              "packages",
+              R.set(packages, "effect", [`${descriptor}-qualification`, ...A.drop(dependency, 1)])
+            )
+          );
+        } else if (id === "package-manager") {
+          changedText = yield* JsonStringCodec(S.JsonObject).encode(R.set(config, "packageManager", "bun@1.4.1"));
+        } else {
+          const options = yield* S.decodeUnknownEffect(S.JsonObject)(config.compilerOptions);
+          const aliases = yield* S.decodeUnknownEffect(S.JsonObject)(options.paths);
+          changedText = yield* JsonStringCodec(S.JsonObject).encode(
+            R.set(
+              config,
+              "compilerOptions",
+              R.set(
+                options,
+                "paths",
+                R.set(aliases, "@beep/qualification-alias", [`./${identityDirectory}/src/index.ts`])
+              )
+            )
+          );
+        }
+      }
+      if (id !== "child-task-config" && id !== "missing-child-config")
+        changedFixture = yield* overlayRootFile(fixture, changedPath, changedText);
+      const changed = yield* execute(changedFixture, `${id}-changed`, true, true, "/fixture", env);
+      const replayed = yield* execute(changedFixture, `${id}-replay`, true, true, "/fixture", env);
+      runs.push(seeded, changed, replayed);
+      const passed =
+        CachePilotOutcome.isAnyOf(["Executed"])(seeded.outcome) &&
+        CachePilotOutcome.isAnyOf(["Executed"])(changed.outcome) &&
+        CachePilotOutcome.isAnyOf(["Executed"])(replayed.outcome) &&
+        seeded.graphExitCode === expectedBaselineExit &&
+        seeded.outcome.selected.origin === "fresh" &&
+        changed.outcome.selected.origin === "fresh" &&
+        seeded.outcome.selected.taskHash !== changed.outcome.selected.taskHash &&
+        compare(changed, replayed, true) &&
+        replayed.outcome.selected.origin === "local-hit";
+      mutations.push(
+        CachePilotMutation.make({
+          id,
+          changedPath,
+          beforeSha256: yield* hashText(original),
+          afterSha256: id === "missing-child-config" ? O.none() : O.some(yield* hashText(changedText)),
+          baseline: seeded.id,
+          changed: changed.id,
+          replay: replayed.id,
+          expectedBaselineExit,
+          expectedChangedExit: 0,
+          passed,
+        })
+      );
+      checks.push(CacheSyntheticCheck.make({ name: `invalidation-${id}`, passed }));
+      if (!passed) break;
+    }
+    if (A.every(checks, (check) => check.passed)) {
+      for (const reason of CachePilotNonExecution.fields.reason.Options) {
+        let fixture = yield* prepare(sourceRoots[0], "root-a", `non-execution-${reason}`);
+        if (reason === "missing-root-config")
+          fixture = PilotRoot.make({ ...fixture, omitted: ["turbo.json", "turbo.jsonc"] });
+        else if (reason === "malformed-root-config")
+          fixture = yield* overlayRootFile(fixture, "turbo.json", '{"tasks":');
+        else if (reason === "malformed-child-config")
+          yield* writeContainedFileString(fixture.identity, "turbo.json", '{"tasks":');
+        else {
+          const manifest = yield* readBytes(fixture.identity, "package.json").pipe(
+            Effect.flatMap(decodeText),
+            Effect.flatMap(decodeJsoncTextAs(S.JsonObject))
+          );
+          const scripts = yield* S.decodeUnknownEffect(S.JsonObject)(manifest.scripts);
+          yield* writeContainedFileString(
+            fixture.identity,
+            "package.json",
+            yield* JsonStringCodec(S.JsonObject).encode(R.set(manifest, "scripts", R.remove(scripts, "lint")))
+          );
+        }
+        const captured = yield* invoke(fixture, "/fixture", [
+          "/tools/turbo",
+          "run",
+          "lint",
+          "--filter=@beep/identity",
+          "--no-daemon",
+          "--cache=local:",
+          "--env-mode=strict",
+          "--summarize",
+          "--output-logs=full",
+          "--log-order=grouped",
+          "--log-prefix=task",
+          "--ui=stream",
+        ]);
+        if (captured.truncated)
+          return yield* CacheCommandError.new("A native non-execution control exceeded its capture bound.");
+        const summaryDirectory = path.join(fixture.directory, "run/runs");
+        const names = (yield* fs.exists(summaryDirectory)) ? yield* fs.readDirectory(summaryDirectory) : [];
+        const summaryPresent = names.length === 1;
+        let selectedExecutionObserved = false;
+        if (summaryPresent) {
+          const native = yield* readBytes(fixture.directory, `run/runs/${O.getOrThrow(A.head(names))}`).pipe(
+            Effect.flatMap(decodeText),
+            Effect.flatMap(JsonStringCodec(NativeSummary).decode)
+          );
+          selectedExecutionObserved = A.some(
+            native.tasks,
+            (task) =>
+              task.taskId === identityTask &&
+              task.command !== "<NONEXISTENT>" &&
+              Str.trim(task.command) !== "" &&
+              O.isSome(task.execution)
+          );
+        }
+        const error = Str.toLowerCase(captured.stderr);
+        const expectedDiagnostic =
+          reason === "missing-root-config"
+            ? Str.includes("could not find turbo.json")(error)
+            : Str.includes("failed to parse turbo.json")(error);
+        const passed =
+          !selectedExecutionObserved &&
+          (reason === "absent-script"
+            ? captured.exitCode === 0 && summaryPresent
+            : captured.exitCode !== 0 && !summaryPresent && expectedDiagnostic);
+        nonExecutions.push(
+          CachePilotNonExecution.make({
+            id: reason,
+            reason,
+            exitCode: captured.exitCode,
+            stdoutSha256: yield* hashText(captured.stdout),
+            stderrSha256: yield* hashText(captured.stderr),
+            summaryPresent,
+            selectedExecutionObserved,
+            passed,
+          })
+        );
+        checks.push(CacheSyntheticCheck.make({ name: `non-execution-${reason}`, passed }));
+        if (!passed) {
+          const diagnostics = `.beep/cache/pilot-observations/${path.basename(experiment)}/${reason}`;
+          yield* writeContainedFileString(root, `${diagnostics}/stdout.txt`, captured.stdout);
+          yield* writeContainedFileString(root, `${diagnostics}/stderr.txt`, captured.stderr);
+          yield* Effect.logWarning(`Native control mismatch; bounded private diagnostics: ${diagnostics}`);
+          break;
+        }
+      }
+    }
     yield* verifyTools();
     if (!S.toEquivalence(CacheActivationPreview)(yield* cache.activation(root, activationRequest), current))
       return yield* CacheCommandError.new("Pilot source configuration drifted during execution.");
@@ -600,7 +991,7 @@ const runPilot = Effect.fn("CachePilot.run")(
       )
         return yield* CacheCommandError.new("Read-only pilot worktree changed during execution.");
     return CachePilotReceipt.make({
-      schemaVersion: "cache-pilot-local/v1",
+      schemaVersion: "cache-pilot-local/v2",
       authority: "local-observation-only",
       key: current.source.key,
       sourceRevision: revision,
@@ -613,10 +1004,16 @@ const runPilot = Effect.fn("CachePilot.run")(
       toolchainDigest: current.source.toolchainDigest,
       runs,
       checks,
+      shadowDecisions,
+      selection: request.selection,
+      mutations,
+      nonExecutions,
       remaining: [
-        "Complete semantic perturbations and ten representative shadow decisions",
         "Complete native read/write and capture-adversary coverage",
         "Accepted signed remote comparisons and final qualification",
+        ...(request.selection === "controls"
+          ? ["Run the full matrix before using these control-only observations"]
+          : []),
       ],
     });
   },
@@ -629,8 +1026,9 @@ const runPilot = Effect.fn("CachePilot.run")(
  *
  * **Details**
  * The live checkout, registered worktrees and Git metadata remain read-only.
- * Only owned task-log/cache directories are writable inside the network-isolated
- * namespace. Returned local observations cannot promote a qualification tuple.
+ * Task-log/cache mounts and disposable namespace storage are writable; this
+ * is not a complete write-trace audit. Returned local observations cannot
+ * promote a qualification tuple.
  *
  * **Example** (Plan the admitted experiment)
  *

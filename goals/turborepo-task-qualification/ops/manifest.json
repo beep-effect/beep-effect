@@ -139,7 +139,20 @@
     "research/ignore-repair-local-verification.json",
     "research/ignore-repair-verification.md",
     "research/merged-activation-preview.json",
-    "research/types-lint-exclusion-request.json"
+    "research/types-lint-exclusion-request.json",
+    "research/command-groups-pilot.json",
+    "research/entrypoint-plans-hosted-pilot.json",
+    "research/entrypoint-plans-pilot.json",
+    "research/pilot-entrypoint-request.json",
+    "research/pilot-entrypoint-review.md",
+    "research/pilot-local-canary.json",
+    "research/pilot-local-stable.json",
+    "research/pilot-pin-negatives.json",
+    "research/pilot-local-verification.md",
+    "research/pilot-local-checkpoint.json",
+    "research/workflow-sources-pilot.json",
+    "research/yeet-plans-hosted-pilot.json",
+    "research/yeet-plans-pilot.json"
   ],
   "agentLaunchers": [
     {
@@ -201,5 +214,5 @@
     "Unresolved numeric deployment budget or ungranted external scope requires a concrete decision before mutation.",
     "Do not overwrite another owner's artifacts or weaken hosted proof."
   ],
-  "statusNote": "P0/P1/P2 active. Real identity and types lint each reproduced false-success local hits after a root-ignore rule was removed, on both exact clients. Identity adds root/ancestor ignore inputs and remains disabled. Types lint is disabled and explicitly excluded at ledger revision three; all previous history is preserved. Four combined ignore-path cases pass 24 observations and 32 checks with types fresh; the separate types exclusion control passes six observations and eight checks. Full identity/types package audit and docgen pass. Census remains 142 workspaces, 2,840 graph nodes and 1,480 executable nodes; 275 source bindings and six complete documents verify. Audit has zero findings and 928 unassessed cached computations. Current fingerprint/activation preview are refreshed. Durable real-pilot execution, complete read/write and comparison/shadow evidence, signed sibling integration, adoption handoff and Yeet closeout remain required."
+  "statusNote": "P0/P1/P2 active. Durable real-pilot CLI execution passes 43 observations and 28 checks on each exact stable/canary client, with ten fresh-authoritative/local-producer/cross-worktree-replay shadow decisions per client and two expected fresh syntax failures. Eight invocation guards fail for the intended reasons without receipts. Read-only source snapshots remain unchanged. Current census retains 142 workspaces, 2,840 graph nodes and 1,480 executable nodes; 285 source bindings and six full documents verify. Audit has zero findings and 928 unassessed cached computations. CLI typecheck, schema-first, full package audit/docgen and final documentation compilation pass. Root/child config, lockfile/alias and absent-script controls, complete read/write/capture evidence, signed sibling integration, dynamic entrypoint review, adoption handoff and Yeet closeout remain required. Identity and types remain cache-disabled and excluded; no qualification is granted."
 }

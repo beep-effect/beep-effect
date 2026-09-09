@@ -24,6 +24,8 @@ import { CacheEntrypointReviewRequest } from "./Cache.entrypoints.schemas.ts";
 import { attachCacheEntrypointReview } from "./Cache.entrypoints.ts";
 import { CacheSyntheticReceipt, CacheSyntheticRequest } from "./Cache.experiment.schemas.ts";
 import { runCacheSyntheticExperiment } from "./Cache.experiment.ts";
+import { CachePilotReceipt, CachePilotRequest } from "./Cache.pilot.schemas.ts";
+import { runCachePilotExperiment } from "./Cache.pilot.ts";
 import {
   CacheActivationPreview,
   CacheActivationRequest,
@@ -758,6 +760,23 @@ const cacheSyntheticCommand = Command.make(
   Command.provide(MemoryStatsLive)
 );
 
+const cachePilotCommand = Command.make(
+  "pilot",
+  { request: Flag.file("request"), output: outputFlag },
+  ({ request, output }) =>
+    Effect.gen(function* () {
+      const input = yield* readCacheRequest(request, CachePilotRequest);
+      const report = yield* runCachePilotExperiment(process.cwd(), input);
+      yield* writeEncoded(report, JsonStringCodec(CachePilotReceipt), output);
+      if (A.some(report.checks, (check) => !check.passed))
+        return yield* CacheCommandError.new("The local real-pilot experiment reported a failed assertion.");
+    }).pipe(renderCacheFailure)
+).pipe(
+  Command.withDescription("Compare the real lint pilot in bounded, network-isolated read-only worktree overlays"),
+  Command.provide(MemoryStatsLive),
+  Command.provide(CacheQualificationLive)
+);
+
 /**
  * Turbo cache command group.
  *
@@ -774,7 +793,7 @@ const cacheSyntheticCommand = Command.make(
  */
 export const cacheCommand = Command.make("cache", {}, () =>
   Console.log(
-    "cache commands: census, audit, inspect, baseline, fingerprint, activation, transition, synthetic, warm, probe, dashboard"
+    "cache commands: census, audit, inspect, baseline, fingerprint, activation, transition, synthetic, pilot, warm, probe, dashboard"
   )
 ).pipe(
   Command.withDescription("Turbo cache recovery and evidence operations"),
@@ -787,6 +806,7 @@ export const cacheCommand = Command.make("cache", {}, () =>
     cacheActivationCommand,
     cacheTransitionCommand,
     cacheSyntheticCommand,
+    cachePilotCommand,
     cacheWarmCommand,
     cacheProbeCommand,
     cacheDashboardCommand,

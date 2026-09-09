@@ -392,3 +392,41 @@ and receipt models, and strict selected-task log extraction. It is exported
 for further integration; CLI wiring and native execution validation remain
 pending. Earlier source-binding receipts predate these new source files and
 must be refreshed before they are used to qualify the current implementation.
+
+## Durable native local pilot: 2026-09-09
+
+`beep cache pilot` now executes the initial real-lint matrix and ten varied
+local shadow decisions in read-only overlays of two worktrees at `4f96c4b1f8`.
+Stable and exact canary each pass 43 observations and 28 checks. Each includes
+ten authoritative/producer/cross-worktree-replay triples, source and declared
+environment invalidation, orchestration/locale/timezone/root stability, and
+two fresh failing syntax-error controls. Successful selected logs remain
+53 bytes; expected failures retain 138-byte captures. Eight invocation guards
+reject wrong pins, runtime/channel mismatches, stale evidence and invalid
+worktree identities without writing receipts.
+
+The refreshed census attachment binds 285 current source files and six complete
+documents. Audit has zero findings and 928 unassessed cached computations.
+CLI typecheck, schema-first and full package audit/docgen pass; the final
+documentation correction also passes docgen. The
+[native verification report](./research/pilot-local-verification.md) and
+[checkpoint](./research/pilot-local-checkpoint.json) record exact references
+and limits for that observer version.
+
+Continue with root/child configuration, lockfile/generated-alias and
+absent-script controls, then complete semantic read/write and capture evidence.
+Runtime mismatch refusal is proven; local observations still do not provide
+signed remote transport authority. Sibling integration, deeper entrypoint
+review, adoption handoff and final Yeet acceptance remain required. The goal
+stays active and both pilot/dependency tuples remain excluded.
+
+## Authored control extension: 2026-09-09
+
+The next observer version adds seven configuration/manifest invalidation
+controls and four setup/absent-script controls. Requests can select the full
+matrix or controls alone, and new receipts identify their selection under
+`cache-pilot-local/v2`. These new native controls still require execution
+validation. The v1 receipts and source bindings above remain historical
+evidence for the earlier observer; they do not validate this extension.
+The operator requested a local commit of the current changes followed by a
+merge of the latest `main`. Continue native validation after that integration.

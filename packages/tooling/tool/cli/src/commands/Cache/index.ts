@@ -40,10 +40,13 @@ export {
 export { runCacheSyntheticExperiment } from "./Cache.experiment.ts";
 export {
   CachePilotLogInput,
+  CachePilotMutation,
+  CachePilotNonExecution,
   CachePilotOutcome,
   CachePilotReceipt,
   CachePilotRequest,
   CachePilotRun,
+  CachePilotShadow,
   CachePilotTask,
 } from "./Cache.pilot.schemas.ts";
 export { runCachePilotExperiment } from "./Cache.pilot.ts";
