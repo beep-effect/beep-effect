@@ -1170,3 +1170,11 @@ audit/health/dead-code --check --base origin/main ok; typos ok; biome + oxlint o
 40/40; `package-verify @beep/repo-cli` ok (audit 404.7 s, docgen 17.8 s). `docgen:local` refuses
 a bounded run on this branch (root `package.json` and the docgen manifest are global inputs) and
 defers to the full proof, which the hosted Docgen lane has passed every round.
+
+Baseline rows (same stage): the scoped ratchet run after the fix cleared CreatePackage and then
+reported `new-uncovered-file` rows for `PackageScripts.schemas.ts` (branches 96.15) and
+`PackageScriptsPolicy.ts` (97.4/94.5/91.02/89.13), a rule that only fires once the package total
+passes. `bun run coverage -- --filter=@beep/repo-cli --write-baseline` rewrote the whole
+`@beep/repo-cli` section (7 added rows, 182 raised and 6 lowered metrics on main-owned files); only
+the four rows for this branch's new files were spliced into the tracked baseline, every
+pre-existing row and the package row stay byte-identical, order matches the tool's.

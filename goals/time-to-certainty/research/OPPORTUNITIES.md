@@ -558,3 +558,17 @@ subprocess diagnostics would make inventory stalls attributable.
   `describe(name, { concurrent: false }, fn)`.
 - **Would have prevented it:** the package-scoped `lint:deprecated-apis` task running inside
   `package-verify` for touched packages, which is exactly the C3.2 wiring this train is building.
+
+## 2026-09-09 — New source files fail the coverage ratchet only after the package total is repaired
+
+- **Doing:** re-running the scoped ratchet (`bun run coverage -- --filter=@beep/repo-cli`) after
+  restoring the create-package file's coverage.
+- **Evidence:** `[coverage-ratchet] … new file has N uncovered unit(s) at X% (no baseline file
+  identity)` for `PackageScripts.schemas.ts` (branches) and `PackageScriptsPolicy.ts` (all four
+  metrics). The rule is emitted only for metrics whose package total did not regress, so four
+  hosted rounds that were red on the package total never showed it; every recently added CLI
+  source file on main carries a baseline row, so the sanctioned remedy is the scoped
+  `--write-baseline` merge committed with the feature.
+- **Would have prevented it:** `package-verify` (or the C3 package-level `coverage` task) reporting
+  "new files without baseline rows" as its own line regardless of package totals, and the brief's
+  acceptance list naming the baseline write for any stage that adds source files.
