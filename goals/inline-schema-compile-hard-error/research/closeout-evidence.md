@@ -14,6 +14,8 @@ and clean package matrix passed.
 | PR #1028 reviewed head | `02d88af51cff03dcbaeb50c3b6da663c1f99fd97` |
 | PR #1028 local Yeet preview | `64a5996a4ec603ae1851716c217b960723cf3f25` |
 | PR #1028 squash merge | `39132ff64b24e851391624b8799f023495ae9cc2` |
+| PR #1038 opening evidence head | `59bba09125b8e57648052bc29227df6e93d34c87` |
+| PR #1038 opening local CI-parity preview | `f416b94770845d213f947c85cc85e5d027bccaaf` |
 
 The PR #1022 reviewed head, its local preview, and its squash merge all resolve
 to Git tree `6a9533d44b007cb26959789f22d7fa7768dc7615`. The local proof therefore
@@ -69,6 +71,29 @@ Both commands exited 0. These receipts supplement, rather than replace, the
 passing 106-owner v2 matrix. FreshBooks contains a later compiler hoist;
 effect-drizzle contains type-alias repairs included in the implementation PR.
 
+PR #1038 review requested structured evidence for those two owners. Fresh
+canonical `runPackageVerify` executions on the same pinned head captured both
+`PackageVerifyReport` values in `package-verification-supplemental.json` on
+2026-09-09. Effect-drizzle passed audit in 17,909 ms and docgen in 3,599 ms;
+FreshBooks passed audit in 13,539 ms and docgen in 3,101 ms. Both reports have
+`quick: false`, both required steps executed with exit code 0, and the capture
+process exited 0. Git HEAD and tree identity matched before and after capture,
+with no changes outside the goal's report files in the proof worktree.
+
+The primary matrix explicitly links that supplemental file through
+`supplementalReceipts`; its original 106-owner summary and tree digest are not
+relabeled. Consumers decode the supplemental array with the existing
+`PackageVerifyReport` from `@beep/repo-cli/test/Quality`, using
+`S.fromJsonString(S.toCodecJson(S.Array(PackageVerifyReport)))`. The JSON codec
+round-trips the canonical report's Option-valued exit codes. Only local paths
+and the length of captured output are sanitized; result status, source head,
+step names, exit codes, and durations retain the executed values.
+
+`bun test goals/inline-schema-compile-hard-error/research/scripts/package-verification.test.ts`
+passes 241 assertions covering the primary counts and link, the canonical
+supplemental reports, matching heads, full audit/docgen execution, and the
+combined 108-owner inventory with no duplicates or missing owners.
+
 The first v2 matrix stopped after seven passing owners when `@beep/ai-sync`
 rejected unrelated, pre-existing Graft permissions in the dirty local agent
 settings. The file was preserved unchanged. At the same commit in a clean
@@ -105,7 +130,7 @@ lowered, and the subsequent hosted Coverage Regression check passed.
 - [Unary schema literals](https://github.com/beep-effect/beep-effect/pull/1022#discussion_r3963944769): accept static signed literals for hoist detection while retaining runtime-dependent factories; resolved.
 - [Ambient values outside the allowlist](https://github.com/beep-effect/beep-effect/pull/1022#discussion_r3963964963): hash all inherited values into a digest; resolved.
 - [Tracked lint configuration path](https://github.com/beep-effect/beep-effect/pull/1028#discussion_r3964376328): corrected the audit to reference `.oxlintrc.json`; resolved.
-- [Same-PR packet closeout](https://github.com/beep-effect/beep-effect/pull/1028#discussion_r3964376332): proof-runner repair and reflection shipped together in #1028; thread resolved. The subsequent external merge prevented the final lifecycle flip in that PR, so the publication exception still awaits operator direction.
+- [Same-PR packet closeout](https://github.com/beep-effect/beep-effect/pull/1028#discussion_r3964376332): proof-runner repair and reflection shipped together in #1028; thread resolved. The subsequent external merge prevented the final lifecycle flip in that PR. On 2026-09-09 the operator authorized final closeout PR #1038 as the publication exception, without waiving verification gates.
 - [Premature P3 completion](https://github.com/beep-effect/beep-effect/pull/1028#discussion_r3964376341): restored active lifecycle and incomplete closeout gates; resolved. P3 remains open until the actual terminal monitor result exists.
 - [Fresh committed-tree package receipt](https://github.com/beep-effect/beep-effect/pull/1028#discussion_r3964829818): pushed the completed v2 matrix and supplemental owner evidence in `abd5416aa2`, posted the proof links, and resolved the thread.
 
@@ -121,8 +146,38 @@ evidence is now complete; the lifecycle remains active while publication and
 the terminal `merge-ready: yes` result are outstanding.
 
 The final receipts are committed and pushed in `abd5416aa2` on
-`codex/inline-schema-final-evidence`. No further PR has been opened while the
-operator's choice about final publication remains pending.
+`codex/inline-schema-final-evidence`, followed by review-state and reflection
+updates through `59bba09125`. On 2026-09-09 the operator approved
+[final closeout PR #1038](https://github.com/beep-effect/beep-effect/pull/1038).
+The final packet-state update belongs in that PR, which must remain open
+until Yeet reports `merge-ready: yes` on its final head. This publication
+exception does not waive any package, local, hosted, or review requirement.
+
+### Opening evidence publication for PR #1038
+
+`bun run beep yeet publish --staged-only` completed at 06:30:48 UTC on
+2026-09-09 with process exit 0, full tier, outcome success, and a successful
+push of `59bba09125b8e57648052bc29227df6e93d34c87`. All 67 reported lanes passed,
+including all 23 local CI-parity stages. The complete invocation took
+4,439,809 ms, including admission waiting.
+
+The committed evidence tree is `62619979faf58d945618c4a58d2db0e109ebde23`.
+The CI-parity preview is `f416b94770845d213f947c85cc85e5d027bccaaf`, tree
+`5fb198101b2e45cda0cdeb763606491a5cf72e05`, with parents
+`e7b66eb31fdfd750ed7a55d702d33a838d7cafab` and
+`59bba09125b8e57648052bc29227df6e93d34c87`. Its fresh build passed 140/140 tasks
+with zero cache hits, and the labs aggregate passed 91/91 tasks. Affected
+package steps that selected no tasks still do not replace the 108-owner
+implementation evidence. Local CI parity does not replace hosted-only checks.
+
+The verdict's `head` and `resolvedHeadSha` retain pre-commit SHA `88c4036de4`.
+The separate reusable run state records the correct `commitSha` `59bba09125`,
+and all 39 saved lane-proof records identify that head and its committed tree.
+The installation, preview, and push logs independently corroborate the new
+commit. This is a verdict-header consistency issue recorded in
+`OPPORTUNITIES.md`, not permission to relabel a receipt or treat the stale
+header alone as exact-head proof. The user's unrelated settings overlay was
+restored with its original checksum after publication.
 
 PR #1028 was also merged externally before the local matrix completed and
 before the requested terminal monitor result was recorded. All required

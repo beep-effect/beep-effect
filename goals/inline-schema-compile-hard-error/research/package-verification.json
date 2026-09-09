@@ -3,6 +3,7 @@
   "head": "02d88af51cff03dcbaeb50c3b6da663c1f99fd97",
   "committedTree": "786d98065f3a3628599a4691e0314b5fb004bff3",
   "treeDigest": "69d951bf1f63a91f8df942f3919fd65586f1f29e1cca2233e20eecda1bee3f0c",
+  "supplementalReceipts": ["package-verification-supplemental.json"],
   "startedAt": "2026-09-09T04:10:10.881Z",
   "updatedAt": "2026-09-09T04:50:14.183Z",
   "summary": {

@@ -33,12 +33,16 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P2 verification is complete; P3 publication and P4 closeout are in progress. The
+P2 verification, P3 publication, and P4 closeout are in progress. The
 implementation and package-proof identity repair are merged. The new full
 local proof and all package verification passed. All nine review threads are
 resolved, and the final receipts are pushed in `abd5416aa2`. Closure still
 requires landing those receipts and recording a terminal Yeet monitor verdict.
-The final PR path awaits operator direction after PR #1028 merged before closeout.
+The operator approved [final closeout PR #1038](https://github.com/beep-effect/beep-effect/pull/1038)
+on 2026-09-09 after PR #1028 merged before closeout. The final packet update
+will be included in #1038 and verified on its final head before handoff.
+P2 stays open with the canonical repository and hosted acceptance item; the
+completed local and package proofs do not close that remaining gate.
 
 ## Latest Evidence
 
@@ -58,6 +62,10 @@ The final PR path awaits operator direction after PR #1028 merged before closeou
   from acceptance, as is the legacy report without committed-tree identity.
   Supplemental canonical verification for `@beep/freshbooks` and `@beep/effect-drizzle`
   covers the two additional owners found in the shipped implementation diff.
+  The primary matrix explicitly links their
+  [structured canonical receipts](./research/package-verification-supplemental.json).
+  The receipt test decodes both report formats and checks all 108 owners,
+  matching heads, and complete successful audit/docgen steps.
   Fresh HTML regeneration has no tracked diff; the lint-rule suite passes all
   66 tests.
 - [PR #1019](https://github.com/beep-effect/beep-effect/pull/1019) shipped the
@@ -85,6 +93,11 @@ The final PR path awaits operator direction after PR #1028 merged before closeou
 - The [September 9 reflection](./history/reflections/2026-09-09-codex.md)
   supplements the earlier account with the completed proofs, the full owner
   inventory, and the remaining publication gate.
+- The full Yeet publication of `59bba09125` passed all 67 reported lanes,
+  including all 23 local CI-parity stages, and pushed that commit. The reusable
+  proof state and lane receipts pin its correct identity despite the verdict
+  header retaining the invocation's starting SHA. The closeout audit records
+  the tested merge preview and the receipt-consistency limitation.
 
 ## Notes
 

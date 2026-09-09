@@ -35,7 +35,12 @@
     "goals/inline-schema-compile-hard-error/research/SOURCES.md",
     "goals/schema-utils-selective-codec-statics/research/closing-census.json"
   ],
-  "researchReports": ["research/SOURCES.md", "research/closeout-evidence.md"],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/closeout-evidence.md",
+    "research/package-verification.json",
+    "research/package-verification-supplemental.json"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -63,20 +68,20 @@
     {
       "id": "P2",
       "name": "Verify",
-      "status": "complete",
-      "evidence": "The clean v2 matrix passed all 106 expected owners at head 02d88af51c and committed tree 786d98065f3a3628599a4691e0314b5fb004bff3. FreshBooks and effect-drizzle passed supplemental verification, covering all 108 owners in the implementation PR diffs. Full local Yeet verification passed all 34 reported lanes on preview 64a5996a4e, which shares that committed tree."
+      "status": "in-progress",
+      "evidence": "The clean v2 matrix passed all 106 expected owners at head 02d88af51c and committed tree 786d98065f3a3628599a4691e0314b5fb004bff3. FreshBooks and effect-drizzle passed supplemental verification, covering all 108 owners in the implementation PR diffs. Full local Yeet verification passed all 34 reported lanes on preview 64a5996a4e, which shares that committed tree. P2 remains open while the canonical repository and hosted acceptance item is unchecked; PR #1038 must satisfy the remaining final-head verification and monitor gate."
     },
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
       "status": "in-progress",
-      "evidence": "PRs #1019, #1022, and #1028 merged. All nine review threads are replied to and resolved, confirmed on GitHub on 2026-09-09. The final #1028 package-evidence reply links receipts pushed in abd5416aa2. The required terminal merge-ready: yes result remains unrecorded."
+      "evidence": "PRs #1019, #1022, and #1028 merged. All nine review threads are replied to and resolved, confirmed on GitHub on 2026-09-09. Evidence commit 59bba09125 passed full Yeet publication with 67 reported lanes and all 23 local CI-parity stages. Operator-approved final closeout PR #1038 is open; its final head must reach the required terminal merge-ready: yes result."
     },
     {
       "id": "P4",
       "name": "Close",
       "status": "in-progress",
-      "evidence": "The September 8 reflection and September 9 follow-up record the implementation lessons and completed proofs. The corrected package evidence is pushed. README.md, PLAN.md, and this manifest remain active until the receipts land and the terminal monitor gate is satisfied. The final PR path awaits operator direction after #1028 merged before closeout."
+      "evidence": "The September 8 reflection and September 9 follow-up record the implementation lessons and completed proofs. The corrected package evidence is pushed. The operator approved final closeout PR #1038 on 2026-09-09 as the publication exception after #1028 merged early. README.md, PLAN.md, and this manifest remain active until the packet update and terminal monitor gate are satisfied in #1038."
     }
   ],
   "verificationCommands": [
@@ -85,6 +90,7 @@
     "rg -n \"inline-schema-compile-hard-error|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/inline-schema-compile-hard-error",
     "git diff --check -- goals/inline-schema-compile-hard-error",
     "bun run beep lint reflection-artifacts",
+    "bun test goals/inline-schema-compile-hard-error/research/scripts/package-verification.test.ts",
     "bun run beep goals doctor",
     "bun run beep goals index --check"
   ],

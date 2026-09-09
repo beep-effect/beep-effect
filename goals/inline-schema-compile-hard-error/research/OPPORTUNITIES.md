@@ -447,6 +447,10 @@
   106 from the opening census plus lint-rules. FreshBooks and effect-drizzle
   were missing. Separate canonical package verification passed for both on
   the current head; the original matrix alone does not cover every handoff.
+  PR #1038 review also found that prose-only supplemental evidence was not
+  discoverable from the matrix JSON. Fresh structured reports now reuse the
+  canonical `PackageVerifyReport` JSON codec and are explicitly linked from
+  the primary receipt; a test checks the complete 108-owner union.
 - **Prevention:** Union census owners with owners of the final implementation
   diff, including later reconciliation and quality repairs. Record that owner
   inventory with the proof identity and report uncovered owners before running.
@@ -473,3 +477,21 @@
 - **Prevention:** Run final package matrices in a clean, pinned worktree, or
   explicitly identify dirty configuration inputs before admission. Keep local
   overlay diagnostics separate from committed-source acceptance evidence.
+
+## 2026-09-09 - Publish verdict retained the pre-commit head
+
+- **Work:** Check the final evidence commit after `bun run beep yeet publish
+  --staged-only` completed its full proof and push.
+- **Evidence:** The successful `yeet-verdict/v2` records `88c4036de4` in both
+  `head` and `resolvedHeadSha`, although the command created and pushed
+  `59bba09125`. The branch's `yeet-run-state/v1` correctly records the latter
+  as `commitSha`. The clean-HEAD installation log also names `59bba09125`,
+  and the CI-parity log identifies preview `f416b94770`, whose second parent
+  is that commit. All 67 reported lanes passed, including all 23 CI-parity
+  stages; the remote branch matches the pushed commit. These independent
+  receipts establish the execution identity, but the verdict header alone
+  does not.
+- **Prevention:** Distinguish the invocation's starting head from the committed
+  proof head and merged-preview identity. Keep the final verdict, reusable
+  proof state, and pushed-head receipt consistent, with a regression test for
+  publish commands that create a commit before proving it.
