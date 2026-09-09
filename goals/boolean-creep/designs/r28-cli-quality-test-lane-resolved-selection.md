@@ -1,5 +1,48 @@
 # r28-cli-quality-test-lane-resolved-selection
 
+**Current source-forward binding (P2 only)**
+
+Revalidated against HEAD `4509872869eb87071250c67717769260f850bcf5` and merged main
+`d68f1a11dd41579660a6c72f3d3e060d6b61352d`, after the R30 packet commit
+`578b25de24f325a7240ed5321d708531c6d55536`. Native continuation uses
+`gpt-6-astra` / `xhigh`; it preserves the original job provenance below.
+This is a bounded source rebind, not another design or a P3 approval.
+The canonical inventory at admission was 738 records /146 qualified, SHA256
+`ea376cff64c549eb542d8bc4dc10c5aec519246b0f20a6720a8f9ad5c64a98d1`.
+
+The full eight-section design below is retained byte for byte from the canonical
+packet at this HEAD. Its prior source header and numbered locators describe
+main `bed30c6adf3beed7de8538209fbdc84d26a3b8ce`. Apply the following exact
+source-location mappings when reading it against d68; these mappings and the
+current preservation notes govern this rebind. Equal source slices, full source
+copies, consumer search, dependency bindings, and proposal hashes are frozen in
+the private `pre-r31-main-d68-quality-designs` handoff. No product test or
+independent review ran, and source implementation remains pending.
+
+| Retained locator file | Exact current mapping |
+| --- | --- |
+| `Tasks.ts` | Old1–2578 stays identical. Old2579–2671 maps +3; old2673–3532 maps +3. The unrelated old2672 lint inventory log is replaced at2675. |
+| `Quality.command.ts` | Old1–2074 stays identical; old2075–2081 maps +10; old2085–3938 maps +11. The only changed prior lines2082–2084 belong to local Effect plugin resolution, not these designs. |
+| `internal/GithubChecks.ts` | Old1–421 stays identical; old422–507 maps +11; old508–891 maps +20. Two additional lane entries cause the shifts. |
+| `test/quality-tasks.test.ts` | Old1–832 stays identical; old837–933 maps +11; old934–1024 maps +12; old1025–1029 maps +13; old1031–2926 maps +14; old2927–2964 maps +15; old2965–6197 maps +16. Changed earlier expectations are listed below. |
+
+Qualification and target remain 4/3, derived/internal LiteralKit, designed/Tier1.
+The raw accumulator232–236/263–267, parser307–321 and testing alias339 are exact.
+Only consumer locations move: runRootTestTask3156–3203, runtime unit read3162,
+integration read3167, explicit scope3169, unsplit presence3180 and root routing
+3205–3222. The prior body still correctly requires unit-before-integration,
+parallel-before-serial failures, and the complete scoped SQL lifetime/payloads.
+Current direct parser fixtures are test6195–6213; static empty-plan fixtures
+are2878–2888. No deleted static planner is revived or credited.
+
+Preserve the added root lint tsconfig-overlay at2581 and its log2675. Build's
+updated affected arguments and Storybook/config-typecheck lane additions are
+current caller behavior, not new test-selection modes. The existing test:unit
+and integration task strings/args and runtime routing are unchanged. Keep the
+current Vitest URL-based globalSetup and unchanged fileParallelism=false.
+
+**Retained design and original provenance**
+
 Native P2 refresh bound to HEAD `e7b1e907726421c7d2a2e1cdd140280df47f2353` and immutable main
 `bed30c6adf3beed7de8538209fbdc84d26a3b8ce`, compared with main
 `3657f8f97f7135c53c3c0b9fa99aa19093c3e5ee`. Prepared by Codex

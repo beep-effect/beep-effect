@@ -1,0 +1,22 @@
+{
+  "lane": "r31-cli-commands-l-q",
+  "sourceSha": "4509872869eb87071250c67717769260f850bcf5",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "e879b891d3e08fe351b878cb89c7ff0a09e311042e4b97ba1b2aea0ddfe5229c",
+  "started": "2026-09-09T15:25:36.388249+00:00",
+  "finished": "2026-09-09T15:39:07.915599+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-cli-commands-l-q.jsonl`\n\nCounts: **0 confirmed**, **0 disqualified**. Validator: `inventory OK: 0 records, 0 unique ids`.\n\nCoverage: every assigned root was scanned (Labs, Laws, Lint, Purge, Qa, Quality), including unindexed source via the file inventory plus targeted Boolean searches.\n\nSeed revalidation: all listed seed owners, members, and classifications still hold on current source. No seed withdrawals and no locator drift that required a correction record. Unchanged qualified/disqualified seeds were not duplicated.\n\nOut-of-net (not recorded): Command.make Flag descriptors and anonymous handler aliases, including XOR pairs such as lint `package-scripts` `--check`/`--write` and quality `scheduler protocol` `--enable-evictions`/`--disable-evictions`; Labs `--json` Flag; `runTestTsgoPackageGroup` compilerOptions spread of the already-seeded synthetic template.\n\nNo unresolved source question.",
+  "transcriptSha256": "21648024509fc566b71e7a6b47d9d9cab2d05dc80934d76d3ee5edbe81f837eb",
+  "runnerSha256": "3e988b6d2fd507b733b37bd9afe8f87eedf9fea22d151d75e386c850b98f2119",
+  "seedSha256": "1739679baffd27a2416adb0853b411992fbfd3a1dc19623d5bf1bb0e67f243d4",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

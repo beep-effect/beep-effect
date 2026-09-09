@@ -1,24 +1,26 @@
 # scheduler-promotion-tick-origin
 
-Pre-R30 native P2 source/design refresh for scheduler staging ownership,
-interruption cleanup and orphan collection. Both existing 4/3 domains, complete
-payloads and the ordered Tier 1E shared-outcome batch remain intact. Product
-citations bind immutable main `3657f8f97f7135c53c3c0b9fa99aa19093c3e5ee` and
-merged HEAD `1c07c15495aaa42f521b887b01e943e68804606c`; their reviewed source/test
-bytes equal the working files. The exact pre-edit designs and rows are retained in the R29 integration
-archive. This native P2 refresh supplies no independent P3 approval or
-implementation credit.
+Pre-R31 native P2 source/design refresh against immutable main
+`d68f1a11dd41579660a6c72f3d3e060d6b61352d` and merged HEAD
+`4509872869eb87071250c67717769260f850bcf5`. Both existing 4/3 domains, complete
+payloads and the ordered Tier 1E shared-outcome batch remain intact. The
+bed30-to-d68 comparison removes three unused callback declarations; all
+retained protocol, admission, polling, cleanup and fixture behavior is unchanged.
+Exact pre-edit designs and rows remain in the private refresh bundle for parent
+archival; the earlier R29 integration archive stays immutable. This native P2
+refresh supplies no independent P3 approval or implementation credit.
 
 # Instance
 
 - id: `scheduler-promotion-tick-origin`
-- exact incoming source SHA: `3657f8f97f7135c53c3c0b9fa99aa19093c3e5ee`
-- previous incoming main SHA: `5fc065daff16300b8435eca3f32d55564664f57c`
-- file:line: `packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:1886`
+- exact incoming source SHA: `d68f1a11dd41579660a6c72f3d3e060d6b61352d`
+- previous comparison main SHA: `bed30c6adf3beed7de8538209fbdc84d26a3b8ce`
+- retained staging/polling design baseline: main `3657f8f97f7135c53c3c0b9fa99aa19093c3e5ee`
+- file:line: `packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:1883`
 - symbol: `PromotionTick`
 - members: `originBusy`, `admitted`
-- evidence: E1 at `QualityScheduler.ts:1912-1923` and E2 at
-  `QualityScheduler.ts:2016-2028` — a tick returns origin-busy/None,
+- evidence: E1 at `QualityScheduler.ts:1909-1920` and E2 at
+  `QualityScheduler.ts:2013-2025` — a tick returns origin-busy/None,
   rejected/None, or not-busy/Some; only the busy case stamps the ticket and
   only the admitted case exits the wait.
 
@@ -66,28 +68,39 @@ second outcome-to-Boolean compatibility bag.
 
 # Migration inventory
 
-- `QualityScheduler.ts:1879-1890` — retain `PromotionTickInfo` unchanged and
+This pre-R31 comparison removes only the unused `AdmissionEntryCodec.describe`
+field and its two unused lease/ticket callbacks (bed30 lines 743, 1401 and 1411).
+The current codec at `QualityScheduler.ts:741-744` still owns decode and owner
+extraction. Classification at `:752-767`, directory-list failure at `:785-789`,
+and malformed-only repair quarantine at `:794-801` retain their exact behavior.
+The error-path fixture at `test/quality-scheduler.test.ts:5033-5050` and empty
+entry preservation at `test/quality-scheduler-degraded-inputs.test.ts:88-121`
+remain byte-identical. No admission branch, origin lease release, promotion
+transition, recovery poll, staging finalizer or protocol payload changed. The
+three upstream callback deletions are not campaign guard-deletion credit.
+
+- `QualityScheduler.ts:1876-1887` — retain `PromotionTickInfo` unchanged and
   replace the duplicated pair in `PromotionTick` with the shared generic
   outcome.
-- `QualityScheduler.ts:1903-1913` — preserve the clock read before durable
+- `QualityScheduler.ts:1900-1910` — preserve the clock read before durable
   recovery/scan work and construct exactly one info snapshot. When
   `selfMayAttempt` is false, map `hasLegacySameOriginOwner` to origin-busy or
   rejected without changing queue selection.
-- `QualityScheduler.ts:1915-1923` — forward the shared outcome from
+- `QualityScheduler.ts:1912-1920` — forward the shared outcome from
   `tryAdmitSelf`; process the promotion transition only for admitted and retain
   `gate.release(admitted.originLease)` on transition error.
-- `QualityScheduler.ts:1931-1970` — no semantic edit to `noteAdmissionWait`;
+- `QualityScheduler.ts:1928-1967` — no semantic edit to `noteAdmissionWait`;
   it continues consuming the independent info snapshot for position,
   escalation, and elapsed time.
-- `QualityScheduler.ts:1989-2030` — keep interruption masked around promotion,
+- `QualityScheduler.ts:1986-2027` — keep interruption masked around promotion,
   restored only for sleep, keep the first report back-dated, return on admitted,
   sleep before refreshing the clock, and stamp blocked-on-origin only for the
   origin-busy tag before persisting the heartbeat.
-- `QualityScheduler.ts:1987` — preserve the public test alias
+- `QualityScheduler.ts:1984` — preserve the public test alias
   `noteAdmissionWaitForTesting`, its six arguments and unchanged info/progress
   shapes. The alias predates this merge; its line moved. Measurement arrays,
   counts and timestamps are payload values, not independent Boolean axes.
-- `QualityScheduler.ts:2053-2098,2100-2127,2237-2259` — preserve admitted use,
+- `QualityScheduler.ts:2050-2095,2097-2124,2234-2256` — preserve admitted use,
   v3 release, enqueue and conditional withdrawal, including suppressed
   withdrawal when a durable lease survives failed promotion cleanup.
 - `AdmissionJournal.ts:395-613,638-674,1551-1629` — preserve mixed v1/v2/v3
@@ -102,18 +115,18 @@ second outcome-to-Boolean compatibility bag.
   Retain admission/promotion journal and release tests at
   `quality-scheduler.test.ts:3888-4173,5052-5123`.
 
-Preserve `QualityScheduler.ts:224-225,980-989`: recovery settlement now
+Preserve `QualityScheduler.ts:224-225,979-988`: recovery settlement now
 polls `fs.exists` until false at 25 ms intervals with a five-second timeout.
 Read failures conservatively produce true and continue polling; timeout also
 produces true. False means the durable record disappeared. Both existing lock-
-contention readers remain: `processReapClaim` at `:1032-1039` and
-`processPromotionTransition` at `:1310-1317` keep their distinct typed pending
+contention readers remain: `processReapClaim` at `:1031-1038` and
+`processPromotionTransition` at `:1309-1316` keep their distinct typed pending
 errors when the result is true. Do not restore the single 25 ms sleep, take over
 a live owner's sinks, release its lock, or erase the pending record from the
 observer path. Recovery still precedes selection through `scanAdmissionState`;
 the pre-scan clock and existing ownership/error-finalizer order remain intact.
 
-The main-3657 preservation baseline also includes the complete staging lifecycle:
+The staging lifecycle introduced by main 3657 remains the preservation baseline:
 
 - `QualityScheduler.ts:528-565` — retain `<target>.tmp-<pid>[-<hex-start>]-<uuid>`,
   the exact anchored filename grammar, optional non-empty identity encoding,
@@ -139,20 +152,20 @@ The main-3657 preservation baseline also includes the complete staging lifecycle
   or cross-source identity remains alive/unknown and is neither listed nor
   removed. Retain source-specific proc/ps/win probing and normalization;
   do not replace this with PID-only or filename-age heuristics.
-- `QualityScheduler.ts:1387-1430` — repair recovers promotion transitions
+- `QualityScheduler.ts:1386-1427` — repair recovers promotion transitions
   first, collects staging orphans, attempts staging removals, then collects
   leases/tickets and repairs dead admission state. Preview collects the same
   candidate class without removal or promotion recovery. The dead-path array
   appends staging paths after dead lease and ticket paths; it is an observation
   and must still contain a candidate whose removal was refused. Staging paths
   do not become dead-lease/dead-ticket records or generate eviction events.
-- `QualityScheduler.ts:924-932,1104-1111,1216-1224,1662-1667,1825-1860,1873,2028,2231`
+- `QualityScheduler.ts:923-931,1103-1110,1215-1223,1659-1664,1822-1857,1870,2025,2228`
   — retain all existing atomic/exclusive users: reap-claim persistence and
   creation, promotion transitions, lease publication and heartbeat, queued
   ticket publication and heartbeat. `runAdmitted` interrupts the heartbeat
-  at `:2071` before journal/release finalization; this must continue to trigger
+  at `:2068` before journal/release finalization; this must continue to trigger
   temporary-file cleanup without moving the origin-lease ownership boundary.
-- `QualityScheduler.ts:2356-2375,2476-2488` — retain the snapshot's `dead`
+- `QualityScheduler.ts:2353-2372,2473-2485` — retain the snapshot's `dead`
   payload and reap's preview/repair split, including the preliminary read-only
   scan and run-scope stop plan in apply mode. Do not reinterpret these paths
   as a new admission outcome, new permission to stop a live scope, or a
@@ -209,7 +222,7 @@ cover lifecycle rows and mixed-reader retention; `:2619-2718` covers the protoco
 fence; `:3343-3386,5081-5123` covers interruption versus surviving durable
 promotion. Preserve these alongside the existing progress seam fixture at
 `:930`. The overlapping attempt-admitted Option branch at
-`QualityScheduler.ts:1916` is counted once in the admission-attempt design,
+`QualityScheduler.ts:1913` is counted once in the admission-attempt design,
 not again as a second deletion here. No product tests ran during this refresh.
 
 Preserve the incoming live concurrency fixture at
@@ -221,7 +234,7 @@ ticket-evicted admission event, one attributed termination event per owner, and
 empty lease/queue/claim directories. This is source-inspected fixture evidence,
 not an executed test in this P2 companion. Earlier delayed-enqueue and blocked-
 clock polling fixtures remain intact; all test citations above refer to the current
-3657 source; the private line map proves the unchanged fixture spans exactly.
+d68 source; byte comparisons prove the unchanged fixture spans exactly.
 
 Preserve the new staging fixtures in `quality-scheduler.test.ts:711-742`
 (deterministic stalled filesystem/file writers), `:767-785` (mid-write

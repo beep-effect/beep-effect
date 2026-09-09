@@ -1,8 +1,8 @@
 # create-package-scaffold-shape
 
-Native P2 design refresh before R29, bound to merged source HEAD
-`f03850b762e41217b5a0c26f26041daee490a070` / main
-`4f13d83e13d61275a57004050ffc62a90d86c014`. This preserves status `designed`
+Native P2 source/design refresh before R31, bound to merged source HEAD
+`4509872869eb87071250c67717769260f850bcf5` / main
+`d68f1a11dd41579660a6c72f3d3e060d6b61352d`. This preserves status `designed`
 and cardinality 24/11. Tier 1: ordered Tier1E tooling batches with serial shared-file edits.
 Independent P3 review and implementation acceptance remain pending.
 
@@ -10,9 +10,9 @@ Owner `ScaffoldShape` at `packages/tooling/tool/cli/src/commands/CreatePackage/C
 with members `appKind`, `lab`, `withStoriesTsconfig`.
 Storage/exposure: stored/internal; target: literalkit.
 
-The full public [source-impact audit](../data/pre-r29-main-4f13d8-source-impact.md),
+The prior public [source-impact audit](../data/pre-r29-main-4f13d8-source-impact.md),
 [source bindings](../data/pre-r29-main-4f13d8-source-bindings.json), and
-[row/design map](../data/pre-r29-main-4f13d8-row-design-map.json) bind this proposal.
+[row/design map](../data/pre-r29-main-4f13d8-row-design-map.json) preserve the earlier baseline.
 The [exact original design](../history/designs/2026-09-09-pre-r29-main-4f13d8/create-package-scaffold-shape.md) is preserved.
 Keep complete decoded exports, typed request diagnostics, public constructor and
 helper input domains, encoded keys/defaults/omission and full independent payloads
@@ -103,14 +103,30 @@ do not rebuild the old three correlated fields as a compatibility object.
 
 ## Migration inventory
 
+The current pre-R31 output baseline is main d68. The command's bed30-to-d68
+change only expands a compiler comment at `CreatePackage.command.ts:1828-1831`;
+all three owner declarations, validation gates and constructors are unchanged.
+The shared defaults at
+`src/internal/package-scripts/PackageScripts.schemas.ts:1250-1254,1271-1275`
+now give app and lab `beep:check` exactly `tsgo -p tsconfig.check.json`.
+Continue delegating to `scaffoldPackageScripts` at `:1351-1374`, including its
+full kind/optional-task contracts and sorted output; do not restore the former
+redundant `tsc -p tsconfig.json --noEmit` suffix. Preserve the separate stories
+check override and `tsc -p tsconfig.stories.json --noEmit` implementation at
+`CreatePackage.command.ts:1938-1943`, every arbitrary helper payload, and the
+CLI's narrower admission rules. Current script and manifest fixtures at
+`test/create-package.test.ts:236,258,311,982,1037,1074` and the policy fixture at
+`test/package-scripts.policy.test.ts:127` assert this upstream output baseline.
+Their preservation earns no Boolean-guard deletion or implementation credit.
+
 The post-merge script writers are an explicit compatibility boundary.
 `appBaseScripts` at CreatePackage.command.ts:1772-1777 delegates to the canonical
 `scaffoldPackageScripts(lab ? "lab" : "app", [])`, then overlays the full caller
 `dev` and `beep:build` strings; only nonlabs receive coverage. The four real-app
-builders at 1833-1903 retain their start/Tauri/dependency overlays. Preserve
+builders at 1835-1905 retain their start/Tauri/dependency overlays. Preserve
 this call to the existing package-scripts module instead of copying its table.
 
-`packageScripts` at 1925-1944 accepts every nonlab `ScriptsPackageKind`, full
+`packageScripts` at 1927-1946 accepts every nonlab `ScriptsPackageKind`, full
 `rootRelative` and `packagePath` strings, and either stories value. It requests
 exactly `["lint:fix", "test:integration", "docgen"]` from the canonical helper,
 then applies Babel, check-tests, policy and coverage overlays. Stories true
@@ -120,7 +136,7 @@ have no ScaffoldShape admission gate. Preserve those signatures and all
 supported kind/stories combinations even where raw CLI validation is narrower.
 Do not delete the public helpers or their Boolean parameters as guard credit.
 
-The actual command branch at 2014-2038 selects scripts kind in this order:
+The actual command branch at 2016-2040 selects scripts kind in this order:
 ecosystem metadata, remaining Some(appKind), tool, then library. A runtime-proof
 case falls through the dedicated app builders, uses the package-shaped manifest,
 and selects the canonical **app** script kind. Real apps/labs retain their
@@ -142,14 +158,14 @@ full separate type/family/kind metadata, canonical encoder and trailing newline.
 | 1508-1513 | Pass the migrated ordered template selector result and complete existing context to TemplateRenderRequest. |
 | 1539-1548 | Pass the new shape literal to generatePackageJson with the same full separate payload arguments. |
 | 1549-1586 | Preserve lab manifest creation, gitkeep files, directories, rendered files, assets, symlink, output paths and order in the file plan. Only existing shape selector calls change. |
-| 1755-1917,1925-1964,1991-2073 | Replace shape destructuring/Option app-manifest dispatch with mode selection of the existing app builders; keep lab values case-specific. Package and runtime-proof keep package manifest generation; stories only selects the existing stories script variant. Preserve canonical encoder and newline. |
+| 1755-1919,1927-1966,1993-2075 | Replace shape destructuring/Option app-manifest dispatch with mode selection of the existing app builders; keep lab values case-specific. Package and runtime-proof keep package manifest generation; stories only selects the existing stories script variant. Preserve canonical encoder and newline. |
 
 The complete direct reader set is templateSpecsFor, assetSpecsFor, filesFor,
 directoriesFor and generatePackageJson, plus their private helper functions.
 Only one actual constructor exists. Exact source and test searches found
 no other shape use; the graph's missing class edges were not treated as
 absence evidence. ScaffoldShape and its five selector/generator consumers remain private.
-The public `CreatePackageScripts` object at 1961-1964 additionally exposes
+The public `CreatePackageScripts` object at 1963-1966 additionally exposes
 `appBaseScripts` and `packageScripts` through CreatePackage/index.ts:14.
 The barrel therefore exports the command, resolver, TemplateContext and
 CreatePackageScripts. Public command runners continue accepting argv with
@@ -160,11 +176,11 @@ existing flags; public script-helper callers keep their separate signatures.
 Delete the stored `appKind`, `lab` and `withStoriesTsconfig` fields from
 this private schema. Delete shape-field reconstruction in the template
 selector at 496-509, the file selector at 646-661, the directory selector
-at 690-698, and manifest destructuring at 2002. Replace the shape's Option
+at 690-698, and manifest destructuring at 2004. Replace the shape's Option
 presence/kind-plus-Boolean decision walls with exhaustive literal cases.
 
 At 515-521 replace the Option filter/map/fallback asset wall with the
-two known Tauri mode cases. In manifest selection at 2005-2012, replace
+two known Tauri mode cases. In manifest selection at 2007-2014, replace
 the Option app-builder probe and branch with mode dispatch, preserving
 the same app builders and package fallback. Remove appManifestBuilderFor
 only if its single migrated caller is gone; retain AppKind helpers used
@@ -181,7 +197,7 @@ and repeated runtime reconstruction across all actual shape readers.
 
 ## Encoded-side impact
 
-Generated-output equivalence is against current main `4f13d83`, including its
+Generated-output equivalence is against current main `d68f1a11`, including its
 canonical lint task scripts and removed codegen placeholders. Do not restore
 pre-merge script tables. Keep tool-specific omission of the optional public
 integration task, lab omissions, runtime-proof app-kind script semantics and
@@ -214,15 +230,15 @@ Retain the new direct exported-helper fixtures at
 Next.js/Tauri/service apps and labs use complete equality assertions. Keep
 `create-package.test.ts:652-681` tool creation and its platform-node dependency,
 the exact app manifest comparisons at 829/892, and runtime-proof's app-kind
-script overrides at 1073-1082. Extend direct helper coverage, if a shared writer
+script overrides at 1069-1078. Extend direct helper coverage, if a shared writer
 is touched, to all currently accepted nonlab kinds with both stories values
 and arbitrary full string arguments; these are wider than the private eleven
 ScaffoldShape cases and must not be filtered through that schema.
 
 The existing CLI fixtures cover all eleven legal modes: ordinary package
 at `create-package.test.ts:683-733`; stories package and dry-run at
-1158-1223; Next.js, Tauri, Vite and service normal variants at 807-1048;
-runtime-proof at 1051-1099; four corresponding lab fixtures at
+1154-1219; Next.js, Tauri, Vite and service normal variants at 807-1044;
+runtime-proof at 1047-1095; four corresponding lab fixtures at
 `create-package-lab.test.ts:401-410,479-488,533-542,607-616` with their
 subsequent output assertions. Keep their complete manifest/file/config
 assertions and the existing lab no-ceremony, identity and root-workspace

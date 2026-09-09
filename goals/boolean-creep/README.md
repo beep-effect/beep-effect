@@ -49,27 +49,28 @@ and compatibility laws remain binding.
 
 ## Latest Evidence
 
-The canonical inventory contains **738 records: 146 qualified and 592 disqualified**
-(D1 382 / D2 210). The qualified set is **115 Tier 1 and 31 Tier 2**; statuses are 23
-historically `reviewed`, 123 `designed`, and 0 `confirmed`. All await replacement
-independent review.
+The scanner prerequisite is now published as [PR #1059](https://github.com/beep-effect/beep-effect/pull/1059) on commit `04cc73e733758e39a4e15ec294f86ef74ecc66c5`, over main `702e815971a4030806cdbd9e8f6aa9260d0d3b62`. Its [full verification](./data/scanner-prerequisite-main702-proof.json) passed all 35 reported steps, including the 134-package coverage ratchet. Canonical publication reused that exact proof; explicit branch selection resolved the earlier PR-creation failure. The PR is open and its hosted review/check monitor is running. No hosted-green or merged claim is made.
 
-Current source HEAD is `e7b1e907726421c7d2a2e1cdd140280df47f2353`, after
-merging main `bed30c6adf3beed7de8538209fbdc84d26a3b8ce` forward. Commit
-`8804a1b7d9fc65c07ea5db063b6d119e818e583b` preserves the finalized Round 29
-packet. The merge preserved all 1,252 packet files byte for byte, and the
-frozen dependency install passed. The [source-forward receipt](./data/pre-r30-main-bed30-source-forward.json)
-records 17 changed census files and five additions, bringing the next complete
-corpus to 3,049 files across 27 lanes. Package/app source matches merged main.
+The canonical inventory contains **751 records: 147 qualified and 604 disqualified**
+(D1 387 / D2 217). The qualified set is **115 Tier 1 and 32 Tier 2**; statuses are 23
+historically `reviewed`, 124 `designed`, and 0 `confirmed`. All await replacement
+independent review. Four additional owners remain in an [explicit unresolved hold](./data/r31-law-owner-holds.json).
 
-The [pre-round installation](./data/pre-r30-main-bed30-parent-integration.json)
-refreshes four complete Quality designs and their rows, plus 18 disqualified
-source locators. The other 676 rows retain their exact bytes; all statuses,
-qualifications, state counts and tiers are unchanged. It preserves concurrent
-quality execution with serial journal/proof writes, the exported test-selection
-result, the broader raw coverage helper, and identical same-scan JSDoc mirrors.
-Exact originals are archived and both full packet validators pass. These are
-P2 corrections; independent P3 and implementation remain pending.
+Current source HEAD is `4509872869eb87071250c67717769260f850bcf5`, after
+merging main `d68f1a11dd41579660a6c72f3d3e060d6b61352d` forward. Commit
+`578b25de24f325a7240ed5321d708531c6d55536` preserves the finalized Round 30
+packet. The merge preserved all 1,346 packet files byte for byte, and the
+frozen dependency install passed. The [source-forward receipt](./data/pre-r31-main-d68-source-forward.json)
+records 16 changed census files and two additions, bringing the next complete
+corpus to 3,051 files across 27 lanes. Package/app source matches merged main.
+
+The [pre-round installation](./data/pre-r31-main-d68-parent-integration.json)
+refreshes twelve complete design documents and retains one audited design
+exactly. It incorporates ten native P2 owner audits and three parent cross-file
+audits, including thirteen moved disqualified source locators. Qualifications,
+state counts, tiers, statuses, complete payloads and guard ownership remain
+unchanged. Original inventory and design bytes are archived. These are P2
+corrections; independent P3 and implementation remain pending.
 
 Round 29 launched at `115b761d533684c5abf4ab9de83d970243c79dfc` over main
 `5fc065daff16300b8435eca3f32d55564664f57c`. Its intermediate main-forward
@@ -131,9 +132,15 @@ adds five designed qualifications and 35 census exclusions, corrects seven
 existing anchors/kinds, and preserves original inventory and design bytes.
 Both packet validators pass for 738 records and 146 designs. This round is wet
 and earns no dry or independent-review credit. Main advanced
-to `d68f1a11dd41579660a6c72f3d3e060d6b61352d` after execution. That update must
-be merged and revalidated before the next census or review. Two current-source
-dry rounds remain required.
+to `d68f1a11dd41579660a6c72f3d3e060d6b61352d` after execution. That update is now merged, and the source-forward design refresh is
+installed. [Round 31](./data/sweeps/refresh-2026-09-09-r31-main-d68f1a/lane-map.json)
+completed all 27 lanes across 3,051 files. Its [terminal execution audit](./data/sweeps/refresh-2026-09-09-r31-main-d68f1a/execution-audit.json) confirms all 3,838 frozen inputs remain unchanged and all completion footers have been read. Parent semantic reconciliation remains in progress. The [settled installation](./data/r31-settled-parent-integration.json) adds 18 disqualified census records, corrects four surviving rows, archives five obsolete rows, and installs the complete Statutes at Large design. All 36 raw occurrences are accounted in the [reconciliation progress receipt](./data/sweeps/refresh-2026-09-09-r31-main-d68f1a/reconciliation-progress.json). Four held owners still prevent final reconciliation; no dry-round credit is claimed. Its [launch admission](./data/sweeps/refresh-2026-09-09-r31-main-d68f1a/launch-admission.json)
+and [created-input verification](./data/sweeps/refresh-2026-09-09-r31-main-d68f1a/launch-created-inputs.json)
+bind the actual 738-record seed, all 146 designs, all 3,051 included files,
+dependencies, source, runner and completed wet predecessor. This grants no
+completion, dry or independent-review credit. Two current-source dry rounds
+remain required. The [remote-main advance](./data/r31-remote-main-advance.json)
+records newer upstream source while R31 retains its admitted inputs. Two complete private runner audits are ready against that newer source: the freshness design is retained with an explicit encoded-input P3 obligation, while the raw request-mode owner is proposed for D1 reclassification. Integration follows final reconciliation and source forward. The Statutes at Large range/end audit supplies the installed complete 4/3 design under its existing ID. Three citation provenance contracts and the constitutional preamble-presence rule remain explicitly unsettled; the two precise user questions are pending. These are P2 proposals, with no implementation or current independent-review credit.
 
 The [scanner prerequisite proof](./data/scanner-prerequisite-main-bed30-proof.json)
 records the failed publication and its source/base attribution. The old-source
@@ -145,8 +152,20 @@ full Yeet verification failed three inherited QualityScheduler.ts coverage floor
 with source and baseline both on bed30. All other lanes passed. A public
 admissionStatus regression test now passes all five focused-suite tests and full
 package verification (audit and docgen). Scheduler source and coverage floors
-remain unchanged. Canonical Yeet publication with full proof and PR creation is
-running. No current full, hosted or merge completion is claimed.
+remain unchanged. That publication passed head proof but failed the bed30 merge-preview
+coverage lane for Planner.ts. Its source and floors are unchanged on d68;
+main d68 adds direct planner behavior tests. The [current prerequisite receipt](./data/scanner-prerequisite-main-d68-proof.json)
+preserves the failed proof and records the clean merge of d68 at
+`12cd15340dd99d052f99951ed80718556ed13d12`. The reviewed scanner configuration
+and scheduler test retain exact bytes. Frozen installation passed, and canonical
+full Yeet verification now passes all 35 reported steps on that exact commit.
+Yeet reused that proof and pushed the branch, but PR creation failed to identify
+the pushed head. Remote main separately advanced to `702e815971a4030806cdbd9e8f6aa9260d0d3b62`.
+The [new prerequisite proof](./data/scanner-prerequisite-main702-proof.json)
+records its clean merge at `04cc73e733758e39a4e15ec294f86ef74ecc66c5`,
+unchanged scanner/test bytes, a passing frozen install and a running full proof.
+The explicit repository/head PR fallback follows successful current proof.
+Hosted checks and merge remain pending.
 
 The preceding R28 source was `93217d998f851e2e93d9864e2b5315552eaa58a7`, after merging
 main `d1b4d769fbaffddd55717f3b1ba461897dd545c5` forward. The packages/apps

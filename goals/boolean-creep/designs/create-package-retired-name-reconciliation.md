@@ -1,8 +1,8 @@
 # create-package-retired-name-reconciliation
 
-Native P2 design refresh before R29, bound to merged source HEAD
-`f03850b762e41217b5a0c26f26041daee490a070` / main
-`4f13d83e13d61275a57004050ffc62a90d86c014`. This preserves status `designed`
+Native P2 source/design refresh before R31, bound to merged source HEAD
+`4509872869eb87071250c67717769260f850bcf5` / main
+`d68f1a11dd41579660a6c72f3d3e060d6b61352d`. This preserves status `designed`
 and cardinality 4/3. Tier 1: ordered Tier1E tooling batches with serial shared-file edits.
 Independent P3 review and implementation acceptance remain pending.
 
@@ -10,9 +10,9 @@ Owner `createPackageCommand` at `packages/tooling/tool/cli/src/commands/CreatePa
 with members `retiredNameReused`, `retiredNameCleared`.
 Storage/exposure: derived/internal; target: literalkit.
 
-The full public [source-impact audit](../data/pre-r29-main-4f13d8-source-impact.md),
+The prior public [source-impact audit](../data/pre-r29-main-4f13d8-source-impact.md),
 [source bindings](../data/pre-r29-main-4f13d8-source-bindings.json), and
-[row/design map](../data/pre-r29-main-4f13d8-row-design-map.json) bind this proposal.
+[row/design map](../data/pre-r29-main-4f13d8-row-design-map.json) preserve the earlier baseline.
 The [exact original design](../history/designs/2026-09-09-pre-r29-main-4f13d8/create-package-retired-name-reconciliation.md) is preserved.
 Keep complete decoded exports, typed request diagnostics, public constructor and
 helper input domains, encoded keys/defaults/omission and full independent payloads
@@ -68,12 +68,28 @@ outcome; it does not expand the final 4/3 census table.
 
 # Migration inventory
 
+The current pre-R31 output baseline is main d68. The command's bed30-to-d68
+change only expands a compiler comment at `CreatePackage.command.ts:1828-1831`;
+all three owner declarations, validation gates and constructors are unchanged.
+The shared defaults at
+`src/internal/package-scripts/PackageScripts.schemas.ts:1250-1254,1271-1275`
+now give app and lab `beep:check` exactly `tsgo -p tsconfig.check.json`.
+Continue delegating to `scaffoldPackageScripts` at `:1351-1374`, including its
+full kind/optional-task contracts and sorted output; do not restore the former
+redundant `tsc -p tsconfig.json --noEmit` suffix. Preserve the separate stories
+check override and `tsc -p tsconfig.stories.json --noEmit` implementation at
+`CreatePackage.command.ts:1938-1943`, every arbitrary helper payload, and the
+CLI's narrower admission rules. Current script and manifest fixtures at
+`test/create-package.test.ts:236,258,311,982,1037,1074` and the policy fixture at
+`test/package-scripts.policy.test.ts:127` assert this upstream output baseline.
+Their preservation earns no Boolean-guard deletion or implementation credit.
+
 The post-merge source introduces `CreatePackageScripts` at
-CreatePackage.command.ts:1961-1964, exported by CreatePackage/index.ts:14.
+CreatePackage.command.ts:1963-1966, exported by CreatePackage/index.ts:14.
 This lifecycle change preserves its full app/package helper signatures and
 canonical script outputs. Shared command edits must retain app/lab script kind
-selection at 1772-1777, the kind/stories package writer at 1925-1944 and the
-ecosystem → remaining app-kind → tool → library selection at 2014-2038.
+selection at 1772-1777, the kind/stories package writer at 1927-1946 and the
+ecosystem → remaining app-kind → tool → library selection at 2016-2040.
 Runtime-proof still uses a package-shaped manifest with canonical app-kind
 scripts. None of these public helper Boolean parameters is removed by the
 retired-name lifecycle migration. Preserve the broader direct helper contract

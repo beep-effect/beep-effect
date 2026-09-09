@@ -30,7 +30,7 @@ no expiry stays active; a valid future/current expiry stays active; a valid
 past expiry is dropped (`Quality.osv-ignore.ts:71-84`). Selection partitions
 IDs into active and dropped arrays, and `runBunAudit` logs dropped IDs before
 constructing `bun audit --ignore` arguments (`Quality.osv-ignore.ts:105-124`;
-`Quality.command.ts:778-805`).
+`Quality.command.ts:824-852`).
 
 A raw expiry means a token matched by the existing regex, not every physical
 line containing the word `ignoreUntil`. Preserve nonmatching-line behavior:
@@ -92,15 +92,15 @@ or boolean getters.
 - `Quality.osv-ignore.ts:105-124,154-160` — preserve stable input order,
   duplicate-ID behavior, active/dropped projection, dual call forms, and
   exported helper signatures.
-- `packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts:778-805`
+- `packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts:824-852`
   — no decoded migration. Preserve file-read failure behavior, dropped-ID log
   ordering/text, and exact Bun arguments.
-- `Quality.command.ts:99-101,320` and `src/test/Quality.test-kit.ts` — keep
+- `Quality.command.ts:101-104,323` and `src/test/Quality.test-kit.ts` — keep
   the existing raw-text selector import and active-ID helper alias. The entry
   model remains private. `OsvIgnoreAuditSelection` at
   `Quality.osv-ignore.ts:44` is also currently a private type despite its
   documentation's import example; do not invent a new public model export.
-- `Quality.command.ts:1034-1054` — the changed OSV Docker security route now
+- `Quality.command.ts:1084-1104` — the changed OSV Docker security route now
   runs the ONNX mitigation proof first. It does not call this Bun-audit
   parser, so no parser migration belongs there; preserve its new execution
   and failure ordering as an adjacent command contract.

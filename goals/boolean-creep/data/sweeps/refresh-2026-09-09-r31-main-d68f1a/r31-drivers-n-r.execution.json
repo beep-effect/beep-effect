@@ -1,0 +1,22 @@
+{
+  "lane": "r31-drivers-n-r",
+  "sourceSha": "4509872869eb87071250c67717769260f850bcf5",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "e879b891d3e08fe351b878cb89c7ff0a09e311042e4b97ba1b2aea0ddfe5229c",
+  "started": "2026-09-09T14:46:52.507720+00:00",
+  "finished": "2026-09-09T14:57:54.348035+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-drivers-n-r.jsonl`\n\nConfirmed: 0. Disqualified: 0.\n\nEvery assigned root was covered (`n3`, `nlp-mcp`, `obs`, `onepassword-cli`, `openai`, `openai-compat`, `openclaw`, `oxigraph`, `pacer`, `pglite`, `phoenix`, `postgres`, `pretext`, `rdf-canonize`, `runpod`). All listed seeds still exist on the claimed owners with the same members; classifications still match current writers/readers. No seed drift, withdrawals, or unresolved source questions. Validator: `inventory OK: 0 records`.",
+  "transcriptSha256": "87c39ed294da71ce97a3ebda164cb680411c387364fc151e34a1089394620e2e",
+  "runnerSha256": "3e988b6d2fd507b733b37bd9afe8f87eedf9fea22d151d75e386c850b98f2119",
+  "seedSha256": "1739679baffd27a2416adb0853b411992fbfd3a1dc19623d5bf1bb0e67f243d4",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

@@ -151,7 +151,7 @@ from no parent, and both variants retain their appropriate full payload.
 The private type has no external constructor or decoder. Only public
 runTmpfsReap/resolveBeepCacheRoot and report schemas are exposed through
 `internal/repo-run/index.ts:27-28` and `src/test/RepoRun.test-kit.ts`.
-`Quality.command.ts:129,3506-3524,3566-3568` and
+`Quality.command.ts:53,3743-3775` and
 `Yeet/internal/Sweep.ts:1141-1180` consume the same public reports. Existing
 source/consumer coverage in the current design is retained by this correction.
 The incoming ResidueReap home/repository boundary checks belong to a separate

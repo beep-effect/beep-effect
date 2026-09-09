@@ -1004,3 +1004,74 @@ current qualifications absent, including three from R29. The landing list now
 contains all 146 qualified IDs exactly once, with 115 Tier 1 and 31 Tier 2
 placements. An inventory-derived parity check during each reconciliation would
 prevent the packet's implementation order from lagging behind its canonical state.
+
+### A later merge-preview run exposed a separate planner coverage gap
+
+The scanner prerequisite publication passed its head proof and scheduler coverage,
+but the bed30 merge preview failed Planner.ts functions 83.33 below 84.61, lines
+90.07 below 90.83, and statements 90.51 below 91.24. Planner source and these
+floors are identical on bed30 and d68, so this is an inherited coverage gap,
+separate from the earlier moving-baseline failure. Main d68 adds direct
+yeetPlanPhases ordering and empty-plan tests. The failed proof is preserved in
+`~/.cache/beep/boolean-creep/scanner-pr-20260909/publish-scheduler-repair-bed30-failure-attribution/`.
+Merge current main into the isolated prerequisite and rerun full proof; do not
+weaken floors or follow the unrelated config-sync repair hint. Exact child-lane
+attribution and checking upstream test additions prevent redundant local repairs.
+
+### Cross-file design citations survived several source moves
+
+The pre-R31 audit found stale Quality.command.ts references inside the Tmpfs
+and OSV designs although their primary owner files had not changed. For example,
+Tmpfs still referenced lines 129 and 3506–3524; the current import and command
+are at 53 and 3743–3775. The relevant function bodies remain byte-identical
+across the latest main update. Refresh all design-referenced changed files,
+including imports and consumer commands, instead of selecting designs solely
+by their inventory owner file. Original design bytes and exact replacements
+are preserved in the private pre-r31-main-d68-parent-crossrefs bundle.
+
+### Completion footers miscounted scoped seed records
+
+R31 modeling-rest reported 23 scoped seeds while its admitted set contains 25;
+schema A–M reported 12 while its set contains 13. The completed transcript
+seed-query outputs contain every actual ID, and the source files match the
+finalized prior round. Preserve the raw footers and derive parent disposition
+counts from the frozen seed and lane membership. A count mismatch alone neither
+proves an omitted review nor establishes complete semantic coverage. Comparing
+explicit ID sets avoids treating prose arithmetic as authoritative evidence.
+
+### Proof-reuse publication still waits for heavyweight admission
+
+The scanner prerequisite passed all 35 full-proof steps on commit 12cd15340d.
+`bun run beep yeet publish --push-only --reuse-verified --pr` accepted the exact
+clean-commit proof, then queued as full-proof(3) behind two merged-preview jobs
+using all ten scheduler tokens. The first three minutes showed roughly 66–69 GiB
+available memory; no current proof failure was observed. The durable publication
+log is in `~/.cache/beep/boolean-creep/scanner-pr-20260909/publish-d68-reuse/`.
+A measured admission class for install-preflight plus push/PR creation could
+reduce this wait when full proof is already reusable. Preserve the current
+scheduler policy while measuring; this queue observation does not justify
+increasing capacity or interrupting other work.
+
+### PR creation missed a branch that Yeet had just pushed
+
+The scanner prerequisite reused its full proof and pushed commit 12cd15340d
+to GitHub, then `gh pr create` failed with "you must first push the current
+branch to a remote, or use the --head flag". The remote push itself succeeded;
+this is a PR-creation context failure. Its terminal result and Yeet verdict are
+preserved in `~/.cache/beep/boolean-creep/scanner-pr-20260909/publish-d68-pr-create-failure/`.
+Verify the exact remote branch and absence of an existing PR, then use the
+explicit repository and `--head` fallback with the reviewed body. Passing the
+known pushed head explicitly in the canonical operator would avoid rediscovery
+ambiguity in an isolated checkout.
+
+### One-Boolean proposals recurred despite the current census net
+
+R31 proposed six qualifications whose complete owners contain only one Boolean:
+VaultChooseRow, HookPulseV1, AgentEffectivenessPhoenixSyncResult,
+AgentEffectivenessPhoenixProject, inspectSymlinkPath and ConflictDerivation. Four additional raw
+D1/D2 rows have the same entry-net problem. The parent rejected these occurrences
+without a D1/D2 fallback; raw reports remain unchanged. VaultChooseRow and
+PhoenixSyncResult were already rejected on the same source bytes in R30. Require
+an explicit list of actual Boolean members on the whole owner before evaluating
+payload-presence or enum correlations. Reusing the prior rejected-owner ledger
+would prevent these repeated proposals without reducing source coverage.

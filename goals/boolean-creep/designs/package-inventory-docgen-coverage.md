@@ -1,5 +1,49 @@
 # package-inventory-docgen-coverage
 
+**Current source-forward binding (P2 only)**
+
+Revalidated against HEAD `4509872869eb87071250c67717769260f850bcf5` and merged main
+`d68f1a11dd41579660a6c72f3d3e060d6b61352d`, after the R30 packet commit
+`578b25de24f325a7240ed5321d708531c6d55536`. Native continuation uses
+`gpt-6-astra` / `xhigh`; it preserves the original job provenance below.
+This is a bounded source rebind, not another design or a P3 approval.
+The canonical inventory at admission was 738 records /146 qualified, SHA256
+`ea376cff64c549eb542d8bc4dc10c5aec519246b0f20a6720a8f9ad5c64a98d1`.
+
+The full eight-section design below is retained byte for byte from the canonical
+packet at this HEAD. Its prior source header and numbered locators describe
+main `bed30c6adf3beed7de8538209fbdc84d26a3b8ce`. Apply the following exact
+source-location mappings when reading it against d68; these mappings and the
+current preservation notes govern this rebind. Equal source slices, full source
+copies, consumer search, dependency bindings, and proposal hashes are frozen in
+the private `pre-r31-main-d68-quality-designs` handoff. No product test or
+independent review ran, and source implementation remains pending.
+
+| Retained locator file | Exact current mapping |
+| --- | --- |
+| `Quality.command.ts` | Old1–2074 stays identical; old2075–2081 maps +10; old2085–3938 maps +11. The only changed prior lines2082–2084 belong to local Effect plugin resolution, not these designs. |
+
+All other source/test/barrel locators in this design remain unchanged.
+
+Qualification and target remain 16/10, derived/persisted tagged union,
+designed/Tier2. JSDocDocumentationInventory.ts, JSDocRatchet.ts, both artifact
+and detector fixture files, and the test facade are byte-identical. The row is
+retained exactly; all declaration/evidence anchors still name the same lines.
+Only its cross-file command consumer moves: old2972–3021→current2983–3032,
+old3173–3214→current3184–3225. Current writer call is3013, current mirror logging
+3026–3028, and CLI mirror flags3198–3205. All referenced command source slices
+remain byte-identical after +11.
+
+Retain the complete decoded builder/API migration and exact ten-output legacy
+projection, including missing-package FFFF versus missing-config FFFT, all
+eight configured payload choices, unchanged exact JSON comparisons, primary
+then mirror write order, optional-path errors and same-scan byte identity.
+The unrelated sibling-tsconfig plugin-resolution change at2075–2095 grants no
+change to this owner and no guard-deletion credit. Tier2 compatibility and
+independent P3 requirements remain exactly as in the retained design.
+
+**Retained design and original provenance**
+
 Native P2 refresh bound to HEAD `e7b1e907726421c7d2a2e1cdd140280df47f2353` and immutable main
 `bed30c6adf3beed7de8538209fbdc84d26a3b8ce`, compared with main
 `3657f8f97f7135c53c3c0b9fa99aa19093c3e5ee`. Prepared by Codex
