@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "yeet-verdict/v1",
+  "base": "origin/main",
+  "branch": "html-experiment",
+  "committed": false,
+  "createdAt": "2026-07-08T17:56:14.405Z",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "publish:01-git-push",
+      "label": "publish:git:push",
+      "phase": "publish",
+      "status": "not-run"
+    }
+  ],
+  "message": "yeet publish refuses a stale base: files changed on this branch were also changed on origin/main since the merge-base, so the PR would conflict or silently regress them.\n3 path(s) across 3 top-level entries: bun.lock, package.json, packages\n  - bun.lock\n  - package.json\n  - packages/tooling/tool/cli/test/sync-data-to-ts.test.ts\nRemedy: git fetch origin && git rebase origin/main, re-run bun run beep yeet verify, then publish again. Pass --allow-stale-base to proceed anyway.",
+  "mode": "publish",
+  "outcome": "failure",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "html-experiment-db635e2b96f8",
+  "indexPath": "<fleet>/beep-effect2/.beep/yeet/quality-issue-index.json"
+}

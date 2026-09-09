@@ -29,6 +29,8 @@ const $I = $CiopsId.create("projection/CiOpsProjection");
  * **Details**
  *
  * `project` and `emitAbox` are deterministic pure-core operations.
+ * `project` preserves the caller's bounded `episodeId` on its proposal;
+ * `emitAbox` uses that identity for the typed current-proposal subject.
  * `projectCurrent` is the explicit stateful boundary that records the latest
  * proposal and publishes it to the transactional change queue.
  *

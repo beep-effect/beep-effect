@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "ci/lane-economics-admission-census",
+  "committed": false,
+  "createdAt": "2026-09-04T01:24:31.950Z",
+  "failurePolicy": "fail-fast",
+  "head": "f23a53b97185662e4a8544a8cc87dd795a4d0fc0",
+  "lanes": [
+    {
+      "id": "closeout:01-pr-context",
+      "label": "closeout:pr-context",
+      "phase": "monitor",
+      "status": "not-run",
+      "tier": "full",
+      "inputDigest": null
+    },
+    {
+      "id": "closeout:02-review-gates",
+      "label": "closeout:review-gates",
+      "phase": "monitor",
+      "status": "not-run",
+      "tier": "full",
+      "inputDigest": null
+    }
+  ],
+  "message": "yeet closeout succeeded.",
+  "mode": "closeout",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "ci_lane-economics-admission-census-c841efb28b0c",
+  "attemptId": "01f0534f-5547-43b1-8fd7-5ba59482cece",
+  "resolvedHeadSha": "f23a53b97185662e4a8544a8cc87dd795a4d0fc0",
+  "diffFingerprint": "96a296d224f285c67bee93c30f8a309157f0daa35dc5b87e410b78630a09cfc7",
+  "proofTier": "full",
+  "startedAt": "2026-09-04T01:24:25.877Z",
+  "endedAt": "2026-09-04T01:24:31.950Z",
+  "elapsedMs": 6073,
+  "indexPath": "<fleet>/beep-effect18/.beep/yeet/quality-issue-index.json"
+}

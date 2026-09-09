@@ -58,14 +58,23 @@ question now asks for the SeatRequest sequence under its governing
 `AdmissionProjectionSpecification`, with the step's literal `hasScopeTag` (a distinct
 data property — the no-punning ruling keeps `hasScope` an object property), and the S6
 predicate registry regenerated to track it.
-**NEXT: auditor run 3 prerequisites, then S8 IRI scheme.** Run 3's queue: the full
-ordering cluster (`ScheduleStep` + its four
-relations ratify together), the deferred identity-provenance corpora (evidence/result
-issuance-custody lineage, plan-identity contract, priority-class registry lineage),
-and the grant-contention + checkout-identity captures (sitting 2). Prior chain:
-`runs/orun-2026-09-03T02:46:18Z.index.yaml`, sha12 `a207a106de68`. Upstream skill
-follow-ups queued in the run report (scanner archive shelter; the sandbox rlimits fix
-is already vendored in this repo). Do NOT rerun §4b or run 2.
+**NEXT: land the Stage A pin PR, then satisfy Stage B.**
+Stage A PINNED 2026-09-08 in `run3-fleet/` and `run3-checkout-identity/`:
+existing admission journals, fleet attempts/verdicts, live granted/queued work,
+and one timestamped checkout inventory. The fleet pin covers 89 checkouts; the
+inventory binds 107 after the review-fix refresh, including registered worktrees outside the required run-file
+globs. The failure-signature occurrence rider is present; cache-plan execution
+resolution and proof-ledger issuance rows are absent. Stage B remains gated on
+the v3 journal PR, organic traffic, and proof-ledger materialization. S7 emission
+v2 remains parallel instrumentation for the ordering cluster; S8 stays deferred.
+The review-fix lane has replaced both pins with encoded output paths, stricter
+receipt checks, and runtime redaction; Fable owns publication and PR replies.
+Current proof is in [the review-fix report](./research/run3-lanes/stage-a-review-fixes-report.md).
+Historical capture details and the original lane handoff are in
+[the Stage A report](./research/run3-lanes/stage-a-report.md); the orchestrator
+committed and published the pin (the implementation lane's sandbox could not
+write the linked worktree's Git metadata — receipt in `research/OPPORTUNITIES.md`).
+Do NOT rerun §4b or run 2.
 
 **The 3-round pre-S4 review loop is COMPLETE** (2026-08-27). Round 3 (seat H codex
 ultra delta-attack, seat I codex max disposition audit, seat J grok xhigh carrier
@@ -132,6 +141,20 @@ graduation. Full plan with locked decisions: [`DECISIONS.md`](./DECISIONS.md).
 
 ## Trail
 
+- 2026-09-08: PR #1027 Stage A review fixes: encoded checkout path components,
+  recomputed receipt observations, runtime-prefix redaction, and refreshed report
+  hashes. Both pins were re-captured once: 89 fleet checkouts, 189 admission rows,
+  and 107 identity bindings. Detached committed-tree verification is the added
+  publication check; the friction receipt records the 30 gitignored omissions.
+  Handoff: `research/run3-lanes/stage-a-review-fixes-report.md`.
+- 2026-09-08: Stage A pinned with two new standalone generators. `run3-fleet/`
+  has 89 checkouts and 177 admission rows across attempts, verdicts, and live state
+  files; `run3-checkout-identity/` has 109 timestamped bindings plus the fleet snapshot
+  (re-pinned once after the pre-commit formatter rewrote payloads; receipt in OPPORTUNITIES). Projections and residue checks pass; the run-2
+  generator remains byte-identical. Stage B is gated on v3 journal deployment,
+  organic traffic, and proof-ledger materialization. Lane briefs and reports for
+  Stage A, the v3 journal PR, and the S7 emission-v2 PR live under
+  `research/run3-lanes/`.
 - 2026-09-03 (twenty-first stint): RUN-3 CORPORA DESIGN SETTLED — sixteen rulings
   locked at a three-round grill (all on recommended arms; DECISIONS.md "run-3
   corpora design grill"), fed by a four-lane evidence sweep synthesized into

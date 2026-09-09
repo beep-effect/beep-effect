@@ -804,6 +804,7 @@ describe("yeet planner", () => {
       "quality:check:tsgo-smoke",
       "quality:test-unit",
       "quality:coverage",
+      "fallow:health",
     ]);
     expect(findStep(plan.steps, "full:cheap-gates").waves).toEqual([
       expect.objectContaining({

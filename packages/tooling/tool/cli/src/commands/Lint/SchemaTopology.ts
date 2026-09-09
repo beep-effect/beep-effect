@@ -154,99 +154,87 @@ const isRetiredInternalTarget = (target: string): boolean =>
 
 const isPublicRoleFileTarget = (target: string): boolean => schemaRoleFileTargetPattern.test(target);
 
+interface ExportKeyPolicy {
+  readonly detail: (section: string, specifier: string) => string;
+  readonly matches: P.Predicate<string>;
+}
+
+interface ExportTargetPolicy {
+  readonly detail: (section: string, specifier: string, target: string) => string;
+  readonly matches: P.Predicate<string>;
+}
+
+const EXPORT_KEY_POLICIES: ReadonlyArray<ExportKeyPolicy> = [
+  {
+    matches: isLegacyTopicalExportKey,
+    detail: (section, specifier) => `${section} exposes retired lowercase schema subpath ${specifier}`,
+  },
+  {
+    matches: isLegacyCaseExportKey,
+    detail: (section, specifier) => `${section} exposes retired compatibility casing subpath ${specifier}`,
+  },
+  {
+    matches: isRetiredSuiteExportKey,
+    detail: (section, specifier) => `${section} exposes retired schema suite aggregator subpath ${specifier}`,
+  },
+  {
+    matches: isRetiredInternalExportKey,
+    detail: (section, specifier) =>
+      `${section} exposes retired public schema parser seam ${specifier}; use @beep/schema/test/* in source tests`,
+  },
+];
+
+const EXPORT_TARGET_POLICIES: ReadonlyArray<ExportTargetPolicy> = [
+  {
+    matches: isLegacyTopicalTarget,
+    detail: (section, specifier, target) =>
+      `${section} target ${specifier} points at retired lowercase topology path ${target}`,
+  },
+  {
+    matches: isRetiredSuiteTarget,
+    detail: (section, specifier, target) =>
+      `${section} target ${specifier} points at retired schema suite aggregator path ${target}`,
+  },
+  {
+    matches: isRetiredInternalTarget,
+    detail: (section, specifier, target) =>
+      `${section} target ${specifier} exposes retired parser seam target ${target}`,
+  },
+  {
+    matches: isPublicRoleFileTarget,
+    detail: (section, specifier, target) =>
+      `${section} target ${specifier} exposes private role file ${target}; export the concept index instead`,
+  },
+];
+
+const topologyViolation = (file: string, detail: string): SchemaTopologyViolation =>
+  SchemaTopologyViolation.make({ file, detail });
+
 const exportRecordViolations = (
   file: string,
   section: string,
   exports: Readonly<Record<string, unknown>>
-): ReadonlyArray<SchemaTopologyViolation> => {
-  let violations = A.empty<SchemaTopologyViolation>();
-
-  for (const [specifier, target] of R.toEntries(exports)) {
-    if (isLegacyTopicalExportKey(specifier)) {
-      violations = A.append(
-        violations,
-        SchemaTopologyViolation.make({
-          file,
-          detail: `${section} exposes retired lowercase schema subpath ${specifier}`,
-        })
-      );
-    }
-
-    if (isLegacyCaseExportKey(specifier)) {
-      violations = A.append(
-        violations,
-        SchemaTopologyViolation.make({
-          file,
-          detail: `${section} exposes retired compatibility casing subpath ${specifier}`,
-        })
-      );
-    }
-
-    if (isRetiredSuiteExportKey(specifier)) {
-      violations = A.append(
-        violations,
-        SchemaTopologyViolation.make({
-          file,
-          detail: `${section} exposes retired schema suite aggregator subpath ${specifier}`,
-        })
-      );
-    }
-
-    if (isRetiredInternalExportKey(specifier)) {
-      violations = A.append(
-        violations,
-        SchemaTopologyViolation.make({
-          file,
-          detail: `${section} exposes retired public schema parser seam ${specifier}; use @beep/schema/test/* in source tests`,
-        })
-      );
-    }
-
-    for (const exportTarget of collectExportTargets(target)) {
-      if (isLegacyTopicalTarget(exportTarget)) {
-        violations = A.append(
-          violations,
-          SchemaTopologyViolation.make({
-            file,
-            detail: `${section} target ${specifier} points at retired lowercase topology path ${exportTarget}`,
-          })
-        );
-      }
-
-      if (isRetiredSuiteTarget(exportTarget)) {
-        violations = A.append(
-          violations,
-          SchemaTopologyViolation.make({
-            file,
-            detail: `${section} target ${specifier} points at retired schema suite aggregator path ${exportTarget}`,
-          })
-        );
-      }
-
-      if (isRetiredInternalTarget(exportTarget)) {
-        violations = A.append(
-          violations,
-          SchemaTopologyViolation.make({
-            file,
-            detail: `${section} target ${specifier} exposes retired parser seam target ${exportTarget}`,
-          })
-        );
-      }
-
-      if (isPublicRoleFileTarget(exportTarget)) {
-        violations = A.append(
-          violations,
-          SchemaTopologyViolation.make({
-            file,
-            detail: `${section} target ${specifier} exposes private role file ${exportTarget}; export the concept index instead`,
-          })
-        );
-      }
-    }
-  }
-
-  return violations;
-};
+): ReadonlyArray<SchemaTopologyViolation> =>
+  pipe(
+    R.toEntries(exports),
+    A.flatMap(([specifier, target]) => [
+      ...pipe(
+        EXPORT_KEY_POLICIES,
+        A.filter(({ matches }) => matches(specifier)),
+        A.map(({ detail }) => topologyViolation(file, detail(section, specifier)))
+      ),
+      ...pipe(
+        collectExportTargets(target),
+        A.flatMap((exportTarget) =>
+          pipe(
+            EXPORT_TARGET_POLICIES,
+            A.filter(({ matches }) => matches(exportTarget)),
+            A.map(({ detail }) => topologyViolation(file, detail(section, specifier, exportTarget)))
+          )
+        )
+      ),
+    ])
+  );
 
 const collectSourcePathViolations = Effect.fn("SchemaTopology.collectSourcePathViolations")(function* (
   repoRoot: string

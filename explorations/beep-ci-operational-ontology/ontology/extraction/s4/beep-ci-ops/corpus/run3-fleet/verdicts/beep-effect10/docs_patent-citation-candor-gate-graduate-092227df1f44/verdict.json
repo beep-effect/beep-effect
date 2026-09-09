@@ -1,0 +1,50 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "docs/patent-citation-candor-gate-graduate",
+  "committed": false,
+  "createdAt": "2026-08-06T02:02:24.551Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "closeout:01-pr-context",
+      "label": "closeout:pr-context",
+      "phase": "monitor",
+      "status": "not-run"
+    },
+    {
+      "id": "closeout:02-review-gates",
+      "label": "closeout:review-gates",
+      "phase": "monitor",
+      "status": "not-run"
+    }
+  ],
+  "message": "yeet closeout succeeded.",
+  "mode": "closeout",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "docs_patent-citation-candor-gate-graduate-092227df1f44",
+  "attemptId": {
+    "_id": "Option",
+    "_tag": "Some",
+    "value": "276ed215-e078-45cc-a934-4dbb5073f623"
+  },
+  "startedAt": {
+    "_id": "Option",
+    "_tag": "Some",
+    "value": "2026-08-06T02:02:20.675Z"
+  },
+  "endedAt": {
+    "_id": "Option",
+    "_tag": "Some",
+    "value": "2026-08-06T02:02:24.551Z"
+  },
+  "elapsedMs": {
+    "_id": "Option",
+    "_tag": "Some",
+    "value": 3876
+  },
+  "indexPath": "<fleet>/beep-effect10/.beep/yeet/quality-issue-index.json"
+}

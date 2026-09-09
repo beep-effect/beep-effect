@@ -5,13 +5,13 @@
     "title": "Complexity Ceiling Burn-Down",
     "status": "active",
     "created": "2026-07-30",
-    "updated": "2026-07-30",
+    "updated": "2026-09-08",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/complexity-ceiling-burn-down",
   "lifecycle": "active",
-  "statusNote": "P0 research remains the next authorized phase: refresh the live Fallow tail inventory and record a triage verdict for every tail function before implementation.",
-  "mission": "Clear the cognitive->15 tail (60 fns), promote the fallow health lane to a blocking baseline ratchet, and hold the maxCognitive=8 gate credible.",
+  "statusNote": "P0 and P1 are complete. The final review wave tightens the tooltip waiver and shrinks the health baseline from 189 to 185 entries; three clean comparisons pass. PR #1021 carries the fixes, including the required Recharts test payload identity. On 2026-09-08 the user explicitly authorized skipping full local proof and publishing through Yeet fast plus monitor. P2 hosted checks, P3 exact-head merge-readiness, and P4 final lifecycle reconciliation remain open; focused evidence is not full proof. Fast mode still queued before the final ratchet push; that owned attempt was stopped and e08f77cdcb was pushed directly under the same instruction. Hosted Yeet monitoring continues.",
+  "mission": "Clear the refreshed cognitive->15 tail (49 fns), promote the fallow health lane to a blocking baseline ratchet, and hold the maxCognitive=8 gate credible.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -22,7 +22,7 @@
     "operator": "yeet",
     "requiresPullRequest": true,
     "requiresMergeable": true,
-    "statement": "Not achieved until this goal's work ships as PRs driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "statement": "Not achieved until PR #1021 is merge-ready through Yeet, with hosted checks and strict review closeout passing on the final published head. The user authorized fast publication with hosted monitoring instead of waiting for full local proof on 2026-09-08.",
     "grandfathered": false
   },
   "currentSourceOfTruth": [
@@ -34,12 +34,17 @@
     "goals/complexity-ceiling-burn-down/SPEC.md",
     "goals/complexity-ceiling-burn-down/PLAN.md",
     "goals/complexity-ceiling-burn-down/GOAL.md",
-    "goals/complexity-ceiling-burn-down/research/SOURCES.md"
+    "goals/complexity-ceiling-burn-down/research/SOURCES.md",
+    "goals/complexity-ceiling-burn-down/research/tail-inventory.md",
+    "goals/complexity-ceiling-burn-down/reports/clean-runs.md",
+    "goals/complexity-ceiling-burn-down/history/reflections/2026-09-03-codex.md",
+    "goals/complexity-ceiling-burn-down/history/reflections/2026-09-08-codex.md"
   ],
   "researchReports": [
     "research/SOURCES.md",
     "research/calibration.md",
-    "research/tail-inventory.md"
+    "research/tail-inventory.md",
+    "research/OPPORTUNITIES.md"
   ],
   "agentLaunchers": [
     {
@@ -54,27 +59,27 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Implement",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Verify",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "in-progress"
     }
   ],
   "verificationCommands": [
@@ -83,7 +88,13 @@
     "rg -n \"complexity-ceiling-burn-down|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/complexity-ceiling-burn-down",
     "git diff --check -- goals/complexity-ceiling-burn-down",
     "bun run beep lint reflection-artifacts",
-    "bun run fallow:health:baseline:check"
+    "bun run fallow:health:baseline:check",
+    "bun run beep quality fallow audit --check --quiet",
+    "bun run fallow suppressions --format json",
+    "bun run beep quality github-checks plan-contract-check --mode pre-push --expect-promoted-fallow-lanes",
+    "bun run beep quality fallow ci-contract-check .github/workflows/check.yml --expect-lanes boundaries,flags,security,fix-preview --expect-blocking-lanes audit,dead-code,health --expect-out-dir .beep/fallow --require-upload --if-no-files-found error --advisory",
+    "node --test scripts/test-onnxruntime-installer-patch.mjs",
+    "bun run beep ci lane security"
   ],
   "stopConditions": [
     "Required source files are missing or materially contradictory.",

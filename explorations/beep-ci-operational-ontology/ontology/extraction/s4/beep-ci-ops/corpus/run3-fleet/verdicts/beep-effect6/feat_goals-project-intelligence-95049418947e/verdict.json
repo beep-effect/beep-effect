@@ -1,0 +1,29 @@
+{
+  "schemaVersion": "yeet-verdict/v1",
+  "base": "origin/main",
+  "branch": "feat/goals-project-intelligence",
+  "committed": false,
+  "createdAt": "2026-07-11T12:45:31.148Z",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "closeout:01-pr-context",
+      "label": "closeout:pr-context",
+      "phase": "monitor",
+      "status": "not-run"
+    },
+    {
+      "id": "closeout:02-review-gates",
+      "label": "closeout:review-gates",
+      "phase": "monitor",
+      "status": "not-run"
+    }
+  ],
+  "message": "yeet closeout succeeded.",
+  "mode": "closeout",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "feat_goals-project-intelligence-95049418947e",
+  "indexPath": "<fleet>/beep-effect6/.beep/yeet/quality-issue-index.json"
+}

@@ -36,6 +36,7 @@
         "lefthook": "catalog:",
         "micromark": "catalog:",
         "micromark-extension-gfm": "catalog:",
+        "onnxruntime-node": "catalog:",
         "oxlint": "catalog:",
         "picomatch": "catalog:",
         "syncpack": "catalog:",

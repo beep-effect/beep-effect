@@ -1,0 +1,236 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "chore/deprecation-purge",
+  "committed": true,
+  "createdAt": "2026-09-03T07:47:02.598Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "advisory:01-fallow-feedback",
+      "label": "fallow-advisory-feedback",
+      "phase": "feedback",
+      "status": "passed",
+      "durationMs": 1732.041741,
+      "peakRssKb": 512752,
+      "exitCode": 0
+    },
+    {
+      "id": "commit:01-git-commit",
+      "label": "commit:git:commit",
+      "phase": "commit",
+      "status": "passed",
+      "durationMs": 947.260442,
+      "peakRssKb": 88048,
+      "exitCode": 0
+    },
+    {
+      "id": "publish:00-head-install-preflight",
+      "label": "publish:head-install-preflight",
+      "phase": "early-publish",
+      "status": "passed",
+      "durationMs": 10534.466833,
+      "exitCode": 0
+    },
+    {
+      "id": "publish:01-git-push",
+      "label": "early-publish:git:push",
+      "phase": "early-publish",
+      "status": "passed",
+      "durationMs": 1638.991657,
+      "peakRssKb": 51200,
+      "exitCode": 0
+    },
+    {
+      "id": "publish:02-pr-create",
+      "label": "publish:pr-create",
+      "phase": "early-publish",
+      "status": "passed",
+      "exitCode": 0
+    },
+    {
+      "id": "full:00-cheap-gates",
+      "label": "full:cheap-gates",
+      "phase": "full",
+      "status": "passed",
+      "durationMs": 316117.765174,
+      "peakRssKb": 18430136,
+      "exitCode": 0
+    },
+    {
+      "id": "full:01-pre-push",
+      "label": "full:pre-push",
+      "phase": "full",
+      "status": "passed",
+      "durationMs": 1334319.112533,
+      "peakRssKb": 18331192,
+      "exitCode": 0
+    },
+    {
+      "id": "full:02-ci-parity",
+      "label": "full:ci-parity",
+      "phase": "full",
+      "status": "failed",
+      "durationMs": 1345676.156239,
+      "exitCode": 1,
+      "repairCommand": "Run `bun run beep quality changeset-status --since origin/main`. Write a changeset listing each changed package with `patch`; packages on the changesets config `ignore` list are exempt."
+    },
+    {
+      "id": "quality:changeset-status",
+      "label": "quality:changeset-status",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "cheap-gates:goals-index",
+      "label": "cheap-gates:goals-index",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "cheap-gates:exploration-atlas",
+      "label": "cheap-gates:exploration-atlas",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "cheap-gates:config-sync",
+      "label": "cheap-gates:config-sync",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "cheap-gates:tsgo-rules",
+      "label": "cheap-gates:tsgo-rules",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "cheap-gates:test-tsgo",
+      "label": "cheap-gates:test-tsgo",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "cheap-gates:effect-imports",
+      "label": "cheap-gates:effect-imports",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "cheap-gates:schema-first",
+      "label": "cheap-gates:schema-first",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "cheap-gates:allowlist-check",
+      "label": "cheap-gates:allowlist-check",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "cheap-gates:goals-doctor",
+      "label": "cheap-gates:goals-doctor",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "cheap-gates:jsdoc-ratchet",
+      "label": "cheap-gates:jsdoc-ratchet",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "cheap-gates:knip",
+      "label": "cheap-gates:knip",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "fallow:audit",
+      "label": "fallow:audit",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "fallow:dead-code",
+      "label": "fallow:dead-code",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "repo-sanity:changeset-graph",
+      "label": "repo-sanity:changeset-graph",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "repo-sanity:tsconfig-sync",
+      "label": "repo-sanity:tsconfig-sync",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "repo-sanity:fallow-boundaries-config",
+      "label": "repo-sanity:fallow-boundaries-config",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "repo-sanity:versions",
+      "label": "repo-sanity:versions",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "repo-sanity:syncpack",
+      "label": "repo-sanity:syncpack",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "repo-sanity:sherif",
+      "label": "repo-sanity:sherif",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "repo-sanity:bun-audit",
+      "label": "repo-sanity:bun-audit",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "monitor:01-pr-context",
+      "label": "monitor:pr-context",
+      "phase": "monitor",
+      "status": "not-run"
+    },
+    {
+      "id": "monitor:02-pr-checks-watch",
+      "label": "monitor:pr-checks:watch",
+      "phase": "monitor",
+      "status": "not-run"
+    }
+  ],
+  "message": "yeet publish --start-pr-early proof failed after pushing the commit. Fix the issue in a follow-up commit and publish again.",
+  "mode": "publish",
+  "outcome": "failure",
+  "packetPaths": [],
+  "pushed": true,
+  "runId": "chore_deprecation-purge-e40b99504acc",
+  "attemptId": "f3365886-0d6e-4180-9985-59b17798c5b4",
+  "startedAt": "2026-09-03T06:46:51.329Z",
+  "endedAt": "2026-09-03T07:47:02.598Z",
+  "elapsedMs": 3611269,
+  "indexPath": "<fleet>/beep-effect2-worktrees/deprecation-purge/.beep/yeet/quality-issue-index.json",
+  "baseFreshness": {
+    "behindCount": 2,
+    "mergeBase": "14606ad5d90040ddd7f039a817faea5aee4e7ae5",
+    "overlappingPaths": []
+  },
+  "failedStepId": "full:02-ci-parity",
+  "failureKind": "step-exit"
+}

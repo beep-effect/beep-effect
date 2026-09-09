@@ -1,0 +1,49 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "codex/evidence-loop-p1-fleet-rollout",
+  "committed": false,
+  "createdAt": "2026-09-04T03:43:06.778Z",
+  "failurePolicy": "fail-fast",
+  "head": "cdc859486c1c9bdab1c16fc822dd171cfbc046b1",
+  "lanes": [
+    {
+      "id": "monitor:01-pr-context",
+      "label": "monitor:pr-context",
+      "phase": "monitor",
+      "status": "passed",
+      "durationMs": 578.252713,
+      "peakRssKb": 59348,
+      "exitCode": 0,
+      "tier": "full",
+      "inputDigest": null
+    },
+    {
+      "id": "monitor:02-pr-checks-watch",
+      "label": "monitor:pr-checks:watch",
+      "phase": "monitor",
+      "status": "failed",
+      "durationMs": 897.807315,
+      "exitCode": 1,
+      "repairCommand": "Rerun `bun run beep quality github-checks nix` and inspect the Nix error.",
+      "tier": "full",
+      "inputDigest": null
+    }
+  ],
+  "message": "yeet monitor failed.",
+  "mode": "monitor",
+  "outcome": "failure",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "codex_evidence-loop-p1-fleet-rollout-240b5605a957",
+  "attemptId": "028f3540-c27d-4598-86b7-5194721ed2ee",
+  "resolvedHeadSha": "cdc859486c1c9bdab1c16fc822dd171cfbc046b1",
+  "diffFingerprint": "96a296d224f285c67bee93c30f8a309157f0daa35dc5b87e410b78630a09cfc7",
+  "proofTier": "full",
+  "startedAt": "2026-09-04T03:42:58.346Z",
+  "endedAt": "2026-09-04T03:43:06.778Z",
+  "elapsedMs": 8433,
+  "indexPath": "<fleet>/beep-effect-worktrees/pr-992-closeout/.beep/yeet/quality-issue-index.json",
+  "failedStepId": "monitor:02-pr-checks-watch",
+  "failureKind": "step-exit"
+}

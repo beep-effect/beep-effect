@@ -225,6 +225,95 @@ nav_order: ${order}
 `
 );
 
+const analysisReportHeader = (analysis: DocgenPackageAnalysis): ReadonlyArray<string> => [
+  `# JSDoc Analysis Report: ${analysis.packageName}`,
+  "",
+  `> **Generated**: ${analysis.timestamp}`,
+  `> **Package**: ${analysis.packagePath}`,
+  `> **Status**: ${analysis.summary.missingDocumentation} export(s) need documentation`,
+  "",
+  "## What To Fix",
+  "",
+  "Public exports should include the repo-required JSDoc tags and canonical category values:",
+  "",
+  "1. `@category`",
+  "2. `@example`",
+  "3. `@since`",
+  "",
+  "Re-run the analysis after edits:",
+  "",
+  "```bash",
+  `bun run beep docgen analyze -p ${analysis.packagePath}`,
+  "```",
+  "",
+];
+
+const checklistPrioritySection = (
+  title: string,
+  entries: ReadonlyArray<DocgenExportAnalysis>
+): ReadonlyArray<string> =>
+  A.isReadonlyArrayEmpty(entries)
+    ? A.empty()
+    : [`### ${title}`, "", ...A.flatMap(entries, (entry) => [formatChecklistItem(entry), ""])];
+
+const fixChecklistSections = (issues: ReadonlyArray<DocgenExportAnalysis>): ReadonlyArray<string> => {
+  if (A.isReadonlyArrayEmpty(issues)) {
+    return ["## Fix Checklist", "", "All public exports are fully documented.", ""];
+  }
+
+  return [
+    "## Fix Checklist",
+    "",
+    ...checklistPrioritySection(
+      "High Priority",
+      A.filter(issues, (entry) => entry.priority === "high")
+    ),
+    ...checklistPrioritySection(
+      "Medium Priority",
+      A.filter(issues, (entry) => entry.priority === "medium")
+    ),
+    ...checklistPrioritySection(
+      "Low Priority",
+      A.filter(issues, (entry) => entry.priority === "low")
+    ),
+  ];
+};
+
+const analysisFindingSection = (entry: DocgenExportAnalysis): ReadonlyArray<string> => [
+  `### ${entry.name}`,
+  "",
+  `- Location: \`${entry.filePath}:${entry.line}\``,
+  `- Kind: ${entry.kind}`,
+  `- Missing: ${A.join(entry.missingTags, ", ")}`,
+  ...(entry.categoryIssues.length > 0 ? [`- Category issues: ${A.join(entry.categoryIssues, "; ")}`] : []),
+  ...(entry.presentTags.length > 0 ? [`- Present: ${A.join(entry.presentTags, ", ")}`] : []),
+  ...(P.isNotUndefined(entry.context) ? [`- Context: ${entry.context}`] : []),
+  "",
+];
+
+const findingSections = (issues: ReadonlyArray<DocgenExportAnalysis>): ReadonlyArray<string> => [
+  "## Findings",
+  "",
+  ...(A.isReadonlyArrayEmpty(issues)
+    ? ["All public exports are fully documented.", ""]
+    : A.flatMap(issues, analysisFindingSection)),
+];
+
+const analysisSummarySection = (analysis: DocgenPackageAnalysis): ReadonlyArray<string> => [
+  "## Summary",
+  "",
+  "| Metric | Count |",
+  "|--------|-------|",
+  `| Total Exports | ${analysis.summary.totalExports} |`,
+  `| Fully Documented | ${analysis.summary.fullyDocumented} |`,
+  `| Missing Documentation | ${analysis.summary.missingDocumentation} |`,
+  `| Missing @category | ${analysis.summary.missingCategory} |`,
+  `| Invalid @category | ${analysis.summary.invalidCategory} |`,
+  `| Missing @example | ${analysis.summary.missingExample} |`,
+  `| Missing @since | ${analysis.summary.missingSince} |`,
+  "",
+];
+
 /**
  * Render the Markdown JSDoc analysis report for one package.
  *
@@ -266,112 +355,14 @@ export const generateAnalysisReport: {
   (fixMode: boolean): (analysis: DocgenPackageAnalysis) => string;
 } = dual(2, (analysis: DocgenPackageAnalysis, fixMode: boolean): string => {
   const issues = A.filter(analysis.exports, hasAnalysisIssue);
-  const high = A.filter(issues, (entry) => entry.priority === "high");
-  const medium = A.filter(issues, (entry) => entry.priority === "medium");
-  const low = A.filter(issues, (entry) => entry.priority === "low");
-  const sections = A.empty<string>();
-
-  A.appendInPlace(sections, `# JSDoc Analysis Report: ${analysis.packageName}`);
-  A.appendInPlace(sections, "");
-  A.appendInPlace(sections, `> **Generated**: ${analysis.timestamp}`);
-  A.appendInPlace(sections, `> **Package**: ${analysis.packagePath}`);
-  A.appendInPlace(sections, `> **Status**: ${analysis.summary.missingDocumentation} export(s) need documentation`);
-  A.appendInPlace(sections, "");
-  A.appendInPlace(sections, "## What To Fix");
-  A.appendInPlace(sections, "");
-  A.appendInPlace(
-    sections,
-    "Public exports should include the repo-required JSDoc tags and canonical category values:"
+  return A.join(
+    [
+      ...analysisReportHeader(analysis),
+      ...(fixMode ? fixChecklistSections(issues) : findingSections(issues)),
+      ...analysisSummarySection(analysis),
+    ],
+    "\n"
   );
-  A.appendInPlace(sections, "");
-  A.appendInPlace(sections, "1. `@category`");
-  A.appendInPlace(sections, "2. `@example`");
-  A.appendInPlace(sections, "3. `@since`");
-  A.appendInPlace(sections, "");
-  A.appendInPlace(sections, "Re-run the analysis after edits:");
-  A.appendInPlace(sections, "");
-  A.appendInPlace(sections, "```bash");
-  A.appendInPlace(sections, `bun run beep docgen analyze -p ${analysis.packagePath}`);
-  A.appendInPlace(sections, "```");
-  A.appendInPlace(sections, "");
-
-  if (fixMode) {
-    A.appendInPlace(sections, "## Fix Checklist");
-    A.appendInPlace(sections, "");
-
-    if (A.isReadonlyArrayEmpty(issues)) {
-      A.appendInPlace(sections, "All public exports are fully documented.");
-      A.appendInPlace(sections, "");
-    } else {
-      if (A.isReadonlyArrayNonEmpty(high)) {
-        A.appendInPlace(sections, "### High Priority");
-        A.appendInPlace(sections, "");
-        for (const entry of high) {
-          A.appendInPlace(sections, formatChecklistItem(entry));
-          A.appendInPlace(sections, "");
-        }
-      }
-
-      if (A.isReadonlyArrayNonEmpty(medium)) {
-        A.appendInPlace(sections, "### Medium Priority");
-        A.appendInPlace(sections, "");
-        for (const entry of medium) {
-          A.appendInPlace(sections, formatChecklistItem(entry));
-          A.appendInPlace(sections, "");
-        }
-      }
-
-      if (A.isReadonlyArrayNonEmpty(low)) {
-        A.appendInPlace(sections, "### Low Priority");
-        A.appendInPlace(sections, "");
-        for (const entry of low) {
-          A.appendInPlace(sections, formatChecklistItem(entry));
-          A.appendInPlace(sections, "");
-        }
-      }
-    }
-  } else {
-    A.appendInPlace(sections, "## Findings");
-    A.appendInPlace(sections, "");
-
-    if (A.isReadonlyArrayEmpty(issues)) {
-      A.appendInPlace(sections, "All public exports are fully documented.");
-      A.appendInPlace(sections, "");
-    } else {
-      for (const entry of issues) {
-        A.appendInPlace(sections, `### ${entry.name}`);
-        A.appendInPlace(sections, "");
-        A.appendInPlace(sections, `- Location: \`${entry.filePath}:${entry.line}\``);
-        A.appendInPlace(sections, `- Kind: ${entry.kind}`);
-        A.appendInPlace(sections, `- Missing: ${A.join(entry.missingTags, ", ")}`);
-        if (entry.categoryIssues.length > 0) {
-          A.appendInPlace(sections, `- Category issues: ${A.join(entry.categoryIssues, "; ")}`);
-        }
-        if (entry.presentTags.length > 0) {
-          A.appendInPlace(sections, `- Present: ${A.join(entry.presentTags, ", ")}`);
-        }
-        if (P.isNotUndefined(entry.context)) {
-          A.appendInPlace(sections, `- Context: ${entry.context}`);
-        }
-        A.appendInPlace(sections, "");
-      }
-    }
-  }
-
-  A.appendInPlace(sections, "## Summary");
-  A.appendInPlace(sections, "");
-  A.appendInPlace(sections, "| Metric | Count |");
-  A.appendInPlace(sections, "|--------|-------|");
-  A.appendInPlace(sections, `| Total Exports | ${analysis.summary.totalExports} |`);
-  A.appendInPlace(sections, `| Fully Documented | ${analysis.summary.fullyDocumented} |`);
-  A.appendInPlace(sections, `| Missing Documentation | ${analysis.summary.missingDocumentation} |`);
-  A.appendInPlace(sections, `| Missing @category | ${analysis.summary.missingCategory} |`);
-  A.appendInPlace(sections, `| Invalid @category | ${analysis.summary.invalidCategory} |`);
-  A.appendInPlace(sections, `| Missing @example | ${analysis.summary.missingExample} |`);
-  A.appendInPlace(sections, `| Missing @since | ${analysis.summary.missingSince} |`);
-  A.appendInPlace(sections, "");
-
-  return A.join(sections, "\n");
 });
 
 /**

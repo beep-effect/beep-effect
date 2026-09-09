@@ -588,6 +588,27 @@ const runBunWithEnv = (
     })
   );
 
+/**
+ * Expose the small quality-command adapters to deterministic unit coverage.
+ *
+ * **Example** (Normalize optional command arguments)
+ *
+ * ```ts
+ * import { qualityCommandPrimitiveHelpersForTesting } from "@beep/repo-cli/test/Quality"
+ *
+ * qualityCommandPrimitiveHelpersForTesting.normalizeExtraArgs("--watch") // ["--watch"]
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const qualityCommandPrimitiveHelpersForTesting = {
+  normalizeExtraArgs,
+  runBun,
+  runBunWithEnv,
+  withExitCode,
+} as const;
+
 const runFixedStep = (repoRoot: string, label: string, command: string, args: ReadonlyArray<string>) =>
   runStep(
     QualityTaskStep.make({
@@ -1013,6 +1034,11 @@ const runSecretScan = Effect.fn("QualityScriptCommands.runSecretScan")(function*
 const runSecurityScan = Effect.fn("QualityScriptCommands.runSecurityScan")(function* (
   repoRoot: string
 ): Effect.fn.Return<void, QualityScriptCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+  yield* Console.log("[github-checks] security: ONNX installer mitigation proof");
+  yield* runFixedStep(repoRoot, "security:onnx-installer-mitigation", "node", [
+    "--test",
+    "scripts/test-onnxruntime-installer-patch.mjs",
+  ]);
   yield* Console.log("[github-checks] security: osv scan");
   yield* runFixedStep(repoRoot, "security:osv-scan", "docker", [
     "run",
