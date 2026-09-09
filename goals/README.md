@@ -189,6 +189,9 @@ bun run beep goals index --check   # prove generation and check a local copy whe
 
 Do not link `goals/INDEX.md` as tracked GitHub truth or stage it. Generate it
 locally when a portfolio table is useful; edit packet manifests instead.
+`bun run beep yeet repair` regenerates it as one of its last fixers, so a pull
+that moves goal manifests never leaves a stale copy behind for
+`goals:index-check`.
 
 ## Research Basis
 
