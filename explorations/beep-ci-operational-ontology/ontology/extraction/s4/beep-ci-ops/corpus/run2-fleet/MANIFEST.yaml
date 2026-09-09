@@ -2,7 +2,7 @@
 # Public run-2 fleet capture; all source descriptors are portable.
 schema_version: beep-ci-ops-fleet-corpus/v1
 generated_by: etl_fleet_corpus.py
-generator_sha256: 962759f2ee171b171a23f5ca0c048f43c0c0586d0446e51adb3ae3f007851229
+generator_sha256: 7f67af18e06fa3ad043aecf494e643560e6d22f6a5c16f4c7398cb116cbb0608
 capture_instant: '2026-09-03T02:27:19.384Z'
 capture_instant_basis: maximum timestamp observed in the captured records
 ordering:
@@ -20,6 +20,9 @@ redaction_rules:
   JSON escapes. Preserve delimiters; replace numeric JSON values with null and quoted or free-text values
   with <redacted>. Pattern: (?P<prefix>\bpid(?P<key_quote>\\*["''])?(?:\s|\\+[nrt])*(?:[=:](?:\s|\\+[nrt])*)?(?P<value_quote>\\*["''])?)[0-9]+'
 - Never transform structural keys, booleans, nulls, or numeric values.
+- 'Ruling 23 repair only: replace sha12(hostname) in string values with <host>; compute the hostname digest
+  at runtime and never record it.'
+- 'Ruling 23 repair only: replace numeric UID tokens in string values with uid-<uid>. Pattern: \buid-[0-9]+'
 projection_rules:
 - Each redacted raw payload has one sibling .properties projection derived from exactly the JSON records
   persisted in that raw file; the raw file remains the fidelity record.
@@ -576,8 +579,8 @@ files:
   source: fleet checkout beep-effect10, .beep/yeet/runs/feat_citation-verified-span-substrate-d7ba8008aaac
   source_file: attempts.ndjson
   event_count: 69
-  bytes: 71332
-  sha256: 3db1f3558a0b7fe546d3e321c54b2c4a52efb7e80fdeff5290c996ea084591f4
+  bytes: 71172
+  sha256: 0f34eb2409b4a832269268c9826a3417dfa741c8f6174ea6465c7fd540529a08
 - path: attempts/beep-effect10/feat_citation-verified-span-substrate-d7ba8008aaac/attempts.properties
   kind: properties_projection
   source: fleet checkout beep-effect10, .beep/yeet/runs/feat_citation-verified-span-substrate-d7ba8008aaac
@@ -591,8 +594,8 @@ files:
   source: fleet checkout beep-effect10, .beep/yeet/runs/feat_citation-verified-span-substrate-pr-ef1c7e507e78
   source_file: attempts.ndjson
   event_count: 18
-  bytes: 23496
-  sha256: 5aa32dcb2db7cb3fea89e88c831559248db53e89eb539f979be6bf8383e469f4
+  bytes: 23486
+  sha256: 2b88cb9492f5193911b7574c65c579673e6bac2668e01e38199178bb15c631be
 - path: attempts/beep-effect10/feat_citation-verified-span-substrate-pr-ef1c7e507e78/attempts.properties
   kind: properties_projection
   source: fleet checkout beep-effect10, .beep/yeet/runs/feat_citation-verified-span-substrate-pr-ef1c7e507e78
@@ -621,8 +624,8 @@ files:
   source: fleet checkout beep-effect10, .beep/yeet/runs/fix_remove-yeet-pr-lease-0b94e262df14
   source_file: attempts.ndjson
   event_count: 14
-  bytes: 19419
-  sha256: 9ec411886a4f111ffc13f97298425718f80f067056b767948608601257e216b2
+  bytes: 19414
+  sha256: b7985fc4d3acf1941d57cfb184bff6baa5910f9f28b8a019853f2d7269f180b6
 - path: attempts/beep-effect10/fix_remove-yeet-pr-lease-0b94e262df14/attempts.properties
   kind: properties_projection
   source: fleet checkout beep-effect10, .beep/yeet/runs/fix_remove-yeet-pr-lease-0b94e262df14
@@ -741,8 +744,8 @@ files:
   source: fleet checkout beep-effect11, .beep/yeet/runs/feat_semantica-c0-canary-eac02dd56aa0
   source_file: attempts.ndjson
   event_count: 43
-  bytes: 49866
-  sha256: e876ff3334692e70bdc37290b2aef90efce480f1628671928d0ad11863ee1665
+  bytes: 49826
+  sha256: a53758be24567499aec5311cfb3c9e3e7d1d4118023ed5c3f7eed026c1142694
 - path: attempts/beep-effect11/feat_semantica-c0-canary-eac02dd56aa0/attempts.properties
   kind: properties_projection
   source: fleet checkout beep-effect11, .beep/yeet/runs/feat_semantica-c0-canary-eac02dd56aa0
@@ -756,8 +759,8 @@ files:
   source: fleet checkout beep-effect11, .beep/yeet/runs/feat_semantica-c0-evidence-505d9134c0f5
   source_file: attempts.ndjson
   event_count: 14
-  bytes: 14365
-  sha256: bab42a8b3d68e8da2dfe24cbc111dfde8d42cdadeb749f7b6e8a6d6adeeb29ef
+  bytes: 14355
+  sha256: 420a2bf44fd9c023dba0c27d6e88375b59c30f39cfcb43f3884fce4babaeec58
 - path: attempts/beep-effect11/feat_semantica-c0-evidence-505d9134c0f5/attempts.properties
   kind: properties_projection
   source: fleet checkout beep-effect11, .beep/yeet/runs/feat_semantica-c0-evidence-505d9134c0f5
@@ -801,8 +804,8 @@ files:
   source: fleet checkout beep-effect11, .beep/yeet/runs/feat_semantica-gold-v1-aad7ea281c99
   source_file: attempts.ndjson
   event_count: 22
-  bytes: 42622
-  sha256: f50038c2f729a96d57cdedf6b32bf634ba2ae40cb1691cd7a85dabd58fc5a802
+  bytes: 42617
+  sha256: 1f8991a1d22d6cced38893729cca4582685f185513c4d2b1f5f7c1561632f337
 - path: attempts/beep-effect11/feat_semantica-gold-v1-aad7ea281c99/attempts.properties
   kind: properties_projection
   source: fleet checkout beep-effect11, .beep/yeet/runs/feat_semantica-gold-v1-aad7ea281c99
@@ -981,8 +984,8 @@ files:
   source: fleet checkout beep-effect12, .beep/yeet/runs/feat_yeet-until-event-6a35ad681e4e
   source_file: attempts.ndjson
   event_count: 100
-  bytes: 100586
-  sha256: b89c62adf207bc0513661b7b322bffca5012236c20224ed991d4074787bf1e8f
+  bytes: 100356
+  sha256: 5c9fb6db2cf582f165fdb2286b679e43459f2117835baec98007626f1f43c7cc
 - path: attempts/beep-effect12/feat_yeet-until-event-6a35ad681e4e/attempts.properties
   kind: properties_projection
   source: fleet checkout beep-effect12, .beep/yeet/runs/feat_yeet-until-event-6a35ad681e4e
@@ -1206,8 +1209,8 @@ files:
   source: fleet checkout beep-effect14, .beep/yeet/runs/chore_es2025-target-d24a7772fb18
   source_file: attempts.ndjson
   event_count: 10
-  bytes: 11319
-  sha256: 490986d8b83ffb473ef574f0426e7841c2702be1c4d114952acff54631d1601b
+  bytes: 11309
+  sha256: 9b42341f017a62c7305bc79f195c1e70790022ad1b079e15e8b3dbc29fb7998c
 - path: attempts/beep-effect14/chore_es2025-target-d24a7772fb18/attempts.properties
   kind: properties_projection
   source: fleet checkout beep-effect14, .beep/yeet/runs/chore_es2025-target-d24a7772fb18
@@ -1716,8 +1719,8 @@ files:
   source: fleet checkout beep-effect17, .beep/yeet/runs/feat_packet-convention-migration-e2644f663b7b
   source_file: attempts.ndjson
   event_count: 61
-  bytes: 78700
-  sha256: 2fbbdd5f0be1a159b5dbcb099058a7685026aa62452b71d8fd0de6f3a220df4d
+  bytes: 78625
+  sha256: cd98aa860cf54621125ba1acd214610370c0244ca81b78544f1504d2569759b1
 - path: attempts/beep-effect17/feat_packet-convention-migration-e2644f663b7b/attempts.properties
   kind: properties_projection
   source: fleet checkout beep-effect17, .beep/yeet/runs/feat_packet-convention-migration-e2644f663b7b
@@ -1746,8 +1749,8 @@ files:
   source: fleet checkout beep-effect18, .beep/yeet/runs/docs_ci-lane-economics-p3-7952c01ee70e
   source_file: attempts.ndjson
   event_count: 17
-  bytes: 22326
-  sha256: f824959ada00332fa3662b3364965b89d2ee9a9ce394efc783d864bbf0be4ff4
+  bytes: 22321
+  sha256: 33669f34804a154732cefdc79d78a77a3d2556fd1daf13ab9c0beed561289beb
 - path: attempts/beep-effect18/docs_ci-lane-economics-p3-7952c01ee70e/attempts.properties
   kind: properties_projection
   source: fleet checkout beep-effect18, .beep/yeet/runs/docs_ci-lane-economics-p3-7952c01ee70e
@@ -1851,8 +1854,8 @@ files:
   source: fleet checkout beep-effect18, .beep/yeet/runs/impeccable-plugin-cefe910dec70
   source_file: attempts.ndjson
   event_count: 98
-  bytes: 109051
-  sha256: 7bc2e6dd2f904e56a2abc2c34088a6e31288249cc2237259e75ea281d323a381
+  bytes: 108846
+  sha256: 0702f6d0949943f90137ba2f8d8cce025410b34dca3a7eb492e75c3768c96393
 - path: attempts/beep-effect18/impeccable-plugin-cefe910dec70/attempts.properties
   kind: properties_projection
   source: fleet checkout beep-effect18, .beep/yeet/runs/impeccable-plugin-cefe910dec70
@@ -1926,8 +1929,8 @@ files:
   source: fleet checkout beep-effect19-openai-driver, .beep/yeet/runs/feat_openai-driver-be9acff03a81
   source_file: attempts.ndjson
   event_count: 25
-  bytes: 28694
-  sha256: 1244f2972a5427d4c2e8604cce49819f1ee987fd89e947bd8ccf909b9fa4c06b
+  bytes: 28659
+  sha256: d274e0101ca2ba3a454352e5d3b94c38afcaf236b91969031e49eaebe7f32ef4
 - path: attempts/beep-effect19-openai-driver/feat_openai-driver-be9acff03a81/attempts.properties
   kind: properties_projection
   source: fleet checkout beep-effect19-openai-driver, .beep/yeet/runs/feat_openai-driver-be9acff03a81
@@ -2121,8 +2124,8 @@ files:
   source: fleet checkout beep-effect19, .beep/yeet/runs/feat_openai-driver-be9acff03a81
   source_file: attempts.ndjson
   event_count: 38
-  bytes: 47013
-  sha256: dbc3bda8ed879b144c1c2eb4fceddbd241d11e4edb7c3acbbd4ad52b15f8bc40
+  bytes: 46948
+  sha256: 534f281d0d50208d786997ad65dc2cb9348e7aaff3836191acef6a9f931654b6
 - path: attempts/beep-effect19/feat_openai-driver-be9acff03a81/attempts.properties
   kind: properties_projection
   source: fleet checkout beep-effect19, .beep/yeet/runs/feat_openai-driver-be9acff03a81
@@ -2136,8 +2139,8 @@ files:
   source: fleet checkout beep-effect19, .beep/yeet/runs/feat_oppold-t7-preservation-f78791c88e5c
   source_file: attempts.ndjson
   event_count: 73
-  bytes: 94005
-  sha256: 542cbc5cf852e9e175a4f86fdb0d366c44dbc67c9ec0f47c59ee225e7cd74e35
+  bytes: 93850
+  sha256: cf69f19e954f2ef0b669cb3b4ad5b852f3a5d1b03108cb9c9fac539a08c1ada4
 - path: attempts/beep-effect19/feat_oppold-t7-preservation-f78791c88e5c/attempts.properties
   kind: properties_projection
   source: fleet checkout beep-effect19, .beep/yeet/runs/feat_oppold-t7-preservation-f78791c88e5c
@@ -2151,8 +2154,8 @@ files:
   source: fleet checkout beep-effect19, .beep/yeet/runs/fix_desktop-storybook-qa-826-8acd0691a21c
   source_file: attempts.ndjson
   event_count: 45
-  bytes: 51800
-  sha256: 21d3ff0e8328e848e1aaff1f8ea2e427f09c737942bc14f84970cab882de8a99
+  bytes: 51765
+  sha256: fa96bcc9e043adf0d9c60141e17cc84e800282ef20fef7a881f7b00ca29b8ce7
 - path: attempts/beep-effect19/fix_desktop-storybook-qa-826-8acd0691a21c/attempts.properties
   kind: properties_projection
   source: fleet checkout beep-effect19, .beep/yeet/runs/fix_desktop-storybook-qa-826-8acd0691a21c
@@ -2451,8 +2454,8 @@ files:
   source: fleet checkout beep-effect2, .beep/yeet/runs/feat_practice-office-provisioning-graduate-1519398a7af5
   source_file: attempts.ndjson
   event_count: 2
-  bytes: 2818
-  sha256: 8fb386fc1de23cb404e6fc4042dce8339a31cb0592d0e8cb000ac83bfae3f079
+  bytes: 2813
+  sha256: 47f131c0574c0f6416a883715946983a3ffd552571005799a34e553d3ace1c5d
 - path: attempts/beep-effect2/feat_practice-office-provisioning-graduate-1519398a7af5/attempts.properties
   kind: properties_projection
   source: fleet checkout beep-effect2, .beep/yeet/runs/feat_practice-office-provisioning-graduate-1519398a7af5
@@ -2931,8 +2934,8 @@ files:
   source: fleet checkout beep-effect3, .beep/yeet/runs/docs_packet-session-b-rulings-7e511477ca6e
   source_file: attempts.ndjson
   event_count: 20
-  bytes: 29075
-  sha256: 1141c5fabb055a4ef1f5104e629a21b62c47a036db271bb706450a62c3cb623d
+  bytes: 29055
+  sha256: 0d80f7680d57392ddcdff0135237ba1c4fb653dd5e73a9eff3be3d68d5694a73
 - path: attempts/beep-effect3/docs_packet-session-b-rulings-7e511477ca6e/attempts.properties
   kind: properties_projection
   source: fleet checkout beep-effect3, .beep/yeet/runs/docs_packet-session-b-rulings-7e511477ca6e
@@ -3021,8 +3024,8 @@ files:
   source: fleet checkout beep-effect3, .beep/yeet/runs/feat_packet-core-close-392ea83362ec
   source_file: attempts.ndjson
   event_count: 10
-  bytes: 14127
-  sha256: c5d5bc63a56f93885308b9883714d1ed43326af8c47d14977bd1e4419a32a2f5
+  bytes: 14122
+  sha256: 57b1fd9aca7744aee7393433c1280f1c56d52f797b2ae899eb6eb1e81903d121
 - path: attempts/beep-effect3/feat_packet-core-close-392ea83362ec/attempts.properties
   kind: properties_projection
   source: fleet checkout beep-effect3, .beep/yeet/runs/feat_packet-core-close-392ea83362ec
@@ -3501,8 +3504,8 @@ files:
   source: fleet checkout beep-effect5, .beep/yeet/runs/slop_08-29-26-26336112ecd8
   source_file: attempts.ndjson
   event_count: 67
-  bytes: 76059
-  sha256: 9c8947d27ee84e1574a0e3113bc953d70510d490ced489eb83a8045de1839548
+  bytes: 76044
+  sha256: 92c38621156e06d432259217e480becdcefdf6bacd00c726e51c6442d88dec5a
 - path: attempts/beep-effect5/slop_08-29-26-26336112ecd8/attempts.properties
   kind: properties_projection
   source: fleet checkout beep-effect5, .beep/yeet/runs/slop_08-29-26-26336112ecd8
@@ -3606,8 +3609,8 @@ files:
   source: fleet checkout beep-effect6, .beep/yeet/runs/feat_patent-document-schema-72d04cb25b16
   source_file: attempts.ndjson
   event_count: 78
-  bytes: 91786
-  sha256: 36512cdf9ae179135b479140fcb3ec670d2911dd13593b77e8cd8856da3c5137
+  bytes: 91676
+  sha256: 1bf8e20fa857bfef304ec1a196b425619c64402a80a2648d5544e7f1599671ae
 - path: attempts/beep-effect6/feat_patent-document-schema-72d04cb25b16/attempts.properties
   kind: properties_projection
   source: fleet checkout beep-effect6, .beep/yeet/runs/feat_patent-document-schema-72d04cb25b16
@@ -3846,8 +3849,8 @@ files:
   source: fleet checkout beep-effect7, .beep/yeet/runs/feat_court-reporter-vocabulary-62d8e9d0e784
   source_file: attempts.ndjson
   event_count: 94
-  bytes: 99491
-  sha256: 40aac9716b975340dd296dfb9911a536d1d529b1a8451d6dc820eb5f399e6bc2
+  bytes: 99361
+  sha256: 4e4e47b856b6f1a069674d3aa8b96d3bf44c42b3dbb71e70d9ad33e0a134d352
 - path: attempts/beep-effect7/feat_court-reporter-vocabulary-62d8e9d0e784/attempts.properties
   kind: properties_projection
   source: fleet checkout beep-effect7, .beep/yeet/runs/feat_court-reporter-vocabulary-62d8e9d0e784
@@ -4086,8 +4089,8 @@ files:
   source: fleet checkout beep-effect8-s5, .beep/yeet/runs/ontology-s7-projection-04817772fed9
   source_file: attempts.ndjson
   event_count: 36
-  bytes: 61090
-  sha256: 9185277b1e883e15e901941959daa7ed0ff32d5e7c5a23725bb42b2fc6911191
+  bytes: 61085
+  sha256: 97c3f3c9a9296899be278888abc81978fdb6e899bcff29c7a50fd1060b820f20
 - path: attempts/beep-effect8-s5/ontology-s7-projection-04817772fed9/attempts.properties
   kind: properties_projection
   source: fleet checkout beep-effect8-s5, .beep/yeet/runs/ontology-s7-projection-04817772fed9
@@ -4101,8 +4104,8 @@ files:
   source: fleet checkout beep-effect8, .beep/yeet/runs/api-ref-scratch-aad44f3b2a75
   source_file: attempts.ndjson
   event_count: 96
-  bytes: 137071
-  sha256: 560ed58c00d2f9dae2ee60b55f5bc8695e907def66586510d8899adae818c03e
+  bytes: 137046
+  sha256: 0bf7b203598f04c8ac5600d4bd55b0e63efb4368b7505191add548204b1e7fd9
 - path: attempts/beep-effect8/api-ref-scratch-aad44f3b2a75/attempts.properties
   kind: properties_projection
   source: fleet checkout beep-effect8, .beep/yeet/runs/api-ref-scratch-aad44f3b2a75
@@ -4431,8 +4434,8 @@ files:
   source: fleet checkout beep-effect9, .beep/yeet/runs/feat_semantic-foundation-closeout-a82610ef7940
   source_file: attempts.ndjson
   event_count: 100
-  bytes: 109425
-  sha256: f43be078aa12049fb41bba46852b3ac6cc6cefd349583f451f178aaff99f2b63
+  bytes: 109245
+  sha256: 2f9cbfd639d05d034d40da9d7acf3499742f3a48d7d90eb5a8a7af0c9eb59796
 - path: attempts/beep-effect9/feat_semantic-foundation-closeout-a82610ef7940/attempts.properties
   kind: properties_projection
   source: fleet checkout beep-effect9, .beep/yeet/runs/feat_semantic-foundation-closeout-a82610ef7940
@@ -5511,8 +5514,8 @@ files:
   source: fleet checkout beep-effect10, .beep/yeet/runs/feat_citation-verified-span-substrate-d7ba8008aaac
   source_file: verdict.json
   event_count: 1
-  bytes: 1780
-  sha256: 283a13d665bd6ea28382e6f3968fad0baf391855e9d8118032f6490b5e4747f0
+  bytes: 1775
+  sha256: f74e48124a85e7a142b66a4e7ce813201c9733fea82ace53dbbd633cb3eb5775
 - path: verdicts/beep-effect10/feat_citation-verified-span-substrate-d7ba8008aaac/verdict.properties
   kind: properties_projection
   source: fleet checkout beep-effect10, .beep/yeet/runs/feat_citation-verified-span-substrate-d7ba8008aaac
@@ -5916,8 +5919,8 @@ files:
   source: fleet checkout beep-effect12, .beep/yeet/runs/feat_yeet-until-event-6a35ad681e4e
   source_file: verdict.json
   event_count: 1
-  bytes: 1778
-  sha256: a1dcabefcae521afae32c4bc2fc0a16bfedceda1825c767801cd44031c287ea3
+  bytes: 1773
+  sha256: ffbbbd5f05ead443ecc7ab4bb846ee017ea7fb15badc15ad17260290463a9154
 - path: verdicts/beep-effect12/feat_yeet-until-event-6a35ad681e4e/verdict.properties
   kind: properties_projection
   source: fleet checkout beep-effect12, .beep/yeet/runs/feat_yeet-until-event-6a35ad681e4e
@@ -6141,8 +6144,8 @@ files:
   source: fleet checkout beep-effect14, .beep/yeet/runs/chore_es2025-target-d24a7772fb18
   source_file: verdict.json
   event_count: 1
-  bytes: 1614
-  sha256: 9d2e58a1035d0cf680e23c255b3089177dca245e61b8f2ef03ec960ab84faee0
+  bytes: 1609
+  sha256: b3705bac15896b12efbb0f82ed519cbadecb3fdf20d8de79c9a025c6b6b3dcc9
 - path: verdicts/beep-effect14/chore_es2025-target-d24a7772fb18/verdict.properties
   kind: properties_projection
   source: fleet checkout beep-effect14, .beep/yeet/runs/chore_es2025-target-d24a7772fb18
@@ -6651,8 +6654,8 @@ files:
   source: fleet checkout beep-effect17, .beep/yeet/runs/feat_packet-convention-migration-e2644f663b7b
   source_file: verdict.json
   event_count: 1
-  bytes: 1767
-  sha256: 7568056f9941fc150abd83f14b058571c65b339961a6eb14ce80e3501de81fe1
+  bytes: 1762
+  sha256: d2ecbe0dc9901df843f286b8f6ec02a736cef713ddde7e1a1e55705c66f7bb0d
 - path: verdicts/beep-effect17/feat_packet-convention-migration-e2644f663b7b/verdict.properties
   kind: properties_projection
   source: fleet checkout beep-effect17, .beep/yeet/runs/feat_packet-convention-migration-e2644f663b7b
@@ -7896,8 +7899,8 @@ files:
   source: fleet checkout beep-effect2, .beep/yeet/runs/feat_practice-office-provisioning-graduate-1519398a7af5
   source_file: verdict.json
   event_count: 1
-  bytes: 2945
-  sha256: affd7f5ef6af5d6a9d6f967b8cf084d13ea969aa324afbd3d36acf7f2a024ad5
+  bytes: 2940
+  sha256: fe831fc0937ecb0cd0835acc930e39d4c9895b27e7209c58f01231b1f7890f59
 - path: verdicts/beep-effect2/feat_practice-office-provisioning-graduate-1519398a7af5/verdict.properties
   kind: properties_projection
   source: fleet checkout beep-effect2, .beep/yeet/runs/feat_practice-office-provisioning-graduate-1519398a7af5
@@ -12119,11 +12122,21 @@ totals:
   payload_files: 1588
   files_emitted: 1589
   events: 6213
-  payload_bytes: 12679246
-  bytes_emitted: 13316735
+  payload_bytes: 12677681
+  bytes_emitted: 13315781
 security_resanitization:
   finding: CSF-012
   source_manifest_sha256: be2144da427e7f9671d386713fb4a34e52246bb8702b586e9de4eb3b74880dc3
   changed_raw_payloads: 12
   live_recapture: false
   superseded_manifest_sha256: 3683a1657a44e0c2e018a68daef57d18fdd2c73d2b86b09bdf57d4b510c5b3b3
+  updates:
+  - finding: CSF-012
+    source_manifest_sha256: ad14e0ee438e4863be14809185be474e59f478d072c42e2bf5b3b1730de20433
+    changed_raw_payloads: 29
+    live_recapture: false
+    ruling: Ruling 23
+    residue_classes:
+    - sha12(hostname)
+    - uid-[0-9]+
+    superseded_manifest_sha256: ad14e0ee438e4863be14809185be474e59f478d072c42e2bf5b3b1730de20433

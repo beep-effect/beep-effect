@@ -6,6 +6,7 @@ metadata and source counts remain intact; the prior manifest digest records
 the security-only transformation. An already repaired pin is verified unchanged.
 Use ``--source-ref <commit>`` to replay an older committed pin into the current
 output tree. This reads only Git objects, never the original live capture sources.
+Use ``--run2-only`` for the Ruling 23 repair without opening other corpus pins.
 """
 from __future__ import annotations
 
@@ -109,7 +110,7 @@ def repair(name: str, source_ref: str | None = None, population: str | None = No
         data = payloads[path]
         rows = module.decode_ndjson(data, path) if path.endswith(".ndjson") else [module.decode_json(data, path)]
         if name == "etl_fleet_corpus":
-            sanitized = [module.redact_string_values(row) for row in rows]
+            sanitized = [module.redact_string_values(row, repair=True) for row in rows]
         else:
             sanitized = [module.redact(row, None, collections.Counter(), True) for row in rows]
         if module.same_json(rows, sanitized):
@@ -129,16 +130,19 @@ def repair(name: str, source_ref: str | None = None, population: str | None = No
         if len(pid_rules) != 1:
             raise SystemExit("refusing ambiguous PID redaction provenance")
         rules[pid_rules[0]] = module.PID_REDACTION_RULE
+        rules.extend(rule for rule in module.REPAIR_REDACTION_RULES if rule not in rules)
     repair_record = {
         "finding": "CSF-012", "source_manifest_sha256": module.sha256(original),
         "changed_raw_payloads": changed, "live_recapture": False,
     }
+    if name == "etl_fleet_corpus":
+        repair_record.update(ruling="Ruling 23", residue_classes=["sha12(hostname)", "uid-[0-9]+"])
+    if source_ref:
+        repair_record["superseded_manifest_sha256"] = module.sha256(previous_output)
     if "security_resanitization" in manifest:
         manifest["security_resanitization"].setdefault("updates", []).append(repair_record)
     else:
         manifest["security_resanitization"] = repair_record
-    if source_ref:
-        manifest["security_resanitization"]["superseded_manifest_sha256"] = module.sha256(previous_output)
     manifest["totals"]["payload_bytes"] = sum(map(len, payloads.values()))
     prefix = original.split(b"schema_version:", 1)[0]
     for _ in range(12):
@@ -177,8 +181,11 @@ def repair(name: str, source_ref: str | None = None, population: str | None = No
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source-ref", help="Replay a committed source pin, preserving its capture provenance")
+    parser.add_argument("--run2-only", action="store_true", help="Repair only the ratified run-2 fleet pin")
     args = parser.parse_args()
-    for generator in ("etl_fleet_corpus", "etl_run3_fleet_corpus", "etl_run3_checkout_identity"):
-        repair(generator, args.source_ref)
-    for population in ("fleet", "synthetic"):
-        repair("etl_run3b_fleet_corpus", args.source_ref, population)
+    repair("etl_fleet_corpus", args.source_ref)
+    if not args.run2_only:
+        for generator in ("etl_run3_fleet_corpus", "etl_run3_checkout_identity"):
+            repair(generator, args.source_ref)
+        for population in ("fleet", "synthetic"):
+            repair("etl_run3b_fleet_corpus", args.source_ref, population)

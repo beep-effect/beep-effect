@@ -21,6 +21,12 @@ the "bush" (`A_LETTER_FROM_THE_OTHER_SIDE_OF_THE_LOOP.md`).
 
 ## Next Open Question
 
+Ruling 23 repairs the ratified run-2 fleet pin in place: 29 raw files now use
+`<host>` and `uid-<uid>` placeholders, with capture history and the original
+security receipt preserved. The implementation and evidence are in the
+[run-2 repair report](./research/run3-lanes/run2-residue-repair-report.md).
+Fable owns review and publication after #1040; run 3 remains the next ontology step.
+
 CSF-012 in [PR #1032](https://github.com/beep-effect/beep-effect/pull/1032)
 corrects PID redaction in the saved run-2 and run-3 corpus pins. The security
 repair preserves captured history and prior-manifest digests; it does not
@@ -150,6 +156,12 @@ loop-closer) → S8 OWL 2 RL + SHACL formalization, rules compilation → S9 dog
 graduation. Full plan with locked decisions: [`DECISIONS.md`](./DECISIONS.md).
 
 ## Trail
+
+- 2026-09-09: Ruling 23 repairs hostname-digest and UID residue in the ratified
+  run-2 fleet pin through committed-source replay. Exactly 29 raw files and the
+  manifest change; all 794 projections remain identical after regeneration.
+  Capture history, custody references, and the CSF-012 receipt are preserved.
+  See [the repair report](./research/run3-lanes/run2-residue-repair-report.md).
 
 - 2026-09-09: CSF-012 fixes quoted and escaped PID redaction in all four corpus
   generators, including Stage B added by #1034. A staged repair sanitizes 35 raw

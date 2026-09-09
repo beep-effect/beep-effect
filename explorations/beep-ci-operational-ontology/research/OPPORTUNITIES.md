@@ -291,3 +291,33 @@
   test, not captured machine material.
 - **Prevention:** construct the negative assignment at test runtime. The scanner
   remains enabled; the generator and pinned payloads do not change.
+
+
+## 2026-09-09: run-2 residue scan lagged the later generators
+
+- **Work:** applying Ruling 23 to the ratified run-2 fleet pin.
+- **Evidence:** the existing verifier accepts retained proof-lock names containing
+  a hostname digest and numeric UID tokens. Its scan covers paths and PIDs but
+  neither of these classes; the brief identifies 29 affected files.
+- **Prevention:** add positive and negative regression cases for each new residue
+  class to older retained-pin scanners, with an explicit repair path that preserves
+  capture history and the prior security receipt.
+- **Handoff drift:** this lane's DECISIONS.md contains Ruling 23 but lacks the
+  Ruling 22 section. Read the amended section from Git commit `05a8f2ed48` without
+  changing the decision file. PR #1032's history-aware repair entry point is
+  `goals/codex-security-findings-2026-09-08/research/scripts/resanitize-corpora.py`,
+  rather than a generator CLI flag. Lane briefs should name that entry point and
+  the exact decision revision.
+- **Setup:** `graft map` reported `no graph`; a scoped Python graph build restored
+  source retrieval. Provision the regenerable graph when preparing a lane.
+
+
+## 2026-09-09: detached proof shells attempted global mise registration
+
+- **Work:** verifying the run-2 pin in a detached worktree inside the authorized lane.
+- **Evidence:** shell startup reported `mise WARN tracking config` with
+  `Read-only file system` while trying to register the new checkout under
+  `~/.local/state/mise/tracked-configs`. The corpus verifier still passed.
+- **Prevention:** let managed proof runners skip optional global checkout
+  registration when the Python environment is already available. Non-login shell
+  execution still emitted the warning; both the verifier and all nine tests passed.

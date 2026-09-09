@@ -32,6 +32,7 @@ import json
 import os
 import re
 import shutil
+import socket
 import tempfile
 from pathlib import Path, PurePosixPath
 from typing import Any, NoReturn, TypeAlias
@@ -96,6 +97,13 @@ PID_REDACTION_RULE = (
     "In string values, replace case-insensitive PID matches, including single or double "
     "quotes and repeated JSON escapes. Preserve delimiters; replace numeric JSON values "
     "with null and quoted or free-text values with <redacted>. Pattern: " + PID_IN_TEXT.pattern
+)
+UID_IN_TEXT = re.compile(r"\buid-[0-9]+")
+REPAIR_REDACTION_RULES = (
+    "Ruling 23 repair only: replace sha12(hostname) in string values with <host>; "
+    "compute the hostname digest at runtime and never record it.",
+    "Ruling 23 repair only: replace numeric UID tokens in string values with uid-<uid>. "
+    "Pattern: " + UID_IN_TEXT.pattern,
 )
 TIMESTAMP_KEY = re.compile(r"(?:^ts$|AtMillis$|At$|TimestampMillis$|Timestamp$)")
 PROPERTY_KEY = re.compile(r"[A-Za-z0-9_]+")
@@ -238,15 +246,19 @@ def redact_string(value: str) -> str:
     return PID_IN_TEXT.sub(redact_pid_match, redacted)
 
 
-def redact_string_values(value: JsonValue) -> JsonValue:
-    """Recursively redact string values while retaining all keys and numbers."""
+def redact_string_values(value: JsonValue, *, repair: bool = False) -> JsonValue:
+    """Retain keys and numbers; apply Ruling 23 rules only during explicit repair."""
 
     if isinstance(value, str):
-        return redact_string(value)
+        redacted = redact_string(value)
+        if repair:
+            redacted = redacted.replace(sha256(socket.gethostname().encode())[:12], "<host>")
+            redacted = UID_IN_TEXT.sub("uid-<uid>", redacted)
+        return redacted
     if isinstance(value, list):
-        return [redact_string_values(item) for item in value]
+        return [redact_string_values(item, repair=repair) for item in value]
     if isinstance(value, dict):
-        return {key: redact_string_values(item) for key, item in value.items()}
+        return {key: redact_string_values(item, repair=repair) for key, item in value.items()}
     return value
 
 
@@ -766,7 +778,12 @@ def scan_output_bytes(files: list[tuple[str, bytes]]) -> None:
     """Hard-fail public-output host-path and secret byte patterns."""
 
     for path, data in files:
-        if PID_IN_TEXT.search(path + "\n" + data.decode("utf-8")):
+        text = path + "\n" + data.decode("utf-8")
+        if sha256(socket.gethostname().encode())[:12] in text:
+            fail("residue scan failed: hostname digest")
+        if UID_IN_TEXT.search(text):
+            fail("residue scan failed: numeric UID token")
+        if PID_IN_TEXT.search(text):
             fail("residue scan failed: free-text process identifier")
         if b"/home/" in data:
             fail(f"host-path scan failed for {path}: forbidden /home/ bytes")
