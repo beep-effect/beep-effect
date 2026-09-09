@@ -512,6 +512,31 @@ describe("CI runner security", () => {
     }, provideScopedLayer(NodeServices.layer))
   );
 
+  // Release lanes run only on `professional-desktop-v*` tags, so this parse is
+  // the standing proof that the ubuntu-22.04 matrix leg prunes the third-party
+  // apt sources before its first apt-get update, once checkout has put the
+  // script in place.
+  it.effect(
+    "prunes third-party apt sources before the release desktop Linux apt update",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const repoRoot = yield* findRepoRoot();
+      const workflow = parsedDocument(
+        yield* fs.readFileString(path.join(repoRoot, ".github/workflows/release-desktop.yml"))
+      );
+      const steps = jobSteps(workflowJobs(workflow), "release-desktop");
+      const install = "Install Tauri Linux system dependencies";
+      assert.strictEqual(stepByName(steps, install).if, "runner.os == 'Linux'");
+      assertPrunesAptSourcesBefore(stepRun(steps, install), "sudo apt-get update");
+      const checkoutIndex = O.getOrThrowWith(
+        A.findFirstIndex(steps, (step) => Str.startsWith("actions/checkout@")(step.uses ?? "")),
+        () => new Error("Job release-desktop declares no checkout step.")
+      );
+      assert.isBelow(checkoutIndex, stepIndexByName(steps, install));
+    }, provideScopedLayer(NodeServices.layer))
+  );
+
   // Quality-lane audit D13 (revised in PR #1054 review): the workflow gates
   // Storybook only on goals_only and lets the lane decide through Turbo's
   // dependency-aware affected probe, restores the Playwright browser cache on
