@@ -313,9 +313,9 @@ const formatTooltipItem = (
   formatter: ChartTooltipContentProps["formatter"],
   item: ChartTooltipPayloadItem,
   index: number
-): React.ReactNode | undefined => {
-  if (formatter === undefined || item.value === undefined || item.name === undefined) return undefined;
-  return formatter(item.value, item.name, item, index, item.payload);
+): O.Option<React.ReactNode> => {
+  if (formatter === undefined || item.value === undefined || item.name === undefined) return O.none();
+  return O.some(formatter(item.value, item.name, item, index, item.payload));
 };
 
 const tooltipItemKey = (nameKey: string | undefined, item: ChartTooltipPayloadItem): string =>
@@ -417,7 +417,7 @@ function ChartTooltipItem({
         indicator === "dot" && "items-center"
       )}
     >
-      {formatted ?? (
+      {O.getOrElse(formatted, () => (
         <ChartTooltipDefaultItem
           item={item}
           itemConfig={itemConfig}
@@ -427,7 +427,7 @@ function ChartTooltipItem({
           nestLabel={nestLabel}
           tooltipLabel={tooltipLabel}
         />
-      )}
+      ))}
     </div>
   );
 }

@@ -14,6 +14,7 @@ import {
 } from "@beep/semantic-web/services/shacl-validation";
 import { A } from "@beep/utils";
 import { Effect, flow, Layer, pipe } from "effect";
+import * as I from "effect/Iterable";
 import * as O from "effect/Option";
 import type { Quad, Subject, Term } from "@beep/rdf/Rdf";
 import type {
@@ -174,16 +175,16 @@ const subjectViolations = (
   request: ShaclValidationRequest,
   shape: ShaclNodeShape,
   subjectKey: string
-): ReadonlyArray<ShaclValidationViolation> => {
+): Iterable<ReadonlyArray<ShaclValidationViolation>> => {
   const subjectQuads = pipe(
     request.dataset.quads,
     A.filter((quad) => serializeTerm(quad.subject) === subjectKey)
   );
-  if (!matchesTargetClass(shape, subjectQuads)) return emptyViolations;
+  if (!matchesTargetClass(shape, subjectQuads)) return I.empty();
   const focusNode = focusNodeFor(shape, subjectKey, subjectQuads);
   return pipe(
     shape.properties,
-    A.flatMap((propertyShape) => propertyViolations(shape, propertyShape, focusNode, subjectQuads))
+    I.map((propertyShape) => propertyViolations(shape, propertyShape, focusNode, subjectQuads))
   );
 };
 
@@ -191,23 +192,33 @@ const shapeViolations = (
   request: ShaclValidationRequest,
   shape: ShaclNodeShape,
   subjectKeys: ReadonlyArray<string>
-): ReadonlyArray<ShaclValidationViolation> => {
+): Iterable<ReadonlyArray<ShaclValidationViolation>> => {
   const focusSubjectKeys = O.isSome(shape.targetNode) ? [serializeTerm(shape.targetNode.value)] : subjectKeys;
   return pipe(
     focusSubjectKeys,
-    A.flatMap((subjectKey) => subjectViolations(request, shape, subjectKey))
+    I.flatMap((subjectKey) => subjectViolations(request, shape, subjectKey))
   );
 };
 
 const validationResult = (
-  violations: ReadonlyArray<ShaclValidationViolation>,
+  violationBatches: Iterable<ReadonlyArray<ShaclValidationViolation>>,
   maxResults: ShaclValidationRequest["maxResults"]
 ): ShaclValidationResult => {
-  const truncated = O.isSome(maxResults) && violations.length >= maxResults.value;
+  let violations: Array<ShaclValidationViolation> = emptyViolations;
+  for (const batch of violationBatches) {
+    violations = pipe(violations, A.appendAll(batch));
+    if (O.isSome(maxResults) && violations.length >= maxResults.value) {
+      return ShaclValidationResult.make({
+        conforms: false,
+        violations: pipe(violations, A.take(maxResults.value)),
+        truncated: true,
+      });
+    }
+  }
   return ShaclValidationResult.make({
     conforms: violations.length === 0,
-    violations: O.isSome(maxResults) ? pipe(violations, A.take(maxResults.value)) : violations,
-    truncated,
+    violations,
+    truncated: false,
   });
 };
 
@@ -256,7 +267,7 @@ export const BoundedShaclValidationServiceLive = Layer.succeed(
       const subjectKeys = uniqueSubjectKeys(request.dataset.quads);
       const violations = pipe(
         request.shapes,
-        A.flatMap((shape) => shapeViolations(request, shape, subjectKeys))
+        I.flatMap((shape) => shapeViolations(request, shape, subjectKeys))
       );
       return Effect.succeed(validationResult(violations, request.maxResults));
     }),

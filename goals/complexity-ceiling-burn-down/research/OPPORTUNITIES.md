@@ -594,3 +594,18 @@ the pinned installed Effect version exposes `Config.url`. The final code uses
 the installed API and reads environment configuration through Effect Config.
 Reference-checkout API searches should be compared with the pinned package
 exports before an integration is treated as compilable.
+
+### Review caught formatter and bounded-traversal regressions (2026-09-08)
+
+PR #1021 found that a nullish fallback erased intentional formatter suppression
+and eager array flattening evaluated every SHACL shape before capping results.
+The tooltip now uses an Option to distinguish an absent formatter from an
+invoked formatter returning null or undefined. Both new suppression cases fail
+on the prior code and pass after the repair; default and zero results also
+pass. SHACL now traverses properties, subjects, and shapes lazily, stopping
+after the property batch that reaches the limit, as the original loop did.
+The focused validator test observes one violation construction with a cap and
+all three without it. All nine UI tests and five bounded-validator tests pass.
+Behavior-preservation review must include intentionally empty callback results
+and traversal work, not just returned values. The new literal-default docgen
+fixture also uses a titled Example section; its focused test passes.

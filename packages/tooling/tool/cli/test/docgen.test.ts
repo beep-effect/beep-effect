@@ -2695,7 +2695,7 @@ export default trimDefault;
             `/**
  * Literal default export fixture.
  *
- * @example
+ * **Example** (Read the literal default)
  * \`\`\`ts
  * import value from "@beep/schema/LiteralDefault"
  *

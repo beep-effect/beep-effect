@@ -5,11 +5,17 @@ import * as ClaimLifecycleUC from "@beep/epistemic-use-cases/ClaimLifecycle";
 import { Dataset, makeDataset, makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf/Rdf";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
-import { ShaclValidationRequest, ShaclValidationService } from "@beep/semantic-web/services/shacl-validation";
+import {
+  ShaclValidationRequest,
+  ShaclValidationService,
+  ShaclValidationViolation,
+} from "@beep/semantic-web/services/shacl-validation";
 import { productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { vi } from "vitest";
 
 const decodeShaclValidationRequest = S.decodeEffect(ShaclValidationRequest);
 const encodeDataset = S.encodeEffect(Dataset);
@@ -102,6 +108,38 @@ describe("@beep/epistemic-server bounded SHACL validator", () => {
         expect(result.conforms).toBe(false);
         expect(result.truncated).toBe(true);
         expect(result.violations).toHaveLength(1);
+      })
+    );
+
+    it.effect(
+      "stops generating violations before later properties and shapes when capped",
+      Effect.fnUntraced(function* () {
+        const service = yield* ShaclValidationService;
+        const request = yield* decodeShaclValidationRequest({
+          dataset: yield* encodeDataset(dataset),
+          maxResults: 1,
+          shapes: [
+            {
+              properties: [
+                { minCount: 1, path: makeNamedNode("https://schema.org/knows") },
+                { minCount: 1, path: makeNamedNode("https://schema.org/email") },
+              ],
+            },
+            { properties: [{ minCount: 1, path: makeNamedNode("https://schema.org/url") }] },
+          ],
+        });
+        const makeViolation = vi.spyOn(ShaclValidationViolation, "make");
+        yield* Effect.gen(function* () {
+          const limited = yield* service.validate(request);
+          expect(limited.violations).toHaveLength(1);
+          expect(limited.truncated).toBe(true);
+          expect(makeViolation).toHaveBeenCalledTimes(1);
+          makeViolation.mockClear();
+          const unlimited = yield* service.validate(ShaclValidationRequest.make({ ...request, maxResults: O.none() }));
+          expect(unlimited.violations).toHaveLength(3);
+          expect(unlimited.truncated).toBe(false);
+          expect(makeViolation).toHaveBeenCalledTimes(3);
+        }).pipe(Effect.ensuring(Effect.sync(() => makeViolation.mockRestore())));
       })
     );
 
