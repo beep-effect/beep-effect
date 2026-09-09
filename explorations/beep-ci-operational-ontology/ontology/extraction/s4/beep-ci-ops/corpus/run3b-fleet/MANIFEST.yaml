@@ -2,7 +2,7 @@
 # Public run-3 Stage B capture; source descriptors are portable.
 schema_version: beep-ci-ops-run3b-fleet-corpus/v1
 generated_by: etl_run3b_fleet_corpus.py
-generator_sha256: d2bb12561e53c5eba6aa3e931593f0b13a8c9db0d4fa887659bc923a5cdcd74a
+generator_sha256: 3a2c28b5fa064e19ee5c9cde687b5e48995b8a89cfa3ca589e6825cee88a6b9c
 corpus_commit: ff1cf545ef2c4a43806dc50323259f300218e573
 capture_instant: '2026-09-09T04:46:24.032Z'
 capture_finished_at: '2026-09-09T04:46:30.704Z'
@@ -24969,8 +24969,8 @@ files:
   provenance: organic
   checkout: beep-effect-worktrees/astra-xhigh-agent-routing
   run_id: chore_astra-xhigh-agent-routing-7491c35440aa
-  bytes: 24326
-  sha256: 699b203d9b6fb30058b0c5bc20eb3420279a42e453e9e285a54e07527a81638b
+  bytes: 24006
+  sha256: 48928fbbf9087c13cb4022eec7089e197b39a9f9da332638faac0f48cd86b6bc
 - path: attempts/beep-effect-worktrees%2Fastra-xhigh-agent-routing/chore_astra-xhigh-agent-routing-7491c35440aa/attempts.properties
   kind: properties_projection
   source: *id004
@@ -24986,8 +24986,8 @@ files:
   checkout: beep-effect-worktrees/astra-xhigh-agent-routing
   run_id: chore_astra-xhigh-agent-routing-7491c35440aa
   derived_from: attempts/beep-effect-worktrees%2Fastra-xhigh-agent-routing/chore_astra-xhigh-agent-routing-7491c35440aa/attempts.ndjson
-  bytes: 19707
-  sha256: ddcf8c988a0d289744f66b18520a6282ee1a51f4105c3e8a03e6328e0096b188
+  bytes: 19427
+  sha256: 70cd4118bfbffa2ca793f01c1b977a1b6df00fa3b3e0ffb9b2624b0b2dd9e003
 - path: attempts/beep-effect-worktrees%2Fp1-a-verdict/knowledge-surface-p1-refs-verdict-b43fda743846/attempts.ndjson
   kind: attempts
   source: &id005
@@ -25179,8 +25179,8 @@ files:
   provenance: organic
   checkout: beep-effect-worktrees/pr-992-closeout
   run_id: codex_evidence-loop-p1-fleet-rollout-240b5605a957
-  bytes: 16073
-  sha256: e6874f4b2f55ee06d2e266c778b310d3374228299cda0c7f4c39dd70d995ff1f
+  bytes: 15817
+  sha256: 979fbe7c6c28f67a7dd8986194bd3c9565927eae4d55c1b42d369b4059fc3d4b
 - path: attempts/beep-effect-worktrees%2Fpr-992-closeout/codex_evidence-loop-p1-fleet-rollout-240b5605a957/attempts.properties
   kind: properties_projection
   source: *id010
@@ -25196,8 +25196,8 @@ files:
   checkout: beep-effect-worktrees/pr-992-closeout
   run_id: codex_evidence-loop-p1-fleet-rollout-240b5605a957
   derived_from: attempts/beep-effect-worktrees%2Fpr-992-closeout/codex_evidence-loop-p1-fleet-rollout-240b5605a957/attempts.ndjson
-  bytes: 13290
-  sha256: a1f396997754dbb0ef57e11fd6c1381203d92e22958846c9d9752892fb7939a0
+  bytes: 13066
+  sha256: b6683e3e3a908424494d8b699a7c10f9bfef2084791b816530323988dd20fbe1
 - path: attempts/beep-effect-worktrees%2Frepo-cli-deterministic-projections/fix_repo-cli-deterministic-projections-4a755a794a19/attempts.ndjson
   kind: attempts
   source: &id011
@@ -25389,8 +25389,8 @@ files:
   provenance: organic
   checkout: beep-effect-worktrees/ttc-a5d
   run_id: fix_disabled-eviction-sink-pending-6a878f4f53dd
-  bytes: 10715
-  sha256: f6d2af396ae34f035ce0df78b9173d41e2bafd127e5bfd21d2e56926bce0dd27
+  bytes: 10555
+  sha256: a40be3a7a4d50c7d214be9a21f736a9dbef3eaed59d116f26a15b5dee38dbdc1
 - path: attempts/beep-effect-worktrees%2Fttc-a5d/fix_disabled-eviction-sink-pending-6a878f4f53dd/attempts.properties
   kind: properties_projection
   source: *id016
@@ -25406,8 +25406,8 @@ files:
   checkout: beep-effect-worktrees/ttc-a5d
   run_id: fix_disabled-eviction-sink-pending-6a878f4f53dd
   derived_from: attempts/beep-effect-worktrees%2Fttc-a5d/fix_disabled-eviction-sink-pending-6a878f4f53dd/attempts.ndjson
-  bytes: 9298
-  sha256: d3bcd77616f9e28184722ed05e5e95694be3ada1929cdce29ea33f880c65aa69
+  bytes: 9158
+  sha256: f442873f8efcba44cc09decfe848b12cf655d111f27e5716e28c982779a3b764
 - path: attempts/beep-effect-worktrees%2Fttc-b3/feat_cheap-gates-first-332d1bbcb979/attempts.ndjson
   kind: attempts
   source: &id017
@@ -25424,8 +25424,8 @@ files:
   provenance: organic
   checkout: beep-effect-worktrees/ttc-b3
   run_id: feat_cheap-gates-first-332d1bbcb979
-  bytes: 2861
-  sha256: 6b69492b722f5d3387268121644354cd6c02ccbedd1e04c38dac2d10d6a0b3aa
+  bytes: 2797
+  sha256: f1a1bcae4d8a1bd5ed4272870b0ff7e65fe20fb4619e9865ee93a7c0a99010e0
 - path: attempts/beep-effect-worktrees%2Fttc-b3/feat_cheap-gates-first-332d1bbcb979/attempts.properties
   kind: properties_projection
   source: *id017
@@ -25441,8 +25441,8 @@ files:
   checkout: beep-effect-worktrees/ttc-b3
   run_id: feat_cheap-gates-first-332d1bbcb979
   derived_from: attempts/beep-effect-worktrees%2Fttc-b3/feat_cheap-gates-first-332d1bbcb979/attempts.ndjson
-  bytes: 2510
-  sha256: f524ea1fa1880addeb269240aaa03ebdbdf3f5370b82279ddfe4416e5246b9a5
+  bytes: 2454
+  sha256: 528d1c758c64f5961f045991f9c108e332b77649be43271920481a47bd5dc6f4
 - path: attempts/beep-effect-worktrees%2Fttc-c3-grill/ttc_c3-package-tasks-grill-259d9ebe8ea8/attempts.ndjson
   kind: attempts
   source: &id018
@@ -25459,8 +25459,8 @@ files:
   provenance: organic
   checkout: beep-effect-worktrees/ttc-c3-grill
   run_id: ttc_c3-package-tasks-grill-259d9ebe8ea8
-  bytes: 15713
-  sha256: d1dfbb4065de1f17d05881faaa184533476416977a29a62cf78fe53ca46b7ef4
+  bytes: 15457
+  sha256: fe4a634da6525bfaf7c0adf42f97578e18f2e43d3d31ac9c87945b65c80235d3
 - path: attempts/beep-effect-worktrees%2Fttc-c3-grill/ttc_c3-package-tasks-grill-259d9ebe8ea8/attempts.properties
   kind: properties_projection
   source: *id018
@@ -25476,8 +25476,8 @@ files:
   checkout: beep-effect-worktrees/ttc-c3-grill
   run_id: ttc_c3-package-tasks-grill-259d9ebe8ea8
   derived_from: attempts/beep-effect-worktrees%2Fttc-c3-grill/ttc_c3-package-tasks-grill-259d9ebe8ea8/attempts.ndjson
-  bytes: 12285
-  sha256: dbcf33e76e5b475c35eb43243ce3a4ac99be4cfbd0fe0895f96196caecaeee2b
+  bytes: 12061
+  sha256: 3db9f364cc32875ff2e1c18dfc1694cae7bc1fe74807b34b8f60487996fdc1f4
 - path: attempts/beep-effect-worktrees%2Fyeet-inbox-backpressure-classification/fix_yeet-inbox-backpressure-classification-94b8ab94c762/attempts.ndjson
   kind: attempts
   source: &id019
@@ -25564,8 +25564,8 @@ files:
   provenance: organic
   checkout: beep-effect
   run_id: chore_deps-update-09-05-26-64c41f08b79f
-  bytes: 20273
-  sha256: f1156d1a3a7654e2f0a638181905c8e781450294ef41938bb37bbddea8060336
+  bytes: 19963
+  sha256: f162b4472bedeb51237ef628ce7ce47d692bd67267041b2faca5327ec4b95279
 - path: attempts/beep-effect/chore_deps-update-09-05-26-64c41f08b79f/attempts.properties
   kind: properties_projection
   source: *id021
@@ -25581,8 +25581,8 @@ files:
   checkout: beep-effect
   run_id: chore_deps-update-09-05-26-64c41f08b79f
   derived_from: attempts/beep-effect/chore_deps-update-09-05-26-64c41f08b79f/attempts.ndjson
-  bytes: 17447
-  sha256: 8e95774f487ed85606cc3daea4c325076d4add97ba41f2fd3739340b4a73d139
+  bytes: 17177
+  sha256: f26628d52d5bbeff247dd72c458356f897abdf549f940c22dd683a66e2ff7d33
 - path: attempts/beep-effect/chore_goal-organization-a2292f00be6a/attempts.ndjson
   kind: attempts
   source: &id022
@@ -25809,8 +25809,8 @@ files:
   provenance: organic
   checkout: beep-effect
   run_id: fix_xstate-effect-diagnostics-2229b8d69f7a
-  bytes: 12265
-  sha256: fc4bd2ab85061daefa6409ece42cd03fd67a6f8ce0db261c5f39e36220c32fde
+  bytes: 12105
+  sha256: 011b37231b6d21c4268e31186528db371f2c80fa8e437b97050b6549e32d0088
 - path: attempts/beep-effect/fix_xstate-effect-diagnostics-2229b8d69f7a/attempts.properties
   kind: properties_projection
   source: *id028
@@ -25826,8 +25826,8 @@ files:
   checkout: beep-effect
   run_id: fix_xstate-effect-diagnostics-2229b8d69f7a
   derived_from: attempts/beep-effect/fix_xstate-effect-diagnostics-2229b8d69f7a/attempts.ndjson
-  bytes: 10145
-  sha256: 8464091149ac6e23e33ac32a69ab345afbcdb3e0ff9c56d183afb054c1d28c75
+  bytes: 10005
+  sha256: 11dcf31fc124a86b0736aa82d40520d8c495f49dbecadfcc6022604a30ed1773
 - path: attempts/beep-effect/fun-08-13-26-6842bfa6463c/attempts.ndjson
   kind: attempts
   source: &id029
@@ -26544,8 +26544,8 @@ files:
   provenance: organic
   checkout: beep-effect10
   run_id: feat_yeet-pr-resume-footer-8d42b8562b8b
-  bytes: 35608
-  sha256: ee5f719175cf46b5489c4ec307d9e2f716eb6fb98b705a439ab56c935adbcbd6
+  bytes: 35581
+  sha256: dd99881404aa9f3a03c6e07cb1bdf7ddea17175a49c879bee57a4fc6ec020400
 - path: attempts/beep-effect10/feat_yeet-pr-resume-footer-8d42b8562b8b/attempts.properties
   kind: properties_projection
   source: *id049
@@ -26561,8 +26561,8 @@ files:
   checkout: beep-effect10
   run_id: feat_yeet-pr-resume-footer-8d42b8562b8b
   derived_from: attempts/beep-effect10/feat_yeet-pr-resume-footer-8d42b8562b8b/attempts.ndjson
-  bytes: 28382
-  sha256: 1054125e4f9fce6ef5e8a24cc4bb98025d8cd9180675b8b07219caf3431ed8bf
+  bytes: 28359
+  sha256: 49b3b4e5e4f896fb03f86f232a53af305543909d7b18fa8a7dbdb76f2af35c3f
 - path: attempts/beep-effect10/fix_admission-journal-reap-arm-coverage-f9cdb23e76ab/attempts.ndjson
   kind: attempts
   source: &id050
@@ -26579,8 +26579,8 @@ files:
   provenance: organic
   checkout: beep-effect10
   run_id: fix_admission-journal-reap-arm-coverage-f9cdb23e76ab
-  bytes: 2047
-  sha256: 74968f77cc7350c6cb380b5205eaf8bb9d11e3d5858ef4bc3437a8a8452aa1d3
+  bytes: 2015
+  sha256: 6a022217e25e7a2f700047e6daabe60b393adfc85264671c66c944a1bdb1edcc
 - path: attempts/beep-effect10/fix_admission-journal-reap-arm-coverage-f9cdb23e76ab/attempts.properties
   kind: properties_projection
   source: *id050
@@ -26596,8 +26596,8 @@ files:
   checkout: beep-effect10
   run_id: fix_admission-journal-reap-arm-coverage-f9cdb23e76ab
   derived_from: attempts/beep-effect10/fix_admission-journal-reap-arm-coverage-f9cdb23e76ab/attempts.ndjson
-  bytes: 1774
-  sha256: 43d413aea6e702a07d36c30912fb0213a61a2bdd136f726a9ebefac8ae25895b
+  bytes: 1746
+  sha256: b00953e0898dac362c79580541d6456da0fe023b7954c467cb4cee3c80928d29
 - path: attempts/beep-effect10/fix_lint-deprecated-apis-tooling-shards-d7d00f13bd3c/attempts.ndjson
   kind: attempts
   source: &id051
@@ -26614,8 +26614,8 @@ files:
   provenance: organic
   checkout: beep-effect10
   run_id: fix_lint-deprecated-apis-tooling-shards-d7d00f13bd3c
-  bytes: 2047
-  sha256: af9e2412748a8db8845838b8e35365543758aad9013e8c61e32fda3136e74cb6
+  bytes: 2015
+  sha256: c8fb8ad9cf9c951f24d8b1365da22b80e7478be02ab1e0b00c6ed6b0e219a064
 - path: attempts/beep-effect10/fix_lint-deprecated-apis-tooling-shards-d7d00f13bd3c/attempts.properties
   kind: properties_projection
   source: *id051
@@ -26631,8 +26631,8 @@ files:
   checkout: beep-effect10
   run_id: fix_lint-deprecated-apis-tooling-shards-d7d00f13bd3c
   derived_from: attempts/beep-effect10/fix_lint-deprecated-apis-tooling-shards-d7d00f13bd3c/attempts.ndjson
-  bytes: 1774
-  sha256: b90576605eb42689eb642cdef018d4914374e2a635a4590f047fca229fe4d3d0
+  bytes: 1746
+  sha256: e254fe2c2ea5675d45d77c04693cb9d0ffa2bca73923abcc846781af60d13099
 - path: attempts/beep-effect10/fix_remove-yeet-pr-lease-0b94e262df14/attempts.ndjson
   kind: attempts
   source: &id052
@@ -26719,8 +26719,8 @@ files:
   provenance: organic
   checkout: beep-effect10
   run_id: fix_yeet-pr-body-snapshot-updated-at-a361a46fce51
-  bytes: 2283
-  sha256: a7afe5901aaaca20d9db4e434e517c5153844219a5308d0ae84e5747365b2048
+  bytes: 2251
+  sha256: 356835ba5e5f6651fad8d46713f33501c0ef6d1380da3ae51d079fc022686d01
 - path: attempts/beep-effect10/fix_yeet-pr-body-snapshot-updated-at-a361a46fce51/attempts.properties
   kind: properties_projection
   source: *id054
@@ -26736,8 +26736,8 @@ files:
   checkout: beep-effect10
   run_id: fix_yeet-pr-body-snapshot-updated-at-a361a46fce51
   derived_from: attempts/beep-effect10/fix_yeet-pr-body-snapshot-updated-at-a361a46fce51/attempts.ndjson
-  bytes: 1988
-  sha256: bb0700acb6270fe88888cc8c29089bbe46fc37c90269318be29ab3fca3a1169e
+  bytes: 1960
+  sha256: 49a414e10d08be24d67a4be5d38ee07a281f1bdcfffc9c3773dd747c4e599cc7
 - path: attempts/beep-effect10/security_codex-findings-2026-08-30-44102561a936/attempts.ndjson
   kind: attempts
   source: &id055
@@ -26789,8 +26789,8 @@ files:
   provenance: organic
   checkout: beep-effect10
   run_id: test_agents-client-reconciliation-cases-6c7fd1cf5e15
-  bytes: 4342
-  sha256: b43c1733c752b04eb8ee34efcae9d9c790f2c6a67ae8a69da49776808c80f6ca
+  bytes: 4278
+  sha256: e531e7e88aa5d8a7ab314c9cdd4aa8ce7e8b12477d1d7fa0aca14b3a1e3861e2
 - path: attempts/beep-effect10/test_agents-client-reconciliation-cases-6c7fd1cf5e15/attempts.properties
   kind: properties_projection
   source: *id056
@@ -26806,8 +26806,8 @@ files:
   checkout: beep-effect10
   run_id: test_agents-client-reconciliation-cases-6c7fd1cf5e15
   derived_from: attempts/beep-effect10/test_agents-client-reconciliation-cases-6c7fd1cf5e15/attempts.ndjson
-  bytes: 3774
-  sha256: 79167cb2b009c3d2590c1ed8f1c4f89569b19d45fa5847105b69ca1f2162830d
+  bytes: 3718
+  sha256: bd6c716ef444d607bfa821240e625e4344f1159f7612bb7fc3bb9cc686ef03c6
 - path: attempts/beep-effect11/chore_graphnosis-session-closeout-d69b1560591d/attempts.ndjson
   kind: attempts
   source: &id057
@@ -26859,8 +26859,8 @@ files:
   provenance: organic
   checkout: beep-effect11
   run_id: codex_complexity-ceiling-burn-down-p0-8bb14622ea08
-  bytes: 188892
-  sha256: a29dc7f1681aa31775a725bd2aa86ee6a1600f22284922280e51335e17de674a
+  bytes: 187864
+  sha256: 1b2d2936afed00b2796721d63cdb8e427297768bb6a424abaab184f2a45bab6b
 - path: attempts/beep-effect11/codex_complexity-ceiling-burn-down-p0-8bb14622ea08/attempts.properties
   kind: properties_projection
   source: *id058
@@ -26876,8 +26876,8 @@ files:
   checkout: beep-effect11
   run_id: codex_complexity-ceiling-burn-down-p0-8bb14622ea08
   derived_from: attempts/beep-effect11/codex_complexity-ceiling-burn-down-p0-8bb14622ea08/attempts.ndjson
-  bytes: 153172
-  sha256: 70cae72136f1f5d5405abec45b83479de19b97c702563995a415ec43d8984ea3
+  bytes: 152276
+  sha256: 630e2f7a4e9a08551c22d0d2286ea13d3b8732dbfae48532fb9098e370fbee4c
 - path: attempts/beep-effect11/codex_complexity-ceiling-closeout-405c084e190c/attempts.ndjson
   kind: attempts
   source: &id059
@@ -26894,8 +26894,8 @@ files:
   provenance: organic
   checkout: beep-effect11
   run_id: codex_complexity-ceiling-closeout-405c084e190c
-  bytes: 4046
-  sha256: d4931dfd30f7734cfa8c331c1b1ed3dcf07edc9897c88e0c12464f6e90d4ecd5
+  bytes: 3982
+  sha256: 53d2c8e41ca06d1f464e18c20621591018dd48a603f99f3860dee9433e70572d
 - path: attempts/beep-effect11/codex_complexity-ceiling-closeout-405c084e190c/attempts.properties
   kind: properties_projection
   source: *id059
@@ -26911,8 +26911,8 @@ files:
   checkout: beep-effect11
   run_id: codex_complexity-ceiling-closeout-405c084e190c
   derived_from: attempts/beep-effect11/codex_complexity-ceiling-closeout-405c084e190c/attempts.ndjson
-  bytes: 3500
-  sha256: 0fe2bae9198850c42e233bd596c674e4553cdc07b72c67d9e3794085c4755464
+  bytes: 3444
+  sha256: 2177e2b94ee1796ed54db10fe258a1851fc527398f5732e4d264f286d23024c1
 - path: attempts/beep-effect11/docs_semantica-c0-design-6e5daf7650f8/attempts.ndjson
   kind: attempts
   source: &id060
@@ -27454,8 +27454,8 @@ files:
   provenance: organic
   checkout: beep-effect12
   run_id: codex_evidence-loop-p1-fleet-rollout-240b5605a957
-  bytes: 16455
-  sha256: d2156fefa6cc4ce7ff082c24d6ef88b8992a488714b8e66dbf5b8485db1d44d0
+  bytes: 16428
+  sha256: 0912dc3bd7da5314772ffb889b44caeb9ac313ed67ae03b0cf8f1757d63d9590
 - path: attempts/beep-effect12/codex_evidence-loop-p1-fleet-rollout-240b5605a957/attempts.properties
   kind: properties_projection
   source: *id075
@@ -27471,8 +27471,8 @@ files:
   checkout: beep-effect12
   run_id: codex_evidence-loop-p1-fleet-rollout-240b5605a957
   derived_from: attempts/beep-effect12/codex_evidence-loop-p1-fleet-rollout-240b5605a957/attempts.ndjson
-  bytes: 14175
-  sha256: defa08edc60f0699756c3cba03eaa35da601e4ed9ec301906b97105f788203a4
+  bytes: 14152
+  sha256: 1175a647298040f0cf5e2670a63c7715a115801b0c384dbb0b08ac7128f0dbe7
 - path: attempts/beep-effect12/codex_security-findings-2026-09-08-fca6d1290697/attempts.ndjson
   kind: attempts
   source: &id076
@@ -27489,8 +27489,8 @@ files:
   provenance: organic
   checkout: beep-effect12
   run_id: codex_security-findings-2026-09-08-fca6d1290697
-  bytes: 59018
-  sha256: 1545736f9f64350f7d8babf2988c22f04ae3eaf0168a86c8c4bf9f6e450effad
+  bytes: 58345
+  sha256: 432c2a386dbff0b2fbdcfbd395a62fc51ddcac87986d68343a3eb69879044acc
 - path: attempts/beep-effect12/codex_security-findings-2026-09-08-fca6d1290697/attempts.properties
   kind: properties_projection
   source: *id076
@@ -27506,8 +27506,8 @@ files:
   checkout: beep-effect12
   run_id: codex_security-findings-2026-09-08-fca6d1290697
   derived_from: attempts/beep-effect12/codex_security-findings-2026-09-08-fca6d1290697/attempts.ndjson
-  bytes: 48564
-  sha256: 8b39ffdf9943c6e5b80fbc1c23040e5eafcabcb447c319c8464cef5635364774
+  bytes: 47991
+  sha256: 57e1ba721e47817983d9bd15055afb22a569d1373a33a0aa3ef83a6971f3aee4
 - path: attempts/beep-effect12/docs_candor-gate-packet-closeout-4d8f19fe683a/attempts.ndjson
   kind: attempts
   source: &id077
@@ -27979,8 +27979,8 @@ files:
   provenance: organic
   checkout: beep-effect13
   run_id: codex_inline-schema-closeout-9311037e85b1
-  bytes: 18342
-  sha256: f04e225363d884ec588be14e01e087b68dc784837a4f60ec8573de0c4674a149
+  bytes: 18214
+  sha256: de40fa75e56eb3784795f039ef99fdcc7dba59302acb8d5c8652c9593aad0523
 - path: attempts/beep-effect13/codex_inline-schema-closeout-9311037e85b1/attempts.properties
   kind: properties_projection
   source: *id090
@@ -27996,8 +27996,8 @@ files:
   checkout: beep-effect13
   run_id: codex_inline-schema-closeout-9311037e85b1
   derived_from: attempts/beep-effect13/codex_inline-schema-closeout-9311037e85b1/attempts.ndjson
-  bytes: 14625
-  sha256: 1eb7d8edb6f0fb2b03cbb721b82bf86e158e0fff228cc0e8b1cdff27c244a9d9
+  bytes: 14513
+  sha256: 6df2ee70f3eb96c45e0ffe76c3a82f55b4c1fd160377e5d1ee4234ea6ee09798
 - path: attempts/beep-effect13/codex_inline-schema-compile-hard-error-4b004da7be80/attempts.ndjson
   kind: attempts
   source: &id091
@@ -28014,8 +28014,8 @@ files:
   provenance: organic
   checkout: beep-effect13
   run_id: codex_inline-schema-compile-hard-error-4b004da7be80
-  bytes: 151398
-  sha256: 707d62d95e872b244f6d29b420e3da944928df856d3ef5981b013eeceafbc974
+  bytes: 150845
+  sha256: bf767d9191228dcca122a937ddd1eff74aa3f598a36fed486430d77cffa555c5
 - path: attempts/beep-effect13/codex_inline-schema-compile-hard-error-4b004da7be80/attempts.properties
   kind: properties_projection
   source: *id091
@@ -28031,8 +28031,8 @@ files:
   checkout: beep-effect13
   run_id: codex_inline-schema-compile-hard-error-4b004da7be80
   derived_from: attempts/beep-effect13/codex_inline-schema-compile-hard-error-4b004da7be80/attempts.ndjson
-  bytes: 121411
-  sha256: e3cb7aaa0e476fdcf07bb865c2b2814fd970378f6394cdd87ef4d9aa3c8e31d1
+  bytes: 120934
+  sha256: 5284baa13a48a7d55458328ef1ff9f457c8570c3485712b37c4c532c870e5fa3
 - path: attempts/beep-effect13/codex_inline-schema-review-followups-bf0f1e73b0f4/attempts.ndjson
   kind: attempts
   source: &id092
@@ -28049,8 +28049,8 @@ files:
   provenance: organic
   checkout: beep-effect13
   run_id: codex_inline-schema-review-followups-bf0f1e73b0f4
-  bytes: 33669
-  sha256: dc3e00dff537bdbd76512c2a37fb6a141547bfe547b3afb35c391cc9a5caaa1d
+  bytes: 33285
+  sha256: 20d4260e370c82f01c267795fafd552dae8738f439f979806e3a8ba164672a53
 - path: attempts/beep-effect13/codex_inline-schema-review-followups-bf0f1e73b0f4/attempts.properties
   kind: properties_projection
   source: *id092
@@ -28066,8 +28066,8 @@ files:
   checkout: beep-effect13
   run_id: codex_inline-schema-review-followups-bf0f1e73b0f4
   derived_from: attempts/beep-effect13/codex_inline-schema-review-followups-bf0f1e73b0f4/attempts.ndjson
-  bytes: 28050
-  sha256: 9fedd06340449943c016d33d078c28e89f22f5f9bf2cf05495a81a6665923c4c
+  bytes: 27714
+  sha256: 6939dfc94fb875edf4dadc33bd179a928100eab166a7c7fb24322e1ce888d258
 - path: attempts/beep-effect13/codex_oppold-corpus-salvage-restoration-9774293bda30/attempts.ndjson
   kind: attempts
   source: &id093
@@ -31829,8 +31829,8 @@ files:
   provenance: organic
   checkout: beep-effect2
   run_id: slop_09-02-26-46a474779bc2
-  bytes: 68630
-  sha256: 30c71ba0c7168c1276fa378ae233f88be07f479e3616d2716f650a396ffbbf8c
+  bytes: 68150
+  sha256: 87ace67aac82bddade06610736d2cd3b5fe393440d8859c9a3dd488bea5fdf43
 - path: attempts/beep-effect2/slop_09-02-26-46a474779bc2/attempts.properties
   kind: properties_projection
   source: *id200
@@ -31846,8 +31846,8 @@ files:
   checkout: beep-effect2
   run_id: slop_09-02-26-46a474779bc2
   derived_from: attempts/beep-effect2/slop_09-02-26-46a474779bc2/attempts.ndjson
-  bytes: 55167
-  sha256: bac5dfb7a75f2daa5d9b101605d89b8561ef281c3c2ad39eb56068bafc7ed01c
+  bytes: 54747
+  sha256: 9630267c2601f4dca38115a8cec6cc7e32c9434040efa37778ab4f45468ec36b
 - path: attempts/beep-effect20/chore_honest-repo-signal-dfb33a5cff68/attempts.ndjson
   kind: attempts
   source: &id201
@@ -32214,8 +32214,8 @@ files:
   provenance: organic
   checkout: beep-effect21-worktrees/residue-reap
   run_id: feat_residue-reap-d7e97502a0cc
-  bytes: 14808
-  sha256: f9d3866811cb58ad3dfd32fad79954f6e2df43eef36ddd42dd70ae3187fdd879
+  bytes: 14594
+  sha256: 6cea033af89b0a91dc356fa413717be9dfe25d6feacedd21ff26d685969142b1
 - path: attempts/beep-effect21-worktrees%2Fresidue-reap/feat_residue-reap-d7e97502a0cc/attempts.properties
   kind: properties_projection
   source: *id211
@@ -32231,8 +32231,8 @@ files:
   checkout: beep-effect21-worktrees/residue-reap
   run_id: feat_residue-reap-d7e97502a0cc
   derived_from: attempts/beep-effect21-worktrees%2Fresidue-reap/feat_residue-reap-d7e97502a0cc/attempts.ndjson
-  bytes: 12813
-  sha256: c3d6b34d99e511d59c2b249dbf12699ce2d3a3f899b01bb42bbf3c702e31aaee
+  bytes: 12627
+  sha256: f9aabb60d8dfc92ab8a2ae65509bed27f0b4cc0e12b1bb745d28316888af6b4c
 - path: attempts/beep-effect21-worktrees%2Fworktree-reap/feat_worktree-reap-7dc5e22846c6/attempts.ndjson
   kind: attempts
   source: &id212
@@ -32249,8 +32249,8 @@ files:
   provenance: organic
   checkout: beep-effect21-worktrees/worktree-reap
   run_id: feat_worktree-reap-7dc5e22846c6
-  bytes: 10845
-  sha256: 2f99630e791ea24a7c39da719a8b21f51430f70d9296f031f01e1b49b285ac4c
+  bytes: 10700
+  sha256: 1a9db38343ddc325e552e87468323a36653d1e04d34739fd4a688d9d2379e1af
 - path: attempts/beep-effect21-worktrees%2Fworktree-reap/feat_worktree-reap-7dc5e22846c6/attempts.properties
   kind: properties_projection
   source: *id212
@@ -32266,8 +32266,8 @@ files:
   checkout: beep-effect21-worktrees/worktree-reap
   run_id: feat_worktree-reap-7dc5e22846c6
   derived_from: attempts/beep-effect21-worktrees%2Fworktree-reap/feat_worktree-reap-7dc5e22846c6/attempts.ndjson
-  bytes: 9398
-  sha256: cec0521674e258d226bd162f255bafdedfed01dae1d397ea24bcf6cf259bc7bb
+  bytes: 9273
+  sha256: ee1d2dc1def70e5ff7430ae9ee7089a4f1c27182293c2684173c71d44bde1c89
 - path: attempts/beep-effect21/feat_agent-runs-slice-ceiling-27bd29596a1c/attempts.ndjson
   kind: attempts
   source: &id213
@@ -32879,8 +32879,8 @@ files:
   provenance: organic
   checkout: beep-effect3-worktrees/ttc-c3-1
   run_id: ttc_c3-1-package-scripts-e566589d94c5
-  bytes: 22029
-  sha256: 276c8e9928d0366b580386a2c0b18e9b750ca964cc73dd126bd3a4006f43f6fd
+  bytes: 21805
+  sha256: b75150ecd53f28812d688158599ec5a2af11a712198869aade81935a2fa693d8
 - path: attempts/beep-effect3-worktrees%2Fttc-c3-1/ttc_c3-1-package-scripts-e566589d94c5/attempts.properties
   kind: properties_projection
   source: *id230
@@ -32896,8 +32896,8 @@ files:
   checkout: beep-effect3-worktrees/ttc-c3-1
   run_id: ttc_c3-1-package-scripts-e566589d94c5
   derived_from: attempts/beep-effect3-worktrees%2Fttc-c3-1/ttc_c3-1-package-scripts-e566589d94c5/attempts.ndjson
-  bytes: 16654
-  sha256: 392a2170359f2233ded90320fc352d5b79499e14f857c73fd0a15889ec919949
+  bytes: 16458
+  sha256: 60dc3c97222a21484a69837822893584bb41416e2ff86b3ca3b89d9e37949e7c
 - path: attempts/beep-effect3/chore_slop-08-23-26-0f99428b1dc9/attempts.ndjson
   kind: attempts
   source: &id231
@@ -33019,8 +33019,8 @@ files:
   provenance: organic
   checkout: beep-effect3
   run_id: docs_codex-findings-2026-09-03-closeout-396712bde2cb
-  bytes: 58848
-  sha256: a250eaecc79dc893ba37c96907e58b1852ab28b4acc4d90b5b42d2e1dfde75b7
+  bytes: 58740
+  sha256: e2d0fb3430dd8f9d376ed6f87c733eb23cd1c8df11b4bd02e74cc2396f36bfd2
 - path: attempts/beep-effect3/docs_codex-findings-2026-09-03-closeout-396712bde2cb/attempts.properties
   kind: properties_projection
   source: *id234
@@ -33036,8 +33036,8 @@ files:
   checkout: beep-effect3
   run_id: docs_codex-findings-2026-09-03-closeout-396712bde2cb
   derived_from: attempts/beep-effect3/docs_codex-findings-2026-09-03-closeout-396712bde2cb/attempts.ndjson
-  bytes: 47521
-  sha256: 023694a207b1f8bb302224bb54040dd95dc1dba8401a279bfbfd78f7ffeee129
+  bytes: 47429
+  sha256: 05d86290df2784ee11b057ef0c496bc9bb17cf4a18a3ccb34a88bba268bcac2b
 - path: attempts/beep-effect3/docs_packet-session-b-rulings-7e511477ca6e/attempts.ndjson
   kind: attempts
   source: &id235
@@ -33789,8 +33789,8 @@ files:
   provenance: organic
   checkout: beep-effect5
   run_id: codex_fix-1014-property-laws-2299bc36549b
-  bytes: 30107
-  sha256: 6b02501e2da60f566c4cd43a1fab9267f656c96ef5f0a109b9d935626757ae42
+  bytes: 29531
+  sha256: 90eefb28d03b7dabcd72013965c5e7bf84f05bddba92956fc47294be22a37171
 - path: attempts/beep-effect5/codex_fix-1014-property-laws-2299bc36549b/attempts.properties
   kind: properties_projection
   source: *id256
@@ -33806,8 +33806,8 @@ files:
   checkout: beep-effect5
   run_id: codex_fix-1014-property-laws-2299bc36549b
   derived_from: attempts/beep-effect5/codex_fix-1014-property-laws-2299bc36549b/attempts.ndjson
-  bytes: 25607
-  sha256: 7ff87c1f76e0a844ab23acf282873c95bfcb10d83187abbf023cfa76a27c715e
+  bytes: 25103
+  sha256: ef82b07f6efd4367329b566098a2096a2676de169c7d8793b92efadcd9827cb0
 - path: attempts/beep-effect5/codex_per-module-imports-p1-37ea02f637cd/attempts.ndjson
   kind: attempts
   source: &id257
@@ -34804,8 +34804,8 @@ files:
   provenance: organic
   checkout: beep-effect6
   run_id: chore_wire-graft-agents-90ec5b79502c
-  bytes: 5826
-  sha256: bcac1deac03666048fbe9c9ba512cb0672563d41742055f4c757f188b5059049
+  bytes: 5666
+  sha256: fe0ae62f715f5ea69e3ffbfabdd4ea848e5d3b4e3d615b6080bff3054c5092db
 - path: attempts/beep-effect6/chore_wire-graft-agents-90ec5b79502c/attempts.properties
   kind: properties_projection
   source: *id285
@@ -34821,8 +34821,8 @@ files:
   checkout: beep-effect6
   run_id: chore_wire-graft-agents-90ec5b79502c
   derived_from: attempts/beep-effect6/chore_wire-graft-agents-90ec5b79502c/attempts.ndjson
-  bytes: 5225
-  sha256: 00a27b57f7e76ea0e6b0cf08c7158a15710fa481ccbf7d0e585b5b78cfb36e3f
+  bytes: 5085
+  sha256: d12df20bea3d504c28e6c0025022a69f1daeee12358be147492974321770c4d8
 - path: attempts/beep-effect6/docs_ai-metrics-v1-closeout-a673592bc445/attempts.ndjson
   kind: attempts
   source: &id286
@@ -35504,8 +35504,8 @@ files:
   provenance: organic
   checkout: beep-effect7
   run_id: codex_astra-agent-guidance-85157133111c
-  bytes: 3105
-  sha256: 6b0bc9b994bedf1faaadc880a3e9014128b3c03a84f080168cacd99f4f1b865c
+  bytes: 3041
+  sha256: 98d2cd0474e0f4b18dd3d2edc5dbda81dae1b7755d579d7475f208c2de5730fa
 - path: attempts/beep-effect7/codex_astra-agent-guidance-85157133111c/attempts.properties
   kind: properties_projection
   source: *id305
@@ -35521,8 +35521,8 @@ files:
   checkout: beep-effect7
   run_id: codex_astra-agent-guidance-85157133111c
   derived_from: attempts/beep-effect7/codex_astra-agent-guidance-85157133111c/attempts.ndjson
-  bytes: 2738
-  sha256: 9d417924166f6614b98d975b56c3308ba2617f0c22d608ee73e63f57ed30527f
+  bytes: 2682
+  sha256: 32a1e109f9554f2b071a5ce5fd3ddd313712ba7ead249450b5d5de9511b87607
 - path: attempts/beep-effect7/codex_security-findings-2026-08-13-a6e38b8aae20/attempts.ndjson
   kind: attempts
   source: &id306
@@ -36204,8 +36204,8 @@ files:
   provenance: organic
   checkout: beep-effect8-s5
   run_id: ontology-run3-stage-a-3e71e7310ab3
-  bytes: 4398
-  sha256: ac324ba813c094f85d43cb6f9953b333423a1d26c564a45d4a12789905d346d0
+  bytes: 4334
+  sha256: 00c5a6bed15501e8ca1f74ce4226a0def061900e4ba06b8ab28e6ebcb178a0a8
 - path: attempts/beep-effect8-s5/ontology-run3-stage-a-3e71e7310ab3/attempts.properties
   kind: properties_projection
   source: *id325
@@ -36221,8 +36221,8 @@ files:
   checkout: beep-effect8-s5
   run_id: ontology-run3-stage-a-3e71e7310ab3
   derived_from: attempts/beep-effect8-s5/ontology-run3-stage-a-3e71e7310ab3/attempts.ndjson
-  bytes: 3818
-  sha256: e0294514dbec4f9e01a7e6c10bf705cb0a7b4f45a0981a1a316dc921959cf589
+  bytes: 3762
+  sha256: edd65507b76569306215bcb9e17d82bdb6af4161c4db36bb7555bca5c38d7934
 - path: attempts/beep-effect8-s5/ontology-s5-dispositions-36a8e632d484/attempts.ndjson
   kind: attempts
   source: &id326
@@ -36449,8 +36449,8 @@ files:
   provenance: organic
   checkout: beep-effect8-worktrees/ontology-emission-v2
   run_id: feat_ontology-s7-emission-v2-938f8a04e6e3
-  bytes: 2119
-  sha256: 6905d97f7617ad985b76c14982e63326970fee3af04d5a4961b4fe318f00ff41
+  bytes: 2087
+  sha256: c5e5bdd3d8ba2ab7a3fb33a86fabee8a0fdf687cb486890043330afc59bc39c5
 - path: attempts/beep-effect8-worktrees%2Fontology-emission-v2/feat_ontology-s7-emission-v2-938f8a04e6e3/attempts.properties
   kind: properties_projection
   source: *id332
@@ -36466,8 +36466,8 @@ files:
   checkout: beep-effect8-worktrees/ontology-emission-v2
   run_id: feat_ontology-s7-emission-v2-938f8a04e6e3
   derived_from: attempts/beep-effect8-worktrees%2Fontology-emission-v2/feat_ontology-s7-emission-v2-938f8a04e6e3/attempts.ndjson
-  bytes: 1838
-  sha256: 57b16ce3eb2c42646859b3508f252b1d391d654e459a09634ec4635cb36468bb
+  bytes: 1810
+  sha256: 3038e53e46751a158c5e9c1594d3b9f31f80f16bcd35786ef7c48f5d366cc75b
 - path: attempts/beep-effect8-worktrees%2Fontology-v3-journal/feat_ontology-v3-journal-events-94f07c9744c5/attempts.ndjson
   kind: attempts
   source: &id333
@@ -36484,8 +36484,8 @@ files:
   provenance: organic
   checkout: beep-effect8-worktrees/ontology-v3-journal
   run_id: feat_ontology-v3-journal-events-94f07c9744c5
-  bytes: 3886
-  sha256: 5cfd96d47efd02dfd6c3cb8699cca90c704f5fdb2d4e268ab7454229e851f060
+  bytes: 3822
+  sha256: 9b366d5252f36d31e1b158b3385dcb3fc1782ecae8d99631cf22a5d3f5465203
 - path: attempts/beep-effect8-worktrees%2Fontology-v3-journal/feat_ontology-v3-journal-events-94f07c9744c5/attempts.properties
   kind: properties_projection
   source: *id333
@@ -36501,8 +36501,8 @@ files:
   checkout: beep-effect8-worktrees/ontology-v3-journal
   run_id: feat_ontology-v3-journal-events-94f07c9744c5
   derived_from: attempts/beep-effect8-worktrees%2Fontology-v3-journal/feat_ontology-v3-journal-events-94f07c9744c5/attempts.ndjson
-  bytes: 3348
-  sha256: 4073dd6c5d9d3764105e714061a670fd5ab0f1b88fed58f1a908c522ad307b79
+  bytes: 3292
+  sha256: b81e2f05a1da5b292398794129dccbaa9b7a40eeff08e799fff2c2ec2dc4583a
 - path: attempts/beep-effect8/api-ref-scratch-aad44f3b2a75/attempts.ndjson
   kind: attempts
   source: &id334
@@ -37357,8 +37357,8 @@ files:
   observed_at: '2026-09-09T04:46:24.144Z'
   history_outside_window: unknown
   provenance: organic
-  bytes: 1247
-  sha256: 461fed21e123e05da5c74dc7e147643871ae7262f67964a33600089a11ccc708
+  bytes: 1220
+  sha256: bfb2de334c26866f8c796ceb6ffc5c2cec2611650c01d12d47d1cb280e9ac9a0
 - path: live/canonical/leases/state-0000.properties
   kind: properties_projection
   source: *id358
@@ -37372,8 +37372,8 @@ files:
   history_outside_window: unknown
   provenance: organic
   derived_from: live/canonical/leases/state-0000.json
-  bytes: 1019
-  sha256: a713d6f9fa0dd60a2edd7357823d4984224be7fbd40cf65048f61c35e456fab1
+  bytes: 1000
+  sha256: df379e17cf8dc3bb924f258f35751998c8e8f50a7a19bc961b985ca732241f2a
 - path: live/canonical/leases/state-0001.json
   kind: live
   source: &id359
@@ -37388,8 +37388,8 @@ files:
   observed_at: '2026-09-09T04:46:24.145Z'
   history_outside_window: unknown
   provenance: organic
-  bytes: 852
-  sha256: 207013c45fbe781e932efe97b82a89772d02847faeaf43a15417cd489d8eacae
+  bytes: 825
+  sha256: 9d37420a845338049b97004181495d767c13fa9c62e2b936f2c8b1c1766e8d5d
 - path: live/canonical/leases/state-0001.properties
   kind: properties_projection
   source: *id359
@@ -37403,8 +37403,8 @@ files:
   history_outside_window: unknown
   provenance: organic
   derived_from: live/canonical/leases/state-0001.json
-  bytes: 664
-  sha256: 6e469eea7cefcde083c7ef75e8b64d796bfaf74ed11f6c7b2be9faa70c7d3cf1
+  bytes: 645
+  sha256: dbacad9233a56cd02a746a3631ba96be6dec28ea6e5ede3e0a9b2f0b75ca6031
 integrity:
   algorithm: sha256
   digest_scope: all payload files; manifest excluded from its own digest
@@ -37416,8 +37416,8 @@ totals:
   payload_files: 718
   files_emitted: 719
   events: 7186
-  payload_bytes: 14345671
-  bytes_emitted: 15598967
+  payload_bytes: 14333049
+  bytes_emitted: 15586514
 security_resanitization:
   finding: CSF-012
   source_manifest_sha256: 740dddef3a0d93f3132cf2ad8fb7ac871781e7e42df6fb3c1d6ccab162c4f7ac
@@ -37427,4 +37427,8 @@ security_resanitization:
   - finding: CSF-012
     source_manifest_sha256: 57dc5593a79927da996171de64f5222175cdedff2d210eac787718c1dff440e4
     changed_raw_payloads: 0
+    live_recapture: false
+  - finding: CSF-013
+    source_manifest_sha256: 75f71cafd47ec5069cd8a3dfe8186951e6729ce025c219a58c60b67361d8a3e6
+    changed_raw_payloads: 32
     live_recapture: false

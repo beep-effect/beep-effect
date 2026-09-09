@@ -1,12 +1,12 @@
-"""Repair captured corpus bytes for CSF-012 without recapturing live sources.
+"""Repair captured corpus redaction without recapturing live sources.
 
-Run with ``uv run --offline --with pyyaml python <this-script>``.
+Run with ``uv run --offline --with pyyaml python <this-script> --finding CSF-013``.
 Each generator verifies the staged result before promotion. Original capture
 metadata and source counts remain intact; the prior manifest digest records
 the security-only transformation. An already repaired pin is verified unchanged.
 Use ``--source-ref <commit>`` to replay an older committed pin into the current
 output tree. This reads only Git objects, never the original live capture sources.
-Use ``--run2-only`` for the Ruling 23 repair without opening other corpus pins.
+Use ``--run2-only --finding "Ruling 23"`` for the ratified run-2 repair only.
 """
 from __future__ import annotations
 
@@ -68,7 +68,8 @@ def load_generator(name: str):
     return module
 
 
-def repair(name: str, source_ref: str | None = None, population: str | None = None) -> None:
+def repair(name: str, source_ref: str | None = None, population: str | None = None,
+           *, finding: str) -> None:
     module = load_generator(name)
     root = module.OUTPUT_ROOT if population is None else module.OUTPUT_ROOTS[population]
 
@@ -130,12 +131,19 @@ def repair(name: str, source_ref: str | None = None, population: str | None = No
         if len(pid_rules) != 1:
             raise SystemExit("refusing ambiguous PID redaction provenance")
         rules[pid_rules[0]] = module.PID_REDACTION_RULE
+        rules[:] = [rule for rule in rules if rule not in (
+            "Never transform structural keys, booleans, nulls, or numeric values.",
+            module.PROCESS_REDACTION_RULE,
+        )]
+        rules[:] = [rule.replace("recursively transform string values only:",
+                                "recursively drop process identity members, then transform strings:") for rule in rules]
+        rules.append(module.PROCESS_REDACTION_RULE)
         rules.extend(rule for rule in module.REPAIR_REDACTION_RULES if rule not in rules)
     repair_record = {
-        "finding": "CSF-012", "source_manifest_sha256": module.sha256(original),
+        "finding": finding, "source_manifest_sha256": module.sha256(original),
         "changed_raw_payloads": changed, "live_recapture": False,
     }
-    if name == "etl_fleet_corpus":
+    if name == "etl_fleet_corpus" and finding == "Ruling 23":
         repair_record.update(ruling="Ruling 23", residue_classes=["sha12(hostname)", "uid-[0-9]+"])
     if source_ref:
         repair_record["superseded_manifest_sha256"] = module.sha256(previous_output)
@@ -182,10 +190,14 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source-ref", help="Replay a committed source pin, preserving its capture provenance")
     parser.add_argument("--run2-only", action="store_true", help="Repair only the ratified run-2 fleet pin")
+    parser.add_argument("--finding", choices=("CSF-012", "CSF-013", "Ruling 23"), required=True,
+                        help="Finding or steward ruling responsible for this repair receipt")
     args = parser.parse_args()
-    repair("etl_fleet_corpus", args.source_ref)
+    if args.finding == "Ruling 23" and not args.run2_only:
+        parser.error("Ruling 23 requires --run2-only")
+    repair("etl_fleet_corpus", args.source_ref, finding=args.finding)
     if not args.run2_only:
         for generator in ("etl_run3_fleet_corpus", "etl_run3_checkout_identity"):
-            repair(generator, args.source_ref)
+            repair(generator, args.source_ref, finding=args.finding)
         for population in ("fleet", "synthetic"):
-            repair("etl_run3b_fleet_corpus", args.source_ref, population)
+            repair("etl_run3b_fleet_corpus", args.source_ref, population, finding=args.finding)

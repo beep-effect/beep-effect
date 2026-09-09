@@ -321,3 +321,12 @@
 - **Prevention:** let managed proof runners skip optional global checkout
   registration when the Python environment is already available. Non-login shell
   execution still emitted the warning; both the verifier and all nine tests passed.
+
+## 2026-09-09: reconciliation fetch hit a local SSH configuration error
+
+- **Work:** fetching main before merging PR #1037 into the run-2 repair branch.
+- **Evidence:** `git fetch origin main` failed with `Bad owner or permissions` for
+  `/etc/ssh/ssh_config.d/20-systemd-ssh-proxy.conf`. A read-only HTTPS fetch of the
+  same public repository succeeded and refreshed `origin/main` to `22063e7b6d`.
+- **Prevention:** check the workstation SSH configuration ownership before fleet
+  dispatch. Public read-only fetches can use HTTPS without changing remote settings.

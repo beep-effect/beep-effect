@@ -45,6 +45,18 @@ class RepairRedactionTests(unittest.TestCase):
                     original = json.dumps({"message": original})
                     expected = json.dumps({"message": expected})
 
+    def test_repair_combines_process_member_removal_with_ruling_23_strings(self):
+        with patch.object(socket, "gethostname", return_value="fixture-host"):
+            message = f"beep-yeet-proof-locks-{fleet.sha256(b'fixture-host')[:12]}-uid-12345"
+            value = {"nested": [{"attached_pid": 12345, "OWNER-PROC-START": "start-fixture",
+                                 "procStartTime": None, "message": message}],
+                     "count": 12345, "ownerRef": "custody-fixture"}
+            ordinary = {**value, "nested": [{"message": message}]}
+            expected = {**value, "nested": [{"message": "beep-yeet-proof-locks-<host>-uid-<uid>"}]}
+            self.assertEqual(fleet.redact_string_values(value), ordinary)
+            self.assertEqual(fleet.redact_string_values(value, repair=True), expected)
+            fleet.scan_output_bytes([("fixture.json", fleet.encode_json(expected))])
+
     def test_safe_lookalikes_keys_and_scalar_types_are_preserved(self):
         with patch.object(socket, "gethostname", return_value="fixture-host"):
             value = {"uid-123": [None, True, False, 123, 1.5],
@@ -133,7 +145,9 @@ class CommittedRepairTests(unittest.TestCase):
                 first = {"finding": "CSF-012", "source_manifest_sha256": "a" * 64,
                          "changed_raw_payloads": 1, "live_recapture": False,
                          "superseded_manifest_sha256": "b" * 64}
-                original["security_resanitization"] = copy.deepcopy(first)
+                second = {"finding": "CSF-013", "source_manifest_sha256": "c" * 64,
+                          "changed_raw_payloads": 0, "live_recapture": False}
+                original["security_resanitization"] = {**copy.deepcopy(first), "updates": [second]}
                 for entry in emitted:
                     target = pin / entry.path
                     target.parent.mkdir(parents=True, exist_ok=True)
@@ -155,17 +169,19 @@ class CommittedRepairTests(unittest.TestCase):
                 (pin / path).write_bytes(b"corrupted\n")
                 corrupted = snapshot()
                 with self.assertRaisesRegex(SystemExit, "mismatched integrity"):
-                    repair.repair("etl_fleet_corpus")
+                    repair.repair("etl_fleet_corpus", finding="Ruling 23")
                 self.assertEqual(snapshot(), corrupted)
 
                 # Explicit source replay reads Git, despite corrupt destination bytes.
-                repair.repair("etl_fleet_corpus", source_ref)
+                repair.repair("etl_fleet_corpus", source_ref, finding="Ruling 23")
                 repaired = snapshot()
                 manifest = fleet.yaml.safe_load(repaired[fleet.MANIFEST_NAME])
                 history = manifest["security_resanitization"]
                 self.assertEqual({key: history[key] for key in first}, first)
-                self.assertEqual(len(history["updates"]), 1)
-                update = history["updates"][0]
+                self.assertEqual(len(history["updates"]), 2)
+                self.assertEqual(history["updates"][0], second)
+                update = history["updates"][1]
+                self.assertEqual(update["finding"], "Ruling 23")
                 self.assertEqual(update["ruling"], "Ruling 23")
                 self.assertEqual(update["residue_classes"], ["sha12(hostname)", "uid-[0-9]+"])
                 self.assertEqual(update["source_manifest_sha256"], fleet.sha256(original_bytes))
@@ -180,12 +196,13 @@ class CommittedRepairTests(unittest.TestCase):
                 for key in ("capture_instant", "admission", "checkouts", "ordering", "projection_rules"):
                     self.assertEqual(manifest[key], original[key])
                 fleet.verify_output_tree(pin)
-                repair.repair("etl_fleet_corpus")
+                repair.repair("etl_fleet_corpus", finding="Ruling 23")
                 self.assertEqual(snapshot(), repaired)
-                repair.repair("etl_fleet_corpus", source_ref)
+                repair.repair("etl_fleet_corpus", source_ref, finding="Ruling 23")
                 replay = fleet.yaml.safe_load(manifest_path.read_bytes())
                 self.assertEqual({key: replay["security_resanitization"][key] for key in first}, first)
-                self.assertEqual(replay["security_resanitization"]["updates"][0]["source_manifest_sha256"],
+                self.assertEqual(replay["security_resanitization"]["updates"][0], second)
+                self.assertEqual(replay["security_resanitization"]["updates"][1]["source_manifest_sha256"],
                                  fleet.sha256(original_bytes))
                 fleet.verify_output_tree(pin)
 
@@ -199,13 +216,22 @@ class CommittedRepairTests(unittest.TestCase):
 
     def test_run2_only_cli_never_loads_another_generator(self):
         script = fleet.REPO_ROOT / "goals/codex-security-findings-2026-09-08/research/scripts/resanitize-corpora.py"
+        for args, required in ((["--run2-only", "--source-ref", "HEAD"], "--finding"),
+                               (["--finding", "Ruling 23", "--source-ref", "HEAD"], "--run2-only")):
+            with self.subTest(args=args), patch.object(sys, "argv", [str(script), *args]), \
+                 patch.object(importlib.util, "spec_from_file_location", side_effect=AssertionError("no generator")), \
+                 contextlib.redirect_stderr(io.StringIO()) as errors:
+                with self.assertRaises(SystemExit) as exc:
+                    runpy.run_path(str(script), run_name="__main__")
+                self.assertEqual(exc.exception.code, 2)
+                self.assertIn(required, errors.getvalue())
         load_spec = importlib.util.spec_from_file_location
 
         def only_run2(name, path):
             self.assertEqual(name, "etl_fleet_corpus")
             return load_spec(name, path)
 
-        with patch.object(sys, "argv", [str(script), "--run2-only"]), \
+        with patch.object(sys, "argv", [str(script), "--run2-only", "--finding", "Ruling 23"]), \
              patch.object(sys, "dont_write_bytecode", True), \
              patch.object(importlib.util, "spec_from_file_location", side_effect=only_run2), \
              contextlib.redirect_stdout(io.StringIO()):
