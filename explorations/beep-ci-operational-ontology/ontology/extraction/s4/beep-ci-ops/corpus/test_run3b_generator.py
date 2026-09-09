@@ -106,7 +106,7 @@ class RedactionTests(unittest.TestCase):
         actual = rows[0]
         self.assertEqual(actual["ownerRef"], actual["attempt"]["ownerRef"])
         self.assertEqual(actual["runScope"]["ownerRef"], etl.sha256(f"1234:<absent>:{salt.hex()}".encode())[:12])
-        self.assertEqual(receipt["owner_refs_by_variant"], {"pid_pair": 1, "ownerpid": 1, "attachedpid": 1, "other": 0})
+        self.assertEqual(receipt["owner_refs_by_variant"], {"pid_pair": 1, "ownerpid": 1, "attached_identity": 1, "other": 0})
         self.assertEqual(receipt["redaction_counts"]["owner_refs_without_proc_start"], 1)
         etl.scan_output_bytes([("lease.json", etl.encode_json(actual)),
                                ("lease.properties", etl.encode_properties_projection(rows))])
@@ -427,14 +427,14 @@ class PinContractTests(unittest.TestCase):
                 for population, root in outputs.items():
                     other = outputs["synthetic" if population == "fleet" else "fleet"]
                     untouched = tree_bytes(other)
-                    repair.repair(etl.__name__, population=population)
+                    repair.repair(etl.__name__, population=population, finding="CSF-012")
                     self.assertEqual(tree_bytes(other), untouched)
                     rows = etl.decode_ndjson((root / messages[population]).read_bytes(), "fixture")
                     self.assertEqual(json.loads(rows[0]["message"]), {"pid": None, "proofTier": "full"})
                     before = tree_bytes(root)
-                    repair.repair(etl.__name__, population=population)
+                    repair.repair(etl.__name__, population=population, finding="CSF-012")
                     self.assertEqual(tree_bytes(root), before)
-                    repair.repair(etl.__name__, source_ref, population)
+                    repair.repair(etl.__name__, source_ref, population, finding="CSF-013")
                     self.assertEqual(tree_bytes(other), untouched)
                     manifest = yaml.safe_load((root / etl.MANIFEST_NAME).read_bytes())
                     self.assertEqual(manifest["security_resanitization"]["source_manifest_sha256"], originals[population])

@@ -62,7 +62,7 @@ class RedactionTests(unittest.TestCase):
         actual = rows[0]
         self.assertEqual(actual["ownerRef"], actual["attempt"]["ownerRef"])
         self.assertEqual(actual["runScope"]["ownerRef"], fleet.sha256(f"1234:<absent>:{salt.hex()}".encode())[:12])
-        self.assertEqual(receipt["owner_refs_by_variant"], {"pid_pair": 1, "ownerpid": 1, "attachedpid": 1, "other": 0})
+        self.assertEqual(receipt["owner_refs_by_variant"], {"pid_pair": 1, "ownerpid": 1, "attached_identity": 1, "other": 0})
         self.assertEqual(receipt["redaction_counts"]["owner_refs_without_proc_start"], 1)
         fleet.scan_output_bytes([("lease.json", fleet.encode_json(actual)),
                                ("lease.properties", fleet.encode_properties_projection(rows))])
@@ -174,6 +174,44 @@ class RedactionTests(unittest.TestCase):
                         with self.assertRaisesRegex(SystemExit, "host path"):
                             fleet.scan_output_bytes([(label, data)])
                     fleet.scan_output_bytes([(expected, expected.encode())])
+
+    def test_legacy_residue_gate_rejects_the_complete_process_member_domain(self):
+        keys = ("pid", "ppid", "ownerPid", "parentPid", "processId", "procStart",
+                "procStartTime", "processStart", "processStartTime", "processStartTicks",
+                "attachedPid", "ownerProcStart", "PROCESS_START_TICKS")
+        for key in keys:
+            row = {"nested": [{key: None}]}
+            candidates = [("fixture.json", legacy.encode_json(row)),
+                          ("fixture.ndjson", legacy.encode_ndjson([row])),
+                          ("fixture.properties", legacy.encode_properties_projection([{key: 271828}]))]
+            for path, data in candidates:
+                with self.subTest(key=key, path=path):
+                    with self.assertRaisesRegex(SystemExit, "process (identity member|identifier)|schema process metadata"):
+                        legacy.scan_output_bytes([(path, data)])
+        with self.assertRaisesRegex(SystemExit, "process identity member"):
+            legacy.scan_output_bytes([("fixture.json", b'{"proc\\u0053tart":null}')])
+        safe = {"message": '{"pid":null}', "failedStepId": "compile", "ownerRef": "fixture"}
+        legacy.scan_output_bytes([("fixture.json", legacy.encode_json(safe)),
+                                  ("fixture.properties", legacy.encode_properties_projection([safe]))])
+
+    def test_schema_process_metadata_is_removed_and_rejected_in_every_family(self):
+        private = {"attachedPid": 271828, "ownerProcStart": "start-fixture",
+                   "attached_pid": 271828, "OWNER-PROC-START": "start-fixture"}
+        row = {"runScope": private, "attempts": [private], "failedStepId": "compile",
+               "ownerRef": "custody-fixture", "count": 3}
+        expected = {**row, "runScope": {}, "attempts": [{}]}
+        for module in (fleet, identity, legacy, stage_b):
+            result = (module.redact_string_values(row) if module is legacy else
+                      module.redact(row, None, collections.Counter(), True))
+            self.assertEqual(result, expected, module.__name__)
+            module.scan_output_bytes([("fixture.json", module.encode_json(result))])
+            for key, value in private.items():
+                for name, data in (("fixture.json", module.encode_json({key: value})),
+                                   ("fixture.properties", f"{key}={value}\n".encode())):
+                    with self.subTest(module=module.__name__, key=key, name=name):
+                        with self.assertRaises(SystemExit) as exc:
+                            module.scan_output_bytes([(name, data)])
+                        self.assertNotIn(str(value), str(exc.exception))
 
     def test_embedded_json_remains_parseable_after_redaction(self):
         for module in (fleet, identity, legacy, stage_b):
@@ -423,6 +461,14 @@ class SyntheticReceiptTests(unittest.TestCase):
                     (root / fleet.MANIFEST_NAME).write_bytes(original)
             self.assertEqual(self.verify_cli(fleet, root).returncode, 0)
 
+    def test_source_replay_requires_an_explicit_finding_before_any_repair(self):
+        script = fleet.REPO_ROOT / "goals/codex-security-findings-2026-09-08/research/scripts/resanitize-corpora.py"
+        result = subprocess.run([sys.executable, str(script), "--source-ref", "HEAD"],
+                                capture_output=True, text=True, timeout=30)
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("--finding", result.stderr)
+        self.assertEqual(result.stdout, "")
+
     def fixture(self, module, root, message=None):
         scanned = "2026-01-01T00:00:00.000Z"
         if module is fleet:
@@ -506,7 +552,7 @@ class SyntheticReceiptTests(unittest.TestCase):
                 generator.write_text("# committed updated generator fixture\n")
                 git("add", ".")
                 git("commit", "-qm", "fixture: update generator")
-                repair.repair(fleet.__name__)
+                repair.repair(fleet.__name__, finding="CSF-012")
                 repaired = (pin / fleet.MANIFEST_NAME).read_bytes()
                 self.assertEqual(repaired.count(b"generator_lineage:\n"), 1)
                 self.assertIsNone(re.search(rb'attachedPid|ownerProcStart|ownerPid|"pid"', repaired))
@@ -516,20 +562,23 @@ class SyntheticReceiptTests(unittest.TestCase):
                 first = repaired_manifest["security_resanitization"]
                 self.assertEqual(first["source_manifest_sha256"], fleet.sha256(original))
                 self.assertEqual(first["changed_raw_payloads"], 1)
+                self.assertEqual(first["finding"], "CSF-012")
                 row = fleet.decode_ndjson((pin / "admission/fixture/journal.ndjson").read_bytes(), "fixture")[0]
                 self.assertEqual(json.loads(row["message"]), {"pid": None, "proofTier": "full"})
                 before = {p.relative_to(pin): p.read_bytes() for p in pin.rglob("*") if p.is_file()}
-                repair.repair(fleet.__name__)
+                repair.repair(fleet.__name__, finding="CSF-012")
                 self.assertEqual(before, {p.relative_to(pin): p.read_bytes() for p in pin.rglob("*") if p.is_file()})
                 generator.write_text("# next generator fixture\n")
-                repair.repair(fleet.__name__)
+                repair.repair(fleet.__name__, finding="CSF-013")
                 updated = fleet.yaml.safe_load((pin / fleet.MANIFEST_NAME).read_bytes())["security_resanitization"]
                 self.assertEqual({k: updated[k] for k in first}, first)
                 self.assertEqual(updated["updates"][0]["changed_raw_payloads"], 0)
-                repair.repair(fleet.__name__, source_ref)
+                self.assertEqual(updated["updates"][0]["finding"], "CSF-013")
+                repair.repair(fleet.__name__, source_ref, finding="CSF-013")
                 replay = fleet.yaml.safe_load((pin / fleet.MANIFEST_NAME).read_bytes())["security_resanitization"]
                 self.assertEqual(replay["source_manifest_sha256"], fleet.sha256(original))
                 self.assertEqual(replay["changed_raw_payloads"], 1)
+                self.assertEqual(replay["finding"], "CSF-013")
                 with self.assertRaisesRegex(SystemExit, "no matching committed provenance"):
                     repair.verify_generator_provenance(fleet, "0" * 64)
 

@@ -60,6 +60,10 @@ PID_IN_TEXT = re.compile(
     r"""(?P<prefix>\bpid(?P<key_quote>\\*["'])?(?:\s|\\+[nrt])*(?:[=:](?:\s|\\+[nrt])*)?(?P<value_quote>\\*["'])?)[0-9]+""",
     re.IGNORECASE,
 )
+PROCESS_METADATA_IN_TEXT = re.compile(
+    r"""\b(?:attached[_-]*pid|owner[_-]*proc[_-]*start)(?:\\*["'])?(?:\s|\\+[nrt])*[:=]""",
+    re.IGNORECASE,
+)
 TIMESTAMP_KEY = re.compile(r"(?:^ts$|AtMillis$|At$|TimestampMillis$|Timestamp$)")
 PROPERTY_KEY = re.compile(r"[A-Za-z0-9_]+")
 PROPERTY_RECORD_COMMENT = re.compile(r"# record (0|[1-9][0-9]*)")
@@ -76,7 +80,7 @@ PATH_RIGHT_BOUNDARY = r"(?=/|$|[\s\"'=,:;)\]])"
 # All three Yeet files above live in packages/tooling/tool/cli/src/commands/Yeet/internal/.
 PROCESS_MEMBER_ALLOWLIST: frozenset[str] = frozenset({"failedstepid", "stepid"})
 # Census labels are counts, not PID values; keep them outside free-text PID syntax.
-OWNER_VARIANTS = ("pid_pair", "ownerpid", "attachedpid", "other")
+OWNER_VARIANTS = ("pid_pair", "ownerpid", "attached_identity", "other")
 JSON_VALUE_BYTES = (
     rb'(?:"(?:\\.|[^"\\])*"|-?(?:0|[1-9]\d*)(?:\.\d+)?'
     rb'(?:[eE][+-]?\d+)?|true|false|null)'
@@ -247,7 +251,7 @@ def redact(value: JsonValue, salt: bytes | None, counts: collections.Counter,
         return value
     result: dict[str, JsonValue] = {}
     identities = {normalized_member(key): child for key, child in value.items() if process_member(key)}
-    if len(identities) != sum(process_member(key) for key in value):
+    if salt is not None and len(identities) != sum(process_member(key) for key in value):
         fail("ambiguous normalized process identity members")
     if identities and salt is not None:
         if "ownerRef" in value:
@@ -272,7 +276,7 @@ def redact(value: JsonValue, salt: bytes | None, counts: collections.Counter,
         # captureSalt is the hexadecimal representation of 32 random bytes.
         result["ownerRef"] = sha256(f"{owner}:{start}:{salt.hex()}".encode())[:12]
         counts["owner_refs"] += 1
-        counts["owner_refs_variant_" + ("pid_pair" if variant == "pid" else variant)] += 1
+        counts["owner_refs_variant_" + {"pid": "pid_pair", "attachedpid": "attached_identity"}.get(variant, variant)] += 1
         if start == "<absent>":
             counts["owner_refs_without_proc_start"] += 1
     for key, child in value.items():
@@ -502,6 +506,8 @@ def scan_output_bytes(files: list[tuple[str, bytes]]) -> None:
         properties = [match[1].decode() for match in re.finditer(rb"(?m)^[ \t]*([^\s=]+)[ \t]*=", data)]
         if any(process_member(key) for key in members + properties):
             fail("residue scan failed: process identity member")
+        if PROCESS_METADATA_IN_TEXT.search(combined.decode("utf-8")):
+            fail("residue scan failed: schema process metadata")
         if PID_IN_TEXT.search(combined.decode("utf-8")):
             fail("residue scan failed: free-text process identifier")
         if b"ghp_" in combined or b"github_pat_" in combined:

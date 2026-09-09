@@ -1,6 +1,6 @@
-"""Repair captured corpus bytes for CSF-012 without recapturing live sources.
+"""Repair captured corpus redaction without recapturing live sources.
 
-Run with ``uv run --offline --with pyyaml python <this-script>``.
+Run with ``uv run --offline --with pyyaml python <this-script> --finding CSF-013``.
 Each generator verifies the staged result before promotion. Original capture
 metadata and source counts remain intact; the prior manifest digest records
 the security-only transformation. An already repaired pin is verified unchanged.
@@ -13,7 +13,6 @@ import collections
 import argparse
 import importlib.util
 import io
-import json
 import os
 import shutil
 import subprocess
@@ -68,7 +67,8 @@ def load_generator(name: str):
     return module
 
 
-def repair(name: str, source_ref: str | None = None, population: str | None = None) -> None:
+def repair(name: str, source_ref: str | None = None, population: str | None = None,
+           *, finding: str) -> None:
     module = load_generator(name)
     root = module.OUTPUT_ROOT if population is None else module.OUTPUT_ROOTS[population]
 
@@ -91,11 +91,6 @@ def repair(name: str, source_ref: str | None = None, population: str | None = No
         print(f"{root.name}: verified unchanged")
         return
     verify_generator_provenance(module, manifest["generator_sha256"])
-    if name == "etl_run3_fleet_corpus" and "generator_lineage" in manifest:
-        module.verify_fields(manifest, {"generator_lineage": {
-            "frozen_sha256": module.FROZEN_GENERATOR_SHA256,
-            "amended_sha256": manifest["generator_sha256"],
-            "ruling": 22, "reason": module.LINEAGE_REASON}}, "source generator lineage")
     receipts = manifest["files"]
     paths = [module.safe_relative_path(r["path"]).as_posix() for r in receipts]
     actual = sorted(source)
@@ -135,8 +130,15 @@ def repair(name: str, source_ref: str | None = None, population: str | None = No
         if len(pid_rules) != 1:
             raise SystemExit("refusing ambiguous PID redaction provenance")
         rules[pid_rules[0]] = module.PID_REDACTION_RULE
+        rules[:] = [rule for rule in rules if rule not in (
+            "Never transform structural keys, booleans, nulls, or numeric values.",
+            module.PROCESS_REDACTION_RULE,
+        )]
+        rules[:] = [rule.replace("recursively transform string values only:",
+                                "recursively drop process identity members, then transform strings:") for rule in rules]
+        rules.append(module.PROCESS_REDACTION_RULE)
     repair_record = {
-        "finding": "CSF-012", "source_manifest_sha256": module.sha256(original),
+        "finding": finding, "source_manifest_sha256": module.sha256(original),
         "changed_raw_payloads": changed, "live_recapture": False,
     }
     if "security_resanitization" in manifest:
@@ -147,15 +149,6 @@ def repair(name: str, source_ref: str | None = None, population: str | None = No
         manifest["security_resanitization"]["superseded_manifest_sha256"] = module.sha256(previous_output)
     manifest["totals"]["payload_bytes"] = sum(map(len, payloads.values()))
     prefix = original.split(b"schema_version:", 1)[0]
-    if name == "etl_run3_fleet_corpus" and "generator_lineage" in manifest:
-        # Stage A emits lineage before schema_version. Replace that block once,
-        # preserving the frozen origin and the escaped, source-validated reason.
-        lineage = manifest.pop("generator_lineage")
-        reason = json.dumps(lineage["reason"]).replace("P", r"\u0050")
-        prefix = prefix.split(b"generator_lineage:\n", 1)[0] + (
-            f"generator_lineage:\n  frozen_sha256: {lineage['frozen_sha256']}\n"
-            f"  amended_sha256: {generator_digest}\n  ruling: 22\n  reason: {reason}\n"
-        ).encode()
     for _ in range(12):
         encoded = prefix + yaml.safe_dump(manifest, sort_keys=False, allow_unicode=True, width=100).encode()
         total = manifest["totals"]["payload_bytes"] + len(encoded)
@@ -192,8 +185,10 @@ def repair(name: str, source_ref: str | None = None, population: str | None = No
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source-ref", help="Replay a committed source pin, preserving its capture provenance")
+    parser.add_argument("--finding", choices=("CSF-012", "CSF-013"), required=True,
+                        help="Finding responsible for this repair receipt")
     args = parser.parse_args()
     for generator in ("etl_fleet_corpus", "etl_run3_fleet_corpus", "etl_run3_checkout_identity"):
-        repair(generator, args.source_ref)
+        repair(generator, args.source_ref, finding=args.finding)
     for population in ("fleet", "synthetic"):
-        repair("etl_run3b_fleet_corpus", args.source_ref, population)
+        repair("etl_run3b_fleet_corpus", args.source_ref, population, finding=args.finding)

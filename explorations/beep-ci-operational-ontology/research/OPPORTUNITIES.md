@@ -396,3 +396,35 @@
   `.beep/corpus-test-repos/` so tests remain inside the authorized worktree.
 - **Prevention:** run the full union of capture and historical repair regressions
   whenever a redaction pattern or manifest schema changes.
+
+## 2026-09-09: reconciliation inherited an incomplete file-URI replay
+
+- **Work:** landing the file-URI boundary fix before merging security PR #1037.
+- **Evidence:** the initial Stage A manifest diff changed its generator digest and
+  added a zero-payload `CSF-012` repair receipt for the URI-only change. Step 0 of
+  `research/run3-lanes/reconcile-1037-brief.md` forbids pin repair or refresh. The
+  diff was preserved in the lane's ignored receipt directory and the committed
+  manifest restored; all three refreshes follow the merge.
+- **Prevention:** keep incomplete replay output separate from the code-and-test
+  handoff and require the finding-attribution check before changing a manifest.
+- **Context gap:** the requested Ruling 23 is absent from the starting worktree
+  (ends at 22) and fetched main at `22063e7b6d` (ends at 21). The lane requested
+  the missing text and does not author a ruling.
+- **Environment:** SSH fetch failed on system proxy-configuration permissions;
+  a command-scoped HTTPS fetch succeeded without changing persistent settings.
+
+## 2026-09-09: CSF-013 rules collide with refreshed custody and lineage
+
+- **Work:** combining the #1037 scanner and tests with the refreshed generators.
+- **Evidence:** the first merged suite retained all 63 tests but failed on
+  `schema process metadata`: the YAML custody count label `attachedpid:`
+  matched the new text rule. A security regression also supplied duplicate
+  normalized members during unsalted replay, where all such keys are removed.
+- **Repair:** rename only the census bucket to `attached_identity`; preserve
+  the scanner and salted capture's ambiguous-identity rejection.
+- **Boundary:** taking the security repair script exactly from main discards
+  this branch's Stage A lineage validation/re-encoding fix. A separate proposed
+  patch is prepared for the operator because the brief assigns that subtree
+  to main while also requiring the lineage regression to survive.
+- **Prevention:** include the refreshed manifest format in security repair
+  compatibility tests and separate process metadata names from count labels.
