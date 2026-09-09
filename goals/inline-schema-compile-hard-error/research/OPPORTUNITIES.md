@@ -380,6 +380,13 @@
   3,153-test surface in the unit and property lanes for 352 and 402 seconds,
   respectively, despite equivalent proof earlier in that same preview.
   Coverage then ran its distinct instrumented proof for 416 seconds.
+  In preview `64a5996a4e`, the 1,022-file TSGo test check passed in 440.5
+  seconds under `cheap-gates:test-tsgo`, then the unchanged preview dispatched
+  the identical command again as `quality:check:tsgo-tests` after JSDoc; that
+  second pass took 456.7 seconds. The nested check aggregate then started a
+  third invocation of the same TSGo test checker through the direct CLI
+  entry point, still checking 1,022 files across 139 packages; it passed after
+  another 460.5 seconds.
 - **Prevention:** Give repo-cli and other shared scripts and commands a bounded
   progress contract: structured phase, current-unit, completed, remaining,
   elapsed, and last-completed events plus concise interactive heartbeats. Key
@@ -431,3 +438,38 @@
   and uncommitted inputs in the receipt identity; pin the recorded head for
   the run and refuse to relabel results if it changes. Test resume behavior
   across two clean commits, then rerun the full owner matrix.
+
+## 2026-09-08 — Opening census did not cover later package changes
+
+- **Work:** Check the scope of the fresh package matrix against the shipped
+  implementation diff before accepting its receipt.
+- **Evidence:** PR #1019 changed 108 package owners, while the runner selected
+  106 from the opening census plus lint-rules. FreshBooks and effect-drizzle
+  were missing. Separate canonical package verification passed for both on
+  the current head; the original matrix alone does not cover every handoff.
+- **Prevention:** Union census owners with owners of the final implementation
+  diff, including later reconciliation and quality repairs. Record that owner
+  inventory with the proof identity and report uncovered owners before running.
+
+## 2026-09-08 — Admission wait suggested an incomplete status command
+
+- **Work:** Inspect scheduler holders after the package matrix waited ten
+  minutes for admission.
+- **Evidence:** Admission suggested `bun run beep quality scheduler status`,
+  but that exact command exited 1 with `Missing required flag: --json`.
+- **Prevention:** Keep emitted recovery commands executable as printed. Make
+  the status flag optional or include it in the wait diagnostic, and test the
+  suggested command against the CLI's parsed options.
+
+## 2026-09-08 — Unrelated agent settings stopped the package proof
+
+- **Work:** Run the fresh committed-tree package matrix for PR #1028.
+- **Evidence:** Seven packages passed before `@beep/ai-sync` rejected four
+  Graft auto-approval entries in the pre-existing dirty `.claude/settings.json`.
+  The overlay is unrelated to this goal and must not be modified to make the
+  proof pass. A separate worktree at the same commit isolates the acceptance
+  run without changing the user's settings.
+  The isolated `@beep/ai-sync` verification then passed with audit and docgen.
+- **Prevention:** Run final package matrices in a clean, pinned worktree, or
+  explicitly identify dirty configuration inputs before admission. Keep local
+  overlay diagnostics separate from committed-source acceptance evidence.

@@ -62,7 +62,7 @@ Higher sources outrank lower sources when they conflict.
 - [x] Repository lint reports zero `beep(no-inline-schema-compile)` findings.
 - [x] The lint rule is configured as an error after zero is reached.
 - [x] Focused rule tests cover inline rejection and module-scope acceptance.
-- [ ] Every affected workspace package completes its required package verify.
+- [x] Every affected workspace package completes its required package verify.
 - [x] Generated sources are regenerated from their updated owners without
       unexplained drift.
 - [ ] Canonical repository and hosted verification are green.

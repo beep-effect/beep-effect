@@ -33,10 +33,11 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P2 verification, P3 review, and P4 closeout are in progress. The implementation
-fixes are merged; this follow-up repairs the package-proof receipt identity and
-retains the reflection. Closure requires fresh package receipts and a terminal
-Yeet monitor result.
+P2 verification is complete; P3 review and P4 closeout are in progress. The
+implementation and package-proof identity repair are merged. The new full
+local proof and all package verification passed. Closure still requires
+publication of the final receipts and a terminal Yeet monitor verdict. The
+final publication path awaits operator direction after PR #1028 merged before closeout.
 
 ## Latest Evidence
 
@@ -49,14 +50,15 @@ Yeet monitor result.
   2026-09-08. The refreshed
   [`residual census`](./research/residual-census.json) reports zero findings on
   the merged implementation, and `beep/no-inline-schema-compile` is an error.
-- The [`106-owner matrix`](./research/package-verification.json) records a
-  historical passing run. Its old digest omitted committed code, so that
-  artifact is not accepted as final-tree package evidence. A fresh matrix with
-  a committed-tree fingerprint is required before closure.
-  Later reconciliation passed full package verification for `@beep/semantica`,
-  `@beep/freshbooks`, and `@beep/repo-cli`, plus focused tests and quick package
-  verification for the four test-only owners. Fresh HTML regeneration has no
-  tracked diff; the final lint-rule suite passes all 66 tests.
+- The [v2 package matrix](./research/package-verification.json) passed all 106
+  owners in a clean worktree at `02d88af51c`, with committed tree
+  `786d98065f3a3628599a4691e0314b5fb004bff3`. Its owner inventory has no missing,
+  extra, or duplicate entries. The earlier local-settings failure is excluded
+  from acceptance, as is the legacy report without committed-tree identity.
+  Supplemental canonical verification for `@beep/freshbooks` and `@beep/effect-drizzle`
+  covers the two additional owners found in the shipped implementation diff.
+  Fresh HTML regeneration has no tracked diff; the lint-rule suite passes all
+  66 tests.
 - [PR #1019](https://github.com/beep-effect/beep-effect/pull/1019) shipped the
   migration. [PR #1022](https://github.com/beep-effect/beep-effect/pull/1022)
   shipped recursive schema-literal classification and complete environment
@@ -66,9 +68,18 @@ Yeet monitor result.
   share Git tree `6a9533d44b007cb26959789f22d7fa7768dc7615`. Hosted checks are
   green. [`research/closeout-evidence.md`](./research/closeout-evidence.md)
   records the commits, commands, results, and review links.
-- The [closeout reflection](./history/reflections/2026-09-08-codex.md) is retained
-  with the proof-runner repair. The lifecycle will close in this PR after its
-  publication and review checks reach the required terminal result.
+- The new PR #1028 merged-preview proof also passed: full tier, 34 reported
+  lanes, recorded execution time 37 minutes 2 seconds. The preview and reviewed
+  head share tree `786d98065f3a3628599a4691e0314b5fb004bff3`. Affected-package
+  steps select no tasks for this goal-only diff; the separate owner matrix
+  supplies the required package-level coverage.
+- [PR #1028](https://github.com/beep-effect/beep-effect/pull/1028) shipped the
+  proof-runner repair and retained the
+  [reflection](./history/reflections/2026-09-08-codex.md). Its required hosted
+  checks passed, but it merged before local verification finished. Three of
+  its four review threads are resolved; the package-evidence thread remains
+  open. The lifecycle remains active until final evidence and publication
+  satisfy the remaining gates.
 
 ## Notes
 
