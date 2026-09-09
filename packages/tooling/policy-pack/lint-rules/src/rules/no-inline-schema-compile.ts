@@ -8,7 +8,7 @@
 
 import { thunkFalse } from "@beep/utils/thunk";
 import { defineRule } from "@oxlint/plugins";
-import { HashSet, MutableHashSet } from "effect";
+import { HashSet, Match, MutableHashSet } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -149,35 +149,33 @@ export default defineRule({
       const expression = unwrapExpression(node);
       if (O.isNone(expression)) return false;
 
-      switch (expression.value.type) {
-        case "Identifier":
-        case "MemberExpression":
-          return isStaticSchemaReference(expression.value);
-        case "Literal":
-          return true;
-        case "ArrayExpression":
-          return A.every(
-            expression.value.elements,
-            (element) =>
-              element === null ||
-              isStaticSchemaExpression(element.type === "SpreadElement" ? element.argument : element)
-          );
-        case "ObjectExpression":
-          return A.every(expression.value.properties, (property) => {
-            if (property.type === "SpreadElement") return isStaticSchemaExpression(property.argument);
-            if (property.computed && !isStaticSchemaExpression(property.key)) return false;
-            return property.kind === "init" && !property.method && isStaticSchemaExpression(property.value);
-          });
-        case "TemplateLiteral":
-          return A.isReadonlyArrayEmpty(expression.value.expressions);
-        case "CallExpression":
-          return O.match(asSchemaMethodCall(expression.value), {
-            onNone: thunkFalse,
-            onSome: ({ args }) => A.every(args, isStaticSchemaExpression),
-          });
-        default:
-          return false;
-      }
+      return Match.value(expression.value).pipe(
+        Match.discriminators("type")({
+          Identifier: isStaticSchemaReference,
+          MemberExpression: isStaticSchemaReference,
+          Literal: () => true,
+          ArrayExpression: ({ elements }) =>
+            A.every(
+              elements,
+              (element) =>
+                element === null ||
+                isStaticSchemaExpression(element.type === "SpreadElement" ? element.argument : element)
+            ),
+          ObjectExpression: ({ properties }) =>
+            A.every(properties, (property) => {
+              if (property.type === "SpreadElement") return isStaticSchemaExpression(property.argument);
+              if (property.computed && !isStaticSchemaExpression(property.key)) return false;
+              return property.kind === "init" && !property.method && isStaticSchemaExpression(property.value);
+            }),
+          TemplateLiteral: ({ expressions }) => A.isReadonlyArrayEmpty(expressions),
+          CallExpression: (call) =>
+            O.match(asSchemaMethodCall(call), {
+              onNone: thunkFalse,
+              onSome: ({ args }) => A.every(args, isStaticSchemaExpression),
+            }),
+        }),
+        Match.orElse(thunkFalse)
+      );
     };
 
     const isNestedStaticSchemaCall = (node: MaybeNode): boolean =>
