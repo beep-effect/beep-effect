@@ -255,3 +255,33 @@ test check also passed in 461,906 ms. After the new review requested the
 successor PR reference, the already-red publication was interrupted cleanly
 with exit 130 so the correction could be published promptly. These partial
 results are not a completed full proof.
+
+### PR #1042 review correction and DNS-failed proof
+
+Commit `6bd41dd036353bc1d51c48fb25625857fe5171fb`, tree
+`a8e84ba4cc56e780f7ca5d2729e62b655f0c08d5`, updates the packet to identify
+#1042 and its draft state. Its clean-HEAD frozen installation passed and
+Yeet pushed it before continuing the full proof. The successor-status review
+thread is resolved. The closeout review gate passed with Greptile 5/5, zero
+issues, zero actionable threads, and zero unresolved threads. Draft status
+intentionally still blocks `merge-ready: yes`.
+
+The publication ended at 08:03:18 UTC on 2026-09-09 with exit 128, after
+743,605 ms. All 15 cheap gates passed, including the TSGo check of 1,024 test
+files in 139 packages in 445,347 ms. The pre-push security lane also passed
+with no issues. The secrets lane then failed when its refresh of
+`origin/main` could not resolve `github.com`; fail-fast left 26 remaining
+pre-push lanes unrun. No local CI-parity preview ran in this attempt. These
+results are partial evidence, not a completed full proof.
+
+The verdict header again retained the invocation's pre-commit head,
+`e749d9a89e`, while the installation, push, and live Git receipts identify
+`6bd41dd036`. The stale header is not exact-head acceptance evidence. The
+unrelated settings overlay was restored with its expected checksum.
+
+DNS subsequently recovered without a configuration change. The exact Git
+fetch succeeded, and `bun run beep ci lane secrets` then passed with exit 0
+in 2,569 ms, scanning both successor commits with no leaks. A fresh GitHub
+read confirmed #1042 remained open as a draft on `6bd41dd036`, and its watcher
+was restarted. The full proof still requires a successful retry; neither the
+single-lane recovery nor the passing review gate replaces it.

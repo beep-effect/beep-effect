@@ -547,3 +547,22 @@
   ignored-projection drift from tracked README or source drift, and expose
   cheap projection failures before long checks. Preserve that distinction in
   the repair command instead of making operators invoke internal read APIs.
+
+## 2026-09-09 - Network failure produced unrelated repair and PR-state hints
+
+- **Work:** Complete the full publication proof and watch draft PR #1042 on
+  commit `6bd41dd036`.
+- **Evidence:** All 15 cheap gates and the security lane passed. The secrets
+  lane then failed at `git fetch origin main:refs/remotes/origin/main --quiet`
+  with `Could not resolve hostname github.com: Temporary failure in name
+  resolution`, exit 128. The verdict instead suggested inspecting an OSV
+  finding and rerunning security. At the same time, the watcher reported that
+  an open PR was required. Subsequent reads confirmed #1042 remained open as
+  a draft, and the exact fetch and canonical secrets lane passed after DNS
+  recovered. The full proof failed; 26 remaining pre-push lanes did not run.
+- **Prevention:** Attribute repair hints to the actual failing step and
+  preserve its diagnostic. Distinguish failed remote lookups from confirmed
+  absent or closed PRs. A bounded retry for transient network failures could
+  avoid discarding completed work, provided head, tree, environment, and
+  proof-scope identities still match; a passing retry of one lane must never
+  be reported as a completed aggregate proof.
