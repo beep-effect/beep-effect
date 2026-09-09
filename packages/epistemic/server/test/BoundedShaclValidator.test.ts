@@ -11,11 +11,10 @@ import {
   ShaclValidationViolation,
 } from "@beep/semantic-web/services/shacl-validation";
 import { productEntityFixtureInput } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect, it, vi } from "@effect/vitest";
 import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { vi } from "vitest";
 
 const decodeShaclValidationRequest = S.decodeEffect(ShaclValidationRequest);
 const encodeDataset = S.encodeEffect(Dataset);
@@ -140,6 +139,42 @@ describe("@beep/epistemic-server bounded SHACL validator", () => {
           expect(unlimited.truncated).toBe(false);
           expect(makeViolation).toHaveBeenCalledTimes(3);
         }).pipe(Effect.ensuring(Effect.sync(() => makeViolation.mockRestore())));
+      })
+    );
+
+    it.effect(
+      "preserves actual conformance with a zero result limit",
+      Effect.fnUntraced(function* () {
+        const service = yield* ShaclValidationService;
+        const encodedDataset = yield* encodeDataset(dataset);
+        const conforming = yield* service.validate(
+          yield* decodeShaclValidationRequest({
+            dataset: encodedDataset,
+            maxResults: 0,
+            shapes: [{ properties: [{ minCount: 1, path: makeNamedNode("https://schema.org/name") }] }],
+          })
+        );
+        expect(conforming.conforms).toBe(true);
+        expect(conforming.truncated).toBe(false);
+        expect(conforming.violations).toEqual([]);
+
+        const nonconforming = yield* service.validate(
+          yield* decodeShaclValidationRequest({
+            dataset: encodedDataset,
+            maxResults: 0,
+            shapes: [
+              {
+                properties: [
+                  { minCount: 1, path: makeNamedNode("https://schema.org/name") },
+                  { minCount: 1, path: makeNamedNode("https://schema.org/knows") },
+                ],
+              },
+            ],
+          })
+        );
+        expect(nonconforming.conforms).toBe(false);
+        expect(nonconforming.truncated).toBe(true);
+        expect(nonconforming.violations).toEqual([]);
       })
     );
 

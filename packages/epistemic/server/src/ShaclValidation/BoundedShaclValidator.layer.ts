@@ -207,7 +207,7 @@ const validationResult = (
   let violations: Array<ShaclValidationViolation> = emptyViolations;
   for (const batch of violationBatches) {
     violations = pipe(violations, A.appendAll(batch));
-    if (O.isSome(maxResults) && violations.length >= maxResults.value) {
+    if (violations.length > 0 && O.isSome(maxResults) && violations.length >= maxResults.value) {
       return ShaclValidationResult.make({
         conforms: false,
         violations: pipe(violations, A.take(maxResults.value)),

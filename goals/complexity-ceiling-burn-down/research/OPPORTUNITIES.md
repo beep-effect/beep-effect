@@ -609,3 +609,10 @@ all three without it. All nine UI tests and five bounded-validator tests pass.
 Behavior-preservation review must include intentionally empty callback results
 and traversal work, not just returned values. The new literal-default docgen
 fixture also uses a titled Example section; its focused test passes.
+
+A follow-up review caught an inherited zero-limit edge in that original loop:
+an empty first property batch satisfied a zero cap and incorrectly reported
+nonconformance. The cap now short-circuits only after an actual violation. A
+zero limit returns no details while preserving conformance; the regression
+also checks a conforming first property followed by a later violation. The
+conforming zero-limit case fails before this correction.
