@@ -777,6 +777,7 @@ describe("yeet planner", () => {
     expect(A.flatMap(findStep(plan.steps, "full:pre-push").waves ?? [], (wave) => wave.laneIds)).toEqual([
       "fallow:audit",
       "fallow:dead-code",
+      "fallow:health",
       "quality:security",
       "quality:secrets",
       "quality:commitlint",
@@ -795,6 +796,7 @@ describe("yeet planner", () => {
       "quality:build",
       "quality:desktop-ipc",
       "quality:jsdoc-ratchet",
+      "quality:doctest",
       "quality:docgen",
       "quality:test-integration",
       "quality:lint",
@@ -802,7 +804,6 @@ describe("yeet planner", () => {
       "quality:check",
       "quality:test-unit",
       "quality:coverage",
-      "fallow:health",
     ]);
     expect(findStep(plan.steps, "full:cheap-gates").waves).toEqual([
       expect.objectContaining({

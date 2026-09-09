@@ -815,6 +815,7 @@ describe("quality task adapter", () => {
       "quality:knip",
       "quality:jsdoc-ratchet",
       "quality:docgen",
+      "quality:doctest",
       "quality:coverage",
       "quality:codegen",
       "quality:commitlint",

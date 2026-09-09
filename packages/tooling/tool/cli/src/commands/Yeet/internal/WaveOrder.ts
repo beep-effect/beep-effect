@@ -209,6 +209,9 @@ export const DEFAULT_GATE_ORDER_SEED = GateOrderSeed.make({
     policyHostedRow("quality:knip", 80, 9, 11 / 832, O.some(20)),
     hostedRow("quality:jsdoc-ratchet", 82, 16, 0),
     hostedRow("quality:docgen", 115, 5, 0),
+    // Hosted "Heavy / Doctest" is laneRows[16] (p50 82 s); the lane joined the
+    // pre-push set with the quality-lane audit (2026-09-09, D8).
+    hostedRow("quality:doctest", 82, 16, 0),
     hostedRow(
       "quality:coverage",
       603,
@@ -242,6 +245,20 @@ export const DEFAULT_GATE_ORDER_SEED = GateOrderSeed.make({
       "A1 Fallow advisory wrapper P50 proxy; blocking inner-lane durations were not yet recorded.",
       3 / 832,
       O.some(33),
+      "precise",
+      PRECISE_BASIS,
+      "policy-preflight",
+      POLICY_PREFLIGHT_BASIS
+    ),
+    // Unseeded lanes sort after every seeded one, which put this 2-second gate
+    // behind coverage (quality-lane audit 2026-09-09, D2 / D8).
+    seedRow(
+      "fallow:health",
+      1.863,
+      localDurationPointer(15),
+      "A1 Fallow advisory wrapper P50 proxy; blocking inner-lane durations were not yet recorded.",
+      0,
+      O.none(),
       "precise",
       PRECISE_BASIS,
       "policy-preflight",
