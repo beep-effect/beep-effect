@@ -10,6 +10,7 @@ import * as HashSet from "effect/HashSet";
 import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { FastCheck as fc } from "effect/testing";
 import { decodeAdmissionPolicyParams } from "@/projection/AboxPolicy";
 import { CiOpsProjection, CiOpsProjectionLive } from "@/projection/CiOpsProjection";
@@ -99,6 +100,7 @@ const inputFor = (
   projectionInstantMillis: number = projectionInstantFor(pending)
 ): ProjectionInput =>
   ProjectionInput.make({
+    episodeId: "verification-1",
     policy,
     pending,
     ledger,
@@ -359,6 +361,7 @@ describe("@beep/ciops S7 projection", () => {
       const policy = yield* readPolicy();
       const emptyFor = (proposalId: string) =>
         ScheduleProposal.make({
+          episodeId: "verification-1",
           proposalId,
           projectionInstantMillis: NonNegativeInt.make(1_000),
           steps: [],
@@ -372,8 +375,12 @@ describe("@beep/ciops S7 projection", () => {
 
       expect(slash.content).toBe(again.content);
       expect(slash.content).not.toBe(question.content);
-      expect(slash.content).toContain("ciops-prov:scheduler ciops-prov:hasCurrentProposal ciops-prov:a%2Fb .");
-      expect(question.content).toContain("ciops-prov:scheduler ciops-prov:hasCurrentProposal ciops-prov:a%3Fb .");
+      expect(slash.content).toContain(
+        "ciops-prov:episode-verification%2D1 ciops-prov:hasCurrentProposal ciops-prov:a%2Fb ."
+      );
+      expect(question.content).toContain(
+        "ciops-prov:episode-verification%2D1 ciops-prov:hasCurrentProposal ciops-prov:a%3Fb ."
+      );
       expect(slash.content).toContain(
         "# PROVISIONAL GRAPH — closure OPEN; excluded from negation and ratified typing."
       );
@@ -395,6 +402,107 @@ describe("@beep/ciops S7 projection", () => {
       expect(stepped.content).toContain("rdf:type ciops:SeatRequest .");
       expect(stepped.content).not.toContain("WorkUnitSpecification");
       expect(stepped.content).not.toContain("schedulesWorkUnit ");
+    }).pipe(provideScopedLayer(BunFileSystem.layer))
+  );
+
+  it.effect("emits the v2 golden ordering cluster with nonce evidence and a step-less deferred tail", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const policy = yield* readPolicy();
+      const pending = A.map(["admitted-a", "admitted-b", "deferred-c"], (nonce, index) =>
+        PendingRequest.make({
+          nonce,
+          kind: "merged-preview",
+          priority: "verify",
+          weightTokens: policy.weights.mergedPreview,
+          originKey: "origin-test",
+          enqueuedAtMillis: NonNegativeInt.make(index),
+        })
+      );
+      const proposal = yield* projectSchedule(inputFor(policy, pending, emptyTokenLedger, 1_000));
+      const document = yield* emitScheduleAbox(proposal);
+      const golden = yield* fs.readFileString("test/fixtures/emission-v2.ttl");
+
+      expect(document.content).toBe(golden);
+      expect(proposal.episodeId).toBe("verification-1");
+      expect(A.map(proposal.steps, (step) => step.stepIndex)).toEqual([0, 1]);
+      expect(A.map(proposal.deferredTail, (request) => request.nonce)).toEqual(["deferred-c"]);
+      expect(document.content).toContain('ciops-prov:scheduledUnitRef "deferred-c"^^xsd:string');
+      expect(document.content).toContain('ciops-prov:hasScopeTag "admission"^^xsd:string');
+      expect(document.content).not.toContain("ciops-prov:hasScope ");
+      expect(document.content).not.toContain("ciops-prov:scheduler ");
+      expect(document.content).not.toContain("-step-2 ");
+      expect(document.content).not.toContain("ciops-prov:Scope");
+    }).pipe(provideScopedLayer(BunFileSystem.layer))
+  );
+
+  it.effect("keeps empty and fully deferred proposals grounded without inventing steps", () =>
+    Effect.gen(function* () {
+      const policy = yield* readPolicy();
+      const request = PendingRequest.make({
+        nonce: "deferred-only",
+        kind: "full-proof",
+        priority: "verify",
+        weightTokens: policy.weights.fullProof,
+        originKey: "origin-test",
+        enqueuedAtMillis: NonNegativeInt.make(0),
+      });
+      const ledger = TokenLedgerState.make({
+        activeGrants: HashMap.make(["active", policy.capacityMaxTokens]),
+        activeReviewFixNonces: HashSet.empty(),
+        activeTokenTotal: NonNegativeInt.make(policy.capacityMaxTokens),
+      });
+      const empty = yield* projectSchedule(inputFor(policy, []));
+      const deferred = yield* projectSchedule(inputFor(policy, [request], ledger));
+      for (const proposal of [empty, deferred]) {
+        const document = yield* emitScheduleAbox(proposal);
+        expect(document.content).toContain("rdf:type ciops-prov:VerificationEpisode .");
+        expect(document.content).toContain("rdf:type ciops-prov:AdmissionProjectionSpecification .");
+        expect(document.content).toContain("ciops-prov:hasProjectionSpecification ");
+        expect(document.content).not.toContain("ciops-prov:hasStep ");
+        expect(document.content).not.toContain("ciops-prov:stepIndex ");
+      }
+      const document = yield* emitScheduleAbox(deferred);
+      expect(document.content).toContain("ciops-prov:defersSeatRequest ");
+      expect(document.content).toContain('ciops-prov:scheduledUnitRef "deferred-only"^^xsd:string');
+    }).pipe(provideScopedLayer(BunFileSystem.layer))
+  );
+
+  it.effect("separates episode identity from specification content and escapes tuple boundaries", () =>
+    Effect.gen(function* () {
+      const policy = yield* readPolicy();
+      const first = yield* projectSchedule(inputFor(policy, []));
+      const emitVariant = (patch: Partial<ScheduleProposal>) =>
+        emitScheduleAbox(ScheduleProposal.make({ ...first, ...patch }));
+      const firstDocument = yield* emitVariant({ policyDigest: "a-b", journalPrefixDigest: "c" });
+      const otherDigest = yield* emitVariant({ policyDigest: "a", journalPrefixDigest: "b-c" });
+      const otherEpisode = yield* emitVariant({ episodeId: "other/episode" });
+      const sameSpec = yield* emitVariant({ episodeId: "other?episode", proposalId: "revision-2" });
+      const specLine = (content: string) =>
+        A.filter(Str.split(content, "\n"), Str.includes("rdf:type ciops-prov:AdmissionProjectionSpecification"));
+
+      expect(specLine(firstDocument.content)).not.toEqual(specLine(otherDigest.content));
+      expect(specLine(otherEpisode.content)).toEqual(specLine(sameSpec.content));
+      expect(otherEpisode.content).toContain(
+        "ciops-prov:episode-other%2Fepisode rdf:type ciops-prov:VerificationEpisode"
+      );
+      expect(sameSpec.content).toContain("ciops-prov:episode-other%3Fepisode rdf:type ciops-prov:VerificationEpisode");
+
+      const special = yield* emitVariant({ policyDigest: 'policy"\\\n', journalPrefixDigest: 'prefix"\\\n' });
+      expect(special.content).toContain('ciops-prov:policyDigest "policy\\"\\\\\\n"^^xsd:string');
+      expect(special.content).toContain('ciops-prov:journalPrefixDigest "prefix\\"\\\\\\n"^^xsd:string');
+    }).pipe(provideScopedLayer(BunFileSystem.layer))
+  );
+
+  it.effect("requires a non-empty episode identity at the input boundary", () =>
+    Effect.gen(function* () {
+      const policy = yield* readPolicy();
+      const input = inputFor(policy, []);
+      const empty = yield* S.decodeEffect(ProjectionInput)({ ...input, episodeId: "" }).pipe(Effect.result);
+      expect(empty._tag).toBe("Failure");
+      const { episodeId: _episodeId, ...missingEpisode } = input;
+      const missing = yield* S.decodeUnknownEffect(ProjectionInput)(missingEpisode).pipe(Effect.result);
+      expect(missing._tag).toBe("Failure");
     }).pipe(provideScopedLayer(BunFileSystem.layer))
   );
 

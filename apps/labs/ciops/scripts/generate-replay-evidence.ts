@@ -1,7 +1,8 @@
 import { createHash } from "node:crypto";
 import { BunRuntime } from "@effect/platform-bun";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
-import { Effect, FileSystem, Layer } from "effect";
+import { Console, Effect, FileSystem, Layer } from "effect";
+import * as A from "effect/Array";
 import { decodeAdmissionPolicyParams } from "@/projection/AboxPolicy";
 import {
   decodeAdmissionJournal,
@@ -45,7 +46,11 @@ const generate = Effect.gen(function* () {
   const policyDigest = sha256(artifacts.abox);
   const journalDigest = sha256(artifacts.journal);
   const report = yield* replayAdmissionJournal(policy, events, policyDigest, journalDigest);
-  yield* writeEvidence(renderReplayEvidence(report, journalDigest));
+  if (A.contains(process.argv, "--check")) {
+    yield* Console.log(renderReplayEvidence(report, journalDigest));
+  } else {
+    yield* writeEvidence(renderReplayEvidence(report, journalDigest));
+  }
   yield* requireReplayMatch(report);
 }).pipe(Effect.withSpan("S7Evidence.generate"));
 
