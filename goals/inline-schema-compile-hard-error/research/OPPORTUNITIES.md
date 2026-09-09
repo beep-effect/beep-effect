@@ -368,8 +368,12 @@
 - **Evidence:** `quality test-tsgo` announced 1,019 files across 139 packages
   and then emitted no progress diagnostic for 493 seconds. Confirming that it
   was still running required an external process check. JSDoc inventory was
-  similarly silent for 264 seconds, while deprecated-API lint buffered its 28
-  shard identities until its 182-second completion. A later
+  similarly silent for 264 seconds in the earlier run and 362 seconds in a
+  later publication proof, while deprecated-API lint buffered its 28 shard
+  identities until its 182-second completion. That publication preview first
+  passed the same 1,019-file `quality test-tsgo` command in its cheap gates in
+  435 seconds, then reran it under a different pre-push lane id for 642 seconds
+  despite the unchanged preview. A later
   `quality package-verify @beep/repo-cli` emitted no phase or progress output
   during its 366-second audit, then printed only its final audit and Docgen
   summary. The immutable merge preview also reran repo-cli's same 162-file,
