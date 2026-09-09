@@ -230,11 +230,7 @@ jobs:
       - name: Append Turbo summary
         if: matrix.uses_turbo == 'true' && steps.lane-gate.outputs.should_run == 'true' && always()
         run: |
-          if [[ "${{ matrix.id }}" == "coverage" ]]; then
-            bun run beep ci append-turbo-summary --all
-          else
-            bun run beep ci append-turbo-summary
-          fi
+          bun run beep ci append-turbo-summary
 
       - name: Save post-lane Turbo fallback
         if: github.event_name == 'push' && matrix.uses_turbo == 'true' && steps.lane-gate.outputs.should_run == 'true' && success()

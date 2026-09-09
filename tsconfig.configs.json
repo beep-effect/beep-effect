@@ -8,7 +8,11 @@
     "**/coverage/**",
     "**/tmp/**",
     "**/test/fixtures/**",
-    "scratchpad/**"
+    "scratchpad/**",
+    "goals/**",
+    "explorations/**",
+    "research/**",
+    "docs/**"
   ],
   "compilerOptions": {
     "composite": false,
