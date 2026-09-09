@@ -2,6 +2,7 @@ import {
   BakeCheckReport,
   BakeConfig,
   BakeLocalInputs,
+  BakeManifestJson,
   BakePlan,
   BakePlanJson,
   BakePlanStep,
@@ -281,6 +282,9 @@ describe("runner image manifest checks", () => {
           const write = (value: BakeReport) =>
             BakeReportJson.encode(value).pipe(Effect.flatMap((json) => fs.writeFileString(manifestPath, json)));
           yield* write(current);
+          expect((yield* service.checkManifest(manifestPath)).fresh).toBe(true);
+          const observed = yield* BakeManifestJson.encode(current);
+          yield* fs.writeFileString(manifestPath, observed);
           expect((yield* service.checkManifest(manifestPath)).fresh).toBe(true);
           for (const stale of [
             BakeReport.make({ ...current, lockfileSha256: digest }),

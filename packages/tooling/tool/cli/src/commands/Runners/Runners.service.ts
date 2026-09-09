@@ -26,6 +26,7 @@ import {
   AwsRunInstancesResponse,
   AwsTag,
   BakeCheckReport,
+  BakeManifestJson,
   BakePlan,
   BakePlanStep,
   BakeReport,
@@ -805,7 +806,7 @@ const checkBakeManifest = Effect.fn("Runners.checkManifest")(function* (manifest
   const rawManifest = yield* fs
     .readFileString(path.resolve(inputs.repoRoot, manifestPath))
     .pipe(RunnersCommandError.mapError("Failed to read the intended runner bake manifest."));
-  const manifest = yield* BakeReportJson.decode(rawManifest).pipe(
+  const manifest = yield* BakeManifestJson.decode(rawManifest).pipe(
     RunnersCommandError.mapError("Invalid intended runner bake manifest.")
   );
   const rawConfig = yield* fs

@@ -173,8 +173,11 @@ keys, initially `Project`, `App`, `ManagedBy`, `beep-ci`, `ghr:environment` and
 disabled and verify that no paid preferences were already active. Delayed
 recommendations or tag visibility are reported as pending evidence.
 
-For image freshness, reuse the existing `BakeReport` as a tracked intended-image
-receipt. Extend the existing runner check to compare that receipt with Bun,
+For image freshness, reuse the freshness fields of the existing `BakeReport`
+as a tracked intended-image receipt. `infra/ci-runners/runner-image.json` was
+initialized from the current AMI's AWS tags on September 9. It records Bun 1.4.0
+and correctly reports stale against the checkout; it does not claim a new bake.
+The reader also accepts the complete report written by a future successful bake. The existing runner check compares that receipt with Bun,
 archive and lockfile keys plus the intended Pulumi AMI pin without AWS access.
 Emit an advisory warning in the existing hosted Repo Sanity job, outside the
 heavy dependency chain. This warns about intended-image drift; the live AWS
@@ -312,3 +315,10 @@ Post-retirement service reads confirmed five current buckets, four hosted
 zones, three owned runner images and three associated snapshots. No CloudFront
 distributions, WAF ACLs, old DynamoDB tables or manual RDS snapshots remain in
 the audited account. The current CI encryption key remains Enabled.
+
+Refresh the tracked receipt through the existing bake path with
+`--report infra/ci-runners/runner-image.json`. Review and update the corresponding
+`ciFleetController:amiId` only after the image and canary are proven; apply the
+saved Pulumi plan with the operator present. Then run the live
+`bun run beep runners bake --check --region us-east-1` in addition to the
+AWS-free manifest check. A matching intended manifest never proves deployment.
