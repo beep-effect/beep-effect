@@ -90,11 +90,14 @@ type ScenarioChain = { readonly label: string; readonly nonce: string; readonly 
 const eventTag = (event: AdmissionJournalEvent) => event._tag;
 const journalLines = (text: string) => pipe(text, Str.split("\n"), A.filter(Str.isNonEmpty));
 const isLockPath = Str.includes(".lock");
+const isStagingPath = Str.includes(".tmp-");
+// Locks and atomic-write staging files are process residue, never scenario state.
+const isTransientPath = (entry: string) => isLockPath(entry) || isStagingPath(entry);
 
 const listDirectory = Effect.fnUntraced(function* (directory: string) {
   const fs = yield* FileSystem.FileSystem;
   // A live contender can be publishing an atomic heartbeat when its directory is observed.
-  return A.filter(yield* fs.readDirectory(directory), (name) => !Str.includes(".tmp-")(name));
+  return A.filter(yield* fs.readDirectory(directory), (name) => !isStagingPath(name));
 });
 
 const readJournalEvents = Effect.fnUntraced(function* (root: string) {
@@ -164,13 +167,13 @@ const withAdmissionTempRoot = Effect.fn("SyntheticAdmission.withTempRoot")(
   provideScopedLayer(NodeServices.layer)
 );
 
-const copyWithoutLocks = Effect.fn("SyntheticAdmission.copyWithoutLocks")(function* (source: string, target: string) {
+const copySettledState = Effect.fn("SyntheticAdmission.copySettledState")(function* (source: string, target: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   yield* fs.makeDirectory(target, { recursive: true });
   const entries = yield* fs.readDirectory(source, { recursive: true });
   yield* Effect.forEach(
-    A.filter(entries, (entry) => !isLockPath(entry)),
+    A.filter(entries, (entry) => !isTransientPath(entry)),
     Effect.fnUntraced(function* (entry) {
       const from = path.join(source, entry);
       const to = path.join(target, entry);
@@ -205,11 +208,11 @@ const exportScenario = Effect.fn("SyntheticAdmission.exportScenario")(function* 
     yield* fs.copy(path.join(admissionRoot, file), path.join(admissionTarget, file), { overwrite: false });
   }
   for (const directory of ["leases", "queue", "claims", "quarantine"]) {
-    yield* copyWithoutLocks(path.join(admissionRoot, directory), path.join(admissionTarget, directory));
+    yield* copySettledState(path.join(admissionRoot, directory), path.join(admissionTarget, directory));
   }
   for (const label of ["contender-a", "dead-lease", "dead-ticket"]) {
     const relative = path.join("checkouts", label, ".beep", "yeet", "runs");
-    yield* copyWithoutLocks(path.join(runtimeDir, relative), path.join(target, relative));
+    yield* copySettledState(path.join(runtimeDir, relative), path.join(target, relative));
   }
   const source = yield* fs.readFile(fileURLToPath(import.meta.url));
   const scenario = yield* encodeScenario({
@@ -340,7 +343,7 @@ describe("synthetic admission scenario", () => {
           expect(yield* listDirectory(path.join(root, "queue"))).toHaveLength(1);
           yield* Fiber.interrupt(waiter);
           expect(yield* Ref.get(ranB)).toBe(false);
-          expect(yield* fs.readDirectory(path.join(root, "queue"))).toStrictEqual([]);
+          expect(yield* listDirectory(path.join(root, "queue"))).toStrictEqual([]);
 
           const binDirectory = path.join(runtimeDir, "bin");
           yield* fs.makeDirectory(binDirectory);
@@ -394,8 +397,8 @@ describe("synthetic admission scenario", () => {
             )
           );
           yield* reap;
-          expect(yield* fs.readDirectory(path.join(root, "claims"))).toStrictEqual([]);
-          expect(yield* fs.readDirectory(path.join(root, "queue"))).toStrictEqual([]);
+          expect(yield* listDirectory(path.join(root, "claims"))).toStrictEqual([]);
+          expect(yield* listDirectory(path.join(root, "queue"))).toStrictEqual([]);
           expect(yield* listDirectory(path.join(root, "leases"))).toHaveLength(1);
           const leaseAttempts = yield* readAttemptJournalEvents(checkoutLease, branchLease);
           const ticketAttempts = yield* readAttemptJournalEvents(checkoutTicket, branchTicket);
@@ -476,7 +479,7 @@ describe("synthetic admission scenario", () => {
           expect(yield* readAttemptJournalEvents(checkoutLease, branchLease)).toStrictEqual(leaseAttempts);
           expect(yield* readAttemptJournalEvents(checkoutTicket, branchTicket)).toStrictEqual(ticketAttempts);
           for (const directory of ["leases", "queue", "claims", "quarantine", "promotions"]) {
-            expect(yield* fs.readDirectory(path.join(root, directory))).toStrictEqual([]);
+            expect(yield* listDirectory(path.join(root, directory))).toStrictEqual([]);
           }
           expect(A.filter(yield* fs.readDirectory(runtimeDir, { recursive: true }), isLockPath)).toStrictEqual([]);
 
