@@ -899,13 +899,10 @@ const finishJournalLockReap = Effect.fnUntraced(function* (
   const completed = reclaimedObservedGeneration
     ? yield* discardReclaimedJournalLock(tombstonePath, adopterPath, observedToken)
     : yield* restoreDisplacedJournalLock(lockPath, tombstonePath, adopterPath, observedToken);
-  // Both arms stay explicit: V8 credited the trailing implicit guard of this
-  // generator unreliably across suite orders, which read as a coverage drop.
-  if (completed) {
-    yield* releaseJournalLockReapClaim(adopterPath, observedToken);
-  } else {
-    return;
-  }
+  yield* releaseJournalLockReapClaim(adopterPath, observedToken).pipe(
+    Effect.when(Effect.succeed(completed)),
+    Effect.asVoid
+  );
 });
 
 const claimAndFinishJournalLockReap = Effect.fnUntraced(function* (

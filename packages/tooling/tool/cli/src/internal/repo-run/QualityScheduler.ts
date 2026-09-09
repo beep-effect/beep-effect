@@ -560,6 +560,25 @@ const tryCreateExclusive = Effect.fnUntraced(function* (
   return linked;
 });
 
+/**
+ * Exercise exclusive-publication collisions without entering the scheduler.
+ *
+ * **Example** (Build an exclusive publication effect)
+ *
+ * ```ts
+ * import { tryCreateExclusiveForTesting } from "@beep/repo-cli/test/RepoRun"
+ *
+ * const publication = tryCreateExclusiveForTesting("/repo/existing", "replacement")
+ * ```
+ *
+ * @param filePath - Destination that must not already exist.
+ * @param content - Content staged before the exclusive link attempt.
+ * @returns An Effect yielding whether the destination was created.
+ * @category testing
+ * @since 0.0.0
+ */
+export const tryCreateExclusiveForTesting = tryCreateExclusive;
+
 interface LiveAdmissionState {
   readonly dead: ReadonlyArray<string>;
   readonly deadLeases: ReadonlyArray<{ readonly path: string; readonly lease: YeetAdmissionLease }>;

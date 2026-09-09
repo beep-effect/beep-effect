@@ -89,6 +89,41 @@ const copyDocsTree: (
   }
 );
 
+const assertUniqueDocsOutputPaths = (
+  packages: ReadonlyArray<DocgenWorkspacePackage>
+): Effect.Effect<void, DomainError> => {
+  const seen = MutableHashSet.empty<string>();
+  const duplicates = MutableHashSet.empty<string>();
+  for (const pkg of packages) {
+    if (MutableHashSet.has(seen, pkg.docsOutputPath)) {
+      MutableHashSet.add(duplicates, pkg.docsOutputPath);
+    } else {
+      MutableHashSet.add(seen, pkg.docsOutputPath);
+    }
+  }
+  return MutableHashSet.size(duplicates) === 0
+    ? Effect.void
+    : DomainError.make({
+        message: `Duplicate docs output paths detected: ${pipe(
+          A.fromIterable(duplicates),
+          A.sort(Order.String),
+          A.join(", ")
+        )}`,
+      });
+};
+
+const cleanAggregateDestination = Effect.fnUntraced(function* (
+  docsRoot: string,
+  selectedPackage: DocgenWorkspacePackage | undefined
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const destination = P.isUndefined(selectedPackage) ? docsRoot : path.join(docsRoot, selectedPackage.docsOutputPath);
+  yield* fs
+    .remove(destination, { recursive: true, force: true })
+    .pipe(Effect.mapError(DomainError.newCause(`Failed to remove "${destination}"`)));
+});
+
 /**
  * Aggregate generated package docs into the root ignored `docs/generated` tree.
  *
@@ -147,45 +182,11 @@ export const aggregateGeneratedDocs: (options?: {
   }
 
   if (P.isUndefined(options?.package)) {
-    const seen = MutableHashSet.empty<string>();
-    const duplicates = MutableHashSet.empty<string>();
-
-    for (const pkg of packages) {
-      if (MutableHashSet.has(seen, pkg.docsOutputPath)) {
-        MutableHashSet.add(duplicates, pkg.docsOutputPath);
-        continue;
-      }
-      MutableHashSet.add(seen, pkg.docsOutputPath);
-    }
-
-    if (MutableHashSet.size(duplicates) > 0) {
-      return yield* DomainError.make({
-        message: `Duplicate docs output paths detected: ${pipe(
-          A.fromIterable(duplicates),
-          A.sort(Order.String),
-          A.join(", ")
-        )}`,
-      });
-    }
+    yield* assertUniqueDocsOutputPaths(packages);
   }
 
   if (options?.clean === true) {
-    if (selectedPackage !== undefined) {
-      const destinationDir = path.join(docsRoot, selectedPackage.docsOutputPath);
-      yield* fs
-        .remove(destinationDir, {
-          recursive: true,
-          force: true,
-        })
-        .pipe(Effect.mapError(DomainError.newCause(`Failed to remove "${destinationDir}"`)));
-    } else {
-      yield* fs
-        .remove(docsRoot, {
-          recursive: true,
-          force: true,
-        })
-        .pipe(Effect.mapError(DomainError.newCause(`Failed to remove "${docsRoot}"`)));
-    }
+    yield* cleanAggregateDestination(docsRoot, selectedPackage);
   }
 
   yield* fs

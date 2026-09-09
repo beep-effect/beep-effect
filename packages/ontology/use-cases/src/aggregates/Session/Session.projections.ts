@@ -599,21 +599,170 @@ const defaultSnapshotOptions = (): BuildOntologySnapshotOptions => ({
   includedPartitions: ASSERTED_VIEW_PARTITIONS,
 });
 
+const makeSnapshotAccumulator = () => ({
+  resources: MutableHashSet.empty<string>(),
+  labels: MutableHashMap.empty<string, string>(),
+  types: MutableHashMap.empty<string, ReadonlyArray<string>>(),
+  parents: MutableHashMap.empty<string, ReadonlyArray<string>>(),
+  children: MutableHashMap.empty<string, ReadonlyArray<string>>(),
+  resourcePartitions: MutableHashMap.empty<string, ReadonlyArray<GraphPartition>>(),
+  relationships: A.empty<OntologyRelationshipSummary>(),
+  classIris: MutableHashSet.empty<string>(),
+  propertyIris: MutableHashSet.empty<string>(),
+  individualIris: MutableHashSet.empty<string>(),
+});
+
+type SnapshotAccumulator = ReturnType<typeof makeSnapshotAccumulator>;
+
+const collectSnapshotSubject = (accumulator: SnapshotAccumulator, partition: GraphPartition, quad: Quad): void => {
+  pipe(
+    subjectIri(quad.subject),
+    O.match({
+      onNone: () => undefined,
+      onSome: (iri) => {
+        MutableHashSet.add(accumulator.resources, iri);
+        upsertPartition(accumulator.resourcePartitions, iri, partition);
+      },
+    })
+  );
+};
+
+const collectSnapshotLabel = (accumulator: SnapshotAccumulator, quad: Quad): void => {
+  if (quad.predicate.value !== RDFS_LABEL.value) {
+    return;
+  }
+  pipe(
+    zipOptions(subjectIri(quad.subject), literalValue(quad.object)),
+    O.match({
+      onNone: () => undefined,
+      onSome: ([iri, label]) => MutableHashMap.set(accumulator.labels, iri, label),
+    })
+  );
+};
+
+const collectSnapshotType = (accumulator: SnapshotAccumulator, quad: Quad): void => {
+  if (quad.predicate.value !== RDF_TYPE.value) {
+    return;
+  }
+  pipe(
+    zipOptions(subjectIri(quad.subject), objectIri(quad.object)),
+    O.match({
+      onNone: () => undefined,
+      onSome: ([iri, typeIri]) => {
+        upsertSet(accumulator.types, iri, typeIri);
+        if (isOntologyTypeIri(typeIri)) MutableHashSet.add(accumulator.classIris, iri);
+        if (isPropertyTypeIri(typeIri)) MutableHashSet.add(accumulator.propertyIris, iri);
+        if (!isVocabularyIri(typeIri) || sameIri(typeIri, OWL_NAMED_INDIVIDUAL_IRI)) {
+          MutableHashSet.add(accumulator.individualIris, iri);
+        }
+      },
+    })
+  );
+};
+
+const collectSnapshotHierarchy = (accumulator: SnapshotAccumulator, quad: Quad): void => {
+  if (quad.predicate.value !== RDFS_SUB_CLASS_OF.value && quad.predicate.value !== RDFS_SUB_PROPERTY_OF.value) {
+    return;
+  }
+  pipe(
+    zipOptions(subjectIri(quad.subject), objectIri(quad.object)),
+    O.match({
+      onNone: () => undefined,
+      onSome: ([childIri, parentIri]) => {
+        MutableHashSet.add(accumulator.resources, parentIri);
+        upsertSet(accumulator.parents, childIri, parentIri);
+        upsertSet(accumulator.children, parentIri, childIri);
+        MutableHashSet.add(accumulator.classIris, childIri);
+        MutableHashSet.add(accumulator.classIris, parentIri);
+      },
+    })
+  );
+};
+
+const collectSnapshotTBoxResources = (accumulator: SnapshotAccumulator, quad: Quad): void => {
+  if (!isTBoxPredicateIri(quad.predicate.value)) {
+    return;
+  }
+  pipe(
+    subjectIri(quad.subject),
+    O.match({
+      onNone: () => undefined,
+      onSome: (iri) => {
+        MutableHashSet.add(accumulator.classIris, iri);
+        MutableHashSet.add(accumulator.resources, iri);
+      },
+    })
+  );
+  pipe(
+    objectIri(quad.object),
+    O.filter((iri) => !isVocabularyIri(iri)),
+    O.match({
+      onNone: () => undefined,
+      onSome: (iri) => {
+        MutableHashSet.add(accumulator.resources, iri);
+        MutableHashSet.add(accumulator.classIris, iri);
+      },
+    })
+  );
+};
+
+const collectSnapshotProperty = (accumulator: SnapshotAccumulator, quad: Quad): void => {
+  if (quad.predicate.value !== RDFS_DOMAIN.value && quad.predicate.value !== RDFS_RANGE.value) {
+    return;
+  }
+  pipe(
+    subjectIri(quad.subject),
+    O.match({
+      onNone: () => undefined,
+      onSome: (iri) => MutableHashSet.add(accumulator.propertyIris, iri),
+    })
+  );
+};
+
+const collectSnapshotRelationship = (accumulator: SnapshotAccumulator, partition: GraphPartition, quad: Quad): void => {
+  if (!isNamedNodeObject(quad.object) || isVocabularyIri(quad.object.value)) {
+    return;
+  }
+  MutableHashSet.add(accumulator.resources, quad.object.value);
+  upsertPartition(accumulator.resourcePartitions, quad.object.value, partition);
+  pipe(
+    subjectIri(quad.subject),
+    O.filter((iri) => !isVocabularyIri(iri)),
+    O.match({
+      onNone: () => undefined,
+      onSome: (sourceIri) =>
+        A.appendInPlace(
+          accumulator.relationships,
+          OntologyRelationshipSummary.make({
+            sourceIri,
+            predicateIri: quad.predicate.value,
+            objectIri: quad.object.value,
+            label: labelFor(accumulator.labels, quad.predicate.value),
+            sourcePartitions: [partition],
+          })
+        ),
+    })
+  );
+};
+
+const collectSnapshotQuad = (accumulator: SnapshotAccumulator, partition: GraphPartition, quad: Quad): void => {
+  collectSnapshotSubject(accumulator, partition, quad);
+  collectSnapshotLabel(accumulator, quad);
+  collectSnapshotType(accumulator, quad);
+  collectSnapshotHierarchy(accumulator, quad);
+  collectSnapshotTBoxResources(accumulator, quad);
+  collectSnapshotProperty(accumulator, quad);
+  collectSnapshotRelationship(accumulator, partition, quad);
+};
+
 const buildOntologySnapshotFromPartitions = (
   session: Session,
   partitions: SessionGraphPartitions,
   options: BuildOntologySnapshotOptions
 ): OntologySnapshot => {
-  const resources = MutableHashSet.empty<string>();
-  const labels = MutableHashMap.empty<string, string>();
-  const types = MutableHashMap.empty<string, ReadonlyArray<string>>();
-  const parents = MutableHashMap.empty<string, ReadonlyArray<string>>();
-  const children = MutableHashMap.empty<string, ReadonlyArray<string>>();
-  const resourcePartitions = MutableHashMap.empty<string, ReadonlyArray<GraphPartition>>();
-  let relationships: ReadonlyArray<OntologyRelationshipSummary> = [];
-  const classIris = MutableHashSet.empty<string>();
-  const propertyIris = MutableHashSet.empty<string>();
-  const individualIris = MutableHashSet.empty<string>();
+  const accumulator = makeSnapshotAccumulator();
+  const { resources, labels, types, parents, children, resourcePartitions, relationships } = accumulator;
+  const { classIris, propertyIris, individualIris } = accumulator;
 
   const quads = pipe(
     options.includedPartitions,
@@ -627,126 +776,7 @@ const buildOntologySnapshotFromPartitions = (
   );
 
   for (const { partition, quad } of quads) {
-    pipe(
-      subjectIri(quad.subject),
-      O.match({
-        onNone: () => undefined,
-        onSome: (iri) => {
-          MutableHashSet.add(resources, iri);
-          upsertPartition(resourcePartitions, iri, partition);
-        },
-      })
-    );
-
-    if (quad.predicate.value === RDFS_LABEL.value) {
-      pipe(
-        subjectIri(quad.subject),
-        (iri) => zipOptions(iri, literalValue(quad.object)),
-        O.match({
-          onNone: () => undefined,
-          onSome: ([iri, label]) => MutableHashMap.set(labels, iri, label),
-        })
-      );
-    }
-
-    if (quad.predicate.value === RDF_TYPE.value) {
-      pipe(
-        subjectIri(quad.subject),
-        (iri) => zipOptions(iri, objectIri(quad.object)),
-        O.match({
-          onNone: () => undefined,
-          onSome: ([iri, typeIri]) => {
-            upsertSet(types, iri, typeIri);
-            if (isOntologyTypeIri(typeIri)) {
-              MutableHashSet.add(classIris, iri);
-            }
-            if (isPropertyTypeIri(typeIri)) {
-              MutableHashSet.add(propertyIris, iri);
-            }
-            if (!isVocabularyIri(typeIri) || sameIri(typeIri, OWL_NAMED_INDIVIDUAL_IRI)) {
-              MutableHashSet.add(individualIris, iri);
-            }
-          },
-        })
-      );
-    }
-
-    if (quad.predicate.value === RDFS_SUB_CLASS_OF.value || quad.predicate.value === RDFS_SUB_PROPERTY_OF.value) {
-      pipe(
-        subjectIri(quad.subject),
-        (iri) => zipOptions(iri, objectIri(quad.object)),
-        O.match({
-          onNone: () => undefined,
-          onSome: ([childIri, parentIri]) => {
-            MutableHashSet.add(resources, parentIri);
-            upsertSet(parents, childIri, parentIri);
-            upsertSet(children, parentIri, childIri);
-            MutableHashSet.add(classIris, childIri);
-            MutableHashSet.add(classIris, parentIri);
-          },
-        })
-      );
-    }
-
-    if (isTBoxPredicateIri(quad.predicate.value)) {
-      pipe(
-        subjectIri(quad.subject),
-        O.match({
-          onNone: () => undefined,
-          onSome: (iri) => {
-            MutableHashSet.add(classIris, iri);
-            MutableHashSet.add(resources, iri);
-          },
-        })
-      );
-      pipe(
-        objectIri(quad.object),
-        O.filter((iri) => !isVocabularyIri(iri)),
-        O.match({
-          onNone: () => undefined,
-          onSome: (iri) => {
-            MutableHashSet.add(resources, iri);
-            MutableHashSet.add(classIris, iri);
-          },
-        })
-      );
-    }
-
-    if (quad.predicate.value === RDFS_DOMAIN.value || quad.predicate.value === RDFS_RANGE.value) {
-      pipe(
-        subjectIri(quad.subject),
-        O.match({
-          onNone: () => undefined,
-          onSome: (iri) => MutableHashSet.add(propertyIris, iri),
-        })
-      );
-    }
-
-    if (isNamedNodeObject(quad.object) && !isVocabularyIri(quad.object.value)) {
-      MutableHashSet.add(resources, quad.object.value);
-      upsertPartition(resourcePartitions, quad.object.value, partition);
-      pipe(
-        subjectIri(quad.subject),
-        O.filter((iri) => !isVocabularyIri(iri)),
-        O.match({
-          onNone: () => undefined,
-          onSome: (sourceIri) => {
-            relationships = pipe(
-              relationships,
-              A.append(
-                OntologyRelationshipSummary.make({
-                  sourceIri,
-                  predicateIri: quad.predicate.value,
-                  objectIri: quad.object.value,
-                  label: labelFor(labels, quad.predicate.value),
-                  sourcePartitions: [partition],
-                })
-              )
-            );
-          },
-        })
-      );
-    }
+    collectSnapshotQuad(accumulator, partition, quad);
   }
 
   const resourceSummaries = pipe(
