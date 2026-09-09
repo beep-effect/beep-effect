@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-09-03",
+  "generatedOn": "2026-09-09",
   "scope": [
     "apps/**/*.{ts,tsx}",
     "packages/**/*.{ts,tsx}",
@@ -150,6 +150,26 @@
       "line": 100,
       "owner": "@beep/duckdb",
       "reason": "The file's round-trip property suite derives its arbitraries from S.toArbitrary and then sanitizes defect-bearing fields per the repo equivalence precedent; the mapped arbitrary form is schema-derived coverage the detector cannot attribute, and the fixed codec assertions pin encoded wire shapes byte-identically."
+    },
+    {
+      "file": "packages/drivers/freshbooks/src/Freshbooks.models.ts",
+      "symbol": "FreshbooksClient.email",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-precision-audit",
+      "line": 344,
+      "owner": "@beep/freshbooks",
+      "reason": "FreshBooks client records carry free-text email addresses populated from the account holder client database; this decode boundary must accept whatever the API returns rather than reject a client on a malformed address."
+    },
+    {
+      "file": "packages/drivers/freshbooks/src/Freshbooks.models.ts",
+      "symbol": "FreshbooksIdentity.email",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-precision-audit",
+      "line": 293,
+      "owner": "@beep/freshbooks",
+      "reason": "The FreshBooks identity (/me) email is external free-text returned by the API; this decode boundary must accept it verbatim rather than fail identity resolution on a non-strict address."
     },
     {
       "file": "packages/drivers/graph-3d/src/Graph3D.react.ts",
@@ -788,26 +808,6 @@
       "status": "exception",
       "owner": "@beep/repo-cli",
       "reason": "One-call formatting contract intentionally couples runtime colorizer functions with their glyph and fraction operands; it has no decode or persistence boundary."
-    },
-    {
-      "file": "packages/drivers/freshbooks/src/Freshbooks.models.ts",
-      "symbol": "FreshbooksClient.email",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-precision-audit",
-      "line": 344,
-      "owner": "@beep/freshbooks",
-      "reason": "FreshBooks client records carry free-text email addresses populated from the account holder client database; this decode boundary must accept whatever the API returns rather than reject a client on a malformed address."
-    },
-    {
-      "file": "packages/drivers/freshbooks/src/Freshbooks.models.ts",
-      "symbol": "FreshbooksIdentity.email",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-precision-audit",
-      "line": 293,
-      "owner": "@beep/freshbooks",
-      "reason": "The FreshBooks identity (/me) email is external free-text returned by the API; this decode boundary must accept it verbatim rather than fail identity resolution on a non-strict address."
     }
   ]
 }

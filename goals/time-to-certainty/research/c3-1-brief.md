@@ -223,3 +223,51 @@ skips the law with a printed reason. Worker tests must **execute** the worker en
 a fixture package (a real subprocess run, not argv pinning alone) so a flag mismatch fails the
 test. Apply the same executed-smoke rule to `lint jsdoc --package` and
 `lint deprecated-apis --package`.
+
+## Amendment 2026-09-09 (7) — Stage E3: repair the proof reds on PR #1029
+
+The local cheap gates and hosted lanes on PR #1029 (head `415fd993cd`) found these defects in
+the lane-written code; fix all of them without changing behaviour or any `package.json`:
+
+1. **Effect LSP rules in tests** (hosted Heavy / Check and local test-tsgo):
+   `test/lint-workers.test.ts` — 24× `effect(asyncFunction)` (no `async` functions: use
+   `it.effect` / `Effect.fnUntraced` generators), 12× `effect(strictEffectProvide)` (no
+   `Effect.provide(layer)` inside tests: use the package's `it.layer` / `provideScopedLayer`
+   test-kit pattern, see `test/ci-runner-security.test.ts`), 2× `effect(missingEffectContext)`
+   (`TSMorphService` must be provided through the test layer), `TS2307` unresolved
+   `@beep/repo-cli/internal/process/StepExec` (internal paths are not exported: expose what the
+   test needs through `src/test/*.test-kit.ts` like `PackageScripts.test-kit.ts`), `TS2379`.
+   `test/package-scripts.schemas.test.ts` — 4× `effect(preferTypedSchemaDecoder)` (use
+   `S.decodeEffect`/`S.encodeEffect` of the typed schema instead of `decodeUnknown*` on values
+   already typed), 2× `effect(missingEffectContext)`, plus real type errors `TS2769`, `TS2488`,
+   `TS2345`. `test/package-scripts.policy.test.ts` — 2× `effect(strictEffectProvide)`.
+2. **oxlint `beep(no-inline-schema-compile)`** (hosted Lint Policy), 13 sites: hoist every
+   `S.is(...)`, `S.decodeEffect(...)`, `S.decodeUnknownEffect(...)`, `S.encodeEffect(...)` to
+   module scope as named constants in `PackageScripts.schemas.ts` (218, 302, 303),
+   `PackageScriptsPolicy.ts` (243), `Lint.command.ts` (928, 980), and the two test files.
+3. **Fallow complexity** (blocking audit findings, ceiling per `standards/fallow.*`): refactor
+   into small named helpers, tersest form, no behaviour change: `PackageScriptsPolicy.ts`
+   `diffBlock` (cognitive 18), `run` (34), `expectedBlock` (22); `PackageScripts.schemas.ts`
+   `scaffoldPackageScripts` (20); `Lint.command.ts` `policyToolsFingerprint` (16) and the
+   anonymous function at 975 (11). Re-run `bun run beep quality fallow audit --check --quiet`
+   and `… fallow health --check --quiet` until both report zero blocking findings.
+4. **Fallow dead code**: `vitest.shared.ts` exports `vitestDoctestActive` with no consumer yet
+   (C3.4 adds the consumers): keep the constant, drop the `export` and its JSDoc until then;
+   `test/lint-workers.test.ts` imports an unexported internal path (see item 1).
+5. **schema-first `SFV4-arbitrary-tests`** on `test/package-scripts.schemas.test.ts`: add
+   schema-derived property coverage (fast-check arbitraries derived from the schemas, e.g.
+   `Arbitrary.make(ScriptsBlock)` / `ScriptsRecord` round trips through `scriptsBlockFromRecord`)
+   so `bun run beep lint schema-first` passes; then run `bun run beep lint schema-first --write`.
+6. **JSDoc ratchet `no-root-package-import` (+1)**: every JSDoc example in the new and changed
+   files must import per module (`import * as Effect from "effect/Effect"`, `effect/Schema`,
+   …), never `from "effect"`; fix `PackageScriptsPolicy.ts:171`, `PackageScripts.schemas.ts:283`
+   and any other example in the touched files, then run `bun run beep quality jsdoc-inventory`
+   and `bun run beep quality jsdoc-ratchet --inventory standards/jsdoc-documentation.inventory.jsonc`
+   until it passes.
+7. After all edits: `bun run beep lint policy-fingerprint --write`; then prove in-lane:
+   `bunx --bun --no-install tsgo -p packages/tooling/tool/cli/tsconfig.check.json --pretty false`,
+   `bunx oxlint --quiet --disable-nested-config` (zero errors), `bunx --no-install biome check`
+   on touched files, the fallow commands above, `bun run beep lint schema-first`, the jsdoc
+   ratchet, and `vitest run` (fork pool is fine from the package directory now; use
+   `--pool=threads` only if forks fail) on every touched test file. Record real outputs.
+   Append `### Stage E3 — files` and stop. No git writes, no manifests, no inbox acks.

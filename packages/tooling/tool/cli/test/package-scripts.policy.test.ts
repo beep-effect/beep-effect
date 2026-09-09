@@ -2,9 +2,11 @@ import {
   DerivationEvidence,
   PackageScriptsPolicy,
   policyToolsFingerprint,
+  ScriptsRecord,
   scriptsBlockFromRecord,
 } from "@beep/repo-cli/test/PackageScripts";
 import { FsUtilsLive, jsonStringifyPretty } from "@beep/repo-utils";
+import { provideScopedLayer } from "@beep/test-utils";
 import { BunServices } from "@effect/platform-bun";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path } from "effect";
@@ -14,9 +16,20 @@ import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as fc from "effect/testing/FastCheck";
 
 const platform = FsUtilsLive.pipe(Layer.provideMerge(BunServices.layer));
+const codecs = R.fromEntries(
+  A.map(["app", "infra", "library", "lab", "tool"] as const, (kind) => {
+    const codec = scriptsBlockFromRecord(kind);
+    return [kind, { decode: S.decodeEffect(codec), encode: S.encodeEffect(codec) }] as const;
+  })
+);
+const decodeManifest = S.decodeEffect(S.fromJsonString(S.Struct({ scripts: S.Record(S.String, S.String) })));
+const scriptsArbitrary = S.toArbitrary(ScriptsRecord)(fc);
+const decodeAppResult = S.decodeResult(scriptsBlockFromRecord("app"));
 const noEvidence = DerivationEvidence.make({
   doctestOwners: HashSet.empty(),
   bypassingConfigs: HashSet.empty(),
@@ -40,23 +53,41 @@ const base = {
   "beep:custom": "owned extra",
   dev: "owned dev",
 };
-const run = <A, E, R>(effect: Effect.Effect<A, E, R>) => effect.pipe(Effect.provide(platform), Effect.scoped);
+const run = provideScopedLayer(platform);
 
 describe("package scripts policy", () => {
+  it.effect("repairs schema-derived records idempotently while preserving free tiers", () =>
+    run(
+      Effect.gen(function* () {
+        const policy = yield* PackageScriptsPolicy.make("/repo");
+        fc.assert(
+          fc.property(scriptsArbitrary, (scripts) => {
+            const actual = Result.getOrThrow(decodeAppResult(scripts));
+            const expected = policy.expected("app", actual, noEvidence);
+            expect(expected.extras).toEqual(actual.extras);
+            for (const [key, value] of actual.impls) expect(HashMap.get(expected.impls, key)).toEqual(O.some(value));
+            expect(policy.diff(expected, policy.expected("app", expected, noEvidence))).toEqual([]);
+          }),
+          { numRuns: 100 }
+        );
+      })
+    )
+  );
+
   it.effect("retains app and infra docgen, optional parallel tasks, implementation values and extras", () =>
     run(
       Effect.gen(function* () {
         const policy = yield* PackageScriptsPolicy.make("/repo");
         for (const kind of ["app", "infra", "library"] as const) {
-          const codec = scriptsBlockFromRecord(kind);
-          const actual = yield* S.decodeEffect(codec)({
+          const codec = codecs[kind];
+          const actual = yield* codec.decode({
             ...base,
             docgen: "legacy docgen",
             "beep:docgen": "custom docgen",
             "test:integration:parallel": "legacy parallel",
           });
           const expected = policy.expected(kind, actual, noEvidence);
-          const record = yield* S.encodeEffect(codec)(expected);
+          const record = yield* codec.encode(expected);
           expect(record.docgen).toBe("bun run beep:docgen");
           expect(record["beep:docgen"]).toBe("custom docgen");
           expect(record["beep:build"]).toBe("owned build");
@@ -75,7 +106,7 @@ describe("package scripts policy", () => {
     run(
       Effect.gen(function* () {
         const policy = yield* PackageScriptsPolicy.make("/repo");
-        const actual = yield* S.decodeEffect(scriptsBlockFromRecord("lab"))({
+        const actual = yield* codecs.lab.decode({
           ...base,
           docgen: "forbidden",
           codegen: "echo 'no codegen needed'",
@@ -91,7 +122,7 @@ describe("package scripts policy", () => {
         expect(drift).toContainEqual({ _tag: "unexpected-task", name: "docgen" });
         expect(drift).toContainEqual({ _tag: "placeholder", name: "codegen", actual: "echo 'no codegen needed'" });
         expect(drift).toContainEqual({ _tag: "missing-impl", name: "beep:check" });
-        const record = yield* S.encodeEffect(scriptsBlockFromRecord("lab"))(expected);
+        const record = yield* codecs.lab.encode(expected);
         expect(record["lint:jsdoc"]).toBeUndefined();
         expect(record["beep:check"]).toBe("tsgo -p tsconfig.check.json && tsc -p tsconfig.json --noEmit");
       })
@@ -180,9 +211,7 @@ describe("package scripts policy", () => {
         expect(HashMap.size(report.drift)).toBe(0);
         const file = `${root}/packages/tooling/tool/docgen/package.json`;
         const first = yield* fs.readFileString(file);
-        const manifest = yield* S.decodeEffect(S.fromJsonString(S.Struct({ scripts: S.Record(S.String, S.String) })))(
-          first
-        );
+        const manifest = yield* decodeManifest(first);
         expect(manifest.scripts.docgen).toBe("bun run beep:docgen");
         expect(manifest.scripts["beep:docgen"]).toBe("bun run src/bin.ts");
         expect(manifest.scripts.audit).toBe("bun run --if-present beep:audit");
@@ -190,9 +219,9 @@ describe("package scripts policy", () => {
         expect(HashSet.size((yield* policy.write(root)).written)).toBe(0);
         expect(yield* fs.readFileString(file)).toBe(first);
         for (const scripts of [{}, { docgen: "bun run beep:docgen" }]) {
-          const codec = scriptsBlockFromRecord("tool");
-          const actual = yield* S.decodeEffect(codec)(scripts);
-          const expected = yield* S.encodeEffect(codec)(policy.expected("tool", actual, noEvidence));
+          const codec = codecs.tool;
+          const actual = yield* codec.decode(scripts);
+          const expected = yield* codec.encode(policy.expected("tool", actual, noEvidence));
           expect(expected["beep:docgen"]).toBe("bunx --bun --no-install docgen");
         }
       })
@@ -217,9 +246,7 @@ describe("package scripts policy", () => {
         const report = yield* policy.write(root);
         expect(HashMap.size(report.drift)).toBe(0);
         const file = `${root}/packages/drivers/gov-legal-mcp/package.json`;
-        const manifest = yield* S.decodeEffect(S.fromJsonString(S.Struct({ scripts: S.Record(S.String, S.String) })))(
-          yield* fs.readFileString(file)
-        );
+        const manifest = yield* decodeManifest(yield* fs.readFileString(file));
         expect(manifest.scripts.codegen).toBe("bun run generate");
         expect(manifest.scripts.generate).toBe("bun run scripts/generate.ts");
         yield* fs.writeFileString(

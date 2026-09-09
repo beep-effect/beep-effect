@@ -869,3 +869,151 @@ Both gates are green on the final tree (`package-scripts: 142 manifests, 0 drift
 `policy-fingerprint: current`); eslint with `--max-warnings=0` is clean on the changed CLI
 sources. `docgen:local` refuses the bounded proof because the docgen tool's manifest changed and
 asks for the full proof; the Yeet publish proof and the hosted Docgen lane run it.
+
+## 2026-09-09 — Stage E3 proof repair
+
+Read the brief through Amendment 7 and the previous results. This launch repairs
+Stage E3 only. No Git write commands, package.json edits, push, publish, or merge
+were performed. Existing changes to the brief, settings, and generated inventories
+were present at entry and preserved; inventory generators refresh the requested
+artifacts below. The checkout HEAD moved during this session through external
+activity, so the receipts describe the working tree, not an exact published head.
+
+Repairs:
+
+1. Worker tests now use `it.effect`, `Effect.fnUntraced`, and
+   `provideScopedLayer`; the test layer includes TSMorphServiceLive. Removed
+   async test functions, Promise run wrappers, and direct layer provision.
+   The existing source-only PackageScripts test kit exposes the StepExec module
+   for the typed partial mock, preserving its other runtime exports. Invalid
+   command assertions inspect Effect failure. Child environment keys are omitted
+   with the Effect Record helper. The rule decoder callback explicitly accepts
+   one argument, avoiding collision between Effect.forEach's numeric index and
+   the decoder's optional parse-options argument. Typed schema inputs use typed
+   decoders; the negative-input tests retain unknown decoders.
+2. Hoisted guards and codecs in the schema module, policy, lint command, and
+   tests. Per-kind codecs are compiled once at module initialization.
+3. Split scaffold rule selection/application, policy rule presence and binding,
+   implementation seeding, drift calculation, source census/config bypasses,
+   manifest processing, fingerprint dependency discovery, and report printing.
+   Script rules, defaults, ordering, preservation, write conditions, and worker
+   subprocess arguments remain unchanged.
+4. Kept vitestDoctestActive private and removed its public example. Collapsed
+   its existing one-use configuration wrapper to avoid the duplicate fragment
+   exposed by that removal; environment parsing is unchanged.
+5. Added 100-case fast-check properties from ScriptsRecord to both schema and
+   policy tests: lossless record round trips, preservation of free tiers, and
+   idempotent policy projection. Added the schema-first-required fields-only
+   error-equivalence annotation; no error fields or failure paths changed.
+6. Replaced root Effect imports in all touched JSDoc examples with per-module
+   namespace imports, including the fingerprint example.
+7. Regenerated policy-tools.fingerprint.json after all source/test edits and
+   after scoped worker fixture cleanup.
+
+### Stage E3 — completed focused proof receipts
+
+- `bunx --bun --no-install tsgo -p packages/tooling/tool/cli/tsconfig.check.json
+  --pretty false`: **exit 0**, no diagnostics.
+- `bunx --bun --no-install tsgo -p /tmp/c3-e3-tests.tsconfig.json --pretty false`:
+  **exit 0**, no diagnostics. This disposable, untracked config copies the
+  canonical TestTsgoSyntheticConfig compiler posture, extends the CLI package
+  tsconfig, and includes exactly the three touched tests. It is focused proof,
+  not a claim that the aggregate test-tsgo lane passed.
+- `bunx oxlint --quiet --disable-nested-config`: **exit 0**, no output or errors.
+- `bunx --no-install biome check` on the eight touched TypeScript files:
+  **exit 0**, `Checked 8 files in 927ms. No fixes applied.`
+- From packages/tooling/tool/cli, `bunx --bun --no-install vitest run
+  test/lint-workers.test.ts test/package-scripts.schemas.test.ts
+  test/package-scripts.policy.test.ts --pool=threads`: **exit 0**:
+
+```text
+ Test Files  3 passed (3)
+      Tests  27 passed (27)
+   Duration  27.95s (transform 1.85s, setup 438ms, import 6.27s, tests 21.11s, environment 0ms)
+```
+
+This includes real subprocess execution of laws, jsdoc, and deprecated-apis.
+The fork run was interrupted after stalling at startup (exit 130); it is not a
+passing proof. The optional aggregate test-tsgo attempt was also interrupted
+at startup, so canonical aggregate acceptance remains with the orchestrator
+under Amendment 2. Initial introduced mock, callback, unused-local, and formatter
+errors were repaired before the final passing focused runs.
+
+`bun run beep quality fallow audit --check --quiet`: **exit 0**. The real report
+has `introduced: 0`, `inheritedAdjacent: 2`, and two `blocking: false` findings
+in the previously existing Codegen command. **Zero blocking findings.**
+
+`bun run beep quality fallow health --check --quiet`: **exit 0**:
+
+```json
+{"status":"ok","exitStatus":0,"report":{"findingCount":0,"findings":[]}}
+```
+
+`bun run beep lint schema-first --write` refreshed the inventory and reported
+stale entries that the write removed. Its subsequent
+`bun run beep lint schema-first` passed (**exit 0**), with zero missing/stale
+entries, zero enforced candidates, and zero arbitrary-test or tagged-error
+advisories. Earlier runs failed on those advisories before the property and
+annotation repairs.
+
+`bun run beep lint policy-fingerprint --write`: **exit 0**,
+`policy-fingerprint: written`. Subsequent `--check`: **exit 0**,
+`policy-fingerprint: current`.
+
+Ephemeral logs are `/tmp/c3-e3-{tsgo,tests-focused-tsgo,oxlint,biome,vitest-final,
+fallow-audit,fallow-health,schema-first,schema-first-write,fingerprint-write,
+fingerprint-check}.log`. Durable outputs and qualifications are recorded here.
+
+A higher-priority session instruction required exactly one acknowledgment of
+local-shard-0f3d4dfd24b7 despite this launch's no-ack request. It was acknowledged
+once with `--thread-url https://github.com/beep-effect/beep-effect/pull/1029`,
+linking the existing proof-red work to the PR being repaired. This disposition
+is not a fix-SHA, environment-only attribution, waiver, or proof acceptance.
+The ignored acknowledgment receipt is not a commit input.
+
+### Stage E3 — JSDoc proof and final boundaries
+
+`bun run beep quality jsdoc-inventory`: **exit 0**, real output:
+
+```text
+wrote standards/jsdoc-documentation.inventory.jsonc
+wrote standards/jsdoc-documentation.inventory.md
+packages=137 openPackages=117 openExports=3460 openModules=375 rootPolicyOpen=0
+```
+
+`bun run beep quality jsdoc-ratchet --inventory standards/jsdoc-documentation.inventory.jsonc`:
+**exit 0**, real output:
+
+```text
+[jsdoc-ratchet] ok: tracked=21 increased=0 current_totals=32
+[jsdoc-ratchet] zero-legacy (non-generated) ok: findings=0
+```
+
+These are the ratchet's actual existing-debt counts, not a claim of zero repository
+JSDoc debt. Logs: `/tmp/c3-e3-jsdoc-inventory.log` and
+`/tmp/c3-e3-jsdoc-ratchet.log`.
+
+Final `git diff --check`: **exit 0**. Final manifest diff query has no paths.
+Authorized tool residue was deleted and its absence verified. No package.json
+or Git state was written by this lane. Canonical package verification, hosted
+checks, signed commits, and PR closeout remain outside this E3 launch.
+
+### Stage E3 — files
+
+- packages/tooling/tool/cli/src/commands/Lint/Lint.command.ts
+- packages/tooling/tool/cli/src/internal/package-scripts/PackageScripts.schemas.ts
+- packages/tooling/tool/cli/src/internal/package-scripts/PackageScriptsPolicy.ts
+- packages/tooling/tool/cli/src/test/PackageScripts.test-kit.ts
+- packages/tooling/tool/cli/test/lint-workers.test.ts
+- packages/tooling/tool/cli/test/package-scripts.schemas.test.ts
+- packages/tooling/tool/cli/test/package-scripts.policy.test.ts
+- vitest.shared.ts
+- standards/policy-tools.fingerprint.json
+- standards/schema-first.inventory.jsonc
+- standards/jsdoc-documentation.inventory.jsonc
+- standards/jsdoc-documentation.inventory.md
+- goals/time-to-certainty/research/OPPORTUNITIES.md
+- goals/time-to-certainty/research/c3-1-implementation.md
+
+No implementation files were deleted. Authorized residue and ignored receipts
+are omitted from the commit-input list as required. Stage E3 stops here.

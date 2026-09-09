@@ -33,26 +33,12 @@ const resolveUniformTypeScriptSourceSpecifiers = (): Plugin => ({
   },
 });
 
-const configStringOptionSync = (name: string): O.Option<string> => Effect.runSync(Config.option(Config.string(name)));
 const configStringEqualsSync = (name: string, expected: string): boolean =>
   pipe(
-    configStringOptionSync(name),
+    Effect.runSync(Config.option(Config.string(name))),
     O.exists((value) => value === expected)
   );
-/**
- * Enables package-local in-source documentation tests.
- *
- * **Example** (Honor doctest mode in a package override)
- *
- * ```ts
- * import { vitestDoctestActive } from "./vitest.shared.ts"
- * console.log(vitestDoctestActive)
- * ```
- *
- * @category configuration
- * @since 0.0.0
- */
-export const vitestDoctestActive = configStringEqualsSync("BEEP_VITEST_DOCTEST", "1");
+const vitestDoctestActive = configStringEqualsSync("BEEP_VITEST_DOCTEST", "1");
 export const vitestCoverageReportOnly = configStringEqualsSync("VITEST_COVERAGE_REPORT_ONLY", "1");
 // Env flags do not survive every spawn chain (root script -> turbo ->
 // package script -> vitest); the vitest process's own argv is authoritative.

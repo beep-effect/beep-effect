@@ -214,8 +214,11 @@ export class ImplScriptDefault extends S.Class<ImplScriptDefault>($I`ImplScriptD
   $I.annote("ImplScriptDefault", { description: "Implementation text stamped only when the key is missing." })
 ) {}
 
+const isTaskScriptName = S.is(TaskScriptName);
+const isImplScriptName = S.is(ImplScriptName);
+
 const ExtraScriptName = S.String.check(
-  S.makeFilter((key) => !S.is(TaskScriptName)(key) && !S.is(ImplScriptName)(key), {
+  S.makeFilter((key) => !isTaskScriptName(key) && !isImplScriptName(key), {
     identifier: $I`ExtraScriptName`,
     title: "Extra script name",
     description: "A script key outside the task and implementation tiers.",
@@ -280,7 +283,7 @@ export type ScriptsRecord = typeof ScriptsRecord.Type;
  *
  * ```ts
  * import { scriptsBlockFromRecord } from "@beep/repo-cli/test/PackageScripts"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * import * as S from "effect/Schema"
  * const block = Effect.runSync(S.decodeUnknownEffect(scriptsBlockFromRecord("app"))({ dev: "vite" }))
  * console.log(block.kind) // app
@@ -299,8 +302,8 @@ export const scriptsBlockFromRecord = (kind: PackageKind) =>
           let impls = HashMap.empty<ImplScriptName, string>();
           let extras = HashMap.empty<string, string>();
           for (const [key, value] of R.toEntries(record)) {
-            if (S.is(TaskScriptName)(key)) tasks = HashMap.set(tasks, key, value);
-            else if (S.is(ImplScriptName)(key)) impls = HashMap.set(impls, key, value);
+            if (isTaskScriptName(key)) tasks = HashMap.set(tasks, key, value);
+            else if (isImplScriptName(key)) impls = HashMap.set(impls, key, value);
             else extras = HashMap.set(extras, key, value);
           }
           return { kind, tasks, impls, extras };
@@ -1302,6 +1305,19 @@ export const implScriptDefaults: ReadonlyArray<ImplScriptDefault> = [
   ImplScriptDefault.make({ kind: "infra", name: "beep:doctest", value: "BEEP_VITEST_DOCTEST=1 bunx --bun vitest run" }),
 ];
 
+const scaffoldRule = (scripts: HashMap.HashMap<string, string>, rule: TaskScriptRule) => {
+  const binding = rule.binding;
+  if (binding._tag === "owned") return scripts;
+  if (binding._tag === "cli") return HashMap.set(scripts, rule.name, binding.command);
+  const tasks = HashMap.set(scripts, rule.name, `bun run ${binding.ifPresent ? "--if-present " : ""}${binding.impl}`);
+  const implementation = A.findFirst(implScriptDefaults, (row) => row.kind === rule.kind && row.name === binding.impl);
+  return O.isSome(implementation) ? HashMap.set(tasks, binding.impl, implementation.value.value) : tasks;
+};
+const scaffoldRuleEnabled =
+  (kind: PackageKind, optionalTasks: ReadonlyArray<TaskScriptName>) => (rule: TaskScriptRule) =>
+    rule.kind === kind &&
+    (rule.presence._tag === "required" || (rule.presence._tag === "optional" && A.contains(optionalTasks, rule.name)));
+
 /**
  * Construct required scaffold bindings and explicitly selected optional tasks from the rule table.
  *
@@ -1325,21 +1341,11 @@ export const scaffoldPackageScripts: {
   (kind: PackageKind, optionalTasks: ReadonlyArray<TaskScriptName>): ScriptsRecord;
   (optionalTasks: ReadonlyArray<TaskScriptName>): (kind: PackageKind) => ScriptsRecord;
 } = dual(2, (kind: PackageKind, optionalTasks: ReadonlyArray<TaskScriptName>): ScriptsRecord => {
-  let scripts = HashMap.empty<string, string>();
-  for (const rule of taskScriptRules) {
-    if (rule.kind !== kind) continue;
-    const enabled =
-      rule.presence._tag === "required" || (rule.presence._tag === "optional" && A.contains(optionalTasks, rule.name));
-    if (!enabled || rule.binding._tag === "owned") continue;
-    const binding = rule.binding;
-    if (binding._tag === "cli") {
-      scripts = HashMap.set(scripts, rule.name, binding.command);
-      continue;
-    }
-    scripts = HashMap.set(scripts, rule.name, `bun run ${binding.ifPresent ? "--if-present " : ""}${binding.impl}`);
-    const implementation = A.findFirst(implScriptDefaults, (row) => row.kind === kind && row.name === binding.impl);
-    if (O.isSome(implementation)) scripts = HashMap.set(scripts, binding.impl, implementation.value.value);
-  }
+  let scripts = A.reduce(
+    A.filter(taskScriptRules, scaffoldRuleEnabled(kind, optionalTasks)),
+    HashMap.empty<string, string>(),
+    scaffoldRule
+  );
   // An audit may call an implementation even when its public task is absent (tool integration tests).
   for (const implementation of implScriptDefaults) {
     if (implementation.kind !== kind || HashMap.has(scripts, implementation.name)) continue;

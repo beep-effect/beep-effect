@@ -483,3 +483,11 @@ Executed worker checks before fleet stamping would have caught both assumptions.
   `any`/`unknown`.
 - **Would have prevented it:** `--quick` running `turbo run build` for the package's dependency
   closure (or refusing when any upstream `dist` is missing) before `beep:check`.
+
+### Stage E3 — cleanup command guard
+
+The explicitly requested Graft residue cleanup was rejected because the shell command used `rm -f` style flags. No command in that invocation ran. Retried the authorized paths with path-specific filesystem operations. A documented permitted cleanup form would avoid the failed invocation.
+
+### Stage E3 — proof runners and scoped test diagnostics
+
+The default Vitest fork run printed its startup banner but executed no tests for several minutes; interrupted that run (exit 130) and used the brief-authorized thread pool. The final thread run executes all three worker subprocess smokes and passes 27 tests. The broader `beep quality test-tsgo` likewise remained at `checking 1026 file(s) across 139 package(s)` and was interrupted, without claiming an aggregate pass. Used a disposable config matching `TestTsgoSyntheticConfig.ts`, extending the real CLI tsconfig and including the three touched tests, with `bunx --bun --no-install tsgo`; that focused check passes. A reliable bounded package test-diagnostic command would avoid the aggregate startup dependency during a three-file repair.

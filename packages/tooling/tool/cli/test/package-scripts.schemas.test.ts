@@ -3,6 +3,7 @@ import {
   PackageKind,
   PackageScriptsReportFromWire,
   ScriptsBlock,
+  ScriptsRecord,
   scriptsBlockFromRecord,
   TaskScriptName,
   TaskScriptRule,
@@ -14,9 +15,24 @@ import * as A from "effect/Array";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as fc from "effect/testing/FastCheck";
+import type { PackageScriptsReportWire } from "@beep/repo-cli/test/PackageScripts";
 
-const presenceRows = [
+const appCodec = scriptsBlockFromRecord("app");
+const decodeApp = S.decodeEffect(appCodec);
+const decodeUnknownApp = S.decodeUnknownEffect(appCodec);
+const encodeApp = S.encodeEffect(appCodec);
+const decodeBlock = S.decodeUnknownEffect(ScriptsBlock);
+const decodeRule = S.decodeEffect(TaskScriptRule);
+const decodeReport = S.decodeEffect(PackageScriptsReportFromWire);
+const encodeReport = S.encodeEffect(PackageScriptsReportFromWire);
+const decodeAppResult = S.decodeResult(appCodec);
+const encodeAppResult = S.encodeResult(appCodec);
+const scriptsArbitrary = S.toArbitrary(ScriptsRecord)(fc);
+
+const presenceRows: ReadonlyArray<readonly [string, string]> = [
   ["build", "required required required required required required optional"],
   ["check", "required required required required required required optional"],
   ["lint", "required required required required required required optional"],
@@ -37,39 +53,45 @@ const presenceRows = [
 ];
 
 describe("canonical package scripts schemas", () => {
+  it("round trips schema-derived script records", () => {
+    fc.assert(
+      fc.property(scriptsArbitrary, (input) => {
+        const block = Result.getOrThrow(decodeAppResult(input));
+        expect(Result.getOrThrow(encodeAppResult(block))).toEqual(input);
+      }),
+      { numRuns: 100 }
+    );
+  });
   it.effect(
     "round trips implementation text and extras without interpretation",
     Effect.fnUntraced(function* () {
-      const codec = scriptsBlockFromRecord("app");
       const input = { build: "bun run beep:build", "beep:build": "custom $BUILD", dev: "vite", "beep:custom": "owned" };
-      const block = yield* S.decodeUnknownEffect(codec)(input);
+      const block = yield* decodeApp(input);
       expect(HashMap.get(block.tasks, "build")).toEqual(O.some("bun run beep:build"));
       expect(HashMap.size(block.impls)).toBe(1);
       expect(HashMap.size(block.extras)).toBe(2);
-      expect(yield* S.encodeEffect(codec)(block)).toEqual(input);
+      expect(yield* encodeApp(block)).toEqual(input);
     })
   );
   it.effect(
     "rejects tier overlap and non-string script values with typed schema errors",
     Effect.fnUntraced(function* () {
       expect(
-        yield* S.decodeUnknownEffect(ScriptsBlock)({
+        yield* decodeBlock({
           kind: "app",
           tasks: HashMap.empty(),
           impls: HashMap.empty(),
           extras: HashMap.make(["build", "bad"]),
         }).pipe(Effect.isFailure)
       ).toBe(true);
-      expect(yield* S.decodeUnknownEffect(scriptsBlockFromRecord("app"))({ build: 1 }).pipe(Effect.isFailure)).toBe(
-        true
-      );
+      expect(yield* decodeUnknownApp({ build: 1 }).pipe(Effect.isFailure)).toBe(true);
     })
   );
   it.effect(
     "decodes every rule row and matches the ratified presence matrix literally",
     Effect.fnUntraced(function* () {
       expect(taskScriptRules).toHaveLength(119);
-      yield* Effect.forEach(taskScriptRules, S.decodeUnknownEffect(TaskScriptRule));
+      yield* Effect.forEach(taskScriptRules, (rule) => decodeRule(rule));
       for (const [name, expected] of presenceRows) {
         const actual = A.map(PackageKind.Options, (kind) =>
           A.findFirst(taskScriptRules, (row) => row.kind === kind && row.name === name)
@@ -85,16 +107,16 @@ describe("canonical package scripts schemas", () => {
   it.effect(
     "round trips report JSON data through the collection view",
     Effect.fnUntraced(function* () {
-      const wire = {
+      const wire: typeof PackageScriptsReportWire.Encoded = {
         schemaVersion: "package-scripts-report/v1",
         rules: "package-scripts-rules/v1",
         manifests: 2,
         drift: { "apps/a/package.json": [{ _tag: "missing-task", name: "lint:laws" }] },
         written: ["apps/a/package.json"],
       };
-      const report = yield* S.decodeUnknownEffect(PackageScriptsReportFromWire)(wire);
+      const report = yield* decodeReport(wire);
       expect(HashSet.has(report.written, "apps/a/package.json")).toBe(true);
-      expect(yield* S.encodeEffect(PackageScriptsReportFromWire)(report)).toEqual(wire);
+      expect(yield* encodeReport(report)).toEqual(wire);
     })
   );
 });

@@ -892,12 +892,43 @@ export class PolicyToolsFingerprint extends S.Class<PolicyToolsFingerprint>($I`P
   })
 ) {}
 
+const decodeDependencies = S.decodeEffect(
+  S.fromJsonString(S.Struct({ dependencies: S.optionalKey(S.Record(S.String, S.String)) }))
+);
+const fingerprintPatterns = Effect.fnUntraced(function* (repoRoot: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const workspaces = yield* resolveWorkspaceDirs(repoRoot);
+  let visited = HashSet.empty<string>();
+  const pending = ["@beep/repo-cli"];
+  const patterns: Array<string> = [];
+  const visit = Effect.fnUntraced(function* (name: string) {
+    const dir = HashMap.get(workspaces, name);
+    if (O.isNone(dir)) {
+      if (name === "@beep/repo-cli")
+        return yield* PackageScriptsPolicyError.make({ message: "CLI workspace is missing", cause: name });
+      return [];
+    }
+    patterns.push(`${path.relative(repoRoot, dir.value)}/src/**`);
+    const text = yield* fs.readFileString(path.join(dir.value, "package.json"));
+    const manifest = yield* decodeDependencies(text);
+    return A.filter(R.keys(manifest.dependencies ?? {}), (dependency) => HashMap.has(workspaces, dependency));
+  });
+  while (A.isReadonlyArrayNonEmpty(pending)) {
+    const name = pending.pop();
+    if (name === undefined || HashSet.has(visited, name)) continue;
+    visited = HashSet.add(visited, name);
+    pending.push(...(yield* visit(name)));
+  }
+  return patterns;
+});
+
 /**
  * Hashes the CLI's transitive workspace dependency sources and root checker configs.
  * **Example** (Prepare a fingerprint computation)
  * ```ts
  * import { policyToolsFingerprint } from "@beep/repo-cli/test/PackageScripts"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * console.log(Effect.isEffect(policyToolsFingerprint("/repo"))) // true
  * ```
  *
@@ -909,29 +940,7 @@ export const policyToolsFingerprint = Effect.fn("policyToolsFingerprint")(
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
     const fsUtils = yield* FsUtils;
-    const workspaces = yield* resolveWorkspaceDirs(repoRoot);
-    let visited = HashSet.empty<string>();
-    const pending = ["@beep/repo-cli"];
-    const patterns: Array<string> = [];
-    while (A.isReadonlyArrayNonEmpty(pending)) {
-      const name = pending.pop();
-      if (name === undefined || HashSet.has(visited, name)) continue;
-      visited = HashSet.add(visited, name);
-      const dir = HashMap.get(workspaces, name);
-      if (O.isNone(dir)) {
-        if (name === "@beep/repo-cli")
-          return yield* PackageScriptsPolicyError.make({ message: "CLI workspace is missing", cause: name });
-        continue;
-      }
-      patterns.push(`${path.relative(repoRoot, dir.value)}/src/**`);
-      const text = yield* fs.readFileString(path.join(dir.value, "package.json"));
-      const manifest = yield* S.decodeEffect(
-        S.fromJsonString(S.Struct({ dependencies: S.optionalKey(S.Record(S.String, S.String)) }))
-      )(text);
-      for (const dependency of R.keys(manifest.dependencies ?? {})) {
-        if (HashMap.has(workspaces, dependency)) pending.push(dependency);
-      }
-    }
+    const patterns = yield* fingerprintPatterns(repoRoot);
     const inputs = A.sort([...patterns, ...rootConfigs, "**/package.json", fingerprintPath], Order.String);
     const sources = yield* fsUtils.globFiles(patterns, { cwd: repoRoot, ignore: ["**/node_modules/**"] });
     const files = A.sort([...sources, ...rootConfigs], Order.String);
@@ -950,10 +959,27 @@ export const policyToolsFingerprint = Effect.fn("policyToolsFingerprint")(
   Effect.mapError((cause) => PackageScriptsPolicyError.make({ message: "Cannot compute policy fingerprint", cause }))
 );
 
+const encodeScriptsReport = S.encodeEffect(PackageScriptsReportFromWire);
+
 const gateFlags = {
   check: Flag.boolean("check").pipe(Flag.withDefault(false)),
   write: Flag.boolean("write").pipe(Flag.withDefault(false)),
 };
+
+const printScriptsReport = Effect.fnUntraced(function* (
+  report: PackageScriptsReportFromWire,
+  wire: typeof PackageScriptsReportFromWire.Encoded,
+  json: boolean
+) {
+  yield* Console.log(
+    json
+      ? yield* jsonStringifyPretty(wire)
+      : `package-scripts: ${report.manifests} manifests, ${HashMap.size(report.drift)} drifting, ${HashSet.size(report.written)} written`
+  );
+  if (!json)
+    for (const [manifest, rows] of report.drift)
+      for (const row of rows) yield* Console.log(`${manifest}: ${row.name}: ${row._tag}`);
+});
 
 /**
  * Checks or repairs the strict package scripts block.
@@ -977,15 +1003,8 @@ export const lintPackageScriptsCommand = Command.make(
     const root = yield* findRepoRoot();
     const policy = yield* PackageScriptsPolicy.make(root);
     const report = yield* write ? policy.write(root) : policy.check(root);
-    const wire = yield* S.encodeEffect(PackageScriptsReportFromWire)(report);
-    yield* Console.log(
-      json
-        ? yield* jsonStringifyPretty(wire)
-        : `package-scripts: ${report.manifests} manifests, ${HashMap.size(report.drift)} drifting, ${HashSet.size(report.written)} written`
-    );
-    if (!json)
-      for (const [manifest, rows] of report.drift)
-        for (const row of rows) yield* Console.log(`${manifest}: ${row.name}: ${row._tag}`);
+    const wire = yield* encodeScriptsReport(report);
+    yield* printScriptsReport(report, wire, json);
     if (HashMap.size(report.drift) > 0) return yield* failWithReportedExit("Package scripts policy drift.");
   })
 ).pipe(Command.withDescription("Check or repair canonical workspace scripts"));

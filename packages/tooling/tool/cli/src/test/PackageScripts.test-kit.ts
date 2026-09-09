@@ -7,3 +7,4 @@ export {
   policyToolsFingerprint,
 } from "../commands/Lint/Lint.command.ts";
 export * from "../internal/package-scripts/index.ts";
+export * as StepExec from "../internal/process/StepExec.ts";
