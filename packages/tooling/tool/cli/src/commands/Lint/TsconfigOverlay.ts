@@ -228,10 +228,11 @@ const isRawDocument = S.is(TsconfigOverlayRawDocument);
 const isAllowedDocumentKey = S.is(TsconfigOverlayDocumentKey);
 const isAllowedCompilerOptionKey = S.is(TsconfigOverlayCompilerOptionKey);
 
-const violationOrder = Order.mapInput(
-  Order.String,
-  (violation: TsconfigOverlayViolation) => `${violation.file} ${violation.scope} ${violation.key}`
-);
+const violationOrder: Order.Order<TsconfigOverlayViolation> = Order.Struct({
+  file: Order.String,
+  scope: Order.String,
+  key: Order.String,
+});
 
 const exists = (fs: FileSystem.FileSystem, filePath: string): Effect.Effect<boolean> =>
   fs.exists(filePath).pipe(Effect.orElseSucceed(thunkFalse));
