@@ -28,6 +28,7 @@ import {
   DateTime,
   Duration,
   Effect,
+  Encoding,
   Fiber,
   FileSystem,
   Layer,
@@ -36,11 +37,12 @@ import {
   pipe,
 } from "effect";
 import * as A from "effect/Array";
-import { constant, dual } from "effect/Function";
+import { constant, dual, flow } from "effect/Function";
 import * as HS from "effect/HashSet";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import {
@@ -60,7 +62,7 @@ import {
   writeAdmissionProtocol,
 } from "./AdmissionJournal.ts";
 import { appendSchedulerAttemptTerminated } from "./AttemptTerminationJournal.ts";
-import { isProcessIdentityAlive, isProcessPidAlive, processStartIdentityForPid } from "./ProcessIdentity.ts";
+import { isProcessIdentityAlive, processStartIdentityForPid } from "./ProcessIdentity.ts";
 import {
   AdmissionClaimSinkState,
   AdmissionConfig,
@@ -520,18 +522,58 @@ export const setAdmissionEvictionProtocol = Effect.fn("QualityScheduler.setAdmis
   return yield* writeAdmissionProtocol(directories.root, eviction);
 });
 
-// Staging siblings are named `<target>.tmp-<pid>-<uuid>`: the pid lets the
-// repair scan tell an orphan (dead writer) from a live in-flight publication.
-const stagingTemporaryPath = (filePath: string): string => `${filePath}.tmp-${process.pid}-${randomUUID()}`;
+// Staging siblings are named `<target>.tmp-<pid>[-<start identity>]-<uuid>`.
+// The writer's process start identity rides along hex-encoded (a `ps`-sourced
+// identity contains spaces) so the repair scan classifies an orphan with the
+// same pid-reuse fence leases use, instead of trusting a bare pid.
+const stagingTemporaryPath = (filePath: string, procStart: O.Option<string>): string =>
+  `${filePath}.tmp-${process.pid}${O.match(procStart, {
+    onNone: () => "",
+    onSome: (identity) => `-${Encoding.encodeHex(identity)}`,
+  })}-${randomUUID()}`;
 
-const stagingFileNamePattern = /\.tmp-(\d+)-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+const stagingFileNamePattern =
+  /\.tmp-(\d+)(?:-([0-9a-f]+))?-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
-const stagingFileOwnerPid = (name: string): O.Option<number> =>
+interface StagingFileOwner {
+  readonly pid: number;
+  readonly procStart: string;
+}
+
+// A name without an identity segment (written before identities were recorded)
+// classifies by pid liveness alone, exactly like a legacy lease.
+const stagingFileIdentity = (segment: string | undefined): string =>
+  pipe(
+    O.fromUndefinedOr(segment),
+    O.map(flow(Encoding.decodeHexString, Result.getOrElse(constant(Str.empty)))),
+    O.getOrElse(constant(Str.empty))
+  );
+
+const stagingFileOwner = (name: string): O.Option<StagingFileOwner> =>
   pipe(
     O.fromNullishOr(stagingFileNamePattern.exec(name)),
-    O.flatMap((match) => O.fromUndefinedOr(match[1])),
-    O.flatMap(Num.parse)
+    O.flatMap((match) =>
+      pipe(
+        O.fromUndefinedOr(match[1]),
+        O.flatMap(Num.parse),
+        O.map((pid) => ({ pid, procStart: stagingFileIdentity(match[2]) }))
+      )
+    )
   );
+
+// `force` turns an already-consumed temporary into a no-op; any other refusal
+// leaves an orphan behind, so it is reported rather than swallowed.
+const removeStagingFile = Effect.fnUntraced(function* (
+  temporary: string
+): Effect.fn.Return<void, never, FileSystem.FileSystem> {
+  const fs = yield* FileSystem.FileSystem;
+  yield* fs.remove(temporary, { force: true }).pipe(
+    Effect.tapError((error) =>
+      Console.error(`[yeet] failed to remove admission staging file ${temporary}: ${error.message}`)
+    ),
+    Effect.ignore
+  );
+});
 
 // Stage the complete content in a sibling temp file so publication (rename or
 // hard link) is atomic and a concurrent repair scan can never observe (and
@@ -561,11 +603,11 @@ const withStagedTemporaryFile = Effect.fnUntraced(function* <A>(
   content: string,
   publish: (temporary: string) => Effect.Effect<A, QualitySchedulerError, FileSystem.FileSystem>
 ): Effect.fn.Return<A, QualitySchedulerError, FileSystem.FileSystem> {
-  const fs = yield* FileSystem.FileSystem;
-  const temporary = stagingTemporaryPath(filePath);
+  const procStart = yield* processStartIdentityForPid(process.pid);
+  const temporary = stagingTemporaryPath(filePath, O.filter(procStart, Str.isNonEmpty));
   return yield* stageTemporaryFile(temporary, content).pipe(
     Effect.andThen(publish(temporary)),
-    Effect.ensuring(fs.remove(temporary, { force: true }).pipe(Effect.ignore))
+    Effect.ensuring(removeStagingFile(temporary))
   );
 });
 
@@ -637,29 +679,33 @@ export const writeFileAtomicForTesting = writeFileAtomic;
 export const tryCreateExclusiveForTesting = tryCreateExclusive;
 
 // Orphaned staging siblings never settle into `.json` state, so the entry scan
-// cannot see them. Under repair, sweep the ones whose writer pid is gone; a
-// live pid is an in-flight publication and is retained.
-const reapStaleStagingFiles = Effect.fnUntraced(function* (
+// cannot see them. Collect the ones whose writer is dead by the lease liveness
+// rules (pid gone, or pid reused by a process with a different start identity)
+// so a dry run previews exactly what repair removes; a live or unverifiable
+// writer is an in-flight publication and is never listed.
+const collectStaleStagingFiles = Effect.fnUntraced(function* (
   directories: AdmissionDirectories
-): Effect.fn.Return<void, QualitySchedulerError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<ReadonlyArray<string>, QualitySchedulerError, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  yield* Effect.forEach(
-    [directories.claims, directories.leases, directories.promotions, directories.queue],
-    Effect.fnUntraced(function* (directory: string) {
-      const names = yield* fs
-        .readDirectory(directory)
-        .pipe(Effect.mapError(QualitySchedulerError.new(`Failed to list admission state in ${directory}.`)));
-      yield* Effect.forEach(
-        A.getSomes(A.map(names, (name) => O.map(stagingFileOwnerPid(name), (pid) => ({ name, pid })))),
-        ({ name, pid }) =>
-          Effect.flatMap(isProcessPidAlive(pid), (alive) =>
-            alive ? Effect.void : fs.remove(path.join(directory, name), { force: true }).pipe(Effect.ignore)
-          ),
-        { discard: true }
-      );
-    }),
-    { discard: true }
+  return A.flatten(
+    yield* Effect.forEach(
+      [directories.claims, directories.leases, directories.promotions, directories.queue],
+      Effect.fnUntraced(function* (directory: string) {
+        const names = yield* fs
+          .readDirectory(directory)
+          .pipe(Effect.mapError(QualitySchedulerError.new(`Failed to list admission state in ${directory}.`)));
+        return A.getSomes(
+          yield* Effect.forEach(
+            A.getSomes(A.map(names, (name) => O.map(stagingFileOwner(name), (owner) => ({ name, owner })))),
+            ({ name, owner }) =>
+              Effect.map(isProcessIdentityAlive(owner), (alive) =>
+                alive ? O.none<string>() : O.some(path.join(directory, name))
+              )
+          )
+        );
+      })
+    )
   );
 });
 
@@ -1337,7 +1383,8 @@ const scanAdmissionState = Effect.fnUntraced(function* (
   retainedDeadLeasePaths: ReadonlyArray<string> = A.empty()
 ): Effect.fn.Return<LiveAdmissionState, QualitySchedulerError, FileSystem.FileSystem | Path.Path> {
   yield* repair ? recoverPromotionTransitions(directories) : Effect.void;
-  yield* repair ? reapStaleStagingFiles(directories) : Effect.void;
+  const staleStaging = yield* collectStaleStagingFiles(directories);
+  yield* repair ? Effect.forEach(staleStaging, removeStagingFile, { discard: true }) : Effect.void;
   const leases = yield* collectAdmissionEntries(
     directories,
     directories.leases,
@@ -1362,8 +1409,11 @@ const scanAdmissionState = Effect.fnUntraced(function* (
     leases: A.map(leases.live, ({ entry, path: entryPath }) => ({ path: entryPath, lease: entry })),
     tickets: A.map(tickets.live, ({ entry, path: entryPath }) => ({ path: entryPath, ticket: entry })),
     dead: A.appendAll(
-      A.map(leases.dead, ({ path: entryPath }) => entryPath),
-      A.map(tickets.dead, ({ path: entryPath }) => entryPath)
+      A.appendAll(
+        A.map(leases.dead, ({ path: entryPath }) => entryPath),
+        A.map(tickets.dead, ({ path: entryPath }) => entryPath)
+      ),
+      staleStaging
     ),
     deadLeases: A.map(leases.dead, ({ entry, path: entryPath }) => ({ path: entryPath, lease: entry })),
     deadTickets: A.map(tickets.dead, ({ entry, path: entryPath }) => ({ path: entryPath, ticket: entry })),

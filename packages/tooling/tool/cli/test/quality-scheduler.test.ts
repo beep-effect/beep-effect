@@ -86,6 +86,7 @@ import {
   Fiber,
   FileSystem,
   Layer,
+  Order,
   Path,
   pipe,
   Ref,
@@ -822,6 +823,28 @@ describe("quality-scheduler", () => {
       expect(yield* fs.readDirectory(directory)).toStrictEqual(["existing"]);
       expect(yield* fs.readFileString(filePath)).toBe("original");
     }).pipe(provideScopedLayer(NodeFileSystem.layer))
+  );
+
+  it.effect("reports a staging temporary that survives its cleanup instead of hiding the refusal", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "quality-scheduler-staging-cleanup-refused-" });
+      const filePath = `${directory}/existing`;
+      yield* fs.writeFileString(filePath, "original");
+      // A genuine platform failure from the same layer stands in for a removal
+      // the operating system refuses.
+      const refusal = yield* fs.readFileString(`${directory}/missing`).pipe(Effect.flip);
+      const fileSystem = FileSystem.FileSystem.of({ ...fs, remove: () => Effect.fail(refusal) });
+
+      const created = yield* tryCreateExclusiveForTesting(filePath, "replacement").pipe(
+        Effect.provideService(FileSystem.FileSystem, fileSystem)
+      );
+
+      expect(created).toBe(false);
+      expect(yield* fs.readFileString(filePath)).toBe("original");
+      const errors = A.map(yield* TestConsole.errorLines, String);
+      expect(A.some(errors, Str.includes("failed to remove admission staging file"))).toBe(true);
+    }).pipe(provideScopedLayer(TestConsole.layer), provideScopedLayer(NodeFileSystem.layer))
   );
 
   it.effect("accepts an owner-agnostic private directory and rejects an unsafe mode", () =>
@@ -2845,7 +2868,7 @@ describe("quality-scheduler", () => {
       })
     ));
 
-  it("reap removes stale staging siblings of dead writers and keeps live ones", () =>
+  it("reap removes staging siblings of dead or pid-reused writers and keeps live ones", () =>
     Effect.runPromise(
       Effect.gen(function* () {
         const gibRef = yield* Ref.make(50);
@@ -2856,24 +2879,43 @@ describe("quality-scheduler", () => {
             yield* Effect.forEach([tempRoot.leases, tempRoot.queue], (directory) =>
               fs.makeDirectory(directory, { recursive: true, mode: 0o700 })
             );
-            // Orphans left by writers that died mid-publication carry the dead
-            // pid in their name; a live pid marks an in-flight heartbeat.
-            const stale = path.join(tempRoot.leases, `nonce-${DEAD_PID}.lease.json.tmp-${DEAD_PID}-${randomUUID()}`);
-            const live = path.join(
+            const ownIdentity = O.getOrElse(yield* processStartIdentityForPid(process.pid), () => "");
+            expect(ownIdentity).not.toBe("");
+            // Legacy names carry only the writer pid; identity-bearing names
+            // add the hex-encoded process start so a reused pid cannot shield
+            // an orphan the way it cannot shield a dead lease.
+            const staleLegacy = path.join(
+              tempRoot.leases,
+              `nonce-${DEAD_PID}.lease.json.tmp-${DEAD_PID}-${randomUUID()}`
+            );
+            const liveLegacy = path.join(
               tempRoot.queue,
               `nonce-${process.pid}.ticket.json.tmp-${process.pid}-${randomUUID()}`
             );
-            yield* fs.writeFileString(stale, "");
-            yield* fs.writeFileString(live, "");
+            const reusedPid = path.join(
+              tempRoot.leases,
+              `nonce-${process.pid}.lease.json.tmp-${process.pid}-${Encoding.encodeHex("proc:1")}-${randomUUID()}`
+            );
+            const current = path.join(
+              tempRoot.queue,
+              `nonce-${process.pid}.ticket.json.tmp-${process.pid}-${Encoding.encodeHex(ownIdentity)}-${randomUUID()}`
+            );
+            yield* Effect.forEach([staleLegacy, liveLegacy, reusedPid, current], (file) =>
+              fs.writeFileString(file, "")
+            );
 
+            // The dry run previews exactly the staging files apply removes.
             const dryRun = yield* reapAdmissionState({ apply: false });
-            expect(dryRun.dead).toStrictEqual([]);
-            expect(yield* fs.exists(stale)).toBe(true);
+            expect(A.sort(dryRun.dead, Order.String)).toStrictEqual(A.sort([staleLegacy, reusedPid], Order.String));
+            expect(yield* fs.exists(staleLegacy)).toBe(true);
+            expect(yield* fs.exists(reusedPid)).toBe(true);
 
             const applied = yield* reapAdmissionState({ apply: true });
-            expect(applied.dead).toStrictEqual([]);
-            expect(yield* fs.exists(stale)).toBe(false);
-            expect(yield* fs.exists(live)).toBe(true);
+            expect(A.sort(applied.dead, Order.String)).toStrictEqual(A.sort([staleLegacy, reusedPid], Order.String));
+            expect(yield* fs.exists(staleLegacy)).toBe(false);
+            expect(yield* fs.exists(reusedPid)).toBe(false);
+            expect(yield* fs.exists(liveLegacy)).toBe(true);
+            expect(yield* fs.exists(current)).toBe(true);
           })
         );
       })
