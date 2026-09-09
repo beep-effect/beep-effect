@@ -39,3 +39,13 @@ PR #1026 review follow-up:
   passed all 49 tests; the fleet suites passed 41 more tests.
 - Non-UTF-8 plain and gzip evidence now produces a path-specific hygiene error.
   All 16 economics tests passed; only the reproduction-script receipt changed.
+
+Merged main verification refinements from `ed66cbce8f`, retaining the complete
+inherited-environment hash and both sets of cache regressions. The focused
+merged proof-cache selection passed seven tests. The latest CLI package
+verification passed (audit 372.9 seconds, docgen 17.3 seconds).
+
+The first publication proof stopped at the JSDoc ratchet because a new parser
+example imported Effect from the root package. The example now imports
+`effect/Effect`; the baseline is unchanged. Hosted coverage also identified
+worktree command and service coverage regressions; targeted tests are pending.

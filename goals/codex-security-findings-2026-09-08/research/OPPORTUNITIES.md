@@ -24,3 +24,8 @@
   category was `decoders`. Package docgen had passed, but the hosted scoped
   entry point also checks canonical categories. Use `decoding`; validate the
   same `docgen:local -- --base origin/main --head HEAD` entry point as CI.
+
+- PR #1026 coverage found lower command and service coverage after worktree
+  boundary checks were added. Package tests passed, but did not enforce the
+  per-file coverage floor. Add rejection-path tests and verify the unchanged
+  coverage ratchet before treating package success as repository acceptance.
