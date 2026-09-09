@@ -5,14 +5,15 @@
  * `@azure/msal-node` with silent refresh, optionally persisting the MSAL token
  * cache encrypted via `@azure/msal-node-extensions` when `tokenCachePath` is
  * configured (DPAPI / Keychain / libsecret). That extension is an optional peer
- * dependency the host installs; see `vendor.d.ts` for the typed surface.
+ * dependency the host installs; `MsalNodeExtensions` below is the package-private
+ * surface the driver relies on, so no ambient module declaration shadows the real
+ * package types in any host program.
  * Interactive redirect capture is injected by the host; the driver never owns a
  * loopback HTTP server.
  *
  * @packageDocumentation
  * @since 0.0.0
  */
-/// <reference path="./vendor.d.ts" />
 
 import { $M365Id } from "@beep/identity";
 import { getSomesStruct } from "@beep/utils/Option";
@@ -35,6 +36,39 @@ import type { M365ConfigInput } from "./M365.config.ts";
 const $I = $M365Id.create("M365.auth");
 
 type ICachePlugin = NonNullable<NonNullable<Configuration["cache"]>["cachePlugin"]>;
+
+// The optional peer `@azure/msal-node-extensions` is loaded through a non-literal
+// specifier so TypeScript never resolves the module: hosts that set
+// `tokenCachePath` install it, this workspace does not, and no ambient module
+// declaration is needed (one would shadow the real package types in any program
+// that includes it). `MsalNodeExtensions` mirrors the upstream 5.5.0
+// `types/persistence/*.d.ts` for exactly the members used below.
+const MSAL_NODE_EXTENSIONS_SPECIFIER = "@azure/msal-node-extensions";
+
+interface MsalPersistence {
+  readonly load: () => Promise<string | null>;
+  readonly save: (contents: string) => Promise<void>;
+}
+
+interface MsalNodeExtensions {
+  readonly DataProtectionScope: {
+    readonly CurrentUser: "CurrentUser";
+    readonly LocalMachine: "LocalMachine";
+  };
+  readonly PersistenceCachePlugin: new (persistence: MsalPersistence) => ICachePlugin;
+  readonly PersistenceCreator: {
+    readonly createPersistence: (config: {
+      readonly accountName?: string;
+      readonly cachePath?: string;
+      readonly dataProtectionScope?: "CurrentUser" | "LocalMachine";
+      readonly serviceName?: string;
+      readonly usePlaintextFileOnLinux?: boolean;
+    }) => Promise<MsalPersistence>;
+  };
+}
+
+const loadMsalNodeExtensions = (): Promise<MsalNodeExtensions> =>
+  import(MSAL_NODE_EXTENSIONS_SPECIFIER) as Promise<MsalNodeExtensions>;
 
 // Opaque MSAL handles are constructed in-process (via a dynamic import, so no
 // static constructor exists for `S.instanceOf`) and never decoded from external
@@ -175,7 +209,7 @@ const buildCachePlugin = (resolved: ResolvedM365Config): Effect.Effect<O.Option<
     onNone: () => Effect.succeed(O.none<ICachePlugin>()),
     onSome: (cachePath) =>
       Effect.tryPromise({
-        try: () => import("@azure/msal-node-extensions"),
+        try: loadMsalNodeExtensions,
         catch: (cause) => M365Error.fromReason("config", { cause }),
       }).pipe(
         Effect.flatMap((Ext) =>

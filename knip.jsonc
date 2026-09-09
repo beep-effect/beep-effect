@@ -106,10 +106,12 @@
       "ignoreDependencies": ["@vitest/browser"]
     },
     "packages/drivers/m365": {
-      // The encrypted token cache imports @azure/msal-node-extensions lazily, and the
-      // package is an optional peer the host declares: it hard-depends on the native keytar
-      // addon, whose prebuild download failed hosted installs, so this workspace never
-      // installs it. Knip's used-optional-peer report would otherwise ask to promote it back.
+      // The encrypted token cache loads @azure/msal-node-extensions through a non-literal
+      // dynamic import, and the package is an optional peer the host declares: it
+      // hard-depends on the native keytar addon, whose prebuild download failed hosted
+      // installs, so this workspace never installs it. Knip cannot see that import, so
+      // without this entry it would report the peer as unused (or, if it could, ask to
+      // promote a used optional peer back to a dependency).
       "ignoreDependencies": ["@azure/msal-node-extensions"]
     },
     "packages/drivers/xai": {
