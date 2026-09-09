@@ -25,7 +25,7 @@ import {
 } from "@beep/repo-cli/test/RepoRun";
 import { decodeYeetAttemptJournalEvent } from "@beep/repo-cli/test/Yeet";
 import { UUID } from "@beep/schema/String";
-import { provideScopedLayer } from "@beep/test-utils";
+import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import {
@@ -49,12 +49,17 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Struct from "effect/Struct";
+import { FastCheck as fc } from "effect/testing";
 
 // Ruling 10's synthetic producer: admission rows come from the real scheduler.
 const producerPath = "packages/tooling/tool/cli/test/quality-scheduler-synthetic-scenario.test.ts";
 const decodeUUID = S.decodeEffect(UUID);
 const encodeLease = S.encodeEffect(S.fromJsonString(YeetAdmissionLease));
 const encodeTicket = S.encodeEffect(S.fromJsonString(YeetAdmissionTicket));
+const encodeLeaseSync = S.encodeSync(S.fromJsonString(YeetAdmissionLease));
+const decodeLeaseSync = S.decodeUnknownSync(S.fromJsonString(YeetAdmissionLease));
+const encodeTicketSync = S.encodeSync(S.fromJsonString(YeetAdmissionTicket));
+const decodeTicketSync = S.decodeUnknownSync(S.fromJsonString(YeetAdmissionTicket));
 const decodeJsonObject = S.decodeUnknownEffect(S.fromJsonString(S.JsonObject));
 const encodeScenario = S.encodeUnknownEffect(S.fromJsonString(S.JsonObject, { space: 2 }));
 const fastConfig = AdmissionConfig.make({
@@ -467,4 +472,27 @@ describe("synthetic admission scenario", () => {
         })
       )
     ));
+  it("property: dead-owner lease and ticket fixtures round-trip through the JSON codecs the scenario writes", () => {
+    fc.assert(
+      fc.property(S.toArbitrary(YeetAdmissionLease)(fc), (lease) => {
+        const encoded = encodeLeaseSync(lease);
+        const decoded = decodeLeaseSync(encoded);
+        expect(decoded.nonce).toBe(lease.nonce);
+        expect(decoded.checkoutRoot).toBe(lease.checkoutRoot);
+        // JSON drops the sign of -0, so the codec law is encode-stability rather than deep identity.
+        expect(encodeLeaseSync(decoded)).toBe(encoded);
+      }),
+      fcRuns(32)
+    );
+    fc.assert(
+      fc.property(S.toArbitrary(YeetAdmissionTicket)(fc), (ticket) => {
+        const encoded = encodeTicketSync(ticket);
+        const decoded = decodeTicketSync(encoded);
+        expect(decoded.nonce).toBe(ticket.nonce);
+        expect(decoded.checkoutRoot).toBe(ticket.checkoutRoot);
+        expect(encodeTicketSync(decoded)).toBe(encoded);
+      }),
+      fcRuns(32)
+    );
+  });
 });
