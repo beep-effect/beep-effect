@@ -573,3 +573,24 @@ adapted the campaign's pre-scan regression guard to the installed replacement
 and its two private directories. Frozen installation and all three guard tests
 pass. Opening the PR before a long aggregate would have made this overlap
 visible earlier; the new early-publication workflow follows that preference.
+
+### Early review clarified proxy configuration and acceptance (2026-09-08)
+
+PR #1021 exposed two introduced review issues before its local proof was
+admitted: Storybook's HMR endpoint was fixed to one proxy host, and checked
+implementation criteria could be read as final verification. The proxy config
+now derives its address from portless's supplied URL and leaves normal Vite
+configuration in place when portless is absent or explicitly bypassed. The
+SPEC separately lists unchecked published-commit proof, hosted readiness, and
+packet closeout gates; the launcher's overall acceptance remains unchecked.
+The queued proof was deliberately interrupted so a follow-up commit can
+include both repairs. Treating proxy origin as runtime configuration and
+separating implementation evidence from final acceptance would have prevented
+these issues.
+
+The focused Storybook handoff also caught a reference-version mismatch:
+`.repos/effect` names the URL configuration constructor `Config.URL`, while
+the pinned installed Effect version exposes `Config.url`. The final code uses
+the installed API and reads environment configuration through Effect Config.
+Reference-checkout API searches should be compared with the pinned package
+exports before an integration is treated as compilable.

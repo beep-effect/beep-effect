@@ -78,6 +78,10 @@ repository that has since changed.
 
 ## Acceptance Criteria
 
+These checkboxes record implemented requirements and the evidence linked in
+this packet. Final acceptance additionally requires every published-commit
+gate below; checked implementation items do not establish merge readiness.
+
 - [x] `research/tail-inventory.md` carries a triage verdict per tail function,
       each executed in the candidate branch (refactor landed, override added,
       or ignore added).
@@ -104,6 +108,16 @@ repository that has since changed.
       vulnerable ZIP dependency with fflate, so the temporary advisory
       exception is no longer needed or retained.
 
+## Published-Commit Verification
+
+- [ ] Full local Yeet proof passes on the published commit.
+- [ ] Hosted checks, blocking health, and review closeout pass on that commit;
+      Yeet reports `merge-ready: yes`.
+- [ ] The same PR records the final manifest status and closeout reflection.
+
+P2, P3, and P4 remain open until these gates are proven. Earlier successful
+runs remain dated evidence, and the early PR is explicitly provisional.
+
 ## Verification Matrix
 
 | Check | Command or evidence | Required result |
@@ -116,7 +130,7 @@ repository that has since changed.
 | Audit gate | `bun run beep quality fallow audit --check --quiet` | Exit 0 on each wave PR |
 | Suppression hygiene | `bun run fallow suppressions` | Zero missing/stale reasons; total at most 207; no campaign-added suppressions |
 | Reflection | `bun run beep lint reflection-artifacts` | Passes at P4 |
-| Installer mitigation | `node --test scripts/test-onnxruntime-installer-patch.mjs` | Both regression cases pass against the installed pinned patch |
+| Installer mitigation | `node --test scripts/test-onnxruntime-installer-patch.mjs` | All three guard tests pass against the installed pinned replacement |
 | Security gate | `bun run beep ci lane security` | Mitigation proof and OSV exit 0 |
 
 ## Stop Conditions

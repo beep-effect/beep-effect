@@ -1,8 +1,19 @@
+import { Effect } from "effect";
 import * as A from "effect/Array";
+import * as Config from "effect/Config";
+import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import type { StorybookConfig } from "@storybook/react-vite";
 import type { Plugin } from "vite";
 
 const repoRoot = new URL("../../..", import.meta.url).pathname;
+const portlessConfig = Effect.runSync(
+  Config.all({
+    mode: Config.string("PORTLESS").pipe(Config.withDefault("1")),
+    url: Config.url("PORTLESS_URL").pipe(Config.option),
+  })
+);
+const proxyUrl = portlessConfig.mode === "0" ? undefined : O.getOrUndefined(portlessConfig.url);
 
 // Lexical 0.46 emits two prod bundles with a pure annotation before `return`.
 // The strip plugin is deliberately copied into each Vite composition root
@@ -86,11 +97,16 @@ const config: StorybookConfig = {
       ],
       server: {
         ...config.server,
-        hmr: {
-          protocol: "wss",
-          host: "storybook.beep.localhost",
-          clientPort: 1355,
-        },
+        ...(proxyUrl === undefined || config.server?.hmr === false
+          ? {}
+          : {
+              hmr: {
+                ...(P.isObject(config.server?.hmr) ? config.server.hmr : {}),
+                protocol: proxyUrl.protocol === "https:" ? "wss" : "ws",
+                host: proxyUrl.hostname,
+                clientPort: Number(proxyUrl.port || (proxyUrl.protocol === "https:" ? 443 : 80)),
+              },
+            }),
         fs: {
           ...config.server?.fs,
           allow: fsAllow,

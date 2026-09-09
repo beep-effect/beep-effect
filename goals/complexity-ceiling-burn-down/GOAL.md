@@ -57,7 +57,7 @@ Workflow:
 
 Acceptance:
 
-- [x] `SPEC.md` acceptance criteria are satisfied.
+- [ ] `SPEC.md` acceptance criteria and published-commit gates are satisfied.
 - [x] `bun run fallow:health:baseline:check` exits 0; zero functions above
       cognitive complexity 15 remain without an override/ignore. Critical
       estimated-CRAP findings in the 7-15 band do not expand this scope.
