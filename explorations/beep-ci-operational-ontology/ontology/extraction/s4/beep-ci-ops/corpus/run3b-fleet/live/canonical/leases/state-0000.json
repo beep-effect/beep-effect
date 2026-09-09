@@ -1,10 +1,10 @@
 {
-  "ownerRef": "c0b185e1d1ed",
+  "ownerRef": "0e3425edc301",
   "ownerRefVariant": "pid_pair",
   "schemaVersion": "yeet-admission-lease/v1",
-  "attemptId": "03e19e3c-fa6f-4123-b858-ded1e5712156",
-  "resolvedHeadSha": "e749d9a89ec43044ac26e69aad5d8b5a8d1431a6",
-  "diffFingerprint": "0ff7dac59076c9ddad060e83650bdfbaf534ae10fd71a7a1f7c9486b9a637f4a",
+  "attemptId": "aab20cd5-d72d-4430-b199-c8143dec079c",
+  "resolvedHeadSha": "6bd41dd036353bc1d51c48fb25625857fe5171fb",
+  "diffFingerprint": "9335762b0ecc98f6fc62172073675a4374ed1b573d1765e1dfe5ae00832b96ca",
   "proofTier": "full",
   "envProfile": "local",
   "stage": "pre-push",
@@ -16,17 +16,17 @@
   "branch": "codex/inline-schema-packet-closeout",
   "coordinationProtocol": "scheduler-origin-concurrency/v1",
   "command": "bun run beep quality github-checks cheap-gates --collect-all && bun run beep quality github-checks pre-push && bun run beep ci local --affected --base origin/main",
-  "startedAt": "2026-09-09T07:52:10.018Z",
-  "admittedAtMillis": 1788940330018,
-  "heartbeatAtMillis": 1788940480541,
-  "enqueuedAtMillis": 1788940279877,
-  "nonce": "9f9cbe1f-3665-4230-b29b-0e850fa2d7b7",
+  "startedAt": "2026-09-09T08:16:56.511Z",
+  "admittedAtMillis": 1788941816511,
+  "heartbeatAtMillis": 1788942001857,
+  "enqueuedAtMillis": 1788941626093,
+  "nonce": "012163b8-ef66-4fb4-aba5-0d4af4072512",
   "hotPaths": [],
   "runScope": {
-    "ownerRef": "88d6a52a1694",
+    "ownerRef": "03851a8534e9",
     "ownerRefVariant": "attachedpid",
-    "unitName": "agent-run-9f9cbe1f-3665-4230-b29b-0e850fa2d7b7.scope",
+    "unitName": "agent-run-012163b8-ef66-4fb4-aba5-0d4af4072512.scope",
     "support": "active",
-    "attachedAt": "2026-09-09T07:52:10.042Z"
+    "attachedAt": "2026-09-09T08:16:56.539Z"
   }
 }

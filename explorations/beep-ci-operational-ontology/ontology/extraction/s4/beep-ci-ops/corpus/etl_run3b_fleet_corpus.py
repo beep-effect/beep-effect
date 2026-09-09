@@ -58,8 +58,8 @@ FLEET_ROOT = fleet_root(REPO_ROOT)
 # Identifier tokens, shared by structural keys and serialized string members.
 PROCESS_MEMBER_PATTERN = (
     r"(?:(?i:pid|ppid|process[_-]?id)"
-    r"|[A-Za-z0-9_-]*[a-z0-9]Pid|[A-Za-z0-9_-]+[_-](?i:pid)"
-    r"|(?:(?:[A-Za-z0-9_-]+[_-])?(?:procStart|processStart)|[A-Za-z0-9_-]*[a-z0-9](?:ProcStart|ProcessStart))(?:[A-Z][A-Za-z0-9]*)?"
+    r"|[A-Za-z0-9_-]*[a-z0-9](?:Pid|PID)|[A-Za-z0-9_-]+[_-](?i:pid)"
+    r"|(?:(?:[A-Za-z0-9_-]+[_-])?(?:procStart|processStart)|[A-Za-z0-9_-]*[a-z0-9](?:ProcStart|ProcessStart|PROCSTART|PROCESSSTART))(?:[A-Z][A-Za-z0-9]*)?"
     r"|(?i:(?:[a-z0-9_-]+[_-])?(?:proc|process)[_-]start(?:[_-][a-z0-9]+)*))"
 )
 PROCESS_MEMBER = re.compile(PROCESS_MEMBER_PATTERN)

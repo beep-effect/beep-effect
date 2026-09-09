@@ -92,8 +92,8 @@ def tree_bytes(root):
 
 class RedactionTests(unittest.TestCase):
     def test_identifier_tokens_preserve_ordinary_words_and_cover_process_names(self):
-        safe = {key: 1234 for key in ("rapid", "cupid", "lipid", "stepId", "failedStepId")}
-        private = {key: 5678 for key in ("pid", "ppid", "ownerPid", "attachedPid", "legacyLockOwnerPid", "claudePid", "ownerProcStart", "xPid", "y_pid", "z-pid")}
+        safe = {key: 1234 for key in ("rapid", "cupid", "lipid", "RAPID", "Cupid", "stepId", "failedStepId", "STEPID")}
+        private = {key: 5678 for key in ("pid", "ppid", "ownerPid", "attachedPid", "legacyLockOwnerPid", "claudePid", "ownerProcStart", "xPid", "y_pid", "z-pid", "ownerPID", "attachedPID", "ownerPROCSTART", "OWNER_PID")}
         for key in safe:
             self.assertFalse(etl.process_member(key), key)
         for key in private:
