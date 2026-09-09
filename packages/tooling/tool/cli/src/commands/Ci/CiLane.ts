@@ -408,6 +408,8 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
     laneClass: "cli-runnable",
     replay: "exact",
     flags: [...TURBO_SHAPE_FLAGS, "--partition", "--dry-run", "--force"],
+    notes:
+      "Runs the unit suites under Bun. Coverage replays them under Node; the dual execution is the deliberate runtime-parity proof (quality-lane audit 2026-09-09, D11), not a duplicate to fold.",
   }),
   CiLaneDescriptor.make({
     id: "test-integration",
@@ -424,6 +426,8 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
     laneClass: "cli-runnable",
     replay: "exact",
     flags: [...TURBO_SHAPE_FLAGS],
+    notes:
+      "Runs under Node because Bun has no istanbul coverage. Test Unit runs the same suites under Bun; packages have passed one runtime and failed the other, so the dual execution is the deliberate runtime-parity proof (D11).",
   }),
   CiLaneDescriptor.make({
     id: "docgen",
