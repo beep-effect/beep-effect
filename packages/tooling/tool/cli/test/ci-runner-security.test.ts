@@ -83,31 +83,36 @@ const setupMonorepoStep = (jobs: WorkflowJobs, jobId: string): WorkflowStep =>
     () => new Error(`Job ${jobId} does not call ${SETUP_MONOREPO_ACTION}.`)
   );
 
+const stepInputs = (step: WorkflowStep): Readonly<Record<string, unknown>> => step.with ?? {};
+
+const stepEnvironment = (step: WorkflowStep): Readonly<Record<string, unknown>> => step.env ?? {};
+
+const setupMonorepoInputs = (jobs: WorkflowJobs, jobId: string): Readonly<Record<string, unknown>> =>
+  stepInputs(setupMonorepoStep(jobs, jobId));
+
+// The cache key a job's post-lane Turbo fallback save step writes under.
+const fallbackSaveKey = (jobs: WorkflowJobs, jobId: string): unknown =>
+  stepInputs(stepByName(jobSteps(jobs, jobId), "Save post-lane Turbo fallback")).key;
+
+// A parsed YAML document, failing the case on any parse error.
+const parsedDocument = (text: string): Document => {
+  const document = parseDocument(text);
+  assert.lengthOf(document.errors, 0);
+  return document;
+};
+
 // $GITHUB_ENV heredoc form written by scripts/ci-job-env.mjs:
 //   NAME<<delimiter\n<value lines>\ndelimiter
-const parseGithubEnv = (text: string): Readonly<Record<string, string>> => {
-  const lines = Str.split(text, "\n");
-  const entries: Array<readonly [string, string]> = [];
-  let index = 0;
-  while (index < lines.length) {
-    const header = Str.match(/^([A-Za-z_][A-Za-z0-9_]*)<<(.+)$/u)(lines[index] ?? "");
-    if (O.isNone(header)) {
-      index += 1;
-      continue;
-    }
-    const name = header.value[1] ?? "";
-    const delimiter = header.value[2] ?? "";
-    const valueLines: Array<string> = [];
-    index += 1;
-    while (index < lines.length && lines[index] !== delimiter) {
-      valueLines.push(lines[index] ?? "");
-      index += 1;
-    }
-    entries.push([name, A.join(valueLines, "\n")]);
-    index += 1;
-  }
-  return R.fromEntries(entries);
-};
+// The back-reference closes each block on its own delimiter line, so a value
+// keeps every line shape (including empty) short of the delimiter itself.
+const githubEnvBlock = /^([A-Za-z_][A-Za-z0-9_]*)<<(.+)\n([\s\S]*?)\n\2$/gmu;
+const parseGithubEnv = (text: string): Readonly<Record<string, string>> =>
+  pipe(
+    Str.matchAll(githubEnvBlock)(text),
+    A.fromIterable,
+    A.map((block) => [block[1] ?? "", block[3] ?? ""] as const),
+    R.fromEntries
+  );
 
 const parseProfileOutput = (text: string): Readonly<Record<string, string>> =>
   pipe(
@@ -146,6 +151,89 @@ const changeProfile = (
   });
   assert.strictEqual(result.exitCode, 0, result.stderr.toString());
   return parseProfileOutput(result.stdout.toString());
+};
+
+// The workflow and action sources the credential-policy cases judge together,
+// read and parsed once per case so each one sees the same documents.
+const readCredentialPolicySources = Effect.fnUntraced(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const repoRoot = yield* findRepoRoot();
+  const readText = (relative: string) => fs.readFileString(path.join(repoRoot, relative));
+  const workflowText = yield* readText(".github/workflows/check.yml");
+  const heavyWorkflowText = yield* readText(".github/workflows/heavy.yml");
+  const storybookText = yield* readText(".github/workflows/storybook.yml");
+  const actionText = yield* readText(".github/actions/setup-monorepo-ci/action.yml");
+  const jobEnvScriptText = yield* readText("scripts/ci-job-env.mjs");
+
+  return {
+    workflowText,
+    heavyWorkflowText,
+    storybookText,
+    actionText,
+    jobEnvScriptText,
+    workflow: parsedDocument(workflowText),
+    heavyWorkflow: parsedDocument(heavyWorkflowText),
+    storybook: parsedDocument(storybookText),
+    action: parsedDocument(actionText),
+  };
+});
+
+// A workflow that hands secrets only through the composite action's explicit
+// inputs: no inline Turbo tuple, no secret inventory, and every remaining
+// secret reference on an allowlisted input line.
+const assertNoInlineCredentialTuple = (name: string, text: string): void => {
+  const lines = Str.split(text, "\n");
+  assert.lengthOf(A.filter(lines, Str.includes("TURBO_TOKEN:")), 0, name);
+  assert.lengthOf(A.filter(lines, Str.includes("TURBO_CACHE:")), 0, name);
+  assert.lengthOf(A.filter(lines, Str.includes("TURBO_API:")), 0, name);
+  assert.notInclude(text, "toJSON(secrets)", name);
+  assert.notInclude(text, "repository-secrets", name);
+  assert.notInclude(text, "secrets.TURBO_TEAM", name);
+  const secretLines = A.filter(lines, (line) =>
+    A.some(SECRET_REFERENCES, (reference) => Str.includes(reference)(line))
+  );
+  for (const line of secretLines) {
+    assert.include(SECRET_INPUT_LINES, Str.trim(line), `${name}: ${Str.trim(line)}`);
+  }
+};
+
+// Every Turbo-backed job and whether it may receive the application secret block.
+const turboJobTable = (documents: {
+  readonly workflow: Document;
+  readonly heavyWorkflow: Document;
+  readonly storybook: Document;
+}): ReadonlyArray<readonly [WorkflowJobs, string, boolean]> => {
+  const check = workflowJobs(documents.workflow);
+
+  return [
+    [check, "verify", true],
+    [check, "lint-shard", true],
+    [check, "test-unit-shard", true],
+    [check, "property-laws", true],
+    [check, "fallow-advisory", false],
+    [check, "build", true],
+    [workflowJobs(documents.heavyWorkflow), "verify", true],
+    [workflowJobs(documents.storybook), "storybook", false],
+  ];
+};
+
+// One Turbo job's setup-monorepo-ci call: the remote-cache tuple comes from
+// repository variables, the Turbo tokens from their explicit inputs, and the
+// application secrets only where the job is allowed them.
+const assertTurboJobSetup = (jobs: WorkflowJobs, jobId: string, appSecrets: boolean): void => {
+  const inputs = setupMonorepoInputs(jobs, jobId);
+  assert.strictEqual(inputs["turbo-remote-cache"], "true", jobId);
+  assert.strictEqual(inputs["turbo-api"], "${{ vars.TURBO_API }}", jobId);
+  assert.strictEqual(inputs["turbo-team"], "${{ vars.TURBO_TEAM }}", jobId);
+  assert.isUndefined(inputs["repository-secrets"], jobId);
+  for (const [input, name] of TURBO_SECRET_INPUTS) {
+    assert.strictEqual(inputs[input], secretReference(name), `${jobId} ${input}`);
+  }
+  for (const [input, name] of APP_SECRET_INPUTS) {
+    assert.strictEqual(inputs[input], appSecrets ? secretReference(name) : undefined, `${jobId} ${input}`);
+  }
+  assert.strictEqual(inputs["app-secrets"], appSecrets ? "true" : undefined, jobId);
 };
 
 describe("CI runner security", () => {
@@ -391,95 +479,71 @@ describe("CI runner security", () => {
   );
 
   it.effect(
-    "routes every Turbo job's cache credentials through the single setup-monorepo-ci policy",
+    "keeps every hand-copied Turbo credential and secret inventory out of the workflows",
     Effect.fnUntraced(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const repoRoot = yield* findRepoRoot();
-      const workflowText = yield* fs.readFileString(path.join(repoRoot, ".github/workflows/check.yml"));
-      const heavyWorkflowText = yield* fs.readFileString(path.join(repoRoot, ".github/workflows/heavy.yml"));
-      const storybookText = yield* fs.readFileString(path.join(repoRoot, ".github/workflows/storybook.yml"));
-      const actionText = yield* fs.readFileString(path.join(repoRoot, ".github/actions/setup-monorepo-ci/action.yml"));
-      const jobEnvScriptText = yield* fs.readFileString(path.join(repoRoot, "scripts/ci-job-env.mjs"));
-      const workflow = parseDocument(workflowText);
-      const heavyWorkflow = parseDocument(heavyWorkflowText);
-      const storybook = parseDocument(storybookText);
-      const action = parseDocument(actionText);
+      const policy = yield* readCredentialPolicySources();
 
-      assert.lengthOf(workflow.errors, 0);
-      assert.lengthOf(heavyWorkflow.errors, 0);
-      assert.lengthOf(storybook.errors, 0);
-      assert.lengthOf(action.errors, 0);
-      assert.isUndefined(workflow.getIn(["on", "pull_request_target"]));
-      assert.isDefined(workflow.getIn(["on", "pull_request"]));
-
+      assert.isUndefined(policy.workflow.getIn(["on", "pull_request_target"]));
+      assert.isDefined(policy.workflow.getIn(["on", "pull_request"]));
       // No workflow hand-copies the credential tuple any more: the selection
       // lives once in scripts/ci-job-env.mjs behind the composite action. The
       // only secret references left are the explicit input pass-throughs the
       // policy allowlists; `toJSON(secrets)` never reaches a step input, so a
       // job's log header cannot inventory the repository's secret names.
       for (const [name, text] of [
-        ["check.yml", workflowText],
-        ["heavy.yml", heavyWorkflowText],
-        ["storybook.yml", storybookText],
+        ["check.yml", policy.workflowText],
+        ["heavy.yml", policy.heavyWorkflowText],
+        ["storybook.yml", policy.storybookText],
       ] as const) {
-        const lines = Str.split(text, "\n");
-        assert.lengthOf(A.filter(lines, Str.includes("TURBO_TOKEN:")), 0, name);
-        assert.lengthOf(A.filter(lines, Str.includes("TURBO_CACHE:")), 0, name);
-        assert.lengthOf(A.filter(lines, Str.includes("TURBO_API:")), 0, name);
-        assert.notInclude(text, "toJSON(secrets)", name);
-        assert.notInclude(text, "repository-secrets", name);
-        assert.notInclude(text, "secrets.TURBO_TEAM", name);
-        const secretLines = A.filter(lines, (line) =>
-          A.some(SECRET_REFERENCES, (reference) => Str.includes(reference)(line))
-        );
-        for (const line of secretLines) {
-          assert.include(SECRET_INPUT_LINES, Str.trim(line), `${name}: ${Str.trim(line)}`);
-        }
+        assertNoInlineCredentialTuple(name, text);
       }
+    }, provideScopedLayer(NodeServices.layer))
+  );
+
+  it.effect(
+    "maps each explicit setup-monorepo-ci secret input onto the policy script's allowlist",
+    Effect.fnUntraced(function* () {
+      const { action, actionText, jobEnvScriptText } = yield* readCredentialPolicySources();
+
       assert.include(actionText, "run: bun scripts/ci-job-env.mjs");
       assert.include(actionText, "BEEP_CI_HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}");
       // The action maps each explicit input to BEEP_CI_SECRET_<NAME>; the
       // script's allowlist names the same secrets.
       assert.notInclude(actionText, "toJSON(secrets)");
       assert.isUndefined(action.getIn(["inputs", "repository-secrets"]));
-      const exportEnvironment =
-        stepByName(decodeWorkflowSteps(action.toJS().runs.steps), "Export job environment").env ?? {};
+      const exportEnvironment = stepEnvironment(
+        stepByName(decodeWorkflowSteps(action.toJS().runs.steps), "Export job environment")
+      );
       assert.isUndefined(exportEnvironment.BEEP_CI_SECRETS_JSON);
       for (const [input, name] of SECRET_INPUTS) {
         assert.strictEqual(action.getIn(["inputs", input, "default"]), "", input);
         assert.strictEqual(exportEnvironment[`BEEP_CI_SECRET_${name}`], `\${{ inputs.${input} }}`, input);
         assert.include(jobEnvScriptText, `"${name}"`, name);
       }
+    }, provideScopedLayer(NodeServices.layer))
+  );
 
-      const turboJobs: ReadonlyArray<readonly [WorkflowJobs, string, boolean]> = [
-        [workflowJobs(workflow), "verify", true],
-        [workflowJobs(workflow), "lint-shard", true],
-        [workflowJobs(workflow), "test-unit-shard", true],
-        [workflowJobs(workflow), "property-laws", true],
-        [workflowJobs(workflow), "fallow-advisory", false],
-        [workflowJobs(workflow), "build", true],
-        [workflowJobs(heavyWorkflow), "verify", true],
-        [workflowJobs(storybook), "storybook", false],
-      ];
-      for (const [jobs, jobId, appSecrets] of turboJobs) {
-        const setup = setupMonorepoStep(jobs, jobId);
-        assert.strictEqual(setup.with?.["turbo-remote-cache"], "true", jobId);
-        assert.strictEqual(setup.with?.["turbo-api"], "${{ vars.TURBO_API }}", jobId);
-        assert.strictEqual(setup.with?.["turbo-team"], "${{ vars.TURBO_TEAM }}", jobId);
-        assert.isUndefined(setup.with?.["repository-secrets"], jobId);
-        for (const [input, name] of TURBO_SECRET_INPUTS) {
-          assert.strictEqual(setup.with?.[input], secretReference(name), `${jobId} ${input}`);
-        }
-        for (const [input, name] of APP_SECRET_INPUTS) {
-          assert.strictEqual(setup.with?.[input], appSecrets ? secretReference(name) : undefined, `${jobId} ${input}`);
-        }
-        assert.strictEqual(setup.with?.["app-secrets"], appSecrets ? "true" : undefined, jobId);
+  it.effect(
+    "routes every Turbo job's cache credentials through the single setup-monorepo-ci policy",
+    Effect.fnUntraced(function* () {
+      const policy = yield* readCredentialPolicySources();
+
+      for (const [jobs, jobId, appSecrets] of turboJobTable(policy)) {
+        assertTurboJobSetup(jobs, jobId, appSecrets);
       }
+    }, provideScopedLayer(NodeServices.layer))
+  );
+
+  it.effect(
+    "saves the Turbo cache only from the Build job on push",
+    Effect.fnUntraced(function* () {
+      const policy = yield* readCredentialPolicySources();
+      const { workflow, workflowText } = policy;
+
       // Pull requests never publish a cache entry; Build saves only on push.
-      for (const [jobs, jobId] of turboJobs) {
+      for (const [jobs, jobId] of turboJobTable(policy)) {
         if (jobId === "build") continue;
-        assert.strictEqual(setupMonorepoStep(jobs, jobId).with?.["cache-write"], "false", jobId);
+        assert.strictEqual(setupMonorepoInputs(jobs, jobId)["cache-write"], "false", jobId);
       }
       // Quality-lane audit D12: Build runs on pull requests (affected-scoped,
       // remote-cache read) and keeps the write environment for pushes only.
@@ -489,10 +553,17 @@ describe("CI runner security", () => {
         "${{ github.event_name == 'push' && 'turbo-cache-write' || null }}"
       );
       assert.strictEqual(
-        setupMonorepoStep(workflowJobs(workflow), "build").with?.["cache-write"],
+        setupMonorepoInputs(workflowJobs(workflow), "build")["cache-write"],
         "${{ github.event_name == 'push' && 'true' || 'false' }}"
       );
       assert.include(workflowText, 'bun run beep ci lane build "${shape_args[@]}"');
+    }, provideScopedLayer(NodeServices.layer))
+  );
+
+  it.effect(
+    "keeps the lane shapes the workflows hand to the CLI",
+    Effect.fnUntraced(function* () {
+      const { workflowText, heavyWorkflowText } = yield* readCredentialPolicySources();
 
       assert.include(workflowText, 'eval "$(scripts/ci-change-profile.sh');
       assert.include(workflowText, 'if [[ "$goals_only" == "true" ]]');
@@ -649,19 +720,16 @@ describe("CI runner security", () => {
       const actionText = yield* fs.readFileString(path.join(repoRoot, ".github/actions/setup-monorepo-ci/action.yml"));
       const checkText = yield* fs.readFileString(path.join(repoRoot, ".github/workflows/check.yml"));
       const heavyText = yield* fs.readFileString(path.join(repoRoot, ".github/workflows/heavy.yml"));
-      const action = parseDocument(actionText);
-      const check = parseDocument(checkText);
-      const heavy = parseDocument(heavyText);
+      const action = parsedDocument(actionText);
+      const check = parsedDocument(checkText);
+      const heavy = parsedDocument(heavyText);
 
-      assert.lengthOf(action.errors, 0);
-      assert.lengthOf(check.errors, 0);
-      assert.lengthOf(heavy.errors, 0);
       assert.strictEqual(action.getIn(["inputs", "turbo-cache-key-suffix", "default"]), "");
       assert.include(actionText, "${{ github.job }}${{ inputs.turbo-cache-key-suffix }}-");
       const actionSteps = decodeWorkflowSteps(action.toJS().runs.steps);
       const turboRestore = stepByName(actionSteps, "Restore Turbo cache (local fallback only)");
       assert.strictEqual(
-        Str.trim(String(turboRestore.with?.["restore-keys"])),
+        Str.trim(String(stepInputs(turboRestore)["restore-keys"])),
         "turbo-${{ runner.os }}-${{ startsWith(runner.name, 'beep-ci-') && 'fleet' || 'shared' }}-${{ github.job }}${{ inputs.turbo-cache-key-suffix }}-"
       );
       // The credential export precedes the Turbo restore so the local fallback
@@ -677,41 +745,32 @@ describe("CI runner security", () => {
 
       const checkJobs = workflowJobs(check);
       const heavyJobs = workflowJobs(heavy);
-      assert.strictEqual(setupMonorepoStep(checkJobs, "verify").with?.["turbo-cache-key-suffix"], "-${{ matrix.id }}");
+      assert.strictEqual(setupMonorepoInputs(checkJobs, "verify")["turbo-cache-key-suffix"], "-${{ matrix.id }}");
       assert.strictEqual(
-        setupMonorepoStep(checkJobs, "lint-shard").with?.["turbo-cache-key-suffix"],
+        setupMonorepoInputs(checkJobs, "lint-shard")["turbo-cache-key-suffix"],
         "-${{ matrix.partition }}"
       );
       assert.strictEqual(
-        setupMonorepoStep(checkJobs, "test-unit-shard").with?.["turbo-cache-key-suffix"],
+        setupMonorepoInputs(checkJobs, "test-unit-shard")["turbo-cache-key-suffix"],
         "-${{ matrix.partition }}"
       );
-      assert.strictEqual(setupMonorepoStep(heavyJobs, "verify").with?.["turbo-cache-key-suffix"], "-${{ matrix.id }}");
+      assert.strictEqual(setupMonorepoInputs(heavyJobs, "verify")["turbo-cache-key-suffix"], "-${{ matrix.id }}");
+      assert.include(String(fallbackSaveKey(checkJobs, "verify")), "-${{ github.job }}-${{ matrix.id }}-");
+      assert.include(String(fallbackSaveKey(checkJobs, "lint-shard")), "-${{ github.job }}-${{ matrix.partition }}-");
       assert.include(
-        String(stepByName(jobSteps(checkJobs, "verify"), "Save post-lane Turbo fallback").with?.key),
-        "-${{ github.job }}-${{ matrix.id }}-"
-      );
-      assert.include(
-        String(stepByName(jobSteps(checkJobs, "lint-shard"), "Save post-lane Turbo fallback").with?.key),
+        String(fallbackSaveKey(checkJobs, "test-unit-shard")),
         "-${{ github.job }}-${{ matrix.partition }}-"
       );
-      assert.include(
-        String(stepByName(jobSteps(checkJobs, "test-unit-shard"), "Save post-lane Turbo fallback").with?.key),
-        "-${{ github.job }}-${{ matrix.partition }}-"
-      );
-      assert.include(
-        String(stepByName(jobSteps(heavyJobs, "verify"), "Save post-lane Turbo fallback").with?.key),
-        "-${{ github.job }}-${{ matrix.id }}-"
-      );
+      assert.include(String(fallbackSaveKey(heavyJobs, "verify")), "-${{ github.job }}-${{ matrix.id }}-");
       // Disk cleanup is the composite action's job now; the shards keep the
       // 64 GiB short-circuit and the matrix lanes always clean.
       assert.notInclude(checkText, "Free runner disk");
       assert.notInclude(heavyText, "Free runner disk");
-      assert.strictEqual(setupMonorepoStep(checkJobs, "verify").with?.["free-disk"], "true");
-      assert.strictEqual(setupMonorepoStep(checkJobs, "lint-shard").with?.["free-disk-min-gib"], "64");
-      assert.strictEqual(setupMonorepoStep(checkJobs, "test-unit-shard").with?.["free-disk-min-gib"], "64");
-      assert.strictEqual(setupMonorepoStep(checkJobs, "fallow-advisory").with?.["free-disk"], "true");
-      assert.strictEqual(setupMonorepoStep(heavyJobs, "verify").with?.["free-disk"], "true");
+      assert.strictEqual(setupMonorepoInputs(checkJobs, "verify")["free-disk"], "true");
+      assert.strictEqual(setupMonorepoInputs(checkJobs, "lint-shard")["free-disk-min-gib"], "64");
+      assert.strictEqual(setupMonorepoInputs(checkJobs, "test-unit-shard")["free-disk-min-gib"], "64");
+      assert.strictEqual(setupMonorepoInputs(checkJobs, "fallow-advisory")["free-disk"], "true");
+      assert.strictEqual(setupMonorepoInputs(heavyJobs, "verify")["free-disk"], "true");
     }, provideScopedLayer(NodeServices.layer))
   );
 

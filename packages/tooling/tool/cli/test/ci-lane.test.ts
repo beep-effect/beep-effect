@@ -156,6 +156,7 @@ const doctestCiLayer = (
 };
 
 const firstOf = <T>(items: ReadonlyArray<T>): T => O.getOrThrow(A.head(items));
+const stepAt = <T>(items: ReadonlyArray<T>, index: number): T => O.getOrThrow(A.get(items, index));
 const lastOf = <T>(items: ReadonlyArray<T>): T => O.getOrThrow(A.last(items));
 
 const baseOptions = CiLaneRunOptions.make({
@@ -1222,24 +1223,26 @@ describe("ciLaneStepsForTesting", () => {
       "ci:storybook:test",
       "ci:storybook:artifact",
     ]);
-    const [build, test, artifact] = steps;
-    expect(build?.command).toBe("bunx");
-    expect([...(build?.args ?? [])]).toEqual([
+    const build = stepAt(steps, 0);
+    const test = stepAt(steps, 1);
+    const artifact = stepAt(steps, 2);
+    expect(build.command).toBe("bunx");
+    expect([...build.args]).toEqual([
       "turbo",
       "run",
       "storybook:build",
       ...expectedTurboCacheArgs(["--filter=@beep/storybook"]),
       "--filter=@beep/storybook",
     ]);
-    expect([...(test?.args ?? [])]).toEqual([
+    expect([...test.args]).toEqual([
       "turbo",
       "run",
       "test:storybook",
       ...expectedTurboCacheArgs(["--filter=@beep/storybook"]),
       "--filter=@beep/storybook",
     ]);
-    expect(artifact?.command).toBe("test");
-    expect([...(artifact?.args ?? [])]).toEqual(["-f", "apps/storybook/storybook-static/index.html"]);
+    expect(artifact.command).toBe("test");
+    expect([...artifact.args]).toEqual(["-f", "apps/storybook/storybook-static/index.html"]);
 
     const prShaped = ciLaneStepsForTesting(REPO_ROOT, "storybook", prShapeOptions);
     const prBuild = firstOf(prShaped);
