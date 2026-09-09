@@ -1,15 +1,29 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "./tsconfig.json",
-  "references": [],
+  "references": [
+    {
+      "path": "../uspto/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/capability/mcp-kit/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/modeling/identity/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/modeling/schema/tsconfig.json"
+    },
+    {
+      "path": "../../tooling/test-kit/test-utils/tsconfig.json"
+    }
+  ],
   "compilerOptions": {
     "composite": false,
     "declaration": false,
     "declarationMap": false,
     "incremental": false,
     "noEmit": true,
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
     "rootDir": "../../.."
   }
 }

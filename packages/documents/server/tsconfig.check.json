@@ -1,15 +1,47 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "./tsconfig.json",
-  "references": [],
+  "references": [
+    {
+      "path": "../domain/tsconfig.json"
+    },
+    {
+      "path": "../tables/tsconfig.json"
+    },
+    {
+      "path": "../use-cases/tsconfig.json"
+    },
+    {
+      "path": "../../drivers/box/tsconfig.json"
+    },
+    {
+      "path": "../../drivers/postgres/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/capability/file-processing/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/modeling/identity/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/modeling/schema/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/modeling/utils/tsconfig.json"
+    },
+    {
+      "path": "../../shared/domain/tsconfig.json"
+    },
+    {
+      "path": "../../tooling/test-kit/test-utils/tsconfig.json"
+    }
+  ],
   "compilerOptions": {
     "composite": false,
     "declaration": false,
     "declarationMap": false,
     "incremental": false,
     "noEmit": true,
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
     "rootDir": "../../.."
   }
 }

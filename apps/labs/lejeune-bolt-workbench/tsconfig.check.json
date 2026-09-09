@@ -1,15 +1,62 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "./tsconfig.json",
-  "references": [],
+  "references": [
+    {
+      "path": "../../../packages/drivers/anthropic/tsconfig.json"
+    },
+    {
+      "path": "../../../packages/drivers/doc-text/tsconfig.json"
+    },
+    {
+      "path": "../../../packages/drivers/duckdb/tsconfig.json"
+    },
+    {
+      "path": "../../../packages/drivers/oxigraph/tsconfig.json"
+    },
+    {
+      "path": "../../../packages/drivers/pglite/tsconfig.json"
+    },
+    {
+      "path": "../../../packages/drivers/venice-ai/tsconfig.json"
+    },
+    {
+      "path": "../../../packages/foundation/capability/file-processing/tsconfig.json"
+    },
+    {
+      "path": "../../../packages/foundation/capability/langextract/tsconfig.json"
+    },
+    {
+      "path": "../../../packages/foundation/capability/semantic-web/tsconfig.json"
+    },
+    {
+      "path": "../../../packages/foundation/modeling/identity/tsconfig.json"
+    },
+    {
+      "path": "../../../packages/foundation/modeling/nlp/tsconfig.json"
+    },
+    {
+      "path": "../../../packages/foundation/modeling/provenance/tsconfig.json"
+    },
+    {
+      "path": "../../../packages/foundation/modeling/rdf/tsconfig.json"
+    },
+    {
+      "path": "../../../packages/foundation/modeling/schema/tsconfig.json"
+    },
+    {
+      "path": "../../../packages/foundation/ui-system/ui/tsconfig.json"
+    },
+    {
+      "path": "../../../packages/tooling/test-kit/test-utils/tsconfig.json"
+    }
+  ],
   "compilerOptions": {
     "composite": false,
     "declaration": false,
     "declarationMap": false,
     "incremental": false,
     "noEmit": true,
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
     "rootDir": "../../../."
   }
 }
