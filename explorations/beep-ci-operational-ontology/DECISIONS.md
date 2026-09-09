@@ -1054,6 +1054,12 @@ generator digests — frozen `7d711673d80791ce2aa1c9a1d1d8da6e1ff1867a5596280635
 and the amended one — are recorded in the run3-fleet manifest and here. The run-2
 generator and `run2-fleet/` stay untouched (they carry no such field). The refresh
 lands in the same follow-up PR as the Stage B fixes, after #1033, so the synthetic
-pin's producer digest cites a tree-resident spec. Rejected: a corrected sibling pin
+pin's producer digest cites a tree-resident spec. Rider recorded the same night: the
+steward's security PR #1032 (CSF-012, quoted and escaped JSON keys bypassing PID
+redaction) had already amended all four generators on `main` and byte-repaired 35
+raw files across the run-2, Stage A, and Stage B fleet pins, so the run-2 generator
+is no longer byte-frozen either; the follow-up PR merges `main` in and re-pins the
+refreshed corpora under the merged generators, and manifests record generator
+lineage rather than a single frozen digest from here on. Rejected: a corrected sibling pin
 beside the leaking one (leaves the residue in the tree) and accepting the fields as a
 known quasi-identifier class (contradicts Ruling 11).
