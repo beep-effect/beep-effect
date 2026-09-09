@@ -255,8 +255,8 @@ const buildBarrelContent = (packageName: string, modules: ReadonlyArray<string>)
  * @category utilities
  * @since 0.0.0
  */
-export const codegenCommand = Command.make(
-  "codegen",
+const barrelCommand = Command.make(
+  "barrel",
   {
     packageDir: Flag.string("package").pipe(
       Flag.withAlias("p"),
@@ -338,3 +338,24 @@ export const codegenCommand = Command.make(
     }
   })
 ).pipe(Command.withDescription("Generate barrel file exports for a package"));
+
+/**
+ * Groups code generators under explicit subcommands.
+ *
+ * **Example** (Build the codegen command runner)
+ *
+ * ```ts
+ * import { codegenCommand } from "@beep/repo-cli/commands/Codegen"
+ * import { Command } from "effect/unstable/cli"
+ *
+ * const run = Command.runWith(codegenCommand, { version: "0.0.0" })
+ * const preview = run(["barrel", "--package", "packages/foundation/modeling/identity", "--dry-run"])
+ * ```
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export const codegenCommand = Command.make("codegen").pipe(
+  Command.withDescription("Run a code generator"),
+  Command.withSubcommands([barrelCommand])
+);

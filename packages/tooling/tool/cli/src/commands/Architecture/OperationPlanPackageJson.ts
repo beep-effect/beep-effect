@@ -10,6 +10,7 @@ import { jsonStringifyPretty } from "@beep/repo-utils";
 import { A, Str } from "@beep/utils";
 import { Effect, pipe } from "effect";
 import * as R from "effect/Record";
+import { scaffoldPackageScripts } from "../../internal/package-scripts/PackageScripts.schemas.ts";
 import type { ArchitecturePackageRole, WritePackageJsonOperation } from "./Architecture.schemas.ts";
 
 const isRootExportSubpath = (subpath: string): boolean => subpath === ".";
@@ -104,26 +105,16 @@ export const renderPackageJsonOperation = Effect.fn(function* (operation: WriteP
       directory: operation.repositoryDirectory,
     },
     scripts: {
-      audit: "bun run --if-present beep:audit",
+      ...scaffoldPackageScripts("library", ["lint:fix", "test:integration"]),
       babel: "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
-      "beep:audit":
-        "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run beep:lint",
-      "beep:build": "tsc -p tsconfig.json && bun run babel",
-      "beep:check": "tsgo -p tsconfig.check.json && bun run beep:check:tests",
       "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",
-      "beep:lint": "biome check .",
-      "beep:lint:fix": "biome check . --write",
-      "beep:test": "bunx --bun vitest run --passWithNoTests --exclude=test/integration/**",
-      "beep:test:integration": "bunx --bun vitest run test/integration --passWithNoTests",
-      build: "bun run beep:build",
-      check: "bun run beep:check",
+      "beep:policy": `bun --cwd ${pipe(
+        operation.repositoryDirectory,
+        Str.split("/"),
+        A.map(() => "../"),
+        A.join("")
+      )} run beep lint package-test-imports --include-root ${operation.repositoryDirectory}`,
       coverage: "bunx vitest run --coverage --exclude=test/integration/**",
-      docgen: "bunx --bun --no-install docgen",
-      lint: "bun run beep:lint",
-      "lint:fix": "bun run beep:lint:fix",
-      test: "bun run beep:test",
-      "test:integration": "bun run beep:test:integration",
-      "test:integration:parallel": "bun run beep:test:integration",
     },
     exports: packageExportMapFor(operation.role, operation.exports, false),
     files: ["src/**/*.ts", "dist/**/*.js", "dist/**/*.js.map", "dist/**/*.d.ts", "dist/**/*.d.ts.map"],

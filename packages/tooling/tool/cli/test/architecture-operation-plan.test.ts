@@ -120,6 +120,7 @@ const runArchitectureCommand = Command.runWith(architectureCommand, {
 });
 
 const PackageJsonPublishConfig = S.Struct({
+  scripts: S.Record(S.String, S.String),
   exports: S.Record(S.String, S.NullOr(S.String)),
   publishConfig: S.Struct({
     exports: S.Record(S.String, S.NullOr(S.String)),
@@ -684,6 +685,34 @@ describe("architecture operation plan", () => {
       expect(packageJson).toContain('"name": "@beep/research-lab-domain"');
       expect(packageJson).toContain('"@beep/shared-domain": "workspace:^"');
       expect(packageJson).toContain('"./aggregates": "./src/aggregates/index.ts"');
+      expect(parsedPackageJson.scripts).toEqual({
+        audit: "bun run --if-present beep:audit",
+        babel: "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
+        "beep:audit":
+          "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run beep:policy && bun run beep:docgen && bun run beep:lint",
+        "beep:build": "tsc -p tsconfig.json && bun run babel",
+        "beep:check": "tsgo -p tsconfig.check.json && bun run beep:check:tests",
+        "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",
+        "beep:docgen": "bunx --bun --no-install docgen",
+        "beep:lint": "biome check .",
+        "beep:lint:fix": "biome check . --write",
+        "beep:policy":
+          "bun --cwd ../../../ run beep lint package-test-imports --include-root packages/research-lab/domain",
+        "beep:test": "bunx --bun vitest run --passWithNoTests --exclude=test/integration/**",
+        "beep:test:integration": "bunx --bun vitest run test/integration --passWithNoTests",
+        build: "bun run beep:build",
+        check: "bun run beep:check",
+        coverage: "bunx vitest run --coverage --exclude=test/integration/**",
+        docgen: "bun run beep:docgen",
+        lint: "bun run beep:lint",
+        "lint:fix": "bun run beep:lint:fix",
+        "lint:deprecated-apis": "beep-cli lint deprecated-apis --package .",
+        "lint:jsdoc": "beep-cli lint jsdoc --package .",
+        "lint:laws": "beep-cli lint laws --package .",
+        "package-test-typecheck": "beep-cli quality test-tsgo-package",
+        test: "bun run beep:test",
+        "test:integration": "bun run beep:test:integration",
+      });
       expect(parsedPackageJson.exports["./aggregates/*"]).toBeUndefined();
       expect(parsedPackageJson.publishConfig?.exports?.["."]).toBe("./dist/index.js");
       expect(parsedPackageJson.publishConfig?.exports?.["./aggregates/*"]).toBeUndefined();

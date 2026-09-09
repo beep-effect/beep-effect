@@ -28,7 +28,10 @@ describe("codegen command", () => {
         yield* fs.writeFileString(path.join(srcDir, "Model.ts"), "export const Model = null;\n");
         yield* fs.writeFileString(path.join(srcDir, "View.tsx"), "export const View = null;\n");
 
-        yield* runCodegenCommand(["--package", packageDir]);
+        yield* runCodegenCommand(["barrel", "--package", packageDir, "--dry-run"]);
+        expect(yield* fs.exists(path.join(srcDir, "index.ts"))).toBe(false);
+
+        yield* runCodegenCommand(["barrel", "--package", packageDir]);
 
         const barrel = yield* fs.readFileString(path.join(srcDir, "index.ts"));
         expect(barrel).toContain('export * from "./Model.ts";');
