@@ -13,6 +13,7 @@ import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import { turboEnvExtendsAmbient } from "../../../internal/cli/EnvConfig.ts";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 import type { GithubCheckLaneSpec } from "../Quality.schemas.ts";
 
@@ -121,21 +122,17 @@ const laneCommandHash = (lane: GithubCheckLaneSpec): string =>
   );
 
 const environmentProfileHash = (lane: GithubCheckLaneSpec): string => {
-  const localEnvironment = lane.step.useLocalEnv === true ? Bun.env : {};
+  const inheritedEnvironmentHash =
+    lane.step.useLocalEnv === true || turboEnvExtendsAmbient(lane.step.command, lane.step.args)
+      ? hashText(stableRecordText(Bun.env))
+      : undefined;
   return hashText(
     stableRecordText({
       platform: process.platform,
       architecture: process.arch,
       bunVersion: Bun.version,
       nodeVersion: process.version,
-      CI: localEnvironment.CI,
-      GITHUB_ACTIONS: localEnvironment.GITHUB_ACTIONS,
-      TURBO_CACHE: localEnvironment.TURBO_CACHE,
-      TURBO_FORCE: localEnvironment.TURBO_FORCE,
-      BEEP_DOCGEN_CONCURRENCY: localEnvironment.BEEP_DOCGEN_CONCURRENCY,
-      BEEP_FC_NUM_RUNS: localEnvironment.BEEP_FC_NUM_RUNS,
-      BEEP_FC_SEED: localEnvironment.BEEP_FC_SEED,
-      NODE_OPTIONS: localEnvironment.NODE_OPTIONS,
+      inheritedEnvironmentHash,
       laneEnv: stableRecordText(lane.step.env ?? {}),
     })
   );
