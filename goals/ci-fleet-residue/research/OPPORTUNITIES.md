@@ -2,6 +2,34 @@
 
 Record receipts at the moment friction happens; redact for the public repo.
 
+## 2026-09-09 — Spot reclamation and broken termination credential access
+
+- What: recent PR verification lanes repeatedly lost their EC2 runners. AWS
+  Spot request status confirmed `instance-terminated-no-capacity` for nine
+  distinct failed runners across Check, Coverage Regression, and Lint Policy
+  in runs 34326794784, 34328058384, 34328673593, and 34329733429.
+- Evidence: retained fleet records contained 30 capacity interruptions across
+  three instance types and both configured availability zones. GitHub reported
+  the losses about 11 minutes after EC2 recorded termination; an apparent
+  18-minute lane lifetime is not evidence of a fixed lane timeout. The
+  tag-based reaper reported an empty reap set with its 150-minute TTL.
+- Additional defect: the termination notification Lambda logged 164 failures
+  across 133 instances during 08:00–09:00 UTC. The minimal fingerprint is
+  `Failed to deregister runner from GitHub` with `kms:Decrypt` denied because
+  no identity policy allows it. The pinned upstream v7.10.1 watcher grants
+  SSM reads without forwarding the customer-managed KMS key grant.
+- Prevention: make the heavy pool permanently On-Demand, preserve its cap and
+  ephemeral teardown, and manage a separate key- and SSM-context-scoped decrypt
+  grant for all three cleanup roles. Verify resource wiring with Pulumi mocks,
+  preview the actual infrastructure diff, and require live capacity and
+  credential-operation evidence after deployment. The operational procedure is
+  in `docs/runbooks/ci-runner-reliability.md`.
+- Deployment-check friction: the initial preview exposed an `Output<T>` string
+  coercion in the new regional SSM condition, which a literal-region mock did
+  not exercise. The regression now passes the same Pulumi output form as the
+  real entrypoint and the policy uses `pulumi.interpolate`. Require inspection
+  of rendered condition values, not just the resource-count summary.
+
 ## Seed context (2026-08-13, from the split)
 
 - Spot evidence: 3 same-second reclaims killed 6 jobs on cutover evening

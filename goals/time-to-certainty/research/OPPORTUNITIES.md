@@ -572,3 +572,49 @@ subprocess diagnostics would make inventory stalls attributable.
 - **Would have prevented it:** `package-verify` (or the C3 package-level `coverage` task) reporting
   "new files without baseline rows" as its own line regardless of package totals, and the brief's
   acceptance list naming the baseline write for any stage that adds source files.
+
+## 2026-09-09 — Two heavy lanes died mid-step on separate runners at the same second
+
+- **Doing:** babysitting PR #1029's sixth hosted round (head cb8236d37f).
+- **Evidence:** `Heavy / Check` and `Heavy / Coverage Regression` both reported `completed/failure`
+  at 07:36:01Z after 23 minutes with step 10 `Run verification lane` still `in_progress/null`, every
+  later step `pending`, and `BlobNotFound` for the job logs; two different `beep-ci-i-…` EC2 runners.
+  Nothing in the head explains a simultaneous stop, and the same lanes were green on the previous
+  head except for a baseline-row finding fixed in this push. The merge button refused on the
+  required checks, so the remedy was a fresh push (main merged forward) rather than a code change.
+- **Root cause (later the same night, second occurrence on #1046 at 08:38Z):** the fleet runs
+  spot capacity (`instance_target_capacity_type: "spot"`, price-capacity-optimized) with on-demand
+  failover only for launch-time capacity errors, so a mid-run reclaim wave takes every affected
+  runner at once and the two longest lanes are the ones exposed.
+- **Would have prevented it:** an on-demand pool for the long heavy lanes or the runner module's
+  job re-queue on spot interruption, a visible `runner reclaimed` marker on the job, and
+  `yeet monitor` classing "completed/failure with no failed step" as environment-only.
+
+### AWS investigation and permanent mitigation
+
+- The live AWS Spot request records confirm both PR #1029 workers were reclaimed at
+  **07:24:29 UTC**, about 11.5 minutes before GitHub recorded their failures. PR #1046's
+  matched runners also report `instance-terminated-no-capacity`. The apparent 18–23 minute
+  limit therefore includes runner-loss detection delay; it is not a lane timeout.
+- A retained fleet snapshot contained 30 capacity interruptions across three instance types
+  and both configured availability zones. Additional matched failures included Lint Policy
+  and very early Check execution. A 16-minute cutoff would not protect all observed losses.
+- The pinned module's `job_retry` input checks jobs that are still queued. It rescues launch
+  or pickup failures, not an in-progress job whose runner has disappeared. No mid-job resume
+  guarantee is supplied by enabling that existing input, which was already enabled.
+- The operator requested a permanent fix. The smallest implemented infrastructure change
+  moves the existing heavy pool to On-Demand while preserving the 14-runner cap, labels,
+  network, identity boundary, and ephemeral teardown. A second pool would preserve Spot
+  discounts for short lanes but also preserve their demonstrated interruption exposure.
+- The same investigation found the upstream v7.10.1 termination watcher missing its
+  customer-managed KMS decrypt grant: 164 credential-access failures in one hour. Three
+  Pulumi-managed inline policies now permit only the configured App key, through SSM,
+  for the two required parameter encryption contexts.
+- Production apply completed with three policy additions, two controller updates, and no
+  deletions. A subsequent preview reported 198 unchanged resources. Live CloudTrail reads
+  prove decryption now succeeds; 12 IAM simulations prove intended access and negative
+  cases. Fresh On-Demand workers completed the standard
+  [fleet probe](https://github.com/beep-effect/beep-effect/actions/runs/34333728712) and
+  [Heavy / Docgen](https://github.com/beep-effect/beep-effect/actions/runs/34332600371/job/102408052217).
+  The probe worker then terminated normally. Full deployment details and reproduction
+  commands are in `docs/runbooks/ci-runner-reliability.md`.

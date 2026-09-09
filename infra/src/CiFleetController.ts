@@ -731,9 +731,9 @@ type CiFleetControllerArgs = {
  * job whose runner died between launch and pickup (spot reclaim, boot
  * failure) — without it such a job waits on GitHub's six-hour queue timeout,
  * because nothing else re-delivers it. A capacity reclaim mid-job still fails
- * that job and only a workflow re-run recovers it; the fleet runs on-demand
- * for the bring-up window after cutover-night reclaim sweeps, with spot (a
- * ~3x cost saving) as the intended steady state. `runners_maximum_count` bounds
+ * that job and only a workflow re-run recovers it. The heavy pool uses
+ * on-demand capacity permanently after repeated interruption sweeps exceeded
+ * the fleet's reliability tripwire. `runners_maximum_count` bounds
  * concurrent instances only — jobs beyond the cap retry from SQS as capacity
  * frees rather than being dropped. `enable_job_queued_check` stays false: its
  * not-queued branch consumes the scale-up message with no retry, so GitHub
@@ -920,13 +920,11 @@ export class CiFleetController extends pulumi.ComponentResource {
           },
         },
         instance_allocation_strategy: "price-capacity-optimized",
-        // P1 spot revert (2026-08-16): the measured on-demand week was calm —
-        // 20/528 re-runs since 2026-08-11, all attributed to lane-wedge
-        // reruns, one glob-timeout flake, and supersede cancels; zero
-        // capacity-class. Tripwire stays armed: >2 interruption re-runs/week
-        // sends the longest lanes back to on-demand
-        // (goals/ci-fleet-residue/research/p1-spot-revert-baseline.md).
-        instance_target_capacity_type: "spot",
+        // Permanent heavy-pool posture: the 2026-09-09 interruption sweep
+        // exceeded the >2 interruption-reruns/week tripwire. Launch-time
+        // on-demand failover cannot recover a runner reclaimed mid-job.
+        // Keep the existing cap and ephemeral teardown to bound spending.
+        instance_target_capacity_type: "on-demand",
         instance_termination_watcher: {
           enable: true,
           enable_runner_deregistration: true,
@@ -996,6 +994,47 @@ export class CiFleetController extends pulumi.ComponentResource {
       },
       { dependsOn: [runnerAmiParameter], parent: this, provider }
     );
+
+    // Upstream v7.10.1 grants these roles ssm:GetParameter but does not pass
+    // kms_key_arn into the termination-watcher module. Own only the missing
+    // grant here; leave its role and existing policies under module control.
+    // The notification function also handles ordinary instance termination,
+    // so these credentials remain necessary for the on-demand fleet.
+    for (const functionName of [
+      "beep-ci-spot-termination-notification",
+      "beep-ci-spot-termination-handler",
+      "beep-ci-deregister-retry",
+    ]) {
+      const watcher = aws.lambda.getFunctionOutput({ functionName }, { dependsOn: [controller], parent: this });
+      new aws.iam.RolePolicy(
+        `${name}-${functionName}-app-decrypt`,
+        {
+          name: "github-app-ssm-decrypt",
+          role: watcher.role.apply(Str.replace(/^.*\//, "")),
+          policy: pulumi.jsonStringify({
+            Version: "2012-10-17",
+            Statement: [
+              {
+                Sid: "DecryptGitHubAppParametersThroughSsm",
+                Effect: "Allow",
+                Action: "kms:Decrypt",
+                Resource: args.config.githubAppKmsKeyArn,
+                Condition: {
+                  StringEquals: {
+                    "kms:ViaService": pulumi.interpolate`ssm.${args.region}.amazonaws.com`,
+                    "kms:EncryptionContext:PARAMETER_ARN": [
+                      args.config.githubAppIdSsmParameterArn,
+                      args.config.githubAppKeyBase64SsmParameterArn,
+                    ],
+                  },
+                },
+              },
+            ],
+          }),
+        },
+        { parent: this }
+      );
+    }
 
     this.ssmParameters = controller.ssm_parameters;
     this.webhook = controller.webhook;
