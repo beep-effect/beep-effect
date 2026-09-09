@@ -1,0 +1,22 @@
+{
+  "lane": "r29-agents-workspace",
+  "sourceSha": "115b761d533684c5abf4ab9de83d970243c79dfc",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "e879b891d3e08fe351b878cb89c7ff0a09e311042e4b97ba1b2aea0ddfe5229c",
+  "started": "2026-09-09T10:33:00.910880+00:00",
+  "finished": "2026-09-09T10:43:37.349065+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-agents-workspace.jsonl`\n\nConfirmed: 0. Disqualified: 0. Validator: `inventory OK: 0 records`.\n\nEvery assigned root was covered (`packages/agents/{client,domain,server,tables,use-cases}/src` and `packages/workspace/{domain,server,tables,use-cases}/src`). No new eligible \u22652-boolean carriers; unchanged canonical seeds were not re-recorded.\n\nSeeds: all 10 owners still exist at the claimed file/line/member sets. Classifications still hold (TextInline D1; ScanState E4; refreshTimeline D1; turnSurface D1; receipt-fallback exclusive write at `Chat.atoms.ts:1032`; RuntimeActivity/RuntimeEvidenceRef unchanged). Callable-predicate seeds (`isAbsoluteVaultRootPath.probes`, `hasOnlyValidEnvVarNames.probes`, `CheckedCodeBlock.validators`) remain schema guards, not Boolean members \u2014 ineligible for this net, no correction record. Out-of-net singles left in the footer only: `requiresApproval`, `headerRow`, `holdingAfterFailure`, `turnActiveAtom`, and one-flag SDK/RPC option objects.\n\nSeed-declaration drift: none. Source SHA: this checkout and `source-sha.txt` are `06c381b61abee8356b78c52b72eb8a5562015bfd`; the prompt advertised `115b761d533684c5abf4ab9de83d970243c79dfc`. No unresolved source question.\n\n\ud83c\udf31 graft saved ~167,000 tokens this turn (35 calls)",
+  "transcriptSha256": "65f6a7a824eba28d3b41b89be0591df00d275f4fe088fe2e12dc1b4c9f8fa785",
+  "runnerSha256": "5553c5d3bd7e2a689a4219b4aa133524d2c7c27505d8c7a9da3b720947bf9fe7",
+  "seedSha256": "5700ee53292787d2f80f3ef622513414495376c2b9eaa3aa163f2fee88ce85a3",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

@@ -1,25 +1,27 @@
-# Instance
+# r27-cli-commands-l-q-github-check-lane-proof-reuse
 
-- id: `r27-cli-commands-l-q-github-check-lane-proof-reuse`
-- exact source SHA: `93217d998f851e2e93d9864e2b5315552eaa58a7`
-- corpus `origin/main`: `d1b4d769fbaffddd55717f3b1ba461897dd545c5`
-- file:line: `packages/tooling/tool/cli/src/commands/Quality/Tasks.ts:1694`
-- symbol: `runGithubCheckWave`
-- members: `reusable`, `activeReuse`
-- evidence: E4 at `Tasks.ts:1695`, E2 at `:1696-1711`
-- cardinality: 4 representable / 3 legal
-- storage/exposure: derived / internal; Tier 1
-- target: LiteralKit; no payload-dependent variants
+Native P2 design refresh before R29, bound to merged source HEAD
+`f03850b762e41217b5a0c26f26041daee490a070` / main
+`4f13d83e13d61275a57004050ffc62a90d86c014`. This preserves status `designed`
+and cardinality 4/3. Tier 1: ordered Tier1E tooling batches with serial shared-file edits.
+Independent P3 review and implementation acceptance remain pending.
 
-R28 native P2 refresh compared the full wave runner with the prior
-`8f266b878445ca8a7f751f9248da428a4dde39a1` source; it is byte-identical apart
-from its location. The mode/availability truth table remains 4/3. The changed
-proof-identity and lane-set dependencies below must be preserved. Prior exact
-design bytes remain under `history/designs/2026-09-09-pre-main-d1b4d7/`.
+Owner `runGithubCheckWave` at `packages/tooling/tool/cli/src/commands/Quality/Tasks.ts:1694`,
+with members `reusable`, `activeReuse`.
+Storage/exposure: derived/internal; target: literalkit.
 
-This is a current-source P2 design. Independent P3 approval and implementation
-remain pending. Shortened source paths below are relative to
-`packages/tooling/tool/cli/src/commands/Quality/`.
+The full public [source-impact audit](../data/pre-r29-main-4f13d8-source-impact.md),
+[source bindings](../data/pre-r29-main-4f13d8-source-bindings.json), and
+[row/design map](../data/pre-r29-main-4f13d8-row-design-map.json) bind this proposal.
+The [exact original design](../history/designs/2026-09-09-pre-r29-main-4f13d8/r27-cli-commands-l-q-github-check-lane-proof-reuse.md) is preserved.
+Keep complete decoded exports, typed request diagnostics, public constructor and
+helper input domains, encoded keys/defaults/omission and full independent payloads
+as specified below. Paths beginning `src/` or `test/` are relative to
+`packages/tooling/tool/cli/` unless the design states otherwise.
+
+Shortened source paths such as `Tasks.ts` and `internal/LaneProofReuse.ts`
+are relative to `packages/tooling/tool/cli/src/commands/Quality/`.
+Test paths remain relative to the CLI package root.
 
 # Current shape
 
@@ -109,13 +111,26 @@ failure-policy handling and independent stop state outside this disposition.
 
 # Migration inventory
 
+The additional package-script-policy merge adds two existing root lint steps
+at `Tasks.ts:2548-2549`: `lint:package-scripts` runs
+`["lint", "package-scripts", "--check"]`, followed by `lint:policy-fingerprint`
+with `["lint", "policy-fingerprint", "--check"]`, before typos. Preserve their
+labels, exact argument order, inherited cwd/environment/timeout construction,
+and blocking failure behavior. They are independent quality gates, with zero
+guard-deletion credit for this carrier. All downstream Tasks.ts citations have
+been relocated by the two inserted lines; earlier owner/proof code is unchanged.
+Keep the corresponding complete root-plan lists and argument assertions at
+`test/quality-tasks.test.ts:2798-2799,2836-2847`. Existing ambient proof identity,
+volatile-security policy, lane topology, report codecs and raw planner inputs
+remain unchanged by this additional delta.
+
 | Source or consumer | Scope |
 | --- | --- |
 | `Quality.schemas.ts` | Define and document the annotated LiteralKit domain alongside the existing GitHub lane schemas; derive its runtime type. |
 | `Tasks.ts:89-112` | Import the schema through the existing Quality schema-role import. |
 | `Tasks.ts:1675-1746` | Replace the local derived pair and its two readers only; preserve run/persist/error sequencing and existing return shape. |
 | `Tasks.ts:1802-1865` | The sole direct caller consumes the unchanged runner result. Keep lane status mapping, stopped-wave behavior, result order, and report construction. |
-| `Tasks.ts:3330` | Keep collectGithubCheckLaneWavesForTesting as the same testing facade; no signature or return-shape change. |
+| `Tasks.ts:3332` | Keep collectGithubCheckLaneWavesForTesting as the same testing facade; no signature or return-shape change. |
 | `internal/LaneProofReuse.ts:202-255,279-287,294-340` | Preserve preparation fallbacks, exact match across all seven identity fields, original-versus-refreshed identity equality before persistence, store merge order and atomic JSON write. |
 | `src/test/Quality.test-kit.ts:57,76` | Existing Tasks and LaneProofReuse exports remain the only required test routes; no helper alias is needed. |
 | `index.ts:48` | Existing schema export remains the facade route; no additional barrel topology change is required. |

@@ -1,0 +1,22 @@
+{
+  "lane": "r29-architecture-ecosystem-internal",
+  "sourceSha": "115b761d533684c5abf4ab9de83d970243c79dfc",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "e879b891d3e08fe351b878cb89c7ff0a09e311042e4b97ba1b2aea0ddfe5229c",
+  "started": "2026-09-09T10:32:42.022777+00:00",
+  "finished": "2026-09-09T10:39:55.814293+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-architecture-ecosystem-internal.jsonl`\n\nConfirmed: 0. Disqualified: 0. Validator: `inventory OK: 0 records`.\n\nEvery assigned root was covered (`architecture-lab` client/config/domain/server/tables/ui/use-cases, `effect-drizzle`, `_internal/db-admin`).\n\nUnchanged seeds (not re-recorded): `WorkItemPublicConfig` D1, `readWorkItemConfig.envFlags` D1, `Meta` `[hasDefault, primaryKey, unique, version]` D1, `SpecDefinition.timestamp` `[ident, withTimezone]` still supported as designed. No seed line/member/classification drift; `hasDefault` is still not an E3 of `default` (serial/identity set `hasDefault` without a default payload).\n\nOut of net (not recorded): callable guards/predicates; function flag parameters (`timestamp({ withTimezone })`, `primaryKey({ autoIncrement })`, `buildColumn` `nullable`); single-boolean carriers (`Edge.optional`, `Classified.nullable`, `IndexIntent.unique`, drizzle `{ withTimezone: true }`); `generated`/`indexed`/`identity` false-or-object sentinels; `SQL<boolean>` expressions.\n\nNo unresolved source question. Prompt SOURCE SHA `115b761` differs from live HEAD / sweep `source-sha.txt` `06c381b`; owners above were read from the live checkout.",
+  "transcriptSha256": "0488361249601cf9e16e02cfb1d9d3eb82a05a537146aff592f475c16bf35a98",
+  "runnerSha256": "5553c5d3bd7e2a689a4219b4aa133524d2c7c27505d8c7a9da3b720947bf9fe7",
+  "seedSha256": "5700ee53292787d2f80f3ef622513414495376c2b9eaa3aa163f2fee88ce85a3",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

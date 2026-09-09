@@ -1,0 +1,22 @@
+{
+  "lane": "r29-cli-commands-r-z",
+  "sourceSha": "115b761d533684c5abf4ab9de83d970243c79dfc",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "e879b891d3e08fe351b878cb89c7ff0a09e311042e4b97ba1b2aea0ddfe5229c",
+  "started": "2026-09-09T11:10:55.294172+00:00",
+  "finished": "2026-09-09T11:21:57.177427+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-cli-commands-r-z.jsonl`\n\nConfirmed 0, disqualified 0. Validator: inventory OK (0 records).\n\nEvery assigned root was covered (Research, Root.ts, Runners, Skills, SyncDataToTs, TopoSort, TsconfigSync, VersionSync, Worktree). All listed seed owners still exist; members still share those owners; classifications still match current writers/readers and constructor contracts. No seed withdrawals.\n\nSeed drift (line only, classification unchanged): `version-sync-options-check` canonical line 415 is now `bunOnly`; first boolean `skipNetwork` is 414.\n\nOut-of-net residue (not recorded): Command.make / handler flag parameters; 1-boolean owners (`SkillPatches.required`, `SyncDataTargetResult.changed`, `ResearchCaptureSummary.skipped`, GitHub/Codex truncated/enabled flags, `ConflictDerivation` / `PolicyDerivation` / `EntryReading` / `WorktreeRemovalReceipt`); `{recursive:true}`-only mkdir/remove bags. No unresolved source question.\n\n\ud83c\udf31 graft saved ~535,501 tokens this turn (12 calls)",
+  "transcriptSha256": "dc83aa882f084aca7e718a5a4dec1740cd955cf8862563fbeb0aa19659858cb5",
+  "runnerSha256": "5553c5d3bd7e2a689a4219b4aa133524d2c7c27505d8c7a9da3b720947bf9fe7",
+  "seedSha256": "5700ee53292787d2f80f3ef622513414495376c2b9eaa3aa163f2fee88ce85a3",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

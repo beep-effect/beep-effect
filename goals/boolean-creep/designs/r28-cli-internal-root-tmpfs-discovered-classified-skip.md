@@ -1,9 +1,23 @@
-# Design: r28-cli-internal-root-tmpfs-discovered-classified-skip
+# r28-cli-internal-root-tmpfs-discovered-classified-skip
 
-Current P2 design on source `93217d998f851e2e93d9864e2b5315552eaa58a7`, main `d1b4d769fbaffddd55717f3b1ba461897dd545c5`.
-Native source audit and private proof: `data/design-refresh-2026-09-09-r28-tmpfs-observation-owner.md`.
-Independent P3 and merged packet ratification remain required. Coordinate both
-Tmpfs models in the ordered Tier 1E subsystem batch, with guard credit allocated below.
+Native P2 design refresh before R29, bound to merged source HEAD
+`f03850b762e41217b5a0c26f26041daee490a070` / main
+`4f13d83e13d61275a57004050ffc62a90d86c014`. This preserves status `designed`
+and cardinality 312/13. Tier 1: ordered Tier1E tooling batches with serial shared-file edits.
+Independent P3 review and implementation acceptance remain pending.
+
+Owner `DiscoveredCandidate` at `packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts:65`,
+with members `reapClass`, `classified`, `shapeSkipReason`, `parentRepo`.
+Storage/exposure: stored/internal; target: tagged-union.
+
+The full public [source-impact audit](../data/pre-r29-main-4f13d8-source-impact.md),
+[source bindings](../data/pre-r29-main-4f13d8-source-bindings.json), and
+[row/design map](../data/pre-r29-main-4f13d8-row-design-map.json) bind this proposal.
+The [exact original design](../history/designs/2026-09-09-pre-r29-main-4f13d8/r28-cli-internal-root-tmpfs-discovered-classified-skip.md) is preserved.
+Keep complete decoded exports, typed request diagnostics, public constructor and
+helper input domains, encoded keys/defaults/omission and full independent payloads
+as specified below. Paths beginning `src/` or `test/` are relative to
+`packages/tooling/tool/cli/` unless the design states otherwise.
 
 ## Current shape
 
@@ -137,9 +151,15 @@ from no parent, and both variants retain their appropriate full payload.
 The private type has no external constructor or decoder. Only public
 runTmpfsReap/resolveBeepCacheRoot and report schemas are exposed through
 `internal/repo-run/index.ts:27-28` and `src/test/RepoRun.test-kit.ts`.
-`Quality.command.ts:129,3505-3523,3565-3567` and
+`Quality.command.ts:129,3506-3524,3566-3568` and
 `Yeet/internal/Sweep.ts:1141-1180` consume the same public reports. Existing
 source/consumer coverage in the current design is retained by this correction.
+The incoming ResidueReap home/repository boundary checks belong to a separate
+janitor and do not supply this candidate or its stat observations. TmpfsReap
+has its own scanProcReferences and no ResidueReap/ProcessIdentity import. Its
+312/13 table, companion72/14 table, all temporal/error cases and guard allocation
+remain unchanged. The Quality citation shift above is caused solely by an
+earlier scheduler-reap flag default insertion.
 
 ## Guard-deletion accounting
 

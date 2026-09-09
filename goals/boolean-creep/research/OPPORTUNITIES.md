@@ -815,3 +815,133 @@ original serializer reproduces the original hash exactly. The separate
 [formatting receipt](../data/r28-verdict-format-drift.json) retains both hashes;
 only the mutable pointer changes. Freeze evidence after formatting, and verify
 referenced byte hashes at commit preparation as well as at round finalization.
+
+### Pre-R29 installation caught incoming source and receipt-format drift
+
+The installation guard stopped before writing when live main advanced from
+`85cc86d1f3fd99088bf6317bfc639743de539331` to
+`5fc065daff16300b8435eca3f32d55564664f57c`. The normal forward merge brought in
+the scheduler recovery polling fix. A bounded source audit preserved the
+17-design preparation, explicitly rebound its one changed test fixture, and
+refreshed the two affected scheduler designs separately. Check live main before
+mutation and isolate the changed source owners so an incoming fix does not
+invalidate unrelated reviewed work or encourage resetting a tracking ref.
+
+The preparation check also found two new JSON maps whose bytes would change
+under the normal Biome hook. The final stage formats those maps before hashing
+and preserves all 37 non-JSON artifacts exactly. The new R29 controller applies
+the same ordering to its own lane maps and execution receipts, with 12 focused
+formatter tests; raw reports and frozen history retain their recorded bytes.
+Format authored evidence before binding it, and test formatter failures and
+semantic preservation at the writer boundary.
+
+### Hosted scanner version did not support the locally verified configuration
+
+The isolated scanner prerequisite lane tested the exact pinned hosted image
+before publication. Gitleaks 8.24.3 still reported all 44 frozen-evidence findings
+with the locally passing configuration; installed Gitleaks 8.30.1 reported none.
+The common `[[allowlists]]` and `targetRules` configuration syntax requires
+8.25 or newer, so the hosted scanner did not apply those exceptions. Publishing
+that configuration unchanged would leave the packet gate failing. The lane is
+preparing the equivalent supported per-rule form and will verify the original
+findings, default detector behavior and negative controls on both runtimes.
+Exercise the exact hosted tool version before declaring a local quality fix
+ready for publication.
+
+The replacement uses nine per-rule tables for the same 46 exact rule/path/line
+predicates. Both 8.24.3 and 8.30.1 now clear the frozen evidence and retain all
+24 control groups and 132 expected findings. Version-specific parser probes
+also preserve all 208 and 222 resolved detectors, respectively, including prior
+allowlists and global settings. The reviewed correction is proceeding through
+fresh Yeet verification in the isolated prerequisite branch; these local
+runtime checks do not claim hosted completion.
+
+### Agent usage exhaustion left the verification process running
+
+The scanner prerequisite agent stopped at an account usage limit while its
+saved Yeet proof remained live. The parent could not attach with the former
+agent's execution-session handle (`Unknown process id`), but the recorded
+operating-system PID, process start time and checkout directory still matched;
+the proof log then advanced from admission waiting to test-tsgo execution.
+Continue from the live process and durable log instead of treating a missing
+tool-session handle as a failed command or launching a duplicate proof. Save
+process identity, checkout, exact input hashes and log paths before handing off
+long-running commands.
+
+### Concurrent settings commit changed the census HEAD
+
+A separate agent restored the checked-in Graft permissions and hook timeouts
+while the round-29 census was running. The commit changes only
+`.claude/settings.json`; all 3,044 admitted corpus files, dependency inputs and
+139 designs still match their launch hashes. The census controller checks exact
+HEAD, so its final source-stability gate must remain failed for this round.
+The existing lane runner also rewrites `source-sha.txt` at each dispatch; use
+the immutable launch admission and saved per-lane prompts to distinguish the
+actual inputs. Keep the raw reports and classify this as historical evidence
+without exact-head dry-round credit. An isolated census checkout would prevent
+unrelated commits from moving this evidence boundary.
+
+### Partial clone made history verification fetch blobs individually
+
+The isolated scanner prerequisite clone used `remote.origin.partialclonefilter`
+`blob:none`. During full Yeet verification, `fallow health` ran a six-month
+`git log --numstat` and repeatedly fetched missing historical blobs; the clone
+had accumulated over a thousand small packs. The proof process remained live.
+A separate fetch hydrates the exact pinned commit history with `--refetch
+--no-filter --no-write-fetch-head --no-tags --no-auto-maintenance`; before/after
+checks cover refs, index and the staged scanner configuration. It does not
+restart or replace the proof. Hydrate history once before running history-based
+quality gates in a partial clone, or use a complete object store for those gates.
+
+### Existing census status hid excluded owners during round 29
+
+Several completed round-29 footers called their seeds unchanged while also
+identifying those seeds as callable predicates, cross-owner expressions or
+zero-Boolean Options. The tooling-library-support footer additionally found
+`codegen-kit-cli-mode` still designed against Command flag handles and anonymous
+function parameters. Reading `CodegenKit.cli.ts:38-48` and
+`CodegenKit.service.ts:443-462` showed that its proposed public API migration
+would touch the explicitly excluded function-flag surface. The prepared
+correction archives that design and withdraws the row without changing source.
+
+Revalidate eligibility before reusing any D1, D2 or designed status. An
+out-of-scope helper collection needs removal from the live projection and an
+exact historical archive, not a retained disqualifier. Conversely, the docgen
+footer excluded actual constructed two-Boolean options objects along with
+anonymous parameter signatures. `Checker.ts:93,117-120,145,169,193,219` contains
+nine real objects whose independent checks are at lines 65 and 72. Keep the
+parameter exclusion and the constructed-object census boundary separate.
+
+### Observer tuples did not define the complete planning-input contract
+
+The final round-29 Yeet report proposed a 128/60 qualification for
+`SweepGitState` based on its only runtime observer. A native design audit found
+`test/yeet-sweep-plan.test.ts:814-821` deliberately constructing an unreliable
+worktree probe with one occupancy flag false, plus known-held/no-path fixtures
+at 279 and 285. Those supported helper inputs contradict the proposed universal
+occupancy implication. The source contract still explicitly requires a
+conservative dirty value for an unreliable status probe. Keep that separately
+proven cluster distinct while auditing the remaining constructor domain; do not
+turn an observer's reachable subset into restrictions on every supported caller.
+
+### Generic JSON rendering bypassed nested schema encoders
+
+The new Runpod template design shares its report generator with the earlier
+cleanup design. `QualityWorkerRunpodEval.ts:311-316,1297-1299` passes the report
+to generic JSON encoding, so a nested schema compatibility transform would not
+run automatically. Both Tier 2 designs must explicitly project their reviewed
+fields through the wrapper encoding path and prove full-output byte equality.
+The template history audit also found the original explicit-id producer retained
+whitespace; use the existing string domain to preserve those historical values.
+Inspect the actual serializer and historical producers when designing a codec.
+
+### Main-forward verification confused whole documents with incoming changes
+
+The main-forward preservation check initially required merged SPEC and DECISIONS
+files to equal main. This branch also carries ratified campaign amendments, so
+that test reported a failure after a successful merge. Comparing the exact
+incoming routing substitutions instead proved all other bytes preserved across
+1,226 packet files. A second input check found that the dependency manifest also
+includes `biome.jsonc`, whose Graft exclusions changed on main; package manifests
+and lock bytes stayed unchanged. Inspect the manifest's actual categories and
+compare merge deltas without discarding intentional branch content.

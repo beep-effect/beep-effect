@@ -1,11 +1,23 @@
-# Design: r28-cli-quality-test-lane-resolved-selection
+# r28-cli-quality-test-lane-resolved-selection
 
-Current P2 design at source `93217d998f851e2e93d9864e2b5315552eaa58a7`,
-main `d1b4d769fbaffddd55717f3b1ba461897dd545c5`. Actual owner `parseTestLaneSelection`;
-4 representable / 3 legal, Tier 1.
-The source audit, bounded correction and native adjudication are bound by
-`data/r28-cli-l-q-integration.json`. This design supplies no independent P3
-approval; replacement review and merged packet ratification remain required.
+Native P2 design refresh before R29, bound to merged source HEAD
+`f03850b762e41217b5a0c26f26041daee490a070` / main
+`4f13d83e13d61275a57004050ffc62a90d86c014`. This preserves status `designed`
+and cardinality 4/3. Tier 1: ordered Tier1E tooling batches with serial shared-file edits.
+Independent P3 review and implementation acceptance remain pending.
+
+Owner `parseTestLaneSelection` at `packages/tooling/tool/cli/src/commands/Quality/Tasks.ts:317`,
+with members `unit`, `integration`.
+Storage/exposure: derived/internal; target: literalkit.
+
+The full public [source-impact audit](../data/pre-r29-main-4f13d8-source-impact.md),
+[source bindings](../data/pre-r29-main-4f13d8-source-bindings.json), and
+[row/design map](../data/pre-r29-main-4f13d8-row-design-map.json) bind this proposal.
+The [exact original design](../history/designs/2026-09-09-pre-r29-main-4f13d8/r28-cli-quality-test-lane-resolved-selection.md) is preserved.
+Keep complete decoded exports, typed request diagnostics, public constructor and
+helper input domains, encoded keys/defaults/omission and full independent payloads
+as specified below. Paths beginning `src/` or `test/` are relative to
+`packages/tooling/tool/cli/` unless the design states otherwise.
 
 ## Current shape
 
@@ -62,6 +74,19 @@ readers; do not reconstruct a stored pair of lane Booleans beside the mode.
 
 ## Migration inventory
 
+The additional package-script-policy merge adds two existing root lint steps
+at `Tasks.ts:2548-2549`: `lint:package-scripts` runs
+`["lint", "package-scripts", "--check"]`, followed by `lint:policy-fingerprint`
+with `["lint", "policy-fingerprint", "--check"]`, before typos. Preserve their
+labels, exact argument order, inherited cwd/environment/timeout construction,
+and blocking failure behavior. They are independent quality gates, with zero
+guard-deletion credit for this carrier. All downstream Tasks.ts citations have
+been relocated by the two inserted lines; earlier owner/proof code is unchanged.
+Keep the corresponding complete root-plan lists and argument assertions at
+`test/quality-tasks.test.ts:2798-2799,2836-2847`. Existing ambient proof identity,
+volatile-security policy, lane topology, report codecs and raw planner inputs
+remain unchanged by this additional delta.
+
 - `Tasks.ts:232-236,263-267,308-314`: retain the raw accumulation contract,
   including its legitimate false/false initial state and argument reducer.
 - `Tasks.ts:307,315-320`: change only the resolved return type and producer;
@@ -73,17 +98,17 @@ readers; do not reconstruct a stored pair of lane Booleans beside the mode.
   integration/all. Preserve unit, parallel, serial order; the parallel label
   and command; and serial `--concurrency=1` followed by the exact output of
   `withoutTurboConcurrencyArgs`.
-- `Tasks.ts:2725,2755`: root task dispatch and exported dual
+- `Tasks.ts:2727,2757`: root task dispatch and exported dual
   `rootQualityStepsForTesting` continue to expose the same step arrays. Their
   argument APIs do not change.
-- `Tasks.ts:3055-3102`: migrate runtime unit selection and the integration
+- `Tasks.ts:3057-3104`: migrate runtime unit selection and the integration
   branch together with the pure planner. Unit failures are collected before
   integration; they do not prevent its execution. Preserve workspace argument
   discovery, the explicit-scope rule for unsplit filters, parallel and optional
   unsplit steps, then the scoped serial SQL resource acquisition and step.
   Append parallel then serial failures, and finally unit then integration
   failures, before `failQualityTaskFailures`.
-- `Tasks.ts:3104-3110`: `runRootTask` continues routing test invocations through
+- `Tasks.ts:3106-3112`: `runRootTask` continues routing test invocations through
   this runtime path. Preserve invocation decoding and every other task route.
 - New private `internal/TestLaneSelection.schemas.ts`: own the mode and resolved
   payload class. Keep the blocked internal package subpath and all package
@@ -101,12 +126,12 @@ used as proof that runtime dispatch or exports are absent.
 Delete exactly two resolved fields and their two fallback assignments at
 317-318. Replace the redundant `hasLane` Boolean and those fallback branches
 with a single finite-mode classification. Migrate five decoded Boolean reads:
-unit at2403 and3061, integration at2414,2424 and3066. Existing
+unit at2403 and3063, integration at2414,2424 and3068. Existing
 `optionalQualityTaskStep.enabled` arguments remain scalar decisions about a
 step; they are not another stored resolved lane pair.
 
 Do not claim deletion of raw accumulator fields, optional-step infrastructure,
-the unsplit-filter presence gate at3079, concurrency stripping, workspace
+the unsplit-filter presence gate at3081, concurrency stripping, workspace
 discovery, resource acquisition or failure aggregation. No coverage resolver
 guard belongs to this record, although it shares Tasks.ts with the separately
 admitted coverage work.
@@ -125,8 +150,8 @@ default; do not reject the raw absence case now that resolved absence is gone.
 Extend the existing `test/quality-tasks.test.ts` plan fixtures with none,
 unit-only, integration-only, both orders, repeated selectors and passthrough
 arguments. Assert complete steps, not only selected labels. Existing parallel
-before serial cases at5299-5307, concurrency stripping at5310-5318 and default
-lab exclusions at5860-5863 remain acceptance fixtures.
+before serial cases at5309-5317, concurrency stripping at5320-5328 and default
+lab exclusions at5870-5873 remain acceptance fixtures.
 
 Exercise runtime selection through existing spawner/quality-task harnesses:
 unit failure still permits integration, parallel failure still permits serial,

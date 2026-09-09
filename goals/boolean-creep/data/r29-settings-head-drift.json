@@ -1,0 +1,32 @@
+{
+  "observedAt": "2026-09-09T10:42:22.507044+00:00",
+  "launchSourceSha": "115b761d533684c5abf4ab9de83d970243c79dfc",
+  "observedHeadSha": "06c381b61abee8356b78c52b72eb8a5562015bfd",
+  "observedOriginMainSha": "5fc065daff16300b8435eca3f32d55564664f57c",
+  "changedCommittedPaths": [".claude/settings.json"],
+  "checks": {
+    "launch-included-files.json": {
+      "count": 3044,
+      "mismatches": [],
+      "manifestSha256": "b95c87b7701ab77f92931985f0153e472d8769a49598057d454befbe720c13e1"
+    },
+    "launch-dependencies.json": {
+      "count": 158,
+      "mismatches": [],
+      "manifestSha256": "99022e45e3608ea44920220298c9fdb6a4cc22383680d92bbbf48279b640a234"
+    },
+    "launch-designs.json": {
+      "count": 139,
+      "mismatches": [],
+      "manifestSha256": "c06c4f5a0f9d4980a3e3240d1ce36008cf7c86b7f88049aa5c39f3a6c30cb6f8"
+    }
+  },
+  "inventorySha256": "5700ee53292787d2f80f3ef622513414495376c2b9eaa3aa163f2fee88ce85a3",
+  "sourcePointerValue": "06c381b61abee8356b78c52b72eb8a5562015bfd",
+  "sourcePointerRole": "The existing lane runner rewrites this pointer from live HEAD on each dispatch; launch-admission and saved per-lane prompts retain actual provenance.",
+  "assessment": "Corpus, dependencies and all designs match launch bytes. Exact HEAD changed concurrently, so the unchanged controller will correctly fail its final sourceStable gate. Preserve every raw report and record that outcome; no exact-head dry or P3 credit.",
+  "currentDryCredit": false,
+  "liveControllerModified": false,
+  "sourceObservation": "A concurrent settings-only commit changed HEAD while primary census lanes were running.",
+  "controllerTerminalResultObserved": false
+}

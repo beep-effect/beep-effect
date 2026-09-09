@@ -1,18 +1,23 @@
-# R28 P2 design: create-package-retired-name-reconciliation
+# create-package-retired-name-reconciliation
 
-Frozen HEAD `93217d998f851e2e93d9864e2b5315552eaa58a7`, origin/main `d1b4d769fbaffddd55717f3b1ba461897dd545c5`. Native P2 source/design proof is bound by `data/design-refresh-2026-09-09-r28-cli-retained-qualified-gap-audit.md` and the original bytes are archived by `data/r28-cli-retained-integration.json`. Independent replacement P3 design review remains pending; no prior review approval is transferred and no product implementation or test acceptance is claimed. Preserve the complete decoded API, public schema/method/test-kit exports, full payloads and encoded outputs described below. Raw request defaults, typed diagnostics and their ordering remain supported contracts; their D1 owners are not implementation targets of this returned-state migration.
+Native P2 design refresh before R29, bound to merged source HEAD
+`f03850b762e41217b5a0c26f26041daee490a070` / main
+`4f13d83e13d61275a57004050ffc62a90d86c014`. This preserves status `designed`
+and cardinality 4/3. Tier 1: ordered Tier1E tooling batches with serial shared-file edits.
+Independent P3 review and implementation acceptance remain pending.
 
-# Instance
+Owner `createPackageCommand` at `packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts:1399`,
+with members `retiredNameReused`, `retiredNameCleared`.
+Storage/exposure: derived/internal; target: literalkit.
 
-- id: `create-package-retired-name-reconciliation`
-- exact source SHA: `93217d998f851e2e93d9864e2b5315552eaa58a7`
-- corpus source SHA: `d1b4d769fbaffddd55717f3b1ba461897dd545c5`
-- file:line: `packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts:1397`
-- symbol: `createPackageCommand`
-- members: `retiredNameReused`, `retiredNameCleared`
-- evidence: E4 at `CreatePackage.command.ts:1603-1605` — the only
-  `retiredNameCleared` writer calls the registry removal only when
-  `retiredNameReused` is true, so cleared implies sanctioned reuse.
+The full public [source-impact audit](../data/pre-r29-main-4f13d8-source-impact.md),
+[source bindings](../data/pre-r29-main-4f13d8-source-bindings.json), and
+[row/design map](../data/pre-r29-main-4f13d8-row-design-map.json) bind this proposal.
+The [exact original design](../history/designs/2026-09-09-pre-r29-main-4f13d8/create-package-retired-name-reconciliation.md) is preserved.
+Keep complete decoded exports, typed request diagnostics, public constructor and
+helper input domains, encoded keys/defaults/omission and full independent payloads
+as specified below. Paths beginning `src/` or `test/` are relative to
+`packages/tooling/tool/cli/` unless the design states otherwise.
 
 # Current shape
 
@@ -63,20 +68,32 @@ outcome; it does not expand the final 4/3 census table.
 
 # Migration inventory
 
-- `packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts:986-1004`
+The post-merge source introduces `CreatePackageScripts` at
+CreatePackage.command.ts:1961-1964, exported by CreatePackage/index.ts:14.
+This lifecycle change preserves its full app/package helper signatures and
+canonical script outputs. Shared command edits must retain app/lab script kind
+selection at 1772-1777, the kind/stories package writer at 1925-1944 and the
+ecosystem → remaining app-kind → tool → library selection at 2014-2038.
+Runtime-proof still uses a package-shaped manifest with canonical app-kind
+scripts. None of these public helper Boolean parameters is removed by the
+retired-name lifecycle migration. Preserve the broader direct helper contract
+and new equality fixtures at create-package.test.ts:274-332 alongside the
+unchanged registry consent, no-op, removal and summary ordering.
+
+- `packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts:988-1006`
   — return the initial reconciliation case from `ensureRetiredNameAllowed` while
   preserving the registry read, typed error mapping, refusal condition, and
   exact refusal message.
-- `CreatePackage.command.ts:1396-1398` — replace `retiredNameReused` with the
+- `CreatePackage.command.ts:1398-1400` — replace `retiredNameReused` with the
   named reconciliation state at the same early gate.
-- `CreatePackage.command.ts:1430-1466` — render the exact sanctioned-reuse
+- `CreatePackage.command.ts:1432-1468` — render the exact sanctioned-reuse
   dry-run line only for `reuse-authorized`; retain all other plan lines and the
   no-mutation return.
-- `CreatePackage.command.ts:1587-1609` — after all existing scaffold,
+- `CreatePackage.command.ts:1589-1611` — after all existing scaffold,
   workspace, identity, and config-sync operations, refine the authorized case
   through `removeRetiredPackageName`; preserve registry removal before lockfile
   refresh and its typed failures.
-- `CreatePackage.command.ts:1611-1649` — render the exact retired-entry removal
+- `CreatePackage.command.ts:1613-1651` — render the exact retired-entry removal
   summary only for `reuse-cleared`; preserve ordering relative to workspace,
   identity, lockfile, and sync summaries.
 - `packages/tooling/tool/cli/src/commands/CreatePackage/internal/RetiredNameRegistry.ts:22-72`

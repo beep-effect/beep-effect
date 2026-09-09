@@ -1,17 +1,34 @@
-# R28 P2 design: create-package-template-type-flags
+# create-package-template-type-flags
 
-Frozen HEAD `93217d998f851e2e93d9864e2b5315552eaa58a7`, origin/main `d1b4d769fbaffddd55717f3b1ba461897dd545c5`. Native P2 source/design proof is bound by `data/design-refresh-2026-09-09-r28-cli-retained-qualified-gap-audit.md` and the original bytes are archived by `data/r28-cli-retained-integration.json`. Independent replacement P3 design review remains pending; no prior review approval is transferred and no product implementation or test acceptance is claimed. Preserve the complete decoded API, public schema/method/test-kit exports, full payloads and encoded outputs described below. Raw request defaults, typed diagnostics and their ordering remain supported contracts; their D1 owners are not implementation targets of this returned-state migration.
+Native P2 design refresh before R29, bound to merged source HEAD
+`f03850b762e41217b5a0c26f26041daee490a070` / main
+`4f13d83e13d61275a57004050ffc62a90d86c014`. This preserves status `designed`
+and cardinality 1658880/31. Tier 1: ordered Tier1E tooling batches with serial shared-file edits.
+Independent P3 review and implementation acceptance remain pending.
+
+Owner `TemplateContext` at `packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts:738`,
+with members `type`, `family`, `kind`, `appKind`, `isTool`, `isApp`, `isLibrary`, `isNextjsApp`, `isTauriApp`, `isViteApp`, `isServiceApp`, `isRuntimeProofApp`, `isRealApp`, `isLab`, `isEcosystem`.
+Storage/exposure: derived/internal; target: tagged-union.
+
+The full public [source-impact audit](../data/pre-r29-main-4f13d8-source-impact.md),
+[source bindings](../data/pre-r29-main-4f13d8-source-bindings.json), and
+[row/design map](../data/pre-r29-main-4f13d8-row-design-map.json) bind this proposal.
+The [exact original design](../history/designs/2026-09-09-pre-r29-main-4f13d8/create-package-template-type-flags.md) is preserved.
+Keep complete decoded exports, typed request diagnostics, public constructor and
+helper input domains, encoded keys/defaults/omission and full independent payloads
+as specified below. Paths beginning `src/` or `test/` are relative to
+`packages/tooling/tool/cli/` unless the design states otherwise.
 
 # Current shape
 
-CreatePackage.command.ts732–765 exports TemplateContext, a real S.Class that
+CreatePackage.command.ts734–767 exports TemplateContext, a real S.Class that
 receives the resolved scaffold selection and full template payload. It carries
 PackageType, optional PackageFamily/PackageKind/AppKind and eleven Booleans:
 isTool/isApp/isLibrary, isNextjsApp/isTauriApp/isViteApp/isServiceApp/
-isRuntimeProofApp/isRealApp, isLab/isEcosystem. The only constructor1477–1502
-runs after type/app/family/kind/lab validation and the dry-run return1465.
+isRuntimeProofApp/isRealApp, isLab/isEcosystem. The only constructor1479–1504
+runs after type/app/family/kind/lab validation and the dry-run return1467.
 
-ScaffoldShape1415 is a different private operation owner; it is not folded into
+ScaffoldShape1417 is a different private operation owner; it is not folded into
 this public template model. No raw config flag object or anonymous handler
 parameter is being admitted. Required names, scoped name, description, year,
 parent directory, package path, rootRelative, portlessLabel, rootDirRelative,
@@ -20,7 +37,7 @@ payloads. They retain exact bytes and do not become Boolean presence axes.
 
 No other TemplateContext.make or live decoder/assignment fixture exists across
 packages/apps. TemplateService's general record contexts are a different public
-API. The malformed tiny S.is JSDoc candidate721–727 does not construct an
+API. The malformed tiny S.is JSDoc candidate723–729 does not construct an
 alternate supported TemplateContext. Public exports must still be migrated
 honestly; this is not a private class just because its sole writer is local.
 
@@ -48,7 +65,7 @@ records would undercount the cluster and duplicate migration.
 
 Retain the public TemplateContext name and all common payload fields. Replace
 the fifteen-field classification cluster with one schema-owned `selection`.
-Use existing LiteralKit building blocks at134–138/216–291 for literal domains,
+Use existing LiteralKit building blocks at136–140/218–293 for literal domains,
 not a new list of Boolean projections or hand-written TypeScript unions.
 
 Model the31 states compositionally: a package branch owns nonapp PackageType
@@ -69,19 +86,36 @@ a TemplateContext codec and then change which diagnostic appears first.
 
 # Migration inventory
 
-- CreatePackage.command.ts134–138/216–291: reuse type/family/kind/app kits and
+The merged source also exports `CreatePackageScripts` at
+CreatePackage.command.ts:1961-1964 through the same wildcard barrel at
+CreatePackage/index.ts:14. Preserve this additional decoded API while migrating
+TemplateContext. Its app helper at 1772-1777 accepts full dev/build strings and
+either lab value; its package helper at 1925-1944 accepts every nonlab scripts
+kind, full relative/path strings and either stories value. Do not route those
+public helper calls through the narrower CLI/TemplateContext selection grammar.
+
+Coordinate with the separate ScaffoldShape design at the existing manifest
+selection seam, CreatePackage.command.ts:1991-2073. Preserve canonical
+scaffoldPackageScripts calls and their exact optional task lists, builder
+ordering and stories override. Package-shaped runtime-proof output uses scripts
+kind app; ecosystem metadata takes precedence over the remaining app-kind,
+tool and library fallback. This output selection uses existing metadata and
+must not be flattened to the new context's broad PackageType alone. The shared
+writers and raw/public helper inputs are not TemplateContext Boolean deletions.
+
+- CreatePackage.command.ts136–140/218–293: reuse type/family/kind/app kits and
   existing validators. Add selection schemas in the current module or an
   architecture-approved neighboring schema role; any future split requires
   the existing architecture command before product edits, not a hand-built
   new package. No new public subpath is needed for this design.
-- Declaration732–765 and constructor1477–1502: remove eleven flags and the
+- Declaration734–767 and constructor1479–1504: remove eleven flags and the
   independently broad repeated selection fields; construct one selection and
-  preserve all other exact payload values. isEcosystem1472 still controls
+  preserve all other exact payload values. isEcosystem1474 still controls
   plugin-profile loading before allocation: replace its local use with direct
-  resolved-family classification, preserving OR short-circuit with nextjs1474.
-  The source-local `isRealAppKind` helper709 is removable only after its sole
-  flag writer1495 is removed; `appKindIs`706 still serves other live helpers.
-- TemplateRenderRequest creation1507–1511: hand over common payload plus a
+  resolved-family classification, preserving OR short-circuit with nextjs1476.
+  The source-local `isRealAppKind` helper711 is removable only after its sole
+  flag writer1497 is removed; `appKindIs`708 still serves other live helpers.
+- TemplateRenderRequest creation1509–1513: hand over common payload plus a
   single template-facing classification literal/structured selection. Do not
   spread duplicated legacy flags back into the rendering context. Keep
   TemplateService's unrelated generic context contract120–135 and other callers.
@@ -115,7 +149,7 @@ has no reader, so its concrete deletion is the three redundant writes/schema
 fields, not invented downstream guards. The old type/app-kind/lab-ecosystem
 designs must not each claim these same writes.
 
-No CLI validation gate1188–1412, stories refusal, retired-name authorization,
+No CLI validation gate1190–1414, stories refusal, retired-name authorization,
 workspace safety check, plugin-profile validation or filesystem error is
 counted as a deletion. ScaffoldShape retains its separate11-state design and
 reader ownership; shared template edits land atomically or are explicitly
@@ -141,6 +175,13 @@ and add its exact codec/constructor compatibility proof; do not silently discard
 such evidence. No incoming codec is invented for a nonexistent live boundary.
 
 # Test impact
+
+Keep current `create-package.test.ts:274-332` direct script-helper contract
+fixtures, tool creation at 652-681, exact app script expectations at 829/892
+and runtime-proof overrides at 1073-1082. These supplement the full31-selection
+rendering matrix without admitting public helper parameters as another owner.
+Current canonical script output, including lint tasks and absence of placeholder
+codegen, is the compatibility baseline for generated-byte comparisons.
 
 Use the current explicit CLI fixture builders as the source of supported
 selection cases. Add a focused31-row schema construction matrix and negative

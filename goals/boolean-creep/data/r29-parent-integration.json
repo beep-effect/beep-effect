@@ -1,0 +1,1249 @@
+{
+  "kind": "boolean-creep-r29-parent-integration-preparation/v1",
+  "sourceSha": "1c07c15495aaa42f521b887b01e943e68804606c",
+  "sourceMainSha": "3657f8f97f7135c53c3c0b9fa99aa19093c3e5ee",
+  "observedOriginMainSha": "c12c6ae651a3facc3f6e6a5190fd84670ef8a014",
+  "status": "installed",
+  "beforeSha256": "5700ee53292787d2f80f3ef622513414495376c2b9eaa3aa163f2fee88ce85a3",
+  "inventorySha256": "96140e7bb2874da2dbe86344c08cf34d4ba3360d0a846660eb5065930c000e84",
+  "counts": {
+    "records": 697,
+    "qualified": 140,
+    "disqualified": 557,
+    "disqualifiers": {
+      "D2": 182,
+      "D1": 375
+    },
+    "tiers": {
+      "1": 110,
+      "2": 30
+    },
+    "statuses": {
+      "reviewed": 23,
+      "designed": 117
+    }
+  },
+  "changes": {
+    "withdrawn": [
+      "codegen-kit-cli-mode",
+      "r2-apps-intake-drag-configured",
+      "r3-foundation-conformance-annotation-integrity",
+      "r3-domains-workspace-absolute-path-probes",
+      "r3-domains-provider-instance-env-name-probes",
+      "r3-domains-anthropic-turn-codec-block-validators",
+      "r3-domains-identity-composer-member-probes",
+      "r3-domains-box-error-retryable-name-conflict",
+      "r3-domains-box-source-kind-guards",
+      "r3-domains-gregorian-calendar-probes",
+      "r3-domains-sync-op-idempotency-violation-probes",
+      "r3-apps-intake-error-include-stack",
+      "r3-domains-localdate-order-predicates",
+      "r3-domains-vault-sync-engine-shape-probes",
+      "r3-apps-intake-atoms-concurrent",
+      "r25-shared-documents-box-listing-kind-guards",
+      "r25-shared-documents-identity-composer-smoke",
+      "r25-shared-documents-classify-echo-suppression",
+      "r25-shared-documents-revive-eligibility",
+      "r26-apps-box-auth-ccg-subject",
+      "r26-apps-box-auth-mode-priority"
+    ],
+    "added": [
+      "r29-drivers-g-m-edge-shader-material-options",
+      "r29-tooling-library-observability-retention-remove-plan-paths",
+      "r29-tooling-library-observability-prepare-parquet-export-dir",
+      "r29-tooling-library-observability-mirror-bundle-dir-remove",
+      "r29-tooling-library-observability-mirror-work-dir-reset",
+      "r29-tooling-library-observability-mirror-work-dir-cleanup",
+      "r29-tooling-library-observability-session-store-prepare-round",
+      "r29-tool-docgen-function-check-options",
+      "r29-tool-docgen-class-check-options",
+      "r29-tool-docgen-class-static-methods-check-options",
+      "r29-tool-docgen-class-methods-check-options",
+      "r29-tool-docgen-class-properties-check-options",
+      "r29-tool-docgen-constant-check-options",
+      "r29-tool-docgen-interface-check-options",
+      "r29-tool-docgen-type-alias-check-options",
+      "r29-tool-docgen-namespace-check-options",
+      "r29-cli-internal-root-run-captured-streams-options",
+      "r29-cli-commands-a-c-findings-write-staging-remove-options",
+      "r29-cli-commands-a-c-mode-validation-request",
+      "r29-cli-commands-d-k-runpod-list-templates-includes",
+      "r29-cli-commands-d-k-runpod-pod-create-input-flags",
+      "r29-cli-commands-d-k-knowledge-tar-extract-options",
+      "r29-cli-commands-d-k-knowledge-tsmorph-project-options",
+      "r29-cli-commands-d-k-docgen-quality-subjects-tsmorph-project-options",
+      "r29-cli-commands-l-q-allowlist-jsonc-parse-options",
+      "r29-cli-commands-l-q-knip-jsonc-parse-options",
+      "r29-cli-commands-l-q-github-checks-feature-matrix-jsonc-parse-options",
+      "r29-cli-commands-l-q-tsgo-rules-tsconfig-jsonc-parse-options",
+      "r29-cli-commands-l-q-tsgo-rules-generated-aliases-json-parse-options",
+      "r29-cli-commands-l-q-test-tsgo-tempdir-remove-options",
+      "r29-cli-commands-l-q-pre-push-ci-lane-plan",
+      "r29-cli-commands-l-q-collect-output-capture-options",
+      "r29-cli-commands-l-q-test-tsgo-turbo-capture-options",
+      "r29-cli-commands-l-q-collect-resolved-step-capture-options",
+      "r29-cli-commands-l-q-quarantine-step-capture-options",
+      "r29-cli-commands-l-q-tsgo-rules-root-tsconfig-jsonc-parse-options",
+      "r29-foundation-ui-correction-resizable-handle-props",
+      "acp-patched-protocol-options",
+      "acp-client-options",
+      "acp-client-child-process-options",
+      "acp-agent-options",
+      "acp-agent-layer-options",
+      "r29-acp-client-constructed-protocol-options",
+      "r29-acp-agent-constructed-protocol-options"
+    ],
+    "replaced": [
+      "drivers-ensure-qa-scene-result",
+      "yeet-sweep-git-state",
+      "docgen-runpod-template-search-scopes",
+      "aimetrics-forwarder-timer-options",
+      "aimetrics-benchmark-run-options",
+      "aimetrics-label-add-options",
+      "xai-sse-done-payload",
+      "xai-websocket-message-binary",
+      "jsonc-parser-sdk-flags",
+      "graph-3d-shader-material-flags",
+      "scheduler-admission-attempt-origin",
+      "scheduler-promotion-tick-origin"
+    ],
+    "unchanged": [
+      "ontology-inspector-form-state",
+      "dock-tab-drag-phase",
+      "ontology-inference-recompute-cause",
+      "yeet-merge-ready-verdict",
+      "runners-bake-freshness",
+      "intake-vault-status",
+      "thread-transcript-load-state",
+      "desktop-panel-menu-item-state",
+      "link-preview-fetch-machine",
+      "todo-item-due-tone",
+      "yeet-status-github-thread-mirror",
+      "pretext-engine-profile",
+      "ids-candidate-window-facts",
+      "composer-send-input-gates",
+      "document-violation-flags",
+      "composer-shell-edit-stream",
+      "thread-load-state-props",
+      "work-item-public-config-flags",
+      "effect-drizzle-meta-column-flags",
+      "drivers-stream-state",
+      "drivers-migration-journal-shape-row",
+      "drivers-acp-protocol-logging-options",
+      "drivers-cosmos-graph-config",
+      "drivers-graph-message",
+      "drivers-pcl-page-info",
+      "drivers-openclaw-channel-health",
+      "drivers-openai-compat-chat-completion-request",
+      "drivers-obs-record-status",
+      "drivers-corpus-stats-params",
+      "drivers-read-lines-options",
+      "drivers-text-stats-options",
+      "drivers-sample-lines-options",
+      "drivers-read-jsonl-options",
+      "drivers-load-lines-options",
+      "drivers-process-file-options",
+      "drivers-filter-lines-options",
+      "drivers-extract-matches-options",
+      "epistemic-proposal-card-action-flags",
+      "epistemic-evidence-list-source-flags",
+      "epistemic-candidate-comparison-action-gates",
+      "epistemic-review-dialog-reason-gates",
+      "color-support-level-flags",
+      "backend-capabilities",
+      "four-hint-annotations",
+      "annotation-options-include-flags",
+      "corpus-stats-parameters-include-flags",
+      "server-observability-config-toggles",
+      "error-reporter-layer-options-flags",
+      "ai-token-annotation-flags",
+      "execution-options-cache-trace",
+      "shacl-validation-result-flags",
+      "source-text-page-nav-flags",
+      "supports-color-decision-input-flags",
+      "color-heuristic-input-flags",
+      "glob-options-scan-flags",
+      "resolved-glob-options-scan-flags",
+      "rm-sync-options-flags",
+      "nlp-token-annotation-flags",
+      "json-schema-node-keywords",
+      "parser-options-csv-toggles",
+      "csv-codec-options-toggles",
+      "force-https-redirect-config-flags",
+      "allow-list-url-policy-relative-flags",
+      "foundation-ui-system-menus-open",
+      "foundation-ui-system-speech-input-connection",
+      "group-metadata-display-flags",
+      "group-patch-display-flags",
+      "composer-features-toggles",
+      "toolbar-selection-marks",
+      "chat-composer-props-gates",
+      "composer-footer-feature-gates",
+      "composer-surface-props-gates",
+      "composer-body-props-gates",
+      "live-waveform-mode-flags",
+      "carousel-scroll-bounds",
+      "carousel-context-scroll-bounds",
+      "knowledge-graph-display-toggles",
+      "combobox-input-chrome",
+      "upload-box-props-config",
+      "upload-box-dropzone-config",
+      "sidebar-open-surfaces",
+      "sidebar-context-open-flags",
+      "sidebar-provider-controlled-open",
+      "use-number-input-options",
+      "number-input-modifier-keys",
+      "number-input-step-modifiers",
+      "use-scribe-microphone-options",
+      "speech-input-microphone-options",
+      "chart-tooltip-hide-flags",
+      "toolbar-toggle-button-flags",
+      "todo-item-props-flags",
+      "ids-fee-facts",
+      "ids-statement-facts",
+      "ids-content-presence-facts",
+      "practice-kg-options",
+      "law-practice-pincite-info",
+      "full-case-citation-flags",
+      "run-ontology-sparql-result-safeguards",
+      "dms-mirror-probe-connected",
+      "vault-sync-status-connected",
+      "tooling-rest-glob-options",
+      "tag-parameters",
+      "extraction-rule",
+      "outcome-label",
+      "ai-metrics-outcome-label-input",
+      "outcome-label-annotation-row",
+      "ai-metrics-install-input",
+      "ai-metrics-install-spec",
+      "ai-metrics-install-plan-step",
+      "ai-metrics-install-plan",
+      "ai-metrics-retention-mutation-result",
+      "ai-metrics-retention-restore-drill-result",
+      "npm-package-json",
+      "tsconfig-compiler-options",
+      "tsconfig-build-options",
+      "ts-node-config",
+      "tooling-rest-next-config",
+      "tooling-rest-experimental-config",
+      "image-config-complete",
+      "styled-components-config",
+      "swc-env-options",
+      "mdx-rs-config",
+      "fetch-logging-config",
+      "redirect-permanent",
+      "modularize-imports-rule-config",
+      "beep-next-bundle-analyzer-config-options",
+      "beep-next-pwa-config-options",
+      "witness-keyboard-event",
+      "witness-listener-options",
+      "witness-config-input",
+      "package-verify-step-outcome",
+      "create-package-template-type-flags",
+      "yeet-status-remote-check-phase",
+      "runners-bake-cli-mode",
+      "docgen-local-json-requires-plan",
+      "create-package-scaffold-shape",
+      "yeet-run-options-flags",
+      "yeet-command-shared-options",
+      "yeet-run-plan-mode-options",
+      "yeet-handler-test-plan-options",
+      "yeet-run-result-commit-push",
+      "yeet-verdict-commit-push",
+      "yeet-quality-issue-flags",
+      "yeet-sweep-options-json-plan",
+      "yeet-reply-live-thread-flags",
+      "yeet-closeout-gh-review-thread",
+      "turbo-summary-task-cache",
+      "runners-aws-ebs-block-device",
+      "version-sync-bun-release",
+      "worktree-list-entry-porcelain",
+      "worktree-porcelain-accumulator",
+      "worktree-doctor-entry-facts",
+      "delete-package-policy-flags",
+      "delete-package-handler-options",
+      "laws-effect-imports-command-options",
+      "laws-terse-effect-command-options",
+      "laws-effect-import-rules-options",
+      "laws-terse-effect-rules-options",
+      "docgen-config-document-toggles",
+      "docgen-workspace-package-presence",
+      "docgen-local-allow-full",
+      "docgen-runpod-eval-options",
+      "docgen-tool-configuration-toggles",
+      "goal-completion-gate-flags",
+      "goal-manifest-capability-flags",
+      "ci-lane-run-options",
+      "ci-local-options",
+      "ci-local-step-plan",
+      "quality-test-lane-selection",
+      "fallow-command-options",
+      "fallow-report-base-fields",
+      "fallow-ci-contract-diagnostics",
+      "jsdoc-migrate-apply-options",
+      "jsdoc-ratchet-options",
+      "codex-findings-ingest-options",
+      "codex-findings-ingest-command-options",
+      "research-repo-card-options",
+      "aimetrics-install-doctor-options",
+      "aimetrics-install-apply-options",
+      "aimetrics-sources-discover-options",
+      "aimetrics-forwarder-run-options",
+      "agent-effectiveness-doctor-options",
+      "agent-effectiveness-eval-score-options",
+      "agent-effectiveness-eval-scorer-options",
+      "corpus-extract-options",
+      "corpus-organize-record-flags",
+      "files-process-options",
+      "files-sort-rename-summary",
+      "files-archive-poor-options",
+      "files-archive-poor-summary",
+      "files-create-captions-options",
+      "files-image-audit-metadata-presence",
+      "files-image-curation-options",
+      "files-normalize-options",
+      "files-normalize-manifest-options",
+      "files-normalize-summary",
+      "sync-data-target-selection",
+      "tsconfig-workspace-descriptor-presence",
+      "knowledge-ref-classification-input",
+      "knowledge-ref-candidate",
+      "qa-record-overlay-toggles",
+      "qa-harness-env-options",
+      "step-exec-run-captured-options",
+      "text-inline-style-marks",
+      "scan-state-json-lexer-flags",
+      "r2-apps-practice-kg-build-flags",
+      "r2-apps-sidebar-thread-list-phase",
+      "r2-apps-contact-form-submit-phase",
+      "r2-apps-vault-sync-command-busy",
+      "r2-apps-oip-layout-script-gates",
+      "r2-apps-oip-metadata-robots",
+      "r2-apps-ontology-menu-open-current",
+      "id-citation-pincite-inherited",
+      "supra-citation-pincite-inherited",
+      "short-form-case-citation-pincite-inherited",
+      "statutes-at-large-pincite-is-range",
+      "citation-base-in-footnote",
+      "constitutional-citation-preamble",
+      "ontology-document-region-edit-flags",
+      "ontology-sparql-region-run-gates",
+      "openclaw-channel-account-status",
+      "m365-graph-event-flags",
+      "firecrawl-monitor-email-notification",
+      "firecrawl-monitor-search-target-result",
+      "firecrawl-browser-execute-shape",
+      "nlp-mcp-dataset-load-lines-options",
+      "nlp-mcp-text-read-options",
+      "nlp-mcp-text-stream-options",
+      "nlp-mcp-pipeline-process-options",
+      "openai-compat-language-model-config",
+      "r2-foundation-adapter-effect-datetime-caps",
+      "r2-foundation-upload-box-drag-flags",
+      "r2-foundation-date-picker-disabled-open",
+      "r2-foundation-color-picker-disabled-open",
+      "r2-foundation-emoji-picker-disabled-open",
+      "yeet-merge-ready-criteria",
+      "yeet-merge-ready-encoded",
+      "tsconfig-sync-mode-flags",
+      "version-sync-options-check",
+      "r2-tooling-bin-main-fast-paths",
+      "r3-apps-serwist-lifecycle-flags",
+      "vault-sync-move-delta-axes",
+      "practice-kg-source-spec-exists",
+      "document-toolbar-busy-disabled",
+      "duckdb-transaction-began-closed",
+      "pretext-detect-engine-family",
+      "r3-drivers-arch-work-item-config-env-flags",
+      "phoenix-prompt-read-exists",
+      "nlp-mcp-file-info-exists",
+      "venice-sse-done-payload",
+      "r3-foundation-mention-plugin-lookup-phase",
+      "r3-foundation-scribe-connect-latches",
+      "r3-foundation-notification-action-busy",
+      "r3-foundation-calendar-event-card-presence",
+      "r3-foundation-link-preview-url-meta",
+      "r3-tooling-freelaw-extract-latches",
+      "r3-tooling-phoenix-sync-program-options",
+      "r3-tooling-tsconfig-alias-presence",
+      "r3-tooling-jsdoc-worker-section-flags",
+      "r3-tooling-fileoverview-finding-flags",
+      "corpus-organize-category-flags",
+      "tour-state-open-payload",
+      "corpus-legacy-word-terminal",
+      "goals-repair-fork-mode",
+      "goals-migrate-conventions-mode",
+      "goals-set-status-input",
+      "docgen-runpod-template-search-mode",
+      "yeet-ack-resolution-flags",
+      "codex-findings-ingest-force-refresh",
+      "codex-findings-ingest-command-force-refresh",
+      "langextract-minimal-fold-segment-kind",
+      "path-safety-atomic-write-remove-options",
+      "html-standard-global-boolean-attributes",
+      "html-picture-source-sizes-auto",
+      "xml-parser-sdk-flags",
+      "taxonomy-loader-manifest-presence",
+      "identity-property-descriptor-flags",
+      "next-image-config",
+      "tsconfig-compiler-options-export",
+      "ts-node-compiler-options",
+      "repo-package-json",
+      "yeet-monitor-command-route",
+      "yeet-merge-ready-criterion-changed",
+      "yeet-monitor-failed-job-flags",
+      "yeet-inbox-list-options",
+      "version-sync-options-write",
+      "version-sync-options-dry-run",
+      "docgen-tool-configuration-schema",
+      "doctest-cli-config",
+      "goals-bootstrap-input-flags",
+      "goals-manifest-shape-probe",
+      "files-staged-commit-record",
+      "files-match-person-options",
+      "worktree-removal-mode",
+      "r2-apps-hero-clip-playback",
+      "run-ontology-sparql-input-inferred",
+      "dms-mirror-unavailable-retryable",
+      "practice-kg-document-tool-row-truncated",
+      "practice-kg-tool-result-truncated",
+      "neutral-citation-unpublished",
+      "statute-citation-has-et-seq",
+      "regulation-citation-has-et-seq",
+      "r2-foundation-calendar-daypicker-display",
+      "r2-foundation-tabstrip-floating-overflow",
+      "worktree-residue-reason-flags",
+      "html-select-child-grammar",
+      "html-dl-child-grammar",
+      "r2-foundation-retry1-dock-split-visibility",
+      "r2-foundation-retry1-number-input-spin-disabled",
+      "r2-foundation-retry1-cause-redaction-truncation",
+      "r3-apps-pglite-data-dir-probe",
+      "r3-apps-sidecar-devtools-gates",
+      "ontology-infer-session-recompute-latches",
+      "r3-domains-review-dialog-state",
+      "r3-drivers-arch-tool-name-collision-stage-flags",
+      "cosmos-backend-selection-webgl2",
+      "wink-backend-capabilities",
+      "openclaw-channel-probe-wire",
+      "r3-tooling-docker-tag-kind-flags",
+      "r3-tooling-bun-report-drift-flags",
+      "r3-tooling-ecosystem-polarity-specifier-call",
+      "r3-tooling-schema-first-normalization-signals",
+      "r3-tooling-schema-first-fn-eligibility",
+      "r3-tooling-match-person-disposition-facts",
+      "r3-tooling-jsdoc-tsdoc-tag-presence",
+      "r3-tooling-fn-schema-inline-contracts",
+      "r2-apps-ipc-spike-mount-gates",
+      "r2-apps-smoke-practice-kg-options",
+      "r2-apps-mcpb-user-config-required",
+      "r2-domains-ontology-workbench-boolean-atoms",
+      "r2-domains-ontology-graph-fold-flags",
+      "onepassword-cli-account-signed-in",
+      "ai-provider-cli-claude-auth-status-payload",
+      "firecrawl-agent-response-shape",
+      "firecrawl-agent-status-shape",
+      "firecrawl-browser-create-shape",
+      "firecrawl-browser-delete-shape",
+      "firecrawl-browser-list-shape",
+      "obs-request-status-result",
+      "shacl-engine-report-shape",
+      "html-datalist-child-grammar",
+      "html-media-child-grammar",
+      "r2-tooling-config-update-result",
+      "r2-tooling-config-update-batch-result",
+      "r2-tooling-docs-eslint-require-jsdoc-gates",
+      "r2-tooling-docs-eslint-require-node-types",
+      "r2-domains-ontology-graph-worker-requeue-latches",
+      "r2-tooling-packet-transition-stream-trace",
+      "obs-record-state-changed-data",
+      "obs-record-state-changed-event",
+      "r3-foundation-auto-button-command-presence",
+      "r3-foundation-todo-item-presence",
+      "r3-foundation-skill-completion-summary-bindings",
+      "r3-tooling-fleet-liveness-negative-probes",
+      "r3-tooling-goal-doctor-supersession-loci",
+      "r3-tooling-packet-mutation-restore-presence",
+      "r3-tooling-packet-mutation-repair-root-residue",
+      "r3-tooling-registration-deletion-note-phase",
+      "r2-apps-dispatch-turn-confirm-latches",
+      "r2-apps-practice-kg-build-overwrite-phase",
+      "r2-apps-hero-clip-video-media-flags",
+      "r2-apps-vault-sync-connection-busy",
+      "r2-apps-vault-sync-conflicts-list",
+      "r2-apps-renderer-react-grab-gate",
+      "r2-apps-oip-route-instant-flags",
+      "r2-apps-contact-form-html-required",
+      "r2-domains-ontology-auto-open-and-inferred-atoms",
+      "r2-domains-contradiction-queue-and-detail-waiting",
+      "r2-drivers-arch-box-post-apply-verdict",
+      "tool-name-collision-row-truncated-digest",
+      "r2-foundation-unique-match-search",
+      "r2-foundation-html-foreign-entry-flags",
+      "r2-foundation-graph-validation-result",
+      "r3-arch-ecosystem-internal-pg-timestamp-timezone",
+      "chat-timeline-refresh-latch",
+      "wink-token-to-ai-flags",
+      "r3-foundation-attribute-requirement-gates",
+      "effect-import-rules-summary-operation",
+      "effect-import-source-transform-phase",
+      "literalkit-attach-helper-descriptors",
+      "literalkit-readonly-property",
+      "mapped-literalkit-attach-helper-descriptors",
+      "mapped-literalkit-make-directional-kit-readonly-property",
+      "mapped-literalkit-readonly-property",
+      "with-codec-statics-install-on-owned-schema",
+      "with-statics-attach-statics",
+      "struct-from-entries-property-descriptor-flags",
+      "acp-client-protocol-capabilities",
+      "acp-server-protocol-capabilities",
+      "graph-3d-sprite-material-flags",
+      "openclaw-telegram-channel-document-flags",
+      "r3-foundation-tier-gate-tool-hints",
+      "r3-foundation-mermaid-accessible-name",
+      "r3-foundation-mermaid-style-safety",
+      "organization-tenant-placement-bits",
+      "test-tsgo-synthetic-compiler-options",
+      "r2-apps-observability-exporter-gates",
+      "r2-apps-practice-kg-package-rm-opts",
+      "r2-apps-root-layout-suppress-hydration",
+      "r2-apps-oip-nav-image-priority",
+      "r2-apps-dms-mirror-disconnected-bits",
+      "r2-foundation-iri-ipv6-segment-facts",
+      "r2-foundation-dock-ghost-axis-flips",
+      "r2-foundation-static-descriptors-mode",
+      "r2-foundation-typeahead-scroll-listener-options",
+      "r2-foundation-youtube-watch-event-init",
+      "r2-foundation-mermaid-dompurify-profiles",
+      "r2-foundation-mermaid-runtime-config-toggles",
+      "r2-foundation-float-fast-check-options",
+      "r2-foundation-double-fast-check-options",
+      "r3-apps-theme-mode-toggle-hydration",
+      "r3-apps-oip-redirects-permanent",
+      "r3-domains-patent-application-coherence-bits",
+      "r3-foundation-verified-span-source-failure-facts",
+      "r3-foundation-invariant-enforcement-channels",
+      "r3-tooling-envconfig-unresolved-turbo-secrets",
+      "r3-tooling-version-sync-category-filter-gates",
+      "r3-apps-claims-directory-must-exist",
+      "r3-apps-bin-directory-must-exist",
+      "r3-apps-oip-socials-active",
+      "r3-apps-smoke-mkdir-recursive",
+      "r3-apps-oip-about-image-fill",
+      "r3-apps-contact-http-disable-logger",
+      "r3-apps-pglite-mkdir-recursive",
+      "r3-apps-package-assert-archive-force",
+      "r3-apps-build-fs-recursive",
+      "r3-apps-practice-kg-error-include-stack",
+      "r3-tooling-next-compiler-config-transforms",
+      "r3-apps-chat-orchestrator-incremental-metrics",
+      "r3-apps-ontology-orchestrator-incremental-metrics",
+      "r3-apps-intake-orchestrator-incremental-metrics",
+      "r3-apps-vault-sync-orchestrator-incremental-metrics",
+      "r3-apps-tauri-ipc-incremental-metrics",
+      "r3-apps-dispatch-turn-subscribe-immediate",
+      "r3-apps-contradiction-qa-mkdir-recursive",
+      "r3-apps-package-mkdir-recursive",
+      "r3-apps-package-prezip-force",
+      "r3-apps-package-foreach-discard",
+      "r3-apps-theme-mode-toggle-glyph-aria-hidden",
+      "r3-apps-hero-clip-layer-aria-hidden",
+      "r3-apps-oip-social-glyph-aria-hidden",
+      "r3-apps-theme-toggle-glyph-aria-hidden",
+      "r3-apps-app-toaster-rich-colors",
+      "r3-apps-ontology-menu-aria-hidden",
+      "r3-apps-editor-proof-document-markdown-flags",
+      "r3-apps-vault-sync-connection-waiting",
+      "r3-drivers-arch-folder-resolution-blocked-provider",
+      "r3-apps-streaming-inline-text-marks",
+      "practice-kg-closed-world-four-hints",
+      "r3-tooling-attempt-journal-classified-lines",
+      "r3-tooling-pglite-integration-gate-flags",
+      "r3-tooling-lint-tagged-union-pattern-gates",
+      "r3-tooling-yeet-resume-options",
+      "r24-foundation-modeling-rest-link-sizes-issue-flags",
+      "r24-foundation-modeling-rest-recovery-budget-coherence",
+      "r24-foundation-modeling-rest-gate-summary-coherence",
+      "r24-foundation-schema-a-m-file-type-checker-ebml-evidence",
+      "html-img-sizes-disposition",
+      "r24-drivers-a-f-firecrawl-browser-execute-success-error",
+      "r24-drivers-a-f-firecrawl-monitor-search-judge-degraded-reason",
+      "graph-3d-webgl-renderer-flags",
+      "r24-foundation-schema-n-z-parser-options-derived-gates",
+      "r24-foundation-ui-typeahead-combobox-aria-observer",
+      "r24-foundation-ui-tour-overlay-observer",
+      "r24-foundation-ui-orb-webgl-context",
+      "r24-foundation-ui-live-waveform-audio-constraints",
+      "r24-foundation-ui-mermaid-svg-safety",
+      "r24-drivers-n-r-openclaw-channel-account-probe-ok-error",
+      "r24-drivers-n-r-openclaw-agent-turn-aborted-stop-reason",
+      "r24-drivers-n-r-openclaw-agent-meta-wire-aborted-stop-reason",
+      "r24-drivers-s-z-wink-make-token-flags",
+      "r24-drivers-s-z-shacl-validate-result-flags",
+      "r25-foundation-schema-n-z-semver-prerelease-numeric-flags",
+      "html-link-imagesizes-disposition",
+      "r25-drivers-a-f-firecrawl-error-options-retryable",
+      "r25-drivers-a-f-firecrawl-error-options-input-retryable",
+      "r25-drivers-a-f-firecrawl-error-retryable",
+      "r25-drivers-a-f-box-action-base-destructive-provider",
+      "r25-drivers-a-f-box-entitlements-paid-seats",
+      "r25-drivers-a-f-firecrawl-browser-execute-killed-error",
+      "r25-foundation-ui-link-preview-asset-validity",
+      "r25-foundation-ui-toolbar-tooltip-mount",
+      "r25-foundation-ui-upload-dropzone-options",
+      "r25-drivers-n-r-openai-compat-chat-completion-stream-options",
+      "r25-drivers-n-r-stream-state-finished-finish-reason",
+      "r25-drivers-n-r-jsonl-output-truncated-errors",
+      "r25-drivers-n-r-openclaw-gateway-health-wire-ok-plugins",
+      "r25-drivers-n-r-openclaw-secrets-reload-output-ok",
+      "r25-drivers-n-r-runpod-raw-request-authenticated-body",
+      "tabstrip-overflow-disposition",
+      "r25-epistemic-ontology-bounded-shacl-conforms-truncated",
+      "r25-epistemic-ontology-dirty-auto-open-atoms",
+      "r25-epistemic-ontology-validation-result-badges",
+      "r25-shared-documents-dms-mirror-probe-probed-at",
+      "r25-shared-documents-vault-sync-status-probed-at",
+      "r25-law-practice-runtime-bundle-overwrite-gate",
+      "r25-tool-docgen-cli-config-toggles",
+      "r25-tool-docgen-load-args-toggles",
+      "r25-tool-docgen-default-compiler-options",
+      "r25-tool-docgen-example-compiler-overlay",
+      "r25-tool-docgen-cleanup-examples-remove-options",
+      "composer-shell-edit-content",
+      "r25-apps-hero-video-state-playing-element",
+      "r25-apps-streaming-turn-view-active",
+      "r25-apps-vault-sync-connected-syncing",
+      "contained-file-read-outcome",
+      "r25-cli-internal-root-gh-page-info",
+      "r25-cli-internal-root-turbo-env-configured",
+      "sidecar-transport-ipc-token",
+      "r25-cli-commands-a-c-ci-lane-run-dry-run-force",
+      "r25-cli-commands-a-c-create-package-remove-existing-path",
+      "r25-cli-commands-a-c-architecture-ensure-absent-remove",
+      "r25-cli-commands-a-c-findings-write-remove-options",
+      "r25-cli-commands-a-c-findings-refresh-remove-options",
+      "r25-cli-commands-d-k-classify-border-sides",
+      "r25-cli-commands-l-q-coverage-replace-all-scoped",
+      "r25-cli-commands-r-z-notion-query-has-more",
+      "r25-cli-commands-r-z-worktree-list-entry-detached-branch",
+      "r25-cli-commands-r-z-porcelain-accumulator-detached-branch",
+      "r25-cli-commands-r-z-worktree-doctor-entry-detached-branch",
+      "r25-cli-commands-r-z-fleet-checkout-detached-branch",
+      "r25-cli-yeet-pr-session-recording-result",
+      "r25-cli-yeet-shared-options-ci-parity-no-fail-fast",
+      "r25-tooling-library-policy-test-logging-config",
+      "r25-tooling-library-policy-test-route-base-disable-flags",
+      "r25-tooling-library-policy-test-outcome-label-quality-gate",
+      "r25-tooling-library-policy-test-outcome-label-input-quality-gate",
+      "coverage-baseline-write-mode",
+      "yeet-prepared-publish-commit",
+      "ids-statement-presence-kind",
+      "citation-blank-page",
+      "pincite-range-endpoints",
+      "corpus-pst-terminal",
+      "ai-metrics-config-snapshot-bounds",
+      "ai-metrics-canonical-root-kind",
+      "docgen-generation-outcome",
+      "docgen-quality-package-outcome",
+      "docgen-subject-collection-outcome",
+      "docgen-runpod-cleanup-outcome",
+      "docgen-worker-packet-review",
+      "goal-completion-gate-grandfathered-note",
+      "goal-manifest-backfill-grandfathered-note",
+      "goals-packet-migration-kind",
+      "goals-transition-plan-disposition",
+      "worktree-fleet-epoch-target",
+      "worktree-process-cwd-reading",
+      "worktree-idle-reading",
+      "worktree-pr-classification",
+      "worktree-reap-candidate-retirement",
+      "worktree-branch-diff-reading",
+      "worktree-policy-reading",
+      "files-face-detection-presence",
+      "files-border-classification",
+      "files-worker-score-thresholds",
+      "files-image-orientation-state",
+      "files-person-reference-disposition",
+      "tsconfig-workspace-owner-presence",
+      "r26-foundation-ui-activate-panel-reasons",
+      "r26-foundation-ui-upload-dropzone-interaction",
+      "r26-drivers-a-f-firecrawl-sdk-agent-request",
+      "r26-drivers-a-f-browser-session-shape",
+      "r26-drivers-a-f-queue-status-shape",
+      "r26-drivers-n-r-openclaw-gateway-health-ok-plugins",
+      "r26-drivers-n-r-openclaw-telegram-group-intent",
+      "obs-qa-scene-provisioning",
+      "m365-tool-error-retryability",
+      "runtime-activity-payload-kind",
+      "vault-sync-push-failure-disposition",
+      "agents-chat-turn-surface",
+      "r26-epistemic-ontology-review-dialog-open-supersession",
+      "r26-law-practice-domain-ids-filed-same-day-closing-date",
+      "r26-agents-workspace-runtime-evidence-span-presence",
+      "jsdoc-fence-state",
+      "codex-findings-packet-commit-kind",
+      "r26-cli-commands-a-c-cleanup-refresh-staging-exists",
+      "r26-cli-commands-a-c-validate-pst-export-acceptance-gates",
+      "r26-cli-commands-a-c-findings-cleanup-refresh-remove-options",
+      "r26-cli-commands-d-k-seed-snapshot-prior-presence",
+      "r26-cli-internal-root-jsdoc-opener-gates",
+      "r26-apps-sidecar-ipc-ready-latch",
+      "r26-cli-commands-l-q-osv-ignore-expiry",
+      "r26-cli-commands-d-k-docgen-quality-command-scope",
+      "r26-cli-commands-d-k-goals-index-command-mode",
+      "receipt-fallback-draft-occupancy",
+      "package-inventory-docgen-coverage",
+      "r26-cli-yeet-provenance-stamp-lane-status",
+      "create-package-retired-name-reconciliation",
+      "r26-tool-docgen-write-file-exists-overwritable",
+      "r26-cli-commands-a-c-create-package-execute-mutation-flags",
+      "canonical-docgen-examples-compiler-options",
+      "r27-tooling-policy-docs-eslint-file-overview-package-documentation",
+      "r27-cli-commands-a-c-findings-manifest-capability-flags",
+      "r27-cli-commands-a-c-findings-manifest-completion-gate",
+      "r27-cli-commands-a-c-findings-manifest-sanitation",
+      "r27-cli-commands-a-c-ecosystem-package-json-flags",
+      "r27-cli-commands-l-q-fallow-ci-workflow-facts",
+      "r27-cli-commands-l-q-effect-tsgo-readme-parser",
+      "r27-cli-commands-l-q-tsgo-smoke-compiler-options",
+      "r27-cli-commands-r-z-sync-data-target-selection-auth",
+      "r27-cli-commands-d-k-normalize-files-dedupe-move",
+      "r27-cli-commands-d-k-normalize-manifest-dedupe-move",
+      "r27-cli-commands-l-q-github-check-lane-proof-reuse",
+      "r27-tooling-library-observability-outcomes-dataset-scorecard-presence",
+      "r27-tooling-library-observability-config-snapshots-dataset-presence",
+      "r27-boolean-state-foundation-spinner-state",
+      "r27-boolean-state-foundation-use-scribe-result-connected",
+      "r27-boolean-state-foundation-sidebar-context-open-state",
+      "r28-drivers-a-f-exiftool-write-tags-core-remove-options",
+      "r28-drivers-a-f-ffmpeg-with-staging-directory-remove-options",
+      "r28-drivers-a-f-ffmpeg-extract-frames-remove-options",
+      "r28-drivers-a-f-box-runtime-prune-undefined-descriptor",
+      "r28-shared-documents-vault-sync-status-cursor-position",
+      "r28-tooling-library-support-tsmorph-project-options",
+      "r28-tooling-library-support-pglite-container-stop-options",
+      "r28-tooling-library-support-runglob-shared-glob-options",
+      "r28-tooling-policy-jsonc-parse-options",
+      "r28-foundation-modeling-rest-bun-glob-scan-options",
+      "r28-foundation-ui-chart-tooltip-indicator-flags",
+      "r28-foundation-ui-chart-tooltip-default-item-flags",
+      "r28-foundation-ui-chart-tooltip-item-flags",
+      "r28-tooling-library-observability-mechanical-terminal-consistency",
+      "r28-tooling-library-observability-deployment-remote-fields",
+      "r28-tooling-library-observability-witness-resolved-config",
+      "r28-cli-internal-root-tmpfs-discovered-classified-skip",
+      "r28-cli-internal-root-tmpfs-gitfile-remove-options",
+      "r28-cli-internal-root-tmpfs-directory-remove-options",
+      "r28-cli-internal-root-tmpfs-fallow-extras-remove-options",
+      "r28-cli-internal-root-admission-journal-sidecar-remove-options",
+      "r28-cli-commands-a-c-eval-law-lanes-spawn-options",
+      "r28-cli-commands-a-c-preservation-capacity-spawn-options",
+      "r28-cli-commands-a-c-ci-partition-dry-run-spawn-options",
+      "r28-cli-commands-d-k-docgen-quality-worker-eval-source",
+      "r28-cli-commands-d-k-docgen-quality-worker-runpod-eval-source",
+      "r28-cli-quality-coverage-resolved-operation",
+      "r28-cli-quality-test-lane-resolved-selection",
+      "r28-cli-commands-r-z-checkout-entry-facts-detached-branch",
+      "r28-cli-commands-r-z-write-remote-skill-remove-options",
+      "r28-cli-commands-r-z-write-agents-mirror-remove-options",
+      "r28-cli-commands-r-z-run-git-probe-spawn-options",
+      "r28-cli-internal-root-tmpfs-stub-observations",
+      "codex-findings-write-request-options"
+    ]
+  },
+  "changeCounts": {
+    "withdrawn": 21,
+    "added": 44,
+    "replaced": 12,
+    "unchanged": 641
+  },
+  "designChanges": [
+    {
+      "file": "docgen-runpod-template-search-scopes.md",
+      "beforeSha256": null,
+      "sha256": "d5885e708851632dac82b60843c647dc62f25290bc4256b85abd5d78e9c9e837"
+    },
+    {
+      "file": "scheduler-admission-attempt-origin.md",
+      "beforeSha256": "74104e1cae6c4b042790d12227627e03a41924bb9bda2669bb256a56166c3512",
+      "sha256": "c5457febe4493ef97b0fd35716ab7fc9b5cb3c84ff39fa8264ee8aafa1232d29"
+    },
+    {
+      "file": "scheduler-promotion-tick-origin.md",
+      "beforeSha256": "7284a83541a1b774f0aceea117d3b4575a2c882dcb724cdd334b35a4251e647b",
+      "sha256": "3c9efa8b85202eeea306b5e1abd16ef256a05c5dc70715532fb8ceef0c06805e"
+    },
+    {
+      "file": "xai-sse-done-payload.md",
+      "beforeSha256": "0f98b5ef369e49f3c9eb6bc8bf4675c5f21e94afac727a2f383ada61b724f55a",
+      "sha256": "5752f91abbf5ba3f0677fcdbe68a3888233de65ec8bbb2f6029bb34f3e3d451b"
+    },
+    {
+      "file": "yeet-sweep-git-state.md",
+      "beforeSha256": null,
+      "sha256": "d416138c7fdb90d5c81770b3032b70d9395c0e04781b0bcf376f3f0a834d034b"
+    }
+  ],
+  "withdrawnDesigns": ["codegen-kit-cli-mode.md"],
+  "sourceBindings": [
+    {
+      "file": "packages/drivers/obs/src/Obs.models.ts",
+      "sha256": "c03b059ce35aea46ed77d340f9b30ecbcc028e0801851b072b64b2fb7d4e2050"
+    },
+    {
+      "file": "packages/drivers/obs/src/Obs.service.ts",
+      "sha256": "f734404307ddbc9af8ece93d505bec65759ceeecd880bc324717bfd18d04feac"
+    },
+    {
+      "file": "packages/drivers/xai/src/XAi.service.ts",
+      "sha256": "79576b76274219d65ac32ae1bf7e41f1942bc7941f28db576e4d607fc783f277"
+    },
+    {
+      "file": "packages/drivers/xai/src/XAiLanguageModel.service.ts",
+      "sha256": "c4790b593513f0a57107bf7a95fbb0e06d8571b6eab10223c249289f9b587571"
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/Streaming/DatasetLoader.ts",
+      "sha256": "688ea2f12ce41b072e2502343bf0e8a3b137a7660150715e0719945ac76674a6"
+    },
+    {
+      "file": "packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts",
+      "sha256": "76d498171d14f95ad8ae5c58c120846d67f2ca6c2b4d8cdaed506d73f766a3b9"
+    },
+    {
+      "file": "packages/workspace/domain/src/entities/Workspace/Workspace.values.ts",
+      "sha256": "a42e89abe5c179708ff7db3c538a90d36748e08105fcf95aa4b2f262fe86b0b2"
+    },
+    {
+      "file": "packages/agents/domain/src/entities/ProviderInstance/ProviderInstance.values.ts",
+      "sha256": "c1cfa49f01c0c39f16f4875f4c1fc89d0344adc446f8cb24212899211e8fceee"
+    },
+    {
+      "file": "packages/agents/server/src/AssistantTurn/AnthropicTurnCodec.ts",
+      "sha256": "d8f43ce574ae8e1a5c2a55ab658bb26fa8adca6296023d09e26c64ef8f7f3e2f"
+    },
+    {
+      "file": "packages/drivers/graph-3d/src/Graph3D.renderer.ts",
+      "sha256": "ca4efa4c08bb3a9d8cc8b6401521fccfef8064383ea8c37edef79bb9a0f6743e"
+    },
+    {
+      "file": "packages/documents/server/src/aggregates/Sync/DmsMirrorBox.ts",
+      "sha256": "65e0853259518ef77daeacc3ccec4092a06ac10aa103a92843479d4ee7f8a86c"
+    },
+    {
+      "file": "packages/documents/server/src/aggregates/Sync/VaultSyncEngine.service.ts",
+      "sha256": "84550653385405ad90878a7b3bf8d0ebdc1a5790aa6b2063c9e0ec3dbb30d374"
+    },
+    {
+      "file": "packages/documents/server/src/entities/SyncOperation/SyncOperation.repo.ts",
+      "sha256": "f3c5cfd0d2e3aaa65a7de83dfcd75920e4fc4c6de7bd1467abb3e76b819a10e6"
+    },
+    {
+      "file": "packages/shared/domain/src/identity/index.ts",
+      "sha256": "3356eb1f4613bee06b8cc4ad81e0653fbd6e74d07d42d2871338efaa611e6f32"
+    },
+    {
+      "file": "packages/shared/domain/src/values/LocalDate/LocalDate.behavior.ts",
+      "sha256": "8423d91f2a25e83cc26421d1779f95f6038211e30a925df17bde6b346fe9796e"
+    },
+    {
+      "file": "packages/shared/domain/src/values/LocalDate/LocalDate.calendar.ts",
+      "sha256": "af287113e5f7c55bbcf37ea2e4ecc3c04d3f27aeed2849e6f828c7af264b5532"
+    },
+    {
+      "file": "apps/professional-desktop/src/intake/Intake.atoms.ts",
+      "sha256": "06933cdb206075584c6b9d182dffdb0841e7a0b3b60be129c855b81f334740be"
+    },
+    {
+      "file": "apps/professional-desktop/src/runtime/Layer.ts",
+      "sha256": "01e75b4eaf661431969f708e24cd1b4c71c7a993590640a1c02b2bf724752284"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/derived-storage.ts",
+      "sha256": "540e7924a460a7ecbf881fbe9300ea35b249c1f0b1a6dbfeb571858313140f36"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/mirror.ts",
+      "sha256": "076a962201291fba6b2e8534bb7a4471bbb23d5e8959eea2d626b47a1ac2c73f"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/retention.ts",
+      "sha256": "11d4d9a37d0a3142bbed4b192eda88cbe4d69150ad5c652a79245a5b764b561f"
+    },
+    {
+      "file": "packages/tooling/library/codegen-kit/src/CodegenKit.cli.ts",
+      "sha256": "ae51412ffeaf7fed76ce59a6896e3a099561b3b0ca77fa05cde61487e167c5e2"
+    },
+    {
+      "file": "packages/tooling/library/codegen-kit/src/CodegenKit.service.ts",
+      "sha256": "ac5bd26f8e3ea3d54923f40f824ccc474b468cf6a4839d519484776dffdbf86a"
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/src/SessionStore.service.ts",
+      "sha256": "a2be51904f2a22a0bf59e2c36b18d46263f465440d527d1a65d8bc528e615546"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/JSDocTagDefinition.model.ts",
+      "sha256": "3d49f272624baa69d5854548c926d0930d05d2d69d4aac8c586d9a42efee0273"
+    },
+    {
+      "file": "packages/tooling/tool/docgen/src/Checker.ts",
+      "sha256": "b180f70055ff7ca72984fd83ff145f1bcf1400f7d94afcb36437c972c7e9cbc0"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts",
+      "sha256": "5e41922eb1a4052fd130d94cac61ac37c0af6eb4ae7650c04ac56ca9fc480803"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Codex/Findings.command.ts",
+      "sha256": "d23f4a34d977de088cacad6ad54ac15c7f83791759cfac9780132304c6d5a0d0"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Codex/Findings.write.ts",
+      "sha256": "8e10178d1fa0c80e98c6ab8f3bd4292982034ed85c32df7e3444db4c8a5a5f82"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/process/StepExec.ts",
+      "sha256": "cd587a632e7e21fd1e913caaf78619ab8cca8be2ef9a86a514d252354dc1ffad"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/GitExec.ts",
+      "sha256": "1e847870f55068d9eb41bec98d156a9698b4216d5ac7965ed9221027d03596bb"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
+      "sha256": "2a0253141d3ebdadfbe6b8d715012b83cb75c36876ec50969e330e2f03a5da01"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/QualityWorkerRunpodEval.ts",
+      "sha256": "febfc733b28082b43daef844c73d1ea2dac75627f7ce5b368c803573889b5d26"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/quality/Quality.subjects.ts",
+      "sha256": "82ca325dc6881dfe72a4b736993ab417f81c1e21cccc967b8950e652d9cf56d3"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.command-surface.ts",
+      "sha256": "dc01c701ab90a060feddd4585f6f09c65de698940df2d53a652fe4df1ac262a4"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.service.ts",
+      "sha256": "f8ad808e75b04944f5192188642dfca5cdbe971e585742c7ebd85f3fa2138332"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Laws/AllowlistCheck.ts",
+      "sha256": "cdeec7606d804a1cd726168391a5df9d5fcb133c8ecfd616c427193e77a3429a"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+      "sha256": "bbb5754f80877f5692e35560481400ed0f774f457c347aab250407b1c2988e6e"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "sha256": "0a23be1ba3b4956ed6e4a1a767e622d08da590650d39d6f62292186b986f6ab0"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/GithubChecks.ts",
+      "sha256": "51e1c88f7852689317b0f13fa72b346b3490af00a25669d3477203b08aa70688"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/KnipRatchet.ts",
+      "sha256": "892c3b4f5181412a011f6dae1f2ff6bdc10da608bc724bdfae7706af27963cab"
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/resizable.tsx",
+      "sha256": "e14f7337d8b521b417e8d426fe4b58d7a37339a04852f9f6fc1d958108d9088f"
+    },
+    {
+      "file": "packages/drivers/acp/src/AcpProtocol.service.ts",
+      "sha256": "d40d1ae7cd3f2fa08a1450d79c2bf12eb425eef90879e42ef9371bbbd2cb098c"
+    },
+    {
+      "file": "packages/drivers/acp/src/AcpClient.service.ts",
+      "sha256": "4de7d2bfa67ecac781852d9663d117686316e6f285fad41f80726f1094efd6bf"
+    },
+    {
+      "file": "packages/drivers/acp/src/AcpAgent.service.ts",
+      "sha256": "77b2ebe107883442ea9b2987ece19d11fb63f6718aee106ad29bfc286f1aa6ac"
+    },
+    {
+      "file": "node_modules/react-resizable-panels/dist/react-resizable-panels.d.ts",
+      "sha256": "1524f0130d0d299fee642580758b16ee5642ea371238f5bd53317b69daac9e12"
+    },
+    {
+      "file": "node_modules/@types/react/index.d.ts",
+      "sha256": "814d5c7384f3ca276e9dc4bcfde5545801a3ea0bfae09916b3336774e662fd1b"
+    }
+  ],
+  "rawReportBindings": [
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-agents-workspace.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-apps.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-architecture-ecosystem-internal.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-cli-commands-a-c.jsonl",
+      "sha256": "6a3a044c31bfddadec18708987f7dbd95102233ecef0057ac8bd8a9aaf1e8117"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-cli-commands-d-k.jsonl",
+      "sha256": "460c4d9f103dc0cbceebcf69a15cf7f22de24c91fbb6ba5241627eb5ec2dad69"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-cli-commands-l-q.jsonl",
+      "sha256": "52c3d24586196ef1d321814a29150b95d31d372a7f7440468ab00b17f88baaef"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-cli-commands-r-z.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-cli-internal-root.jsonl",
+      "sha256": "1a080e4db6c84effc92e4e79c1d173655945d2a8dc448fe911c427faa16f8462"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-cli-yeet.jsonl",
+      "sha256": "2b75de67e4ab81d1e26c264fcad8a4145b5d4867c1f6470757500b55792159c8"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-drivers-a-f-correction.jsonl",
+      "sha256": "773a77e099a19d29f522ac245ef0e9e04c9de72a1323e55bd50be87f4b241beb"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-drivers-a-f.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-drivers-g-m.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-drivers-n-r.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-drivers-s-z.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-epistemic-ontology.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-foundation-capability.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-foundation-modeling-rest.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-foundation-primitive.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-foundation-schema-a-m.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-foundation-schema-n-z.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-foundation-ui-correction.jsonl",
+      "sha256": "afcdd4cd8fcd8802916cf3f18ffe0d4fe8abd6c19768fd558525c06ec7cb0841"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-foundation-ui.jsonl",
+      "sha256": "88eb939af5d5ac5e31ba6a073d2c239afb98f90c8cc4da983894ae4ce292ac43"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-law-practice-domain.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-law-practice-runtime.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-shared-documents.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-tool-docgen.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-tooling-library-observability.jsonl",
+      "sha256": "224b2cf21cab7ccc6232cb2d15a10628fa6b5bdca8a2603d484fec7a57cd9f44"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-tooling-library-support.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-tooling-policy.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "newQualified": [
+    "docgen-runpod-template-search-scopes",
+    "yeet-sweep-git-state"
+  ],
+  "boundedCorrectionIds": [
+    "r29-foundation-ui-correction-resizable-handle-props",
+    "acp-patched-protocol-options",
+    "acp-client-options",
+    "acp-client-child-process-options",
+    "acp-agent-options",
+    "acp-agent-layer-options",
+    "r29-acp-client-constructed-protocol-options",
+    "r29-acp-agent-constructed-protocol-options"
+  ],
+  "schedulerSourceBindings": {
+    "head": "1c07c15495aaa42f521b887b01e943e68804606c",
+    "main": "3657f8f97f7135c53c3c0b9fa99aa19093c3e5ee",
+    "previousMain": "5fc065daff16300b8435eca3f32d55564664f57c",
+    "files": [
+      {
+        "file": "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts",
+        "beforeSha256": "06085119bc1e5815aff385be0aa24ed074bf6a459fd54a0984442fb7dd1e66d5",
+        "currentSha256": "987b70f1316c7ac05a4c7ee5c7f6eb3348cddc15cf32dd1c747cadcbfa5c1aa6",
+        "headEqualsMainEqualsWorking": true
+      },
+      {
+        "file": "packages/tooling/tool/cli/test/quality-scheduler.test.ts",
+        "beforeSha256": "ab77d80d9292f509db382d5ea87f0c4db4fc474b84e7b5e2720811639441ab1c",
+        "currentSha256": "a2bbff5a2a14fe3be085dfbfa99e3280f6b2d627b8415405e0c38fef62ab9982",
+        "headEqualsMainEqualsWorking": true
+      },
+      {
+        "file": "packages/tooling/tool/cli/src/internal/repo-run/ProcessIdentity.ts",
+        "beforeSha256": "521d4f4c52e24ed9077222eabc45ba61767257285df42dcd959b8f4956dda356",
+        "currentSha256": "521d4f4c52e24ed9077222eabc45ba61767257285df42dcd959b8f4956dda356",
+        "headEqualsMainEqualsWorking": true
+      },
+      {
+        "file": "packages/tooling/tool/cli/test/process-identity.test.ts",
+        "beforeSha256": "2eb6f53eda15715e30ced552c24971ddd7bdf63722629d583f5f31f0439edc16",
+        "currentSha256": "2eb6f53eda15715e30ced552c24971ddd7bdf63722629d583f5f31f0439edc16",
+        "headEqualsMainEqualsWorking": true
+      },
+      {
+        "file": "packages/tooling/tool/cli/src/internal/repo-run/AdmissionJournal.ts",
+        "beforeSha256": "7c3fd36bcf64ba5ea8f2ab472a8d137911333737326370a2345f55313ab8c429",
+        "currentSha256": "7c3fd36bcf64ba5ea8f2ab472a8d137911333737326370a2345f55313ab8c429",
+        "headEqualsMainEqualsWorking": true
+      },
+      {
+        "file": "packages/tooling/tool/cli/src/internal/repo-run/index.ts",
+        "beforeSha256": "8700650d67f60eeebdbc9830b1f47c415fcd80d26b2d51e0c6d0b4314079934a",
+        "currentSha256": "8700650d67f60eeebdbc9830b1f47c415fcd80d26b2d51e0c6d0b4314079934a",
+        "headEqualsMainEqualsWorking": true
+      },
+      {
+        "file": "packages/tooling/tool/cli/src/test/RepoRun.test-kit.ts",
+        "beforeSha256": "88affd301f15a26a60bc1aa7d9fc6bb6a43dab0fcfb35a437ab6d28a6e5f5f8f",
+        "currentSha256": "88affd301f15a26a60bc1aa7d9fc6bb6a43dab0fcfb35a437ab6d28a6e5f5f8f",
+        "headEqualsMainEqualsWorking": true
+      },
+      {
+        "file": "packages/tooling/tool/cli/package.json",
+        "beforeSha256": "5ed96d77de203949878f319238078633506324ab7c38060065b735041f2b2a69",
+        "currentSha256": "5ed96d77de203949878f319238078633506324ab7c38060065b735041f2b2a69",
+        "headEqualsMainEqualsWorking": true
+      },
+      {
+        "file": "goals/boolean-creep/designs/scheduler-admission-attempt-origin.md",
+        "currentSha256": "74104e1cae6c4b042790d12227627e03a41924bb9bda2669bb256a56166c3512"
+      },
+      {
+        "file": "goals/boolean-creep/designs/scheduler-promotion-tick-origin.md",
+        "currentSha256": "7284a83541a1b774f0aceea117d3b4575a2c882dcb724cdd334b35a4251e647b"
+      },
+      {
+        "file": "goals/boolean-creep/GOAL.md",
+        "currentSha256": "560a143a9a389f361a14c08d15818ab7fb988be6b85f4f403ee17cb64f2d188d"
+      },
+      {
+        "file": "goals/boolean-creep/SPEC.md",
+        "currentSha256": "9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087"
+      },
+      {
+        "file": "goals/boolean-creep/DECISIONS.md",
+        "currentSha256": "e6851a394568acf774d51b2d840635b8f4fbee200dd346d26bc82dbef624ea8d"
+      },
+      {
+        "file": "goals/boolean-creep/README.md",
+        "currentSha256": "8165384a531fe380c27b18c5e9df332ad8eb604065e728555c45fafc51f8fa18"
+      },
+      {
+        "file": "goals/boolean-creep/PLAN.md",
+        "currentSha256": "a397b8b5d1765d3ccd1b46a9f4ce138cf8c1752cfc866d245a9ae0774cc5d350"
+      },
+      {
+        "file": "goals/boolean-creep/ops/manifest.json",
+        "currentSha256": "18eca71ecc71e30246c6b43dc55829ea4890ec43ace483eab7ff26d256212e38"
+      },
+      {
+        "file": "goals/boolean-creep/data/inventory.jsonl",
+        "currentSha256": "5700ee53292787d2f80f3ef622513414495376c2b9eaa3aa163f2fee88ce85a3"
+      },
+      {
+        "file": "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts",
+        "beforeSha256": "88cc300876a7169ae905ad357fd645461b1acdfaf282114cbcd247c4fdea0e81",
+        "currentSha256": "88cc300876a7169ae905ad357fd645461b1acdfaf282114cbcd247c4fdea0e81",
+        "headEqualsMainEqualsWorking": true
+      },
+      {
+        "file": "packages/tooling/tool/cli/src/internal/repo-run/JournalFile.ts",
+        "beforeSha256": "9898265b4b2a1003478078f639fbff51a48fd9b118fc0ca24966d307c974eb55",
+        "currentSha256": "9898265b4b2a1003478078f639fbff51a48fd9b118fc0ca24966d307c974eb55",
+        "headEqualsMainEqualsWorking": true
+      }
+    ]
+  },
+  "schedulerProgressDrift": [
+    {
+      "file": "goals/boolean-creep/README.md",
+      "agentSha256": "8165384a531fe380c27b18c5e9df332ad8eb604065e728555c45fafc51f8fa18",
+      "parentSha256": "4610f7864930435b61011d3bee86c7742b405cad60eec6ea40a462e8b007e126",
+      "disposition": "Parent progress updates; no source, contract, row or design change."
+    },
+    {
+      "file": "goals/boolean-creep/PLAN.md",
+      "agentSha256": "a397b8b5d1765d3ccd1b46a9f4ce138cf8c1752cfc866d245a9ae0774cc5d350",
+      "parentSha256": "3a9c919ed53da6d2b79625b30cfe899ebaa46deef251f627358439a2ec553352",
+      "disposition": "Parent progress updates; no source, contract, row or design change."
+    }
+  ],
+  "nativeCorrectionNotes": [
+    "Toolbar type is optional, contrary to the raw correction prose; no eligible pair is created by its local multiple projection.",
+    "Resizable selected raw three-field cluster is valid D1; seven inherited pure-Boolean HTML/React members are now explicitly included. ARIA/Booleanish passthroughs create no local correlation.",
+    "Two concrete ACP protocol-construction objects are distinct D1 owners; conforming to a named interface does not exempt actual object-literal owners."
+  ],
+  "unresolved": [
+    "SweepGitState ancestry/localTip and unreliable-worktree/path neighboring contracts"
+  ],
+  "dryCredit": false,
+  "independentP3Approval": false,
+  "productSourceWritten": false,
+  "installedAt": "2026-09-09T12:06:13.345071+00:00",
+  "inputInventory": "goals/boolean-creep/history/inventory/2026-09-09-r29-parent-before.jsonl",
+  "outputInventory": "goals/boolean-creep/history/inventory/2026-09-09-r29-parent-after.jsonl",
+  "designArchive": "goals/boolean-creep/history/designs/2026-09-09-r29-parent",
+  "structuralValidation": {
+    "inventory": "inventory OK: 697 records, 697 unique ids",
+    "designs": "design coverage OK: 140 qualified ids",
+    "scope": "The actual packet validators passed against the staged projection. This is structural validation only, not full Yeet verification or current-main census credit."
+  },
+  "qualifiedEvidence": "Parent source adjudication and per-instance native P2 bundles; independent P3 remains pending.",
+  "originMainAdvance": "Fresh tracking main advanced to c12c6ae651a3facc3f6e6a5190fd84670ef8a014 after the bounded runs. This installation retains verified 1c07/3657 source evidence; a forward merge and impact audit precede the next census or formal verification."
+}
