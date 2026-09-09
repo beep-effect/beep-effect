@@ -233,3 +233,61 @@
   while the owning `uv` process remains alive (its temporary environment is removed
   when that process exits).
   A committed-byte check needs no new tool installation or machine trust change.
+
+## 2026-09-08: `scheduler reap` describes a dry-run it cannot run
+
+- **Work:** draining six `pending-protocol-off` reap claims after publishing the
+  protocol v2 marker (Stage B grill, Ruling 20).
+- **Evidence:** `bun run beep quality scheduler reap` prints a description that
+  says "dry-run by default" and a flag help text of "default: dry-run report",
+  then exits 1 with `Missing required flag: --apply`. Only the mutating form runs.
+- **Cost:** one failed invocation and a blind apply; the operator could not
+  preview which dead leases and tickets would replay into eviction rows before
+  mutating the machine-wide admission root.
+- **Prevention:** give the boolean flag an explicit `false` default so the
+  dry-run report is the real default, or drop the dry-run wording from both
+  descriptions; a regression test invoking the command without the flag would
+  have caught the drift (`reapAdmissionState({ apply: false })` already exists).
+
+## 2026-09-08: Stage B checkout had graft wiring without its graph
+
+- **Work:** retrieving the required generator and scheduler context before implementation.
+- **Evidence:** `graft map` exited 1 with `no graph — run graft build first`.
+- **Prevention:** provision the regenerable graph with a newly prepared lane, or
+  check its presence in the lane handoff. Rebuilt locally before code retrieval.
+
+## 2026-09-08: Stage B synthetic checkout labels omitted the withdrawn contender
+
+- **Work:** matching the Stage B consumer to the PR-1 producer before the live pin.
+- **Evidence:** the producer's `checkoutB` is a separate `contender-b` root and its
+  expected chain is enqueued then withdrawn. The consumer brief names only the
+  three checkouts with exported attempt directories.
+- **Prevention:** distinguish checkout roots observed in journal rows from
+  exported attempt directories in the handoff contract. The consumer preserves
+  a fourth `contender-b` token without inventing an attempt directory.
+
+## 2026-09-08: packet validation requires more than the generator's Python environment
+
+- **Work:** running the packet validator after Stage B implementation.
+- **Evidence:** the generator's PyYAML-only environment exited with
+  `ModuleNotFoundError: No module named 'rdflib'` before validation started.
+- **Prevention:** document the packet validator's dependency set separately from
+  the standalone generators. Retried with its declared script dependencies.
+
+## 2026-09-08: copied manifest inventory exemption was broader than one file
+
+- **Work:** checking Stage B's whole-tree verifier before committing its first capture.
+- **Evidence:** the copied inventory predicate excluded every file named
+  `MANIFEST.yaml`, so an unlisted nested manifest could evade the file-set check.
+- **Prevention:** exempt only the root manifest's exact path. Added a regression
+  for an extra nested manifest. The Stage B generator changes and its fleet pin
+  is refreshed after tests; the frozen generators remain untouched.
+
+## 2026-09-08: a negative credential fixture tripped the commit scanner
+
+- **Work:** committing the Stage B generator, tests, and pins.
+- **Evidence:** pre-commit gitleaks rejected `test_run3b_generator.py` under
+  `generic-api-key`; the match was the invented assignment in a residue-rejection
+  test, not captured machine material.
+- **Prevention:** construct the negative assignment at test runtime. The scanner
+  remains enabled; the generator and pinned payloads do not change.
