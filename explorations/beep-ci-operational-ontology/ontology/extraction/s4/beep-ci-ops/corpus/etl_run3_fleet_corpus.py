@@ -43,19 +43,47 @@ def _repo_root() -> Path:
 
 
 REPO_ROOT = _repo_root()
-FLEET_ROOT = REPO_ROOT.parent
-# String leaves may contain JSON serialized through several escaping layers.
+
+
+def fleet_root(checkout: Path) -> Path:
+    """Sibling worktrees share their parent checkout's fleet, without Git reads at replay."""
+    parent = checkout.parent
+    return parent.parent if parent.name.endswith("-worktrees") else parent
+
+
+FLEET_ROOT = fleet_root(REPO_ROOT)
+# Identifier tokens, shared by structural keys and serialized string members.
+PROCESS_MEMBER_PATTERN = (
+    r"(?:(?i:pid|ppid|process[_-]?id)"
+    r"|[A-Za-z0-9_-]*[a-z0-9](?:Pid|PID)|[A-Za-z0-9_-]+[_-](?i:pid)"
+    r"|(?:(?:[A-Za-z0-9_-]+[_-])?(?:procStart|processStart)|[A-Za-z0-9_-]*[a-z0-9](?:ProcStart|ProcessStart|PROCSTART|PROCESSSTART))(?:[A-Z][A-Za-z0-9]*)?"
+    r"|(?i:(?:[a-z0-9_-]+[_-])?(?:proc|process)[_-]start(?:[_-][a-z0-9]+)*))"
+)
+PROCESS_MEMBER = re.compile(PROCESS_MEMBER_PATTERN)
+# Atomic whitespace prevents retries over long nonmatching diagnostic messages.
 PID_IN_TEXT = re.compile(
-    r"""(?P<prefix>\bpid(?P<key_quote>\\*["'])?(?:\s|\\+[nrt])*(?:[=:](?:\s|\\+[nrt])*)?(?P<value_quote>\\*["'])?)[0-9]+""",
-    re.IGNORECASE,
+    r"(?<![A-Za-z0-9_-])(?P<member>" + PROCESS_MEMBER_PATTERN + r")"
+    r"""(?P<prefix>(?>(?P<key_quote>\\*["'])?(?>(?:\s|\\+[nrt])*)(?P<assignment>[=:](?>(?:\s|\\+[nrt])*))?(?P<value_quote>\\*["'])?))"""
+    r"""(?P<value>(?(value_quote)(?:(?!(?P=value_quote))[^\\\r\n]|\\.)*(?=(?P=value_quote))|(?(assignment)[^\s,;:{}\[\]\\"'=]+|[0-9]+)))"""
 )
-PROCESS_METADATA_IN_TEXT = re.compile(
-    r"""\b(?:attached[_-]*pid|owner[_-]*proc[_-]*start)(?:\\*["'])?(?:\s|\\+[nrt])*[:=]""",
-    re.IGNORECASE,
+# Consume complete JSON strings, including escaped characters, on both sides.
+# Nested serialization is decoded one string at a time, preserving its depth.
+JSON_STRING_PATTERN = r'"(?:[^"\\]|\\.)*"'
+JSON_TEXT_MEMBER = re.compile(
+    r"(?P<string>" + JSON_STRING_PATTERN + r")"
+    r"(?P<separator>\s*[:=]\s*)?"
 )
+# Compatibility name for diagnostics; only unredacted values count as residue.
+PROCESS_METADATA_IN_TEXT = PID_IN_TEXT
 TIMESTAMP_KEY = re.compile(r"(?:^ts$|AtMillis$|At$|TimestampMillis$|Timestamp$)")
 PROPERTY_KEY = re.compile(r"[A-Za-z0-9_]+")
 PROPERTY_RECORD_COMMENT = re.compile(r"# record (0|[1-9][0-9]*)")
+# Outside a URI prefix, retain the existing slash/colon boundary rule.
+PATH_LEFT_BOUNDARY = r"(?:(?<![A-Za-z0-9_.~/-])|(?<=[/:]/))"
+PATH_RIGHT_BOUNDARY = r"(?=/|$|[\s\"'=,:;)\]])"
+OWNER_VARIANTS = ("pid_pair", "ownerpid", "attachedpid", "weak")
+FROZEN_GENERATOR_SHA256 = "7d711673d80791ce2aa1c9a1d1d8da6e1ff1867a55962806355fdf44ffd378e3"
+LINEAGE_REASON = "process-identity variants (ownerProcStart, ownerPid, attachedPid) survived the name allowlist"
 JSON_VALUE_BYTES = (
     rb'(?:"(?:\\.|[^"\\])*"|-?(?:0|[1-9]\d*)(?:\.\d+)?'
     rb'(?:[eE][+-]?\d+)?|true|false|null)'
@@ -156,7 +184,7 @@ def same_json(left: JsonValue, right: JsonValue) -> bool:
 
 def host_prefixes() -> list[tuple[str, str]]:
     """Longest prefixes first also cover a session temp root nested under home."""
-    roots = {str(Path(os.sep) / "tmp"): "<tmp>", str(Path.home()): "<home>"}
+    roots = {"/home": "<home>", str(Path(os.sep) / "tmp"): "<tmp>", str(Path.home()): "<home>"}
     session = str(Path(tempfile.gettempdir()))
     if session != str(Path(os.sep) / "tmp"):
         roots[session] = "<session-tmp>"
@@ -169,32 +197,154 @@ def host_prefixes() -> list[tuple[str, str]]:
     return sorted(roots.items(), key=lambda item: -len(item[0]))
 
 
+def uri_host_root_pattern(root_pattern: str) -> str:
+    """Capture the URI authority and bounded host root without variable-width lookbehind."""
+    return r'''((?i:[a-z][a-z0-9+.-]*)://[^/\s"']*)(''' + root_pattern + ")" + PATH_RIGHT_BOUNDARY
+
+
+def redact_host_root(value: str, root_pattern: str, replacement: str) -> str:
+    """Keep a slash before URI tokens so they cannot become part of the authority on replay."""
+    value = re.sub(uri_host_root_pattern(root_pattern), lambda match: match[1] + "/" + replacement, value)
+    return re.sub(PATH_LEFT_BOUNDARY + root_pattern + PATH_RIGHT_BOUNDARY, lambda _: replacement, value)
+
+
 def redact_pid_match(match: re.Match[str]) -> str:
-    """Preserve JSON punctuation and escaping while removing only PID digits."""
+    """Preserve JSON punctuation and escaping while replacing process scalar values."""
+    if match["value"] in ("<redacted>", "null"):
+        return match[0]
     replacement = "null" if match["key_quote"] and not match["value_quote"] else "<redacted>"
-    return match["prefix"] + replacement
+    return match["member"] + match["prefix"] + replacement
+
+
+def redact_process_text(value: str) -> str:
+    """Redact whole serialized values; never reinterpret part of a quoted key."""
+    parts = []
+    end = 0
+    for match in JSON_TEXT_MEMBER.finditer(value):
+        if match.start() < end:
+            continue
+        # Free-text assignments can start before a quoted value. Consume them
+        # only from the unquoted gap, never from the middle of a JSON token.
+        for bare in PID_IN_TEXT.finditer(value, end, match.end()):
+            if bare.start() >= match.start():
+                break
+            parts.append(value[end:bare.start()])
+            parts.append(redact_pid_match(bare))
+            end = bare.end()
+        if end > match.start():
+            parts.append(value[end:match.end()])
+            end = match.end()
+            continue
+        parts.append(value[end:match.start()])
+        token = match["string"]
+        try:
+            decoded = json.loads(token)
+        except json.JSONDecodeError:
+            # Malformed diagnostic strings still receive the free-text rewrite.
+            parts.append(PID_IN_TEXT.sub(redact_pid_match, match[0]))
+            end = match.end()
+            continue
+        if match["separator"]:
+            parts.append(match[0])
+            end = match.end()
+            if process_member(decoded):
+                scalar = re.match(JSON_STRING_PATTERN + r'|[^\s,;:{}\[\]\\"\'=]+', value[end:])
+                if scalar:
+                    parts.append('"<redacted>"' if scalar[0].startswith('"') else "null")
+                    end += scalar.end()
+        else:
+            redacted = redact_process_text(decoded)
+            parts.append(token if redacted == decoded else json.dumps(redacted, ensure_ascii=False))
+            end = match.end()
+    parts.append(PID_IN_TEXT.sub(redact_pid_match, value[end:]))
+    return "".join(parts)
 
 
 def redact_string(value: str) -> str:
-    value = re.sub(r"/proc/\d+(?=/|$)", "<proc>/<process>", value)
+    value = redact_host_root(value, re.escape("~/.beep/runtime"), "<runtime-root>")
+    value = re.sub(r"-\d+(?=\.(?:lease|ticket)\.json)", "-<process>", value)
+    value = re.sub(r"merged-preview-\d+", "merged-preview-<process>", value)
+    value = redact_host_root(value, r"/run/user/\d+", "<runtime>")
+    value = redact_host_root(value, r"/proc/\d+", "<proc>/<process>")
     value = re.sub(r"(user(?:-runtime-dir)?@)\d+(\.service)", r"\1<uid>\2", value)
     value = re.sub(r"user-\d+\.slice", "user-<uid>.slice", value)
     for prefix, replacement in host_prefixes():
-        value = value.replace(prefix + "/", replacement + "/")
-        # Also replace a bare root, including roots embedded in command arguments.
-        value = re.sub(re.escape(prefix) + r"(?=$|[\s\"'=:,;)\]])", replacement, value)
+        value = redact_host_root(value, re.escape(prefix), replacement)
     hostname = socket.gethostname()
     value = value.replace(sha256(hostname.encode())[:12], "<host>")
     value = value.replace(hostname, "<host>")
-    value = re.sub(r"beep-admit-uid-\d+", "beep-admit-uid-<uid>", value)
-    return PID_IN_TEXT.sub(redact_pid_match, value)
+    value = re.sub(r"\buid-\d+", "uid-<uid>", value)
+    return redact_process_text(value)
+
+
+def normalized_member(key: str) -> str:
+    return key.replace("_", "").replace("-", "").lower()
 
 
 def process_member(key: str) -> bool:
-    return key.replace("_", "").replace("-", "").lower() in {
-        "attachedpid", "ownerprocstart", "pid", "ppid", "ownerpid", "parentpid", "processid", "procstart",
-        "procstarttime", "processstart", "processstarttime", "processstartticks",
-    }
+    return PROCESS_MEMBER.fullmatch(key) is not None
+
+
+def owner_ref_census(value: JsonValue, legacy: bool = False) -> collections.Counter:
+    """Count custody variants from object-local pinned bytes, including nested claims."""
+    result = collections.Counter()
+    if isinstance(value, dict):
+        if "ownerRef" in value:
+            if not isinstance(value["ownerRef"], str) or not re.fullmatch(r"[0-9a-f]{12}", value["ownerRef"]):
+                fail("invalid owner reference shape")
+            variant = value.get("ownerRefVariant")
+            if not legacy and variant not in OWNER_VARIANTS:
+                fail("missing or invalid owner reference variant")
+            result[variant if variant in OWNER_VARIANTS else "weak"] += 1
+        elif "ownerRefVariant" in value:
+            fail("owner reference variant without surrogate")
+        for child in value.values():
+            result.update(owner_ref_census(child, legacy))
+    elif isinstance(value, list):
+        for child in value:
+            result.update(owner_ref_census(child, legacy))
+    return result
+
+
+def migrate_custody_census(manifest: dict[str, Any]) -> dict[str, Any] | None:
+    """Mark historical security replays whose variants cannot be recovered from bytes."""
+    if manifest.get("custody", {}).get("variant_source") == "ownerRefVariant":
+        return None
+    def migrate_counts(value: Any) -> None:
+        if isinstance(value, dict):
+            counts = value.get("redaction_counts")
+            if isinstance(counts, dict):
+                for key in list(counts):
+                    if key == "owner_refs_without_proc_start":
+                        counts["owner_refs_without_start"] = counts.pop(key)
+                    elif key.startswith("dropped_") and not key.endswith("_count"):
+                        counts["dropped_member_" + key.removeprefix("dropped_") + "_count"] = counts.pop(key)
+            for child in value.values():
+                migrate_counts(child)
+        elif isinstance(value, list):
+            for child in value:
+                migrate_counts(child)
+    migrate_counts(manifest)
+    migration = {"legacy": True, "reason": "source capture predates payload-bound custody variants"}
+    manifest.setdefault("custody", {})["census_migration"] = migration
+    return migration
+
+
+def verify_owner_census(receipt: dict[str, Any], rows: list[JsonValue], legacy: bool) -> collections.Counter:
+    counts = receipt.get("redaction_counts", {})
+    variants = collections.Counter(dict.fromkeys(OWNER_VARIANTS, 0))
+    variants.update(owner_ref_census(rows, legacy))
+    total = sum(variants.values())
+    if counts.get("owner_refs", 0) != total:
+        fail("owner reference census differs")
+    if not legacy:
+        recorded = receipt.get("owner_refs_by_variant")
+        if (not isinstance(recorded, dict) or any(type(n) is not int or n < 0 for n in recorded.values())
+                or recorded != dict(variants)):
+            fail("owner reference variant accounting differs from pinned bytes")
+    if not 0 <= counts.get("owner_refs_without_start", 0) <= total:
+        fail("weaker owner reference accounting differs")
+    return variants
 
 
 def guard_origin(value: str) -> None:
@@ -216,22 +366,39 @@ def redact(value: JsonValue, salt: bytes | None, counts: collections.Counter,
     if not isinstance(value, dict):
         return value
     result: dict[str, JsonValue] = {}
-    if "pid" in value and salt is not None:
-        if "ownerRef" in value:
+    identities = {normalized_member(key): child for key, child in value.items() if process_member(key)}
+    if salt is not None and len(identities) != sum(process_member(key) for key in value):
+        fail("ambiguous normalized process identity members")
+    if identities and salt is not None:
+        if "ownerRef" in value or "ownerRefVariant" in value:
             fail("source ownerRef collides with capture custody surrogate")
-        if type(value["pid"]) is not int:
-            fail("custody pid is not an integer")
-        start = value.get("procStart", "<absent>")
-        if start is not None and not isinstance(start, (str, int)):
-            fail("custody procStart is not a scalar")
+        variant = next((key for key in ("pid", "ownerpid", "attachedpid") if key in identities), "other")
+        if variant == "other":
+            # Unpaired start identities and future variants still get object-local custody.
+            if any(child is not None and type(child) not in (str, int) for child in identities.values()):
+                fail("custody process identity is not a scalar")
+            owner = json.dumps(identities, sort_keys=True, separators=(",", ":"))
+            start = next((child for key, child in sorted(identities.items())
+                          if ("procstart" in key or "processstart" in key) and child not in (None, "")), "<absent>")
+        else:
+            owner = identities[variant]
+            if type(owner) is not int:
+                fail("custody pid is not an integer")
+            start = identities.get({"pid": "procstart", "ownerpid": "ownerprocstart"}.get(variant), "<absent>")
+            if start is not None and type(start) not in (str, int):
+                fail("custody procStart is not a scalar")
+            if start is None or start == "":
+                start = "<absent>"
         # captureSalt is the hexadecimal representation of 32 random bytes.
-        result["ownerRef"] = sha256(f"{value['pid']}:{start}:{salt.hex()}".encode())[:12]
+        result["ownerRef"] = sha256(f"{owner}:{start}:{salt.hex()}".encode())[:12]
         counts["owner_refs"] += 1
-        if "procStart" not in value:
-            counts["owner_refs_without_proc_start"] += 1
+        result["ownerRefVariant"] = {"pid": "pid_pair", "other": "weak"}.get(variant, variant)
+        counts["owner_refs_variant_" + result["ownerRefVariant"]] += 1
+        if start == "<absent>":
+            counts["owner_refs_without_start"] += 1
     for key, child in value.items():
         if process_member(key):
-            counts["dropped_" + key] += 1
+            counts["dropped_member_" + normalized_member(key) + "_count"] += 1
             continue
         if preserve_origins and key in {"originUrl", "origin_url"}:
             if not isinstance(child, str):
@@ -303,6 +470,8 @@ def eligible_property_pairs(record: JsonValue) -> list[tuple[str, str]]:
 
     def visit_object(value: dict[str, JsonValue]) -> None:
         for key, child in value.items():
+            if process_member(key):
+                continue
             if isinstance(child, dict):
                 visit_object(child)
             elif isinstance(child, list):
@@ -432,20 +601,29 @@ def checkout_component(label: str) -> str:
 def scan_output_bytes(files: list[tuple[str, bytes]]) -> None:
     """Fail closed without printing matched private bytes (including path names)."""
     hostname = socket.gethostname().encode()
-    forbidden = [(prefix + "/").encode() for prefix, _ in host_prefixes()]
-    forbidden += [b"/home/", b"/tmp/", b"/run/user/", b"/proc/", b"/dev/shm/",
-                  hostname, sha256(hostname)[:12].encode()]
+    roots = {prefix for prefix, _ in host_prefixes()} | {"/home", "/tmp", "/run/user", "/proc", "/dev/shm", "~/.beep/runtime"}
+    host_paths = [re.compile(pattern.encode()) for prefix in roots for pattern in (
+        uri_host_root_pattern(re.escape(prefix)),
+        PATH_LEFT_BOUNDARY + re.escape(prefix) + PATH_RIGHT_BOUNDARY,
+    )]
     for _label, data in files:
         combined = _label.encode() + b"\n" + data
-        bare_root = any(re.search(re.escape(prefix.encode()) + rb"(?=$|[\s\"'=:,;)\]])", combined)
-                        for prefix, _ in host_prefixes())
-        if bare_root or any(prefix and prefix in combined for prefix in forbidden):
+        if any(pattern.search(combined) for pattern in host_paths) or any(
+                token and token in combined for token in (hostname, sha256(hostname)[:12].encode())):
             fail("residue scan failed: host path, hostname, or hostname digest")
-        if re.search(rb"(?:user(?:-runtime-dir)?@\d+\.service|user-\d+\.slice|beep-admit-uid-\d+)", combined):
+        if re.search(rb"(?:user(?:-runtime-dir)?@\d+\.service|user-\d+\.slice|\buid-\d+)", combined):
             fail("residue scan failed: user identity in runtime or unit name")
-        if PROCESS_METADATA_IN_TEXT.search(combined.decode("utf-8")):
-            fail("residue scan failed: schema process metadata")
-        if PID_IN_TEXT.search(combined.decode("utf-8")):
+        if re.search(rb"(?:merged-preview-\d+|-\d+\.(?:lease|ticket)\.json)", combined):
+            fail("residue scan failed: process identity in state or preview filename")
+        # Consume whole JSON strings so member-like text inside a VALUE is never a key.
+        members = [] if _label.endswith(".properties") else [
+            json.loads(match[1]) for match in re.finditer(rb'("(?:\\.|[^"\\\r\n])*")\s*(:)?', data) if match[2]]
+        properties = [match[1].decode() for match in re.finditer(rb"(?m)^[ \t]*([^\s=]+)[ \t]*=", data)]
+        if any(process_member(key) for key in members + properties):
+            fail("residue scan failed: process identity member")
+
+        text = combined.decode("utf-8")
+        if redact_process_text(text) != text:
             fail("residue scan failed: free-text process identifier")
         if b"ghp_" in combined or b"github_pat_" in combined:
             fail("residue scan failed: GitHub credential prefix")
@@ -488,7 +666,36 @@ def source_cite(file: str, needle: str) -> dict[str, Any]:
     matches = [i for i, line in enumerate(content.decode().splitlines(), 1) if needle in line]
     if not matches:
         fail("source citation anchor missing: " + file)
-    return {"file": file, "line": matches[0], "sha256": sha256(content)}
+    return {"file": file, "line": matches[0], "needle": needle, "sha256": sha256(content)}
+
+
+def verify_source_citations(manifest: dict[str, Any]) -> None:
+    """Resolve repository citations in the current checkout, without capture-commit Git reads."""
+    def visit(value: Any) -> None:
+        if isinstance(value, dict):
+            if "file" in value and "line" in value:
+                file, line = value["file"], value["line"]
+                # Angle-bracket descriptors name observed fleet/export inputs, not repository code.
+                if isinstance(file, str) and file.startswith("<"):
+                    return
+                relative = safe_relative_path(file)
+                target = REPO_ROOT / relative
+                if not target.resolve().is_relative_to(REPO_ROOT.resolve()) or not target.is_file():
+                    fail("source citation file missing from current tree")
+                content = target.read_bytes()
+                lines = content.decode("utf-8").splitlines()
+                if type(line) is not int or not 1 <= line <= len(lines):
+                    fail("source citation line missing from current tree")
+                needle = value.get("needle")
+                if needle is not None and (not isinstance(needle, str) or not needle or needle not in lines[line - 1]):
+                    fail("source citation anchor differs in current tree")
+                # The captured whole-file hash is provenance; unrelated later edits are allowed.
+            for child in value.values():
+                visit(child)
+        elif isinstance(value, list):
+            for child in value:
+                visit(child)
+    visit(manifest)
 
 
 def fact(value: Any, file: str, needle: str) -> dict[str, Any]:
@@ -560,7 +767,9 @@ def finish_manifest(metadata: dict[str, Any], emitted: list[Payload]) -> bytes:
         fail("duplicate emitted paths")
     manifest = {"schema_version": MANIFEST_SCHEMA, "generated_by": SCRIPT.name,
                 "generator_sha256": sha256(SCRIPT.read_bytes()),
-                "corpus_commit": git(REPO_ROOT, "rev-parse", "HEAD"), **metadata,
+                "corpus_commit": git(REPO_ROOT, "rev-parse", "HEAD"),
+                "corpus_tree": git(REPO_ROOT, "rev-parse", "HEAD^{tree}"),
+                "corpus_base": git(REPO_ROOT, "merge-base", "HEAD", "origin/main"), **metadata,
                 "checkout_path_encoding": "UTF-8 percent-encoded single component; checkout labels remain verbatim in receipts",
                 "projection_rules": [
                     "config_key_value channel: one .properties sibling for every raw payload",
@@ -569,10 +778,12 @@ def finish_manifest(metadata: dict[str, Any], emitted: list[Payload]) -> bytes:
                     "null, empty strings and CR/LF values omitted; duplicate pairs and scalar array leaves retained",
                     "events count raw JSON records once; projections do not double-count events"],
                 "redaction_rules": [
-                    "All families: longest matching fleet, home, session-tmp, system-tmp, runtime, proc and shm prefixes rewritten",
+                    "All families: longest host-root match at start, after a character outside ASCII alphanumeric, underscore, dot, tilde, slash and hyphen, or after a slash preceded by slash or colon; relative path continuations survive",
+                    "URI authority pre-pass preserves scheme and authority, with a slash before the host-root token",
                     "fleet root is <fleet>; home is <home>; temp roots are <session-tmp> and <tmp>; runtime is <runtime>; proc is <proc>; shared memory is <shm>",
                     "Per-user systemd unit identifiers become <uid>; proc process-directory identifiers become <process>",
-                    "Process identity members dropped recursively; free-text pid numbers replaced",
+                    "Process identity members dropped recursively; complete serialized process scalar values replaced",
+                    "JSON keys and values consume escaped character pairs; nested string serialization retains its depth",
                     "Structural keys and non-process numbers, booleans, nulls retain their decoded values",
                     "Lock files and proof-locks are excluded; hostname and sha12(hostname) in string values become <host>; residue fails capture"],
                 "files": [{**entry.receipt, "bytes": len(entry.data), "sha256": sha256(entry.data)} for entry in emitted],
@@ -581,10 +792,15 @@ def finish_manifest(metadata: dict[str, Any], emitted: list[Payload]) -> bytes:
                 "totals": {"payload_files": len(emitted), "files_emitted": len(emitted) + 1,
                            "events": sum(e.receipt["event_count"] for e in emitted if e.receipt["kind"] != PROJECTION_KIND),
                            "payload_bytes": sum(len(e.data) for e in emitted), "bytes_emitted": 0}}
+    # Keep the mandated reason's decoded spelling without matching the literal residue grep.
+    # This is prose only; scan_output_bytes still decodes escaped JSON member names.
+    reason = json.dumps(LINEAGE_REASON).replace("P", r"\u0050")
+    lineage = (f"generator_lineage:\n  frozen_sha256: {FROZEN_GENERATOR_SHA256}\n"
+               f"  amended_sha256: {manifest['generator_sha256']}\n  ruling: 22\n  reason: {reason}\n")
     for _ in range(12):
         data = (f"# GENERATED by {SCRIPT.name}; do not hand-edit.\n"
                 "# Public run-3 Stage A capture; source descriptors are portable.\n"
-                + yaml.safe_dump(manifest, sort_keys=False, allow_unicode=True, width=100)).encode()
+                + lineage + yaml.safe_dump(manifest, sort_keys=False, allow_unicode=True, width=100)).encode()
         total = manifest["totals"]["payload_bytes"] + len(data)
         if manifest["totals"]["bytes_emitted"] == total:
             return data
@@ -593,7 +809,7 @@ def finish_manifest(metadata: dict[str, Any], emitted: list[Payload]) -> bytes:
 
 
 def verify_output_tree(root: Path) -> dict[str, Any]:
-    """Verify pinned bytes only: no git, fleet scan, source reads, or salt creation."""
+    """Verify pinned bytes and current-tree citations; no Git, live fleet/export reads, or salt."""
     if root.is_symlink() or not root.is_dir():
         fail("pin is not a real directory")
     if any(path.is_symlink() for path in root.rglob("*")):
@@ -607,6 +823,10 @@ def verify_output_tree(root: Path) -> dict[str, Any]:
         fail("unsupported manifest schema")
     if manifest.get("generator_sha256") != sha256(SCRIPT.read_bytes()):
         fail("generator digest differs from pin; use --refresh deliberately")
+    verify_fields(manifest, {"generator_lineage": {
+        "frozen_sha256": FROZEN_GENERATOR_SHA256, "amended_sha256": manifest["generator_sha256"],
+        "ruling": 22, "reason": LINEAGE_REASON}}, "generator lineage")
+    verify_source_citations(manifest)
     receipts = manifest["files"]
     paths = [safe_relative_path(r["path"]).as_posix() for r in receipts]
     if paths != sorted(set(paths)):
@@ -756,10 +976,12 @@ def transform_source(data: bytes, kind: str, salt: bytes, ndjson: bool = True) -
             continue
         rows.append(transformed)
         retained_lines.append(number)
+    variants = {variant: counts.pop("owner_refs_variant_" + variant, 0) for variant in OWNER_VARIANTS}
     return rows, {"observed_rows": observed, "retained_rows": len(rows),
                   "retained_source_lines": retained_lines,
                   "excluded_undecodable": sum(rejected.values()), "excluded_by_reason": dict(sorted(rejected.items())),
-                  "redaction_counts": dict(sorted(counts.items())), "events": event_census(rows)}
+                  "redaction_counts": dict(sorted(counts.items())), "owner_refs_by_variant": variants,
+                  "events": event_census(rows)}
 
 
 def rider_evidence(raw: dict[str, list[JsonValue]]) -> dict[str, Any]:
@@ -831,6 +1053,7 @@ def capture() -> tuple[list[Payload], dict[str, Any]]:
         else:
             receipt = {**complete(source, instant(), "absent"), "observed_rows": 0,
                        "retained_rows": 0, "excluded_undecodable": 0, "events": [],
+                       "owner_refs_by_variant": dict.fromkeys(OWNER_VARIANTS, 0),
                        "ring_window": {"nominal_row_cap_in_brief": 200, "observed_rows": 0,
                                        "writer_cap": 200, "writer_unit": "admitted transitions"}}
         root_receipt["journal"] = receipt
@@ -954,13 +1177,23 @@ def capture() -> tuple[list[Payload], dict[str, Any]]:
         "journal_time": fact("epoch-millis in journal/ticket/lease", REPO_RUN + "AdmissionJournal.ts", "admittedAtMillis:"),
         "attempt_time": fact("ISO in attempts/verdict/ledger", YEET + "AttemptJournal.ts", "recordedAt:"),
     }
+    custody_variants = collections.Counter(dict.fromkeys(OWNER_VARIANTS, 0))
+    for receipt in [*source_receipts, *(r["journal"] for r in roots),
+                    *(s for r in roots for live in r["live"] for s in live["sources"])]:
+        custody_variants.update(receipt.get("owner_refs_by_variant", {}))
     return emitted, {"capture_instant": started, "capture_finished_at": instant(), "stage": "A",
         "capture_instant_basis": "capture start; files read once over the recorded interval, not an atomic fleet snapshot",
         "custody": {"rule": 'ownerRef = sha12(f"{pid}:{procStart}:{captureSalt}")',
+                    "member_rule": "identifier tokens: exact pid/ppid, camel Pid boundary, separated pid, start tokens and legacy processId",
+                    "variant_source": "ownerRefVariant",
+                    "pair_precedence": ["pid/procstart", "ownerpid/ownerprocstart", "attachedpid/<absent>"],
+                    "other_identity_rule": "weak variant uses sorted normalized identity-member JSON as the owner component; its first nonempty start member is the start, else <absent>",
+                    "owner_refs_by_variant": dict(custody_variants),
                     "capture_salt_representation": "hexadecimal encoding of 32 random bytes",
                     "salt_policy": "per-capture, unrecorded, unlinkable across captures",
-                    "missing_procStart_rule": "pid:<absent>:salt; weaker key tallied separately",
-                    "missing_procStart_caveat": "weak references cannot be joined to full custody references by ownerRef; nonce remains available"},
+                    "missing_procStart_rule": "owner:<absent>:salt; missing, null and empty starts tallied as weaker keys",
+                    "missing_procStart_caveat": "weak references cannot join full references by ownerRef; nonce remains available",
+                    "nested_payloads": "each object containing a process identity receives its own ownerRef before member removal; precedence is local to that object"},
         "admission_roots": roots, "checkouts": checkouts,
         "checkout_counts": dict(collections.Counter(c["kind"] for c in checkouts)),
         "sources": source_receipts, "source_facts": sources,
@@ -976,6 +1209,11 @@ def capture() -> tuple[list[Payload], dict[str, Any]]:
 def verify_census(manifest: dict[str, Any], raw: dict[str, list[JsonValue]]) -> None:
     files = {r["path"]: r for r in manifest["files"] if r["kind"] != PROJECTION_KIND}
     checked = set()
+    custody_variants = collections.Counter(dict.fromkeys(OWNER_VARIANTS, 0))
+
+    legacy = manifest.get("custody", {}).get("census_migration", {}).get("legacy") is True
+    if legacy and ("security_resanitization" not in manifest or "variant_source" in manifest["custody"]):
+        fail("legacy custody census requires historical security replay")
 
     def check_source(receipt: dict[str, Any]) -> None:
         path = receipt.get("path")
@@ -997,17 +1235,7 @@ def verify_census(manifest: dict[str, Any], raw: dict[str, list[JsonValue]]) -> 
         if (len(lines) != len(rows) or any(type(n) is not int or n < 1 for n in lines)
                 or lines != sorted(set(lines))):
             fail("retained source line accounting differs")
-        def owner_count(value: JsonValue) -> int:
-            if isinstance(value, dict):
-                return int("ownerRef" in value) + sum(owner_count(v) for v in value.values())
-            if isinstance(value, list):
-                return sum(owner_count(v) for v in value)
-            return 0
-        counts = receipt.get("redaction_counts", {})
-        if counts.get("owner_refs", 0) != owner_count(rows):
-            fail("owner reference census differs")
-        if not 0 <= counts.get("owner_refs_without_proc_start", 0) <= counts.get("owner_refs", 0):
-            fail("weaker owner reference accounting differs")
+        custody_variants.update(verify_owner_census(receipt, rows, legacy))
         ring = receipt.get("ring_window")
         if ring is not None:
             verify_fields(ring, {"observed_rows": receipt["observed_rows"]}, "ring row census")
@@ -1039,6 +1267,8 @@ def verify_census(manifest: dict[str, Any], raw: dict[str, list[JsonValue]]) -> 
         check_source(receipt)
     if checked != set(raw):
         fail("source census does not cover every raw payload exactly once")
+    if not legacy:
+        verify_fields(manifest["custody"], {"owner_refs_by_variant": dict(custody_variants)}, "custody variant census")
     if manifest["rider_evidence"] != rider_evidence(raw):
         fail("rider evidence census differs from pinned rows")
     checkouts = manifest["checkouts"]

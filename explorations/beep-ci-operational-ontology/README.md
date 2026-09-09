@@ -21,6 +21,22 @@ the "bush" (`A_LETTER_FROM_THE_OTHER_SIDE_OF_THE_LOOP.md`).
 
 ## Next Open Question
 
+PR #1040's URI-authority and escaped-quote follow-ups are complete locally in
+both generators. All three pins were recaptured once after both fixes; the
+84-test generator suite and corpus/packet checks pass. Fable reviews and
+publishes the committed handoff before run 3 proper. Ruling 22 and the accepted
+live-count convention still apply. See the
+[URI-authority report](./research/run3-lanes/reconcile-1037-report.md#uri-authorities-greptile-round-2).
+Ruling 23 repairs the ratified run-2 fleet pin in place: 29 raw files now use
+`<host>` and `uid-<uid>` placeholders, with capture history and the original
+security receipt preserved. Reconciliation with PR #1037 retains both CSF-013
+updates and appends the Ruling 23 receipt after them. PR #1041 review fixes make replay
+host-independent and idempotent, bind the extra transformations to Ruling 23, and align
+UID scanning with preserved structural JSON keys. All payloads and security receipts
+remain unchanged by these review fixes. The implementation and evidence are in the
+[run-2 repair report](./research/run3-lanes/run2-residue-repair-report.md).
+Fable owns review and publication after #1040; run 3 remains the next ontology step.
+
 CSF-012 in [PR #1032](https://github.com/beep-effect/beep-effect/pull/1032)
 corrects PID redaction in the saved run-2 and run-3 corpus pins. The security
 repair preserves captured history and prior-manifest digests; it does not
@@ -67,10 +83,10 @@ question now asks for the SeatRequest sequence under its governing
 `AdmissionProjectionSpecification`, with the step's literal `hasScopeTag` (a distinct
 data property — the no-punning ruling keeps `hasScope` an object property), and the S6
 predicate registry regenerated to track it.
-**NEXT: publish Stage B after the synthetic fixture PR, then run 3 proper.**
+**NEXT: Fable reviews and publishes the URI-authority and escaped-quote handoff before run 3 proper.**
 Stage A PINNED 2026-09-08 in `run3-fleet/` and `run3-checkout-identity/`:
 existing admission journals, fleet attempts/verdicts, live granted/queued work,
-and one timestamped checkout inventory. The fleet pin covers 89 checkouts; the
+and one timestamped checkout inventory. The latest Ruling 22 fleet refresh covers 97 checkouts; the
 inventory binds 107 after the review-fix refresh, including registered worktrees outside the required run-file
 globs. The failure-signature occurrence rider is present; cache-plan execution
 resolution and proof-ledger issuance rows are absent. Stage B is now pinned in
@@ -79,7 +95,10 @@ run 4 under Ruling 17. S7 emission v2 supplies the ordering-cluster evidence;
 S8 stays deferred. Stage B proof is in [the report](./research/run3-lanes/stage-b-report.md).
 The review-fix lane has replaced both pins with encoded output paths, stricter
 receipt checks, and runtime redaction; Fable owns publication and PR replies.
-Current proof is in [the review-fix report](./research/run3-lanes/stage-a-review-fixes-report.md).
+Current fleet and synthetic proof is in
+[the #1037 reconciliation report](./research/run3-lanes/reconcile-1037-report.md).
+The producer spec is tree-resident after #1033; #1032 and #1037 are merged into the follow-up.
+Checkout-identity proof remains in [the prior review-fix report](./research/run3-lanes/stage-a-review-fixes-report.md).
 Historical capture details and the original lane handoff are in
 [the Stage A report](./research/run3-lanes/stage-a-report.md); the orchestrator
 committed and published the pin (the implementation lane's sandbox could not
@@ -150,6 +169,47 @@ loop-closer) → S8 OWL 2 RL + SHACL formalization, rules compilation → S9 dog
 graduation. Full plan with locked decisions: [`DECISIONS.md`](./DECISIONS.md).
 
 ## Trail
+
+- 2026-09-09: Committed the URI boundary fix and merged #1037. All three live
+  refreshes pass pin verification, exact corruption restoration, and residue
+  scans; packet validation and the CQ suite pass. Final re-pin handoff awaits
+  the missing Ruling 23, the lineage-script exception, and acceptance of live
+  failure-pair deltas (Stage A 1864; Stage B 1754). See
+  [the #1037 report](./research/run3-lanes/reconcile-1037-report.md).
+- 2026-09-09: Reconciled the residue follow-up with #1032 through a merge commit.
+  Both redaction fixes and test suites survive; source-cited Stage B step-ID
+  exceptions restore the failure joins. Fresh Stage A: 1914 payloads / 1915 files,
+  7869 events; Stage B fleet: 734 / 735, 7279 events; synthetic: 8 / 9, 10 events.
+  Both organic captures cover 94 checkouts with 289 admission rows. All five pins
+  verify; 58 generator tests, packet validation, and the CQ suite pass. Three
+  refreshed pins pass corruption/restore and empty residue scans. Fable owns
+  review/publication. See [the reconciliation report](./research/run3-lanes/reconcile-1032-report.md).
+
+- 2026-09-09: Stage A fleet residue remediated under Ruling 22. Mirrored Stage B's
+  normalized process-member custody and bounded host-root scans, with source-cited
+  step-ID exceptions preserving the failure rider. Refreshed 95 checkouts,
+  287 admission rows, 1914 payloads / 1915 files; all residue scans pass.
+  Checkout identity and both Stage B pins remain unchanged. Fable owns publication
+  of the combined follow-up; run 3 proper remains next.
+  See [the residue report](./research/run3-lanes/stage-a-residue-report.md).
+
+- 2026-09-09: Stage B review fixes after merged PR #1034: normalized process-identity
+  redaction and custody variants, bounded host-root matching, and verified synthetic
+  termination joins. Refreshed fleet: 94 checkouts, 275 admission rows,
+  732 payloads / 733 files; synthetic: 8 payloads / 9 files.
+  Proof-ledger issuance stays re-parked to run 4. Stage A residue needs a separate ruling.
+  See [the review-fix report](./research/run3-lanes/stage-b-review-fixes-report.md).
+- 2026-09-09: completed PR #1041 G1/G2 and Additional findings X1–X4 locally.
+  Run-2 has 14 passing regressions; all 38 unchanged #1037 tests pass. The additional
+  fixes change only the generator digest in the corpus manifest, retaining every
+  payload and security receipt. See [the repair report](./research/run3-lanes/run2-residue-repair-report.md).
+  Fable owns publication.
+
+- 2026-09-09: Ruling 23 repairs hostname-digest and UID residue in the ratified
+  run-2 fleet pin through committed-source replay. Exactly 29 raw files and the
+  manifest change; all 794 projections remain identical after regeneration.
+  Capture history, custody references, and the CSF-012 receipt are preserved.
+  See [the repair report](./research/run3-lanes/run2-residue-repair-report.md).
 
 - 2026-09-09: CSF-012 fixes quoted and escaped PID redaction in all four corpus
   generators, including Stage B added by #1034. A staged repair sanitizes 35 raw
@@ -473,3 +533,17 @@ graduation. Full plan with locked decisions: [`DECISIONS.md`](./DECISIONS.md).
 - 2026-09-08: recorded the operator's Astra/xhigh routing update in DECISIONS,
   this resume surface, and manifest timestamps where needed; retained the existing
   stage, lifecycle, open questions, and historical execution provenance.
+
+- 2026-09-09: PR #1040 round-2 fixes and three final captures completed locally;
+  custody counts now bind to payload variants, citations resolve in the current
+  tree, and the full corpus/packet verification is recorded in the reconciliation
+  report. Fable owns review and publication.
+
+- 2026-09-09: PR #1040 URI-authority and round-3 escaped-quote findings fixed in
+  both generators; three pins recaptured once, with 84 passing generator tests
+  and corpus/packet proof. The reconciliation report records current counts and
+  hashes. Fable retains publication and review ownership.
+- 2026-09-09: merged main after #1037 into the run-2 repair branch, preserved its
+  process-metadata checks and both CSF-013 receipts, and replayed Ruling 23 from
+  the committed main pin. Only 29 raw files plus the manifest differ from main;
+  see the reconciliation section of the run-2 repair report. Fable owns publication.

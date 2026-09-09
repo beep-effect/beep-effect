@@ -1032,3 +1032,50 @@ records the spec's file sha256 and merges after PR-1 so the cited path exists
 on main. Rejected: one bundled PR (Greptile goes blind past 500 files, leaving
 the spec to the Codex connector alone) and stacked PRs (required checks skip
 until the base merges).
+
+## 2026-09-09 — post-merge residue ruling (one ruling, steward: Benjamin)
+
+Raised after PR #1034 merged ahead of its Codex review. The review found that the
+Stage B redactor's process-identity allowlist never knew the attempt-journal and
+run-scope field names, so `ownerProcStart` (60 files), `attachedPid` (4) and
+`ownerPid` (1) survived in `run3b-fleet/`; the same audit of the merged Stage A pin
+found `ownerProcStart` in 52 files and `ownerPid` in 1 of `run3-fleet/`. Both pins
+are on `main`. Ruling 3 had frozen the Stage A pin and its self-pinning generator
+byte-for-byte.
+
+**Ruling 22 — residue law outranks pin immutability until ratification.** A pin
+that no ratification sitting has consumed may be refreshed when it violates the
+public-repo residue law (Ruling 11's custody surrogate exists precisely so that raw
+process identities never reach the tree). `etl_run3_fleet_corpus.py` is amended
+with the rule-based process-member detection and the path-boundary host-root
+matching that the Stage B fixes introduce, `run3-fleet/` is re-pinned under the
+amended generator (new salt, new capture instant, new self-pinned sha), and both
+generator digests — frozen `7d711673d80791ce2aa1c9a1d1d8da6e1ff1867a55962806355fdf44ffd378e3`
+and the amended one — are recorded in the run3-fleet manifest and here. The run-2
+generator and `run2-fleet/` stay untouched (they carry no such field). The refresh
+lands in the same follow-up PR as the Stage B fixes, after #1033, so the synthetic
+pin's producer digest cites a tree-resident spec. Rider recorded the same night: the
+steward's security PR #1032 (CSF-012, quoted and escaped JSON keys bypassing PID
+redaction) had already amended all four generators on `main` and byte-repaired 35
+raw files across the run-2, Stage A, and Stage B fleet pins, so the run-2 generator
+is no longer byte-frozen either; the follow-up PR merges `main` in and re-pins the
+refreshed corpora under the merged generators, and manifests record generator
+lineage rather than a single frozen digest from here on. Rejected: a corrected sibling pin
+beside the leaking one (leaves the residue in the tree) and accepting the fields as a
+known quasi-identifier class (contradicts Ruling 11).
+## 2026-09-09 — ratified-pin repair ruling (one ruling, steward: Benjamin)
+
+Raised when the reconciliation lane for the Ruling 22 follow-up applied the newer
+residue diagnostics to the untouched run-2 fleet pin on `main`: 29 files carry the
+hostname digest and `uid-<n>` tokens inside quoted proof-lock directory names. The
+run-2 generator never scanned those classes, so its own verifier passes.
+
+**Ruling 23 — ratified pins are repaired in place, never refreshed.** Auditor run 2
+ratified against `run2-fleet/`, so Ruling 22's refresh path does not apply. Residue
+found later in a ratified pin is repaired byte-for-byte under the repair mechanics
+PR #1032 introduced (`--source-ref` replay, generator-provenance check), recorded as
+a `security_resanitization` entry naming the classes and this ruling, with capture
+history, custody references, every unaffected byte, and the ratification chain
+untouched. It lands as its own PR after #1040. Rejected: folding it into #1040
+(mixes a ratified repair with un-ratified refreshes in an already large PR) and
+accepting the class as ratified residue (contradicts the public-repo law).

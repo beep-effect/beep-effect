@@ -3,7 +3,7 @@
   "base": "origin/main",
   "branch": "codex/complexity-ceiling-burn-down-p0",
   "committed": false,
-  "createdAt": "2026-09-09T03:11:49.271Z",
+  "createdAt": "2026-09-09T03:25:45.795Z",
   "failurePolicy": "fail-fast",
   "head": "3a5f52d669cd6fdb93ee2035485833e1a7d20e86",
   "lanes": [
@@ -30,12 +30,12 @@
   "packetPaths": [],
   "pushed": false,
   "runId": "codex_complexity-ceiling-burn-down-p0-8bb14622ea08",
-  "attemptId": "e9797d61-b700-4a6a-95e6-fca6fc679f0a",
+  "attemptId": "e46bd417-fdec-4643-ba82-dde437c46766",
   "resolvedHeadSha": "3a5f52d669cd6fdb93ee2035485833e1a7d20e86",
-  "diffFingerprint": "96a296d224f285c67bee93c30f8a309157f0daa35dc5b87e410b78630a09cfc7",
+  "diffFingerprint": "bf03b8493d882f2b76b9fdd45b4abbb3c5809a2c49a2fc2f395437383ba45719",
   "proofTier": "full",
-  "startedAt": "2026-09-09T03:11:42.381Z",
-  "endedAt": "2026-09-09T03:11:49.271Z",
-  "elapsedMs": 6891,
+  "startedAt": "2026-09-09T03:25:40.604Z",
+  "endedAt": "2026-09-09T03:25:45.795Z",
+  "elapsedMs": 5191,
   "indexPath": "<fleet>/beep-effect11/.beep/yeet/quality-issue-index.json"
 }

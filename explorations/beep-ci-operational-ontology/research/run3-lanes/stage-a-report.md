@@ -390,3 +390,84 @@ Before that commit, update the pending-commit sentences in this report and the
 packet mirrors to reflect the resumed lane. Record the actual implementation
 SHA in the follow-up report, then rerun the HEAD-based knowledge gates.
 Publishing remains with Fable; this implementation lane did not push or open a PR.
+
+## Residue remediation (Ruling 22, 2026-09-09)
+
+Ruling 22 authorizes this fleet-only replacement before ratification. Checkout
+identity remains on its existing pin. The generator mirrors Stage B's process
+identity, custody, and path-boundary fixes, including generic UID redaction.
+Source-cited exceptions preserve execution `stepId` and `failedStepId` fields;
+they are not process identities despite their normalized suffix.
+
+The final capture starts `2026-09-09T06:09:24.473Z` and finishes
+`2026-09-09T06:09:32.388Z` (UTC). It covers 22 clones and
+73 linked worktrees, 95 checkouts total.
+The pin has **1,914 payloads / 1,915 files**, including
+one deterministic `.properties` projection per raw payload, **7,863 source
+records**, 15,953,615 payload bytes, and 18,738,757 bytes including the manifest.
+Excluded undecodable rows/files: 0. Observed proof ledgers: 0.
+
+| Raw family | Files | Source records |
+| --- | ---: | ---: |
+| admission | 2 | 287 |
+| attempts | 360 | 6981 |
+| live | 4 | 4 |
+| verdict | 591 | 591 |
+
+| pid pair | owner pair | attached identity | Other identities | Weak start keys |
+| ---: | ---: | ---: | ---: | ---: |
+| 291 | 235 | 2 | 0 | 123 |
+
+Total minted owner references: 528. The per-source variant counts
+sum to the manifest custody census and to retained `ownerRef` occurrences. Variant
+identity and weak-key counts are capture observations; raw members and salt cannot
+be recovered at replay. The verifier checks variant keys, nonnegative integer
+counts, per-source sums, aggregate sums, and weak-key bounds.
+
+Frozen generator SHA-256:
+`7d711673d80791ce2aa1c9a1d1d8da6e1ff1867a55962806355fdf44ffd378e3`.
+
+Amended generator SHA-256:
+`a428cf71b8c385d5cba7430aa755b0d7fe579b131976587ee83475cba6e6785e`.
+
+Whole-tree SHA-256, including the manifest:
+`798be15c800daf3a163bf011ddcdbd61c2e5baf4d826b1705b38b64a9ad1794f`.
+
+Previous committed fleet whole-tree SHA-256:
+`c9b8a20bf095bf1e47a5629ae8b02c34ef6c6138650fdda63120c9e17438385b`.
+
+Tree hashes sort relative POSIX file names. For each file, hash its UTF-8 name and
+contents, each preceded by its length as an 8-byte big-endian unsigned integer.
+The generator lineage records both generator digests, Ruling 22, and the exact
+required reason after YAML decoding.
+
+Final serial verify → corrupted byte → restore exits: **0 → 1 → 0**.
+Restoration reproduced the complete pre-corruption tree hash. The corruption
+appended `corrupted=fixture` to one fleet `.properties` payload and restored its
+original bytes in `finally`; the failure was a SHA-256/byte-count mismatch.
+
+The full built-in scan passed names and contents. Both independent scans below
+returned exit 1 with **empty output**. A separate scan found **zero hostname or
+SHA-12 hostname matches**, without printing those values.
+
+```sh
+packet=explorations/beep-ci-operational-ontology
+corpus="$packet/ontology/extraction/s4/beep-ci-ops/corpus"
+grep -rlE 'attachedPid|ownerProcStart|ownerPid|"pid"' "$corpus/run3-fleet"
+rg -l --pcre2 '(?<![A-Za-z0-9_.~/-])(?:/home/|/tmp/|/run/user/|/proc/|/dev/shm/|~/.beep/runtime)|\buid-[0-9]+|\bpid[ =:]?[0-9]+' \
+  "$corpus/run3-fleet"
+```
+
+The required lineage reason names the removed fields as prose. Its YAML scalar
+uses `\u0050` for their capital P so the exact decoded value and the literal grep
+requirement both hold. No payload member is hidden this way: the process-member
+scanner decodes escaped JSON keys, with a rejecting regression.
+
+The failure-signature rider retains 1898 structured occurrences. The cache-plan
+rider and proof ledgers remain absent. All 25 generator tests pass. Packet
+validation reports 0 blockers / 0 warnings; all 25 CQ seed tests and 20 fixtures
+pass. Protected generators, all other pins, and `DECISIONS.md` are byte-unchanged.
+
+The full census, source citations, deviations, and committed-head proof are in
+[the residue remediation report](./stage-a-residue-report.md). Earlier sections
+of this report describe their recorded captures and do not supersede this one.

@@ -37,12 +37,14 @@ import {
   pipe,
 } from "effect";
 import * as A from "effect/Array";
+import * as Bool from "effect/Boolean";
 import { constant, dual, flow } from "effect/Function";
 import * as HS from "effect/HashSet";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
+import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import {
@@ -219,7 +221,8 @@ const encodePromotionTransition = S.encodeUnknownEffect(S.fromJsonString(Admissi
 
 const GIB = 1024 * 1024 * 1024;
 const MEMINFO_PATH = "/proc/meminfo";
-const recoveryRecordSettlementWindow = Duration.millis(25);
+const recoveryRecordSettlementWindow = Duration.seconds(5);
+const recoveryRecordSettlementPollInterval = Duration.millis(25);
 const textEncoder = new TextEncoder();
 
 /**
@@ -978,11 +981,11 @@ const recoveryRecordRemainsAfterSettlement = Effect.fnUntraced(function* (
   recoveryPath: string
 ): Effect.fn.Return<boolean, never, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
-  if (!(yield* fs.exists(recoveryPath).pipe(Effect.orElseSucceed(constant(true))))) {
-    return false;
-  }
-  yield* Effect.sleep(recoveryRecordSettlementWindow);
-  return yield* fs.exists(recoveryPath).pipe(Effect.orElseSucceed(constant(true)));
+  // A healthy owner may need several seconds to finish its sinks on a loaded runner.
+  return yield* Effect.repeat(fs.exists(recoveryPath).pipe(Effect.orElseSucceed(constant(true))), {
+    until: Bool.not,
+    schedule: Schedule.spaced(recoveryRecordSettlementPollInterval),
+  }).pipe(Effect.timeout(recoveryRecordSettlementWindow), Effect.orElseSucceed(constant(true)));
 });
 
 const processAttemptJournalSink = Effect.fnUntraced(function* (
