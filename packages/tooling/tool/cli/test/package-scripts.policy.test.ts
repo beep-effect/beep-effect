@@ -124,7 +124,7 @@ describe("package scripts policy", () => {
         expect(drift).toContainEqual({ _tag: "missing-impl", name: "beep:check" });
         const record = yield* codecs.lab.encode(expected);
         expect(record["lint:jsdoc"]).toBeUndefined();
-        expect(record["beep:check"]).toBe("tsgo -p tsconfig.check.json && tsc -p tsconfig.json --noEmit");
+        expect(record["beep:check"]).toBe("tsgo -p tsconfig.check.json");
       })
     )
   );

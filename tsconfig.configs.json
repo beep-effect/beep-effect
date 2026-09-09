@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "./tsconfig.base.json",
+  "include": ["**/vitest.*.ts", "./*.ts"],
+  "exclude": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/coverage/**",
+    "**/tmp/**",
+    "**/test/fixtures/**",
+    "scratchpad/**"
+  ],
+  "compilerOptions": {
+    "composite": false,
+    "incremental": false,
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": false,
+    "noEmit": true,
+    "rootDir": ".",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "rewriteRelativeImportExtensions": false,
+    "erasableSyntaxOnly": false,
+    "types": ["node", "bun"]
+  }
+}

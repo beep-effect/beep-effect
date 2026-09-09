@@ -182,6 +182,7 @@ export const DEFAULT_GATE_ORDER_SEED = GateOrderSeed.make({
     repoSanityRow("repo-sanity:versions", 0),
     repoSanityRow("repo-sanity:syncpack", 0),
     repoSanityRow("repo-sanity:sherif", 0),
+    repoSanityRow("repo-sanity:config-typecheck", 0),
     repoSanityRow("repo-sanity:bun-audit", 13 / 832, O.some(17)),
     seedRow(
       "quality:build",
