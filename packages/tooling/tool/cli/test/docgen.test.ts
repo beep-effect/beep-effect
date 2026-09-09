@@ -275,6 +275,30 @@ const seedDocgenPackage = Effect.fn("DocgenTest.seedDocgenPackage")(function* ()
 const schemaPackageSourcePath = (path: Path.Path): string =>
   path.join(process.cwd(), "packages", "foundation", "modeling", "schema", "src", "index.ts");
 
+const invalidCategorySource = `/**
+ * Probe module carrying an unknown category tag.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
+/**
+ * Renders probe lines.
+ *
+ * **Example** (Render probe lines)
+ *
+ * \`\`\`ts
+ * import { renderProbeLines } from "@beep/schema"
+ *
+ * console.log(renderProbeLines())
+ * \`\`\`
+ *
+ * @category rendering
+ * @since 0.0.0
+ */
+export const renderProbeLines = (): ReadonlyArray<string> => [];
+`;
+
 const writeSchemaTsconfig = Effect.fn("DocgenTest.writeSchemaTsconfig")(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -1023,6 +1047,7 @@ export const ProofFixture = 1;
             )
           );
           expect(output).toContain("- full aggregate command: bun run docs:aggregate");
+          expect(output).toContain("- full JSDoc metadata check: every package with a canonical docgen.json outDir");
         })
       )
     )
@@ -1091,6 +1116,86 @@ export const ProofFixture = 1;
           "bun run docs:aggregate",
         ]);
       })
+    );
+  });
+
+  it.effect("fails full docgen on invalid JSDoc metadata before spawning Turbo", () => {
+    const spawned = A.empty<string>();
+    return withTempRepo(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        yield* seedDocgenPackage();
+        yield* fs.writeFileString(schemaPackageSourcePath(path), invalidCategorySource);
+
+        const exit = yield* Effect.exit(
+          runDocgenLocal({
+            allowFull: false,
+            base: "origin/main",
+            full: true,
+            head: "HEAD",
+            json: false,
+            packageSelector: O.some("@beep/schema"),
+            parallel: 6,
+            plan: false,
+          }).pipe(provideScopedLayer(recordingSpawnerLayer(spawned)))
+        );
+
+        expect(Exit.isFailure(exit)).toBe(true);
+        if (Exit.isFailure(exit)) {
+          expect(Cause.squash(exit.cause)).toMatchObject({
+            _tag: "DomainError",
+            message: "docgen:local JSDoc check failed for 1 package(s).",
+          });
+        }
+        expect(spawned).toEqual([]);
+        const errors = A.join(A.filter(yield* TestConsole.errorLines, isString), "\n");
+        expect(errors).toContain(
+          "docgen:local: packages/foundation/modeling/schema has 1 export(s) missing docgen metadata"
+        );
+        expect(errors).toContain("renderProbeLines invalid category: Unknown @category value rendering.");
+      }).pipe(provideScopedLayer(TestConsole.layer))
+    );
+  });
+
+  it.effect("skips the full JSDoc metadata check for packages with a non-canonical docgen outDir", () => {
+    const spawned = A.empty<string>();
+    return withTempRepo(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        yield* seedDocgenPackage();
+        const probeDir = path.join(process.cwd(), "packages", "foundation", "modeling", "probe");
+        yield* fs.makeDirectory(path.join(probeDir, "src"), { recursive: true });
+        yield* fs.writeFileString(
+          path.join(probeDir, "package.json"),
+          encodeJson({ name: "@beep/probe", version: "0.0.0" })
+        );
+        yield* fs.writeFileString(
+          path.join(probeDir, "docgen.json"),
+          encodeJson({ srcDir: "src", outDir: ".jsdoc-loop/generated-docs" })
+        );
+        yield* fs.writeFileString(path.join(probeDir, "src", "index.ts"), invalidCategorySource);
+
+        const plan = yield* runDocgenLocal({
+          allowFull: false,
+          base: "origin/main",
+          full: true,
+          head: "HEAD",
+          json: false,
+          packageSelector: O.some("@beep/schema"),
+          parallel: 6,
+          plan: false,
+        }).pipe(provideScopedLayer(recordingSpawnerLayer(spawned)));
+
+        expect(plan.mode).toBe("full");
+        expect(A.length(spawned)).toBe(2);
+        const logs = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
+        expect(logs).toContain(
+          "docgen:local: skipped JSDoc metadata check for @beep/probe (non-canonical outDir: .jsdoc-loop/generated-docs)"
+        );
+        expect(logs).toContain("docgen:local: checking JSDoc metadata for 1 package(s)");
+      }).pipe(provideScopedLayer(TestConsole.layer))
     );
   });
 
