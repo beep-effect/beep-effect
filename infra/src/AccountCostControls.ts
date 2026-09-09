@@ -184,6 +184,9 @@ export class AccountCostControls extends pulumi.ComponentResource {
       { ...resourceOptions, additionalSecretOutputs: ["notifications"] }
     );
 
+    // These six keys were present in this account's Cost Explorer allocation-tag
+    // inventory on 2026-09-09. Recheck availability before the attended apply;
+    // resource tags alone do not prove billing has ingested a key.
     for (const tagKey of ["App", "Project", "ManagedBy", "beep-ci", "ghr:environment", "DataClass"]) {
       new aws.costexplorer.CostAllocationTag(
         `${name}-tag-${tagKey}`,

@@ -20,19 +20,11 @@ const controller = new CiFleetController("ci-fleet-controller", {
   workerSecurityGroupId: stack.workerSecurityGroupId,
 });
 const turboCache = new CiTurboCache("ci-turbo-cache", { config: loadCiTurboCacheConfig() });
-const costControls = new AccountCostControls(
+new AccountCostControls(
   "account-cost-controls",
   loadAccountCostControlsConfig(),
   new pulumi.Config("accountCostControls").requireSecretObject<unknown>("notificationEmailAddresses")
 );
-
-/**
- * Managed account budget identifier without subscriber information.
- *
- * @category resources
- * @since 0.0.0
- */
-export const accountBudgetId = costControls.budgetId;
 
 /**
  * Dedicated fleet VPC identifier.
