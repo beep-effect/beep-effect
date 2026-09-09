@@ -41,9 +41,12 @@ source, coverage and predecessor bindings. Four synthetic test methods, includin
 31 negative mutation cases, pass; the historical wet/source-invalid rounds are
 rejected. No model call or formal review ran. The separate [input preparation](./data/p3-fable-input-preparation.json)
 now implements complete bounded assignment and live repository snapshot checks.
-Seven synthetic test methods pass; the current observation covers 6,376 files
+Seven synthetic test methods pass; the historical observation covers 6,376 files
 and assigns all 146 qualifications to 35 lanes. These observations grant no
-review admission. Actual dry evidence, the full process controller and durable
+review admission. The [process-attempt preparation](./data/p3-fable-process-preparation.json)
+now preserves exact outputs and process identity through cancellation, deadlines
+and interruption; ten local Python child-process tests pass. No Fable process
+was started. Actual dry evidence, the full process controller and durable
 launcher, runtime/advisory-reference bindings and capability proof, final input
 binding and canonical validator transition remain pending.
 Historical Grok helpers and receipts retain their original provenance.
@@ -55,11 +58,22 @@ compatibility, or sequencing inventories. The historical baseline is now 40
 Tier 1 and 6 Tier 2 records before new admissions.
 
 P2R rebuilt the current-corpus inventory and continues its residue census and design
-refresh. The live inventory is **738 records: 146 qualified and 592 disqualified** (D1
-382 / D2 210), with **115 Tier 1 and 31 Tier 2**. Statuses are 23 historically
-`reviewed`, 123 `designed`, and 0 `confirmed`; all need replacement P3 review.
+refresh. The live inventory is **751 records: 145 qualified and 606 disqualified** (D1
+389 / D2 217), with **113 Tier 1 and 32 Tier 2**. Statuses are 21 historically
+`reviewed`, 124 `designed`, and 0 `applied`; all need replacement P3 review.
 
-The branch now includes main `284294ee24177f13f6d3a763c5d987206d351c51`,
+The branch includes main `e7b7d03e61bd5cddd74e89bb03ae10dbe06e067b`
+through merge `854cc9a8862d8a3b63f7deb68c1f2bdcbdbaf5ac`. The
+[merge receipt](./data/post-r31-main-e7b-source-forward.json) confirms all 1,450
+then-present packet files survived unchanged. The declaration-based check-overlay
+change modifies seven census TypeScript files and one supporting template;
+their owner/design impact audit is pending. No dependencies or lockfiles changed.
+
+The [bounded Graft audit](./data/post-r31-main284-graft-audit.json) is complete:
+17 declarations and 15 other surfaces introduce no eligible owner. It preserves
+all current IDs and counts, with no replacement census, dry-round or P3 credit.
+
+The earlier merge includes main `284294ee24177f13f6d3a763c5d987206d351c51`,
 brought forward in commit `131603144e0b361422bd77167c64d9ff192759b2`. The
 [latest merge receipt](./data/post-r31-main284-source-forward.json) preserves all
 1,448 then-present packet files and records five new Graft command source files

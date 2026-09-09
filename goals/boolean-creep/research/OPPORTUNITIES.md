@@ -1119,3 +1119,14 @@ The earlier main-a203 receipt's source list was corrected with those same globs,
 and source equality was rechecked. Original receipt bytes remain in the private
 source-forward bundle. A known changed-file count or positive-control path must
 accompany a filtered diff before an empty result can support an equality claim.
+
+
+## 2026-09-09 — Live plan counts lagged the installed inventory
+
+While preparing the source-forward receipt, `PLAN.md` still described the live
+inventory as 738 records / 146 qualified, although the canonical JSONL and
+`data/post-r31-settled-validation.json` showed 751 / 145. README also retained
+one later sentence claiming 146 current designs. The current summaries now agree
+with the canonical inventory; historical round counts remain unchanged. Checking
+every explicitly current count alongside the inventory and design validators
+would have caught this partial documentation update before the prior commit.

@@ -59,10 +59,23 @@ scanner configuration is now available to the packet's eventual publication.
 
 The canonical inventory contains **751 records: 145 qualified and 606 disqualified**
 (D1 389 / D2 217). The qualified set is **113 Tier 1 and 32 Tier 2**; statuses are 21
-historically `reviewed`, 124 `designed`, and 0 `confirmed`. All await replacement
+historically `reviewed`, 124 `designed`, and 0 `applied`. All await replacement
 independent review. Four additional owners remain in an [explicit unresolved hold](./data/r31-law-owner-holds.json).
 
-The branch now includes main `284294ee24177f13f6d3a763c5d987206d351c51`,
+The branch includes main `e7b7d03e61bd5cddd74e89bb03ae10dbe06e067b`
+through merge `854cc9a8862d8a3b63f7deb68c1f2bdcbdbaf5ac`. The
+[merge receipt](./data/post-r31-main-e7b-source-forward.json) confirms all 1,450
+then-present packet files survived unchanged. Seven changed TypeScript source
+files and one supporting template need a bounded owner/design impact audit.
+No dependencies or lockfiles changed. The [Graft audit](./data/post-r31-main284-graft-audit.json)
+is complete and adds no eligible owner; it grants no replacement census or dry credit.
+
+The [review process preparation](./data/p3-fable-process-preparation.json) passes
+ten local Python child-process tests for output preservation, process identity,
+refusal, cancellation, timeout and interruption handling. No model review ran.
+Full controller composition, durable cgroup ownership and formal admission remain pending.
+
+The earlier merge includes main `284294ee24177f13f6d3a763c5d987206d351c51`,
 brought forward in commit `131603144e0b361422bd77167c64d9ff192759b2`. The
 [latest merge receipt](./data/post-r31-main284-source-forward.json) preserves all
 1,448 then-present packet files and records five new Graft command source files
@@ -275,7 +288,7 @@ qualified callable withdrawals. It receives no dry credit. Its immutable
 941-record snapshot contains 162 qualified cases; the later Tika callable
 withdrawal produced the 940-record immutable seed for round 27.
 
-All 146 current qualified cases have design documents. Inventory and design
+All 145 current qualified cases have design documents. Inventory and design
 coverage validate structurally. Modeling, chart-layout, graph-worker retry,
 transcript, Hero playback and receipt occupancy corrections are integrated.
 The L–Q integration adds resolved coverage/test lanes and corrects raw requests.
