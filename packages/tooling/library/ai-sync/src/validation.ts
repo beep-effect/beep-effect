@@ -132,10 +132,18 @@ const ApprovedClaudeRepoBashPermission = LiteralKit([
   "Bash(rm -rf .beep/fallow)",
   "Bash(bunx commitlint:*)",
   "Bash(bun install:*)",
+  "Bash(graft ask:*)",
+  "Bash(graft grep:*)",
+  "Bash(graft skeleton:*)",
+  "Bash(graft callers:*)",
+  "Bash(graft map:*)",
+  "Bash(graft blast:*)",
+  "Bash(graft check:*)",
+  "Bash(graft build:*)",
 ]).pipe(
   $I.annoteSchema("ApprovedClaudeRepoBashPermission", {
     description:
-      "Exact 49-value Bash grant domain approved for this repository, including named read-only GitHub queries, intentional Yeet publication commands, archive refs under refs/archive/, and Yeet sweep; worktree removal only through the Beep CLI.",
+      "Exact 57-value Bash grant domain approved for this repository, including named read-only GitHub queries, intentional Yeet publication commands, archive refs under refs/archive/, and Yeet sweep; worktree removal only through the Beep CLI, plus the read-only Graft code-graph query subcommands (never `graft init`, `uninstall`, or `upgrade`, which rewrite tracked agent configuration).",
   })
 );
 

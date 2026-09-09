@@ -575,7 +575,7 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/ai-sync", (it) => {
   );
 
   it.effect(
-    "keeps checked-in Claude grants inside the exact 49-value allow domain",
+    "keeps checked-in Claude grants inside the exact 57-value allow domain",
     Effect.fn(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -583,7 +583,16 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/ai-sync", (it) => {
       const settingsText = yield* fs.readFileString(path.join(repoRoot, ".claude/settings.json"));
       const settings = yield* decodeStructInlineSchemaJson(settingsText);
 
-      assert.lengthOf(settings.permissions.allow, 49);
+      assert.lengthOf(settings.permissions.allow, 57);
+      assert.include(settings.permissions.allow, "Bash(graft ask:*)");
+      assert.include(settings.permissions.allow, "Bash(graft grep:*)");
+      assert.include(settings.permissions.allow, "Bash(graft skeleton:*)");
+      assert.include(settings.permissions.allow, "Bash(graft callers:*)");
+      assert.include(settings.permissions.allow, "Bash(graft map:*)");
+      assert.include(settings.permissions.allow, "Bash(graft blast:*)");
+      assert.include(settings.permissions.allow, "Bash(graft check:*)");
+      assert.include(settings.permissions.allow, "Bash(graft build:*)");
+      assert.notInclude(settings.permissions.allow, "Bash(graft:*)");
       assert.include(settings.permissions.allow, "Bash(git worktree prune:*)");
       assert.include(settings.permissions.allow, "Bash(bun run beep yeet sweep:*)");
       assert.notInclude(settings.permissions.allow, "Bash(git worktree remove:*)");

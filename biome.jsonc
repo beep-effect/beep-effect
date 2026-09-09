@@ -27,6 +27,12 @@
       // GitHub Copilot; keep upstream bundles outside authored repo formatting.
       "!.claude/skills/impeccable",
       "!.github/skills/impeccable",
+      // Graft-owned generated wiring (shims, skill, Grok/OpenCode config) is
+      // rewritten by `graft init` on upgrade; keep it outside repo formatting.
+      "!.claude/helpers",
+      "!.claude/skills/graft",
+      "!.grok",
+      "!opencode.json",
       "!specs",
       "!**/.tsup",
       "!**/.turbo",
