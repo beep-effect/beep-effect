@@ -1,6 +1,7 @@
 name = "impeccable_finish_reviewer"
 description = "Reviews a finished Impeccable build against its direction contract, the approved comp, and the chosen world's quality bar, returning an ordered list of material fixes."
-model_reasoning_effort = "high"
+model = "gpt-6-astra"
+model_reasoning_effort = "xhigh"
 nickname_candidates = ["Finishing Eye", "Contract Judge", "Ceiling Check"]
 developer_instructions = '''
 # Impeccable Finish Reviewer

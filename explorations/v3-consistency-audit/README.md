@@ -26,6 +26,9 @@ PascalCase decision.
 
 ## Next Open Question
 
+Routing for future token-heavy Codex work is settled: `gpt-6-astra` with
+`xhigh` reasoning ([decision update](./DECISIONS.md)). The next step remains:
+
 None — graduated 2026-08-30. The work lives in
 [`goals/slice-topology-audit`](../../goals/slice-topology-audit/README.md)
 (provides `architecture/slice-audit`; amendments PR → `audit` command +
@@ -146,3 +149,6 @@ this packet at `decompose` when their gates fire.
   frontier empty. `BRIEF.md` + `MAP.md` written; stage `decompose`. Mid-session
   `main` fast-forwarded `3435c24f94` → `2c0c8eb046` (no slice packages
   touched; census valid). Stopped before graduation by decision.
+- 2026-09-08: recorded the operator's Astra/xhigh routing update in DECISIONS,
+  this resume surface, and manifest timestamps where needed; retained the existing
+  stage, lifecycle, open questions, and historical execution provenance.

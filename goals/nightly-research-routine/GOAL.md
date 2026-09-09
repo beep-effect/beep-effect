@@ -30,7 +30,7 @@ Hard laws (never weaken for convenience):
   attribution (introduced vs inherited) then stop-with-note — no repair
   thrashing. Never auto-merge.
 - Never write to `explorations/INBOX.md` or `goals/` from research output.
-- Quota routing: grok-4.5 orchestrator/search (xAI pool), Sol/Luna verify
+- Quota routing: grok-4.5 orchestrator/search (xAI pool), Astra/Luna verify
   (OpenAI pool), exactly ONE Fable call (writer seat). Scrubbed env for
   headless proxy calls (`env -i … ANTHROPIC_BASE_URL=http://127.0.0.1:8317`).
 
