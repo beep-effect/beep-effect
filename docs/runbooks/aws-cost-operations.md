@@ -599,6 +599,9 @@ swap-page deltas, and preserves the lane exit status. It neither enables paid
 CloudWatch metrics nor records command arguments, environment variables or
 process command lines. Its host-wide peak can miss short bursts; it is not an
 exact child-process peak or sufficient evidence to downsize on its own.
+Older PR checkouts may not contain the helper even though they call the updated
+reusable workflow from `main`. In that case the workflow emits a notice and
+runs the same requested lane directly, preserving its arguments and exit status.
 
 Compare the same pinned source and lane shape on isolated workers with the
 same image, storage, CPU count and cache posture. Keep production On-Demand,
@@ -607,6 +610,48 @@ configuration. The initial comparison is `r6i.2xlarge` versus `m6i.2xlarge`:
 both have eight vCPUs, with 64 versus 32 GiB memory. September 9 AWS Price List
 quotes in us-east-1 are $0.504 and $0.384 per hour respectively. The 23.8%
 hourly reduction is a candidate saving, not a measured monthly saving.
+
+The isolated comparison uses source `e8b92a61c3`, the activated lean image,
+eight vCPUs, 100 GiB gp3 volumes and local-only Turbo caching. Check starts
+without a local task cache; subsequent lanes share the preceding lanes' local
+outputs. This is a matched sequential suite, not the fresh-worker cache state
+of every hosted job. Compare corresponding lanes, and report cache hits with
+their results. The additional `r6a.2xlarge` candidate retains 64 GiB and has a
+$0.4536 hourly quote, 10% below the baseline's rate.
+
+The first full Check comparison passed 246 of 246 tasks with no cache hits on
+both `r6i.2xlarge` and `m6i.2xlarge`, taking 528.85 and 534.58 seconds. Full Lint
+Policy also passed on both, taking 517.36 and 528.63 seconds. Its sampled host
+memory peaked at 28.44 and 27.22 GiB respectively, leaving only 3.59 GiB
+available on the smaller worker. That result does not justify moving the
+entire pool to 32 GiB under the reliability-first decision.
+
+Full Docgen also passed on both, taking 810.69 and 837.98 seconds with the
+configured concurrency of six. Its sampled peak was 27.06 GiB on the baseline
+and 29.93 GiB on the smaller worker, leaving only 0.89 GiB available there.
+This further rules out adopting 32 GiB for the entire pool on these results.
+
+The 64 GiB `r6a.2xlarge` trial passed Check in 542.97 seconds, Lint Policy in
+535.69 seconds and Build in 53.87 seconds. The corresponding baseline times
+were 528.85, 517.36 and 53.42 seconds. Its hourly rate is lower, but Check and
+Lint Policy were 2.7% and 3.5% slower in this single trial. These observations
+do not establish a performance-neutral replacement. Keep the existing
+64 GiB On-Demand production choices and cap; collect repeated representative
+results before proposing a family change or a separate pool for smaller lanes.
+
+The initial full Coverage trials on the baseline and 32 GiB candidate finished
+in 25m35s and 25m55s with a failing SQL-helper coverage floor. The isolated user
+lacked Docker socket access, so container tests were skipped. Those are failed
+diagnostic runs, not successful cost-per-completion benchmarks. Repair the
+test user's Docker access, start a fresh user process and rerun the affected
+package without cache reuse; preserve the original failures and coverage floors.
+The experiment's final validation and temporary-resource cleanup receipts are
+recorded with [PR #1071](https://github.com/beep-effect/beep-effect/pull/1071).
+
+The [code-focused memory burndown opportunity](../../goals/ci-fleet-residue/research/OPPORTUNITIES.md#2026-09-09--burn-down-ci-check-memory-in-code-before-reducing-runner-ram)
+starts with profiling Lint Policy and Docgen implementations. It requires unchanged
+checks, diagnostics and completion-time acceptance, with repeated before/after
+measurements. Reducing concurrency or adding swap alone does not complete it.
 
 ### Billing and recommendation readiness
 

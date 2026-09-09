@@ -2,6 +2,62 @@
 
 Record receipts at the moment friction happens; redact for the public repo.
 
+## 2026-09-09 — A reusable workflow can outpace helpers in older PR checkouts
+
+- What: pre-publication review found that `heavy.yml@main` would invoke the
+  new resource helper from a caller PR checkout that may not contain it.
+- Evidence: the reusable workflow's checkout step has no override to the
+  caller's source ref. An older branch can therefore lack
+  `scripts/ci-runner-resources.sh` while receiving the new workflow body.
+- Repair: make the observer optional at orchestration time. When it is absent,
+  run the identical lane command and arguments directly in the same managed
+  process group. Keep failures and required checks intact.
+- Verification: execute the workflow's actual shell body in a temporary
+  checkout with no helper and a test command that exits 7. Assert that the
+  full Check arguments reach the command and that the workflow returns 7.
+- Prevention: test reusable-workflow changes against a caller checkout that
+  predates newly introduced repository helpers, as well as the current branch.
+
+## 2026-09-09 — Burn down CI check memory in code before reducing runner RAM
+
+- Operator direction: capture a later code-focused memory burndown. The main
+  work is improving check implementations, rather than changing runner sizes
+  or reducing concurrency to fit a smaller machine.
+- Evidence: matched, full Lint Policy runs on source `e8b92a61c3` passed in
+  517.36 seconds on `r6i.2xlarge` and 528.63 seconds on `m6i.2xlarge`. The
+  five-second host samples peaked at 28.44 and 27.22 GiB respectively. The
+  smaller worker had only 3.59 GiB available at its low point, despite passing.
+  These are sampled host values, not exact process peaks. Both used the same
+  image, eight vCPUs, source and lane commands. There was no swap.
+- Full Docgen then passed in 810.69 and 837.98 seconds respectively, using
+  the same configured concurrency of six. Its sampled peak was 27.06 GiB on
+  the baseline and 29.93 GiB on the 32 GiB candidate, whose minimum available
+  memory was only 0.89 GiB. Include the docgen implementation in the initial
+  profiling scope; a passing exit code alone concealed very little headroom.
+- Scope: profile the implementations invoked by full Lint Policy and Docgen,
+  then Check and Coverage as their measured peaks warrant. The Lint Policy entry point
+  is `runRootLintPolicyTaskInternal` in
+  `packages/tooling/tool/cli/src/commands/Quality/Tasks.ts`; it currently runs
+  three policy steps concurrently. Attribute memory to individual steps and
+  their child processes before selecting a refactor.
+- Investigate repeated TypeScript Program/AST construction, duplicate workspace
+  graph or index construction, unnecessary whole-repository file retention,
+  and results retained after a check has consumed them. Prefer reusing an
+  existing representation, streaming bounded inputs, or releasing completed
+  work over adding another cache. These are investigation targets, not yet
+  established causes.
+- Acceptance: run the same full check set on pinned source and matched cache
+  state before and after each change. Preserve diagnostics, failure behavior
+  and required contexts. Record peak memory, available-memory headroom, CPU,
+  wall time and outcomes across repeated trials. A smaller runner must retain
+  a reviewed safety margin during representative peak workloads; one passing
+  low-memory trial is insufficient.
+- Do not close this opportunity by lowering check coverage, skipping policy
+  work, adding swap, or reducing concurrency alone. A concurrency change can
+  support a code fix, but must keep the operator's completion-time requirement.
+- Scheduling: a later implementation effort, as requested. The current cost
+  PR records the evidence and retains the production memory safety boundary.
+
 ## 2026-09-09 — Canary user data was encoded twice
 
 - What: the first pair of isolated sizing canaries stopped without running
@@ -19,6 +75,19 @@ Record receipts at the moment friction happens; redact for the public repo.
   `./typos`. Correct the exact member name. Empty console responses required
   a temporary SSM-channel-only diagnostics role on the isolated test workers;
   capture local logs and remove that role/profile with the canaries.
+- The isolated test user also lacked the `docker` group. Both comparison
+  machines failed to build the PGLite integration image, and an explicit Docker
+  probe returned `connect: permission denied` for the daemon socket. Add the
+  group and start a fresh user process for matched integration reruns. Treat
+  those first attempts as harness failures, not runner-size failures; verify
+  Docker access during future canary preflight.
+- The same unavailable Docker path made the first two Coverage runs skip
+  SQL container tests. Their only reported floor regressions were in
+  `SqlTest.ts`: lines `78.85 < 79.56`, statements `78.32 < 79.02`. Preserve
+  those failed full-run receipts and rerun `@beep/test-utils` coverage without
+  task-cache reuse after repairing the environment. A focused recovery does
+  not turn the original full run into a passing timing benchmark, and does
+  not authorize changing its coverage floors.
 
 ## 2026-09-09 — Standard rightsizing recommendations cannot size ephemeral workers
 

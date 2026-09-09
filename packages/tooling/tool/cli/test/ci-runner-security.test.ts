@@ -259,6 +259,42 @@ const assertTurboJobSetup = (jobs: WorkflowJobs, jobId: string, appSecrets: bool
 
 describe("CI runner security", () => {
   it.effect(
+    "preserves the requested PR lane when an older checkout has no resource helper",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const repoRoot = yield* findRepoRoot();
+      const tempRoot = yield* fs.makeTempDirectoryScoped();
+      const workflow = parsedDocument(yield* fs.readFileString(path.join(repoRoot, ".github/workflows/heavy.yml")));
+      const run = pipe(
+        stepRun(jobSteps(workflowJobs(workflow), "verify"), "Run verification lane"),
+        Str.replaceAll("${{ matrix.id }}", "check"),
+        Str.replaceAll("${{ steps.lane-gate.outputs.doctest_mode }}", "full")
+      );
+      const fakeBun = path.join(tempRoot, "bun");
+      yield* fs.writeFileString(fakeBun, '#!/usr/bin/env bash\nprintf "<%s>\\n" "$@"\nexit 7\n');
+      yield* fs.chmod(fakeBun, 0o755);
+      const result = Bun.spawnSync(["bash", "-c", run], {
+        cwd: tempRoot,
+        env: {
+          ...process.env,
+          PATH: `${tempRoot}:${process.env.PATH ?? ""}`,
+          GITHUB_EVENT_NAME: "pull_request",
+          GITHUB_BASE_REF: "main",
+        },
+        stderr: "pipe",
+        stdout: "pipe",
+      });
+      assert.strictEqual(result.exitCode, 7);
+      assert.include(result.stdout.toString(), "Runner resource helper unavailable");
+      assert.include(
+        result.stdout.toString(),
+        "<run>\n<beep>\n<ci>\n<lane>\n<check>\n<--affected>\n<--base>\n<origin/main>\n<--summarize>\n"
+      );
+    }, provideScopedLayer(NodeServices.layer))
+  );
+
+  it.effect(
     "preserves lane failure while emitting resource evidence without command arguments",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
