@@ -37,7 +37,7 @@ Static archaeology of the current `ttc/c3-package-tasks-grill` worktree, 2026-09
 | `fallow:audit` | hosted GIT; native graph | 0 |
 | `fallow:dead-code` | hosted GIT; native graph | 0 |
 | `fallow:health` | hosted GIT; native graph | 0 |
-| `fallow:boundaries:check` | manifest + native source graph | 0 |
+| `fallow:boundaries:check` (root script; hosted task is `//#fallow:boundaries:config-check`, see the section note) | manifest + native source graph | 0 |
 | `jsdoc-ratchet` | GIT inventory; baseline compare | 0 |
 | `changeset-status` | GIT diff + changesets | 0 |
 | `config-sync:check` | workspace config graph | 0 |
@@ -574,6 +574,13 @@ The source directive walk and recursive tsconfigs are actual additional reads; e
 **Installed tool contract:** `node_modules/fallow/schema.json` documents built-in ignores `**/node_modules/**`, `**/dist/**`, `build/**`, `**/.git/**`, `**/coverage/**`, `**/*.min.js`, `**/*.min.mjs`, `**/*.min.cjs`, `**/*.bundle.js`, unioned with custom ignorePatterns. Workspace discovery also reads package.json workspaces, pnpm-workspace.yaml and tsconfig references. Plugin discovery may read `.fallow/plugins/**` and root `fallow-plugin-*`; presence is input even if absent today. --type-aware is opt-in; `FALLOW_TYPE_AWARE` can also enable semantics, so explicitly control/hash it. `--root/-r` changes project root; `--workspace/-w` scopes **output** to names/globs/negations, not proof of bounded file reads (`node_modules/fallow/capabilities.json:204`). Audit requires Git according to installed manifest; health history flags add Git reads beyond base provenance. Exact native walker extension set remains UNKNOWN.
 
 ## fallow:boundaries:check
+
+> Orchestrator note (table revision 4): this section documents the existing root script
+> `fallow:boundaries:check` (`bun run beep fallow boundaries --check`). The hosted repo-sanity
+> member is a different command, `bun run beep fallow boundaries config-check --check`
+> (`packages/tooling/tool/cli/src/commands/Quality/internal/GithubChecks.ts:397`), and the C3 task
+> for it is `//#fallow:boundaries:config-check` in `c3-lane-task-table.md`; the root script stays a
+> plain local script.
 
 - **Entry point:** `packages/tooling/tool/cli/src/commands/Fallow/Fallow.command.ts:460`
 - **Source scan roots / tests:** Full workspace manifest dependency index → generated zones/rules; then `fallow dead-code --boundary-violations` source analysis. **Not only generated config comparison** `packages/tooling/tool/cli/src/commands/Fallow/Fallow.command.ts:495`. Same Fallow graph scope/tests as above.
