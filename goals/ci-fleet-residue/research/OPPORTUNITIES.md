@@ -2,6 +2,32 @@
 
 Record receipts at the moment friction happens; redact for the public repo.
 
+## 2026-09-09 — A fresh image passed integrity but regressed setup time
+
+- What: comparing the existing image with a fresh Bun 1.4.2 image before
+  changing the production pin. Both probes used the same pushed revision,
+  `r6i.2xlarge`, root-volume settings and isolated setup procedure.
+- Evidence: the existing image missed the baked fast path and completed setup
+  in 18 seconds, including a 9-second frozen install. The new image passed the
+  exact setup integrity detector but took 228 seconds, including a 6-second
+  install. The successful integrity result alone did not establish a speedup.
+- Response: keep the production pin unchanged and instrument cache hashing,
+  extraction and Node setup separately before choosing the repair. AWS console
+  reads also returned older captures after newer ones; retain completed evidence
+  instead of letting a stale response erase an observed peak or result.
+- Isolation: a second fresh guest measured 163 seconds hashing the 1.35 GB
+  cache archive, 27 seconds extracting it and 2 seconds setting up Node. The
+  archive expands to 4.60 GB; the subsequent frozen install took 6 seconds.
+  The repair removes this archive from future bakes and skips its restore,
+  while retaining Bun's release digest, installed-binary digest, root ownership,
+  version and lockfile checks. Every job still runs a fresh frozen install.
+- Repair probe: the exact modified setup detector passed on another fresh
+  instance, with a fast-path hit, 20-second setup and 9-second frozen install.
+  This isolated result removes the archive regression; a production workflow
+  probe is still required to measure hosted setup and completion time.
+- Prevention: require timed canaries as well as freshness and integrity checks
+  before promoting an image intended to reduce setup cost.
+
 ## 2026-09-09 — Spot retry estimates must use billed usage
 
 - What: comparing Spot, autoscaled On-Demand EC2 and EKS after the operator
@@ -49,6 +75,12 @@ Record receipts at the moment friction happens; redact for the public repo.
 - Bake evidence: `RunInstances` was rejected before creation by the unrelated
   `FreedomFramework-CI` policy's explicit `LimitEC2Size` deny, which permits
   only `t2.micro` for the current operator login.
+- Bake access repair: after the operator approved continuation, the September 9
+  16:08 UTC operation detached only that obsolete policy from the operator
+  user. The policy remains available for rollback, its other attachment remains,
+  and every other operator policy attachment was verified unchanged. A fresh
+  `r6i.2xlarge` bake then launched successfully; image validation and activation
+  remain separate steps.
 - Prevention: capture the required operator identity and exact launch-policy
   preflight in the bake runbook. Keep the rejection distinct from a broken
   image or a capacity shortage; do not create credentials or weaken fleet

@@ -204,6 +204,25 @@ AMI pin, attended Pulumi apply, controller SSM parameter and runner module.
 Coalesce lockfile churn and measure bake payback rather than rebuilding for
 every edit.
 
+The September 9 refresh canary found that a fresh image's dependency-cache
+archive made setup slower: 228 seconds versus 18 seconds for the existing
+image's isolated fallback. A diagnostic guest spent 163 seconds hashing the
+1.35 GB archive and 27 seconds extracting it, while a fresh frozen install
+took 9 seconds on the baseline guest. Future bakes therefore omit dependency
+archives. The setup fast path validates the baked Bun toolchain and clears
+inherited dependency caches; each job performs its own frozen install. Bun's
+release digest, installed-binary digest, root ownership, version and lockfile
+checks remain required. Intended-image freshness alone is not a performance
+receipt.
+
+The modified setup path then passed on a fresh instance in 20 seconds, including
+a 9-second frozen install, versus the isolated baseline's 18 seconds. This
+removes the measured archive regression. It does not establish a hosted speedup:
+GitHub cache/action overhead and a complete production workflow remain part of
+the attended activation check. The baseline Check lane passed in 739 seconds,
+with a 10.36 GiB peak in 15-second VM-memory samples; this is not sufficient
+evidence to downsize every heavy lane.
+
 Repair the retired teardown script so it cannot terminate builders or current
 controller workers. Supersede historical Spot and $100 ceiling instructions at
 their entry points, preserving dated experiment results. Add current image
@@ -404,11 +423,36 @@ asset distribution is preserved under the cutoff and has no base certificate
 charge. The five current CI/OIP buckets, current runner images and snapshots,
 current CI key, account identities and AWS-managed keys are preserved.
 
-The stale image refresh exposed an unrelated old IAM policy on the current
-operator login: `FreedomFramework-CI` denies `RunInstances` for every size except
-`t2.micro`. AWS rejected the launch before creating a worker. The policy is not
-owned by the CI stack; any access repair requires the operator's explicit
-decision. Do not weaken a fleet role or attempt the bake on an undersized VM.
+The stale image refresh exposed an unrelated old IAM policy on the operator
+login: `FreedomFramework-CI` denies `RunInstances` for every size except
+`t2.micro`. AWS rejected the original launch before creating a worker. After
+the operator approved continuation, the September 9 16:08 UTC repair detached
+only that policy from the operator user. The policy and its other attachment
+remain, and every other operator attachment was verified unchanged. Reattaching
+the retained policy restores the previous access configuration. No fleet role
+was changed. A subsequent `r6i.2xlarge` bake launched successfully.
+
+The image refresh follows a separate validation and activation sequence:
+
+1. Bake from a pushed source revision using the existing command. Preserve the
+   current production image as the rollback target and capture an encrypted
+   production checkpoint before changing the pin.
+2. Launch bounded probes from the current and candidate images on identical
+   `r6i.2xlarge` instances with the production root-volume settings. Both use
+   the same source revision, pinned Node archive, frozen Bun install and
+   `bun run beep ci lane check --summarize`. Run the setup action's actual
+   integrity detector: the current image must report a miss and the candidate
+   must report a hit. Capture setup time, lane result and sampled VM memory.
+3. Keep these probes isolated from GitHub runner registration and both GitHub
+   and remote Turbo caches. Their setup measurements compare the image paths;
+   they do not establish hosted queue time or account-wide savings. Each guest
+   has a 40-minute termination backstop and a bounded verification command.
+4. Review the intended manifest, AMI pin and refreshed Pulumi preview. Apply
+   the saved plan only with the operator present. Prove the live SSM pin and
+   run the existing Fleet Lane Probe on a newly launched production worker.
+   Require a baked fast-path hit and successful verification before calling
+   activation validated. Retain the old image until rollback is no longer
+   needed.
 
 ## Current stack ownership and bounded operations
 

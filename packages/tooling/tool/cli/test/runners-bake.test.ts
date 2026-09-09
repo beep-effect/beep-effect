@@ -781,24 +781,21 @@ describe("runner bake planning and argv", () => {
     expect(script).toContain("/tmp/bun-linux-x64/bun-linux-x64/bun /usr/local/bin/bun");
     expect(script).not.toContain("/tmp/bun-linux-x64/bun-linux-x64/bun /home/ec2-user/.bun/bin/bun");
     // The release zip ships only the bun binary. Both entrypoints must stay
-    // root-owned and execute before the bake trusts them to warm dependencies.
+    // root-owned and execute before the bake stamps the verified toolchain.
     expect(script).toContain("ln -sfn bun /usr/local/bin/bunx");
     expect(script).toContain("chown -h root:root /usr/local/bin/bunx");
     expect(script).toContain("/usr/local/bin/bunx --version");
     expect(script.indexOf("ln -sfn bun /usr/local/bin/bunx")).toBeLessThan(
       script.indexOf("git clone --filter=blob:none")
     );
-    expect(script).toContain("/usr/local/bin/bun install --cwd /tmp/beep-effect --frozen-lockfile");
+    expect(script).not.toContain("bun install --cwd");
     expect(script).toContain("git -C /tmp/beep-effect checkout --detach 0123456789abcdef0123456789abcdef01234567");
     expect(script).toContain(`= "${digest}"`);
     expect(script).toContain(`'1.3.14' > /etc/beep-ci/bun-version`);
     expect(script).toContain(`'${bunArchiveDigest}' > /etc/beep-ci/bun-archive.sha256`);
     expect(script).toContain('bun_binary_sha256="$(sha256sum /usr/local/bin/bun');
     expect(script).toContain('"${bun_binary_sha256}" > /etc/beep-ci/bun-binary.sha256');
-    expect(script).toContain("tar -C /home/ec2-user/.bun/install -czf /opt/beep-ci/bun-install-cache.tgz cache");
-    expect(script).toContain("chown root:root /opt/beep-ci/bun-install-cache.tgz");
-    expect(script).toContain("chmod 0444 /opt/beep-ci/bun-install-cache.tgz");
-    expect(script).toContain('"${bun_install_cache_sha256}" > /etc/beep-ci/bun-install-cache.sha256');
+    expect(script).not.toContain("bun-install-cache");
     expect(script).toContain("install -o root -g root -m 0444 /dev/null /etc/beep-ci/baked-runner");
     expect(script).toContain("/home/ec2-user/.bun/bin /home/ec2-user/.bun/install/cache");
     // AL2023's cloud-init lacks the newer --machine-id flag; the reset is
@@ -879,7 +876,7 @@ describe("runner bake planning and argv", () => {
   );
 
   it.effect(
-    "authenticates baked Bun and restores only the sealed dependency cache",
+    "authenticates baked Bun and discards inherited dependency caches",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -888,19 +885,17 @@ describe("runner bake planning and argv", () => {
 
       expect(action).toContain('rm -rf -- "${HOME:?}/.bun/install/cache"');
       expect(action).toContain("sha256sum /usr/local/bin/bun");
-      expect(action).toContain("sha256sum /opt/beep-ci/bun-install-cache.tgz");
+      expect(action).not.toContain("bun-install-cache");
       expect(action).toContain('[ "$bun_owner_mode" = "0:0:755" ]');
-      expect(action).toContain('[ "$cache_owner_mode" = "0:0:444" ]');
       expect(action).toContain('[ "$bunx_target" = "bun" ]');
       expect(action).toContain('echo "/usr/local/bin" >> "$GITHUB_PATH"');
       expect(action).not.toContain('echo "$HOME/.bun/bin" >> "$GITHUB_PATH"');
 
-      const binaryDigestCheck = action.indexOf('[ "$baked_binary" = "$installed_binary" ]');
-      const cacheDigestCheck = action.indexOf('[ "$baked_cache" = "$installed_cache" ]');
-      const cacheRestore = action.indexOf("tar -xzf /opt/beep-ci/bun-install-cache.tgz");
-      expect(binaryDigestCheck).toBeGreaterThan(-1);
-      expect(cacheDigestCheck).toBeGreaterThan(binaryDigestCheck);
-      expect(cacheRestore).toBeGreaterThan(cacheDigestCheck);
+      expect(action).toContain('[ "$baked_binary" = "$installed_binary" ]');
+      expect(action).toContain('[ "$baked_lock" = "$checkout_lock" ]');
+      expect(action).toContain('[ "$baked_bun" = "$checkout_bun" ]');
+      expect(action).toContain('[ "$baked_archive" = "$checkout_archive" ]');
+      expect(action).toContain("bun install --frozen-lockfile");
     }, provideScopedLayer(PlatformLayer))
   );
 });
