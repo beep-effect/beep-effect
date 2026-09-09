@@ -2,8 +2,10 @@
 
 ## Status
 
-Status: `active` (P0 and P1 complete; P2 hosted verification, P3
-merge-readiness, and P4 final closeout remain open)
+Status: `completed-retained`. Implementation merged in PR #1021; the final
+lifecycle update is a metadata-only follow-up because the operator merged as
+soon as required checks cleared. The follow-up's hosted readiness remains the
+last agent completion check.
 
 ## Phases
 
@@ -11,9 +13,9 @@ merge-readiness, and P4 final closeout remain open)
 | --- | --- | --- | --- |
 | P0 Research | complete | Refresh `research/tail-inventory.md` from a live `fallow health` run; record a triage verdict per tail function (refactor / override / ignore) with hotspot rank (`fallow health --hotspots`); adopt/defer verdicts for runtime-coverage CRAP and `fallow impact`. | Every tail function has a verdict; feature verdicts recorded with evidence. |
 | P1 Implement | complete | Execute the five panel seams and every current tail-function verdict in hotspot order, batched by owning family; rebaseline at the final wave boundary. | All 30 refactor verdicts and 19 review-dated override verdicts executed; no ignores added. |
-| P2 Verify | active | Final wave: shrink the health baseline to 185 entries, tighten the tooltip waiver, and record three clean comparisons. | Focused health, audit, suppression, and package handoffs pass; published-head hosted checks must pass. Full local proof is skipped per the user's 2026-09-08 instruction. |
-| P3 Yeet: PR to mergeable | active | Publish ready fixes immediately through `yeet publish --fast --monitor`. | PR #1021 reports `merge-ready: yes`, with Greptile 5/5, zero issues, and no unresolved review threads on its final head. |
-| P4 Close | active | Closeout reflection and same-PR packet status reconciliation; retain the recorded revisit-6 decision. | Reflection and final evidence are prepared; flip lifecycle only after the hosted completion audit passes. |
+| P2 Verify | complete | Final wave: shrink the health baseline to 185 entries, tighten the tooltip waiver, and record three clean comparisons. | Focused health, audit, suppression, and package handoffs passed; all 18 required hosted checks passed on 3a5f52d669. Full local proof is skipped per the user's 2026-09-08 instruction. |
+| P3 Yeet: PR to mergeable | complete | Publish ready fixes immediately through `yeet publish --fast --monitor`. | PR #1021 merged after required checks cleared, with Greptile 5/5, zero issues, and all nine review threads resolved; Yeet observed the merge and exited 0. |
+| P4 Close | complete | Closeout reflection and same-PR packet status reconciliation; retain the recorded revisit-6 decision. | The closeout reflection landed with implementation. The canonical status writer sets completed-retained in a follow-up after the operator merge; verify that metadata PR before reporting final completion. |
 
 ## P4 Closeout Checklist
 

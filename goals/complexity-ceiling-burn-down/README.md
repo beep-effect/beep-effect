@@ -1,6 +1,6 @@
 # Complexity Ceiling Burn-Down
 
-Lifecycle: `active`. Source: [`ops/manifest.json`](./ops/manifest.json).
+Lifecycle: `completed-retained`. Source: [`ops/manifest.json`](./ops/manifest.json).
 
 ## Outcome
 
@@ -20,22 +20,30 @@ allows cognitive 17 and 77 lines for an implementation measuring 16 and 76;
 the previous CRAP allowance is removed. Runtime-coverage CRAP and `fallow impact`
 remain deferred with evidence in the inventory.
 
-## Publication and remaining acceptance
+## Publication and closeout
 
-[PR #1021](https://github.com/beep-effect/beep-effect/pull/1021) carries the
-campaign. The user requested immediate publication of ready fixes and, on
-2026-09-08, explicitly skipped the full local proof queue. Publication uses
-`bun run beep yeet publish --fast --monitor`; if its pre-push admission still
-queues, push the reviewed commit directly and continue Yeet monitoring.
-Hosted checks, Greptile 5/5 with
-zero issues, and no unresolved review threads must prove the final published
-head before lifecycle closure. P2, P3, and final P4 reconciliation remain open.
+[PR #1021](https://github.com/beep-effect/beep-effect/pull/1021) merged as
+[`74efb548f1`](https://github.com/beep-effect/beep-effect/commit/74efb548f16aa2c37f14cb3ea8b71ef47d2315ab)
+on 2026-09-09 at 03:33:07 UTC. Its 18 required checks passed on `3a5f52d669`;
+Greptile reported 5/5 with no outstanding findings, and all nine review threads
+were resolved. Yeet observed the merge and exited 0. Property Laws finished successfully at
+03:36:56 UTC, leaving no pending or failed checks on the implementation head.
 
-The latest code fix, `4c6352111a`, supplies Recharts' required `graphicalItemId`
-in the tooltip fixture. The package test compiler and full UI audit/docgen
-pass. The epistemic-server package's full audit/docgen also passes after its
-review fixes. All nine review threads were resolved before the final ratchet
-update; the published-head monitor remains the authority for new feedback.
+The closeout reflection landed with the implementation. The operator merged
+before the final lifecycle update could be committed, so that metadata follows
+in a small separate PR. The canonical goals status writer updates the manifest,
+README lifecycle, and portfolio index. The follow-up's own hosted checks and
+Yeet readiness must pass before the agent reports final completion.
+
+The user requested immediate pushes and explicitly skipped the full local
+proof queue. Fast publication initially pushed the fixture fix; when it later
+queued before push, the reviewed commit was pushed directly and hosted Yeet
+monitoring continued. Historical local passes remain supporting evidence.
+
+The Recharts fixture fix supplies its required `graphicalItemId`. The owning
+test compiler and full UI audit/docgen pass, as does the epistemic-server
+package's full audit/docgen after the review fixes. The hosted Heavy / Check
+job passed on `3a5f52d669`, confirming the reported compiler failure is fixed.
 
 ## Evidence
 

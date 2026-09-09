@@ -81,8 +81,9 @@ repository that has since changed.
 ## Acceptance Criteria
 
 These checkboxes record implemented requirements and the evidence linked in
-this packet. Final acceptance additionally requires every published-commit
-gate below; checked implementation items do not establish merge readiness.
+this packet. The published-commit evidence and operator-merge timing exception
+below record final acceptance; implementation checkboxes alone are not readiness
+proof.
 
 - [x] `research/tail-inventory.md` carries a triage verdict per tail function,
       each executed in the candidate branch (refactor landed, override added,
@@ -117,12 +118,23 @@ gate below; checked implementation items do not establish merge readiness.
       with hosted checks; focused results are not represented as full proof.
       If fast mode still queues before pushing, push the reviewed commit
       directly and continue Yeet monitoring under the same instruction.
-- [ ] Hosted checks, blocking health, and review closeout pass on that commit;
-      Yeet reports `merge-ready: yes`.
-- [ ] The same PR records the final manifest status and closeout reflection.
+- [x] Required hosted checks, blocking health, and strict review closeout
+      passed on `3a5f52d669`. Yeet observed the required-checks-green and
+      acceptable-merge-state criteria before the operator merged PR #1021.
+- [x] The closeout reflection landed in PR #1021. Final lifecycle metadata
+      follows in a separate closeout PR under the timing exception below.
 
-P2, P3, and P4 remain open until these gates are proven. Earlier successful
-runs remain dated evidence, and the early PR is explicitly provisional.
+PR #1021 merged as `74efb548f1` at 2026-09-09T03:33:07Z, initiated by the
+operator. Its 18 required checks passed; Greptile reported 5/5 with zero
+outstanding findings, and all nine review threads were resolved. Yeet's watch
+observed the merge and exited 0. Property Laws was still running at merge time and subsequently passed at
+03:36:56 UTC, leaving no pending or failed checks on the implementation head. The closeout metadata PR must pass its own hosted checks
+and Yeet readiness before the agent reports the goal complete.
+
+The same-PR lifecycle rule could not be completed after that external merge.
+The reflection already landed with the implementation; the lifecycle and phase
+status changes use a small follow-up PR instead. This records the deviation
+rather than rewriting the merged PR's history.
 
 ## Verification Matrix
 
