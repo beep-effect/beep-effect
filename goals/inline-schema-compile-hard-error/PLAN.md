@@ -24,9 +24,13 @@ full local proof passed all 34 reported lanes. All nine review threads across
 the three PRs are resolved, and the receipts are pushed in `abd5416aa2`.
 The operator approved final closeout PR #1038 on 2026-09-09 after #1028 merged
 before closeout. Publication of evidence commit `59bba09125` passed all 67
-reported lanes, including all 23 local CI-parity stages. The final packet
-update belongs in #1038, which must remain open through the terminal monitor
-gate on its final head. No verification requirement is waived.
+reported lanes, including all 23 local CI-parity stages. PR #1038 merged at
+07:19 UTC before its final-head local proof or packet update. All four of its
+review threads are resolved and all 18 required hosted checks passed. The
+owned queued proof was stopped cleanly after the merge. The operator then
+approved a successor draft PR on branch `codex/inline-schema-packet-closeout`,
+retained as a draft through local proof and the final packet update. The
+successor has not been opened yet. No verification requirement is waived.
 P2 remains in progress while the canonical repository and hosted acceptance
 item is open, even though the implementation's local and package proofs passed.
 

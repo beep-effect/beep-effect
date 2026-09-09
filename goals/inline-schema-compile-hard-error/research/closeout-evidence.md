@@ -160,9 +160,10 @@ The final receipts are committed and pushed in `abd5416aa2` on
 `codex/inline-schema-final-evidence`, followed by review-state and reflection
 updates through `59bba09125`. On 2026-09-09 the operator approved
 [final closeout PR #1038](https://github.com/beep-effect/beep-effect/pull/1038).
-The final packet-state update belongs in that PR, which must remain open
-until Yeet reports `merge-ready: yes` on its final head. This publication
-exception does not waive any package, local, hosted, or review requirement.
+That approval required the final packet-state update in #1038 and a terminal
+Yeet `merge-ready: yes` result on its final head. The later merge and approved
+successor draft are recorded below. Neither publication exception waives a
+package, local, hosted, or review requirement.
 
 ### Opening evidence publication for PR #1038
 
@@ -213,3 +214,32 @@ generation on `02d88af51c` also exits 0 with no tracked generated diff.
 The final closed-state audit must still check the packet-citation gate. The
 closeout commit must name `inline-schema-compile-hard-error` so that the
 completion citation can be recognized when this PR merges.
+
+### PR #1038 merged before final closeout
+
+GitHub merged PR #1038 at 07:19:00 UTC on 2026-09-09, with reviewed head
+`3324595a3b24e1cdd93f0f0c76d5bf3a3ce5961f` and squash commit
+`3bb59f37c02b7d677c6a5b58651fe85bb4bb5943`. The live review-thread query
+returned all four threads resolved and no further pages. The closeout gate
+had passed with Greptile 5/5, zero issues, and zero actionable threads.
+
+The watcher recorded the last required check, `Heavy / Check`, passing at
+07:18:55 UTC. All 18 required checks passed. The only failing optional checks
+were the two Vercel deployments reporting the permitted rate-limit exception.
+The watcher ended with `reason: all-terminal` and exit 1 for those two checks;
+it did not emit the required terminal `merge-ready: yes` result.
+
+The publication had already pushed the review fix but remained queued for
+local admission. No heavy proof lanes ran for this head. After confirming the
+merge, the owned queued process was interrupted with exit 130, and Yeet
+restored the unrelated settings overlay with its original checksum. The
+successful full proof on opening head `59bba09125` is retained above, not
+relabeled as proof of `3324595a3b`.
+
+`yeet status --remote` now reports `merge-ready: no, blocked on pr-open`.
+The packet remains active. The exception naming #1038 cannot be fulfilled
+after its merge. The operator subsequently approved a successor draft
+closeout PR on 2026-09-09. Branch `codex/inline-schema-packet-closeout` starts
+from the #1038 squash merge. It will stay draft through local proof and the
+final packet update, then complete final-head verification before being
+marked ready for the operator to merge. No further PR has been opened yet.

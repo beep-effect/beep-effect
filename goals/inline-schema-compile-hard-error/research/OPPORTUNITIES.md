@@ -498,3 +498,34 @@
   proof head and merged-preview identity. Keep the final verdict, reusable
   proof state, and pushed-head receipt consistent, with a regression test for
   publish commands that create a commit before proving it.
+
+## 2026-09-09 - Early PR merged before local proof and packet closeout
+
+- **Work:** Publish the PR #1038 review fixes promptly while keeping the full
+  local proof and final packet update in that PR.
+- **Evidence:** GitHub merged head `3324595a3b` at 07:19:00 UTC, five seconds
+  after the final required hosted check passed. All four review threads were
+  resolved and Greptile scored 5/5. The local publication was still waiting
+  for admission and had started no heavy proof lanes. `yeet status --remote`
+  then reported `merge-ready: no, blocked on pr-open`. The owned queued run
+  was interrupted cleanly with exit 130, and Yeet restored the unrelated
+  settings overlay with its original checksum. This is not final-head local
+  proof. The final lifecycle update can no longer land in #1038.
+- **Prevention:** Keep early closeout PRs in draft until the local proof and
+  packet-state update are ready for final verification. Expose local proof
+  and packet readiness to merge operators; hosted green alone does not prove
+  either. Once merged, request an explicit successor-PR exception instead of
+  silently relabeling the old proof or opening another PR.
+
+## 2026-09-09 - Early publication lacks draft creation
+
+- **Work:** Open the operator-approved successor as a draft and keep it draft
+  through local proof and the final packet update.
+- **Evidence:** `bun run beep yeet publish --help` describes `--pr` as creating
+  a ready, non-draft PR. There is no draft flag, and `--start-pr-early` requires
+  `--pr`. The supported fallback is a normal verified push followed by
+  `gh pr create --draft`; this delays remote review until that first proof
+  finishes.
+- **Prevention:** Carry an explicit draft flag through Yeet's PR creation
+  path, including early publication, without changing the local proof or
+  hosted acceptance requirements.

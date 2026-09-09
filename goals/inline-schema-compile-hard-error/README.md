@@ -34,13 +34,17 @@ Use this command for execution-capable sessions:
 ## Current Phase
 
 P2 verification, P3 publication, and P4 closeout are in progress. The
-implementation and package-proof identity repair are merged. The new full
-local proof and all package verification passed. All nine review threads are
-resolved, and the final receipts are pushed in `abd5416aa2`. Closure still
-requires landing those receipts and recording a terminal Yeet monitor verdict.
-The operator approved [final closeout PR #1038](https://github.com/beep-effect/beep-effect/pull/1038)
-on 2026-09-09 after PR #1028 merged before closeout. The final packet update
-will be included in #1038 and verified on its final head before handoff.
+implementation and package-proof identity repair are merged. The full proof
+on opening evidence head `59bba09125` and all 108 package-owner verifications
+passed. All thirteen review threads across the four PRs are resolved.
+The operator-approved [closeout PR #1038](https://github.com/beep-effect/beep-effect/pull/1038)
+merged at 07:19 UTC on 2026-09-09 with all 18 required hosted checks passed.
+Its final head `3324595a3b` was still queued for local proof; that owned run
+was stopped cleanly after the merge. The final packet update and terminal
+Yeet monitor verdict remain outstanding. The operator approved a successor
+draft closeout PR on 2026-09-09. Branch `codex/inline-schema-packet-closeout`
+starts from the #1038 squash merge and will retain draft status through local
+proof and the final packet update. No successor PR has been opened yet.
 P2 stays open with the canonical repository and hosted acceptance item; the
 completed local and package proofs do not close that remaining gate.
 
