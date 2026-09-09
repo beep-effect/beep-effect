@@ -160,3 +160,120 @@ therefore governs this run-2 correction. PR #1032's generator diff was read from
 script, rather than in the generator CLI as the brief's wording suggested.
 
 The branch is local only. Publication remains with Fable after #1040.
+
+## Reconciliation with #1037
+
+Date: 2026-09-09. Main was fetched and pinned at
+`22063e7b6dbb6e63adcf0b080b397fcb350712b7`. Merge commit `375e767e2a` has parents
+`920c686b4a` and `22063e7b6d`. It resolves the three expected conflicts by retaining
+both generator implementations and selecting main's run-2 manifest. The following
+repair replays that committed main pin through the merged generator. This section's
+receipts supersede the earlier report's generator, manifest, and whole-tree hashes.
+
+The merged redactor drops CSF-013 process-member variants while applying the hostname
+digest and UID string substitutions only with `repair=True`. The scanner retains
+both sets of checks, including decoded escaped keys and properties. Explicit
+attribution remains required before source replay. The CLI accepts
+`--finding "Ruling 23"` only with `--run2-only`; the new receipt uses `Ruling 23`
+for both `finding` and `ruling`, with no CSF identifier assigned to this repair.
+The superseded-manifest digest belongs to the appended entry, preserving the first
+receipt's original digest.
+
+Main contains **two** CSF-013 updates. Both are preserved exactly. The resulting
+history is the original CSF-012 receipt, the two CSF-013 updates in their original
+order, and one Ruling 23 update. The new update records 29 changed raw payloads,
+the two residue classes, `live_recapture: false`, and main's manifest digest as both
+its source and superseded manifest. No receipt is manually reconstructed.
+
+The independent audit reads main's complete pin from `git archive` into memory.
+Every repaired payload must equal its main bytes after only the two specified
+substitutions. It found 313 hostname-digest and 313 UID substitutions in exactly
+29 raw files. The only corpus paths differing from main are those files and the
+manifest. All 794 projections and 1,559 corpus files are unchanged. The merged
+pin has 1,589 files, 6,213 events, and 13,316,312 bytes; the capture instant remains
+`2026-09-03T02:27:19.384Z`.
+
+The manifest audit compares every decoded field, allowing only the generator digest,
+two appended rule descriptions, recalculated byte and integrity receipts, emitted
+byte totals, and the appended security update. Capture history, custody references,
+source descriptors, event counts, and ordering match main exactly. The protected-file
+audit covers 2,870 files: run-3 and run-3b pins, generators, and tests equal incoming
+main, and `DECISIONS.md` equals the branch's starting HEAD. The reconciliation makes
+no separate changes to those protected files. The README and open-question manifest
+record the reconciliation; the packet's stage and lifecycle remain unchanged.
+
+| Check | Reconciliation result |
+| --- | --- |
+| Repair staged verifier | PASS; 29 raw payloads sanitized |
+| Ordinary run-2 verifier | PASS; redaction, projection, host-path, and secret checks |
+| Run-2 suite | 10 tests PASS; original nine plus combined CSF-013/Ruling 23 regression |
+| PR #1037 suites | 38 tests PASS with the fixture-directory override below |
+| Independent corpus and manifest audit | PASS; exactly 29 raw files plus manifest differ from main |
+| Hostname digest, numeric UID, home paths, raw PID scans | 0 for every class |
+| Schema process metadata, decoded process members, escaped process keys | 0 for every class |
+| Packet validator | 0 blockers, 0 warns; 26 CQs and 25 SPARQL files |
+| CQ suite | 0 failures across 25 seed tests and 20 fixtures |
+| Repair rerun without source replay | PASS; verified unchanged |
+| Protected-file comparison | PASS; 2,870 files unchanged after merge resolution |
+| Post-commit knowledge references | PASS; exit 0 and 0 live gated observations |
+| Detached committed-HEAD verifier and run-2 suite | PASS; verifier and all 10 tests, clean tracked tree |
+| Commit hooks | Gitleaks, typos, Biome, and commitlint PASS |
+
+| Receipt | SHA-256 |
+| --- | --- |
+| Merged generator | `5f1b8ccc04aba2d52506ebcf0eeac6da9fa9242752d747af7ab54de98f522ab1` |
+| Main manifest | `15776b69b2af00fe34cc9a6d06ad7523861736dc209802a9e106ac39b891b77f` |
+| Reconciled manifest | `7f68bcf9a48ffa0e20b5614cd9309c397d09fbf1e82eda9be60a4fadd224c002` |
+| Main whole tree | `c720365b514b3c655d884e5abc72df69f9278379b234401893317a2f3bac7fda` |
+| Reconciled whole tree | `2dee0abcc0cd2b340c82b48202222bd33c81e0f1ce93c236d1e83a524342a055` |
+
+Replay command, with the same offline Python environment used above:
+
+```sh
+uv run --offline --with pyyaml python \
+  goals/codex-security-findings-2026-09-08/research/scripts/resanitize-corpora.py \
+  --run2-only --finding "Ruling 23" \
+  --source-ref 22063e7b6dbb6e63adcf0b080b397fcb350712b7
+```
+
+Two environment failures were attributed before retrying. SSH fetch failed on a
+local configuration ownership check; read-only HTTPS fetched the same public main
+without changing remote configuration. The unmodified PR #1037 suites first passed
+36 tests and failed two fixture setups because `~/.cache/beep` is read-only in this
+lane. The successful rerun redirected only temporary directories requested at that
+exact cache path into this worktree. No test body, assertion, generator, or home
+directory setting changed. Both receipts are in `research/OPPORTUNITIES.md`.
+
+The fixture override is reproducible from the repository root:
+
+```sh
+uv run --offline --with pyyaml python - <<'PY'
+import tempfile
+import unittest
+from pathlib import Path
+from unittest.mock import patch
+
+scratch = Path.cwd() / ".beep/run2-residue-repair/fixtures"
+scratch.mkdir(parents=True, exist_ok=True)
+cache = Path.home() / ".cache/beep"
+original = tempfile.mkdtemp
+def redirected(suffix=None, prefix=None, dir=None):
+    return original(suffix=suffix, prefix=prefix, dir=scratch if dir == cache else dir)
+suite = unittest.defaultTestLoader.discover(
+    "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus",
+    pattern="test_run3*generator*.py",
+)
+with patch.object(tempfile, "mkdtemp", redirected):
+    result = unittest.TextTestRunner(verbosity=2).run(suite)
+raise SystemExit(not result.wasSuccessful())
+PY
+```
+
+After committing the repaired pin, `bun run beep knowledge refs --check` passed
+with zero live gated observations. A detached checkout under
+`.beep/run2-residue-repair/reconcile-detached` passed the ordinary run-2 verifier
+and all 10 run-2 tests without tracked changes. Its full corpus digest matched the
+reconciled receipt above. The optional mise registration warnings described in the
+original report recurred; every proof command exited 0. The lane repeats the
+knowledge-reference and detached checks at final HEAD after this report update,
+then removes the disposable checkout. No push or PR creation is part of this handoff.

@@ -330,3 +330,14 @@
   same public repository succeeded and refreshed `origin/main` to `22063e7b6d`.
 - **Prevention:** check the workstation SSH configuration ownership before fleet
   dispatch. Public read-only fetches can use HTTPS without changing remote settings.
+
+## 2026-09-09: CSF-013 regression fixtures require a writable global cache
+
+- **Work:** running both unchanged generator test suites from PR #1037 during
+  run-2 reconciliation.
+- **Evidence:** 36 tests passed; two history-replay fixtures failed before setup
+  with `Read-only file system` when creating temporary repositories in
+  `~/.cache/beep`. This lane permits fixture writes inside its own worktree.
+- **Prevention:** give test fixtures an explicit scratch-directory override.
+  The reconciliation runner redirects only those temporary-directory allocations
+  into `.beep/run2-residue-repair`; test files and generator behavior stay intact.

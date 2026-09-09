@@ -23,7 +23,8 @@ the "bush" (`A_LETTER_FROM_THE_OTHER_SIDE_OF_THE_LOOP.md`).
 
 Ruling 23 repairs the ratified run-2 fleet pin in place: 29 raw files now use
 `<host>` and `uid-<uid>` placeholders, with capture history and the original
-security receipt preserved. The implementation and evidence are in the
+security receipt preserved. Reconciliation with PR #1037 retains both CSF-013
+updates and appends the Ruling 23 receipt after them. The implementation and evidence are in the
 [run-2 repair report](./research/run3-lanes/run2-residue-repair-report.md).
 Fable owns review and publication after #1040; run 3 remains the next ontology step.
 
@@ -485,3 +486,8 @@ graduation. Full plan with locked decisions: [`DECISIONS.md`](./DECISIONS.md).
 - 2026-09-08: recorded the operator's Astra/xhigh routing update in DECISIONS,
   this resume surface, and manifest timestamps where needed; retained the existing
   stage, lifecycle, open questions, and historical execution provenance.
+
+- 2026-09-09: merged main after #1037 into the run-2 repair branch, preserved its
+  process-metadata checks and both CSF-013 receipts, and replayed Ruling 23 from
+  the committed main pin. Only 29 raw files plus the manifest differ from main;
+  see the reconciliation section of the run-2 repair report. Fable owns publication.
