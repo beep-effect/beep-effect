@@ -1,5 +1,47 @@
 # Health Ratchet Clean Runs
 
+## Final review wave — 2026-09-09 UTC
+
+The review fixes on `4c6352111a`, including main through `ed66cbce8f`, remove
+four obsolete baseline entries. The canonical writer shrank the baseline from
+189 to 185; no row or count increased. `ChartTooltipContent` now measures
+cognitive 16 and 76 lines: its cognitive allowance remains 17, its unit-size
+allowance decreases from 135 to 77, and the obsolete CRAP allowance is removed.
+
+The writer exits 1 while saving because the unbaselined report still contains
+findings in the frozen band. The acceptance command is the baseline comparison;
+three consecutive comparisons of the final candidate bytes exit 0:
+
+| Run | UTC timestamp | Exit | Baseline SHA-256 |
+| ---: | --- | ---: | --- |
+| 1 | 2026-09-09T03:03:06.205041+00:00 | 0 | `7b35d81a5e403d1a038c569ce7b31cc0da4d00339839ddbf8ce9574d2d295048` |
+| 2 | 2026-09-09T03:03:08.944659+00:00 | 0 | `7b35d81a5e403d1a038c569ce7b31cc0da4d00339839ddbf8ce9574d2d295048` |
+| 3 | 2026-09-09T03:03:11.647914+00:00 | 0 | `7b35d81a5e403d1a038c569ce7b31cc0da4d00339839ddbf8ce9574d2d295048` |
+
+Fallow 3.23.0 analyzed 4,444 files and 68,615 functions. All 185 entries match,
+with zero stale entries, moved entries, or regressions. The unbaselined scan
+contains zero unwaived findings above cognitive 15. Two combined critical
+labels remain at cognitive 12 (`tooltipLabel`) and 7 (`LinkPreview` callback),
+within the explicitly frozen 7-15 band.
+
+The strict branch-local audit exits 0 with zero introduced findings and 60
+inherited-adjacent findings. Suppressions remain 207 across 114 files, with
+zero missing or stale reasons and no campaign-added markers. The CI and
+pre-push contract checks both confirm audit, dead-code, and health as blocking.
+All 49 triage paths and 19 dated active waivers match the report; no campaign
+waiver dimension is stale.
+
+The tooltip package test compiler now accepts its required `graphicalItemId`.
+Both UI and epistemic-server packages passed their full audit and docgen after
+the review fixes. Hosted Build And Test on `29e4618939` passed all 77 Storybook
+files and 489 tests. The later hosted Check failure identified the fixture's
+missing type field, corrected in `4c6352111a`.
+
+The user explicitly requested skipping full local proof on 2026-09-08.
+Publication now uses `yeet publish --fast --monitor`; these bounded results
+support the change, and hosted checks must establish final-head readiness.
+Earlier local proof receipts below are historical, not current-head proof.
+
 ## Current-main integration — 2026-09-09 UTC
 
 After integrating main at `52fcc8d135` and reusing the existing compiled codecs

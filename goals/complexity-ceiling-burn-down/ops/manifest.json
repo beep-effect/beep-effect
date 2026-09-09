@@ -10,7 +10,7 @@
   },
   "packetPath": "goals/complexity-ceiling-burn-down",
   "lifecycle": "active",
-  "statusNote": "P0 and P1 are complete; P2 full proof, P3 hosted merge-readiness, and P4 closeout remain open. The user requested early PR publication during verification. Main at 663904610c replaces the vulnerable ONNX ZIP dependency and removes the temporary exception. The pre-scan guard now passes three installed-replacement regressions. Earlier full proof passed at 2026-09-09T00:21:12Z; the subsequent clean-commit run passed all 15 initial gates and build before the deliberate workflow switch. Fresh local and hosted proof must cover the combined committed candidate.",
+  "statusNote": "P0 and P1 are complete. The final review wave tightens the tooltip waiver and shrinks the health baseline from 189 to 185 entries; three clean comparisons pass. PR #1021 carries the fixes, including the required Recharts test payload identity. On 2026-09-08 the user explicitly authorized skipping full local proof and publishing through Yeet fast plus monitor. P2 hosted checks, P3 exact-head merge-readiness, and P4 final lifecycle reconciliation remain open; focused evidence is not full proof.",
   "mission": "Clear the refreshed cognitive->15 tail (49 fns), promote the fallow health lane to a blocking baseline ratchet, and hold the maxCognitive=8 gate credible.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -22,7 +22,7 @@
     "operator": "yeet",
     "requiresPullRequest": true,
     "requiresMergeable": true,
-    "statement": "Not achieved until this goal's work ships as PRs driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "statement": "Not achieved until PR #1021 is merge-ready through Yeet, with hosted checks and strict review closeout passing on the final published head. The user authorized fast publication with hosted monitoring instead of waiting for full local proof on 2026-09-08.",
     "grandfathered": false
   },
   "currentSourceOfTruth": [

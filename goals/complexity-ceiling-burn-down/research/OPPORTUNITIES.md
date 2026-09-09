@@ -657,3 +657,21 @@ Recharts' payload type. Runtime assertions and the normal package check had
 passed because those checks did not compile this test surface. The fixture now
 supplies the series identity. Test-only changes need the package test-typecheck
 alongside their runtime assertions before publication.
+
+### Publication mode did not match the requested queue behavior (2026-09-08)
+
+The user asked for review fixes to be committed and pushed as soon as available.
+Early PR mode pushed first but still entered the full local proof queue. After
+the user explicitly requested skipping proof, `yeet publish --fast --monitor`
+pushed the tooltip fixture fix and began hosted monitoring. Publication receipts
+should state both when the push happens and whether local proof still follows;
+the packet now records the authorized replacement of that wait.
+
+### Final waiver and baseline retained obsolete allowances (2026-09-08)
+
+The review fixes left four stale baseline entries and a tooltip CRAP allowance
+that no longer reproduced. At the final wave boundary, the canonical writer
+reduced the baseline from 189 to 185 entries, the tooltip line allowance fell
+from 135 to 77, and its CRAP allowance was removed. The writer saved successfully
+but exited 1 for retained unbaselined findings; all three subsequent baseline
+comparisons exited 0. Record the writer and comparator outcomes separately.

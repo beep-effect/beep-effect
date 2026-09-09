@@ -162,22 +162,21 @@ campaign, so the current no-growth comparator is `<= 207`: 120
 requires zero missing/stale reasons and forbids campaign-added suppressions.
 The 91- and 194-count inventories remain provenance only.
 
-## Final verification state
+## Final review-wave verification
 
-The implementation branch now proves the refreshed objective:
+The P0 table above preserves its dated measurements. After the review fixes
+through `4c6352111a` and main integration through `ed66cbce8f`, Fallow 3.23.0
+analyzes 4,444 files and 68,615 functions. All 49 verdicts remain executed:
+30 real refactors, 19 dated overrides, and no new ignores.
 
-- After synchronizing to `origin/main` at
-  `53193e5a5e93a3231282eaead455f7d06a85ac4d`, Fallow 3.22.0 analyzes 4,411
-  files and 67,646 functions after the extracted seams landed; the live
-  complexity breakdown contains zero unwaived findings above cognitive
-  complexity 15.
-- `bun run beep quality fallow audit --check --quiet` exits 0 with zero
-  introduced complexity or duplication findings.
-- `bun run fallow:health:baseline:check` exits 0. The regenerated baseline has
-  189 entries: 189 matched, zero stale, and zero moved.
-- `bun run fallow suppressions --format json` reports 207 suppressions in 114
-  files, with zero missing reasons and zero stale suppressions. The +13 since
-  the original P0 inventory landed on main; this campaign added no inline
-  suppression.
-- Three consecutive clean baseline comparisons against identical baseline
-  bytes are recorded in `reports/clean-runs.md`.
+- The unbaselined report contains zero unwaived functions above cognitive 15.
+- The final wave shrinks the health baseline from 189 to 185 entries; three
+  consecutive comparisons match all 185, with zero stale or moved entries.
+- `ChartTooltipContent` measures cognitive 16 and 76 lines. Its allowance is
+  tightened to cognitive 17 and 77 lines; its obsolete CRAP allowance is gone.
+- Two combined critical estimated-CRAP labels remain at cognitive 12 and 7.
+  They remain visible and do not expand the user-confirmed 7-15 non-goal.
+- Suppression hygiene and the branch-local audit remain separate acceptance
+  gates; their latest receipts are summarized in `reports/clean-runs.md`.
+- Hosted checks and strict review closeout must prove the final PR head. The
+  user authorized fast publication and skipped the full local proof wait.

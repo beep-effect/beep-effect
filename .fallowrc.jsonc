@@ -558,8 +558,7 @@
         "files": ["packages/foundation/ui-system/ui/src/components/chart.tsx"],
         "functions": ["ChartTooltipContent"],
         "maxCognitive": 17,
-        "maxCrap": 73,
-        "maxUnitSize": 135,
+        "maxUnitSize": 77,
         "reason": "The Recharts adapter props, label resolution, and container composition are one tooltip boundary; the nested item renderer is refactored separately. Review by 2026-12-03: re-measure after that extraction and lower this ceiling to the observed boundary."
       }
     ]

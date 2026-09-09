@@ -25,8 +25,10 @@ repository that has since changed.
 
 ## Source Hierarchy
 
-1. User objective (2026-09-03 refresh: burn down the current repository's
-   complexity using the latest Fallow release; the historical packet must not
+1. User objective (2026-09-08 publication update: skip the full local proof
+   queue and push ready fixes through `yeet publish --fast --monitor`; hosted
+   checks and review closeout remain required. 2026-09-03 refresh: burn down
+   the current repository's complexity using the latest Fallow release; the historical packet must not
    block current work. 2026-09-08 clarification: keep the cognitive >15
    completion scope; critical estimated-CRAP findings in the 7-15 band do not
    expand the work. The user also approved mitigating inherited
@@ -110,7 +112,9 @@ gate below; checked implementation items do not establish merge readiness.
 
 ## Published-Commit Verification
 
-- [ ] Full local Yeet proof passes on the published commit.
+- [x] Publish through the user-authorized `yeet publish --fast --monitor`
+      workflow. The 2026-09-08 instruction replaces the full local proof wait
+      with hosted checks; focused results are not represented as full proof.
 - [ ] Hosted checks, blocking health, and review closeout pass on that commit;
       Yeet reports `merge-ready: yes`.
 - [ ] The same PR records the final manifest status and closeout reflection.
