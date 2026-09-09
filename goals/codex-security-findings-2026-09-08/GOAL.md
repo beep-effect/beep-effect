@@ -2,8 +2,8 @@
 
 Repo root: the current working directory. Do not assume an absolute path.
 
-Outcome: fix and close the 9 Codex Cloud security findings captured on
-2026-09-08 for `kriegcloud/beep-effect`: 2 Low, 7 Informational.
+Outcome: fix and close the 10 Codex Cloud security findings captured on
+2026-09-08 for `kriegcloud/beep-effect`: 2 Low, 8 Informational.
 Ship one Yeet-driven PR to mergeable, merge it, then resolve the exact captured
 Codex IDs until no packet-applicable finding remains open.
 
@@ -29,6 +29,10 @@ Scope:
 
 Rules:
 
+<!-- codex-findings-refresh:start -->
+Refresh capture: all 10 records are validated, assigned, and implemented. The new ambient-environment cache regression passes.
+<!-- codex-findings-refresh:end -->
+
 1. Default every item to `remediate`; use `already-fixed` or `false-positive`
    only with strict current-HEAD proof in the finding and triage ledger.
 2. Apply Effect-first and schema-first repo law. Search live source and barrels
@@ -39,7 +43,7 @@ Rules:
    sanitized metadata, summaries, decisions, changed files, and proof.
 5. Run focused tests, affected package checks, packet validation, then Yeet
    repair/verify. Publish one intentional PR and monitor through mergeable.
-6. After merge, close only the exact 9-ID allowlist in Codex as Already fixed
+6. After merge, close only the exact 10-ID allowlist in Codex as Already fixed
    (or the evidence-backed invalid reason) and verify zero packet-open findings.
 
 The operator explicitly authorized resolving all current security findings in one

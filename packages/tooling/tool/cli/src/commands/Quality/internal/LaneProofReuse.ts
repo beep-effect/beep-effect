@@ -121,7 +121,9 @@ const laneCommandHash = (lane: GithubCheckLaneSpec): string =>
   );
 
 const environmentProfileHash = (lane: GithubCheckLaneSpec): string => {
-  const localEnvironment = lane.step.useLocalEnv === true ? Bun.env : {};
+  // Ordinary lanes inherit ambient values; secret-session lanes retain a
+  // sanitized subset. useLocalEnv selects wrapping, not environment isolation.
+  const localEnvironment = Bun.env;
   return hashText(
     stableRecordText({
       platform: process.platform,

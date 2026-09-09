@@ -10,14 +10,14 @@
   },
   "packetPath": "goals/codex-security-findings-2026-09-08",
   "lifecycle": "active",
-  "mission": "Remediate and close the 9 Codex Cloud security findings captured on 2026-09-08.",
+  "mission": "Remediate and close the 10 Codex Cloud security findings captured on 2026-09-08.",
   "executionCapable": true,
   "reflectionRequired": true,
   "completionGate": {
     "operator": "yeet",
     "requiresPullRequest": true,
     "requiresMergeable": true,
-    "statement": "Not achieved until the work ships as a Yeet-driven mergeable PR, is merged, and the exact 9 Codex findings are resolved with zero packet-applicable open findings.",
+    "statement": "Not achieved until the work ships as a Yeet-driven mergeable PR, is merged, and the exact 10 Codex findings are resolved with zero packet-applicable open findings.",
     "grandfathered": false
   },
   "branch": "codex/security-findings-2026-09-08",
@@ -50,21 +50,21 @@
     "rawCaptureTracked": false
   },
   "catalog": {
-    "expectedCount": 9,
-    "capturedCount": 9,
+    "expectedCount": 10,
+    "capturedCount": 10,
     "severityCountsKnown": true,
     "severityCounts": {
       "Low": 2,
-      "Informational": 7
+      "Informational": 8
     },
     "dispositionCounts": {
-      "remediate": 9,
+      "remediate": 10,
       "already-fixed": 0,
       "false-positive": 0,
       "out-of-scope": 0,
       "untriaged": 0
     },
-    "note": "All captured IDs confirmed and remediated. Focused proof passes; repository proof and merge remain pending."
+    "note": "All ten captured IDs are validated and implemented with focused regression proof. Updated package and repository proof, publication, merge, and Codex closure remain pending."
   },
   "closeoutPolicy": {
     "fixed": "Already fixed",
@@ -142,7 +142,7 @@
     "test \"$(wc -m < goals/codex-security-findings-2026-09-08/GOAL.md)\" -le 4000",
     "jq . goals/codex-security-findings-2026-09-08/ops/manifest.json",
     "jq . goals/codex-security-findings-2026-09-08/ops/triage.json",
-    "test \"$(find goals/codex-security-findings-2026-09-08/findings -maxdepth 1 -name 'CSF-*.md' | wc -l | tr -d ' ')\" = 9",
+    "test \"$(find goals/codex-security-findings-2026-09-08/findings -maxdepth 1 -name 'CSF-*.md' | wc -l | tr -d ' ')\" = 10",
     "git diff --check -- goals/codex-security-findings-2026-09-08",
     "jq -r '.findings[].commit' goals/codex-security-findings-2026-09-08/ops/triage.json | while read -r c; do git merge-base --is-ancestor \"$c\" HEAD || echo \"not-an-ancestor: $c\"; done",
     "bun run beep lint reflection-artifacts"

@@ -14,3 +14,9 @@
   its test process stopped. The terminating actor was not established. Run the
   required proofs serially and retain their logs across task continuation;
   interrupted runs never count as acceptance evidence.
+- Refreshing the packet after a tenth report appeared failed because the
+  document scanner treated the reflection's YAML frontmatter delimiter as a
+  spreadsheet formula. Scope that rule to imported fields and non-Markdown
+  documents; retain all private-content checks on Markdown. Writer, CSV, and
+  sensitivity regressions passed, and canonical refresh then preserved the
+  original nine records and appended CSF-010.

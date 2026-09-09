@@ -4,11 +4,11 @@
     "repository": "kriegcloud/beep-effect",
     "findingsView": "repo-scoped, status=new",
     "branch": "codex/security-findings-2026-09-08",
-    "expectedCount": 9,
-    "capturedCount": 9,
+    "expectedCount": 10,
+    "capturedCount": 10,
     "capturedAt": "2026-09-08",
     "captureMethod": "signed-in-csv-export",
-    "note": "All nine findings confirmed and remediated. Focused regressions and full verification of FreshBooks, AI Sync, and repo-cli pass. Repository-wide Yeet proof and post-merge Codex closure remain pending."
+    "note": "All ten findings are validated and implemented. Focused regressions and full FreshBooks, AI Sync, and updated CLI package verification pass. Repository proof, publication, merge, and exact-ID closure remain pending."
   },
   "lanes": {
     "L1-permissions": {
@@ -34,6 +34,10 @@
     "L5-process": {
       "status": "implemented",
       "findings": ["CSF-008"]
+    },
+    "L7-proof-cache": {
+      "status": "implemented",
+      "findings": ["CSF-010"]
     }
   },
   "findings": [
@@ -300,6 +304,34 @@
       "ownerArea": "Worktree archive containment",
       "verdict": "confirmed-vulnerable",
       "lane": "L2-filesystem"
+    },
+    {
+      "id": "CSF-010",
+      "codexId": "87fa964ffcec81918d3518db0cc69a5d",
+      "title": "Lane-proof cache ignores inherited environment changes",
+      "severity": "Informational",
+      "codexStatus": "New",
+      "commit": "52fcc8d1353db9481ef9edb6cc9619500f95568d",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "Ordinary commands inherit selected ambient settings despite omitting useLocalEnv. Their cached proof identity omitted those settings and could incorrectly skip execution after a change."
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "packages/tooling/tool/cli/src/commands/Quality/internal/LaneProofReuse.ts",
+          "packages/tooling/tool/cli/test/quality-tasks.test.ts"
+        ],
+        "verificationCommands": [
+          "bunx --bun vitest run test/quality-tasks.test.ts -t 'lane proof|lane-proof|ordinary lane'"
+        ],
+        "summary": "Hash selected ambient execution settings for every lane. A real child-process regression verifies reuse at unchanged values and execution after inherited property-test, CI, and Turbo settings change."
+      },
+      "ownerArea": "Local verification proof reuse",
+      "verdict": "confirmed-vulnerable",
+      "lane": "L7-proof-cache"
     }
   ]
 }

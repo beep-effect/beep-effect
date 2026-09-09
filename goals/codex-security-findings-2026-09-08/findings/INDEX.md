@@ -10,7 +10,7 @@ auth values, email addresses, and raw local paths.
 | Severity | Count |
 | --- | ---: |
 | Low | 2 |
-| Informational | 7 |
+| Informational | 8 |
 
 ## Findings
 
@@ -25,9 +25,14 @@ auth values, email addresses, and raw local paths.
 | [CSF-007](./CSF-007.md) | Informational | implemented | Home\-path hygiene check rejects ordinary branch names | Public evidence path hygiene |
 | [CSF-008](./CSF-008.md) | Informational | implemented | Old clients reap live state written by the new client | Process identity compatibility |
 | [CSF-009](./CSF-009.md) | Informational | implemented | Raw worktree names escape the archive residue root | Worktree archive containment |
+| [CSF-010](./CSF-010.md) | Informational | implemented | Lane\-proof cache ignores inherited environment changes | Local verification proof reuse |
 
 ## Closeout Mapping
 
 - `remediate` or `already-fixed` -> close as `Already fixed` after merge.
 - Strictly proven invalid -> close as `False positive` with evidence recorded.
 - Accepted risk / `Won't fix` is unavailable.
+
+<!-- codex-findings-refresh:start -->
+Refresh capture: all 10 records are validated, assigned, and implemented. The new ambient-environment cache regression passes.
+<!-- codex-findings-refresh:end -->
