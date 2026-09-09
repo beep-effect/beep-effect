@@ -616,3 +616,35 @@ nonconformance. The cap now short-circuits only after an actual violation. A
 zero limit returns no details while preserving conformance; the regression
 also checks a conforming first property followed by a later violation. The
 conforming zero-limit case fails before this correction.
+
+### Proxy correction introduced a new complexity finding (2026-09-08)
+
+Hosted Fallow audit and health rejected the first HMR review fix: `viteFinal`
+rose to cognitive 12 and cyclomatic 15. The existing callback mixed proxy
+transport selection with unrelated plugin, resolver, and filesystem settings.
+Proxy transport settings now resolve once from the optional configured URL.
+Vite's assembly preserves disabled HMR and consumes those settings through
+its existing merge function. This retains the reviewed behavior without
+repeating transport or nested-configuration guards; no baseline or threshold
+is relaxed.
+
+The first extraction still exceeded the per-file CRAP allowance; its reduced
+version passed health but remained a new audit finding. The final assembly
+reuses Vite's `mergeConfig` for nested options
+and plugin ordering, then deduplicates the configured modules and filesystem
+roots. Seven proxy cases also check retained plugin order, aliases, server
+headers, filesystem strictness, source maps, and warning-limit precedence.
+The health baseline check passes without changing the baseline or thresholds.
+
+A separate local Fallow audit exited 137 during workstation memory exhaustion.
+The earlyoom journal identifies its `quality fallow audit` process as a SIGKILL
+target with less than one percent memory available and no free swap. This is
+an environment failure, not a successful audit. Keep heavyweight work behind
+admission and require a successful audit after memory recovers.
+
+The successful rerun reports zero introduced Fallow audit findings. Storybook's
+quick package verification and the unchanged health baseline also pass.
+Hosted Lint Policy separately exposed line-sensitive schema inventory drift:
+the new validator regression moved an existing advisory from line 14 to 19.
+The canonical schema-first writer refreshes that location while retaining the
+same advisory; review-test additions need this inventory check before push.
