@@ -151,6 +151,73 @@ A local repair that restores already-correct committed files does not require
 a source PR. If a failure also reproduces from a clean current base, attribute
 it and use the [Yeet workflow](../../.claude/skills/yeet/SKILL.md) for the source fix.
 
+## Seed the meaning tier into other clones
+
+Copy the paid-for meaning tier from a clone that already has
+`graft/.cache/summaries.json`. Preview every destination first:
+
+```sh
+bun run beep graft cache sync --from ../beep-effect --siblings --dry-run --json
+bun run beep graft cache sync --from ../beep-effect --siblings
+```
+
+For selected clones, repeat `--to` instead of `--siblings`:
+
+```sh
+bun run beep graft cache sync --from ../beep-effect --to ../beep-effect2 --to ../beep-effect6
+```
+
+Sibling discovery uses the source basename with trailing digits removed, so
+`beep-effect6` selects sibling `beep-effect*` directories containing `.git`.
+The source is excluded. Exactly one of `--to` or `--siblings` is required.
+
+Sync atomically replaces the summaries cache, root-level concept Markdown
+(including `INDEX.md`), and `.graph/wiring.json` when present, and removes
+root-level concept nodes the target still has but the source no longer does,
+so the target's concept set matches the source. Missing source files are
+reported as skipped; a missing summaries cache fails the command. Per-file
+cards in nested directories are left for each target's own structural rebuild.
+All writes stay under the target's `graft/`; overlapping clones, redirected
+artifact paths, and targets without `.git` are refused, and a plan with any
+refusal is applied to nothing: the plan is printed and the command exits
+non-zero with no files written. `--json` emits a plan for dry runs and refused
+runs, and a report with copied, removed, skipped, refused, and byte counts for
+writes. The command runs neither Git nor Graft. A dangling or unreadable
+sibling entry is skipped by `--siblings` rather than aborting discovery.
+
+## Build the meaning tier (operator only)
+
+The meaning tier (`graft build --deep`) adds the concept map and the per-symbol
+summary and crux. It spends model quota through the local proxy, so it is an
+operator batch job, never something an agent runs. It has three model-backed
+passes: per-file summaries (one request per file, content-hash cached, cheap
+to repeat), concept synthesis (142 sequential batches on this repo; effort
+barely changes their duration because the time goes to writing nodes), and the
+per-symbol crux pass (one batched request per file, checkpointed every 15 s).
+Run it as two systemd user services so a closed terminal cannot kill it and
+the proxy token stays in an environment file rather than on a command line:
+phase A at medium effort until the crux pass starts (the synthesis quality is
+what every later query ranks on), then phase B at low effort to completion
+(synthesis replays from cache; the crux pass is mechanical).
+
+```sh
+install -m 600 /dev/null "${XDG_CACHE_HOME:-$HOME/.cache}/beep/graft-deep-medium.env"
+# GRAFT_PROVIDER=openai, GRAFT_BASE_URL=http://127.0.0.1:8317/v1, GRAFT_API_KEY=<proxy client token>,
+# GRAFT_MODEL=gpt-6-astra(medium), GRAFT_LLM_RETRIES=12, DO_NOT_TRACK=1; same file with (low) for phase B
+systemd-run --user --unit graft-deep-A --working-directory="$PWD" --collect \
+  -p EnvironmentFile="${XDG_CACHE_HOME:-$HOME/.cache}/beep/graft-deep-medium.env" \
+  -p StandardOutput=append:"$HOME/data-home/graft-cache/deep-build.log" -p StandardError=inherit \
+  graft build --deep -j 4
+# when the log shows `summarizing 1/…`: systemctl --user stop graft-deep-A, then the same
+# command as graft-deep-B with the (low) environment file; it runs to completion
+```
+
+Leave `--allow-partial` off so an incomplete meaning tier fails loudly; rerun
+the same command to retry only the failed files. `-j` reaches the crux pass
+only; the concept pass runs eight summaries in parallel regardless. The
+synthesis checkpoint patch described below must be present before phase A, or
+a provider error discards every finished batch.
+
 ## After a Graft upgrade
 
 The installed package is pinned under the user-local prefix, off any Node
