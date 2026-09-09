@@ -47,6 +47,7 @@ const SECRET_REFERENCES = A.map(SECRET_INPUTS, ([, name]) => `secrets.${name}`);
 const WorkflowStep = S.Struct({
   name: S.optionalKey(S.String),
   if: S.optionalKey(S.String),
+  run: S.optionalKey(S.String),
   uses: S.optionalKey(S.String),
   with: S.optionalKey(S.Record(S.String, S.Unknown)),
   env: S.optionalKey(S.Record(S.String, S.Unknown)),
@@ -76,6 +77,23 @@ const stepByName = (steps: ReadonlyArray<WorkflowStep>, name: string): WorkflowS
     A.findFirst(steps, (step) => step.name === name),
     () => new Error(`Step "${name}" is not declared.`)
   );
+
+const stepRun = (steps: ReadonlyArray<WorkflowStep>, name: string): string =>
+  O.getOrThrowWith(
+    O.fromUndefinedOr(stepByName(steps, name).run),
+    () => new Error(`Step "${name}" declares no run script.`)
+  );
+
+// Third-party apt sources on the hosted ubuntu-24.04 image (Google Chrome,
+// Microsoft) fail `apt-get update` for minutes at a time ("Hash Sum mismatch",
+// "403 Forbidden"); every lane that touches apt keeps only the Ubuntu archive
+// first, through the shared prune script.
+const PRUNE_APT_SOURCES = "scripts/ci-prune-apt-sources.sh";
+const assertPrunesAptSourcesBefore = (run: string, command: string): void => {
+  assert.include(run, `\n${PRUNE_APT_SOURCES}\n`);
+  assert.include(run, command);
+  assert.isBelow(run.indexOf(PRUNE_APT_SOURCES), run.indexOf(command));
+};
 
 const setupMonorepoStep = (jobs: WorkflowJobs, jobId: string): WorkflowStep =>
   O.getOrThrowWith(
@@ -382,6 +400,11 @@ describe("CI runner security", () => {
       assert.include(workflowText, "run: cargo check --locked");
       assert.include(workflowText, "run: cargo clippy --locked -- -D warnings");
       assert.include(workflowText, "working-directory: apps/professional-desktop/src-tauri");
+      assertPrunesAptSourcesBefore(stepRun(steps, "Install Tauri Linux system dependencies"), "sudo apt-get update");
+      const pruneScript = yield* fs.readFileString(path.join(repoRoot, PRUNE_APT_SOURCES));
+      assert.include(pruneScript, "! -name 'ubuntu.sources'");
+      const pruneInfo = yield* fs.stat(path.join(repoRoot, PRUNE_APT_SOURCES));
+      assert.notStrictEqual(pruneInfo.mode & 0o111, 0, "prune script must be executable");
       // tauri-build needs the sidecar binary, so the cargo steps follow the
       // IPC proof that builds it.
       assert.isBelow(stepIndexByName(steps, "Run desktop IPC stdio proof"), stepIndexByName(steps, "Check Rust crate"));
@@ -437,6 +460,10 @@ describe("CI runner security", () => {
       ]) {
         assert.strictEqual(stepByName(steps, name).if, gate, name);
       }
+      assertPrunesAptSourcesBefore(
+        stepRun(steps, "Install Playwright Chromium"),
+        "bunx playwright install --with-deps chromium"
+      );
       const upload = stepByName(steps, "Upload Storybook static artifact");
       assert.strictEqual(upload.if, `${gate} && hashFiles('apps/storybook/storybook-static/index.html') != ''`);
       assert.strictEqual(upload.with?.["if-no-files-found"], "error");

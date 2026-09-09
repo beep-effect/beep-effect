@@ -532,10 +532,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          # The image preinstalls Google Chrome's apt source (google-chrome.sources), which
-          # fails apt-get update with "dl.google.com/linux/chrome-stable/deb ... Hash Sum
-          # mismatch" while Google republishes its index; nothing here installs from it.
-          sudo rm -f /etc/apt/sources.list.d/google-chrome.sources /etc/apt/sources.list.d/google-chrome.list
+          # The image's third-party apt sources (Google Chrome, Microsoft) fail apt-get
+          # update with "Hash Sum mismatch" / "403 Forbidden" for minutes at a time;
+          # keep only the Ubuntu archive, which is where these packages come from.
+          scripts/ci-prune-apt-sources.sh
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             libwebkit2gtk-4.1-dev \
