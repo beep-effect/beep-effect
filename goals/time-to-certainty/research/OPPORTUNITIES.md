@@ -572,3 +572,31 @@ subprocess diagnostics would make inventory stalls attributable.
 - **Would have prevented it:** `package-verify` (or the C3 package-level `coverage` task) reporting
   "new files without baseline rows" as its own line regardless of package totals, and the brief's
   acceptance list naming the baseline write for any stage that adds source files.
+
+## 2026-09-09 — Two heavy lanes died mid-step on separate runners at the same second
+
+- **Doing:** babysitting PR #1029's sixth hosted round (head cb8236d37f).
+- **Evidence:** `Heavy / Check` and `Heavy / Coverage Regression` both reported `completed/failure`
+  at 07:36:01Z after 23 minutes with step 10 `Run verification lane` still `in_progress/null`, every
+  later step `pending`, and `BlobNotFound` for the job logs; two different `beep-ci-i-…` EC2 runners.
+  Nothing in the head explains a simultaneous stop, and the same lanes were green on the previous
+  head except for a baseline-row finding fixed in this push. The merge button refused on the
+  required checks, so the remedy was a fresh push (main merged forward) rather than a code change.
+- **Would have prevented it:** the runner-fleet janitor or lifetime policy leaving a visible marker
+  (a job annotation or a `[beep-ci] runner reclaimed` log line) so an operator can attribute a
+  step-less failure without reading two job payloads, plus `yeet monitor` classing
+  "completed/failure with no failed step" as environment-only automatically.
+
+## 2026-09-09 — The reap-claim settlement window was a 25 ms sleep
+
+- **Doing:** attributing Property Laws on the same head.
+- **Evidence:** `quality-scheduler.test.ts › atomically claims dead leases and tickets before
+  journaling each death once` failed with `Admission reap claim … stayed busy; its outputs remain
+  pending.` from `QualityScheduler.ts:905`. `recoveryRecordRemainsAfterSettlement` slept once for
+  25 ms and treated a still-present claim as stuck, while the owning reaper still had two journal
+  sinks and an acknowledgement write to finish on a runner whose import phase alone took five
+  minutes. Fixed on `fix/scheduler-reap-claim-settlement`: a 25 ms spaced poll under a 5 s deadline,
+  and the regression now holds the owner in its sink behind a Deferred gate.
+- **Would have prevented it:** the same rule #1039 applied to the legacy-ticket tests, stated once
+  for the scheduler: no fixed sleeps as settlement or ordering witnesses; poll with a bounded
+  deadline, and gate concurrency in tests with Deferred instead of wall-clock waits.

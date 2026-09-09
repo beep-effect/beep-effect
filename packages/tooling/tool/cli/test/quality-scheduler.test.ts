@@ -3316,119 +3316,160 @@ describe("quality-scheduler", () => {
       }).pipe(provideScopedLayer(TestConsole.layer), provideScopedLayer(SchedulerCommandLayer))
     ));
 
-  it("atomically claims dead leases and tickets before journaling each death once", () =>
-    Effect.runPromise(
-      Effect.gen(function* () {
-        const gibRef = yield* Ref.make(50);
-        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
-          Effect.gen(function* () {
-            const fs = yield* FileSystem.FileSystem;
-            const path = yield* Path.Path;
-            const checkoutRoot = path.join(path.dirname(path.dirname(tempRoot.root)), "checkout");
-            const leaseAttemptId = yield* decodeUUID("550e8400-e29b-41d4-a716-446655440021");
-            const ticketAttemptId = yield* decodeUUID("550e8400-e29b-41d4-a716-446655440022");
-            yield* fs.makeDirectory(checkoutRoot, { recursive: true });
-            yield* writeFakeLease(tempRoot, {
-              pid: DEAD_PID,
-              nonce: "",
-              checkoutRoot,
-              branch: "feat/dead-lease",
-              heartbeatAtMillis: 12345,
-              attemptId: O.some(leaseAttemptId),
-              resolvedHeadSha: O.some("0123456789abcdef0123456789abcdef01234567"),
-              diffFingerprint: O.some("abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcd"),
-              proofTier: O.some("full"),
-              envProfile: O.some("local"),
-              stage: O.some("pre-push"),
-            });
-            yield* writeFakeTicket(tempRoot, {
-              pid: DEAD_PID,
-              nonce: "dead-ticket",
-              checkoutRoot,
-              branch: "feat/dead-ticket",
-              attemptId: O.some(ticketAttemptId),
-              resolvedHeadSha: O.some("fedcba9876543210fedcba9876543210fedcba98"),
-              diffFingerprint: O.some("1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"),
-              proofTier: O.some("review-fix"),
-              envProfile: O.some("hosted"),
-              stage: O.some("hosted"),
-            });
+  it.live("atomically claims dead leases and tickets before journaling each death once", () =>
+    Effect.gen(function* () {
+      const gibRef = yield* Ref.make(50);
+      yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const checkoutRoot = path.join(path.dirname(path.dirname(tempRoot.root)), "checkout");
+          const leaseAttemptId = yield* decodeUUID("550e8400-e29b-41d4-a716-446655440021");
+          const ticketAttemptId = yield* decodeUUID("550e8400-e29b-41d4-a716-446655440022");
+          yield* fs.makeDirectory(checkoutRoot, { recursive: true });
+          yield* writeFakeLease(tempRoot, {
+            pid: DEAD_PID,
+            nonce: "",
+            checkoutRoot,
+            branch: "feat/dead-lease",
+            heartbeatAtMillis: 12345,
+            attemptId: O.some(leaseAttemptId),
+            resolvedHeadSha: O.some("0123456789abcdef0123456789abcdef01234567"),
+            diffFingerprint: O.some("abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcd"),
+            proofTier: O.some("full"),
+            envProfile: O.some("local"),
+            stage: O.some("pre-push"),
+          });
+          yield* writeFakeTicket(tempRoot, {
+            pid: DEAD_PID,
+            nonce: "dead-ticket",
+            checkoutRoot,
+            branch: "feat/dead-ticket",
+            attemptId: O.some(ticketAttemptId),
+            resolvedHeadSha: O.some("fedcba9876543210fedcba9876543210fedcba98"),
+            diffFingerprint: O.some("1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"),
+            proofTier: O.some("review-fix"),
+            envProfile: O.some("hosted"),
+            stage: O.some("hosted"),
+          });
 
-            yield* setAdmissionEvictionProtocol("on");
+          yield* setAdmissionEvictionProtocol("on");
 
-            yield* Effect.all([reapAdmissionState({ apply: true }), reapAdmissionState({ apply: true })], {
-              concurrency: "unbounded",
-            });
+          const sinkEntered = yield* Deferred.make<void>();
+          const finishSinks = yield* Deferred.make<void>();
+          const claimObserved = yield* Deferred.make<void>();
+          const claimChecks = yield* Ref.make(0);
+          const heldJournal = AdmissionEvictionJournal.of({
+            appendOnce: Effect.fnUntraced(function* (root, event) {
+              yield* Deferred.succeed(sinkEntered, undefined);
+              yield* Deferred.await(finishSinks);
+              return yield* appendAdmissionEvictionJournalEvent(root, event);
+            }),
+          });
+          const observingFileSystem = FileSystem.FileSystem.of({
+            ...fs,
+            exists: Effect.fnUntraced(function* (target) {
+              const exists = yield* fs.exists(target);
+              if (
+                exists &&
+                Str.Equivalence(path.dirname(target), tempRoot.claims) &&
+                Str.endsWith(".reap.json")(target)
+              ) {
+                if ((yield* Ref.updateAndGet(claimChecks, (count) => count + 1)) >= 3) {
+                  yield* Deferred.succeed(claimObserved, undefined);
+                }
+              }
+              return exists;
+            }),
+          });
+          const owner = yield* Effect.forkChild(
+            reapAdmissionState({ apply: true }).pipe(Effect.provideService(AdmissionEvictionJournal, heldJournal))
+          );
+          yield* Deferred.await(sinkEntered);
+          const observer = yield* Effect.forkChild(
+            reapAdmissionState({ apply: true }).pipe(Effect.provideService(FileSystem.FileSystem, observingFileSystem))
+          );
 
-            const admissionEvents = yield* readJournalEvents(tempRoot.root);
-            expect(A.filter(admissionEvents, AdmissionJournalEvent.guards["admission-lease-evicted"])).toHaveLength(1);
-            expect(A.filter(admissionEvents, AdmissionJournalEvent.guards["admission-ticket-evicted"])).toHaveLength(1);
-            expect(
-              pipe(admissionEvents, A.findFirst(AdmissionJournalEvent.guards["admission-lease-evicted"]), O.getOrThrow)
-            ).toMatchObject({
-              schemaVersion: "yeet-admission-journal/v3",
-              checkoutRoot,
-              branch: "feat/dead-lease",
-              lastHeartbeatAtMillis: 12345,
-            });
-            expect(
-              pipe(admissionEvents, A.findFirst(AdmissionJournalEvent.guards["admission-ticket-evicted"]), O.getOrThrow)
-            ).toMatchObject({
-              schemaVersion: "yeet-admission-journal/v3",
-              checkoutRoot,
-              branch: "feat/dead-ticket",
-            });
-            const attemptEvents = yield* Effect.forEach(
-              [
-                ["feat/dead-lease", "lease-eviction"],
-                ["feat/dead-ticket", "queued-submitter-death"],
-              ] as const,
-              ([branch, reason]) =>
-                Effect.gen(function* () {
-                  const context = RepoRunContext.make({
-                    repoRoot: checkoutRoot,
-                    cwd: checkoutRoot,
-                    base: "origin/main",
-                    head: "HEAD",
-                    branch,
-                    packetDir: ".beep/yeet",
-                    originalArgv: [],
-                    turbo: TurboPlanSnapshot.make({
-                      graphHealthStatus: "ok",
-                      graphHealthWarnings: [],
-                      tasks: [],
-                    }),
-                  });
-                  const text = yield* fs.readFileString(yield* attemptJournalPath(context));
-                  const rows = yield* Effect.forEach(pipe(text, Str.split("\n"), A.filter(Str.isNonEmpty)), (line) =>
-                    decodeYeetAttemptJournalEvent(line)
-                  );
-                  expect(rows).toHaveLength(1);
-                  expect(rows[0]).toMatchObject({ _tag: "attempt-terminated", reason });
-                  return rows[0];
-                })
-            );
-            expect(attemptEvents).toHaveLength(2);
-            expect(attemptEvents[0]).toMatchObject({
-              resolvedHeadSha: O.some("0123456789abcdef0123456789abcdef01234567"),
-              diffFingerprint: O.some("abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcd"),
-              proofTier: O.some("full"),
-              envProfile: O.some("local"),
-              stage: O.some("pre-push"),
-            });
-            expect(attemptEvents[1]).toMatchObject({
-              resolvedHeadSha: O.some("fedcba9876543210fedcba9876543210fedcba98"),
-              diffFingerprint: O.some("1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"),
-              proofTier: O.some("review-fix"),
-              envProfile: O.some("hosted"),
-              stage: O.some("hosted"),
-            });
-            expect(yield* listDirectory(tempRoot.leases)).toHaveLength(0);
-            expect(yield* listDirectory(tempRoot.queue)).toHaveLength(0);
-          })
-        );
-      })
-    ));
+          // Keep the owner in its sink well past the old 25 ms single-sleep window (one second),
+          // The second reaper must observe the claim repeatedly without taking it over.
+          yield* Deferred.await(claimObserved).pipe(Effect.timeout(Duration.seconds(5)));
+          yield* Effect.sleep(Duration.seconds(1));
+          expect(yield* Ref.get(claimChecks)).toBeGreaterThan(2);
+          expect(observer.pollUnsafe()).toBeUndefined();
+          yield* Deferred.succeed(finishSinks, undefined);
+          yield* Fiber.join(owner);
+          yield* Fiber.join(observer);
+
+          const admissionEvents = yield* readJournalEvents(tempRoot.root);
+          expect(A.filter(admissionEvents, AdmissionJournalEvent.guards["admission-lease-evicted"])).toHaveLength(1);
+          expect(A.filter(admissionEvents, AdmissionJournalEvent.guards["admission-ticket-evicted"])).toHaveLength(1);
+          expect(
+            pipe(admissionEvents, A.findFirst(AdmissionJournalEvent.guards["admission-lease-evicted"]), O.getOrThrow)
+          ).toMatchObject({
+            schemaVersion: "yeet-admission-journal/v3",
+            checkoutRoot,
+            branch: "feat/dead-lease",
+            lastHeartbeatAtMillis: 12345,
+          });
+          expect(
+            pipe(admissionEvents, A.findFirst(AdmissionJournalEvent.guards["admission-ticket-evicted"]), O.getOrThrow)
+          ).toMatchObject({
+            schemaVersion: "yeet-admission-journal/v3",
+            checkoutRoot,
+            branch: "feat/dead-ticket",
+          });
+          const attemptEvents = yield* Effect.forEach(
+            [
+              ["feat/dead-lease", "lease-eviction"],
+              ["feat/dead-ticket", "queued-submitter-death"],
+            ] as const,
+            ([branch, reason]) =>
+              Effect.gen(function* () {
+                const context = RepoRunContext.make({
+                  repoRoot: checkoutRoot,
+                  cwd: checkoutRoot,
+                  base: "origin/main",
+                  head: "HEAD",
+                  branch,
+                  packetDir: ".beep/yeet",
+                  originalArgv: [],
+                  turbo: TurboPlanSnapshot.make({
+                    graphHealthStatus: "ok",
+                    graphHealthWarnings: [],
+                    tasks: [],
+                  }),
+                });
+                const text = yield* fs.readFileString(yield* attemptJournalPath(context));
+                const rows = yield* Effect.forEach(pipe(text, Str.split("\n"), A.filter(Str.isNonEmpty)), (line) =>
+                  decodeYeetAttemptJournalEvent(line)
+                );
+                expect(rows).toHaveLength(1);
+                expect(rows[0]).toMatchObject({ _tag: "attempt-terminated", reason });
+                return rows[0];
+              })
+          );
+          expect(attemptEvents).toHaveLength(2);
+          expect(attemptEvents[0]).toMatchObject({
+            resolvedHeadSha: O.some("0123456789abcdef0123456789abcdef01234567"),
+            diffFingerprint: O.some("abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcd"),
+            proofTier: O.some("full"),
+            envProfile: O.some("local"),
+            stage: O.some("pre-push"),
+          });
+          expect(attemptEvents[1]).toMatchObject({
+            resolvedHeadSha: O.some("fedcba9876543210fedcba9876543210fedcba98"),
+            diffFingerprint: O.some("1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"),
+            proofTier: O.some("review-fix"),
+            envProfile: O.some("hosted"),
+            stage: O.some("hosted"),
+          });
+          expect(yield* listDirectory(tempRoot.leases)).toHaveLength(0);
+          expect(yield* listDirectory(tempRoot.queue)).toHaveLength(0);
+          expect(yield* listDirectory(tempRoot.claims)).toHaveLength(0);
+        })
+      );
+    })
+  );
 
   it("acknowledges completed reap claims and quarantines malformed recovery records", () =>
     Effect.runPromise(
