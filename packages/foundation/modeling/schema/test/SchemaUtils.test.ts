@@ -3,6 +3,7 @@ import { $SchemaId } from "@beep/identity/packages";
 import * as Encoders from "@beep/schema/SchemaUtils/encoders";
 import * as SchemaUtils from "@beep/schema/SchemaUtils/index";
 import { optional } from "@beep/schema/SchemaUtils/optional";
+import { optionalKeyWithDefault } from "@beep/schema/SchemaUtils/optionalKeyWithDefaults";
 import { pluck } from "@beep/schema/SchemaUtils/pluck";
 import { split } from "@beep/schema/SchemaUtils/split";
 import { toEquivalence } from "@beep/schema/SchemaUtils/toEquivalence";
@@ -14,6 +15,57 @@ import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
+
+const isNonEmptyString = S.is(S.NonEmptyString);
+const OptionalKeySettings = S.Struct({ retries: optionalKeyWithDefault(S.FiniteFromString, 3) });
+const decodeOptionalKeySettings = S.decodeEffect(OptionalKeySettings);
+const encodeOptionalKeySettings = S.encodeEffect(OptionalKeySettings);
+const encodeUnknownOptionalKeySettings = S.encodeUnknownEffect(OptionalKeySettings);
+const OptionalPatch = S.Struct({ file: optional(S.String) });
+const decodeOptionalPatch = S.decodeUnknownEffect(OptionalPatch);
+const encodeOptionalPatch = S.encodeEffect(OptionalPatch);
+const EmptyArraySettings = S.Struct({
+  tags: S.String.pipe(S.Array, SchemaUtils.withEmptyArrayDefaults<string>()),
+});
+const decodeEmptyArraySettingsSync = S.decodeSync(EmptyArraySettings);
+const DataFirstEmptyArrayTags = SchemaUtils.withEmptyArrayDefaults(S.String.pipe(S.Array));
+const DataFirstEmptyArraySettings = S.Struct({ tags: DataFirstEmptyArrayTags });
+const decodeDataFirstEmptyArraySettingsSync = S.decodeSync(DataFirstEmptyArraySettings);
+const OptionalLabelNode = S.Struct({
+  label: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+});
+const decodeOptionalLabelNodeSync = S.decodeSync(OptionalLabelNode);
+const NullableDirectionNode = S.Struct({
+  direction: S.OptionFromNullOr(S.String).pipe(SchemaUtils.withNoneDefault),
+});
+const ConstantDefaultsNode = S.Struct({
+  version: S.Literal(1).pipe(SchemaUtils.withConstantDefault(1)),
+  format: S.Literals(["", "left", "center"]).pipe(SchemaUtils.withConstantDefault<"" | "left" | "center">("")),
+});
+const RequiredVersionNode = S.Struct({
+  version: S.Literal(1).pipe(SchemaUtils.withConstantDefault(1)),
+});
+const decodeRequiredVersionNodeSync = S.decodeSync(RequiredVersionNode);
+const decodeUnknownRequiredVersionNodeSync = S.decodeUnknownSync(RequiredVersionNode);
+
+describe("optionalKeyWithDefault", () => {
+  it.effect(
+    "defaults absent keys while decoding present encoded values",
+    Effect.fnUntraced(function* () {
+      expect(yield* decodeOptionalKeySettings({})).toEqual({ retries: 3 });
+      expect(yield* decodeOptionalKeySettings({ retries: "0" })).toEqual({ retries: 0 });
+      expect(Exit.isFailure(yield* Effect.exit(decodeOptionalKeySettings({ retries: "invalid" })))).toBe(true);
+    })
+  );
+
+  it.effect(
+    "encodes decoded values and requires the decoded key",
+    Effect.fnUntraced(function* () {
+      expect(yield* encodeOptionalKeySettings({ retries: 3 })).toEqual({ retries: "3" });
+      expect(Exit.isFailure(yield* Effect.exit(encodeUnknownOptionalKeySettings({})))).toBe(true);
+    })
+  );
+});
 
 describe("pluck", () => {
   it("decodes a one-property struct into the selected field value", () => {
@@ -176,12 +228,6 @@ describe("toEquivalence", () => {
 });
 
 describe("optional", () => {
-  const Patch = S.Struct({
-    file: optional(S.String),
-  });
-  const decode = S.decodeUnknownEffect(Patch);
-  const encode = S.encodeEffect(Patch);
-
   it("is exported from the SchemaUtils barrel", () => {
     expect(SchemaUtils.optional).toBe(optional);
   });
@@ -189,7 +235,7 @@ describe("optional", () => {
   it.effect(
     "decodes omitted optional keys as undefined",
     Effect.fnUntraced(function* () {
-      const decoded = yield* decode({});
+      const decoded = yield* decodeOptionalPatch({});
 
       expect(decoded.file).toBeUndefined();
     })
@@ -198,7 +244,7 @@ describe("optional", () => {
   it.effect(
     "decodes present optional keys with the inner schema",
     Effect.fnUntraced(function* () {
-      const decoded = yield* decode({ file: "src/schema.ts" });
+      const decoded = yield* decodeOptionalPatch({ file: "src/schema.ts" });
 
       expect(decoded.file).toBe("src/schema.ts");
     })
@@ -207,9 +253,9 @@ describe("optional", () => {
   it.effect(
     "omits undefined values when encoding",
     Effect.fnUntraced(function* () {
-      expect(yield* encode({})).toEqual({});
-      expect(yield* encode({ file: undefined })).toEqual({});
-      expect(yield* encode({ file: "src/schema.ts" })).toEqual({ file: "src/schema.ts" });
+      expect(yield* encodeOptionalPatch({})).toEqual({});
+      expect(yield* encodeOptionalPatch({ file: undefined })).toEqual({});
+      expect(yield* encodeOptionalPatch({ file: "src/schema.ts" })).toEqual({ file: "src/schema.ts" });
     })
   );
 });
@@ -233,71 +279,41 @@ describe("withStatics", () => {
 
 describe("withEmptyArrayDefaults", () => {
   it("defaults missing array fields to an empty readonly array", () => {
-    const Settings = S.Struct({
-      tags: S.String.pipe(S.Array, SchemaUtils.withEmptyArrayDefaults<string>()),
-    });
-
-    expect(A.isReadonlyArrayEmpty(S.decodeSync(Settings)({}).tags)).toBe(true);
+    expect(A.isReadonlyArrayEmpty(decodeEmptyArraySettingsSync({}).tags)).toBe(true);
   });
 
   it("supports the data-first call style", () => {
-    const Tags = SchemaUtils.withEmptyArrayDefaults(S.String.pipe(S.Array));
-    const Settings = S.Struct({ tags: Tags });
-
-    expect(A.isReadonlyArrayEmpty(S.decodeSync(Settings)({ tags: undefined }).tags)).toBe(true);
+    expect(A.isReadonlyArrayEmpty(decodeDataFirstEmptyArraySettingsSync({ tags: undefined }).tags)).toBe(true);
   });
 });
 
 describe("withNoneDefault", () => {
   it("defaults an omitted optional-key Option field to None at construction time", () => {
-    const Node = S.Struct({
-      label: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    });
-
-    expect(O.isNone(Node.make({}).label)).toBe(true);
-    expect(Node.make({ label: O.some("x") }).label).toStrictEqual(O.some("x"));
+    expect(O.isNone(OptionalLabelNode.make({}).label)).toBe(true);
+    expect(OptionalLabelNode.make({ label: O.some("x") }).label).toStrictEqual(O.some("x"));
   });
 
   it("defaults an omitted nullable Option field to None at construction time", () => {
-    const Node = S.Struct({
-      direction: S.OptionFromNullOr(S.String).pipe(SchemaUtils.withNoneDefault),
-    });
-
-    expect(O.isNone(Node.make({}).direction)).toBe(true);
+    expect(O.isNone(NullableDirectionNode.make({}).direction)).toBe(true);
   });
 
   it("leaves the decode contract intact (missing optional key still decodes to None)", () => {
-    const Node = S.Struct({
-      label: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    });
-
-    expect(O.isNone(S.decodeSync(Node)({}).label)).toBe(true);
-    expect(S.decodeSync(Node)({ label: "x" }).label).toStrictEqual(O.some("x"));
+    expect(O.isNone(decodeOptionalLabelNodeSync({}).label)).toBe(true);
+    expect(decodeOptionalLabelNodeSync({ label: "x" }).label).toStrictEqual(O.some("x"));
   });
 });
 
 describe("withConstantDefault", () => {
   it("defaults an omitted field to the constant at construction time", () => {
-    const Node = S.Struct({
-      version: S.Literal(1).pipe(SchemaUtils.withConstantDefault(1)),
-      // Union-typed field: annotate the make-input so the default is not inferred
-      // narrower than the field's literal union (mirrors branded-field usage).
-      format: S.Literals(["", "left", "center"]).pipe(SchemaUtils.withConstantDefault<"" | "left" | "center">("")),
-    });
-
-    const made = Node.make({});
+    const made = ConstantDefaultsNode.make({});
 
     expect(made.version).toBe(1);
     expect(made.format).toBe("");
   });
 
   it("leaves the encoded contract required (the key is still mandatory on decode)", () => {
-    const Node = S.Struct({
-      version: S.Literal(1).pipe(SchemaUtils.withConstantDefault(1)),
-    });
-
-    expect(() => S.decodeUnknownSync(Node)({})).toThrow();
-    expect(S.decodeSync(Node)({ version: 1 }).version).toBe(1);
+    expect(() => decodeUnknownRequiredVersionNodeSync({})).toThrow();
+    expect(decodeRequiredVersionNodeSync({ version: 1 }).version).toBe(1);
   });
 });
 
@@ -307,7 +323,7 @@ describe("withCodecStatics", () => {
   it("attached statics agree with the raw schema codecs over schema-derived samples", () => {
     fc.assert(
       fc.property(S.toArbitrary(S.NonEmptyString)(fc), (sampled) => {
-        expect(Slug.is(sampled)).toBe(S.is(S.NonEmptyString)(sampled));
+        expect(Slug.is(sampled)).toBe(isNonEmptyString(sampled));
         expect(Slug.decodeUnknownSync(sampled)).toBe(sampled);
         expect(O.isSome(Slug.decodeUnknownOption(sampled))).toBe(true);
       }),

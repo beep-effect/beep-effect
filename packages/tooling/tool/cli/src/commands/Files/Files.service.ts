@@ -526,6 +526,11 @@ const normalizeCollectedSkipped = (skipped: NormalizeSkippedEntry): NormalizeCol
   skipped: A.of(skipped),
 });
 
+const statSourceEntry = (fs: FileSystem.FileSystem, sourcePath: string) =>
+  fs
+    .stat(sourcePath)
+    .pipe(Effect.mapError((cause) => formatPlatformError("Failed to stat source entry", sourcePath, { cause })));
+
 const collectNormalizeFile = Effect.fn("Files.collectNormalizeFile")(function* (
   directory: string,
   canonicalDirectory: string,
@@ -548,9 +553,7 @@ const collectNormalizeFile = Effect.fn("Files.collectNormalizeFile")(function* (
     );
   }
 
-  const stat = yield* fs
-    .stat(sourcePath)
-    .pipe(Effect.mapError((cause) => formatPlatformError("Failed to stat source entry", sourcePath, { cause })));
+  const stat = yield* statSourceEntry(fs, sourcePath);
 
   if (stat.type === "Directory") {
     return normalizeCollectedSkipped(
@@ -669,11 +672,202 @@ const collectNormalizeFiles = Effect.fn("Files.collectNormalizeFiles")(function*
   };
 });
 
+interface CaptionSourceMetadata {
+  readonly extension: string;
+  readonly sourceName: string;
+  readonly sourcePath: string;
+}
+
+const captionSourceResolutionFailure = (
+  sourceName: string,
+  sourcePath: string,
+  unresolved: boolean
+): CreateCaptionFilesSkippedEntry =>
+  makeCreateCaptionFilesSkippedEntry(
+    sourceName,
+    sourcePath,
+    O.none<string>(),
+    O.none<string>(),
+    "symlink",
+    unresolved ? "Could not resolve source entry." : "Symlink entries are not captioned."
+  );
+
+const captionSourceStatFailure = (
+  sourceName: string,
+  sourcePath: string,
+  isDirectory: boolean
+): CreateCaptionFilesSkippedEntry =>
+  makeCreateCaptionFilesSkippedEntry(
+    sourceName,
+    sourcePath,
+    O.none<string>(),
+    O.none<string>(),
+    isDirectory ? "directory" : "non-media",
+    isDirectory ? "Directories are not captioned." : "Only regular image files receive caption sidecars."
+  );
+
+const captionSourceMediaFailure = (
+  sourceName: string,
+  sourcePath: string,
+  extension: string,
+  isUnknown: boolean
+): CreateCaptionFilesSkippedEntry =>
+  makeCreateCaptionFilesSkippedEntry(
+    sourceName,
+    sourcePath,
+    O.some(extension),
+    O.none<string>(),
+    isUnknown ? "non-media" : "video",
+    isUnknown
+      ? "Only recognized image files receive caption sidecars."
+      : "Video caption sidecars are out of scope for this operation."
+  );
+
+const inspectCaptionSource = Effect.fnUntraced(function* (directory: string, canonicalDir: string, sourceName: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const sourcePath = path.join(directory, sourceName);
+  const canonicalPath = yield* fs.realPath(sourcePath).pipe(Effect.option);
+
+  if (O.isNone(canonicalPath) || !Str.equivalence(canonicalPath.value, path.join(canonicalDir, sourceName))) {
+    return Result.fail(captionSourceResolutionFailure(sourceName, sourcePath, O.isNone(canonicalPath)));
+  }
+
+  const stat = yield* statSourceEntry(fs, sourcePath);
+  if (stat.type !== "File") {
+    return Result.fail(captionSourceStatFailure(sourceName, sourcePath, stat.type === "Directory"));
+  }
+
+  const extension = path.extname(sourceName);
+  if (Str.equivalence(extension, "") || Str.equivalence(extension, ".")) {
+    return Result.fail(
+      makeCreateCaptionFilesSkippedEntry(
+        sourceName,
+        sourcePath,
+        O.none<string>(),
+        O.none<string>(),
+        "extensionless",
+        "Extensionless files are not captioned."
+      )
+    );
+  }
+
+  const mediaKind = mediaKindFromExtension(extension);
+  if (O.isNone(mediaKind) || mediaKind.value === "video") {
+    return Result.fail(captionSourceMediaFailure(sourceName, sourcePath, extension, O.isNone(mediaKind)));
+  }
+
+  return Result.succeed({ extension, sourceName, sourcePath } satisfies CaptionSourceMetadata);
+});
+
+const captionPlanSkip = (
+  source: CaptionSourceMetadata,
+  captionName: string,
+  reason: CreateCaptionFilesSkippedReason,
+  message: string
+) =>
+  Result.fail(
+    makeCreateCaptionFilesSkippedEntry(
+      source.sourceName,
+      source.sourcePath,
+      O.some(source.extension),
+      O.some(captionName),
+      reason,
+      message
+    )
+  );
+
+const inspectExistingCaptionTarget = Effect.fnUntraced(function* (
+  canonicalDir: string,
+  captionName: string,
+  captionPath: string,
+  source: CaptionSourceMetadata,
+  overwrite: boolean
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const captionExists = yield* fs
+    .exists(captionPath)
+    .pipe(Effect.mapError((cause) => formatPlatformError("Failed to inspect caption target", captionPath, { cause })));
+  if (!captionExists) return Result.succeed(false);
+
+  const captionCanonicalPath = yield* fs.realPath(captionPath).pipe(Effect.option);
+  if (
+    O.isNone(captionCanonicalPath) ||
+    !Str.equivalence(captionCanonicalPath.value, path.join(canonicalDir, captionName))
+  ) {
+    return captionPlanSkip(
+      source,
+      captionName,
+      "caption-target-not-file",
+      `Caption target "${captionName}" is a symlink or cannot be resolved inside the source directory.`
+    );
+  }
+
+  const captionStat = yield* fs
+    .stat(captionPath)
+    .pipe(Effect.mapError((cause) => formatPlatformError("Failed to stat caption target", captionPath, { cause })));
+  if (captionStat.type !== "File") {
+    return captionPlanSkip(
+      source,
+      captionName,
+      "caption-target-not-file",
+      `Caption target "${captionName}" already exists and is not a file.`
+    );
+  }
+  if (!overwrite) {
+    return captionPlanSkip(source, captionName, "caption-exists", `Caption target "${captionName}" already exists.`);
+  }
+  return Result.succeed(true);
+});
+
+const planCaptionTarget = Effect.fnUntraced(function* (
+  directory: string,
+  canonicalDir: string,
+  source: CaptionSourceMetadata,
+  plannedCaptionNames: HashSet.HashSet<string>,
+  overwrite: boolean
+) {
+  const path = yield* Path.Path;
+  const captionName = `${path.basename(source.sourceName, source.extension)}.txt`;
+  const captionPath = path.join(directory, captionName);
+
+  if (HashSet.has(plannedCaptionNames, captionName)) {
+    return captionPlanSkip(
+      source,
+      captionName,
+      "caption-target-collision",
+      `Another image in this run already targets "${captionName}".`
+    );
+  }
+
+  const targetInspection = yield* inspectExistingCaptionTarget(
+    canonicalDir,
+    captionName,
+    captionPath,
+    source,
+    overwrite
+  );
+  if (Result.isFailure(targetInspection)) return Result.fail(targetInspection.failure);
+
+  return Result.succeed(
+    CreateCaptionFilesPlanEntry.make({
+      captionName,
+      captionPath,
+      captionRelativePath: path.relative(directory, captionPath),
+      extension: source.extension,
+      overwritesExisting: targetInspection.success,
+      sourceName: source.sourceName,
+      sourcePath: source.sourcePath,
+      sourceRelativePath: path.relative(directory, source.sourcePath),
+    })
+  );
+});
+
 const buildCreateCaptionFilesPlan = Effect.fn("Files.buildCreateCaptionFilesPlan")(function* (
   options: CreateCaptionFilesOptions
 ): Effect.fn.Return<CreateCaptionFilesPlan, FilesCommandError, FileSystem.FileSystem | Path.Path | Terminal.Terminal> {
   const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
   const { canonicalDir, directory } = yield* validateDirectory(options.dir);
   const sourceNames = yield* fs.readDirectory(directory).pipe(
     Effect.map(A.sort(Order.String)),
@@ -687,218 +881,26 @@ const buildCreateCaptionFilesPlan = Effect.fn("Files.buildCreateCaptionFilesPlan
   yield* runFilesProgressForEach(
     sourceNames,
     Effect.fnUntraced(function* (sourceName) {
-      const sourcePath = path.join(directory, sourceName);
-      const canonicalPath = yield* fs.realPath(sourcePath).pipe(Effect.option);
-
-      if (O.isNone(canonicalPath)) {
-        skipped = A.append(
-          skipped,
-          makeCreateCaptionFilesSkippedEntry(
-            sourceName,
-            sourcePath,
-            O.none<string>(),
-            O.none<string>(),
-            "symlink",
-            "Could not resolve source entry."
-          )
-        );
+      const source = yield* inspectCaptionSource(directory, canonicalDir, sourceName);
+      if (Result.isFailure(source)) {
+        skipped = A.append(skipped, source.failure);
         return;
       }
 
-      if (!Str.equivalence(canonicalPath.value, path.join(canonicalDir, sourceName))) {
-        skipped = A.append(
-          skipped,
-          makeCreateCaptionFilesSkippedEntry(
-            sourceName,
-            sourcePath,
-            O.none<string>(),
-            O.none<string>(),
-            "symlink",
-            "Symlink entries are not captioned."
-          )
-        );
-        return;
-      }
-
-      const stat = yield* fs
-        .stat(sourcePath)
-        .pipe(Effect.mapError((cause) => formatPlatformError("Failed to stat source entry", sourcePath, { cause })));
-
-      if (stat.type === "Directory") {
-        skipped = A.append(
-          skipped,
-          makeCreateCaptionFilesSkippedEntry(
-            sourceName,
-            sourcePath,
-            O.none<string>(),
-            O.none<string>(),
-            "directory",
-            "Directories are not captioned."
-          )
-        );
-        return;
-      }
-
-      if (stat.type !== "File") {
-        skipped = A.append(
-          skipped,
-          makeCreateCaptionFilesSkippedEntry(
-            sourceName,
-            sourcePath,
-            O.none<string>(),
-            O.none<string>(),
-            "non-media",
-            "Only regular image files receive caption sidecars."
-          )
-        );
-        return;
-      }
-
-      const extension = path.extname(sourceName);
-      if (Str.equivalence(extension, "") || Str.equivalence(extension, ".")) {
-        skipped = A.append(
-          skipped,
-          makeCreateCaptionFilesSkippedEntry(
-            sourceName,
-            sourcePath,
-            O.none<string>(),
-            O.none<string>(),
-            "extensionless",
-            "Extensionless files are not captioned."
-          )
-        );
-        return;
-      }
-
-      const mediaKind = mediaKindFromExtension(extension);
-      if (O.isNone(mediaKind)) {
-        skipped = A.append(
-          skipped,
-          makeCreateCaptionFilesSkippedEntry(
-            sourceName,
-            sourcePath,
-            O.some(extension),
-            O.none<string>(),
-            "non-media",
-            "Only recognized image files receive caption sidecars."
-          )
-        );
-        return;
-      }
-
-      if (mediaKind.value === "video") {
-        skipped = A.append(
-          skipped,
-          makeCreateCaptionFilesSkippedEntry(
-            sourceName,
-            sourcePath,
-            O.some(extension),
-            O.none<string>(),
-            "video",
-            "Video caption sidecars are out of scope for this operation."
-          )
-        );
-        return;
-      }
-
-      const captionName = `${path.basename(sourceName, extension)}.txt`;
-      const captionPath = path.join(directory, captionName);
-
-      if (HashSet.has(plannedCaptionNames, captionName)) {
-        skipped = A.append(
-          skipped,
-          makeCreateCaptionFilesSkippedEntry(
-            sourceName,
-            sourcePath,
-            O.some(extension),
-            O.some(captionName),
-            "caption-target-collision",
-            `Another image in this run already targets "${captionName}".`
-          )
-        );
-        return;
-      }
-
-      const captionExists = yield* fs
-        .exists(captionPath)
-        .pipe(
-          Effect.mapError((cause) => formatPlatformError("Failed to inspect caption target", captionPath, { cause }))
-        );
-      let overwritesExisting = false;
-
-      if (captionExists) {
-        const captionCanonicalPath = yield* fs.realPath(captionPath).pipe(Effect.option);
-        if (
-          O.isNone(captionCanonicalPath) ||
-          !Str.equivalence(captionCanonicalPath.value, path.join(canonicalDir, captionName))
-        ) {
-          skipped = A.append(
-            skipped,
-            makeCreateCaptionFilesSkippedEntry(
-              sourceName,
-              sourcePath,
-              O.some(extension),
-              O.some(captionName),
-              "caption-target-not-file",
-              `Caption target "${captionName}" is a symlink or cannot be resolved inside the source directory.`
-            )
-          );
-          return;
-        }
-
-        const captionStat = yield* fs
-          .stat(captionPath)
-          .pipe(
-            Effect.mapError((cause) => formatPlatformError("Failed to stat caption target", captionPath, { cause }))
-          );
-
-        if (captionStat.type !== "File") {
-          skipped = A.append(
-            skipped,
-            makeCreateCaptionFilesSkippedEntry(
-              sourceName,
-              sourcePath,
-              O.some(extension),
-              O.some(captionName),
-              "caption-target-not-file",
-              `Caption target "${captionName}" already exists and is not a file.`
-            )
-          );
-          return;
-        }
-
-        if (!options.overwrite) {
-          skipped = A.append(
-            skipped,
-            makeCreateCaptionFilesSkippedEntry(
-              sourceName,
-              sourcePath,
-              O.some(extension),
-              O.some(captionName),
-              "caption-exists",
-              `Caption target "${captionName}" already exists.`
-            )
-          );
-          return;
-        }
-
-        overwritesExisting = true;
-      }
-
-      plannedCaptionNames = HashSet.add(plannedCaptionNames, captionName);
-      entries = A.append(
-        entries,
-        CreateCaptionFilesPlanEntry.make({
-          captionName,
-          captionPath,
-          captionRelativePath: path.relative(directory, captionPath),
-          extension,
-          overwritesExisting,
-          sourceName,
-          sourcePath,
-          sourceRelativePath: path.relative(directory, sourcePath),
-        })
+      const target = yield* planCaptionTarget(
+        directory,
+        canonicalDir,
+        source.success,
+        plannedCaptionNames,
+        options.overwrite
       );
+      if (Result.isFailure(target)) {
+        skipped = A.append(skipped, target.failure);
+        return;
+      }
+
+      plannedCaptionNames = HashSet.add(plannedCaptionNames, target.success.captionName);
+      entries = A.append(entries, target.success);
     }),
     {
       concurrency: 1,
@@ -953,9 +955,7 @@ const collectDetectBordersFile = Effect.fn("Files.collectDetectBordersFile")(fun
     );
   }
 
-  const stat = yield* fs
-    .stat(sourcePath)
-    .pipe(Effect.mapError((cause) => formatPlatformError("Failed to stat source entry", sourcePath, { cause })));
+  const stat = yield* statSourceEntry(fs, sourcePath);
 
   if (stat.type === "Directory") {
     return detectBordersCollectedSkipped(
@@ -1172,9 +1172,7 @@ const collectArchiveCandidateFile = Effect.fn("Files.collectArchiveCandidateFile
     );
   }
 
-  const stat = yield* fs
-    .stat(sourcePath)
-    .pipe(Effect.mapError((cause) => formatPlatformError("Failed to stat source entry", sourcePath, { cause })));
+  const stat = yield* statSourceEntry(fs, sourcePath);
 
   if (stat.type === "Directory") {
     return archiveCandidateCollectedSkipped(

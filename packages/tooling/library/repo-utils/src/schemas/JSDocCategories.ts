@@ -479,6 +479,7 @@ const JSDocCategoryNormalizationFromString = S.String.pipe(
     description: "Decode-only normalization from free-form @category text to the canonical normalization result.",
   })
 );
+const decodeJSDocCategoryNormalizationFromStringResult = S.decodeResult(JSDocCategoryNormalizationFromString);
 
 /**
  * Normalize and classify free-form `@category` text.
@@ -498,7 +499,7 @@ const JSDocCategoryNormalizationFromString = S.String.pipe(
  * @since 0.0.0
  */
 export const normalizeJSDocCategory = (value: string): JSDocCategoryNormalization =>
-  Result.getOrThrow(S.decodeResult(JSDocCategoryNormalizationFromString)(value));
+  Result.getOrThrow(decodeJSDocCategoryNormalizationFromStringResult(value));
 
 /**
  * Return true when a category is canonical or accepted as a migration alias.

@@ -20,11 +20,17 @@ import { Effect, Result } from "effect";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeBrandIdentity = S.decodeEffect(BrandIdentity);
+const decodePrintableTextResult = S.decodeResult(PrintableText);
+const decodeUnknownBrandIdentitySync = S.decodeUnknownSync(BrandIdentity);
+const encodeBrandIdentity = S.encodeEffect(BrandIdentity);
+const encodeBrandIdentitySync = S.encodeSync(BrandIdentity);
+
 describe("beep identity", () => {
   it.effect("round-trips through its schema", () =>
     Effect.gen(function* () {
-      const encoded = yield* S.encodeEffect(BrandIdentity)(beep);
-      const decoded = yield* S.decodeEffect(BrandIdentity)(encoded);
+      const encoded = yield* encodeBrandIdentity(beep);
+      const decoded = yield* decodeBrandIdentity(encoded);
 
       expect(decoded).toStrictEqual(beep);
     })
@@ -92,17 +98,17 @@ describe("renderThemeCss", () => {
   });
 
   it("rejects control characters, lone surrogates, and noncharacters at the schema boundary", () => {
-    const family = S.decodeResult(PrintableText)("Line\nbreak");
-    const name = S.decodeResult(PrintableText)("bell\u0007");
-    const noncharacter = S.decodeResult(PrintableText)("bad\ufffe");
-    const loneSurrogate = S.decodeResult(PrintableText)("bad\ud83d");
+    const family = decodePrintableTextResult("Line\nbreak");
+    const name = decodePrintableTextResult("bell\u0007");
+    const noncharacter = decodePrintableTextResult("bad\ufffe");
+    const loneSurrogate = decodePrintableTextResult("bad\ud83d");
 
     expect(Result.isFailure(family)).toBe(true);
     expect(Result.isFailure(name)).toBe(true);
     expect(Result.isFailure(noncharacter)).toBe(true);
     expect(Result.isFailure(loneSurrogate)).toBe(true);
-    expect(Result.isSuccess(S.decodeResult(PrintableText)("Inter Variable"))).toBe(true);
-    expect(Result.isSuccess(S.decodeResult(PrintableText)("beep \u{1f680}"))).toBe(true);
+    expect(Result.isSuccess(decodePrintableTextResult("Inter Variable"))).toBe(true);
+    expect(Result.isSuccess(decodePrintableTextResult("beep \u{1f680}"))).toBe(true);
   });
 });
 
@@ -133,12 +139,12 @@ describe("BrandIdentity properties", () => {
   // round-trips losslessly, so the codec assertions above generalize past the
   // handpicked fixtures.
   it("round-trips arbitrary identities through encode and decode", () => {
-    const decode = S.decodeUnknownSync(BrandIdentity);
-    const encode = S.encodeSync(BrandIdentity);
     const equivalent = S.toEquivalence(BrandIdentity);
 
     fc.assert(
-      fc.property(S.toArbitrary(BrandIdentity)(fc), (identity) => equivalent(decode(encode(identity)), identity)),
+      fc.property(S.toArbitrary(BrandIdentity)(fc), (identity) =>
+        equivalent(decodeUnknownBrandIdentitySync(encodeBrandIdentitySync(identity)), identity)
+      ),
       fcRuns(5)
     );
   });

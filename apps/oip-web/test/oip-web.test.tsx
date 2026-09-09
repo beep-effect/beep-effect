@@ -44,6 +44,10 @@ import {
 } from "@/content";
 import { OipAtomProvider } from "@/runtime/OipAtomProvider";
 
+const decodeUnknownContactSubmissionAcceptedExit = S.decodeUnknownExit(ContactSubmissionAccepted);
+const decodeUnknownContactSubmissionFormPayloadExit = S.decodeUnknownExit(ContactSubmissionFormPayload);
+const decodeUnknownContactSubmissionRejectedExit = S.decodeUnknownExit(ContactSubmissionRejected);
+
 const contactFormEmail = Result.getOrThrow(S.decodeResult(EmailString)("tom@example.com"));
 
 vi.mock("next/image", () =>
@@ -632,11 +636,9 @@ describe("@beep/oip-web", { concurrent: false }, () => {
     }));
 
   it("rejects malformed contact form payloads at the browser wire schema", () => {
-    const decodeFormPayload = S.decodeUnknownExit(ContactSubmissionFormPayload);
-
     expect(
       Exit.isFailure(
-        decodeFormPayload({
+        decodeUnknownContactSubmissionFormPayloadExit({
           ...validContactPayload(),
           message: "short",
         })
@@ -644,7 +646,7 @@ describe("@beep/oip-web", { concurrent: false }, () => {
     ).toBe(true);
     expect(
       Exit.isFailure(
-        decodeFormPayload({
+        decodeUnknownContactSubmissionFormPayloadExit({
           ...validContactPayload(),
           name: "T",
         })
@@ -674,7 +676,7 @@ describe("@beep/oip-web", { concurrent: false }, () => {
     expect(rejected.status).toBe("rejected");
     expect(
       Exit.isFailure(
-        S.decodeUnknownExit(ContactSubmissionAccepted)({
+        decodeUnknownContactSubmissionAcceptedExit({
           message: "The submission could not be accepted.",
           status: "rejected",
         })
@@ -682,7 +684,7 @@ describe("@beep/oip-web", { concurrent: false }, () => {
     ).toBe(true);
     expect(
       Exit.isFailure(
-        S.decodeUnknownExit(ContactSubmissionRejected)({
+        decodeUnknownContactSubmissionRejectedExit({
           message: "Your note was received.",
           status: "accepted",
         })

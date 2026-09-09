@@ -12,6 +12,14 @@ import { LabConfig, RuntimeLayer } from "@/runtime/Layer";
 import { ProjectionFailed, ReasoningFailed, ReportInvalid } from "@/schema/Errors";
 import { CanaryC0 } from "@/services/CanaryC0";
 import { CanaryC1 } from "@/services/CanaryC1";
+
+const decodeCanaryOptions = S.decodeEffect(CanaryOptions);
+const decodeCanaryStage = S.decodeEffect(CanaryStage);
+const encodeCanaryOptions = S.encodeEffect(CanaryOptions);
+const encodeCanaryStage = S.encodeEffect(CanaryStage);
+const isCanaryOptions = S.is(CanaryOptions);
+const isCanaryStage = S.is(CanaryStage);
+
 import { CanaryC2 } from "@/services/CanaryC2";
 
 const runtimeFromEnv = (env: Record<string, string>) =>
@@ -123,7 +131,7 @@ describe("Semantica canary schemas", () => {
       fc.property(
         S.toArbitrary(CanaryStage)(fc),
         S.toArbitrary(CanaryOptions)(fc),
-        (stage, options) => S.is(CanaryStage)(stage) && S.is(CanaryOptions)(options)
+        (stage, options) => isCanaryStage(stage) && isCanaryOptions(options)
       ),
       { numRuns: 25 }
     );
@@ -132,8 +140,8 @@ describe("Semantica canary schemas", () => {
   it("round-trips CanaryStage", () =>
     Effect.runPromise(
       Effect.gen(function* () {
-        const encoded = yield* S.encodeEffect(CanaryStage)("c1");
-        const decoded = yield* S.decodeEffect(CanaryStage)(encoded);
+        const encoded = yield* encodeCanaryStage("c1");
+        const decoded = yield* decodeCanaryStage(encoded);
 
         expect({ decoded, encoded }).toEqual({ decoded: "c1", encoded: "c1" });
       })
@@ -149,8 +157,8 @@ describe("Semantica canary schemas", () => {
           paper: O.some("paper-001"),
           selection: "f1+w1",
         });
-        const encoded = yield* S.encodeEffect(CanaryOptions)(options);
-        const decoded = yield* S.decodeEffect(CanaryOptions)(encoded);
+        const encoded = yield* encodeCanaryOptions(options);
+        const decoded = yield* decodeCanaryOptions(encoded);
 
         expect({ decoded, encoded }).toEqual({
           decoded: options,

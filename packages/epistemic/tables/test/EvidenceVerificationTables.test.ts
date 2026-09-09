@@ -23,6 +23,11 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeUnknownEvidenceResult = S.decodeUnknownResult(Evidence);
+const decodeUnknownEvidenceVerificationModelResult = S.decodeUnknownResult(EvidenceVerificationModel);
+const encodeUnknownEvidenceVerificationModelResult = S.encodeUnknownResult(EvidenceVerificationModel);
+const encodeUnknownTextAnchorVerificationReceiptResult = S.encodeUnknownResult(TextAnchorVerificationReceipt);
+
 const digest = SourceTextDigest.make("sha256:3a6eb0790f39ac87c94f3856b2dd2c5d110e6811602261a9a923d3bb23adc8b7");
 const verifiedAnchor = TextAnchorVerificationReceipt.make({
   anchor: TextAnchor.make({
@@ -65,7 +70,7 @@ const input = {
 };
 const evidenceFor = (id: Epistemic.EvidenceId, anchor: TextAnchor) =>
   Result.getOrThrow(
-    S.decodeUnknownResult(Evidence)({
+    decodeUnknownEvidenceResult({
       ...productEntityFixtureInput("EpistemicEvidence", id),
       artifactFixtureKey: `artifact:evidence-verification-${id}`,
       createdAt: 0,
@@ -119,14 +124,14 @@ describe("EvidenceVerificationTable", () => {
     fc.assert(
       fc.property(S.toArbitrary(EvidenceVerificationManifestation)(fc), (manifestation) => {
         const verification = Result.getOrThrow(
-          S.decodeUnknownResult(EvidenceVerificationModel)({
+          decodeUnknownEvidenceVerificationModelResult({
             ...productEntityFixtureInput("EpistemicEvidenceVerification", 7),
             evidenceId: manifestation.evidenceId,
             manifestationKey: Result.getOrThrow(
               manifestationKeyFor(manifestation.evidenceId, manifestation.verifiedAnchor)
             ),
             verifiedAnchor: Result.getOrThrow(
-              S.encodeUnknownResult(TextAnchorVerificationReceipt)(manifestation.verifiedAnchor)
+              encodeUnknownTextAnchorVerificationReceiptResult(manifestation.verifiedAnchor)
             ),
           })
         );
@@ -143,8 +148,8 @@ describe("EvidenceVerificationTable", () => {
           })
         );
 
-        expect(Result.getOrThrow(S.encodeUnknownResult(EvidenceVerificationModel)(decoded))).toStrictEqual(
-          Result.getOrThrow(S.encodeUnknownResult(EvidenceVerificationModel)(verification))
+        expect(Result.getOrThrow(encodeUnknownEvidenceVerificationModelResult(decoded))).toStrictEqual(
+          Result.getOrThrow(encodeUnknownEvidenceVerificationModelResult(verification))
         );
       }),
       fcRuns(25)
@@ -152,7 +157,7 @@ describe("EvidenceVerificationTable", () => {
   });
 
   it("round-trips rows through schema-derived converters", () => {
-    const verification = Result.getOrThrow(S.decodeUnknownResult(EvidenceVerificationModel)(input));
+    const verification = Result.getOrThrow(decodeUnknownEvidenceVerificationModelResult(input));
     const insert = Result.getOrThrow(EvidenceVerification.toEvidenceVerificationInsert(verification, evidence));
     const tamperedVerification = EvidenceVerificationModel.make({
       ...verification,
@@ -198,7 +203,7 @@ describe("EvidenceVerificationTable", () => {
           EvidenceVerification.fromEvidenceVerificationRow({
             ...insert,
             id: 7,
-            verifiedAnchor: Result.getOrThrow(S.encodeUnknownResult(TextAnchorVerificationReceipt)(mutatedAnchor)),
+            verifiedAnchor: Result.getOrThrow(encodeUnknownTextAnchorVerificationReceiptResult(mutatedAnchor)),
           })
         )
       ).toBe(true);
@@ -249,7 +254,7 @@ describe("EvidenceVerificationTable", () => {
   });
 
   it("rejects a verification created before its referenced evidence", () => {
-    const verification = Result.getOrThrow(S.decodeUnknownResult(EvidenceVerificationModel)(input));
+    const verification = Result.getOrThrow(decodeUnknownEvidenceVerificationModelResult(input));
     const futureEvidence = Evidence.make({
       ...evidence,
       createdAt: DateTime.makeUnsafe(DateTime.toEpochMillis(verification.createdAt) + 1),

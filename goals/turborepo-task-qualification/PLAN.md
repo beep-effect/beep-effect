@@ -281,3 +281,21 @@ The repaired manifest's live source fingerprint and read-only activation
 preview are refreshed. An isolated exact-stable native parity rerun for that
 new source is queued through the existing admission route; it cannot supply
 task execution or activation-invariance credit by itself.
+
+## Main integration: 2026-09-09
+
+The operator requested committing the current work and merging current main.
+Implementation commit `f85bbe2760` preserves the pre-merge qualification
+checkpoint. The merge imports main `85cc86d1f3`, including Bun 1.4.2, dependency
+updates and the generated workspace-script contract. Existing qualification
+receipts remain historical for their recorded source/toolchain fingerprints;
+refresh the census, reviewed baseline and pilot contract before new acceptance.
+
+Identity keeps `cache: false` and its excluded ledger entry. Its generated
+`lint` wrapper now invokes the quiet `beep:lint` implementation. The original
+verbose Biome command remains available as `beep:lint:verbose`, and its package
+audit uses that verbose command. This preserves diagnostic access while
+complying with the imported task-wrapper policy. The canonical package-script
+check reports 142 manifests, zero drift and zero writes. This integration
+requires a fresh capture/exit matrix; earlier repair receipts do not establish
+equivalence for the new wrapper or Bun version.

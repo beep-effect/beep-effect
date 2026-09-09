@@ -1,0 +1,42 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "security/codex-findings-2026-08-30",
+  "committed": false,
+  "createdAt": "2026-08-30T20:01:35.196Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "monitor:01-pr-context",
+      "label": "monitor:pr-context",
+      "phase": "monitor",
+      "status": "passed",
+      "durationMs": 364.585047,
+      "peakRssKb": 52652,
+      "exitCode": 0
+    },
+    {
+      "id": "monitor:02-pr-checks-watch",
+      "label": "monitor:pr-checks:watch",
+      "phase": "monitor",
+      "status": "failed",
+      "durationMs": 808.621727,
+      "exitCode": 1,
+      "repairCommand": "Rerun `bun run beep quality github-checks nix` and inspect the Nix error."
+    }
+  ],
+  "message": "yeet monitor failed.",
+  "mode": "monitor",
+  "outcome": "failure",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "security_codex-findings-2026-08-30-44102561a936",
+  "attemptId": "3a4625e3-3731-425b-9fce-9cdf2b6c40cb",
+  "startedAt": "2026-08-30T20:01:30.966Z",
+  "endedAt": "2026-08-30T20:01:35.196Z",
+  "elapsedMs": 4230,
+  "indexPath": "<fleet>/beep-effect10/.beep/yeet/quality-issue-index.json",
+  "failedStepId": "monitor:02-pr-checks-watch",
+  "failureKind": "step-exit"
+}

@@ -5,6 +5,26 @@ Canonical rules for all coding agents. Claude Code loads this via the
 directly. Laws only — architecture lives in `standards/ARCHITECTURE.md`,
 workflows in skills.
 
+## Token-heavy Codex work
+
+Use `gpt-6-astra` with extra high reasoning (`xhigh`) for all token-heavy
+Codex work, including implementation, exploration, review, and distillation.
+Pin both the model and reasoning effort when launching that work:
+
+- Native subagents: `model: "gpt-6-astra"`, `reasoning_effort: "xhigh"`.
+- Codex CLI: `--model gpt-6-astra -c 'model_reasoning_effort="xhigh"'`.
+- Codex plugin/companion: `--model gpt-6-astra --effort xhigh`.
+- Proxy Workflow children: `model: "gpt-6-astra(xhigh)"`.
+
+Preserve the configured lightweight and Grok web research routes for their
+intended work. Do not set `CLAUDE_CODE_SUBAGENT_MODEL` in proxy wrappers;
+it overrides explicit Workflow child models.
+
+This operator instruction (2026-09-08) supersedes earlier model and effort
+guidance for new token-heavy Codex work. Historical reports, captured user
+requests, completed-run provenance, and model-parsing fixtures retain the
+models and effort levels they actually recorded.
+
 ## 1Password
 
 - Agents resolve `op` from `PATH`, never the system binary by absolute path.
@@ -61,6 +81,8 @@ workflows in skills.
 
 ## Quality Operator
 
+- Every workspace manifest's scripts block is generated: run
+  `bun run beep lint package-scripts --write` instead of hand-editing task-facing keys.
 - Yeet is the canonical repo-quality path: `bun run beep yeet repair`,
   `... verify`, `... publish --message "..."`, `... monitor`. Keep those
   commands green.
@@ -151,9 +173,12 @@ If you touch this, load or run this first. Do not hand-author around it.
 
 - File memory is the memory layer: each agent's own durable files
   (`CLAUDE.md` / `MEMORY.md` auto-memory) plus repo docs. There is no shared
-  external memory service and no code-KG index; basic-memory and codegraph
-  were removed on 2026-08-29 (`standards/memory-architecture/04-decision-log.md`).
-  Do not reintroduce either or wire a successor without a new decision there.
+  external memory service; basic-memory and codegraph were removed on
+  2026-08-29 (`standards/memory-architecture/04-decision-log.md`). Graft is
+  the sanctioned code-structure query path (2026-09-08 entry there): a
+  git-ignored, regenerable tree-sitter code graph, not a memory layer. Do not
+  reintroduce a memory service or wire another code index without a new
+  decision there.
 - If context is missing, fall back to repo-local docs, code search, and this
   file.
 
@@ -182,3 +207,45 @@ If you touch this, load or run this first. Do not hand-author around it.
   of spawning fresh ones.
 - Durable on-disk handoffs: agent/session transitions exchange deliverables as
   files on disk (packet `research/`, scratchpad), never chat-only summaries.
+
+<!-- graft:start -->
+## Graft — repo context graph
+
+This repo is indexed in `graft/`: small linked markdown nodes that explain each
+system and carry exact file:line spans, kept in sync with the code through git.
+
+For ANY task here — understanding how something works, finding where code lives,
+or scoping a change — get context from the graph before grepping or opening
+source files. Re-ask freely (it's cheap) and reuse literal identifiers you
+already have (symbol, error string, file name) as the query. New to this repo?
+Run `graft map` first — a token-budgeted orientation (dir clusters, hubs,
+hotspots), no LLM, no key.
+
+- Run `graft ask "<your question>" --source` → ranked nodes with the relevant
+  code spans inlined (each hit's ≤8-line crux by default; `--full` for whole
+  definitions when the crux isn't enough). Match the tool to the task shape:
+  for understanding or editing, the top node IS the answer — cite its
+  `covers:` file:line spans and edit straight from `--source`. For
+  exhaustive tasks ("every occurrence / every caller of this pattern"), ranked
+  results are top-N, not complete — run `graft grep "<literal>"` instead
+  (exhaustive over indexed files, grouped by enclosing symbol), falling back
+  to raw `grep -rn` only for unindexed files.
+- `graft skeleton <file>` → every definition's signature + span, ~10× cheaper
+  than reading the file; use it to skim an API surface.
+- `graft callers <symbol>` gives precomputed, exact edges — who calls this.
+  Add `--direction out` for what it calls, or `--depth N` to walk
+  transitively for the full blast radius. For structural questions, skip
+  ranking and use this directly.
+- Or browse: `graft/INDEX.md` lists every node; follow the links.
+- Monorepos and folders of multiple repos rank fairly across sub-projects —
+  hits carry `[scope/]` labels naming which one they're from. Narrow with
+  `graft ask "<task>" --in <scope>/` once you know where you're working.
+
+If a returned span is truncated ("+N more lines"), open the file at that exact
+range before finalizing. Only open source files when a node genuinely lacks a
+needed detail, and then at the exact file:line the node points to — never
+re-read whole files.
+
+After big code changes, refresh the graph with `graft build` (deterministic,
+no API key, $0).
+<!-- graft:end -->

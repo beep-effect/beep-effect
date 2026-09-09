@@ -1,5 +1,9 @@
 # Research
 
+> Future reuse (2026-09-08): new token-heavy Codex work follows the
+> [Astra/xhigh routing update](./DECISIONS.md). The graduated campaign
+> operating plan below retains its original model choices as historical provenance.
+
 <!--
 Stage 1. Ground the capture in reality. Two halves: what exists outside the
 repo (cited), and what exists inside it (so we compose bricks instead of

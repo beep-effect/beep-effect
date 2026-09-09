@@ -33,17 +33,79 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — not started.
+P2 verification, P3 publication, and P4 closeout are in progress. The
+implementation and package-proof identity repair are merged. The full proof
+on opening evidence head `59bba09125` and all 108 package-owner verifications
+passed. All thirteen review threads across the four PRs are resolved.
+The operator-approved [closeout PR #1038](https://github.com/beep-effect/beep-effect/pull/1038)
+merged at 07:19 UTC on 2026-09-09 with all 18 required hosted checks passed.
+Its final head `3324595a3b` was still queued for local proof; that owned run
+was stopped cleanly after the merge. The final packet update and terminal
+Yeet monitor verdict remain outstanding. The operator approved a successor
+draft closeout PR on 2026-09-09. [PR #1042](https://github.com/beep-effect/beep-effect/pull/1042)
+is open as a draft on branch `codex/inline-schema-packet-closeout`, based on
+the #1038 squash merge. It will remain draft through local proof and the
+final packet update.
+P2 stays open with the canonical repository and hosted acceptance item; the
+completed local and package proofs do not close that remaining gate.
 
 ## Latest Evidence
 
-- The predecessor census closed with 2,931 remaining
-  `beep(no-inline-schema-compile)` findings, down from its 2,935 opening
-  baseline.
-- The predecessor left no warning on a touched line and removed its named
-  `ProvRdf.ts` inline compiler.
-- The packet was compiled from the repository's `standard-delivery` bootstrap
-  archetype on 2026-08-30 with no conflicts.
+- The predecessor's 2,931 findings reproduce exactly. The opening tree had
+  3,087 findings across 566 files and 105 ownership families; all +156 drift is
+  attributed in [`research/opening-census.md`](./research/opening-census.md).
+- The generator owner was updated first. All 3,087 opening findings reconcile
+  to zero. Later mainline additions were also hoisted, including 20 repo-cli
+  findings and the 67-call reconciliation across seven ownership families on
+  2026-09-08. The refreshed
+  [`residual census`](./research/residual-census.json) reports zero findings on
+  the merged implementation, and `beep/no-inline-schema-compile` is an error.
+- The [v2 package matrix](./research/package-verification.json) passed all 106
+  owners in a clean worktree at `02d88af51c`, with committed tree
+  `786d98065f3a3628599a4691e0314b5fb004bff3`. Its owner inventory has no missing,
+  extra, or duplicate entries. The earlier local-settings failure is excluded
+  from acceptance, as is the legacy report without committed-tree identity.
+  Supplemental canonical verification for `@beep/freshbooks` and `@beep/effect-drizzle`
+  covers the two additional owners found in the shipped implementation diff.
+  The primary matrix explicitly links their
+  [structured canonical receipts](./research/package-verification-supplemental.json).
+  The receipt test decodes both report formats and checks all 108 owners,
+  matching heads, and complete successful audit/docgen steps.
+  Its expected owners come from the independent
+  [implementation-diff inventory](./research/implementation-owner-inventory.json),
+  captured from all files in merged PRs #1019, #1022, and #1028.
+  Fresh HTML regeneration has no tracked diff; the lint-rule suite passes all
+  66 tests.
+- [PR #1019](https://github.com/beep-effect/beep-effect/pull/1019) shipped the
+  migration. [PR #1022](https://github.com/beep-effect/beep-effect/pull/1022)
+  shipped recursive schema-literal classification and complete environment
+  proof hashing. All five review threads across those PRs are resolved.
+- Full `bun run beep yeet verify --merged` passed all 33 reported lanes in
+  43 minutes 35 seconds. The PR #1022 head, local preview, and squash merge
+  share Git tree `6a9533d44b007cb26959789f22d7fa7768dc7615`. Hosted checks are
+  green. [`research/closeout-evidence.md`](./research/closeout-evidence.md)
+  records the commits, commands, results, and review links.
+- The new PR #1028 merged-preview proof also passed: full tier, 34 reported
+  lanes, recorded execution time 37 minutes 2 seconds. The preview and reviewed
+  head share tree `786d98065f3a3628599a4691e0314b5fb004bff3`. Affected-package
+  steps select no tasks for this goal-only diff; the separate owner matrix
+  supplies the required package-level coverage.
+- [PR #1028](https://github.com/beep-effect/beep-effect/pull/1028) shipped the
+  proof-runner repair and retained the
+  [reflection](./history/reflections/2026-09-08-codex.md). Its required hosted
+  checks passed, but it merged before local verification finished. All four
+  review threads are resolved; the final
+  [package-evidence reply](https://github.com/beep-effect/beep-effect/pull/1028#discussion_r3964829818)
+  links the pushed receipts. The lifecycle remains active until publication
+  and terminal monitoring satisfy the remaining gates.
+- The [September 9 reflection](./history/reflections/2026-09-09-codex.md)
+  supplements the earlier account with the completed proofs, the full owner
+  inventory, and the remaining publication gate.
+- The full Yeet publication of `59bba09125` passed all 67 reported lanes,
+  including all 23 local CI-parity stages, and pushed that commit. The reusable
+  proof state and lane receipts pin its correct identity despite the verdict
+  header retaining the invocation's starting SHA. The closeout audit records
+  the tested merge preview and the receipt-consistency limitation.
 
 ## Notes
 

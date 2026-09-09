@@ -46,6 +46,14 @@ import type {
   ExecutionVerdict,
 } from "@beep/epistemic-domain";
 
+const decodeExecutionDecisionRecordSync = S.decodeSync(ExecutionDecisionRecord);
+const decodeExecutionOutcomeRecordSync = S.decodeSync(ExecutionOutcomeRecord);
+const decodeExecutionRequestSync = S.decodeSync(ExecutionRequest);
+const decodeFrozenGrantSetSync = S.decodeSync(FrozenGrantSet);
+const encodeExecutionDecisionRecordSync = S.encodeSync(ExecutionDecisionRecord);
+const encodeExecutionOutcomeRecordSync = S.encodeSync(ExecutionOutcomeRecord);
+const encodeFrozenGrantSetSync = S.encodeSync(FrozenGrantSet);
+
 const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(
   schema: Schema,
   options?: {
@@ -97,7 +105,7 @@ const requestInput = {
 } as const;
 
 const request = (overrides: Record<string, unknown> = {}): ExecutionRequest =>
-  S.decodeSync(ExecutionRequest)({ ...requestInput, ...overrides });
+  decodeExecutionRequestSync({ ...requestInput, ...overrides });
 
 const now = DateTime.makeUnsafe(0);
 const afterExpiry = DateTime.makeUnsafe(120000);
@@ -153,8 +161,8 @@ describe("ExecutionAuthority", () => {
     });
 
     it("reaches every evaluator denial reason distinctly, one axis per case", () => {
-      const tamperedFrozen = S.decodeSync(FrozenGrantSet)({
-        ...S.encodeSync(FrozenGrantSet)(frozen),
+      const tamperedFrozen = decodeFrozenGrantSetSync({
+        ...encodeFrozenGrantSetSync(frozen),
         grants: [],
       });
       const verdictsByReason: Record<(typeof evaluatorDenialReasons)[number], ExecutionVerdict> = {
@@ -212,8 +220,8 @@ describe("ExecutionAuthority", () => {
       // The tampered set's grants would otherwise produce operation-not-granted;
       // the broken seal must win because a set that fails its own digest cannot
       // be trusted to answer any narrower question.
-      const tampered = S.decodeSync(FrozenGrantSet)({
-        ...S.encodeSync(FrozenGrantSet)(frozen),
+      const tampered = decodeFrozenGrantSetSync({
+        ...encodeFrozenGrantSetSync(frozen),
         grants: [],
       });
 
@@ -257,8 +265,8 @@ describe("ExecutionAuthority", () => {
     it("verifyFrozenGrantSetDigest accepts the sealed set and rejects a tampered copy", () => {
       expect(verifyFrozenGrantSetDigest(frozen)).toBe(true);
 
-      const tampered = S.decodeSync(FrozenGrantSet)({
-        ...S.encodeSync(FrozenGrantSet)(frozen),
+      const tampered = decodeFrozenGrantSetSync({
+        ...encodeFrozenGrantSetSync(frozen),
         policyRevision: "2.0.0",
       });
       expect(verifyFrozenGrantSetDigest(tampered)).toBe(false);
@@ -275,8 +283,8 @@ describe("ExecutionAuthority", () => {
 
     it("rejects a tampered decision record keeping its old hash", () => {
       const record = sealExecutionDecision(decisionContent({ seq: 0, prevHash: O.none() }));
-      const tampered = S.decodeSync(ExecutionDecisionRecord)({
-        ...S.encodeSync(ExecutionDecisionRecord)(record),
+      const tampered = decodeExecutionDecisionRecordSync({
+        ...encodeExecutionDecisionRecordSync(record),
         audience: "local-workspace",
       });
 
@@ -296,8 +304,8 @@ describe("ExecutionAuthority", () => {
       const first = sealExecutionDecision(decisionContent({ seq: 0, prevHash: O.none() }));
       const second = sealExecutionDecision(decisionContent({ seq: 1, prevHash: O.some(first.hash) }));
       const third = sealExecutionDecision(decisionContent({ seq: 2, prevHash: O.some(second.hash) }));
-      const tamperedSecond = S.decodeSync(ExecutionDecisionRecord)({
-        ...S.encodeSync(ExecutionDecisionRecord)(second),
+      const tamperedSecond = decodeExecutionDecisionRecordSync({
+        ...encodeExecutionDecisionRecordSync(second),
         destinationDigest: "0".repeat(64),
       });
 
@@ -360,8 +368,8 @@ describe("ExecutionAuthority", () => {
         runKey: ExecutionRunKey.make("b".repeat(64)),
         settlement: "completed",
       });
-      const tampered = S.decodeSync(ExecutionOutcomeRecord)({
-        ...S.encodeSync(ExecutionOutcomeRecord)(outcome),
+      const tampered = decodeExecutionOutcomeRecordSync({
+        ...encodeExecutionOutcomeRecordSync(outcome),
         settlement: "failed",
       });
 

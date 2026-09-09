@@ -8,15 +8,24 @@
 /// <reference path="../../../madge.d.ts" />
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { FsUtils, findRepoRoot, jsonStringifyPretty, resolveWorkspaceDirs } from "@beep/repo-utils";
 import { isExcludedTypeScriptSourcePath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
 import { normalizePath } from "@beep/schema";
 import { A, Str, thunkEmptyStr } from "@beep/utils";
-import { Console, Effect, FileSystem, HashSet, Inspectable, MutableHashSet, Order, Path, pipe } from "effect";
+import { Config, Console, Effect, FileSystem, HashSet, Inspectable, MutableHashSet, Order, Path, pipe } from "effect";
+import * as HashMap from "effect/HashMap";
+import * as O from "effect/Option";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { Command, Flag } from "effect/unstable/cli";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { LABS_WORKSPACE_ROOT } from "../../internal/cli/Labs/index.ts";
 import { printLines } from "../../internal/cli/Printer.ts";
+import { PackageScriptsReportFromWire } from "../../internal/package-scripts/PackageScripts.schemas.ts";
+import {
+  PackageScriptsPolicy,
+  PackageScriptsPolicyError,
+} from "../../internal/package-scripts/PackageScriptsPolicy.ts";
 import { runToExit } from "../../internal/process/StepExec.ts";
 import { runGoalsDoctor } from "../Goals/Doctor.ts";
 import { runRootLintPolicyTask } from "../Quality/index.ts";
@@ -239,6 +248,258 @@ const recoverLintFileDiscovery = <A>(checkName: string, fallback: A) =>
     return yield* failWithReportedExit(`[${checkName}] ${error.message}`, 2);
   });
 
+const lintViolation = (file: string, content: string, kind: string, detail: string, offset = 0): LintViolation =>
+  LintViolation.make({ file, line: lineNumberAt(content, offset), kind, detail });
+
+const appendLintViolation = (
+  violations: Array<LintViolation>,
+  file: string,
+  content: string,
+  kind: string,
+  detail: string,
+  offset = 0
+) => void A.appendInPlace(violations, lintViolation(file, content, kind, detail, offset));
+
+const patternViolations = (
+  file: string,
+  content: string,
+  pattern: RegExp,
+  isValidAt: (offset: number) => boolean,
+  kind: string,
+  detail: string
+): ReadonlyArray<LintViolation> => {
+  const violations = A.empty<LintViolation>();
+  for (const match of Str.matchAll(pattern)(content)) {
+    const offset = match.index ?? 0;
+    if (!isValidAt(offset)) appendLintViolation(violations, file, content, kind, detail, offset);
+  }
+  return violations;
+};
+
+const nativeSortViolations = (file: string, content: string): ReadonlyArray<LintViolation> => {
+  const violations = A.empty<LintViolation>();
+  for (const match of Str.matchAll(/\b([A-Za-z_$][\w$]*)\.sort\s*\(/g)(content)) {
+    if (match[1] !== "A") {
+      A.appendInPlace(
+        violations,
+        lintViolation(
+          file,
+          content,
+          "native-sort",
+          "Use A.sort with an explicit Order in hotspot runtime files.",
+          match.index ?? 0
+        )
+      );
+    }
+  }
+  return violations;
+};
+
+const nativeStringMethodViolations = (file: string, content: string): ReadonlyArray<LintViolation> => {
+  const violations = A.empty<LintViolation>();
+  for (const match of Str.matchAll(/\b([A-Za-z_$][\w$]*)\.(split|trim|startsWith|endsWith)\s*\(/g)(content)) {
+    if (match[1] !== "Str") {
+      A.appendInPlace(
+        violations,
+        lintViolation(
+          file,
+          content,
+          "string-method",
+          `Use effect/String helpers or shared schema transforms instead of native .${match[2]}(...) in hotspot files.`,
+          match.index ?? 0
+        )
+      );
+    }
+  }
+  return violations;
+};
+
+const runtimeFocusViolations = (file: string, content: string): ReadonlyArray<LintViolation> => {
+  const violations = A.empty<LintViolation>();
+  if (
+    /from\s+["']node:(?:fs|path|child_process)["']/.test(content) ||
+    /require\(["']node:(?:fs|path|child_process)["']\)/.test(content)
+  ) {
+    A.appendInPlace(
+      violations,
+      lintViolation(
+        file,
+        content,
+        "node-runtime-import",
+        "Use Effect runtime services (FileSystem/Path/process) instead of node:* runtime imports in hotspot files."
+      )
+    );
+  }
+  if (/\bawait\s+fetch\s*\(|\breturn\s+fetch\s*\(|=\s*fetch\s*\(|\bglobalThis\.fetch\s*\(/.test(content)) {
+    A.appendInPlace(
+      violations,
+      lintViolation(
+        file,
+        content,
+        "native-fetch",
+        "Use effect/unstable/http HttpClient and provide @effect/platform-bun/BunHttpClient.layer instead of native fetch."
+      )
+    );
+  }
+  return pipe(
+    violations,
+    A.appendAll(nativeSortViolations(file, content)),
+    A.appendAll(nativeStringMethodViolations(file, content))
+  );
+};
+
+const serviceIdentityViolations = (file: string, content: string): ReadonlyArray<LintViolation> =>
+  patternViolations(
+    file,
+    content,
+    /Context\.Service</g,
+    (offset) => /\(\)\(\s*\$I`/.test(Str.slice(offset, offset + 320)(content)),
+    "service-id",
+    "Context.Service tag must use $I`ServiceName` identity."
+  );
+
+const schemaAnnotationViolations = (file: string, content: string): ReadonlyArray<LintViolation> =>
+  patternViolations(
+    file,
+    content,
+    /S\.Class<[^>]+>\(\$I`[^`]+`\)\(/g,
+    (offset) => /\$I\.annote\(/.test(Str.slice(offset, offset + 2400)(content)),
+    "schema-annotation",
+    "S.Class schema is missing $I.annote(...) metadata."
+  );
+
+const runtimeSchemaFirstViolationKinds = (file: string, content: string): ReadonlyArray<string> =>
+  pipe(
+    runtimeFocusViolations(file, content),
+    A.appendAll(serviceIdentityViolations(file, content)),
+    A.appendAll(schemaAnnotationViolations(file, content)),
+    A.map((violation) => violation.kind)
+  );
+
+/**
+ * Reports focused runtime and schema-first violation kinds for pure policy tests.
+ *
+ * **Details**
+ *
+ * This seam uses the same detectors as the tooling lint command without reading
+ * files or mutating process state.
+ *
+ * **Example** (Inspect a hotspot source fragment)
+ *
+ * ```ts
+ * import { LintCommandTestKit } from "@beep/repo-cli/commands/Lint"
+ *
+ * const kinds = LintCommandTestKit.runtimeSchemaFirstViolationKinds(
+ *   "packages/tooling/tool/cli/src/commands/Lint/index.ts",
+ *   "const values = [2, 1]; values.sort()"
+ * )
+ * console.log(kinds)
+ * ```
+ *
+ * @internal
+ * @category testing
+ * @since 0.0.0
+ */
+export const LintCommandTestKit = {
+  runtimeSchemaFirstViolationKinds,
+} as const;
+
+const toolingFileViolations = (file: string, content: string, path: Path.Path): ReadonlyArray<LintViolation> => {
+  const violations = A.empty<LintViolation>();
+  const basename = path.basename(file, ".ts");
+  if (!HashSet.has(ALLOWED_NON_PASCAL_FILENAMES, basename) && !/^[A-Z][A-Za-z0-9]*$/.test(basename)) {
+    A.appendInPlace(
+      violations,
+      lintViolation(
+        file,
+        content,
+        "pascal-case-file",
+        "Tooling CLI TypeScript files must use PascalCase names (except index.ts and bin.ts)."
+      )
+    );
+  }
+  if (/\bexport\s+interface\b/.test(content)) {
+    A.appendInPlace(
+      violations,
+      lintViolation(
+        file,
+        content,
+        "export-interface",
+        "Use schema classes or type aliases instead of exported interfaces."
+      )
+    );
+  }
+  if (/\bData\.taggedEnum\b|\bData\.TaggedEnum\b/.test(content)) {
+    A.appendInPlace(
+      violations,
+      lintViolation(
+        file,
+        content,
+        "data-tagged-enum",
+        "Use Schema tagged unions via LiteralKit + mapMembers + Tuple.evolve."
+      )
+    );
+  }
+  return pipe(
+    violations,
+    A.appendAll(serviceIdentityViolations(file, content)),
+    A.appendAll(schemaAnnotationViolations(file, content))
+  );
+};
+
+const inspectLintFile = Effect.fn("Lint.inspectToolingSchemaFirstFile")(function* (
+  file: string,
+  fs: FileSystem.FileSystem,
+  path: Path.Path
+) {
+  const content = yield* fs.readFileString(path.join(process.cwd(), file)).pipe(Effect.orElseSucceed(thunkEmptyStr));
+  const isToolingFile = Str.startsWith(`${TOOLING_ROOT}/`)(file);
+  const violations = isToolingFile ? toolingFileViolations(file, content, path) : A.empty<LintViolation>();
+  return HashSet.has(FOCUS_RUNTIME_FILES, file)
+    ? pipe(violations, A.appendAll(runtimeFocusViolations(file, content)))
+    : violations;
+});
+
+const taggedUnionViolation = Effect.fn("Lint.inspectRequiredTaggedUnion")(function* (
+  schemaName: (typeof REQUIRED_TAGGED_UNIONS)[number],
+  toolingFiles: ReadonlyArray<string>,
+  fs: FileSystem.FileSystem,
+  path: Path.Path
+) {
+  const declarationPattern = new RegExp(`(?:export\\s+)?const\\s+${schemaName}\\s*=`);
+  for (const file of toolingFiles) {
+    const content = yield* fs.readFileString(path.join(process.cwd(), file)).pipe(Effect.orElseSucceed(thunkEmptyStr));
+    const match = declarationPattern.exec(content);
+    if (match === null) continue;
+    const snippet = Str.slice(match.index, match.index + 1400)(content);
+    const missesLiteralKitPattern =
+      !/\.mapMembers\(/.test(snippet) ||
+      !/Tuple\.evolve\(/.test(snippet) ||
+      !/\.pipe\(S\.toTaggedUnion\(/.test(snippet);
+    const usesAllowedFallback =
+      schemaName === "GenerationAction" && /S\.Union\(/.test(snippet) && /\.pipe\(S\.toTaggedUnion\(/.test(snippet);
+    return missesLiteralKitPattern && !usesAllowedFallback
+      ? A.of(
+          lintViolation(
+            file,
+            content,
+            "tagged-union-pattern",
+            `${schemaName} must use LiteralKit + mapMembers + Tuple.evolve + S.toTaggedUnion.`,
+            match.index
+          )
+        )
+      : A.empty<LintViolation>();
+  }
+  return A.of(
+    LintViolation.make({
+      file: TOOLING_ROOT,
+      line: 1,
+      kind: "missing-schema",
+      detail: `Expected tagged union schema '${schemaName}' was not found.`,
+    })
+  );
+});
+
 const runLintToolingSchemaFirst = Effect.fn("runLintToolingSchemaFirst")(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -253,159 +514,13 @@ const runLintToolingSchemaFirst = Effect.fn("runLintToolingSchemaFirst")(functio
 
   const files = pipe(filesByRoot, A.flatten, A.dedupe);
   const toolingFiles = A.filter(files, (file) => Str.startsWith(`${TOOLING_ROOT}/`)(file));
-  let violations = A.empty<LintViolation>();
-
-  for (const file of files) {
-    const isToolingFile = Str.startsWith(`${TOOLING_ROOT}/`)(file);
-    const isRuntimeFocusFile = HashSet.has(FOCUS_RUNTIME_FILES, file);
-    if (!isToolingFile && !isRuntimeFocusFile) {
-      continue;
-    }
-
-    const absolute = path.join(process.cwd(), file);
-    const content = yield* fs.readFileString(absolute).pipe(Effect.orElseSucceed(thunkEmptyStr));
-
-    const pushViolation = (kind: string, detail: string, offset = 0): void => {
-      violations = A.append(
-        violations,
-        LintViolation.make({
-          file,
-          line: lineNumberAt(content, offset),
-          kind,
-          detail,
-        })
-      );
-    };
-
-    const basename = path.basename(file, ".ts");
-    if (
-      isToolingFile &&
-      !HashSet.has(ALLOWED_NON_PASCAL_FILENAMES, basename) &&
-      !/^[A-Z][A-Za-z0-9]*$/.test(basename)
-    ) {
-      pushViolation(
-        "pascal-case-file",
-        "Tooling CLI TypeScript files must use PascalCase names (except index.ts and bin.ts)."
-      );
-    }
-
-    if (isToolingFile && /\bexport\s+interface\b/.test(content)) {
-      pushViolation("export-interface", "Use schema classes or type aliases instead of exported interfaces.");
-    }
-
-    if (isToolingFile && /\bData\.taggedEnum\b|\bData\.TaggedEnum\b/.test(content)) {
-      pushViolation("data-tagged-enum", "Use Schema tagged unions via LiteralKit + mapMembers + Tuple.evolve.");
-    }
-
-    if (isRuntimeFocusFile) {
-      if (
-        /from\s+["']node:(?:fs|path|child_process)["']/.test(content) ||
-        /require\(["']node:(?:fs|path|child_process)["']\)/.test(content)
-      ) {
-        pushViolation(
-          "node-runtime-import",
-          "Use Effect runtime services (FileSystem/Path/process) instead of node:* runtime imports in hotspot files."
-        );
-      }
-
-      if (/\bawait\s+fetch\s*\(|\breturn\s+fetch\s*\(|=\s*fetch\s*\(|\bglobalThis\.fetch\s*\(/.test(content)) {
-        pushViolation(
-          "native-fetch",
-          "Use effect/unstable/http HttpClient and provide @effect/platform-bun/BunHttpClient.layer instead of native fetch."
-        );
-      }
-
-      const sortPattern = /\b([A-Za-z_$][\w$]*)\.sort\s*\(/g;
-      for (const match of Str.matchAll(sortPattern)(content)) {
-        const receiver = match[1];
-        if (receiver !== "A") {
-          pushViolation("native-sort", "Use A.sort with an explicit Order in hotspot runtime files.", match.index ?? 0);
-        }
-      }
-
-      const stringMethodPattern = /\b([A-Za-z_$][\w$]*)\.(split|trim|startsWith|endsWith)\s*\(/g;
-      for (const match of Str.matchAll(stringMethodPattern)(content)) {
-        const receiver = match[1];
-        const method = match[2];
-        if (receiver !== "Str") {
-          pushViolation(
-            "string-method",
-            `Use effect/String helpers or shared schema transforms instead of native .${method}(...) in hotspot files.`,
-            match.index ?? 0
-          );
-        }
-      }
-    }
-
-    if (isToolingFile) {
-      const serviceLinePattern = /Context\.Service</g;
-      for (const match of Str.matchAll(serviceLinePattern)(content)) {
-        const start = match.index ?? 0;
-        const nearby = Str.slice(start, start + 320)(content);
-        if (!/\(\)\(\s*\$I`/.test(nearby)) {
-          pushViolation("service-id", "Context.Service tag must use $I`ServiceName` identity.", start);
-        }
-      }
-
-      const classPattern = /S\.Class<[^>]+>\(\$I`[^`]+`\)\(/g;
-      for (const match of Str.matchAll(classPattern)(content)) {
-        const start = match.index ?? 0;
-        const nearby = Str.slice(start, start + 2400)(content);
-        if (!/\$I\.annote\(/.test(nearby)) {
-          pushViolation("schema-annotation", "S.Class schema is missing $I.annote(...) metadata.", start);
-        }
-      }
-    }
-  }
-
-  for (const schemaName of REQUIRED_TAGGED_UNIONS) {
-    const declarationPattern = new RegExp(`(?:export\\s+)?const\\s+${schemaName}\\s*=`);
-    let found = false;
-
-    for (const file of toolingFiles) {
-      const absolute = path.join(process.cwd(), file);
-      const content = yield* fs.readFileString(absolute).pipe(Effect.orElseSucceed(thunkEmptyStr));
-      const match = declarationPattern.exec(content);
-
-      if (match === null) {
-        continue;
-      }
-
-      found = true;
-      const snippet = Str.slice(match.index, match.index + 1400)(content);
-      const usesLiteralKitPattern =
-        !/\.mapMembers\(/.test(snippet) ||
-        !/Tuple\.evolve\(/.test(snippet) ||
-        !/\.pipe\(S\.toTaggedUnion\(/.test(snippet);
-      const usesTaggedUnionFallback =
-        schemaName === "GenerationAction" && /S\.Union\(/.test(snippet) && /\.pipe\(S\.toTaggedUnion\(/.test(snippet);
-
-      if (usesLiteralKitPattern && !usesTaggedUnionFallback) {
-        violations = A.append(
-          violations,
-          LintViolation.make({
-            file,
-            line: lineNumberAt(content, match.index),
-            kind: "tagged-union-pattern",
-            detail: `${schemaName} must use LiteralKit + mapMembers + Tuple.evolve + S.toTaggedUnion.`,
-          })
-        );
-      }
-      break;
-    }
-
-    if (!found) {
-      violations = A.append(
-        violations,
-        LintViolation.make({
-          file: TOOLING_ROOT,
-          line: 1,
-          kind: "missing-schema",
-          detail: `Expected tagged union schema '${schemaName}' was not found.`,
-        })
-      );
-    }
-  }
+  const fileViolations = yield* Effect.forEach(files, (file) => inspectLintFile(file, fs, path), {
+    concurrency: "unbounded",
+  });
+  const requiredUnionViolations = yield* Effect.forEach(REQUIRED_TAGGED_UNIONS, (schemaName) =>
+    taggedUnionViolation(schemaName, toolingFiles, fs, path)
+  );
+  const violations = pipe(fileViolations, A.appendAll(requiredUnionViolations), A.flatten);
 
   if (A.length(violations) > 0) {
     yield* Console.error(`[check-tooling-schema-first] found ${A.length(violations)} violation(s).`);
@@ -526,6 +641,130 @@ const runDeprecatedApiLint = Effect.fn("runDeprecatedApiLint")(function* () {
   yield* Console.log("[lint:deprecated-apis] OK: no deprecated vendor API usage found.");
 });
 
+const lintPackageFlag = Flag.string("package").pipe(Flag.optional);
+
+const resolveLintPackage = Effect.fn("Lint.resolvePackage")(function* (root: string, directory: string) {
+  const path = yield* Path.Path;
+  const absolute = path.resolve(directory);
+  if (!isContainedLintPath(path, root, absolute)) {
+    return yield* failWithReportedExit("Lint package directory must stay inside the repository.");
+  }
+  return normalizePath(path.relative(root, absolute)) || ".";
+});
+
+const runEslintWorker = Effect.fn("Lint.eslintWorker")(function* (
+  root: string,
+  profile: string,
+  targets: ReadonlyArray<string>
+) {
+  if (A.isReadonlyArrayEmpty(targets)) return;
+  const path = yield* Path.Path;
+  const nodeOptions = yield* Config.string("NODE_OPTIONS").pipe(Config.withDefault(""));
+  // Workers lint a whole package with type information; @beep/repo-cli exhausts a 4 GiB heap,
+  // so the default matches the shard heap instead of a smaller worker-only budget.
+  const heapOptions = /--max[-_]old[-_]space[-_]size(?:=|\s+)/.test(nodeOptions)
+    ? nodeOptions
+    : `${nodeOptions} ${DEPRECATED_API_LINT_NODE_OPTIONS}`;
+  const exitCode = yield* runToExit({
+    command: path.join(root, DEPRECATED_API_LINT_ESLINT_BIN),
+    args: [
+      "--config",
+      path.join(root, "eslint.config.mjs"),
+      ...(profile === "docs" ? ["--max-warnings=0", "--no-warn-ignored"] : []),
+      ...targets,
+    ],
+    cwd: root,
+    env: { BEEP_ESLINT_PROFILE: profile, NODE_OPTIONS: Str.trim(heapOptions) },
+    extendEnv: true,
+    stdio: "inherit",
+  });
+  if (exitCode !== 0)
+    return yield* failWithReportedExit(`lint ${profile}: failed with exit code ${exitCode}.`, exitCode);
+});
+
+const lintJsdocCommand = Command.make(
+  "jsdoc",
+  {
+    package: lintPackageFlag,
+    rootOnly: Flag.boolean("root-only").pipe(Flag.withDefault(false)),
+  },
+  Effect.fn("Lint.jsdoc")(function* ({ package: directory, rootOnly }) {
+    if (O.isSome(directory) === rootOnly) {
+      return yield* failWithReportedExit("Choose exactly one of --package or --root-only.");
+    }
+    const root = yield* findRepoRoot();
+    if (O.isSome(directory)) {
+      return yield* runEslintWorker(root, "docs", [yield* resolveLintPackage(root, directory.value)]);
+    }
+    const fsUtils = yield* FsUtils;
+    const path = yield* Path.Path;
+    const workspaces = yield* resolveWorkspaceDirs(root);
+    const files = yield* fsUtils.globFiles(["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/**/*.ts"], {
+      cwd: root,
+      ignore: [
+        "apps/labs/**",
+        "**/node_modules/**",
+        "**/.context/**",
+        ...A.map(A.fromIterable(HashMap.values(workspaces)), (dir) => `${normalizePath(path.relative(root, dir))}/**`),
+      ],
+    });
+    yield* runEslintWorker(root, "docs", A.sort(files, Order.String));
+  })
+).pipe(Command.withDescription("Check package or non-workspace documentation with the docs ESLint profile"));
+
+const lintLawsCommand = Command.make(
+  "laws",
+  {
+    package: Flag.string("package"),
+  },
+  Effect.fn("Lint.laws")(function* ({ package: directory }) {
+    const root = yield* findRepoRoot();
+    const path = yield* Path.Path;
+    const prefix = yield* resolveLintPackage(root, directory);
+    const fsUtils = yield* FsUtils;
+    const files = A.sort(
+      yield* fsUtils.globFiles([`${prefix}/**/*.{ts,tsx}`], {
+        cwd: root,
+        ignore: [
+          "**/node_modules/**",
+          "**/dist/**",
+          "**/build/**",
+          "**/.turbo/**",
+          "**/coverage/**",
+          "**/*.d.ts",
+          "**/*.d.tsx",
+        ],
+      }),
+      Order.String
+    );
+    const include = A.join(files, ",");
+    const commands = [
+      ...A.flatMap(["terse-effect", "native-runtime", "frozen-grant-set", "effect-fn"], (law) =>
+        A.isReadonlyArrayEmpty(files)
+          ? []
+          : [["laws", law, "--check", ...(law === "terse-effect" ? ["--advisory"] : []), "--include", include]]
+      ),
+      ...(Str.startsWith(prefix, "packages/") ? [["lint", "package-test-imports", "--include-root", prefix]] : []),
+    ];
+    if (A.isReadonlyArrayEmpty(files)) {
+      yield* Console.log(`lint laws: skipping four laws for ${prefix}; no TypeScript source files.`);
+    }
+    if (!Str.startsWith(prefix, "packages/")) {
+      yield* Console.log(`lint laws: skipping package-test-imports for ${prefix}; it only scans packages/.`);
+    }
+    for (const args of commands) {
+      const exitCode = yield* runToExit({
+        command: "bun",
+        args: ["run", path.join(root, "packages/tooling/tool/cli/src/bin.ts"), "--", ...args],
+        cwd: root,
+        extendEnv: true,
+        stdio: "inherit",
+      });
+      if (exitCode !== 0) return yield* failWithReportedExit(`lint laws: ${A.join(args, " ")} failed.`, exitCode);
+    }
+  })
+).pipe(Command.withDescription("Run the package-scoped law checks"));
+
 /**
  * Lint command for circular dependency checks.
  *
@@ -554,9 +793,15 @@ const lintCircularCommand = Command.make("circular", {}, runLintCircular).pipe(
  * @category utilities
  * @since 0.0.0
  */
-const lintDeprecatedApisCommand = Command.make("deprecated-apis", {}, runDeprecatedApiLint).pipe(
-  Command.withDescription("Check TypeScript sources for deprecated third-party API usage")
-);
+const lintDeprecatedApisCommand = Command.make(
+  "deprecated-apis",
+  { package: lintPackageFlag },
+  Effect.fn("Lint.deprecatedApis")(function* ({ package: directory }) {
+    if (O.isNone(directory)) return yield* runDeprecatedApiLint();
+    const root = yield* findRepoRoot();
+    yield* runEslintWorker(root, "deprecated-apis", [yield* resolveLintPackage(root, directory.value)]);
+  })
+).pipe(Command.withDescription("Check TypeScript sources for deprecated third-party API usage"));
 
 /**
  * Lint command for repo-wide root policy checks.
@@ -611,9 +856,200 @@ const lintToolingSchemaFirstCommand = Command.make("tooling-schema-first", {}, r
   Command.withDescription("Check packages/tooling/tool/cli source for schema-first conventions")
 );
 
+const fingerprintPath = "standards/policy-tools.fingerprint.json";
+const rootConfigs = [
+  "eslint.config.mjs",
+  "tsdoc.json",
+  ".oxlintrc.json",
+  "_typos.toml",
+  "knip.jsonc",
+  ".fallowrc.jsonc",
+  "biome.jsonc",
+  "tsconfig.base.json",
+  "tsconfig.json",
+];
+
+/**
+ * Generated checker input declaration; content hashes are computed at task time.
+ * **Example** (Recognize a missing fingerprint)
+ * ```ts
+ * import { PolicyToolsFingerprint } from "@beep/repo-cli/test/PackageScripts"
+ * import * as S from "effect/Schema"
+ * console.log(S.is(PolicyToolsFingerprint)(undefined)) // false
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class PolicyToolsFingerprint extends S.Class<PolicyToolsFingerprint>($I`PolicyToolsFingerprint`)(
+  {
+    schemaVersion: S.Literal("policy-tools-fingerprint/v1"),
+    inputs: S.Array(S.String),
+  },
+  $I.annote("PolicyToolsFingerprint", {
+    description: "Declared checker workspace dependency closure and root configuration inputs.",
+  })
+) {}
+
+const decodeFingerprint = S.decodeEffect(S.fromJsonString(PolicyToolsFingerprint));
+const fingerprintEquivalent = S.toEquivalence(PolicyToolsFingerprint);
+const fingerprintIsCurrent = Effect.fnUntraced(function* (file: string, expected: PolicyToolsFingerprint) {
+  const fs = yield* FileSystem.FileSystem;
+  if (!(yield* fs.exists(file))) return false;
+  const text = yield* fs.readFileString(file);
+  return yield* decodeFingerprint(text).pipe(
+    Effect.map((actual) => fingerprintEquivalent(actual, expected)),
+    Effect.catchTag("SchemaError", () => Effect.succeed(false))
+  );
+});
+
+const decodeDependencies = S.decodeEffect(
+  S.fromJsonString(S.Struct({ dependencies: S.optionalKey(S.Record(S.String, S.String)) }))
+);
+const fingerprintPatterns = Effect.fnUntraced(function* (repoRoot: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const workspaces = yield* resolveWorkspaceDirs(repoRoot);
+  let visited = HashSet.empty<string>();
+  const pending = ["@beep/repo-cli"];
+  const patterns: Array<string> = [];
+  const visit = Effect.fnUntraced(function* (name: string) {
+    const dir = HashMap.get(workspaces, name);
+    if (O.isNone(dir)) {
+      if (name === "@beep/repo-cli")
+        return yield* PackageScriptsPolicyError.make({ message: "CLI workspace is missing", cause: name });
+      return [];
+    }
+    patterns.push(`${path.relative(repoRoot, dir.value)}/src/**`);
+    const text = yield* fs.readFileString(path.join(dir.value, "package.json"));
+    const manifest = yield* decodeDependencies(text);
+    return A.filter(R.keys(manifest.dependencies ?? {}), (dependency) => HashMap.has(workspaces, dependency));
+  });
+  while (A.isReadonlyArrayNonEmpty(pending)) {
+    const name = pending.pop();
+    if (name === undefined || HashSet.has(visited, name)) continue;
+    visited = HashSet.add(visited, name);
+    pending.push(...(yield* visit(name)));
+  }
+  return patterns;
+});
+
+/**
+ * Declares the CLI's transitive workspace source globs and root checker configs.
+ * **Example** (Prepare a fingerprint computation)
+ * ```ts
+ * import { policyToolsFingerprint } from "@beep/repo-cli/test/PackageScripts"
+ * import * as Effect from "effect/Effect"
+ * console.log(Effect.isEffect(policyToolsFingerprint("/repo"))) // true
+ * ```
+ *
+ * @category workflows
+ * @since 0.0.0
+ */
+export const policyToolsFingerprint = Effect.fn("policyToolsFingerprint")(
+  function* (repoRoot: string) {
+    const patterns = yield* fingerprintPatterns(repoRoot);
+    const inputs = A.sort([...patterns, ...rootConfigs, "**/package.json", fingerprintPath], Order.String);
+    return PolicyToolsFingerprint.make({
+      schemaVersion: "policy-tools-fingerprint/v1",
+      inputs,
+    });
+  },
+  Effect.mapError((cause) => PackageScriptsPolicyError.make({ message: "Cannot compute policy fingerprint", cause }))
+);
+
+const encodeScriptsReport = S.encodeEffect(PackageScriptsReportFromWire);
+
+const gateFlags = {
+  check: Flag.boolean("check").pipe(Flag.withDefault(false)),
+  write: Flag.boolean("write").pipe(Flag.withDefault(false)),
+};
+
+const printScriptsReport = Effect.fnUntraced(function* (
+  report: PackageScriptsReportFromWire,
+  wire: typeof PackageScriptsReportFromWire.Encoded,
+  json: boolean
+) {
+  yield* Console.log(
+    json
+      ? yield* jsonStringifyPretty(wire)
+      : `package-scripts: ${report.manifests} manifests, ${HashMap.size(report.drift)} drifting, ${HashSet.size(report.written)} written`
+  );
+  if (!json)
+    for (const [manifest, rows] of report.drift)
+      for (const row of rows) yield* Console.log(`${manifest}: ${row.name}: ${row._tag}`);
+});
+
+/**
+ * Checks or repairs the strict package scripts block.
+ * **Example** (Inspect the gate name)
+ * ```ts
+ * import { lintPackageScriptsCommand } from "@beep/repo-cli/test/PackageScripts"
+ * console.log(lintPackageScriptsCommand.name) // package-scripts
+ * ```
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export const lintPackageScriptsCommand = Command.make(
+  "package-scripts",
+  {
+    ...gateFlags,
+    json: Flag.boolean("json").pipe(Flag.withDefault(false)),
+  },
+  Effect.fn("lintPackageScripts")(function* ({ check, write, json }) {
+    if (check && write) return yield* failWithReportedExit("Choose --check or --write, not both.");
+    const root = yield* findRepoRoot();
+    const policy = yield* PackageScriptsPolicy.make(root);
+    const report = yield* write ? policy.write(root) : policy.check(root);
+    const wire = yield* encodeScriptsReport(report);
+    yield* printScriptsReport(report, wire, json);
+    if (HashMap.size(report.drift) > 0) return yield* failWithReportedExit("Package scripts policy drift.");
+  })
+).pipe(Command.withDescription("Check or repair canonical workspace scripts"));
+
+/**
+ * Fails on changed declared checker inputs or writes the current declaration.
+ * **Example** (Inspect the fingerprint gate name)
+ * ```ts
+ * import { lintPolicyFingerprintCommand } from "@beep/repo-cli/test/PackageScripts"
+ * console.log(lintPolicyFingerprintCommand.name) // policy-fingerprint
+ * ```
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export const lintPolicyFingerprintCommand = Command.make(
+  "policy-fingerprint",
+  gateFlags,
+  Effect.fn("lintPolicyFingerprint")(function* ({ check, write }) {
+    if (check && write) return yield* failWithReportedExit("Choose --check or --write, not both.");
+    const root = yield* findRepoRoot();
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const file = path.join(root, fingerprintPath);
+    const fingerprint = yield* policyToolsFingerprint(root);
+    const expected = `${yield* jsonStringifyPretty(fingerprint)}\n`;
+    if (write) {
+      yield* fs.writeFileString(file, expected);
+      yield* Console.log("policy-fingerprint: written");
+    } else {
+      if (!(yield* fingerprintIsCurrent(file, fingerprint)))
+        return yield* failWithReportedExit(
+          "Policy fingerprint is stale; run bun run beep lint policy-fingerprint --write."
+        );
+      yield* Console.log("policy-fingerprint: current");
+    }
+  })
+).pipe(Command.withDescription("Check or generate declared checker inputs"));
+
 const lintSubcommands = [
+  lintPackageScriptsCommand,
+  lintPolicyFingerprintCommand,
   lintCircularCommand,
   lintDeprecatedApisCommand,
+  lintJsdocCommand,
+  lintLawsCommand,
   lintEcosystemPolarityCommand,
   lintGoalPacketsCommand,
   lintIdentityRegistryCommand,

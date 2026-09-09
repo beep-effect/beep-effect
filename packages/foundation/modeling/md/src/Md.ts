@@ -85,6 +85,9 @@ import type {
   TaskListItemSpec,
 } from "./Md.model.ts";
 
+const decodeYouTube = S.decodeEffect(YouTube);
+const decodeYouTubeResult = S.decodeResult(YouTube);
+
 /**
  * Inline constructor input accepted by text-oriented builders.
  *
@@ -1219,7 +1222,7 @@ const youtubeInput = (videoId: string): YouTube.Encoded => ({ _tag: "youtube", v
  * @since 0.0.0
  */
 export const youtube = (videoId: string): Result.Result<YouTube, S.SchemaError> =>
-  S.decodeResult(YouTube)(youtubeInput(videoId));
+  decodeYouTubeResult(youtubeInput(videoId));
 
 /**
  * Effectful YouTube embed constructor.
@@ -1238,7 +1241,7 @@ export const youtube = (videoId: string): Result.Result<YouTube, S.SchemaError> 
  * @since 0.0.0
  */
 export const youtubeEffect = Effect.fn("Md.youtubeEffect")(function* (videoId: string) {
-  return yield* S.decodeEffect(YouTube)(youtubeInput(videoId));
+  return yield* decodeYouTube(youtubeInput(videoId));
 });
 
 /**

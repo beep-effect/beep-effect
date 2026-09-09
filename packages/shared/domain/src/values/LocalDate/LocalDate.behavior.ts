@@ -203,7 +203,7 @@ const LocalDateEquivalence = S.toEquivalence(LocalDate.Model);
  * @since 0.0.0
  */
 export const fromString = (dateString: string): Effect.Effect<LocalDate.Model, S.SchemaError> =>
-  S.decodeEffect(LocalDateFromString)(dateString);
+  decodeLocalDateFromString2(dateString);
 
 /**
  * Create a `LocalDate` from a JavaScript `Date` using UTC calendar components.
@@ -766,3 +766,4 @@ export declare namespace LocalDateFromString {
    */
   export type Encoded = typeof LocalDateFromString.Encoded;
 }
+const decodeLocalDateFromString2 = S.decodeEffect(LocalDateFromString);

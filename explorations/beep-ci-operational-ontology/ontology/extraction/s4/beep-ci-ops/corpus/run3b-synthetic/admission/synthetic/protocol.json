@@ -1,0 +1,5 @@
+{
+  "schemaVersion": "yeet-admission-protocol/v2",
+  "eviction": "on",
+  "provenance": "synthetic"
+}

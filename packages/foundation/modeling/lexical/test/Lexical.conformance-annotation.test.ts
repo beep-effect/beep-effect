@@ -7,11 +7,13 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
+const isConformanceAnnotation = S.is(Conformance.Annotation);
+
 describe("@beep/lexical-schema conformance annotations", () => {
   it("collects the Beep v1 profile from the exhaustive Lexical result schema", () => {
     const annotation = LexicalConformanceResult.pipe(Conformance.collectConformanceAnnotations, A.head, O.getOrThrow);
 
-    expect(S.is(Conformance.Annotation)(annotation)).toBe(true);
+    expect(isConformanceAnnotation(annotation)).toBe(true);
     expect(A.map(annotation.profiles, ({ id }) => id)).toEqual(["beep-lexical-v1"]);
     expect(A.map(annotation.sources, ({ id }) => id)).toEqual([
       "lexical-source-0.49.0",

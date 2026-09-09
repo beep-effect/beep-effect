@@ -6,6 +6,10 @@ import { Effect, Encoding, Layer } from "effect";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const encodeCuidSync = S.encodeSync(Cuid);
+const encodeCuidSeedSync = S.encodeSync(CuidSeed);
+const isCuid = S.is(Cuid);
+
 const beepSha512Digest =
   "e6d9beb966c28eeb50c7162bbe1329b4ab3334ee1b2d3df4bd44334430347c0db4cbf8202a414e795cdc2facd37b3eb4ee8d8550969441dfecf8df4cdf582e03";
 const CuidTestLayer = CuidState.Default.pipe(Layer.provideMerge(BunCrypto.layer));
@@ -26,7 +30,7 @@ describe("Cuid", () => {
   it.effect("generates CUID values with explicit platform crypto", () =>
     Effect.gen(function* () {
       const id = yield* cuid;
-      expect(S.is(Cuid)(id)).toBe(true);
+      expect(isCuid(id)).toBe(true);
     }).pipe(provideScopedLayer(CuidTestLayer))
   );
 
@@ -36,7 +40,7 @@ describe("Cuid", () => {
     fc.assert(
       fc.property(arbitrary, (id) => {
         expect(Cuid.is(id)).toBe(true);
-        expect(S.encodeSync(Cuid)(id)).toBe(id);
+        expect(encodeCuidSync(id)).toBe(id);
       }),
       fcRuns(25)
     );
@@ -51,7 +55,7 @@ describe("Cuid", () => {
       fingerprint: "beep",
     });
 
-    expect(S.encodeSync(CuidSeed)(seed)).toEqual({
+    expect(encodeCuidSeedSync(seed)).toEqual({
       timestamp: 1,
       counter: 0,
       random,

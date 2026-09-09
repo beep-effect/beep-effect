@@ -31,6 +31,9 @@ import type { PrNumber } from "./Provenance.ts";
 import type { ResumeOptions } from "./Resume.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/Resume");
+const decodePrRef = S.decodeEffect(PrRef);
+const decodePrRepository = S.decodeOption(PrRepository);
+const decodePrProvenanceLabel = S.decodeOption(PrProvenanceLabel);
 const encodeResolved = S.encodeUnknownResult(S.fromJsonString(S.Array(ResolvedResume)));
 
 /**
@@ -105,7 +108,7 @@ const decodeCwd = S.decodeUnknownOption(S.fromJsonString(TranscriptCwd));
  * @since 0.0.0
  */
 export const parsePrRef = Effect.fn("Resume.parsePrRef")(function* (ref: string) {
-  return yield* S.decodeEffect(PrRef)(ref).pipe(
+  return yield* decodePrRef(ref).pipe(
     Effect.mapError((cause) => YeetCommandError.make({ message: `Invalid PR reference: ${ref}`, cause, exitCode: 4 }))
   );
 });
@@ -295,7 +298,7 @@ const transcriptFallback = Effect.fn("Resume.transcriptFallback")(function* (
           /^(?:https:\/\/github\.com\/|github\.com[/:])?([^/\s]+)\/([^/\s]+?)(?:\.git)?(?:\/pull\/[1-9][0-9]*)?$/iu
         )(candidate);
         if (O.isNone(match) || match.value[1] === undefined || match.value[2] === undefined) return false;
-        const normalized = S.decodeOption(PrRepository)({
+        const normalized = decodePrRepository({
           host: "github.com",
           owner: Str.toLowerCase(match.value[1]),
           name: Str.toLowerCase(match.value[2]),
@@ -315,7 +318,7 @@ const transcriptFallback = Effect.fn("Resume.transcriptFallback")(function* (
       const info = yield* fs.stat(transcriptPath);
       const recordedAt = pipe(info.mtime, O.map(DateTime.fromDateUnsafe), O.getOrElse(DateTime.nowUnsafe));
       const sessionId = path.basename(name, ".jsonl");
-      const workspace = S.decodeOption(PrProvenanceLabel)(path.basename(cwd)).pipe(
+      const workspace = decodePrProvenanceLabel(path.basename(cwd)).pipe(
         O.getOrElse<PrProvenanceLabel>(() => "unknown")
       );
       return O.some(

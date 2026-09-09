@@ -1,0 +1,68 @@
+[
+  {
+    "headSha": "02d88af51cff03dcbaeb50c3b6da663c1f99fd97",
+    "packageName": "@beep/effect-drizzle",
+    "packageDir": "packages/ecosystem/effect-drizzle",
+    "quick": false,
+    "repoRoot": ".",
+    "results": [
+      {
+        "step": "audit",
+        "script": "beep:audit",
+        "skipped": false,
+        "ok": true,
+        "durationMillis": 17909,
+        "exitCode": {
+          "_tag": "Some",
+          "value": 0
+        },
+        "output": "\n$ biome check .\nChecked 60 files in 1505ms. No fixes applied.\n"
+      },
+      {
+        "step": "docgen",
+        "script": "docgen",
+        "skipped": false,
+        "ok": true,
+        "durationMillis": 3599,
+        "exitCode": {
+          "_tag": "Some",
+          "value": 0
+        },
+        "output": "[01:44:03.471] INFO (#333): Writing markdown files...\n[01:44:03.493] INFO (#332): Typechecking examples...\n[01:44:04.322] INFO (#2): ✓ Docs generation succeeded!\n"
+      }
+    ]
+  },
+  {
+    "headSha": "02d88af51cff03dcbaeb50c3b6da663c1f99fd97",
+    "packageName": "@beep/freshbooks",
+    "packageDir": "packages/drivers/freshbooks",
+    "quick": false,
+    "repoRoot": ".",
+    "results": [
+      {
+        "step": "audit",
+        "script": "beep:audit",
+        "skipped": false,
+        "ok": true,
+        "durationMillis": 13539,
+        "exitCode": {
+          "_tag": "Some",
+          "value": 0
+        },
+        "output": "[01:44:15.171] INFO (#2): ✓ Docs generation succeeded!\n$ biome check .\nChecked 14 files in 1234ms. No fixes applied.\n"
+      },
+      {
+        "step": "docgen",
+        "script": "docgen",
+        "skipped": false,
+        "ok": true,
+        "durationMillis": 3101,
+        "exitCode": {
+          "_tag": "Some",
+          "value": 0
+        },
+        "output": "[01:44:20.431] INFO (#105): Writing markdown files...\n[01:44:20.471] INFO (#104): Typechecking examples...\n[01:44:21.057] INFO (#2): ✓ Docs generation succeeded!\n"
+      }
+    ]
+  }
+]

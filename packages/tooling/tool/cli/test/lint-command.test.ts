@@ -1,4 +1,5 @@
 import { lintCommand } from "@beep/repo-cli";
+import { LintCommandTestKit } from "@beep/repo-cli/test/Lint";
 import { TSMorphServiceLive } from "@beep/repo-utils";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
@@ -133,6 +134,39 @@ const argumentAfter = (line: string, argument: string): O.Option<string> => {
     O.flatMap((index) => A.get(parts, index + 1))
   );
 };
+
+describe("tooling schema-first lint detectors", () => {
+  it("reports runtime and schema metadata violations through the pure test seam", () => {
+    const kinds = LintCommandTestKit.runtimeSchemaFirstViolationKinds(
+      "packages/tooling/tool/cli/src/commands/Lint/index.ts",
+      A.join(
+        [
+          'import * as Fs from "node:fs";',
+          "export class MissingMetadata extends S.Class<MissingMetadata>($I`MissingMetadata`)({ value: S.String }) {}",
+          'export class MissingIdentity extends Context.Service<MissingIdentity, {}>()("missing") {}',
+          "const values = [2, 1];",
+          "values.sort();",
+          'const text = " value ";',
+          "text.trim();",
+          'const request = fetch("https://example.com");',
+          "void request;",
+        ],
+        "\n"
+      )
+    );
+
+    expect(kinds).toEqual(
+      expect.arrayContaining([
+        "native-fetch",
+        "native-sort",
+        "node-runtime-import",
+        "schema-annotation",
+        "service-id",
+        "string-method",
+      ])
+    );
+  });
+});
 
 describe("deprecated-apis lint command", { concurrent: false }, () => {
   it(

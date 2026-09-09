@@ -256,6 +256,120 @@ const makeFinding = (
 const REMEDIATION =
   "Write a closeout reflection at goals/<slug>/history/reflections/<YYYY-MM-DD>-<agent>.md via the /reflect skill (copy goals/_template/history/reflections/_TEMPLATE.md); its YAML frontmatter must validate against ReflectionFrontmatter.";
 
+interface GoalReflectionFindings {
+  readonly advisories: ReadonlyArray<ReflectionPolicyFinding>;
+  readonly blocking: ReadonlyArray<ReflectionPolicyFinding>;
+}
+
+const validateReflectionFiles = Effect.fnUntraced(function* (
+  slug: string,
+  reflectionsDir: string,
+  reflectionFiles: ReadonlyArray<string>
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const blocking: Array<ReflectionPolicyFinding> = [];
+  for (const file of reflectionFiles) {
+    const raw = yield* fs.readFileString(`${reflectionsDir}/${file}`).pipe(Effect.orElseSucceed(() => Str.empty));
+    if (!(yield* frontmatterIsValid(raw))) {
+      blocking.push(
+        makeFinding(
+          slug,
+          "error",
+          "Reflection artifact has missing or invalid ReflectionFrontmatter.",
+          REMEDIATION,
+          `${reflectionsDir}/${file}`
+        )
+      );
+    }
+  }
+  return blocking;
+});
+
+const inspectCompletedReflection = Effect.fnUntraced(function* (
+  slug: string,
+  reflectionFiles: ReadonlyArray<string>
+): Effect.fn.Return<GoalReflectionFindings, never, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const manifestPath = path.join(GOALS_DIR, slug, "ops", "manifest.json");
+  const manifestRead = yield* fs.readFileString(manifestPath).pipe(Effect.asSome, Effect.orElseSucceed(O.none<string>));
+  if (O.isNone(manifestRead)) {
+    return { advisories: [], blocking: [] };
+  }
+
+  const manifestJson: unknown = parse(manifestRead.value);
+  const { status } = readManifestStatus(manifestJson);
+  if (!COMPLETED_STATUS_TOKENS.includes(status)) {
+    return { advisories: [], blocking: [] };
+  }
+
+  if (((manifestJson ?? {}) as Record<string, unknown>).reflectionRequired === false) {
+    return {
+      blocking: [],
+      advisories: [
+        makeFinding(
+          slug,
+          "warning",
+          `Completed goal "${slug}" opted out of the reflection gate (reflectionRequired: false).`,
+          "Write a closeout reflection and flip reflectionRequired to true when the packet re-enters the gate."
+        ),
+      ],
+    };
+  }
+
+  return {
+    advisories: [],
+    blocking:
+      reflectionFiles.length === 0
+        ? [
+            makeFinding(
+              slug,
+              "error",
+              `Completed goal "${slug}" (status: ${status}) has no closeout reflection artifact.`,
+              REMEDIATION
+            ),
+          ]
+        : [],
+  };
+});
+
+const inspectGoalReflection = Effect.fnUntraced(function* (
+  slug: string
+): Effect.fn.Return<GoalReflectionFindings, never, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const reflectionsDir = path.join(GOALS_DIR, slug, ...REFLECTIONS_SUBDIR);
+  const reflectionsDirExists = yield* fs.exists(reflectionsDir).pipe(Effect.orElseSucceed(thunkFalse));
+  const reflectionFiles = reflectionsDirExists
+    ? pipe(
+        yield* fs.readDirectory(reflectionsDir).pipe(Effect.orElseSucceed(A.empty<string>)),
+        A.filter(reflectionFileNameIsArtifact)
+      )
+    : A.empty<string>();
+  const blocking = yield* validateReflectionFiles(slug, reflectionsDir, reflectionFiles);
+  const completed = yield* inspectCompletedReflection(slug, reflectionFiles);
+  return { advisories: completed.advisories, blocking: A.appendAll(blocking, completed.blocking) };
+});
+
+const reportReflectionFindings = Effect.fnUntraced(function* (
+  blocking: ReadonlyArray<ReflectionPolicyFinding>,
+  advisories: ReadonlyArray<ReflectionPolicyFinding>
+) {
+  yield* Console.log(`[reflection] blocking_findings=${blocking.length}`);
+  yield* Console.log(`[reflection] advisory_findings=${advisories.length}`);
+
+  if (A.isReadonlyArrayNonEmpty(advisories)) {
+    yield* Console.error("[reflection] advisories (non-fatal):");
+    yield* Effect.forEach(advisories, logPolicyFinding, { discard: true });
+  }
+
+  if (A.isReadonlyArrayNonEmpty(blocking)) {
+    yield* Console.error("[reflection] blocking findings:");
+    yield* Effect.forEach(blocking, logPolicyFinding, { discard: true });
+    return yield* failWithReportedExit("reflection: required closeout reflection missing or invalid.");
+  }
+});
+
 /**
  * Validates reflection frontmatter in every packet and closeout presence in
  * completed ones.
@@ -271,7 +385,6 @@ const REMEDIATION =
  */
 export const runReflectionArtifactLint = Effect.fn(function* () {
   const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
 
   const blocking: Array<ReflectionPolicyFinding> = [];
   const advisories: Array<ReflectionPolicyFinding> = [];
@@ -283,93 +396,12 @@ export const runReflectionArtifactLint = Effect.fn(function* () {
       continue;
     }
 
-    // Frontmatter must decode in ANY packet, not only completed ones — the
-    // PR #365 YAML traps hid in the completed-only gap, and goals doctor
-    // already validates every packet (Doctor.ts carries the same rule).
-    // `goals/` entries can be plain files (README.md); probing below one
-    // fails with ENOTDIR rather than returning false, so both probes degrade
-    // to "no reflections" instead of failing the whole lint.
-    const reflectionsDir = path.join(GOALS_DIR, slug, ...REFLECTIONS_SUBDIR);
-    const reflectionsDirExists = yield* fs.exists(reflectionsDir).pipe(Effect.orElseSucceed(thunkFalse));
-    const reflectionFiles = reflectionsDirExists
-      ? (yield* fs.readDirectory(reflectionsDir).pipe(Effect.orElseSucceed(A.empty<string>))).filter(
-          reflectionFileNameIsArtifact
-        )
-      : [];
-
-    for (const file of reflectionFiles) {
-      const raw = yield* fs.readFileString(path.join(reflectionsDir, file)).pipe(Effect.orElseSucceed(() => Str.empty));
-      const valid = yield* frontmatterIsValid(raw);
-      if (!valid) {
-        const finding = makeFinding(
-          slug,
-          "error",
-          `Reflection artifact has missing or invalid ReflectionFrontmatter.`,
-          REMEDIATION,
-          `${reflectionsDir}/${file}`
-        );
-        blocking.push(finding);
-      }
-    }
-
-    // The closeout-presence gate and the reflectionRequired opt-out remain
-    // completed-packet contracts.
-    const manifestPath = path.join(GOALS_DIR, slug, "ops", "manifest.json");
-    const manifestRead = yield* fs
-      .readFileString(manifestPath)
-      .pipe(Effect.asSome, Effect.orElseSucceed(O.none<string>));
-    if (O.isNone(manifestRead)) {
-      continue;
-    }
-    const manifestJson: unknown = parse(manifestRead.value);
-    const { status } = readManifestStatus(manifestJson);
-    const completed = COMPLETED_STATUS_TOKENS.includes(status);
-    if (!completed) {
-      continue;
-    }
-    // Explicit opt-out only (goals/README.md documents the gate as a
-    // reflectionRequired contract): packets closed before the reflection
-    // practice carry `reflectionRequired: false`; an absent field still gates.
-    if (((manifestJson ?? {}) as Record<string, unknown>).reflectionRequired === false) {
-      advisories.push(
-        makeFinding(
-          slug,
-          "warning",
-          `Completed goal "${slug}" opted out of the reflection gate (reflectionRequired: false).`,
-          "Write a closeout reflection and flip reflectionRequired to true when the packet re-enters the gate."
-        )
-      );
-      continue;
-    }
-
-    if (reflectionFiles.length === 0) {
-      const finding = makeFinding(
-        slug,
-        "error",
-        `Completed goal "${slug}" (status: ${status}) has no closeout reflection artifact.`,
-        REMEDIATION
-      );
-      blocking.push(finding);
-    }
+    const findings = yield* inspectGoalReflection(slug);
+    blocking.push(...findings.blocking);
+    advisories.push(...findings.advisories);
   }
 
-  yield* Console.log(`[reflection] blocking_findings=${blocking.length}`);
-  yield* Console.log(`[reflection] advisory_findings=${advisories.length}`);
-
-  if (advisories.length > 0) {
-    yield* Console.error("[reflection] advisories (non-fatal):");
-    for (const finding of advisories) {
-      yield* logPolicyFinding(finding);
-    }
-  }
-
-  if (blocking.length > 0) {
-    yield* Console.error("[reflection] blocking findings:");
-    for (const finding of blocking) {
-      yield* logPolicyFinding(finding);
-    }
-    return yield* failWithReportedExit("reflection: required closeout reflection missing or invalid.");
-  }
+  yield* reportReflectionFindings(blocking, advisories);
 });
 
 /**

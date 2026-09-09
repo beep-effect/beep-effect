@@ -261,8 +261,10 @@ const probeRecordedProcessIdentity = (
  * **Details**
  *
  * A recorded identity selects the probe for its own source. Without one,
- * procfs is preferred and the platform inspector is the fallback. A probe
- * never substitutes an observation from a different source.
+ * procfs is preferred and the platform inspector is the fallback. Procfs
+ * writers retain the raw start-time representation understood by older
+ * checkouts sharing the scheduler. Readers also accept prefixed procfs
+ * identities. A probe never substitutes a different source.
  *
  * **Example** (Read the current portable identity)
  *
@@ -277,7 +279,7 @@ const probeRecordedProcessIdentity = (
  *
  * @param pid - Process whose start identity is requested.
  * @param recordedIdentity - Existing identity whose source must be reused.
- * @returns A source-prefixed start identity when the selected probe succeeds.
+ * @returns A legacy-compatible procfs identity or a prefixed platform identity.
  * @category liveness
  * @since 0.0.0
  */
@@ -288,7 +290,7 @@ export const processStartIdentityForPid = Effect.fnUntraced(function* (
   if (O.isSome(recordedIdentity)) {
     return yield* probeRecordedProcessIdentity(pid, recordedIdentity.value);
   }
-  const procStart = yield* procProcessStartIdentity(pid);
+  const procStart = yield* processStartTimeForPid(pid);
   return O.isSome(procStart)
     ? procStart
     : yield* processStartIdentityFromSystemCommand(pid, process.platform === "win32" ? "win" : "ps");

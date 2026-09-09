@@ -30,6 +30,8 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { describe, expect, it } from "vitest";
 
+const decodeRunModeSync = S.decodeSync(RunMode);
+
 const toError = (cause: unknown) => new Error(String(cause));
 
 describe("internal/cli/FailureRendering", () => {
@@ -61,7 +63,7 @@ describe("internal/cli/FailureRendering", () => {
 
 describe("internal/cli/RunMode", () => {
   it("decodes the shared run-mode literals", () => {
-    expect(S.decodeSync(RunMode)("dry-run")).toBe("dry-run");
+    expect(decodeRunModeSync("dry-run")).toBe("dry-run");
     expect(RunModeIs.write("write")).toBe(true);
     expect(RunModeIs.write("check")).toBe(false);
   });

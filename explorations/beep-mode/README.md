@@ -18,6 +18,9 @@ assumptions (Graphite, `Task` model slugs, `~/.cursor/rules`, cursor-team-kit).
 
 ## Next Open Question
 
+Routing for future token-heavy Codex work is settled: `gpt-6-astra` with
+`xhigh` reasoning ([decision update](./DECISIONS.md)). The next step remains:
+
 None — align frontier empty (18 decisions in `DECISIONS.md`), pending the
 operator's shared-understanding confirmation. Next stage: shape (`BRIEF.md`),
 then decompose (`MAP.md`) into a future `beep-mode` goal with three phased PRs.
@@ -42,3 +45,6 @@ then decompose (`MAP.md`) into a future `beep-mode` goal with three phased PRs.
 - 2026-08-29 (a): packet opened mid-grill. Rounds 1-2 settled shape, entry point,
   vehicle, principle layout, name, and Cursor plugin fate (six decisions).
   Codex distillation of pstack in flight for round 3.
+- 2026-09-08: recorded the operator's Astra/xhigh routing update in DECISIONS,
+  this resume surface, and manifest timestamps where needed; retained the existing
+  stage, lifecycle, open questions, and historical execution provenance.

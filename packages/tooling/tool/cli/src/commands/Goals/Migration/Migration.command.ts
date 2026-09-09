@@ -31,6 +31,8 @@ import {
 import type { GoalPacketRecord } from "../Inventory.ts";
 import type { ManifestTranslation, ManifestTranslationPlan, PacketGenesisSeed } from "./Migration.schemas.ts";
 
+const isPacketEventTimestamp = S.is(PacketEventTimestamp);
+
 /**
  * Default committed report path for a fleet migration apply.
  *
@@ -643,7 +645,7 @@ export const goalsMigrateConventionsCommand = Command.make(
       const usage = "Usage: beep goals migrate-conventions --preview|--apply [--at <ISO timestamp>]";
       const mode = yield* requireExclusiveMode(preview, apply, usage);
       const timestamp = O.isSome(at) ? at.value : DateTime.formatIso(yield* DateTime.now);
-      if (!S.is(PacketEventTimestamp)(timestamp)) {
+      if (!isPacketEventTimestamp(timestamp)) {
         return yield* GoalStatusInputError.new(`--at must be a full ISO-8601 date-time; received "${timestamp}".`);
       }
       if (mode === "apply") yield* conventionReportCoordinates(report);

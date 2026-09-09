@@ -36,6 +36,12 @@ import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
+const decodeCitingApplicationIdentity = S.decodeEffect(CitingApplicationIdentity);
+const decodeSha256HexFromBytes = S.decodeEffect(Sha256HexFromBytes);
+const decodeUnknownCandorDisposition = S.decodeUnknownEffect(CandorDisposition);
+const decodeUnknownPatentCitationEvent = S.decodeUnknownEffect(PatentCitationEvent);
+const decodeUnknownSourceTextIdentity = S.decodeUnknownEffect(SourceTextIdentity);
+
 const SCOPE_REF = "matter:candor";
 const FILING_ENCODED = { applicationNumber: "16138242", kind: "UsptoNormalized" } as const;
 const utf8 = new TextEncoder();
@@ -90,7 +96,7 @@ type SourceEntry = {
  * what makes declared supersession meaningful.
  */
 const observation = Effect.fnUntraced(function* (name: string, text: string) {
-  const hex = yield* S.decodeEffect(Sha256HexFromBytes)(utf8.encode(text));
+  const hex = yield* decodeSha256HexFromBytes(utf8.encode(text));
   const digest = `sha256:${hex}`;
   const encoded = {
     extractor: { name: "utf8", version: "1" },
@@ -101,7 +107,7 @@ const observation = Effect.fnUntraced(function* (name: string, text: string) {
     sourceRef: `source:${name}`,
     textDigest: digest,
   };
-  const identity = yield* S.decodeUnknownEffect(SourceTextIdentity)(encoded);
+  const identity = yield* decodeUnknownSourceTextIdentity(encoded);
   return { encoded, identity, text } satisfies Observation;
 });
 
@@ -125,7 +131,7 @@ type EventOptions = {
 };
 
 const eventFixture = (id: number, o: Observation, options: EventOptions = {}) =>
-  S.decodeUnknownEffect(PatentCitationEvent)({
+  decodeUnknownPatentCitationEvent({
     ...productEntityFixtureInput(LawPractice.PatentCitationEventId.entityType, id),
     actor: "Applicant",
     citingApplication: FILING_ENCODED,
@@ -153,7 +159,7 @@ const dispositionFixture = (
   target: { readonly eventId: number; readonly textDigest: string },
   options: DispositionOptions = {}
 ) =>
-  S.decodeUnknownEffect(CandorDisposition)({
+  decodeUnknownCandorDisposition({
     ...productEntityFixtureInput(LawPractice.CandorDispositionId.entityType, id),
     citingApplication: FILING_ENCODED,
     createdByPrincipal: options.principal ?? userPrincipal,
@@ -215,7 +221,7 @@ const scenario = (build: Effect.Effect<Fixture, S.SchemaError, Crypto.Crypto>) =
   Layer.mergeAll(CandorPolicyLive, readerLayer(build), resolverLayer(build)).pipe(Layer.provideMerge(TestCrypto));
 
 const evaluateFiling = Effect.fnUntraced(function* () {
-  const citingApplication = yield* S.decodeEffect(CitingApplicationIdentity)(FILING_ENCODED);
+  const citingApplication = yield* decodeCitingApplicationIdentity(FILING_ENCODED);
   const policy = yield* CandorPolicy;
   return yield* policy.evaluate(CandorFilingScope.make({ citingApplication, orgId: Shared.OrganizationId.make(1) }));
 });

@@ -34,6 +34,8 @@ import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { WorktreeReapSkipReason } from "./Reap.schemas.ts";
 import type { FleetLivenessVerdict, FleetProbeReading, WorktreeListEntry } from "./Worktree.schemas.ts";
 
+const isFinite = S.is(S.Finite);
+
 const $I = $RepoCliId.create("commands/Worktree/Reap.service");
 
 type ProbeCapture = {
@@ -633,10 +635,12 @@ export const runWorktreeReap = Effect.fn("WorktreeReap.runWorktreeReap")(functio
   );
   const porcelain = yield* runWorktreeGitCapture(
     currentRoot,
-    ["worktree", "list", "--porcelain"],
+    ["worktree", "list", "--porcelain", "-z"],
     "Failed to list registered git worktrees."
   );
-  const entries = parseWorktreePorcelain(porcelain);
+  const entries = yield* parseWorktreePorcelain(porcelain).pipe(
+    Effect.mapError(WorktreeCommandError.new("Git worktree listing must use NUL delimiters."))
+  );
   const mainCheckout = O.getOrElse(
     O.map(A.head(entries), (entry) => entry.path),
     () => currentRoot
@@ -646,7 +650,7 @@ export const runWorktreeReap = Effect.fn("WorktreeReap.runWorktreeReap")(functio
     (entry) => !Str.Equivalence(path.resolve(entry.path), path.resolve(currentRoot))
   );
   const idleThresholdHours = options.idleHours ?? 48;
-  if (!S.is(S.Finite)(idleThresholdHours) || idleThresholdHours < 0) {
+  if (!isFinite(idleThresholdHours) || idleThresholdHours < 0) {
     return yield* WorktreeCommandError.make({ message: "--idle-hours must be a non-negative finite number." });
   }
   const clockNow = yield* Clock.currentTimeMillis;

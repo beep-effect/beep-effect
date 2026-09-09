@@ -14,6 +14,8 @@ import * as Str from "effect/String";
 import { LegalDocumentConceptId, LegalDocumentTaxonomy, VaultFilingContext } from "./Taxonomy.model.ts";
 import type { LegalDocumentTaxonomyConcept } from "./Taxonomy.model.ts";
 
+const decodeValidWindowsPlainPathSegment = S.decodeEffect(ValidWindowsPlainPathSegment);
+
 const $I = $DocumentsDomainId.create("values/Taxonomy/Taxonomy.projection");
 
 const ROOT_SEGMENT = "matters" as const;
@@ -140,7 +142,7 @@ export class ProjectedVaultPath extends S.Class<ProjectedVaultPath>($I`Projected
 ) {}
 
 const decodeSegment = (value: string): Effect.Effect<ValidWindowsPlainPathSegment, TaxonomyProjectionError> =>
-  S.decodeEffect(ValidWindowsPlainPathSegment)(value).pipe(
+  decodeValidWindowsPlainPathSegment(value).pipe(
     Effect.mapError(() => TaxonomyProjectionError.make({ reason: `invalid vault path segment: ${value}` }))
   );
 

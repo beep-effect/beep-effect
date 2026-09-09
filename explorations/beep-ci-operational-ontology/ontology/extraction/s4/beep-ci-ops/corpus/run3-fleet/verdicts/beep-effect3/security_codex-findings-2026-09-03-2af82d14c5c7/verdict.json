@@ -1,0 +1,48 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "security/codex-findings-2026-09-03",
+  "committed": false,
+  "createdAt": "2026-09-03T14:05:58.939Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "publish:00-head-install-preflight",
+      "label": "publish:head-install-preflight",
+      "phase": "publish",
+      "status": "not-run"
+    },
+    {
+      "id": "publish:01-git-push",
+      "label": "publish:git:push",
+      "phase": "publish",
+      "status": "not-run"
+    },
+    {
+      "id": "monitor:01-pr-context",
+      "label": "monitor:pr-context",
+      "phase": "monitor",
+      "status": "not-run"
+    },
+    {
+      "id": "monitor:02-pr-checks-watch",
+      "label": "monitor:pr-checks:watch",
+      "phase": "monitor",
+      "status": "not-run"
+    }
+  ],
+  "message": "yeet publish --reuse-verified found stale proof state:\n  - commit 4f5f604aa67fc258d584edd337f8705920bb4dd6 != fcadee1064e33fe45c85a5a2cc2c129d81a12c5a\nRun `bun run beep yeet verify` against the exact current worktree before retrying.",
+  "mode": "publish",
+  "outcome": "failure",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "security_codex-findings-2026-09-03-2af82d14c5c7",
+  "attemptId": "4217d5c5-4231-4413-b86b-ab029fa4f4f3",
+  "startedAt": "2026-09-03T14:05:58.838Z",
+  "endedAt": "2026-09-03T14:05:58.939Z",
+  "elapsedMs": 102,
+  "indexPath": "<fleet>/beep-effect3/.beep/yeet/quality-issue-index.json",
+  "failedStepId": "publish:00-head-install-preflight",
+  "failureKind": "handler-error"
+}

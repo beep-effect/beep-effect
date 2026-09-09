@@ -8,6 +8,7 @@
 import { $CiopsId } from "@beep/identity/packages";
 import { LiteralKit, NonNegativeInt, PosInt } from "@beep/schema";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
+import { UUID } from "@beep/schema/String";
 import { Effect, HashMap, HashSet } from "effect";
 import * as S from "effect/Schema";
 
@@ -324,6 +325,7 @@ export class ScheduleStep extends S.Class<ScheduleStep>($I`ScheduleStep`)(
  * import { NonNegativeInt } from "@beep/schema"
  *
  * const proposal = ScheduleProposal.make({
+ *   episodeId: "verification-1",
  *   proposalId: "schedule-policy-prefix-1000",
  *   projectionInstantMillis: NonNegativeInt.make(1000),
  *   steps: [],
@@ -339,6 +341,7 @@ export class ScheduleStep extends S.Class<ScheduleStep>($I`ScheduleStep`)(
  */
 export class ScheduleProposal extends S.Class<ScheduleProposal>($I`ScheduleProposal`)(
   {
+    episodeId: S.NonEmptyString,
     proposalId: S.NonEmptyString,
     projectionInstantMillis: NonNegativeInt,
     steps: S.Array(ScheduleStep),
@@ -354,6 +357,13 @@ export class ScheduleProposal extends S.Class<ScheduleProposal>($I`SchedulePropo
 /**
  * Complete explicit input to the clock-free projection core.
  *
+ * **Details**
+ *
+ * `episodeId` identifies a bounded verification occurrence supplied by the
+ * caller. Keep it across revisions of that occurrence's proposal; allocate a
+ * different id for a different occurrence. Replay uses its pinned journal
+ * digest and the zero-based grant event index, never a scheduler singleton.
+ *
  * **Example** (Construct projection input)
  *
  * ```ts
@@ -363,6 +373,7 @@ export class ScheduleProposal extends S.Class<ScheduleProposal>($I`SchedulePropo
  * import * as HashSet from "effect/HashSet"
  *
  * const input = ProjectionInput.make({
+ *   episodeId: "verification-1",
  *   policy: AdmissionPolicyParams.make({
  *     capacityMaxTokens: PosInt.make(10),
  *     slotSizeGib: PosInt.make(5),
@@ -397,6 +408,7 @@ export class ScheduleProposal extends S.Class<ScheduleProposal>($I`SchedulePropo
  */
 export class ProjectionInput extends S.Class<ProjectionInput>($I`ProjectionInput`)(
   {
+    episodeId: S.NonEmptyString,
     policy: AdmissionPolicyParams,
     pending: S.Array(PendingRequest),
     ledger: TokenLedgerState,
@@ -405,7 +417,7 @@ export class ProjectionInput extends S.Class<ProjectionInput>($I`ProjectionInput
     journalPrefixDigest: S.NonEmptyString,
   },
   $I.annote("ProjectionInput", {
-    description: "Policy, pending requests, token state, instant, and provenance digests supplied to projection.",
+    description: "Verification occurrence, policy, pending requests, token state, instant, and provenance digests.",
   })
 ) {}
 
@@ -727,22 +739,98 @@ class AdmissionJournalTicketEvicted extends S.Class<AdmissionJournalTicketEvicte
   })
 ) {}
 
+// V3 rows retain live owner and checkout attribution. Legacy classes above
+// continue accepting the redacted S6 shape; no CLI internals cross this boundary.
+class AdmissionJournalV3Identity extends S.Class<AdmissionJournalV3Identity>($I`AdmissionJournalV3Identity`)(
+  {
+    schemaVersion: S.Literal("yeet-admission-journal/v3"),
+    nonce: S.String,
+    pid: S.Finite,
+    attemptId: UUID.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    checkoutRoot: S.String,
+    branch: S.String,
+  },
+  $I.annote("AdmissionJournalV3Identity", {
+    description: "Live v3 journal identity and direct checkout attribution shared by replay events.",
+  })
+) {}
+
+class AdmissionJournalQueuedIdentity extends AdmissionJournalV3Identity.extend<AdmissionJournalQueuedIdentity>(
+  $I`AdmissionJournalQueuedIdentity`
+)(
+  {
+    procStart: S.String,
+    kind: AdmissionWorkKind,
+    priority: AdmissionPriority,
+    originKey: S.String,
+    enqueuedAtMillis: S.Finite,
+  },
+  $I.annote("AdmissionJournalQueuedIdentity", {
+    description: "Queued request identity carried by ledger-neutral enqueue and withdrawal events.",
+  })
+) {}
+
+class AdmissionJournalEnqueued extends AdmissionJournalQueuedIdentity.extend<AdmissionJournalEnqueued>(
+  $I`AdmissionJournalEnqueued`
+)(
+  { _tag: S.tag("admission-enqueued"), weightTokens: S.Finite },
+  $I.annote("AdmissionJournalEnqueued", { description: "V3 request enqueue; does not charge admitted tokens." })
+) {}
+
+class AdmissionJournalWithdrawn extends AdmissionJournalQueuedIdentity.extend<AdmissionJournalWithdrawn>(
+  $I`AdmissionJournalWithdrawn`
+)(
+  { _tag: S.tag("admission-withdrawn"), withdrawnAtMillis: S.Finite },
+  $I.annote("AdmissionJournalWithdrawn", { description: "V3 queued withdrawal; does not release admitted tokens." })
+) {}
+
+class AdmissionJournalReleasedV3 extends S.Class<AdmissionJournalReleasedV3>($I`AdmissionJournalReleasedV3`)(
+  { ...AdmissionJournalReleased.fields, ...AdmissionJournalV3Identity.fields },
+  $I.annote("AdmissionJournalReleasedV3", { description: "V3 release with direct checkout attribution." })
+) {}
+
+class AdmissionJournalLeaseEvictedV3 extends S.Class<AdmissionJournalLeaseEvictedV3>(
+  $I`AdmissionJournalLeaseEvictedV3`
+)(
+  {
+    ...AdmissionJournalLeaseEvicted.fields,
+    ...AdmissionJournalV3Identity.fields,
+    lastHeartbeatAtMillis: S.Finite,
+  },
+  $I.annote("AdmissionJournalLeaseEvictedV3", {
+    description: "V3 lease eviction with checkout attribution and the last observed heartbeat.",
+  })
+) {}
+
+class AdmissionJournalTicketEvictedV3 extends S.Class<AdmissionJournalTicketEvictedV3>(
+  $I`AdmissionJournalTicketEvictedV3`
+)(
+  { ...AdmissionJournalTicketEvicted.fields, ...AdmissionJournalV3Identity.fields },
+  $I.annote("AdmissionJournalTicketEvictedV3", { description: "V3 queued ticket eviction with checkout attribution." })
+) {}
+
 /**
- * Tagged union of admitted and released journal transitions used by replay.
+ * Mixed v1/v2/v3 admission transitions accepted by live-journal replay.
  *
- * **Example** (Decode an admitted event)
+ * **Details**
+ *
+ * Enqueue and withdrawal rows are ledger-neutral but count in the decoded
+ * source-event index. Versions share tags, so consumers match the decoded union
+ * with Effect Match instead of `S.toTaggedUnion`, which rejects duplicate tags.
+ *
+ * **Example** (Decode a legacy released event)
  *
  * ```ts
  * import { AdmissionJournalEvent } from "@/projection/Schemas"
  * import * as S from "effect/Schema"
  *
- * const decoded = S.decodeUnknownSync(AdmissionJournalEvent)({
+ * const decoded = S.decodeUnknownOption(AdmissionJournalEvent)({
  *   schemaVersion: "yeet-admission-journal/v1",
  *   _tag: "admission-released",
  *   nonce: "request-1",
  *   releasedAtMillis: 3000
  * })
- * console.log(decoded._tag) // "admission-released"
+ * console.log(decoded._tag) // "Some"
  * ```
  *
  * @category schemas
@@ -753,8 +841,12 @@ export const AdmissionJournalEvent = S.Union([
   AdmissionJournalReleased,
   AdmissionJournalLeaseEvicted,
   AdmissionJournalTicketEvicted,
+  AdmissionJournalEnqueued,
+  AdmissionJournalWithdrawn,
+  AdmissionJournalReleasedV3,
+  AdmissionJournalLeaseEvictedV3,
+  AdmissionJournalTicketEvictedV3,
 ]).pipe(
-  S.toTaggedUnion("_tag"),
   $I.annoteSchema("AdmissionJournalEvent", {
     description: "Admission transition decoded from the S6 golden journal or the live journal shape.",
   })
@@ -763,7 +855,7 @@ export const AdmissionJournalEvent = S.Union([
 /**
  * Decoded journal transition accepted by {@link AdmissionJournalEvent}.
  *
- * @see {@link AdmissionJournalEvent} for runtime decoding and tagged-union helpers.
+ * @see {@link AdmissionJournalEvent} for mixed-version runtime decoding.
  * @category models
  * @since 0.0.0
  */

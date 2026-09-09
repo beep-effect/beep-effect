@@ -52,6 +52,10 @@ import * as FetchHttpClient from "effect/unstable/http/FetchHttpClient";
 import sharp from "sharp";
 import { describe, expect, it } from "vitest";
 
+const decodePersonMatchDeviceIndexesFromCsv = S.decodeEffect(PersonMatchDeviceIndexesFromCsv);
+const decodeUnknownPersonMatchModelOption = S.decodeUnknownOption(PersonMatchModel);
+const decodeUnknownPersonMatchWorkerReportOption = S.decodeUnknownOption(PersonMatchWorkerReport);
+
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
   <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
@@ -1742,8 +1746,8 @@ describe("files command", { concurrent: false }, () => {
             elapsedSeconds: 0,
           };
 
-          expect(O.isSome(S.decodeUnknownOption(PersonMatchModel)(adaFaceModel))).toBe(true);
-          expect(O.isNone(S.decodeUnknownOption(PersonMatchWorkerReport)(mismatchedWorkerReport))).toBe(true);
+          expect(O.isSome(decodeUnknownPersonMatchModelOption(adaFaceModel))).toBe(true);
+          expect(O.isNone(decodeUnknownPersonMatchWorkerReportOption(mismatchedWorkerReport))).toBe(true);
         })
       )
     ));
@@ -1774,9 +1778,7 @@ describe("files command", { concurrent: false }, () => {
 
           const rocmWorkerReport = makeAdaFaceRocmWorkerReportFixture(path, cacheDir, candidateDir, referencePath);
           const worker = yield* decodePersonMatchWorkerSuccess(rocmWorkerReport).pipe(Effect.mapError(filesTestError));
-          const devices = yield* S.decodeEffect(PersonMatchDeviceIndexesFromCsv)("0").pipe(
-            Effect.mapError(filesTestError)
-          );
+          const devices = yield* decodePersonMatchDeviceIndexesFromCsv("0").pipe(Effect.mapError(filesTestError));
           const options = MatchPersonOptions.make({
             acceptModelLicense: true,
             backend: "adaface-kprpe",
@@ -4404,6 +4406,7 @@ exit 74
           yield* fs.writeFileString(path.join(rawDir, "extensionless"), "notes");
           yield* fs.makeDirectory(path.join(rawDir, "nested.jpg"));
           yield* writeSvgFile(path.join(rawDir, "vector.svg"), 2, 2);
+          yield* fs.symlink(path.join(rawDir, "missing.png"), path.join(rawDir, "broken.png"));
 
           yield* runFilesCommand(["normalize", "--dir", rawDir, "--out-dir", outDir]);
 
@@ -4412,6 +4415,7 @@ exit 74
           expect(yield* sortedDirectoryEntries(outDir)).toEqual(["foo.png", "foo_01.png", "normalize-manifest.json"]);
           expect(A.map(manifest.entries, (entry) => entry.outputName)).toEqual(["foo.png", "foo_01.png"]);
           expect(A.map(manifest.skipped, (entry) => entry.reason)).toEqual([
+            "symlink",
             "video",
             "extensionless",
             "directory",
@@ -4424,7 +4428,7 @@ exit 74
             normalizedCount: 2,
             plannedCount: 2,
             resizedCount: 0,
-            skippedCount: 5,
+            skippedCount: 6,
           });
         })
       )

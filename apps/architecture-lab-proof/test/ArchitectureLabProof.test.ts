@@ -7,6 +7,9 @@ import * as Equal from "effect/Equal";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeArchitectureLabProofResultSync = S.decodeSync(ArchitectureLabProofResult);
+const encodeArchitectureLabProofResultSync = S.encodeSync(ArchitectureLabProofResult);
+
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
   <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
@@ -19,7 +22,7 @@ describe("architecture lab proof app", () => {
       Effect.map((result) => {
         expect(result.created.status).toBe("open");
         expect(result.summary.visibleActions).toContain("assign");
-        expect(S.encodeSync(ArchitectureLabProofResult)(result)).toEqual({
+        expect(encodeArchitectureLabProofResultSync(result)).toEqual({
           created: {
             id: "architecture-lab-proof-1",
             title: "Prove canonical slice topology",
@@ -42,7 +45,7 @@ describe("architecture lab proof app", () => {
     fc.assert(
       fc.property(S.toArbitrary(ArchitectureLabProofResult)(fc), (value) => {
         expect(
-          Equal.equals(S.decodeSync(ArchitectureLabProofResult)(S.encodeSync(ArchitectureLabProofResult)(value)), value)
+          Equal.equals(decodeArchitectureLabProofResultSync(encodeArchitectureLabProofResultSync(value)), value)
         ).toBe(true);
       }),
       fcRuns(20)

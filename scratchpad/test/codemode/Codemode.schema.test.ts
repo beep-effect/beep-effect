@@ -52,6 +52,25 @@ import {
   SecurityScheme,
   SecuritySchemeApiKey,
 } from "../../codemode/openapi/OpenAPI.types.ts";
+const decodeExecutionLimitsSync = S.decodeSync(ExecutionLimits);
+const decodeSearchInputSync = S.decodeSync(SearchInput);
+const decodeUnknownApiPathResult = S.decodeUnknownResult(ApiPath);
+const decodeUnknownDiagnosticLocationResult = S.decodeUnknownResult(DiagnosticLocation);
+const decodeUnknownExecutionLimitsResult = S.decodeUnknownResult(ExecutionLimits);
+const decodeUnknownGlobalMethodReferenceResult = S.decodeUnknownResult(GlobalMethodReference);
+const decodeUnknownIdentifierSegmentResult = S.decodeUnknownResult(IdentifierSegment);
+const decodeUnknownIntrinsicReferenceResult = S.decodeUnknownResult(IntrinsicReference);
+const decodeUnknownOperationIdResult = S.decodeUnknownResult(OperationId);
+const decodeUnknownToolCallEndedResult = S.decodeUnknownResult(ToolCallEnded);
+const encodeDiagnosticModelSync = S.encodeSync(DiagnosticModel);
+const encodeExecutionLimitsSync = S.encodeSync(ExecutionLimits);
+const encodeSearchInputSync = S.encodeSync(SearchInput);
+const encodeStatementBreakSync = S.encodeSync(StatementBreak);
+const isApiPath2 = S.is(ApiPath);
+const isIdentifierSegment = S.is(IdentifierSegment);
+const isMemberReference = S.is(MemberReference);
+const isResult = S.is(Result);
+const isInt = S.is(S.Int);
 
 const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, numRuns = 40): void => {
   const derived = S.toArbitrary(schema)(fc);
@@ -106,40 +125,32 @@ describe("CodeMode schema laws", () => {
   });
 
   it("keeps identifier and path checks at the schema boundary", () => {
-    const decodeIdentifier = S.decodeUnknownResult(IdentifierSegment);
-    const decodePath = S.decodeUnknownResult(ApiPath);
-    const decodeOperationId = S.decodeUnknownResult(OperationId);
-
     assert.strictEqual(identifierSegment("$valid_1"), true);
     assert.strictEqual(identifierSegment("1invalid"), false);
-    assert.strictEqual(Rs.isFailure(decodeIdentifier("with-dash")), true);
-    assert.strictEqual(Rs.isFailure(decodeIdentifier("")), true);
-    assert.strictEqual(Rs.isSuccess(decodePath("/users/{id}")), true);
-    assert.strictEqual(Rs.isFailure(decodePath("users/{id}")), true);
-    assert.strictEqual(Rs.isFailure(decodeOperationId("   ")), true);
-    assert.strictEqual(Rs.getOrThrow(decodeOperationId("  getUser  ")), "getUser");
+    assert.strictEqual(Rs.isFailure(decodeUnknownIdentifierSegmentResult("with-dash")), true);
+    assert.strictEqual(Rs.isFailure(decodeUnknownIdentifierSegmentResult("")), true);
+    assert.strictEqual(Rs.isSuccess(decodeUnknownApiPathResult("/users/{id}")), true);
+    assert.strictEqual(Rs.isFailure(decodeUnknownApiPathResult("users/{id}")), true);
+    assert.strictEqual(Rs.isFailure(decodeUnknownOperationIdResult("   ")), true);
+    assert.strictEqual(Rs.getOrThrow(decodeUnknownOperationIdResult("  getUser  ")), "getUser");
   });
 
   it("keeps string-domain checks equivalent to their defining laws", () => {
-    const isIdentifier = S.is(IdentifierSegment);
-    const isApiPath = S.is(ApiPath);
-    const decodeOperationId = S.decodeUnknownResult(OperationId);
-
     fc.assert(
       fc.property(
         fc.string(),
-        (candidate) => isIdentifier(candidate) === /^[A-Za-z_$][A-Za-z0-9_$]*$/u.test(candidate)
+        (candidate) => isIdentifierSegment(candidate) === /^[A-Za-z_$][A-Za-z0-9_$]*$/u.test(candidate)
       ),
       fcRuns(200)
     );
     fc.assert(
-      fc.property(fc.string(), (candidate) => isApiPath(candidate) === /^\/.*$/u.test(candidate)),
+      fc.property(fc.string(), (candidate) => isApiPath2(candidate) === /^\/.*$/u.test(candidate)),
       fcRuns(200)
     );
     fc.assert(
       fc.property(fc.string(), (candidate) => {
         const trimmed = Str.trim(candidate);
-        const decoded = decodeOperationId(candidate);
+        const decoded = decodeUnknownOperationIdResult(candidate);
 
         return Str.isEmpty(trimmed) ? Rs.isFailure(decoded) : Rs.isSuccess(decoded) && decoded.success === trimmed;
       }),
@@ -148,41 +159,35 @@ describe("CodeMode schema laws", () => {
   });
 
   it("decodes defaults once and keeps absent Option fields off the wire", () => {
-    const limits = S.decodeSync(ExecutionLimits)({});
-    const search = S.decodeSync(SearchInput)({});
+    const limits = decodeExecutionLimitsSync({});
+    const search = decodeSearchInputSync({});
 
     assert.strictEqual(O.isNone(limits.timeoutMs), true);
     assert.strictEqual(O.isNone(limits.maxToolCalls), true);
     assert.strictEqual(O.isNone(limits.maxOutputBytes), true);
-    expect(S.encodeSync(ExecutionLimits)(limits)).toEqual({});
+    expect(encodeExecutionLimitsSync(limits)).toEqual({});
 
     assert.strictEqual(O.isNone(search.query), true);
     assert.strictEqual(O.isNone(search.namespace), true);
     assert.strictEqual(search.limit, 10);
     assert.strictEqual(search.offset, 0);
-    expect(S.encodeSync(SearchInput)(search)).toEqual({ limit: 10, offset: 0 });
+    expect(encodeSearchInputSync(search)).toEqual({ limit: 10, offset: 0 });
   });
 
   it("rejects unsafe execution limits through schema checks", () => {
-    const decode = S.decodeUnknownResult(ExecutionLimits);
-
-    assert.strictEqual(Rs.isFailure(decode({ timeoutMs: 0 })), true);
-    assert.strictEqual(Rs.isFailure(decode({ timeoutMs: 1.5 })), true);
-    assert.strictEqual(Rs.isFailure(decode({ maxToolCalls: -1 })), true);
-    assert.strictEqual(Rs.isFailure(decode({ maxOutputBytes: Number.NaN })), true);
+    assert.strictEqual(Rs.isFailure(decodeUnknownExecutionLimitsResult({ timeoutMs: 0 })), true);
+    assert.strictEqual(Rs.isFailure(decodeUnknownExecutionLimitsResult({ timeoutMs: 1.5 })), true);
+    assert.strictEqual(Rs.isFailure(decodeUnknownExecutionLimitsResult({ maxToolCalls: -1 })), true);
+    assert.strictEqual(Rs.isFailure(decodeUnknownExecutionLimitsResult({ maxOutputBytes: Number.NaN })), true);
   });
 
   it("enforces one-based diagnostics and exhaustive reference pairs", () => {
-    const decodeLocation = S.decodeUnknownResult(DiagnosticLocation);
-    const decodeIntrinsic = S.decodeUnknownResult(IntrinsicReference);
-    const decodeGlobal = S.decodeUnknownResult(GlobalMethodReference);
-
-    assert.strictEqual(Rs.isFailure(decodeLocation({ line: 0, column: 1 })), true);
-    assert.strictEqual(Rs.isFailure(decodeLocation({ line: 1, column: 0 })), true);
-    assert.strictEqual(Rs.isSuccess(decodeLocation({ line: 1, column: 1 })), true);
+    assert.strictEqual(Rs.isFailure(decodeUnknownDiagnosticLocationResult({ line: 0, column: 1 })), true);
+    assert.strictEqual(Rs.isFailure(decodeUnknownDiagnosticLocationResult({ line: 1, column: 0 })), true);
+    assert.strictEqual(Rs.isSuccess(decodeUnknownDiagnosticLocationResult({ line: 1, column: 1 })), true);
     assert.strictEqual(
       Rs.isFailure(
-        decodeIntrinsic({
+        decodeUnknownIntrinsicReferenceResult({
           _tag: "IntrinsicReference",
           method: {
             receiverKind: "String",
@@ -195,7 +200,7 @@ describe("CodeMode schema laws", () => {
     );
     assert.strictEqual(
       Rs.isFailure(
-        decodeGlobal({
+        decodeUnknownGlobalMethodReferenceResult({
           _tag: "GlobalMethodReference",
           method: {
             namespace: "String",
@@ -220,16 +225,15 @@ describe("CodeMode schema laws", () => {
         error: { kind: "ParseError", message: "Code cannot be empty." },
         toolCalls: [],
       });
-      assert.strictEqual(S.is(Result)(success), true);
-      assert.strictEqual(S.is(Result)(failure), true);
+      assert.strictEqual(isResult(success), true);
+      assert.strictEqual(isResult(failure), true);
     })
   );
 
   it("rejects invalid terminal tool observations", () => {
-    const decodeEnded = S.decodeUnknownResult(ToolCallEnded);
     assert.strictEqual(
       Rs.isFailure(
-        decodeEnded({
+        decodeUnknownToolCallEndedResult({
           _tag: "failure",
           index: 0,
           name: "search",
@@ -241,7 +245,7 @@ describe("CodeMode schema laws", () => {
     );
     assert.strictEqual(
       Rs.isFailure(
-        decodeEnded({
+        decodeUnknownToolCallEndedResult({
           _tag: "success",
           index: 0,
           name: "search",
@@ -254,7 +258,7 @@ describe("CodeMode schema laws", () => {
     );
     assert.strictEqual(
       Rs.isFailure(
-        decodeEnded({
+        decodeUnknownToolCallEndedResult({
           _tag: "success",
           index: 0,
           name: " ",
@@ -267,13 +271,12 @@ describe("CodeMode schema laws", () => {
   });
 
   it("keeps numeric execution-limit checks equivalent to positive and non-negative integers", () => {
-    const decode = S.decodeUnknownResult(ExecutionLimits);
     const numeric = fc.double({ noDefaultInfinity: false, noNaN: false });
 
     fc.assert(
       fc.property(
         numeric,
-        (value) => Rs.isSuccess(decode({ timeoutMs: value })) === (S.is(S.Int)(value) && N.isGreaterThan(0)(value))
+        (value) => Rs.isSuccess(decodeUnknownExecutionLimitsResult({ timeoutMs: value })) === (isInt(value) && N.isGreaterThan(0)(value))
       ),
       fcRuns(200)
     );
@@ -281,7 +284,7 @@ describe("CodeMode schema laws", () => {
       fc.property(
         numeric,
         (value) =>
-          Rs.isSuccess(decode({ maxToolCalls: value })) === (S.is(S.Int)(value) && N.isGreaterThanOrEqualTo(0)(value))
+          Rs.isSuccess(decodeUnknownExecutionLimitsResult({ maxToolCalls: value })) === (isInt(value) && N.isGreaterThanOrEqualTo(0)(value))
       ),
       fcRuns(200)
     );
@@ -332,14 +335,14 @@ describe("CodeMode schema laws", () => {
     assert.strictEqual(UriFunctionName.is.decodeURIComponent(uriFunction.name), true);
     assert.strictEqual(ErrorConstructorName.is.AggregateError(errorConstructor.name), true);
     assert.strictEqual(GeneratorMethodKind.is.iterator(generatorMethod.kind), true);
-    assert.strictEqual(S.is(MemberReference)(member), true);
+    assert.strictEqual(isMemberReference(member), true);
     assert.strictEqual(member.target, target);
     assert.strictEqual(StatementResult.guards.Break(statement), true);
-    expect(S.encodeSync(StatementBreak)(statement)).toEqual({
+    expect(encodeStatementBreakSync(statement)).toEqual({
       _tag: "Break",
       label: "outer",
     });
-    expect(S.encodeSync(StatementBreak)(StatementBreak.new())).toEqual({
+    expect(encodeStatementBreakSync(StatementBreak.new())).toEqual({
       _tag: "Break",
     });
   });
@@ -366,7 +369,7 @@ describe("CodeMode schema laws", () => {
   it("encodes diagnostic defaults as a wire-compatible tagged object", () => {
     const diagnostic = DiagnosticModel.new("ParseError", "Unexpected token");
 
-    expect(S.encodeSync(DiagnosticModel)(diagnostic)).toEqual({
+    expect(encodeDiagnosticModelSync(diagnostic)).toEqual({
       kind: "ParseError",
       message: "Unexpected token",
     });

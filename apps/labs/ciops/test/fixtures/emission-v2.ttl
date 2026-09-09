@@ -1,0 +1,37 @@
+@prefix ciops: <https://oip.law/ontology/ci-ops#> .
+@prefix ciops-prov: <https://oip.law/ontology/ci-ops-prov#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ciops-prov:schedule%2Dpolicy%2Ddigest%2Djournal%2Dprefix%2Ddigest%2D1000 rdf:type ciops:ScheduleProposal .
+ciops-prov:schedule%2Dpolicy%2Ddigest%2Djournal%2Dprefix%2Ddigest%2D1000-request-0 ciops:admissionChargeTokens "5"^^xsd:integer .
+ciops-prov:schedule%2Dpolicy%2Ddigest%2Djournal%2Dprefix%2Ddigest%2D1000-request-0 ciops:hasOriginKey "origin-test" .
+ciops-prov:schedule%2Dpolicy%2Ddigest%2Djournal%2Dprefix%2Ddigest%2D1000-request-0 rdf:type ciops:SeatRequest .
+ciops-prov:schedule%2Dpolicy%2Ddigest%2Djournal%2Dprefix%2Ddigest%2D1000-request-1 ciops:admissionChargeTokens "5"^^xsd:integer .
+ciops-prov:schedule%2Dpolicy%2Ddigest%2Djournal%2Dprefix%2Ddigest%2D1000-request-1 ciops:hasOriginKey "origin-test" .
+ciops-prov:schedule%2Dpolicy%2Ddigest%2Djournal%2Dprefix%2Ddigest%2D1000-request-1 rdf:type ciops:SeatRequest .
+ciops-prov:schedule%2Dpolicy%2Ddigest%2Djournal%2Dprefix%2Ddigest%2D1000-request-2 ciops:admissionChargeTokens "5"^^xsd:integer .
+ciops-prov:schedule%2Dpolicy%2Ddigest%2Djournal%2Dprefix%2Ddigest%2D1000-request-2 ciops:hasOriginKey "origin-test" .
+ciops-prov:schedule%2Dpolicy%2Ddigest%2Djournal%2Dprefix%2Ddigest%2D1000-request-2 rdf:type ciops:SeatRequest .
+
+# PROVISIONAL GRAPH — closure OPEN; excluded from negation and ratified typing.
+ciops-prov:episode-verification%2D1 ciops-prov:hasCurrentProposal ciops-prov:schedule%2Dpolicy%2Ddigest%2Djournal%2Dprefix%2Ddigest%2D1000 .
+ciops-prov:episode-verification%2D1 rdf:type ciops-prov:VerificationEpisode .
+ciops-prov:schedule%2Dpolicy%2Ddigest%2Djournal%2Dprefix%2Ddigest%2D1000 ciops-prov:defersSeatRequest ciops-prov:schedule%2Dpolicy%2Ddigest%2Djournal%2Dprefix%2Ddigest%2D1000-request-2 .
+ciops-prov:schedule%2Dpolicy%2Ddigest%2Djournal%2Dprefix%2Ddigest%2D1000 ciops-prov:hasProjectionSpecification ciops-prov:specification-s7%2Demission%2Fv2-policy%2Ddigest-journal%2Dprefix%2Ddigest-admission .
+ciops-prov:schedule%2Dpolicy%2Ddigest%2Djournal%2Dprefix%2Ddigest%2D1000 ciops-prov:hasStep ciops-prov:schedule%2Dpolicy%2Ddigest%2Djournal%2Dprefix%2Ddigest%2D1000-step-0 .
+ciops-prov:schedule%2Dpolicy%2Ddigest%2Djournal%2Dprefix%2Ddigest%2D1000 ciops-prov:hasStep ciops-prov:schedule%2Dpolicy%2Ddigest%2Djournal%2Dprefix%2Ddigest%2D1000-step-1 .
+ciops-prov:schedule%2Dpolicy%2Ddigest%2Djournal%2Dprefix%2Ddigest%2D1000-request-0 ciops-prov:scheduledUnitRef "admitted-a"^^xsd:string .
+ciops-prov:schedule%2Dpolicy%2Ddigest%2Djournal%2Dprefix%2Ddigest%2D1000-request-1 ciops-prov:scheduledUnitRef "admitted-b"^^xsd:string .
+ciops-prov:schedule%2Dpolicy%2Ddigest%2Djournal%2Dprefix%2Ddigest%2D1000-request-2 ciops-prov:scheduledUnitRef "deferred-c"^^xsd:string .
+ciops-prov:schedule%2Dpolicy%2Ddigest%2Djournal%2Dprefix%2Ddigest%2D1000-step-0 ciops-prov:hasScopeTag "admission"^^xsd:string .
+ciops-prov:schedule%2Dpolicy%2Ddigest%2Djournal%2Dprefix%2Ddigest%2D1000-step-0 ciops-prov:schedulesSeatRequest ciops-prov:schedule%2Dpolicy%2Ddigest%2Djournal%2Dprefix%2Ddigest%2D1000-request-0 .
+ciops-prov:schedule%2Dpolicy%2Ddigest%2Djournal%2Dprefix%2Ddigest%2D1000-step-0 ciops-prov:stepIndex "0"^^xsd:integer .
+ciops-prov:schedule%2Dpolicy%2Ddigest%2Djournal%2Dprefix%2Ddigest%2D1000-step-0 rdf:type ciops-prov:ScheduleStep .
+ciops-prov:schedule%2Dpolicy%2Ddigest%2Djournal%2Dprefix%2Ddigest%2D1000-step-1 ciops-prov:hasScopeTag "admission"^^xsd:string .
+ciops-prov:schedule%2Dpolicy%2Ddigest%2Djournal%2Dprefix%2Ddigest%2D1000-step-1 ciops-prov:schedulesSeatRequest ciops-prov:schedule%2Dpolicy%2Ddigest%2Djournal%2Dprefix%2Ddigest%2D1000-request-1 .
+ciops-prov:schedule%2Dpolicy%2Ddigest%2Djournal%2Dprefix%2Ddigest%2D1000-step-1 ciops-prov:stepIndex "1"^^xsd:integer .
+ciops-prov:schedule%2Dpolicy%2Ddigest%2Djournal%2Dprefix%2Ddigest%2D1000-step-1 rdf:type ciops-prov:ScheduleStep .
+ciops-prov:specification-s7%2Demission%2Fv2-policy%2Ddigest-journal%2Dprefix%2Ddigest-admission ciops-prov:journalPrefixDigest "journal-prefix-digest"^^xsd:string .
+ciops-prov:specification-s7%2Demission%2Fv2-policy%2Ddigest-journal%2Dprefix%2Ddigest-admission ciops-prov:policyDigest "policy-digest"^^xsd:string .
+ciops-prov:specification-s7%2Demission%2Fv2-policy%2Ddigest-journal%2Dprefix%2Ddigest-admission rdf:type ciops-prov:AdmissionProjectionSpecification .

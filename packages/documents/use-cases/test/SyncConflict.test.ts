@@ -17,6 +17,8 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import type { SyncConflictRepositoryShape } from "@beep/documents-use-cases/entities/SyncConflict/server";
 
+const decodeUnknownNonEmptyStringSync = S.decodeUnknownSync(S.NonEmptyString);
+
 const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
   const arbitrary = S.toArbitrary(schema)(fc);
   const encode = S.encodeResult(schema);
@@ -43,7 +45,7 @@ const driftSeed = (remoteEventId: O.Option<string>) =>
   SyncConflictSeed.make({
     conflictKind: "remoteEdit",
     provider: "box",
-    remoteEventId: O.map(remoteEventId, S.decodeUnknownSync(S.NonEmptyString)),
+    remoteEventId: O.map(remoteEventId, decodeUnknownNonEmptyStringSync),
     remotePayload: { eventType: "ITEM_MODIFY" },
     resolutionStatus: "open",
     workspaceId,

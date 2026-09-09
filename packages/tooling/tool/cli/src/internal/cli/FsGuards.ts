@@ -428,20 +428,19 @@ const writePreparedFileString = Effect.fnUntraced(function* (
             )
           )
         );
-      yield* fs
-        .writeFileString(temporaryPath, contents)
-        .pipe(
-          Effect.mapError((cause) =>
-            fsGuardError(
-              prepared.root,
-              prepared.target,
-              temporaryPath,
-              "filesystem-failure",
-              `Failed to write temporary file "${temporaryPath}".`,
-              cause
-            )
+      yield* fs.chmod(temporaryPath, 0o600).pipe(
+        Effect.andThen(fs.writeFileString(temporaryPath, contents)),
+        Effect.mapError((cause) =>
+          fsGuardError(
+            prepared.root,
+            prepared.target,
+            temporaryPath,
+            "filesystem-failure",
+            `Failed to write temporary file "${temporaryPath}".`,
+            cause
           )
-        );
+        )
+      );
 
       const checked = yield* prepareContainedTarget(fs, path, prepared.root, prepared.target, false);
       if (O.isNone(checked)) {

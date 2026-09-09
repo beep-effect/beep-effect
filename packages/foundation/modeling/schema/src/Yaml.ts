@@ -99,6 +99,7 @@ export const YamlTextToUnknown = S.String.pipe(
  * @since 0.0.0
  */
 export type YamlTextToUnknown = typeof YamlTextToUnknown.Type;
+const decodeUnknownYamlTextToUnknown = S.decodeUnknownEffect(YamlTextToUnknown);
 
 /**
  * Builds a decoder that parses YAML text and then decodes the result through a
@@ -125,8 +126,7 @@ export type YamlTextToUnknown = typeof YamlTextToUnknown.Type;
  * @since 0.0.0
  */
 export const decodeYamlTextAs = <Schema extends S.Top>(schema: Schema) => {
-  const decodeYamlUnknownText = S.decodeUnknownEffect(YamlTextToUnknown);
   const decodeTargetSchema = S.decodeUnknownEffect(schema);
 
-  return flow(decodeYamlUnknownText, Effect.flatMap(decodeTargetSchema));
+  return flow(decodeUnknownYamlTextToUnknown, Effect.flatMap(decodeTargetSchema));
 };

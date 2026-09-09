@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-09-03",
+  "generatedOn": "2026-09-09",
   "scope": [
     "apps/**/*.{ts,tsx}",
     "packages/**/*.{ts,tsx}",
@@ -81,7 +81,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 257,
+      "line": 31,
       "owner": "@beep/db-admin",
       "reason": "Migration regression proof decodes fixed fixture rows through the table converters to prove the five-table DDL, the trigger catalog, and the append-only denials; schema-derived arbitrary coverage for these entities lives with the law-practice domain model tests."
     },
@@ -152,6 +152,26 @@
       "reason": "The file's round-trip property suite derives its arbitraries from S.toArbitrary and then sanitizes defect-bearing fields per the repo equivalence precedent; the mapped arbitrary form is schema-derived coverage the detector cannot attribute, and the fixed codec assertions pin encoded wire shapes byte-identically."
     },
     {
+      "file": "packages/drivers/freshbooks/src/Freshbooks.models.ts",
+      "symbol": "FreshbooksClient.email",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-precision-audit",
+      "line": 344,
+      "owner": "@beep/freshbooks",
+      "reason": "FreshBooks client records carry free-text email addresses populated from the account holder client database; this decode boundary must accept whatever the API returns rather than reject a client on a malformed address."
+    },
+    {
+      "file": "packages/drivers/freshbooks/src/Freshbooks.models.ts",
+      "symbol": "FreshbooksIdentity.email",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-precision-audit",
+      "line": 293,
+      "owner": "@beep/freshbooks",
+      "reason": "The FreshBooks identity (/me) email is external free-text returned by the API; this decode boundary must accept it verbatim rather than fail identity resolution on a non-strict address."
+    },
+    {
       "file": "packages/drivers/graph-3d/src/Graph3D.react.ts",
       "symbol": "useGraph3DHandle",
       "kind": "schema-policy-advisory",
@@ -190,16 +210,6 @@
       "reason": "Live obs-websocket connection handle, not data: events is a Stream, subscribeEvents is a scoped Effect, and request is an Effectful call. Only the hello and identified payloads are schema-backed (ObsHello, ObsIdentified); the handle itself has no decode or persistence boundary."
     },
     {
-      "file": "packages/drivers/tika/test/integration/Tika.server.live.test.ts",
-      "symbol": "schema-codec-tests",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-arbitrary-tests",
-      "line": 42,
-      "owner": "@beep/tika",
-      "reason": "Opt-in live Tika Server lane that no-ops unless BEEP_TEST_TIKA_URL is set; the codecs decode the operator-supplied base URL and generated fixture paths as boundary validation against a real server, not schema-behavior coverage. Schema-derived arbitrary round-trips for TikaServerEngineConfig live in packages/drivers/tika/test/Tika.server.test.ts."
-    },
-    {
       "file": "packages/drivers/wink/src/Wink.service.ts",
       "symbol": "WinkEngineRuntimeState",
       "kind": "exported-type-literal",
@@ -213,7 +223,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 98,
+      "line": 16,
       "owner": "@beep/epistemic-config",
       "reason": "Audience-routing regression over fixed loopback and external URL cases; schema-derived URL property coverage lives with the owning @beep/schema URL models, while arbitrary destinations would not prove these named security classifications."
     },
@@ -247,7 +257,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 14,
+      "line": 19,
       "owner": "@beep/epistemic-server",
       "reason": "Fixture-driven integration coverage of the bounded SHACL validator behind the claim gate; schema-derived property coverage for these request/dataset schemas already lives in packages/foundation/capability/semantic-web/test/ServicesAndSurface.test.ts."
     },
@@ -267,7 +277,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 89,
+      "line": 53,
       "owner": "@beep/epistemic-server",
       "reason": "External-Postgres race regression uses deterministic candidate identifiers to prove concurrent repository behavior; arbitrary values would make the race non-reproducible, and schema-derived identifier laws live with the owning domain models."
     },
@@ -277,7 +287,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 87,
+      "line": 77,
       "owner": "@beep/epistemic-server",
       "reason": "Repository integration suite uses fixed schema-decoded fixtures to prove atomic review, races, temporal queries, and restart behavior; schema-derived arbitrary round-trips live with the owning domain and use-case models."
     },
@@ -413,7 +423,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 7,
+      "line": 5,
       "owner": "@beep/schema",
       "reason": "Exception: CurrencyCode/CurrencyName are LiteralKit unions over the generated ISO 4217 enumeration; example-based assertions cover representative decode/reject and `.Options` membership, and S.toArbitrary over a finite literal union only re-samples already-enumerated members, so schema-derived property coverage would be vacuous."
     },
@@ -423,19 +433,9 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 33,
+      "line": 9,
       "owner": "@beep/schema",
       "reason": "Exception: meta-test of the Fn/ThunkOf/AnyFn schema combinator over function values (declareConstructor with self-identity equivalence); no structural data for S.toArbitrary to generate or round-trip."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/test/PromiseSchema.test.ts",
-      "symbol": "schema-codec-tests",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-arbitrary-tests",
-      "line": 10,
-      "owner": "@beep/schema",
-      "reason": "Exception: PromiseSchema is a pure S.declare<globalThis.Promise<unknown>> identity declaration (Type === Encoded === a native Promise, no codec transform). S.toArbitrary throws 'Unsupported AST Declaration', and a Promise cannot be meaningfully round-tripped (decode/encode are identity, equivalence is reference equality), so any property law would be vacuous. Cross-realm acceptance and thenable-impostor rejection are covered by example-based unit tests."
     },
     {
       "file": "packages/foundation/modeling/schema/test/TerritoryCode.test.ts",
@@ -443,19 +443,9 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 10,
+      "line": 8,
       "owner": "@beep/schema",
       "reason": "Exception: TerritoryCode/TerritoryName and their code<->name MappedLiteralKit codecs are finite literal-union schemas over the generated CLDR enumeration; representative decode/encode and reversible-mapping cases are covered by example assertions, and S.toArbitrary over the finite enumeration adds no coverage beyond the enumerated members."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/test/Timezone.test.ts",
-      "symbol": "schema-codec-tests",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-arbitrary-tests",
-      "line": 7,
-      "owner": "@beep/schema",
-      "reason": "Exception: Timezone is a LiteralKit union over the generated IANA tzdb enumeration; example-based assertions cover representative decode and rejection, and property sampling over a finite literal union only re-picks already-enumerated members, so schema-derived property coverage would be vacuous."
     },
     {
       "file": "packages/foundation/modeling/schema/test/Transformations.test.ts",
@@ -575,7 +565,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 69,
+      "line": 40,
       "owner": "@beep/law-practice-server",
       "reason": "Schema-heavy test file has 4 Schema codec assertions but no schema-derived property coverage."
     },
@@ -585,7 +575,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 549,
+      "line": 553,
       "owner": "@beep/law-practice-server",
       "reason": "Competency-question acceptance fixtures assert recorded and derived answers over one deliberately seeded practice; the questions are donor-fixed golden coverage, and schema-derived arbitrary coverage for the underlying entities lives with the law-practice domain model tests."
     },
@@ -595,7 +585,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 121,
+      "line": 59,
       "owner": "@beep/law-practice-server",
       "reason": "PGlite-backed drizzle repository proof decodes fixed fixture rows through the real migration bundle to prove read-back with database-assigned ids, tenant isolation, id-ascending order, and typed driver failures; schema-derived arbitrary coverage for these entities lives with the law-practice domain model tests (same posture as the candor sibling and the migration proof entries above)."
     },
@@ -615,19 +605,9 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 93,
+      "line": 39,
       "owner": "@beep/law-practice-use-cases",
       "reason": "Deterministic policy fixtures decode exact anchored event and disposition wires so lineage, source-resolution, supersession, and fail-closed semantics remain observable; schema-derived round-trip coverage for these law-practice domain schemas lives in packages/law-practice/domain/test/LawPracticeDomain.test.ts."
-    },
-    {
-      "file": "packages/ontology/server/test/OntologyTools.test.ts",
-      "symbol": "schema-codec-tests",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-arbitrary-tests",
-      "line": 71,
-      "owner": "@beep/ontology-server",
-      "reason": "Real-engine orchestration regression coverage; schema-derived property laws belong to the schema-owning ontology use-cases package."
     },
     {
       "file": "packages/ontology/use-cases/test/Session.validation.test.ts",
@@ -677,7 +657,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 22,
+      "line": 16,
       "owner": "@beep/repo-utils",
       "reason": "Intentionally golden/regression-only coverage: the harness pins byte-identity of JSDocTagDefinition.make before and after the Fibered migration against a committed 113-tag fingerprint snapshot; schema-derived arbitrary coverage for TagValue cases lives in JSDoc.model.test.ts and for the kit in the identity Fibered tests."
     },
@@ -828,26 +808,6 @@
       "status": "exception",
       "owner": "@beep/repo-cli",
       "reason": "One-call formatting contract intentionally couples runtime colorizer functions with their glyph and fraction operands; it has no decode or persistence boundary."
-    },
-    {
-      "file": "packages/drivers/freshbooks/src/Freshbooks.models.ts",
-      "symbol": "FreshbooksClient.email",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-precision-audit",
-      "line": 344,
-      "owner": "@beep/freshbooks",
-      "reason": "FreshBooks client records carry free-text email addresses populated from the account holder client database; this decode boundary must accept whatever the API returns rather than reject a client on a malformed address."
-    },
-    {
-      "file": "packages/drivers/freshbooks/src/Freshbooks.models.ts",
-      "symbol": "FreshbooksIdentity.email",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-precision-audit",
-      "line": 293,
-      "owner": "@beep/freshbooks",
-      "reason": "The FreshBooks identity (/me) email is external free-text returned by the API; this decode boundary must accept it verbatim rather than fail identity resolution on a non-strict address."
     }
   ]
 }

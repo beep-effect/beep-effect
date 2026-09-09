@@ -1,0 +1,78 @@
+{
+  "schemaVersion": "yeet-verdict/v1",
+  "base": "origin/main",
+  "branch": "security/codex-findings-2026-07-14-review",
+  "committed": true,
+  "createdAt": "2026-07-14T16:52:05.452Z",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "advisory:01-fallow-feedback",
+      "label": "fallow-advisory-feedback",
+      "phase": "feedback",
+      "status": "passed",
+      "durationMs": 1635.658244,
+      "exitCode": 0
+    },
+    {
+      "id": "commit:01-git-commit",
+      "label": "commit:git:commit",
+      "phase": "commit",
+      "status": "passed",
+      "durationMs": 2296.029473,
+      "exitCode": 0
+    },
+    {
+      "id": "full:01-pre-push",
+      "label": "full:pre-push",
+      "phase": "full",
+      "status": "passed",
+      "durationMs": 591453.16111,
+      "exitCode": 0
+    },
+    {
+      "id": "publish:00-head-install-preflight",
+      "label": "publish:head-install-preflight",
+      "phase": "publish",
+      "status": "passed",
+      "durationMs": 4169.787981,
+      "exitCode": 0
+    },
+    {
+      "id": "publish:01-git-push",
+      "label": "publish:git:push",
+      "phase": "publish",
+      "status": "passed",
+      "durationMs": 1488.27281,
+      "exitCode": 0
+    },
+    {
+      "id": "monitor:01-pr-context",
+      "label": "monitor:pr-context",
+      "phase": "monitor",
+      "status": "passed",
+      "durationMs": 411.832869,
+      "exitCode": 0
+    },
+    {
+      "id": "monitor:02-pr-checks-watch",
+      "label": "monitor:pr-checks:watch",
+      "phase": "monitor",
+      "status": "passed",
+      "durationMs": 717.6314,
+      "exitCode": 0
+    }
+  ],
+  "message": "yeet publish succeeded.",
+  "mode": "publish",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": true,
+  "runId": "security_codex-findings-2026-07-14-review-1116b3657fce",
+  "indexPath": "<fleet>/beep-effect7/.beep/yeet/quality-issue-index.json",
+  "baseFreshness": {
+    "behindCount": 0,
+    "mergeBase": "f9edd6fed2a497c961927ab43cf02fb839222c70",
+    "overlappingPaths": []
+  }
+}

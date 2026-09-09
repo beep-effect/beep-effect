@@ -1,0 +1,36 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "feat/lexical-atlas-p0-evidence-exercise",
+  "committed": false,
+  "createdAt": "2026-08-24T19:37:21.325Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "closeout:01-pr-context",
+      "label": "closeout:pr-context",
+      "phase": "monitor",
+      "status": "not-run"
+    },
+    {
+      "id": "closeout:02-review-gates",
+      "label": "closeout:review-gates",
+      "phase": "monitor",
+      "status": "not-run"
+    }
+  ],
+  "message": "yeet PR closeout failed with 2 issue(s).",
+  "mode": "closeout",
+  "outcome": "failure",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "feat_lexical-atlas-p0-evidence-exercise-d9878e518205",
+  "attemptId": "a350f5e9-2abc-4427-872a-cfa6da1faaae",
+  "startedAt": "2026-08-24T19:37:16.278Z",
+  "endedAt": "2026-08-24T19:37:21.325Z",
+  "elapsedMs": 5047,
+  "indexPath": "<fleet>/beep-effect15/.beep/yeet/quality-issue-index.json",
+  "failedStepId": "closeout:01-pr-context",
+  "failureKind": "handler-error"
+}

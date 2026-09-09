@@ -17,14 +17,16 @@ import { createHash, randomUUID } from "node:crypto";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { UUID } from "@beep/schema/String";
-import { Clock, Console, Duration, Effect, Encoding, FileSystem, Number as N, Order, Path, pipe } from "effect";
+import { Clock, Console, Context, Duration, Effect, Encoding, FileSystem, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import { constant, dual, flow } from "effect/Function";
+import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as Struct from "effect/Struct";
 import { publishJournalTextAtomically } from "./JournalFile.ts";
 import {
   isProcessPidAlive,
@@ -32,7 +34,12 @@ import {
   processIdentityStatus,
   processStartIdentityForPid,
 } from "./ProcessIdentity.ts";
-import { AdmissionPriority, AdmissionWorkKind, QualitySchedulerError } from "./QualityScheduler.schemas.ts";
+import {
+  AdmissionPriority,
+  AdmissionWorkKind,
+  QualitySchedulerError,
+  YeetAdmissionTicket,
+} from "./QualityScheduler.schemas.ts";
 import type * as SchemaAST from "effect/SchemaAST";
 
 const $I = $RepoCliId.create("internal/repo-run/AdmissionJournal");
@@ -40,6 +47,14 @@ const JOURNAL_FILE_NAME = "journal.ndjson";
 const PROTOCOL_FILE_NAME = "protocol.json";
 const LOCK_FILE_NAME = "journal.lock";
 const RETAINED_ADMISSIONS = 200;
+/**
+ * Bound decoded history even when queue churn produces no admissions.
+ *
+ * 200 admissions × 3 lifecycle rows (enqueue, admit, release) × 4 = 2,400.
+ * Reserve the admitted ring first, then spend the remaining slots on the newest
+ * known rows. Opaque rows do not consume this budget and remain byte-identical.
+ */
+const RETAINED_KNOWN_ROWS = RETAINED_ADMISSIONS * 3 * 4;
 const LOCK_RETRY_ATTEMPTS = 8;
 const LOCK_RETRY_DELAY_MILLIS = 25;
 const LOCKED_OPERATION_RETRY_ATTEMPTS = 5;
@@ -50,7 +65,7 @@ const LOCK_REAP_ADOPTION_BOUND_MILLIS = 30_000;
 const LOCK_REUSE_BACKSTOP_MILLIS = 300_000;
 
 /**
- * Whether v2 eviction events may be emitted into the shared admission journal.
+ * Whether eviction events may be emitted into the shared admission journal.
  *
  * **Example** (Recognize the rollout-safe default)
  *
@@ -65,12 +80,12 @@ const LOCK_REUSE_BACKSTOP_MILLIS = 300_000;
  */
 export const AdmissionEvictionEmission = LiteralKit(["off", "on"]).pipe(
   $I.annoteSchema("AdmissionEvictionEmission", {
-    description: "Whether current scheduler writers may emit v2 admission eviction events.",
+    description: "Whether current scheduler writers may emit admission eviction events.",
   })
 );
 
 /**
- * Whether current scheduler writers may emit v2 admission eviction events.
+ * Whether current scheduler writers may emit admission eviction events.
  *
  * @category models
  * @since 0.0.0
@@ -80,13 +95,19 @@ export type AdmissionEvictionEmission = typeof AdmissionEvictionEmission.Type;
 /**
  * Versioned mixed-checkout protocol marker stored in the admission root.
  *
+ * **Details**
+ *
+ * Protocol v2 authorizes v3 eviction rows. Pre-v3 workers only decode protocol
+ * v1, so they fail closed and defer recovery instead of duplicating a v3 receipt
+ * they cannot recognize after an interrupted claim acknowledgment.
+ *
  * **Example** (Construct the disabled protocol)
  *
  * ```ts
  * import { AdmissionProtocol } from "@beep/repo-cli/test/RepoRun"
  *
  * const protocol = AdmissionProtocol.make({
- *   schemaVersion: "yeet-admission-protocol/v1",
+ *   schemaVersion: "yeet-admission-protocol/v2",
  *   eviction: "off",
  * })
  * console.log(protocol.eviction) // "off"
@@ -97,7 +118,7 @@ export type AdmissionEvictionEmission = typeof AdmissionEvictionEmission.Type;
  */
 export class AdmissionProtocol extends S.Class<AdmissionProtocol>($I`AdmissionProtocol`)(
   {
-    schemaVersion: S.Literal("yeet-admission-protocol/v1"),
+    schemaVersion: S.Literal("yeet-admission-protocol/v2"),
     eviction: AdmissionEvictionEmission,
   },
   $I.annote("AdmissionProtocol", {
@@ -106,7 +127,7 @@ export class AdmissionProtocol extends S.Class<AdmissionProtocol>($I`AdmissionPr
 ) {}
 
 const disabledAdmissionProtocol = AdmissionProtocol.make({
-  schemaVersion: "yeet-admission-protocol/v1",
+  schemaVersion: "yeet-admission-protocol/v2",
   eviction: AdmissionEvictionEmission.Enum.off,
 });
 const decodeAdmissionProtocol = S.decodeUnknownOption(S.fromJsonString(AdmissionProtocol));
@@ -371,6 +392,166 @@ export class AdmissionJournalTicketEvicted extends S.Class<AdmissionJournalTicke
   })
 ) {}
 
+class AdmissionJournalQueuedIdentity extends S.Class<AdmissionJournalQueuedIdentity>(
+  $I`AdmissionJournalQueuedIdentity`
+)(
+  {
+    ...Struct.pick(YeetAdmissionTicket.fields, [
+      "nonce",
+      "pid",
+      "procStart",
+      "attemptId",
+      "kind",
+      "priority",
+      "originKey",
+      "checkoutRoot",
+      "branch",
+      "enqueuedAtMillis",
+    ]),
+    schemaVersion: S.Literal("yeet-admission-journal/v3"),
+  },
+  $I.annote("AdmissionJournalQueuedIdentity", {
+    description: "Ticket identity shared by enqueue and withdrawal journal transitions.",
+  })
+) {}
+
+/**
+ * Records a newly published admission ticket and its checkout attribution.
+ *
+ * **Example** (Read the enqueue tag)
+ *
+ * ```ts
+ * import { AdmissionJournalEnqueued } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(AdmissionJournalEnqueued.fields._tag.literal) // "admission-enqueued"
+ * ```
+ *
+ * @category domain-events
+ * @since 0.0.0
+ */
+export class AdmissionJournalEnqueued extends AdmissionJournalQueuedIdentity.extend<AdmissionJournalEnqueued>(
+  $I`AdmissionJournalEnqueued`
+)(
+  {
+    _tag: S.Literal("admission-enqueued"),
+    weightTokens: YeetAdmissionTicket.fields.weightTokens,
+  },
+  $I.annote("AdmissionJournalEnqueued", { description: "A request entered the durable admission queue." })
+) {}
+
+/**
+ * Records a queued ticket removed by its finalizer before admission.
+ *
+ * **Example** (Read the withdrawal tag)
+ *
+ * ```ts
+ * import { AdmissionJournalWithdrawn } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(AdmissionJournalWithdrawn.fields._tag.literal) // "admission-withdrawn"
+ * ```
+ *
+ * @category domain-events
+ * @since 0.0.0
+ */
+export class AdmissionJournalWithdrawn extends AdmissionJournalQueuedIdentity.extend<AdmissionJournalWithdrawn>(
+  $I`AdmissionJournalWithdrawn`
+)(
+  {
+    _tag: S.Literal("admission-withdrawn"),
+    withdrawnAtMillis: S.Finite,
+  },
+  $I.annote("AdmissionJournalWithdrawn", { description: "A queued request left without becoming admitted work." })
+) {}
+
+class AdmissionJournalCheckoutIdentity extends S.Class<AdmissionJournalCheckoutIdentity>(
+  $I`AdmissionJournalCheckoutIdentity`
+)(
+  Struct.pick(YeetAdmissionTicket.fields, ["checkoutRoot", "branch"]),
+  $I.annote("AdmissionJournalCheckoutIdentity", {
+    description: "Checkout attribution retained after admission state files disappear.",
+  })
+) {}
+
+/**
+ * Version-three release retaining the lease's checkout and branch.
+ *
+ * **Example** (Read the release version)
+ *
+ * ```ts
+ * import { AdmissionJournalReleasedV3 } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(AdmissionJournalReleasedV3.fields.schemaVersion.literal) // "yeet-admission-journal/v3"
+ * ```
+ *
+ * @category domain-events
+ * @since 0.0.0
+ */
+export class AdmissionJournalReleasedV3 extends AdmissionJournalCheckoutIdentity.extend<AdmissionJournalReleasedV3>(
+  $I`AdmissionJournalReleasedV3`
+)(
+  { ...AdmissionJournalReleased.fields, schemaVersion: S.Literal("yeet-admission-journal/v3") },
+  $I.annote("AdmissionJournalReleasedV3", { description: "A released lease with direct checkout attribution." })
+) {}
+
+/**
+ * Version-three lease eviction retaining checkout attribution and the observed heartbeat.
+ *
+ * **Example** (Read the lease eviction version)
+ *
+ * ```ts
+ * import { AdmissionJournalLeaseEvictedV3 } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(AdmissionJournalLeaseEvictedV3.fields.schemaVersion.literal) // "yeet-admission-journal/v3"
+ * ```
+ *
+ * @category domain-events
+ * @since 0.0.0
+ */
+export class AdmissionJournalLeaseEvictedV3 extends AdmissionJournalCheckoutIdentity.extend<AdmissionJournalLeaseEvictedV3>(
+  $I`AdmissionJournalLeaseEvictedV3`
+)(
+  {
+    ...AdmissionJournalLeaseEvicted.fields,
+    schemaVersion: S.Literal("yeet-admission-journal/v3"),
+    lastHeartbeatAtMillis: S.Finite,
+  },
+  $I.annote("AdmissionJournalLeaseEvictedV3", {
+    description: "A dead lease's eviction with its checkout and last heartbeat observed by the reaper.",
+  })
+) {}
+
+/**
+ * Version-three ticket eviction retaining the queued submitter's checkout and branch.
+ *
+ * **Example** (Read the ticket eviction version)
+ *
+ * ```ts
+ * import { AdmissionJournalTicketEvictedV3 } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(AdmissionJournalTicketEvictedV3.fields.schemaVersion.literal) // "yeet-admission-journal/v3"
+ * ```
+ *
+ * @category domain-events
+ * @since 0.0.0
+ */
+export class AdmissionJournalTicketEvictedV3 extends AdmissionJournalCheckoutIdentity.extend<AdmissionJournalTicketEvictedV3>(
+  $I`AdmissionJournalTicketEvictedV3`
+)(
+  { ...AdmissionJournalTicketEvicted.fields, schemaVersion: S.Literal("yeet-admission-journal/v3") },
+  $I.annote("AdmissionJournalTicketEvictedV3", {
+    description: "An evicted queue ticket with direct checkout attribution.",
+  })
+) {}
+
+const admissionJournalEventGuards = {
+  "admission-admitted": S.is(AdmissionJournalAdmitted),
+  "admission-released": S.is(S.Union([AdmissionJournalReleased, AdmissionJournalReleasedV3])),
+  "admission-lease-evicted": S.is(S.Union([AdmissionJournalLeaseEvicted, AdmissionJournalLeaseEvictedV3])),
+  "admission-ticket-evicted": S.is(S.Union([AdmissionJournalTicketEvicted, AdmissionJournalTicketEvictedV3])),
+  "admission-enqueued": S.is(AdmissionJournalEnqueued),
+  "admission-withdrawn": S.is(AdmissionJournalWithdrawn),
+};
+
 /**
  * Schema-decoded transition stored in the machine-wide admission journal.
  *
@@ -390,11 +571,20 @@ export const AdmissionJournalEvent = S.Union([
   AdmissionJournalReleased,
   AdmissionJournalLeaseEvicted,
   AdmissionJournalTicketEvicted,
+  AdmissionJournalEnqueued,
+  AdmissionJournalWithdrawn,
+  AdmissionJournalReleasedV3,
+  AdmissionJournalLeaseEvictedV3,
+  AdmissionJournalTicketEvictedV3,
 ]).pipe(
-  S.toTaggedUnion("_tag"),
   $I.annoteSchema("AdmissionJournalEvent", {
-    description: "Schema-decoded transition stored in the machine-wide admission journal.",
-  })
+    description: "Version-one, version-two, and version-three transitions in the shared admission journal.",
+  }),
+  // Versions share event tags. toTaggedUnion rejects duplicate discriminants;
+  // derive each guard from all supported schemas for that tag instead.
+  SchemaUtils.withStatics(() => ({
+    guards: admissionJournalEventGuards,
+  }))
 );
 
 /**
@@ -415,7 +605,12 @@ export const AdmissionJournalEvent = S.Union([
  */
 export type AdmissionJournalEvent = typeof AdmissionJournalEvent.Type;
 
-type AdmissionJournalV1Event = AdmissionJournalAdmitted | AdmissionJournalReleased;
+type AdmissionJournalTransition =
+  | AdmissionJournalAdmitted
+  | AdmissionJournalReleased
+  | AdmissionJournalReleasedV3
+  | AdmissionJournalEnqueued
+  | AdmissionJournalWithdrawn;
 
 const encodeEvent = S.encodeUnknownEffect(S.fromJsonString(AdmissionJournalEvent));
 
@@ -439,6 +634,44 @@ export const decodeAdmissionJournalEvent: {
   (options?: SchemaAST.ParseOptions): (input: unknown) => Effect.Effect<AdmissionJournalEvent, S.SchemaError>;
   (input: unknown, options?: SchemaAST.ParseOptions): Effect.Effect<AdmissionJournalEvent, S.SchemaError>;
 } = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(S.fromJsonString(AdmissionJournalEvent)));
+
+/**
+ * Reader contract used when retaining rows during a locked journal rewrite.
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export interface AdmissionJournalReaderShape {
+  /** Decode a supported row; schema failures remain opaque preserved rows. */
+  readonly decode: (line: string) => Effect.Effect<AdmissionJournalEvent, S.SchemaError>;
+}
+
+/**
+ * Selects the reader revision used by the journal preservation boundary.
+ *
+ * **Details**
+ *
+ * The default reads every current variant. Tests can provide a v1/v2 reader
+ * to exercise the same locked rewrite with an older fleet member's knowledge.
+ *
+ * **Example** (Provide the current reader explicitly)
+ *
+ * ```ts
+ * import { AdmissionJournalReader, decodeAdmissionJournalEvent } from "@beep/repo-cli/test/RepoRun"
+ * import { Layer } from "effect"
+ *
+ * const reader = Layer.succeed(AdmissionJournalReader, { decode: decodeAdmissionJournalEvent })
+ * console.log(Layer.isLayer(reader)) // true
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export class AdmissionJournalReader extends Context.Service<AdmissionJournalReader, AdmissionJournalReaderShape>()(
+  $I`AdmissionJournalReader`
+) {}
+
+const currentAdmissionJournalReader = AdmissionJournalReader.of({ decode: decodeAdmissionJournalEvent });
 
 /**
  * Resolves the machine-wide admission journal path beneath a scheduler root.
@@ -492,7 +725,8 @@ export const admissionProtocolPath = Effect.fn("AdmissionJournal.protocolPath")(
  * **Details**
  *
  * A missing, unreadable, or undecodable marker means the mixed-checkout
- * preservation rollout is not proven, so v2 eviction rows remain disabled.
+ * v3 recovery fence is not proven, so eviction rows remain disabled. A protocol
+ * v1 marker is likewise disabled even when its eviction field is on.
  *
  * **Example** (Read a protocol marker)
  *
@@ -899,13 +1133,10 @@ const finishJournalLockReap = Effect.fnUntraced(function* (
   const completed = reclaimedObservedGeneration
     ? yield* discardReclaimedJournalLock(tombstonePath, adopterPath, observedToken)
     : yield* restoreDisplacedJournalLock(lockPath, tombstonePath, adopterPath, observedToken);
-  // Both arms stay explicit: V8 credited the trailing implicit guard of this
-  // generator unreliably across suite orders, which read as a coverage drop.
-  if (completed) {
-    yield* releaseJournalLockReapClaim(adopterPath, observedToken);
-  } else {
-    return;
-  }
+  yield* releaseJournalLockReapClaim(adopterPath, observedToken).pipe(
+    Effect.when(Effect.succeed(completed)),
+    Effect.asVoid
+  );
 });
 
 const claimAndFinishJournalLockReap = Effect.fnUntraced(function* (
@@ -1239,7 +1470,7 @@ export const withJournalFileLock = Effect.fnUntraced(function* <Success, Require
  * ```
  *
  * @param root - Machine-wide admission root directory.
- * @param eviction - Desired v2 eviction-event emission state.
+ * @param eviction - Desired eviction-event emission state.
  * @returns The protocol that was durably published.
  * @category utilities
  * @since 0.0.0
@@ -1249,7 +1480,7 @@ export const writeAdmissionProtocol = Effect.fn("AdmissionJournal.writeProtocol"
   eviction: AdmissionEvictionEmission
 ): Effect.fn.Return<AdmissionProtocol, QualitySchedulerError, FileSystem.FileSystem | Path.Path> {
   const { lockPath, protocolPath } = yield* prepareAdmissionJournalPaths(root);
-  const protocol = AdmissionProtocol.make({ schemaVersion: "yeet-admission-protocol/v1", eviction });
+  const protocol = AdmissionProtocol.make({ schemaVersion: "yeet-admission-protocol/v2", eviction });
   const content = yield* encodeAdmissionProtocol(protocol).pipe(
     Effect.mapError(QualitySchedulerError.new("Failed to encode the admission protocol marker."))
   );
@@ -1326,8 +1557,12 @@ const rewriteJournalLocked = Effect.fnUntraced(function* (
   // Mixed fleet revisions share this journal. Preserve rows this revision does
   // not understand byte-for-byte so an older locked rewrite cannot erase a
   // newer protocol event before all checkouts have rolled forward.
+  const reader = O.getOrElse(
+    yield* Effect.serviceOption(AdmissionJournalReader),
+    constant(currentAdmissionJournalReader)
+  );
   const retained = yield* Effect.forEach(rawLines, (raw) =>
-    decodeAdmissionJournalEvent(raw).pipe(
+    reader.decode(raw).pipe(
       Effect.option,
       Effect.map((decoded) => ({ event: decoded, line: raw }))
     )
@@ -1360,7 +1595,29 @@ const rewriteJournalLocked = Effect.fnUntraced(function* (
     A.length(admittedIndexes) <= RETAINED_ADMISSIONS
       ? 0
       : pipe(admittedIndexes, A.takeRight(RETAINED_ADMISSIONS), A.head, O.getOrElse(constant(0)));
-  const retainedRecords = A.filter(records, (record, index) => index >= firstRetainedIndex || O.isNone(record.event));
+  const remainingSlots = RETAINED_KNOWN_ROWS - N.min(A.length(admittedIndexes), RETAINED_ADMISSIONS);
+  const otherKnownIndexes = pipe(
+    A.map(records, (record, index) =>
+      index >= firstRetainedIndex &&
+      O.exists(record.event, (known) => !AdmissionJournalEvent.guards["admission-admitted"](known))
+        ? O.some(index)
+        : O.none()
+    ),
+    A.getSomes
+  );
+  const firstOtherRetainedIndex = pipe(
+    otherKnownIndexes,
+    A.takeRight(remainingSlots),
+    A.head,
+    O.getOrElse(constant(A.length(records)))
+  );
+  const retainedRecords = A.filter(
+    records,
+    (record, index) =>
+      O.isNone(record.event) ||
+      (index >= firstRetainedIndex &&
+        (AdmissionJournalEvent.guards["admission-admitted"](record.event.value) || index >= firstOtherRetainedIndex))
+  );
   yield* publishJournalAtomic(
     journalPath,
     lockPath,
@@ -1379,11 +1636,12 @@ const rewriteJournalLocked = Effect.fnUntraced(function* (
  * The writer takes `journal.lock` with a bounded wait, publishing its
  * PID/start-time-fenced generation by hard link so the lock never exists
  * without an owner. A lock whose owner process is dead or PID-reused is
- * reaped, and release removes only the generation this writer stamped. The
- * A writer displaced during publication reacquires a fresh generation and
+ * reaped, and release removes only the generation this writer stamped. A writer
+ * displaced during publication reacquires a fresh generation and
  * reruns the whole read-and-publish operation through a bounded retry. The
- * rewrite drops undecodable records, ring-trims to the
- * newest admitted transitions, and publishes atomically via temp-file
+ * rewrite preserves undecodable records, ring-trims known rows to the
+ * newest 200 admitted transitions and caps total known history at 2,400 rows,
+ * reserving those admissions before keeping other recent rows. It publishes via temp-file
  * rename. A lock that stays busy fails the append with a typed error;
  * scheduler correctness never depends on this operation, so callers treat
  * that failure as a best-effort diagnostic write. Unknown journal rows remain
@@ -1404,9 +1662,16 @@ const rewriteJournalLocked = Effect.fnUntraced(function* (
  * @category utilities
  * @since 0.0.0
  */
+export const appendAdmissionJournalEvent = Effect.fn("AdmissionJournal.append")(function* (
+  root: string,
+  event: AdmissionJournalTransition
+): Effect.fn.Return<void, QualitySchedulerError, FileSystem.FileSystem | Path.Path> {
+  yield* appendAdmissionJournalEventWithMode(root, event, false);
+});
+
 const appendAdmissionJournalEventWithMode = Effect.fnUntraced(function* (
   root: string,
-  event: AdmissionJournalV1Event,
+  event: AdmissionJournalTransition,
   idempotent: boolean
 ): Effect.fn.Return<void, QualitySchedulerError, FileSystem.FileSystem | Path.Path> {
   const { journalPath, lockPath } = yield* prepareAdmissionJournalPaths(root);
@@ -1419,13 +1684,6 @@ const appendAdmissionJournalEventWithMode = Effect.fnUntraced(function* (
     LOCKED_OPERATION_RETRY_ATTEMPTS,
     `Admission journal lock "${lockPath}" stayed busy; dropping one ${event._tag} event.`
   );
-});
-
-export const appendAdmissionJournalEvent = Effect.fn("AdmissionJournal.append")(function* (
-  root: string,
-  event: AdmissionJournalV1Event
-): Effect.fn.Return<void, QualitySchedulerError, FileSystem.FileSystem | Path.Path> {
-  yield* appendAdmissionJournalEventWithMode(root, event, false);
 });
 
 /**
@@ -1452,7 +1710,7 @@ export const appendAdmissionJournalEvent = Effect.fn("AdmissionJournal.append")(
  */
 export const appendAdmissionJournalEventOnce = Effect.fn("AdmissionJournal.appendOnce")(function* (
   root: string,
-  event: AdmissionJournalV1Event
+  event: AdmissionJournalTransition
 ): Effect.fn.Return<void, QualitySchedulerError, FileSystem.FileSystem | Path.Path> {
   yield* appendAdmissionJournalEventWithMode(root, event, true);
 });
@@ -1475,14 +1733,18 @@ export const appendAdmissionJournalEventOnce = Effect.fn("AdmissionJournal.appen
  * ```
  *
  * @param root - Machine-wide admission root directory.
- * @param event - Version-two lease or ticket eviction event.
+ * @param event - Version-two or version-three lease or ticket eviction event.
  * @returns Whether the enabled protocol admitted or already contained the event.
  * @category utilities
  * @since 0.0.0
  */
 export const appendAdmissionEvictionJournalEvent = Effect.fn("AdmissionJournal.appendEviction")(function* (
   root: string,
-  event: AdmissionJournalLeaseEvicted | AdmissionJournalTicketEvicted
+  event:
+    | AdmissionJournalLeaseEvicted
+    | AdmissionJournalTicketEvicted
+    | AdmissionJournalLeaseEvictedV3
+    | AdmissionJournalTicketEvictedV3
 ): Effect.fn.Return<boolean, QualitySchedulerError, FileSystem.FileSystem | Path.Path> {
   const { journalPath, lockPath } = yield* prepareAdmissionJournalPaths(root);
   const line = yield* encodeEvent(event).pipe(

@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "docs/ci-hang-observability-research",
+  "committed": false,
+  "createdAt": "2026-08-24T04:08:39.941Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "closeout:01-pr-context",
+      "label": "closeout:pr-context",
+      "phase": "monitor",
+      "status": "not-run"
+    },
+    {
+      "id": "closeout:02-review-gates",
+      "label": "closeout:review-gates",
+      "phase": "monitor",
+      "status": "not-run"
+    }
+  ],
+  "message": "yeet closeout succeeded.",
+  "mode": "closeout",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "docs_ci-hang-observability-research-39f3f6266887",
+  "attemptId": "8ca8708c-bd45-45b8-8fa6-a13d6a94f55e",
+  "startedAt": "2026-08-24T04:08:35.715Z",
+  "endedAt": "2026-08-24T04:08:39.941Z",
+  "elapsedMs": 4226,
+  "indexPath": "<fleet>/beep-effect2/.beep/yeet/quality-issue-index.json"
+}

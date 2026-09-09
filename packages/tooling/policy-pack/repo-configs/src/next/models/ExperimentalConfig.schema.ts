@@ -25,7 +25,7 @@ const ProxyPrefetchMode = LiteralKit(["strict", "flexible"]).pipe(
     description: "Allowed Next.js proxy prefetch modes.",
   })
 );
-const WebVitalsMetric = LiteralKit(["CLS", "FCP", "FID", "INP", "LCP", "TTFB"]).pipe(
+const WebVitalsMetric = LiteralKit(["CLS", "FCP", "INP", "LCP", "TTFB"]).pipe(
   $I.annoteSchema("WebVitalsMetric", {
     description: "Web Vitals metric identifiers accepted by Next.js experimental config.",
   })

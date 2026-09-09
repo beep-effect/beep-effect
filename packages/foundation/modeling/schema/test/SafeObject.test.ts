@@ -5,18 +5,21 @@ import { Cause, Effect, Exit } from "effect";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeUnknownSafeObject = S.decodeUnknownEffect(SafeObject);
+const decodeUnknownSafeObjectFromObjectKeyword = S.decodeUnknownEffect(SafeObjectFromObjectKeyword);
+const encodeSafeObject = S.encodeEffect(SafeObject);
+const encodeSafeObjectFromObjectKeyword = S.encodeEffect(SafeObjectFromObjectKeyword);
+const isSafeObject2 = S.is(SafeObject);
+
 const SafeObjectArbitrary = S.toArbitrary(SafeObject)(fc);
 const SafeObjectFromObjectKeywordArbitrary = S.toArbitrary(SafeObjectFromObjectKeyword)(fc);
 
 describe("SafeObject", () => {
-  const decode = S.decodeUnknownEffect(SafeObject);
-  const encode = S.encodeEffect(SafeObject);
-
   it.effect(
     "accepts heterogeneous string-keyed records",
     Effect.fnUntraced(function* () {
       const nested = { active: true };
-      const value = yield* decode({
+      const value = yield* decodeUnknownSafeObject({
         count: 1,
         enabled: true,
         label: "ready",
@@ -30,20 +33,20 @@ describe("SafeObject", () => {
         nested,
       });
       expect(value.nested).toBe(nested);
-      expect(yield* decode({})).toEqual({});
+      expect(yield* decodeUnknownSafeObject({})).toEqual({});
     })
   );
 
   it.effect(
     "rejects values that are not object records",
     Effect.fnUntraced(function* () {
-      expect(Exit.isFailure(yield* Effect.exit(decode(null)))).toBe(true);
-      expect(Exit.isFailure(yield* Effect.exit(decode(undefined)))).toBe(true);
-      expect(Exit.isFailure(yield* Effect.exit(decode(true)))).toBe(true);
-      expect(Exit.isFailure(yield* Effect.exit(decode(1)))).toBe(true);
-      expect(Exit.isFailure(yield* Effect.exit(decode("record")))).toBe(true);
-      expect(Exit.isFailure(yield* Effect.exit(decode([])))).toBe(true);
-      expect(Exit.isFailure(yield* Effect.exit(decode(() => undefined)))).toBe(true);
+      expect(Exit.isFailure(yield* Effect.exit(decodeUnknownSafeObject(null)))).toBe(true);
+      expect(Exit.isFailure(yield* Effect.exit(decodeUnknownSafeObject(undefined)))).toBe(true);
+      expect(Exit.isFailure(yield* Effect.exit(decodeUnknownSafeObject(true)))).toBe(true);
+      expect(Exit.isFailure(yield* Effect.exit(decodeUnknownSafeObject(1)))).toBe(true);
+      expect(Exit.isFailure(yield* Effect.exit(decodeUnknownSafeObject("record")))).toBe(true);
+      expect(Exit.isFailure(yield* Effect.exit(decodeUnknownSafeObject([])))).toBe(true);
+      expect(Exit.isFailure(yield* Effect.exit(decodeUnknownSafeObject(() => undefined)))).toBe(true);
     })
   );
 
@@ -55,7 +58,7 @@ describe("SafeObject", () => {
       }
 
       const input = new RecordLike();
-      const value = yield* decode(input);
+      const value = yield* decodeUnknownSafeObject(input);
 
       expect(value).toEqual({ label: "ready" });
       expect(value).not.toBe(input);
@@ -63,14 +66,12 @@ describe("SafeObject", () => {
   );
 
   it("derives arbitrary values that round-trip", () => {
-    const isSafeObject = S.is(SafeObject);
-
     fc.assert(
       fc.property(SafeObjectArbitrary, (value) => {
-        expect(isSafeObject(value)).toBe(true);
+        expect(isSafeObject2(value)).toBe(true);
 
-        const encoded = Effect.runSync(encode(value));
-        expect(Effect.runSync(decode(encoded))).toEqual(value);
+        const encoded = Effect.runSync(encodeSafeObject(value));
+        expect(Effect.runSync(decodeUnknownSafeObject(encoded))).toEqual(value);
       }),
       fcRuns(100)
     );
@@ -78,9 +79,6 @@ describe("SafeObject", () => {
 });
 
 describe("SafeObjectFromObjectKeyword", () => {
-  const decode = S.decodeUnknownEffect(SafeObjectFromObjectKeyword);
-  const encode = S.encodeEffect(SafeObjectFromObjectKeyword);
-
   it.effect(
     "normalizes every object-keyword shape into a string-keyed record",
     Effect.fnUntraced(function* () {
@@ -93,33 +91,33 @@ describe("SafeObjectFromObjectKeyword", () => {
       }
       callable.label = "callable";
 
-      expect(yield* decode({ enabled: true })).toEqual({ enabled: true });
-      expect(yield* decode(new RecordLike())).toEqual({ label: "ready" });
-      expect(yield* decode(["first", "second"])).toEqual({ 0: "first", 1: "second" });
-      expect(yield* decode(callable)).toEqual({ label: "callable" });
-      expect(yield* decode(() => undefined)).toEqual({});
+      expect(yield* decodeUnknownSafeObjectFromObjectKeyword({ enabled: true })).toEqual({ enabled: true });
+      expect(yield* decodeUnknownSafeObjectFromObjectKeyword(new RecordLike())).toEqual({ label: "ready" });
+      expect(yield* decodeUnknownSafeObjectFromObjectKeyword(["first", "second"])).toEqual({ 0: "first", 1: "second" });
+      expect(yield* decodeUnknownSafeObjectFromObjectKeyword(callable)).toEqual({ label: "callable" });
+      expect(yield* decodeUnknownSafeObjectFromObjectKeyword(() => undefined)).toEqual({});
     })
   );
 
   it.effect(
     "rejects values outside ObjectKeyword",
     Effect.fnUntraced(function* () {
-      expect(Exit.isFailure(yield* Effect.exit(decode(null)))).toBe(true);
-      expect(Exit.isFailure(yield* Effect.exit(decode(undefined)))).toBe(true);
-      expect(Exit.isFailure(yield* Effect.exit(decode(true)))).toBe(true);
-      expect(Exit.isFailure(yield* Effect.exit(decode(1)))).toBe(true);
-      expect(Exit.isFailure(yield* Effect.exit(decode("record")))).toBe(true);
+      expect(Exit.isFailure(yield* Effect.exit(decodeUnknownSafeObjectFromObjectKeyword(null)))).toBe(true);
+      expect(Exit.isFailure(yield* Effect.exit(decodeUnknownSafeObjectFromObjectKeyword(undefined)))).toBe(true);
+      expect(Exit.isFailure(yield* Effect.exit(decodeUnknownSafeObjectFromObjectKeyword(true)))).toBe(true);
+      expect(Exit.isFailure(yield* Effect.exit(decodeUnknownSafeObjectFromObjectKeyword(1)))).toBe(true);
+      expect(Exit.isFailure(yield* Effect.exit(decodeUnknownSafeObjectFromObjectKeyword("record")))).toBe(true);
     })
   );
 
   it.effect(
     "encodes the normalized safe object back to an object",
     Effect.fnUntraced(function* () {
-      const value = yield* decode(["first", "second"]);
-      const encoded = yield* encode(value);
+      const value = yield* decodeUnknownSafeObjectFromObjectKeyword(["first", "second"]);
+      const encoded = yield* encodeSafeObjectFromObjectKeyword(value);
 
       expect(encoded).toEqual({ 0: "first", 1: "second" });
-      expect(yield* decode(encoded)).toEqual(value);
+      expect(yield* decodeUnknownSafeObjectFromObjectKeyword(encoded)).toEqual(value);
     })
   );
 
@@ -140,8 +138,8 @@ describe("SafeObjectFromObjectKeyword", () => {
     );
 
     for (const input of [throwingGetter, throwingProxy]) {
-      expect(() => decode(input)).not.toThrow();
-      const exit = Effect.runSync(Effect.exit(decode(input)));
+      expect(() => decodeUnknownSafeObjectFromObjectKeyword(input)).not.toThrow();
+      const exit = Effect.runSync(Effect.exit(decodeUnknownSafeObjectFromObjectKeyword(input)));
       expect(Exit.isFailure(exit)).toBe(true);
       if (Exit.isFailure(exit)) {
         expect(Cause.hasFails(exit.cause)).toBe(true);
@@ -152,8 +150,8 @@ describe("SafeObjectFromObjectKeyword", () => {
   it("derives arbitrary safe objects that round-trip", () => {
     fc.assert(
       fc.property(SafeObjectFromObjectKeywordArbitrary, (value) => {
-        const encoded = Effect.runSync(encode(value));
-        expect(Effect.runSync(decode(encoded))).toEqual(value);
+        const encoded = Effect.runSync(encodeSafeObjectFromObjectKeyword(value));
+        expect(Effect.runSync(decodeUnknownSafeObjectFromObjectKeyword(encoded))).toEqual(value);
       }),
       fcRuns(100)
     );

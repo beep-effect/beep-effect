@@ -15,6 +15,7 @@
  * `false` across calls. `[^'\n]+` (not `[^']+`) keeps the quoted directory operand from spanning a
  * newline and pairing quotes across unrelated lines.
  */
+const GITHUB_SUGGESTION_COMMIT = /^Update [^\n]+\n\nCo-authored-by: [^\n]*\[bot\]/u;
 const SUBTREE_SQUASH_MARKER =
   /^[ \t]*\*?[ \t]*Squashed '[^'\n]+' (?:content from commit [0-9a-f]{7,40}|changes from [0-9a-f]{7,40}\.\.[0-9a-f]{7,40})[ \t\r]*$/mu;
 
@@ -49,6 +50,9 @@ export default {
     (message: string) =>
       /^Squashed '[^']+' (?:content from commit [0-9a-f]+|changes from [0-9a-f]+\.\.[0-9a-f]+)(?:\n|$)/u.test(message),
     (message: string) => SUBTREE_SQUASH_MARKER.test(message),
+    // GitHub's "apply suggestion" button writes `Update <path>` plus a bot co-author trailer;
+    // the repository cannot shape that message, and the squash-merge title is linted server-side.
+    (message: string) => GITHUB_SUGGESTION_COMMIT.test(message),
   ],
   rules: {
     "body-max-line-length": [2, "always", 100],

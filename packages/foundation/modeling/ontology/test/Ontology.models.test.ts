@@ -16,6 +16,12 @@ import { Result, SchemaAST } from "effect";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeHttpUrlResult = S.decodeResult(HttpUrl);
+const decodeOWLClassResult = S.decodeResult(OWLClass);
+const decodeOWLObjectPropertyResult = S.decodeResult(OWLObjectProperty);
+const decodeOWLSearchScoreResult = S.decodeResult(OWLSearchScore);
+const isHttpUrl = S.is(HttpUrl);
+
 const HttpUrlArbitrary = S.toArbitrary(HttpUrl)(fc);
 const GraphInfoArbitrary = S.toArbitrary(GraphInfo)(fc);
 const HealthResponseArbitrary = S.toArbitrary(HealthResponse)(fc);
@@ -105,9 +111,9 @@ describe("@beep/ontology models", () => {
   });
 
   it("accepts only HTTP and HTTPS URL schemes", () => {
-    expect(S.is(HttpUrl)("http://example.com/ontology.owl")).toBe(true);
-    expect(S.is(HttpUrl)("https://example.com/ontology.owl")).toBe(true);
-    expect(S.is(HttpUrl)("ftp://example.com/ontology.owl")).toBe(false);
+    expect(isHttpUrl("http://example.com/ontology.owl")).toBe(true);
+    expect(isHttpUrl("https://example.com/ontology.owl")).toBe(true);
+    expect(isHttpUrl("ftp://example.com/ontology.owl")).toBe(false);
   });
 
   it("preserves representative OpenAPI encoded wire shapes", () => {
@@ -163,11 +169,11 @@ describe("@beep/ontology models", () => {
     ));
 
   it("rejects malformed values for the absorbed precision invariants", () => {
-    expect(Result.isFailure(S.decodeResult(HttpUrl)("not a url"))).toBe(true);
-    expect(Result.isFailure(S.decodeResult(OWLSearchScore)(Number.POSITIVE_INFINITY))).toBe(true);
-    expect(Result.isFailure(S.decodeResult(OWLClass)({ iri: "" }))).toBe(true);
-    expect(Result.isFailure(S.decodeResult(OWLClass)({ iri: "Rclass", sub_class_of: [""] }))).toBe(true);
-    expect(Result.isFailure(S.decodeResult(OWLObjectProperty)({ iri: "", domain: ["Rdomain"] }))).toBe(true);
-    expect(Result.isFailure(S.decodeResult(OWLObjectProperty)({ iri: "Rproperty", range: [""] }))).toBe(true);
+    expect(Result.isFailure(decodeHttpUrlResult("not a url"))).toBe(true);
+    expect(Result.isFailure(decodeOWLSearchScoreResult(Number.POSITIVE_INFINITY))).toBe(true);
+    expect(Result.isFailure(decodeOWLClassResult({ iri: "" }))).toBe(true);
+    expect(Result.isFailure(decodeOWLClassResult({ iri: "Rclass", sub_class_of: [""] }))).toBe(true);
+    expect(Result.isFailure(decodeOWLObjectPropertyResult({ iri: "", domain: ["Rdomain"] }))).toBe(true);
+    expect(Result.isFailure(decodeOWLObjectPropertyResult({ iri: "Rproperty", range: [""] }))).toBe(true);
   });
 });

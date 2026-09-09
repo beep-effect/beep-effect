@@ -86,6 +86,29 @@ import { micromark } from "micromark";
 import type { EffectRenderAdapter, PureRenderAdapter, RenderError } from "@beep/md/Md.render";
 import type { JsonObject } from "@beep/schema";
 
+const decodeBlock = S.decodeEffect(Block);
+const decodeCodeFenceLanguage = S.decodeEffect(CodeFenceLanguage);
+const decodeDocument = S.decodeEffect(Document);
+const decodeInline = S.decodeEffect(Inline);
+const decodePre = S.decodeEffect(Pre);
+const decodeText = S.decodeEffect(Text);
+const decodeBlockResult = S.decodeResult(Block);
+const decodeDocumentResult = S.decodeResult(Document);
+const decodeInlineResult = S.decodeResult(Inline);
+const decodeInlineChildrenResult = S.decodeResult(InlineChildren);
+const decodeCodeFenceLanguageSync = S.decodeSync(CodeFenceLanguage);
+const decodeUrlPolicySpecSync = S.decodeSync(UrlPolicySpec);
+const encodeBlock = S.encodeEffect(Block);
+const encodeDocument = S.encodeEffect(Document);
+const encodePre = S.encodeEffect(Pre);
+const encodeBlockResult = S.encodeResult(Block);
+const encodeDocumentResult = S.encodeResult(Document);
+const encodeInlineResult = S.encodeResult(Inline);
+const encodeSafeDocumentResult = S.encodeResult(SafeDocument);
+const encodeUnknownDocumentResult = S.encodeUnknownResult(Document);
+const isDuplicateFootnoteDefinitionSafetyViolation = S.is(DuplicateFootnoteDefinitionSafetyViolation);
+const isHtmlProjectionSafetyViolation = S.is(HtmlProjectionSafetyViolation);
+
 const InlineArbitrary = S.toArbitrary(Inline)(fc);
 const BlockArbitrary = S.toArbitrary(Block)(fc);
 const DocumentArbitrary = S.toArbitrary(Document)(fc);
@@ -338,8 +361,8 @@ https://www.youtube.com/watch?v=M7lc1UVf-VE
       Md.admonition("note", [Md.footnoteDef("duplicate", "Nested admonition")]),
     ]);
     const issues = documentSafetyIssues(document);
-    const duplicateIssues = issues.filter(S.is(DuplicateFootnoteDefinitionSafetyViolation));
-    const projectionIssues = issues.filter(S.is(HtmlProjectionSafetyViolation));
+    const duplicateIssues = issues.filter(isDuplicateFootnoteDefinitionSafetyViolation);
+    const projectionIssues = issues.filter(isHtmlProjectionSafetyViolation);
 
     expect(duplicateIssues).toMatchObject([
       { identifier: "duplicate", path: ["children", 0, "identifier"] },
@@ -363,7 +386,7 @@ https://www.youtube.com/watch?v=M7lc1UVf-VE
     fc.assert(
       fc.property(FootnoteIdentifierArbitrary, (identifier) => {
         const document = Md.make([Md.footnoteDef(identifier, "One"), Md.footnoteDef(identifier, "Two")]);
-        const duplicateIssues = documentSafetyIssues(document).filter(S.is(DuplicateFootnoteDefinitionSafetyViolation));
+        const duplicateIssues = documentSafetyIssues(document).filter(isDuplicateFootnoteDefinitionSafetyViolation);
 
         expect(duplicateIssues).toHaveLength(2);
         expect(duplicateIssues.every((issue) => issue.identifier === identifier)).toBe(true);
@@ -374,7 +397,7 @@ https://www.youtube.com/watch?v=M7lc1UVf-VE
 
   it("rejects a heading outline that the safe HTML projection cannot render", () => {
     const document = Md.make([Md.h2(""), Md.h5("")]);
-    const projectionIssues = documentSafetyIssues(document).filter(S.is(HtmlProjectionSafetyViolation));
+    const projectionIssues = documentSafetyIssues(document).filter(isHtmlProjectionSafetyViolation);
 
     expect(projectionIssues).toMatchObject([
       {
@@ -384,9 +407,7 @@ https://www.youtube.com/watch?v=M7lc1UVf-VE
       },
     ]);
     expect(Result.isFailure(refineSafeDocument(document))).toBe(true);
-    expect(Result.isFailure(decodeSafeDocument(Result.getOrThrow(S.encodeUnknownResult(Document)(document))))).toBe(
-      true
-    );
+    expect(Result.isFailure(decodeSafeDocument(Result.getOrThrow(encodeUnknownDocumentResult(document))))).toBe(true);
   });
 
   it("renders every schema-derived SafeDocument without failing", () =>
@@ -404,34 +425,32 @@ https://www.youtube.com/watch?v=M7lc1UVf-VE
       const pre = Md.pre("code");
       const doc = Md.make([Md.p([text]), pre]);
 
-      expect(yield* S.decodeEffect(Inline)(text)).toEqual(text);
+      expect(yield* decodeInline(text)).toEqual(text);
       // Pre.language is a codec field (OptionFromNullOr: Option<string> <-> string
       // | null), so Pre's encoded form differs from a constructed instance. Decode
       // through the encoded form rather than feeding a decoded instance back in.
-      expect(yield* S.decodeEffect(Block)(yield* S.encodeEffect(Block)(pre))).toEqual(pre);
-      expect(yield* S.decodeEffect(Document)(yield* S.encodeEffect(Document)(doc))).toEqual(doc);
+      expect(yield* decodeBlock(yield* encodeBlock(pre))).toEqual(pre);
+      expect(yield* decodeDocument(yield* encodeDocument(doc))).toEqual(doc);
       const tsPre = Pre.make({ value: "x", language: O.some("ts") });
-      expect(yield* S.decodeEffect(Pre)(yield* S.encodeEffect(Pre)(tsPre))).toEqual(tsPre);
-      expect(yield* S.decodeEffect(CodeFenceLanguage)("ts")).toBe("ts");
-      expect(() => S.decodeSync(CodeFenceLanguage)("ts bad")).toThrow();
+      expect(yield* decodePre(yield* encodePre(tsPre))).toEqual(tsPre);
+      expect(yield* decodeCodeFenceLanguage("ts")).toBe("ts");
+      expect(() => decodeCodeFenceLanguageSync("ts bad")).toThrow();
       // Pre.language now folds non-conforming legacy info strings to None at decode,
       // so a free-form "ts bad" token drops out instead of being preserved.
-      expect(yield* S.decodeEffect(Pre)({ _tag: "pre", language: "ts bad", value: "x" })).toEqual(
+      expect(yield* decodePre({ _tag: "pre", language: "ts bad", value: "x" })).toEqual(
         Pre.make({ value: "x", language: O.none() })
       );
-      expect(yield* S.decodeEffect(Text)(Text.make({ value: "Hello" }))).toEqual(text);
+      expect(yield* decodeText(Text.make({ value: "Hello" }))).toEqual(text);
     })
   );
 
   it("round-trips schema-derived Markdown AST nodes", () =>
     fc.assert(
       fc.property(InlineArbitrary, BlockArbitrary, DocumentArbitrary, (inline, block, document) => {
-        const decodedInline = Result.getOrThrow(
-          S.decodeResult(Inline)(Result.getOrThrow(S.encodeResult(Inline)(inline)))
-        );
-        const decodedBlock = Result.getOrThrow(S.decodeResult(Block)(Result.getOrThrow(S.encodeResult(Block)(block))));
+        const decodedInline = Result.getOrThrow(decodeInlineResult(Result.getOrThrow(encodeInlineResult(inline))));
+        const decodedBlock = Result.getOrThrow(decodeBlockResult(Result.getOrThrow(encodeBlockResult(block))));
         const decodedDocument = Result.getOrThrow(
-          S.decodeResult(Document)(Result.getOrThrow(S.encodeResult(Document)(document)))
+          decodeDocumentResult(Result.getOrThrow(encodeDocumentResult(document)))
         );
 
         expect(decodedInline).toEqual(inline);
@@ -461,7 +480,7 @@ https://www.youtube.com/watch?v=M7lc1UVf-VE
     );
 
     const text = Text.make({ value: "unbounded domain" });
-    expect(Result.isSuccess(S.decodeResult(InlineChildren)([text, text, text]))).toBe(true);
+    expect(Result.isSuccess(decodeInlineChildrenResult([text, text, text]))).toBe(true);
   });
 
   it("encoded documents survive a JSON boundary (jsonb columns, rpc/ndjson wire)", () => {
@@ -483,7 +502,7 @@ https://www.youtube.com/watch?v=M7lc1UVf-VE
       Md.pre("no language here"),
       Md.p([Md.text("hello")]),
     ]);
-    const encoded = Result.getOrThrow(S.encodeResult(Document)(doc));
+    const encoded = Result.getOrThrow(encodeDocumentResult(doc));
     const json = Result.getOrThrow(encodeJsonResult(encoded));
 
     expect(Result.getOrThrow(decodeDocumentJsonResult(json))).toEqual(doc);
@@ -492,7 +511,7 @@ https://www.youtube.com/watch?v=M7lc1UVf-VE
   it("every encoded document survives a JSON boundary", () =>
     fc.assert(
       fc.property(DocumentArbitrary, (document) => {
-        const encoded = Result.getOrThrow(S.encodeResult(Document)(document));
+        const encoded = Result.getOrThrow(encodeDocumentResult(document));
         const json = Result.getOrThrow(encodeJsonResult(encoded));
 
         // JavaScript JSON stringification normalizes -0 to 0, so compare against
@@ -874,7 +893,7 @@ Demo video`);
       '<blockquote><ul><li><p><a href="tel:+15551234567">Call</a> <a href="#">Web</a></p></li></ul></blockquote>'
     );
 
-    const normalizedPolicy = S.decodeSync(UrlPolicySpec)({
+    const normalizedPolicy = decodeUrlPolicySpecSync({
       _tag: "AllowList",
       schemes: [" HTTPS: "],
       allowRelative: false,
@@ -974,11 +993,11 @@ Demo video`);
   it("refines user-authored documents without changing their encoded wire", () => {
     const document = Md.make([Md.p([Md.a("https://example.com", "Safe"), Md.img("/logo.png", { alt: "Logo" })])]);
     const safe = Result.getOrThrow(refineSafeDocument(document));
-    const encodedSafe = Result.getOrThrow(S.encodeResult(Document)(document));
+    const encodedSafe = Result.getOrThrow(encodeDocumentResult(document));
 
     expect(documentSafetyIssues(document)).toEqual([]);
     expect(decodeSafeDocumentUnsafe(encodedSafe)).toEqual(safe);
-    expect(Result.getOrThrow(S.encodeResult(SafeDocument)(safe))).toEqual(encodedSafe);
+    expect(Result.getOrThrow(encodeSafeDocumentResult(safe))).toEqual(encodedSafe);
 
     const hostile = Md.make([
       Md.p([
@@ -988,7 +1007,7 @@ Demo video`);
         Md.img("//example.com/tracker.png", { alt: "Tracker" }),
       ]),
     ]);
-    const encodedHostile = Result.getOrThrow(S.encodeResult(Document)(hostile));
+    const encodedHostile = Result.getOrThrow(encodeDocumentResult(hostile));
     expect(Result.isFailure(decodeSafeDocument(encodedHostile))).toBe(true);
     expect(() => decodeSafeDocumentUnsafe(encodedHostile)).toThrow();
     expect(documentSafetyIssues(hostile)).toMatchObject([

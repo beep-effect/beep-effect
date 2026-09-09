@@ -1,0 +1,36 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "feat/experiment-apps-lifecycle",
+  "committed": false,
+  "createdAt": "2026-08-14T04:14:18.971Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "publish:00-head-install-preflight",
+      "label": "publish:head-install-preflight",
+      "phase": "publish",
+      "status": "not-run"
+    },
+    {
+      "id": "publish:01-git-push",
+      "label": "publish:git:push",
+      "phase": "publish",
+      "status": "not-run"
+    }
+  ],
+  "message": "yeet publish refuses a stale base: files changed on this branch were also changed on origin/main since the merge-base, so the PR would conflict or silently regress them.\n17 path(s) across 1 top-level entry: goals\n  - goals/INDEX.md\n  - goals/lab-apps-lifecycle/GOAL.md\n  - goals/lab-apps-lifecycle/PLAN.md\n  - goals/lab-apps-lifecycle/README.md\n  - goals/lab-apps-lifecycle/SPEC.md\n  - goals/lab-apps-lifecycle/history/.gitkeep\n  - goals/lab-apps-lifecycle/history/reflections/.gitkeep\n  - goals/lab-apps-lifecycle/history/reflections/_TEMPLATE.md\n  - goals/lab-apps-lifecycle/ops/manifest.json\n  - goals/lab-apps-lifecycle/research/.gitkeep\n  - (+7 more; full list in the failure packet)\nRemedy: git fetch origin && git merge origin/main, resolve conflicts, re-run bun run beep yeet verify, then publish again. Pass --allow-stale-base to proceed anyway.",
+  "mode": "publish",
+  "outcome": "failure",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "feat_experiment-apps-lifecycle-3a9168426f77",
+  "attemptId": "7d633db6-4a77-4e1b-b12f-cc071bec0b98",
+  "startedAt": "2026-08-14T04:14:18.758Z",
+  "endedAt": "2026-08-14T04:14:18.971Z",
+  "elapsedMs": 213,
+  "indexPath": "<fleet>/beep-effect9/.beep/yeet/quality-issue-index.json",
+  "failedStepId": "publish:00-head-install-preflight",
+  "failureKind": "handler-error"
+}

@@ -12,12 +12,14 @@ import { vaultSyncConflictsAtom, vaultSyncStatusAtom } from "@/sync/Sync.atoms";
 import { DEFAULT_PROFESSIONAL_WORKSPACE_ID } from "@/workspace/ProfessionalWorkspace";
 import type { SyncConflict } from "@beep/documents-domain/entities/SyncConflict";
 
+const decodeVaultSyncStatusSync = S.decodeSync(VaultSyncStatus);
+
 const statusWith = (
   connected: boolean,
   disconnectReason: O.Option<DmsMirrorDisconnectReason>,
   probedAt: O.Option<string> = O.none()
 ): VaultSyncStatus =>
-  S.decodeSync(VaultSyncStatus)({
+  decodeVaultSyncStatusSync({
     conflictItems: 0,
     connected,
     disconnectReason: O.getOrNull(disconnectReason),

@@ -29,6 +29,7 @@ class KnnRow extends S.Class<KnnRow>($I`KnnRow`)(
   { chunk_id: ChunkId, distance: S.Finite },
   $I.annote("KnnRow", { description: "Decoded DuckDB exact-neighbour row." })
 ) {}
+const decodeUnknownKnnRowArray = S.decodeUnknownEffect(S.Array(KnnRow));
 
 const failed = (message: string): ProjectionFailed => ProjectionFailed.make({ message, reason: "vector-failed" });
 
@@ -100,7 +101,7 @@ const makeVectorProjection = Effect.fn("VectorProjection.make")(function* () {
           }
         )
         .pipe(Effect.mapError(() => failed("The exact DuckDB kNN query failed.")));
-      const decoded = yield* S.decodeUnknownEffect(S.Array(KnnRow))(rows).pipe(
+      const decoded = yield* decodeUnknownKnnRowArray(rows).pipe(
         Effect.mapError(() => failed("DuckDB returned invalid exact-neighbour rows."))
       );
       return KnnQueryResult.make({

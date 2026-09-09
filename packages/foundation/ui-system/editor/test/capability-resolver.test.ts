@@ -20,6 +20,8 @@ import { Effect, Equal, Result } from "effect";
 import * as S from "effect/Schema";
 import type { CapabilityDisposition, ProfileKind } from "@beep/editor/capability/schemas";
 
+const encodeResolvedEditorProfile = S.encodeEffect(ResolvedEditorProfile);
+
 const emptyRegistrations = (): CapabilityRegistrations =>
   CapabilityRegistrations.make({ nodes: [], extensions: [], transformers: [] });
 
@@ -179,10 +181,12 @@ describe("capability resolver", () => {
       });
       const second = yield* Effect.fromResult(resolveEditorProfile(editorCapabilityCatalog, reordered));
       const third = yield* Effect.fromResult(resolveEditorProfile(editorCapabilityCatalog, referenceProfiles.minimal));
-
-      const encode = S.encodeEffect(ResolvedEditorProfile);
-      expect(Equal.equals(yield* encode(original), yield* encode(second))).toBe(true);
-      expect(Equal.equals(yield* encode(original), yield* encode(third))).toBe(true);
+      expect(
+        Equal.equals(yield* encodeResolvedEditorProfile(original), yield* encodeResolvedEditorProfile(second))
+      ).toBe(true);
+      expect(
+        Equal.equals(yield* encodeResolvedEditorProfile(original), yield* encodeResolvedEditorProfile(third))
+      ).toBe(true);
     })
   );
 });

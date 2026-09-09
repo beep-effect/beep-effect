@@ -8,9 +8,11 @@
 
 import { thunkFalse } from "@beep/utils/thunk";
 import { defineRule } from "@oxlint/plugins";
-import { HashSet, MutableHashSet } from "effect";
+import { HashSet, Match, MutableHashSet } from "effect";
+import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Str from "effect/String";
 import {
   classifyImportSpecifier,
   getPropertyName,
@@ -64,10 +66,10 @@ const isStaticSchemaReference = (node: MaybeNode): boolean => {
 
   if (expression.value.type === "Identifier") {
     const [firstChar] = expression.value.name;
-    return firstChar !== undefined && firstChar.toUpperCase() === firstChar;
+    return firstChar !== undefined && Str.toUpperCase(firstChar) === firstChar;
   }
 
-  return expression.value.type === "MemberExpression";
+  return expression.value.type === "MemberExpression" && isStaticSchemaReference(expression.value.object);
 };
 
 const messageHigh = (method: string) =>
@@ -143,14 +145,45 @@ export default defineRule({
         )
       );
 
+    const isStaticSchemaExpression = (node: MaybeNode): boolean => {
+      const expression = unwrapExpression(node);
+      if (O.isNone(expression)) return false;
+
+      return Match.value(expression.value).pipe(
+        Match.discriminators("type")({
+          Identifier: isStaticSchemaReference,
+          MemberExpression: isStaticSchemaReference,
+          Literal: () => true,
+          ArrayExpression: ({ elements }) =>
+            A.every(
+              elements,
+              (element) =>
+                element === null ||
+                isStaticSchemaExpression(element.type === "SpreadElement" ? element.argument : element)
+            ),
+          ObjectExpression: ({ properties }) =>
+            A.every(properties, (property) => {
+              if (property.type === "SpreadElement") return isStaticSchemaExpression(property.argument);
+              if (property.computed && !isStaticSchemaExpression(property.key)) return false;
+              return property.kind === "init" && !property.method && isStaticSchemaExpression(property.value);
+            }),
+          TemplateLiteral: ({ expressions }) => A.isReadonlyArrayEmpty(expressions),
+          UnaryExpression: ({ argument, operator }) =>
+            (Str.Equivalence(operator, "-") || Str.Equivalence(operator, "+")) && isStaticSchemaExpression(argument),
+          CallExpression: (call) =>
+            O.match(asSchemaMethodCall(call), {
+              onNone: thunkFalse,
+              onSome: ({ args }) => A.every(args, isStaticSchemaExpression),
+            }),
+        }),
+        Match.orElse(thunkFalse)
+      );
+    };
+
     const isNestedStaticSchemaCall = (node: MaybeNode): boolean =>
       O.match(asSchemaMethodCall(node), {
         onNone: thunkFalse,
-        onSome: ({ method, args }) => {
-          if (!O.exists(method, (name) => name === "fromJsonString")) return true;
-          const [firstArg] = args;
-          return isStaticSchemaReference(firstArg) || isNestedStaticSchemaCall(firstArg);
-        },
+        onSome: ({ args }) => A.every(args, isStaticSchemaExpression),
       });
 
     // High when the first argument is itself a nested static schema call (literal + compiler both

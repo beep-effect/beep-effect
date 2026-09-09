@@ -5,11 +5,19 @@ import * as ClaimLifecycleUC from "@beep/epistemic-use-cases/ClaimLifecycle";
 import { Dataset, makeDataset, makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf/Rdf";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
-import { ShaclValidationRequest, ShaclValidationService } from "@beep/semantic-web/services/shacl-validation";
+import {
+  ShaclValidationRequest,
+  ShaclValidationService,
+  ShaclValidationViolation,
+} from "@beep/semantic-web/services/shacl-validation";
 import { productEntityFixtureInput } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect, it, vi } from "@effect/vitest";
 import { Effect } from "effect";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
+
+const decodeShaclValidationRequest = S.decodeEffect(ShaclValidationRequest);
+const encodeDataset = S.encodeEffect(Dataset);
 
 const candidate = S.decodeUnknownSync(CandidateClaim)({
   ...productEntityFixtureInput("EpistemicCandidateClaim", 1),
@@ -75,8 +83,8 @@ describe("@beep/epistemic-server bounded SHACL validator", () => {
       Effect.fnUntraced(function* () {
         const service = yield* ShaclValidationService;
         const result = yield* service.validate(
-          yield* S.decodeEffect(ShaclValidationRequest)({
-            dataset: yield* S.encodeEffect(Dataset)(dataset),
+          yield* decodeShaclValidationRequest({
+            dataset: yield* encodeDataset(dataset),
             maxResults: 1,
             shapes: [
               {
@@ -99,6 +107,119 @@ describe("@beep/epistemic-server bounded SHACL validator", () => {
         expect(result.conforms).toBe(false);
         expect(result.truncated).toBe(true);
         expect(result.violations).toHaveLength(1);
+      })
+    );
+
+    it.effect(
+      "stops generating violations before later properties and shapes when capped",
+      Effect.fnUntraced(function* () {
+        const service = yield* ShaclValidationService;
+        const request = yield* decodeShaclValidationRequest({
+          dataset: yield* encodeDataset(dataset),
+          maxResults: 1,
+          shapes: [
+            {
+              properties: [
+                { minCount: 1, path: makeNamedNode("https://schema.org/knows") },
+                { minCount: 1, path: makeNamedNode("https://schema.org/email") },
+              ],
+            },
+            { properties: [{ minCount: 1, path: makeNamedNode("https://schema.org/url") }] },
+          ],
+        });
+        const makeViolation = vi.spyOn(ShaclValidationViolation, "make");
+        yield* Effect.gen(function* () {
+          const limited = yield* service.validate(request);
+          expect(limited.violations).toHaveLength(1);
+          expect(limited.truncated).toBe(true);
+          expect(makeViolation).toHaveBeenCalledTimes(1);
+          makeViolation.mockClear();
+          const unlimited = yield* service.validate(ShaclValidationRequest.make({ ...request, maxResults: O.none() }));
+          expect(unlimited.violations).toHaveLength(3);
+          expect(unlimited.truncated).toBe(false);
+          expect(makeViolation).toHaveBeenCalledTimes(3);
+        }).pipe(Effect.ensuring(Effect.sync(() => makeViolation.mockRestore())));
+      })
+    );
+
+    it.effect(
+      "preserves actual conformance with a zero result limit",
+      Effect.fnUntraced(function* () {
+        const service = yield* ShaclValidationService;
+        const encodedDataset = yield* encodeDataset(dataset);
+        const conforming = yield* service.validate(
+          yield* decodeShaclValidationRequest({
+            dataset: encodedDataset,
+            maxResults: 0,
+            shapes: [{ properties: [{ minCount: 1, path: makeNamedNode("https://schema.org/name") }] }],
+          })
+        );
+        expect(conforming.conforms).toBe(true);
+        expect(conforming.truncated).toBe(false);
+        expect(conforming.violations).toEqual([]);
+
+        const nonconforming = yield* service.validate(
+          yield* decodeShaclValidationRequest({
+            dataset: encodedDataset,
+            maxResults: 0,
+            shapes: [
+              {
+                properties: [
+                  { minCount: 1, path: makeNamedNode("https://schema.org/name") },
+                  { minCount: 1, path: makeNamedNode("https://schema.org/knows") },
+                ],
+              },
+            ],
+          })
+        );
+        expect(nonconforming.conforms).toBe(false);
+        expect(nonconforming.truncated).toBe(true);
+        expect(nonconforming.violations).toEqual([]);
+      })
+    );
+
+    it.effect(
+      "filters non-target classes and reports a missing required value",
+      Effect.fnUntraced(function* () {
+        const service = yield* ShaclValidationService;
+        const encodedDataset = yield* encodeDataset(dataset);
+        const nonTargetResult = yield* service.validate(
+          yield* decodeShaclValidationRequest({
+            dataset: encodedDataset,
+            shapes: [
+              {
+                properties: [{ minCount: 1, path: makeNamedNode("https://schema.org/knows") }],
+                targetClass: makeNamedNode("https://schema.org/Organization"),
+              },
+            ],
+          })
+        );
+        const requiredValueResult = yield* service.validate(
+          yield* decodeShaclValidationRequest({
+            dataset: encodedDataset,
+            shapes: [
+              {
+                properties: [
+                  {
+                    hasValue: {
+                      datatype: makeNamedNode(XSD_STRING.value),
+                      termType: "Literal",
+                      value: "Bob",
+                    },
+                    minCount: 1,
+                    path: makeNamedNode("https://schema.org/name"),
+                  },
+                ],
+                targetClass: makeNamedNode("https://schema.org/Person"),
+              },
+            ],
+          })
+        );
+
+        expect(nonTargetResult.conforms).toBe(true);
+        expect(nonTargetResult.violations).toEqual([]);
+        expect(requiredValueResult.conforms).toBe(false);
+        expect(requiredValueResult.violations[0]?.message).toContain("Expected value");
       })
     );
   });

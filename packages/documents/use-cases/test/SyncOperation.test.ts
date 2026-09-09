@@ -22,6 +22,8 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import type { SyncOperationRepositoryShape } from "@beep/documents-use-cases/entities/SyncOperation/server";
 
+const decodeVaultRelPathSync = S.decodeSync(VaultRelPath);
+
 const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
   const arbitrary = S.toArbitrary(schema)(fc);
   const encode = S.encodeResult(schema);
@@ -55,7 +57,7 @@ const uploadSeed = (idempotencyKey: string, targetRelPath: string) =>
     status: "queued",
     syncItemId,
     targetName: "complaint.pdf",
-    targetRelPath: S.decodeSync(VaultRelPath)(targetRelPath),
+    targetRelPath: decodeVaultRelPathSync(targetRelPath),
     workspaceId,
   });
 

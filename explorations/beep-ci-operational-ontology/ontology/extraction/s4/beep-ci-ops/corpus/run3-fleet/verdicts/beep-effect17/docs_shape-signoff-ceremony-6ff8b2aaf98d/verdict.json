@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "docs/shape-signoff-ceremony",
+  "committed": false,
+  "createdAt": "2026-08-14T00:30:08.626Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "closeout:01-pr-context",
+      "label": "closeout:pr-context",
+      "phase": "monitor",
+      "status": "not-run"
+    },
+    {
+      "id": "closeout:02-review-gates",
+      "label": "closeout:review-gates",
+      "phase": "monitor",
+      "status": "not-run"
+    }
+  ],
+  "message": "yeet closeout succeeded.",
+  "mode": "closeout",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "docs_shape-signoff-ceremony-6ff8b2aaf98d",
+  "attemptId": "b60bbbcc-f735-4382-8f21-f6111ac6ca2c",
+  "startedAt": "2026-08-14T00:30:06.465Z",
+  "endedAt": "2026-08-14T00:30:08.626Z",
+  "elapsedMs": 2161,
+  "indexPath": "<fleet>/beep-effect17/.beep/yeet/quality-issue-index.json"
+}

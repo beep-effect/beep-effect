@@ -3,6 +3,8 @@ import * as S from "effect/Schema";
 import { describe, expect, it } from "vitest";
 import { failureMessageOr } from "@/lib/failureMessage";
 
+const decodeUnknownFinite = S.decodeUnknownEffect(S.Finite);
+
 class PrototypeMessageFailure {
   get message(): string {
     return "message from the prototype";
@@ -36,7 +38,7 @@ describe("failureMessageOr", () => {
   });
 
   it("reads the issue text from a real SchemaError", () => {
-    const failure = Effect.runSync(S.decodeUnknownEffect(S.Finite)("x").pipe(Effect.flip));
+    const failure = Effect.runSync(decodeUnknownFinite("x").pipe(Effect.flip));
     const message = orFallback(failure);
 
     expect(message).not.toBe("fallback");

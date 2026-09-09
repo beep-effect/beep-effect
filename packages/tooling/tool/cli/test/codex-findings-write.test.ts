@@ -40,6 +40,26 @@ const writeIn = Effect.fn("writeIn")(function* (options: {
 });
 
 describe("codex findings packet promotion", () => {
+  it("preserves Markdown frontmatter while retaining private-content checks", () =>
+    run(
+      Effect.gen(function* () {
+        const contents = "---\nagent: codex\n---\n\n# Reflection\n";
+        const reflectionPath = "history/reflections/2026-08-04-codex.md";
+        const outcome = yield* writeIn({ documents: [...sampleDocuments, doc(reflectionPath, contents)] });
+        const fs = yield* FileSystem.FileSystem;
+        expect(outcome.committed).toBe(true);
+        expect(yield* fs.readFileString(`goals/${SLUG}/${reflectionPath}`)).toBe(contents);
+        const rejected = yield* writeIn({
+          force: true,
+          documents: [...sampleDocuments, doc(reflectionPath, `${contents}/home/private-owner/work\n`)],
+        }).pipe(
+          Effect.map(() => false),
+          Effect.catchTag("CodexFindingsRedactionError", () => Effect.succeed(true))
+        );
+        expect(rejected).toBe(true);
+      })
+    ));
+
   it("writes every document under the packet directory", () =>
     run(
       Effect.gen(function* () {
@@ -107,6 +127,17 @@ describe("codex findings packet promotion", () => {
 });
 
 describe("codex findings verbatim raw evidence", () => {
+  it("retains formula refusal for documents that are not Markdown", () =>
+    run(
+      Effect.gen(function* () {
+        const outcome = yield* writeIn({ documents: [doc("ops/export.csv", "=SUM(1,2)\n")] }).pipe(
+          Effect.map(() => "accepted"),
+          Effect.catchTag("CodexFindingsRedactionError", () => Effect.succeed("refused"))
+        );
+        expect(outcome).toBe("refused");
+      })
+    ));
+
   // Report bodies are external prose that legitimately quotes local paths.
   // Measured against a real 27-finding export, 4 bodies trip the scan — so a
   // hard refusal here would block roughly one ingest in seven.

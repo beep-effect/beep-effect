@@ -1,0 +1,69 @@
+{
+  "schemaVersion": "yeet-verdict/v1",
+  "base": "origin/main",
+  "branch": "@slop/6-21-26",
+  "committed": true,
+  "createdAt": "2026-06-21T16:06:34.768Z",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "advisory:01-fallow-feedback",
+      "label": "fallow-advisory-feedback",
+      "phase": "feedback",
+      "status": "passed",
+      "exitCode": 0
+    },
+    {
+      "id": "commit:01-git-commit",
+      "label": "commit:git:commit:amend",
+      "phase": "commit",
+      "status": "passed",
+      "exitCode": 0
+    },
+    {
+      "id": "full:01-pre-push",
+      "label": "full:pre-push",
+      "phase": "full",
+      "status": "passed",
+      "exitCode": 0
+    },
+    {
+      "id": "publish:01-git-push",
+      "label": "publish:git:push",
+      "phase": "publish",
+      "status": "failed",
+      "exitCode": 1,
+      "repairCommand": "git push -u origin HEAD"
+    },
+    {
+      "id": "publish:02-pr-create",
+      "label": "publish:pr-create",
+      "phase": "publish",
+      "status": "not-run"
+    },
+    {
+      "id": "monitor:01-pr-context",
+      "label": "monitor:pr-context",
+      "phase": "monitor",
+      "status": "not-run"
+    },
+    {
+      "id": "monitor:02-pr-checks-watch",
+      "label": "monitor:pr-checks:watch",
+      "phase": "monitor",
+      "status": "not-run"
+    }
+  ],
+  "message": "yeet publish phase failed.",
+  "mode": "publish",
+  "outcome": "failure",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "slop_6-21-26-891831746191",
+  "indexPath": "<fleet>/beep-effect6/.beep/yeet/quality-issue-index.json",
+  "baseFreshness": {
+    "behindCount": 0,
+    "mergeBase": "1d7fef2339f2c90a57447c479ebda300018ab166",
+    "overlappingPaths": []
+  }
+}

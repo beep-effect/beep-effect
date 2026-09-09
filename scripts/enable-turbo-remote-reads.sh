@@ -51,8 +51,8 @@ case "${TURBO_API}" in
   *) die "TURBO_API must be an https:// endpoint" ;;
 esac
 
-if [[ ! "${TURBO_TOKEN_REF}" =~ ^op://[^/]+/[^/]+/[^/]+$ ]]; then
-  die "TURBO_TOKEN_REF must be a 1Password reference (op://vault/item/field), never a token value"
+if [[ ! "${TURBO_TOKEN_REF}" =~ ^op://[^/]+/[^/]+/([^/]+/)?[^/]+$ || "${TURBO_TOKEN_REF}" == *$'\n'* || "${TURBO_TOKEN_REF}" == *$'\r'* ]]; then
+  die "TURBO_TOKEN_REF must be a 1Password reference (op://vault/item/[section/]field), never a token value"
 fi
 
 case "${TOKEN_REPLACE}" in

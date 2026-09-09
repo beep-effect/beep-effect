@@ -6,6 +6,8 @@ import * as Cause from "effect/Cause";
 import * as S from "effect/Schema";
 import * as SchemaIssue from "effect/SchemaIssue";
 
+const decodeAnyFnSync = S.decodeSync(AnyFn);
+
 const runResult = <A, E>(effect: Effect.Effect<A, E>) =>
   Effect.runPromise(
     Effect.match(effect, {
@@ -242,7 +244,7 @@ describe("Fn convenience exports", () => {
   it("accepts any runtime function via AnyFn", () => {
     const handler = () => "ok";
 
-    expect(S.decodeSync(AnyFn)(handler)).toBe(handler);
+    expect(decodeAnyFnSync(handler)).toBe(handler);
   });
 
   it("creates thunk schemas with ThunkOf", () => {

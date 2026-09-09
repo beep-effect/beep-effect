@@ -31,6 +31,7 @@ import {
   sourceLocation,
 } from "./Interpreter.model.ts";
 import { containsRuntimeReference } from "./Interpreter.references.ts";
+const isErrorConstructorName = S.is(ErrorConstructorName);
 
 const renderUnknown = (value: unknown, property?: "name" | "message"): string =>
   pipe(
@@ -166,7 +167,7 @@ export const caughtErrorValue = (thrown: unknown): unknown =>
         return createErrorValue(thrown.errorName, thrown.message);
       }
       const renderedName = P.isError(thrown) ? renderUnknown(thrown, "name") : "Error";
-      const name = S.is(ErrorConstructorName)(renderedName) ? renderedName : "Error";
+      const name = isErrorConstructorName(renderedName) ? renderedName : "Error";
       return createErrorValue(name, normalizeError(thrown).message);
     }),
     Result.getOrElse(() => createErrorValue("Error", normalizeError(thrown).message))

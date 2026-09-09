@@ -20,6 +20,9 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
+const decodeResidueReapReportJson = S.decodeEffect(S.fromJsonString(ResidueReapReport));
+const encodeResidueReapReportJson = S.encodeEffect(S.fromJsonString(ResidueReapReport));
+
 const FIXTURE_NOW_MILLIS = 2_000_000_000_000;
 const noLiveCwd = () => Effect.succeedSome(false);
 
@@ -387,6 +390,114 @@ describe("residue reap", () => {
     ).pipe(provideScopedLayer(NodeServices.layer))
   );
 
+  it.effect("preserves external data behind every symlinked home residue root", () =>
+    withTempDirectory((root) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const homeRoot = path.join(root, "home");
+        const external = path.join(root, "external");
+        const payload = path.join(external, "photo-face-old", "keep.txt");
+        const session = path.join(external, "old.jsonl");
+        yield* fs.makeDirectory(path.dirname(payload), { recursive: true });
+        yield* fs.writeFileString(payload, "unrelated work\n");
+        yield* fs.writeFileString(session, "unrelated session\n");
+        yield* touchTreeDaysAgo(root, external, 60);
+        for (const relative of [".codex/sessions", ".codex/archived_sessions", ".codex/worktrees", ".cache/beep"]) {
+          const linked = path.join(homeRoot, relative);
+          yield* fs.makeDirectory(path.dirname(linked), { recursive: true });
+          yield* fs.symlink(external, linked);
+        }
+        const report = yield* runResidueReap({
+          apply: true,
+          homeRoot,
+          repoRoot: root,
+          nowMillis: FIXTURE_NOW_MILLIS,
+          probeLiveCwd: noLiveCwd,
+        });
+        expect(report.reapedCount).toBe(0);
+        expect(yield* fs.readFileString(payload)).toBe("unrelated work\n");
+        expect(yield* fs.readFileString(session)).toBe("unrelated session\n");
+        expect(A.every(report.candidates, (entry) => entry.action === "skip")).toBe(true);
+      })
+    ).pipe(provideScopedLayer(NodeServices.layer))
+  );
+
+  it.effect("rechecks the home boundary when a class root is repointed after discovery", () =>
+    withTempDirectory((root) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const fixture = yield* makeFixture(root);
+        const classRoot = path.dirname(fixture.oldWorktree);
+        const moved = path.join(root, "moved-worktrees");
+        const external = path.join(root, "external");
+        const payload = path.join(external, "old-worktree", "keep.txt");
+        yield* fs.makeDirectory(path.dirname(payload), { recursive: true });
+        yield* fs.writeFileString(payload, "unrelated work\n");
+        yield* touchTreeDaysAgo(root, external, 60);
+        const swappingProbe = Effect.fn("rootSwappingProbe")(function* (target: string) {
+          if (Str.Equivalence(target, fixture.oldWorktree) && !(yield* fs.exists(moved))) {
+            yield* fs.rename(classRoot, moved);
+            yield* fs.symlink(external, classRoot);
+          }
+          return O.some(false);
+        }, Effect.orDie);
+        const report = yield* runResidueReap({
+          apply: true,
+          classes: ["codex-worktrees"],
+          homeRoot: fixture.homeRoot,
+          repoRoot: fixture.repoRoot,
+          nowMillis: FIXTURE_NOW_MILLIS,
+          probeLiveCwd: swappingProbe,
+        });
+        expect(report.reapedCount).toBe(0);
+        expect(candidateByPath(report, fixture.oldWorktree).skipReason).toBe("path-changed");
+        expect(yield* fs.readFileString(payload)).toBe("unrelated work\n");
+        expect(yield* fs.exists(path.join(moved, "old-worktree", "payload.txt"))).toBe(true);
+      })
+    ).pipe(provideScopedLayer(NodeServices.layer))
+  );
+
+  it.effect("rechecks the repository boundary when the Turbo cache root is repointed after discovery", () =>
+    withTempDirectory((root) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const fixture = yield* makeFixture(root);
+        const entry = path.join(fixture.turboCacheRoot, "old-directory");
+        const moved = path.join(root, "moved-cache");
+        const external = path.join(root, "external-cache");
+        const payload = path.join(external, "old-directory", "keep.txt");
+        yield* fs.makeDirectory(entry);
+        yield* fs.writeFileString(path.join(entry, "payload.txt"), "original cache\n");
+        yield* fs.makeDirectory(path.dirname(payload), { recursive: true });
+        yield* fs.writeFileString(payload, "unrelated work\n");
+        yield* touchTreeDaysAgo(root, entry, 60);
+        yield* touchTreeDaysAgo(root, external, 60);
+        const swappingProbe = Effect.fn("turboRootSwappingProbe")(function* (target: string) {
+          if (Str.Equivalence(target, entry) && !(yield* fs.exists(moved))) {
+            yield* fs.rename(fixture.turboCacheRoot, moved);
+            yield* fs.symlink(external, fixture.turboCacheRoot);
+          }
+          return O.some(false);
+        }, Effect.orDie);
+        const report = yield* runResidueReap({
+          apply: true,
+          classes: ["turbo-cache"],
+          homeRoot: fixture.homeRoot,
+          repoRoot: fixture.repoRoot,
+          nowMillis: FIXTURE_NOW_MILLIS,
+          probeLiveCwd: swappingProbe,
+        });
+        expect(report.reapedCount).toBe(0);
+        expect(candidateByPath(report, entry).skipReason).toBe("path-changed");
+        expect(yield* fs.readFileString(payload)).toBe("unrelated work\n");
+        expect(yield* fs.readFileString(path.join(moved, "old-directory", "payload.txt"))).toBe("original cache\n");
+      })
+    ).pipe(provideScopedLayer(NodeServices.layer))
+  );
+
   it.effect("skips a candidate whose path became a symlink after classification", () =>
     withTempDirectory((root) =>
       Effect.gen(function* () {
@@ -583,8 +694,8 @@ describe("residue reap", () => {
           nowMillis: FIXTURE_NOW_MILLIS,
           repoRoot: fixture.repoRoot,
         });
-        const encoded = yield* S.encodeEffect(S.fromJsonString(ResidueReapReport))(report);
-        const decoded = yield* S.decodeEffect(S.fromJsonString(ResidueReapReport))(encoded);
+        const encoded = yield* encodeResidueReapReportJson(report);
+        const decoded = yield* decodeResidueReapReportJson(encoded);
         expect(decoded).toEqual(report);
         expect(decoded.schemaVersion).toBe("residue-reap/v1");
         expect(decoded.classes).toEqual(["turbo-cache"]);

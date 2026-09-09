@@ -37,6 +37,9 @@ import { canonicalJsonText, canonicalJsonTextPretty, sha256Hex } from "./PacketC
 import type { PlanMode, PlanOwnership, ValidationRequirement } from "./Bootstrap.schemas.ts";
 import type { CapabilitySlug } from "./Goals.schemas.ts";
 
+const decodeGoalSlug = S.decodeEffect(GoalSlug);
+const encodeUnknownMaterializationPlan = S.encodeUnknownEffect(MaterializationPlan);
+
 const COMPLETION_GATE_STATEMENT =
   "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).";
 
@@ -717,7 +720,7 @@ export const compileMaterializationPlan: {
  */
 export const renderMaterializationPlanJson: (plan: MaterializationPlan) => Effect.Effect<string, S.SchemaError> =
   Effect.fnUntraced(function* (plan: MaterializationPlan) {
-    const encoded = yield* S.encodeUnknownEffect(MaterializationPlan)(plan);
+    const encoded = yield* encodeUnknownMaterializationPlan(plan);
     return canonicalJsonTextPretty(encoded);
   });
 
@@ -827,7 +830,7 @@ const resolveToday = (raw: O.Option<string>) =>
   });
 
 const decodeSlug = (raw: string) =>
-  S.decodeEffect(GoalSlug)(raw).pipe(
+  decodeGoalSlug(raw).pipe(
     Effect.mapError((issue) => GoalPlanInputError.new(`--slug "${raw}" is invalid: ${issue.message}`))
   );
 

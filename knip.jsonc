@@ -121,6 +121,9 @@
     // The GitHub Copilot Impeccable tree mirrors the Claude Code source, whose
     // detector CLI is a root package script and therefore an analyzed entry.
     ".github/skills/impeccable/**",
+    // Graft-owned hook/statusline shims written by `graft init` and rewritten on
+    // upgrade; Claude Code runs them by path from .claude/settings.json.
+    ".claude/helpers/**",
     "goals/**",
     // explorations/ is the fuzzy front end of the goals/ pipeline (capture -> graduate, see
     // explorations/CLAUDE.md); prototype code there (e.g. identity-as-iri/assets/ontology-prototype)

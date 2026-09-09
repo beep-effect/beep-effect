@@ -37,13 +37,8 @@ import {
   readSchemaFirstInventoryDocument,
   writeSchemaFirstInventoryDocument,
 } from "./SchemaFirstStore.ts";
-import type {
-  SchemaCrispeningPolicyDocument,
-  SchemaFirstEntryKind,
-  SchemaFirstEntryStatus,
-  SchemaFirstLintOptions,
-  SchemaFirstPolicyRuleId,
-} from "../Lint.schemas.ts";
+import type { CallExpression, SourceFile } from "ts-morph";
+import type { SchemaCrispeningPolicyDocument, SchemaFirstEntryKind, SchemaFirstLintOptions } from "../Lint.schemas.ts";
 import type { SchemaFirstLintFindings } from "../SchemaFirst.render.ts";
 import type { FunctionLikeDeclarationNode } from "./SchemaFirstDetectors.ts";
 
@@ -91,217 +86,241 @@ const collectLiteralKitConstAssertionViolations = Effect.fn(function* () {
   return violations;
 });
 
+const appendOptionEntry = (entries: Array<SchemaFirstInventoryEntry>, entry: O.Option<SchemaFirstInventoryEntry>) => {
+  if (O.isSome(entry)) A.appendInPlace(entries, entry.value);
+};
+
+const appendCandidate = (
+  entries: Array<SchemaFirstInventoryEntry>,
+  file: string,
+  symbol: string,
+  kind: SchemaFirstEntryKind,
+  reason: string,
+  owner: string
+) => {
+  A.appendInPlace(entries, SchemaFirstInventoryEntry.make({ file, symbol, kind, status: "candidate", reason, owner }));
+};
+
+const appendArbitraryAndTaggedErrorEntries = (
+  entries: Array<SchemaFirstInventoryEntry>,
+  sourceFile: SourceFile,
+  filePath: string,
+  owner: string
+) => {
+  appendOptionEntry(
+    entries,
+    SchemaFirstArbitraryCoverage.arbitraryTestsEntryFromSourceFile(sourceFile, filePath, owner)
+  );
+  if (isExcludedTypeScriptSourcePath(filePath) || !SchemaFirstDetectors.sourceHasTaggedErrorSignal(sourceFile)) return;
+  for (const declaration of sourceFile.getDescendantsOfKind(SyntaxKind.ClassDeclaration)) {
+    appendOptionEntry(
+      entries,
+      SchemaFirstDetectors.taggedErrorEquivalenceEntryFromClassDeclaration(declaration, filePath, owner)
+    );
+  }
+};
+
+const appendInterfaceEntries = (
+  entries: Array<SchemaFirstInventoryEntry>,
+  sourceFile: SourceFile,
+  filePath: string,
+  owner: string
+) => {
+  for (const declaration of sourceFile.getInterfaces()) {
+    const symbol = SchemaFirstDetectors.declarationSymbol(declaration, declaration.getName());
+    if (!SchemaFirstDetectors.isEffectivelyExported(declaration, symbol)) continue;
+    if (!SchemaFirstDetectors.isInterfaceSchemaFirstCandidate(declaration)) continue;
+    appendCandidate(
+      entries,
+      filePath,
+      symbol,
+      "exported-interface",
+      "Exported pure-data interface should be modeled as an annotated schema.",
+      owner
+    );
+  }
+};
+
+const appendTypeAliasEntries = (
+  entries: Array<SchemaFirstInventoryEntry>,
+  sourceFile: SourceFile,
+  filePath: string,
+  owner: string
+) => {
+  for (const declaration of sourceFile.getTypeAliases()) {
+    const symbol = SchemaFirstDetectors.declarationSymbol(declaration, declaration.getName());
+    if (!SchemaFirstDetectors.isEffectivelyExported(declaration, symbol)) continue;
+    const typeNode = declaration.getTypeNode();
+    if (typeNode === undefined || typeNode.getKind() !== SyntaxKind.TypeLiteral) continue;
+    if (!SchemaFirstDetectors.isTypeAliasSchemaFirstCandidate(declaration)) continue;
+    appendCandidate(
+      entries,
+      filePath,
+      symbol,
+      "exported-type-literal",
+      "Exported pure-data type alias should be modeled as an annotated schema.",
+      owner
+    );
+  }
+};
+
+const appendSignaledCallEntries = (
+  entries: Array<SchemaFirstInventoryEntry>,
+  callExpression: CallExpression,
+  filePath: string,
+  owner: string,
+  hasNormalizationSignal: boolean,
+  hasGetSomesSignal: boolean
+) => {
+  if (hasNormalizationSignal) {
+    appendOptionEntry(
+      entries,
+      SchemaFirstDetectors.normalizationEntryFromCallExpression(callExpression, filePath, owner)
+    );
+  }
+  if (hasGetSomesSignal) {
+    appendOptionEntry(
+      entries,
+      SchemaFirstDetectors.getsomesStructEntryFromCallExpression(callExpression, filePath, owner)
+    );
+  }
+};
+
+const appendStructOrBoundaryEntry = (
+  entries: Array<SchemaFirstInventoryEntry>,
+  callExpression: CallExpression,
+  filePath: string,
+  owner: string
+) => {
+  if (callExpression.getExpression().getText() !== "S.Struct") {
+    if (SchemaFirstDetectors.isJsonParseCallExpression(callExpression)) {
+      A.appendInPlace(entries, SchemaFirstDetectors.boundaryCodecEntryFromJsonParse(callExpression, filePath, owner));
+    }
+    return;
+  }
+  if (!SchemaFirstDetectors.isStructSchemaFirstCandidate(callExpression)) return;
+  appendCandidate(
+    entries,
+    filePath,
+    SchemaFirstDetectors.inferStructSymbol(callExpression),
+    "object-struct-schema",
+    "Object schema should prefer an annotated S.Class over S.Struct.",
+    owner
+  );
+};
+
+const appendCallEntries = (
+  entries: Array<SchemaFirstInventoryEntry>,
+  sourceFile: SourceFile,
+  filePath: string,
+  owner: string
+) => {
+  const hasNormalizationSignal = SchemaFirstDetectors.sourceHasNormalizationSignal(sourceFile);
+  const hasGetSomesSignal = SchemaFirstDetectors.sourceHasGetSomesSignal(sourceFile);
+  for (const callExpression of sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression)) {
+    appendSignaledCallEntries(entries, callExpression, filePath, owner, hasNormalizationSignal, hasGetSomesSignal);
+    appendStructOrBoundaryEntry(entries, callExpression, filePath, owner);
+  }
+};
+
+const appendFunctionEntries = (
+  entries: Array<SchemaFirstInventoryEntry>,
+  sourceFile: SourceFile,
+  filePath: string,
+  owner: string
+) => {
+  const candidates: ReadonlyArray<FunctionLikeDeclarationNode> = [
+    ...A.filter(sourceFile.getFunctions(), (declaration) => {
+      const symbol = SchemaFirstDetectors.declarationSymbol(declaration, declaration.getName());
+      return SchemaFirstDetectors.isEffectivelyExported(declaration, symbol);
+    }),
+    ...SchemaFirstDetectors.sourceExportedArrowFunctions(sourceFile),
+  ];
+  const inspectFnSchema =
+    SchemaFirstDetectors.sourceHasFnSchemaSignal(sourceFile) &&
+    SchemaFirstDetectors.isFnSchemaEligibleFilePath(filePath);
+  const inspectNullReturn = SchemaFirstDetectors.isNullReturnEligibleFilePath(filePath);
+  for (const functionLike of candidates) {
+    if (inspectFnSchema) {
+      appendOptionEntry(entries, SchemaFirstDetectors.fnSchemaEntryFromFunctionLike(functionLike, filePath, owner));
+    }
+    if (inspectNullReturn) {
+      appendOptionEntry(entries, SchemaFirstDetectors.nullReturnEntryFromFunctionLike(functionLike, filePath, owner));
+    }
+  }
+};
+
+const appendPropertyEntries = (
+  entries: Array<SchemaFirstInventoryEntry>,
+  sourceFile: SourceFile,
+  filePath: string,
+  owner: string
+) => {
+  for (const property of sourceFile.getDescendantsOfKind(SyntaxKind.PropertyAssignment)) {
+    appendOptionEntry(entries, SchemaFirstDetectors.numericDomainEntryFromProperty(property, filePath, owner));
+    appendOptionEntry(entries, SchemaFirstDetectors.precisionAuditEntryFromProperty(property, filePath, owner));
+  }
+};
+
+const appendStaticApiEntries = (
+  entries: Array<SchemaFirstInventoryEntry>,
+  sourceFile: SourceFile,
+  filePath: string,
+  owner: string
+) => {
+  if (!SchemaFirstDetectors.sourceHasStaticApiSchemaSignal(sourceFile)) return;
+  for (const statement of sourceFile.getDescendantsOfKind(SyntaxKind.SwitchStatement)) {
+    appendOptionEntry(entries, SchemaFirstDetectors.staticApiEntryFromSwitch(statement, filePath, owner));
+  }
+};
+
+const appendDefaultsEntries = (
+  entries: Array<SchemaFirstInventoryEntry>,
+  sourceFile: SourceFile,
+  filePath: string,
+  owner: string
+) => {
+  if (!SchemaFirstDetectors.sourceHasDefaultsSchemaSignal(sourceFile)) return;
+  for (const parameter of sourceFile.getDescendantsOfKind(SyntaxKind.Parameter)) {
+    appendOptionEntry(entries, SchemaFirstDetectors.defaultsEntryFromParameter(parameter, filePath, owner));
+  }
+};
+
+const appendEquivalenceEntries = (
+  entries: Array<SchemaFirstInventoryEntry>,
+  sourceFile: SourceFile,
+  filePath: string,
+  owner: string
+) => {
+  if (!SchemaFirstDetectors.sourceHasEquivalenceSchemaSignal(sourceFile)) return;
+  for (const declaration of sourceFile.getDescendantsOfKind(SyntaxKind.VariableDeclaration)) {
+    appendOptionEntry(
+      entries,
+      SchemaFirstDetectors.equivalenceEntryFromVariableDeclaration(declaration, filePath, owner)
+    );
+  }
+};
+
 const scanSchemaFirstInventory = Effect.fn(function* () {
   const path = yield* Path.Path;
   const ownerResolver = yield* makeSchemaFirstOwnerResolver();
   const project = yield* makeSchemaFirstProject();
 
   const entries = A.empty<SchemaFirstInventoryEntry>();
-  const pushEntry = (
-    file: string,
-    symbol: string,
-    kind: SchemaFirstEntryKind,
-    status: SchemaFirstEntryStatus,
-    reason: string,
-    owner: string,
-    options: {
-      readonly line?: number;
-      readonly ruleId?: SchemaFirstPolicyRuleId;
-    } = {}
-  ) =>
-    void A.appendInPlace(
-      entries,
-      SchemaFirstInventoryEntry.make({
-        file,
-        symbol,
-        kind,
-        status,
-        ...options,
-        reason,
-        owner,
-      })
-    );
 
   for (const sourceFile of project.getSourceFiles()) {
     const filePath = toPosixPath(path.relative(process.cwd(), sourceFile.getFilePath()));
     const owner = ownerResolver(sourceFile.getFilePath());
-    const arbitraryTestsEntry = SchemaFirstArbitraryCoverage.arbitraryTestsEntryFromSourceFile(
-      sourceFile,
-      filePath,
-      owner
-    );
-    if (O.isSome(arbitraryTestsEntry)) {
-      A.appendInPlace(entries, arbitraryTestsEntry.value);
-    }
-
-    if (!isExcludedTypeScriptSourcePath(filePath) && SchemaFirstDetectors.sourceHasTaggedErrorSignal(sourceFile)) {
-      for (const declaration of sourceFile.getDescendantsOfKind(SyntaxKind.ClassDeclaration)) {
-        const entry = SchemaFirstDetectors.taggedErrorEquivalenceEntryFromClassDeclaration(
-          declaration,
-          filePath,
-          owner
-        );
-        if (O.isSome(entry)) {
-          A.appendInPlace(entries, entry.value);
-        }
-      }
-    }
-
-    if (isSchemaFirstExcludedFile(filePath)) {
-      continue;
-    }
-
-    for (const declaration of sourceFile.getInterfaces()) {
-      const symbol = SchemaFirstDetectors.declarationSymbol(declaration, declaration.getName());
-      if (
-        !SchemaFirstDetectors.isEffectivelyExported(declaration, symbol) ||
-        !SchemaFirstDetectors.isInterfaceSchemaFirstCandidate(declaration)
-      ) {
-        continue;
-      }
-      pushEntry(
-        filePath,
-        symbol,
-        "exported-interface",
-        "candidate",
-        "Exported pure-data interface should be modeled as an annotated schema.",
-        owner
-      );
-    }
-
-    for (const declaration of sourceFile.getTypeAliases()) {
-      const symbol = SchemaFirstDetectors.declarationSymbol(declaration, declaration.getName());
-      if (!SchemaFirstDetectors.isEffectivelyExported(declaration, symbol)) {
-        continue;
-      }
-      const typeNode = declaration.getTypeNode();
-      if (
-        typeNode === undefined ||
-        typeNode.getKind() !== SyntaxKind.TypeLiteral ||
-        !SchemaFirstDetectors.isTypeAliasSchemaFirstCandidate(declaration)
-      ) {
-        continue;
-      }
-      pushEntry(
-        filePath,
-        symbol,
-        "exported-type-literal",
-        "candidate",
-        "Exported pure-data type alias should be modeled as an annotated schema.",
-        owner
-      );
-    }
-
-    const hasNormalizationSignal = SchemaFirstDetectors.sourceHasNormalizationSignal(sourceFile);
-    const hasGetSomesSignal = SchemaFirstDetectors.sourceHasGetSomesSignal(sourceFile);
-
-    for (const callExpression of sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression)) {
-      if (hasNormalizationSignal) {
-        const normalizationEntry = SchemaFirstDetectors.normalizationEntryFromCallExpression(
-          callExpression,
-          filePath,
-          owner
-        );
-        if (O.isSome(normalizationEntry)) {
-          A.appendInPlace(entries, normalizationEntry.value);
-        }
-      }
-      if (hasGetSomesSignal) {
-        const getsomesEntry = SchemaFirstDetectors.getsomesStructEntryFromCallExpression(
-          callExpression,
-          filePath,
-          owner
-        );
-        if (O.isSome(getsomesEntry)) {
-          A.appendInPlace(entries, getsomesEntry.value);
-        }
-      }
-
-      if (callExpression.getExpression().getText() !== "S.Struct") {
-        if (SchemaFirstDetectors.isJsonParseCallExpression(callExpression)) {
-          A.appendInPlace(
-            entries,
-            SchemaFirstDetectors.boundaryCodecEntryFromJsonParse(callExpression, filePath, owner)
-          );
-        }
-        continue;
-      }
-      if (!SchemaFirstDetectors.isStructSchemaFirstCandidate(callExpression)) {
-        continue;
-      }
-      pushEntry(
-        filePath,
-        SchemaFirstDetectors.inferStructSymbol(callExpression),
-        "object-struct-schema",
-        "candidate",
-        "Object schema should prefer an annotated S.Class over S.Struct.",
-        owner
-      );
-    }
-
-    const functionLikeCandidates: ReadonlyArray<FunctionLikeDeclarationNode> = [
-      ...A.filter(sourceFile.getFunctions(), (declaration) => {
-        const symbol = SchemaFirstDetectors.declarationSymbol(declaration, declaration.getName());
-        return SchemaFirstDetectors.isEffectivelyExported(declaration, symbol);
-      }),
-      ...SchemaFirstDetectors.sourceExportedArrowFunctions(sourceFile),
-    ];
-    const hasFnSchemaSignal = SchemaFirstDetectors.sourceHasFnSchemaSignal(sourceFile);
-    const isFnSchemaEligible = SchemaFirstDetectors.isFnSchemaEligibleFilePath(filePath);
-    const isNullReturnEligible = SchemaFirstDetectors.isNullReturnEligibleFilePath(filePath);
-
-    for (const functionLike of functionLikeCandidates) {
-      if (hasFnSchemaSignal && isFnSchemaEligible) {
-        const fnSchemaEntry = SchemaFirstDetectors.fnSchemaEntryFromFunctionLike(functionLike, filePath, owner);
-        if (O.isSome(fnSchemaEntry)) {
-          A.appendInPlace(entries, fnSchemaEntry.value);
-        }
-      }
-      if (isNullReturnEligible) {
-        const nullReturnEntry = SchemaFirstDetectors.nullReturnEntryFromFunctionLike(functionLike, filePath, owner);
-        if (O.isSome(nullReturnEntry)) {
-          A.appendInPlace(entries, nullReturnEntry.value);
-        }
-      }
-    }
-
-    for (const property of sourceFile.getDescendantsOfKind(SyntaxKind.PropertyAssignment)) {
-      const entry = SchemaFirstDetectors.numericDomainEntryFromProperty(property, filePath, owner);
-      if (O.isSome(entry)) {
-        A.appendInPlace(entries, entry.value);
-      }
-      const precisionEntry = SchemaFirstDetectors.precisionAuditEntryFromProperty(property, filePath, owner);
-      if (O.isSome(precisionEntry)) {
-        A.appendInPlace(entries, precisionEntry.value);
-      }
-    }
-
-    if (SchemaFirstDetectors.sourceHasStaticApiSchemaSignal(sourceFile)) {
-      for (const switchStatement of sourceFile.getDescendantsOfKind(SyntaxKind.SwitchStatement)) {
-        const entry = SchemaFirstDetectors.staticApiEntryFromSwitch(switchStatement, filePath, owner);
-        if (O.isSome(entry)) {
-          A.appendInPlace(entries, entry.value);
-        }
-      }
-    }
-
-    if (SchemaFirstDetectors.sourceHasDefaultsSchemaSignal(sourceFile)) {
-      for (const parameter of sourceFile.getDescendantsOfKind(SyntaxKind.Parameter)) {
-        const entry = SchemaFirstDetectors.defaultsEntryFromParameter(parameter, filePath, owner);
-        if (O.isSome(entry)) {
-          A.appendInPlace(entries, entry.value);
-        }
-      }
-    }
-
-    if (SchemaFirstDetectors.sourceHasEquivalenceSchemaSignal(sourceFile)) {
-      for (const declaration of sourceFile.getDescendantsOfKind(SyntaxKind.VariableDeclaration)) {
-        const entry = SchemaFirstDetectors.equivalenceEntryFromVariableDeclaration(declaration, filePath, owner);
-        if (O.isSome(entry)) {
-          A.appendInPlace(entries, entry.value);
-        }
-      }
-    }
+    appendArbitraryAndTaggedErrorEntries(entries, sourceFile, filePath, owner);
+    if (isSchemaFirstExcludedFile(filePath)) continue;
+    appendInterfaceEntries(entries, sourceFile, filePath, owner);
+    appendTypeAliasEntries(entries, sourceFile, filePath, owner);
+    appendCallEntries(entries, sourceFile, filePath, owner);
+    appendFunctionEntries(entries, sourceFile, filePath, owner);
+    appendPropertyEntries(entries, sourceFile, filePath, owner);
+    appendStaticApiEntries(entries, sourceFile, filePath, owner);
+    appendDefaultsEntries(entries, sourceFile, filePath, owner);
+    appendEquivalenceEntries(entries, sourceFile, filePath, owner);
   }
 
   return SchemaFirstInventoryDocument.make({

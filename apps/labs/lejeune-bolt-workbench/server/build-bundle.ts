@@ -35,6 +35,19 @@ import { makeProjectionLayer, ProjectionLayerOptions, verifyDurableProjectionSna
 import { verifyFrozenProviderRecording } from "@/workflows/ProviderRecording";
 import { replayOffline } from "@/workflows/Replay";
 
+const decodeFrozenProviderRecordingFromJsonString = S.decodeEffect(FrozenProviderRecordingFromJsonString);
+const decodeGoldenReplayReceiptFromJsonString = S.decodeEffect(GoldenReplayReceiptFromJsonString);
+const decodeImmutableDemoBundleFromJsonString = S.decodeEffect(ImmutableDemoBundleFromJsonString);
+const decodeMutableRetentionMetadataFromJsonString = S.decodeEffect(MutableRetentionMetadataFromJsonString);
+const decodeMutableReviewLedgerFromJsonString = S.decodeEffect(MutableReviewLedgerFromJsonString);
+const decodeProjectionStoreMetadataFromJsonString = S.decodeEffect(ProjectionStoreMetadataFromJsonString);
+const decodeRetentionAuthorizationFromJsonString = S.decodeEffect(RetentionAuthorizationFromJsonString);
+const encodeGoldenReplayReceiptFromJsonString = S.encodeEffect(GoldenReplayReceiptFromJsonString);
+const encodeImmutableDemoBundleFromJsonString = S.encodeEffect(ImmutableDemoBundleFromJsonString);
+const encodeMutableRetentionMetadataFromJsonString = S.encodeEffect(MutableRetentionMetadataFromJsonString);
+const encodeMutableReviewLedgerFromJsonString = S.encodeEffect(MutableReviewLedgerFromJsonString);
+const encodeProjectionStoreMetadataFromJsonString = S.encodeEffect(ProjectionStoreMetadataFromJsonString);
+
 const $I = $LejeuneBoltWorkbenchId.create("server/build-bundle");
 const RECORDING_PATH = "src/fixtures/provider-recording.json";
 const bytesEquivalent = S.toEquivalence(S.Uint8Array);
@@ -179,12 +192,12 @@ export const verifyPublicationReadback = Effect.fn("LeJeuneBundle.verifyPublicat
 ) {
   const [bundle, bundleIdentity, mutableLedger, projectionMetadata, receipt, retentionMetadata] = yield* Effect.all(
     [
-      S.decodeEffect(ImmutableDemoBundleFromJsonString)(input.bundleText),
+      decodeImmutableDemoBundleFromJsonString(input.bundleText),
       Sha256HexFromBytes.decodeEffect(strToU8(input.bundleText)),
-      S.decodeEffect(MutableReviewLedgerFromJsonString)(input.ledgerText),
-      S.decodeEffect(ProjectionStoreMetadataFromJsonString)(input.projectionMetadataText),
-      S.decodeEffect(GoldenReplayReceiptFromJsonString)(input.receiptText),
-      S.decodeEffect(MutableRetentionMetadataFromJsonString)(input.retentionMetadataText),
+      decodeMutableReviewLedgerFromJsonString(input.ledgerText),
+      decodeProjectionStoreMetadataFromJsonString(input.projectionMetadataText),
+      decodeGoldenReplayReceiptFromJsonString(input.receiptText),
+      decodeMutableRetentionMetadataFromJsonString(input.retentionMetadataText),
     ],
     { concurrency: 6 }
   ).pipe(
@@ -237,7 +250,7 @@ const enforceRetentionPolicy = Effect.fn("LeJeuneBundle.enforceRetentionPolicy")
         bundleBuildErrorWithCause("retention", "The reviewed retention authorization could not be read.", cause)
       )
     );
-  const authorization = yield* S.decodeEffect(RetentionAuthorizationFromJsonString)(authorizationText).pipe(
+  const authorization = yield* decodeRetentionAuthorizationFromJsonString(authorizationText).pipe(
     Effect.mapError((cause) =>
       bundleBuildErrorWithCause("retention", "The reviewed retention authorization is invalid.", cause)
     )
@@ -344,7 +357,7 @@ const buildStagedBundle = Effect.fn("LeJeuneBundle.buildStagedBundle")(function*
         )
       )
     );
-  const decodedRecording = yield* S.decodeEffect(FrozenProviderRecordingFromJsonString)(recordingText).pipe(
+  const decodedRecording = yield* decodeFrozenProviderRecordingFromJsonString(recordingText).pipe(
     Effect.mapError((cause) =>
       bundleBuildErrorWithCause("provider-recording", "The sanitized provider recording is invalid.", cause)
     )
@@ -408,11 +421,11 @@ const buildStagedBundle = Effect.fn("LeJeuneBundle.buildStagedBundle")(function*
   });
   const [bundleJson, receiptJson, ledgerJson, retentionMetadataJson, projectionMetadataJson] = yield* Effect.all(
     [
-      S.encodeEffect(ImmutableDemoBundleFromJsonString)(replay.bundle),
-      S.encodeEffect(GoldenReplayReceiptFromJsonString)(replay.receipt),
-      S.encodeEffect(MutableReviewLedgerFromJsonString)(replay.mutableLedger),
-      S.encodeEffect(MutableRetentionMetadataFromJsonString)(replay.retentionMetadata),
-      S.encodeEffect(ProjectionStoreMetadataFromJsonString)(projectionMetadata),
+      encodeImmutableDemoBundleFromJsonString(replay.bundle),
+      encodeGoldenReplayReceiptFromJsonString(replay.receipt),
+      encodeMutableReviewLedgerFromJsonString(replay.mutableLedger),
+      encodeMutableRetentionMetadataFromJsonString(replay.retentionMetadata),
+      encodeProjectionStoreMetadataFromJsonString(projectionMetadata),
     ],
     { concurrency: 5 }
   ).pipe(

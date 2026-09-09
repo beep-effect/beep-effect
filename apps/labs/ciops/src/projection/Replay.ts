@@ -7,7 +7,7 @@
 
 import { $CiopsId } from "@beep/identity/packages";
 import { LiteralKit, NonNegativeInt, PosInt } from "@beep/schema";
-import { Effect, HashMap, HashSet, Order, pipe } from "effect";
+import { Effect, HashMap, HashSet, Match, Order, pipe } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import { dual } from "effect/Function";
@@ -26,12 +26,9 @@ import {
   ReplayMismatchError,
   TokenLedgerState,
 } from "./Schemas.ts";
-import type {
-  AdmissionJournalAdmitted,
-  AdmissionJournalLeaseEvicted,
-  AdmissionJournalReleased,
-  AdmissionPolicyParams,
-} from "./Schemas.ts";
+import type { AdmissionJournalAdmitted, AdmissionPolicyParams } from "./Schemas.ts";
+
+const decodeAdmissionJournalEventJson = S.decodeEffect(S.fromJsonString(AdmissionJournalEvent));
 
 const $I = $CiopsId.create("projection/Replay");
 
@@ -189,7 +186,7 @@ const decodeJournalLine = Effect.fnUntraced(function* (
   line: string,
   lineIndex: number
 ): Effect.fn.Return<AdmissionJournalEvent, PolicyDecodeError> {
-  return yield* S.decodeEffect(S.fromJsonString(AdmissionJournalEvent))(line).pipe(
+  return yield* decodeAdmissionJournalEventJson(line).pipe(
     Effect.mapError(() => replayInputFailure(`Admission journal line ${lineIndex + 1} did not match its schema.`))
   );
 });
@@ -246,23 +243,31 @@ const phantomGrantNonces = (events: ReadonlyArray<AdmissionJournalEvent>): HashS
       A.map(
         events,
         (event, eventIndex): O.Option<string> =>
-          AdmissionJournalEvent.match(event, {
-            "admission-admitted": (admitted) =>
-              A.some(
-                A.drop(events, eventIndex + 1),
-                AdmissionJournalEvent.match({
-                  "admission-admitted": () => false,
-                  "admission-released": (released) => Eq.equals(released.nonce, admitted.nonce),
-                  "admission-lease-evicted": (evicted) => Eq.equals(evicted.nonce, admitted.nonce),
-                  "admission-ticket-evicted": () => false,
-                })
-              )
-                ? O.none<string>()
-                : O.some(admitted.nonce),
-            "admission-released": O.none<string>,
-            "admission-lease-evicted": O.none<string>,
-            "admission-ticket-evicted": O.none<string>,
-          })
+          Match.value(event).pipe(
+            Match.tagsExhaustive({
+              "admission-admitted": (admitted) =>
+                A.some(
+                  A.drop(events, eventIndex + 1),
+                  Match.type<AdmissionJournalEvent>().pipe(
+                    Match.tagsExhaustive({
+                      "admission-admitted": () => false,
+                      "admission-released": (released) => Eq.equals(released.nonce, admitted.nonce),
+                      "admission-lease-evicted": (evicted) => Eq.equals(evicted.nonce, admitted.nonce),
+                      "admission-ticket-evicted": () => false,
+                      "admission-enqueued": () => false,
+                      "admission-withdrawn": () => false,
+                    })
+                  )
+                )
+                  ? O.none<string>()
+                  : O.some(admitted.nonce),
+              "admission-released": O.none<string>,
+              "admission-lease-evicted": O.none<string>,
+              "admission-ticket-evicted": O.none<string>,
+              "admission-enqueued": O.none<string>,
+              "admission-withdrawn": O.none<string>,
+            })
+          )
       )
     )
   );
@@ -308,6 +313,9 @@ const releaseFromLedger = Effect.fnUntraced(function* (
  * is included until its grant transition commits; every other candidate uses
  * the binding strict `t < admittedAtMillis` boundary. Releases remove the
  * exact active charge paired by nonce.
+ * Each grant verification is a bounded episode identified by
+ * `replay-${journalDigest}-${eventIndex}` (zero-based source event index).
+ * Replaying the same pinned journal preserves that occurrence identity.
  *
  * **Example** (Replay an empty event stream)
  *
@@ -350,12 +358,16 @@ export const replayAdmissionJournal = Effect.fn("Replay.replayAdmissionJournal")
     A.map(
       events,
       (event): O.Option<AdmissionJournalAdmitted> =>
-        AdmissionJournalEvent.match(event, {
-          "admission-admitted": (admitted) => O.some(admitted),
-          "admission-released": O.none<AdmissionJournalAdmitted>,
-          "admission-lease-evicted": O.none<AdmissionJournalAdmitted>,
-          "admission-ticket-evicted": O.none<AdmissionJournalAdmitted>,
-        })
+        Match.value(event).pipe(
+          Match.tagsExhaustive({
+            "admission-admitted": (admitted) => O.some(admitted),
+            "admission-released": O.none<AdmissionJournalAdmitted>,
+            "admission-lease-evicted": O.none<AdmissionJournalAdmitted>,
+            "admission-ticket-evicted": O.none<AdmissionJournalAdmitted>,
+            "admission-enqueued": O.none<AdmissionJournalAdmitted>,
+            "admission-withdrawn": O.none<AdmissionJournalAdmitted>,
+          })
+        )
     )
   );
   const phantomNonces = phantomGrantNonces(events);
@@ -416,6 +428,7 @@ export const replayAdmissionJournal = Effect.fn("Replay.replayAdmissionJournal")
     const pending = pendingAtAdmission(admittedEvents, admitted);
     const proposal = yield* projectSchedule(
       ProjectionInput.make({
+        episodeId: `replay-${journalDigest}-${eventIndex}`,
         policy,
         pending,
         ledger,
@@ -464,26 +477,32 @@ export const replayAdmissionJournal = Effect.fn("Replay.replayAdmissionJournal")
   });
 
   const replayReleased = Effect.fn("Replay.released")(function* (
-    released: AdmissionJournalReleased
+    released: Extract<AdmissionJournalEvent, { readonly _tag: "admission-released" }>
   ): Effect.fn.Return<void, PolicyDecodeError> {
     ledger = yield* releaseFromLedger(ledger, released.nonce);
     releasedCount += 1;
   });
 
   const replayLeaseEvicted = Effect.fn("Replay.leaseEvicted")(function* (
-    evicted: AdmissionJournalLeaseEvicted
+    evicted: Extract<AdmissionJournalEvent, { readonly _tag: "admission-lease-evicted" }>
   ): Effect.fn.Return<void, PolicyDecodeError> {
     ledger = yield* releaseFromLedger(ledger, evicted.nonce);
     releasedCount += 1;
   });
 
   for (const event of events) {
-    yield* AdmissionJournalEvent.match(event, {
-      "admission-admitted": replayAdmitted,
-      "admission-released": replayReleased,
-      "admission-lease-evicted": replayLeaseEvicted,
-      "admission-ticket-evicted": () => Effect.void,
-    });
+    yield* Match.value(event).pipe(
+      Match.tagsExhaustive({
+        "admission-admitted": replayAdmitted,
+        "admission-released": replayReleased,
+        "admission-lease-evicted": replayLeaseEvicted,
+        "admission-ticket-evicted": () => Effect.void,
+        "admission-enqueued": () => Effect.void,
+        "admission-withdrawn": () => Effect.void,
+      })
+    );
+    // Every decoded row counts, including ledger-neutral queue transitions.
+    // This remains the zero-based source-event index used by episode provenance.
     eventIndex += 1;
   }
 

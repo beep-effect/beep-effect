@@ -23,10 +23,6 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { TranscriptReadError } from "../Errors.ts";
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
 const $I = $ScratchpadId.create("claudecode/Hook/Transcript");
 
 const JsonValue = S.fromJsonString(Unknown).pipe(
@@ -34,6 +30,11 @@ const JsonValue = S.fromJsonString(Unknown).pipe(
     description: "One JSON value encoded as a transcript JSONL line.",
   })
 );
+
+// ---------------------------------------------------------------------------
+// Helpers
+const decodeJsonValue = S.decodeEffect(JsonValue);
+// ---------------------------------------------------------------------------
 
 /**
  * Read a Claude Code transcript file and return each JSONL line as a
@@ -81,6 +82,6 @@ export const readTranscript = (
       .pipe(Effect.mapError((cause) => TranscriptReadError.make({ path, cause })));
     const lines = pipe(content, Str.split("\n"), A.map(Str.trim), A.filter(Str.isNonEmpty));
     return yield* Effect.forEach(lines, (line) =>
-      S.decodeEffect(JsonValue)(line).pipe(Effect.mapError((cause) => TranscriptReadError.make({ path, cause })))
+      decodeJsonValue(line).pipe(Effect.mapError((cause) => TranscriptReadError.make({ path, cause })))
     );
   });

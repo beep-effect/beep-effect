@@ -12,6 +12,7 @@ import {
   FaceDetectionPoint,
   FaceDetectionResult,
   FaceDetectionService,
+  FaceDetectionServiceTestKit,
   FaceDetectionTopK,
   NonNegativeImageCoordinate,
   PositivePixelDimension,
@@ -24,6 +25,13 @@ import { Effect, Equal, Layer, Result } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
+
+const encodeFaceDetectionResult = S.encodeResult(FaceDetection);
+const encodeFaceDetectionBoxResult = S.encodeResult(FaceDetectionBox);
+const encodeFaceDetectionErrorResult = S.encodeResult(FaceDetectionError);
+const encodeFaceDetectionErrorFromUnknownOptionsResult = S.encodeResult(FaceDetectionErrorFromUnknownOptions);
+const encodeFaceDetectionImageRequestResult = S.encodeResult(FaceDetectionImageRequest);
+const encodeFaceDetectionResultResult = S.encodeResult(FaceDetectionResult);
 
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
@@ -92,7 +100,7 @@ describe("@beep/face-detection", () => {
     expect(
       JSON.stringify(
         Result.getOrThrow(
-          S.encodeResult(FaceDetectionImageRequest)(FaceDetectionImageRequest.make({ imagePath: "./photo.jpg" }))
+          encodeFaceDetectionImageRequestResult(FaceDetectionImageRequest.make({ imagePath: "./photo.jpg" }))
         )
       )
     ).toBe(
@@ -103,10 +111,10 @@ describe("@beep/face-detection", () => {
         topK: 5000,
       })
     );
-    expect(JSON.stringify(Result.getOrThrow(S.encodeResult(FaceDetectionBox)(fakeFace.box)))).toBe(
+    expect(JSON.stringify(Result.getOrThrow(encodeFaceDetectionBoxResult(fakeFace.box)))).toBe(
       JSON.stringify({ height: 24, width: 20, x: 10, y: 12 })
     );
-    expect(JSON.stringify(Result.getOrThrow(S.encodeResult(FaceDetection)(fakeFace)))).toBe(
+    expect(JSON.stringify(Result.getOrThrow(encodeFaceDetectionResult(fakeFace)))).toBe(
       JSON.stringify({
         box: { height: 24, width: 20, x: 10, y: 12 },
         confidence: 0.9,
@@ -122,7 +130,7 @@ describe("@beep/face-detection", () => {
     expect(
       JSON.stringify(
         Result.getOrThrow(
-          S.encodeResult(FaceDetectionResult)(
+          encodeFaceDetectionResultResult(
             FaceDetectionResult.make({
               faces: [fakeFace],
               height: 100,
@@ -134,7 +142,7 @@ describe("@beep/face-detection", () => {
       )
     ).toBe(
       JSON.stringify({
-        faces: [Result.getOrThrow(S.encodeResult(FaceDetection)(fakeFace))],
+        faces: [Result.getOrThrow(encodeFaceDetectionResult(fakeFace))],
         height: 100,
         imagePath: "./photo.jpg",
         width: 100,
@@ -143,7 +151,7 @@ describe("@beep/face-detection", () => {
     expect(
       JSON.stringify(
         Result.getOrThrow(
-          S.encodeResult(FaceDetectionErrorFromUnknownOptions)(
+          encodeFaceDetectionErrorFromUnknownOptionsResult(
             FaceDetectionErrorFromUnknownOptions.make({ modelPath: O.some("./yunet.onnx") })
           )
         )
@@ -152,9 +160,7 @@ describe("@beep/face-detection", () => {
     expect(
       JSON.stringify(
         Result.getOrThrow(
-          S.encodeResult(FaceDetectionError)(
-            FaceDetectionError.make({ message: "model failed", operation: "loadModel" })
-          )
+          encodeFaceDetectionErrorResult(FaceDetectionError.make({ message: "model failed", operation: "loadModel" }))
         )
       )
     ).toBe(JSON.stringify({ _tag: "FaceDetectionError", message: "model failed", operation: "loadModel" }));
@@ -213,6 +219,23 @@ describe("@beep/face-detection", () => {
     expect(RawFaceDetectionConfidence.decodeUnknownSync(-0.2)).toBe(0);
     expect(RawFaceDetectionConfidence.decodeUnknownSync(0.5)).toBe(0.5);
     expect(RawFaceDetectionConfidence.decodeUnknownSync(1.2)).toBe(1);
+  });
+
+  it("computes padded and fixed-model preprocessing geometry", () => {
+    expect(FaceDetectionServiceTestKit.preprocessGeometry(33, 17)).toEqual({
+      offsetX: 0,
+      offsetY: 0,
+      padHeight: 32,
+      padWidth: 64,
+      scale: 1,
+    });
+    expect(FaceDetectionServiceTestKit.preprocessGeometry(400, 200, { height: 320, width: 320 })).toEqual({
+      offsetX: 0,
+      offsetY: 80,
+      padHeight: 320,
+      padWidth: 320,
+      scale: 0.8,
+    });
   });
 
   it.effect("runs workflows through the service contract", () =>

@@ -1,0 +1,38 @@
+{
+  "schemaVersion": "yeet-verdict/v1",
+  "base": "origin/main",
+  "branch": "feat/recorded-qa-followup",
+  "committed": false,
+  "createdAt": "2026-08-01T13:50:29.859Z",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "publish:00-head-install-preflight",
+      "label": "publish:head-install-preflight",
+      "phase": "publish",
+      "status": "passed",
+      "durationMs": 5029.845313,
+      "exitCode": 0
+    },
+    {
+      "id": "publish:01-git-push",
+      "label": "publish:git:push",
+      "phase": "publish",
+      "status": "passed",
+      "durationMs": 1448.856123,
+      "exitCode": 0
+    }
+  ],
+  "message": "yeet publish succeeded.",
+  "mode": "publish",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": true,
+  "runId": "feat_recorded-qa-followup-cb78e9dff6d1",
+  "indexPath": "<fleet>/beep-effect-worktrees/recorded-qa-followup/.beep/yeet/quality-issue-index.json",
+  "baseFreshness": {
+    "behindCount": 0,
+    "mergeBase": "91ff8fa480e43566be154feb9ce158cdd7c04fc7",
+    "overlappingPaths": []
+  }
+}

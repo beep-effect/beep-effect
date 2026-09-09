@@ -18,6 +18,12 @@ import { Result } from "effect";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeUnknownEvidenceVerificationResult = S.decodeUnknownResult(EvidenceVerification);
+const decodeUnknownEvidenceVerificationManifestationResult = S.decodeUnknownResult(EvidenceVerificationManifestation);
+const encodeEvidenceVerificationManifestationResult = S.encodeResult(EvidenceVerificationManifestation);
+const encodeUnknownEvidenceVerificationResult = S.encodeUnknownResult(EvidenceVerification);
+const encodeUnknownTextAnchorVerificationReceiptResult = S.encodeUnknownResult(TextAnchorVerificationReceipt);
+
 const sourceDigest = SourceTextDigest.make("sha256:3a6eb0790f39ac87c94f3856b2dd2c5d110e6811602261a9a923d3bb23adc8b7");
 const textDigest = SourceTextDigest.make("sha256:ed7002b439e9ac845f22357d822bac144473c8d52b3c91e2c8f66e8118f24a6c");
 
@@ -45,13 +51,18 @@ const manifestation = EvidenceVerificationManifestation.make({
 
 describe("EvidenceVerification", () => {
   it("round-trips schema-derived manifestations", () => {
-    const encode = S.encodeResult(EvidenceVerificationManifestation);
-    const decode = S.decodeUnknownResult(EvidenceVerificationManifestation);
     const equivalent = S.toEquivalence(EvidenceVerificationManifestation);
 
     fc.assert(
       fc.property(S.toArbitrary(EvidenceVerificationManifestation)(fc), (value) =>
-        equivalent(Result.getOrThrow(decode(Result.getOrThrow(encode(value)))), value)
+        equivalent(
+          Result.getOrThrow(
+            decodeUnknownEvidenceVerificationManifestationResult(
+              Result.getOrThrow(encodeEvidenceVerificationManifestationResult(value))
+            )
+          ),
+          value
+        )
       ),
       fcRuns(25)
     );
@@ -118,7 +129,7 @@ describe("EvidenceVerification", () => {
   it("detects a manifestation-key mismatch without mutating the row", () => {
     const manifestationKey = Result.getOrThrow(evidenceVerificationManifestationKey(manifestation));
     const verification = Result.getOrThrow(
-      S.decodeUnknownResult(EvidenceVerification)({
+      decodeUnknownEvidenceVerificationResult({
         ...productEntityFixtureInput("EpistemicEvidenceVerification", 7),
         evidenceId: 4,
         manifestationKey,
@@ -142,10 +153,10 @@ describe("EvidenceVerification", () => {
       ...productEntityFixtureInput("EpistemicEvidenceVerification", 7),
       evidenceId: 4,
       manifestationKey,
-      verifiedAnchor: Result.getOrThrow(S.encodeUnknownResult(TextAnchorVerificationReceipt)(verifiedAnchor)),
+      verifiedAnchor: Result.getOrThrow(encodeUnknownTextAnchorVerificationReceiptResult(verifiedAnchor)),
     };
-    const decoded = Result.getOrThrow(S.decodeUnknownResult(EvidenceVerification)(input));
+    const decoded = Result.getOrThrow(decodeUnknownEvidenceVerificationResult(input));
 
-    expect(Result.getOrThrow(S.encodeUnknownResult(EvidenceVerification)(decoded))).toStrictEqual(input);
+    expect(Result.getOrThrow(encodeUnknownEvidenceVerificationResult(decoded))).toStrictEqual(input);
   });
 });

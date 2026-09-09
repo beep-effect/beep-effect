@@ -3,17 +3,17 @@ import { describe, expect, it } from "@effect/vitest";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeUnknownCspDirectivesSync = S.decodeUnknownSync(CspDirectives);
+const encodeCspDirectivesSync = S.encodeSync(CspDirectives);
+
 describe("CspDirectives", () => {
   it("round-trips schema-derived directive-field samples through encode/decode", () => {
     const arbitrary = S.toArbitrary(CspDirectives)(fc);
-    const decode = S.decodeUnknownSync(CspDirectives);
-    const encode = S.encodeSync(CspDirectives);
-
     fc.assert(
       fc.property(arbitrary, (directives) => {
-        const encoded = encode(directives);
-        const decoded = decode(encoded);
-        expect(encode(decoded)).toEqual(encoded);
+        const encoded = encodeCspDirectivesSync(directives);
+        const decoded = decodeUnknownCspDirectivesSync(encoded);
+        expect(encodeCspDirectivesSync(decoded)).toEqual(encoded);
       }),
       { numRuns: 25 }
     );

@@ -16,6 +16,9 @@ import * as S from "effect/Schema";
 import { ChildProcessSpawner } from "effect/unstable/process";
 import type { AiProviderCliProvider, AiProviderCliRunRequest } from "@beep/ai-provider-cli";
 
+const encodeAiProviderCliAuthSnapshotResult = S.encodeResult(AiProviderCliAuthSnapshot);
+const isAiProviderCliError = S.is(AiProviderCliError);
+
 const claudeLoggedInStdout = `{
   "loggedIn": true,
   "authMethod": "claude.ai",
@@ -230,14 +233,14 @@ describe("@beep/ai-provider-cli auth snapshots", () => {
       status: "not-authenticated",
     });
 
-    expect(Result.getOrThrow(S.encodeResult(AiProviderCliAuthSnapshot)(fullSnapshot))).toEqual({
+    expect(Result.getOrThrow(encodeAiProviderCliAuthSnapshotResult(fullSnapshot))).toEqual({
       email: "dev@example.com",
       provider: "claude",
       status: "authenticated",
       subscriptionLabel: "Claude Max Subscription",
       tokenSource: "claude.ai",
     });
-    expect(Result.getOrThrow(S.encodeResult(AiProviderCliAuthSnapshot)(minimalSnapshot))).toEqual({
+    expect(Result.getOrThrow(encodeAiProviderCliAuthSnapshotResult(minimalSnapshot))).toEqual({
       provider: "codex",
       status: "not-authenticated",
     });
@@ -289,7 +292,7 @@ describe("@beep/ai-provider-cli executable overrides", () => {
         );
       }).pipe(provideScopedLayer(CapturingLayer), Effect.flip);
 
-      expect(S.is(AiProviderCliError)(error)).toBe(true);
+      expect(isAiProviderCliError(error)).toBe(true);
       expect(yield* Ref.get(runnerInvoked)).toBe(false);
     })
   );

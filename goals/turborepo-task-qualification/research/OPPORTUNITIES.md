@@ -293,3 +293,22 @@ in `Cache.experiment.ts`. Its exception requires both that exact value and the
 exact source path, and applies only to that rule. No runtime code changed.
 Checking generated search surfaces and adversarial fixture literals through
 the actual staged hooks would have caught these integration failures earlier.
+
+## 2026-09-09: main changes the pilot's runtime and script boundary
+
+The requested main merge produced 25 conflicts, including the Bun pin,
+dependency resolution and workspace-script convergence. Main now generates
+the `lint` task wrapper, so retaining the old direct quiet command there would
+be reverted by the policy writer. The quiet command now lives in `beep:lint`;
+`beep:lint:verbose` and the audit retain detailed diagnostics. The canonical
+writer reports zero drift. Both this script boundary and Bun 1.4.2 invalidate
+the previous pilot's source/toolchain bindings; those receipts remain historical.
+A base-freshness check before long experiment waves would identify this
+integration work sooner. No qualification or cache activation follows from
+resolving the Git conflicts.
+
+The focused merged-tree run passed 175 of 176 tests. Its sole failure caught
+the order of the two independently added final Yeet gates in the merged test
+expectation; the implementation already retained both gates. The expectation
+now follows the observed planner order. Pre-commit hooks passed, but the
+first merge message used unsupported type `merge`; the retry uses `chore`.

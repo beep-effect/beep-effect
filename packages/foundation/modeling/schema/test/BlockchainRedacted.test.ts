@@ -11,6 +11,12 @@ import { Redacted } from "effect";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeCryptoTxnHashRedactedSync = S.decodeSync(CryptoTxnHashRedacted);
+const decodeCryptoWalletAddressRedactedSync = S.decodeSync(CryptoWalletAddressRedacted);
+const decodeEthereumValidatorPublicKeyRedactedSync = S.decodeSync(EthereumValidatorPublicKeyRedacted);
+const decodeEvmAddressRedactedSync = S.decodeSync(EvmAddressRedacted);
+const decodeUnknownEthereumValidatorPublicKeySync = S.decodeUnknownSync(EthereumValidatorPublicKey);
+
 const bitcoinAddress = "16L5yRNPTuciSgXGHqYwn9N6NeoKqopAu";
 const evmAddress = "0x52908400098527886e0f7030069857d2e4169ee7";
 const validatorPublicKey =
@@ -19,10 +25,10 @@ const transactionHash = "0xababababababababababababababababababababababababababa
 
 describe("blockchain redacted schemas", () => {
   it("decode canonical blockchain identifiers into redacted values", () => {
-    const walletAddress = S.decodeSync(CryptoWalletAddressRedacted)(bitcoinAddress);
-    const decodedEvmAddress = S.decodeSync(EvmAddressRedacted)(evmAddress);
-    const decodedValidatorPublicKey = S.decodeSync(EthereumValidatorPublicKeyRedacted)(validatorPublicKey);
-    const decodedTransactionHash = S.decodeSync(CryptoTxnHashRedacted)(transactionHash);
+    const walletAddress = decodeCryptoWalletAddressRedactedSync(bitcoinAddress);
+    const decodedEvmAddress = decodeEvmAddressRedactedSync(evmAddress);
+    const decodedValidatorPublicKey = decodeEthereumValidatorPublicKeyRedactedSync(validatorPublicKey);
+    const decodedTransactionHash = decodeCryptoTxnHashRedactedSync(transactionHash);
 
     expect(String(walletAddress)).toBe("<redacted>");
     expect(String(decodedEvmAddress)).toBe("<redacted>");
@@ -33,14 +39,12 @@ describe("blockchain redacted schemas", () => {
     expect(Redacted.value(decodedValidatorPublicKey)).toBe(validatorPublicKey);
     expect(Redacted.value(decodedTransactionHash)).toBe(transactionHash);
   });
-
-  const decodeValidatorPublicKey = S.decodeUnknownSync(EthereumValidatorPublicKey);
   const validatorPublicKeyArbitrary = S.toArbitrary(EthereumValidatorPublicKey)(fc);
 
   it("derives valid validator public keys from the source schema and round-trips", () => {
     fc.assert(
       fc.property(validatorPublicKeyArbitrary, (value) => {
-        expect(decodeValidatorPublicKey(value)).toBe(value);
+        expect(decodeUnknownEthereumValidatorPublicKeySync(value)).toBe(value);
       }),
       fcRuns(50)
     );
