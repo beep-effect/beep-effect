@@ -61,15 +61,16 @@ question now asks for the SeatRequest sequence under its governing
 `AdmissionProjectionSpecification`, with the step's literal `hasScopeTag` (a distinct
 data property — the no-punning ruling keeps `hasScope` an object property), and the S6
 predicate registry regenerated to track it.
-**NEXT: land the Stage A pin PR, then satisfy Stage B.**
+**NEXT: publish Stage B after the synthetic fixture PR, then run 3 proper.**
 Stage A PINNED 2026-09-08 in `run3-fleet/` and `run3-checkout-identity/`:
 existing admission journals, fleet attempts/verdicts, live granted/queued work,
 and one timestamped checkout inventory. The fleet pin covers 89 checkouts; the
 inventory binds 107 after the review-fix refresh, including registered worktrees outside the required run-file
 globs. The failure-signature occurrence rider is present; cache-plan execution
-resolution and proof-ledger issuance rows are absent. Stage B remains gated on
-the v3 journal PR, organic traffic, and proof-ledger materialization. S7 emission
-v2 remains parallel instrumentation for the ordering cluster; S8 stays deferred.
+resolution and proof-ledger issuance rows are absent. Stage B is now pinned in
+`run3b-fleet/` and `run3b-synthetic/`; proof-ledger issuance rows are re-parked to
+run 4 under Ruling 17. S7 emission v2 supplies the ordering-cluster evidence;
+S8 stays deferred. Stage B proof is in [the report](./research/run3-lanes/stage-b-report.md).
 The review-fix lane has replaced both pins with encoded output paths, stricter
 receipt checks, and runtime redaction; Fable owns publication and PR replies.
 Current proof is in [the review-fix report](./research/run3-lanes/stage-a-review-fixes-report.md).
@@ -144,6 +145,14 @@ graduation. Full plan with locked decisions: [`DECISIONS.md`](./DECISIONS.md).
 
 ## Trail
 
+- 2026-09-08: Stage B pinned with one new standalone generator and independent
+  `run3b-fleet/` and `run3b-synthetic/` roots. The fleet covers 93 checkouts,
+  235 admission rows, 354 attempt journals, one protocol marker, and two live
+  state files: 718 payloads, 719 files total. The synthetic pin has seven
+  admission rows and two termination journals: eight payloads, nine files total.
+  Its four nonce chains match the producer export. Proof-ledger issuance rows
+  are RE-PARKED to run 4 (Ruling 17); next is run 3 proper after publication.
+  See [the Stage B report](./research/run3-lanes/stage-b-report.md).
 - 2026-09-08: PR #1027 Stage A review fixes: encoded checkout path components,
   recomputed receipt observations, runtime-prefix redaction, and refreshed report
   hashes. Both pins were re-captured once: 89 fleet checkouts, 189 admission rows,
