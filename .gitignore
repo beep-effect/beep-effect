@@ -161,3 +161,6 @@ explorations/beep-ci-operational-ontology/research/evidence/journal-snapshot-*/g
 # Python bytecode (packet research scripts)
 **/__pycache__/
 *.pyc
+
+# graft's local graph cache — regenerable, not committed (run `graft build`).
+/graft/
