@@ -3,14 +3,14 @@
   "initiative": {
     "id": "complexity-ceiling-burn-down",
     "title": "Complexity Ceiling Burn-Down",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-07-30",
-    "updated": "2026-09-08",
+    "updated": "2026-09-09",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/complexity-ceiling-burn-down",
-  "lifecycle": "active",
-  "statusNote": "P0 and P1 are complete. The final review wave tightens the tooltip waiver and shrinks the health baseline from 189 to 185 entries; three clean comparisons pass. PR #1021 carries the fixes, including the required Recharts test payload identity. On 2026-09-08 the user explicitly authorized skipping full local proof and publishing through Yeet fast plus monitor. P2 hosted checks, P3 exact-head merge-readiness, and P4 final lifecycle reconciliation remain open; focused evidence is not full proof. Fast mode still queued before the final ratchet push; that owned attempt was stopped and e08f77cdcb was pushed directly under the same instruction. Hosted Yeet monitoring continues.",
+  "lifecycle": "completed-retained",
+  "statusNote": "Implementation merged in PR #1021 as 74efb548f1 on 2026-09-09 after all 18 required checks passed. Greptile reported 5/5 with zero outstanding findings, and all nine review threads were resolved. The operator merged before the lifecycle update could land, so final metadata follows in a separate closeout PR; the reflection already landed with implementation. The follow-up must pass hosted readiness before the agent reports final goal completion. Full local proof was skipped under the explicit user instruction.",
   "mission": "Clear the refreshed cognitive->15 tail (49 fns), promote the fallow health lane to a blocking baseline ratchet, and hold the maxCognitive=8 gate credible.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -22,7 +22,7 @@
     "operator": "yeet",
     "requiresPullRequest": true,
     "requiresMergeable": true,
-    "statement": "Not achieved until PR #1021 is merge-ready through Yeet, with hosted checks and strict review closeout passing on the final published head. The user authorized fast publication with hosted monitoring instead of waiting for full local proof on 2026-09-08.",
+    "statement": "Implementation shipped in PR #1021 after required hosted checks and strict review closeout passed. The operator merge preceded the final lifecycle update, which is recorded in a follow-up PR that must reach hosted Yeet readiness. Full local proof was explicitly waived on 2026-09-08.",
     "grandfathered": false
   },
   "currentSourceOfTruth": [
@@ -38,7 +38,8 @@
     "goals/complexity-ceiling-burn-down/research/tail-inventory.md",
     "goals/complexity-ceiling-burn-down/reports/clean-runs.md",
     "goals/complexity-ceiling-burn-down/history/reflections/2026-09-03-codex.md",
-    "goals/complexity-ceiling-burn-down/history/reflections/2026-09-08-codex.md"
+    "goals/complexity-ceiling-burn-down/history/reflections/2026-09-08-codex.md",
+    "goals/complexity-ceiling-burn-down/history/reflections/2026-09-09-codex.md"
   ],
   "researchReports": [
     "research/SOURCES.md",
@@ -69,17 +70,17 @@
     {
       "id": "P2",
       "name": "Verify",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "in-progress"
+      "status": "complete"
     }
   ],
   "verificationCommands": [

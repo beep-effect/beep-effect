@@ -687,3 +687,34 @@ The commit hook also added the canonical baseline's final newline, changing
 its byte digest without changing any finding. Three fresh checks of published
 `e08f77cdcb` now back the recorded digest. Capture exact baseline bytes after
 formatter hooks before labeling a digest as published-commit evidence.
+
+### A rate-limit failure looked like a missing pull request (2026-09-08)
+
+The hosted watcher exited with `requires an open pull request` while the REST
+pull-request endpoint still reported PR #1021 open at the expected head.
+A direct GraphQL query reported an exhausted API quota; the REST quota endpoint
+simultaneously reported a full allowance. REST job status remained available
+and confirmed CI was running. Preserve the underlying API failure in the watch
+error, back off GraphQL retries, and avoid treating a failed query as PR absence.
+
+GraphQL later recovered, and canonical Yeet monitoring resumed. The packet
+status preview and doctor checks passed while the hosted jobs continued.
+
+### Operator merge preceded final lifecycle metadata (2026-09-08)
+
+PR #1021's required checks cleared at 03:33:03 UTC on September 9. The operator
+merged it four seconds later, before the final lifecycle update could be
+committed. The closeout reflection was already included, but the manifest and
+phase statuses still read active. The canonical status writer now prepares a
+small follow-up PR. A closure protocol needs to coordinate the final metadata
+commit with an operator who may merge immediately when required checks pass;
+otherwise a same-PR lifecycle requirement cannot be completed after the fact.
+
+### Lifecycle follow-up rewrote immutable reflection history (2026-09-09)
+
+Review on PR #1030 identified a rewrite of the September 8 reflection that
+already landed in PR #1021. `goals/README.md` defines each reflection as an
+immutable run record. The file is restored byte-for-byte from the implementation
+merge, and a separate September 9 UTC reflection carries the post-merge facts.
+Frontmatter validation alone cannot detect a valid but historically incorrect
+rewrite; closeout review should compare landed reflection bytes as well.
