@@ -7,17 +7,18 @@
 
 ## Status
 
-Status: `active`
+Status: `completed-retained`, matching [the canonical manifest](./ops/manifest.json).
+All phases P0–P4 are complete; the execution model below records the completed work.
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
 | P0 Open | complete | Grill-locked SPEC, research capture, packet frame. | SPEC/README/manifest/GOAL/SOURCES exist; grill decisions recorded. |
-| P1 M1 dock capabilities | in-progress | Per-panel min/max constraints (kernel); tab-overflow dropdown + drop-indicator quadrants (adapter); Storybook interaction proofs. | Both dock suites + stories green; pre-M1 snapshot fixture decodes; live-browser gesture pass done; PR mergeable via yeet. |
-| P2 M2 workbench decomposition | pending | Zero-behavior split of `Session.workbench.tsx` into nine region components; Add-Triple atoms relocate to `Session.atoms.ts`; StrictMode-safe tree host if component-shaped. | ontology-ui + ontology-client suites pass unchanged; `OntologyWorkbench` is composition-only; PR mergeable. |
-| P3 M3 shell integration | pending | Nine panel renderers; Document panel; nav-rail panel menu; core-cluster default layout; `desktop:dock-workspace:v2` bump + v1 cleanup; `SurfaceRetry` disposition. | App suite green under `bunx --bun vitest`; default-layout + v2-boot tests pass; PR mergeable. |
-| P4 M4 QA + close | pending | Browser QA loop to zero required findings; QA-loop skill graduation; closeout reflection + packet flips. | QA exit criteria met; reflection validates; same-PR state flip lands; PR mergeable. |
+| P1 M1 dock capabilities | complete | Per-panel min/max constraints (kernel); tab-overflow dropdown + drop-indicator quadrants (adapter); Storybook interaction proofs. | Both dock suites + stories green; pre-M1 snapshot fixture decodes; live-browser gesture pass done; PR mergeable via yeet. |
+| P2 M2 workbench decomposition | complete | Zero-behavior split of `Session.workbench.tsx` into nine region components; Add-Triple atoms relocate to `Session.atoms.ts`; StrictMode-safe tree host if component-shaped. | ontology-ui + ontology-client suites pass unchanged; `OntologyWorkbench` is composition-only; PR mergeable. |
+| P3 M3 shell integration | complete | Nine panel renderers; Document panel; nav-rail panel menu; core-cluster default layout; `desktop:dock-workspace:v2` bump + v1 cleanup; `SurfaceRetry` disposition. | App suite green under `bunx --bun vitest`; default-layout + v2-boot tests pass; PR mergeable. |
+| P4 M4 QA + close | complete | Browser QA loop to zero required findings; QA-loop skill graduation; closeout reflection + packet flips. | QA exit criteria met; reflection validates; same-PR state flip lands; PR mergeable. |
 
 ## Execution model (locked decision 8)
 
