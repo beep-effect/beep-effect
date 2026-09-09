@@ -21,13 +21,14 @@
     "test": "bun run beep:test",
     "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
     "beep:build": "tsc -p tsconfig.json && bun run babel",
-    "beep:check": "tsgo -p tsconfig.check.json",
+    "beep:check": "tsgo -p tsconfig.check.json && bun run beep:check:tests",
     "beep:docgen": "bunx --bun --no-install docgen",
     "beep:doctest": "BEEP_VITEST_DOCTEST=1 bunx --bun vitest run",
     "beep:lint": "biome check .",
     "beep:lint:fix": "biome check . --write",
     "beep:test": "bunx --bun vitest run",
-    "babel": "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps --compact false"
+    "babel": "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps --compact false",
+    "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit"
   },
   "dependencies": {
     "@beep/utils": "workspace:^",
