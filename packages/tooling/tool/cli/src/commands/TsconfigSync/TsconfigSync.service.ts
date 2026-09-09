@@ -134,7 +134,6 @@ export const syncTsconfigAtRoot: {
       A.map(packageChanges, (change) => [change.filePath, change.content] as const)
     );
     const checkOverlayChanges = yield* planPackageCheckReferenceSync(
-      rootDir,
       workspaces,
       options.filter,
       plannedCanonicalContent

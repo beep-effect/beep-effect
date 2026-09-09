@@ -9,7 +9,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
 import { resolveWorkspacePackages } from "@beep/repo-utils/Workspaces";
-import { A, Str } from "@beep/utils";
+import { A, Str, thunkFalse } from "@beep/utils";
 import { Console, DateTime, Duration, Effect, FileSystem, HashMap, HashSet, Order, Path, pipe } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -460,7 +460,7 @@ const missingReferenceOutputs = Effect.fn("CheckCensus.missingReferenceOutputs")
     Effect.fnUntraced(function* (reference) {
       const tsconfigPath = yield* referencedTsconfigPath(pkg.dir, reference.path);
       const declarationFile = yield* referencedDeclarationIndex(tsconfigPath);
-      const exists = yield* fs.exists(declarationFile).pipe(Effect.orElseSucceed(() => false));
+      const exists = yield* fs.exists(declarationFile).pipe(Effect.orElseSucceed(thunkFalse));
 
       return exists
         ? A.empty<CheckCensusMissingOutput>()
@@ -749,8 +749,8 @@ const hasCheckOverlay = Effect.fn("CheckCensus.hasCheckOverlay")(function* (
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const [overlay, build] = yield* Effect.all([
-    fs.exists(path.join(dir, "tsconfig.check.json")).pipe(Effect.orElseSucceed(() => false)),
-    fs.exists(path.join(dir, "tsconfig.json")).pipe(Effect.orElseSucceed(() => false)),
+    fs.exists(path.join(dir, "tsconfig.check.json")).pipe(Effect.orElseSucceed(thunkFalse)),
+    fs.exists(path.join(dir, "tsconfig.json")).pipe(Effect.orElseSucceed(thunkFalse)),
   ]);
 
   return overlay && build;

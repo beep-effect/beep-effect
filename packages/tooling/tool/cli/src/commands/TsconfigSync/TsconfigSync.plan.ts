@@ -1012,7 +1012,11 @@ const planOnePackageCheckReferenceSync = Effect.fnUntraced(function* (
   }
 
   const path = yield* Path.Path;
-  const canonicalPath = path.join(workspace.absoluteDir, "tsconfig.json");
+  // The overlay mirrors the project package-references maintains: the owner
+  // tsconfig (tsconfig.build.json when one exists, else tsconfig.json), read
+  // from this run's planned content so a same-run reference change lands in
+  // both files.
+  const canonicalPath = workspace.ownerTsconfigPath ?? path.join(workspace.absoluteDir, "tsconfig.json");
   const overlayPath = path.join(workspace.absoluteDir, CHECK_TSCONFIG_FILENAME);
 
   const canonicalContent = yield* pipe(
@@ -1060,11 +1064,10 @@ const planOnePackageCheckReferenceSync = Effect.fnUntraced(function* (
  * import { planPackageCheckReferenceSync } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan"
  * import { Effect, HashMap } from "effect"
  *
- * const program = planPackageCheckReferenceSync("/repo", [], undefined, HashMap.empty())
+ * const program = planPackageCheckReferenceSync([], undefined, HashMap.empty())
  * console.log(Effect.isEffect(program)) // true
  * ```
  *
- * @param rootDir - Absolute repository root.
  * @param workspaces - Every discovered workspace descriptor.
  * @param filter - Optional workspace name or relative path that narrows the planned packages.
  * @param plannedCanonicalContent - Canonical `tsconfig.json` content already planned by this run, by absolute path.
@@ -1073,7 +1076,6 @@ const planOnePackageCheckReferenceSync = Effect.fnUntraced(function* (
  * @since 0.0.0
  */
 const planPackageCheckReferenceSync = Effect.fn(function* (
-  rootDir: string,
   workspaces: ReadonlyArray<WorkspaceDescriptor>,
   filter: string | undefined,
   plannedCanonicalContent: HashMap.HashMap<string, string>
@@ -1086,7 +1088,6 @@ const planPackageCheckReferenceSync = Effect.fn(function* (
     pipe(change, O.match({ onNone: thunkUndefined, onSome: (planned) => A.appendInPlace(plannedChanges, planned) }));
   }
 
-  yield* Effect.annotateCurrentSpan("tsconfig-sync.check-overlays.root", rootDir);
   return plannedChanges;
 });
 
