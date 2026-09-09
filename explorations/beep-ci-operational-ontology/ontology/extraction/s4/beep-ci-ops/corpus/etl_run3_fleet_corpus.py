@@ -64,14 +64,21 @@ PROCESS_MEMBER = re.compile(PROCESS_MEMBER_PATTERN)
 PID_IN_TEXT = re.compile(
     r"(?<![A-Za-z0-9_-])(?P<member>" + PROCESS_MEMBER_PATTERN + r")"
     r"""(?P<prefix>(?>(?P<key_quote>\\*["'])?(?>(?:\s|\\+[nrt])*)(?P<assignment>[=:](?>(?:\s|\\+[nrt])*))?(?P<value_quote>\\*["'])?))"""
-    r"""(?P<value>(?(value_quote)(?:(?!(?P=value_quote))[^\r\n])+(?=(?P=value_quote))|(?(assignment)[^\s,;:{}\[\]\\"'=]+|[0-9]+)))"""
+    r"""(?P<value>(?(value_quote)(?:(?!(?P=value_quote))[^\\\r\n]|\\.)*(?=(?P=value_quote))|(?(assignment)[^\s,;:{}\[\]\\"'=]+|[0-9]+)))"""
+)
+# Consume complete JSON strings, including escaped characters, on both sides.
+# Nested serialization is decoded one string at a time, preserving its depth.
+JSON_STRING_PATTERN = r'"(?:[^"\\]|\\.)*"'
+JSON_TEXT_MEMBER = re.compile(
+    r"(?P<string>" + JSON_STRING_PATTERN + r")"
+    r"(?P<separator>\s*[:=]\s*)?"
 )
 # Compatibility name for diagnostics; only unredacted values count as residue.
 PROCESS_METADATA_IN_TEXT = PID_IN_TEXT
 TIMESTAMP_KEY = re.compile(r"(?:^ts$|AtMillis$|At$|TimestampMillis$|Timestamp$)")
 PROPERTY_KEY = re.compile(r"[A-Za-z0-9_]+")
 PROPERTY_RECORD_COMMENT = re.compile(r"# record (0|[1-9][0-9]*)")
-# A preceding slash is a boundary only when it follows slash or colon (URI authority).
+# Outside a URI prefix, retain the existing slash/colon boundary rule.
 PATH_LEFT_BOUNDARY = r"(?:(?<![A-Za-z0-9_.~/-])|(?<=[/:]/))"
 PATH_RIGHT_BOUNDARY = r"(?=/|$|[\s\"'=,:;)\]])"
 OWNER_VARIANTS = ("pid_pair", "ownerpid", "attachedpid", "weak")
@@ -190,6 +197,17 @@ def host_prefixes() -> list[tuple[str, str]]:
     return sorted(roots.items(), key=lambda item: -len(item[0]))
 
 
+def uri_host_root_pattern(root_pattern: str) -> str:
+    """Capture the URI authority and bounded host root without variable-width lookbehind."""
+    return r'''((?i:[a-z][a-z0-9+.-]*)://[^/\s"']*)(''' + root_pattern + ")" + PATH_RIGHT_BOUNDARY
+
+
+def redact_host_root(value: str, root_pattern: str, replacement: str) -> str:
+    """Keep a slash before URI tokens so they cannot become part of the authority on replay."""
+    value = re.sub(uri_host_root_pattern(root_pattern), lambda match: match[1] + "/" + replacement, value)
+    return re.sub(PATH_LEFT_BOUNDARY + root_pattern + PATH_RIGHT_BOUNDARY, lambda _: replacement, value)
+
+
 def redact_pid_match(match: re.Match[str]) -> str:
     """Preserve JSON punctuation and escaping while replacing process scalar values."""
     if match["value"] in ("<redacted>", "null"):
@@ -198,21 +216,65 @@ def redact_pid_match(match: re.Match[str]) -> str:
     return match["member"] + match["prefix"] + replacement
 
 
+def redact_process_text(value: str) -> str:
+    """Redact whole serialized values; never reinterpret part of a quoted key."""
+    parts = []
+    end = 0
+    for match in JSON_TEXT_MEMBER.finditer(value):
+        if match.start() < end:
+            continue
+        # Free-text assignments can start before a quoted value. Consume them
+        # only from the unquoted gap, never from the middle of a JSON token.
+        for bare in PID_IN_TEXT.finditer(value, end, match.end()):
+            if bare.start() >= match.start():
+                break
+            parts.append(value[end:bare.start()])
+            parts.append(redact_pid_match(bare))
+            end = bare.end()
+        if end > match.start():
+            parts.append(value[end:match.end()])
+            end = match.end()
+            continue
+        parts.append(value[end:match.start()])
+        token = match["string"]
+        try:
+            decoded = json.loads(token)
+        except json.JSONDecodeError:
+            # Malformed diagnostic strings still receive the free-text rewrite.
+            parts.append(PID_IN_TEXT.sub(redact_pid_match, match[0]))
+            end = match.end()
+            continue
+        if match["separator"]:
+            parts.append(match[0])
+            end = match.end()
+            if process_member(decoded):
+                scalar = re.match(JSON_STRING_PATTERN + r'|[^\s,;:{}\[\]\\"\'=]+', value[end:])
+                if scalar:
+                    parts.append('"<redacted>"' if scalar[0].startswith('"') else "null")
+                    end += scalar.end()
+        else:
+            redacted = redact_process_text(decoded)
+            parts.append(token if redacted == decoded else json.dumps(redacted, ensure_ascii=False))
+            end = match.end()
+    parts.append(PID_IN_TEXT.sub(redact_pid_match, value[end:]))
+    return "".join(parts)
+
+
 def redact_string(value: str) -> str:
-    value = re.sub(PATH_LEFT_BOUNDARY + re.escape("~/.beep/runtime") + PATH_RIGHT_BOUNDARY, "<runtime-root>", value)
+    value = redact_host_root(value, re.escape("~/.beep/runtime"), "<runtime-root>")
     value = re.sub(r"-\d+(?=\.(?:lease|ticket)\.json)", "-<process>", value)
     value = re.sub(r"merged-preview-\d+", "merged-preview-<process>", value)
-    value = re.sub(PATH_LEFT_BOUNDARY + r"/run/user/\d+" + PATH_RIGHT_BOUNDARY, "<runtime>", value)
-    value = re.sub(PATH_LEFT_BOUNDARY + r"/proc/\d+" + PATH_RIGHT_BOUNDARY, "<proc>/<process>", value)
+    value = redact_host_root(value, r"/run/user/\d+", "<runtime>")
+    value = redact_host_root(value, r"/proc/\d+", "<proc>/<process>")
     value = re.sub(r"(user(?:-runtime-dir)?@)\d+(\.service)", r"\1<uid>\2", value)
     value = re.sub(r"user-\d+\.slice", "user-<uid>.slice", value)
     for prefix, replacement in host_prefixes():
-        value = re.sub(PATH_LEFT_BOUNDARY + re.escape(prefix) + PATH_RIGHT_BOUNDARY, lambda _: replacement, value)
+        value = redact_host_root(value, re.escape(prefix), replacement)
     hostname = socket.gethostname()
     value = value.replace(sha256(hostname.encode())[:12], "<host>")
     value = value.replace(hostname, "<host>")
     value = re.sub(r"\buid-\d+", "uid-<uid>", value)
-    return PID_IN_TEXT.sub(redact_pid_match, value)
+    return redact_process_text(value)
 
 
 def normalized_member(key: str) -> str:
@@ -540,7 +602,10 @@ def scan_output_bytes(files: list[tuple[str, bytes]]) -> None:
     """Fail closed without printing matched private bytes (including path names)."""
     hostname = socket.gethostname().encode()
     roots = {prefix for prefix, _ in host_prefixes()} | {"/home", "/tmp", "/run/user", "/proc", "/dev/shm", "~/.beep/runtime"}
-    host_paths = [re.compile((PATH_LEFT_BOUNDARY + re.escape(prefix) + PATH_RIGHT_BOUNDARY).encode()) for prefix in roots]
+    host_paths = [re.compile(pattern.encode()) for prefix in roots for pattern in (
+        uri_host_root_pattern(re.escape(prefix)),
+        PATH_LEFT_BOUNDARY + re.escape(prefix) + PATH_RIGHT_BOUNDARY,
+    )]
     for _label, data in files:
         combined = _label.encode() + b"\n" + data
         if any(pattern.search(combined) for pattern in host_paths) or any(
@@ -557,7 +622,8 @@ def scan_output_bytes(files: list[tuple[str, bytes]]) -> None:
         if any(process_member(key) for key in members + properties):
             fail("residue scan failed: process identity member")
 
-        if any(redact_pid_match(match) != match[0] for match in PID_IN_TEXT.finditer(combined.decode("utf-8"))):
+        text = combined.decode("utf-8")
+        if redact_process_text(text) != text:
             fail("residue scan failed: free-text process identifier")
         if b"ghp_" in combined or b"github_pat_" in combined:
             fail("residue scan failed: GitHub credential prefix")
@@ -713,9 +779,11 @@ def finish_manifest(metadata: dict[str, Any], emitted: list[Payload]) -> bytes:
                     "events count raw JSON records once; projections do not double-count events"],
                 "redaction_rules": [
                     "All families: longest host-root match at start, after a character outside ASCII alphanumeric, underscore, dot, tilde, slash and hyphen, or after a slash preceded by slash or colon; relative path continuations survive",
+                    "URI authority pre-pass preserves scheme and authority, with a slash before the host-root token",
                     "fleet root is <fleet>; home is <home>; temp roots are <session-tmp> and <tmp>; runtime is <runtime>; proc is <proc>; shared memory is <shm>",
                     "Per-user systemd unit identifiers become <uid>; proc process-directory identifiers become <process>",
-                    "Process identity members dropped recursively; serialized process scalar values replaced",
+                    "Process identity members dropped recursively; complete serialized process scalar values replaced",
+                    "JSON keys and values consume escaped character pairs; nested string serialization retains its depth",
                     "Structural keys and non-process numbers, booleans, nulls retain their decoded values",
                     "Lock files and proof-locks are excluded; hostname and sha12(hostname) in string values become <host>; residue fails capture"],
                 "files": [{**entry.receipt, "bytes": len(entry.data), "sha256": sha256(entry.data)} for entry in emitted],

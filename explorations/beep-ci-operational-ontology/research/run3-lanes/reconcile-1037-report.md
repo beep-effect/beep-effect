@@ -522,3 +522,126 @@ uv run --offline --with pyyaml,rdflib python "$packet/research/scripts/validate_
 uv run --offline --with pyoxigraph python "$packet/research/scripts/run_cq_suite.py"
 bun run beep knowledge refs --check
 ```
+
+## URI authorities (Greptile round 2)
+
+The URI-authority finding and the additional round-3 escaped-quote finding
+are fixed in both generators. The stopped lane's URI pre-pass and tests were
+reviewed and retained. This handoff is local to `ontology-run3-stage-b-fixes`;
+Fable owns publication and PR review.
+
+Host-root matching first consumes a URI scheme and its authority, then
+rewrites or rejects the bounded root. Redaction and scanning share that
+forward pattern. The chosen output keeps a slash before the token:
+`file://localhost/home/alice/x` becomes `file://localhost/<home>/x`.
+Empty authorities retain the third slash, as in `file:///<home>/x`.
+Synthetic aliases still precede generic roots. The existing boundary handles
+all other positions. Relative `packages/home/x` and the URL path `homepage/x`
+remain unchanged.
+
+For serialized process values, both sides use complete JSON-string tokens
+whose escaped characters are consumed in pairs. The redactor decodes nested
+strings one level at a time and replaces the whole sensitive scalar. This
+preserves valid JSON and the serialization depth. It also recognizes a
+Unicode-escaped process key without mistaking a suffix inside an unrelated
+escaped key for a process member. Free-text assignments still use the shared
+process-member domain. Scanning calls the same rewrite routine to detect
+unredacted serialized values.
+
+Both suites cover escaped quotes, backslashes immediately before closing
+quotes, empty strings, values containing serialized JSON, escaped keys, and
+four serialization depths. They assert decoded values, whole-value replacement,
+idempotence, raw-residue rejection, and preservation of ordinary fields.
+URI cases cover five schemes, four authority forms, all supported roots,
+filename and content scans, non-root paths, delimiters, and Stage B alias
+precedence. All 73 parent tests remain; 11 new tests bring the suites to 84.
+The URI and process-text helper syntax trees are identical in both generators.
+An additional 200 deterministic escaped-value probes passed before recapture.
+
+### One recapture per population
+
+Both fixes and the manifest rule descriptions were final before capture.
+Stage A ran once with `--refresh`; Stage B ran once with `--refresh all` and
+`--synthetic-root ~/.cache/beep/ciops-synthetic-root`. The producer export
+remained byte-identical; READY, producer provenance, and termination joins pass.
+
+| Pin | Capture start UTC | Capture finish UTC |
+| --- | --- | --- |
+| run3-fleet | 2026-09-09T07:53:39.784Z | 2026-09-09T07:53:52.202Z |
+| run3b-fleet | 2026-09-09T07:54:43.616Z | 2026-09-09T07:54:53.934Z |
+| run3b-synthetic | 2026-09-09T07:55:27.214Z | 2026-09-09T07:55:27.304Z |
+
+All three manifests record the following capture anchors. The generator
+digests below identify the final working-tree generators used for capture.
+
+```text
+corpus_commit: 0436e31dc1e3146e145c6f4c5d4badbe0b69b1ec
+corpus_tree:   39d26dcd41ef6ea7f59300dc96936171cc7082f7
+corpus_base:   22063e7b6dbb6e63adcf0b080b397fcb350712b7
+```
+
+| Pin | Payloads | All files | Events | Payload bytes | All bytes |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| run2-fleet | 1588 | 1589 | 6213 | 12679246 | 13317275 |
+| run3-checkout-identity | 216 | 217 | 108 | 694899 | 894958 |
+| run3-fleet | 1926 | 1927 | 7962 | 16242234 | 19055345 |
+| run3b-fleet | 740 | 741 | 7375 | 14649906 | 15985484 |
+| run3b-synthetic | 8 | 9 | 10 | 6953 | 43001 |
+
+| Pin | Generator SHA-256 | Manifest SHA-256 |
+| --- | --- | --- |
+| run3-fleet | `bb987c68393def23cb3f5186b766b41a8a58d412e0add390750304cdf4f050e1` | `ad5f470fbda5cbde5e0b4bfa90b140f429bf9f1b1035bcc14884d99b66e4ba73` |
+| run3b-fleet | `ae4aac7fb1dcb5f3057a923b8904a683ce6ebcd5ea22899dd8eb36bda1296296` | `736df25b867bf2a6e537ed24cbb8e2fb0045bbeec4bec0a69a60c835c248d4b1` |
+| run3b-synthetic | `ae4aac7fb1dcb5f3057a923b8904a683ce6ebcd5ea22899dd8eb36bda1296296` | `59c6506455ba50e78cd19c848a7d42fa46631c2692bfe2103ffc35529e59ec48` |
+
+Whole-tree hashes use the report's sorted POSIX-name and file-byte algorithm,
+with an eight-byte length prefix for each name and byte sequence.
+
+| Pin | Whole-tree SHA-256 |
+| --- | --- |
+| run2-fleet | `d6290ad5311f411ac8b77b4ad93a90bd359b239e444e784b9b47c61fe1aecd3b` |
+| run3-checkout-identity | `88bec9ddde3f4984bf2be774b62dc6edd7214b4700f98087ab8229048b268387` |
+| run3-fleet | `8525180ae5f14b85c1b990fca087a205c389967819399b3623c96b11eab41e58` |
+| run3b-fleet | `6f6cd03ce2d385819721db809f672cdbec5974c329bc600e91a653f968793b68` |
+| run3b-synthetic | `94010645180bb5ed209264656ac15b01d4f87fa5d75ae4ebde6e34a201f050fe` |
+
+| Population | Prior failure pairs | Fresh raw pairs | Fresh projected pairs |
+| --- | ---: | ---: | ---: |
+| run3-fleet | 1865 | 1872 | 1872 |
+| run3b-fleet | 1755 | 1760 | 1760 |
+| run3b-synthetic | 0 | 0 | 0 |
+
+Both organic captures observed 22 clones and 75 linked worktrees, 97 checkouts.
+Compared with the prior round-2 pins, Stage A has eight more payloads and 31
+more events; Stage B fleet has six more payloads and 36 more events.
+
+Every raw `failedStepId` retains `failureKind` in the same object, and raw
+counts equal projected counts. Organic changes reflect the new live capture
+intervals under the existing capture contract.
+Synthetic remains the same ten-event scenario. The prior tables above remain
+historical receipts. Proof-ledger issuance stays re-parked to run 4.
+
+### Verification and committed handoff
+
+- All five pins pass their four ordinary generator CLIs.
+- Each refreshed pin passes a serial 0 -> 1 -> 0 corruption cycle; its complete
+  tree hash returns to the pre-corruption value after restoration in `finally`.
+- Refreshed pins have zero host-root URI matches, serialized process-value
+  residue, structural process-member residue, quoted/escaped numeric PID
+  matches, literal variants, host paths, UID residue, hostnames, and hostname
+  digests in names and contents. Their file-URI diagnostic is also zero.
+- Run-2 and checkout identity pass their unchanged scanners. Run-2 retains
+  the previously documented broader diagnostics; those are not claimed empty.
+- Ran 84 tests in 82.039s. All pass.
+- Packet validator: 0 blockers and 0 warnings; 26 CQs and 25 SPARQL files parsed.
+- CQ suite: 0 failures across 25 seed tests and 20 fixtures.
+- DECISIONS.md, run2-fleet, run3-checkout-identity, and both protected generators
+  remain byte-identical to the starting HEAD. No workspace package was edited.
+  Package verification does not apply to this corpus and packet change.
+
+The final commit is followed by detached verification of all five pins, exact
+tracked inventories and tree hashes, committed generator provenance, and
+`bun run beep knowledge refs --check`. The exact-commit receipts and command
+logs are retained in the ignored `.beep/uri-authority/` directory and included
+in the lane handoff. This is local corpus/packet proof; no hosted acceptance
+or run-3 ratification is claimed.

@@ -21,13 +21,12 @@ the "bush" (`A_LETTER_FROM_THE_OTHER_SIDE_OF_THE_LOOP.md`).
 
 ## Next Open Question
 
-Round-2 review fixes for PR #1040 are complete locally: identifier-token
-redaction, payload-bound custody variants, strict synthetic row retention,
-legacy replay migration, and current-tree citation checks. All three refreshed
-pins pass ordinary verification and corruption/restore checks. Fable reviews
-and publishes the committed handoff before run 3 proper. The brief clarifies
-that Ruling 22 applies, accepts live-count deltas, and confirms the lineage fix.
-See [the round-2 report](./research/run3-lanes/reconcile-1037-report.md#review-fixes-round-2-2026-09-09).
+PR #1040's URI-authority and escaped-quote follow-ups are complete locally in
+both generators. All three pins were recaptured once after both fixes; the
+84-test generator suite and corpus/packet checks pass. Fable reviews and
+publishes the committed handoff before run 3 proper. Ruling 22 and the accepted
+live-count convention still apply. See the
+[URI-authority report](./research/run3-lanes/reconcile-1037-report.md#uri-authorities-greptile-round-2).
 
 CSF-012 in [PR #1032](https://github.com/beep-effect/beep-effect/pull/1032)
 corrects PID redaction in the saved run-2 and run-3 corpus pins. The security
@@ -75,10 +74,10 @@ question now asks for the SeatRequest sequence under its governing
 `AdmissionProjectionSpecification`, with the step's literal `hasScopeTag` (a distinct
 data property — the no-punning ruling keeps `hasScope` an object property), and the S6
 predicate registry regenerated to track it.
-**NEXT: Fable reviews and publishes the round-2 committed handoff before run 3 proper.**
+**NEXT: Fable reviews and publishes the URI-authority and escaped-quote handoff before run 3 proper.**
 Stage A PINNED 2026-09-08 in `run3-fleet/` and `run3-checkout-identity/`:
 existing admission journals, fleet attempts/verdicts, live granted/queued work,
-and one timestamped checkout inventory. The latest reconciled Ruling 22 fleet refresh covers 95 checkouts; the
+and one timestamped checkout inventory. The latest Ruling 22 fleet refresh covers 97 checkouts; the
 inventory binds 107 after the review-fix refresh, including registered worktrees outside the required run-file
 globs. The failure-signature occurrence rider is present; cache-plan execution
 resolution and proof-ledger issuance rows are absent. Stage B is now pinned in
@@ -519,3 +518,8 @@ graduation. Full plan with locked decisions: [`DECISIONS.md`](./DECISIONS.md).
   custody counts now bind to payload variants, citations resolve in the current
   tree, and the full corpus/packet verification is recorded in the reconciliation
   report. Fable owns review and publication.
+
+- 2026-09-09: PR #1040 URI-authority and round-3 escaped-quote findings fixed in
+  both generators; three pins recaptured once, with 84 passing generator tests
+  and corpus/packet proof. The reconciliation report records current counts and
+  hashes. Fable retains publication and review ownership.

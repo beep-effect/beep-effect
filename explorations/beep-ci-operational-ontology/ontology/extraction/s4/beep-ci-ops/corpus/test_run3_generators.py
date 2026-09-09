@@ -49,6 +49,53 @@ class RedactionTests(unittest.TestCase):
         fleet.scan_output_bytes([("safe.json", fleet.encode_json(result)),
                                   ("safe.properties", fleet.encode_properties_projection([result]))])
 
+    def test_serialized_escaped_process_values_are_wholly_replaced(self):
+        values = ('a"secret', 'secret\\', 'secret\\\\',
+                  json.dumps({"detail": 'nested"secret', "tail": "secret\\"}), '')
+        for key in ("ownerPid", "attachedPid", "ownerProcStart", "pid"):
+            for value in values:
+                for depth in range(4):
+                    message = json.dumps({key: value, "failedStepId": "check", "rapid": 42})
+                    for _ in range(depth):
+                        message = json.dumps({"message": message})
+                    with self.subTest(key=key, value=value, depth=depth):
+                        with self.assertRaises(SystemExit):
+                            fleet.scan_output_bytes([("raw.json", fleet.encode_json({"message": message}))])
+                        redacted = fleet.redact_string(message)
+                        self.assertEqual(fleet.redact_string(redacted), redacted)
+                        fleet.scan_output_bytes([("safe.json", fleet.encode_json({"message": redacted})),
+                                                  ("safe.properties", fleet.encode_properties_projection([{"message": redacted}]))])
+                        decoded = redacted
+                        for _ in range(depth):
+                            decoded = json.loads(decoded)["message"]
+                        self.assertEqual(json.loads(decoded), {key: "<redacted>", "failedStepId": "check", "rapid": 42})
+
+    def test_free_text_quoted_process_values_are_wholly_replaced(self):
+        for message in (r'ownerPid="a\"secret"', r'pid "secret\\"', r"ownerPid='a\'secret'"):
+            with self.subTest(message=message):
+                with self.assertRaises(SystemExit):
+                    fleet.scan_output_bytes([("raw", fleet.encode_json({"message": message}))])
+                redacted = fleet.redact_string(message)
+                self.assertNotIn("secret", redacted)
+                self.assertEqual(fleet.redact_string(redacted), redacted)
+                fleet.scan_output_bytes([("safe", fleet.encode_json({"message": redacted}))])
+
+    def test_serialized_escaped_keys_are_consumed_as_whole_strings(self):
+        for depth in range(4):
+            message = r'{"owner\u0050id":"a\"secret","note\"ownerPid":"keep","tail\\":"keep"}'
+            for _ in range(depth):
+                message = json.dumps({"message": message})
+            with self.subTest(depth=depth):
+                with self.assertRaises(SystemExit):
+                    fleet.scan_output_bytes([("raw.json", fleet.encode_json({"message": message}))])
+                redacted = fleet.redact_string(message)
+                self.assertEqual(fleet.redact_string(redacted), redacted)
+                fleet.scan_output_bytes([("safe.json", fleet.encode_json({"message": redacted}))])
+                decoded = redacted
+                for _ in range(depth):
+                    decoded = json.loads(decoded)["message"]
+                self.assertEqual(json.loads(decoded), {"ownerPid": "<redacted>", 'note"ownerPid': "keep", "tail\\": "keep"})
+
     def test_serialized_process_variants_are_redacted_at_every_escape_depth(self):
         private = {"ownerPid": 1234, "ownerProcStart": "start-fixture", "attachedPid": 5678,
                    "legacyLockOwnerPid": "9012", "claudePid": 3456, "ppid": 6789,
@@ -219,7 +266,8 @@ class RedactionTests(unittest.TestCase):
                 for prefix in ("", " ", '"', "=", "(", ":", "//", ":/", "file://", "file:/"):
                     for suffix in ("", "/beep-effect/x"):
                         absolute = prefix + root + suffix
-                        self.assertEqual(fleet.redact_string(absolute), prefix + token + suffix)
+                        expected = prefix + ("/" if prefix == "file://" else "") + token + suffix
+                        self.assertEqual(fleet.redact_string(absolute), expected)
                         with self.assertRaisesRegex(SystemExit, "host path"):
                             fleet.scan_output_bytes([("fixture", absolute.encode())])
                 self.assertEqual(fleet.redact_string(root + "-other/x"), root + "-other/x")
@@ -228,16 +276,52 @@ class RedactionTests(unittest.TestCase):
                 self.assertEqual(fleet.redact_string(relative), relative)
                 fleet.scan_output_bytes([("fixture", relative.encode())])
 
+    def test_uri_authorities_bound_host_roots_in_rewrite_and_scan(self):
+        with patch.object(Path, "home", return_value=Path("/home/alice")), \
+                patch.object(fleet, "FLEET_ROOT", Path("/workspace")):
+            for scheme in ("file", "sftp", "git+ssh", "x.y-z0", "FILE"):
+                for authority in ("", "localhost", "host:2222", "[::1]:2222"):
+                    for path, expected in (("/home/alice/x", "<home>/x"),
+                                           ("/home/x", "<home>/x"),
+                                           ("/tmp/x", "<tmp>/x"),
+                                           ("/proc/123/s", "<proc>/<process>/s"),
+                                           ("/run/user/123/state", "<runtime>/state"),
+                                           ("/dev/shm/x", "<shm>/x"),
+                                           ("/workspace/project/x", "<fleet>/project/x")):
+                        raw = f"{scheme}://{authority}{path}"
+                        redacted = f"{scheme}://{authority}/{expected}"
+                        with self.subTest(raw=raw):
+                            self.assertEqual(fleet.redact_string(raw), redacted)
+                            self.assertEqual(fleet.redact_string(redacted), redacted)
+                            for label, data in (("fixture", raw.encode()), (raw, b""),
+                                                ("fixture.json", fleet.encode_json({"uri": raw}))):
+                                with self.assertRaisesRegex(SystemExit, "host path"):
+                                    fleet.scan_output_bytes([(label, data)])
+                            fleet.scan_output_bytes([(redacted, redacted.encode())])
+
+    def test_uri_authorities_preserve_non_root_paths_and_stop_at_delimiters(self):
+        for value in ("packages/home/x", "https://example.com/homepage/x",
+                      "file://host/packages/home/x", "file://host/tmp-other/x",
+                      "file://host\npackages/home/x", "file://host packages/home/x",
+                      "file://host'packages/home/x", 'file://host"packages/home/x'):
+            with self.subTest(value=value):
+                self.assertEqual(fleet.redact_string(value), value)
+                fleet.scan_output_bytes([("fixture", value.encode())])
+        raw = 'file://localhost/tmp/x "sftp://host/proc/123/s"'
+        expected = 'file://localhost/<tmp>/x "sftp://host/<proc>/<process>/s"'
+        self.assertEqual(fleet.redact_string(raw), expected)
+        fleet.scan_output_bytes([("fixture", expected.encode())])
+
     def test_file_uri_host_roots_preserve_scheme_and_reject_raw_residue(self):
         # Model Alice's home explicitly so the fixture is independent of the test host.
         with patch.object(Path, "home", return_value=Path("/home/alice")), \
                 patch.object(fleet, "FLEET_ROOT", Path("/workspace")):
-            for raw, expected in (("file:///home/alice/x", "file://<home>/x"),
-                                  ("file:///proc/123/status", "file://<proc>/<process>/status"),
-                                  ("file:///workspace/project/x", "file://<fleet>/project/x"),
-                                  ("file:///tmp/x", "file://<tmp>/x"),
-                                  ("file:///dev/shm/x", "file://<shm>/x"),
-                                  ("file:///run/user/123/state", "file://<runtime>/state")):
+            for raw, expected in (("file:///home/alice/x", "file:///<home>/x"),
+                                  ("file:///proc/123/status", "file:///<proc>/<process>/status"),
+                                  ("file:///workspace/project/x", "file:///<fleet>/project/x"),
+                                  ("file:///tmp/x", "file:///<tmp>/x"),
+                                  ("file:///dev/shm/x", "file:///<shm>/x"),
+                                  ("file:///run/user/123/state", "file:///<runtime>/state")):
                 with self.subTest(raw=raw):
                     self.assertEqual(fleet.redact_string(raw), expected)
                     self.assertEqual(fleet.redact_string(expected), expected)

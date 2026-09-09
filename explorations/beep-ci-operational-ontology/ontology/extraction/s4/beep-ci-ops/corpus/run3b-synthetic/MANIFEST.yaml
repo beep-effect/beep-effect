@@ -2,12 +2,12 @@
 # Public run-3 Stage B capture; source descriptors are portable.
 schema_version: beep-ci-ops-run3b-synthetic-corpus/v1
 generated_by: etl_run3b_fleet_corpus.py
-generator_sha256: 980d50e290a211e0238dded4aa85e4e99405cf8bbcc7f44509ef7d775bd3edc9
-corpus_commit: 34aa58b96bf06b7d7681165dd6cf84cd6b668365
-corpus_tree: da556e0526c1f412c85ef6e91462db5a5a98a47e
+generator_sha256: ae4aac7fb1dcb5f3057a923b8904a683ce6ebcd5ea22899dd8eb36bda1296296
+corpus_commit: 0436e31dc1e3146e145c6f4c5d4badbe0b69b1ec
+corpus_tree: 39d26dcd41ef6ea7f59300dc96936171cc7082f7
 corpus_base: 22063e7b6dbb6e63adcf0b080b397fcb350712b7
-capture_instant: '2026-09-09T07:30:38.422Z'
-capture_finished_at: '2026-09-09T07:30:38.510Z'
+capture_instant: '2026-09-09T07:55:27.214Z'
+capture_finished_at: '2026-09-09T07:55:27.304Z'
 stage: B
 provenance: synthetic
 capture_instant_basis: capture start; files read once over the recorded interval, not an atomic fleet
@@ -108,7 +108,7 @@ admission_roots:
     world: closed
     status: present
     complete_within: one read of the named source during this capture; retained window only
-    observed_at: '2026-09-09T07:30:38.505Z'
+    observed_at: '2026-09-09T07:55:27.298Z'
     history_outside_window: unknown
     observed_rows: 7
     retained_rows: 7
@@ -167,7 +167,7 @@ admission_roots:
     world: closed
     status: present
     complete_within: one read of the named source during this capture; retained window only
-    observed_at: '2026-09-09T07:30:38.508Z'
+    observed_at: '2026-09-09T07:55:27.303Z'
     history_outside_window: unknown
     observed_rows: 1
     retained_rows: 1
@@ -191,7 +191,7 @@ admission_roots:
     world: closed
     status: present
     complete_within: one read of the named source during this capture; retained window only
-    observed_at: '2026-09-09T07:30:38.508Z'
+    observed_at: '2026-09-09T07:55:27.303Z'
     history_outside_window: unknown
     files_observed: 0
     captured_files: 0
@@ -203,7 +203,7 @@ admission_roots:
     world: closed
     status: present
     complete_within: one read of the named source during this capture; retained window only
-    observed_at: '2026-09-09T07:30:38.508Z'
+    observed_at: '2026-09-09T07:55:27.303Z'
     history_outside_window: unknown
     files_observed: 0
     captured_files: 0
@@ -215,7 +215,7 @@ admission_roots:
     world: closed
     status: present
     complete_within: one read of the named source during this capture; retained window only
-    observed_at: '2026-09-09T07:30:38.508Z'
+    observed_at: '2026-09-09T07:55:27.303Z'
     history_outside_window: unknown
     files_observed: 0
     captured_files: 0
@@ -227,7 +227,7 @@ admission_roots:
     world: closed
     status: present
     complete_within: one read of the named source during this capture; retained window only
-    observed_at: '2026-09-09T07:30:38.508Z'
+    observed_at: '2026-09-09T07:55:27.303Z'
     history_outside_window: unknown
     files_observed: 0
     captured_files: 0
@@ -247,7 +247,7 @@ checkouts:
     world: closed
     status: absent
     complete_within: one read of the named source during this capture; retained window only
-    observed_at: '2026-09-09T07:30:38.508Z'
+    observed_at: '2026-09-09T07:55:27.303Z'
     history_outside_window: unknown
 - checkout: dead-lease
   kind: synthetic
@@ -262,7 +262,7 @@ checkouts:
     world: closed
     status: absent
     complete_within: one read of the named source during this capture; retained window only
-    observed_at: '2026-09-09T07:30:38.509Z'
+    observed_at: '2026-09-09T07:55:27.304Z'
     history_outside_window: unknown
 - checkout: dead-ticket
   kind: synthetic
@@ -277,7 +277,7 @@ checkouts:
     world: closed
     status: absent
     complete_within: one read of the named source during this capture; retained window only
-    observed_at: '2026-09-09T07:30:38.509Z'
+    observed_at: '2026-09-09T07:55:27.304Z'
     history_outside_window: unknown
 checkout_counts:
   synthetic: 3
@@ -287,7 +287,7 @@ sources:
   world: closed
   status: present
   complete_within: one read of the named source during this capture; retained window only
-  observed_at: '2026-09-09T07:30:38.509Z'
+  observed_at: '2026-09-09T07:55:27.303Z'
   history_outside_window: unknown
   observed_rows: 1
   retained_rows: 1
@@ -318,7 +318,7 @@ sources:
   world: closed
   status: present
   complete_within: one read of the named source during this capture; retained window only
-  observed_at: '2026-09-09T07:30:38.509Z'
+  observed_at: '2026-09-09T07:55:27.304Z'
   history_outside_window: unknown
   observed_rows: 1
   retained_rows: 1
@@ -766,10 +766,12 @@ redaction_rules:
 - 'All families: longest host-root match at start, after a character outside ASCII alphanumeric, underscore,
   dot, tilde, slash and hyphen, or after a slash preceded by slash or colon; relative path continuations
   survive'
+- URI authority pre-pass preserves scheme and authority, with a slash before the host-root token
 - fleet root is <fleet>; home is <home>; temp roots are <session-tmp> and <tmp>; runtime is <runtime>;
   proc is <proc>; shared memory is <shm>
 - Per-user systemd unit identifiers become <uid>; proc process-directory identifiers become <process>
-- Process identity members dropped recursively; serialized process scalar values replaced
+- Process identity members dropped recursively; complete serialized process scalar values replaced
+- JSON keys and values consume escaped character pairs; nested string serialization retains its depth
 - Structural keys and non-process numbers, booleans, nulls retain their decoded values
 - Lock files and proof-locks are excluded; hostname and sha12(hostname) in string values become <host>;
   residue fails capture
@@ -785,11 +787,11 @@ files:
   world: closed
   status: present
   complete_within: one read of the named source during this capture; retained window only
-  observed_at: '2026-09-09T07:30:38.505Z'
+  observed_at: '2026-09-09T07:55:27.298Z'
   history_outside_window: unknown
   provenance: synthetic
   bytes: 3046
-  sha256: 064597090764c56bcb6fdc96b3e247dabb6dbd93a1ff797af3ecba6fc1c9d501
+  sha256: 3cd9365409f82bed8eab969f6902666561411f1b0b015ad74f9b1171b511b7f8
 - path: admission/synthetic/journal.properties
   kind: properties_projection
   source: *id001
@@ -799,12 +801,12 @@ files:
   world: closed
   status: present
   complete_within: one read of the named source during this capture; retained window only
-  observed_at: '2026-09-09T07:30:38.505Z'
+  observed_at: '2026-09-09T07:55:27.298Z'
   history_outside_window: unknown
   provenance: synthetic
   derived_from: admission/synthetic/journal.ndjson
   bytes: 2807
-  sha256: b98a0cf863938911936179e846b27efa92d8095b3c81f1c4e3a9803ae4f7d1d1
+  sha256: ae1804752f416f790d1732efeff97f32df1191ff75e89b7abb43bdd006a0dac6
 - path: admission/synthetic/protocol.json
   kind: protocol
   source: &id002
@@ -816,7 +818,7 @@ files:
   world: closed
   status: present
   complete_within: one read of the named source during this capture; retained window only
-  observed_at: '2026-09-09T07:30:38.508Z'
+  observed_at: '2026-09-09T07:55:27.303Z'
   history_outside_window: unknown
   provenance: synthetic
   bytes: 101
@@ -830,7 +832,7 @@ files:
   world: closed
   status: present
   complete_within: one read of the named source during this capture; retained window only
-  observed_at: '2026-09-09T07:30:38.508Z'
+  observed_at: '2026-09-09T07:55:27.303Z'
   history_outside_window: unknown
   provenance: synthetic
   derived_from: admission/synthetic/protocol.json
@@ -847,7 +849,7 @@ files:
   world: closed
   status: present
   complete_within: one read of the named source during this capture; retained window only
-  observed_at: '2026-09-09T07:30:38.509Z'
+  observed_at: '2026-09-09T07:55:27.303Z'
   history_outside_window: unknown
   provenance: synthetic
   checkout: dead-lease
@@ -863,7 +865,7 @@ files:
   world: closed
   status: present
   complete_within: one read of the named source during this capture; retained window only
-  observed_at: '2026-09-09T07:30:38.509Z'
+  observed_at: '2026-09-09T07:55:27.303Z'
   history_outside_window: unknown
   provenance: synthetic
   checkout: dead-lease
@@ -882,7 +884,7 @@ files:
   world: closed
   status: present
   complete_within: one read of the named source during this capture; retained window only
-  observed_at: '2026-09-09T07:30:38.509Z'
+  observed_at: '2026-09-09T07:55:27.304Z'
   history_outside_window: unknown
   provenance: synthetic
   checkout: dead-ticket
@@ -898,7 +900,7 @@ files:
   world: closed
   status: present
   complete_within: one read of the named source during this capture; retained window only
-  observed_at: '2026-09-09T07:30:38.509Z'
+  observed_at: '2026-09-09T07:55:27.304Z'
   history_outside_window: unknown
   provenance: synthetic
   checkout: dead-ticket
@@ -918,4 +920,4 @@ totals:
   files_emitted: 9
   events: 10
   payload_bytes: 6953
-  bytes_emitted: 42793
+  bytes_emitted: 43001

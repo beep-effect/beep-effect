@@ -1,0 +1,22 @@
+{
+  "ownerRef": "cf6da0a5baa6",
+  "ownerRefVariant": "pid_pair",
+  "schemaVersion": "yeet-admission-ticket/v1",
+  "attemptId": "d2a767b9-43c5-4756-afb3-f543645f32c2",
+  "resolvedHeadSha": "8540d9453a59bf8316f52077531f4ba145269244",
+  "diffFingerprint": "857e6224e7cdf9bb63dfb068c54f2f9c9a085155d6e6372d63ceea263d3a9ab5",
+  "proofTier": "review-fix",
+  "envProfile": "local",
+  "stage": "repair-loop",
+  "kind": "review-fix",
+  "weightTokens": 1,
+  "priority": "verify",
+  "originKey": "",
+  "checkoutRoot": "<fleet>/beep-effect2-worktrees/graft-recovery-runbook",
+  "branch": "codex/graft-recovery-runbook",
+  "coordinationProtocol": "scheduler-origin-concurrency/v1",
+  "enqueuedAtMillis": 1788940362521,
+  "heartbeatAtMillis": 1788940417658,
+  "blockedOnOriginAtMillis": 0,
+  "nonce": "d7ec57f5-4157-46c1-9fca-b7a7775b75ef"
+}
