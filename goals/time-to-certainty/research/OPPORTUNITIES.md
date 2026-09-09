@@ -607,9 +607,13 @@ subprocess diagnostics would make inventory stalls attributable.
   network, identity boundary, and ephemeral teardown. A second pool would preserve Spot
   discounts for short lanes but also preserve their demonstrated interruption exposure.
 - The same investigation found the upstream v7.10.1 termination watcher missing its
-  customer-managed KMS decrypt grant: 164 credential-access failures in one hour. Three
-  Pulumi-managed inline policies now permit only the configured App key, through SSM,
-  for the two required parameter encryption contexts.
+  customer-managed KMS decrypt grant: 164 credential-access failures in one hour. The
+  initial deployment added three narrow inline policies. PR review caught a future
+  role-deletion hazard from attaching policies outside the upstream role owner's graph.
+  The final source uses six key-owned KMS grants, scoped to Decrypt and each exact App
+  parameter context. Names include immutable role IDs so same-name replacements renew
+  access. Explicit controller-region lookups also fix ambient-region drift. These grants
+  permit direct decryption of matching ciphertext; they cannot require `kms:ViaService`.
 - Production apply completed with three policy additions, two controller updates, and no
   deletions. A subsequent preview reported 198 unchanged resources. Live CloudTrail reads
   prove decryption now succeeds; 12 IAM simulations prove intended access and negative
@@ -618,8 +622,26 @@ subprocess diagnostics would make inventory stalls attributable.
   [Heavy / Docgen](https://github.com/beep-effect/beep-effect/actions/runs/34332600371/job/102408052217).
   The probe worker then terminated normally. Full deployment details and reproduction
   commands are in `docs/runbooks/ci-runner-reliability.md`.
+- Review migration: create the six KMS grants, allow their propagation, then remove the
+  initial three policies in attended applies. Verify real SSM reads after removal;
+  IAM simulation does not account for KMS grants. Preserve both this investigation and
+  the newly landed reap-claim settlement receipt when merging the shared ledger.
 - Publication friction: `changeset-status --since origin/main` evaluates the committed
   range. The pre-deployment dirty-tree check reported no product workspace, while the
   first published range correctly required an `@beep/infra` release note. Add the
   infrastructure changeset before publication; a dirty-tree zero count is not proof
   that the committed change is exempt from the release-note rule.
+
+## 2026-09-09 — The reap-claim settlement window was a 25 ms sleep
+
+- **Doing:** attributing Property Laws on the same head.
+- **Evidence:** `quality-scheduler.test.ts › atomically claims dead leases and tickets before
+  journaling each death once` failed with `Admission reap claim … stayed busy; its outputs remain
+  pending.` from `QualityScheduler.ts:905`. `recoveryRecordRemainsAfterSettlement` slept once for
+  25 ms and treated a still-present claim as stuck, while the owning reaper still had two journal
+  sinks and an acknowledgement write to finish on a runner whose import phase alone took five
+  minutes. Fixed on `fix/scheduler-reap-claim-settlement`: a 25 ms spaced poll under a 5 s deadline,
+  and the regression now holds the owner in its sink behind a Deferred gate.
+- **Would have prevented it:** the same rule #1039 applied to the legacy-ticket tests, stated once
+  for the scheduler: no fixed sleeps as settlement or ordering witnesses; poll with a bounded
+  deadline, and gate concurrency in tests with Deferred instead of wall-clock waits.

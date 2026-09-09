@@ -3,6 +3,7 @@ import { O, Str } from "@beep/utils";
 import { assert, describe, expect, it } from "@effect/vitest";
 import * as pulumi from "@pulumi/pulumi";
 import { Effect, MutableHashMap, pipe, Result } from "effect";
+import * as A from "effect/Array";
 import * as S from "effect/Schema";
 
 const validConfigValues = {
@@ -155,6 +156,8 @@ describe("@beep/infra CiFleetController", () => {
       const moduleRunnerCaps = MutableHashMap.empty<string, unknown>();
       const policyDocuments = MutableHashMap.empty<string, string>();
       const rolePolicyRoles = MutableHashMap.empty<string, unknown>();
+      const lambdaRegions = MutableHashMap.empty<string, unknown>();
+      const decryptGrants = MutableHashMap.empty<string, unknown>();
 
       yield* Effect.acquireUseRelease(
         Effect.tryPromise(() =>
@@ -162,7 +165,11 @@ describe("@beep/infra CiFleetController", () => {
             {
               call: (args) => {
                 if (args.token === "aws:lambda/getFunction:getFunction" && isString(args.inputs.functionName)) {
+                  MutableHashMap.set(lambdaRegions, args.inputs.functionName, args.inputs.region);
                   return { role: `arn:aws:iam::123456789012:role/beep-ci/${args.inputs.functionName}-role` };
+                }
+                if (args.token === "aws:iam/getRole:getRole" && isString(args.inputs.name)) {
+                  return { uniqueId: `immutable-id-${args.inputs.name}` };
                 }
                 return { accountId: "123456789012", partition: "aws" };
               },
@@ -186,6 +193,9 @@ describe("@beep/infra CiFleetController", () => {
                   MutableHashMap.set(moduleRunnerCaps, args.name, args.inputs.runners_maximum_count);
                 }
                 const policy = args.inputs.policy;
+                if (args.type === "aws:kms/grant:Grant") {
+                  MutableHashMap.set(decryptGrants, args.name, args.inputs);
+                }
                 if (args.type === "aws:iam/rolePolicy:RolePolicy" && isString(policy)) {
                   MutableHashMap.set(policyDocuments, args.name, policy);
                   MutableHashMap.set(rolePolicyRoles, args.name, args.inputs.role);
@@ -257,37 +267,32 @@ describe("@beep/infra CiFleetController", () => {
       expect(capturedRunnerGroupName.value).toBe("beep-ec2-heavy");
       expect(MutableHashMap.get(moduleCapacityTypes, "ci-fleet-controller-test")).toEqual(O.some("on-demand"));
       expect(MutableHashMap.get(moduleRunnerCaps, "ci-fleet-controller-test")).toEqual(O.some(14));
-      expect(MutableHashMap.size(rolePolicyRoles)).toBe(3);
+      expect(MutableHashMap.size(rolePolicyRoles)).toBe(0);
+      expect(MutableHashMap.size(decryptGrants)).toBe(6);
       for (const functionName of [
         "beep-ci-spot-termination-notification",
         "beep-ci-spot-termination-handler",
         "beep-ci-deregister-retry",
       ]) {
-        const policyName = `ci-fleet-controller-test-${functionName}-app-decrypt`;
-        expect(MutableHashMap.get(rolePolicyRoles, policyName)).toEqual(O.some(`${functionName}-role`));
-        expect(pipe(MutableHashMap.get(policyDocuments, policyName), O.map(decodePolicyDocument))).toEqual(
-          O.some(
-            Result.succeed({
-              Version: "2012-10-17",
-              Statement: [
-                {
-                  Sid: "DecryptGitHubAppParametersThroughSsm",
-                  Effect: "Allow",
-                  Action: "kms:Decrypt",
-                  Resource: validConfigValues.githubAppKmsKeyArn,
-                  Condition: {
-                    StringEquals: {
-                      "kms:ViaService": "ssm.us-east-1.amazonaws.com",
-                      "kms:EncryptionContext:PARAMETER_ARN": [
-                        validConfigValues.githubAppIdSsmParameterArn,
-                        validConfigValues.githubAppKeyBase64SsmParameterArn,
-                      ],
-                    },
-                  },
-                },
-              ],
-            })
-          )
+        expect(MutableHashMap.get(lambdaRegions, functionName)).toEqual(O.some("us-east-1"));
+        A.forEach(
+          [
+            { purpose: "id", parameterArn: validConfigValues.githubAppIdSsmParameterArn },
+            { purpose: "key", parameterArn: validConfigValues.githubAppKeyBase64SsmParameterArn },
+          ],
+          ({ purpose, parameterArn }) =>
+            expect(
+              MutableHashMap.get(decryptGrants, `ci-fleet-controller-test-${functionName}-app-${purpose}-decrypt`)
+            ).toEqual(
+              O.some({
+                name: `${functionName}-immutable-id-${functionName}-role-${purpose}`,
+                region: "us-east-1",
+                keyId: validConfigValues.githubAppKmsKeyArn,
+                granteePrincipal: `arn:aws:iam::123456789012:role/beep-ci/${functionName}-role`,
+                operations: ["Decrypt"],
+                constraints: [{ encryptionContextEquals: { PARAMETER_ARN: parameterArn } }],
+              })
+            )
         );
       }
       expect(capturedMetadataOptions.value).toEqual({

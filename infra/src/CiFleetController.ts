@@ -997,7 +997,10 @@ export class CiFleetController extends pulumi.ComponentResource {
 
     // Upstream v7.10.1 grants these roles ssm:GetParameter but does not pass
     // kms_key_arn into the termination-watcher module. Own only the missing
-    // grant here; leave its role and existing policies under module control.
+    // grant on the KMS key; leave its roles and policies under module control.
+    // External inline/attached policies can block the module's role deletion.
+    // Include the immutable IAM role ID in each grant name so a same-name role
+    // replacement creates fresh grants instead of inheriting stale state.
     // The notification function also handles ordinary instance termination,
     // so these credentials remain necessary for the on-demand fleet.
     for (const functionName of [
@@ -1005,35 +1008,31 @@ export class CiFleetController extends pulumi.ComponentResource {
       "beep-ci-spot-termination-handler",
       "beep-ci-deregister-retry",
     ]) {
-      const watcher = aws.lambda.getFunctionOutput({ functionName }, { dependsOn: [controller], parent: this });
-      new aws.iam.RolePolicy(
-        `${name}-${functionName}-app-decrypt`,
-        {
-          name: "github-app-ssm-decrypt",
-          role: watcher.role.apply(Str.replace(/^.*\//, "")),
-          policy: pulumi.jsonStringify({
-            Version: "2012-10-17",
-            Statement: [
-              {
-                Sid: "DecryptGitHubAppParametersThroughSsm",
-                Effect: "Allow",
-                Action: "kms:Decrypt",
-                Resource: args.config.githubAppKmsKeyArn,
-                Condition: {
-                  StringEquals: {
-                    "kms:ViaService": pulumi.interpolate`ssm.${args.region}.amazonaws.com`,
-                    "kms:EncryptionContext:PARAMETER_ARN": [
-                      args.config.githubAppIdSsmParameterArn,
-                      args.config.githubAppKeyBase64SsmParameterArn,
-                    ],
-                  },
-                },
-              },
-            ],
-          }),
-        },
-        { parent: this }
+      const watcher = aws.lambda.getFunctionOutput(
+        { functionName, region: args.region },
+        { dependsOn: [controller], parent: this }
       );
+      const role = aws.iam.getRoleOutput(
+        { name: watcher.role.apply(Str.replace(/^.*\//, "")) },
+        { dependsOn: [controller], parent: this }
+      );
+      for (const { purpose, parameterArn } of [
+        { purpose: "id", parameterArn: args.config.githubAppIdSsmParameterArn },
+        { purpose: "key", parameterArn: args.config.githubAppKeyBase64SsmParameterArn },
+      ]) {
+        new aws.kms.Grant(
+          `${name}-${functionName}-app-${purpose}-decrypt`,
+          {
+            name: pulumi.interpolate`${functionName}-${role.uniqueId}-${purpose}`,
+            region: args.region,
+            keyId: args.config.githubAppKmsKeyArn,
+            granteePrincipal: watcher.role,
+            operations: ["Decrypt"],
+            constraints: [{ encryptionContextEquals: { PARAMETER_ARN: parameterArn } }],
+          },
+          { parent: this }
+        );
+      }
     }
 
     this.ssmParameters = controller.ssm_parameters;

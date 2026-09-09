@@ -38,22 +38,27 @@ termination roles `ssm:GetParameter` but does not forward `kms_key_arn` to the
 termination watcher. With an externally managed customer-key-encrypted GitHub
 App credential, deregistration therefore fails with `kms:Decrypt` denied.
 
-`CiFleetController` owns only an additional `github-app-ssm-decrypt` inline
-policy on these existing Lambda roles:
+`CiFleetController` owns six KMS grants, one per App parameter for each of
+these existing Lambda roles:
 
 - `beep-ci-spot-termination-notification`
 - `beep-ci-spot-termination-handler`
 - `beep-ci-deregister-retry`
 
-The grant allows only `kms:Decrypt` on the configured GitHub App key, through
-regional SSM, with encryption context naming the App ID or App private-key
-parameter. It does not grant access to the webhook secret, unrelated parameters,
-direct KMS decrypt calls, or other keys. The notification Lambda also consumes
+Each grant allows only `Decrypt` on the configured GitHub App key with an exact
+encryption context naming its App ID or App private-key parameter. It does not
+grant access to the webhook secret, unrelated parameter contexts, or other keys.
+KMS grants cannot enforce `kms:ViaService`: direct decryption of matching
+parameter ciphertext is also permitted. The notification Lambda consumes
 ordinary EC2 termination events, so this fix remains necessary on On-Demand.
 
-The upstream module still owns the roles and its existing policies. Keep the
-extra policy until an upstream upgrade supplies and validates an equivalent
-grant; do not hand-edit the generated SDK or broaden runner workload identity.
+The upstream module still owns the roles and its existing policies. Key grants
+do not attach policies that could block the module from deleting a role. Each
+grant name includes the immutable IAM role ID, forcing fresh grants if a role
+is recreated under the same name. Lambda lookup and grant creation explicitly
+use the controller region. Keep the grants until an upstream upgrade supplies
+and validates equivalent access; do not hand-edit the generated SDK or broaden
+runner workload identity.
 
 ## Deploy and verify
 
@@ -64,15 +69,20 @@ grant; do not hand-edit the generated SDK or broaden runner workload identity.
    `op run --env-file=<path> -- true >/dev/null`. Use that same wrapper for
    Pulumi. Never print resolved credentials or export plaintext stack secrets.
 3. Run `bun run beep quality package-verify @beep/infra`. Review a saved Pulumi
-   preview: the purchase-model update and three narrow IAM grants are intended;
+   preview: the purchase-model update and six narrow KMS grants are intended;
    unexpected network, security-boundary, AMI, cap, or deletion changes need
    separate attribution before apply.
-4. Apply the reviewed plan. Inspect the live scale-up configuration for
+4. Apply the reviewed plan with the operator attending. When migrating the
+   initial three `github-app-ssm-decrypt` inline policies, create the six grants
+   first with a reviewed targeted apply. Allow five minutes for KMS propagation,
+   then remove only those three policies with the reviewed remaining apply.
+   Inspect the live scale-up configuration for
    On-Demand and cap 14. Newly launched matching EC2 instances must have no Spot
    request ID. Let existing busy instances drain naturally.
-5. Verify the three roles allow the exact SSM/KMS context and deny unrelated
-   contexts. Require a successful natural termination/deregistration log after
-   the policy update; an IAM simulation alone does not prove the real operation.
+5. Inspect `kms list-grants` for exactly the six intended principals, operations,
+   and parameter contexts. IAM policy simulation does not evaluate KMS grants.
+   Require successful real SSM decryption and natural termination/deregistration
+   evidence after removing the initial policies.
 6. Confirm a heavy verification job succeeds on a newly launched On-Demand
    runner. Re-read the target run and SHA before any failed-job rerun; do not
    replay superseded branches or healthy jobs.
@@ -84,7 +94,7 @@ for each running VM until its ephemeral teardown completes.
 
 ## Deployment evidence — 2026-09-09
 
-- Production apply: three IAM policies created, two controller resources
+- Initial production apply: three IAM policies created, two controller resources
   updated, no deletions. The scale-up Lambda changed at 09:13:51 UTC and
   reported On-Demand capacity with cap 14.
 - A second `pulumi preview --expect-no-changes` succeeded with 198 unchanged
@@ -102,8 +112,14 @@ for each running VM until its ephemeral teardown completes.
   also succeeded on a new On-Demand worker. The probe worker subsequently
   terminated, confirming ephemeral teardown still works.
 - `bun run beep quality package-verify @beep/infra` passed audit and docgen.
-  The mock regression exercises a Pulumi-output region, On-Demand selection,
-  the unchanged cap, all three role bindings, and exact IAM scope.
+  The mock regression now exercises a Pulumi-output region, On-Demand selection,
+  the unchanged cap, all six exact grant scopes, immutable role IDs in grant
+  names, and absence of external role policies.
+- PR review identified the external-policy role-deletion hazard and ambient
+  Lambda-region lookup. The source replaces those policies with six KMS grants
+  and explicit regional lookups. Migration of the initial production policies
+  requires the attended sequence above; the initial simulation results describe
+  those policies, not the replacement grants.
 
 At deployment, the AWS Price List API quoted $0.504/hour for `r6i.2xlarge`
 Linux shared-tenancy On-Demand in `us-east-1`. The four allowed instance types

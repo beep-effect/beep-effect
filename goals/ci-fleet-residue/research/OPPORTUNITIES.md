@@ -27,8 +27,15 @@ Record receipts at the moment friction happens; redact for the public repo.
 - Deployment-check friction: the initial preview exposed an `Output<T>` string
   coercion in the new regional SSM condition, which a literal-region mock did
   not exercise. The regression now passes the same Pulumi output form as the
-  real entrypoint and the policy uses `pulumi.interpolate`. Require inspection
-  of rendered condition values, not just the resource-count summary.
+  real entrypoint. The later KMS-grant implementation passes that output directly
+  to regional AWS inputs. Require inspection of rendered values, not just the
+  resource-count summary.
+- Review friction: external inline policies on module-owned roles can block
+  deletion or fail to follow same-name role replacement. The final source owns
+  six key grants instead, with exact parameter contexts and immutable role IDs
+  in grant names. Lambda discovery explicitly uses the controller region. The
+  initial three deployed policies remain until the attended grant migration;
+  add grants before removing working access and verify real reads afterward.
 
 ## Seed context (2026-08-13, from the split)
 
