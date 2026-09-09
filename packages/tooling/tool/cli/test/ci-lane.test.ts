@@ -1276,7 +1276,7 @@ describe("ciLaneStepsForTesting", () => {
       expect(workflow).toContain('if [[ "$goals_only" == "true" ]]; then');
       expect(workflow).toContain('shape_args+=(--affected --base "origin/${GITHUB_BASE_REF:-main}")');
       expect(workflow).toContain('run_lane ci lane storybook "${shape_args[@]}"');
-    }).pipe(Effect.provide(NodeServices.layer))
+    }).pipe(provideScopedLayer(NodeServices.layer))
   );
 
   // Quality-lane audit D12: pull requests build affected-scoped with the same

@@ -1,9 +1,11 @@
 import { lintCommand } from "@beep/repo-cli";
 import { collectTsconfigOverlayViolations } from "@beep/repo-cli/commands/Lint/TsconfigOverlay";
+import { FsUtilsLive, TSMorphServiceLive } from "@beep/repo-utils";
 import { provideScopedLayer } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { Effect, FileSystem, Layer, Path } from "effect";
+import * as P from "effect/Predicate";
 import * as TestConsole from "effect/testing/TestConsole";
 import { Command } from "effect/unstable/cli";
 import { describe, expect, it } from "vitest";
@@ -11,7 +13,9 @@ import { expectReportedExit, withTempWorkingDirectory } from "./support/CommandT
 
 const runLintCommand = Command.runWith(lintCommand, { version: "0.0.0" });
 
-const testLayer = Layer.mergeAll(NodeServices.layer, TestConsole.layer);
+const testLayer = Layer.mergeAll(FsUtilsLive, TSMorphServiceLive, TestConsole.layer).pipe(
+  Layer.provideMerge(NodeServices.layer)
+);
 
 const CLEAN_OVERLAY = `{
   "$schema": "https://json.schemastore.org/tsconfig",
@@ -90,7 +94,7 @@ describe("tsconfig-overlay lint command", { concurrent: false }, () => {
             const exit = yield* Effect.exit(runLintCommand(["tsconfig-overlay"]));
 
             expectReportedExit(exit);
-            const errorText = A.join(yield* TestConsole.errorLines, "\n");
+            const errorText = A.join(A.filter(yield* TestConsole.errorLines, P.isString), "\n");
             expect(errorText).toContain(
               "[tsconfig-overlay] violation: 3 key(s) across 1 overlay(s) fall outside the allowlist"
             );

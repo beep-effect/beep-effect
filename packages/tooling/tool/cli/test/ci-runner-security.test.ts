@@ -52,7 +52,7 @@ const WorkflowStep = S.Struct({
   env: S.optionalKey(S.Record(S.String, S.Unknown)),
 });
 type WorkflowStep = typeof WorkflowStep.Type;
-const WorkflowJobs = S.Record(S.String, S.Struct({ steps: S.optionalKey(S.Array(WorkflowStep)) }));
+const WorkflowJobs = S.Record(S.String, S.Struct({ steps: WorkflowStep.pipe(S.Array, S.optionalKey) }));
 type WorkflowJobs = typeof WorkflowJobs.Type;
 const decodeWorkflowSteps = S.decodeUnknownSync(S.Array(WorkflowStep));
 const decodeWorkflowJobs = S.decodeUnknownSync(WorkflowJobs);
