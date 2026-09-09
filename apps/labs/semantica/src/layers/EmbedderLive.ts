@@ -16,6 +16,8 @@ import { ProviderCache } from "@/services/ProviderCache";
 import type { PosInt } from "@beep/schema";
 import type { EmbeddingInput } from "@/schema/Projection";
 
+const decodeEmbeddingVectorType = S.decodeEffect(S.toType(EmbeddingVector));
+
 const EmbeddingVectorJson = S.fromJsonString(EmbeddingVector).pipe(
   SchemaUtils.withCodecStatics(["encodeEffect", "decodeEffect"])
 );
@@ -178,7 +180,7 @@ const providerBatch = Effect.fn("Embedder.providerBatch")(function* (
             Result.fail(degraded(input, model, "response-invalid", "The embedding provider returned an empty vector."))
           ),
         onNonEmpty: (values) =>
-          S.decodeEffect(S.toType(EmbeddingVector))(
+          decodeEmbeddingVectorType(
             EmbeddingVector.make({
               chunk: input.chunk,
               model,

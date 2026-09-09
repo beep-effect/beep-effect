@@ -213,6 +213,7 @@ export class GlobError extends S.TaggedError<GlobError>($I`GlobError`)(
     thunk(GlobError.make({ pattern, cause: normalizeGlobErrorCause(cause) }))
   );
 }
+const isGlobError = S.is(GlobError);
 
 type GlobErrorCauseInput = GlobError["cause"] | GlobError.Encoded["cause"];
 
@@ -280,7 +281,7 @@ type PathMatcher = (relativePath: string) => boolean;
 function toGlobError(pattern: Pattern): (cause: unknown) => GlobError {
   return (cause: unknown): GlobError =>
     Match.value(cause).pipe(
-      Match.when(S.is(GlobError), (error) => error),
+      Match.when(isGlobError, (error) => error),
       Match.orElse((error) => GlobError.new(pattern, decodeGlobErrorCause(error)))
     );
 }

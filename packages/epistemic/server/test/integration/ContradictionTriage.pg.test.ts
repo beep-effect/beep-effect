@@ -49,6 +49,9 @@ import * as Shared from "@beep/shared-domain/identity/Shared";
 import { systemPrincipal as systemPrincipalInput } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import * as PgClient from "@effect/sql-pg/PgClient";
+
+const decodeUnknownRecordEdgeFactResult = S.decodeUnknownResult(RecordEdgeFact);
+
 import { describe, expect, layer } from "@effect/vitest";
 import { Config, Context, DateTime, Deferred, Effect, Layer, pipe, Redacted } from "effect";
 import * as Eq from "effect/Equal";
@@ -155,7 +158,7 @@ const candidate = ContradictionCandidate.make({
 
 const recordRaceEdge = (suffix: string, amount: string) =>
   Result.getOrThrow(
-    S.decodeUnknownResult(RecordEdgeFact)({
+    decodeUnknownRecordEdgeFactResult({
       fact: { amount },
       identity: {
         evidenceScope: null,

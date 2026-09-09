@@ -34,6 +34,26 @@ import * as S from "effect/Schema";
 import * as SchemaAST from "effect/SchemaAST";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeCanonicalizeDatasetRequest = S.decodeEffect(CanonicalizeDatasetRequest);
+const decodeDataset = S.decodeEffect(Dataset);
+const decodeFingerprintDatasetRequest = S.decodeEffect(FingerprintDatasetRequest);
+const decodeSparqlQueryRequest = S.decodeEffect(SparqlQueryRequest);
+const decodeWebAnnotation = S.decodeEffect(WebAnnotation);
+const decodeCanonicalizeDatasetRequestResult = S.decodeResult(CanonicalizeDatasetRequest);
+const decodeDatasetResult = S.decodeResult(Dataset);
+const decodeFingerprintDatasetRequestResult = S.decodeResult(FingerprintDatasetRequest);
+const encodeCanonicalizeDatasetRequest = S.encodeEffect(CanonicalizeDatasetRequest);
+const encodeDataset = S.encodeEffect(Dataset);
+const encodeFingerprintDatasetRequest = S.encodeEffect(FingerprintDatasetRequest);
+const encodeShaclNodeShape = S.encodeEffect(ShaclNodeShape);
+const encodeShaclPropertyShape = S.encodeEffect(ShaclPropertyShape);
+const encodeShaclValidationRequest = S.encodeEffect(ShaclValidationRequest);
+const encodeSparqlQueryRequest = S.encodeEffect(SparqlQueryRequest);
+const encodeCanonicalizeDatasetRequestResult = S.encodeResult(CanonicalizeDatasetRequest);
+const encodeDatasetResult = S.encodeResult(Dataset);
+const encodeFingerprintDatasetRequestResult = S.encodeResult(FingerprintDatasetRequest);
+const isShaclSeverity = S.is(ShaclSeverity);
+
 const dataset = makeDataset([
   makeQuad(
     makeNamedNode("https://example.com/people/alice"),
@@ -66,7 +86,7 @@ const ServiceTestLayer = Layer.merge(CanonicalizationServiceLive, UnsupportedSpa
 describe("Services and Surface", () => {
   it("publishes a canonical arbitrary for SHACL severity", () => {
     expect(SchemaAST.resolve(ShaclSeverity.ast)?.toArbitrary).toBeDefined();
-    expect(fc.sample(S.toArbitrary(ShaclSeverity)(fc), { numRuns: 20, seed: 0x5eed }).every(S.is(ShaclSeverity))).toBe(
+    expect(fc.sample(S.toArbitrary(ShaclSeverity)(fc), { numRuns: 20, seed: 0x5eed }).every(isShaclSeverity)).toBe(
       true
     );
   });
@@ -138,25 +158,25 @@ describe("Services and Surface", () => {
           CanonicalizeDatasetRequestArbitrary,
           FingerprintDatasetRequestArbitrary,
           (generatedDataset, canonicalizeRequest, fingerprintRequest) => {
-            const encodedDataset = S.encodeResult(Dataset)(generatedDataset);
+            const encodedDataset = encodeDatasetResult(generatedDataset);
             const reencodedDataset = pipe(
               encodedDataset,
-              Result.flatMap(S.decodeResult(Dataset)),
-              Result.flatMap(S.encodeResult(Dataset))
+              Result.flatMap(decodeDatasetResult),
+              Result.flatMap(encodeDatasetResult)
             );
 
-            const encodedCanonicalizeRequest = S.encodeResult(CanonicalizeDatasetRequest)(canonicalizeRequest);
+            const encodedCanonicalizeRequest = encodeCanonicalizeDatasetRequestResult(canonicalizeRequest);
             const reencodedCanonicalizeRequest = pipe(
               encodedCanonicalizeRequest,
-              Result.flatMap(S.decodeResult(CanonicalizeDatasetRequest)),
-              Result.flatMap(S.encodeResult(CanonicalizeDatasetRequest))
+              Result.flatMap(decodeCanonicalizeDatasetRequestResult),
+              Result.flatMap(encodeCanonicalizeDatasetRequestResult)
             );
 
-            const encodedFingerprintRequest = S.encodeResult(FingerprintDatasetRequest)(fingerprintRequest);
+            const encodedFingerprintRequest = encodeFingerprintDatasetRequestResult(fingerprintRequest);
             const reencodedFingerprintRequest = pipe(
               encodedFingerprintRequest,
-              Result.flatMap(S.decodeResult(FingerprintDatasetRequest)),
-              Result.flatMap(S.encodeResult(FingerprintDatasetRequest))
+              Result.flatMap(decodeFingerprintDatasetRequestResult),
+              Result.flatMap(encodeFingerprintDatasetRequestResult)
             );
 
             expect(reencodedDataset).toEqual(encodedDataset);
@@ -171,38 +191,38 @@ describe("Services and Surface", () => {
   it.effect(
     "keeps optional service control fields absent in encoded wire shapes when omitted",
     Effect.fnUntraced(function* () {
-      const emptyDataset = yield* S.decodeEffect(Dataset)({ quads: [] });
+      const emptyDataset = yield* decodeDataset({ quads: [] });
       const namedNode = makeNamedNode("https://schema.org/name");
 
-      const encodedCanonicalizeRequest = yield* S.encodeEffect(CanonicalizeDatasetRequest)(
+      const encodedCanonicalizeRequest = yield* encodeCanonicalizeDatasetRequest(
         CanonicalizeDatasetRequest.make({
           algorithm: "rdfc-1.0",
           dataset: emptyDataset,
         })
       );
-      const encodedFingerprintRequest = yield* S.encodeEffect(FingerprintDatasetRequest)(
+      const encodedFingerprintRequest = yield* encodeFingerprintDatasetRequest(
         FingerprintDatasetRequest.make({
           algorithm: "rdfc-1.0",
           dataset: emptyDataset,
         })
       );
-      const encodedPropertyShape = yield* S.encodeEffect(ShaclPropertyShape)(
+      const encodedPropertyShape = yield* encodeShaclPropertyShape(
         ShaclPropertyShape.make({
           path: namedNode,
         })
       );
-      const encodedNodeShape = yield* S.encodeEffect(ShaclNodeShape)(
+      const encodedNodeShape = yield* encodeShaclNodeShape(
         ShaclNodeShape.make({
           properties: [],
         })
       );
-      const encodedValidationRequest = yield* S.encodeEffect(ShaclValidationRequest)(
+      const encodedValidationRequest = yield* encodeShaclValidationRequest(
         ShaclValidationRequest.make({
           dataset: emptyDataset,
           shapes: [],
         })
       );
-      const encodedSparqlRequest = yield* S.encodeEffect(SparqlQueryRequest)(
+      const encodedSparqlRequest = yield* encodeSparqlQueryRequest(
         SparqlQueryRequest.make({
           dataset: emptyDataset,
           profile: "ask",
@@ -231,9 +251,9 @@ describe("Services and Surface", () => {
       "canonicalizes and fingerprints datasets deterministically",
       Effect.fnUntraced(function* () {
         const service = yield* CanonicalizationService;
-        const encodedDataset = yield* S.encodeEffect(Dataset)(dataset);
+        const encodedDataset = yield* encodeDataset(dataset);
         const canonicalized = yield* service.canonicalize(
-          yield* S.decodeEffect(CanonicalizeDatasetRequest)({
+          yield* decodeCanonicalizeDatasetRequest({
             algorithm: "rdfc-1.0",
             dataset: encodedDataset,
           })
@@ -242,7 +262,7 @@ describe("Services and Surface", () => {
         expect(pipe(canonicalized.canonicalText, Str.split("\n"))).toHaveLength(2);
 
         const fingerprint = yield* service.fingerprint(
-          yield* S.decodeEffect(FingerprintDatasetRequest)({
+          yield* decodeFingerprintDatasetRequest({
             algorithm: "rdfc-1.0",
             dataset: encodedDataset,
           })
@@ -274,17 +294,17 @@ describe("Services and Surface", () => {
 
         const [leftRequest, rightRequest] = yield* Effect.all(
           [
-            S.encodeEffect(Dataset)(left).pipe(
+            encodeDataset(left).pipe(
               Effect.flatMap((encoded) =>
-                S.decodeEffect(FingerprintDatasetRequest)({
+                decodeFingerprintDatasetRequest({
                   algorithm: "rdfc-1.0",
                   dataset: encoded,
                 })
               )
             ),
-            S.encodeEffect(Dataset)(right).pipe(
+            encodeDataset(right).pipe(
               Effect.flatMap((encoded) =>
-                S.decodeEffect(FingerprintDatasetRequest)({
+                decodeFingerprintDatasetRequest({
                   algorithm: "rdfc-1.0",
                   dataset: encoded,
                 })
@@ -309,8 +329,8 @@ describe("Services and Surface", () => {
         const service = yield* SparqlQueryService;
         const error = yield* service
           .execute(
-            yield* S.decodeEffect(SparqlQueryRequest)({
-              dataset: yield* S.encodeEffect(Dataset)(dataset),
+            yield* decodeSparqlQueryRequest({
+              dataset: yield* encodeDataset(dataset),
               profile: "select",
               query: "SELECT * WHERE { ?s ?p ?o }",
             })
@@ -319,7 +339,7 @@ describe("Services and Surface", () => {
 
         expect(error.message).toBe("No SPARQL engine is wired into the v1 semantic-web package.");
 
-        const annotation = yield* S.decodeEffect(WebAnnotation)({
+        const annotation = yield* decodeWebAnnotation({
           id: "https://example.com/annotations/1",
           target: {
             selector: {

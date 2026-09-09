@@ -24,6 +24,16 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeButtonStateResult = S.decodeResult(ButtonState);
+const decodeInputResult = S.decodeResult(Input);
+const decodeInputStateResult = S.decodeResult(InputState);
+const decodeUnknownButtonStateResult = S.decodeUnknownResult(ButtonState);
+const decodeUnknownInputStateResult = S.decodeUnknownResult(InputState);
+const encodeButtonStateResult = S.encodeResult(ButtonState);
+const encodeInputStateResult = S.encodeResult(InputState);
+const isHtmlConditionalInputAttributeName = S.is(HtmlConditionalInputAttributeName);
+const isHtmlInputStateName = S.is(HtmlInputStateName);
+
 const InputStateArbitrary = S.toArbitrary(InputState)(fc);
 const ButtonStateArbitrary = S.toArbitrary(ButtonState)(fc);
 
@@ -34,11 +44,11 @@ describe("HTML form-control semantic states", () => {
 
     expect(states).toHaveLength(HtmlInputStateName.Options.length);
     expect(A.every(HtmlInputStateName.Options, (state) => A.contains(states, state))).toBe(true);
-    expect(A.every(states, S.is(HtmlInputStateName))).toBe(true);
+    expect(A.every(states, isHtmlInputStateName)).toBe(true);
     expect(HTML_CONDITIONAL_INPUT_ATTRIBUTE_NAMES).toEqual(HtmlConditionalInputAttributeName.Options);
-    expect(A.every(applicableAttributes, S.is(HtmlConditionalInputAttributeName))).toBe(true);
-    expect(S.is(HtmlInputStateName)("unsupported")).toBe(false);
-    expect(S.is(HtmlConditionalInputAttributeName)("nonstandard")).toBe(false);
+    expect(A.every(applicableAttributes, isHtmlConditionalInputAttributeName)).toBe(true);
+    expect(isHtmlInputStateName("unsupported")).toBe(false);
+    expect(isHtmlConditionalInputAttributeName("nonstandard")).toBe(false);
   });
 
   it("normalizes every input type while preserving the missing wire state", () => {
@@ -49,7 +59,7 @@ describe("HTML form-control semantic states", () => {
     const states = R.keys(HTML_INPUT_ATTRIBUTE_APPLICABILITY);
     expect(states).toHaveLength(22);
     A.forEach(states, (state) => {
-      const input = Result.getOrThrow(S.decodeResult(Input)({ _tag: "input", type: state }));
+      const input = Result.getOrThrow(decodeInputResult({ _tag: "input", type: state }));
       const semanticState = resolveInputState(input);
       expect(semanticState.state).toBe(state);
       expect(inputStateAllowedAttributes(semanticState)).toStrictEqual(HTML_INPUT_ATTRIBUTE_APPLICABILITY[state]);
@@ -127,23 +137,23 @@ describe("HTML form-control semantic states", () => {
     expect(validButton.state).toBe("submit");
     expect(invalidInput.state).toBe("unsupported");
     expect(invalidButton.basis).toBe("auto-command");
-    expect(Result.isFailure(S.decodeUnknownResult(InputState)({ state: "unsupported" }))).toBe(true);
-    expect(Result.isFailure(S.decodeUnknownResult(ButtonState)({ state: "submit", basis: "auto-command" }))).toBe(true);
+    expect(Result.isFailure(decodeUnknownInputStateResult({ state: "unsupported" }))).toBe(true);
+    expect(Result.isFailure(decodeUnknownButtonStateResult({ state: "submit", basis: "auto-command" }))).toBe(true);
   });
 
   it("round-trips schema-derived input and button semantic states", () => {
     fc.assert(
       fc.property(InputStateArbitrary, (state) => {
-        const encoded = Result.getOrThrow(S.encodeResult(InputState)(state));
-        const decoded = Result.getOrThrow(S.decodeResult(InputState)(encoded));
+        const encoded = Result.getOrThrow(encodeInputStateResult(state));
+        const decoded = Result.getOrThrow(decodeInputStateResult(encoded));
         expect(Eq.equals(decoded, state)).toBe(true);
       }),
       fcRuns(25)
     );
     fc.assert(
       fc.property(ButtonStateArbitrary, (state) => {
-        const encoded = Result.getOrThrow(S.encodeResult(ButtonState)(state));
-        const decoded = Result.getOrThrow(S.decodeResult(ButtonState)(encoded));
+        const encoded = Result.getOrThrow(encodeButtonStateResult(state));
+        const decoded = Result.getOrThrow(decodeButtonStateResult(encoded));
         expect(Eq.equals(decoded, state)).toBe(true);
       }),
       fcRuns(25)

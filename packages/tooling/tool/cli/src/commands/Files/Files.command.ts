@@ -48,6 +48,9 @@ import { defaultPersonMatchBackendForPlatform } from "./internal/MatchPerson.ts"
 import type { PersonMatchBackend } from "./Files.schemas.ts";
 import type { FilesCommandService } from "./Files.service.ts";
 
+const decodeMatchPersonOptions = S.decodeEffect(MatchPersonOptions);
+const decodePersonMatchDeviceIndexesFromCsv = S.decodeEffect(PersonMatchDeviceIndexesFromCsv);
+
 const runFilesProgram = <A>(
   effect: Effect.Effect<A, FilesCommandError, FilesCommandService>
 ): Effect.Effect<void, FilesCommandError, FilesCommandService> => effect.pipe(Effect.asVoid);
@@ -425,7 +428,7 @@ const decodeMatchPersonDevices = (
   O.match(devices, {
     onNone: () => Effect.succeed(O.none<PersonMatchDeviceIndexesFromCsv>()),
     onSome: (value) =>
-      S.decodeEffect(PersonMatchDeviceIndexesFromCsv)(value).pipe(
+      decodePersonMatchDeviceIndexesFromCsv(value).pipe(
         Effect.asSome,
         FilesCommandError.mapError(
           `Invalid --devices value "${value}"; expected exactly one non-negative device index such as 0.`
@@ -712,7 +715,7 @@ const filesMatchPersonCommand = Command.make(
     const thresholdSource = A.some([detectionThreshold, matchThreshold, reviewThreshold, minFaceAreaPct], O.isSome)
       ? "explicit"
       : "calibrated-default";
-    const options = yield* S.decodeEffect(MatchPersonOptions)({
+    const options = yield* decodeMatchPersonOptions({
       acceptModelLicense,
       backend: resolvedBackend,
       batchSize,

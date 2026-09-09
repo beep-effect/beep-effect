@@ -38,6 +38,20 @@ import * as McpServer from "effect/unstable/ai/McpServer";
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
 
+const decodeDocumentsProjectionOutput = S.decodeEffect(DocumentsProjectionOutput);
+const decodeDocumentsProjectionOutputJson = S.decodeEffect(S.fromJsonString(DocumentsProjectionOutput));
+const decodeStructInlineSchemaJson = S.decodeEffect(S.fromJsonString(S.Struct({ error: S.String, envVar: S.String })));
+const decodeUsptoGetDocumentsParams = S.decodeEffect(UsptoGetDocumentsParams);
+const decodeUsptoMcpFailure = S.decodeEffect(UsptoMcpFailure);
+const encodeDocumentsProjectionOutput = S.encodeEffect(DocumentsProjectionOutput);
+const encodeUsptoGetDocumentsParams = S.encodeEffect(UsptoGetDocumentsParams);
+const encodeUsptoMcpFailure = S.encodeEffect(UsptoMcpFailure);
+const ApplicationMetadataArray = S.Struct({
+  applicationNumberText: S.String,
+  inventionTitle: S.optionalKey(S.String),
+}).pipe(S.Array, S.fromJsonString);
+const decodeApplicationMetadataArray = S.decodeEffect(ApplicationMetadataArray);
+
 const applicationEnvelope = JSON.stringify({
   count: 1,
   patentFileWrapperDataBag: [
@@ -178,9 +192,7 @@ describe("uspto-mcp fixture proofs", () => {
       const result = yield* callSearch().pipe(provideScopedLayer(buildLayer({}, respondWith(applicationEnvelope))));
 
       assert.isFalse(result.isError);
-      const decoded = yield* S.decodeEffect(S.fromJsonString(S.Struct({ error: S.String, envVar: S.String })))(
-        textOf(result)
-      );
+      const decoded = yield* decodeStructInlineSchemaJson(textOf(result));
       assert.strictEqual(decoded.error, "api_key_required");
       assert.strictEqual(decoded.envVar, "USPTO_API_KEY");
     })
@@ -194,11 +206,7 @@ describe("uspto-mcp fixture proofs", () => {
       );
 
       assert.isFalse(result.isError);
-      const ApplicationMetadataArray = S.Struct({
-        applicationNumberText: S.String,
-        inventionTitle: S.optionalKey(S.String),
-      }).pipe(S.Array, S.fromJsonString);
-      const decoded = yield* S.decodeEffect(ApplicationMetadataArray)(textOf(result));
+      const decoded = yield* decodeApplicationMetadataArray(textOf(result));
       assert.strictEqual(decoded.length, 1);
       assert.strictEqual(decoded[0]?.applicationNumberText, "16138242");
       assert.strictEqual(decoded[0]?.inventionTitle, "Adjustable widget assembly");
@@ -218,7 +226,7 @@ describe("uspto-mcp fixture proofs", () => {
       // The complete-tier payload for 200 documents comfortably exceeds the
       // default 8000-byte budget; the response must have been reshaped down
       // to a smaller named tier rather than returned inline in full.
-      const projection = yield* S.decodeEffect(S.fromJsonString(DocumentsProjectionOutput))(raw);
+      const projection = yield* decodeDocumentsProjectionOutputJson(raw);
 
       assert.strictEqual(projection._tag, "Inline");
       if (projection._tag === "Inline") {
@@ -234,9 +242,9 @@ describe("uspto-mcp schema parity", () => {
     "keeps explicit get-documents parameter wire shape and defaults missing budget in the schema",
     Effect.fnUntraced(function* () {
       const explicitWire = { applicationNumber: "16138242", budgetBytes: 8000 };
-      const decoded = yield* S.decodeEffect(UsptoGetDocumentsParams)(explicitWire);
-      const encoded = yield* S.encodeEffect(UsptoGetDocumentsParams)(decoded);
-      const defaulted = yield* S.decodeEffect(UsptoGetDocumentsParams)({ applicationNumber: "16138242" });
+      const decoded = yield* decodeUsptoGetDocumentsParams(explicitWire);
+      const encoded = yield* encodeUsptoGetDocumentsParams(decoded);
+      const defaulted = yield* decodeUsptoGetDocumentsParams({ applicationNumber: "16138242" });
 
       assert.deepEqual(encoded, explicitWire);
       assert.strictEqual(defaulted.budgetBytes, 8000);
@@ -257,13 +265,13 @@ describe("uspto-mcp schema parity", () => {
         envelope: { columns: ["documentIdentifier"], rows: [["DOC-1"]] },
       };
 
-      const failure = yield* S.decodeEffect(UsptoMcpFailure)(failureWire);
-      const projection = yield* S.decodeEffect(DocumentsProjectionOutput)(projectionWire);
+      const failure = yield* decodeUsptoMcpFailure(failureWire);
+      const projection = yield* decodeDocumentsProjectionOutput(projectionWire);
 
       assert.isTrue(UsptoMcpFailure.is(failure));
       assert.isTrue(DocumentsProjectionOutput.is(projection));
-      assert.deepEqual(yield* S.encodeEffect(UsptoMcpFailure)(failure), failureWire);
-      assert.deepEqual(yield* S.encodeEffect(DocumentsProjectionOutput)(projection), projectionWire);
+      assert.deepEqual(yield* encodeUsptoMcpFailure(failure), failureWire);
+      assert.deepEqual(yield* encodeDocumentsProjectionOutput(projection), projectionWire);
     })
   );
 

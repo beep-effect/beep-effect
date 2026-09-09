@@ -21,6 +21,20 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeAnnotationResult = S.decodeResult(Annotation);
+const decodeEnforcementResult = S.decodeResult(Enforcement);
+const decodeInvariantResult = S.decodeResult(Invariant);
+const decodeRevisionResult = S.decodeResult(Revision);
+const decodeUnknownEnforcementResult = S.decodeUnknownResult(Enforcement);
+const decodeUnknownInvariantResult = S.decodeUnknownResult(Invariant);
+const decodeUnknownPolicyResult = S.decodeUnknownResult(Policy);
+const decodeUnknownReportResult = S.decodeUnknownResult(Report);
+const decodeUnknownRevisionResult = S.decodeUnknownResult(Revision);
+const encodeEnforcementResult = S.encodeResult(Enforcement);
+const encodePolicyResult = S.encodeResult(Policy);
+const encodeReportResult = S.encodeResult(Report);
+const encodeRevisionResult = S.encodeResult(Revision);
+
 const InvariantEnforcementArbitrary = S.toArbitrary(Enforcement)(fc);
 const ConformancePolicyArbitrary = S.toArbitrary(Policy)(fc);
 const SpecificationRevisionArbitrary = S.toArbitrary(Revision)(fc);
@@ -118,11 +132,11 @@ describe("Conformance", () => {
       ...annotationInput.sources[0],
       title: "Duplicate Specification",
     };
-    const duplicateResult = S.decodeResult(Annotation)({
+    const duplicateResult = decodeAnnotationResult({
       ...annotationInput,
       sources: [annotationInput.sources[0], duplicateSource],
     });
-    const danglingResult = S.decodeResult(Annotation)({
+    const danglingResult = decodeAnnotationResult({
       ...annotationInput,
       profiles: [{ ...annotationInput.profiles[0], sourceIds: ["missing-source"] }],
     });
@@ -144,7 +158,7 @@ describe("Conformance", () => {
       title: "Secondary Specification",
       contentSha256: "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb",
     };
-    const duplicateSelection = S.decodeResult(Annotation)({
+    const duplicateSelection = decodeAnnotationResult({
       ...annotationInput,
       profiles: [
         {
@@ -154,7 +168,7 @@ describe("Conformance", () => {
         },
       ],
     });
-    const outsideProfile = S.decodeResult(Annotation)({
+    const outsideProfile = decodeAnnotationResult({
       ...annotationInput,
       sources: [annotationInput.sources[0], secondarySource],
       invariants: [
@@ -233,12 +247,12 @@ describe("Conformance", () => {
     ];
 
     expect(
-      A.every(invalidDescriptors, (descriptor) => Result.isFailure(S.decodeUnknownResult(Invariant)(descriptor)))
+      A.every(invalidDescriptors, (descriptor) => Result.isFailure(decodeUnknownInvariantResult(descriptor)))
     ).toBe(true);
 
     expect(
       Result.isSuccess(
-        S.decodeResult(Invariant)({
+        decodeInvariantResult({
           ...invariant,
           decidability: "externalAuthority",
           enforcement: [{ kind: "notEnforced", gap: "The authority must decide this condition." }],
@@ -247,7 +261,7 @@ describe("Conformance", () => {
     ).toBe(true);
     expect(
       Result.isSuccess(
-        S.decodeResult(Invariant)({
+        decodeInvariantResult({
           ...invariant,
           references: [
             { sourceId: "example-spec", section: "Rule" },
@@ -258,7 +272,7 @@ describe("Conformance", () => {
     ).toBe(true);
     expect(
       Result.isSuccess(
-        S.decodeResult(Invariant)({
+        decodeInvariantResult({
           ...invariant,
           enforcement: [
             { kind: "runtime", validator: "Example.validate" },
@@ -269,7 +283,7 @@ describe("Conformance", () => {
     ).toBe(true);
     expect(
       Result.isSuccess(
-        S.decodeResult(Invariant)({
+        decodeInvariantResult({
           ...invariant,
           decidability: "contextualRuntime",
           enforcement: [{ kind: "documented", rationale: "The caller supplies the deciding context." }],
@@ -278,7 +292,7 @@ describe("Conformance", () => {
     ).toBe(true);
     expect(
       Result.isSuccess(
-        S.decodeResult(Invariant)({
+        decodeInvariantResult({
           ...invariant,
           decidability: "undecidable",
           enforcement: [
@@ -296,12 +310,12 @@ describe("Conformance", () => {
           "decodePandocJsonStrict,encodePandocJson",
           "Heading.validateOutline()",
         ],
-        (validator) => Result.isFailure(S.decodeResult(Enforcement)({ kind: "runtime", validator }))
+        (validator) => Result.isFailure(decodeEnforcementResult({ kind: "runtime", validator }))
       )
     ).toBe(true);
-    expect(
-      Result.isSuccess(S.decodeResult(Enforcement)({ kind: "runtime", validator: "Heading.validateOutline" }))
-    ).toBe(true);
+    expect(Result.isSuccess(decodeEnforcementResult({ kind: "runtime", validator: "Heading.validateOutline" }))).toBe(
+      true
+    );
   });
 
   it("exposes exhaustive helpers for semantically distinct variants", () => {
@@ -346,19 +360,17 @@ describe("Conformance", () => {
       { kind: "retrievedSnapshot", retrievedOn: "2026-13-01" },
     ];
 
-    expect(A.every(invalidRevisions, (revision) => Result.isFailure(S.decodeUnknownResult(Revision)(revision)))).toBe(
-      true
-    );
+    expect(A.every(invalidRevisions, (revision) => Result.isFailure(decodeUnknownRevisionResult(revision)))).toBe(true);
     expect(
       Result.isSuccess(
-        S.decodeResult(Revision)({
+        decodeRevisionResult({
           kind: "gitCommit",
           repository: "https://example.com/repository.git",
           commit: "1ed08f66df016a18c6d7d56bd97aa778912cb37b",
         })
       )
     ).toBe(true);
-    expect(Result.isSuccess(S.decodeResult(Revision)({ kind: "datedSnapshot", date: "2024-02-29" }))).toBe(true);
+    expect(Result.isSuccess(decodeRevisionResult({ kind: "datedSnapshot", date: "2024-02-29" }))).toBe(true);
   });
 
   it("formats every immutable source revision kind", () => {
@@ -392,16 +404,16 @@ describe("Conformance", () => {
         ConformancePolicyArbitrary,
         SpecificationRevisionArbitrary,
         (enforcement, policy, revision) => {
-          expect(
-            pipe(S.encodeResult(Enforcement)(enforcement), Result.flatMap(S.decodeUnknownResult(Enforcement)))
-          ).toEqual(Result.succeed(enforcement));
-          expect(pipe(S.encodeResult(Policy)(policy), Result.flatMap(S.decodeUnknownResult(Policy)))).toEqual(
+          expect(pipe(encodeEnforcementResult(enforcement), Result.flatMap(decodeUnknownEnforcementResult))).toEqual(
+            Result.succeed(enforcement)
+          );
+          expect(pipe(encodePolicyResult(policy), Result.flatMap(decodeUnknownPolicyResult))).toEqual(
             Result.succeed(policy)
           );
-          expect(pipe(S.encodeResult(Report)(report), Result.flatMap(S.decodeUnknownResult(Report)))).toEqual(
+          expect(pipe(encodeReportResult(report), Result.flatMap(decodeUnknownReportResult))).toEqual(
             Result.succeed(report)
           );
-          expect(pipe(S.encodeResult(Revision)(revision), Result.flatMap(S.decodeUnknownResult(Revision)))).toEqual(
+          expect(pipe(encodeRevisionResult(revision), Result.flatMap(decodeUnknownRevisionResult))).toEqual(
             Result.succeed(revision)
           );
         }
@@ -411,7 +423,7 @@ describe("Conformance", () => {
   });
 
   it("requires issues for non-conforming reports", () => {
-    const result = S.decodeUnknownResult(Report)({
+    const result = decodeUnknownReportResult({
       status: "nonConforming",
       profileIds: ["example"],
       checkedInvariantIds: ["example.rule"],
@@ -448,8 +460,8 @@ describe("Conformance", () => {
       ],
     };
 
-    expect(Result.isFailure(S.decodeUnknownResult(Report)(uncheckedIssue))).toBe(true);
-    expect(Result.isFailure(S.decodeUnknownResult(Report)(duplicateIds))).toBe(true);
+    expect(Result.isFailure(decodeUnknownReportResult(uncheckedIssue))).toBe(true);
+    expect(Result.isFailure(decodeUnknownReportResult(duplicateIds))).toBe(true);
     expect(() =>
       Report.cases.nonConforming.make({
         profileIds: ["example"],

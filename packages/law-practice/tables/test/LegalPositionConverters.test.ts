@@ -55,6 +55,20 @@ const ROW_ID = 1;
 const ACT = "enter the demised premises";
 const NORM = { designation: "cl. 4.1" };
 const systemPrincipal = { component: "Runtime", kind: "System" };
+const StoredRow = S.fromJsonString(Unknown);
+const serializeRow = S.encodeEffect(StoredRow);
+const parseRow = S.decodeUnknownEffect(StoredRow);
+const StoredScopeAxes = S.Struct({
+  scope: S.Struct({ material: S.Array(S.String), territorial: S.Array(S.String) }),
+});
+const decodeStoredScopeAxes = S.decodeUnknownEffect(StoredScopeAxes);
+const StoredRelatorPair = S.Struct({ candidate: S.Struct({ relators: S.Array(S.Finite) }) });
+const decodeStoredRelatorPair = S.decodeUnknownEffect(StoredRelatorPair);
+const StoredDerivationKinds = S.Struct({ derivationKind: S.Struct({ kinds: S.Array(S.String) }) });
+const decodeStoredDerivationKinds = S.decodeUnknownEffect(StoredDerivationKinds);
+
+const throughStorage = (row: unknown): Effect.Effect<unknown, S.SchemaError> =>
+  Effect.flatMap(serializeRow(row), parseRow);
 
 const norm = (designation: string, fragment: string | null) => ({ fragment, norm: { designation } });
 
@@ -439,19 +453,6 @@ describe("set-valued fields across the storage boundary", () => {
   // through the shared `Unknown` JSON-string schema rather than by hand keeps the proof on the
   // repo's schema APIs, and it is where the tagged `{"_id":"HashSet"}` form
   // would show up if a set-valued field were declared with `S.HashSet`.
-  const StoredRow = S.fromJsonString(Unknown);
-  const serializeRow = S.encodeEffect(StoredRow);
-  const parseRow = S.decodeUnknownEffect(StoredRow);
-
-  const throughStorage = (row: unknown): Effect.Effect<unknown, S.SchemaError> =>
-    Effect.flatMap(serializeRow(row), parseRow);
-
-  const StoredScopeAxes = S.Struct({
-    scope: S.Struct({ material: S.Array(S.String), territorial: S.Array(S.String) }),
-  });
-  const StoredRelatorPair = S.Struct({ candidate: S.Struct({ relators: S.Array(S.Finite) }) });
-  const StoredDerivationKinds = S.Struct({ derivationKind: S.Struct({ kinds: S.Array(S.String) }) });
-
   it.effect(
     "stores every scope axis as a JSON array and reads it back as a HashSet",
     Effect.fnUntraced(function* () {
@@ -461,7 +462,7 @@ describe("set-valued fields across the storage boundary", () => {
 
       // Decoding the stored value as arrays is the assertion: a set that had
       // been written as a HashSet would not be one.
-      const { scope } = yield* S.decodeUnknownEffect(StoredScopeAxes)(stored);
+      const { scope } = yield* decodeStoredScopeAxes(stored);
 
       expect(A.sort(scope.territorial, Order.String)).toEqual(["US-CA", "US-NV"]);
       expect(A.sort(scope.material, Order.String)).toEqual(["the demised premises", "the yard"]);
@@ -486,7 +487,7 @@ describe("set-valued fields across the storage boundary", () => {
       const insert = yield* Effect.fromResult(toLegalOppositionCandidateInsert(candidate));
       const stored = yield* throughStorage({ ...insert, id: ROW_ID });
 
-      const { candidate: storedCandidate } = yield* S.decodeUnknownEffect(StoredRelatorPair)(stored);
+      const { candidate: storedCandidate } = yield* decodeStoredRelatorPair(stored);
 
       expect(A.sort(storedCandidate.relators, Order.Number)).toEqual([1, 2]);
 
@@ -511,7 +512,7 @@ describe("set-valued fields across the storage boundary", () => {
       const insert = yield* Effect.fromResult(toActFrameInsert(frame));
       const stored = yield* throughStorage({ ...insert, id: ROW_ID });
 
-      const { derivationKind } = yield* S.decodeUnknownEffect(StoredDerivationKinds)(stored);
+      const { derivationKind } = yield* decodeStoredDerivationKinds(stored);
 
       expect(A.sort(derivationKind.kinds, Order.String)).toEqual(["create", "extinguish"]);
 

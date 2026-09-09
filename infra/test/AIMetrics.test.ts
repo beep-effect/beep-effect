@@ -13,6 +13,9 @@ import * as S from "effect/Schema";
 import { describe, expect, it } from "vitest";
 import { expectSchemaRoundTrip } from "./schemaParity.ts";
 
+const encodeUnknownAIMetricsRemoteDeploymentConfig = S.encodeUnknownEffect(AIMetricsRemoteDeploymentConfig);
+const encodeUnknownAIMetricsRemoteSshConfig = S.encodeUnknownEffect(AIMetricsRemoteSshConfig);
+
 describe("@beep/infra AIMetrics", () => {
   it("keeps stack args import-safe and target-aware", () => {
     const args = AIMetricsStackArgs.new(
@@ -141,14 +144,14 @@ describe("@beep/infra AIMetrics", () => {
 
   it("encodes AI metrics remote config with unchanged optional-key wire shapes", () => {
     const encodedSsh = Effect.runSync(
-      S.encodeUnknownEffect(AIMetricsRemoteSshConfig)(
+      encodeUnknownAIMetricsRemoteSshConfig(
         AIMetricsRemoteSshConfig.make({
           agentSocketPath: O.some("/tmp/agent.sock"),
         })
       )
     );
     const encodedRemote = Effect.runSync(
-      S.encodeUnknownEffect(AIMetricsRemoteDeploymentConfig)(
+      encodeUnknownAIMetricsRemoteDeploymentConfig(
         AIMetricsRemoteDeploymentConfig.make({
           phoenixTailnetHttpsPort: 9446,
         })

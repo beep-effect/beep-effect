@@ -46,6 +46,11 @@ import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeM365McpServerConfigResult = S.decodeResult(M365McpServerConfig);
+const decodeM365ToolErrorResult = S.decodeResult(M365ToolError);
+const encodeM365McpServerConfigResult = S.encodeResult(M365McpServerConfig);
+const encodeM365ToolErrorResult = S.encodeResult(M365ToolError);
+
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 
@@ -185,20 +190,20 @@ describe("M365 MCP server", () => {
       version: "0.0.0",
     });
 
-    assert.deepStrictEqual(Result.getOrThrow(S.encodeResult(M365ToolError)(failure)), {
+    assert.deepStrictEqual(Result.getOrThrow(encodeM365ToolErrorResult(failure)), {
       message: "Microsoft 365 listDrives failed: throttled",
       operation: "listDrives",
       reason: "throttled",
       retryable: true,
       toolName: "m365_list_drives",
     });
-    assert.deepStrictEqual(Result.getOrThrow(S.encodeResult(M365ToolError)(failureWithoutReason)), {
+    assert.deepStrictEqual(Result.getOrThrow(encodeM365ToolErrorResult(failureWithoutReason)), {
       message: "Microsoft 365 getSite failed",
       operation: "getSite",
       retryable: false,
       toolName: "m365_get_site",
     });
-    assert.deepStrictEqual(Result.getOrThrow(S.encodeResult(M365McpServerConfig)(config)), {
+    assert.deepStrictEqual(Result.getOrThrow(encodeM365McpServerConfigResult(config)), {
       name: "beep-m365-test",
       version: "0.0.0",
     });
@@ -209,14 +214,14 @@ describe("M365 MCP server", () => {
       fc.property(M365ToolErrorArbitrary, M365McpServerConfigArbitrary, (failure, config) => {
         assert.isTrue(
           sameM365ToolError(
-            Result.getOrThrow(S.decodeResult(M365ToolError)(Result.getOrThrow(S.encodeResult(M365ToolError)(failure)))),
+            Result.getOrThrow(decodeM365ToolErrorResult(Result.getOrThrow(encodeM365ToolErrorResult(failure)))),
             failure
           )
         );
         assert.isTrue(
           sameM365McpServerConfig(
             Result.getOrThrow(
-              S.decodeResult(M365McpServerConfig)(Result.getOrThrow(S.encodeResult(M365McpServerConfig)(config)))
+              decodeM365McpServerConfigResult(Result.getOrThrow(encodeM365McpServerConfigResult(config)))
             ),
             config
           )

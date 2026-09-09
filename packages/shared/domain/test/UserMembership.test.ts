@@ -5,6 +5,9 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
 
+const decodeUnknownMembershipModel = S.decodeUnknownEffect(Membership.Model);
+const decodeUnknownUserModel = S.decodeUnknownEffect(User.Model);
+
 const systemPrincipal = {
   component: "Runtime",
   kind: "System",
@@ -31,7 +34,7 @@ describe("User and Membership", () => {
   it.effect(
     "decodes shared User rows",
     Effect.fnUntraced(function* () {
-      const user = yield* S.decodeUnknownEffect(User.Model)({
+      const user = yield* decodeUnknownUserModel({
         ...baseEntityInput("SharedUser", 2),
         displayName: "Jordan Miles",
       });
@@ -47,7 +50,7 @@ describe("User and Membership", () => {
   it.effect(
     "decodes shared Membership rows",
     Effect.fnUntraced(function* () {
-      const membership = yield* S.decodeUnknownEffect(Membership.Model)({
+      const membership = yield* decodeUnknownMembershipModel({
         ...baseEntityInput("SharedMembership", 10),
         role: "owner",
         status: "active",

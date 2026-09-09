@@ -12,6 +12,17 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import type { DrizzleClient } from "@beep/drizzle";
 
+const decodeDrizzleErrorResult = S.decodeResult(DrizzleError);
+const decodeDrizzleErrorContextResult = S.decodeResult(DrizzleErrorContext);
+const decodeDrizzleErrorSync = S.decodeSync(DrizzleError);
+const decodeUnknownDrizzleErrorResult = S.decodeUnknownResult(DrizzleError);
+const decodeUnknownDrizzleErrorContextResult = S.decodeUnknownResult(DrizzleErrorContext);
+const decodeUnknownDrizzleRowsResult = S.decodeUnknownResult(DrizzleRows);
+const decodeUnknownDrizzleErrorSync = S.decodeUnknownSync(DrizzleError);
+const encodeDrizzleErrorResult = S.encodeResult(DrizzleError);
+const encodeDrizzleErrorContextResult = S.encodeResult(DrizzleErrorContext);
+const encodeDrizzleRowsResult = S.encodeResult(DrizzleRows);
+
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
   <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
@@ -274,7 +285,7 @@ describe("DrizzleError", () => {
   });
 
   it("decodes an omitted cause as none", () => {
-    const error = S.decodeSync(DrizzleError)({
+    const error = decodeDrizzleErrorSync({
       _tag: "DrizzleError",
       operation: "execute",
     });
@@ -290,15 +301,15 @@ describe("DrizzleError", () => {
       query: O.some("select * from accounts where id = $1"),
       params: O.some([123]),
     });
-    const encoded = Result.getOrThrow(S.encodeResult(DrizzleErrorContext)(context));
-    const decoded = Result.getOrThrow(S.decodeResult(DrizzleErrorContext)(encoded));
+    const encoded = Result.getOrThrow(encodeDrizzleErrorContextResult(context));
+    const decoded = Result.getOrThrow(decodeDrizzleErrorContextResult(encoded));
 
     expect(encoded).toEqual({
       query: "select * from accounts where id = $1",
       params: [123],
     });
     expect(Eq.equals(decoded, context)).toBe(true);
-    expect(Result.getOrThrow(S.encodeResult(DrizzleErrorContext)(DrizzleErrorContext.make({})))).toEqual({});
+    expect(Result.getOrThrow(encodeDrizzleErrorContextResult(DrizzleErrorContext.make({})))).toEqual({});
   });
 
   it("keeps normalized error wire shape while enforcing redacted params", () => {
@@ -306,8 +317,8 @@ describe("DrizzleError", () => {
       operation: "execute",
       params: O.some(["<redacted>"]),
     });
-    const encoded = Result.getOrThrow(error.pipe(S.encodeResult(DrizzleError)));
-    const decoded = Result.getOrThrow(S.decodeResult(DrizzleError)(encoded));
+    const encoded = Result.getOrThrow(error.pipe(encodeDrizzleErrorResult));
+    const decoded = Result.getOrThrow(decodeDrizzleErrorResult(encoded));
 
     expect(encoded).toEqual({
       _tag: "DrizzleError",
@@ -317,7 +328,7 @@ describe("DrizzleError", () => {
     expect(decoded.operation).toBe(error.operation);
     expect(Eq.equals(decoded.params, error.params)).toBe(true);
     expect(() =>
-      S.decodeUnknownSync(DrizzleError)({
+      decodeUnknownDrizzleErrorSync({
         _tag: "DrizzleError",
         operation: "execute",
         params: ["raw"],
@@ -335,7 +346,7 @@ describe("DrizzleError", () => {
     fc.assert(
       fc.property(DrizzleErrorContextArbitrary, (context) => {
         const decoded = Result.getOrThrow(
-          S.encodeResult(DrizzleErrorContext)(context).pipe(Result.flatMap(S.decodeUnknownResult(DrizzleErrorContext)))
+          encodeDrizzleErrorContextResult(context).pipe(Result.flatMap(decodeUnknownDrizzleErrorContextResult))
         );
 
         expect(Eq.equals(decoded, context)).toBe(true);
@@ -346,7 +357,7 @@ describe("DrizzleError", () => {
     fc.assert(
       fc.property(DrizzleErrorArbitrary, (error) => {
         const decoded = Result.getOrThrow(
-          error.pipe(S.encodeResult(DrizzleError), Result.flatMap(S.decodeUnknownResult(DrizzleError)))
+          error.pipe(encodeDrizzleErrorResult, Result.flatMap(decodeUnknownDrizzleErrorResult))
         );
 
         expect(decoded._tag).toBe(error._tag);
@@ -361,7 +372,7 @@ describe("DrizzleError", () => {
     fc.assert(
       fc.property(DrizzleRowsArbitrary, (rows) => {
         const decoded = Result.getOrThrow(
-          S.encodeResult(DrizzleRows)(rows).pipe(Result.flatMap(S.decodeUnknownResult(DrizzleRows)))
+          encodeDrizzleRowsResult(rows).pipe(Result.flatMap(decodeUnknownDrizzleRowsResult))
         );
 
         expect(Eq.equals(decoded, rows)).toBe(true);

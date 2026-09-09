@@ -10,6 +10,9 @@ import * as S from "effect/Schema";
 import type { OpenclawProcessRequest } from "@beep/openclaw/Openclaw.models";
 import type { OpenclawCliRunner } from "@beep/openclaw/OpenclawCli.service";
 
+const isOpenclawCommandExitError = S.is(OpenclawCommandExitError);
+const isOpenclawOutputParseError = S.is(OpenclawOutputParseError);
+
 const unitName = "openclaw-spike.service";
 const showStdout =
   "ActiveState=active\n" +
@@ -146,7 +149,7 @@ describe("@beep/openclaw OpenclawSystemd service", () => {
         const error = yield* systemd.show(unitName).pipe(Effect.flip);
 
         expect(error).toBeInstanceOf(OpenclawOutputParseError);
-        if (S.is(OpenclawOutputParseError)(error)) {
+        if (isOpenclawOutputParseError(error)) {
           expect(error.executable).toBe("systemctl");
           expect(error.subcommand).toBe("show");
         }
@@ -162,7 +165,7 @@ describe("@beep/openclaw OpenclawSystemd service", () => {
         const error = yield* systemd.start(unitName).pipe(Effect.flip);
 
         expect(error).toBeInstanceOf(OpenclawCommandExitError);
-        if (S.is(OpenclawCommandExitError)(error)) {
+        if (isOpenclawCommandExitError(error)) {
           expect(error.executable).toBe("systemctl");
           expect(error.subcommand).toBe("start");
           expect(error.exitCode).toBe(1);

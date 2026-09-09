@@ -7,6 +7,9 @@ import { Text } from "@beep/html/Html.nodes";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Exit, pipe } from "effect";
 import * as O from "effect/Option";
+
+const isForeignElementName = S.is(ForeignElementName);
+
 import * as S from "effect/Schema";
 
 const XHTML_NAMESPACE = "http://www.w3.org/1999/xhtml";
@@ -574,9 +577,9 @@ describe("@beep/html browser conformance", () => {
   });
 
   it("admits exactly the foreign-name representatives preserved by HTML parsing", () => {
-    expect(S.is(ForeignElementName)("_x")).toBe(false);
-    expect(S.is(ForeignElementName)("é")).toBe(false);
-    expect(S.is(ForeignElementName)("svg:é")).toBe(true);
+    expect(isForeignElementName("_x")).toBe(false);
+    expect(isForeignElementName("é")).toBe(false);
+    expect(isForeignElementName("svg:é")).toBe(true);
 
     const root = ForeignElement.make({
       namespace: "svg",

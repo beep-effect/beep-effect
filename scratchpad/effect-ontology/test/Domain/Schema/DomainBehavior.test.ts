@@ -14,24 +14,33 @@ import {
 } from "../../../Domain/Schema/DocumentMetadata.ts";
 import { BackgroundJobId, JobMetadata } from "../../../Domain/Schema/JobSchema.ts";
 import { AssertionId, ClaimId, DerivedAssertionId, TextSpan } from "../../../Domain/Schema/KnowledgeModel.ts";
+const decodeGcsUri = S.decodeEffect(GcsUri);
+const decodeJobMetadata = S.decodeEffect(JobMetadata);
+const decodePreprocessingOptions = S.decodeEffect(PreprocessingOptions);
+const decodeDateTimeUtcFromString = S.decodeEffect(S.DateTimeUtcFromString);
+const decodeTextSpan = S.decodeEffect(TextSpan);
+const decodeChunkingParamsResult = S.decodeResult(ChunkingParams);
+const decodePreprocessingOptionsResult = S.decodeResult(PreprocessingOptions);
+const decodeTextSpanResult = S.decodeResult(TextSpan);
+const encodeTextSpan = S.encodeEffect(TextSpan);
 
 const contentHash = ContentHash.make("a".repeat(64));
 
 describe("effect-ontology schema-owned domain behavior", () => {
   it("enforces adaptive chunking and preprocessing bounds at decode time", () => {
-    const valid = S.decodeResult(ChunkingParams)({
+    const valid = decodeChunkingParamsResult({
       chunkSize: 500,
       overlapSentences: 2,
     });
-    const invalidSize = S.decodeResult(ChunkingParams)({
+    const invalidSize = decodeChunkingParamsResult({
       chunkSize: 0,
       overlapSentences: 2,
     });
-    const invalidOverlap = S.decodeResult(ChunkingParams)({
+    const invalidOverlap = decodeChunkingParamsResult({
       chunkSize: 500,
       overlapSentences: 11,
     });
-    const invalidBatchSize = S.decodeResult(PreprocessingOptions)({
+    const invalidBatchSize = decodePreprocessingOptionsResult({
       classificationBatchSize: 51,
     });
 
@@ -44,8 +53,8 @@ describe("effect-ontology schema-owned domain behavior", () => {
   it.effect(
     "applies complete preprocessing defaults and Option-normalizes overrides",
     Effect.fnUntraced(function* () {
-      const defaults = yield* S.decodeEffect(PreprocessingOptions)({});
-      const override = yield* S.decodeEffect(PreprocessingOptions)({
+      const defaults = yield* decodePreprocessingOptions({});
+      const override = yield* decodePreprocessingOptions({
         chunkingStrategyOverride: "section_aware",
       });
 
@@ -81,8 +90,8 @@ describe("effect-ontology schema-owned domain behavior", () => {
   it.effect(
     "constructs a complete conservative metadata fallback without nullish fields",
     Effect.fnUntraced(function* () {
-      const preprocessedAt = yield* S.decodeEffect(S.DateTimeUtcFromString)("2026-07-25T12:00:00.000Z");
-      const sourceUri = yield* S.decodeEffect(GcsUri)("gs://beep-input/documents/report.txt");
+      const preprocessedAt = yield* decodeDateTimeUtcFromString("2026-07-25T12:00:00.000Z");
+      const sourceUri = yield* decodeGcsUri("gs://beep-input/documents/report.txt");
       const metadata = DocumentMetadata.fallback({
         documentId: DocumentId.make("doc-abc123def456"),
         sourceUri,
@@ -112,20 +121,20 @@ describe("effect-ontology schema-owned domain behavior", () => {
   it.effect(
     "applies retry defaults and normalizes width-checked evidence spans",
     Effect.fnUntraced(function* () {
-      const metadata = yield* S.decodeEffect(JobMetadata)({
+      const metadata = yield* decodeJobMetadata({
         id: BackgroundJobId.fromContentHash(contentHash),
       });
-      const span = yield* S.decodeEffect(TextSpan)({
+      const span = yield* decodeTextSpan({
         start: 4,
         end: 9,
         text: "Alice",
       });
-      const mismatched = S.decodeResult(TextSpan)({
+      const mismatched = decodeTextSpanResult({
         start: 4,
         end: 8,
         text: "Alice",
       });
-      const encoded = yield* S.encodeEffect(TextSpan)(span);
+      const encoded = yield* encodeTextSpan(span);
 
       expect(metadata.attempts).toBe(0);
       expect(O.isNone(metadata.lastError)).toBe(true);

@@ -71,6 +71,10 @@ import { HtmlWhatwgConformanceAnnotation } from "./internal/conformance/Html.con
 import { inspectHeadingOutline } from "./internal/conformance/Html.heading-conformance.ts";
 import { inspectScriptConformance } from "./internal/conformance/Html.script-conformance.ts";
 import { isValidBcp47LanguageTag } from "./internal/Html.language-tag.ts";
+
+const decodeHtmlRootResult = S.decodeResult(HtmlRoot);
+const encodeHtmlRootResult = S.encodeResult(HtmlRoot);
+
 import type { HtmlAttributeRequirement } from "./Html.meta.ts";
 import type { HtmlRootView } from "./internal/conformance/Html.conformance-contracts.ts";
 
@@ -253,10 +257,10 @@ const snapshotFailure = (): HtmlConformanceError =>
   makeConformanceError("The HTML root could not be copied into a detached schema-valid conformance snapshot");
 
 const snapshotRoot = (root: HtmlRoot.Type): Effect.Effect<HtmlRoot.Type, HtmlConformanceError> =>
-  Result.match(S.encodeResult(HtmlRoot)(root), {
+  Result.match(encodeHtmlRootResult(root), {
     onFailure: () => Effect.fail(snapshotFailure()),
     onSuccess: (encoded) =>
-      Result.match(S.decodeResult(HtmlRoot)(encoded), {
+      Result.match(decodeHtmlRootResult(encoded), {
         onFailure: () => Effect.fail(snapshotFailure()),
         onSuccess: flow(freezeTree, Effect.succeed),
       }),

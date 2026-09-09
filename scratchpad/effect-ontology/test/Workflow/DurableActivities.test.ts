@@ -30,6 +30,9 @@ import {
   makeCrossBatchResolutionActivity,
   makeIngestionActivity,
 } from "../../Workflow/DurableActivities.ts";
+const decodeClaimPersistenceInput = S.decodeEffect(ClaimPersistenceInput);
+const decodeEvidenceSpan = S.decodeEffect(EvidenceSpan);
+const decodeObjectRef = S.decodeEffect(ObjectRef);
 
 const DurableActivityTestWorkflow = Workflow.make("durable-activity-test", {
   payload: { testName: S.String },
@@ -159,11 +162,11 @@ describe("durable activity boundaries", () => {
       Effect.fnUntraced(function* () {
         const storage = yield* StorageService;
         const rdf = yield* RdfBuilder;
-        const activity = yield* S.decodeEffect(ObjectRef)("urn:beep:test:activity:persistence");
-        const source = yield* S.decodeEffect(ObjectRef)("urn:beep:test:source:persistence");
-        const provenance = yield* S.decodeEffect(ObjectRef)("urn:beep:test:artifact:persistence");
-        const observationId = yield* S.decodeEffect(ObjectRef)("urn:beep:test:observation:persistence");
-        const evidence = yield* S.decodeEffect(EvidenceSpan)({ text: "Ada", startChar: 4, endChar: 7 });
+        const activity = yield* decodeObjectRef("urn:beep:test:activity:persistence");
+        const source = yield* decodeObjectRef("urn:beep:test:source:persistence");
+        const provenance = yield* decodeObjectRef("urn:beep:test:artifact:persistence");
+        const observationId = yield* decodeObjectRef("urn:beep:test:observation:persistence");
+        const evidence = yield* decodeEvidenceSpan({ text: "Ada", startChar: 4, endChar: 7 });
         const claim = ClaimData.make({
           claimId: ClaimId.make("claim-abc123def456"),
           subjectIri: "https://example.test/entity/ada",
@@ -213,7 +216,7 @@ describe("durable activity boundaries", () => {
             });
           }),
         });
-        const input = yield* S.decodeEffect(ClaimPersistenceInput)({
+        const input = yield* decodeClaimPersistenceInput({
           batchId: BatchA,
           ontologyId: "ontology-1",
           documentGraphUris: [graphUri],

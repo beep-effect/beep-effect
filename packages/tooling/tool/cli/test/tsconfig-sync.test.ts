@@ -28,6 +28,7 @@ const TsconfigReferences = S.Struct({
     })
   ),
 });
+const encodeUnknownTsconfigReferencesSync = S.encodeUnknownSync(TsconfigReferences);
 const TsconfigPaths = S.Struct({
   compilerOptions: S.Struct({
     paths: S.Record(S.String, S.Array(S.String)),
@@ -37,7 +38,7 @@ const decodeTsconfigReferences = S.decodeUnknownSync(TsconfigReferences);
 const decodeTsconfigPaths = S.decodeUnknownSync(TsconfigPaths);
 
 const expectTsconfigReferencesRoundTrip = (value: typeof TsconfigReferences.Type): void => {
-  const encoded = S.encodeUnknownSync(TsconfigReferences)(value);
+  const encoded = encodeUnknownTsconfigReferencesSync(value);
   expect(decodeTsconfigReferences(encoded)).toEqual(value);
 };
 

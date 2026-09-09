@@ -23,6 +23,14 @@ import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import type { OpenclawProcessRequest } from "@beep/openclaw/Openclaw.models";
 import type { OpenclawCliRunner } from "@beep/openclaw/OpenclawCli.service";
 
+const decodeOpenclawConfigValidationResult = S.decodeResult(OpenclawConfigValidation);
+const decodeOpenclawSecretsReloadResult = S.decodeResult(OpenclawSecretsReload);
+const encodeOpenclawConfigValidationResult = S.encodeResult(OpenclawConfigValidation);
+const encodeOpenclawSecretsReloadResult = S.encodeResult(OpenclawSecretsReload);
+const isOpenclawCommandExitError = S.is(OpenclawCommandExitError);
+const isOpenclawCommandSpawnError = S.is(OpenclawCommandSpawnError);
+const isOpenclawOutputParseError = S.is(OpenclawOutputParseError);
+
 const binaryPath = "/opt/openclaw/node_modules/.bin/openclaw";
 const gatewayUrl = "ws://127.0.0.1:19031";
 const gatewayTokenValue = "gateway-token-value";
@@ -297,7 +305,7 @@ describe("@beep/openclaw OpenclawCli service", () => {
         const cli = yield* OpenclawCli;
         const validation = yield* cli.configValidate(baseContext);
 
-        expect(Result.getOrThrow(S.encodeResult(OpenclawConfigValidation)(validation))).toEqual({
+        expect(Result.getOrThrow(encodeOpenclawConfigValidationResult(validation))).toEqual({
           _tag: "Valid",
           output: "Configuration is valid.",
         });
@@ -345,7 +353,7 @@ describe("@beep/openclaw OpenclawCli service", () => {
         const cli = yield* OpenclawCli;
         const reload = yield* cli.secretsReload(gatewayContext, { timeoutMs: 15_000 });
 
-        expect(Result.getOrThrow(S.encodeResult(OpenclawSecretsReload)(reload))).toEqual({
+        expect(Result.getOrThrow(encodeOpenclawSecretsReloadResult(reload))).toEqual({
           _tag: "Reloaded",
           warningCount: 0,
         });
@@ -465,7 +473,7 @@ describe("@beep/openclaw OpenclawCli service", () => {
         const cli = yield* OpenclawCli;
         const validation = yield* cli.configValidate(baseContext);
 
-        expect(Result.getOrThrow(S.encodeResult(OpenclawConfigValidation)(validation))).toEqual({
+        expect(Result.getOrThrow(encodeOpenclawConfigValidationResult(validation))).toEqual({
           _tag: "Invalid",
           diagnostics: "Unknown top-level key: unexpected",
           exitCode: 1,
@@ -479,7 +487,7 @@ describe("@beep/openclaw OpenclawCli service", () => {
         const cli = yield* OpenclawCli;
         const reload = yield* cli.secretsReload(gatewayContext);
 
-        expect(Result.getOrThrow(S.encodeResult(OpenclawSecretsReload)(reload))).toEqual({
+        expect(Result.getOrThrow(encodeOpenclawSecretsReloadResult(reload))).toEqual({
           _tag: "Degraded",
           diagnostics: "secrets.reload failed",
           exitCode: 1,
@@ -505,7 +513,7 @@ describe("@beep/openclaw OpenclawCli service", () => {
         const error = yield* cli.version(baseContext).pipe(Effect.flip);
 
         expect(error).toBeInstanceOf(OpenclawCommandExitError);
-        if (S.is(OpenclawCommandExitError)(error)) {
+        if (isOpenclawCommandExitError(error)) {
           expect(error.exitCode).toBe(1);
           expect(error.stdoutLength).toBe(0);
           expect(error.stderrLength).toBe("node: command failed\n".length);
@@ -521,7 +529,7 @@ describe("@beep/openclaw OpenclawCli service", () => {
         const error = yield* cli.gatewayHealth(gatewayContext).pipe(Effect.flip);
 
         expect(error).toBeInstanceOf(OpenclawCommandExitError);
-        if (S.is(OpenclawCommandExitError)(error)) {
+        if (isOpenclawCommandExitError(error)) {
           expect(error.exitCode).toBe(1);
           expect(O.isNone(error.diagnostics)).toBe(true);
           expect(error.stderrLength).toBe("unauthorized: invalid token\n".length);
@@ -538,7 +546,7 @@ describe("@beep/openclaw OpenclawCli service", () => {
 
         const reloadError = yield* cli.secretsReload(gatewayContext).pipe(Effect.flip);
         expect(reloadError).toBeInstanceOf(OpenclawOutputParseError);
-        if (S.is(OpenclawOutputParseError)(reloadError)) {
+        if (isOpenclawOutputParseError(reloadError)) {
           expect(reloadError.subcommand).toBe("secrets reload");
           expect(reloadError.stdoutLength).toBe("not-json".length);
         }
@@ -560,7 +568,7 @@ describe("@beep/openclaw OpenclawCli service", () => {
         const error = yield* cli.version(baseContext).pipe(Effect.flip);
 
         expect(error).toBeInstanceOf(OpenclawCommandSpawnError);
-        if (S.is(OpenclawCommandSpawnError)(error)) {
+        if (isOpenclawCommandSpawnError(error)) {
           expect(error.executable).toBe(binaryPath);
           expect(error.subcommand).toBe("--version");
         }
@@ -576,15 +584,12 @@ describe("@beep/openclaw OpenclawCli service", () => {
         S.toArbitrary(OpenclawConfigValidation)(fc),
         S.toArbitrary(OpenclawSecretsReload)(fc),
         (validation, reload) => {
-          const validationWire = Result.getOrThrow(S.encodeResult(OpenclawConfigValidation)(validation));
-          const reloadWire = Result.getOrThrow(S.encodeResult(OpenclawSecretsReload)(reload));
+          const validationWire = Result.getOrThrow(encodeOpenclawConfigValidationResult(validation));
+          const reloadWire = Result.getOrThrow(encodeOpenclawSecretsReloadResult(reload));
           expect(
-            validationEquivalence(
-              Result.getOrThrow(S.decodeResult(OpenclawConfigValidation)(validationWire)),
-              validation
-            )
+            validationEquivalence(Result.getOrThrow(decodeOpenclawConfigValidationResult(validationWire)), validation)
           ).toBe(true);
-          expect(reloadEquivalence(Result.getOrThrow(S.decodeResult(OpenclawSecretsReload)(reloadWire)), reload)).toBe(
+          expect(reloadEquivalence(Result.getOrThrow(decodeOpenclawSecretsReloadResult(reloadWire)), reload)).toBe(
             true
           );
         }

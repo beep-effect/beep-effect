@@ -44,6 +44,19 @@ import { FastCheck as fc } from "effect/testing";
 import { describe, expect, it } from "vitest";
 import type { PatternElement } from "@beep/nlp/Core/index";
 
+const decodeBracketStringToEntityPatternElement = Schema.decodeEffect(BracketStringToEntityPatternElement);
+const decodeBracketStringToLiteralPatternElement = Schema.decodeEffect(BracketStringToLiteralPatternElement);
+const decodeBracketStringToPOSPatternElement = Schema.decodeEffect(BracketStringToPOSPatternElement);
+const decodeEntityPatternOption = Schema.decodeEffect(EntityPatternOption);
+const decodeLiteralPatternOption = Schema.decodeEffect(LiteralPatternOption);
+const decodePOSPatternOption = Schema.decodeEffect(POSPatternOption);
+const decodePatternElement = Schema.decodeEffect(Pattern.Element);
+const decodeBracketStringToLiteralPatternElementSync = Schema.decodeSync(BracketStringToLiteralPatternElement);
+const decodeEntityPatternOptionSync = Schema.decodeSync(EntityPatternOption);
+const decodeLiteralPatternOptionSync = Schema.decodeSync(LiteralPatternOption);
+const decodePOSPatternOptionSync = Schema.decodeSync(POSPatternOption);
+const encodePatternElement = Schema.encodeEffect(Pattern.Element);
+
 const POSPatternOptionArbitrary = Schema.toArbitrary(POSPatternOption)(fc);
 const EntityPatternOptionArbitrary = Schema.toArbitrary(EntityPatternOption)(fc);
 const LiteralPatternOptionArbitrary = Schema.toArbitrary(LiteralPatternOption)(fc);
@@ -136,9 +149,9 @@ describe("Core Pattern", () => {
   it("encodes and decodes element schemas", () =>
     Effect.runPromise(
       Effect.gen(function* () {
-        const posResult = yield* Schema.decodeEffect(BracketStringToPOSPatternElement)("[ADJ|NOUN]");
-        const entityResult = yield* Schema.decodeEffect(BracketStringToEntityPatternElement)("[DATE|TIME]");
-        const literalResult = yield* Schema.decodeEffect(BracketStringToLiteralPatternElement)("[|Apple|Google]");
+        const posResult = yield* decodeBracketStringToPOSPatternElement("[ADJ|NOUN]");
+        const entityResult = yield* decodeBracketStringToEntityPatternElement("[DATE|TIME]");
+        const literalResult = yield* decodeBracketStringToLiteralPatternElement("[|Apple|Google]");
 
         expect(posResult.value).toEqual(["ADJ", "NOUN"]);
         expect(entityResult.value).toEqual(["DATE", "TIME"]);
@@ -158,11 +171,11 @@ describe("Core Pattern", () => {
         PatternElementArbitrary,
         PatternArbitrary,
         (posOption, entityOption, literalOption, patternElement, pattern) => {
-          const decodedPOSOption = Effect.runSync(Schema.decodeEffect(POSPatternOption)(posOption));
-          const decodedEntityOption = Effect.runSync(Schema.decodeEffect(EntityPatternOption)(entityOption));
-          const decodedLiteralOption = Effect.runSync(Schema.decodeEffect(LiteralPatternOption)(literalOption));
-          const encodedElement = Effect.runSync(Schema.encodeEffect(Pattern.Element)(patternElement));
-          const decodedElement = Effect.runSync(Schema.decodeEffect(Pattern.Element)(encodedElement));
+          const decodedPOSOption = Effect.runSync(decodePOSPatternOption(posOption));
+          const decodedEntityOption = Effect.runSync(decodeEntityPatternOption(entityOption));
+          const decodedLiteralOption = Effect.runSync(decodeLiteralPatternOption(literalOption));
+          const encodedElement = Effect.runSync(encodePatternElement(patternElement));
+          const decodedElement = Effect.runSync(decodePatternElement(encodedElement));
           const decodedPattern = Pattern.decode(Pattern.encode(pattern));
 
           expect(decodedPOSOption).toEqual(posOption);
@@ -191,14 +204,14 @@ describe("Core Pattern", () => {
   });
 
   it("rejects all-empty pattern options at the schema boundary", () => {
-    expect(() => Schema.decodeSync(POSPatternOption)([""])).toThrow();
-    expect(() => Schema.decodeSync(EntityPatternOption)([""])).toThrow();
-    expect(() => Schema.decodeSync(LiteralPatternOption)([""])).toThrow();
+    expect(() => decodePOSPatternOptionSync([""])).toThrow();
+    expect(() => decodeEntityPatternOptionSync([""])).toThrow();
+    expect(() => decodeLiteralPatternOptionSync([""])).toThrow();
   });
 
   it("rejects reserved literal choices that would collide with typed bracket syntax", () => {
     expect(() => literal("DATE")).toThrow();
-    expect(() => Schema.decodeSync(BracketStringToLiteralPatternElement)("[DATE]")).toThrow();
+    expect(() => decodeBracketStringToLiteralPatternElementSync("[DATE]")).toThrow();
   });
 
   it("supports Pattern schema helpers", () => {

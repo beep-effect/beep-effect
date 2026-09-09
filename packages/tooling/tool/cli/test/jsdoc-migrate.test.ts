@@ -22,6 +22,9 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect, Exit, MutableHashMap } from "effect";
 import * as S from "effect/Schema";
 
+const decodeUnknownJSDocMigrateProxyUrl = S.decodeUnknownEffect(JSDocMigrateProxyUrl);
+const isJSDocMigrateInlineText = S.is(JSDocMigrateInlineText);
+
 const lines = (...values: ReadonlyArray<string>): string => values.join("\n");
 
 const simpleBlock = lines(
@@ -621,11 +624,9 @@ describe("JSDocMigrateTitles response validation", () => {
   const pending = jsdocMigrateExtractRecordsForFile("packages/x/src/g.ts", legacyPair("Doc A.", "Doc B."));
 
   it("rejects every ECMAScript line separator while accepting a safe inline line", () => {
-    const isInlineText = S.is(JSDocMigrateInlineText);
-
-    expect(isInlineText("safe\u2028*/ const injected = true")).toBe(false);
-    expect(isInlineText("safe\u2029*/ const injected = true")).toBe(false);
-    expect(isInlineText("A plain safe line")).toBe(true);
+    expect(isJSDocMigrateInlineText("safe\u2028*/ const injected = true")).toBe(false);
+    expect(isJSDocMigrateInlineText("safe\u2029*/ const injected = true")).toBe(false);
+    expect(isJSDocMigrateInlineText("A plain safe line")).toBe(true);
   });
 
   it("renders a prompt naming every pending anchor", () => {
@@ -702,12 +703,10 @@ describe("JSDocMigrateTitles response validation", () => {
   });
 
   it("accepts only literal loopback HTTP proxy URLs", () => {
-    const decode = S.decodeUnknownEffect(JSDocMigrateProxyUrl);
-
-    expect(Exit.isSuccess(Effect.runSyncExit(decode("http://127.0.0.1:8317")))).toBe(true);
-    expect(Exit.isSuccess(Effect.runSyncExit(decode("http://[::1]:8317")))).toBe(true);
-    expect(Exit.isFailure(Effect.runSyncExit(decode("https://example.com")))).toBe(true);
-    expect(Exit.isFailure(Effect.runSyncExit(decode("http://localhost:8317")))).toBe(true);
+    expect(Exit.isSuccess(Effect.runSyncExit(decodeUnknownJSDocMigrateProxyUrl("http://127.0.0.1:8317")))).toBe(true);
+    expect(Exit.isSuccess(Effect.runSyncExit(decodeUnknownJSDocMigrateProxyUrl("http://[::1]:8317")))).toBe(true);
+    expect(Exit.isFailure(Effect.runSyncExit(decodeUnknownJSDocMigrateProxyUrl("https://example.com")))).toBe(true);
+    expect(Exit.isFailure(Effect.runSyncExit(decodeUnknownJSDocMigrateProxyUrl("http://localhost:8317")))).toBe(true);
   });
 
   it("rejects a see-purpose count that disagrees with the block", () => {

@@ -20,6 +20,20 @@ import * as Equal from "effect/Equal";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeMentionOptionResult = S.decodeResult(MentionOption);
+const decodeMentionOptionsResult = S.decodeResult(MentionOptions);
+const decodeSlashItemResult = S.decodeResult(SlashItem);
+const decodeSlashItemsResult = S.decodeResult(SlashItems);
+const decodeAttachmentRejectionSync = S.decodeSync(AttachmentRejection);
+const decodeComposerFeaturesSync = S.decodeSync(ComposerFeatures);
+const decodeImageAttachmentMimeTypeSync = S.decodeSync(ImageAttachmentMimeType);
+const decodeSendOnSync = S.decodeSync(SendOn);
+const encodeAttachmentFailureSync = S.encodeSync(AttachmentFailure);
+const encodeAttachmentRejectionSync = S.encodeSync(AttachmentRejection);
+const encodeComposerFeaturesSync = S.encodeSync(ComposerFeatures);
+const encodeImageAttachmentMimeTypeSync = S.encodeSync(ImageAttachmentMimeType);
+const encodeSendOnSync = S.encodeSync(SendOn);
+
 describe("@beep/editor schema crispening parity", () => {
   it("keeps touched encoded wire shapes byte-identical", () => {
     const tooLarge = AttachmentTooLarge.make({
@@ -36,22 +50,22 @@ describe("@beep/editor schema crispening parity", () => {
     });
     const features = ComposerFeatures.make({ toolbar: false });
 
-    expect(S.encodeSync(AttachmentRejection)(tooLarge)).toEqual({
+    expect(encodeAttachmentRejectionSync(tooLarge)).toEqual({
       _tag: "AttachmentTooLarge",
       filename: "recording.mov",
       size: 15_000_000,
       maxBytes: 10_485_760,
     });
-    expect(S.encodeSync(AttachmentRejection)(invalidMimeType)).toEqual({
+    expect(encodeAttachmentRejectionSync(invalidMimeType)).toEqual({
       _tag: "AttachmentInvalidMimeType",
       filename: "payload.bin",
       mimeType: "",
     });
-    expect(S.encodeSync(AttachmentFailure)(portFailure)).toEqual({
+    expect(encodeAttachmentFailureSync(portFailure)).toEqual({
       _tag: "AttachmentPortFailed",
       message: "Files could not be attached.",
     });
-    expect(S.encodeSync(ComposerFeatures)(features)).toEqual({
+    expect(encodeComposerFeaturesSync(features)).toEqual({
       toolbar: false,
       slash: true,
       mentions: true,
@@ -64,28 +78,26 @@ describe("@beep/editor schema crispening parity", () => {
   it("round-trips pure chat schemas with schema-derived arbitraries", () => {
     fc.assert(
       fc.property(S.toArbitrary(SendOn)(fc), (value) => {
-        expect(Equal.equals(S.decodeSync(SendOn)(S.encodeSync(SendOn)(value)), value)).toBe(true);
+        expect(Equal.equals(decodeSendOnSync(encodeSendOnSync(value)), value)).toBe(true);
       })
     );
     fc.assert(
       fc.property(S.toArbitrary(ImageAttachmentMimeType)(fc), (value) => {
-        expect(
-          Equal.equals(S.decodeSync(ImageAttachmentMimeType)(S.encodeSync(ImageAttachmentMimeType)(value)), value)
-        ).toBe(true);
-      })
-    );
-    fc.assert(
-      fc.property(S.toArbitrary(ComposerFeatures)(fc), (value) => {
-        expect(pipe(value, S.encodeSync(ComposerFeatures), S.decodeSync(ComposerFeatures), Equal.equals(value))).toBe(
+        expect(Equal.equals(decodeImageAttachmentMimeTypeSync(encodeImageAttachmentMimeTypeSync(value)), value)).toBe(
           true
         );
       })
     );
     fc.assert(
+      fc.property(S.toArbitrary(ComposerFeatures)(fc), (value) => {
+        expect(Equal.equals(decodeComposerFeaturesSync(encodeComposerFeaturesSync(value)), value)).toBe(true);
+      })
+    );
+    fc.assert(
       fc.property(S.toArbitrary(AttachmentRejection)(fc), (value) => {
-        expect(
-          pipe(value, S.encodeSync(AttachmentRejection), S.decodeSync(AttachmentRejection), Equal.equals(value))
-        ).toBe(true);
+        expect(pipe(value, encodeAttachmentRejectionSync, decodeAttachmentRejectionSync, Equal.equals(value))).toBe(
+          true
+        );
       })
     );
   });
@@ -93,17 +105,17 @@ describe("@beep/editor schema crispening parity", () => {
   it("rejects empty menu identity and display fields at the schema boundary", () => {
     expect(
       Result.isFailure(
-        S.decodeResult(SlashItem)({
+        decodeSlashItemResult({
           key: "",
           label: "Heading",
           onSelect: () => undefined,
         })
       )
     ).toBe(true);
-    expect(Result.isFailure(S.decodeResult(MentionOption)({ id: "", label: "Ada" }))).toBe(true);
+    expect(Result.isFailure(decodeMentionOptionResult({ id: "", label: "Ada" }))).toBe(true);
     expect(
       Result.isFailure(
-        S.decodeResult(SlashItems)([
+        decodeSlashItemsResult([
           { key: "paragraph", label: "Paragraph", onSelect: () => undefined },
           { key: "", label: "Broken", onSelect: () => undefined },
         ])
@@ -111,7 +123,7 @@ describe("@beep/editor schema crispening parity", () => {
     ).toBe(true);
     expect(
       Result.isFailure(
-        S.decodeResult(MentionOptions)([
+        decodeMentionOptionsResult([
           { id: "ada", label: "Ada" },
           { id: "", label: "Broken" },
         ])
@@ -120,11 +132,11 @@ describe("@beep/editor schema crispening parity", () => {
   });
 
   it("rejects duplicate collection identities at their exact field paths", () => {
-    const duplicateSlashItems = S.decodeResult(SlashItems)([
+    const duplicateSlashItems = decodeSlashItemsResult([
       { key: "same", label: "First", onSelect: () => undefined },
       { key: "same", label: "Second", onSelect: () => undefined },
     ]);
-    const duplicateMentions = S.decodeResult(MentionOptions)([
+    const duplicateMentions = decodeMentionOptionsResult([
       { id: "same", label: "First" },
       { id: "same", label: "Second" },
     ]);

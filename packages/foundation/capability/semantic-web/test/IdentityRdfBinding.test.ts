@@ -29,6 +29,13 @@ import * as SchemaIssue from "effect/SchemaIssue";
 import { FastCheck as fc } from "effect/testing";
 import type { ShaclNodeShape } from "@beep/semantic-web/services/shacl-validation";
 
+const decodeShaclValidationRequest = S.decodeEffect(ShaclValidationRequest);
+const decodeIdentityRdfBindingResult = S.decodeResult(IdentityRdfBinding);
+const decodeIdentityShapePolicyResult = S.decodeResult(IdentityShapePolicy);
+const encodeShaclValidationRequest = S.encodeEffect(ShaclValidationRequest);
+const isIdentityEntryIriError2 = S.is(IdentityEntryIriError);
+const isIdentityFiberPathError = S.is(IdentityFiberPathError);
+
 const entryComposer = $SemanticWebId.create("identity/registry-test-entry");
 const propertyEntryComposer = $SemanticWebId.create("identity/property-test-entry");
 const labelPath = makeNamedNode($SemanticWebId.create("identity/fibers/label").iri);
@@ -79,10 +86,8 @@ const expectSchemaMakeToFail = (run: () => unknown, messagePart: string): void =
 };
 
 const expectIdentityEntryIriError = (error: unknown, identity: string, iri: string): void => {
-  const isIdentityEntryIriError = S.is(IdentityEntryIriError);
-
-  assert.isTrue(isIdentityEntryIriError(error));
-  if (isIdentityEntryIriError(error)) {
+  assert.isTrue(isIdentityEntryIriError2(error));
+  if (isIdentityEntryIriError2(error)) {
     assert.strictEqual(error.identity, identity);
     assert.strictEqual(error.iri, iri);
   }
@@ -100,7 +105,7 @@ describe("identity RDF binding", () => {
       "identifierPath and curiePath collide at RDF predicate"
     );
 
-    const decoded = S.decodeResult(IdentityRdfBinding)(collidingBindingInput);
+    const decoded = decodeIdentityRdfBindingResult(collidingBindingInput);
     assert.isTrue(Result.isFailure(decoded));
     if (Result.isFailure(decoded)) {
       assert.include(
@@ -116,7 +121,7 @@ describe("identity RDF binding", () => {
       "Required identity fiber 'label' appears more than once."
     );
 
-    const decoded = S.decodeResult(IdentityShapePolicy)(duplicatePolicyInput);
+    const decoded = decodeIdentityShapePolicyResult(duplicatePolicyInput);
     assert.isTrue(Result.isFailure(decoded));
     if (Result.isFailure(decoded)) {
       assert.include(
@@ -185,14 +190,12 @@ describe("identity RDF binding", () => {
         DefaultIdentityRdfBinding,
         IdentityShapePolicy.make({ requiredFibers: ["label"] })
       )([entry]).pipe(Effect.flip);
-
-      const isFiberPathError = S.is(IdentityFiberPathError);
-      assert.isTrue(isFiberPathError(encodingError));
-      if (isFiberPathError(encodingError)) {
+      assert.isTrue(isIdentityFiberPathError(encodingError));
+      if (isIdentityFiberPathError(encodingError)) {
         assert.strictEqual(encodingError.fiber, "label");
       }
-      assert.isTrue(isFiberPathError(projectionError));
-      if (isFiberPathError(projectionError)) {
+      assert.isTrue(isIdentityFiberPathError(projectionError));
+      if (isIdentityFiberPathError(projectionError)) {
         assert.strictEqual(projectionError.fiber, "label");
       }
     })
@@ -251,10 +254,8 @@ describe("identity RDF binding", () => {
         binding,
         IdentityShapePolicy.make({ requiredFibers: ["label", "route"] })
       )([entry]);
-      const encodedRequest = yield* S.encodeEffect(ShaclValidationRequest)(
-        ShaclValidationRequest.make({ dataset, shapes })
-      );
-      const request = yield* S.decodeEffect(ShaclValidationRequest)(encodedRequest);
+      const encodedRequest = yield* encodeShaclValidationRequest(ShaclValidationRequest.make({ dataset, shapes }));
+      const request = yield* decodeShaclValidationRequest(encodedRequest);
       const receivedShapes = yield* Ref.make<ReadonlyArray<ShaclNodeShape>>([]);
       const mock = ShaclValidationService.of({
         validate: Effect.fn("IdentityRdfBindingTest.validate")(function* (received: ShaclValidationRequest) {

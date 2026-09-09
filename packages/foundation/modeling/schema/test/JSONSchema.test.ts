@@ -30,6 +30,8 @@ import * as S from "effect/Schema";
 import * as Struct from "effect/Struct";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeExtensionKeyOption = S.decodeOption(ExtensionKey);
+
 const decodeNode = S.decodeUnknownEffect(NodeCodec);
 const encodeNode = S.encodeEffect(NodeCodec);
 const decodeDocument = S.decodeUnknownEffect(Document);
@@ -219,8 +221,8 @@ describe("JSONSchema", { concurrent: false, timeout: 300_000 }, () => {
     });
 
     it("ExtensionKey rejects canonical keywords and accepts extension names", () => {
-      expect(O.isNone(S.decodeOption(ExtensionKey)("type"))).toBe(true);
-      expect(O.isSome(S.decodeOption(ExtensionKey)("x-vendor"))).toBe(true);
+      expect(O.isNone(decodeExtensionKeyOption("type"))).toBe(true);
+      expect(O.isSome(decodeExtensionKeyOption("x-vendor"))).toBe(true);
     });
 
     it.effect(

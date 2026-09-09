@@ -31,6 +31,8 @@ import type { BoxDesiredState } from "./BoxProvisioningIntent.ts";
 import type { BoxDiscovery, BoxDiscoveryKind, BoxObservedFolder } from "./BoxProvisioningObserved.ts";
 import type { MarkerPage } from "./internal/live.ts";
 
+const isBFolderMini = S.is(B.FolderMini);
+
 const $I = $BoxProvisioningId.create("BoxProvisioningInventory");
 
 const scanFolderTree = Effect.fn("BoxProvisioningInventory.scanFolderTree")(function* (
@@ -39,7 +41,7 @@ const scanFolderTree = Effect.fn("BoxProvisioningInventory.scanFolderTree")(func
 ): Effect.fn.Return<ReadonlyArray<BoxObservedFolder>, B.BoxError | BoxProvisioningInvariantError> {
   const items = yield* listFolderItems(box, parentProviderId);
   const children = yield* Effect.forEach(
-    A.filter(items, S.is(B.FolderMini)),
+    A.filter(items, isBFolderMini),
     (item) => toObservedFolderFromMini(item, parentProviderId),
     { concurrency: 1 }
   );

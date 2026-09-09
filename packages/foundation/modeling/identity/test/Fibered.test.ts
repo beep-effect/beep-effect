@@ -11,6 +11,7 @@ const Section = S.Struct({
   rank: S.Finite,
   route: S.String,
 });
+const decodeSectionSync = S.decodeSync(Section);
 const sectionValues = {
   text: { label: "Text", rank: 1, route: "/text" },
   count: { label: "Count", rank: 2, route: "/count" },
@@ -28,6 +29,8 @@ const family = Fibered.make({
     values: sectionValues,
   },
 });
+const decodeFamilyUnionSync = S.decodeSync(family.union);
+const decodeUnknownFamilyUnionExit = S.decodeUnknownExit(family.union);
 
 describe("Fibered", () => {
   it("is total over the base and preserves declaration order", () => {
@@ -42,7 +45,7 @@ describe("Fibered", () => {
 
   it("decodes each section value once and uses the default annotation key", () => {
     for (const point of Base.literals) {
-      const expected = S.decodeSync(Section)(sectionValues[point]);
+      const expected = decodeSectionSync(sectionValues[point]);
       const first = family.meta(point);
 
       expect(first).toEqual(expected);
@@ -69,20 +72,20 @@ describe("Fibered", () => {
   });
 
   it("accepts every member encoding and rejects wrong tags and payloads", () => {
-    expect(S.decodeSync(family.union)({ _tag: "text", value: "hello" })).toEqual({
+    expect(decodeFamilyUnionSync({ _tag: "text", value: "hello" })).toEqual({
       _tag: "text",
       value: "hello",
     });
-    expect(S.decodeSync(family.union)({ _tag: "count", value: 3 })).toEqual({
+    expect(decodeFamilyUnionSync({ _tag: "count", value: 3 })).toEqual({
       _tag: "count",
       value: 3,
     });
-    expect(S.decodeSync(family.union)({ _tag: "flag", value: true })).toEqual({
+    expect(decodeFamilyUnionSync({ _tag: "flag", value: true })).toEqual({
       _tag: "flag",
       value: true,
     });
-    expect(S.decodeUnknownExit(family.union)({ _tag: "missing", value: "hello" })._tag).toBe("Failure");
-    expect(S.decodeUnknownExit(family.union)({ _tag: "count", value: "three" })._tag).toBe("Failure");
+    expect(decodeUnknownFamilyUnionExit({ _tag: "missing", value: "hello" })._tag).toBe("Failure");
+    expect(decodeUnknownFamilyUnionExit({ _tag: "count", value: "three" })._tag).toBe("Failure");
   });
 
   it("projects named section keys and permits the empty projection", () => {

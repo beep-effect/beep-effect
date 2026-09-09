@@ -17,12 +17,16 @@ import type { DockInvariantViolation, DockPersistenceError, DockTransitionError 
 import type { DockMutationOutcome } from "./Dock.outcomes.ts";
 import type { DockWorkspace } from "./Dock.tree.ts";
 
+const decodeUnknownDockCommandEnvelope = S.decodeUnknownEffect(DockCommandEnvelope);
+
 const $I = $DockId.create("DockEngine.service");
 
 const DockSnapshotJson = S.fromJsonString(DockSnapshot);
+const decodeDockSnapshotJson = S.decodeEffect(DockSnapshotJson);
+const encodeDockSnapshotJson = S.encodeEffect(DockSnapshotJson);
 
 const decodeCommand = Effect.fn("DockEngine.decodeCommand")(function* (input: unknown) {
-  return yield* S.decodeUnknownEffect(DockCommandEnvelope)(input).pipe(
+  return yield* decodeUnknownDockCommandEnvelope(input).pipe(
     Effect.mapError((cause) =>
       DockInputError.make({
         boundary: "command",
@@ -34,7 +38,7 @@ const decodeCommand = Effect.fn("DockEngine.decodeCommand")(function* (input: un
 
 const encodeSnapshot = Effect.fn("DockEngine.encodeSnapshot")(function* (state: DockWorkspace) {
   yield* validateWorkspace(state);
-  return yield* S.encodeEffect(DockSnapshotJson)(DockSnapshot.make({ workspace: state })).pipe(
+  return yield* encodeDockSnapshotJson(DockSnapshot.make({ workspace: state })).pipe(
     Effect.mapError((cause) =>
       DockInputError.make({
         boundary: "snapshot",
@@ -45,7 +49,7 @@ const encodeSnapshot = Effect.fn("DockEngine.encodeSnapshot")(function* (state: 
 });
 
 const decodeSnapshotInput = Effect.fn("DockEngine.decodeSnapshotInput")(function* (input: string) {
-  const snapshot = yield* S.decodeEffect(DockSnapshotJson)(input).pipe(
+  const snapshot = yield* decodeDockSnapshotJson(input).pipe(
     Effect.mapError((cause) =>
       DockInputError.make({
         boundary: "snapshot",

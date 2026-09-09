@@ -16,6 +16,19 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import type { AiProviderCliRunner } from "@beep/ai-provider-cli";
 
+const decodeAiProviderCliAuthProbeResult = S.decodeResult(AiProviderCliAuthProbe);
+const decodeAiProviderCliAuthStatusResult = S.decodeResult(AiProviderCliAuthStatus);
+const decodeAiProviderCliErrorResult = S.decodeResult(AiProviderCliError);
+const decodeAiProviderCliExitCodeResult = S.decodeResult(AiProviderCliExitCode);
+const decodeAiProviderCliProcessResultResult = S.decodeResult(AiProviderCliProcessResult);
+const decodeAiProviderCliProviderResult = S.decodeResult(AiProviderCliProvider);
+const encodeAiProviderCliAuthProbeResult = S.encodeResult(AiProviderCliAuthProbe);
+const encodeAiProviderCliAuthStatusResult = S.encodeResult(AiProviderCliAuthStatus);
+const encodeAiProviderCliErrorResult = S.encodeResult(AiProviderCliError);
+const encodeAiProviderCliExitCodeResult = S.encodeResult(AiProviderCliExitCode);
+const encodeAiProviderCliProcessResultResult = S.encodeResult(AiProviderCliProcessResult);
+const encodeAiProviderCliProviderResult = S.encodeResult(AiProviderCliProvider);
+
 const ProviderArbitrary = S.toArbitrary(AiProviderCliProvider)(fc);
 const AuthStatusArbitrary = S.toArbitrary(AiProviderCliAuthStatus)(fc);
 const ExitCodeArbitrary = S.toArbitrary(AiProviderCliExitCode)(fc);
@@ -63,7 +76,7 @@ describe("@beep/ai-provider-cli", () => {
       status: "authenticated",
     });
 
-    expect(Result.getOrThrow(S.encodeResult(AiProviderCliError)(fullError))).toEqual({
+    expect(Result.getOrThrow(encodeAiProviderCliErrorResult(fullError))).toEqual({
       _tag: "AiProviderCliError",
       command: "claude",
       exitCode: 127,
@@ -73,18 +86,18 @@ describe("@beep/ai-provider-cli", () => {
       stderr: "err",
       stdout: "out",
     });
-    expect(Result.getOrThrow(S.encodeResult(AiProviderCliError)(minimalError))).toEqual({
+    expect(Result.getOrThrow(encodeAiProviderCliErrorResult(minimalError))).toEqual({
       _tag: "AiProviderCliError",
       message: "Failed",
       operation: "checkAuth",
       provider: "codex",
     });
-    expect(Result.getOrThrow(S.encodeResult(AiProviderCliProcessResult)(processResult))).toEqual({
+    expect(Result.getOrThrow(encodeAiProviderCliProcessResultResult(processResult))).toEqual({
       exitCode: 0,
       stderr: "",
       stdout: "ok",
     });
-    expect(Result.getOrThrow(S.encodeResult(AiProviderCliAuthProbe)(authProbe))).toEqual({
+    expect(Result.getOrThrow(encodeAiProviderCliAuthProbeResult(authProbe))).toEqual({
       command: "claude",
       provider: "claude",
       status: "authenticated",
@@ -103,26 +116,24 @@ describe("@beep/ai-provider-cli", () => {
         (provider, status, exitCode, processResult, authProbe, error) => {
           expect(
             Result.getOrThrow(
-              S.decodeResult(AiProviderCliProvider)(Result.getOrThrow(S.encodeResult(AiProviderCliProvider)(provider)))
+              decodeAiProviderCliProviderResult(Result.getOrThrow(encodeAiProviderCliProviderResult(provider)))
             )
           ).toBe(provider);
           expect(
             Result.getOrThrow(
-              S.decodeResult(AiProviderCliAuthStatus)(
-                Result.getOrThrow(S.encodeResult(AiProviderCliAuthStatus)(status))
-              )
+              decodeAiProviderCliAuthStatusResult(Result.getOrThrow(encodeAiProviderCliAuthStatusResult(status)))
             )
           ).toBe(status);
           expect(
             Result.getOrThrow(
-              S.decodeResult(AiProviderCliExitCode)(Result.getOrThrow(S.encodeResult(AiProviderCliExitCode)(exitCode)))
+              decodeAiProviderCliExitCodeResult(Result.getOrThrow(encodeAiProviderCliExitCodeResult(exitCode)))
             )
           ).toBe(exitCode);
           expect(
             sameProcessResult(
               Result.getOrThrow(
-                S.decodeResult(AiProviderCliProcessResult)(
-                  Result.getOrThrow(S.encodeResult(AiProviderCliProcessResult)(processResult))
+                decodeAiProviderCliProcessResultResult(
+                  Result.getOrThrow(encodeAiProviderCliProcessResultResult(processResult))
                 )
               ),
               processResult
@@ -131,9 +142,7 @@ describe("@beep/ai-provider-cli", () => {
           expect(
             sameAuthProbe(
               Result.getOrThrow(
-                S.decodeResult(AiProviderCliAuthProbe)(
-                  Result.getOrThrow(S.encodeResult(AiProviderCliAuthProbe)(authProbe))
-                )
+                decodeAiProviderCliAuthProbeResult(Result.getOrThrow(encodeAiProviderCliAuthProbeResult(authProbe)))
               ),
               authProbe
             )
@@ -141,7 +150,7 @@ describe("@beep/ai-provider-cli", () => {
           expect(
             sameError(
               Result.getOrThrow(
-                S.decodeResult(AiProviderCliError)(Result.getOrThrow(S.encodeResult(AiProviderCliError)(error)))
+                decodeAiProviderCliErrorResult(Result.getOrThrow(encodeAiProviderCliErrorResult(error)))
               ),
               error
             )

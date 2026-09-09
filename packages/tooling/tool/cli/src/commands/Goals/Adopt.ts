@@ -50,6 +50,8 @@ import type { MaterializationPlan, ValidationRequirement } from "./Bootstrap.sch
 import type { ConflictRow, PlanRow, PreservationRow } from "./Bootstrap.ts";
 import type { GoalStatus } from "./Goals.schemas.ts";
 
+const decodeGoalSlug = S.decodeEffect(GoalSlug);
+
 const MANIFEST_RELATIVE_PATH = "ops/manifest.json";
 const README_RELATIVE_PATH = "README.md";
 const REFLECTION_TEMPLATE_BASENAME = "_TEMPLATE.md";
@@ -510,7 +512,7 @@ const runAdoptPlan = Effect.fn("Goals.runAdoptPlan")(function* (options: {
       "Phase 0 ships plan-only commands; pass --plan (no writer exists to omit it for)."
     );
   }
-  const slug = yield* S.decodeEffect(GoalSlug)(options.slug).pipe(
+  const slug = yield* decodeGoalSlug(options.slug).pipe(
     Effect.mapError((issue) => GoalPlanInputError.new(`slug "${options.slug}" is invalid: ${issue.message}`))
   );
   const snapshot = yield* readPacketSnapshot(slug);

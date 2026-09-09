@@ -27,6 +27,12 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeEntityInputSync = S.decodeSync(EntityInput);
+const decodeUnknownIrToLawShapeResult = S.decodeUnknownResult(IrToLawShape);
+const encodeEntityInputSync = S.encodeSync(EntityInput);
+const encodeIrToLawExtractionErrorSync = S.encodeSync(IrToLawExtractionError);
+const encodeOfficeActionReviewErrorSync = S.encodeSync(OfficeActionReviewError);
+
 const assertSchemaEncodeDecodeRoundTrip = <Schema extends S.Codec<unknown>>(
   schema: Schema,
   options?: {
@@ -72,7 +78,6 @@ describe("@beep/law-practice-use-cases schema parity", () => {
   });
 
   it("preserves the IrToLawExtractionError encoded wire shape", () => {
-    const encode = S.encodeSync(IrToLawExtractionError);
     const missing = IrToLawExtractionError.fromReason("required-extraction-missing", {
       label: "claim",
       message: "Missing claim extraction.",
@@ -84,13 +89,13 @@ describe("@beep/law-practice-use-cases schema parity", () => {
     });
 
     expect(O.isNone(missing.alignmentStatus)).toBe(true);
-    expect(encode(missing)).toStrictEqual({
+    expect(encodeIrToLawExtractionErrorSync(missing)).toStrictEqual({
       _tag: "IrToLawExtractionError",
       label: "claim",
       message: "Missing claim extraction.",
       reason: "required-extraction-missing",
     });
-    expect(encode(unaligned)).toStrictEqual({
+    expect(encodeIrToLawExtractionErrorSync(unaligned)).toStrictEqual({
       _tag: "IrToLawExtractionError",
       alignmentStatus: "unaligned",
       label: "distinction",
@@ -100,7 +105,7 @@ describe("@beep/law-practice-use-cases schema parity", () => {
   });
 
   it("preserves the spike EntityInput encoded audit envelope", () => {
-    const decoded = S.decodeSync(EntityInput)({
+    const decoded = decodeEntityInputSync({
       createdAt: 1,
       createdByPrincipal: { component: "Runtime", kind: "System" },
       entityType: "LawPracticeClaim",
@@ -114,7 +119,7 @@ describe("@beep/law-practice-use-cases schema parity", () => {
       updatedByPrincipal: { component: "Runtime", kind: "System" },
     });
 
-    expect(S.encodeSync(EntityInput)(decoded)).toStrictEqual({
+    expect(encodeEntityInputSync(decoded)).toStrictEqual({
       createdAt: 1,
       createdByPrincipal: {
         component: "Runtime",
@@ -142,7 +147,7 @@ describe("@beep/law-practice-use-cases schema parity", () => {
       message: "The distinction could not be grounded.",
     });
 
-    const encoded = S.encodeSync(OfficeActionReviewError)(error);
+    const encoded = encodeOfficeActionReviewErrorSync(error);
 
     expect(OfficeActionReviewError.is(error)).toBe(true);
     expect(O.isSome(OfficeActionReviewError.decodeUnknownOption(encoded))).toBe(true);
@@ -151,9 +156,7 @@ describe("@beep/law-practice-use-cases schema parity", () => {
   // `toLaw` is a declared schema whose guard is the only thing standing between
   // the port and a non-callable value, so both branches are asserted here.
   it("accepts only a callable toLaw port", () => {
-    const decodeShape = S.decodeUnknownResult(IrToLawShape);
-
-    expect(Result.isSuccess(decodeShape({ toLaw: () => Effect.void }))).toBe(true);
-    expect(Result.isFailure(decodeShape({ toLaw: "not-a-function" }))).toBe(true);
+    expect(Result.isSuccess(decodeUnknownIrToLawShapeResult({ toLaw: () => Effect.void }))).toBe(true);
+    expect(Result.isFailure(decodeUnknownIrToLawShapeResult({ toLaw: "not-a-function" }))).toBe(true);
   });
 });

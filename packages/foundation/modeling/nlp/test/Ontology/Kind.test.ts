@@ -12,6 +12,9 @@ import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeKindKindContainment = S.decodeEffect(Kind.KindContainment);
+const encodeKindKindContainment = S.encodeEffect(Kind.KindContainment);
+
 const allKinds: ReadonlyArray<Kind.TextKind> = [
   "Document",
   "Paragraph",
@@ -71,8 +74,8 @@ describe("Containment poset", () => {
   it("round-trips schema-derived containment records", () => {
     fc.assert(
       fc.property(KindContainmentArbitrary, (containment) => {
-        const encoded = Effect.runSync(S.encodeEffect(Kind.KindContainment)(containment));
-        const decoded = Effect.runSync(S.decodeEffect(Kind.KindContainment)(encoded));
+        const encoded = Effect.runSync(encodeKindKindContainment(containment));
+        const decoded = Effect.runSync(decodeKindKindContainment(encoded));
 
         expect(decoded).toEqual(containment);
       })

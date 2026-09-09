@@ -20,6 +20,13 @@ import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeGateSummaryReceipt = S.decodeEffect(GateSummaryReceipt);
+const decodeAttestationResourceResult = S.decodeResult(AttestationResource);
+const decodeUnknownGateSummary = S.decodeUnknownEffect(GateSummary);
+const encodeUnknownGateSummary = S.encodeUnknownEffect(GateSummary);
+const encodeUnknownGateSummaryReceipt = S.encodeUnknownEffect(GateSummaryReceipt);
+const encodeUnknownAttestationResourceResult = S.encodeUnknownResult(AttestationResource);
+
 const emptySha256 = Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
 const digest = EvidenceDigest.make({ sha256: emptySha256 });
 const subject = EvidenceSubject.make({ digest, name: "qa/inventory.json" });
@@ -72,8 +79,8 @@ describe("@beep/skill-contract GateSummary", () => {
         predicateType: GateSummaryPredicateType,
         subject: [subject],
       });
-      const encoded = yield* S.encodeUnknownEffect(GateSummaryReceipt)(receipt);
-      const decoded = yield* S.decodeEffect(GateSummaryReceipt)(encoded);
+      const encoded = yield* encodeUnknownGateSummaryReceipt(receipt);
+      const decoded = yield* decodeGateSummaryReceipt(encoded);
 
       expect(S.toEquivalence(GateSummaryReceipt)(decoded, receipt)).toBe(true);
       expect(decoded.predicate.policy.digest.sha256).toBe(emptySha256);
@@ -96,11 +103,11 @@ describe("@beep/skill-contract GateSummary", () => {
   it.effect("rejects result and level fields that disagree with blocking outcomes", () =>
     Effect.gen(function* () {
       const passing = summaryFor({ applicable: true, outcome: "allowed", severity: "blocking" });
-      const encoded = yield* S.encodeUnknownEffect(GateSummary)(passing);
+      const encoded = yield* encodeUnknownGateSummary(passing);
       const wrongResultInput: unknown = { ...encoded, verificationResult: "FAILED" };
       const wrongLevelsInput: unknown = { ...encoded, verifiedLevels: ["FAILED"] };
-      const wrongResult = yield* S.decodeUnknownEffect(GateSummary)(wrongResultInput).pipe(Effect.flip);
-      const wrongLevels = yield* S.decodeUnknownEffect(GateSummary)(wrongLevelsInput).pipe(Effect.flip);
+      const wrongResult = yield* decodeUnknownGateSummary(wrongResultInput).pipe(Effect.flip);
+      const wrongLevels = yield* decodeUnknownGateSummary(wrongLevelsInput).pipe(Effect.flip);
 
       expect(wrongResult.message).toContain("must agree");
       expect(wrongLevels.message).toContain("must agree");
@@ -110,12 +117,12 @@ describe("@beep/skill-contract GateSummary", () => {
   it.effect("rejects an applicable allowed gate result without evidence subjects", () =>
     Effect.gen(function* () {
       const passing = summaryFor({ applicable: true, outcome: "allowed", severity: "blocking" });
-      const encoded = yield* S.encodeUnknownEffect(GateSummary)(passing);
+      const encoded = yield* encodeUnknownGateSummary(passing);
       const missingEvidenceInput: unknown = {
         ...encoded,
         gateResults: A.map(encoded.gateResults, (result) => ({ ...result, evidenceSubjects: [] })),
       };
-      const failure = yield* S.decodeUnknownEffect(GateSummary)(missingEvidenceInput).pipe(Effect.flip);
+      const failure = yield* decodeUnknownGateSummary(missingEvidenceInput).pipe(Effect.flip);
 
       expect(failure.message).toContain("require non-empty evidence subjects");
     })
@@ -124,8 +131,8 @@ describe("@beep/skill-contract GateSummary", () => {
   it("round-trips schema-derived arbitrary attestation resources", () =>
     fc.assert(
       fc.property(S.toArbitrary(AttestationResource)(fc), (candidate) => {
-        const encoded = Result.getOrThrow(S.encodeUnknownResult(AttestationResource)(candidate));
-        const decoded = Result.getOrThrow(S.decodeResult(AttestationResource)(encoded));
+        const encoded = Result.getOrThrow(encodeUnknownAttestationResourceResult(candidate));
+        const decoded = Result.getOrThrow(decodeAttestationResourceResult(encoded));
 
         expect(S.toEquivalence(AttestationResource)(decoded, candidate)).toBe(true);
       }),

@@ -24,6 +24,9 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import { REPO_ROOT, TestLayer, WORKSPACE_ROOT } from "./TSMorph.test-support.ts";
 
+const decodeUnknownSymbolIdSync = S.decodeUnknownSync(SymbolId);
+const encodeUnknownSymbolIdSync = S.encodeUnknownSync(SymbolId);
+
 const TSCONFIG_PATH = "packages/tooling/library/repo-utils/tsconfig.json";
 const MODEL_FILE_PATH = "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts";
 const FIXTURE_TSCONFIG_PATH = "packages/tooling/library/repo-utils/test/fixtures/tsmorph-diagnostics/tsconfig.json";
@@ -85,13 +88,10 @@ const TSMORPH_TIMEOUT = 40_000;
 describe("SymbolId schema arbitrary", () => {
   it("only generates decodable, round-tripping symbol ids", () => {
     const symbolIdArbitrary = S.toArbitrary(SymbolId)(fc);
-    const decodeSymbolId = S.decodeUnknownSync(SymbolId);
-    const encodeSymbolId = S.encodeUnknownSync(SymbolId);
-
     fc.assert(
       fc.property(symbolIdArbitrary, (symbolId) => {
-        const decoded = decodeSymbolId(symbolId);
-        expect(encodeSymbolId(decoded)).toBe(symbolId);
+        const decoded = decodeUnknownSymbolIdSync(symbolId);
+        expect(encodeUnknownSymbolIdSync(decoded)).toBe(symbolId);
       }),
       fcRuns(50)
     );

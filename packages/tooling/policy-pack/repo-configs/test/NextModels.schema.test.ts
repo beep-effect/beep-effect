@@ -20,6 +20,10 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import { describe, expect, it } from "vitest";
 
+const decodeUnknownImageConfigComplete = S.decodeUnknownEffect(ImageConfigComplete);
+const decodeUnknownRedirect = S.decodeUnknownEffect(Redirect);
+const decodeUnknownRouteHas = S.decodeUnknownEffect(RouteHas);
+
 const decodeRewrite = S.decodeUnknownEffect(Rewrite);
 const decodeHeader = S.decodeUnknownEffect(Header);
 const decodeMiddleware = S.decodeUnknownEffect(Middleware);
@@ -167,9 +171,7 @@ describe("Next route schemas", () => {
         expect(
           Exit.isFailure(
             yield* Effect.promise(() =>
-              Promise.resolve(
-                exit(S.decodeUnknownEffect(RouteHas)({ type: "host", key: "host", value: "example.com" }))
-              )
+              Promise.resolve(exit(decodeUnknownRouteHas({ type: "host", key: "host", value: "example.com" })))
             )
           )
         ).toBe(true);
@@ -185,7 +187,7 @@ describe("Next route schemas", () => {
             yield* Effect.promise(() =>
               Promise.resolve(
                 exit(
-                  S.decodeUnknownEffect(Redirect)({
+                  decodeUnknownRedirect({
                     source: "/old",
                     destination: "/new",
                     permanent: true,
@@ -215,17 +217,15 @@ describe("Next image schemas", () => {
     );
   });
 
-  it("rejects out-of-domain image quality values", () => {
-    const decodeImageConfigComplete = S.decodeUnknownEffect(ImageConfigComplete);
-
-    return Effect.runPromise(
+  it("rejects out-of-domain image quality values", () =>
+    Effect.runPromise(
       Effect.gen(function* () {
         expect(
           Exit.isFailure(
             yield* Effect.promise(() =>
               Promise.resolve(
                 exit(
-                  decodeImageConfigComplete({
+                  decodeUnknownImageConfigComplete({
                     deviceSizes: [640],
                     imageSizes: [32],
                     loader: "default",
@@ -253,8 +253,7 @@ describe("Next image schemas", () => {
           )
         ).toBe(true);
       })
-    );
-  });
+    ));
 });
 
 describe("Next config primitive schemas", () => {

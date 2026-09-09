@@ -14,6 +14,10 @@ import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeUnknownDomainProviderInstanceProviderInstanceSync = S.decodeUnknownSync(
+  DomainProviderInstance.ProviderInstance
+);
+
 const ProviderInstanceArbitrary = S.toArbitrary(DomainProviderInstance.ProviderInstance)(fc);
 const ProviderInstanceEquivalence = S.toEquivalence(DomainProviderInstance.ProviderInstance);
 
@@ -95,7 +99,7 @@ describe("ProviderInstance table", () => {
   });
 
   it("round-trips ProviderInstance rows through the converters", () => {
-    const providerInstance = S.decodeUnknownSync(DomainProviderInstance.ProviderInstance)(providerInstanceRow);
+    const providerInstance = decodeUnknownDomainProviderInstanceProviderInstanceSync(providerInstanceRow);
     const insert = toProviderInstanceInsert(providerInstance);
 
     expect("id" in insert).toBe(false);

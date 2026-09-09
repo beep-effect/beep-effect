@@ -2,6 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import { OutputFilename, OutputType, OutputTypeRegistry } from "../../../Domain/Model/OutputType.ts";
+const isOutputFilename = S.is(OutputFilename);
 
 describe("effect-ontology output artifact taxonomy", () => {
   it("derives arbitraries for output types and filenames", () => {
@@ -21,7 +22,7 @@ describe("effect-ontology output artifact taxonomy", () => {
       const metadata = OutputType.metadata(type);
 
       expect(metadata).toBe(OutputTypeRegistry[type]);
-      expect(S.is(OutputFilename)(metadata.filename)).toBe(true);
+      expect(isOutputFilename(metadata.filename)).toBe(true);
       expect(metadata.description.length).toBeGreaterThan(0);
     }
   });

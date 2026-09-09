@@ -18,6 +18,14 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const encodeCreateThreadAtomInputResult = S.encodeResult(CreateThreadAtomInput);
+const encodeDocumentResult = S.encodeResult(Document);
+const encodeEditTargetResult = S.encodeResult(EditTarget);
+const encodeEditTurnRequestResult = S.encodeResult(EditTurnRequest);
+const encodeParagraphBlockResult = S.encodeResult(ParagraphBlock);
+const encodeSendTurnRequestResult = S.encodeResult(SendTurnRequest);
+const encodeStreamingTurnResult = S.encodeResult(StreamingTurn);
+
 const userDocument = (value: string) =>
   decodeSafeDocumentUnsafe(Document.make({ children: [P.make({ children: [Text.make({ value })] })] }));
 
@@ -38,12 +46,12 @@ describe("@beep/agents-client schema parity", () => {
     const threadId = WorkspaceIdentity.ThreadId.make(10);
     const turnId = WorkspaceIdentity.TurnId.make(20);
     const content = userDocument("Explain atoms");
-    const encodedContent = Result.getOrThrow(S.encodeResult(Document)(content));
+    const encodedContent = Result.getOrThrow(encodeDocumentResult(content));
     const block = assistantBlock;
-    const encodedBlock = Result.getOrThrow(S.encodeResult(ParagraphBlock)(block));
+    const encodedBlock = Result.getOrThrow(encodeParagraphBlockResult(block));
 
     const createThread = CreateThreadAtomInput.make({ workspaceId, title: "Matter intake" });
-    expect(Result.getOrThrow(S.encodeResult(CreateThreadAtomInput)(createThread))).toStrictEqual({
+    expect(Result.getOrThrow(encodeCreateThreadAtomInputResult(createThread))).toStrictEqual({
       workspaceId: 7,
       title: "Matter intake",
     });
@@ -64,10 +72,10 @@ describe("@beep/agents-client schema parity", () => {
     expect(defaultedStreamingTurn.requestId).toStrictEqual(O.none());
     expect(defaultedStreamingTurn.truncateFrom).toStrictEqual(O.none());
     expect(defaultedStreamingTurn.reconciliation).toBe("timeline");
-    expect(Result.getOrThrow(S.encodeResult(StreamingTurn)(defaultedStreamingTurn))).toStrictEqual(
-      Result.getOrThrow(S.encodeResult(StreamingTurn)(explicitStreamingTurn))
+    expect(Result.getOrThrow(encodeStreamingTurnResult(defaultedStreamingTurn))).toStrictEqual(
+      Result.getOrThrow(encodeStreamingTurnResult(explicitStreamingTurn))
     );
-    expect(Result.getOrThrow(S.encodeResult(StreamingTurn)(defaultedStreamingTurn))).toStrictEqual({
+    expect(Result.getOrThrow(encodeStreamingTurnResult(defaultedStreamingTurn))).toStrictEqual({
       threadId: 10,
       requestId: O.none(),
       userContent: encodedContent,
@@ -79,24 +87,20 @@ describe("@beep/agents-client schema parity", () => {
     // An edit target carries its thread: edit state is global while composers are
     // per-thread, so without it a thread change mid-edit submitted the old
     // thread's turn id against the new thread.
-    expect(Result.getOrThrow(S.encodeResult(EditTarget)(EditTarget.make({ threadId, turnId, content })))).toStrictEqual(
-      {
-        threadId: 10,
-        turnId: 20,
-        content: encodedContent,
-      }
-    );
+    expect(Result.getOrThrow(encodeEditTargetResult(EditTarget.make({ threadId, turnId, content })))).toStrictEqual({
+      threadId: 10,
+      turnId: 20,
+      content: encodedContent,
+    });
 
-    expect(
-      Result.getOrThrow(S.encodeResult(SendTurnRequest)(SendTurnRequest.make({ threadId, content })))
-    ).toStrictEqual({
+    expect(Result.getOrThrow(encodeSendTurnRequestResult(SendTurnRequest.make({ threadId, content })))).toStrictEqual({
       _tag: "send",
       threadId: 10,
       content: encodedContent,
     });
 
     expect(
-      Result.getOrThrow(S.encodeResult(EditTurnRequest)(EditTurnRequest.make({ threadId, turnId, content })))
+      Result.getOrThrow(encodeEditTurnRequestResult(EditTurnRequest.make({ threadId, turnId, content })))
     ).toStrictEqual({
       _tag: "edit",
       threadId: 10,

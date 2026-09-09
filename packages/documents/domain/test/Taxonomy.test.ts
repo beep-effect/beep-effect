@@ -15,6 +15,9 @@ import { Effect, Result } from "effect";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeUnknownFilingOutcomeResult = S.decodeUnknownResult(FilingOutcome);
+const encodeFilingOutcomeResult = S.encodeResult(FilingOutcome);
+
 describe("@beep/documents-domain taxonomy seed", () => {
   it.effect(
     "keeps the repo-owned JSON-LD seed aligned with folder projection data",
@@ -63,14 +66,12 @@ describe("@beep/documents-domain taxonomy seed", () => {
   );
 
   it("round-trips the filing outcome union with schema-derived arbitraries", () => {
-    const decode = S.decodeUnknownResult(FilingOutcome);
-    const encode = S.encodeResult(FilingOutcome);
     const equivalent = S.toEquivalence(FilingOutcome);
 
     fc.assert(
       fc.property(S.toArbitrary(FilingOutcome)(fc), (outcome) => {
-        const encoded = Result.getOrThrow(encode(outcome));
-        const decoded = Result.getOrThrow(decode(encoded));
+        const encoded = Result.getOrThrow(encodeFilingOutcomeResult(outcome));
+        const decoded = Result.getOrThrow(decodeUnknownFilingOutcomeResult(encoded));
 
         expect(equivalent(decoded, outcome)).toBe(true);
       }),

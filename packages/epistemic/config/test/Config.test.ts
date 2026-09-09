@@ -13,6 +13,8 @@ import { Cause, ConfigProvider, Effect, Exit, Layer } from "effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
+const decodeExecutionGrantSync = S.decodeSync(ExecutionGrant);
+
 const configLayer = (configuration: Readonly<Record<string, string>>) =>
   EpistemicConfigLive.pipe(Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown(configuration))));
 
@@ -120,7 +122,7 @@ describe("grant fixtures", () => {
   it("produces a byte-stable digest across reconstructions", () => {
     // The acceptance test chains ledger rows against this digest, so a fixture
     // that drifts between runs would make the chain unreproducible.
-    const grant = S.decodeSync(ExecutionGrant)({
+    const grant = decodeExecutionGrantSync({
       budget: { maxToolCalls: null },
       expiresAt: 86_400_000,
       operation: "ontology_publish_provenance",

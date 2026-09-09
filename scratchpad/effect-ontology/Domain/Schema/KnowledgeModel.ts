@@ -411,6 +411,7 @@ const ClaimRankDefinition = LiteralKit(["preferred", "normal", "deprecated"]).an
     description: "Wikidata-style preferred, normal, or deprecated claim rank.",
   })
 );
+const decodeClaimRankDefinition = S.decodeEffect(ClaimRankDefinition);
 
 /**
  * Wikidata-style rank assigned to an extracted claim.
@@ -427,7 +428,7 @@ const ClaimRankDefinition = LiteralKit(["preferred", "normal", "deprecated"]).an
  */
 export const ClaimRank = ClaimRankDefinition.pipe(
   SchemaUtils.withStatics(() => ({
-    decodeEffect: S.decodeEffect(ClaimRankDefinition),
+    decodeEffect: decodeClaimRankDefinition,
   }))
 );
 /**
@@ -470,9 +471,10 @@ const TemporalIntervalDefinition = S.Struct({
     }
   )
 );
+const isTemporalIntervalDefinition = S.is(TemporalIntervalDefinition);
 
 const TemporalIntervalFromSelf = S.declare((input: unknown): input is typeof TemporalIntervalDefinition.Type =>
-  S.is(TemporalIntervalDefinition)(input)
+  isTemporalIntervalDefinition(input)
 ).annotate({
   toArbitrary: () => (fc) =>
     fc

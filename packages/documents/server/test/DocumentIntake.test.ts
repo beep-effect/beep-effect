@@ -19,6 +19,10 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeDocumentIntakeDroppedFileInput = S.decodeEffect(Document.IntakeDroppedFileInput);
+const decodeUnknownUint8ArrayFromBase64Result = S.decodeUnknownResult(S.Uint8ArrayFromBase64);
+const encodeUint8ArrayFromBase64Result = S.encodeResult(S.Uint8ArrayFromBase64);
+
 const DocumentsIntakeTestLayer = DocumentsServerLive.pipe(
   Layer.provideMerge(BunFileSystem.layer),
   Layer.provideMerge(BunPath.layer)
@@ -44,14 +48,12 @@ const filedConceptId = (filing: FilingOutcome) =>
 
 describe("@beep/documents-server DocumentIntake", () => {
   it("round-trips dropped-file bytes through the Base64 wire codec with schema-derived arbitraries", () => {
-    const decode = S.decodeUnknownResult(S.Uint8ArrayFromBase64);
-    const encode = S.encodeResult(S.Uint8ArrayFromBase64);
     const equivalent = S.toEquivalence(S.Uint8ArrayFromBase64);
 
     fc.assert(
       fc.property(S.toArbitrary(S.Uint8ArrayFromBase64)(fc), (bytes) => {
-        const encoded = Result.getOrThrow(encode(bytes));
-        const decoded = Result.getOrThrow(decode(encoded));
+        const encoded = Result.getOrThrow(encodeUint8ArrayFromBase64Result(bytes));
+        const decoded = Result.getOrThrow(decodeUnknownUint8ArrayFromBase64Result(encoded));
 
         expect(equivalent(decoded, bytes)).toBe(true);
       }),
@@ -88,7 +90,7 @@ describe("@beep/documents-server DocumentIntake", () => {
       const vaultRootPath = yield* fs.makeTempDirectoryScoped({ prefix: "beep-documents-vault-" });
       const bytes = new TextEncoder().encode("unclassifiable body");
 
-      const input = yield* S.decodeEffect(Document.IntakeDroppedFileInput)({
+      const input = yield* decodeDocumentIntakeDroppedFileInput({
         content: Buffer.from(bytes).toString("base64"),
         filingContext: DefaultVaultFilingContext,
         intakeBatchId: "Batch 42",

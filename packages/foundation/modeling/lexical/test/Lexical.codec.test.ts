@@ -26,6 +26,15 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import type { TableCellHeaderState } from "@beep/lexical-schema";
 
+const decodeLexicalNodeResult = S.decodeResult(LexicalNode);
+const decodeSerializedEditorStateResult = S.decodeResult(SerializedEditorState);
+const decodeArtifactUriSync = S.decodeSync(ArtifactUri);
+const decodeMdModelDocumentSync = S.decodeSync(MdModel.Document);
+const decodeMdModelPreSync = S.decodeSync(MdModel.Pre);
+const decodeSerializedEditorStateSync = S.decodeSync(SerializedEditorState);
+const encodeArtifactUriSync = S.encodeSync(ArtifactUri);
+const encodeMdModelDocumentSync = S.encodeSync(MdModel.Document);
+
 const StateArbitrary = S.toArbitrary(SerializedEditorState)(fc);
 const ArtifactUriArbitrary = S.toArbitrary(ArtifactUri)(fc);
 const DocumentArbitrary = S.toArbitrary(MdModel.Document)(fc);
@@ -354,7 +363,7 @@ describe("Lexical.codec", { concurrent: false }, () => {
     fc.assert(
       fc.property(ArtifactUriArbitrary, (uri) => {
         expect(ArtifactUri.is(uri)).toBe(true);
-        expect(S.decodeSync(ArtifactUri)(S.encodeSync(ArtifactUri)(uri))).toBe(uri);
+        expect(decodeArtifactUriSync(encodeArtifactUriSync(uri))).toBe(uri);
       }),
       fcRuns(50)
     );
@@ -380,7 +389,7 @@ describe("Lexical.codec", { concurrent: false }, () => {
     // Invalid info-strings are unconstructable via `Pre.make` now (the schema
     // validates the branded `CodeFenceLanguage` at construction); they can only
     // arrive on the wire, where Md decode folds them to None at the boundary.
-    const invalidLanguage = S.decodeSync(MdModel.Pre)({
+    const invalidLanguage = decodeMdModelPreSync({
       _tag: "pre",
       value: "console.log('beep')",
       language: "ts bad",
@@ -408,7 +417,7 @@ describe("Lexical.codec", { concurrent: false }, () => {
   });
 
   it("drops Lexical-only text format bits (underline) per the lossiness profile", () => {
-    const state = S.decodeSync(SerializedEditorState)({
+    const state = decodeSerializedEditorStateSync({
       root: {
         type: "root",
         version: 1,
@@ -457,7 +466,7 @@ describe("Lexical.codec", { concurrent: false }, () => {
   });
 
   it("preserves nested lists through Lexical and Md projections", () => {
-    const state = S.decodeSync(SerializedEditorState)({
+    const state = decodeSerializedEditorStateSync({
       root: {
         type: "root",
         version: 1,
@@ -637,7 +646,7 @@ describe("Lexical.codec", { concurrent: false }, () => {
         // field (OptionFromNullOr), so the projected instance differs from its
         // encoded form. Decoding the instance directly would reject its real
         // Option; decoding the encoded form confirms the projection is valid.
-        expect(S.decodeSync(MdModel.Document)(S.encodeSync(MdModel.Document)(document))).toEqual(document);
+        expect(decodeMdModelDocumentSync(encodeMdModelDocumentSync(document))).toEqual(document);
       }),
       // Pinned at the original 50. Nightly `BEEP_FC_NUM_RUNS=1000` times out at
       // 300s on unbounded SerializedEditorState trees (#663). Hard `numRuns`
@@ -648,7 +657,7 @@ describe("Lexical.codec", { concurrent: false }, () => {
 
   it("wraps a loose text node in a Markdown paragraph", () => {
     const looseText = Result.getOrThrow(
-      S.decodeResult(LexicalNode)({
+      decodeLexicalNodeResult({
         type: "text",
         version: 1,
         detail: 0,
@@ -699,7 +708,7 @@ describe("Lexical.codec", { concurrent: false }, () => {
 
   it("preserves block structure for shadow-root quotes", () => {
     const state = Result.getOrThrow(
-      S.decodeResult(SerializedEditorState)({
+      decodeSerializedEditorStateResult({
         root: {
           type: "root",
           version: 1,

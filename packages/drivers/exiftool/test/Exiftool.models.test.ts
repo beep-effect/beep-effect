@@ -31,6 +31,12 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeUnknownSafeTagNameOption = S.decodeUnknownOption(SafeTagName);
+const decodeUnknownExiftoolErrorFromUnknownOptionsSync = S.decodeUnknownSync(ExiftoolErrorFromUnknownOptions);
+const encodeBeepQaProvenanceSync = S.encodeSync(BeepQaProvenance);
+const encodeExifMetadataSync = S.encodeSync(ExifMetadata);
+const encodeExiftoolErrorFromUnknownOptionsSync = S.encodeSync(ExiftoolErrorFromUnknownOptions);
+
 const assertRoundTrip = <Schema extends S.Codec<unknown, unknown>>(schema: Schema): void => {
   const encode = S.encodeSync(schema);
   const decode = S.decodeUnknownSync(schema);
@@ -69,14 +75,16 @@ describe("@beep/exiftool models", () => {
     assertRoundTrip(BeepQaProvenance);
     assertRoundTrip(WriteXmpPacketRequest);
     assertRoundTrip(ExiftoolErrorContext);
-
-    const encodeErrorOptions = S.encodeSync(ExiftoolErrorFromUnknownOptions);
-    const decodeErrorOptions = S.decodeUnknownSync(ExiftoolErrorFromUnknownOptions);
     fc.assert(
       fc.property(
         S.toArbitrary(ExiftoolErrorFromUnknownOptions)(fc).filter((options) => O.isNone(options.cause)),
         (options) => {
-          expect(Equal.equals(decodeErrorOptions(encodeErrorOptions(options)), options)).toBe(true);
+          expect(
+            Equal.equals(
+              decodeUnknownExiftoolErrorFromUnknownOptionsSync(encodeExiftoolErrorFromUnknownOptionsSync(options)),
+              options
+            )
+          ).toBe(true);
         }
       ),
       fcRuns(25)
@@ -85,7 +93,7 @@ describe("@beep/exiftool models", () => {
 
   it("keeps Option-modeled optional metadata encoded as omitted keys", () => {
     expect(
-      S.encodeSync(BeepQaProvenance)(
+      encodeBeepQaProvenanceSync(
         BeepQaProvenance.make({
           actionId: "act-9",
           capturedAtEpochMs: 1753900000000,
@@ -100,7 +108,7 @@ describe("@beep/exiftool models", () => {
       sessionId: "sess-1",
     });
 
-    expect(S.encodeSync(BeepQaProvenance)(fullProvenance)).toEqual({
+    expect(encodeBeepQaProvenanceSync(fullProvenance)).toEqual({
       actionId: "act-9",
       capturedAtEpochMs: 1753900000000,
       clockOffsetMs: 12.5,
@@ -112,7 +120,7 @@ describe("@beep/exiftool models", () => {
     });
 
     expect(
-      S.encodeSync(ExifMetadata)(
+      encodeExifMetadataSync(
         ExifMetadata.make({
           fileType: O.some("PNG"),
           imageWidth: O.some(8),
@@ -127,12 +135,11 @@ describe("@beep/exiftool models", () => {
   });
 
   it("rejects tag names that could smuggle extra arguments", () => {
-    const decodeTagName = S.decodeUnknownOption(SafeTagName);
-    expect(O.isSome(decodeTagName("XMP-beepQA:sessionId"))).toBe(true);
-    expect(O.isNone(decodeTagName(""))).toBe(true);
-    expect(O.isNone(decodeTagName("tag name"))).toBe(true);
-    expect(O.isNone(decodeTagName("tag=value"))).toBe(true);
-    expect(O.isNone(decodeTagName("tag<file"))).toBe(true);
+    expect(O.isSome(decodeUnknownSafeTagNameOption("XMP-beepQA:sessionId"))).toBe(true);
+    expect(O.isNone(decodeUnknownSafeTagNameOption(""))).toBe(true);
+    expect(O.isNone(decodeUnknownSafeTagNameOption("tag name"))).toBe(true);
+    expect(O.isNone(decodeUnknownSafeTagNameOption("tag=value"))).toBe(true);
+    expect(O.isNone(decodeUnknownSafeTagNameOption("tag<file"))).toBe(true);
   });
 
   it("builds read, write, and version arguments with -config first", () => {
@@ -240,10 +247,10 @@ describe("@beep/exiftool models", () => {
     expect(
       pipe(
         decoded,
-        O.map((provenance) => S.encodeSync(BeepQaProvenance)(provenance)),
+        O.map((provenance) => encodeBeepQaProvenanceSync(provenance)),
         O.getOrElse(() => ({}))
       )
-    ).toEqual(S.encodeSync(BeepQaProvenance)(fullProvenance));
+    ).toEqual(encodeBeepQaProvenanceSync(fullProvenance));
 
     expect(
       O.isNone(

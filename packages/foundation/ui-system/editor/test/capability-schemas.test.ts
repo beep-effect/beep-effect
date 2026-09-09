@@ -19,6 +19,15 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import type { NodeRegistrationKey } from "@beep/editor/capability/schemas";
 
+const decodeCapabilityCatalog = S.decodeEffect(CapabilityCatalog);
+const decodeCapabilityDescriptor = S.decodeEffect(CapabilityDescriptor);
+const decodeEditorProfile = S.decodeEffect(EditorProfile);
+const decodeKeyChordFromString = S.decodeEffect(KeyChordFromString);
+const decodeResolvedEditorProfile = S.decodeEffect(ResolvedEditorProfile);
+const encodeCapabilityDescriptor = S.encodeEffect(CapabilityDescriptor);
+const encodeEditorProfile = S.encodeEffect(EditorProfile);
+const encodeResolvedEditorProfile = S.encodeEffect(ResolvedEditorProfile);
+
 const descriptorInput = {
   id: "format.bold",
   title: "Bold",
@@ -64,17 +73,17 @@ describe("capability schemas", () => {
   it.effect(
     "round-trips descriptors, profiles, and resolved profiles",
     Effect.fnUntraced(function* () {
-      const decodedDescriptor = yield* S.decodeEffect(CapabilityDescriptor)(descriptorInput);
-      const descriptorEncoded = yield* S.encodeEffect(CapabilityDescriptor)(decodedDescriptor);
-      const descriptorRoundTrip = yield* S.decodeEffect(CapabilityDescriptor)(descriptorEncoded);
+      const decodedDescriptor = yield* decodeCapabilityDescriptor(descriptorInput);
+      const descriptorEncoded = yield* encodeCapabilityDescriptor(decodedDescriptor);
+      const descriptorRoundTrip = yield* decodeCapabilityDescriptor(descriptorEncoded);
       expect(Equal.equals(decodedDescriptor, descriptorRoundTrip)).toBe(true);
 
       const profile = EditorProfile.make({
         id: ProfileId.make("editor.schema-test"),
         capabilities: [CapabilityId.make("format.bold")],
       });
-      const profileEncoded = yield* S.encodeEffect(EditorProfile)(profile);
-      const profileRoundTrip = yield* S.decodeEffect(EditorProfile)(profileEncoded);
+      const profileEncoded = yield* encodeEditorProfile(profile);
+      const profileRoundTrip = yield* decodeEditorProfile(profileEncoded);
       expect(Equal.equals(profile, profileRoundTrip)).toBe(true);
 
       const resolved = ResolvedEditorProfile.make({
@@ -85,8 +94,8 @@ describe("capability schemas", () => {
         commands: [],
         guardedChords: [],
       });
-      const resolvedEncoded = yield* S.encodeEffect(ResolvedEditorProfile)(resolved);
-      const resolvedRoundTrip = yield* S.decodeEffect(ResolvedEditorProfile)(resolvedEncoded);
+      const resolvedEncoded = yield* encodeResolvedEditorProfile(resolved);
+      const resolvedRoundTrip = yield* decodeResolvedEditorProfile(resolvedEncoded);
       expect(Equal.equals(resolved, resolvedRoundTrip)).toBe(true);
     })
   );
@@ -96,12 +105,12 @@ describe("capability schemas", () => {
     Effect.fnUntraced(function* () {
       const vocabulary = ["Ctrl+Alt+1", "Cmd+Option+1", "Control+Shift+Q", "Ctrl+\\", "Cmd+.", "Win+Shift+X"];
       for (const chord of vocabulary) {
-        const parsed = yield* S.decodeEffect(KeyChordFromString)(chord);
+        const parsed = yield* decodeKeyChordFromString(chord);
         expect(parsed.key).not.toBe("");
       }
 
       for (const malformed of ["", "Ctrl+", "Hyper+K", "Ctrl+Hyper+K"]) {
-        const exit = yield* Effect.exit(S.decodeEffect(KeyChordFromString)(malformed));
+        const exit = yield* Effect.exit(decodeKeyChordFromString(malformed));
         expect(Exit.isFailure(exit)).toBe(true);
       }
     })
@@ -111,30 +120,24 @@ describe("capability schemas", () => {
     "rejects duplicate catalog ids, command ids, and registration keys",
     Effect.fnUntraced(function* () {
       const duplicateIds = yield* Effect.exit(
-        S.decodeEffect(CapabilityCatalog)([
-          descriptor("node.one", "command.one"),
-          descriptor("node.one", "command.two"),
-        ])
+        decodeCapabilityCatalog([descriptor("node.one", "command.one"), descriptor("node.one", "command.two")])
       );
       expect(Exit.isFailure(duplicateIds)).toBe(true);
 
       const duplicateCommands = yield* Effect.exit(
-        S.decodeEffect(CapabilityCatalog)([
-          descriptor("node.one", "command.same"),
-          descriptor("node.two", "command.same"),
-        ])
+        decodeCapabilityCatalog([descriptor("node.one", "command.same"), descriptor("node.two", "command.same")])
       );
       expect(Exit.isFailure(duplicateCommands)).toBe(true);
 
       const duplicateRegistrations = yield* Effect.exit(
-        S.decodeEffect(CapabilityCatalog)([
+        decodeCapabilityCatalog([
           descriptor("node.one", "command.one", ["TextNode"]),
           descriptor("node.two", "command.two", ["TextNode"]),
         ])
       );
       expect(Exit.isFailure(duplicateRegistrations)).toBe(true);
 
-      const valid = yield* S.decodeEffect(CapabilityCatalog)([
+      const valid = yield* decodeCapabilityCatalog([
         descriptor("node.one", "command.one", ["TextNode"]),
         descriptor("node.two", "command.two", ["TabNode"]),
       ]);
