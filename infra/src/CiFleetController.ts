@@ -919,7 +919,7 @@ export class CiFleetController extends pulumi.ComponentResource {
             name: githubAppWebhookSecretSsmParameterName,
           },
         },
-        instance_allocation_strategy: "price-capacity-optimized",
+        instance_allocation_strategy: "lowest-price",
         // Permanent heavy-pool posture: the 2026-09-09 interruption sweep
         // exceeded the >2 interruption-reruns/week tripwire. Launch-time
         // on-demand failover cannot recover a runner reclaimed mid-job.

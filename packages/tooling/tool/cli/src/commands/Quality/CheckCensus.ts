@@ -536,7 +536,7 @@ const signed = (value: number): string => (value > 0 ? `+${value}` : String(valu
  *
  * @param report - The census report to render.
  * @returns Header and one line per row.
- * @category rendering
+ * @category formatting
  * @since 0.0.0
  */
 export const renderCheckCensusLines = (report: CheckCensusReport): ReadonlyArray<string> => {

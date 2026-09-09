@@ -434,10 +434,12 @@ describe("CI runner security", () => {
         "Restore Playwright Chromium cache",
         "Install Playwright Chromium",
         "Run Storybook lane",
-        "Upload Storybook static artifact",
       ]) {
         assert.strictEqual(stepByName(steps, name).if, gate, name);
       }
+      const upload = stepByName(steps, "Upload Storybook static artifact");
+      assert.strictEqual(upload.if, `${gate} && hashFiles('apps/storybook/storybook-static/index.html') != ''`);
+      assert.strictEqual(upload.with?.["if-no-files-found"], "error");
       assert.include(workflowText, 'if [[ "$goals_only" == "true" ]]; then');
       assert.include(workflowText, 'shape_args+=(--affected --base "origin/${GITHUB_BASE_REF:-main}")');
       const restore = stepByName(steps, "Restore Playwright Chromium cache");
