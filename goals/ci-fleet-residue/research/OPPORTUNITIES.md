@@ -2,6 +2,26 @@
 
 Record receipts at the moment friction happens; redact for the public repo.
 
+## 2026-09-09 — A branch-dispatched probe passed routing but could not get a runner
+
+- What: validating the newly activated image with Fleet Lane Probe before
+  merging PR #1062.
+- Evidence: run `34385300906` was dispatched from the PR branch. The webhook
+  accepted its queued-job event and the dispatcher confirmed the build-queue
+  handoff. It remained queued while new-image workers handled other jobs.
+  The runner group's allowed workflow definitions are restricted to `main`,
+  including `fleet-lane-probe.yml@refs/heads/main`.
+- Attribution: the operator chose an ineligible workflow ref. Capacity was
+  also occupied, but queue acceptance and busy workers did not prove that this
+  particular workflow could be assigned. The image rollout was not the cause.
+- Response: cancel the unassigned probe. Validate PR code through its required
+  Heavy / Check job, which calls the approved `heavy.yml@main` reusable
+  workflow, and correlate its runner with the new EC2 image. Keep the runner
+  group restriction intact; dispatch Fleet Lane Probe from `main` after merge.
+- Prevention: check the allowed workflow refs before dispatching a probe.
+  Treat controller routing and GitHub runner-group eligibility as separate
+  checks so an ineligible job does not keep requesting capacity.
+
 ## 2026-09-09 — An unused Chrome package feed blocked Storybook twice
 
 - What: final hosted proof for the lean runner-image PR #1062.
@@ -20,6 +40,8 @@ Record receipts at the moment friction happens; redact for the public repo.
   `.list` and `.sources` definitions in this workflow as well.
 - Prevention: scope job package sources to the dependencies the job needs,
   and require a successful hosted rerun before closing the incident.
+- Hosted proof: run `34384268437` on `30d176e0fd` passed both Playwright
+  installation and the Storybook lane with the repair in place.
 
 ## 2026-09-09 — A fresh image passed integrity but regressed setup time
 
@@ -53,8 +75,11 @@ Record receipts at the moment friction happens; redact for the public repo.
   11.61 GiB. The guest was terminated after capturing its terminal success.
 - Rollout boundary: the refreshed saved image-only Pulumi plan has one SSM
   update, 83 unchanged resources and no replacements or deletions. It excludes
-  the known enrollment-provider discrepancy. The intended pin and image
-  receipt are reviewable; attended activation and a hosted probe remain.
+  the known enrollment-provider discrepancy. The operator approved the apply,
+  which completed at 17:49 UTC with exactly those changes. Direct AWS reads
+  confirmed the new image at SSM version 8 and matching live image keys.
+  Hosted acceptance uses the PR's approved Heavy / Check workflow; the
+  separate receipt above explains the cancelled branch-dispatched probe.
 - Prevention: require timed canaries as well as freshness and integrity checks
   before promoting an image intended to reduce setup cost.
 

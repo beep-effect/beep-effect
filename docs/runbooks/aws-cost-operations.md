@@ -462,10 +462,17 @@ The image refresh follows a separate validation and activation sequence:
    September 9 final probe allowed 20 minutes after stop before cleanup.
 4. Review the intended manifest, AMI pin and refreshed Pulumi preview. Apply
    the saved plan only with the operator present. Prove the live SSM pin and
-   run the existing Fleet Lane Probe on a newly launched production worker.
-   Require a baked fast-path hit and successful verification before calling
-   activation validated. Retain the old image until rollback is no longer
-   needed.
+   verify a newly launched production worker. Before merge, use the PR's
+   required Heavy / Check job: `check.yml` calls the approved reusable
+   `heavy.yml@main` definition while checking out the PR source. Correlate its
+   GitHub runner name with the EC2 image ID, then require a baked fast-path hit
+   and successful verification. Retain the old image for rollback.
+5. Fleet Lane Probe must be dispatched from `main`. The runner group restricts
+   allowed workflow definitions to that ref. A feature-branch dispatch can
+   reach the controller queue yet remain ineligible for assignment; do not
+   mistake that for a launch failure or relax the group restriction. Use this
+   probe after merge to verify deployed main, and inspect the group's allowed
+   workflow refs before choosing another dispatch ref.
 
 The September 9 replacement image is `ami-07af50c345b5ba065`, baked from pushed
 source `b9b6faa5a2`; the rollback image is `ami-0738c1b69711969bc`. The isolated
@@ -474,9 +481,12 @@ refreshed full preview contains only the intended SSM image update and the
 previously documented Cost Optimization Hub provider discrepancy. The saved
 image-only plan targets `ci-fleet-controller-runner-ami`: one update, 83 unchanged
 resources, no replacements or deletions. It excludes the unrelated enrollment
-update. The intended pin is committed for review; production activation and
-the hosted Fleet Lane Probe still require the attended rollout. A passing
-isolated probe does not establish that production uses the new image.
+update. The operator-approved apply completed at 17:49 UTC with exactly those
+changes. A direct AWS read confirmed the new image at SSM version 8; the live
+image check confirmed matching Bun, release-archive and lockfile keys. Save
+the hosted job's image identity, setup result and successful Check receipt in
+the rollout PR before declaring the activation validated. A matching manifest
+alone does not establish that production uses the new image.
 
 ## Current stack ownership and bounded operations
 
