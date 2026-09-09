@@ -15,9 +15,10 @@ describe("doctest lane fixture", () => {
             "bun",
             "--eval",
             `
-          import config, { vitestDoctestActive } from "${shared}";
+          import config from "${shared}";
           import { strictEqual, deepStrictEqual } from "node:assert";
-          strictEqual(vitestDoctestActive, ${active});
+          strictEqual(Array.isArray(config.test?.includeSource) && config.test.includeSource.length > 0, ${active});
+          strictEqual((config.test?.include ?? []).length === 0, ${active});
           deepStrictEqual(config.test.include, ${active} ? [] : ["test/**/*.test.{ts,tsx}"]);
           deepStrictEqual(config.test.includeSource, ${active} ? ["src/**/*.{ts,tsx}"] : []);
           strictEqual(config.test.passWithNoTests, ${!active});
