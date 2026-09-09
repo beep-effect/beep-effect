@@ -499,8 +499,9 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
     required: false,
     laneClass: "cli-runnable",
     replay: "exact",
-    flags: [],
-    notes: "Runs jsdoc-inventory before jsdoc-ratchet, matching hosted CI's sequence.",
+    flags: ["--inventory"],
+    notes:
+      "Runs jsdoc-inventory before jsdoc-ratchet, matching hosted CI's sequence, unless --inventory <path> supplies a prebuilt inventory (then only the ratchet runs).",
   }),
   CiLaneDescriptor.make({
     id: "build",

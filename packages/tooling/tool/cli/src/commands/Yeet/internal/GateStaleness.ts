@@ -44,7 +44,6 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { sortedUniquePaths } from "../../../internal/repo-run/index.ts";
 import { GOALS_DOCTOR_BASELINE_PATH } from "../../Goals/Doctor.ts";
-import { ALLOWLIST_PATH } from "../../Laws/AllowlistCheck.ts";
 import { SchemaFirstInventoryPath } from "../../Lint/Lint.schemas.ts";
 import {
   coverageRegressionBaselinePath,
@@ -356,17 +355,6 @@ export const YEET_GATE_ARTIFACT_DESCRIPTORS: ReadonlyArray<GateArtifactDescripto
     gateId: "fallow-health",
     kind: "baseline",
     regenerateCommand: "bun run fallow:health:baseline:write",
-    scope: "repo-code",
-  }),
-  // Hand-maintained exemption list read by `lint:native-runtime` and
-  // `lint:allowlist`; there is no writer, so the check itself is the
-  // regeneration step: it names the entries that no longer match a live
-  // violation and the stale generated snapshot.
-  GateArtifactDescriptor.make({
-    artifactPath: ALLOWLIST_PATH,
-    gateId: "effect-laws-allowlist",
-    kind: "manifest",
-    regenerateCommand: "bun run beep laws allowlist-check",
     scope: "repo-code",
   }),
   // Read by `lint:schema-first` (Lint/SchemaFirst.ts) as the tracked-finding

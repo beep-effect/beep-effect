@@ -364,6 +364,29 @@ const readTsconfigReferences = Effect.fn("CheckCensus.readTsconfigReferences")(f
   return decoded.references ?? A.empty();
 });
 
+// The committed check overlay may narrow or widen the program (effect-drizzle
+// includes `scripts` its tsconfig.json does not), so the synthesized overlay
+// copies that selection and isolates the reference strategy it measures.
+const TsconfigSelection = S.Struct({
+  include: S.Array(S.String).pipe(S.optionalKey),
+  exclude: S.Array(S.String).pipe(S.optionalKey),
+});
+const decodeTsconfigSelection = S.decodeUnknownEffect(TsconfigSelection);
+
+const readCheckOverlaySelection = Effect.fn("CheckCensus.readCheckOverlaySelection")(function* (
+  packageDir: string
+): Effect.fn.Return<typeof TsconfigSelection.Type, QualityScriptCommandError, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const overlayPath = path.join(packageDir, "tsconfig.check.json");
+  const text = yield* fs
+    .readFileString(overlayPath)
+    .pipe(QualityScriptCommandError.mapError(`Failed to read ${overlayPath}.`));
+  return yield* decodeTsconfigSelection(parseJsonc(text)).pipe(
+    QualityScriptCommandError.mapError(`Failed to decode include/exclude from ${overlayPath}.`)
+  );
+});
+
 // The reference-keeping overlay is the committed check overlay with two
 // differences: it keeps `references` (so upstream packages resolve through
 // their declaration output, as `tsc -p tsconfig.json` does) and it leaves the
@@ -378,9 +401,11 @@ const withReferenceKeepingOverlay = Effect.fnUntraced(function* <A, E, R>(
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const references = yield* readTsconfigReferences(packageDir);
+  const selection = yield* readCheckOverlaySelection(packageDir);
   const configPath = path.join(packageDir, CHECK_CENSUS_OVERLAY_FILE_NAME);
   const configText = yield* jsonStringifyPretty({
     extends: "./tsconfig.json",
+    ...selection,
     references,
     compilerOptions: {
       composite: false,
