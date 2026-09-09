@@ -206,8 +206,6 @@ export const DEFAULT_GATE_ORDER_SEED = GateOrderSeed.make({
       "precise",
       "Terminal reds occur after the established environment-only TS2589 quarantine."
     ),
-    cheapWrapperRow("quality:check:tsgo-tests", 6 / 832, O.some(24), "heavy", HEAVY_BASIS),
-    hostedRow("quality:check:tsgo-smoke", 383, 2, 0),
     policyHostedRow("quality:knip", 80, 9, 11 / 832, O.some(20)),
     hostedRow("quality:jsdoc-ratchet", 82, 16, 0),
     hostedRow("quality:docgen", 115, 5, 0),

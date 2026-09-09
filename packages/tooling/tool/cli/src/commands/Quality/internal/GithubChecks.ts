@@ -275,27 +275,18 @@ export const githubCheckQualityLanes = (repoRoot: string): ReadonlyArray<GithubC
     "heavy",
     ciLaneStep(repoRoot, "quality:lint-policy", "lint-policy")
   ),
+  // `quality:check` replays `beep ci lane check --affected`, whose root `bun run
+  // check` carries the repo-wide `quality:test-tsgo` and `quality:tsgo-smoke`
+  // extras by design: `shouldRunRepoWideSteps` demotes them only under an
+  // explicit `--filter`/`--since`, never under `--affected`, so the affected
+  // replay still owns the only gate on Effect tsgo diagnostics in test files.
+  // Standalone copies of those extras were deleted as pure repeats
+  // (quality-lane audit 2026-09-09, D6).
   githubCheckLane(
     "quality:check",
     "repo-quality",
     "heavy",
     ts2589QuarantineLane(ciLaneStep(repoRoot, "quality:check", "check"))
-  ),
-  // The hosted Check context runs affected-scoped, which suppresses the two
-  // repo-wide extras root `bun run check` used to carry. They are the only gate
-  // on Effect tsgo diagnostics in test files, so they stay as their own local
-  // lanes rather than disappearing with the root command.
-  githubCheckLane(
-    "quality:check:tsgo-tests",
-    "repo-quality",
-    "heavy",
-    repoCliLane(repoRoot, "quality:check:tsgo-tests", ["test-tsgo"])
-  ),
-  githubCheckLane(
-    "quality:check:tsgo-smoke",
-    "repo-quality",
-    "heavy",
-    repoCliLane(repoRoot, "quality:check:tsgo-smoke", ["tsgo-smoke"])
   ),
   githubCheckLane("quality:knip", "repo-quality", "preflight", repoCliLane(repoRoot, "quality:knip", ["knip"])),
   githubCheckLane(
@@ -540,18 +531,6 @@ export const githubCheckCheapGateLanes = (repoRoot: string): ReadonlyArray<Githu
     "repo-sanity",
     "preflight",
     bunRunLane(repoRoot, "cheap-gates:config-sync", ["config-sync:check"])
-  ),
-  githubCheckLane(
-    "cheap-gates:tsgo-rules",
-    "repo-quality",
-    "preflight",
-    repoCliLane(repoRoot, "cheap-gates:tsgo-rules", ["tsgo-rules"])
-  ),
-  githubCheckLane(
-    "cheap-gates:test-tsgo",
-    "repo-quality",
-    "preflight",
-    repoCliLane(repoRoot, "cheap-gates:test-tsgo", ["test-tsgo"])
   ),
   githubCheckLane(
     "cheap-gates:effect-imports",

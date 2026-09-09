@@ -2382,10 +2382,8 @@ const rootCheckSteps = (repoRoot: string, args: ReadonlyArray<string>) => [
     ...turboStep(repoRoot, "check", ["check"], boundedRootTurboArgs(args)),
     flakeQuarantine: "ts2589-no-location",
   }),
-  ...optionalQualityTaskStep({
-    enabled: shouldRunRepoWideSteps(args),
-    step: () => repoCliStep(repoRoot, "check:tsgo:rules", ["quality", "tsgo-rules"]),
-  }),
+  // `tsgo-rules` keeps its single owner in lint-policy (`lint:tsgo-rules`);
+  // the check root task carries only the test-file and smoke tsgo extras.
   ...optionalQualityTaskStep({
     enabled: shouldRunRepoWideSteps(args),
     step: () => repoCliStep(repoRoot, "check:tsgo:tests", ["quality", "test-tsgo"]),

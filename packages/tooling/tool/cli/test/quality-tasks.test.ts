@@ -809,8 +809,6 @@ describe("quality task adapter", () => {
       "quality:lint",
       "quality:lint-policy",
       "quality:check",
-      "quality:check:tsgo-tests",
-      "quality:check:tsgo-smoke",
       "quality:knip",
       "quality:jsdoc-ratchet",
       "quality:docgen",
@@ -826,10 +824,10 @@ describe("quality task adapter", () => {
     expect(qualityLaneArgs(lanes, "quality:build")).toEqual(["run", "beep", "ci", "lane", "build"]);
     expect(qualityLaneArgs(lanes, "quality:knip")).toEqual(["run", "beep", "quality", "knip"]);
     expect(qualityLaneArgs(lanes, "quality:jsdoc-ratchet")).toEqual(["run", "beep", "ci", "lane", "jsdoc-ratchet"]);
-    // Affected-scoped `beep ci lane check` drops the repo-wide tsgo extras root
-    // `bun run check` carried, so they keep running as their own local lanes.
-    expect(qualityLaneArgs(lanes, "quality:check:tsgo-tests")).toEqual(["run", "beep", "quality", "test-tsgo"]);
-    expect(qualityLaneArgs(lanes, "quality:check:tsgo-smoke")).toEqual(["run", "beep", "quality", "tsgo-smoke"]);
+    // The repo-wide tsgo extras ride inside `quality:check` (root `bun run check`
+    // keeps them under `--affected`), so no lane runs `test-tsgo` or `tsgo-smoke` again.
+    expect(A.some(lanes, (lane) => A.contains(lane.step.args, "test-tsgo"))).toBe(false);
+    expect(A.some(lanes, (lane) => A.contains(lane.step.args, "tsgo-smoke"))).toBe(false);
     expect(A.map(githubCheckLanePlan.githubCheckLaneWaves(lanes), (wave) => wave.wave)).toEqual([
       "preflight",
       "heavy",
@@ -845,8 +843,6 @@ describe("quality task adapter", () => {
       "cheap-gates:goals-index",
       "cheap-gates:exploration-atlas",
       "cheap-gates:config-sync",
-      "cheap-gates:tsgo-rules",
-      "cheap-gates:test-tsgo",
       "cheap-gates:effect-imports",
       "cheap-gates:schema-first",
       "cheap-gates:allowlist-check",
@@ -2512,19 +2508,15 @@ describe("quality task adapter", () => {
   it("includes repo-level tsgo diagnostics for affected root check lanes", () => {
     const steps = rootQualityStepsForTesting("/repo", getInvocation(["check", "--affected", "--summarize"]));
 
-    expect(steps).toHaveLength(4);
+    expect(steps).toHaveLength(3);
     expect(steps[0]).toMatchObject({
       label: "check",
       command: "bunx",
       cwd: "/repo",
     });
     expect(steps[0]?.args).toEqual(expectedRootTurboArgs("check", ["--affected", "--summarize"]));
+    // tsgo-rules is owned by lint-policy alone (`lint:tsgo-rules`); check carries no copy.
     expect(A.slice(steps, { start: 1 })).toEqual([
-      expect.objectContaining({
-        label: "check:tsgo:rules",
-        command: "bun",
-        args: repoCliEntryArgs("quality", "tsgo-rules"),
-      }),
       expect.objectContaining({
         label: "check:tsgo:tests",
         command: "bun",
@@ -5898,12 +5890,7 @@ describe("labs turbo exclusion", () => {
   it("ends check argvs with the labs exclude while repo-wide tsgo steps survive", () => {
     for (const argv of [["check", "--affected", "--summarize"], ["check"]]) {
       const steps = rootQualityStepsForTesting("/repo", getInvocation(argv));
-      expect(A.map(steps, (step) => step.label)).toEqual([
-        "check",
-        "check:tsgo:rules",
-        "check:tsgo:tests",
-        "check:tsgo:smoke",
-      ]);
+      expect(A.map(steps, (step) => step.label)).toEqual(["check", "check:tsgo:tests", "check:tsgo:smoke"]);
       expectEndsWithLabsExclude(steps[0]);
     }
   });
