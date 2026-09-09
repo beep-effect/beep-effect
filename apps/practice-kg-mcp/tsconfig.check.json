@@ -1,7 +1,32 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "./tsconfig.json",
-  "references": [],
+  "references": [
+    {
+      "path": "../../packages/drivers/anthropic/tsconfig.json"
+    },
+    {
+      "path": "../../packages/drivers/duckdb/tsconfig.json"
+    },
+    {
+      "path": "../../packages/drivers/pglite/tsconfig.json"
+    },
+    {
+      "path": "../../packages/foundation/modeling/identity/tsconfig.json"
+    },
+    {
+      "path": "../../packages/foundation/modeling/schema/tsconfig.json"
+    },
+    {
+      "path": "../../packages/foundation/modeling/utils/tsconfig.json"
+    },
+    {
+      "path": "../../packages/law-practice/server/tsconfig.json"
+    },
+    {
+      "path": "../../packages/tooling/test-kit/test-utils/tsconfig.json"
+    }
+  ],
   "compilerOptions": {
     "composite": false,
     "declaration": false,

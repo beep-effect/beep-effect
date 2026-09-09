@@ -142,4 +142,47 @@ describe("check census", () => {
       provideScopedLayer(NodeServices.layer)
     )
   );
+
+  it.effect(
+    "refuses to measure an unbuilt tree and names the missing declaration output",
+    Effect.fnUntraced(
+      function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const repoRoot = yield* findRepoRoot();
+        const tsgoPath = path.join(repoRoot, "node_modules", ".bin", "tsgo");
+        const tempRoot = path.join(repoRoot, "node_modules", ".tmp");
+        yield* fs.makeDirectory(tempRoot, { recursive: true });
+        const root = yield* fs.makeTempDirectoryScoped({ directory: tempRoot, prefix: "check-census-unbuilt-" });
+        const consumerDir = path.join(root, "packages", "consumer");
+
+        // Same fixture, upstream never built: the reference-keeping overlay
+        // would only count TS6305 noise, so the census must refuse up front.
+        yield* writeFixtureRepo(root);
+
+        const error = yield* runCheckCensus(
+          CheckCensusOptions.make({
+            repoRoot: root,
+            tsgoPath,
+            packages: [{ name: "@fixture/consumer", dir: consumerDir }],
+            concurrency: 1,
+          })
+        ).pipe(Effect.flip);
+
+        expect(error._tag).toBe("QualityScriptCommandError");
+        expect(error.message).toContain(
+          "check-census needs a built tree: 1 referenced project(s) across 1 package(s) have no declaration output."
+        );
+        expect(error.message).toContain(
+          "  - @fixture/consumer: ../upstream/tsconfig.json -> packages/upstream/dist/index.d.ts"
+        );
+        expect(error.message).toContain("Run `bun run build`");
+        // Nothing was measured: no temporary overlay was ever written.
+        expect(yield* fs.exists(path.join(consumerDir, CHECK_CENSUS_OVERLAY_FILE_NAME))).toBe(false);
+        expect(yield* fs.exists(path.join(root, "packages", "upstream", "dist"))).toBe(false);
+      },
+      Effect.scoped,
+      provideScopedLayer(NodeServices.layer)
+    )
+  );
 });
