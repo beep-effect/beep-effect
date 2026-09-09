@@ -12,6 +12,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+/// <reference path="./vendor.d.ts" />
 
 import { $M365Id } from "@beep/identity";
 import { getSomesStruct } from "@beep/utils/Option";
