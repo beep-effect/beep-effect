@@ -251,11 +251,22 @@ export class ScriptsBlock extends S.Class<ScriptsBlock>($I`ScriptsBlock`)(
   })
 ) {}
 
-/** Encoded collection view accepted by the scripts codec. @category type-level @since 0.0.0 */
+/**
+ * Provides type-level companions for the encoded representation of a scripts block.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace ScriptsBlock {
-  /** Encoded scripts tiers. @category type-level @since 0.0.0 */
+  /**
+   * Encoded task, implementation, and extra script tiers accepted before schema decoding.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
   export type Encoded = typeof ScriptsBlock.Encoded;
 }
+
 /**
  * Flat JSON scripts record at the manifest boundary.
  *

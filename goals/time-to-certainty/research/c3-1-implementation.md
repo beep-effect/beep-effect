@@ -1132,3 +1132,41 @@ tracked .ignore. Temporary test fixtures were scoped and cleaned. Existing
 changes to .claude helpers/settings and the brief were preserved. No package.json
 edits, Git write commands, inbox acknowledgments, push, publish, or merge were
 performed. Stage E4 stops here.
+
+## 2026-09-09 — Stage E5 hosted round-5 remediation (orchestrator)
+
+Hosted state on 4ea0393ddc: every lane green except Heavy / Lint Policy, Heavy / Coverage
+Regression, and the rate-limited Vercel pair. Both reds attributed as introduced.
+
+- **Lint Policy** — `lint:deprecated-apis` reported `` `sequential` is deprecated. Use
+  `concurrent: false` instead `` at two `describe.sequential` sites in
+  `test/lint-workers.test.ts` (E4 authored). Replaced with the repo idiom
+  `describe(name, { concurrent: false }, fn)`; the shared Vitest sequence is globally concurrent,
+  so the modifier was load-bearing for the mock reset and had to be kept in the new form.
+- **Coverage Regression** — per-file ratchet on
+  `src/commands/CreatePackage/CreatePackage.command.ts`: lines 91.91 < 92.12, statements
+  92.32 < 92.56, branches 79.46 < 79.66, functions 97.22 < 99. Cause: the scaffold rewrite replaced
+  fully covered literal script constants with `scaffoldPackageScripts` and introduced a
+  `Match` over the package kind whose `lab` arm can never fire (`--lab` is only valid with
+  `--type app`, every lab app returns early through its app builder, and `--lab --app-kind
+  runtime-proof` is rejected) and whose `tool` arm no command test exercised. Remedy: deleted the
+  dead `lab` arm and the matching dead `kind === "lab"` conditional in the package renderer
+  (`PackageScriptsKind = Exclude<PackageKind, "lab">`), and added a `--type tool` command test
+  asserting the rendered block and the `@effect/platform-node` dependency. Scoped Node lcov
+  reproduction over the eight CreatePackage tests (matches hosted to two decimals): lines
+  409/443 = 92.33, functions 105/106 = 99.06, branches 236/295 = 80.00; the uncovered set is
+  exactly the baseline's 34 lines.
+- **Worker heap** — the stamped `lint:deprecated-apis --package .` on `@beep/repo-cli` died with
+  a V8 heap OOM at the worker default of 4096 and passed at the shard's 8192 (exit 0, 54 s, no
+  deprecated API left). The worker default now reuses `DEPRECATED_API_LINT_NODE_OPTIONS`; the
+  three test expectations follow.
+- **Review** — Greptile P2 (thread on `PackageScripts.schemas.ts` 254–258) applied verbatim:
+  full JSDoc for the `ScriptsBlock` namespace and its `Encoded` companion.
+
+Proofs (worktree, CI=true): package-scripts --check 142/0 drifting; policy-fingerprint current;
+schema-first ok; jsdoc-ratchet tracked=21 increased=0, zero-legacy findings=0; fallow
+audit/health/dead-code --check --base origin/main ok; typos ok; biome + oxlint on the five files
+(warnings pre-existing only); Bun vitest for lint-workers, create-package, package-scripts.schemas
+40/40; `package-verify @beep/repo-cli` ok (audit 404.7 s, docgen 17.8 s). `docgen:local` refuses
+a bounded run on this branch (root `package.json` and the docgen manifest are global inputs) and
+defers to the full proof, which the hosted Docgen lane has passed every round.

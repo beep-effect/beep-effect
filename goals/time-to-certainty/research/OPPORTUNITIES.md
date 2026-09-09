@@ -519,3 +519,42 @@ printed only its command banner for several minutes and was interrupted
 `jsdoc-ratchet --inventory standards/jsdoc-documentation.inventory.jsonc`
 passed against the tracked inventory. Per-package progress and bounded
 subprocess diagnostics would make inventory stalls attributable.
+
+## 2026-09-09 — The package-level eslint worker inherits a smaller heap than the shard it replaces
+
+- **Doing:** running the stamped `lint:deprecated-apis` script on `@beep/repo-cli` to prove a
+  deprecation fix before pushing PR #1029's fifth hosted round.
+- **Evidence:** `beep-cli lint deprecated-apis --package .` died with
+  `FATAL ERROR: Ineffective mark-compacts near heap limit Allocation failed - JavaScript heap out
+  of memory` at the worker's default `--max-old-space-size=4096`, and passed (exit 0, 54 s) with
+  the root shard's 8192. Stage D executed the stamped scripts on small workspaces only, so the
+  largest package never exercised the default.
+- **Would have prevented it:** one shared heap constant for shards and workers (now the case), and
+  a brief rule that stamped scripts are executed on the largest owner of each task, not the
+  smallest.
+
+## 2026-09-09 — Local coverage proof passed while the hosted per-file ratchet failed
+
+- **Doing:** the E4 "last churn round" proof chain, which included a Node coverage run for
+  `@beep/repo-cli` that exited 0.
+- **Evidence:** hosted `[coverage-ratchet] coverage regression(s) detected` on
+  `src/commands/CreatePackage/CreatePackage.command.ts` on all four metrics (0.2–1.8 points) after
+  the scaffold rewrite replaced fully covered literal script constants with `scaffoldPackageScripts`
+  plus two never-exercised match arms. A scoped reproduction,
+  `bunx vitest run --coverage --coverage.include=<file> --coverage.reporter=lcov <the 8 tests>`,
+  matched the hosted numbers to two decimals in 48 s; the 861 s full run had not surfaced them.
+- **Would have prevented it:** a cheap per-file ratchet delta for touched source files inside
+  `package-verify` / `yeet verify` (the lcov reproduction is the shape), so a rewrite that deletes
+  covered lines shows its ratio drop before push instead of after a 15-minute hosted lane.
+
+## 2026-09-09 — A Vitest deprecation surfaced only on the hosted deprecated-apis lane
+
+- **Doing:** E4 rewrote `test/lint-workers.test.ts` with `describe.sequential` to keep the shared
+  mock reset ordered under the repo's globally concurrent Vitest sequence.
+- **Evidence:** hosted Lint Policy failed with
+  `` `sequential` is deprecated. Use `concurrent: false` instead  @typescript-eslint/no-deprecated ``
+  at two sites; the local proof subset had no typed deprecated-apis pass because the root lane is a
+  multi-minute, 8 GiB-per-shard eslint run. The repo's own idiom is
+  `describe(name, { concurrent: false }, fn)`.
+- **Would have prevented it:** the package-scoped `lint:deprecated-apis` task running inside
+  `package-verify` for touched packages, which is exactly the C3.2 wiring this train is building.

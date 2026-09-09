@@ -145,6 +145,11 @@ const decodeStoriesTsconfig = S.decodeUnknownSync(StoriesTsconfig);
 const decodeStoriesDirectoryTsconfig = S.decodeUnknownSync(StoriesDirectoryTsconfig);
 const decodeTypeScriptPluginsConfig = S.decodeUnknownEffect(TypeScriptPluginsConfig);
 const decodePackageScripts = S.decodeUnknownSync(PackageScripts);
+const ToolPackageManifest = S.Struct({
+  scripts: S.Record(S.String, S.String),
+  dependencies: S.Record(S.String, S.String),
+});
+const decodeToolPackageManifest = S.decodeUnknownSync(ToolPackageManifest);
 const decodeGeneratedPackageManifest = S.decodeUnknownSync(GeneratedPackageManifest);
 const decodeFoundationPackageMetadata = S.decodeUnknownSync(FoundationPackageMetadata);
 const decodeToolingPackageMetadata = S.decodeUnknownSync(ToolingPackageMetadata);
@@ -638,6 +643,37 @@ describe("create-package", { concurrent: false }, () => {
             );
 
             expect(yield* fs.readFileString(bunArgsPath)).toBe("install\n--lockfile-only\n");
+          })
+        )
+      ),
+    CreatePackageTestTimeoutMs
+  );
+
+  it(
+    "scaffolds tool packages with the tool script block and the platform-node dependency",
+    () =>
+      Effect.runPromise(
+        withBootstrappedRootConfig(PackageParentRootConfig, ({ path, rootDir }) =>
+          Effect.gen(function* () {
+            yield* bootstrapIdentityWorkspace(rootDir);
+
+            yield* runCreatePackageCommand([
+              "example-tool",
+              "--type",
+              "tool",
+              "--parent-dir",
+              "packages",
+              "--description",
+              "A tool package",
+            ]);
+
+            const manifest = decodeToolPackageManifest(
+              yield* readJsonFile(path.join(rootDir, "packages", "example-tool", "package.json"))
+            );
+            expect(manifest.scripts).toEqual(
+              CreatePackageScripts.package("tool", "../../", "packages/example-tool", false)
+            );
+            expect(manifest.dependencies["@effect/platform-node"]).toBe("catalog:");
           })
         )
       ),

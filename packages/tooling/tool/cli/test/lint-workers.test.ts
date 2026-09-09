@@ -47,7 +47,7 @@ const packageFiles = Effect.fnUntraced(function* (directory: string) {
 });
 beforeEach(() => execution.mockReset().mockImplementation(() => Effect.succeed(0)));
 
-describe.sequential("thin lint workers", () => {
+describe("thin lint workers", { concurrent: false }, () => {
   it.effect(
     "checks declared fingerprint inputs independently of formatting and source contents",
     Effect.fnUntraced(function* () {
@@ -92,7 +92,7 @@ describe.sequential("thin lint workers", () => {
         command: `${root}/node_modules/.bin/eslint`,
         args: ["--config", `${root}/eslint.config.mjs`, prefix],
         cwd: root,
-        env: { BEEP_ESLINT_PROFILE: "deprecated-apis", NODE_OPTIONS: "--max-old-space-size=4096" },
+        env: { BEEP_ESLINT_PROFILE: "deprecated-apis", NODE_OPTIONS: "--max-old-space-size=8192" },
         extendEnv: true,
         stdio: "inherit",
       });
@@ -114,7 +114,7 @@ describe.sequential("thin lint workers", () => {
         command: `${root}/node_modules/.bin/eslint`,
         args: ["--config", `${root}/eslint.config.mjs`, "--max-warnings=0", "--no-warn-ignored", prefix],
         cwd: root,
-        env: { BEEP_ESLINT_PROFILE: "docs", NODE_OPTIONS: "--trace-warnings --max-old-space-size=4096" },
+        env: { BEEP_ESLINT_PROFILE: "docs", NODE_OPTIONS: "--trace-warnings --max-old-space-size=8192" },
         extendEnv: true,
         stdio: "inherit",
       });
@@ -159,7 +159,7 @@ describe.sequential("thin lint workers", () => {
             "packages/unowned/example.ts",
           ],
           cwd: fixtureRoot,
-          env: { BEEP_ESLINT_PROFILE: "docs", NODE_OPTIONS: "--max-old-space-size=4096" },
+          env: { BEEP_ESLINT_PROFILE: "docs", NODE_OPTIONS: "--max-old-space-size=8192" },
           extendEnv: true,
           stdio: "inherit",
         });
@@ -294,7 +294,7 @@ describe.sequential("thin lint workers", () => {
   );
 });
 
-describe.sequential("executed lint workers", () => {
+describe("executed lint workers", { concurrent: false }, () => {
   for (const worker of ["laws", "jsdoc", "deprecated-apis"]) {
     it.effect(
       `executes ${worker} against a fixture package surface`,

@@ -660,9 +660,11 @@ const runEslintWorker = Effect.fn("Lint.eslintWorker")(function* (
   if (A.isReadonlyArrayEmpty(targets)) return;
   const path = yield* Path.Path;
   const nodeOptions = yield* Config.string("NODE_OPTIONS").pipe(Config.withDefault(""));
+  // Workers lint a whole package with type information; @beep/repo-cli exhausts a 4 GiB heap,
+  // so the default matches the shard heap instead of a smaller worker-only budget.
   const heapOptions = /--max[-_]old[-_]space[-_]size(?:=|\s+)/.test(nodeOptions)
     ? nodeOptions
-    : `${nodeOptions} --max-old-space-size=4096`;
+    : `${nodeOptions} ${DEPRECATED_API_LINT_NODE_OPTIONS}`;
   const exitCode = yield* runToExit({
     command: path.join(root, DEPRECATED_API_LINT_ESLINT_BIN),
     args: [

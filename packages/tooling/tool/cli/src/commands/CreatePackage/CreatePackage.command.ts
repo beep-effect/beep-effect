@@ -1921,8 +1921,11 @@ const encodeManifestJson = (manifest: unknown): Effect.Effect<string, DomainErro
   Effect.map(encodePackageJsonCanonicalPrettyEffect(manifest), (json) => `${json}\n`);
 
 // Script table for library/tool package manifests.
+// Labs are runnable apps and render through `appBaseScripts`; the package renderer never sees them.
+type PackageScriptsKind = Exclude<ScriptsPackageKind, "lab">;
+
 const packageScripts = (
-  kind: ScriptsPackageKind,
+  kind: PackageScriptsKind,
   rootRelative: string,
   packagePath: string,
   withStoriesTsconfig: boolean
@@ -1937,7 +1940,7 @@ const packageScripts = (
       }
     : {}),
   "beep:policy": `bun --cwd ${rootRelative} run beep lint package-test-imports --include-root ${packagePath}`,
-  ...(kind === "lab" ? {} : { coverage: "bunx vitest run --coverage --exclude=test/integration/**" }),
+  coverage: "bunx vitest run --coverage --exclude=test/integration/**",
 });
 
 /**
@@ -2015,18 +2018,14 @@ const generatePackageJson: (
     const kind = Match.value(type).pipe(
       Match.when(
         () => O.isSome(ecosystemMetadata),
-        (): ScriptsPackageKind => "ecosystem"
-      ),
-      Match.when(
-        () => lab,
-        (): ScriptsPackageKind => "lab"
+        (): PackageScriptsKind => "ecosystem"
       ),
       Match.when(
         () => O.isSome(appKind),
-        (): ScriptsPackageKind => "app"
+        (): PackageScriptsKind => "app"
       ),
-      Match.when("tool", (): ScriptsPackageKind => "tool"),
-      Match.orElse((): ScriptsPackageKind => "library")
+      Match.when("tool", (): PackageScriptsKind => "tool"),
+      Match.orElse((): PackageScriptsKind => "library")
     );
     const scripts = packageScripts(kind, toRootRelative(packagePath), packagePath, withStoriesTsconfig);
     if (O.isSome(ecosystemMetadata)) {
