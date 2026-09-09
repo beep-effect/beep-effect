@@ -27,3 +27,8 @@ reason = "image-size ICNS-parser infinite-loop DoS affecting <=2.0.2; 2.0.2 IS t
 id = "GHSA-5p2g-fcmc-qvqq"
 ignoreUntil = 2026-09-15T00:00:00Z
 reason = "image-size JXL/HEIF-parser infinite-loop DoS affecting <=2.0.2; same package, same exposure, and same no-fixed-release status as GHSA-w3rx-r6r6-pgpr above. Revisit when image-size publishes a release above 2.0.2."
+
+[[IgnoredVulns]]
+id = "GHSA-vwc7-r8mq-g2x9"
+ignoreUntil = 2026-12-08T00:00:00Z
+reason = "adm-zip 0.5.9..0.6.0 follows destination symlinks during extraction (arbitrary file overwrite, medium). No fixed release exists as of 2026-09-08 (advisory first_patched_version is null; 0.6.0 is the npm latest). adm-zip reaches the lockfile only through onnxruntime-node@1.29.0 (a dependency of @beep/face-detection), whose install script extracts its own pinned runtime archive from the vendor release; no repository code or CI lane hands adm-zip an attacker-supplied archive, so the symlink overwrite requires a compromised vendor artifact, which the lockfile integrity hash already guards. Newly widened advisory, not introduced by the current PR (identical lockfile on main; the Security lane goes red on every branch at the same finding). Revisit when adm-zip publishes a release above 0.6.0 or onnxruntime-node drops it."
