@@ -91,6 +91,7 @@ import {
   QualityTaskLaneRun,
   QualityTaskLaneRunReport,
   QualityTaskStep,
+  qualityCommandPrimitiveHelpersForTesting,
   qualityProfileConfigForTesting,
   readCoverageComparisonBaselineForTesting,
   renderCoverageFailuresForTesting,
@@ -208,7 +209,7 @@ const qualityLaneArgs = (lanes: ReadonlyArray<GithubCheckLaneSpec>, laneId: stri
     O.getOrThrowWith(() => new Error(`missing quality lane ${laneId}`))
   );
 const runGit = Effect.fn("QualityTasksTest.runGit")(function* (repoRoot: string, args: ReadonlyArray<string>) {
-  const handle = yield* ChildProcess.make("git", [...args], {
+  const handle = yield* ChildProcess.make("git", ["-c", "commit.gpgSign=false", ...args], {
     cwd: repoRoot,
     stdin: "ignore",
     stdout: "ignore",
@@ -518,7 +519,7 @@ const cheapGatesTestLayer = (spawned: Array<string>, failedCommands: ReadonlyArr
   Layer.mergeAll(FileSystemLayer, TestConsole.layer, cheapGatesSpawnerLayer(spawned, failedCommands));
 
 type FallowFeatureMatrixRowTuple = readonly [
-  featureFamily: "audit" | "dead-code" | "health",
+  featureFamily: GithubChecksFallowFeatureMatrix["features"][number]["featureFamily"],
   ciMode: "advisory-artifact" | "blocking-check",
   promotionStatus: "advisory" | "research" | "candidate-blocking" | "blocking",
 ];
@@ -536,6 +537,7 @@ const expectUnpromotedWiredFallowLanes = (matrix: GithubChecksFallowFeatureMatri
   expect(githubCheckPromotedFallowLaneDiagnosticsForTesting("/repo", "pre-push", matrix)).toEqual([
     "unpromoted Fallow GitHub check lane is wired: fallow:audit",
     "unpromoted Fallow GitHub check lane is wired: fallow:dead-code",
+    "unpromoted Fallow GitHub check lane is wired: fallow:health",
   ]);
 };
 
@@ -768,6 +770,22 @@ describe("quality task adapter", () => {
     ).toBe(false);
   });
 
+  it("covers the primitive quality-command adapters without spawning commands", () => {
+    const helpers = qualityCommandPrimitiveHelpersForTesting;
+
+    expect(helpers.normalizeExtraArgs(undefined)).toEqual([]);
+    expect(helpers.normalizeExtraArgs("--watch")).toEqual(["--watch"]);
+    expect(helpers.normalizeExtraArgs(new Set<unknown>(["--run", 1]))).toEqual(["--run"]);
+    expect(helpers.normalizeExtraArgs(42)).toEqual([]);
+    expect(helpers.withExitCode("quality:test", "bun", ["run", "test"], 2)).toMatchObject({
+      command: "bun run test",
+      exitCode: 2,
+      message: "quality:test failed with exit code 2.",
+    });
+    expect(Effect.isEffect(helpers.runBun("/repo", "quality:test", ["test"]))).toBe(true);
+    expect(Effect.isEffect(helpers.runBunWithEnv("/repo", "quality:test", ["test"], { CI: "true" }))).toBe(true);
+  });
+
   it("adds surface-only docgen check when requested", () => {
     const steps = devQualityStepsForTesting("/repo", {
       base: "main",
@@ -837,6 +855,7 @@ describe("quality task adapter", () => {
       "cheap-gates:knip",
       "fallow:audit",
       "fallow:dead-code",
+      "fallow:health",
     ]);
     expect(A.every(lanes, (lane) => lane.wave === "preflight")).toBe(true);
     expect(A.map(githubCheckLanePlan.githubCheckLaneWaves(lanes), (wave) => wave.wave)).toEqual(["preflight"]);
@@ -2156,13 +2175,18 @@ describe("quality task adapter", () => {
     );
   });
 
-  it("accepts the current packet state with audit and dead-code as promoted pre-push lanes", () => {
+  it("accepts the current packet state with audit, dead-code, and health as promoted pre-push lanes", () => {
     const matrix = fallowFeatureMatrix([
       ["audit", "blocking-check", "blocking"],
       ["dead-code", "blocking-check", "blocking"],
+      ["health", "blocking-check", "blocking"],
     ]);
 
-    expect(promotedFallowGithubCheckLaneIdsForTesting(matrix)).toEqual(["fallow:audit", "fallow:dead-code"]);
+    expect(promotedFallowGithubCheckLaneIdsForTesting(matrix)).toEqual([
+      "fallow:audit",
+      "fallow:dead-code",
+      "fallow:health",
+    ]);
     expect(githubCheckPromotedFallowLaneDiagnosticsForTesting("/repo", "pre-push", matrix)).toEqual([]);
   });
 
@@ -2325,21 +2349,22 @@ describe("quality task adapter", () => {
           })
         );
         const labels = A.map(plan, (step) => step.label);
-        expect(A.take(labels, 2)).toEqual(["ci:fallow:audit", "ci:fallow:dead-code"]);
-        expect(labels).toContain("ci:fallow:envelope-check:dead-code");
+        expect(A.take(labels, 3)).toEqual(["ci:fallow:audit", "ci:fallow:dead-code", "ci:fallow:health"]);
+        expect(labels).toContain("ci:fallow:envelope-check:health");
       }).pipe(provideScopedLayer(FileSystemLayer))
     ));
 
   it("rejects a promoted Fallow matrix row that is not wired into pre-push", () => {
-    // dead-code is wired; health is promoted but not wired → missing health diagnostic
+    // The promoted boundaries lane is intentionally absent from the static pre-push lane set.
     const matrix = fallowFeatureMatrix([
       ["audit", "blocking-check", "blocking"],
       ["dead-code", "blocking-check", "blocking"],
       ["health", "blocking-check", "blocking"],
+      ["boundaries", "blocking-check", "blocking"],
     ]);
 
     expect(githubCheckPromotedFallowLaneDiagnosticsForTesting("/repo", "pre-push", matrix)).toEqual([
-      "missing promoted Fallow GitHub check lane fallow:health",
+      "missing promoted Fallow GitHub check lane fallow:boundaries",
     ]);
   });
 
@@ -2353,7 +2378,7 @@ describe("quality task adapter", () => {
   });
 
   it("treats candidate-blocking Fallow rows as promotion contract inputs", () => {
-    // health=candidate-blocking counts as promoted; dead-code wired but research → both diagnostics fire
+    // health=candidate-blocking counts as promoted; audit and dead-code stay wired but unpromoted.
     const matrix = fallowFeatureMatrix([
       ["health", "advisory-artifact", "candidate-blocking"],
       ["audit", "advisory-artifact", "research"],
@@ -2361,7 +2386,6 @@ describe("quality task adapter", () => {
     ]);
     expect(promotedFallowGithubCheckLaneIdsForTesting(matrix)).toEqual(["fallow:health"]);
     expect(githubCheckPromotedFallowLaneDiagnosticsForTesting("/repo", "pre-push", matrix)).toEqual([
-      "missing promoted Fallow GitHub check lane fallow:health",
       "unpromoted Fallow GitHub check lane is wired: fallow:audit",
       "unpromoted Fallow GitHub check lane is wired: fallow:dead-code",
     ]);
@@ -3086,6 +3110,37 @@ describe("quality task adapter", () => {
     }, provideScopedLayer(PlatformLayer))
   );
 
+  it.effect(
+    "resolves exact explicit baseline filters into verifier-equivalent shard owners",
+    Effect.fnUntraced(function* () {
+      const repoRoot = yield* findRepoRoot();
+      const options = yield* validateCoverageTaskArgsForTesting(repoRoot, [
+        "--write-baseline",
+        "--filter=@beep/repo-cli",
+        "--filter",
+        "@beep/ui",
+        "--filter=@beep/repo-cli",
+      ]);
+
+      expect(options.expectedPackageNames).toEqual(["@beep/repo-cli", "@beep/ui"]);
+    }, provideScopedLayer(PlatformLayer))
+  );
+
+  it.effect(
+    "rejects scoped baseline selectors that are not exact coverage owners",
+    Effect.fnUntraced(function* () {
+      const repoRoot = yield* findRepoRoot();
+      const exit = yield* Effect.exit(
+        validateCoverageTaskArgsForTesting(repoRoot, ["--write-baseline", "--filter=...@beep/repo-cli"])
+      );
+
+      assert.isTrue(Exit.isFailure(exit));
+      if (Exit.isFailure(exit)) {
+        assert.include(Cause.pretty(exit.cause), "must name exact workspace packages that define coverage");
+      }
+    }, provideScopedLayer(PlatformLayer))
+  );
+
   it("compares coverage snapshots with fail-on-drop and warning-only new package semantics", () => {
     const result = compareCoverageRegressionSnapshotsForTesting(
       coverageRegressionBaseline,
@@ -3401,7 +3456,7 @@ describe("quality task adapter", () => {
     })
   );
 
-  it.effect.skipIf(Bun.env.VITEST_COVERAGE_REPORT_ONLY === "1")(
+  it.effect(
     "keeps every committed coverage package on schema v2 with file provenance",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
@@ -3972,6 +4027,19 @@ describe("quality task adapter", () => {
       expect(A.take(steps[0]?.args ?? [], 3)).toEqual(["turbo", "run", "coverage"]);
       expect(steps[0]?.args).toEqual(expect.arrayContaining(["--filter=@beep/a", "--filter=@beep/b"]));
       expect(steps[0]?.args).not.toContain("--only");
+    });
+
+    it("uses verifier-equivalent shards for narrow baseline writes", () => {
+      const steps = coverageSelectedStepsForTesting("/repo", ["@beep/a", "@beep/b"], [], {
+        hosted: false,
+        writeBaseline: true,
+      });
+
+      expect(A.map(steps, (step) => step.label)).toEqual(["coverage:prebuild", "coverage:shard-1", "coverage:shard-2"]);
+      for (const step of A.drop(steps, 1)) {
+        expect(step.args).toContain("--maxWorkers=1");
+        expect(step.env).toMatchObject({ VITEST_COVERAGE_REPORT_ONLY: "1" });
+      }
     });
 
     // CI=true here only fixes the prebuild's Turbo cache posture (turboRunArgs

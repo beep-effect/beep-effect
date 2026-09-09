@@ -45,9 +45,11 @@ import * as Str from "effect/String";
 import {
   AdmissionEvictionEmission,
   AdmissionJournalAdmitted,
-  AdmissionJournalLeaseEvicted,
-  AdmissionJournalReleased,
-  AdmissionJournalTicketEvicted,
+  AdmissionJournalEnqueued,
+  AdmissionJournalLeaseEvictedV3,
+  AdmissionJournalReleasedV3,
+  AdmissionJournalTicketEvictedV3,
+  AdmissionJournalWithdrawn,
   acquireJournalFileLock,
   appendAdmissionEvictionJournalEvent,
   appendAdmissionJournalEvent,
@@ -79,6 +81,7 @@ import { enterRunScope, readRunScopeTelemetry, runScopeUnitName, stopRunScopeFor
 import { admissionRootFor, perUserRuntimeRoot } from "./RuntimeRoot.ts";
 import type { UUID } from "@beep/schema/String";
 import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { AdmissionJournalLeaseEvicted, AdmissionJournalTicketEvicted } from "./AdmissionJournal.ts";
 
 const $I = $RepoCliId.create("internal/repo-run/QualityScheduler");
 
@@ -151,7 +154,11 @@ export interface AdmissionEvictionJournalShape {
   /** Publish or acknowledge one eviction event when the admission protocol permits it. */
   readonly appendOnce: (
     root: string,
-    event: AdmissionJournalLeaseEvicted | AdmissionJournalTicketEvicted
+    event:
+      | AdmissionJournalLeaseEvicted
+      | AdmissionJournalTicketEvicted
+      | AdmissionJournalLeaseEvictedV3
+      | AdmissionJournalTicketEvictedV3
   ) => Effect.Effect<boolean, QualitySchedulerError, FileSystem.FileSystem | Path.Path>;
 }
 
@@ -500,7 +507,7 @@ export const admissionProtocolStatus = Effect.fn("QualityScheduler.admissionProt
  * console.log(typeof setAdmissionEvictionProtocol) // "function"
  * ```
  *
- * @param eviction - Desired v2 eviction-event emission state.
+ * @param eviction - Desired v3 eviction-event emission state under the protocol v2 fence.
  * @returns The protocol marker that was published.
  * @category utilities
  * @since 0.0.0
@@ -559,6 +566,25 @@ const tryCreateExclusive = Effect.fnUntraced(function* (
   yield* fs.remove(temporary, { force: true }).pipe(Effect.ignore);
   return linked;
 });
+
+/**
+ * Exercise exclusive-publication collisions without entering the scheduler.
+ *
+ * **Example** (Build an exclusive publication effect)
+ *
+ * ```ts
+ * import { tryCreateExclusiveForTesting } from "@beep/repo-cli/test/RepoRun"
+ *
+ * const publication = tryCreateExclusiveForTesting("/repo/existing", "replacement")
+ * ```
+ *
+ * @param filePath - Destination that must not already exist.
+ * @param content - Content staged before the exclusive link attempt.
+ * @returns An Effect yielding whether the destination was created.
+ * @category testing
+ * @since 0.0.0
+ */
+export const tryCreateExclusiveForTesting = tryCreateExclusive;
 
 interface LiveAdmissionState {
   readonly dead: ReadonlyArray<string>;
@@ -739,22 +765,27 @@ const reasonForReapClaim = (claim: AdmissionReapClaim): "lease-eviction" | "queu
 const admissionEventForReapClaim = (claim: AdmissionReapClaim) =>
   AdmissionReapClaim.match(claim, {
     lease: ({ lease, claimedAtMillis }) =>
-      AdmissionJournalLeaseEvicted.make({
-        schemaVersion: "yeet-admission-journal/v2",
+      AdmissionJournalLeaseEvictedV3.make({
+        schemaVersion: "yeet-admission-journal/v3",
         _tag: "admission-lease-evicted",
         nonce: lease.nonce,
         pid: lease.pid,
         attemptId: lease.attemptId,
+        checkoutRoot: lease.checkoutRoot,
+        branch: lease.branch,
+        lastHeartbeatAtMillis: lease.heartbeatAtMillis,
         evictedAtMillis: claimedAtMillis,
         reason: "owner-dead-or-reused",
       }),
     ticket: ({ ticket, claimedAtMillis }) =>
-      AdmissionJournalTicketEvicted.make({
-        schemaVersion: "yeet-admission-journal/v2",
+      AdmissionJournalTicketEvictedV3.make({
+        schemaVersion: "yeet-admission-journal/v3",
         _tag: "admission-ticket-evicted",
         nonce: ticket.nonce,
         pid: ticket.pid,
         attemptId: ticket.attemptId,
+        checkoutRoot: ticket.checkoutRoot,
+        branch: ticket.branch,
         evictedAtMillis: claimedAtMillis,
         reason: "queued-submitter-death",
       }),
@@ -1910,13 +1941,15 @@ const runAdmitted = Effect.fnUntraced(function* <Success, UseError, UseRequireme
       const telemetry = yield* readLeaseRunScopeTelemetry(admitted.lease);
       yield* appendAdmissionJournalEvent(
         directories.root,
-        AdmissionJournalReleased.make({
-          schemaVersion: "yeet-admission-journal/v1",
+        AdmissionJournalReleasedV3.make({
+          schemaVersion: "yeet-admission-journal/v3",
           _tag: "admission-released",
           nonce: admitted.lease.nonce,
           pid: admitted.lease.pid,
           releasedAtMillis,
           attemptId: admitted.lease.attemptId,
+          checkoutRoot: admitted.lease.checkoutRoot,
+          branch: admitted.lease.branch,
           ...OptionUtils.getSomesStruct({
             memoryPeakBytes: O.fromUndefinedOr(telemetry.memoryPeakBytes),
           }),
@@ -1927,6 +1960,35 @@ const runAdmitted = Effect.fnUntraced(function* <Success, UseError, UseRequireme
       yield* releaseOrigin(admitted.originLease);
     })
   );
+});
+
+const finalizeAdmissionTicket = Effect.fnUntraced(function* (
+  directories: AdmissionDirectories,
+  ticketPath: string,
+  ticket: YeetAdmissionTicket
+): Effect.fn.Return<void, never, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  // A promotion may have published its lease before failing to remove the
+  // ticket. That durable grant belongs to promotion/reap recovery, not withdrawal.
+  const leaseExists = yield* fs
+    .exists(path.join(directories.leases, `${ticket.nonce}-${ticket.pid}.lease.json`))
+    .pipe(Effect.orElseSucceed(constant(true)));
+  // A completed promotion already removed the ticket. Only acknowledge a
+  // withdrawal when this finalizer actually removes a still-queued request.
+  const removed = yield* fs.remove(ticketPath).pipe(Effect.as(true), Effect.orElseSucceed(constant(false)));
+  if (!removed || leaseExists) {
+    return;
+  }
+  yield* appendAdmissionJournalEvent(
+    directories.root,
+    AdmissionJournalWithdrawn.make({
+      ...ticket,
+      schemaVersion: "yeet-admission-journal/v3",
+      _tag: "admission-withdrawn",
+      withdrawnAtMillis: yield* Clock.currentTimeMillis,
+    })
+  ).pipe(Effect.catch(warnAdmissionJournalError));
 });
 
 /**
@@ -2037,6 +2099,14 @@ export const withQualityAdmission = Effect.fn("QualityScheduler.withQualityAdmis
             message: `Admission ticket ${ticketPath} already exists; remove it and retry.`,
           });
         }
+        yield* appendAdmissionJournalEvent(
+          directories.root,
+          AdmissionJournalEnqueued.make({
+            ...ticket,
+            schemaVersion: "yeet-admission-journal/v3",
+            _tag: "admission-enqueued",
+          })
+        ).pipe(Effect.catch(warnAdmissionJournalError));
         return ticket;
       }),
       Effect.fnUntraced(function* (enqueued) {
@@ -2051,10 +2121,7 @@ export const withQualityAdmission = Effect.fn("QualityScheduler.withQualityAdmis
         );
         return yield* runAdmitted(directories, admitted, gate.release, use, resolved, restore);
       }),
-      Effect.fnUntraced(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        yield* fs.remove(ticketPath, { force: true }).pipe(Effect.ignore);
-      })
+      (enqueued) => finalizeAdmissionTicket(directories, ticketPath, enqueued)
     )
   );
 });

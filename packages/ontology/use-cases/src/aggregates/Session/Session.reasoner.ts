@@ -551,58 +551,79 @@ const ancestorsFor = (edges: GraphEdges, source: string): ReadonlyArray<string> 
   );
 };
 
-const closureQuads = (quads: ReadonlyArray<Quad>, keys: ReadonlyArray<string>): ReadonlyArray<Quad> => {
-  const subclassEdges = collectEdges(quads, RDFS_SUB_CLASS_OF);
-  const subpropertyEdges = collectEdges(quads, RDFS_SUB_PROPERTY_OF);
-  let inferred: ReadonlyArray<Quad> = [];
+const appendInferredQuad = (
+  inferred: ReadonlyArray<Quad>,
+  keys: ReadonlyArray<string>,
+  quad: Quad
+): ReadonlyArray<Quad> => (hasExistingTriple(keys, quad) ? inferred : addQuadUnique(inferred, quad));
 
-  for (const [child, parents] of subclassEdges) {
+const transitiveClosureQuads = (
+  edges: GraphEdges,
+  predicate: NamedNode,
+  keys: ReadonlyArray<string>,
+  initial: ReadonlyArray<Quad>
+): ReadonlyArray<Quad> => {
+  let inferred = initial;
+  for (const [child, parents] of edges) {
     for (const ancestor of pipe(
       parents,
-      A.flatMap((parent) => ancestorsFor(subclassEdges, parent))
+      A.flatMap((parent) => ancestorsFor(edges, parent))
     )) {
-      const quad = inferredQuad(subjectTerm(child), RDFS_SUB_CLASS_OF, iriObject(ancestor));
-      inferred = hasExistingTriple(keys, quad) ? inferred : addQuadUnique(inferred, quad);
+      inferred = appendInferredQuad(inferred, keys, inferredQuad(subjectTerm(child), predicate, iriObject(ancestor)));
     }
   }
+  return inferred;
+};
 
-  for (const [child, parents] of subpropertyEdges) {
-    for (const ancestor of pipe(
-      parents,
-      A.flatMap((parent) => ancestorsFor(subpropertyEdges, parent))
-    )) {
-      const quad = inferredQuad(subjectTerm(child), RDFS_SUB_PROPERTY_OF, iriObject(ancestor));
-      inferred = hasExistingTriple(keys, quad) ? inferred : addQuadUnique(inferred, quad);
-    }
-  }
-
+const propertyPropagationQuads = (
+  quads: ReadonlyArray<Quad>,
+  propertyEdges: GraphEdges,
+  keys: ReadonlyArray<string>,
+  initial: ReadonlyArray<Quad>
+): ReadonlyArray<Quad> => {
+  let inferred = initial;
   for (const quad of quads) {
-    for (const superProperty of ancestorsFor(subpropertyEdges, quad.predicate.value)) {
-      const propagated = inferredQuad(quad.subject, makeNamedNode(superProperty), quad.object);
-      inferred = hasExistingTriple(keys, propagated) ? inferred : addQuadUnique(inferred, propagated);
+    for (const superProperty of ancestorsFor(propertyEdges, quad.predicate.value)) {
+      inferred = appendInferredQuad(
+        inferred,
+        keys,
+        inferredQuad(quad.subject, makeNamedNode(superProperty), quad.object)
+      );
     }
   }
+  return inferred;
+};
 
-  const typeQuads = pipe(
-    quads,
-    A.filter((quad) => quad.predicate.value === RDF_TYPE.value)
-  );
-  for (const quad of typeQuads) {
+const typePropagationQuads = (
+  quads: ReadonlyArray<Quad>,
+  subclassEdges: GraphEdges,
+  keys: ReadonlyArray<string>,
+  initial: ReadonlyArray<Quad>
+): ReadonlyArray<Quad> => {
+  let inferred = initial;
+  for (const quad of A.filter(quads, (candidate) => candidate.predicate.value === RDF_TYPE.value)) {
     pipe(
       objectKey(quad.object),
       O.match({
         onNone: () => undefined,
         onSome: (classIri) => {
           for (const ancestor of ancestorsFor(subclassEdges, classIri)) {
-            const propagated = inferredQuad(quad.subject, RDF_TYPE, iriObject(ancestor));
-            inferred = hasExistingTriple(keys, propagated) ? inferred : addQuadUnique(inferred, propagated);
+            inferred = appendInferredQuad(inferred, keys, inferredQuad(quad.subject, RDF_TYPE, iriObject(ancestor)));
           }
         },
       })
     );
   }
-
   return inferred;
+};
+
+const closureQuads = (quads: ReadonlyArray<Quad>, keys: ReadonlyArray<string>): ReadonlyArray<Quad> => {
+  const subclassEdges = collectEdges(quads, RDFS_SUB_CLASS_OF);
+  const subpropertyEdges = collectEdges(quads, RDFS_SUB_PROPERTY_OF);
+  const subclassClosure = transitiveClosureQuads(subclassEdges, RDFS_SUB_CLASS_OF, keys, []);
+  const subpropertyClosure = transitiveClosureQuads(subpropertyEdges, RDFS_SUB_PROPERTY_OF, keys, subclassClosure);
+  const propertyClosure = propertyPropagationQuads(quads, subpropertyEdges, keys, subpropertyClosure);
+  return typePropagationQuads(quads, subclassEdges, keys, propertyClosure);
 };
 
 const propertyClassMap = (quads: ReadonlyArray<Quad>, predicate: NamedNode): GraphEdges => {

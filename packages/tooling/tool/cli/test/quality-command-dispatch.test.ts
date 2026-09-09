@@ -2,9 +2,9 @@ import { qualityCommand } from "@beep/repo-cli/commands/Quality";
 import { MemoryStats, provideRuntimeRootForTesting, RuntimeRootChoice } from "@beep/repo-cli/test/RepoRun";
 import { FsUtilsLive } from "@beep/repo-utils";
 import { provideScopedLayer } from "@beep/test-utils";
-import { A, Str } from "@beep/utils";
+import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
-import { Effect, FileSystem, Layer, Sink, Stream } from "effect";
+import { Effect, Exit, FileSystem, Layer, Sink, Stream } from "effect";
 import * as P from "effect/Predicate";
 import * as TestConsole from "effect/testing/TestConsole";
 import { Command } from "effect/unstable/cli";
@@ -38,7 +38,7 @@ const successfulHandle = ChildProcessSpawner.makeHandle({
   unref: Effect.succeed(Effect.void),
 });
 
-const recordingSpawnerLayer = (spawned: Array<string>) =>
+const recordingSpawnerLayer = (spawned: Array<string>, handle = successfulHandle) =>
   Layer.succeed(
     ChildProcessSpawner.ChildProcessSpawner,
     ChildProcessSpawner.make((command) => {
@@ -46,7 +46,7 @@ const recordingSpawnerLayer = (spawned: Array<string>) =>
         return Effect.die("quality command dispatch does not spawn piped commands");
       }
       A.appendInPlace(spawned, A.join([command.command, ...command.args], " "));
-      return Effect.succeed(successfulHandle);
+      return Effect.succeed(handle);
     })
   );
 
@@ -104,9 +104,30 @@ describe("quality command dispatch", () => {
         yield* runQualityCommand(["github-checks", "security"]);
         yield* runQualityCommand(["github-checks", "security", "--collect-all"]);
 
-        expect(spawned).toHaveLength(2);
-        expect(A.every(spawned, Str.startsWith("docker run --rm"))).toBe(true);
+        expect(spawned).toEqual([
+          "node --test scripts/test-onnxruntime-installer-patch.mjs",
+          expect.stringMatching(/^docker run --rm /),
+          "node --test scripts/test-onnxruntime-installer-patch.mjs",
+          expect.stringMatching(/^docker run --rm /),
+        ]);
       }).pipe(provideScopedLayer(Layer.mergeAll(CommandTestLayer, recordingSpawnerLayer(spawned))))
+    );
+  });
+
+  it("stops before OSV when the ONNX installer mitigation proof fails", () => {
+    const spawned: Array<string> = [];
+    const failedHandle = ChildProcessSpawner.makeHandle({
+      ...successfulHandle,
+      exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(1)),
+    });
+
+    return Effect.runPromise(
+      Effect.gen(function* () {
+        const exit = yield* Effect.exit(runQualityCommand(["github-checks", "security"]));
+
+        expect(Exit.isFailure(exit)).toBe(true);
+        expect(spawned).toEqual(["node --test scripts/test-onnxruntime-installer-patch.mjs"]);
+      }).pipe(provideScopedLayer(Layer.mergeAll(CommandTestLayer, recordingSpawnerLayer(spawned, failedHandle))))
     );
   });
 

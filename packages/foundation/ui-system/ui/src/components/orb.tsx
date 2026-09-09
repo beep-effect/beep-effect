@@ -69,6 +69,50 @@ type OrbUniforms = {
   readonly uTime: THREE.Uniform<number>;
 };
 
+type ActiveAgentState = Exclude<AgentState, null>;
+type VolumeTargets = readonly [number, number];
+
+const agentVolumeTargets: Record<ActiveAgentState, (time: number) => VolumeTargets> = {
+  listening: (time) => [clamp01(0.55 + Math.sin(time * 3.2) * 0.35), 0.45],
+  talking: (time) => [clamp01(0.65 + Math.sin(time * 4.8) * 0.22), clamp01(0.75 + Math.sin(time * 3.6) * 0.22)],
+  thinking: (time) => {
+    const base = 0.38 + 0.07 * Math.sin(time * 0.7);
+    const wander = 0.05 * Math.sin(time * 2.1) * Math.sin(time * 0.37 + 1.2);
+    return [clamp01(base + wander), clamp01(0.48 + 0.12 * Math.sin(time * 1.05 + 0.6))];
+  },
+};
+
+const automaticTargetVolumes = (uniforms: THREE.ShaderMaterial["uniforms"], agentState: AgentState): VolumeTargets => {
+  const uTime = uniforms.uTime;
+  if (P.isNullish(uTime) || agentState === null) return [0, 0.3];
+  return agentVolumeTargets[agentState](uTime.value * 2);
+};
+
+const liveVolume = (volumeRef: React.RefObject<number> | undefined, getVolume: (() => number) | undefined): number =>
+  F.pipe(
+    volumeRef?.current,
+    O.fromNullishOr,
+    O.orElse(() => O.fromNullishOr(getVolume?.())),
+    O.getOrElse(() => 0)
+  );
+
+const manualVolumeTarget = (
+  explicitVolume: number | undefined,
+  volumeRef: React.RefObject<number> | undefined,
+  getVolume: (() => number) | undefined
+): number => clamp01(explicitVolume ?? liveVolume(volumeRef, getVolume));
+
+const updateNumberUniform = (
+  uniform: THREE.IUniform<number> | undefined,
+  update: (current: number) => number
+): void => {
+  if (P.isNotNullish(uniform)) uniform.value = update(uniform.value);
+};
+
+const lerpColorUniform = (uniform: THREE.IUniform<THREE.Color> | undefined, target: THREE.Color): void => {
+  if (P.isNotNullish(uniform)) uniform.value.lerp(target, 0.08);
+};
+
 /**
  * Orb component.
  *
@@ -161,8 +205,6 @@ function Scene({
 
   const agentRef = useRef<AgentState>(agentState);
   const modeRef = useRef<"auto" | "manual">(volumeMode);
-  const manualInRef = useRef<number>(manualInput ?? 0);
-  const manualOutRef = useRef<number>(manualOutput ?? 0);
   const curInRef = useRef(0);
   const curOutRef = useRef(0);
   const randomSeedRef = useRef(seed ?? randomUint32());
@@ -176,14 +218,6 @@ function Scene({
   useEffect(() => {
     modeRef.current = volumeMode;
   }, [volumeMode]);
-
-  useEffect(() => {
-    manualInRef.current = clamp01(manualInput ?? inputVolumeRef?.current ?? getInputVolume?.() ?? 0);
-  }, [manualInput, inputVolumeRef, getInputVolume]);
-
-  useEffect(() => {
-    manualOutRef.current = clamp01(manualOutput ?? outputVolumeRef?.current ?? getOutputVolume?.() ?? 0);
-  }, [manualOutput, outputVolumeRef, getOutputVolume]);
 
   if (seed !== undefined && randomSeedRef.current !== seed) {
     randomSeedRef.current = seed;
@@ -222,85 +256,51 @@ function Scene({
     return () => observer.disconnect();
   }, A.empty());
 
+  const updateLiveColors = () => {
+    const liveColors = F.pipe(
+      colorsRef?.current,
+      O.fromNullishOr,
+      O.flatMap((live) => O.all({ targetColor1: A.head(live), targetColor2: A.get(1)(live) }))
+    );
+    if (O.isSome(liveColors)) {
+      targetColor1Ref.current.set(liveColors.value.targetColor1);
+      targetColor2Ref.current.set(liveColors.value.targetColor2);
+    }
+  };
+
+  const targetVolumes = (uniforms: THREE.ShaderMaterial["uniforms"]): readonly [number, number] =>
+    modeRef.current === "manual"
+      ? [
+          manualVolumeTarget(manualInput, inputVolumeRef, getInputVolume),
+          manualVolumeTarget(manualOutput, outputVolumeRef, getOutputVolume),
+        ]
+      : automaticTargetVolumes(uniforms, agentRef.current);
+
+  const updateOrbUniforms = (
+    uniforms: THREE.ShaderMaterial["uniforms"],
+    delta: number,
+    targetIn: number,
+    targetOut: number
+  ) => {
+    curInRef.current += (targetIn - curInRef.current) * 0.2;
+    curOutRef.current += (targetOut - curOutRef.current) * 0.2;
+    const targetSpeed = 0.1 + (1 - (curOutRef.current - 1) ** 2) * 0.9;
+    animSpeedRef.current += (targetSpeed - animSpeedRef.current) * 0.12;
+    updateNumberUniform(uniforms.uTime, (current) => current + delta * 0.5);
+    updateNumberUniform(uniforms.uOpacity, (current) => (current < 1 ? Math.min(1, current + delta * 2) : current));
+    updateNumberUniform(uniforms.uAnimation, (current) => current + delta * animSpeedRef.current);
+    updateNumberUniform(uniforms.uInputVolume, () => curInRef.current);
+    updateNumberUniform(uniforms.uOutputVolume, () => curOutRef.current);
+    lerpColorUniform(uniforms.uColor1, targetColor1Ref.current);
+    lerpColorUniform(uniforms.uColor2, targetColor2Ref.current);
+  };
+
   useFrame((_, delta: number) => {
     const mat = circleRef.current?.material;
     if (mat === undefined) return;
-    const live = colorsRef?.current;
-    const liveOpt = F.pipe(
-      live,
-      O.fromNullishOr,
-      O.flatMap((live) =>
-        O.all({
-          targetColor1: A.head(live),
-          targetColor2: A.get(1)(live),
-        })
-      )
-    );
-
-    if (O.isSome(liveOpt)) {
-      const { targetColor1, targetColor2 } = liveOpt.value;
-      targetColor1Ref.current.set(targetColor1);
-      targetColor2Ref.current.set(targetColor2);
-    }
-
-    const u = mat.uniforms;
-
-    if (P.isNotNullish(u.uTime)) {
-      u.uTime.value += delta * 0.5;
-    }
-
-    if (P.isNotNullish(u.uOpacity) && u.uOpacity.value < 1) {
-      u.uOpacity.value = Math.min(1, u.uOpacity.value + delta * 2);
-    }
-
-    let targetIn = 0;
-    let targetOut = 0.3;
-    if (modeRef.current === "manual") {
-      targetIn = clamp01(manualInput ?? inputVolumeRef?.current ?? getInputVolume?.() ?? 0);
-      targetOut = clamp01(manualOutput ?? outputVolumeRef?.current ?? getOutputVolume?.() ?? 0);
-    } else {
-      const uTime = u.uTime;
-      if (P.isNotNullish(uTime)) {
-        const t = uTime.value * 2;
-        if (agentRef.current === null) {
-          targetIn = 0;
-          targetOut = 0.3;
-        } else if (agentRef.current === "listening") {
-          targetIn = clamp01(0.55 + Math.sin(t * 3.2) * 0.35);
-          targetOut = 0.45;
-        } else if (agentRef.current === "talking") {
-          targetIn = clamp01(0.65 + Math.sin(t * 4.8) * 0.22);
-          targetOut = clamp01(0.75 + Math.sin(t * 3.6) * 0.22);
-        } else {
-          const base = 0.38 + 0.07 * Math.sin(t * 0.7);
-          const wander = 0.05 * Math.sin(t * 2.1) * Math.sin(t * 0.37 + 1.2);
-          targetIn = clamp01(base + wander);
-          targetOut = clamp01(0.48 + 0.12 * Math.sin(t * 1.05 + 0.6));
-        }
-      }
-    }
-
-    curInRef.current += (targetIn - curInRef.current) * 0.2;
-    curOutRef.current += (targetOut - curOutRef.current) * 0.2;
-
-    const targetSpeed = 0.1 + (1 - (curOutRef.current - 1) ** 2) * 0.9;
-    animSpeedRef.current += (targetSpeed - animSpeedRef.current) * 0.12;
-
-    if (P.isNotNullish(u.uAnimation)) {
-      u.uAnimation.value += delta * animSpeedRef.current;
-    }
-    if (P.isNotNullish(u.uInputVolume)) {
-      u.uInputVolume.value = curInRef.current;
-    }
-    if (P.isNotNullish(u.uOutputVolume)) {
-      u.uOutputVolume.value = curOutRef.current;
-    }
-    if (P.isNotNullish(u.uColor1)) {
-      u.uColor1.value.lerp(targetColor1Ref.current, 0.08);
-    }
-    if (P.isNotNullish(u.uColor2)) {
-      u.uColor2.value.lerp(targetColor2Ref.current, 0.08);
-    }
+    updateLiveColors();
+    const [targetIn, targetOut] = targetVolumes(mat.uniforms);
+    updateOrbUniforms(mat.uniforms, delta, targetIn, targetOut);
   });
 
   useEffect(() => {
@@ -570,7 +570,7 @@ void main() {
     color.rgb = 1.0 - (1.0 - color.rgb) * (1.0 - ringColor * totalRingAlpha);
 
     // Define colours to ramp against greyscale (could increase the amount of colours in the ramp)
-    vec3 color1 = vec3(0.0, 0.0, 0.0); // Black
+    vec3 color1 = mix(uColor1, uColor2, 0.2) * 0.28; // Low-intensity base color
     vec3 color2 = uColor1; // Darker Color
     vec3 color3 = uColor2; // Lighter Color
     vec3 color4 = vec3(1.0, 1.0, 1.0); // White

@@ -1,5 +1,5 @@
 import { resolveIsMobile } from "@beep/ui/hooks/useMobile";
-import { getStepFactor, numberToString, toNumber } from "@beep/ui/hooks/useNumberInput";
+import { getStepFactor, NumberInputTestKit, numberToString, toNumber } from "@beep/ui/hooks/useNumberInput";
 import { pipe } from "effect";
 import * as O from "effect/Option";
 import { describe, expect, it } from "vitest";
@@ -39,6 +39,19 @@ describe("@beep/ui hooks/useNumberInput", () => {
 
     it("falls back to the base step when fine-grained scaling would be rounded away", () => {
       expect(getStepFactor({ ctrlKey: true }, 0.001, { precision: 2 })).toBe(0.001);
+    });
+  });
+
+  describe("resolveBlurInterfaceValue", () => {
+    it("restores invalid input and formats unclamped values", () => {
+      expect(NumberInputTestKit.resolveBlurInterfaceValue("not-a-number", "4.0", 1, true, 0, 10)).toBe("4.0");
+      expect(NumberInputTestKit.resolveBlurInterfaceValue("12.345", "0", 2, false, 0, 10)).toBe("12.35");
+    });
+
+    it("clamps values to the inclusive bounds", () => {
+      expect(NumberInputTestKit.resolveBlurInterfaceValue("12", "0", 1, true, 0, 10)).toBe("10.0");
+      expect(NumberInputTestKit.resolveBlurInterfaceValue("-2", "0", 1, true, 0, 10)).toBe("0.0");
+      expect(NumberInputTestKit.resolveBlurInterfaceValue("5", "0", 1, true, 0, 10)).toBe("5.0");
     });
   });
 

@@ -191,122 +191,125 @@ export const controlsTheme: ThemeComponents = {
   },
   MuiSwitch: {
     styleOverrides: {
-      root: ({ theme }) => ({
-        "--_h": `${SWITCH_SIZES.md.height}px`,
-        "--_w": `${SWITCH_SIZES.md.width}px`,
-        "--_inset": `${SWITCH_SIZES.md.inset}px`,
-        "--_b": "1px",
-        "--_thumb-size": "calc(var(--_h) - var(--_b) * 2 - var(--_inset) * 2)",
-        "--_thumb-w": "var(--_thumb-size)",
-        "--_thumb-h": "var(--_thumb-size)",
-        "--plus-opacity-switchTrackDisabled": "0.5",
-        width: "var(--_w)",
-        height: "var(--_h)",
-        padding: 0,
-        borderRadius: "var(--_h)",
-        "&:has(.Mui-focusVisible)": {
-          outline: "2px solid",
-          outlineOffset: "4px",
-          outlineColor: (theme.vars || theme).palette.text.primary,
-        },
-        [TOUCH_MEDIA_QUERY]: {
-          ...(SWITCH_SIZES.md.height !== SWITCH_TOUCH_SIZES.md.height && {
-            "--_h": `${SWITCH_TOUCH_SIZES.md.height}px`,
-          }),
-          ...(SWITCH_SIZES.md.width !== SWITCH_TOUCH_SIZES.md.width && {
-            "--_w": `${SWITCH_TOUCH_SIZES.md.width}px`,
-          }),
-          ...(SWITCH_SIZES.md.inset !== SWITCH_TOUCH_SIZES.md.inset && {
-            "--_inset": `${SWITCH_TOUCH_SIZES.md.inset}px`,
-          }),
-        },
-        variants: [
-          {
-            props: { size: "small" },
-            style: {
-              "--_h": `${SWITCH_SIZES.sm.height}px`,
-              "--_w": `${SWITCH_SIZES.sm.width}px`,
-              "--_inset": `${SWITCH_SIZES.sm.inset}px`,
-              [TOUCH_MEDIA_QUERY]: {
-                ...(SWITCH_SIZES.sm.height !== SWITCH_TOUCH_SIZES.sm.height && {
-                  "--_h": `${SWITCH_TOUCH_SIZES.sm.height}px`,
-                }),
-                ...(SWITCH_SIZES.sm.width !== SWITCH_TOUCH_SIZES.sm.width && {
-                  "--_w": `${SWITCH_TOUCH_SIZES.sm.width}px`,
-                }),
-                ...(SWITCH_SIZES.sm.inset !== SWITCH_TOUCH_SIZES.sm.inset && {
-                  "--_inset": `${SWITCH_TOUCH_SIZES.sm.inset}px`,
-                }),
-              },
-            },
+      root: ({ theme }) => {
+        const palette = (theme.vars || theme).palette;
+        return {
+          "--_h": `${SWITCH_SIZES.md.height}px`,
+          "--_w": `${SWITCH_SIZES.md.width}px`,
+          "--_inset": `${SWITCH_SIZES.md.inset}px`,
+          "--_b": "1px",
+          "--_thumb-size": "calc(var(--_h) - var(--_b) * 2 - var(--_inset) * 2)",
+          "--_thumb-w": "var(--_thumb-size)",
+          "--_thumb-h": "var(--_thumb-size)",
+          "--plus-opacity-switchTrackDisabled": "0.5",
+          width: "var(--_w)",
+          height: "var(--_h)",
+          padding: 0,
+          borderRadius: "var(--_h)",
+          "&:has(.Mui-focusVisible)": {
+            outline: "2px solid",
+            outlineOffset: "4px",
+            outlineColor: palette.text.primary,
           },
-          {
-            props: { size: "large" },
-            style: {
-              "--_h": `${SWITCH_SIZES.lg.height}px`,
-              "--_w": `${SWITCH_SIZES.lg.width}px`,
-              "--_inset": `${SWITCH_SIZES.lg.inset}px`,
-              [TOUCH_MEDIA_QUERY]: {
-                ...(SWITCH_SIZES.lg.height !== SWITCH_TOUCH_SIZES.lg.height && {
-                  "--_h": `${SWITCH_TOUCH_SIZES.lg.height}px`,
-                }),
-                ...(SWITCH_SIZES.lg.width !== SWITCH_TOUCH_SIZES.lg.width && {
-                  "--_w": `${SWITCH_TOUCH_SIZES.lg.width}px`,
-                }),
-                ...(SWITCH_SIZES.lg.inset !== SWITCH_TOUCH_SIZES.lg.inset && {
-                  "--_inset": `${SWITCH_TOUCH_SIZES.lg.inset}px`,
-                }),
-              },
-            },
-          },
-        ],
-        [`& .${switchClasses.switchBase}`]: {
-          padding: borderWidth,
-          top: "var(--_inset)",
-          left: "var(--_inset)",
-          [`&.${switchClasses.checked}`]: {
-            color: (theme.vars || theme).palette.common.white,
-            transform: `translateX(calc(var(--_w) - var(--_thumb-w) - var(--_b) * 2 - var(--_inset) * 2))`,
-            ...theme.applyStyles("dark", {
-              [`& .${switchClasses.thumb}`]: {
-                background: (theme.vars || theme).palette.grey[900],
-              },
+          [TOUCH_MEDIA_QUERY]: {
+            ...(SWITCH_SIZES.md.height !== SWITCH_TOUCH_SIZES.md.height && {
+              "--_h": `${SWITCH_TOUCH_SIZES.md.height}px`,
+            }),
+            ...(SWITCH_SIZES.md.width !== SWITCH_TOUCH_SIZES.md.width && {
+              "--_w": `${SWITCH_TOUCH_SIZES.md.width}px`,
+            }),
+            ...(SWITCH_SIZES.md.inset !== SWITCH_TOUCH_SIZES.md.inset && {
+              "--_inset": `${SWITCH_TOUCH_SIZES.md.inset}px`,
             }),
           },
-          [`&.${switchClasses.checked}:not(.Mui-disabled) + .${switchClasses.track}`]: {
-            opacity: 1,
-            border: "none",
-          },
-          "&:active": {
-            "--_thumb-w": "calc(var(--_thumb-size) + 4px)",
-          },
-          "&.Mui-disabled": {
-            [`& .${switchClasses.thumb}`]: {
-              opacity: "var(--plus-opacity-switchTrackDisabled)",
+          variants: [
+            {
+              props: { size: "small" },
+              style: {
+                "--_h": `${SWITCH_SIZES.sm.height}px`,
+                "--_w": `${SWITCH_SIZES.sm.width}px`,
+                "--_inset": `${SWITCH_SIZES.sm.inset}px`,
+                [TOUCH_MEDIA_QUERY]: {
+                  ...(SWITCH_SIZES.sm.height !== SWITCH_TOUCH_SIZES.sm.height && {
+                    "--_h": `${SWITCH_TOUCH_SIZES.sm.height}px`,
+                  }),
+                  ...(SWITCH_SIZES.sm.width !== SWITCH_TOUCH_SIZES.sm.width && {
+                    "--_w": `${SWITCH_TOUCH_SIZES.sm.width}px`,
+                  }),
+                  ...(SWITCH_SIZES.sm.inset !== SWITCH_TOUCH_SIZES.sm.inset && {
+                    "--_inset": `${SWITCH_TOUCH_SIZES.sm.inset}px`,
+                  }),
+                },
+              },
+            },
+            {
+              props: { size: "large" },
+              style: {
+                "--_h": `${SWITCH_SIZES.lg.height}px`,
+                "--_w": `${SWITCH_SIZES.lg.width}px`,
+                "--_inset": `${SWITCH_SIZES.lg.inset}px`,
+                [TOUCH_MEDIA_QUERY]: {
+                  ...(SWITCH_SIZES.lg.height !== SWITCH_TOUCH_SIZES.lg.height && {
+                    "--_h": `${SWITCH_TOUCH_SIZES.lg.height}px`,
+                  }),
+                  ...(SWITCH_SIZES.lg.width !== SWITCH_TOUCH_SIZES.lg.width && {
+                    "--_w": `${SWITCH_TOUCH_SIZES.lg.width}px`,
+                  }),
+                  ...(SWITCH_SIZES.lg.inset !== SWITCH_TOUCH_SIZES.lg.inset && {
+                    "--_inset": `${SWITCH_TOUCH_SIZES.lg.inset}px`,
+                  }),
+                },
+              },
+            },
+          ],
+          [`& .${switchClasses.switchBase}`]: {
+            padding: borderWidth,
+            top: "var(--_inset)",
+            left: "var(--_inset)",
+            [`&.${switchClasses.checked}`]: {
+              color: palette.common.white,
+              transform: `translateX(calc(var(--_w) - var(--_thumb-w) - var(--_b) * 2 - var(--_inset) * 2))`,
+              ...theme.applyStyles("dark", {
+                [`& .${switchClasses.thumb}`]: {
+                  background: palette.grey[900],
+                },
+              }),
+            },
+            [`&.${switchClasses.checked}:not(.Mui-disabled) + .${switchClasses.track}`]: {
+              opacity: 1,
+              border: "none",
+            },
+            "&:active": {
+              "--_thumb-w": "calc(var(--_thumb-size) + 4px)",
+            },
+            "&.Mui-disabled": {
+              [`& .${switchClasses.thumb}`]: {
+                opacity: "var(--plus-opacity-switchTrackDisabled)",
+              },
             },
           },
-        },
-        [`& .${switchClasses.thumb}`]: {
-          borderRadius: "var(--_thumb-size)",
-          background: (theme.vars || theme).palette.common.white,
-          width: "var(--_thumb-w)",
-          height: "var(--_thumb-h)",
-          boxShadow: "0 3px 8px 0 rgba(0,0,0,0.1), 0 1px 1px 0 rgba(0,0,0,0.12), 0 3px 1px 0 rgba(0,0,0,0.08)",
-          transition: "width 120ms ease-out 0ms",
-        },
-        [`& .${switchClasses.track}`]: {
-          borderRadius: "var(--_thumb-size)",
-          border: `solid ${(theme.vars || theme).palette.grey[300]}`,
-          borderWidth,
-          backgroundColor: (theme.vars || theme).palette.grey[300],
-          opacity: 1,
-          transition: "none",
-          ...theme.applyStyles("dark", {
-            border: `solid ${(theme.vars || theme).palette.grey[700]}`,
-            backgroundColor: (theme.vars || theme).palette.grey[900],
-          }),
-        },
-      }),
+          [`& .${switchClasses.thumb}`]: {
+            borderRadius: "var(--_thumb-size)",
+            background: palette.common.white,
+            width: "var(--_thumb-w)",
+            height: "var(--_thumb-h)",
+            boxShadow: "0 3px 8px 0 rgba(0,0,0,0.1), 0 1px 1px 0 rgba(0,0,0,0.12), 0 3px 1px 0 rgba(0,0,0,0.08)",
+            transition: "width 120ms ease-out 0ms",
+          },
+          [`& .${switchClasses.track}`]: {
+            borderRadius: "var(--_thumb-size)",
+            border: `solid ${palette.grey[300]}`,
+            borderWidth,
+            backgroundColor: palette.grey[300],
+            opacity: 1,
+            transition: "none",
+            ...theme.applyStyles("dark", {
+              border: `solid ${palette.grey[700]}`,
+              backgroundColor: palette.grey[900],
+            }),
+          },
+        };
+      },
     },
   },
   MuiFormControlLabel: {

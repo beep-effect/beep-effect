@@ -13,9 +13,9 @@
 | Source | Title | Upstream (repo) | Location (`file:line`) | Theme | Disposition |
 |--------|-------|-----------------|------------------------|-------|-------------|
 | `calibration` | 2026-07-30 distribution + panel evidence | this repo | `research/calibration.md` | threshold calibration | normative input |
-| `tail` | >15 tail snapshot (60 fns) | this repo | `research/tail-inventory.md` | target list | refresh in P0 |
-| `lanes` | fallow lane blocking/advisory split | this repo | `packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:631` | promotion wiring | modify in P3 |
-| `predicate` | per-lane blocking predicate + argv | this repo | `packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts:513` | promotion wiring | modify in P3 |
+| `tail` | live >15 tail (49 fns, Fallow 3.22.0) | this repo | `research/tail-inventory.md` | target list | completed inventory |
+| `lanes` | fallow lane blocking/advisory split | this repo | `packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:631` | promotion wiring | implemented and verified |
+| `predicate` | per-lane blocking predicate + argv | this repo | `packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts:513` | promotion wiring | implemented and verified |
 | `dead-code` | prior fallow campaign (triage-first, 3 clean runs) | this repo | `goals/fallow-zero-dead-code/SPEC.md` | campaign template | pattern reuse |
 | `ratchets` | health-lane deferral this packet closes | this repo | `goals/fallow-advisory-ratchets/` | provenance | reference |
 | `worked` | function-decomposition worked examples | this repo | `goals/standards-remediation/ops/reports/{DA-2,SF-2}` | refactor motion | pattern reuse |
@@ -31,7 +31,7 @@ helper walls); promotion follows the ratchet pattern (baseline measured →
 
 | Repo | License | Port discipline | What we take |
 |------|---------|-----------------|--------------|
-| fallow-rs/fallow (v3.10.0, npm devDependency) | per its distribution | tool usage only | CLI/MCP behavior; no code ported |
+| fallow-rs/fallow (v3.22.0 latest, npm devDependency; v3.10.0 historical calibration) | per its distribution | tool usage only | CLI/MCP behavior; no code ported |
 
 ## 3. External research sources
 
@@ -47,8 +47,8 @@ helper walls); promotion follows the ratchet pattern (baseline measured →
 - `.fallowrc.jsonc` — ceilings, overrides, `require-suppression-reason` (reuse).
 - `standards/fallow.health.regression-baseline.jsonc` +
   `fallow:health:baseline:{write,check}` scripts (reuse; written this PR).
-- `bun run beep quality fallow <lane>` envelope machinery (reuse; extend for
-  baseline-compare argv in P3).
+- `bun run beep quality fallow <lane>` envelope machinery (reused and extended
+  with baseline-comparison argv for the blocking health lane).
 - fallow MCP (`.mcp.json` `fallow`) — triage instrumentation: `inspect_target`,
   `check_health` + `complexity_breakdown`, `trace_export` (reuse).
 
@@ -61,3 +61,11 @@ helper walls); promotion follows the ratchet pattern (baseline measured →
 - Suppression backfill evidence: 78 pragmas across 45 files backfilled
   2026-07-30 (report archived in session scratchpad; verification =
   `fallow suppressions` shows 0 missing reasons).
+- Original refreshed P0 baseline: Fallow 3.22.0 reported 194 suppressions
+  across 112 files with zero missing/stale reasons.
+- Final latest-main comparator: after synchronizing to
+  `53193e5a5e93a3231282eaead455f7d06a85ac4d`, Fallow 3.22.0 reports 207
+  suppressions across 114 files with zero missing/stale reasons: 120
+  `code-duplication`, 73 `complexity`, and 14 other. No added suppression
+  marker appears in the campaign diff; the +13 landed on main, so 207 is the
+  current no-growth comparator and 194 remains provenance.
