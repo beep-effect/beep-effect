@@ -22,3 +22,8 @@ audit 342.1 seconds and docgen 18.0 seconds. Repository proof remains required.
 
 Repository-wide Yeet proof, publication, hosted checks, merge, and exact-ID
 Codex closure remain pending. Earlier interrupted runs are not acceptance proof.
+
+Main integration: merged the Graft agent configuration from `b8eb96213c`.
+The permission domain retains all eight scoped Graft commands and denies
+arbitrary stash deletion (57 approved grants). Updated AI Sync package
+verification passed: audit 9.5 seconds and docgen 2.9 seconds.
