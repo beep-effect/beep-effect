@@ -6,6 +6,17 @@
 // still execute under node via this shim. The guard below leaves real Bun
 // untouched: it only installs when globalThis.Bun lacks the probed surface
 // (quality-gate-ratchets A1, 2026-07-06).
+//
+// This file is typechecked by the root tsconfig.configs.json project
+// (repo-sanity:config-typecheck). It is a Node polyfill of Bun's
+// Promise-based API surface, so the Effect diagnostics below cannot hold here
+// by construction; every other rule stays enforced.
+// @effect-diagnostics nodeBuiltinImport:skip-file -- the shim implements Bun.spawn/file/serve over node:child_process, node:fs, node:http
+// @effect-diagnostics asyncFunction:skip-file -- Bun.file().text(), Bun.write, Bun.serve fetch handlers are async by contract
+// @effect-diagnostics newPromise:skip-file -- Bun.spawn().exited, Bun.sleep, and server.stop are Promises by contract
+// @effect-diagnostics processEnv:skip-file -- fast-check floor/seed env is read before any Effect runtime exists
+// @effect-diagnostics globalTimers:skip-file -- Bun.sleep is a plain setTimeout promise
+// @effect-diagnostics globalRandom:skip-file -- Bun.serve port selection has no Effect Random service at setup time
 import { spawn as nodeSpawn, spawnSync as nodeSpawnSync } from "node:child_process";
 import { readdirSync, statSync } from "node:fs";
 import { readFile, writeFile } from "node:fs/promises";
@@ -189,13 +200,13 @@ const normalizeSpawnInput = (
   readonly command: string;
   readonly options: BunSpawnSyncOptions;
 } => {
-  if (Array.isArray(commandOrOptions)) {
-    const [command = "", ...args] = commandOrOptions;
-    return { args, command, options: options ?? {} };
+  if (P.hasProperty(commandOrOptions, "cmd")) {
+    const [command = "", ...args] = commandOrOptions.cmd;
+    return { args, command, options: commandOrOptions };
   }
 
-  const [command = "", ...args] = commandOrOptions.cmd;
-  return { args, command, options: commandOrOptions };
+  const [command = "", ...args] = commandOrOptions;
+  return { args, command, options: options ?? {} };
 };
 
 // fallow-ignore-next-line complexity -- Node adapter preserves Bun command, stdio, signal, and exit semantics
@@ -225,8 +236,7 @@ const spawn = (commandOrOptions: BunSpawnSyncObject | ReadonlyArray<string>, opt
   const child = nodeSpawn(normalized.command, [...normalized.args], {
     cwd: normalized.options.cwd,
     env: { ...process.env, ...normalized.options.env },
-    stderr: stdioMode(normalized.options.stderr),
-    stdout: stdioMode(normalized.options.stdout),
+    stdio: ["ignore", stdioMode(normalized.options.stdout), stdioMode(normalized.options.stderr)],
   });
 
   return {
@@ -293,12 +303,15 @@ const responseHeaders = (response: Response): Record<string, string> => {
 const requestHeaders = (messageHeaders: NodeJS.Dict<string | readonly string[]>): Headers => {
   const headers = new Headers();
   for (const [key, value] of Object.entries(messageHeaders)) {
-    if (Array.isArray(value)) {
+    if (P.isUndefined(value)) {
+      continue;
+    }
+    if (P.isString(value)) {
+      headers.set(key, value);
+    } else {
       for (const item of value) {
         headers.append(key, item);
       }
-    } else if (value !== undefined) {
-      headers.set(key, value);
     }
   }
   return headers;
@@ -326,7 +339,7 @@ const serve = (options: BunServeOptions): ReturnType<BunTestShim["serve"]> => {
           const method = request.method ?? "GET";
           const body = method === "GET" || method === "HEAD" ? undefined : Buffer.concat(chunks);
           const fetchRequest = new Request(url, {
-            body,
+            ...(P.isUndefined(body) ? {} : { body }),
             headers: requestHeaders(request.headers),
             method,
           });
@@ -346,10 +359,10 @@ const serve = (options: BunServeOptions): ReturnType<BunTestShim["serve"]> => {
     stop: () =>
       new Promise((resolve, reject) => {
         server.close((error) => {
-          if (error) {
-            reject(error);
-          } else {
+          if (P.isUndefined(error)) {
             resolve();
+          } else {
+            reject(error);
           }
         });
       }),

@@ -28,7 +28,8 @@ const LINT_POLICY_SUBCOMMANDS = subcommands(
   "schema-catalog",
   "schema-first",
   "schema-topology",
-  "tooling-schema-first"
+  "tooling-schema-first",
+  "tsconfig-overlay"
 );
 
 export { LINT_POLICY_SUBCOMMANDS };

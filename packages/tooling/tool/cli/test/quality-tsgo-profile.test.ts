@@ -38,6 +38,32 @@ describe("quality tsgo plugin profiles", () => {
     ).toEqual([]);
   });
 
+  it("accepts an Effect Drizzle overlay that inherits the profile from its sibling tsconfig", () => {
+    expect(
+      collectTsgoPluginProfileDiagnosticsForTesting({
+        basePlugin: BasePlugin,
+        configs: [
+          ["packages/ecosystem/effect-drizzle/tsconfig.json", configWithPlugins([EffectDrizzlePlugin])],
+          [
+            "packages/ecosystem/effect-drizzle/tsconfig.check.json",
+            { extends: "./tsconfig.json", compilerOptions: {} },
+          ],
+        ],
+      })
+    ).toEqual([]);
+  });
+
+  it("rejects an Effect Drizzle chain root without the explicit profile", () => {
+    expect(
+      collectTsgoPluginProfileDiagnosticsForTesting({
+        basePlugin: BasePlugin,
+        configs: [["packages/ecosystem/effect-drizzle/tsconfig.json", { extends: "../../../tsconfig.base.json" }]],
+      })
+    ).toEqual([
+      "Effect Drizzle tsconfig packages/ecosystem/effect-drizzle/tsconfig.json is missing its explicit @effect/language-service profile",
+    ]);
+  });
+
   it("rejects another disabled Effect Drizzle rule", () => {
     const diagnostics = collectTsgoPluginProfileDiagnosticsForTesting({
       basePlugin: BasePlugin,

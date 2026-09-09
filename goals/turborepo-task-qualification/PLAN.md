@@ -562,3 +562,12 @@ normal-workspace client matrices remain pending. Existing v2 receipts describe
 the earlier source fixture and retain their original source hashes. Refresh
 the census, policy baseline and entrypoint attachments after merging main;
 new source or planner state does not inherit those historical proofs.
+
+The local slice was committed as `5ebfc19af3` before integrating main
+`d68f1a11dd`. Pre-merge CLI package verification passed its complete audit
+(486.0 seconds) and docgen (28.7 seconds). The merged tree passed the focused
+quality-task, Yeet, cache-dependency and cache-capture tests, followed by CLI
+package verification's lint/check subset. The canonical tsconfig writer
+restored the cache-policy package alias; config synchronization and a final
+CLI type check then passed. Full Yeet proof and refreshed qualification
+attachments remain pending for this integrated state.

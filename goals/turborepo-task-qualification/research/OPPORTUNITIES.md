@@ -537,3 +537,14 @@ controls disable reuse and may still run after this comparison stops reuse.
   after correction.
 - Prevention: finish the module's exports and focused type check alongside its
   first filesystem tests, before moving on to full installed-tree experiments.
+
+### Retain generated aliases when integrating main
+
+- Activity: merge main's quality-lane changes after saving the local cache work
+  in `5ebfc19af3`.
+- Evidence: `config-sync:check` found one missing root alias after the merge.
+  The canonical `beep tsconfig-sync` writer restored `@beep/repo-configs/cache`;
+  the repeated check reports no drift. The quality-lane test conflict also
+  needed main's config type-check lane retained beside this branch's cache gate.
+- Prevention: validate generated aliases and lane membership after each main
+  integration, including merges that Git resolves without a config conflict.

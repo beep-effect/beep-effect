@@ -77,6 +77,7 @@ import {
   qualityIssuesFromStepResult,
   RepoPlanStep,
   RepoRunContext,
+  RepoRunPlan,
   RepoStepRunResult,
   releaseProofLock,
   renderPackageQualityPacketMarkdown,
@@ -123,6 +124,7 @@ import {
   YeetStatusSnapshot,
   YeetStatusWorktree,
   YeetVerdict,
+  yeetPlanPhases,
   yeetRerunDecisionText,
   yeetRerunJobListingCommand,
   yeetStatusNextCommandForTesting,
@@ -793,6 +795,7 @@ describe("yeet planner", () => {
       "repo-sanity:versions",
       "repo-sanity:syncpack",
       "repo-sanity:sherif",
+      "repo-sanity:config-typecheck",
       "quality:build",
       "quality:desktop-ipc",
       "quality:jsdoc-ratchet",
@@ -803,6 +806,7 @@ describe("yeet planner", () => {
       "quality:lint-policy",
       "quality:check",
       "quality:test-unit",
+      "quality:storybook",
       "quality:coverage",
       "quality:cache-policy",
     ]);
@@ -5323,5 +5327,39 @@ describe("yeet base ref safety", () => {
   it("ignores non-origin base refs so they fall back to rev-parse", () => {
     expect(O.isNone(safeOriginBranchFromBaseForTesting("main"))).toBe(true);
     expect(O.isNone(safeOriginBranchFromBaseForTesting("HEAD~1"))).toBe(true);
+  });
+});
+
+describe("yeetPlanPhases", () => {
+  const stepIn = (phase: RepoPlanStep["phase"], id: string): RepoPlanStep =>
+    RepoPlanStep.make({ ...prePushStep, id, label: id, phase });
+
+  it("returns each phase once, in execution order, regardless of step order", () => {
+    const plan = RepoRunPlan.make({
+      context,
+      steps: [
+        stepIn("monitor", "m"),
+        stepIn("publish", "p"),
+        stepIn("full", "f1"),
+        stepIn("early-publish", "e"),
+        stepIn("commit", "c"),
+        stepIn("feedback", "fb"),
+        stepIn("prepare", "pr"),
+        stepIn("full", "f2"),
+      ],
+    });
+    expect(yeetPlanPhases(plan)).toStrictEqual([
+      "prepare",
+      "feedback",
+      "commit",
+      "early-publish",
+      "full",
+      "publish",
+      "monitor",
+    ]);
+  });
+
+  it("is empty for an empty plan", () => {
+    expect(yeetPlanPhases(RepoRunPlan.make({ context, steps: [] }))).toStrictEqual([]);
   });
 });

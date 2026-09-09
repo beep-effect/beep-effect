@@ -740,7 +740,6 @@ const quarantineEntry = Effect.fnUntraced(function* (
 
 interface AdmissionEntryCodec<Entry, DecodeError> {
   readonly decode: (text: string) => Effect.Effect<Entry, DecodeError>;
-  readonly describe: (entry: Entry) => string;
   readonly ownerOf: (entry: Entry) => { readonly pid: number; readonly procStart: string };
 }
 
@@ -1398,7 +1397,6 @@ const scanAdmissionState = Effect.fnUntraced(function* (
     {
       decode: decodeLease,
       ownerOf: (lease: YeetAdmissionLease) => lease,
-      describe: (lease: YeetAdmissionLease) => `pid ${lease.pid} (${lease.kind}, ${lease.checkoutRoot})`,
     },
     repair
   );
@@ -1408,7 +1406,6 @@ const scanAdmissionState = Effect.fnUntraced(function* (
     {
       decode: decodeTicket,
       ownerOf: (ticket: YeetAdmissionTicket) => ticket,
-      describe: (ticket: YeetAdmissionTicket) => `pid ${ticket.pid} (queued ${ticket.kind}, ${ticket.checkoutRoot})`,
     },
     repair
   );

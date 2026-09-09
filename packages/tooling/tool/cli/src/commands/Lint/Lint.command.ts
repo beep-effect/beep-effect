@@ -40,6 +40,7 @@ import { lintRoadmapRefsCommand } from "./RoadmapRefs.ts";
 import { lintSchemaCatalogCommand } from "./SchemaCatalog.ts";
 import { lintSchemaFirstCommand } from "./SchemaFirst.ts";
 import { lintSchemaTopologyCommand } from "./SchemaTopology.ts";
+import { lintTsconfigOverlayCommand } from "./TsconfigOverlay.ts";
 
 const $I = $RepoCliId.create("commands/Lint/Lint.command");
 
@@ -1063,6 +1064,7 @@ const lintSubcommands = [
   lintSchemaFirstCommand,
   lintSchemaTopologyCommand,
   lintToolingSchemaFirstCommand,
+  lintTsconfigOverlayCommand,
 ];
 
 /**

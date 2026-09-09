@@ -151,9 +151,10 @@ export class TurboEnvironmentHealthWarning extends S.Class<TurboEnvironmentHealt
  *
  * **Details**
  *
- * `check.yml` hands pull-request jobs a blank credential triple and
- * `TURBO_CACHE=local:rw`; main pushes receive a literal token and a
- * workstation carries a 1Password reference. Code that classifies those
+ * The hosted `setup-monorepo-ci` policy (`scripts/ci-job-env.mjs`) hands
+ * fork pull-request jobs a blank credential triple and `TURBO_CACHE=local:rw`;
+ * main pushes receive a literal token and a workstation carries a 1Password
+ * reference. Code that classifies those
  * values (`EnvConfig.readTurboCacheEnvironment`) executes different arms under
  * each, so any measurement that must agree across all three — the coverage
  * ratchet — spreads this record over its child environment. `satisfies`
