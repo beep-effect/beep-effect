@@ -1,5 +1,8 @@
 # Heavy CI runner reliability
 
+Account budgets, audit receipts and image refresh/retention policy are owned by
+[AWS cost operations](./aws-cost-operations.md).
+
 The `beep-ec2-heavy` pool uses On-Demand EC2 capacity. The operator chose this
 permanent posture on 2026-09-09 after repeated Spot reclamations interrupted
 verification. Keep the 14-instance cap, 64 GiB instance choices, and ephemeral

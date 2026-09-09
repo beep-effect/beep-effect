@@ -129,7 +129,8 @@ jobs:
         run: bun run beep ci append-turbo-summary
 
       - name: Upload Storybook static artifact
-        if: steps.lane-gate.outputs.should_run == 'true'
+        # The affected lane can skip successfully; a build enforces index.html itself.
+        if: steps.lane-gate.outputs.should_run == 'true' && hashFiles('apps/storybook/storybook-static/index.html') != ''
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: storybook-static

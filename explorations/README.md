@@ -138,9 +138,13 @@ authoritative and the manifest fields are checked compatibility mirrors.
 
 `bun run beep explore atlas --check` is the blocking projection gate. It
 decodes the manifest fields required for projection and fails on underivable
-stream authority or generated README/Atlas drift. The remaining v1 shape
-(`openQuestions`, links, and sources) is still conversational and checked by
-the skill; the fleet convention migration owns full-schema lint.
+stream authority or generated README/Atlas drift, printing every underivable
+input or drifting path on stderr before it exits. `explorations/ATLAS.md` is
+git-ignored, so a stale local copy fails only local proofs (hosted lanes never
+carry one) and the `--write` rewrite never appears in `git diff`. The
+remaining v1 shape (`openQuestions`, links, and sources) is still
+conversational and checked by the skill; the fleet convention migration owns
+full-schema lint.
 
 ## Graduation Contract
 
