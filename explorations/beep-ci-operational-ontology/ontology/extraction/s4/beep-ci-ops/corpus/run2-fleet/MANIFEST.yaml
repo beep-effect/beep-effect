@@ -2,7 +2,7 @@
 # Public run-2 fleet capture; all source descriptors are portable.
 schema_version: beep-ci-ops-fleet-corpus/v1
 generated_by: etl_fleet_corpus.py
-generator_sha256: 42666faada44d5d67ddf232473f5f4ed011623ec59152b83721489f8151be625
+generator_sha256: 3cd7af71dda7ea6fed6b9b4d2399dbfa55be572746420000168a7cda23e09206
 capture_instant: '2026-09-03T02:27:19.384Z'
 capture_instant_basis: maximum timestamp observed in the captured records
 ordering:

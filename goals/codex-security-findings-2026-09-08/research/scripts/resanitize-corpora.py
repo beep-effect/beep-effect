@@ -111,7 +111,7 @@ def repair(name: str, source_ref: str | None = None, population: str | None = No
         data = payloads[path]
         rows = module.decode_ndjson(data, path) if path.endswith(".ndjson") else [module.decode_json(data, path)]
         if name == "etl_fleet_corpus":
-            sanitized = [module.redact_string_values(row, repair=True) for row in rows]
+            sanitized = [module.redact_string_values(row, repair=finding == "Ruling 23") for row in rows]
         else:
             sanitized = [module.redact(row, None, collections.Counter(), True) for row in rows]
         if module.same_json(rows, sanitized):
@@ -138,7 +138,8 @@ def repair(name: str, source_ref: str | None = None, population: str | None = No
         rules[:] = [rule.replace("recursively transform string values only:",
                                 "recursively drop process identity members, then transform strings:") for rule in rules]
         rules.append(module.PROCESS_REDACTION_RULE)
-        rules.extend(rule for rule in module.REPAIR_REDACTION_RULES if rule not in rules)
+        if finding == "Ruling 23":
+            rules.extend(rule for rule in module.REPAIR_REDACTION_RULES if rule not in rules)
     repair_record = {
         "finding": finding, "source_manifest_sha256": module.sha256(original),
         "changed_raw_payloads": changed, "live_recapture": False,

@@ -24,7 +24,10 @@ the "bush" (`A_LETTER_FROM_THE_OTHER_SIDE_OF_THE_LOOP.md`).
 Ruling 23 repairs the ratified run-2 fleet pin in place: 29 raw files now use
 `<host>` and `uid-<uid>` placeholders, with capture history and the original
 security receipt preserved. Reconciliation with PR #1037 retains both CSF-013
-updates and appends the Ruling 23 receipt after them. The implementation and evidence are in the
+updates and appends the Ruling 23 receipt after them. PR #1041 review fixes make replay
+host-independent and idempotent, bind the extra transformations to Ruling 23, and align
+UID scanning with preserved structural JSON keys. All payloads and security receipts
+remain unchanged by these review fixes. The implementation and evidence are in the
 [run-2 repair report](./research/run3-lanes/run2-residue-repair-report.md).
 Fable owns review and publication after #1040; run 3 remains the next ontology step.
 
@@ -157,6 +160,12 @@ loop-closer) → S8 OWL 2 RL + SHACL formalization, rules compilation → S9 dog
 graduation. Full plan with locked decisions: [`DECISIONS.md`](./DECISIONS.md).
 
 ## Trail
+
+- 2026-09-09: completed PR #1041 G1/G2 and Additional findings X1–X4 locally.
+  Run-2 has 14 passing regressions; all 38 unchanged #1037 tests pass. The additional
+  fixes change only the generator digest in the corpus manifest, retaining every
+  payload and security receipt. See [the repair report](./research/run3-lanes/run2-residue-repair-report.md).
+  Fable owns publication.
 
 - 2026-09-09: Ruling 23 repairs hostname-digest and UID residue in the ratified
   run-2 fleet pin through committed-source replay. Exactly 29 raw files and the

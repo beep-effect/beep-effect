@@ -93,7 +93,35 @@ class RepairRedactionTests(unittest.TestCase):
                                 "beep-yeet-proof-locks-abcdef012345-cache "
                                 "beep-yeet-proof-locks-<host>-uid-<uid>"}
             self.assertEqual(fleet.redact_string_values(value, repair=True), value)
-            fleet.scan_output_bytes([("fixture", value["message"].encode())])
+            fleet.scan_output_bytes([("fixture.json", fleet.encode_json(value)),
+                                     ("fixture.ndjson", fleet.encode_ndjson([value]))])
+
+    def test_uid_keys_are_preserved_but_nested_string_values_are_rejected(self):
+        safe = {"uid-123": [{"uid-456": [None, True, 123, "safe"]}]}
+        self.assertEqual(fleet.redact_string_values(safe, repair=True), safe)
+        for suffix, encode in (("json", fleet.encode_json), ("ndjson", lambda row: fleet.encode_ndjson([row]))):
+            fleet.scan_output_bytes([("fixture." + suffix, encode(safe))])
+            for message in ("uid-123", '{"uid-123": "embedded key is part of a string value"}'):
+                unsafe = {"uid-123": [{"uid-456": [message]}]}
+                with self.subTest(suffix=suffix, embedded=message.startswith("{")):
+                    with self.assertRaisesRegex(SystemExit, "numeric UID token"):
+                        fleet.scan_output_bytes([("fixture." + suffix, encode(unsafe))])
+                    repaired = fleet.redact_string_values(unsafe, repair=True)
+                    fleet.scan_output_bytes([("fixture." + suffix, encode(repaired))])
+        # Escaped structural keys retain their identity; escaped values are scanned decoded.
+        fleet.scan_output_bytes([("fixture.json", br'{"\u0075id-123": "safe"}')])
+        with self.assertRaisesRegex(SystemExit, "numeric UID token"):
+            fleet.scan_output_bytes([("fixture.json", br'{"message": "\u0075id-123"}')])
+
+    def test_uid_scanning_still_covers_paths_and_non_json_outputs(self):
+        for path, data in (("uid-123.json", b'{"safe": true}'),
+                           ("fixture.properties", b"message=uid-123\n"),
+                           ("MANIFEST.yaml", b"message: uid-123\n"),
+                           ("fixture.txt", b"uid-123")):
+            with self.subTest(path=path):
+                with self.assertRaisesRegex(SystemExit, "numeric UID token") as exc:
+                    fleet.scan_output_bytes([(path, data)])
+                self.assertNotIn("uid-123", str(exc.exception))
 
     def test_scanner_rejects_each_class_in_paths_and_contents_without_echo(self):
         with patch.object(socket, "gethostname", return_value="fixture-host"):
@@ -163,7 +191,8 @@ class CommittedRepairTests(unittest.TestCase):
                  contextlib.redirect_stdout(io.StringIO()):
                 private = f"beep-yeet-proof-locks-{fleet.sha256(b'foreign-fixture-host')[:12]}-uid-12345"
                 row = {"schemaVersion": fleet.ADMISSION_SCHEMA, "admittedAtMillis": 1767225600000,
-                       "ownerRef": "custody-fixture", "message": private}
+                       "ownerRef": "custody-fixture", "message": private,
+                       "uid-123": [{"uid-456": [None, True, 123, "safe"]}]}
                 path = "admission/fixture/journal.ndjson"
                 raw = fleet.EmittedFile(
                     path=path, data=fleet.encode_ndjson([row]), kind="admission", event_count=1,
@@ -202,6 +231,13 @@ class CommittedRepairTests(unittest.TestCase):
                 with self.assertRaisesRegex(SystemExit, "mismatched integrity"):
                     repair.repair("etl_fleet_corpus", finding="Ruling 23")
                 self.assertEqual(snapshot(), corrupted)
+
+                # CSF attribution cannot authorize Ruling 23 transformations or publish their residue.
+                for finding in ("CSF-012", "CSF-013"):
+                    with self.subTest(finding=finding), self.assertRaisesRegex(SystemExit, "hostname digest"):
+                        repair.repair("etl_fleet_corpus", source_ref, finding=finding)
+                    self.assertEqual(snapshot(), corrupted)
+                    self.assertFalse(list(corpus.glob(".run2-fleet-security-*")))
 
                 # Explicit source replay reads Git, despite corrupt destination bytes.
                 repair.repair("etl_fleet_corpus", source_ref, finding="Ruling 23")
@@ -260,21 +296,45 @@ class CommittedRepairTests(unittest.TestCase):
                 classes = fleet.yaml.safe_load(manifest_path.read_bytes())["security_resanitization"]
                 self.assertEqual(classes["updates"][-1]["residue_classes"], ["sha12(hostname)", "uid-[0-9]+"])
 
-                # A distinct finding retains CSF-013's attributed source-replay behavior.
-                previous_manifest = manifest_path.read_bytes()
-                repair.repair("etl_fleet_corpus", source_ref, finding="CSF-013")
-                attributed = snapshot()
-                csf_history = fleet.yaml.safe_load(attributed[fleet.MANIFEST_NAME])["security_resanitization"]
-                self.assertEqual(csf_history["updates"][0], second)
-                self.assertEqual(csf_history["updates"][-1]["finding"], "CSF-013")
-                self.assertEqual(csf_history["updates"][-1]["superseded_manifest_sha256"],
-                                 fleet.sha256(previous_manifest))
-                repair.repair("etl_fleet_corpus", source_ref, finding="CSF-013")
-                self.assertEqual(snapshot(), attributed)
+                # A source with only CSF residue can still receive either CSF repair.
+                csf_row = {**row, "message": "pid=12345", "attachedPid": 12345}
+                csf_raw = fleet.EmittedFile(
+                    path=path, data=fleet.encode_ndjson([csf_row]), kind=raw.kind, event_count=1,
+                    timestamps=raw.timestamps, source=raw.source, source_file=raw.source_file,
+                )
+                csf_emitted = sorted(fleet.with_properties_projection(csf_raw, [csf_row]),
+                                     key=lambda item: item.path)
+                csf_source = fleet.yaml.safe_load(fleet.build_manifest(csf_emitted))
+                csf_source["security_resanitization"] = {**copy.deepcopy(first), "updates": [second]}
+                for entry in csf_emitted:
+                    (pin / entry.path).write_bytes(entry.data)
+                manifest_path.write_bytes(fleet.dump_manifest_with_totals(
+                    csf_source, sum(len(entry.data) for entry in csf_emitted)))
+                git("add", "--", "corpus/run2-fleet")
+                git("commit", "-qm", "fixture: capture source with only CSF residue")
+                csf_source_ref = git("rev-parse", "HEAD")
+                for finding in ("CSF-012", "CSF-013"):
+                    previous_manifest = manifest_path.read_bytes()
+                    repair.repair("etl_fleet_corpus", csf_source_ref, finding=finding)
+                    attributed = snapshot()
+                    csf_manifest = fleet.yaml.safe_load(attributed[fleet.MANIFEST_NAME])
+                    csf_history = csf_manifest["security_resanitization"]
+                    self.assertEqual(csf_history["updates"][0], second)
+                    self.assertEqual(csf_history["updates"][-1]["finding"], finding)
+                    self.assertEqual(csf_history["updates"][-1]["changed_raw_payloads"], 1)
+                    self.assertNotIn("ruling", csf_history["updates"][-1])
+                    self.assertNotIn("residue_classes", csf_history["updates"][-1])
+                    self.assertTrue(set(fleet.REPAIR_REDACTION_RULES).isdisjoint(csf_manifest["redaction_rules"]))
+                    self.assertEqual(csf_history["updates"][-1]["superseded_manifest_sha256"],
+                                     fleet.sha256(previous_manifest))
+                    self.assertEqual(fleet.decode_ndjson((pin / path).read_bytes(), path),
+                                     [{**row, "message": "pid=<redacted>"}])
+                    repair.repair("etl_fleet_corpus", csf_source_ref, finding=finding)
+                    self.assertEqual(snapshot(), attributed)
 
                 # A new generator still needs its binding and an attributed repair receipt.
                 generator.write_text("# another updated generator fixture\n")
-                repair.repair("etl_fleet_corpus", source_ref, finding="CSF-013")
+                repair.repair("etl_fleet_corpus", csf_source_ref, finding="CSF-013")
                 regenerated = fleet.yaml.safe_load(manifest_path.read_bytes())
                 self.assertEqual(regenerated["generator_sha256"], fleet.sha256(generator.read_bytes()))
                 self.assertEqual(regenerated["security_resanitization"]["updates"][-1]["superseded_manifest_sha256"],
@@ -309,8 +369,10 @@ class CommittedRepairTests(unittest.TestCase):
         with patch.object(sys, "argv", [str(script), "--run2-only", "--finding", "Ruling 23"]), \
              patch.object(sys, "dont_write_bytecode", True), \
              patch.object(importlib.util, "spec_from_file_location", side_effect=only_run2), \
-             contextlib.redirect_stdout(io.StringIO()):
+             patch.object(tempfile, "mkdtemp", side_effect=AssertionError("CLI smoke test must not stage the pin")), \
+             contextlib.redirect_stdout(io.StringIO()) as output:
             runpy.run_path(str(script), run_name="__main__")
+        self.assertIn("run2-fleet: verified unchanged", output.getvalue())
 
 
 if __name__ == "__main__":

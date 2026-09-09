@@ -796,17 +796,19 @@ def discover_live_capture() -> list[EmittedFile]:
     return sorted(emitted, key=lambda entry: entry.path)
 
 
-def reject_process_members(value: JsonValue) -> None:
-    """Reject structural process fields without interpreting embedded message text."""
+def reject_json_residue(value: JsonValue) -> None:
+    """Reject process fields and numeric UIDs in string leaves, preserving other keys."""
 
     if isinstance(value, dict):
         for key, child in value.items():
             if process_member(key):
                 fail("residue scan failed: process identity member")
-            reject_process_members(child)
+            reject_json_residue(child)
     elif isinstance(value, list):
         for child in value:
-            reject_process_members(child)
+            reject_json_residue(child)
+    elif isinstance(value, str) and UID_IN_TEXT.search(value):
+        fail("residue scan failed: numeric UID token")
 
 
 def scan_output_bytes(files: list[tuple[str, bytes]]) -> None:
@@ -816,16 +818,17 @@ def scan_output_bytes(files: list[tuple[str, bytes]]) -> None:
         text = path + "\n" + data.decode("utf-8")
         if PROOF_LOCK_HOST_IN_TEXT.search(text) or sha256(socket.gethostname().encode())[:12] in text:
             fail("residue scan failed: hostname digest")
-        if UID_IN_TEXT.search(text):
+        # JSON keys are structural; only values receive the Ruling 23 UID transformation.
+        if UID_IN_TEXT.search(path if path.endswith((".json", ".ndjson")) else text):
             fail("residue scan failed: numeric UID token")
         if PROCESS_METADATA_IN_TEXT.search(text):
             fail("residue scan failed: schema process metadata")
         if PID_IN_TEXT.search(text):
             fail("residue scan failed: free-text process identifier")
         if path.endswith(".json"):
-            reject_process_members(decode_json(data, path))
+            reject_json_residue(decode_json(data, path))
         elif path.endswith(".ndjson"):
-            reject_process_members(decode_ndjson(data, path))
+            reject_json_residue(decode_ndjson(data, path))
         elif path.endswith(".properties"):
             for stanza in decode_properties_projection(data, path):
                 if any(process_member(key) for key, _ in stanza):

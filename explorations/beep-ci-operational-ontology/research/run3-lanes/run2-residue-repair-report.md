@@ -111,7 +111,8 @@ for the completed pin.
 ```sh
 uv run --offline --with pyyaml python \
   goals/codex-security-findings-2026-09-08/research/scripts/resanitize-corpora.py \
-  --run2-only --source-ref a8a7931b21ca2f0e25f8103a854f8ab39000f7f8
+  --run2-only --finding "Ruling 23" \
+  --source-ref a8a7931b21ca2f0e25f8103a854f8ab39000f7f8
 
 uv run --offline --with pyyaml python \
   explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/etl_fleet_corpus.py
@@ -358,3 +359,85 @@ mise registration warnings described earlier recurred; the proof commands exited
 The lane repeats these commit-dependent checks at the final amended HEAD after this
 report update, then removes its disposable checkout. No push or PR operation is part
 of this handoff.
+
+### Additional findings (Codex)
+
+Date: 2026-09-09. Additional-findings base: `f2e9cf9bd1`. The worktree was clean
+at handoff; the prior G1/G2 implementation was committed in `81b504ed73`. The
+following completes X1–X4 and supersedes the preceding generator and pin hashes.
+
+- **X1:** covered by G1's structural proof-lock matching. Foreign-host and partial
+  redaction regressions remain green.
+- **X2:** run-2 replay selects `repair=True` and adds the Ruling 23 redaction rule
+  descriptions only when the finding is `Ruling 23`. A CSF-012 or CSF-013 replay
+  retains the ordinary process-member and PID transformations. If its source also
+  contains hostname or UID residue requiring Ruling 23, staged verification rejects
+  it without changing the destination. Both CSF findings still repair sources with
+  only CSF residue, preserve their original receipt history, record their own finding
+  without `ruling` or `residue_classes`, and verify unchanged on repeated replay.
+- **X3:** numeric UID scanning examines decoded string values in JSON/NDJSON,
+  recursively through objects and arrays. Structural keys such as `uid-123` stay
+  unchanged and pass the full staged verifier. Embedded JSON remains string content,
+  so numeric UID tokens inside it still require redaction. The regression also checks
+  Unicode-escaped keys and values. Filename, properties, manifest, other text,
+  hostname, process-member, PID, path, and secret checks remain in force.
+- **X4:** the primary historical reproduction command now includes
+  `--finding "Ruling 23"`. The reconciled-source replay command above retains the
+  same required attribution and returns `verified unchanged` on the current pin.
+
+The tests first reproduced the preserved-key contradiction at the complete scanner
+and staged-verifier boundaries. During verification, the existing CLI smoke test
+also tried ordinary repair against the working pin after the generator changed.
+That appended a zero-change receipt and reordered rule descriptions. This test now
+forbids staging and requires `verified unchanged`, preventing that mutation when the
+generator binding is stale. The OPPORTUNITIES ledger records the evidence.
+
+To preserve the ratified history, the final manifest was regenerated from committed
+HEAD's manifest after checking its generator provenance, every payload digest, and
+exact equality of all 1,588 payloads with committed HEAD. Repair-mode redaction also
+left every decoded payload unchanged. `dump_manifest_with_totals` changed only
+`generator_sha256`; a disposable full-pin copy passed `verify_output_tree` before
+promotion. No rule description, byte total, or security receipt differs from
+`f2e9cf9bd1`, and no live capture ran.
+
+The independent audit still finds exactly 313 hostname substitutions and 313 UID
+substitutions in the original 29 raw files relative to reconciled main. All 794
+projections are unchanged. The security history remains CSF-012, two CSF-013 updates,
+and one Ruling 23 update, with every field unchanged from the additional-findings
+base. The pin has 1,589 files, 6,213 events, and 13,316,455 bytes; capture instant
+`2026-09-03T02:27:19.384Z` is unchanged.
+
+| Check | Additional-findings result |
+| --- | --- |
+| Run-2 tests | 14 PASS, including preserved-key staged replay and both CSF authorities |
+| PR #1037 tests | 38 PASS with the unchanged fixture-directory override above |
+| Staged manifest and ordinary run-2 verification | PASS |
+| Explicit reconciled-source replay and ordinary repair | `verified unchanged`; all 1,589 files byte-identical |
+| Independent corpus and manifest audit | PASS; only `generator_sha256` differs from the additional-findings base |
+| Structural proof-lock, hostname digest, UID, home path, raw PID scans | 0 for every class |
+| Schema process metadata, decoded process members, escaped process keys | 0 for every class |
+| Packet validator | 0 blockers, 0 warns; 26 CQs and 25 SPARQL files |
+| CQ suite | 0 failures across 25 seed tests and 20 fixtures |
+| Protected-file audit | 2,870 files unchanged, including decisions and run-3/run-3b artifacts |
+| Whitespace check | `git diff --check` PASS |
+| Post-commit knowledge references | PASS; exit 0 and 0 live gated observations |
+| Detached committed-HEAD verifier and run-2 tests | PASS; verifier and 14 tests, matching corpus hash, clean tracked tree |
+| Commit hooks | Gitleaks, typos, Biome, and commitlint PASS |
+
+| Receipt | SHA-256 |
+| --- | --- |
+| Final generator | `3cd7af71dda7ea6fed6b9b4d2399dbfa55be572746420000168a7cda23e09206` |
+| Additional-findings base manifest | `8ef17f3b15c6ccbfaf5a3642ebebb6192d302c5de4f3e14d77c6748d93a47318` |
+| Final manifest | `2002198a991778ebf75d0aa79c034bd16c820bbfa5de6e3d96f12f66b946eb10` |
+| Final whole tree | `f37916859376db8c022ef68186cb6173dee667c504e10223a91c33c1ab7da84e` |
+
+No workspace package changed. The packet README, open-question manifest, and
+OPPORTUNITIES ledger record this completion without changing stage or lifecycle.
+After the implementation commit, `bun run beep knowledge refs --check` passed with
+zero live gated observations. A detached checkout under
+`.beep/run2-residue-repair/additional-detached` passed the ordinary verifier and all
+14 run-2 tests. Its corpus hash matched the final whole-tree receipt, and its tracked
+tree stayed clean. Optional mise registration warnings recurred because global mise
+state is read-only; every proof command exited 0. The lane repeats both checks at the
+final amended HEAD after this report update, then removes the disposable checkout.
+Publication and PR operations remain with Fable.

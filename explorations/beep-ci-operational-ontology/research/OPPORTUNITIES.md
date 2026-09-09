@@ -1,5 +1,21 @@
 # Research friction receipts
 
+## 2026-09-09: run-2 replay authority and structural UID keys diverged
+
+- **Work:** completing PR #1041 Additional findings X2–X4 after the G1/G2 commit.
+- **Evidence:** the run-2 regressions now scan complete serialized records; preserved
+  `uid-123` fixture keys fail with `residue scan failed: numeric UID token`, including
+  during staged replay. CSF replay also selects `repair=True` unconditionally, while
+  its receipt omits the Ruling 23 authority. The first report command lacks `--finding`.
+- **Prevention:** exercise the complete staged verifier for preserved keys and test
+  CSF and Ruling 23 replay separately, including rule descriptions and receipt fields.
+  Validate documented commands against the required CLI arguments.
+- **Test isolation:** after the generator edit, the existing CLI smoke test invoked
+  ordinary repair on the working pin and appended a zero-change receipt. The final
+  manifest is regenerated from committed HEAD with only its generator binding changed,
+  after proving all payloads unchanged. The smoke test now forbids staging and requires
+  `verified unchanged`, so a stale binding fails without rewriting the pin.
+
 ## 2026-09-09: run-2 review fixes require a generator binding update
 
 - **Work:** addressing PR #1041 G1 and G2 in the run-2 repair lane.
