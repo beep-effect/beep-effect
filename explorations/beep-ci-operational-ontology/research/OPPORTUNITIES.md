@@ -446,3 +446,31 @@
   output, then rejected the stale synthetic manifest's old census label. The
   following synthetic refresh verified fleet and pinned synthetic successfully.
   No intermediate mixed-generation result is used as final proof.
+
+## 2026-09-09: capture provenance must survive squash merges
+
+- **Work:** PR #1040 round-2 C3 review of the three refreshed run-3 pins.
+- **Evidence:** a manifest's `corpus_commit` records a branch HEAD; squash merge
+  need not preserve that commit's reachability. The existing citations already
+  carry a file, line, anchor, and captured file hash, but replay did not resolve
+  them against the current checkout.
+- **Repair:** retain capture HEAD as `corpus_commit`, add `corpus_tree` and
+  `corpus_base`, and verify each repository citation's path, line, and anchor in
+  the current tree without requiring the capture commit. Portable fleet/export
+  descriptors remain observation receipts. Existing run-2 and identity pins
+  remain unchanged.
+- **Prevention:** S6 POLICY should adopt this capture/current-tree convention;
+  the captured whole-file hash is historical provenance, while the current
+  line and anchor are the replay contract. A vanished branch commit alone must
+  not invalidate citations that still resolve after squash merge.
+
+## 2026-09-09: serialized process replacement must be idempotent
+
+- **Work:** round-2 C4 unifies serialized process-member replacement and scans.
+- **Evidence:** the first expanded regex reinterpreted a closing key quote as
+  an opening value quote when a previously redacted numeric value was `null`.
+  The repeated-redaction regression failed before any live capture.
+- **Repair:** commit the optional quote/separator prefix atomically so replay
+  cannot consume later JSON members as the original value.
+- **Prevention:** test parseability, repeated redaction, and residue rejection
+  at multiple escaping depths before refreshing self-pinned corpora.

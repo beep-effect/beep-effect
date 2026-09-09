@@ -147,6 +147,10 @@ def repair(name: str, source_ref: str | None = None, population: str | None = No
         "finding": finding, "source_manifest_sha256": module.sha256(original),
         "changed_raw_payloads": changed, "live_recapture": False,
     }
+    if name in {"etl_run3_fleet_corpus", "etl_run3b_fleet_corpus"}:
+        migration = module.migrate_custody_census(manifest)
+        if migration is not None:
+            repair_record["custody_census_migration"] = migration
     if "security_resanitization" in manifest:
         manifest["security_resanitization"].setdefault("updates", []).append(repair_record)
     else:

@@ -1,2 +1,2 @@
-{"ownerRef":"b9555d9057b5","schemaVersion":"yeet-admission-journal/v1","_tag":"admission-admitted","nonce":"91deb101","kind":"review-fix","weightTokens":1,"priority":"verify","originKey":"","enqueuedAtMillis":1788047259737,"admittedAtMillis":1788047259740}
-{"ownerRef":"399724b5eb06","schemaVersion":"yeet-admission-journal/v1","_tag":"admission-released","nonce":"91deb101","releasedAtMillis":1788047736427}
+{"ownerRef":"7784f4cff81f","ownerRefVariant":"pid_pair","schemaVersion":"yeet-admission-journal/v1","_tag":"admission-admitted","nonce":"91deb101","kind":"review-fix","weightTokens":1,"priority":"verify","originKey":"","enqueuedAtMillis":1788047259737,"admittedAtMillis":1788047259740}
+{"ownerRef":"d332c7769b52","ownerRefVariant":"pid_pair","schemaVersion":"yeet-admission-journal/v1","_tag":"admission-released","nonce":"91deb101","releasedAtMillis":1788047736427}

@@ -36,6 +36,76 @@ stage_b = load("etl_run3b_fleet_corpus")
 
 
 class RedactionTests(unittest.TestCase):
+    def test_identifier_tokens_preserve_ordinary_words_and_cover_process_names(self):
+        safe = {key: 1234 for key in ("rapid", "cupid", "lipid", "stepId", "failedStepId")}
+        private = {key: 5678 for key in ("pid", "ppid", "ownerPid", "attachedPid", "legacyLockOwnerPid", "claudePid", "ownerProcStart", "xPid", "y_pid", "z-pid")}
+        for key in safe:
+            self.assertFalse(fleet.process_member(key), key)
+        for key in private:
+            self.assertTrue(fleet.process_member(key), key)
+        result = fleet.redact({**safe, **private}, b"a" * 32, collections.Counter())
+        self.assertEqual({key: result[key] for key in safe}, safe)
+        self.assertFalse(set(private) & set(result))
+        fleet.scan_output_bytes([("safe.json", fleet.encode_json(result)),
+                                  ("safe.properties", fleet.encode_properties_projection([result]))])
+
+    def test_serialized_process_variants_are_redacted_at_every_escape_depth(self):
+        private = {"ownerPid": 1234, "ownerProcStart": "start-fixture", "attachedPid": 5678,
+                   "legacyLockOwnerPid": "9012", "claudePid": 3456, "ppid": 6789,
+                   "futureProcessStartTicks": "ticks-fixture", "rapid": 42, "failedStepId": "check"}
+        for depth in range(4):
+            message = json.dumps(private)
+            for _ in range(depth):
+                message = json.dumps({"message": message})
+            with self.assertRaises(SystemExit):
+                fleet.scan_output_bytes([("raw.json", fleet.encode_json({"message": message}))])
+            redacted = fleet.redact_string(message)
+            self.assertEqual(fleet.redact_string(redacted), redacted)
+            fleet.scan_output_bytes([("redacted.json", fleet.encode_json({"message": redacted})),
+                                      ("redacted.properties", fleet.encode_properties_projection([{"message": redacted}]))])
+            decoded = redacted
+            for _ in range(depth):
+                decoded = json.loads(decoded)["message"]
+            decoded = json.loads(decoded)
+            self.assertEqual(decoded, {key: value if key in ("rapid", "failedStepId") else
+                                      "<redacted>" if isinstance(value, str) else None
+                                      for key, value in private.items()})
+        for key in private:
+            if key in ("rapid", "failedStepId"):
+                continue
+            message = "{'" + key + "': 'start-fixture'}"
+            self.assertNotIn("start-fixture", fleet.redact_string(message))
+            bare = key + "=start-fixture"
+            self.assertNotIn("start-fixture", fleet.redact_string(bare))
+            with self.assertRaises(SystemExit):
+                fleet.scan_output_bytes([("fixture", bare.encode())])
+
+    def test_custody_variants_are_bound_to_payload_bytes(self):
+        row = {"pid": 123, "procStart": "start", "nested": {"ownerPid": 456, "ownerProcStart": "start"},
+               "scope": {"attachedPid": 789}, "future": {"claudePid": 321}}
+        redacted = fleet.redact(row, b"a" * 32, collections.Counter())
+        variants = fleet.owner_ref_census(redacted)
+        self.assertEqual(dict(variants), dict.fromkeys(fleet.OWNER_VARIANTS, 1))
+        receipt = {"owner_refs_by_variant": dict(variants), "redaction_counts": {"owner_refs": 4}}
+        fleet.verify_owner_census(receipt, [redacted], False)
+        receipt["owner_refs_by_variant"].update(pid_pair=0, ownerpid=2)
+        with self.assertRaisesRegex(SystemExit, "variant accounting differs from pinned bytes"):
+            fleet.verify_owner_census(receipt, [redacted], False)
+        del redacted["ownerRefVariant"]
+        with self.assertRaisesRegex(SystemExit, "missing or invalid"):
+            fleet.owner_ref_census(redacted)
+
+    def test_current_tree_citations_survive_missing_capture_commit(self):
+        file = fleet.REPO_RUN + "AdmissionJournal.ts"
+        citation = fleet.source_cite(file, 'export class AdmissionProtocol extends')
+        manifest = {"corpus_commit": "0" * 40, "source": citation}
+        with patch.object(fleet.subprocess, "run", side_effect=AssertionError("historical git read")):
+            fleet.verify_source_citations(manifest)
+            for changed in ({"line": 0}, {"line": citation["line"] + 1},
+                            {"file": "missing-fixture.ts"}, {"needle": "missing fixture anchor"}):
+                with self.assertRaises(SystemExit):
+                    fleet.verify_source_citations({"source": {**citation, **changed}})
+
     def test_generic_uid_and_state_filename_residue_matches_stage_b(self):
         for raw, expected in (("runtime uid-4242", "runtime uid-<uid>"),
                               ("merged-preview-4242", "merged-preview-<process>"),
@@ -62,8 +132,8 @@ class RedactionTests(unittest.TestCase):
         actual = rows[0]
         self.assertEqual(actual["ownerRef"], actual["attempt"]["ownerRef"])
         self.assertEqual(actual["runScope"]["ownerRef"], fleet.sha256(f"1234:<absent>:{salt.hex()}".encode())[:12])
-        self.assertEqual(receipt["owner_refs_by_variant"], {"pid_pair": 1, "ownerpid": 1, "attached_identity": 1, "other": 0})
-        self.assertEqual(receipt["redaction_counts"]["owner_refs_without_proc_start"], 1)
+        self.assertEqual(receipt["owner_refs_by_variant"], {"pid_pair": 1, "ownerpid": 1, "attachedpid": 1, "weak": 0})
+        self.assertEqual(receipt["redaction_counts"]["owner_refs_without_start"], 1)
         fleet.scan_output_bytes([("lease.json", fleet.encode_json(actual)),
                                ("lease.properties", fleet.encode_properties_projection(rows))])
         attempt = {"schemaVersion": fleet.ATTEMPT_SCHEMA, "_tag": "attempt-started", "attemptId": "fixture",
@@ -77,12 +147,12 @@ class RedactionTests(unittest.TestCase):
                         {"parentPid": 1234}, {"futureProcessStartTicks": 42}, {"processId": 1234}):
             with self.subTest(keys=list(payload)):
                 actual = fleet.redact(payload, b"a" * 32, collections.Counter())
-                self.assertEqual(list(actual), ["ownerRef"])
+                self.assertEqual(list(actual), ["ownerRef", "ownerRefVariant"])
                 self.assertEqual(fleet.eligible_property_pairs(payload), [])
         for missing in (None, ""):
             counts = collections.Counter()
             fleet.redact({"ownerPid": 1234, "ownerProcStart": missing}, b"a" * 32, counts)
-            self.assertEqual(counts["owner_refs_without_proc_start"], 1)
+            self.assertEqual(counts["owner_refs_without_start"], 1)
         with self.assertRaisesRegex(SystemExit, "ambiguous"):
             fleet.redact({"ownerPid": 1, "owner_pid": 2}, b"a" * 32, collections.Counter())
 
@@ -99,7 +169,8 @@ class RedactionTests(unittest.TestCase):
                 self.assertTrue(fleet.process_member(key), (file, key))
             observed.update(identities)
         self.assertTrue({"attachedPid", "ownerPid", "ownerProcStart", "pid", "procStart"} <= observed)
-        self.assertEqual(fleet.PROCESS_MEMBER_ALLOWLIST, {"failedstepid", "stepid"})
+        self.assertRegex((fleet.REPO_ROOT / fleet.YEET / "Provenance.ts").read_text(), r"claudePid: S\.")
+        self.assertIn("const legacyLockOwnerPid =", (fleet.REPO_ROOT / fleet.REPO_RUN / "AdmissionJournal.ts").read_text())
 
     def test_execution_step_identifiers_preserve_failure_rider_and_projections(self):
         for file, key in (("Verdict.ts", "failedStepId"), ("ProofState.ts", "stepId")):
@@ -130,7 +201,7 @@ class RedactionTests(unittest.TestCase):
                         fleet.scan_output_bytes([("fixture", data)])
         with self.assertRaisesRegex(SystemExit, "process identity member"):
             fleet.scan_output_bytes([("escaped.json", b'{"owner\\u0050id":42}')])
-        benign = {"description": 'rapid cupid lipid attachedPid ownerProcStart "ownerPid": word',
+        benign = {"description": 'rapid cupid lipid attachedPid ownerProcStart ownerPid word',
                   "words": ["pid", "ownerPid", "ownerProcStart"], "rapidly": "safe"}
         self.assertEqual(fleet.redact(benign, b"a" * 32, collections.Counter()), benign)
         fleet.scan_output_bytes([("safe.json", fleet.encode_json(benign)),
@@ -308,7 +379,7 @@ class RedactionTests(unittest.TestCase):
         self.assertEqual(receipt["excluded_undecodable"], 6)
         self.assertEqual(receipt["excluded_by_reason"], {"unknown-schema-version": 2, "non-object": 2, "invalid-json": 2})
         self.assertEqual(receipt["retained_source_lines"], [1, 2, 3, 4])
-        self.assertEqual(receipt["redaction_counts"]["owner_refs_without_proc_start"], 1)
+        self.assertEqual(receipt["redaction_counts"]["owner_refs_without_start"], 1)
         self.assertEqual(len({r["ownerRef"] for r in actual[:3]}), 1)
         self.assertNotEqual(actual[0]["ownerRef"], actual[3]["ownerRef"])
         refreshed, _ = fleet.transform_source(source, "admission", b"b" * 32)
@@ -336,7 +407,7 @@ class RedactionTests(unittest.TestCase):
                 self.assertEqual(result["checkoutRoot"], "<fleet>/beep-effect-fixture")
                 self.assertEqual(result["home"], "<home>/data")
                 self.assertEqual(result["nested"], {"ownerRef": fleet.sha256(
-                    f"789:<absent>:{(b'a' * 32).hex()}".encode())[:12]} if module is fleet else {})
+                    f"789:<absent>:{(b'a' * 32).hex()}".encode())[:12], "ownerRefVariant": "ownerpid"} if module is fleet else {})
                 self.assertIs(result["b"], True)
                 self.assertIs(result["null"], None)
                 self.assertIs(type(result["n"]), int)
@@ -469,7 +540,7 @@ class SyntheticReceiptTests(unittest.TestCase):
         self.assertIn("--finding", result.stderr)
         self.assertEqual(result.stdout, "")
 
-    def fixture(self, module, root, message=None):
+    def fixture(self, module, root, message=None, legacy_census=False):
         scanned = "2026-01-01T00:00:00.000Z"
         if module is fleet:
             path = "admission/fixture/journal.ndjson"
@@ -479,11 +550,14 @@ class SyntheticReceiptTests(unittest.TestCase):
                  "admittedAtMillis": 1767225600000, "pid": 123}]), "admission", b"a" * 32)
             if message is not None:
                 rows[0]["message"] = message
+            if legacy_census:
+                rows[0].pop("ownerRefVariant")
+                census["redaction_counts"] = {"owner_refs": 1, "owner_refs_without_proc_start": 1, "dropped_pid": 1}
             emitted = module.payload_pair(path, rows, "admission", source, scanned)
             metadata = {"capture_instant": scanned, "admission_roots": [{"label": "fixture",
                 "journal": {"path": path, **module.complete(source, scanned), **census}, "live": []}],
                 "sources": [], "checkouts": [], "checkout_counts": {},
-                "custody": {"owner_refs_by_variant": dict(census["owner_refs_by_variant"])},
+                "custody": {"variant_source": "ownerRefVariant", "owner_refs_by_variant": dict(census["owner_refs_by_variant"])},
                 "rider_evidence": module.rider_evidence({path: rows}),
                 "proof_ledger": {"checkouts_with_ledger": 0}}
         else:
@@ -509,6 +583,9 @@ class SyntheticReceiptTests(unittest.TestCase):
                 "bindings": [{"checkout": label, "identity_key": key, "kind": row["kind"], "path": path,
                     **module.complete(key, scanned), "binding_probe_matches_snapshot": True,
                     "binding_probe_status": "present"}]}
+        if legacy_census:
+            metadata["custody"].pop("variant_source")
+            metadata["admission_roots"][0]["journal"].pop("owner_refs_by_variant")
         with patch.object(module, "git", return_value="a" * 40):
             manifest = module.finish_manifest(metadata, emitted)
         for payload in emitted:
@@ -544,7 +621,7 @@ class SyntheticReceiptTests(unittest.TestCase):
                  patch.object(repair, "ROOT", repo), patch.object(repair, "CORPUS", corpus), \
                  patch.object(repair, "load_generator", return_value=fleet), \
                  contextlib.redirect_stdout(io.StringIO()):
-                original = self.fixture(fleet, pin, '{"pid":1234567,"proofTier":"full"}')
+                original = self.fixture(fleet, pin, '{"pid":1234567,"proofTier":"full"}', legacy_census=True)
                 git("init", "-q")
                 git("add", ".")
                 git("commit", "-qm", "fixture: capture original pin")
@@ -579,6 +656,7 @@ class SyntheticReceiptTests(unittest.TestCase):
                 self.assertEqual(replay["source_manifest_sha256"], fleet.sha256(original))
                 self.assertEqual(replay["changed_raw_payloads"], 1)
                 self.assertEqual(replay["finding"], "CSF-013")
+                self.assertTrue(replay["custody_census_migration"]["legacy"])
                 with self.assertRaisesRegex(SystemExit, "no matching committed provenance"):
                     repair.verify_generator_provenance(fleet, "0" * 64)
 

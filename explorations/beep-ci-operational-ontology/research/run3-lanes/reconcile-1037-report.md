@@ -363,3 +363,162 @@ It has not been created because the actual tree still has the lineage test
 error and the brief's missing-ruling/count requirements need clarification.
 The proposed patch and complete verification receipts remain under the ignored
 `.beep/reconcile-1037/` directory for continuation in this same worktree.
+
+## Review fixes, round 2 (2026-09-09)
+
+All seven findings are addressed under the round-2 brief and its clarifications.
+The earlier pending questions in this report are superseded: Ruling 22 applies,
+live capture deltas are accepted, and the lineage patch is already committed.
+This lane commits locally on `ontology-run3-stage-b-fixes`; Fable retains PR
+review and publication. No push, PR operation, or ratification is part of this work.
+
+| Finding | Verdict, change, and regression evidence |
+| --- | --- |
+| C1 | Confirmed fixed. Both suites retain `test_file_uri_host_roots_preserve_scheme_and_reject_raw_residue`, covering URI redaction, scanning, and idempotence. |
+| C2 | Fixed. Historical security replay explicitly records `custody.census_migration.legacy: true` and the same migration in its security receipt. Such captures predate payload-bound variants, so their historical variant tallies are not asserted as byte-derived. Total surrogate counts still verify. Both committed-history tests replay a source receipt missing `owner_refs_by_variant` and payloads missing `ownerRefVariant`, including the `--source-ref` path. |
+| C3 | Fixed. Each refreshed manifest records capture HEAD (`corpus_commit`), its tree (`corpus_tree`), and merge-base with `origin/main` (`corpus_base`). Replay resolves repository file/line citations in the current checkout and validates recorded anchors without reading the capture commit. Both suites exercise an unavailable capture SHA and reject missing files, wrong lines, and wrong anchors. |
+| C4 | Fixed. The inherited numeric rule only handled `pid`; the metadata rule rejected some variants without rewriting serialized values. Both generators now share `PROCESS_MEMBER_PATTERN` between structural detection and `PID_IN_TEXT`, with `redact_pid_match` preserving punctuation and escaping. Both suites cover numeric and quoted variant values through four escaping depths, single quotes, bare assignments, parseability, residue rejection, and idempotence. |
+| C5 | Fixed. Identifier tokens replace normalized suffix matching: exact pid/ppid, camel Pid boundaries, separated pid tokens, corresponding start tokens, and the existing processId protection. `rapid`, `cupid`, `lipid`, `stepId`, and `failedStepId` survive redaction/projection. Both suites retain source-derived schema oracles and cover owner, attached, legacy-lock, and Claude identities. |
+| C6 | Fixed. Every synthetic input must retain every observed row with zero undecodable exclusions. Capture and replay enforce the rule. The malformed contender journal regression uses `{bad json` and proves no synthetic pin is emitted. |
+| C7 | Fixed. Every minted surrogate carries object-local `ownerRefVariant` with pid_pair, ownerpid, attachedpid, or weak. Replay recomputes per-source variant counts and the aggregate from raw payloads and compares the receipts. Both suites test payload binding; Stage B additionally rejects a coordinated per-source/aggregate reassignment with valid byte totals. |
+
+The shared matcher, replacement callback, custody census/migration helpers, and
+citation functions have identical syntax trees in Stage A and Stage B. The
+custody salt, precedence, and ownerRef hash inputs remain the existing capture
+contract. `weak` names the fallback identity variant; missing start values also
+retain their separate weaker-reference count. Count labels now end in `_count`
+or use `owner_refs_without_start`, avoiding process-token syntax. Historical
+replay migrates those old count labels explicitly.
+
+The source-derived oracle covers RunScope.schemas.ts:126, AttemptJournal.ts:57-58,
+AttemptTerminationJournal.ts:125-126, AdmissionJournal.ts, and
+QualityScheduler.schemas.ts. It also checks Provenance.ts:1134 (`claudePid`) and
+AdmissionJournal.ts:777 (`legacyLockOwnerPid`, a parser symbol rather than a schema field).
+
+### Capture provenance convention
+
+All three refreshed pins record:
+
+```text
+corpus_commit: 34aa58b96bf06b7d7681165dd6cf84cd6b668365
+corpus_tree:   da556e0526c1f412c85ef6e91462db5a5a98a47e
+corpus_base:   22063e7b6dbb6e63adcf0b080b397fcb350712b7
+```
+
+The tree above belongs to capture HEAD, as required by `HEAD^{tree}`; the final
+generator is identified separately by its self-pinned digest below. This is not
+a claim that the final pin bytes were already present in capture HEAD. The
+captured source-file SHA remains historical provenance; replay checks the
+current file, line, and recorded anchor, allowing unrelated later file edits.
+Stage A now records anchors as Stage B already did. Historical Stage A citations
+without an anchor still require an existing current file and in-range line.
+Angle-bracket fleet/export descriptors identify observed inputs rather than
+repository code. The S6 POLICY adoption opportunity is recorded in
+`research/OPPORTUNITIES.md`; no ruling or policy ratification was authored.
+
+### Final captures and hashes
+
+Each population was captured once under the final generators. Stage B used
+`--refresh all --synthetic-root ~/.cache/beep/ciops-synthetic-root`, avoiding
+a temporary check against an old sibling pin. The producer export was read
+without mutation; READY, producer digest, and both termination joins pass.
+
+| Pin | Capture start UTC | Capture finish UTC |
+| --- | --- | --- |
+| run3-fleet | 2026-09-09T07:29:26.731Z | 2026-09-09T07:29:35.472Z |
+| run3b-fleet | 2026-09-09T07:30:06.129Z | 2026-09-09T07:30:14.138Z |
+| run3b-synthetic | 2026-09-09T07:30:38.422Z | 2026-09-09T07:30:38.510Z |
+
+| Pin | Payloads | All files | Events | Payload bytes | All bytes |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| run2-fleet | 1588 | 1589 | 6213 | 12679246 | 13317275 |
+| run3-checkout-identity | 216 | 217 | 108 | 694899 | 894958 |
+| run3-fleet | 1918 | 1919 | 7931 | 16133003 | 18932716 |
+| run3b-fleet | 734 | 735 | 7339 | 14573775 | 15897847 |
+| run3b-synthetic | 8 | 9 | 10 | 6953 | 42793 |
+
+| Pin | Generator SHA-256 | Manifest SHA-256 |
+| --- | --- | --- |
+| run2-fleet | `d1f1d0dad1561e167bd169ce75c51928848262515f5124f0c95dcee9a6c882af` | `15776b69b2af00fe34cc9a6d06ad7523861736dc209802a9e106ac39b891b77f` |
+| run3-checkout-identity | `322bddb51a8e923157eacec946f3bc430542f4687fc7851750922e07f581772e` | `0cf5e1066e0dcf3e4690ea222a77dec2f3103ac73e65afcdcae891dc32c75eac` |
+| run3-fleet | `08027618ad32e3ac23c26d147a097325b962751b767f706e86560724e92e9394` | `ab546771916784845f07e486756cc21eeb90fdee2b229dad36da922f5eb98209` |
+| run3b-fleet | `980d50e290a211e0238dded4aa85e4e99405cf8bbcc7f44509ef7d775bd3edc9` | `51528694b8c301b0df4d756ca2ef027f923d0718473ff0984a444ae4544dda1b` |
+| run3b-synthetic | `980d50e290a211e0238dded4aa85e4e99405cf8bbcc7f44509ef7d775bd3edc9` | `ec3e7627bd9fbe8553958a94ce3968b676a67e2e33f9fc942fb8455371aaf726` |
+
+Whole-tree hashes include the manifest, using the length-prefixed, sorted
+POSIX-name/file-byte algorithm documented earlier in this report.
+
+| Pin | Whole-tree SHA-256 |
+| --- | --- |
+| run2-fleet | `d6290ad5311f411ac8b77b4ad93a90bd359b239e444e784b9b47c61fe1aecd3b` |
+| run3-checkout-identity | `88bec9ddde3f4984bf2be774b62dc6edd7214b4700f98087ab8229048b268387` |
+| run3-fleet | `df7b95a9fbf0f514300f34e6481f368cf9221bc11e7bdf6094d8b44cb9831dc2` |
+| run3b-fleet | `85b0830b403db48c826c907340f3ef3e4117750ba118577601b10322d084a536` |
+| run3b-synthetic | `c307338c165142d36036e8703233f860b953064d49cb5bd2d9559ab4ebf5944d` |
+
+Both organic captures observed 22 clones and 73 linked worktrees (95 checkouts).
+These are interval observations. Compared with the preceding captures, Stage A
+has six fewer payloads and 18 more events; Stage B fleet has eight fewer payloads
+and 16 more events. The synthetic ten-event scenario is unchanged; its payload
+bytes increase from 6575 to 6953 because the custody variant is now persisted.
+
+| Population | Previous failure pairs | Fresh raw pairs | Fresh projected pairs |
+| --- | ---: | ---: | ---: |
+| run3-fleet | 1864 | 1865 | 1865 |
+| run3b-fleet | 1754 | 1755 | 1755 |
+| run3b-synthetic | 0 | 0 | 0 |
+
+Every raw `failedStepId` has `failureKind` in the same object. The organic
+increases are accepted live traffic; rows were not removed to manufacture old
+counts. Proof-ledger issuance remains re-parked to run 4.
+
+| Population | pid_pair | ownerpid | attachedpid | weak | Total |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| run3-fleet | 319 | 247 | 2 | 0 | 568 |
+| run3b-fleet | 319 | 247 | 2 | 0 | 568 |
+| run3b-synthetic | 7 | 0 | 0 | 0 | 7 |
+
+### Verification and handoff
+
+- All five pins pass ordinary verification through their four generator CLIs.
+- All three refreshed pins pass corruption cycles 0 -> 1 -> 0 with exact
+  whole-tree restoration. Captures and corruption cycles ran serially.
+- The three refreshed pins have zero structural process-member residue,
+  unredacted serialized process values, literal variant matches, quoted/escaped
+  numeric PID matches, file-URI residue, host paths, UID residue, hostnames, or
+  hostname digests in names and contents.
+- Run-2 and checkout identity pass their unchanged scanners. Run-2 retains its
+  two manifest rule mentions and inherited broader diagnostics (612 host/UID
+  and 313 hostname/hash matches); those older diagnostics are not claimed empty.
+- Packet validator: 0 blockers, 0 warnings; 26 CQs and 25 SPARQL files parsed.
+- CQ suite: 0 failures across 25 seed tests and 20 fixtures. This does not
+  expand golden antecedent coverage or ratify run 3.
+- DECISIONS.md, run2-fleet, run3-checkout-identity, and their generators remain
+  byte-identical to the starting HEAD. No workspace package was edited.
+  Package verification is not applicable; this is the specified corpus/packet
+  proof, not full Yeet or hosted PR acceptance.
+
+The complete generator suites pass: **73 tests in 52.964 seconds**, with all
+34 Stage A/shared and 29 Stage B parent tests retained, plus 10 new tests.
+The detached committed-head proof and post-commit knowledge-reference check run
+after this commit; their exact-HEAD receipts are retained in the local directory
+below and reported in the lane handoff.
+Local command logs and machine-readable checks are in the ignored
+`.beep/review-fixes-2/` receipt directory.
+
+```sh
+packet=explorations/beep-ci-operational-ontology
+corpus="$packet/ontology/extraction/s4/beep-ci-ops/corpus"
+export UV_CACHE_DIR=~/.cache/beep/uv-cache
+uv run --offline --with pyyaml python "$corpus/etl_run3_fleet_corpus.py" --refresh
+uv run --offline --with pyyaml python "$corpus/etl_run3b_fleet_corpus.py" \
+  --refresh all --synthetic-root ~/.cache/beep/ciops-synthetic-root
+uv run --offline --with pyyaml python "$corpus/etl_fleet_corpus.py"
+uv run --offline --with pyyaml python "$corpus/etl_run3_checkout_identity.py"
+uv run --offline --with pyyaml python "$corpus/etl_run3_fleet_corpus.py"
+uv run --offline --with pyyaml python "$corpus/etl_run3b_fleet_corpus.py"
+uv run --offline --with pyyaml python -m unittest discover -s "$corpus" -p 'test_run3*.py'
+uv run --offline --with pyyaml,rdflib python "$packet/research/scripts/validate_packet.py"
+uv run --offline --with pyoxigraph python "$packet/research/scripts/run_cq_suite.py"
+bun run beep knowledge refs --check
+```

@@ -55,32 +55,29 @@ def fleet_root(checkout: Path) -> Path:
 
 
 FLEET_ROOT = fleet_root(REPO_ROOT)
-# String leaves may contain JSON serialized through several escaping layers.
+# Identifier tokens, shared by structural keys and serialized string members.
+PROCESS_MEMBER_PATTERN = (
+    r"(?:(?i:pid|ppid|process[_-]?id)"
+    r"|[A-Za-z0-9_-]*[a-z0-9]Pid|[A-Za-z0-9_-]+[_-](?i:pid)"
+    r"|(?:(?:[A-Za-z0-9_-]+[_-])?(?:procStart|processStart)|[A-Za-z0-9_-]*[a-z0-9](?:ProcStart|ProcessStart))(?:[A-Z][A-Za-z0-9]*)?"
+    r"|(?i:(?:[a-z0-9_-]+[_-])?(?:proc|process)[_-]start(?:[_-][a-z0-9]+)*))"
+)
+PROCESS_MEMBER = re.compile(PROCESS_MEMBER_PATTERN)
+# Atomic whitespace prevents retries over long nonmatching diagnostic messages.
 PID_IN_TEXT = re.compile(
-    r"""(?P<prefix>\bpid(?P<key_quote>\\*["'])?(?:\s|\\+[nrt])*(?:[=:](?:\s|\\+[nrt])*)?(?P<value_quote>\\*["'])?)[0-9]+""",
-    re.IGNORECASE,
+    r"(?<![A-Za-z0-9_-])(?P<member>" + PROCESS_MEMBER_PATTERN + r")"
+    r"""(?P<prefix>(?>(?P<key_quote>\\*["'])?(?>(?:\s|\\+[nrt])*)(?P<assignment>[=:](?>(?:\s|\\+[nrt])*))?(?P<value_quote>\\*["'])?))"""
+    r"""(?P<value>(?(value_quote)(?:(?!(?P=value_quote))[^\r\n])+(?=(?P=value_quote))|(?(assignment)[^\s,;:{}\[\]\\"'=]+|[0-9]+)))"""
 )
-PROCESS_METADATA_IN_TEXT = re.compile(
-    r"""\b(?:attached[_-]*pid|owner[_-]*proc[_-]*start)(?:\\*["'])?(?:\s|\\+[nrt])*[:=]""",
-    re.IGNORECASE,
-)
+# Compatibility name for diagnostics; only unredacted values count as residue.
+PROCESS_METADATA_IN_TEXT = PID_IN_TEXT
 TIMESTAMP_KEY = re.compile(r"(?:^ts$|AtMillis$|At$|TimestampMillis$|Timestamp$)")
 PROPERTY_KEY = re.compile(r"[A-Za-z0-9_]+")
 PROPERTY_RECORD_COMMENT = re.compile(r"# record (0|[1-9][0-9]*)")
 # A preceding slash is a boundary only when it follows slash or colon (URI authority).
 PATH_LEFT_BOUNDARY = r"(?:(?<![A-Za-z0-9_.~/-])|(?<=[/:]/))"
 PATH_RIGHT_BOUNDARY = r"(?=/|$|[\s\"'=,:;)\]])"
-# Execution step identifiers, not process identities:
-# packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:592 (failedStepId)
-# packages/tooling/tool/cli/src/commands/Yeet/internal/ProofState.ts:51 (stepId)
-# packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts:407 (stepId)
-# Other execution joins do not match the process rule and need no exception:
-# Verdict.ts:580-581 and AttemptJournal.ts:50-51 (runId, attemptId),
-# Verdict.ts:152 (lane id), RepoRun.models.ts:185 (taskId), :309/:344 (wave/step id).
-# All three Yeet files above live in packages/tooling/tool/cli/src/commands/Yeet/internal/.
-PROCESS_MEMBER_ALLOWLIST: frozenset[str] = frozenset({"failedstepid", "stepid"})
-# Census labels are counts, not PID values; keep them outside free-text PID syntax.
-OWNER_VARIANTS = ("pid_pair", "ownerpid", "attached_identity", "other")
+OWNER_VARIANTS = ("pid_pair", "ownerpid", "attachedpid", "weak")
 JSON_VALUE_BYTES = (
     rb'(?:"(?:\\.|[^"\\])*"|-?(?:0|[1-9]\d*)(?:\.\d+)?'
     rb'(?:[eE][+-]?\d+)?|true|false|null)'
@@ -195,9 +192,11 @@ def host_prefixes() -> list[tuple[str, str]]:
 
 
 def redact_pid_match(match: re.Match[str]) -> str:
-    """Preserve JSON punctuation and escaping while removing only PID digits."""
+    """Preserve JSON punctuation and escaping while replacing process scalar values."""
+    if match["value"] in ("<redacted>", "null"):
+        return match[0]
     replacement = "null" if match["key_quote"] and not match["value_quote"] else "<redacted>"
-    return match["prefix"] + replacement
+    return match["member"] + match["prefix"] + replacement
 
 
 def redact_string(value: str, aliases: dict[str, str] | None = None) -> str:
@@ -224,11 +223,69 @@ def normalized_member(key: str) -> str:
 
 
 def process_member(key: str) -> bool:
-    normalized = normalized_member(key)
-    return normalized not in PROCESS_MEMBER_ALLOWLIST and (
-        normalized.endswith("pid") or "procstart" in normalized or "processstart" in normalized
-        or normalized == "processid"  # Preserve the older generator's explicit protection.
-    )
+    return PROCESS_MEMBER.fullmatch(key) is not None
+
+
+def owner_ref_census(value: JsonValue, legacy: bool = False) -> collections.Counter:
+    """Count custody variants from object-local pinned bytes, including nested claims."""
+    result = collections.Counter()
+    if isinstance(value, dict):
+        if "ownerRef" in value:
+            if not isinstance(value["ownerRef"], str) or not re.fullmatch(r"[0-9a-f]{12}", value["ownerRef"]):
+                fail("invalid owner reference shape")
+            variant = value.get("ownerRefVariant")
+            if not legacy and variant not in OWNER_VARIANTS:
+                fail("missing or invalid owner reference variant")
+            result[variant if variant in OWNER_VARIANTS else "weak"] += 1
+        elif "ownerRefVariant" in value:
+            fail("owner reference variant without surrogate")
+        for child in value.values():
+            result.update(owner_ref_census(child, legacy))
+    elif isinstance(value, list):
+        for child in value:
+            result.update(owner_ref_census(child, legacy))
+    return result
+
+
+def migrate_custody_census(manifest: dict[str, Any]) -> dict[str, Any] | None:
+    """Mark historical security replays whose variants cannot be recovered from bytes."""
+    if manifest.get("custody", {}).get("variant_source") == "ownerRefVariant":
+        return None
+    def migrate_counts(value: Any) -> None:
+        if isinstance(value, dict):
+            counts = value.get("redaction_counts")
+            if isinstance(counts, dict):
+                for key in list(counts):
+                    if key == "owner_refs_without_proc_start":
+                        counts["owner_refs_without_start"] = counts.pop(key)
+                    elif key.startswith("dropped_") and not key.endswith("_count"):
+                        counts["dropped_member_" + key.removeprefix("dropped_") + "_count"] = counts.pop(key)
+            for child in value.values():
+                migrate_counts(child)
+        elif isinstance(value, list):
+            for child in value:
+                migrate_counts(child)
+    migrate_counts(manifest)
+    migration = {"legacy": True, "reason": "source capture predates payload-bound custody variants"}
+    manifest.setdefault("custody", {})["census_migration"] = migration
+    return migration
+
+
+def verify_owner_census(receipt: dict[str, Any], rows: list[JsonValue], legacy: bool) -> collections.Counter:
+    counts = receipt.get("redaction_counts", {})
+    variants = collections.Counter(dict.fromkeys(OWNER_VARIANTS, 0))
+    variants.update(owner_ref_census(rows, legacy))
+    total = sum(variants.values())
+    if counts.get("owner_refs", 0) != total:
+        fail("owner reference census differs")
+    if not legacy:
+        recorded = receipt.get("owner_refs_by_variant")
+        if (not isinstance(recorded, dict) or any(type(n) is not int or n < 0 for n in recorded.values())
+                or recorded != dict(variants)):
+            fail("owner reference variant accounting differs from pinned bytes")
+    if not 0 <= counts.get("owner_refs_without_start", 0) <= total:
+        fail("weaker owner reference accounting differs")
+    return variants
 
 
 def guard_origin(value: str) -> None:
@@ -254,7 +311,7 @@ def redact(value: JsonValue, salt: bytes | None, counts: collections.Counter,
     if salt is not None and len(identities) != sum(process_member(key) for key in value):
         fail("ambiguous normalized process identity members")
     if identities and salt is not None:
-        if "ownerRef" in value:
+        if "ownerRef" in value or "ownerRefVariant" in value:
             fail("source ownerRef collides with capture custody surrogate")
         variant = next((key for key in ("pid", "ownerpid", "attachedpid") if key in identities), "other")
         if variant == "other":
@@ -276,12 +333,13 @@ def redact(value: JsonValue, salt: bytes | None, counts: collections.Counter,
         # captureSalt is the hexadecimal representation of 32 random bytes.
         result["ownerRef"] = sha256(f"{owner}:{start}:{salt.hex()}".encode())[:12]
         counts["owner_refs"] += 1
-        counts["owner_refs_variant_" + {"pid": "pid_pair", "attachedpid": "attached_identity"}.get(variant, variant)] += 1
+        result["ownerRefVariant"] = {"pid": "pid_pair", "other": "weak"}.get(variant, variant)
+        counts["owner_refs_variant_" + result["ownerRefVariant"]] += 1
         if start == "<absent>":
-            counts["owner_refs_without_proc_start"] += 1
+            counts["owner_refs_without_start"] += 1
     for key, child in value.items():
         if process_member(key):
-            counts["dropped_" + normalized_member(key)] += 1
+            counts["dropped_member_" + normalized_member(key) + "_count"] += 1
             continue
         if preserve_origins and key in {"originUrl", "origin_url"}:
             if not isinstance(child, str):
@@ -506,9 +564,7 @@ def scan_output_bytes(files: list[tuple[str, bytes]]) -> None:
         properties = [match[1].decode() for match in re.finditer(rb"(?m)^[ \t]*([^\s=]+)[ \t]*=", data)]
         if any(process_member(key) for key in members + properties):
             fail("residue scan failed: process identity member")
-        if PROCESS_METADATA_IN_TEXT.search(combined.decode("utf-8")):
-            fail("residue scan failed: schema process metadata")
-        if PID_IN_TEXT.search(combined.decode("utf-8")):
+        if any(redact_pid_match(match) != match[0] for match in PID_IN_TEXT.finditer(combined.decode("utf-8"))):
             fail("residue scan failed: free-text process identifier")
         if b"ghp_" in combined or b"github_pat_" in combined:
             fail("residue scan failed: GitHub credential prefix")
@@ -552,6 +608,35 @@ def source_cite(file: str, needle: str) -> dict[str, Any]:
     if not matches:
         fail("source citation anchor missing: " + file)
     return {"file": file, "line": matches[0], "needle": needle, "sha256": sha256(content)}
+
+
+def verify_source_citations(manifest: dict[str, Any]) -> None:
+    """Resolve repository citations in the current checkout, without capture-commit Git reads."""
+    def visit(value: Any) -> None:
+        if isinstance(value, dict):
+            if "file" in value and "line" in value:
+                file, line = value["file"], value["line"]
+                # Angle-bracket descriptors name observed fleet/export inputs, not repository code.
+                if isinstance(file, str) and file.startswith("<"):
+                    return
+                relative = safe_relative_path(file)
+                target = REPO_ROOT / relative
+                if not target.resolve().is_relative_to(REPO_ROOT.resolve()) or not target.is_file():
+                    fail("source citation file missing from current tree")
+                content = target.read_bytes()
+                lines = content.decode("utf-8").splitlines()
+                if type(line) is not int or not 1 <= line <= len(lines):
+                    fail("source citation line missing from current tree")
+                needle = value.get("needle")
+                if needle is not None and (not isinstance(needle, str) or not needle or needle not in lines[line - 1]):
+                    fail("source citation anchor differs in current tree")
+                # The captured whole-file hash is provenance; unrelated later edits are allowed.
+            for child in value.values():
+                visit(child)
+        elif isinstance(value, list):
+            for child in value:
+                visit(child)
+    visit(manifest)
 
 
 def fact(value: Any, file: str, needle: str) -> dict[str, Any]:
@@ -623,7 +708,9 @@ def finish_manifest(metadata: dict[str, Any], emitted: list[Payload], population
         fail("duplicate emitted paths")
     manifest = {"schema_version": manifest_schema(population), "generated_by": SCRIPT.name,
                 "generator_sha256": sha256(SCRIPT.read_bytes()),
-                "corpus_commit": git(REPO_ROOT, "rev-parse", "HEAD"), **metadata,
+                "corpus_commit": git(REPO_ROOT, "rev-parse", "HEAD"),
+                "corpus_tree": git(REPO_ROOT, "rev-parse", "HEAD^{tree}"),
+                "corpus_base": git(REPO_ROOT, "merge-base", "HEAD", "origin/main"), **metadata,
                 "checkout_path_encoding": "UTF-8 percent-encoded single component; checkout labels remain verbatim in receipts",
                 "projection_rules": [
                     "config_key_value channel: one .properties sibling for every raw payload",
@@ -635,7 +722,7 @@ def finish_manifest(metadata: dict[str, Any], emitted: list[Payload], population
                     "All families: longest host-root match at start, after a character outside ASCII alphanumeric, underscore, dot, tilde, slash and hyphen, or after a slash preceded by slash or colon; relative path continuations survive",
                     "fleet root is <fleet>; home is <home>; temp roots are <session-tmp> and <tmp>; runtime is <runtime>; proc is <proc>; shared memory is <shm>",
                     "Per-user systemd unit identifiers become <uid>; proc process-directory identifiers become <process>",
-                    "Process identity members dropped recursively; free-text pid numbers replaced",
+                    "Process identity members dropped recursively; serialized process scalar values replaced",
                     "Structural keys and non-process numbers, booleans, nulls retain their decoded values",
                     "Lock files and proof-locks are excluded; hostname and sha12(hostname) in string values become <host>; residue fails capture"],
                 "files": [{**entry.receipt, "bytes": len(entry.data), "sha256": sha256(entry.data)} for entry in emitted],
@@ -656,7 +743,7 @@ def finish_manifest(metadata: dict[str, Any], emitted: list[Payload], population
 
 
 def verify_output_tree(root: Path, population: str) -> dict[str, Any]:
-    """Verify pinned bytes only: no git, fleet scan, source reads, or salt creation."""
+    """Verify pinned bytes and current-tree citations; no Git, live fleet/export reads, or salt."""
     if root.is_symlink() or not root.is_dir():
         fail("pin is not a real directory")
     if any(path.is_symlink() for path in root.rglob("*")):
@@ -672,6 +759,7 @@ def verify_output_tree(root: Path, population: str) -> dict[str, Any]:
         fail("generator digest differs from pin; use --refresh deliberately")
     verify_fields(manifest, {"generated_by": SCRIPT.name, "stage": "B",
                   "provenance": "synthetic" if population == "synthetic" else "organic"}, "manifest identity")
+    verify_source_citations(manifest)
     receipts = manifest["files"]
     paths = [safe_relative_path(r["path"]).as_posix() for r in receipts]
     if paths != sorted(set(paths)):
@@ -850,6 +938,8 @@ def transform_source(data: bytes, kind: str, salt: bytes, ndjson: bool = True,
         rows.append(transformed)
         counts.update(row_counts)
         retained_lines.append(number)
+    if synthetic and len(rows) != observed:
+        fail("synthetic source has undecodable rows; every observed row must be retained")
     variants = {variant: counts.pop("owner_refs_variant_" + variant, 0) for variant in OWNER_VARIANTS}
     return rows, {"observed_rows": observed, "retained_rows": len(rows),
                   "retained_source_lines": retained_lines,
@@ -1255,10 +1345,10 @@ def capture(population: str, synthetic_root: Path | None = None) -> tuple[list[P
         "capture_instant_basis": "capture start; files read once over the recorded interval, not an atomic fleet snapshot",
         **scenario,
         "custody": {"rule": 'ownerRef = sha12(f"{pid}:{procStart}:{captureSalt}")',
-                    "member_rule": "remove underscore/hyphen and lowercase; ends with pid or contains procstart/processstart; legacy processid also protected",
-                    "non_identity_allowlist": sorted(PROCESS_MEMBER_ALLOWLIST),
+                    "member_rule": "identifier tokens: exact pid/ppid, camel Pid boundary, separated pid, start tokens and legacy processId",
+                    "variant_source": "ownerRefVariant",
                     "pair_precedence": ["pid/procstart", "ownerpid/ownerprocstart", "attachedpid/<absent>"],
-                    "other_identity_rule": "other variant uses sorted normalized identity-member JSON as the owner component; its first nonempty start member is the start, else <absent>",
+                    "other_identity_rule": "weak variant uses sorted normalized identity-member JSON as the owner component; its first nonempty start member is the start, else <absent>",
                     "owner_refs_by_variant": dict(custody_variants),
                     "capture_salt_representation": "hexadecimal encoding of 32 random bytes",
                     "salt_policy": "per-capture, unrecorded, unlinkable across captures",
@@ -1283,6 +1373,10 @@ def verify_census(manifest: dict[str, Any], raw: dict[str, list[JsonValue]]) -> 
     checked = set()
     custody_variants = collections.Counter(dict.fromkeys(OWNER_VARIANTS, 0))
 
+    legacy = manifest.get("custody", {}).get("census_migration", {}).get("legacy") is True
+    if legacy and ("security_resanitization" not in manifest or "variant_source" in manifest["custody"]):
+        fail("legacy custody census requires historical security replay")
+
     def check_source(receipt: dict[str, Any], kind: str) -> None:
         path = receipt.get("path")
         rows = raw.get(path, [])
@@ -1297,6 +1391,8 @@ def verify_census(manifest: dict[str, Any], raw: dict[str, list[JsonValue]]) -> 
         if "retained_rows" in receipt:
             verify_fields(receipt, {"retained_rows": len(rows), "events": event_census(rows)}, "source census")
             excluded = receipt["excluded_undecodable"]
+            if manifest["provenance"] == "synthetic" and (excluded != 0 or receipt["observed_rows"] != len(rows)):
+                fail("synthetic source has undecodable rows; every observed row must be retained")
             exclusions = receipt.get("excluded_by_reason", {})
             if (any(type(n) is not int or n < 0 for n in exclusions.values())
                     or excluded != sum(exclusions.values()) or receipt["observed_rows"] != len(rows) + excluded):
@@ -1305,24 +1401,7 @@ def verify_census(manifest: dict[str, Any], raw: dict[str, list[JsonValue]]) -> 
             if (len(lines) != len(rows) or any(type(n) is not int or n < 1 for n in lines)
                     or lines != sorted(set(lines))):
                 fail("retained source line accounting differs")
-            def owner_count(value: JsonValue) -> int:
-                if isinstance(value, dict):
-                    if "ownerRef" in value and (not isinstance(value["ownerRef"], str) or not re.fullmatch(r"[0-9a-f]{12}", value["ownerRef"])):
-                        fail("invalid owner reference shape")
-                    return int("ownerRef" in value) + sum(owner_count(v) for v in value.values())
-                if isinstance(value, list):
-                    return sum(owner_count(v) for v in value)
-                return 0
-            counts = receipt.get("redaction_counts", {})
-            if counts.get("owner_refs", 0) != owner_count(rows):
-                fail("owner reference census differs")
-            variants = receipt.get("owner_refs_by_variant", {})
-            if (set(variants) != set(OWNER_VARIANTS) or any(type(n) is not int or n < 0 for n in variants.values())
-                    or sum(variants.values()) != counts.get("owner_refs", 0)):
-                fail("owner reference variant accounting differs")
-            custody_variants.update(variants)
-            if not 0 <= counts.get("owner_refs_without_proc_start", 0) <= counts.get("owner_refs", 0):
-                fail("weaker owner reference accounting differs")
+            custody_variants.update(verify_owner_census(receipt, rows, legacy))
         ring = receipt.get("ring_window")
         if ring is not None:
             expected = {"observed_rows": receipt.get("observed_rows", 0)}
@@ -1362,7 +1441,8 @@ def verify_census(manifest: dict[str, Any], raw: dict[str, list[JsonValue]]) -> 
         check_source(receipt, "attempts")
     if checked != set(raw):
         fail("source census does not cover every raw payload exactly once")
-    verify_fields(manifest["custody"], {"owner_refs_by_variant": dict(custody_variants)}, "custody variant census")
+    if not legacy:
+        verify_fields(manifest["custody"], {"owner_refs_by_variant": dict(custody_variants)}, "custody variant census")
     census = loss_population(raw, labels)
     if manifest["loss_population"] != census:
         fail("loss-population census differs from pinned rows")

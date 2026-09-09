@@ -91,6 +91,76 @@ def tree_bytes(root):
 
 
 class RedactionTests(unittest.TestCase):
+    def test_identifier_tokens_preserve_ordinary_words_and_cover_process_names(self):
+        safe = {key: 1234 for key in ("rapid", "cupid", "lipid", "stepId", "failedStepId")}
+        private = {key: 5678 for key in ("pid", "ppid", "ownerPid", "attachedPid", "legacyLockOwnerPid", "claudePid", "ownerProcStart", "xPid", "y_pid", "z-pid")}
+        for key in safe:
+            self.assertFalse(etl.process_member(key), key)
+        for key in private:
+            self.assertTrue(etl.process_member(key), key)
+        result = etl.redact({**safe, **private}, b"a" * 32, collections.Counter())
+        self.assertEqual({key: result[key] for key in safe}, safe)
+        self.assertFalse(set(private) & set(result))
+        etl.scan_output_bytes([("safe.json", etl.encode_json(result)),
+                                  ("safe.properties", etl.encode_properties_projection([result]))])
+
+    def test_serialized_process_variants_are_redacted_at_every_escape_depth(self):
+        private = {"ownerPid": 1234, "ownerProcStart": "start-fixture", "attachedPid": 5678,
+                   "legacyLockOwnerPid": "9012", "claudePid": 3456, "ppid": 6789,
+                   "futureProcessStartTicks": "ticks-fixture", "rapid": 42, "failedStepId": "check"}
+        for depth in range(4):
+            message = json.dumps(private)
+            for _ in range(depth):
+                message = json.dumps({"message": message})
+            with self.assertRaises(SystemExit):
+                etl.scan_output_bytes([("raw.json", etl.encode_json({"message": message}))])
+            redacted = etl.redact_string(message)
+            self.assertEqual(etl.redact_string(redacted), redacted)
+            etl.scan_output_bytes([("redacted.json", etl.encode_json({"message": redacted})),
+                                      ("redacted.properties", etl.encode_properties_projection([{"message": redacted}]))])
+            decoded = redacted
+            for _ in range(depth):
+                decoded = json.loads(decoded)["message"]
+            decoded = json.loads(decoded)
+            self.assertEqual(decoded, {key: value if key in ("rapid", "failedStepId") else
+                                      "<redacted>" if isinstance(value, str) else None
+                                      for key, value in private.items()})
+        for key in private:
+            if key in ("rapid", "failedStepId"):
+                continue
+            message = "{'" + key + "': 'start-fixture'}"
+            self.assertNotIn("start-fixture", etl.redact_string(message))
+            bare = key + "=start-fixture"
+            self.assertNotIn("start-fixture", etl.redact_string(bare))
+            with self.assertRaises(SystemExit):
+                etl.scan_output_bytes([("fixture", bare.encode())])
+
+    def test_custody_variants_are_bound_to_payload_bytes(self):
+        row = {"pid": 123, "procStart": "start", "nested": {"ownerPid": 456, "ownerProcStart": "start"},
+               "scope": {"attachedPid": 789}, "future": {"claudePid": 321}}
+        redacted = etl.redact(row, b"a" * 32, collections.Counter())
+        variants = etl.owner_ref_census(redacted)
+        self.assertEqual(dict(variants), dict.fromkeys(etl.OWNER_VARIANTS, 1))
+        receipt = {"owner_refs_by_variant": dict(variants), "redaction_counts": {"owner_refs": 4}}
+        etl.verify_owner_census(receipt, [redacted], False)
+        receipt["owner_refs_by_variant"].update(pid_pair=0, ownerpid=2)
+        with self.assertRaisesRegex(SystemExit, "variant accounting differs from pinned bytes"):
+            etl.verify_owner_census(receipt, [redacted], False)
+        del redacted["ownerRefVariant"]
+        with self.assertRaisesRegex(SystemExit, "missing or invalid"):
+            etl.owner_ref_census(redacted)
+
+    def test_current_tree_citations_survive_missing_capture_commit(self):
+        file = etl.REPO_RUN + "AdmissionJournal.ts"
+        citation = etl.source_cite(file, 'export class AdmissionProtocol extends')
+        manifest = {"corpus_commit": "0" * 40, "source": citation}
+        with patch.object(etl.subprocess, "run", side_effect=AssertionError("historical git read")):
+            etl.verify_source_citations(manifest)
+            for changed in ({"line": 0}, {"line": citation["line"] + 1},
+                            {"file": "missing-fixture.ts"}, {"needle": "missing fixture anchor"}):
+                with self.assertRaises(SystemExit):
+                    etl.verify_source_citations({"source": {**citation, **changed}})
+
     def test_fleet_root_covers_clone_and_sibling_worktree_layouts(self):
         root = Path("/workspace/projects")
         self.assertEqual(etl.fleet_root(root / "beep-effect8"), root)
@@ -106,8 +176,8 @@ class RedactionTests(unittest.TestCase):
         actual = rows[0]
         self.assertEqual(actual["ownerRef"], actual["attempt"]["ownerRef"])
         self.assertEqual(actual["runScope"]["ownerRef"], etl.sha256(f"1234:<absent>:{salt.hex()}".encode())[:12])
-        self.assertEqual(receipt["owner_refs_by_variant"], {"pid_pair": 1, "ownerpid": 1, "attached_identity": 1, "other": 0})
-        self.assertEqual(receipt["redaction_counts"]["owner_refs_without_proc_start"], 1)
+        self.assertEqual(receipt["owner_refs_by_variant"], {"pid_pair": 1, "ownerpid": 1, "attachedpid": 1, "weak": 0})
+        self.assertEqual(receipt["redaction_counts"]["owner_refs_without_start"], 1)
         etl.scan_output_bytes([("lease.json", etl.encode_json(actual)),
                                ("lease.properties", etl.encode_properties_projection(rows))])
         attempt = {"schemaVersion": etl.ATTEMPT_SCHEMA, "_tag": "attempt-started", "attemptId": "fixture",
@@ -121,12 +191,12 @@ class RedactionTests(unittest.TestCase):
                         {"parentPid": 1234}, {"futureProcessStartTicks": 42}, {"processId": 1234}):
             with self.subTest(keys=list(payload)):
                 actual = etl.redact(payload, b"a" * 32, collections.Counter())
-                self.assertEqual(list(actual), ["ownerRef"])
+                self.assertEqual(list(actual), ["ownerRef", "ownerRefVariant"])
                 self.assertEqual(etl.eligible_property_pairs(payload), [])
         for missing in (None, ""):
             counts = collections.Counter()
             etl.redact({"ownerPid": 1234, "ownerProcStart": missing}, b"a" * 32, counts)
-            self.assertEqual(counts["owner_refs_without_proc_start"], 1)
+            self.assertEqual(counts["owner_refs_without_start"], 1)
         with self.assertRaisesRegex(SystemExit, "ambiguous"):
             etl.redact({"ownerPid": 1, "owner_pid": 2}, b"a" * 32, collections.Counter())
 
@@ -143,7 +213,8 @@ class RedactionTests(unittest.TestCase):
                 self.assertTrue(etl.process_member(key), (file, key))
             observed.update(identities)
         self.assertTrue({"attachedPid", "ownerPid", "ownerProcStart", "pid", "procStart"} <= observed)
-        self.assertEqual(etl.PROCESS_MEMBER_ALLOWLIST, {"failedstepid", "stepid"})
+        self.assertRegex((etl.REPO_ROOT / etl.YEET / "Provenance.ts").read_text(), r"claudePid: S\.")
+        self.assertIn("const legacyLockOwnerPid =", (etl.REPO_ROOT / etl.REPO_RUN / "AdmissionJournal.ts").read_text())
 
     def test_deployed_execution_join_keys_survive_redaction_and_projection(self):
         # Enumerate the deployed verdict/attempt, retained journal, and execution schemas.
@@ -190,7 +261,7 @@ class RedactionTests(unittest.TestCase):
                         etl.scan_output_bytes([("fixture", data)])
         with self.assertRaisesRegex(SystemExit, "process identity member"):
             etl.scan_output_bytes([("escaped.json", b'{"owner\\u0050id":42}')])
-        benign = {"description": 'rapid cupid lipid attachedPid ownerProcStart "ownerPid": word',
+        benign = {"description": 'rapid cupid lipid attachedPid ownerProcStart ownerPid word',
                   "words": ["pid", "ownerPid", "ownerProcStart"], "rapidly": "safe"}
         self.assertEqual(etl.redact(benign, b"a" * 32, collections.Counter()), benign)
         etl.scan_output_bytes([("safe.json", etl.encode_json(benign)),
@@ -251,7 +322,7 @@ class RedactionTests(unittest.TestCase):
         self.assertEqual(actual["lease"]["ownerRef"], etl.sha256(f"4242:start:{(b'a' * 32).hex()}".encode())[:12])
         self.assertNotEqual(actual["lease"]["ownerRef"], actual["ticket"]["ownerRef"])
         self.assertEqual(receipt["redaction_counts"]["owner_refs"], 3)
-        self.assertEqual(receipt["redaction_counts"]["owner_refs_without_proc_start"], 1)
+        self.assertEqual(receipt["redaction_counts"]["owner_refs_without_start"], 1)
         self.assertEqual(actual["ticket"]["n"], 5)
         self.assertIs(actual["ticket"]["flag"], False)
         self.assertIsNone(actual["ticket"]["null"])
@@ -358,7 +429,7 @@ class PinContractTests(unittest.TestCase):
         self.patches.enter_context(patch.object(etl, "source_facts", return_value={}))
         self.patches.enter_context(patch.object(etl, "known_losses", return_value=[]))
         self.patches.enter_context(patch.object(etl, "join_keys", return_value={}))
-        self.patches.enter_context(patch.object(etl, "source_cite", return_value={"file": "fixture.md", "line": 1, "needle": "fixture", "sha256": "a" * 64}))
+        self.patches.enter_context(patch.object(etl, "source_cite", return_value=etl.source_cite(etl.REPO_RUN + "AdmissionJournal.ts", "export class AdmissionProtocol extends")))
         self.patches.enter_context(patch.object(etl, "git", return_value="a" * 40))
 
     def run_main(self, *args):
@@ -410,6 +481,25 @@ class PinContractTests(unittest.TestCase):
                     payloads = {raw.path: etl.encode_ndjson(rows),
                                 etl.projection_path(raw.path): etl.projected_bytes(rows, metadata["provenance"])}
                     emitted = [dataclasses.replace(e, data=payloads.get(e.path, e.data)) for e in emitted]
+                    def remove_variants(value):
+                        if isinstance(value, dict):
+                            value.pop("ownerRefVariant", None)
+                            for child in value.values():
+                                remove_variants(child)
+                        elif isinstance(value, list):
+                            for child in value:
+                                remove_variants(child)
+                    old_payloads = {}
+                    for entry in emitted:
+                        if entry.receipt["kind"] == etl.PROJECTION_KIND:
+                            continue
+                        old_rows = etl.decode_ndjson(entry.data, entry.path) if entry.path.endswith(".ndjson") else [etl.decode_json(entry.data, entry.path)]
+                        remove_variants(old_rows)
+                        old_payloads[entry.path] = etl.encode_ndjson(old_rows) if entry.path.endswith(".ndjson") else etl.encode_json(old_rows[0])
+                        old_payloads[etl.projection_path(entry.path)] = etl.projected_bytes(old_rows, metadata["provenance"])
+                    emitted = [dataclasses.replace(entry, data=old_payloads[entry.path]) for entry in emitted]
+                    metadata["custody"].pop("variant_source")
+                    metadata["admission_roots"][0]["journal"].pop("owner_refs_by_variant")
                     manifest = etl.finish_manifest(metadata, emitted, population)
                     for e in emitted:
                         destination = root / e.path
@@ -439,6 +529,8 @@ class PinContractTests(unittest.TestCase):
                     manifest = yaml.safe_load((root / etl.MANIFEST_NAME).read_bytes())
                     self.assertEqual(manifest["security_resanitization"]["source_manifest_sha256"], originals[population])
                     self.assertEqual(manifest["security_resanitization"]["changed_raw_payloads"], 1)
+                    self.assertTrue(manifest["custody"]["census_migration"]["legacy"])
+                    self.assertTrue(manifest["security_resanitization"]["custody_census_migration"]["legacy"])
                     self.assertEqual(manifest["provenance"], "organic" if population == "fleet" else "synthetic")
                     projection = (root / etl.projection_path(messages[population])).read_bytes()
                     self.assertEqual(projection, etl.projected_bytes(rows, manifest["provenance"]))
@@ -516,6 +608,22 @@ class PinContractTests(unittest.TestCase):
         journal.write_bytes(next((self.export / "checkouts/dead-lease").rglob("attempts.ndjson")).read_bytes())
         with self.assertRaisesRegex(SystemExit, "contender-a attempts receipt must be empty"):
             etl.capture("synthetic", self.export)
+
+    def test_malformed_synthetic_contender_journal_refuses_pin(self):
+        journal = next((self.export / "checkouts/contender-a").rglob("attempts.ndjson"))
+        journal.write_text("{bad json\n")
+        with self.assertRaisesRegex(SystemExit, "synthetic source has undecodable rows"):
+            self.run_main("--synthetic-root", self.export)
+        self.assertFalse(self.outputs["synthetic"].exists())
+
+    def test_coherent_variant_receipt_and_aggregate_rewrite_is_rejected(self):
+        emitted, metadata = etl.capture("synthetic", self.export)
+        for census in (metadata["admission_roots"][0]["journal"]["owner_refs_by_variant"],
+                       metadata["custody"]["owner_refs_by_variant"]):
+            census["pid_pair"] -= 1
+            census["ownerpid"] += 1
+        with self.assertRaisesRegex(SystemExit, "variant accounting differs from pinned bytes"):
+            etl.write_staged_capture(emitted, etl.finish_manifest(metadata, emitted, "synthetic"), self.outputs["synthetic"], "synthetic")
 
     def test_expected_mismatch_refuses_pin(self):
         scenario = copy.deepcopy(self.scenario)

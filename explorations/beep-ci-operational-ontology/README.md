@@ -21,12 +21,13 @@ the "bush" (`A_LETTER_FROM_THE_OTHER_SIDE_OF_THE_LOOP.md`).
 
 ## Next Open Question
 
-Reconciliation with #1037 is pending the missing Ruling 23, the narrow Stage A
-lineage exception in the main-owned repair script, and acceptance of documented
-live-capture failure-pair deltas. Step 0 and the merge are committed; three fresh
-pins pass ordinary verification and corruption/restore checks. The re-pin commit
-and committed-head handoff are still due. See
-[the current reconciliation report](./research/run3-lanes/reconcile-1037-report.md).
+Round-2 review fixes for PR #1040 are complete locally: identifier-token
+redaction, payload-bound custody variants, strict synthetic row retention,
+legacy replay migration, and current-tree citation checks. All three refreshed
+pins pass ordinary verification and corruption/restore checks. Fable reviews
+and publishes the committed handoff before run 3 proper. The brief clarifies
+that Ruling 22 applies, accepts live-count deltas, and confirms the lineage fix.
+See [the round-2 report](./research/run3-lanes/reconcile-1037-report.md#review-fixes-round-2-2026-09-09).
 
 CSF-012 in [PR #1032](https://github.com/beep-effect/beep-effect/pull/1032)
 corrects PID redaction in the saved run-2 and run-3 corpus pins. The security
@@ -74,7 +75,7 @@ question now asks for the SeatRequest sequence under its governing
 `AdmissionProjectionSpecification`, with the step's literal `hasScopeTag` (a distinct
 data property — the no-punning ruling keeps `hasScope` an object property), and the S6
 predicate registry regenerated to track it.
-**NEXT: settle the #1037 reconciliation gates, finish its committed-head proof, then Fable reviews and publishes before run 3 proper.**
+**NEXT: Fable reviews and publishes the round-2 committed handoff before run 3 proper.**
 Stage A PINNED 2026-09-08 in `run3-fleet/` and `run3-checkout-identity/`:
 existing admission journals, fleet attempts/verdicts, live granted/queued work,
 and one timestamped checkout inventory. The latest reconciled Ruling 22 fleet refresh covers 95 checkouts; the
@@ -513,3 +514,8 @@ graduation. Full plan with locked decisions: [`DECISIONS.md`](./DECISIONS.md).
 - 2026-09-08: recorded the operator's Astra/xhigh routing update in DECISIONS,
   this resume surface, and manifest timestamps where needed; retained the existing
   stage, lifecycle, open questions, and historical execution provenance.
+
+- 2026-09-09: PR #1040 round-2 fixes and three final captures completed locally;
+  custody counts now bind to payload variants, citations resolve in the current
+  tree, and the full corpus/packet verification is recorded in the reconciliation
+  report. Fable owns review and publication.
