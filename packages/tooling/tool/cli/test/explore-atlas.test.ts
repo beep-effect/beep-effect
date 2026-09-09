@@ -1,5 +1,6 @@
 import {
   buildExplorationProjection,
+  checkExplorationAtlas,
   explorationProjectionDriftPaths,
   writeExplorationAtlas,
 } from "@beep/repo-cli/commands/Explore";
@@ -15,11 +16,17 @@ import { NodeServices } from "@effect/platform-node";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
+import * as TestConsole from "effect/testing/TestConsole";
 import { describe, expect, it } from "vitest";
 import { permutedDirectoryReadsFileSystem } from "./support/CommandTest.ts";
 
 const encodeJson = UnknownFromJsonString.encodeUnknownSync;
-const testLayer = Layer.mergeAll(NodeServices.layer, PacketEventStoreLive.pipe(Layer.provideMerge(NodeServices.layer)));
+const testLayer = Layer.mergeAll(
+  NodeServices.layer,
+  PacketEventStoreLive.pipe(Layer.provideMerge(NodeServices.layer)),
+  TestConsole.layer
+);
 const PROJECTION_REPEAT_RUNS = 20;
 
 const provideTestLayer = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
@@ -47,6 +54,10 @@ Which question survives projection?
 
 - 2026-08-27: authored trail survives projection.
 `;
+
+const errorLines = Effect.fnUntraced(function* () {
+  return A.filter(yield* TestConsole.errorLines, P.isString);
+});
 
 const writePacket = Effect.fnUntraced(function* (root: string, slug: string, document: unknown, readmeContent: string) {
   const fs = yield* FileSystem.FileSystem;
@@ -294,6 +305,96 @@ Does this fail closed?
 
           expect(projection.issues[0]?.detail).toContain("malformed generated markers");
           expect(projection.readmes).toEqual([]);
+          yield* fs.remove(root, { recursive: true });
+        })
+      )
+    ));
+
+  it("prints every underivable input on stderr before the silent reported exit", () =>
+    Effect.runPromise(
+      provideTestLayer(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const root = yield* fs.makeTempDirectory({ prefix: "beep-exploration-atlas-refusal-" });
+          yield* writePacket(
+            root,
+            "alpha",
+            manifest("alpha", "Alpha", "active", "research"),
+            readme("Alpha", "research", "active")
+          );
+          yield* writePacket(
+            root,
+            "renamed",
+            manifest("moved", "Moved", "active", "capture"),
+            readme("Moved", "capture", "active")
+          );
+          const manifestPath = path.join(root, "explorations", "renamed", "ops", "manifest.json");
+          const refusal = [
+            "[explore:atlas] 1 underivable projection input(s); repair the packet inputs, never explorations/ATLAS.md:",
+            `- ${manifestPath}: manifest slug is moved, not directory renamed`,
+          ];
+
+          const checkError = yield* checkExplorationAtlas(root).pipe(Effect.flip);
+          const writeError = yield* writeExplorationAtlas(root).pipe(Effect.flip);
+
+          const sentinel = {
+            _tag: "CliReportedExit",
+            exitCode: 1,
+            message:
+              "explore atlas: 1 underivable projection input(s); repair the packet inputs, never explorations/ATLAS.md.",
+          };
+          expect(checkError).toMatchObject(sentinel);
+          expect(writeError).toMatchObject(sentinel);
+          expect(yield* errorLines()).toEqual([...refusal, ...refusal]);
+          expect(yield* fs.exists(path.join(root, "explorations", "ATLAS.md"))).toBe(false);
+          yield* fs.remove(root, { recursive: true });
+        })
+      )
+    ));
+
+  it("names every drifting projection and the git-ignored Atlas before the silent reported exit", () =>
+    Effect.runPromise(
+      provideTestLayer(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const root = yield* fs.makeTempDirectory({ prefix: "beep-exploration-atlas-drift-" });
+          yield* writePacket(
+            root,
+            "alpha",
+            manifest("alpha", "Alpha", "active", "research"),
+            readme("Alpha", "research", "active")
+          );
+          const readmePath = path.join(root, "explorations", "alpha", "README.md");
+          const atlasPath = path.join(root, "explorations", "ATLAS.md");
+          const driftHeader =
+            "[explore:atlas] 1 generated projection(s) drift; run `bun run beep explore atlas --write`:";
+
+          const readmeDrift = yield* checkExplorationAtlas(root).pipe(Effect.flip);
+          yield* writeExplorationAtlas(root);
+          yield* fs.writeFileString(atlasPath, `${yield* fs.readFileString(atlasPath)}authored doctrine\n`);
+          const atlasDrift = yield* checkExplorationAtlas(root).pipe(Effect.flip);
+          yield* writeExplorationAtlas(root);
+          yield* checkExplorationAtlas(root);
+
+          const sentinel = {
+            _tag: "CliReportedExit",
+            exitCode: 1,
+            message: "explore atlas: 1 generated projection(s) drift; run `bun run beep explore atlas --write`.",
+          };
+          expect(readmeDrift).toMatchObject(sentinel);
+          expect(atlasDrift).toMatchObject(sentinel);
+          expect(yield* errorLines()).toEqual([
+            driftHeader,
+            `- ${readmePath}`,
+            driftHeader,
+            "- explorations/ATLAS.md",
+            "[explore:atlas] explorations/ATLAS.md is a git-ignored local projection: a stale copy fails only local checks, and the rewrite never appears in git diff.",
+          ]);
+          expect(A.filter(yield* TestConsole.logLines, P.isString)).toEqual([
+            "[explore:atlas] OK: D3 Atlas and README projections are current.",
+          ]);
           yield* fs.remove(root, { recursive: true });
         })
       )
