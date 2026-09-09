@@ -49,6 +49,19 @@ jobs:
             timeout_minutes: 60
             uses_turbo: "false"
             install_typos: "false"
+          # Quality-lane audit D12: pull requests prove the tsc emit + babel
+          # build affected-scoped with remote-cache read; trusted main pushes
+          # run unscoped and stay the only cache writer. The lane lives here
+          # rather than in check.yml because the beep-ec2-heavy runner group
+          # admits only heavy.yml@main and check.yml@main: check.yml calls
+          # this workflow at @main, so its jobs carry the main ref on pull
+          # requests, while a job declared in check.yml carries the PR ref
+          # and never receives a runner.
+          - id: build
+            name: Build
+            timeout_minutes: 40
+            uses_turbo: "true"
+            install_typos: "false"
     env:
       BEEP_DOCGEN_CONCURRENCY: ${{ matrix.docgen_concurrency || 3 }}
     steps:
@@ -202,7 +215,7 @@ jobs:
           shape_args+=(--summarize)
 
           case "${{ matrix.id }}" in
-            check|test-integration|coverage)
+            check|test-integration|coverage|build)
               run_lane ci lane "${{ matrix.id }}" "${shape_args[@]}"
               ;;
             lint-policy)

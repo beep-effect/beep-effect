@@ -47,6 +47,7 @@ const SECRET_REFERENCES = A.map(SECRET_INPUTS, ([, name]) => `secrets.${name}`);
 const WorkflowStep = S.Struct({
   name: S.optionalKey(S.String),
   if: S.optionalKey(S.String),
+  run: S.optionalKey(S.String),
   uses: S.optionalKey(S.String),
   with: S.optionalKey(S.Record(S.String, S.Unknown)),
   env: S.optionalKey(S.Record(S.String, S.Unknown)),
@@ -58,6 +59,10 @@ const decodeWorkflowSteps = S.decodeUnknownSync(S.Array(WorkflowStep));
 const decodeWorkflowJobs = S.decodeUnknownSync(WorkflowJobs);
 
 const workflowJobs = (document: Document): WorkflowJobs => decodeWorkflowJobs(document.toJS().jobs);
+
+// The heavy verify job's matrix lanes; each dispatches one `beep ci lane`.
+const heavyMatrixLanes = (document: Document): ReadonlyArray<Readonly<Record<string, unknown>>> =>
+  document.toJS().jobs.verify.strategy.matrix.include;
 
 const jobSteps = (jobs: WorkflowJobs, jobId: string): ReadonlyArray<WorkflowStep> =>
   O.getOrThrowWith(
@@ -76,6 +81,23 @@ const stepByName = (steps: ReadonlyArray<WorkflowStep>, name: string): WorkflowS
     A.findFirst(steps, (step) => step.name === name),
     () => new Error(`Step "${name}" is not declared.`)
   );
+
+const stepRun = (steps: ReadonlyArray<WorkflowStep>, name: string): string =>
+  O.getOrThrowWith(
+    O.fromUndefinedOr(stepByName(steps, name).run),
+    () => new Error(`Step "${name}" declares no run script.`)
+  );
+
+// Third-party apt sources on the hosted ubuntu-24.04 image (Google Chrome,
+// Microsoft) fail `apt-get update` for minutes at a time ("Hash Sum mismatch",
+// "403 Forbidden"); every lane that touches apt keeps only the Ubuntu archive
+// first, through the shared prune script.
+const PRUNE_APT_SOURCES = "scripts/ci-prune-apt-sources.sh";
+const assertPrunesAptSourcesBefore = (run: string, command: string): void => {
+  assert.include(run, `\n${PRUNE_APT_SOURCES}\n`);
+  assert.include(run, command);
+  assert.isBelow(run.indexOf(PRUNE_APT_SOURCES), run.indexOf(command));
+};
 
 const setupMonorepoStep = (jobs: WorkflowJobs, jobId: string): WorkflowStep =>
   O.getOrThrowWith(
@@ -212,7 +234,6 @@ const turboJobTable = (documents: {
     [check, "test-unit-shard", true],
     [check, "property-laws", true],
     [check, "fallow-advisory", false],
-    [check, "build", true],
     [workflowJobs(documents.heavyWorkflow), "verify", true],
     [workflowJobs(documents.storybook), "storybook", false],
   ];
@@ -382,6 +403,11 @@ describe("CI runner security", () => {
       assert.include(workflowText, "run: cargo check --locked");
       assert.include(workflowText, "run: cargo clippy --locked -- -D warnings");
       assert.include(workflowText, "working-directory: apps/professional-desktop/src-tauri");
+      assertPrunesAptSourcesBefore(stepRun(steps, "Install Tauri Linux system dependencies"), "sudo apt-get update");
+      const pruneScript = yield* fs.readFileString(path.join(repoRoot, PRUNE_APT_SOURCES));
+      assert.include(pruneScript, "! -name 'ubuntu.sources'");
+      const pruneInfo = yield* fs.stat(path.join(repoRoot, PRUNE_APT_SOURCES));
+      assert.notStrictEqual(pruneInfo.mode & 0o111, 0, "prune script must be executable");
       // tauri-build needs the sidecar binary, so the cargo steps follow the
       // IPC proof that builds it.
       assert.isBelow(stepIndexByName(steps, "Run desktop IPC stdio proof"), stepIndexByName(steps, "Check Rust crate"));
@@ -437,6 +463,10 @@ describe("CI runner security", () => {
       ]) {
         assert.strictEqual(stepByName(steps, name).if, gate, name);
       }
+      assertPrunesAptSourcesBefore(
+        stepRun(steps, "Install Playwright Chromium"),
+        "bunx playwright install --with-deps chromium"
+      );
       const upload = stepByName(steps, "Upload Storybook static artifact");
       assert.strictEqual(upload.if, `${gate} && hashFiles('apps/storybook/storybook-static/index.html') != ''`);
       assert.strictEqual(upload.with?.["if-no-files-found"], "error");
@@ -537,28 +567,37 @@ describe("CI runner security", () => {
   );
 
   it.effect(
-    "saves the Turbo cache only from the Build job on push",
+    "saves the Turbo cache only on push, with Build dispatched from heavy.yml",
     Effect.fnUntraced(function* () {
       const policy = yield* readCredentialPolicySources();
-      const { workflow, workflowText } = policy;
+      const { workflow, heavyWorkflow, heavyWorkflowText } = policy;
 
-      // Pull requests never publish a cache entry; Build saves only on push.
+      // Pull requests never publish a cache entry: every Turbo job restores
+      // only, and the post-lane fallback save is push-gated.
       for (const [jobs, jobId] of turboJobTable(policy)) {
-        if (jobId === "build") continue;
         assert.strictEqual(setupMonorepoInputs(jobs, jobId)["cache-write"], "false", jobId);
       }
+      const heavyJobs = workflowJobs(heavyWorkflow);
+      assert.include(
+        stepByName(jobSteps(heavyJobs, "verify"), "Save post-lane Turbo fallback").if,
+        "github.event_name == 'push'"
+      );
       // Quality-lane audit D12: Build runs on pull requests (affected-scoped,
       // remote-cache read) and keeps the write environment for pushes only.
-      assert.isUndefined(workflow.getIn(["jobs", "build", "if"]));
+      // It dispatches from heavy.yml: the beep-ec2-heavy runner group admits
+      // heavy.yml@main on pull requests, never a job declared in check.yml.
+      assert.isUndefined(workflow.getIn(["jobs", "build"]));
       assert.strictEqual(
-        workflow.getIn(["jobs", "build", "environment"]),
+        heavyWorkflow.getIn(["jobs", "verify", "environment"]),
         "${{ github.event_name == 'push' && 'turbo-cache-write' || null }}"
       );
-      assert.strictEqual(
-        setupMonorepoInputs(workflowJobs(workflow), "build")["cache-write"],
-        "${{ github.event_name == 'push' && 'true' || 'false' }}"
+      const buildLane = O.getOrThrowWith(
+        A.findFirst(heavyMatrixLanes(heavyWorkflow), (lane) => lane.id === "build"),
+        () => new Error("heavy.yml declares no build lane.")
       );
-      assert.include(workflowText, 'bun run beep ci lane build "${shape_args[@]}"');
+      assert.strictEqual(buildLane.name, "Build");
+      assert.strictEqual(buildLane.uses_turbo, "true");
+      assert.include(heavyWorkflowText, "check|test-integration|coverage|build)");
     }, provideScopedLayer(NodeServices.layer))
   );
 

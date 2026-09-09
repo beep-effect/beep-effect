@@ -89,7 +89,15 @@ jobs:
 
       - name: Install Playwright Chromium
         if: steps.lane-gate.outputs.should_run == 'true'
-        run: bunx playwright install --with-deps chromium
+        shell: bash
+        run: |
+          set -euo pipefail
+          # --with-deps runs apt-get update, which the image's third-party apt sources
+          # (Google Chrome, Microsoft) fail with "Hash Sum mismatch" / "403 Forbidden" for
+          # minutes at a time; Playwright ships its own Chromium and its OS dependencies
+          # come from the Ubuntu archive, so keep only that source first.
+          scripts/ci-prune-apt-sources.sh
+          bunx playwright install --with-deps chromium
 
       - name: Save Playwright Chromium cache
         if: steps.lane-gate.outputs.should_run == 'true' && github.event_name == 'push' && steps.playwright-cache-restore.outputs.cache-hit != 'true'
