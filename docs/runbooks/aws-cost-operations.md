@@ -191,10 +191,10 @@ changed enrollment or a clean no-change preview. Revisit it when the provider
 supports this readback; do not repeatedly apply merely to clear the preview.
 
 For image freshness, reuse the freshness fields of the existing `BakeReport`
-as a tracked intended-image receipt. `infra/ci-runners/runner-image.json` was
-initialized from the current AMI's AWS tags on September 9. It records Bun 1.4.0
-and correctly reports stale against the checkout; it does not claim a new bake.
-The reader also accepts the complete report written by a future successful bake. The existing runner check compares that receipt with Bun,
+as a tracked intended-image receipt. `infra/ci-runners/runner-image.json` now
+records the September 9 Bun 1.4.2 bake and its intended production pin. It
+supersedes the initial receipt copied from the stale Bun 1.4.0 image's tags.
+The existing runner check compares that receipt with Bun,
 archive and lockfile keys plus the intended Pulumi AMI pin without AWS access.
 Emit an advisory warning in the existing hosted Repo Sanity job, outside the
 heavy dependency chain. This warns about intended-image drift; the live AWS
@@ -215,13 +215,22 @@ release digest, installed-binary digest, root ownership, version and lockfile
 checks remain required. Intended-image freshness alone is not a performance
 receipt.
 
-The modified setup path then passed on a fresh instance in 20 seconds, including
-a 9-second frozen install, versus the isolated baseline's 18 seconds. This
-removes the measured archive regression. It does not establish a hosted speedup:
-GitHub cache/action overhead and a complete production workflow remain part of
-the attended activation check. The baseline Check lane passed in 739 seconds,
-with a 10.36 GiB peak in 15-second VM-memory samples; this is not sufficient
-evidence to downsize every heavy lane.
+The modified setup path first passed on a fresh instance in 20 seconds, including
+a 9-second frozen install, versus the isolated baseline's 18 seconds. Baking
+without the archive then reduced the candidate's full snapshot data from
+8.024 GiB to 2.350 GiB. The resulting image passed the same setup detector in
+11 seconds, including a 9-second install, and confirmed that no dependency
+archive exists. Its full Check lane passed all 246 tasks in 541 seconds.
+
+These results remove the measured archive regression. They do not establish a
+hosted speedup: GitHub cache/action overhead and a complete production workflow
+remain part of the attended activation check. The final canary uses source
+`b9b6faa5a2`, which includes the newer Check overlay fix from PR #1058. Its
+541-second Check cannot be attributed to the image by comparison with the
+739-second baseline on `a2030c8bd9`. The matched original candidate passed in
+753 seconds on that earlier source. The final canary's peak VM-memory sample
+was 11.61 GiB, sampled every 15 seconds; this is not sufficient evidence to
+downsize every heavy lane.
 
 Repair the retired teardown script so it cannot terminate builders or current
 controller workers. Supersede historical Spot and $100 ceiling instructions at
@@ -446,13 +455,28 @@ The image refresh follows a separate validation and activation sequence:
 3. Keep these probes isolated from GitHub runner registration and both GitHub
    and remote Turbo caches. Their setup measurements compare the image paths;
    they do not establish hosted queue time or account-wide savings. Each guest
-   has a 40-minute termination backstop and a bounded verification command.
+   has a 40-minute shutdown backstop and a bounded verification command.
+   Stop the guest, capture its terminal console marker, then terminate it and
+   verify termination. Console output can lag shutdown and regress to an older
+   capture; retain the most complete result and bound the capture wait. The
+   September 9 final probe allowed 20 minutes after stop before cleanup.
 4. Review the intended manifest, AMI pin and refreshed Pulumi preview. Apply
    the saved plan only with the operator present. Prove the live SSM pin and
    run the existing Fleet Lane Probe on a newly launched production worker.
    Require a baked fast-path hit and successful verification before calling
    activation validated. Retain the old image until rollback is no longer
    needed.
+
+The September 9 replacement image is `ami-07af50c345b5ba065`, baked from pushed
+source `b9b6faa5a2`; the rollback image is `ami-0738c1b69711969bc`. The isolated
+probe passed and its guest and both builders were verified terminated. The
+refreshed full preview contains only the intended SSM image update and the
+previously documented Cost Optimization Hub provider discrepancy. The saved
+image-only plan targets `ci-fleet-controller-runner-ami`: one update, 83 unchanged
+resources, no replacements or deletions. It excludes the unrelated enrollment
+update. The intended pin is committed for review; production activation and
+the hosted Fleet Lane Probe still require the attended rollout. A passing
+isolated probe does not establish that production uses the new image.
 
 ## Current stack ownership and bounded operations
 

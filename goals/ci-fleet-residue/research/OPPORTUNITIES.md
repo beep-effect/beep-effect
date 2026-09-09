@@ -25,6 +25,17 @@ Record receipts at the moment friction happens; redact for the public repo.
   instance, with a fast-path hit, 20-second setup and 9-second frozen install.
   This isolated result removes the archive regression; a production workflow
   probe is still required to measure hosted setup and completion time.
+- Lean-image proof: the replacement bake omits the archive and reduces full
+  snapshot data from 8.024 GiB to 2.350 GiB. Its fresh guest passed setup in
+  11 seconds, including a 9-second frozen install, and Check passed 246/246
+  tasks in 541 seconds. This uses pushed source `b9b6faa5a2`, including the
+  newer Check overlay repair; the earlier source's 739-second Check is not a
+  controlled image-only timing comparison. Peak sampled VM memory was
+  11.61 GiB. The guest was terminated after capturing its terminal success.
+- Rollout boundary: the refreshed saved image-only Pulumi plan has one SSM
+  update, 83 unchanged resources and no replacements or deletions. It excludes
+  the known enrollment-provider discrepancy. The intended pin and image
+  receipt are reviewable; attended activation and a hosted probe remain.
 - Prevention: require timed canaries as well as freshness and integrity checks
   before promoting an image intended to reduce setup cost.
 
