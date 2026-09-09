@@ -93,3 +93,8 @@
   tests, exercise repair from a synthetic committed history, and retain the initial
   receipt with append-only update records. Replaying the original committed pins
   restored the message structure without live recapture.
+
+- Main advanced with PR #1034 after the previous merge conflict was fixed,
+  introducing another copy of the same vulnerable redactor and 11 affected raw
+  files. Refresh GitHub mergeability immediately before reporting it cleared,
+  and include newly merged copies when validating a shared security boundary.

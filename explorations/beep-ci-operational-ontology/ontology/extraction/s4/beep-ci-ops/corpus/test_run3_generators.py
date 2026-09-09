@@ -30,11 +30,12 @@ def load(name):
 fleet = load("etl_run3_fleet_corpus")
 identity = load("etl_run3_checkout_identity")
 legacy = load("etl_fleet_corpus")
+stage_b = load("etl_run3b_fleet_corpus")
 
 
 class RedactionTests(unittest.TestCase):
     def test_embedded_json_remains_parseable_after_redaction(self):
-        for module in (fleet, identity, legacy):
+        for module in (fleet, identity, legacy, stage_b):
             for pid in (1234567, "1234567"):
                 original = {"pid": pid, "proofTier": "full", "nested": [True, None]}
                 for depth in range(4):
@@ -49,7 +50,7 @@ class RedactionTests(unittest.TestCase):
                     self.assertEqual(module.redact_string(module.redact_string(message)), module.redact_string(message))
 
     def test_quoted_process_ids_are_redacted_and_rejected_at_every_json_depth(self):
-        for module in (fleet, identity, legacy):
+        for module in (fleet, identity, legacy, stage_b):
             for message in ('pid:1234567', '{"pid":1234567}', '{"PID" : "1234567"}',
                             '{"pid"\n:\t1234567}', 'pid = 1234567',
                             "pid='1234567'", "pid:'1234567'", "{'pid': '1234567'}"):
@@ -57,9 +58,9 @@ class RedactionTests(unittest.TestCase):
                     with self.subTest(module=module.__name__, depth=depth, message=message):
                         result = module.redact_string(message)
                         self.assertNotIn("1234567", result)
-                        module.scan_output_bytes([("fixture", result.encode())])
+                        module.scan_output_bytes([("fixture", module.encode_json({"message": result}))])
                         with self.assertRaises(SystemExit) as exc:
-                            module.scan_output_bytes([("fixture", message.encode())])
+                            module.scan_output_bytes([("fixture", module.encode_json({"message": message}))])
                         self.assertNotIn("1234567", str(exc.exception))
                         message = json.dumps({"message": message})
             unchanged = 'rapid1234567, runId=1234567, elapsedMs=1234567'
@@ -73,7 +74,7 @@ class RedactionTests(unittest.TestCase):
             "assert all(m.redact_string(s)==s for s in messages); "
             "m.scan_output_bytes([(str(i),s.encode()) for i,s in enumerate(messages)])"
         )
-        for module in (fleet, identity, legacy):
+        for module in (fleet, identity, legacy, stage_b):
             subprocess.run([sys.executable, "-c", runner, str(module.SCRIPT.parent), module.__name__],
                            capture_output=True, check=True, timeout=10)
 

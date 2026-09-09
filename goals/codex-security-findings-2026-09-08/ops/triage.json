@@ -381,7 +381,7 @@
       "validation": {
         "status": "complete",
         "confidence": "high",
-        "rationale": "The shared PID pattern in all three corpus generators missed quoted JSON keys and escaped whitespace. Synthetic regressions reproduced the bypass, and both fleet pins contained twelve affected raw payloads."
+        "rationale": "The shared PID pattern missed quoted JSON keys and escaped whitespace in the original three generators. Both fleet pins contained twelve affected raw payloads. After PR #1034 merged, its fourth generator reproduced 28 quoted-PID failures and its organic pin contained eleven affected raw files."
       },
       "remediation": {
         "status": "implemented",
@@ -393,13 +393,16 @@
           "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run2-fleet/",
           "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3-fleet/",
           "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3-checkout-identity/",
-          "goals/codex-security-findings-2026-09-08/research/scripts/resanitize-corpora.py"
+          "goals/codex-security-findings-2026-09-08/research/scripts/resanitize-corpora.py",
+          "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/etl_run3b_fleet_corpus.py",
+          "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3b-fleet/",
+          "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3b-synthetic/"
         ],
         "verificationCommands": [
-          "uv run --offline --with pyyaml python -m unittest discover -s explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus -p test_run3_generators.py",
+          "uv run --offline --with pyyaml python -m unittest discover -s explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus -p 'test_run3*.py'",
           "uv run --offline --with pyyaml python goals/codex-security-findings-2026-09-08/research/scripts/resanitize-corpora.py"
         ],
-        "summary": "Recognize quoted and multiply escaped PID syntax, enforce the same residue check in the older generator, and sanitize saved payloads through a staged integrity-verified repair. Preserve capture metadata, event counts, and custody references; record source manifest digests."
+        "summary": "All four standalone generators preserve embedded JSON while redacting quoted and multiply escaped PID values. The staged repair sanitizes 35 saved raw files across five pins, preserves capture and population metadata, and retains the initial repair receipt with subsequent updates. All 34 tests and all five pin verifiers pass."
       },
       "ownerArea": "Public corpus process identity redaction",
       "verdict": "confirmed-vulnerable",

@@ -151,9 +151,10 @@ graduation. Full plan with locked decisions: [`DECISIONS.md`](./DECISIONS.md).
 
 ## Trail
 
-- 2026-09-09: CSF-012 fixes quoted and escaped PID redaction in all three corpus
-  generators. A staged repair sanitizes 24 raw files, regenerates integrity
-  receipts, and passes every pin verifier; 20 generator tests pass. The operator
+- 2026-09-09: CSF-012 fixes quoted and escaped PID redaction in all four corpus
+  generators, including Stage B added by #1034. A staged repair sanitizes 35 raw
+  files and verifies all five pins; 34 generator tests pass. Current proofs are
+  recorded in the Stage A and Stage B reports. The operator
   authorized follow-up PR #1032 after #1026 merged with eleven findings, including
   the necessary security correction to otherwise immutable run-2 payloads.
 

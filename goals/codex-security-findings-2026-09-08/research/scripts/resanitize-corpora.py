@@ -67,9 +67,16 @@ def load_generator(name: str):
     return module
 
 
-def repair(name: str, source_ref: str | None = None) -> None:
+def repair(name: str, source_ref: str | None = None, population: str | None = None) -> None:
     module = load_generator(name)
-    root = module.OUTPUT_ROOT
+    root = module.OUTPUT_ROOT if population is None else module.OUTPUT_ROOTS[population]
+
+    def verify(root: Path) -> None:
+        if population is None:
+            module.verify_output_tree(root)
+        else:
+            module.verify_output_tree(root, population)
+
     if root.is_symlink() or not root.is_dir() or any(p.is_symlink() for p in root.rglob("*")):
         raise SystemExit("refusing a missing or symlinked corpus")
     previous_output = (root / module.MANIFEST_NAME).read_bytes()
@@ -79,7 +86,7 @@ def repair(name: str, source_ref: str | None = None) -> None:
     manifest = yaml.safe_load(original)
     generator_digest = module.sha256(module.SCRIPT.read_bytes())
     if not source_ref and manifest["generator_sha256"] == generator_digest:
-        module.verify_output_tree(root)
+        verify(root)
         print(f"{root.name}: verified unchanged")
         return
     verify_generator_provenance(module, manifest["generator_sha256"])
@@ -109,7 +116,8 @@ def repair(name: str, source_ref: str | None = None) -> None:
             continue
         payloads[path] = module.encode_ndjson(sanitized) if path.endswith(".ndjson") else module.encode_json(sanitized[0])
         projection = next(r["path"] for r in receipts if r.get("derived_from") == path)
-        payloads[projection] = module.encode_properties_projection(sanitized)
+        payloads[projection] = (module.encode_properties_projection(sanitized) if population is None else
+                                module.projected_bytes(sanitized, manifest["provenance"]))
         changed += 1
     for receipt in receipts:
         data = payloads[receipt["path"]]
@@ -152,7 +160,7 @@ def repair(name: str, source_ref: str | None = None) -> None:
             destination.parent.mkdir(parents=True, exist_ok=True)
             destination.write_bytes(data)
         (stage / module.MANIFEST_NAME).write_bytes(encoded)
-        module.verify_output_tree(stage)
+        verify(stage)
         os.replace(root, backup)
         try:
             os.replace(stage, root)
@@ -172,3 +180,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
     for generator in ("etl_fleet_corpus", "etl_run3_fleet_corpus", "etl_run3_checkout_identity"):
         repair(generator, args.source_ref)
+    for population in ("fleet", "synthetic"):
+        repair("etl_run3b_fleet_corpus", args.source_ref, population)

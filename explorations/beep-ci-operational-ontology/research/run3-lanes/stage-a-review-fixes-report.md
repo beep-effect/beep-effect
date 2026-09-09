@@ -8,7 +8,9 @@ claims below describe the pre-CSF-012 commit `e9f5e0700a8c`; they are not curren
 integrity evidence. The following values supersede them for the repaired pins.
 
 The repair was replayed from committed source `247d22465bdf5b0bb97388bc22c66c01f8eb54d2`
-with `resanitize-corpora.py --source-ref <commit>`. It preserved embedded JSON,
+with the then-three-pin `resanitize-corpora.py --source-ref <commit>`.
+The current five-pin script can replay pre-security source `86990e28f9`, which
+also contains both Stage B pins. It preserved embedded JSON,
 capture instants, event counts, owner references, and the original manifest
 digests. No live source was recaptured and no ontology ratification was rerun.
 Both fleet pins retain the original count of 12 repaired raw files; the identity

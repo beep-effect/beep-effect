@@ -129,3 +129,13 @@ PR #1032 review and main integration:
 - The Stage A report now labels earlier proofs as historical and records current
   whole-tree hashes, generator digests, counts, and byte totals. Full Yeet proof,
   hosted acceptance, merge, and CSF-012 closure remain pending.
+
+
+Main advanced again with Stage B publication #1034 (`86990e28f9`). The second
+merge preserved both exploration records. Its fourth generator repeated CSF-012:
+28 quoted-PID regressions failed, and independent scanning found 13 occurrences
+in 11 organic raw files. The delimiter-preserving fix now covers that generator;
+all 34 combined tests pass. Its organic pin was repaired through its own full
+population verifier and projection writer; synthetic payloads are unchanged.
+All five pins verify unchanged on a second repair run. Stage B's report now
+records current integrity proofs and labels original capture evidence historical.
