@@ -5,12 +5,12 @@
     "title": "Complexity Ceiling Burn-Down",
     "status": "active",
     "created": "2026-07-30",
-    "updated": "2026-09-03",
+    "updated": "2026-09-08",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/complexity-ceiling-burn-down",
   "lifecycle": "active",
-  "statusNote": "P0, P1, P2, and P4 are complete locally against Fallow 3.22.0 on latest main 53193e5a5e: all 49 tail verdicts are executed, the 189-entry baseline matches without stale or moved entries, and the current 207-suppression inventory has no campaign additions. P3 is active until Yeet proves the exact pull-request head merge-ready.",
+  "statusNote": "P0, P1, and P2 are complete. All 49 tail verdicts are executed, with zero unwaived functions above cognitive 15, an unchanged 189-entry baseline, and 207 reasoned suppressions. Full Yeet verification passed at 2026-09-09T00:21:12Z, including the approved ONNX mitigation, 3159 CLI tests, and the coverage comparison across 134 packages. Normal publication must verify the committed changes; P3 hosted merge-readiness and P4 final closeout remain open.",
   "mission": "Clear the refreshed cognitive->15 tail (49 fns), promote the fallow health lane to a blocking baseline ratchet, and hold the maxCognitive=8 gate credible.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -37,7 +37,8 @@
     "goals/complexity-ceiling-burn-down/research/SOURCES.md",
     "goals/complexity-ceiling-burn-down/research/tail-inventory.md",
     "goals/complexity-ceiling-burn-down/reports/clean-runs.md",
-    "goals/complexity-ceiling-burn-down/history/reflections/2026-09-03-codex.md"
+    "goals/complexity-ceiling-burn-down/history/reflections/2026-09-03-codex.md",
+    "goals/complexity-ceiling-burn-down/history/reflections/2026-09-08-codex.md"
   ],
   "researchReports": [
     "research/SOURCES.md",
@@ -78,7 +79,7 @@
     {
       "id": "P4",
       "name": "Close",
-      "status": "complete"
+      "status": "in-progress"
     }
   ],
   "verificationCommands": [
@@ -91,7 +92,9 @@
     "bun run beep quality fallow audit --check --quiet",
     "bun run fallow suppressions --format json",
     "bun run beep quality github-checks plan-contract-check --mode pre-push --expect-promoted-fallow-lanes",
-    "bun run beep quality fallow ci-contract-check .github/workflows/check.yml --expect-lanes boundaries,flags,security,fix-preview --expect-blocking-lanes audit,dead-code,health --expect-out-dir .beep/fallow --require-upload --if-no-files-found error --advisory"
+    "bun run beep quality fallow ci-contract-check .github/workflows/check.yml --expect-lanes boundaries,flags,security,fix-preview --expect-blocking-lanes audit,dead-code,health --expect-out-dir .beep/fallow --require-upload --if-no-files-found error --advisory",
+    "node --test scripts/test-onnxruntime-installer-patch.mjs",
+    "bun run beep quality github-checks security"
   ],
   "stopConditions": [
     "Required source files are missing or materially contradictory.",

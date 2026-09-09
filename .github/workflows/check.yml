@@ -1050,6 +1050,22 @@ jobs:
           filter: blob:none
           persist-credentials: false
 
+      - name: Setup Bun for installer mitigation proof
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version-file: .bun-version
+          no-cache: "true"
+
+      - name: Setup Node.js for installer mitigation proof
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+
+      - name: Verify ONNX installer mitigation before accepting the OSV exception
+        run: |
+          bun install --frozen-lockfile --ignore-scripts
+          node --test scripts/test-onnxruntime-installer-patch.mjs
+
       - name: OSV vulnerability scan
         uses: google/osv-scanner-action/osv-scanner-action@c5996e0193a3df57d695c1b8a1dec2a4c62e8730 # v2.3.3
         with:

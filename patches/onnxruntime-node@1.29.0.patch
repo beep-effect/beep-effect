@@ -1,0 +1,9 @@
+diff --git a/script/install-utils.js b/script/install-utils.js
+--- a/script/install-utils.js
++++ b/script/install-utils.js
+@@ -142,3 +142,2 @@
+-        // Create a temporary directory
+-        const tempDir = path.join(os.tmpdir(), `onnxruntime-node-pkgs_${Date.now()}`);
+-        fs.mkdirSync(tempDir, { recursive: true });
++        // Atomically create a private workspace so extraction cannot reuse attacker-controlled symlinks.
++        const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'onnxruntime-node-pkgs_'));

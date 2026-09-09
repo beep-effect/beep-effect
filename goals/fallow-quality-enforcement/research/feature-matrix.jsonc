@@ -1,7 +1,7 @@
 {
   "$schema": "./feature-matrix.schema.json",
   "schemaVersion": "fallow-quality-enforcement/feature-matrix/v1",
-  "updated": "2026-09-03",
+  "updated": "2026-09-08",
   "validatorVersion": "fallow-quality-enforcement-validator/v1",
   "features": [
     {
@@ -222,7 +222,7 @@
       "baselineArtifact": "standards/fallow.health.regression-baseline.jsonc",
       "baselineSummary": {
         "status": "measured",
-        "counts": "Fallow 3.22.0 analyzed 4,369 files and 65,579 functions after the complexity-ceiling burn-down. The committed baseline contains 190 entries; all matched with zero stale or moved entries, and no unwaived function remains above cognitive complexity 15.",
+        "counts": "Fallow 3.23.0 analyzed 4,440 files and 68,513 functions on the 2026-09-08 merged candidate. The committed baseline contains 189 entries; all matched with zero stale or moved entries, and no unwaived function remains above cognitive complexity 15.",
         "notes": "The calibrated maxCognitive 8 policy is governed by review-dated threshold overrides. Three consecutive clean baseline comparisons are recorded in goals/complexity-ceiling-burn-down/reports/clean-runs.md."
       },
       "falsePositiveStatus": "waived-with-expiry",

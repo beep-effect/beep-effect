@@ -2,8 +2,8 @@
 
 ## Status
 
-Status: `active` (P0, P1, P2, and P4 complete locally; P3 publishing and
-exact-head merge-readiness proof active)
+Status: `active` (P0, P1, and P2 complete; P3 publication and P4 final
+closeout remain open)
 
 ## Phases
 
@@ -11,9 +11,9 @@ exact-head merge-readiness proof active)
 | --- | --- | --- | --- |
 | P0 Research | complete | Refresh `research/tail-inventory.md` from a live `fallow health` run; record a triage verdict per tail function (refactor / override / ignore) with hotspot rank (`fallow health --hotspots`); adopt/defer verdicts for runtime-coverage CRAP and `fallow impact`. | Every tail function has a verdict; feature verdicts recorded with evidence. |
 | P1 Implement | complete | Execute the five panel seams and every current tail-function verdict in hotspot order, batched by owning family; rebaseline at the final wave boundary. | All 30 refactor verdicts and 19 review-dated override verdicts executed; no ignores added. |
-| P2 Verify | complete | `fallow:health:baseline:check` green; zero unwaived functions above cognitive 15; suppression total at most the latest-main comparator of 207 with no campaign additions; record 3 consecutive clean health-lane runs in `reports/clean-runs.md`. | Local verification matrix green on `53193e5a5e`; final 189-entry comparator matched with zero stale/moved entries. |
+| P2 Verify | complete | `fallow:health:baseline:check` green; zero unwaived functions above cognitive 15; suppression total at most the latest-main comparator of 207 with no campaign additions; record 3 consecutive clean health-lane runs in `reports/clean-runs.md`. | Full Yeet verification passed at 2026-09-09T00:21:12Z on the reviewed candidate based on `29f1284b43`. Coverage compared 134 packages; all 15 initial gates and the final blocking health check passed. Normal publication must verify the committed changes before push. |
 | P3 Yeet: PR to mergeable | active | Publish the completed lane-promotion campaign through Yeet and monitor the exact pull-request head. | Health lane blocking in hosted CI + local pre-push; exact head reports `merge-ready: yes`. |
-| P4 Close | complete | Closeout reflection; same-PR packet status reconciliation; revisit-6 decision note appended to the DECISIONS entry. | Reflection passes lint; active manifest reflects local completion and P3 publication state. |
+| P4 Close | active | Closeout reflection; same-PR packet status reconciliation; revisit-6 decision note appended to the DECISIONS entry. | Refresh the reflection and final manifest after current-candidate proof; retain the earlier reflection as execution history. |
 
 ## P4 Closeout Checklist
 

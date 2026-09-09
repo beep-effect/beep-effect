@@ -38,9 +38,10 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research, P1 implementation, P2 verification, and P4 packet closeout are
-complete locally. P3 is active while Yeet publishes and proves the exact pull
-request head merge-ready. All 49 live Fallow 3.22.0 tail verdicts are executed:
+P0 research, P1 implementation, and P2 local verification are complete. P3
+publication and P4 final closeout remain open until the exact pull request head
+is proven merge-ready. All 49 functions in the refreshed P0 inventory have
+executed verdicts:
 30 real refactors and 19 review-dated cohesive-boundary overrides, with zero
 ignore additions. Runtime-coverage CRAP and `fallow impact` are both deferred
 with evidence.
@@ -50,9 +51,34 @@ user refresh, the latest-main total of 207 suppressions is the campaign's
 no-growth comparator; the calibration total and original refreshed P0 total of
 194 remain provenance rather than stop conditions. The final
 committed-candidate baseline has 189 entries, all matched, with zero stale or
-moved entries. The strict branch-local Fallow audit is green.
+moved entries. The strict branch-local Fallow audit passed on the current
+candidate with zero introduced findings.
 
 ## Latest Evidence
+
+Full local verification passed at **2026-09-09T00:21:12Z**. The reviewed
+candidate includes `origin/main` at `9b7553f618` through HEAD `29f1284b43`.
+The full-tier verdict records 31 passed lanes, three reused lanes, and no
+failures. All 15 initial gates passed, as did security, build, full docgen,
+lint and policy, compiler checks, unit and integration tests, coverage, and
+final blocking health. The CLI suite passed 163 files and 3,159 tests; coverage
+passed its comparison across 134 packages. This build required no TS2589
+quarantine handling.
+
+Fallow 3.23.0 analyzed 4,441 files and 68,533 functions with zero unwaived
+functions above cognitive 15. All 189 baseline entries match, and suppression
+hygiene remains 207 total with no missing reasons or stale entries. Three
+consecutive health runs and their unchanged baseline digest are recorded in
+`reports/clean-runs.md`.
+
+The approved ONNX installer patch passes its regression tests and the security
+gate. Its advisory-specific exception expires September 15. Local and hosted
+security require the mitigation proof before OSV. The root regression script
+has an explicit catalog dependency; Knip reports zero introduced findings.
+A focused SAST replay of all four staged JavaScript/TypeScript files ran 128
+rules with zero findings. Normal Yeet publication will verify the committed
+changes because some gates select files from the committed Git range. Hosted
+PR proof and final packet closeout remain outstanding.
 
 P0 refresh (2026-09-03): Fallow 3.22.0 scanned 4,361 files and 65,040
 functions; `research/tail-inventory.md` records all 49 current functions above

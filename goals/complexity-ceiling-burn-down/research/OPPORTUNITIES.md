@@ -287,3 +287,237 @@
 - **Prevention:** scheduler status and reap must observe the same process and
   user-systemd namespace as admitted work, or fail closed when that namespace
   is unavailable instead of treating invisible host PIDs as dead.
+
+## 2026-09-08: continuation found a resolved but unfinished base merge
+
+- **Work:** locating the existing campaign before restarting the goal from a
+  different checkout.
+- **Evidence:** the campaign branch had implementation commit `2edf1f7f56`,
+  `MERGE_HEAD` at `9fce883441`, 131 staged paths, and no unmerged index entries.
+  The packet still named base `53193e5a5e`; `yeet status --remote` found no PR
+  and a failed saved proof. The current merge candidate passed
+  `fallow:health:baseline:check`, with all 189 entries matched, and reported
+  207 suppressions with zero missing reasons or stale entries.
+- **Cost:** the launcher checkout described P0 as pending while the existing
+  campaign described implementation as complete. Git state, packet claims,
+  and old proof output had to be reconciled before further work.
+- **Prevention:** leave a continuation receipt naming the implementation
+  commit, pending merge target, staged-state ownership, and last authoritative
+  failure. Distinguish local acceptance evidence from hosted PR completion.
+
+## 2026-09-08: a clean health comparison is not an empty health inventory
+
+- **Work:** checking the completed tail against the packet's critical-finding
+  acceptance language.
+- **Evidence:** the baseline comparison exits 0 with an empty `findings`
+  array, but an unbaselined `fallow:health --complexity-breakdown --report-only`
+  scan retains three critical CRAP findings at cognitive scores 7, 8, and 12.
+  No unwaived function exceeds cognitive 15. The chart baseline still has one
+  `complexity_critical` count because Fallow combines cognitive and CRAP
+  severity for `tooltipLabel`.
+- **Cost:** treating either the empty regression array or the aggregate
+  critical count as the cognitive-tail census would misstate acceptance.
+- **Prevention:** report the unwaived cognitive-over-15 count separately from
+  critical CRAP findings and baseline regressions. Keep the explicit 7-15
+  non-goal and deferred runtime-coverage CRAP decision visible during closeout.
+- **Resolution:** on 2026-09-08 the user confirmed the cognitive >15
+  completion scope. The SPEC and launcher now require an explicit unwaived
+  cognitive-tail census and retain critical estimated-CRAP findings below the
+  ceiling as separately reported evidence.
+
+## 2026-09-08: the command environment omitted the user runtime directory
+
+- **Work:** checking the scheduler and user scopes before heavyweight proof.
+- **Evidence:** `systemctl --user list-units 'agent-run-*.scope'` failed with
+  `XDG_RUNTIME_DIR not defined`. The current user's runtime directory and bus
+  socket existed. Supplying their verified paths to the command restored the
+  user-manager query and allowed the host scheduler snapshot to be checked.
+- **Cost:** an empty scheduler result without the runtime-directory context
+  could have been mistaken for proof that no other admitted work existed.
+- **Prevention:** preserve the desktop user's runtime directory and bus
+  connection in agent command environments. When they are absent, verify the
+  owning user and existing socket before supplying those paths; never reap
+  work from a snapshot taken in a different coordination namespace.
+
+## 2026-09-08: full docgen stopped on an unchanged scratchpad package
+
+- **Work:** running `bun run beep yeet repair` after merging current main.
+- **Evidence:** full docgen reported 117 successful tasks out of 126 before
+  `@beep/scratchpad#docgen` exited 130. Its last phase was typechecking 3,172
+  examples from 477 modules; no TypeScript diagnostic accompanied the exit.
+  `git diff --name-only origin/main -- scratchpad` was empty. The available
+  kernel journal query returned no OOM entry for that interval.
+- **Cost:** the parent repair continued into builds while retaining the
+  failed documentation step, so activity in a later phase did not imply that
+  the preceding phase passed.
+- **Prevention:** report completed wave verdicts from structured step results,
+  and include termination cause and process identity in child-failure receipts.
+  Treat this exit as unresolved until an isolated replay and the complete
+  authoritative proof pass; do not classify it as a flake from the exit code.
+- **Replay:** after the later base update and memory recovery, the exact
+  scratchpad `bun run docgen` child command exited 0, compiling all 3,172
+  examples from 477 modules. This resolves the isolated reproduction; it does
+  not replace the required full-repository proof.
+
+## 2026-09-08: the merged verification-plan test omitted blocking health
+
+- **Work:** running the affected repo-CLI suite after integrating main's
+  economics-based Yeet wave ordering with the campaign's health promotion.
+- **Evidence:** `yeet.test.ts` failed the complete pre-push lane-list
+  assertion. The current verification plan includes `fallow:health` as an
+  unseeded preflight lane after the seeded lanes; the inherited expected list
+  contained only audit and dead-code. The cheap tier already runs health
+  before heavy feedback.
+- **Resolution:** retain the ordered full-list assertion and add its missing
+  `fallow:health` entry. This asserts that the promotion remains in the
+  authoritative proof without changing the scheduler's unrelated ordering
+  policy. A focused replay and package handoff check are required next.
+- **Focused proof:** all 164 tests in `test/yeet.test.ts` passed in the
+  isolated replay. `bun run beep quality package-verify @beep/repo-cli --quick`
+  then passed lint and check. The quick subset matches this continuation's
+  single test assertion edit; aggregate proof remains a separate requirement.
+
+## 2026-09-08: system memory pressure killed repair and the CLI test runner
+
+- **Work:** waiting for the affected tests in the same Yeet repair run.
+- **Evidence:** seven test tasks passed, while the repo-CLI test process and
+  repair parent exited with SIGKILL/137. The host journal at 15:34:25 local
+  time records `earlyoom` killing both processes. One second later, the
+  kernel killed a Codex process with roughly 80 GiB of anonymous resident
+  memory. The previous repair handle is gone; no campaign process remained
+  when the continuation inspected the process table.
+- **Attribution:** the aggregate termination is environment-only. The
+  independently reported health-lane assertion failure was a campaign merge
+  repair and was fixed separately. Neither attribution makes the interrupted
+  aggregate proof pass.
+- **Prevention:** record host memory-pressure events alongside child exit
+  codes, keep tool output bounded, and use the shared admission scheduler for
+  heavyweight proof. Resume only after checking live process ownership and
+  available memory, without killing unrelated work or weakening gates.
+
+## 2026-09-08: the optional docgen wrapper rejects canonical example prose
+
+- **Work:** isolating the scratchpad documentation termination with
+  `bun run docgen:local --package @beep/scratchpad --parallel 1`.
+- **Evidence:** the wrapper stopped in metadata analysis before compiling
+  examples. It reported missing `@example` tags even where exports have the
+  required titled `**Example**` sections. The current-main
+  `Docgen/internal/quality/Quality.subjects.ts` still lists `@example` as a
+  required export tag and derives examples only from `tagValues(tags,
+  "example")`; those paths are unchanged by this campaign. The exact package
+  docgen child then passed.
+- **Attribution:** the wrapper metadata mismatch is inherited. The successful
+  child replay provides a focused diagnostic; aggregate Yeet remains the
+  acceptance command.
+- **Prevention:** keep metadata recognition aligned with the canonical JSDoc
+  section grammar and report wrapper metadata failures separately from the
+  example compiler result.
+
+## 2026-09-08: packet edits left the local Goals projection stale
+
+- **Work:** running full Yeet verification after refreshing the manifest and
+  evidence for Fallow 3.23.0.
+- **Evidence:** the cheap-gate collection passed 14 lanes, including all 139
+  package test typechecks and audit, dead-code, and health. Only
+  `cheap-gates:goals-index` failed with `local goals/INDEX.md drifts`.
+- **Attribution:** introduced projection drift from this continuation's
+  packet edits; refresh it with `bun run beep goals index --write`, then run
+  the complete verifier again.
+- **Cost:** the collect-all cheap tier spent roughly eight minutes checking
+  test types after the projection failure was already known.
+- **Prevention:** regenerate and check manifest-derived local projections
+  immediately after the final packet edit, before starting aggregate proof.
+
+## 2026-09-08: an inherited archive dependency blocks the security lane
+
+- **Work:** full Yeet verification after all 15 cheap gates passed.
+- **Evidence:** OSV reported `GHSA-vwc7-r8mq-g2x9` for `adm-zip@0.6.0`, reached
+  through `onnxruntime-node@1.29.0`. The security lane exited 1. Both versions
+  remain npm latest, and the scanner reports no fixed version. The installed
+  ONNX installer creates a predictable temporary directory and invokes ZIP
+  extraction with overwrite enabled, matching the destination-symlink
+  condition in the [advisory](https://github.com/advisories/GHSA-vwc7-r8mq-g2x9).
+- **Attribution:** inherited; `git diff origin/main -- bun.lock
+  osv-scanner.toml` is empty at base `9b7553f618`. Identical dependency state
+  does not make the vulnerability a false positive or the failing gate pass.
+- **Boundary:** the launcher stops before dependency, lockfile, or security
+  behavior changes. The user has been asked whether to authorize a private
+  random extraction directory mitigation, regression proof, and a reviewed
+  expiring exception while a fixed upstream release is unavailable. No such
+  change has been applied.
+- **Prevention:** surface newly published inherited dependency findings before
+  the expensive proof phase, and distinguish attribution from risk acceptance.
+- **Authorization and focused proof:** the user approved the installer
+  mitigation and reviewed exception on 2026-09-08. A controlled test using the
+  actual installer and real ZIP library reproduced an outside-file overwrite
+  before the patch. With a private `mkdtempSync` workspace, both the success
+  case and missing-entry cleanup case passed. Applying the pinned dependency
+  patch and validating the installed result remain required.
+
+## 2026-09-08: full proof repeats the same test typecheck command
+
+- **Work:** waiting for full pre-push after the 15 cheap gates passed.
+- **Evidence:** `cheap-gates:test-tsgo` ran `bun run beep quality test-tsgo`
+  across 1,020 files and 139 packages and passed in about eight minutes. The
+  later `quality:check:tsgo-tests` lane launched the same command again. The
+  log reused exact audit and dead-code lane proofs, but not this differently
+  named typecheck lane.
+- **Cost:** a second broad compiler pass delays independent docgen and test
+  failures even when the cheap tier already proved the same command.
+- **Prevention:** evaluate shared proof identity for equivalent commands and
+  inputs while preserving invalidation on source, configuration, or tool
+  changes. This campaign records the observation without changing admission
+  or proof-reuse policy.
+
+### Approved mitigation integrated (2026-09-08)
+
+The generated `onnxruntime-node@1.29.0` Bun patch now replaces timestamp-based
+temporary directory reuse with atomic private `mkdtempSync` allocation. No
+dependency versions changed. Frozen installation, both installed-dependency
+regression tests, and the real local security lane pass. Eight CLI dispatch
+tests pass, including rejection before OSV when the mitigation proof fails.
+Hosted Security now runs the same proof before the scanner; the single-advisory
+exception expires on September 15. The preceding full aggregate passed every
+other lane, including coverage. Full proof including the mitigation remains
+open. Keeping mitigation regression proof beside expiring exceptions would
+have prevented a scanner-only acceptance decision.
+
+### Generated patch context trips whitespace proof (2026-09-08)
+
+`git diff --cached --check` flagged the new Bun patch's blank context markers
+as trailing whitespace. The just-started verifier was intentionally interrupted
+(exit 130) before proceeding. Regenerating the same source diff with zero
+context removes those markers; Bun reapplied it in the isolated install, and
+both the isolated and root frozen-install regression checks passed with the
+identical intended installer source. Patch generation should account for the
+repository's whitespace check before starting aggregate verification.
+
+### Root regression proof needs a declared dependency (2026-09-08)
+
+The first complete cheap-gate run after mitigation passed 14 of 15 lanes but
+Knip reported `unlisted: scripts/test-onnxruntime-installer-patch.mjs#onnxruntime-node`.
+The root script resolved a package installed for the face-detection workspace
+without declaring its own dependency. The root development manifest now names
+`onnxruntime-node` through the existing catalog, retaining resolved version
+1.29.0 and the pinned patch. Root-script dependency checks should run alongside
+regression proof before an aggregate that begins with repository typechecking.
+No Knip baseline or suppression was added.
+
+Frozen installation, the actual security gate, and Fallow audit passed after
+that declaration. Knip now reports `current=2 baseline=2 introduced=0`.
+
+### Commit-range gates limit pre-commit proof reuse (2026-09-08)
+
+The current full verifier's SAST selector uses `origin/main...HEAD` and its
+recorded Semgrep invocation omits the staged new root regression script.
+Identical file bytes before and after committing therefore do not imply an
+identical verification scope. Normal Yeet publish must prove the committed
+candidate so the new script enters SAST; a pre-commit proof receipt alone is
+insufficient for this campaign's publication. Making commit-range limitations
+visible in verification receipts would prevent unsafe reuse assumptions.
+The selector itself is unchanged in this goal.
+
+A focused pre-publication replay applied the same Semgrep configurations to
+all four staged JavaScript/TypeScript files, including the new script: 128
+rules ran with zero findings. This supporting check does not replace the
+normal committed-candidate publish proof.

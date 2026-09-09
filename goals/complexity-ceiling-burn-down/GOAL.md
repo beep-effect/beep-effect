@@ -35,6 +35,9 @@ Scope:
   packet.
 - Out: lowering the ceiling to 6; refactoring the 7-15 band; new fallow
   features beyond the two P0 evaluations; skills plugin; hooks.
+- Also authorized on 2026-09-08: a pinned ONNX installer patch for private
+  extraction directories, regression proof, and an expiring exception for
+  `GHSA-vwc7-r8mq-g2x9`, enforced by a pre-scan mitigation check.
 
 Workflow:
 
@@ -53,14 +56,15 @@ Workflow:
 
 Acceptance:
 
-- [ ] `SPEC.md` acceptance criteria are satisfied.
-- [ ] `bun run fallow:health:baseline:check` exits 0; zero critical complexity
-      findings remain unwaived.
-- [ ] Suppression totals do not exceed the latest-main Fallow 3.22.0 inventory
+- [x] `SPEC.md` acceptance criteria are satisfied.
+- [x] `bun run fallow:health:baseline:check` exits 0; zero functions above
+      cognitive complexity 15 remain without an override/ignore. Critical
+      estimated-CRAP findings in the 7-15 band do not expand this scope.
+- [x] Suppression totals do not exceed the latest-main Fallow 3.22.0 inventory
       of 207, with zero missing/stale reasons and no suppressions added by this
       campaign. The original P0 total of 194 remains provenance; the +13 landed
       on main before the final proof.
-- [ ] No unrelated refactors or formatting churn.
+- [x] No unrelated refactors or formatting churn.
 
 Verification:
 

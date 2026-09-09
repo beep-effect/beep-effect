@@ -284,6 +284,7 @@
     "lefthook": "catalog:",
     "micromark": "catalog:",
     "micromark-extension-gfm": "catalog:",
+    "onnxruntime-node": "catalog:",
     "oxlint": "catalog:",
     "picomatch": "catalog:",
     "syncpack": "catalog:",
@@ -322,6 +323,7 @@
   },
   "packageManager": "bun@1.4.2",
   "patchedDependencies": {
+    "onnxruntime-node@1.29.0": "patches/onnxruntime-node@1.29.0.patch",
     "knip@6.27.0": "patches/knip@6.27.0.patch",
     "sharp@0.35.0": "patches/sharp@0.35.0.patch",
     "drizzle-orm@1.0.0-rc.4-fb12281": "patches/drizzle-orm@1.0.0-rc.4-fb12281.patch"

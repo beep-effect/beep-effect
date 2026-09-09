@@ -27,3 +27,8 @@ reason = "image-size ICNS-parser infinite-loop DoS affecting <=2.0.2; 2.0.2 IS t
 id = "GHSA-5p2g-fcmc-qvqq"
 ignoreUntil = 2026-09-15T00:00:00Z
 reason = "image-size JXL/HEIF-parser infinite-loop DoS affecting <=2.0.2; same package, same exposure, and same no-fixed-release status as GHSA-w3rx-r6r6-pgpr above. Revisit when image-size publishes a release above 2.0.2."
+
+[[IgnoredVulns]]
+id = "GHSA-vwc7-r8mq-g2x9"
+ignoreUntil = 2026-09-15T00:00:00Z
+reason = "Reviewed and approved 2026-09-08: adm-zip 0.6.0 has no fixed release. Its sole lockfile consumer is onnxruntime-node 1.29.0, whose pinned Bun patch replaces predictable extraction directories with atomic private mkdtemp workspaces. Local and hosted security gates first test the installed patch against a precreated destination symlink, private permissions, and success/failure cleanup. This single-advisory exception avoids ignoring other vulnerabilities in the package. Remove after an upstream fix; reassess if the consumer graph changes or before expiry."

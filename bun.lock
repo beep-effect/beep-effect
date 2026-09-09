@@ -36,6 +36,7 @@
         "lefthook": "catalog:",
         "micromark": "catalog:",
         "micromark-extension-gfm": "catalog:",
+        "onnxruntime-node": "catalog:",
         "oxlint": "catalog:",
         "picomatch": "catalog:",
         "syncpack": "catalog:",
@@ -3011,6 +3012,9 @@
         "@effect/tsgo": "catalog:",
       },
     },
+  },
+  "patchedDependencies": {
+    "onnxruntime-node@1.29.0": "patches/onnxruntime-node@1.29.0.patch",
   },
   "overrides": {
     "@effect/platform-node-shared": "catalog:",

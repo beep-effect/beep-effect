@@ -27,7 +27,11 @@ repository that has since changed.
 
 1. User objective (2026-09-03 refresh: burn down the current repository's
    complexity using the latest Fallow release; the historical packet must not
-   block current work).
+   block current work. 2026-09-08 clarification: keep the cognitive >15
+   completion scope; critical estimated-CRAP findings in the 7-15 band do not
+   expand the work. The user also approved mitigating inherited
+   `GHSA-vwc7-r8mq-g2x9` with a private ONNX installer extraction directory,
+   regression proof, and a reviewed expiring advisory exception).
 2. `AGENTS.md`, `CLAUDE.md`, and required skills.
 3. `standards/effect-laws-v1.md` (law 23), `standards/architecture/DECISIONS.md`
    (2026-07-30 entry), `standards/ARCHITECTURE.md`.
@@ -47,6 +51,9 @@ repository that has since changed.
   `packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts`
   (lane promotion, PR2 of the campaign).
 - This packet's own files.
+- The explicitly approved security follow-up: the pinned ONNX installer patch,
+  root package manifest and lockfile registration, advisory exception, and a
+  regression check run by the security lane before OSV.
 
 ## Constraints
 
@@ -76,9 +83,11 @@ repository that has since changed.
       or ignore added).
 - [x] Wave 1 (five panel-named seams in `research/calibration.md`) executed and
       verified; already-landed work counts when current source proves it.
-- [x] `bun run fallow:health:baseline:check` exits 0 and the committed baseline
-      shows zero `critical` complexity findings (nothing above cognitive 15
-      without an override/ignore).
+- [x] `bun run fallow:health:baseline:check` exits 0 and an unbaselined scan
+      shows zero functions above cognitive 15 without an override/ignore.
+      Fallow's combined critical-severity labels may include estimated CRAP
+      findings below that ceiling; report them separately without expanding
+      the 7-15 non-goal.
 - [x] Health lane promoted to blocking after 3 consecutive clean runs recorded
       under `reports/clean-runs.md` (PR2; CiLane + FallowQuality wiring).
 - [x] P0 adopt/defer verdicts recorded for runtime-coverage CRAP and
@@ -88,6 +97,11 @@ repository that has since changed.
       suppressions. The +13 from the original 194 comparator landed on main
       independently of this campaign.
 - [x] No unrelated refactors or formatting churn.
+- [x] The approved ONNX installer mitigation is applied through a pinned Bun
+      patch. Regression tests prove destination-symlink isolation, private
+      permissions, successful extraction, and cleanup on failure. The security
+      lane runs this proof before applying the single-advisory exception, which
+      expires on 2026-09-15 unless independently reviewed again.
 
 ## Verification Matrix
 
@@ -97,9 +111,12 @@ repository that has since changed.
 | Manifest JSON | `jq . goals/complexity-ceiling-burn-down/ops/manifest.json` | Passes |
 | Whitespace | `git diff --check -- goals/complexity-ceiling-burn-down` | Passes |
 | Baseline ratchet | `bun run fallow:health:baseline:check` | Exit 0 |
+| Cognitive tail | `bun run fallow:health --format json --quiet --complexity-breakdown --report-only` | Zero unwaived findings with cognitive complexity above 15 |
 | Audit gate | `bun run beep quality fallow audit --check --quiet` | Exit 0 on each wave PR |
 | Suppression hygiene | `bun run fallow suppressions` | Zero missing/stale reasons; total at most 207; no campaign-added suppressions |
 | Reflection | `bun run beep lint reflection-artifacts` | Passes at P4 |
+| Installer mitigation | `node --test scripts/test-onnxruntime-installer-patch.mjs` | Both regression cases pass against the installed pinned patch |
+| Security gate | `bun run beep quality github-checks security` | Mitigation proof and OSV exit 0 |
 
 ## Stop Conditions
 
