@@ -1,4 +1,5 @@
 import {
+  GraftCacheArtifact,
   GraftCacheSync,
   GraftCacheSyncLive,
   GraftCacheSyncPlan,
@@ -12,6 +13,7 @@ import { NodeServices } from "@effect/platform-node";
 import { expect, layer, it as propertyTest } from "@effect/vitest";
 import { Console, Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
+import * as Eq from "effect/Equal";
 import * as PlatformError from "effect/PlatformError";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -19,13 +21,21 @@ import * as Str from "effect/String";
 import * as fc from "effect/testing/FastCheck";
 import { Command } from "effect/unstable/cli";
 
-const artifacts = [".cache/summaries.json", "INDEX.md", "effects.md", "services.md", ".graph/wiring.json"];
+const artifacts = [
+  ".cache/summaries.json",
+  "INDEX.md",
+  "effects.md",
+  "services.md",
+  ".graph/wiring.json",
+  "manifest.json",
+];
 const contents = [
   '{"summaries":{"file":"paid summary"}}\n',
   "# Index\n",
   "# Effects\n",
   "# Services\n",
   '{"crux":"paid crux"}\n',
+  '{"version":1,"model":"test-model","repoDigest":"test-digest","files":{},"nodes":{}}\n',
 ];
 
 const fixture = Effect.fn("GraftCacheSyncTest.fixture")(function* () {
@@ -97,7 +107,7 @@ propertyTest("round-trips arbitrary reports without losing plan entries, reasons
 
 layer(testLayer)("Graft cache sync", (it) => {
   it.effect(
-    "plans all three artifact families in order without creating a target graft directory",
+    "plans all four artifact families in order without creating a target graft directory",
     Effect.fn(function* () {
       const { fs, source, target, path } = yield* fixture();
       const sync = yield* GraftCacheSync;
@@ -108,8 +118,17 @@ layer(testLayer)("Graft cache sync", (it) => {
         "concepts",
         "concepts",
         "wiring",
+        "manifest",
       ]);
       expect(A.every(plan.entries, (entry) => entry.action === "copy")).toBe(true);
+      expect(A.filter(plan.entries, (entry) => GraftCacheArtifact.is.manifest(entry.artifact))).toEqual([
+        expect.objectContaining({
+          artifact: "manifest",
+          action: "copy",
+          sourcePath: path.join(source, "graft", "manifest.json"),
+          targetPath: path.join(target, "graft", "manifest.json"),
+        }),
+      ]);
       expect(A.map(plan.entries, (entry) => path.relative(path.join(target, "graft"), entry.targetPath))).toEqual(
         artifacts
       );
@@ -118,22 +137,134 @@ layer(testLayer)("Graft cache sync", (it) => {
   );
 
   it.effect(
-    "reports missing INDEX and wiring while retaining other concept nodes",
+    "plans 25 populated clones with 300 root concepts with at most 104 directory reads",
+    Effect.fn(function* () {
+      const { fs, source, target, path, directory } = yield* fixture();
+      const targetCount = 25;
+      const conceptCount = 300;
+      // The shared fixture already has INDEX.md and two root concept nodes.
+      yield* Effect.forEach(
+        A.range(1, conceptCount - 3),
+        (index) => fs.writeFileString(path.join(source, "graft", `concept-${index}.md`), "# Concept\n"),
+        { concurrency: 16 }
+      );
+      const targets = A.prepend(
+        A.map(A.range(1, targetCount - 1), (index) => path.join(directory, `clone-${index}`)),
+        target
+      );
+      yield* Effect.forEach(
+        targets,
+        Effect.fn(function* (root) {
+          yield* fs.makeDirectory(root, { recursive: true });
+          yield* fs.writeFileString(path.join(root, ".git"), "gitdir: untouched\n");
+          yield* fs.copy(path.join(source, "graft"), path.join(root, "graft"));
+        }),
+        { concurrency: 4 }
+      );
+      let directoryReads = 0;
+      let realPaths = 0;
+      let stats = 0;
+      const countingFs = Layer.succeed(
+        FileSystem.FileSystem,
+        FileSystem.FileSystem.of({
+          "~effect/platform/FileSystem": fs["~effect/platform/FileSystem"],
+          access: fs.access,
+          copy: fs.copy,
+          copyFile: fs.copyFile,
+          chmod: fs.chmod,
+          chown: fs.chown,
+          glob: fs.glob,
+          exists: fs.exists,
+          link: fs.link,
+          makeDirectory: fs.makeDirectory,
+          makeTempDirectory: fs.makeTempDirectory,
+          makeTempDirectoryScoped: fs.makeTempDirectoryScoped,
+          makeTempFile: fs.makeTempFile,
+          makeTempFileScoped: fs.makeTempFileScoped,
+          open: fs.open,
+          readDirectory: Effect.fnUntraced(function* (name, options) {
+            directoryReads += 1;
+            return yield* fs.readDirectory(name, options);
+          }),
+          readFile: fs.readFile,
+          readFileString: fs.readFileString,
+          readLink: fs.readLink,
+          realPath: Effect.fnUntraced(function* (name) {
+            realPaths += 1;
+            return yield* fs.realPath(name);
+          }),
+          remove: fs.remove,
+          rename: fs.rename,
+          sink: fs.sink,
+          stat: Effect.fnUntraced(function* (name) {
+            stats += 1;
+            return yield* fs.stat(name);
+          }),
+          stream: fs.stream,
+          symlink: fs.symlink,
+          truncate: fs.truncate,
+          utimes: fs.utimes,
+          watch: fs.watch,
+          writeFile: fs.writeFile,
+          writeFileString: fs.writeFileString,
+        })
+      );
+      const plan = yield* GraftCacheSync.use((sync) => sync.plan(source, targets)).pipe(
+        provideScopedLayer(Layer.fresh(GraftCacheSyncLive).pipe(Layer.provide(countingFs)))
+      );
+      expect(plan.entries).toHaveLength(targetCount * (conceptCount + 3));
+      expect(A.every(plan.entries, (entry) => entry.action === "copy")).toBe(true);
+      // Exactly root, graft, .cache and .graph once per clone, including source.
+      expect(directoryReads).toBe((targetCount + 1) * 4); // 104, independent of entry count.
+      // Each artifact and its three parents once, plus each clone's root/.git probe.
+      expect(realPaths).toBe((targetCount + 1) * (conceptCount + 7));
+      expect(stats).toBe(realPaths);
+    }),
+    15_000
+  );
+
+  it.effect(
+    "deduplicates a canonical target and its symlink alias without changing entry order",
+    Effect.fn(function* () {
+      const { fs, source, target, path, directory } = yield* fixture();
+      yield* fs.makeDirectory(path.join(target, "graft"));
+      yield* fs.writeFileString(path.join(target, "graft", "stale.md"), "# Stale\n");
+      const alias = path.join(directory, "target-alias");
+      yield* fs.symlink(target, alias);
+      const sync = yield* GraftCacheSync;
+      const single = yield* sync.plan(source, [target]);
+      expect(single.entries).toHaveLength(artifacts.length + 1);
+      expect((yield* sync.plan(source, [target, alias])).entries).toEqual(single.entries);
+      expect((yield* sync.plan(source, [alias, target])).entries).toEqual(single.entries);
+    })
+  );
+
+  it.effect(
+    "reports missing INDEX, wiring, and manifest while retaining other concept nodes",
     Effect.fn(function* () {
       const { fs, source, target, path } = yield* fixture();
       yield* fs.remove(path.join(source, "graft", "INDEX.md"));
       yield* fs.remove(path.join(source, "graft", ".graph"), { recursive: true });
+      yield* fs.remove(path.join(source, "graft", "manifest.json"));
       const sync = yield* GraftCacheSync;
       const report = yield* sync.apply(yield* sync.plan(source, [target]));
-      expect(report.skipped).toBe(2);
+      expect(report.skipped).toBe(3);
       expect(report.copied).toBe(3);
       expect(
         A.map(
           A.filter(report.plan.entries, (entry) => entry.action === "skip-missing-source"),
           (entry) => entry.artifact
         )
-      ).toEqual(["concepts", "wiring"]);
+      ).toEqual(["concepts", "wiring", "manifest"]);
+      expect(A.filter(report.plan.entries, (entry) => GraftCacheArtifact.is.manifest(entry.artifact))).toEqual([
+        expect.objectContaining({
+          artifact: "manifest",
+          action: "skip-missing-source",
+          reason: "Source artifact is missing.",
+        }),
+      ]);
       expect(yield* fs.exists(path.join(target, "graft", ".graph"))).toBe(false);
+      expect(yield* fs.exists(path.join(target, "graft", "manifest.json"))).toBe(false);
     })
   );
 
@@ -201,6 +332,7 @@ layer(testLayer)("Graft cache sync", (it) => {
       yield* fs.makeDirectory(path.join(target, "graft", "src"), { recursive: true });
       yield* fs.writeFileString(path.join(target, "graft", "src", "existing.md"), "target card\n");
       yield* fs.writeFileString(path.join(target, "graft", "INDEX.md"), "old index\n");
+      yield* fs.writeFileString(path.join(target, "graft", "manifest.json"), "old manifest\n");
       const binary = new Uint8Array([0, 255, 1, 128, 10]);
       yield* fs.writeFile(path.join(source, "graft", ".graph", "wiring.json"), binary);
       let renames = 0;
@@ -211,6 +343,9 @@ layer(testLayer)("Graft cache sync", (it) => {
           expect(Str.startsWith(".graft-cache-sync-")(path.basename(temporary))).toBe(true);
           if (path.basename(destination) === "INDEX.md") {
             expect(yield* fs.readFileString(destination)).toBe("old index\n");
+          }
+          if (Eq.equals(path.basename(destination), "manifest.json")) {
+            expect(yield* fs.readFileString(destination)).toBe("old manifest\n");
           }
           expect(yield* fs.readFile(temporary)).toEqual(
             yield* fs.readFile(path.join(source, path.relative(target, destination)))
@@ -227,10 +362,10 @@ layer(testLayer)("Graft cache sync", (it) => {
         provideScopedLayer(Layer.fresh(GraftCacheSyncLive)),
         Effect.provideService(FileSystem.FileSystem, observedFs)
       );
-      expect(report.copied).toBe(5);
+      expect(report.copied).toBe(6);
       expect(report.skipped).toBe(0);
       expect(report.refused).toBe(0);
-      expect(renames).toBe(5);
+      expect(renames).toBe(6);
       let total = 0;
       for (const relative of artifacts) {
         const bytes = yield* fs.readFile(path.join(source, "graft", relative));
@@ -300,6 +435,7 @@ layer(testLayer)("Graft cache sync", (it) => {
       yield* fs.makeDirectory(path.join(target, "graft"));
       yield* fs.symlink(path.join(target, "missing"), path.join(target, "graft", ".cache"));
       yield* fs.symlink(path.join(target, "README.md"), path.join(target, "graft", "INDEX.md"));
+      yield* fs.symlink(path.join(target, "README.md"), path.join(target, "graft", "manifest.json"));
       const sync = yield* GraftCacheSync;
       const plan = yield* sync.plan(source, [target]);
       expect(
@@ -307,7 +443,7 @@ layer(testLayer)("Graft cache sync", (it) => {
           A.filter(plan.entries, (entry) => entry.action === "refuse"),
           (entry) => entry.artifact
         )
-      ).toEqual(["summaries", "concepts"]);
+      ).toEqual(["summaries", "concepts", "manifest"]);
       expect((yield* Effect.flip(sync.apply(plan)))._tag).toBe("GraftCacheTargetError");
       expect(yield* fs.readFileString(path.join(target, "README.md"))).toBe("tracked content\n");
       expect(yield* fs.exists(path.join(target, "missing"))).toBe(false);
@@ -354,12 +490,30 @@ layer(testLayer)("Graft cache sync", (it) => {
       expect(Result.isSuccess(preview.result)).toBe(true);
       expect(preview.output).toHaveLength(1);
       const plan = yield* decodePlanJson(preview.output[0]);
-      expect(plan.entries).toHaveLength(10);
+      expect(plan.entries).toHaveLength(12);
       expect(yield* fs.exists(path.join(target, "graft"))).toBe(false);
       expect(yield* fs.exists(path.join(other, "graft"))).toBe(false);
       const applied = yield* runCommand(["cache", "sync", "--from", source, "--siblings", "--json"]);
       expect(Result.isSuccess(applied.result)).toBe(true);
-      expect((yield* decodeReportJson(applied.output[0])).copied).toBe(10);
+      const report = yield* decodeReportJson(applied.output[0]);
+      expect(report.copied).toBe(12);
+      expect(A.filter(report.plan.entries, (entry) => GraftCacheArtifact.is.manifest(entry.artifact))).toHaveLength(2);
+    })
+  );
+
+  it.effect(
+    "renders manifest copies and totals in the human-readable report",
+    Effect.fn(function* () {
+      const { source, target, path } = yield* fixture();
+      const applied = yield* runCommand(["cache", "sync", "--from", source, "--to", target]);
+      expect(Result.isSuccess(applied.result)).toBe(true);
+      expect(applied.output).toHaveLength(1);
+      expect(applied.output[0]).toEqual(
+        expect.stringContaining(`copy manifest ${path.join(target, "graft", "manifest.json")}`)
+      );
+      expect(applied.output[0]).toEqual(
+        expect.stringContaining("Copied: 6; removed: 0; skipped: 0; refused: 0; bytes:")
+      );
     })
   );
 
@@ -375,7 +529,7 @@ layer(testLayer)("Graft cache sync", (it) => {
       const refused = yield* runCommand(["cache", "sync", "--from", source, "--to", target, "--json"]);
       expect(Result.isFailure(refused.result)).toBe(true);
       const refusedPlan = yield* decodePlanJson(refused.output[0]);
-      expect(A.length(A.filter(refusedPlan.entries, (entry) => entry.action === "refuse"))).toBe(5);
+      expect(A.length(A.filter(refusedPlan.entries, (entry) => entry.action === "refuse"))).toBe(6);
       expect(yield* fs.exists(path.join(target, "graft"))).toBe(false);
     })
   );
