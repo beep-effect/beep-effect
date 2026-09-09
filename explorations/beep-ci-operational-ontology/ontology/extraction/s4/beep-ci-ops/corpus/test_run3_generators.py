@@ -38,7 +38,7 @@ stage_b = load("etl_run3b_fleet_corpus")
 class RedactionTests(unittest.TestCase):
     def test_identifier_tokens_preserve_ordinary_words_and_cover_process_names(self):
         safe = {key: 1234 for key in ("rapid", "cupid", "lipid", "RAPID", "Cupid", "stepId", "failedStepId", "STEPID")}
-        private = {key: 5678 for key in ("pid", "ppid", "ownerPid", "attachedPid", "legacyLockOwnerPid", "claudePid", "ownerProcStart", "xPid", "y_pid", "z-pid", "ownerPID", "attachedPID", "ownerPROCSTART")}
+        private = {key: 5678 for key in ("pid", "ppid", "ownerPid", "attachedPid", "legacyLockOwnerPid", "claudePid", "ownerProcStart", "xPid", "y_pid", "z-pid")}
         for key in safe:
             self.assertFalse(fleet.process_member(key), key)
         for key in private:
@@ -48,6 +48,12 @@ class RedactionTests(unittest.TestCase):
         self.assertFalse(set(private) & set(result))
         fleet.scan_output_bytes([("safe.json", fleet.encode_json(result)),
                                   ("safe.properties", fleet.encode_properties_projection([result]))])
+        # Uppercase acronym forms normalize like their camelCase twins, so each gets its own object.
+        for key in ("ownerPID", "attachedPID", "ownerPROCSTART"):
+            self.assertTrue(fleet.process_member(key), key)
+            single = fleet.redact({key: 5678, "rapid": 42}, b"a" * 32, collections.Counter())
+            self.assertNotIn(key, single)
+            self.assertEqual(single["rapid"], 42)
 
     def test_serialized_escaped_process_values_are_wholly_replaced(self):
         values = ('a"secret', 'secret\\', 'secret\\\\',
