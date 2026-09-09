@@ -45,7 +45,10 @@ def _repo_root() -> Path:
 REPO_ROOT = _repo_root()
 FLEET_ROOT = REPO_ROOT.parent
 # String leaves may contain JSON serialized through several escaping layers.
-PID_IN_TEXT = re.compile(r'\bpid(?:\\*")?(?:\s|\\+[nrt])*[=:]?(?:\s|\\+[nrt])*(?:\\*")?[0-9]+', re.IGNORECASE)
+PID_IN_TEXT = re.compile(
+    r"""\bpid(?:\\*["'])?(?:\s|\\+[nrt])*(?:[=:](?:\s|\\+[nrt])*)?(?:\\*["'])?[0-9]+""",
+    re.IGNORECASE,
+)
 TIMESTAMP_KEY = re.compile(r"(?:^ts$|AtMillis$|At$|TimestampMillis$|Timestamp$)")
 PROPERTY_KEY = re.compile(r"[A-Za-z0-9_]+")
 PROPERTY_RECORD_COMMENT = re.compile(r"# record (0|[1-9][0-9]*)")

@@ -36,7 +36,8 @@ class RedactionTests(unittest.TestCase):
     def test_quoted_process_ids_are_redacted_and_rejected_at_every_json_depth(self):
         for module in (fleet, identity, legacy):
             for message in ('pid:1234567', '{"pid":1234567}', '{"PID" : "1234567"}',
-                            '{"pid"\n:\t1234567}', 'pid = 1234567'):
+                            '{"pid"\n:\t1234567}', 'pid = 1234567',
+                            "pid='1234567'", "pid:'1234567'", "{'pid': '1234567'}"):
                 for depth in range(4):
                     with self.subTest(module=module.__name__, depth=depth, message=message):
                         result = module.redact_string(message)
@@ -48,6 +49,24 @@ class RedactionTests(unittest.TestCase):
                         message = json.dumps({"message": message})
             unchanged = 'rapid1234567, runId=1234567, elapsedMs=1234567'
             self.assertEqual(module.redact_string(unchanged), unchanged)
+
+    def test_long_nonmatching_pid_text_finishes_in_a_bounded_child(self):
+        runner = (
+            "import importlib,sys; sys.path.insert(0,sys.argv[1]); "
+            "m=importlib.import_module(sys.argv[2]); "
+            "messages=['pid'+' '*100000, 'pid'+r'\\n'*50000]; "
+            "assert all(m.redact_string(s)==s for s in messages); "
+            "m.scan_output_bytes([(str(i),s.encode()) for i,s in enumerate(messages)])"
+        )
+        for module in (fleet, identity, legacy):
+            subprocess.run([sys.executable, "-c", runner, str(module.SCRIPT.parent), module.__name__],
+                           capture_output=True, check=True, timeout=10)
+
+    def test_legacy_pin_rejects_an_obsolete_redaction_description(self):
+        manifest = legacy.yaml.safe_load((legacy.OUTPUT_ROOT / legacy.MANIFEST_NAME).read_bytes())
+        with patch.object(legacy.yaml, "safe_load", return_value={**manifest, "redaction_rules": []}):
+            with self.assertRaisesRegex(SystemExit, "redaction rule"):
+                legacy.verify_output_tree(legacy.OUTPUT_ROOT)
 
     def test_runtime_proc_shared_memory_and_user_unit_rewrites(self):
         for module in (fleet, identity):

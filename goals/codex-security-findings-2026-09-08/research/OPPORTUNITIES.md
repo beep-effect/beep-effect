@@ -76,3 +76,13 @@
   affected message values. Exercise serialization depth at public-output
   boundaries, and keep the reject scan aligned with the redactor. Repairing the
   saved bytes with provenance receipts avoids unrelated live recapture drift.
+
+- PR #1032 review exposed single-quoted PID forms and ambiguous whitespace
+  repetition in the expanded regex. Cover both quote styles and bound long
+  non-matching scans in a child process. Derive the manifest description from
+  the actual pattern and reject stale descriptions during pin verification.
+- Yeet restored pre-format goal JSON after an interrupted staged-only proof,
+  causing a formatting-only conflict. The saved and committed JSON decoded to
+  identical data; the unrelated settings bytes matched their pre-run hash.
+  Format intended JSON before staging so the saved overlay contains only
+  unrelated work. The recovery stash remains available.

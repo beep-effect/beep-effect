@@ -2,7 +2,7 @@
 # Public run-3 Stage A capture; source descriptors are portable.
 schema_version: beep-ci-ops-run3-fleet-corpus/v1
 generated_by: etl_run3_fleet_corpus.py
-generator_sha256: e184d5dbb1e9b9eb5b668feadf2ae751ad25398d5ce6a8fc43d6f021a7088e3e
+generator_sha256: 6cb4e288ce5c0ee6a954d8afe4cf03aa9b2b5ddefcac975171ef0dfa8d1ef50e
 corpus_commit: c00126704caf8496b3633df7581e8967a164c9bd
 capture_instant: '2026-09-09T03:13:20.428Z'
 capture_finished_at: '2026-09-09T03:13:27.254Z'
@@ -68415,9 +68415,9 @@ totals:
   files_emitted: 1873
   events: 7641
   payload_bytes: 15623094
-  bytes_emitted: 18263226
+  bytes_emitted: 18263225
 security_resanitization:
   finding: CSF-012
-  source_manifest_sha256: 91d9cdcc717f440ed3a442688b7f1a0915ccb009dc090e9b0b2a6b444e44f3f9
-  changed_raw_payloads: 12
+  source_manifest_sha256: eec994daa6e955ba4ae2372ee156fe149e05bd08b8e5882a6395a65282d39b1e
+  changed_raw_payloads: 0
   live_recapture: false

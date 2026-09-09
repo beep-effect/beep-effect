@@ -76,6 +76,12 @@ def repair(name: str) -> None:
         data = payloads[receipt["path"]]
         receipt.update(bytes=len(data), sha256=module.sha256(data))
     manifest["generator_sha256"] = generator_digest
+    if name == "etl_fleet_corpus":
+        rules = manifest["redaction_rules"]
+        pid_rules = [i for i, rule in enumerate(rules) if "pid <redacted>" in rule]
+        if len(pid_rules) != 1:
+            raise SystemExit("refusing ambiguous PID redaction provenance")
+        rules[pid_rules[0]] = module.PID_REDACTION_RULE
     manifest["security_resanitization"] = {
         "finding": "CSF-012", "source_manifest_sha256": module.sha256(original),
         "changed_raw_payloads": changed, "live_recapture": False,

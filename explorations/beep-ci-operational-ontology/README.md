@@ -148,7 +148,7 @@ graduation. Full plan with locked decisions: [`DECISIONS.md`](./DECISIONS.md).
 
 - 2026-09-09: CSF-012 fixes quoted and escaped PID redaction in all three corpus
   generators. A staged repair sanitizes 24 raw files, regenerates integrity
-  receipts, and passes every pin verifier; 16 generator tests pass. The operator
+  receipts, and passes every pin verifier; 18 generator tests pass. The operator
   authorized resolving all current findings in PR #1026, including the necessary
   security correction to otherwise immutable run-2 payloads.
 

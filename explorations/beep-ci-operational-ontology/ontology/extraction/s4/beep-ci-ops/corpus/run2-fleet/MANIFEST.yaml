@@ -2,7 +2,7 @@
 # Public run-2 fleet capture; all source descriptors are portable.
 schema_version: beep-ci-ops-fleet-corpus/v1
 generated_by: etl_fleet_corpus.py
-generator_sha256: b4a7d604c8fb47be3dbc2e9deacba559356b33baf0795a8d1fd1a1df0db450c2
+generator_sha256: c863edce2f3d820f7166752ad8dd5a09fd6ac9aa06376188324b0bf5bc833dbb
 capture_instant: '2026-09-03T02:27:19.384Z'
 capture_instant_basis: maximum timestamp observed in the captured records
 ordering:
@@ -16,7 +16,8 @@ redaction_rules:
 - 'For attempt and verdict records, recursively transform string values only: replace the fleet-project
   host prefix with <fleet>/, then any remaining operator-home prefix with <home>, then the system temporary-directory
   prefix with <tmp>/.'
-- In those string values, replace each case-sensitive match of \b(pid)[ =:]?[0-9]+ with pid <redacted>.
+- 'In string values, replace case-insensitive PID matches, including single or double quotes and repeated
+  JSON escapes, with pid <redacted>. Pattern: \bpid(?:\\*["''])?(?:\s|\\+[nrt])*(?:[=:](?:\s|\\+[nrt])*)?(?:\\*["''])?[0-9]+'
 - Never transform structural keys, booleans, nulls, or numeric values.
 projection_rules:
 - Each redacted raw payload has one sibling .properties projection derived from exactly the JSON records
@@ -12118,9 +12119,9 @@ totals:
   files_emitted: 1589
   events: 6213
   payload_bytes: 12679302
-  bytes_emitted: 13316444
+  bytes_emitted: 13316571
 security_resanitization:
   finding: CSF-012
-  source_manifest_sha256: be2144da427e7f9671d386713fb4a34e52246bb8702b586e9de4eb3b74880dc3
-  changed_raw_payloads: 12
+  source_manifest_sha256: cb9b8688562bde30776e96930c5112bc654d83cf2ddc2819d0e97be224405826
+  changed_raw_payloads: 0
   live_recapture: false

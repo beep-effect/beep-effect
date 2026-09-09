@@ -88,7 +88,14 @@ DROP_ADMISSION_FIELDS = ("pid", "procStart")
 PROJECTION_KIND = "properties_projection"
 
 # String leaves may contain JSON serialized through several escaping layers.
-PID_IN_TEXT = re.compile(r'\bpid(?:\\*")?(?:\s|\\+[nrt])*[=:]?(?:\s|\\+[nrt])*(?:\\*")?[0-9]+', re.IGNORECASE)
+PID_IN_TEXT = re.compile(
+    r"""\bpid(?:\\*["'])?(?:\s|\\+[nrt])*(?:[=:](?:\s|\\+[nrt])*)?(?:\\*["'])?[0-9]+""",
+    re.IGNORECASE,
+)
+PID_REDACTION_RULE = (
+    "In string values, replace case-insensitive PID matches, including single or double "
+    "quotes and repeated JSON escapes, with pid <redacted>. Pattern: " + PID_IN_TEXT.pattern
+)
 TIMESTAMP_KEY = re.compile(r"(?:^ts$|AtMillis$|At$|TimestampMillis$|Timestamp$)")
 PROPERTY_KEY = re.compile(r"[A-Za-z0-9_]+")
 PROPERTY_RECORD_COMMENT = re.compile(r"# record (0|[1-9][0-9]*)")
@@ -861,10 +868,7 @@ def build_manifest(emitted: list[EmittedFile]) -> bytes:
                 "operator-home prefix with <home>, then the system temporary-directory prefix "
                 "with <tmp>/."
             ),
-            (
-                r"In those string values, replace each case-sensitive match of "
-                r"\b(pid)[ =:]?[0-9]+ with pid <redacted>."
-            ),
+            PID_REDACTION_RULE,
             "Never transform structural keys, booleans, nulls, or numeric values.",
         ],
         "projection_rules": [
@@ -1010,6 +1014,8 @@ def verify_output_tree(root: Path) -> VerificationSummary:
         fail(f"{MANIFEST_NAME} has an unsupported schema")
     if manifest.get("generator_sha256") != sha256(SCRIPT.read_bytes()):
         fail("generator digest differs from the pinned manifest; use --refresh deliberately")
+    if PID_REDACTION_RULE not in manifest.get("redaction_rules", []):
+        fail("manifest PID redaction rule differs from the generator")
     if re.search(rb"/(?:home|tmp)(?:/|\b)", manifest_bytes):
         fail(f"{MANIFEST_NAME} contains a non-portable home or temporary path")
     if re.search(rb"(?:^|[ \t:'\"])/(?!/)", manifest_bytes, flags=re.MULTILINE):
