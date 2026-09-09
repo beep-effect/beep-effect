@@ -46,10 +46,21 @@ and assigns all 146 qualifications to 35 lanes. These observations grant no
 review admission. The [process-attempt preparation](./data/p3-fable-process-preparation.json)
 now preserves exact outputs and process identity through cancellation, deadlines
 and interruption; ten local Python child-process tests pass. No Fable process
-was started. Actual dry evidence, the full process controller and durable
-launcher, runtime/advisory-reference bindings and capability proof, final input
-binding and canonical validator transition remain pending.
+was started. The composition below now joins these components and installs the
+Fable validator. Actual dry evidence, the exact-input outer launcher,
+runtime/advisory-reference bindings, capability proof and final input binding
+remain pending.
 Historical Grok helpers and receipts retain their original provenance.
+
+The [independent-review controller composition](./data/p3-fable-controller-composition.json)
+now joins assignments, repeated admission, managed lane attempts, strict Fable
+result parsing and aggregate validation. Sixteen tests pass, including real
+user-service cleanup after detached children, cancellation, timeout and
+interruption. All 33 retained fixture service invocations are stopped and
+unpopulated. The canonical review validator now expects Fable provenance; its
+exact old bytes are archived, and six fixtures pass against the installed
+validator. No model process or formal review ran. Runtime audit/capability proof,
+two actual current dry rounds and the exact-input outer launch remain pending.
 
 The [R32 controller and launcher preparation](./data/r32-controller-launcher-preparation.json)
 now incorporates the Graft partition directly into the next census controller.

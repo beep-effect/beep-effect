@@ -72,6 +72,16 @@ the zero-cohort CLI family. All 145 qualified rows remain byte-identical, with
 original rows and designs archived. No dependencies or lockfiles changed. The [Graft audit](./data/post-r31-main284-graft-audit.json)
 is complete and adds no eligible owner; it grants no replacement census or dry credit.
 
+The [independent-review controller composition](./data/p3-fable-controller-composition.json)
+now joins assignments, repeated admission, managed lane attempts, strict Fable
+result parsing and aggregate validation. Sixteen tests pass, including real
+user-service cleanup after detached children, cancellation, timeout and
+interruption. All 33 retained fixture service invocations are stopped and
+unpopulated. The canonical review validator now expects Fable provenance; its
+exact old bytes are archived, and six fixtures pass against the installed
+validator. No model process or formal review ran. Runtime audit/capability proof,
+two actual current dry rounds and the exact-input outer launch remain pending.
+
 The [R32 controller and launcher preparation](./data/r32-controller-launcher-preparation.json)
 now incorporates the Graft partition directly into the next census controller.
 It also checks predecessor reconciliation and artifact bindings for complete
@@ -86,7 +96,7 @@ designs remain unchanged.
 The [review process preparation](./data/p3-fable-process-preparation.json) passes
 ten local Python child-process tests for output preservation, process identity,
 refusal, cancellation, timeout and interruption handling. No model review ran.
-Full controller composition, durable cgroup ownership and formal admission remain pending.
+The composition above now supplies managed lane ownership; formal admission remains pending.
 
 The earlier merge includes main `284294ee24177f13f6d3a763c5d987206d351c51`,
 brought forward in commit `131603144e0b361422bd77167c64d9ff192759b2`. The

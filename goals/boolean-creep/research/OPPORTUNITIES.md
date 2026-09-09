@@ -1185,3 +1185,16 @@ checked its specific R30 predecessor, so no admitted round is shown to have
 bypassed reconciliation. The next controller will check the predecessor for
 both complete and source-invalid outcomes, before creating outputs or invoking
 models. A completed receipt with unresolved questions must be a negative fixture.
+
+
+## 2026-09-09 — Private-cache subprocess lacked the local user bus environment
+
+The first local review-controller service fixture refused before dispatch with
+`service-observation-failed`. Its exact `systemctl --user show` subprocess reported
+that `DBUS_SESSION_BUS_ADDRESS` and `XDG_RUNTIME_DIR` were not defined. Repository
+shell commands could reach the manager, but the private-cache Python process did
+not inherit those variables. The supervisor now verifies the current user's
+runtime directory and bus socket ownership and supplies only those local bus
+coordinates to manager commands. No model or service started in the failed
+attempt. Service fixtures must run from the same private execution directory as
+the controller, rather than relying on the repository shell environment.

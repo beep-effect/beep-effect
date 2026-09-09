@@ -1,0 +1,58 @@
+{
+  "kind": "fable-controller-composition-preparation/v1",
+  "sourceSha": "7e09ee66d4077824a5820f8651d10d5e3729f978",
+  "baseMainSha": "e7b7d03e61bd5cddd74e89bb03ae10dbe06e067b",
+  "observedAdvancedMainSha": "8d507287b7bd01445a663bfdb0b333c585a7d764",
+  "privateBundle": "~/.cache/beep/boolean-creep/p3-fable-controller-composition",
+  "privateManifest": {
+    "sha256": "f31588eb831215a960c470a6a38ad9f35f5b66db45083a275109380de43f6c87",
+    "artifacts": 792,
+    "fixtureDependencyLinks": 6
+  },
+  "composition": [
+    "Complete bounded lane assignment, literal prompts and repeated admission.",
+    "Two-current-dry-round, repository snapshot, runtime-audit and actual capability-probe gates.",
+    "Manager-owned per-lane services with exact invocation identity and verified cgroup drain.",
+    "Strict Fable transport parsing, preserved findings, complete aggregate coverage and canonical packet validation.",
+    "Separate capability bootstrap after dry/audit admission; no capability result can count as a design review."
+  ],
+  "tests": {
+    "finalMethods": 16,
+    "exitCode": 0,
+    "usesLocalPythonFixturesOnly": true,
+    "actualUserServicesExercised": true,
+    "ownedServiceInvocationsFinallyChecked": 33,
+    "allStoppedAndUnpopulated": true,
+    "unrelatedProcessPreserved": true
+  },
+  "canonicalValidator": {
+    "file": "goals/boolean-creep/ops/validate-review.ts",
+    "onlyChange": "reviewer literal: grok-cli to claude-cli-fable",
+    "oldSha256": "32e650ee76b2e814bf1448578503f2c9c5eb58a06d5ec5afa80d29dfacec46bd",
+    "newSha256": "e02ef47430f55a3da76e4548442f5160c37d11166cc364df971b192cf5ef3032",
+    "archive": "goals/boolean-creep/history/ops/2026-09-09-fable-transition/validate-review.ts.txt",
+    "fixtures": 6,
+    "allExpectedOutcomesPassed": true,
+    "oldReviewProvenancePreserved": true
+  },
+  "inventory": {
+    "records": 753,
+    "qualified": 145,
+    "disqualified": 608,
+    "applied": 0,
+    "sha256": "ed743923428ac9b8d8973a48dcf5f8011526881d64436a0779658a4159f42426",
+    "changedByPreparation": false
+  },
+  "remaining": [
+    "Resolve the two citation decisions and finalize R31 reconciliation.",
+    "Merge and audit advanced main before the next census.",
+    "Obtain two actual current-source dry rounds.",
+    "Bind and review complete runtime, managed configuration, environment, installed dependency and advisory-reference evidence.",
+    "Run the actual capability probe, bind final review inputs and admit the outer user-service launcher.",
+    "Perform independent review and reconcile all findings before GATE 2."
+  ],
+  "modelProcessesInvoked": false,
+  "formalReviewAdmitted": false,
+  "dryCredit": false,
+  "independentP3Approval": false
+}
