@@ -9,7 +9,7 @@ import {
 import { CommandJsonOutput } from "@beep/repo-cli/test/Cli";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
-import { expect, layer, it as propertyTest } from "@effect/vitest";
+import { expect, it, layer } from "@effect/vitest";
 import { Console, Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import * as PlatformError from "effect/PlatformError";
@@ -86,7 +86,7 @@ const assertReportRoundTrip = Effect.fn("GraftCacheSyncTest.assertReportRoundTri
   expect(decoded).toEqual(report);
 });
 
-propertyTest.effect.prop(
+it.effect.prop(
   "round-trips arbitrary reports without losing plan entries, reasons, or counters",
   [GraftCacheSyncReport],
   ([report]) => Effect.map(assertReportRoundTrip(report), () => true)
