@@ -110,3 +110,42 @@ will be recorded against PR #1026. Capture-time Codex statuses are preserved.
 After main integration, the ignored exploration Atlas was stale. Canonical
 `beep explore atlas --write` restored it and `--check` passes; no tracked
 exploration file changed. The superseded local proof is not acceptance evidence.
+
+
+PR #1032 review and main integration:
+
+- Integrated main's Astra xhigh routing while retaining the security correction.
+  Exploration attribution now identifies follow-up PR #1032.
+- Reproduced embedded JSON corruption with a failing parse regression. All three
+  redactors now preserve punctuation and escaping, using null for numeric JSON
+  PID values and <redacted> inside quoted values.
+- Replayed all pins from committed pre-repair source `247d22465bdf` through the
+  repair script. Both fleet pins changed 12 raw files; identity changed zero.
+  All three staged verifiers passed, and an ordinary rerun verified unchanged.
+- The script resolves the source generator digest from Git history. A synthetic
+  committed repository exercises repair after the generator update is committed,
+  exact-source replay, idempotence, rejection of unknown provenance, and retaining
+  the first repair record when a later revision changes no payloads.
+- The Stage A report now labels earlier proofs as historical and records current
+  whole-tree hashes, generator digests, counts, and byte totals. Full Yeet proof,
+  hosted acceptance, merge, and CSF-012 closure remain pending.
+
+
+Main advanced again with Stage B publication #1034 (`86990e28f9`). The second
+merge preserved both exploration records. Its fourth generator repeated CSF-012:
+28 quoted-PID regressions failed, and independent scanning found 13 occurrences
+in 11 organic raw files. The delimiter-preserving fix now covers that generator;
+all 34 combined tests pass. Its organic pin was repaired through its own full
+population verifier and projection writer; synthetic payloads are unchanged.
+All five pins verify unchanged on a second repair run. Stage B's report now
+records current integrity proofs and labels original capture evidence historical.
+
+
+Stage B repair-history review follow-up adds both fleet and synthetic cases to
+a committed-history regression. It verifies old-pin repair after a committed
+generator change, independent roots, exact-source replay, idempotence, original
+repair receipts, and population-specific projections. The new test reproduced
+a projection false positive for an embedded redacted PID null; only text
+projections admit that safe representation. Raw identity members and remaining
+numeric PID values still fail. The complete 35-test suite and both updated
+Stage B pin verifiers pass, with no further raw payload changes.

@@ -7,6 +7,7 @@ Fixtures are synthetic and never touch scheduler state or the frozen corpora.
 import collections
 import contextlib
 import copy
+import dataclasses
 import importlib.util
 import io
 import json
@@ -224,7 +225,7 @@ class RedactionTests(unittest.TestCase):
                str(Path(tempfile.gettempdir()) / "private").encode(), b"/home/another/private", b"/tmp/private",
                b"/run/user/9876/state", b"/proc/123/status", b"/dev/shm/state", b"~/.beep/runtime/state",
                b"uid-1234", b"user@1234.service", b"user-1234.slice", b"pid123", b"pid=123", b"pid:123",
-               b'{"pid":123}', b'{"procStart":"raw"}', b"nonce-123.lease.json", b"merged-preview-1234",
+               b'{"pid":123}', b'{"pid":null}', b'{"procStart":"raw"}', b"nonce-123.lease.json", b"merged-preview-1234",
                host, etl.sha256(host)[:12].encode(), b"ghp_" + b"x" * 25, b"github_pat_" + b"x" * 25,
                b"op://vault/item/field=Abcdef1234567890", b"sk-proj-" + b"x" * 30,
                b"xoxb-" + b"x" * 20, b"AKIA" + b"X" * 16, b"-----BEGIN PRIVATE KEY-----",
@@ -235,6 +236,9 @@ class RedactionTests(unittest.TestCase):
                     etl.scan_output_bytes([("fixture", data)])
                 self.assertNotIn(data.decode(), str(exc.exception))
         etl.scan_output_bytes([("safe", b"branch=feat/tmpfs-reap\nownerRef=abcdef012345\nuid-<uid>\n<proc>/<process>/status\n")])
+        etl.scan_output_bytes([("safe.properties", b'message={"pid":null,"proofTier":"full"}\n')])
+        with self.assertRaises(SystemExit):
+            etl.scan_output_bytes([("unsafe.properties", b'message={"pid":null}\nother={"pid":123}\n')])
 
     def test_string_rewrites_and_synthetic_mapping(self):
         roots = {str(Path(tempfile.gettempdir()) / "fixture" / label): f"<synthetic-checkout:{label}>" for label in etl.SYNTHETIC_SOURCE_LABELS}
@@ -313,6 +317,76 @@ class PinContractTests(unittest.TestCase):
                   "m=importlib.import_module(Path(sys.argv[1]).stem); "
                   "m.verify_output_tree(Path(sys.argv[2]),sys.argv[3])")
         return subprocess.run([sys.executable, "-c", runner, str(etl.SCRIPT), str(self.outputs[population]), population], capture_output=True, text=True, timeout=30)
+
+    def test_committed_repair_history_for_both_populations(self):
+        script = etl.REPO_ROOT / "goals/codex-security-findings-2026-09-08/research/scripts/resanitize-corpora.py"
+        spec = importlib.util.spec_from_file_location("repair_stage_b", script)
+        repair = importlib.util.module_from_spec(spec)
+        with patch.object(sys, "dont_write_bytecode", True):
+            spec.loader.exec_module(repair)
+        cache = Path.home() / ".cache/beep"
+        cache.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=cache) as name:
+            repo = Path(name)
+            corpus = repo / "corpus"
+            corpus.mkdir()
+            generator = corpus / etl.SCRIPT.name
+            generator.write_text("# original Stage B generator fixture\n")
+            outputs = {p: corpus / ("run3b-" + p) for p in ("fleet", "synthetic")}
+
+            def git(*args):
+                return subprocess.run(["git", "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid",
+                                       "-c", "commit.gpgsign=false", "-c", "core.hooksPath=/dev/null", *args],
+                                      cwd=repo, check=True, capture_output=True, text=True).stdout.strip()
+
+            with patch.object(etl, "SCRIPT", generator), patch.object(etl, "OUTPUT_ROOTS", outputs), \
+                 patch.object(repair, "ROOT", repo), patch.object(repair, "CORPUS", corpus), \
+                 patch.object(repair, "load_generator", return_value=etl), \
+                 contextlib.redirect_stdout(io.StringIO()):
+                originals = {}
+                messages = {}
+                for population, root in outputs.items():
+                    emitted, metadata = etl.capture(population, self.export if population == "synthetic" else None)
+                    raw = next(e for e in emitted if e.receipt["kind"] == "admission")
+                    rows = etl.decode_ndjson(raw.data, raw.path)
+                    rows[0]["message"] = '{"pid":1234567,"proofTier":"full"}'
+                    messages[population] = raw.path
+                    payloads = {raw.path: etl.encode_ndjson(rows),
+                                etl.projection_path(raw.path): etl.projected_bytes(rows, metadata["provenance"])}
+                    emitted = [dataclasses.replace(e, data=payloads.get(e.path, e.data)) for e in emitted]
+                    manifest = etl.finish_manifest(metadata, emitted, population)
+                    for e in emitted:
+                        destination = root / e.path
+                        destination.parent.mkdir(parents=True, exist_ok=True)
+                        destination.write_bytes(e.data)
+                    (root / etl.MANIFEST_NAME).write_bytes(manifest)
+                    originals[population] = etl.sha256(manifest)
+                git("init", "-q")
+                git("add", ".")
+                git("commit", "-qm", "fixture: capture Stage B populations")
+                source_ref = git("rev-parse", "HEAD")
+                generator.write_text("# committed updated Stage B generator fixture\n")
+                git("add", ".")
+                git("commit", "-qm", "fixture: update generator")
+                for population, root in outputs.items():
+                    other = outputs["synthetic" if population == "fleet" else "fleet"]
+                    untouched = tree_bytes(other)
+                    repair.repair(etl.__name__, population=population)
+                    self.assertEqual(tree_bytes(other), untouched)
+                    rows = etl.decode_ndjson((root / messages[population]).read_bytes(), "fixture")
+                    self.assertEqual(json.loads(rows[0]["message"]), {"pid": None, "proofTier": "full"})
+                    before = tree_bytes(root)
+                    repair.repair(etl.__name__, population=population)
+                    self.assertEqual(tree_bytes(root), before)
+                    repair.repair(etl.__name__, source_ref, population)
+                    self.assertEqual(tree_bytes(other), untouched)
+                    manifest = yaml.safe_load((root / etl.MANIFEST_NAME).read_bytes())
+                    self.assertEqual(manifest["security_resanitization"]["source_manifest_sha256"], originals[population])
+                    self.assertEqual(manifest["security_resanitization"]["changed_raw_payloads"], 1)
+                    self.assertEqual(manifest["provenance"], "organic" if population == "fleet" else "synthetic")
+                    projection = (root / etl.projection_path(messages[population])).read_bytes()
+                    self.assertEqual(projection, etl.projected_bytes(rows, manifest["provenance"]))
+                    etl.verify_output_tree(root, population)
 
     def test_ready_gate_refuses_without_emission(self):
         (self.export / "READY").unlink()

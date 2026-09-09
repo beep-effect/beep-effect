@@ -31,6 +31,8 @@ def load(name):
 
 fleet = load("etl_run3_fleet_corpus")
 identity = load("etl_run3_checkout_identity")
+legacy = load("etl_fleet_corpus")
+stage_b = load("etl_run3b_fleet_corpus")
 
 
 class RedactionTests(unittest.TestCase):
@@ -154,6 +156,56 @@ class RedactionTests(unittest.TestCase):
             for relative in ("packages/run/user/123/state", "packages/proc/123/status", "packages/~/.beep/runtime/state"):
                 self.assertEqual(fleet.redact_string(relative), relative)
                 fleet.scan_output_bytes([("fixture", relative.encode())])
+
+    def test_embedded_json_remains_parseable_after_redaction(self):
+        for module in (fleet, identity, legacy, stage_b):
+            for pid in (1234567, "1234567"):
+                original = {"pid": pid, "proofTier": "full", "nested": [True, None]}
+                for depth in range(4):
+                    message = json.dumps(original)
+                    for _ in range(depth):
+                        message = json.dumps({"message": message})
+                    result = module.redact_string(message)
+                    for _ in range(depth):
+                        result = json.loads(result)["message"]
+                    decoded = json.loads(result)
+                    self.assertEqual(decoded, {**original, "pid": None if isinstance(pid, int) else "<redacted>"})
+                    self.assertEqual(module.redact_string(module.redact_string(message)), module.redact_string(message))
+
+    def test_quoted_process_ids_are_redacted_and_rejected_at_every_json_depth(self):
+        for module in (fleet, identity, legacy, stage_b):
+            for message in ('pid:1234567', '{"pid":1234567}', '{"PID" : "1234567"}',
+                            '{"pid"\n:\t1234567}', 'pid = 1234567',
+                            "pid='1234567'", "pid:'1234567'", "{'pid': '1234567'}"):
+                for depth in range(4):
+                    with self.subTest(module=module.__name__, depth=depth, message=message):
+                        result = module.redact_string(message)
+                        self.assertNotIn("1234567", result)
+                        module.scan_output_bytes([("fixture", module.encode_json({"message": result}))])
+                        with self.assertRaises(SystemExit) as exc:
+                            module.scan_output_bytes([("fixture", module.encode_json({"message": message}))])
+                        self.assertNotIn("1234567", str(exc.exception))
+                        message = json.dumps({"message": message})
+            unchanged = 'rapid1234567, runId=1234567, elapsedMs=1234567'
+            self.assertEqual(module.redact_string(unchanged), unchanged)
+
+    def test_long_nonmatching_pid_text_finishes_in_a_bounded_child(self):
+        runner = (
+            "import importlib,sys; sys.path.insert(0,sys.argv[1]); "
+            "m=importlib.import_module(sys.argv[2]); "
+            "messages=['pid'+' '*100000, 'pid'+r'\\n'*50000]; "
+            "assert all(m.redact_string(s)==s for s in messages); "
+            "m.scan_output_bytes([(str(i),s.encode()) for i,s in enumerate(messages)])"
+        )
+        for module in (fleet, identity, legacy, stage_b):
+            subprocess.run([sys.executable, "-c", runner, str(module.SCRIPT.parent), module.__name__],
+                           capture_output=True, check=True, timeout=10)
+
+    def test_legacy_pin_rejects_an_obsolete_redaction_description(self):
+        manifest = legacy.yaml.safe_load((legacy.OUTPUT_ROOT / legacy.MANIFEST_NAME).read_bytes())
+        with patch.object(legacy.yaml, "safe_load", return_value={**manifest, "redaction_rules": []}):
+            with self.assertRaisesRegex(SystemExit, "redaction rule"):
+                legacy.verify_output_tree(legacy.OUTPUT_ROOT)
 
     def test_runtime_proc_shared_memory_and_user_unit_rewrites(self):
         for module in (fleet, identity):
@@ -353,7 +405,7 @@ class SyntheticReceiptTests(unittest.TestCase):
                     (root / fleet.MANIFEST_NAME).write_bytes(original)
             self.assertEqual(self.verify_cli(fleet, root).returncode, 0)
 
-    def fixture(self, module, root):
+    def fixture(self, module, root, message=None):
         scanned = "2026-01-01T00:00:00.000Z"
         if module is fleet:
             path = "admission/fixture/journal.ndjson"
@@ -361,6 +413,8 @@ class SyntheticReceiptTests(unittest.TestCase):
             rows, census = fleet.transform_source(fleet.encode_ndjson([
                 {"schemaVersion": "yeet-admission-journal/v1", "_tag": "admission-admitted",
                  "admittedAtMillis": 1767225600000, "pid": 123}]), "admission", b"a" * 32)
+            if message is not None:
+                rows[0]["message"] = message
             emitted = module.payload_pair(path, rows, "admission", source, scanned)
             metadata = {"capture_instant": scanned, "admission_roots": [{"label": "fixture",
                 "journal": {"path": path, **module.complete(source, scanned), **census}, "live": []}],
@@ -399,6 +453,61 @@ class SyntheticReceiptTests(unittest.TestCase):
             target.write_bytes(payload.data)
         (root / module.MANIFEST_NAME).write_bytes(manifest)
         return manifest
+
+    def test_committed_repair_replays_old_pin_and_preserves_initial_provenance(self):
+        script = fleet.REPO_ROOT / "goals/codex-security-findings-2026-09-08/research/scripts/resanitize-corpora.py"
+        spec = importlib.util.spec_from_file_location("repair_corpora", script)
+        repair = importlib.util.module_from_spec(spec)
+        # Goal packet snapshots reject hidden-directory and binary residue.
+        with patch.object(sys, "dont_write_bytecode", True):
+            spec.loader.exec_module(repair)
+        cache = Path.home() / ".cache/beep"
+        cache.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=cache) as name:
+            repo = Path(name)
+            corpus = repo / "corpus"
+            pin = corpus / "run3-fleet"
+            pin.mkdir(parents=True)
+            generator = corpus / "etl_run3_fleet_corpus.py"
+            generator.write_text("# original generator fixture\n")
+
+            def git(*args):
+                return subprocess.run(["git", "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid",
+                                       "-c", "commit.gpgsign=false", "-c", "core.hooksPath=/dev/null", *args],
+                                      cwd=repo, check=True, capture_output=True, text=True).stdout.strip()
+
+            with patch.object(fleet, "SCRIPT", generator), patch.object(fleet, "OUTPUT_ROOT", pin), \
+                 patch.object(repair, "ROOT", repo), patch.object(repair, "CORPUS", corpus), \
+                 patch.object(repair, "load_generator", return_value=fleet), \
+                 contextlib.redirect_stdout(io.StringIO()):
+                original = self.fixture(fleet, pin, '{"pid":1234567,"proofTier":"full"}')
+                git("init", "-q")
+                git("add", ".")
+                git("commit", "-qm", "fixture: capture original pin")
+                source_ref = git("rev-parse", "HEAD")
+                generator.write_text("# committed updated generator fixture\n")
+                git("add", ".")
+                git("commit", "-qm", "fixture: update generator")
+                repair.repair(fleet.__name__)
+                first = fleet.yaml.safe_load((pin / fleet.MANIFEST_NAME).read_bytes())["security_resanitization"]
+                self.assertEqual(first["source_manifest_sha256"], fleet.sha256(original))
+                self.assertEqual(first["changed_raw_payloads"], 1)
+                row = fleet.decode_ndjson((pin / "admission/fixture/journal.ndjson").read_bytes(), "fixture")[0]
+                self.assertEqual(json.loads(row["message"]), {"pid": None, "proofTier": "full"})
+                before = {p.relative_to(pin): p.read_bytes() for p in pin.rglob("*") if p.is_file()}
+                repair.repair(fleet.__name__)
+                self.assertEqual(before, {p.relative_to(pin): p.read_bytes() for p in pin.rglob("*") if p.is_file()})
+                generator.write_text("# next generator fixture\n")
+                repair.repair(fleet.__name__)
+                updated = fleet.yaml.safe_load((pin / fleet.MANIFEST_NAME).read_bytes())["security_resanitization"]
+                self.assertEqual({k: updated[k] for k in first}, first)
+                self.assertEqual(updated["updates"][0]["changed_raw_payloads"], 0)
+                repair.repair(fleet.__name__, source_ref)
+                replay = fleet.yaml.safe_load((pin / fleet.MANIFEST_NAME).read_bytes())["security_resanitization"]
+                self.assertEqual(replay["source_manifest_sha256"], fleet.sha256(original))
+                self.assertEqual(replay["changed_raw_payloads"], 1)
+                with self.assertRaisesRegex(SystemExit, "no matching committed provenance"):
+                    repair.verify_generator_provenance(fleet, "0" * 64)
 
     def verify_cli(self, module, root):
         runner = ("import importlib,sys; from pathlib import Path; "

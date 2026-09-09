@@ -21,6 +21,12 @@ the "bush" (`A_LETTER_FROM_THE_OTHER_SIDE_OF_THE_LOOP.md`).
 
 ## Next Open Question
 
+CSF-012 in [PR #1032](https://github.com/beep-effect/beep-effect/pull/1032)
+corrects PID redaction in the saved run-2 and run-3 corpus pins. The security
+repair preserves captured history and prior-manifest digests; it does not
+recapture sources or rerun ontology ratification. Stage B is now pinned; the next
+step is run 3 proper, as described below.
+
 Routing for future token-heavy Codex work is settled: `gpt-6-astra` with
 `xhigh` reasoning ([decision update](./DECISIONS.md)). The next step remains:
 
@@ -160,6 +166,14 @@ graduation. Full plan with locked decisions: [`DECISIONS.md`](./DECISIONS.md).
   732 payloads / 733 files; synthetic: 8 payloads / 9 files.
   Proof-ledger issuance stays re-parked to run 4. Stage A residue needs a separate ruling.
   See [the review-fix report](./research/run3-lanes/stage-b-review-fixes-report.md).
+
+- 2026-09-09: CSF-012 fixes quoted and escaped PID redaction in all four corpus
+  generators, including Stage B added by #1034. A staged repair sanitizes 35 raw
+  files and verifies all five pins; 35 generator tests pass. Current proofs are
+  recorded in the Stage A and Stage B reports. The operator
+  authorized follow-up PR #1032 after #1026 merged with eleven findings, including
+  the necessary security correction to otherwise immutable run-2 payloads.
+
 - 2026-09-08: Stage B pinned with one new standalone generator and independent
   `run3b-fleet/` and `run3b-synthetic/` roots. The fleet covers 93 checkouts,
   235 admission rows, 354 attempt journals, one protocol marker, and two live

@@ -52,7 +52,11 @@ def fleet_root(checkout: Path) -> Path:
 
 
 FLEET_ROOT = fleet_root(REPO_ROOT)
-PID_IN_TEXT = re.compile(r"\b(pid)[ =:]?[0-9]+")
+# String leaves may contain JSON serialized through several escaping layers.
+PID_IN_TEXT = re.compile(
+    r"""(?P<prefix>\bpid(?P<key_quote>\\*["'])?(?:\s|\\+[nrt])*(?:[=:](?:\s|\\+[nrt])*)?(?P<value_quote>\\*["'])?)[0-9]+""",
+    re.IGNORECASE,
+)
 TIMESTAMP_KEY = re.compile(r"(?:^ts$|AtMillis$|At$|TimestampMillis$|Timestamp$)")
 PROPERTY_KEY = re.compile(r"[A-Za-z0-9_]+")
 PROPERTY_RECORD_COMMENT = re.compile(r"# record (0|[1-9][0-9]*)")
@@ -178,6 +182,12 @@ def host_prefixes() -> list[tuple[str, str]]:
     return sorted(roots.items(), key=lambda item: -len(item[0]))
 
 
+def redact_pid_match(match: re.Match[str]) -> str:
+    """Preserve JSON punctuation and escaping while removing only PID digits."""
+    replacement = "null" if match["key_quote"] and not match["value_quote"] else "<redacted>"
+    return match["prefix"] + replacement
+
+
 def redact_string(value: str) -> str:
     value = re.sub(PATH_LEFT_BOUNDARY + re.escape("~/.beep/runtime") + PATH_RIGHT_BOUNDARY, "<runtime-root>", value)
     value = re.sub(r"-\d+(?=\.(?:lease|ticket)\.json)", "-<process>", value)
@@ -192,7 +202,7 @@ def redact_string(value: str) -> str:
     value = value.replace(sha256(hostname.encode())[:12], "<host>")
     value = value.replace(hostname, "<host>")
     value = re.sub(r"\buid-\d+", "uid-<uid>", value)
-    return PID_IN_TEXT.sub("pid <redacted>", value)
+    return PID_IN_TEXT.sub(redact_pid_match, value)
 
 
 def normalized_member(key: str) -> str:
