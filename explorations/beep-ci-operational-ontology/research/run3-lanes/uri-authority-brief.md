@@ -29,3 +29,18 @@ matches; redaction and the residue scan both accept it. Same in the Stage B gene
 4. Append `## URI authorities (Greptile round 2)` to `reconcile-1037-report.md`.
 
 Commit: `fix(explorations): bound host roots after URI authorities`, body lines under 100 chars.
+
+## Additional finding (Greptile round 3, `etl_run3_fleet_corpus.py:70`) — HELD
+
+**Escaped quotes break the serialized-value redaction.** The round-2 quoted-value branch
+treats the first `"` as the closing delimiter, so `{"ownerPid":"a\"secret"}` becomes
+`{"ownerPid": ""secret"}`: invalid JSON and part of the identity value survives. Same in the
+Stage B generator. Fix in BOTH generators: match a JSON string value as
+`"(?:[^"\\]|\\.)*"` (escaped characters consumed as pairs), apply the same to the key
+side, and cover serialized depths the way PR #1032's tests do (once-escaped `\"ownerPid\"`
+and twice-escaped forms). Tests: the example above redacts to well-formed JSON with the
+whole value replaced; a value containing `\\` before the closing quote; a message whose
+quoted value is itself serialized JSON. The residue scan must reject the raw forms.
+
+If the stopped lane left uncommitted edits in the tree, review them first and build on them.
+Do ONE re-capture of the three refreshed pins after both fixes, then the full verification set.
