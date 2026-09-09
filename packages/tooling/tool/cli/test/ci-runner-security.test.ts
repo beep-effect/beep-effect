@@ -238,16 +238,20 @@ describe("CI runner security", () => {
       assert.strictEqual(profile("pull_request").desktop_rust_relevant, "false");
 
       const steps = jobSteps(workflowJobs(workflow), "professional-desktop-ipc-stdio");
-      const rustGate =
-        "steps.lane-gate.outputs.should_run == 'true' && steps.lane-gate.outputs.rust_should_run == 'true'";
-      for (const name of [
-        "Install Tauri Linux system dependencies",
-        "Setup Rust toolchain",
-        "Check Rust crate",
-        "Lint Rust crate",
-      ]) {
+      const laneGate = "steps.lane-gate.outputs.should_run == 'true'";
+      const rustGate = `${laneGate} && steps.lane-gate.outputs.rust_should_run == 'true'`;
+      for (const name of ["Install Tauri Linux system dependencies", "Check Rust crate", "Lint Rust crate"]) {
         assert.strictEqual(stepByName(steps, name).if, rustGate, name);
       }
+      // build-sidecar.ts and sidecar-ipc-stdio.test.ts read the host target
+      // triple from `rustc -vV`, so the toolchain is provisioned whenever the
+      // lane runs, ahead of the IPC proof; only the Tauri packages and the
+      // cargo steps wait on the crate gate.
+      assert.strictEqual(stepByName(steps, "Setup Rust toolchain").if, laneGate);
+      assert.isBelow(
+        stepIndexByName(steps, "Setup Rust toolchain"),
+        stepIndexByName(steps, "Run desktop IPC stdio proof")
+      );
       assert.strictEqual(stepByName(steps, "Setup Rust toolchain").with?.components, "clippy");
       assert.strictEqual(
         stepByName(steps, "Setup Rust toolchain").with?.["cache-workspaces"],

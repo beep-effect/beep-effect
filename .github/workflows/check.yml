@@ -473,8 +473,10 @@ jobs:
           set -euo pipefail
           should_run=true
           # desktop_rust_relevant (scripts/ci-change-profile.sh) gates the
-          # cargo steps: only src-tauri or this workflow's changes pay for
-          # the Rust toolchain on pull requests; pushes always compile.
+          # Tauri system packages and the cargo steps: only src-tauri or this
+          # workflow's changes compile the crate on pull requests; pushes
+          # always compile. The toolchain itself is provisioned whenever the
+          # lane runs (see "Setup Rust toolchain" below).
           eval "$(scripts/ci-change-profile.sh "origin/${GITHUB_BASE_REF:-main}")"
           rust_should_run="$desktop_rust_relevant"
 
@@ -510,8 +512,14 @@ jobs:
             build-essential \
             pkg-config
 
+      # The IPC proof needs rustc on every run: build-sidecar.ts and
+      # sidecar-ipc-stdio.test.ts read the host target triple from `rustc -vV`,
+      # and the Rust that happens to ship on the hosted image is not a
+      # contract. The toolchain is therefore provisioned on should_run alone
+      # (rust-cache keeps it to seconds); only the apt packages and the cargo
+      # steps wait on the crate gate.
       - name: Setup Rust toolchain
-        if: steps.lane-gate.outputs.should_run == 'true' && steps.lane-gate.outputs.rust_should_run == 'true'
+        if: steps.lane-gate.outputs.should_run == 'true'
         uses: actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659 # v1.17.0
         with:
           toolchain: stable
