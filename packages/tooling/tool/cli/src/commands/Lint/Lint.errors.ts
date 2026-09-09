@@ -211,6 +211,7 @@ export class TsconfigOverlayReadError extends S.TaggedError<TsconfigOverlayReadE
    * @param message - Action that failed, such as `Failed to read <overlay path>.`.
    * @returns The tagged error carrying the action message with the rendered cause appended.
    * @category constructors
+   * @since 0.0.0
    */
   static readonly new = (cause: unknown, message: string): TsconfigOverlayReadError =>
     TsconfigOverlayReadError.make({ message: messageWithCause(message, cause) });

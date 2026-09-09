@@ -32,7 +32,15 @@ const APP_SECRET_INPUTS: ReadonlyArray<readonly [string, string]> = [
   ["liveblocks-secret-key", "LIVEBLOCKS_SECRET_KEY"],
 ];
 const SECRET_INPUTS: ReadonlyArray<readonly [string, string]> = [...TURBO_SECRET_INPUTS, ...APP_SECRET_INPUTS];
-const secretInputLine = ([input, name]: readonly [string, string]): string => `${input}: \${{ secrets.${name} }}`;
+// The read-only Turbo token is the only secret a same-repository pull request
+// may receive; the write token and every application secret are gated to
+// push events in the workflow expression itself, so PR-controlled code never
+// sees them even before the policy script runs.
+const secretReference = (name: string): string =>
+  name === "TURBO_READ_TOKEN"
+    ? `\${{ secrets.${name} }}`
+    : `\${{ github.event_name == 'push' && secrets.${name} || '' }}`;
+const secretInputLine = ([input, name]: readonly [string, string]): string => `${input}: ${secretReference(name)}`;
 const SECRET_INPUT_LINES = A.map(SECRET_INPUTS, secretInputLine);
 const SECRET_REFERENCES = A.map(SECRET_INPUTS, ([, name]) => `secrets.${name}`);
 
@@ -472,14 +480,10 @@ describe("CI runner security", () => {
         assert.strictEqual(setup.with?.["turbo-team"], "${{ vars.TURBO_TEAM }}", jobId);
         assert.isUndefined(setup.with?.["repository-secrets"], jobId);
         for (const [input, name] of TURBO_SECRET_INPUTS) {
-          assert.strictEqual(setup.with?.[input], `\${{ secrets.${name} }}`, `${jobId} ${input}`);
+          assert.strictEqual(setup.with?.[input], secretReference(name), `${jobId} ${input}`);
         }
         for (const [input, name] of APP_SECRET_INPUTS) {
-          assert.strictEqual(
-            setup.with?.[input],
-            appSecrets ? `\${{ secrets.${name} }}` : undefined,
-            `${jobId} ${input}`
-          );
+          assert.strictEqual(setup.with?.[input], appSecrets ? secretReference(name) : undefined, `${jobId} ${input}`);
         }
         assert.strictEqual(setup.with?.["app-secrets"], appSecrets ? "true" : undefined, jobId);
       }

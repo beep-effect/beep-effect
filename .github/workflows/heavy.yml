@@ -135,16 +135,16 @@ jobs:
           app-secrets: "true"
           turbo-api: ${{ vars.TURBO_API }}
           turbo-team: ${{ vars.TURBO_TEAM }}
-          turbo-token: ${{ secrets.TURBO_TOKEN }}
+          turbo-token: ${{ github.event_name == 'push' && secrets.TURBO_TOKEN || '' }}
           turbo-read-token: ${{ secrets.TURBO_READ_TOKEN }}
-          database-url: ${{ secrets.DATABASE_URL }}
-          database-url-unpooled: ${{ secrets.DATABASE_URL_UNPOOLED }}
-          email-resend-api-key: ${{ secrets.EMAIL_RESEND_API_KEY }}
-          auth-secret: ${{ secrets.AUTH_SECRET }}
-          better-auth-secret: ${{ secrets.BETTER_AUTH_SECRET }}
-          better-auth-url: ${{ secrets.BETTER_AUTH_URL }}
-          security-trusted-origins: ${{ secrets.SECURITY_TRUSTED_ORIGINS }}
-          liveblocks-secret-key: ${{ secrets.LIVEBLOCKS_SECRET_KEY }}
+          database-url: ${{ github.event_name == 'push' && secrets.DATABASE_URL || '' }}
+          database-url-unpooled: ${{ github.event_name == 'push' && secrets.DATABASE_URL_UNPOOLED || '' }}
+          email-resend-api-key: ${{ github.event_name == 'push' && secrets.EMAIL_RESEND_API_KEY || '' }}
+          auth-secret: ${{ github.event_name == 'push' && secrets.AUTH_SECRET || '' }}
+          better-auth-secret: ${{ github.event_name == 'push' && secrets.BETTER_AUTH_SECRET || '' }}
+          better-auth-url: ${{ github.event_name == 'push' && secrets.BETTER_AUTH_URL || '' }}
+          security-trusted-origins: ${{ github.event_name == 'push' && secrets.SECURITY_TRUSTED_ORIGINS || '' }}
+          liveblocks-secret-key: ${{ github.event_name == 'push' && secrets.LIVEBLOCKS_SECRET_KEY || '' }}
 
       # PRs may restore the post-main local fallback without saving it. Same-
       # repository PRs can also read the remote cache; forks remain tokenless.
