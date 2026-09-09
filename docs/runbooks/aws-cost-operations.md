@@ -367,10 +367,35 @@ minutes per successful lane, accounting for interruption waivers, setup,
 retries and idle cleanup, alongside queue and completion times. Spot remains
 the likely lower compute bill at the observed prices. The current decision
 remains On-Demand because the operator prioritizes reliability and speed.
-The next experiments are a fresh baked AMI and lane-specific resource
-measurement. A hybrid Spot pool or EKS migration needs a separate measured
+The lean AMI refresh is deployed; lane-specific resource measurement is next.
+A hybrid Spot pool or EKS migration needs a separate measured
 case that meets those same acceptance conditions; neither is deployed by
 this cost-control PR.
+
+### If Docker runner or application images are introduced
+
+The current fleet boots EC2 AMIs and runs verification directly on the host.
+For a future Docker/ECR implementation, consult the
+[Turborepo Docker guide](https://turborepo.dev/docs/guides/tools/docker)
+before designing the build. For an application image, evaluate
+`turbo prune <workspace-name> --docker` to retain the target workspace's
+dependency closure and prune its lockfile. Install from the generated package
+manifests and lockfile before copying `out/full` source, so source-only edits
+can reuse the dependency layer. Use a multi-stage build and exclude local
+`node_modules` from the build context.
+
+Application pruning does not establish the contents of a general CI runner
+image. A runner must support every lane assigned to it; validate any proposed
+pruned workspace against the lane's actual commands and required repository
+files. Adapt the guide's examples to this repo's pinned Bun/Turbo versions and
+frozen lockfile installation. Benchmark image build, pull, setup and successful
+lane costs against the deployed AMI before changing the fleet.
+
+For remote-cache credentials, use
+[Docker BuildKit secret mounts](https://docs.docker.com/build/building/secrets/)
+with runtime-resolved `op://` references. The guide's `TURBO_TOKEN` build-argument
+example does not meet this repo's secret-handling rules; never store a token in
+Dockerfile `ARG`/`ENV`, image layers or committed configuration.
 
 ## September 9 execution receipts
 
