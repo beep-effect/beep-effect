@@ -122,22 +122,17 @@ const laneCommandHash = (lane: GithubCheckLaneSpec): string =>
   );
 
 const environmentProfileHash = (lane: GithubCheckLaneSpec): string => {
-  const inheritedEnvironment =
-    lane.step.useLocalEnv === true || turboEnvExtendsAmbient(lane.step.command, lane.step.args) ? Bun.env : {};
+  const inheritedEnvironmentHash =
+    lane.step.useLocalEnv === true || turboEnvExtendsAmbient(lane.step.command, lane.step.args)
+      ? hashText(stableRecordText(Bun.env))
+      : undefined;
   return hashText(
     stableRecordText({
       platform: process.platform,
       architecture: process.arch,
       bunVersion: Bun.version,
       nodeVersion: process.version,
-      CI: inheritedEnvironment.CI,
-      GITHUB_ACTIONS: inheritedEnvironment.GITHUB_ACTIONS,
-      TURBO_CACHE: inheritedEnvironment.TURBO_CACHE,
-      TURBO_FORCE: inheritedEnvironment.TURBO_FORCE,
-      BEEP_DOCGEN_CONCURRENCY: inheritedEnvironment.BEEP_DOCGEN_CONCURRENCY,
-      BEEP_FC_NUM_RUNS: inheritedEnvironment.BEEP_FC_NUM_RUNS,
-      BEEP_FC_SEED: inheritedEnvironment.BEEP_FC_SEED,
-      NODE_OPTIONS: inheritedEnvironment.NODE_OPTIONS,
+      inheritedEnvironmentHash,
       laneEnv: stableRecordText(lane.step.env ?? {}),
     })
   );

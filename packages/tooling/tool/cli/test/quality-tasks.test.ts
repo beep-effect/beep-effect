@@ -1685,17 +1685,17 @@ describe("quality task adapter", () => {
         "fail-fast",
         "active"
       );
-      const atSeed = (seed: string) => withEnvVarEffect("BEEP_FC_SEED", seed, run);
+      const withGoldenMode = (mode: string) => withEnvVarEffect("REGEN_GOLDENS", mode, run);
 
-      expect(A.map((yield* atSeed("101")).report.lanes, (result) => result.status)).toEqual(["passed"]);
-      expect(A.map((yield* atSeed("101")).report.lanes, (result) => result.status)).toEqual(["reused"]);
-      expect(A.map((yield* atSeed("202")).report.lanes, (result) => result.status)).toEqual(["passed"]);
+      expect(A.map((yield* withGoldenMode("0")).report.lanes, (result) => result.status)).toEqual(["passed"]);
+      expect(A.map((yield* withGoldenMode("0")).report.lanes, (result) => result.status)).toEqual(["reused"]);
+      expect(A.map((yield* withGoldenMode("1")).report.lanes, (result) => result.status)).toEqual(["passed"]);
       expect(yield* fs.readFileString(markerPath)).toBe("run\nrun\n");
     }, provideScopedLayer(PlatformLayer))
   );
 
   it.effect(
-    "includes ambient inputs for local-env lanes with an isolated spawn",
+    "includes the complete ambient environment for local-env lanes with an isolated spawn",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
       const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: "lane-proof-local-env-" });
@@ -1714,8 +1714,8 @@ describe("quality task adapter", () => {
           useLocalEnv: true,
         }),
       });
-      const hashAtSeed = (seed: string) =>
-        withEnvVarEffect("BEEP_FC_SEED", seed, prepareLaneProofSession([lane], "active")).pipe(
+      const hashAtConcurrency = (concurrency: string) =>
+        withEnvVarEffect("BEEP_QUALITY_CHECK_CONCURRENCY", concurrency, prepareLaneProofSession([lane], "active")).pipe(
           Effect.map((session) =>
             pipe(
               session,
@@ -1726,8 +1726,8 @@ describe("quality task adapter", () => {
           )
         );
 
-      expect(yield* hashAtSeed("101")).toBe(yield* hashAtSeed("101"));
-      expect(yield* hashAtSeed("101")).not.toBe(yield* hashAtSeed("202"));
+      expect(yield* hashAtConcurrency("2")).toBe(yield* hashAtConcurrency("2"));
+      expect(yield* hashAtConcurrency("2")).not.toBe(yield* hashAtConcurrency("3"));
     }, provideScopedLayer(PlatformLayer))
   );
 
