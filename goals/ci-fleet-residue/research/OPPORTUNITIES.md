@@ -26,8 +26,11 @@ Record receipts at the moment friction happens; redact for the public repo.
   account module now measures 100% lines/statements/functions; the runner
   command measures 89.28% branches against its previous 86.36% floor.
 - Test isolation: the shared Vitest configuration enables concurrent tests,
-  while Pulumi config and mocks use a shared runtime. Mark this fixture suite
-  sequential so one case cannot replace another case's mock monitor.
+  while Pulumi config and mocks use a shared runtime. Set `concurrent: false`
+  on this fixture suite so one case cannot replace another case's mock monitor.
+- API compatibility: hosted `lint:deprecated-apis` rejected Vitest's older
+  `sequential` shorthand and `toThrowError` matcher. Use the supported suite
+  option and `toThrow`, and run the exact lint gate after adding test APIs.
 - Prevention: cover real configuration and failure boundaries before the full
   proof; retain the existing regression baseline instead of lowering it.
 

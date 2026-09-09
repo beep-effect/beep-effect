@@ -10,7 +10,7 @@ import { vi } from "vitest";
 
 const decode = S.decodeUnknownResult(AccountCostControlsConfig);
 
-describe.sequential("@beep/infra AccountCostControls", () => {
+describe("@beep/infra AccountCostControls", { concurrent: false }, () => {
   it("defaults to the approved soft guardrail and rejects unsafe thresholds", () => {
     const config = Result.getOrThrow(decode({ expectedAccountId: "123456789012" }));
     expect(config.monthlyBudgetUsd).toBe(500);
@@ -33,12 +33,12 @@ describe.sequential("@beep/infra AccountCostControls", () => {
           pulumi.runtime.setConfig("accountCostControls:anomalyImpactUsd", "12");
           expect(loadAccountCostControlsConfig()).toMatchObject({ monthlyBudgetUsd: 650, anomalyImpactUsd: 12 });
           pulumi.runtime.setConfig("accountCostControls:monthlyBudgetUsd", "0");
-          expect(loadAccountCostControlsConfig).toThrowError(
+          expect(loadAccountCostControlsConfig).toThrow(
             "Invalid accountCostControls account or spending threshold configuration"
           );
           pulumi.runtime.setConfig("accountCostControls:monthlyBudgetUsd", "500");
           pulumi.runtime.setConfig("accountCostControls:expectedAccountId", "wrong-account");
-          expect(loadAccountCostControlsConfig).toThrowError(
+          expect(loadAccountCostControlsConfig).toThrow(
             "Invalid accountCostControls account or spending threshold configuration"
           );
         }),
@@ -70,7 +70,7 @@ describe.sequential("@beep/infra AccountCostControls", () => {
                   Result.getOrThrow(decode({ expectedAccountId: "123456789012" })),
                   input
                 )
-            ).toThrowError(/^Invalid accountCostControls notification recipients; values are redacted$/u);
+            ).toThrow(/^Invalid accountCostControls notification recipients; values are redacted$/u);
           } finally {
             apply.mockRestore();
           }
