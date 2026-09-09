@@ -1,8 +1,8 @@
 # C3 lane-to-task table — design gate
 
-Status: REVISION 3, 2026-09-08, after one adversarial Codex review
-(`research/c3-lane-task-table.review.md`, disposition appended there) and two Greptile P1s on
-PR #1018 (D15 scope, Fallow advisory sublanes). Awaiting Benjamin. No
+Status: REVISION 4, 2026-09-08, after one adversarial Codex review
+(`research/c3-lane-task-table.review.md`, disposition appended there), two Greptile P1s and
+twelve Codex threads on PR #1018 (all folded; see the thread replies). Awaiting Benjamin. No
 implementation starts before this table is ratified. Owner: Fable orchestrator. Rulings in
 force: 5, 6, 10, 19–25 (`research/decisions.md`). Evidence: `research/c3-turbo-facts.md` (Grok,
 15 Turbo 2.10 facts against the docs, plus the live-probe amendment), `research/c3-sublane-inputs.md`
@@ -135,7 +135,9 @@ Consequences:
   repo-sanity members that read git or the network.
 - **D3 Two-tier scripts block with four presence kinds.** Task-facing keys are the strict
   tier: for each (kind, key) the rule is `required`, `optional` (value strict when present),
-  `absent`, or `derived` (D7, D11); values are `indirection` (`bun run beep:X`, or `bun run
+  `absent`, or `derived` (D7, D11; the codegen derivation reads an explicit generator registry in the
+  schema module, never the manifest's own script, so a deleted generator script is drift);
+  values are `indirection` (`bun run beep:X`, or `bun run
   --if-present beep:audit`), `cli` (exact `beep-cli …` text), or `owned` (package text kept
   as is). Implementation keys (`beep:*`) are the free tier: required only behind an
   unconditional indirection, value free, generator default stamped when missing, never
@@ -167,8 +169,12 @@ Consequences:
   the profile env, and a per-package heap cap (`NODE_OPTIONS` declared in `env`). The 4-way
   shard runner and the per-shard eslint cache retire once the package task lands (orchestrator
   default). The typed profile runs in its own bounded invocation (D10). Coverage equals today's
-  shards: labs are a shard today and stay covered; the docs profile's root-owned JS/MJS/CJS
-  files (root `eslint .`) keep a root residual `//#lint:jsdoc:root` so no file loses coverage.
+  lanes: labs are a deprecated-apis shard today and stay covered there; the docs profile ignores
+  `apps/labs/**` (`DocsESLintConfig.ts:68–72`, ceremony-exempt), so `lint:jsdoc` is absent for
+  the lab kind. Every root-owned eligible file the root `eslint .` sees today (top-level files,
+  `scripts/**`, `goals/**`, `scratchpad/**`, `tools/**`, non-ignored `.claude/**`) keeps a root
+  residual `//#lint:jsdoc:root` whose worker selects exactly the eligible files outside package
+  workspaces, so no file loses coverage.
   Config-base and source-routing parity with the root invocation is a C3.2 fixture.
 - **D7 Doctest presence by need.** `doctest` is present iff the package owns at least one
   `import.meta.vitest` source under the same selector the worker uses (`src/**/*.{ts,tsx}`,
@@ -195,17 +201,21 @@ Consequences:
   `goals:doctor`, `goals:index-check`, `lint:reflection-artifacts`, `lint:roadmap-refs`,
   `lint:judge-rubric`, `jsdoc:inventory:check`, `fallow:audit:check`, `fallow:dead-code:check`,
   `fallow:health:advisory`, `fallow:boundaries:advisory`, `fallow:flags:advisory`,
-  `fallow:security:advisory`, `fallow:fix-preview:advisory`, `knip:check` (26 new). Existing root scripts keep their text where the meaning is unchanged
+  `fallow:security:advisory`, `fallow:fix-preview:advisory`, `knip:check`,
+  `repo-sanity:changeset-graph`, `repo-sanity:syncpack`, `repo-sanity:sherif`,
+  `repo-sanity:versions`, `repo-sanity:bun-audit` (31 new). Existing root scripts keep their text where the meaning is unchanged
   (`lint:oxlint`, `changeset:status`, `config-sync:check`, `topo-sort`).
 - **D10 Ordered invocations, one shared plan.** `beep lint policy` and the hosted Lint Policy
-  lane run one plan definition in three invocations, in this order: (1) cheap precise gates
-  (every root task under about 10 s plus `//#lint:package-scripts`), local fail-fast per SPEC
-  B3; (2) medium tasks (`lint:jsdoc`, `lint:laws`, `//#lint:schema-first`, the D2 unfiltered
-  group); (3) the typed profile `lint:deprecated-apis` at bounded concurrency
-  (`BEEP_QUALITY_CHECK_CONCURRENCY`, default 4). Local: file-input tasks take `--affected`;
-  the D2 group runs unfiltered in its own invocation. Hosted and `--full`: no `--affected`.
-  Every invocation uses `--continue=dependencies-successful --summarize`; the wrapper keeps a
-  nonzero exit across invocations and, hosted, runs all three for the full diagnostic picture.
+  lane run one plan definition in ordered invocations: (1) cheap precise gates (every root
+  task under about 10 s plus `//#lint:package-scripts` and `//#lint:policy-fingerprint`),
+  local fail-fast per SPEC B3; (2) medium file-input tasks (`lint:jsdoc`, `lint:laws`,
+  `//#lint:schema-first`); (3) the D2 group, always unfiltered; (4) the typed profile
+  `lint:deprecated-apis` at bounded concurrency (`BEEP_QUALITY_CHECK_CONCURRENCY`, default 4).
+  Locally that is four Turbo runs (1, 2 and 4 take `--affected`; 3 never does); hosted and
+  `--full` take no `--affected`, so 2 and 3 merge into one run and there are three. Every run
+  uses `--continue=dependencies-successful --summarize`; each writes its own run summary and
+  the ledger ingests every summary of the attempt (§7.1.5). The wrapper keeps a nonzero exit
+  across runs and, hosted, executes all of them for the full diagnostic picture.
   `beep:preflight` runs the `--write` generators first, then the plan. Aggregates (D12) run
   last.
 - **D11 Codegen split.** `turbo.json` `codegen` keeps `cache: false` and `dependsOn:
@@ -222,13 +232,18 @@ Consequences:
   aggregate with its freshness checks) run after the invocations.
 - **D13 Kinds and the exempt domain.** Kinds: library, tool, ecosystem, app, lab, infra,
   exempt. The gate's domain is the root `workspaces` members only (142); nested non-workspace
-  manifests (`infra/lambda/*`, `infra/ci-runners/*`) are out of domain. `ecosystem` uses the
+  manifests (`infra/lambda/*`, `infra/ci-runners/*`) are out of domain. The two `exempt`
+  members (`scratchpad`, `tools/tsgo-shim`) are in domain but every key is `optional owned`
+  for them: the gate reports nothing and `--write` changes nothing (scratchpad's `docgen`
+  script stays as it is). `ecosystem` uses the
   library rules with its census differences recorded as `optional` (`lint:fix` absent today);
   no stricter-audit claim.
 - **D14 Cache flags.** Deterministic checks with closed file and env inputs: `cache: true`,
-  no outputs. D2 lanes: `cache: false`, unfiltered, non-reusable. Binary walkers (oxlint,
-  typos): `cache: true` only after their walk fixture passes (§7.1); until then
-  `cache: false`. Generators that write tracked files: plain scripts or `cache: false`.
+  no outputs. D2 lanes: `cache: false`, unfiltered, non-reusable. Binary walkers: typos gets
+  `cache: true` only after its walk fixture passes (§7.1); oxlint stays `cache: false` for
+  good, because its mandatory `no-js-extension-imports` rule tests the existence of imported
+  `.js`/`.mjs`/`.cjs` targets on disk (`no-js-extension-imports.ts:79`), including generated
+  targets outside any input set, so no file-input contract closes it. Generators that write tracked files: plain scripts or `cache: false`.
 - **D15 Policy-tool fingerprint (new).** The checker implementations are inputs of every
   policy task. Instead of guessing each task's import closure, one generated file
   `standards/policy-tools.fingerprint.json` is declared as a `$TURBO_ROOT$` input of every
@@ -238,7 +253,9 @@ Consequences:
   `@beep/utils`, `@beep/schema`, `@beep/identity`, the policy-pack packages, and whatever the
   manifests name next), plus the root tool configs the checkers read. The generator walks the
   manifests, so a new CLI dependency joins the fingerprint without an edit. A cheap root gate
-  `//#lint:policy-fingerprint` (inputs: those trees plus the file) fails when it is stale;
+  `//#lint:policy-fingerprint` fails when it is stale; its Turbo inputs are generated from
+  the same declared input list the generator hashes (the trees and the exact root configs),
+  plus the fingerprint file, so a config edit can never replay a cached "fresh" verdict;
   `beep:preflight` regenerates it. A checker or checker-dependency edit therefore reruns
   policy tasks exactly once, and build/check/test caches stay untouched; node_modules
   dependencies are already in `hashOfExternalDependencies`. This matches ruling 4's epoch salt
@@ -284,7 +301,7 @@ false`, unfiltered, ledger `undeclared`.
 
 | Today's step (label) | Root script (★ new) | Script text | `inputs` | Flags | Consumers | Hosted p50 |
 | --- | --- | --- | --- | --- | --- | --- |
-| — (gate) | ★ `lint:policy-fingerprint` | `bun run beep lint policy-fingerprint --check` | `packages/tooling/tool/cli/src/**`, `packages/tooling/library/repo-utils/src/**`, `packages/tooling/policy-pack/*/src/**`, `standards/policy-tools.fingerprint.json` | D15 | P, F, G | new |
+| — (gate) | ★ `lint:policy-fingerprint` | `bun run beep lint policy-fingerprint --check` | the generator's declared input list verbatim (the `src/**` of `@beep/repo-cli` and its workspace dependency closure, plus the exact root tool configs it hashes), `standards/policy-tools.fingerprint.json`, `**/package.json` (closure discovery) | D15; inputs and digest share one source of truth | P, F, G | new |
 | — (gate) | ★ `lint:package-scripts` | `bun run beep lint package-scripts --check` | `package.json`, `**/package.json`, `packages/**/src/**/*.{ts,tsx}`, `apps/**/src/**/*.{ts,tsx}`, `**/vitest*.config.ts`, `!**/node_modules/**`, `!**/test/fixtures/**` | derivation evidence uses root workspace membership and the doctest selector (D7) | P, F, G | new |
 | `knowledge:semantic-delta` | ★ `knowledge:semantic-delta` | `bun run beep knowledge semantic-delta` | `AGENTS.md`, `CLAUDE.md`, `goals/**`, `explorations/**`, `docs/**`, `.claude/**`, `.agents/**`, `.codex/**`, `standards/**`, `.github/**`, `**/package.json`, `!docs/generated/**`, `!docs/_internal/**` (explanatory; not a reuse claim) | D2; `passThroughEnv: ["GITHUB_EVENT_PATH"]` | P, F, W(`quality:lint-policy`) | 78 s |
 | `knowledge:refs-check` | ★ `knowledge:refs-check` | `bun run beep knowledge refs --check` | same corpus | D2 | P, F | unmeasured |
@@ -294,11 +311,11 @@ false`, unfiltered, ledger `undeclared`.
 | `lint:effect-imports` (code mode; A1) | ★ `lint:effect-imports` | `bun run beep laws effect-imports --check` | `{apps,packages,infra}/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}`, `packages/foundation/**/package.json`, `packages/foundation/**/src/**`, `!**/node_modules/**`, `!packages/**/docs/**` | `WT`; deliberate over-inclusion while it returns early | P, F, G | 12 s |
 | `lint:effect-imports-markdown` | ★ `lint:effect-imports-markdown` | `bun run beep laws effect-imports --mode markdown --check` | `.patterns/**/*.{md,mdx}`, `standards/**/*.{md,mdx}`, `.claude/skills/**/*.{md,mdx}`, `docs/**/*.{md,mdx}`, `goals/*/[A-Z]*.md`, `packages/foundation/**/package.json`, `packages/foundation/**/src/**` | | P, F | unmeasured |
 | `lint:tsgo-rules` | ★ `lint:tsgo-rules` | `bun run beep quality tsgo-rules` | `{apps,packages,tooling,infra}/**/*.{cts,mts,ts,tsx}`, `{apps,packages,infra,scratchpad}/**/tsconfig*.json`, `tsconfig.base.json`, `tsconfig.json`, `vitest.aliases.generated.json`, `!**/node_modules/**`, `!**/dist/**` | `WT` (directive walk) | P, F, G(`cheap-gates:tsgo-rules`) | 5 s |
-| `lint:oxlint` | `lint:oxlint` (text gains `--quiet --disable-nested-config`) | `oxlint --quiet --disable-nested-config` | `.oxlintrc.json`, `.gitignore`, `**/.gitignore`, `*.{js,mjs,cjs,ts,tsx,jsx}`, `scripts/**`, `apps/**/*.{ts,tsx,js,jsx,mjs,cjs}`, `packages/**/*.{ts,tsx,js,jsx,mjs,cjs}`, `infra/**/*.{ts,js,mjs}`, `packages/tooling/policy-pack/lint-rules/src/**`, `!**/node_modules/**`, `!**/dist/**` | `cache: false` until the walk fixture passes (D14) | P, F | 4.5 s |
+| `lint:oxlint` | `lint:oxlint` (text gains `--quiet --disable-nested-config`) | `oxlint --quiet --disable-nested-config` | `.oxlintrc.json`, `.gitignore`, `**/.gitignore`, `*.{js,mjs,cjs,ts,tsx,jsx}`, `scripts/**`, `apps/**/*.{ts,tsx,js,jsx,mjs,cjs}`, `packages/**/*.{ts,tsx,js,jsx,mjs,cjs}`, `infra/**/*.{ts,js,mjs}`, `packages/tooling/policy-pack/lint-rules/src/**`, `!**/node_modules/**` (explanatory) | `cache: false`, unfiltered, non-reusable: ambient target-existence reads (D14) | P, F | 4.5 s |
 | `lint:ecosystem-polarity` | ★ `lint:ecosystem-polarity` | `bun run beep lint ecosystem-polarity` | `packages/ecosystem/*/package.json`, `packages/ecosystem/*/src/**/*.{ts,tsx,mts,cts}` | | P, F | 4 s |
 | `lint:allowlist` | ★ `lint:allowlist` | `bun run beep laws allowlist-check` | `standards/effect-laws.allowlist.jsonc`, `packages/tooling/policy-pack/repo-configs/src/internal/eslint/generated/EffectLawsAllowlistSnapshot.ts`, `{packages,apps,infra}/**/*.{ts,tsx}` (entries may name any target root), `!**/node_modules/**` | `WT` | P, F, G(`cheap-gates:allowlist-check`) | 4 s |
 | `lint:jsdoc-module-tags` | ★ `lint:jsdoc-module-tags` | `bun run beep quality jsdoc-module-tags` | `{.patterns,apps,packages,tooling}/**/*.{hbs,md,ts,tsx}`, `!apps/labs/**` (explanatory) | D2 (`git ls-files`) | P, F | 4 s |
-| `lint:jsdoc:root` (new residual, D6) | ★ `lint:jsdoc:root` | `bun run beep lint jsdoc --root-only` | `*.{ts,tsx,js,jsx,mjs,cjs}`, `scripts/**`, `eslint.config.mjs`, `tsdoc.json`, policy-pack eslint sources | | P, F | new |
+| `lint:jsdoc:root` (new residual, D6) | ★ `lint:jsdoc:root` | `bun run beep lint jsdoc --root-only` (worker selector: eligible files outside package workspaces, excluding `apps/labs/**` as the profile does) | `**/*.{ts,tsx,js,jsx,mjs,cjs}`, `!packages/**`, `!apps/**`, `!infra/**`, `!**/node_modules/**`, `eslint.config.mjs`, `tsdoc.json`, `packages/tooling/policy-pack/repo-configs/src/eslint/**`, `packages/tooling/policy-pack/repo-configs/src/internal/eslint/**` (so `goals/**`, `scratchpad/**`, `tools/**`, `.claude/**`, `scripts/**` and top-level files stay covered) | | P, F | new |
 | `lint:native-runtime:roots` (new residual, D5) | ★ `lint:native-runtime:roots` | `bun run beep laws native-runtime --check --include-prefix scratchpad,packages/_internal/db-admin/effect-ontology` | those roots' `**/*.{ts,tsx}`, allowlist sources | | P, F | new |
 | `goals:doctor` | ★ `goals:doctor` | `bun run beep goals doctor` | `goals/**`, `explorations/**`, `goals/goals-doctor.baseline.jsonc` (explanatory) | D2 (git log, wall clock) | P, F, G(`cheap-gates:goals-doctor`) | 4 s |
 | `goals:index-check` | ★ `goals:index-check` | `bun run beep goals index --check` | `goals/*/ops/manifest.json`, `goals/*/README.md`, `goals/*/GOAL.md`, `goals/INDEX.md` | | P, F, G(`cheap-gates:goals-index`) | 4 s |
@@ -308,7 +325,7 @@ false`, unfiltered, ledger `undeclared`.
 | `lint:typos` | ★ `lint:typos` | `typos` | `_typos.toml`, `.gitignore`, `**/.gitignore`, `**/*` minus the exact `files.extend-exclude` list transcribed from `_typos.toml` at implementation time; typos version pinned by the lockfile | `cache: false` until the walk fixture passes (D14) | P, F, L(stays direct with its own excludes) | 1 s |
 | `ci:knip` (`beep quality knip`) | ★ `knip:check` (`knip` stays `knip-bun`) | `bun run beep quality knip` | `knip.jsonc`, `**/package.json`, `bun.lock`, `**/tsconfig*.json`, `.gitignore`, `**/.gitignore`, `apps/**`, `packages/**`, `infra/**`, `scripts/**`, root tool configs, `standards/knip.regression-baseline.jsonc`, `!**/node_modules/**`, `!**/dist/**`, `!**/.turbo/**` (explanatory) | D2 (gitignore semantics incl. `.git/info/exclude`) | F, C(knip), G(`:300`, `cheap-gates:knip`), W(`quality:knip`) | 80 s |
 | `ci:fallow:audit` | ★ `fallow:audit:check` | `bun run beep quality fallow audit --check --base "$BEEP_PROOF_BASE" --out .beep/fallow/audit.check.json --quiet` | `.fallowrc.jsonc`, `**/package.json`, `**/tsconfig*.json`, `apps/**`, `packages/**`, `infra/**`, `scripts/**`, `.claude/skills/**`, `.fallow/plugins/**`, `standards/fallow.pilot.inventory.jsonc` (explanatory) | D2; `env: ["BEEP_PROOF_BASE"]` (the worker's `--base` argument, forwarded by the wrapper as today); `outputs: [".beep/fallow/audit.check.json", ".beep/fallow/raw/audit.check.*"]` | C(fallow), G(`:485`), W(`fallow:audit`), Y | most frequent actionable red (47) |
-| `ci:fallow:dead-code` | ★ `fallow:dead-code:check` | `… fallow dead-code --check --base "$BEEP_PROOF_BASE" --out .beep/fallow/dead-code.check.json --quiet` | as audit (no baseline file: hosted does not pass it) | D2; `outputs: [".beep/fallow/dead-code.check.json", ".beep/fallow/raw/dead-code.check.*"]` | C, G(`:491`), W(`fallow:dead-code`), Y | |
+| `ci:fallow:dead-code` | ★ `fallow:dead-code:check` | `… fallow dead-code --check --base "$BEEP_PROOF_BASE" --out .beep/fallow/dead-code.check.json --quiet` | as audit (no baseline file: hosted does not pass it) | D2; `env: ["BEEP_PROOF_BASE"]` (forwarded by the wrapper exactly as for audit); `outputs: [".beep/fallow/dead-code.check.json", ".beep/fallow/raw/dead-code.check.*"]` | C, G(`:491`), W(`fallow:dead-code`), Y | |
 | `ci:fallow:health`, `ci:fallow:boundaries`, `ci:fallow:flags`, `ci:fallow:security`, `ci:fallow:fix-preview` (advisory) | ★ `fallow:<lane>:advisory` (five root tasks) | `… fallow <lane> --advisory --base "$BEEP_PROOF_BASE" --out .beep/fallow/<lane>.advisory.json --quiet` | as audit | D2; `env: ["BEEP_PROOF_BASE"]`; `outputs: [".beep/fallow/<lane>.advisory.json", ".beep/fallow/raw/<lane>.advisory.*"]`; advisory exit semantics unchanged (the wrapper never fails the lane on advisory findings); the workflow gate and the post-run envelope checks (`check.yml:767–806`, `CiLane.ts:1235,1557`) stay | C, `check.yml:767–806` | advisory lane |
 | `ci:jsdoc-ratchet:inventory` | ★ `jsdoc:inventory:check` | `bun run beep quality jsdoc-inventory --output-json .beep/ci/jsdoc-documentation.inventory.jsonc --output-markdown .beep/ci/jsdoc-documentation.inventory.md` | `**/docgen.json`, `**/package.json`, `{packages,apps,infra}/**/*.{ts,tsx}` (any `docgen.srcDir`), `tsdoc.json` (explanatory) | D2 (`git ls-files`, timestamps); `outputs: [".beep/ci/jsdoc-documentation.inventory.*"]` | C(jsdoc-ratchet), F (write variant `jsdoc:inventory` stays a script), W, G(`cheap-gates:jsdoc-ratchet`) | ratchet lane |
 | `ci:jsdoc-ratchet:ratchet` compare | **cli** after the run | `beep quality jsdoc-ratchet --inventory .beep/ci/… --baseline standards/jsdoc-totals.regression-baseline.jsonc` | consumes a fresh successful inventory only | | C | |
@@ -316,8 +333,13 @@ false`, unfiltered, ledger `undeclared`.
 | `quality test-tsgo` aggregate | **cli** (existing Turbo aggregate) | | | | F, G(`cheap-gates:test-tsgo`) | |
 | `changeset:status` | root task | `bun run beep quality changeset-status` | `.changeset/**`, `**/package.json` (explanatory) | D2 (`git diff since`) | C(repo-sanity), F, W, G | Repo Sanity 5.14% |
 | `config-sync:check` | root task | `bun run beep tsconfig-sync --check` | `**/package.json`, `**/tsconfig*.json`, `**/docgen.json`, `syncpack.config.ts`, `tsconfig.base.json` | | C(repo-sanity), F, W(`repo-sanity:tsconfig-sync`), G | |
-| `changeset-graph`, syncpack, sherif, versions, `bun-audit`, `fallow:boundaries:check` | **cli** members of repo-sanity (git or network, or already generated-config compares) | | | | C, W | |
-| `version-sync` | **cli**; lefthook keeps `--skip-network` | | | network | L | |
+| `ci:repo-sanity:changeset-graph` | ★ `repo-sanity:changeset-graph` | `bun run beep quality changeset-graph` | `.changeset/**`, `**/package.json`, `bun.lock` | | C(repo-sanity), W(`repo-sanity:changeset-graph`), G | |
+| `ci:repo-sanity` syncpack | ★ `repo-sanity:syncpack` | `bunx syncpack lint` (today's argv) | `syncpack.config.ts`, `**/package.json`, `bun.lock` | | C, W(`repo-sanity:syncpack`) | |
+| `ci:repo-sanity` sherif | ★ `repo-sanity:sherif` | `bunx sherif` (today's argv) | `**/package.json`, `bun.lock` | | C, W(`repo-sanity:sherif`) | |
+| `ci:repo-sanity` versions | ★ `repo-sanity:versions` | `bun run beep quality versions` (today's step) | `.bun-version`, `.nvmrc`, `**/package.json`, `mise.toml` | | C, W(`repo-sanity:versions`) | |
+| `ci:repo-sanity` bun-audit | ★ `repo-sanity:bun-audit` | `bun run beep quality bun-audit` | `bun.lock`, `osv-scanner.toml` (explanatory) | D2 (network) | C, W(`repo-sanity:bun-audit`) | |
+| `ci:repo-sanity` fallow boundaries | ★ `fallow:boundaries:check` | `bun run beep fallow boundaries --check` | `standards/fallow.boundaries.generated.jsonc`, `.fallowrc.jsonc`, `**/package.json`, `apps/**`, `packages/**`, `infra/**` (explanatory) | D2 (fallow binary walk) | C, W(`repo-sanity:fallow-boundaries-config`), G | |
+| `version-sync` | **cli**; lefthook keeps `--skip-network` (the only repo-sanity member that stays a step: it is a network writer, not a check) | | | network | L | |
 | `topo-sort` | root task | `bun run beep topo-sort` | `**/package.json` | | F | |
 | `docs:aggregate` | generator script (unchanged) | | | | — | |
 
@@ -352,8 +374,8 @@ false`, unfiltered, ledger `undeclared`.
 - `create-package`, `Architecture/OperationPlanPackageJson.ts`, `DeletePackage/*`: consume the
   scripts-block schema (PR 1).
 - `standards/turbo-remote-cache.md`: "Reading policy task hashes" (root `taskId` is
-  `//#<script>`; three summaries per policy run; freshness protocol from §7.1.5) and the rule
-  line from C3.5.
+  `//#<script>`; four summaries per local policy run and three per hosted run; freshness
+  protocol from §7.1.5) and the rule line from C3.5.
 - Lefthook stays direct for `typos` (its own excludes) and `version-sync --skip-network`.
 
 ## 3. Scripts-block schema (schema → service → implementation)
@@ -477,6 +499,19 @@ export class PackageScriptsReport extends S.Class<PackageScriptsReport>($I`Packa
   },
   $I.annote("PackageScriptsReport", { description: "Result of one --check or --write pass over the fleet." })
 ) {}
+/** The one codec between the JSON wire form and the collection view; the CLI writes through it. */
+export const PackageScriptsReportFromWire = PackageScriptsReportWire.pipe(
+  S.decodeTo(PackageScriptsReport, SchemaTransformation.transform({
+    decode: (wire) => ({ ...wire, drift: HashMap.fromIterable(Object.entries(wire.drift)), written: HashSet.fromIterable(wire.written) }),
+    encode: (report) => ({ ...report, drift: Object.fromEntries(A.sort(HashMap.toEntries(report.drift), byKey)), written: A.sort(HashSet.toValues(report.written), Order.String) }),
+  }))
+);
+
+/** Explicit generator registry: the codegen derivation reads this, never the manifest's own script (a deleted generator script is drift). */
+export const CodegenGeneratorPackage = LiteralKit([
+  "packages/tooling/policy-pack/repo-configs", "packages/foundation/modeling/identity", "apps/professional-desktop",
+  "packages/drivers/runpod", "packages/drivers/govinfo", "packages/drivers/ecfr", "packages/drivers/box", "packages/drivers/acp",
+]).pipe($I.annoteSchema("CodegenGeneratorPackage", { description: "Workspaces that own a real codegen script." }));
 ```
 
 Guards derive from the schemas (`S.is(TaskScriptRule)`, `PackageKind.is.lab`,
@@ -500,7 +535,7 @@ export class PackageScriptsPolicy extends Context.Service<PackageScriptsPolicy, 
 
 `DerivationEvidence` = `{ doctestOwners: HashSet<manifestPath>, bypassingConfigs: HashSet<manifestPath>,
 generators: HashSet<manifestPath> }` computed once per run with the doctest worker's selector
-(D7) and the existing non-placeholder `codegen` set. `kindOf` reads the root `workspaces` globs
+(D7) and `CodegenGeneratorPackage.HashSet` (the registry above, not the manifests). `kindOf` reads the root `workspaces` globs
 and path prefixes (`apps/labs/*` → lab, `apps/*` → app, `packages/tooling/tool/*` → tool,
 `packages/ecosystem/*` → ecosystem, `infra` → infra, `scratchpad` and `tools/*` → exempt,
 else library); a manifest outside the workspaces is out of domain.
@@ -508,22 +543,22 @@ else library); a manifest outside the workspaces is out of domain.
 Canonical rule table (strict tier), presence from the census in §0.3. `ind(x)` = indirection
 to `beep:x`; `cli(t)` = exact text; `own` = package-owned; `req`/`opt`/`—`.
 
-| key | library | tool | ecosystem | app | lab | infra |
-| --- | --- | --- | --- | --- | --- | --- |
-| build / check / lint / test | req ind | req ind | req ind | req ind | req ind | req ind |
-| lint:fix | req ind | req ind | opt ind | req ind | req ind | req ind |
-| test:property | opt ind(test) | opt ind(test) | — | opt ind(test) | — | — |
-| test:integration | opt ind(test:integration) | — | req ind | opt ind | — | — |
-| test:integration:parallel | opt ind(test:integration) | — | opt ind | opt ind | — | — |
-| coverage | req own | req own | req own | opt own | — | req own |
-| docgen | req ind(docgen) | req ind | req ind | opt ind | — | req ind |
-| audit | req `bun run --if-present beep:audit` | same | same | same | same | same |
-| package-test-typecheck | req cli(`beep-cli quality test-tsgo-package`) | same | same | same | same | same |
-| codegen | derived(codegen-generator) own | same | same | same | same | same |
-| lint:deprecated-apis | req cli(`beep-cli lint deprecated-apis --package .`) | same | same | same | same | same |
-| lint:jsdoc | req cli(`beep-cli lint jsdoc --package .`) | same | same | same | same | same |
-| lint:laws | req cli(`beep-cli lint laws --package .`) | same | same | same | same | same |
-| doctest | derived(doctest-sources) ind(doctest) | same | same | same | same | — |
+| key | library | tool | ecosystem | app | lab | infra | exempt |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| build / check / lint / test | req ind | req ind | req ind | req ind | req ind | req ind | opt own |
+| lint:fix | req ind | req ind | opt ind | req ind | req ind | req ind | opt own |
+| test:property | opt ind(test) | opt ind(test) | — | opt ind(test) | — | — | opt own |
+| test:integration | opt ind(test:integration) | — | req ind | opt ind | — | — | opt own |
+| test:integration:parallel | opt ind(test:integration) | — | opt ind | opt ind | — | — | opt own |
+| coverage | req own | req own | req own | opt own | — | req own | opt own |
+| docgen | req ind(docgen) | req ind | req ind | opt ind | — | req ind | opt own |
+| audit | req `bun run --if-present beep:audit` | same | same | same | same | same | opt own |
+| package-test-typecheck | req cli(`beep-cli quality test-tsgo-package`) | same | same | same | same | same | opt own |
+| codegen | derived(codegen-generator) own | same | same | same | same | same | opt own |
+| lint:deprecated-apis | req cli(`beep-cli lint deprecated-apis --package .`) | same | same | same | same | same | — |
+| lint:jsdoc | req cli(`beep-cli lint jsdoc --package .`) | same | same | same | — (docs profile ignores labs) | same | — |
+| lint:laws | req cli(`beep-cli lint laws --package .`) | same | same | same | same | same | — |
+| doctest | derived(doctest-sources) ind(doctest) | same | same | same | same | — | — |
 
 Gate contract: `beep lint package-scripts --check` exits non-zero with one drift row per
 manifest and key; `--write` applies strict-tier fixes, adds missing `beep:*` defaults, removes
@@ -567,8 +602,8 @@ Invocations (D10):
 
 | Context | Invocations |
 | --- | --- |
-| local `beep lint policy` | (1) `turbo run <cheap gates> --affected --continue=dependencies-successful --summarize`, stop on a precise red; (2) `turbo run lint:jsdoc lint:laws //#lint:schema-first --affected …` and, unfiltered, `turbo run <D2 group> …`; (3) `turbo run lint:deprecated-apis --affected --concurrency=<N> …`; then CLI aggregates |
-| `--full`, hosted Lint Policy | the same three without `--affected`, all executed, nonzero exit retained |
+| local `beep lint policy` | four runs: (1) `turbo run <cheap gates> --affected --continue=dependencies-successful --summarize`, stop on a precise red; (2) `turbo run lint:jsdoc lint:laws //#lint:schema-first --affected …`; (3) `turbo run <D2 group> …` unfiltered; (4) `turbo run lint:deprecated-apis --affected --concurrency=<N> …`; then CLI aggregates |
+| `--full`, hosted Lint Policy | three runs: (1) cheap gates, (2) medium plus the D2 group, (3) typed; no `--affected`, all executed, nonzero exit retained |
 | hosted Doctest | `turbo run doctest --summarize` |
 | hosted Knip / Fallow / JSDoc Ratchet | `turbo run //#knip:check --summarize`; `turbo run //#fallow:audit:check //#fallow:dead-code:check //#fallow:health:advisory //#fallow:boundaries:advisory //#fallow:flags:advisory //#fallow:security:advisory //#fallow:fix-preview:advisory --summarize` then envelope checks; `turbo run //#jsdoc:inventory:check --summarize` then the compare |
 | `beep:preflight` | the `--write` generators (`tsconfig-sync`, `fallow:boundaries:write`, `jsdoc:inventory`, `schema-first --write`, `package-scripts --write`, `policy-fingerprint --write`), then the local plan |
@@ -659,9 +694,12 @@ governs in-file concurrency only; Turbo's process fan-out is measured, not assum
 6. Hosted Lint Policy and Doctest stay full scope; all moved tests green; each gate lands
    green on main (fleet `--write` in the same PR, ruling 24); a `<= 500 changed files` check
    runs before every publish.
-7. Package handoff: `bun run beep quality package-verify @beep/repo-cli` (`CI=true
-   TMPDIR=/tmp`) for the CLI; for the fleet manifest PR, `--quick` verification on a sample
-   of touched workspaces plus Yeet's required full gates decide readiness.
+7. Package handoff (AGENTS.md Quality Operator): full `bun run beep quality package-verify
+   @beep/repo-cli` (`CI=true TMPDIR=/tmp`) for the CLI; for every workspace whose manifest
+   the fleet rewrite touches, `package-verify --quick`, justified because the touched surface
+   is the scripts block only (no source edit), run as one batch through Turbo's concurrency;
+   any workspace whose source a PR edits gets the full verification. Yeet's required gates are
+   not a substitute for the per-package handoff.
 
 ### 7.2 PR train
 

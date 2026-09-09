@@ -187,7 +187,7 @@ requested directories. The direct missing routes above already refute “all con
 
 ### Effect API audit
 
-Reference **E** = `/home/elpresidank/YeeBois/dev/effect/packages/effect/src/`.
+Reference **E** = `.repos/effect/packages/effect/src/`.
 These are rc.112 source signatures, not v3 recollection. **No demonstrated v3-ism in the listed
 constructor calls.** Compilation of the incomplete sketch was not claimed.
 
