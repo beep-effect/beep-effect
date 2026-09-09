@@ -265,9 +265,9 @@ const expectExportCheck = Effect.fnUntraced(function* (
   });
   for (const label of ["contender-a", "dead-lease", "dead-ticket"]) {
     const relative = path.join("checkouts", label, ".beep", "yeet", "runs");
-    expect(yield* fs.readDirectory(path.join(exportCheck, relative), { recursive: true })).toStrictEqual(
-      yield* fs.readDirectory(path.join(runtimeDir, relative), { recursive: true })
-    );
+    expect(
+      A.sort(yield* fs.readDirectory(path.join(exportCheck, relative), { recursive: true }), Str.Order)
+    ).toStrictEqual(A.sort(yield* fs.readDirectory(path.join(runtimeDir, relative), { recursive: true }), Str.Order));
   }
   for (const directory of ["leases", "queue", "claims", "quarantine"]) {
     expect(yield* fs.readDirectory(path.join(exportCheck, "admission", directory))).toStrictEqual([]);
