@@ -453,3 +453,112 @@ tests, schema-first, goal doctor and version synchronization. Full package
 verification passes for CLI (395.0-second audit, 17.6-second docgen) and
 identity (4.7-second audit, 2.4-second docgen). These package results do not
 replace the failing cache-policy gate or the remaining full Yeet proof.
+
+## Integrated graph and alias input review: 2026-09-09
+
+The main merge is committed as `ed12e4ede8`, after the user-requested local
+commit `22a0a0d124`. The reviewed baseline now has 142 workspaces, 2,840
+configured nodes and 1,474 executable computations. Six property wrappers
+were removed; no common cache flags or commands changed. The canonical
+baseline writer and Quality gate accept the reviewed graph with zero blocking
+findings and 922 unassessed cached computations. The qualification ledger is
+byte-identical. The pilot observer validates the actual identity closure,
+which no longer contains dependency lint, instead of requiring an obsolete
+two-task graph.
+
+The native v2 trials exposed two issues. The child-config fixture needed
+formatting through pinned Biome; that correction allows six invalidation
+controls to pass. The generated root-alias mutation preserved the task hash
+because root lint excluded `tsconfig*.json`. All four independent setup and
+absent-script controls pass with reuse disabled. The retained trial receipts
+are observations of those exact earlier inputs, not acceptance of the repair.
+
+The identity-only input correction removes the inherited tsconfig exclusion
+while preserving the current root lint inputs. The native input count grows
+from 43 to 46, with one copy of the root tsconfig input. Both live tasks remain
+cache-disabled and excluded. The v4 activation fragments are restricted to
+disposable native experiments.
+
+Three direct wrapper cases complete under the narrower file-open trace bound:
+baseline aliases, an added alias and 811 redirected aliases. All exit zero
+with the same 53-byte stderr capture. Each successfully opens root tsconfig
+through both Bun wrappers and a Biome worker, and opens 7,635 regular files
+outside identity. Matching outputs do not establish general irrelevance of
+those files. The earlier broad trace hit its 8 MiB bound and was rejected.
+The [file-open review](./research/alias-file-open-review.json) records these
+limits; semantic read/write classification remains required.
+
+Native controls on the corrected configuration and full stable/canary
+comparison runs are in progress. The new entrypoint attachment binds 286
+source files and six complete snapshots. No source review or local cache hit
+satisfies signed-remote integration or permits tuple promotion. Continue the
+read/write/capture boundary, sibling handoffs and final Yeet proof after these
+local checks; the goal remains active.
+
+Full package verification passes for the current edits: CLI audit/docgen
+431.3/25.0 seconds and identity audit/docgen 5.2/2.7 seconds. Schema-first,
+goal doctor, exploration checks and reflection-artifact checks pass. The
+[checkpoint](./research/alias-input-checkpoint.json) binds these results and
+explicitly records the stable corrected-control request as pending scheduler
+admission. Continue that owned run before launching the prepared full-client
+requests; do not restart it solely because an observation wait expired.
+
+## Dependency-sensitive lint repair: 2026-09-09
+
+The pending root-alias control run completed successfully: 21 observations
+and all 11 checks passed. A further direct probe then established semantic
+influence from a dependency source: deprecating an ordinary types-package
+export imported by the isolated identity fixture changes fresh lint from
+success to failure. Both native Turbo clients replayed the old success at
+the unchanged hash. The
+[counterexample and isolated repair](./research/dependency-cache-invalidation.json)
+retain all twelve native observations.
+
+Identity's child config now declares `^lint`. Types lint stays excluded and
+cache-disabled, so it executes fresh and its source-dependent task hash
+participates in identity's hash. The baseline writer accepts this one-edge
+delta without changing the ledger. The gate reports zero blocking findings
+and 922 unassessed cached computations. The durable dependency control fails
+fresh with the deprecated export, then requires a changed hash, fresh success
+and local replay after removing the annotation. All 24 control observations
+and 12 checks pass. The named missing-child control can remove this edge;
+its two missing dependency observations are not credited as executions.
+
+Full stable v2 validation passes 67 observations and 40 checks, including ten
+shadow decisions. It records 44 successful fresh selected executions, 19
+local hits, four expected fresh failures and 65 fresh dependency executions.
+Exact canary passes the same matrix and counts. Full package verification
+passes for CLI (447.9-second audit, 17.7-second docgen) and identity
+(4.5-second audit, 3.1-second docgen). The new
+entrypoint request binds 286 sources and six complete snapshots; all five
+planner/workflow documents remain byte-identical to their main-integration
+versions, while command groups bind the new census.
+
+The current fixtures omit installed node_modules. A fresh read-only installed
+view now proves this can hide a deprecation failure: the installed computation
+fails after the external export becomes deprecated, while the source fixture
+without that dependency tree passes. The
+[v2 report](./research/pilot-local-v2-verification.md) and
+[checkpoint](./research/pilot-local-v2-checkpoint.json) retain both the passing
+local matrices and this disqualifying normal-workspace equivalence gap.
+Next, materialize and integrity-bind installed dependencies and the executed
+launcher/binary chain, then rerun both exact-client matrices and the external
+deprecation adversary. Complete read/write
+and capture adversaries, signed siblings, dynamic entrypoints, adoption and
+final Yeet acceptance remain required. All live pilot reuse stays disabled.
+
+## Dependency snapshot primitives and branch synchronization: 2026-09-09
+
+The installed-tree snapshot schemas, materializer and verifier are implemented
+as library operations. Four focused tests cover schema serialization, digest
+stability across locations and timestamps, detection of changed content, modes
+and entries, declared workspace links, and rejection of escaping links or a
+symlinked tree root. The implementation now uses the installed Effect APIs and
+passes the schema-first policy check.
+
+This slice does not yet connect a materialized tree to the pilot or bind the
+executed dependency launcher chain. A full installed-tree snapshot and the
+normal-workspace client matrices remain pending. Existing v2 receipts describe
+the earlier source fixture and retain their original source hashes. Refresh
+the census, policy baseline and entrypoint attachments after merging main;
+new source or planner state does not inherit those historical proofs.

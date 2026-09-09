@@ -188,11 +188,17 @@ const runPilot = Effect.fn("CachePilot.run")(
     const current = yield* cache.activation(root, activationRequest);
     if (!S.toEquivalence(CacheActivationPreview)(current, preview))
       return yield* CacheCommandError.new("The pilot activation preview is stale.");
-    const dependency = yield* A.findFirst(current.source.configuration.nodes, (node) => node.id === typesTask).pipe(
-      Effect.fromOption(() => CacheCommandError.new("The real pilot's required types dependency is absent."))
+    const dependencyNodes = A.filter(current.source.configuration.nodes, (node) => node.id !== identityTask);
+    if (A.some(dependencyNodes, (node) => node.id !== typesTask || node.configuration.cache))
+      return yield* CacheCommandError.new("Pilot dependencies must be limited to fresh, unqualified types lint.");
+    const expectedTasks = A.sort(
+      A.map(current.source.configuration.nodes, (node) => node.id),
+      Order.String
     );
-    if (dependency.configuration.cache)
-      return yield* CacheCommandError.new("The unqualified types dependency must execute fresh.");
+    const expectedDependencies = A.sort(
+      A.map(dependencyNodes, (node) => node.id),
+      Order.String
+    );
     const census = yield* collectCacheCensus(root);
     const context = yield* resolveWorktreeContext(root);
     const revision = yield* captureHost(root, ["rev-parse", "HEAD"]).pipe(
@@ -440,8 +446,16 @@ const runPilot = Effect.fn("CachePilot.run")(
         return yield* CacheCommandError.new("Pilot dry-run setup failed or exceeded its capture bound.");
       const plan = yield* JsonStringCodec(NativeSummary).decode(dry.stdout);
       const joined = yield* joinCacheCensusPlan(census.workspaces, plan);
-      if (joined.length !== 2)
-        return yield* CacheCommandError.new("Pilot graph differs from identity plus its types dependency.");
+      if (
+        !S.toEquivalence(S.Array(S.String))(
+          A.sort(
+            A.map(joined, (node) => node.id),
+            Order.String
+          ),
+          expectedTasks
+        )
+      )
+        return yield* CacheCommandError.new("Pilot graph differs from the reviewed identity task closure.");
       for (const node of joined) {
         const expected = yield* A.findFirst(census.nodes, (row) => row.id === node.id).pipe(
           Effect.fromOption(() => CacheCommandError.new("Pilot dry node is absent from the current census."))
@@ -514,7 +528,19 @@ const runPilot = Effect.fn("CachePilot.run")(
         taskObservation,
         { concurrency: 1 }
       );
-      if (A.some(dependencies, (task) => task.computation !== typesTask || task.origin !== "fresh"))
+      // Removing the child config may remove its dependency edges. Any remaining
+      // dependency must still belong to the reviewed closure and execute fresh.
+      if (
+        (!fixture.omitChild &&
+          !S.toEquivalence(S.Array(S.String))(
+            A.sort(
+              A.map(dependencies, (task) => task.computation),
+              Order.String
+            ),
+            expectedDependencies
+          )) ||
+        A.some(dependencies, (task) => !A.contains(expectedDependencies, task.computation) || task.origin !== "fresh")
+      )
         return yield* CacheCommandError.new("Pilot dependency was unexpected or reused an unqualified artifact.");
       const selected = A.filter(summary.tasks, (task) => task.taskId === identityTask);
       if (selected.length > 1) return yield* CacheCommandError.new("Native pilot summary repeated the selected task.");
@@ -781,12 +807,28 @@ const runPilot = Effect.fn("CachePilot.run")(
       "lockfile",
       "package-manager",
       "generated-alias",
+      "dependency-source",
     ]);
     for (const id of mutationIds.Options) {
       const fixture = yield* prepare(sourceRoots[0], "root-a", `mutation-${id}`);
-      const expectedBaselineExit = id === "root-lint-config" ? 1 : 0;
+      const expectedBaselineExit = A.contains(mutationIds.pickOptions(["root-lint-config", "dependency-source"]), id)
+        ? 1
+        : 0;
       if (id === "root-lint-config")
         yield* writeContainedFileString(fixture.identity, "src/index.ts", "export const = ;\n");
+      if (id === "dependency-source") {
+        yield* writeContainedFileString(
+          fixture.identity,
+          "src/qualification-dependency.ts",
+          'import { qualificationDependency } from "../../../primitive/types/src/index.ts";\n\nexport const qualificationValue = qualificationDependency;\n'
+        );
+        const dependencySource = yield* readBytes(fixture.types, "src/index.ts").pipe(Effect.flatMap(decodeText));
+        yield* writeContainedFileString(
+          fixture.types,
+          "src/index.ts",
+          `${dependencySource}\n/** @deprecated qualification dependency control */\nexport const qualificationDependency = 1;\n`
+        );
+      }
       const env = { QUALIFICATION_CONFIG_INPUT: "changed", QUALIFICATION_CHILD_INPUT: "changed" };
       const seeded = yield* execute(fixture, `${id}-baseline`, true, true, "/fixture", env);
       let changedFixture = fixture;
@@ -809,13 +851,27 @@ const runPilot = Effect.fn("CachePilot.run")(
             const config = yield* decodeJsoncTextAs(S.JsonObject)(text);
             const tasks = yield* S.decodeUnknownEffect(S.JsonObject)(config.tasks);
             const lint = yield* S.decodeUnknownEffect(S.JsonObject)(tasks.lint);
-            return yield* JsonStringCodec(S.JsonObject).encode(
+            const encoded = yield* JsonStringCodec(S.JsonObject).encode(
               R.set(config, "tasks", R.set(tasks, "lint", R.set(lint, "env", ["QUALIFICATION_CHILD_INPUT"])))
             );
+            yield* writeContainedFileString(fixture.identity, "turbo.json", encoded);
+            const formatted = yield* invoke(fixture, "/fixture", [
+              "/bin/sh",
+              "-c",
+              `exec /tools/biome format --stdin-file-path=/fixture/${identityDirectory}/turbo.json < /fixture/${identityDirectory}/turbo.json`,
+            ]);
+            if (formatted.exitCode !== 0 || formatted.truncated)
+              return yield* CacheCommandError.new("Cannot format the child-config control with pinned Biome.");
+            return formatted.stdout;
           });
           changedText = yield* change(fixture.after);
           changedFixture = PilotRoot.make({ ...fixture, before: yield* change(fixture.before), after: changedText });
         }
+      } else if (id === "dependency-source") {
+        changedPath = `${typesDirectory}/src/index.ts`;
+        original = yield* readBytes(fixture.types, "src/index.ts").pipe(Effect.flatMap(decodeText));
+        changedText = Str.replace("/** @deprecated qualification dependency control */\n", "")(original);
+        yield* writeContainedFileString(fixture.types, "src/index.ts", changedText);
       } else {
         changedPath =
           id === "root-lint-config"
@@ -862,7 +918,7 @@ const runPilot = Effect.fn("CachePilot.run")(
           );
         }
       }
-      if (id !== "child-task-config" && id !== "missing-child-config")
+      if (!A.contains(mutationIds.pickOptions(["child-task-config", "missing-child-config", "dependency-source"]), id))
         changedFixture = yield* overlayRootFile(fixture, changedPath, changedText);
       const changed = yield* execute(changedFixture, `${id}-changed`, true, true, "/fixture", env);
       const replayed = yield* execute(changedFixture, `${id}-replay`, true, true, "/fixture", env);
@@ -894,91 +950,89 @@ const runPilot = Effect.fn("CachePilot.run")(
       checks.push(CacheSyntheticCheck.make({ name: `invalidation-${id}`, passed }));
       if (!passed) break;
     }
-    if (A.every(checks, (check) => check.passed)) {
-      for (const reason of CachePilotNonExecution.fields.reason.Options) {
-        let fixture = yield* prepare(sourceRoots[0], "root-a", `non-execution-${reason}`);
-        if (reason === "missing-root-config")
-          fixture = PilotRoot.make({ ...fixture, omitted: ["turbo.json", "turbo.jsonc"] });
-        else if (reason === "malformed-root-config")
-          fixture = yield* overlayRootFile(fixture, "turbo.json", '{"tasks":');
-        else if (reason === "malformed-child-config")
-          yield* writeContainedFileString(fixture.identity, "turbo.json", '{"tasks":');
-        else {
-          const manifest = yield* readBytes(fixture.identity, "package.json").pipe(
-            Effect.flatMap(decodeText),
-            Effect.flatMap(decodeJsoncTextAs(S.JsonObject))
-          );
-          const scripts = yield* S.decodeUnknownEffect(S.JsonObject)(manifest.scripts);
-          yield* writeContainedFileString(
-            fixture.identity,
-            "package.json",
-            yield* JsonStringCodec(S.JsonObject).encode(R.set(manifest, "scripts", R.remove(scripts, "lint")))
-          );
-        }
-        const captured = yield* invoke(fixture, "/fixture", [
-          "/tools/turbo",
-          "run",
-          "lint",
-          "--filter=@beep/identity",
-          "--no-daemon",
-          "--cache=local:",
-          "--env-mode=strict",
-          "--summarize",
-          "--output-logs=full",
-          "--log-order=grouped",
-          "--log-prefix=task",
-          "--ui=stream",
-        ]);
-        if (captured.truncated)
-          return yield* CacheCommandError.new("A native non-execution control exceeded its capture bound.");
-        const summaryDirectory = path.join(fixture.directory, "run/runs");
-        const names = (yield* fs.exists(summaryDirectory)) ? yield* fs.readDirectory(summaryDirectory) : [];
-        const summaryPresent = names.length === 1;
-        let selectedExecutionObserved = false;
-        if (summaryPresent) {
-          const native = yield* readBytes(fixture.directory, `run/runs/${O.getOrThrow(A.head(names))}`).pipe(
-            Effect.flatMap(decodeText),
-            Effect.flatMap(JsonStringCodec(NativeSummary).decode)
-          );
-          selectedExecutionObserved = A.some(
-            native.tasks,
-            (task) =>
-              task.taskId === identityTask &&
-              task.command !== "<NONEXISTENT>" &&
-              Str.trim(task.command) !== "" &&
-              O.isSome(task.execution)
-          );
-        }
-        const error = Str.toLowerCase(captured.stderr);
-        const expectedDiagnostic =
-          reason === "missing-root-config"
-            ? Str.includes("could not find turbo.json")(error)
-            : Str.includes("failed to parse turbo.json")(error);
-        const passed =
-          !selectedExecutionObserved &&
-          (reason === "absent-script"
-            ? captured.exitCode === 0 && summaryPresent
-            : captured.exitCode !== 0 && !summaryPresent && expectedDiagnostic);
-        nonExecutions.push(
-          CachePilotNonExecution.make({
-            id: reason,
-            reason,
-            exitCode: captured.exitCode,
-            stdoutSha256: yield* hashText(captured.stdout),
-            stderrSha256: yield* hashText(captured.stderr),
-            summaryPresent,
-            selectedExecutionObserved,
-            passed,
-          })
+    // These controls disable reuse and remain independent of a failed replay comparison.
+    for (const reason of CachePilotNonExecution.fields.reason.Options) {
+      let fixture = yield* prepare(sourceRoots[0], "root-a", `non-execution-${reason}`);
+      if (reason === "missing-root-config")
+        fixture = PilotRoot.make({ ...fixture, omitted: ["turbo.json", "turbo.jsonc"] });
+      else if (reason === "malformed-root-config") fixture = yield* overlayRootFile(fixture, "turbo.json", '{"tasks":');
+      else if (reason === "malformed-child-config")
+        yield* writeContainedFileString(fixture.identity, "turbo.json", '{"tasks":');
+      else {
+        const manifest = yield* readBytes(fixture.identity, "package.json").pipe(
+          Effect.flatMap(decodeText),
+          Effect.flatMap(decodeJsoncTextAs(S.JsonObject))
         );
-        checks.push(CacheSyntheticCheck.make({ name: `non-execution-${reason}`, passed }));
-        if (!passed) {
-          const diagnostics = `.beep/cache/pilot-observations/${path.basename(experiment)}/${reason}`;
-          yield* writeContainedFileString(root, `${diagnostics}/stdout.txt`, captured.stdout);
-          yield* writeContainedFileString(root, `${diagnostics}/stderr.txt`, captured.stderr);
-          yield* Effect.logWarning(`Native control mismatch; bounded private diagnostics: ${diagnostics}`);
-          break;
-        }
+        const scripts = yield* S.decodeUnknownEffect(S.JsonObject)(manifest.scripts);
+        yield* writeContainedFileString(
+          fixture.identity,
+          "package.json",
+          yield* JsonStringCodec(S.JsonObject).encode(R.set(manifest, "scripts", R.remove(scripts, "lint")))
+        );
+      }
+      const captured = yield* invoke(fixture, "/fixture", [
+        "/tools/turbo",
+        "run",
+        "lint",
+        "--filter=@beep/identity",
+        "--no-daemon",
+        "--cache=local:",
+        "--env-mode=strict",
+        "--summarize",
+        "--output-logs=full",
+        "--log-order=grouped",
+        "--log-prefix=task",
+        "--ui=stream",
+      ]);
+      if (captured.truncated)
+        return yield* CacheCommandError.new("A native non-execution control exceeded its capture bound.");
+      const summaryDirectory = path.join(fixture.directory, "run/runs");
+      const names = (yield* fs.exists(summaryDirectory)) ? yield* fs.readDirectory(summaryDirectory) : [];
+      const summaryPresent = names.length === 1;
+      let selectedExecutionObserved = false;
+      if (summaryPresent) {
+        const native = yield* readBytes(fixture.directory, `run/runs/${O.getOrThrow(A.head(names))}`).pipe(
+          Effect.flatMap(decodeText),
+          Effect.flatMap(JsonStringCodec(NativeSummary).decode)
+        );
+        selectedExecutionObserved = A.some(
+          native.tasks,
+          (task) =>
+            task.taskId === identityTask &&
+            task.command !== "<NONEXISTENT>" &&
+            Str.trim(task.command) !== "" &&
+            O.isSome(task.execution)
+        );
+      }
+      const error = Str.toLowerCase(captured.stderr);
+      const expectedDiagnostic =
+        reason === "missing-root-config"
+          ? Str.includes("could not find turbo.json")(error)
+          : Str.includes("failed to parse turbo.json")(error);
+      const passed =
+        !selectedExecutionObserved &&
+        (reason === "absent-script"
+          ? captured.exitCode === 0 && summaryPresent
+          : captured.exitCode !== 0 && !summaryPresent && expectedDiagnostic);
+      nonExecutions.push(
+        CachePilotNonExecution.make({
+          id: reason,
+          reason,
+          exitCode: captured.exitCode,
+          stdoutSha256: yield* hashText(captured.stdout),
+          stderrSha256: yield* hashText(captured.stderr),
+          summaryPresent,
+          selectedExecutionObserved,
+          passed,
+        })
+      );
+      checks.push(CacheSyntheticCheck.make({ name: `non-execution-${reason}`, passed }));
+      if (!passed) {
+        const diagnostics = `.beep/cache/pilot-observations/${path.basename(experiment)}/${reason}`;
+        yield* writeContainedFileString(root, `${diagnostics}/stdout.txt`, captured.stdout);
+        yield* writeContainedFileString(root, `${diagnostics}/stderr.txt`, captured.stderr);
+        yield* Effect.logWarning(`Native control mismatch; bounded private diagnostics: ${diagnostics}`);
+        break;
       }
     }
     yield* verifyTools();

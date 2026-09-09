@@ -3,7 +3,7 @@
   "extends": ["//"],
   "tasks": {
     "lint": {
-      "cache": false,
+      "cache": true,
       "dependsOn": ["^lint"],
       "inputs": [
         "$TURBO_DEFAULT$",

@@ -1,5 +1,85 @@
 # Friction and opportunities
 
+## 2026-09-09: an absent installed dependency hides a lint failure
+
+The read-only source worktrees contain no node_modules tree. A fresh probe
+compares this fixture with a read-only view of the installed dependencies.
+The unmodified installed computation passes. Adding a nondeprecated external
+export/import also passes; deprecating only that external export makes both
+quiet and verbose lint fail, and verbose output identifies the deprecation
+rule. The otherwise equivalent source fixture without installed dependencies
+passes because that export is not resolved. The
+[installed-dependency observation](./installed-dependency-observation.json)
+records all eight runs and preserves host overlay-target and lockfile hashes.
+Its installed view is not a complete integrity attestation. A pinned binary
+and lockfile do not alone prove that a source fixture materializes every
+dependency the selected computation reads. Bind and verify that materialization
+before treating the local pilot as the normal workspace computation.
+
+## 2026-09-09: native dependency repair and helper API correction
+
+The [native dependency probe](./dependency-cache-invalidation.json)
+reproduces stale successful replay on both pinned clients: local hit exits
+zero and forced fresh execution exits one at task hash `750fbc908c142716`.
+Adding the identity-only `^lint` edge changes the selected hash when the
+dependency changes, and both clients execute and fail fresh as expected.
+The durable repaired controls also pass: 24 observations and 12 checks.
+Dependency source reads need hash participation even when the dependency's
+own lint result is fresh and successful. The scoped repair keeps types lint
+excluded and cache-disabled.
+
+The first implementation check of the new control caught two API mistakes:
+`LiteralKit` has `pickOptions` rather than tagged-union `isAnyOf`, and Effect
+String's replacement helper is curried. Use `A.contains` with the literal
+kit's selected options and the installed String helper signature. The
+corrected source passes typechecking and native controls. Check the exact
+helper API before extending a neighboring control pattern.
+
+## 2026-09-09: a dependency export changes the selected lint verdict
+
+The root configuration enables `noDeprecatedImports` as an error. Its project
+scanner explains why the direct trace opens files outside identity; upstream
+[rule documentation](https://biomejs.dev/linter/rules/no-deprecated-imports/javascript/)
+identifies that scanner dependency. A bounded fresh probe adds an ordinary
+relative import of a types-package export to an isolated identity source file.
+Changing only that export's JSDoc deprecation annotation changes both quiet
+and verbose lint from exit zero to exit one, with the verbose diagnostic
+identifying `lint/suspicious/noDeprecatedImports`. An annotation on the
+existing namespace export did not trigger that rule; it cannot establish
+general dependency irrelevance. The
+[fresh observation](./dependency-deprecation-observation.json) preserves both
+cases. Native cache invalidation and an identity-specific fresh dependency
+edge are being tested before broader replay comparisons continue.
+
+## 2026-09-09: bounded trace exposes a wider file-open boundary
+
+The direct identity wrapper probe's broad file/network/process trace reached
+its 8 MiB limit and was rejected. A narrower file-open/network/process trace
+completed three fresh cases below 4 MiB each. Each case opened 7,662 regular
+repository files, of which 7,635 were outside identity, and produced the same
+53-byte stderr capture. Successful opens establish presence, not semantic
+influence or complete read/write coverage. The
+[interpreted receipt](./alias-file-open-review.json) keeps private trace hashes
+and line references. This boundary needs further classification before
+qualification; no tuple promotion follows from matching outputs.
+
+The earlier alias control failed because the inherited root tsconfig exclusion
+kept a changed root configuration out of the task hash. The identity-only
+[input review](./alias-input-baseline-review.md) removes that exclusion while
+preserving the root lint inputs and cache-disabled state. Its native input
+count increases from 43 to 46. Review effective exclusions together with
+positive inputs; listing a global input does not prove that a task hashes it.
+
+## 2026-09-09: incorrect cache-policy command dispatched aggregate lint
+
+An operator invocation used `beep lint cache-policy`, which dispatched the
+aggregate lint planner instead of the intended gate. The owned dispatcher
+was interrupted and exited 130 with `All fibers interrupted without error`.
+No validation credit is assigned to that run. The correct
+`beep quality cache-policy` command completed with zero blocking findings and
+922 unassessed cached computations. Use the canonical Quality command;
+rejecting unknown lint selectors would prevent this accidental fan-out.
+
 ## 2026-09-09: tooling role creation is slice-only
 
 While locating the canonical generator for the Cache operational roles and
@@ -428,3 +508,32 @@ the incoming lint/test graph changes. The old baseline is preserved and the
 gate remains enforced. A baseline review and source-binding refresh must
 accompany future qualification after a main integration; a clean Git merge
 and passing package tests do not establish cache-policy acceptance.
+
+The first v2 control run changed the child task hash and executed fresh, but
+the fixture's minified JSON failed Biome formatting. The intended success
+and replay assertions therefore failed for a fixture reason. The retained
+`pilot-controls-unformatted-child.json` records that trial, including two
+fresh failures and no false successful replay. Format valid child-control
+JSON through the exact pinned Biome binary inside the read-only sandbox
+before testing semantic invalidation; malformed-config controls stay raw.
+
+The formatted v2 control run passes six invalidation cases, but the generated
+root alias perturbation keeps the same hash and returns a local hit. Root
+lint explicitly excludes root `tsconfig*.json` files. Preserve the trial in
+`pilot-controls-alias-observation.json` and require direct fresh comparison
+and file-read evidence before deciding whether this input is irrelevant or
+the declaration needs repair. The protocol permits documented irrelevance;
+a stable hash alone does not prove it. Independent malformed/missing-config
+controls disable reuse and may still run after this comparison stops reuse.
+
+### Validate new snapshot modules before branch synchronization
+
+- Activity: prepare the dependency snapshot slice for the requested commit and
+  merge from main.
+- Evidence: the CLI type check found a finite-number schema diagnostic and an
+  unknown tuple-order input in `Cache.dependencies.ts`. The new module also
+  needed its public exports connected before its documentation examples could
+  resolve. Focused native filesystem tests and schema-first validation pass
+  after correction.
+- Prevention: finish the module's exports and focused type check alongside its
+  first filesystem tests, before moving on to full installed-tree experiments.

@@ -1,0 +1,156 @@
+{
+  "schemaVersion": "cache-alias-input-checkpoint/v1",
+  "authority": "Reviewed configuration, bounded fresh file-open observations and package validation only; corrected native control execution remains pending. No qualification, cache activation or signed-remote authority.",
+  "inputRevision": "ed12e4ede811c642d866e591d65b860dc2b23d7f",
+  "configurationDigest": "08040529694d06d8fceb69d2b1be4d9ed767d007f2c4e1120c8d7d82e5129bf3",
+  "activationTargetDigest": "bfa48b0149ba01367e282245e8978481f0595ad02eb6a268a3d99a827a6cfca9",
+  "toolchainDigest": "50d59edde15c279412d17a97e63e1110b6af2567a9a15e0cbce8756191292f4d",
+  "activation": {
+    "path": "goals/turborepo-task-qualification/research/alias-input-activation-preview.json",
+    "sha256": "5b395f5d5b339d12d214fe272fa0c640b2568f60d914e3a5e835a15596f69d2b"
+  },
+  "baseline": {
+    "path": "standards/cache-qualification-baseline.json",
+    "sha256": "cc1fbe92c0137c099b3ab242a7107e41848f38cd4827b349161cf266670bac19"
+  },
+  "ledger": {
+    "path": "standards/cache-qualification.json",
+    "sha256": "06a4ce7d4ca481d5dd93dacfdb4dff16108ca5683f67c4a68af173ff07fd05ac"
+  },
+  "ledgerUnchanged": true,
+  "population": {
+    "workspaces": 142,
+    "configuredNodes": 2840,
+    "executableNodes": 1474
+  },
+  "policy": {
+    "blockingFindings": 0,
+    "unassessedCachedComputations": 922,
+    "pilotState": "excluded",
+    "pilotCacheEnabled": false
+  },
+  "entrypoints": {
+    "attachment": {
+      "path": ".beep/qualification-local-preflight/census-alias-input-attached.json",
+      "sha256": "91fb86ddf60951913538b69f294eee136354102d2807af16058e636c373e738b"
+    },
+    "request": {
+      "path": "goals/turborepo-task-qualification/research/lane-merge-entrypoint-request.json",
+      "sha256": "ce7bb36bdb6de43829f6d81770c16981f5e341d8f7c4d124cc163e1d542f69c3"
+    },
+    "sourceBindings": 286,
+    "completeDocuments": 6,
+    "unresolved": [
+      "Candidate semantic reads, writes, captures and signed/shadow comparisons remain required.",
+      "Classify nested workspace and root command semantics.",
+      "Entrypoint attachments establish source identity only; candidate runtime evidence remains required.",
+      "Hosted expanded workflows, remote action sources and required statuses retain their existing proof owners.",
+      "Review dynamic CI/Quality/Yeet entrypoint branches and their external verdicts.",
+      "Source planner scenarios do not exhaust dynamic interpreter decisions or prove their runtime outcomes."
+    ]
+  },
+  "evidence": [
+    {
+      "path": "goals/turborepo-task-qualification/research/lane-merge-baseline-review.md",
+      "sha256": "8e0dd3a5de6acd9c22dad1f35b890039f47c14495c71d85b3676aa417f45acf1"
+    },
+    {
+      "path": "goals/turborepo-task-qualification/research/lane-merge-baseline-delta.json",
+      "sha256": "0154d7e7cff8970e3a42d97428c06f72aed749539814b02f2083259ec220985c"
+    },
+    {
+      "path": "goals/turborepo-task-qualification/research/alias-input-baseline-review.md",
+      "sha256": "1a225f4d80a04316bd8be8a463cf70972c101150720bebe006b546faa0bb7f26"
+    },
+    {
+      "path": "goals/turborepo-task-qualification/research/alias-input-baseline-delta.json",
+      "sha256": "09b63f7b635fd815648ed8b336ead1c8f2d2c50eb15e8a82c4ed09421b28fd91"
+    },
+    {
+      "path": "goals/turborepo-task-qualification/research/pilot-controls-unformatted-child.json",
+      "sha256": "3466ef282f82e25d5869b45a5791b6faa642f9f173993b5a2e50658d0c4666a3"
+    },
+    {
+      "path": "goals/turborepo-task-qualification/research/pilot-controls-alias-observation.json",
+      "sha256": "d686781bbfd329820dd37f7073cc57d21f88aeba93e82ae8f650c51e72344ef5"
+    },
+    {
+      "path": "goals/turborepo-task-qualification/research/pilot-controls-absence-observation.json",
+      "sha256": "5d7d1e0b19f30d2b2bd79bc8d1876cfa4ada46c91a49450dda93706fafe9cc10"
+    },
+    {
+      "path": "goals/turborepo-task-qualification/research/alias-input-open-presence.json",
+      "sha256": "d54d0322314dcaa386b430b12af9074ca9b7d60f020f9a4ffe4de3df831584ba"
+    },
+    {
+      "path": "goals/turborepo-task-qualification/research/alias-file-open-review.json",
+      "sha256": "aae07237206e11d2a2e39fbfdd05fc5db1095477c9a24efa91ad35754f7cd294"
+    }
+  ],
+  "verification": {
+    "cliPackage": {
+      "passed": true,
+      "reference": {
+        "path": ".beep/qualification-local-preflight/alias-input-cli-package-verify.log",
+        "sha256": "a6c9e436e83ecd0fc631bcfcd82564a683258d85baf6c13c3ecb2bfe96fb76a5"
+      }
+    },
+    "identityPackage": {
+      "passed": true,
+      "reference": {
+        "path": ".beep/qualification-local-preflight/alias-input-identity-package-verify.log",
+        "sha256": "fb0fd7f21c37d6b1e25ca27b6b291baebcd24bfc6d311d9f0cd01291d9f20c09"
+      }
+    },
+    "schemaFirst": {
+      "passed": true,
+      "reference": {
+        "path": ".beep/qualification-local-preflight/lane-merge-schema-first.log",
+        "sha256": "92cdfc88b77af58c49edb6143b3ba44e5a03a38ff30e124dd2d3811d646819b3"
+      }
+    },
+    "goalsDoctor": {
+      "passed": true,
+      "reference": {
+        "path": ".beep/qualification-local-preflight/alias-input-goals-doctor.log",
+        "sha256": "83248b4d9820dbab6331d52fd946a2ab0945205cedc7c9f0ef6e9c18d8ee50a1"
+      }
+    },
+    "exploreCheck": {
+      "passed": true,
+      "reference": {
+        "path": ".beep/qualification-local-preflight/alias-input-explore-check.log",
+        "sha256": "a8e9e6963f045eb177b93c100bda803766fed5126e65ec44b4f750b95f828741"
+      }
+    },
+    "reflectionArtifacts": {
+      "passed": true,
+      "reference": {
+        "path": ".beep/qualification-local-preflight/alias-input-reflection-artifacts.log",
+        "sha256": "dc58e3cf99fff163aa6e100a032a40ab464ea55b3fdd24cbbdcb42f25a1daa90"
+      }
+    },
+    "cachePolicy": {
+      "passed": true,
+      "reference": {
+        "path": ".beep/qualification-local-preflight/alias-input-quality-cache-policy.log",
+        "sha256": "72176981b8eae3f56b598318b7c1cb8d3e517482d639a5513184df5438a005ac"
+      }
+    }
+  },
+  "nativeValidation": {
+    "status": "pending-scheduler-admission",
+    "activeRequest": {
+      "path": ".beep/qualification-local-preflight/pilot-controls-stable-alias-input-v2-request.json",
+      "sha256": "49544f9ebbd96e12b668b48376d9456a7300766a645ccd90be707ea4e5f4ff83"
+    },
+    "expectedOutput": ".beep/qualification-local-preflight/pilot-controls-stable-alias-input-v2.json",
+    "followUp": "After all seven invalidation and four non-execution controls pass, execute the prepared full stable/canary requests in separate namespaces. No outer timeout around scheduler admission."
+  },
+  "remaining": [
+    "Native validation of the corrected 46-input configuration on exact stable/canary clients.",
+    "Semantic classification of additional file opens, complete write and capture adversaries.",
+    "Accepted signed conformance/trust runtime receipts; both sibling goal packets remain paused.",
+    "Dynamic entrypoint/external verdict coverage, adoption handoff and final Yeet acceptance."
+  ]
+}

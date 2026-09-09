@@ -4,7 +4,6 @@
   "tasks": {
     "lint": {
       "cache": false,
-      "dependsOn": ["^lint"],
       "inputs": [
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/biome.jsonc",

@@ -1,0 +1,446 @@
+{
+  "schemaVersion": "cache-dependency-invalidation-observation/v1",
+  "authority": "Bounded native counterexample and isolated dependency-edge repair only. No full pilot, signed-remote or qualification authority.",
+  "sourceRevision": "ed12e4ede811c642d866e591d65b860dc2b23d7f",
+  "activation": {
+    "path": "goals/turborepo-task-qualification/research/alias-input-activation-preview.json",
+    "sha256": "5b395f5d5b339d12d214fe272fa0c640b2568f60d914e3a5e835a15596f69d2b"
+  },
+  "tools": {
+    "bun": {
+      "version": "1.4.2",
+      "sha256": "a83d263767d839e4d2649ca8e35d07159c7afc99afdc96d731ced29e056dda0c"
+    },
+    "biome": {
+      "version": "Version: 2.5.6",
+      "sha256": "3cc9a0c3fa26ac26a89e8a3b203c010c9ae88e36f69a2679e79981f267ce9d57"
+    }
+  },
+  "clients": [
+    {
+      "channel": "stable",
+      "client": {
+        "version": "2.10.12",
+        "sha256": "cfca1bde77f1216d4dcc8964e567eed9d47be224c848e8001edc9a1a07839dde",
+        "namespace": "qualification-pilot-local-stable-bun142-alias-input-v2"
+      }
+    },
+    {
+      "channel": "canary",
+      "client": {
+        "version": "2.10.13-canary.1",
+        "sha256": "86aa80b5c86c8b6d07061626a6f8562385c3aed1270794dac53c6beaec856223",
+        "namespace": "qualification-pilot-local-canary-bun142-alias-input-v2"
+      }
+    }
+  ],
+  "observer": {
+    "path": ".beep/qualification-local-preflight/probe-dependency-cache.py",
+    "sha256": "a8c292b1063e3403562ec2bdb3ead132686bf32bdf4156dd9143f75e043e9a0a"
+  },
+  "records": [
+    {
+      "channel": "stable",
+      "variant": "without-dependency-edge",
+      "mode": "producer",
+      "configurationSha256": "45b704cc4cf21c818abcbd948ab5776643116ed6841440f6e410297d41b2d976",
+      "dependencySourceSha256": "5e92d72f6eba48189317084c77410d641d06f52aea2f0f6fa5dca4c62ad5d78b",
+      "identitySourceSha256": "ac15abf09739999cbb343b7069ad7f15c8e88ec266cbc6f1d1e890f3b7f016e0",
+      "processExitCode": 0,
+      "taskHash": "750fbc908c142716",
+      "cache": {
+        "local": false,
+        "remote": false,
+        "status": "MISS",
+        "timeSaved": 0
+      },
+      "taskExecutionExitCode": 0,
+      "inputsDigest": "2f11779430f3b342c834fcb229a328e58deed42ea01c9bc1f79bd720e77d8d8e",
+      "dependencyTasks": [],
+      "summarySha256": "ffd377bbcd19876af96a7761bacc0e7ce23c21237b9528994552be1ae962aef1",
+      "stdoutSha256": "4d5ef63fb10ceb7ba71bae9febc97b9a6076990a4e10c5c83121490bb2811c0f",
+      "stderrSha256": "d1cbab58e094d90d083b156a38865e8f0eab48ff7ba48e7f6d46b562c521a5d0",
+      "taskLog": {
+        "bytes": 53,
+        "sha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657"
+      },
+      "privateOutputPrefix": ".beep/qualification-local-preflight/dependency-cache-f6mprb4x/stable-without-dependency-edge/producer"
+    },
+    {
+      "channel": "stable",
+      "variant": "without-dependency-edge",
+      "mode": "reuse-after-deprecation",
+      "configurationSha256": "45b704cc4cf21c818abcbd948ab5776643116ed6841440f6e410297d41b2d976",
+      "dependencySourceSha256": "655a6b3747cc3afe2d0f51e06fb273e901f004c8e64ef6a027d2c61805078b36",
+      "identitySourceSha256": "ac15abf09739999cbb343b7069ad7f15c8e88ec266cbc6f1d1e890f3b7f016e0",
+      "processExitCode": 0,
+      "taskHash": "750fbc908c142716",
+      "cache": {
+        "local": true,
+        "remote": false,
+        "status": "HIT",
+        "source": "LOCAL",
+        "timeSaved": 757,
+        "sha": "ed12e4ede811c642d866e591d65b860dc2b23d7f",
+        "dirtyHash": "9a6424998ab2a57e9da4c8e16ac318c1013b6f01462c9b230ce9327b1e7a47fa"
+      },
+      "taskExecutionExitCode": 0,
+      "inputsDigest": "2f11779430f3b342c834fcb229a328e58deed42ea01c9bc1f79bd720e77d8d8e",
+      "dependencyTasks": [],
+      "summarySha256": "00f85b83bc93f7479e6023c31d83b56df8fade982b05f6738cac45dc129e6afb",
+      "stdoutSha256": "26e24d22bde43e2fe95a26dfcb6713ba2f9b1b897f3e7760ccd79d42c2c77696",
+      "stderrSha256": "d1cbab58e094d90d083b156a38865e8f0eab48ff7ba48e7f6d46b562c521a5d0",
+      "taskLog": {
+        "bytes": 53,
+        "sha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657"
+      },
+      "privateOutputPrefix": ".beep/qualification-local-preflight/dependency-cache-f6mprb4x/stable-without-dependency-edge/reuse-after-deprecation"
+    },
+    {
+      "channel": "stable",
+      "variant": "without-dependency-edge",
+      "mode": "fresh-after-deprecation",
+      "configurationSha256": "45b704cc4cf21c818abcbd948ab5776643116ed6841440f6e410297d41b2d976",
+      "dependencySourceSha256": "655a6b3747cc3afe2d0f51e06fb273e901f004c8e64ef6a027d2c61805078b36",
+      "identitySourceSha256": "ac15abf09739999cbb343b7069ad7f15c8e88ec266cbc6f1d1e890f3b7f016e0",
+      "processExitCode": 1,
+      "taskHash": "750fbc908c142716",
+      "cache": {
+        "local": false,
+        "remote": false,
+        "status": "MISS",
+        "timeSaved": 0
+      },
+      "taskExecutionExitCode": 1,
+      "inputsDigest": "2f11779430f3b342c834fcb229a328e58deed42ea01c9bc1f79bd720e77d8d8e",
+      "dependencyTasks": [],
+      "summarySha256": "b7aae8261797979b31145bb19084d7dca3fc388eed48b8615c780dbb5580cd36",
+      "stdoutSha256": "7c2fb19b43bff0a101a3addf67ec6e463c25fd00c9cd907d862b1f945a48b996",
+      "stderrSha256": "334e64df9c5de6f6e7264414da2fcf37aca28c5922defea6c467758b1d46a1cb",
+      "taskLog": null,
+      "privateOutputPrefix": ".beep/qualification-local-preflight/dependency-cache-f6mprb4x/stable-without-dependency-edge/fresh-after-deprecation"
+    },
+    {
+      "channel": "stable",
+      "variant": "with-fresh-dependency-edge",
+      "mode": "producer",
+      "configurationSha256": "f8763d05f39959e1f0f9533ead0d22d1876b56138935d364e7ee7677f40f7ab9",
+      "dependencySourceSha256": "5e92d72f6eba48189317084c77410d641d06f52aea2f0f6fa5dca4c62ad5d78b",
+      "identitySourceSha256": "ac15abf09739999cbb343b7069ad7f15c8e88ec266cbc6f1d1e890f3b7f016e0",
+      "processExitCode": 0,
+      "taskHash": "7b68d79f2ad24a09",
+      "cache": {
+        "local": false,
+        "remote": false,
+        "status": "MISS",
+        "timeSaved": 0
+      },
+      "taskExecutionExitCode": 0,
+      "inputsDigest": "0db7d8aa7b69774ef15de5ff7b23759f8db9e617d07b5c19961751ce7932e7f9",
+      "dependencyTasks": [
+        {
+          "id": "@beep/types#lint",
+          "command": "bun run beep:lint",
+          "cache": {
+            "local": false,
+            "remote": false,
+            "status": "MISS",
+            "timeSaved": 0
+          },
+          "exitCode": 0
+        }
+      ],
+      "summarySha256": "4bde73139aff4ae7623eeb1af079cf612574476739584866b6bde0b1c52acfa8",
+      "stdoutSha256": "8899caa8d86d4b2b3417293cea07659592caa7baafc63a381f47fcfc76393007",
+      "stderrSha256": "d1cbab58e094d90d083b156a38865e8f0eab48ff7ba48e7f6d46b562c521a5d0",
+      "taskLog": {
+        "bytes": 53,
+        "sha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657"
+      },
+      "privateOutputPrefix": ".beep/qualification-local-preflight/dependency-cache-f6mprb4x/stable-with-fresh-dependency-edge/producer"
+    },
+    {
+      "channel": "stable",
+      "variant": "with-fresh-dependency-edge",
+      "mode": "reuse-after-deprecation",
+      "configurationSha256": "f8763d05f39959e1f0f9533ead0d22d1876b56138935d364e7ee7677f40f7ab9",
+      "dependencySourceSha256": "655a6b3747cc3afe2d0f51e06fb273e901f004c8e64ef6a027d2c61805078b36",
+      "identitySourceSha256": "ac15abf09739999cbb343b7069ad7f15c8e88ec266cbc6f1d1e890f3b7f016e0",
+      "processExitCode": 1,
+      "taskHash": "e25fc38913e68a1f",
+      "cache": {
+        "local": false,
+        "remote": false,
+        "status": "MISS",
+        "timeSaved": 0
+      },
+      "taskExecutionExitCode": 1,
+      "inputsDigest": "0db7d8aa7b69774ef15de5ff7b23759f8db9e617d07b5c19961751ce7932e7f9",
+      "dependencyTasks": [
+        {
+          "id": "@beep/types#lint",
+          "command": "bun run beep:lint",
+          "cache": {
+            "local": false,
+            "remote": false,
+            "status": "MISS",
+            "timeSaved": 0
+          },
+          "exitCode": 0
+        }
+      ],
+      "summarySha256": "4922237abda89403c4f120083205aca315d55dd953d5292b673d19d6f1d530ea",
+      "stdoutSha256": "d8ad1ad1a39e48b9776e09739bba8b220693e89370c00407a8bf5a5e46d025a3",
+      "stderrSha256": "6121508776a4ac97df78549bdbc94cc09fd466be584725bf8d30456d85e6d484",
+      "taskLog": {
+        "bytes": 138,
+        "sha256": "376d8fd73fce8c4404fa85bb984bac6c18d4a49720648991de6a6f828a28cc72"
+      },
+      "privateOutputPrefix": ".beep/qualification-local-preflight/dependency-cache-f6mprb4x/stable-with-fresh-dependency-edge/reuse-after-deprecation"
+    },
+    {
+      "channel": "stable",
+      "variant": "with-fresh-dependency-edge",
+      "mode": "fresh-after-deprecation",
+      "configurationSha256": "f8763d05f39959e1f0f9533ead0d22d1876b56138935d364e7ee7677f40f7ab9",
+      "dependencySourceSha256": "655a6b3747cc3afe2d0f51e06fb273e901f004c8e64ef6a027d2c61805078b36",
+      "identitySourceSha256": "ac15abf09739999cbb343b7069ad7f15c8e88ec266cbc6f1d1e890f3b7f016e0",
+      "processExitCode": 1,
+      "taskHash": "e25fc38913e68a1f",
+      "cache": {
+        "local": false,
+        "remote": false,
+        "status": "MISS",
+        "timeSaved": 0
+      },
+      "taskExecutionExitCode": 1,
+      "inputsDigest": "0db7d8aa7b69774ef15de5ff7b23759f8db9e617d07b5c19961751ce7932e7f9",
+      "dependencyTasks": [
+        {
+          "id": "@beep/types#lint",
+          "command": "bun run beep:lint",
+          "cache": {
+            "local": false,
+            "remote": false,
+            "status": "MISS",
+            "timeSaved": 0
+          },
+          "exitCode": 0
+        }
+      ],
+      "summarySha256": "2c4945754b13703fea525f5bb43a179a0429cf5313925df2168a51a82309c04d",
+      "stdoutSha256": "f415f900777803586baabe9966634972371b1b443aa1be46dbf9bce02486d9d9",
+      "stderrSha256": "334e64df9c5de6f6e7264414da2fcf37aca28c5922defea6c467758b1d46a1cb",
+      "taskLog": null,
+      "privateOutputPrefix": ".beep/qualification-local-preflight/dependency-cache-f6mprb4x/stable-with-fresh-dependency-edge/fresh-after-deprecation"
+    },
+    {
+      "channel": "canary",
+      "variant": "without-dependency-edge",
+      "mode": "producer",
+      "configurationSha256": "45b704cc4cf21c818abcbd948ab5776643116ed6841440f6e410297d41b2d976",
+      "dependencySourceSha256": "5e92d72f6eba48189317084c77410d641d06f52aea2f0f6fa5dca4c62ad5d78b",
+      "identitySourceSha256": "ac15abf09739999cbb343b7069ad7f15c8e88ec266cbc6f1d1e890f3b7f016e0",
+      "processExitCode": 0,
+      "taskHash": "750fbc908c142716",
+      "cache": {
+        "local": false,
+        "remote": false,
+        "status": "MISS",
+        "timeSaved": 0
+      },
+      "taskExecutionExitCode": 0,
+      "inputsDigest": "2f11779430f3b342c834fcb229a328e58deed42ea01c9bc1f79bd720e77d8d8e",
+      "dependencyTasks": [],
+      "summarySha256": "218dd5a109c3b50146129fdc3843a77ffde517a235a0221b9a91b189443f98f4",
+      "stdoutSha256": "d295fbe3dfb7712f91b2d72971cbf7a4a818727b0632cdd25613df360923a578",
+      "stderrSha256": "7eff679aaf1b0676c840f20cd06b7df79ca36ea7d5a1da52c253d076fa94e4fb",
+      "taskLog": {
+        "bytes": 53,
+        "sha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657"
+      },
+      "privateOutputPrefix": ".beep/qualification-local-preflight/dependency-cache-f6mprb4x/canary-without-dependency-edge/producer"
+    },
+    {
+      "channel": "canary",
+      "variant": "without-dependency-edge",
+      "mode": "reuse-after-deprecation",
+      "configurationSha256": "45b704cc4cf21c818abcbd948ab5776643116ed6841440f6e410297d41b2d976",
+      "dependencySourceSha256": "655a6b3747cc3afe2d0f51e06fb273e901f004c8e64ef6a027d2c61805078b36",
+      "identitySourceSha256": "ac15abf09739999cbb343b7069ad7f15c8e88ec266cbc6f1d1e890f3b7f016e0",
+      "processExitCode": 0,
+      "taskHash": "750fbc908c142716",
+      "cache": {
+        "local": true,
+        "remote": false,
+        "status": "HIT",
+        "source": "LOCAL",
+        "timeSaved": 723,
+        "sha": "ed12e4ede811c642d866e591d65b860dc2b23d7f",
+        "dirtyHash": "9a6424998ab2a57e9da4c8e16ac318c1013b6f01462c9b230ce9327b1e7a47fa"
+      },
+      "taskExecutionExitCode": 0,
+      "inputsDigest": "2f11779430f3b342c834fcb229a328e58deed42ea01c9bc1f79bd720e77d8d8e",
+      "dependencyTasks": [],
+      "summarySha256": "9e83d673c310e8e78a86afe6c7b4280a17b66228744a4f74afc202960a10b367",
+      "stdoutSha256": "7ace478bff597d90ef704b8c291953a273f8c577647fc40b135fdf172d84277f",
+      "stderrSha256": "7eff679aaf1b0676c840f20cd06b7df79ca36ea7d5a1da52c253d076fa94e4fb",
+      "taskLog": {
+        "bytes": 53,
+        "sha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657"
+      },
+      "privateOutputPrefix": ".beep/qualification-local-preflight/dependency-cache-f6mprb4x/canary-without-dependency-edge/reuse-after-deprecation"
+    },
+    {
+      "channel": "canary",
+      "variant": "without-dependency-edge",
+      "mode": "fresh-after-deprecation",
+      "configurationSha256": "45b704cc4cf21c818abcbd948ab5776643116ed6841440f6e410297d41b2d976",
+      "dependencySourceSha256": "655a6b3747cc3afe2d0f51e06fb273e901f004c8e64ef6a027d2c61805078b36",
+      "identitySourceSha256": "ac15abf09739999cbb343b7069ad7f15c8e88ec266cbc6f1d1e890f3b7f016e0",
+      "processExitCode": 1,
+      "taskHash": "750fbc908c142716",
+      "cache": {
+        "local": false,
+        "remote": false,
+        "status": "MISS",
+        "timeSaved": 0
+      },
+      "taskExecutionExitCode": 1,
+      "inputsDigest": "2f11779430f3b342c834fcb229a328e58deed42ea01c9bc1f79bd720e77d8d8e",
+      "dependencyTasks": [],
+      "summarySha256": "7a7b82f41a9f369fbe133872c185adba06a8c0dc7b9c534427f169f30272520d",
+      "stdoutSha256": "353bc02d80dc0a1ac3811813cdad0e7899d67cbe50975b1122d1474c841090e4",
+      "stderrSha256": "16524bc596e0c5abcce8999491c5295eb9bbf86555c04e312233125436a5e628",
+      "taskLog": null,
+      "privateOutputPrefix": ".beep/qualification-local-preflight/dependency-cache-f6mprb4x/canary-without-dependency-edge/fresh-after-deprecation"
+    },
+    {
+      "channel": "canary",
+      "variant": "with-fresh-dependency-edge",
+      "mode": "producer",
+      "configurationSha256": "f8763d05f39959e1f0f9533ead0d22d1876b56138935d364e7ee7677f40f7ab9",
+      "dependencySourceSha256": "5e92d72f6eba48189317084c77410d641d06f52aea2f0f6fa5dca4c62ad5d78b",
+      "identitySourceSha256": "ac15abf09739999cbb343b7069ad7f15c8e88ec266cbc6f1d1e890f3b7f016e0",
+      "processExitCode": 0,
+      "taskHash": "7b68d79f2ad24a09",
+      "cache": {
+        "local": false,
+        "remote": false,
+        "status": "MISS",
+        "timeSaved": 0
+      },
+      "taskExecutionExitCode": 0,
+      "inputsDigest": "0db7d8aa7b69774ef15de5ff7b23759f8db9e617d07b5c19961751ce7932e7f9",
+      "dependencyTasks": [
+        {
+          "id": "@beep/types#lint",
+          "command": "bun run beep:lint",
+          "cache": {
+            "local": false,
+            "remote": false,
+            "status": "MISS",
+            "timeSaved": 0
+          },
+          "exitCode": 0
+        }
+      ],
+      "summarySha256": "e20a7cc7dd80d4e318c9be2634d90027543397818924c0c54c9582888d8d07cd",
+      "stdoutSha256": "1458c3f2a83acb5b0ecb7c277e2de7ca11916d03bd45a58371754b4d7e3a6908",
+      "stderrSha256": "7eff679aaf1b0676c840f20cd06b7df79ca36ea7d5a1da52c253d076fa94e4fb",
+      "taskLog": {
+        "bytes": 53,
+        "sha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657"
+      },
+      "privateOutputPrefix": ".beep/qualification-local-preflight/dependency-cache-f6mprb4x/canary-with-fresh-dependency-edge/producer"
+    },
+    {
+      "channel": "canary",
+      "variant": "with-fresh-dependency-edge",
+      "mode": "reuse-after-deprecation",
+      "configurationSha256": "f8763d05f39959e1f0f9533ead0d22d1876b56138935d364e7ee7677f40f7ab9",
+      "dependencySourceSha256": "655a6b3747cc3afe2d0f51e06fb273e901f004c8e64ef6a027d2c61805078b36",
+      "identitySourceSha256": "ac15abf09739999cbb343b7069ad7f15c8e88ec266cbc6f1d1e890f3b7f016e0",
+      "processExitCode": 1,
+      "taskHash": "e25fc38913e68a1f",
+      "cache": {
+        "local": false,
+        "remote": false,
+        "status": "MISS",
+        "timeSaved": 0
+      },
+      "taskExecutionExitCode": 1,
+      "inputsDigest": "0db7d8aa7b69774ef15de5ff7b23759f8db9e617d07b5c19961751ce7932e7f9",
+      "dependencyTasks": [
+        {
+          "id": "@beep/types#lint",
+          "command": "bun run beep:lint",
+          "cache": {
+            "local": false,
+            "remote": false,
+            "status": "MISS",
+            "timeSaved": 0
+          },
+          "exitCode": 0
+        }
+      ],
+      "summarySha256": "9322e9a408783139d7c44693ef6cc9944b2dc9c7e25a66135754a72b304108d8",
+      "stdoutSha256": "25f9bc53837b161b414a91937b22421c1ae615069669f6ae0cfc1b268e3b00bf",
+      "stderrSha256": "c96f3bfeebc489cfc7045ad8d42bdeddaf751e8b33d3a062608bfa9cc2356ef8",
+      "taskLog": {
+        "bytes": 138,
+        "sha256": "376d8fd73fce8c4404fa85bb984bac6c18d4a49720648991de6a6f828a28cc72"
+      },
+      "privateOutputPrefix": ".beep/qualification-local-preflight/dependency-cache-f6mprb4x/canary-with-fresh-dependency-edge/reuse-after-deprecation"
+    },
+    {
+      "channel": "canary",
+      "variant": "with-fresh-dependency-edge",
+      "mode": "fresh-after-deprecation",
+      "configurationSha256": "f8763d05f39959e1f0f9533ead0d22d1876b56138935d364e7ee7677f40f7ab9",
+      "dependencySourceSha256": "655a6b3747cc3afe2d0f51e06fb273e901f004c8e64ef6a027d2c61805078b36",
+      "identitySourceSha256": "ac15abf09739999cbb343b7069ad7f15c8e88ec266cbc6f1d1e890f3b7f016e0",
+      "processExitCode": 1,
+      "taskHash": "e25fc38913e68a1f",
+      "cache": {
+        "local": false,
+        "remote": false,
+        "status": "MISS",
+        "timeSaved": 0
+      },
+      "taskExecutionExitCode": 1,
+      "inputsDigest": "0db7d8aa7b69774ef15de5ff7b23759f8db9e617d07b5c19961751ce7932e7f9",
+      "dependencyTasks": [
+        {
+          "id": "@beep/types#lint",
+          "command": "bun run beep:lint",
+          "cache": {
+            "local": false,
+            "remote": false,
+            "status": "MISS",
+            "timeSaved": 0
+          },
+          "exitCode": 0
+        }
+      ],
+      "summarySha256": "cf3e2bf7e24f9012d7025e9a4ea0c468e203006ba301e2736ced39ce417921f6",
+      "stdoutSha256": "d8ccb01c8279dfea88a30c174e0803df363785a0beab33f8dc5f0eb9101270ad",
+      "stderrSha256": "16524bc596e0c5abcce8999491c5295eb9bbf86555c04e312233125436a5e628",
+      "taskLog": null,
+      "privateOutputPrefix": ".beep/qualification-local-preflight/dependency-cache-f6mprb4x/canary-with-fresh-dependency-edge/fresh-after-deprecation"
+    }
+  ],
+  "checks": [
+    {
+      "channel": "stable",
+      "staleSuccessReproduced": true,
+      "freshDependencyRepairInvalidates": true
+    },
+    {
+      "channel": "canary",
+      "staleSuccessReproduced": true,
+      "freshDependencyRepairInvalidates": true
+    }
+  ],
+  "registeredSourceUnchanged": true
+}

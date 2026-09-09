@@ -3,8 +3,7 @@
   "extends": ["//"],
   "tasks": {
     "lint": {
-      "cache": false,
-      "dependsOn": ["^lint"],
+      "cache": true,
       "inputs": [
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/biome.jsonc",

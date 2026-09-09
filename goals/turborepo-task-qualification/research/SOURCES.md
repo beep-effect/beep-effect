@@ -317,6 +317,10 @@ These are graduated-goal deliverables, not omissions to conceal with static
 confidence.
 # Native local pilot checkpoint: 2026-09-09
 
+These v1 pilot receipts retain authority for their original source and input
+bindings. The main integration and subsequent input correction are recorded
+below; they are not covered by the earlier checkpoint.
+
 - [Native verification report](./pilot-local-verification.md) and
   [checkpoint](./pilot-local-checkpoint.json): current local scope, exact
   references, package gates and explicit remaining requirements.
@@ -334,3 +338,68 @@ confidence.
   [Yeet hosted](./yeet-plans-hosted-pilot.json),
   [workflow/action sources](./workflow-sources-pilot.json) and
   [command groups](./command-groups-pilot.json).
+
+# Integrated graph and alias input evidence: 2026-09-09
+
+- [Alias-input checkpoint](./alias-input-checkpoint.json): historical baseline,
+  evidence and verification hashes; corrected native validation is explicitly
+  pending scheduler admission and supplies no acceptance credit yet.
+
+- [Main baseline review](./lane-merge-baseline-review.md),
+  [complete delta](./lane-merge-baseline-delta.json) and
+  [writer request](./lane-merge-baseline-request.json): the 1,474 executable
+  computations and attributed incoming graph/script changes.
+- [Native child-format trial](./pilot-controls-unformatted-child.json),
+  [old alias failure](./pilot-controls-alias-observation.json) and
+  [independent setup/absence controls](./pilot-controls-absence-observation.json):
+  preserved failed trials and their exact observations.
+- [Identity input review](./alias-input-baseline-review.md),
+  [single-computation delta](./alias-input-baseline-delta.json),
+  [baseline writer request](./alias-input-baseline-request.json) and
+  [v4 activation preview](./alias-input-activation-preview.json): scoped root
+  tsconfig hashing with live caching still disabled.
+- [Initial positive open records](./alias-input-open-presence.json) and
+  [completed bounded file-open review](./alias-file-open-review.json): fresh
+  observations and explicit semantic/read/write limits, with private raw
+  traces retained by hash.
+- [Integrated entrypoint review](./lane-merge-entrypoint-review.md) and
+  [source-bound request](./lane-merge-entrypoint-request.json): 286 source
+  bindings and six complete planner/workflow/command-group snapshots.
+
+# Dependency-sensitive lint evidence: 2026-09-09
+
+- [Completed root-alias controls](./pilot-controls-alias-repaired.json): 21
+  observations and 11 checks on the v4 configuration.
+- [Direct dependency probe](./dependency-deprecation-observation.json) and
+  [native invalidation counterexample/repair](./dependency-cache-invalidation.json):
+  semantic influence, stale successful replay on both clients, and the tested
+  identity-specific fresh dependency edge.
+- [Dependency-edge review](./dependency-edge-baseline-review.md),
+  [delta](./dependency-edge-baseline-delta.json),
+  [writer request](./dependency-edge-baseline-request.json) and
+  [v5 activation preview](./dependency-edge-activation-preview.json): one
+  reviewed edge with live caching still disabled.
+- [Durable repaired controls](./pilot-controls-dependency-repaired.json): 24
+  observations and 12 checks, including dependency-source invalidation.
+- [Full stable v2 receipt](./pilot-local-v2-stable.json) and
+  [exact canary v2 receipt](./pilot-local-v2-canary.json): 67 observations,
+  40 checks and ten local shadow decisions each.
+- [Installed dependency metadata](./installed-dependency-boundary.json) and
+  [fresh runtime probe](./installed-dependency-observation.json): the absent
+  installed package tree hides a deprecation failure in the source fixture.
+  These observations prevent a normal-workspace qualification claim.
+- [V2 verification report](./pilot-local-v2-verification.md) and
+  [checkpoint](./pilot-local-v2-checkpoint.json): exact evidence/source
+  references, passing package gates and the next dependency materialization
+  repair, with full remaining requirements.
+- [Updated entrypoint review](./dependency-edge-entrypoint-review.md) and
+  [request](./dependency-edge-entrypoint-request.json): current observer/input
+  source bindings and six complete snapshots, with runtime obligations kept
+  separate from source review.
+
+- `packages/tooling/tool/cli/src/commands/Cache/Cache.dependencies.schemas.ts`
+  and `Cache.dependencies.ts`: installed-tree snapshot model, bounded canonical
+  archive identity, topology checks, copy parity and retained-view verification.
+  The library operations are not yet integrated with the pilot runtime.
+- `packages/tooling/tool/cli/test/cache-dependencies.test.ts`: four focused
+  schema and native filesystem tests for content identity and symlink limits.

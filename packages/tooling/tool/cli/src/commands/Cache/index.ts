@@ -20,6 +20,12 @@ export {
   runCacheWarm,
 } from "./Cache.command.ts";
 export {
+  CacheDependencyLink,
+  CacheDependencyMaterialization,
+  CacheDependencyTree,
+} from "./Cache.dependencies.schemas.ts";
+export { materializeCacheDependencies, verifyCacheDependencies } from "./Cache.dependencies.ts";
+export {
   CacheCensusEntrypointReview,
   CacheEntrypointArtifact,
   CacheEntrypointArtifactFormat,
