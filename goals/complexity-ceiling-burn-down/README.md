@@ -53,7 +53,7 @@ job passed on `3a5f52d669`, confirming the reported compiler failure is fixed.
 | Three clean runs, baseline digest, dated earlier full proof | [`reports/clean-runs.md`](./reports/clean-runs.md) |
 | Real refactor seams and waiver rationale | [`research/calibration.md`](./research/calibration.md), `.fallowrc.jsonc` |
 | Review and CI failure attribution | [`research/OPPORTUNITIES.md`](./research/OPPORTUNITIES.md) |
-| Closeout lessons | [`history/reflections/2026-09-08-codex.md`](./history/reflections/2026-09-08-codex.md) |
+| Implementation and post-merge reflections | [`2026-09-08-codex.md`](./history/reflections/2026-09-08-codex.md), [`2026-09-09-codex.md`](./history/reflections/2026-09-09-codex.md) |
 | Acceptance and required commands | [`SPEC.md`](./SPEC.md), [`PLAN.md`](./PLAN.md) |
 
 Browser QA round 9 used the actual tooltip and Recharts components. Its five

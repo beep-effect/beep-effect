@@ -709,3 +709,12 @@ phase statuses still read active. The canonical status writer now prepares a
 small follow-up PR. A closure protocol needs to coordinate the final metadata
 commit with an operator who may merge immediately when required checks pass;
 otherwise a same-PR lifecycle requirement cannot be completed after the fact.
+
+### Lifecycle follow-up rewrote immutable reflection history (2026-09-09)
+
+Review on PR #1030 identified a rewrite of the September 8 reflection that
+already landed in PR #1021. `goals/README.md` defines each reflection as an
+immutable run record. The file is restored byte-for-byte from the implementation
+merge, and a separate September 9 UTC reflection carries the post-merge facts.
+Frontmatter validation alone cannot detect a valid but historically incorrect
+rewrite; closeout review should compare landed reflection bytes as well.
