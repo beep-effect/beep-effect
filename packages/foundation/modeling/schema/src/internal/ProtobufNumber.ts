@@ -7,11 +7,12 @@
 
 import { $SchemaId } from "@beep/identity/packages";
 import { SchemaTransformation } from "effect";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 
 const $I = $SchemaId.create("internal/ProtobufNumber");
 
-const isJsNumber = (value: unknown): value is number => typeof value === "number";
+const isJsNumber = P.isNumber;
 
 const ProtobufNumberGenerationSource = S.Union([S.Finite, S.Literals(["NaN", "Infinity", "-Infinity"])]);
 
