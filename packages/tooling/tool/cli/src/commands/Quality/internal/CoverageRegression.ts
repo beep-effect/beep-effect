@@ -2556,7 +2556,7 @@ const failurePackageNames = (failures: ReadonlyArray<CoverageComparisonFailure>)
  *
  * @param result - Comparison result the ratchet is about to enforce.
  * @returns Remediation lines, empty when no package floor regressed.
- * @category rendering
+ * @category formatting
  * @since 0.0.0
  */
 export const renderCoverageRemediation = (result: CoverageComparisonResult): ReadonlyArray<string> => [

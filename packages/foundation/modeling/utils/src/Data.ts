@@ -9,4 +9,10 @@
  * @since 0.0.0
  */
 
+/**
+ * `effect/Data` constructors and tagged-value helpers.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export * from "effect/Data";
