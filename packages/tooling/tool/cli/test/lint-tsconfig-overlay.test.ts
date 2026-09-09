@@ -236,6 +236,41 @@ describe("tsconfig-overlay lint command", { concurrent: false }, () => {
   );
 
   it(
+    "mirrors tsconfig.build.json when it owns the package's references",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            const path = yield* Path.Path;
+            // tsconfig-sync writes references into tsconfig.build.json when a
+            // package has one, so the overlay must repeat that file, not
+            // tsconfig.json.
+            yield* writeCanonical("packages/drivers/owner", CANONICAL_WITH_REFERENCE);
+            yield* writePackageFile(
+              "packages/drivers/owner",
+              "tsconfig.build.json",
+              `{
+  "extends": "./tsconfig.json",
+  "references": [{ "path": "../dep/tsconfig.json" }, { "path": "../other/tsconfig.json" }]
+}
+`
+            );
+            yield* writeOverlay("packages/drivers/owner", MIRRORED_OVERLAY);
+
+            const violations = yield* collectTsconfigOverlayViolations(path.resolve(process.cwd()));
+            const drift = A.findFirst(violations, (violation) => violation.scope === "references");
+
+            expect(A.length(violations)).toBe(1);
+            expect(drift._tag === "Some" ? drift.value.detail : undefined).toBe(
+              "expected the 2 reference(s) of tsconfig.build.json, found 1 (missing 1, extra 0)"
+            );
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    15_000
+  );
+
+  it(
     "fails loudly when an overlay is not a JSONC object",
     () =>
       Effect.runPromise(

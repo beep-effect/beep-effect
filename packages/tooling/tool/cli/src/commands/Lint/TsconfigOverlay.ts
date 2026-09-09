@@ -49,6 +49,9 @@ const $I = $RepoCliId.create("commands/Lint/TsconfigOverlay");
 
 const overlayFileName = "tsconfig.check.json";
 const canonicalFileName = "tsconfig.json";
+// tsconfig-sync writes references into tsconfig.build.json when a package has
+// one (its owner project), so the overlay must mirror the same file.
+const buildOwnerFileName = "tsconfig.build.json";
 const checkCommand = "bun run beep lint tsconfig-overlay";
 const syncCommand = "bun run beep tsconfig-sync --write";
 // Mirrors the package test-typecheck lint's search roots so every overlay a
@@ -307,7 +310,8 @@ const violationsOf = (
 const referenceViolationOf = (
   file: string,
   expected: ReadonlyArray<string>,
-  actual: ReadonlyArray<string>
+  actual: ReadonlyArray<string>,
+  ownerName: string
 ): O.Option<TsconfigOverlayViolation> => {
   if (referenceListEquivalence(expected, actual)) {
     return O.none();
@@ -323,31 +327,39 @@ const referenceViolationOf = (
       file,
       scope: "references",
       key: "references",
-      detail: `expected the ${A.length(expected)} reference(s) of ${canonicalFileName}, found ${A.length(actual)} (missing ${missing}, extra ${extra}${reordered})`,
+      detail: `expected the ${A.length(expected)} reference(s) of ${ownerName}, found ${A.length(actual)} (missing ${missing}, extra ${extra}${reordered})`,
     })
   );
 };
 
-// Canonical references next to the overlay; an absent tsconfig.json has none.
+// Canonical references next to the overlay: tsconfig.build.json owns them when
+// it exists (matching tsconfig-sync's owner choice), else tsconfig.json; an
+// absent owner has none.
 const canonicalReferencePaths = Effect.fn("TsconfigOverlay.canonicalReferencePaths")(function* (
   overlayFile: string,
   relativeFile: string
-): Effect.fn.Return<ReadonlyArray<string>, TsconfigOverlayReadError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  { readonly ownerName: string; readonly paths: ReadonlyArray<string> },
+  TsconfigOverlayReadError,
+  FileSystem.FileSystem | Path.Path
+> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const canonicalFile = path.join(path.dirname(overlayFile), canonicalFileName);
+  const directory = path.dirname(overlayFile);
+  const ownerName = (yield* pathExists(fs, path.join(directory, buildOwnerFileName)))
+    ? buildOwnerFileName
+    : canonicalFileName;
+  const canonicalFile = path.join(directory, ownerName);
   if (!(yield* pathExists(fs, canonicalFile))) {
-    return A.empty();
+    return { ownerName, paths: A.empty() };
   }
   const text = yield* fs
     .readFileString(canonicalFile)
-    .pipe(TsconfigOverlayReadError.mapError(`Failed to read the ${canonicalFileName} next to ${relativeFile}.`));
+    .pipe(TsconfigOverlayReadError.mapError(`Failed to read the ${ownerName} next to ${relativeFile}.`));
   const document = yield* decodeCanonicalReferenceList(text).pipe(
-    TsconfigOverlayReadError.mapError(
-      `Failed to decode references from the ${canonicalFileName} next to ${relativeFile}.`
-    )
+    TsconfigOverlayReadError.mapError(`Failed to decode references from the ${ownerName} next to ${relativeFile}.`)
   );
-  return referencePathsOf(document);
+  return { ownerName, paths: referencePathsOf(document) };
 });
 
 /**
@@ -407,10 +419,10 @@ export const collectTsconfigOverlayViolations = Effect.fn("TsconfigOverlay.colle
           TsconfigOverlayReadError.mapError(`Failed to decode references from ${relativeFile}.`),
           Effect.map(referencePathsOf)
         );
-        const expectedReferences = yield* canonicalReferencePaths(overlayFile, relativeFile);
+        const canonical = yield* canonicalReferencePaths(overlayFile, relativeFile);
         return A.appendAll(
           violationsOf(relativeFile, document),
-          A.fromOption(referenceViolationOf(relativeFile, expectedReferences, overlayReferences))
+          A.fromOption(referenceViolationOf(relativeFile, canonical.paths, overlayReferences, canonical.ownerName))
         );
       }),
       { concurrency: 1 }
