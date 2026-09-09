@@ -239,17 +239,13 @@ runs:
         BEEP_CI_HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}
       run: bun scripts/ci-job-env.mjs
 
-    # ~/.npm/_prebuilds is prebuild-install's download cache (keytar): a hit skips
-    # the GitHub release fetch that has timed out on hosted runners.
     - name: Restore Bun dependencies cache
       if: ${{ steps.baked.outputs.hit != 'true' }}
       id: bun-cache-restore
       continue-on-error: true
       uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
-        path: |
-          ~/.bun/install/cache
-          ~/.npm/_prebuilds
+        path: ~/.bun/install/cache
         key: bun-${{ runner.os }}-${{ startsWith(runner.name, 'beep-ci-') && 'fleet' || 'shared' }}-${{ hashFiles('bun.lock') }}
         restore-keys: bun-${{ runner.os }}-${{ startsWith(runner.name, 'beep-ci-') && 'fleet' || 'shared' }}-
 
@@ -294,9 +290,7 @@ runs:
       continue-on-error: true
       uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
-        path: |
-          ~/.bun/install/cache
-          ~/.npm/_prebuilds
+        path: ~/.bun/install/cache
         key: bun-${{ runner.os }}-${{ startsWith(runner.name, 'beep-ci-') && 'fleet' || 'shared' }}-${{ hashFiles('bun.lock') }}
 
     - name: Save Turbo cache (local fallback only)
