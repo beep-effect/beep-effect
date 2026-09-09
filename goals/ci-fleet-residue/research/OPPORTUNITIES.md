@@ -456,3 +456,11 @@ Record receipts at the moment friction happens; redact for the public repo.
   fails. Both defects were present in the merged base, not caused by AWS cleanup.
 - **Prevention:** compare filesystem inventories independently of enumeration order
   and make artifact uploads respect successful affected-lane skips.
+- **Companion-test correction:** the initial focused selection missed the workflow
+  security suite, whose literal upload-gate assertion still required the old
+  condition. The full suite exposed it. Update that contract to require both the
+  artifact-presence guard and strict missing-file handling; include security,
+  lane and scheduler suites together when validating the repair.
+  Run that focused selection with the package's `bunx --bun vitest run` runtime:
+  all 120 related tests pass there; a Node invocation exposed a Bun-spawn fixture
+  difference in the pre-existing bootstrap test.
