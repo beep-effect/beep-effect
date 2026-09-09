@@ -1,0 +1,596 @@
+{
+  "class": "EV011",
+  "method": "plain vitest imports in files with a lexical effect import",
+  "fileCount": 117,
+  "occurrenceCount": 117,
+  "files": [
+    {
+      "file": "packages/agents/server/test/AnthropicTurnCodec.test.ts",
+      "count": 1,
+      "lines": [9]
+    },
+    {
+      "file": "packages/agents/server/test/AnthropicTurnKernel.test.ts",
+      "count": 1,
+      "lines": [8]
+    },
+    {
+      "file": "packages/agents/server/test/scanChunk.test.ts",
+      "count": 1,
+      "lines": [10]
+    },
+    {
+      "file": "packages/drivers/cosmos/test/CosmosProjection.test.ts",
+      "count": 1,
+      "lines": [14]
+    },
+    {
+      "file": "packages/drivers/n3/test/N3TurtleCodec.test.ts",
+      "count": 1,
+      "lines": [9]
+    },
+    {
+      "file": "packages/drivers/rdf-canonize/test/CanonicalizationSecurity.test.ts",
+      "count": 1,
+      "lines": [14]
+    },
+    {
+      "file": "packages/drivers/wink/test/Layers.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/drivers/wink/test/ParityTools.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/drivers/wink/test/ToolValidation.test.ts",
+      "count": 1,
+      "lines": [28]
+    },
+    {
+      "file": "packages/drivers/wink/test/WinkEngineRef.test.ts",
+      "count": 1,
+      "lines": [13]
+    },
+    {
+      "file": "packages/drivers/wink/test/WinkTokenization.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/epistemic/ui/test/ContradictionTriagePanel.test.tsx",
+      "count": 1,
+      "lines": [10]
+    },
+    {
+      "file": "packages/epistemic/ui/test/ContradictionTriageView.test.tsx",
+      "count": 1,
+      "lines": [23]
+    },
+    {
+      "file": "packages/epistemic/ui/test/EvidenceSourcePanel.test.tsx",
+      "count": 1,
+      "lines": [6]
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/Boundary.test.ts",
+      "count": 1,
+      "lines": [5]
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/CauseDiagnostics.test.ts",
+      "count": 1,
+      "lines": [10]
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/DevTools.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/DevToolsRelay.test.ts",
+      "count": 1,
+      "lines": [5]
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/ErrorReporting.test.ts",
+      "count": 1,
+      "lines": [7]
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/HttpApiTelemetry.test.ts",
+      "count": 1,
+      "lines": [18]
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/HttpError.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/Metric.test.ts",
+      "count": 1,
+      "lines": [14]
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/NodeSdk.test.ts",
+      "count": 1,
+      "lines": [12]
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/Observed.test.ts",
+      "count": 1,
+      "lines": [6]
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/OtlpPacketLab.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/ServerUtilities.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/foundation/modeling/identity/test/Curie.test.ts",
+      "count": 1,
+      "lines": [16]
+    },
+    {
+      "file": "packages/foundation/modeling/identity/test/Fibered.test.ts",
+      "count": 1,
+      "lines": [6]
+    },
+    {
+      "file": "packages/foundation/modeling/identity/test/Identity.test.ts",
+      "count": 1,
+      "lines": [16]
+    },
+    {
+      "file": "packages/foundation/modeling/identity/test/IdentityRegistry.test.ts",
+      "count": 1,
+      "lines": [12]
+    },
+    {
+      "file": "packages/foundation/modeling/identity/test/IriBinding.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/foundation/modeling/identity/test/OntologyEntrypoints.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/foundation/modeling/identity/test/Vocab.test.ts",
+      "count": 1,
+      "lines": [7]
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/test/CoreModels.test.ts",
+      "count": 1,
+      "lines": [12]
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/test/PatternCore.test.ts",
+      "count": 1,
+      "lines": [44]
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.conformance-strict-failure.test.ts",
+      "count": 1,
+      "lines": [5]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Number.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/codecStatics.test.ts",
+      "count": 1,
+      "lines": [18]
+    },
+    {
+      "file": "packages/foundation/modeling/utils/test/Array.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/foundation/modeling/utils/test/Glob.test.ts",
+      "count": 1,
+      "lines": [9]
+    },
+    {
+      "file": "packages/foundation/modeling/utils/test/Option.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/foundation/modeling/utils/test/SchemaParity.test.ts",
+      "count": 1,
+      "lines": [8]
+    },
+    {
+      "file": "packages/foundation/modeling/utils/test/Str.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/foundation/modeling/utils/test/Struct.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/test/DockviewReact.test.tsx",
+      "count": 1,
+      "lines": [30]
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/test/Floating.test.tsx",
+      "count": 1,
+      "lines": [26]
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/test/Gestures.test.tsx",
+      "count": 1,
+      "lines": [22]
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/test/Minima.test.tsx",
+      "count": 1,
+      "lines": [24]
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/test/capability-runtime.test.tsx",
+      "count": 1,
+      "lines": [16]
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/test/mermaid-race.test.tsx",
+      "count": 1,
+      "lines": [7]
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/test/FormWidgets.test.ts",
+      "count": 1,
+      "lines": [5]
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/test/hooks.test.ts",
+      "count": 1,
+      "lines": [5]
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/test/schema-parity.test.ts",
+      "count": 1,
+      "lines": [19]
+    },
+    {
+      "file": "packages/ontology/client/test/Session.atoms.test.ts",
+      "count": 1,
+      "lines": [45]
+    },
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/test/oxlint-rules.test.ts",
+      "count": 1,
+      "lines": [5]
+    },
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/test/registry.test.ts",
+      "count": 1,
+      "lines": [8]
+    },
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/test/rules.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/test/schema-parity.test.ts",
+      "count": 1,
+      "lines": [5]
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/EffectTsgoEffectFnPolicy.test.ts",
+      "count": 1,
+      "lines": [13]
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/NextConfig.schemas.test.ts",
+      "count": 1,
+      "lines": [8]
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/NextModels.schema.test.ts",
+      "count": 1,
+      "lines": [21]
+    },
+    {
+      "file": "packages/tooling/test-kit/fc-runs/test/FastCheckRuns.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/test/SqlTest.test.ts",
+      "count": 1,
+      "lines": [28]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/allowlist-check.test.ts",
+      "count": 1,
+      "lines": [12]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/cache-command.test.ts",
+      "count": 1,
+      "lines": [9]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/ci-command.test.ts",
+      "count": 1,
+      "lines": [10]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/cli-json-printer.test.ts",
+      "count": 1,
+      "lines": [14]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/cli-kits.test.ts",
+      "count": 1,
+      "lines": [31]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/codegen-command.test.ts",
+      "count": 1,
+      "lines": [8]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/coverage-baseline-subtraction.test.ts",
+      "count": 1,
+      "lines": [13]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/create-package-lab.test.ts",
+      "count": 1,
+      "lines": [30]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/create-package-security.test.ts",
+      "count": 1,
+      "lines": [14]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/create-package.test.ts",
+      "count": 1,
+      "lines": [13]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/delete-package-labs.test.ts",
+      "count": 1,
+      "lines": [27]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/delete-package.test.ts",
+      "count": 1,
+      "lines": [27]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/ecosystem-polarity.test.ts",
+      "count": 1,
+      "lines": [7]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/effect-fn.test.ts",
+      "count": 1,
+      "lines": [6]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/effect-imports.test.ts",
+      "count": 1,
+      "lines": [10]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/explore-atlas.test.ts",
+      "count": 1,
+      "lines": [18]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/explore-check.test.ts",
+      "count": 1,
+      "lines": [22]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/files-command.test.ts",
+      "count": 1,
+      "lines": [53]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/foundation-topology.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/frozen-grant-set.test.ts",
+      "count": 1,
+      "lines": [6]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/goals-bootstrap-plan.test.ts",
+      "count": 1,
+      "lines": [31]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/goals-doctor-path-security.test.ts",
+      "count": 1,
+      "lines": [8]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/goals-doctor.test.ts",
+      "count": 1,
+      "lines": [14]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/goals-packet-core.test.ts",
+      "count": 1,
+      "lines": [32]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/goals-set-risk-tier.test.ts",
+      "count": 1,
+      "lines": [19]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/goals-set-status-stream.test.ts",
+      "count": 1,
+      "lines": [21]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/identity-registration-removal.test.ts",
+      "count": 1,
+      "lines": [16]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/image-command.test.ts",
+      "count": 1,
+      "lines": [13]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts",
+      "count": 1,
+      "lines": [13]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/lab-identity-segment.test.ts",
+      "count": 1,
+      "lines": [16]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/labs-ceremony-scoping.test.ts",
+      "count": 1,
+      "lines": [9]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/labs-list.test.ts",
+      "count": 1,
+      "lines": [13]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/lint-command.test.ts",
+      "count": 1,
+      "lines": [13]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/lint-identity-registry.test.ts",
+      "count": 1,
+      "lines": [19]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/match-person-model-store.test.ts",
+      "count": 1,
+      "lines": [9]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/package-verify.test.ts",
+      "count": 1,
+      "lines": [29]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/person-match-model-store.test.ts",
+      "count": 1,
+      "lines": [7]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/process-identity.test.ts",
+      "count": 1,
+      "lines": [19]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/purge-security.test.ts",
+      "count": 1,
+      "lines": [5]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/qa-judge-skill.test.ts",
+      "count": 1,
+      "lines": [10]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/quality-artifact-generators.test.ts",
+      "count": 1,
+      "lines": [13]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/quality-command-dispatch.test.ts",
+      "count": 1,
+      "lines": [12]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/reflection-lint.test.ts",
+      "count": 1,
+      "lines": [10]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/regenerate-merge-driver.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/roadmap-refs.test.ts",
+      "count": 1,
+      "lines": [14]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/schema-first.test.ts",
+      "count": 1,
+      "lines": [28]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/schema-topology.test.ts",
+      "count": 1,
+      "lines": [5]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/single-project-emit.test.ts",
+      "count": 1,
+      "lines": [6]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/skills-command.test.ts",
+      "count": 1,
+      "lines": [8]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/support/CommandTest.ts",
+      "count": 1,
+      "lines": [5]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/terse-effect.test.ts",
+      "count": 1,
+      "lines": [5]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/tsconfig-sync.test.ts",
+      "count": 1,
+      "lines": [16]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-artifact-writers.test.ts",
+      "count": 1,
+      "lines": [40]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-inbox-hook-adapter.test.ts",
+      "count": 1,
+      "lines": [8]
+    }
+  ],
+  "limitations": [
+    "Lexical import intersection; type-only or indirect Effect usage is not distinguished."
+  ]
+}

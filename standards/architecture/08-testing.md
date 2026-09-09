@@ -36,6 +36,12 @@ Test pattern:
   plain `it`/`expect`.
 - Effect-returning domain function: use `it.effect` from `@effect/vitest` and
   yield the call. Use `Effect.exit` to inspect typed failures without throwing.
+- Assert Option, Result, and Exit values with the public `@effect/vitest/utils`
+  helpers: `assertSome`, `assertNone`, `assertSuccess`, `assertFailure`,
+  `assertExitSuccess`, and `assertExitFailure`. `expect` and plain-value `assert`
+  remain legal inside `it.effect`; the assertion choice depends on the value,
+  not the tester. `assertExitFailure` takes an expected `Cause`, such as
+  `Cause.fail(expectedError)`, rather than the bare error.
 - Schema-modeled laws: derive data from the production schema with
   `S.toArbitrary(schema)` and FastCheck. Add `toArbitrary` annotations to the
   source schema when the domain needs realistic generated values.
@@ -46,7 +52,10 @@ rejects the transition. Both can be tested without booting any Layer.
 
 ````ts
 import { describe, expect, it } from "@effect/vitest";
-import { Cause, Effect, Exit } from "effect";
+import { assertExitFailure } from "@effect/vitest/utils";
+import { Effect } from "effect";
+import * as Cause from "effect/Cause";
+import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import {
   MembershipAlreadyRevoked,
@@ -75,14 +84,10 @@ describe("Membership", () => {
     "revoke fails with MembershipAlreadyRevoked when already revoked",
     Effect.fnUntraced(function* () {
       const exit = yield* Effect.exit(revokedMembership.revoke());
-      expect(Exit.isFailure(exit)).toBe(true);
-      if (Exit.isFailure(exit)) {
-        const error = Cause.findErrorOption(exit.cause);
-        expect(O.isSome(error)).toBe(true);
-        if (O.isSome(error)) {
-          expect(error.value).toBeInstanceOf(MembershipAlreadyRevoked);
-        }
-      }
+      // Extract the typed error; success or a defect-only cause throws here.
+      const error = O.getOrThrow(Exit.findErrorOption(exit));
+      assertExitFailure(exit, Cause.fail(error));
+      expect(error).toBeInstanceOf(MembershipAlreadyRevoked);
     })
   );
 });
@@ -127,7 +132,11 @@ and `MembershipRepository` (persistence port). The revoke test stubs both:
 
 ````ts
 import { expect, layer } from "@effect/vitest";
-import { Cause, Effect, Exit, Layer } from "effect";
+import { assertExitFailure } from "@effect/vitest/utils";
+import { Effect } from "effect";
+import * as Cause from "effect/Cause";
+import * as Exit from "effect/Exit";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import {
   MembershipAccess,
@@ -165,14 +174,9 @@ layer(TestLayer)("MembershipService.revoke", (it) => {
     Effect.fnUntraced(function* () {
       const service = yield* MembershipService;
       const exit = yield* Effect.exit(service.revoke(revokeMembershipCommand));
-      expect(Exit.isFailure(exit)).toBe(true);
-      if (Exit.isFailure(exit)) {
-        const error = Cause.findErrorOption(exit.cause);
-        expect(O.isSome(error)).toBe(true);
-        if (O.isSome(error)) {
-          expect(error.value).toBeInstanceOf(MembershipNotFound);
-        }
-      }
+      const error = O.getOrThrow(Exit.findErrorOption(exit));
+      assertExitFailure(exit, Cause.fail(error));
+      expect(error).toBeInstanceOf(MembershipNotFound);
     })
   );
 });
@@ -221,9 +225,10 @@ slice provides:
 
 ````ts
 // packages/iam/use-cases/test/MembershipRepository.contract.ts
-import { expect, layer } from "@effect/vitest";
-import { Effect, type Layer } from "effect";
-import * as O from "effect/Option";
+import { layer } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
+import { Effect } from "effect";
+import type * as Layer from "effect/Layer";
 import { MembershipRepository } from "@beep/iam-use-cases/server";
 import { activeMembership } from "@beep/iam-use-cases/test";
 
@@ -252,7 +257,7 @@ export const MembershipRepositoryContract = (
         const repo = yield* MembershipRepository;
         yield* repo.save(activeMembership);
         const found = yield* repo.findById(activeMembership.id);
-        expect(O.isSome(found)).toBe(true);
+        assertSome(found, activeMembership);
       })
     );
 
@@ -261,7 +266,7 @@ export const MembershipRepositoryContract = (
       Effect.fnUntraced(function* () {
         const repo = yield* MembershipRepository;
         const found = yield* repo.findById(activeMembership.id);
-        expect(O.isNone(found)).toBe(true);
+        assertNone(found);
       })
     );
   });

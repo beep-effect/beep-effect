@@ -12,6 +12,13 @@
  */
 export * from "./EcosystemPolarity.ts";
 /**
+ * Effect Vitest canon detector utilities.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./EffectVitest.ts";
+/**
  * Judge-rubric lens drift lint utilities.
  *
  * @category cli-commands
@@ -39,9 +46,33 @@ export * from "./Lint.errors.ts";
  * @since 0.0.0
  */
 export {
+  decodeEffectVitestFindingJson,
+  decodeEffectVitestInventoryDocument,
+  decodeEffectVitestPrimitiveGraphDocument,
+  EffectVitestCensusPath,
+  EffectVitestCensusRow,
+  EffectVitestFinding,
+  EffectVitestFindingRuleId,
+  EffectVitestInventoryDocument,
+  EffectVitestInventoryPath,
+  EffectVitestLintOptions,
+  EffectVitestPackageTiming,
+  EffectVitestPrimitive,
+  EffectVitestPrimitiveCoverage,
+  EffectVitestPrimitiveGraphDocument,
+  EffectVitestPrimitiveGraphPath,
+  EffectVitestReplacement,
+  EffectVitestRuleId,
+  EffectVitestScanTiming,
+  EffectVitestSourceFileGlobs,
+  encodeEffectVitestFindingJson,
+  encodeEffectVitestInventoryDocument,
+  encodeEffectVitestPrimitiveGraphDocument,
   encodeSchemaFirstInventoryDocument,
   isActiveSchemaFirstRuleAdvisory,
+  isEffectVitestTestFilePath,
   LiteralKitConstAssertionViolation,
+  makeEffectVitestFindingKey,
   makeSchemaFirstEntryKey,
   SchemaCrispeningPolicyPath,
   SchemaFirstInventoryDocument,

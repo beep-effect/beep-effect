@@ -1,0 +1,19 @@
+{
+  "class": "it-layer",
+  "method": "ts-morph syntax-only exact CallExpression it.layer(...)",
+  "fileCount": 2,
+  "occurrenceCount": 4,
+  "files": [
+    {
+      "file": "apps/professional-desktop/test/theme-atoms.test.tsx",
+      "count": 1,
+      "lines": [34]
+    },
+    {
+      "file": "infra/test/OpenClaw.test.ts",
+      "count": 3,
+      "lines": [397, 419, 751]
+    }
+  ],
+  "limitations": "Exact syntactic call identity; aliases and computed property access are not counted."
+}

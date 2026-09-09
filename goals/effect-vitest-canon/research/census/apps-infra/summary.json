@@ -1,0 +1,285 @@
+{
+  "generatedOn": "2026-09-08",
+  "scope": {
+    "roots": ["apps/**", "infra/**"],
+    "fileCount": 106,
+    "testFileCount": 99,
+    "supportFileCount": 7,
+    "bytes": 920686,
+    "lines": 22002,
+    "packageCount": 11,
+    "kindDomain": ["test", "support"],
+    "ownership": "nearest ancestor directory matching a root package.json workspace entry; nested unregistered manifests do not own files",
+    "ignoredEligibleDifferenceCount": 0
+  },
+  "scopeByRoot": {
+    "apps": {
+      "test": 88,
+      "support": 5
+    },
+    "infra": {
+      "test": 11,
+      "support": 2
+    }
+  },
+  "scopeByPackage": {
+    "@beep/api-docs": {
+      "test": 3,
+      "support": 0
+    },
+    "@beep/architecture-lab-proof": {
+      "test": 1,
+      "support": 0
+    },
+    "@beep/ciops": {
+      "test": 2,
+      "support": 0
+    },
+    "@beep/infra": {
+      "test": 11,
+      "support": 2
+    },
+    "@beep/lejeune-bolt-workbench": {
+      "test": 3,
+      "support": 0
+    },
+    "@beep/oip-web": {
+      "test": 3,
+      "support": 1
+    },
+    "@beep/practice-kg-mcp": {
+      "test": 2,
+      "support": 0
+    },
+    "@beep/professional-desktop": {
+      "test": 57,
+      "support": 2
+    },
+    "@beep/semantica": {
+      "test": 15,
+      "support": 2
+    },
+    "@beep/todox": {
+      "test": 1,
+      "support": 0
+    },
+    "@beep/trustgraph-workbench": {
+      "test": 1,
+      "support": 0
+    }
+  },
+  "classes": {
+    "effect-vitest-imports": {
+      "fileCount": 62,
+      "occurrenceCount": 62
+    },
+    "effect-vitest-plain-imports": {
+      "fileCount": 0,
+      "occurrenceCount": 0
+    },
+    "plain-vitest-imports": {
+      "fileCount": 58,
+      "occurrenceCount": 58
+    },
+    "it-effect": {
+      "fileCount": 50,
+      "occurrenceCount": 189
+    },
+    "it-live": {
+      "fileCount": 7,
+      "occurrenceCount": 28
+    },
+    "it-layer": {
+      "fileCount": 2,
+      "occurrenceCount": 4
+    },
+    "it-flaky-test": {
+      "fileCount": 0,
+      "occurrenceCount": 0
+    },
+    "it-prop": {
+      "fileCount": 0,
+      "occurrenceCount": 0
+    },
+    "it-effect-prop": {
+      "fileCount": 0,
+      "occurrenceCount": 0
+    },
+    "effect-prop": {
+      "fileCount": 0,
+      "occurrenceCount": 0
+    },
+    "fc-assert": {
+      "fileCount": 18,
+      "occurrenceCount": 22
+    },
+    "fc-assert-property": {
+      "fileCount": 18,
+      "occurrenceCount": 22
+    },
+    "effect-run-promise": {
+      "fileCount": 15,
+      "occurrenceCount": 73
+    },
+    "effect-run-sync": {
+      "fileCount": 12,
+      "occurrenceCount": 37
+    },
+    "effect-run-fork": {
+      "fileCount": 0,
+      "occurrenceCount": 0
+    },
+    "effect-run-methods": {
+      "fileCount": 23,
+      "occurrenceCount": 110
+    },
+    "effect-provide": {
+      "fileCount": 20,
+      "occurrenceCount": 25
+    },
+    "effect-scoped": {
+      "fileCount": 20,
+      "occurrenceCount": 47
+    },
+    "effect-exit": {
+      "fileCount": 3,
+      "occurrenceCount": 6
+    },
+    "effect-result": {
+      "fileCount": 2,
+      "occurrenceCount": 4
+    },
+    "effect-sleep": {
+      "fileCount": 7,
+      "occurrenceCount": 11
+    },
+    "test-clock": {
+      "fileCount": 3,
+      "occurrenceCount": 12
+    },
+    "test-clock-adjust": {
+      "fileCount": 2,
+      "occurrenceCount": 2
+    },
+    "effect-vitest-utils-imports": {
+      "fileCount": 0,
+      "occurrenceCount": 0
+    },
+    "node-fs-imports": {
+      "fileCount": 1,
+      "occurrenceCount": 2
+    },
+    "os-tmpdir": {
+      "fileCount": 1,
+      "occurrenceCount": 2
+    },
+    "bun-node-filesystem": {
+      "fileCount": 11,
+      "occurrenceCount": 43
+    },
+    "vi-mock": {
+      "fileCount": 5,
+      "occurrenceCount": 7
+    },
+    "vi-spy-on": {
+      "fileCount": 7,
+      "occurrenceCount": 24
+    },
+    "vi-mocks-spies": {
+      "fileCount": 10,
+      "occurrenceCount": 31
+    },
+    "retries-attempts": {
+      "fileCount": 14,
+      "occurrenceCount": 31
+    },
+    "option-result-exit-expect-assertions": {
+      "fileCount": 40,
+      "occurrenceCount": 144
+    },
+    "it-effect-expect": {
+      "fileCount": 49,
+      "occurrenceCount": 1273
+    },
+    "it-effect-assert": {
+      "fileCount": 12,
+      "occurrenceCount": 100
+    },
+    "named-wrapper-calls": {
+      "fileCount": 11,
+      "occurrenceCount": 53
+    }
+  },
+  "countingNotes": {
+    "itEffectIncludesEffectProp": false,
+    "effectProvideExactCallOnly": true,
+    "effectProvideServiceExcluded": true
+  },
+  "wrappers": {
+    "definitionCount": 8,
+    "callOccurrenceCount": 53
+  },
+  "evCandidates": {
+    "EV001": {
+      "fileCount": 23,
+      "occurrenceCount": 110
+    },
+    "EV002": {
+      "fileCount": 4,
+      "occurrenceCount": 5
+    },
+    "EV003": {
+      "fileCount": 11,
+      "occurrenceCount": 53
+    },
+    "EV004": {
+      "fileCount": 4,
+      "occurrenceCount": 7
+    },
+    "EV005": {
+      "fileCount": 2,
+      "occurrenceCount": 4
+    },
+    "EV006": {
+      "fileCount": 40,
+      "occurrenceCount": 144
+    },
+    "EV007": {
+      "fileCount": 18,
+      "occurrenceCount": 22
+    },
+    "EV008": {
+      "fileCount": 1,
+      "occurrenceCount": 1
+    },
+    "EV009": {
+      "fileCount": 7,
+      "occurrenceCount": 28
+    },
+    "EV010": {
+      "fileCount": 12,
+      "occurrenceCount": 47
+    },
+    "EV011": {
+      "fileCount": 50,
+      "occurrenceCount": 50
+    },
+    "EV012": {
+      "fileCount": 10,
+      "occurrenceCount": 31
+    },
+    "EV013": {
+      "fileCount": 14,
+      "occurrenceCount": 31
+    },
+    "EV014": {
+      "fileCount": 2,
+      "occurrenceCount": 4
+    },
+    "EV015": {
+      "fileCount": 0,
+      "occurrenceCount": 0
+    }
+  },
+  "countStatus": "LIVE census; historical 2026-09-04 estimates were not forced."
+}

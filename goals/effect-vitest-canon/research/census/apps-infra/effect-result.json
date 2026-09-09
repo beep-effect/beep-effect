@@ -1,0 +1,19 @@
+{
+  "class": "effect-result",
+  "method": "ts-morph syntax-only exact CallExpression Effect.result(...)",
+  "fileCount": 2,
+  "occurrenceCount": 4,
+  "files": [
+    {
+      "file": "apps/practice-kg-mcp/test/Host.test.ts",
+      "count": 2,
+      "lines": [71, 74]
+    },
+    {
+      "file": "apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts",
+      "count": 2,
+      "lines": [250, 290]
+    }
+  ],
+  "limitations": "Exact syntactic call identity; aliases are not counted."
+}

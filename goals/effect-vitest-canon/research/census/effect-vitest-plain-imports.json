@@ -1,0 +1,15 @@
+{
+  "class": "effect-vitest-plain-imports",
+  "method": "Merged lane reconnaissance; see methodsByLane.",
+  "methodsByLane": {
+    "packages": "line-oriented lexical scan over live in-scope package files",
+    "apps-infra": "global regular expression: /(?:from\\s*[\"']@effect\\/vitest\\/plain[\"']|import\\s*[\"']@effect\\/vitest\\/plain[\"'])/g"
+  },
+  "scope": "tests",
+  "fileCount": 0,
+  "occurrenceCount": 0,
+  "files": [],
+  "limitations": [
+    "Verified textual occurrence census over the live scoped files; comments and strings can produce false positives, and multiline syntax can affect precision."
+  ]
+}

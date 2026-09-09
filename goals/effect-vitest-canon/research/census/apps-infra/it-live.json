@@ -1,0 +1,47 @@
+{
+  "class": "it-live",
+  "method": "ts-morph syntax-only exact CallExpression it.live(...)",
+  "fileCount": 7,
+  "occurrenceCount": 28,
+  "files": [
+    {
+      "file": "apps/labs/lejeune-bolt-workbench/test/Bundle.test.ts",
+      "count": 4,
+      "lines": [263, 322, 379, 1055]
+    },
+    {
+      "file": "apps/professional-desktop/test/browser-failure-atoms.test.ts",
+      "count": 2,
+      "lines": [40, 62]
+    },
+    {
+      "file": "apps/professional-desktop/test/composer-atom-lifetime.test.ts",
+      "count": 1,
+      "lines": [34]
+    },
+    {
+      "file": "apps/professional-desktop/test/composer-dispatch-confirm.test.ts",
+      "count": 3,
+      "lines": [69, 90, 115]
+    },
+    {
+      "file": "apps/professional-desktop/test/dock-shell.test.tsx",
+      "count": 1,
+      "lines": [107]
+    },
+    {
+      "file": "apps/professional-desktop/test/intake-atoms.test.ts",
+      "count": 15,
+      "lines": [
+        122, 144, 162, 190, 210, 227, 246, 270, 287, 302, 322, 352, 388, 416,
+        447
+      ]
+    },
+    {
+      "file": "apps/professional-desktop/test/sync-atoms.test.ts",
+      "count": 2,
+      "lines": [50, 87]
+    }
+  ],
+  "limitations": "Exact syntactic call identity; aliases and computed property access are not counted."
+}

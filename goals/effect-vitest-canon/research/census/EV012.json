@@ -1,0 +1,134 @@
+{
+  "class": "EV012",
+  "method": "Merged lane reconnaissance; see methodsByLane.",
+  "methodsByLane": {
+    "packages": "all vi.mock and vi.spyOn sites",
+    "apps-infra": "vi.mock or vi.spyOn occurrences"
+  },
+  "scope": "tests",
+  "fileCount": 23,
+  "occurrenceCount": 47,
+  "files": [
+    {
+      "file": "apps/oip-web/test/oip-web.test.tsx",
+      "count": 6,
+      "lines": [49, 64, 68, 480, 527, 773]
+    },
+    {
+      "file": "apps/professional-desktop/test/chat-ui.test.tsx",
+      "count": 1,
+      "lines": [43]
+    },
+    {
+      "file": "apps/professional-desktop/test/editor-contract-hardening.test.tsx",
+      "count": 13,
+      "lines": [
+        158, 159, 205, 287, 288, 368, 375, 425, 490, 493, 700, 701, 1047
+      ]
+    },
+    {
+      "file": "apps/professional-desktop/test/intake-atoms.test.ts",
+      "count": 3,
+      "lines": [34, 193, 394]
+    },
+    {
+      "file": "apps/professional-desktop/test/optimistic-user-turn.test.tsx",
+      "count": 1,
+      "lines": [282]
+    },
+    {
+      "file": "apps/professional-desktop/test/surface-boundary.test.tsx",
+      "count": 3,
+      "lines": [38, 53, 80]
+    },
+    {
+      "file": "apps/professional-desktop/test/tauri-ipc-socket.test.ts",
+      "count": 1,
+      "lines": [11]
+    },
+    {
+      "file": "apps/professional-desktop/test/theme-atoms.test.tsx",
+      "count": 1,
+      "lines": [129]
+    },
+    {
+      "file": "apps/professional-desktop/test/viewer-encoding.test.tsx",
+      "count": 1,
+      "lines": [26]
+    },
+    {
+      "file": "apps/professional-desktop/test/youtube-watch-opener.test.tsx",
+      "count": 1,
+      "lines": [11]
+    },
+    {
+      "file": "packages/agents/server/test/AnthropicTurnKernel.test.ts",
+      "count": 1,
+      "lines": [29]
+    },
+    {
+      "file": "packages/drivers/cosmos/test/CosmosProjection.test.ts",
+      "count": 2,
+      "lines": [30, 60]
+    },
+    {
+      "file": "packages/drivers/n3/test/N3TurtleCodec.test.ts",
+      "count": 1,
+      "lines": [105]
+    },
+    {
+      "file": "packages/drivers/rdf-canonize/test/CanonicalizationSecurity.test.ts",
+      "count": 1,
+      "lines": [25]
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.conformance-strict-failure.test.ts",
+      "count": 1,
+      "lines": [7]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/ProtobufScalars.test.ts",
+      "count": 1,
+      "lines": [298]
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/test/DockviewReact.test.tsx",
+      "count": 2,
+      "lines": [120, 246]
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/test/mermaid-race.test.tsx",
+      "count": 1,
+      "lines": [44]
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/test/SqlTest.test.ts",
+      "count": 2,
+      "lines": [42, 104]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/cli-json-printer.test.ts",
+      "count": 1,
+      "lines": [112]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/package-verify.test.ts",
+      "count": 1,
+      "lines": [282]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/process-identity.test.ts",
+      "count": 1,
+      "lines": [90]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/qa-judge-skill.test.ts",
+      "count": 1,
+      "lines": [35]
+    }
+  ],
+  "limitations": [
+    "Candidate-only: whether the target is an Effect service requires human judgment.",
+    "Judgment candidate: textual inspection does not determine whether the target is an Effect service."
+  ]
+}

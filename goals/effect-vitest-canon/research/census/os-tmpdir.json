@@ -1,0 +1,51 @@
+{
+  "class": "os-tmpdir",
+  "method": "Merged lane reconnaissance; see methodsByLane.",
+  "methodsByLane": {
+    "packages": "union of line-oriented lexical scans over live in-scope package files",
+    "apps-infra": "global regular expression: /\\b(?:os\\.)?tmpdir\\s*\\(/g"
+  },
+  "scope": "tests",
+  "fileCount": 7,
+  "occurrenceCount": 11,
+  "files": [
+    {
+      "file": "infra/ci-runners/sdks/ghaRunners/test/build.test.js",
+      "count": 2,
+      "lines": [21, 49]
+    },
+    {
+      "file": "packages/agents/server/test/ProviderInstance.integration.test.ts",
+      "count": 1,
+      "lines": [1]
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/test/AiProviderCli.snapshot.test.ts",
+      "count": 1,
+      "lines": [1]
+    },
+    {
+      "file": "packages/foundation/modeling/utils/test/FileSystem.test.ts",
+      "count": 3,
+      "lines": [3, 11, 113]
+    },
+    {
+      "file": "packages/foundation/modeling/utils/test/Glob.test.ts",
+      "count": 2,
+      "lines": [2, 38]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/runtime-root.test.ts",
+      "count": 1,
+      "lines": [1]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-review-fixes.test.ts",
+      "count": 1,
+      "lines": [1]
+    }
+  ],
+  "limitations": [
+    "Verified textual occurrence census over the live scoped files; comments and strings can produce false positives, and multiline syntax can affect precision."
+  ]
+}

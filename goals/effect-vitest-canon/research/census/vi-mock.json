@@ -1,0 +1,41 @@
+{
+  "class": "vi-mock",
+  "method": "Merged lane reconnaissance; see methodsByLane.",
+  "methodsByLane": {
+    "apps-infra": "global regular expression: /\\bvi\\.mock\\s*\\(/g"
+  },
+  "scope": "tests",
+  "fileCount": 5,
+  "occurrenceCount": 7,
+  "files": [
+    {
+      "file": "apps/oip-web/test/oip-web.test.tsx",
+      "count": 3,
+      "lines": [49, 64, 68]
+    },
+    {
+      "file": "apps/professional-desktop/test/chat-ui.test.tsx",
+      "count": 1,
+      "lines": [43]
+    },
+    {
+      "file": "apps/professional-desktop/test/intake-atoms.test.ts",
+      "count": 1,
+      "lines": [34]
+    },
+    {
+      "file": "apps/professional-desktop/test/tauri-ipc-socket.test.ts",
+      "count": 1,
+      "lines": [11]
+    },
+    {
+      "file": "apps/professional-desktop/test/youtube-watch-opener.test.tsx",
+      "count": 1,
+      "lines": [11]
+    }
+  ],
+  "limitations": [
+    "Verified textual occurrence census over the live scoped files; comments and strings can produce false positives, and multiline syntax can affect precision.",
+    "Only one lane emitted this auxiliary class; use the common grouped class or wrapper name totals for full-repository comparisons."
+  ]
+}

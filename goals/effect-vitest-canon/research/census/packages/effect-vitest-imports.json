@@ -1,0 +1,3794 @@
+{
+  "class": "effect-vitest-imports",
+  "method": "line-oriented lexical scan over live in-scope package files",
+  "fileCount": 757,
+  "occurrenceCount": 757,
+  "files": [
+    {
+      "file": "packages/_internal/db-admin/test/ArchitectureLabMigrationTarget.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/_internal/db-admin/test/index.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/_internal/db-admin/test/integration/ArchitectureLabMigration.pglite.test.ts",
+      "count": 1,
+      "lines": [5]
+    },
+    {
+      "file": "packages/_internal/db-admin/test/integration/DocumentsSyncMigration.pglite.test.ts",
+      "count": 1,
+      "lines": [20]
+    },
+    {
+      "file": "packages/_internal/db-admin/test/integration/EpistemicContradictionMigration.pglite.test.ts",
+      "count": 1,
+      "lines": [19]
+    },
+    {
+      "file": "packages/_internal/db-admin/test/integration/EpistemicEdgeMigration.pglite.test.ts",
+      "count": 1,
+      "lines": [18]
+    },
+    {
+      "file": "packages/_internal/db-admin/test/integration/EpistemicExecutionLedgerMigration.pglite.test.ts",
+      "count": 1,
+      "lines": [7]
+    },
+    {
+      "file": "packages/_internal/db-admin/test/integration/LawPracticeCandorGateMigration.pglite.test.ts",
+      "count": 1,
+      "lines": [18]
+    },
+    {
+      "file": "packages/_internal/db-admin/test/integration/LawPracticeLegalPositionMigration.pglite.test.ts",
+      "count": 1,
+      "lines": [24]
+    },
+    {
+      "file": "packages/agents/client/test/Chat.layer.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/agents/client/test/Chat.schema-parity.test.ts",
+      "count": 1,
+      "lines": [14]
+    },
+    {
+      "file": "packages/agents/client/test/ProviderInstance.atoms.test.ts",
+      "count": 1,
+      "lines": [10]
+    },
+    {
+      "file": "packages/agents/client/test/run-turn-defect.test.ts",
+      "count": 1,
+      "lines": [14]
+    },
+    {
+      "file": "packages/agents/client/test/run-turn-reconciliation.test.ts",
+      "count": 1,
+      "lines": [21]
+    },
+    {
+      "file": "packages/agents/client/test/selected-thread-lifetime.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/agents/domain/test/AgentsDomain.test.ts",
+      "count": 1,
+      "lines": [25]
+    },
+    {
+      "file": "packages/agents/domain/test/ProviderInstance.test.ts",
+      "count": 1,
+      "lines": [13]
+    },
+    {
+      "file": "packages/agents/server/test/AnthropicTurnKernel.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/agents/server/test/AssistantTurn.schema-parity.test.ts",
+      "count": 1,
+      "lines": [13]
+    },
+    {
+      "file": "packages/agents/server/test/BlockRepair.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/agents/server/test/ProviderInstance.integration.test.ts",
+      "count": 1,
+      "lines": [37]
+    },
+    {
+      "file": "packages/agents/tables/test/ProviderInstanceTable.test.ts",
+      "count": 1,
+      "lines": [10]
+    },
+    {
+      "file": "packages/agents/use-cases/test/AssistantTurn.test.ts",
+      "count": 1,
+      "lines": [19]
+    },
+    {
+      "file": "packages/agents/use-cases/test/Chat.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/agents/use-cases/test/ProfessionalRuntime.test.ts",
+      "count": 1,
+      "lines": [20]
+    },
+    {
+      "file": "packages/agents/use-cases/test/ProviderInstance.test.ts",
+      "count": 1,
+      "lines": [15]
+    },
+    {
+      "file": "packages/agents/use-cases/test/TaggedError.equivalence.test.ts",
+      "count": 1,
+      "lines": [13]
+    },
+    {
+      "file": "packages/architecture-lab/client/test/WorkItemClient.test.ts",
+      "count": 1,
+      "lines": [5]
+    },
+    {
+      "file": "packages/architecture-lab/config/test/WorkItemConfig.test.ts",
+      "count": 1,
+      "lines": [14]
+    },
+    {
+      "file": "packages/architecture-lab/domain/test/TaggedError.equivalence.test.ts",
+      "count": 1,
+      "lines": [7]
+    },
+    {
+      "file": "packages/architecture-lab/domain/test/WorkItem.test.ts",
+      "count": 1,
+      "lines": [5]
+    },
+    {
+      "file": "packages/architecture-lab/domain/test/WorkPriority.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/architecture-lab/domain/test/Worker.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/architecture-lab/server/test/WorkItemServer.test.ts",
+      "count": 1,
+      "lines": [11]
+    },
+    {
+      "file": "packages/architecture-lab/server/test/WorkerServer.test.ts",
+      "count": 1,
+      "lines": [6]
+    },
+    {
+      "file": "packages/architecture-lab/server/test/integration/WorkItemDrizzleRepository.pglite.test.ts",
+      "count": 1,
+      "lines": [12]
+    },
+    {
+      "file": "packages/architecture-lab/tables/test/WorkItemTable.test.ts",
+      "count": 1,
+      "lines": [6]
+    },
+    {
+      "file": "packages/architecture-lab/tables/test/WorkerTable.test.ts",
+      "count": 1,
+      "lines": [5]
+    },
+    {
+      "file": "packages/architecture-lab/ui/test/WorkItemViewModel.test.ts",
+      "count": 1,
+      "lines": [10]
+    },
+    {
+      "file": "packages/architecture-lab/use-cases/test/SchemaParity.test.ts",
+      "count": 1,
+      "lines": [7]
+    },
+    {
+      "file": "packages/architecture-lab/use-cases/test/TaggedError.equivalence.test.ts",
+      "count": 1,
+      "lines": [20]
+    },
+    {
+      "file": "packages/architecture-lab/use-cases/test/WorkItem.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/architecture-lab/use-cases/test/Worker.test.ts",
+      "count": 1,
+      "lines": [6]
+    },
+    {
+      "file": "packages/documents/domain/test/EntityMaterialization.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/documents/domain/test/SyncConflict.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/documents/domain/test/SyncCursor.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/documents/domain/test/SyncItem.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/documents/domain/test/SyncOperation.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/documents/domain/test/TaggedError.equivalence.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/documents/domain/test/Taxonomy.test.ts",
+      "count": 1,
+      "lines": [13]
+    },
+    {
+      "file": "packages/documents/server/test/DmsMirrorBox.test.ts",
+      "count": 1,
+      "lines": [25]
+    },
+    {
+      "file": "packages/documents/server/test/DocumentIntake.test.ts",
+      "count": 1,
+      "lines": [13]
+    },
+    {
+      "file": "packages/documents/server/test/FilingDecisionLlm.test.ts",
+      "count": 1,
+      "lines": [17]
+    },
+    {
+      "file": "packages/documents/server/test/SyncConflictServer.test.ts",
+      "count": 1,
+      "lines": [16]
+    },
+    {
+      "file": "packages/documents/server/test/SyncCursorServer.test.ts",
+      "count": 1,
+      "lines": [13]
+    },
+    {
+      "file": "packages/documents/server/test/SyncItemServer.test.ts",
+      "count": 1,
+      "lines": [20]
+    },
+    {
+      "file": "packages/documents/server/test/SyncOperationServer.test.ts",
+      "count": 1,
+      "lines": [22]
+    },
+    {
+      "file": "packages/documents/server/test/VaultSyncDrift.test.ts",
+      "count": 1,
+      "lines": [21]
+    },
+    {
+      "file": "packages/documents/server/test/VaultSyncEngine.test.ts",
+      "count": 1,
+      "lines": [26]
+    },
+    {
+      "file": "packages/documents/server/test/VaultSyncReviewRegressions.test.ts",
+      "count": 1,
+      "lines": [25]
+    },
+    {
+      "file": "packages/documents/server/test/integration/SyncRepositoriesDrizzle.pglite.test.ts",
+      "count": 1,
+      "lines": [35]
+    },
+    {
+      "file": "packages/documents/tables/test/SyncConflictTable.test.ts",
+      "count": 1,
+      "lines": [10]
+    },
+    {
+      "file": "packages/documents/tables/test/SyncCursorTable.test.ts",
+      "count": 1,
+      "lines": [10]
+    },
+    {
+      "file": "packages/documents/tables/test/SyncItemTable.test.ts",
+      "count": 1,
+      "lines": [11]
+    },
+    {
+      "file": "packages/documents/tables/test/SyncOperationTable.test.ts",
+      "count": 1,
+      "lines": [10]
+    },
+    {
+      "file": "packages/documents/use-cases/test/Document.errors.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/documents/use-cases/test/FilingDecision.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/documents/use-cases/test/Sync.test.ts",
+      "count": 1,
+      "lines": [40]
+    },
+    {
+      "file": "packages/documents/use-cases/test/SyncConflict.test.ts",
+      "count": 1,
+      "lines": [12]
+    },
+    {
+      "file": "packages/documents/use-cases/test/SyncCursor.test.ts",
+      "count": 1,
+      "lines": [10]
+    },
+    {
+      "file": "packages/documents/use-cases/test/SyncItem.test.ts",
+      "count": 1,
+      "lines": [16]
+    },
+    {
+      "file": "packages/documents/use-cases/test/SyncOperation.test.ts",
+      "count": 1,
+      "lines": [17]
+    },
+    {
+      "file": "packages/documents/use-cases/test/TaggedError.equivalence.test.ts",
+      "count": 1,
+      "lines": [28]
+    },
+    {
+      "file": "packages/drivers/acp/test/Acp.equivalence.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/drivers/acp/test/agent.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/drivers/acp/test/integration/client.integration.test.ts",
+      "count": 1,
+      "lines": [5]
+    },
+    {
+      "file": "packages/drivers/acp/test/protocol.test.ts",
+      "count": 1,
+      "lines": [6]
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/test/AiProviderCli.service.test.ts",
+      "count": 1,
+      "lines": [11]
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/test/AiProviderCli.snapshot.test.ts",
+      "count": 1,
+      "lines": [11]
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/test/AiProviderCliHome.equivalence.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/drivers/anthropic/test/Anthropic.equivalence.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/drivers/anthropic/test/Anthropic.repair.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/drivers/anthropic/test/Anthropic.test.ts",
+      "count": 1,
+      "lines": [14]
+    },
+    {
+      "file": "packages/drivers/box-provisioning/test/BoxProvisioning.test.ts",
+      "count": 1,
+      "lines": [28]
+    },
+    {
+      "file": "packages/drivers/box-provisioning/test/BoxProvisioningApplier.test.ts",
+      "count": 1,
+      "lines": [11]
+    },
+    {
+      "file": "packages/drivers/box-provisioning/test/BoxProvisioningApplyJournal.test.ts",
+      "count": 1,
+      "lines": [7]
+    },
+    {
+      "file": "packages/drivers/box-provisioning/test/BoxProvisioningArtifactPrivacy.test.ts",
+      "count": 1,
+      "lines": [12]
+    },
+    {
+      "file": "packages/drivers/box-provisioning/test/BoxProvisioningIntent.test.ts",
+      "count": 1,
+      "lines": [11]
+    },
+    {
+      "file": "packages/drivers/box-provisioning/test/BoxProvisioningInventory.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/drivers/box-provisioning/test/BoxProvisioningPlanner.test.ts",
+      "count": 1,
+      "lines": [22]
+    },
+    {
+      "file": "packages/drivers/box/test/Box.equivalence.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/drivers/box/test/Box.service.test.ts",
+      "count": 1,
+      "lines": [7]
+    },
+    {
+      "file": "packages/drivers/box/test/integration/Box.live.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/drivers/cosmos/test/Cosmos.equivalence.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/drivers/cosmos/test/CosmosProjection.test.ts",
+      "count": 1,
+      "lines": [11]
+    },
+    {
+      "file": "packages/drivers/discord/test/Discord.equivalence.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/drivers/discord/test/Discord.service.test.ts",
+      "count": 1,
+      "lines": [13]
+    },
+    {
+      "file": "packages/drivers/doc-text/test/DocText.equivalence.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/drivers/doc-text/test/DocText.service.test.ts",
+      "count": 1,
+      "lines": [19]
+    },
+    {
+      "file": "packages/drivers/drizzle/test/Drizzle.equivalence.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/drivers/drizzle/test/Drizzle.errors.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/drivers/drizzle/test/integration/Drizzle.pglite.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/drivers/duckdb/test/DuckDb.equivalence.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/drivers/duckdb/test/DuckDb.service.test.ts",
+      "count": 1,
+      "lines": [16]
+    },
+    {
+      "file": "packages/drivers/ecfr/test/Ecfr.equivalence.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/drivers/ecfr/test/Ecfr.service.test.ts",
+      "count": 1,
+      "lines": [24]
+    },
+    {
+      "file": "packages/drivers/exiftool/test/Exiftool.equivalence.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/drivers/exiftool/test/Exiftool.models.test.ts",
+      "count": 1,
+      "lines": [28]
+    },
+    {
+      "file": "packages/drivers/exiftool/test/Exiftool.service.test.ts",
+      "count": 1,
+      "lines": [13]
+    },
+    {
+      "file": "packages/drivers/exiftool/test/integration/Exiftool.live.test.ts",
+      "count": 1,
+      "lines": [12]
+    },
+    {
+      "file": "packages/drivers/face-detection/test/FaceDetection.equivalence.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/drivers/face-detection/test/FaceDetection.service.test.ts",
+      "count": 1,
+      "lines": [22]
+    },
+    {
+      "file": "packages/drivers/ffmpeg/test/FFmpeg.capture.failures.test.ts",
+      "count": 1,
+      "lines": [13]
+    },
+    {
+      "file": "packages/drivers/ffmpeg/test/FFmpeg.capture.test.ts",
+      "count": 1,
+      "lines": [42]
+    },
+    {
+      "file": "packages/drivers/ffmpeg/test/FFmpeg.equivalence.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/drivers/ffmpeg/test/FFmpeg.extract-args.test.ts",
+      "count": 1,
+      "lines": [8]
+    },
+    {
+      "file": "packages/drivers/ffmpeg/test/FFmpeg.service.test.ts",
+      "count": 1,
+      "lines": [28]
+    },
+    {
+      "file": "packages/drivers/ffmpeg/test/integration/FFmpeg.capture.integration.test.ts",
+      "count": 1,
+      "lines": [15]
+    },
+    {
+      "file": "packages/drivers/firecrawl/test/Firecrawl.equivalence.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/drivers/firecrawl/test/Firecrawl.service.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/drivers/firecrawl/test/integration/Firecrawl.live.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/drivers/freshbooks/test/Freshbooks.service.test.ts",
+      "count": 1,
+      "lines": [16]
+    },
+    {
+      "file": "packages/drivers/freshbooks/test/Freshbooks.token.test.ts",
+      "count": 1,
+      "lines": [9]
+    },
+    {
+      "file": "packages/drivers/gov-legal-mcp/test/GovLegalMcp.equivalence.test.ts",
+      "count": 1,
+      "lines": [8]
+    },
+    {
+      "file": "packages/drivers/gov-legal-mcp/test/Server.test.ts",
+      "count": 1,
+      "lines": [43]
+    },
+    {
+      "file": "packages/drivers/govinfo/test/Govinfo.equivalence.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/drivers/govinfo/test/Govinfo.generated.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/drivers/govinfo/test/Govinfo.service.test.ts",
+      "count": 1,
+      "lines": [24]
+    },
+    {
+      "file": "packages/drivers/graph-3d/test/Graph3D.equivalence.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/drivers/graph-3d/test/browser/Graph3D.renderer.test.ts",
+      "count": 1,
+      "lines": [5]
+    },
+    {
+      "file": "packages/drivers/hubspot/test/HubSpot.equivalence.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/drivers/hubspot/test/HubSpot.service.test.ts",
+      "count": 1,
+      "lines": [13]
+    },
+    {
+      "file": "packages/drivers/libpff/test/Libpff.eml.test.ts",
+      "count": 1,
+      "lines": [9]
+    },
+    {
+      "file": "packages/drivers/libpff/test/Libpff.equivalence.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/drivers/libpff/test/Libpff.pffexport.test.ts",
+      "count": 1,
+      "lines": [20]
+    },
+    {
+      "file": "packages/drivers/libpff/test/Libpff.service.test.ts",
+      "count": 1,
+      "lines": [21]
+    },
+    {
+      "file": "packages/drivers/libpff/test/integration/Libpff.pffexport.live.test.ts",
+      "count": 1,
+      "lines": [15]
+    },
+    {
+      "file": "packages/drivers/m365-mcp/test/SanitizedSpan.test.ts",
+      "count": 1,
+      "lines": [14]
+    },
+    {
+      "file": "packages/drivers/m365-mcp/test/Server.test.ts",
+      "count": 1,
+      "lines": [29]
+    },
+    {
+      "file": "packages/drivers/m365/test/M365.service.test.ts",
+      "count": 1,
+      "lines": [33]
+    },
+    {
+      "file": "packages/drivers/m365/test/integration/M365.live.test.ts",
+      "count": 1,
+      "lines": [9]
+    },
+    {
+      "file": "packages/drivers/n3/test/N3.equivalence.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/drivers/n3/test/N3TurtleCodec.test.ts",
+      "count": 1,
+      "lines": [5]
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/test/NlpMcp.equivalence.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/test/SanitizedSpan.test.ts",
+      "count": 1,
+      "lines": [14]
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/test/Server.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/test/Streaming.functions.test.ts",
+      "count": 1,
+      "lines": [11]
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/test/Streaming.schema.test.ts",
+      "count": 1,
+      "lines": [39]
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/test/integration/Streaming.test.ts",
+      "count": 1,
+      "lines": [5]
+    },
+    {
+      "file": "packages/drivers/obs/test/Obs.equivalence.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/drivers/obs/test/Obs.service.test.ts",
+      "count": 1,
+      "lines": [11]
+    },
+    {
+      "file": "packages/drivers/obs/test/ObsProtocol.test.ts",
+      "count": 1,
+      "lines": [22]
+    },
+    {
+      "file": "packages/drivers/obs/test/integration/Obs.live.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/drivers/onepassword-cli/test/OnePasswordCli.equivalence.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/drivers/onepassword-cli/test/OnePasswordCli.service.test.ts",
+      "count": 1,
+      "lines": [15]
+    },
+    {
+      "file": "packages/drivers/openai-compat/test/OpenAiCompat.language-model.test.ts",
+      "count": 1,
+      "lines": [26]
+    },
+    {
+      "file": "packages/drivers/openai/test/OpenAi.equivalence.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/drivers/openai/test/OpenAi.service.test.ts",
+      "count": 1,
+      "lines": [18]
+    },
+    {
+      "file": "packages/drivers/openai/test/OpenAi.test.ts",
+      "count": 1,
+      "lines": [9]
+    },
+    {
+      "file": "packages/drivers/openclaw/test/Openclaw.equivalence.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/drivers/openclaw/test/Openclaw.models.test.ts",
+      "count": 1,
+      "lines": [45]
+    },
+    {
+      "file": "packages/drivers/openclaw/test/OpenclawCli.service.test.ts",
+      "count": 1,
+      "lines": [15]
+    },
+    {
+      "file": "packages/drivers/openclaw/test/OpenclawIntent.models.test.ts",
+      "count": 1,
+      "lines": [22]
+    },
+    {
+      "file": "packages/drivers/openclaw/test/OpenclawProbe.service.test.ts",
+      "count": 1,
+      "lines": [15]
+    },
+    {
+      "file": "packages/drivers/openclaw/test/OpenclawRender.test.ts",
+      "count": 1,
+      "lines": [24]
+    },
+    {
+      "file": "packages/drivers/openclaw/test/OpenclawSystemd.service.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/drivers/openclaw/test/integration/OpenclawBinary.acceptance.test.ts",
+      "count": 1,
+      "lines": [36]
+    },
+    {
+      "file": "packages/drivers/oxigraph/test/Oxigraph.equivalence.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/drivers/oxigraph/test/OxigraphLazyImport.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/drivers/pacer/test/Pacer.equivalence.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/drivers/pacer/test/Pacer.test.ts",
+      "count": 1,
+      "lines": [17]
+    },
+    {
+      "file": "packages/drivers/pglite/test/Pglite.equivalence.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/drivers/pglite/test/PgliteClient.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/drivers/pglite/test/integration/PgliteClient.persistent.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/drivers/phoenix/test/Phoenix.equivalence.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/drivers/phoenix/test/Phoenix.service.test.ts",
+      "count": 1,
+      "lines": [27]
+    },
+    {
+      "file": "packages/drivers/postgres/test/Postgres.equivalence.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/drivers/postgres/test/Postgres.errors.test.ts",
+      "count": 1,
+      "lines": [23]
+    },
+    {
+      "file": "packages/drivers/postgres/test/integration/Postgres.pglite.test.ts",
+      "count": 1,
+      "lines": [16]
+    },
+    {
+      "file": "packages/drivers/pretext/test/Pretext.equivalence.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/drivers/pretext/test/Pretext.models.test.ts",
+      "count": 1,
+      "lines": [12]
+    },
+    {
+      "file": "packages/drivers/pretext/test/PretextCapture.test-layer.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/drivers/pretext/test/browser.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/drivers/rdf-canonize/test/CanonicalizationSecurity.test.ts",
+      "count": 1,
+      "lines": [10]
+    },
+    {
+      "file": "packages/drivers/runpod/test/Runpod.equivalence.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/drivers/runpod/test/Runpod.service.test.ts",
+      "count": 1,
+      "lines": [24]
+    },
+    {
+      "file": "packages/drivers/runpod/test/integration/Runpod.live.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/drivers/sanity/test/Sanity.equivalence.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/drivers/sanity/test/Sanity.service.test.ts",
+      "count": 1,
+      "lines": [15]
+    },
+    {
+      "file": "packages/drivers/shacl/test/Shacl.equivalence.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/drivers/shacl/test/ShaclEngineValidation.test.ts",
+      "count": 1,
+      "lines": [7]
+    },
+    {
+      "file": "packages/drivers/shacl/test/ShaclLazyImport.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/drivers/tailscale/test/Tailscale.equivalence.test.ts",
+      "count": 1,
+      "lines": [8]
+    },
+    {
+      "file": "packages/drivers/tailscale/test/tailscale.test.ts",
+      "count": 1,
+      "lines": [16]
+    },
+    {
+      "file": "packages/drivers/tika/test/Tika.errors.test.ts",
+      "count": 1,
+      "lines": [12]
+    },
+    {
+      "file": "packages/drivers/tika/test/Tika.server.test.ts",
+      "count": 1,
+      "lines": [14]
+    },
+    {
+      "file": "packages/drivers/tika/test/Tika.service.test.ts",
+      "count": 1,
+      "lines": [13]
+    },
+    {
+      "file": "packages/drivers/tika/test/Tika.tikaapp.test.ts",
+      "count": 1,
+      "lines": [9]
+    },
+    {
+      "file": "packages/drivers/tika/test/integration/Tika.server.live.test.ts",
+      "count": 1,
+      "lines": [9]
+    },
+    {
+      "file": "packages/drivers/uspto-mcp/test/Server.test.ts",
+      "count": 1,
+      "lines": [32]
+    },
+    {
+      "file": "packages/drivers/uspto/test/Uspto.equivalence.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/drivers/uspto/test/Uspto.service.test.ts",
+      "count": 1,
+      "lines": [17]
+    },
+    {
+      "file": "packages/drivers/venice-ai/test/VeniceAI.equivalence.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/drivers/venice-ai/test/VeniceAI.service.test.ts",
+      "count": 1,
+      "lines": [25]
+    },
+    {
+      "file": "packages/drivers/venice-ai/test/integration/VeniceAI.integration.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/drivers/wink/test/Backend/WinkBackend.test.ts",
+      "count": 1,
+      "lines": [13]
+    },
+    {
+      "file": "packages/drivers/wink/test/Graph/GraphOperationsCatalog.test.ts",
+      "count": 1,
+      "lines": [13]
+    },
+    {
+      "file": "packages/drivers/wink/test/Graph/TextGraph.test.ts",
+      "count": 1,
+      "lines": [14]
+    },
+    {
+      "file": "packages/drivers/wink/test/NLPService.test.ts",
+      "count": 1,
+      "lines": [13]
+    },
+    {
+      "file": "packages/drivers/wink/test/Wink.equivalence.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/drivers/wink/test/Wink.models.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/drivers/xai/test/XAi.equivalence.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/drivers/xai/test/XAi.service.test.ts",
+      "count": 1,
+      "lines": [29]
+    },
+    {
+      "file": "packages/ecosystem/effect-drizzle/test/TaggedErrors.equivalence.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/ecosystem/effect-drizzle/test/bundle-size.test.ts",
+      "count": 1,
+      "lines": [1]
+    },
+    {
+      "file": "packages/ecosystem/effect-drizzle/test/import-boundary.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/ecosystem/effect-drizzle/test/integration/live.test.ts",
+      "count": 1,
+      "lines": [6]
+    },
+    {
+      "file": "packages/ecosystem/effect-drizzle/test/integration/sqlite-live.test.ts",
+      "count": 1,
+      "lines": [6]
+    },
+    {
+      "file": "packages/ecosystem/effect-drizzle/test/sqlite-unit.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/ecosystem/effect-drizzle/test/unit.test.ts",
+      "count": 1,
+      "lines": [5]
+    },
+    {
+      "file": "packages/epistemic/client/test/ContradictionTriage.atoms.test.ts",
+      "count": 1,
+      "lines": [27]
+    },
+    {
+      "file": "packages/epistemic/config/test/Config.test.ts",
+      "count": 1,
+      "lines": [11]
+    },
+    {
+      "file": "packages/epistemic/domain/test/Contradiction.test.ts",
+      "count": 1,
+      "lines": [30]
+    },
+    {
+      "file": "packages/epistemic/domain/test/EntityMaterialization.test.ts",
+      "count": 1,
+      "lines": [7]
+    },
+    {
+      "file": "packages/epistemic/domain/test/EpistemicDomain.test.ts",
+      "count": 1,
+      "lines": [22]
+    },
+    {
+      "file": "packages/epistemic/domain/test/EvidenceVerification.test.ts",
+      "count": 1,
+      "lines": [16]
+    },
+    {
+      "file": "packages/epistemic/domain/test/ExecutionAuthority.test.ts",
+      "count": 1,
+      "lines": [38]
+    },
+    {
+      "file": "packages/epistemic/domain/test/LogicalEdgeIdentity.test.ts",
+      "count": 1,
+      "lines": [8]
+    },
+    {
+      "file": "packages/epistemic/domain/test/TaggedError.equivalence.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/epistemic/server/test/BoundedShaclValidator.test.ts",
+      "count": 1,
+      "lines": [10]
+    },
+    {
+      "file": "packages/epistemic/server/test/ContradictionTriage.observability.test.ts",
+      "count": 1,
+      "lines": [16]
+    },
+    {
+      "file": "packages/epistemic/server/test/EpistemicServer.test.ts",
+      "count": 1,
+      "lines": [6]
+    },
+    {
+      "file": "packages/epistemic/server/test/GovernedEgress.test.ts",
+      "count": 1,
+      "lines": [18]
+    },
+    {
+      "file": "packages/epistemic/server/test/GovernedTierGate.test.ts",
+      "count": 1,
+      "lines": [27]
+    },
+    {
+      "file": "packages/epistemic/server/test/IdentityShaclProjection.e2e.test.ts",
+      "count": 1,
+      "lines": [14]
+    },
+    {
+      "file": "packages/epistemic/server/test/integration/ContradictionTriage.p0.pglite.test.ts",
+      "count": 1,
+      "lines": [16]
+    },
+    {
+      "file": "packages/epistemic/server/test/integration/ContradictionTriage.pg.test.ts",
+      "count": 1,
+      "lines": [52]
+    },
+    {
+      "file": "packages/epistemic/server/test/integration/ContradictionTriage.pglite.test.ts",
+      "count": 1,
+      "lines": [65]
+    },
+    {
+      "file": "packages/epistemic/server/test/integration/EdgeAuthority.pg.test.ts",
+      "count": 1,
+      "lines": [33]
+    },
+    {
+      "file": "packages/epistemic/server/test/integration/EdgeAuthority.pglite.test.ts",
+      "count": 1,
+      "lines": [32]
+    },
+    {
+      "file": "packages/epistemic/server/test/integration/EdgeAuthority.restart.pglite.test.ts",
+      "count": 1,
+      "lines": [29]
+    },
+    {
+      "file": "packages/epistemic/server/test/integration/ExecutionLedger.pglite.test.ts",
+      "count": 1,
+      "lines": [22]
+    },
+    {
+      "file": "packages/epistemic/server/test/integration/GovernedTierGate.pglite.test.ts",
+      "count": 1,
+      "lines": [24]
+    },
+    {
+      "file": "packages/epistemic/tables/test/ContradictionTables.test.ts",
+      "count": 1,
+      "lines": [42]
+    },
+    {
+      "file": "packages/epistemic/tables/test/EpistemicTables.test.ts",
+      "count": 1,
+      "lines": [14]
+    },
+    {
+      "file": "packages/epistemic/tables/test/EvidenceVerificationTables.test.ts",
+      "count": 1,
+      "lines": [18]
+    },
+    {
+      "file": "packages/epistemic/tables/test/ExecutionRecordTables.test.ts",
+      "count": 1,
+      "lines": [17]
+    },
+    {
+      "file": "packages/epistemic/use-cases/test/ClaimDisposition.test.ts",
+      "count": 1,
+      "lines": [9]
+    },
+    {
+      "file": "packages/epistemic/use-cases/test/ContradictionTriage.commands.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/epistemic/use-cases/test/ContradictionTriage.rpc.test.ts",
+      "count": 1,
+      "lines": [24]
+    },
+    {
+      "file": "packages/epistemic/use-cases/test/EdgeAuthorityCommands.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/epistemic/use-cases/test/EpistemicUseCases.test.ts",
+      "count": 1,
+      "lines": [12]
+    },
+    {
+      "file": "packages/epistemic/use-cases/test/ExecutionLedger.test.ts",
+      "count": 1,
+      "lines": [8]
+    },
+    {
+      "file": "packages/epistemic/use-cases/test/TaggedError.equivalence.test.ts",
+      "count": 1,
+      "lines": [21]
+    },
+    {
+      "file": "packages/foundation/capability/api-transport/test/EgressDenied.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/foundation/capability/api-transport/test/TaggedError.equivalence.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/foundation/capability/api-transport/test/Transport.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/foundation/capability/chalk/test/TaggedError.equivalence.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/foundation/capability/chalk/test/index.test.ts",
+      "count": 1,
+      "lines": [20]
+    },
+    {
+      "file": "packages/foundation/capability/colors/test/index.test.ts",
+      "count": 1,
+      "lines": [8]
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/test/FileProcessing.test.ts",
+      "count": 1,
+      "lines": [30]
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/test/PathSafety.test.ts",
+      "count": 1,
+      "lines": [9]
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/test/SourceText.test.ts",
+      "count": 1,
+      "lines": [13]
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/test/TaggedError.equivalence.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/foundation/capability/langextract/test/Alignment.test.ts",
+      "count": 1,
+      "lines": [20]
+    },
+    {
+      "file": "packages/foundation/capability/langextract/test/Extraction.test.ts",
+      "count": 1,
+      "lines": [14]
+    },
+    {
+      "file": "packages/foundation/capability/langextract/test/Handoff.test.ts",
+      "count": 1,
+      "lines": [7]
+    },
+    {
+      "file": "packages/foundation/capability/langextract/test/Service.test.ts",
+      "count": 1,
+      "lines": [15]
+    },
+    {
+      "file": "packages/foundation/capability/langextract/test/TaggedError.equivalence.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/foundation/capability/langextract/test/VerifiedSpanHistory.test.ts",
+      "count": 1,
+      "lines": [18]
+    },
+    {
+      "file": "packages/foundation/capability/langextract/test/VerifiedSpanSpike.test.ts",
+      "count": 1,
+      "lines": [15]
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/test/ApiKeyRequired.test.ts",
+      "count": 1,
+      "lines": [16]
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/test/FieldTier.test.ts",
+      "count": 1,
+      "lines": [23]
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/test/SanitizedSpan.test.ts",
+      "count": 1,
+      "lines": [9]
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/test/SanitizedToolkit.test.ts",
+      "count": 1,
+      "lines": [12]
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/test/TierGate.test.ts",
+      "count": 1,
+      "lines": [20]
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/test/ToolkitComposition.test.ts",
+      "count": 1,
+      "lines": [8]
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Backend/Composition.test.ts",
+      "count": 1,
+      "lines": [13]
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Backend/NLPBackend.test.ts",
+      "count": 1,
+      "lines": [12]
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Graph/AnnotatedTextGraph.test.ts",
+      "count": 1,
+      "lines": [15]
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Graph/EffectGraph.test.ts",
+      "count": 1,
+      "lines": [13]
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Graph/GraphOperations.test.ts",
+      "count": 1,
+      "lines": [15]
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Graph/TextGraph.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Graph/TypeClass.test.ts",
+      "count": 1,
+      "lines": [13]
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/TaggedError.equivalence.test.ts",
+      "count": 1,
+      "lines": [14]
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Tools/Schemas.test.ts",
+      "count": 1,
+      "lines": [40]
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/CauseRedaction.test.ts",
+      "count": 1,
+      "lines": [15]
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/Logging.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/PhaseProfiler.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/TaggedErrors.equivalence.test.ts",
+      "count": 1,
+      "lines": [18]
+    },
+    {
+      "file": "packages/foundation/capability/semantic-web/test/IdentityRdfBinding.test.ts",
+      "count": 1,
+      "lines": [20]
+    },
+    {
+      "file": "packages/foundation/capability/semantic-web/test/IdentityRdfBindingCoverage.test.ts",
+      "count": 1,
+      "lines": [13]
+    },
+    {
+      "file": "packages/foundation/capability/semantic-web/test/ServicesAndSurface.test.ts",
+      "count": 1,
+      "lines": [29]
+    },
+    {
+      "file": "packages/foundation/capability/semantic-web/test/TaggedError.equivalence.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/ConformanceLedger.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/Html.browser-conformance.test.ts",
+      "count": 1,
+      "lines": [7]
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/Html.browser-import.test.ts",
+      "count": 1,
+      "lines": [1]
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/Html.conformance-annotation.test.ts",
+      "count": 1,
+      "lines": [5]
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/Html.conformance-hardening.test.ts",
+      "count": 1,
+      "lines": [84]
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/Html.coverage-matrix.test.ts",
+      "count": 1,
+      "lines": [49]
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/Html.entrypoints.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/Html.form-control.test.ts",
+      "count": 1,
+      "lines": [18]
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/Html.generator.test.ts",
+      "count": 1,
+      "lines": [12]
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/Html.heading-conformance.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/Html.microsyntax.test.ts",
+      "count": 1,
+      "lines": [20]
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/Html.responsive-image-conformance.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/Html.script.test.ts",
+      "count": 1,
+      "lines": [12]
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/Html.security.test.ts",
+      "count": 1,
+      "lines": [51]
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/Html.source-size.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/Html.srcset.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/Html.test.ts",
+      "count": 1,
+      "lines": [24]
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/TaggedError.equivalence.test.ts",
+      "count": 1,
+      "lines": [5]
+    },
+    {
+      "file": "packages/foundation/modeling/identity/test/AnnoteError.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/foundation/modeling/identity/test/Curie.test.ts",
+      "count": 1,
+      "lines": [10]
+    },
+    {
+      "file": "packages/foundation/modeling/identity/test/Fibered.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/foundation/modeling/identity/test/IdentityRegistry.test.ts",
+      "count": 1,
+      "lines": [9]
+    },
+    {
+      "file": "packages/foundation/modeling/identity/test/PnLocal.test.ts",
+      "count": 1,
+      "lines": [12]
+    },
+    {
+      "file": "packages/foundation/modeling/identity/test/TaggedError.equivalence.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/foundation/modeling/identity/test/TemplateGuards.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/foundation/modeling/identity/test/Vocab.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/foundation/modeling/identity/test/shape-stable.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/test/ConformanceLedger.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/test/Lexical.codec.test.ts",
+      "count": 1,
+      "lines": [21]
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/test/Lexical.conformance-annotation.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/test/Lexical.conformance.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/test/Lexical.model.test.ts",
+      "count": 1,
+      "lines": [29]
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/test/Lexical.strict-invariants.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/test/TaggedError.equivalence.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/foundation/modeling/md/test/ConformanceLedger.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/foundation/modeling/md/test/Md.conformance-annotation.test.ts",
+      "count": 1,
+      "lines": [11]
+    },
+    {
+      "file": "packages/foundation/modeling/md/test/Md.conformance.test.ts",
+      "count": 1,
+      "lines": [37]
+    },
+    {
+      "file": "packages/foundation/modeling/md/test/Md.test.ts",
+      "count": 1,
+      "lines": [79]
+    },
+    {
+      "file": "packages/foundation/modeling/md/test/TaggedError.equivalence.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/test/Algebra/Monoid.test.ts",
+      "count": 1,
+      "lines": [14]
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/test/Algebra/NLPMonoid.test.ts",
+      "count": 1,
+      "lines": [14]
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/test/Graph/GraphOps.test.ts",
+      "count": 1,
+      "lines": [13]
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/test/Graph/Schema.test.ts",
+      "count": 1,
+      "lines": [12]
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/test/Handoff/Contract.test.ts",
+      "count": 1,
+      "lines": [10]
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/test/Ontology/Kind.test.ts",
+      "count": 1,
+      "lines": [10]
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/test/Operations/Composable.test.ts",
+      "count": 1,
+      "lines": [12]
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/test/TextVariants.test.ts",
+      "count": 1,
+      "lines": [5]
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/test/Fold.test.ts",
+      "count": 1,
+      "lines": [5]
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/test/Ontology.models.test.ts",
+      "count": 1,
+      "lines": [14]
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/test/SemanticFoundation.test.ts",
+      "count": 1,
+      "lines": [28]
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/test/TaggedError.equivalence.test.ts",
+      "count": 1,
+      "lines": [15]
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/ConformanceLedger.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.codec.test.ts",
+      "count": 1,
+      "lines": [40]
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.conformance-annotation.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.conformance-strict-failure.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.mapping.test.ts",
+      "count": 1,
+      "lines": [16]
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.semantic-conformance.test.ts",
+      "count": 1,
+      "lines": [6]
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/TaggedError.equivalence.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Version.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/integration/Pandoc.integration.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/foundation/modeling/provenance/test/TaggedError.equivalence.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/foundation/modeling/provenance/test/TextAnchor.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/foundation/modeling/provenance/test/VerifiedTextAnchor.test.ts",
+      "count": 1,
+      "lines": [18]
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/test/IRI.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/test/InteropAndMetadata.test.ts",
+      "count": 1,
+      "lines": [8]
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/test/ProvO.test.ts",
+      "count": 1,
+      "lines": [25]
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/test/ProvRdf.test.ts",
+      "count": 1,
+      "lines": [28]
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/test/Rdf.test.ts",
+      "count": 1,
+      "lines": [116]
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/test/SemanticSchemaConformance.test.ts",
+      "count": 1,
+      "lines": [14]
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/test/TaggedError.equivalence.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/test/URI.test.ts",
+      "count": 1,
+      "lines": [11]
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/test/VocabDrift.test.ts",
+      "count": 1,
+      "lines": [8]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Address.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/ArrayBuffer.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/AtURI.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/BinaryFileExtension.test.ts",
+      "count": 1,
+      "lines": [7]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/BlockchainRedacted.test.ts",
+      "count": 1,
+      "lines": [9]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/CaseStr.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Color.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Conformance.test.ts",
+      "count": 1,
+      "lines": [17]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Csp.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Csv.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/CsvParser.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Cuid.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/CurrencyCode.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/DateTimeUtcFromValid.test.ts",
+      "count": 1,
+      "lines": [17]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Did.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Dom.test.ts",
+      "count": 1,
+      "lines": [7]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Duration.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/EffectSchema.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Email.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/EthAmount.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/EthereumValidatorPublicKey.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/EvmAddress.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/FileDiff.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/FileInfo.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/FileName.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/FilePath.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/FileTypeChecker.test.ts",
+      "count": 1,
+      "lines": [17]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Fn.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Glob.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Graph.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/HashSet.test.ts",
+      "count": 1,
+      "lines": [5]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/HttpHeaders.test.ts",
+      "count": 1,
+      "lines": [32]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/HttpStatus.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Int.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/JSONSchema.test.ts",
+      "count": 1,
+      "lines": [26]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Json.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Jsonc.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Jsonl.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/LiteralKit.test.ts",
+      "count": 1,
+      "lines": [11]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/LocalDate.test.ts",
+      "count": 1,
+      "lines": [26]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/MappedLiteralKit.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Markdown.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/MimeType.test.ts",
+      "count": 1,
+      "lines": [11]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/MutableHashMap.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/MutableHashSet.test.ts",
+      "count": 1,
+      "lines": [5]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Opaque.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Options.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/ParserOptions.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Percentage.test.ts",
+      "count": 1,
+      "lines": [15]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Port.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/PosixPath.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/PromiseSchema.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/ProtobufScalars.test.ts",
+      "count": 1,
+      "lines": [13]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/RegExp.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/SafeObject.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/SafeRemoteHost.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/SchemaUtils.test.ts",
+      "count": 1,
+      "lines": [10]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Semver.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/SeverityLevel.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Sha256.test.ts",
+      "count": 1,
+      "lines": [5]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Slug.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/StatusCauseError.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/String.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/TaggedError.equivalence.test.ts",
+      "count": 1,
+      "lines": [29]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/TerritoryCode.test.ts",
+      "count": 1,
+      "lines": [5]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Timestamp.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Timezone.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Toml.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Transformations.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/TxnHash.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/TypedArrays.test.ts",
+      "count": 1,
+      "lines": [6]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/URL.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Unknown.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Xml.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Yaml.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/codecStatics.test.ts",
+      "count": 1,
+      "lines": [10]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/collectAnnotationsAt.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/EvidenceLadder.test.ts",
+      "count": 1,
+      "lines": [20]
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/EvidenceReceipt.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/Gate.test.ts",
+      "count": 1,
+      "lines": [21]
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/GateSummary.test.ts",
+      "count": 1,
+      "lines": [17]
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/Recovery.test.ts",
+      "count": 1,
+      "lines": [20]
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/SkillCompletion.test.ts",
+      "count": 1,
+      "lines": [42]
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/SkillContract.test.ts",
+      "count": 1,
+      "lines": [18]
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/SkillProjection.test.ts",
+      "count": 1,
+      "lines": [23]
+    },
+    {
+      "file": "packages/foundation/modeling/utils/test/DrainableWorker.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/foundation/modeling/utils/test/Errors.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/foundation/modeling/utils/test/FileSystem.test.ts",
+      "count": 1,
+      "lines": [5]
+    },
+    {
+      "file": "packages/foundation/modeling/utils/test/Path.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/foundation/modeling/utils/test/TaggedError.equivalence.test.ts",
+      "count": 1,
+      "lines": [6]
+    },
+    {
+      "file": "packages/foundation/primitive/data/test/currency-codes.test.ts",
+      "count": 1,
+      "lines": [12]
+    },
+    {
+      "file": "packages/foundation/primitive/data/test/keyboard-shortcuts.test.ts",
+      "count": 1,
+      "lines": [17]
+    },
+    {
+      "file": "packages/foundation/primitive/data/test/mime-types.test.ts",
+      "count": 1,
+      "lines": [15]
+    },
+    {
+      "file": "packages/foundation/primitive/data/test/territories.test.ts",
+      "count": 1,
+      "lines": [11]
+    },
+    {
+      "file": "packages/foundation/primitive/data/test/timezones.test.ts",
+      "count": 1,
+      "lines": [10]
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/test/Brand.test.ts",
+      "count": 1,
+      "lines": [18]
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/test/assets.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/test/DockviewReact.test.tsx",
+      "count": 1,
+      "lines": [24]
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/test/Floating.test.tsx",
+      "count": 1,
+      "lines": [20]
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/test/Gestures.test.tsx",
+      "count": 1,
+      "lines": [17]
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/test/Minima.test.tsx",
+      "count": 1,
+      "lines": [17]
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/DockAtoms.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/DockEngine.test.ts",
+      "count": 1,
+      "lines": [31]
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/DockPolicy.test.ts",
+      "count": 1,
+      "lines": [28]
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/Floating.test.ts",
+      "count": 1,
+      "lines": [37]
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/Geometry.test.ts",
+      "count": 1,
+      "lines": [23]
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/GestureParity.test.ts",
+      "count": 1,
+      "lines": [23]
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/HiddenMaximize.test.ts",
+      "count": 1,
+      "lines": [26]
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/Minima.test.ts",
+      "count": 1,
+      "lines": [22]
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/PanelGroupUpdates.test.ts",
+      "count": 1,
+      "lines": [25]
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/Recency.test.ts",
+      "count": 1,
+      "lines": [19]
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/TaggedErrors.equivalence.test.ts",
+      "count": 1,
+      "lines": [9]
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/dockview-anchored-box.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/test/TaggedErrors.equivalence.test.ts",
+      "count": 1,
+      "lines": [8]
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/test/Version.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/test/capability-catalog.test.ts",
+      "count": 1,
+      "lines": [8]
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/test/capability-errors.test.ts",
+      "count": 1,
+      "lines": [12]
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/test/capability-projection.test.ts",
+      "count": 1,
+      "lines": [12]
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/test/capability-resolver.test.ts",
+      "count": 1,
+      "lines": [18]
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/test/capability-review-fixes.test.ts",
+      "count": 1,
+      "lines": [15]
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/test/capability-runtime.test.tsx",
+      "count": 1,
+      "lines": [11]
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/test/capability-schemas.test.ts",
+      "count": 1,
+      "lines": [16]
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/test/chat-schema-parity.test.ts",
+      "count": 1,
+      "lines": [17]
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/test/code-fence.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/test/editor-nodes.test.ts",
+      "count": 1,
+      "lines": [14]
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/test/mermaid-race.test.tsx",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/test/runtime.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/test/style-node-matrix.test.ts",
+      "count": 1,
+      "lines": [9]
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/test/typeahead-ids.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/test/AdapterEffectDateTime.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/test/ReactInvariant.equivalence.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/law-practice/domain/test/CourtReporterVocabulary.test.ts",
+      "count": 1,
+      "lines": [31]
+    },
+    {
+      "file": "packages/law-practice/domain/test/Footnote.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/law-practice/domain/test/LawPracticeDomain.test.ts",
+      "count": 1,
+      "lines": [62]
+    },
+    {
+      "file": "packages/law-practice/domain/test/LegalPositionTransitions.test.ts",
+      "count": 1,
+      "lines": [15]
+    },
+    {
+      "file": "packages/law-practice/domain/test/PatentDocument.test.ts",
+      "count": 1,
+      "lines": [13]
+    },
+    {
+      "file": "packages/law-practice/server/test/CandorPromotionGate.test.ts",
+      "count": 1,
+      "lines": [22]
+    },
+    {
+      "file": "packages/law-practice/server/test/CandorRecord.pglite.test.ts",
+      "count": 1,
+      "lines": [38]
+    },
+    {
+      "file": "packages/law-practice/server/test/CandorRecord.test.ts",
+      "count": 1,
+      "lines": [33]
+    },
+    {
+      "file": "packages/law-practice/server/test/CompetencyQuestions.test.ts",
+      "count": 1,
+      "lines": [68]
+    },
+    {
+      "file": "packages/law-practice/server/test/LawPracticeServer.test.ts",
+      "count": 1,
+      "lines": [13]
+    },
+    {
+      "file": "packages/law-practice/server/test/LegalPositionRecord.pglite.test.ts",
+      "count": 1,
+      "lines": [48]
+    },
+    {
+      "file": "packages/law-practice/server/test/LegalPositionRecord.test.ts",
+      "count": 1,
+      "lines": [40]
+    },
+    {
+      "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
+      "count": 1,
+      "lines": [35]
+    },
+    {
+      "file": "packages/law-practice/server/test/TaggedError.equivalence.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/law-practice/tables/test/CandorConverters.test.ts",
+      "count": 1,
+      "lines": [30]
+    },
+    {
+      "file": "packages/law-practice/tables/test/LawPracticeTables.test.ts",
+      "count": 1,
+      "lines": [8]
+    },
+    {
+      "file": "packages/law-practice/tables/test/LegalPositionConverters.test.ts",
+      "count": 1,
+      "lines": [42]
+    },
+    {
+      "file": "packages/law-practice/use-cases/test/CandorPolicy.test.ts",
+      "count": 1,
+      "lines": [29]
+    },
+    {
+      "file": "packages/law-practice/use-cases/test/LegalPositionRelatorPolicy.test.ts",
+      "count": 1,
+      "lines": [36]
+    },
+    {
+      "file": "packages/law-practice/use-cases/test/PatentClaimCandidate.test.ts",
+      "count": 1,
+      "lines": [5]
+    },
+    {
+      "file": "packages/law-practice/use-cases/test/SchemaParity.test.ts",
+      "count": 1,
+      "lines": [23]
+    },
+    {
+      "file": "packages/law-practice/use-cases/test/TaggedError.equivalence.test.ts",
+      "count": 1,
+      "lines": [6]
+    },
+    {
+      "file": "packages/ontology/client/test/Session.atoms.test.ts",
+      "count": 1,
+      "lines": [40]
+    },
+    {
+      "file": "packages/ontology/client/test/TaggedError.equivalence.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/ontology/client/test/auto-open.test.ts",
+      "count": 1,
+      "lines": [20]
+    },
+    {
+      "file": "packages/ontology/client/test/browser/graph-renderer-toggle.test.ts",
+      "count": 1,
+      "lines": [25]
+    },
+    {
+      "file": "packages/ontology/client/test/failure-messages.test.ts",
+      "count": 1,
+      "lines": [10]
+    },
+    {
+      "file": "packages/ontology/client/test/graph-centrality.test.ts",
+      "count": 1,
+      "lines": [7]
+    },
+    {
+      "file": "packages/ontology/client/test/graph-labels.test.ts",
+      "count": 1,
+      "lines": [7]
+    },
+    {
+      "file": "packages/ontology/client/test/inspector-actions.test.ts",
+      "count": 1,
+      "lines": [25]
+    },
+    {
+      "file": "packages/ontology/client/test/stale-read.test.ts",
+      "count": 1,
+      "lines": [19]
+    },
+    {
+      "file": "packages/ontology/client/test/workbench-state-lifetime.test.ts",
+      "count": 1,
+      "lines": [11]
+    },
+    {
+      "file": "packages/ontology/client/test/worker-wire.test.ts",
+      "count": 1,
+      "lines": [16]
+    },
+    {
+      "file": "packages/ontology/config/test/Config.test.ts",
+      "count": 1,
+      "lines": [10]
+    },
+    {
+      "file": "packages/ontology/domain/test/Session.test.ts",
+      "count": 1,
+      "lines": [16]
+    },
+    {
+      "file": "packages/ontology/domain/test/TaggedError.equivalence.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/ontology/server/test/OntoauthorMatCompetency.test.ts",
+      "count": 1,
+      "lines": [26]
+    },
+    {
+      "file": "packages/ontology/server/test/OntologyPublishTools.test.ts",
+      "count": 1,
+      "lines": [15]
+    },
+    {
+      "file": "packages/ontology/server/test/OntologyTools.test.ts",
+      "count": 1,
+      "lines": [19]
+    },
+    {
+      "file": "packages/ontology/server/test/SessionServer.test.ts",
+      "count": 1,
+      "lines": [32]
+    },
+    {
+      "file": "packages/ontology/ui/test/Session.workbench.test.ts",
+      "count": 1,
+      "lines": [19]
+    },
+    {
+      "file": "packages/ontology/use-cases/test/BrowserWorkerImportGraph.test.ts",
+      "count": 1,
+      "lines": [20]
+    },
+    {
+      "file": "packages/ontology/use-cases/test/GraphLayout.test.ts",
+      "count": 1,
+      "lines": [11]
+    },
+    {
+      "file": "packages/ontology/use-cases/test/PizzaTutorial.e2e.test.ts",
+      "count": 1,
+      "lines": [14]
+    },
+    {
+      "file": "packages/ontology/use-cases/test/SchemaParity.test.ts",
+      "count": 1,
+      "lines": [28]
+    },
+    {
+      "file": "packages/ontology/use-cases/test/Session.test.ts",
+      "count": 1,
+      "lines": [61]
+    },
+    {
+      "file": "packages/ontology/use-cases/test/Session.validation.test.ts",
+      "count": 1,
+      "lines": [42]
+    },
+    {
+      "file": "packages/ontology/use-cases/test/TaggedError.equivalence.test.ts",
+      "count": 1,
+      "lines": [21]
+    },
+    {
+      "file": "packages/ontology/use-cases/test/WorkerImportGraph.test.ts",
+      "count": 1,
+      "lines": [1]
+    },
+    {
+      "file": "packages/shared/domain/test/EntityKernel.test.ts",
+      "count": 1,
+      "lines": [16]
+    },
+    {
+      "file": "packages/shared/domain/test/IdentityNamespaces.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/shared/domain/test/LocalDate.test.ts",
+      "count": 1,
+      "lines": [29]
+    },
+    {
+      "file": "packages/shared/domain/test/OnePasswordReference.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/shared/domain/test/Organization.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/shared/domain/test/SchemaParity.test.ts",
+      "count": 1,
+      "lines": [15]
+    },
+    {
+      "file": "packages/shared/domain/test/TaggedError.equivalence.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/shared/domain/test/UserMembership.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/shared/tables/test/OrganizationTable.test.ts",
+      "count": 1,
+      "lines": [5]
+    },
+    {
+      "file": "packages/shared/use-cases/test/PromotionGate.test.ts",
+      "count": 1,
+      "lines": [10]
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/TaggedErrors.equivalence.test.ts",
+      "count": 1,
+      "lines": [19]
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/agent-effectiveness-laws.test.ts",
+      "count": 1,
+      "lines": [11]
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/agent-effectiveness.test.ts",
+      "count": 1,
+      "lines": [36]
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/archive.test.ts",
+      "count": 1,
+      "lines": [6]
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/circuit-breaker.test.ts",
+      "count": 1,
+      "lines": [12]
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/config-snapshot-bounds.test.ts",
+      "count": 1,
+      "lines": [15]
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/data-root.test.ts",
+      "count": 1,
+      "lines": [15]
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/duckdb.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/eventlog-proof.test.ts",
+      "count": 1,
+      "lines": [1]
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/file-inventory.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/forwarder.test.ts",
+      "count": 1,
+      "lines": [7]
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/hook-pulse-writer.test.ts",
+      "count": 1,
+      "lines": [24]
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/hook-pulse.test.ts",
+      "count": 1,
+      "lines": [19]
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/identity-registry.test.ts",
+      "count": 1,
+      "lines": [17]
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/ingest.test.ts",
+      "count": 1,
+      "lines": [100]
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/install.test.ts",
+      "count": 1,
+      "lines": [15]
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/mirror.test.ts",
+      "count": 1,
+      "lines": [10]
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/otlp.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/privacy.test.ts",
+      "count": 1,
+      "lines": [9]
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/retention.test.ts",
+      "count": 1,
+      "lines": [14]
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/scorecard.test.ts",
+      "count": 1,
+      "lines": [16]
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/sequence-break.test.ts",
+      "count": 1,
+      "lines": [21]
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/session-lease.test.ts",
+      "count": 1,
+      "lines": [10]
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/source-discovery.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/telemetry-v2-store.test.ts",
+      "count": 1,
+      "lines": [15]
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/telemetry-v2.test.ts",
+      "count": 1,
+      "lines": [16]
+    },
+    {
+      "file": "packages/tooling/library/ai-sync/test/AiSync.equivalence.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/tooling/library/ai-sync/test/ai-sync.test.ts",
+      "count": 1,
+      "lines": [37]
+    },
+    {
+      "file": "packages/tooling/library/codegen-kit/test/CodegenKit.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/test/ActionEvent.pointer-cancel.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/test/ClockCorrelator.test.ts",
+      "count": 1,
+      "lines": [11]
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/test/Collector.test.ts",
+      "count": 1,
+      "lines": [18]
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/test/ExtractionPlanner.test.ts",
+      "count": 1,
+      "lines": [27]
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/test/QaCapture.equivalence.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/test/QaCapture.models.test.ts",
+      "count": 1,
+      "lines": [42]
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/test/SessionStore.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/test/Witness.service.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/test/integration/ClockCorrelator.integration.test.ts",
+      "count": 1,
+      "lines": [5]
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/Dependencies.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/DependencyIndex.test.ts",
+      "count": 1,
+      "lines": [5]
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/FsUtils.test.ts",
+      "count": 1,
+      "lines": [5]
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/Graph.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/JSDoc.model.test.ts",
+      "count": 1,
+      "lines": [8]
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/JSDocTagDefinition.golden.test.ts",
+      "count": 1,
+      "lines": [5]
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/Root.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/TSMorph.model.test.ts",
+      "count": 1,
+      "lines": [58]
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/TSMorph.service.test.ts",
+      "count": 1,
+      "lines": [20]
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/TSMorph.shared.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/TaggedErrors.equivalence.test.ts",
+      "count": 1,
+      "lines": [17]
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/TsConfig.test.ts",
+      "count": 1,
+      "lines": [6]
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/UniqueDeps.test.ts",
+      "count": 1,
+      "lines": [6]
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/Workspaces.test.ts",
+      "count": 1,
+      "lines": [10]
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/errors/errors.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/integration/monorepo.test.ts",
+      "count": 1,
+      "lines": [19]
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/schemas/BiomeJson.test.ts",
+      "count": 1,
+      "lines": [6]
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/schemas/DocgenConfig.test.ts",
+      "count": 1,
+      "lines": [6]
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/schemas/PackageJson.test.ts",
+      "count": 1,
+      "lines": [15]
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/schemas/TSConfig.test.ts",
+      "count": 1,
+      "lines": [12]
+    },
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/test/oxlint-sources.ts",
+      "count": 1,
+      "lines": [282]
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/EffectLawsAllowlistSchemas.test.ts",
+      "count": 1,
+      "lines": [7]
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/NextConfig.model.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/NoNativeRuntimeHotspots.test.ts",
+      "count": 1,
+      "lines": [7]
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/SharedNextConfig.model.test.ts",
+      "count": 1,
+      "lines": [16]
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/effect-first-regressions.test.ts",
+      "count": 1,
+      "lines": [6]
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/effect-steering-guidance.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/test/ConformanceLedger.test.ts",
+      "count": 1,
+      "lines": [9]
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/test/Entity.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/test/Layer.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/test/Schema.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/test/SqlTest.equivalence.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/test/SqlTest.offline.test.ts",
+      "count": 1,
+      "lines": [13]
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/test/SqlTest.test.ts",
+      "count": 1,
+      "lines": [21]
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/test/SystemTemp.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/test/integration/SqlTest.pglite.test.ts",
+      "count": 1,
+      "lines": [12]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/agent-effectiveness-command.test.ts",
+      "count": 1,
+      "lines": [12]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/agent-effectiveness-eval-scorer.test.ts",
+      "count": 1,
+      "lines": [13]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/ai-metrics-command.test.ts",
+      "count": 1,
+      "lines": [17]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/architecture-operation-plan.test.ts",
+      "count": 1,
+      "lines": [18]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/artifacts-io.test.ts",
+      "count": 1,
+      "lines": [13]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/changeset-graph.test.ts",
+      "count": 1,
+      "lines": [11]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/changeset-status.test.ts",
+      "count": 1,
+      "lines": [14]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/ci-lane-timings.test.ts",
+      "count": 1,
+      "lines": [27]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/ci-lane.test.ts",
+      "count": 1,
+      "lines": [27]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/ci-runner-security.test.ts",
+      "count": 1,
+      "lines": [5]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/cli-json-printer.test.ts",
+      "count": 1,
+      "lines": [11]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/cli-stdin.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/codex-findings-csv.test.ts",
+      "count": 1,
+      "lines": [9]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/codex-findings-normalize.test.ts",
+      "count": 1,
+      "lines": [11]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/codex-findings-packet.test.ts",
+      "count": 1,
+      "lines": [12]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/codex-findings-refresh.test.ts",
+      "count": 1,
+      "lines": [23]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/codex-findings-scan.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/codex-findings-write.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/commitlint-config.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/corpus-command.test.ts",
+      "count": 1,
+      "lines": [48]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/corpus-preservation.test.ts",
+      "count": 1,
+      "lines": [43]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/coverage-turbo-inputs.test.ts",
+      "count": 1,
+      "lines": [7]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/create-package-identity-template.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/directory-handle.test.ts",
+      "count": 1,
+      "lines": [10]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/docgen-stall-watchdog.test.ts",
+      "count": 1,
+      "lines": [7]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/docgen.test.ts",
+      "count": 1,
+      "lines": [52]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/doctest-lane.test.ts",
+      "count": 1,
+      "lines": [1]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/doctest.test.ts",
+      "count": 1,
+      "lines": [13]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/flake-quarantine.test.ts",
+      "count": 1,
+      "lines": [15]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/goals-command.test.ts",
+      "count": 1,
+      "lines": [18]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/goals-manifest-capabilities.test.ts",
+      "count": 1,
+      "lines": [13]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/goals-packet-convention-migration.test.ts",
+      "count": 1,
+      "lines": [33]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/jsdoc-migrate.test.ts",
+      "count": 1,
+      "lines": [21]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/knowledge-refs.test.ts",
+      "count": 1,
+      "lines": [18]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/knowledge-semantic-delta.test.ts",
+      "count": 1,
+      "lines": [28]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/lint-judge-rubric.test.ts",
+      "count": 1,
+      "lines": [11]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/lint-security.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/lint-subcommand-allowlist.test.ts",
+      "count": 1,
+      "lines": [9]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/native-runtime.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/person-match-portability.test.ts",
+      "count": 1,
+      "lines": [12]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/process-attachment.test.ts",
+      "count": 1,
+      "lines": [5]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/process-identity.test.ts",
+      "count": 1,
+      "lines": [14]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/proof-digest.test.ts",
+      "count": 1,
+      "lines": [6]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/proof-fact.test.ts",
+      "count": 1,
+      "lines": [20]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/proof-ledger.test.ts",
+      "count": 1,
+      "lines": [16]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/qa-command.test.ts",
+      "count": 1,
+      "lines": [34]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/qa-judge-contract-parity.test.ts",
+      "count": 1,
+      "lines": [60]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/qa-judge-skill.test.ts",
+      "count": 1,
+      "lines": [6]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/qa-pure.test.ts",
+      "count": 1,
+      "lines": [87]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/qa-round-pipeline.test.ts",
+      "count": 1,
+      "lines": [43]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/quality-scheduler-degraded-inputs.test.ts",
+      "count": 1,
+      "lines": [12]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/quality-scheduler-drift.test.ts",
+      "count": 1,
+      "lines": [18]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/quality-scheduler.test.ts",
+      "count": 1,
+      "lines": [65]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/quality-tasks.test.ts",
+      "count": 1,
+      "lines": [137]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/quality-tmpfs-render.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/ratchet-diff.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/research-command.test.ts",
+      "count": 1,
+      "lines": [12]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/residue-reap.test.ts",
+      "count": 1,
+      "lines": [10]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/restoration-archive-coverage.test.ts",
+      "count": 1,
+      "lines": [12]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/restoration-transformations-coverage.test.ts",
+      "count": 1,
+      "lines": [27]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/run-scope.test.ts",
+      "count": 1,
+      "lines": [10]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/runners-bake.test.ts",
+      "count": 1,
+      "lines": [28]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/runtime-root.test.ts",
+      "count": 1,
+      "lines": [12]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/schema-catalog.test.ts",
+      "count": 1,
+      "lines": [6]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/schema-topology.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/setup-effect-ref.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/shared-internals.test.ts",
+      "count": 1,
+      "lines": [57]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/skills-provenance.test.ts",
+      "count": 1,
+      "lines": [33]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/step-capture-lifecycle.test.ts",
+      "count": 1,
+      "lines": [14]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/step-git-exec.test.ts",
+      "count": 1,
+      "lines": [28]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/sync-data-to-ts.test.ts",
+      "count": 1,
+      "lines": [36]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/tagged-error-equivalence.test.ts",
+      "count": 1,
+      "lines": [84]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/test-tsgo-turbo-inputs.test.ts",
+      "count": 1,
+      "lines": [7]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/tmpfs-reap.test.ts",
+      "count": 1,
+      "lines": [10]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/tsconfig-sync.test.ts",
+      "count": 1,
+      "lines": [10]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/turbo-cache.test.ts",
+      "count": 1,
+      "lines": [19]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/version-sync-effect.test.ts",
+      "count": 1,
+      "lines": [20]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/worktree-command.test.ts",
+      "count": 1,
+      "lines": [38]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/worktree-fleet-scan.test.ts",
+      "count": 1,
+      "lines": [10]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/worktree-fleet.test.ts",
+      "count": 1,
+      "lines": [16]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/worktree-reap.test.ts",
+      "count": 1,
+      "lines": [17]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-ack.test.ts",
+      "count": 1,
+      "lines": [18]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-command-wiring.test.ts",
+      "count": 1,
+      "lines": [5]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-fallow-self-heal.test.ts",
+      "count": 1,
+      "lines": [17]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-gate-staleness.test.ts",
+      "count": 1,
+      "lines": [16]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-inbox-porcelain.test.ts",
+      "count": 1,
+      "lines": [34]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-inbox-view.test.ts",
+      "count": 1,
+      "lines": [24]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-inbox.test.ts",
+      "count": 1,
+      "lines": [30]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-merge-ready-coherence.test.ts",
+      "count": 1,
+      "lines": [7]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-merged-preview.test.ts",
+      "count": 1,
+      "lines": [18]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts",
+      "count": 1,
+      "lines": [17]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-monitor-comment-stream.test.ts",
+      "count": 1,
+      "lines": [18]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-monitor-loop.test.ts",
+      "count": 1,
+      "lines": [25]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-monitor-phase-empty.test.ts",
+      "count": 1,
+      "lines": [11]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-portfolio-index-guard.test.ts",
+      "count": 1,
+      "lines": [13]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-pr-provenance-boundary.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-pr-provenance.test.ts",
+      "count": 1,
+      "lines": [12]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-pr-session-registry.test.ts",
+      "count": 1,
+      "lines": [8]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-provenance-footer.test.ts",
+      "count": 1,
+      "lines": [24]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-remediation.test.ts",
+      "count": 1,
+      "lines": [29]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-reply-engine.test.ts",
+      "count": 1,
+      "lines": [30]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-reply-schemas.test.ts",
+      "count": 1,
+      "lines": [10]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-resume.test.ts",
+      "count": 1,
+      "lines": [17]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-review-fixes.test.ts",
+      "count": 1,
+      "lines": [22]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-status-triage.test.ts",
+      "count": 1,
+      "lines": [20]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-sweep-plan.test.ts",
+      "count": 1,
+      "lines": [27]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-sweep-schemas.test.ts",
+      "count": 1,
+      "lines": [14]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-verdict-json.test.ts",
+      "count": 1,
+      "lines": [10]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-watch-mode.test.ts",
+      "count": 1,
+      "lines": [22]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-watch-stream.test.ts",
+      "count": 1,
+      "lines": [21]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet.test.ts",
+      "count": 1,
+      "lines": [139]
+    },
+    {
+      "file": "packages/tooling/tool/docgen/test/Checker.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "packages/tooling/tool/docgen/test/Configuration.test.ts",
+      "count": 1,
+      "lines": [5]
+    },
+    {
+      "file": "packages/tooling/tool/docgen/test/Core.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/tooling/tool/docgen/test/Domain.equivalence.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "packages/tooling/tool/docgen/test/Parser.test.ts",
+      "count": 1,
+      "lines": [6]
+    },
+    {
+      "file": "packages/tooling/tool/docgen/test/SchemaParity.test.ts",
+      "count": 1,
+      "lines": [7]
+    },
+    {
+      "file": "packages/tooling/tool/docgen/test/version.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/workspace/domain/test/EntityMaterialization.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "packages/workspace/domain/test/WorkspaceDomain.test.ts",
+      "count": 1,
+      "lines": [23]
+    },
+    {
+      "file": "packages/workspace/server/test/ThreadStore.test.ts",
+      "count": 1,
+      "lines": [10]
+    },
+    {
+      "file": "packages/workspace/server/test/WorkspaceSourceTextResolver.test.ts",
+      "count": 1,
+      "lines": [25]
+    },
+    {
+      "file": "packages/workspace/server/test/WorkspaceVaultStore.test.ts",
+      "count": 1,
+      "lines": [7]
+    },
+    {
+      "file": "packages/workspace/server/test/integration/ThreadStoreDrizzleRepository.pglite.test.ts",
+      "count": 1,
+      "lines": [13]
+    },
+    {
+      "file": "packages/workspace/tables/test/WorkspaceTables.test.ts",
+      "count": 1,
+      "lines": [15]
+    },
+    {
+      "file": "packages/workspace/use-cases/test/TaggedError.equivalence.test.ts",
+      "count": 1,
+      "lines": [12]
+    },
+    {
+      "file": "packages/workspace/use-cases/test/ThreadTimeline.test.ts",
+      "count": 1,
+      "lines": [6]
+    }
+  ],
+  "limitations": []
+}

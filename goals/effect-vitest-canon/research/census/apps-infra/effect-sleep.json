@@ -1,0 +1,44 @@
+{
+  "class": "effect-sleep",
+  "method": "ts-morph syntax-only exact CallExpression Effect.sleep(...)",
+  "fileCount": 7,
+  "occurrenceCount": 11,
+  "files": [
+    {
+      "file": "apps/labs/semantica/test/ProviderCache.test.ts",
+      "count": 4,
+      "lines": [78, 326, 332, 697]
+    },
+    {
+      "file": "apps/professional-desktop/test/browser-failure-atoms.test.ts",
+      "count": 1,
+      "lines": [34]
+    },
+    {
+      "file": "apps/professional-desktop/test/composer-atom-lifetime.test.ts",
+      "count": 1,
+      "lines": [40]
+    },
+    {
+      "file": "apps/professional-desktop/test/composer-dispatch-confirm.test.ts",
+      "count": 2,
+      "lines": [38, 142]
+    },
+    {
+      "file": "apps/professional-desktop/test/dock-shell.test.tsx",
+      "count": 1,
+      "lines": [116]
+    },
+    {
+      "file": "apps/professional-desktop/test/intake-atoms.test.ts",
+      "count": 1,
+      "lines": [403]
+    },
+    {
+      "file": "apps/professional-desktop/test/sync-atoms.test.ts",
+      "count": 1,
+      "lines": [109]
+    }
+  ],
+  "limitations": "Exact syntactic call identity; aliases are not counted."
+}

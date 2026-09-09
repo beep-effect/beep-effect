@@ -1,0 +1,79 @@
+{
+  "class": "EV013",
+  "method": "retry/attempt/backoff token occurrences",
+  "fileCount": 14,
+  "occurrenceCount": 31,
+  "files": [
+    {
+      "file": "apps/labs/semantica/test/ProviderCache.test.ts",
+      "count": 3,
+      "lines": [395, 397, 672]
+    },
+    {
+      "file": "apps/professional-desktop/test/browser-failure-atoms.test.ts",
+      "count": 1,
+      "lines": [21]
+    },
+    {
+      "file": "apps/professional-desktop/test/composer-atom-lifetime.test.ts",
+      "count": 1,
+      "lines": [28]
+    },
+    {
+      "file": "apps/professional-desktop/test/composer-dispatch-confirm.test.ts",
+      "count": 1,
+      "lines": [63]
+    },
+    {
+      "file": "apps/professional-desktop/test/intake-atoms.test.ts",
+      "count": 1,
+      "lines": [79]
+    },
+    {
+      "file": "apps/professional-desktop/test/integration/execution-authority.pglite.test.ts",
+      "count": 1,
+      "lines": [54]
+    },
+    {
+      "file": "apps/professional-desktop/test/integration/ontology-mcp-http.test.ts",
+      "count": 2,
+      "lines": [455, 457]
+    },
+    {
+      "file": "apps/professional-desktop/test/optimistic-user-turn.test.tsx",
+      "count": 4,
+      "lines": [224, 225, 408, 437]
+    },
+    {
+      "file": "apps/professional-desktop/test/surface-boundary.test.tsx",
+      "count": 1,
+      "lines": [78]
+    },
+    {
+      "file": "apps/professional-desktop/test/sync-atoms.test.ts",
+      "count": 1,
+      "lines": [37]
+    },
+    {
+      "file": "apps/professional-desktop/test/sync-retry.test.tsx",
+      "count": 6,
+      "lines": [15, 27, 28, 31, 32, 32]
+    },
+    {
+      "file": "apps/professional-desktop/test/vault-sync-disconnected-note.test.tsx",
+      "count": 7,
+      "lines": [73, 100, 105, 119, 158, 158, 159]
+    },
+    {
+      "file": "apps/professional-desktop/test/youtube-watch-opener.test.tsx",
+      "count": 1,
+      "lines": [100]
+    },
+    {
+      "file": "infra/test/OpenClaw.test.ts",
+      "count": 1,
+      "lines": [632]
+    }
+  ],
+  "limitations": "Broad judgment candidate. Tokens may name product behavior, assertions, fixtures, or prose instead of hand-rolled retry loops."
+}

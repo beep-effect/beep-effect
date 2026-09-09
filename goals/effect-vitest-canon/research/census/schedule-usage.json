@@ -1,0 +1,45 @@
+{
+  "class": "schedule-usage",
+  "method": "Merged lane reconnaissance; see methodsByLane.",
+  "methodsByLane": {
+    "packages": "line-oriented lexical scan over live in-scope package files"
+  },
+  "scope": "tests",
+  "fileCount": 6,
+  "occurrenceCount": 11,
+  "files": [
+    {
+      "file": "packages/ontology/client/test/Session.atoms.test.ts",
+      "count": 2,
+      "lines": [65]
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/sequence-break.test.ts",
+      "count": 2,
+      "lines": [292]
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/test/integration/SqlTest.pglite.test.ts",
+      "count": 2,
+      "lines": [37, 38]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/ai-metrics-command.test.ts",
+      "count": 3,
+      "lines": [282, 284]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/quality-scheduler.test.ts",
+      "count": 1,
+      "lines": [2550]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-monitor-comment-stream.test.ts",
+      "count": 1,
+      "lines": [116]
+    }
+  ],
+  "limitations": [
+    "Only one lane emitted this auxiliary class; use the common grouped class or wrapper name totals for full-repository comparisons."
+  ]
+}

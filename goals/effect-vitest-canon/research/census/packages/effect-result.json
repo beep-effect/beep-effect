@@ -1,0 +1,74 @@
+{
+  "class": "effect-result",
+  "method": "line-oriented lexical scan over live in-scope package files",
+  "fileCount": 13,
+  "occurrenceCount": 28,
+  "files": [
+    {
+      "file": "packages/documents/server/test/DocumentIntake.test.ts",
+      "count": 2,
+      "lines": [121, 168]
+    },
+    {
+      "file": "packages/drivers/tika/test/integration/Tika.server.live.test.ts",
+      "count": 1,
+      "lines": [189]
+    },
+    {
+      "file": "packages/epistemic/server/test/integration/ContradictionTriage.pg.test.ts",
+      "count": 3,
+      "lines": [353, 524, 525]
+    },
+    {
+      "file": "packages/epistemic/server/test/integration/EdgeAuthority.pg.test.ts",
+      "count": 2,
+      "lines": [205]
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/test/PathSafety.test.ts",
+      "count": 8,
+      "lines": [33, 50, 80, 100, 189, 192, 242, 245]
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/test/SourceText.test.ts",
+      "count": 1,
+      "lines": [83]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/corpus-command.test.ts",
+      "count": 1,
+      "lines": [1741]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/docgen-stall-watchdog.test.ts",
+      "count": 3,
+      "lines": [42, 60, 84]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/lab-identity-segment.test.ts",
+      "count": 2,
+      "lines": [221, 243]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/residue-reap.test.ts",
+      "count": 2,
+      "lines": [515, 517]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/skills-command.test.ts",
+      "count": 1,
+      "lines": [262]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/worktree-reap.test.ts",
+      "count": 1,
+      "lines": [495]
+    },
+    {
+      "file": "packages/workspace/server/test/WorkspaceVaultStore.test.ts",
+      "count": 1,
+      "lines": [77]
+    }
+  ],
+  "limitations": []
+}

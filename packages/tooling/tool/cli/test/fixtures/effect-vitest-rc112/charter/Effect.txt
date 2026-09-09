@@ -1,0 +1,86 @@
+// Exact declaration excerpts from packages/effect/src/Effect.ts at
+// @effect/vitest@4.0.0-rc.112 (MIT; see ../LICENSE).
+// Pinned full-file SHA-256: e26177a8df298e27b0a1f14194beff152711b97c118b6e1a31d61e444f85fbaf
+
+// @effect-vitest-anchor Effect.timeoutOrElse 4631 4643
+export const timeoutOrElse: {
+  <A2, E2, R2>(options: {
+    readonly duration: Duration.Input
+    readonly orElse: LazyArg<Effect<A2, E2, R2>>
+  }): <A, E, R>(self: Effect<A, E, R>) => Effect<A | A2, E | E2, R | R2>
+  <A, E, R, A2, E2, R2>(
+    self: Effect<A, E, R>,
+    options: {
+      readonly duration: Duration.Input
+      readonly orElse: LazyArg<Effect<A2, E2, R2>>
+    }
+  ): Effect<A | A2, E | E2, R | R2>
+} = internal.timeoutOrElse
+
+// @effect-vitest-anchor Effect.raceFirst 4894 4912
+export const raceFirst: {
+  <A2, E2, R2>(
+    that: Effect<A2, E2, R2>,
+    options?: {
+      readonly onWinner?: (
+        options: { readonly fiber: Fiber<any, any>; readonly index: number; readonly parentFiber: Fiber<any, any> }
+      ) => void
+    }
+  ): <A, E, R>(self: Effect<A, E, R>) => Effect<A | A2, E | E2, R | R2>
+  <A, E, R, A2, E2, R2>(
+    self: Effect<A, E, R>,
+    that: Effect<A2, E2, R2>,
+    options?: {
+      readonly onWinner?: (
+        options: { readonly fiber: Fiber<any, any>; readonly index: number; readonly parentFiber: Fiber<any, any> }
+      ) => void
+    }
+  ): Effect<A | A2, E | E2, R | R2>
+} = internal.raceFirst
+
+// @effect-vitest-anchor Effect.scopedWith 6510 6512
+export const scopedWith: <A, E, R>(
+  f: (scope: Scope) => Effect<A, E, R>
+) => Effect<A, E, R> = internal.scopedWith
+
+// @effect-vitest-anchor Effect.fnUntraced 13481 13481
+export const fnUntraced: fn.Untraced = internal.fnUntraced
+
+// @effect-vitest-anchor Effect.annotateLogs 13944 13980
+export const annotateLogs = dual<
+  {
+    (
+      key: string,
+      value: unknown
+    ): <A, E, R>(effect: Effect<A, E, R>) => Effect<A, E, R>
+    (
+      values: Record<string, unknown>
+    ): <A, E, R>(effect: Effect<A, E, R>) => Effect<A, E, R>
+  },
+  {
+    <A, E, R>(
+      effect: Effect<A, E, R>,
+      key: string,
+      value: unknown
+    ): Effect<A, E, R>
+    <A, E, R>(
+      effect: Effect<A, E, R>,
+      values: Record<string, unknown>
+    ): Effect<A, E, R>
+  }
+>(
+  (args) => isEffect(args[0]),
+  <A, E, R>(
+    effect: Effect<A, E, R>,
+    ...args: [Record<string, unknown>] | [key: string, value: unknown]
+  ): Effect<A, E, R> =>
+    internal.updateService(effect, CurrentLogAnnotations, (annotations) => {
+      const newAnnotations = args.length === 1 ? { ...annotations, ...args[0] } : { ...annotations }
+      if (args.length === 1) {
+        return newAnnotations
+      } else {
+        InternalRecord.assignProperty(newAnnotations, args[0], args[1])
+      }
+      return newAnnotations
+    })
+)

@@ -1,0 +1,131 @@
+{
+  "class": "it-layer",
+  "method": "line-oriented lexical scan over live in-scope package files",
+  "fileCount": 24,
+  "occurrenceCount": 48,
+  "files": [
+    {
+      "file": "packages/agents/server/test/AnthropicTurnKernel.test.ts",
+      "count": 1,
+      "lines": [121]
+    },
+    {
+      "file": "packages/agents/use-cases/test/AssistantTurn.test.ts",
+      "count": 1,
+      "lines": [143]
+    },
+    {
+      "file": "packages/drivers/acp/test/integration/client.integration.test.ts",
+      "count": 1,
+      "lines": [34]
+    },
+    {
+      "file": "packages/drivers/acp/test/protocol.test.ts",
+      "count": 1,
+      "lines": [210]
+    },
+    {
+      "file": "packages/drivers/pacer/test/Pacer.test.ts",
+      "count": 14,
+      "lines": [
+        145, 164, 185, 213, 240, 255, 267, 280, 294, 308, 323, 340, 357, 373
+      ]
+    },
+    {
+      "file": "packages/epistemic/server/test/BoundedShaclValidator.test.ts",
+      "count": 1,
+      "lines": [39]
+    },
+    {
+      "file": "packages/epistemic/server/test/EpistemicServer.test.ts",
+      "count": 1,
+      "lines": [26]
+    },
+    {
+      "file": "packages/epistemic/server/test/IdentityShaclProjection.e2e.test.ts",
+      "count": 1,
+      "lines": [32]
+    },
+    {
+      "file": "packages/epistemic/use-cases/test/ClaimDisposition.test.ts",
+      "count": 1,
+      "lines": [73]
+    },
+    {
+      "file": "packages/epistemic/use-cases/test/EpistemicUseCases.test.ts",
+      "count": 1,
+      "lines": [70]
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/CauseRedaction.test.ts",
+      "count": 3,
+      "lines": [103, 126, 142]
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/Logging.test.ts",
+      "count": 2,
+      "lines": [69, 84]
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/PhaseProfiler.test.ts",
+      "count": 1,
+      "lines": [104]
+    },
+    {
+      "file": "packages/foundation/capability/semantic-web/test/ServicesAndSurface.test.ts",
+      "count": 1,
+      "lines": [229]
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/DockEngine.test.ts",
+      "count": 1,
+      "lines": [94]
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/DockPolicy.test.ts",
+      "count": 2,
+      "lines": [94, 106]
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/Floating.test.ts",
+      "count": 1,
+      "lines": [65]
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/GestureParity.test.ts",
+      "count": 1,
+      "lines": [60]
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/HiddenMaximize.test.ts",
+      "count": 1,
+      "lines": [60]
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/PanelGroupUpdates.test.ts",
+      "count": 1,
+      "lines": [56]
+    },
+    {
+      "file": "packages/law-practice/server/test/LawPracticeServer.test.ts",
+      "count": 4,
+      "lines": [74, 134, 160, 169]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/native-runtime.test.ts",
+      "count": 1,
+      "lines": [28]
+    },
+    {
+      "file": "packages/tooling/tool/docgen/test/Checker.test.ts",
+      "count": 5,
+      "lines": [65, 90, 160, 190, 205]
+    },
+    {
+      "file": "packages/tooling/tool/docgen/test/Configuration.test.ts",
+      "count": 1,
+      "lines": [173]
+    }
+  ],
+  "limitations": []
+}

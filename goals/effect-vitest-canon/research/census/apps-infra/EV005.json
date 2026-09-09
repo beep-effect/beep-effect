@@ -1,0 +1,19 @@
+{
+  "class": "EV005",
+  "method": "exact Effect.result CallExpressions",
+  "fileCount": 2,
+  "occurrenceCount": 4,
+  "files": [
+    {
+      "file": "apps/practice-kg-mcp/test/Host.test.ts",
+      "count": 2,
+      "lines": [71, 74]
+    },
+    {
+      "file": "apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts",
+      "count": 2,
+      "lines": [250, 290]
+    }
+  ],
+  "limitations": "Candidate census only: whether each result is used to assert an outcome requires syntax/semantic review."
+}

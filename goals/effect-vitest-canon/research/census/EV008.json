@@ -1,0 +1,67 @@
+{
+  "class": "EV008",
+  "method": "Merged lane reconnaissance; see methodsByLane.",
+  "methodsByLane": {
+    "packages": "Effect.sleep or Schedule usage in files with it.effect and without any TestClock.adjust/setTime",
+    "apps-infra": "Effect.sleep or Schedule in it.effect files lacking TestClock.adjust anywhere in the file"
+  },
+  "scope": "tests",
+  "fileCount": 10,
+  "occurrenceCount": 18,
+  "files": [
+    {
+      "file": "apps/professional-desktop/test/dock-shell.test.tsx",
+      "count": 1,
+      "lines": [116]
+    },
+    {
+      "file": "packages/agents/client/test/run-turn-reconciliation.test.ts",
+      "count": 2,
+      "lines": [122, 539]
+    },
+    {
+      "file": "packages/drivers/duckdb/test/DuckDb.service.test.ts",
+      "count": 1,
+      "lines": [644]
+    },
+    {
+      "file": "packages/drivers/libpff/test/Libpff.pffexport.test.ts",
+      "count": 1,
+      "lines": [1047]
+    },
+    {
+      "file": "packages/ontology/client/test/Session.atoms.test.ts",
+      "count": 2,
+      "lines": [65]
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/sequence-break.test.ts",
+      "count": 2,
+      "lines": [292]
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/test/integration/SqlTest.pglite.test.ts",
+      "count": 2,
+      "lines": [37, 38]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/ai-metrics-command.test.ts",
+      "count": 3,
+      "lines": [282, 284]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/quality-tasks.test.ts",
+      "count": 3,
+      "lines": [1010, 1208, 1258]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-monitor-comment-stream.test.ts",
+      "count": 1,
+      "lines": [116]
+    }
+  ],
+  "limitations": [
+    "Candidate-only file-level heuristic; callback boundaries, live-clock wrappers, and event-driven uses are unresolved.",
+    "Heuristic at file granularity. The sleep/Schedule may be outside the effect test or legitimately live, and an adjustment in another callback would suppress candidates."
+  ]
+}

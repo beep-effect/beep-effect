@@ -1,0 +1,319 @@
+{
+  "class": "effect-vitest-imports",
+  "method": "global regular expression: /(?:from\\s*[\"']@effect\\/vitest[\"']|import\\s*[\"']@effect\\/vitest[\"'])/g",
+  "fileCount": 62,
+  "occurrenceCount": 62,
+  "files": [
+    {
+      "file": "apps/architecture-lab-proof/test/ArchitectureLabProof.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "apps/labs/api-docs/test/Catalog.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "apps/labs/api-docs/test/Docs.routes.test.ts",
+      "count": 1,
+      "lines": [1]
+    },
+    {
+      "file": "apps/labs/api-docs/test/health.test.ts",
+      "count": 1,
+      "lines": [1]
+    },
+    {
+      "file": "apps/labs/ciops/test/health.test.ts",
+      "count": 1,
+      "lines": [1]
+    },
+    {
+      "file": "apps/labs/ciops/test/projection.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "apps/labs/lejeune-bolt-workbench/test/Bundle.test.ts",
+      "count": 1,
+      "lines": [7]
+    },
+    {
+      "file": "apps/labs/lejeune-bolt-workbench/test/BundleBuilder.test.ts",
+      "count": 1,
+      "lines": [7]
+    },
+    {
+      "file": "apps/oip-web/test/TaggedErrors.equivalence.test.ts",
+      "count": 1,
+      "lines": [1]
+    },
+    {
+      "file": "apps/practice-kg-mcp/test/Host.test.ts",
+      "count": 1,
+      "lines": [11]
+    },
+    {
+      "file": "apps/practice-kg-mcp/test/TaggedError.equivalence.test.ts",
+      "count": 1,
+      "lines": [1]
+    },
+    {
+      "file": "apps/professional-desktop/test/ContradictionQaSeed.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "apps/professional-desktop/test/TaggedErrors.equivalence.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "apps/professional-desktop/test/UsagePricing.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "apps/professional-desktop/test/browser-failure-atoms.test.ts",
+      "count": 1,
+      "lines": [1]
+    },
+    {
+      "file": "apps/professional-desktop/test/chat-contract.test.ts",
+      "count": 1,
+      "lines": [17]
+    },
+    {
+      "file": "apps/professional-desktop/test/chat-ui.test.tsx",
+      "count": 1,
+      "lines": [18]
+    },
+    {
+      "file": "apps/professional-desktop/test/code-block.test.tsx",
+      "count": 1,
+      "lines": [5]
+    },
+    {
+      "file": "apps/professional-desktop/test/composer-atom-lifetime.test.ts",
+      "count": 1,
+      "lines": [5]
+    },
+    {
+      "file": "apps/professional-desktop/test/composer-dispatch-confirm.test.ts",
+      "count": 1,
+      "lines": [14]
+    },
+    {
+      "file": "apps/professional-desktop/test/composer-policy.test.ts",
+      "count": 1,
+      "lines": [6]
+    },
+    {
+      "file": "apps/professional-desktop/test/composer-send-lifetime.test.tsx",
+      "count": 1,
+      "lines": [6]
+    },
+    {
+      "file": "apps/professional-desktop/test/contradiction-sidecar-registration.test.ts",
+      "count": 1,
+      "lines": [38]
+    },
+    {
+      "file": "apps/professional-desktop/test/cosmos-spike-runtime.test.tsx",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "apps/professional-desktop/test/dock-shell.test.tsx",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "apps/professional-desktop/test/editor-contract-hardening.test.tsx",
+      "count": 1,
+      "lines": [24]
+    },
+    {
+      "file": "apps/professional-desktop/test/editor-proof-panel.test.tsx",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "apps/professional-desktop/test/fps-atoms.test.ts",
+      "count": 1,
+      "lines": [1]
+    },
+    {
+      "file": "apps/professional-desktop/test/intake-atoms.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "apps/professional-desktop/test/intake-refusal.test.ts",
+      "count": 1,
+      "lines": [1]
+    },
+    {
+      "file": "apps/professional-desktop/test/integration/Pglite.equivalence.test.ts",
+      "count": 1,
+      "lines": [1]
+    },
+    {
+      "file": "apps/professional-desktop/test/integration/PgliteDataDirCompatibility.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "apps/professional-desktop/test/integration/UsageRecordSink.pglite.test.ts",
+      "count": 1,
+      "lines": [8]
+    },
+    {
+      "file": "apps/professional-desktop/test/integration/chat-persist.pglite.test.ts",
+      "count": 1,
+      "lines": [36]
+    },
+    {
+      "file": "apps/professional-desktop/test/integration/chat-real-anthropic.e2e.test.ts",
+      "count": 1,
+      "lines": [29]
+    },
+    {
+      "file": "apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts",
+      "count": 1,
+      "lines": [29]
+    },
+    {
+      "file": "apps/professional-desktop/test/integration/contradiction-sidecar-contract.test.ts",
+      "count": 1,
+      "lines": [15]
+    },
+    {
+      "file": "apps/professional-desktop/test/integration/execution-authority.pglite.test.ts",
+      "count": 1,
+      "lines": [26]
+    },
+    {
+      "file": "apps/professional-desktop/test/integration/ontology-mcp-http.test.ts",
+      "count": 1,
+      "lines": [23]
+    },
+    {
+      "file": "apps/professional-desktop/test/integration/sidecar-ipc-stdio.test.ts",
+      "count": 1,
+      "lines": [20]
+    },
+    {
+      "file": "apps/professional-desktop/test/integration/sidecar-smoke.test.ts",
+      "count": 1,
+      "lines": [26]
+    },
+    {
+      "file": "apps/professional-desktop/test/mermaid-viewer.test.tsx",
+      "count": 1,
+      "lines": [6]
+    },
+    {
+      "file": "apps/professional-desktop/test/ontology-sidecar-registration.test.ts",
+      "count": 1,
+      "lines": [19]
+    },
+    {
+      "file": "apps/professional-desktop/test/ontology-workspace-seed.test.ts",
+      "count": 1,
+      "lines": [9]
+    },
+    {
+      "file": "apps/professional-desktop/test/optimistic-user-turn.test.tsx",
+      "count": 1,
+      "lines": [19]
+    },
+    {
+      "file": "apps/professional-desktop/test/renderer-observability-config.test.ts",
+      "count": 1,
+      "lines": [1]
+    },
+    {
+      "file": "apps/professional-desktop/test/schema-parity.test.ts",
+      "count": 1,
+      "lines": [12]
+    },
+    {
+      "file": "apps/professional-desktop/test/sidebar-layout.test.ts",
+      "count": 1,
+      "lines": [1]
+    },
+    {
+      "file": "apps/professional-desktop/test/spike-schema.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "apps/professional-desktop/test/surface-boundary.test.tsx",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "apps/professional-desktop/test/sync-atoms.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "apps/professional-desktop/test/sync-retry.test.tsx",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "apps/professional-desktop/test/table-layout.test.tsx",
+      "count": 1,
+      "lines": [5]
+    },
+    {
+      "file": "apps/professional-desktop/test/tailwind-sources.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "apps/professional-desktop/test/tauri-ipc-socket.test.ts",
+      "count": 1,
+      "lines": [1]
+    },
+    {
+      "file": "apps/professional-desktop/test/theme-atoms.test.tsx",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "apps/professional-desktop/test/vault-directory-picker.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "apps/professional-desktop/test/viewer-encoding.test.tsx",
+      "count": 1,
+      "lines": [5]
+    },
+    {
+      "file": "apps/professional-desktop/test/youtube-watch-opener.test.tsx",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "infra/test/CiFleetController.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "infra/test/CiTurboCache.test.ts",
+      "count": 1,
+      "lines": [2]
+    },
+    {
+      "file": "infra/test/OpenClaw.test.ts",
+      "count": 1,
+      "lines": [39]
+    }
+  ],
+  "limitations": "Verified textual occurrence census over the live scoped files; comments and strings can produce false positives, and multiline syntax can affect precision."
+}

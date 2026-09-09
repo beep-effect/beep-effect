@@ -1,0 +1,24 @@
+{
+  "method": "Compared rg --files --hidden with rg --files --hidden --no-ignore after applying only the D9 path exclusions and the same file-kind predicate.",
+  "d9ExcludedSegments": [
+    "node_modules",
+    ".claude",
+    "scratchpad",
+    "goals",
+    "explorations",
+    "docs"
+  ],
+  "confirmedIgnoredArtifactPatterns": [
+    "coverage/",
+    "dist/",
+    "build/",
+    ".turbo",
+    "**/.next/",
+    "**/src-tauri/target/"
+  ],
+  "defaultEligibleCount": 106,
+  "noIgnoreEligibleCount": 106,
+  "ignoredOrGeneratedEligible": [],
+  "sourcePathsUnderBuildGeneratedOrVendorSegments": [],
+  "limitations": "The artifact patterns are confirmed from root/app/infra ignore configuration. An empty difference means no additional eligible test/support file is currently present under ignored output paths; it is not a claim that such outputs can never exist."
+}

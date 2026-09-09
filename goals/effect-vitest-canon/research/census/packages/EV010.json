@@ -1,0 +1,346 @@
+{
+  "class": "EV010",
+  "method": "raw filesystem/platform filesystem/tmpdir lexical candidates",
+  "fileCount": 67,
+  "occurrenceCount": 220,
+  "files": [
+    {
+      "file": "packages/documents/server/test/DocumentIntake.test.ts",
+      "count": 3,
+      "lines": [11, 23]
+    },
+    {
+      "file": "packages/documents/server/test/FilingDecisionLlm.test.ts",
+      "count": 3,
+      "lines": [15, 152]
+    },
+    {
+      "file": "packages/documents/server/test/VaultSyncDrift.test.ts",
+      "count": 3,
+      "lines": [19, 29]
+    },
+    {
+      "file": "packages/documents/server/test/VaultSyncEngine.test.ts",
+      "count": 4,
+      "lines": [24, 56, 78]
+    },
+    {
+      "file": "packages/documents/server/test/VaultSyncReviewRegressions.test.ts",
+      "count": 3,
+      "lines": [23, 33]
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/test/Streaming.functions.test.ts",
+      "count": 3,
+      "lines": [9, 18]
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/test/integration/Streaming.test.ts",
+      "count": 3,
+      "lines": [3, 15]
+    },
+    {
+      "file": "packages/drivers/pglite/test/integration/PgliteClient.persistent.test.ts",
+      "count": 3,
+      "lines": [2, 17]
+    },
+    {
+      "file": "packages/ecosystem/effect-drizzle/test/integration/sqlite-live.test.ts",
+      "count": 3,
+      "lines": [4, 200]
+    },
+    {
+      "file": "packages/epistemic/server/test/integration/ContradictionTriage.p0.pglite.test.ts",
+      "count": 3,
+      "lines": [14, 27]
+    },
+    {
+      "file": "packages/epistemic/server/test/integration/EdgeAuthority.restart.pglite.test.ts",
+      "count": 3,
+      "lines": [27, 39]
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/test/PathSafety.test.ts",
+      "count": 3,
+      "lines": [7, 14]
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/test/SemanticFoundation.test.ts",
+      "count": 5,
+      "lines": [27, 432, 494, 518]
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.codec.test.ts",
+      "count": 3,
+      "lines": [39, 172]
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.mapping.test.ts",
+      "count": 3,
+      "lines": [15, 37]
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/integration/Pandoc.integration.test.ts",
+      "count": 3,
+      "lines": [3, 17]
+    },
+    {
+      "file": "packages/foundation/modeling/utils/test/FileSystem.test.ts",
+      "count": 2,
+      "lines": [11, 113]
+    },
+    {
+      "file": "packages/foundation/modeling/utils/test/Glob.test.ts",
+      "count": 1,
+      "lines": [38]
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/DependencyIndex.test.ts",
+      "count": 3,
+      "lines": [3, 11]
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/Root.test.ts",
+      "count": 3,
+      "lines": [2, 7]
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/TsConfig.test.ts",
+      "count": 3,
+      "lines": [4, 10]
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/UniqueDeps.test.ts",
+      "count": 3,
+      "lines": [4, 9]
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/Workspaces.test.ts",
+      "count": 3,
+      "lines": [8, 15]
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/integration/monorepo.test.ts",
+      "count": 3,
+      "lines": [17, 22]
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/schemas/BiomeJson.test.ts",
+      "count": 6,
+      "lines": [4, 74, 90, 92, 93]
+    },
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/test/oxlint-sources.ts",
+      "count": 2,
+      "lines": [325, 329]
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/EffectTsgoEffectFnPolicy.test.ts",
+      "count": 3,
+      "lines": [6, 19]
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/test/ConformanceLedger.test.ts",
+      "count": 3,
+      "lines": [8, 238]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/artifacts-io.test.ts",
+      "count": 3,
+      "lines": [11, 17]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/docgen.test.ts",
+      "count": 3,
+      "lines": [50, 88]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts",
+      "count": 3,
+      "lines": [9, 36]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/lint-judge-rubric.test.ts",
+      "count": 4,
+      "lines": [7, 20, 114]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/package-verify.test.ts",
+      "count": 3,
+      "lines": [25, 31]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/process-identity.test.ts",
+      "count": 4,
+      "lines": [13, 119, 137]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/proof-digest.test.ts",
+      "count": 3,
+      "lines": [4, 10]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/proof-ledger.test.ts",
+      "count": 3,
+      "lines": [14, 23]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/qa-judge-contract-parity.test.ts",
+      "count": 3,
+      "lines": [58, 68]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/qa-judge-skill.test.ts",
+      "count": 3,
+      "lines": [4, 12]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/qa-pure.test.ts",
+      "count": 3,
+      "lines": [85, 92]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/qa-round-pipeline.test.ts",
+      "count": 3,
+      "lines": [41, 51]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/quality-artifact-generators.test.ts",
+      "count": 3,
+      "lines": [9, 15]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/quality-scheduler-degraded-inputs.test.ts",
+      "count": 3,
+      "lines": [10, 78]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/quality-scheduler-drift.test.ts",
+      "count": 5,
+      "lines": [16, 59, 99, 110]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/quality-scheduler.test.ts",
+      "count": 5,
+      "lines": [63, 91, 643, 664]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/quality-tasks.test.ts",
+      "count": 3,
+      "lines": [135, 162]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/runners-bake.test.ts",
+      "count": 9,
+      "lines": [26, 40, 383, 427, 547, 574, 601, 634]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/step-capture-lifecycle.test.ts",
+      "count": 7,
+      "lines": [12, 197, 214, 254, 310, 391]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/tsconfig-sync.test.ts",
+      "count": 3,
+      "lines": [7, 19]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-ack.test.ts",
+      "count": 3,
+      "lines": [16, 32]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-artifact-writers.test.ts",
+      "count": 3,
+      "lines": [33, 46]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-inbox-porcelain.test.ts",
+      "count": 3,
+      "lines": [32, 84]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-inbox-view.test.ts",
+      "count": 3,
+      "lines": [22, 64]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-inbox.test.ts",
+      "count": 3,
+      "lines": [28, 62]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-merged-preview.test.ts",
+      "count": 3,
+      "lines": [16, 28]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts",
+      "count": 3,
+      "lines": [15, 264]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-monitor-comment-stream.test.ts",
+      "count": 3,
+      "lines": [16, 142]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-monitor-phase-empty.test.ts",
+      "count": 3,
+      "lines": [9, 18]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-portfolio-index-guard.test.ts",
+      "count": 3,
+      "lines": [11, 20]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-pr-fixtures.ts",
+      "count": 3,
+      "lines": [3, 10]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-remediation.test.ts",
+      "count": 3,
+      "lines": [27, 206]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-reply-engine.test.ts",
+      "count": 3,
+      "lines": [28, 352]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-review-fixes.test.ts",
+      "count": 3,
+      "lines": [20, 28]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-sweep-plan.test.ts",
+      "count": 3,
+      "lines": [25, 489]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-watch-mode.test.ts",
+      "count": 3,
+      "lines": [20, 179]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet.test.ts",
+      "count": 3,
+      "lines": [137, 151]
+    },
+    {
+      "file": "packages/workspace/server/test/WorkspaceSourceTextResolver.test.ts",
+      "count": 4,
+      "lines": [23, 39, 41]
+    },
+    {
+      "file": "packages/workspace/server/test/WorkspaceVaultStore.test.ts",
+      "count": 3,
+      "lines": [5, 14]
+    }
+  ],
+  "limitations": [
+    "Candidate-only: subject requirements and platform-lifecycle intent require human judgment."
+  ]
+}

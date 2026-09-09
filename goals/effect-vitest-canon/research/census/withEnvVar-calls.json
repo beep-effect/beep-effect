@@ -1,0 +1,53 @@
+{
+  "class": "withEnvVar-calls",
+  "method": "Merged lane reconnaissance; see methodsByLane.",
+  "methodsByLane": {
+    "packages": "line-oriented lexical scan over live in-scope package files"
+  },
+  "scope": "tests and support",
+  "fileCount": 6,
+  "occurrenceCount": 69,
+  "files": [
+    {
+      "file": "packages/tooling/tool/cli/test/cache-command.test.ts",
+      "count": 3,
+      "lines": [65, 68]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/ci-lane.test.ts",
+      "count": 5,
+      "lines": [859, 860, 869, 870, 878]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/docgen.test.ts",
+      "count": 2,
+      "lines": [773, 774]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/files-command.test.ts",
+      "count": 26,
+      "lines": [
+        1449, 2022, 2164, 2207, 2269, 2334, 2387, 2419, 2454, 2525, 2589, 2626,
+        2663, 2701, 2735, 2768, 2808, 2851, 2885, 2924, 2985, 3061, 3111, 3637,
+        4945, 5013
+      ]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/quality-tasks.test.ts",
+      "count": 29,
+      "lines": [
+        566, 582, 590, 609, 830, 831, 863, 864, 2704, 2705, 2732, 2733, 2759,
+        2760, 2761, 2762, 2803, 2804, 2816, 2817, 2827, 2828, 3779, 4385, 5608,
+        5609, 5622, 5623, 5664
+      ]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet.test.ts",
+      "count": 4,
+      "lines": [806, 1052, 1066, 1114]
+    }
+  ],
+  "limitations": [
+    "Only one lane emitted this auxiliary class; use the common grouped class or wrapper name totals for full-repository comparisons."
+  ]
+}

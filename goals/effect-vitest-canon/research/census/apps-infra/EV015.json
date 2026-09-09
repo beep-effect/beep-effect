@@ -1,0 +1,8 @@
+{
+  "class": "EV015",
+  "method": "TestClock.adjust in files containing it.layer",
+  "fileCount": 0,
+  "occurrenceCount": 0,
+  "files": [],
+  "limitations": "Judgment candidate: file-level co-occurrence does not prove callback nesting or whether per-test reset/excludeTestServices is already present."
+}

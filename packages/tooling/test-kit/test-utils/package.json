@@ -19,6 +19,8 @@
     "./MemoryFileSystem": "./src/MemoryFileSystem/index.ts",
     "./MemoryFileSystem/*": null,
     "./*": "./src/*.ts",
+    "./test/Vitest": "./src/test/Vitest.test-kit.ts",
+    "./test/*": null,
     "./internal/*": null
   },
   "repository": {
@@ -90,6 +92,8 @@
       "./MemoryFileSystem": "./dist/MemoryFileSystem/index.js",
       "./MemoryFileSystem/*": null,
       "./*": "./dist/*.js",
+      "./test/Vitest": null,
+      "./test/*": null,
       "./internal/*": null
     }
   },

@@ -1,0 +1,19 @@
+{
+  "class": "it-effect-prop",
+  "method": "Merged lane reconnaissance; see methodsByLane.",
+  "methodsByLane": {
+    "packages": "line-oriented lexical scan over live in-scope package files",
+    "apps-infra": "ts-morph syntax-only exact CallExpression it.effect.prop(...)"
+  },
+  "scope": "tests",
+  "fileCount": 1,
+  "occurrenceCount": 1,
+  "files": [
+    {
+      "file": "packages/foundation/capability/semantic-web/test/IdentityRdfBinding.test.ts",
+      "count": 1,
+      "lines": [162]
+    }
+  ],
+  "limitations": ["Exact syntactic call identity; aliases are not counted."]
+}

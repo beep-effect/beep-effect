@@ -1,0 +1,259 @@
+{
+  "class": "EV011",
+  "method": "plain vitest import in a file containing an effect package import",
+  "fileCount": 50,
+  "occurrenceCount": 50,
+  "files": [
+    {
+      "file": "apps/labs/semantica/test/C0Input.test.ts",
+      "count": 1,
+      "lines": [11]
+    },
+    {
+      "file": "apps/labs/semantica/test/C0Slice.test.ts",
+      "count": 1,
+      "lines": [13]
+    },
+    {
+      "file": "apps/labs/semantica/test/Canary.test.ts",
+      "count": 1,
+      "lines": [9]
+    },
+    {
+      "file": "apps/labs/semantica/test/Evaluator.test.ts",
+      "count": 1,
+      "lines": [19]
+    },
+    {
+      "file": "apps/labs/semantica/test/Extractor.test.ts",
+      "count": 1,
+      "lines": [21]
+    },
+    {
+      "file": "apps/labs/semantica/test/Fixtures.test.ts",
+      "count": 1,
+      "lines": [12]
+    },
+    {
+      "file": "apps/labs/semantica/test/Gold.test.ts",
+      "count": 1,
+      "lines": [15]
+    },
+    {
+      "file": "apps/labs/semantica/test/GoldSource.test.ts",
+      "count": 1,
+      "lines": [15]
+    },
+    {
+      "file": "apps/labs/semantica/test/Ledger.test.ts",
+      "count": 1,
+      "lines": [7]
+    },
+    {
+      "file": "apps/labs/semantica/test/Projection.test.ts",
+      "count": 1,
+      "lines": [21]
+    },
+    {
+      "file": "apps/labs/semantica/test/ProjectionExpectation.test.ts",
+      "count": 1,
+      "lines": [7]
+    },
+    {
+      "file": "apps/labs/semantica/test/ProviderCache.test.ts",
+      "count": 1,
+      "lines": [26]
+    },
+    {
+      "file": "apps/labs/semantica/test/Reasoning.test.ts",
+      "count": 1,
+      "lines": [11]
+    },
+    {
+      "file": "apps/labs/semantica/test/Schema.test.ts",
+      "count": 1,
+      "lines": [23]
+    },
+    {
+      "file": "apps/oip-web/test/oip-seo.test.ts",
+      "count": 1,
+      "lines": [5]
+    },
+    {
+      "file": "apps/oip-web/test/oip-web.test.tsx",
+      "count": 1,
+      "lines": [11]
+    },
+    {
+      "file": "apps/professional-desktop/test/browser-failure-atoms.test.ts",
+      "count": 1,
+      "lines": [9]
+    },
+    {
+      "file": "apps/professional-desktop/test/chat-ui.test.tsx",
+      "count": 1,
+      "lines": [26]
+    },
+    {
+      "file": "apps/professional-desktop/test/code-block.test.tsx",
+      "count": 1,
+      "lines": [9]
+    },
+    {
+      "file": "apps/professional-desktop/test/composer-atom-lifetime.test.ts",
+      "count": 1,
+      "lines": [13]
+    },
+    {
+      "file": "apps/professional-desktop/test/composer-dispatch-confirm.test.ts",
+      "count": 1,
+      "lines": [24]
+    },
+    {
+      "file": "apps/professional-desktop/test/composer-policy.test.ts",
+      "count": 1,
+      "lines": [9]
+    },
+    {
+      "file": "apps/professional-desktop/test/composer-send-lifetime.test.tsx",
+      "count": 1,
+      "lines": [9]
+    },
+    {
+      "file": "apps/professional-desktop/test/cosmos-spike-runtime.test.tsx",
+      "count": 1,
+      "lines": [6]
+    },
+    {
+      "file": "apps/professional-desktop/test/dock-shell.test.tsx",
+      "count": 1,
+      "lines": [8]
+    },
+    {
+      "file": "apps/professional-desktop/test/editor-contract-hardening.test.tsx",
+      "count": 1,
+      "lines": [35]
+    },
+    {
+      "file": "apps/professional-desktop/test/editor-proof-panel.test.tsx",
+      "count": 1,
+      "lines": [6]
+    },
+    {
+      "file": "apps/professional-desktop/test/failure-message.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "apps/professional-desktop/test/fps-atoms.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "apps/professional-desktop/test/intake-atoms.test.ts",
+      "count": 1,
+      "lines": [13]
+    },
+    {
+      "file": "apps/professional-desktop/test/mermaid-viewer.test.tsx",
+      "count": 1,
+      "lines": [10]
+    },
+    {
+      "file": "apps/professional-desktop/test/optimistic-user-turn.test.tsx",
+      "count": 1,
+      "lines": [26]
+    },
+    {
+      "file": "apps/professional-desktop/test/renderer-observability-config.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "apps/professional-desktop/test/rpc-session-auth.test.ts",
+      "count": 1,
+      "lines": [3]
+    },
+    {
+      "file": "apps/professional-desktop/test/surface-boundary.test.tsx",
+      "count": 1,
+      "lines": [8]
+    },
+    {
+      "file": "apps/professional-desktop/test/sync-atoms.test.ts",
+      "count": 1,
+      "lines": [14]
+    },
+    {
+      "file": "apps/professional-desktop/test/sync-retry.test.tsx",
+      "count": 1,
+      "lines": [7]
+    },
+    {
+      "file": "apps/professional-desktop/test/table-layout.test.tsx",
+      "count": 1,
+      "lines": [8]
+    },
+    {
+      "file": "apps/professional-desktop/test/tauri-ipc-socket.test.ts",
+      "count": 1,
+      "lines": [6]
+    },
+    {
+      "file": "apps/professional-desktop/test/tauri-youtube-security.test.ts",
+      "count": 1,
+      "lines": [4]
+    },
+    {
+      "file": "apps/professional-desktop/test/theme-atoms.test.tsx",
+      "count": 1,
+      "lines": [9]
+    },
+    {
+      "file": "apps/professional-desktop/test/thread-transcript-view.test.ts",
+      "count": 1,
+      "lines": [15]
+    },
+    {
+      "file": "apps/professional-desktop/test/vault-sync-disconnected-note.test.tsx",
+      "count": 1,
+      "lines": [10]
+    },
+    {
+      "file": "apps/professional-desktop/test/viewer-encoding.test.tsx",
+      "count": 1,
+      "lines": [8]
+    },
+    {
+      "file": "apps/professional-desktop/test/youtube-watch-opener.test.tsx",
+      "count": 1,
+      "lines": [6]
+    },
+    {
+      "file": "infra/test/AIMetrics.test.ts",
+      "count": 1,
+      "lines": [13]
+    },
+    {
+      "file": "infra/test/CiRunners.test.ts",
+      "count": 1,
+      "lines": [20]
+    },
+    {
+      "file": "infra/test/OipWeb.test.ts",
+      "count": 1,
+      "lines": [13]
+    },
+    {
+      "file": "infra/test/Storybook.test.ts",
+      "count": 1,
+      "lines": [12]
+    },
+    {
+      "file": "infra/test/schemaParity.ts",
+      "count": 1,
+      "lines": [4]
+    }
+  ],
+  "limitations": "Verified file-level import co-occurrence. It does not prove imported Effect APIs are used by a test callback."
+}

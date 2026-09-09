@@ -1,0 +1,29 @@
+{
+  "class": "EV002",
+  "method": "exact Effect.provide CallExpressions co-occurring in files containing exact it.effect or it.live calls",
+  "fileCount": 4,
+  "occurrenceCount": 5,
+  "files": [
+    {
+      "file": "apps/architecture-lab-proof/test/ArchitectureLabProof.test.ts",
+      "count": 1,
+      "lines": [13]
+    },
+    {
+      "file": "apps/professional-desktop/test/integration/PgliteDataDirCompatibility.test.ts",
+      "count": 1,
+      "lines": [28]
+    },
+    {
+      "file": "apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts",
+      "count": 1,
+      "lines": [58]
+    },
+    {
+      "file": "apps/professional-desktop/test/integration/sidecar-ipc-stdio.test.ts",
+      "count": 2,
+      "lines": [158, 164]
+    }
+  ],
+  "limitations": "Semantic candidate only: exact Effect.provide calls exclude Effect.provideService, but file-level co-occurrence does not prove callback containment or distinguish non-stub from Layer.succeed/Layer.mock stubs."
+}

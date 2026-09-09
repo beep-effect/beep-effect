@@ -1,0 +1,162 @@
+{
+  "class": "withTempWorkingDirectory-calls",
+  "method": "Merged lane reconnaissance; see methodsByLane.",
+  "methodsByLane": {
+    "packages": "line-oriented lexical scan over live in-scope package files"
+  },
+  "scope": "tests and support",
+  "fileCount": 26,
+  "occurrenceCount": 221,
+  "files": [
+    {
+      "file": "packages/tooling/tool/cli/test/codex-findings-refresh.test.ts",
+      "count": 1,
+      "lines": [71]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/codex-findings-write.test.ts",
+      "count": 1,
+      "lines": [23]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/delete-package-labs.test.ts",
+      "count": 4,
+      "lines": [404, 415, 429, 459]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/delete-package.test.ts",
+      "count": 6,
+      "lines": [151, 223, 329, 358, 380, 414]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/ecosystem-polarity.test.ts",
+      "count": 1,
+      "lines": [32]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/effect-fn.test.ts",
+      "count": 4,
+      "lines": [81, 170, 233, 270]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/effect-imports.test.ts",
+      "count": 22,
+      "lines": [
+        148, 208, 228, 257, 280, 307, 336, 382, 436, 465, 500, 527, 568, 594,
+        621, 648, 684, 722, 756, 794, 834, 894
+      ]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/explore-check.test.ts",
+      "count": 8,
+      "lines": [47, 65, 155, 202, 240, 293, 333, 363]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/frozen-grant-set.test.ts",
+      "count": 10,
+      "lines": [68, 106, 140, 173, 205, 238, 271, 304, 335, 368]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/goals-bootstrap-plan.test.ts",
+      "count": 6,
+      "lines": [306, 352, 369, 424, 470, 527]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/goals-doctor-path-security.test.ts",
+      "count": 1,
+      "lines": [26]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/goals-doctor.test.ts",
+      "count": 4,
+      "lines": [70, 86, 102, 118]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/goals-manifest-capabilities.test.ts",
+      "count": 1,
+      "lines": [97]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/goals-packet-convention-migration.test.ts",
+      "count": 16,
+      "lines": [
+        1815, 1834, 1862, 1885, 1900, 1922, 1969, 2105, 2297, 2315, 2327, 2353,
+        2412, 2484, 2545, 2601
+      ]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/goals-set-risk-tier.test.ts",
+      "count": 6,
+      "lines": [74, 115, 153, 175, 196, 248]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/goals-set-status-stream.test.ts",
+      "count": 11,
+      "lines": [74, 112, 135, 186, 219, 262, 307, 358, 384, 431, 469]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/identity-registration-removal.test.ts",
+      "count": 3,
+      "lines": [46, 130, 179]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/lab-identity-segment.test.ts",
+      "count": 6,
+      "lines": [149, 179, 210, 235, 256, 289]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/labs-list.test.ts",
+      "count": 1,
+      "lines": [26]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/lint-command.test.ts",
+      "count": 57,
+      "lines": [
+        142, 174, 194, 219, 283, 316, 336, 373, 415, 450, 472, 508, 530, 560,
+        601, 639, 666, 698, 730, 767, 791, 828, 851, 890, 921, 941, 973, 996,
+        1056, 1090, 1110, 1146, 1169, 1204, 1331, 1380, 1423, 1480, 1529, 1572,
+        1595, 1626, 1659, 1692, 1725, 1813, 1840, 1873, 1907, 1940, 1971, 2013,
+        2048, 2088, 2131, 2173, 2208
+      ]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/lint-identity-registry.test.ts",
+      "count": 14,
+      "lines": [
+        130, 159, 183, 232, 257, 302, 327, 351, 379, 412, 445, 473, 511, 542
+      ]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/native-runtime.test.ts",
+      "count": 7,
+      "lines": [32, 62, 89, 118, 142, 166, 202]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/reflection-lint.test.ts",
+      "count": 10,
+      "lines": [112, 126, 139, 152, 168, 182, 193, 210, 229, 252]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/roadmap-refs.test.ts",
+      "count": 2,
+      "lines": [64, 87]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/schema-catalog.test.ts",
+      "count": 3,
+      "lines": [103, 124, 153]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/terse-effect.test.ts",
+      "count": 16,
+      "lines": [
+        112, 147, 170, 192, 239, 267, 290, 313, 339, 382, 417, 450, 496, 540,
+        590, 629
+      ]
+    }
+  ],
+  "limitations": [
+    "Only one lane emitted this auxiliary class; use the common grouped class or wrapper name totals for full-repository comparisons."
+  ]
+}

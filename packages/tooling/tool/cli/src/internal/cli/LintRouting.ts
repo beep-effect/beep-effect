@@ -13,6 +13,7 @@ const LINT_POLICY_SUBCOMMANDS = subcommands(
   "circular",
   "deprecated-apis",
   "ecosystem-polarity",
+  "effect-vitest",
   "goal-packets",
   "identity-registry",
   "judge-rubric",

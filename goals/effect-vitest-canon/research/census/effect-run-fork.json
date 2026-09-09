@@ -1,0 +1,13 @@
+{
+  "class": "effect-run-fork",
+  "method": "Merged lane reconnaissance; see methodsByLane.",
+  "methodsByLane": {
+    "packages": "line-oriented lexical scan over live in-scope package files",
+    "apps-infra": "ts-morph syntax-only exact CallExpression Effect.runFork(...)"
+  },
+  "scope": "tests",
+  "fileCount": 0,
+  "occurrenceCount": 0,
+  "files": [],
+  "limitations": ["Exact syntactic call identity; aliases are not counted."]
+}

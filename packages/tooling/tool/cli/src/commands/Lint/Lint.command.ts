@@ -30,6 +30,7 @@ import { runToExit } from "../../internal/process/StepExec.ts";
 import { runGoalsDoctor } from "../Goals/Doctor.ts";
 import { runRootLintPolicyTask } from "../Quality/index.ts";
 import { lintEcosystemPolarityCommand } from "./EcosystemPolarity.ts";
+import { lintEffectVitestCommand } from "./EffectVitest.ts";
 import { lintIdentityRegistryCommand } from "./IdentityRegistry.ts";
 import { lintJudgeRubricCommand } from "./JudgeRubric.ts";
 import { LintCircularAnalysisError, LintFileDiscoveryError } from "./Lint.errors.ts";
@@ -1052,6 +1053,7 @@ const lintSubcommands = [
   lintJsdocCommand,
   lintLawsCommand,
   lintEcosystemPolarityCommand,
+  lintEffectVitestCommand,
   lintGoalPacketsCommand,
   lintIdentityRegistryCommand,
   lintJudgeRubricCommand,

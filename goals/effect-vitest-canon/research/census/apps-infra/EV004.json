@@ -1,0 +1,29 @@
+{
+  "class": "EV004",
+  "method": "Effect.scoped co-occurring in files containing it.effect or it.live",
+  "fileCount": 4,
+  "occurrenceCount": 7,
+  "files": [
+    {
+      "file": "apps/architecture-lab-proof/test/ArchitectureLabProof.test.ts",
+      "count": 1,
+      "lines": [13]
+    },
+    {
+      "file": "apps/professional-desktop/test/integration/sidecar-ipc-stdio.test.ts",
+      "count": 1,
+      "lines": [161]
+    },
+    {
+      "file": "apps/professional-desktop/test/tauri-ipc-socket.test.ts",
+      "count": 4,
+      "lines": [17, 35, 59, 81]
+    },
+    {
+      "file": "infra/test/OpenClaw.test.ts",
+      "count": 1,
+      "lines": [106]
+    }
+  ],
+  "limitations": "Candidate census only: file-level co-occurrence does not prove the call is inside the runner callback."
+}

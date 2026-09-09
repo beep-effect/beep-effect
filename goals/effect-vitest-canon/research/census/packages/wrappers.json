@@ -1,0 +1,3725 @@
+{
+  "method": "syntax-only declaration discovery with string/comment-aware balanced function braces and const statement boundaries; no type checker, getType, or tsconfig project",
+  "definitionCount": 136,
+  "definitions": [
+    {
+      "name": "withStatus",
+      "file": "packages/documents/use-cases/test/SyncOperation.test.ts",
+      "line": 79,
+      "endLine": 82,
+      "body": "const withStatus = (\n  operation: DomainSyncOperation.SyncOperation,\n  status: DomainSyncOperation.SyncOperationStatus\n): DomainSyncOperation.SyncOperation => decodeSyncOperation({ ...encodeSyncOperation(operation), status });",
+      "resourcesAcquired": [],
+      "layersBuilt": [],
+      "candidateKind": "pure-data-helper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/drivers/duckdb/test/DuckDb.service.test.ts",
+      "line": 32,
+      "endLine": 44,
+      "body": "const withTempDirectory = <A, E, R>(use: (tmpDir: string) => Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      return yield* fs.makeTempDirectory();\n    }),\n    use,\n    (tmpDir) =>\n      Effect.gen(function* () {\n        const fs = yield* FileSystem.FileSystem;\n        yield* fs.remove(tmpDir, { recursive: true, force: true });\n      })\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withNativeDuckDbConnection",
+      "file": "packages/drivers/duckdb/test/DuckDb.service.test.ts",
+      "line": 46,
+      "endLine": 61,
+      "body": "const withNativeDuckDbConnection = <A, E, R>(\n  use: (connection: DuckDBConnection) => Effect.Effect<A, E, R>\n): Effect.Effect<A, E, R> =>\n  Effect.acquireUseRelease(\n    Effect.promise(() =>\n      DuckDBInstance.create(\":memory:\").then((instance) =>\n        instance.connect().then((connection) => ({ connection, instance }))\n      )\n    ),\n    ({ connection }) => use(connection),\n    ({ connection, instance }) =>\n      Effect.sync(() => {\n        connection.closeSync();\n        instance.closeSync();\n      })\n  );",
+      "resourcesAcquired": ["acquireUseRelease"],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withDuckDbInstanceCreate",
+      "file": "packages/drivers/duckdb/test/DuckDb.service.test.ts",
+      "line": 63,
+      "endLine": 77,
+      "body": "const withDuckDbInstanceCreate =\n  (create: typeof DuckDBInstance.create) =>\n  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>\n    Effect.acquireUseRelease(\n      Effect.sync(() => {\n        const original = DuckDBInstance.create;\n        DuckDBInstance.create = create;\n        return original;\n      }),\n      () => effect,\n      (original) =>\n        Effect.sync(() => {\n          DuckDBInstance.create = original;\n        })\n    );",
+      "resourcesAcquired": ["acquireUseRelease"],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/drivers/exiftool/test/Exiftool.service.test.ts",
+      "line": 95,
+      "endLine": 110,
+      "body": "const withTempDirectory = <A, E, R>(use: (tmpDir: string) => Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      return yield* fs.makeTempDirectory();\n    }),\n    use,\n    (tmpDir) =>\n      Effect.gen(function* () {\n        const fs = yield* FileSystem.FileSystem;\n        yield* fs.remove(tmpDir, {\n          recursive: true,\n          force: true,\n        });\n      })\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/drivers/ffmpeg/test/FFmpeg.capture.failures.test.ts",
+      "line": 175,
+      "endLine": 190,
+      "body": "const withTempDirectory = <A2, E, R>(use: (tmpDir: string) => Effect.Effect<A2, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      return yield* fs.makeTempDirectory();\n    }),\n    use,\n    (tmpDir) =>\n      Effect.gen(function* () {\n        const fs = yield* FileSystem.FileSystem;\n        yield* fs.remove(tmpDir, {\n          recursive: true,\n          force: true,\n        });\n      })\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/drivers/ffmpeg/test/FFmpeg.capture.test.ts",
+      "line": 153,
+      "endLine": 168,
+      "body": "const withTempDirectory = <A2, E, R>(use: (tmpDir: string) => Effect.Effect<A2, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      return yield* fs.makeTempDirectory();\n    }),\n    use,\n    (tmpDir) =>\n      Effect.gen(function* () {\n        const fs = yield* FileSystem.FileSystem;\n        yield* fs.remove(tmpDir, {\n          recursive: true,\n          force: true,\n        });\n      })\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/drivers/ffmpeg/test/FFmpeg.service.test.ts",
+      "line": 125,
+      "endLine": 140,
+      "body": "const withTempDirectory = <A, E, R>(use: (tmpDir: string) => Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      return yield* fs.makeTempDirectory();\n    }),\n    use,\n    (tmpDir) =>\n      Effect.gen(function* () {\n        const fs = yield* FileSystem.FileSystem;\n        yield* fs.remove(tmpDir, {\n          recursive: true,\n          force: true,\n        });\n      })\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/drivers/ffmpeg/test/integration/FFmpeg.capture.integration.test.ts",
+      "line": 115,
+      "endLine": 130,
+      "body": "const withTempDirectory = <A2, E, R>(use: (tmpDir: string) => Effect.Effect<A2, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      return yield* fs.makeTempDirectory();\n    }),\n    use,\n    (tmpDir) =>\n      Effect.gen(function* () {\n        const fs = yield* FileSystem.FileSystem;\n        yield* fs.remove(tmpDir, {\n          recursive: true,\n          force: true,\n        });\n      })\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempFixture",
+      "file": "packages/drivers/nlp-mcp/test/integration/Streaming.test.ts",
+      "line": 20,
+      "endLine": 41,
+      "body": "const withTempFixture = <A, E, R>(\n  name: string,\n  content: string,\n  use: (file: string) => Effect.Effect<A, E, R>\n): Effect.Effect<A, E | PlatformError, R | FileSystem.FileSystem | Path.Path> =>\n  Effect.gen(function* () {\n    const fs = yield* FileSystem.FileSystem;\n    const path = yield* Path.Path;\n    return yield* Effect.acquireUseRelease(\n      fs.makeTempDirectory(),\n      (dir) =>\n        Effect.gen(function* () {\n          const file = path.join(dir, name);\n          yield* fs.writeFileString(file, content);\n          // Configure the fixture's temp directory as the streaming tools' only\n          // allowed read root, so the path-safety guard is exercised against a\n          // legitimate in-root read rather than blocking the test's temp file.\n          return yield* use(file).pipe(Effect.provideService(StreamingAllowedRoots, [dir]));\n        }),\n      (dir) => Effect.orDie(fs.remove(dir, { force: true, recursive: true }))\n    );\n  });",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["Effect.provideService"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withObs",
+      "file": "packages/drivers/obs/test/Obs.service.test.ts",
+      "line": 59,
+      "endLine": 68,
+      "body": "const withObs = <A2, E>(\n  handlers: Partial<Record<ObsRequestType, StubHandler>>,\n  use: (obs: ObsShape, calls: Effect.Effect<ReadonlyArray<RecordedRequest>>) => Effect.Effect<A2, E>\n): Effect.Effect<A2, E, Scope.Scope> =>\n  Effect.gen(function* () {\n    const stub = yield* makeStubProtocol(respondWith(handlers));\n    const context = yield* Layer.build(Obs.layer.pipe(Layer.provide(Layer.succeed(ObsProtocol)(stub.protocol))));\n    const obs = yield* Effect.service(Obs).pipe(Effect.provide(context));\n    return yield* use(obs, stub.calls);\n  });",
+      "resourcesAcquired": ["Scope"],
+      "layersBuilt": ["Effect.provide", "Layer.provide", "Layer.succeed"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withLevel",
+      "file": "packages/foundation/capability/chalk/test/index.test.ts",
+      "line": 26,
+      "endLine": 35,
+      "body": "const withLevel = (instance: ChalkInstance, level: ColorSupportLevelType, run: () => void): void => {\n  const previousLevel = instance.level;\n\n  try {\n    instance.level = level;\n    run();\n  } finally {\n    instance.level = previousLevel;\n  }\n};",
+      "resourcesAcquired": [],
+      "layersBuilt": [],
+      "candidateKind": "pure-data-helper-candidate"
+    },
+    {
+      "name": "withMcpClient",
+      "file": "packages/foundation/capability/mcp-kit/test/SanitizedToolkit.test.ts",
+      "line": 111,
+      "endLine": 111,
+      "body": "const withMcpClient = (clientId: number) => Effect.provideService(McpServerClient, makeStubMcpClient(clientId));",
+      "resourcesAcquired": [],
+      "layersBuilt": ["Effect.provideService"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withSessionHeader",
+      "file": "packages/foundation/capability/mcp-kit/test/SanitizedToolkit.test.ts",
+      "line": 113,
+      "endLine": 119,
+      "body": "const withSessionHeader = (sessionId: string) =>\n  Effect.provideService(\n    HttpServerRequest.HttpServerRequest,\n    HttpServerRequest.fromWeb(\n      new Request(\"http://localhost/mcp\", { headers: { \"mcp-session-id\": sessionId }, method: \"POST\" })\n    )\n  );",
+      "resourcesAcquired": [],
+      "layersBuilt": ["Effect.provideService"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withFileSystem",
+      "file": "packages/foundation/modeling/utils/test/Glob.test.ts",
+      "line": 31,
+      "endLine": 32,
+      "body": "const withFileSystem = <E>(use: (fs: FileSystem.FileSystem) => Effect.Effect<void, E>): TestEffect<void> =>\n  provideScopedLayer(NodeServices.layer)(FileSystem.FileSystem.pipe(Effect.flatMap(use), Effect.orDie));",
+      "resourcesAcquired": ["FileSystem"],
+      "layersBuilt": ["provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withBunGlobDisabled",
+      "file": "packages/foundation/modeling/utils/test/Glob.test.ts",
+      "line": 103,
+      "endLine": 123,
+      "body": "const withBunGlobDisabled = (effect: GlobProgram) => {\n  const bunRef = globalThis.Bun;\n\n  return Match.value(bunRef === undefined).pipe(\n    Match.when(true, () => effect),\n    Match.orElse(() =>\n      Effect.acquireUseRelease(\n        Effect.try({\n          try: () => disableBunGlob(bunRef),\n          catch: toGlobMutationError(\"disable\"),\n        }),\n        () => effect,\n        (originalGlob) =>\n          Effect.try({\n            try: () => restoreBunGlob(bunRef, originalGlob),\n            catch: toGlobMutationError(\"restore\"),\n          })\n      )\n    )\n  );\n};",
+      "resourcesAcquired": ["acquireUseRelease"],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withBunServices",
+      "file": "packages/foundation/ui-system/brand/test/assets.test.ts",
+      "line": 10,
+      "endLine": 11,
+      "body": "const withBunServices = <A, E>(effect: Effect.Effect<A, E, FileSystem.FileSystem | Path.Path>) =>\n  Effect.scoped(Layer.build(BunServices.layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));",
+      "resourcesAcquired": ["FileSystem"],
+      "layersBuilt": ["Effect.provide"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withDuckDb",
+      "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
+      "line": 166,
+      "endLine": 169,
+      "body": "const withDuckDb =\n  (databasePath: string) =>\n  <A, E, R>(effect: Effect.Effect<A, E, R>) =>\n    effect.pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath }))));",
+      "resourcesAcquired": [],
+      "layersBuilt": ["makeNodeLayer", "provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withDisposition",
+      "file": "packages/law-practice/use-cases/test/CandorPolicy.test.ts",
+      "line": 357,
+      "endLine": 366,
+      "body": "const withDisposition = (options: DispositionOptions, extra?: DispositionOptions) =>\n  Effect.fnUntraced(function* () {\n    const a = yield* observation(\"a\", TEXT_A);\n    const first = yield* dispositionFixture(10, targets(1, a), options);\n    const dispositions =\n      extra === undefined\n        ? [first]\n        : [first, yield* dispositionFixture(11, targets(1, a), { ...extra, supersedes: 10 })];\n    return { dispositions, events: [yield* eventFixture(1, a)], sources: [sourceEntry(a)] } satisfies Fixture;\n  });",
+      "resourcesAcquired": [],
+      "layersBuilt": [],
+      "candidateKind": "pure-data-helper-candidate"
+    },
+    {
+      "name": "withEventOptions",
+      "file": "packages/law-practice/use-cases/test/CandorPolicy.test.ts",
+      "line": 407,
+      "endLine": 415,
+      "body": "const withEventOptions = (options: EventOptions) =>\n  Effect.fnUntraced(function* () {\n    const a = yield* observation(\"a\", TEXT_A);\n    return {\n      dispositions: [yield* dispositionFixture(10, targets(1, a))],\n      events: [yield* eventFixture(1, a, options)],\n      sources: [sourceEntry(a)],\n    } satisfies Fixture;\n  });",
+      "resourcesAcquired": [],
+      "layersBuilt": [],
+      "candidateKind": "pure-data-helper-candidate"
+    },
+    {
+      "name": "withToolkit",
+      "file": "packages/ontology/server/test/OntologyTools.test.ts",
+      "line": 58,
+      "endLine": 77,
+      "body": "const withToolkit = <A2, E>(\n  run: (\n    tools: OntologyToolServiceShape,\n    path: OntologyFilePath,\n    root: string\n  ) => Effect.Effect<A2, E, FileSystem.FileSystem | Path.Path>\n) =>\n  Effect.fnUntraced(function* () {\n    return yield* Effect.gen(function* () {\n      const fileSystem = yield* FileSystem.FileSystem;\n      const platformPath = yield* Path.Path;\n      const root = yield* fileSystem.makeTempDirectoryScoped({ prefix: \"beep-ontology-tools-\" });\n      yield* fileSystem.writeFileString(platformPath.join(root, \"ontology.ttl\"), fixtureSource);\n      const path = yield* S.decodeEffect(OntologyFilePath)(\"ontology.ttl\");\n      return yield* Effect.gen(function* () {\n        const tools = yield* OntologyToolService;\n        return yield* run(tools, path, root);\n      }).pipe(provideScopedLayer(toolLayerForRoot(root)));\n    }).pipe(provideScopedLayer(NodeServices.layer));\n  });",
+      "resourcesAcquired": ["FileSystem"],
+      "layersBuilt": ["provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/library/ai-metrics/test/agent-effectiveness.test.ts",
+      "line": 50,
+      "endLine": 65,
+      "body": "const withTempDirectory = <A, E, R>(use: (tmpDir: string) => Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      return yield* fs.makeTempDirectory({\n        directory: privacySafeSystemTempRoot(),\n        prefix: \"beep-agent-effectiveness-\",\n      });\n    }),\n    use,\n    (tmpDir) =>\n      Effect.gen(function* () {\n        const fs = yield* FileSystem.FileSystem;\n        yield* fs.remove(tmpDir, { recursive: true, force: true });\n      })\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/library/ai-metrics/test/config-snapshot-bounds.test.ts",
+      "line": 69,
+      "endLine": 74,
+      "body": "const withTempDirectory = <A2, E, R>(use: (tmpDir: string) => Effect.Effect<A2, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.flatMap(FileSystem.FileSystem, (fs) => fs.makeTempDirectory()),\n    use,\n    (tmpDir) => Effect.flatMap(FileSystem.FileSystem, (fs) => fs.remove(tmpDir, { recursive: true, force: true }))\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/library/ai-metrics/test/duckdb.test.ts",
+      "line": 12,
+      "endLine": 17,
+      "body": "const withTempDirectory = <A, E, R>(use: (tmpDir: string) => Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.flatMap(FileSystem.FileSystem, (fs) => fs.makeTempDirectory()),\n    use,\n    (tmpDir) => Effect.flatMap(FileSystem.FileSystem, (fs) => fs.remove(tmpDir, { recursive: true, force: true }))\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/library/ai-metrics/test/file-inventory.test.ts",
+      "line": 7,
+      "endLine": 12,
+      "body": "const withTempDirectory = <A2, E, R>(use: (tmpDir: string) => Effect.Effect<A2, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.flatMap(FileSystem.FileSystem, (fs) => fs.makeTempDirectory()),\n    use,\n    (tmpDir) => Effect.flatMap(FileSystem.FileSystem, (fs) => fs.remove(tmpDir, { recursive: true, force: true }))\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withSaltEnv",
+      "file": "packages/tooling/library/ai-metrics/test/hook-pulse-writer.test.ts",
+      "line": 84,
+      "endLine": 85,
+      "body": "const withSaltEnv = <A, E, R>(env: Record<string, string>, effect: Effect.Effect<A, E, R>) =>\n  Effect.provideService(effect, ConfigProvider.ConfigProvider, ConfigProvider.fromEnv({ env }));",
+      "resourcesAcquired": [],
+      "layersBuilt": ["Effect.provideService"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withSaltEnv",
+      "file": "packages/tooling/library/ai-metrics/test/hook-pulse.test.ts",
+      "line": 262,
+      "endLine": 263,
+      "body": "const withSaltEnv = <A, E, R>(env: Record<string, string>, effect: Effect.Effect<A, E, R>) =>\n  Effect.provideService(effect, ConfigProvider.ConfigProvider, ConfigProvider.fromEnv({ env }));",
+      "resourcesAcquired": [],
+      "layersBuilt": ["Effect.provideService"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/library/ai-metrics/test/identity-registry.test.ts",
+      "line": 32,
+      "endLine": 37,
+      "body": "const withTempDirectory = <A2, E, R>(use: (tmpDir: string) => Effect.Effect<A2, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.flatMap(FileSystem.FileSystem, (fs) => fs.makeTempDirectory()),\n    use,\n    (tmpDir) => Effect.flatMap(FileSystem.FileSystem, (fs) => fs.remove(tmpDir, { recursive: true, force: true }))\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/library/ai-metrics/test/ingest.test.ts",
+      "line": 127,
+      "endLine": 139,
+      "body": "const withTempDirectory = <A, E, R>(use: (tmpDir: string) => Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      return yield* fs.makeTempDirectory();\n    }),\n    use,\n    (tmpDir) =>\n      Effect.gen(function* () {\n        const fs = yield* FileSystem.FileSystem;\n        yield* fs.remove(tmpDir, { recursive: true, force: true });\n      })\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/library/ai-metrics/test/retention.test.ts",
+      "line": 32,
+      "endLine": 43,
+      "body": "const withTempDirectory = <A, E, R>(use: (tmpDir: string) => Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      return yield* fs.makeTempDirectory();\n    }),\n    use,\n    Effect.fnUntraced(function* (tmpDir) {\n      const fs = yield* FileSystem.FileSystem;\n      yield* fs.remove(tmpDir, { recursive: true, force: true });\n    })\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempStore",
+      "file": "packages/tooling/library/ai-metrics/test/telemetry-v2-store.test.ts",
+      "line": 35,
+      "endLine": 43,
+      "body": "const withTempStore = Effect.fnUntraced(function* <A2, E, R>(\n  use: (dataRoot: string, store: TelemetryV2StoreShape) => Effect.Effect<A2, E, R>\n) {\n  const fs = yield* FileSystem.FileSystem;\n  const dataRoot = yield* fs.makeTempDirectoryScoped({ prefix: \"beep-telemetry-v2-store-\" });\n  const absoluteDataRoot = yield* requireAbsoluteAiMetricsDataRoot(dataRoot);\n  const context = yield* Layer.build(TelemetryV2Store.layer(absoluteDataRoot));\n  return yield* use(dataRoot, Context.get(context, TelemetryV2Store));\n});",
+      "resourcesAcquired": ["FileSystem"],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/library/ai-sync/test/ai-sync.test.ts",
+      "line": 96,
+      "endLine": 108,
+      "body": "const withTempDirectory = <A, E, R>(use: (tmpDir: string) => Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      return yield* fs.makeTempDirectory();\n    }),\n    use,\n    (tmpDir) =>\n      Effect.gen(function* () {\n        const fs = yield* FileSystem.FileSystem;\n        yield* fs.remove(tmpDir, { recursive: true, force: true });\n      })\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/library/codegen-kit/test/CodegenKit.test.ts",
+      "line": 183,
+      "endLine": 190,
+      "body": "const withTempDirectory = <A, E, R>(use: (directory: string) => Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.flatMap(FileSystem.FileSystem, (fs) =>\n      fs.makeTempDirectory({ directory: import.meta.dirname, prefix: \"codegen-kit-test-\" })\n    ),\n    use,\n    (directory) => Effect.flatMap(FileSystem.FileSystem, (fs) => fs.remove(directory, { recursive: true, force: true }))\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withOxlintFixture",
+      "file": "packages/tooling/policy-pack/lint-rules/test/oxlint-harness.ts",
+      "line": 150,
+      "endLine": 164,
+      "body": "const withOxlintFixture = Effect.fn(\"oxlintHarness.withOxlintFixture\")(function* <Success, Error, Requirements>(\n  prefix: string,\n  rule: OxlintRule,\n  source: string,\n  filename: string,\n  supportingFiles: ReadonlyArray<readonly [path: string, source: string]>,\n  use: (fixture: OxlintFixture) => Effect.Effect<Success, Error, Requirements>\n) {\n  const fs = yield* FileSystem.FileSystem;\n  return yield* Effect.acquireUseRelease(\n    fs.makeTempDirectory({ prefix }),\n    (tempDir) => makeOxlintFixture(tempDir, rule, source, filename, supportingFiles).pipe(Effect.flatMap(use)),\n    (tempDir) => fs.remove(tempDir, { recursive: true, force: true }).pipe(Effect.ignore)\n  );\n});",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory",
+        "tempDir"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempProject",
+      "file": "packages/tooling/policy-pack/repo-configs/test/EffectTsgoEffectFnPolicy.test.ts",
+      "line": 32,
+      "endLine": 39,
+      "body": "const withTempProject = <A, E, R>(use: (projectDir: string) => Effect.Effect<A, E, R>) =>\n  Effect.scoped(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      const projectDir = yield* fs.makeTempDirectoryScoped({ prefix: \"effect-tsgo-effect-fn-\" });\n      return yield* use(projectDir);\n    })\n  );",
+      "resourcesAcquired": ["FileSystem"],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/tool/cli/test/agent-effectiveness-command.test.ts",
+      "line": 75,
+      "endLine": 90,
+      "body": "const withTempDirectory = <A, E, R>(use: (tmpDir: string) => Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      return yield* fs.makeTempDirectory({\n        directory: privacySafeSystemTempRoot(),\n        prefix: \"beep-agent-effectiveness-\",\n      });\n    }),\n    use,\n    (tmpDir) =>\n      Effect.gen(function* () {\n        const fs = yield* FileSystem.FileSystem;\n        yield* fs.remove(tmpDir, { recursive: true, force: true });\n      })\n  ).pipe(provideScopedLayer(CommandTestLayer));",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["CommandTestLayer", "provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withPhoenixBaseUrlEnv",
+      "file": "packages/tooling/tool/cli/test/agent-effectiveness-command.test.ts",
+      "line": 99,
+      "endLine": 106,
+      "body": "const withPhoenixBaseUrlEnv = <A, E, R>(phoenixBaseUrl: string, use: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>\n  provideScopedLayer(\n    ConfigProvider.layer(\n      ConfigProvider.fromUnknown({\n        BEEP_AGENT_EFFECTIVENESS_PHOENIX_BASE_URL: phoenixBaseUrl,\n      })\n    )\n  )(use);",
+      "resourcesAcquired": [],
+      "layersBuilt": ["provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempFixture",
+      "file": "packages/tooling/tool/cli/test/agent-effectiveness-eval-scorer.test.ts",
+      "line": 37,
+      "endLine": 49,
+      "body": "const withTempFixture = <A, E, R>(use: (fixtureDir: string) => Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      return yield* fs.makeTempDirectory();\n    }),\n    use,\n    (dir) =>\n      Effect.gen(function* () {\n        const fs = yield* FileSystem.FileSystem;\n        yield* fs.remove(dir, { force: true, recursive: true });\n      })\n  ).pipe(provideTestLayer);",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["provideTestLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/tool/cli/test/ai-metrics-command.test.ts",
+      "line": 102,
+      "endLine": 114,
+      "body": "const withTempDirectory = <A, E, R>(use: (tmpDir: string) => Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      return yield* fs.makeTempDirectory();\n    }),\n    use,\n    (tmpDir) =>\n      Effect.gen(function* () {\n        const fs = yield* FileSystem.FileSystem;\n        yield* fs.remove(tmpDir, { recursive: true, force: true });\n      })\n  ).pipe(provideScopedLayer(CommandTestLayer));",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["CommandTestLayer", "provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withRawArchiveKeyEnv",
+      "file": "packages/tooling/tool/cli/test/ai-metrics-command.test.ts",
+      "line": 150,
+      "endLine": 157,
+      "body": "const withRawArchiveKeyEnv = <A, E, R>(rawArchiveKey: string, use: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>\n  provideScopedLayer(\n    ConfigProvider.layer(\n      ConfigProvider.fromUnknown({\n        BEEP_AI_METRICS_RAW_ARCHIVE_KEY: rawArchiveKey,\n      })\n    )\n  )(use);",
+      "resourcesAcquired": [],
+      "layersBuilt": ["provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withProcessEnv",
+      "file": "packages/tooling/tool/cli/test/ai-metrics-command.test.ts",
+      "line": 161,
+      "endLine": 164,
+      "body": "const withProcessEnv = <A, E, R>(\n  env: { readonly [key: string]: string },\n  use: Effect.Effect<A, E, R>\n): Effect.Effect<A, E, R> => provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown(env)))(use);",
+      "resourcesAcquired": [],
+      "layersBuilt": ["provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withPrependedPath",
+      "file": "packages/tooling/tool/cli/test/ai-metrics-command.test.ts",
+      "line": 206,
+      "endLine": 222,
+      "body": "const withPrependedPath = <A, E, R>(binDir: string, use: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>\n  Effect.acquireUseRelease(\n    Effect.sync(() => {\n      const previousPath = Bun.env.PATH;\n      Bun.env.PATH = previousPath === undefined ? binDir : `${binDir}:${previousPath}`;\n      return previousPath;\n    }),\n    () => use,\n    (previousPath) =>\n      Effect.sync(() => {\n        if (previousPath === undefined) {\n          delete Bun.env.PATH;\n        } else {\n          Bun.env.PATH = previousPath;\n        }\n      })\n  );",
+      "resourcesAcquired": ["acquireUseRelease"],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withOtlpSink",
+      "file": "packages/tooling/tool/cli/test/ai-metrics-command.test.ts",
+      "line": 236,
+      "endLine": 261,
+      "body": "const withOtlpSink = <A, E, R>(\n  use: (baseUrl: string, requests: ReadonlyArray<CapturedOtlpRequest>) => Effect.Effect<A, E, R>,\n  responseStatus = 200\n) =>\n  Effect.acquireUseRelease(\n    Effect.sync(() => {\n      const requests: Array<CapturedOtlpRequest> = [];\n      const server = Bun.serve({\n        fetch: (request) =>\n          request.arrayBuffer().then((body) => {\n            A.appendInPlace(requests, {\n              bodyByteLength: body.byteLength,\n              bodyText: new TextDecoder().decode(body),\n              contentType: request.headers.get(\"content-type\") ?? \"\",\n              path: new URL(request.url).pathname,\n            });\n            return new Response(null, { status: responseStatus });\n          }),\n        hostname: \"127.0.0.1\",\n        port: 0,\n      });\n      return { requests, server };\n    }),\n    ({ requests, server }) => use(`http://127.0.0.1:${server.port}`, requests),\n    ({ server }) => Effect.promise(() => server.stop(true))\n  );",
+      "resourcesAcquired": ["acquireUseRelease"],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempRepo",
+      "file": "packages/tooling/tool/cli/test/allowlist-check.test.ts",
+      "line": 21,
+      "endLine": 32,
+      "body": "const withTempRepo = <A, E>(use: (tmpDir: string) => Effect.Effect<A, E, FileSystem.FileSystem | Path.Path>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      const tmpDir = yield* fs.makeTempDirectory();\n      yield* fs.writeFileString(`${tmpDir}/bun.lock`, \"\");\n\n      return { fs, tmpDir } as const;\n    }),\n    ({ tmpDir }) => use(tmpDir),\n    ({ fs, tmpDir }) => fs.remove(tmpDir, { recursive: true })\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDir",
+      "file": "packages/tooling/tool/cli/test/artifacts-io.test.ts",
+      "line": 22,
+      "endLine": 27,
+      "body": "const withTempDir = <A, E, R>(use: (dir: string) => Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.flatMap(FileSystem.FileSystem, (fs) => fs.makeTempDirectory()),\n    use,\n    (dir) => Effect.flatMap(FileSystem.FileSystem, (fs) => fs.remove(dir, { recursive: true }).pipe(Effect.orDie))\n  ).pipe(provideScopedLayer(PlatformLayer));",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["PlatformLayer", "provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withEnvVar",
+      "file": "packages/tooling/tool/cli/test/cache-command.test.ts",
+      "line": 37,
+      "endLine": 55,
+      "body": "const withEnvVar = <A, E, R>(\n  name: string,\n  value: string | undefined,\n  use: Effect.Effect<A, E, R>\n): Effect.Effect<A, E, R> =>\n  Effect.acquireUseRelease(\n    Effect.sync(() => {\n      const previous = Bun.env[name];\n      if (value === undefined) delete Bun.env[name];\n      else Bun.env[name] = value;\n      return previous;\n    }),\n    () => use,\n    (previous) =>\n      Effect.sync(() => {\n        if (previous === undefined) delete Bun.env[name];\n        else Bun.env[name] = previous;\n      })\n  );",
+      "resourcesAcquired": ["acquireUseRelease"],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withWarmEnvironment",
+      "file": "packages/tooling/tool/cli/test/cache-command.test.ts",
+      "line": 57,
+      "endLine": 69,
+      "body": "const withWarmEnvironment = <A, E, R>(\n  values: Readonly<{\n    readonly TURBO_API: string | undefined;\n    readonly TURBO_TOKEN: string | undefined;\n    readonly TURBO_TEAM: string | undefined;\n  }>,\n  use: Effect.Effect<A, E, R>\n): Effect.Effect<A, E, R> =>\n  withEnvVar(\n    \"TURBO_API\",\n    values.TURBO_API,\n    withEnvVar(\"TURBO_TOKEN\", values.TURBO_TOKEN, withEnvVar(\"TURBO_TEAM\", values.TURBO_TEAM, use))\n  );",
+      "resourcesAcquired": [],
+      "layersBuilt": [],
+      "candidateKind": "pure-data-helper-candidate"
+    },
+    {
+      "name": "withTempRepo",
+      "file": "packages/tooling/tool/cli/test/changeset-graph.test.ts",
+      "line": 36,
+      "endLine": 48,
+      "body": "const withTempRepo = <A, E, R>(use: (tmpDir: string) => Effect.Effect<A, E, R>) =>\n  Effect.scoped(\n    Effect.acquireUseRelease(\n      Effect.gen(function* () {\n        const fs = yield* FileSystem.FileSystem;\n        const tmpDir = yield* fs.makeTempDirectory();\n\n        return { fs, tmpDir } as const;\n      }),\n      ({ tmpDir }) => use(tmpDir),\n      ({ fs, tmpDir }) => fs.remove(tmpDir, { recursive: true, force: true })\n    ).pipe(provideScopedLayer(testLayer))\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["provideScopedLayer", "testLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempRepo",
+      "file": "packages/tooling/tool/cli/test/changeset-status.test.ts",
+      "line": 73,
+      "endLine": 94,
+      "body": "const withTempRepo = <A2, E, R>(\n  changedFiles: ReadonlyArray<string>,\n  addedChangesets: ReadonlyArray<string>,\n  spawned: Array<string>,\n  use: (tmpDir: string) => Effect.Effect<A2, E, R>\n) =>\n  Effect.scoped(\n    Effect.acquireUseRelease(\n      Effect.gen(function* () {\n        const fs = yield* FileSystem.FileSystem;\n        const tmpDir = yield* fs.makeTempDirectory();\n\n        return { fs, tmpDir } as const;\n      }),\n      ({ tmpDir }) => use(tmpDir),\n      ({ fs, tmpDir }) => fs.remove(tmpDir, { recursive: true, force: true })\n    ).pipe(\n      provideScopedLayer(\n        Layer.mergeAll(NodeServices.layer, TestConsole.layer, gitFixtureLayer(changedFiles, addedChangesets, spawned))\n      )\n    )\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["gitFixtureLayer", "provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempRepo",
+      "file": "packages/tooling/tool/cli/test/ci-command.test.ts",
+      "line": 26,
+      "endLine": 51,
+      "body": "const withTempRepo = <A, E, R>(use: Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      const tmpDir = yield* fs.makeTempDirectory();\n      const previousCwd = process.cwd();\n      const previousGithubStepSummary = Bun.env.GITHUB_STEP_SUMMARY;\n\n      process.chdir(tmpDir);\n      delete Bun.env.GITHUB_STEP_SUMMARY;\n      yield* fs.makeDirectory(\".git\", { recursive: true });\n\n      return { fs, previousCwd, previousGithubStepSummary, tmpDir } as const;\n    }),\n    () => use,\n    ({ fs, previousCwd, previousGithubStepSummary, tmpDir }) =>\n      Effect.gen(function* () {\n        process.chdir(previousCwd);\n        if (previousGithubStepSummary === undefined) {\n          delete Bun.env.GITHUB_STEP_SUMMARY;\n        } else {\n          Bun.env.GITHUB_STEP_SUMMARY = previousGithubStepSummary;\n        }\n        yield* fs.remove(tmpDir, { recursive: true });\n      })\n  ).pipe(provideScopedLayer(TestLayer));",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["TestLayer", "provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withEnvVar",
+      "file": "packages/tooling/tool/cli/test/ci-lane.test.ts",
+      "line": 44,
+      "endLine": 54,
+      "body": "const withEnvVar = <A>(name: string, value: string | undefined, use: () => A): A => {\n  const previous = Bun.env[name];\n  if (value === undefined) delete Bun.env[name];\n  else Bun.env[name] = value;\n  try {\n    return use();\n  } finally {\n    if (previous === undefined) delete Bun.env[name];\n    else Bun.env[name] = previous;\n  }\n};",
+      "resourcesAcquired": [],
+      "layersBuilt": [],
+      "candidateKind": "pure-data-helper-candidate"
+    },
+    {
+      "name": "withEnvVarEffect",
+      "file": "packages/tooling/tool/cli/test/ci-lane.test.ts",
+      "line": 206,
+      "endLine": 224,
+      "body": "const withEnvVarEffect = <A, E, R>(\n  name: string,\n  value: string | undefined,\n  use: Effect.Effect<A, E, R>\n): Effect.Effect<A, E, R> =>\n  Effect.acquireUseRelease(\n    Effect.sync(() => {\n      const previous = Bun.env[name];\n      if (value === undefined) delete Bun.env[name];\n      else Bun.env[name] = value;\n      return previous;\n    }),\n    () => use,\n    (previous) =>\n      Effect.sync(() => {\n        if (previous === undefined) delete Bun.env[name];\n        else Bun.env[name] = previous;\n      })\n  );",
+      "resourcesAcquired": ["acquireUseRelease"],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withPartitionShim",
+      "file": "packages/tooling/tool/cli/test/ci-lane.test.ts",
+      "line": 232,
+      "endLine": 289,
+      "body": "const withPartitionShim = <A, E, R>(\n  options: PartitionShimOptions,\n  use: (fixture: { readonly commandLogPath: string; readonly tempDir: string }) => Effect.Effect<A, E, R>\n) =>\n  Effect.scoped(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      const path = yield* Path.Path;\n      const tempDir = yield* fs.makeTempDirectory();\n      const binDir = path.join(tempDir, \"bin\");\n      const commandLogPath = path.join(tempDir, \"commands.log\");\n      const bunxPath = path.join(binDir, \"bunx\");\n\n      yield* fs.makeDirectory(binDir, { recursive: true });\n      yield* fs.writeFileString(\n        bunxPath,\n        A.join(\n          [\n            \"#!/usr/bin/env sh\",\n            'printf \\'%s\\\\n\\' \"$*\" >> \"$CI_LANE_TEST_COMMAND_LOG\"',\n            'case \" $* \" in',\n            '  *\" --dry-run=json \"*)',\n            \"    printf '%s\\\\n' \\\"$CI_LANE_TEST_DRY_RUN_OUTPUT\\\"\",\n            '    exit \"${CI_LANE_TEST_DRY_RUN_EXIT:-0}\"',\n            \"    ;;\",\n            \"esac\",\n            'exit \"${CI_LANE_TEST_EXECUTION_EXIT:-0}\"',\n            \"\",\n          ],\n          \"\\n\"\n        )\n      );\n      yield* fs.chmod(bunxPath, 0o755);\n      yield* Effect.addFinalizer(() => fs.remove(tempDir, { force: true, recursive: true }).pipe(Effect.orDie));\n\n      return yield* withEnvVarEffect(\n        \"PATH\",\n        `${binDir}:${Bun.env.PATH ?? \"\"}`,\n        withEnvVarEffect(\n          \"CI_LANE_TEST_COMMAND_LOG\",\n          commandLogPath,\n          withEnvVarEffect(\n            \"CI_LANE_TEST_DRY_RUN_OUTPUT\",\n            options.dryRunOutput,\n            withEnvVarEffect(\n              \"CI_LANE_TEST_DRY_RUN_EXIT\",\n              String(options.dryRunExitCode ?? 0),\n              withEnvVarEffect(\n                \"CI_LANE_TEST_EXECUTION_EXIT\",\n                String(options.executionExitCode ?? 0),\n                use({ commandLogPath, tempDir })\n              )\n            )\n          )\n        )\n      );\n    })\n  );",
+      "resourcesAcquired": ["FileSystem", "makeTempDirectory", "tempDir"],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withWorkingDirectory",
+      "file": "packages/tooling/tool/cli/test/ci-lane.test.ts",
+      "line": 291,
+      "endLine": 300,
+      "body": "const withWorkingDirectory = <A, E, R>(directory: string, use: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>\n  Effect.acquireUseRelease(\n    Effect.sync(() => {\n      const previous = process.cwd();\n      process.chdir(directory);\n      return previous;\n    }),\n    () => use,\n    (previous) => Effect.sync(() => process.chdir(previous))\n  );",
+      "resourcesAcquired": ["acquireUseRelease"],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/tool/cli/test/coverage-baseline-subtraction.test.ts",
+      "line": 30,
+      "endLine": 42,
+      "body": "const withTempDirectory = <A2, E, R2>(use: (directory: string) => Effect.Effect<A2, E, R2>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      return yield* fs.makeTempDirectory();\n    }),\n    use,\n    (directory) =>\n      Effect.gen(function* () {\n        const fs = yield* FileSystem.FileSystem;\n        yield* fs.remove(directory, { recursive: true, force: true });\n      })\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempRepoCommand",
+      "file": "packages/tooling/tool/cli/test/create-package-lab.test.ts",
+      "line": 82,
+      "endLine": 100,
+      "body": "const withTempRepoCommand = <A2, E, R>(use: Effect.Effect<A2, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      const path = yield* Path.Path;\n      const tmpDir = yield* fs.makeTempDirectory();\n\n      process.chdir(tmpDir);\n      yield* fs.makeDirectory(path.join(tmpDir, \".git\"), { recursive: true });\n\n      return { fs, tmpDir } as const;\n    }),\n    () => use,\n    ({ fs, tmpDir }) =>\n      Effect.gen(function* () {\n        process.chdir(TestFileCwd);\n        yield* fs.remove(tmpDir, { recursive: true, force: true });\n      })\n  ).pipe(provideScopedLayer(CommandTestLayer), Effect.orDie);",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["CommandTestLayer", "provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withLabsFixture",
+      "file": "packages/tooling/tool/cli/test/create-package-lab.test.ts",
+      "line": 303,
+      "endLine": 316,
+      "body": "const withLabsFixture = <A2, E, R>(\n  options: RootConfigOptions,\n  use: (context: TempRepoCommandContext) => Effect.Effect<A2, E, R>\n) =>\n  withTempRepoCommand(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      const path = yield* Path.Path;\n      const rootDir = process.cwd();\n      yield* bootstrapRootConfig(rootDir, options);\n      yield* bootstrapMarkedIdentityWorkspace(rootDir);\n      return yield* use({ fs, path, rootDir });\n    })\n  );",
+      "resourcesAcquired": ["FileSystem"],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/tool/cli/test/create-package-security.test.ts",
+      "line": 23,
+      "endLine": 35,
+      "body": "const withTempDirectory = <A, E, R>(use: (tmpDir: string) => Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      return yield* fs.makeTempDirectory();\n    }),\n    use,\n    (tmpDir) =>\n      Effect.gen(function* () {\n        const fs = yield* FileSystem.FileSystem;\n        yield* fs.remove(tmpDir, { recursive: true, force: true });\n      })\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withSanctionedEcosystemDiagnosticDelta",
+      "file": "packages/tooling/tool/cli/test/create-package.test.ts",
+      "line": 176,
+      "endLine": 190,
+      "body": "const withSanctionedEcosystemDiagnosticDelta = (\n  plugins: ReadonlyArray<TypeScriptPluginConfig>\n): ReadonlyArray<TypeScriptPluginConfig> =>\n  A.map(plugins, (plugin) =>\n    plugin.name === \"@effect/language-service\"\n      ? {\n          ...plugin,\n          diagnosticSeverity: {\n            ...decodeUnknownRecord(plugin.diagnosticSeverity),\n            missedPipeableOpportunity: \"off\",\n            missingPipeableSignature: \"off\",\n          },\n        }\n      : plugin\n  );",
+      "resourcesAcquired": [],
+      "layersBuilt": [],
+      "candidateKind": "pure-data-helper-candidate"
+    },
+    {
+      "name": "withTempRepoCommand",
+      "file": "packages/tooling/tool/cli/test/create-package.test.ts",
+      "line": 255,
+      "endLine": 273,
+      "body": "const withTempRepoCommand = <A, E, R>(use: Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      const path = yield* Path.Path;\n      const tmpDir = yield* fs.makeTempDirectory();\n\n      process.chdir(tmpDir);\n      yield* fs.makeDirectory(path.join(tmpDir, \".git\"), { recursive: true });\n\n      return { fs, tmpDir } as const;\n    }),\n    () => use,\n    ({ fs, tmpDir }) =>\n      Effect.gen(function* () {\n        process.chdir(TestFileCwd);\n        yield* fs.remove(tmpDir, { recursive: true, force: true });\n      })\n  ).pipe(provideScopedLayer(CommandTestLayer), Effect.orDie);",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["CommandTestLayer", "provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withBunShim",
+      "file": "packages/tooling/tool/cli/test/create-package.test.ts",
+      "line": 324,
+      "endLine": 339,
+      "body": "const withBunShim = <A, E, R>(binDir: string, argsFilePath: string, use: Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.sync(() => {\n      const previousPath = Bun.env.PATH;\n      const previousArgsFilePath = Bun.env.BEEP_CREATE_PACKAGE_BUN_ARGS_FILE;\n      Bun.env.PATH = previousPath === undefined ? binDir : `${binDir}:${previousPath}`;\n      Bun.env.BEEP_CREATE_PACKAGE_BUN_ARGS_FILE = argsFilePath;\n      return { previousArgsFilePath, previousPath } as const;\n    }),\n    () => use,\n    ({ previousArgsFilePath, previousPath }) =>\n      Effect.sync(() => {\n        Bun.env.PATH = previousPath;\n        Bun.env.BEEP_CREATE_PACKAGE_BUN_ARGS_FILE = previousArgsFilePath;\n      })\n  );",
+      "resourcesAcquired": ["acquireUseRelease"],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withBootstrappedRootConfig",
+      "file": "packages/tooling/tool/cli/test/create-package.test.ts",
+      "line": 482,
+      "endLine": 494,
+      "body": "const withBootstrappedRootConfig = <A, E, R>(\n    options: RootConfigOptions,\n    use: (context: TempRepoCommandContext) => Effect.Effect<A, E, R>\n  ) =>\n    withTempRepoCommand(\n      Effect.gen(function* () {\n        const fs = yield* FileSystem.FileSystem;\n        const path = yield* Path.Path;\n        const rootDir = process.cwd();\n        yield* bootstrapRootConfig(rootDir, options);\n        return yield* use({ fs, path, rootDir });\n      })\n    );",
+      "resourcesAcquired": ["FileSystem"],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/tool/cli/test/delete-package-labs.test.ts",
+      "line": 36,
+      "endLine": 48,
+      "body": "const withTempDirectory = <A2, E, R>(use: (directory: string) => Effect.Effect<A2, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      return yield* fs.makeTempDirectory();\n    }),\n    use,\n    (directory) =>\n      Effect.gen(function* () {\n        const fs = yield* FileSystem.FileSystem;\n        yield* fs.remove(directory, { recursive: true, force: true });\n      })\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/tool/cli/test/delete-package.test.ts",
+      "line": 36,
+      "endLine": 48,
+      "body": "const withTempDirectory = <A, E, R>(use: (directory: string) => Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      return yield* fs.makeTempDirectory();\n    }),\n    use,\n    (directory) =>\n      Effect.gen(function* () {\n        const fs = yield* FileSystem.FileSystem;\n        yield* fs.remove(directory, { recursive: true, force: true });\n      })\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withEnvVar",
+      "file": "packages/tooling/tool/cli/test/docgen.test.ts",
+      "line": 115,
+      "endLine": 132,
+      "body": "const withEnvVar = <A>(name: string, value: string | undefined, use: () => A): A => {\n  const previousValue = Bun.env[name];\n  if (value === undefined) {\n    delete Bun.env[name];\n  } else {\n    Bun.env[name] = value;\n  }\n\n  try {\n    return use();\n  } finally {\n    if (previousValue === undefined) {\n      delete Bun.env[name];\n    } else {\n      Bun.env[name] = previousValue;\n    }\n  }\n};",
+      "resourcesAcquired": [],
+      "layersBuilt": [],
+      "candidateKind": "pure-data-helper-candidate"
+    },
+    {
+      "name": "withTempRepo",
+      "file": "packages/tooling/tool/cli/test/docgen.test.ts",
+      "line": 204,
+      "endLine": 223,
+      "body": "const withTempRepo = <A, E, R>(use: Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      const path = yield* Path.Path;\n      const tmpDir = yield* fs.makeTempDirectory();\n      const previousCwd = process.cwd();\n\n      process.chdir(tmpDir);\n      yield* fs.makeDirectory(path.join(tmpDir, \".git\"), { recursive: true });\n\n      return { fs, path, previousCwd, tmpDir } as const;\n    }),\n    () => use,\n    ({ fs, previousCwd, tmpDir }) =>\n      Effect.gen(function* () {\n        process.chdir(previousCwd);\n        yield* fs.remove(tmpDir, { recursive: true });\n      })\n  ).pipe(provideScopedLayer(TestLayer));",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["TestLayer", "provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempRepoCommand",
+      "file": "packages/tooling/tool/cli/test/docgen.test.ts",
+      "line": 225,
+      "endLine": 244,
+      "body": "const withTempRepoCommand = <A, E, R>(use: Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      const path = yield* Path.Path;\n      const tmpDir = yield* fs.makeTempDirectory();\n      const previousCwd = process.cwd();\n\n      process.chdir(tmpDir);\n      yield* fs.makeDirectory(path.join(tmpDir, \".git\"), { recursive: true });\n\n      return { fs, previousCwd, tmpDir } as const;\n    }),\n    () => use,\n    ({ fs, previousCwd, tmpDir }) =>\n      Effect.gen(function* () {\n        process.chdir(previousCwd);\n        yield* fs.remove(tmpDir, { recursive: true });\n      })\n  ).pipe(provideScopedLayer(CommandTestLayer));",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["CommandTestLayer", "provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withConfigEnv",
+      "file": "packages/tooling/tool/cli/test/docgen.test.ts",
+      "line": 246,
+      "endLine": 249,
+      "body": "const withConfigEnv = <A, E, R>(\n  env: { readonly [key: string]: string },\n  use: Effect.Effect<A, E, R>\n): Effect.Effect<A, E, R> => provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown(env)))(use);",
+      "resourcesAcquired": [],
+      "layersBuilt": ["provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withFixtureRepo",
+      "file": "packages/tooling/tool/cli/test/ecosystem-polarity.test.ts",
+      "line": 31,
+      "endLine": 39,
+      "body": "const withFixtureRepo = <A, E, R>(use: Effect.Effect<A, E, R>) =>\n  withTempWorkingDirectory(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      const path = yield* Path.Path;\n      yield* fs.makeDirectory(path.join(process.cwd(), \".git\"));\n      return yield* use;\n    })\n  );",
+      "resourcesAcquired": ["FileSystem"],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempWorkingDirectory",
+      "file": "packages/tooling/tool/cli/test/effect-fn.test.ts",
+      "line": 16,
+      "endLine": 31,
+      "body": "const withTempWorkingDirectory = <A, E, R>(use: Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      const tmpDir = yield* fs.makeTempDirectory();\n      const previousCwd = process.cwd();\n      process.chdir(tmpDir);\n      return { fs, previousCwd, tmpDir } as const;\n    }),\n    () => use,\n    ({ fs, previousCwd, tmpDir }) =>\n      Effect.gen(function* () {\n        process.chdir(previousCwd);\n        yield* fs.remove(tmpDir, { recursive: true });\n      })\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempWorkingDirectory",
+      "file": "packages/tooling/tool/cli/test/effect-imports.test.ts",
+      "line": 26,
+      "endLine": 41,
+      "body": "const withTempWorkingDirectory = <A, E, R>(use: Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      const tmpDir = yield* fs.makeTempDirectory();\n      const previousCwd = process.cwd();\n      process.chdir(tmpDir);\n      return { fs, previousCwd, tmpDir } as const;\n    }),\n    () => use,\n    ({ fs, previousCwd, tmpDir }) =>\n      Effect.gen(function* () {\n        process.chdir(previousCwd);\n        yield* fs.remove(tmpDir, { recursive: true });\n      })\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/tool/cli/test/files-command.test.ts",
+      "line": 122,
+      "endLine": 139,
+      "body": "const withTempDirectory = <A, E, R>(use: (tmpDir: string) => Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      const tmpDir = yield* fs.makeTempDirectory();\n      const previousCwd = process.cwd();\n\n      process.chdir(tmpDir);\n\n      return { fs, previousCwd, tmpDir } as const;\n    }),\n    ({ tmpDir }) => use(tmpDir),\n    ({ fs, previousCwd, tmpDir }) =>\n      Effect.gen(function* () {\n        process.chdir(previousCwd);\n        yield* fs.remove(tmpDir, { recursive: true, force: true });\n      })\n  ).pipe(provideScopedLayer(testLayer));",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["provideScopedLayer", "testLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withEnvVar",
+      "file": "packages/tooling/tool/cli/test/files-command.test.ts",
+      "line": 746,
+      "endLine": 762,
+      "body": "const withEnvVar = <A, E, R>(name: string, value: string, use: Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.sync(() => {\n      const previousValue = Bun.env[name];\n      Bun.env[name] = value;\n      return previousValue;\n    }),\n    () => provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown({ [name]: value })))(use),\n    (previousValue) =>\n      Effect.sync(() => {\n        if (previousValue === undefined) {\n          delete Bun.env[name];\n        } else {\n          Bun.env[name] = previousValue;\n        }\n      })\n  );",
+      "resourcesAcquired": ["acquireUseRelease"],
+      "layersBuilt": ["provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempWorkingDirectory",
+      "file": "packages/tooling/tool/cli/test/frozen-grant-set.test.ts",
+      "line": 15,
+      "endLine": 30,
+      "body": "const withTempWorkingDirectory = <A, E, R>(use: Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      const tmpDir = yield* fs.makeTempDirectory();\n      const previousCwd = process.cwd();\n      process.chdir(tmpDir);\n      return { fs, previousCwd, tmpDir } as const;\n    }),\n    () => use,\n    ({ fs, previousCwd, tmpDir }) =>\n      Effect.gen(function* () {\n        process.chdir(previousCwd);\n        yield* fs.remove(tmpDir, { recursive: true });\n      })\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/tool/cli/test/image-command.test.ts",
+      "line": 29,
+      "endLine": 46,
+      "body": "const withTempDirectory = <A, E, R>(use: (tmpDir: string) => Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      const tmpDir = yield* fs.makeTempDirectory();\n      const previousCwd = process.cwd();\n\n      process.chdir(tmpDir);\n\n      return { fs, previousCwd, tmpDir } as const;\n    }),\n    ({ tmpDir }) => use(tmpDir),\n    ({ fs, previousCwd, tmpDir }) =>\n      Effect.gen(function* () {\n        process.chdir(previousCwd);\n        yield* fs.remove(tmpDir, { recursive: true, force: true });\n      })\n  ).pipe(provideScopedLayer(testLayer));",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["provideScopedLayer", "testLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withPathPrefix",
+      "file": "packages/tooling/tool/cli/test/image-command.test.ts",
+      "line": 48,
+      "endLine": 60,
+      "body": "const withPathPrefix = <A, E, R>(pathPrefix: string, use: Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.sync(() => {\n      const previousPath = Bun.env.PATH;\n      Bun.env.PATH = `${pathPrefix}:${previousPath ?? \"\"}`;\n      return previousPath;\n    }),\n    () => use,\n    (previousPath) =>\n      Effect.sync(() => {\n        Bun.env.PATH = previousPath;\n      })\n  );",
+      "resourcesAcquired": ["acquireUseRelease"],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withFixtureRepo",
+      "file": "packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts",
+      "line": 144,
+      "endLine": 156,
+      "body": "const withFixtureRepo = Effect.fnUntraced(function* <A, E, R>(\n  options: { readonly topoSortScript: string; readonly packages: ReadonlyArray<FixturePackage> },\n  use: (repoRoot: string) => Effect.Effect<A, E, R>\n) {\n  return yield* Effect.acquireUseRelease(\n    acquireFixtureRepo(options),\n    use,\n    Effect.fnUntraced(function* (repoRoot) {\n      const fs = yield* FileSystem.FileSystem;\n      yield* fs.remove(repoRoot, { recursive: true });\n    })\n  ).pipe(provideScopedLayer(PlatformLayer));\n});",
+      "resourcesAcquired": ["FileSystem", "acquireUseRelease"],
+      "layersBuilt": ["PlatformLayer", "provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withPurpose",
+      "file": "packages/tooling/tool/cli/test/jsdoc-migrate.test.ts",
+      "line": 734,
+      "endLine": 736,
+      "body": "const withPurpose = JSON.stringify(\n      withSee.map((record) => ({ anchor: record.anchor, titles: [\"Use it\"], seePurposes: [\"for the helper.\"] }))\n    );",
+      "resourcesAcquired": [],
+      "layersBuilt": [],
+      "candidateKind": "pure-data-helper-candidate"
+    },
+    {
+      "name": "withUnbootableBase",
+      "file": "packages/tooling/tool/cli/test/knowledge-semantic-delta.test.ts",
+      "line": 1524,
+      "endLine": 1534,
+      "body": "const withUnbootableBase = (\n    baseFiles: Readonly<Record<string, string>>,\n    headFiles: Readonly<Record<string, string>>,\n    headOptions: OracleOptions = {}\n  ): KnowledgePairedOracleInput => ({\n    base: unbootableProbeOracle(baseFiles),\n    gitRefNames: NO_GIT_REFS,\n    head: makeOracle(headFiles, headOptions),\n    probePolicy: \"enabled\",\n    renames: [],\n  });",
+      "resourcesAcquired": [],
+      "layersBuilt": [],
+      "candidateKind": "pure-data-helper-candidate"
+    },
+    {
+      "name": "withLabsRepo",
+      "file": "packages/tooling/tool/cli/test/labs-list.test.ts",
+      "line": 25,
+      "endLine": 41,
+      "body": "const withLabsRepo = <A2, E, R>(use: Effect.Effect<A2, E, R>) =>\n  withTempWorkingDirectory(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      yield* fs.writeFileString(\"bun.lock\", \"\");\n      yield* fs.writeFileString(\n        \"package.json\",\n        `${encodeJson({\n          name: \"fixture-root\",\n          private: true,\n          type: \"module\",\n          workspaces: [\"apps/labs/*\"],\n        })}\\n`\n      );\n      return yield* use;\n    })\n  ).pipe(provideScopedLayer(LabsTestLayer), Effect.orDie);",
+      "resourcesAcquired": ["FileSystem"],
+      "layersBuilt": ["LabsTestLayer", "provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempModelRoot",
+      "file": "packages/tooling/tool/cli/test/match-person-model-store.test.ts",
+      "line": 26,
+      "endLine": 37,
+      "body": "const withTempModelRoot = <A, E, R>(use: (modelRoot: string, targetPath: string) => Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      const path = yield* Path.Path;\n      const modelRoot = yield* fs.makeTempDirectory();\n      return Tuple.make(modelRoot, path.join(modelRoot, \"model.safetensors\"));\n    }),\n    ([modelRoot, targetPath]) => use(modelRoot, targetPath),\n    ([modelRoot]) =>\n      FileSystem.FileSystem.use((fs) => fs.remove(modelRoot, { force: true, recursive: true }).pipe(Effect.ignore))\n  ).pipe(provideScopedLayer(testLayer));",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["provideScopedLayer", "testLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/tool/cli/test/package-verify.test.ts",
+      "line": 96,
+      "endLine": 110,
+      "body": "const withTempDirectory = <Result, Error, Requirements>(\n  use: (tmpDir: string) => Effect.Effect<Result, Error, Requirements>\n) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      return yield* fs.makeTempDirectory();\n    }),\n    use,\n    (tmpDir) =>\n      Effect.gen(function* () {\n        const fs = yield* FileSystem.FileSystem;\n        yield* fs.remove(tmpDir, { recursive: true });\n      })\n  ).pipe(provideScopedLayer(PlatformLayer));",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["PlatformLayer", "provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempRoot",
+      "file": "packages/tooling/tool/cli/test/person-match-model-store.test.ts",
+      "line": 24,
+      "endLine": 29,
+      "body": "const withTempRoot = <A, E, R>(use: (root: string) => Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    FileSystem.FileSystem.use((fs) => fs.makeTempDirectory()),\n    use,\n    (root) => FileSystem.FileSystem.use((fs) => fs.remove(root, { force: true, recursive: true }).pipe(Effect.ignore))\n  ).pipe(provideScopedLayer(testLayer));",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["provideScopedLayer", "testLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withProcStat",
+      "file": "packages/tooling/tool/cli/test/process-identity.test.ts",
+      "line": 24,
+      "endLine": 36,
+      "body": "const withProcStat = Effect.fnUntraced(function* <Value, Error, Requirements>(\n  stat: string,\n  effect: Effect.Effect<Value, Error, Requirements | FileSystem.FileSystem>\n): Effect.fn.Return<Value, Error, Requirements | FileSystem.FileSystem> {\n  const fs = yield* FileSystem.FileSystem;\n  const testFileSystem = FileSystem.FileSystem.of({\n    ...fs,\n    readFileString: Effect.fn(\"ProcessIdentityTest.readFileString\")((target, encoding) =>\n      Str.startsWith(\"/proc/\")(target) ? Effect.succeed(stat) : fs.readFileString(target, encoding)\n    ),\n  });\n  return yield* effect.pipe(Effect.provideService(FileSystem.FileSystem, testFileSystem));\n});",
+      "resourcesAcquired": ["FileSystem"],
+      "layersBuilt": ["Effect.provideService"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withLedger",
+      "file": "packages/tooling/tool/cli/test/proof-ledger.test.ts",
+      "line": 80,
+      "endLine": 88,
+      "body": "const withLedger = <Value, Failure, Requirements>(\n  root: string,\n  use: (ledger: ProofLedgerShape) => Effect.Effect<Value, Failure, Requirements>,\n  tripwire: ProofChangedPackageTripwire = constFalse\n) =>\n  Effect.gen(function* () {\n    const ledger = yield* ProofLedger;\n    return yield* use(ledger);\n  }).pipe(Effect.provideServiceEffect(ProofLedger, ProofLedger.make(root, tripwire)));",
+      "resourcesAcquired": [],
+      "layersBuilt": [],
+      "candidateKind": "pure-data-helper-candidate"
+    },
+    {
+      "name": "withTempDirectories",
+      "file": "packages/tooling/tool/cli/test/purge-security.test.ts",
+      "line": 14,
+      "endLine": 29,
+      "body": "const withTempDirectories = <A, E, R>(use: (tmpDir: string, externalDir: string) => Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      const tmpDir = yield* fs.makeTempDirectory();\n      const externalDir = yield* fs.makeTempDirectory();\n\n      return { externalDir, fs, tmpDir } as const;\n    }),\n    ({ externalDir, tmpDir }) => use(tmpDir, externalDir),\n    ({ externalDir, fs, tmpDir }) =>\n      Effect.all([\n        fs.remove(tmpDir, { recursive: true, force: true }),\n        fs.remove(externalDir, { recursive: true, force: true }),\n      ]).pipe(Effect.asVoid)\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDir",
+      "file": "packages/tooling/tool/cli/test/qa-judge-contract-parity.test.ts",
+      "line": 70,
+      "endLine": 75,
+      "body": "const withTempDir = <A, E, R>(use: (dir: string) => Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.flatMap(FileSystem.FileSystem, (fs) => fs.makeTempDirectory({ prefix: \"beep-qa-gate-parity-\" })),\n    use,\n    (dir) => Effect.flatMap(FileSystem.FileSystem, (fs) => fs.remove(dir, { recursive: true }).pipe(Effect.orDie))\n  ).pipe(provideScopedLayer(PlatformLayer));",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["PlatformLayer", "provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDir",
+      "file": "packages/tooling/tool/cli/test/qa-pure.test.ts",
+      "line": 95,
+      "endLine": 100,
+      "body": "const withTempDir = <A, E, R>(use: (dir: string) => Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.flatMap(FileSystem.FileSystem, (fs) => fs.makeTempDirectory({ prefix: \"beep-qa-pure-\" })),\n    use,\n    (dir) => Effect.flatMap(FileSystem.FileSystem, (fs) => fs.remove(dir, { recursive: true }).pipe(Effect.orDie))\n  ).pipe(provideScopedLayer(PlatformLayer));",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["PlatformLayer", "provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempCwd",
+      "file": "packages/tooling/tool/cli/test/qa-round-pipeline.test.ts",
+      "line": 54,
+      "endLine": 59,
+      "body": "const withTempCwd = <A, E, R>(use: (cwd: string) => Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.flatMap(FileSystem.FileSystem, (fs) => fs.makeTempDirectory({ prefix: \"beep-qa-round-\" })),\n    use,\n    (dir) => Effect.flatMap(FileSystem.FileSystem, (fs) => fs.remove(dir, { recursive: true }).pipe(Effect.orDie))\n  ).pipe(provideScopedLayer(QaLayer));",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["QaLayer", "provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withFixtureRepo",
+      "file": "packages/tooling/tool/cli/test/quality-artifact-generators.test.ts",
+      "line": 119,
+      "endLine": 128,
+      "body": "const withFixtureRepo = Effect.fnUntraced(function* <A, E, R>(use: (repoRoot: string) => Effect.Effect<A, E, R>) {\n  return yield* Effect.acquireUseRelease(\n    acquireFixtureRepo(),\n    use,\n    Effect.fnUntraced(function* (repoRoot) {\n      const fs = yield* FileSystem.FileSystem;\n      yield* fs.remove(repoRoot, { recursive: true });\n    })\n  ).pipe(provideScopedLayer(PlatformLayer));\n});",
+      "resourcesAcquired": ["FileSystem", "acquireUseRelease"],
+      "layersBuilt": ["PlatformLayer", "provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withLabsFixtureRepo",
+      "file": "packages/tooling/tool/cli/test/quality-artifact-generators.test.ts",
+      "line": 160,
+      "endLine": 169,
+      "body": "const withLabsFixtureRepo = Effect.fnUntraced(function* <A, E, R>(use: (repoRoot: string) => Effect.Effect<A, E, R>) {\n  return yield* Effect.acquireUseRelease(\n    acquireLabsFixtureRepo(),\n    use,\n    Effect.fnUntraced(function* (repoRoot) {\n      const fs = yield* FileSystem.FileSystem;\n      yield* fs.remove(repoRoot, { recursive: true });\n    })\n  ).pipe(provideScopedLayer(PlatformLayer));\n});",
+      "resourcesAcquired": ["FileSystem", "acquireUseRelease"],
+      "layersBuilt": ["PlatformLayer", "provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withProcessPath",
+      "file": "packages/tooling/tool/cli/test/quality-scheduler.test.ts",
+      "line": 224,
+      "endLine": 243,
+      "body": "const withProcessPath = <Value, Failure, Requirements>(\n  nextPath: string,\n  use: Effect.Effect<Value, Failure, Requirements>\n) =>\n  Effect.acquireUseRelease(\n    Effect.sync(() => {\n      const previousPath = Bun.env.PATH;\n      Bun.env.PATH = nextPath;\n      return previousPath;\n    }),\n    () => use,\n    (previousPath) =>\n      Effect.sync(() => {\n        if (previousPath === undefined) {\n          delete Bun.env.PATH;\n        } else {\n          Bun.env.PATH = previousPath;\n        }\n      })\n  );",
+      "resourcesAcquired": ["acquireUseRelease"],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withPrependedPath",
+      "file": "packages/tooling/tool/cli/test/quality-scheduler.test.ts",
+      "line": 245,
+      "endLine": 251,
+      "body": "const withPrependedPath = <Value, Failure, Requirements>(\n  binDirectory: string,\n  use: Effect.Effect<Value, Failure, Requirements>\n) =>\n  Effect.suspend(() =>\n    withProcessPath(Bun.env.PATH === undefined ? binDirectory : `${binDirectory}:${Bun.env.PATH}`, use)\n  );",
+      "resourcesAcquired": [],
+      "layersBuilt": [],
+      "candidateKind": "pure-data-helper-candidate"
+    },
+    {
+      "name": "withAdmissionTempRoot",
+      "file": "packages/tooling/tool/cli/test/quality-scheduler.test.ts",
+      "line": 340,
+      "endLine": 373,
+      "body": "const withAdmissionTempRoot = Effect.fn(\"withAdmissionTempRoot\")(\n  function* <Result, Error2, Requirements>(\n    gibRef: Ref.Ref<number>,\n    use: (tempRoot: AdmissionTempRoot) => Effect.Effect<Result, Error2, Requirements>,\n    totalGib = 128,\n    runScopesEnabled = false\n  ) {\n    const fs = yield* FileSystem.FileSystem;\n    const path = yield* Path.Path;\n    const runtimeDir = yield* fs.makeTempDirectory();\n    const root = path.join(runtimeDir, \"beep\", \"admit\");\n    const tempRoot: AdmissionTempRoot = {\n      root,\n      claims: path.join(root, \"claims\"),\n      leases: path.join(root, \"leases\"),\n      promotions: path.join(root, \"promotions\"),\n      queue: path.join(root, \"queue\"),\n      quarantine: path.join(root, \"quarantine\"),\n    };\n    return yield* use(tempRoot).pipe(\n      provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: \"test-override\", root: runtimeDir })),\n      provideScopedLayer(\n        ConfigProvider.layer(\n          ConfigProvider.fromUnknown({\n            BEEP_RUN_SCOPES: runScopesEnabled ? \"1\" : \"0\",\n          })\n        )\n      ),\n      provideScopedLayer(memoryLayer(gibRef, totalGib)),\n      Effect.onExit(() => fs.remove(runtimeDir, { recursive: true, force: true }).pipe(Effect.ignore))\n    );\n  },\n  (effect) => effect.pipe(provideScopedLayer(PlatformLayer), Effect.scoped)\n);",
+      "resourcesAcquired": ["FileSystem", "makeTempDirectory"],
+      "layersBuilt": ["PlatformLayer", "memoryLayer", "provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempRepo",
+      "file": "packages/tooling/tool/cli/test/quality-tasks.test.ts",
+      "line": 250,
+      "endLine": 273,
+      "body": "const withTempRepo = <A, E, R>(use: Effect.Effect<A, E, R>) =>\n  Effect.scoped(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      const path = yield* Path.Path;\n      const originalCwd = process.cwd;\n      const repositoryPath = yield* fs.makeTempDirectory();\n\n      yield* Effect.sync(() => {\n        process.cwd = () => repositoryPath;\n      });\n      yield* fs.makeDirectory(path.join(repositoryPath, \".git\"), { recursive: true });\n      yield* Effect.addFinalizer(() =>\n        Effect.gen(function* () {\n          yield* Effect.sync(() => {\n            process.cwd = originalCwd;\n          });\n          yield* fs.remove(repositoryPath, { force: true, recursive: true }).pipe(Effect.orDie);\n        })\n      );\n\n      return yield* use;\n    })\n  ).pipe(provideScopedLayer(PlatformLayer));",
+      "resourcesAcquired": ["FileSystem", "makeTempDirectory"],
+      "layersBuilt": ["PlatformLayer", "provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withEnvVar",
+      "file": "packages/tooling/tool/cli/test/quality-tasks.test.ts",
+      "line": 283,
+      "endLine": 300,
+      "body": "const withEnvVar = <A>(name: string, value: string | undefined, use: () => A): A => {\n  const previousValue = Bun.env[name];\n  if (value === undefined) {\n    delete Bun.env[name];\n  } else {\n    Bun.env[name] = value;\n  }\n\n  try {\n    return use();\n  } finally {\n    if (previousValue === undefined) {\n      delete Bun.env[name];\n    } else {\n      Bun.env[name] = previousValue;\n    }\n  }\n};",
+      "resourcesAcquired": [],
+      "layersBuilt": [],
+      "candidateKind": "pure-data-helper-candidate"
+    },
+    {
+      "name": "withEnvVarEffect",
+      "file": "packages/tooling/tool/cli/test/quality-tasks.test.ts",
+      "line": 302,
+      "endLine": 326,
+      "body": "const withEnvVarEffect = <Out, E, R>(\n  name: string,\n  value: string | undefined,\n  use: Effect.Effect<Out, E, R>\n): Effect.Effect<Out, E, R> =>\n  Effect.acquireUseRelease(\n    Effect.sync(() => {\n      const previousValue = Bun.env[name];\n      if (value === undefined) {\n        delete Bun.env[name];\n      } else {\n        Bun.env[name] = value;\n      }\n      return previousValue;\n    }),\n    () => use,\n    (previousValue) =>\n      Effect.sync(() => {\n        if (previousValue === undefined) {\n          delete Bun.env[name];\n        } else {\n          Bun.env[name] = previousValue;\n        }\n      })\n  );",
+      "resourcesAcquired": ["acquireUseRelease"],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withExpectedLabsExclude",
+      "file": "packages/tooling/tool/cli/test/quality-tasks.test.ts",
+      "line": 345,
+      "endLine": 359,
+      "body": "const withExpectedLabsExclude = (task: string, args: ReadonlyArray<string>): ReadonlyArray<string> => {\n  if (!A.contains(LABS_EXCLUDED_TASKS, task) || A.contains(args, LABS_EXCLUDE_FILTER)) {\n    return args;\n  }\n  return pipe(\n    A.findFirstIndex(args, (arg) => arg === \"--\"),\n    O.match({\n      onNone: (): ReadonlyArray<string> => [...args, LABS_EXCLUDE_FILTER],\n      onSome: (index) => {\n        const [head, tail] = A.splitAt(args, index);\n        return [...head, LABS_EXCLUDE_FILTER, ...tail];\n      },\n    })\n  );\n};",
+      "resourcesAcquired": [],
+      "layersBuilt": [],
+      "candidateKind": "pure-data-helper-candidate"
+    },
+    {
+      "name": "withRows",
+      "file": "packages/tooling/tool/cli/test/quality-tasks.test.ts",
+      "line": 3835,
+      "endLine": 3836,
+      "body": "const withRows = (packages: Record<string, CoveragePackageBaseline>) =>\n      CoverageRegressionBaseline.make({ ...coverageRegressionBaseline, packages });",
+      "resourcesAcquired": [],
+      "layersBuilt": [],
+      "candidateKind": "pure-data-helper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/tool/cli/test/residue-reap.test.ts",
+      "line": 26,
+      "endLine": 40,
+      "body": "const withTempDirectory = <Value, Failure, Requirements>(\n  use: (root: string) => Effect.Effect<Value, Failure, Requirements>\n) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      return yield* fs.makeTempDirectory({ prefix: \"residue-reap-test-\" });\n    }),\n    use,\n    (root) =>\n      Effect.gen(function* () {\n        const fs = yield* FileSystem.FileSystem;\n        yield* fs.remove(root, { force: true, recursive: true });\n      })\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/tool/cli/test/run-scope.test.ts",
+      "line": 20,
+      "endLine": 34,
+      "body": "const withTempDirectory = <Value, Failure, Requirements>(\n  use: (root: string) => Effect.Effect<Value, Failure, Requirements>\n) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      return yield* fs.makeTempDirectory({ prefix: \"run-scope-test-\" });\n    }),\n    use,\n    (root) =>\n      Effect.gen(function* () {\n        const fs = yield* FileSystem.FileSystem;\n        yield* fs.remove(root, { force: true, recursive: true });\n      })\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/tool/cli/test/runners-bake.test.ts",
+      "line": 58,
+      "endLine": 65,
+      "body": "const withTempDirectory = <Result, Error, Requirements>(\n  use: (tmpDir: string) => Effect.Effect<Result, Error, Requirements>\n) =>\n  Effect.acquireUseRelease(\n    Effect.flatMap(FileSystem.FileSystem, (fs) => fs.makeTempDirectory()),\n    use,\n    (tmpDir) => Effect.flatMap(FileSystem.FileSystem, (fs) => fs.remove(tmpDir, { recursive: true }).pipe(Effect.orDie))\n  ).pipe(provideScopedLayer(PlatformLayer));",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["PlatformLayer", "provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/tool/cli/test/setup-effect-ref.test.ts",
+      "line": 13,
+      "endLine": 25,
+      "body": "const withTempDirectory = <A, E, R>(use: (tempDir: string) => Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      return yield* fs.makeTempDirectory({ prefix: \"setup-effect-ref-test-\" });\n    }),\n    use,\n    (tempDir) =>\n      Effect.gen(function* () {\n        const fs = yield* FileSystem.FileSystem;\n        yield* fs.remove(tempDir, { force: true, recursive: true });\n      })\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory",
+        "tempDir"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withProvider",
+      "file": "packages/tooling/tool/cli/test/shared-internals.test.ts",
+      "line": 268,
+      "endLine": 271,
+      "body": "const withProvider = (value: string) =>\n        provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown({ TOKEN: value })))(\n          readOptionalConfigString(\"TOKEN\")\n        );",
+      "resourcesAcquired": [],
+      "layersBuilt": ["provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTurboEnv",
+      "file": "packages/tooling/tool/cli/test/shared-internals.test.ts",
+      "line": 360,
+      "endLine": 361,
+      "body": "const withTurboEnv = (env: Record<string, string>) =>\n    provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown(env)));",
+      "resourcesAcquired": [],
+      "layersBuilt": ["provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempRepoCommand",
+      "file": "packages/tooling/tool/cli/test/skills-command.test.ts",
+      "line": 138,
+      "endLine": 156,
+      "body": "const withTempRepoCommand = <A, E, R>(use: Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      const tmpDir = yield* fs.makeTempDirectory();\n      const previousCwd = process.cwd();\n\n      process.chdir(tmpDir);\n      yield* fs.makeDirectory(\".git\", { recursive: true });\n\n      return { fs, previousCwd, tmpDir } as const;\n    }),\n    () => use,\n    ({ fs, previousCwd, tmpDir }) =>\n      Effect.gen(function* () {\n        process.chdir(previousCwd);\n        yield* fs.remove(tmpDir, { recursive: true, force: true });\n      })\n  ).pipe(provideScopedLayer(CommandTestLayer));",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["CommandTestLayer", "provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempWorkingDirectory",
+      "file": "packages/tooling/tool/cli/test/support/CommandTest.ts",
+      "line": 33,
+      "endLine": 54,
+      "body": "export const withTempWorkingDirectory = <A, E, R>(use: Effect.Effect<A, E, R>) =>\n  Effect.scoped(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      const originalCwd = process.cwd();\n      const workingDirectory = yield* fs.makeTempDirectory();\n\n      yield* Effect.sync(() => {\n        process.chdir(workingDirectory);\n      });\n      yield* Effect.addFinalizer(() =>\n        Effect.gen(function* () {\n          yield* Effect.sync(() => {\n            process.chdir(originalCwd);\n          });\n          yield* fs.remove(workingDirectory, { force: true, recursive: true }).pipe(Effect.orDie);\n        })\n      );\n\n      return yield* use;\n    })\n  );",
+      "resourcesAcquired": ["FileSystem", "makeTempDirectory"],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withEnv",
+      "file": "packages/tooling/tool/cli/test/sync-data-to-ts.test.ts",
+      "line": 222,
+      "endLine": 233,
+      "body": "const withEnv = <A, E, R>(\n  entries: Readonly<Record<string, string>>,\n  use: Effect.Effect<A, E, R>\n): Effect.Effect<A, E, R> =>\n  Effect.gen(function* () {\n    const current = yield* ConfigProvider.ConfigProvider;\n    const testEnv = ConfigProvider.fromEnv({ env: entries });\n\n    return yield* use.pipe(\n      Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.orElse(testEnv, current))\n    );\n  });",
+      "resourcesAcquired": [],
+      "layersBuilt": ["Effect.provideService"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempRepoCommand",
+      "file": "packages/tooling/tool/cli/test/sync-data-to-ts.test.ts",
+      "line": 235,
+      "endLine": 254,
+      "body": "const withTempRepoCommand = <A, E, R>(use: Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      const path = yield* Path.Path;\n      const tmpDir = yield* fs.makeTempDirectory();\n      const previousCwd = process.cwd();\n\n      process.chdir(tmpDir);\n      yield* fs.makeDirectory(path.join(tmpDir, \".git\"), { recursive: true });\n\n      return { fs, previousCwd, tmpDir } as const;\n    }),\n    () => use,\n    ({ fs, previousCwd, tmpDir }) =>\n      Effect.gen(function* () {\n        process.chdir(previousCwd);\n        yield* fs.remove(tmpDir, { recursive: true });\n      })\n  ).pipe(provideScopedLayer(CommandTestLayer));",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["CommandTestLayer", "provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withRegisteredTarget",
+      "file": "packages/tooling/tool/cli/test/sync-data-to-ts.test.ts",
+      "line": 256,
+      "endLine": 272,
+      "body": "const withRegisteredTarget = <A, E, R>(target: SyncDataTarget, use: Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.sync(() => {\n      const targets = syncDataTargets as unknown as Array<SyncDataTarget>;\n      A.appendInPlace(targets, target);\n      return targets;\n    }),\n    () => use,\n    (targets) =>\n      Effect.sync(() => {\n        const index = O.getOrUndefined(A.findFirstIndex(targets, (candidate) => candidate.id === target.id));\n\n        if (index !== undefined) {\n          A.spliceInPlace(targets, { start: index, deleteCount: 1 });\n        }\n      })\n  );",
+      "resourcesAcquired": ["acquireUseRelease"],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withPackage",
+      "file": "packages/tooling/tool/cli/test/terse-effect.test.ts",
+      "line": 549,
+      "endLine": 560,
+      "body": "export function withPackage(packageName: string, options: PackageOptions): PackageOptions;\",\n                \"export function withPackage(packageName: string): (options: PackageOptions) => PackageOptions;\",\n                \"export function withPackage(\",\n                \"  packageName: string,\",\n                \"  options?: PackageOptions\",\n                \"): PackageOptions | ((options: PackageOptions) => PackageOptions) {\",\n                \"  if (options === undefined) {\",\n                \"    return (self) => ({ ...self, packageName });\",\n                \"  }\",\n                \"\",\n                \"  return { ...options, packageName };\",\n                \"}",
+      "resourcesAcquired": [],
+      "layersBuilt": [],
+      "candidateKind": "pure-data-helper-candidate"
+    },
+    {
+      "name": "withPackage",
+      "file": "packages/tooling/tool/cli/test/terse-effect.test.ts",
+      "line": 550,
+      "endLine": 560,
+      "body": "export function withPackage(packageName: string): (options: PackageOptions) => PackageOptions;\",\n                \"export function withPackage(\",\n                \"  packageName: string,\",\n                \"  options?: PackageOptions\",\n                \"): PackageOptions | ((options: PackageOptions) => PackageOptions) {\",\n                \"  if (options === undefined) {\",\n                \"    return (self) => ({ ...self, packageName });\",\n                \"  }\",\n                \"\",\n                \"  return { ...options, packageName };\",\n                \"}",
+      "resourcesAcquired": [],
+      "layersBuilt": [],
+      "candidateKind": "pure-data-helper-candidate"
+    },
+    {
+      "name": "withPackage",
+      "file": "packages/tooling/tool/cli/test/terse-effect.test.ts",
+      "line": 551,
+      "endLine": 560,
+      "body": "export function withPackage(\",\n                \"  packageName: string,\",\n                \"  options?: PackageOptions\",\n                \"): PackageOptions | ((options: PackageOptions) => PackageOptions) {\",\n                \"  if (options === undefined) {\",\n                \"    return (self) => ({ ...self, packageName });\",\n                \"  }\",\n                \"\",\n                \"  return { ...options, packageName };\",\n                \"}",
+      "resourcesAcquired": [],
+      "layersBuilt": [],
+      "candidateKind": "pure-data-helper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/tool/cli/test/tmpfs-reap.test.ts",
+      "line": 35,
+      "endLine": 49,
+      "body": "const withTempDirectory = <Value, Failure, Requirements>(\n  use: (root: string) => Effect.Effect<Value, Failure, Requirements>\n) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      return yield* fs.makeTempDirectory({ prefix: \"tmpfs-reap-test-\" });\n    }),\n    use,\n    (root) =>\n      Effect.gen(function* () {\n        const fs = yield* FileSystem.FileSystem;\n        yield* fs.remove(root, { force: true, recursive: true });\n      })\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempRepo",
+      "file": "packages/tooling/tool/cli/test/tsconfig-sync.test.ts",
+      "line": 44,
+      "endLine": 62,
+      "body": "const withTempRepo = <A, E, R>(use: Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      const path = yield* Path.Path;\n      const tmpDir = yield* fs.makeTempDirectory();\n      const previousCwd = process.cwd();\n\n      yield* fs.makeDirectory(path.join(tmpDir, \".git\"), { recursive: true });\n      process.chdir(tmpDir);\n      return { fs, previousCwd, tmpDir } as const;\n    }),\n    () => use,\n    ({ fs, previousCwd, tmpDir }) =>\n      Effect.gen(function* () {\n        process.chdir(previousCwd);\n        yield* fs.remove(tmpDir, { recursive: true, force: true });\n      })\n  ).pipe(provideScopedLayer(TestLayer));",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["TestLayer", "provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withScratchRepo",
+      "file": "packages/tooling/tool/cli/test/worktree-command.test.ts",
+      "line": 129,
+      "endLine": 149,
+      "body": "const withScratchRepo = <A, E, R>(use: (repoRoot: string) => Effect.Effect<A, E, R>) =>\n  Effect.scoped(\n    Effect.acquireUseRelease(\n      Effect.gen(function* () {\n        const fs = yield* FileSystem.FileSystem;\n        const path = yield* Path.Path;\n        const tmpDir = yield* fs.makeTempDirectory({ prefix: \"worktree-command-test-\" });\n        const repoRoot = path.join(tmpDir, \"main\");\n        yield* fs.makeDirectory(repoRoot);\n        yield* initScratchRepo(repoRoot);\n        const originRoot = path.join(tmpDir, \"origin.git\");\n        yield* fs.makeDirectory(originRoot);\n        yield* runGit(originRoot, [\"init\", \"--bare\"]);\n        yield* runGit(repoRoot, [\"remote\", \"add\", \"origin\", originRoot]);\n        yield* runGit(repoRoot, [\"push\", \"--set-upstream\", \"origin\", \"main\"]);\n        return { fs, repoRoot, tmpDir } as const;\n      }),\n      ({ repoRoot }) => use(repoRoot),\n      ({ fs, tmpDir }) => fs.remove(tmpDir, { recursive: true, force: true }).pipe(Effect.ignore)\n    ).pipe(provideScopedLayer(testLayer))\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["provideScopedLayer", "testLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withScratchFleet",
+      "file": "packages/tooling/tool/cli/test/worktree-fleet-scan.test.ts",
+      "line": 99,
+      "endLine": 111,
+      "body": "const withScratchFleet = <A, E, R>(use: (fixture: FleetFixture) => Effect.Effect<A, E, R>) =>\n  Effect.scoped(\n    Effect.acquireUseRelease(\n      Effect.gen(function* () {\n        const fs = yield* FileSystem.FileSystem;\n        const tmpDir = yield* fs.makeTempDirectory();\n        const fixture = yield* initScratchFleet(tmpDir);\n        return { fs, fixture };\n      }),\n      ({ fixture }) => use(fixture),\n      ({ fixture, fs }) => fs.remove(fixture.tmpDir, { recursive: true, force: true }).pipe(Effect.ignore)\n    ).pipe(provideScopedLayer(testLayer))\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["provideScopedLayer", "testLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withScratchRepo",
+      "file": "packages/tooling/tool/cli/test/worktree-reap.test.ts",
+      "line": 57,
+      "endLine": 98,
+      "body": "const withScratchRepo = <Value, Failure, Requirements>(\n  use: (fixture: {\n    readonly mainHead: string;\n    readonly repoRoot: string;\n    readonly tempRoot: string;\n    readonly worktreesRoot: string;\n  }) => Effect.Effect<Value, Failure, Requirements>\n) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      const path = yield* Path.Path;\n      const tempRoot = yield* fs.makeTempDirectory({ prefix: \"worktree-reap-test-\" });\n      const repoRoot = path.join(tempRoot, \"repo\");\n      const originRoot = path.join(tempRoot, \"origin.git\");\n      const worktreesRoot = path.join(tempRoot, \"worktrees\");\n      yield* Effect.forEach(\n        [repoRoot, originRoot, worktreesRoot],\n        Effect.fn(\"WorktreeReapTest.makeFixtureDirectory\")(function* (directory) {\n          yield* fs.makeDirectory(directory, { recursive: true });\n        }),\n        { discard: true }\n      );\n      yield* runCommand(\"git\", [\"init\", \"--quiet\", \"--bare\"], originRoot);\n      yield* runCommand(\"git\", [\"init\", \"--quiet\", \"-b\", \"main\"], repoRoot);\n      yield* runCommand(\"git\", [\"config\", \"user.email\", \"worktree-reap@example.invalid\"], repoRoot);\n      yield* runCommand(\"git\", [\"config\", \"user.name\", \"Worktree Reap Test\"], repoRoot);\n      yield* runCommand(\"git\", [\"config\", \"commit.gpgsign\", \"false\"], repoRoot);\n      yield* fs.writeFileString(path.join(repoRoot, \"README.md\"), \"# fixture\\n\");\n      yield* runCommand(\"git\", [\"add\", \"README.md\"], repoRoot);\n      yield* runCommand(\"git\", [\"commit\", \"--quiet\", \"-m\", \"fixture\"], repoRoot);\n      yield* runCommand(\"git\", [\"remote\", \"add\", \"origin\", originRoot], repoRoot);\n      yield* runCommand(\"git\", [\"push\", \"--quiet\", \"--set-upstream\", \"origin\", \"main\"], repoRoot);\n      const mainHead = Str.trim(yield* runCommand(\"git\", [\"rev-parse\", \"HEAD\"], repoRoot));\n      return { mainHead, repoRoot, tempRoot, worktreesRoot };\n    }),\n    use,\n    Effect.fn(\"WorktreeReapTest.removeFixture\")(function* ({ tempRoot }) {\n      const fs = yield* FileSystem.FileSystem;\n      yield* fs.remove(tempRoot, { force: true, recursive: true });\n    })\n  ).pipe(provideScopedLayer(testLayer));",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["provideScopedLayer", "testLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/tool/cli/test/yeet-artifact-writers.test.ts",
+      "line": 48,
+      "endLine": 55,
+      "body": "const withTempDirectory = <Result, Error, Requirements>(\n  use: (tmpDir: string) => Effect.Effect<Result, Error, Requirements>\n) =>\n  Effect.acquireUseRelease(\n    Effect.flatMap(FileSystem.FileSystem, (fs) => fs.makeTempDirectory()),\n    use,\n    (tmpDir) => Effect.flatMap(FileSystem.FileSystem, (fs) => fs.remove(tmpDir, { recursive: true }).pipe(Effect.orDie))\n  ).pipe(provideScopedLayer(PlatformLayer));",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["PlatformLayer", "provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/tool/cli/test/yeet-fallow-self-heal.test.ts",
+      "line": 34,
+      "endLine": 48,
+      "body": "const withTempDirectory = <Result, Error, Requirements>(\n  use: (tmpDir: string) => Effect.Effect<Result, Error, Requirements>\n) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      return yield* fs.makeTempDirectory();\n    }),\n    use,\n    (tmpDir) =>\n      Effect.gen(function* () {\n        const fs = yield* FileSystem.FileSystem;\n        yield* fs.remove(tmpDir, { recursive: true });\n      })\n  ).pipe(provideScopedLayer(TestLayer));",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["TestLayer", "provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withInbox",
+      "file": "packages/tooling/tool/cli/test/yeet-inbox-hook-adapter.test.ts",
+      "line": 72,
+      "endLine": 168,
+      "body": "const withInbox = Effect.fn(\"YeetInboxHookAdapterTest.withInbox\")(function* <Value, Failure, Requirements>(\n  use: (fixture: {\n    readonly ack: (id: string, contents?: string) => Effect.Effect<void, PlatformError.PlatformError>;\n    readonly root: string;\n  }) => Effect.Effect<Value, Failure, Requirements>\n) {\n  const fs = yield* FileSystem.FileSystem;\n  const path = yield* Path.Path;\n  const root = yield* fs.makeTempDirectory({ prefix: \"beep-yeet-hook-\" });\n  const inbox = path.join(root, \".beep\", \"inbox\");\n  const acks = path.join(inbox, \"acks\");\n  yield* fs.makeDirectory(path.join(root, \".git\"), { recursive: true });\n  yield* fs.makeDirectory(acks, { recursive: true });\n\n  const rows = [\n    {\n      schemaVersion: \"yeet-inbox/v1\",\n      kind: \"check-failed\",\n      id: \"coverage-live\",\n      severity: \"P0\",\n      checkout: root,\n      ts: \"2026-08-27T00:00:00Z\",\n      capsule: {\n        bucket: \"fail\",\n        headSha: \"abc123\",\n        lane: \"Check / Coverage\",\n        link: \"https://github.com/beep/beep/actions/runs/1/job/2\",\n        observedAt: \"2026-08-27T00:00:00Z\",\n        prNumber: 900,\n        state: \"FAILURE\",\n        workflow: \"Check\",\n      },\n    },\n    {\n      schemaVersion: \"yeet-inbox/v1\",\n      kind: \"review-thread\",\n      id: \"thread-live\",\n      severity: \"P1\",\n      checkout: root,\n      ts: \"2026-08-27T00:00:01Z\",\n      capsule: {\n        headSha: \"abc123\",\n        prNumber: 900,\n        threadId: \"thread-1\",\n        link: \"https://github.com/beep/beep/pull/900#discussion_r1\",\n      },\n    },\n    {\n      schemaVersion: \"yeet-inbox/v1\",\n      kind: \"base-drift\",\n      id: \"drift-live\",\n      severity: \"P2\",\n      checkout: root,\n      ts: \"2026-08-27T00:00:02Z\",\n      capsule: {\n        base: \"origin/main\",\n        headSha: \"abc123\",\n        prNumber: 900,\n      },\n    },\n    {\n      schemaVersion: \"yeet-inbox/v1\",\n      kind: \"check-failed\",\n      id: \"lint-stale\",\n      severity: \"P0\",\n      checkout: root,\n      ts: \"2026-08-26T00:00:00Z\",\n      capsule: {\n        bucket: \"fail\",\n        headSha: \"old456\",\n        lane: \"Check / Lint\",\n        link: null,\n        observedAt: \"2026-08-26T00:00:00Z\",\n        prNumber: 899,\n        state: \"FAILURE\",\n        workflow: \"Check\",\n      },\n    },\n  ];\n\n  const encodedRows = yield* Effect.forEach(rows, (row) => encodeUnknown(row));\n  yield* fs.writeFileString(path.join(inbox, \"failures.ndjson\"), `${A.join(encodedRows, \"\\n\")}\\n`);\n  const encodedDispatch = yield* encodeUnknown({\n    schemaVersion: \"yeet-dispatch/v1\",\n    capsuleIds: [\"coverage-live\"],\n    headSha: \"abc123\",\n    prNumber: 900,\n    sessionStartedAt: \"2026-08-27T00:00:00Z\",\n    updatedAt: \"2026-08-27T00:00:00Z\",\n  });\n  yield* fs.writeFileString(path.join(inbox, \"dispatch.json\"), encodedDispatch);\n\n  return yield* use({\n    ack: (id, contents = \"{}\\n\") => fs.writeFileString(path.join(acks, id), contents),\n    root,\n  }).pipe(Effect.ensuring(fs.remove(root, { recursive: true }).pipe(Effect.orDie)));\n});",
+      "resourcesAcquired": ["FileSystem", "makeTempDirectory"],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts",
+      "line": 255,
+      "endLine": 262,
+      "body": "const withTempDirectory = Effect.fn(\"withTempDirectory\")(function* <Value, Failure, Requirements>(\n  use: (root: string) => Effect.Effect<Value, Failure, Requirements>\n) {\n  const fs = yield* FileSystem.FileSystem;\n  return yield* Effect.acquireUseRelease(fs.makeTempDirectory(), use, (root) =>\n    Effect.ignore(fs.remove(root, { recursive: true }))\n  );\n});",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/tool/cli/test/yeet-monitor-comment-stream.test.ts",
+      "line": 102,
+      "endLine": 109,
+      "body": "const withTempDirectory = Effect.fn(\"withTempDirectory\")(function* <Value, Failure, Requirements>(\n  use: (root: string) => Effect.Effect<Value, Failure, Requirements>\n) {\n  const fs = yield* FileSystem.FileSystem;\n  return yield* Effect.acquireUseRelease(fs.makeTempDirectory(), use, (root) =>\n    Effect.ignore(fs.remove(root, { recursive: true }))\n  );\n});",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/tool/cli/test/yeet-portfolio-index-guard.test.ts",
+      "line": 55,
+      "endLine": 69,
+      "body": "const withTempDirectory = <Result, Error, Requirements>(\n  use: (tmpDir: string) => Effect.Effect<Result, Error, Requirements>\n) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      return yield* fs.makeTempDirectory();\n    }),\n    use,\n    (tmpDir) =>\n      Effect.gen(function* () {\n        const fs = yield* FileSystem.FileSystem;\n        yield* fs.remove(tmpDir, { recursive: true });\n      })\n  ).pipe(provideScopedLayer(PlatformLayer));",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["PlatformLayer", "provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withPortfolioRepo",
+      "file": "packages/tooling/tool/cli/test/yeet-portfolio-index-guard.test.ts",
+      "line": 112,
+      "endLine": 120,
+      "body": "const withPortfolioRepo = <Result, Error, Requirements>(\n  use: (repo: TempPortfolioRepo) => Effect.Effect<Result, Error, Requirements>,\n  slugs: ReadonlyArray<string> = [\"alpha-packet\", \"beta-packet\"]\n) =>\n  withTempDirectory((tmpDir) =>\n    Effect.gen(function* () {\n      return yield* use(yield* initPortfolioRepo(tmpDir, slugs));\n    })\n  );",
+      "resourcesAcquired": [],
+      "layersBuilt": [],
+      "candidateKind": "pure-data-helper-candidate"
+    },
+    {
+      "name": "withPortfolioRepoAndOutside",
+      "file": "packages/tooling/tool/cli/test/yeet-portfolio-index-guard.test.ts",
+      "line": 122,
+      "endLine": 135,
+      "body": "const withPortfolioRepoAndOutside = <Result, Error, Requirements>(\n  use: (repo: TempPortfolioRepo, outsideRoot: string) => Effect.Effect<Result, Error, Requirements>\n) =>\n  withTempDirectory((tempRoot) =>\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      const path = yield* Path.Path;\n      const repoRoot = path.join(tempRoot, \"repo\");\n      const outsideRoot = path.join(tempRoot, \"outside\");\n      yield* fs.makeDirectory(repoRoot);\n      yield* fs.makeDirectory(outsideRoot);\n      return yield* use(yield* initPortfolioRepo(repoRoot, [\"alpha-packet\", \"beta-packet\"]), outsideRoot);\n    })\n  );",
+      "resourcesAcquired": ["FileSystem"],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/tool/cli/test/yeet-reply-engine.test.ts",
+      "line": 342,
+      "endLine": 349,
+      "body": "const withTempDirectory = Effect.fn(\"withTempDirectory\")(function* <Value, Failure, Requirements>(\n  use: (root: string) => Effect.Effect<Value, Failure, Requirements>\n) {\n  const fs = yield* FileSystem.FileSystem;\n  return yield* Effect.acquireUseRelease(fs.makeTempDirectory(), use, (root) =>\n    Effect.ignore(fs.remove(root, { recursive: true }))\n  );\n});",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/tool/cli/test/yeet-review-fixes.test.ts",
+      "line": 43,
+      "endLine": 57,
+      "body": "const withTempDirectory = <Success, Error, Requirements>(\n  use: (tmpDir: string) => Effect.Effect<Success, Error, Requirements>\n) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      return yield* fs.makeTempDirectory();\n    }),\n    use,\n    (tmpDir) =>\n      Effect.gen(function* () {\n        const fs = yield* FileSystem.FileSystem;\n        yield* fs.remove(tmpDir, { recursive: true });\n      })\n  ).pipe(provideScopedLayer(PlatformLayer));",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["PlatformLayer", "provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withProofCoordinatorRepo",
+      "file": "packages/tooling/tool/cli/test/yeet-review-fixes.test.ts",
+      "line": 76,
+      "endLine": 110,
+      "body": "const withProofCoordinatorRepo = <Success, Error, Requirements>(\n  use: (repo: {\n    readonly context: RepoRunContext;\n    readonly lockPath: string;\n    readonly repositoryIdentity: string;\n  }) => Effect.Effect<Success, Error, Requirements>,\n  availableGib = 50,\n  totalGib = 128\n) =>\n  withTempDirectory((tmpDir) =>\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      const path = yield* Path.Path;\n      yield* runGit(tmpDir, [\"init\"]);\n      const repositoryIdentity = `https://example.test/review-fixes/${path.basename(tmpDir)}.git`;\n      yield* runGit(tmpDir, [\"remote\", \"add\", \"origin\", repositoryIdentity]);\n      const context = contextAt(tmpDir);\n      const lockPath = yield* proofLockPathForContext(context);\n      yield* fs.remove(lockPath, { force: true });\n      return yield* Effect.acquireUseRelease(\n        Effect.succeed({ context, lockPath, repositoryIdentity }),\n        use,\n        ({ lockPath: acquiredPath }) =>\n          Effect.gen(function* () {\n            const fs = yield* FileSystem.FileSystem;\n            yield* fs.remove(acquiredPath, { force: true });\n          })\n      );\n    }).pipe(\n      // Coordinator locks and admission leases both live under the temp\n      // runtime root, so removing tmpDir cleans every artifact.\n      provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: \"test-override\", root: `${tmpDir}/runtime` })),\n      provideScopedLayer(memoryStatsTestLayer(availableGib, totalGib))\n    )\n  );",
+      "resourcesAcquired": ["FileSystem", "acquireUseRelease"],
+      "layersBuilt": ["memoryStatsTestLayer", "provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/tool/cli/test/yeet-sweep-plan.test.ts",
+      "line": 479,
+      "endLine": 486,
+      "body": "const withTempDirectory = Effect.fn(\"withTempDirectory\")(function* <Value, Failure, Requirements>(\n  use: (root: string) => Effect.Effect<Value, Failure, Requirements>\n) {\n  const fs = yield* FileSystem.FileSystem;\n  return yield* Effect.acquireUseRelease(fs.makeTempDirectory(), use, (root) =>\n    Effect.ignore(fs.remove(root, { recursive: true }))\n  );\n});",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/tool/cli/test/yeet.test.ts",
+      "line": 238,
+      "endLine": 252,
+      "body": "const withTempDirectory = <Result, Error, Requirements>(\n  use: (tmpDir: string) => Effect.Effect<Result, Error, Requirements>\n) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      return yield* fs.makeTempDirectory();\n    }),\n    use,\n    (tmpDir) =>\n      Effect.gen(function* () {\n        const fs = yield* FileSystem.FileSystem;\n        yield* fs.remove(tmpDir, { force: true, recursive: true });\n      })\n  ).pipe(provideScopedLayer(PlatformLayer));",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["PlatformLayer", "provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withEnvVar",
+      "file": "packages/tooling/tool/cli/test/yeet.test.ts",
+      "line": 254,
+      "endLine": 264,
+      "body": "const withEnvVar = <Out>(name: string, value: string | undefined, use: () => Out): Out => {\n  const previous = Bun.env[name];\n  if (value === undefined) delete Bun.env[name];\n  else Bun.env[name] = value;\n  try {\n    return use();\n  } finally {\n    if (previous === undefined) delete Bun.env[name];\n    else Bun.env[name] = previous;\n  }\n};",
+      "resourcesAcquired": [],
+      "layersBuilt": [],
+      "candidateKind": "pure-data-helper-candidate"
+    },
+    {
+      "name": "withEnvVarEffect",
+      "file": "packages/tooling/tool/cli/test/yeet.test.ts",
+      "line": 266,
+      "endLine": 284,
+      "body": "const withEnvVarEffect = <Out, Error, Requirements>(\n  name: string,\n  value: string | undefined,\n  use: Effect.Effect<Out, Error, Requirements>\n): Effect.Effect<Out, Error, Requirements> =>\n  Effect.acquireUseRelease(\n    Effect.sync(() => {\n      const previous = Bun.env[name];\n      if (value === undefined) delete Bun.env[name];\n      else Bun.env[name] = value;\n      return previous;\n    }),\n    () => use,\n    (previous) =>\n      Effect.sync(() => {\n        if (previous === undefined) delete Bun.env[name];\n        else Bun.env[name] = previous;\n      })\n  );",
+      "resourcesAcquired": ["acquireUseRelease"],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTrackedFileRepo",
+      "file": "packages/tooling/tool/cli/test/yeet.test.ts",
+      "line": 309,
+      "endLine": 317,
+      "body": "const withTrackedFileRepo = <Result, Error, Requirements>(\n  use: (repo: TempTrackedFileRepo) => Effect.Effect<Result, Error, Requirements>\n) =>\n  withTempDirectory((tmpDir) =>\n    Effect.gen(function* () {\n      const repo = yield* initTrackedFileRepo(tmpDir);\n      return yield* use({ ...repo, tmpDir });\n    })\n  );",
+      "resourcesAcquired": [],
+      "layersBuilt": [],
+      "candidateKind": "pure-data-helper-candidate"
+    },
+    {
+      "name": "withProofCoordinatorRepo",
+      "file": "packages/tooling/tool/cli/test/yeet.test.ts",
+      "line": 323,
+      "endLine": 359,
+      "body": "const withProofCoordinatorRepo = <Result, Error, Requirements>(\n  use: (repo: TempProofCoordinatorRepo) => Effect.Effect<Result, Error, Requirements>\n) =>\n  withTrackedFileRepo((repo) =>\n    Effect.acquireUseRelease(\n      Effect.gen(function* () {\n        const fs = yield* FileSystem.FileSystem;\n        const path = yield* Path.Path;\n        const repositoryIdentity = `https://example.test/${path.basename(repo.tmpDir)}.git`;\n        yield* runGit(repo.tmpDir, [\"remote\", \"add\", \"origin\", repositoryIdentity]);\n        const lockPath = yield* proofLockPathForContext(repo.tempContext);\n        const fallbackPath = path.join(path.dirname(lockPath), \"scheduler-fallback.lock\");\n        yield* Effect.all([fs.remove(lockPath, { force: true }), fs.remove(fallbackPath, { force: true })], {\n          discard: true,\n        });\n        return { ...repo, lockPath } as const;\n      }),\n      use,\n      ({ lockPath }) =>\n        Effect.gen(function* () {\n          const fs = yield* FileSystem.FileSystem;\n          const path = yield* Path.Path;\n          const coordinatorDirectory = path.dirname(lockPath);\n          const coordinatorPrefix = path.basename(lockPath);\n          const fallbackPath = path.join(coordinatorDirectory, \"scheduler-fallback.lock\");\n          yield* Effect.all([fs.remove(lockPath, { force: true }), fs.remove(fallbackPath, { force: true })], {\n            discard: true,\n          });\n          const entries = yield* fs.readDirectory(coordinatorDirectory).pipe(Effect.orElseSucceed(A.empty<string>));\n          yield* Effect.forEach(\n            A.filter(entries, Str.startsWith(coordinatorPrefix)),\n            (entry) => fs.remove(path.join(coordinatorDirectory, entry), { force: true }).pipe(Effect.ignore),\n            { discard: true }\n          );\n        })\n    )\n  );",
+      "resourcesAcquired": ["FileSystem", "acquireUseRelease"],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withRuntimeConfig",
+      "file": "packages/tooling/tool/cli/test/yeet.test.ts",
+      "line": 4311,
+      "endLine": 4315,
+      "body": "const withRuntimeConfig = (env: Record<string, string>) =>\n          pipe(\n            proofCoordinatorLockPath(\"git@github.com:acme/repo.git\"),\n            provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown(env)))\n          );",
+      "resourcesAcquired": [],
+      "layersBuilt": ["provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    }
+  ],
+  "wrapperCalls": [
+    {
+      "name": "withAdmissionTempRoot",
+      "occurrenceCount": 90,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/tooling/tool/cli/test/quality-scheduler.test.ts",
+          "count": 90,
+          "lines": [
+            711, 742, 767, 800, 850, 888, 919, 959, 979, 1005, 1040, 1073, 1119,
+            1154, 1179, 1220, 1289, 1316, 1344, 1370, 1422, 1482, 1548, 1600,
+            1623, 1664, 1690, 1722, 1810, 1873, 1927, 2004, 2059, 2098, 2123,
+            2149, 2171, 2211, 2251, 2293, 2342, 2364, 2390, 2430, 2476, 2518,
+            2624, 2655, 2681, 2711, 2730, 2748, 2768, 2821, 2919, 2953, 2983,
+            3037, 3083, 3113, 3159, 3201, 3277, 3321, 3388, 3418, 3446, 3504,
+            3540, 3589, 3641, 3684, 3738, 3785, 3820, 3871, 3915, 3970, 4004,
+            4055, 4097, 4196, 4225, 4302, 4321, 4350, 4368, 4393, 4419, 4443
+          ]
+        }
+      ],
+      "lexicalDefinitionCount": 1,
+      "estimatedCallCountExcludingDefinitions": 89
+    },
+    {
+      "name": "withAdmissionWorkloadBinding",
+      "occurrenceCount": 6,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/tooling/tool/cli/test/step-capture-lifecycle.test.ts",
+          "count": 6,
+          "lines": [175, 191, 208, 230, 245, 346]
+        }
+      ],
+      "lexicalDefinitionCount": 0,
+      "estimatedCallCountExcludingDefinitions": 6
+    },
+    {
+      "name": "withAiMetricsDuckDb",
+      "occurrenceCount": 2,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/tooling/library/ai-metrics/test/duckdb.test.ts",
+          "count": 2,
+          "lines": [39, 62]
+        }
+      ],
+      "lexicalDefinitionCount": 0,
+      "estimatedCallCountExcludingDefinitions": 2
+    },
+    {
+      "name": "withAlias",
+      "occurrenceCount": 5,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/tooling/tool/cli/test/knowledge-semantic-delta.test.ts",
+          "count": 5,
+          "lines": [1104, 1104, 1173, 1182, 1183]
+        }
+      ],
+      "lexicalDefinitionCount": 0,
+      "estimatedCallCountExcludingDefinitions": 5
+    },
+    {
+      "name": "withAttributes",
+      "occurrenceCount": 8,
+      "fileCount": 3,
+      "files": [
+        {
+          "file": "packages/foundation/capability/observability/test/HttpApiTelemetry.test.ts",
+          "count": 3,
+          "lines": [65, 101, 130]
+        },
+        {
+          "file": "packages/foundation/capability/observability/test/Metric.test.ts",
+          "count": 1,
+          "lines": [136]
+        },
+        {
+          "file": "packages/foundation/capability/observability/test/PhaseProfiler.test.ts",
+          "count": 4,
+          "lines": [69, 72, 97, 122]
+        }
+      ],
+      "lexicalDefinitionCount": 0,
+      "estimatedCallCountExcludingDefinitions": 8
+    },
+    {
+      "name": "withBootstrappedRootConfig",
+      "occurrenceCount": 11,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/tooling/tool/cli/test/create-package.test.ts",
+          "count": 11,
+          "lines": [551, 577, 650, 701, 764, 843, 911, 945, 1143, 1231, 1290]
+        }
+      ],
+      "lexicalDefinitionCount": 1,
+      "estimatedCallCountExcludingDefinitions": 10
+    },
+    {
+      "name": "withBunGlobDisabled",
+      "occurrenceCount": 8,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/foundation/modeling/utils/test/Glob.test.ts",
+          "count": 8,
+          "lines": [220, 221, 236, 273, 306, 326, 345, 370]
+        }
+      ],
+      "lexicalDefinitionCount": 1,
+      "estimatedCallCountExcludingDefinitions": 7
+    },
+    {
+      "name": "withBunShim",
+      "occurrenceCount": 1,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/tooling/tool/cli/test/create-package.test.ts",
+          "count": 1,
+          "lines": [560]
+        }
+      ],
+      "lexicalDefinitionCount": 1,
+      "estimatedCallCountExcludingDefinitions": 0
+    },
+    {
+      "name": "withCaching",
+      "occurrenceCount": 2,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/foundation/capability/nlp-processing/test/Backend/Composition.test.ts",
+          "count": 2,
+          "lines": [3, 108]
+        }
+      ],
+      "lexicalDefinitionCount": 0,
+      "estimatedCallCountExcludingDefinitions": 2
+    },
+    {
+      "name": "withCiLanePeakRss",
+      "occurrenceCount": 2,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/tooling/tool/cli/test/ci-lane-timings.test.ts",
+          "count": 2,
+          "lines": [454, 457]
+        }
+      ],
+      "lexicalDefinitionCount": 0,
+      "estimatedCallCountExcludingDefinitions": 2
+    },
+    {
+      "name": "withCodecStatics",
+      "occurrenceCount": 18,
+      "fileCount": 4,
+      "files": [
+        {
+          "file": "packages/agents/use-cases/test/AssistantTurn.test.ts",
+          "count": 1,
+          "lines": [107]
+        },
+        {
+          "file": "packages/foundation/modeling/schema/test/SchemaUtils.test.ts",
+          "count": 2,
+          "lines": [305, 333]
+        },
+        {
+          "file": "packages/foundation/modeling/schema/test/codecStatics.test.ts",
+          "count": 14,
+          "lines": [
+            39, 41, 46, 47, 62, 73, 93, 111, 138, 142, 143, 144, 150, 163
+          ]
+        },
+        {
+          "file": "packages/tooling/library/codegen-kit/test/CodegenKit.test.ts",
+          "count": 1,
+          "lines": [364]
+        }
+      ],
+      "lexicalDefinitionCount": 0,
+      "estimatedCallCountExcludingDefinitions": 18
+    },
+    {
+      "name": "withConfigEnv",
+      "occurrenceCount": 3,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/tooling/tool/cli/test/docgen.test.ts",
+          "count": 3,
+          "lines": [1004, 1031, 1048]
+        }
+      ],
+      "lexicalDefinitionCount": 1,
+      "estimatedCallCountExcludingDefinitions": 2
+    },
+    {
+      "name": "withConstantDefault",
+      "occurrenceCount": 2,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/foundation/modeling/schema/test/SchemaUtils.test.ts",
+          "count": 2,
+          "lines": [282, 296]
+        }
+      ],
+      "lexicalDefinitionCount": 0,
+      "estimatedCallCountExcludingDefinitions": 2
+    },
+    {
+      "name": "withConstructorDefault",
+      "occurrenceCount": 2,
+      "fileCount": 2,
+      "files": [
+        {
+          "file": "packages/foundation/modeling/schema/test/collectAnnotationsAt.test.ts",
+          "count": 1,
+          "lines": [81]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/lint-command.test.ts",
+          "count": 1,
+          "lines": [1152]
+        }
+      ],
+      "lexicalDefinitionCount": 0,
+      "estimatedCallCountExcludingDefinitions": 2
+    },
+    {
+      "name": "withDecodingDefaultKey",
+      "occurrenceCount": 1,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/drivers/acp/test/helpers.ts",
+          "count": 1,
+          "lines": [19]
+        }
+      ],
+      "lexicalDefinitionCount": 0,
+      "estimatedCallCountExcludingDefinitions": 1
+    },
+    {
+      "name": "withDefault",
+      "occurrenceCount": 1,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/drivers/acp/test/fixtures/acp-mock-peer.ts",
+          "count": 1,
+          "lines": [14]
+        }
+      ],
+      "lexicalDefinitionCount": 0,
+      "estimatedCallCountExcludingDefinitions": 1
+    },
+    {
+      "name": "withDetector",
+      "occurrenceCount": 2,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/drivers/face-detection/test/FaceDetection.service.test.ts",
+          "count": 2,
+          "lines": [219, 231]
+        }
+      ],
+      "lexicalDefinitionCount": 0,
+      "estimatedCallCountExcludingDefinitions": 2
+    },
+    {
+      "name": "withDisposition",
+      "occurrenceCount": 4,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/law-practice/use-cases/test/CandorPolicy.test.ts",
+          "count": 4,
+          "lines": [586, 594, 602, 610]
+        }
+      ],
+      "lexicalDefinitionCount": 1,
+      "estimatedCallCountExcludingDefinitions": 3
+    },
+    {
+      "name": "withDuckDb",
+      "occurrenceCount": 4,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
+          "count": 4,
+          "lines": [235, 374, 549, 557]
+        }
+      ],
+      "lexicalDefinitionCount": 1,
+      "estimatedCallCountExcludingDefinitions": 3
+    },
+    {
+      "name": "withDuckDbInstanceCreate",
+      "occurrenceCount": 10,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/drivers/duckdb/test/DuckDb.service.test.ts",
+          "count": 10,
+          "lines": [378, 435, 492, 517, 552, 605, 656, 697, 873, 903]
+        }
+      ],
+      "lexicalDefinitionCount": 1,
+      "estimatedCallCountExcludingDefinitions": 9
+    },
+    {
+      "name": "withEmptyArrayDefaults",
+      "occurrenceCount": 1,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/foundation/modeling/schema/test/SchemaUtils.test.ts",
+          "count": 1,
+          "lines": [244]
+        }
+      ],
+      "lexicalDefinitionCount": 0,
+      "estimatedCallCountExcludingDefinitions": 1
+    },
+    {
+      "name": "withEnv",
+      "occurrenceCount": 1,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/tooling/tool/cli/test/sync-data-to-ts.test.ts",
+          "count": 1,
+          "lines": [934]
+        }
+      ],
+      "lexicalDefinitionCount": 1,
+      "estimatedCallCountExcludingDefinitions": 0
+    },
+    {
+      "name": "withEnvironment",
+      "occurrenceCount": 1,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/tooling/test-kit/test-utils/test/SqlTest.test.ts",
+          "count": 1,
+          "lines": [72]
+        }
+      ],
+      "lexicalDefinitionCount": 0,
+      "estimatedCallCountExcludingDefinitions": 1
+    },
+    {
+      "name": "withEnvVar",
+      "occurrenceCount": 69,
+      "fileCount": 6,
+      "files": [
+        {
+          "file": "packages/tooling/tool/cli/test/cache-command.test.ts",
+          "count": 3,
+          "lines": [65, 68, 68]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/ci-lane.test.ts",
+          "count": 5,
+          "lines": [859, 860, 869, 870, 878]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/docgen.test.ts",
+          "count": 2,
+          "lines": [773, 774]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/files-command.test.ts",
+          "count": 26,
+          "lines": [
+            1449, 2022, 2164, 2207, 2269, 2334, 2387, 2419, 2454, 2525, 2589,
+            2626, 2663, 2701, 2735, 2768, 2808, 2851, 2885, 2924, 2985, 3061,
+            3111, 3637, 4945, 5013
+          ]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/quality-tasks.test.ts",
+          "count": 29,
+          "lines": [
+            566, 582, 590, 609, 830, 831, 863, 864, 2704, 2705, 2732, 2733,
+            2759, 2760, 2761, 2762, 2803, 2804, 2816, 2817, 2827, 2828, 3779,
+            4385, 5608, 5609, 5622, 5623, 5664
+          ]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/yeet.test.ts",
+          "count": 4,
+          "lines": [806, 1052, 1066, 1114]
+        }
+      ],
+      "lexicalDefinitionCount": 6,
+      "estimatedCallCountExcludingDefinitions": 63
+    },
+    {
+      "name": "withEnvVarEffect",
+      "occurrenceCount": 52,
+      "fileCount": 3,
+      "files": [
+        {
+          "file": "packages/tooling/tool/cli/test/ci-lane.test.ts",
+          "count": 5,
+          "lines": [267, 270, 273, 276, 279]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/quality-tasks.test.ts",
+          "count": 46,
+          "lines": [
+            1050, 1053, 1104, 1107, 1149, 1152, 1196, 1199, 1238, 1241, 1504,
+            1507, 1514, 1534, 1535, 1536, 1539, 1553, 1570, 1573, 1573, 1603,
+            1606, 1635, 1637, 1669, 1671, 1678, 1706, 1723, 1745, 1746, 1773,
+            1776, 1801, 1802, 1829, 1830, 1831, 1874, 1905, 1938, 2647, 5303,
+            5360, 5410
+          ]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/yeet.test.ts",
+          "count": 1,
+          "lines": [543]
+        }
+      ],
+      "lexicalDefinitionCount": 3,
+      "estimatedCallCountExcludingDefinitions": 49
+    },
+    {
+      "name": "withEventOptions",
+      "occurrenceCount": 2,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/law-practice/use-cases/test/CandorPolicy.test.ts",
+          "count": 2,
+          "lines": [649, 657]
+        }
+      ],
+      "lexicalDefinitionCount": 1,
+      "estimatedCallCountExcludingDefinitions": 1
+    },
+    {
+      "name": "withExif",
+      "occurrenceCount": 2,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/tooling/tool/cli/test/files-command.test.ts",
+          "count": 2,
+          "lines": [215, 244]
+        }
+      ],
+      "lexicalDefinitionCount": 0,
+      "estimatedCallCountExcludingDefinitions": 2
+    },
+    {
+      "name": "withExpectedLabsExclude",
+      "occurrenceCount": 1,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/tooling/tool/cli/test/quality-tasks.test.ts",
+          "count": 1,
+          "lines": [372]
+        }
+      ],
+      "lexicalDefinitionCount": 1,
+      "estimatedCallCountExcludingDefinitions": 0
+    },
+    {
+      "name": "withExposedPorts",
+      "occurrenceCount": 1,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/tooling/test-kit/test-utils/test/SqlTest.test.ts",
+          "count": 1,
+          "lines": [76]
+        }
+      ],
+      "lexicalDefinitionCount": 0,
+      "estimatedCallCountExcludingDefinitions": 1
+    },
+    {
+      "name": "withFallback",
+      "occurrenceCount": 3,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/foundation/capability/nlp-processing/test/Backend/Composition.test.ts",
+          "count": 3,
+          "lines": [2, 70, 84]
+        }
+      ],
+      "lexicalDefinitionCount": 0,
+      "estimatedCallCountExcludingDefinitions": 3
+    },
+    {
+      "name": "withFileSystem",
+      "occurrenceCount": 5,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/foundation/modeling/utils/test/Glob.test.ts",
+          "count": 5,
+          "lines": [33, 43, 44, 45, 46]
+        }
+      ],
+      "lexicalDefinitionCount": 1,
+      "estimatedCallCountExcludingDefinitions": 4
+    },
+    {
+      "name": "withFixtureRepo",
+      "occurrenceCount": 18,
+      "fileCount": 3,
+      "files": [
+        {
+          "file": "packages/tooling/tool/cli/test/ecosystem-polarity.test.ts",
+          "count": 4,
+          "lines": [46, 80, 108, 130]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts",
+          "count": 13,
+          "lines": [
+            234, 301, 378, 426, 502, 586, 643, 706, 767, 841, 907, 986, 1079
+          ]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/quality-artifact-generators.test.ts",
+          "count": 1,
+          "lines": [174]
+        }
+      ],
+      "lexicalDefinitionCount": 3,
+      "estimatedCallCountExcludingDefinitions": 15
+    },
+    {
+      "name": "withId",
+      "occurrenceCount": 1,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/foundation/modeling/nlp/test/PatternCore.test.ts",
+          "count": 1,
+          "lines": [101]
+        }
+      ],
+      "lexicalDefinitionCount": 0,
+      "estimatedCallCountExcludingDefinitions": 1
+    },
+    {
+      "name": "withInbox",
+      "occurrenceCount": 4,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/tooling/tool/cli/test/yeet-inbox-hook-adapter.test.ts",
+          "count": 4,
+          "lines": [178, 202, 343, 393]
+        }
+      ],
+      "lexicalDefinitionCount": 1,
+      "estimatedCallCountExcludingDefinitions": 3
+    },
+    {
+      "name": "withKeyDefaults",
+      "occurrenceCount": 2,
+      "fileCount": 2,
+      "files": [
+        {
+          "file": "packages/foundation/modeling/schema/test/HashSet.test.ts",
+          "count": 1,
+          "lines": [48]
+        },
+        {
+          "file": "packages/foundation/modeling/schema/test/MutableHashSet.test.ts",
+          "count": 1,
+          "lines": [88]
+        }
+      ],
+      "lexicalDefinitionCount": 0,
+      "estimatedCallCountExcludingDefinitions": 2
+    },
+    {
+      "name": "withLabsFixture",
+      "occurrenceCount": 9,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/tooling/tool/cli/test/create-package-lab.test.ts",
+          "count": 9,
+          "lines": [389, 467, 521, 595, 651, 743, 773, 809, 873]
+        }
+      ],
+      "lexicalDefinitionCount": 1,
+      "estimatedCallCountExcludingDefinitions": 8
+    },
+    {
+      "name": "withLabsFixtureRepo",
+      "occurrenceCount": 1,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/tooling/tool/cli/test/quality-artifact-generators.test.ts",
+          "count": 1,
+          "lines": [208]
+        }
+      ],
+      "lexicalDefinitionCount": 1,
+      "estimatedCallCountExcludingDefinitions": 0
+    },
+    {
+      "name": "withLabsRepo",
+      "occurrenceCount": 4,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/tooling/tool/cli/test/labs-list.test.ts",
+          "count": 4,
+          "lines": [76, 94, 122, 145]
+        }
+      ],
+      "lexicalDefinitionCount": 1,
+      "estimatedCallCountExcludingDefinitions": 3
+    },
+    {
+      "name": "withLedger",
+      "occurrenceCount": 11,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/tooling/tool/cli/test/proof-ledger.test.ts",
+          "count": 11,
+          "lines": [93, 107, 128, 143, 160, 212, 219, 235, 275, 304, 324]
+        }
+      ],
+      "lexicalDefinitionCount": 1,
+      "estimatedCallCountExcludingDefinitions": 10
+    },
+    {
+      "name": "withLevel",
+      "occurrenceCount": 10,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/foundation/capability/chalk/test/index.test.ts",
+          "count": 10,
+          "lines": [39, 46, 55, 63, 74, 86, 96, 111, 126, 155]
+        }
+      ],
+      "lexicalDefinitionCount": 1,
+      "estimatedCallCountExcludingDefinitions": 9
+    },
+    {
+      "name": "withLiteralKitStatics",
+      "occurrenceCount": 1,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/foundation/modeling/schema/test/LiteralKit.test.ts",
+          "count": 1,
+          "lines": [36]
+        }
+      ],
+      "lexicalDefinitionCount": 0,
+      "estimatedCallCountExcludingDefinitions": 1
+    },
+    {
+      "name": "withMark",
+      "occurrenceCount": 2,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/foundation/modeling/nlp/test/PatternCore.test.ts",
+          "count": 2,
+          "lines": [70, 111]
+        }
+      ],
+      "lexicalDefinitionCount": 0,
+      "estimatedCallCountExcludingDefinitions": 2
+    },
+    {
+      "name": "withMcpClient",
+      "occurrenceCount": 3,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/foundation/capability/mcp-kit/test/SanitizedToolkit.test.ts",
+          "count": 3,
+          "lines": [199, 224, 237]
+        }
+      ],
+      "lexicalDefinitionCount": 1,
+      "estimatedCallCountExcludingDefinitions": 2
+    },
+    {
+      "name": "withMetadata",
+      "occurrenceCount": 2,
+      "fileCount": 2,
+      "files": [
+        {
+          "file": "packages/foundation/modeling/nlp/test/Ontology/Kind.test.ts",
+          "count": 1,
+          "lines": [110]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/files-command.test.ts",
+          "count": 1,
+          "lines": [243]
+        }
+      ],
+      "lexicalDefinitionCount": 0,
+      "estimatedCallCountExcludingDefinitions": 2
+    },
+    {
+      "name": "withNativeDuckDbConnection",
+      "occurrenceCount": 5,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/drivers/duckdb/test/DuckDb.service.test.ts",
+          "count": 5,
+          "lines": [831, 912, 941, 981, 1034]
+        }
+      ],
+      "lexicalDefinitionCount": 1,
+      "estimatedCallCountExcludingDefinitions": 4
+    },
+    {
+      "name": "withObs",
+      "occurrenceCount": 8,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/drivers/obs/test/Obs.service.test.ts",
+          "count": 8,
+          "lines": [77, 104, 150, 185, 224, 255, 277, 301]
+        }
+      ],
+      "lexicalDefinitionCount": 1,
+      "estimatedCallCountExcludingDefinitions": 7
+    },
+    {
+      "name": "withOtlpSink",
+      "occurrenceCount": 5,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/tooling/tool/cli/test/ai-metrics-command.test.ts",
+          "count": 5,
+          "lines": [1000, 1073, 1365, 1437, 1468]
+        }
+      ],
+      "lexicalDefinitionCount": 1,
+      "estimatedCallCountExcludingDefinitions": 4
+    },
+    {
+      "name": "withOxlintFixture",
+      "occurrenceCount": 2,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/tooling/policy-pack/lint-rules/test/oxlint-harness.ts",
+          "count": 2,
+          "lines": [190, 243]
+        }
+      ],
+      "lexicalDefinitionCount": 1,
+      "estimatedCallCountExcludingDefinitions": 1
+    },
+    {
+      "name": "withPackage",
+      "occurrenceCount": 3,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/tooling/tool/cli/test/terse-effect.test.ts",
+          "count": 3,
+          "lines": [549, 550, 551]
+        }
+      ],
+      "lexicalDefinitionCount": 3,
+      "estimatedCallCountExcludingDefinitions": 0
+    },
+    {
+      "name": "withPartitionShim",
+      "occurrenceCount": 9,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/tooling/tool/cli/test/ci-lane.test.ts",
+          "count": 9,
+          "lines": [692, 729, 738, 747, 773, 788, 797, 812, 834]
+        }
+      ],
+      "lexicalDefinitionCount": 1,
+      "estimatedCallCountExcludingDefinitions": 8
+    },
+    {
+      "name": "withPathPrefix",
+      "occurrenceCount": 5,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/tooling/tool/cli/test/image-command.test.ts",
+          "count": 5,
+          "lines": [173, 213, 253, 320, 356]
+        }
+      ],
+      "lexicalDefinitionCount": 1,
+      "estimatedCallCountExcludingDefinitions": 4
+    },
+    {
+      "name": "withPhoenixBaseUrlEnv",
+      "occurrenceCount": 1,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/tooling/tool/cli/test/agent-effectiveness-command.test.ts",
+          "count": 1,
+          "lines": [190]
+        }
+      ],
+      "lexicalDefinitionCount": 1,
+      "estimatedCallCountExcludingDefinitions": 0
+    },
+    {
+      "name": "withPortfolioRepo",
+      "occurrenceCount": 6,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/tooling/tool/cli/test/yeet-portfolio-index-guard.test.ts",
+          "count": 6,
+          "lines": [236, 254, 273, 344, 363, 388]
+        }
+      ],
+      "lexicalDefinitionCount": 1,
+      "estimatedCallCountExcludingDefinitions": 5
+    },
+    {
+      "name": "withPortfolioRepoAndOutside",
+      "occurrenceCount": 2,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/tooling/tool/cli/test/yeet-portfolio-index-guard.test.ts",
+          "count": 2,
+          "lines": [295, 318]
+        }
+      ],
+      "lexicalDefinitionCount": 1,
+      "estimatedCallCountExcludingDefinitions": 1
+    },
+    {
+      "name": "withPrependedPath",
+      "occurrenceCount": 24,
+      "fileCount": 2,
+      "files": [
+        {
+          "file": "packages/tooling/tool/cli/test/ai-metrics-command.test.ts",
+          "count": 1,
+          "lines": [1612]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/quality-scheduler.test.ts",
+          "count": 23,
+          "lines": [
+            937, 2796, 3253, 3430, 3453, 3559, 3573, 3611, 3627, 3661, 3669,
+            3716, 3724, 3764, 3804, 3842, 3894, 3952, 3988, 4034, 4080, 4122,
+            4209
+          ]
+        }
+      ],
+      "lexicalDefinitionCount": 2,
+      "estimatedCallCountExcludingDefinitions": 22
+    },
+    {
+      "name": "withProcessEnv",
+      "occurrenceCount": 4,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/tooling/tool/cli/test/ai-metrics-command.test.ts",
+          "count": 4,
+          "lines": [469, 486, 500, 521]
+        }
+      ],
+      "lexicalDefinitionCount": 1,
+      "estimatedCallCountExcludingDefinitions": 3
+    },
+    {
+      "name": "withProcessPath",
+      "occurrenceCount": 3,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/tooling/tool/cli/test/quality-scheduler.test.ts",
+          "count": 3,
+          "lines": [250, 1969, 3849]
+        }
+      ],
+      "lexicalDefinitionCount": 1,
+      "estimatedCallCountExcludingDefinitions": 2
+    },
+    {
+      "name": "withProcStat",
+      "occurrenceCount": 5,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/tooling/tool/cli/test/process-identity.test.ts",
+          "count": 5,
+          "lines": [102, 103, 107, 110, 130]
+        }
+      ],
+      "lexicalDefinitionCount": 1,
+      "estimatedCallCountExcludingDefinitions": 4
+    },
+    {
+      "name": "withProofCoordinatorRepo",
+      "occurrenceCount": 29,
+      "fileCount": 2,
+      "files": [
+        {
+          "file": "packages/tooling/tool/cli/test/yeet-review-fixes.test.ts",
+          "count": 3,
+          "lines": [229, 264, 310]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/yeet.test.ts",
+          "count": 26,
+          "lines": [
+            640, 4372, 4394, 4411, 4450, 4474, 4491, 4517, 4569, 4613, 4649,
+            4672, 4696, 4723, 4752, 4781, 4854, 4879, 4906, 4933, 4961, 4993,
+            5061, 5092, 5145, 5171
+          ]
+        }
+      ],
+      "lexicalDefinitionCount": 2,
+      "estimatedCallCountExcludingDefinitions": 27
+    },
+    {
+      "name": "withProvider",
+      "occurrenceCount": 2,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/tooling/tool/cli/test/shared-internals.test.ts",
+          "count": 2,
+          "lines": [272, 273]
+        }
+      ],
+      "lexicalDefinitionCount": 1,
+      "estimatedCallCountExcludingDefinitions": 1
+    },
+    {
+      "name": "withQualityAdmission",
+      "occurrenceCount": 36,
+      "fileCount": 2,
+      "files": [
+        {
+          "file": "packages/tooling/tool/cli/test/quality-scheduler-drift.test.ts",
+          "count": 3,
+          "lines": [124, 176, 220]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/quality-scheduler.test.ts",
+          "count": 33,
+          "lines": [
+            744, 768, 814, 853, 890, 939, 2301, 2347, 2367, 2374, 2399, 2411,
+            2456, 2486, 2523, 2635, 2662, 2694, 2714, 2733, 2750, 3707, 4235,
+            4244, 4306, 4332, 4334, 4354, 4374, 4403, 4424, 4447, 4457
+          ]
+        }
+      ],
+      "lexicalDefinitionCount": 0,
+      "estimatedCallCountExcludingDefinitions": 36
+    },
+    {
+      "name": "withRawArchiveKeyEnv",
+      "occurrenceCount": 18,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/tooling/tool/cli/test/ai-metrics-command.test.ts",
+          "count": 18,
+          "lines": [
+            904, 934, 1022, 1096, 1167, 1218, 1387, 1441, 1505, 1538, 1568,
+            1598, 1645, 1684, 1715, 1774, 1813, 1849
+          ]
+        }
+      ],
+      "lexicalDefinitionCount": 1,
+      "estimatedCallCountExcludingDefinitions": 17
+    },
+    {
+      "name": "withRegisteredTarget",
+      "occurrenceCount": 1,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/tooling/tool/cli/test/sync-data-to-ts.test.ts",
+          "count": 1,
+          "lines": [907]
+        }
+      ],
+      "lexicalDefinitionCount": 1,
+      "estimatedCallCountExcludingDefinitions": 0
+    },
+    {
+      "name": "withRestorationWriterClaim",
+      "occurrenceCount": 9,
+      "fileCount": 2,
+      "files": [
+        {
+          "file": "packages/tooling/tool/cli/test/corpus-command.test.ts",
+          "count": 8,
+          "lines": [1724, 1750, 1772, 1775, 1780, 1787, 1796, 1803]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/restoration-archive-coverage.test.ts",
+          "count": 1,
+          "lines": [809]
+        }
+      ],
+      "lexicalDefinitionCount": 0,
+      "estimatedCallCountExcludingDefinitions": 9
+    },
+    {
+      "name": "withRows",
+      "occurrenceCount": 12,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/tooling/tool/cli/test/quality-tasks.test.ts",
+          "count": 12,
+          "lines": [
+            3839, 3848, 3852, 3867, 3911, 3920, 3929, 3934, 3942, 4087, 4100,
+            4185
+          ]
+        }
+      ],
+      "lexicalDefinitionCount": 1,
+      "estimatedCallCountExcludingDefinitions": 11
+    },
+    {
+      "name": "withRuntimeConfig",
+      "occurrenceCount": 4,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/tooling/tool/cli/test/yeet.test.ts",
+          "count": 4,
+          "lines": [4317, 4318, 4319, 4320]
+        }
+      ],
+      "lexicalDefinitionCount": 1,
+      "estimatedCallCountExcludingDefinitions": 3
+    },
+    {
+      "name": "withSaltEnv",
+      "occurrenceCount": 13,
+      "fileCount": 2,
+      "files": [
+        {
+          "file": "packages/tooling/library/ai-metrics/test/hook-pulse-writer.test.ts",
+          "count": 1,
+          "lines": [937]
+        },
+        {
+          "file": "packages/tooling/library/ai-metrics/test/hook-pulse.test.ts",
+          "count": 12,
+          "lines": [
+            312, 362, 380, 886, 909, 937, 959, 982, 1015, 1037, 1041, 1045
+          ]
+        }
+      ],
+      "lexicalDefinitionCount": 2,
+      "estimatedCallCountExcludingDefinitions": 11
+    },
+    {
+      "name": "withSanctionedEcosystemDiagnosticDelta",
+      "occurrenceCount": 1,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/tooling/tool/cli/test/create-package.test.ts",
+          "count": 1,
+          "lines": [1362]
+        }
+      ],
+      "lexicalDefinitionCount": 1,
+      "estimatedCallCountExcludingDefinitions": 0
+    },
+    {
+      "name": "withSanitizedToolSpan",
+      "occurrenceCount": 2,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/foundation/capability/mcp-kit/test/SanitizedSpan.test.ts",
+          "count": 2,
+          "lines": [61, 77]
+        }
+      ],
+      "lexicalDefinitionCount": 0,
+      "estimatedCallCountExcludingDefinitions": 2
+    },
+    {
+      "name": "withScratchFleet",
+      "occurrenceCount": 8,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/tooling/tool/cli/test/worktree-fleet-scan.test.ts",
+          "count": 8,
+          "lines": [137, 170, 197, 246, 280, 308, 339, 385]
+        }
+      ],
+      "lexicalDefinitionCount": 1,
+      "estimatedCallCountExcludingDefinitions": 7
+    },
+    {
+      "name": "withScratchRepo",
+      "occurrenceCount": 26,
+      "fileCount": 2,
+      "files": [
+        {
+          "file": "packages/tooling/tool/cli/test/worktree-command.test.ts",
+          "count": 14,
+          "lines": [
+            572, 596, 626, 659, 670, 724, 784, 831, 832, 889, 976, 1032, 1073,
+            1111
+          ]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/worktree-reap.test.ts",
+          "count": 12,
+          "lines": [130, 204, 231, 247, 278, 296, 326, 355, 395, 428, 460, 490]
+        }
+      ],
+      "lexicalDefinitionCount": 2,
+      "estimatedCallCountExcludingDefinitions": 24
+    },
+    {
+      "name": "withSecureHeaders",
+      "occurrenceCount": 1,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/tooling/policy-pack/repo-configs/test/SharedNextConfig.model.test.ts",
+          "count": 1,
+          "lines": [167]
+        }
+      ],
+      "lexicalDefinitionCount": 0,
+      "estimatedCallCountExcludingDefinitions": 1
+    },
+    {
+      "name": "withSessionHeader",
+      "occurrenceCount": 2,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/foundation/capability/mcp-kit/test/SanitizedToolkit.test.ts",
+          "count": 2,
+          "lines": [224, 237]
+        }
+      ],
+      "lexicalDefinitionCount": 1,
+      "estimatedCallCountExcludingDefinitions": 1
+    },
+    {
+      "name": "withSharedFlags",
+      "occurrenceCount": 1,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/tooling/tool/cli/test/knowledge-semantic-delta.test.ts",
+          "count": 1,
+          "lines": [1151]
+        }
+      ],
+      "lexicalDefinitionCount": 0,
+      "estimatedCallCountExcludingDefinitions": 1
+    },
+    {
+      "name": "withSpan",
+      "occurrenceCount": 3,
+      "fileCount": 2,
+      "files": [
+        {
+          "file": "packages/foundation/capability/observability/test/NodeSdk.test.ts",
+          "count": 2,
+          "lines": [56, 103]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/sync-data-to-ts.test.ts",
+          "count": 1,
+          "lines": [323]
+        }
+      ],
+      "lexicalDefinitionCount": 0,
+      "estimatedCallCountExcludingDefinitions": 3
+    },
+    {
+      "name": "withStartupTimeout",
+      "occurrenceCount": 1,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/tooling/test-kit/test-utils/test/SqlTest.test.ts",
+          "count": 1,
+          "lines": [80]
+        }
+      ],
+      "lexicalDefinitionCount": 0,
+      "estimatedCallCountExcludingDefinitions": 1
+    },
+    {
+      "name": "withStatics",
+      "occurrenceCount": 4,
+      "fileCount": 3,
+      "files": [
+        {
+          "file": "packages/foundation/modeling/schema/test/SchemaUtils.test.ts",
+          "count": 1,
+          "lines": [220]
+        },
+        {
+          "file": "packages/foundation/modeling/schema/test/TaggedError.equivalence.test.ts",
+          "count": 1,
+          "lines": [243]
+        },
+        {
+          "file": "packages/foundation/modeling/schema/test/codecStatics.test.ts",
+          "count": 2,
+          "lines": [114, 135]
+        }
+      ],
+      "lexicalDefinitionCount": 0,
+      "estimatedCallCountExcludingDefinitions": 4
+    },
+    {
+      "name": "withStatus",
+      "occurrenceCount": 2,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/documents/use-cases/test/SyncOperation.test.ts",
+          "count": 2,
+          "lines": [136, 184]
+        }
+      ],
+      "lexicalDefinitionCount": 1,
+      "estimatedCallCountExcludingDefinitions": 1
+    },
+    {
+      "name": "withSubcommands",
+      "occurrenceCount": 9,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/tooling/tool/cli/test/knowledge-semantic-delta.test.ts",
+          "count": 9,
+          "lines": [1109, 1144, 1158, 1166, 1175, 1184, 1234, 1275, 1276]
+        }
+      ],
+      "lexicalDefinitionCount": 0,
+      "estimatedCallCountExcludingDefinitions": 9
+    },
+    {
+      "name": "withTempCwd",
+      "occurrenceCount": 27,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/tooling/tool/cli/test/qa-round-pipeline.test.ts",
+          "count": 27,
+          "lines": [
+            149, 160, 170, 181, 195, 210, 238, 253, 287, 322, 363, 378, 390,
+            405, 428, 443, 495, 526, 538, 587, 606, 630, 679, 694, 716, 751, 769
+          ]
+        }
+      ],
+      "lexicalDefinitionCount": 1,
+      "estimatedCallCountExcludingDefinitions": 26
+    },
+    {
+      "name": "withTempDir",
+      "occurrenceCount": 24,
+      "fileCount": 3,
+      "files": [
+        {
+          "file": "packages/tooling/tool/cli/test/artifacts-io.test.ts",
+          "count": 5,
+          "lines": [44, 74, 119, 139, 183]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/qa-judge-contract-parity.test.ts",
+          "count": 6,
+          "lines": [98, 136, 155, 258, 355, 582]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/qa-pure.test.ts",
+          "count": 13,
+          "lines": [
+            155, 168, 183, 201, 249, 260, 275, 287, 301, 319, 330, 339, 359
+          ]
+        }
+      ],
+      "lexicalDefinitionCount": 3,
+      "estimatedCallCountExcludingDefinitions": 21
+    },
+    {
+      "name": "withTempDirectories",
+      "occurrenceCount": 2,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/tooling/tool/cli/test/purge-security.test.ts",
+          "count": 2,
+          "lines": [34, 71]
+        }
+      ],
+      "lexicalDefinitionCount": 1,
+      "estimatedCallCountExcludingDefinitions": 1
+    },
+    {
+      "name": "withTempDirectory",
+      "occurrenceCount": 472,
+      "fileCount": 38,
+      "files": [
+        {
+          "file": "packages/drivers/duckdb/test/DuckDb.service.test.ts",
+          "count": 5,
+          "lines": [243, 279, 709, 1028, 1098]
+        },
+        {
+          "file": "packages/drivers/exiftool/test/Exiftool.service.test.ts",
+          "count": 5,
+          "lines": [134, 195, 234, 270, 308]
+        },
+        {
+          "file": "packages/drivers/ffmpeg/test/FFmpeg.capture.failures.test.ts",
+          "count": 11,
+          "lines": [204, 236, 255, 285, 310, 357, 398, 439, 477, 513, 547]
+        },
+        {
+          "file": "packages/drivers/ffmpeg/test/FFmpeg.capture.test.ts",
+          "count": 9,
+          "lines": [442, 473, 538, 574, 606, 643, 686, 724, 766]
+        },
+        {
+          "file": "packages/drivers/ffmpeg/test/FFmpeg.service.test.ts",
+          "count": 4,
+          "lines": [272, 323, 369, 406]
+        },
+        {
+          "file": "packages/drivers/ffmpeg/test/integration/FFmpeg.capture.integration.test.ts",
+          "count": 3,
+          "lines": [144, 206, 272]
+        },
+        {
+          "file": "packages/tooling/library/ai-metrics/test/agent-effectiveness.test.ts",
+          "count": 17,
+          "lines": [
+            489, 512, 536, 598, 637, 677, 713, 748, 798, 848, 892, 961, 1028,
+            1084, 1154, 1190, 1240
+          ]
+        },
+        {
+          "file": "packages/tooling/library/ai-metrics/test/config-snapshot-bounds.test.ts",
+          "count": 12,
+          "lines": [123, 141, 160, 183, 205, 221, 248, 278, 311, 333, 355, 434]
+        },
+        {
+          "file": "packages/tooling/library/ai-metrics/test/duckdb.test.ts",
+          "count": 2,
+          "lines": [36, 56]
+        },
+        {
+          "file": "packages/tooling/library/ai-metrics/test/file-inventory.test.ts",
+          "count": 3,
+          "lines": [16, 39, 51]
+        },
+        {
+          "file": "packages/tooling/library/ai-metrics/test/identity-registry.test.ts",
+          "count": 24,
+          "lines": [
+            100, 120, 147, 173, 204, 243, 260, 293, 324, 357, 391, 430, 464,
+            493, 540, 579, 595, 633, 669, 707, 735, 757, 774, 805
+          ]
+        },
+        {
+          "file": "packages/tooling/library/ai-metrics/test/ingest.test.ts",
+          "count": 34,
+          "lines": [
+            471, 571, 670, 743, 1022, 1198, 1410, 1597, 1640, 1744, 1782, 1922,
+            1987, 2217, 2334, 2422, 2514, 2602, 2680, 2806, 2860, 2904, 2928,
+            2973, 3038, 3080, 3125, 3176, 3247, 3337, 3401, 3448, 3492, 3580
+          ]
+        },
+        {
+          "file": "packages/tooling/library/ai-metrics/test/retention.test.ts",
+          "count": 1,
+          "lines": [161]
+        },
+        {
+          "file": "packages/tooling/library/ai-sync/test/ai-sync.test.ts",
+          "count": 3,
+          "lines": [300, 326, 596]
+        },
+        {
+          "file": "packages/tooling/library/codegen-kit/test/CodegenKit.test.ts",
+          "count": 8,
+          "lines": [194, 216, 243, 265, 433, 471, 536, 568]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/agent-effectiveness-command.test.ts",
+          "count": 7,
+          "lines": [155, 182, 212, 240, 275, 304, 318]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/ai-metrics-command.test.ts",
+          "count": 42,
+          "lines": [
+            324, 363, 387, 397, 422, 464, 481, 498, 516, 533, 555, 584, 597,
+            616, 651, 681, 712, 722, 740, 758, 797, 822, 883, 933, 1001, 1075,
+            1152, 1196, 1337, 1366, 1438, 1469, 1504, 1537, 1567, 1597, 1644,
+            1683, 1714, 1773, 1812, 1848
+          ]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/coverage-baseline-subtraction.test.ts",
+          "count": 4,
+          "lines": [99, 126, 141, 156]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/create-package-security.test.ts",
+          "count": 7,
+          "lines": [73, 95, 123, 156, 188, 214, 239]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/delete-package-labs.test.ts",
+          "count": 6,
+          "lines": [166, 185, 276, 295, 333, 357]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/delete-package.test.ts",
+          "count": 7,
+          "lines": [72, 124, 196, 258, 298, 712, 739]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/files-command.test.ts",
+          "count": 95,
+          "lines": [
+            922, 1014, 1075, 1159, 1235, 1280, 1355, 1400, 1438, 1485, 1542,
+            1574, 1617, 1652, 1683, 1709, 1753, 2084, 2107, 2149, 2192, 2245,
+            2311, 2365, 2480, 3037, 3097, 3136, 3168, 3191, 3209, 3232, 3273,
+            3297, 3325, 3346, 3370, 3398, 3419, 3440, 3460, 3477, 3503, 3530,
+            3558, 3574, 3591, 3611, 3628, 3650, 3675, 3712, 3751, 3784, 3808,
+            3828, 3850, 3890, 3919, 3963, 4012, 4062, 4123, 4180, 4240, 4278,
+            4330, 4392, 4435, 4455, 4483, 4507, 4540, 4559, 4582, 4605, 4627,
+            4690, 4723, 4759, 4808, 4845, 4869, 4891, 4909, 4933, 4981, 5001,
+            5027, 5112, 5173, 5211, 5273, 5365, 5433
+          ]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/image-command.test.ts",
+          "count": 7,
+          "lines": [161, 198, 239, 281, 306, 341, 386]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/package-verify.test.ts",
+          "count": 13,
+          "lines": [
+            143, 173, 204, 233, 260, 280, 305, 328, 349, 413, 476, 535, 569
+          ]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/residue-reap.test.ts",
+          "count": 11,
+          "lines": [164, 193, 224, 249, 290, 329, 358, 391, 431, 479, 577]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/run-scope.test.ts",
+          "count": 13,
+          "lines": [49, 60, 71, 95, 110, 125, 143, 158, 170, 185, 197, 211, 222]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/runners-bake.test.ts",
+          "count": 6,
+          "lines": [238, 253, 416, 536, 565, 591]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/setup-effect-ref.test.ts",
+          "count": 6,
+          "lines": [29, 90, 151, 210, 269, 322]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/tmpfs-reap.test.ts",
+          "count": 29,
+          "lines": [
+            288, 330, 368, 398, 514, 549, 581, 617, 659, 691, 728, 767, 814,
+            848, 883, 919, 961, 1093, 1134, 1182, 1210, 1258, 1306, 1348, 1402,
+            1444, 1476, 1511, 1541
+          ]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/yeet-artifact-writers.test.ts",
+          "count": 6,
+          "lines": [125, 219, 256, 298, 318, 337]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/yeet-fallow-self-heal.test.ts",
+          "count": 9,
+          "lines": [127, 161, 192, 224, 249, 272, 297, 329, 359]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts",
+          "count": 3,
+          "lines": [268, 289, 340]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/yeet-monitor-comment-stream.test.ts",
+          "count": 9,
+          "lines": [150, 158, 172, 183, 195, 224, 255, 295, 319]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/yeet-portfolio-index-guard.test.ts",
+          "count": 3,
+          "lines": [116, 125, 207]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/yeet-reply-engine.test.ts",
+          "count": 3,
+          "lines": [370, 395, 538]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/yeet-review-fixes.test.ts",
+          "count": 4,
+          "lines": [85, 152, 170, 211]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/yeet-sweep-plan.test.ts",
+          "count": 10,
+          "lines": [493, 510, 524, 534, 545, 559, 584, 606, 619, 642]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/yeet.test.ts",
+          "count": 31,
+          "lines": [
+            312, 572, 1191, 1719, 1779, 2381, 2399, 2418, 2460, 2517, 2572,
+            2638, 2699, 2722, 2823, 2925, 2988, 3033, 3083, 3122, 3171, 3229,
+            3278, 3333, 3377, 3424, 3469, 3501, 3785, 4336, 5257
+          ]
+        }
+      ],
+      "lexicalDefinitionCount": 38,
+      "estimatedCallCountExcludingDefinitions": 434
+    },
+    {
+      "name": "withTempFixture",
+      "occurrenceCount": 21,
+      "fileCount": 2,
+      "files": [
+        {
+          "file": "packages/drivers/nlp-mcp/test/integration/Streaming.test.ts",
+          "count": 19,
+          "lines": [
+            46, 62, 77, 98, 114, 131, 147, 163, 196, 212, 228, 250, 276, 296,
+            312, 328, 344, 360, 376
+          ]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/agent-effectiveness-eval-scorer.test.ts",
+          "count": 2,
+          "lines": [71, 100]
+        }
+      ],
+      "lexicalDefinitionCount": 2,
+      "estimatedCallCountExcludingDefinitions": 19
+    },
+    {
+      "name": "withTempModelRoot",
+      "occurrenceCount": 7,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/tooling/tool/cli/test/match-person-model-store.test.ts",
+          "count": 7,
+          "lines": [148, 177, 218, 259, 282, 305, 328]
+        }
+      ],
+      "lexicalDefinitionCount": 1,
+      "estimatedCallCountExcludingDefinitions": 6
+    },
+    {
+      "name": "withTempProject",
+      "occurrenceCount": 1,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/tooling/policy-pack/repo-configs/test/EffectTsgoEffectFnPolicy.test.ts",
+          "count": 1,
+          "lines": [169]
+        }
+      ],
+      "lexicalDefinitionCount": 1,
+      "estimatedCallCountExcludingDefinitions": 0
+    },
+    {
+      "name": "withTempRepo",
+      "occurrenceCount": 90,
+      "fileCount": 7,
+      "files": [
+        {
+          "file": "packages/tooling/tool/cli/test/allowlist-check.test.ts",
+          "count": 6,
+          "lines": [78, 123, 165, 220, 260, 300]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/changeset-graph.test.ts",
+          "count": 4,
+          "lines": [230, 256, 290, 318]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/changeset-status.test.ts",
+          "count": 5,
+          "lines": [285, 308, 336, 359, 394]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/ci-command.test.ts",
+          "count": 3,
+          "lines": [79, 96, 145]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/docgen.test.ts",
+          "count": 41,
+          "lines": [
+            620, 674, 793, 877, 919, 940, 1064, 1118, 1208, 1299, 1362, 1408,
+            1470, 1512, 1569, 1615, 1660, 1747, 1770, 1847, 1923, 1999, 2083,
+            2149, 2186, 2252, 2316, 2394, 2468, 2534, 2600, 2738, 2811, 2870,
+            3019, 3114, 3192, 3579, 3771, 4331, 4395
+          ]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/quality-tasks.test.ts",
+          "count": 20,
+          "lines": [
+            2632, 3248, 3668, 3891, 3950, 4015, 4037, 4064, 4256, 5085, 5108,
+            5146, 5168, 5190, 5232, 5269, 5328, 5380, 5477, 5527
+          ]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/tsconfig-sync.test.ts",
+          "count": 11,
+          "lines": [195, 223, 282, 321, 389, 438, 555, 698, 768, 888, 976]
+        }
+      ],
+      "lexicalDefinitionCount": 7,
+      "estimatedCallCountExcludingDefinitions": 83
+    },
+    {
+      "name": "withTempRepoCommand",
+      "occurrenceCount": 36,
+      "fileCount": 3,
+      "files": [
+        {
+          "file": "packages/tooling/tool/cli/test/create-package-lab.test.ts",
+          "count": 2,
+          "lines": [307, 691]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/create-package.test.ts",
+          "count": 5,
+          "lines": [486, 630, 990, 1046, 1114]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/docgen.test.ts",
+          "count": 29,
+          "lines": [
+            968, 1003, 1030, 1047, 1102, 1167, 2955, 3369, 3448, 3663, 3689,
+            3714, 3810, 3858, 3968, 4035, 4096, 4182, 4255, 4467, 4513, 4554,
+            4591, 4638, 4673, 4697, 4724, 4737, 4764
+          ]
+        }
+      ],
+      "lexicalDefinitionCount": 5,
+      "estimatedCallCountExcludingDefinitions": 31
+    },
+    {
+      "name": "withTempRoot",
+      "occurrenceCount": 13,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/tooling/tool/cli/test/person-match-model-store.test.ts",
+          "count": 13,
+          "lines": [
+            115, 134, 154, 177, 195, 209, 228, 242, 265, 288, 312, 335, 360
+          ]
+        }
+      ],
+      "lexicalDefinitionCount": 1,
+      "estimatedCallCountExcludingDefinitions": 12
+    },
+    {
+      "name": "withTempStore",
+      "occurrenceCount": 6,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/tooling/library/ai-metrics/test/telemetry-v2-store.test.ts",
+          "count": 6,
+          "lines": [71, 104, 124, 150, 178, 203]
+        }
+      ],
+      "lexicalDefinitionCount": 1,
+      "estimatedCallCountExcludingDefinitions": 5
+    },
+    {
+      "name": "withTempWorkingDirectory",
+      "occurrenceCount": 221,
+      "fileCount": 26,
+      "files": [
+        {
+          "file": "packages/tooling/tool/cli/test/codex-findings-refresh.test.ts",
+          "count": 1,
+          "lines": [71]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/codex-findings-write.test.ts",
+          "count": 1,
+          "lines": [23]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/delete-package-labs.test.ts",
+          "count": 4,
+          "lines": [404, 415, 429, 459]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/delete-package.test.ts",
+          "count": 6,
+          "lines": [151, 223, 329, 358, 380, 414]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/ecosystem-polarity.test.ts",
+          "count": 1,
+          "lines": [32]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/effect-fn.test.ts",
+          "count": 4,
+          "lines": [81, 170, 233, 270]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/effect-imports.test.ts",
+          "count": 22,
+          "lines": [
+            148, 208, 228, 257, 280, 307, 336, 382, 436, 465, 500, 527, 568,
+            594, 621, 648, 684, 722, 756, 794, 834, 894
+          ]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/explore-check.test.ts",
+          "count": 8,
+          "lines": [47, 65, 155, 202, 240, 293, 333, 363]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/frozen-grant-set.test.ts",
+          "count": 10,
+          "lines": [68, 106, 140, 173, 205, 238, 271, 304, 335, 368]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/goals-bootstrap-plan.test.ts",
+          "count": 6,
+          "lines": [306, 352, 369, 424, 470, 527]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/goals-doctor-path-security.test.ts",
+          "count": 1,
+          "lines": [26]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/goals-doctor.test.ts",
+          "count": 4,
+          "lines": [70, 86, 102, 118]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/goals-manifest-capabilities.test.ts",
+          "count": 1,
+          "lines": [97]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/goals-packet-convention-migration.test.ts",
+          "count": 16,
+          "lines": [
+            1815, 1834, 1862, 1885, 1900, 1922, 1969, 2105, 2297, 2315, 2327,
+            2353, 2412, 2484, 2545, 2601
+          ]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/goals-set-risk-tier.test.ts",
+          "count": 6,
+          "lines": [74, 115, 153, 175, 196, 248]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/goals-set-status-stream.test.ts",
+          "count": 11,
+          "lines": [74, 112, 135, 186, 219, 262, 307, 358, 384, 431, 469]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/identity-registration-removal.test.ts",
+          "count": 3,
+          "lines": [46, 130, 179]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/lab-identity-segment.test.ts",
+          "count": 6,
+          "lines": [149, 179, 210, 235, 256, 289]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/labs-list.test.ts",
+          "count": 1,
+          "lines": [26]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/lint-command.test.ts",
+          "count": 57,
+          "lines": [
+            142, 174, 194, 219, 283, 316, 336, 373, 415, 450, 472, 508, 530,
+            560, 601, 639, 666, 698, 730, 767, 791, 828, 851, 890, 921, 941,
+            973, 996, 1056, 1090, 1110, 1146, 1169, 1204, 1331, 1380, 1423,
+            1480, 1529, 1572, 1595, 1626, 1659, 1692, 1725, 1813, 1840, 1873,
+            1907, 1940, 1971, 2013, 2048, 2088, 2131, 2173, 2208
+          ]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/lint-identity-registry.test.ts",
+          "count": 14,
+          "lines": [
+            130, 159, 183, 232, 257, 302, 327, 351, 379, 412, 445, 473, 511, 542
+          ]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/native-runtime.test.ts",
+          "count": 7,
+          "lines": [32, 62, 89, 118, 142, 166, 202]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/reflection-lint.test.ts",
+          "count": 10,
+          "lines": [112, 126, 139, 152, 168, 182, 193, 210, 229, 252]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/roadmap-refs.test.ts",
+          "count": 2,
+          "lines": [64, 87]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/schema-catalog.test.ts",
+          "count": 3,
+          "lines": [103, 124, 153]
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/terse-effect.test.ts",
+          "count": 16,
+          "lines": [
+            112, 147, 170, 192, 239, 267, 290, 313, 339, 382, 417, 450, 496,
+            540, 590, 629
+          ]
+        }
+      ],
+      "lexicalDefinitionCount": 4,
+      "estimatedCallCountExcludingDefinitions": 217
+    },
+    {
+      "name": "withTextFormat",
+      "occurrenceCount": 1,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/foundation/ui-system/editor/test/style-node-matrix.test.ts",
+          "count": 1,
+          "lines": [43]
+        }
+      ],
+      "lexicalDefinitionCount": 0,
+      "estimatedCallCountExcludingDefinitions": 1
+    },
+    {
+      "name": "withToolkit",
+      "occurrenceCount": 7,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/ontology/server/test/OntologyTools.test.ts",
+          "count": 7,
+          "lines": [93, 138, 170, 221, 240, 286, 321]
+        }
+      ],
+      "lexicalDefinitionCount": 1,
+      "estimatedCallCountExcludingDefinitions": 6
+    },
+    {
+      "name": "withTracer",
+      "occurrenceCount": 9,
+      "fileCount": 7,
+      "files": [
+        {
+          "file": "packages/drivers/gov-legal-mcp/test/Server.test.ts",
+          "count": 1,
+          "lines": [396]
+        },
+        {
+          "file": "packages/drivers/m365-mcp/test/SanitizedSpan.test.ts",
+          "count": 1,
+          "lines": [102]
+        },
+        {
+          "file": "packages/drivers/nlp-mcp/test/SanitizedSpan.test.ts",
+          "count": 1,
+          "lines": [71]
+        },
+        {
+          "file": "packages/epistemic/server/test/ContradictionTriage.observability.test.ts",
+          "count": 1,
+          "lines": [134]
+        },
+        {
+          "file": "packages/foundation/capability/mcp-kit/test/SanitizedSpan.test.ts",
+          "count": 2,
+          "lines": [61, 78]
+        },
+        {
+          "file": "packages/foundation/capability/mcp-kit/test/SanitizedToolkit.test.ts",
+          "count": 1,
+          "lines": [138]
+        },
+        {
+          "file": "packages/workspace/server/test/WorkspaceSourceTextResolver.test.ts",
+          "count": 2,
+          "lines": [185, 398]
+        }
+      ],
+      "lexicalDefinitionCount": 0,
+      "estimatedCallCountExcludingDefinitions": 9
+    },
+    {
+      "name": "withTrackedFileRepo",
+      "occurrenceCount": 13,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/tooling/tool/cli/test/yeet.test.ts",
+          "count": 13,
+          "lines": [
+            326, 528, 1133, 1152, 1173, 1422, 3663, 3684, 4128, 4157, 4181,
+            4204, 4227
+          ]
+        }
+      ],
+      "lexicalDefinitionCount": 1,
+      "estimatedCallCountExcludingDefinitions": 12
+    },
+    {
+      "name": "withTransaction",
+      "occurrenceCount": 22,
+      "fileCount": 5,
+      "files": [
+        {
+          "file": "packages/drivers/drizzle/test/Drizzle.errors.test.ts",
+          "count": 4,
+          "lines": [403, 420, 438, 452]
+        },
+        {
+          "file": "packages/drivers/drizzle/test/integration/Drizzle.pglite.test.ts",
+          "count": 2,
+          "lines": [84, 93]
+        },
+        {
+          "file": "packages/drivers/duckdb/test/DuckDb.service.test.ts",
+          "count": 13,
+          "lines": [
+            253, 292, 644, 693, 719, 722, 1134, 1173, 1182, 1191, 1194, 1221,
+            1225
+          ]
+        },
+        {
+          "file": "packages/epistemic/server/test/integration/ContradictionTriage.pg.test.ts",
+          "count": 2,
+          "lines": [340, 505]
+        },
+        {
+          "file": "packages/epistemic/server/test/integration/EdgeAuthority.pg.test.ts",
+          "count": 1,
+          "lines": [259]
+        }
+      ],
+      "lexicalDefinitionCount": 0,
+      "estimatedCallCountExcludingDefinitions": 22
+    },
+    {
+      "name": "withTurboEnv",
+      "occurrenceCount": 1,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/tooling/tool/cli/test/shared-internals.test.ts",
+          "count": 1,
+          "lines": [367]
+        }
+      ],
+      "lexicalDefinitionCount": 1,
+      "estimatedCallCountExcludingDefinitions": 0
+    },
+    {
+      "name": "withUnbootableBase",
+      "occurrenceCount": 3,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/tooling/tool/cli/test/knowledge-semantic-delta.test.ts",
+          "count": 3,
+          "lines": [1538, 1558, 1696]
+        }
+      ],
+      "lexicalDefinitionCount": 1,
+      "estimatedCallCountExcludingDefinitions": 2
+    },
+    {
+      "name": "withWaitStrategy",
+      "occurrenceCount": 1,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/tooling/test-kit/test-utils/test/SqlTest.test.ts",
+          "count": 1,
+          "lines": [84]
+        }
+      ],
+      "lexicalDefinitionCount": 0,
+      "estimatedCallCountExcludingDefinitions": 1
+    },
+    {
+      "name": "withWarmEnvironment",
+      "occurrenceCount": 5,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/tooling/tool/cli/test/cache-command.test.ts",
+          "count": 5,
+          "lines": [184, 214, 229, 254, 280]
+        }
+      ],
+      "lexicalDefinitionCount": 1,
+      "estimatedCallCountExcludingDefinitions": 4
+    },
+    {
+      "name": "withWorkingDirectory",
+      "occurrenceCount": 1,
+      "fileCount": 1,
+      "files": [
+        {
+          "file": "packages/tooling/tool/cli/test/ci-lane.test.ts",
+          "count": 1,
+          "lines": [841]
+        }
+      ],
+      "lexicalDefinitionCount": 1,
+      "estimatedCallCountExcludingDefinitions": 0
+    }
+  ],
+  "limitations": [
+    "Only named function declarations, const arrow functions, and const Effect.fn-style generator functions named withXyz are extracted.",
+    "body contains the complete declaration, not only the inner function body.",
+    "candidateKind is lexical: pure-data-helper-candidate rows are retained but are not asserted to acquire resources.",
+    "resourcesAcquired and layersBuilt are lexical token inventories, not semantic conclusions."
+  ]
+}

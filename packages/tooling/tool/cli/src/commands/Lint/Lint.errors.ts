@@ -238,3 +238,64 @@ export class TsconfigOverlayReadError extends S.TaggedError<TsconfigOverlayReadE
     TsconfigOverlayReadError.new(cause, message)
   );
 }
+
+/**
+ * Reports a failed Effect Vitest scan boundary without leaking an untyped error.
+ *
+ * **Example** (Describe a pin mismatch)
+ *
+ * ```ts
+ * import { EffectVitestLintError } from "@beep/repo-cli/commands/Lint"
+ *
+ * const error = EffectVitestLintError.new("Installed @effect/vitest does not match rc.112.")
+ * console.log(error.message)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class EffectVitestLintError extends S.TaggedError<EffectVitestLintError>($I`EffectVitestLintError`)(
+  "EffectVitestLintError",
+  { message: S.String },
+  $I.annoteError<EffectVitestLintError>("EffectVitestLintError", {
+    description: "Raised when Effect Vitest scope discovery, decoding, validation, or persistence fails.",
+  })
+) {
+  static readonly new = (message: string): EffectVitestLintError => EffectVitestLintError.make({ message });
+
+  static readonly mapError = Err.mapCauseError<EffectVitestLintError, [message: string]>((cause, message) =>
+    EffectVitestLintError.new(messageWithCause(message, cause))
+  );
+}
+
+/**
+ * Reports a missing, malformed, or internally inconsistent pinned primitive graph.
+ *
+ * **Example** (Describe a dangling policy edge)
+ *
+ * ```ts
+ * import { EffectVitestPrimitiveGraphError } from "@beep/repo-cli/commands/Lint"
+ *
+ * const error = EffectVitestPrimitiveGraphError.new("EV001 has no graph-backed replacement.")
+ * console.log(error._tag) // "EffectVitestPrimitiveGraphError"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class EffectVitestPrimitiveGraphError extends S.TaggedError<EffectVitestPrimitiveGraphError>(
+  $I`EffectVitestPrimitiveGraphError`
+)(
+  "EffectVitestPrimitiveGraphError",
+  { message: S.NonEmptyString },
+  $I.annoteError<EffectVitestPrimitiveGraphError>("EffectVitestPrimitiveGraphError", {
+    description: "Raised when the authoritative Effect Vitest primitive graph cannot be loaded or applied.",
+  })
+) {
+  static readonly new = (message: string): EffectVitestPrimitiveGraphError =>
+    EffectVitestPrimitiveGraphError.make({ message });
+
+  static readonly mapError = Err.mapCauseError<EffectVitestPrimitiveGraphError, [message: string]>((cause, message) =>
+    EffectVitestPrimitiveGraphError.new(messageWithCause(message, cause))
+  );
+}

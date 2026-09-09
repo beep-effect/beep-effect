@@ -1,0 +1,121 @@
+{
+  "class": "test-clock-adjust",
+  "method": "Merged lane reconnaissance; see methodsByLane.",
+  "methodsByLane": {
+    "packages": "line-oriented lexical scan over live in-scope package files",
+    "apps-infra": "global regular expression: /\\bTestClock\\.adjust\\s*\\(/g"
+  },
+  "scope": "tests",
+  "fileCount": 21,
+  "occurrenceCount": 48,
+  "files": [
+    {
+      "file": "apps/labs/semantica/test/ProviderCache.test.ts",
+      "count": 1,
+      "lines": [77]
+    },
+    {
+      "file": "apps/professional-desktop/test/chat-contract.test.ts",
+      "count": 1,
+      "lines": [631]
+    },
+    {
+      "file": "packages/drivers/m365/test/M365.service.test.ts",
+      "count": 1,
+      "lines": [710]
+    },
+    {
+      "file": "packages/drivers/tailscale/test/tailscale.test.ts",
+      "count": 1,
+      "lines": [254]
+    },
+    {
+      "file": "packages/epistemic/client/test/ContradictionTriage.atoms.test.ts",
+      "count": 3,
+      "lines": [158, 199, 225]
+    },
+    {
+      "file": "packages/epistemic/server/test/GovernedEgress.test.ts",
+      "count": 1,
+      "lines": [233]
+    },
+    {
+      "file": "packages/epistemic/server/test/integration/ContradictionTriage.pg.test.ts",
+      "count": 2,
+      "lines": [330, 495]
+    },
+    {
+      "file": "packages/epistemic/server/test/integration/ContradictionTriage.pglite.test.ts",
+      "count": 5,
+      "lines": [994, 1049, 1191, 1267, 1302]
+    },
+    {
+      "file": "packages/epistemic/server/test/integration/EdgeAuthority.pglite.test.ts",
+      "count": 2,
+      "lines": [216, 400]
+    },
+    {
+      "file": "packages/epistemic/server/test/integration/EdgeAuthority.restart.pglite.test.ts",
+      "count": 1,
+      "lines": [157]
+    },
+    {
+      "file": "packages/foundation/capability/langextract/test/Service.test.ts",
+      "count": 3,
+      "lines": [162, 196, 199]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/LocalDate.test.ts",
+      "count": 2,
+      "lines": [294, 308]
+    },
+    {
+      "file": "packages/shared/domain/test/LocalDate.test.ts",
+      "count": 2,
+      "lines": [159, 163]
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/ingest.test.ts",
+      "count": 1,
+      "lines": [2192]
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/test/SqlTest.offline.test.ts",
+      "count": 1,
+      "lines": [283]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/corpus-command.test.ts",
+      "count": 1,
+      "lines": [2681]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/quality-scheduler.test.ts",
+      "count": 8,
+      "lines": [1257, 2566, 2568, 2586, 2588, 2605, 3098, 3102]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/step-capture-lifecycle.test.ts",
+      "count": 9,
+      "lines": [399, 417, 436, 437, 477, 504, 526, 527, 552]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-pr-provenance.test.ts",
+      "count": 1,
+      "lines": [194]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet.test.ts",
+      "count": 1,
+      "lines": [3176]
+    },
+    {
+      "file": "packages/workspace/server/test/ThreadStore.test.ts",
+      "count": 1,
+      "lines": [396]
+    }
+  ],
+  "limitations": [
+    "Verified textual occurrence census over the live scoped files; comments and strings can produce false positives, and multiline syntax can affect precision."
+  ]
+}

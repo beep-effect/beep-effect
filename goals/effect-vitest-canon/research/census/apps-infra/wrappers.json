@@ -1,0 +1,191 @@
+{
+  "method": "ts-morph syntax-only Project with skipAddingFilesFromTsConfig; complete variable statements/function declarations for withXyz definitions. No getType. Calls are textual withXyz(...) occurrences.",
+  "definitions": [
+    {
+      "name": "withBunServices",
+      "file": "apps/labs/semantica/test/Reasoning.test.ts",
+      "line": 40,
+      "endLine": 41,
+      "body": "const withBunServices = <A2, E, R>(effect: Effect.Effect<A2, E, R>) =>\n  Effect.scoped(Layer.build(BunServices.layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));",
+      "resourcesAcquired": [],
+      "layersBuilt": ["Layer.build"]
+    },
+    {
+      "name": "withReportDigest",
+      "file": "apps/labs/semantica/test/Schema.test.ts",
+      "line": 491,
+      "endLine": 494,
+      "body": "const withReportDigest = (body: typeof EvalReportBodySchema.Type) => ({\n  ...Result.getOrThrow(S.encodeResult(EvalReportBodySchema)(body)),\n  reportDigest: Result.getOrThrow(contentDigestSync(EvalReportBodySchema)(body)),\n});",
+      "resourcesAcquired": [],
+      "layersBuilt": []
+    },
+    {
+      "name": "withSocials",
+      "file": "apps/oip-web/test/oip-seo.test.ts",
+      "line": 33,
+      "endLine": 38,
+      "body": "const withSocials = (socials: ReadonlyArray<SocialLink>): OipSiteContent =>\n  OipSiteContent.make({\n    ...oipSiteContent,\n    metadata,\n    socials,\n  });",
+      "resourcesAcquired": [],
+      "layersBuilt": []
+    },
+    {
+      "name": "withContactConfig",
+      "file": "apps/oip-web/test/oip-web.test.tsx",
+      "line": 83,
+      "endLine": 93,
+      "body": "const withContactConfig = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>\n  Effect.scoped(\n    Layer.build(\n      ConfigProvider.layer(\n        ConfigProvider.fromUnknown({\n          CRM_HUBSPOT_ACCOUNT_ID: \"12345\",\n          CRM_HUBSPOT_SERVICE_KEY: \"hubspot-service-key\",\n        })\n      )\n    ).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context))))\n  );",
+      "resourcesAcquired": [],
+      "layersBuilt": ["Layer.build"]
+    },
+    {
+      "name": "withPgliteSql",
+      "file": "apps/professional-desktop/test/integration/PgliteDataDirCompatibility.test.ts",
+      "line": 32,
+      "endLine": 33,
+      "body": "const withPgliteSql = <A, E, R>(dataDir: string, effect: Effect.Effect<A, E, R>) =>\n  effect.pipe(provideScopedLayer(makeBundledPgliteLayer({ dataDir, relaxedDurability: true })));",
+      "resourcesAcquired": [],
+      "layersBuilt": ["provideScopedLayer", "makeBundledPgliteLayer"]
+    },
+    {
+      "name": "withChatDbPath",
+      "file": "apps/professional-desktop/test/integration/PgliteDataDirCompatibility.test.ts",
+      "line": 35,
+      "endLine": 38,
+      "body": "const withChatDbPath =\n  (dataDir: string) =>\n  <A, E, R>(effect: Effect.Effect<A, E, R>) =>\n    effect.pipe(provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown({ CHAT_DB_PATH: dataDir }))));",
+      "resourcesAcquired": [],
+      "layersBuilt": ["provideScopedLayer"]
+    },
+    {
+      "name": "withHttpServerImpl",
+      "file": "apps/professional-desktop/test/integration/support/ontology-mcp-harness.ts",
+      "line": 206,
+      "endLine": 240,
+      "body": "const withHttpServerImpl = <A2, E>(options: TransportOptions, run: WithHttpServerRun<A2, E>) =>\n  Effect.scoped(\n    Effect.gen(function* () {\n      const fileSystem = yield* FileSystem.FileSystem;\n      const path = yield* Path.Path;\n      const root = yield* fileSystem.makeTempDirectoryScoped({ prefix: \"ontology-mcp-http-\" });\n      yield* fileSystem.writeFileString(path.join(root, \"ontology.ttl\"), fixtureSource);\n      const ontologyPath = yield* decodeOntologyFilePath(\"ontology.ttl\");\n      const useSocketTransport = yield* socketTransportConfig;\n      if (useSocketTransport) {\n        const server = transportServer(root, options).pipe(Layer.provideMerge(nodeLoopbackLayer));\n        const client = mcpSessionClientLayer.pipe(Layer.provideMerge(server));\n        return yield* run(root, ontologyPath, useSocketTransport).pipe(\n          provideScopedLayer(makeMcpClientProtocol(useSocketTransport).pipe(Layer.provideMerge(client)))\n        );\n      }\n\n      const routes = transportLayer(root, options);\n      const { dispose, handler } = HttpRouter.toWebHandler(routes, { disableLogger: true });\n      yield* Effect.addFinalizer(() => Effect.promise(dispose));\n      function customFetch(\n        input: Parameters<typeof globalThis.fetch>[0],\n        init?: Parameters<typeof globalThis.fetch>[1]\n      ): ReturnType<typeof globalThis.fetch> {\n        return handler(new Request(input, init));\n      }\n      customFetch.preconnect = globalThis.fetch.preconnect;\n      const clientLayer = mcpSessionClientLayer.pipe(\n        Layer.provideMerge(FetchHttpClient.layer.pipe(Layer.provide(Layer.succeed(FetchHttpClient.Fetch, customFetch))))\n      );\n      return yield* run(root, ontologyPath, useSocketTransport).pipe(\n        provideScopedLayer(makeMcpClientProtocol(useSocketTransport).pipe(Layer.provideMerge(clientLayer)))\n      );\n    }).pipe(provideScopedLayer(NodeServices.layer))\n  );",
+      "resourcesAcquired": ["makeTempDirectoryScoped"],
+      "layersBuilt": [
+        "Layer.provideMerge",
+        "nodeLoopbackLayer",
+        "mcpSessionClientLayer",
+        "provideScopedLayer",
+        "transportLayer",
+        "clientLayer",
+        "Layer.provide",
+        "Layer.succeed"
+      ]
+    },
+    {
+      "name": "withHttpServer",
+      "file": "apps/professional-desktop/test/integration/support/ontology-mcp-harness.ts",
+      "line": 242,
+      "endLine": 245,
+      "body": "export const withHttpServer: {\n  <A2, E>(run: WithHttpServerRun<A2, E>): (options: TransportOptions) => ReturnType<typeof withHttpServerImpl<A2, E>>;\n  <A2, E>(options: TransportOptions, run: WithHttpServerRun<A2, E>): ReturnType<typeof withHttpServerImpl<A2, E>>;\n} = dual(2, withHttpServerImpl);",
+      "resourcesAcquired": [],
+      "layersBuilt": []
+    }
+  ],
+  "calls": [
+    {
+      "name": "withApi",
+      "file": "apps/labs/api-docs/test/Catalog.test.ts",
+      "count": 1,
+      "lines": [45]
+    },
+    {
+      "name": "withLive",
+      "file": "apps/labs/semantica/test/ProviderCache.test.ts",
+      "count": 3,
+      "lines": [78, 332, 697]
+    },
+    {
+      "name": "withBunServices",
+      "file": "apps/labs/semantica/test/Reasoning.test.ts",
+      "count": 2,
+      "lines": [87, 140]
+    },
+    {
+      "name": "withReportDigest",
+      "file": "apps/labs/semantica/test/Schema.test.ts",
+      "count": 15,
+      "lines": [
+        503, 1281, 1285, 1291, 1292, 1314, 1318, 1344, 1348, 1367, 1372, 1389,
+        1407, 1411, 1416
+      ]
+    },
+    {
+      "name": "withConstructorDefault",
+      "file": "apps/oip-web/test/oip-seo.test.ts",
+      "count": 1,
+      "lines": [98]
+    },
+    {
+      "name": "withSocials",
+      "file": "apps/oip-web/test/oip-seo.test.ts",
+      "count": 7,
+      "lines": [54, 67, 82, 108, 134, 147, 162]
+    },
+    {
+      "name": "withContactConfig",
+      "file": "apps/oip-web/test/oip-web.test.tsx",
+      "count": 5,
+      "lines": [724, 740, 748, 762, 775]
+    },
+    {
+      "name": "withVaultSelection",
+      "file": "apps/professional-desktop/test/intake-atoms.test.ts",
+      "count": 1,
+      "lines": [97]
+    },
+    {
+      "name": "withChatDbPath",
+      "file": "apps/professional-desktop/test/integration/PgliteDataDirCompatibility.test.ts",
+      "count": 1,
+      "lines": [302]
+    },
+    {
+      "name": "withPgliteSql",
+      "file": "apps/professional-desktop/test/integration/PgliteDataDirCompatibility.test.ts",
+      "count": 4,
+      "lines": [45, 92, 136, 305]
+    },
+    {
+      "name": "withHttpServer",
+      "file": "apps/professional-desktop/test/integration/execution-authority.pglite.test.ts",
+      "count": 4,
+      "lines": [150, 343, 459, 517]
+    },
+    {
+      "name": "withHttpServer",
+      "file": "apps/professional-desktop/test/integration/ontology-mcp-http.test.ts",
+      "count": 8,
+      "lines": [151, 185, 204, 240, 300, 340, 376, 465]
+    },
+    {
+      "name": "withDefault",
+      "file": "apps/professional-desktop/test/integration/support/ontology-mcp-harness.ts",
+      "count": 1,
+      "lines": [30]
+    }
+  ],
+  "callCountsByName": {
+    "withAdmissionTempRoot": 0,
+    "withApi": 1,
+    "withBunServices": 2,
+    "withChatDbPath": 1,
+    "withConstructorDefault": 1,
+    "withContactConfig": 5,
+    "withDefault": 1,
+    "withEnvVar": 0,
+    "withHttpServer": 12,
+    "withLive": 3,
+    "withPgliteSql": 4,
+    "withReportDigest": 15,
+    "withSocials": 7,
+    "withTempDirectory": 0,
+    "withTempRepo": 0,
+    "withTempWorkingDirectory": 0,
+    "withVaultSelection": 1
+  },
+  "definitionCount": 8,
+  "callOccurrenceCount": 53,
+  "limitations": "Definitions are syntax-only AST declarations. Pure data helpers remain candidates and are not inferred to acquire resources. resourcesAcquired and layersBuilt are token inventories, not semantic proofs. Call counts are lexical and can include member APIs such as withLive."
+}

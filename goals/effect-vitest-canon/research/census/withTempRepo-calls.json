@@ -1,0 +1,58 @@
+{
+  "class": "withTempRepo-calls",
+  "method": "Merged lane reconnaissance; see methodsByLane.",
+  "methodsByLane": {
+    "packages": "line-oriented lexical scan over live in-scope package files"
+  },
+  "scope": "tests and support",
+  "fileCount": 7,
+  "occurrenceCount": 90,
+  "files": [
+    {
+      "file": "packages/tooling/tool/cli/test/allowlist-check.test.ts",
+      "count": 6,
+      "lines": [78, 123, 165, 220, 260, 300]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/changeset-graph.test.ts",
+      "count": 4,
+      "lines": [230, 256, 290, 318]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/changeset-status.test.ts",
+      "count": 5,
+      "lines": [285, 308, 336, 359, 394]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/ci-command.test.ts",
+      "count": 3,
+      "lines": [79, 96, 145]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/docgen.test.ts",
+      "count": 41,
+      "lines": [
+        620, 674, 793, 877, 919, 940, 1064, 1118, 1208, 1299, 1362, 1408, 1470,
+        1512, 1569, 1615, 1660, 1747, 1770, 1847, 1923, 1999, 2083, 2149, 2186,
+        2252, 2316, 2394, 2468, 2534, 2600, 2738, 2811, 2870, 3019, 3114, 3192,
+        3579, 3771, 4331, 4395
+      ]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/quality-tasks.test.ts",
+      "count": 20,
+      "lines": [
+        2632, 3248, 3668, 3891, 3950, 4015, 4037, 4064, 4256, 5085, 5108, 5146,
+        5168, 5190, 5232, 5269, 5328, 5380, 5477, 5527
+      ]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/tsconfig-sync.test.ts",
+      "count": 11,
+      "lines": [195, 223, 282, 321, 389, 438, 555, 698, 768, 888, 976]
+    }
+  ],
+  "limitations": [
+    "Only one lane emitted this auxiliary class; use the common grouped class or wrapper name totals for full-repository comparisons."
+  ]
+}

@@ -1,0 +1,744 @@
+[
+  {
+    "file": "apps/architecture-lab-proof/test/ArchitectureLabProof.test.ts",
+    "package": "@beep/architecture-lab-proof",
+    "kind": "test",
+    "bytes": 2012,
+    "lines": 51
+  },
+  {
+    "file": "apps/labs/api-docs/test/Catalog.test.ts",
+    "package": "@beep/api-docs",
+    "kind": "test",
+    "bytes": 1797,
+    "lines": 48
+  },
+  {
+    "file": "apps/labs/api-docs/test/Docs.routes.test.ts",
+    "package": "@beep/api-docs",
+    "kind": "test",
+    "bytes": 2977,
+    "lines": 65
+  },
+  {
+    "file": "apps/labs/api-docs/test/health.test.ts",
+    "package": "@beep/api-docs",
+    "kind": "test",
+    "bytes": 954,
+    "lines": 23
+  },
+  {
+    "file": "apps/labs/ciops/test/health.test.ts",
+    "package": "@beep/ciops",
+    "kind": "test",
+    "bytes": 983,
+    "lines": 24
+  },
+  {
+    "file": "apps/labs/ciops/test/projection.test.ts",
+    "package": "@beep/ciops",
+    "kind": "test",
+    "bytes": 19733,
+    "lines": 475
+  },
+  {
+    "file": "apps/labs/lejeune-bolt-workbench/test/App.test.tsx",
+    "package": "@beep/lejeune-bolt-workbench",
+    "kind": "test",
+    "bytes": 350,
+    "lines": 11
+  },
+  {
+    "file": "apps/labs/lejeune-bolt-workbench/test/Bundle.test.ts",
+    "package": "@beep/lejeune-bolt-workbench",
+    "kind": "test",
+    "bytes": 47072,
+    "lines": 1079
+  },
+  {
+    "file": "apps/labs/lejeune-bolt-workbench/test/BundleBuilder.test.ts",
+    "package": "@beep/lejeune-bolt-workbench",
+    "kind": "test",
+    "bytes": 22995,
+    "lines": 465
+  },
+  {
+    "file": "apps/labs/semantica/test/App.test.tsx",
+    "package": "@beep/semantica",
+    "kind": "test",
+    "bytes": 328,
+    "lines": 11
+  },
+  {
+    "file": "apps/labs/semantica/test/C0Input.test.ts",
+    "package": "@beep/semantica",
+    "kind": "test",
+    "bytes": 15826,
+    "lines": 368
+  },
+  {
+    "file": "apps/labs/semantica/test/C0Slice.test.ts",
+    "package": "@beep/semantica",
+    "kind": "test",
+    "bytes": 11591,
+    "lines": 241
+  },
+  {
+    "file": "apps/labs/semantica/test/Canary.test.ts",
+    "package": "@beep/semantica",
+    "kind": "test",
+    "bytes": 6352,
+    "lines": 167
+  },
+  {
+    "file": "apps/labs/semantica/test/Evaluator.test.ts",
+    "package": "@beep/semantica",
+    "kind": "test",
+    "bytes": 17095,
+    "lines": 473
+  },
+  {
+    "file": "apps/labs/semantica/test/Extractor.test.ts",
+    "package": "@beep/semantica",
+    "kind": "test",
+    "bytes": 16379,
+    "lines": 426
+  },
+  {
+    "file": "apps/labs/semantica/test/Fixtures.test.ts",
+    "package": "@beep/semantica",
+    "kind": "test",
+    "bytes": 14622,
+    "lines": 345
+  },
+  {
+    "file": "apps/labs/semantica/test/Gold.test.ts",
+    "package": "@beep/semantica",
+    "kind": "test",
+    "bytes": 24621,
+    "lines": 569
+  },
+  {
+    "file": "apps/labs/semantica/test/GoldSource.test.ts",
+    "package": "@beep/semantica",
+    "kind": "test",
+    "bytes": 11708,
+    "lines": 286
+  },
+  {
+    "file": "apps/labs/semantica/test/Ledger.test.ts",
+    "package": "@beep/semantica",
+    "kind": "test",
+    "bytes": 4053,
+    "lines": 91
+  },
+  {
+    "file": "apps/labs/semantica/test/Projection.test.ts",
+    "package": "@beep/semantica",
+    "kind": "test",
+    "bytes": 15100,
+    "lines": 364
+  },
+  {
+    "file": "apps/labs/semantica/test/ProjectionExpectation.test.ts",
+    "package": "@beep/semantica",
+    "kind": "test",
+    "bytes": 1775,
+    "lines": 36
+  },
+  {
+    "file": "apps/labs/semantica/test/ProviderCache.test.ts",
+    "package": "@beep/semantica",
+    "kind": "test",
+    "bytes": 34634,
+    "lines": 789
+  },
+  {
+    "file": "apps/labs/semantica/test/Reasoning.test.ts",
+    "package": "@beep/semantica",
+    "kind": "test",
+    "bytes": 8996,
+    "lines": 199
+  },
+  {
+    "file": "apps/labs/semantica/test/Schema.test.ts",
+    "package": "@beep/semantica",
+    "kind": "test",
+    "bytes": 50233,
+    "lines": 1426
+  },
+  {
+    "file": "apps/labs/semantica/test/helpers/CrashProbeChild.ts",
+    "package": "@beep/semantica",
+    "kind": "support",
+    "bytes": 3759,
+    "lines": 101
+  },
+  {
+    "file": "apps/labs/semantica/test/helpers/EyeOracleChild.ts",
+    "package": "@beep/semantica",
+    "kind": "support",
+    "bytes": 1768,
+    "lines": 43
+  },
+  {
+    "file": "apps/labs/trustgraph-workbench/test/App.test.tsx",
+    "package": "@beep/trustgraph-workbench",
+    "kind": "test",
+    "bytes": 963,
+    "lines": 25
+  },
+  {
+    "file": "apps/oip-web/test/TaggedErrors.equivalence.test.ts",
+    "package": "@beep/oip-web",
+    "kind": "test",
+    "bytes": 2268,
+    "lines": 62
+  },
+  {
+    "file": "apps/oip-web/test/oip-seo.test.ts",
+    "package": "@beep/oip-web",
+    "kind": "test",
+    "bytes": 6547,
+    "lines": 182
+  },
+  {
+    "file": "apps/oip-web/test/oip-web.test.tsx",
+    "package": "@beep/oip-web",
+    "kind": "test",
+    "bytes": 31939,
+    "lines": 867
+  },
+  {
+    "file": "apps/oip-web/test/setup.dom.ts",
+    "package": "@beep/oip-web",
+    "kind": "support",
+    "bytes": 3485,
+    "lines": 98
+  },
+  {
+    "file": "apps/practice-kg-mcp/test/Host.test.ts",
+    "package": "@beep/practice-kg-mcp",
+    "kind": "test",
+    "bytes": 3780,
+    "lines": 86
+  },
+  {
+    "file": "apps/practice-kg-mcp/test/TaggedError.equivalence.test.ts",
+    "package": "@beep/practice-kg-mcp",
+    "kind": "test",
+    "bytes": 2086,
+    "lines": 37
+  },
+  {
+    "file": "apps/professional-desktop/test/App.test.tsx",
+    "package": "@beep/professional-desktop",
+    "kind": "test",
+    "bytes": 1768,
+    "lines": 45
+  },
+  {
+    "file": "apps/professional-desktop/test/ContradictionQaSeed.test.ts",
+    "package": "@beep/professional-desktop",
+    "kind": "test",
+    "bytes": 1132,
+    "lines": 23
+  },
+  {
+    "file": "apps/professional-desktop/test/TaggedErrors.equivalence.test.ts",
+    "package": "@beep/professional-desktop",
+    "kind": "test",
+    "bytes": 5405,
+    "lines": 111
+  },
+  {
+    "file": "apps/professional-desktop/test/UsagePricing.test.ts",
+    "package": "@beep/professional-desktop",
+    "kind": "test",
+    "bytes": 1277,
+    "lines": 37
+  },
+  {
+    "file": "apps/professional-desktop/test/browser-failure-atoms.test.ts",
+    "package": "@beep/professional-desktop",
+    "kind": "test",
+    "bytes": 3211,
+    "lines": 82
+  },
+  {
+    "file": "apps/professional-desktop/test/chat-contract.test.ts",
+    "package": "@beep/professional-desktop",
+    "kind": "test",
+    "bytes": 30210,
+    "lines": 636
+  },
+  {
+    "file": "apps/professional-desktop/test/chat-ui.test.tsx",
+    "package": "@beep/professional-desktop",
+    "kind": "test",
+    "bytes": 10759,
+    "lines": 248
+  },
+  {
+    "file": "apps/professional-desktop/test/code-block.test.tsx",
+    "package": "@beep/professional-desktop",
+    "kind": "test",
+    "bytes": 2115,
+    "lines": 47
+  },
+  {
+    "file": "apps/professional-desktop/test/composer-atom-lifetime.test.ts",
+    "package": "@beep/professional-desktop",
+    "kind": "test",
+    "bytes": 2261,
+    "lines": 54
+  },
+  {
+    "file": "apps/professional-desktop/test/composer-dispatch-confirm.test.ts",
+    "package": "@beep/professional-desktop",
+    "kind": "test",
+    "bytes": 6204,
+    "lines": 151
+  },
+  {
+    "file": "apps/professional-desktop/test/composer-policy.test.ts",
+    "package": "@beep/professional-desktop",
+    "kind": "test",
+    "bytes": 5338,
+    "lines": 142
+  },
+  {
+    "file": "apps/professional-desktop/test/composer-send-lifetime.test.tsx",
+    "package": "@beep/professional-desktop",
+    "kind": "test",
+    "bytes": 3416,
+    "lines": 77
+  },
+  {
+    "file": "apps/professional-desktop/test/contradiction-sidecar-registration.test.ts",
+    "package": "@beep/professional-desktop",
+    "kind": "test",
+    "bytes": 18311,
+    "lines": 501
+  },
+  {
+    "file": "apps/professional-desktop/test/cosmos-spike-runtime.test.tsx",
+    "package": "@beep/professional-desktop",
+    "kind": "test",
+    "bytes": 1299,
+    "lines": 39
+  },
+  {
+    "file": "apps/professional-desktop/test/dock-shell.test.tsx",
+    "package": "@beep/professional-desktop",
+    "kind": "test",
+    "bytes": 8056,
+    "lines": 195
+  },
+  {
+    "file": "apps/professional-desktop/test/editor-contract-hardening.test.tsx",
+    "package": "@beep/professional-desktop",
+    "kind": "test",
+    "bytes": 57061,
+    "lines": 1344
+  },
+  {
+    "file": "apps/professional-desktop/test/editor-proof-panel.test.tsx",
+    "package": "@beep/professional-desktop",
+    "kind": "test",
+    "bytes": 1606,
+    "lines": 33
+  },
+  {
+    "file": "apps/professional-desktop/test/failure-message.test.ts",
+    "package": "@beep/professional-desktop",
+    "kind": "test",
+    "bytes": 1992,
+    "lines": 58
+  },
+  {
+    "file": "apps/professional-desktop/test/failure-observability.test.ts",
+    "package": "@beep/professional-desktop",
+    "kind": "test",
+    "bytes": 743,
+    "lines": 18
+  },
+  {
+    "file": "apps/professional-desktop/test/fps-atoms.test.ts",
+    "package": "@beep/professional-desktop",
+    "kind": "test",
+    "bytes": 1517,
+    "lines": 46
+  },
+  {
+    "file": "apps/professional-desktop/test/intake-atoms.test.ts",
+    "package": "@beep/professional-desktop",
+    "kind": "test",
+    "bytes": 18683,
+    "lines": 470
+  },
+  {
+    "file": "apps/professional-desktop/test/intake-refusal.test.ts",
+    "package": "@beep/professional-desktop",
+    "kind": "test",
+    "bytes": 1101,
+    "lines": 27
+  },
+  {
+    "file": "apps/professional-desktop/test/integration/Pglite.equivalence.test.ts",
+    "package": "@beep/professional-desktop",
+    "kind": "test",
+    "bytes": 1047,
+    "lines": 28
+  },
+  {
+    "file": "apps/professional-desktop/test/integration/PgliteDataDirCompatibility.test.ts",
+    "package": "@beep/professional-desktop",
+    "kind": "test",
+    "bytes": 12657,
+    "lines": 316
+  },
+  {
+    "file": "apps/professional-desktop/test/integration/UsageRecordSink.pglite.test.ts",
+    "package": "@beep/professional-desktop",
+    "kind": "test",
+    "bytes": 6192,
+    "lines": 156
+  },
+  {
+    "file": "apps/professional-desktop/test/integration/chat-persist.pglite.test.ts",
+    "package": "@beep/professional-desktop",
+    "kind": "test",
+    "bytes": 6258,
+    "lines": 135
+  },
+  {
+    "file": "apps/professional-desktop/test/integration/chat-real-anthropic.e2e.test.ts",
+    "package": "@beep/professional-desktop",
+    "kind": "test",
+    "bytes": 6996,
+    "lines": 170
+  },
+  {
+    "file": "apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts",
+    "package": "@beep/professional-desktop",
+    "kind": "test",
+    "bytes": 12934,
+    "lines": 304
+  },
+  {
+    "file": "apps/professional-desktop/test/integration/contradiction-sidecar-contract.test.ts",
+    "package": "@beep/professional-desktop",
+    "kind": "test",
+    "bytes": 2411,
+    "lines": 61
+  },
+  {
+    "file": "apps/professional-desktop/test/integration/execution-authority.pglite.test.ts",
+    "package": "@beep/professional-desktop",
+    "kind": "test",
+    "bytes": 28742,
+    "lines": 582
+  },
+  {
+    "file": "apps/professional-desktop/test/integration/ontology-mcp-http.test.ts",
+    "package": "@beep/professional-desktop",
+    "kind": "test",
+    "bytes": 24984,
+    "lines": 526
+  },
+  {
+    "file": "apps/professional-desktop/test/integration/sidecar-ipc-stdio.test.ts",
+    "package": "@beep/professional-desktop",
+    "kind": "test",
+    "bytes": 6610,
+    "lines": 174
+  },
+  {
+    "file": "apps/professional-desktop/test/integration/sidecar-smoke.test.ts",
+    "package": "@beep/professional-desktop",
+    "kind": "test",
+    "bytes": 3604,
+    "lines": 78
+  },
+  {
+    "file": "apps/professional-desktop/test/integration/support/ontology-mcp-harness.ts",
+    "package": "@beep/professional-desktop",
+    "kind": "support",
+    "bytes": 12157,
+    "lines": 264
+  },
+  {
+    "file": "apps/professional-desktop/test/mermaid-viewer.test.tsx",
+    "package": "@beep/professional-desktop",
+    "kind": "test",
+    "bytes": 8521,
+    "lines": 194
+  },
+  {
+    "file": "apps/professional-desktop/test/ontology-sidecar-registration.test.ts",
+    "package": "@beep/professional-desktop",
+    "kind": "test",
+    "bytes": 5303,
+    "lines": 130
+  },
+  {
+    "file": "apps/professional-desktop/test/ontology-workspace-seed.test.ts",
+    "package": "@beep/professional-desktop",
+    "kind": "test",
+    "bytes": 3356,
+    "lines": 86
+  },
+  {
+    "file": "apps/professional-desktop/test/optimistic-user-turn.test.tsx",
+    "package": "@beep/professional-desktop",
+    "kind": "test",
+    "bytes": 18259,
+    "lines": 493
+  },
+  {
+    "file": "apps/professional-desktop/test/packaged-rpc-origin.test.ts",
+    "package": "@beep/professional-desktop",
+    "kind": "test",
+    "bytes": 1089,
+    "lines": 23
+  },
+  {
+    "file": "apps/professional-desktop/test/professional-atom-provider.test.tsx",
+    "package": "@beep/professional-desktop",
+    "kind": "test",
+    "bytes": 603,
+    "lines": 18
+  },
+  {
+    "file": "apps/professional-desktop/test/renderer-observability-config.test.ts",
+    "package": "@beep/professional-desktop",
+    "kind": "test",
+    "bytes": 1923,
+    "lines": 55
+  },
+  {
+    "file": "apps/professional-desktop/test/rpc-session-auth.test.ts",
+    "package": "@beep/professional-desktop",
+    "kind": "test",
+    "bytes": 2276,
+    "lines": 49
+  },
+  {
+    "file": "apps/professional-desktop/test/schema-parity.test.ts",
+    "package": "@beep/professional-desktop",
+    "kind": "test",
+    "bytes": 11338,
+    "lines": 250
+  },
+  {
+    "file": "apps/professional-desktop/test/setup.dom.ts",
+    "package": "@beep/professional-desktop",
+    "kind": "support",
+    "bytes": 1116,
+    "lines": 27
+  },
+  {
+    "file": "apps/professional-desktop/test/sidebar-layout.test.ts",
+    "package": "@beep/professional-desktop",
+    "kind": "test",
+    "bytes": 3187,
+    "lines": 81
+  },
+  {
+    "file": "apps/professional-desktop/test/spike-schema.test.ts",
+    "package": "@beep/professional-desktop",
+    "kind": "test",
+    "bytes": 3421,
+    "lines": 88
+  },
+  {
+    "file": "apps/professional-desktop/test/surface-boundary.test.tsx",
+    "package": "@beep/professional-desktop",
+    "kind": "test",
+    "bytes": 4955,
+    "lines": 116
+  },
+  {
+    "file": "apps/professional-desktop/test/sync-atoms.test.ts",
+    "package": "@beep/professional-desktop",
+    "kind": "test",
+    "bytes": 5764,
+    "lines": 124
+  },
+  {
+    "file": "apps/professional-desktop/test/sync-retry.test.tsx",
+    "package": "@beep/professional-desktop",
+    "kind": "test",
+    "bytes": 1378,
+    "lines": 35
+  },
+  {
+    "file": "apps/professional-desktop/test/table-layout.test.tsx",
+    "package": "@beep/professional-desktop",
+    "kind": "test",
+    "bytes": 2365,
+    "lines": 59
+  },
+  {
+    "file": "apps/professional-desktop/test/tailwind-sources.test.ts",
+    "package": "@beep/professional-desktop",
+    "kind": "test",
+    "bytes": 2354,
+    "lines": 49
+  },
+  {
+    "file": "apps/professional-desktop/test/tauri-ipc-socket.test.ts",
+    "package": "@beep/professional-desktop",
+    "kind": "test",
+    "bytes": 3207,
+    "lines": 93
+  },
+  {
+    "file": "apps/professional-desktop/test/tauri-youtube-security.test.ts",
+    "package": "@beep/professional-desktop",
+    "kind": "test",
+    "bytes": 4861,
+    "lines": 106
+  },
+  {
+    "file": "apps/professional-desktop/test/theme-atoms.test.tsx",
+    "package": "@beep/professional-desktop",
+    "kind": "test",
+    "bytes": 6162,
+    "lines": 162
+  },
+  {
+    "file": "apps/professional-desktop/test/thread-transcript-view.test.ts",
+    "package": "@beep/professional-desktop",
+    "kind": "test",
+    "bytes": 4454,
+    "lines": 123
+  },
+  {
+    "file": "apps/professional-desktop/test/vault-directory-picker.test.ts",
+    "package": "@beep/professional-desktop",
+    "kind": "test",
+    "bytes": 4156,
+    "lines": 115
+  },
+  {
+    "file": "apps/professional-desktop/test/vault-sync-disconnected-note.test.tsx",
+    "package": "@beep/professional-desktop",
+    "kind": "test",
+    "bytes": 7470,
+    "lines": 162
+  },
+  {
+    "file": "apps/professional-desktop/test/viewer-encoding.test.tsx",
+    "package": "@beep/professional-desktop",
+    "kind": "test",
+    "bytes": 1924,
+    "lines": 46
+  },
+  {
+    "file": "apps/professional-desktop/test/youtube-watch-opener.test.tsx",
+    "package": "@beep/professional-desktop",
+    "kind": "test",
+    "bytes": 4052,
+    "lines": 107
+  },
+  {
+    "file": "apps/todox/test/app.test.tsx",
+    "package": "@beep/todox",
+    "kind": "test",
+    "bytes": 854,
+    "lines": 28
+  },
+  {
+    "file": "infra/ci-runners/sdks/ghaRunners/test/build.test.js",
+    "package": "@beep/infra",
+    "kind": "test",
+    "bytes": 2398,
+    "lines": 72
+  },
+  {
+    "file": "infra/lambda/turbo-cache/test/authorizer.test.ts",
+    "package": "@beep/infra",
+    "kind": "test",
+    "bytes": 4091,
+    "lines": 102
+  },
+  {
+    "file": "infra/lambda/turbo-cache/test/helpers.ts",
+    "package": "@beep/infra",
+    "kind": "support",
+    "bytes": 613,
+    "lines": 20
+  },
+  {
+    "file": "infra/lambda/turbo-cache/test/hmac.test.ts",
+    "package": "@beep/infra",
+    "kind": "test",
+    "bytes": 2044,
+    "lines": 58
+  },
+  {
+    "file": "infra/lambda/turbo-cache/test/writer.test.ts",
+    "package": "@beep/infra",
+    "kind": "test",
+    "bytes": 2085,
+    "lines": 60
+  },
+  {
+    "file": "infra/test/AIMetrics.test.ts",
+    "package": "@beep/infra",
+    "kind": "test",
+    "bytes": 7038,
+    "lines": 183
+  },
+  {
+    "file": "infra/test/CiFleetController.test.ts",
+    "package": "@beep/infra",
+    "kind": "test",
+    "bytes": 25887,
+    "lines": 532
+  },
+  {
+    "file": "infra/test/CiRunners.test.ts",
+    "package": "@beep/infra",
+    "kind": "test",
+    "bytes": 6846,
+    "lines": 158
+  },
+  {
+    "file": "infra/test/CiTurboCache.test.ts",
+    "package": "@beep/infra",
+    "kind": "test",
+    "bytes": 6320,
+    "lines": 147
+  },
+  {
+    "file": "infra/test/OipWeb.test.ts",
+    "package": "@beep/infra",
+    "kind": "test",
+    "bytes": 7491,
+    "lines": 172
+  },
+  {
+    "file": "infra/test/OpenClaw.test.ts",
+    "package": "@beep/infra",
+    "kind": "test",
+    "bytes": 38858,
+    "lines": 828
+  },
+  {
+    "file": "infra/test/Storybook.test.ts",
+    "package": "@beep/infra",
+    "kind": "test",
+    "bytes": 5224,
+    "lines": 122
+  },
+  {
+    "file": "infra/test/schemaParity.ts",
+    "package": "@beep/infra",
+    "kind": "support",
+    "bytes": 605,
+    "lines": 18
+  }
+]

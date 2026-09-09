@@ -1,0 +1,69 @@
+{
+  "class": "EV010",
+  "method": "node:fs, BunFileSystem, NodeFileSystem, or tmpdir occurrences",
+  "fileCount": 12,
+  "occurrenceCount": 47,
+  "files": [
+    {
+      "file": "apps/labs/ciops/test/projection.test.ts",
+      "count": 13,
+      "lines": [3, 3, 127, 151, 174, 201, 270, 296, 314, 398, 420, 448, 453]
+    },
+    {
+      "file": "apps/practice-kg-mcp/test/Host.test.ts",
+      "count": 3,
+      "lines": [9, 9, 16]
+    },
+    {
+      "file": "apps/professional-desktop/test/integration/PgliteDataDirCompatibility.test.ts",
+      "count": 3,
+      "lines": [2, 2, 21]
+    },
+    {
+      "file": "apps/professional-desktop/test/integration/UsageRecordSink.pglite.test.ts",
+      "count": 3,
+      "lines": [6, 6, 68]
+    },
+    {
+      "file": "apps/professional-desktop/test/integration/chat-persist.pglite.test.ts",
+      "count": 3,
+      "lines": [34, 34, 63]
+    },
+    {
+      "file": "apps/professional-desktop/test/integration/chat-real-anthropic.e2e.test.ts",
+      "count": 3,
+      "lines": [27, 27, 111]
+    },
+    {
+      "file": "apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts",
+      "count": 3,
+      "lines": [27, 27, 64]
+    },
+    {
+      "file": "apps/professional-desktop/test/integration/contradiction-sidecar-contract.test.ts",
+      "count": 3,
+      "lines": [14, 14, 59]
+    },
+    {
+      "file": "apps/professional-desktop/test/integration/sidecar-ipc-stdio.test.ts",
+      "count": 3,
+      "lines": [19, 19, 163]
+    },
+    {
+      "file": "apps/professional-desktop/test/integration/sidecar-smoke.test.ts",
+      "count": 3,
+      "lines": [25, 25, 70]
+    },
+    {
+      "file": "apps/professional-desktop/test/tailwind-sources.test.ts",
+      "count": 3,
+      "lines": [2, 2, 47]
+    },
+    {
+      "file": "infra/ci-runners/sdks/ghaRunners/test/build.test.js",
+      "count": 4,
+      "lines": [2, 21, 26, 49]
+    }
+  ],
+  "limitations": "Judgment candidate: whether the subject only needs FileSystem or asserts platform lifecycle cannot be inferred textually."
+}

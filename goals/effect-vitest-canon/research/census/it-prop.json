@@ -1,0 +1,21 @@
+{
+  "class": "it-prop",
+  "method": "Merged lane reconnaissance; see methodsByLane.",
+  "methodsByLane": {
+    "packages": "line-oriented lexical scan over live in-scope package files",
+    "apps-infra": "ts-morph syntax-only exact CallExpression it.prop(...)"
+  },
+  "scope": "tests",
+  "fileCount": 1,
+  "occurrenceCount": 2,
+  "files": [
+    {
+      "file": "packages/drivers/pacer/test/Pacer.test.ts",
+      "count": 2,
+      "lines": [120, 131]
+    }
+  ],
+  "limitations": [
+    "Exact syntactic call identity; excludes it.effect.prop and aliases."
+  ]
+}
