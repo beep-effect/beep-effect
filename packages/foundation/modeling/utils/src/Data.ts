@@ -9,4 +9,18 @@
  * @since 0.0.0
  */
 
+/**
+ * Re-exports the `effect/Data` constructors and tagged-value helpers.
+ *
+ * **Example** (Import the re-exported module)
+ *
+ * ```ts
+ * import * as Data from "@beep/utils/Data"
+ *
+ * console.log(Data)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export * from "effect/Data";
