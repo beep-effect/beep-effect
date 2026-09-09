@@ -1623,6 +1623,10 @@ describe("quality task adapter", () => {
       });
       yield* persistLaneProofs(emptySession, []);
       yield* withEnvVarEffect("BEEP_YEET_LANE_PROOF_MODE", undefined, persistLaneProofs(emptySession, [[lane, 1]]));
+      yield* persistLaneProofs(emptySession, [
+        [lane, 1],
+        [laneProofTestLane(path.join(tempRoot, "other"), "proof:other", "preflight", "process.exit(0)"), 1],
+      ]);
     }, provideScopedLayer(PlatformLayer))
   );
 
@@ -1680,6 +1684,109 @@ describe("quality task adapter", () => {
       expect(A.map((yield* atRuns("100")).report.lanes, (result) => result.status)).toEqual(["reused"]);
       expect(A.map((yield* atRuns("400")).report.lanes, (result) => result.status)).toEqual(["passed"]);
       expect(yield* fs.readFileString(markerPath)).toBe("run\nrun\n");
+    }, provideScopedLayer(PlatformLayer))
+  );
+
+  it.effect(
+    "invalidates a lane proof when an inherited ambient input changes",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: "lane-proof-ambient-env-" });
+      const markerPath = path.join(tempRoot, ".beep", "ambient-marker.txt");
+      yield* initializeLaneProofRepository(tempRoot);
+
+      const lane = laneProofTestLane(
+        tempRoot,
+        "proof:ambient-env",
+        "preflight",
+        "echo run >> .beep/ambient-marker.txt"
+      );
+      const run = collectGithubCheckLaneWavesForTesting(
+        "proof-ambient-env",
+        [GithubCheckLaneWaveSpec.make({ wave: "preflight", lanes: [lane] })],
+        "fail-fast",
+        "active"
+      );
+      const withGoldenMode = (mode: string) => withEnvVarEffect("REGEN_GOLDENS", mode, run);
+
+      expect(A.map((yield* withGoldenMode("0")).report.lanes, (result) => result.status)).toEqual(["passed"]);
+      expect(A.map((yield* withGoldenMode("0")).report.lanes, (result) => result.status)).toEqual(["reused"]);
+      expect(A.map((yield* withGoldenMode("1")).report.lanes, (result) => result.status)).toEqual(["passed"]);
+      expect(yield* fs.readFileString(markerPath)).toBe("run\nrun\n");
+    }, provideScopedLayer(PlatformLayer))
+  );
+
+  it.effect(
+    "includes the complete ambient environment for local-env lanes with an isolated spawn",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: "lane-proof-local-env-" });
+      yield* initializeLaneProofRepository(tempRoot);
+
+      const lane = GithubCheckLaneSpec.make({
+        id: "proof:local-env",
+        stage: "repo-quality",
+        wave: "preflight",
+        blockedBy: [],
+        step: QualityTaskStep.make({
+          label: "proof:local-env",
+          command: "op",
+          args: ["run", "--", "bunx", "turbo", "run", "check"],
+          cwd: tempRoot,
+          useLocalEnv: true,
+        }),
+      });
+      const hashAtConcurrency = (concurrency: string) =>
+        withEnvVarEffect("BEEP_QUALITY_CHECK_CONCURRENCY", concurrency, prepareLaneProofSession([lane], "active")).pipe(
+          Effect.map((session) =>
+            pipe(
+              session,
+              O.flatMap((session) => A.head(session.identities)),
+              O.map((identity) => identity.envProfileHash),
+              O.getOrThrow
+            )
+          )
+        );
+
+      expect(yield* hashAtConcurrency("2")).toBe(yield* hashAtConcurrency("2"));
+      expect(yield* hashAtConcurrency("2")).not.toBe(yield* hashAtConcurrency("3"));
+    }, provideScopedLayer(PlatformLayer))
+  );
+
+  it.effect(
+    "omits ambient inputs from proof identity when the lane spawn is isolated",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: "lane-proof-isolated-env-" });
+      yield* initializeLaneProofRepository(tempRoot);
+
+      const lane = GithubCheckLaneSpec.make({
+        id: "proof:isolated-env",
+        stage: "repo-quality",
+        wave: "preflight",
+        blockedBy: [],
+        step: QualityTaskStep.make({
+          label: "proof:isolated-env",
+          command: "op",
+          args: ["run", "--", "bunx", "turbo", "run", "check"],
+          cwd: tempRoot,
+          env: { PATH: "/usr/bin" },
+        }),
+      });
+      const hashAtGoldenMode = (mode: string) =>
+        withEnvVarEffect("REGEN_GOLDENS", mode, prepareLaneProofSession([lane], "active")).pipe(
+          Effect.map((session) =>
+            pipe(
+              session,
+              O.flatMap((session) => A.head(session.identities)),
+              O.map((identity) => identity.envProfileHash),
+              O.getOrThrow
+            )
+          )
+        );
+
+      expect(yield* hashAtGoldenMode("0")).toBe(yield* hashAtGoldenMode("1"));
     }, provideScopedLayer(PlatformLayer))
   );
 
