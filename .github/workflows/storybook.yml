@@ -16,8 +16,9 @@ permissions:
 jobs:
   storybook:
     # Quality-lane audit D13: the lane body lives in the beep CLI
-    # (`beep ci lane storybook`) so it replays locally; this workflow carries
-    # the change-profile gate, the Playwright browser cache, and the artifact
+    # (`beep ci lane storybook`) so it replays locally and decides for itself
+    # whether @beep/storybook is in Turbo's affected set; this workflow carries
+    # the goals_only gate, the Playwright browser cache, and the artifact
     # upload. Non-required: never add "Storybook" to ruleset 10240248 without
     # a stable green history.
     name: Storybook
@@ -46,10 +47,12 @@ jobs:
         run: |
           set -euo pipefail
           should_run=true
-          # storybook_relevant (scripts/ci-change-profile.sh) is the same
-          # profile the CLI lane applies under --affected; pushes always run.
+          # Only goals_only (scripts/ci-change-profile.sh) gates here. Whether
+          # @beep/storybook is affected is the lane's own decision: under
+          # --affected it probes Turbo's dependency-aware plan and skips
+          # itself when nothing in Storybook's closure changed. Pushes run.
           eval "$(scripts/ci-change-profile.sh "origin/${GITHUB_BASE_REF:-main}")"
-          if [[ "$goals_only" == "true" || "$storybook_relevant" != "true" ]]; then
+          if [[ "$goals_only" == "true" ]]; then
             should_run=false
           fi
           echo "should_run=$should_run" >> "$GITHUB_OUTPUT"

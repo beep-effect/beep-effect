@@ -61,7 +61,9 @@ type CiLaneEnvironment = FileSystem.FileSystem | FsUtils | Path.Path | ChildProc
 
 const JSDOC_CI_INVENTORY_JSON_PATH = ".beep/ci/jsdoc-documentation.inventory.jsonc";
 const JSDOC_CI_INVENTORY_MARKDOWN_PATH = ".beep/ci/jsdoc-documentation.inventory.md";
-const STORYBOOK_TURBO_SELECT_FILTER = "--filter=@beep/storybook";
+const STORYBOOK_PACKAGE_NAME = "@beep/storybook";
+const STORYBOOK_BUILD_TASK = "storybook:build";
+const STORYBOOK_TURBO_SELECT_FILTER = `--filter=${STORYBOOK_PACKAGE_NAME}`;
 const STORYBOOK_STATIC_INDEX_PATH = "apps/storybook/storybook-static/index.html";
 const normalizeSlashes = (value: string): string => Str.replace(/\\/g, "/")(value);
 
@@ -597,10 +599,12 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
   }),
   // Quality-lane audit D13: Storybook used to build and browser-test on every
   // PR with no gate, no descriptor, and no local replay (584 s per PR). The
-  // lane body now lives here; storybook.yml carries the change-profile gate
-  // (storybook_relevant from scripts/ci-change-profile.sh), the Playwright
-  // browser cache, and the artifact upload. Non-required: never add
-  // "Storybook" to ruleset 10240248 without a stable green history.
+  // lane body now lives here, and its affected shape asks Turbo whether
+  // @beep/storybook sits in the dependency-aware affected set (a dry-run
+  // probe, so transitive workspace changes such as @beep/schema count).
+  // storybook.yml carries only the goals_only gate, the Playwright browser
+  // cache, and the artifact upload. Non-required: never add "Storybook" to
+  // ruleset 10240248 without a stable green history.
   CiLaneDescriptor.make({
     id: "storybook",
     contextName: "Storybook",
@@ -609,7 +613,7 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
     replay: "exact",
     flags: [...TURBO_SHAPE_FLAGS],
     notes:
-      "Builds and browser-tests @beep/storybook through one positive Turbo filter (never --affected: Turbo unions filters). --affected --base drives the CLI-side change-profile gate instead, so local and PR replays skip when no Storybook input changed. Requires Playwright Chromium (bunx playwright install chromium).",
+      "Builds and browser-tests @beep/storybook through one positive Turbo filter. --affected --base first probes `turbo run storybook:build --filter=@beep/storybook --affected --dry-run=json` (Turbo intersects the filter with its dependency-aware affected set) and skips the lane when the plan selects no @beep/storybook task, so local and PR replays run for transitive workspace changes and skip docs-only change sets; storybook.yml keeps only the goals_only gate and lets the lane decide. Requires Playwright Chromium (bunx playwright install chromium).",
   }),
 ];
 
@@ -1096,26 +1100,27 @@ export const ciLanePartitionArgsForTesting: {
     })
 );
 
-class TurboPartitionDryRunTask extends S.Class<TurboPartitionDryRunTask>($I`TurboPartitionDryRunTask`)(
+class TurboDryRunTask extends S.Class<TurboDryRunTask>($I`TurboDryRunTask`)(
   {
     command: S.String,
     package: S.String,
     task: S.String,
     taskId: S.String,
   },
-  $I.annote("TurboPartitionDryRunTask", {
-    description: "Task entry read from Turbo's JSON dry-run plan for a partitioned CI lane.",
+  $I.annote("TurboDryRunTask", {
+    description: "Task entry read from Turbo's JSON dry-run plan for a CI lane selection probe.",
   })
 ) {}
 
-class TurboPartitionDryRun extends S.Class<TurboPartitionDryRun>($I`TurboPartitionDryRun`)(
-  { tasks: S.Array(TurboPartitionDryRunTask) },
-  $I.annote("TurboPartitionDryRun", {
-    description: "Turbo JSON dry-run document used to prove a partitioned CI lane's selected tasks.",
+class TurboDryRun extends S.Class<TurboDryRun>($I`TurboDryRun`)(
+  { tasks: S.Array(TurboDryRunTask) },
+  $I.annote("TurboDryRun", {
+    description:
+      "Turbo JSON dry-run document read by the partition proof and the Storybook affected probe to learn which tasks Turbo selected.",
   })
 ) {}
 
-const decodeTurboPartitionDryRun = S.decodeUnknownEffect(S.fromJsonString(TurboPartitionDryRun));
+const decodeTurboDryRun = S.decodeUnknownEffect(S.fromJsonString(TurboDryRun));
 const TURBO_NONEXISTENT_TASK_COMMAND = "<NONEXISTENT>";
 
 const turboRootLaneStep = (
@@ -1503,9 +1508,9 @@ export const ciLaneStepsForTesting: {
       secrets: () => [bunRunStep(repoRoot, "ci:secrets", ["beep", "quality", "github-checks", "secrets"])],
       security: () => [bunRunStep(repoRoot, "ci:security", ["beep", "quality", "github-checks", "security"])],
       // Quality-lane audit D13: one positively-filtered build, the browser test
-      // run, then the static-artifact proof storybook.yml uploads. Deliberately
-      // no --affected on the Turbo argv (filter union hazard, same as labs);
-      // the affected shape gates the whole lane in runCiStepLane instead.
+      // run, then the static-artifact proof storybook.yml uploads. No
+      // --affected on the execution argv: the affected shape is answered once
+      // by the dry-run probe in runCiStepLane, which then runs the lane whole.
       storybook: () => [
         QualityTaskStep.make({
           label: "ci:storybook:build",
@@ -1657,74 +1662,6 @@ export const docgenLaneModeForChangedPaths = (changedPaths: ReadonlyArray<string
       ? "affected"
       : "none";
 
-/**
- * POSIX ERE (and JavaScript-compatible) pattern for Storybook lane inputs.
- *
- * **Details**
- *
- * This is the single definition of the Storybook change profile: the app,
- * the ui-system packages and graph-3d driver whose stories it mounts, any
- * story file or `stories/` directory, the Storybook configs, the workflow,
- * gate, and lane bodies, and the root dependency graph. The CLI gate uses it
- * through {@link isStorybookLaneInput}; `scripts/ci-change-profile.sh` embeds
- * the identical literal for the pre-install workflow gate, and a unit test
- * pins the two together.
- *
- * **Example** (Inspect the profile)
- *
- * ```ts
- * import { STORYBOOK_LANE_INPUT_PATTERN } from "@beep/repo-cli/commands/Ci"
- *
- * console.log(new RegExp(STORYBOOK_LANE_INPUT_PATTERN, "u").test("apps/storybook/package.json")) // true
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export const STORYBOOK_LANE_INPUT_PATTERN =
-  "^(apps/storybook/|packages/foundation/ui-system/|packages/drivers/graph-3d/|\\.github/workflows/storybook\\.yml$|scripts/ci-change-profile\\.sh$|packages/tooling/tool/cli/src/commands/Ci/CiLane\\.ts$|(bun\\.lock|package\\.json|turbo\\.json)$)|(^|/)(stories/|\\.storybook/)|\\.stories\\.tsx$|vitest\\.storybook\\.(config|setup)\\.ts$";
-
-const storybookLaneInput = new RegExp(STORYBOOK_LANE_INPUT_PATTERN, "u");
-
-/**
- * Whether one changed repository path is a Storybook lane input.
- *
- * **Example** (Classify changed paths)
- *
- * ```ts
- * import { isStorybookLaneInput } from "@beep/repo-cli/commands/Ci"
- *
- * console.log(isStorybookLaneInput("packages/foundation/ui-system/ui/stories/button.stories.tsx")) // true
- * console.log(isStorybookLaneInput("docs/README.md")) // false
- * ```
- *
- * @param file - Normalized repository-relative path.
- * @returns `true` when the Storybook lane must run for this change.
- * @category utilities
- * @since 0.0.0
- */
-export const isStorybookLaneInput = (file: string): boolean => O.isSome(Str.match(storybookLaneInput)(file));
-
-/**
- * Whether a base-to-head change set touches any Storybook lane input.
- *
- * **Example** (Gate the Storybook lane)
- *
- * ```ts
- * import { storybookLaneInputsChanged } from "@beep/repo-cli/commands/Ci"
- *
- * console.log(storybookLaneInputsChanged(["docs/README.md", "bun.lock"])) // true
- * console.log(storybookLaneInputsChanged(["docs/README.md"])) // false
- * ```
- *
- * @param changedPaths - Normalized base-to-head repository paths.
- * @returns `true` when at least one path is a Storybook lane input.
- * @category utilities
- * @since 0.0.0
- */
-export const storybookLaneInputsChanged = (changedPaths: ReadonlyArray<string>): boolean =>
-  A.some(changedPaths, isStorybookLaneInput);
-
 const normalizedOutputPaths = (output: string): ReadonlyArray<string> =>
   pipe(Str.split(/\r?\n/u)(output), A.map(normalizeSlashes), A.filter(Str.isNonEmpty), A.dedupe, A.sort(Order.String));
 
@@ -1759,17 +1696,54 @@ const resolveAutoDocgenLaneMode = Effect.fn("CiLane.resolveAutoDocgenLaneMode")(
   return mode;
 });
 
-const resolveStorybookLaneRelevance = Effect.fn("CiLane.resolveStorybookLaneRelevance")(function* (
+// Quality-lane audit D13, revised for PR #1054 review: a path profile cannot
+// see the workspace graph, so a change under packages/foundation/modeling/*
+// that reaches @beep/ui and its stories used to skip the lane. Turbo owns that
+// graph already: `--affected` intersected with the positive filter selects
+// @beep/storybook#storybook:build exactly when its dependency closure (or a
+// global input) changed against TURBO_SCM_BASE, and nothing otherwise.
+const storybookAffectedProbeArgs = (): ReadonlyArray<string> =>
+  directTurboArgs([STORYBOOK_BUILD_TASK], [STORYBOOK_TURBO_SELECT_FILTER, "--affected", "--dry-run=json"]);
+
+const isStorybookBuildTask = (entry: TurboDryRunTask): boolean =>
+  entry.package === STORYBOOK_PACKAGE_NAME &&
+  entry.task === STORYBOOK_BUILD_TASK &&
+  entry.command !== TURBO_NONEXISTENT_TASK_COMMAND;
+
+const resolveStorybookLaneAffected = Effect.fn("CiLane.resolveStorybookLaneAffected")(function* (
   repoRoot: string,
-  base: string,
-  head: string
+  base: string
 ): Effect.fn.Return<boolean, CiCommandError, ChildProcessSpawner.ChildProcessSpawner> {
-  const changedPaths = yield* changedPathsBetween(repoRoot, base, head, "the Storybook change profile");
-  const relevant = storybookLaneInputsChanged(changedPaths);
-  yield* Console.log(
-    `[ci] storybook: ${relevant ? "Storybook inputs changed" : "no Storybook input changed"} across ${A.length(changedPaths)} changed path(s) (${base}...${head})`
+  const probeArgs = storybookAffectedProbeArgs();
+  yield* Console.log(`[ci] ci:storybook: bunx ${A.join(probeArgs, " ")}`);
+  const envOverrides = yield* turboEnvOverrides("bunx", probeArgs, Bun.env);
+  const result = yield* runCaptured({
+    command: "bunx",
+    args: probeArgs,
+    cwd: repoRoot,
+    env: { ...envOverrides, TURBO_SCM_BASE: base },
+    extendEnv: turboEnvExtendsAmbient("bunx", probeArgs),
+    source: "stdout",
+    trim: true,
+  }).pipe(CiCommandError.mapError("Failed to spawn Turbo's Storybook affected dry run."));
+  if (result.exitCode !== 0) {
+    return yield* CiCommandError.make({
+      message: `Turbo's Storybook affected dry run exited with code ${result.exitCode}.`,
+    });
+  }
+  if (result.truncated) {
+    return yield* CiCommandError.make({
+      message: "Turbo's Storybook affected dry run exceeded the capture bound.",
+    });
+  }
+  const dryRun = yield* decodeTurboDryRun(result.output).pipe(
+    CiCommandError.mapError("Turbo emitted invalid JSON for the Storybook affected dry run.")
   );
-  return relevant;
+  const affected = A.some(dryRun.tasks, isStorybookBuildTask);
+  yield* Console.log(
+    `[ci] storybook: Turbo's affected plan (${base}...HEAD) ${affected ? "selects" : "does not select"} ${STORYBOOK_PACKAGE_NAME}#${STORYBOOK_BUILD_TASK} (${A.length(dryRun.tasks)} task(s) selected)`
+  );
+  return affected;
 });
 
 const runCiStepLane = Effect.fn("CiLane.runCiStepLane")(function* (
@@ -1784,14 +1758,11 @@ const runCiStepLane = Effect.fn("CiLane.runCiStepLane")(function* (
           mode: yield* resolveAutoDocgenLaneMode(repoRoot, options.base, options.head),
         })
       : options;
-  // The Storybook lane's affected shape is a change-profile gate, mirroring
-  // the storybook.yml lane-gate so a local replay skips the same PRs.
-  if (
-    laneId === "storybook" &&
-    options.affected &&
-    !(yield* resolveStorybookLaneRelevance(repoRoot, options.base, options.head))
-  ) {
-    yield* Console.log("[ci] storybook: no Storybook input changed for this change set (skipped)");
+  // The Storybook lane's affected shape asks Turbo whether @beep/storybook is
+  // in the dependency-aware affected set; storybook.yml keeps only the
+  // goals_only gate, so PR and local replays skip the same change sets.
+  if (laneId === "storybook" && options.affected && !(yield* resolveStorybookLaneAffected(repoRoot, options.base))) {
+    yield* Console.log("[ci] storybook: @beep/storybook is outside Turbo's affected set for this change set (skipped)");
     return;
   }
   const steps = ciLaneStepsForTesting(repoRoot, laneId, resolvedOptions);
@@ -2146,7 +2117,7 @@ const runCiPartitionedLane = Effect.fn("CiLane.runCiPartitionedLane")(function* 
     );
   }
 
-  const dryRun = yield* decodeTurboPartitionDryRun(selectedResult.output).pipe(
+  const dryRun = yield* decodeTurboDryRun(selectedResult.output).pipe(
     Effect.mapError((cause) =>
       ciLanePartitionError(
         "turbo-dry-run",
@@ -2579,8 +2550,8 @@ const ciLocalLaneFlags = (laneId: CiLaneId, plan: CiLocalStepPlan): ReadonlyArra
     sast: A.empty<string>,
     secrets: A.empty<string>,
     security: A.empty<string>,
-    // The affected shape is the CLI-side change-profile gate, not a Turbo
-    // selector (see the storybook lane body).
+    // The affected shape drives the Turbo dry-run probe, not the execution
+    // argv (see the storybook lane body).
     storybook: () => turboShapeFlags,
     "test-integration": () => turboShapeFlags,
     "test-unit": () => turboShapeFlags,

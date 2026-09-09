@@ -11,11 +11,8 @@ import {
   ciLocalStepsForTesting,
   docgenLaneModeForChangedPaths,
   doctestStepForTesting,
-  isStorybookLaneInput,
   proveCiLanePartition,
   runCiLane,
-  STORYBOOK_LANE_INPUT_PATTERN,
-  storybookLaneInputsChanged,
 } from "@beep/repo-cli/commands/Ci";
 import {
   isLabsWorkspaceDir,
@@ -1260,51 +1257,21 @@ describe("ciLaneStepsForTesting", () => {
     }
   });
 
-  it("classifies storybook lane inputs from one pattern shared with the workflow gate", () => {
-    for (const relevant of [
-      "apps/storybook/package.json",
-      "apps/storybook/.storybook/main.ts",
-      "apps/storybook/vitest.storybook.config.ts",
-      "packages/foundation/ui-system/ui/src/button.tsx",
-      "packages/foundation/ui-system/dock-react/stories/dock.stories.tsx",
-      "packages/drivers/graph-3d/stories/graph.stories.tsx",
-      "packages/drivers/graph-3d/src/index.ts",
-      "apps/web/src/hero.stories.tsx",
-      "packages/example/stories/index.ts",
-      ".github/workflows/storybook.yml",
-      "scripts/ci-change-profile.sh",
-      "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-      "bun.lock",
-      "package.json",
-      "turbo.json",
-    ]) {
-      expect(isStorybookLaneInput(relevant), relevant).toBe(true);
-    }
-    for (const inert of [
-      "docs/README.md",
-      "packages/foundation/schema/src/index.ts",
-      "packages/example/package.json",
-      "apps/web/src/hero.tsx",
-      "goals/example/GOAL.md",
-    ]) {
-      expect(isStorybookLaneInput(inert), inert).toBe(false);
-    }
-    expect(storybookLaneInputsChanged(["docs/README.md", "bun.lock"])).toBe(true);
-    expect(storybookLaneInputsChanged(["docs/README.md"])).toBe(false);
-    expect(storybookLaneInputsChanged([])).toBe(false);
-  });
-
-  it.effect("pins the workflow gate's storybook pattern to the CLI literal", () =>
+  // The workflow gates only on goals_only and hands the affected decision to
+  // the lane (Turbo dry-run probe); no path profile survives anywhere.
+  it.effect("leaves the storybook affected decision to the lane instead of a workflow path profile", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const repoRoot = yield* findRepoRoot();
       const script = yield* fs.readFileString(path.join(repoRoot, "scripts/ci-change-profile.sh"));
       const workflow = yield* fs.readFileString(path.join(repoRoot, ".github/workflows/storybook.yml"));
-      expect(script).toContain(`storybook_pattern='${STORYBOOK_LANE_INPUT_PATTERN}'`);
-      expect(script).toContain("storybook_relevant=");
+      expect(script).not.toContain("storybook_relevant");
+      expect(script).not.toContain("storybook_pattern");
+      expect(workflow).not.toContain("storybook_relevant");
       expect(workflow).toContain('eval "$(scripts/ci-change-profile.sh');
-      expect(workflow).toContain('"$storybook_relevant" != "true"');
+      expect(workflow).toContain('if [[ "$goals_only" == "true" ]]; then');
+      expect(workflow).toContain('shape_args+=(--affected --base "origin/${GITHUB_BASE_REF:-main}")');
       expect(workflow).toContain('run_lane ci lane storybook "${shape_args[@]}"');
     }).pipe(Effect.provide(NodeServices.layer))
   );
@@ -1318,6 +1285,195 @@ describe("ciLaneStepsForTesting", () => {
     expect(step.env).toEqual({ TURBO_SCM_BASE: "origin/main" });
   });
 });
+
+// Storybook affected probe: under --affected the lane asks Turbo (JSON dry
+// run, TURBO_SCM_BASE from --base) whether @beep/storybook sits in the
+// dependency-aware affected set and runs the whole lane iff the plan carries
+// @beep/storybook#storybook:build. A path profile could not see transitive
+// workspace dependencies such as @beep/schema; Turbo's graph can.
+type StorybookSpawn = {
+  readonly line: string;
+  readonly env: Readonly<Record<string, string | undefined>>;
+};
+
+const storybookCiLayer = (dryRunOutput: string, spawned: Array<StorybookSpawn>, dryRunExitCode = 0) => {
+  const fileSystemLayer = FileSystem.layerNoop({
+    exists: (file) => Effect.succeed(Str.endsWith("/.git")(file)),
+    makeDirectory: () => Effect.void,
+    writeFileString: () => Effect.void,
+  });
+  const processLayer = Layer.succeed(
+    ChildProcessSpawner.ChildProcessSpawner,
+    ChildProcessSpawner.make((command) => {
+      if (!ChildProcess.isStandardCommand(command)) {
+        return Effect.die("the Storybook lane test never spawns a piped command");
+      }
+      spawned.push({ line: A.join([command.command, ...command.args], " "), env: command.options.env ?? {} });
+      return Effect.succeed(
+        A.contains(command.args, "--dry-run=json") ? commandHandle(dryRunOutput, dryRunExitCode) : commandHandle()
+      );
+    })
+  );
+  const fileSystemAndPath = Layer.merge(fileSystemLayer, Path.layer);
+  return Layer.mergeAll(
+    fileSystemAndPath,
+    FsUtilsLive.pipe(Layer.provide(fileSystemAndPath)),
+    processLayer,
+    TestConsole.layer
+  );
+};
+
+const storybookDryRun = (
+  tasks: ReadonlyArray<{ readonly package: string; readonly task: string; readonly command?: string }>
+): string =>
+  encodeJson({
+    tasks: A.map(tasks, (entry) => ({
+      command: entry.command ?? "bun run beep:build",
+      package: entry.package,
+      task: entry.task,
+      taskId: `${entry.package}#${entry.task}`,
+    })),
+  });
+
+const STORYBOOK_PROBE_SUFFIX = ["--filter=@beep/storybook", "--affected", "--dry-run=json"];
+const storybookProbeLine = A.join(
+  [
+    "bunx",
+    "turbo",
+    "run",
+    "storybook:build",
+    ...expectedTurboCacheArgs(STORYBOOK_PROBE_SUFFIX),
+    ...STORYBOOK_PROBE_SUFFIX,
+  ],
+  " "
+);
+const consoleOutput = Effect.map(TestConsole.logLines, (lines) => A.join(A.filter(lines, P.isString), "\n"));
+
+const unselectedStorybookSpawns = A.empty<StorybookSpawn>();
+layer(storybookCiLayer(storybookDryRun([]), unselectedStorybookSpawns))(
+  "storybook lane affected probe (nothing in the closure changed)",
+  (it) => {
+    it.effect("skips the lane when Turbo's affected plan selects no @beep/storybook task", () =>
+      Effect.gen(function* () {
+        yield* runCiLane("storybook", prShapeOptions);
+
+        expect(unselectedStorybookSpawns).toHaveLength(1);
+        const probe = firstOf(unselectedStorybookSpawns);
+        expect(probe.line).toBe(storybookProbeLine);
+        expect(probe.env.TURBO_SCM_BASE).toBe("origin/main");
+        const output = yield* consoleOutput;
+        expect(output).toContain(
+          "Turbo's affected plan (origin/main...HEAD) does not select @beep/storybook#storybook:build (0 task(s) selected)"
+        );
+        expect(output).toContain(
+          "[ci] storybook: @beep/storybook is outside Turbo's affected set for this change set (skipped)"
+        );
+      })
+    );
+  }
+);
+
+const foreignStorybookSpawns = A.empty<StorybookSpawn>();
+layer(
+  storybookCiLayer(
+    storybookDryRun([
+      { package: "@beep/schema", task: "build" },
+      { package: "@beep/storybook", task: "storybook:build", command: "<NONEXISTENT>" },
+    ]),
+    foreignStorybookSpawns
+  )
+)("storybook lane affected probe (no executable storybook task)", (it) => {
+  it.effect("ignores dependency builds and non-existent task placeholders", () =>
+    Effect.gen(function* () {
+      yield* runCiLane("storybook", prShapeOptions);
+
+      expect(foreignStorybookSpawns).toHaveLength(1);
+      expect(yield* consoleOutput).toContain("does not select @beep/storybook#storybook:build (2 task(s) selected)");
+    })
+  );
+});
+
+const selectedStorybookSpawns = A.empty<StorybookSpawn>();
+layer(
+  storybookCiLayer(
+    storybookDryRun([
+      { package: "@beep/schema", task: "build" },
+      { package: "@beep/ui", task: "build" },
+      {
+        package: "@beep/storybook",
+        task: "storybook:build",
+        command: "storybook build -o storybook-static",
+      },
+    ]),
+    selectedStorybookSpawns
+  )
+)("storybook lane affected probe (transitive dependency changed)", (it) => {
+  it.effect("runs the whole lane when the plan carries @beep/storybook#storybook:build", () =>
+    Effect.gen(function* () {
+      yield* runCiLane("storybook", prShapeOptions);
+
+      const lines = A.map(selectedStorybookSpawns, (spawn) => spawn.line);
+      expect(lines).toHaveLength(4);
+      expect(lines[0]).toBe(storybookProbeLine);
+      expect(lines[1]).toContain("turbo run storybook:build");
+      expect(lines[1]).toContain("--filter=@beep/storybook --summarize");
+      expect(lines[1]).not.toContain("--affected");
+      expect(lines[2]).toContain("turbo run test:storybook");
+      expect(lines[2]).not.toContain("--affected");
+      expect(lines[3]).toBe("test -f apps/storybook/storybook-static/index.html");
+      expect(yield* consoleOutput).toContain(
+        "Turbo's affected plan (origin/main...HEAD) selects @beep/storybook#storybook:build (3 task(s) selected)"
+      );
+    })
+  );
+});
+
+const unscopedStorybookSpawns = A.empty<StorybookSpawn>();
+layer(storybookCiLayer(storybookDryRun([]), unscopedStorybookSpawns))("storybook lane without --affected", (it) => {
+  it.effect("never probes Turbo and runs every step", () =>
+    Effect.gen(function* () {
+      yield* runCiLane("storybook", baseOptions);
+
+      const lines = A.map(unscopedStorybookSpawns, (spawn) => spawn.line);
+      expect(lines).toHaveLength(3);
+      expect(A.some(lines, Str.includes("--dry-run=json"))).toBe(false);
+      expect(lines[0]).toContain("turbo run storybook:build");
+      expect(lines[2]).toBe("test -f apps/storybook/storybook-static/index.html");
+    })
+  );
+});
+
+const failedStorybookSpawns = A.empty<StorybookSpawn>();
+layer(storybookCiLayer("turbo: could not resolve base", failedStorybookSpawns, 2))(
+  "storybook lane affected probe (Turbo failure)",
+  (it) => {
+    it.effect("fails closed instead of guessing when the probe exits non-zero", () =>
+      Effect.gen(function* () {
+        const error = yield* runCiLane("storybook", prShapeOptions).pipe(Effect.flip);
+
+        expect(error._tag).toBe("CiCommandError");
+        expect(error.message).toBe("Turbo's Storybook affected dry run exited with code 2.");
+        expect(failedStorybookSpawns).toHaveLength(1);
+      })
+    );
+  }
+);
+
+const malformedStorybookSpawns = A.empty<StorybookSpawn>();
+layer(storybookCiLayer("{not json", malformedStorybookSpawns))(
+  "storybook lane affected probe (malformed plan)",
+  (it) => {
+    it.effect("fails closed when Turbo's plan does not decode", () =>
+      Effect.gen(function* () {
+        const error = yield* runCiLane("storybook", prShapeOptions).pipe(Effect.flip);
+
+        expect(error._tag).toBe("CiCommandError");
+        expect(error.message).toBe("Turbo emitted invalid JSON for the Storybook affected dry run.");
+        expect(malformedStorybookSpawns).toHaveLength(1);
+      })
+    );
+  }
+);
 
 describe("ciLocalStepsForTesting", () => {
   const branchPlan = CiLocalStepPlan.make({ affected: false, base: "origin/main", onMainBranch: false });

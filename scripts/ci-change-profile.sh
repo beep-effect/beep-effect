@@ -8,19 +8,17 @@ set -euo pipefail
 # never suppress the matrices.
 #
 #   goals_only              only convention-owned packet prose changed
-#   storybook_relevant      Storybook lane inputs changed
 #   desktop_rust_relevant   apps/professional-desktop/src-tauri (cargo) changed
+#
+# The Storybook lane has no path profile here: `beep ci lane storybook
+# --affected` asks Turbo's dependency-aware affected set whether
+# @beep/storybook is selected (a path list cannot see transitive workspace
+# dependencies), and storybook.yml gates only on goals_only.
 
 event_name="${GITHUB_EVENT_NAME:-local}"
 base_ref="${1:-origin/${GITHUB_BASE_REF:-main}}"
 goals_only=false
-storybook_relevant=true
 desktop_rust_relevant=true
-
-# Storybook lane inputs (D13). This literal is STORYBOOK_LANE_INPUT_PATTERN in
-# packages/tooling/tool/cli/src/commands/Ci/CiLane.ts; a unit test pins the
-# two copies together, so change them in lockstep.
-storybook_pattern='^(apps/storybook/|packages/foundation/ui-system/|packages/drivers/graph-3d/|\.github/workflows/storybook\.yml$|scripts/ci-change-profile\.sh$|packages/tooling/tool/cli/src/commands/Ci/CiLane\.ts$|(bun\.lock|package\.json|turbo\.json)$)|(^|/)(stories/|\.storybook/)|\.stories\.tsx$|vitest\.storybook\.(config|setup)\.ts$'
 
 # Rust crate inputs for the desktop-ipc cargo check/clippy steps (D15): the
 # crate itself plus the workflow and gate that carry the steps.
@@ -39,9 +37,6 @@ if [[ "$event_name" == "pull_request" ]]; then
   if [[ -n "$changed_files" ]] && ! grep -Eqv "$goals_document_pattern" <<< "$changed_files"; then
     goals_only=true
   fi
-  if [[ -z "$changed_files" ]] || ! grep -Eq "$storybook_pattern" <<< "$changed_files"; then
-    storybook_relevant=false
-  fi
   if [[ -z "$changed_files" ]] || ! grep -Eq "$desktop_rust_pattern" <<< "$changed_files"; then
     desktop_rust_relevant=false
   fi
@@ -49,7 +44,6 @@ fi
 
 emit() {
   echo "goals_only=$goals_only"
-  echo "storybook_relevant=$storybook_relevant"
   echo "desktop_rust_relevant=$desktop_rust_relevant"
 }
 
