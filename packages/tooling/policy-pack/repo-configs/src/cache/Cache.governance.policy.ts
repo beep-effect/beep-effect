@@ -387,6 +387,82 @@ export const cacheLedgerFailures = (store: CacheQualificationStore): ReadonlyArr
   return A.dedupe(failures);
 };
 
+type ReportFinding = (kind: CachePolicyFindingKind, subject: string, blocking?: boolean) => void;
+
+const auditContractConfiguration = (node: CachePolicyNode, contract: CacheTaskContract, find: ReportFinding) => {
+  if (
+    !sameConfiguration(node.configuration, contract.configuration) ||
+    contract.commandDigest !== node.commandDigest ||
+    !sameDependencies(node.dependencies, contract.dependencies) ||
+    contract.commands[0] !== node.command
+  )
+    find("configuration-drift", node.computation);
+};
+
+const auditContractNode = (
+  node: CachePolicyNode,
+  entry: CacheQualificationEntry,
+  baseline: CachePolicyBaseline,
+  reviewed: O.Option<CachePolicyNode>,
+  find: ReportFinding
+): boolean => {
+  const status = entry.status;
+  if (CacheQualificationStatus.isAnyOf(["suspended", "excluded"])(status)) {
+    find("suspended-reuse", node.computation);
+    return true;
+  }
+  if (!CacheQualificationStatus.isAnyOf(["candidate", "shadow", "qualified"])(status)) return false;
+  if (status.state !== "qualified") find("unqualified-reuse", node.computation);
+  if (!sameKey(entry.key, status.contract.key)) find("assessment-drift", node.computation);
+  auditContractConfiguration(node, status.contract, find);
+  if (!O.exists(reviewed, (prior) => prior.configuration.cache) && status.state !== "qualified")
+    find("unreviewed-expansion", node.computation);
+  if (!A.contains(baseline.scope, node.computation)) find("unreviewed-expansion", node.computation);
+  return true;
+};
+
+const auditLegacyNode = (node: CachePolicyNode, reviewed: O.Option<CachePolicyNode>, find: ReportFinding) => {
+  if (O.isNone(reviewed) || !reviewed.value.configuration.cache) {
+    find("unreviewed-expansion", node.computation);
+  } else if (
+    node.command !== reviewed.value.command ||
+    node.commandDigest !== reviewed.value.commandDigest ||
+    !sameDependencies(node.dependencies, reviewed.value.dependencies) ||
+    !sameConfiguration(node.configuration, reviewed.value.configuration)
+  ) {
+    find("configuration-drift", node.computation);
+  }
+};
+
+const auditPopulation = (
+  request: CachePolicyAuditRequest,
+  relevant: ReadonlyArray<CacheQualificationEntry>,
+  find: ReportFinding
+): ReadonlyArray<string> => {
+  const unassessed: Array<string> = [];
+  const auditNode = (node: CachePolicyNode) => {
+    if (!node.configuration.cache) return;
+    const assessment = A.findFirst(relevant, (entry) => entry.key.computation === node.computation);
+    const reviewed = A.findFirst(request.baseline.projection.nodes, (row) => row.computation === node.computation);
+    if (O.isNone(assessment) || assessment.value.status.state === "unassessed") unassessed.push(node.computation);
+    if (O.isSome(assessment) && auditContractNode(node, assessment.value, request.baseline, reviewed, find)) return;
+    auditLegacyNode(node, reviewed, find);
+  };
+  A.forEach(request.current.nodes, auditNode);
+  return unassessed;
+};
+
+const auditSourceDrift = (baseline: CachePolicyProjection, current: CachePolicyProjection, find: ReportFinding) => {
+  for (const source of current.sources) {
+    const prior = A.findFirst(baseline.sources, (row) => row.path === source.path);
+    if (O.isNone(prior) || prior.value.sha256 !== source.sha256) find("configuration-source-drift", source.path, false);
+  }
+  for (const source of baseline.sources) {
+    if (!A.some(current.sources, (row) => row.path === source.path))
+      find("configuration-source-drift", source.path, false);
+  }
+};
+
 /**
  * Compare effective cache configuration with reviewed baseline and explicit tuple assessments.
  *
@@ -421,7 +497,6 @@ export const cacheLedgerFailures = (store: CacheQualificationStore): ReadonlyArr
 export const auditCachePolicy = (request: CachePolicyAuditRequest): CachePolicyAuditReport => {
   const { baseline, current, store, profile, epoch } = request;
   let findings = A.empty<CachePolicyFinding>();
-  let unassessed = A.empty<string>();
   const find = (kind: CachePolicyFindingKind, subject: string, blocking = true) => {
     findings = A.append(findings, CachePolicyFinding.make({ kind, subject, blocking }));
   };
@@ -447,54 +522,7 @@ export const auditCachePolicy = (request: CachePolicyAuditRequest): CachePolicyA
     store.entries,
     (entry) => entry.key.layer === "turbo-task-result" && entry.key.profile === profile && entry.key.epoch === epoch
   );
-  for (const node of current.nodes) {
-    const assessment = A.findFirst(relevant, (entry) => entry.key.computation === node.computation);
-    const reviewed = A.findFirst(baseline.projection.nodes, (row) => row.computation === node.computation);
-    if (O.isNone(assessment) || assessment.value.status.state === "unassessed") {
-      if (node.configuration.cache) unassessed = A.append(unassessed, node.computation);
-    }
-    if (!node.configuration.cache) continue;
-    if (O.isSome(assessment)) {
-      const status = assessment.value.status;
-      if (CacheQualificationStatus.isAnyOf(["suspended", "excluded"])(status)) {
-        find("suspended-reuse", node.computation);
-        continue;
-      }
-      if (CacheQualificationStatus.isAnyOf(["candidate", "shadow", "qualified"])(status)) {
-        if (status.state !== "qualified") find("unqualified-reuse", node.computation);
-        if (!sameKey(assessment.value.key, status.contract.key)) find("assessment-drift", node.computation);
-        if (
-          !sameConfiguration(node.configuration, status.contract.configuration) ||
-          status.contract.commandDigest !== node.commandDigest ||
-          !sameDependencies(node.dependencies, status.contract.dependencies) ||
-          status.contract.commands[0] !== node.command
-        ) {
-          find("configuration-drift", node.computation);
-        }
-        if ((O.isNone(reviewed) || !reviewed.value.configuration.cache) && status.state !== "qualified")
-          find("unreviewed-expansion", node.computation);
-        if (!A.contains(baseline.scope, node.computation)) find("unreviewed-expansion", node.computation);
-        continue;
-      }
-    }
-    if (O.isNone(reviewed) || !reviewed.value.configuration.cache) {
-      find("unreviewed-expansion", node.computation);
-    } else if (
-      node.command !== reviewed.value.command ||
-      node.commandDigest !== reviewed.value.commandDigest ||
-      !sameDependencies(node.dependencies, reviewed.value.dependencies) ||
-      !sameConfiguration(node.configuration, reviewed.value.configuration)
-    ) {
-      find("configuration-drift", node.computation);
-    }
-  }
-  for (const source of current.sources) {
-    const prior = A.findFirst(baseline.projection.sources, (row) => row.path === source.path);
-    if (O.isNone(prior) || prior.value.sha256 !== source.sha256) find("configuration-source-drift", source.path, false);
-  }
-  for (const source of baseline.projection.sources) {
-    if (!A.some(current.sources, (row) => row.path === source.path))
-      find("configuration-source-drift", source.path, false);
-  }
+  const unassessed = auditPopulation(request, relevant, find);
+  auditSourceDrift(baseline.projection, current, find);
   return CachePolicyAuditReport.make({ findings, unassessed });
 };

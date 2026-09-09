@@ -1,5 +1,28 @@
 # Friction and opportunities
 
+## 2026-09-09: draft PR readiness follow-up
+
+The operator authorized taking PR #1068 through mergeability while keeping it
+in draft; the qualification packet itself remains paused and incomplete.
+Merging current main produced one root tsconfig alias conflict. Both aliases
+were retained, and the canonical config generator confirmed no drift.
+
+The first Yeet repair found missing in-range changesets for identity,
+repo-configs and types, two unused CI-operations schema exports, and Cache
+complexity/duplication findings. The failure is tracked in PR #1068. The
+remaining repair feedback was intentionally interrupted after this precise
+failure (exit 130); it is not passing proof. Fix the findings and rerun the
+canonical gates before publishing or claiming readiness. Do not refresh
+complexity baselines to hide newly introduced functions.
+
+The follow-up collects contract, evidence, runtime and experiment checks into
+named phases and shares the bounded experiment reader. Fallow audit, dead-code
+and health now pass without baseline changes; Knip and the other preliminary
+code gates pass as well. The remaining changeset gate reads committed range
+entries, so a newly written changeset does not satisfy it until committed.
+The first CLI package pass caught an introduced prior-contract reference typo
+and inline JSDoc tags; both were corrected before rerunning package proof.
+
 ## 2026-09-09: paused PR publication checks
 
 The first library-fingerprinting typecheck caught a curried Effect String

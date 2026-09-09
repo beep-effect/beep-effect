@@ -247,13 +247,10 @@ export const collectCacheCensus = Effect.fn("Cache.collectCacheCensus")(function
   let tasks = R.keys(rootConfig.tasks);
   let sourcePaths = ["turbo.json", "package.json", "bun.lock", ".bun-version", ".nvmrc"];
   let workspaceRows = A.empty<CacheCensusWorkspace>();
-  for (const name of discoveredNames) {
-    const workspace = yield* HashMap.get(workspaces, name).pipe(
-      Effect.fromOption(() => CacheCommandError.new("Workspace disappeared during discovery."))
-    );
-    const directory = paths.relative(root, workspace.dir);
-    workspaceRows = A.append(workspaceRows, CacheCensusWorkspace.make({ name, directory, scripts: workspace.scripts }));
-    sourcePaths = A.append(sourcePaths, paths.join(directory, "package.json"));
+  const collectChildConfigurations = Effect.fn("CacheCensus.collectChildConfigurations")(function* (
+    name: string,
+    directory: string
+  ) {
     for (const configName of ["turbo.json", "turbo.jsonc"]) {
       const childPath = paths.join(directory, configName);
       if (yield* fs.exists(paths.join(root, childPath))) {
@@ -270,6 +267,15 @@ export const collectCacheCensus = Effect.fn("Cache.collectCacheCensus")(function
         sourcePaths = A.append(sourcePaths, childPath);
       }
     }
+  });
+  for (const name of discoveredNames) {
+    const workspace = yield* HashMap.get(workspaces, name).pipe(
+      Effect.fromOption(() => CacheCommandError.new("Workspace disappeared during discovery."))
+    );
+    const directory = paths.relative(root, workspace.dir);
+    workspaceRows = A.append(workspaceRows, CacheCensusWorkspace.make({ name, directory, scripts: workspace.scripts }));
+    sourcePaths = A.append(sourcePaths, paths.join(directory, "package.json"));
+    yield* collectChildConfigurations(name, directory);
   }
   const selectedTasks = pipe(tasks, A.dedupe, A.sort(Order.String));
   const dry = yield* capture(root, turbo, [

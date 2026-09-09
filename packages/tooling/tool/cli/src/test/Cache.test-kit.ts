@@ -8,7 +8,12 @@
 export { joinCacheCensusPlan } from "../commands/Cache/Cache.census.ts";
 export { runCacheWarmForTesting, runCacheWarmLaneForTesting } from "../commands/Cache/Cache.command.ts";
 export { inspectCacheDependencyTree } from "../commands/Cache/Cache.dependencies.ts";
-export { readCacheEvidenceBytes } from "../commands/Cache/Cache.evidence.ts";
+export {
+  decodeCacheExperimentText,
+  hashCacheExperimentExecutable,
+  readCacheEvidenceBytes,
+  readCacheExperimentBytes,
+} from "../commands/Cache/Cache.evidence.ts";
 export { equivalentCacheFixtureRuns, inspectCacheFixtureCapture } from "../commands/Cache/Cache.experiment.ts";
 export {
   collectCacheToolchain,

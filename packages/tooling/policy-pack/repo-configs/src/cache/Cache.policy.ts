@@ -391,6 +391,86 @@ const samePins = S.toEquivalence(CacheQualificationPins);
 const sameClient = S.toEquivalence(CacheClientPin);
 const pairKinds = CacheEvidenceKind.pickOptions(["fresh-fresh", "fresh-remote-hit"]);
 
+const contractPromotionFailures = (
+  contract: CacheTaskContract,
+  observations: ReadonlyArray<CacheQualificationObservation>
+): ReadonlyArray<string> => {
+  let failures = A.empty<string>();
+  if (contract.key.layer !== "turbo-task-result") failures = A.append(failures, "reuse-layer-owned-elsewhere");
+  if (!contract.configuration.cache) failures = A.append(failures, "reuse-disabled-contract");
+  if (contract.configuration.persistent || contract.configuration.interactive)
+    failures = A.append(failures, "non-finite-command");
+  if (A.some(observations, (entry) => !sameKey(entry.key, contract.key) || !samePins(entry.pins, contract.pins))) {
+    failures = A.append(failures, "evidence-identity-drift");
+  }
+  if (A.some(observations, (entry) => !entry.passed)) failures = A.append(failures, "failed-observation");
+  if (contract.clients.stable.namespace === contract.clients.canary.namespace)
+    failures = A.append(failures, "namespace-overlap");
+  if (A.some(observations, (entry) => !sameClient(entry.client, contract.clients[entry.channel])))
+    failures = A.append(failures, "client-profile-drift");
+  return failures;
+};
+
+const isolatedPairFailures = (channel: CacheClientChannel, rows: ReadonlyArray<CacheQualificationObservation>) =>
+  A.flatMap(pairKinds, (kind) => {
+    const pairs = A.filter(rows, (entry) => entry.kind === kind && A.length(A.dedupe(entry.roots)) >= 2);
+    const insufficient =
+      A.length(A.dedupe(A.map(pairs, (entry) => entry.run))) < 3 ||
+      A.length(A.dedupe(A.map(pairs, (entry) => entry.receipt.sha256))) < 3 ||
+      A.length(A.dedupe(A.flatMap(pairs, (entry) => entry.roots))) < 6;
+    return insufficient ? [`${channel}:missing-isolated-${kind}`] : [];
+  });
+
+const shadowFailures = (channel: CacheClientChannel, rows: ReadonlyArray<CacheQualificationObservation>) => {
+  const shadows = A.filter(rows, (entry) => entry.kind === "shadow");
+  const insufficient =
+    A.length(A.dedupe(A.map(shadows, (entry) => entry.run))) < 10 ||
+    A.length(A.dedupe(A.map(shadows, (entry) => entry.receipt.sha256))) < 10;
+  return insufficient ? [`${channel}:missing-shadow-decisions`] : [];
+};
+
+const subjectFailures = (
+  contract: CacheTaskContract,
+  channel: CacheClientChannel,
+  rows: ReadonlyArray<CacheQualificationObservation>
+) => {
+  const requirements: ReadonlyArray<readonly [CacheEvidenceKind, ReadonlyArray<string>]> = [
+    ["semantic-invalidation", contract.semanticInputClasses],
+    [
+      "orchestration-invariance",
+      O.isSome(contract.activation)
+        ? A.dedupe(A.append(contract.orchestrationInputClasses, "activation-projection"))
+        : contract.orchestrationInputClasses,
+    ],
+    ["negative-case", contract.negativeCases],
+  ];
+  return A.flatMap(requirements, ([kind, subjects]) => {
+    const observed = A.filter(rows, (entry) => entry.kind === kind && A.length(entry.subjects) === 1);
+    return A.map(
+      A.filter(subjects, (subject) => !A.some(observed, (entry) => A.contains(entry.subjects, subject))),
+      (subject) => `${channel}:missing-${kind}:${subject}`
+    );
+  });
+};
+
+const requiredKindFailures = (
+  contract: CacheTaskContract,
+  channel: CacheClientChannel,
+  rows: ReadonlyArray<CacheQualificationObservation>
+) => {
+  const required: ReadonlyArray<CacheEvidenceKind> = [
+    "concurrency",
+    "capture-safety",
+    "conformance",
+    "trust",
+    ...(contract.crossRoot ? (["cross-root"] satisfies ReadonlyArray<CacheEvidenceKind>) : []),
+  ];
+  return A.map(
+    A.filter(required, (kind) => !A.some(rows, (entry) => entry.kind === kind)),
+    (kind) => `${channel}:missing-${kind}`
+  );
+};
+
 /**
  * Report missing or contradictory promotion evidence after Cache has verified receipt content and provenance.
  *
@@ -424,19 +504,6 @@ export const cachePromotionFailures: {
 } = dual(
   2,
   (contract: CacheTaskContract, observations: ReadonlyArray<CacheQualificationObservation>): ReadonlyArray<string> => {
-    let failures = A.empty<string>();
-    if (contract.key.layer !== "turbo-task-result") failures = A.append(failures, "reuse-layer-owned-elsewhere");
-    if (!contract.configuration.cache) failures = A.append(failures, "reuse-disabled-contract");
-    if (contract.configuration.persistent || contract.configuration.interactive)
-      failures = A.append(failures, "non-finite-command");
-    if (A.some(observations, (entry) => !sameKey(entry.key, contract.key) || !samePins(entry.pins, contract.pins))) {
-      failures = A.append(failures, "evidence-identity-drift");
-    }
-    if (A.some(observations, (entry) => !entry.passed)) failures = A.append(failures, "failed-observation");
-    if (contract.clients.stable.namespace === contract.clients.canary.namespace)
-      failures = A.append(failures, "namespace-overlap");
-    if (A.some(observations, (entry) => !sameClient(entry.client, contract.clients[entry.channel])))
-      failures = A.append(failures, "client-profile-drift");
     const valid = A.filter(
       observations,
       (entry) =>
@@ -445,51 +512,17 @@ export const cachePromotionFailures: {
         samePins(entry.pins, contract.pins) &&
         sameClient(entry.client, contract.clients[entry.channel])
     );
-    for (const channel of CacheClientChannel.Options) {
-      const rows = A.filter(valid, (entry) => entry.channel === channel);
-      const byKind = (kind: CacheEvidenceKind) => A.filter(rows, (entry) => entry.kind === kind);
-      for (const kind of pairKinds) {
-        const pairs = A.filter(byKind(kind), (entry) => A.length(A.dedupe(entry.roots)) >= 2);
-        if (
-          A.length(A.dedupe(A.map(pairs, (entry) => entry.run))) < 3 ||
-          A.length(A.dedupe(A.map(pairs, (entry) => entry.receipt.sha256))) < 3 ||
-          A.length(A.dedupe(A.flatMap(pairs, (entry) => entry.roots))) < 6
-        )
-          failures = A.append(failures, `${channel}:missing-isolated-${kind}`);
-      }
-      const shadows = byKind("shadow");
-      if (
-        A.length(A.dedupe(A.map(shadows, (entry) => entry.run))) < 10 ||
-        A.length(A.dedupe(A.map(shadows, (entry) => entry.receipt.sha256))) < 10
-      )
-        failures = A.append(failures, `${channel}:missing-shadow-decisions`);
-      for (const [kind, subjects] of [
-        ["semantic-invalidation", contract.semanticInputClasses],
-        [
-          "orchestration-invariance",
-          O.isSome(contract.activation)
-            ? A.dedupe(A.append(contract.orchestrationInputClasses, "activation-projection"))
-            : contract.orchestrationInputClasses,
-        ],
-        ["negative-case", contract.negativeCases],
-      ] satisfies ReadonlyArray<readonly [CacheEvidenceKind, ReadonlyArray<string>]>) {
-        for (const subject of subjects) {
-          if (!A.some(byKind(kind), (entry) => A.length(entry.subjects) === 1 && A.contains(entry.subjects, subject))) {
-            failures = A.append(failures, `${channel}:missing-${kind}:${subject}`);
-          }
-        }
-      }
-      const required: ReadonlyArray<CacheEvidenceKind> = [
-        "concurrency",
-        "capture-safety",
-        "conformance",
-        "trust",
-        ...(contract.crossRoot ? (["cross-root"] satisfies ReadonlyArray<CacheEvidenceKind>) : []),
-      ];
-      for (const kind of required) {
-        if (A.isReadonlyArrayEmpty(byKind(kind))) failures = A.append(failures, `${channel}:missing-${kind}`);
-      }
-    }
-    return failures;
+    return A.appendAll(
+      contractPromotionFailures(contract, observations),
+      A.flatMap(CacheClientChannel.Options, (channel) => {
+        const rows = A.filter(valid, (entry) => entry.channel === channel);
+        return [
+          ...isolatedPairFailures(channel, rows),
+          ...shadowFailures(channel, rows),
+          ...subjectFailures(contract, channel, rows),
+          ...requiredKindFailures(contract, channel, rows),
+        ];
+      })
+    );
   }
 );

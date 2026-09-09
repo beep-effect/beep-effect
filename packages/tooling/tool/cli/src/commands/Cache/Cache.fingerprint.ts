@@ -223,6 +223,27 @@ export const fingerprintCacheComputation = Effect.fn("CacheFingerprint.computati
   return CacheLiveIdentity.make({ key, configuration, configurationDigest, toolchain, toolchainDigest });
 }, CacheCommandError.mapError("Cannot fingerprint the computation configuration."));
 
+const validateActivationArtifacts = Effect.fn("CacheFingerprint.validateActivationArtifacts")(function* (
+  census: CacheCensusReport,
+  activation: CacheActivationProjection,
+  before: string,
+  after: string
+) {
+  if (
+    activation.before.path === activation.after.path ||
+    activation.before.path === activation.path ||
+    activation.after.path === activation.path
+  )
+    return yield* CacheCommandError.new("Activation requires separate immutable before/after artifacts.");
+  const sources = A.filter(census.sources, (entry) => entry.path === activation.path);
+  if (A.length(sources) !== 1 || !A.every(sources, (entry) => entry.sha256 === activation.before.sha256))
+    return yield* CacheCommandError.new("The observed activation source file differs from its reviewed bytes.");
+  for (const [text, expected] of A.zip([before, after], [activation.before.sha256, activation.after.sha256])) {
+    if ((yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(text))) !== expected)
+      return yield* CacheCommandError.new("Activation artifact bytes differ from their digests.");
+  }
+});
+
 /**
  * Validate and fingerprint an exact single-task cache activation projection.
  *
@@ -263,19 +284,7 @@ export const projectCacheActivation = Effect.fn("CacheFingerprint.projectActivat
     return yield* CacheCommandError.new(
       "Activation must target the selected workspace's inheriting Turbo configuration."
     );
-  if (
-    activation.before.path === activation.after.path ||
-    activation.before.path === activation.path ||
-    activation.after.path === activation.path
-  )
-    return yield* CacheCommandError.new("Activation requires separate immutable before/after artifacts.");
-  const sources = A.filter(census.sources, (entry) => entry.path === activation.path);
-  if (A.length(sources) !== 1 || !A.every(sources, (entry) => entry.sha256 === activation.before.sha256))
-    return yield* CacheCommandError.new("The observed activation source file differs from its reviewed bytes.");
-  for (const [text, expected] of A.zip([before, after], [activation.before.sha256, activation.after.sha256])) {
-    if ((yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(text))) !== expected)
-      return yield* CacheCommandError.new("Activation artifact bytes differ from their digests.");
-  }
+  yield* validateActivationArtifacts(census, activation, before, after);
   const disabled = yield* decodeJsoncTextAs(S.JsonObject)(before);
   const enabled = yield* decodeJsoncTextAs(S.JsonObject)(after);
   yield* S.decodeUnknownEffect(S.Tuple([S.Literal("//")]))(disabled.extends);

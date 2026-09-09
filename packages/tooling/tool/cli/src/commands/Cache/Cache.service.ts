@@ -118,37 +118,39 @@ const projectCensus = (census: CacheCensusReport): CachePolicyProjection =>
     sources: A.filter(census.sources, (source) => /(?:^|\/)turbo\.jsonc?$/.test(source.path)),
   });
 
+const verifyHistoryEntry = Effect.fn("CacheQualification.verifyHistoryEntry")(function* (
+  root: string,
+  entry: CacheQualificationStore["entries"][number]
+) {
+  if (entry.status.state === "unassessed") return;
+  yield* verifyReference(root, entry.status.review.basis);
+  if (entry.status.state === "shadow" || entry.status.state === "qualified") {
+    yield* Effect.forEach(entry.status.receipts, (reference) => verifyReference(root, reference), { discard: true });
+  }
+});
+
 const audit = Effect.fn("CacheQualification.audit")(function* (root: string) {
   const baseline = yield* readBaseline(root);
   const store = yield* readStore(root);
-  for (const { entry } of store.history) {
-    if (entry.status.state === "unassessed") continue;
-    yield* verifyReference(root, entry.status.review.basis);
-    if (entry.status.state === "shadow" || entry.status.state === "qualified") {
-      yield* Effect.forEach(entry.status.receipts, (reference) => verifyReference(root, reference), { discard: true });
-    }
-  }
-  for (const entry of store.entries) {
-    if (entry.status.state === "qualified") {
-      return yield* CacheCommandError.new(
-        "A qualified ledger entry requires the accepted signed conformance/trust receipt importer."
-      );
-    }
-  }
+  yield* Effect.forEach(store.history, ({ entry }) => verifyHistoryEntry(root, entry), { discard: true });
+  if (A.some(store.entries, (entry) => entry.status.state === "qualified"))
+    return yield* CacheCommandError.new(
+      "A qualified ledger entry requires the accepted signed conformance/trust receipt importer."
+    );
   const census = yield* collectCacheCensus(root);
-  const active = A.filter(store.entries, (entry) =>
-    CacheQualificationStatus.isAnyOf(["candidate", "shadow"])(entry.status)
-  );
-  if (A.isReadonlyArrayNonEmpty(active)) {
+  if (A.some(store.entries, (entry) => CacheQualificationStatus.isAnyOf(["candidate", "shadow"])(entry.status))) {
     const toolchain = yield* collectCacheToolchain(root);
-    for (const entry of active) {
-      if (CacheQualificationStatus.isAnyOf(["candidate", "shadow"])(entry.status)) {
+    yield* Effect.forEach(
+      store.entries,
+      Effect.fn("CacheQualification.validateActiveEntry")(function* (entry) {
+        if (!CacheQualificationStatus.isAnyOf(["candidate", "shadow"])(entry.status)) return;
         yield* validateLiveContract(
           entry.status.contract,
           yield* contractIdentity(root, entry.status.contract, census, toolchain)
         );
-      }
-    }
+      }),
+      { discard: true }
+    );
   }
   return auditCachePolicy(
     CachePolicyAuditRequest.make({
@@ -316,6 +318,92 @@ const writeBaseline = Effect.fn("CacheQualification.writeBaseline")(function* (
   );
 }, CacheCommandError.mapError("Cannot write reviewed cache baseline."));
 
+const validateContractEligibility = Effect.fn("CacheQualification.validateContractEligibility")(function* (
+  key: CacheQualificationKey,
+  contract: CacheTaskContract
+) {
+  if (!sameKey(key, contract.key)) return yield* CacheCommandError.new("Transition contract uses a different tuple.");
+  if (contract.configuration.persistent || contract.configuration.interactive) {
+    return yield* CacheCommandError.new("Persistent or interactive commands cannot be qualified.");
+  }
+  if (contract.clients.stable.namespace === contract.clients.canary.namespace) {
+    return yield* CacheCommandError.new("Stable and canary namespaces must be isolated.");
+  }
+});
+
+const validatePriorContract = Effect.fn("CacheQualification.validatePriorContract")(function* (
+  contract: CacheTaskContract,
+  prior: O.Option<CacheQualificationStore["entries"][number]>
+) {
+  if (O.isSome(prior) && CacheQualificationStatus.isAnyOf(["candidate", "shadow", "qualified"])(prior.value.status)) {
+    if (!sameContract(contract, prior.value.status.contract))
+      return yield* CacheCommandError.new("Contract changes require a new candidate review.");
+  }
+});
+
+const validateTransitionContract = Effect.fn("CacheQualification.validateTransitionContract")(function* (
+  root: string,
+  request: CacheTransitionRequest,
+  prior: O.Option<CacheQualificationStore["entries"][number]>
+) {
+  const { key, status } = request.entry;
+  if (!CacheQualificationStatus.isAnyOf(["candidate", "shadow", "qualified", "suspended"])(status)) return;
+  yield* validateContractEligibility(key, status.contract);
+  if (status.state === "candidate" && status.review.basis.sha256 !== status.contract.pins.contract) {
+    return yield* CacheCommandError.new("Candidate review must identify the contract worksheet bytes.");
+  }
+  if (status.state !== "candidate") yield* validatePriorContract(status.contract, prior);
+  if (status.state === "shadow") {
+    // Shadow preserves fresh execution authority. Bytes are retained as observations;
+    // they are not interpreted as passing qualification evidence here.
+    yield* Effect.forEach(status.receipts, (reference) => verifyReference(root, reference), { discard: true });
+  }
+  if (status.state === "qualified") {
+    return yield* CacheCommandError.new(
+      "Promotion requires the signed conformance/trust receipt importer; no accepted sibling runtime contract is installed."
+    );
+  }
+});
+
+const validateTransitionScope = Effect.fn("CacheQualification.validateTransitionScope")(function* (
+  key: CacheQualificationKey,
+  baseline: CachePolicyBaseline
+) {
+  if (key.layer !== "turbo-task-result")
+    return yield* CacheCommandError.new("This reuse layer belongs to another proof owner.");
+  if (
+    key.profile !== baseline.profile ||
+    key.epoch !== baseline.epoch ||
+    !A.contains(baseline.scope, key.computation)
+  ) {
+    return yield* CacheCommandError.new("Transition is outside the reviewed pilot scope, profile or epoch.");
+  }
+});
+
+const validateAdoption = Effect.fn("CacheQualification.validateAdoption")(function* (
+  root: string,
+  request: CacheTransitionRequest,
+  baseline: CachePolicyBaseline,
+  next: CacheQualificationStore
+) {
+  const { key, status } = request.entry;
+  if (status.state === "candidate" || status.state === "shadow") {
+    const census = yield* collectCacheCensus(root);
+    yield* validateLiveContract(
+      status.contract,
+      yield* contractIdentity(root, status.contract, census, yield* collectCacheToolchain(root))
+    );
+    const current = projectCensus(census);
+    if (!A.some(current.nodes, (node) => node.computation === key.computation))
+      return yield* CacheCommandError.new("A missing script cannot enter qualification.");
+    const report = auditCachePolicy(
+      CachePolicyAuditRequest.make({ baseline, current, store: next, profile: key.profile, epoch: key.epoch })
+    );
+    if (A.some(report.findings, (finding) => finding.blocking))
+      return yield* CacheCommandError.new("Current configuration fails the reviewed cache policy audit.");
+  }
+});
+
 const transition = Effect.fn("CacheQualification.transition")(function* (
   root: string,
   request: CacheTransitionRequest
@@ -328,15 +416,7 @@ const transition = Effect.fn("CacheQualification.transition")(function* (
       if (store.revision !== request.expectedRevision)
         return yield* CacheCommandError.new("Qualification revision conflict.");
       const { key, status } = request.entry;
-      if (key.layer !== "turbo-task-result")
-        return yield* CacheCommandError.new("This reuse layer belongs to another proof owner.");
-      if (
-        key.profile !== baseline.profile ||
-        key.epoch !== baseline.epoch ||
-        !A.contains(baseline.scope, key.computation)
-      ) {
-        return yield* CacheCommandError.new("Transition is outside the reviewed pilot scope, profile or epoch.");
-      }
+      yield* validateTransitionScope(key, baseline);
       const prior = A.findFirst(store.entries, (entry) => sameKey(entry.key, key));
       const previousState = O.match(prior, {
         onNone: () => "unassessed" as const,
@@ -347,37 +427,7 @@ const transition = Effect.fn("CacheQualification.transition")(function* (
       if (status.state === "unassessed")
         return yield* CacheCommandError.new("Unassessed is an initial state, not a reviewed transition.");
       yield* verifyReference(root, status.review.basis);
-      if (CacheQualificationStatus.isAnyOf(["candidate", "shadow", "qualified", "suspended"])(status)) {
-        if (!sameKey(key, status.contract.key))
-          return yield* CacheCommandError.new("Transition contract uses a different tuple.");
-        if (status.contract.configuration.persistent || status.contract.configuration.interactive) {
-          return yield* CacheCommandError.new("Persistent or interactive commands cannot be qualified.");
-        }
-        if (status.contract.clients.stable.namespace === status.contract.clients.canary.namespace) {
-          return yield* CacheCommandError.new("Stable and canary namespaces must be isolated.");
-        }
-        if (status.state === "candidate" && status.review.basis.sha256 !== status.contract.pins.contract) {
-          return yield* CacheCommandError.new("Candidate review must identify the contract worksheet bytes.");
-        }
-        if (
-          status.state !== "candidate" &&
-          O.isSome(prior) &&
-          CacheQualificationStatus.isAnyOf(["candidate", "shadow", "qualified"])(prior.value.status)
-        ) {
-          if (!sameContract(status.contract, prior.value.status.contract))
-            return yield* CacheCommandError.new("Contract changes require a new candidate review.");
-        }
-        if (status.state === "shadow") {
-          // Shadow preserves fresh execution authority. Bytes are retained as observations;
-          // they are not interpreted as passing qualification evidence here.
-          yield* Effect.forEach(status.receipts, (reference) => verifyReference(root, reference), { discard: true });
-        }
-        if (status.state === "qualified") {
-          return yield* CacheCommandError.new(
-            "Promotion requires the signed conformance/trust receipt importer; no accepted sibling runtime contract is installed."
-          );
-        }
-      }
+      yield* validateTransitionContract(root, request, prior);
       const next = CacheQualificationStore.make({
         revision: NonNegativeInt.make(store.revision + 1),
         history: A.append(
@@ -391,21 +441,7 @@ const transition = Effect.fn("CacheQualification.transition")(function* (
       });
       // Suspension/exclusion must remain available even while the live graph is
       // broken. Candidate/shadow adoption must match the current executable graph.
-      if (status.state === "candidate" || status.state === "shadow") {
-        const census = yield* collectCacheCensus(root);
-        yield* validateLiveContract(
-          status.contract,
-          yield* contractIdentity(root, status.contract, census, yield* collectCacheToolchain(root))
-        );
-        const current = projectCensus(census);
-        if (!A.some(current.nodes, (node) => node.computation === key.computation))
-          return yield* CacheCommandError.new("A missing script cannot enter qualification.");
-        const report = auditCachePolicy(
-          CachePolicyAuditRequest.make({ baseline, current, store: next, profile: key.profile, epoch: key.epoch })
-        );
-        if (A.some(report.findings, (finding) => finding.blocking))
-          return yield* CacheCommandError.new("Current configuration fails the reviewed cache policy audit.");
-      }
+      yield* validateAdoption(root, request, baseline, next);
       const encoded = yield* StoreJson.encode(next);
       yield* writeContainedFileString(root, storePath, `${encoded}\n`);
       return next;

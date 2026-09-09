@@ -20,6 +20,21 @@ const UnambiguousTerminalText = S.String.check(S.isPattern(/^[^\x00-\x08\x0b-\x1
 );
 const isUnambiguous = S.is(UnambiguousTerminalText);
 
+const validatePilotStreams = Effect.fn("CachePilot.validateStreams")(function* (input: CachePilotLogInput) {
+  if (
+    input.truncated ||
+    new TextEncoder().encode(input.stdout).byteLength > 1024 * 1024 ||
+    new TextEncoder().encode(input.stderr).byteLength > 1024 * 1024 ||
+    !isUnambiguous(input.stdout) ||
+    !isUnambiguous(input.stderr)
+  )
+    return yield* CacheCommandError.new(
+      "Pilot process streams are truncated, oversized or contain ambiguous terminal text."
+    );
+  if (!input.cacheEnabled && input.origin === "local-hit")
+    return yield* CacheCommandError.new("A disabled pilot task cannot be a local hit.");
+});
+
 /**
  * Remove only the selected task's first, exactly matched Turbo progress line.
  *
@@ -48,18 +63,7 @@ const isUnambiguous = S.is(UnambiguousTerminalText);
  * @since 0.0.0
  */
 export const extractCachePilotLog = Effect.fn("CachePilot.extractLog")(function* (input: CachePilotLogInput) {
-  if (
-    input.truncated ||
-    new TextEncoder().encode(input.stdout).byteLength > 1024 * 1024 ||
-    new TextEncoder().encode(input.stderr).byteLength > 1024 * 1024 ||
-    !isUnambiguous(input.stdout) ||
-    !isUnambiguous(input.stderr)
-  )
-    return yield* CacheCommandError.new(
-      "Pilot process streams are truncated, oversized or contain ambiguous terminal text."
-    );
-  if (!input.cacheEnabled && input.origin === "local-hit")
-    return yield* CacheCommandError.new("A disabled pilot task cannot be a local hit.");
+  yield* validatePilotStreams(input);
   const prefix = `${Str.replace("#", ":")(input.computation)}: `;
   const selectedLines = pipe(
     A.fromIterable(Str.linesWithSeparators(input.stdout)),

@@ -77,6 +77,33 @@ const physicalTree = Effect.fn("CacheDependencies.physicalTree")(function* (root
     return yield* CacheCommandError.new("Dependency node_modules must be a physical directory in its owning root.");
 });
 
+const inspectDependencyLink = Effect.fn("CacheDependencies.inspectLink")(function* (
+  root: string,
+  workspaces: ReadonlyArray<CacheCensusWorkspace>,
+  relative: string,
+  target: string
+) {
+  const path = yield* Path.Path;
+  if (
+    path.isAbsolute(relative) ||
+    path.normalize(relative) !== relative ||
+    Str.startsWith("../")(relative) ||
+    path.isAbsolute(target)
+  )
+    return yield* CacheCommandError.new("Dependency tree contains an absolute or escaping symlink.");
+  const resolved = path.relative(
+    path.resolve(root),
+    path.resolve(root, "node_modules", path.dirname(relative), target)
+  );
+  if (Str.startsWith("node_modules/")(resolved))
+    return CacheDependencyLink.cases.Internal.make({ path: relative, target });
+
+  const workspace = A.findFirst(workspaces, (row) => row.directory === resolved && row.name === relative);
+  if (O.isNone(workspace))
+    return yield* CacheCommandError.new("Dependency symlink does not target its declared workspace.");
+  return CacheDependencyLink.cases.Workspace.make({ path: relative, target, workspace: workspace.value.directory });
+});
+
 /**
  * Inspect a complete dependency view without following its symlinks.
  *
@@ -113,30 +140,11 @@ export const inspectCacheDependencyTree = Effect.fn("CacheDependencies.inspect")
   const pairs = yield* S.decodeUnknownEffect(S.Array(S.Tuple([S.NonEmptyString, S.NonEmptyString])))(rows);
   if (pairs.length !== linkCount || Str.includes("\ufffd")(encoded))
     return yield* CacheCommandError.new("Dependency link inventory is incomplete or not valid text.");
-  const links: Array<CacheDependencyLink> = [];
-  for (const [relative, target] of A.sort(pairs, Order.Tuple([Order.String, Order.String]))) {
-    if (
-      path.isAbsolute(relative) ||
-      path.normalize(relative) !== relative ||
-      Str.startsWith("../")(relative) ||
-      path.isAbsolute(target)
-    )
-      return yield* CacheCommandError.new("Dependency tree contains an absolute or escaping symlink.");
-    const resolved = path.relative(
-      path.resolve(root),
-      path.resolve(root, "node_modules", path.dirname(relative), target)
-    );
-    if (Str.startsWith("node_modules/")(resolved))
-      links.push(CacheDependencyLink.cases.Internal.make({ path: relative, target }));
-    else {
-      const workspace = A.findFirst(workspaces, (row) => row.directory === resolved && row.name === relative);
-      if (O.isNone(workspace))
-        return yield* CacheCommandError.new("Dependency symlink does not target its declared workspace.");
-      links.push(
-        CacheDependencyLink.cases.Workspace.make({ path: relative, target, workspace: workspace.value.directory })
-      );
-    }
-  }
+  const links = yield* Effect.forEach(
+    A.sort(pairs, Order.Tuple([Order.String, Order.String])),
+    ([relative, target]) => inspectDependencyLink(root, workspaces, relative, target),
+    { concurrency: 1 }
+  );
   const digest = yield* capture(root, "/usr/bin/bash", [
     "-c",
     digestScript,
