@@ -8,6 +8,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
 import { PermissionMode, SettingsFile, WorktreeConfig } from "../../../claudecode/Settings/Schema.ts";
+const decodeUnknownWorktreeConfigSync = S.decodeUnknownSync(WorktreeConfig);
 
 const decodeSettings = S.decodeUnknownSync(SettingsFile);
 const encodeSettings = S.encodeSync(SettingsFile);
@@ -206,7 +207,7 @@ describe("SettingsFile current wire contract", () => {
   });
 
   it("rejects former boolean worktree isolation and marketplace policy", () => {
-    expect(() => S.decodeUnknownSync(WorktreeConfig)({ bgIsolation: true })).toThrow();
+    expect(() => decodeUnknownWorktreeConfigSync({ bgIsolation: true })).toThrow();
     expect(() => decodeSettings({ strictKnownMarketplaces: true })).toThrow();
   });
 });

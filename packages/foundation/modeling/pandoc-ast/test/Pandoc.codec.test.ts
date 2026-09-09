@@ -46,6 +46,12 @@ import * as S from "effect/Schema";
 import * as SchemaIssue from "effect/SchemaIssue";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeUnknownPandocJsonFromStringSync = S.decodeUnknownSync(PandocJsonFromString);
+const encodeTable = S.encodeEffect(Table);
+const isPandocLosslessDocument = S.is(PandocLosslessDocument);
+const isPandocMetaValue = S.is(PandocMetaValue);
+const isTable = S.is(Table);
+
 const expectSchemaMakeToFail = (run: () => unknown, messagePart: string): void => {
   const formatIssue = SchemaIssue.makeFormatterDefault();
   try {
@@ -248,8 +254,8 @@ describe("Pandoc.codec", () => {
     };
     const document = Effect.runSync(decodePandocJsonLossless(input));
 
-    expect(S.is(PandocLosslessDocument)(document)).toBe(true);
-    expect(S.is(PandocLosslessDocument)({ ...document })).toBe(false);
+    expect(isPandocLosslessDocument(document)).toBe(true);
+    expect(isPandocLosslessDocument({ ...document })).toBe(false);
     expect(document.apiVersion).toEqual(document.wire["pandoc-api-version"]);
     expect(document.blocks).toEqual(document.wire.blocks);
     expect(document.meta).toEqual(document.wire.meta);
@@ -290,7 +296,7 @@ describe("Pandoc.codec", () => {
     };
 
     expect(
-      S.is(Table)({
+      isTable({
         _tag: "table",
         payload: [["", [], []], null, [], null, [], null],
       })
@@ -1046,7 +1052,7 @@ describe("Pandoc.codec", () => {
           id: "table-id",
           keyValues: [["custom-style", "EvidenceTable"]],
         });
-        expect(yield* S.encodeEffect(Table)(table)).toEqual({
+        expect(yield* encodeTable(table)).toEqual({
           _tag: "table",
           payload: table.payload,
         });
@@ -1350,7 +1356,7 @@ describe("Pandoc.codec", () => {
         };
         const document = yield* decodePandocJson(wire);
 
-        expect(S.is(PandocMetaValue)(document.meta.title)).toBe(true);
+        expect(isPandocMetaValue(document.meta.title)).toBe(true);
         expect(document.meta.title).toEqual(MetaString.make({ value: "Document" }));
         expect(document.meta.nested?._tag).toBe("metaMap");
         if (document.meta.nested?._tag === "metaMap") {
@@ -1458,8 +1464,8 @@ describe("Pandoc.codec", () => {
     ).rejects.toThrow());
 
   it("exposes a schema-owned JSON string boundary", () => {
-    const decode = S.decodeUnknownSync(PandocJsonFromString);
-
-    expect(decode(`{"pandoc-api-version":[1,23,1],"meta":{},"blocks":[]}`).blocks).toEqual([]);
+    expect(
+      decodeUnknownPandocJsonFromStringSync(`{"pandoc-api-version":[1,23,1],"meta":{},"blocks":[]}`).blocks
+    ).toEqual([]);
   });
 });

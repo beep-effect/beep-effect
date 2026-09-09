@@ -5,31 +5,33 @@ import { describe, expect, it } from "@effect/vitest";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
-describe("MappedLiteralKit", () => {
-  const SqlState = MappedLiteralKit([
-    ["SUCCESSFUL_COMPLETION", "00000"],
-    ["WARNING", "01000"],
-  ] as const);
+const SqlState = MappedLiteralKit([
+  ["SUCCESSFUL_COMPLETION", "00000"],
+  ["WARNING", "01000"],
+] as const);
+const decodeSqlStateSync = S.decodeSync(SqlState);
+const decodeSqlStateToSync = S.decodeSync(SqlState.To);
+const decodeUnknownSqlStateSync = S.decodeUnknownSync(SqlState);
+const encodeSqlStateSync = S.encodeSync(SqlState);
+const encodeSqlStateToSync = S.encodeSync(SqlState.To);
 
+describe("MappedLiteralKit", () => {
   it("decodes From literals into To literals", () => {
-    expect(S.decodeSync(SqlState)("SUCCESSFUL_COMPLETION")).toBe("00000");
-    expect(S.decodeSync(SqlState)("WARNING")).toBe("01000");
+    expect(decodeSqlStateSync("SUCCESSFUL_COMPLETION")).toBe("00000");
+    expect(decodeSqlStateSync("WARNING")).toBe("01000");
   });
 
   it("encodes To literals back into From literals", () => {
-    expect(S.encodeSync(SqlState)("00000")).toBe("SUCCESSFUL_COMPLETION");
-    expect(S.encodeSync(SqlState)("01000")).toBe("WARNING");
+    expect(encodeSqlStateSync("00000")).toBe("SUCCESSFUL_COMPLETION");
+    expect(encodeSqlStateSync("01000")).toBe("WARNING");
   });
 
   it("round-trips schema-derived mapped literal samples", () => {
     const arbitrary = S.toArbitrary(SqlState)(fc);
-    const decode = S.decodeUnknownSync(SqlState);
-    const encode = S.encodeSync(SqlState);
-
     fc.assert(
       fc.property(arbitrary, (literal) => {
         expect(SqlState.To.Options).toContain(literal);
-        expect(decode(encode(literal))).toBe(literal);
+        expect(decodeUnknownSqlStateSync(encodeSqlStateSync(literal))).toBe(literal);
       }),
       fcRuns(25)
     );
@@ -105,8 +107,8 @@ describe("MappedLiteralKit", () => {
   });
 
   it("decodes and encodes on the reverse directional kit", () => {
-    expect(S.decodeSync(SqlState.To)("00000")).toBe("SUCCESSFUL_COMPLETION");
-    expect(S.encodeSync(SqlState.To)("SUCCESSFUL_COMPLETION")).toBe("00000");
+    expect(decodeSqlStateToSync("00000")).toBe("SUCCESSFUL_COMPLETION");
+    expect(encodeSqlStateToSync("SUCCESSFUL_COMPLETION")).toBe("00000");
   });
 
   it("rejects duplicate from-side literals", () => {

@@ -115,6 +115,7 @@ import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { CaptureCommandTimedOutError } from "../../internal/process/index.ts";
 import type { CoverageBaselineRowDelta } from "./internal/CoverageScope.ts";
 import type { FlakeQuarantineTask } from "./internal/FlakeQuarantine.ts";
+import type { LaneProofSession } from "./internal/LaneProofReuse.ts";
 import type { UnexpectedQualityTaskFailure } from "./Quality.errors.ts";
 import type { GithubCheckLaneWaveSpec, PackageJsonDocument, PackageJsonWorkspacesDocument } from "./Quality.schemas.ts";
 
@@ -1674,7 +1675,8 @@ const collectQualityTaskLaneRuns = Effect.fn("QualityTasks.collectQualityTaskLan
 const runGithubCheckWave = Effect.fn("QualityTasks.runGithubCheckWave")(function* (
   label: string,
   wave: GithubCheckLaneWaveSpec,
-  failurePolicy: GithubCheckFailurePolicy
+  failurePolicy: GithubCheckFailurePolicy,
+  laneProofMode?: LaneProofSession["mode"]
 ) {
   let activeReusableIds = A.empty<string>();
   let failures = A.empty<QualityTaskFailed>();
@@ -1688,7 +1690,7 @@ const runGithubCheckWave = Effect.fn("QualityTasks.runGithubCheckWave")(function
       continue;
     }
 
-    const session = yield* prepareLaneProofSession([lane]);
+    const session = yield* prepareLaneProofSession([lane], laneProofMode);
     const reusable = O.exists(session, (prepared) => hasReusableLaneProof(prepared, lane.id));
     const activeReuse = reusable && O.exists(session, (prepared) => prepared.mode === "active");
     if (reusable) {
@@ -1798,7 +1800,8 @@ const runStreamingStepGroup = Effect.fn("QualityTasks.runStreamingStepGroup")(fu
 const collectGithubCheckLaneWaves = Effect.fn("QualityTasks.collectGithubCheckLaneWaves")(function* (
   label: string,
   waves: ReadonlyArray<GithubCheckLaneWaveSpec>,
-  failurePolicy: GithubCheckFailurePolicy
+  failurePolicy: GithubCheckFailurePolicy,
+  laneProofMode?: LaneProofSession["mode"]
 ) {
   let failures = A.empty<QualityTaskFailed>();
   let laneRuns = A.empty<GithubCheckLaneRun>();
@@ -1826,7 +1829,7 @@ const collectGithubCheckLaneWaves = Effect.fn("QualityTasks.collectGithubCheckLa
       laneRuns: waveLaneRuns,
       skippedLaneIds,
       stoppedAfterRed,
-    } = yield* runGithubCheckWave(`${label}:${wave.wave}`, wave, failurePolicy);
+    } = yield* runGithubCheckWave(`${label}:${wave.wave}`, wave, failurePolicy, laneProofMode);
     const failedLabels = A.map(waveFailures, (failure) => failure.label);
     laneRuns = A.appendAll(
       laneRuns,

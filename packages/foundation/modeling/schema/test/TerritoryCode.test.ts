@@ -5,28 +5,45 @@ import { TerritoryCode, TerritoryCodeFromName, TerritoryName, TerritoryNameFromC
 import { describe, expect, it } from "@effect/vitest";
 import * as S from "effect/Schema";
 
+const decodeContinentCodeSync = S.decodeSync(ContinentCode);
+const decodeContinentCodeFromNameSync = S.decodeSync(ContinentCodeFromName);
+const decodeContinentNameSync = S.decodeSync(ContinentName);
+const decodeContinentNameFromCodeSync = S.decodeSync(ContinentNameFromCode);
+const decodeCountryCodeSync = S.decodeSync(CountryCode);
+const decodeCountryCodeFromNameSync = S.decodeSync(CountryCodeFromName);
+const decodeCountryNameSync = S.decodeSync(CountryName);
+const decodeCountryNameFromCodeSync = S.decodeSync(CountryNameFromCode);
+const decodeTerritoryCodeSync = S.decodeSync(TerritoryCode);
+const decodeTerritoryCodeFromNameSync = S.decodeSync(TerritoryCodeFromName);
+const decodeTerritoryNameSync = S.decodeSync(TerritoryName);
+const decodeTerritoryNameFromCodeSync = S.decodeSync(TerritoryNameFromCode);
+const encodeContinentCodeFromNameSync = S.encodeSync(ContinentCodeFromName);
+const encodeContinentNameFromCodeSync = S.encodeSync(ContinentNameFromCode);
+const encodeTerritoryCodeFromNameSync = S.encodeSync(TerritoryCodeFromName);
+const encodeTerritoryNameFromCodeSync = S.encodeSync(TerritoryNameFromCode);
+
 describe("TerritoryCode", () => {
   it("decodes CLDR territory codes and names from generated @beep/data values", () => {
-    expect(S.decodeSync(TerritoryCode)("US")).toBe("US");
-    expect(S.decodeSync(TerritoryName)("United States")).toBe("United States");
+    expect(decodeTerritoryCodeSync("US")).toBe("US");
+    expect(decodeTerritoryNameSync("United States")).toBe("United States");
     expect(TerritoryCode.Options).toContain("GB");
     expect(TerritoryName.Options).toContain("United Kingdom");
   });
 
   it("maps territory codes and names in both directions", () => {
-    expect(S.decodeSync(TerritoryNameFromCode)("US")).toBe("United States");
-    expect(S.encodeSync(TerritoryNameFromCode)("United States")).toBe("US");
-    expect(S.decodeSync(TerritoryCodeFromName)("United States")).toBe("US");
-    expect(S.encodeSync(TerritoryCodeFromName)("US")).toBe("United States");
+    expect(decodeTerritoryNameFromCodeSync("US")).toBe("United States");
+    expect(encodeTerritoryNameFromCodeSync("United States")).toBe("US");
+    expect(decodeTerritoryCodeFromNameSync("United States")).toBe("US");
+    expect(encodeTerritoryCodeFromNameSync("US")).toBe("United States");
   });
 });
 
 describe("CountryCode", () => {
   it("aliases the CLDR territory code and name schemas for country-facing callers", () => {
-    expect(S.decodeSync(CountryCode)("US")).toBe("US");
-    expect(S.decodeSync(CountryName)("United States")).toBe("United States");
-    expect(S.decodeSync(CountryNameFromCode)("GB")).toBe("United Kingdom");
-    expect(S.decodeSync(CountryCodeFromName)("United Kingdom")).toBe("GB");
+    expect(decodeCountryCodeSync("US")).toBe("US");
+    expect(decodeCountryNameSync("United States")).toBe("United States");
+    expect(decodeCountryNameFromCodeSync("GB")).toBe("United Kingdom");
+    expect(decodeCountryCodeFromNameSync("United Kingdom")).toBe("GB");
   });
 
   it("renders flags only for alpha-2 country codes", () => {
@@ -39,16 +56,16 @@ describe("CountryCode", () => {
 
 describe("ContinentCode", () => {
   it("decodes CLDR top-level containment codes and names", () => {
-    expect(S.decodeSync(ContinentCode)("019")).toBe("019");
-    expect(S.decodeSync(ContinentName)("Americas")).toBe("Americas");
+    expect(decodeContinentCodeSync("019")).toBe("019");
+    expect(decodeContinentNameSync("Americas")).toBe("Americas");
     expect(ContinentCode.Options).toContain("150");
     expect(ContinentName.Options).toContain("Europe");
   });
 
   it("maps continent codes and names in both directions", () => {
-    expect(S.decodeSync(ContinentNameFromCode)("019")).toBe("Americas");
-    expect(S.encodeSync(ContinentNameFromCode)("Americas")).toBe("019");
-    expect(S.decodeSync(ContinentCodeFromName)("Europe")).toBe("150");
-    expect(S.encodeSync(ContinentCodeFromName)("150")).toBe("Europe");
+    expect(decodeContinentNameFromCodeSync("019")).toBe("Americas");
+    expect(encodeContinentNameFromCodeSync("Americas")).toBe("019");
+    expect(decodeContinentCodeFromNameSync("Europe")).toBe("150");
+    expect(encodeContinentCodeFromNameSync("150")).toBe("Europe");
   });
 });

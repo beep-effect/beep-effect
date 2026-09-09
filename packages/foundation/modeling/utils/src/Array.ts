@@ -9,6 +9,7 @@ import * as A from "effect/Array";
 import { dual, flow } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { compileAssertion } from "./Schema.ts";
 import { thunkFalse, thunkTrue } from "./thunk.ts";
 import type { TUnsafe } from "@beep/types";
 import type * as Order from "effect/Order";
@@ -69,9 +70,8 @@ const NonEmptyArraySchema = NonEmptyReadonlyArraySchema.pipe(S.mutable);
  * @category guards
  * @since 0.0.0
  */
-export const assertNonEmptyArray: (input: unknown) => asserts input is A.NonEmptyArray<TUnsafe.Any> = (input) => {
-  S.asserts(NonEmptyArraySchema, input);
-};
+export const assertNonEmptyArray: (input: unknown) => asserts input is A.NonEmptyArray<TUnsafe.Any> =
+  compileAssertion(NonEmptyArraySchema);
 /**
  * Asserts that `input` is a readonly non-empty array, throwing on failure.
  *
@@ -93,11 +93,8 @@ export const assertNonEmptyArray: (input: unknown) => asserts input is A.NonEmpt
  * @category guards
  * @since 0.0.0
  */
-export const assertNonEmptyReadonlyArray: (input: unknown) => asserts input is A.NonEmptyReadonlyArray<TUnsafe.Any> = (
-  input
-) => {
-  S.asserts(NonEmptyReadonlyArraySchema, input);
-};
+export const assertNonEmptyReadonlyArray: (input: unknown) => asserts input is A.NonEmptyReadonlyArray<TUnsafe.Any> =
+  compileAssertion(NonEmptyReadonlyArraySchema);
 
 function asNonEmptyArray<T>(out: Array<T>): A.NonEmptyArray<T> {
   assertNonEmptyArray(out);

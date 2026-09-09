@@ -10,6 +10,17 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const encodeUseCaseServerWorkItemWorkItemRepositoryErrorResult = S.encodeResult(
+  UseCaseServer.WorkItem.WorkItemRepositoryError
+);
+const encodeUseCaseServerWorkerWorkerRepositoryErrorResult = S.encodeResult(UseCaseServer.Worker.WorkerRepositoryError);
+const encodeWorkItemCreateWorkItemCommandResult = S.encodeResult(WorkItem.CreateWorkItemCommand);
+const encodeWorkItemListWorkItemsQueryResult = S.encodeResult(WorkItem.ListWorkItemsQuery);
+const encodeWorkItemWorkItemActionErrorResult = S.encodeResult(WorkItem.WorkItemActionError);
+const encodeWorkerCreateWorkerCommandResult = S.encodeResult(Worker.CreateWorkerCommand);
+const encodeWorkerListWorkersQueryResult = S.encodeResult(Worker.ListWorkersQuery);
+const encodeWorkerWorkerActionErrorResult = S.encodeResult(Worker.WorkerActionError);
+
 const workItemId = Result.getOrThrow(S.decodeResult(DomainWorkItem.WorkItemId)("work-item-1"));
 const workerId = Result.getOrThrow(S.decodeResult(ArchitectureLabIdentity.WorkerId)(1));
 const organizationId = Result.getOrThrow(S.decodeResult(DomainWorker.WorkerOrganizationId)(10));
@@ -53,7 +64,7 @@ describe("@beep/architecture-lab-use-cases schema parity", () => {
   it("preserves command and query encoded wire shapes", () => {
     expect(
       Result.getOrThrow(
-        S.encodeResult(WorkItem.CreateWorkItemCommand)(
+        encodeWorkItemCreateWorkItemCommandResult(
           WorkItem.CreateWorkItemCommand.make({
             id: workItemId,
             title: "Document topology",
@@ -67,7 +78,7 @@ describe("@beep/architecture-lab-use-cases schema parity", () => {
 
     expect(
       Result.getOrThrow(
-        S.encodeResult(WorkItem.CreateWorkItemCommand)(
+        encodeWorkItemCreateWorkItemCommandResult(
           WorkItem.CreateWorkItemCommand.make({
             id: workItemId,
             title: "Document topology",
@@ -82,12 +93,12 @@ describe("@beep/architecture-lab-use-cases schema parity", () => {
     });
 
     expect(
-      Result.getOrThrow(S.encodeResult(WorkItem.ListWorkItemsQuery)(WorkItem.ListWorkItemsQuery.make({})))
+      Result.getOrThrow(encodeWorkItemListWorkItemsQueryResult(WorkItem.ListWorkItemsQuery.make({})))
     ).toStrictEqual({});
 
     expect(
       Result.getOrThrow(
-        S.encodeResult(Worker.CreateWorkerCommand)(
+        encodeWorkerCreateWorkerCommandResult(
           Worker.CreateWorkerCommand.make({
             id: workerId,
             organizationId,
@@ -101,15 +112,13 @@ describe("@beep/architecture-lab-use-cases schema parity", () => {
       organizationId: 10,
     });
 
-    expect(Result.getOrThrow(S.encodeResult(Worker.ListWorkersQuery)(Worker.ListWorkersQuery.make({})))).toStrictEqual(
-      {}
-    );
+    expect(Result.getOrThrow(encodeWorkerListWorkersQueryResult(Worker.ListWorkersQuery.make({})))).toStrictEqual({});
   });
 
   it("preserves public and repository error encoded wire shapes", () => {
     expect(
       Result.getOrThrow(
-        S.encodeResult(UseCaseServer.WorkItem.WorkItemRepositoryError)(
+        encodeUseCaseServerWorkItemWorkItemRepositoryErrorResult(
           UseCaseServer.WorkItem.WorkItemRepositoryConflict.make({
             workItemId,
             reason: "duplicate id",
@@ -124,7 +133,7 @@ describe("@beep/architecture-lab-use-cases schema parity", () => {
 
     expect(
       Result.getOrThrow(
-        S.encodeResult(WorkItem.WorkItemActionError)(
+        encodeWorkItemWorkItemActionErrorResult(
           WorkItem.WorkItemActionRejected.make({
             workItemId,
             reason: "WorkItemAlreadyArchived",
@@ -139,7 +148,7 @@ describe("@beep/architecture-lab-use-cases schema parity", () => {
 
     expect(
       Result.getOrThrow(
-        S.encodeResult(UseCaseServer.Worker.WorkerRepositoryError)(
+        encodeUseCaseServerWorkerWorkerRepositoryErrorResult(
           UseCaseServer.Worker.WorkerRepositoryUnavailable.make({
             reason: "maintenance",
           })
@@ -152,7 +161,7 @@ describe("@beep/architecture-lab-use-cases schema parity", () => {
 
     expect(
       Result.getOrThrow(
-        S.encodeResult(Worker.WorkerActionError)(
+        encodeWorkerWorkerActionErrorResult(
           Worker.WorkerConflict.make({
             workerId,
             reason: "Worker already exists",

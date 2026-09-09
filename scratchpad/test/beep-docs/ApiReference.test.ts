@@ -16,6 +16,11 @@ import {
   SearchMetadata,
   StagedSearchMetadata,
 } from "../../beep-docs/domain/SearchMetadata.ts";
+const decodeModulePathFromExportPathOption = S.decodeOption(ModulePathFromExportPath);
+const decodePackageSlugFromPackageNameOption = S.decodeOption(PackageSlugFromPackageName);
+const decodeDocumentationSearchMetadataSync = S.decodeSync(DocumentationSearchMetadata);
+const decodeModulePathFromExportPathSync = S.decodeSync(ModulePathFromExportPath);
+const encodeModulePathFromExportPathSync = S.encodeSync(ModulePathFromExportPath);
 
 const decodeReflection = S.decodeUnknownSync(TypeDocProjectReflection);
 
@@ -241,22 +246,18 @@ describe("CodeSnippet", () => {
 
 describe("domain codecs", () => {
   it("derives module paths from export paths and back", () => {
-    const decode = S.decodeSync(ModulePathFromExportPath);
-    const decodeOption = S.decodeOption(ModulePathFromExportPath);
-    const encode = S.encodeSync(ModulePathFromExportPath);
-    assert.equal(decode("."), "index");
-    assert.equal(decode("./unstable/http/HttpClient"), "unstable/http/HttpClient");
-    assert.equal(encode(decode(".")), ".");
-    assert.equal(encode(decode("./Option")), "./Option");
-    assert.isTrue(O.isNone(decodeOption("./../escape")));
-    assert.isTrue(O.isNone(decodeOption("./a//b")));
+    assert.equal(decodeModulePathFromExportPathSync("."), "index");
+    assert.equal(decodeModulePathFromExportPathSync("./unstable/http/HttpClient"), "unstable/http/HttpClient");
+    assert.equal(encodeModulePathFromExportPathSync(decodeModulePathFromExportPathSync(".")), ".");
+    assert.equal(encodeModulePathFromExportPathSync(decodeModulePathFromExportPathSync("./Option")), "./Option");
+    assert.isTrue(O.isNone(decodeModulePathFromExportPathOption("./../escape")));
+    assert.isTrue(O.isNone(decodeModulePathFromExportPathOption("./a//b")));
   });
 
   it("derives package slugs", () => {
-    const decode = S.decodeOption(PackageSlugFromPackageName);
-    assert.deepEqual(O.getOrUndefined(decode("@effect/platform-node")), "platform-node");
-    assert.deepEqual(O.getOrUndefined(decode("effect")), "effect");
-    assert.isTrue(O.isNone(decode("@other/Pkg")));
+    assert.deepEqual(O.getOrUndefined(decodePackageSlugFromPackageNameOption("@effect/platform-node")), "platform-node");
+    assert.deepEqual(O.getOrUndefined(decodePackageSlugFromPackageNameOption("effect")), "effect");
+    assert.isTrue(O.isNone(decodePackageSlugFromPackageNameOption("@other/Pkg")));
   });
 
   it("discriminates search metadata by content source", () => {
@@ -272,7 +273,7 @@ describe("domain codecs", () => {
       sections: [],
     });
     assert.isTrue(StagedSearchMetadata.guards.blog(staged));
-    const stored = S.decodeSync(DocumentationSearchMetadata)({
+    const stored = decodeDocumentationSearchMetadataSync({
       schema_version: 1,
       content_source: "documentation",
       docs_version: "v4",

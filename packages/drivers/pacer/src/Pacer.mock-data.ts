@@ -30,6 +30,10 @@ import {
 } from "./Pcl.models.ts";
 import type { Effect } from "effect";
 
+const encodeUnknownCaseReportList = S.encodeUnknownEffect(CaseReportList);
+const encodeUnknownPartyReportList = S.encodeUnknownEffect(PartyReportList);
+const encodeUnknownReportInfoType = S.encodeUnknownEffect(ReportInfoType);
+
 const caseArbitrary = S.toArbitrary(CaseResult)(FastCheck);
 const partyArbitrary = S.toArbitrary(PartyResult)(FastCheck);
 const receiptArbitrary = S.toArbitrary(Receipt)(FastCheck);
@@ -71,7 +75,7 @@ const caseReportListBody = (
   totalPages: number,
   content: ReadonlyArray<CaseResult>
 ): Effect.Effect<unknown, S.SchemaError> =>
-  S.encodeUnknownEffect(CaseReportList)(
+  encodeUnknownCaseReportList(
     CaseReportList.make({
       receipt: O.some(sampleReceipt(pageNumber + 1)),
       pageInfo: O.some(
@@ -97,7 +101,7 @@ const caseReportListBody = (
  * @since 0.0.0
  */
 const partyReportListBody = (content: ReadonlyArray<PartyResult>): Effect.Effect<unknown, S.SchemaError> =>
-  S.encodeUnknownEffect(PartyReportList)(
+  encodeUnknownPartyReportList(
     PartyReportList.make({
       receipt: O.some(sampleReceipt(2001)),
       pageInfo: O.some(
@@ -367,7 +371,7 @@ export const reportInfoBody: {
     status: "WAITING" | "RUNNING" | "COMPLETED" | "FAILED"
   ): (reportId: number | string) => Effect.Effect<unknown, S.SchemaError>;
 } = dual(2, (reportId: number | string, status: "WAITING" | "RUNNING" | "COMPLETED" | "FAILED") =>
-  S.encodeUnknownEffect(ReportInfoType)(
+  encodeUnknownReportInfoType(
     ReportInfoType.make({
       reportId,
       status: O.some(status),

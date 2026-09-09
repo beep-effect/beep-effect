@@ -4928,8 +4928,9 @@ const elementMetaSource: Readonly<Record<HtmlTag, S.Codec.Encoded<typeof HtmlEle
   },
 };
 
+const decodeElementMetaResult = S.decodeResult(HtmlElementMeta);
 const decodeElementMeta = (value: S.Codec.Encoded<typeof HtmlElementMeta>): HtmlElementMeta =>
-  Result.getOrThrow(S.decodeResult(HtmlElementMeta)(value));
+  Result.getOrThrow(decodeElementMetaResult(value));
 
 /**
  * Metadata for every generated HTML element, keyed by tag name.

@@ -17,6 +17,7 @@ import {
   TypeDocProjectReflection,
   TypeDocProjectReflectionFromJsonString,
 } from "../../beep-docs/domain/ApiReference.ts";
+const decodeUnknownTypeDocProjectReflectionSync = S.decodeUnknownSync(TypeDocProjectReflection);
 
 const utf8 = new TextEncoder();
 
@@ -27,7 +28,7 @@ const decodePackageManifest = S.decodeUnknownEffect(ApiReferencePackageManifest)
 const decodeDatasetManifest = S.decodeUnknownEffect(ApiReferenceDatasetManifest);
 
 const reflectionFor = (name: string) =>
-  S.decodeUnknownSync(TypeDocProjectReflection)({
+  decodeUnknownTypeDocProjectReflectionSync({
     schemaVersion: "2.0",
     variant: "project",
     id: 1,

@@ -23,6 +23,14 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeEvidenceModelResult = S.decodeResult(EvidenceModel);
+const decodeUnknownEvidenceModelResult = S.decodeUnknownResult(EvidenceModel);
+const decodeUnknownCandidateClaimModelSync = S.decodeUnknownSync(CandidateClaimModel);
+const decodeUnknownClaimDispositionModelSync = S.decodeUnknownSync(ClaimDispositionModel);
+const decodeUnknownEdgeVersionModelSync = S.decodeUnknownSync(EdgeVersionModel);
+const decodeUnknownEvidenceModelSync = S.decodeUnknownSync(EvidenceModel);
+const decodeUnknownUsageRecordModelSync = S.decodeUnknownSync(UsageRecordModel);
+
 const UsageRecordArbitrary = S.toArbitrary(UsageRecordModel)(fc);
 const UsageRecordEquivalence = S.toEquivalence(UsageRecordModel);
 
@@ -306,7 +314,7 @@ describe("EpistemicTables", () => {
   });
 
   it("round-trips a UsageRecord row through the converters", () => {
-    const record = S.decodeUnknownSync(UsageRecordModel)(usageRecordInput(10));
+    const record = decodeUnknownUsageRecordModelSync(usageRecordInput(10));
 
     const insert = UsageRecord.toUsageRecordInsert(record);
     expect("id" in insert).toBe(false);
@@ -344,7 +352,7 @@ describe("EpistemicTables", () => {
   });
 
   it("round-trips a CandidateClaim row through the converters", () => {
-    const claim = S.decodeUnknownSync(CandidateClaimModel)(candidateClaimInput(10));
+    const claim = decodeUnknownCandidateClaimModelSync(candidateClaimInput(10));
 
     const insert = CandidateClaim.toCandidateClaimInsert(claim);
     expect("id" in insert).toBe(false);
@@ -360,7 +368,7 @@ describe("EpistemicTables", () => {
   });
 
   it("round-trips an Evidence row through the converters", () => {
-    const evidence = S.decodeUnknownSync(EvidenceModel)(evidenceInput(10));
+    const evidence = decodeUnknownEvidenceModelSync(evidenceInput(10));
 
     const insert = Evidence.toEvidenceInsert(evidence);
     expect("id" in insert).toBe(false);
@@ -381,7 +389,7 @@ describe("EpistemicTables", () => {
   });
 
   it("normalizes legacy Evidence span widths on read and writes only the strict width", () => {
-    const evidence = Result.getOrThrow(S.decodeUnknownResult(EvidenceModel)(evidenceInput(10)));
+    const evidence = Result.getOrThrow(decodeUnknownEvidenceModelResult(evidenceInput(10)));
     const insert = Evidence.toEvidenceInsert(evidence);
     const legacyRow = {
       ...insert,
@@ -393,7 +401,7 @@ describe("EpistemicTables", () => {
       spanFixtureKey: "span:oa-1:12-48",
     };
 
-    expect(Result.isFailure(S.decodeResult(EvidenceModel)(legacyRow))).toBe(true);
+    expect(Result.isFailure(decodeEvidenceModelResult(legacyRow))).toBe(true);
 
     const decoded = Evidence.fromEvidenceRow(legacyRow);
     const canonicalInsert = Evidence.toEvidenceInsert(decoded);
@@ -406,7 +414,7 @@ describe("EpistemicTables", () => {
   });
 
   it("preserves reads of legacy Evidence quotes above the current write bound", () => {
-    const evidence = Result.getOrThrow(S.decodeUnknownResult(EvidenceModel)(evidenceInput(10)));
+    const evidence = Result.getOrThrow(decodeUnknownEvidenceModelResult(evidenceInput(10)));
     const insert = Evidence.toEvidenceInsert(evidence);
     const quote = Str.repeat(EVIDENCE_SPAN_QUOTE_MAX_LENGTH + 1)("a");
     const legacyRow = {
@@ -419,7 +427,7 @@ describe("EpistemicTables", () => {
       },
     };
 
-    expect(Result.isFailure(S.decodeResult(EvidenceModel)(legacyRow))).toBe(true);
+    expect(Result.isFailure(decodeEvidenceModelResult(legacyRow))).toBe(true);
 
     const decoded = Evidence.fromEvidenceRow(legacyRow);
 
@@ -429,7 +437,7 @@ describe("EpistemicTables", () => {
   });
 
   it("rejects malformed Evidence rows with a schema error", () => {
-    const evidence = S.decodeUnknownSync(EvidenceModel)(evidenceInput(10));
+    const evidence = decodeUnknownEvidenceModelSync(evidenceInput(10));
     const malformedRow = {
       ...Evidence.toEvidenceInsert(evidence),
       id: 10,
@@ -443,7 +451,7 @@ describe("EpistemicTables", () => {
   // branch count is the column count, not logic to simplify.
   // fallow-ignore-next-line complexity -- exhaustive assertions cover every column of the slice's widest table
   it("round-trips an EdgeVersion row through the converters", () => {
-    const version = S.decodeUnknownSync(EdgeVersionModel)(edgeVersionInput(10));
+    const version = decodeUnknownEdgeVersionModelSync(edgeVersionInput(10));
 
     const insert = EdgeVersion.toEdgeVersionInsert(version);
     expect("id" in insert).toBe(false);
@@ -495,7 +503,7 @@ describe("EpistemicTables", () => {
   // Same exhaustive column walk for the closed/Option-some variant.
   // fallow-ignore-next-line complexity -- exhaustive assertions cover the closed and Option-some column variant
   it("round-trips a closed EdgeVersion row through the converters", () => {
-    const closed = S.decodeUnknownSync(EdgeVersionModel)({
+    const closed = decodeUnknownEdgeVersionModelSync({
       ...edgeVersionInput(11),
       evidenceScope: "evidence-set-1",
       expiredAt: 2_500,
@@ -548,7 +556,7 @@ describe("EpistemicTables", () => {
   });
 
   it("round-trips a ClaimDisposition row through the converters", () => {
-    const disposition = S.decodeUnknownSync(ClaimDispositionModel)(claimDispositionInput(10));
+    const disposition = decodeUnknownClaimDispositionModelSync(claimDispositionInput(10));
 
     const insert = ClaimDisposition.toClaimDispositionInsert(disposition);
     expect("id" in insert).toBe(false);

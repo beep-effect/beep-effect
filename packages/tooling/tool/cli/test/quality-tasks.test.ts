@@ -99,6 +99,7 @@ import {
   reviewFixDocgenLocalArgsForTesting,
   rootLintPolicyStepsForTesting,
   rootQualityStepsForTesting,
+  runBunAudit,
   runGithubChecks,
   runQualityTask,
   runQualityTaskStepGroupForTesting,
@@ -152,13 +153,28 @@ import {
   Stream,
 } from "effect";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import * as TestConsole from "effect/testing/TestConsole";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
+import { vi } from "vitest";
 import type { CiLaneId } from "@beep/repo-cli/commands/Ci";
 import type { GateOrderLaneClass, GithubCheckLaneWave, QualityTaskInvocation } from "@beep/repo-cli/test/Quality";
+
+const decodeQualityTaskLaneRun = S.decodeEffect(QualityTaskLaneRun);
+const decodeQualityTaskLaneRunReportJson = S.decodeEffect(S.fromJsonString(QualityTaskLaneRunReport));
+const encodeQualityTaskLaneRunReport = S.encodeEffect(QualityTaskLaneRunReport);
+const encodeQualityTaskLaneRunReportJson = S.encodeEffect(S.fromJsonString(QualityTaskLaneRunReport));
+
+const decodeCoverageComparisonFailure = S.decodeEffect(CoverageComparisonFailure);
+const decodeGithubCheckFailurePolicy = S.decodeEffect(GithubCheckFailurePolicy);
+const decodeGithubCheckRunReport = S.decodeEffect(GithubCheckRunReport);
+const decodeGithubCheckRunReportSync = S.decodeSync(GithubCheckRunReport);
+const decodeUnknownCoverageRegressionBaseline = S.decodeUnknownEffect(CoverageRegressionBaseline);
+const encodeCoverageRegressionBaseline = S.encodeEffect(CoverageRegressionBaseline);
+const encodeGithubCheckRunReportSync = S.encodeSync(GithubCheckRunReport);
 
 const FileSystemLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 const PlatformLayer = Layer.mergeAll(
@@ -444,7 +460,8 @@ const laneProofTestLane = (
   id: string,
   wave: GithubCheckLaneWave,
   source: string,
-  useLocalEnv = false
+  useLocalEnv = false,
+  env?: Readonly<Record<string, string>>
 ): GithubCheckLaneSpec =>
   GithubCheckLaneSpec.make({
     id,
@@ -456,6 +473,7 @@ const laneProofTestLane = (
       command: "bash",
       args: ["-c", source],
       cwd: repoRoot,
+      ...(P.isUndefined(env) ? {} : { env }),
       useLocalEnv,
     }),
   });
@@ -477,25 +495,25 @@ const qualityCommandHandle = (output: string, exitCode: number) =>
     unref: Effect.succeed(Effect.void),
   });
 
-const cheapGatesSpawnerLayer = (spawned: Array<string>, failedCommands: ReadonlyArray<string>) =>
-  Layer.succeed(
-    ChildProcessSpawner.ChildProcessSpawner,
-    ChildProcessSpawner.make((command) => {
-      if (ChildProcess.isStandardCommand(command)) {
-        const commandText = A.join([command.command, ...command.args], " ");
-        A.appendInPlace(spawned, commandText);
-        const output = A.contains(command.args, "--is-shallow-repository")
-          ? "false"
-          : A.contains(command.args, "--show-current")
-            ? "feature/cheap-gates"
-            : "";
-        const exitCode = A.contains(failedCommands, commandText) ? 1 : 0;
-        return Effect.succeed(qualityCommandHandle(output, exitCode));
-      }
+const cheapGatesSpawner = (spawned: Array<string>, failedCommands: ReadonlyArray<string>) =>
+  ChildProcessSpawner.make((command) => {
+    if (ChildProcess.isStandardCommand(command)) {
+      const commandText = A.join([command.command, ...command.args], " ");
+      A.appendInPlace(spawned, commandText);
+      const output = A.contains(command.args, "--is-shallow-repository")
+        ? "false"
+        : A.contains(command.args, "--show-current")
+          ? "feature/cheap-gates"
+          : "";
+      const exitCode = A.contains(failedCommands, commandText) ? 1 : 0;
+      return Effect.succeed(qualityCommandHandle(output, exitCode));
+    }
 
-      return Effect.die("the cheap-gates test never spawns a piped command");
-    })
-  );
+    return Effect.die("the cheap-gates test never spawns a piped command");
+  });
+
+const cheapGatesSpawnerLayer = (spawned: Array<string>, failedCommands: ReadonlyArray<string>) =>
+  Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, cheapGatesSpawner(spawned, failedCommands));
 
 const cheapGatesTestLayer = (spawned: Array<string>, failedCommands: ReadonlyArray<string>) =>
   Layer.mergeAll(FileSystemLayer, TestConsole.layer, cheapGatesSpawnerLayer(spawned, failedCommands));
@@ -536,6 +554,50 @@ const expectSubstringBefore = (text: string, before: string, after: string): voi
 };
 
 describe("quality task adapter", () => {
+  it.effect(
+    "runs Bun audit with active OSV ignores and reports dropped entries",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const repoRoot = yield* fs.makeTempDirectoryScoped({ prefix: "quality-bun-audit-" });
+      yield* fs.writeFileString(
+        path.join(repoRoot, "osv-scanner.toml"),
+        [
+          "[[IgnoredVulns]]",
+          'id = "GHSA-active"',
+          "",
+          "[[IgnoredVulns]]",
+          'id = "GHSA-expired"',
+          "ignoreUntil = definitely-not-a-date",
+          "",
+        ].join("\n")
+      );
+
+      const spawned: Array<string> = [];
+      yield* runBunAudit(repoRoot).pipe(
+        Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, cheapGatesSpawner(spawned, A.empty()))
+      );
+
+      expect(spawned).toEqual(["bun audit --audit-level=high --ignore=GHSA-active"]);
+      expect(A.join(A.filter(yield* TestConsole.logLines, isString), "\n")).toContain("GHSA-expired");
+    }, provideScopedLayer(PlatformLayer))
+  );
+
+  it.effect(
+    "runs the review-fix command sequence with its default range",
+    Effect.fnUntraced(function* () {
+      const spawned: Array<string> = [];
+      yield* runGithubChecks("review-fix").pipe(
+        Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, cheapGatesSpawner(spawned, A.empty()))
+      );
+
+      expect(spawned).toContain("bun run build -- --affected --summarize");
+      expect(spawned).toContain(
+        A.join(["bun", "run", ...reviewFixDocgenLocalArgsForTesting("origin/main", "HEAD")], " ")
+      );
+    }, provideScopedLayer(PlatformLayer))
+  );
+
   it("parses canonical task invocations and preserves passthrough args", () => {
     expect(getInvocation(["build", "--affected", "--summarize"])).toMatchObject({
       task: "build",
@@ -951,8 +1013,8 @@ describe("quality task adapter", () => {
   it("decodes the failure policy and wave report schemas", () =>
     Effect.runPromise(
       Effect.gen(function* () {
-        expect(yield* S.decodeEffect(GithubCheckFailurePolicy)("fail-fast")).toBe("fail-fast");
-        const report = yield* S.decodeEffect(GithubCheckRunReport)({
+        expect(yield* decodeGithubCheckFailurePolicy("fail-fast")).toBe("fail-fast");
+        const report = yield* decodeGithubCheckRunReport({
           failurePolicy: "collect-all",
           lanes: [
             {
@@ -973,7 +1035,7 @@ describe("quality task adapter", () => {
   it("decodes legacy lane rows and encodes unknown input digests as null", () =>
     Effect.runPromise(
       Effect.gen(function* () {
-        const legacy = yield* S.decodeEffect(QualityTaskLaneRun)({
+        const legacy = yield* decodeQualityTaskLaneRun({
           id: "check",
           label: "ci:check",
           status: "passed",
@@ -985,7 +1047,7 @@ describe("quality task adapter", () => {
         expect(legacy.inputDigest).toStrictEqual(O.none());
         expect(legacy.redSchedulingDecision).toStrictEqual(O.none());
 
-        const encoded = yield* S.encodeEffect(QualityTaskLaneRunReport)(
+        const encoded = yield* encodeQualityTaskLaneRunReport(
           QualityTaskLaneRunReport.make({
             schemaVersion: "quality-task-lane-run/v1",
             lanes: [legacy],
@@ -1049,10 +1111,7 @@ describe("quality task adapter", () => {
         expect(reportLines).toHaveLength(2);
         yield* Effect.forEach(
           reportLines,
-          (line) =>
-            S.decodeEffect(S.fromJsonString(QualityTaskLaneRunReport))(
-              Str.slice(QUALITY_TASK_LANE_RUN_REPORT_PREFIX.length)(line)
-            ),
+          (line) => decodeQualityTaskLaneRunReportJson(Str.slice(QUALITY_TASK_LANE_RUN_REPORT_PREFIX.length)(line)),
           { discard: true }
         );
       }).pipe(provideScopedLayer(PlatformLayer))
@@ -1079,7 +1138,7 @@ describe("quality task adapter", () => {
         );
         const lines = pipe(yield* fs.readFileString(artifactPath), Str.split("\n"), A.filter(Str.isNonEmpty));
         expect(lines).toHaveLength(2);
-        const report = yield* S.decodeEffect(S.fromJsonString(QualityTaskLaneRunReport))(lines[1]);
+        const report = yield* decodeQualityTaskLaneRunReportJson(lines[1]);
         expect(report.schemaVersion).toBe("quality-task-lane-run/v1");
         expect(report.parentLaneId).toStrictEqual(O.some("full:02-ci-parity"));
         expect(A.map(report.lanes, (lane) => lane.id)).toEqual(["check"]);
@@ -1089,7 +1148,7 @@ describe("quality task adapter", () => {
           A.findFirst(Str.startsWith(QUALITY_TASK_LANE_RUN_REPORT_PREFIX)),
           O.getOrThrow
         );
-        const emittedReport = yield* S.decodeEffect(S.fromJsonString(QualityTaskLaneRunReport))(
+        const emittedReport = yield* decodeQualityTaskLaneRunReportJson(
           Str.slice(QUALITY_TASK_LANE_RUN_REPORT_PREFIX.length)(emitted)
         );
         expect(A.map(emittedReport.lanes, (lane) => lane.id)).toEqual(["check"]);
@@ -1104,7 +1163,7 @@ describe("quality task adapter", () => {
         const path = yield* Path.Path;
         const tempDir = yield* fs.makeTempDirectory();
         const artifactPath = path.join(tempDir, "unscoped-inner-lanes.ndjson");
-        const durableReport = yield* S.encodeEffect(S.fromJsonString(QualityTaskLaneRunReport))(
+        const durableReport = yield* encodeQualityTaskLaneRunReportJson(
           QualityTaskLaneRunReport.make({
             schemaVersion: "quality-task-lane-run/v1",
             parentLaneId: O.none(),
@@ -1136,7 +1195,7 @@ describe("quality task adapter", () => {
           A.findFirst(Str.startsWith(QUALITY_TASK_LANE_RUN_REPORT_PREFIX)),
           O.getOrThrow
         );
-        const emittedReport = yield* S.decodeEffect(S.fromJsonString(QualityTaskLaneRunReport))(
+        const emittedReport = yield* decodeQualityTaskLaneRunReportJson(
           Str.slice(QUALITY_TASK_LANE_RUN_REPORT_PREFIX.length)(emitted)
         );
         expect(emittedReport.parentLaneId).toStrictEqual(O.none());
@@ -1153,7 +1212,7 @@ describe("quality task adapter", () => {
         const tempDir = yield* fs.makeTempDirectory();
         const missingPath = path.join(tempDir, "missing.ndjson");
         const foreignPath = path.join(tempDir, "foreign.ndjson");
-        const foreignReport = yield* S.encodeEffect(S.fromJsonString(QualityTaskLaneRunReport))(
+        const foreignReport = yield* encodeQualityTaskLaneRunReportJson(
           QualityTaskLaneRunReport.make({
             schemaVersion: "quality-task-lane-run/v1",
             parentLaneId: O.some("full:foreign-parent"),
@@ -1184,9 +1243,7 @@ describe("quality task adapter", () => {
         );
         expect(reportLines).toHaveLength(2);
         const reports = yield* Effect.forEach(reportLines, (line) =>
-          S.decodeEffect(S.fromJsonString(QualityTaskLaneRunReport))(
-            Str.slice(QUALITY_TASK_LANE_RUN_REPORT_PREFIX.length)(line)
-          )
+          decodeQualityTaskLaneRunReportJson(Str.slice(QUALITY_TASK_LANE_RUN_REPORT_PREFIX.length)(line))
         );
         expect(A.every(reports, (report) => A.isReadonlyArrayEmpty(report.lanes))).toBe(true);
         expect(A.every(reports, (report) => O.contains(report.parentLaneId, "full:current-parent"))).toBe(true);
@@ -1233,9 +1290,7 @@ describe("quality task adapter", () => {
               }
               yield* Fiber.interrupt(wrapper);
               expect(lines).toHaveLength(2);
-              const reports = yield* Effect.forEach(lines, (line) =>
-                S.decodeEffect(S.fromJsonString(QualityTaskLaneRunReport))(line)
-              );
+              const reports = yield* Effect.forEach(lines, (line) => decodeQualityTaskLaneRunReportJson(line));
               expect(A.flatMap(reports, (report) => A.map(report.lanes, (lane) => lane.id))).toEqual([
                 "first",
                 "second",
@@ -1283,9 +1338,7 @@ describe("quality task adapter", () => {
               }
               yield* Fiber.interrupt(wrapper);
               expect(lines).toHaveLength(2);
-              const reports = yield* Effect.forEach(lines, (line) =>
-                S.decodeEffect(S.fromJsonString(QualityTaskLaneRunReport))(line)
-              );
+              const reports = yield* Effect.forEach(lines, (line) => decodeQualityTaskLaneRunReportJson(line));
               expect(A.flatMap(reports, (report) => A.map(report.lanes, (lane) => lane.id))).toEqual([
                 "first",
                 "second",
@@ -1301,7 +1354,7 @@ describe("quality task adapter", () => {
     const ReportArbitrary = S.toArbitrary(GithubCheckRunReport)(fc);
     fc.assert(
       fc.property(ReportArbitrary, (report) => {
-        const decoded = S.decodeSync(GithubCheckRunReport)(S.encodeSync(GithubCheckRunReport)(report));
+        const decoded = decodeGithubCheckRunReportSync(encodeGithubCheckRunReportSync(report));
         expect(decoded.schemaVersion).toBe("github-check-run/v1");
         expect(decoded.failurePolicy).toBe(report.failurePolicy);
         expect(A.map(decoded.lanes, (lane) => lane.id)).toEqual(A.map(report.lanes, (lane) => lane.id));
@@ -1574,6 +1627,34 @@ describe("quality task adapter", () => {
   );
 
   it.effect(
+    "disables lane-proof reuse when the virtual tree cannot be created",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: "lane-proof-tree-failure-" });
+      yield* initializeLaneProofRepository(tempRoot);
+
+      const lane = laneProofTestLane(tempRoot, "proof:tree-failure", "preflight", "process.exit(0)");
+      const originalSpawnSync = Bun.spawnSync;
+      const spawnSync = vi.spyOn(Bun, "spawnSync").mockImplementation(((
+        command: ReadonlyArray<string>,
+        options: unknown
+      ) => {
+        if (A.contains(command, "write-tree")) {
+          throw new Error("simulated write-tree failure");
+        }
+        return originalSpawnSync(command as never, options as never);
+      }) as never);
+
+      try {
+        const session = yield* prepareLaneProofSession([lane], "active");
+        expect(O.isNone(session)).toBe(true);
+      } finally {
+        spawnSync.mockRestore();
+      }
+    }, provideScopedLayer(PlatformLayer))
+  );
+
+  it.effect(
     "invalidates a lane proof when the property-test run floor increases",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
@@ -1582,15 +1663,18 @@ describe("quality task adapter", () => {
       const markerPath = path.join(tempRoot, ".beep", "property-marker.txt");
       yield* initializeLaneProofRepository(tempRoot);
 
-      const lane = laneProofTestLane(tempRoot, "quality:test-unit", "heavy", "echo run >> .beep/property-marker.txt");
-      const waves = [GithubCheckLaneWaveSpec.make({ wave: "heavy", lanes: [lane] })];
-      const run = collectGithubCheckLaneWavesForTesting("proof-fc-runs", waves, "fail-fast");
-      const atRuns = (runs: string) =>
-        withEnvVarEffect(
-          "BEEP_YEET_LANE_PROOF_MODE",
-          "active",
-          withEnvVarEffect("BEEP_YEET_PROOF_BASE", undefined, withEnvVarEffect("BEEP_FC_NUM_RUNS", runs, run))
+      const atRuns = (runs: string) => {
+        const lane = laneProofTestLane(
+          tempRoot,
+          "quality:test-unit",
+          "heavy",
+          "echo run >> .beep/property-marker.txt",
+          false,
+          { BEEP_FC_NUM_RUNS: runs }
         );
+        const waves = [GithubCheckLaneWaveSpec.make({ wave: "heavy", lanes: [lane] })];
+        return collectGithubCheckLaneWavesForTesting("proof-fc-runs", waves, "fail-fast", "active");
+      };
 
       expect(A.map((yield* atRuns("100")).report.lanes, (result) => result.status)).toEqual(["passed"]);
       expect(A.map((yield* atRuns("100")).report.lanes, (result) => result.status)).toEqual(["reused"]);
@@ -3146,7 +3230,7 @@ describe("quality task adapter", () => {
     "rejects current coverage baselines without per-file provenance",
     Effect.fnUntraced(function* () {
       const decoded = yield* Effect.exit(
-        S.decodeUnknownEffect(CoverageRegressionBaseline)({
+        decodeUnknownCoverageRegressionBaseline({
           schema_version: 2,
           generated_at: "2026-07-06T00:00:00.000Z",
           git_sha: "test-sha",
@@ -3234,14 +3318,14 @@ describe("quality task adapter", () => {
       yield* Effect.forEach(
         invalidDocuments,
         Effect.fnUntraced(function* ({ input, label }) {
-          const decoded = yield* Effect.exit(S.decodeUnknownEffect(CoverageRegressionBaseline)(input));
+          const decoded = yield* Effect.exit(decodeUnknownCoverageRegressionBaseline(input));
           assert.isTrue(Exit.isFailure(decoded), `Expected ${label} to fail baseline decoding`);
         }),
         { discard: true }
       );
 
       const unsafeFailure = yield* Effect.exit(
-        S.decodeEffect(CoverageComparisonFailure)({
+        decodeCoverageComparisonFailure({
           _tag: "baseline-drop",
           actual: 0,
           baseline: 100,
@@ -3273,7 +3357,7 @@ describe("quality task adapter", () => {
     "rejects legacy schema versions after the per-file migration",
     Effect.fnUntraced(function* () {
       const decoded = yield* Effect.exit(
-        S.decodeUnknownEffect(CoverageRegressionBaseline)({
+        decodeUnknownCoverageRegressionBaseline({
           schema_version: 1,
           generated_at: "2026-07-06T00:00:00.000Z",
           git_sha: "test-sha",
@@ -3963,7 +4047,7 @@ describe("quality task adapter", () => {
             const repoRoot = process.cwd();
             const baselinePath = path.join(repoRoot, "standards/coverage.regression-baseline.jsonc");
             const writeBaseline = (document: CoverageRegressionBaseline) =>
-              S.encodeEffect(CoverageRegressionBaseline)(document).pipe(
+              encodeCoverageRegressionBaseline(document).pipe(
                 Effect.flatMap((encoded) => fs.writeFileString(baselinePath, encodeJson(encoded)))
               );
 
@@ -4022,7 +4106,7 @@ describe("quality task adapter", () => {
             const repoRoot = process.cwd();
             const baselinePath = path.join(repoRoot, "standards/coverage.regression-baseline.jsonc");
             const writeBaseline = (document: CoverageRegressionBaseline) =>
-              S.encodeEffect(CoverageRegressionBaseline)(document).pipe(
+              encodeCoverageRegressionBaseline(document).pipe(
                 Effect.flatMap((encoded) => fs.writeFileString(baselinePath, encodeJson(encoded)))
               );
 
@@ -4088,7 +4172,7 @@ describe("quality task adapter", () => {
             const baselinePath = path.join(repoRoot, "standards/coverage.regression-baseline.jsonc");
 
             yield* fs.makeDirectory(path.dirname(baselinePath), { recursive: true });
-            yield* S.encodeEffect(CoverageRegressionBaseline)(
+            yield* encodeCoverageRegressionBaseline(
               CoverageRegressionBaseline.make({ ...coverageRegressionBaseline, generated_at: "workspace" })
             ).pipe(Effect.flatMap((encoded) => fs.writeFileString(baselinePath, encodeJson(encoded))));
 
@@ -4109,7 +4193,7 @@ describe("quality task adapter", () => {
             const repoRoot = process.cwd();
             const baselinePath = path.join(repoRoot, "standards/coverage.regression-baseline.jsonc");
             yield* fs.makeDirectory(path.dirname(baselinePath), { recursive: true });
-            yield* S.encodeEffect(CoverageRegressionBaseline)(coverageRegressionBaseline).pipe(
+            yield* encodeCoverageRegressionBaseline(coverageRegressionBaseline).pipe(
               Effect.flatMap((encoded) => fs.writeFileString(baselinePath, encodeJson(encoded)))
             );
             yield* runGit(repoRoot, ["init"]);
@@ -4136,7 +4220,7 @@ describe("quality task adapter", () => {
             const repoRoot = process.cwd();
             const baselinePath = path.join(repoRoot, "standards/coverage.regression-baseline.jsonc");
             const writeBaseline = (document: CoverageRegressionBaseline) =>
-              S.encodeEffect(CoverageRegressionBaseline)(document).pipe(
+              encodeCoverageRegressionBaseline(document).pipe(
                 Effect.flatMap((encoded) => fs.writeFileString(baselinePath, encodeJson(encoded)))
               );
 

@@ -349,6 +349,7 @@ export class CoverageRegressionBaseline extends S.Class<CoverageRegressionBaseli
     description: "Package coverage percentages used by the fail-on-drop ratchet.",
   })
 ) {}
+const encodeCoverageRegressionBaseline = S.encodeEffect(CoverageRegressionBaseline);
 
 const defaultCoverageTieredMinimum = CoverageTieredMinimum.make({
   lines: Percentage.make(70),
@@ -1737,7 +1738,7 @@ const formatBaseline = Effect.fn("CoverageRegression.formatBaseline")(function* 
   // `formatJsonc` stringifies whatever it is handed, so the document has to be
   // encoded first. The v2 domain uses branded percentages, counts, and path
   // keys whose wire representation remains plain JSON scalars and records.
-  const encoded = yield* S.encodeEffect(CoverageRegressionBaseline)(baseline).pipe(
+  const encoded = yield* encodeCoverageRegressionBaseline(baseline).pipe(
     QualityTaskConfigurationError.mapError("Failed to encode coverage regression baseline.")
   );
   const jsonc = yield* formatJsonc(encoded).pipe(

@@ -20,6 +20,11 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeTextOffsetRangeResult = S.decodeResult(TextOffsetRange);
+const decodeUtf16TextRangeResult = S.decodeResult(Utf16TextRange);
+const encodeUnknownTextOffsetRangeResult = S.encodeUnknownResult(TextOffsetRange);
+const encodeUnknownUtf16TextRangeResult = S.encodeUnknownResult(Utf16TextRange);
+
 const expectExactRawSlice = (source: string, startChar: number, endChar: number, quote: string): void => {
   expect(Str.slice(startChar, endChar)(source)).toBe(quote);
 };
@@ -364,23 +369,23 @@ describe("verified-span hostile-text contract", () => {
     ).toThrow();
     expect(
       Result.isFailure(
-        S.decodeResult(TextOffsetRange)({
+        decodeTextOffsetRangeResult({
           end: 1,
           start: 2,
           unit: "unicode-code-point",
         })
       )
     ).toBe(true);
-    expect(Result.isFailure(S.decodeResult(Utf16TextRange)({ endChar: 0, startChar: 0 }))).toBe(true);
+    expect(Result.isFailure(decodeUtf16TextRangeResult({ endChar: 0, startChar: 0 }))).toBe(true);
   });
 
   it("derives only ordered, round-trippable ranges from both schemas", () =>
     fc.assert(
       fc.property(S.toArbitrary(TextOffsetRange)(fc), S.toArbitrary(Utf16TextRange)(fc), (offsetRange, utf16Range) => {
-        const encodedOffsetRange = Result.getOrThrow(S.encodeUnknownResult(TextOffsetRange)(offsetRange));
-        const encodedUtf16Range = Result.getOrThrow(S.encodeUnknownResult(Utf16TextRange)(utf16Range));
-        const decodedOffsetRange = Result.getOrThrow(S.decodeResult(TextOffsetRange)(encodedOffsetRange));
-        const decodedUtf16Range = Result.getOrThrow(S.decodeResult(Utf16TextRange)(encodedUtf16Range));
+        const encodedOffsetRange = Result.getOrThrow(encodeUnknownTextOffsetRangeResult(offsetRange));
+        const encodedUtf16Range = Result.getOrThrow(encodeUnknownUtf16TextRangeResult(utf16Range));
+        const decodedOffsetRange = Result.getOrThrow(decodeTextOffsetRangeResult(encodedOffsetRange));
+        const decodedUtf16Range = Result.getOrThrow(decodeUtf16TextRangeResult(encodedUtf16Range));
 
         expect(offsetRange.start).toBeLessThan(offsetRange.end);
         expect(utf16Range.startChar).toBeLessThan(utf16Range.endChar);

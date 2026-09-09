@@ -22,6 +22,9 @@ import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
 import { Command } from "effect/unstable/cli";
 
+const isWriteFileOperation = S.is(WriteFileOperation);
+const isWritePackageJsonOperation = S.is(WritePackageJsonOperation);
+
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
   <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
@@ -574,7 +577,7 @@ describe("architecture operation plan", () => {
       const plannedPaths = A.map(decoded.operations, (operation) => operation.path);
       const packageJsonOperation = O.getOrUndefined(
         A.findFirst(decoded.operations, (operation): operation is WritePackageJsonOperation =>
-          S.is(WritePackageJsonOperation)(operation)
+          isWritePackageJsonOperation(operation)
         )
       );
 
@@ -617,7 +620,7 @@ describe("architecture operation plan", () => {
             A.findFirst(
               plan.operations,
               (operation): operation is WriteFileOperation =>
-                S.is(WriteFileOperation)(operation) && Str.endsWith("/src/index.ts")(operation.path)
+                isWriteFileOperation(operation) && Str.endsWith("/src/index.ts")(operation.path)
             )
           );
 
@@ -630,14 +633,14 @@ describe("architecture operation plan", () => {
               A.findFirst(
                 plan.operations,
                 (operation): operation is WriteFileOperation =>
-                  S.is(WriteFileOperation)(operation) && Str.endsWith(layerSuffix)(operation.path)
+                  isWriteFileOperation(operation) && Str.endsWith(layerSuffix)(operation.path)
               )
             );
             const testLayerOperation = O.getOrThrow(
               A.findFirst(
                 plan.operations,
                 (operation): operation is WriteFileOperation =>
-                  S.is(WriteFileOperation)(operation) && Str.endsWith("/src/test.ts")(operation.path)
+                  isWriteFileOperation(operation) && Str.endsWith("/src/test.ts")(operation.path)
               )
             );
 

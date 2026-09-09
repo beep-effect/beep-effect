@@ -66,6 +66,7 @@ export const PermittedCrossDomainPoliciesValue = PermittedCrossDomainPoliciesVal
  * @since 0.0.0
  */
 export type PermittedCrossDomainPoliciesValue = typeof PermittedCrossDomainPoliciesValue.Type;
+const isPermittedCrossDomainPoliciesValue = S.is(PermittedCrossDomainPoliciesValue);
 
 const PermittedCrossDomainPoliciesOptionBase = LiteralKit([false, ...PermittedCrossDomainPoliciesValueBase.Options]);
 
@@ -190,7 +191,7 @@ export const PermittedCrossDomainPoliciesHeader = S.Union([PermittedCrossDomainP
         return O.none<string>();
       }
 
-      if (S.is(PermittedCrossDomainPoliciesValue)(option)) {
+      if (isPermittedCrossDomainPoliciesValue(option)) {
         return O.some(option);
       }
 

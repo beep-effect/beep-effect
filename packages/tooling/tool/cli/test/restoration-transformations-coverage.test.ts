@@ -31,6 +31,8 @@ import { DateTime, Effect, FileSystem, Layer, MutableHashMap, MutableHashSet, Pa
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
+const encodeCollectorManifestRecordJson = S.encodeEffect(S.fromJsonString(CollectorManifestRecord));
+
 const sha = RT.digestString;
 const identity = {
   preservationRunId: "preservation-1",
@@ -3018,7 +3020,7 @@ else exit 92; fi
         mailBytes.fill(0x42);
         yield* fs.writeFile(mailPath, mailBytes);
         yield* fs.writeFileString(rootArchive, "verbatim-root-archive");
-        const collectorRow = yield* S.encodeEffect(S.fromJsonString(CollectorManifestRecord))(
+        const collectorRow = yield* encodeCollectorManifestRecordJson(
           CollectorManifestRecord.cases.copied.make({
             dst: "F:\\salvage\\$Recycle.Bin\\surface-a\\$Rstore.pst",
             size: NonNegativeInt.make(mailBytes.length),

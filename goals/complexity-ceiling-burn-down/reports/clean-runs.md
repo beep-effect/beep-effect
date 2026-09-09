@@ -1,5 +1,28 @@
 # Health Ratchet Clean Runs
 
+## Current-main integration — 2026-09-09 UTC
+
+After integrating main at `52fcc8d135` and reusing the existing compiled codecs
+in the campaign's SHACL regression test, repository Oxlint and the affected
+package's full audit and docgen passed. Three fresh baseline checks passed:
+
+| Run | UTC timestamp | Exit | Baseline SHA-256 |
+| ---: | --- | ---: | --- |
+| 1 | 2026-09-09T01:04:34Z | 0 | `fc6c8bbe0e2b0217c8bdcb418b2b1986bf0e5a1aedae8ea8e34f8dca8ab60ba6` |
+| 2 | 2026-09-09T01:04:37Z | 0 | `fc6c8bbe0e2b0217c8bdcb418b2b1986bf0e5a1aedae8ea8e34f8dca8ab60ba6` |
+| 3 | 2026-09-09T01:04:40Z | 0 | `fc6c8bbe0e2b0217c8bdcb418b2b1986bf0e5a1aedae8ea8e34f8dca8ab60ba6` |
+
+Fallow 3.23.0 analyzed 4,443 files and 68,551 functions. All 189 baseline
+entries matched, with zero stale entries, moved entries, or regressions.
+The unbaselined scan found zero unwaived functions above cognitive 15.
+Suppression hygiene remained 207 across 114 files, with zero missing reasons
+or stale suppressions. No baseline or suppression change was needed.
+
+The previous publication attempt stopped at a semantic-delta command-reference
+finding after security, SAST, build, test typechecking, full docgen, integration,
+and lint passed. The documented equivalent security lane passes. Fresh full
+proof of the committed integration and documentation repair is still required.
+
 ## Full local verification — 2026-09-09 UTC
 
 `bun run beep yeet verify` exited 0 after the approved mitigation and root

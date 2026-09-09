@@ -328,7 +328,7 @@ export class DrizzleError extends S.TaggedError<DrizzleError>($I`DrizzleError`)(
     description: "Technical Drizzle driver failure scoped to a driver operation.",
   })
 ) {
-  static readonly is = (value: unknown): value is DrizzleError => safeBoolean(() => S.is(DrizzleError)(value));
+  static readonly is = (value: unknown): value is DrizzleError => safeBoolean(() => isDrizzleError(value));
 
   /**
    * Normalize an unknown driver failure into a {@link DrizzleError}.
@@ -381,3 +381,4 @@ export class DrizzleError extends S.TaggedError<DrizzleError>($I`DrizzleError`)(
       });
     });
 }
+const isDrizzleError = S.is(DrizzleError);

@@ -22,6 +22,8 @@ import {
   OFFICE_ACTION_FIXTURE,
 } from "./fixture.ts";
 
+const isIrToLawExtractionError = S.is(IrToLawExtractionError);
+
 const OFFICE_ACTION_MODEL_OUTPUT = `{"extractions":[{"label":"office_action","text":"Office Action"},{"label":"claim","text":"A widget comprising a lid and a base."},{"label":"rejection_reference","text":"Smith"},{"label":"distinction","text":"a hinge coupling the lid to the base"}]}`;
 
 const MINIMAL_FOLD_DISTINCTION_MODEL_OUTPUT = `{"extractions":[{"label":"office_action","text":"Office Action"},{"label":"claim","text":"A widget comprising a lid and a base."},{"label":"rejection_reference","text":"Smith"},{"label":"distinction","text":"a hinge coupling \\n the lid to the base"}]}`;
@@ -62,8 +64,8 @@ const expectReviewExtractionError = Effect.fn("law_practice.server.test.expect_r
 
   const error = yield* review.review(input).pipe(Effect.flip);
 
-  expect(S.is(IrToLawExtractionError)(error)).toBe(true);
-  if (S.is(IrToLawExtractionError)(error)) {
+  expect(isIrToLawExtractionError(error)).toBe(true);
+  if (isIrToLawExtractionError(error)) {
     expect(error.reason).toBe(reason);
     expect(error.label).toBe("distinction");
     assert?.(error);

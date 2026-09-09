@@ -32,6 +32,7 @@ import { JinaReaderClient } from "../../Service/JinaReaderClient.ts";
 import type { IngestResult } from "../../Service/LinkIngestionService.ts";
 import { LinkIngestionError, LinkIngestionService } from "../../Service/LinkIngestionService.ts";
 import { withErrorHandler } from "../ErrorHandler.ts";
+const decodeUnknownLinkStatus = S.decodeUnknownEffect(LinkStatus);
 
 // =============================================================================
 // Fetch Command - Preview URL content without storage
@@ -304,7 +305,7 @@ const documentsHandler = Effect.fn("documentsHandler")(function* (
   const ingestion = yield* LinkIngestionService;
   const canonicalStatus = yield* O.match(status, {
     onNone: () => Effect.succeedNone,
-    onSome: flow(S.decodeUnknownEffect(LinkStatus), Effect.map(O.some)),
+    onSome: flow(decodeUnknownLinkStatus, Effect.map(O.some)),
   });
   const documents = yield* ingestion.list({
     ...getSomesStruct({ status: canonicalStatus, sourceType }),

@@ -13,6 +13,10 @@ import { describe, expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 
+const isBoxBlockedByAmbiguity = S.is(BoxBlockedByAmbiguity);
+const isBoxBlockedByEntitlement = S.is(BoxBlockedByEntitlement);
+const isBoxBlockedByPolicy = S.is(BoxBlockedByPolicy);
+
 const sensitiveSentinels = [
   "Confidential Client Folder",
   "attorney@example.test",
@@ -38,17 +42,17 @@ describe("@beep/box-provisioning artifact privacy schemas", () => {
       A.every(
         sensitiveSentinels,
         (sentinel) =>
-          !S.is(BoxBlockedByEntitlement)({
+          !isBoxBlockedByEntitlement({
             _tag: "BlockedByEntitlement",
             entitlement: "metadata",
             planName: sentinel,
           }) &&
-          !S.is(BoxBlockedByAmbiguity)({
+          !isBoxBlockedByAmbiguity({
             _tag: "BlockedByAmbiguity",
             candidateCount: 2,
             matchKind: sentinel,
           }) &&
-          !S.is(BoxBlockedByPolicy)({ _tag: "BlockedByPolicy", policy: sentinel })
+          !isBoxBlockedByPolicy({ _tag: "BlockedByPolicy", policy: sentinel })
       )
     ).toBe(true);
   });

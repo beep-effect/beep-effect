@@ -11,6 +11,9 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
 
+const decodeShaclValidationRequest = S.decodeEffect(ShaclValidationRequest);
+const encodeDataset = S.encodeEffect(Dataset);
+
 const candidate = S.decodeUnknownSync(CandidateClaim)({
   ...productEntityFixtureInput("EpistemicCandidateClaim", 1),
   fixtureKey: "claim.patentability",
@@ -75,8 +78,8 @@ describe("@beep/epistemic-server bounded SHACL validator", () => {
       Effect.fnUntraced(function* () {
         const service = yield* ShaclValidationService;
         const result = yield* service.validate(
-          yield* S.decodeEffect(ShaclValidationRequest)({
-            dataset: yield* S.encodeEffect(Dataset)(dataset),
+          yield* decodeShaclValidationRequest({
+            dataset: yield* encodeDataset(dataset),
             maxResults: 1,
             shapes: [
               {
@@ -106,9 +109,9 @@ describe("@beep/epistemic-server bounded SHACL validator", () => {
       "filters non-target classes and reports a missing required value",
       Effect.fnUntraced(function* () {
         const service = yield* ShaclValidationService;
-        const encodedDataset = yield* S.encodeEffect(Dataset)(dataset);
+        const encodedDataset = yield* encodeDataset(dataset);
         const nonTargetResult = yield* service.validate(
-          yield* S.decodeEffect(ShaclValidationRequest)({
+          yield* decodeShaclValidationRequest({
             dataset: encodedDataset,
             shapes: [
               {
@@ -119,7 +122,7 @@ describe("@beep/epistemic-server bounded SHACL validator", () => {
           })
         );
         const requiredValueResult = yield* service.validate(
-          yield* S.decodeEffect(ShaclValidationRequest)({
+          yield* decodeShaclValidationRequest({
             dataset: encodedDataset,
             shapes: [
               {

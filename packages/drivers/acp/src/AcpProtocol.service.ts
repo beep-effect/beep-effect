@@ -24,6 +24,8 @@ import type * as Scope from "effect/Scope";
 import type * as Stdio from "effect/Stdio";
 import type * as RpcMessage from "effect/unstable/rpc/RpcMessage";
 
+const isAcpSchemaError = S.is(AcpSchema.Error);
+
 const $I = $AcpId.create("protocol");
 const ACP_PROTOCOL_QUEUE_CAPACITY = 1_024;
 const ACP_PROTOCOL_DISCONNECT_QUEUE_CAPACITY = 16;
@@ -566,7 +568,7 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
         Success: (exit) => completeExtPendingSuccess(requestId, exit.value),
         Failure: (exit) => {
           const failure = A.findFirst(exit.cause, (entry) => entry._tag === "Fail");
-          if (O.isSome(failure) && S.is(AcpSchema.Error)(failure.value.error)) {
+          if (O.isSome(failure) && isAcpSchemaError(failure.value.error)) {
             return completeExtPendingFailure(
               requestId,
               AcpError.AcpRequestError.fromProtocolError(failure.value.error)

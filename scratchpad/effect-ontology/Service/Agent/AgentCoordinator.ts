@@ -63,6 +63,7 @@ import {
   PipelineExecutionError,
   RefinementResult,
 } from "./types.ts";
+const decodeAgentTaskType = S.decodeEffect(S.toType(AgentTask));
 
 const $I = $ScratchpadId.create("effect-ontology/Service/Agent/AgentCoordinator");
 
@@ -1219,7 +1220,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
           )
         );
 
-        const validationTask = yield* S.decodeEffect(S.toType(AgentTask))(validationResult.output).pipe(
+        const validationTask = yield* decodeAgentTaskType(validationResult.output).pipe(
           Effect.catch(
             Effect.fnUntraced(function* (cause) {
               return yield* PipelineExecutionError.make({
@@ -1273,7 +1274,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
           )
         );
 
-        const correctionOutput = yield* S.decodeEffect(S.toType(AgentTask))(correctionResult.output).pipe(
+        const correctionOutput = yield* decodeAgentTaskType(correctionResult.output).pipe(
           Effect.catch(
             Effect.fnUntraced(function* (cause) {
               return yield* PipelineExecutionError.make({

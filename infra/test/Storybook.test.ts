@@ -12,6 +12,8 @@ import * as S from "effect/Schema";
 import { describe, expect, it } from "vitest";
 import { expectSchemaRoundTrip } from "./schemaParity.ts";
 
+const encodeUnknownStorybookVercelProjectConfig = S.encodeUnknownEffect(StorybookVercelProjectConfig);
+
 describe("@beep/infra Storybook", () => {
   it("applies Vercel-only defaults for the public Storybook app", () => {
     const args = makeStorybookStackArgsFromConfigValues();
@@ -82,12 +84,10 @@ describe("@beep/infra Storybook", () => {
 
   it("encodes Storybook Vercel config with the same optional team-id wire shape", () => {
     const encodedWithTeam = Effect.runSync(
-      S.encodeUnknownEffect(StorybookVercelProjectConfig)(
-        StorybookVercelProjectConfig.make({ teamId: O.some("team_123") })
-      )
+      encodeUnknownStorybookVercelProjectConfig(StorybookVercelProjectConfig.make({ teamId: O.some("team_123") }))
     );
     const encodedWithoutTeam = Effect.runSync(
-      S.encodeUnknownEffect(StorybookVercelProjectConfig)(StorybookVercelProjectConfig.make({}))
+      encodeUnknownStorybookVercelProjectConfig(StorybookVercelProjectConfig.make({}))
     );
 
     expect(encodedWithTeam).toEqual({

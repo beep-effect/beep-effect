@@ -36,6 +36,12 @@ import * as Tracer from "effect/Tracer";
 import { FastCheck as fc } from "effect/testing";
 import type { ExtractFileOperation } from "@beep/file-processing/Operation";
 
+const decodeWorkspaceSetWorkspaceVaultInput = S.decodeEffect(Workspace.SetWorkspaceVaultInput);
+const decodeWorkspaceIdentityWorkspaceId = S.decodeEffect(WorkspaceIdentity.WorkspaceId);
+const decodeSourceTextIdentityResult = S.decodeResult(SourceTextIdentity);
+const encodeUnknownSourceTextIdentityResult = S.encodeUnknownResult(SourceTextIdentity);
+const isVerifiedSourceText = S.is(VerifiedSourceText);
+
 const PlatformLayer = Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer, BunPath.layer);
 const WorkspaceVaultLayer = WorkspaceVaultStoreInMemoryLayer.pipe(
   Layer.provideMerge(BunFileSystem.layer),
@@ -67,8 +73,8 @@ const digestBytes = Effect.fn("WorkspaceSourceTextResolverTest.digestBytes")(fun
 
 const configureVault = Effect.fn("WorkspaceSourceTextResolverTest.configureVault")(function* (vaultRootPath: string) {
   const store = yield* Workspace.WorkspaceVaultStore;
-  const workspaceId = yield* S.decodeEffect(WorkspaceIdentity.WorkspaceId)(1);
-  const input = yield* S.decodeEffect(Workspace.SetWorkspaceVaultInput)({
+  const workspaceId = yield* decodeWorkspaceIdentityWorkspaceId(1);
+  const input = yield* decodeWorkspaceSetWorkspaceVaultInput({
     vaultRootPath,
     workspaceId,
   });
@@ -154,8 +160,8 @@ describe("@beep/workspace-server WorkspaceSourceTextResolver", () => {
   it("round-trips schema-derived source identities through their wire shape", () =>
     fc.assert(
       fc.property(S.toArbitrary(SourceTextIdentity)(fc), (identity) => {
-        const encoded = Result.getOrThrow(S.encodeUnknownResult(SourceTextIdentity)(identity));
-        const decoded = Result.getOrThrow(S.decodeResult(SourceTextIdentity)(encoded));
+        const encoded = Result.getOrThrow(encodeUnknownSourceTextIdentityResult(identity));
+        const decoded = Result.getOrThrow(decodeSourceTextIdentityResult(encoded));
 
         expect(S.toEquivalence(SourceTextIdentity)(decoded, identity)).toBe(true);
       }),
@@ -193,7 +199,7 @@ describe("@beep/workspace-server WorkspaceSourceTextResolver", () => {
 
       expect(source.text).toBe(sourceText);
       expect(source.identity.sourceDigest).toBe(digest);
-      expect(S.is(VerifiedSourceText)(verifiedSource)).toBe(true);
+      expect(isVerifiedSourceText(verifiedSource)).toBe(true);
       expect(verifiedSource.sourceText).toBe(sourceText);
       expect(verifiedSource.source).toEqual(source.identity);
       expectSourceTextResolveSpan(captured, {

@@ -116,7 +116,7 @@ repository that has since changed.
 | Suppression hygiene | `bun run fallow suppressions` | Zero missing/stale reasons; total at most 207; no campaign-added suppressions |
 | Reflection | `bun run beep lint reflection-artifacts` | Passes at P4 |
 | Installer mitigation | `node --test scripts/test-onnxruntime-installer-patch.mjs` | Both regression cases pass against the installed pinned patch |
-| Security gate | `bun run beep quality github-checks security` | Mitigation proof and OSV exit 0 |
+| Security gate | `bun run beep ci lane security` | Mitigation proof and OSV exit 0 |
 
 ## Stop Conditions
 

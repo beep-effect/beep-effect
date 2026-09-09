@@ -148,9 +148,10 @@ const AttachmentCaptureLimitBytes = S.Finite.pipe(
     description: "A composer attachment capture limit clamped to the supported byte range.",
   })
 );
+const decodeAttachmentCaptureLimitBytesResult = S.decodeResult(AttachmentCaptureLimitBytes);
 
 const resolveAttachmentCaptureLimitBytes = (maxBytes: number): number =>
-  Result.getOrElse(S.decodeResult(AttachmentCaptureLimitBytes)(maxBytes), () => DEFAULT_MAX_ATTACHMENT_BYTES);
+  Result.getOrElse(decodeAttachmentCaptureLimitBytesResult(maxBytes), () => DEFAULT_MAX_ATTACHMENT_BYTES);
 
 /**
  * A captured file rejected because it exceeds the (clamped) byte budget.

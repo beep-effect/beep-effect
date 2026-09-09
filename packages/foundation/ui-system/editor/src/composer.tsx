@@ -30,6 +30,9 @@ import { decodeEditorStateForRuntimeResult, runtimeInitialStateOption } from "./
 import { editorTheme } from "./theme.ts";
 import { EditorCompatibilityViewer, EditorWireViewer } from "./viewer.tsx";
 import type { SerializedEditorState } from "@beep/lexical-schema";
+
+const encodeEditorStateFromJsonSync = S.encodeSync(EditorStateFromJson);
+
 import type { JSX } from "react";
 
 const resolvedCompatibilityProfile = Result.getOrThrow(
@@ -156,7 +159,7 @@ export function EditorComposer({
         theme: editorTheme,
         nodes: [...editorNodes],
         ...O.getSomesStruct({
-          editorState: O.map(runtimeInitialState, S.encodeSync(EditorStateFromJson)),
+          editorState: O.map(runtimeInitialState, encodeEditorStateFromJsonSync),
         }),
         onError: (error) => logEditorError(error),
       }}
@@ -235,7 +238,7 @@ export function EditorWireComposer({
       O.match(result.state, {
         onNone: () => <EditorCompatibilityViewer result={result} className={className} />,
         onSome: (initialState) => {
-          const encodedInitialState = S.encodeSync(EditorStateFromJson)(initialState);
+          const encodedInitialState = encodeEditorStateFromJsonSync(initialState);
           return (
             <EditorComposer
               key={encodedInitialState}

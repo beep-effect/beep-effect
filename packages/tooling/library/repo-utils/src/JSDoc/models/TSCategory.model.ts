@@ -212,6 +212,8 @@ export class TSCategoryDefinition extends S.Class<TSCategoryDefinition>($I`TSCat
       "A single member of the closed taxonomy used to classify TypeScript code elements in the knowledge graph.",
   })
 ) {}
+const decodeTSCategoryDefinitionResult = S.decodeResult(TSCategoryDefinition);
+const encodeTSCategoryDefinitionResult = S.encodeResult(TSCategoryDefinition);
 
 /**
  * Runtime encoded shape for TS category metadata.
@@ -318,7 +320,7 @@ export const make: {
   <const Tag extends TSCategoryTagBase>(meta: Omit<TSCategory, "_tag">): (tag: Tag) => ReturnType<typeof S.Literal>;
   <const Tag extends TSCategoryTagBase>(_tag: Tag, meta: Omit<TSCategory, "_tag">): ReturnType<typeof S.Literal>;
 } = dual(2, <const Tag extends TSCategoryTagBase>(_tag: Tag, meta: Omit<TSCategory, "_tag">) => {
-  const definition = Result.getOrThrow(S.decodeResult(TSCategoryDefinition)({ _tag, ...meta }));
+  const definition = Result.getOrThrow(decodeTSCategoryDefinitionResult({ _tag, ...meta }));
   return S.Literal(_tag).annotate({ tsCategoryMetadata: definition });
 });
 
@@ -1124,7 +1126,7 @@ export const CATEGORY_TAXONOMY: ReadonlyArray<TSCategory> = pipe(
   A.map((schema) =>
     pipe(
       getTSCategoryMetadata(schema),
-      O.map((metadata) => Result.getOrThrow(S.encodeResult(TSCategoryDefinition)(metadata)))
+      O.map((metadata) => Result.getOrThrow(encodeTSCategoryDefinitionResult(metadata)))
     )
   ),
   A.getSomes

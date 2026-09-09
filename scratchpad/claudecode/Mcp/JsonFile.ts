@@ -21,6 +21,9 @@ import * as S from "effect/Schema";
 import { McpConfigError } from "../Errors.ts";
 import { HttpMcpServer, McpOAuth, McpServerConfig, StdioMcpServer } from "./Schema.ts";
 
+const isHttpMcpServer = S.is(HttpMcpServer);
+const isStdioMcpServer = S.is(StdioMcpServer);
+
 const $I = $ScratchpadId.create("claudecode/Mcp/JsonFile");
 
 // ---------------------------------------------------------------------------
@@ -126,7 +129,6 @@ export declare namespace ClaudeJsonProject {
    */
   export type Encoded = typeof ClaudeJsonProject.Encoded;
 }
-
 /**
  * Tolerant schema for the MCP-related portions of `~/.claude.json`.
  *
@@ -159,7 +161,6 @@ export class ClaudeJsonFile extends S.Class<ClaudeJsonFile>($I`ClaudeJsonFile`)(
     description: "MCP-relevant portions of Claude's user configuration file.",
   })
 ) {}
-
 /**
  * Companion types for {@link ClaudeJsonFile}.
  *
@@ -195,6 +196,9 @@ const ClaudeJsonFileJson = S.fromJsonString(ClaudeJsonFile).pipe(
     description: "JSON text codec for MCP fields in Claude's user configuration.",
   })
 );
+
+const decodeMcpJsonFileJson = S.decodeEffect(McpJsonFileJson);
+const decodeClaudeJsonFileJson = S.decodeEffect(ClaudeJsonFileJson);
 
 /**
  * Overrides used while resolving all MCP configuration scopes.
@@ -413,7 +417,7 @@ const loadOptionalJson = <A>(
 
 /** @internal */
 const serverEndpointKey = (server: McpServerConfig): string => {
-  if (S.is(StdioMcpServer)(server)) {
+  if (isStdioMcpServer(server)) {
     return `command:${server.command}\u0000${A.join(O.getOrElse(server.args, A.empty<string>), "\u0000")}`;
   }
   return `url:${server.url}`;
@@ -502,8 +506,7 @@ const mcpFileFromServers = (
 ): Effect.Effect<O.Option<McpJsonFile>> =>
   O.match(servers, {
     onNone: () => Effect.succeed(O.none<McpJsonFile>()),
-    onSome: (mcpServers) =>
-      withoutReservedServerNames(McpJsonFile.make({ mcpServers }), source).pipe(Effect.asSome),
+    onSome: (mcpServers) => withoutReservedServerNames(McpJsonFile.make({ mcpServers }), source).pipe(Effect.asSome),
   });
 
 /** @internal */
@@ -514,7 +517,7 @@ const encodeOAuth = S.encodeSync(McpOAuth);
 
 /** @internal */
 const serializeServerForCurrentClaudeCode = (server: McpServerConfig): Readonly<Record<string, unknown>> => {
-  if (S.is(StdioMcpServer)(server)) {
+  if (isStdioMcpServer(server)) {
     return {
       ...optionalJsonField("type", server.type),
       command: server.command,
@@ -524,7 +527,7 @@ const serializeServerForCurrentClaudeCode = (server: McpServerConfig): Readonly<
       ...optionalJsonField("alwaysLoad", server.alwaysLoad),
     };
   }
-  if (S.is(HttpMcpServer)(server)) {
+  if (isHttpMcpServer(server)) {
     return {
       type: server.type,
       url: server.url,
@@ -624,7 +627,7 @@ export const loadJson = Effect.fn("Mcp.loadJson")(function* (
   yield* Effect.annotateCurrentSpan("mcp.path", path);
   yield* Effect.logDebug("loading MCP config").pipe(Effect.annotateLogs({ path }));
   const raw = yield* readFileString(path);
-  const decoded = yield* S.decodeEffect(McpJsonFileJson)(raw).pipe(
+  const decoded = yield* decodeMcpJsonFileJson(raw).pipe(
     Effect.mapError((cause) => McpConfigError.make({ path, cause }))
   );
   return yield* withoutReservedServerNames(decoded, path);
@@ -663,9 +666,7 @@ export const loadClaudeJson = Effect.fn("Mcp.loadClaudeJson")(function* (
 ): Effect.fn.Return<ClaudeJsonFile, McpConfigError, FileSystem.FileSystem> {
   yield* Effect.annotateCurrentSpan("mcp.claudeJsonPath", path);
   const raw = yield* readFileString(path);
-  return yield* S.decodeEffect(ClaudeJsonFileJson)(raw).pipe(
-    Effect.mapError((cause) => McpConfigError.make({ path, cause }))
-  );
+  return yield* decodeClaudeJsonFileJson(raw).pipe(Effect.mapError((cause) => McpConfigError.make({ path, cause })));
 });
 
 /** @internal */

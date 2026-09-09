@@ -43,6 +43,9 @@ import { Embedder } from "@/services/Embedder";
 import { ProviderCache } from "@/services/ProviderCache";
 import { RdfProjection } from "@/services/RdfProjection";
 import { VectorProjection } from "@/services/VectorProjection";
+
+const decodeEmbeddingVectorTypeSync = S.decodeSync(S.toType(EmbeddingVector));
+
 import type { ProviderCacheEntry } from "@/schema/ProviderCache";
 
 const sha = (digit: string): Sha256Hex => Sha256Hex.make(Str.repeat(64)(digit));
@@ -63,7 +66,7 @@ const embeddingModel = (dimension: PosInt) =>
   });
 
 const vector = (model: ModelIdentity, chunk: ChunkId, values: A.NonEmptyReadonlyArray<number>) =>
-  S.decodeSync(S.toType(EmbeddingVector))(EmbeddingVector.make({ chunk, model, values }));
+  decodeEmbeddingVectorTypeSync(EmbeddingVector.make({ chunk, model, values }));
 
 const config = Layer.succeed(
   LabConfig,

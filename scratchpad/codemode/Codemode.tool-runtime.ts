@@ -369,6 +369,7 @@ export class SearchInput extends S.Class<SearchInput>($I`SearchInput`)(
       offset: NonNegativeInt.make(offset),
     });
 }
+const decodeUnknownSearchInput = S.decodeUnknownEffect(SearchInput);
 
 /**
  * One tool matched by built-in discovery.
@@ -445,6 +446,7 @@ export class SearchOutput extends S.Class<SearchOutput>($I`SearchOutput`)(
       ),
     });
 }
+const encodeUnknownSearchOutput = S.encodeUnknownEffect(SearchOutput);
 
 /**
  * Pre-tokenized catalog entry used by the discovery function.
@@ -1418,7 +1420,7 @@ export const make = <R>(
               ? error
               : ToolRuntimeError.new("InvalidToolInput", "Arguments for tool 'search' could not be copied."),
         });
-        const input = yield* S.decodeUnknownEffect(SearchInput)(external).pipe(
+        const input = yield* decodeUnknownSearchInput(external).pipe(
           Effect.mapError((cause) =>
             ToolRuntimeError.new("InvalidToolInput", `Invalid input for tool 'search': ${cause.message}`)
           )
@@ -1427,7 +1429,7 @@ export const make = <R>(
         return yield* observeEnd(
           Effect.gen(function* () {
             if (P.isNotUndefined(hooks.onToolCallStart)) yield* hooks.onToolCallStart(started);
-            return yield* S.encodeUnknownEffect(SearchOutput)(search(index, input)).pipe(
+            return yield* encodeUnknownSearchOutput(search(index, input)).pipe(
               Effect.mapError((cause) =>
                 ToolRuntimeError.new("InvalidToolOutput", `Invalid output from tool 'search': ${cause.message}`)
               )

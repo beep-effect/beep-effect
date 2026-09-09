@@ -44,6 +44,13 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import type { DmsMirrorShape, VaultSyncEngineShape } from "@beep/documents-use-cases/aggregates/Sync/server";
 
+const decodeGetVaultSyncStatusPayloadSync = S.decodeSync(GetVaultSyncStatusPayload);
+const decodeRemoteItemIdSync = S.decodeSync(RemoteItemId);
+const decodeVaultSyncErrorSync = S.decodeSync(VaultSyncError);
+const decodeVaultSyncStatusInputSync = S.decodeSync(VaultSyncStatusInput);
+const decodeUnknownDmsEventTypeSync = S.decodeUnknownSync(DmsEventType);
+const encodeVaultSyncStatusSync = S.encodeSync(VaultSyncStatus);
+
 const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
   const arbitrary = S.toArbitrary(schema)(fc);
   const encode = S.encodeResult(schema);
@@ -83,7 +90,7 @@ describe("DmsMirror port models", () => {
     const item = DmsRemoteItem.make({
       itemKind: "folder",
       name: "matters",
-      remoteId: S.decodeSync(RemoteItemId)("9000"),
+      remoteId: decodeRemoteItemIdSync("9000"),
     });
     expect(O.isNone(item.parentRemoteId)).toBe(true);
 
@@ -103,7 +110,7 @@ describe("DmsMirror port models", () => {
     expect(DmsEventType.is.created("created")).toBe(true);
     expect(DmsEventType.is.deleted("created")).toBe(false);
     expect(DmsEventType.Enum.unknown).toBe("unknown");
-    expect(() => S.decodeUnknownSync(DmsEventType)("uploaded")).toThrow();
+    expect(() => decodeUnknownDmsEventTypeSync("uploaded")).toThrow();
   });
 
   it.effect(
@@ -156,7 +163,7 @@ describe("DmsMirror port models", () => {
 describe("VaultSyncEngine port", () => {
   it("round-trips the vault sync status read model", () => {
     expect(O.isNone(idleStatus.cursorPosition)).toBe(true);
-    expect(S.encodeSync(VaultSyncStatus)(idleStatus)).toStrictEqual({
+    expect(encodeVaultSyncStatusSync(idleStatus)).toStrictEqual({
       conflictItems: 0,
       connected: false,
       disconnectReason: "credentials-missing",
@@ -174,12 +181,12 @@ describe("VaultSyncEngine port", () => {
   });
 
   it("decodes and guards the vault sync error union", () => {
-    const scanFailed = S.decodeSync(VaultSyncError)(VaultScanFailed.make({ reason: "vault root missing" }));
+    const scanFailed = decodeVaultSyncErrorSync(VaultScanFailed.make({ reason: "vault root missing" }));
     expect(scanFailed._tag).toBe("VaultScanFailed");
 
     // Wire shape, not an instance: the optional-key disconnectReason encodes
     // as a bare literal (or an absent key), never as an Option object.
-    const mirrorDown = S.decodeSync(VaultSyncError)({
+    const mirrorDown = decodeVaultSyncErrorSync({
       _tag: "DmsMirrorUnavailable",
       disconnectReason: "transient",
       provider: "box",
@@ -188,7 +195,7 @@ describe("VaultSyncEngine port", () => {
     });
     expect(mirrorDown._tag).toBe("DmsMirrorUnavailable");
 
-    const repositoryDown = S.decodeSync(VaultSyncError)(
+    const repositoryDown = decodeVaultSyncErrorSync(
       SyncItemRepositoryUnavailable.make({ reason: "database connection closed" })
     );
     expect(repositoryDown._tag).toBe("SyncItemRepositoryUnavailable");
@@ -220,8 +227,8 @@ describe("VaultSyncEngine port", () => {
     // Both construction and missing-key decoding must stay wire-compatible
     // with pre-forceProbe callers, which never bypass the probe cache.
     expect(VaultSyncStatusInput.make({ workspaceId }).forceProbe).toBe(false);
-    expect(S.decodeSync(VaultSyncStatusInput)({ workspaceId: 1 }).forceProbe).toBe(false);
-    expect(S.decodeSync(GetVaultSyncStatusPayload)({ workspaceId: 1 }).forceProbe).toBe(false);
+    expect(decodeVaultSyncStatusInputSync({ workspaceId: 1 }).forceProbe).toBe(false);
+    expect(decodeGetVaultSyncStatusPayloadSync({ workspaceId: 1 }).forceProbe).toBe(false);
     expect(GetVaultSyncStatusPayload.make({ forceProbe: true, workspaceId }).forceProbe).toBe(true);
   });
 

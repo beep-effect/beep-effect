@@ -5,6 +5,8 @@ import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const isAtUri2 = S.is(AtUri);
+
 const AtUriArbitrary = S.toArbitrary(AtUri)(fc);
 const decodeAtUri = S.decodeUnknownEffect(AtUri);
 
@@ -71,14 +73,12 @@ describe("AtUri", () => {
   );
 
   it("derives schema arbitrary values that remain normalized Lexicon AT URIs", () => {
-    const isAtUri = S.is(AtUri);
-
     fc.assert(
       fc.property(AtUriArbitrary, (uri) => {
         const withoutScheme = uri.slice("at://".length);
         const pathSegments = withoutScheme.split("/");
 
-        expect(isAtUri(uri)).toBe(true);
+        expect(isAtUri2(uri)).toBe(true);
         expect(uri.startsWith("at://")).toBe(true);
         expect(uri).not.toMatch(/[?#]/u);
         expect(uri.endsWith("/")).toBe(false);

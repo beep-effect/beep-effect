@@ -18,6 +18,8 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { FastCheck as fc } from "effect/testing";
 
+const decodePosixPath = S.decodeEffect(PosixPath);
+
 const BEEP_TEST_LIBPFF_PST_ENV = "BEEP_TEST_LIBPFF_PST";
 
 // Snapshot the opt-in lane key once, treating absent and blank values as "not
@@ -44,8 +46,8 @@ const liveOperation = Effect.fn("LibpffLive.operation")(function* (pstPath: stri
   const exportRoot = yield* fs.makeTempDirectoryScoped({ prefix: "libpff-pffexport-live-" });
 
   const { artifactId, digest, operationId } = yield* decodeTestOperationIdentifiers();
-  const locatorValue = yield* S.decodeEffect(PosixPath)(pstPath);
-  const relativePath = yield* S.decodeEffect(PosixPath)(path.basename(pstPath));
+  const locatorValue = yield* decodePosixPath(pstPath);
+  const relativePath = yield* decodePosixPath(path.basename(pstPath));
 
   const operation = ExportArchiveOperation.make({
     format: "pst",
@@ -165,7 +167,7 @@ describe("@beep/libpff live pffexport", () => {
           ...operation.source,
           locator: ArtifactLocator.make({
             kind: "file",
-            value: yield* S.decodeEffect(PosixPath)("/nonexistent/beep-live-missing.pst"),
+            value: yield* decodePosixPath("/nonexistent/beep-live-missing.pst"),
           }),
         });
         const error = yield* engine

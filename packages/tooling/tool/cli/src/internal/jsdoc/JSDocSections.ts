@@ -297,6 +297,7 @@ export const JSDocSectionName = LiteralKit(["When to use", "Details", "Gotchas",
 );
 
 export type JSDocSectionName = typeof JSDocSectionName.Type;
+const isJSDocSectionName = S.is(JSDocSectionName);
 
 export class JSDocSection extends S.Class<JSDocSection>($I`JSDocSection`)(
   {
@@ -428,10 +429,9 @@ export const parseJSDocSections = ({ commentText }: ParseJSDocSectionsOptions): 
     readonly name: JSDocSectionName;
     readonly title: string | undefined;
   }> = [];
-  const isSectionName = S.is(JSDocSectionName);
   for (const [index, line] of A.entries(maskedBodyLines)) {
     const match = sectionHeadingPattern.exec(line);
-    if (match !== null && isSectionName(match[1])) {
+    if (match !== null && isJSDocSectionName(match[1])) {
       A.appendInPlace(sectionStarts, { index, name: match[1], title: match[2] });
     }
   }

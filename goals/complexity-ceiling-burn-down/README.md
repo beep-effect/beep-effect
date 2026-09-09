@@ -38,9 +38,10 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 research, P1 implementation, and P2 local verification are complete. P3
-publication and P4 final closeout remain open until the exact pull request head
-is proven merge-ready. All 49 functions in the refreshed P0 inventory have
+P0 research and P1 implementation are complete. P2 full verification is open
+again after integrating current main at `52fcc8d135`; P3 publication and P4
+final closeout remain open until the exact pull request head is proven
+merge-ready. All 49 functions in the refreshed P0 inventory have
 executed verdicts:
 30 real refactors and 19 review-dated cohesive-boundary overrides, with zero
 ignore additions. Runtime-coverage CRAP and `fallow impact` are both deferred
@@ -56,7 +57,23 @@ candidate with zero introduced findings.
 
 ## Latest Evidence
 
-Full local verification passed at **2026-09-09T00:21:12Z**. The reviewed
+The integration with main at `52fcc8d135` passed repository Oxlint and three
+fresh health checks at **2026-09-09T01:04:34Z**, **01:04:37Z**, and
+**01:04:40Z**. Fallow 3.23.0 analyzed 4,443 files and 68,551 functions with
+zero unwaived functions above cognitive 15. All 189 baseline entries match,
+and suppression hygiene remains 207 total with no missing reasons or stale
+entries. The affected epistemic package passed its full audit and docgen
+after three test calls were switched to its existing compiled codecs.
+
+Publication of `3f22ad17fa` had passed security, committed-range SAST, build,
+test typechecking, full docgen, integration, and lint before semantic-delta
+rejected an executable command's positional argument as an unknown subcommand.
+The SPEC now names the equivalent CI lane entry point, which passed its
+mitigation proof and OSV scan. This repair and the main integration require
+fresh full proof on the committed candidate. Hosted proof and closeout remain
+outstanding.
+
+The previous full local verification passed at **2026-09-09T00:21:12Z**. Its reviewed
 candidate includes `origin/main` at `9b7553f618` through HEAD `29f1284b43`.
 The full-tier verdict records 31 passed lanes, three reused lanes, and no
 failures. All 15 initial gates passed, as did security, build, full docgen,
@@ -76,9 +93,10 @@ gate. Its advisory-specific exception expires September 15. Local and hosted
 security require the mitigation proof before OSV. The root regression script
 has an explicit catalog dependency; Knip reports zero introduced findings.
 A focused SAST replay of all four staged JavaScript/TypeScript files ran 128
-rules with zero findings. Normal Yeet publication will verify the committed
-changes because some gates select files from the committed Git range. Hosted
-PR proof and final packet closeout remain outstanding.
+rules with zero findings. The later publication scan included the committed
+installer regression script and passed. Both SAST and semantic-delta require
+committed-candidate proof; pre-commit file equality does not establish their
+complete scope.
 
 P0 refresh (2026-09-03): Fallow 3.22.0 scanned 4,361 files and 65,040
 functions; `research/tail-inventory.md` records all 49 current functions above

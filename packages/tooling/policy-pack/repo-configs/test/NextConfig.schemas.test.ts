@@ -7,9 +7,12 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import { describe, expect, it } from "vitest";
 
+const decodeAllowedDevOriginResult = S.decodeResult(AllowedDevOrigin);
+const encodeAllowedDevOriginResult = S.encodeResult(AllowedDevOrigin);
+
 const expectRoundTrip = (value: AllowedDevOrigin) => {
-  const encoded = Result.getOrThrow(S.encodeResult(AllowedDevOrigin)(value));
-  const decoded = Result.getOrThrow(S.decodeResult(AllowedDevOrigin)(encoded));
+  const encoded = Result.getOrThrow(encodeAllowedDevOriginResult(value));
+  const decoded = Result.getOrThrow(decodeAllowedDevOriginResult(encoded));
 
   expect(Equal.equals(decoded, value)).toBe(true);
 };

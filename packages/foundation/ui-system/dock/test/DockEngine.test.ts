@@ -56,6 +56,12 @@ import {
 } from "./Fixtures.ts";
 import type { DockChanged, DockMutationOutcome } from "@beep/dock";
 
+const decodeDockSnapshotJson = S.decodeEffect(S.fromJsonString(DockSnapshot));
+const decodeUnknownDockSnapshotJsonOption = S.decodeUnknownOption(S.fromJsonString(DockSnapshot));
+const encodeDockWorkspaceJson = S.encodeEffect(S.fromJsonString(DockWorkspace));
+const encodePopulatedWorkspaceJson = S.encodeEffect(S.fromJsonString(PopulatedWorkspace));
+const encodeDockSnapshotJsonOption = S.encodeOption(S.fromJsonString(DockSnapshot));
+
 const workspaceEquals = DockWorkspace.equals;
 
 const requireChanged = (outcome: DockMutationOutcome): Effect.Effect<DockChanged> =>
@@ -123,7 +129,7 @@ describe("DockEngine", () => {
         expect(tabs.active.id).toBe(panelOne.id);
 
         const encoded = yield* engine.encodeSnapshot(state);
-        const snapshot = yield* S.decodeEffect(S.fromJsonString(DockSnapshot))(encoded);
+        const snapshot = yield* decodeDockSnapshotJson(encoded);
         const decoded = yield* engine.decodeSnapshot(encoded);
         expect(snapshot.version).toBe(1);
         expect(workspaceEquals(snapshot.workspace, state)).toBe(true);
@@ -135,7 +141,7 @@ describe("DockEngine", () => {
       "rejects legacy unversioned workspace snapshots",
       Effect.fnUntraced(function* () {
         const engine = yield* DockEngine;
-        const legacySnapshot = yield* S.encodeEffect(S.fromJsonString(DockWorkspace))(DockWorkspace.empty);
+        const legacySnapshot = yield* encodeDockWorkspaceJson(DockWorkspace.empty);
         const failure = yield* Effect.flip(engine.decodeSnapshot(legacySnapshot));
 
         expect(failure).toMatchObject({ _tag: "DockInputError", boundary: "snapshot" });
@@ -500,7 +506,7 @@ describe("DockEngine", () => {
       Effect.fnUntraced(function* () {
         const codec = S.fromJsonString(DockWorkspace);
         const encodeFailure = yield* Effect.flip(S.encodeEffect(codec)(duplicatePanelWorkspace));
-        const uncheckedJson = yield* S.encodeEffect(S.fromJsonString(PopulatedWorkspace))(duplicatePanelWorkspace);
+        const uncheckedJson = yield* encodePopulatedWorkspaceJson(duplicatePanelWorkspace);
         const decodeFailure = yield* Effect.flip(S.decodeEffect(codec)(uncheckedJson));
 
         expect(encodeFailure.message).toContain("globally unique panel, group, and split identifiers");
@@ -609,10 +615,7 @@ describe("dock snapshot codec properties", () => {
     Effect.sync(() =>
       fc.assert(
         fc.property(S.toArbitrary(DockSnapshot)(fc), (snapshot) => {
-          const decoded = O.flatMap(
-            S.encodeOption(S.fromJsonString(DockSnapshot))(snapshot),
-            S.decodeUnknownOption(S.fromJsonString(DockSnapshot))
-          );
+          const decoded = O.flatMap(encodeDockSnapshotJsonOption(snapshot), decodeUnknownDockSnapshotJsonOption);
           expect(O.exists(decoded, (value) => workspaceEquals(value.workspace, snapshot.workspace))).toBe(true);
         }),
         { numRuns: 24 }

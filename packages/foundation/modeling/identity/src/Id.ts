@@ -1555,6 +1555,7 @@ const SegmentCheck = S.makeFilterGroup(
 );
 
 const SegmentSchema = S.String.check(SegmentCheck);
+const decodeUnknownSegmentSchemaSync = S.decodeUnknownSync(SegmentSchema);
 
 const ModuleSegmentCheck = S.makeFilterGroup(
   [
@@ -1574,6 +1575,8 @@ const ModuleSegmentCheck = S.makeFilterGroup(
 );
 
 const ModuleSegmentSchema = SegmentSchema.check(ModuleSegmentCheck);
+const decodeUnknownModuleSegmentSchemaSync = S.decodeUnknownSync(ModuleSegmentSchema);
+const decodeModuleSegmentSchemaSync = S.decodeSync(ModuleSegmentSchema);
 
 const BaseSegmentSchema = S.String.check(
   S.isNonEmpty({
@@ -1721,12 +1724,12 @@ const toTaggedKey = <const Segment extends TString.NonEmpty>(segment: Segment): 
   `$${toPascalIdentifier(segment)}Id` as TaggedAccessor<Segment>;
 
 const validateSegment = <const Segment extends TString.NonEmpty>(segment: Segment): Segment => {
-  S.decodeUnknownSync(SegmentSchema)(segment);
+  decodeUnknownSegmentSchemaSync(segment);
   return segment;
 };
 
 const validateModuleSegment = <const Segment extends TString.NonEmpty>(segment: Segment): Segment => {
-  S.decodeUnknownSync(ModuleSegmentSchema)(segment);
+  decodeUnknownModuleSegmentSchemaSync(segment);
   return segment;
 };
 
@@ -1793,7 +1796,7 @@ const createComposer = <
     validateTemplateInterpolations(values);
     validateTemplateSegmentCount(strings);
 
-    return pipe(strings[0], S.decodeSync(ModuleSegmentSchema), (segment) =>
+    return pipe(strings[0], decodeModuleSegmentSchemaSync, (segment) =>
       toIdentityString(appendIdentityValue(value, segment))
     );
   }

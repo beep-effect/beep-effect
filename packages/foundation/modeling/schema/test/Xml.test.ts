@@ -4,6 +4,9 @@ import { describe, expect, it } from "@effect/vitest";
 import { Cause, Effect, Exit } from "effect";
 import * as S from "effect/Schema";
 
+const decodeXmlTextToUnknown = S.decodeEffect(XmlTextToUnknown);
+const encodeXmlTextToUnknown = S.encodeEffect(XmlTextToUnknown);
+
 const $I = $SchemaId.create("xml_test");
 
 class PersonNode extends S.Class<PersonNode>($I`PersonNode`)(
@@ -40,7 +43,7 @@ describe("Xml", () => {
   it.effect(
     "maps invalid XML into SchemaIssue.InvalidValue",
     Effect.fnUntraced(function* () {
-      const result = yield* Effect.exit(S.decodeEffect(XmlTextToUnknown)("<people><name>Ada</people>"));
+      const result = yield* Effect.exit(decodeXmlTextToUnknown("<people><name>Ada</people>"));
 
       expect(Exit.isFailure(result)).toBe(true);
       if (Exit.isFailure(result)) {
@@ -55,7 +58,7 @@ describe("Xml", () => {
     "fails to encode unknown values back into XML text",
     Effect.fnUntraced(function* () {
       const result = yield* Effect.exit(
-        S.encodeEffect(XmlTextToUnknown)({
+        encodeXmlTextToUnknown({
           people: {
             name: "Ada",
             age: "36",

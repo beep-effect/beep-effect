@@ -27,13 +27,25 @@ import { GoldFile, GoldRef, GoldSubset } from "@/schema/Gold";
 import { ModelIdentity } from "@/schema/Model";
 import { EvalRunTelemetry } from "@/schema/Telemetry";
 import { CanaryC0 } from "@/services/CanaryC0";
+
+const isRuntimeMode = S.is(RuntimeMode);
+
 import { GoldSource } from "@/services/GoldSource";
 
 const ManifestJson = S.fromJsonString(CorpusManifest);
+const decodeManifestJson = S.decodeEffect(ManifestJson);
+
 const F1IndexJson = S.fromJsonString(F1Index);
+const decodeF1IndexJson = S.decodeEffect(F1IndexJson);
+
 const GoldRefJson = S.fromJsonString(GoldRef, { space: 2 });
+const encodeGoldRefJson = S.encodeEffect(GoldRefJson);
+
 const EvalReportJson = S.fromJsonString(EvalReport);
+const decodeEvalReportJson = S.decodeEffect(EvalReportJson);
+
 const EvalTelemetryJson = S.fromJsonString(EvalRunTelemetry);
+const decodeEvalTelemetryJson = S.decodeEffect(EvalTelemetryJson);
 
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
@@ -42,7 +54,7 @@ const provideScopedLayer =
 
 describe("C0 F1 live-to-replay slice", () => {
   it("derives execution-mode values from the runtime schema", () => {
-    fc.assert(fc.property(S.toArbitrary(RuntimeMode)(fc), (mode) => S.is(RuntimeMode)(mode)));
+    fc.assert(fc.property(S.toArbitrary(RuntimeMode)(fc), (mode) => isRuntimeMode(mode)));
   });
 
   it("runs real F1-only sources without a corpus root and replays to an equal report digest", () =>
@@ -60,10 +72,8 @@ describe("C0 F1 live-to-replay slice", () => {
             const replayOut = path.join(temp, "replay-out");
             const manifest = yield* fs
               .readFileString("fixtures/w1.manifest.json")
-              .pipe(Effect.flatMap(S.decodeEffect(ManifestJson)));
-            const fixtures = yield* fs
-              .readFileString("fixtures/f1/index.json")
-              .pipe(Effect.flatMap(S.decodeEffect(F1IndexJson)));
+              .pipe(Effect.flatMap(decodeManifestJson));
+            const fixtures = yield* fs.readFileString("fixtures/f1/index.json").pipe(Effect.flatMap(decodeF1IndexJson));
             const goldIds = A.map(A.take(manifest.rows, 10), (row) => row.id);
             const proposer = ModelIdentity.make({
               artifactHash: Sha256Hex.make("8".repeat(64)),
@@ -90,10 +100,7 @@ describe("C0 F1 live-to-replay slice", () => {
               GoldFile.make({ labels: [], paperId: goldPaper, proposer, subset: "relation", version: "gold/v1" }),
             ];
             yield* fs.makeDirectory(goldDirectory, { recursive: true });
-            yield* fs.writeFileString(
-              path.join(goldDirectory, "gold.json"),
-              `${yield* S.encodeEffect(GoldRefJson)(gold)}\n`
-            );
+            yield* fs.writeFileString(path.join(goldDirectory, "gold.json"), `${yield* encodeGoldRefJson(gold)}\n`);
 
             const config = Layer.succeed(
               LabConfig,
@@ -175,16 +182,16 @@ describe("C0 F1 live-to-replay slice", () => {
               const callsAfterReplay = yield* Ref.get(providerCalls);
               const writtenLive = yield* fs
                 .readFileString(path.join(liveOut, "eval-report.json"))
-                .pipe(Effect.flatMap(S.decodeEffect(EvalReportJson)));
+                .pipe(Effect.flatMap(decodeEvalReportJson));
               const writtenReplay = yield* fs
                 .readFileString(path.join(replayOut, "eval-report.json"))
-                .pipe(Effect.flatMap(S.decodeEffect(EvalReportJson)));
+                .pipe(Effect.flatMap(decodeEvalReportJson));
               const liveTelemetry = yield* fs
                 .readFileString(path.join(liveOut, "eval-telemetry.json"))
-                .pipe(Effect.flatMap(S.decodeEffect(EvalTelemetryJson)));
+                .pipe(Effect.flatMap(decodeEvalTelemetryJson));
               const replayTelemetry = yield* fs
                 .readFileString(path.join(replayOut, "eval-telemetry.json"))
-                .pipe(Effect.flatMap(S.decodeEffect(EvalTelemetryJson)));
+                .pipe(Effect.flatMap(decodeEvalTelemetryJson));
 
               expect(live.reportDigest).toBe(replay.reportDigest);
               expect(live.reportDigest).toBe("95cc0a0dbe099ab307d18f36e657b9ab758e95753bb46bbf44e0ecf623c17dc9");

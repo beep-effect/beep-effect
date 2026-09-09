@@ -47,6 +47,8 @@ import {
 } from "./support/ontology-mcp-harness.ts";
 import type { ExecutionDecisionRecord, ExecutionOutcomeRecord } from "@beep/epistemic-domain/values/ExecutionRecord";
 
+const isOntologySparqlQueryRequest = S.is(OntologySparqlQueryRequest);
+
 const { pgliteIntegrationTimeoutMillis } = makePgliteIntegrationGate();
 const workspaceCanary = "EXECUTION_AUTHORITY_WORKSPACE_CANARY_7E3B2D1A";
 const publishBodyCanary = "EXECUTION_AUTHORITY_PUBLISH_BODY_CANARY_8F4C3E2B";
@@ -116,7 +118,7 @@ ex:canary ex:value "${workspaceCanary}" .
 
 describe("professional desktop execution-authority schema laws", () => {
   it("generates valid ontology SPARQL query requests", () => {
-    fc.assert(fc.property(S.toArbitrary(OntologySparqlQueryRequest)(fc), S.is(OntologySparqlQueryRequest)), fcRuns(25));
+    fc.assert(fc.property(S.toArbitrary(OntologySparqlQueryRequest)(fc), isOntologySparqlQueryRequest), fcRuns(25));
   });
 });
 

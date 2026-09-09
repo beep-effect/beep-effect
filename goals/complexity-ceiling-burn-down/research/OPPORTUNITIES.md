@@ -521,3 +521,41 @@ A focused pre-publication replay applied the same Semgrep configurations to
 all four staged JavaScript/TypeScript files, including the new script: 128
 rules ran with zero findings. This supporting check does not replace the
 normal committed-candidate publish proof.
+
+### Committed command references expose a probe limitation (2026-09-08)
+
+Publication passed security, SAST, build, test typechecking, full docgen,
+integration tests, and lint, then stopped at semantic-delta with one introduced
+finding in the SPEC: `Unknown beep command path: quality github-checks security.`
+The command is executable, but its command group combines a positional mode
+with a named subcommand. The knowledge resolver treats the mode as another
+subcommand whenever the group has children. The new inline documentation
+exposed this inherited probe limitation only after it entered HEAD; the earlier
+pre-commit semantic-delta result did not cover it.
+
+The SPEC and manifest now use `bun run beep ci lane security`, the existing
+lane entry point that dispatches to the same mitigation proof and OSV scan.
+No scanner exemption, command behavior, or probe implementation changes are
+needed. Future command-surface work should distinguish positional arguments
+from child commands, and verification receipts should identify HEAD-only
+documentation scope alongside committed-range security scope.
+
+The generated root failure packet suggested an OSV repair even though the
+security lane passed; the precise lane result identified lint-policy and its
+semantic-delta child. Repair routing should derive from that current child
+failure instead of retaining the earlier security category.
+
+### Main advanced while publication was proving the candidate (2026-09-08)
+
+Main at `52fcc8d135` changed 599 files, including 15 campaign overlaps, and
+promoted inline schema compilation to an error. The merge had one textual
+conflict in the advisory explanation; the approved mitigation-specific reason
+was retained. Three codec compilations added by the campaign's SHACL test
+still needed adaptation after the automatic merge. They now reuse the existing
+module-level codecs, and the full package handoff and repository Oxlint pass.
+
+The health baseline and suppression inventory are unchanged after three fresh
+checks. Refreshing the base immediately before publication exposed this
+integration requirement; a clean textual merge alone would not have established
+compliance with the newly enforced rule. The current-main candidate needs a
+fresh aggregate proof, while the earlier successful run remains dated evidence.

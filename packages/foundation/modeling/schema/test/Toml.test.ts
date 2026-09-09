@@ -4,6 +4,9 @@ import { describe, expect, it } from "@effect/vitest";
 import { Cause, Effect, Exit } from "effect";
 import * as S from "effect/Schema";
 
+const decodeTomlTextToUnknown = S.decodeEffect(TomlTextToUnknown);
+const encodeTomlTextToUnknown = S.encodeEffect(TomlTextToUnknown);
+
 const $I = $SchemaId.create("toml_test");
 
 class TomlDatabase extends S.Class<TomlDatabase>($I`TomlDatabase`)(
@@ -47,7 +50,7 @@ port = 5432
   it.effect(
     "maps invalid TOML into SchemaIssue.InvalidValue",
     Effect.fnUntraced(function* () {
-      const result = yield* Effect.exit(S.decodeEffect(TomlTextToUnknown)("invalid = = ="));
+      const result = yield* Effect.exit(decodeTomlTextToUnknown("invalid = = ="));
 
       expect(Exit.isFailure(result)).toBe(true);
       if (Exit.isFailure(result)) {
@@ -63,7 +66,7 @@ port = 5432
     "fails to encode unknown values back into TOML text",
     Effect.fnUntraced(function* () {
       const result = yield* Effect.exit(
-        S.encodeEffect(TomlTextToUnknown)({
+        encodeTomlTextToUnknown({
           title: "beep",
         })
       );

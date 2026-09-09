@@ -7,6 +7,19 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeFFirecrawlApiFailure = S.decodeEffect(F.FirecrawlApiFailure);
+const decodeFFirecrawlConfigInput = S.decodeEffect(F.FirecrawlConfigInput);
+const decodeFFirecrawlScrapePayload = S.decodeEffect(F.FirecrawlScrapePayload);
+const decodeUnknownFFirecrawlDocument = S.decodeUnknownEffect(F.FirecrawlDocument);
+const decodeUnknownFFirecrawlSearchData = S.decodeUnknownEffect(F.FirecrawlSearchData);
+const decodeUnknownFFirecrawlDocumentOption = S.decodeUnknownOption(F.FirecrawlDocument);
+const decodeUnknownFFirecrawlMonitorListDataOption = S.decodeUnknownOption(F.FirecrawlMonitorListData);
+const decodeUnknownFFirecrawlScrapeOptionsOption = S.decodeUnknownOption(F.FirecrawlScrapeOptions);
+const decodeUnknownFFirecrawlScrapeSuccessOption = S.decodeUnknownOption(F.FirecrawlScrapeSuccess);
+const decodeUnknownFFirecrawlSearchDataOption = S.decodeUnknownOption(F.FirecrawlSearchData);
+const encodeFFirecrawlApiFailure = S.encodeEffect(F.FirecrawlApiFailure);
+const encodeFFirecrawlConfigInput = S.encodeEffect(F.FirecrawlConfigInput);
+
 type FakeWatcherEventName = "document" | "done" | "error" | "snapshot";
 type FakeWatcherListener = (payload: unknown) => void;
 const decodeWatcherEventOption = S.decodeUnknownOption(F.FirecrawlWatcherEvent);
@@ -180,7 +193,7 @@ describe("@beep/firecrawl", () => {
   it.effect(
     "decodes schema defaults into Option values",
     Effect.fnUntraced(function* () {
-      const payload = yield* S.decodeEffect(F.FirecrawlScrapePayload)({ url: "https://example.com" });
+      const payload = yield* decodeFFirecrawlScrapePayload({ url: "https://example.com" });
 
       expect(payload.url).toBe("https://example.com");
       expect(O.isNone(payload.options)).toBe(true);
@@ -190,14 +203,14 @@ describe("@beep/firecrawl", () => {
   it.effect(
     "keeps config wire shape while normalizing through the schema",
     Effect.fnUntraced(function* () {
-      const config = yield* S.decodeEffect(F.FirecrawlConfigInput)({
+      const config = yield* decodeFFirecrawlConfigInput({
         apiKey: "fc-test-key",
         apiUrl: "https://api.firecrawl.dev/",
         backoffFactor: 2,
         maxRetries: 3,
         timeoutMs: 1_000,
       });
-      const encoded = yield* S.encodeEffect(F.FirecrawlConfigInput)(config);
+      const encoded = yield* encodeFFirecrawlConfigInput(config);
 
       expect(config.apiUrl).toBe("https://api.firecrawl.dev");
       expect(config.backoffFactor).toEqual(O.some(2));
@@ -216,12 +229,12 @@ describe("@beep/firecrawl", () => {
   it.effect(
     "keeps error wire shape while tightening numeric diagnostics",
     Effect.fnUntraced(function* () {
-      const failure = yield* S.decodeEffect(F.FirecrawlApiFailure)({
+      const failure = yield* decodeFFirecrawlApiFailure({
         error: "Unauthorized",
         status: 429,
         success: false,
       });
-      const encoded = yield* S.encodeEffect(F.FirecrawlApiFailure)(failure);
+      const encoded = yield* encodeFFirecrawlApiFailure(failure);
 
       expect(failure.status).toEqual(O.some(429));
       expect(encoded).toEqual({
@@ -256,11 +269,11 @@ describe("@beep/firecrawl", () => {
   it.effect(
     "rejects malformed SDK shapes while preserving future response fields",
     Effect.fnUntraced(function* () {
-      const documentWithFutureField = yield* S.decodeUnknownEffect(F.FirecrawlDocument)({
+      const documentWithFutureField = yield* decodeUnknownFFirecrawlDocument({
         futureField: { enabled: true },
         markdown: "ok",
       });
-      const representativeSearchData = yield* S.decodeUnknownEffect(F.FirecrawlSearchData)({
+      const representativeSearchData = yield* decodeUnknownFFirecrawlSearchData({
         web: [
           { description: "result", url: "https://example.com/result" },
           { futureField: { enabled: true }, markdown: "document" },
@@ -277,12 +290,12 @@ describe("@beep/firecrawl", () => {
           { futureField: { enabled: true }, markdown: "document" },
         ],
       });
-      expect(O.isNone(S.decodeUnknownOption(F.FirecrawlScrapeOptions)(42))).toBe(true);
-      expect(O.isNone(S.decodeUnknownOption(F.FirecrawlScrapeOptions)([]))).toBe(true);
-      expect(O.isNone(S.decodeUnknownOption(F.FirecrawlDocument)({ markdown: 42 }))).toBe(true);
-      expect(O.isNone(S.decodeUnknownOption(F.FirecrawlSearchData)({ web: [{ url: 42 }] }))).toBe(true);
-      expect(O.isNone(S.decodeUnknownOption(F.FirecrawlMonitorListData)([42]))).toBe(true);
-      expect(O.isNone(S.decodeUnknownOption(F.FirecrawlScrapeSuccess)({ data: 42 }))).toBe(true);
+      expect(O.isNone(decodeUnknownFFirecrawlScrapeOptionsOption(42))).toBe(true);
+      expect(O.isNone(decodeUnknownFFirecrawlScrapeOptionsOption([]))).toBe(true);
+      expect(O.isNone(decodeUnknownFFirecrawlDocumentOption({ markdown: 42 }))).toBe(true);
+      expect(O.isNone(decodeUnknownFFirecrawlSearchDataOption({ web: [{ url: 42 }] }))).toBe(true);
+      expect(O.isNone(decodeUnknownFFirecrawlMonitorListDataOption([42]))).toBe(true);
+      expect(O.isNone(decodeUnknownFFirecrawlScrapeSuccessOption({ data: 42 }))).toBe(true);
     })
   );
 

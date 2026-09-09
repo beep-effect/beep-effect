@@ -17,8 +17,10 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { assertReviewedCurrentAttributeGap } from "../scripts/generate.ts";
 
+const encodeHtmlElementMetaResult = S.encodeResult(HtmlElementMeta);
+
 const encodedMeta = (tag: keyof typeof ELEMENT_META): S.Codec.Encoded<typeof HtmlElementMeta> =>
-  Result.getOrThrow(S.encodeResult(HtmlElementMeta)(ELEMENT_META[tag]));
+  Result.getOrThrow(encodeHtmlElementMetaResult(ELEMENT_META[tag]));
 
 const expectDeepFrozen = (value: unknown): void => {
   if (A.isArray(value)) {

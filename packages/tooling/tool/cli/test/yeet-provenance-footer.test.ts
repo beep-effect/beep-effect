@@ -41,6 +41,8 @@ const GhBodyEditsDocument = S.Struct({
 });
 type GhBodyEdit = typeof GhBodyEdit.Type;
 const editedAt = "2026-09-03T12:01:00Z";
+const encodeGhBodyJsonResult = S.encodeUnknownResult(S.fromJsonString(GhBody));
+const encodeGhBodyEditsDocumentJsonResult = S.encodeUnknownResult(S.fromJsonString(GhBodyEditsDocument));
 // The `gh pr view --json` fields gh 2.99 exposes that the stamp may ask for.
 // A field outside this set is exactly what shipped the `lastEditedAt` skip, so
 // the fake refuses it the way gh does instead of returning a snapshot anyway.
@@ -72,10 +74,10 @@ const ghPrView = <E, R>(
     onSome: (field) => Effect.succeed(ghUnknownJsonField(field)),
   });
 const encodeGhBody = (body: string, updatedAt: string = editedAt): string =>
-  Result.getOrThrow(S.encodeUnknownResult(S.fromJsonString(GhBody))({ body, updatedAt }));
+  Result.getOrThrow(encodeGhBodyJsonResult({ body, updatedAt }));
 const encodeGhBodyEdits = (nodes: ReadonlyArray<GhBodyEdit>): string =>
   Result.getOrThrow(
-    S.encodeUnknownResult(S.fromJsonString(GhBodyEditsDocument))({
+    encodeGhBodyEditsDocumentJsonResult({
       data: { repository: { pullRequest: { userContentEdits: { nodes } } } },
     })
   );

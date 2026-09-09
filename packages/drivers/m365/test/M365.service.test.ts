@@ -42,6 +42,21 @@ import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
 import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
 import type * as HttpClientError from "effect/unstable/http/HttpClientError";
 
+const decodeGraphDriveResult = S.decodeResult(GraphDrive);
+const decodeGraphDriveItemResult = S.decodeResult(GraphDriveItem);
+const decodeGraphFolderResult = S.decodeResult(GraphFolder);
+const decodeM365ConfigInputResult = S.decodeResult(M365ConfigInput);
+const decodeM365ListMessagesRequestResult = S.decodeResult(M365ListMessagesRequest);
+const decodeM365ListSitesRequestResult = S.decodeResult(M365ListSitesRequest);
+const encodeGraphDriveResult = S.encodeResult(GraphDrive);
+const encodeGraphDriveItemResult = S.encodeResult(GraphDriveItem);
+const encodeGraphFolderResult = S.encodeResult(GraphFolder);
+const encodeGraphQuotaResult = S.encodeResult(GraphQuota);
+const encodeM365ConfigInputResult = S.encodeResult(M365ConfigInput);
+const encodeM365ErrorResult = S.encodeResult(M365Error);
+const encodeM365ListMessagesRequestResult = S.encodeResult(M365ListMessagesRequest);
+const encodeM365ListSitesRequestResult = S.encodeResult(M365ListSitesRequest);
+
 type CapturedRequest = {
   readonly headers: Readonly<Record<string, string>>;
   readonly method: string;
@@ -267,7 +282,7 @@ const routeFixture = (request: HttpClientRequest.HttpClientRequest): Effect.Effe
 describe("@beep/m365 service", () => {
   it("keeps encoded schema wire shapes byte-identical", () => {
     const config = Result.getOrThrow(
-      S.decodeResult(M365ConfigInput)({
+      decodeM365ConfigInputResult({
         authority: "https://login.microsoftonline.com/common",
         clientId: "client-id",
         graphBaseUrl: GRAPH_BASE_URL,
@@ -279,7 +294,7 @@ describe("@beep/m365 service", () => {
       })
     );
     const drive = Result.getOrThrow(
-      S.decodeResult(GraphDrive)({
+      decodeGraphDriveResult({
         id: DRIVE_ID,
         quota: {
           remaining: 12,
@@ -288,22 +303,22 @@ describe("@beep/m365 service", () => {
         },
       })
     );
-    const folder = Result.getOrThrow(S.decodeResult(GraphFolder)({ childCount: 2 }));
+    const folder = Result.getOrThrow(decodeGraphFolderResult({ childCount: 2 }));
     const item = Result.getOrThrow(
-      S.decodeResult(GraphDriveItem)({
+      decodeGraphDriveItemResult({
         folder: { childCount: 2 },
         id: ITEM_ID,
         size: 3,
       })
     );
     const messagesRequest = Result.getOrThrow(
-      S.decodeResult(M365ListMessagesRequest)({
+      decodeM365ListMessagesRequestResult({
         filter: "receivedDateTime ge 2026-01-01",
         top: 2,
         userId: "user-id",
       })
     );
-    const sitesRequest = Result.getOrThrow(S.decodeResult(M365ListSitesRequest)({}));
+    const sitesRequest = Result.getOrThrow(decodeM365ListSitesRequestResult({}));
     const error = M365Error.fromReason("throttled", {
       resource: "drives",
       retryAfterSeconds: 12,
@@ -311,7 +326,7 @@ describe("@beep/m365 service", () => {
       url: `${GRAPH_BASE_URL}/me/drives`,
     });
 
-    expect(Result.getOrThrow(S.encodeResult(M365ConfigInput)(config))).toStrictEqual({
+    expect(Result.getOrThrow(encodeM365ConfigInputResult(config))).toStrictEqual({
       authority: "https://login.microsoftonline.com/common",
       clientId: "client-id",
       graphBaseUrl: GRAPH_BASE_URL,
@@ -321,7 +336,7 @@ describe("@beep/m365 service", () => {
       tenantId: "common",
       tokenCachePath: ".cache/m365.json",
     });
-    expect(Result.getOrThrow(S.encodeResult(GraphDrive)(drive))).toStrictEqual({
+    expect(Result.getOrThrow(encodeGraphDriveResult(drive))).toStrictEqual({
       id: DRIVE_ID,
       quota: {
         remaining: 12,
@@ -329,26 +344,26 @@ describe("@beep/m365 service", () => {
         used: 12,
       },
     });
-    expect(Result.getOrThrow(S.encodeResult(GraphQuota)(pipe(drive.quota, O.getOrThrow)))).toStrictEqual({
+    expect(Result.getOrThrow(encodeGraphQuotaResult(pipe(drive.quota, O.getOrThrow)))).toStrictEqual({
       remaining: 12,
       total: 24,
       used: 12,
     });
-    expect(Result.getOrThrow(S.encodeResult(GraphFolder)(folder))).toStrictEqual({ childCount: 2 });
-    expect(Result.getOrThrow(S.encodeResult(GraphDriveItem)(item))).toStrictEqual({
+    expect(Result.getOrThrow(encodeGraphFolderResult(folder))).toStrictEqual({ childCount: 2 });
+    expect(Result.getOrThrow(encodeGraphDriveItemResult(item))).toStrictEqual({
       folder: { childCount: 2 },
       id: ITEM_ID,
       size: 3,
     });
-    expect(Result.getOrThrow(S.encodeResult(M365ListMessagesRequest)(messagesRequest))).toStrictEqual({
+    expect(Result.getOrThrow(encodeM365ListMessagesRequestResult(messagesRequest))).toStrictEqual({
       filter: "receivedDateTime ge 2026-01-01",
       top: 2,
       userId: "user-id",
     });
-    expect(Result.getOrThrow(S.encodeResult(M365ListSitesRequest)(sitesRequest))).toStrictEqual({
+    expect(Result.getOrThrow(encodeM365ListSitesRequestResult(sitesRequest))).toStrictEqual({
       search: "*",
     });
-    expect(Result.getOrThrow(S.encodeResult(M365Error)(error))).toStrictEqual({
+    expect(Result.getOrThrow(encodeM365ErrorResult(error))).toStrictEqual({
       _tag: "M365Error",
       reason: "throttled",
       resource: "drives",

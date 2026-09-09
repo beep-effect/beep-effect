@@ -730,6 +730,7 @@ export class ContentSecurityPolicyOptionStruct extends S.Class<ContentSecurityPo
     description: "Structured CSP option input with optional directive fields and optional report-only mode.",
   })
 ) {}
+const decodeContentSecurityPolicyOptionStruct = S.decodeEffect(ContentSecurityPolicyOptionStruct);
 
 /**
  * CSP option schema accepting a disabled `false` value or structured directives.
@@ -973,7 +974,7 @@ export const ContentSecurityPolicyHeader = S.Union([ContentSecurityPolicyOption,
         return O.none<string>();
       }
 
-      const decodedOption = yield* S.decodeEffect(ContentSecurityPolicyOptionStruct)(option).pipe(
+      const decodedOption = yield* decodeContentSecurityPolicyOptionStruct(option).pipe(
         Effect.mapError((cause) =>
           CspError.make({
             message: cause.message,

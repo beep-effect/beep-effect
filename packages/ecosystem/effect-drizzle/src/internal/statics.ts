@@ -5,12 +5,14 @@
  * @category utilities
  * @since 0.0.0
  */
+type WithStatics<Self extends object, Statics extends object> = Self & Statics;
+
 export const assignStatics: {
-  <Statics extends object>(statics: Statics): <Self extends object>(self: Self) => Self & Statics;
-  <Self extends object, Statics extends object>(self: Self, statics: Statics): Self & Statics;
+  <Statics extends object>(statics: Statics): <Self extends object>(self: Self) => WithStatics<Self, Statics>;
+  <Self extends object, Statics extends object>(self: Self, statics: Statics): WithStatics<Self, Statics>;
 } = /* @__PURE__ */ dual(
   2,
-  <Self extends object, Statics extends object>(self: Self, statics: Statics): Self & Statics =>
+  <Self extends object, Statics extends object>(self: Self, statics: Statics): WithStatics<Self, Statics> =>
     Object.assign(self, statics)
 );
 
@@ -22,12 +24,16 @@ export const assignStatics: {
  * @since 0.0.0
  */
 export const withStatics: {
-  <Self extends object, Statics extends object>(make: (self: Self) => Statics): (self: Self) => Self & Statics;
-  <Self extends object, Statics extends object>(self: Self, make: (self: Self) => Statics): Self & Statics;
+  <Self extends object, Statics extends object>(
+    make: (self: Self) => Statics
+  ): (self: Self) => WithStatics<Self, Statics>;
+  <Self extends object, Statics extends object>(self: Self, make: (self: Self) => Statics): WithStatics<Self, Statics>;
 } = /* @__PURE__ */ dual(
   2,
-  <Self extends object, Statics extends object>(self: Self, make: (self: Self) => Statics): Self & Statics =>
-    assignStatics(self, make(self))
+  <Self extends object, Statics extends object>(
+    self: Self,
+    make: (self: Self) => Statics
+  ): WithStatics<Self, Statics> => assignStatics(self, make(self))
 );
 
 import { dual } from "effect/Function";

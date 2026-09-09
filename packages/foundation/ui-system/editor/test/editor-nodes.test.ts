@@ -19,6 +19,12 @@ import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
+
+const decodeUnknownSerializedEditorStateResult = S.decodeUnknownResult(SerializedEditorState);
+const decodeUnknownSerializedEditorStateSync = S.decodeUnknownSync(SerializedEditorState);
+const encodeEditorStateFromJsonSync = S.encodeSync(EditorStateFromJson);
+const encodeSerializedEditorStateSync = S.encodeSync(SerializedEditorState);
+
 import { $getRoot, $setState, createState } from "lexical";
 
 const text = (value: string) => MdModel.Text.make({ value });
@@ -79,17 +85,15 @@ describe("@beep/editor node registration", () => {
 
     fc.assert(
       fc.property(S.toArbitrary(SerializedEditorState)(fc), (state) => {
-        editor.setEditorState(editor.parseEditorState(S.encodeSync(EditorStateFromJson)(state)));
-        expect(Result.isSuccess(S.decodeUnknownResult(SerializedEditorState)(editor.getEditorState().toJSON()))).toBe(
-          true
-        );
+        editor.setEditorState(editor.parseEditorState(encodeEditorStateFromJsonSync(state)));
+        expect(Result.isSuccess(decodeUnknownSerializedEditorStateResult(editor.getEditorState().toJSON()))).toBe(true);
       }),
       { numRuns: 25 }
     );
   });
 
   it("imports a codec-built editor state and re-exports schema-conformant wire state", () => {
-    const wire = documentToEditorState(fixtureTurn).pipe(Effect.runSync, S.encodeSync(SerializedEditorState));
+    const wire = documentToEditorState(fixtureTurn).pipe(Effect.runSync, encodeSerializedEditorStateSync);
 
     const editor = createHeadlessEditor({
       namespace: "beep-editor-test",
@@ -103,7 +107,7 @@ describe("@beep/editor node registration", () => {
     const exported = editor.getEditorState().toJSON();
 
     // Whatever the runtime nodes export must decode through the schema.
-    const decoded = S.decodeUnknownSync(SerializedEditorState)(exported);
+    const decoded = decodeUnknownSerializedEditorStateSync(exported);
     const artifact = decoded.root.children.at(-1);
     expect(artifact?.type).toBe("artifact-ref");
     if (artifact?.type === "artifact-ref") {
@@ -288,9 +292,7 @@ describe("@beep/editor node registration", () => {
     expect(watch?.getAttribute("rel")).toBe("noreferrer noopener");
     expect(watch?.textContent).toBe("Watch on YouTube");
 
-    const roundTripped = Result.getOrThrow(
-      S.decodeUnknownResult(SerializedEditorState)(editor.getEditorState().toJSON())
-    );
+    const roundTripped = Result.getOrThrow(decodeUnknownSerializedEditorStateResult(editor.getEditorState().toJSON()));
     expect(roundTripped.root.children).toEqual([
       expect.objectContaining({ type: "youtube", videoID: syntheticYouTubeVideoId }),
     ]);

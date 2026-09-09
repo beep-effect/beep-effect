@@ -21,6 +21,7 @@ import {
 import type { CodeModeDate } from "../Codemode.values.ts";
 import { type AstNode, InterpreterRuntimeError } from "../interpreter/Interpreter.model.ts";
 import { coerceToNumber, coerceToString } from "./StdLib.value.ts";
+const isDateSetterName = S.is(DateSetterName);
 
 export {
   dateMethods,
@@ -87,7 +88,7 @@ export const invokeDateStatic = (name: DirectDateStatic, args: Array<unknown>, _
  * @since 0.0.0
  */
 export const dateSetterArgumentCount = (name: DateMethod): O.Option<1 | 2 | 3 | 4> =>
-  S.is(DateSetterName)(name) ? O.some(DateSetterArity[name]) : O.none();
+  isDateSetterName(name) ? O.some(DateSetterArity[name]) : O.none();
 
 /**
  * Dispatches a guest Date instance method against a {@link CodeModeDate}.

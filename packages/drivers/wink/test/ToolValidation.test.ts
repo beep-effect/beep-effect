@@ -27,6 +27,20 @@ import * as O from "effect/Option";
 import { FastCheck as fc } from "effect/testing";
 import { describe, expect, it } from "vitest";
 
+const decodeBowCosineSimilaritySuccessSchemaSync = Schema.decodeSync(BowCosineSimilarity.successSchema);
+const decodeChunkBySentencesParametersSchemaSync = Schema.decodeSync(ChunkBySentences.parametersSchema);
+const decodeCreateCorpusParametersSchemaSync = Schema.decodeSync(CreateCorpus.parametersSchema);
+const decodeExtractKeywordsParametersSchemaSync = Schema.decodeSync(ExtractKeywords.parametersSchema);
+const decodeTextSimilaritySuccessSchemaSync = Schema.decodeSync(TextSimilarity.successSchema);
+const decodeTverskySimilarityParametersSchemaSync = Schema.decodeSync(TverskySimilarity.parametersSchema);
+const decodeTverskySimilaritySuccessSchemaSync = Schema.decodeSync(TverskySimilarity.successSchema);
+const encodeCorpusManagerErrorSync = Schema.encodeSync(CorpusManagerError);
+const encodeCustomEntityExampleSync = Schema.encodeSync(CustomEntityExample);
+const encodeEntityGroupNameSync = Schema.encodeSync(EntityGroupName);
+const encodeInstanceIdSync = Schema.encodeSync(InstanceId);
+const encodeSentenceSpanFailureSync = Schema.encodeSync(SentenceSpanFailure);
+const encodeVectorizerErrorSync = Schema.encodeSync(VectorizerError);
+
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
   <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
@@ -48,18 +62,16 @@ const assertRoundTrip = <SchemaT extends Schema.ConstraintCodec<unknown, unknown
 
 describe("Tool validation", () => {
   it("rejects fractional keyword limits at the schema boundary", () => {
-    expect(() => Schema.decodeSync(ExtractKeywords.parametersSchema)({ text: "hello", topN: 2.5 })).toThrow();
+    expect(() => decodeExtractKeywordsParametersSchemaSync({ text: "hello", topN: 2.5 })).toThrow();
   });
 
   it("rejects non-positive chunk limits at the schema boundary", () => {
-    expect(() =>
-      Schema.decodeSync(ChunkBySentences.parametersSchema)({ maxChunkChars: 0, text: "One. Two." })
-    ).toThrow();
+    expect(() => decodeChunkBySentencesParametersSchemaSync({ maxChunkChars: 0, text: "One. Two." })).toThrow();
   });
 
   it("rejects invalid BM25 ranges at the schema boundary", () => {
     expect(() =>
-      Schema.decodeSync(CreateCorpus.parametersSchema)({
+      decodeCreateCorpusParametersSchemaSync({
         bm25Config: {
           b: 2,
           k: 0,
@@ -70,7 +82,7 @@ describe("Tool validation", () => {
   });
 
   it("defaults Tversky parameters at the schema boundary", () => {
-    expect(Schema.decodeSync(TverskySimilarity.parametersSchema)({ text1: "alpha", text2: "beta" })).toEqual({
+    expect(decodeTverskySimilarityParametersSchemaSync({ text1: "alpha", text2: "beta" })).toEqual({
       alpha: 0.5,
       beta: 0.5,
       text1: "alpha",
@@ -80,19 +92,19 @@ describe("Tool validation", () => {
 
   it("rejects out-of-range similarity scores in tool success schemas", () => {
     expect(() =>
-      Schema.decodeSync(BowCosineSimilarity.successSchema)({
+      decodeBowCosineSimilaritySuccessSchemaSync({
         method: "bow.cosine",
         score: 1.2,
       })
     ).toThrow();
     expect(() =>
-      Schema.decodeSync(TextSimilarity.successSchema)({
+      decodeTextSimilaritySuccessSchemaSync({
         method: "vector.cosine",
         score: -0.1,
       })
     ).toThrow();
     expect(() =>
-      Schema.decodeSync(TverskySimilarity.successSchema)({
+      decodeTverskySimilaritySuccessSchemaSync({
         alpha: 0.5,
         beta: 0.5,
         method: "set.tversky",
@@ -133,24 +145,24 @@ describe("Tool validation", () => {
     expect(EntityGroupName.is(entityGroupName)).toBe(true);
     expect(InstanceId.is(instanceId)).toBe(true);
     expect(WinkError.is(winkError)).toBe(true);
-    expect(Schema.encodeSync(EntityGroupName)(entityGroupName)).toBe("ProductName");
-    expect(Schema.encodeSync(InstanceId)(instanceId)).toBe("wink-engine-example-4");
-    expect(Schema.encodeSync(CustomEntityExample)(customEntityExample)).toEqual({
+    expect(encodeEntityGroupNameSync(entityGroupName)).toBe("ProductName");
+    expect(encodeInstanceIdSync(instanceId)).toBe("wink-engine-example-4");
+    expect(encodeCustomEntityExampleSync(customEntityExample)).toEqual({
       name: "SKU",
       patterns: ["[PROPN]"],
     });
-    expect(Schema.encodeSync(SentenceSpanFailure)(sentenceSpanFailure)).toEqual({
+    expect(encodeSentenceSpanFailureSync(sentenceSpanFailure)).toEqual({
       _tag: "SentenceSpanFailure",
       reason: "Unable to derive a stable sentence token span.",
       sentenceIndex: 0,
       sentenceText: "Hello world.",
     });
-    expect(Schema.encodeSync(CorpusManagerError)(corpusManagerError)).toEqual({
+    expect(encodeCorpusManagerErrorSync(corpusManagerError)).toEqual({
       _tag: "CorpusManagerError",
       corpusId: "support-docs",
       message: "Corpus does not exist",
     });
-    expect(Schema.encodeSync(VectorizerError)(vectorizerError)).toEqual({
+    expect(encodeVectorizerErrorSync(vectorizerError)).toEqual({
       _tag: "VectorizerError",
       message: "Document index is out of range",
       operation: "tf",

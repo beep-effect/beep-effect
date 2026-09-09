@@ -12,6 +12,9 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import type { FileFormatFamily } from "@beep/file-processing/Strategy";
 
+const decodePosixPath = S.decodeEffect(PosixPath);
+const decodeTikaAppEngineConfigResult = S.decodeResult(TikaAppEngineConfig);
+
 const testLayer = NodeServices.layer;
 
 const provideTestLayer = provideScopedLayer(testLayer);
@@ -59,8 +62,8 @@ const fixture = Effect.fn(function* (stubScript: string, format: FileFormatFamil
   yield* fs.writeFile(sourcePath, sourceBytes);
 
   const { artifactId, digest, operationId } = yield* decodeTestOperationIdentifiers();
-  const locatorValue = yield* S.decodeEffect(PosixPath)(sourcePath);
-  const relativePath = yield* S.decodeEffect(PosixPath)("document.pdf");
+  const locatorValue = yield* decodePosixPath(sourcePath);
+  const relativePath = yield* decodePosixPath("document.pdf");
 
   const operation = ExtractFileOperation.make({
     format,
@@ -84,7 +87,7 @@ const fixture = Effect.fn(function* (stubScript: string, format: FileFormatFamil
 
 describe("makeTikaAppFileProcessingEngine", () => {
   it("keeps tika-app schema wire inputs and normalization stable", () => {
-    const config = Result.getOrThrow(S.decodeResult(TikaAppEngineConfig)({ jarPath: "/opt/tika/tika-app.jar" }));
+    const config = Result.getOrThrow(decodeTikaAppEngineConfigResult({ jarPath: "/opt/tika/tika-app.jar" }));
 
     expect(config.javaPath).toBe("java");
     expect(config.timeoutMillis).toBe(PosInt.make(120_000));

@@ -10,7 +10,7 @@
   },
   "packetPath": "goals/complexity-ceiling-burn-down",
   "lifecycle": "active",
-  "statusNote": "P0, P1, and P2 are complete. All 49 tail verdicts are executed, with zero unwaived functions above cognitive 15, an unchanged 189-entry baseline, and 207 reasoned suppressions. Full Yeet verification passed at 2026-09-09T00:21:12Z, including the approved ONNX mitigation, 3159 CLI tests, and the coverage comparison across 134 packages. Normal publication must verify the committed changes; P3 hosted merge-readiness and P4 final closeout remain open.",
+  "statusNote": "P0 and P1 are complete; P2 is open again for current-main proof. Integration with main at 52fcc8d135 passed Oxlint, the affected epistemic package handoff, and three fresh health checks with zero unwaived functions above cognitive 15, 189 matched baseline entries, and 207 reasoned suppressions. Earlier full proof passed at 2026-09-09T00:21:12Z. Publication then exposed a semantic-delta command-reference limitation, repaired by documenting the equivalent CI security lane. Fresh committed-candidate full proof, P3 hosted merge-readiness, and P4 final closeout remain open.",
   "mission": "Clear the refreshed cognitive->15 tail (49 fns), promote the fallow health lane to a blocking baseline ratchet, and hold the maxCognitive=8 gate credible.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -69,7 +69,7 @@
     {
       "id": "P2",
       "name": "Verify",
-      "status": "complete"
+      "status": "in-progress"
     },
     {
       "id": "P3",
@@ -94,7 +94,7 @@
     "bun run beep quality github-checks plan-contract-check --mode pre-push --expect-promoted-fallow-lanes",
     "bun run beep quality fallow ci-contract-check .github/workflows/check.yml --expect-lanes boundaries,flags,security,fix-preview --expect-blocking-lanes audit,dead-code,health --expect-out-dir .beep/fallow --require-upload --if-no-files-found error --advisory",
     "node --test scripts/test-onnxruntime-installer-patch.mjs",
-    "bun run beep quality github-checks security"
+    "bun run beep ci lane security"
   ],
   "stopConditions": [
     "Required source files are missing or materially contradictory.",

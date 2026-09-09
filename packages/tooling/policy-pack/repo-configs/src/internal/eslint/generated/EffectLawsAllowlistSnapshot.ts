@@ -38,6 +38,14 @@ export const ALLOWLIST_SNAPSHOT = {
     },
     {
       "rule": "beep-laws/no-native-runtime",
+      "file": "packages/foundation/modeling/utils/src/Schema.ts",
+      "kind": "native-error",
+      "reason": "compileAssertion is a low-level adapter that precompiles the decoded schema parser while preserving Effect Schema.asserts compatibility: schema failures must throw native Error with the exact generic message and SchemaIssue cause, while defects and mixed causes must preserve the complete Cause. A tagged application error would change that observable vendor contract.",
+      "owner": "@beep/utils",
+      "issue": "UTILS-SCHEMA-ASSERTS-NATIVE-ERROR-COMPATIBILITY"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
       "file": "packages/foundation/modeling/html/src/Html.conformance.ts",
       "kind": "new-map-set",
       "reason": "Conformance proofs need weak identity semantics in two places: private issuer membership and proof-to-detached-root storage must not retain validated trees, while recursive snapshot traversal needs cycle detection without retaining previously inspected ASTs. Effect collections provide neither weak keys nor weak membership.",

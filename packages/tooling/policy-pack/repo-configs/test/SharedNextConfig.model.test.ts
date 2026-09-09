@@ -20,6 +20,8 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import type { NextConfig } from "next";
 
+const decodeSecureHeadersConfigResult = S.decodeResult(SecureHeadersConfig);
+
 const expectRoundTrip = <Schema extends S.Top & S.ConstraintEncoder<unknown> & S.ConstraintDecoder<unknown>>(
   schema: Schema,
   value: Schema["Type"]
@@ -151,7 +153,7 @@ describe("Shared Next.js config preset", () => {
   });
 
   it("applies secure-header object defaults through the schema", () => {
-    const config = Result.getOrThrow(S.decodeResult(SecureHeadersConfig)({}));
+    const config = Result.getOrThrow(decodeSecureHeadersConfigResult({}));
 
     expect(makeSecureHeaders(config)).toEqual(DEFAULT_BEEP_SECURE_HEADERS);
   });

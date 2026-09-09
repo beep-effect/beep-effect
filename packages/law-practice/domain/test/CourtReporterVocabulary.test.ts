@@ -33,6 +33,9 @@ import { pipe } from "effect";
 import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 
+const isCourtVocabularyArtifact = S.is(CourtVocabularyArtifact);
+const isReporterVocabularyArtifact = S.is(ReporterVocabularyArtifact);
+
 const currentCourt = CourtVocabulary.records[0]!;
 const secondCourt = CourtVocabulary.records[1]!;
 const thirdCourt = CourtVocabulary.records[2]!;
@@ -112,8 +115,8 @@ const classify = (previous: Parameters<typeof comparisonArtifact>[0], next: Para
 
 describe("CourtReporterVocabulary", () => {
   it("publishes schema-decoded pinned artifacts with unique stable identities", () => {
-    expect(S.is(CourtVocabularyArtifact)(CourtVocabulary)).toBe(true);
-    expect(S.is(ReporterVocabularyArtifact)(ReporterVocabulary)).toBe(true);
+    expect(isCourtVocabularyArtifact(CourtVocabulary)).toBe(true);
+    expect(isReporterVocabularyArtifact(ReporterVocabulary)).toBe(true);
     expect(CourtVocabulary.stableIdCount).toBe(2_809);
     expect(ReporterVocabulary.stableIdCount).toBe(1_262);
     expect(A.length(A.dedupe(A.map(CourtVocabulary.records, ({ id }) => id)))).toBe(2_809);
