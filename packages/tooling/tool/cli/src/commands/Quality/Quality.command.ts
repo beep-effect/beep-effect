@@ -39,6 +39,7 @@ import { isLabsWorkspacePath } from "../../internal/cli/Labs/index.ts";
 import { printLines } from "../../internal/cli/Printer.ts";
 import { unknownRecordKeys, unknownRecordProperty } from "../../internal/cli/UnknownProbe.ts";
 import { formatCommandLine, QualityTaskStep, runCaptured, runToExit } from "../../internal/process/index.ts";
+import { checkScriptTestTypecheckCoverage } from "../../internal/quality/TestTypecheckCoverage.ts";
 import {
   AdmissionConfig,
   admissionProtocolStatus,
@@ -56,6 +57,7 @@ import {
 import { WaveOrder } from "../Yeet/internal/WaveOrder.ts";
 import { runChangesetGraphCheck } from "./ChangesetGraph.ts";
 import { changesetStatusCommand } from "./ChangesetStatus.ts";
+import { checkCensusCommand } from "./CheckCensus.ts";
 import { qualityFallowCommand } from "./FallowQuality.command.ts";
 import {
   githubCheckChangesetStatusLane,
@@ -70,6 +72,7 @@ import {
   githubCheckQualityLanesForTesting as githubCheckQualityLanesForTestingImpl,
   githubCheckRepoSanityLanes,
   githubCheckRepoSanityLanesForTesting as githubCheckRepoSanityLanesForTestingImpl,
+  githubCheckTierConcurrency,
   promotedFallowGithubCheckLaneIdsForTesting as promotedFallowGithubCheckLaneIdsForTestingImpl,
 } from "./internal/GithubChecks.ts";
 import {
@@ -376,6 +379,48 @@ const effectTsgoReadmeParser = new XMLParser({
 export const isEffectDiagnosticsDirectiveForTesting = (line: string): boolean =>
   effectDiagnosticsDirectivePattern.test(line);
 
+/**
+ * Decide whether Quality rejects a directive at its normalized repository-relative path.
+ *
+ * **Details**
+ *
+ * The D14 conformance exception permits only the exact file-local strictEffectProvide
+ * skip-file directive in the shared FileSystemConformance registration module, where
+ * each test provides the filesystem layer under test. All other recognized directives
+ * remain rejected. Paths and directive lines are compared exactly, without trimming.
+ * The production collector uses this same predicate after normalizing its paths.
+ *
+ * **Example** (Keep the conformance exception local)
+ *
+ * ```ts import.meta.vitest name="Keep the conformance exception local"
+ * import { isRejectedEffectDiagnosticsDirectiveForTesting } from "@beep/repo-cli/commands/Quality/Quality.command"
+ * import { pipe } from "effect/Function"
+ *
+ * const line = "// @effect-diagnostics strictEffectProvide:skip-file"
+ * const conformancePath = "packages/tooling/test-kit/test-utils/src/FileSystemConformance.ts"
+ * isRejectedEffectDiagnosticsDirectiveForTesting(line, conformancePath) // => false
+ * pipe(line, isRejectedEffectDiagnosticsDirectiveForTesting("packages/example/src/main.ts")) // => true
+ * ```
+ *
+ * @param line - Complete source line, without its line separator.
+ * @param normalizedRepoRelativePath - Repository-relative path with forward slashes, as normalized by the collector.
+ * @returns Whether the collector must report this line as a forbidden directive.
+ * @category testing
+ * @since 0.0.0
+ */
+export const isRejectedEffectDiagnosticsDirectiveForTesting: {
+  (normalizedRepoRelativePath: string): (line: string) => boolean;
+  (line: string, normalizedRepoRelativePath: string): boolean;
+} = dual(
+  2,
+  (line: string, normalizedRepoRelativePath: string): boolean =>
+    isEffectDiagnosticsDirectiveForTesting(line) &&
+    !(
+      normalizedRepoRelativePath === "packages/tooling/test-kit/test-utils/src/FileSystemConformance.ts" &&
+      line === `// ${effectDiagnosticsDirectivePrefix} strictEffectProvide:skip-file`
+    )
+);
+
 class EffectTsgoRuleCell extends S.Class<EffectTsgoRuleCell>($I`EffectTsgoRuleCell`)(
   {
     code: S.String,
@@ -622,9 +667,10 @@ const runFixedStep = (repoRoot: string, label: string, command: string, args: Re
 const runGithubCheckLaneGroup = (
   label: string,
   lanes: ReadonlyArray<GithubCheckLaneSpec>,
-  failurePolicy: GithubCheckFailurePolicyType
+  failurePolicy: GithubCheckFailurePolicyType,
+  concurrency = githubCheckTierConcurrency("pre-push")
 ): Effect.Effect<void, QualityTaskConfigurationError | QualityTaskGroupFailed, QualityScriptEnvironment> =>
-  runQualityTaskGithubCheckLaneWaves(label, githubCheckLaneWaves(lanes), failurePolicy);
+  runQualityTaskGithubCheckLaneWaves(label, githubCheckLaneWaves(lanes), failurePolicy, concurrency);
 
 const runEvidenceOrderedGithubCheckLaneGroup = Effect.fn(
   "QualityScriptCommands.runEvidenceOrderedGithubCheckLaneGroup"
@@ -856,11 +902,15 @@ const runCheapGates = Effect.fn("QualityScriptCommands.runCheapGates")(function*
   QualityScriptCommandError | QualityTaskConfigurationError | QualityTaskGroupFailed,
   QualityScriptEnvironment
 > {
-  const changesetStatusLanes = yield* githubCheckChangesetStatusLanes(repoRoot);
+  const changesetStatusLanes = A.map(
+    yield* githubCheckChangesetStatusLanes(repoRoot),
+    githubCheckLanePlan.githubCheckLaneInTier("cheap-gates")
+  );
   yield* runGithubCheckLaneGroup(
     "github-checks:cheap-gates",
     [...changesetStatusLanes, ...githubCheckCheapGateLanes(repoRoot)],
-    "collect-all"
+    "collect-all",
+    githubCheckTierConcurrency("cheap-gates")
   );
 });
 
@@ -1357,7 +1407,16 @@ type TestTsgoPackageGroup = {
   readonly packageDir: string;
   readonly tsconfigPath: string;
   readonly files: ReadonlyArray<string>;
+  readonly scripts: Readonly<Record<string, string>>;
   readonly hasTaskScript: boolean;
+};
+
+// Package groups split by whether their own `check` script already typechecks
+// every discovered test file (D1). Covered groups are the lane's skip set; the
+// uncovered ones are the blind spots the lane still has to compile.
+type TestTsgoCoveragePartition = {
+  readonly covered: ReadonlyArray<TestTsgoPackageGroup>;
+  readonly uncovered: ReadonlyArray<TestTsgoPackageGroup>;
 };
 
 type TestTsgoPackageResult = {
@@ -1466,16 +1525,41 @@ const collectTestTsgoPackageGroups = Effect.fn("QualityScriptCommands.collectTes
         A.map(([, filePath]) => filePath),
         A.sort(Order.String)
       );
+      const scripts = packageManifest.scripts ?? R.empty<string, string>();
       return {
         packageName: packageManifest.name,
         packageDir,
         tsconfigPath,
         files,
-        hasTaskScript: R.has(packageManifest.scripts ?? {}, testTsgoPackageTaskName),
+        scripts,
+        hasTaskScript: R.has(scripts, testTsgoPackageTaskName),
       } satisfies TestTsgoPackageGroup;
     }),
     { concurrency: 1 }
   );
+});
+
+const partitionTestTsgoPackageGroupsByCoverage = Effect.fn(
+  "QualityScriptCommands.partitionTestTsgoPackageGroupsByCoverage"
+)(function* (
+  groups: ReadonlyArray<TestTsgoPackageGroup>
+): Effect.fn.Return<TestTsgoCoveragePartition, never, FileSystem.FileSystem | Path.Path> {
+  const judged = yield* Effect.forEach(
+    groups,
+    (group) =>
+      checkScriptTestTypecheckCoverage(group.packageDir, group.scripts, group.files).pipe(
+        Effect.map((coverage) => [group, coverage.covered] as const)
+      ),
+    { concurrency: 1 }
+  );
+  const groupsWhere = (wanted: boolean): ReadonlyArray<TestTsgoPackageGroup> =>
+    pipe(
+      judged,
+      A.filter(([, isCovered]) => isCovered === wanted),
+      A.map(([group]) => group)
+    );
+
+  return { covered: groupsWhere(true), uncovered: groupsWhere(false) };
 });
 
 const runTestTsgoPackageGroup = Effect.fn("QualityScriptCommands.runTestTsgoPackageGroup")(function* (
@@ -1512,7 +1596,7 @@ const runTestTsgoPackageGroup = Effect.fn("QualityScriptCommands.runTestTsgoPack
 
   const result = yield* collectOutput(
     QualityTaskStep.make({
-      label: `check:tsgo:tests:${groupLabel}`,
+      label: `quality:test-tsgo:${groupLabel}`,
       command: path.join(repoRoot, "node_modules", ".bin", "tsgo"),
       args: ["-p", syntheticConfigPath, "--pretty", "false", ...extraArgs],
       cwd: repoRoot,
@@ -1618,6 +1702,7 @@ export const testTsgoPlanningForTesting = {
   isIgnoredDirectory: isIgnoredTestTsgoDirectory,
   packageLabel: tsgoTestPackageLabel,
   packageResultPath: testTsgoPackageResultPath,
+  partitionByCoverage: partitionTestTsgoPackageGroupsByCoverage,
   turboArgs: testTsgoTurboArgs,
   turboSummaryPath: testTsgoTurboSummaryPath,
 };
@@ -1801,7 +1886,7 @@ export const missingTestTsgoTaskMessageForTesting = (groups: ReadonlyArray<TestT
   return A.isReadonlyArrayEmpty(missingPackageNames)
     ? O.none()
     : O.some(
-        `[check:tsgo:tests] missing required "${testTsgoPackageTaskName}" package script for ${A.join(
+        `[quality:test-tsgo] missing required "${testTsgoPackageTaskName}" package script for ${A.join(
           missingPackageNames,
           ", "
         )}. Add "${testTsgoPackageTaskName}": "${testTsgoPackageTaskScript}" to each named package.json.`
@@ -2323,11 +2408,12 @@ const collectDisabledEffectDiagnosticDirectives = Effect.fn(
       const text = yield* fs
         .readFileString(filePath)
         .pipe(QualityScriptCommandError.mapError(`Failed to read ${filePath}.`));
+      const relativePath = normalizePath(path.relative(repoRoot, filePath));
       return pipe(
         Str.split(text, "\n"),
         A.flatMap((line, index) =>
-          effectDiagnosticsDirectivePattern.test(line)
-            ? A.of(`${normalizePath(path.relative(repoRoot, filePath))}:${index + 1}`)
+          isRejectedEffectDiagnosticsDirectiveForTesting(line, relativePath)
+            ? A.of(`${relativePath}:${index + 1}`)
             : A.empty<string>()
         )
       );
@@ -2417,7 +2503,7 @@ export const runTsgoRulesCheck = Effect.fn("QualityScriptCommands.runTsgoRulesCh
   });
 
   if (A.isReadonlyArrayNonEmpty(parseErrors)) {
-    yield* Console.error("[check:tsgo-rules] failed to parse tsconfig.base.json");
+    yield* Console.error("[lint:tsgo-rules] failed to parse tsconfig.base.json");
     yield* Console.error(
       A.join(
         A.map(parseErrors, (error) => `parse error ${error.error} at offset ${error.offset}`),
@@ -2496,7 +2582,7 @@ export const runTsgoRulesCheck = Effect.fn("QualityScriptCommands.runTsgoRulesCh
   );
 
   if (A.isReadonlyArrayNonEmpty(diagnostics)) {
-    yield* Console.error("[check:tsgo-rules] @effect/tsgo diagnostics are not globally enforced.");
+    yield* Console.error("[lint:tsgo-rules] @effect/tsgo diagnostics are not globally enforced.");
     yield* Console.error(A.join(diagnostics, "\n"));
     return yield* QualityScriptCommandError.make({
       message: "@effect/tsgo rule enforcement drift found.",
@@ -2505,7 +2591,7 @@ export const runTsgoRulesCheck = Effect.fn("QualityScriptCommands.runTsgoRulesCh
   }
 
   yield* Console.log(
-    `[check:tsgo-rules] verified ${A.length(installedRuleNames)} installed @effect/tsgo rule(s) are configured as error`
+    `[lint:tsgo-rules] verified ${A.length(installedRuleNames)} installed @effect/tsgo rule(s) are configured as error`
   );
 });
 
@@ -2527,7 +2613,48 @@ export const runTsgoRulesCheck = Effect.fn("QualityScriptCommands.runTsgoRulesCh
 export const runTestTsgoChecks = Effect.fn("QualityScriptCommands.runTestTsgoChecks")(function* (
   extraArgs: unknown
 ): Effect.fn.Return<void, QualityScriptCommandError, QualityScriptEnvironment> {
-  const { fs, path, repoRoot } = yield* qualityFileContext();
+  const { repoRoot } = yield* qualityFileContext();
+  yield* runTestTsgoChecksAt(repoRoot, extraArgs);
+});
+
+const reportTestTsgoFailure = (repoRoot: string, failure: TestTsgoPackageResult) => {
+  const packageName = tsgoTestPackageLabel(repoRoot, failure.group.packageDir);
+  const configName = pipe(failure.group.tsconfigPath, Str.replace(`${failure.group.packageDir}/`, ""));
+  return Console.error(`[quality:test-tsgo] ${packageName} failed with ${configName}`).pipe(
+    Effect.andThen(Str.isNonEmpty(failure.output) ? Console.error(failure.output) : Effect.void)
+  );
+};
+
+// Render diagnostics and per-package failures; true when the lane must exit red.
+const reportTestTsgoResults = Effect.fn("QualityScriptCommands.reportTestTsgoResults")(function* (
+  repoRoot: string,
+  results: ReadonlyArray<TestTsgoPackageResult>
+): Effect.fn.Return<boolean> {
+  const failures = A.filter(results, (result) => result.exitCode !== 0);
+  const effectDiagnosticLines = collectEffectTsgoDiagnosticLines(results);
+
+  if (A.isReadonlyArrayNonEmpty(effectDiagnosticLines)) {
+    yield* Console.error(
+      `[quality:test-tsgo] found ${A.length(effectDiagnosticLines)} Effect diagnostic(s) in test files`
+    );
+    yield* Console.error(A.join(effectDiagnosticLines, "\n"));
+  }
+
+  yield* Effect.forEach(failures, (failure) => reportTestTsgoFailure(repoRoot, failure), { discard: true });
+
+  return A.isReadonlyArrayNonEmpty(effectDiagnosticLines) || A.isReadonlyArrayNonEmpty(failures);
+});
+
+// Discover test files, drop packages whose own check script already covers them,
+// and demand the package-owned Turbo task for the rest. None when nothing is left to run.
+const resolveTestTsgoPackageGroups = Effect.fn("QualityScriptCommands.resolveTestTsgoPackageGroups")(function* (
+  repoRoot: string
+): Effect.fn.Return<
+  O.Option<ReadonlyArray<TestTsgoPackageGroup>>,
+  QualityScriptCommandError,
+  QualityScriptEnvironment
+> {
+  const path = yield* Path.Path;
   const discoveredFiles = yield* Effect.forEach(
     testSearchRoots,
     (root) => collectTestTsgoFilesUnder(path.join(repoRoot, root)),
@@ -2535,14 +2662,26 @@ export const runTestTsgoChecks = Effect.fn("QualityScriptCommands.runTestTsgoChe
   ).pipe(Effect.map(A.flatten));
 
   if (A.isReadonlyArrayEmpty(discoveredFiles)) {
-    yield* Console.log("[check:tsgo:tests] no test files found");
-    return;
+    yield* Console.log("[quality:test-tsgo] no test files found");
+    return O.none();
   }
 
-  const tempDir = path.join(repoRoot, "node_modules", ".tmp", "tsgo-test-checks");
-  const normalizedExtraArgs = normalizeExtraArgs(extraArgs);
-  const packageGroups = yield* collectTestTsgoPackageGroups(repoRoot, discoveredFiles);
-  const missingTaskMessage = missingTestTsgoTaskMessageForTesting(packageGroups);
+  const { covered, uncovered } = yield* partitionTestTsgoPackageGroupsByCoverage(
+    yield* collectTestTsgoPackageGroups(repoRoot, discoveredFiles)
+  );
+
+  if (A.isReadonlyArrayNonEmpty(covered)) {
+    yield* Console.log(
+      `[quality:test-tsgo] skipped ${A.length(covered)} package(s) already covered by their check script`
+    );
+  }
+
+  if (A.isReadonlyArrayEmpty(uncovered)) {
+    yield* Console.log("[quality:test-tsgo] every package's check script already typechecks its test files");
+    return O.none();
+  }
+
+  const missingTaskMessage = missingTestTsgoTaskMessageForTesting(uncovered);
 
   if (O.isSome(missingTaskMessage)) {
     return yield* QualityScriptCommandError.make({
@@ -2551,43 +2690,60 @@ export const runTestTsgoChecks = Effect.fn("QualityScriptCommands.runTestTsgoChe
     });
   }
 
+  return O.some(uncovered);
+});
+
+/**
+ * Run the repo-wide test-file tsgo lane against an explicit repository root.
+ *
+ * **Details**
+ *
+ * Packages whose own `check` script already typechecks every discovered test
+ * file are skipped (quality-lane audit 2026-09-09, D1): the lane is the net
+ * under `standards/test-typecheck.blindspot-baseline.jsonc`, not a second
+ * compile of every package, and it shrinks as the baseline shrinks. When every
+ * package is covered the lane says so and exits 0 without invoking Turbo.
+ *
+ * **Example** (Run the lane against a fixture root)
+ *
+ * ```ts
+ * import { runTestTsgoChecksAt } from "@beep/repo-cli/commands/Quality/Quality.command"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(runTestTsgoChecksAt("/repo", undefined))) // true
+ * ```
+ *
+ * @param repoRoot - Repository root whose `apps`, `packages`, and `infra` trees are searched.
+ * @param extraArgs - Additional arguments passed to tsgo.
+ * @returns Effect that runs the test-file tsgo lane.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const runTestTsgoChecksAt = Effect.fn("QualityScriptCommands.runTestTsgoChecksAt")(function* (
+  repoRoot: string,
+  extraArgs: unknown
+): Effect.fn.Return<void, QualityScriptCommandError, QualityScriptEnvironment> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const resolved = yield* resolveTestTsgoPackageGroups(repoRoot);
+
+  if (O.isNone(resolved)) {
+    return;
+  }
+
+  const packageGroups = resolved.value;
+  const tempDir = path.join(repoRoot, "node_modules", ".tmp", "tsgo-test-checks");
+  const checkedFileCount = A.length(A.flatMap(packageGroups, (group) => group.files));
   yield* Console.log(
-    `[check:tsgo:tests] checking ${A.length(discoveredFiles)} file(s) across ${A.length(packageGroups)} package(s)`
+    `[quality:test-tsgo] checking ${checkedFileCount} file(s) across ${A.length(packageGroups)} package(s)`
   );
-  const results = yield* runTestTsgoTurboTasks(repoRoot, packageGroups, normalizedExtraArgs).pipe(
-    Effect.ensuring(
-      fs
-        .remove(tempDir, {
-          recursive: true,
-          force: true,
-        })
-        .pipe(Effect.ignore)
-    )
+  const results = yield* runTestTsgoTurboTasks(repoRoot, packageGroups, normalizeExtraArgs(extraArgs)).pipe(
+    Effect.ensuring(fs.remove(tempDir, { recursive: true, force: true }).pipe(Effect.ignore))
   );
-  const failures = A.filter(results, (result) => result.exitCode !== 0);
-  const effectDiagnosticLines = collectEffectTsgoDiagnosticLines(results);
 
-  if (A.isReadonlyArrayNonEmpty(effectDiagnosticLines)) {
-    yield* Console.error(
-      `[check:tsgo:tests] found ${A.length(effectDiagnosticLines)} Effect diagnostic(s) in test files`
-    );
-    yield* Console.error(A.join(effectDiagnosticLines, "\n"));
-  }
-
-  if (A.isReadonlyArrayNonEmpty(failures)) {
-    for (const failure of failures) {
-      const packageName = tsgoTestPackageLabel(repoRoot, failure.group.packageDir);
-      const configName = pipe(failure.group.tsconfigPath, Str.replace(`${failure.group.packageDir}/`, ""));
-      yield* Console.error(`[check:tsgo:tests] ${packageName} failed with ${configName}`);
-      if (Str.isNonEmpty(failure.output)) {
-        yield* Console.error(failure.output);
-      }
-    }
-  }
-
-  if (A.isReadonlyArrayNonEmpty(effectDiagnosticLines) || A.isReadonlyArrayNonEmpty(failures)) {
+  if (yield* reportTestTsgoResults(repoRoot, results)) {
     return yield* withExitCode(
-      "check:tsgo:tests",
+      "quality:test-tsgo",
       path.join(repoRoot, "node_modules", ".bin", "tsgo"),
       ["-p", "<package-test-tsconfig>"],
       1
@@ -2662,7 +2818,7 @@ export const runTsgoSmokeCheck = Effect.fn("QualityScriptCommands.runTsgoSmokeCh
     .pipe(QualityScriptCommandError.mapError(`Failed to write ${tsconfigPath}.`));
   const result = yield* collectOutput(
     QualityTaskStep.make({
-      label: "check:tsgo:smoke",
+      label: "quality:tsgo-smoke",
       command: tsgoPath,
       args: ["-p", tsconfigPath, "--pretty", "false"],
       cwd: repoRoot,
@@ -2670,7 +2826,9 @@ export const runTsgoSmokeCheck = Effect.fn("QualityScriptCommands.runTsgoSmokeCh
   ).pipe(Effect.ensuring(fs.remove(smokeDir, { recursive: true }).pipe(Effect.ignore)));
 
   if (result.exitCode === 0) {
-    yield* Console.error("[check:tsgo:smoke] expected tsgo to fail on effectFnOpportunity but it exited successfully");
+    yield* Console.error(
+      "[quality:tsgo-smoke] expected tsgo to fail on effectFnOpportunity but it exited successfully"
+    );
     if (Str.isNonEmpty(result.output)) {
       yield* Console.error(result.output);
     }
@@ -2682,7 +2840,7 @@ export const runTsgoSmokeCheck = Effect.fn("QualityScriptCommands.runTsgoSmokeCh
 
   if (!Str.includes("effect(effectFnOpportunity)")(result.output)) {
     yield* Console.error(
-      "[check:tsgo:smoke] tsgo failed, but did not report the expected effectFnOpportunity diagnostic"
+      "[quality:tsgo-smoke] tsgo failed, but did not report the expected effectFnOpportunity diagnostic"
     );
     if (Str.isNonEmpty(result.output)) {
       yield* Console.error(result.output);
@@ -2693,7 +2851,7 @@ export const runTsgoSmokeCheck = Effect.fn("QualityScriptCommands.runTsgoSmokeCh
     });
   }
 
-  yield* Console.log("[check:tsgo:smoke] verified tsgo CLI reports effectFnOpportunity under the repo base config");
+  yield* Console.log("[quality:tsgo-smoke] verified tsgo CLI reports effectFnOpportunity under the repo base config");
 });
 
 /**
@@ -2830,11 +2988,21 @@ export const runJSDocInventory = Effect.fn("QualityScriptCommands.runJSDocInvent
     O.fromUndefinedOr,
     O.map((outputPath) => path.resolve(repoRoot, outputPath))
   );
+  const ciOutputJsonPath = pipe(
+    options.ciOutputJsonPath,
+    O.fromUndefinedOr,
+    O.map((outputPath) => path.resolve(repoRoot, outputPath))
+  );
+  const ciOutputMarkdownPath = pipe(
+    options.ciOutputMarkdownPath,
+    O.fromUndefinedOr,
+    O.map((outputPath) => path.resolve(repoRoot, outputPath))
+  );
 
   const result = yield* writeJSDocDocumentationInventory({
     ...options,
     rootDir: repoRoot,
-    ...OptionUtils.getSomesStruct({ outputJsonPath, outputMarkdownPath }),
+    ...OptionUtils.getSomesStruct({ outputJsonPath, outputMarkdownPath, ciOutputJsonPath, ciOutputMarkdownPath }),
   }).pipe(
     QualityScriptCommandError.mapError("Failed to generate JSDoc documentation inventory.", {
       command: "bun run beep quality jsdoc-inventory",
@@ -2844,6 +3012,9 @@ export const runJSDocInventory = Effect.fn("QualityScriptCommands.runJSDocInvent
 
   yield* Console.log(`wrote ${repoRelative(result.outputJsonPath, repoRoot, path)}`);
   yield* Console.log(`wrote ${repoRelative(result.outputMarkdownPath, repoRoot, path)}`);
+  yield* Effect.forEach(A.getSomes([ciOutputJsonPath, ciOutputMarkdownPath]), (mirrorPath) =>
+    Console.log(`wrote ${repoRelative(mirrorPath, repoRoot, path)} (mirror)`)
+  );
   yield* Console.log(
     `packages=${result.totals.packages} openPackages=${result.totals.packagesNeedingRemediation} openExports=${result.totals.openExports} openModules=${result.totals.openModules} rootPolicyOpen=${result.totals.rootPolicyOpen}`
   );
@@ -3013,12 +3184,25 @@ const jsdocInventoryCommand = Command.make(
       Flag.withDescription("Markdown inventory output path; defaults to the tracked standards artifact"),
       Flag.optional
     ),
+    ciOutputJson: Flag.string("ci-output-json").pipe(
+      Flag.withDescription("Extra JSONC path written from the same scan (the .beep/ci/ copy the ratchet lane reads)"),
+      Flag.optional
+    ),
+    ciOutputMarkdown: Flag.string("ci-output-markdown").pipe(
+      Flag.withDescription("Extra Markdown path written from the same scan"),
+      Flag.optional
+    ),
   },
-  ({ outputJson, outputMarkdown }) =>
+  ({ ciOutputJson, ciOutputMarkdown, outputJson, outputMarkdown }) =>
     runQualityProgram(
       runJSDocInventory(
         JSDocDocumentationInventoryOptions.make({
-          ...OptionUtils.getSomesStruct({ outputJsonPath: outputJson, outputMarkdownPath: outputMarkdown }),
+          ...OptionUtils.getSomesStruct({
+            outputJsonPath: outputJson,
+            outputMarkdownPath: outputMarkdown,
+            ciOutputJsonPath: ciOutputJson,
+            ciOutputMarkdownPath: ciOutputMarkdown,
+          }),
         })
       )
     )
@@ -3705,6 +3889,7 @@ export const qualityCommand = Command.make("quality", {}, () =>
     "- bun run beep quality bun-audit",
     "- bun run beep quality test-tsgo",
     "- bun run beep quality tsgo-smoke",
+    "- bun run beep quality check-census [--filter <name>] [--output-json <path>]",
     "- bun run beep quality tsgo-rules",
     "- bun run beep quality jsdoc-module-tags",
     "- bun run beep quality jsdoc-inventory",
@@ -3732,6 +3917,7 @@ export const qualityCommand = Command.make("quality", {}, () =>
     testTsgoCommand,
     testTsgoPackageCommand,
     tsgoSmokeCommand,
+    checkCensusCommand,
     tsgoRulesCommand,
     jsdocModuleTagsCommand,
     jsdocInventoryCommand,

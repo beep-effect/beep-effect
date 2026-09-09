@@ -44,6 +44,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { sortedUniquePaths } from "../../../internal/repo-run/index.ts";
 import { GOALS_DOCTOR_BASELINE_PATH } from "../../Goals/Doctor.ts";
+import { SchemaFirstInventoryPath } from "../../Lint/Lint.schemas.ts";
 import {
   coverageRegressionBaselinePath,
   coverageRegressionRegenerationCommand,
@@ -345,6 +346,24 @@ export const YEET_GATE_ARTIFACT_DESCRIPTORS: ReadonlyArray<GateArtifactDescripto
     gateId: "jsdoc-documentation-inventory",
     kind: "inventory",
     regenerateCommand: jsdocInventoryRegenerationCommand,
+    scope: "repo-code",
+  }),
+  // Read by `beep quality fallow health --check` (FallowQuality.command.ts
+  // passes it as `--baseline`); the writer is the root script.
+  GateArtifactDescriptor.make({
+    artifactPath: "standards/fallow.health.regression-baseline.jsonc",
+    gateId: "fallow-health",
+    kind: "baseline",
+    regenerateCommand: "bun run fallow:health:baseline:write",
+    scope: "repo-code",
+  }),
+  // Read by `lint:schema-first` (Lint/SchemaFirst.ts) as the tracked-finding
+  // inventory it ratchets against.
+  GateArtifactDescriptor.make({
+    artifactPath: SchemaFirstInventoryPath,
+    gateId: "schema-first-inventory",
+    kind: "inventory",
+    regenerateCommand: "bun run beep lint schema-first --write",
     scope: "repo-code",
   }),
 ];

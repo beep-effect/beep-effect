@@ -18,6 +18,7 @@ import {
   collectCoverageChangedFilesForTesting,
   collectGithubCheckLaneWavesForTesting,
   collectQualityTaskLaneRunsForTesting,
+  parseTestLaneSelectionForTesting,
   runQualityTaskGithubCheckLaneWaves,
   runQualityTaskStreamingLaneGroup,
 } from "@beep/repo-cli/commands/Quality/Tasks";
@@ -48,6 +49,7 @@ import {
   coverageScopedBaselineWriteCommand,
   coverageScopeWeightSeconds,
   coverageSelectedStepsForTesting,
+  coverageStepForTesting,
   detectQualityProfileForTesting,
   devQualityStepsForTesting,
   FallowReportFinding,
@@ -70,6 +72,7 @@ import {
   githubCheckPromotedFallowLaneDiagnosticsForTesting,
   githubCheckQualityLanesForTesting,
   githubCheckRepoSanityLanesForTesting,
+  githubCheckTierConcurrency,
   KnipFinding,
   LaneProofSession,
   lintFixChangedStepForTesting,
@@ -152,6 +155,7 @@ import {
   Sink,
   Stream,
 } from "effect";
+import * as HM from "effect/HashMap";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
@@ -289,6 +293,11 @@ const withTempRepo = <A, E, R>(use: Effect.Effect<A, E, R>) =>
     })
   ).pipe(provideScopedLayer(PlatformLayer));
 
+// The single coverage invocation for a `bun run coverage <argv>` shape; root
+// coverage itself plans at run time, so this is the unit the runtime composes.
+const coverageStepOf = (argv: ReadonlyArray<string>): QualityTaskStep =>
+  coverageStepForTesting("/repo", getInvocation(["coverage", ...argv]).args ?? A.empty<string>());
+
 const getInvocation = (argv: ReadonlyArray<string>): QualityTaskInvocation => {
   const invocation = parseQualityTaskInvocation(argv);
   if (O.isNone(invocation)) {
@@ -417,6 +426,7 @@ const githubCheckTestLane = (
     orderEstimate,
     stage: "repo-quality",
     step: bunScriptStep(id, source),
+    tier: "pre-push",
     wave,
   });
 
@@ -465,6 +475,7 @@ const laneProofTestLane = (
 ): GithubCheckLaneSpec =>
   GithubCheckLaneSpec.make({
     id,
+    tier: "pre-push",
     stage: "repo-quality",
     wave,
     blockedBy: [],
@@ -809,11 +820,10 @@ describe("quality task adapter", () => {
       "quality:lint",
       "quality:lint-policy",
       "quality:check",
-      "quality:check:tsgo-tests",
-      "quality:check:tsgo-smoke",
       "quality:knip",
       "quality:jsdoc-ratchet",
       "quality:docgen",
+      "quality:doctest",
       "quality:coverage",
       "quality:codegen",
       "quality:commitlint",
@@ -826,10 +836,10 @@ describe("quality task adapter", () => {
     expect(qualityLaneArgs(lanes, "quality:build")).toEqual(["run", "beep", "ci", "lane", "build"]);
     expect(qualityLaneArgs(lanes, "quality:knip")).toEqual(["run", "beep", "quality", "knip"]);
     expect(qualityLaneArgs(lanes, "quality:jsdoc-ratchet")).toEqual(["run", "beep", "ci", "lane", "jsdoc-ratchet"]);
-    // Affected-scoped `beep ci lane check` drops the repo-wide tsgo extras root
-    // `bun run check` carried, so they keep running as their own local lanes.
-    expect(qualityLaneArgs(lanes, "quality:check:tsgo-tests")).toEqual(["run", "beep", "quality", "test-tsgo"]);
-    expect(qualityLaneArgs(lanes, "quality:check:tsgo-smoke")).toEqual(["run", "beep", "quality", "tsgo-smoke"]);
+    // The repo-wide tsgo extras ride inside `quality:check` (root `bun run check`
+    // keeps them under `--affected`), so no lane runs `test-tsgo` or `tsgo-smoke` again.
+    expect(A.some(lanes, (lane) => A.contains(lane.step.args, "test-tsgo"))).toBe(false);
+    expect(A.some(lanes, (lane) => A.contains(lane.step.args, "tsgo-smoke"))).toBe(false);
     expect(A.map(githubCheckLanePlan.githubCheckLaneWaves(lanes), (wave) => wave.wave)).toEqual([
       "preflight",
       "heavy",
@@ -842,35 +852,63 @@ describe("quality task adapter", () => {
     const lanes = githubCheckCheapGateLanes("/repo");
 
     expect(A.map(lanes, (lane) => lane.id)).toEqual([
-      "cheap-gates:goals-index",
-      "cheap-gates:exploration-atlas",
-      "cheap-gates:config-sync",
-      "cheap-gates:tsgo-rules",
-      "cheap-gates:test-tsgo",
-      "cheap-gates:effect-imports",
-      "cheap-gates:schema-first",
-      "cheap-gates:allowlist-check",
-      "cheap-gates:goals-doctor",
-      "cheap-gates:jsdoc-ratchet",
-      "cheap-gates:knip",
+      "goals:index-check",
+      "explore:atlas-check",
+      "repo-sanity:tsconfig-sync",
+      "lint:effect-imports",
+      "lint:schema-first",
+      "lint:allowlist",
+      "goals:doctor",
+      "quality:jsdoc-ratchet:committed",
+      "quality:knip",
       "fallow:audit",
       "fallow:dead-code",
       "fallow:health",
     ]);
     expect(A.every(lanes, (lane) => lane.wave === "preflight")).toBe(true);
     expect(A.map(githubCheckLanePlan.githubCheckLaneWaves(lanes), (wave) => wave.wave)).toEqual(["preflight"]);
-    expect(qualityLaneArgs(lanes, "cheap-gates:config-sync")).toEqual(["run", "config-sync:check"]);
-    expect(qualityLaneArgs(lanes, "cheap-gates:effect-imports")).toEqual([
+    expect(qualityLaneArgs(lanes, "repo-sanity:tsconfig-sync")).toEqual(["run", "config-sync:check"]);
+    expect(qualityLaneArgs(lanes, "lint:effect-imports")).toEqual(["run", "beep", "laws", "effect-imports", "--check"]);
+    expect(qualityLaneArgs(lanes, "quality:jsdoc-ratchet:committed")).toEqual([
       "run",
       "beep",
-      "laws",
-      "effect-imports",
-      "--check",
+      "quality",
+      "jsdoc-ratchet",
     ]);
-    expect(qualityLaneArgs(lanes, "cheap-gates:jsdoc-ratchet")).toEqual(["run", "beep", "quality", "jsdoc-ratchet"]);
     expect(A.map(githubCheckLanesForModeForTesting("/repo", "cheap-gates"), (lane) => lane.id)).toEqual(
       A.map(lanes, (lane) => lane.id)
     );
+  });
+
+  // TTC ruling 28: a lane id names the command it runs and doubles as the step
+  // label (the `[beep-cli] <label>` log prefix); the tier is metadata, so one
+  // command keeps one id whichever tier schedules it.
+  it("names every registered lane after its command with the label as its log prefix", () => {
+    const cheapGateLanes = githubCheckLanesForModeForTesting("/repo", "cheap-gates");
+    const prePushLanes = githubCheckLanesForModeForTesting("/repo", "pre-push");
+    const registered = [githubCheckChangesetStatusLane("/repo"), ...cheapGateLanes, ...prePushLanes];
+    const commandOf = (lane: GithubCheckLaneSpec): string => A.join([lane.step.command, ...lane.step.args], " ");
+    const idsByCommand = A.reduce(registered, HM.empty<string, ReadonlyArray<string>>(), (acc, lane) =>
+      HM.modifyAt(acc, commandOf(lane), (ids) => O.some(A.dedupe(A.append(O.getOrElse(ids, A.empty<string>), lane.id))))
+    );
+
+    expect(A.filter(registered, (lane) => lane.step.label !== lane.id)).toEqual([]);
+    expect(
+      A.filter(registered, (lane) => Str.startsWith("cheap-gates:")(lane.id) || Str.startsWith("pre-push:")(lane.id))
+    ).toEqual([]);
+    expect(A.filter(HM.toEntries(idsByCommand), ([, ids]) => A.length(ids) > 1)).toEqual([]);
+    expect(A.every(cheapGateLanes, (lane) => lane.tier === "cheap-gates")).toBe(true);
+    expect(A.every(prePushLanes, (lane) => lane.tier === "pre-push")).toBe(true);
+    // D9: the cheap tier runs four abreast; heavy pre-push lanes stay serial.
+    expect(githubCheckTierConcurrency("cheap-gates")).toBe(4);
+    expect(githubCheckTierConcurrency("pre-push")).toBe(1);
+    // The same command keeps its id across tiers, so the lane-proof ledger can match it.
+    expect(
+      A.map(
+        A.filter(cheapGateLanes, (lane) => lane.id === "quality:knip"),
+        (lane) => lane.step.args
+      )
+    ).toEqual([qualityLaneArgs(prePushLanes, "quality:knip")]);
   });
 
   // ship-velocity B1: a local green must mean what a hosted green means, so the
@@ -996,10 +1034,10 @@ describe("quality task adapter", () => {
     const lanes = githubCheckPrePushExternalLanesForTesting("/repo");
 
     expect(A.map(lanes, (lane) => lane.id)).toEqual([
-      "pre-push:secrets",
-      "pre-push:security",
-      "pre-push:sast",
-      "pre-push:nix",
+      "quality:secrets",
+      "quality:security",
+      "quality:sast",
+      "quality:nix",
     ]);
     expect(A.map(lanes, (lane) => lane.stage)).toEqual([
       "diff-security",
@@ -1703,6 +1741,7 @@ describe("quality task adapter", () => {
           yield* initializeLaneProofRepository(tempRoot);
           const lane = GithubCheckLaneSpec.make({
             id: "quality:test-unit",
+            tier: "pre-push",
             stage: "repo-quality",
             wave: "heavy",
             blockedBy: [],
@@ -1773,6 +1812,7 @@ describe("quality task adapter", () => {
 
       const lane = GithubCheckLaneSpec.make({
         id: "proof:local-env",
+        tier: "pre-push",
         stage: "repo-quality",
         wave: "preflight",
         blockedBy: [],
@@ -1810,6 +1850,7 @@ describe("quality task adapter", () => {
 
       const lane = GithubCheckLaneSpec.make({
         id: "proof:isolated-env",
+        tier: "pre-push",
         stage: "repo-quality",
         wave: "preflight",
         blockedBy: [],
@@ -1907,7 +1948,7 @@ describe("quality task adapter", () => {
 
       const secretsLane = laneProofTestLane(
         tempRoot,
-        "pre-push:secrets",
+        "quality:secrets",
         "preflight",
         "echo secrets >> .beep/secrets-history.txt"
       );
@@ -1992,7 +2033,7 @@ describe("quality task adapter", () => {
       const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: "lane-proof-security-" });
       yield* initializeLaneProofRepository(tempRoot);
 
-      const lane = laneProofTestLane(tempRoot, "pre-push:security", "preflight", "echo security >> .beep/security.txt");
+      const lane = laneProofTestLane(tempRoot, "quality:security", "preflight", "echo security >> .beep/security.txt");
       const run = collectGithubCheckLaneWavesForTesting(
         "proof-security",
         [GithubCheckLaneWaveSpec.make({ wave: "preflight", lanes: [lane] })],
@@ -2101,8 +2142,8 @@ describe("quality task adapter", () => {
           GithubCheckLaneWaveSpec.make({
             wave: "preflight",
             lanes: [
-              githubCheckTestLane("cheap-gates:config-sync", "preflight", "process.exit(2)"),
-              githubCheckTestLane("cheap-gates:effect-imports", "preflight", "process.exit(3)"),
+              githubCheckTestLane("repo-sanity:tsconfig-sync", "preflight", "process.exit(2)"),
+              githubCheckTestLane("lint:effect-imports", "preflight", "process.exit(3)"),
             ],
           }),
         ],
@@ -2112,10 +2153,104 @@ describe("quality task adapter", () => {
           expect(report.schemaVersion).toBe("github-check-run/v1");
           expect(report.failurePolicy).toBe("collect-all");
           expect(A.map(failures, (failure) => failure.label)).toEqual([
-            "cheap-gates:config-sync",
-            "cheap-gates:effect-imports",
+            "repo-sanity:tsconfig-sync",
+            "lint:effect-imports",
           ]);
           expect(A.map(report.lanes, (lane) => lane.status)).toEqual(["failed", "failed"]);
+        }),
+        provideScopedLayer(PlatformLayer)
+      )
+    ));
+
+  // D9: the cheap tier runs lanes abreast, but the first red, the run report,
+  // and the journal artifact all keep wave order whatever the completion order.
+  it("keeps wave-order attribution and journaling when cheap gates run concurrently", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const tempDir = yield* fs.makeTempDirectory();
+        const artifactPath = path.join(tempDir, "cheap-gates.ndjson");
+        const laneIds = ["goals:index-check", "lint:schema-first", "lint:allowlist", "goals:doctor"];
+        const result = yield* withEnvVarEffect(
+          QUALITY_TASK_LANE_RUN_ARTIFACT_PATH_ENV,
+          artifactPath,
+          collectGithubCheckLaneWavesForTesting(
+            "cheap-gates",
+            [
+              GithubCheckLaneWaveSpec.make({
+                wave: "preflight",
+                lanes: [
+                  // The first-declared red finishes last; a later red and a
+                  // later green finish first.
+                  githubCheckTestLane("goals:index-check", "preflight", "setTimeout(() => process.exit(2), 400)"),
+                  githubCheckTestLane("lint:schema-first", "preflight", "setTimeout(() => process.exit(0), 200)"),
+                  githubCheckTestLane("lint:allowlist", "preflight", "process.exit(3)"),
+                  githubCheckTestLane("goals:doctor", "preflight", "process.exit(0)"),
+                ],
+              }),
+            ],
+            "collect-all",
+            undefined,
+            githubCheckTierConcurrency("cheap-gates")
+          )
+        );
+        const runOf = (id: string) => O.getOrThrow(A.findFirst(result.laneReport.lanes, (lane) => lane.id === id));
+
+        expect(A.map(result.failures, (failure) => failure.label)).toEqual(["goals:index-check", "lint:allowlist"]);
+        expect(result.report.firstRed).toStrictEqual(O.some("goals:index-check"));
+        expect(result.report.skippedAfterRed).toBe(0);
+        expect(A.map(result.report.lanes, (lane) => [lane.id, lane.status])).toEqual([
+          ["goals:index-check", "failed"],
+          ["lint:schema-first", "passed"],
+          ["lint:allowlist", "failed"],
+          ["goals:doctor", "passed"],
+        ]);
+        expect(A.map(result.laneReport.lanes, (lane) => lane.id)).toEqual(laneIds);
+        // Proof that the lanes overlapped: the instant red started before the slow red ended.
+        expect(O.getOrThrow(runOf("lint:allowlist").startedAt) < O.getOrThrow(runOf("goals:index-check").endedAt)).toBe(
+          true
+        );
+        const journaled = yield* Effect.forEach(
+          pipe(yield* fs.readFileString(artifactPath), Str.split("\n"), A.filter(Str.isNonEmpty)),
+          (line) => decodeQualityTaskLaneRunReportJson(line)
+        );
+        expect(A.flatMap(journaled, (report) => A.map(report.lanes, (lane) => lane.id))).toEqual(laneIds);
+        yield* fs.remove(tempDir, { recursive: true, force: true });
+      }).pipe(provideScopedLayer(PlatformLayer))
+    ));
+
+  it("stops fail-fast scheduling at the next chunk boundary when lanes run abreast", () =>
+    Effect.runPromise(
+      collectGithubCheckLaneWavesForTesting(
+        "pre-push",
+        [
+          GithubCheckLaneWaveSpec.make({
+            wave: "preflight",
+            lanes: [
+              githubCheckTestLane("quality:secrets", "preflight", "process.exit(1)"),
+              githubCheckTestLane("quality:security", "preflight", "process.exit(0)"),
+              githubCheckTestLane("quality:sast", "preflight", "process.exit(0)"),
+              githubCheckTestLane("quality:nix", "preflight", "process.exit(0)"),
+              githubCheckTestLane("quality:commitlint", "preflight", "process.exit(0)"),
+            ],
+          }),
+        ],
+        "fail-fast",
+        undefined,
+        2
+      ).pipe(
+        Effect.map(({ failures, report }) => {
+          expect(A.map(failures, (failure) => failure.label)).toEqual(["quality:secrets"]);
+          expect(report.firstRed).toStrictEqual(O.some("quality:secrets"));
+          expect(A.map(report.lanes, (lane) => lane.status)).toEqual([
+            "failed",
+            "passed",
+            "not-run-early-stop",
+            "not-run-early-stop",
+            "not-run-early-stop",
+          ]);
+          expect(report.skippedAfterRed).toBe(3);
         }),
         provideScopedLayer(PlatformLayer)
       )
@@ -2185,8 +2320,8 @@ describe("quality task adapter", () => {
     const spawned: Array<string> = [];
     const cheapGateLanes = githubCheckCheapGateLanes(process.cwd());
     const failedCommands = [
-      A.join(["bun", ...qualityLaneArgs(cheapGateLanes, "cheap-gates:config-sync")], " "),
-      A.join(["bun", ...qualityLaneArgs(cheapGateLanes, "cheap-gates:effect-imports")], " "),
+      A.join(["bun", ...qualityLaneArgs(cheapGateLanes, "repo-sanity:tsconfig-sync")], " "),
+      A.join(["bun", ...qualityLaneArgs(cheapGateLanes, "lint:effect-imports")], " "),
     ];
     const lastLane = O.getOrThrow(A.last(cheapGateLanes));
     const lastCommand = A.join([lastLane.step.command, ...lastLane.step.args], " ");
@@ -2204,8 +2339,8 @@ describe("quality task adapter", () => {
             expect(failure).toBeInstanceOf(QualityTaskGroupFailed);
             if (isQualityTaskGroupFailed(failure)) {
               expect(A.map(failure.failures, (step) => step.label)).toEqual([
-                "cheap-gates:config-sync",
-                "cheap-gates:effect-imports",
+                "repo-sanity:tsconfig-sync",
+                "lint:effect-imports",
               ]);
             }
           }
@@ -2214,8 +2349,8 @@ describe("quality task adapter", () => {
           const logText = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
           expect(logText).toContain(GITHUB_CHECK_RUN_REPORT_PREFIX);
           expect(logText).toContain('"failurePolicy":"collect-all"');
-          expect(logText).toContain('"id":"cheap-gates:config-sync","stage":"repo-sanity","status":"failed"');
-          expect(logText).toContain('"id":"cheap-gates:effect-imports","stage":"repo-quality","status":"failed"');
+          expect(logText).toContain('"id":"repo-sanity:tsconfig-sync","stage":"repo-sanity","status":"failed"');
+          expect(logText).toContain('"id":"lint:effect-imports","stage":"repo-quality","status":"failed"');
           expect(logText).toContain('"status":"passed"');
         })
       ).pipe(provideScopedLayer(Layer.mergeAll(cheapGatesTestLayer(spawned, failedCommands), PullRequestConfigLayer)))
@@ -2512,26 +2647,22 @@ describe("quality task adapter", () => {
   it("includes repo-level tsgo diagnostics for affected root check lanes", () => {
     const steps = rootQualityStepsForTesting("/repo", getInvocation(["check", "--affected", "--summarize"]));
 
-    expect(steps).toHaveLength(4);
+    expect(steps).toHaveLength(3);
     expect(steps[0]).toMatchObject({
       label: "check",
       command: "bunx",
       cwd: "/repo",
     });
     expect(steps[0]?.args).toEqual(expectedRootTurboArgs("check", ["--affected", "--summarize"]));
+    // tsgo-rules is owned by lint-policy alone (`lint:tsgo-rules`); check carries no copy.
     expect(A.slice(steps, { start: 1 })).toEqual([
       expect.objectContaining({
-        label: "check:tsgo:rules",
-        command: "bun",
-        args: repoCliEntryArgs("quality", "tsgo-rules"),
-      }),
-      expect.objectContaining({
-        label: "check:tsgo:tests",
+        label: "quality:test-tsgo",
         command: "bun",
         args: repoCliEntryArgs("quality", "test-tsgo"),
       }),
       expect.objectContaining({
-        label: "check:tsgo:smoke",
+        label: "quality:tsgo-smoke",
         command: "bun",
         args: repoCliEntryArgs("quality", "tsgo-smoke"),
       }),
@@ -2560,7 +2691,7 @@ describe("quality task adapter", () => {
       ])
     ).toEqual(
       O.some(
-        '[check:tsgo:tests] missing required "package-test-typecheck" package script for @beep/alpha, ' +
+        '[quality:test-tsgo] missing required "package-test-typecheck" package script for @beep/alpha, ' +
           '@beep/zulu. Add "package-test-typecheck": "beep-cli quality test-tsgo-package" to each named package.json.'
       )
     );
@@ -2575,6 +2706,7 @@ describe("quality task adapter", () => {
       packageDir: "/repo/packages/example",
       tsconfigPath: "/repo/packages/example/tsconfig.test.json",
       files: ["/repo/packages/example/test/example.test.ts"],
+      scripts: {},
       hasTaskScript: true,
     };
 
@@ -2725,6 +2857,13 @@ describe("quality task adapter", () => {
       decreased: [],
       missing_current_metrics: ["unsafeExampleFindings"],
     });
+  });
+
+  // quality-lane audit 2026-09-09 (E1): the test and coverage runners plan at
+  // run time, so no static root plan may claim to describe them.
+  it("leaves test and coverage without a static root plan", () => {
+    expect(rootQualityStepsForTesting("/repo", getInvocation(["test", "--integration"]))).toEqual([]);
+    expect(rootQualityStepsForTesting("/repo", getInvocation(["coverage"]))).toEqual([]);
   });
 
   it("skips repo-level tsgo diagnostics only for explicit package filters", () => {
@@ -3000,9 +3139,9 @@ describe("quality task adapter", () => {
     expect(steps[0]?.env).not.toHaveProperty("VITEST_COVERAGE_REPORT_ONLY");
   });
 
-  it("runs root coverage as the ratchet gate by default", () => {
+  it("builds the coverage invocation as the ratchet gate by default", () => {
     const steps = withEnvVar("BEEP_FC_SEED", undefined, () =>
-      withEnvVar("NODE_OPTIONS", undefined, () => rootQualityStepsForTesting("/repo", getInvocation(["coverage"])))
+      withEnvVar("NODE_OPTIONS", undefined, () => [coverageStepOf([])])
     );
 
     expect(steps).toHaveLength(1);
@@ -3031,9 +3170,7 @@ describe("quality task adapter", () => {
     const steps = withEnvVar("TURBO_API", "https://cache.example.test", () =>
       withEnvVar("TURBO_TOKEN", "op://fixture-vault/turbo/token", () =>
         withEnvVar("TURBO_TEAM", "team_fixture", () =>
-          withEnvVar("TURBO_CACHE", "local:rw,remote:r", () =>
-            rootQualityStepsForTesting("/repo", getInvocation(["coverage"]))
-          )
+          withEnvVar("TURBO_CACHE", "local:rw,remote:r", () => [coverageStepOf([])])
         )
       )
     );
@@ -3057,7 +3194,7 @@ describe("quality task adapter", () => {
     // (this checkout may be configured for remote reads), coverage invocations
     // carry no remote posture while the caller-owned passthrough survives.
     const ambientPlanArgs = expectedTurboCacheArgs([]);
-    const coverage = rootQualityStepsForTesting("/repo", getInvocation(["coverage"]));
+    const coverage = [coverageStepOf([])];
     const fullSteps = coverageFullStepsForTesting("/repo", ["@beep/schema"], []);
     const callerOwned = coverageFullStepsForTesting("/repo", ["@beep/schema"], ["--remote-only"]);
 
@@ -3073,9 +3210,7 @@ describe("quality task adapter", () => {
 
   it("preserves existing Node options when disabling experimental Web Storage for coverage", () => {
     const steps = withEnvVar("BEEP_FC_SEED", undefined, () =>
-      withEnvVar("NODE_OPTIONS", "--max-old-space-size=4096", () =>
-        rootQualityStepsForTesting("/repo", getInvocation(["coverage"]))
-      )
+      withEnvVar("NODE_OPTIONS", "--max-old-space-size=4096", () => [coverageStepOf([])])
     );
 
     expect(steps[0]?.env).toMatchObject({
@@ -3086,7 +3221,7 @@ describe("quality task adapter", () => {
 
   it("honors an explicit fast-check seed for exploratory coverage runs", () => {
     const steps = withEnvVar("NODE_OPTIONS", undefined, () =>
-      withEnvVar("BEEP_FC_SEED", "8675309", () => rootQualityStepsForTesting("/repo", getInvocation(["coverage"])))
+      withEnvVar("BEEP_FC_SEED", "8675309", () => [coverageStepOf([])])
     );
 
     expect(steps[0]?.env).toMatchObject({
@@ -3097,12 +3232,9 @@ describe("quality task adapter", () => {
 
   it("keeps report-only coverage reserved for baseline regeneration and strips writer controls", () => {
     const steps = withEnvVar("BEEP_FC_SEED", undefined, () =>
-      withEnvVar("NODE_OPTIONS", undefined, () =>
-        rootQualityStepsForTesting(
-          "/repo",
-          getInvocation(["coverage", "--", "--write-baseline", "--replace-all", "--concurrency=1", "--force"])
-        )
-      )
+      withEnvVar("NODE_OPTIONS", undefined, () => [
+        coverageStepOf(["--", "--write-baseline", "--replace-all", "--concurrency=1", "--force"]),
+      ])
     );
 
     expect(steps).toHaveLength(1);
@@ -5354,25 +5486,6 @@ describe("quality task adapter", () => {
     });
   });
 
-  it("plans the bounded parallel integration pass before the serial SQL pass", () => {
-    const steps = rootQualityStepsForTesting("/repo", getInvocation(["test", "--integration", "--summarize"]));
-
-    expect(A.map(steps, (step) => step.label)).toEqual(["test:integration:parallel", "test:integration:serial"]);
-    expect(steps[0]?.args).toContain("test:integration:parallel");
-    expect(steps[0]?.args).toContain("--summarize");
-    expect(steps[1]?.args).toEqual(expectedTurboArgs("test:integration:serial", ["--concurrency=1", "--summarize"]));
-  });
-
-  it("drops caller concurrency flags from the serial SQL pass instead of duplicating turbo's", () => {
-    const steps = rootQualityStepsForTesting(
-      "/repo",
-      getInvocation(["test", "--integration", "--concurrency=1", "--summarize"])
-    );
-
-    expect(steps[1]?.args).toEqual(expectedTurboArgs("test:integration:serial", ["--concurrency=1", "--summarize"]));
-    expect(A.filter([...(steps[1]?.args ?? [])], (arg) => arg.startsWith("--concurrency"))).toHaveLength(1);
-  });
-
   it("requires explicit test SQL URLs over generic application defaults", () => {
     expect(
       sqlIntegrationConnectionUriFromEnvForTesting({
@@ -5898,31 +6011,19 @@ describe("labs turbo exclusion", () => {
   it("ends check argvs with the labs exclude while repo-wide tsgo steps survive", () => {
     for (const argv of [["check", "--affected", "--summarize"], ["check"]]) {
       const steps = rootQualityStepsForTesting("/repo", getInvocation(argv));
-      expect(A.map(steps, (step) => step.label)).toEqual([
-        "check",
-        "check:tsgo:rules",
-        "check:tsgo:tests",
-        "check:tsgo:smoke",
-      ]);
+      expect(A.map(steps, (step) => step.label)).toEqual(["check", "quality:test-tsgo", "quality:tsgo-smoke"]);
       expectEndsWithLabsExclude(steps[0]);
     }
   });
 
-  it("ends lint, unit, integration, and scoped coverage argvs with the labs exclude", () => {
+  it("ends lint and scoped coverage argvs with the labs exclude", () => {
     expectEndsWithLabsExclude(
       rootQualityStepsForTesting("/repo", getInvocation(["lint", "--affected", "--summarize"]))[0]
     );
     expectEndsWithLabsExclude(rootQualityStepsForTesting("/repo", getInvocation(["lint"]))[0]);
 
-    expectEndsWithLabsExclude(rootQualityStepsForTesting("/repo", getInvocation(["test", "--unit"]))[0]);
-
-    const integration = rootQualityStepsForTesting("/repo", getInvocation(["test", "--integration"]));
-    expect(A.map(integration, (step) => step.label)).toEqual(["test:integration:parallel", "test:integration:serial"]);
-    expectEndsWithLabsExclude(integration[0]);
-    expectEndsWithLabsExclude(integration[1]);
-
     const coverage = withEnvVar("BEEP_FC_SEED", undefined, () =>
-      withEnvVar("NODE_OPTIONS", undefined, () => rootQualityStepsForTesting("/repo", getInvocation(["coverage"])))
+      withEnvVar("NODE_OPTIONS", undefined, () => [coverageStepOf([])])
     );
     expectEndsWithLabsExclude(coverage[0]);
   });
@@ -5936,9 +6037,7 @@ describe("labs turbo exclusion", () => {
 
   it("keeps the labs exclude ahead of the coverage vitest passthrough and inside every shard", () => {
     const baseline = withEnvVar("BEEP_FC_SEED", undefined, () =>
-      withEnvVar("NODE_OPTIONS", undefined, () =>
-        rootQualityStepsForTesting("/repo", getInvocation(["coverage", "--", "--write-baseline", "--concurrency=1"]))
-      )
+      withEnvVar("NODE_OPTIONS", undefined, () => [coverageStepOf(["--", "--write-baseline", "--concurrency=1"])])
     );
     const baselineArgs = argsOf(baseline[0]);
     const filterIndex = argIndexOf(baselineArgs, LABS_EXCLUDE_FILTER);
@@ -6074,5 +6173,25 @@ describe("unwrapped turbo steps drop an unusable remote cache posture", () => {
     expect(rewritten.flakeQuarantine).toBe("ts2589-no-location");
     expect(rewritten.captureTimeoutMillis).toBe(900_000);
     expect(rewritten.label).toBe(step.label);
+  });
+});
+
+describe("parseTestLaneSelection", () => {
+  it("selects the flagged lanes and keeps the remaining arguments in order", () => {
+    const both = parseTestLaneSelectionForTesting(["--", "--unit", "--concurrency=2", "--integration", "--summarize"]);
+    expect(both).toStrictEqual({ unit: true, integration: true, args: ["--concurrency=2", "--summarize"] });
+    const unitOnly = parseTestLaneSelectionForTesting(["--unit"]);
+    expect(unitOnly).toStrictEqual({ unit: true, integration: false, args: [] });
+    const integrationOnly = parseTestLaneSelectionForTesting(["--integration", "--affected"]);
+    expect(integrationOnly).toStrictEqual({ unit: false, integration: true, args: ["--affected"] });
+  });
+
+  it("runs both lanes when no lane flag is present", () => {
+    expect(parseTestLaneSelectionForTesting([])).toStrictEqual({ unit: true, integration: true, args: [] });
+    expect(parseTestLaneSelectionForTesting(["--concurrency=2"])).toStrictEqual({
+      unit: true,
+      integration: true,
+      args: ["--concurrency=2"],
+    });
   });
 });

@@ -16,6 +16,8 @@
     ".": "./src/index.ts",
     "./ConformanceLedger": "./src/ConformanceLedger/index.ts",
     "./ConformanceLedger/*": null,
+    "./MemoryFileSystem": "./src/MemoryFileSystem/index.ts",
+    "./MemoryFileSystem/*": null,
     "./*": "./src/*.ts",
     "./internal/*": null
   },
@@ -45,14 +47,15 @@
     "test:property": "bun run beep:test",
     "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
     "beep:build": "tsc -p tsconfig.json && bun run babel",
-    "beep:check": "tsgo -p tsconfig.check.json",
+    "beep:check": "tsgo -p tsconfig.check.json && bun run beep:check:tests",
     "beep:docgen": "bunx --bun --no-install docgen",
     "beep:lint": "biome check .",
     "beep:lint:fix": "biome check . --write",
     "beep:test": "bunx --bun vitest run --exclude=test/integration/**",
     "beep:test:integration": "TESTCONTAINERS_RYUK_DISABLED=true bunx --bun vitest run test/integration",
     "babel": "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
-    "test:integration:serial": "bun run beep:test:integration"
+    "test:integration:serial": "bun run beep:test:integration",
+    "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit"
   },
   "dependencies": {
     "@beep/fc-runs": "workspace:^",
@@ -65,12 +68,12 @@
     "@effect/sql-pglite": "catalog:",
     "@effect/sql-sqlite-bun": "catalog:",
     "@effect/sql-sqlite-node": "catalog:",
+    "@effect/vitest": "catalog:",
     "effect": "catalog:",
     "pg": "^8.20.0",
     "testcontainers": "catalog:"
   },
   "devDependencies": {
-    "@effect/vitest": "catalog:",
     "@types/bun": "catalog:",
     "@types/node": "catalog:",
     "@types/pg": "^8.20.0"
@@ -84,6 +87,8 @@
       ".": "./dist/index.ts",
       "./ConformanceLedger": "./dist/ConformanceLedger/index.js",
       "./ConformanceLedger/*": null,
+      "./MemoryFileSystem": "./dist/MemoryFileSystem/index.js",
+      "./MemoryFileSystem/*": null,
       "./*": "./dist/*.js",
       "./internal/*": null
     }

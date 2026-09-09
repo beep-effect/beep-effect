@@ -269,6 +269,8 @@ export class JSDocDocumentationInventoryOptions extends S.Class<JSDocDocumentati
     rootDir: S.optionalKey(JSDocInventoryDirectoryPath),
     outputJsonPath: S.optionalKey(JSDocInventoryOutputPath),
     outputMarkdownPath: S.optionalKey(JSDocInventoryOutputPath),
+    ciOutputJsonPath: S.optionalKey(JSDocInventoryOutputPath),
+    ciOutputMarkdownPath: S.optionalKey(JSDocInventoryOutputPath),
     generatedAt: S.optionalKey(JSDocInventoryGeneratedAt),
   },
   $I.annote("JSDocDocumentationInventoryOptions", {
@@ -1655,15 +1657,40 @@ export const writeJSDocDocumentationInventory = Effect.fn("JSDocDocumentationInv
   yield* fs
     .writeFileString(outputJsonPath, jsonContent)
     .pipe(QualityArtifactGeneratorError.mapError(`Failed to write ${outputJsonPath}.`, { filePath: outputJsonPath }));
-  yield* fs.writeFileString(outputMarkdownPath, renderMarkdown(inventory)).pipe(
+  const markdownContent = renderMarkdown(inventory);
+  yield* fs.writeFileString(outputMarkdownPath, markdownContent).pipe(
     QualityArtifactGeneratorError.mapError(`Failed to write ${outputMarkdownPath}.`, {
       filePath: outputMarkdownPath,
     })
   );
+  // One scan, two output sets (quality-lane audit A3 / D14): the CI copies
+  // under `.beep/ci/` are byte-identical mirrors so a ratchet lane handed
+  // `--inventory` reads the same scan the committed artifact came from.
+  yield* writeJSDocInventoryMirror(options.ciOutputJsonPath, jsonContent);
+  yield* writeJSDocInventoryMirror(options.ciOutputMarkdownPath, markdownContent);
 
   return {
     outputJsonPath,
     outputMarkdownPath,
     totals: inventory.totals,
   };
+});
+
+const writeJSDocInventoryMirror = Effect.fn("JSDocDocumentationInventory.writeMirror")(function* (
+  mirrorPath: string | undefined,
+  content: string
+): Effect.fn.Return<void, QualityArtifactGeneratorError, FileSystem.FileSystem | Path.Path> {
+  if (mirrorPath === undefined) {
+    return;
+  }
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  yield* fs.makeDirectory(path.dirname(mirrorPath), { recursive: true }).pipe(
+    QualityArtifactGeneratorError.mapError(`Failed to create artifact directory for ${mirrorPath}.`, {
+      filePath: mirrorPath,
+    })
+  );
+  yield* fs
+    .writeFileString(mirrorPath, content)
+    .pipe(QualityArtifactGeneratorError.mapError(`Failed to write ${mirrorPath}.`, { filePath: mirrorPath }));
 });
