@@ -558,6 +558,65 @@ bun run beep quality jsdoc-inventory
 bun run beep quality changeset-graph
 ```
 
+#### Admission transition journal
+
+The scheduler writes `<admission-root>/journal.ndjson` under a fenced journal
+lock. The event union accepts `yeet-admission-journal/v1`,
+`yeet-admission-journal/v2`, and `yeet-admission-journal/v3` in the same file.
+Each row has `_tag`, `schemaVersion`, `nonce`, `pid`, and an optional
+`attemptId` (an `Option` after decoding).
+
+| Event | Version | Other fields |
+| --- | --- | --- |
+| `admission-admitted` | v1 | `procStart`, `kind`, `weightTokens`, `priority`, `originKey`, `enqueuedAtMillis`, `admittedAtMillis` |
+| `admission-released` | v1 | `releasedAtMillis`, optional `memoryPeakBytes` |
+| `admission-lease-evicted` | v2 | `evictedAtMillis`, `reason: owner-dead-or-reused` |
+| `admission-ticket-evicted` | v2 | `evictedAtMillis`, `reason: queued-submitter-death` |
+| `admission-enqueued` | v3 | `procStart`, `kind`, `weightTokens`, `priority`, `originKey`, `checkoutRoot`, `branch`, `enqueuedAtMillis` |
+| `admission-withdrawn` | v3 | `procStart`, `kind`, `priority`, `originKey`, `checkoutRoot`, `branch`, `enqueuedAtMillis`, `withdrawnAtMillis` |
+| `admission-released` | v3 | All v1 release fields plus `checkoutRoot`, `branch` |
+| `admission-lease-evicted` | v3 | All v2 lease eviction fields plus `checkoutRoot`, `branch`, `lastHeartbeatAtMillis` |
+| `admission-ticket-evicted` | v3 | All v2 ticket eviction fields plus `checkoutRoot`, `branch` |
+
+Current writers emit enqueue after ticket publication, admission during durable
+promotion, and release during admitted-work cleanup. A ticket finalizer emits
+withdrawal only when it removes a queued ticket without a published lease.
+Withdrawal has no reason field: the finalizer does not classify why the wait
+ended. A successful lifecycle joins enqueue, admission, and release by `nonce`;
+an abandoned wait joins enqueue and withdrawal. Sub-envelope origin-gate-only
+work creates no ticket or lease and emits no admission transitions.
+
+V3 evictions require `protocol.json` with `schemaVersion:
+"yeet-admission-protocol/v2"` and `eviction: "on"`. The scheduler protocol
+command publishes this new marker under the same fenced journal lock. Missing,
+unreadable, undecodable, and protocol-v1 markers disable v3 eviction emission.
+Pre-v3 workers cannot decode protocol v2 and therefore leave a durable reap
+claim pending, even if the v3 writer crashed after appending its receipt but
+before acknowledging the claim. A v3-aware retry recognizes that receipt and
+completes the claim without duplicating it. Rollout requires publishing the v2
+marker before v3 evictions can begin; do not downgrade it while v3 claims remain
+recoverable. Older ordinary appenders continue preserving opaque v3 rows.
+The v3 lease eviction copies the last heartbeat from the lease saved in that
+claim, so delayed recovery retains the original observation. `evictedAtMillis`
+is the claim instant, not an asserted process death time.
+
+Preservation-era v1/v2 readers treat v3 rows as opaque: locked rewrites keep
+their original bytes and relative source order, including across ring trimming.
+The new reader decodes every supported version. Versioned releases and evictions
+share `_tag` values, so the journal exposes schema-derived guards covering both
+versions of each tag. Scheduler status and reap decisions use ticket, lease,
+promotion, and claim files; journal decoding does not determine admission.
+
+Journal writes remain best effort. The existing newest-200-admission boundary
+still applies; a second cap retains at most 2,400 known rows (200 admissions ×
+3 enqueue/admit/release rows × 4). The admitted ring has reserved slots; remaining
+slots keep the newest other known rows inside that boundary. Thus queue-only
+churn is bounded even without admissions, and it cannot displace the admitted
+ring. Opaque rows are exempt from both limits and retain their bytes and source
+order. Lock contention, write failures, retention, and mixed-version traffic can
+leave incomplete observed chains. This is not a complete audit log or a bound
+on bytes contributed by unknown rows or older writers.
+
 ### `yeet`
 
 Run the canonical End-to-End Green operator path: deterministic repair, full
