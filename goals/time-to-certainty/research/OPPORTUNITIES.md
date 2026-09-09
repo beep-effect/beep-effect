@@ -491,3 +491,15 @@ The explicitly requested Graft residue cleanup was rejected because the shell co
 ### Stage E3 — proof runners and scoped test diagnostics
 
 The default Vitest fork run printed its startup banner but executed no tests for several minutes; interrupted that run (exit 130) and used the brief-authorized thread pool. The final thread run executes all three worker subprocess smokes and passes 27 tests. The broader `beep quality test-tsgo` likewise remained at `checking 1026 file(s) across 139 package(s)` and was interrupted, without claiming an aggregate pass. Used a disposable config matching `TestTsgoSyntheticConfig.ts`, extending the real CLI tsconfig and including the three touched tests, with `bunx --bun --no-install tsgo`; that focused check passes. A reliable bounded package test-diagnostic command would avoid the aggregate startup dependency during a three-file repair.
+
+## 2026-09-09 — A committed policy-tool fingerprint goes stale on every PR merge ref
+
+- **Doing:** getting PR #1029's hosted Lint Policy lane green after pushing all repairs.
+- **Evidence:** `lint:policy-fingerprint` was current on the branch tip but exited 1 on hosted,
+  which lints `refs/pull/1029/merge`; main had moved three commits, one touching the repo CLI
+  source that the fingerprint digests, so the committed digest could not match the merge tree.
+  The only remedy was merging main and regenerating, which holds until main moves again.
+- **Would have prevented it:** computing the fingerprint at task time instead of committing its
+  digest (a `cache: false` root task writing an untracked artifact that policy tasks depend on,
+  or declaring the computed closure globs directly as task inputs). C3.2 must settle this before
+  any policy task keys on the file (table D15, revisit).
