@@ -1,0 +1,29 @@
+{
+  "schemaVersion": "yeet-verdict/v1",
+  "base": "origin/main",
+  "branch": "@slop/chat-fixes",
+  "committed": false,
+  "createdAt": "2026-06-21T16:40:00.150Z",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "closeout:01-pr-context",
+      "label": "closeout:pr-context",
+      "phase": "monitor",
+      "status": "not-run"
+    },
+    {
+      "id": "closeout:02-review-gates",
+      "label": "closeout:review-gates",
+      "phase": "monitor",
+      "status": "not-run"
+    }
+  ],
+  "message": "yeet PR closeout failed with 10 issue(s).",
+  "mode": "closeout",
+  "outcome": "failure",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "slop_chat-fixes-a06ad6828384",
+  "indexPath": "<fleet>/beep-effect3/.beep/yeet/quality-issue-index.json"
+}

@@ -1,0 +1,29 @@
+{
+  "schemaVersion": "yeet-verdict/v1",
+  "base": "origin/main",
+  "branch": "docs/patent-citation-candor-gate-open",
+  "committed": false,
+  "createdAt": "2026-08-04T12:09:58.540Z",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "closeout:01-pr-context",
+      "label": "closeout:pr-context",
+      "phase": "monitor",
+      "status": "not-run"
+    },
+    {
+      "id": "closeout:02-review-gates",
+      "label": "closeout:review-gates",
+      "phase": "monitor",
+      "status": "not-run"
+    }
+  ],
+  "message": "yeet closeout succeeded.",
+  "mode": "closeout",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "docs_patent-citation-candor-gate-open-9034257bc14a",
+  "indexPath": "<fleet>/beep-effect10/.beep/yeet/quality-issue-index.json"
+}

@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "fix/repo-cli-deterministic-projections",
+  "committed": false,
+  "createdAt": "2026-08-31T03:10:21.226Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "closeout:01-pr-context",
+      "label": "closeout:pr-context",
+      "phase": "monitor",
+      "status": "not-run"
+    },
+    {
+      "id": "closeout:02-review-gates",
+      "label": "closeout:review-gates",
+      "phase": "monitor",
+      "status": "not-run"
+    }
+  ],
+  "message": "yeet closeout succeeded.",
+  "mode": "closeout",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "fix_repo-cli-deterministic-projections-4a755a794a19",
+  "attemptId": "0518b0eb-8fb5-4207-9bab-6e26b7dbc4ba",
+  "startedAt": "2026-08-31T03:10:16.723Z",
+  "endedAt": "2026-08-31T03:10:21.226Z",
+  "elapsedMs": 4503,
+  "indexPath": "<fleet>/beep-effect-worktrees/repo-cli-deterministic-projections/.beep/yeet/quality-issue-index.json"
+}

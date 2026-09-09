@@ -1,0 +1,29 @@
+{
+  "schemaVersion": "yeet-verdict/v1",
+  "base": "origin/main",
+  "branch": "feat/tracked-docs-home",
+  "committed": false,
+  "createdAt": "2026-06-12T08:39:20.578Z",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "publish:01-git-push",
+      "label": "publish:git:push",
+      "phase": "publish",
+      "status": "passed",
+      "exitCode": 0
+    }
+  ],
+  "message": "yeet publish succeeded.",
+  "mode": "publish",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": true,
+  "runId": "feat_tracked-docs-home",
+  "indexPath": "<fleet>/beep-effect/.beep/yeet/quality-issue-index.json",
+  "baseFreshness": {
+    "behindCount": 0,
+    "mergeBase": "78cbec4d1db4e9f5a1499a821c1d2f172af768ee",
+    "overlappingPaths": []
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "@slop/09-02-26",
+  "committed": false,
+  "createdAt": "2026-09-04T21:17:54.453Z",
+  "failurePolicy": "fail-fast",
+  "head": "bf6014ae31531bf4dc18f7f6eedafa96a700d876",
+  "lanes": [
+    {
+      "id": "closeout:01-pr-context",
+      "label": "closeout:pr-context",
+      "phase": "monitor",
+      "status": "not-run",
+      "tier": "full",
+      "inputDigest": null
+    },
+    {
+      "id": "closeout:02-review-gates",
+      "label": "closeout:review-gates",
+      "phase": "monitor",
+      "status": "not-run",
+      "tier": "full",
+      "inputDigest": null
+    }
+  ],
+  "message": "yeet closeout succeeded.",
+  "mode": "closeout",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "slop_09-02-26-46a474779bc2",
+  "attemptId": "2e220f3d-bd11-44b2-97c1-08fdc25f69a2",
+  "resolvedHeadSha": "bf6014ae31531bf4dc18f7f6eedafa96a700d876",
+  "diffFingerprint": "29086ffb1ae3ca97af3ac2e249e453b40c4b51cc1355697681b9eed1d4ab5b09",
+  "proofTier": "full",
+  "startedAt": "2026-09-04T21:17:48.893Z",
+  "endedAt": "2026-09-04T21:17:54.453Z",
+  "elapsedMs": 5560,
+  "indexPath": "<fleet>/beep-effect2/.beep/yeet/quality-issue-index.json"
+}

@@ -14,6 +14,7 @@ import * as Str from "effect/String";
 const Census = S.Struct({ byOwnerFamily: S.Record(S.String, S.Number) });
 const PackageManifest = S.Struct({ name: S.String });
 const PreviousReport = S.Struct({
+  committedTree: S.String,
   treeDigest: S.String,
   results: S.Array(
     S.Struct({
@@ -28,11 +29,15 @@ const PreviousReport = S.Struct({
 const decodeCensus = S.decodeUnknownSync(S.fromJsonString(Census));
 const decodePackageManifest = S.decodeUnknownSync(S.fromJsonString(PackageManifest));
 const decodePreviousReport = S.decodeUnknownOption(S.fromJsonString(PreviousReport));
+const decodeGitIdentity = S.decodeUnknownSync(S.Tuple([S.NonEmptyString, S.NonEmptyString]));
 
 const run = (cwd: string, command: ReadonlyArray<string>) =>
   Bun.spawnSync(A.fromIterable(command), { cwd, stdout: "pipe", stderr: "pipe" });
 
 const repoRoot = run(process.cwd(), ["git", "rev-parse", "--show-toplevel"]).stdout.toString().trim();
+const identity = run(repoRoot, ["git", "rev-parse", "HEAD", "HEAD^{tree}"]);
+if (identity.exitCode !== 0) throw new Error("Cannot identify the committed package-verification tree.");
+const [head, committedTree] = decodeGitIdentity(identity.stdout.toString().trim().split("\n"));
 const goalRoot = resolve(repoRoot, "goals/inline-schema-compile-hard-error");
 const census = decodeCensus(readFileSync(resolve(goalRoot, "research/opening-census.json"), "utf8"));
 const reportPath = resolve(goalRoot, "research/package-verification.json");
@@ -71,6 +76,10 @@ const untracked = run(repoRoot, ["git", "ls-files", "--others", "--exclude-stand
   )
   .sort();
 const hasher = new Bun.CryptoHasher("sha256");
+hasher.update("inline-schema-package-verification/v2\n");
+hasher.update(committedTree);
+hasher.update(readFileSync(import.meta.filename));
+hasher.update(JSON.stringify(packageNames));
 hasher.update(diff);
 for (const filename of untracked) {
   hasher.update(filename);
@@ -82,7 +91,10 @@ const previous = existsSync(reportPath)
   ? decodePreviousReport(readFileSync(reportPath, "utf8"))
   : { _tag: "None" as const };
 const canResume =
-  process.argv.includes("--resume") && previous._tag === "Some" && previous.value.treeDigest === treeDigest;
+  process.argv.includes("--resume") &&
+  previous._tag === "Some" &&
+  previous.value.committedTree === committedTree &&
+  previous.value.treeDigest === treeDigest;
 const results = canResume ? [...previous.value.results] : [];
 const completed = new Set(
   A.map(
@@ -93,13 +105,18 @@ const completed = new Set(
 const startedAt = new Date().toISOString();
 
 const checkpoint = (): void => {
+  const currentHead = run(repoRoot, ["git", "rev-parse", "HEAD"]);
+  if (currentHead.exitCode !== 0 || currentHead.stdout.toString().trim() !== head) {
+    throw new Error("HEAD changed during package verification; refusing to relabel mixed-tree results.");
+  }
   const failures = A.filter(results, (result) => !result.ok);
   writeFileSync(
     reportPath,
     `${JSON.stringify(
       {
-        schemaVersion: "inline-schema-package-verification/v1",
-        head: run(repoRoot, ["git", "rev-parse", "HEAD"]).stdout.toString().trim(),
+        schemaVersion: "inline-schema-package-verification/v2",
+        head,
+        committedTree,
         treeDigest,
         startedAt,
         updatedAt: new Date().toISOString(),
@@ -117,7 +134,9 @@ const checkpoint = (): void => {
   );
 };
 
-if (process.argv.includes("--list")) {
+if (process.argv.includes("--identity-only")) {
+  process.stdout.write(`${JSON.stringify({ head, committedTree, treeDigest, canResume })}\n`);
+} else if (process.argv.includes("--list")) {
   process.stdout.write(`${A.join(packageNames, "\n")}\n`);
 } else {
   for (const [index, packageName] of packageNames.entries()) {

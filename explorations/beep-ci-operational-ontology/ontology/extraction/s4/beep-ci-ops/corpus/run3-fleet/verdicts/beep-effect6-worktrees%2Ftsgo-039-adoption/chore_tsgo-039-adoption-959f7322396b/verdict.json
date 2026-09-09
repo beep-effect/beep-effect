@@ -1,0 +1,92 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "chore/tsgo-039-adoption",
+  "committed": false,
+  "createdAt": "2026-09-03T12:07:01.067Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "advisory:01-fallow-feedback",
+      "label": "fallow-advisory-feedback",
+      "phase": "feedback",
+      "status": "passed",
+      "durationMs": 2419.034564,
+      "peakRssKb": 508556,
+      "exitCode": 0
+    },
+    {
+      "id": "commit:01-git-commit",
+      "label": "commit:git:commit",
+      "phase": "commit",
+      "status": "not-run"
+    },
+    {
+      "id": "publish:00-head-install-preflight",
+      "label": "publish:head-install-preflight",
+      "phase": "early-publish",
+      "status": "not-run"
+    },
+    {
+      "id": "publish:01-git-push",
+      "label": "early-publish:git:push",
+      "phase": "early-publish",
+      "status": "not-run"
+    },
+    {
+      "id": "publish:02-pr-create",
+      "label": "publish:pr-create",
+      "phase": "early-publish",
+      "status": "not-run"
+    },
+    {
+      "id": "full:00-cheap-gates",
+      "label": "full:cheap-gates",
+      "phase": "full",
+      "status": "not-run"
+    },
+    {
+      "id": "full:01-pre-push",
+      "label": "full:pre-push",
+      "phase": "full",
+      "status": "not-run"
+    },
+    {
+      "id": "full:02-ci-parity",
+      "label": "full:ci-parity",
+      "phase": "full",
+      "status": "not-run"
+    },
+    {
+      "id": "monitor:01-pr-context",
+      "label": "monitor:pr-context",
+      "phase": "monitor",
+      "status": "not-run"
+    },
+    {
+      "id": "monitor:02-pr-checks-watch",
+      "label": "monitor:pr-checks:watch",
+      "phase": "monitor",
+      "status": "not-run"
+    }
+  ],
+  "message": "yeet publish requires reviewed staged changes or a clean local commit ahead of the publish remote/base.",
+  "mode": "publish",
+  "outcome": "failure",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "chore_tsgo-039-adoption-959f7322396b",
+  "attemptId": "9f4d9a42-d8b1-4ce9-b52c-1f493be54d51",
+  "startedAt": "2026-09-03T12:06:58.551Z",
+  "endedAt": "2026-09-03T12:07:01.067Z",
+  "elapsedMs": 2516,
+  "indexPath": "<fleet>/beep-effect6-worktrees/tsgo-039-adoption/.beep/yeet/quality-issue-index.json",
+  "baseFreshness": {
+    "behindCount": 5,
+    "mergeBase": "012377374910e535c4d6b4e0f554de7a365ac209",
+    "overlappingPaths": []
+  },
+  "failedStepId": "commit:01-git-commit",
+  "failureKind": "handler-error"
+}

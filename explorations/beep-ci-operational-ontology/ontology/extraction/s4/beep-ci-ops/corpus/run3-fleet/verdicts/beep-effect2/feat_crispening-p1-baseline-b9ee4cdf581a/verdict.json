@@ -1,0 +1,53 @@
+{
+  "schemaVersion": "yeet-verdict/v1",
+  "base": "origin/main",
+  "branch": "feat/crispening-p1-baseline",
+  "committed": false,
+  "createdAt": "2026-07-06T06:15:55.914Z",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "advisory:01-fallow-feedback",
+      "label": "fallow-advisory-feedback",
+      "phase": "feedback",
+      "status": "passed",
+      "exitCode": 0
+    },
+    {
+      "id": "commit:01-git-commit",
+      "label": "commit:git:commit",
+      "phase": "commit",
+      "status": "not-run"
+    },
+    {
+      "id": "full:01-pre-push",
+      "label": "full:pre-push",
+      "phase": "full",
+      "status": "not-run"
+    },
+    {
+      "id": "publish:01-git-push",
+      "label": "publish:git:push",
+      "phase": "publish",
+      "status": "not-run"
+    },
+    {
+      "id": "publish:02-pr-create",
+      "label": "publish:pr-create",
+      "phase": "publish",
+      "status": "not-run"
+    }
+  ],
+  "message": "yeet publish refuses untracked files. Stage intended new files or remove ignored-sensitive leftovers before running yeet.\n130 path(s) across 1 top-level entry: goals\n  - goals/repo-crispening-orchestration/ops/inventory/S1/RULE-CARD-NOTES.md\n  - goals/repo-crispening-orchestration/ops/inventory/S1/beep__architecture-lab-client.json\n  - goals/repo-crispening-orchestration/ops/inventory/S1/beep__architecture-lab-config.json\n  - goals/repo-crispening-orchestration/ops/inventory/S1/beep__architecture-lab-domain.json\n  - goals/repo-crispening-orchestration/ops/inventory/S1/beep__architecture-lab-server.json\n  - goals/repo-crispening-orchestration/ops/inventory/S1/beep__architecture-lab-tables.json\n  - goals/repo-crispening-orchestration/ops/inventory/S1/beep__architecture-lab-ui.json\n  - goals/repo-crispening-orchestration/ops/inventory/S1/beep__architecture-lab-use-cases.json\n  - goals/repo-crispening-orchestration/ops/inventory/S1/beep__db-admin.json\n  - goals/repo-crispening-orchestration/ops/inventory/S1/beep__epistemic-domain.json\n  - (+120 more; full list in the failure packet)\nRemedy: Stage the intended files, remove leftovers, or rerun with --staged-only to park the residue in a stash automatically.",
+  "mode": "publish",
+  "outcome": "failure",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "feat_crispening-p1-baseline-b9ee4cdf581a",
+  "indexPath": "<fleet>/beep-effect2/.beep/yeet/quality-issue-index.json",
+  "baseFreshness": {
+    "behindCount": 4,
+    "mergeBase": "5fd9f352200fa8e38b3339702d8973f7c30afb89",
+    "overlappingPaths": []
+  }
+}

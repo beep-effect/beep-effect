@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "fix/disabled-eviction-sink-pending",
+  "committed": false,
+  "createdAt": "2026-09-04T03:49:29.002Z",
+  "failurePolicy": "fail-fast",
+  "head": "42b5252a93fe5ad984e636803867a8eed40e3138",
+  "lanes": [
+    {
+      "id": "closeout:01-pr-context",
+      "label": "closeout:pr-context",
+      "phase": "monitor",
+      "status": "not-run",
+      "tier": "full",
+      "inputDigest": null
+    },
+    {
+      "id": "closeout:02-review-gates",
+      "label": "closeout:review-gates",
+      "phase": "monitor",
+      "status": "not-run",
+      "tier": "full",
+      "inputDigest": null
+    }
+  ],
+  "message": "yeet closeout succeeded.",
+  "mode": "closeout",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "fix_disabled-eviction-sink-pending-6a878f4f53dd",
+  "attemptId": "4119821a-8435-4568-aa5d-237d9f5ec0f2",
+  "resolvedHeadSha": "42b5252a93fe5ad984e636803867a8eed40e3138",
+  "diffFingerprint": "96a296d224f285c67bee93c30f8a309157f0daa35dc5b87e410b78630a09cfc7",
+  "proofTier": "full",
+  "startedAt": "2026-09-04T03:49:22.772Z",
+  "endedAt": "2026-09-04T03:49:29.002Z",
+  "elapsedMs": 6231,
+  "indexPath": "<fleet>/beep-effect-worktrees/ttc-a5d/.beep/yeet/quality-issue-index.json"
+}

@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "codex/fix-1014-property-laws",
+  "committed": false,
+  "createdAt": "2026-09-09T01:23:38.372Z",
+  "failurePolicy": "fail-fast",
+  "head": "b73fe898e6c51b4ffe3e6a5f697327fe348a6729",
+  "lanes": [
+    {
+      "id": "closeout:01-pr-context",
+      "label": "closeout:pr-context",
+      "phase": "monitor",
+      "status": "not-run",
+      "tier": "full",
+      "inputDigest": null
+    },
+    {
+      "id": "closeout:02-review-gates",
+      "label": "closeout:review-gates",
+      "phase": "monitor",
+      "status": "not-run",
+      "tier": "full",
+      "inputDigest": null
+    }
+  ],
+  "message": "yeet closeout succeeded.",
+  "mode": "closeout",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "codex_fix-1014-property-laws-2299bc36549b",
+  "attemptId": "e6512d88-1df8-4417-b432-4a0e21c3f880",
+  "resolvedHeadSha": "b73fe898e6c51b4ffe3e6a5f697327fe348a6729",
+  "diffFingerprint": "96a296d224f285c67bee93c30f8a309157f0daa35dc5b87e410b78630a09cfc7",
+  "proofTier": "full",
+  "startedAt": "2026-09-09T01:23:33.123Z",
+  "endedAt": "2026-09-09T01:23:38.372Z",
+  "elapsedMs": 5250,
+  "indexPath": "<fleet>/beep-effect5/.beep/yeet/quality-issue-index.json"
+}

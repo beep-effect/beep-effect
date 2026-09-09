@@ -1,0 +1,43 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "fix/changeset-gate-revival",
+  "committed": false,
+  "createdAt": "2026-08-24T04:07:26.152Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "publish:00-head-install-preflight",
+      "label": "publish:head-install-preflight",
+      "phase": "publish",
+      "status": "passed",
+      "durationMs": 3812.617183,
+      "exitCode": 0
+    },
+    {
+      "id": "publish:01-git-push",
+      "label": "publish:git:push",
+      "phase": "publish",
+      "status": "passed",
+      "durationMs": 1549.224918,
+      "exitCode": 0
+    }
+  ],
+  "message": "yeet publish succeeded.",
+  "mode": "publish",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": true,
+  "runId": "fix_changeset-gate-revival-6421eaa9ac61",
+  "attemptId": "5718cf86-34a6-49af-8745-895835a1187e",
+  "startedAt": "2026-08-24T04:07:20.676Z",
+  "endedAt": "2026-08-24T04:07:26.152Z",
+  "elapsedMs": 5476,
+  "indexPath": "<fleet>/beep-effect6/.beep/yeet/quality-issue-index.json",
+  "baseFreshness": {
+    "behindCount": 1,
+    "mergeBase": "ff2184e6b3c5cef6d00fe196b5e5ea8be95ed408",
+    "overlappingPaths": []
+  }
+}

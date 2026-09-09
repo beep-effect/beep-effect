@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "yeet-verdict/v1",
+  "base": "origin/main",
+  "branch": "experiment-stella",
+  "committed": false,
+  "createdAt": "2026-07-25T13:36:04.497Z",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "advisory:01-fallow-feedback",
+      "label": "fallow-advisory-feedback",
+      "phase": "feedback",
+      "status": "passed",
+      "durationMs": 1742.691138,
+      "exitCode": 0
+    },
+    {
+      "id": "full:01-pre-push",
+      "label": "full:pre-push",
+      "phase": "full",
+      "status": "passed",
+      "durationMs": 1218790.421221,
+      "exitCode": 0
+    },
+    {
+      "id": "publish:00-head-install-preflight",
+      "label": "publish:head-install-preflight",
+      "phase": "full",
+      "status": "passed",
+      "durationMs": 5061.67917,
+      "exitCode": 0
+    }
+  ],
+  "message": "yeet verify succeeded.",
+  "mode": "verify",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "experiment-stella-c9ec68be43fa",
+  "indexPath": "<fleet>/beep-effect8/.beep/yeet/quality-issue-index.json"
+}

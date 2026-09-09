@@ -1,0 +1,56 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "infra/ci-runners-groundwork",
+  "committed": false,
+  "createdAt": "2026-08-07T03:16:11.534Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "advisory:01-fallow-feedback",
+      "label": "fallow-advisory-feedback",
+      "phase": "feedback",
+      "status": "passed",
+      "durationMs": 3411.857836,
+      "exitCode": 0
+    },
+    {
+      "id": "commit:01-git-commit",
+      "label": "commit:git:commit",
+      "phase": "commit",
+      "status": "not-run"
+    },
+    {
+      "id": "full:01-pre-push",
+      "label": "full:pre-push",
+      "phase": "full",
+      "status": "not-run"
+    },
+    {
+      "id": "publish:00-head-install-preflight",
+      "label": "publish:head-install-preflight",
+      "phase": "publish",
+      "status": "not-run"
+    },
+    {
+      "id": "publish:01-git-push",
+      "label": "publish:git:push",
+      "phase": "publish",
+      "status": "not-run"
+    }
+  ],
+  "message": "yeet publish refuses a stale base: files changed on this branch were also changed on origin/main since the merge-base, so the PR would conflict or silently regress them.\n8 path(s) across 3 top-level entries: .changeset, goals, infra\n  - .changeset/ci-runners-groundwork.md\n  - goals/speed-loop/research/OPPORTUNITIES.md\n  - goals/speed-loop/research/runner-secrets.md\n  - infra/ci-runners/Pulumi.yaml\n  - infra/src/CiRunners.ts\n  - infra/src/index.ts\n  - infra/src/internal/ci-runners-entry.ts\n  - infra/test/CiRunners.test.ts\nRemedy: git fetch origin && git rebase origin/main, re-run bun run beep yeet verify, then publish again. Pass --allow-stale-base to proceed anyway.",
+  "mode": "publish",
+  "outcome": "failure",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "infra_ci-runners-groundwork-933ae9cb61d0",
+  "attemptId": "51af81d1-e134-4c8d-9696-ff9a873625bc",
+  "startedAt": "2026-08-07T03:16:07.809Z",
+  "endedAt": "2026-08-07T03:16:11.534Z",
+  "elapsedMs": 3725,
+  "indexPath": "<fleet>/beep-effect3-pra/.beep/yeet/quality-issue-index.json",
+  "failedStepId": "commit:01-git-commit",
+  "failureKind": "handler-error"
+}
