@@ -1,0 +1,73 @@
+diff --git a/script/install-utils.js b/script/install-utils.js
+index abfacce881600c17dd1396c9b33e2721bd33287e..017c223fa67cda58e7dac9254f2af73883338597 100644
+--- a/script/install-utils.js
++++ b/script/install-utils.js
+@@ -8,7 +8,8 @@ const https = require('https');
+ const { execFileSync } = require('child_process');
+ const path = require('path');
+ const os = require('os');
+-const AdmZip = require('adm-zip'); // Use adm-zip instead of spawn
++// The root Bun override replaces this dependency with fflate@0.8.3.
++const { unzipSync } = require('adm-zip');
+ 
+ async function downloadFile(url, dest) {
+   return new Promise((resolve, reject) => {
+@@ -140,8 +141,7 @@ async function resolvePackage(type, index, packageName, version) {
+         }
+ 
+         // Create a temporary directory
+-        const tempDir = path.join(os.tmpdir(), `onnxruntime-node-pkgs_${Date.now()}`);
+-        fs.mkdirSync(tempDir, { recursive: true });
++        const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'onnxruntime-node-pkgs-'));
+ 
+         try {
+           const packageFilePath = path.join(tempDir, packageFileName);
+@@ -153,15 +153,12 @@ async function resolvePackage(type, index, packageName, version) {
+           // Load the NuGet package (which is a ZIP file)
+           let zip;
+           try {
+-            zip = new AdmZip(packageFilePath);
++            const entries = new Set(manifests.map(({ pathInPackage }) => pathInPackage));
++            zip = unzipSync(fs.readFileSync(packageFilePath), { filter: ({ name }) => entries.has(name) });
+           } catch (err) {
+             throw new Error(`Failed to open NuGet package: ${err.message}`);
+           }
+ 
+-          // Extract only the needed files from the package
+-          const extractDir = path.join(tempDir, 'extracted');
+-          fs.mkdirSync(extractDir, { recursive: true });
+-
+           // Process each manifest and extract/copy files to their destinations
+           for (const manifest of manifests) {
+             const { filepath, pathInPackage } = manifest;
+@@ -171,19 +168,22 @@ async function resolvePackage(type, index, packageName, version) {
+             fs.mkdirSync(targetDir, { recursive: true });
+ 
+             // Check if the file exists directly in the zip
+-            const zipEntry = zip.getEntry(pathInPackage);
+-            if (!zipEntry) {
++            if (!Object.hasOwn(zip, pathInPackage)) {
+               throw new Error(`Failed to find ${pathInPackage} in NuGet package`);
+             }
+ 
+             console.log(`Extracting ${pathInPackage} to ${filepath}`);
+ 
+-            // Extract just this entry to a temporary location
+-            const extractedFilePath = path.join(extractDir, path.basename(pathInPackage));
+-            zip.extractEntryTo(zipEntry, extractDir, false, true);
+-
+-            // Copy to the final destination
+-            fs.copyFileSync(extractedFilePath, filepath);
++            // Stage in a private directory on the destination filesystem. Rename
++            // replaces an existing file or symlink without following its target.
++            const stagingDir = fs.mkdtempSync(path.join(targetDir, '.onnxruntime-'));
++            try {
++              const stagedFile = path.join(stagingDir, 'binary');
++              fs.writeFileSync(stagedFile, zip[pathInPackage], { flag: 'wx', mode: 0o644 });
++              fs.renameSync(stagedFile, filepath);
++            } finally {
++              fs.rmSync(stagingDir, { recursive: true, force: true });
++            }
+           }
+         } finally {
+           // Clean up the temporary directory - always runs even if an error occurs

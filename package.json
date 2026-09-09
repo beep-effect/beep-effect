@@ -313,6 +313,7 @@
     "js-yaml": "5.2.2",
     "minimatch": "10.2.5",
     "nanoid": "^3.3.18",
+    "onnxruntime-node@1.29.0>adm-zip": "npm:fflate@0.8.3",
     "pdfjs-dist": "catalog:",
     "postcss": "^8.5.23",
     "protobufjs": "^7.6.6",
@@ -324,7 +325,8 @@
   "patchedDependencies": {
     "knip@6.27.0": "patches/knip@6.27.0.patch",
     "sharp@0.35.0": "patches/sharp@0.35.0.patch",
-    "drizzle-orm@1.0.0-rc.4-fb12281": "patches/drizzle-orm@1.0.0-rc.4-fb12281.patch"
+    "drizzle-orm@1.0.0-rc.4-fb12281": "patches/drizzle-orm@1.0.0-rc.4-fb12281.patch",
+    "onnxruntime-node@1.29.0": "patches/onnxruntime-node@1.29.0.patch"
   },
   "private": true,
   "repository": {
