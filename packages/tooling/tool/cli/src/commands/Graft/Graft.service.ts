@@ -97,22 +97,28 @@ const makeGraftCacheSync = Effect.fn("GraftCacheSync.make")(function* () {
 
   // Read each parent before resolving the child: exists() alone misses dangling symlinks.
   // Reject all redirected components, including links back into the same clone's tracked tree.
+  // One path component: it must be a real directory entry (no symlink, no
+  // redirection) of the expected type, or the whole artifact path is refused.
+  const verifySegment = Effect.fn("GraftCacheSync.verifySegment")(function* (current: string, expectedType: string) {
+    const canonical = yield* fs.realPath(current).pipe(Effect.mapError(ioError(current)));
+    const info = yield* fs.stat(current).pipe(Effect.mapError(ioError(current)));
+    if (!Eq.equals(canonical, current) || !Eq.equals(info.type, expectedType)) {
+      return yield* GraftCacheTargetError.make({
+        path: current,
+        message: `Refusing redirected or non-${expectedType} artifact path: ${current}.`,
+      });
+    }
+  });
+
   const safePath = Effect.fn("GraftCacheSync.safePath")(function* (root: string, relative: string, directory: boolean) {
     const segments = Str.split(path.sep)(relative);
+    const last = A.length(segments) - 1;
     let current = root;
     for (const { segment, index } of A.map(segments, (segment, index) => ({ segment, index }))) {
       const names = yield* fs.readDirectory(current).pipe(Effect.mapError(ioError(current)));
       if (!A.contains(names, segment)) return false;
       current = path.join(current, segment);
-      const canonical = yield* fs.realPath(current).pipe(Effect.mapError(ioError(current)));
-      const info = yield* fs.stat(current).pipe(Effect.mapError(ioError(current)));
-      const expectedType = directory || index < A.length(segments) - 1 ? "Directory" : "File";
-      if (!Eq.equals(canonical, current) || !Eq.equals(info.type, expectedType)) {
-        return yield* GraftCacheTargetError.make({
-          path: current,
-          message: `Refusing redirected or non-${expectedType} artifact path: ${current}.`,
-        });
-      }
+      yield* verifySegment(current, directory || index < last ? "Directory" : "File");
     }
     return true;
   });

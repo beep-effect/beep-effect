@@ -47,6 +47,24 @@ const renderPlan = (plan: GraftCacheSyncPlan): string =>
     "\n"
   );
 
+const renderReport = (report: GraftCacheSyncReport): string =>
+  `${renderPlan(report.plan)}\nCopied: ${report.copied}; skipped: ${report.skipped}; refused: ${report.refused}; bytes: ${report.bytes}`;
+
+// JSON goes through the shared chunked stdout writer: a plain Console.log of a
+// multi-target plan exceeds the 64 KiB pipe buffer and is cut off at exit.
+const emit = Effect.fn("GraftCommand.emit")(function* <A, I>(
+  json: boolean,
+  value: A,
+  schema: S.Codec<A, I>,
+  lines: string
+) {
+  if (!json) return yield* Console.log(lines);
+  const encodeError = (cause: unknown) =>
+    GraftCacheIoError.make({ path: "stdout", message: "Failed to encode Graft cache sync output.", cause });
+  const encoded = yield* S.encodeEffect(schema)(value).pipe(Effect.mapError(encodeError));
+  yield* printCommandJson(encoded).pipe(Effect.mapError(encodeError));
+});
+
 const syncCommand = Command.make(
   "sync",
   flags,
@@ -60,27 +78,11 @@ const syncCommand = Command.make(
     const sync = yield* GraftCacheSync;
     const targets = options.siblings ? yield* sync.discoverSiblings(options.from) : options.to;
     const plan = yield* sync.plan(options.from, targets);
-    const encodeError = (cause: unknown) =>
-      GraftCacheIoError.make({ path: plan.source, message: "Failed to encode Graft cache sync output.", cause });
-    // JSON goes through the shared chunked stdout writer: a plain Console.log of a
-    // multi-target plan exceeds the 64 KiB pipe buffer and is cut off at exit.
     if (options.dryRun) {
-      if (options.json) {
-        const encoded = yield* S.encodeEffect(GraftCacheSyncPlan)(plan).pipe(Effect.mapError(encodeError));
-        yield* printCommandJson(encoded).pipe(Effect.mapError(encodeError));
-      } else {
-        yield* Console.log(renderPlan(plan));
-      }
+      yield* emit(options.json, plan, GraftCacheSyncPlan, renderPlan(plan));
     } else {
       const report = yield* sync.apply(plan);
-      if (options.json) {
-        const encoded = yield* S.encodeEffect(GraftCacheSyncReport)(report).pipe(Effect.mapError(encodeError));
-        yield* printCommandJson(encoded).pipe(Effect.mapError(encodeError));
-      } else {
-        yield* Console.log(
-          `${renderPlan(report.plan)}\nCopied: ${report.copied}; skipped: ${report.skipped}; refused: ${report.refused}; bytes: ${report.bytes}`
-        );
-      }
+      yield* emit(options.json, report, GraftCacheSyncReport, renderReport(report));
     }
     if (A.some(plan.entries, (entry) => GraftCacheSyncAction.is.refuse(entry.action))) {
       return yield* GraftCacheTargetError.make({
