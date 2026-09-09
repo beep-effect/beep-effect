@@ -233,6 +233,7 @@
     "tar": "^7.5.22",
     "testcontainers": "^12.1.0",
     "three": "^0.185.1",
+    "xstate": "6.0.0-alpha.52",
     "toml": "^5.0.0",
     "ts-morph": "^28.0.0",
     "turbo": "^2.10.12",
@@ -324,7 +325,8 @@
   "patchedDependencies": {
     "knip@6.27.0": "patches/knip@6.27.0.patch",
     "sharp@0.35.0": "patches/sharp@0.35.0.patch",
-    "drizzle-orm@1.0.0-rc.4-fb12281": "patches/drizzle-orm@1.0.0-rc.4-fb12281.patch"
+    "drizzle-orm@1.0.0-rc.4-fb12281": "patches/drizzle-orm@1.0.0-rc.4-fb12281.patch",
+    "xstate@6.0.0-alpha.52": "patches/xstate@6.0.0-alpha.52.patch"
   },
   "private": true,
   "repository": {

@@ -2989,6 +2989,7 @@
         "rehype-stringify": "catalog:",
         "remark-gfm": "catalog:",
         "typedoc": "catalog:",
+        "xstate": "catalog:",
         "yaml": "catalog:",
       },
       "devDependencies": {
@@ -2996,7 +2997,9 @@
         "@effect/vitest": "catalog:",
         "@types/n3": "catalog:",
         "@types/node": "catalog:",
+        "@typescript-eslint/parser": "catalog:",
         "drizzle-kit": "catalog:",
+        "eslint": "catalog:",
         "typescript": "catalog:",
         "vitest": "catalog:",
       },
@@ -3011,6 +3014,9 @@
         "@effect/tsgo": "catalog:",
       },
     },
+  },
+  "patchedDependencies": {
+    "xstate@6.0.0-alpha.52": "patches/xstate@6.0.0-alpha.52.patch",
   },
   "overrides": {
     "@effect/platform-node-shared": "catalog:",
@@ -3290,6 +3296,7 @@
     "wink-nlp": "^2.4.0",
     "wink-nlp-utils": "^2.1.0",
     "ws": "^8.21.3",
+    "xstate": "6.0.0-alpha.52",
     "yaml": "^2.9.0",
   },
   "packages": {
@@ -8244,6 +8251,8 @@
     "xmlbuilder": ["xmlbuilder@10.1.1", "", {}, "sha512-OyzrcFLL/nb6fMGHbiRDuPup9ljBycsdCypwuyg5AAHvyWzGfChJpCXMG88AGTIMFhGZ9RccFN1e6lhg3hkwKg=="],
 
     "xmlchars": ["xmlchars@2.2.0", "", {}, "sha512-JZnDKK8B0RCDw84FNdDAIpZK+JuJw+s7Lz8nksI7SIuU3UXJJslUthsi+uWBUYOwPFwW7W7PRLRfUKpxjtjFCw=="],
+
+    "xstate": ["xstate@6.0.0-alpha.52", "", { "dependencies": { "saxes": "^6.0.0" }, "bin": { "xstate": "./bin/xstate.js" } }, "sha512-7CXQ+gI07PFx4QDnONwcU5eEdzovE2pyceFw9GSem6w9qe3Xaw/jFVaAylduvZZq8VdZVCkD3yzkM7D4yPbOtw=="],
 
     "xtend": ["xtend@4.0.2", "", {}, "sha512-LKYU1iAXJXUgAXn9URjiu+MWhyUXHsvfp7mcuYm9dSUKK0/CjtrUwFAxD82/mCWbtLsGjFIad0wIsod4zrTAEQ=="],
 

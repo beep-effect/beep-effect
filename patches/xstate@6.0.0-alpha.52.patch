@@ -1,0 +1,114 @@
+diff --git a/dist/declarations/src/StateMachine.d.ts b/dist/declarations/src/StateMachine.d.ts
+index c50ecd7ee59d9aa818410570f368ef35545414c1..0e0b841c745cc386d2e033199061f5c66963143c 100644
+--- a/dist/declarations/src/StateMachine.d.ts
++++ b/dist/declarations/src/StateMachine.d.ts
+@@ -14,6 +14,10 @@ type ProvidedActors<TExpectedActorMap extends Sources['actors'], TProvidedActorM
+     [K in keyof TProvidedActorMap]: K extends keyof TExpectedActorMap ? TProvidedActorMap[K] extends AnyActorLogic ? CompatibleProvidedActorSource<TExpectedActorMap[K], TProvidedActorMap[K]> : never : never;
+ };
+ export declare class StateMachine<TContext extends MachineContext, TEvent extends EventObject, TChildren extends Record<string, AnyActorRef | undefined>, TStateValue extends StateValue, TTag extends string, TInput, TOutput, TEmitted extends EventObject, TMeta extends MetaObject, TConfig extends StateSchema, TActionMap extends Sources['actions'], TActorMap extends Sources['actors'], TGuardMap extends Sources['guards'], TDelayMap extends Sources['delays'], TInternalEvent extends EventObject = never> implements ActorLogic<MachineSnapshot<TContext, TEvent, TChildren, TStateValue, TTag, TOutput, TMeta, TConfig>, TEvent, TInput, AnyActorSystem, TEmitted> {
++    /** Type-only metadata for integrations that collect registered source requirements. */
++    readonly _actionMap: TActionMap;
++    readonly _actorMap: TActorMap;
++    readonly _stateSchema: TConfig;
+     /** The raw config used to create the machine. */
+     config: Next_MachineConfig<any, any, any, any, any, any, any, any, any, any, any, any> & {
+         schemas?: AnyMachineSchemas;
+diff --git a/dist/declarations/src/setup.d.ts b/dist/declarations/src/setup.d.ts
+index 4be4688739af7c7f6832e0a4f41ab52163c696d1..8e223258226f26b204940c029594c66dec888a21 100644
+--- a/dist/declarations/src/setup.d.ts
++++ b/dist/declarations/src/setup.d.ts
+@@ -2,7 +2,7 @@ import { SetupStateSchemas, StandardSchemaV1 } from "./schema.types.js";
+ import type { ActorLogicValidator } from "./validation.types.js";
+ import { StateMachine } from "./StateMachine.js";
+ import { type Actor, type RequiredActorOptionsKeys } from "./createActor.js";
+-import { AnyActorRef, AnyActorLogic, ActorRefFromLogic, AnyStateNode, EventObject, AnyEventObject, EventDescriptor, ExtractEvent, MachineContext, ProvidedActor, RoutableStateId, StateSchema, StateValue, StateValueFromStateSchema, ToChildren, MetaObject, Cast, Compute, EnqueueObject, DoneActorEvent, DoneStateEvent, ErrorActorEvent, SystemRegistry, RegistryKeyForLogic, ActorOptions, Observer, Subscription, OutputArg, SnapshotEvent, SingleOrArray, AfterEvent, TimeoutEvent, ErrorEvent } from "./types.js";
++import { AnyActorRef, AnyActorLogic, ActorRefFromLogic, AnyStateNode, EventObject, AnyEventObject, EventDescriptor, ExtractEvent, MachineContext, ProvidedActor, RoutableStateId, StateSchema, StateValue, StateValueFromStateSchema, ToChildren, MetaObject, Cast, Compute, EnqueueObject, DoneActorEvent, DoneStateEvent, ErrorFrom, ErrorActorEvent, SystemRegistry, RegistryKeyForLogic, ActorOptions, Observer, Subscription, OutputArg, SnapshotEvent, SingleOrArray, AfterEvent, TimeoutEvent, ErrorEvent } from "./types.js";
+ import { AnyActorSystem } from "./system.js";
+ import { InspectionEvent } from "./inspection.js";
+ import { ActionSchemas, DelayMapFromNames, DelaySourceMap, GuardSourceMap, GuardSchemas, InferChildren, InferActions, InferGuards, Sources, InferOutput, InferEvents, InferInternalEvents, Next_MachineConfig, Next_InvokeConfig, Next_StateNodeConfig, Next_TransitionConfigOrTarget, OutputFromConfig, ValidateHistoryDefaults, ValidateStateTargets, WithDefault } from "./types.v6.js";
+@@ -901,7 +901,7 @@ type SetupInvokeConfig<TStateSchemas extends Record<string, SetupStateSchema>, T
+     } ? [
+         Extract<NonNullable<TOnDone>, (...args: any[]) => unknown>
+     ] extends [never] ? undefined | StateTransitionObjectConfig<TStateSchemas, TContext, TContextShape, DoneActorEvent, TChildren, TMeta, TActionMap, TActorMap, TGuardMap, TDelayMap, TSystemRegistry, false> : StateTransitionConfigOrTarget<TStateSchemas, TContext, TContextShape, InvokeDoneEvent<TInvoke>, TEvent, TEmitted, TChildren, TMeta, TActionMap, TActorMap, TGuardMap, TDelayMap, TSystemRegistry> : never;
+-    onError?: StateTransitionConfigOrTarget<TStateSchemas, TContext, TContextShape, ErrorActorEvent, TEvent, TEmitted, TChildren, TMeta, TActionMap, TActorMap, TGuardMap, TDelayMap, TSystemRegistry>;
++    onError?: StateTransitionConfigOrTarget<TStateSchemas, TContext, TContextShape, InvokeErrorEvent<TInvoke, TActorMap>, TEvent, TEmitted, TChildren, TMeta, TActionMap, TActorMap, TGuardMap, TDelayMap, TSystemRegistry>;
+     onSnapshot?: StateTransitionConfigOrTarget<TStateSchemas, TContext, TContextShape, SnapshotEvent<any>, TEvent, TEmitted, TChildren, TMeta, TActionMap, TActorMap, TGuardMap, TDelayMap, TSystemRegistry>;
+     onTimeout?: StateTransitionConfigOrTarget<TStateSchemas, TContext, TContextShape, TEvent, TEvent, TEmitted, TChildren, TMeta, TActionMap, TActorMap, TGuardMap, TDelayMap, TSystemRegistry>;
+ } : never : never;
+@@ -1122,3 +1122,8 @@ type SystemBuilder<TSystemRegistry extends SystemRegistry> = {
+     setup: SetupFunction<TSystemRegistry>;
+ };
+ export declare function createSystem<const TSystemRegistry extends SystemRegistry = {}>(_config?: SystemConfig<TSystemRegistry>): SystemBuilder<TSystemRegistry>;
++
++type InvokeErrorEvent<TInvoke, TActorMap extends Sources['actors']> = TInvoke extends { src: infer TSrc }
++  ? TSrc extends keyof TActorMap & string ? ErrorActorEvent<ErrorFrom<TActorMap[TSrc]>>
++    : TSrc extends AnyActorLogic ? ErrorActorEvent<ErrorFrom<TSrc>> : ErrorActorEvent
++  : ErrorActorEvent;
+diff --git a/dist/declarations/src/types.d.ts b/dist/declarations/src/types.d.ts
+index 3f06838e84b87f658f0122c7aafa9670f2ea9a0f..8a0a3c4a5349b4adfe828ed6e280938fe0d38b7f 100644
+--- a/dist/declarations/src/types.d.ts
++++ b/dist/declarations/src/types.d.ts
+@@ -898,7 +898,7 @@ in TInput = NonReducibleUnknown, TSystem extends AnyActorSystem = AnyActorSystem
+     /** The initial setup/configuration used to create the actor logic. */
+     config?: unknown;
+     /** Optional runtime validator for pure calculation boundaries. */
+-    validator?: import("./validation.types.js").ActorLogicValidator;
++    validator?: import("./validation.types.js").ActorLogicValidator | undefined;
+     /**
+      * Transition function that processes the current state and an incoming event
+      * to produce a new state and effects.
+@@ -963,7 +963,7 @@ in TInput = NonReducibleUnknown, TSystem extends AnyActorSystem = AnyActorSystem
+ }
+ export interface AnyActorLogic {
+     config?: unknown;
+-    validator?: import("./validation.types.js").ActorLogicValidator;
++    validator?: import("./validation.types.js").ActorLogicValidator | undefined;
+     transition(snapshot: any, event: any, actorScope: any): ActorLogicTransitionResult<any>;
+     initialTransition(input: any, actorScope: any): ActorLogicTransitionResult<any>;
+     getInitialSnapshot(actorScope: any, input: any): any;
+@@ -1325,3 +1325,10 @@ export type AnyAction = Action<MachineContext, EventObject, EventObject, Sources
+     args: any[];
+ } | AnyEventObject;
+ export {};
++
++/** Extracts the error reported by actor logic or an actor reference. */
++export type ErrorFrom<T> = T extends { transition: (snapshot: infer TSnapshot, ...args: never[]) => unknown }
++    ? TSnapshot extends { error: infer TError } ? Exclude<TError, undefined> : unknown
++    : T extends ActorRef<infer TSnapshot, infer _TEvent, infer _TEmitted>
++      ? TSnapshot extends { error: infer TError } ? Exclude<TError, undefined> : unknown
++      : never;
+diff --git a/dist/declarations/src/types.v6.d.ts b/dist/declarations/src/types.v6.d.ts
+index 1f568c203ac8372c43f87b01ac9911ce74751ca7..308c33343c8d985041c174e1b0b9f48115cebaec 100644
+--- a/dist/declarations/src/types.v6.d.ts
++++ b/dist/declarations/src/types.v6.d.ts
+@@ -1,6 +1,6 @@
+ import { SetupStateSchemas, StandardSchemaV1, TypeSchema } from "./schema.types.js";
+ import { MachineSnapshot } from "./State.js";
+-import { Action, ActorTimeoutEvent, AfterEvent, ActorLogic, ActorRef, ActorRefFromLogic, ActorSelf, AnyActorLogic, AnyActorRef, Compute, DoneActorEvent, DoNotInfer, ErrorActorEvent, EventDescriptor, ErrorEvent, EventObject, EventPayloadPattern, ExtractEvent, InitialContext, InputFrom, IsNever, MetaObject, NonReducibleUnknown, OutputFrom, SingleOrArray, SnapshotEvent, StateValue, TODO, TransitionContextMapper, TransitionContextPatch, TransitionConfigFunction, Values, AnyStateNode, SystemRegistry, TimeoutEvent } from "./types.js";
++import { Action, ActorTimeoutEvent, AfterEvent, ActorLogic, ActorRef, ActorRefFromLogic, ActorSelf, AnyActorLogic, AnyActorRef, Compute, DoneActorEvent, DoNotInfer, ErrorFrom, ErrorActorEvent, EventDescriptor, ErrorEvent, EventObject, EventPayloadPattern, ExtractEvent, InitialContext, InputFrom, IsNever, MetaObject, NonReducibleUnknown, OutputFrom, SingleOrArray, SnapshotEvent, StateValue, TODO, TransitionContextMapper, TransitionContextPatch, TransitionConfigFunction, Values, AnyStateNode, SystemRegistry, TimeoutEvent } from "./types.js";
+ import { MachineContext, Mapper } from "./types.js";
+ import { LowInfer } from "./types.js";
+ import { DoneStateEvent } from "./types.js";
+@@ -239,7 +239,7 @@ export type Next_InvokeConfig<TContext extends MachineContext, TEvent extends Ev
+     src: string | AnyActorLogic | ((args: InvokeSrcArgs<TContext, TEvent, TActorMap>) => string | AnyActorLogic);
+     input?: ((args: InvokeInputArgs<TContext, TEvent, TEmitted, TChildren, TInput>) => unknown) | NonReducibleUnknown;
+ } : {
+-    [K in keyof TActorMap & string]: Next_InvokeConfigBase<TContext, TEvent, TEmitted, TChildren, TActionMap, TActorMap, TGuardMap, TDelayMap, TMeta, TSystemRegistry, DoneActorEvent<OutputFrom<TActorMap[K]>>> & {
++    [K in keyof TActorMap & string]: Next_InvokeConfigBase<TContext, TEvent, TEmitted, TChildren, TActionMap, TActorMap, TGuardMap, TDelayMap, TMeta, TSystemRegistry, DoneActorEvent<OutputFrom<TActorMap[K]>>, ErrorActorEvent<ErrorFrom<TActorMap[K]>>> & {
+         id?: ChildIdForLogic<TActorMap[K], TChildren>;
+         input?: ((args: InvokeInputArgs<TContext, TEvent, TEmitted, TChildren, TInput>) => InputFrom<TActorMap[K]>) | InputFrom<TActorMap[K]>;
+     } & ({
+@@ -250,11 +250,11 @@ export type Next_InvokeConfig<TContext extends MachineContext, TEvent extends Ev
+         src: (args: InvokeSrcArgs<TContext, TEvent, TActorMap>) => K | TActorMap[K];
+     });
+ }[keyof TActorMap & string] | InlineInvokeConfig<TContext, TEvent, TEmitted, TChildren, TActionMap, TActorMap, TGuardMap, TDelayMap, TMeta, TSystemRegistry, TInput>;
+-interface Next_InvokeConfigBase<TContext extends MachineContext, TEvent extends EventObject, TEmitted extends EventObject, _TChildren extends Record<string, AnyActorRef | undefined>, TActionMap extends Sources['actions'], TActorMap extends Sources['actors'], TGuardMap extends Sources['guards'], TDelayMap extends Sources['delays'], TMeta extends MetaObject, TSystemRegistry extends SystemRegistry, TDoneEvent extends EventObject = [keyof TActorMap & string] extends [never] ? DoneActorEvent<any> : DoneActorEvent<OutputFrom<TActorMap[keyof TActorMap & string]>>> {
++interface Next_InvokeConfigBase<TContext extends MachineContext, TEvent extends EventObject, TEmitted extends EventObject, _TChildren extends Record<string, AnyActorRef | undefined>, TActionMap extends Sources['actions'], TActorMap extends Sources['actors'], TGuardMap extends Sources['guards'], TDelayMap extends Sources['delays'], TMeta extends MetaObject, TSystemRegistry extends SystemRegistry, TDoneEvent extends EventObject = [keyof TActorMap & string] extends [never] ? DoneActorEvent<any> : DoneActorEvent<OutputFrom<TActorMap[keyof TActorMap & string]>>, TErrorEvent extends EventObject = [keyof TActorMap & string] extends [never] ? ErrorActorEvent : ErrorActorEvent<ErrorFrom<TActorMap[keyof TActorMap & string]>>> {
+     id?: string;
+     registryKey?: keyof TSystemRegistry & string;
+     onDone?: Next_TransitionConfigOrTarget<TContext, TDoneEvent, TEvent, TEmitted, TActionMap, TActorMap, TGuardMap, TDelayMap, TMeta>;
+-    onError?: Next_TransitionConfigOrTarget<TContext, ErrorActorEvent, TEvent, TEmitted, TActionMap, TActorMap, TGuardMap, TDelayMap, TMeta>;
++    onError?: Next_TransitionConfigOrTarget<TContext, TErrorEvent, TEvent, TEmitted, TActionMap, TActorMap, TGuardMap, TDelayMap, TMeta>;
+     onSnapshot?: Next_TransitionConfigOrTarget<TContext, SnapshotEvent<any>, TEvent, TEmitted, TActionMap, TActorMap, TGuardMap, TDelayMap, TMeta>;
+     /**
+      * The duration (in ms) after which this invocation will time out if it has
