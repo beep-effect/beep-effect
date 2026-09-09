@@ -240,3 +240,46 @@ as final proof. Source/citation commit for the captures is `5e02f8c04b2448fe4ff4
 The committed-head proof and knowledge reference check are recorded in the
 post-commit appendix below. Fable owns review and publication; no remote mutation
 is authorized for this lane.
+
+## Committed-head verification
+
+Refresh/implementation commit: `c61b4aed9ce89738b0d43d29c5554d38681fa955`.
+
+```text
+fix(explorations): re-pin the refreshed corpora under the merged generators
+```
+
+Explicit-path staging committed 736 reviewed paths. Gitleaks, typos, Biome, and
+commitlint hooks passed. Biome normalized only `ops/manifest.json` formatting;
+it did not change the generators or pins. Commit body lines are under 100 characters.
+
+A detached worktree at this exact commit was created under the lane's ignored
+`.beep/reconcile-1032/` directory. The trusted lane's offline PyYAML interpreter
+ran all four ordinary generator CLIs there, covering all five pins. Every exit
+was zero. No refresh, synthetic-root input, live recapture, or mise trust change
+was used. The test disabled Python bytecode writes.
+
+| Pin | Manifest payloads | All tracked files | Missing | Extra |
+| --- | ---: | ---: | ---: | ---: |
+| `run2-fleet` | 1588 | 1589 | 0 | 0 |
+| `run3-checkout-identity` | 216 | 217 | 0 | 0 |
+| `run3-fleet` | 1914 | 1915 | 0 | 0 |
+| `run3b-fleet` | 734 | 735 | 0 | 0 |
+| `run3b-synthetic` | 8 | 9 | 0 | 0 |
+
+All detached whole-tree hashes match the capture table above. The repair script's
+`verify_generator_provenance` independently found each of the five pinned
+generator digests in reachable committed history. The detached worktree was
+clean and was removed without force.
+
+After the implementation commit, `bun run beep knowledge refs --check` exited
+**0**, with **0 live gated observations**. Packet validation was repeated after
+bookkeeping and passed with zero blockers and warnings. The source/test bytes
+are the same bytes that passed the complete 58-test suite.
+
+This documentation follow-up records the actual implementation SHA and its
+post-commit proof. It changes no generator or pin. Final HEAD receives the same
+detached verification, tracked-inventory/hash checks, committed-provenance
+checks, and post-commit knowledge reference check before handoff. The final
+handoff identifies that documentation commit separately. No push or PR creation
+occurred; Fable retains review and publication ownership.

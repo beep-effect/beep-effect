@@ -276,3 +276,10 @@ All final counts supersede the historical capture counts above. Both organic
 captures cover 94 checkouts. The full digest lineage, manifest decision, source
 citations, inherited run-2 diagnostic limit, and committed-head proof are in
 [the reconciliation report](./reconcile-1032-report.md). DECISIONS.md was not edited.
+
+The refresh is committed as `c61b4aed9ce89738b0d43d29c5554d38681fa955`. At that exact commit,
+all five ordinary generator checks passed in a clean detached worktree; tracked
+inventories and whole-tree hashes match, and every generator digest has committed
+provenance. Post-commit `bun run beep knowledge refs --check` passed with zero
+live gated observations. The documentation follow-up receives the same final-HEAD
+proof before handoff. No generator or pin bytes change in this follow-up.
